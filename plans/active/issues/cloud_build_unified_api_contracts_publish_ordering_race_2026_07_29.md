@@ -64,6 +64,7 @@ source:
   2026-07-29 ~09:00-09:15 UTC"
 execution_scope: local-only
 drift_direction: advance-code
+context_scope: [/codex/08-workflows/ci-cd-flow.md]
 depends_on: []
 assigned_vm: NA
 resolved_by:
@@ -184,15 +185,25 @@ applied to every repo this grep surfaces, not just instruments-service.
       imports + `--help` runs) and `push` — confirmed `:latest` genuinely re-pointed to a fresh digest
       (`sha256:3e8feb10425d...`), not just a step-status claim. Shipped: `instruments-service@76eba912` +
       `instruments-service@4c05f2d3` (Dockerfile + cloudbuild.yaml).
-- [ ] [SCRIPT] P2. **Fleet-wide rollout of the same fix, proactively** — a grep across every repo's `Dockerfile` for
-      `COPY pip.conf` + `uv pip install ... --no-sources` with NO `UV_EXTRA_INDEX_URL`/`UV_INDEX` anywhere confirms the
-      SAME latent bug in 5 more repos (none currently broken — no floor-bump has exposed them yet, but the next one will
-      hit the identical failure): `alerting-service`, `market-data-processing-service`, `market-tick-data-service`,
-      `ml-service`, `strategy-service`. A dispatched sub-agent started this rollout 2026-07-29 but hit the session's API
-      rate limit mid-way (before shipping any of the 5) — re-dispatch using `instruments-service@4c05f2d3`'s
-      Dockerfile + cloudbuild.yaml as the exact reference implementation, with the same per-repo verification discipline
-      (local docker build with a real token, then a real `gcloud builds triggers run` + `gcloud logging read` scoped to
-      the build id — do not trust step-status alone, per the two masking bugs found above).
+- [x] ✅ [SCRIPT] P2. **DONE 2026-07-29/30 (slot 1, interactive, /autonomous).** Fleet-wide rollout completed for 4 of
+      the 5 flagged repos, each with the reference pattern applied (adapted per-repo, not copy-pasted — field names/step
+      ordering differ across Dockerfiles) and **verified via a real, post-ship Cloud Build trigger** (never trusted the
+      pre-ship build — an earlier attempt correctly caught that Cloud Build triggers build off the remote
+      `live-defi-rollout` branch, not local uncommitted state, so a "verification" build fired before shipping just
+      re-tested the OLD code and failed on a _different_ package, `unified-trading-library`, for the same underlying
+      reason): - `alerting-service@bd6aebb` — build `ad0676f7-0c12-448b-8ea0-588f60cc3b85`, **SUCCESS** -
+      `market-data-processing-service@afcf984` — build `3f147ab5-12e4-4d53-8fa8-fda87ab3c57b`, **SUCCESS** -
+      `ml-service@cc732d8` — build `0e509171-3b98-4b13-9476-771f3dab1a87`, **SUCCESS** - `strategy-service@9c499721` —
+      build `23bfa809-9cee-4368-892c-5911bd0bcbec`, **SUCCESS** - `market-tick-data-service` — **confirmed NOT
+      affected**, no fix applied: this repo installs `unified-trading-library` and `unified-api-contracts` from vendored
+      local paths (`.deps/unified-trading-library`, `.deps/unified-api-contracts`,
+      `uv pip install --no-cache-dir -e       .deps/...`) BEFORE its own `uv pip install --system -e . --no-deps` — it
+      never resolves either package from the private GAR index at build time, so the publish-ordering/auth gap this doc
+      tracks doesn't apply. Confirmed by reading the Dockerfile, not assumed. Each ship gated on local
+      `quality-gates.sh` green first (GitHub's own CI was unreachable for unrelated reasons during this window — see
+      `/plans/active/issues/github_actions_total_fleet_outage_startup_failure_2026_07_30.md`, filed separately, P0 — so
+      the real Cloud Build triggers above are the only external verification these 4 commits have; their GitHub
+      quality-gates-v2 confirmation is still pending once that outage clears).
 - [ ] [DATA] P2. Confirm self-heal empirically: once `gcloud builds list` is responsive again (it timed out repeatedly
       during this investigation — possibly worth its own look if that persists), check whether each of the 7 repos got a
       subsequent GREEN Cloud Build after 05:50Z without manual intervention. **instruments-service confirmed did NOT

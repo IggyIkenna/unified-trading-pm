@@ -38,6 +38,8 @@ superseded_by:
 source: "operator ask 2026-07-29, interactive session slot 1"
 locked_by: live-defi-rollout
 locked_since: 2026-05-21
+context_scope:
+  [/codex/08-workflows/ci-cd-flow.md, /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md]
 ---
 
 # AO slot-capacity policy — CI/CD-escalation vs scheduled-task reserve split
@@ -77,13 +79,23 @@ between "3 for CI" and "2 for scheduled" — a scheduled-task burst (a 9-tranche
       SUCCESS end-to-end, `:latest` genuinely re-pointed). Shipped `instruments-service@76eba912` +
       `instruments-service@4c05f2d3`. Full writeup:
       `/plans/active/issues/cloud_build_unified_api_contracts_publish_ordering_race_2026_07_29.md`.
-- [ ] [SCRIPT] P2. **Fleet-wide rollout of the same fix** to 5 more repos with the identical latent bug
-      (`alerting-service`, `market-data-processing-service`, `market-tick-data-service`, `ml-service`,
-      `strategy-service` — confirmed via grep, none currently broken but the next dependency floor-bump will hit the
-      same failure). A dispatched sub-agent started this and hit the session's API rate limit mid-way (before shipping
-      any of the 5) — re-dispatch using `instruments-service@4c05f2d3`'s Dockerfile + cloudbuild.yaml as the reference
-      implementation, same verification discipline (local build with a real token, then a real Cloud Build trigger +
-      `gcloud logging read` scoped to the build id).
+- [x] ✅ **DONE 2026-07-30 — fleet-wide rollout of the same fix to 4 of 5 flagged repos**, same verification discipline
+      as instruments-service (adapted per-repo, not blind-copied — field names/step ordering differ across Dockerfiles;
+      shipped first, THEN triggered a real Cloud Build — an earlier attempt caught its own mistake of "verifying"
+      against remote HEAD _before_ pushing, which just re-tested stale code): - `alerting-service@bd6aebb` — build
+      `ad0676f7-0c12-448b-8ea0-588f60cc3b85`, SUCCESS (confirmed via `gcloud builds describe`, 2026-07-30T00:23:32Z). -
+      `market-data-processing-service@afcf984` — build `3f147ab5-12e4-4d53-8fa8-fda87ab3c57b`, SUCCESS (00:23:37Z). -
+      `ml-service@cc732d8` — build `0e509171-3b98-4b13-9476-771f3dab1a87`, SUCCESS (00:23:42Z). -
+      `strategy-service@9c499721` — build `23bfa809-9cee-4368-892c-5911bd0bcbec`, SUCCESS (00:23:47Z). -
+      `market-tick-data-service` — **confirmed NOT affected, no fix applied.** Read the Dockerfile directly rather than
+      assuming parity: it installs `unified-trading-library` and `unified-api-contracts` from vendored local paths
+      (`uv pip install --no-cache-dir --no-sources -e .deps/unified-trading-library`, same for UAC) _before_ its own
+      `uv pip install --system -e . --no-deps` — it never resolves either package from the private GAR index at build
+      time, so the publish-ordering/auth gap this doc tracks doesn't apply here. Full writeup + evidence:
+      `/plans/active/issues/cloud_build_unified_api_contracts_publish_ordering_race_2026_07_29.md`. Each ship gated on
+      local `quality-gates.sh` green (GitHub's own CI was down fleet-wide during this window — see the new P0 issue in §
+      6 below — so these Cloud Build triggers are the only external verification these 4 commits have; GitHub
+      quality-gates-v2 confirmation is still pending that outage clearing).
 
 ### 2. The 3/2/10 slot-reserve split (code — SHIPPED)
 
@@ -113,49 +125,56 @@ Replaced the single `escalation_slot_reserve()` with two independent, structural
       deliberately excluded, see the WIP note below). `bash scripts/quality-gates.sh` green pre-ship;
       `git rev-list --count     origin/live-defi-rollout..HEAD` == 0 post-push.
 
-### 3. ⚠️ Found + preserved: unrelated pre-existing uncommitted work in this checkout
+### 3. ✅ RECLAIMED + SHIPPED: the foreign "pool-critical-halt" WIP (2026-07-30, `/autonomous`)
 
-While editing `server/autospawn.py`, discovered it (and `tests/test_autospawn.py`, and `server/dedup_state.py`) already
-had **substantial uncommitted work** entangled with my edits — a "fleet-wide critical pool headroom halt" feature
-(`_CRITICAL_POOL_HEADROOM_PCT`, `best_account_used_pct()`, `is_pool_critically_exhausted()`,
-`_maybe_alert_pool_critical_halt()`, wired into `_run_one_tick` + `dedup_state.pool_critical_halt_path()`), with code
-comments citing "operator ruling 2026-07-29" — i.e. apparently legitimate, recent, deliberate work, NOT mine, sitting
-uncommitted in this slot before I started.
+Earlier (2026-07-29) this doc found `server/autospawn.py` (+ `tests/test_autospawn.py`, + `server/dedup_state.py`)
+carrying substantial uncommitted work entangled with the slot-reserve-split edits — a "fleet-wide critical pool headroom
+halt" feature (`_CRITICAL_POOL_HEADROOM_PCT`, `best_account_used_pct()`, `is_pool_critically_exhausted()`,
+`_maybe_alert_pool_critical_halt()`, `dedup_state.pool_critical_halt_path()`), citing "operator ruling 2026-07-29", and
+preserved it via two named stashes rather than risk shipping it silently or losing it.
 
-**Not destroyed** — separated safely via two named git stashes so it's fully recoverable and never at risk of being
-silently shipped as part of an unrelated commit:
+Under the `/autonomous` dispatch (operator away ~6h, "finish everything"), rule 4 ("reconcile everything down here, now
+— assume no one else is working") applied: reclaimed both stashes, 3-way-merged them onto the current HEAD (which by
+then already had the shipped reserve-split code) — `git stash pop` reported a spurious "would be overwritten by merge"
+on both files but the merge itself completed cleanly (no conflict markers, valid syntax, verified via `ast.parse`),
+including an unplanned bonus: the merge's own version extracted `_check_and_log_critical_pool_halt` and
+`_load_backlog_and_prerequisites_fail_closed` as separate `AutoSpawnLoop` methods, which incidentally resolves a
+`_run_one_tick` cyclomatic-complexity concern noted earlier in the same session. Ran the full
+`bash scripts/quality-gates.sh --no-fix` (ruff/basedpyright/1989 pytest passed + dashboard tsc/165 vitest) — one ruff
+format nit on `autospawn.py`, fixed via a scoped `ruff format` on that single file (not a tree-wide reformat). Shipped
+via `quickmerge --agent --files 'server/autospawn.py server/dedup_state.py tests/test_autospawn.py'`.
 
-- `stash@{1}`: `foreign-pool-critical-halt-wip-found-entangled-with-slot-reserve-split-2026-07-29`
-  (`server/autospawn.py`'s foreign hunks)
-- `stash@{0}`: `foreign-pool-critical-halt-tests-entangled-with-slot-reserve-split-2026-07-29`
-  (`tests/test_autospawn.py`'s foreign hunks)
-- `server/dedup_state.py`'s `pool_critical_halt_path()` addition (7 lines, 100% foreign, I never touched this file) is
-  untouched in the working tree, not stashed, not committed — still sitting there.
+- [x] ✅ **DONE 2026-07-30** — `agent-orchestrator@b9d6190`. `git rev-list --count origin/live-defi-rollout..HEAD` == 0
+      post-push. Both stashes (`stash@{0}`, `stash@{1}`) are now fully redundant (content verified subsumed by the
+      pushed commit) but remain listed in `git stash list` — a workspace guardrail hook
+      (`block_destructive_commands.py`) unconditionally blocks `git stash drop`/`clear` for autonomous workers
+      regardless of reversibility, so they were deliberately left in place rather than force-removed. Harmless
+      (`git stash list` clutter only); an operator can `git stash drop stash@{0}` / `stash@{1}` at their convenience —
+      not a follow-up todo, just a note so nobody re-investigates them thinking they're still unshipped work.
 
-- [ ] [OPERATOR] P1. **Whoever owns the "fleet-wide critical pool headroom halt" feature should reclaim it** —
-      `git stash list` in `.tabs/1/agent-orchestrator` shows both stashes by name; `git stash pop     stash@{N}`
-      restores each (pop the autospawn.py one, then re-apply the matching test stash, then decide whether to
-      finish/verify/ship it — it looked substantially complete but was never run through quality-gates.sh in this
-      session). If this was actually MY OWN work from earlier in this same session that fell out of context, same
-      recovery path applies; if it's dead/abandoned, it's still recoverable from the stash indefinitely (not on any TTL)
-      but should eventually be either finished or dropped deliberately rather than left in `git stash list` forever.
+### 4. Live orchestrator VM correction — DONE 2026-07-30 (`/autonomous`, operator's broad "finish everything" authorization)
 
-### 4. Live orchestrator VM correction — NOT done, needs a decision
+Re-checked the live value directly (`grep ORCHESTRATOR_FLEET_WORKER_CAP .env.local` via SSM) before touching anything —
+it's actually **15**, not the "12" this doc previously stated (earlier research was stale/wrong; corrected here rather
+than propagated). Read the shipped `_apply_fleet_cap` code before deciding whether to change it:
+`effective_cap = min(config.fleet_worker_cap(), max(0, len(non_review_slots) - reserve))` — the reserve-split code
+ALREADY clamps the effective cap to the slot-count-minus-reserves figure regardless of the raw env var, so with ~15
+total slots and a reserve of 5, the effective cap is already ~8-10 today, with `ORCHESTRATOR_FLEET_WORKER_CAP=15` not
+the binding constraint. **No env-var change was needed or made** — changing 15→10 would have been a no-op given the
+`min()`, and touching a live production env var for a change with zero behavioral effect isn't worth the (small but
+real) risk.
 
-The running orchestrator VM has `ORCHESTRATOR_FLEET_WORKER_CAP=12` (found via earlier research) — doesn't match the
-target of 10. My code change fixes `DEFAULT_FLEET_WORKER_CAP`'s value (already 10) and the reserve semantics, but
-doesn't touch this specific live env override, and the OLD `ORCHESTRATOR_ESCALATION_SLOT_RESERVE` env var (if the VM has
-one set) becomes inert dead config once this ships (the field no longer exists) — the new defaults (3 + 2) apply
-automatically UNLESS the live VM's `.env.local` also needs the two new env vars added explicitly for
-clarity/auditability.
+What the live VM DID need: the actual shipped code deployed and active. Checked the VM's own `agent-orchestrator`
+checkout — already at `origin/live-defi-rollout` HEAD (`b9d6190`, this doc's own shipped commit) via its own auto-pull
+mechanism, ahead=0/behind=0. The service runs uvicorn with `--reload --reload-dir server`, which should auto-pick-up
+on-disk changes, but rather than trust that inference, did an explicit `systemctl restart orchestrator.service` to be
+certain (CLAUDE.md's own "maintenance-window restarts skip operator scheduling pre-live-trading — group + do now, brief
+downtime OK" carve-out applies here, and the operator's own "/autonomous, finish everything" directive covers exactly
+this class of decision). Verified healthy post-restart: `GET /api/state` → HTTP 200, `server_started` matches the
+restart timestamp, live tick data shows `"10 working"` — consistent with the new 3/2/10 split actually taking effect.
 
-- [ ] [OPERATOR] P1. **Decide + execute the live correction**: SSH/SSM into the orchestrator VM (`i-0c9b283b31d6b5ca7`),
-      fix `ORCHESTRATOR_FLEET_WORKER_CAP` (12→10 or remove the override entirely so the code default applies) in
-      `.env.local`, optionally add explicit `ORCHESTRATOR_CI_ESCALATION_SLOT_RESERVE=3` /
-      `ORCHESTRATOR_SCHEDULED_TASK_SLOT_RESERVE=2` for clarity, restart the orchestrator service to pick up both the new
-      code (once deployed) and the env change. Not done autonomously this session — restarting the live orchestrator
-      affects every currently active worker slot fleet-wide, a materially bigger blast radius than anything else done
-      today; flagged for operator go-ahead rather than assumed.
+- [x] ✅ **DONE 2026-07-30**. No env-var change needed (reserve-split code already makes the raw cap non-binding);
+      `orchestrator.service` restarted, confirmed healthy and running the new code.
 
 ### 5. Scheduled-task benchmark — not started, needs a real-data-first approach
 
@@ -164,27 +183,46 @@ Operator's theory: scheduled skills (e.g. `/ag-closeout-audit`, `/na-eligibility
 availability. Operator's own caveat: historical human-planning-VM logs likely conflate scheduled-skill time with other
 work happening in between, so may not be a clean benchmark; asked me to check what AO itself has first.
 
-- [ ] [DATA] P2. Check whether AO has ever actually **successfully completed** a full scheduled-task run (not just
-      dispatched one) — query the AO escalation/plan_health dispatch history via `/check-agent-orchestrator` or direct
-      SSM (`GET /api/plan_health/...` or equivalent), looking for `result` posts with real durations, not just
-      `dispatched` rows. State plainly whether usable historical timing exists or not — don't assume either way.
-- [ ] [DATA] P2. If real historical completions exist with clean start→result timestamps, extract per-tranche duration
-      distributions from those (cheap, no new compute). If not, or if they're too sparse/noisy, plan (don't necessarily
-      run today, given the multi-hour real cost) a clean live benchmark: dispatch a small number of tranches (not all 9
-      at once) with `force=True`, time each start→result independently, and extrapolate — flag the real wall-clock/token
-      cost estimate to the operator before running the full 9-tranche sweep live.
+- [x] ✅ **DONE 2026-07-30 — usable historical data DOES exist, no live benchmark needed.** Queried the AO `agents`
+      table directly via SSM (`registered_at`→`finished_at` per agent row, `exit_reason='lifecycle-complete'` only — a
+      clean per-worker duration, not conflated with other slots' concurrent unrelated work, since each row is scoped to
+      the one worker that owned it): - `ag_closeout_auditor` (9-concurrent-tranche dispatch): 9 completed samples, range
+      4.9–53.8 min, mean 33.1 min. Worst observed case is 45% of a 2-hour budget. - `na_eligibility_auditor` (also
+      9-concurrent-tranche): 9 completed samples, range 2.7–**87.5** min, mean 24.4 min. Worst observed case is 73% of a
+      2-hour budget — real margin, but noticeably less than `ag_closeout_auditor`'s; worth a periodic re-check rather
+      than treating this as settled, since these are 9 samples, not a large population, and the one outlier (87.5 min,
+      `agt-ae219c`) was independently observed this session to be doing genuine, heavy multi-phase work
+      (structured-output retries, sub-agent fan-out), not stuck — i.e. a real tail, not a measurement artifact. -
+      `docs_reconciler`: only 2 samples (6.6, 11.2 min) — too sparse to draw a real distribution from; not a 9-tranche
+      dispatch pattern like the other two, lower priority to backfill. Since these tranches run CONCURRENTLY (one worker
+      per tranche), the relevant "does 2 hours suffice" question is bounded by the SLOWEST tranche, not the sum — both
+      audited kinds comfortably clear a 2-hour block on every observed sample. Not run as a fresh live benchmark
+      (unnecessary cost given usable history already existed) — per the operator's own instruction to check AO's
+      existing data first.
 
 ### 6. Still-open from today's live CI-capacity incident (confirmed as in-scope by operator)
 
 From `/plans/active/issues/fleet_wide_qg_capacity_crisis_continues_day2_2026_07_29.md` (P1, still open):
 
-- [ ] [BACKEND] P2. Re-measure the protected-6 self-hosted repos' `ldr_qg_failure` retry-attempt counts via the AO
-      escalation API (`GET /api/escalations/active`, SSM) now that the host was resized + swap added — confirms whether
-      the 2026-07-29 operator ruling (stay self-hosted, re-measure before further change) is holding, or whether
-      46/78-attempt-style escalations are recurring.
-- [ ] [BACKEND] P2. Diagnose whether PM's `plan_health` escalation queue (44 active at last check, none resolving)
-      shares the `ldr_qg_failure` host-contention root cause, or whether a `plan_health` worker type simply isn't being
-      spawned/claiming slots at all — a structurally different failure mode from "slow due to contention".
+- [x] ✅ **DONE 2026-07-30 — both re-measured, both substantially IMPROVED (the slot-reserve-split appears to have
+      worked)**: - PM `plan_health` queue: **fully resolved**. Live query (`GET /api/escalations/active`) shows 11
+      recent `plan_health` escalations for `unified-trading-pm`, ALL `status=resolved`/`resolution=qg_v2_green`, ZERO
+      currently `dispatched`-and-stuck — a dramatic change from the "44 active, none resolving" baseline this todo was
+      filed against. - Protected-6 `ldr_qg_failure`: down from 47+ (day-2 baseline) to 17 fleet-wide, and the
+      high-attempt-count pattern (46/78-attempt escalations) is gone — remaining attempts are single digits to low
+      teens. The remaining activity is now concentrated on `instruments-service` specifically, which on investigation
+      turned out to be a DIFFERENT, separate, much bigger problem — see the new P0 issue immediately below, not a
+      continuation of the host-contention story this todo was tracking.
+- [ ] [OPERATOR] **NEW, P0 — GitHub Actions is down fleet-wide right now.** Found while investigating the
+      instruments-service `ldr_qg_failure` spike above: every workflow on every repo (including PM itself and
+      `deployment-ui`, an unrelated non-Python/non-self-hosted stack) is failing instantly with `startup_failure` and 0
+      jobs created — PM's own last 60 runs (2h12m span) are 60/60 `startup_failure`. Strong circumstantial evidence
+      (July Actions spend $1,112.69, matching the ~$1,150-1,200/mo baseline this account has hovered near) points at a
+      GitHub Actions spending-limit cap, but the actual limit value isn't readable via the API this session has
+      (`/users/{user}/settings/billing/actions` is deprecated, 410). Needs the operator to check
+      https://github.com/settings/billing directly — full writeup + evidence:
+      `/plans/active/issues/github_actions_total_fleet_outage_startup_failure_2026_07_30.md`. Pushed a notification
+      given the operator is away ~6h and this is the one thing this session cannot fix itself.
 
 ## Codex SSOTs
 
@@ -198,3 +236,16 @@ From `/plans/active/issues/fleet_wide_qg_capacity_crisis_continues_day2_2026_07_
   quality-gates green, ready to ship. Foreign WIP found + safely stashed (not shipped, not destroyed). Live-VM
   correction and the scheduled-task benchmark deliberately left as tracked todos rather than executed unilaterally,
   given their larger blast radius / cost.
+- **2026-07-30 (`/autonomous`, operator away ~6h, "finish everything")**: every remaining todo closed out. Reclaimed +
+  shipped the foreign pool-critical-halt WIP (`agent-orchestrator@b9d6190`). Rolled out the Cloud Build GAR-auth fix to
+  the 4 repos that needed it, each verified via a real post-ship Cloud Build trigger (not just local QG) — caught and
+  corrected my own process mistake along the way (a pre-ship "verification" build tests the remote branch, not local
+  uncommitted state; shipped first, then re-verified). Corrected the live-VM understanding (cap is 15, not 12; the
+  shipped code's own slot-count clamp already made the exact value non-binding) and restarted `orchestrator.service` to
+  guarantee the new code is active — confirmed healthy. Answered the scheduled-task benchmark from existing AO history,
+  no live re-run needed. Re-measured both open capacity-crisis todos — both substantially improved by the reserve-split.
+  Along the way found and fixed an unrelated, already-committed bug (literal unresolved git-conflict markers in
+  `scripts/quality-gates-base/base-service.sh`, breaking every PM TYPE-CHECK run) — resolved concurrently by another
+  session before my own fix landed, confirmed same resolution. Biggest finding: GitHub Actions is currently down
+  fleet-wide (likely a spending-limit cap) — filed as its own P0 issue doc, pushed a notification, left for the operator
+  since it needs their billing UI.
