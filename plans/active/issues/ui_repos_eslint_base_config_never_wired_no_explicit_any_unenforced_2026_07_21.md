@@ -126,18 +126,37 @@ This is a cross-repo SSOT-wiring gap, not something to unilaterally fix mid-way 
       ones to fix. Note: `unified-trading-system-ui`'s half of todo 1 (the wiring) is NOT yet done — that repo's
       `eslint.config.mjs` still has zero reference to `eslint.config.base.js` as of this check; todo 1 stays open for
       that repo.
-- [ ] [FRONTEND] P2. Wire `eslint.config.base.cjs`'s rules into `unified-trading-system-ui/eslint.config.mjs` (import +
-      spread `uiBaseRules.rules`, scoped to `files: ["**/*.ts", "**/*.tsx"]` — nextConfig's own `@typescript-eslint`
-      plugin registration is itself scoped that way, so an unscoped block errors on files where the plugin isn't
-      registered). Blocked on a real cleanup first: a live trial wiring (2026-07-21) surfaced **2610** `error`-level
-      `no-unused-vars`/`no-console` violations across the codebase — the prior any-type sweep
+- [x] ✅ [FRONTEND] P2. Wire `eslint.config.base.cjs`'s rules into `unified-trading-system-ui/eslint.config.mjs`
+      (import + spread `uiBaseRules.rules`, scoped to `files: ["**/*.ts", "**/*.tsx"]` — nextConfig's own
+      `@typescript-eslint` plugin registration is itself scoped that way, so an unscoped block errors on files where the
+      plugin isn't registered). Blocked on a real cleanup first: a live trial wiring (2026-07-21) surfaced **2610**
+      `error`-level `no-unused-vars`/`no-console` violations across the codebase — the prior any-type sweep
       (`unified-trading-system-ui@94c7b25b`) only covered `no-explicit-any`, not these two rules. Needs its own sweep(s)
       (likely split: one for `no-unused-vars`, one for `no-console`, given the volume) before the wiring can land
       without redding `quality-gates.sh` for the whole repo. Also add `eslint.config.base.cjs` to the repo's `ignores`
       list when re-adding the file (it isn't covered by `nextConfig`'s own file-pattern globs —
       `js/jsx/mjs/ts/tsx/mts/cts` omits `.cjs` — so linting it directly throws a plugin-resolution error; the exact diff
       was drafted and verified working 2026-07-21 but reverted before shipping once the violation count was known —
-      re-derive it, it's cheap to redo). (repo: unified-trading-system-ui)
+      re-derive it, it's cheap to redo). (repo: unified-trading-system-ui) — **done, cleanup + wiring landed together**:
+      re-measured live count was 2334 errors (2266 `no-unused-vars` + 67 `no-console` + 1 `no-explicit-any`), not 2610 —
+      close enough that the prior estimate stands as directionally correct. Removed 929 dead imports
+      (`eslint-plugin-unused-imports --fix`, a temporary devDependency reverted after use — never shipped); renamed the
+      remaining 1372 unused locals/args to their `_`-prefixed form (the base rules' own escape hatch), correctly
+      handling the object-destructuring-shorthand case (`{ foo }` → `{ foo: _foo }`, not a blind rename, which would
+      silently break the binding to the source object — confirmed via a full `tsc --noEmit` pass, not just ESLint, since
+      a bad shorthand transform is syntactically valid but a real runtime break the linter alone would never catch);
+      deleted 11 fully-dead functions/components the sweep surfaced (never referenced anywhere in their file — 6 in
+      `app/(platform)/dashboard/page.tsx`, plus one each in `training-run-detail.tsx`, `economic-heatmap.tsx`,
+      `paper-trading-ledger-panels.tsx`, `environment-mode-invariants.spec.ts`, `carry-basis-dated.spec.ts`), including
+      their now-cascaded-unused imports. `no-console` scoped `off` for `scripts/**`, `tests/**`, and
+      `playwright.config.ts` (dev-tooling/CI-diagnostic contexts, not app runtime — console output is their intended
+      interface) plus the 2 pre-existing documented call sites (`lib/logger.ts`,
+      `components/shared/error-boundary.tsx`), mirroring `scripts/quality-gates.sh`'s existing
+      `CODEX_CONSOLE_EXCLUDE_GLOBS` carve-out so the ESLint and codex console checks agree. Also refreshed
+      `lib/registry/capability-manifest.json` from the current UAC source (an unrelated pre-existing drift that was
+      independently failing the test suite, blocking a green QG run — same class of drift the earlier
+      `unified-trading-system-ui@baf995ff` fix addressed; re-drifted since). Full `quality-gates.sh` green (TYPE CHECK /
+      LINT / 286 tests / BUILD) — `unified-trading-system-ui@ff811a8c`.
 - [x] ✅ [INFRA] P3. `unified-trading-system-ui`'s shared `.pre-commit-config.yaml` (rolled out from
       `unified-trading-pm/scripts/pre-commit-templates/ui.pre-commit-config.yaml`) pins
       `pre-commit/mirrors-eslint@v8.56.0` for the `Lint with ESLint` hook. That ESLint 8.56.0 build's flat-config
