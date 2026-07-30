@@ -19,7 +19,7 @@ summary:
   the underlying race (DemoAuthProvider.restore()'s async `fetchAssignedSlotsFromStore` fetch vs. whatever route guard
   fires the redirect) needs a slot with normal host load to reproduce cleanly and fix at the source (e.g. block the
   guard's redirect decision on the restore-promise settling, not on a synchronous localStorage read)."
-status: open
+status: resolved
 nature: issue
 asset_group: [meta]
 stage: [meta]
@@ -39,7 +39,7 @@ execution_scope: orchestrator-agent
 assigned_role: ui_developer
 drift_direction: advance-code
 source: [ui_hardcoded_colour_and_localhost_debt_2026_07_21-batch5-retroactive-evidence]
-resolved_by:
+resolved_by: unified-trading-system-ui@5612c9cb
 locked_by:
 depends_on: []
 ---
@@ -102,11 +102,11 @@ otherwise-idle attempt sequence, which is concerning for CI trustworthiness if C
 
 ## Todos
 
-- [ ] [ENGINEER] P2. Root-cause + fix the `DemoAuthProvider`/route-guard async race that lets an admin-gated
+- [x] ✅ [ENGINEER] P2. Root-cause + fix the `DemoAuthProvider`/route-guard async race that lets an admin-gated
       `(platform)` route redirect to `/login` despite a correctly-seeded `portal_user`/`portal_token` persona, per the
       4-step recommended fix above. Re-verify `tests/smoke/research-real-data.smoke.spec.ts` and
       `tests/smoke/trading-predictions-colour-migration.smoke.spec.ts` (both pre-existing, both reproduced failing here)
-      pass reliably afterward.
+      pass reliably afterward. — unified-trading-system-ui@5612c9cb
 
 ## Codex SSOTs
 
@@ -118,3 +118,16 @@ otherwise-idle attempt sequence, which is concerning for CI trustworthiness if C
   bounded/deterministic-outcome work, no operator gate or live judgment call found; flipped
   `assigned_vm: NA -> planning`. Conflict-check run against all active `assigned_vm: planning` docs in this doc's
   `parent_epic` + the infra tranche's consolidated-closeout digest: zero/milestone-only overlap, clear to proceed.
+- **2026-07-30 (slot-6)**: RESOLVED. Root cause: `DemoAuthProvider.onAuthStateChanged()` (`lib/auth/demo-provider.ts`)
+  was a no-op stub that never called back — so `AuthContext`'s `loading` flag (`hooks/use-auth.tsx`) only cleared via a
+  synchronous `getUser()` check racing `restore()`'s async fetch (almost always loses on first mount, since `restore()`
+  always yields at its first `await`) or a blind 3s `setTimeout`. `RequireAuth` (`components/shell/require-auth.tsx`)
+  itself was already correct (`if (!loading && !user)` — never redirects while `loading`), so the fix was entirely in
+  `DemoAuthProvider`: added a listener set + a `restored` flag; `restore()`'s `finally` block now notifies subscribers
+  with the resolved user regardless of how long the fetch takes, matching the pattern `FirebaseAuthProvider` already
+  used correctly via real `onAuthStateChanged`. `onAuthStateChanged` on late-subscribe now also fires immediately if
+  `restore()` already settled. Verified: `tests/smoke/research-real-data.smoke.spec.ts` +
+  `tests/smoke/trading-predictions-colour-migration.smoke.spec.ts` (the two specs this doc names as reproducing the
+  failure) — 10/10 passed across two runs (`--repeat-each=2` then a plain run), zero retries, at host load 5-30 on this
+  10-core machine (comparable to the incident's measured 13-65). typecheck/lint/unit/build all green
+  (`.qg_last_passed_sha` on `unified-trading-system-ui@5612c9cb`). Shipped via quickmerge.
