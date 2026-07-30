@@ -221,6 +221,31 @@ baselines are drafted, ungated, as candidates 3/4 of `cefi_consolidated_native_a
 checkpoints (timing-coupled to the backfill) are in the forked
 `cefi_track2_coverage_backfill_checkpoints_2026_07_25.md`.
 
+**Reconciled 2026-07-30** (finalize-001, slot 10) — 3 of 5 sub-checkpoints have genuine, verified evidence; the
+POST-BACKFILL pair does NOT (the backfill VM was preempted mid-run, see below) and stays unflipped:
+
+- [x] ✅ [DATA] P1. **Resume the coverage backfill** — DONE 2026-07-27 (slot-6). Launched
+      `cefi-queue-heavy-binancefutu-x17-20260727-210013` (SPOT, N=1 Tardis cap satisfied), confirmed RUNNING with
+      progress climbing over 2+ checks. Full evidence: `cefi_track2_coverage_backfill_checkpoints_2026_07_25.md` todo 1.
+- [x] ✅ [DATA] P1. **MID-BACKFILL `/data-pipeline-check-is` checkpoint** — DONE 2026-07-28 (slot-6). Report:
+      `instruments-service/pipeline_e2e_check_reports/data_pipeline_e2e_check_is_2026_03_15.md` (run date 2026-03-15;
+      live-leg `total=26 passed=21 failed=1 ambiguous=0 skipped=4`, 1 genuine gap filed as
+      `issues/cefi_coinbase_cde_urdi_zero_records_2026_07_28.md`). Full evidence: gating plan todo 2.
+- [x] ✅ [DATA] P1. **MID-BACKFILL `/data-pipeline-check-mtds` checkpoint** — DONE 2026-07-28 (slot-6). Report:
+      `plans/audit/results/data_pipeline_e2e_check_mtds_2026_03_15.md` (run date 2026-03-15; root-caused failures to a
+      launcher guard scoping bug, filed as
+      `issues/mtds_backfill_launcher_guard_overapplies_to_nontardis_venues_2026_07_28.md`, not a data-correctness
+      regression). Full evidence: gating plan todo 3.
+- [ ] [DATA] P1. **POST-BACKFILL `/data-pipeline-check-is` final gate** — **NOT DONE.** The backfill VM was **preempted
+      2026-07-28T10:51 UTC** at only ~2.3% of the target span (`compute.instances.preempted`, confirmed via
+      `gcloud compute operations list`); no relaunch has occurred since. Running this gate against a 2.3%-complete, dead
+      backfill would misrepresent it as finished — declined per the data-pipeline-correctness HARD RULE. See
+      `issues/cefi_track2_backfill_vm_preempted_no_recovery_2026_07_30.md` for the relaunch todo.
+- [ ] [DATA] P1. **POST-BACKFILL `/data-pipeline-check-mtds` final gate + new coverage %** — **NOT DONE**, same blocker
+      as above. **No new coverage % supersedes the archived 50.79%** — that measurement is gated on this checkpoint
+      genuinely running post-completion. (The 2026-07-27 pre-launch baseline, 44.96%, is NOT the post-backfill number
+      and should not be cited as one.)
+
 ## Track 3 — Manifest completeness axis (SEPARATE from id-format) · P1
 
 - **Source**: `data_completion_cefi_2026_07_15.md` — a DIFFERENT canonicalization axis: manifest `pipeline_mode`
