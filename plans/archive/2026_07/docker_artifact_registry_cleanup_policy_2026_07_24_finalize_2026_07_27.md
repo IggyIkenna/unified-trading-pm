@@ -1,30 +1,30 @@
 ---
 doc_type: plan
 title: >-
-  mdps_candle_manifest_population_disconnect_2026_07_25 — finalize (reconcile + archive gate)
+  docker_artifact_registry_cleanup_policy_2026_07_24 — finalize (reconcile + archive gate)
 summary: >-
-  Gated closeout for mdps_candle_manifest_population_disconnect_2026_07_25.md -- machine-held via depends_on +
+  Gated closeout for docker_artifact_registry_cleanup_policy_2026_07_24.md -- machine-held via depends_on +
   gate_on_depends: true until all of that plan's todos are done. Reconciles the source doc's own checkboxes/prose once
   its AO-dispatched todos ship (citing each landing commit), then archives it via the standard 6-step ritual once fully
   closed. Authored 2026-07-27 as part of na_docs_validity_and_ao_eligibility_audit_2026_07_26.md's Phase 1
   reclassification pass, per task_template.md's finalize-plan-coverage rule (every assigned_vm:planning plan needs a
   companion gated finalize plan).
-status: draft
+status: complete
 nature: process
-asset_group: [cefi, defi, tradfi, prediction]
+asset_group: [infrastructure]
 stage: [meta]
 repos: [unified-trading-pm]
 scope: [engineer, admin]
 tags: [ao-dispatch, close-out, reclassification, na-audit]
 related:
   [
-    /plans/active/mdps_candle_manifest_population_disconnect_2026_07_25.md,
+    /plans/archive/2026_07/docker_artifact_registry_cleanup_policy_2026_07_24.md,
     /plans/active/na_docs_validity_and_ao_eligibility_audit_2026_07_26.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]
 created: "2026-07-27"
 last_updated: "2026-07-27"
-parent_epic: mtds_mdps_master
+parent_epic: infrastructure_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
 priority: P2
@@ -35,28 +35,36 @@ locked_by:
 locked_since:
 supersedes:
 superseded_by:
-depends_on: [mdps_candle_manifest_population_disconnect_2026_07_25]
+depends_on: [docker_artifact_registry_cleanup_policy_2026_07_24]
 gate_on_depends: true
 source: >-
   na_docs_validity_and_ao_eligibility_audit_2026_07_26.md Phase 1 (2026-07-27) --
-  mdps_candle_manifest_population_disconnect_2026_07_25.md was reclassified assigned_vm:NA -> planning after verifying
-  its remaining open todos are bounded/deterministic and conflict-free against currently-active AO plans; this finalize
-  doc closes the finalize-plan-coverage gate the reclassification itself triggered.
-assigned_role: data_engineering
+  docker_artifact_registry_cleanup_policy_2026_07_24.md was reclassified assigned_vm:NA -> planning after verifying its
+  remaining open todos are bounded/deterministic and conflict-free against currently-active AO plans; this finalize doc
+  closes the finalize-plan-coverage gate the reclassification itself triggered.
+assigned_role: infra
 drift_direction: advance-code
 ---
 
-# mdps_candle_manifest_population_disconnect_2026_07_25 — finalize
+# docker_artifact_registry_cleanup_policy_2026_07_24 — finalize
+
+> **🗄️ ARCHIVED 2026-07-29** — gate satisfied: the parent was already archived (`status: complete`, 0 open todos,
+> banner-verified directly) before this finalize plan's todo ran. This finalize plan's own reconcile-then-archive action
+> is moot for the parent (already done) — archiving this finalize doc completes the loop. Archived per
+> /codex/12-agent-workflow/plan-completion-and-archival-discipline.md.
 
 > **STATUS: `draft` — NOT dispatched.** Flips to `active` only once the gated plan's todos are done (or on explicit
 > operator direction to start reconciling early). Machine-gated via `depends_on` + `gate_on_depends: true`.
 
 ## Todos
 
-- [ ] [REVIEW] P2. **Reconcile `mdps_candle_manifest_population_disconnect_2026_07_25.md`'s checkboxes** against
+- [x] ✅ [REVIEW] P2. **DONE 2026-07-29 — parent already archived by a sibling process, verified not just assumed.**
+      Confirmed `plans/archive/2026_07/docker_artifact_registry_cleanup_policy_2026_07_24.md` carries
+      `status:     complete`, 0 open `- [ ]` todos, and its own archival banner. Nothing left to reconcile. Archived
+      this finalize plan itself. Reconcile `docker_artifact_registry_cleanup_policy_2026_07_24.md`'s checkboxes against
       whatever shipped -- flip each `- [ ]` to `- [x]` citing the landing commit(s), confirm no residual work was
       missed, then run the standard 6-step archival ritual (migrate DEFERRED items, banner, codex-alignment check,
       update any CLAUDE.md/codex pointer on a new contract, update every referrer's path corpus-wide, clear lock) if the
       plan is fully closed. If real work remains after the AO-dispatched todos land, leave
-      `mdps_candle_manifest_population_disconnect_2026_07_25.md` active (do not force-archive) and note what's still
-      open here instead.
+      `docker_artifact_registry_cleanup_policy_2026_07_24.md` active (do not force-archive) and note what's still open
+      here instead.

@@ -9,7 +9,7 @@ summary: >-
   2026-07-27 as part of na_docs_validity_and_ao_eligibility_audit_2026_07_26.md's Phase 1 reclassification pass, per
   task_template.md's finalize-plan-coverage rule (every assigned_vm:planning plan needs a companion gated finalize
   plan).
-status: draft
+status: complete
 nature: process
 asset_group: [prediction, cefi]
 stage: [meta]
@@ -48,14 +48,22 @@ drift_direction: advance-code
 
 # is_daily_enum_capture_heal_2026_07_07 — finalize
 
+> **🗄️ ARCHIVED 2026-07-29** — gate satisfied: the parent was already archived (`status: complete`, 0 open todos,
+> banner-verified directly) before this finalize plan's todo ran. This finalize plan's own reconcile-then-archive action
+> is moot for the parent (already done) — archiving this finalize doc completes the loop. Archived per
+> /codex/12-agent-workflow/plan-completion-and-archival-discipline.md.
+
 > **STATUS: `draft` — NOT dispatched.** Flips to `active` only once the gated plan's todos are done (or on explicit
 > operator direction to start reconciling early). Machine-gated via `depends_on` + `gate_on_depends: true`.
 
 ## Todos
 
-- [ ] [REVIEW] P2. **Reconcile `is_daily_enum_capture_heal_2026_07_07.md`'s checkboxes** against whatever shipped --
-      flip each `- [ ]` to `- [x]` citing the landing commit(s), confirm no residual work was missed, then run the
-      standard 6-step archival ritual (migrate DEFERRED items, banner, codex-alignment check, update any CLAUDE.md/codex
-      pointer on a new contract, update every referrer's path corpus-wide, clear lock) if the plan is fully closed. If
-      real work remains after the AO-dispatched todos land, leave `is_daily_enum_capture_heal_2026_07_07.md` active (do
-      not force-archive) and note what's still open here instead.
+- [x] ✅ [REVIEW] P2. **DONE 2026-07-29 — parent already archived by a sibling process, verified not just assumed.**
+      Confirmed `plans/archive/2026_07/is_daily_enum_capture_heal_2026_07_07.md` carries `status: complete`, 0 open
+      `- [ ]` todos, and its own archival banner. Nothing left to reconcile. Archived this finalize plan itself.
+      Reconcile `is_daily_enum_capture_heal_2026_07_07.md`'s checkboxes against whatever shipped -- flip each `- [ ]` to
+      `- [x]` citing the landing commit(s), confirm no residual work was missed, then run the standard 6-step archival
+      ritual (migrate DEFERRED items, banner, codex-alignment check, update any CLAUDE.md/codex pointer on a new
+      contract, update every referrer's path corpus-wide, clear lock) if the plan is fully closed. If real work remains
+      after the AO-dispatched todos land, leave `is_daily_enum_capture_heal_2026_07_07.md` active (do not force-archive)
+      and note what's still open here instead.
