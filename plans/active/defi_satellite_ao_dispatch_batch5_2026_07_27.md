@@ -75,6 +75,14 @@ operator approval.
 
 ## Todos
 
+- [x] ⛔ [DATA] P1. **MOVED to Conflict-gated item 3 below (BLOCKED-OPERATOR-DECISION) — 2026-07-30, slot-12.** Was:
+      "Run `/data-pipeline-check-is` and `/data-pipeline-check-mtds` 3x each across the defi asset_group." Both skills'
+      SKILL.md § 0 forbid synthesizing `--day`; filed `/blocked` (`BLK-b5b0e61a`, duplicate of standing `BLK-d355f03a`
+      already independently raised by slots 4 and 5); operator ruled **C** — park, do not invent a day. **No dated runs
+      were performed; this checkbox marks the triage disposition, not the audit as complete.** See Conflict-gated item 3
+      for the full detail; the substantive todo returns to this list once the operator names the baseline/mid/final
+      day(s).
+
 - [ ] [DATA] P3. For a representative sample of shards from the 5 affected pool-heavy DEX venues (PANCAKESWAP_V3-BSC,
       UNISWAP_V3-OPTIMISM, UNISWAP_V3-POLYGON, UNISWAP_V4-ETHEREUM, PANCAKESWAP_V3-BASE), load each flat-shape
       instrument_availability `instruments.parquet` and, for every set of rows sharing a duplicate `instrument_key`
