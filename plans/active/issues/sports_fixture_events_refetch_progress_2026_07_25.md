@@ -505,3 +505,16 @@ guidance — "do not bother re-probing before `2026-07-30T00:00Z`"). Current tim
 VM running, nothing new to observe. Releasing via `/skip-current-task {"reason_code": "GATED"}` without a redundant
 probe. Next dispatch: unchanged from the 20:14Z entry — wait for `2026-07-30T00:00Z`, then re-probe once and relaunch
 WITHOUT `--force` on a clean response.
+
+**RESET CONFIRMED + RELAUNCHED 2026-07-30T00:03Z-00:20Z (interactive session, operator-present, `/autonomous`)**: probed
+right at the predicted `00:00Z` reset window — clean response (`errors: []`,
+`response.requests: {current: 12, limit_day: 150000}`), confirming the launcher comment's `00:00 UTC` daily-reset claim
+precisely. Verified both fixes (`instruments-service@5a6deafd`, `unified-api-contracts@f3ae871c`) still ancestors of
+current HEAD before relaunching. Tarballs already fresh for instruments-service/deployment-service (unchanged since last
+publish); UAC drifted one commit further (`f909e112` deployed vs `c92cf03499c4` HEAD) between the tarball check and the
+actual launch — confirmed `f3ae871c` still an ancestor of the deployed `f909e112` sha before proceeding (safe, unrelated
+newer commit). Relaunched WITHOUT `--force` per the established plan: `af-backfill-20260730-012007`,
+`--entity FIXTURE_EVENTS --recovery-fixture-ids gs://.../recovery_fixture_ids.parquet 2020-06-06 2026-07-25` (no
+`--force`) — skip-if-fresh will naturally retry every `attempted_failed` cell from yesterday's quota exhaustion plus
+continue the ~13 remaining days. Verifying it's running cleanly now; will monitor to genuine completion, then re-census,
+then move to the queued FIXTURE_STATS/FIXTURE_LINEUPS all-leagues backfill.
