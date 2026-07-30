@@ -135,7 +135,7 @@ and are correct under both outcomes; todo 3 sets the eventual target.
       named list rather than 30 rows). This todo is required under EITHER outcome of todo 3. (repo:
       market-tick-data-service) — market-tick-data-service@409ee88f. Re-measured at correction time (counts unchanged:
       237 files / 658 comments); §2.3 now itemizes both by directory bucket with regen grep commands.
-- [ ] [CODE] P2. **Add a freeze-and-shrink ratchet to `market-tick-data-service/scripts/quality-gates.sh`** for both
+- [x] ✅ [CODE] P2. **Add a freeze-and-shrink ratchet to `market-tick-data-service/scripts/quality-gates.sh`** for both
       patterns (blanket file-level pyright headers via a grep/AST count of `^# pyright: report\w+=false` lines; inline
       `# type: ignore` via a grep count), mirroring the existing `BE_EXCLUDE_GLOBS` / `FUNCTION_SIZE_EXTRA_EXCLUDES` /
       `ASYNCIO_RUN_EXCLUDE_GLOBS` ratchet mechanism (freeze current counts as the baseline — 237 files / 658 comments as
@@ -143,7 +143,7 @@ and are correct under both outcomes; todo 3 sets the eventual target.
       the gate on any INCREASE, never require a decrease to ship). This closes the "basedpyright clean proves less than
       it should" gap immediately regardless of the operator's todo-3 answer: even if vendor-glue suppressions get
       sanctioned, net-new UNSANCTIONED ones should still be gated to 0 per the codex's own existing rule. (repo:
-      market-tick-data-service)
+      market-tick-data-service) — market-tick-data-service@d072b035.
 - [ ] [OPERATOR] P3. **Choose the durable policy direction** for the 237-file / 658-comment inventory once todos 1-2
       ship: (a) drive it toward zero as genuine codex enforcement (a real type-safety recovery project — likely large,
       since it's 54% of the repo, and would need its own follow-up plan with a scoped rollout), OR (b) formally ACCEPT
@@ -166,3 +166,18 @@ and are correct under both outcomes; todo 3 sets the eventual target.
   tables (blanket-header files + inline-ignore occurrences), each grouped by directory bucket, plus the two regen grep
   commands so future re-measurement doesn't require re-deriving the query. Todos 2 (ratchet) and 3 (operator policy
   call) remain open — not in this task's scope.
+- **2026-07-30 (backend_engineer, slot 5)**: Todo 2 shipped — market-tick-data-service@d072b035. Re-measured both counts
+  fresh at implementation time (`grep -rl "^# pyright: report" market_tick_data_service/ | wc -l` → still 237;
+  `grep -rn "# type: ignore" --include="*.py" . | grep -v .venv | wc -l` → still 658, no drift). Added STEP 5.94
+  (blanket file-level pyright-suppression header freeze-and-shrink ratchet, baseline=237 files) and STEP 5.95 (inline
+  `# type: ignore` freeze-and-shrink ratchet, baseline=658 occurrences) directly to
+  `market-tick-data-service/scripts/quality-gates.sh`, mirroring this file's own local grep-based STEP-block style (STEP
+  5.92/5.93) rather than the shared `unified-trading-pm/scripts/quality-gates-base/base-service.sh` YAML-baseline
+  mechanism, since this todo is scoped to the one repo only. Both fail the gate on any count increase above the frozen
+  baseline; a decrease only warns (ratchet the baseline number down in the script, never raise it). Verified both PASS
+  at the frozen baselines in a full local `quality-gates.sh` run (267s, all green, sentinel=d072b035) before shipping.
+  Note: this repo's local STEP numbering already collided with `base-service.sh`'s own STEP 5.92/5.93 before this
+  change: my new local 5.94/5.95 similarly duplicate the labels of `base-service.sh`'s STEP 5.94 (fallback-import
+  ratchet) and STEP 5.95 (DTZ/TID251 ratchet), which also run in the same QG pass — cosmetically confusing in the log
+  (two different checks both print "STEP 5.94"/"STEP 5.95") but functionally harmless, and consistent with this file's
+  pre-existing convention. Todo 3 (operator policy call) remains open, not in this task's scope.
