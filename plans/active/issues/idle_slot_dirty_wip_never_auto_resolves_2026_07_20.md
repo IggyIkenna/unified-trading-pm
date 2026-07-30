@@ -279,3 +279,9 @@ Review (agt-c83ba7, msg 2013, 13:08Z) flagged and main (agt-52bb99) verified rea
   skill's non-batchable taxonomy warns about'); the 4 per-slot recovery todos are in the operator-decision list ('each
   needs foreign-worktree access plus a judgment call on whether specific commits are superseded'). Slot-6's 2 dangling
   GMX objects are GC-eligible ~2026-08-08 — see the orphaned-commit-recovery issue doc filed by this run.
+- **2026-07-30 (plans-corpus-reduction-marathon wave 4)**: re-triaged, no action taken. The 2 remaining open todos
+  (`[BACKEND] P2` add a periodic dirty-resolution sweep + extend it to committed-but-unpushed commits) are exactly the 2
+  already-adjudicated `conflict-gated` items from the na-eligibility-audit entry above — adding a new automatic caller
+  into agent-orchestrator's own live respawn/dirty-resolution path while an unresolved operator-merge-gate bypass exists
+  is explicitly the non-batchable compounding class this workspace's audits are built to catch, not a bounded code fix.
+  Correctly skipped, consistent with the standing verdict — no new work done.

@@ -143,3 +143,12 @@ again) never triggers it. Nothing currently reminds an operator/agent to re-run 
 - None directly own cgroup resource-control drop-ins. If todo 2 ships, consider whether
   `/codex/05-infrastructure/vm-launcher-runbook.md` or a runtime-topology doc should note the self-healing rescale
   mechanism, so a future EC2 instance-type change doesn't need tribal-knowledge re-discovery.
+
+## Progress Log
+
+- **2026-07-30 (plans-corpus-reduction-marathon wave 4)**: re-triaged, no action taken. The remaining `[REVIEW] P3` todo
+  ("consider whether... dashboard/alerting should also surface MemoryAvailable/cgroup-vs-host RAM mismatch") is phrased
+  as an open judgment call, not a bounded fix, and the concrete implementation would cross both agent-orchestrator's
+  backend (a new cgroup-v2 memory-stat reader in `host_resources.py`, extending the `/ws/vm-resources` push contract)
+  and deployment-ui's frontend (a new dashboard tile, which per this workspace's `[UI]` gate needs a `pw:L2 ✓`
+  regression spec) — real feature-sized, cross-repo work, not a 20-minute follow-up. Correctly skipped.

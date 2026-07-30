@@ -164,3 +164,8 @@ rows, that's a separate write-path bug to diagnose via its logs.
   completed; recommend Track 1's owner re-check this on their next pass, since the oracle-prices/evm-defi/
   solana-defi/dex-pools pause stays open indefinitely until R3+R4 clear. No code changes required — this was a
   diagnosis-and-documentation correction, not a bug fix.
+- **2026-07-30 (plans-corpus-reduction-marathon wave 4)**: re-triaged, no action taken. Todos 1+2 were already resolved
+  by slot-16 above. The 1 remaining todo (fix the stale referrer in `lst_rate_honest_coverage_2026_07_21.md`) is
+  genuinely gated — that file is 1001 lines, 1 over the `check_line_caps.sh` hard cap with no baseline exemption for a
+  touched file, so the referrer edit cannot land until the plan is trimmed below the cap first. Deciding what content is
+  safe to cut from an active 1000+-line plan is a judgment call, not a mechanical fix — correctly skipped.

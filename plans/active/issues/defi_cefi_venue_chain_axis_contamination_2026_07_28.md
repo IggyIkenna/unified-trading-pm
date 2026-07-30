@@ -149,33 +149,39 @@ in this read-only audit pass (time-bounded scope).
       the SAME bug _class_ as the already-fixed EXTENDED-STARKNET/LIGHTER-ZKSYNC "-CHAIN-suffix" split
       (`instruments_cefi_g1_g5_gate_execution_2026_07_24.md`), hitting the "-FUTURES" venue family this time instead of
       an on-chain-perp-CLOB chain suffix. **Splitter location FOUND (slot-15, concurrent session, see Progress Log
-      below) — it is NOT MTDS-side as this entry originally guessed; it's `instruments-service/scripts/
-      migration_orphan_sweep.py:253`'s `shard_key_from_segments()`, missing the `_KNOWN_DEFI_CHAINS` allowlist guard its
-      sibling `market-tick-data-service/scripts/rebuild_defi_manifest.py` already has.** Timestamp reconciliation:
-      this entry's `day=2026-05-16..22` is the ORIGINAL CAPTURE date (from the GCS path partition); the concurrent
-      trace's `written_at=2026-07-24T20:06:38` is the LATER MANIFEST-REGISTRATION timestamp (from
-      `backfill_orphan_class_e.py` sweeping + registering these already-misplaced objects into the manifest, corrupting
-      venue/chain in the process) — the two are consistent, not contradictory: same underlying 35 objects, two
-      different lifecycle timestamps. Not independently re-verified that these are literally the SAME 35 rows (both
-      traces used different query methods) — flagged for whoever executes the fix to spot-check before relying on it.
-- [ ] [DATA] P2. **Scope now much narrower than "fix + re-stamp the whole finding":** (a) **fix
-      `instruments-service/scripts/migration_orphan_sweep.py:253`** — add the missing `_KNOWN_DEFI_CHAINS`-allowlist
-      guard before the unconditional `venue, _sep, chain = venue.partition("-")` split (mirror
-      `market-tick-data-service/scripts/rebuild_defi_manifest.py`'s existing guard exactly) — this is a pure
-      forward-looking code fix, no `--apply` needed, repo: instruments-service (corrected from this entry's original
-      "MTDS-side" guess); (b) decide + execute cleanup of the ~35-42-row / 7-venue / 1-week (2026-05-16→2026-05-22)
-      DUPLICATE CeFi objects physically stored in the DeFi bucket (`market-data-tick-defi-prd-...`) — **[OPERATOR]**
-      requires sign-off per delete-safety-protocol before any GCS delete/move (the na-eligibility-audit's 2026-07-30
-      CONTESTED VERDICT below already flagged this exact gap); confirm row-for-row duplication (not just
-      prefix-existence) against the cefi bucket copy FIRST, AND re-run `backfill_orphan_class_e.py`'s registration
-      logic mentally/in a dry-run against the fixed splitter to confirm the manifest rows self-correct on the next
-      sweep rather than needing a separate re-stamp; (c) decide whether `gas_fees`'s venue==chain shape
-      (candidate-class-1 finding, NOT cross-AG, NOT a writer bug in the "wrong data" sense) needs a `("venues","defi")`
-      accepted-exception registry entry (mirroring `_ACCEPTED_EXCEPTIONS` in
-      `deployment-api/deployment_api/routes/data_status/_distinct_values.py`) so it stops badging as drift, OR a schema
-      change to leave `venue=""` for chain-only data_types — this is a design decision, not a bug fix, and belongs to
-      whoever owns the gas_fees writer + the distinct-values panel's exception policy. Source: this doc,
-      na-eligibility-audit 2026-07-30 tranche=defi CONTESTED VERDICT below.
+      below) — it is NOT MTDS-side as this entry originally guessed; it's
+      `instruments-service/scripts/     migration_orphan_sweep.py:253`'s `shard_key_from_segments()`, missing the
+      `_KNOWN_DEFI_CHAINS` allowlist guard its sibling `market-tick-data-service/scripts/rebuild_defi_manifest.py`
+      already has.** Timestamp reconciliation: this entry's `day=2026-05-16..22` is the ORIGINAL CAPTURE date (from the
+      GCS path partition); the concurrent trace's `written_at=2026-07-24T20:06:38` is the LATER MANIFEST-REGISTRATION
+      timestamp (from `backfill_orphan_class_e.py` sweeping + registering these already-misplaced objects into the
+      manifest, corrupting venue/chain in the process) — the two are consistent, not contradictory: same underlying 35
+      objects, two different lifecycle timestamps. Not independently re-verified that these are literally the SAME 35
+      rows (both traces used different query methods) — flagged for whoever executes the fix to spot-check before
+      relying on it.
+- [x] ✅ [DATA] P2 (a). **DONE 2026-07-30 — `instruments-service@f651ff8b`.** Fixed
+      `instruments-service/scripts/migration_orphan_sweep.py::shard_key_from_segments()` — added an allowlist guard
+      before the unconditional `venue, _sep, chain = venue.partition("-")` split. Used UAC's own
+      `unified_api_contracts.registry.chain_env.MAINNET_CHAIN_IDS` as the allowlist (already imported elsewhere in this
+      same repo, e.g. `scripts/enumerate_expected_universe.py`) rather than duplicating a second local
+      `_KNOWN_DEFI_CHAINS` frozenset copy of MTDS's — same guard semantics the doc asked to mirror, one fewer
+      hand-maintained vocabulary. Regression test added
+      (`test_defi_venue_chain_split_guarded_against_unknown_chain_suffix`) pinning the exact `BITGET-FUTURES` →
+      `venue="BITGET-FUTURES", chain=""` (unsplit) behavior; existing `test_defi_combined_venue_chain_split`
+      (`EIGENLAYER-ETHEREUM` → split) still passes unchanged. Full `quality-gates.sh` green.
+- [ ] [OPERATOR] [DATA] P2 (b)+(c) remaining, split out from the original combined todo above (part (a) is done): (b)
+      decide + execute cleanup of the ~35-42-row / 7-venue / 1-week (2026-05-16→2026-05-22) DUPLICATE CeFi objects
+      physically stored in the DeFi bucket (`market-data-tick-defi-prd-...`) — **[OPERATOR]** requires sign-off per
+      delete-safety-protocol before any GCS delete/move (the na-eligibility-audit's 2026-07-30 CONTESTED VERDICT below
+      already flagged this exact gap); confirm row-for-row duplication (not just prefix-existence) against the cefi
+      bucket copy FIRST — note the fix in (a) makes the manifest self-correcting on the NEXT
+      `backfill_orphan_class_e.py` sweep, so this remaining part is scoped to the physical GCS duplicate-object cleanup
+      only, not a manifest re-stamp; (c) decide whether `gas_fees`'s venue==chain shape (candidate-class-1 finding, NOT
+      cross-AG, NOT a writer bug in the "wrong data" sense) needs a `("venues","defi")` accepted-exception registry
+      entry (mirroring `_ACCEPTED_EXCEPTIONS` in `deployment-api/deployment_api/routes/data_status/_distinct_values.py`)
+      so it stops badging as drift, OR a schema change to leave `venue=""` for chain-only data_types — this is a design
+      decision, not a bug fix, and belongs to whoever owns the gas_fees writer + the distinct-values panel's exception
+      policy. Source: this doc, na-eligibility-audit 2026-07-30 tranche=defi CONTESTED VERDICT below.
 - [ ] [OPERATOR] P2. **Contested cross-AG architecture question**:
       `features-service/features_service/cefi/calculators/perp_funding_corpus.py:254-255` deliberately writes
       CEFI-tagged (`asset_group="cefi"` in the row, `_OUT_ASSET_GROUP`) perp-funding-corpus data into the SHARED
@@ -185,9 +191,9 @@ in this read-only audit pass (time-bounded scope).
       means any generic manifest/orphan-sweep tool run with `--asset-group defi` against that shared bucket will
       encounter cefi-tagged objects and — per the cross-AG finding above — mis-handle them unless it's cefi-aware.
       Confirm with the operator whether this shared-bucket-cross-tagging design is still wanted (vs. e.g. a dedicated
-      cross-cutting bucket `CanonicalPerpFundingProvider` reads from instead), since it is the root ARCHITECTURAL
-      reason this bug class is even possible — fixing `migration_orphan_sweep.py` closes THIS instance but not the
-      underlying hazard. Not a worker-resolvable design call.
+      cross-cutting bucket `CanonicalPerpFundingProvider` reads from instead), since it is the root ARCHITECTURAL reason
+      this bug class is even possible — fixing `migration_orphan_sweep.py` closes THIS instance but not the underlying
+      hazard. Not a worker-resolvable design call.
 
 ## Progress Log
 
@@ -290,3 +296,8 @@ in this read-only audit pass (time-bounded scope).
   doc's own pre-existing scope boundary and the CONTESTED VERDICT's `[OPERATOR]` gate above. See the rewritten P2 todo
   for the 3-part remaining scope (MTDS splitter fix / duplicate-object cleanup pending operator sign-off / gas_fees
   accepted-exception design decision).
+- **2026-07-30 (plans-corpus-reduction-marathon wave 4)**: shipped part (a) of the P2 fix —
+  `instruments-service@f651ff8b` (the actual splitter location, `migration_orphan_sweep.py`, not MTDS — corrected from
+  an earlier note in this doc that guessed MTDS-side). Parts (b) (physical GCS duplicate-object cleanup) and (c)
+  (gas_fees accepted-exception design decision) remain, both correctly gated (operator sign-off / design call) — doc
+  stays active/open, not archivable yet. The separate `[OPERATOR] P2` contested-architecture todo also remains open.

@@ -122,3 +122,10 @@ enforces the equivalent for Cloud Build SHAs; the same integrity expectation app
       `plans/archive/issues/mtds_empty_string_fallback_baseline_drift_2026_07_30.md` `resolved_by` and both todo
       citations rewritten with the real SHAs (`41372139` for item 1, `00c2cfe4` for item 2) and an explicit correction
       note. Repo: unified-trading-pm.
+
+## Progress Log
+
+- **2026-07-30 (plans-corpus-reduction-marathon wave 4)**: re-triaged, no action taken. Both remaining todos are
+  correctly gated: todo 1 is explicitly `[OPERATOR]` P1 (review whether isolated incident or a broader pattern); todo 2
+  is conditional on todo 1's outcome ("If a process fix is directed..."). Neither is a worker-resolvable bounded fix —
+  left open for operator review.
