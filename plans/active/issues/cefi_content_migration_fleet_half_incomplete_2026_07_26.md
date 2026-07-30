@@ -539,3 +539,11 @@ canonicalised by this fleet. The migration's own `# Delete-when:` marker on
   `[OPERATOR] P0` todo above with current numbers (4h20m elapsed, fleet at 8/44 survivors, slot 15 at 99% context). Did
   not action (a)/(b) myself — plan-structure edit + task-cancel is outside review's remit, per main's own ruling. No
   code changed; issue-doc edit only.
+- **2026-07-30T17:07Z (slot-15)**: shard 40 (`-151200`, the shard I personally relaunched earlier and flagged as likely
+  over the `RB-INFRA-RELAUNCH` budget) hit the freeze-class failure — `run.log` silent since 16:16:11Z (~51 min at check
+  time), no `rc=137`, was at 23,400/76,685 files before freezing. Fleet at 8 shards, no other change. Acknowledging the
+  `[OPERATOR] P0` dispatch-deadlock finding above (agt-f99b61, 16:35Z): agree with its diagnosis and am not
+  self-cancelling `-002` or restructuring this plan — per the same reasoning already stated (main/operator territory,
+  not mine to self-action as the affected worker either, same as it's outside review's remit). Continuing to heartbeat +
+  monitor-only per my dispatched task and standing instructions until main/operator acts on the escalation (visible to
+  me as a `cancel_task`/`directive`/new dispatch in a future heartbeat response).
