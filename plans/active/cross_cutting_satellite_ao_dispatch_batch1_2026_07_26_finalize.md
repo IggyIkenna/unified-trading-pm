@@ -108,3 +108,41 @@ drift_direction: advance-code
       referrer of either doc and fix each path to point at the archived location → clear `locked_by` (already empty on
       both, confirm). **Done when**: both plans are moved to `plans/archive/2026_07/`, every corpus referrer resolves to
       the new path, and this finalize doc itself gets archived alongside them in the same commit.
+
+## Progress Log
+
+- **2026-07-30 (slot 14, review-craft-adopted) — todo 1 PARTIAL, NOT flipped: the "31 now-done" premise is stale/false
+  right now.** Picked up finalize-001 via `/boot`. Before reconciling, checked the live backlog (`GET /api/backlog`)
+  against the two `depends_on` plans this doc's own `gate_on_depends: true` should have blocked on: **9 of batch1's
+  current 19 todos and 11 of batch1b's current 18 todos are still `queued`, not `done`** — 20 still-open backlog tasks
+  total (real count now 37 todos across both docs, not the original "31"; both docs grew via mid-flight splits, e.g.
+  batch1's `-017`). The gate did not actually hold — filed as its own finding + follow-up todos:
+  `plans/active/issues/finalize_plan_gate_on_depends_premature_dispatch_2026_07_30.md`.
+  - **What I did anyway (real, bounded, verified progress)**: identified every todo across both docs that IS currently
+    `[x]` done (~15), and for each, verified whether its named `Source:` doc's own checkbox/section was already
+    reconciled (most workers already did this inline as part of shipping their todo) or still needed a real edit.
+    Result: **13 of the ~15 were already correctly reconciled** (verified via direct read, not trusted blindly) —
+    `distinct_values_noncanonical_audit_2026_07_20.md` (archived, line-191),
+    `instruments_completion_tracker_2026_07_06.md` (46/61 checked, 15 genuinely still open, matches its own text),
+    `cf_manifest_audit_scheduled_job_daily_failure_2026_07_13.md` (archived, resolved),
+    `datapoint_validation_results_bucket_missing_2026_07_21.md` (archived, resolved),
+    `features_service_coverage_and_script_canon_2026_06_10.md` (flipped, cites features-service@25932d23),
+    `silent_wrong_answer_audit_candidates_2026_07_20.md` (archived, resolved),
+    `master_data_canonicalisation_migration_catalogue_2026_06_07.md` (R5-fix-5 flipped),
+    `pipeline_mode_source_batch_live_replay_standardisation_2026_06_05.md` (§#7 correctly left unchecked — partial
+    scope, no false-completion), `instruments_foundation_phase0_cross_cutting_2026_07_24.md` (per-item citations already
+    appended, GATE 0 correctly still open), `legacy_bucket_dual_write_decommission_2026_07_24.md` (both lead items
+    closed-with-evidence). **2 needed real edits, done this session**:
+    `instrument_record_schema_completeness_extra_forbid_2026_07_18.md` (todos 1-2 flipped `[x]` with the authoritative
+    field-list + per-field disposition-table evidence from batch1's DATA/P1 todo, citing `instruments-service@ee2d6c75`;
+    todos 3/4 annotated PARTIAL — REMOVE-subset done, `min_order_size` still ambiguous/unresolved so ADD/final-flip stay
+    open; verified `ee2d6c75` is a real ancestor commit before citing it) and
+    `instruments_foundation_completeness_2026_06_24.md` (DeFi completeness ORACLE P0 item annotated PARTIAL — only the
+    §9 schema-only rollout slice landed, `unified-api-contracts@1407b7fd` verified as a real commit; the checkbox
+    correctly stays unchecked since probe implementation + `--use-defi-oracle` wiring are still unbuilt). **1 item
+    (`DATA P0` CF-1…CF-12) explicitly should NOT be flipped** — batch1's own text already reasoned this correctly
+    (partial 4-of-5-AG coverage, flipping would overclaim); no action needed, confirmed correct as-is.
+  - **Not attempted**: the ~22 still-open batch1/batch1b todos have no `Source:` reconciliation to do yet (they aren't
+    done). This todo's own checkbox stays `[ ]` — flipping it now would be a false-completion claim (workspace HARD
+    RULE: plans run to actual completion). **Re-dispatch this todo once batch1 + batch1b actually reach 0 open todos**
+    to catch the remaining ~22 source-doc reconciliations in one pass.

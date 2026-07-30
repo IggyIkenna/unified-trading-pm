@@ -215,7 +215,14 @@ child's Phase 1 section for the full gate-by-gate detail.
         = the pool's on-chain **creation block** (this IS the genesis oracle — kills the RAYDIUM `1970-01-01` = missing
         creation timestamp). DoD: per (protocol,chain) completeness % surfaced in the drilldown; 100% = complete; any
         &lt;100% is a typed gap. A venue/AG is NOT "complete" until this Tier-B oracle is green — never assert
-        completeness from our own capture.
+        completeness from our own capture. — **PARTIAL — §9 P0 schema-only rollout step landed** (via
+        `cross_cutting_satellite_ao_dispatch_batch1_2026_07_26.md`, 2026-07-26, slot-7):
+        `unified-api-contracts@1407b7fd` landed `CompletenessProbe`/`CompletenessProbeStatus`/`CompletenessProbeKind` in
+        `canonical/crosscutting/honest_coverage.py` per `/codex/02-data/defi-completeness-oracle.md` §2, plus
+        `factory_address_by_chain` populated (web-verified on-chain addresses) for the top-10 DEX protocols on
+        `_ProtocolCapability`. Schema-only — **no probe implementations, no `--use-defi-oracle` wiring, no on-chain
+        `poolCount` cross-check runs yet** — this checkbox stays open pending the actual probe implementation +
+        drilldown surfacing described above.
 
 > **Folded-in defi residual** (from I-1 consolidation 2026-06-26, `defi_venue_name_canonicalisation_and_reth_2026_06_17`
 > archived; 4/5 done — moved here verbatim 2026-07-24):
