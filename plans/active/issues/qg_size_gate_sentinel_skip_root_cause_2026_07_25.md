@@ -16,7 +16,7 @@ summary:
   resolving it. Thematically adjacent to `qg_sentinel_environment_blind_2026_07_23.md` (a DIFFERENT sentinel-skip
   mechanism — ENVIRONMENT-dimension binding — surfaced 2026-07-23) but not the same root cause; that doc's fix (bind
   configuration into the sentinel hash) may or may not also explain this one, which is exactly the open question here."
-status: open
+status: resolved
 nature: issue
 asset_group: [sports]
 stage: [meta]
@@ -40,6 +40,9 @@ estimate_calibrated_ai_days: 0.36
 assigned_role: infra
 drift_direction: advance-code
 resolved_by:
+  "qg_size_gate_sentinel_skip_root_cause-003/-004 (slot 6), 2026-07-30 — instruments-service@431674af +
+  unified-trading-pm@d43f98ef7. All acceptance + follow-up todos done; archival ritual (git mv + referrer fixes) not yet
+  run — deferred, tracked separately."
 locked_by:
 locked_since:
 depends_on: []
@@ -149,50 +152,50 @@ the historical record can further disambiguate (a) vs (b) without a fresh repro.
       `FUNCTION_SIZE_EXTRA_EXCLUDES`). Diagnostic output (full run log preserved in this session's evidence):
 
       ```
-                              QG_SIZE_DIAG: sentinel_file_existed=yes sha_sentinel_existed=yes sentinel_hit=false content_hash=a44890b01405... stored_hash=b440d7799da5...
-                              QG_SIZE_DIAG: _SIZE_FILES count=55 pwd=.../instruments-service V_before_size_checks=1
-                              ❌ Files exceed 900 lines:  ./instruments_service/engine/orchestrator/sports_reference_fixtures.py: 914 L
-                              ❌ Function/class/method size exceeded:  ./instruments_service/engine/orchestrator/process.py:99:process_instruments(): 205L
-                              QG_SIZE_DIAG: SVIOL_nonempty=yes FSIZES_nonempty=yes V_after_size_checks=3
-                              QG_SIZE_DIAG: final_V=3 CODEX_MAX_VIOLATIONS=3 verdict=WARN_WITHIN_TOLERANCE
-                              ⚠️  Codex compliance: 3 violations (within tolerance of 3)
-                              ✅ ALL QUALITY GATES PASSED (112s)
-                              ```
+                                  QG_SIZE_DIAG: sentinel_file_existed=yes sha_sentinel_existed=yes sentinel_hit=false content_hash=a44890b01405... stored_hash=b440d7799da5...
+                                  QG_SIZE_DIAG: _SIZE_FILES count=55 pwd=.../instruments-service V_before_size_checks=1
+                                  ❌ Files exceed 900 lines:  ./instruments_service/engine/orchestrator/sports_reference_fixtures.py: 914 L
+                                  ❌ Function/class/method size exceeded:  ./instruments_service/engine/orchestrator/process.py:99:process_instruments(): 205L
+                                  QG_SIZE_DIAG: SVIOL_nonempty=yes FSIZES_nonempty=yes V_after_size_checks=3
+                                  QG_SIZE_DIAG: final_V=3 CODEX_MAX_VIOLATIONS=3 verdict=WARN_WITHIN_TOLERANCE
+                                  ⚠️  Codex compliance: 3 violations (within tolerance of 3)
+                                  ✅ ALL QUALITY GATES PASSED (112s)
+                                  ```
 
-                              **(a) Content-sentinel fast-path — RULED OUT, conclusively.** `sentinel_hit=false` (my own edit to
-                              `base-service.sh` changed the gate-script content hash — the sentinel hash includes the gate script itself, per
-                              `_qg_content_hash()` L100 — which invalidated any prior sentinel and forced a genuine full run). This was NOT a
-                              skipped-heavy-phases run; TESTS + TYPE CHECK both ran. The violation was STILL missed as a fail. **(b) Stale
-                              `$_SIZE_FILES` — RULED OUT.** `_SIZE_FILES count=55` (correctly enumerated, `sports_reference_fixtures.py`
-                              included) and BOTH `SVIOL` (the 914L file) and `FSIZES` (a NEW regression: `process.py:process_instructions()`
-                              regrew to 205L — the exact function that was decomposed from 1,931L on 2026-06-11 to justify ratcheting
-                              `CODEX_MAX_VIOLATIONS` 4→3) were correctly populated non-empty. The size-check AST/byte-count logic itself has
-                              ZERO bug — it detected both violations exactly as designed.
+                                  **(a) Content-sentinel fast-path — RULED OUT, conclusively.** `sentinel_hit=false` (my own edit to
+                                  `base-service.sh` changed the gate-script content hash — the sentinel hash includes the gate script itself, per
+                                  `_qg_content_hash()` L100 — which invalidated any prior sentinel and forced a genuine full run). This was NOT a
+                                  skipped-heavy-phases run; TESTS + TYPE CHECK both ran. The violation was STILL missed as a fail. **(b) Stale
+                                  `$_SIZE_FILES` — RULED OUT.** `_SIZE_FILES count=55` (correctly enumerated, `sports_reference_fixtures.py`
+                                  included) and BOTH `SVIOL` (the 914L file) and `FSIZES` (a NEW regression: `process.py:process_instructions()`
+                                  regrew to 205L — the exact function that was decomposed from 1,931L on 2026-06-11 to justify ratcheting
+                                  `CODEX_MAX_VIOLATIONS` 4→3) were correctly populated non-empty. The size-check AST/byte-count logic itself has
+                                  ZERO bug — it detected both violations exactly as designed.
 
-                              **(c) ACTUAL root cause — the `CODEX_MAX_VIOLATIONS` static tolerance ceiling (base-service.sh L2168-2176)
-                              masks NEW violations with headroom freed by OTHER, unrelated violation classes shrinking.**
-                              `_max_v=${CODEX_MAX_VIOLATIONS:-0}`; the verdict is `V > _max_v → FAIL`, `0 < V <= _max_v → WARN (logged, gate
-                              still passes)`, `V == 0 → PASS`. instruments-service sets `CODEX_MAX_VIOLATIONS=3`
-                              (`instruments-service/scripts/quality-gates.sh:233`), explicitly comment-justified on 2026-06-11 as "Remaining 3
-                              classes: os.getenv/os.environ, bare `pip install uv`, broad `except Exception:`" — i.e. the ceiling was sized
-                              assuming the size-violation class stayed at 0 forever. In THIS run, `os.getenv`/`pip install uv` had ALSO since
-                              cleared (only "broad except Exception" remained, contributing `V=1`), so 2 full slots of headroom existed —
-                              exactly enough to silently absorb the 2 BRAND-NEW size violations (`V: 1→3`) without crossing `_max_v=3`. The
-                              ceiling is a single AGGREGATE count across every violation class, with no per-class floor/ceiling and no
-                              awareness that "0 size violations" was a load-bearing precondition of its own value — so it structurally cannot
-                              distinguish "3 pre-approved legacy debt items" from "1 pre-approved item + 2 fresh regressions of a class the
-                              ceiling assumed was permanently cleared." This is a LIVE, currently-active gap (not a one-off, not historical) —
-                              confirmed via a real, non-scoped, non-sentinel-hit run, moments before filing this update. Escalating per the
-                              todo's own criterion ("silently green-lights real 900L+/200L+ violations fleet-wide"): a fleet scan
-                              (`grep CODEX_MAX_VIOLATIONS=` across every repo's `scripts/quality-gates.sh`) found **9 repos exposed to this
-                              exact class**: `deployment-api` (5), `strategy-service` (4), `execution-service` (3), `instruments-service` (3),
-                              `unified-api-contracts` (2), `batch-live-reconciliation-service` / `deployment-service` / `ibkr-gateway-infra` /
-                              `market-data-processing-service` (1 each) — any of these can have a genuine NEW size (or other codex-checked)
-                              violation silently pass as long as some OTHER pre-existing violation class in that repo has since shrunk. P0
-                              follow-up filed below with the concrete fix direction. Diagnostic instrumentation fully REVERTED after capture
-                              (`git diff` on `base-service.sh` clean) — it was fleet-shared code and the diagnostic was explicitly temporary.
-                              Live regressions found in instruments-service (the 914L file + the 205L function) are NOT fixed by this todo
-                              (out of scope for a tooling-diagnostic task on a different repo's domain code) — filed as their own todo below.
+                                  **(c) ACTUAL root cause — the `CODEX_MAX_VIOLATIONS` static tolerance ceiling (base-service.sh L2168-2176)
+                                  masks NEW violations with headroom freed by OTHER, unrelated violation classes shrinking.**
+                                  `_max_v=${CODEX_MAX_VIOLATIONS:-0}`; the verdict is `V > _max_v → FAIL`, `0 < V <= _max_v → WARN (logged, gate
+                                  still passes)`, `V == 0 → PASS`. instruments-service sets `CODEX_MAX_VIOLATIONS=3`
+                                  (`instruments-service/scripts/quality-gates.sh:233`), explicitly comment-justified on 2026-06-11 as "Remaining 3
+                                  classes: os.getenv/os.environ, bare `pip install uv`, broad `except Exception:`" — i.e. the ceiling was sized
+                                  assuming the size-violation class stayed at 0 forever. In THIS run, `os.getenv`/`pip install uv` had ALSO since
+                                  cleared (only "broad except Exception" remained, contributing `V=1`), so 2 full slots of headroom existed —
+                                  exactly enough to silently absorb the 2 BRAND-NEW size violations (`V: 1→3`) without crossing `_max_v=3`. The
+                                  ceiling is a single AGGREGATE count across every violation class, with no per-class floor/ceiling and no
+                                  awareness that "0 size violations" was a load-bearing precondition of its own value — so it structurally cannot
+                                  distinguish "3 pre-approved legacy debt items" from "1 pre-approved item + 2 fresh regressions of a class the
+                                  ceiling assumed was permanently cleared." This is a LIVE, currently-active gap (not a one-off, not historical) —
+                                  confirmed via a real, non-scoped, non-sentinel-hit run, moments before filing this update. Escalating per the
+                                  todo's own criterion ("silently green-lights real 900L+/200L+ violations fleet-wide"): a fleet scan
+                                  (`grep CODEX_MAX_VIOLATIONS=` across every repo's `scripts/quality-gates.sh`) found **9 repos exposed to this
+                                  exact class**: `deployment-api` (5), `strategy-service` (4), `execution-service` (3), `instruments-service` (3),
+                                  `unified-api-contracts` (2), `batch-live-reconciliation-service` / `deployment-service` / `ibkr-gateway-infra` /
+                                  `market-data-processing-service` (1 each) — any of these can have a genuine NEW size (or other codex-checked)
+                                  violation silently pass as long as some OTHER pre-existing violation class in that repo has since shrunk. P0
+                                  follow-up filed below with the concrete fix direction. Diagnostic instrumentation fully REVERTED after capture
+                                  (`git diff` on `base-service.sh` clean) — it was fleet-shared code and the diagnostic was explicitly temporary.
+                                  Live regressions found in instruments-service (the 914L file + the 205L function) are NOT fixed by this todo
+                                  (out of scope for a tooling-diagnostic task on a different repo's domain code) — filed as their own todo below.
 
 - [x] ✅ [SCRIPT] P0. **DONE 2026-07-30 (slot 7)** — Fixed `CODEX_MAX_VIOLATIONS` aggregate-tolerance masking. Moved the
       file-size + function/class/method-size checks (`SVIOL`/`FSIZES`, were L1417-1471) into the existing ZERO-TOLERANCE
@@ -233,7 +236,7 @@ the historical record can further disambiguate (a) vs (b) without a fresh repro.
       on instruments-service now reports `✅ ALL QUALITY GATES PASSED` +
       `[check_adapter_contract_regression] OK — 331     baselined file(s) at or above minimum.` `CODEX_MAX_VIOLATIONS`
       ratchet-down not yet re-verified — leaving that sub-clause for a follow-up rather than guessing.
-- [ ] [SCRIPT] P1. `base-library.sh` (library-tier repos: unified-trading-library, unified-api-contracts,
+- [x] ✅ [SCRIPT] P1. `base-library.sh` (library-tier repos: unified-trading-library, unified-api-contracts,
       unified-cloud-interface, etc.) carries the IDENTICAL `SVIOL`/`FSIZES` size-check-into-shared-`V` pattern
       (confirmed: `base-library.sh:930` + `:952`, both `V=$(( V + 1 ))` on failure) but — unlike `base-service.sh` — has
       NO `_V_PRE_RATCHET`/hard-gate-aggregation-verdict mechanism at all anywhere in the file (grepped: zero hits for
@@ -245,7 +248,22 @@ the historical record can further disambiguate (a) vs (b) without a fresh repro.
       requires first porting (or building an equivalent of) the `_V_PRE_RATCHET`/`_RATCHET_FAILS`
       hard-gate-aggregation-verdict pattern into `base-library.sh` (which currently has none), THEN moving
       `SVIOL`/`FSIZES` into it. Recommend scoping as its own todo/plan rather than folding into this one. Repo:
-      unified-trading-pm (`scripts/quality-gates-base/base-library.sh`).
+      unified-trading-pm (`scripts/quality-gates-base/base-library.sh`). — DONE `unified-trading-pm@d43f98ef7`. Ported
+      the identical `_V_PRE_RATCHET`/`_RATCHET_FAILS` pattern: snapshot after the codex-compliance verdict, moved
+      SVIOL/SWARN/FSIZES into that hard-gate zone (pure code-move, same AST/line-count logic, same `SIZE_EXTRA_EXCLUDES`
+      allow-list), added the final aggregation-verdict check before the duration-check/success- banner/sentinel-write
+      sequence. **Live-verified the actual masking scenario is closed** (not just code-reviewed): on
+      `unified-trading-library` (`CODEX_MAX_VIOLATIONS=0`) a synthetic 212L function correctly produced
+      `❌ Quality     gates FAILED: 1 hard gate/ratchet step(s) failed... Sentinel NOT written` even though
+      `✅ Codex compliance     PASSED` had already printed cleanly; repeated on `unified-api-contracts`
+      (`CODEX_MAX_VIOLATIONS=2`, REAL tolerance headroom — the exact masking precondition) with the same result: Codex
+      compliance still reports PASSED (V=0 at that check) but the size violation still hard-fails via the new verdict.
+      Both scratch files removed, never committed. Also confirmed the pass-case is clean
+      (`--skip-tests --skip-typecheck` reaches `ALL QUALITY     GATES PASSED` on both repos with only WARN-level
+      test-file-oversize notices, non-blocking). Pass-1 `quality-gates.sh` on unified-trading-pm itself needed 2
+      attempts — the first hit the `<600s` duration cap under genuine host-wide contention (5+ concurrent
+      `quality-gates.sh` runs observed across other slots at the time, not a defect in this change); the retry passed
+      clean once contention eased.
 
 ## Progress Log
 
