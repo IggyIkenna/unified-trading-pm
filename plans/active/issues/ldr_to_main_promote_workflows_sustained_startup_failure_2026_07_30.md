@@ -192,3 +192,16 @@ historical one.
   check (does the PR-creation step actually call `gh pr merge --auto` / `enablePullRequestAutoMerge`). Did not attempt a
   GH-side fix myself (out of a worker's scope per this doc's own instruction) — declined + skipped the VERIFY-gate task
   per the established posture.
+
+- **2026-07-30 (slot-11, data_engineering craft)**: Nth consecutive re-check (≥11 now, slot-12 through slot-11) of the
+  sibling VERIFY-gate todo. **Partial progress**: check (a) now PASSES — `ldr-to-main-promote.yml` / `-fleet.yml` show
+  5+ consecutive `success` runs each through `2026-07-30T23:53Z`, no `startup_failure` since the slot-3 recovery. Checks
+  (b)/(c) still UNMET, same signature slot-3 diagnosed: `market-tick-data-service`'s most-recently-merged-to-`main` PR
+  is still `#773` (2026-07-28); open promote PR is now `#792` (`promote/market-tick-data-service/d072b0358b33`),
+  `5b5caffa` confirmed carried but NOT yet an ancestor of `main` (`git merge-base --is-ancestor 5b5caffa origin/main`
+  fails), `mergeStateStatus: UNSTABLE`, `mergeable: MERGEABLE`, `autoMergeRequest: null`, `mergedAt: null` — identical
+  never-requested-auto-merge shape, PR #792 is the 6th regeneration since #788. Did not attempt the GH-side auto-merge
+  fix (out of worker scope). Skipping rather than filing a 3rd `/blocked` — slot-2 already recommended PARKing this
+  VERIFY-gate todo one cycle ago (`priority: 999` + `priority_override: true` per `RULES.md` § 4) and it is still
+  un-actioned two cycles later; every re-dispatch since has re-derived the identical already-tracked root cause for zero
+  new signal. Flagging to main via progress message rather than re-escalating in this doc a third time.
