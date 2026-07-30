@@ -165,3 +165,50 @@ that point in the sequence.
   scoped to this task). Root-cause isolation + full detail:
   `/plans/active/issues/mtds_gas_fees_migration_script_unbounded_memory_2026_07_30.md`. **This todo cannot safely
   proceed until that leak is fixed** — do not re-run the script as-is.
+
+- **2026-07-30 (slot-7, data_engineering) — scoping complete, leak fixed, migration in progress**:
+  - **Scoping (step a)**: bounded manifest-only read (`read_availability_index`, filtered `data_type=gas_fees`, no GCS
+    walk) found real legacy history under only **10 of the 14** listed legacy venues — `ETHEREUM` (1857 shard-days,
+    2020-01-01..2026-07-21), `OPTIMISM` (797), `BSC` (1611), `POLYGON` (1697), `BASE` (739), `ARBITRUM` (1272),
+    `AVALANCHE` (1565), `LINEA` (767), `MANTLE` (763), `AURORA` (1357) — **12,425 total legacy manifest rows**.
+    `FANTOM`, `CELO`, `SOLANA`, `BITCOIN` have **zero** historical manifest rows (FANTOM/CELO are live-only per code
+    comments; BTC collection is hardcoded disabled; Solana requires an explicit flag never passed in prod) — nothing to
+    migrate for those 4. One exact collision found: `chain=ETHEREUM date=2026-07-21` has BOTH a legacy captured row AND
+    a post-fix `venue=ALCHEMY` captured row (same calendar day straddling the fix's deploy time) — the migration script
+    skips that one pair to avoid duplicating/clobbering the already-canonical object.
+  - **Root cause of the memory leak** (full detail in the linked doc): the script's `ManifestWriter(...)` omitted
+    `per_vm_shards=True`, so every flush took the legacy path that reads/writes the ENTIRE consolidated DeFi manifest
+    index (~14.86 GiB / 27M+ rows) instead of a small per-host shard. **Fixed** (`market-tick-data-service@8016c7e4`),
+    verified safe under a `ulimit -v` memory cap with a real (throwaway) probe write.
+  - **Migration (step b) IN PROGRESS**: with the fix applied, RSS holds stable at ~1.2GB (vs 40+GB before) under a
+    protective `ulimit -v 8000000` (8GB) wrapper — re-verified real-world; a 4GB cap was too tight (crashed pyarrow's
+    own virtual-address-space reservations with `std::system_error`, unrelated to the actual leak). As of this note,
+    ~3800/12,424 legacy rows processed (chains ARBITRUM, AURORA complete; AVALANCHE in progress), zero memory growth
+    trend, running as a background process (not tied to this chat session — survives compaction).
+  - **Step c (stage, do not execute, the delete-safety proof)** not yet started — genuinely blocked on step b's
+    completion, not on any decision.
+  - **Lessons for whoever resumes**: (1) `ManifestWriter` constructed directly (outside a deployed service with
+    `MANIFEST_PER_VM_SHARDS=true` in its env) silently defaults to the expensive legacy full-index path — always pass
+    `per_vm_shards=True` explicitly in a one-off script. (2) `ulimit -v` is a virtual-memory cap, not RSS — pyarrow/
+    pandas reserve large virtual address space regardless of actual usage, so a tight cap (e.g. 3-4GB) will false-crash
+    even correct code; 8GB was the smallest cap that didn't trip on legitimate work in this case. (3) Pre-existing
+    legacy objects sometimes have a byte-identical duplicate under a second leaf-name convention (`GAS.parquet` +
+    `_migrated_gas_fees_<start>_<end>.parquet`, both from an earlier per-instrument migration) — harmless, the
+    idempotent `blob_exists` check on the shared target path naturally de-dupes them.
+
+## Deferred work after 2026-07-30
+
+| Item                                                                                                     | State / why deferred                                                                                                                                | Blocked on                                                                                   |
+| -------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
+| Full migration completion (~12,424 legacy rows → `venue=ALCHEMY`)                                        | Cannot be done yet — background process running, needs real elapsed wall-clock time (observed rate ≈ linear, ETA another ~40-50 min from this note) | Time elapsing; check `ps aux \| grep migrate_legacy_gas_fees` / manifest row counts directly |
+| Stage (not execute) the 5-part delete-safety proof for the 10 legacy prefixes                            | Not started — genuinely next step, not a decision gap                                                                                               | Migration completion + verification that all 10 prefixes are fully copied                    |
+| Flip this doc's todo checkbox                                                                            | Correctly withheld — work isn't done yet                                                                                                            | Migration completion + verification                                                          |
+| `ManifestWriter.__init__` safety-check follow-up (P1, filed in the linked memory-leak doc)               | Not started — separate, smaller follow-up task                                                                                                      | Nobody yet; open item, not gating this migration                                             |
+| Audit sibling `scripts/` for the same `per_vm_shards` omission (P2, filed in the linked memory-leak doc) | Not started — separate follow-up task                                                                                                               | Nobody yet; open item, not gating this migration                                             |
+
+**Recommended next action**: check whether the background migration process (see script + log path in this session's
+scratchpad, or just re-run the script — it is fully idempotent/resumable via its fast `blob_exists` pre-check) has
+completed; if so, verify final written+skipped counts against the 12,424-row worklist (minus the 1 known collision),
+update this doc with final numbers, flip the checkbox, ship, and `/done`. If the process died again, check
+`ps`/`dmesg`/host memory BEFORE assuming a regression — this host runs many concurrent agent slots and a
+non-migration-related host-memory event could still kill it even with the fix in place.
