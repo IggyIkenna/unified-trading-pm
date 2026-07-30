@@ -43,7 +43,7 @@ source:
     prediction_satellite_ao_dispatch_batch3_2026_07_26_finalize-001,
   ]
 parent_epic: agent_operating_framework_master
-priority: P1
+priority: P0
 assigned_vm: planning
 execution_scope: orchestrator-agent
 drift_direction: advance-code
@@ -275,7 +275,7 @@ general dispatcher gap, not an isolated one-off — root-cause item 1 remains th
 
 ## Todos
 
-- [ ] [BACKEND] P1. **Trace + fix `_wire_gate_on_depends_prereqs`**
+- [ ] [BACKEND] P0. **Trace + fix `_wire_gate_on_depends_prereqs`**
       (`agent-orchestrator/server/regen_backlog_from_plan.py`) so a `gate_on_depends: true` finalize plan's tasks
       reliably get the upstream plan's real task ids wired into `prereqs.completed_tasks` on every regen tick, not just
       (maybe) at first-ingestion. Confirmed 9 times across ≥6 distinct plan pairs (defi_dex_pool,
@@ -374,3 +374,16 @@ noted in the prior recurrence note). Main confirmed live and applied the park re
 already independently dispatched elsewhere — so at least the routing/dispatch side is otherwise functioning correctly;
 only the specific in-body per-todo `depends_on` reference wasn't mechanically gate-able. Declining to attempt 11c;
 resuming the queue-drain loop per main's directive.
+
+## 2026-07-30 priority bump (review agent, todo 1 P1→P0)
+
+Per main (`agt-fd75de`)'s directive (chat message 2026-07-30T16:52:10Z): bumped todo 1 (`_wire_gate_on_depends_prereqs`
+root-cause fix) from `P1` to `P0`, and the doc's frontmatter `priority` from `P1` to `P0` to match, given the blast
+radius confirmed in this doc (≥6 distinct plan pairs, 9+ bounces, plus a separate `[OPERATOR]`-tagged prod-delete
+near-miss on slot 7 that main flagged in the same message) — the fix should dispatch ahead of the finalize-bounce churn
+it keeps generating, per CLAUDE.md's `docs(plans):`-flip mechanism (P0/P1-tagged todos derive top backlog priority ~20
+vs P2/P3's 50/80, per main's corroboration in an earlier message this session re: a different P0 todo). Per
+`/api/state`, slot 3 already shows `last_msg: "booted — resuming gate_on_depends_wiring_gap_defi_dex_pool_finalize-00…"`
+— the root-cause fix appears to already be in flight, so this bump is a durable-record correction (keeps the doc
+accurate for any future re-queue) rather than a live re-prioritization of already-dispatched work. Todo 2 (the P2
+dispatch-time defense-in-depth check) is intentionally left unchanged — main's ask was scoped to item 1 only.
