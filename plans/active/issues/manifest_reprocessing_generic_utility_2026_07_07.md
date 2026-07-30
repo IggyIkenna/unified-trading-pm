@@ -129,8 +129,9 @@ service CLI subcommand"), as a permanent instruments-service CLI subcommand — 
       error_reason_predicate) with 13 unit tests. `reprocess_shards()`'s signature + the 3-gate safety contract (per-VM
       shard isolation, idx-only mutation, captured-count invariant) are pinned in its docstring; the body is a
       documented `NotImplementedError` stub — implementing it is the separate `[CODE] P2` todo below, unchanged.
-- [ ] [CODE] P2. Implement it, generalizing `retry_transient_cefi_failures_2026_06_28.py` as the template; port its
-      existing safety gates (dry-run default, snapshot-before-write, captured-count invariant checks).
+- [x] ✅ [CODE] P2. Implement it, generalizing `retry_transient_cefi_failures_2026_06_28.py` as the template; port its
+      existing safety gates (dry-run default, snapshot-before-write, captured-count invariant checks). —
+      `unified-trading-library@4b6a13cf`.
 - [ ] [CODE] P2. Wire it as an instruments-service CLI subcommand (`--operation reprocess-shards`) per
       `script-homes.md`'s production-verb rule.
 - [ ] [SCRIPT] P3. Retire the 13 one-off scripts above (was: 11 — verify-rerun-2 finding 151, 2026-07-14: title/summary
@@ -139,6 +140,33 @@ service CLI subcommand"), as a permanent instruments-service CLI subcommand — 
       going forward).
 
 ## Progress Log
+
+- **2026-07-30 (slot 6, infra)** — Dispatched `manifest_reprocessing_generic_utility-002` (the second `[CODE] P2` todo).
+  Implemented `reprocess_shards()`'s body in `unified_trading_library/manifest_reprocess.py`, replacing the
+  `NotImplementedError` stub, porting all three pinned safety gates verbatim from
+  `retry_transient_cefi_failures_2026_06_28.py`: (1) per-VM shard isolation — `dry_run=False` requires
+  `MANIFEST_PER_VM_SHARDS=true` + non-empty `VM_NAME` in the environment, checked via a new
+  `_has_reprocess_shard_isolation()` (raw env reads mirroring the template's `_validate_apply_env` and the identical
+  `manifest_migrations.v7_to_v8` pattern — deliberately NOT `UnifiedCloudConfig`, since this asks "did the operator
+  declare isolation for THIS run", not "what's the shared default"), aborting via a new
+  `MissingReprocessShardIsolationError` before any mutation; (2) idx-only mutation — `df.loc[idx, ...]` never re-derives
+  a selection; (3) captured-count invariant — computed before/after via a new `_captured_row_count()` helper, raising
+  `RuntimeError` (no partial write) on mismatch. The write path re-uses the established `ManifestWriter._INDEX_PATH`
+  canonical-index constant (matching how `_maintenance.py`/`_read_index.py`/existing tests already reference it
+  cross-module) and resolves its storage client lazily via
+  `unified_trading_library.cloud_interface.get_storage_client()` with no explicit provider (matching
+  `read_availability_index`'s own resolution pattern, rather than hardcoding `provider="gcp"` like the CeFi-specific
+  template did). Dry-run (the default) and the zero-matched-rows case both short-circuit before any env-gate check or
+  write — mirrors the template's own early-return. Replaced the prior stub-only test
+  (`test_reprocess_shards_not_yet_implemented`) with 5 real tests covering: zero-matched no-op, dry-run (no mutation/no
+  write, isolation env not required), missing-isolation abort (row untouched), a full apply that flips only the matched
+  row and writes the parquet back (verified via a `_StubStorageClient` patched onto
+  `unified_trading_library.cloud_interface.get_storage_client`), and the captured-count-invariant abort (no write
+  attempted). All 17 tests in `tests/unit/test_manifest_reprocess.py` pass; `bash scripts/quality-gates.sh` green (one
+  iteration caught a real false-positive: a docstring line containing the literal substring `os.environ` with no `noqa`
+  tripped the codex-compliance grep check even though the actual code lines already carried the correct
+  `qg-os-environ`/`config-bootstrap` markers — reworded the prose to avoid the banned literal, no logic change). Shipped
+  `unified-trading-library@4b6a13cf` via quickmerge.
 
 - **2026-07-30 (slot 6, infra)** — Dispatched `manifest_reprocessing_generic_utility-001` (the `[DESIGN] P2` todo).
   Resolved the placement question and shipped `unified_trading_library/manifest_reprocess.py`: `CaptureStatus` +
