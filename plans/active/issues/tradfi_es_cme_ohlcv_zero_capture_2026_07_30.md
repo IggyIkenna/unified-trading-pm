@@ -120,10 +120,39 @@ source:
 > `2026-07-30T09:50Z` (~6-7 min post-launch): all 7 confirmed alive via `run.log` (no crash/traceback), correctly
 > skipping the CME New Year's-day non-trading-day date, and currently in a **legitimate, by-design bounded wait** on a
 > live manifest-consolidator lock (`_wait_for_in_flight_cycle_then_reread`, observed lock age 190-300s, horizon 3600s)
-> before their first real per-date OHLCV fetch attempt — this is expected consolidator contention from the wider fleet
-> of concurrent backfills running this session, not a stall; per the workspace's async-wait discipline this is being
-> tracked on a real progress metric (manifest `row_count>0` for `venue=CME, instrument_id=ES.FUT`), not VM-lifecycle
-> alone. **Verification of actual captured rows is the one remaining open step** — see the corrected Todos below.
+> before their first real per-date OHLCV fetch attempt. **This wait turned out NOT to be harmless — see UPDATE 2 below:
+> it caused all 7 VMs to fail before attempting a single real fetch, a genuine systemic bug now fixed.**
+
+> **UPDATE 2 2026-07-30 (28-min watch completed) — the first re-launch attempt FAILED, 0/7 VMs, and uncovered a genuine
+> systemic infra bug; a fixed second re-launch is now running.** A background watcher polled all 7 VMs for 28 minutes;
+> zero showed real progress. Direct inspection (`gcloud compute instances describe` + `gcloud compute operations list`,
+> per the "verify `compute.instances.preempted` before diagnosing a hang" discipline) revealed the true outcome:
+>
+> - **4 of 7 VMs (2023/2024/2025/2026) were SPOT-preempted** at ~09:50Z, ~2-3 minutes after boot, before any real work —
+>   ordinary SPOT contention (this session ran many concurrent VMs fleet-wide), not a code issue.
+> - **3 of 7 VMs (2020/2021/2022) were killed by their OWN in-VM stall-watchdog** (`vm-exec-with-gcs-tee.sh`,
+>   `WORKER_STALLED (no-progress-marker): no progress in 1802s (threshold=1800s)`) — a genuine, previously-undiscovered
+>   bug: `STALL_TIMEOUT_SEC` defaults to 1800s (30min), but the manifest-consolidator-lock wait these VMs were
+>   correctly, legitimately sitting in (`_wait_for_in_flight_cycle_then_reread`) has its own documented bounded-wait
+>   horizon of 3600s (1hr) for tradfi (`consolidator_inflight_horizon_for_bucket`). A VM that boots while the lock is
+>   held can spend its entire first 30+ minutes in that documented-safe wait without ever emitting an
+>   `uploaded`/`streamed` progress line, and gets stall-killed before the lock it is correctly waiting on ever clears.
+>   **Not ES-specific — affects every VM launched via the shared tradfi-OHLCV launcher family (CME/ICE/NASDAQ/NYSE,
+>   `_tradfi-ohlcv-launcher-lib.sh`) whenever the consolidator lock is held >30min**, which is exactly what heavy
+>   concurrent fleet activity (like this session's) produces.
+>
+> **Fixed**: `_tradfi-ohlcv-launcher-lib.sh` now also sets `STALL_TIMEOUT_SEC=3900` (3600s horizon + 300s buffer)
+> alongside the existing `STALL_PROGRESS_REGEX` metadata — scoped to just this launcher family, not
+> `vm-exec-with-gcs-tee.sh`'s shared global default (which cefi/mdps/sfi/gas-fees also depend on, so left untouched). 2
+> new regression tests (`TestTradfiOhlcvStallTimeoutHeadroom`), `quality-gates.sh` green, shipped
+> `deployment-service@c1e3dc70`.
+>
+> **Re-launched a second time** (same launcher, same scope) at `2026-07-30T10:41-10:43Z`: all 7 VMs confirmed `RUNNING`
+> (`tradfi-bf-cme-ohlcv-1m-es-2020-20260730-104155` through `-2026-20260730-104338`). A second background watcher is
+> tracking real progress/stall/preemption signatures for up to 40 minutes. **Verification of actual captured rows
+> remains the one open step** — see the corrected Todos below. If this second attempt ALSO shows 0/7 real progress, that
+> would point at either persistent fleet-wide SPOT pressure (retry later, not a bug) or a residual gap in the
+> stall-timeout fix (re-diagnose, don't just re-launch a third time blind).
 
 ## What I found
 
@@ -198,18 +227,24 @@ root-cause fix.
 
 ## Todos
 
-- [ ] [DATA] P1. **CURRENT, ACTIVE TODO (2026-07-30 UPDATE — supersedes the "diagnose the tagging mismatch" framing
-      below, which is now understood to be secondary, not the primary cause).** Verify the 7 re-launched
-      `tradfi-bf-cme-ohlcv-1m-es-*` VMs (started `2026-07-30T09:43-09:45Z`, scope `--only-root ES`, same 2020-2026
-      year-shards as the original fleet) actually captured real rows once they complete/self-delete. Re-run this issue's
-      original query — live read of `market-data-tick-tradfi-prd`'s `_index/availability_index.parquet`, scoped to
-      `venue=CME, instrument_id=ES.FUT, data_type in {ohlcv_1m, ohlcv_1s}`, filter `written_at` to this run's date — and
-      confirm `row_count>0` / `capture_status=captured` now appears for at least a substantial share of the 2020-2026
-      window (a repeat 100% `attempted_failed`/`empty_confirmed` result would mean the transient-failure hypothesis
-      above is wrong and this needs re-opening as a genuine code-bug investigation, likely starting with the
-      `stype_in=parent`-vs-schema hypothesis in "Recommended next steps" §1 below). Cite the resulting row counts as
-      closing evidence on both this issue and `instruments_tradfi_g1_g5_gate_execution_2026_07_24.md`'s original P0 todo
-      (which reported the original false "zero capture ever" framing). Repo: market-tick-data-service.
+- [x] ✅ [INFRA] P1. **DONE 2026-07-30 — the systemic stall-watchdog/consolidator-lock-horizon mismatch UPDATE 2 found
+      above.** `_tradfi-ohlcv-launcher-lib.sh` now sets `STALL_TIMEOUT_SEC=3900` alongside `STALL_PROGRESS_REGEX` (3600s
+      consolidator-lock horizon + 300s buffer, vs. the 1800s generic default that was killing legitimately- waiting
+      VMs). 2 new regression tests, `quality-gates.sh` green. Shipped `deployment-service@c1e3dc70`. Repo:
+      deployment-service.
+- [ ] [DATA] P1. **CURRENT, ACTIVE TODO — supersedes the "diagnose the tagging mismatch" framing below, which is now
+      understood to be secondary, not the primary cause.** Verify the SECOND re-launch of the 7
+      `tradfi-bf-cme-ohlcv-1m-es-*` VMs (started `2026-07-30T10:41-10:43Z`, post-stall-timeout-fix, scope
+      `--only-root ES`, same 2020-2026 year-shards as the original fleet) actually captured real rows once they
+      complete/self-delete. Re-run this issue's original query — live read of `market-data-tick-tradfi-prd`'s
+      `_index/availability_index.parquet`, scoped to
+      `venue=CME, instrument_id=ES.FUT, data_type in {ohlcv_1m,     ohlcv_1s}`, filter `written_at` to this run's date —
+      and confirm `row_count>0` / `capture_status=captured` now appears for at least a substantial share of the
+      2020-2026 window. If this second attempt ALSO shows 0 real rows with no stall-kill/preemption signature in the
+      logs, re-open as a genuine code-bug investigation (starting with the `stype_in=parent`-vs-schema hypothesis in
+      "Recommended next steps" §1 below) — do not assume transient a third time without evidence. Cite the resulting row
+      counts as closing evidence on both this issue and `instruments_tradfi_g1_g5_gate_execution_2026_07_24.md`'s
+      original P0 todo (which reported the original false "zero capture ever" framing). Repo: market-tick-data-service.
 - [ ] [DIAG] P2. **Secondary, lower-priority data-hygiene item (demoted from P1 — confirmed NOT the cause of the
       original zero-capture finding, see UPDATE above).** Real ohlcv_1m/1s data for the SP500/ES/MES family already
       exists under a BLANK `instrument_id` with `underlying` correctly populated (28,307+111 real rows; `written_at`
