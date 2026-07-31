@@ -293,9 +293,12 @@ file-by-file.
       the extraction preserved the subtle invariants; basedpyright's 12 remaining errors confirmed identical message-set
       against origin (diff empty when line numbers stripped); ruff clean; full `quality-gates.sh` green (113s). Repo:
       deployment-api.
-- [ ] [SCRIPT] P2. Decompose the remaining function-size-only violation in
-      `deployment_api/services/data_status/sports.py`. Remove its exclude entry once compliant; re-run
-      `quality-gates.sh` to confirm no regression.
+- [x] ✅ [SCRIPT] P2. **DONE 2026-07-31 (slot-2, infra craft).** Decomposed the oversized method in
+      `deployment_api/services/data_status/sports.py` (`_get_reference_expected_dates()`, was 57L).
+      `deployment-api@47a63ed`: extracted `_resolve_upstream_bucket` + `_read_upstream_venue_dates` — pure code motion,
+      no logic changes. `FUNCTION_SIZE_EXTRA_EXCLUDES` entry removed — gate passes natively. Verified: 246 targeted
+      tests green (`test_data_status_turbo.py`, `test_data_status_service.py`), basedpyright clean, ruff clean, full
+      `quality-gates.sh` green (137s). Repo: deployment-api.
 - [ ] [SCRIPT] P2. Decompose the remaining function-size-only violation in
       `deployment_api/services/data_status/sports_helpers.py` (`sports_honest_coverage()`, 300L). Remove its exclude
       entry once compliant; re-run `quality-gates.sh` to confirm no regression.
