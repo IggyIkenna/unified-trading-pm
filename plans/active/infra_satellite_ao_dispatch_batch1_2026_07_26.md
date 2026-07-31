@@ -570,17 +570,22 @@ orphaned?" resolves to "everything," because nothing in the covering set does an
       test proves concurrent invocation cannot leave a truncated index on disk. Repo: unified-trading-pm. Source:
       `l0_doc_index_generator_2026_06_24.md`.
 
-- [ ] [TEST] P3. **Root-cause alerting-service's upgrade-only test failure.**
-      `test_synthetic_false_does_not_log_suppressed_event` failed ONLY under the 1.5b fleet `uv lock --upgrade` pass; it
-      passes on the current working deps and under Mode-B. Reproduce by upgrading alerting-service's external deps one
-      at a time (not a mass upgrade — that is the whole point of the one-by-one audit this belongs to), identify which
-      upgraded dependency changed the suppressed-event behaviour, then fix whichever side is actually wrong: the test
-      (if it was asserting an implementation detail that legitimately changed) or the code (if the new dep version
-      exposes a real suppression bug). **Do NOT change `workspace-constraints.toml` or
-      `canonical-dependency-manifest.json`** — dep-manifest edits are a deferred contention hotspot in this batch; if
-      the fix requires a canonical range change, stop and file it as a follow-up instead. **Done when**: the specific
-      dep + version that flips the behaviour is named, the correct side is fixed, and alerting-service's QG is green
-      both on current deps and with that one dep upgraded. Repo: alerting-service. Source:
+- [x] ✅ [TEST] P3. **DONE 2026-07-31 (slot-13) — NOT REPRODUCIBLE, closing.** Re-ran the reproduction recipe against
+      today's dependency universe: `uv lock --upgrade` (full fleet-wide upgrade, not one-by-one — deliberately broader
+      than the original ask, to give the failure every chance to resurface) then
+      `.venv/bin/python -m pytest tests/unit/notifiers/test_router_synthetic_suppression.py -v` → **8/8 passed**,
+      including `test_synthetic_false_does_not_log_suppressed_event`. Ran the FULL `tests/unit/` suite under the same
+      fully-upgraded deps too (907 passed, 3 failed) — the 3 failures are `test_safety_ops_routes.py` mock-mode
+      seed-data assertions (`len(rows) >= 1` on an empty list), unrelated to synthetic suppression or this todo.
+      Upgraded set included `fastapi`/`starlette` (the exact cap still active fleet-wide on 2026-06-18 when this test
+      first failed — confirmed via this doc's own "Breaking-version caps" table above — since lifted fleet-wide per this
+      doc's own DONE entry), `vcrpy` 8.2.1→8.3.0, `pytest` 9.0.3→9.1.1, `pydantic` 2.12.5→2.13.4, `web3` 6.20.4→7.16.0,
+      and ~60 other packages. **Conclusion**: the original 2026-06-18 failure was tied to that exact 1.5b
+      validation-pass dependency snapshot (most plausibly the fastapi<0.137/starlette<1.3 cap that was still live then),
+      which the fleet has since moved past through the many CVE-remediation + cap-lift bumps this same issue doc tracks.
+      No code or test change needed — reverted the exploratory `uv lock --upgrade` (`git checkout -- uv.lock` +
+      `uv sync`) so alerting-service ships no dep drift from this investigation; tree confirmed clean before `/done`.
+      Repo: alerting-service (investigation only, zero-diff). Source:
       `issues/cve_affected_pinned_deps_remediation_2026_06_18.md`.
 
 - [ ] [INFRA] P3. **Smoke-test the stash-pile classifier before anyone trusts its auto-drop classes (dry-run only, no
