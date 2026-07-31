@@ -213,3 +213,11 @@ regression) is worse.**
   read + a Progress Log append, no code change. Further corroborates that Option A (dedup at the escalation-dispatch
   layer itself) is the fix that actually closes this doc's waste — the 9th dispatch's alerting-materiality fix is a
   genuinely useful, complementary layer (correct classification) but does not substitute for it.
+- **2026-07-31 (data_pipeline_failure escalation worker, agt-05ca7f, slot 11) — `(cefi, book_snapshot_5)`'s 11th+
+  dispatch, same story again.** Dispatch context again carried the STATIC BACKLOG materiality annotation (110 rows/24h)
+  and a full worker session still spawned to handle it. Session cost: two file reads + a git-ancestor check (5 commits)
+  - one bounded column-projected manifest read + two Progress Log appends, no code change — this single condition has
+    now consumed 11+ full orchestrator-agent dispatches since 2026-07-28, at least 5 of which (7th onward) found nothing
+    to fix beyond re-confirming an already-materiality-suppressed decaying trickle. Full writeup in the book_snapshot_5
+    doc's own Progress Log. Still awaiting the operator/design decision on Option A/B/C — this entry adds no new
+    argument, just another data point on the climbing count.

@@ -95,10 +95,10 @@ source:
   data_pipeline_failure worker (slot-16), fired 2026-07-28, asset_group=cefi data_type=book_snapshot_5, 299,467
   attempted_failed of 1,037,001 attempted (28.9%), flagged Fresh (0d old)."
 last_updated:
-  2026-07-31 (10th+ dispatch, agt-164899 -- confirmed the nullable=True fix (agt-716d56) still holds; a tiny 5-row
-  post-fix tail (04:02-04:18Z) already self-resolved with zero further activity 80min later. Also confirms
-  deployment-service@a564cca's materiality fix is now correctly labeling this cell STATIC BACKLOG (95 rows/24h, below
-  the 500-row floor) instead of Fresh -- the mechanism this doc's 9th dispatch shipped is working as intended.)
+  2026-07-31 (11th+ dispatch, agt-05ca7f -- confirmed all 5 fix commits still hold; a tiny 16-row KRAKEN-SPOT/OKX-SWAP
+  tail (04:18-06:05Z) matches the same self-resolving in-flight-stale-code shape documented 6 times prior on this doc,
+  not re-polled given the established pattern. deployment-service@a564cca's materiality fix continues correctly labeling
+  this cell STATIC BACKLOG (110 rows/24h, below the 500-row floor) instead of Fresh.)
 ---
 
 # CeFi `book_snapshot_5` schema-contract mismatch -- root cause + fix (2026-07-28)
@@ -555,3 +555,28 @@ against the reproduction script.
   hold under production load, and the alerting-materiality fix is now correctly suppressing the Fresh mislabel for this
   decaying trickle. No GCS/manifest write, no VM launch, no code change (PM plan-doc edit only). Pinged
   `dp-fleet-monitor` (authoring slot) with this outcome.
+- **2026-07-31 (`data_pipeline_failure` escalation worker, task `agt-05ca7f`, slot 11) — 11th+ dispatch, materiality fix
+  still holding; a fresh, tiny KRAKEN-SPOT/OKX-SWAP tail confirmed same self-resolving shape.** Received another
+  `DP_RUN_MOSTLY_EMPTY` (DP-FETCH-009) page for `(cefi, book_snapshot_5)`: 300,457/1,085,336 = 27.7%, alert context
+  already carrying the materiality annotation "STATIC BACKLOG — only 110 attempted_failed row(s) in the last 1d (below
+  the 500-row materiality floor)". No issue doc pre-linked (`Filed issue: (none — alert carries the details)`); found
+  this doc via the standard pre-task plan/issue conflict-check grep. Re-verified all five fix commits are still
+  ancestors of `origin/live-defi-rollout` (`git merge-base --is-ancestor`, fresh `git fetch`): MTDS
+  `339ca767`/`6bf568ee`, UAC `8db188fe`/`1c4d8864`, deployment-service `a564cca`. Did a bounded column-projected live
+  read of `gs://market-data-tick-cefi-prd-central-element-323112/_index/availability_index.parquet` filtered to
+  `(asset_group=cefi, data_type=book_snapshot_5, capture_status=attempted_failed)` rather than trusting the label alone
+  (per this doc's own open P2 todo about `_classify_tardis_error`'s truncation potentially hiding a new violation behind
+  the same manifest bucket): total 300,457 rows (matches the alert exactly); of the 6,861 all-time
+  `"schema contract violated"` rows, 16 carry `attempted_at` after the last confirmed post-fix checkpoint
+  (`agt-164899`'s `2026-07-31T04:18:05Z`) — 9 KRAKEN-SPOT, 7 OKX-SWAP, spanning `04:18:05Z`-`06:05:19Z` (~1h47m). Same
+  venue pair as the very first documented tail on this doc (2026-07-28, KRAKEN-SPOT/OKX-SWAP, ~10:48-10:49Z) and the
+  same small-short-lived shape as the 5 other self-resolving tails already logged above — consistent with the
+  established "in-flight VM/worker process resolving pre-fix code, self-resolving within hours" pattern, not a new
+  mechanism. Did not re-poll after a wait window (per async-wait-discipline: this shape has now self-resolved 6/6 times
+  it was checked twice, and holding a slot open to re-poll a 16-row tail is not a good use of shared escalation-worker
+  capacity — billing/capacity-waste avoidance over re-confirming an already-well-established pattern). **Conclusion: no
+  code fix needed this session** — all three root-cause fixes continue to hold, and the materiality fix continues to
+  correctly label this decaying trickle STATIC BACKLOG rather than Fresh. No GCS/manifest write, no VM launch, no code
+  change (PM plan-doc edit only). Pinged `dp-fleet-monitor` (authoring slot) with this outcome; also appended a
+  corroborating entry to `dp_escalation_worker_dispatch_no_open_issue_check_2026_07_29.md` (this is now the 11th+
+  dispatch for this exact condition, further reinforcing that doc's still-open Option A recommendation).
