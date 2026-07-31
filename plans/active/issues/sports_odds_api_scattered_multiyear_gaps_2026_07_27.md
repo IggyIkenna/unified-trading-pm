@@ -206,17 +206,28 @@ access (likely expired for the older ranges) or VM run-log archaeology, out of s
               `mtds-backfill-odds-smallchunk-20260731` (`--start 2020-06-06 --end 2026-07-31 --chunk-size 5`, same
               `e2-highmem-4`, SPOT) — the best validated workaround per the sibling doc, though not guaranteed (that
               doc's own conclusion: "no reliable workaround identified"; chunk-size 5 was 0/3 successful on the tail's
-              dense real-fetch window previously). Verified STARTED (`RUNNING` within seconds of `gcloud compute
-              instances create`). **Still open, NOT flipping**: the underlying OOM defect is an unresolved P1 in the
-              sibling doc ("root-cause the actual retained-memory object(s)") — this backfill cannot be reliably
-              completed until that lands or until this small-chunk relaunch is confirmed to finish clean. **Next steps
-              for whoever resumes**: check `gcloud compute instances describe mtds-backfill-odds-smallchunk-20260731
-              --zone=asia-northeast1-c` (absence = terminal, self-deletes on completion) and tail
-              `gs://deployment-scripts-central-element-323112/vm-logs/mtds-backfill-odds-smallchunk-20260731/run.log` for
-              any `CHUNK_FAILED` lines; once terminal, re-run this same data_type-aware census — if genuinely 0 gaps (or
-              only structurally unfillable ones), flip this checkbox with the manifest evidence, then do the P2 VERIFY
-              todo's own re-census. If chunks are still failing even at `--chunk-size 5`, this todo is genuinely blocked
-              on the sibling doc's P1 root-cause fix landing — do not keep relaunching with the same parameters expecting
+              dense real-fetch window previously). **That first relaunch was itself preempted ~55s after insert**
+              (confirmed via `gcloud compute operations list` → `compute.instances.preempted`, per CLAUDE.md's
+              "verify preemption FIRST" rule — genuine SPOT capacity preemption, unrelated to the OOM bug; zero
+              progress lost since no chunk had started). Retried as **`mtds-backfill-odds-smallchunk2-20260731`**
+              (identical params) — this second launch also needed an explicit `--account=github-actions-deploy@...`
+              override (the ambient `gcloud` active account had drifted to a different, lower-privilege identity
+              mid-session, most likely a shared-host config mutation from another slot's concurrent gcloud usage, not
+              a genuine IAM gap on this task's identity — resolved via account selection, no role grant needed).
+              Verified STARTED (`RUNNING` within seconds of `gcloud compute instances create`) and confirmed it
+              survived past the same ~1min preemption window this session's first attempt hit. **Still open, NOT
+              flipping**: the underlying OOM defect is an unresolved P1 in the sibling doc ("root-cause the actual
+              retained-memory object(s)") — this backfill cannot be reliably completed until that lands or until this
+              small-chunk relaunch is confirmed to finish clean. **Next steps for whoever resumes**: check
+              `gcloud compute instances describe mtds-backfill-odds-smallchunk2-20260731 --zone=asia-northeast1-c`
+              (absence = terminal, self-deletes on completion; if preempted again, check
+              `compute.instances.preempted` via operations list before assuming an OOM) and tail
+              `gs://deployment-scripts-central-element-323112/vm-logs/mtds-backfill-odds-smallchunk2-20260731/run.log`
+              for any `CHUNK_FAILED` lines; once terminal, re-run this same data_type-aware census — if genuinely 0
+              gaps (or only structurally unfillable ones), flip this checkbox with the manifest evidence, then do the
+              P2 VERIFY todo's own re-census. If chunks are still failing (not just preempting) even at
+              `--chunk-size 5`, this todo is genuinely blocked on the sibling doc's P1 root-cause fix landing — do
+              not keep relaunching with the same parameters expecting
               a different result; escalate via that doc instead.
 
 - [ ] [VERIFY] P2. Depends on the P1 backfill above. **Census re-run 2026-07-30 (slot 3) against a snapshotted canonical
@@ -373,7 +384,13 @@ access (likely expired for the older ranges) or VM run-log archaeology, out of s
   accurate state. Read `mtds_backfill_vm_memory_hang_large_chunk_2026_07_22.md` in full (the tracked P1 root-cause for
   this OOM class) — its root-cause todo ("profile the retained-memory object across date iterations") is still `[ ]`
   open; no fix has landed. Relaunched with the doc's best-validated mitigation (`--chunk-size 5`, same `e2-highmem-4`,
-  full remaining range) as `mtds-backfill-odds-smallchunk-20260731`; verified STARTED (`RUNNING` within seconds).
+  full remaining range) as `mtds-backfill-odds-smallchunk-20260731`; verified STARTED (`RUNNING` within seconds), but
+  it was preempted ~55s later (genuine SPOT capacity preemption, confirmed via `compute.instances.preempted` — not
+  the OOM bug, zero progress lost). Retried as `mtds-backfill-odds-smallchunk2-20260731` (identical params); this
+  second attempt needed an explicit `--account=github-actions-deploy@...` override because the ambient `gcloud`
+  active account had drifted mid-session (shared-host config state, not a genuine IAM gap on this task's identity —
+  resolved via account selection per the "check the ambient identity before treating a permission error as a
+  blocked-question" rule). Confirmed this retry survived past the ~1min preemption window the first attempt hit.
   Documented this run's more-severe OOM evidence (default chunk-size OOMs on `e2-highmem-4` even on mostly-SKIP older
   history, not just the previously-documented dense recent tail) as a new addendum in the sibling OOM doc. Not flipping
   this checkbox — real backfill work remains incomplete and is now blocked on either (a) the small-chunk relaunch
