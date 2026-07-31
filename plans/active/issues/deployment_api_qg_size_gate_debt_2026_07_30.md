@@ -120,8 +120,21 @@ file-by-file.
       regressions).
 - [ ] [SCRIPT] P1. Decompose `deployment_api/services/cost_observability/service.py` (1055L, 6 oversized methods).
       Remove its exclude entry once compliant.
-- [ ] [SCRIPT] P1. Decompose `deployment_api/routes/health_consolidator.py` (1082L). Remove its exclude entry once
-      compliant.
+- [x] ✅ [SCRIPT] P1. **DONE 2026-07-31 (slot-5, infra craft)** — `deployment-api@c11f56f`. Decomposed
+      `deployment_api/routes/health_consolidator.py` (1082L) into a 6-module facade package
+      (`health_consolidator/{__init__,_models,_classify,_catalog,_reads,_mock}.py`, every module ≤523L), mirroring the
+      2026-07-31 `deployments_inventory` precedent. Every module-qualified seam the test suite patches by name
+      (`resolve_bucket_name` / `get_storage_client` / `consolidated_blob_age_sec` / `per_vm_shard_backlog` /
+      `per_vm_shards_exist` / `read_availability_index` / `_compute_consolidator_health` — all patched as
+      `deployment_api.routes.health_consolidator.<name>` in `tests/unit/test_route_health_overview.py`) stayed
+      physically in the facade `__init__.py` (`_ag_health`, `_consolidator_health`, `_build_consolidators`,
+      `object_delta_for_bucket`, the stale-while-revalidate cache, and the route handler) rather than using the
+      `deployments_inventory`-style `_inv.`-indirection trick, since none of the patch-sensitive functions needed to
+      move — everything extracted (pydantic models, freshness/verdict classification, catalog loading, per-bucket
+      cheap-read helpers, the mock-mode estate) takes its GCS client as a plain argument, never reads the module-level
+      collaborator off its own globals. Verified: full `quality-gates.sh` green (5052 tests pass, 0 regressions,
+      `✅ File size OK`, `✅ Function/class/method size OK`); `FUNCTION_SIZE_EXTRA_EXCLUDES` entry for
+      `health_consolidator.py` removed from `deployment-api/scripts/quality-gates.sh`.
 - [ ] [SCRIPT] P2. Decompose `deployment_api/routes/data_status/_live_coverage.py` (920L, just over the cap). Remove its
       exclude entry once compliant.
 - [ ] [SCRIPT] P2. Extract helpers from the 8 oversized methods in
@@ -221,3 +234,7 @@ file-by-file.
   seeded/derived dispatch + count bookkeeping into `mtds_dt_entries.py` helpers that take `expected_dates` as a
   parameter. Re-verified: `deployment-api@a483514`, full `quality-gates.sh` green (5052 tests pass, `✅ File size OK`,
   `✅ Function/class/method size OK`, 0 regressions). 7 P1/P2 decomposition todos remain open for follow-up dispatch.
+- 2026-07-31 (slot-5, infra craft): Flipped todo — decomposed `deployment_api/routes/health_consolidator.py` (1082L)
+  into a 6-module facade package. See the flipped checkbox above for the full evidence chain (which functions stayed in
+  the facade to preserve the test-patch surface, verification detail). `deployment-api@c11f56f`. 6 P1/P2 decomposition
+  todos remain open for follow-up dispatch.
