@@ -892,3 +892,12 @@ accordingly.
   pattern — 3966s (~66min), 46,600/169,594 files (27.5%), `bytes_allocated=0` at last release. Tally now stands at 4
   shards (40, 42, 22, 25) for this signature vs 4 (16, 19, 23, 44) for the confirmed corrupt-file spike signature — a
   roughly even split across the 18-shard relaunch batch so far. No action taken (monitoring-only).
+- **2026-07-31T05:03Z (slot-15) — a THIRD distinct signature reappears**: shard 17 (`-032349`) is genuinely frozen
+  (silent, `run.log` `Update time` stuck at 04:18:20Z, ~45min stale at check time, `STOPPING` in `gcloud`), NOT an
+  explicit `rc=137` kill — this is the original whole-VM-freeze pattern from this session's earliest diagnostics (no
+  exit code, no OOM line, just goes silent), at 2989s (~49.8min elapsed, 19,400/157,497 files, 12.3%) — almost exactly
+  the original ~45-50min freeze window this doc first identified before the fix shipped. Last `bytes_allocated` before
+  going silent was `69,214,016` (~69MB, unremarkable). This is now a THIRD failure mode observed post-fix: (1)
+  corrupt-file spike-OOM (16/19/23/44), (2) zero-allocation slow-timing OOM (40/42/22/25), and now (3) the pre-fix
+  silent-freeze pattern recurring on at least one shard despite the fix. No action taken (monitoring-only) — will
+  self-reap via the in-VM stall-kill per this doc's established pattern.
