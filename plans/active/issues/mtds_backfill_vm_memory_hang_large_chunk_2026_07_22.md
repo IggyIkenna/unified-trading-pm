@@ -357,6 +357,29 @@ it wasn't a reliable one for CEFI.
       pre-flight gap count per chunk) or just a documented operator convention ("scope a small `--chunk-size` explicitly
       when re-running a tail that's known to have a high real-fetch-day density"). Repo: deployment-service.
 
+## 2026-07-31 third recurrence — machine-type bump now insufficient even for SKIP-dense OLDER history (slot-5, `data_engineering`, task `sports_odds_api_scattered_multiyear_gaps-004`)
+
+**New, more severe signature than either prior recurrence.** `mtds-backfill-odds-sentinel-fix-20260731`
+(`launch-mtds-sports-odds-backfill-vm.sh --start 2020-06-06 --end 2026-07-31`, default `--chunk-size 250`, already on
+the fixed `e2-highmem-4` machine type) OOM-killed on **6 of its first 6 completed chunks**
+(`CHUNK_FAILED: ... exit=137 reason=OOM_KILLED` for chunks 1-6; chunk 7's log then cuts off mid-run with no further
+lines — the same silent-freeze signature as this doc's original CEFI incident). Unlike the 2026-07-29 sports recurrence
+(which only failed on chunk 9, the dense recent-history tail, and was explained by cross-day memory accumulation within
+one real-fetch-heavy chunk), **these 6 chunks cover 2020-06-06..2024-07-14 — mostly `SKIP` days** (the manifest already
+holds real captures for most of this range; only 7 `Processed date=` lines appear across the whole visible log vs. 201
+`SKIP` lines). A chunk that is >95% skip-days should have a near-flat memory profile, yet still OOM-killed on a 32GB
+machine that already has ~2.2x headroom over every previously-observed peak (14.6GB CEFI, ~23-25GB sports-tail). This
+means **the machine-type bump is no longer a reliable mitigation even for the "safe" (skip-dense, older-history) case
+the original fix was validated against** — a genuinely new severity level, not just a recurrence in a new launcher. Root
+cause not further narrowed this session (same P1 below covers it — the retained-memory object hypothesis would explain
+this too: if the leak is per-date-iteration regardless of SKIP vs. real-fetch, a 250-day chunk accumulates 250
+iterations' worth of leaked state even when almost all of them no-op). **Mitigation applied**: relaunched with
+`--chunk-size 5` (this doc's own best-validated workaround) as `mtds-backfill-odds-smallchunk-20260731` — full detail +
+resume instructions in `sports_odds_api_scattered_multiyear_gaps_2026_07_27.md`'s Progress Log (same date, slot 5).
+Given `--chunk-size 5` was previously 0/3 successful on the dense tail (2026-07-29 addendum above), this relaunch is a
+mitigation attempt, not a confirmed fix — if it also fails, that's further evidence the P1 root-cause below needs to
+land before this launcher can be trusted for any full-range run.
+
 ## Progress Log
 
 - **na-eligibility-audit 2026-07-30**: KEEP-NA, valid (infra tranche, dispatch agt-30721a) — All 4 items are genuine
@@ -364,3 +387,9 @@ it wasn't a reliable one for CEFI.
   chunk-size design choice), none with a worker-determinable checkable outcome today. NOTE: this doc's real asset_group
   is [cefi, meta], not infra — a residual scope-leak from this session's pre-fix Phase 0 population; classified here for
   completeness, no state changed, cefi tranche's own future audit owns this doc.
+- 2026-07-31 (slot 5, data_engineering): Documented a third OOM recurrence (see new section above) while working
+  `sports_odds_api_scattered_multiyear_gaps_2026_07_27.md`'s P1 backfill todo — worse severity than either prior
+  instance (SKIP-dense older history now OOMs on `e2-highmem-4`, not just dense real-fetch chunks). No code fix
+  attempted this session (out of scope for the dispatched task); relaunched the odds_api backfill with the
+  `--chunk-size 5` mitigation as a workaround. The P1 root-cause todo below remains the durable fix and is still `[ ]`
+  open.
