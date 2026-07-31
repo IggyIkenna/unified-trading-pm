@@ -167,3 +167,10 @@ regression) is worse.**
   full-worker dispatches for backlogs that already have an OPEN issue doc and zero new root-cause-relevant activity,
   reinforcing that Option A's dedup check belongs at the dispatch layer (would save this exact session's spawn) rather
   than being re-derived per-condition by convention alone.
+- **2026-07-31 (data_pipeline_failure escalation worker, agt-794496, slot 5) — `(cefi, derivative_ticker)` now at its
+  7th+ dispatch.** `cefi_derivative_ticker_tardis_resolver_aiodns_hardfail_2026_07_28.md` re-fired yet again with a
+  byte-identical `attempted_failed` numerator (158,475) to the immediately-prior verified reading; only the `attempted`
+  denominator moved. Session cost: two file reads + one `git merge-base --is-ancestor` check (both fix commits still in
+  place) + a Progress Log append, no GCS read, no code change. Further corroborates Option A — this single condition has
+  now consumed 7+ full orchestrator-agent dispatches since 2026-07-28 for a backlog whose root-cause-relevant state has
+  not changed since the second dispatch fixed it.
