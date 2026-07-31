@@ -65,6 +65,19 @@ locked_since: 2026-05-21
       "park it" blocked-answer deterministically results in the task being parked (or an explicit operator step being
       raised), verified end-to-end on one real task.
 
+## Progress Log
+
+- 2026-07-31 (slot-9, data_engineering): second confirming occurrence, different task —
+  `defi_satellite_ao_dispatch_batch3-015` (the `funding_oi`/`returns` D1 DeFi features todo in
+  `plans/active/defi_satellite_ao_dispatch_batch3_2026_07_26.md`). The plan's own text records main ruled (~2026-07-31
+  12:58Z, in response to slot-16's `/blocked`) to PARK this todo via the backlog.yaml recipe (priority: 999 + a false
+  prerequisite gated on both linked issue docs) — yet my dispatch at 15:11:08Z (`task_dispatched` activity,
+  `dispatch_reason: "tier=1 priority=20 plan_order=0"`) shows the task still at its plan-derived `priority: 20`,
+  not 999. This is the 11th+ consecutive dispatch of this exact todo today (slots 2,3,4,5,6,8,10,11,14,16, now 9) since
+  the ruling — same root cause this doc already describes (a main "park it" disposition records intent only, nothing
+  mechanically applies it). No new action taken beyond this evidence note; skipped the task per the established
+  precedent (don't re-ask the already-answered question, don't force the compute step past its real infra blocker).
+
 ## Codex SSOTs
 
 - `/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md` — dispatch / blocked-queue /
