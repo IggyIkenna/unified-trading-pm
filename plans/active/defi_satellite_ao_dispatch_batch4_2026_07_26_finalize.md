@@ -53,15 +53,32 @@ drift_direction: advance-code
 
 ## Todos
 
-- [ ] [REVIEW] P3. **Reconcile both source docs.** (1) `/plans/active/issues/defi_code_codex_drift_2026_05_27.md` —
-      confirm the D2 item now reads `- [x]` with a dated note citing at least two of the four sources batch4 names, and
-      confirm no codex file was touched in that commit (`git show --stat` on it). Then re-read the doc end to end: with
-      D2 closed, its only remaining open item should be D15 (the HYPERLIQUID/ASTER `DEFI_VENUE_PHASE` label reconcile),
-      whose UAC-registry half is still operator-gated — so the doc stays `status: open`; record that in one line rather
-      than flipping it. (2) `/plans/archive/issues/aave_rate_impact_structural_zero_defillama_borrow_gap_2026_07_26.md`
-      — confirm it is at `plans/archive/issues/` with `status: resolved` and a populated `resolved_by:`, or that
-      batch4's todo closed with a written reason it was NOT archived. **Done when**: both source docs' states are
-      confirmed by reading, with a one-line note each recording why the doc is or is not `resolved`.
+- [x] ✅ [REVIEW] P3. **Reconcile both source docs — DONE 2026-07-31.** (1)
+      `/plans/active/issues/defi_code_codex_drift_2026_05_27.md` — **confirmed**: D2 reads `- [x]` with a dated note
+      ("CLOSED 2026-05-28 leg + FOLDED+DELETED 2026-07-21 for the remaining two, re-verified 2026-07-28") citing all
+      four of batch4's named sources. The flip landed in `unified-trading-pm@fdbafb3be` — a large same-day batch commit
+      ("archive 22 zero-todo docs, flip 22 doc-only-quick fixes...") that also touched 13 OTHER codex files
+      (`canonical-cutover-register.md`, `cross-asset-canonical-target-ssot.md`, `defi-canonical-naming-ssot.md`,
+      `defi-data-type-taxonomy.md`, `defi-data-types-catalog.md`, `four-surface-reconciliation-procedure.md`,
+      `gcs-and-manifest-delete-safety-protocol.md`, `honest-coverage-model.md`, `mvp-scope-canonical.md`,
+      `reconciliation-finding-taxonomy.md`, `sports-data-types-catalog.md`, `solana-defi-coverage.md`,
+      `deployment-observability.md`) — so the literal "no codex file touched in that commit" premise does not hold for
+      the commit as a whole; **but the one codex file this check exists to protect,
+      `/codex/05-infrastructure/bucket-isolation-model.md` (the parked DO-NOT-DELETE operator question), is NOT among
+      them** — `git show --stat fdbafb3be | grep bucket-isolation-model` returns nothing, so the substantive concern
+      (this todo silently pre-empting the parked operator question) did not occur. Re-read the doc end to end: the only
+      remaining `- [ ]` is D15 (HYPERLIQUID/ASTER `DEFI_VENUE_PHASE`/legacy-corpus migration) — its classification half
+      was already operator-ruled 2026-07-27 (keep both venues pure CEFI), but the legacy-corpus migration itself is
+      unscoped and its adjacent `honest_coverage_shard_dimension_model_definitional_data_2026_07_07.md` cross-reference
+      is flagged (not blocking) as needing an operator confirmation — so the doc correctly stays `status: open`, not
+      flipped. (2) `/plans/archive/issues/aave_rate_impact_structural_zero_defillama_borrow_gap_2026_07_26.md` —
+      **confirmed directly** (no fallback reason needed): the file is now at `plans/archive/issues/` with frontmatter
+      `status: resolved` and `resolved_by: features-service@b0845d83, strategy-service@59dd0638` populated — the 6-step
+      archival ritual batch4's own todo 2 had explicitly left incomplete ("NOT done: the file was NOT moved... this pass
+      was scoped to verify-and-flip only") was completed in the SAME `PM@fdbafb3be` batch commit as the D2 flip above
+      (`git log --follow --name-status` shows an `R083` rename `plans/active/issues/... → plans/archive/issues/...` in
+      that commit), with a small referrer-path follow-up in `PM@090ce516b` ("archive onchain manifest backfill issue
+      doc"). **Done**: both source docs' states confirmed by reading, one-line note each above.
 - [ ] [REVIEW] P3. **Re-check batch4's three dropped-by-conflict-check items against batch3's live state.** Batch4
       dropped them because batch3 claimed the same ground. Re-read batch3's corresponding todos: if any has since been
       cancelled, superseded, or re-scoped away from that ground, the dropped item becomes uncovered again and must be
