@@ -518,7 +518,7 @@ cancellation-timeout fix and already shipped). Suggested next steps for whoever 
       for the low-pid subset, confirmed via live routing evidence," not the "refuted" verdict the prior single-sample
       check reached. No code shipped (pure investigation, 4 occurrences × 2 log streams each).
 
-- [ ] [BACKEND] P1. **NEW, opened 2026-07-31 (slot 7, backend_engineer) — confirm whether the low-pid (28/29) vs
+- [x] ✅ [BACKEND] P1. **NEW, opened 2026-07-31 (slot 7, backend_engineer) — confirm whether the low-pid (28/29) vs
       high-pid (280/900/5096) split found this session (see the todo above) actually maps to gunicorn MASTER vs
       recycled-WORKER roles, and reconcile the doc's headline conclusion.** 4/4 checked occurrences split cleanly: low
       pids → genuine whole-instance replacement (request abandonment, instance-ID swap, sometimes a
@@ -531,7 +531,34 @@ cancellation-timeout fix and already shipped). Suggested next steps for whoever 
       single-sample check had concluded), just mislabeled by Cloud Run's generic `AUTOSCALING` reason string; (3) then
       investigate WHY the master itself calls `abort()` (never established — this doc only traced supervisory mechanics;
       `faulthandler` is only armed worker-side, so an arbiter-side abort has no dump to read yet). (repo:
-      deployment-api)
+      deployment-api) — **2026-07-31 (slot 11, backend_engineer)**: shipped step (1), the only part of this todo
+      determinable without waiting for a future SIGABRT. `deployment-api@785405d`: added an `on_starting` hook (fires
+      ONCE, in the master/arbiter, before any fork) logging `"gunicorn MASTER (arbiter) started, pid=%s"` via
+      `server.log.info` (reaches stdout — `errorlog = "-"`/`accesslog = "-"` are already confirmed-working delivery
+      paths per this doc's earlier findings), and extended the existing `post_fork` hook to also log
+      `"gunicorn WORKER forked, pid=%s age=%s"` per worker fork (age = gunicorn's own spawn-order counter, already used
+      for leader-election — 0..N-1 = initial spawn, N+ = a post-recycle re-fork). Together these give a durable stdout
+      record mapping every pid this container ever forks to a role (MASTER vs WORKER) + spawn generation, so the NEXT
+      SIGABRT's pid can be looked up against these lines instead of inferred from magnitude. 2 new unit tests
+      (`TestOnStarting.test_logs_master_pid`, `TestPostFork.test_logs_worker_pid_and_age`) + all existing
+      `test_gunicorn_conf.py` tests green; `quality-gates.sh` PASSED (112s); verified live on origin via
+      `merge-base --is-ancestor`. Steps (2)/(3) are NOT actionable yet — they require reading a SIGABRT that occurs
+      AFTER this ships and matching its pid against these new log lines; filed as a `[REVIEW]` follow-up below rather
+      than guessing ahead of the evidence.
+
+- [ ] [REVIEW] P1. **NEW, opened 2026-07-31 (slot 11, backend_engineer) — once `deployment-api@785405d`'s MASTER/WORKER
+      pid-role logging (todo above) reaches a live Cloud Run deploy of `uts-shared-deployment-api` (verify via direct
+      image extraction or `gcloud run revisions list` creation timestamp — content-diff, not ancestry, per this doc's
+      own 2026-07-25 methodology correction), read the NEXT `Uncaught signal: 6` occurrence's pid against the new
+      `"gunicorn MASTER (arbiter) started, pid=%s"` / `"gunicorn WORKER forked, pid=%s age=%s"` stdout lines for that
+      same revision/instance.** If the crashing pid matches the logged MASTER pid: this CONFIRMS the doc's original
+      "crash-loop compounding the reaper" claim is TRUE for the low-pid subset (not refuted, per the pid=900
+      single-sample check's earlier conclusion) — update this doc's headline framing accordingly, and open a fresh
+      `[BACKEND]` todo to investigate WHY the master itself calls `abort()` (no dump exists for an arbiter-side abort —
+      `faulthandler` is only armed worker-side). If it matches a logged WORKER pid instead: the low-pid/high-pid split
+      found this session was NOT a MASTER/WORKER distinction — re-open that question with a fresh evidence-backed todo
+      rather than re-guessing. If no SIGABRT has occurred yet since the deploy, this todo stays open — don't force a
+      conclusion from zero data. (repo: deployment-api)
 
 - [ ] [BACKEND] P3. **NEW, opened 2026-07-31 (slot 13, backend_engineer) — dead-code cleanup: `workers/auto_sync.py`'s
       entire background-sync implementation is unreachable in production.** Found while tracing the call graph for the
@@ -596,6 +623,14 @@ cancellation-timeout fix and already shipped). Suggested next steps for whoever 
   new tests + all 25 existing `catalogue_lifecycle` tests green; `quality-gates.sh` PASSED (111s); verified on origin
   via `merge-base --is-ancestor`. Flipped the checkbox; filed a `[REVIEW] P2` monitoring todo (does the SIGKILL rate
   actually drop on the fix-carrying revision) plus two named next-candidate mechanisms if it doesn't.
+
+- **2026-07-31 (slot 11, backend_engineer)** — Dispatched `deployment_api_sigabrt_crash_loop-014` (confirm/reconcile the
+  pid↔gunicorn-role mapping). Shipped the only currently-determinable part (step 1): `deployment-api@785405d` adds an
+  `on_starting` hook logging the arbiter's own pid once at master startup, and extends `post_fork` to log each worker's
+  pid+age on every fork — together a durable stdout record so the NEXT SIGABRT's pid can be matched to MASTER vs WORKER
+  without guessing. 2 new unit tests + all existing `test_gunicorn_conf.py` tests green; `quality-gates.sh` PASSED
+  (112s); verified on origin. Steps (2)/(3) need a post-deploy SIGABRT to read against these new lines — filed a
+  `[REVIEW] P1` follow-up rather than guessing ahead of the evidence. Flipped the checkbox.
 
 > **2026-07-31 line-cap remediation**: every entry from the original 2026-07-24 finding through the `-007` dispatch
 > extracted verbatim to `/plans/archive/2026_07/deployment_api_sigabrt_crash_loop_progress_log_history_2026_07_31.md`
