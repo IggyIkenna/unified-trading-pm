@@ -393,16 +393,19 @@ concurrent workers do not collide on this file.
       already-completed fix; flipping only. Source:
       `archive/issues/qg_hardcoded_tmp_paths_false_failures_on_full_tmpfs_2026_07_26.md` (its own Todos already show
       this done + archived).
-- [ ] [BACKEND] P2. **Root-cause and fix `plan-health-agent.yml`'s dead `schedule` trigger (1/200 firings since
-      2026-03-07).** One combined todo (todo 2 is gated on todo 1's output, same source doc): (a) compare the workflow's
-      trigger/concurrency/permissions blocks line-by-line against 2-3 reliably-firing sibling crons — the doc has
-      already ruled out disabled-workflow-state, recently-added-trigger, and concurrency-group collision; the leading
-      untested hypothesis is `pull_request`-trigger-volume deprioritization; escalate to GitHub support/status page only
-      if no structural cause is found; (b) once root-caused, ship the fix (e.g. split the `pull_request`- triggered
-      sweep into its own workflow file to remove shared-workflow contention, or adjust concurrency scoping) and verify
-      via a real schedule-triggered run appearing within 48 hours of shipping. **Done when**: (a) records a root cause
-      (or a documented, GH-support-escalated absence of one), and (b)'s fix is verified by an actual schedule-fired run
-      post-ship. Source: `issues/plan_health_agent_dead_schedule_trigger_2026_07_27.md` (todos 1-2).
+- [x] ✅ [BACKEND] P2. DONE 2026-07-31 — unified-trading-pm (this doc-flip commit). **Root-cause and fix
+      `plan-health-agent.yml`'s dead `schedule` trigger (1/200 firings since 2026-03-07).** RESOLVED AS MOOT, not
+      diagnosed-and-fixed: the `schedule:` trigger under investigation was deliberately REMOVED from
+      `.github/workflows/plan-health-agent.yml` (+ its template twin) one day after the source issue doc was filed —
+      `unified-trading-pm@481e72d6f` (2026-07-28 09:44 UTC, "RULE-11 prove-then-retire"), an unrelated decision that
+      superseded the daily hygiene sweep with `plan-reconciler.timer` (systemd, central orchestrator VM). Re-verified
+      live 2026-07-31: current workflow `on:` block is `pull_request: branches: [main]` only (no `schedule:`); the
+      replacement timer is `active (waiting)`, last fired 2026-07-31 08:00:15 UTC, with a genuine successful dispatch
+      logged at 2026-07-31T00:01:38Z (`{"ok":true,"dispatch_id":"agt-151fd0",...}|HTTP:200`) and correct
+      retry-until-capacity behavior past two transient connect-timeouts. No fix was possible or needed — there is no
+      longer a schedule trigger to fix, and its function is proven live elsewhere. Source doc updated to
+      `status: resolved` with full resolution writeup + both its todos closed:
+      `issues/plan_health_agent_dead_schedule_trigger_2026_07_27.md`.
 - [x] ✅ [DOC] P2. DONE 2026-07-31 — unified-trading-pm (this doc-flip commit).
       **`monitoring_control_plane_master_2026_06_10.md` reconciliation + one bounded status check.** (a) Reconciled G3
       (manifest-consolidator-health) against what actually shipped: `unified_deployment_health_cockpit_2026_06_23`

@@ -8,8 +8,10 @@ summary:
   run list shows only 1 schedule-triggered run out of the last 200 (2026-07-26 03:02 UTC) against ~140+ days since the
   file was added 2026-03-07. A sibling daily cron (readiness-verifier.yml) fires reliably (~83%, matching the documented
   GHA schedule throttle) with the same schedule-trigger shape, so this is not the known throttle — something specific to
-  this workflow is suppressing it.
-status: open
+  this workflow is suppressing it. RESOLVED as moot — the schedule trigger itself was deliberately dropped from the
+  workflow the very next day (RULE-11 prove-then-retire, unrelated to this investigation), superseded by the
+  plan-reconciler.timer systemd job, independently confirmed alive and firing.
+status: resolved
 nature: issue
 asset_group: [ci]
 stage: [meta]
@@ -29,7 +31,7 @@ estimate_calibrated_ai_days: 0.5
 assigned_role: NA
 drift_direction: advance-code
 depends_on: []
-resolved_by:
+resolved_by: slot 8 (cicd→backend_engineer craft, task ci_satellite_ao_dispatch_batch2-010), 2026-07-31
 locked_by:
 supersedes:
 superseded_by:
@@ -105,18 +107,44 @@ escalation — neither completed this session):
 corpus drift before it compounds. A schedule trigger that looks configured but essentially never fires is worse than an
 honestly-absent one: nobody notices the gap because the workflow file itself looks correct.
 
+## Resolution — 2026-07-31
+
+**Moot, not root-caused-and-fixed.** The `schedule:` trigger this issue investigates was deliberately **removed
+entirely** from `.github/workflows/plan-health-agent.yml` (and its workflow-templates twin) the very next day after this
+doc was filed — `unified-trading-pm@481e72d6f` (2026-07-28 09:44 UTC), commit message: "RULE-11 prove-then-retire
+executed: dropped the schedule: trigger + Haiku plan-health/notify job pair from
+.github/workflows/plan-health-agent.yml + its template twin, keeping only the pull_request-triggered plan-health-gate
+hard gate... superseded by the daily deep plan-reconciler agent (opus, effort max) on a systemd timer on the central
+orchestrator VM." This was an **independent, unrelated decision** (RULE-11 prove-then-retire, tracked in
+`plan_hygiene_precommit_and_agentic_resolution_2026_06_10.md`, archived) — not a response to this investigation — that
+happened to remove the exact trigger under study.
+
+Verified 2026-07-31 (re-confirmed live, not just reading the commit):
+
+- Current `.github/workflows/plan-health-agent.yml` `on:` block is `pull_request: branches: [main]` only — no
+  `schedule:`, no `workflow_dispatch:`. Confirmed no `template/plan-health*` twin still carries a `schedule:` block
+  either (`grep -rn "schedule.*cron" scripts/workflow-templates/` → 0 hits for this workflow).
+- The replacement daily mechanism (`plan-reconciler.timer`, systemd, central orchestrator VM) is loaded, enabled, and
+  actively firing: `systemctl status plan-reconciler.timer` shows `Active: active (waiting)`, last triggered 2026-07-31
+  08:00:15 UTC. `journalctl -u plan-reconciler.service` over the prior 12h shows a genuine successful dispatch
+  (`2026-07-31T00:01:38Z`, `{"ok":true,"dispatch_id":"agt-151fd0",...}|HTTP:200`) plus the hourly retry-until-capacity
+  design correctly no-op'ing once dispatched (`"already dispatched successfully today"`) and correctly retrying past a
+  couple of transient connect-timeout failures (`07:00:48Z` failed → `08:00:15Z` succeeded as a no-op, meaning the
+  underlying dispatch from `00:01:38Z` was still valid) — this is a materially more reliable daily-hygiene mechanism
+  than the 0.5%-firing GHA `schedule:` trigger this issue originally flagged.
+
+The original root-cause question (was it `pull_request`-volume deprioritization, a GH scheduler bug, something else?) is
+now **unanswerable and irrelevant** — there is nothing left to observe (the trigger no longer exists) and nothing left
+to fix (its function was already replaced by a mechanism proven to work). No GitHub-support escalation is warranted for
+a trigger that was intentionally retired.
+
 ## Todos
 
-- [ ] [BACKEND] P2. **Root-cause why the schedule trigger essentially never fires.** Check
-      `gh workflow view plan-health-agent.yml` for any disabled state; compare this workflow's full trigger/concurrency
-      block against 2-3 OTHER reliably-firing daily crons in the same repo line-by-line (not just the `on:` block —
-      job-level `if:` conditions, `concurrency:`, `permissions:`) for a structural difference; if nothing is found, open
-      a GitHub support ticket or check the GitHub Status page history for `github.com` Actions scheduler incidents
-      around this repo's activity pattern. Report the root cause before attempting a fix — do not guess.
-- [ ] [BACKEND] P2. **Fix it** once root-caused — likely candidates: split the `pull_request:`-triggered hygiene sweep
-      into its own workflow file separate from the `schedule:`-triggered daily sweep (removing the shared-workflow
-      contention entirely, if that's the cause), or adjust `concurrency:` scoping. Verify the fix by confirming an
-      actual `schedule`-triggered run appears in `gh run list` within 48 hours of shipping.
+- [x] ✅ **Root-cause why the schedule trigger essentially never fires.** Resolved as MOOT, not diagnosed — see
+      Resolution above: the trigger was removed by an unrelated 2026-07-28 decision one day after this doc was filed,
+      before root-causing completed. No further diagnosis is possible or useful.
+- [x] ✅ **Fix it.** No fix needed/applicable — the trigger's daily-hygiene function was already fully superseded by
+      `plan-reconciler.timer`, independently verified alive and firing (see Resolution above). Nothing to ship.
 
 ## Codex SSOTs
 
