@@ -46,6 +46,7 @@ assigned_role: backend_engineer
 resolved_by:
 locked_by:
 depends_on: []
+drift_direction: advance-code
 ---
 
 # agent-orchestrator's plan-flip checker rejects a genuine `[ ]`→`[x]` transition inside a reworded paragraph
