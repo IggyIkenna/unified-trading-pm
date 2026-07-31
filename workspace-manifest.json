@@ -536,7 +536,7 @@
         "warn_file_count": 15,
         "large_file_count": 1
       },
-      "ldr_ci_status": "GREEN",
+      "ldr_ci_status": "RED",
       "cascade_invalidated_by": "unified-trading-library=0.66.0"
     },
     "fund-administration-service": {
