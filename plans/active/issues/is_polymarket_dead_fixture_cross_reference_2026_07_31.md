@@ -124,3 +124,8 @@ Not adjudicated here:
       activation path (real plan/todo reference) to the code comment. (repo: instruments-service)
 
 ## Progress Log
+
+- **na-eligibility-audit 2026-07-31 (prediction tranche)**: KEEP-NA, valid — 1 open. The doc's own "Recommended
+  decision" section explicitly frames this as "Not adjudicated here" — a genuine (A) delete vs (B) keep-and-document
+  architecture call needing operator/plan-owner input, not a fact a worker can determine by reading code alone. Doc
+  stays NA.

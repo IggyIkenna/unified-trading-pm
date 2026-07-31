@@ -60,7 +60,7 @@ drift_direction: advance-code
       `prediction_satellite_ao_dispatch_batch1_2026_07_25.md`'s 7 todos all cite
       `prediction_phase_ab_residuals_2026_07_24.md` as Source, but each todo's own Done-when records results into a
       DIFFERENT sibling doc's Progress Log (`prediction_capture_incident_remediation_2026_07_06.md`,
-      `issues/prediction_lifecycle_prefetch_gate_and_resolution_day_catalogue_2026_07_14.md`,
+      `/plans/archive/issues/prediction_lifecycle_prefetch_gate_and_resolution_day_catalogue_2026_07_14.md`,
       `issues/prediction_polymarket_legacy_dual_write_trees_metadata_loss_2026_07_24.md`, plus
       `prediction_phase_ab_residuals_2026_07_24.md` itself for todo 7). Flip the corresponding checkbox in
       `prediction_phase_ab_residuals_2026_07_24.md` for each of the 7 items (they should already be cross-referenced via

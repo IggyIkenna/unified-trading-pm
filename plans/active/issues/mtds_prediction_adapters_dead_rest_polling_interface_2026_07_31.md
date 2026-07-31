@@ -119,3 +119,7 @@ Not adjudicated here (genuine judgment call on scope, not auto-resolved):
       (repo: market-tick-data-service)
 
 ## Progress Log
+
+- **na-eligibility-audit 2026-07-31 (prediction tranche)**: KEEP-NA, valid — 1 open. Same shape as the sibling
+  Polymarket dead-fixture finding filed the same day: the doc's own "Recommended decision" section explicitly frames (A)
+  delete vs (B) keep-and-document as a genuine judgment call, not auto-resolved. Doc stays NA.

@@ -138,11 +138,15 @@ source: >-
       `prediction-live-{venue}-{data_type}` VMs, manifest-confirmed captures through `day=2026-07-27`). (repos:
       **e2e-testing** — `e2e-testing/scripts/validation/validate_batch_live_smoke_matrix.py:552` +
       market-tick-data-service for the `by_date/` drift leg)
-- [ ] [BACKEND] P1. **Adapters must apply lifecycle bounds BEFORE the network call** — today inactive days land as
-      `SOURCE_RETURNED_ZERO` instead of an honest `EXPECTED_*`, and the CLOB catalogue scoped to `end_date_iso==day` can
-      cap backfills to the resolution day.
-      `issues/prediction_lifecycle_prefetch_gate_and_resolution_day_catalogue_2026_07_14.md`. (repos:
-      market-tick-data-service). **Reconciled 2026-07-26** (resolved
+- [x] ✅ [BACKEND] P1. **STALE — CLOSED 2026-07-31 (na-eligibility-audit, prediction tranche).** Adapters must apply
+      lifecycle bounds BEFORE the network call — today inactive days land as `SOURCE_RETURNED_ZERO` instead of an honest
+      `EXPECTED_*`, and the CLOB catalogue scoped to `end_date_iso==day` can cap backfills to the resolution day. **Its
+      own source doc is now fully resolved and archived**:
+      `/plans/archive/issues/prediction_lifecycle_prefetch_gate_and_resolution_day_catalogue_2026_07_14.md` (all 5 todos
+      done — pre-fetch gate `market-tick-data-service@abe0904d`, active-window catalogue widening
+      `instruments-service@41ca79d7`, historical re-backfill terminal 2026-07-30, full-corpus VERIFY 81.8%
+      captured÷attempted). This checkbox described the same deliverable and was simply never flipped once the source doc
+      landed. (repos: market-tick-data-service). **Reconciled 2026-07-26** (resolved
       `autonomous_session_operator_decisions_2026_07_25.md` entry #13, option A) against
       `prediction_satellite_ao_dispatch_batch4_2026_07_26.md` todo 1's overlapping lifecycle-bounds legs — this todo's
       `EXPECTED_*` target state is the ratified contract (already an `OUT_OF_COVERAGE_WINDOW_REASONS` member, clipped
@@ -256,15 +260,15 @@ source: >-
       features-service)
 
       **2026-07-26 fold-in** (resolved `autonomous_session_operator_decisions_2026_07_25.md` entry #12, option A):
-                                                                                                                                                                                                          `prediction_perps_kalshi_polymarket_parked_2026_07_24.md`'s sole remaining open item folds in here —
-                                                                                                                                                                                                          **Polymarket-perp enumerator, BLOCKED-UPSTREAM** (no public perps API exists — `perps-api.polymarket.com` /
-                                                                                                                                                                                                          `perps.polymarket.com` / `perp.polymarket.com` all NXDOMAIN, web-UI beta only, CFTC-DCM-approved perps launched
-                                                                                                                                                                                                          2026-04-21; re-verified 2026-06-22 that the unified CLOB/Gamma discovery path does not enumerate perp markets
-                                                                                                                                                                                                          either). Scaffold shipped at every layer (`PolymarketPerpReferenceDataAdapter` + MTDS adapter/connector +
-                                                                                                                                                                                                          launcher gating + strategy honest-absence); real unblock is Polymarket publishing the public perps API or
-                                                                                                                                                                                                          operator-provisioned beta credentials — status stays BLOCKED-CREDENTIALS, not descoped, auto-flows on endpoint
-                                                                                                                                                                                                          availability. Ping: slot_0. Repo: instruments-service. The shell plan (10 other todos, all shipped) archived —
-                                                                                                                                                                                                          see its own Progress Log.
+                                                                                                                                                                                                                  `prediction_perps_kalshi_polymarket_parked_2026_07_24.md`'s sole remaining open item folds in here —
+                                                                                                                                                                                                                  **Polymarket-perp enumerator, BLOCKED-UPSTREAM** (no public perps API exists — `perps-api.polymarket.com` /
+                                                                                                                                                                                                                  `perps.polymarket.com` / `perp.polymarket.com` all NXDOMAIN, web-UI beta only, CFTC-DCM-approved perps launched
+                                                                                                                                                                                                                  2026-04-21; re-verified 2026-06-22 that the unified CLOB/Gamma discovery path does not enumerate perp markets
+                                                                                                                                                                                                                  either). Scaffold shipped at every layer (`PolymarketPerpReferenceDataAdapter` + MTDS adapter/connector +
+                                                                                                                                                                                                                  launcher gating + strategy honest-absence); real unblock is Polymarket publishing the public perps API or
+                                                                                                                                                                                                                  operator-provisioned beta credentials — status stays BLOCKED-CREDENTIALS, not descoped, auto-flows on endpoint
+                                                                                                                                                                                                                  availability. Ping: slot_0. Repo: instruments-service. The shell plan (10 other todos, all shipped) archived —
+                                                                                                                                                                                                                  see its own Progress Log.
 
 ### A4 — Fixture-attribute WRITERS (Phase E depends on this landing before the Phase-D re-backfill)
 
@@ -456,6 +460,19 @@ source: >-
 
 ## Progress Log
 
+- **na-eligibility-audit 2026-07-31 (prediction tranche)**: KEEP-NA, stale item closed — 7 open (was 9 at the 2026-07-30
+  marker: A5 adapter dead-code audit resolved same-day by a sibling dispatch, -1; A1c closed this pass as stale, -1).
+  A1c ("Adapters must apply lifecycle bounds BEFORE the network call") described work whose own source doc
+  (`issues/prediction_lifecycle_prefetch_gate_and_resolution_day_catalogue_2026_07_14.md`) is now fully resolved and
+  archived — closed with citation. Remaining 7 open items re-verified against the 2026-07-30 marker's own reasoning,
+  unchanged: A1a stays gated on `prediction_capture_incident_remediation_2026_07_06.md`'s unimplemented Phase 6
+  (out-of-tranche doc, not re-opened this pass); the 6 Phase-B items (enumeration-driven manifest migration,
+  fixture-attribute historical backfill, ambiguous-canonical-value per-value escalation, instrument_type casing
+  re-verify, the actively-growing blank-instrument_type diagnostic, and the reconciliation-cadence top-up — the last
+  already a confirmed duplicate of `prediction_consolidated_native_ao_extract_2026_07_25.md` todo 4) each require a
+  writer drain + operator-held `--apply` on a race-sensitive `_index` CAS rewrite, an infra drain window, or end in a
+  genuine per-item escalation path — none worker-determinable end to end. Doc stays NA.
+
 - **2026-07-31 (slot-12, backend_engineer) — A5 adapter dead-code/fallback audit DONE, dispatched via
   `prediction_consolidated_native_ao_extract_2026_07_25.md` todo 1.** Audited every prediction adapter file in scope
   (instruments-service `kalshi.py`/`fixture_match.py`/`polymarket/*`, market-tick-data-service `kalshi_adapter.py`/
@@ -574,7 +591,7 @@ source: >-
   4 of this doc's checkboxes to DONE citing batch1's 7 commits, annotated a 5th that stays open.** Batch1's 7 todos all
   cited this doc as Source but wrote their Done-when evidence into 3 different sibling docs' Progress Logs
   (`prediction_capture_incident_remediation_2026_07_06.md`,
-  `issues/prediction_lifecycle_prefetch_gate_and_resolution_day_catalogue_2026_07_14.md`,
+  `/plans/archive/issues/prediction_lifecycle_prefetch_gate_and_resolution_day_catalogue_2026_07_14.md`,
   `plans/archive/issues/prediction_polymarket_legacy_dual_write_trees_metadata_loss_2026_07_24.md`) plus this doc itself
   for todo 7 — all 3 sibling docs' Progress Log entries + their own checkboxes were already correctly flipped (confirmed
   by direct read); the gap was that NONE of batch1's 7 commit SHAs had yet been cited in THIS doc's own checkbox list.

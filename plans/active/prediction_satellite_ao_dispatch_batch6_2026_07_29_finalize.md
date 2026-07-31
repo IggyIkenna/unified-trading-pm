@@ -53,7 +53,7 @@ drift_direction: advance-code
 - [ ] [REVIEW] P1. **Reconcile the 9 distinct source docs.** batch6's 13 todos cite 9 source docs
       (`prediction_capture_incident_remediation_2026_07_06.md`,
       `issues/prediction_arb_live_execution_bridge_2026_07_20.md`,
-      `issues/prediction_lifecycle_prefetch_gate_and_resolution_day_catalogue_2026_07_14.md`,
+      `/plans/archive/issues/prediction_lifecycle_prefetch_gate_and_resolution_day_catalogue_2026_07_14.md`,
       `issues/kalshi_execution_credential_secret_name_mismatch_2026_07_26.md`,
       `issues/kalshi_mass_attempted_failed_unclassified_adapter_error_2026_07_27.md`,
       `prediction_cross_venue_arb_and_coverage_2026_07_24.md` (3 todos cite this one),

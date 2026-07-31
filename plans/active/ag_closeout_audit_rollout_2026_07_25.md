@@ -222,7 +222,7 @@ source: >-
     `predictions_ml_walk_forward_and_arb_2026_06_20.md`, `predictions_other_bucket_and_ui_drilldown_2026_06_20.md`,
     `issues/kalshi_live_capture_regression_and_drift_2026_07_13.md`,
     `issues/prediction_arb_live_execution_bridge_2026_07_20.md`,
-    `issues/prediction_lifecycle_prefetch_gate_and_resolution_day_catalogue_2026_07_14.md`,
+    `/plans/archive/issues/prediction_lifecycle_prefetch_gate_and_resolution_day_catalogue_2026_07_14.md`,
     `issues/prediction_phantom_reconciler_wipes_bundle_atom_2026_07_10.md`,
     `issues/prediction_polymarket_legacy_dual_write_trees_metadata_loss_2026_07_24.md`,
     `issues/prediction_universe_capture_dead_since_07_01_2026_07_06.md`. Next: AO-eligibility triage + conflict-check

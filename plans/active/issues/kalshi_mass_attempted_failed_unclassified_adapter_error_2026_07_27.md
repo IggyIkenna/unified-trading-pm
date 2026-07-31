@@ -19,7 +19,7 @@ scope: [engineer]
 tags: [prediction, kalshi, data-correctness, attempted-failed, manifest, big-finding]
 related:
   [
-    /plans/active/issues/prediction_lifecycle_prefetch_gate_and_resolution_day_catalogue_2026_07_14.md,
+    /plans/archive/issues/prediction_lifecycle_prefetch_gate_and_resolution_day_catalogue_2026_07_14.md,
     /plans/active/issues/kalshi_live_capture_regression_and_drift_2026_07_13.md,
     /plans/archive/2026_07/prediction_satellite_ao_dispatch_batch1_2026_07_25.md,
   ]

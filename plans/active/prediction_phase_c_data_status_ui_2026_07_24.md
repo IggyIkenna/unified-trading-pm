@@ -98,6 +98,13 @@ source: >-
 
 ## Progress Log
 
+- **na-eligibility-audit 2026-07-31 (prediction tranche)**: KEEP-NA, valid — 4 open, unchanged since the 2026-07-30
+  marker (this file's only intervening edit was a referrer-path fix elsewhere in the corpus repointing an archived
+  cross-link, not a content change to this doc's own scope). The real
+  `depends_on: [prediction_phase_ab_residuals_2026_07_24]`
+  - `gate_on_depends: true` gate is re-confirmed still live — the prerequisite doc still carries 7 open todos as of this
+    same run. KEEP-NA on that citation alone, per the skill's own rule. Doc stays NA.
+
 - **na-eligibility-audit 2026-07-30 (prediction tranche)**: KEEP-NA, valid — 4 open, and the doc carries
   `depends_on: [prediction_phase_ab_residuals_2026_07_24]` + `gate_on_depends: true` against a prerequisite that is
   still open (9 todos). Per this skill's own rule, a real `depends_on`+`gate_on_depends` gate on a still-open

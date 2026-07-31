@@ -7,7 +7,7 @@ summary:
   `empty_confirmed` instead of no-fetch `EXPECTED_*` honest absence. Separately (verified filter, propagation
   unconfirmed), IS's Polymarket CLOB per-day catalogue is scoped to markets whose `end_date_iso` equals the target day —
   if that feeds the MTDS per-day cid list, backfills only ever attempt a market's trades on its RESOLUTION day.
-status: open
+status: resolved
 nature: process
 asset_group: [prediction]
 stage: [meta]
@@ -28,13 +28,25 @@ source:
   [operator question 2026-07-14 (Honest Coverage panel review), read-only lifecycle-gating investigation (main session)]
 assigned_vm: NA
 resolved_by:
+  [
+    "market-tick-data-service@abe0904d (MTDS pre-fetch lifecycle gate)",
+    "instruments-service@41ca79d7 (IS active-window catalogue widening)",
+    "historical re-backfill: 5 SPOT VMs (4 shards + 1 gap-filler relaunch), all terminal EXIT_STATUS=0, 2026-07-30",
+  ]
 locked_by:
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
-last_updated: 2026-07-14
+last_updated: 2026-07-31
 locked_since:
 ---
+
+> **🟢 ARCHIVED 2026-07-31 — RESOLVED.** All 5 tracked todos shipped: MTDS pre-fetch lifecycle gate
+> (`market-tick-data-service@abe0904d`), IS active-window catalogue widening (`instruments-service@41ca79d7`), the
+> post-fix live-window VERIFY (26.3%→97.9% captured fraction), and the full historical re-backfill (5 SPOT VMs, all
+> terminal `EXIT_STATUS=0`, full-corpus VERIFY 81.8% captured÷attempted, `attempted_failed=0`) — `status: resolved`, 0
+> open todos remain (confirmed via direct read, `na-eligibility-audit` prediction tranche 2026-07-31). Archived per
+> `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`'s 6-step ritual.
 
 # Prediction lifecycle pre-fetch gate + resolution-day catalogue scoping (2026-07-14)
 

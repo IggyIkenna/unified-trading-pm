@@ -305,10 +305,11 @@ back orphaned; the 19 not extracted above are listed with WHY, so none is silent
   `issues/cross_ag_prediction_rows_bleed_into_sports_instruments_index_2026_07_20.md` (sign-off for a third remediation
   attempt on a twice-reverted live index; the code precondition `unified-trading-library@14301571` HAS shipped and
   proven stable on a sibling bucket), `issues/prediction_arb_live_execution_bridge_2026_07_20.md` (architectural
-  transport-seam decision), `issues/prediction_lifecycle_prefetch_gate_and_resolution_day_catalogue_2026_07_14.md` (its
-  one residual is the `[INFRA] P1 BLOCKED-OPERATOR-DECISION` historical re-backfill launch; its `[VERIFY] P2` leg is
-  batch1 todo 4), `prediction_cross_venue_arb_and_coverage_2026_07_24.md`'s 2 `[DESIGN]` items + the `[UAC]`
-  politics/geo arbability audit + its 2 `[OPERATOR]`-gated manifest-walk items (all already in batch4's Deferred),
+  transport-seam decision),
+  `/plans/archive/issues/prediction_lifecycle_prefetch_gate_and_resolution_day_catalogue_2026_07_14.md` (its one
+  residual is the `[INFRA] P1 BLOCKED-OPERATOR-DECISION` historical re-backfill launch; its `[VERIFY] P2` leg is batch1
+  todo 4), `prediction_cross_venue_arb_and_coverage_2026_07_24.md`'s 2 `[DESIGN]` items + the `[UAC]` politics/geo
+  arbability audit + its 2 `[OPERATOR]`-gated manifest-walk items (all already in batch4's Deferred),
   `prediction_phase_ab_residuals_2026_07_24.md`'s `[DECISION] P1` ambiguous-canonical-form item,
   `issues/sports_odds_naming_migration_uncommitted_wip_and_checkbox_drift_2026_07_25.md` item 3 (dispatch-track
   re-flag).

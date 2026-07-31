@@ -337,7 +337,7 @@ fixture-linked before MVP backfill.
     - **[CODE] P1.** Repoint `polymarket_perp` against Polymarket's perps API (demo/testnet if available)
     - **[VERIFY] P1.** Pin the prediction-store event-capture gap (the real question the purge-vs-move decision needs)
     - +2 more (P2/P3, one DESCOPED-NOT-MVP) — see file for the rest
-  - [`plans/active/issues/prediction_lifecycle_prefetch_gate_and_resolution_day_catalogue_2026_07_14.md`](/plans/active/issues/prediction_lifecycle_prefetch_gate_and_resolution_day_catalogue_2026_07_14.md)
+  - [`/plans/archive/issues/prediction_lifecycle_prefetch_gate_and_resolution_day_catalogue_2026_07_14.md`](/plans/archive/issues/prediction_lifecycle_prefetch_gate_and_resolution_day_catalogue_2026_07_14.md)
     - **[VERIFY] P2.** Post-fix: re-measure prediction attempted/captured trajectory on a sampled window
     - **[INFRA] P1.** Launch the historical prediction re-backfill under the widened catalogue — **RULED 2026-07-28, GO
       (sharded SPOT VMs, full 2025-03-14→today range, no partial-window shortcut)**, retagged away from
@@ -587,10 +587,18 @@ The autonomous slot-2 pass (operator: "prediction-specific files only") shipped 
 unit; the items below each require a SHARED file another slot is actively migrating, an irreversible prod-migration
 drain window, or an operator decision. They are ordered, not abandoned — each names its exact blocker.
 
-- [ ] [DATA] P2. **A4 column materialization** (shared): add the 6 fixture-match fields to UAC `InstrumentRecord`; IS
-      `process_write._records_to_dataframe` join (~6-line extension of the `clob_token_ids` block reading
-      `fixture_match_for_instrument_key`); MTDS prediction-tick schema. The resolver + side-table stamping already
-      shipped (`is@85988ade`); this turns it into real parquet/manifest columns.
+- [x] ✅ [DATA] P2. **STALE — CLOSED 2026-07-31 (na-eligibility-audit, prediction tranche).** A4 column materialization
+      (shared): add the 6 fixture-match fields to UAC `InstrumentRecord`; IS `process_write._records_to_dataframe` join
+      (~6-line extension of the `clob_token_ids` block reading `fixture_match_for_instrument_key`); MTDS prediction-tick
+      schema. **Already shipped, this checkbox was never flipped**: per
+      [`prediction_phase_ab_residuals_2026_07_24.md`](/plans/active/prediction_phase_ab_residuals_2026_07_24.md)'s own
+      A4 section (`[x]` DONE 2026-07-18) — UAC `InstrumentRecord` + `INSTRUMENTS_PARQUET_SCHEMA` shipped
+      `unified-api-contracts@e7ed754e`; IS `process_write._records_to_dataframe` join shipped
+      `instruments-service@e3ffc613`. MTDS prediction-tick schema is explicitly **OPTIONAL/DEFERRED** there ("catalogue
+      carries the attrs; tick-grain only if the arb path needs it") — a deliberate scope decision, not open blocked
+      work. The separate historical BACKFILL of these columns remains tracked as its own live Phase-B checkbox
+      ("Backfill the fixture-match attributes (A4 columns) across historical Polymarket + Kalshi soccer") — not
+      superseded by this close.
 - **E2 alias additions** (shared): add the missing Kalshi soccer team aliases (E2's worklist) to
   `unified_api_contracts.external.api_football.team_mappings`, plus the South-American club aliases for the odds-side
   ~66%→~100% — to reach the operator's ~0% gap.
@@ -618,6 +626,15 @@ drain window, or an operator decision. They are ordered, not abandoned — each 
   [`instruments_store_prediction_path_scheme_not_asset_group_pipeline_mode_2026_07_26.md`](/plans/archive/issues/instruments_store_prediction_path_scheme_not_asset_group_pipeline_mode_2026_07_26.md).
 
 ## Progress Log — condensed (2026-07-24, replaces the pre-split ~917-line tick-by-tick log)
+
+- **na-eligibility-audit 2026-07-31 (prediction tranche)**: KEEP-NA, stale item closed — the "A4 column materialization
+  (shared)" Deferred-work checkbox was superseded (UAC + IS legs shipped `unified-api-contracts@e7ed754e` /
+  `instruments-service@e3ffc613` per `prediction_phase_ab_residuals_2026_07_24.md`'s own A4 section; MTDS leg explicitly
+  OPTIONAL/DEFERRED, not blocked open work) — closed with citation, doc stays NA. Separately archived
+  `issues/prediction_lifecycle_prefetch_gate_and_resolution_day_catalogue_2026_07_14.md` (0 open todos, terminal) and
+  fixed this doc's own aggregated-source-docs link to its new `plans/archive/issues/` path in the same pass. No other
+  open item changed; this doc's role as the live Phase A-E coordination hub (0 native todos by design per its own
+  `gate_on_depends: false` note) is unaffected — not archived, still the live index.
 
 - **na-eligibility-audit 2026-07-30 (prediction tranche)**: KEEP-NA, valid — 1 open ([DATA] P2, A4 fixture-match column
   materialization), which is the shared cross-repo half of work whose prediction-side legs are tracked in the Phase A-B

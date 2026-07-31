@@ -203,6 +203,13 @@ candidate, not a batch todo.
 
 ## Progress Log
 
+- **na-eligibility-audit 2026-07-31 (prediction tranche)**: KEEP-NA, valid — 2 open (was 4 at the 2026-07-30 marker;
+  Findings 2 and 3 were mechanically resolved 2026-07-31 by the sibling `/ag-closeout-audit prediction` run, see the
+  Todos section above). The 2 remaining items are re-confirmed still genuinely gated, each on its own citation: Finding
+  1's todo is explicitly `[OPERATOR]`-tagged (an `asset_group` tag-scope ruling); Finding 4's todo requires editing an
+  `ao`-owned file (`ao_consolidated_closeout_2026_07_25.md`), out of prediction-tranche file ownership per the
+  primary-owner rule. Neither is a defaulted-and-never-assessed item. Doc stays NA.
+
 - **na-eligibility-audit 2026-07-30 (prediction tranche)**: KEEP-NA, valid — 4 open. Filed EARLIER TODAY by the sibling
   `/ag-closeout-audit prediction` run, whose own `source:` records that every item was deliberately PARKED with
   options + a marked recommendation because no operator was reachable. That is an assessed NA, not a defaulted one, so

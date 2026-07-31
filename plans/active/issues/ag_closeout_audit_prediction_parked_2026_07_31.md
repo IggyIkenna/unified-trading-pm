@@ -167,6 +167,14 @@ paired `_finalize` sibling will show the same gap; prediction is a confirmed liv
 
 ## Progress Log
 
+- **na-eligibility-audit 2026-07-31 (prediction tranche)**: KEEP-NA, valid — 2 open. Both findings were ASSESSED, not
+  defaulted, by the same-day sibling `/ag-closeout-audit prediction` run that filed this doc: Finding 1's todo is
+  explicitly informational (no action needed unless an operator/future worker picks A-vs-B on the two linked adapter
+  dead-code docs); Finding 2's todo is bounded/mechanical but targets an `ao`/tooling-owned script
+  (`generate_ag_closeout_audit_candidates.py`, `parent_epic: agent_operating_framework_master`) outside this doc's own
+  `predictions_master` file-ownership — the doc's own text already says it is "flagging here... to fold in," i.e. routed
+  to the `ao` tranche/operator, not a defaulted-NA item this run should reclassify. Doc stays NA.
+
 - **2026-07-31 (slot 4, ag_closeout_auditor, dispatch agt-592e74):** Filed by the scheduled
   `/ag-closeout-audit prediction` run. Phase 0-2 read-only for both findings above; Phase 1 ran a real 2-agent Workflow
   (`wf_a447329e-21a`, 0 errors) confirming Finding 1's non-batchable verdict independently. Phase 3 conflict-check

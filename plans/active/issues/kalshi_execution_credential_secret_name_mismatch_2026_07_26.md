@@ -138,6 +138,15 @@ Two directions, both viable, not adjudicated by this doc:
 
 ## Progress Log
 
+- **na-eligibility-audit 2026-07-31 (prediction tranche)**: KEEP-NA, valid — 1 open (was 2 at the 2026-07-30 marker; the
+  `[SCRIPT] P1` secret-reshape leg shipped 2026-07-31, see its own checkbox evidence above). The remaining `[DATA] P1`
+  item is explicitly tagged `BLOCKED-OPERATOR-DECISION` with its own reasoning (KalshiAdapter defaults to the LIVE
+  production host; this codebase's `OperationalMode.PAPER` never calls a real venue API, so "paper order" can't mean
+  what the original ask intended; the 2026-07-28 operator ruling on this doc explicitly scoped itself to the
+  secret-reshape only) and already correctly cites its duplicate tracking home
+  (`prediction_satellite_ao_dispatch_batch6_2026_07_29.md` todo 5) rather than needing a fresh citation fix. Doc stays
+  NA.
+
 - **na-eligibility-audit 2026-07-30 (prediction tranche)**: KEEP-NA, valid — both open todos are CONFLICT:
   `prediction_satellite_ao_dispatch_batch6_2026_07_29.md` todo 5 claims both the Secret Manager reshape (RULED
   2026-07-28 as not wallet-key-class) and the gated live paper-order verify. Flipping this doc would dispatch a

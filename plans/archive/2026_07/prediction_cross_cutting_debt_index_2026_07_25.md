@@ -252,7 +252,7 @@ for the live picture.
   (closed/archived/record-only)")
   - **[CODE] P2.** Add a collision-resistant component (e.g. an 8-hex slug of `hash(venue, data_type)`) to the
     pipeline-e2e-check VM name
-- [`plans/active/issues/prediction_lifecycle_prefetch_gate_and_resolution_day_catalogue_2026_07_14.md`](/plans/active/issues/prediction_lifecycle_prefetch_gate_and_resolution_day_catalogue_2026_07_14.md)
+- [`/plans/archive/issues/prediction_lifecycle_prefetch_gate_and_resolution_day_catalogue_2026_07_14.md`](/plans/archive/issues/prediction_lifecycle_prefetch_gate_and_resolution_day_catalogue_2026_07_14.md)
   (dup ref — see `prediction_consolidated_closeout_2026_07_18.md`'s "Aggregated source docs → Capture / correctness"
   subsection for its 2 open todos — corrected 2026-07-25, was "see Capture / correctness above," which only resolved
   while this content lived in the same file as that subsection)

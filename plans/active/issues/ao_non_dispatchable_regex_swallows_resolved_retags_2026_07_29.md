@@ -162,7 +162,7 @@ past tense rather than deleting it outright.
   since those could have superseded the state `6edd4486a` captured.
   - **CONFIRMED-RESOLVED / CORRECT-AS-IS (12 files, 21 items)**: `cefi_satellite_ao_dispatch_batch3_2026_07_26.md`,
     `infra_capture_and_devops_leftovers_2026_07_06.md`,
-    `issues/prediction_lifecycle_prefetch_gate_and_resolution_day_catalogue_2026_07_14.md`,
+    `/plans/archive/issues/prediction_lifecycle_prefetch_gate_and_resolution_day_catalogue_2026_07_14.md`,
     `mtds_available_at_cross_asset_backfill_2026_07_13.md` (8 items — all trace to the same real CLAUDE.md
     maintenance-window ruling), `prediction_phase_ab_residuals_2026_07_24.md`,
     `sports_live_availability_and_source_latency_2026_07_24.md` (correctly updated in-place by the later key-rotation
