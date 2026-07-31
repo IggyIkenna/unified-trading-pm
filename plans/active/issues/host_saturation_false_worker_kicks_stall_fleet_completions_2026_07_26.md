@@ -200,3 +200,9 @@ is known-wrong is actively dangerous.
   is not done until proven across the fleet + all promotion branches"), this is exactly the kind of shared-infra change
   that needs fleet-wide verification, not a single-repo bounded fix. Left for a dedicated DEVOPS pass with room to
   verify across repos.
+- **2026-07-31 (conflict-gated re-triage) — RECLASSIFIED, not actually conflict-gated.** This doc WAS one side of the
+  watchdog kick+escalation contradiction, and that side is fully shipped (`@64b5310` + the `[DOC] P2` SSOT note). The
+  remaining `[DEVOPS] P1` (fleet-wide QG admission semaphore) was never itself gated by the contradiction or by any
+  other doc — it's genuinely open, standalone, large-blast-radius infra work that needs its own scoped implementation
+  pass (touches `base-service.sh`/the QG entry point every repo invokes). Mis-filed into the conflict-gated bucket by
+  association with its sibling item, not by an actual dependency.

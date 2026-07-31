@@ -135,3 +135,16 @@ recurrence-prone and episode 1 needed manual intervention.
   kick+escalation cluster ('its second todo also reorders the kill+resume-vs-`spawn_retry_cap` escalation'). All 3 todos
   touch that same kick/escalation mechanism, whose directional ordering was an operator call; do not draft competing
   work against it.
+- **2026-07-31 (conflict-gated re-triage)**: The cluster's ordering question IS now ruled + shipped (soften first
+  `@64b5310`, harden confirmed pre-existing `@77fc60a`) — but re-checking item 2 specifically against the live code
+  (`server/worker_liveness/_respawn.py::maybe_auto_respawn_stuck_slot`) shows the FORCE kill+resume path already fires
+  at `kick_escalation_threshold` (3 consecutive kick failures) and bypasses the `last_ping`-freshness gate entirely — so
+  the mechanism this item asks for (force-resume reachable before/without waiting on `spawn_retry_cap`) appears to
+  already exist. What's NOT confirmed: whether `spawn_retry_cap`/`retry_count` counts EACH force-resume attempt
+  (plausible reading of episode 1's `retry_count=2` after 5 consecutive freezes — 2 force-resumes already attempted and
+  failed to clear the SAME wedge before the cap hit), in which case the real gap is "the resume doesn't fix a recurring
+  identical wedge," not "ordering." **Not resolved by this re-triage — needs a live trace or a direct test of a slot
+  that force-resumes into the identical wedge twice**, so item 2 stays open pending that check. Items 1 (auto-submit
+  `/compact`) and 3 (context-plateau detection) were never actually blocked by the ordering question — independently
+  actionable now (item 1 in particular would make this whole escalation race moot by preventing the wedge in the first
+  place).

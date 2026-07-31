@@ -104,6 +104,19 @@ exists" section together before scoping the workstream.
   recording an explicit operator deferral ('pick this up again afterwards, not now'), and its one todo is a `[DESIGN]`
   scoping task (an open-ended design call, not a bounded outcome). Same ruling already recorded in
   `ao_satellite_ao_dispatch_batch1_2026_07_26.md`'s operator-decision Deferred list.
+- **2026-07-31 (operator direction)**: Operator says this is resolved via
+  `/plans/archive/issues/operator_gated_blocked_answer_is_a_no_op_2026_07_30.md` (D1-D5, live in prod). Cross-checked
+  that doc's actual scope against this one's 4 pain points: **pain point 1 (insufficient context) is genuinely fixed**
+  for operator-gated (`BLK-op-*`) rows — D5 rewrote the seeded question to lead with the full todo body instead of a
+  truncated single line. D1-D3 also give operator-gated rulings a real dispatch path (not relevant to this doc's
+  complaint, but adjacent). **Not obviously covered by D1-D5's scope**: pain points 2 (scale/triage across ~30 open
+  questions), 3 (cross-question dedup), and 4 (dead-agent unreachability — capturing `claude_session_id` on `BlockedRow`
+  at creation + a transcript-jump UI affordance) — D1-D5 is specifically about the OPERATOR-GATED answer-to-dispatch
+  mechanism, and neither `BlockedRow`'s schema nor the dashboard's resolution UI appear to have gained a
+  session-id/transcript-jump field per that doc's own todo list. Flagging this gap rather than silently closing it — if
+  pain points 2-4 are also considered covered or no-longer-wanted, this doc should archive pointing at the resolving
+  doc; if they're still real, worth splitting into a narrower follow-up scoped to just those three. Deferring the
+  archive-or-split call to the operator rather than guessing.
 
 ## Todos
 

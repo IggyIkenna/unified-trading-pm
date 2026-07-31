@@ -81,16 +81,22 @@ it never reaches `origin/live-defi-rollout` on its own.
 
 ## Proposed fixes
 
-- [ ] [INFRA] P2. **⚠️ ALREADY CLAIMED by an active `assigned_vm: planning` doc — do NOT dispatch from here (citation
-      added by `/na-eligibility-audit ao` 2026-07-30).** `/plans/active/ao_consolidated_closeout_2026_07_25.md` carries
-      an OPEN `[INFRA] P2` todo that cites this doc's spec verbatim and owns execution ("Escalate the watchdog from
-      soft-kick to hard-kill + respawn after N consecutive `post_kick_classification=frozen` observations (e.g. N=3,
-      ~15-20 min) … per `killed_slot_orphans_committed_unpushed_work_no_push_path_2026_07_21.md`'s own spec"). Flipping
-      this doc's `assigned_vm` would duplicate that dispatch. **Also: the gate below has now CLEARED** — the
-      `host_saturation_false_worker_kicks_stall_fleet_completions_2026_07_26.md` fix this todo waits on SHIPPED as
-      `agent-orchestrator@64b5310` (progress-marker kick shield + zero-kick regression test), so the sequencing
-      precondition is satisfied and the closeout's todo is unblocked. Re-scope N/timing against that CORRECTED
-      classifier, as both docs require. Original gating note follows. **Gated 2026-07-26** (resolved
+- [x] ✅ [INFRA] P2. **DONE — confirmed already-implemented pre-existing code, audited + re-scoped via
+      `agent-orchestrator@77fc60a` (2026-07-31, in the now-archived
+      `/plans/archive/2026_07/ao_consolidated_closeout_2026_07_25.md`).** That plan's own claimed `[INFRA] P2` todo
+      (cited below) ran its audit AFTER the `host_saturation` gate cleared and found the escalation mechanism this todo
+      asks for was already shipped: `kick_escalation_threshold` (config field, default 3) was introduced in `5b07bd3`,
+      and the ping-advanced-reset bug that let the 2026-07-21 incident's wedged worker dodge escalation for 55 kicks was
+      already fixed in `2a48eda` — both predating this plan. `WorkerLivenessKicker._tick_once` already forces
+      `_maybe_auto_respawn_stuck_slot(..., force=True)` (kills the wedged tmux session + resumes the in-flight task via
+      `--resume`) once `_consecutive_kick_failures` reaches `kick_escalation_threshold`, gated on `genuinely_recovered`
+      (pane verified 'working'), not merely `ping_advanced`. **This doc's own checkbox was stale** — the closeout's
+      finalize plan (`ao_consolidated_closeout_2026_07_25_finalize_2026_07_30.md`) did not cite or reconcile evidence
+      back into this file; flipped directly during the 2026-07-31 conflict-gated re-triage pass instead. (Prior note,
+      retained for history: this todo was previously flagged "ALREADY CLAIMED by
+      `/plans/active/ao_consolidated_closeout_2026_07_25.md`'s `[INFRA] P2` todo — do NOT dispatch from here" by
+      `/na-eligibility-audit ao` 2026-07-30, with the sequencing gate below noted CLEARED via
+      `agent-orchestrator@64b5310`.) Original gating note follows for history. **Gated 2026-07-26** (resolved
       `autonomous_session_operator_decisions_2026_07_25.md` entry #21, option A — soften first): do NOT land this
       hard-kill-escalation ahead of `issues/host_saturation_false_worker_kicks_stall_fleet_completions_2026_07_26.md`'s
       two-window/completion-signal fix. That doc has MEASURED evidence the current classifier already fires falsely on
@@ -164,3 +170,8 @@ review(slot1)'s behalf per the async-wait/stuck-recovery watchdog guidance.
   `host_saturation_false_worker_kicks_stall_fleet_completions_2026_07_26.md` two-window fix it waits on shipped as
   `agent-orchestrator@64b5310`, so the closeout's todo is now unblocked. The second `[INFRA] P2` reclaim-and-push item
   stays in the deferred worker-liveness cluster.
+- **2026-07-31 (conflict-gated re-triage)**: Flipped `[INFRA] P2` (hard-kill escalation speed) to `[x]` — the claiming
+  plan's own audit (`agent-orchestrator@77fc60a`) found the mechanism was already shipped pre-existing (`5b07bd3` +
+  `2a48eda`), and that plan is now archived, but its finalize never reconciled evidence back into THIS doc. See the
+  flipped todo above for the full evidence trail. The second `[INFRA] P2` (reclaim-and-push automation) remains
+  genuinely open, independent work — not gated by anything, just unbuilt.

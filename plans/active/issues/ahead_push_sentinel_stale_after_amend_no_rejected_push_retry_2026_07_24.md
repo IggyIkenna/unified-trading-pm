@@ -102,3 +102,9 @@ behind — rather than a guessed one-line patch to the riskiest file in the code
   automated code path in the system'. Independently held in `ao_satellite_ao_dispatch_batch1_2026_07_26.md`'s
   conflict-gated Deferred list, which adds a file-collision reason (its characterisation test lands in
   `tests/test_watchdog_unpushed_sweep.py`, the same module the gate-aware sweep fix needs).
+- **2026-07-31 (re-triage)**: The file-collision reason has CLEARED —
+  `watchdog_unpushed_sweep_defeats_operator_merge_gate_2026_07_26.md`'s gate-aware sweep shipped
+  `agent-orchestrator@49c919d`, adding 3 new tests to `tests/test_watchdog_unpushed_sweep.py` (12/12 passing, no
+  conflict). This doc's own design-decision gap is UNCHANGED and still open — this todo still needs its own
+  retry/backoff-vs-alert design call — but it is no longer blocked on anything else landing first; it's ready to be
+  worked directly whenever picked up.

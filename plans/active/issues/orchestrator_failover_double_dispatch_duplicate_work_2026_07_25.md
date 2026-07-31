@@ -177,3 +177,35 @@ Doc-only this time (no code collision), but a clean example of the SAME task_id 
   ordering is ruled', and the `[BACKEND] P3` `/done` idempotency item shares `server/routes/slots_worker.py`'s `/done`
   handler with `reaper_kills_inflight_detached_quickmerge_false_done_2026_07_24.md` ('must land as one change') and
   interacts with the unresolved operator-merge-gate governance question.
+- **2026-07-31 (conflict-gated re-triage)**: Mixed. The `/done`-idempotency item's blocking governance question is now
+  ANSWERED (`watchdog_unpushed_sweep_defeats_operator_merge_gate_2026_07_26.md` shipped `agent-orchestrator@49c919d`) —
+  unblocked, still needs the combined `/done`-handler change with the reaper doc's item, still unbuilt. **The
+  `[BACKEND] P2` release-signal/liveness-check item is STILL GATED, on a different basis than recorded**: verified by
+  direct code read that the shipped kicker fix (`agent-orchestrator@64b5310`, `_progress_marker_shields_kick`) lives in
+  `server/worker_liveness/__init__.py` and only shields the LIVENESS KICKER from false `worker_kicked` events — it does
+  not touch the actual FAILOVER/re-dispatch path this item is about. Searched for the redispatch mechanism
+  (`failover_allowed` is only ever consumed by `server/failover.py`, which is the cross-HOST/multi-VM module confirmed
+  dead-in-practice, `fleet_registry_entries: 0`, per `ao_open_issues_consolidated_close_out_2026_07_17.md`'s B3 finding
+  — NOT same-VM slot-to-slot failover) — the actual mechanism producing the observed same-VM double-dispatch incidents
+  is not yet identified with confidence (checked `server/stale_dispatch.py::reclaim_stale_dispatches`, but it only fires
+  when `tmux_session IS NULL`, which doesn't match "worker silently alive mid-QG-run" from the incident writeups). This
+  item needs a real root-cause investigation before a fix can be scoped — flagging as a genuine open question, not a
+  quick fix.
+- **2026-07-31 (root-cause candidate found)**: `WorkerLivenessWatchdog._reconcile_unacked_dispatches`
+  (`worker_liveness_watchdog.py:963`) is a strong candidate the original hypothesis missed. Any `status="dispatched"`
+  task past `dispatch_ack_timeout_seconds` (default **1800s/30min**) with NO explicit ack event
+  (`slot_progress`/`slot_done*`/`slot_blocked` — a worker doing normal tool-use turns for 30+ min without ever calling
+  one of these emits none) AND whose pane does NOT classify `"working"` (spinner-present) **at the exact check instant**
+  is released back to `queued` — `slot.current_task` is cleared if it matches, and a fresh dispatch can then hand the
+  SAME task to a different slot while the original session is still alive and unaware. This matches "long silent
+  quality-gates.sh run, no heartbeat" far better than `failover_allowed`. Two things keep this from being a confirmed
+  root cause yet: (1) `classify_pane` returns `"working"` on a spinner, and a live QG subprocess call normally DOES show
+  one — the mechanism would need a pane-read miss (host-load race, same class as
+  `host_saturation_false_worker_kicks_stall_fleet_completions_2026_07_26.md`) or a genuinely spinner-less state (e.g. a
+  DETACHED quickmerge, matching `reaper_kills_inflight_detached_quickmerge_false_done_2026_07_24.md`'s "waiting for the
+  detached process" pane text) to actually misfire; (2) the reclaim PINS the task back to the SAME slot
+  (`target_slot`+`affinity=high`), which mostly explains a slot re-claiming its own task, not necessarily a DIFFERENT
+  slot picking it up — whether `affinity=high` is a hard filter or just a scoring bias against `dispatch.py`'s
+  `_blocks_affinity` wasn't checked this pass. **Next step to confirm**: correlate the 4 incidents' timestamps against
+  `slot_dispatch_unacked` activity-log rows for the same `task_id` — if present at the right time, this is confirmed; a
+  live orchestrator DB query (read-only SSM), not something checkable from a dev checkout.
