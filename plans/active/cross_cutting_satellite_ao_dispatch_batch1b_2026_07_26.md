@@ -128,28 +128,28 @@ drift_direction: advance-code
       required lifecycle marker.
 
       **PARTIAL PROGRESS 2026-07-31 (slot 10) — lifecycle-marker stamping sub-piece DONE, classify/delete/relocate
-                  NOT done.** Fleet-wide `grep -rL '^# Delete-when:' */scripts/ --include='*.py' --include='*.sh'` found 32
-                  remaining unstamped scripts across 12 repos (client-reporting-api, deployment-service, deployment-ui,
-                  e2e-testing, features-service, fund-administration-service, greeks-service, instruments-service,
-                  market-data-processing-service, market-tick-data-service, unified-api-contracts, unified-trading-pm) — every
-                  other repo in the fleet was already fully stamped from the prior rollout. Stamped all 32 using the
-                  already-decided classification embedded in each script (existing `Epic:`/`Lifecycle:` prose where present) or
-                  the nearest sibling-file epic convention (mechanical, no new judgment calls), then shipped per-repo via the
-                  normal QG→quickmerge flow: client-reporting-api@c47835f, deployment-service@1261ce7, deployment-ui@5a4ce5a,
-                  e2e-testing@42be3c1, features-service@3966bfcb, fund-administration-service (pending final quickmerge, commit
-                  c0402e0 already QG-green), greeks-service@aee891d, instruments-service@240d80a7,
-                  market-data-processing-service@0d43a64, market-tick-data-service@fe1c4ca2, unified-api-contracts@a4b1345d
-                  (recovered via reflog after a quickmerge branch-reset bug — see
-                  `plans/archive/issues/quickmerge_agent_regate_resets_branch_loses_local_commit_2026_07_31.md`), unified-trading-pm
-                  (this commit). **The classify/delete/relocate portion of this item's done-when is intentionally NOT attempted
-                  here** — that work requires per-script KEEP/DELETE/DEPRECATE/PROMOTE-TO-CLI judgment calls (campaign-gating
-                  awareness, GCS-orphan-verification before any delete) that are explicitly scoped as
-                  GATED+REVIEWED/human-judgment in `plans/active/repo_scripts_governance_audit_2026_06_18.md` (`assigned_vm: NA`)
-                  — an AO worker attempting a fleet-wide classify+delete sweep unsupervised would risk deleting
-                  campaign-in-flight one-offs (that governance-audit doc's own Finding 1 flags this exact risk for
-                  instruments-service/MTDS). This item stays open; the marker-stamping done-when clause is satisfied, the
-                  delete/relocate clauses are not — do not re-flip this checkbox until the governance-audit plan's Phase-1
-                  delete/deprecate/promote execution actually lands.
+                      NOT done.** Fleet-wide `grep -rL '^# Delete-when:' */scripts/ --include='*.py' --include='*.sh'` found 32
+                      remaining unstamped scripts across 12 repos (client-reporting-api, deployment-service, deployment-ui,
+                      e2e-testing, features-service, fund-administration-service, greeks-service, instruments-service,
+                      market-data-processing-service, market-tick-data-service, unified-api-contracts, unified-trading-pm) — every
+                      other repo in the fleet was already fully stamped from the prior rollout. Stamped all 32 using the
+                      already-decided classification embedded in each script (existing `Epic:`/`Lifecycle:` prose where present) or
+                      the nearest sibling-file epic convention (mechanical, no new judgment calls), then shipped per-repo via the
+                      normal QG→quickmerge flow: client-reporting-api@c47835f, deployment-service@1261ce7, deployment-ui@5a4ce5a,
+                      e2e-testing@42be3c1, features-service@3966bfcb, fund-administration-service (pending final quickmerge, commit
+                      c0402e0 already QG-green), greeks-service@aee891d, instruments-service@240d80a7,
+                      market-data-processing-service@0d43a64, market-tick-data-service@fe1c4ca2, unified-api-contracts@a4b1345d
+                      (recovered via reflog after a quickmerge branch-reset bug — see
+                      `plans/archive/issues/quickmerge_agent_regate_resets_branch_loses_local_commit_2026_07_31.md`), unified-trading-pm
+                      (this commit). **The classify/delete/relocate portion of this item's done-when is intentionally NOT attempted
+                      here** — that work requires per-script KEEP/DELETE/DEPRECATE/PROMOTE-TO-CLI judgment calls (campaign-gating
+                      awareness, GCS-orphan-verification before any delete) that are explicitly scoped as
+                      GATED+REVIEWED/human-judgment in `plans/active/repo_scripts_governance_audit_2026_06_18.md` (`assigned_vm: NA`)
+                      — an AO worker attempting a fleet-wide classify+delete sweep unsupervised would risk deleting
+                      campaign-in-flight one-offs (that governance-audit doc's own Finding 1 flags this exact risk for
+                      instruments-service/MTDS). This item stays open; the marker-stamping done-when clause is satisfied, the
+                      delete/relocate clauses are not — do not re-flip this checkbox until the governance-audit plan's Phase-1
+                      delete/deprecate/promote execution actually lands.
 
 - [x] ✅ [CODE] P2. **features-service — fix `odds_features_exporter.py` velocity-accel fallback NaN/math semantics
       (dead-code + a legit-`0.0`-drop bug).** `_compute_velocity_from_pivoted`'s (lines ~509-514) elif/else acceleration
@@ -386,6 +386,14 @@ drift_direction: advance-code
       action available: legs (a/b/d/e) resolved, leg (c)'s only open scope is the disputed 2023-07-22→2023-11-01 window
       this blocker gates (the uncontested 2023-11-01+ floor is already fully captured). Full detail in
       `issues/aster_perp_funding_backfill_stale_launcher_and_genesis_conflict_2026_07_28.md`. Released via
+      `/skip-current-task {"reason_code": "BLOCKED"}`. — **Status 2026-07-31T (slot 13, data_engineering)**: re-verified
+      `BLK-a94f446d` still unanswered (fresh pull, corpus grep for the blocker id, `git log --since     2026-07-29` on
+      both this plan and the issue doc — only unrelated commits landed; no operator ruling recorded). The 2026-07-31
+      corpus-wide ownership-conflict sweep added a premise-correction banner to the issue doc (about Finding 1's
+      HL/ASTER-funding-equivalence claim being reversed) but explicitly left this todo's genesis-date question
+      `[OPERATOR]`-gated and unaffected. `POST /api/backlog/.../blockers` confirms no formal blocker record tied to this
+      task_id (the gate lives on the issue doc's own todo, not the backlog dispatcher), and a `/progress` call returned
+      no operator message. No unblocked action available — same as the 2026-07-29 status. Released via
       `/skip-current-task {"reason_code": "BLOCKED"}`.
 - [ ] [DATA] P2. **Build the GCS-persisted OBSERVED funding-cadence audit script** — the inferred half of Finding 3
       (`perp_funding_data_semantics_and_cadence_2026_06_16.md`) that the canonical `FUNDING_CADENCE_HISTORY`
