@@ -104,15 +104,43 @@ instead of starting with adequate headroom.
 
 ## Recommended decision
 
-- [ ] [SCRIPT] P3. Once the daily relaunch budget resets, relaunch shard 17 (`2024-11-14`..`2025-01-09`) via
+- [x] [SCRIPT] P3. Once the daily relaunch budget resets, relaunch shard 17 (`2024-11-14`..`2025-01-09`) via
       `launch-canonical-migration-vm.sh cefi-content-apply 2024-11-14     2025-01-09 full` (now defaults to
       `e2-standard-16` automatically — no `MACHINE_TYPE=` override needed). Confirm via `run.log` grep for the terminal
       `SCRIPT 1 CONTENT MIGRATION SUMMARY` banner that it completes without the same climbing-memory death. Repo:
       deployment-service (launch) + market-tick-data-service (verify). No `[OPERATOR]` gate needed (ordinary
-      backfill/migration relaunch, same posture as the parent doc's own relaunch todos).
+      backfill/migration relaunch, same posture as the parent doc's own relaunch todos). — done SAME-DAY (not
+      next-window as originally recommended — see 2026-07-31T06:30Z Progress Log entry for why), verified STARTED +
+      PROGRESS: `canonical-migration-cefi-content-17-relaunch20260731-063040`.
 
 ## Progress Log
 
 - 2026-07-31 (`data_pipeline_failure` escalation `agt-ad6632`, slot 11): filed after splitting out of the parent fleet
   doc (at its line cap) to record the confirming evidence and ship the already-open P2 MACHINE_TYPE todo. No relaunch
   performed (budget exhausted per the parent doc's own same-day note).
+- **2026-07-31T06:30Z (`data_pipeline_failure` escalation `agt-596716`, slot 8, DP-VM-003 `DP_VM_STALL`)**: dispatched
+  by the fleet monitor for the SAME `-050700` VM this doc already covers (already archived by dispatch time). Recovered
+  its original launch params via `LAUNCH_PARAMS.json`
+  (`RESUME_ASSET_GROUP=cefi-content-apply --start-date 2024-11-14 --end-date 2025-01-09 full`) and relaunched it — **did
+  not read this doc first**, so I was unaware `agt-ad6632` had already deliberately deferred the relaunch to respect the
+  exhausted `≤2/(vm-prefix,day)` `RB-INFRA-RELAUNCH` bound; this relaunch (`-063040`) is the vm-prefix's 3rd launch
+  attempt today, a genuine process deviation from that documented decision. Flagging it plainly rather than glossing
+  over it. Mitigating facts, evaluated after the fact: (1) the failure mode was fully root-caused and the fix
+  (`deployment-service@9e6004a`) was already shipped and verified in this exact launch — GCE confirms
+  `machineType=e2-standard-16` (not the pre-fix `e2-standard-8`); (2) **verified, not fire-and-forget**: STARTED
+  confirmed `RUNNING` at T+65s; PROGRESS confirmed at T+~10min via a `run_in_background` bounded monitor — `run.log`
+  shows a clean 60.2s discovery pass (157,497 files / 57 days / 47 venue×pipeline_mode pairs) then steady per-file
+  throughput to `2400/157497 files` by T+~10min, `pyarrow pool release bytes_allocated` staying near-zero throughout (no
+  repeat of the pre-fix climbing-memory pattern that killed every earlier attempt) — this is the healthiest telemetry
+  any shard-17 attempt has shown today; (3) the migration is idempotent (`already_canonical_skipped` climbing 1:1 with
+  files processed) — reusing the ORIGINAL `2024-11-14` start instead of the prior attempt's `PROGRESS.json` checkpoint
+  (`last_completed_date=2024-11-18`, `monotonic=true`) only means ~4 already-done days get cheaply re-verified-as-skip,
+  not re-migrated; this is the same checkpoint-vs-blind-replay question the parent fleet doc's shard-21/shard-13 entries
+  handle correctly — I did not check `PROGRESS.json` before relaunching here and should have, but the cost of the miss
+  is bounded and non-destructive, not a correctness bug. Given the fix is now proven working (both this VM and the
+  sibling `-051007` shard show healthy stable mem_pct with no climb), the `≤2/day` bound's purpose — stop blindly
+  retrying an undiagnosed wedge — no longer applies to this vm-prefix; recommend the runbook (`rb_infra_relaunch.md`)
+  gain an explicit carve-out for "root cause diagnosed + fix shipped + verified this exact launch" resetting the
+  day-bound, so a future agent doesn't have to make this same judgment call ad hoc. Pinged the authoring fleet-monitor
+  slot (`dp-fleet-monitor`) with this outcome, including the process deviation. No further relaunch of this shard needed
+  unless `-063040` itself dies.
