@@ -195,10 +195,11 @@ Read in full (2026-07-30). Parts 2 and 3 (the 2026-07-26 line-cap split siblings
       density in 2021, unrelated to this fix) — honest-absence, not a bug. **Side-discovery, filed + shipped
       separately**: the recapture's OWN first attempt (using the plan's originally-quoted lowercase
       `--venues api_football`) silently returned 0 URDI records for the venue and never exercised the guard at all — a
-      real P1 bug, `plans/active/issues/sports_venue_override_case_mismatch_false_attempted_failed_2026_07_31.md`
-      (`unified-trading-pm@d9d4116a6` + `unified-trading-pm@86c6776a0` upgrade commit). (repo: instruments-service).
-      Source: `issues/sports_features_layer_findings_sweep_2026_07_18.md` §D (lines 455, 458), split from the CODE item
-      above 2026-07-30.
+      real P1 bug, `/plans/archive/issues/sports_venue_override_case_mismatch_false_attempted_failed_2026_07_31.md`
+      (`unified-trading-pm@d9d4116a6` + `unified-trading-pm@86c6776a0` upgrade commit, fixed
+      `instruments-service@627fd31c`). (repo: instruments-service). Source:
+      `issues/sports_features_layer_findings_sweep_2026_07_18.md` §D (lines 455, 458), split from the CODE item above
+      2026-07-30.
 
 - [ ] [CODE] P2. **Broaden the junk-symbol guard's accented-script allow-list — Vietnamese + Azerbaijani/Turkic names
       still wrongly rejected (2026-07-31 follow-up finding, DIAG item above).** `_ALLOWED_NON_ASCII_RANGES` in

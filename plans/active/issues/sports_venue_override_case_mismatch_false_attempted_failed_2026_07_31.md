@@ -22,7 +22,7 @@ summary:
   a prior 2026-07-13 root-cause fix for a related false-positive class) returns True for every date. The REAL sports
   fixture data capture is unaffected (a separate bespoke code path successfully wrote 1329/1119 real canonical fixtures
   per date in this same run) — only the zero-fixture-league bookkeeping in process_zero_records.py is mis-stamped."
-status: open
+status: resolved
 priority: P1
 nature: notes
 asset_group: [sports]
@@ -41,13 +41,14 @@ source:
   venue form the plan's own prior attempt quoted). Identical 'wrote attempted_failed markers for 383 leagues' + 'No URDI
   adapter for 1 venue(s) ... api_football' warning pair fired on every date processed (2021-11-20, -21, -22, -23)."
 locked_by:
-resolved_by:
+resolved_by: instruments-service@627fd31c
 execution_scope: orchestrator-agent
 assigned_role: backend_engineer
 model_tier: sonnet-doable
 drift_direction: advance-code
 assigned_vm: planning
 depends_on: []
+last_updated: 2026-07-31
 ---
 
 ## What I found
@@ -181,37 +182,37 @@ matter for at least one field but missed for `venues`).
       instruments-service)
 
       **Blast-radius check**: grepped every `*.sh`/`*.py`/`*.yml`/`*.yaml` launcher/cron/scheduler across the
-          canonical repo checkouts (deployment-service `scripts/vm/`, `terraform/gcp/sports_scheduler_cron.tf`,
-          `deployment_service/sports_trigger_*.py`, agent-orchestrator configs) for a lowercase `--venues api_football`
-          invocation — zero hits outside doc/plan prose. The one VM launcher that sets `--venues`
-          (`deployment-service/scripts/vm/vm_instruments_reference.sh:36`) defaults `VENUES="API_FOOTBALL"` (uppercase);
-          the live Cloud Scheduler dispatch path (`sports_trigger_periodic.py`/`sports_trigger_scheduler.py`) never passes
-          `--venues` at all — it uses the hardcoded-uppercase default list in `venue_core.py::get_venues_for_asset_groups`.
-          **Blast radius confirmed limited to manual/interactive invocations** (the plan's own quoted example and the
-          original bug-reporting worker's run) — no production automation was affected.
+              canonical repo checkouts (deployment-service `scripts/vm/`, `terraform/gcp/sports_scheduler_cron.tf`,
+              `deployment_service/sports_trigger_*.py`, agent-orchestrator configs) for a lowercase `--venues api_football`
+              invocation — zero hits outside doc/plan prose. The one VM launcher that sets `--venues`
+              (`deployment-service/scripts/vm/vm_instruments_reference.sh:36`) defaults `VENUES="API_FOOTBALL"` (uppercase);
+              the live Cloud Scheduler dispatch path (`sports_trigger_periodic.py`/`sports_trigger_scheduler.py`) never passes
+              `--venues` at all — it uses the hardcoded-uppercase default list in `venue_core.py::get_venues_for_asset_groups`.
+              **Blast radius confirmed limited to manual/interactive invocations** (the plan's own quoted example and the
+              original bug-reporting worker's run) — no production automation was affected.
 
-          **Fix**: `instruments_service/cli/instruments_handler.py::_wire_cli_filters_from_args` now stores
-          `self._venue_override = [v.upper() for v in venues_arg]` (mirrors `sports_provider_arg.upper()` two lines below)
-          and threads the normalised list into `earliest_venue_date()` too (that lookup is keyed the same
-          UAC-uppercase way, so it was equally exposed). Checked `_sports_entity_filter`/`_trigger_name` (the other two
-          unnormalized CLI-arg fields in the same method) — both are opaque filter strings, not UAC-registry dict keys, so
-          out of scope for this bug class.
+              **Fix**: `instruments_service/cli/instruments_handler.py::_wire_cli_filters_from_args` now stores
+              `self._venue_override = [v.upper() for v in venues_arg]` (mirrors `sports_provider_arg.upper()` two lines below)
+              and threads the normalised list into `earliest_venue_date()` too (that lookup is keyed the same
+              UAC-uppercase way, so it was equally exposed). Checked `_sports_entity_filter`/`_trigger_name` (the other two
+              unnormalized CLI-arg fields in the same method) — both are opaque filter strings, not UAC-registry dict keys, so
+              out of scope for this bug class.
 
-          **Regression test**: `tests/unit/test_cli_handler_boost.py::test_wire_cli_filters_venues_uppercased_regardless_of_cli_casing`
-          pins `--venues api_football` (lowercase CLI input) → `handler._venue_override == ["API_FOOTBALL"]` +
-          `earliest_venue_date` called with the normalised list. All 4 `wire_cli_filters` tests pass.
+              **Regression test**: `tests/unit/test_cli_handler_boost.py::test_wire_cli_filters_venues_uppercased_regardless_of_cli_casing`
+              pins `--venues api_football` (lowercase CLI input) → `handler._venue_override == ["API_FOOTBALL"]` +
+              `earliest_venue_date` called with the normalised list. All 4 `wire_cli_filters` tests pass.
 
-          **Verification recapture** (`GCP_PROJECT_ID=central-element-323112 instruments-service --operation instruments
-          --mode batch --asset-group sports --venues api_football --start-date 2021-11-20 --end-date 2021-11-20 --force`,
-          the exact lowercase invocation the original bug report used): full run log (4984 lines) shows **zero** `"No URDI
-          adapter"` warnings and **zero** `"wrote attempted_failed markers"` lines (both fired on every date pre-fix);
-          `"Venue override from CLI: ['API_FOOTBALL']"` confirms normalisation. Confirmed both done-criteria: (a)
-          `gsutil ls gs://instruments-store-sports-prd-central-element-323112/instrument_availability/by_date/day=2021-11-20/venue=API_FOOTBALL/`
-          shows `instruments.parquet` written; (b) `ManifestWriter: updated availability index (11812025 total entries,
-          2107 new)` + `Shard completeness OK: 8/1 venues written for date=2021-11-20` + `instruments: date=2021-11-20 wrote
-          43682 records across 359 venues` — the zero-fixture-league false-failure path never fired. quality-gates.sh: full
-          run PASSED (90s) with sentinel written at `627fd31c`; the run's overall exit code was non-zero only due to an
-          UNRELATED, pre-existing cross-repo check (`deployment-api/deployment_api/services/data_status/mtds.py` adapter-
-          contract baseline drift from an already-merged decompose refactor, tracked separately at
-          `deployment_api_qg_size_gate_debt_2026_07_30.md`) — verified zero overlap with this task's diff. Shipped via
-          quickmerge --agent (sentinel-verified fast path).
+              **Verification recapture** (`GCP_PROJECT_ID=central-element-323112 instruments-service --operation instruments
+              --mode batch --asset-group sports --venues api_football --start-date 2021-11-20 --end-date 2021-11-20 --force`,
+              the exact lowercase invocation the original bug report used): full run log (4984 lines) shows **zero** `"No URDI
+              adapter"` warnings and **zero** `"wrote attempted_failed markers"` lines (both fired on every date pre-fix);
+              `"Venue override from CLI: ['API_FOOTBALL']"` confirms normalisation. Confirmed both done-criteria: (a)
+              `gsutil ls gs://instruments-store-sports-prd-central-element-323112/instrument_availability/by_date/day=2021-11-20/venue=API_FOOTBALL/`
+              shows `instruments.parquet` written; (b) `ManifestWriter: updated availability index (11812025 total entries,
+              2107 new)` + `Shard completeness OK: 8/1 venues written for date=2021-11-20` + `instruments: date=2021-11-20 wrote
+              43682 records across 359 venues` — the zero-fixture-league false-failure path never fired. quality-gates.sh: full
+              run PASSED (90s) with sentinel written at `627fd31c`; the run's overall exit code was non-zero only due to an
+              UNRELATED, pre-existing cross-repo check (`deployment-api/deployment_api/services/data_status/mtds.py` adapter-
+              contract baseline drift from an already-merged decompose refactor, tracked separately at
+              `deployment_api_qg_size_gate_debt_2026_07_30.md`) — verified zero overlap with this task's diff. Shipped via
+              quickmerge --agent (sentinel-verified fast path).
