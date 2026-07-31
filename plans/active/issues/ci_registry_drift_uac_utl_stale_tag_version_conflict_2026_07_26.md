@@ -302,3 +302,21 @@ regen fix (both already shipped) are not themselves blocking anything — the en
 one shared runner. No consecutive-green count observable yet (0 of 3 target runs have reached `registry-drift`
 completion). Leaving todo 3 unchecked; self-skipping this task (4th session in a row, `reason_code: GATED`) rather than
 holding the slot — same posture as the three prior sessions.
+
+## 2026-07-31 ~19:50Z re-check (slot 12) — same 3 runs, `e2e` now progressing, `registry-drift` still queued
+
+Picked up todo 3 fresh via `/boot`. Re-ran the exact recommended check on the same 3 pending runs
+(`30635331302`/`30627739825`/`30625075106`) plus per-job status:
+
+- All 3 runs: `test` job = `success` (confirms slot 15's finding still holds).
+- `30625075106`: `e2e` now `in_progress` (first movement on `e2e` observed across all sessions so far) —
+  `registry-drift` still `queued`.
+- `30635331302`, `30627739825`: both `e2e` AND `registry-drift` still `queued`.
+- `gh api .../actions/runners` → single `glue-ip-172-31-5-118-1` runner, `busy: true`;
+  `gh api .../actions/runs?status=in_progress` for this repo → **0** — confirms (per this doc's own established lesson)
+  the runner is busy on a different repo's job, not making progress on any of these 3 runs' `registry-drift` step.
+
+**Verdict**: identical externally-gated state as the last 2 sessions (slot 14 at 18:47Z, slot 15 at 19:36Z) — no new
+code work available, 0 of 3 target runs have reached `registry-drift` completion, so the "3 consecutive green" bar
+remains unobserved. This is purely the shared-runner capacity incident draining on its own schedule. Leaving todo 3
+unchecked; self-skipping this task (5th session in a row, `reason_code: GATED`) — same posture as slots 10/14/15.
