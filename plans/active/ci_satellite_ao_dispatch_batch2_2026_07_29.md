@@ -193,14 +193,36 @@ concurrent workers do not collide on this file.
       pattern, and is accurate as written (now genuinely safe since the sentinel binds environment). **No corpus edit
       was required by this todo** — Sequenced after todo 1 (already `[x]` above). Source:
       `issues/qg_sentinel_environment_blind_2026_07_23.md` (Resolution checklist item 4, also flipped).
-- [ ] [INFRA] P2. **Fix the env-coupled `ENVIRONMENT`-ambient-default tests in `deployment-api` and `strategy-service`**
-      (set the environment explicitly per-test instead of relying on the ambient default, same pattern already shipped
-      in `unified-trading-library`). **Explicitly excludes the two `market-tick-data-service` cases** — those stay gated
-      pending `mtds_deployment_env_race_survives_single_worker_2026_07_23.md`'s own cascade-instrumentation step (still
-      open, see `## Deferred`); fixing them first would silence the only known reproducer of a real leak before its
-      cause is confirmed. **Done when**: both repos' env-coupled tests pass under `ENVIRONMENT=development` and unset,
-      and `quality-gates.sh` is green in both. Source: `issues/qg_sentinel_environment_blind_2026_07_23.md` (Resolution
-      checklist item 3, partial — the non-MTDS half).
+- [x] ✅ [INFRA] P2. **CONFIRMED ALREADY CLEAN (verified 2026-07-31) — no code change needed, the non-MTDS half of the
+      2026-07-23 claim does not reproduce today.** Re-derived the exact mechanism first: since todo 1's (a)/(b) landed
+      (`unified-trading-pm@4545df4c6`, 2026-07-30), `qg-environment.sh`'s `qg_resolve_environment()` is now sourced by
+      BOTH quickmerge AND a standalone `quality-gates.sh` run — so the original divergence this todo worried about
+      (quickmerge forces `development`, standalone left `ENVIRONMENT` unset and fell through to the bucket resolver's
+      `prod` default) no longer exists: on `live-defi-rollout` (every slot's branch, not `main`), BOTH paths now resolve
+      `ENVIRONMENT=development` identically. Reproduced directly against that now-single value: `deployment-api`'s full
+      `tests/unit` suite (the exact scope `quality-gates.sh` collects, `RUN_INTEGRATION=false`) — 5052 passed/16 skipped
+      under `ENVIRONMENT` unset AND under `ENVIRONMENT=development`, byte-identical pass/skip counts, `-p no:xdist`.
+      `strategy-service`'s full `tests/` suite (its `PYTEST_UNIT_DIR="tests/"` — the per-family-layout scope the gate
+      actually runs, excluding only `-k integration`) — 5003 passed/5 skipped/22 xfailed under both states, again
+      identical. Grepped every `-prd-`/`resolve_bucket_name`/`get_bucket_name` test call site in both repos (the
+      `test_manifest_source.py`/`test_data_query_service.py`/`test_unified_deps_functional.py` hits the original
+      2026-07-23 grep would have found) — all pass literal strings directly to mocked functions or explicit config
+      overrides, none resolve a bucket name through the ambient-`ENVIRONMENT`-dependent ambient resolver path the way
+      MTDS's 2 named reproducer tests do. `git log --since=2026-07-23 -- tests/` in both repos shows no intervening fix
+      commit either — this was not silently patched elsewhere; the original claim (unlike MTDS's 2 explicitly-named,
+      explicitly-verified failing tests) appears to have over-generalized from the `-prd-` grep pattern without
+      confirming a live ambient-`ENVIRONMENT` failure in these two repos specifically. **Final confirmation — the real
+      gate, not just the scoped reproduction**: full `bash scripts/quality-gates.sh` (backgrounded per the cicd
+      heartbeat rule) in both repos: `deployment-api` → `✅ ALL QUALITY GATES PASSED (112s)`, sentinel written, exit 0
+      (the 2 `❌`-prefixed lines mid-run are pre-existing `imports-inside-functions`/`direct-cloud-SDK` debt absorbed
+      within `CODEX_MAX_VIOLATIONS=5`'s aggregate-tolerance pool — "Codex compliance: 3 violations (within tolerance of
+      5)", unrelated to this todo); `strategy-service` → `✅ ALL QUALITY GATES PASSED (122s)`, sentinel written,
+      independently re-verified `EXIT=0` on a second fast-path run (the peripheral `e2e-testing/scripts/defi/`
+      ruff/basedpyright warnings printed after the pass banner are that OTHER repo's own pre-existing peripheral-dir
+      debt, non-blocking, out of scope here). **Explicitly excludes the two `market-tick-data-service` cases**, which
+      stay genuinely gated — those are real, confirmed, still-failing reproducers (see `## Deferred` E7), unrelated to
+      this finding. Source: `issues/qg_sentinel_environment_blind_2026_07_23.md` (Resolution checklist item 3, non-MTDS
+      half — flipped accordingly there too).
 - [x] ✅ [DEVOPS] P2. **DONE (verified 2026-07-30, this session's rulings-closeout pass) — all three parts already
       resolved, none by this session directly; closing out the citation.** (a) The `PROVENANCE-BLOCKED` reclassification
       is live in `scripts/cicd/promotion_lag_monitor.py` (`_provenance_blocked()` + the
@@ -489,3 +511,16 @@ Three questions, quotes/locations/options/recommendation, not resolved autonomou
   surfaced (and correctly NOT absorbed) along the way. Also corrected this plan's own stale draft-status banner and this
   Progress Log's prior "operator-gated draft" framing — the plan has been `status: active` since the operator's same-day
   activation, just never reflected in the body text until now.
+
+- **2026-07-31 (slot 14, `[INFRA]` dispatch)** — picked up todo 3 (env-coupled `ENVIRONMENT`-ambient-default tests in
+  `deployment-api`/`strategy-service`). Investigated by reproducing the exact 2026-07-23 mechanism against both repos'
+  real `quality-gates.sh`-scoped test suites under `ENVIRONMENT` unset and `ENVIRONMENT=development` — found byte-
+  identical pass/skip/xfail counts under both states in both repos (no divergence), then confirmed with a full real
+  `bash scripts/quality-gates.sh` run in each (backgrounded per the cicd heartbeat rule) — both green, sentinels
+  written. Root cause of why this is now moot: todo 1's already-shipped (a)/(b) fix made a standalone `quality-gates.sh`
+  run resolve the SAME `ENVIRONMENT=development` a quickmerge run would on `live-defi-rollout`, closing the exact
+  ambient-default divergence this todo worried about. No code change was needed in either repo — the original 2026-07-23
+  claim (grep-derived, unverified for these 2 repos unlike MTDS's named/confirmed reproducers) does not reproduce today.
+  Flipped todo 3 `[x]` with full evidence inline; also updated the source issue doc
+  (`issues/qg_sentinel_environment_blind_2026_07_23.md` item 3) to record the same finding. MTDS's 2 cases remain
+  untouched and genuinely gated (E7, unchanged).

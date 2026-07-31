@@ -171,7 +171,14 @@ guessed/placeholder environment values, cost is not a blocker (this is code + CI
       `STAGE 0: Cascade`) actually runs — those 2 tests are the ONLY known reproducer of a real leak, and fixing them
       first (silencing the symptom) risks making the leak permanently invisible before its cause is confirmed.
       `deployment-api`/`strategy-service` are NOT the reproducer and are not gated by this — proceed on those two
-      independently whenever convenient.
+      independently whenever convenient. **`deployment-api`/`strategy-service` half CONFIRMED CLEAN 2026-07-31 (no fix
+      needed)** — full reproduction (both repos' actual `quality-gates.sh`-scoped test suites, `ENVIRONMENT` unset vs
+      `development`, byte-identical pass counts both ways) plus a real green `bash scripts/quality-gates.sh` run in each
+      repo found no reproducible ambient-`ENVIRONMENT` failure in either repo today — the original claim (grep-derived
+      from `-prd-` literals, unlike MTDS's 2 explicitly-named/verified reproducers) does not hold up under direct
+      verification; `git log` in both repos shows no intervening fix commit, so this wasn't silently patched elsewhere
+      either. Box stays open only because the MTDS half (E7 above) remains genuinely unresolved. Full write-up:
+      `/plans/active/ci_satellite_ao_dispatch_batch2_2026_07_29.md` todo 3.
 - [x] ✅ [DOC] P2. Correct the "re-run quality-gates.sh --no-fix then retry" guidance wherever it is taught (agent
       prompts, runbooks): as written it is a sentinel-laundering step, not a fix. It is only safe once the sentinel
       binds configuration. — **Verified 2026-07-31: already done as a byproduct of the sentinel-binding fix above
