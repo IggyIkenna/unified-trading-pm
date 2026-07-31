@@ -277,6 +277,16 @@ honest-absence, no silent fallback):
     across UAC (schema) / instruments-service (resolver) / features-service (consumption) / strategy-service (arb
     layer), per the theme's full-completion mandate (no shortcuts, no partial MVP). Source doc's own todo carries the
     scoping detail; this ruling only removes the "needs a design session first" gate.
+
+    **Partial ship 2026-07-31** (`prediction_satellite_ao_dispatch_batch6_2026_07_29.md`'s fixture-pairing todo,
+    `prediction_satellite_ao_dispatch_batch6-008`): UAC (`@1dddc680`), instruments-service (`@62a8b1d8`), and
+    strategy-service (`@d71c8aa4`) all shipped real code for the MLB league; features-service needed no changes (its
+    dispatch/kernel were already sport-agnostic, confirmed via its existing test coverage). The genuinely remaining
+    piece — cross-venue team-name alias tables for MLB/NFL/NBA/tennis, needed to safely widen past MLB and pair on
+    venue-mismatched team-name renderings without risking a false pair — is real data-engineering work, not a
+    code-wiring gap, and was NOT fabricated; it's tracked as its own new `[DATA] P2` todo in the batch6 doc. Full
+    per-repo breakdown + the "why not the rest" reasoning is in that todo's own Partial-progress note and the source
+    doc's (`prediction_cross_venue_arb_and_coverage_2026_07_24.md`) matching update.
 - **Politics/geo cross-venue canonicalization audit (which families are genuinely arbable + how to name/group them)** —
   **RULED: build the FULL structured enumeration now (bounded, checkable), narrowed to a residual operator ask only
   where genuinely tied.** Determining whether two differently-labeled venue markets resolve to the SAME real-world event
