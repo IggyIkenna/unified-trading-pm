@@ -149,9 +149,21 @@ not just noting.
       worker (a distinct failure mode from "slow due to contention"). **DIAGNOSED 2026-07-30 (slot 4, backend_engineer)
       — SAME root cause, no independent bottleneck; a genuine but different mechanism than pure host contention. Full
       breakdown in Progress Log below.**
-- [ ] [SCRIPT] P2. Once `fleet_wide_qg_self_hosted_runner_capacity_crisis_2026_07_27.md`'s Recommended-fix-path section
-      is next revisited, consider splitting that doc (archive the day-1 Progress Log, keep an active continuation) so
-      future corroborations have somewhere to land instead of spawning sibling docs like this one.
+- [x] ✅ [SCRIPT] P2. **DONE — already satisfied, verified 2026-07-31 (slot 11, backend_engineer/cicd).** The split this
+      todo asks for already happened, independently of a Recommended-fix-path revisit: the original doc's own
+      `## Follow-up` section (`fleet_wide_qg_self_hosted_runner_capacity_crisis_2026_07_27.md` L307-309) records **"✅
+      DONE 2026-07-29 — `## Progress Log` history hoisted to
+      `/plans/archive/2026_07/fleet_wide_qg_self_hosted_runner_capacity_crisis_progress_log_history_2026_07_29.md` (768
+      lines extracted, doc went from 1015L to 250L)"** — triggered by hitting the 1000-line hard cap directly, not by a
+      Recommended-fix-path revisit (that section's 4 items were all `[x]`-decided 2026-07-28 and haven't been reopened
+      since). Verified today the split is holding up and doing exactly what this todo wanted: original doc currently
+      **313 lines** (wc -l, ~700 lines of headroom under the 1000 cap) and its `## Progress Log` has taken **3 fresh
+      corroboration entries since the split** (2026-07-29 ~15:51 UTC market-tick-data-service, 2026-07-30 ~15:14 UTC
+      features-service, 2026-07-31 ~01:35 UTC features-service) with no need to spin up another sibling doc — i.e.
+      corroborations now have somewhere to land, which was this todo's entire goal. (This continuation doc itself is at
+      657 lines and growing — worth the same treatment eventually, but that's a fresh observation, not this todo's
+      scope; not opening a new todo for it here since nothing is currently blocked.) No code change; no further split
+      needed right now.
 - [ ] [DATA] P2. **New, opened by the P1 cost-quantification finding above.** The retry storm's real, expensive cost
       bucket is AWS EC2 wall-clock/compute on the oversubscribed shared host (`i-0c9b283b31d6b5ca7`) from the 815 real
       agent-dispatch attempts recorded against `ldr_qg_failure` escalations since 2026-07-27 (self-hosted GH Actions
