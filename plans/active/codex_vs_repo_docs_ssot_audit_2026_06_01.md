@@ -420,8 +420,13 @@ either already-satisfied or stale. This session (Phase-2 worker) executed the **
       `quickmerge --agent`, verified on origin; all changed `.md` prettier-clean.
 - [ ] [DOCS] P2. **trading-agent-service** (7) / **ibkr-gateway-infra** (4) / **batch-live-reconciliation-service** (1)
       / **system-integration-tests** (1).
-- [ ] [DOCS] P2. **deployment-ui** (3) (`user-management-ui` dropped — ARCHIVED 2026-04-20, corrected 2026-07-15,
-      plan-reconcile).
+- [x] ✅ [DOCS] P2. **deployment-ui** (3) (`user-management-ui` dropped — ARCHIVED 2026-04-20, corrected 2026-07-15,
+      plan-reconcile). — deployment-ui@b7ccd3b (2026-07-31): DELETE `src/README.md` (stock Vite+React boilerplate);
+      FIX-STALE `README.md` (env var `VITE_API_URL`→`VITE_DEPLOYMENT_API_URL` + `VITE_OAUTH_CLIENT_ID`→
+      `VITE_GOOGLE_CLIENT_ID` to match actual code; stale 7-tab table → real 16-screen/7-group nav per
+      `src/components/NavMenu.tsx`) + `docs/ARCHITECTURE.md` (stale "8-tab"/route table, component structure, endpoint
+      list all reconciled to current source). Repo-internal drift only, no codex target. QG-green (55s), verified on
+      origin.
 - [ ] [DOCS] P3. **unified-trading-system-ui** (152) — audit only data/path/contract docs; leave genuine UI docs.
 
 ### FIX-STALE pass-1 — landed 2026-06-01 (operator chose FIX-STALE-only; DELETEs/REDIRECTs held), ~340 fixes on LDR
