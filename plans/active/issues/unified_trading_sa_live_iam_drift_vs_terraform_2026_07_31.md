@@ -49,7 +49,7 @@ estimate_class: infra
 estimate_baseline_ai_days: 0.5
 estimate_calibrated_ai_days: 0.4
 assigned_role: infra
-sequential: false
+sequential: true
 drift_direction: correct-code
 source: >-
   Surfaced 2026-07-31 (slot-14, infra) while executing bucket_iam_write_protection_per_tier_2026_06_09.md P2.2b
@@ -213,7 +213,10 @@ confirm no further self-grants happened in the interim.
       undecided long. (repo: unified-trading-pm)
 - [ ] [TERRAFORM] P2. Once P0/P1 resolve, either `terraform import` the genuinely-needed undeclared roles into `main.tf`
       (so `tofu plan` catches future drift) or remove the rest via scoped `google_project_iam_member` deletions — never
-      a blanket `set-iam-policy` policy overwrite. (repo: deployment-service)
+      a blanket `set-iam-policy` policy overwrite. (repo: deployment-service) — **BLOCKED on P1** (2026-07-31, slot 7):
+      P1's `[OPERATOR]` ruling on `projectIamAdmin`/`serviceAccountAdmin` is still open, and this todo's own text gates
+      all 24 roles on "P0/P1 resolve" as one unit — do not split scope without an operator ruling. `sequential: true`
+      now set on this doc so P2 stops re-dispatching to fresh slots until P1 flips.
 - [ ] [DOCS] P3. Cross-reference this doc from `bucket_iam_write_protection_per_tier_2026_06_09.md`'s Phase 2 (P2.1b
       already scopes "remove the god-SA objectAdmin" — note there that even a completed P2.1b leaves
       `projectIamAdmin`/`serviceAccountAdmin` live unless this doc's P1/P2 also land). (repo: unified-trading-pm)
