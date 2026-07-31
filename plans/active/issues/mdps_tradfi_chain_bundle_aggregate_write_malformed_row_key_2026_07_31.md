@@ -131,10 +131,17 @@ rather than absorbing unplanned scope mid-relaunch-verification.
       contract for a non-per-instrument shard. 4 regression tests added (2 in `test_streaming_write_per_tf.py`, 2 in
       `test_canonical_writer_record_helpers.py`) asserting `instrument_id` is absent from the row_key for an empty
       instrument_id + `underlying=SP500`. Full quality-gates.sh green (2293 passed, 2 skipped).
-- [ ] [BACKEND] P3. Register a `SchemaContract` for
+- [x] ✅ [BACKEND] P3. Register a `SchemaContract` for
       `asset_group=tradfi instrument_type=COMBO|FUTURE     data_type=ohlcv_1s` in
       `unified_api_contracts.internal.schemas.contracts.CONTRACT_REGISTRY` (confirm `ohlcv_1s` is actually wanted for
-      tradfi first — it may be intentionally out of scope). Repo: unified-api-contracts.
+      tradfi first — it may be intentionally out of scope). Repo: unified-api-contracts. —
+      `unified-api-contracts@4eeb495f` ("fix(schemas): register missing tradfi ohlcv_1s SchemaContract entries")
+      registers exactly the four entries this gap needed:
+      `("tradfi","future"|"futures_chain"|"combo"|"UNKNOWN", "ohlcv_1s") -> TRADFI_FUTURE_OHLCV_1M`. Confirmed on
+      `live-defi-rollout` (clean tree) while investigating DP-VM-001 escalation agt-d05d42 (slot 12) — the dead
+      `mdps-backfill-tradfi-y2026es-20260731-023743` VM hit this exact `No SchemaContract registered` error 1,366 times
+      across its run because it launched (02:37:43Z) before this fix landed (03:30:26Z). See that doc's Progress Log for
+      the fleet-wide detail.
 
 # Progress Log
 

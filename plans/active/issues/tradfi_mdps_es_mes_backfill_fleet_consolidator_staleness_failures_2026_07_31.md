@@ -150,6 +150,23 @@ ops/follow-up:
       "who else might already be fixing this" from the registry by hand. If it was another `data_pipeline_failure`
       escalation worker, no action needed — just confirms the multi-escalation dispatch model is working as intended for
       a fleet-wide failure.
+- [ ] [DATA] P2. `mdps-backfill-tradfi-y2026es-20260731-023743`'s dead `run.log` shows 42 dates hard-failing
+      `DEPENDENCY CHECK FAILED` (`market_data_processing_service.app.core.dependency_checker`, raw GCS blob-existence
+      probe, `required=True`) — every one a Saturday/Sunday (confirmed by date), but **only from 2026-02-07 onward**;
+      every January 2026 weekend (Jan 3/4, 10/11, 17/18, 24/25, 31) passed the SAME check cleanly. Direct GCS check
+      confirms the asymmetry is real, not a log-reading artifact: `raw_tick_data/by_date/day=2026-01-03/` (Saturday) has
+      1 object, `day=2026-07-25/` (also a Saturday) has 0. So this is NOT simply "MDPS's dependency checker is
+      calendar-blind" (a blanket calendar-awareness fix would be the wrong diagnosis) — something in
+      market-tick-data-service's own weekend/holiday capture (a `venue_trading_calendar`/`EXPECTED_WEEKEND` marker
+      write, per `/codex/02-data/honest-coverage-model.md` § the closure-reason table) stopped landing a per-day object
+      for non-trading days starting around early February 2026, while January weekends still got one. Needs a root-cause
+      read of MTDS's own weekend-marker-writing path (when/why it stopped, or whether Jan was written by an older code
+      path than Feb+) before deciding whether the fix belongs in MTDS (restore the marker write) or MDPS (make the
+      dependency check calendar-aware so it doesn't need MTDS to write anything for a closed day). Repos:
+      market-tick-data-service, market-data-processing-service. Does not lose data (weekends have nothing to capture)
+      and does not block this relaunch's per-instrument candle output — a false-alarm/exit-code hygiene issue for the
+      fleet monitor, not a data-correctness one. Scoped as its own follow-up (needs investigation, not a guess-fix)
+      rather than folded into this one-shot relaunch.
 - [x] ✅ [OPS] P0. Relaunch the whole `es`+`es3` fleet (14 shards, 2020-2026) with the market-data-processing-service
       code AFTER `43b043b` (deploys via the floating tarball — confirm the new tarball manifest pins an ancestor of
       `43b043b` before relaunching, same check pattern used for the `75b5735` staleness fix above). Every shard in this
@@ -280,3 +297,37 @@ capture zero rows for its entire assigned range.
   performed** — a 3rd launch of this shard today would have been a pointless duplicate of the already-healthy `023743`
   VM. Pinged the authoring slot (`dp-fleet-monitor`) confirming coverage; no code or ops change needed from this
   escalation.
+- **2026-07-31 (slot 12, DP-VM-001 escalation agt-d05d42)**: dispatched to relaunch
+  `mdps-backfill-tradfi-y2026es-20260731-023743` (exit_code=1) — itself one of the P0 fleet-wide `023743`-wave shards
+  above. Confirmed via `DeploymentsRegistry` no live coverage existed for this shard at dispatch time (genuinely dead,
+  not a duplicate situation). Full-log analysis (not just the tail) of the dead VM's `run.log`: 182/206 dates in its
+  assigned range (2026-01-01..2026-07-25) showed a subprocess-per-date `FAILED` status. The dominant cause by far (1,366
+  occurrences) was the exact
+  `No SchemaContract registered for asset_group='tradfi' instrument_type='COMBO'/ 'FUTURE' data_type='ohlcv_1s' venue='CME'`
+  line already filed as Gap 2/P3 in
+  `/plans/active/issues/mdps_tradfi_chain_bundle_aggregate_write_malformed_row_key_2026_07_31.md` — this VM launched
+  02:37:43Z, before the fix (`unified-api-contracts@4eeb495f`, landed 03:30:26Z) existed, so it ran the whole 7-month
+  range without it. The remaining ~42 date-failures are genuine Saturday/Sunday CME closures (verified: GCS
+  `raw_tick_data/by_date/day=2026-07-25/` and `day=2026-07-26/` both 0 objects, and both dates are a real weekend) —
+  `market_data_processing_service.app.core.dependency_checker` does a raw GCS-existence probe with no
+  `venue_trading_calendar`/`EXPECTED_WEEKEND` awareness, so every non-trading day gets hard-classified
+  `required=True`+missing instead of a benign calendar skip. This is a real, distinct, structural gap (any TradFi/CME
+  MDPS backfill spanning a weekend will always exit non-zero this way) but does NOT lose any data (there is genuinely
+  nothing to capture on a closed day) and does not block this relaunch's actual goal, so I did not attempt to fix it
+  mid-relaunch — filed as its own follow-up todo below rather than silently absorbing unplanned scope. **Also confirmed
+  the P3 SchemaContract todo in the sibling doc is now done** (`unified-api-contracts@4eeb495f` registers exactly the
+  `("tradfi","future"|"futures_chain"|"combo"|"UNKNOWN", "ohlcv_1s")` entries that todo asked for) and flipped its
+  checkbox there with this doc as evidence. **Action taken**: the floating `unified-api-contracts` tarball was STALE
+  (pinned `1b51e2c8`, predates `4eeb495f` — confirmed via `git merge-base --is-ancestor`), so I republished it
+  (`bash deployment-service/scripts/vm/create-code-tarballs.sh`, default/core-only — skip-if-unchanged left
+  `unified-trading-library`/`market-tick-data-service` untouched since neither had changed, now pins `02f78924`,
+  confirmed ancestor-including `4eeb495f`). Relaunched the shard fresh (`mdps-backfill-tradfi-y2026es-20260731-041306`)
+  with the exact original scope recovered from the dead VM's `LAUNCH_PARAMS.json` (`CME:FUTURE:ES CME:FUTURE:MES`,
+  2026-01-01..2026-07-25, full, SPOT, `--env prod`). Verified STARTED (GCE `RUNNING` immediately
+  post-`gcloud compute instances create`). The launcher's own freshness check flagged `market-data-processing-service`
+  as stale too (manifest `4b84d5c11ede` vs repo HEAD `75236c311b24`) — did not republish that one: `4b84d5c11ede`
+  already includes the `43b043b` chain-bundle fix this fleet needed (confirmed ancestor by an earlier slot in this doc),
+  and the repo's newer HEAD is unrelated churn, so launching on the slightly-stale-but-already-correct MDPS pin was the
+  lower-risk choice versus rebuilding a 2nd tarball mid-escalation. Within relaunch-budget (no other
+  `mdps-backfill-tradfi-` relaunch found for this exact shard today; well under the ≤2/(vm-prefix,day) cap counting
+  distinct shards).
