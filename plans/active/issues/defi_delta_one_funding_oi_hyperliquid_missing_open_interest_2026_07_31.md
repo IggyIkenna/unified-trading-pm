@@ -30,7 +30,6 @@ related:
   - /plans/active/issues/delta_one_lookback_instrument_discovery_wrong_universe_for_passthrough_defi_2026_07_30.md
   - /plans/active/defi_satellite_ao_dispatch_batch3_2026_07_26.md
 created: "2026-07-31"
-author: slot-2 (data_engineering craft, defi_satellite_ao_dispatch_batch3-014)
 source: [D1 todo delta_one leg verification-window dry-run, features-delta-one-defi-20260730-234947]
 parent_epic: defi_master
 assigned_vm: planning

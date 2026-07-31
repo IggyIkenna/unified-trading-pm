@@ -39,7 +39,6 @@ related:
   - /plans/active/defi_satellite_ao_dispatch_batch3_2026_07_26.md
   - /plans/active/issues/features_service_defi_backfill_vm_oom_unexplained_2026_07_26.md
 created: "2026-07-30"
-author: slot-3
 source: [defi_satellite_ao_dispatch_batch3_2026_07_26.md-D1]
 parent_epic: defi_master
 assigned_vm: planning

@@ -31,7 +31,6 @@ related:
   - /plans/active/defi_satellite_ao_dispatch_batch3_2026_07_26.md
   - /plans/active/issues/delta_one_lookback_instrument_discovery_wrong_universe_for_passthrough_defi_2026_07_30.md
 created: "2026-07-30"
-author: slot-3
 source: [defi_satellite_ao_dispatch_batch3_2026_07_26.md-D1]
 parent_epic: defi_master
 assigned_vm: planning

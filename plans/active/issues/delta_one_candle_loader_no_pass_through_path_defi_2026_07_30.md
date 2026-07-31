@@ -40,7 +40,6 @@ related:
   - /plans/active/issues/features_service_defi_backfill_vm_oom_unexplained_2026_07_26.md
   - /plans/active/defi_satellite_ao_dispatch_batch3_2026_07_26.md
 created: "2026-07-30"
-author: slot-4 (data_pipeline_failure escalation, DP-VM-001)
 source: [DP_VM_EXIT_NONZERO escalation for features-delta-one-defi-20260730-222034]
 parent_epic: defi_master
 assigned_vm: planning
