@@ -1,0 +1,203 @@
+# Baseline for check_bare_read_availability_index.py
+#
+# Each entry = a CURRENTLY-KNOWN bare `read_availability_index(bucket)` call
+# site (no `columns=`/`filters=` projection kwarg) in production
+# (non-test, non-scripts) code. Surfaces as WARNING (informational,
+# exit-clean). A new occurrence not in this file -> ERROR, exit 1.
+# SHRINKING ratchet — only ever remove entries (as each is fixed, or
+# confirmed genuinely unprojectable and given an inline
+# `# QG-allow: bare-read-availability-index` marker instead — either way, an
+# entry leaving this file should never be replaced by a new one for the same
+# site).
+#
+# Bootstrap: populated 2026-07-31 (slot-5, read_availability_index_bare_defi_callers-018)
+# by a full `--workspace-root <ws>` sweep (no --scope) at the moment this
+# checker was written. Most of the ~35-40 sites the originating audit found
+# were already fixed by prior dispatches on this same issue doc; the entries
+# below are what a fresh full-corpus scan still finds bare, classified by
+# `status`:
+#
+#   - wrapper_alias_already_projected_internally: the call site imports
+#     deployment-api's `manifest_source.read_manifest_index` under the alias
+#     `read_availability_index` (directly, or via a package `__init__.py`
+#     re-export) — NOT the raw UTL function. The wrapper's own bare-fallback
+#     branch (`services/manifest_source.py:164`) already reuses
+#     `DRILLDOWN_COLUMNS` as of `deployment-api@489d747` (this issue doc's
+#     own P0 item), so these ~9 sites are transitively safe at RUNTIME even
+#     though the call site itself carries no `columns=`/`filters=` kwarg —
+#     matches the issue doc's own description of this fix's blast radius
+#     ("feeds ~10 downstream dashboard endpoints transitively"). Left bare
+#     (not force-projected redundantly) rather than baseline-cleared, since
+#     the checker is a literal callee-name AST match with no import-alias
+#     resolution (mirrors the issue doc's own audit methodology, and the
+#     writer-side sibling checker's simplicity) — it cannot distinguish this
+#     case from a genuinely-raw bare call without that resolution.
+#   - intentionally_bare_verbatim_schema_required: the site's own function
+#     returns or writes the read DataFrame VERBATIM (full schema) on at
+#     least one code path (a dry-run return, an early blob-listing-failure
+#     return, or the actual GCS write-back) — confirmed by direct read in
+#     this issue doc's DONE 2026-07-30 (slot-6) P2 item. Projecting would
+#     silently truncate the manifest schema on that path (a correctness
+#     regression), not a memory win — deliberately left bare, with an
+#     in-code comment at each site (per that item's own description).
+#   - pending_triage: not yet audited/fixed. Some overlap the issue doc's own
+#     still-open P1/P3 items (unified-trading-library's 4 generic
+#     bucket-param helpers; the unified-trading-pm audit-tooling script);
+#     others are new sites this full-corpus scan surfaced that the original
+#     8-repo audit didn't cover (execution-service was outside that audit's
+#     `repos:` frontmatter; market-tick-data-service's `venue_fetch.py:187`
+#     and instruments-service's `cli/main.py:291` are genuinely new finds).
+#
+# SSOT: plans/active/issues/read_availability_index_bare_defi_callers_2026_07_27.md
+
+default_successor: read_availability_index_bare_defi_callers_2026_07_27
+entries:
+  # -- wrapper_alias_already_projected_internally (deployment-api, 9 sites) --
+  - repo: deployment-api
+    file: deployment_api/services/data_query_service.py
+    line: 725
+    function: _availability_rows
+    status: wrapper_alias_already_projected_internally
+    successor: read_availability_index_bare_defi_callers_2026_07_27
+  - repo: deployment-api
+    file: deployment_api/services/data_status/instrument_coverage.py
+    line: 191
+    function: build_cefi_is_instruments_provider
+    status: wrapper_alias_already_projected_internally
+    successor: read_availability_index_bare_defi_callers_2026_07_27
+  - repo: deployment-api
+    file: deployment_api/services/data_status_drilldown/_core.py
+    line: 171
+    function: _scoped_manifest_rows
+    status: wrapper_alias_already_projected_internally
+    successor: read_availability_index_bare_defi_callers_2026_07_27
+  - repo: deployment-api
+    file: deployment_api/services/data_status_drilldown/_core.py
+    line: 388
+    function: lookup_capture_status_for_shard
+    status: wrapper_alias_already_projected_internally
+    successor: read_availability_index_bare_defi_callers_2026_07_27
+  - repo: deployment-api
+    file: deployment_api/services/data_status_drilldown/_csv_export.py
+    line: 477
+    function: build_mtds_shard_csv_export
+    status: wrapper_alias_already_projected_internally
+    successor: read_availability_index_bare_defi_callers_2026_07_27
+  - repo: deployment-api
+    file: deployment_api/services/data_status_hierarchical.py
+    line: 688
+    function: get_hierarchical_drilldown
+    status: wrapper_alias_already_projected_internally
+    successor: read_availability_index_bare_defi_callers_2026_07_27
+  - repo: deployment-api
+    file: deployment_api/services/data_status_service.py
+    line: 449
+    function: _read_index_cached
+    status: wrapper_alias_already_projected_internally
+    successor: read_availability_index_bare_defi_callers_2026_07_27
+  - repo: deployment-api
+    file: deployment_api/services/shard_detail/_shard_core.py
+    line: 525
+    function: _manifest_row_for_coord
+    status: wrapper_alias_already_projected_internally
+    successor: read_availability_index_bare_defi_callers_2026_07_27
+  - repo: deployment-api
+    file: deployment_api/services/shard_detail/_venue_detail.py
+    line: 354
+    function: _prediction_venue_detail
+    status: wrapper_alias_already_projected_internally
+    successor: read_availability_index_bare_defi_callers_2026_07_27
+
+  # -- intentionally_bare_verbatim_schema_required (unified-trading-library, 5 sites) --
+  - repo: unified-trading-library
+    file: unified_trading_library/manifest_writer/_maintenance.py
+    line: 162
+    function: rebuild_manifest
+    status: intentionally_bare_verbatim_schema_required
+    successor: read_availability_index_bare_defi_callers_2026_07_27
+  - repo: unified-trading-library
+    file: unified_trading_library/manifest_writer/_maintenance.py
+    line: 537
+    function: rebuild_manifest_from_canonical_paths
+    status: intentionally_bare_verbatim_schema_required
+    successor: read_availability_index_bare_defi_callers_2026_07_27
+  - repo: unified-trading-library
+    file: unified_trading_library/manifest_writer/_maintenance.py
+    line: 802
+    function: merge_manifest_from_canonical_paths
+    status: intentionally_bare_verbatim_schema_required
+    successor: read_availability_index_bare_defi_callers_2026_07_27
+  - repo: unified-trading-library
+    file: unified_trading_library/manifest_writer/_queries.py
+    line: 418
+    function: reconcile_manifest
+    status: intentionally_bare_verbatim_schema_required
+    successor: read_availability_index_bare_defi_callers_2026_07_27
+  - repo: unified-trading-library
+    file: unified_trading_library/manifest_writer/_writer_io.py
+    line: 164
+    function: lookup
+    status: intentionally_bare_verbatim_schema_required
+    successor: read_availability_index_bare_defi_callers_2026_07_27
+
+  # -- pending_triage (10 sites) --
+  - repo: execution-service
+    file: execution_service/data/canonical_paths.py
+    line: 273
+    function: resolve_manifest_capture_status
+    status: pending_triage
+    successor: read_availability_index_bare_defi_callers_2026_07_27
+  - repo: instruments-service
+    file: instruments_service/cli/main.py
+    line: 79
+    function: _run_coverage_status
+    status: pending_triage
+    successor: read_availability_index_bare_defi_callers_2026_07_27
+  - repo: instruments-service
+    file: instruments_service/cli/main.py
+    line: 151
+    function: _run_refresh_league_entity_coverage
+    status: pending_triage
+    successor: read_availability_index_bare_defi_callers_2026_07_27
+  - repo: instruments-service
+    file: instruments_service/cli/main.py
+    line: 291
+    function: _run_reprocess_shards
+    status: pending_triage
+    successor: read_availability_index_bare_defi_callers_2026_07_27
+  - repo: market-tick-data-service
+    file: market_tick_data_service/engine/orchestrator/venue_fetch.py
+    line: 187
+    function: _check_sports_v9_columns
+    status: pending_triage
+    successor: read_availability_index_bare_defi_callers_2026_07_27
+  - repo: unified-trading-library
+    file: unified_trading_library/dependency_check.py
+    line: 143
+    function: check_upstream_ready
+    status: pending_triage
+    successor: read_availability_index_bare_defi_callers_2026_07_27
+  - repo: unified-trading-library
+    file: unified_trading_library/instruments_preflight/runner.py
+    line: 118
+    function: get_last_attempted_at
+    status: pending_triage
+    successor: read_availability_index_bare_defi_callers_2026_07_27
+  - repo: unified-trading-library
+    file: unified_trading_library/pipeline_e2e_check/prod_precheck.py
+    line: 58
+    function: read_prod_capture_status
+    status: pending_triage
+    successor: read_availability_index_bare_defi_callers_2026_07_27
+  - repo: unified-trading-library
+    file: unified_trading_library/pipeline_e2e_check/shard_verify.py
+    line: 154
+    function: verify_manifest_row
+    status: pending_triage
+    successor: read_availability_index_bare_defi_callers_2026_07_27
+  - repo: unified-trading-pm
+    file: plans/audit/results/available_at_fill_rate_audit_2026_07_13.py
+    line: 51
+    function: audit_bucket
+    status: pending_triage
+    successor: read_availability_index_bare_defi_callers_2026_07_27

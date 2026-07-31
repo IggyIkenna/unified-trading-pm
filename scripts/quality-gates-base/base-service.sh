@@ -3785,6 +3785,49 @@ else
     log_success "STEP 5.105: skipped (checker not yet provisioned in this repo's PM checkout)"
 fi
 
+# ── STEP 5.106: bare read_availability_index(bucket) call — READER-side mirror ─
+#
+# READER-side counterpart to STEP 5.102 (writer-side
+# check_manifest_writer_missing_write_before_return.py). Per
+# plans/active/issues/read_availability_index_bare_defi_callers_2026_07_27.md:
+# UTL's `read_availability_index(bucket, columns=None, filters=None)` decodes
+# the WHOLE consolidated availability index into a pandas DataFrame when
+# called bare — the defi prod index alone is 1.58 GB on disk (several GB once
+# decoded). A caller reachable with a defi-asset-group bucket that omits both
+# `columns=`/`filters=` is one cache-miss/cold-start from an OOM on a
+# memory-constrained Cloud Run job or VM (`mtds_backfill_vm_startup_oom_rc137_2026_07_14`
+# incident class). That audit fixed the ~35-40 sites it manually found;
+# this checker is the standing guard so no NEW bare call site lands silently.
+# AST-walk, production code only (scripts/tests excluded). SHRINKING ratchet:
+# read_availability_index_bare_call_baseline.yaml (24 entries at bootstrap —
+# a full workspace sweep the day this checker landed).
+# Escape: `# QG-allow: bare-read-availability-index` on the call line.
+_BARE_RAI_CHECKER="${REPO_ROOT}/unified-trading-pm/scripts/quality_gates/check_bare_read_availability_index.py"
+if [ -f "$_BARE_RAI_CHECKER" ]; then
+    _BRAI_REPO=$(basename "$PROJECT_ROOT")
+    _BRAI_WS="$REPO_ROOT"
+    _BRAI_SRC_ARG=()
+    [ -n "${SOURCE_DIR:-}" ] && [ -d "${SOURCE_DIR}" ] && _BRAI_SRC_ARG=(--source-dir "$SOURCE_DIR")
+    _BRAI_LOG="${TMPDIR:-/tmp}/bare_read_availability_index_qg.log.$$"
+    if $PYTHON_CMD "$_BARE_RAI_CHECKER" \
+            --workspace-root "$_BRAI_WS" --scope "$_BRAI_REPO" "${_BRAI_SRC_ARG[@]}" >"$_BRAI_LOG" 2>&1; then
+        if grep -q '^\[WARN\]' "$_BRAI_LOG" 2>/dev/null; then
+            log_warn "STEP 5.106: $(grep -c '^\[WARN\]' "$_BRAI_LOG") baselined bare read_availability_index() call site(s); 0 new"
+        else
+            log_success "STEP 5.106: No bare read_availability_index(bucket) call sites (columns=/filters= projection required)"
+        fi
+    else
+        log_fail "STEP 5.106: NEW bare read_availability_index(bucket) call — no columns=/filters= projection kwarg (read_availability_index_bare_defi_callers_2026_07_27):"
+        cat "$_BRAI_LOG"
+        log_fail "         Baseline: unified-trading-pm/scripts/quality_gates/read_availability_index_bare_call_baseline.yaml (NEVER raise a count)"
+        log_fail "         Recheck: $PYTHON_CMD unified-trading-pm/scripts/quality_gates/check_bare_read_availability_index.py --workspace-root $_BRAI_WS --scope $_BRAI_REPO"
+        V=$(( V + 1 ))
+    fi
+    rm -f "$_BRAI_LOG" 2>/dev/null
+else
+    log_success "STEP 5.106: skipped (checker not yet provisioned in this repo's PM checkout)"
+fi
+
 # ── STEP 5.89: record_empty/record_expected_empty reason closed-set ───────────
 #
 # Every ``record_empty(reason=...)`` / ``record_expected_empty(reason=...)`` call
