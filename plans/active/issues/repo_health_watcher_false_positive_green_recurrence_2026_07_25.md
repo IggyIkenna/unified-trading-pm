@@ -19,7 +19,7 @@ summary: >-
   branch HEAD`) should have caught. Filed rather than silently re-declaring the blocker forever; worked around it this
   time by self-verifying with a real local QG run before trusting each green signal (as the archived doc's own
   recommendation says a waiter always should).
-status: open
+status: resolved
 nature: issue
 asset_group: [meta]
 stage: [meta]
@@ -39,7 +39,7 @@ priority: P2
 assigned_vm: planning
 execution_scope: orchestrator-agent
 drift_direction: advance-code
-resolved_by:
+resolved_by: agent-orchestrator@8fc338d
 locked_by:
 depends_on: []
 ---
@@ -95,8 +95,47 @@ false "resume" churn.
 
 ## Todos
 
-- [ ] [BACKEND] P2. **Re-audit RepoHealthWatcher's `failing_run_is_current` gate against this recurrence** — item 3's
+- [x] [BACKEND] P2. **Re-audit RepoHealthWatcher's `failing_run_is_current` gate against this recurrence** — item 3's
       claimed Progress Log resolution does not actually exist in this file; re-audit
       `ci_status`/`failing_run_is_current` against the `fd96e5a2` instance (check whether it read a run against a
       different branch than `live-defi-rollout`), and consider treating repos with no LDR-triggered CI run as `unknown`
-      rather than falling through to a stale unrelated-branch verdict.
+      rather than falling through to a stale unrelated-branch verdict. ✅ — `agent-orchestrator@8fc338d` (see Progress
+      Log below).
+
+## Progress Log
+
+**2026-07-31 (slot 11, backend_engineer craft)** — Re-audited `failing_run_is_current`/`repo_ldr_qg_conclusion`/
+`ci_status` against this exact recurrence. Root cause confirmed via `git log`/`git show`: `_qg_runs_endpoint()`
+(`server/ci_reconcile.py`) built its GH API query as `branch=live-defi-rollout` alone. GitHub reports a
+`pull_request`-triggered run's `head_branch` as the PR's **source** ref — for an LDR→staging/main promotion PR that
+source ref IS `live-defi-rollout` — so that query matched BOTH the genuine hourly `workflow_dispatch` LDR re-test AND
+any in-flight promotion-PR run testing a merge commit (`refs/pull/N/merge`), not a pure LDR checkout. That explains the
+recurrence exactly: `failing_run_is_current`'s `run.head_sha == branch HEAD` check can pass against a promote-PR run
+whose reported `head_sha` (the PR head commit) coincidentally still equals current LDR HEAD, even though that run never
+tested a pure LDR tree and says nothing about whether LDR itself is green.
+
+This was independently found and fixed by another worker (slot-8) the same day, **before** I picked up this todo:
+`agent-orchestrator@8fc338d` ("fix(ci_reconcile): filter LDR quality-gates-v2 queries to workflow_dispatch events",
+2026-07-31T00:50:30Z, already on `origin/live-defi-rollout`). The fix adds `&event=workflow_dispatch` to
+`_qg_runs_endpoint()`'s query when `branch == "live-defi-rollout"` — this is exactly `ldr_ci_monitor.py`'s existing
+`gh run list --event workflow_dispatch` filter for the same signal, now applied to the reconcile-loop's own read path.
+Verified the fix closes the gap for every caller, not just the escalation loop:
+
+- `repo_ldr_qg_conclusion()` and `_latest_qg_run_head_sha()` (which backs `failing_run_is_current`) both call the SAME
+  `_qg_runs_endpoint()`, so both the escalation-dispatch path and the `failing_run_is_current` staleness gate are fixed
+  by the one endpoint change.
+- `server/ci_status.py::ci_status()` (what `RepoHealthWatcher`'s auto-resolve loop calls, per
+  `server/repo_health_watcher.py`) computes `qg_state` via `repo_ldr_qg_conclusion()` and gates staleness via
+  `failing_run_is_current()` — both now event-filtered — so `RepoHealthWatcher`'s green-resolution path is fixed
+  transitively, closing recommendation #1 above.
+- Recommendation #2 (treat "no LDR-triggered run" as `unknown`, never auto-resolve) is already satisfied as a
+  consequence: with the event filter in place, a repo with genuinely zero `workflow_dispatch` runs against LDR now
+  returns `qg_state=None` (no promote-PR run leaks through to masquerade as one) — `ci_status()`'s
+  `blocked = qg_state != "success" or stale` is `True` whenever `qg_state is None`, so such a repo is never
+  auto-resolved green. No separate code change needed for #2; it falls out of the #1 fix.
+- Fix ships with direct unit coverage (`tests/test_ci_reconcile.py`):
+  `test_qg_runs_endpoint_filters_event_for_ldr_branch`, `test_qg_runs_endpoint_no_event_filter_for_main_branch`,
+  `test_repo_ldr_qg_conclusion_sends_event_filter_for_ldr`, `test_repo_ldr_qg_conclusion_no_event_filter_for_main`,
+  `test_latest_qg_run_head_sha_sends_event_filter_for_ldr` — all added in the same commit.
+
+No further code change required. Closing this issue doc.
