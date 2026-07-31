@@ -138,3 +138,6 @@ an image for something that should not run again.
   stale image while investigating an unrelated fresh tail on the cefi/book_snapshot_5 DP-FETCH-009 alert (see
   `cefi_book_snapshot5_schema_contract_ts_event_levels_mismatch_2026_07_28.md`'s Progress Log for the full context).
   Read-only investigation only; no image rebuilt, no job triggered, no code changed.
+- **na-eligibility-audit 2026-07-31** (tranche=cefi, autonomous): KEEP-NA, valid — both open todos are explicitly gated
+  on an unresolved scoping/judgment call ("still-relevant vs dead/superseded... a scoping/judgment call, not
+  determinable by this investigation alone"); the second todo is conditional on that decision. Not worker-determinable.

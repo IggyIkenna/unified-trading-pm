@@ -775,3 +775,6 @@ Orthogonality mistags found scoping the new cross-cutting AG layer — see
 
 - **na-eligibility-audit 2026-07-30** (tranche=cefi, autonomous): KEEP-NA, valid - the sole todo is a standing
   discoverability-index sync with no terminal done-state; by design a human-maintained digest, not a dispatchable unit.
+- **na-eligibility-audit 2026-07-31** (tranche=cefi, autonomous): KEEP-NA, valid — re-verified after the file's last
+  commit (5fb83f4ea) touched only a corpus-referrer link (archived-doc path fix from an unrelated ag-closeout-audit
+  run), not this doc's own todo/scope. Verdict unchanged from 2026-07-30.

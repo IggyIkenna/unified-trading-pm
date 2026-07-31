@@ -250,3 +250,13 @@ unshipped work. Phase A remains correctly flipped done (already verified complet
 unchanged, no new resolution. Per this sweep's own explicit constraint (do not resolve an open operator-only policy
 contradiction, do not execute a ~1.2M-object prod delete without an independently-verified §3a citation), Phase B was
 NOT executed and the hard-stop-2 contradiction was NOT adjudicated. No action taken; no changes needed.
+
+### 2026-07-31 (na-eligibility-audit, tranche=cefi, autonomous) — KEEP-NA, valid
+
+All 4 open todos (Phases B/C/D/E) stay NA: the doc's own summary/banner declares "All steps are human-executed (LOCAL,
+not AO-dispatched)... never an autonomous-agent action," Phase B is the categorical delete-safety hard-stop #2
+(`[OPERATOR]`), Phase C is blocked on an unresolved migration-verification investigation, and Phase D/E — while reading
+individually as "dispatchable" in their own todo text — are real-production-write, VM-scale steps tightly interleaved
+with the still-open hard-stop-2 contradiction (`cefi_hardstop2_carveout_codex_vs_plan_contradiction_2026_07_29.md`). Per
+the skill's "stay skeptical of a todo's own self-framing" caveat, the doc-level banner governs over any individual
+todo's isolated wording. No reclassification.

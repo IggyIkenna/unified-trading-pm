@@ -478,3 +478,7 @@ against the reproduction script.
   duplicate/stale-snapshot re-page of the identical pre-fix condition `agt-716d56` already root-caused and fixed, not a
   new failure mode. No code fix needed, no GCS/manifest write, no VM launch this session (PM plan-doc edit only). Pinged
   `dp-fleet-monitor` (authoring slot) with this outcome.
+- **na-eligibility-audit 2026-07-31** (tranche=cefi, autonomous): KEEP-NA, valid — re-verdicted (a new P2 todo was added
+  since the 2026-07-30 marker). Both open todos are explicit design/maintainer-judgment calls ("a design decision,"
+  "needs a maintainer/operator call on the right shape, not a unilateral change from an escalation worker's one-shot
+  scope") — not worker-determinable.

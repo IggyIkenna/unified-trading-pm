@@ -186,3 +186,6 @@ not lost if the bound expires unanswered.
   decision on lifetime-count-vs-trailing-window (options A/B/C above) is still open and unaffected by this re-fire. No
   code changed. Also filed `/plans/active/issues/dp_escalation_worker_dispatch_no_open_issue_check_2026_07_29.md` (if
   not already cross-linked) as the standing meta-issue this repeat dispatch itself is an instance of.
+- **na-eligibility-audit 2026-07-31** (tranche=cefi, autonomous): KEEP-NA, valid — both open todos are explicitly
+  `[OPERATOR]`/operator-conditional (decide among options A/B/C; the DIAG follow-up is gated on that decision). Not
+  worker-determinable.
