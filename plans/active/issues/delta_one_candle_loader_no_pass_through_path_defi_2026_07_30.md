@@ -181,6 +181,14 @@ coverage asserting a DEFI `funding_oi`/`returns` run actually loads non-empty da
       `unified-trading-pm/agents/RULES.md` §4 "Park a task") so the AO dispatcher stops redispatching fresh workers into
       the same guaranteed-deterministic-failure loop -- 10 VM launches burned today already, several concurrently
       in-flight as this doc was filed.
+- [x] ✅ [BACKEND] P1. Fix `_tf_cluster_helper.py::_process_one_date_for_cluster` to isolate failures per OUTPUT
+      TIMEFRAME (not just per date) -- the near-cluster's default output-TF ladder (`["15s","1m","5m","15m"]`, from
+      `_default_output_timeframes`/`config.DEFAULT_TIMEFRAMES`) always tries `"15s"` FIRST, and a single failed TF
+      aborted the WHOLE cluster/date immediately, so the real requested TF (`"15m"`, listed LAST) was never reached for
+      any DEFI pass-through group even after todo 1's fix landed. Repo: features-service. Done when: a cluster whose
+      first output TF fails but a later TF in the same cluster succeeds returns `True` and both TFs are attempted,
+      verified by a new unit test; `bash scripts/quality-gates.sh` green. — ✅ features-service@9769ded7. Full evidence
+      in Progress Log below.
 
 # Progress Log
 
@@ -254,3 +262,47 @@ coverage asserting a DEFI `funding_oi`/`returns` run actually loads non-empty da
   - **Not done in this todo** (correctly out of scope — todo 2/3 below cover it): did not re-run the actual DEFI
     `funding_oi` backfill against production GCS (todo 2's job, gated on this landing) and did not action the
     `[OPERATOR]` park recommendation (todo 3, still open below).
+- **2026-07-31 (slot-8, data_pipeline_failure escalation DP-VM-001, `ESCALATION_ID=agt-e52874`, for VM
+  `features-delta-one-defi-20260730-234947`, exit_code=1) — found + fixed a THIRD layer, shipped todo 4.** Dispatched
+  per `codex/15-runbooks/incidents/rb_infra_relaunch.md` to relaunch this VM. Read its durable GCS logs first per the
+  runbook's own guidance and found this is a NEW mutation of the same causal chain, not a repeat of an already-tracked
+  failure: `EXIT_STATUS=1`, `deployment_id=c788d8f8-665b-4b78-b7ad-e2d3b3d463a7`, `git_commit=d072b0358b...`
+  (BoM-recorded commit not resolvable in the repo history — likely a stale/incorrect BoM stamp, not investigated
+  further, out of this escalation's scope). Confirmed todo 1's pass-through fix (`features-service@a5a5bf7d`) IS
+  deployed and working — `Manifest discovery: 1 captured instruments for DEFI date=2023-05-12 data_type=perp_funding`
+  (previously `0`, per the sibling blank-id doc) and real per-instrument candle processing was attempted (no more
+  `No upstream MDPS data` messages). But the run still failed 100% of dates with
+  `No pre-loaded candles for HYPERLIQUID:perpetual: at 15s — skipping` → the honest-absence gate correctly rejecting an
+  unproven `empty_confirmed` write → `ERROR ALL feature groups failed: ['funding_oi']` → exit 1. Traced to
+  `_tf_cluster_helper.py`: `_default_output_timeframes("DEFI")` returns the CEFI-shaped
+  `["15s","1m","5m","15m","1h","4h","24h"]` ladder (DEFI has no `TRADFI_SUPPORTED_TIMEFRAMES`-style exclusion list); the
+  near-cluster reads real base candles at `"15m"` (the CLI's actual `--timeframe`, confirmed via
+  `resample_candles_to_timeframes`'s same-tf identity branch — `candle_resampler.py:212`), but
+  `_process_one_date_for_cluster` iterated output TFs in ladder order (`"15s"` first) and `return False` IMMEDIATELY on
+  the first failing TF — since `"15s"` (finer than the `"15m"` base, `candle_resampler.py`'s own "target finer than base
+  — cannot resample" warning) always fails first, `"15m"` (listed LAST, the one TF that genuinely had data) was NEVER
+  attempted. Exact same failure-mode CLASS already fixed for TRADFI via `constants.py`'s `TRADFI_SUPPORTED_TIMEFRAMES`
+  (see that file's own 2026-07-26 comment on the identical abort-before-real-TF shape) — but that fix only special-cased
+  TRADFI's ladder, not the underlying abort-on-first- failure bug, so DEFI's pass-through groups hit the same class
+  through a different door.
+  - **Fix (lower-risk than a DEFI-specific timeframe allowlist, which would require guessing DEFI's exact native data
+    cadence):** made `_process_one_date_for_cluster` isolate failures per OUTPUT TIMEFRAME instead of aborting the whole
+    cluster on the first one — mirrors the shard-level-failure-isolation codex principle already applied one level up
+    (`_process_tf_clusters_date_range`'s own any-succeeded-across-dates contract). A TF the cluster can't serve now logs
+    a warning and the loop continues to the next TF; the cluster only reports failure if EVERY TF failed. Verified via a
+    new regression test asserting the exact production shape (first TF fails, later TF in the same cluster succeeds,
+    both are attempted, result is `True`) plus updated the pre-existing test that had encoded the old abort-immediately
+    contract. All 50 `test_tf_cluster_helper.py` tests pass; full `quality-gates.sh` green at HEAD (hit the 50-line
+    method-size gate on the first pass — 57L — trimmed the docstring/log message to 47L and re-ran green). Shipped:
+    `features-service@9769ded7`.
+  - **Did not relaunch** the VM (would fail identically pre-fix; the fix is now live via LDR so a fresh relaunch of D1's
+    todo 2 can be attempted once this lands past the Tier-C drain to staging/main — that resume attempt is todo 2 above,
+    still open).
+  - **Did not action** the still-open `[OPERATOR]` park recommendation (todo 3) — flagging again here since two prior
+    escalation workers (slot-4, slot-2) already recommended it and it appears not yet executed; this is now the THIRD
+    data_pipeline_failure escalation to hit this same VM-relaunch-storm chain today.
+  - **Not investigated** (out of this escalation's scope): whether `"15s"`/`"1m"`/`"5m"` output TFs are ever
+    MEANINGFULLY desired for DEFI pass-through data at all (vs. just wasted attempts that always fail and log a warning)
+    — a `DEFI_SUPPORTED_TIMEFRAMES`-style allowlist (mirroring `TRADFI_SUPPORTED_TIMEFRAMES`) would be a cleaner
+    long-term fix once someone with the real perp_funding/oracle_prices native-cadence knowledge scopes it; today's fix
+    is the safe, general, no-domain-knowledge-required floor (never mask a working TF, whatever the ladder contains).
