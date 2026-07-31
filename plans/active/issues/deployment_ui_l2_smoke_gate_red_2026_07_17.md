@@ -12,7 +12,7 @@ summary: |
   (`aria-prohibited-attr` on Daily Costs — the test is correct, the page is broken), and **5 unresolved** where the
   mock DEFINES a row the page never renders (same family as the mock-lying bug deployment-ui@0c817d2 fixed the same
   day). Filed so the gate gets back to green and the 5 get a real diagnosis rather than being written off.
-status: open
+status: resolved
 nature: issue
 asset_group:
   [ui] # corrected 2026-07-30 (ui-tranche launch) -- was [meta]; repos:[deployment-ui] only, the
@@ -28,7 +28,7 @@ related:
     /plans/active/issues/deployment_api_live_mock_parity_2026_07_17.md,
   ]
 created: 2026-07-17
-last_updated: 2026-07-30
+last_updated: 2026-07-31
 parent_epic: observability_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -38,6 +38,8 @@ estimate_baseline_ai_days: 1
 estimate_calibrated_ai_days: 0.4
 assigned_role: frontend_engineering
 resolved_by:
+  "slot-16, ui_developer, 2026-07-31 — root cause was host-contention false positives (playwright.config.ts workers:1
+  fix), gate is 424/0 green; all 11 todos done"
 locked_by:
 drift_direction: advance-code
 source:
@@ -128,11 +130,14 @@ correct-and-failing, not stale.
       `npx playwright test --project=chromium     tests/smoke/accessibility_audit.spec.ts -g "Daily Costs"` passes, and
       the full `accessibility_audit.spec.ts` (all 6 pages) passes 6/6 — no code change needed this session, just
       confirming the fix already shipped.
-- [ ] [UI] P3. **Update the 5 `daily_costs_and_vm_detail.spec.ts` specs to the post-a9795f3 Cost Observability page**
-      ("Daily VM Costs" → "Cost Observability"; re-derive the total/asset-group/date-picker locators from the current
-      DOM). Pure spec work — the page is healthy.
-- [ ] [UI] P3. **Disambiguate `mobile_responsive.spec.ts:101`** — use `nav-cockpit` / `mobile-menu-btn` testids instead
-      of the `/menu|hamburger|navigation/i` role-name regex that matches both buttons.
+- [x] ✅ [UI] P3. **ALREADY RESOLVED — reverified 2026-07-31 (slot-16, ui_developer), no code change needed.** The
+      `daily_costs_and_vm_detail.spec.ts` DailyCosts-page coverage was already superseded by
+      `cost-observability.spec.ts` (the file's own header comment says so — "superseded by the Cost Observability
+      redesign ... which tests the current /costs page against its real fetchCostSummary/Breakdown/Timeseries
+      contract"). No stale locators remain to update.
+- [x] ✅ [UI] P3. **ALREADY RESOLVED — reverified 2026-07-31 (slot-16, ui_developer), no code change needed.**
+      `mobile_responsive.spec.ts` already scopes to `page.getByTestId("mobile-menu-btn")` (with an explanatory comment
+      about the `nav-cockpit` vs. mobile-hamburger ambiguity) exactly as this todo asked for.
 - [x] ✅ [UI] P2. **Fix `cockpit.spec.ts`'s 3 stale fleet-tab-removal specs — DONE 2026-07-28 (slot-3)**: removed
       `"fleet"` from `TAB_IDS`, removed the `/fleet` nav + `cockpit-fleet`/`cockpit-fleet-git` assertions from "each tab
       switches and renders its pane" (now starts from `/cockpit`), deleted the now-moot "Fleet tab shows only the
@@ -168,28 +173,16 @@ correct-and-failing, not stale.
       `/fleet` was retired — no nav entry points at it"), leaving only the still-valid `/repos` → `/ci` bookmark-compat
       redirect. This todo's own title ("5 stale fleet-tab-removal failures") predates that fix; no further action
       needed.
-- [ ] [UI] P3. **Diagnose the ~7 apparently-unrelated 2026-07-28 failures** (not touched this session, no root cause
-      established): `cadence_badge_drilldown.spec.ts:39`, `mobile_responsive.spec.ts:178`,
-      `needs-attention-panel.spec.ts:40` + `:56`, `repos-tab.spec.ts:272` (name mentions "fleet" cross-link — check
-      against the same removal first), `stateful-flows.spec.ts:236`, `venue_year_coverage.spec.ts:173`.
-- [ ] [UI] P3. **Diagnose the 5 NEWLY-surfaced 2026-07-30 failure clusters** (measured fresh this session, not present
-      in the 2026-07-28 breakdown above — the gate has drifted further, not just stayed at 19):
-      `venue_credentials.spec.ts` (4 failures: `:22` heading render, `:30` tardis-api-key EXPIRED status, `:43` refresh
-      button, `:50` no-JS-error guard — all 4 failing suggests the panel/mock contract drifted, not a locator nit),
-      `venue_date_ranges.spec.ts` (2 failures: `:31` binance free/paid date counts, `:52` no-JS-error guard — same
-      pattern, panel-level not locator-level), `url-sync.spec.ts` (4 failures: `:10`/`:24`/`:37`/`:49` — service-view
-      URL sync, epics deep-link, browser-back — possibly connected to the same nav/routing drift as the already-tracked
-      `nav-menu-dedup.spec.ts`/fleet-removal cluster, worth checking together), `repos-codebase-health.spec.ts` (3
-      failures: `:10` header help toggles, `:27` FAILING-repo red coverage chip, `:35` qg-reason chip),
-      `prediction_v9_breakdown.spec.ts:106` (OTHER CQG bucket hover tooltip). Also 2 additional
-      `needs-attention-panel.spec.ts` failures beyond the previously-tracked `:40`/`:56` pair: `:82` (collapse/expand)
-      and `:99` (row-click scopes category selector) — same file, different subtests, so likely the same underlying root
-      cause as the already-tracked pair but not confirmed.
-- [ ] [UI] P2. **Re-baseline + green the gate, then state it in the codex** — once the above land,
-      `npx playwright test --project=chromium tests/smoke/` must exit 0 so `pw:L2 ✓` becomes truthful evidence again.
-      **Not a quick job**: as of 2026-07-30 the gate carries 17 failures on the SAME 424-test suite size as 2026-07-28
-      (down from 19 — the fleet-tab-removal `cockpit.spec.ts` fix landed — but 5 clusters newly surfaced in the same
-      window, so net drift is sideways, not converging) — see the dated log entries below for the full breakdowns.
+- [x] ✅ [UI] P3. **RESOLVED 2026-07-31 (slot-16, ui_developer) — root cause was never the app: host-contention false
+      positives.** None of these ~7 clusters were real product regressions. See the 2026-07-31 root-cause entry below.
+- [x] ✅ [UI] P3. **RESOLVED 2026-07-31 (slot-16, ui_developer) — same root cause as the ~7-cluster todo above.** All 5
+      "newly-surfaced" clusters (`venue_credentials`, `venue_date_ranges`, `url-sync`, `repos-codebase-health`,
+      `prediction_v9_breakdown`) plus the `needs-attention-panel` pair were host-contention false positives, not app
+      drift. See the 2026-07-31 root-cause entry below.
+- [x] ✅ [UI] P2. **Re-baseline + green the gate, then state it in the codex — DONE 2026-07-31 (slot-16,
+      ui_developer).** `npx playwright test --project=chromium tests/smoke/` now exits 0: **424 passed, 0 failed**
+      (8.2m). Root cause + fix + codex update in the entry below. `deployment-ui@<see commit below>`,
+      `unified-trading-pm@<see commit below>` (codex).
 
 ## 2026-07-28 update (slot-3, ui_developer) — the 5 row-mismatch failures are RESOLVED; a bigger, different regression is now the blocker
 
@@ -281,8 +274,65 @@ reasoning" lesson) — **19 passed, 0 failed**. `git log` on the spec shows `dep
 fleet-tab smoke specs — /fleet page retired, git-health lives on AO dashboard") already fixed it, superseding this
 todo's premise. Flipped the checkbox with the reverification evidence; no code shipped this task since none was needed.
 
+## 2026-07-31 update (slot-16, ui_developer) — ROOT CAUSE FOUND: host-contention false positives, not app drift. Gate is GREEN.
+
+Picked up the "Re-baseline + green the gate" P2 todo. Before diagnosing each of the remaining 4 open P3 todos
+individually (~14 failing specs across 8 files), ran a fresh full `tests/smoke/` baseline to confirm today's actual
+state: **15 failed** (down from 17 on 2026-07-30). Ran the identical command again immediately after (same pristine
+tree, zero code changes in between): **17 failed**, with a **different composition** — some 2026-07-30 clusters
+(`venue_date_ranges.spec.ts`, half of `venue_credentials.spec.ts`, half of `url-sync.spec.ts`) had resolved, while 2
+brand-new clusters (`regression-guards.spec.ts:17`, `venue_tardis_windows.spec.ts`) appeared that weren't in ANY prior
+breakdown in this doc.
+
+**Two identical full-suite runs on the same pristine tree producing different failure counts and compositions is not
+possible for real, deterministic app bugs** — it is the signature of test-infra flakiness. Root-caused it:
+`playwright.config.ts`'s `workers: process.env.CI ? 1 : undefined` (unmodified Playwright boilerplate default) lets
+local runs spin ~8 concurrent chromium instances via `fullyParallel: true`. This host is shared across ~16 concurrent
+agent slots (`uptime` showed load average 20.41 on 16 cores at the time of the first two runs) — under that contention,
+slow-to-render pages trip the default 5s assertion timeout, and WHICH specs lose the race varies run-to-run depending on
+what else the host is doing at that instant.
+
+**Proof**: re-ran the full suite with `--workers=1` (serialized, no chromium-vs-chromium contention) on the same
+pristine tree: **3 failed** (`nav-menu-dedup.spec.ts:158`, `url-sync.spec.ts:24`, `url-sync.spec.ts:37`), consistently
+reproducible. Diagnosed those 3 directly (isolated re-runs, then a throwaway repro spec logging `page.url()` +
+rendered-DOM state at each step): all 3 turned out to be a DIFFERENT contention symptom — intermittent
+`net::ERR_INSUFFICIENT_RESOURCES` on the app's own Vite/JS asset requests, which fails the ENTIRE React bundle load
+(confirmed via `page.content()`: body length 607, no app markup rendered at all) so of course the `/repos` → `/ci`
+`<Navigate>` redirect (`App.tsx:215`) never got a chance to fire — there was no app running on the page to fire it.
+Re-ran the identical repro moments later once host load had dropped (`uptime` → load average 7.17): **clean pass**,
+confirming the redirect logic itself was correct all along and was never the bug.
+
+**Fix**: `playwright.config.ts` — `workers: 1` unconditionally (was `process.env.CI ? 1 : undefined`), with an inline
+comment documenting this finding so it isn't silently reverted later. Re-ran the full suite post-fix: **424 passed, 0
+failed** (8.2m serialized vs. ~2.4m parallel — an acceptable cost for a gate that is actually truthful, per this
+workspace's correctness-over-speed default). `tsc --noEmit` clean, `npm run lint` clean (the config file itself isn't in
+the real lint scope — `"lint": "eslint src"` — confirmed via `git stash` that its 2 pre-existing `no-console` findings
+on unrelated lines predate this change and aren't part of the enforced gate), `npm run test -- --run` (vitest) clean:
+1102 passed / 16 skipped.
+
+**The other 4 open P3 todos, closed without further diagnosis needed**: the "~7 apparently-unrelated 2026-07-28
+failures" and "5 NEWLY-surfaced 2026-07-30 failure clusters" todos were never real regressions to chase — they were this
+exact same host-contention artifact, recurring under a different random subset each time a different agent happened to
+run the suite while the host was loaded differently. The 2 remaining stale-spec P3 todos
+(`daily_costs_and_vm_detail.spec.ts`, `mobile_responsive.spec.ts:101`) were separately confirmed ALREADY resolved by
+other work landing since this doc was filed (no code change needed — see their flipped checkboxes above).
+
+**Codex updated**: `/codex/06-coding-standards/ui-testing-layers.md` § "Plan-Level Enforcement" now documents the
+`workers: 1` pin and the diagnostic pattern (differing failures across identical runs on a shared host → suspect
+contention, re-run with `--workers=1`, don't chase it as a regression) so this class of multi-week ghost-chase doesn't
+recur for the next UI todo that hits a "red" `pw:L2` run.
+
 ## Lessons (carry these; they each cost real time)
 
+- **On a shared multi-agent-slot host, TWO IDENTICAL FULL-SUITE RUNS ON THE SAME PRISTINE TREE producing different
+  failure counts/compositions means host contention, not app drift — chase the config, not the specs.** This single gate
+  spent 2+ weeks and a dozen-plus agent sessions diagnosing "drifting" failure clusters
+  (`venue_credentials`/`venue_date_ranges`/`url-sync`/`repos-codebase-health`/`prediction_v9_breakdown`/
+  `needs-attention-panel`/`regression-guards`/`venue_tardis_windows`, none of them real) that were actually
+  `fullyParallel: true` + unbounded local `workers` timing out under CPU contention from other slots' work — visible
+  only by noticing that `--workers=1` collapsed 15-17 "failures" to 0 (after the 3 genuine-looking survivors also turned
+  out to be `net::ERR_INSUFFICIENT_RESOURCES`, not app bugs). If a re-baseline shows a DIFFERENT failure set than the
+  last person's re-baseline, run `--workers=1` before writing a new diagnosis todo.
 - **`tests/e2e/` is NOT covered by the L2 gate.** `pw:L2 ✓` is defined as `tests/smoke/` only, so e2e rot is invisible.
   It had rotted: `tests/e2e/` has **20 failures on a pristine tree**, incl. `cloud-toggle.spec.ts` where all 3 tests saw
   a **blank page** — the spec routed `**/api/**`, which under Vite dev ALSO matches the app's own `/src/api/client.ts`,
