@@ -144,7 +144,10 @@ ground to open up, and it did:
       market-data-processing-service, deployment-service. **Done when**: a dated measurement section in the issue doc
       reports the new hit rate, states whether `_retry_empty_day_listing` resolved, further-reduced, or did not move the
       mismatch, and either flips the doc's open item or restates the precise remaining gap. Source:
-      `issues/tradfi_mdps_build_continuous_mismatches_2_and_4_still_open_2026_07_26.md`.
+      `issues/tradfi_mdps_build_continuous_mismatches_2_and_4_still_open_2026_07_26.md`. **NOT YET DISPATCHABLE
+      (2026-07-31, slot-2, data_engineering craft)**: a fresh ES/MES per-contract "process" step launch already
+      genuinely satisfies this todo's "launch" half — see Progress Log below; still mid-backfill, gated on that fleet
+      finishing before build-continuous + the re-measure can run.
 
 - [x] ✅ [DATA] P0. **Migration/purge pass for CME+CBOE `WithinBoundsTradfiSourceZero` bundle-grain rows, plus harden
       the script against recurrence — combined into ONE todo because both edit the same script.** (1) Run a
@@ -429,6 +432,29 @@ mirroring the batch1/batch2/batch3/batch4 finalize pattern.
   100%-confirmed match) — the actual write stays gated on that answer. Also fixed this doc's own stale "Status: draft —
   NOT approved, NOT dispatched" banner (line ~80), which contradicted the frontmatter's `status: active` since the
   2026-07-30 `5a6bbefc3` operator approval commit — the banner text was never updated in that same commit.
+
+- **2026-07-31 (slot-2, data_engineering craft, task `tradfi_satellite_ao_dispatch_batch5-001`)** — Picked up todo 2
+  (ES/MES per-contract backfill re-run + hit-rate re-measure). Before launching a new backfill (this todo's literal
+  instruction), checked `gcloud compute instances list` for any already-running ES/MES fleet to avoid a duplicate SPOT
+  launch — found 14 `mdps-backfill-tradfi-y{2020..2026}es[3]-20260731-023743` VMs already `RUNNING`, launched ~30 min
+  earlier. Traced their provenance: they are the fleet-wide relaunch from a DIFFERENT, unrelated incident —
+  `issues/tradfi_mdps_es_mes_backfill_fleet_consolidator_staleness_failures_2026_07_31.md` (a tradfi manifest
+  consolidator staleness-budget false-positive + a chain-bundle instrument-id matcher gap, both now fixed —
+  `unified-trading-library@75b5735`, `market-data-processing-service@43b043b` — and confirmed baked into this fleet's
+  tarball). That fleet's own scope is functionally identical to this todo's "launch" instruction: full ES/MES
+  per-contract process-step backfill, `CME:FUTURE:ES CME:FUTURE:MES`, spanning the same 2020-2026 window. Relaunching a
+  SECOND fleet here would duplicate SPOT compute/GCS write load for zero benefit — declining to do so. **Verified
+  genuine live progress** (not just VM liveness) via `run.log` tail on all 7 `es` year-shards: each is processing around
+  day 78-82 of its ~365-day year (e.g. `y2020es` at `date=2020-03-19`, `y2026es` at `date=2026-03-04`) after ~30 min
+  runtime — real `POLARS AGGREGATED` candle-write lines confirm genuine compute, not a hung/idle VM. At this rate
+  (~21-22% in ~30 min), the process-step alone has an ETA of roughly 1.5-2 more hours before all 14 shards complete —
+  well before `build-continuous --root ES` (this todo's second step) or the hit-rate re-measure (the third) can even
+  begin. This is a multi-hour gate, not something to hold this slot open for — declining todo 2 and skipping this task
+  rather than busy-waiting, per the same posture the CeFi Track-2 backfill precedent established
+  (`issues/cefi_track2_backfill_vm_preempted_no_recovery_2026_07_30.md`). Next dispatch should check
+  `DeploymentsRegistry`/`gcloud compute instances list` for the `mdps-backfill-tradfi-y*es*-20260731-023743` fleet's
+  completion before re-running `build-continuous` and the hit-rate measurement — no new backfill launch needed unless
+  this fleet is found to have failed.
 
 ## Codex SSOTs
 
