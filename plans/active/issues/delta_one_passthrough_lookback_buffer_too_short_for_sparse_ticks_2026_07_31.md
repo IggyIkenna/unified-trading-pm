@@ -45,7 +45,6 @@ related:
   - /plans/active/issues/delta_one_get_captured_instruments_blank_id_perp_funding_2026_07_30.md
   - /plans/active/defi_satellite_ao_dispatch_batch3_2026_07_26.md
 created: "2026-07-31"
-author: slot-5 (data_engineering craft, defi_satellite_ao_dispatch_batch3-014)
 source: [features-delta-one-defi-20260731-025149 verification run, 0/51 completed despite 51/51 range-load success]
 parent_epic: defi_master
 assigned_vm: planning
