@@ -330,16 +330,19 @@ verify the guardrail did not trip + row counts are unchanged before resuming the
 
 **Dispatch-order findings #2-#6 (2026-07-29/30, slots 14/15/11/6/3)**: `-006` dispatched 5×, `-001` never executed each
 time — a backend prereq-wiring bug despite `sequential: true`
-(`issues/mtds_backfill_sequential_true_dispatch_order_violated_2026_07_29.md`, still unfixed as of #6). All 5 declined
-
-- skipped (`GATED`) rather than resume the cron out of order; none touched production.
+(`issues/mtds_backfill_sequential_true_dispatch_order_violated_2026_07_29.md`, still unfixed as of #6). All 5 skipped
+(`GATED`) rather than resume the cron out of order; none touched production.
 
 **#7 — 2026-07-31 (slot 16) — breaking the loop: `-001`'s own prerequisites (snapshot + cron-pause) are both already
 complete, so it's stuck on the dispatch bug, not a real gate.** Verified cron still `PAUSED` live. Determined real
 capture bounds via `read_availability_index(..., MANIFEST_ALLOW_STALE_FALLBACK=true)`: `2025-03-13..2026-07-28`, both
 `KALSHI`/`POLYMARKET` present. Launched a full-range dry-run (prior dry-run only covered 5 days) as the final safety
-check before the live write — running in background, genuinely CPU-active. Apply/force-consolidate/audit/resume
-sequence + evidence to follow once it completes.
+check before the live write. **Found + acted on a real resource-safety issue**: RSS climbed 3.6→13.7GB, no plateau — the
+"unbounded scan on a shared host" pattern CLAUDE.md's heavy-compute rule bans. Killed by exact PID before risking OOM on
+other slots. Did NOT proceed to the real apply this session (same unbounded shape would recur — no `--chunk-size` on
+this script). **Next for `-001`**: re-run in bounded sub-ranges (e.g. quarterly) or via
+`scripts/dev/run-bounded-analysis.sh`/a dedicated VM. Cron still `PAUSED`, snapshot still valid, nothing written to
+production.
 
 **2026-07-14 (ICE-purge session, cross-plan note)**: the operator AUTHORIZED and USED a tradfi consolidator-cron pause
 window today for the ICE non-24h purge (`purge_tradfi_ice_non_24h_2026_07_14.py`, market-tick-data-service@fffd7f82):
