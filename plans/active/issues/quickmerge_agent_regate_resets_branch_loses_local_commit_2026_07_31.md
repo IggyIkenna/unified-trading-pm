@@ -74,10 +74,35 @@ have a fix or a documented safe workaround.
 
 ## Recommended decision
 
-- [ ] [SCRIPT] P1. Locate the branch-reset call inside `quickmerge.sh`'s sentinel-invalid retry/re-gate path (search for
-      `git reset` / `Reset to origin` near the `sentinel invalid (HEAD moved` log line) and change it to preserve local
-      commits — either skip the reset when local HEAD is a strict descendant of the pre-retry state (nothing to lose),
-      or always rebase (never hard-reset) onto the new origin tip before re-gating. Repo: unified-trading-pm.
+- [x] ✅ [SCRIPT] P1. **DONE 2026-07-31.** Locate the branch-reset call inside `quickmerge.sh`'s sentinel-invalid
+      retry/re-gate path (search for `git reset` / `Reset to origin` near the `sentinel invalid (HEAD moved` log line)
+      and change it to preserve local commits — either skip the reset when local HEAD is a strict descendant of the
+      pre-retry state (nothing to lose), or always rebase (never hard-reset) onto the new origin tip before re-gating.
+      Repo: unified-trading-pm. **Investigation finding**: no literal `git reset` call exists anywhere in
+      `quickmerge.sh`, and the sentinel retry loop itself (near the "sentinel invalid" log line) only calls
+      `_qm_stage_0_4_not_behind_gate` (pull --ff-only / pull --rebase --autostash, both non-destructive) — matching this
+      doc's own "somewhere later in the retry/re-gate flow... apparently unconditional" caveat (the author couldn't pin
+      the exact line either, only the reflog symptom). Found the operationally-identical anti-pattern
+      (`checkout -B <branch> origin/<branch>`, which produces the exact "branch: Reset to origin/<branch>" reflog
+      signature) unprotected in **STAGE 5**'s branch-selection block (both the `--dep-branch` and manifest-branch arms)
+      — the SAME anti-pattern already flagged + partially fixed once before in `cascade_dep_branch` (2026-07-22,
+      `quickmerge_silently_reset_unpushed_commit_2026_07_22.md`), but that fix only covered the cascade function, not
+      this second occurrence. Rather than patch the two `checkout -B` call sites individually (which only protects
+      against loss FROM those two exact lines, and the precise trigger condition for the sentinel-invalid case remains
+      unconfirmed), shipped a **root-cause-agnostic safety net** (`unified-trading-pm@f93a618e6`): a QG-certified-commit
+      snapshot (`_QM_PRE_STAGE5_HEAD` + `_QM_PRE_STAGE5_BRANCH`) taken the instant Stage 3 (quality gates) finishes,
+      verified via `git merge-base --is-ancestor` immediately after STAGE 5's branch-checkout block, scoped to fire only
+      when `$BRANCH` is the SAME branch name we snapshotted (a genuinely new PR branch off `origin/main` not containing
+      it is expected, not a regression). On detection: preserves the lost commit to
+      `refs/wip-preserve/quickmerge-stage5-regate-<sha12>` (mirroring the cascade fix's own preserve-ref convention) and
+      hard-fails with an explicit recovery command, instead of silently proceeding to push. This catches the failure
+      class regardless of which exact code path causes it (the two known `checkout -B` sites, or anything else that
+      might move the branch pointer during STAGE 5). 6 new hermetic bats tests
+      (`tests/test_quickmerge_stage5_no_regression_guard.bats`, real local git fixtures — no network): the guard fires +
+      durably preserves on a literal repro of the destructive `checkout -B` call, stays silent on the safe
+      plain-checkout path, stays silent on genuine new-branch creation, and stays silent when nothing was snapshotted.
+      All 14 pre-existing `test_quickmerge_dep_tier_gate.bats` tests still pass unchanged (no regression). `bash -n`
+      syntax-clean.
 - [ ] [DOC] P2. Add an explicit post-`--agent`-quickmerge verification step to `RULES.md` § 2 / `worker.md` § DONE:
       `git fetch origin <branch> --quiet && git merge-base --is-ancestor <your-sha> origin/<branch>` — treat a "✅
       Landed" message as unverified until this check passes; on failure, recover via `git reflog` +
