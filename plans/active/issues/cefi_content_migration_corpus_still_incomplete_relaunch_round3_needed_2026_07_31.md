@@ -113,23 +113,27 @@ needs an explicit next relaunch round, and none is currently dispatched.
       todo). — worker, slot 10, 2026-07-31: relaunched 13/17 (budget allowed); see Progress Log for per-shard resume
       dates + the 4 shards correctly skipped this round for `RB-INFRA-RELAUNCH` budget. Corpus-level "done when" still
       pending — tracked by the new follow-up todo below + the parent doc's `-002` re-verify.
-- [ ] [OPERATOR] P1. **Shards 16, 17, 21, 41 are now over `RB-INFRA-RELAUNCH`'s `≤2/(vm-prefix,day)` budget** (queried
-      live via `DeploymentsRegistry.list_recent_archive(days=1)` 2026-07-31T13:35Z: shard 16=2, shard 21=2 archived
-      today — AT cap; shard 17=3, shard 41=3 archived today — OVER cap) and were correctly NOT relaunched this round.
-      All four died again on their most recent (pre-round-3) attempt showing the SAME symptom — repeated
-      `WARNING No progress in the last poll window — N files still outstanding (possible wedged worker)` immediately
-      before death, despite already running on `e2-standard-16` with both the pyarrow-pool-release fix
-      (`market-tick-data-service@9f4098b1`) and the stall-timeout fix (`@55d051bd`) live. Shard 17 in particular has now
-      died on its 3rd post-fix attempt (`-050700`, per the parent doc's own DP-VM-003 agt-ad6632 finding:
-      `host_metrics_window.mem_pct` climbed to 91.4% before the reaper found it gone) — the two shipped fixes close a
-      wedge/freeze class and a slow leak respectively, but something is still exhausting this specific VM's headroom on
-      these 4 large shards specifically. Needs an operator decision before a 4th relaunch attempt today: (a) bump
-      `MACHINE_TYPE` further for just these 4 shards (e.g. `e2-standard-32`) to test whether it's a raw-memory ceiling,
-      (b) cross-reference against the sibling
+- [ ] [OPERATOR] P1. **Shards 16, 17, 19, 21, 40, 41 are now AT-or-over `RB-INFRA-RELAUNCH`'s `≤2/(vm-prefix,day)`
+      budget** (queried live via `DeploymentsRegistry.list_recent_archive(days=1)` 2026-07-31T13:35Z: shard 16=2, shard
+      21=2 archived today — AT cap; shard 17=3, shard 41=3 archived today — OVER cap; **re-queried fresh
+      2026-07-31T~14:1xZ (data_pipeline_failure escalation `agt-41a65e`, DP-VM-001, dispatched for shard 19's
+      `-133613` OOM): shard 19=2 archived today (`-032349` rc=137, `-133613` rc=137) — AT cap; shard 40=2 archived
+      today (`-032606` rc=137, `-133900` rc=137) — AT cap**) and were correctly NOT relaunched further this round.
+      All six died again on their most recent (pre-round-3, or the round-3 attempt itself for 19/40) attempt showing
+      the SAME symptom — repeated `WARNING No progress in the last poll window — N files still outstanding (possible
+      wedged worker)` immediately before death, despite already running on `e2-standard-16` with both the
+      pyarrow-pool-release fix (`market-tick-data-service@9f4098b1`) and the stall-timeout fix (`@55d051bd`) live.
+      Shard 17 in particular has now died on its 3rd post-fix attempt (`-050700`, per the parent doc's own DP-VM-003
+      agt-ad6632 finding: `host_metrics_window.mem_pct` climbed to 91.4% before the reaper found it gone) — the two
+      shipped fixes close a wedge/freeze class and a slow leak respectively, but something is still exhausting this
+      specific VM's headroom on these 6 large shards specifically. Needs an operator decision before a further
+      relaunch attempt today: (a) bump `MACHINE_TYPE` further for just these 6 shards (e.g. `e2-standard-32`) to test
+      whether it's a raw-memory ceiling, (b) cross-reference against the sibling
       `cefi_content_apply_memory_freeze_recurs_post_fix_and_registry_false_reap_2026_07_31.md` root-cause investigation
       (same symptom class — worth checking whether that doc's fix, once shipped, closes this too before spending more
       relaunch budget), or (c) wait for tomorrow's budget reset and relaunch cleanly. **Done when**: operator picks
-      (a)/(b)/(c) and shards 16/17/21/41 get their round-4 relaunch (or are confirmed covered by the sibling doc's fix).
+      (a)/(b)/(c) and shards 16/17/19/21/40/41 get their next relaunch (or are confirmed covered by the sibling doc's
+      fix).
 
       **Corroborating signal 2026-07-31 13:56Z (review agt-8ce066, gcloud-verified — a DIFFERENT shape than the
               same-shard-memory-death pattern above):** shards 43 + 44, freshly relaunched this round at 13:39:58Z / 13:40:22Z,
@@ -240,3 +244,18 @@ needs an explicit next relaunch round, and none is currently dispatched.
   possible round-4 belongs with whoever owns that follow-up, same as the existing `[OPERATOR]` item's posture for
   16/17/21/41. Leaving the parent doc's BLOCKED-ON checkbox unflipped — genuinely still blocked, not a redundant
   re-check.
+- **2026-07-31T~14:1xZ (`data_pipeline_failure` escalation `agt-41a65e`, slot 9, DP-VM-001 `DP_VM_EXIT_NONZERO`)**:
+  dispatched by the fleet monitor for `canonical-migration-cefi-content-19-relaunch20260731-133613`
+  (`deployment_id=506b8a58-414f-4bf1-ab87-930bcdcd3243`, `exit_code=137`) per `rb_infra_relaunch.md`. Per the
+  runbook's bound ("if the registry archive shows ≥2 relaunches of this prefix today, do NOT relaunch again; page
+  the operator"), queried `DeploymentsRegistry.list_recent_archive(days=1)` fresh (not `gcloud compute operations
+  list`, same undercounting trap this doc already flags) before acting: shard 19 has exactly 2 archived failures
+  today (`-032349` rc=137, `-133613` rc=137) — AT the `≤2/(vm-prefix,day)` cap. **Did NOT relaunch a 3rd time.**
+  While querying, also checked shard 40 (the other shard slot-4's ~14:0xZ entry above flagged as a "genuinely new"
+  same-symptom death) since it's the same escalation class and directly adjacent evidence: also exactly 2 archived
+  today (`-032606` rc=137, `-133900` rc=137) — AT cap. Folded both into the `[OPERATOR] P1` todo above (shard list
+  16/17/21/41 → 16/17/19/21/40/41, with 19/40 marked AT cap alongside 16/21, distinct from 17/41's OVER-cap status)
+  rather than filing a duplicate escalation — the operator decision already pending there (machine-size bump /
+  root-cause cross-reference / wait-for-reset) covers this exact failure class, so a second page would be redundant
+  per the standing alert-dedup convention (fire on state-change, not every occurrence of an already-tracked
+  condition). No code changed; no VM launched. Pinged the authoring fleet-monitor slot with this outcome.
