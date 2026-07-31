@@ -161,15 +161,27 @@ many agents' work, not an isolated container).
       resilience) — a routine single-day/single-venue capture should never default to a full-bucket-manifest
       read-merge-write. `assert_consolidator_healthy` ruled out (read-preflight-only, no write-path caller). See "Root
       cause (CONFIRMED 2026-07-31)" above for the full evidence chain. (repo: unified-trading-library)
-- [ ] [INFRA] P1. Now that the call site is `_write_with_generation_match`'s legacy-CAS full-index read-merge-write (NOT
-      `manifest_consolidator.consolidate()` — retitled from the original DuckDB-focused framing), fix the
+- [x] [INFRA] P1. ✅ Now that the call site is `_write_with_generation_match`'s legacy-CAS full-index read-merge-write
+      (NOT `manifest_consolidator.consolidate()` — retitled from the original DuckDB-focused framing), fix the
       unbounded-memory risk: either (a) make `DefiManifestRecorder` (and any other CLI-facing `ManifestWriter`
       construction site) default to per-VM shard mode (`per_vm_shards=True`) for ad-hoc/interactive captures instead of
       silently falling back to the fleet-only legacy CAS path, or (b) bound `_read_with_generation` /
       `_merge_dataframes` (row/byte budget, mirroring the existing `_resolve_per_vm_merge_max_bytes()` guard already
       used by the READ side's `_read_slow_path`) so a legacy-mode write on a large bucket can't runaway even when per-VM
       mode isn't enabled — whichever preserves correctness without the unbounded-memory risk. (repo:
-      unified-trading-library)
+      unified-trading-library) — **unified-trading-library@74fdeeca6ee58957d7d15591d566fef353fdcc76, 2026-07-31.**
+      Implemented as a variant of (b) that REFUSES rather than truncates: this single canonical blob is fully
+      overwritten on every write, so silently reading only part of it (as the per-VM merge budget safely does for its
+      many-shards case) would drop untouched rows from the rewritten index — a truncated read is not a safe bound here.
+      New `ManifestWriterIoMixin._refuse_if_legacy_read_oversized()` cheap-checks the existing canonical blob's
+      compressed size via a metadata-only `blob.reload()` (no download) BEFORE `_try_conditional_write` /
+      `_read_with_generation` would otherwise download + `pd.read_parquet` the whole blob; oversized (default >200 MiB,
+      mirroring `_resolve_per_vm_merge_max_bytes`'s existing budget) raises the new `ManifestLegacyWriteRefusedError`
+      instead of proceeding. Escape hatches: `MANIFEST_LEGACY_READ_MAX_BYTES=0` (env opt-out) or
+      `ManifestWriter(allow_oversized_legacy_write=True)` (per-writer force flag) for a deliberate one-off correction
+      script. 6 new unit tests (`tests/unit/test_manifest_writer_legacy_read_size_guard.py`) cover: refusal before any
+      read, normal write within budget, the force flag, the env opt-out, the fresh-index no-op case, and the unset-env
+      default budget. `quality-gates.sh` green (182s, sentinel=74fdeeca).
 - [ ] [DATA] P2. Once (a)/(b) ships, re-run the AAVE-PLASMA manifest registration for `2026-07-30` (the GCS data already
       exists — this is a re-register, not a re-capture) and confirm rows land via the same targeted `pyarrow`
       filtered-read method documented above (never a bucket-wide walk or whole-table `astype(str)` scan). Then flip
