@@ -347,16 +347,20 @@ concurrent workers do not collide on this file.
       on both files; full `quality-gates.sh` green. — deployment-api@a3f5822 Source:
       `/plans/archive/issues/mutable_git_sha_tag_restamping_cloudbuild_2026_07_13.md` (archived 2026-07-30) ([INFRA] P3,
       third item).
-- [ ] [INFRA] P2. **Sync `deployment-service/configs/gcp_service_accounts.yaml` against live IAM.** The per-service
-      SA/IAM registry has NO entry at all for `unified-trading-sa@central-element-323112` (deployment-api's actual
-      runtime SA) and its own footer admits `last_executed: NEVER` — an aspirational registry is worse than none,
-      because it reads as coverage. Reconcile it against a live `gcloud projects get-iam-policy` /
-      `gcloud iam service-accounts list` read and set the runbook fields (`owner`/`cadence`/`verifier`/`last_executed`)
-      that `check_runbook_fields.py` expects. **Read-only on GCP — do not add, remove, or modify any IAM binding** (the
-      SA-scoping work in the same source doc is operator-credential-gated, `## Deferred` D10). **Done when**: every live
-      SA the workspace actually uses has an entry, each entry's roles match the live policy, `last_executed` is dated,
-      and the diff between registry and reality is recorded in the source doc. Source:
-      `issues/github_actions_deploy_sa_overbroad_secret_access_2026_07_24.md` ([BACKEND] P3).
+- [x] ✅ [INFRA] P2. **Sync `deployment-service/configs/gcp_service_accounts.yaml` against live IAM.** Read-only audit
+      (`gcloud iam service-accounts list` / `get-iam-policy` / `storage buckets list` / `run services describe` per live
+      Cloud Run service — no IAM binding added/removed/modified) confirmed the specifically-flagged gap: added the
+      missing `unified-trading-sa` entry (deployment-api's + client-reporting-api's confirmed live runtime SA) with its
+      live project-level roles, plus `deployment-api` to `service_short_names`. The audit also surfaced a much larger
+      finding beyond this todo's bounded scope: 17/19 other declared `*-prod` SAs (and all their declared buckets) have
+      no live counterpart at all, and most live Cloud Run services actually run on the GCP default compute SA rather
+      than any per-service SA — i.e. the registry's whole per-service isolation model was never provisioned. Recorded
+      the full diff in the YAML's header comment + `execution.last_diff` (dated `last_executed: 2026-07-31`) rather than
+      silently absorbing or dropping it, and filed the larger architecture-decision-gated finding as a separate issue
+      doc (its own scope — migrate live services to match the plan, or rewrite the plan to match live reality — is a
+      judgment call, not a bounded fact-check). — deployment-service@0b7d03c Source:
+      `issues/github_actions_deploy_sa_overbroad_secret_access_2026_07_24.md` ([BACKEND] P3), follow-up:
+      `issues/gcp_service_accounts_registry_diverged_from_live_provisioning_2026_07_31.md`.
 - [x] ✅ [DOC] P2. **`/codex/08-workflows/ci-cd-flow.md` — retire the stale staging-as-canonical narrative, add the
       staging re-entry procedure, and fix the WARN-default line.** FOUR docs independently claim this one file, so it is
       one combined todo. (a) L75-109 still shows `ldr-to-staging-promote` draining every service repo on a 15-min cron
