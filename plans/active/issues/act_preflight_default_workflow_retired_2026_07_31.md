@@ -14,7 +14,7 @@ summary: >-
   `.github/workflows/$WORKFLOW` exists, so it silently resolves to ZERO target repos and reports success over an empty
   set. The fix is a one-line default change to `quality-gates-v2.yml`; the codex doc has already been corrected to pass
   `--workflow quality-gates-v2.yml` explicitly so the runbook is usable in the meantime.
-status: open
+status: resolved
 nature: issue
 asset_group: [cross-cutting]
 stage: [meta]
@@ -35,7 +35,9 @@ execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
 assigned_vm: planning
-resolved_by:
+resolved_by: >-
+  Both todos done: script default fixed unified-trading-pm@075e4e11b (WORKFLOW="quality-gates-v2.yml" + loud-fail on
+  empty --repo all); codex caveat dropped + verifier: restored to the no-flag form unified-trading-pm@1b4c9c9eb.
 locked_by:
 locked_since:
 ---
@@ -89,9 +91,9 @@ The v2 rename is the shipped state (`quality-gates-v2` is the required check on 
       `--repo all` path fail loudly (exit 2) when `TARGET_REPOS` resolves empty rather than exiting 0 over an empty set.
       Ship via `unified-trading-pm` quality gates + quickmerge. Provenance: codex freshness re-review shard-B,
       2026-07-31. — unified-trading-pm@075e4e11b
-- [ ] [DOC] P3. Once shipped, drop the ⚠️ caveat + this issue reference from
+- [x] ✅ [DOC] P3. Once shipped, drop the ⚠️ caveat + this issue reference from
       `/codex/05-infrastructure/act-preflight-coverage.md` § Operational guidance and restore the no-flag invocation in
-      its `verifier:` frontmatter field.
+      its `verifier:` frontmatter field. — unified-trading-pm@1b4c9c9eb
 
 ## Why this was not fixed in the discovering session
 
