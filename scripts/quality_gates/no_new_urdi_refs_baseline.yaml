@@ -1,0 +1,22 @@
+# Baseline for the no-NEW-URDI-refs grep guard (instruments-service).
+#
+# This is a SHRINKING ratchet. `repos[<repo>].count` is the number of
+# `.py` source lines containing the literal token `URDI` (tests excluded)
+# the guard tolerates in that repo. A repo whose live count EXCEEDS its
+# baseline fails CI — a NEW URDI reference landed. The load-bearing
+# `urdi_reference_provider.py` spine is grandfathered here on purpose; the
+# guard exists to STOP proliferation, NOT to rename the existing module
+# (finding 369, corrected 2026-07-12 — the module is the LIVE fetch spine).
+#
+# For a genuinely-required new reference to the spine (e.g. a new production
+# adapter wiring into it), add `# QG-allow: urdi-legacy` on the line with a
+# one-line reason. LOWER a count (re-run `--update-baseline`) the moment
+# refs are removed. NEVER raise a count. Repos not listed default to count=0
+# (this guard is instruments-service-ONLY — wired into that repo's
+# quality-gates.sh, not the shared base-service.sh).
+#
+# SSOT: plans/active/codex_vs_repo_docs_ssot_audit_2026_06_01.md (finding 369).
+note: Seeded 2026-07-31 — codex_vs_repo_docs_ssot_audit finding 369 grep guard.
+repos:
+  instruments-service:
+    count: 113
