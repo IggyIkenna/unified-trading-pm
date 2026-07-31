@@ -1,0 +1,177 @@
+---
+doc_type: issue
+title: >-
+  Prediction tranche closeout-audit findings (2026-07-31) — two fresh dead-code findings are correctly operator-gated
+  (not batchable), and the candidate-generation script's depends_on-resolution gap recurs for prediction's own Phase A-E
+  children
+summary: >-
+  Filed by the scheduled `/ag-closeout-audit prediction` run 2026-07-31 (Phases 0-2, mostly read-only; 2 mechanical
+  fixes from yesterday's parked findings were applied directly, see
+  `issues/prediction_closeout_tag_and_batch_claim_findings_2026_07_30.md`'s Todos/Progress-Log for those). This run's
+  own fresh ground: (1) two adapter dead-code findings filed the SAME DAY by
+  `prediction_consolidated_native_ao_extract_2026_07_25.md` todo 1 are genuinely orphaned (no active plan claims their
+  fix) but correctly non-batchable — each is an explicit, self-declared (A) delete vs (B) keep-and-document judgment
+  call, independently confirmed by a fresh Phase-1 Workflow classification. (2) A confirmed NEW instance of the
+  candidate-generation script's known `depends_on`-resolution gap (previously tracked only for `native_ao_extract`
+  -shaped forks): prediction's 4 Phase A-E children have no `_finalize` sibling of their own, so `_covering_paths()`'s
+  finalize→depends_on resolution never reaches them — they are currently only caught as "covered" by incidental
+  prose-text citation matching, not structurally. This did not corrupt today's count (the prose citations happen to
+  hold), but it is fragile and cross-tranche (the script is `ao`/tooling-owned).
+status: open
+nature: issue
+asset_group: [prediction]
+stage: [meta]
+repos: [unified-trading-pm]
+scope: [engineer, admin]
+tags: [prediction, ag-closeout-audit, dead-code, adapter-dead-code-and-fallback-ban, script-bug, plan-hygiene]
+related:
+  [
+    /plans/active/prediction_consolidated_closeout_2026_07_18.md,
+    /plans/active/issues/prediction_closeout_tag_and_batch_claim_findings_2026_07_30.md,
+    /plans/active/issues/is_polymarket_dead_fixture_cross_reference_2026_07_31.md,
+    /plans/active/issues/mtds_prediction_adapters_dead_rest_polling_interface_2026_07_31.md,
+    /plans/active/prediction_phase_ab_residuals_2026_07_24.md,
+    /plans/active/issues/ag_closeout_audit_orphan_definition_and_digest_citation_defects_2026_07_30.md,
+    /cursor-configs/skills/ag-closeout-audit/SKILL.md,
+  ]
+created: 2026-07-31
+parent_epic: predictions_master
+assigned_vm: NA
+execution_scope: local-only
+priority: P3
+estimate_class: refactor
+estimate_baseline_ai_days: 0.2
+estimate_calibrated_ai_days: 0.08
+assigned_role: data_engineering
+drift_direction: none
+depends_on: []
+source:
+  [
+    "Scheduled /ag-closeout-audit prediction run 2026-07-31 (ag_closeout_auditor, slot 4, dispatch agt-592e74), Phases
+    0-2 (+ a Phase-1 Workflow over the 2 genuinely-fresh candidates). Operator was not interactively present during the
+    run, so both judgment-relevant items below are parked rather than guessed.",
+  ]
+resolved_by:
+locked_by:
+locked_since:
+supersedes:
+superseded_by:
+---
+
+# Prediction closeout-audit findings, 2026-07-31
+
+> **Context.** Side-findings of today's `/ag-closeout-audit prediction` pass, beyond what this run already fixed
+> directly (see `issues/prediction_closeout_tag_and_batch_claim_findings_2026_07_30.md` for Findings 2/3's resolution).
+> Headline result: of 52 raw `asset_group:[prediction]` candidates, 0 genuinely-never-triaged prediction-primary orphans
+> remain after correcting one citation false-positive and excluding 11 genuinely cross-cutting multi-AG docs — the
+> corpus is well-drained after 6 prior batch rounds. The 2 items below are this run's only real new ground.
+
+## Finding 1 — 2 fresh adapter dead-code findings are orphaned but correctly non-batchable (operator-gated)
+
+`prediction_consolidated_native_ao_extract_2026_07_25.md` todo 1 (adapter dead-code/fallback audit, done 2026-07-31)
+filed two new issue docs:
+
+- [`issues/is_polymarket_dead_fixture_cross_reference_2026_07_31.md`](/plans/active/issues/is_polymarket_dead_fixture_cross_reference_2026_07_31.md)
+  — instruments-service's Polymarket adapter threads a real `api_football` secret into a `_cross_reference_fixture()`
+  capability with zero non-test call sites.
+- [`issues/mtds_prediction_adapters_dead_rest_polling_interface_2026_07_31.md`](/plans/active/issues/mtds_prediction_adapters_dead_rest_polling_interface_2026_07_31.md)
+  — market-tick-data-service's Kalshi/Polymarket adapters carry a whole dead live-REST-polling method family
+  (`get_markets`/`get_prices`/`parse_market`/etc.), exercised only by dedicated tests.
+
+Both are `assigned_vm: NA`, `status: open`, cited nowhere in any active batch (confirmed via corpus-wide grep — no
+batch4/batch6/finalize doc mentions either basename; both postdate batch6's 2026-07-29 drafting). A fresh Phase-1
+Workflow classification (2 independent agents, one per doc) confirmed both `orphaned_never_touched` — but NOT
+AO-dispatch-eligible as written: each doc's own "Recommended decision" section explicitly frames its single todo as an
+unresolved (A) delete vs (B) keep-and-document-a-real-activation-path choice, self-labeled "genuine judgment call on
+scope, not auto-resolved." `prediction_phase_ab_residuals_2026_07_24.md`'s A5 subsection (the audit's own reconciliation
+point) already acknowledges both without fixing them inline, for the identical reason.
+
+**Why not drafted into a batch.** This matches the skill's own "operator-gated" non-batchable taxonomy exactly — no
+amount of re-triage resolves whether there's a genuine future activation path for either capability; that is a
+product/architecture call, not a fact a worker can determine by reading code. Per CLAUDE.md's "Delete deprecated code
+(no shims)" governance rule, option (A) is the workspace's default lean absent a concrete revival plan — and this run
+found no such plan anywhere in prediction's active corpus for either capability — but a lean is not a ruling, and
+drafting a same-day "just delete it" batch todo on a finding filed hours earlier, overriding its own author's explicit
+"not adjudicated here," would be second-guessing a judgment call outside this skill's mandate (Phase 3 drafts
+conflict-CLEARED bounded work; it does not itself rule on open design questions).
+
+**Recommendation:** no batch action needed. Whoever next touches either adapter file (or the operator,
+opportunistically) picks (A) or (B) directly on the issue doc; either branch is then a clean, bounded, single-session
+fix.
+
+## Finding 2 — candidate-script `depends_on`-resolution gap recurs for prediction's Phase A-E children (cross-tranche)
+
+`scripts/plan-hygiene/generate_ag_closeout_audit_candidates.py::_covering_paths()` resolves a discovered `_finalize`
+doc's `depends_on:` to its paired main plan (fixed 2026-07-30 per
+`issues/ag_closeout_audit_orphan_definition_and_digest_citation_defects_2026_07_30.md` todo 2 — verified still present
+and working in this run: `--tranche prediction --json` correctly includes
+`prediction_consolidated_native_ao_extract_2026_07_25.md`/`_finalize`,
+`prediction_satellite_ao_dispatch_batch4_2026_07_26.md` /`_finalize`,
+`prediction_satellite_ao_dispatch_batch6_2026_07_29.md`/`_finalize` in `covering_paths` — 7 total).
+
+**What it does NOT resolve**: the CLOSEOUT HUB doc's own `depends_on:` — only a `_finalize` doc's. Applied to
+prediction: `prediction_consolidated_closeout_2026_07_18.md`'s frontmatter lists
+`depends_on: [prediction_phase_ab_residuals_2026_07_24, prediction_phase_c_data_status_ui_2026_07_24, prediction_phase_d_formal_smoke_and_backfill_2026_07_24, prediction_phase_e_football_arb_live_2026_07_24]`
+— but NONE of those 4 phase children have their own `_finalize` sibling doc (unlike `native_ao_extract`/batch4/batch6,
+each of which does), so the only mechanism that resolves a hub's `depends_on:` (finalize→main) never fires for them.
+Verified live: `--tranche prediction --json`'s `covering_paths` (7 entries) does not include any of the 4 phase
+children.
+
+**Why this didn't corrupt today's orphan count.** The script's SEPARATE citation-matching path (`_cited_basenames()`, a
+basename regex over every covering doc's raw text) accidentally catches all 4 — their filenames appear verbatim in the
+closeout hub's own "Split notice" table and "Per-child open-todo snapshot" prose. So they read `cited_somewhere`, not
+`never_cited`, and the practical count was correct today. But this is incidental (prose-text matching, not structural
+graph resolution) and carries the exact fragility already demonstrated live in this same run: the
+`mtds_prediction_adapters_dead_rest_polling_interface_2026_07_31.md` citation in
+`prediction_consolidated_native_ao_extract_2026_07_25.md`'s Progress Log was ALSO present in raw text, yet the regex
+still missed it — a prettier line-wrap had inserted a stray space mid-filename (fixed this run, same commit as the rest
+of today's mechanical fixes). A closeout hub's own `depends_on:` failing to structurally resolve is one
+missing-citation-away from silently mis-reporting a genuinely-active Phase child as orphaned.
+
+**Why not fixed here.** `generate_ag_closeout_audit_candidates.py` is `ao`/tooling-owned
+(`parent_epic: agent_operating_framework_master` on its tracking issue,
+`ag_closeout_audit_orphan_definition_and_digest_citation_defects_2026_07_30.md`, `asset_group: [cefi]`) — editing it is
+outside the prediction tranche's file ownership for today's concurrent-sharded-worker run (per the skill's own
+"primary-owner rule for multi-tranche docs" safety rule — a shared/cross-tranche artifact's WRITE belongs to its owning
+tranche, to avoid N workers racing the same file). Flagging here for that tranche/the operator to fold in.
+
+**Recommendation (mechanical, no judgment):** extend `_covering_paths()` to also resolve the closeout hub doc's OWN
+`depends_on:` (not just each discovered `_finalize` doc's) to real `plans/active/` files, unioning them into the
+covering set — mirrors the fix already applied for the finalize→main direction. A minimal repro: any AG whose
+line-cap-split children were forked directly off the closeout hub (via `depends_on:`) rather than getting their own
+paired `_finalize` sibling will show the same gap; prediction is a confirmed live instance.
+
+## Todos
+
+- [ ] [DOC] P3. No action needed on Finding 1 unless/until an operator or the next worker touching either adapter file
+      picks (A) or (B) on the two named issue docs directly — this finding is informational (explains why neither was
+      batched), not itself an actionable task. (repo: unified-trading-pm)
+- [ ] [SCRIPT] P2. Extend `generate_ag_closeout_audit_candidates.py::_covering_paths()` to resolve the closeout hub
+      doc's own frontmatter `depends_on:` (not just each discovered `_finalize` doc's) to real files, unioning them into
+      the covering set — same pattern as the existing finalize→main resolution. **Done when**:
+      `--tranche prediction --json`'s `covering_paths` includes all 4 Phase A-E children structurally (not just via
+      incidental text citation), a regression test asserts this for a hub-depends_on-only fork (no paired finalize), and
+      the existing `test_finalize_doc_depends_on_pulls_in_its_line_cap_fork_as_covering` test (or a sibling) still
+      passes. Cross-reference `issues/ag_closeout_audit_orphan_definition_and_digest_citation_defects_2026_07_30.md`
+      before starting (same function, avoid duplicate/conflicting edits) — this is a distinct, additive extension of
+      that doc's already-shipped todo 2, not a re-open of it. (repo: unified-trading-pm)
+
+## Codex SSOTs
+
+- `/cursor-configs/skills/ag-closeout-audit/SKILL.md` § Phase 0.2 path (b) — the `depends_on:`/`related:` resolution
+  requirement Finding 2 shows is only half-implemented.
+- `/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md` § "Dispatch-scope eligibility" — why Finding
+  1's two items are not yet bounded todos.
+- `/codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md` § "Running as one of N concurrent
+  sharded tranche workers" — the primary-owner rule behind not editing the (cefi/ao-owned) tracking issue directly.
+
+## Progress Log
+
+- **2026-07-31 (slot 4, ag_closeout_auditor, dispatch agt-592e74):** Filed by the scheduled
+  `/ag-closeout-audit prediction` run. Phase 0-2 read-only for both findings above; Phase 1 ran a real 2-agent Workflow
+  (`wf_a447329e-21a`, 0 errors) confirming Finding 1's non-batchable verdict independently. Phase 3 conflict-check
+  concluded no new batch warranted (both Finding-1 items non-batchable; Finding 2 is a tooling gap, not prediction
+  content work). Mechanical Findings 2/3 from yesterday's sibling doc
+  (`issues/prediction_closeout_tag_and_batch_claim_findings_2026_07_30.md`) were fixed directly in this same run — see
+  that doc's own Todos/Progress-Log, not repeated here. parked_findings ledger: 2 findings this doc (Finding 1,
+  Finding 2) == 2 entries written to this doc. Balanced.

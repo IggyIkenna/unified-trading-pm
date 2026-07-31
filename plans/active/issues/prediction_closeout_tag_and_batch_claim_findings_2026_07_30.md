@@ -169,18 +169,29 @@ candidate, not a batch todo.
       `prediction_cross_venue_arb_and_coverage_2026_07_24.md` and `prediction_live_clob_depth_capture_2026_07_24.md`
       drop their inherited `cefi` tag. **Done when**: the ruling is recorded here and, if A, both docs' `asset_group` is
       `[prediction]` with `check_ag_closeout_linkage.py` re-run green immediately after. (repo: unified-trading-pm)
-- [ ] [DOC] P2. Resolve Finding 2 before `prediction_satellite_ao_dispatch_batch6_2026_07_29.md` is flipped
-      `status: active`: delete batch6 todo 7 and cite batch4 todo 3 in its place, so the cqg recent-window
-      re-enumeration has exactly one owner. **Done when**: batch6 carries no cqg-re-enumeration todo and its Deferred
-      section names batch4 todo 3 as the owner. (repo: unified-trading-pm)
-- [ ] [DOC] P3. Resolve Finding 3: add the 4 named docs to `prediction_consolidated_closeout_2026_07_18.md`'s
-      aggregated-sources index as proper `[text](path)` markdown links with their open-todo counts. **Done when**: all 4
-      basenames appear in that section and `bash scripts/plan-hygiene/check_todo_format.sh` +
-      `check_ag_closeout_linkage.py` are green. (repo: unified-trading-pm)
+      **Re-confirmed still open 2026-07-31** (`/ag-closeout-audit prediction` scheduled run) — no operator ruling
+      recorded here yet; not stale, genuinely still gated.
+- [x] ✅ [DOC] P2. **DONE 2026-07-31** — `unified-trading-pm@(this commit)`. Resolve Finding 2 before
+      `prediction_satellite_ao_dispatch_batch6_2026_07_29.md` is flipped `status: active`: delete batch6 todo 7 and cite
+      batch4 todo 3 in its place, so the cqg recent-window re-enumeration has exactly one owner. **Adapted execution**
+      (batch6 was already `status: active` and live-dispatching by the time this ran, changing the premise): rather than
+      deleting the todo line — which would shift every subsequent todo's positional task-ID on an actively-dispatching
+      plan (per the fleet's own live warning that `regen_backlog_from_plan.py` IDs are position-derived, not
+      content-stable) — checked batch6's copy `[x]` IN PLACE with a "DUPLICATE — not independently executed" resolution
+      note citing batch4 todo 3 as sole owner. Same outcome (exactly one owner, duplicate-dispatch risk closed), safer
+      mechanism given the changed premise.
+- [x] ✅ [DOC] P3. **DONE 2026-07-31** — `unified-trading-pm@(this commit)`. Resolve Finding 3: add the 4 named docs to
+      `prediction_consolidated_closeout_2026_07_18.md`'s aggregated-sources index as proper `[text](path)` markdown
+      links with their open-todo counts. All 4 added, plus 2 fresh 2026-07-31 adapter dead-code findings discovered by
+      this same run (bonus, same fix shape) and a stale-entry correction for `kalshi_live_capture_regression_and_drift`
+      (was citing 3 long-resolved prose items). `check_todo_format.sh` and `check_ag_closeout_linkage.py` both green (10
+      orphans corpus-wide, baseline 32, zero `[prediction]`-tagged).
 - [ ] [DOC] P3. Resolve Finding 4: have the `ao` tranche adopt
       `issues/prediction_trades_migration_concurrent_dispatch_2026_07_28.md` — name it in
       `ao_consolidated_closeout_2026_07_25.md`'s own sources list so it stops reporting `orphaned_never_touched` from
       prediction's audit. **Done when**: that doc is cited by an `ao`-tranche covering doc. (repo: unified-trading-pm)
+      **Re-confirmed still open 2026-07-31** — out of prediction-tranche scope to fix directly (would write to an
+      `ao`-owned file); still correctly parked, not stale.
 
 ## Codex SSOTs
 
@@ -200,3 +211,14 @@ candidate, not a batch todo.
   a sibling skill parked it. Finding 2 (batch4 todo 3 and batch6 todo 7 both claiming the same cqg re-enumeration) is
   independently re-confirmed by THIS run's conflict-check and escalated in its report — it is a live duplicate-dispatch
   hazard the moment batch6 goes `active`.
+- **2026-07-31 (slot 4, ag_closeout_auditor, dispatch agt-592e74) — `/ag-closeout-audit prediction` scheduled run.**
+  Re-checked all 4 findings per the skill's iterative-drain rule (step 1: re-check the prior run's parked items before
+  fresh triage). Findings 2 and 3 were mechanical with no judgment call and batch6 had by now gone `status: active`
+  (raising real duplicate-dispatch stakes for Finding 2) — fixed both, see the Todos section above for exact commits and
+  the adapted approach on Finding 2 (checked in place rather than deleted, to protect positional task-ID stability on
+  the now-live plan). Findings 1 and 4 re-confirmed still genuinely open (operator ruling / cross-tranche adoption
+  respectively) — not stale, no action taken on either. This run's own fresh Phase 0-2 pass found 0 new never-triaged
+  prediction-primary orphans beyond 2 same-day dead-code findings (both correctly non-batchable, operator-gated A-vs-B
+  judgment calls) and confirmed a new instance of the candidate-script's `depends_on`-resolution gap (prediction's 4
+  Phase A-E children, not just `native_ao_extract`-shaped forks) — full detail in
+  `issues/ag_closeout_audit_prediction_parked_2026_07_31.md`.

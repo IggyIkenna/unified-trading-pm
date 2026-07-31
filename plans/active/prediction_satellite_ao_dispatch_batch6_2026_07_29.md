@@ -200,29 +200,29 @@ sports-tranche-owned).
       captured evidence, and both source-doc todos are flipped citing the SHAs/evidence.
 
       **Todo 1 DONE 2026-07-31**: both secrets provisioned + verified non-empty and byte-identical to source (evidence
-              in the source doc). **Todo 2 BLOCKED-OPERATOR-DECISION 2026-07-31** — found a real conflict this todo's own text
-              doesn't resolve: this codebase's `OperationalMode.PAPER` never calls any real venue API (routes everything
-              through a simulated `PaperBettingAdapter` — `execution_service/adapters/sports_factory.py`'s `_PAPER_VENUE_KEYS`
-              includes `kalshi`), so "paper order" cannot mean that operational mode. `KalshiAdapter`'s default `base_url` is
-              `https://api.elections.kalshi.com` — Kalshi's LIVE production host, which literally matches this todo's own
-              "elections-subdomain host" instruction (there's a separate `KALSHI_DEMO_BASE =
-              "https://demo-api.kalshi.co"` the code supports but does not default to). The operator's 2026-07-28 ruling on the
-              source doc explicitly scoped itself to the secret-reshape decision and states that step "does not touch the
-              exchange side at all" — it never separately ruled on the safety/authorization of todo 2 actually placing a live
-              order with real funds.
+                      in the source doc). **Todo 2 BLOCKED-OPERATOR-DECISION 2026-07-31** — found a real conflict this todo's own text
+                      doesn't resolve: this codebase's `OperationalMode.PAPER` never calls any real venue API (routes everything
+                      through a simulated `PaperBettingAdapter` — `execution_service/adapters/sports_factory.py`'s `_PAPER_VENUE_KEYS`
+                      includes `kalshi`), so "paper order" cannot mean that operational mode. `KalshiAdapter`'s default `base_url` is
+                      `https://api.elections.kalshi.com` — Kalshi's LIVE production host, which literally matches this todo's own
+                      "elections-subdomain host" instruction (there's a separate `KALSHI_DEMO_BASE =
+                      "https://demo-api.kalshi.co"` the code supports but does not default to). The operator's 2026-07-28 ruling on the
+                      source doc explicitly scoped itself to the secret-reshape decision and states that step "does not touch the
+                      exchange side at all" — it never separately ruled on the safety/authorization of todo 2 actually placing a live
+                      order with real funds.
 
-              **Question**: how should todo 2 be executed?
+                      **Question**: how should todo 2 be executed?
 
-              A: Use Kalshi's demo API host (`KALSHI_DEMO_BASE`) instead of the live default — genuinely risk-free, but
-              diverges from this todo's literal "elections-subdomain host" text, and needs confirming the demo host accepts
-              the same provisioned credentials before trying. [WORKER REC]
-              B: Place a real order on the live host as literally instructed — commits real (if small) funds on a live
-              regulated exchange; needs an explicit operator go-ahead given the ruling above never covered this specific risk.
-              C: Some other verification method (e.g. a dry-run / signature-only test that proves the credential wiring works
-              without submitting a live order) — needs the operator to specify what would count as sufficient evidence.
+                      A: Use Kalshi's demo API host (`KALSHI_DEMO_BASE`) instead of the live default — genuinely risk-free, but
+                      diverges from this todo's literal "elections-subdomain host" text, and needs confirming the demo host accepts
+                      the same provisioned credentials before trying. [WORKER REC]
+                      B: Place a real order on the live host as literally instructed — commits real (if small) funds on a live
+                      regulated exchange; needs an explicit operator go-ahead given the ruling above never covered this specific risk.
+                      C: Some other verification method (e.g. a dry-run / signature-only test that proves the credential wiring works
+                      without submitting a live order) — needs the operator to specify what would count as sufficient evidence.
 
-              Not attempted pending an answer — filed as the actionable question, not guessed. `can_continue: true`; other
-              backlog work continues in the meantime.
+                      Not attempted pending an answer — filed as the actionable question, not guessed. `can_continue: true`; other
+                      backlog work continues in the meantime.
 
 - [ ] [DIAG] P2. **Kalshi mass `attempted_failed` unclassified-adapter-error investigation + contingent fix.**
       Internally-sequential 3-step chain (combined into one todo per the skill's own "sequential work → one todo" rule):
@@ -234,11 +234,15 @@ sports-tranche-owned).
       when**: the recurrence check + reclassification verdict are recorded, the contingent fix ships if warranted (or is
       explicitly ruled out with evidence if not), and the source doc's todos are flipped.
 
-- [ ] [SCRIPT] P2. **cqg partition-completeness — recent-window catalogue re-enumeration (operational run, already-
-      fixed classifier).** A bounded operational re-walk using the classifier fix that already shipped — not a code
-      change. **Source**: `plans/active/prediction_cross_venue_arb_and_coverage_2026_07_24.md` (the `[~]` in-progress
-      "cqg partition-completeness" item). **Done when**: the re-enumeration run completes with a dated verdict recorded
-      in the source doc's Progress Log and its checkbox flipped.
+- [x] ✅ [SCRIPT] P2. **DUPLICATE — not independently executed 2026-07-31.** cqg partition-completeness — recent-window
+      catalogue re-enumeration (operational run, already-fixed classifier). **Resolution**: this is the SAME item as
+      `prediction_satellite_ao_dispatch_batch4_2026_07_26.md` todo 3 (same source doc, same source item, same repo, same
+      operational run) — a genuine duplicate extraction first flagged by
+      `issues/prediction_closeout_tag_and_batch_claim_findings_2026_07_30.md` Finding 2. Checked off IN PLACE (not
+      deleted, to preserve every other todo's positional task-ID stability on this actively-dispatching plan) rather
+      than executed twice; batch4 todo 3 is the single owner going forward. **Source**:
+      `plans/active/prediction_cross_venue_arb_and_coverage_2026_07_24.md` (the `[~]` in-progress "cqg
+      partition-completeness" item) — its checkbox flips when batch4 todo 3 lands, not from this todo.
 
 - [ ] [BACKEND] P2. **Build the fixture-pairing residual — registry-resolution + mapping-population + arb-layer wiring
       across UAC/IS/features-service/strategy-service.** RULED 2026-07-28 in
@@ -449,3 +453,12 @@ sports-odds/sports-registry content with zero prediction-market-specific work �
     dispatch/check: confirm `...220658` reaches `EXIT_STATUS=0`, then run the full-corpus VERIFY
     (`read_capture_status_counts`, bucket `market-data-tick-pred-prd-central-element-323112`, `2025-03-14→2026-06-15`)
     and flip both this todo and the source issue doc's item, citing the numbers.
+- 2026-07-31 (slot 4, ag_closeout_auditor, dispatch agt-592e74, `/ag-closeout-audit prediction` scheduled run): resolved
+  `issues/prediction_closeout_tag_and_batch_claim_findings_2026_07_30.md` Finding 2 (this plan's
+  cqg-partition-completeness todo duplicated `prediction_satellite_ao_dispatch_batch4_2026_07_26.md` todo 3, same source
+  doc/item/repo — a live duplicate-dispatch risk since both plans are `status: active`). Checked the todo off IN PLACE
+  with a duplicate-resolution note rather than deleting the line, to avoid shifting any other todo's positional task-ID
+  (per the fleet's own live warning that `regen_backlog_from_plan.py` task-ID assignment is position-derived, not
+  content-stable — a mid-list deletion on an actively-dispatching plan risks re-mapping IDs for every todo after it). No
+  other batch6 todo's position changed. Full fresh Phase 0-2 audit + remaining findings in this run's own
+  report/parked-findings doc.

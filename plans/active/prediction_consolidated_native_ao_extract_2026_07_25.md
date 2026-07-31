@@ -218,5 +218,5 @@ to every classification in this doc + the Deferred section above).
   filed issue docs recorded in `prediction_phase_ab_residuals_2026_07_24.md`'s Progress Log + its A5 checkbox, per this
   todo's own Done-when (reconciles evidence back into that doc, not this one). Summary: 2 distinct dead-code findings
   (`is_polymarket_dead_fixture_cross_reference_2026_07_31.md`,
-  `mtds_prediction_adapters_dead_rest_polling_interface_ 2026_07_31.md`), 0 silent-fallback or duplicate-implementation
+  `mtds_prediction_adapters_dead_rest_polling_interface_2026_07_31.md`), 0 silent-fallback or duplicate-implementation
   violations found.
