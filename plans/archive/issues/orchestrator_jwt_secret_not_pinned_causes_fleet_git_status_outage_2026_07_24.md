@@ -189,7 +189,7 @@ message. Fixed in `unified-trading-pm@<pending — see commit that ships this fi
       post-restart. Temp account removed after. The systemd-unit-level pin now exists alongside the `.env.local` one
       (`drop-in` list in `systemctl status` shows `jwt-secret-gcs.conf` loaded) — durable across a VM rebuild that loses
       the gitignored `.env.local`, not just across ordinary restarts.
-- [x] ✅ **DONE 2026-07-26 (slot-11, `infra`) — `unified-trading-pm@421262a`.** Point `slot-git-status-report.sh`'s
+- [x] ✅ **DONE 2026-07-26 (slot-11, `infra`) — `unified-trading-pm@804fa2b9a`.** Point `slot-git-status-report.sh`'s
       default `ORCH_URL` at `http://localhost:8765` when running ON the orchestrator VM itself (keep the public URL
       default for any future non-central host), so the existing `_is_trusted_loopback` escape hatch actually protects
       this caller against the interim staleness window between restarts even before the P1 fix lands. Needs care: must

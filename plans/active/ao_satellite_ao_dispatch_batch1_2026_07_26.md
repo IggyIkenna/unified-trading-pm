@@ -113,7 +113,7 @@ the 35 satellite docs. This plan extracts the conflict-clear, bounded-outcome su
       `/plans/active/issues/orchestrator_planregen_prune_wipes_backlog_on_transient_zero_derivation_2026_07_25.md`
       (BACKEND P2 ×2 — combined here because both change the same prune path in the same file). That doc's third todo
       (positional task-ids) is NOT in scope — see this plan's Deferred section.
-- [x] ✅ **DONE 2026-07-26 (slot-11, `infra`) — `unified-trading-pm@<pending, see this commit>`.** Made
+- [x] ✅ **DONE 2026-07-26 (slot-11, `infra`) — `unified-trading-pm@804fa2b9a`.** Made
       `unified-trading-pm/scripts/dev/slot-git-status-report.sh` prefer `http://localhost:8765` (trusted-local, no
       bearer token) when the loopback backend is reachable, falling back to the public `ORCH_URL` + `ORCH_TOKEN_FILE`
       when it is not, so an expired/rotated `~/.orch_token` can no longer silence a whole host's git-health view. Did
@@ -247,18 +247,18 @@ the 35 satellite docs. This plan extracts the conflict-clear, bounded-outcome su
       that also names `bootstrap.py`/regen ids — do not touch task-id derivation here.
 
       **2026-07-28 update — the actual root cause was found and fixed at the application level** (an UPDATE status
-              regression in `release_task_to_queue()`, not a bare DELETE — see the resolved issue doc), which left this
-              todo's original DELETE-trigger idea a narrower, discretionary defense-in-depth item rather than the primary
-              mitigation. **2026-08-01 — built as that defense-in-depth backstop.** Added
-              `bootstrap.py::_migrate_done_task_delete_trace()` — an idempotent migration creating `deleted_done_tasks_trace` +
-              an `AFTER DELETE ON tasks WHEN OLD.status = 'done'` SQLite trigger, which fires regardless of call site
-              (including a raw out-of-band SQL delete the application-level guard cannot see, since that guard only catches an
-              illegal transition made through the ORM). The trigger only INSERTs, never raises. 4 new tests in
-              `tests/test_done_task_delete_trace.py`: a raw SQL delete of a done row leaves a trace; the sanctioned
-              `DELETE /api/backlog/{task_id}` path still succeeds unconditionally AND is traced; deleting a non-done task
-              leaves no trace (the `WHEN` clause is status-specific); the migration is idempotent across repeated
-              `create_all_tables()` calls. Full detail + evidence in
-              `/plans/archive/issues/ao_backlog_done_row_disappearance_2026_07_25.md`'s Progress Log.
+                          regression in `release_task_to_queue()`, not a bare DELETE — see the resolved issue doc), which left this
+                          todo's original DELETE-trigger idea a narrower, discretionary defense-in-depth item rather than the primary
+                          mitigation. **2026-08-01 — built as that defense-in-depth backstop.** Added
+                          `bootstrap.py::_migrate_done_task_delete_trace()` — an idempotent migration creating `deleted_done_tasks_trace` +
+                          an `AFTER DELETE ON tasks WHEN OLD.status = 'done'` SQLite trigger, which fires regardless of call site
+                          (including a raw out-of-band SQL delete the application-level guard cannot see, since that guard only catches an
+                          illegal transition made through the ORM). The trigger only INSERTs, never raises. 4 new tests in
+                          `tests/test_done_task_delete_trace.py`: a raw SQL delete of a done row leaves a trace; the sanctioned
+                          `DELETE /api/backlog/{task_id}` path still succeeds unconditionally AND is traced; deleting a non-done task
+                          leaves no trace (the `WHEN` clause is status-specific); the migration is idempotent across repeated
+                          `create_all_tables()` calls. Full detail + evidence in
+                          `/plans/archive/issues/ao_backlog_done_row_disappearance_2026_07_25.md`'s Progress Log.
 
 - [x] ✅ [REVIEW] P3. **DONE-IN-SUBSTANCE 2026-08-01 — via a more rigorous successor pass than this todo originally
       specified, not by literally editing the named doc.** `ao_consolidated_closeout_2026_07_25.md` (the doc this todo's

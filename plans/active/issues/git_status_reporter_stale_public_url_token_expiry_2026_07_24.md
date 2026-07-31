@@ -81,10 +81,10 @@ the public URL + token, so the fix must be conditional, not a blanket default fl
 
 ## Todos
 
-- [x] ✅ **DONE 2026-07-26 (slot-11, `infra`) — `unified-trading-pm@421262a`.** Make `slot-git-status-report.sh` prefer
-      `http://localhost:8765` (trusted-local, no token) when the loopback backend is reachable, falling back to the
-      public `ORCH_URL` + `ORCH_TOKEN_FILE` when it is not (off-VM operator laptops). Do NOT unconditionally flip the
-      default `ORCH_URL` — that would break off-VM reporters. **Done-when:** on host ip-172-31-5-118, after the next
+- [x] ✅ **DONE 2026-07-26 (slot-11, `infra`) — `unified-trading-pm@804fa2b9a`.** Make `slot-git-status-report.sh`
+      prefer `http://localhost:8765` (trusted-local, no token) when the loopback backend is reachable, falling back to
+      the public `ORCH_URL` + `ORCH_TOKEN_FILE` when it is not (off-VM operator laptops). Do NOT unconditionally flip
+      the default `ORCH_URL` — that would break off-VM reporters. **Done-when:** on host ip-172-31-5-118, after the next
       reporter tick `/api/fleet/git-health` shows `reporter_stale=false` for the host's slots and
       `git_staleness_alert_sent` stops firing; off-VM path still uses public URL + token (verified by reading the
       branch, not just on-VM behaviour). Wire into the primary consumer's `quality-gates.sh` if the script isn't already
@@ -120,6 +120,6 @@ the public URL + token, so the fix must be conditional, not a blanket default fl
 - **na-eligibility-audit 2026-07-30**: KEEP-NA, valid — the one open `[INFRA] P3` is re-minting `~/.orch_token`, a
   credential operation, already ruled 'a distinct credential operation' in
   `ao_satellite_ao_dispatch_batch1_2026_07_26.md`'s Deferred list. Noted but NOT verified this run (no live orchestrator
-  access from an offline audit worktree): the durable loopback fix shipped `unified-trading-pm@421262a` on 2026-07-26
+  access from an offline audit worktree): the durable loopback fix shipped `unified-trading-pm@804fa2b9a` on 2026-07-26
   removes the on-VM token dependency entirely, so this stopgap may already be moot for the central host — confirm
   `reporter_stale=false` live before closing it.

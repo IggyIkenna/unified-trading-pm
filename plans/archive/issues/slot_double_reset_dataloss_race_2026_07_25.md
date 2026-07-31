@@ -318,3 +318,16 @@ Both discarded commit-sets were manually recovered this session via cherry-pick 
 - `server/autospawn.py`
 - `server/head_backward_canary.py`
 - `server/notifications/slack.py`
+
+## Progress Log
+
+- **2026-08-01** (`ao_satellite_ao_dispatch_batch1_2026_07_26.md`, its BACKEND P3 todo): the residual "Verification once
+  implemented" check this doc's own `[BACKEND] P3` deferred to that batch plan is now done for real, not just
+  cross-referenced. `agent-orchestrator@7cd01e67c75` adds
+  `test_head_backward_canary_still_detects_legitimate_post_fix_realign` to `tests/test_dirty_state_resolution.py` —
+  reuses the exact allowed-realign scenario from
+  `test_orphan_realigns_normally_when_pre_existing_ahead_commit_is_old_enough` (the Part-B age guard clears, the real
+  fixed `commit_and_push_dirty_repos` runs its actual `checkout -B` realign), then asserts
+  `head_backward_canary.detect_discards_in_repo` still finds exactly one hit (safe via `preserved_ref`, but not silently
+  invisible). Confirms `head_backward_canary.py` needed no source modification — only a new test. This doc has zero open
+  todos.

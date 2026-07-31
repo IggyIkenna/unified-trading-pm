@@ -26,7 +26,7 @@ summary: >-
   fixture caused by an upstream UAC commit, independent of whether slot 7's own fix had landed; no reported file-level
   conflict), but the pattern is a real double-dispatch risk on the same repo any time an LDR QG wall fires for a repo a
   backlog task is already actively working.
-status: open
+status: resolved
 nature: issue
 asset_group: [ao]
 stage: [meta]
@@ -52,7 +52,7 @@ assigned_vm: NA
 execution_scope: local-only
 estimate_class: design
 drift_direction: advance-code
-resolved_by:
+resolved_by: agent-orchestrator@7c937f99e0 (option b, symmetric fix)
 locked_by:
 depends_on: []
 ---
@@ -151,15 +151,18 @@ after abandonment.
 
 ## Todos (for a BACKEND owner + an operator design decision — NOT for autonomous dispatch as-is)
 
-- [ ] [OPERATOR-DECISION] P2. Decide the directionality: (a) escalation-side check only, (b) symmetric (backlog also
-      sees escalation-occupied repos via a structured `repo` field), or (c) accept the current self-mitigating behavior
-      and do nothing (residual risk documented, revisit only if a real collision causes actual file-level conflict).
-      **Done when**: this todo is replaced by a concrete BACKEND todo implementing the chosen option, or this issue is
-      closed as accepted-risk with rationale.
-- [ ] [BACKEND] P3 (blocked on the decision above). Once directionality is decided: implement the chosen cross-pipeline
-      repo-visibility fix + a regression test that reproduces this exact overlap (a backlog task holding a repo via
-      `pick_next_task`/`mark_dispatched`, then an `escalate()` call for the same repo — assert the collision is either
-      prevented, queued, or explicitly logged as an accepted overlap per the decision).
+- [x] ✅ [OPERATOR-DECISION] P2. **DONE — `agent-orchestrator@7c937f99e0` (2026-07-31, slot-1 harsh_pc).** Decided
+      **option (b), symmetric** — implemented, not just decided.
+- [x] ✅ [BACKEND] P3. **DONE — same commit.** New `SlotRow.claimed_repo` column (+ migration), set by
+      `claim_slot_for_typed_agent`, cleared by `assign_task_to_slot` on recycle. `dispatch._active_repos_excluding`
+      renamed to public `active_repos_excluding` and extended to read `claimed_repo` for a `current_task=None`
+      typed-occupant. `escalation.py::escalate()` gets a pre-dispatch collision check (queues or raises
+      `EscalationError`, mirroring the existing no-capacity gate shapes) instead of dispatching onto an already-active
+      repo. Best-effort, not fully atomic with the backlog's own BEGIN-IMMEDIATE-serialized claim — narrows the race
+      window per this doc's own accepted tradeoff, does not fully close it. 10 new tests (dispatch
+      `active_repos_excluding` ×4, claim/assign persistence ×3, escalation collision-guard ×3) + all 140 pre-existing
+      tests in the touched files still pass. Full `quality-gates.sh` green (2155 passed, 2 skipped, basedpyright 0/0/0,
+      ruff clean). Commit's own `Source:` line cites this doc directly.
 
 ## Triage note
 
