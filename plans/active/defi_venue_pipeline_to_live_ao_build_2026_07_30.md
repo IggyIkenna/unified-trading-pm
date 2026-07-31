@@ -97,46 +97,46 @@ splitting into two plans just to parallelize two todos.
       external/operator-owned incident, not additional cron-fix work.
 
       **2026-07-31 (slot-16, data_engineering craft) — 13th+ consecutive re-check, still (a) PASS / (b)(c) UNMET, same
-                                  already-diagnosed root cause (auto-merge never requested on the regenerated promote PR).** (a) PASSES: 5+
-                                  consecutive successes on both promote workflows through `2026-07-31T03:30Z`. (b)/(c) still fail: MTDS's
-                                  most-recently-merged main PR is still `#773`; the open promote PR has regenerated to `#793`
-                                  (`promote/market-tick-data-service/d74984b03948`), `5b5caffa` confirmed an ancestor of current LDR,
-                                  `mergeStateStatus: UNSTABLE`, `autoMergeRequest: null`, `mergedAt: null` — the exact never-requested-auto-merge
-                                  signature the issue doc's `[CI] P1` todo already named as the concrete fix target. Did not attempt the GH-side
-                                  fix (out of worker scope). Filed `/blocked` recommending this todo (and its sibling in the issue doc) be PARKED —
-                                  the park recommendation has now stood unactioned for 13+ dispatch cycles across many slots, each independently
-                                  re-confirming the identical root cause for zero new signal.
+                                      already-diagnosed root cause (auto-merge never requested on the regenerated promote PR).** (a) PASSES: 5+
+                                      consecutive successes on both promote workflows through `2026-07-31T03:30Z`. (b)/(c) still fail: MTDS's
+                                      most-recently-merged main PR is still `#773`; the open promote PR has regenerated to `#793`
+                                      (`promote/market-tick-data-service/d74984b03948`), `5b5caffa` confirmed an ancestor of current LDR,
+                                      `mergeStateStatus: UNSTABLE`, `autoMergeRequest: null`, `mergedAt: null` — the exact never-requested-auto-merge
+                                      signature the issue doc's `[CI] P1` todo already named as the concrete fix target. Did not attempt the GH-side
+                                      fix (out of worker scope). Filed `/blocked` recommending this todo (and its sibling in the issue doc) be PARKED —
+                                      the park recommendation has now stood unactioned for 13+ dispatch cycles across many slots, each independently
+                                      re-confirming the identical root cause for zero new signal.
 
-                          **2026-07-31 ~13:47Z (main-agent agt-9f21bc) — the "unmet" is now a FALSE NEGATIVE: check (b) is structurally
-                                  unsatisfiable and the fix is ALREADY on main; do NOT park this.** Promotes are NOT stuck — mtds LDR→main
-                                  PRs #799 (11:15Z) / #800 (11:31Z) / #801 (13:01:21Z) ALL MERGED today, after slot-16's 03:30Z check.
-                                  Check (b) as written ("a promote PR _containing 5b5caffa_ merged to main", tested by SHA-ancestry vs
-                                  `main`) can NEVER pass because LDR→main promotes are SQUASH merges — main HEAD `4cd0e969` records
-                                  `Promoted-From-LDR: 6ca2d278`, "squash … not rebaseable", so no individual LDR commit SHA is ever an
-                                  ancestor of `main` (`compare/5b5caffa...main` → diverged, behind_by:823). The UNDERLYING condition IS met:
-                                  `5b5caffa` is an ancestor of the promoted LDR commit `6ca2d278` that #801 squashed to main (verified
-                                  `compare/5b5caffa...6ca2d278` → status ahead, behind_by:0) — the cron-fix content is deployed to main.
-                                  CORRECTION for check (b): test "`5b5caffa` is an ancestor of the `Promoted-From-LDR:` commit stamped on
-                                  main's latest mtds promote commit" (PASSES now), NOT SHA-ancestry vs `main`. Only genuinely-open sub-check
-                                  is (c) `image-build-gate` SUCCESS on main HEAD `4cd0e969` (not yet observed — only `quality-gates-v2` seen
-                                  queued on it). Resolution: complete `-006` via the corrected (b) + a real (c) confirmation — this is a
-                                  verify-criterion fix, not a park-forever.
+                              **2026-07-31 ~13:47Z (main-agent agt-9f21bc) — the "unmet" is now a FALSE NEGATIVE: check (b) is structurally
+                                      unsatisfiable and the fix is ALREADY on main; do NOT park this.** Promotes are NOT stuck — mtds LDR→main
+                                      PRs #799 (11:15Z) / #800 (11:31Z) / #801 (13:01:21Z) ALL MERGED today, after slot-16's 03:30Z check.
+                                      Check (b) as written ("a promote PR _containing 5b5caffa_ merged to main", tested by SHA-ancestry vs
+                                      `main`) can NEVER pass because LDR→main promotes are SQUASH merges — main HEAD `4cd0e969` records
+                                      `Promoted-From-LDR: 6ca2d278`, "squash … not rebaseable", so no individual LDR commit SHA is ever an
+                                      ancestor of `main` (`compare/5b5caffa...main` → diverged, behind_by:823). The UNDERLYING condition IS met:
+                                      `5b5caffa` is an ancestor of the promoted LDR commit `6ca2d278` that #801 squashed to main (verified
+                                      `compare/5b5caffa...6ca2d278` → status ahead, behind_by:0) — the cron-fix content is deployed to main.
+                                      CORRECTION for check (b): test "`5b5caffa` is an ancestor of the `Promoted-From-LDR:` commit stamped on
+                                      main's latest mtds promote commit" (PASSES now), NOT SHA-ancestry vs `main`. Only genuinely-open sub-check
+                                      is (c) `image-build-gate` SUCCESS on main HEAD `4cd0e969` (not yet observed — only `quality-gates-v2` seen
+                                      queued on it). Resolution: complete `-006` via the corrected (b) + a real (c) confirmation — this is a
+                                      verify-criterion fix, not a park-forever.
 
-                          **2026-07-31 (slot-6, data_engineering craft) — DONE: check (c) confirmed, all 3 checks now pass.**
-                                  `image-build-gate.yml` triggers on `pull_request`, not `push` to `main` — it validates BEFORE merge, so
-                                  the right query is the PR run, not a post-merge run on `main` (which is why the earlier check missed
-                                  it: `gh run list --workflow=image-build-gate.yml --branch main` correctly returns nothing, since that
-                                  workflow never runs directly on `main`). Found it: run `30632812168`, `pull_request`, head
-                                  `promote/market-tick-data-service/6ca2d278e8fa` (exactly the `Promoted-From-LDR` commit main-agent
-                                  identified), `success`, completed `2026-07-31T13:01:21Z`/`13:32Z`, 31m5s. Re-verified (a) fresh myself
-                                  (not just trusting the 03:30Z snapshot): both `ldr-to-main-promote.yml` and
-                                  `ldr-to-main-promote-fleet.yml` show 6/6 consecutive successes through `14:45Z`, well past the earlier
-                                  incident window. Re-verified (b) independently: `git log origin/main -1` on `market-tick-data-service`
-                                  confirms HEAD is still `4cd0e969` with `Promoted-From-LDR: 6ca2d278e8fa7e9a32292cca2ea658e8216ef862`,
-                                  and `git merge-base --is-ancestor 5b5caffa 6ca2d278e8fa...` returns true — the cron fix is genuinely on
-                                  `main`. All 3 checks pass; the next todo (cron-fix live-verify remainder) is unblocked. Evidence:
-                                  GHA runs `30632812168` (image-build-gate, success), the promote-workflow run lists above, and the live
-                                  `git merge-base --is-ancestor` output, all captured this session. No code shipped — pure verification.
+                              **2026-07-31 (slot-6, data_engineering craft) — DONE: check (c) confirmed, all 3 checks now pass.**
+                                      `image-build-gate.yml` triggers on `pull_request`, not `push` to `main` — it validates BEFORE merge, so
+                                      the right query is the PR run, not a post-merge run on `main` (which is why the earlier check missed
+                                      it: `gh run list --workflow=image-build-gate.yml --branch main` correctly returns nothing, since that
+                                      workflow never runs directly on `main`). Found it: run `30632812168`, `pull_request`, head
+                                      `promote/market-tick-data-service/6ca2d278e8fa` (exactly the `Promoted-From-LDR` commit main-agent
+                                      identified), `success`, completed `2026-07-31T13:01:21Z`/`13:32Z`, 31m5s. Re-verified (a) fresh myself
+                                      (not just trusting the 03:30Z snapshot): both `ldr-to-main-promote.yml` and
+                                      `ldr-to-main-promote-fleet.yml` show 6/6 consecutive successes through `14:45Z`, well past the earlier
+                                      incident window. Re-verified (b) independently: `git log origin/main -1` on `market-tick-data-service`
+                                      confirms HEAD is still `4cd0e969` with `Promoted-From-LDR: 6ca2d278e8fa7e9a32292cca2ea658e8216ef862`,
+                                      and `git merge-base --is-ancestor 5b5caffa 6ca2d278e8fa...` returns true — the cron fix is genuinely on
+                                      `main`. All 3 checks pass; the next todo (cron-fix live-verify remainder) is unblocked. Evidence:
+                                      GHA runs `30632812168` (image-build-gate, success), the promote-workflow run lists above, and the live
+                                      `git merge-base --is-ancestor` output, all captured this session. No code shipped — pure verification.
 
 - [x] ✅ [DATA] P1. Fix/confirm the production cron backing these 6 venues' capture so it reliably writes real per-day
       manifest shards going forward — not the one-off manual-invocation samples the source doc's investigation found.
@@ -151,77 +151,79 @@ splitting into two plans just to parallelize two todos.
       manifest query.
 
       **2026-07-30 (slot-6) — ROOT CAUSE CONFIRMED + FIX SHIPPED, deployment/live-verify portion still pending
-                                                                                              (blocked on a separate, already-tracked infra incident, not this fix).** Confirmed the SAME OOM/timeout root
-                                                                                              cause the gas-fees fix already patched applies here too, via direct code read (not a guess):
-                                                                                              `lst_rates_handler._check_freshness_skip()` called `ManifestFreshnessCache.bulk_load()` completely UNBOUNDED —
-                                                                                              `bulk_load() -> read_availability_index()` can synchronously block for up to
-                                                                                              `AG_CONSOLIDATOR_INFLIGHT_HORIZON_SEC["defi"]=4200s` when a defi consolidator merge is in flight
-                                                                                              (`unified-trading-library/manifest_writer/_staleness_budget.py`), and this job's own Cloud Run timeout is
-                                                                                              **1200s** (confirmed live in `deployment-service/terraform/gcp/defi_collection_scheduler.tf`'s "lst-rates"
-                                                                                              entry) — exactly the `1800s < 4200s` shape that caused the gas-fees crash-loop, just with an even tighter
-                                                                                              1200s budget here. Fixed the same way: reused the existing `_gas_fee_helpers.bounded_freshness_warmup()` helper
-                                                                                              (90s bound, fail-open — never skip on an untrustworthy/timed-out cache) instead of hand-rolling a new one.
-                                                                                              While validating via full `quality-gates.sh`, found ONE pre-existing unrelated failure blocking a green tree —
-                                                                                              `test_vault_share_price_handler.py::test_process_writes_canonical_partition_per_protocol_chain` (confirmed
-                                                                                              pre-existing via a clean-tree repro before touching it) — root-caused to a stale test assertion
-                                                                                              (`pipeline_mode=batch_onchain_subgraph`) no longer matching this handler's actual, intended, RPC-only
-                                                                                              `batch_onchain_rpc` behavior, now that `unified-api-contracts` corrected
-                                                                                              `SOURCE_PRIORITY[("defi","vault_share_price")]` to `["onchain_rpc"]` today (2026-07-30) — the MTDS-side
-                                                                                              companion fix `issues/defi_pipeline_mode_source_desync_yearn_v3_2026_07_21.md` todo 4 was waiting on. Fixed
-                                                                                              both (the handler's now-stale `_VAULT_SHARE_PRICE_SOURCE` constant + the test's stale path assertion). Full
-                                                                                              `quality-gates.sh --no-fix`: green (exit 0), shipped via quickmerge: `market-tick-data-service@5b5caffa`.
+                                                                                                  (blocked on a separate, already-tracked infra incident, not this fix).** Confirmed the SAME OOM/timeout root
+                                                                                                  cause the gas-fees fix already patched applies here too, via direct code read (not a guess):
+                                                                                                  `lst_rates_handler._check_freshness_skip()` called `ManifestFreshnessCache.bulk_load()` completely UNBOUNDED —
+                                                                                                  `bulk_load() -> read_availability_index()` can synchronously block for up to
+                                                                                                  `AG_CONSOLIDATOR_INFLIGHT_HORIZON_SEC["defi"]=4200s` when a defi consolidator merge is in flight
+                                                                                                  (`unified-trading-library/manifest_writer/_staleness_budget.py`), and this job's own Cloud Run timeout is
+                                                                                                  **1200s** (confirmed live in `deployment-service/terraform/gcp/defi_collection_scheduler.tf`'s "lst-rates"
+                                                                                                  entry) — exactly the `1800s < 4200s` shape that caused the gas-fees crash-loop, just with an even tighter
+                                                                                                  1200s budget here. Fixed the same way: reused the existing `_gas_fee_helpers.bounded_freshness_warmup()` helper
+                                                                                                  (90s bound, fail-open — never skip on an untrustworthy/timed-out cache) instead of hand-rolling a new one.
+                                                                                                  While validating via full `quality-gates.sh`, found ONE pre-existing unrelated failure blocking a green tree —
+                                                                                                  `test_vault_share_price_handler.py::test_process_writes_canonical_partition_per_protocol_chain` (confirmed
+                                                                                                  pre-existing via a clean-tree repro before touching it) — root-caused to a stale test assertion
+                                                                                                  (`pipeline_mode=batch_onchain_subgraph`) no longer matching this handler's actual, intended, RPC-only
+                                                                                                  `batch_onchain_rpc` behavior, now that `unified-api-contracts` corrected
+                                                                                                  `SOURCE_PRIORITY[("defi","vault_share_price")]` to `["onchain_rpc"]` today (2026-07-30) — the MTDS-side
+                                                                                                  companion fix `issues/defi_pipeline_mode_source_desync_yearn_v3_2026_07_21.md` todo 4 was waiting on. Fixed
+                                                                                                  both (the handler's now-stale `_VAULT_SHARE_PRICE_SOURCE` constant + the test's stale path assertion). Full
+                                                                                                  `quality-gates.sh --no-fix`: green (exit 0), shipped via quickmerge: `market-tick-data-service@5b5caffa`.
 
-                                                                                              **Cannot yet verify the done-when** (3 consecutive real cron-triggered runs against the FIXED code) —
-                                                                                              `image-build-gate.yml` only rebuilds the deployed container on push to `main`, not `live-defi-rollout`, and the
-                                                                                              LDR→main promotion for this repo (and the ENTIRE `promotion_model: ldr_main` fleet) is currently blocked by an
-                                                                                              already-filed, actively-investigated, unrelated incident:
-                                                                                              `plans/active/issues/ldr_to_main_promote_workflows_sustained_startup_failure_2026_07_30.md` (both
-                                                                                              `ldr-to-main-promote-fleet.yml` and `ldr-to-main-promote.yml` have returned `startup_failure` on every tick
-                                                                                              since 2026-07-29T18:30Z — confirmed live via `gh run list`, not stale). Once that incident resolves and this
-                                                                                              commit promotes + rebuilds, re-run: trigger `gcloud scheduler jobs run` against the real `lst-rates` Cloud
-                                                                                              Scheduler job 3x (this counts as "real cron-triggered" per this todo's own parenthetical — it invokes the
-                                                                                              actual Scheduler entity, not a raw `gcloud run jobs execute`), then confirm via Cloud Run execution history +
-                                                                                              a manifest query that all 6 venues get `capture_status=captured` rows on each run. Not flipping this checkbox
-                                                                                              — the done-when genuinely isn't met yet, and this is NOT a code gap, it's an external, already-owned
-                                                                                              deployment-pipeline outage.
+                                                                                                  **Cannot yet verify the done-when** (3 consecutive real cron-triggered runs against the FIXED code) —
+                                                                                                  `image-build-gate.yml` only rebuilds the deployed container on push to `main`, not `live-defi-rollout`, and the
+                                                                                                  LDR→main promotion for this repo (and the ENTIRE `promotion_model: ldr_main` fleet) is currently blocked by an
+                                                                                                  already-filed, actively-investigated, unrelated incident:
+                                                                                                  `plans/active/issues/ldr_to_main_promote_workflows_sustained_startup_failure_2026_07_30.md` (both
+                                                                                                  `ldr-to-main-promote-fleet.yml` and `ldr-to-main-promote.yml` have returned `startup_failure` on every tick
+                                                                                                  since 2026-07-29T18:30Z — confirmed live via `gh run list`, not stale). Once that incident resolves and this
+                                                                                                  commit promotes + rebuilds, re-run: trigger `gcloud scheduler jobs run` against the real `lst-rates` Cloud
+                                                                                                  Scheduler job 3x (this counts as "real cron-triggered" per this todo's own parenthetical — it invokes the
+                                                                                                  actual Scheduler entity, not a raw `gcloud run jobs execute`), then confirm via Cloud Run execution history +
+                                                                                                  a manifest query that all 6 venues get `capture_status=captured` rows on each run. Not flipping this checkbox
+                                                                                                  — the done-when genuinely isn't met yet, and this is NOT a code gap, it's an external, already-owned
+                                                                                                  deployment-pipeline outage.
 
-          **2026-07-31 (slot-9, data_engineering craft) — DONE: done-when met, checkbox flipped.** Picked up after the
-          fleet-wide runner-capacity crisis cleared enough for `market-tick-data-service@9ae23495` (slot-6's SECOND fix —
-          the `source=` kwarg bug found while live-verifying the first fix) to reach `main`. Verified fresh: `9ae23495` is
-          an ancestor of `main`'s `Promoted-From-LDR` commit (`9574175479fd`, squash-merged via PR #802,
-          `git merge-base --is-ancestor` → true — squash merges mean SHA-ancestry vs literal `main` never resolves, per
-          main-agent's 2026-07-31 correction above; this is the right test). `image-build-gate.yml` ran SUCCESS on that PR
-          branch (run `30648459442`). Confirmed the deployed `:latest` AR image tag lineage includes `9ae2349`/`9574175`/
-          `9ea8d15` (built `2026-07-31T17:01:44Z`) — the fix is genuinely live. **One factual correction to this todo's own
-          text**: MAKER is NOT an `lst_rates` venue — it's `vault_share_price` (YIELD_BEARING sDAI, no validator staking;
-          matches slot-15's todo-1 adapter note above). The "manifest-registration gap self-resolves" framing was
-          half-right: it resolves via the SIBLING `uts-prod-mtds-collect-vault-share-price` cron (also fixed in
-          `5b5caffa`'s companion `_VAULT_SHARE_PRICE_SOURCE`/`SOURCE_PRIORITY` fix), not via `lst-rates` itself. Ran the
-          done-when literally against BOTH real Cloud Scheduler jobs (`uts-prod-mtds-collect-lst-rates-cron` for the other
-          5 venues + `uts-prod-mtds-collect-vault-share-price-cron` for MAKER) via `gcloud scheduler jobs run` (invokes the
-          actual Scheduler entity per this todo's own parenthetical, not a raw `gcloud run jobs execute`) — **3 consecutive
-          runs each**, all succeeded with no crash-loop (lst-rates: 1m26s/1m23s/1m23s; vault-share-price: ~1m/56s/55s), and
-          a manifest query (per-VM shard read, since the fresh writes hadn't hit the ~1min consolidator merge window yet)
-          confirmed `capture_status=captured` for all 6 target venues on every one of the 3 runs:
-          run 1 (`18:15-18:17Z`): ANKR/STADER/STAKEWISE/SWELL/MANTLE via shard `local-1-5749.parquet` (MAKER not yet
-          re-triggered this run, confirmed captured from its own real schedule at `01:11Z` same day, pre-dating the
-          rebuild — superseded by run 2/3 below); run 2 (`18:23-18:25Z`): all 6 via shards `local-1-2c51.parquet`
-          (MAKER, `source=onchain_rpc`) + `local-1-ba16.parquet` (other 5, `source=onchain_subgraph`); run 3
-          (`18:25-18:27Z`): all 6 via shards `local-1-c9ff.parquet` (MAKER) + `local-1-e327.parquet` (other 5). All rows
-          `capture_status=captured`, correct `source=` per venue, `date=2026-07-30` (yesterday, expected — these crons
-          capture the prior UTC day). No code changes needed this session — the fix was already shipped by slot-6; this
-          was pure live-verification once the deployment pipeline unblocked. Evidence: Cloud Run execution IDs
-          `uts-prod-mtds-collect-lst-rates-{wh8gd,zgq5l,7pdj6}` +
-          `uts-prod-mtds-collect-vault-share-price-{ds6qf,6xq9t}` (all `succeededCount=1, failedCount=0`), GHA run
-          `30648459442` (image-build-gate success), and the per-VM shard reads above (GCS
-          `gs://market-data-tick-defi-prd-central-element-323112/_index/per_vm/`).
+              **2026-07-31 (slot-9, data_engineering craft) — DONE: done-when met, checkbox flipped.** Picked up after the
+              fleet-wide runner-capacity crisis cleared enough for `market-tick-data-service@9ae23495` (slot-6's SECOND fix —
+              the `source=` kwarg bug found while live-verifying the first fix) to reach `main`. Verified fresh: `9ae23495` is
+              an ancestor of `main`'s `Promoted-From-LDR` commit (`9574175479fd`, squash-merged via PR #802,
+              `git merge-base --is-ancestor` → true — squash merges mean SHA-ancestry vs literal `main` never resolves, per
+              main-agent's 2026-07-31 correction above; this is the right test). `image-build-gate.yml` ran SUCCESS on that PR
+              branch (run `30648459442`). Confirmed the deployed `:latest` AR image tag lineage includes `9ae2349`/`9574175`/
+              `9ea8d15` (built `2026-07-31T17:01:44Z`) — the fix is genuinely live. **One factual correction to this todo's own
+              text**: MAKER is NOT an `lst_rates` venue — it's `vault_share_price` (YIELD_BEARING sDAI, no validator staking;
+              matches slot-15's todo-1 adapter note above). The "manifest-registration gap self-resolves" framing was
+              half-right: it resolves via the SIBLING `uts-prod-mtds-collect-vault-share-price` cron (also fixed in
+              `5b5caffa`'s companion `_VAULT_SHARE_PRICE_SOURCE`/`SOURCE_PRIORITY` fix), not via `lst-rates` itself. Ran the
+              done-when literally against BOTH real Cloud Scheduler jobs (`uts-prod-mtds-collect-lst-rates-cron` for the other
+              5 venues + `uts-prod-mtds-collect-vault-share-price-cron` for MAKER) via `gcloud scheduler jobs run` (invokes the
+              actual Scheduler entity per this todo's own parenthetical, not a raw `gcloud run jobs execute`) — **3 consecutive
+              runs each**, all succeeded with no crash-loop (lst-rates: 1m26s/1m23s/1m23s; vault-share-price: ~1m/56s/55s), and
+              a manifest query (per-VM shard read, since the fresh writes hadn't hit the ~1min consolidator merge window yet)
+              confirmed `capture_status=captured` for all 6 target venues on every one of the 3 runs:
+              run 1 (`18:15-18:17Z`): ANKR/STADER/STAKEWISE/SWELL/MANTLE via shard `local-1-5749.parquet` (MAKER not yet
+              re-triggered this run, confirmed captured from its own real schedule at `01:11Z` same day, pre-dating the
+              rebuild — superseded by run 2/3 below); run 2 (`18:23-18:25Z`): all 6 via shards `local-1-2c51.parquet`
+              (MAKER, `source=onchain_rpc`) + `local-1-ba16.parquet` (other 5, `source=onchain_subgraph`); run 3
+              (`18:25-18:27Z`): all 6 via shards `local-1-c9ff.parquet` (MAKER) + `local-1-e327.parquet` (other 5). All rows
+              `capture_status=captured`, correct `source=` per venue, `date=2026-07-30` (yesterday, expected — these crons
+              capture the prior UTC day). No code changes needed this session — the fix was already shipped by slot-6; this
+              was pure live-verification once the deployment pipeline unblocked. Evidence: Cloud Run execution IDs
+              `uts-prod-mtds-collect-lst-rates-{wh8gd,zgq5l,7pdj6}` +
+              `uts-prod-mtds-collect-vault-share-price-{ds6qf,6xq9t}` (all `succeededCount=1, failedCount=0`), GHA run
+              `30648459442` (image-build-gate success), and the per-VM shard reads above (GCS
+              `gs://market-data-tick-defi-prd-central-element-323112/_index/per_vm/`).
 
-- [ ] [DATA] P1. Run the 90-day historical backfill for all 6 venues via direct local invocation — no VM launch needed
-      per the source doc's own estimate (~2,340 lightweight RPC calls, well under a constrained rate limit) — now that
-      the cron is confirmed healthy (prior todo). Done-when: the availability manifest shows ≥90 days of
+- [x] ✅ [DATA] P1. Run the 90-day historical backfill for all 6 venues via direct local invocation — no VM launch
+      needed per the source doc's own estimate (~2,340 lightweight RPC calls, well under a constrained rate limit) — now
+      that the cron is confirmed healthy (prior todo). Done-when: the availability manifest shows ≥90 days of
       `capture_status=captured` rows per venue (or a documented, source-cited reason for any specific-day gap — e.g. a
       genuine upstream outage), each row's `source=` field correctly tagged per
-      `/codex/02-data/pipeline-mode-partition.md`.
+      `/codex/02-data/pipeline-mode-partition.md`. — **2026-07-31 (slot-16, data_engineering craft) — DONE.** See
+      Progress Log for the full incident (a genuine runaway-memory bug hit + root-caused + fixed mid-task) and final
+      verification numbers.
 
 - [ ] [DATA] P1. Register all 6 venues in the instruments catalogue so downstream consumers see a complete universe, not
       just a manifest-side capture stream (ruling item 4). Done-when: the instruments catalogue / data-status surface
@@ -523,3 +525,51 @@ splitting into two plans just to parallelize two todos.
   `main`/rebuilt yet through no fault of its own. **Resume point unchanged from the entry above**: once the fleet
   capacity crisis clears enough for `9ae23495` to reach `main` + `image-build-gate` to rebuild `:latest`, re-run the
   3x-scheduler-trigger + manifest-check sequence (baseline captured above). Todo 3 stays unchecked.
+- **2026-07-31 (slot-16, data_engineering craft) — Todo 3 DONE: 90-day backfill complete for all 6 venues, a genuine
+  host-endangering memory bug found + root-caused + fixed along the way.**
+  - **Incident**: a single-day test invocation
+    (`--operation collect-lst-rates --mode batch --asset-group DEFI --start-date 2026-07-29 --end-date 2026-07-29`, no
+    `MANIFEST_PER_VM_SHARDS`/`VM_NAME` set — the plain invocation documented in
+    `scripts/full-defi-backfill.sh`/`scripts/smoke_canonical_writes.sh`) grew to 40GB+ RSS on this shared host (61GB
+    total, already ~46GB used from sibling-slot processes) and did not respond to SIGTERM — required SIGKILL per the
+    runaway-process HARD RULE (CLAUDE.md governance; exact-PID kill per `RULES.md` § 1). Host memory recovered fully
+    after the kill (verified via `free -h`).
+  - **Root cause**: `market_tick_data_service/cli/handlers/_defi_manifest.py`'s `DefiManifestRecorder` (the shared
+    manifest-recording shim every DeFi CLI handler calls) constructs its `ManifestWriter` at `batch_size=1` (immediate
+    flush per record) WITHOUT passing `per_vm_shards=True` — so an unconfigured caller (any local/dev CLI invocation
+    lacking the `MANIFEST_PER_VM_SHARDS=true` env var production Cloud Run deployment configs set) silently falls
+    through to `ManifestWriter`'s legacy full-index read-merge-write CAS path on EVERY `record_captured`/
+    `record_failed`/`record_zero_rows` call — `lst_rates_handler.py` alone makes ~15-20 such calls per date. Confirmed
+    the SAME anti-pattern class already documented + fixed once today for a different call site:
+    `/plans/active/issues/mtds_gas_fees_migration_script_unbounded_memory_2026_07_30.md` (`ManifestWriter` missing
+    `per_vm_shards=True` → legacy CAS path against the real ~27M-row DeFi availability index, ~14.86GiB+ per
+    read-merge-write cycle) — this is a NEW, wider-blast-radius occurrence of the identical bug class (the CORE
+    production manifest-recording plumbing, not a one-off script), extending the "4 incidents in ~36 hours against the
+    same manifest" pattern noted in
+    `/plans/active/issues/expand_defi_pool_catalogue_script_unbounded_memory_2026_07_31.md` to a 5th.
+  - **Fix shipped**: `market-tick-data-service@77738598` — `DefiManifestRecorder.__init__` now passes
+    `per_vm_shards=True` explicitly (this recorder never has a legitimate reason to want the legacy CAS path; the
+    production per-VM-shard behavior is already the correct/desired one, it just shouldn't depend on env-var propagation
+    that a local CLI invocation never gets). Full `quality-gates.sh` green (sentinel matches shipping SHA); verified on
+    origin via `git merge-base --is-ancestor` after a mid-push auto-rebase changed the local SHA from `cf6fed0b` to
+    `77738598` (same content, rebased onto a newer LDR tip — not the
+    `quickmerge_agent_regate_resets_branch_loses_local_commit_2026_07_31.md` failure mode, just an ordinary
+    push-rejected-then-rebased cycle; re-verified against the POST-rebase SHA per `RULES.md` § 2's recipe).
+  - **Backfill completed** (both operations, `MANIFEST_PER_VM_SHARDS=true VM_NAME=slot16-defi-venue-90d-backfill`,
+    `--start-date 2026-05-02 --end-date 2026-07-30` = exactly 90 inclusive days): `collect-lst-rates` (covers
+    ANKR/STADER/STAKEWISE/SWELL/MANTLE) ran in 2 parts — the first attempt lost its process after 18/90 days to the
+    orchestrator's own orphan-reaper (launched via `setsid ... &` inside a backgrounded shell, the exact
+    double-detachment anti-pattern `worker.md`'s "never `nohup`" HARD RULE warns against; corrected by passing the
+    command directly to the harness's own backgrounding for the resume, which completed cleanly).
+    `collect-vault-share -price` (covers MAKER) completed in one shot, 90/90 days, zero errors. A safety RSS watchdog
+    (6GB cap, well above the ~0.3-1.6GB actually observed with the fix) ran alongside every real invocation; never
+    triggered.
+  - **Verification** (live per-VM-shard merge via `read_availability_index(..., filters=[date window])` with
+    `VM_NAME=slot16-defi-venue-90d-backfill` set so the reader's self-shard merge picks up this session's own shard —
+    the plain unconfigured read initially showed stale pre-existing consolidated-index rows instead, a verification
+    methodology gap, not a data bug; the per-VM shard file itself was directly inspected first and confirmed correct):
+    all 6 target venues show **90/90 days `capture_status=captured` with the correctly-tagged `source=`** per
+    `/codex/02-data/pipeline-mode-partition.md` — ANKR/STADER/STAKEWISE/SWELL/MANTLE (`data_type=lst_rates`,
+    `source=onchain_subgraph`) and MAKER (`data_type=vault_share_price`, `source=onchain_rpc`). No specific-day gaps;
+    zero documented-exception days needed. Evidence: per-venue/per-day breakdown captured this session (available on
+    request; not pasted here to keep this entry bounded).

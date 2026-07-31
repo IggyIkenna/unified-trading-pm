@@ -162,3 +162,20 @@ locked_since:
   `ANALYSIS_MEM_CAP`) and points the target script's own docstring at this wrapper as the required invocation for its
   remaining runs. `quality-gates.sh` green on the shipping SHA; quickmerge landed on `live-defi-rollout` and verified
   present on origin. Todos 1 and 3 remain open (thread-source diagnosis; shared safe-by-default read-helper decision).
+- **2026-07-31 (slot-16, data_engineering craft, corroborating note)**: hit a **5th** occurrence of this exact class —
+  this time write-side, and NOT a one-off script: `market_tick_data_service/cli/handlers/_defi_manifest.py`'s
+  `DefiManifestRecorder` (the shared manifest-recording shim every DeFi CLI handler calls) constructs its
+  `ManifestWriter` at `batch_size=1` without `per_vm_shards=True` — an unconfigured local CLI invocation (no
+  `MANIFEST_PER_VM_SHARDS=true`, the exact env gap this doc's todo 3 flags) falls through to the legacy full-index
+  read-merge-write CAS path on every record call. Confirmed via a real single-day `collect-lst-rates` test invocation
+  that grew to 40GB+ RSS and required a SIGKILL (host recovered after). This is the SAME root cause as
+  `mtds_gas_fees_migration_script_unbounded_memory_2026_07_30.md` (`ManifestWriter` missing `per_vm_shards=True`), but
+  hitting the CORE production manifest-recording plumbing rather than a one-off migration script — meaning EVERY local/
+  dev invocation of ANY DeFi capture handler (not just this specific script) was at risk. **Fixed**:
+  `market-tick-data-service@77738598` passes `per_vm_shards=True` explicitly on `DefiManifestRecorder`'s
+  `ManifestWriter` construction — this recorder has no legitimate reason to want the legacy CAS path, so hardcoding it
+  closes the gap without depending on env-var propagation a local invocation never gets. Full detail + the actual
+  90-day-backfill task this blocked: `/plans/active/defi_venue_pipeline_to_live_ao_build_2026_07_30.md` Progress Log.
+  Strengthens the case for todo 3's shared safe-by-default write helper (this doc's todo 3 already covers the read side;
+  the write side now has its OWN 2-incident precedent — gas_fees migration script + this core recorder — worth folding
+  into the same evaluation rather than treating as a separate class).
