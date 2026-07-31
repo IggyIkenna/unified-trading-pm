@@ -320,3 +320,28 @@ Picked up todo 3 fresh via `/boot`. Re-ran the exact recommended check on the sa
 code work available, 0 of 3 target runs have reached `registry-drift` completion, so the "3 consecutive green" bar
 remains unobserved. This is purely the shared-runner capacity incident draining on its own schedule. Leaving todo 3
 unchecked; self-skipping this task (5th session in a row, `reason_code: GATED`) — same posture as slots 10/14/15.
+
+## 2026-07-31 ~20:xxZ re-check (slot 4) — IDENTICAL state to slot 12, zero movement in 10+ min — flagging redispatch churn
+
+Picked up todo 3 fresh via `/boot` (`already_in_progress: true`, `dispatch_reason: "resume"`). Re-ran the exact same
+check on the exact same 3 runs:
+
+- All 3 runs: `test` = `success` (unchanged).
+- `30625075106`: `e2e` = `in_progress` (unchanged from slot 12's reading).
+- `30635331302`, `30627739825`: `e2e` = `queued` (unchanged).
+- All 3: `registry-drift` = `queued` (unchanged — still 0 of 3 target runs reached completion).
+- `gh api .../actions/runners` → single `glue-ip-172-31-5-118-1` runner, `busy: true`;
+  `gh api .../actions/runs?status=in_progress` for this repo → **0** (unchanged).
+
+**This is byte-for-byte the same observable state slot 12 recorded ~10-15 minutes ago** — no state transition occurred
+between that check and this one. This is now the **6th consecutive session** (slots 10, 14, 15, 12, and this one, plus
+the original slot-7 pre-compact entry) to `/boot` this exact todo, spend a check confirming nothing changed, and
+self-skip. Per the workspace CLAUDE.md async-wait/poll-discipline HARD RULE ("a bare skip re-queues it to re-dispatch
+every cycle with zero new information — a textbook async-wait/poll-discipline violation... gate it behind a condition so
+it only re-dispatches once the fleet actually advances") — this doc's own todo 3 has now hit exactly that pattern.
+Posting a `/blocked` (not a code question — a scheduling one: should this task be parked via `priority_override` + a
+`registry-drift-observable` prerequisite condition, gated on the tracked capacity incident, so it stops burning a fresh
+worker dispatch every cycle for identical zero-new-information reads) with `can_continue: true` and moving to other
+queued work rather than holding this slot on a 7th identical poll. Leaving todo 3 unchecked; self-skipping
+(`reason_code: GATED`) — same posture as the 5 prior sessions, but flagging the churn itself as the actionable finding
+here.
