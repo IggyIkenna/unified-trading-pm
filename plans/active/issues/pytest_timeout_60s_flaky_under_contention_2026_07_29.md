@@ -495,3 +495,26 @@ those commits landed). The escalation's own repo-blocker list (`GET /api/repo-bl
   entries for market-tick-data-service. Same "orphaned noise against an already-resolved wall" conclusion as every prior
   entry — no code or test change made. Slot left clean (0 commits ahead of `origin/live-defi-rollout`, nothing to
   commit).
+- **2026-07-31 (cicd escalation `agt-02ea96`, slot 3)**: instruments-service promotion PR #1048 (LDR→main), failing run
+  `30658448525` (`QG slice (tests)` job, started `19:16:13Z`, head SHA `aadd856c`). Identical "no-attributable-test"
+  signature to the immediately-preceding entry (`agt-64f618`): `pytest_timeout.py:317 handler` fired INSIDE the xdist
+  worker's own IPC flush (`execnet/gateway_base.py:577 to_io` → `write` → `outfile.flush()`),
+  `Failed: Timeout (>150.0s)`, cascading into `worker_internal_error`/`AssertionError`, then the whole
+  `quality-gates.sh` process SIGKILLed (`exit=137`) ~6min later (`19:39:00Z`) — no source-level test file/line
+  attributable, confirming a scheduling artifact, not a per-test bug. Diff since the last confirmed-green run
+  (`2b488f0e`, run `30651585942` success `17:32:49Z`) is one unrelated commit (`aadd856c`, +55 lines, a new
+  bounded-wrapper script for an unrelated one-off DeFi-catalogue script — zero test/core-code changes), ruling out a
+  code regression. PR #1048 already **MERGED** (`mergedAt=19:16:18Z`, 5s after the check run started — an independent
+  already-green check satisfied the merge, same self-merge pattern as every prior entry). Zero open
+  `/api/repo-blockers`, zero open PRs for instruments-service. New wrinkle: the standing recovery `workflow_dispatch`
+  reruns (`30659447161` live-defi-rollout@`df9b6daa`, queued since `19:31:59Z`; `30664529775` main@`25e67740`, queued
+  since `20:52:27Z`) were STILL queued with zero pickup after 2h+ at investigation time (`21:44Z`). Confirmed this is
+  queue depth, not a dead runner: sibling repos on the same `i-0c9b283b31d6b5ca7` protected-6 box
+  (market-tick-data-service, features-service) show jobs from the same ~19:16-19:32Z window actively completing (some
+  taking 2h+ end-to-end) or still `in_progress` at investigation time — the box is grinding through a deep backlog, not
+  wedged. Consistent with the standing operator ruling ("protected-6 stay self-hosted, accept recurring reds, resolve
+  via retrigger", `fleet_wide_qg_capacity_crisis_continues_day2_2026_07_29.md`) — did not add a 3rd retrigger (2 already
+  in flight) and did not attempt runner/host-level intervention (out of a cicd worker's scope;
+  `ssm:DescribeInstanceInformation` also denied for the current IAM identity, confirming no ambient access to this box
+  either way). No code/test action taken — same "orphaned noise against an already-resolved wall" conclusion as every
+  prior entry in this doc. Slot left clean (0 commits ahead of `origin/live-defi-rollout` on instruments-service).
