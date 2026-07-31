@@ -80,8 +80,8 @@ drift_direction: advance-code
 
 ## Todos
 
-- [ ] [BACKEND] P2. **Adapter dead-code/fallback audit.** Audit instruments-service's and market-tick-data-service's
-      prediction adapters for dead code, silent fallback branches, and duplicated logic, per
+- [x] ✅ [BACKEND] P2. **Adapter dead-code/fallback audit — DONE 2026-07-31 (slot-12).** Audit instruments-service's and
+      market-tick-data-service's prediction adapters for dead code, silent fallback branches, and duplicated logic, per
       `/codex/06-coding-standards/adapter-dead-code-and-fallback-ban.md`. Exact paths:
       `instruments_service/reference_data/adapters/prediction/kalshi.py` + `.../adapters/prediction/polymarket/`
       (instruments-service), `.../adapters/prediction/` (market-tick-data-service). **Awareness note (not a done-when
@@ -211,3 +211,12 @@ Grepped `prediction_satellite_ao_dispatch_batch1_2026_07_25.md` and
 `/codex/02-data/reconciliation-finding-taxonomy.md` (todo 4, C2a/F2 vocabulary),
 `/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md` § "Dispatch-scope eligibility" (the bar applied
 to every classification in this doc + the Deferred section above).
+
+## Progress Log
+
+- **2026-07-31 (slot-12, backend_engineer) — todo 1 (adapter dead-code/fallback audit) DONE.** Full evidence + the 2
+  filed issue docs recorded in `prediction_phase_ab_residuals_2026_07_24.md`'s Progress Log + its A5 checkbox, per this
+  todo's own Done-when (reconciles evidence back into that doc, not this one). Summary: 2 distinct dead-code findings
+  (`is_polymarket_dead_fixture_cross_reference_2026_07_31.md`,
+  `mtds_prediction_adapters_dead_rest_polling_interface_ 2026_07_31.md`), 0 silent-fallback or duplicate-implementation
+  violations found.
