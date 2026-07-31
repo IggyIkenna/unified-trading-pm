@@ -555,8 +555,27 @@ promote PR** (the breaking-gate narrows SIT dispatch, never QG).
   class/method, incompatible signature change (added-required / removed / reordered param, dropped `**kwargs`),
   removed/renamed/retyped Pydantic/dataclass field (the UAC schema case), **removed/renamed Enum member or changed Enum
   member VALUE** (StrEnum/IntEnum contracts — the serialized value IS the contract; a NEW Enum member is
-  additive/non-breaking), or removed HTTP route. **Not breaking** = additive, docstring, comment, reformat, reorder,
-  move-across-modules. Regression-guarded by `tests/unit/test_detect_breaking_change.py`.
+  additive/non-breaking), removed HTTP route, or **a removed key/collection-member/inner-key on a
+  `# @contract-surface`-tagged module-level registry dict** (fixed 2026-07-31, see below). **Not breaking** = additive,
+  docstring, comment, reformat, reorder, move-across-modules, an ADDED key/member/inner-key on a tagged registry
+  constant. Regression-guarded by `tests/unit/test_detect_breaking_change.py`.
+- **Registry data-dict contract surface** (closes `breaking_change_differ_blind_to_registry_data_dicts_2026_07_09.md`,
+  fixed 2026-07-31): a plain module-level dict/list/set constant (e.g. UAC's
+  `INSTRUMENT_TYPES_BY_VENUE: dict[str, set[str]]`) keeps the SAME exported name and the SAME annotation even when its
+  literal CONTENTS silently lose a member — invisible to every check above (the 2026-07-07 `23fa3a99` incident: bare
+  `"OKX"` losing `"SPOT_PAIR"` from `INSTRUMENT_TYPES_BY_VENUE` broke instruments-service's `build_expected('cefi')`,
+  75→71 tuples, `is_breaking: false`, export count unchanged 1153→1153). Fix: tag the constant with a
+  `# @contract-surface` comment directly above its declaration; the differ then resolves its literal value (bare-`Name`
+  dict keys/members are resolved against earlier same-file `NAME = "value"` string constants — the registry convention —
+  via a small AST literal-evaluator, `_resolve_literal`/`_resolve_registry_dict`; a per-key value that isn't statically
+  resolvable, e.g. a computed list comprehension, is silently DROPPED from the snapshot rather than aborting the whole
+  constant) and diffs it structurally: a removed top-level key, a removed set/list member, or a removed inner dict-key
+  (the `VENUE_DATA_TYPE_CAPABILITIES: dict[str, dict[str, str]]` case) is breaking; any ADDITION is not. Currently
+  tagged: `INSTRUMENT_TYPES_BY_VENUE`, `VENUES_BY_ASSET_GROUP`, `VENUE_DATA_TYPE_CAPABILITIES` (all in
+  `unified-api-contracts/unified_api_contracts/registry/`). Precedent: manifest `schema_version` is an explicit,
+  deliberate signal that a DATA contract changed (see the scope-boundary bullet below); `# @contract-surface` is the
+  same idea for a plain Python data registry — tag it explicitly rather than have the differ guess by name/path. Adding
+  a NEW registry constant to this tracked set is a one-line tag, not a differ code change.
 - **Scope boundary — the differ is a CODE public-surface tool; non-code contract surfaces are OUT of scope BY DESIGN**
   and governed by their OWN SSOTs: (1) **manifest `schema_version`** (a DATA-schema contract, SSOT
   `/codex/02-data/availability-manifest-and-data-status.md`); (2) **GCS path / partition keys** (`pipeline_mode=` /
@@ -592,10 +611,16 @@ is DEAD for `ldr_main` repos. The cross-repo breaking gate is on the **LDR→mai
 > fingerprint match; the digest added a combination check. Both were removed as blockers because they thrashed under
 > fleet churn and could not stamp the structurally-uncovered repos (`e2e-testing`, `ibkr-gateway-infra`). The fleet-wide
 > "was the last SIT green" signal replaced both (finding 78, 2026-07-12). Historic detail:
-> `plans/active/issues/sit_rehome_safety_gate_gaps_2026_06_27.md`. **Note the residual coverage gap (Layer-2, still
-> open):** on the 2026-07-07/08 incident `full-workspace-sit` itself ran green due to a SIT test-coverage gap (no test
-> re-derives IS's expected-universe from the live UAC registry), so that exact break class still slips through even with
-> `sit-gate/fleet-green` enforced — tracked in
+> `plans/active/issues/sit_rehome_safety_gate_gaps_2026_06_27.md`. **The Layer-2 coverage gap is CLOSED (fixed
+> 2026-07-31):** on the 2026-07-07/08 incident `full-workspace-sit` itself ran green due to a SIT test-coverage gap (no
+> test re-derived IS's expected-universe from the live UAC registry) — closed by
+> `unified-api-contracts/tests/test_cefi_registry_expected_universe_invariant.py`, which loads instruments-service's
+> `scripts/expected_universe.py` by file path (it is a dev script, not part of the installable package) and (a) runs the
+> real `build_expected('cefi')` against the live registry, (b) asserts every non-DeFi `VENUE_DATA_TYPE_CAPABILITIES`
+> entry names a venue declared in `VENUES_BY_ASSET_GROUP`, (c) asserts every `CEFI_VENUE_FOLD` target venue produces at
+> least one expected tuple. Wired into `system-integration-tests/scripts/run_cross_repo_invariants.sh`; skips in
+> per-repo CI (instruments-service sibling absent), runs for real in full-workspace SIT. Full fix (Layer 1 differ +
+> Layer 2 SIT + the `test_venue_to_tardis_matches_inverted_venue_mapping` xfail resolution) tracked in
 > `plans/active/issues/breaking_change_differ_blind_to_registry_data_dicts_2026_07_09.md`.
 
 - **`ci_status` lifecycle (the state the promote bots read)**: a repo's CI state advances

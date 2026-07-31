@@ -87,8 +87,7 @@ def test_removed_underscore_name_from_all_is_not_breaking():
     removed public export → false 'breaking' → stuck on the LDR→main label-check + SIT gate.
     """
     old = extract_surface(
-        '__all__ = ["foo", "_CEFI_VENUES", "_TRADFI_VENUES"]\n'
-        "def foo(): ...\n_CEFI_VENUES = []\n_TRADFI_VENUES = []\n",
+        '__all__ = ["foo", "_CEFI_VENUES", "_TRADFI_VENUES"]\ndef foo(): ...\n_CEFI_VENUES = []\n_TRADFI_VENUES = []\n',
         "m",
     )
     new = extract_surface('__all__ = ["foo"]\ndef foo(): ...\n', "m")
@@ -274,6 +273,140 @@ def test_module_to_package_move_preserves_surface_is_not_breaking():
     )
     reasons = diff_surfaces(old, new)
     assert not reasons, reasons
+
+
+def test_untagged_registry_dict_member_removal_is_not_tracked():
+    """A plain module-level dict WITHOUT the ``# @contract-surface`` marker is NOT
+    diffed at the literal level — only opted-in constants get this treatment (the
+    marker-gating itself, not just the diff mechanics)."""
+    base = """
+CONFIG: dict[str, set[str]] = {
+    "OKX": {"SPOT_PAIR", "PERPETUAL"},
+}
+"""
+    new = """
+CONFIG: dict[str, set[str]] = {
+    "OKX": {"PERPETUAL"},
+}
+"""
+    reasons = diff_surfaces(extract_surface(base, "m"), extract_surface(new, "m"))
+    assert not reasons, reasons
+
+
+def test_contract_surface_removed_set_member_is_breaking_23fa3a99_regression():
+    """Regression fixture for `unified-api-contracts@23fa3a99` (2026-07-07): removing
+    "SPOT_PAIR" from the bare "OKX" key of `INSTRUMENT_TYPES_BY_VENUE` silently broke
+    instruments-service's `build_expected('cefi')` (75->71 tuples) with the OLD differ
+    reporting `is_breaking: false` (name stayed exported, annotation unchanged) — the
+    exact gap this `# @contract-surface` marker + registry diff closes. See
+    plans/active/issues/breaking_change_differ_blind_to_registry_data_dicts_2026_07_09.md.
+    """
+    base = """
+OKX_SPOT = "OKX-SPOT"
+OKX_FUTURES = "OKX-FUTURES"
+# @contract-surface
+INSTRUMENT_TYPES_BY_VENUE: dict[str, set[str]] = {
+    OKX_SPOT: {"SPOT_PAIR"},
+    OKX_FUTURES: {"PERPETUAL", "FUTURE", "OPTION"},
+    "OKX": {"SPOT_PAIR", "PERPETUAL", "FUTURE", "OPTION"},
+    "BYBIT": {"SPOT_PAIR", "PERPETUAL", "FUTURE"},
+}
+"""
+    new = """
+OKX_SPOT = "OKX-SPOT"
+OKX_FUTURES = "OKX-FUTURES"
+# @contract-surface
+INSTRUMENT_TYPES_BY_VENUE: dict[str, set[str]] = {
+    OKX_SPOT: {"SPOT_PAIR"},
+    OKX_FUTURES: {"PERPETUAL", "FUTURE", "OPTION"},
+    "OKX": {"PERPETUAL", "FUTURE", "OPTION"},
+    "BYBIT": {"PERPETUAL", "FUTURE"},
+}
+"""
+    reasons = diff_surfaces(extract_surface(base, "m"), extract_surface(new, "m"))
+    assert reasons
+    assert any("SPOT_PAIR" in r and "OKX" in r for r in reasons)
+    assert any("SPOT_PAIR" in r and "BYBIT" in r for r in reasons)
+
+
+def test_contract_surface_added_set_member_is_not_breaking():
+    base = """
+# @contract-surface
+INSTRUMENT_TYPES_BY_VENUE: dict[str, set[str]] = {
+    "OKX": {"PERPETUAL"},
+}
+"""
+    new = """
+# @contract-surface
+INSTRUMENT_TYPES_BY_VENUE: dict[str, set[str]] = {
+    "OKX": {"PERPETUAL", "FUTURE"},
+    "NEWVENUE": {"SPOT_PAIR"},
+}
+"""
+    reasons = diff_surfaces(extract_surface(base, "m"), extract_surface(new, "m"))
+    assert not reasons, reasons
+
+
+def test_contract_surface_removed_top_level_key_is_breaking():
+    """VENUES_BY_ASSET_GROUP shape (dict[str, list[str]]) — an asset_group entirely
+    disappearing, or a venue dropped from its list, is breaking."""
+    base = """
+# @contract-surface
+VENUES_BY_ASSET_GROUP: dict[str, list[str]] = {
+    "cefi": ["BINANCE-SPOT", "OKX"],
+    "tradfi": ["NASDAQ"],
+}
+"""
+    new = """
+# @contract-surface
+VENUES_BY_ASSET_GROUP: dict[str, list[str]] = {
+    "cefi": ["BINANCE-SPOT"],
+}
+"""
+    reasons = diff_surfaces(extract_surface(base, "m"), extract_surface(new, "m"))
+    assert reasons
+    assert any("tradfi" in r and "removed key" in r for r in reasons)
+    assert any("OKX" in r and "removed member" in r for r in reasons)
+
+
+def test_contract_surface_removed_capability_inner_key_is_breaking():
+    """VENUE_DATA_TYPE_CAPABILITIES shape (dict[str, dict[str, str]]) — a venue losing
+    a data_type capability entry is breaking; the start-date VALUE changing is not."""
+    base = """
+# @contract-surface
+VENUE_DATA_TYPE_CAPABILITIES: dict[str, dict[str, str]] = {
+    "DERIBIT": {"trades": "2019-03-30", "options_chain": "2019-03-30"},
+}
+"""
+    new = """
+# @contract-surface
+VENUE_DATA_TYPE_CAPABILITIES: dict[str, dict[str, str]] = {
+    "DERIBIT": {"trades": "2020-01-01"},
+}
+"""
+    reasons = diff_surfaces(extract_surface(base, "m"), extract_surface(new, "m"))
+    assert reasons
+    assert any("options_chain" in r for r in reasons)
+    # the start-date VALUE change (trades: 2019-03-30 -> 2020-01-01) is NOT itself
+    # flagged — only structural key removal is tracked for this shape.
+    assert not any("2019-03-30" in r or "2020-01-01" in r for r in reasons)
+
+
+def test_contract_surface_unresolvable_value_is_dropped_not_crashed():
+    """A per-key value the differ cannot statically resolve (a computed expression,
+    e.g. `VENUES_BY_ASSET_GROUP["defi"]`'s `list(dict.fromkeys(...))`) is DROPPED from
+    the tracked snapshot rather than aborting the whole constant or crashing — every
+    other, literal key in the same dict stays diffable."""
+    src = """
+_LIVE = ["AAVE_V3"]
+# @contract-surface
+VENUES_BY_ASSET_GROUP: dict[str, list[str]] = {
+    "cefi": ["BINANCE-SPOT"],
+    "defi": list(dict.fromkeys(v for v in _LIVE)),
+}
+"""
+    surf = extract_surface(src, "m")
+    assert surf.registry["VENUES_BY_ASSET_GROUP"] == {"cefi": ["BINANCE-SPOT"]}
 
 
 if __name__ == "__main__":
