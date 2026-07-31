@@ -6,7 +6,7 @@ summary:
   NA -> planning by /na-eligibility-audit defi on 2026-07-30. Verifies the re-stamp landed honestly (row-count parity,
   no duplicate row_keys, only the confirmed-lending rows flipped), confirms the paused consolidator cron was resumed,
   and checks archival eligibility.
-status: active
+status: complete
 nature: process
 asset_group: [defi]
 stage: [data]
@@ -46,6 +46,11 @@ source:
 ---
 
 # Finalize — MTDS lending instrument_type historical re-stamp
+
+> **🟢 ARCHIVED 2026-07-31.** All 4 todos done: independent live re-verification of the re-stamp (todo 1), live cron
+> state confirmation (todo 2), the distinct-values panel re-check (todo 3), and this archival (todo 4) — source plan
+> moved to `/plans/archive/2026_07/market_tick_data_service_lending_instrument_type_historical_restamp_2026_07_24.md`
+> alongside this doc.
 
 > **Gated twin.** `depends_on` + `gate_on_depends: true` hold every todo here until every todo in
 > `/plans/active/market_tick_data_service_lending_instrument_type_historical_restamp_2026_07_24.md` is done. Do not
@@ -90,16 +95,32 @@ source:
       in the first place: the `--apply` run measured `safe_idx` empty (0 rows to re-stamp), and `try_once()` returns
       `"nothing_to_do"` before any CAS write on an empty `safe_idx`, so there was no write-vs-consolidator-cron race to
       protect and no pause was taken. Nothing to resume; the live infra state matches the narrative exactly.
-- [ ] [DATA] P2. **Confirm the distinct-values panel no longer badges `liquidation` for this writer path** and
+- [x] [DATA] P2. ✅ **Confirm the distinct-values panel no longer badges `liquidation` for this writer path** and
       cross-link the result into `/plans/archive/2026_07/distinct_values_noncanonical_audit_2026_07_20.md`'s Progress
-      Log, per the source plan's own closing todo.
-- [ ] [PM] P2. **Check archival eligibility for the source plan.** If every todo is done and `locked_by:` is empty, run
-      the standard 6-step archival ritual (`/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`) and
-      archive this finalize doc alongside it. If `locked_by:` is set, STOP and escalate for `[unlock-plan]` — never
-      autonomous.
+      Log, per the source plan's own closing todo. — **2026-07-31**: called
+      `deployment_api.routes.data_status._distinct_values.get_distinct_values("defi")` directly (`GCP_PROJECT_ID` env
+      set, no mocks) against the live nightly honest-coverage rollup: `source_date: "2026-07-31"`,
+      `generated_at: "2026-07-31T23:19:43Z"`. `instrument_types` axis =
+      `['POOL', 'a_token', 'lending', 'lst',     'perpetual', 'pool', 'solana_amm_pool', 'solana_lending', 'solana_vault', 'spot_asset', 'staking',     'yield_bearing']`
+      — `liquidation` absent, `non_canonical_count.instrument_types == 0`. Sixth independent confirmation of the same
+      zero (source plan measured it five times 07-27→07-30; this is the 07-31 re-check). Cross-linked into the parent
+      archived plan's Progress Log (see that doc's 2026-07-31 entry).
+- [x] [PM] P2. ✅ **Check archival eligibility for the source plan.** Every todo in both the source plan (5/5) and this
+      finalize twin (4/4, as of this todo) is done; `locked_by:` is empty on both. Ran the 6-step archival ritual
+      (`/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`): no DEFERRED items to migrate (todo 3
+      above already captured the one open follow-up); archived-banner added to both docs; no new codex contract was
+      established by this closeout (the manifest re-stamp pattern + distinct-values panel are already documented in
+      `/codex/02-data/availability-manifest-and-data-status.md` and `/codex/02-data/defi-canonical-naming-ssot.md`);
+      referrers fixed (`plans/active/INDEX.md` updated to point at the archive locations; the parent archived plan's
+      Progress Log corrected — see its 2026-07-31 entry). Both docs moved to `plans/archive/2026_07/`.
 
 ## Progress Log
 
+- **2026-07-31 (slot-15)** — Picked up todos 3-4 (AO task `defi_satellite_ao_dispatch_batch6-015`, which duplicated this
+  finalize twin's own remaining scope). Re-confirmed the distinct-values panel live (sixth independent measurement,
+  `source_date=2026-07-31`) — `liquidation` still absent, `non_canonical_count.instrument_types == 0` — and cross-linked
+  into the parent archived plan's Progress Log. All 4 todos here + all 5 in the source plan are done, `locked_by:` empty
+  on both — ran the 6-step archival ritual and archived both docs to `plans/archive/2026_07/`.
 - **2026-07-30 (slot-3)** — Picked up todo 2 (AO task
   `market_tick_data_service_lending_instrument_type_historical_restamp_finalize-002`). Resolved the exact GCP Scheduler
   job name from terraform (not guessed) and queried it live: `state: ENABLED`, `lastAttemptTime` ≈1 min old, firing on

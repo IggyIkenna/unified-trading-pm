@@ -9,7 +9,7 @@ summary: >-
   to build + apply the paired historical re-stamp, mirroring the already-shipped cefi venue-as-chain and sports
   odds_horizon_bucket re-stamp pattern (pre-apply GCS snapshot, CAS-guarded --apply, operator-authorized paused-writer
   window).
-status: active
+status: complete
 nature: process
 asset_group: [defi]
 stage: [data]
@@ -46,6 +46,14 @@ last_updated: 2026-07-24
 ---
 
 # MTDS lending instrument_type — historical manifest re-stamp
+
+> **🟢 ARCHIVED 2026-07-31.** All 5 todos done: measured scope was 0 the entire time (five independent live
+> measurements, 2026-07-27 through 2026-07-30), `--apply` ran as a provable no-op, and the distinct-values panel
+> confirms `liquidation` is absent from the defi `instrument_types` axis (re-confirmed live a sixth time, 2026-07-31).
+> Finalize twin
+> `/plans/archive/2026_07/market_tick_data_service_lending_instrument_type_historical_restamp_finalize_2026_07_30.md`
+> independently re-verified the result against live prod before this archival. Parent audit:
+> `/plans/archive/2026_07/distinct_values_noncanonical_audit_2026_07_20.md`.
 
 ## Background (moved verbatim from the parent audit plan)
 

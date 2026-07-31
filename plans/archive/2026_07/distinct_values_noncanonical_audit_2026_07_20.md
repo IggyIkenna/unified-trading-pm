@@ -384,6 +384,21 @@ entirely, `non_canonical_count.instrument_types == 0`. See
 `/plans/archive/2026_07/market_tick_data_service_lending_instrument_type_historical_restamp_2026_07_24.md` for full
 detail.
 
+**Correction (2026-07-31):** the line above was written prematurely — the source plan was NOT actually archived on
+2026-07-30. Instead, `/na-eligibility-audit defi` (same day) reclassified it `NA -> planning` and authored a gated
+`market_tick_data_service_lending_instrument_type_historical_restamp_finalize_2026_07_30.md` twin to independently
+re-verify the re-stamp against live prod before archival. That finalize twin's own re-verification (its todos 1-2,
+2026-07-30) independently confirmed rows-in==rows-out / 0 duplicate row_keys / 0 buggy-literal rows at the live
+manifest. Cross-linking today's re-verification of the same fact one more time, per this plan's own closing todo: a
+fresh call to `deployment_api.routes.data_status._distinct_values.get_distinct_values("defi")` (2026-07-31,
+`source_date=2026-07-31`, `generated_at=2026-07-31T23:19:43Z`) confirms `liquidation` is STILL absent from the defi
+`instrument_types` axis
+(`['POOL', 'a_token', 'lending', 'lst', 'perpetual', 'pool', 'solana_amm_pool', 'solana_lending', 'solana_vault', 'spot_asset', 'staking', 'yield_bearing']`)
+and `non_canonical_count.instrument_types == 0` — sixth independent confirmation, one day later, of the same zero. Both
+the source plan and its finalize twin are archived as of this entry (see
+`/plans/archive/2026_07/market_tick_data_service_lending_instrument_type_historical_restamp_2026_07_24.md` and
+`/plans/archive/2026_07/market_tick_data_service_lending_instrument_type_historical_restamp_finalize_2026_07_30.md`).
+
 ## Refined worklist (post-verification, 2026-07-20)
 
 ### Executable safe-code (no manifest mutation, no denominator shift)
