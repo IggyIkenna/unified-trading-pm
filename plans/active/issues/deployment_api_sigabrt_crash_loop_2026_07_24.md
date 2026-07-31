@@ -755,11 +755,35 @@ cancellation-timeout fix and already shipped). Suggested next steps for whoever 
       rollup precedent is actually gen2 live); a zero-traffic gen2 canary (same image) still produced zero stdout. Test
       revisions cleaned up (live traffic stayed on gen1 throughout). (repo: deployment-api)
 
-- [ ] [BACKEND] P1. **NEW, opened 2026-07-31 (slot-6) — candidate (a) REFUTED too: a bare `python3 -c "print(...)"`
-      override (bypassing gunicorn/app/`tini`) on the SAME image still produced ZERO stdout/stderr (clean exit(0),
-      prints ran, nothing reached Cloud Logging).** Rules out `preload_app`/`logging.basicConfig`/`errorlog` — the break
-      is below Python/gunicorn: the base image or an unfound Cloud Run log-routing issue. Next: diff this image's layers
-      vs a working sibling's; check GCP support for a known regression. (repo: deployment-api)
+- [x] ✅ [BACKEND] P1. **DONE 2026-07-31 (slot 8) — `deployment-api@e8ce86a`. Both named candidates REFUTED by 4 live
+      canary experiments; found + fixed the REAL root cause.** (Slot-6 independently ran the same bare-interpreter
+      canary concurrently and reached the identical refutation — corroborating, not conflicting; this entry carries the
+      investigation the rest of the way to the actual root cause + fix.) Deployed 4 zero-traffic canaries on
+      `uts-shared-deployment-api` overriding `--command`/`--args` to bypass tini+gunicorn+app entirely: (1) bare
+      `--command=python3` print loop → zero stdout, refuting BOTH named candidates (no `preload_app`, no app import at
+      all); (2) same + `--no-cpu-throttling` → still zero, ruling that out too; (3) a structured
+      `{"severity":"ERROR",...}` JSON line on stdout → **appeared**; (4) same at `severity=INFO` → **appeared**. Root
+      cause: Cloud Run stamps `severity=DEFAULT` (0) on any non-JSON-structured stdout/stderr line, and this project's
+      `_Default` Cloud Logging sink excludes `severity <= "DEBUG"` (100) for cost control — silently dropping every
+      plain-text line this service ever wrote (gunicorn hooks, faulthandler dumps, this app's own
+      `logging.basicConfig()`), regardless of what the app logged. **Fixed**: `main.py` now calls
+      `unified_trading_library.setup_cloud_logging()` (its `CloudRunJSONFormatter` already emits GCP-recognized JSON
+      with an explicit `severity`, surviving the exclusion at INFO+). 3 new tests (`test_main_logging_bootstrap.py`) pin
+      the regression; `quality-gates.sh` PASSED; verified on origin. Cleaned up 6 of 7 stray canary revisions (incl. the
+      pre-existing `00375-yic`); the 7th (`00382-cat`) is the Cloud-Run "latest" pointer and can only be deleted once a
+      real deploy supersedes it — tracked in the REVIEW todo below. (repo: deployment-api)
+
+- [ ] [REVIEW] P1. **NEW, opened 2026-07-31 (slot 8) — once `deployment-api@e8ce86a` (todo above) reaches a live Cloud
+      Run deploy of `uts-shared-deployment-api`, confirm real stdout/stderr resume AND read the next SIGABRT's dump.**
+      Verify the deploy via direct image extraction (not ancestry, per this doc's 2026-07-25 methodology correction),
+      then `gcloud logging read` for `logName:"stdout" OR logName:"stderr"` on that revision under real traffic (not a
+      canary) — structured JSON app-level lines should now appear. If SIGABRTs recur, check whether the faulthandler
+      dump (a Python traceback, not JSON) ALSO survives — it may not (same `severity<=DEBUG` exclusion could still apply
+      to a raw traceback unless Cloud Run's stack-trace auto-detection promotes it, per this session's finding that
+      occasional pre-existing traceback fragments DID appear historically); if it still doesn't, that's a DIFFERENT,
+      narrower follow-up (get faulthandler's dump to emit via `setup_cloud_logging`'s JSON path instead of raw stderr),
+      not a re-open of this fix. Also delete the stray `00382-cat` canary revision once superseded. (repo:
+      deployment-api)
 
 - [ ] [BACKEND] P3. **NEW, opened 2026-07-31 (slot 13, backend_engineer) — dead-code cleanup: `workers/auto_sync.py`'s
       entire background-sync implementation is unreachable in production.** Found while tracing the call graph for the
@@ -892,41 +916,10 @@ cancellation-timeout fix and already shipped). Suggested next steps for whoever 
 
 ## Progress Log
 
-- **2026-07-31 (slot 7, backend_engineer)** — Dispatched `deployment_api_sigabrt_crash_loop-009` (the sandbox-
-  external-termination-for-multi-instance todo). Executed all 3 named steps with live Cloud Monitoring/Logging data;
-  full evidence is inline on that checkbox above, not duplicated here. Headline: found the needed multi-instance
-  occurrence (`00338-4qv@11:17:37Z`, pid=29, `instance_count=2`), and applying Finding A's method to it (plus 2 more
-  cross-checks) surfaced a pid-based split across 4 occurrences — low pids (28/29) correlate with genuine whole-instance
-  replacement (incl. a real `"Starting new instance"`/`AUTOSCALING`-tagged line + a `"Truncated response body"` line on
-  the single-instance pid=29 case), high pids (280/900) show zero disruption — which CONTRADICTS Finding A's blanket
-  "refuted" conclusion (drawn from one pid=900 sample). Flipped the checkbox; filed a `[BACKEND] P1` follow-up to
-  confirm the pid↔gunicorn-role mapping and reconcile the doc's framing. No code shipped (pure investigation).
-
-- **2026-07-31 (slot 13, backend_engineer)** — Dispatched `deployment_api_sigabrt_crash_loop-008` (the real-OOM-kill /
-  SIGKILL todo). `gcloud logging read` over 30 days found exactly 8 `"Container terminated on signal 9"` events, ALL
-  within the last 3 days, each within 0.06%-4% of the 16384 MiB limit and each within seconds of an `AUTOSCALING`
-  `"Starting new instance"` line — a genuine, recent, cold-start-correlated OOM pattern. Traced the mechanism (not just
-  logs): `catalogue_lifecycle.py`'s new-listings/upcoming-expiries builders each fan out 5 concurrent per-AG
-  `ThreadPoolExecutor` parquet reads on every UNCACHED call with no cap on concurrent uncached requests — the exact
-  multi-AG "first-mount burst" this repo's own `cloudbuild.yaml` comment already documents as the 2026-07-17 8Gi→16Gi
-  incident's cause, which explicitly recommends a concurrency guard "rather than bumping again" instead of the fix ever
-  being built. Shipped `deployment-api@ec1f635`: a `threading.Semaphore` guard (mirrors the sibling drilldown endpoint's
-  `_drilldown_build_semaphore`) that sheds load as a 503 + `Retry-After` once 2 uncached builds are already in flight. 4
-  new tests + all 25 existing `catalogue_lifecycle` tests green; `quality-gates.sh` PASSED (111s); verified on origin
-  via `merge-base --is-ancestor`. Flipped the checkbox; filed a `[REVIEW] P2` monitoring todo (does the SIGKILL rate
-  actually drop on the fix-carrying revision) plus two named next-candidate mechanisms if it doesn't.
-
-- **2026-07-31 (slot 11, backend_engineer)** — Dispatched `deployment_api_sigabrt_crash_loop-014` (confirm/reconcile the
-  pid↔gunicorn-role mapping). Shipped the only currently-determinable part (step 1): `deployment-api@785405d` adds an
-  `on_starting` hook logging the arbiter's own pid once at master startup, and extends `post_fork` to log each worker's
-  pid+age on every fork — together a durable stdout record so the NEXT SIGABRT's pid can be matched to MASTER vs WORKER
-  without guessing. 2 new unit tests + all existing `test_gunicorn_conf.py` tests green; `quality-gates.sh` PASSED
-  (112s); verified on origin. Steps (2)/(3) need a post-deploy SIGABRT to read against these new lines — filed a
-  `[REVIEW] P1` follow-up rather than guessing ahead of the evidence. Flipped the checkbox.
-
-> **2026-07-31 line-cap remediation**: every entry from the original 2026-07-24 finding through the `-007` dispatch
-> extracted verbatim to `/plans/archive/2026_07/deployment_api_sigabrt_crash_loop_progress_log_history_2026_07_31.md`
-> (doc was at 1060/1000 lines). New entries append below this note going forward.
+> **2026-07-31 line-cap remediation (2nd pass)**: every entry from the original 2026-07-24 finding through the `-014`
+> dispatch (`-009`/`-008`/`-014`, in addition to the earlier `-007`-and-before batch) extracted verbatim to
+> `/plans/archive/2026_07/deployment_api_sigabrt_crash_loop_progress_log_history_2026_07_31.md` (doc was at 1024/1000
+> lines after the blackout-fix flip). New entries append below this note going forward.
 
 - **2026-07-31T13:22Z (slot 6, review)** — Dispatched `deployment_api_sigabrt_crash_loop-003`, this doc's original
   2026-07-24 `[REVIEW]` ask (read the faulthandler dump, report the stuck call site, confirm/refute
@@ -998,3 +991,8 @@ cancellation-timeout fix and already shipped). Suggested next steps for whoever 
   `--account=unified-trading-sa@central-element-323112.iam.gserviceaccount.com` (already-credentialed, no new grant
   needed) has the role and is what this check used. Gate still not met — left the checkbox open, no code shipped (pure
   verification).
+
+- **2026-07-31 (slot 8, backend_engineer)** — Dispatched `deployment_api_sigabrt_crash_loop-023` (blackout
+  bootstrap/fd-wiring todo). 4 canary `gcloud run deploy --command/--args` overrides refuted both named candidates,
+  found the real cause (`_Default` sink excludes `severity<=DEBUG`; Cloud Run stamps DEFAULT on plain-text stdout).
+  Shipped `deployment-api@e8ce86a`; full detail on the flipped checkbox above. Filed a `[REVIEW]` follow-up.

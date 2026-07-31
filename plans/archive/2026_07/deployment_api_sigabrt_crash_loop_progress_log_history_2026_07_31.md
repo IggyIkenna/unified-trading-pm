@@ -502,3 +502,35 @@ drift_direction: none
     this doc with the confirmed stuck call site. If it names `_compute_inventory`'s cold path, that directly validates
     (and raises confidence on) the sibling issue doc's Gap-2 todo as the fix. If it names something else entirely, file
     a fresh, evidence-backed BACKEND todo here with the exact stuck frame.
+
+- **2026-07-31 (slot 7, backend_engineer)** — Dispatched `deployment_api_sigabrt_crash_loop-009` (the sandbox-
+  external-termination-for-multi-instance todo). Executed all 3 named steps with live Cloud Monitoring/Logging data;
+  full evidence is inline on that checkbox above, not duplicated here. Headline: found the needed multi-instance
+  occurrence (`00338-4qv@11:17:37Z`, pid=29, `instance_count=2`), and applying Finding A's method to it (plus 2 more
+  cross-checks) surfaced a pid-based split across 4 occurrences — low pids (28/29) correlate with genuine whole-instance
+  replacement (incl. a real `"Starting new instance"`/`AUTOSCALING`-tagged line + a `"Truncated response body"` line on
+  the single-instance pid=29 case), high pids (280/900) show zero disruption — which CONTRADICTS Finding A's blanket
+  "refuted" conclusion (drawn from one pid=900 sample). Flipped the checkbox; filed a `[BACKEND] P1` follow-up to
+  confirm the pid↔gunicorn-role mapping and reconcile the doc's framing. No code shipped (pure investigation).
+
+- **2026-07-31 (slot 13, backend_engineer)** — Dispatched `deployment_api_sigabrt_crash_loop-008` (the real-OOM-kill /
+  SIGKILL todo). `gcloud logging read` over 30 days found exactly 8 `"Container terminated on signal 9"` events, ALL
+  within the last 3 days, each within 0.06%-4% of the 16384 MiB limit and each within seconds of an `AUTOSCALING`
+  `"Starting new instance"` line — a genuine, recent, cold-start-correlated OOM pattern. Traced the mechanism (not just
+  logs): `catalogue_lifecycle.py`'s new-listings/upcoming-expiries builders each fan out 5 concurrent per-AG
+  `ThreadPoolExecutor` parquet reads on every UNCACHED call with no cap on concurrent uncached requests — the exact
+  multi-AG "first-mount burst" this repo's own `cloudbuild.yaml` comment already documents as the 2026-07-17 8Gi→16Gi
+  incident's cause, which explicitly recommends a concurrency guard "rather than bumping again" instead of the fix ever
+  being built. Shipped `deployment-api@ec1f635`: a `threading.Semaphore` guard (mirrors the sibling drilldown endpoint's
+  `_drilldown_build_semaphore`) that sheds load as a 503 + `Retry-After` once 2 uncached builds are already in flight. 4
+  new tests + all 25 existing `catalogue_lifecycle` tests green; `quality-gates.sh` PASSED (111s); verified on origin
+  via `merge-base --is-ancestor`. Flipped the checkbox; filed a `[REVIEW] P2` monitoring todo (does the SIGKILL rate
+  actually drop on the fix-carrying revision) plus two named next-candidate mechanisms if it doesn't.
+
+- **2026-07-31 (slot 11, backend_engineer)** — Dispatched `deployment_api_sigabrt_crash_loop-014` (confirm/reconcile the
+  pid↔gunicorn-role mapping). Shipped the only currently-determinable part (step 1): `deployment-api@785405d` adds an
+  `on_starting` hook logging the arbiter's own pid once at master startup, and extends `post_fork` to log each worker's
+  pid+age on every fork — together a durable stdout record so the NEXT SIGABRT's pid can be matched to MASTER vs WORKER
+  without guessing. 2 new unit tests + all existing `test_gunicorn_conf.py` tests green; `quality-gates.sh` PASSED
+  (112s); verified on origin. Steps (2)/(3) need a post-deploy SIGABRT to read against these new lines — filed a
+  `[REVIEW] P1` follow-up rather than guessing ahead of the evidence. Flipped the checkbox.
