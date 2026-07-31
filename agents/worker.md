@@ -378,6 +378,21 @@ repo.
 
 b) Capture the short SHA (post-quickmerge HEAD): `SHA=$(git rev-parse --short HEAD)`
 
+b1) **Verify — never trust quickmerge's own "✅ Landed" message alone** (2026-07-31,
+`quickmerge_agent_regate_resets_branch_loses_local_commit_2026_07_31.md`). A sentinel-invalid retry/re-gate can, on a
+high-churn shared branch, land the branch on a ref that no longer contains your commit while still printing "Landed" —
+reflog-recoverable, but silently lost if you don't check:
+
+```bash
+git fetch origin live-defi-rollout --quiet && git merge-base --is-ancestor "$SHA" origin/live-defi-rollout \
+  && echo "✅ verified on origin" || echo "❌ NOT on origin — see recovery below"
+```
+
+On failure: `git reflog` to find the dangling commit, `git merge --ff-only <sha>` (or rebase onto it if origin has since
+moved further), re-run Pass-1/Pass-2, re-verify, THEN call `/done` — never `/done` on an unverified SHA. `quickmerge.sh`
+STAGE 5 now also self-checks this exact condition (preserves to a `refs/wip-preserve/quickmerge-stage5-regate-<sha12>`
+ref + hard-fails instead of silently pushing on detection) — this manual check is the belt to that suspenders.
+
 b2) IF `task.plan_ref` points at a `plans/active/<X>.md` AND that path does NOT exist inside your service-repo worktree
 (cross-repo case — it lives in `.tabs/<your-slot>/unified-trading-pm/`), do the plan flip NOW before `/done`. Same agent
 turn. Two pushes total:

@@ -97,6 +97,24 @@ git push origin HEAD:live-defi-rollout
 # 3) Call /done with SHA_CODE
 ```
 
+**Verify — never trust quickmerge's own "✅ Landed" message alone (2026-07-31,
+`quickmerge_agent_regate_resets_branch_loses_local_commit_2026_07_31.md`).** A sentinel-invalid retry/re-gate can, on a
+high-churn shared branch, land the branch on a ref that no longer contains your commit while still printing "Landed" —
+reflog-recoverable, but silently lost if you don't check. Before calling `/done`, confirm your SHA is actually on
+origin:
+
+```bash
+git fetch origin live-defi-rollout --quiet && git merge-base --is-ancestor "$SHA_CODE" origin/live-defi-rollout \
+  && echo "✅ verified on origin" || echo "❌ NOT on origin — see recovery below"
+```
+
+On failure: `git reflog` to find your dangling commit (it survives there even though the branch tip no longer has it),
+`git merge --ff-only <sha>` (or rebase your branch back onto it if origin has since moved further), re-run the
+Pass-1/Pass-2 ship flow, and re-verify before retrying `/done`. `quickmerge.sh` itself now also self-checks this exact
+condition in STAGE 5 (a `refs/wip-preserve/quickmerge-stage5-regate-<sha12>` ref + a hard failure instead of a silent
+push if it detects the loss) — this manual check is the belt to that suspenders, since the STAGE 5 guard only covers the
+specific mechanism it was built to catch, not every way a shared branch could theoretically move.
+
 **Ordering note**: commit BEFORE running `quality-gates.sh` (as the snippet above already shows) — the QG sentinel is
 keyed to HEAD at the moment it's written, so QG-before-commit moves HEAD past the sentinel and forces an avoidable
 re-run on the very next quickmerge call. See `worker.md`'s Pass-1/Pass-2 section for the full rationale
