@@ -55,23 +55,52 @@ e.g. `DEFI_CHAIN_RPC_OUTAGE_SOLANA` in `registry/scenarios/defi.py:44-70` — a 
 
 ## Todos
 
-- [ ] [CODE] P2. **Implement `execution_slippage_spike` as a `ScenarioOverlay`.** Read
-      `plans/active/scratch_scenarios_day1/13_execution_slippage_spike.md` in full for the exact mutation spec and
-      expected outcomes it designed. Add it to `unified-api-contracts/unified_api_contracts/registry/scenarios/` (likely
-      `cross_asset.py` or `defi.py` depending on scope — check the source doc), following the
-      `DEFI_CHAIN_RPC_OUTAGE_SOLANA` pattern (category, layer, `applies_to` filter, `mutation_spec`, `expected_outcomes`
-      with real breaker/kill-switch/alert-code assertions, not placeholders).
-- [ ] [CODE] P2. **Implement `lst_unstake_queue_blowup` as a `ScenarioOverlay`.** Read
-      `plans/active/scratch_scenarios_day1/16_lst_unstake_queue_blowup.md` in full for the exact mutation spec and
-      expected outcomes it designed. Add it to the UAC registry (likely `defi.py`, LST/restaking-adjacent — compare
-      against the existing `defi_lst_depeg_steth_5pct` entry for a similar-shape neighbor).
-- [ ] [VALIDATE] P3. **Wire both into the UTL applier + confirm consumption.** Verify `unified-trading-library`'s
-      scenario applier actually picks up the 2 new `ScenarioOverlay` entries (mirrors how the other 16 scenarios are
-      exercised — via UAC registry consumption directly, a smoke test, or a game-day runbook). Once confirmed consumed,
-      update `plans/active/scratch_scenarios_day1/13_*.md` and `16_*.md` to note the registry entry they now back (they
-      stay as design provenance, per the pattern set by scenarios 01-10).
+- [x] ✅ [CODE] P2. **DONE 2026-07-31 — `unified-api-contracts@15ab5a48`.** Implemented `execution_slippage_spike` as a
+      `ScenarioOverlay` in `unified_api_contracts/registry/scenarios/cross_asset.py` (asset_groups span both cefi+defi
+      per the source doc, matching `CROSS_ASSET_FLASH_CRASH`'s exact home-file precedent). `BookSpoof` mutation
+      (existing type — covers both the DEX pool-drain and CeFi book-thinning variants' shared depth-withdrawal
+      mechanism). Closest-fit substitutions documented in the registry file's own module docstring: `VENUE_OUTAGE`
+      category + `SPREAD_BLOWOUT_BPS` breaker (the source fragment's `EXECUTION_QUALITY`/`LIQUIDITY_DRAIN`/
+      `BOOK_THINNING` categories and `EXECUTION_SLIPPAGE_EXCEEDED`/`CEFI_BOOK_THIN` alert codes don't exist in UAC yet).
+      `Drift`/`Hyperliquid-spot` DEX protocols from the source fragment omitted (not registered adapter keys anywhere in
+      the workspace — confirmed via MTDS's `VENUE_REGISTRY`/`PLANNED_VENUES`) rather than invented; only Uniswap
+      V3/Curve/Balancer declared. 3 expected_outcomes (carry_staked_basis/ARBITRAGE_PRICE_DISPERSION/
+      LEVERAGED_FUNDING_ARB) per the source doc's targeted archetypes. Full `quality-gates.sh` green (281s, 2 dedicated
+      shape tests + all pre-existing registry-invariant tests updated for the new count).
+- [x] ✅ [CODE] P2. **DONE 2026-07-31 — `unified-api-contracts@15ab5a48`.** Implemented `lst_unstake_queue_blowup` as
+      `DEFI_LST_UNSTAKE_QUEUE_BLOWUP` (`scenario_id="defi_lst_unstake_queue_blowup"`, `defi_`-prefixed per this registry
+      file's own naming convention) in `unified_api_contracts/registry/scenarios/defi.py`, next to
+      `DEFI_LST_DEPEG_STETH_5PCT` as scoped. `LatencyInject` mutation (existing type — represents the added redemption
+      delay; same type `defi_mempool_congestion_inclusion_delay` already uses for an analogous "added delay to a
+      settlement pipeline" mechanism) since the source fragment's own PRIMARY mechanism (a per-LST
+      `unstake_days_remaining` feature) needs a `LST_WITHDRAWAL_THROUGHPUT_BASELINES` registry the fragment itself marks
+      `DEFERRED-TO-PHASE-2-IMPL`. `LENDING_POOL_UNAVAILABLE_SECONDS` substitutes for the undefined queue-lockup breaker
+      (same "prevented from acting on this position" shape as its existing Aave/Morpho use). Only the 12 LST/LRT tokens
+      confirmed in UAC's real `LST_TOKEN_TO_PROTOCOL_ASSET` registry declared — the source fragment's frxETH/sfrxETH
+      (Frax)/Sanctum/LBTC (Lombard) aren't onboarded there, so omitted rather than invented. The fragment's
+      `secondary_market_depeg` sub-variant is not separately modeled (composes with, and is mechanically covered by,
+      `execution_slippage_spike`'s pool-drain mechanism per the fragment's own "Composes with" section). Full
+      `quality-gates.sh` green (same run as above, 1 dedicated shape test added).
+- [x] ✅ [VALIDATE] P3. **DONE 2026-07-31.** Verified `unified-trading-library`'s `ScenarioOverlayApplier` picks up both
+      new entries with ZERO applier code changes needed — both scenarios reuse EXISTING mutation types (`BookSpoof`,
+      `LatencyInject`) whose `apply()` dispatch (`unified_trading_library/scenario/applier.py`) is already generic on
+      `mutation_type`. Confirmed via the pre-existing parametrized smoke test
+      `tests/unit/scenario/test_applier.py::test_every_registry_scenario_applies_without_error` — ran green against all
+      13 registry scenarios (up from 11), including both new ones, with no test or applier-code edits required. Full
+      `unified-trading-library` scenario suite (`tests/unit/scenario/`) green, 64/64. Updated the source design
+      fragments (`13_execution_slippage_spike.md`, `16_lst_unstake_queue_blowup.md`) with a `🟢 SHIPPED` banner noting
+      the registry entry + commit SHA each now backs, per this todo's own instruction (no such banner pattern actually
+      existed on scenarios 01-10 despite this todo's claim — confirmed via grep before writing the note, so a new
+      minimal banner convention was used instead of a nonexistent one).
 
 ## Progress Log
+
+- **2026-07-31 (slot 7, backend_engineer)**: All 3 todos DONE — `unified-api-contracts@15ab5a48` (both
+  ScenarioOverlays + registry tests, full `quality-gates.sh` green) + verified zero-code-change consumption via
+  `unified-trading-library`'s existing applier smoke test. Plan is fully complete + unlocked (`locked_by:` empty) —
+  archiving in a separate follow-up commit per the checkbox-flip-then-git-mv discipline
+  (`quickmerge_agent_regate_resets_branch_loses_local_commit_2026_07_31.md`'s sibling incident on combining flips with
+  archival in one commit).
 
 - **na-eligibility-audit 2026-07-30**: RECLASSIFY -> assigned_vm: planning (conflict-check CLEAR against 231 active
   planning docs; no open todo elsewhere duplicates this claim) - implement 2 already-DESIGNED scenarios into the UAC
