@@ -716,3 +716,8 @@ accordingly.
   (needs to reach the terminal summary to fully verify), but this is the strongest direct evidence so far that the
   periodic-pool-release fix works. Monitoring-only, not touching this VM (it's the dedicated verification todo's run,
   not mine).
+- **2026-07-31T03:23Z (slot-15)**: **relaunch-remaining-18 todo appears dispatched** — 4 new VMs appeared
+  (`canonical-migration-cefi-content-{13,15,16,17}-relaunch20260731-032349`), all `RUNNING`, using the shared `-032349`
+  launch-batch suffix (someone else's dispatch, not mine). These are 4 of the 18 shards this doc's corpus-wide re-verify
+  (22:06Z entry) found still incomplete. Fleet now at 6 total (the 4 new + the ongoing shard-14 verify run).
+  Monitoring-only — not launching the remaining 14, not touching these VMs.
