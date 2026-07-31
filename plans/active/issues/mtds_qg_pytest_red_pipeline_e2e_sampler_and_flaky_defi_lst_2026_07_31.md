@@ -74,10 +74,11 @@ scope for a tradfi manifest-shard todo).
 
 ## Todos
 
-- [ ] [SCRIPT] P2. Root-cause + fix the full-suite test-order dependency behind
+- [x] ✅ [SCRIPT] P2. Root-cause + fix the full-suite test-order dependency behind
       `test_rebuild_defi_manifest_chunking.py::test_run_chunked_forces_reemit_absence_false_per_chunk` and
       `test_lst_rates_handler.py`'s 2 failing tests only failing inside the full suite (pass in isolation) — most likely
-      a shared module-level/global state leak from an earlier test. Repo: market-tick-data-service.
+      a shared module-level/global state leak from an earlier test. Repo: market-tick-data-service. —
+      market-tick-data-service@3309780b
 - [ ] [DATA] P2. Fix the CeFi `pipeline_e2e_check.py::_sample_raw_symbol_from_prod_listing` sampler so it
       deterministically prefers a `captured` instrument over `empty_confirmed` and reports the correct
       `prod_manifest`/`prod_parquet_listing` sample-source label, per `test_pipeline_e2e_sampler_prefers_captured.py`'s
@@ -125,3 +126,34 @@ scope for a tradfi manifest-shard todo).
   tradfi manifest-shard regression tests this doc's parent todo needed) immediately after the clean confirmation —
   verified on origin. `status` stays `open` for the 2 real (if intermittent) flaky-test todos; this entry exists so a
   future reader doesn't re-chase a false "always fails" signal caused by an explicit env-var override, not the repo.
+
+- **2026-07-31 (slot 7, backend_engineer) — ROOT-CAUSED + FIXED todo 1.** Reproduced
+  `test_run_chunked_forces_reemit_absence_false_per_chunk` deterministically (not merely in one lucky combo) by running
+  it alongside the other 4 originally-failing tests: `ManifestConsolidatorStaleError` on bucket `test-bucket`,
+  `consolidated_age_sec: -1.0`. Traced the mechanism: this test passes `reemit_absence=True` to `_run_chunked` but only
+  mocks `scan_and_rebuild` — NOT `reemit_defi_honest_absence_rows` (unlike its two sibling tests, which correctly mock
+  both). So `_run_chunked` calls the REAL `reemit_defi_honest_absence_rows` → real (unmocked)
+  `get_storage_client()`/`read_availability_index()` against `test-bucket`. Under the test env's `CLOUD_PROVIDER=local`,
+  that resolves to UTL's `LocalStorageProvider`, whose default root is the single shared, never-torn-down
+  `{tempfile.gettempdir()}/local-storage` (confirmed on-disk: `/tmp/local-storage/test-bucket/_index/per_vm/*.parquet` —
+  leftover real per-VM shard files from unrelated earlier test runs on this host). `_per_vm_shards_exist()` sees those
+  leftovers, `read_availability_index` correctly (by design) loud-fails with `ManifestConsolidatorStaleError` since no
+  consolidated blob sits beside them. This is the EXACT SAME bug class as the already-archived
+  `local_storage_provider_shared_tempdir_test_state_leak_2026_07_20.md` (resolved in `unified-trading-library@8f0d6e8f`
+  via an autouse `tests/conftest.py` fixture that redirects `LocalStorageProvider`'s default root to per-test
+  `tmp_path`) — that fix's own "Scope note" explicitly flagged that it only covers UTL's OWN test suite (fixtures are
+  per-repo) and named this exact recurrence as the anticipated next case. MTDS never had the mirrored fixture. **Fix**:
+  added `_isolate_local_storage_provider_default_root` (autouse, mirrors UTL's fixture verbatim) to
+  `market-tick-data-service/tests/conftest.py`, monkeypatching
+  `unified_trading_library.cloud_interface.providers.local._default_local_storage_root` to a per-test `tmp_path`.
+  Verified: the exact 5-test repro combo that failed before now passes (`5 passed`); re-ran the 2 relevant test files +
+  their siblings (28 tests) green; full `quality-gates.sh` Pass-1 green, sentinel written matching HEAD. Shipped
+  `market-tick-data-service@3309780b` via quickmerge, verified on origin. **Did not investigate the 2
+  `test_lst_rates_handler.py` tests as a SEPARATE mechanism** — they mock `get_storage_client` at the handler level so
+  are not directly exposed to this same leak path; per this doc's own 2026-07-31 self-correction entry above, no slot
+  has reproduced a genuine standing failure in those 2 specific tests under a clean shell/environment (the earlier
+  "consistently fails" report was traced to a contaminated env-var override in slot 3's own shell, unrelated to this
+  fix). If they resurface as flaky under a clean env in a future full-suite run, that would point at a DIFFERENT
+  `LocalStorageProvider`-adjacent leak (e.g. via `DefiManifestRecorder`/`ManifestWriter` internals) that this same
+  fixture should now also cover going forward, since it isolates the shared root for every test in this repo's suite,
+  not just the one that surfaced it.
