@@ -1020,3 +1020,33 @@ anyone, any time — none are blocking.
   the underlying raw data improves. Flipped this todo's own checkbox (the literal re-run ACTION is complete and was
   executed correctly) but the underlying `2020-03-26` MES gap remains open, now tracked under the new P1 finding rather
   than the original (disproven) premature-kill theory. No code shipped — verification + new finding only.
+
+- **2026-07-31 (slot 9, `tradfi_satellite_ao_dispatch_batch5-001` — "re-run ES/MES a THIRD time now that the
+  listing-retry mitigation is live", IN PROGRESS)**: Picked up the deferred "re-run a THIRD time" row from this doc's
+  own Deferred-work table (last entry, "Not done"). This session resumed a task already in progress
+  (`already_in_progress: true` on boot) — found a live fleet mid-flight from an earlier turn of this same task, spanning
+  several hours of prior attempts (`gcloud compute operations list` shows
+  `mdps-backfill-tradfi-y2020es3-20260730-210724` (preempted 21:19 UTC), `...-221458` (deleted), and the fleet inspected
+  below), confirming this exact third-re-run action has been underway since ~2026-07-30 21:07 UTC across multiple
+  session restarts. **Found + fixed a real, ACTIVE billing-waste bug on pickup**: 7 VMs
+  (`mdps-backfill-tradfi-y{2020..2026}es-20260731-011358[-r2]`) were RUNNING but missing `VM_INSTRUMENT_IDS` metadata
+  entirely — confirmed via direct `gcloud compute instances describe` on all 7 — meaning each was processing the ENTIRE
+  TradFi instrument universe (equities/options/everything) for its year, not just ES/MES. This is an EXACT repeat of the
+  2026-07-26 scope-mismatch bug this same doc already diagnosed once (slot 4's original mis-scoped 7-shard launch, fixed
+  by slot 2 same day) — a prior turn of THIS session had already caught it for 2020/2021 (launched correctly-scoped
+  `es3` replacements with `VM_INSTRUMENT_IDS=CME:FUTURE:ES;CME:FUTURE:MES` at `20260731-014643`) but the mis-scoped
+  originals for all 7 years were still live, burning compute on out-of-scope data, and no correction had been applied
+  for 2022-2026 at the time I checked. Deleted all 7 mis-scoped VMs (`y2020es`, `y2021es-r2`, `y2022es-r2`, `y2023es`,
+  `y2024es`, `y2025es`, `y2026es`, all `-20260731-011358*`) after confirming via run.log tail that each was genuinely
+  live (not a preempted/hung ghost) before deleting, per the VM-delete guardrail. Verified a correctly-scoped `es3`
+  replacement (`VM_INSTRUMENT_IDS=CME:FUTURE:ES;CME:FUTURE:MES`) was ALREADY running for every one of the 7 years by the
+  time I finished (2020-2026, all `20260731-014643`, all confirmed via direct metadata read on a 3-of-7 spot-check) — a
+  prior turn had evidently queued the full corrected fleet just before this turn resumed; no relaunch needed on my part,
+  only the cleanup of the superseded mis-scoped originals. Net effect: the fleet is now clean — 7 SPOT VMs, one per year
+  2020-2026, each correctly scoped to `CME:FUTURE:ES CME:FUTURE:MES` only, each resuming from measured prior progress
+  (`y2020es3` starts `2020-05-01`, not `2020-01-01` — Jan-Apr 2020 was already completed in an earlier attempt per the
+  operations-log history above). Armed a `run_in_background` watchdog polling the fleet every 5 min (progress metric =
+  VM count still running, not log activity) up to a 10h ceiling; will run `build-continuous --root ES` once all 7
+  self-delete, then re-measure the `1d`/`24h` hit rate against the `454/2398` (~18.9%) baseline this doc has tracked
+  across two prior full passes, and record here whether `_retry_empty_day_listing`
+  (`market-data-processing-service@22b926c`) moved the number.
