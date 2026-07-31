@@ -22,8 +22,8 @@ related:
 created: 2026-07-30
 last_updated: 2026-07-30
 parent_epic: deployment_and_user_management_master
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 priority: P1
 estimate_class: refactor
 estimate_baseline_ai_days: 3.0
@@ -94,15 +94,58 @@ file-by-file.
 - [ ] [SCRIPT] P2. Extract helpers from the 8 oversized methods in
       `deployment_api/services/data_status/breakdowns_core.py` + `breakdowns_domain.py` (both are pure-decomposition
       candidates — mostly independent `_build_*_breakdown()` methods). Remove both exclude entries once compliant.
-- [ ] [SCRIPT] P2. Decompose the remaining function-size-only violators (no file-size violation):
-      `routes/     deployment_state.py`, `services/artifact_pipeline/service.py`, `services/data_analytics_service.py`,
-      `services/data_query_service.py`,
-      `services/data_status/{cli,coverage,defi,instrument_coverage,sports,     sports_helpers,venue_resolution}.py`,
-      `services/deploy_missing_launch.py`, `services/deployment_manager.py`, `services/deployment_state.py`,
-      `services/event_processor.py`, `services/state_manager.py`, `services/sync_service.py`,
-      `services/tarball_staleness.py`, `utils/path_combinatorics.py` — one todo per file recommended when this doc is
-      worked (currently bundled to respect the 10-100 todo authoring cap; split at dispatch time if promoted to
-      `assigned_vm: planning`).
+- [ ] [SCRIPT] P2. Decompose the remaining function-size-only violation in `deployment_api/routes/deployment_state.py`
+      (`refresh_deployment_status_sync()`, 234L). Remove its `FUNCTION_SIZE_EXTRA_EXCLUDES` entry once compliant; re-run
+      `quality-gates.sh` to confirm no regression.
+- [ ] [SCRIPT] P2. Decompose the remaining function-size-only violation in
+      `deployment_api/services/artifact_pipeline/service.py`. Remove its exclude entry once compliant; re-run
+      `quality-gates.sh` to confirm no regression.
+- [ ] [SCRIPT] P2. Decompose the remaining function-size-only violation in
+      `deployment_api/services/data_analytics_service.py`. Remove its exclude entry once compliant; re-run
+      `quality-gates.sh` to confirm no regression.
+- [ ] [SCRIPT] P2. Decompose the remaining function-size-only violation in
+      `deployment_api/services/data_query_service.py`. Remove its exclude entry once compliant; re-run
+      `quality-gates.sh` to confirm no regression.
+- [ ] [SCRIPT] P2. Decompose the remaining function-size-only violation in `deployment_api/services/data_status/cli.py`.
+      Remove its exclude entry once compliant; re-run `quality-gates.sh` to confirm no regression.
+- [ ] [SCRIPT] P2. Decompose the remaining function-size-only violation in
+      `deployment_api/services/data_status/coverage.py`. Remove its exclude entry once compliant; re-run
+      `quality-gates.sh` to confirm no regression.
+- [ ] [SCRIPT] P2. Decompose the remaining function-size-only violation in
+      `deployment_api/services/data_status/defi.py`. Remove its exclude entry once compliant; re-run `quality-gates.sh`
+      to confirm no regression.
+- [ ] [SCRIPT] P2. Decompose the remaining function-size-only violation in
+      `deployment_api/services/data_status/instrument_coverage.py` (`per_instrument_coverage()`, 364L). Remove its
+      exclude entry once compliant; re-run `quality-gates.sh` to confirm no regression.
+- [ ] [SCRIPT] P2. Decompose the remaining function-size-only violation in
+      `deployment_api/services/data_status/sports.py`. Remove its exclude entry once compliant; re-run
+      `quality-gates.sh` to confirm no regression.
+- [ ] [SCRIPT] P2. Decompose the remaining function-size-only violation in
+      `deployment_api/services/data_status/sports_helpers.py` (`sports_honest_coverage()`, 300L). Remove its exclude
+      entry once compliant; re-run `quality-gates.sh` to confirm no regression.
+- [ ] [SCRIPT] P2. Decompose the remaining function-size-only violation in
+      `deployment_api/services/data_status/venue_resolution.py`. Remove its exclude entry once compliant; re-run
+      `quality-gates.sh` to confirm no regression.
+- [ ] [SCRIPT] P2. Decompose the remaining function-size-only violation in
+      `deployment_api/services/deploy_missing_launch.py` (`launch_deploy_missing_vm()`, 236L). Remove its exclude entry
+      once compliant; re-run `quality-gates.sh` to confirm no regression.
+- [ ] [SCRIPT] P2. Decompose the remaining function-size-only violation in
+      `deployment_api/services/deployment_manager.py`. Remove its exclude entry once compliant; re-run
+      `quality-gates.sh` to confirm no regression.
+- [ ] [SCRIPT] P2. Decompose the remaining function-size-only violation in `deployment_api/services/deployment_state.py`
+      (a different file from `routes/deployment_state.py` above — same basename, different directory). Remove its
+      exclude entry once compliant; re-run `quality-gates.sh` to confirm no regression.
+- [ ] [SCRIPT] P2. Decompose the remaining function-size-only violation in `deployment_api/services/event_processor.py`.
+      Remove its exclude entry once compliant; re-run `quality-gates.sh` to confirm no regression.
+- [ ] [SCRIPT] P2. Decompose the remaining function-size-only violation in `deployment_api/services/state_manager.py`.
+      Remove its exclude entry once compliant; re-run `quality-gates.sh` to confirm no regression.
+- [ ] [SCRIPT] P2. Decompose the remaining function-size-only violation in `deployment_api/services/sync_service.py`.
+      Remove its exclude entry once compliant; re-run `quality-gates.sh` to confirm no regression.
+- [ ] [SCRIPT] P2. Decompose the remaining function-size-only violation in
+      `deployment_api/services/tarball_staleness.py`. Remove its exclude entry once compliant; re-run `quality-gates.sh`
+      to confirm no regression.
+- [ ] [SCRIPT] P2. Decompose the remaining function-size-only violation in `deployment_api/utils/path_combinatorics.py`.
+      Remove its exclude entry once compliant; re-run `quality-gates.sh` to confirm no regression.
 - [ ] [SCRIPT] P3. Once every file above is decomposed and removed from `FUNCTION_SIZE_EXTRA_EXCLUDES`, re-measure
       `CODEX_MAX_VIOLATIONS` honestly (currently 5) and ratchet it down if the size class was the only thing keeping it
       non-zero — verify actual `V` via `QG_SLICE=lint-codex`, don't guess.
@@ -119,3 +162,12 @@ file-by-file.
   one-shot CI-fix scope). Not assigning `assigned_vm: planning` yet per the default-human rule — an operator/main-agent
   call on whether to AO-dispatch this (each todo above is independently bounded/deterministic once split further, so it
   would likely qualify, but that's a destination decision this escalation role doesn't make unilaterally).
+- **na-eligibility-audit 2026-07-31**: RECLASSIFY, conflict-cleared (infra tranche, dispatch agt-676f1e) — this doc's
+  own 2026-07-30 entry above already flagged every todo as independently bounded/deterministic and deferred only the
+  destination call, which this audit exists to make. Conflict-check run against
+  `parent_epic: deployment_and_user_management_master` (no other active `assigned_vm: planning` doc in this epic) + the
+  infra tranche's consolidated-closeout digest: zero overlap, clear to proceed. Flipped `assigned_vm: NA -> planning`,
+  `execution_scope: local-only -> orchestrator-agent`. Also split the final bundled "remaining function-size-only
+  violators" todo (19 files in one checkbox) into 19 one-file todos, per this doc's own "one todo per file recommended
+  when this doc is worked... split at dispatch time if promoted to `assigned_vm: planning`" note — total open todo count
+  is now 27 (was 9), still well under the 10-100 authoring cap.

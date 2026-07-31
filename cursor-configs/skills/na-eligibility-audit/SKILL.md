@@ -161,7 +161,21 @@ the hunter's own reported verdicts for that doc (KEEP items
 
 **Never re-litigate an established ruling.** A doc whose own text already cites an explicit dated operator ruling, a
 `depends_on`+`gate_on_depends` gate on a still-open prerequisite, or a "🟡 DO NOT DISPATCH" banner is KEEP-NA on that
-citation alone — confirm the citation is real (grep it), don't re-derive the underlying judgment call yourself.
+citation alone — confirm the citation is real (grep it), don't re-derive the underlying judgment call yourself. Two more
+citation classes count exactly the same way, added after a live incident
+(`plans/active/issues/regen_positional_task_ids_not_content_stable_2026_07_17.md`, BLK-29884333, 2026-07-31 — a prior
+na-eligibility-audit RECLASSIFY of that exact doc caused three real mis-dispatches of a banner-guarded, multi-day
+fleet-core rewrite before the operator/main-agent caught and reverted it): **(a) a banner or body sentence redirecting
+work to a DIFFERENT doc/plan** (e.g. "Do NOT start work from this doc alone", "tracked and executed via `<other doc>`")
+— even when this doc's own todo text reads as a clean, bounded, fully-scoped AO-dispatchable item, a redirect banner
+means the DISPATCH MECHANISM is wrong (flipping this doc's `assigned_vm` would let backlog-regen derive tasks directly
+from it, bypassing the doc it's supposed to route through); **(b) an inline `assigned_vm: NA #`-comment or a Progress
+Log entry documenting that THIS SAME SKILL previously reclassified this doc and was reverted** — a revert is a standing
+ruling, not a stale data point to re-evaluate fresh. Also stay skeptical of a todo's own "fully-scoped, AO-dispatchable"
+self-framing when the underlying change is a multi-file, multi-day rewrite of live-dispatch-critical-path machinery —
+bounded/bundled-into-one-todo is not the same test as small/low-risk; the
+`ao-dispatch-batch-naming-and-conflict-check.md`-flavoured "worker-determinable outcome" bar still applies on top of
+whatever the doc's own prose claims.
 
 ## Phase 2 — conflict-check before any RECLASSIFY flip
 

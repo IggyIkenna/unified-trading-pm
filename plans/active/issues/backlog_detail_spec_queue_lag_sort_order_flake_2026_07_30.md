@@ -64,7 +64,23 @@ first:
 
 ## Recommended next step
 
-- [ ] [INFRA] P3. Root-cause and fix the `backlog-detail.spec.ts` queue_lag ascending-sort order flake — either
-      `seed_e2e_state.py`'s `E2E-QUEUED` timestamp isn't landing where its own comment says, or the queued_at sort
-      comparator is inverted/wrong for a still-queued row. Done when: both currently-failing tests in
-      `tests/e2e/backlog-detail.spec.ts` pass consistently across 3 consecutive local runs.
+- [ ] [INFRA] P3. **Duplicate — tracked and already AO-dispatchable under
+      `/plans/active/issues/ao_dashboard_backlog_detail_queue_lag_e2e_flaky_2026_07_26.md`** (`assigned_vm: planning`,
+      same two `backlog-detail.spec.ts` test failures, same symptom, filed 4 days earlier with a more complete
+      root-cause hypothesis — a background reconciler resetting a mock-mode-seeded `dispatched` row). Not reclassifying
+      this doc; that doc is the one to dispatch. Root-cause and fix the `backlog-detail.spec.ts` queue_lag
+      ascending-sort order flake — either `seed_e2e_state.py`'s `E2E-QUEUED` timestamp isn't landing where its own
+      comment says, or the queued_at sort comparator is inverted/wrong for a still-queued row. Done when: both
+      currently-failing tests in `tests/e2e/backlog-detail.spec.ts` pass consistently across 3 consecutive local runs
+      (done via the other doc's todos, not this one).
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-31**: KEEP-NA-STALE (infra tranche, dispatch agt-676f1e) — this doc's sole open todo
+  duplicates `/plans/active/issues/ao_dashboard_backlog_detail_queue_lag_e2e_flaky_2026_07_26.md`, which is already
+  `assigned_vm: planning` (found via conflict-check surface (a): active planning docs in
+  `parent_epic: orchestrator_master` — the initial grep against only the `ao_satellite_ao_dispatch_batch*` docs missed
+  it because a first-pass search incorrectly filtered on `status: active`, excluding this issue doc's `status: open`;
+  broadening the search to any status surfaced the duplicate). Not reclassifying — flipping `assigned_vm` here would
+  dispatch a second worker onto already-claimed work. Fixed the checkbox citation to point at the authoritative doc per
+  the KEEP-NA-STALE rule; `assigned_vm: NA` left as-is (zero backlog impact, pure hygiene).

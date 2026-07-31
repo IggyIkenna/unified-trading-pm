@@ -109,3 +109,9 @@ so nothing is blocked on this decision; the only remaining cost is 1.2 GB of dis
       as an operator-escalation, not a workaround. Run:
       `rm -rf     .tabs/3/instruments-service-agentwork-sports-2026-07-13/`. **Done when**: directory is gone,
       `du -sh .tabs/3/stash-bundles/` confirms the bundle is the only remaining trace.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-31**: KEEP-NA, valid (infra tranche, dispatch agt-676f1e) — sole remaining open todo is
+  explicitly `[OPERATOR]`-tagged and its own text states the guardrail (`block_destructive_commands.py`) unconditionally
+  blocks any agent from running it, no override. Unambiguous human-only action. No other action.

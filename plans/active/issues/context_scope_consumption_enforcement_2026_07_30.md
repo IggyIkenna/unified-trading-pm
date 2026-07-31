@@ -110,3 +110,7 @@ pressure. The operator explicitly named this as "the rest of the work" for a lat
   committed — 4 stash entries (stash@{13}/{14}/{15}/{21}) all carried an identical copy, none reapplied cleanly. Filed
   here verbatim (only the dead `related:` link to the never-committed producer-side plan doc was repointed to the
   shipped `context-scout` skill) so the 4 stash entries can now be safely dropped without losing this tracked gap.
+- **na-eligibility-audit 2026-07-31**: KEEP-NA, valid (infra tranche, dispatch agt-676f1e) — todo 1 explicitly requires
+  an operator pick among 3 named design options (where the consumption read happens) plus a LOCAL-vs-AO-dispatched track
+  decision per the ask-before-creating HARD RULE; todo 2 is gated behind todo 1 shipping. Genuine judgment call, not a
+  mis-defaulted mechanical task. No other action.

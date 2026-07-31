@@ -29,10 +29,10 @@ source:
   standalone pip-audit against agent-orchestrator to sanity-check before shipping the empty QG_PIP_AUDIT_COMMON_IGNORES,
   and found its own quality-gates.sh never invokes pip-audit at all. The initial 5-package finding was corrected
   same-day after the operator asked for re-verification and the check was re-run correctly against the repo's own .venv."
-assigned_vm: NA
+assigned_vm: planning
 resolved_by:
 locked_by:
-execution_scope: local-only
+execution_scope: orchestrator-agent
 assigned_role: infra
 drift_direction: advance-code
 depends_on: []
@@ -75,3 +75,15 @@ been caught by the repo's own gate.
       cache/timeout/classify-by-output pattern `base-service.sh` uses rather than inventing a new one. **Done when**:
       `bash     scripts/quality-gates.sh` in agent-orchestrator runs pip-audit and the step is visible in its output.
       Repo: agent-orchestrator.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-31**: RECLASSIFY, conflict-cleared (infra tranche, dispatch agt-676f1e) —
+  bounded/deterministic-outcome work (single script, one file, done-when is directly checkable), no operator gate or
+  live judgment call found. Conflict-check run against every active `assigned_vm: planning` doc in
+  `parent_epic: infrastructure_master` (incl. `cve_affected_pinned_deps_remediation_2026_06_18.md`, which
+  cross-references this doc but only for its own prose-correction todo — already landed on this doc's current content,
+  not a claim on the pip-audit-step implementation) + the infra tranche's consolidated-closeout digest: zero overlap,
+  clear to proceed. Verified the underlying gap is still live today
+  (`grep -n pip.audit agent-orchestrator/scripts/quality-gates.sh` — no match). Flipped `assigned_vm: NA -> planning`,
+  `execution_scope: local-only -> orchestrator-agent`.

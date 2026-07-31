@@ -151,3 +151,10 @@ convention's scope).
   touched (verified by grep). Pre-existing drift from other slots' concurrent work since the baseline was last lowered,
   not a regression this session caused. Not fixed here (corpus-wide, well outside this todo's scope) — flagging the live
   numbers for whoever next runs `--update-baseline` or works this doc's own P3 todos.
+- **na-eligibility-audit 2026-07-31**: KEEP-NA, valid — confirms continuity of the 2026-07-30 verdict above (this run's
+  only change since was the ratchet-measurement Progress Log entry directly above, a status note, not a todo/scope
+  change). Re-checked the open-todo mix on independent review: the P2 REVIEW item ("does archival mean physical-move or
+  stay-in-place-with-banner") is still a genuine unresolved policy call, and both P3 dangling-reference todos partially
+  depend on that same policy answer for correctness (archival-caused dangling refs are a subset of the existence-
+  violation backlog, per this doc's own 2026-07-25 Progress Log entries). Doc stays NA as a whole; unchanged from
+  yesterday's assessment.

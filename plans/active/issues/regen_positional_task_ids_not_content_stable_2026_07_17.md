@@ -260,3 +260,16 @@ unauditable tail, reached from a different direction: there they are un-AUDITABL
   bounded/deterministic-outcome work, no operator gate or live judgment call found; flipped
   `assigned_vm: NA -> planning`. Conflict-check run against all active `assigned_vm: planning` docs in this doc's
   `parent_epic` + the infra tranche's consolidated-closeout digest: zero/milestone-only overlap, clear to proceed.
+- **na-eligibility-audit 2026-07-31**: KEEP-NA, valid — **DO NOT RECLASSIFY THIS DOC.** Confirmed the 2026-07-31
+  BLK-29884333 entry above: the 2026-07-30 na-eligibility-audit RECLASSIFY verdict directly above was itself a
+  misclassification, caused a THIRD mis-dispatch of a banner-guarded, local-only-homed, multi-day live-dispatch-core
+  rewrite before the operator/main-agent caught and reverted it. This doc carries a top-of-body "🟢 EXECUTION
+  CONSOLIDATED" banner explicitly reading "Do NOT start work from this doc alone" (work routes through
+  `ao_open_issues_consolidated_close_out_2026_07_17.md` instead) and an `assigned_vm: NA` inline frontmatter comment
+  stating "NOT AO-dispatchable" — both citations verified real by reading them directly, per the skill's own
+  never-re-litigate rule. Leaving `assigned_vm: NA` untouched. Closed the operator-pending "hardening the na-audit
+  against banner-guarded/local-homed docs" half of BLK-29884333 directly: strengthened
+  `/cursor-configs/skills/na-eligibility-audit/SKILL.md`'s "Never re-litigate an established ruling" paragraph to
+  explicitly name a redirect-to-another-doc banner and an inline `assigned_vm: NA #`-comment citing a prior
+  RECLASSIFY-then-revert as hard KEEP-NA triggers (same commit as this marker), so a future run's Phase 1 does not need
+  to rediscover this citation by luck.

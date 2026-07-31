@@ -34,8 +34,8 @@ related:
   ]
 created: 2026-07-30
 parent_epic: plan_hygiene_master
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 priority: P1
 estimate_class: refactor
 estimate_baseline_ai_days: 0.5
@@ -152,3 +152,17 @@ For **(2) the multi-tranche marker gap** — recommended **A**:
 - [ ] [SCRIPT] P2. Have `generate_na_doc_tranche_inventory.py` emit an explicit `owning_tranche` per doc (however § 2 is
       ruled) so a worker can filter to the docs it owns instead of each tranche independently re-deriving membership
       from the full `asset_group` list.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-31**: RECLASSIFY, conflict-cleared (infra tranche, dispatch agt-676f1e) — the only
+  remaining open todo is the `[SCRIPT] P2` `owning_tranche` field addition explicitly flagged by this SKILL.md's own
+  Phase 0 text as "the `[SCRIPT] P2` todo already tracked" here (not to be duplicated) — bounded/deterministic (single
+  script, algorithm already ruled + specified in § "Options" above and in
+  `ao-dispatch-batch-naming-and-conflict-check.md` § 2), no operator gate remaining (the `[OPERATOR]` ruling todo above
+  is already done). Conflict-check run against every active `assigned_vm: planning` doc in
+  `parent_epic: plan_hygiene_master` + the infra tranche's consolidated-closeout digest: zero overlap, clear to proceed.
+  Flipped `assigned_vm: NA -> planning`, `execution_scope: local-only -> orchestrator-agent`. Confirmed this run's own
+  Phase 0 saw zero cross-tranche overlap among the 38 infra-tranche docs (every doc's `tranches` list was
+  single-valued), so the primary-owner rule this doc's own fix will formalize was moot for this particular run but the
+  gap it closes is real for tranches with genuine overlap.
