@@ -333,9 +333,16 @@ file-by-file.
       `FUNCTION_SIZE_EXTRA_EXCLUDES` entry removed — gate passes natively. Verified: 23 targeted tests green
       (`test_deploy_missing_launch.py`), basedpyright clean, ruff clean (3 pre-existing `# noqa` format warnings
       confirmed unchanged via stash-diff), full `quality-gates.sh` green (162s). Repo: deployment-api.
-- [ ] [SCRIPT] P2. Decompose the remaining function-size-only violation in
-      `deployment_api/services/deployment_manager.py`. Remove its exclude entry once compliant; re-run
-      `quality-gates.sh` to confirm no regression.
+- [x] ✅ [SCRIPT] P2. **DONE 2026-07-31 (slot-2, infra craft).** Decomposed 3 oversized methods in
+      `deployment_api/services/deployment_manager.py`. `deployment-api@efdbe42`: extracted
+      `_calculate_shards_or_raise`/`_resource_requirements_for_compute` from `calculate_quota_requirements` (was 98L);
+      `_validate_deployment_request_full`/ `_calculate_and_normalise_shards` from `create_deployment` (was 127L); and
+      `_log_deployment_failure`/`_submit_deployment`/`_maybe_warn_cross_region_egress`/
+      `_resolve_deployment_image_and_job`/`_call_create_deployment` from `run_deployment_background` (was 155L). Pure
+      code motion, no logic changes. `FUNCTION_SIZE_EXTRA_EXCLUDES` entry removed — gate passes natively. Verified: 103
+      targeted tests green (`test_deployment_manager.py`, `test_route_deployments.py`,
+      `test_route_deployments_mock.py`), basedpyright clean, ruff clean, full `quality-gates.sh` green (100s). Repo:
+      deployment-api.
 - [ ] [SCRIPT] P2. Decompose the remaining function-size-only violation in `deployment_api/services/deployment_state.py`
       (a different file from `routes/deployment_state.py` above — same basename, different directory). Remove its
       exclude entry once compliant; re-run `quality-gates.sh` to confirm no regression.
