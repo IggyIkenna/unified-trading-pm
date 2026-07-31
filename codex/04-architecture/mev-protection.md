@@ -37,7 +37,7 @@ referenced_by:
     /codex/09-strategy/architecture-v2/cross-cutting/mev-protection.md,
   ]
 owner:
-last_reviewed: 2026-05-17
+last_reviewed: 2026-09-27
 code_refs:
 ---
 
@@ -209,7 +209,8 @@ MEVProtectionConfig(
 is the single source of truth for all MEV-resistant RPC endpoints. Connectors **must** import from UAC and never
 hardcode these URLs.
 
-> **Static enforcement (codex audit EX-14 2026-05-12)**: a new QG ratchet (planned —
+> **Static enforcement (codex audit EX-14 2026-05-12)**: a new QG ratchet (STILL PLANNED — re-verified absent
+> 2026-07-31, over two months after it was proposed —
 > `unified-trading-pm/scripts/quality_gates/check_no_inline_defi_addresses_or_rpcs.py`) AST-walks `defi_execution/` for
 > hex contract-address literals (`0x[a-fA-F0-9]{40}`) + `https://...rpc...` URL literals outside the UAC-import path.
 > Today a new connector pasting either inline would pass QG. Analogous to QG STEP 5.69 (`resolve_bucket_name()`

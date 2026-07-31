@@ -21,7 +21,7 @@ created: 2026-05-15
 authoritative_for: [strategy ensemble VM topology (one-VM-per-asset-group + per-VM process layout)]
 referenced_by: [/codex/04-architecture/matching-engine-assumptions.md]
 owner:
-last_reviewed: 2026-05-17
+last_reviewed: 2026-09-12
 code_refs:
 author: ikenna
 sources:
@@ -126,17 +126,32 @@ Every strategy ensemble VM is launched via a dedicated script in `deployment-ser
 All VM name prefixes MUST be registered in `vm_zombie_watchdog.py` `VM_PREFIX_TO_BUCKET` before launch. This is enforced
 by `TestVmPrefixRegistration::test_all_launch_prefixes_covered_by_watchdog`.
 
-> **[DELTA 2026-05-22]** **Current state:** DeFi and CeFi strategy VM launchers (`launch-defi-strategy-vm.sh`,
-> `launch-cefi-strategy-vm.sh`) were shipped as part of the May-23 cutover path. TradFi and Sports launchers extend
-> existing backfill launchers. Prediction VM launcher is post-cutover. **Planned delta:**
-> `plans/epics/strategy_master.md` tracks prediction launcher creation. **Target architecture:** All 5 asset-group
-> strategy VM launchers exist, registered in `VM_PREFIX_TO_BUCKET`, and enforced by `TestVmPrefixRegistration`.
+> **[CORRECTED 2026-07-31 — the previous DELTA's "shipped" claim was false.]** Neither
+> `launch-defi-strategy-vm.sh` nor `launch-cefi-strategy-vm.sh` exists in `deployment-service/scripts/vm/`, and
+> `colocate-strategy-vm.sh` does not exist either. **The per-asset-group launcher model in the table above was never
+> built.** What shipped instead is a set of per-MODE strategy launchers:
+>
+> | Launcher                             | Mode                          |
+> | ------------------------------------ | ----------------------------- |
+> | `launch-strategy-live-vm.sh`         | live                          |
+> | `launch-strategy-paper-vm.sh`        | paper                         |
+> | `launch-strategy-backtest-grid-vm.sh`| backtest grid                 |
+> | `launch-strategy-test-vm.sh`         | test                          |
+>
+> Asset-group scoping is a launcher ARGUMENT in this model, not a separate script. Treat the asset-group table above as
+> a superseded design. `TestVmPrefixRegistration` does still exist
+> (`deployment-service/tests/unit/test_vm_zombie_watchdog.py`) and still enforces prefix registration.
 
 ---
 
 ## Colocation bootstrap
 
-The colocation bootstrap script (`deployment-service/scripts/vm/colocate-strategy-vm.sh`) runs on VM startup and:
+> **⚠️ `colocate-strategy-vm.sh` does not exist (verified 2026-07-31).** The steps below describe the intended
+> colocation bootstrap; the behaviour now lives inside the per-mode `launch-strategy-*-vm.sh` scripts. Read them for the
+> authoritative sequence rather than trusting this list.
+
+The colocation bootstrap was specified as a script (`deployment-service/scripts/vm/colocate-strategy-vm.sh`) running on
+VM startup that:
 
 1. Starts local Redis with `redis-server --daemonize yes --port 6379 --bind 127.0.0.1`
 2. Sets service-discovery env vars to localhost defaults

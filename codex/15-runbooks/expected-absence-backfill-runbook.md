@@ -24,7 +24,7 @@ created: 2026-05-07
 authoritative_for: [expected-absence backfill runbook (reconciler + enumerator passes)]
 referenced_by: [plans/active/writegate_honest_coverage_endtoend_2026_05_06.md]
 owner: UTL maintainer (honest_coverage subsystem)
-last_reviewed: 2026-05-17
+last_reviewed: 2026-09-24
 code_refs:
 execution:
   {
@@ -72,8 +72,10 @@ pre-launch, source pre-coverage, non-trading-day). This is what closes the rollu
 
 - Code: `instruments-service/scripts/enumerate_expected_universe.py` (Phase 3.D.4, shipped 2026-05-07
   instruments-service@8e404c8 / @d1c9928 / @a936a28).
-- Launcher: `deployment-service/scripts/vm/launch-expected-universe-enumerator-vm.sh` (deployment-service@dcc5c87 /
-  @38b7a58 with `--max-writes-per-run` cap pass-through).
+- Launcher: `deployment-service/scripts/vm/launch-expected-universe-v2-vm.sh` (deployment-service@dcc5c87 / @38b7a58
+  with `--max-writes-per-run` cap pass-through). **Renamed** — this runbook said
+  `launch-expected-universe-enumerator-vm.sh` until the 2026-07-31 re-review; that filename no longer exists, so every
+  command below was un-runnable as written.
 - Default scan-only (CSV report); `--apply-write` requires the same per-VM shard isolation envvars.
 
 ## Per-asset-group volume + invocation order
@@ -95,7 +97,7 @@ VM per asset_group; consolidator merges per-VM shards into canonical within ~5 m
 ### Scan-only (default — no manifest mutation)
 
 ```bash
-bash deployment-service/scripts/vm/launch-expected-universe-enumerator-vm.sh tradfi
+bash deployment-service/scripts/vm/launch-expected-universe-v2-vm.sh tradfi
 # capture VM_NAME from stdout, e.g. expected-universe-enum-tradfi-{ts}
 sleep 90
 gcloud storage ls gs://central-element-323112-events/events/instruments-service/$(date -u +%Y-%m-%d)/expected-universe-enum-tradfi-*/
@@ -106,7 +108,7 @@ gcloud storage ls gs://central-element-323112-events/events/instruments-service/
 
 ```bash
 # default cap is 1M; bump per-asset-group when the universe genuinely exceeds it (DeFi did, used 5M).
-bash deployment-service/scripts/vm/launch-expected-universe-enumerator-vm.sh defi --apply-write 5000000
+bash deployment-service/scripts/vm/launch-expected-universe-v2-vm.sh defi --apply-write 5000000
 # launcher injects MANIFEST_PER_VM_SHARDS=true + VM_NAME=<unique-tag> automatically.
 # wait for ENUMERATOR_COMPLETED event with written>0
 ```
@@ -160,7 +162,7 @@ After each VM shutdown:
 - **Code:** `instruments-service/scripts/enumerate_expected_universe.py` (Phase 3.D.4 enumerator),
   `instruments-service/scripts/reconcile_expected_absence_reasons.py` (Phase 3.D.1 reconciler),
   `unified-trading-library/legacy_reason_classifier.py` (UTL classifier dispatch),
-  `deployment-service/scripts/vm/launch-expected-universe-enumerator-vm.sh` (launcher).
+  `deployment-service/scripts/vm/launch-expected-universe-v2-vm.sh` (launcher).
 
 ## Re-run cadence
 
