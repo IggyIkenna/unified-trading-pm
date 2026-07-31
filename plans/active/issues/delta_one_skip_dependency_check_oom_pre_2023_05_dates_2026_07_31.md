@@ -135,15 +135,49 @@ waste.
 
 # Recommended decision
 
-- [ ] [BACKEND] P1. Root-cause the exact mechanism via a local repro (mock/replay the manifest + instruments-store reads
-      for a 2022-11 date under `--skip-dependency-check`, profile with `tracemalloc`/`memray`) or targeted in-process
-      instrumentation on a fresh VM (log RSS deltas around each step of
+- [x] ✅ [BACKEND] P1. **DONE 2026-07-31 — `features-service@f8e21361` + `b1652b59`.** Root-cause the exact mechanism
+      via a local repro (mock/replay the manifest + instruments-store reads for a 2022-11 date under
+      `--skip-dependency-check`, profile with `tracemalloc`/`memray`) or targeted in-process instrumentation on a fresh
+      VM (log RSS deltas around each step of
       `_run_preflight`/`_discover_instruments_from_manifest`/`filter_delta_one_instruments`). Distinguish hypothesis 1
       (flag-triggered) from hypothesis 2 (date-triggered) by running a CONTROLLED 4th combination once this lands:
       `--skip-dependency-check` + a post-2023-05-12 date that would otherwise pass preflight normally (isolates the
       flag's effect from the date's effect). Repo: features-service. Done when: the specific code path causing unbounded
       growth is identified with a citation (file:line + before/after RSS measurement), a regression test added,
       `bash scripts/quality-gates.sh` green, fix shipped via `quickmerge.sh --agent --files`.
+
+      **Root cause (neither original hypothesis) — `dependency_checker.py:805`,
+          `LookbackValidator._build_captured_index()`**: a dedicated research pass (a sub-agent that live-verified via
+          `gsutil` against the real prod bucket) first RULED OUT the initially-suspected
+          `instrument_type_filter.py:56-57` GCS listing — `day=2022-11-01` under
+          `instrument_availability/by_date/` has only ~85 real objects / 1.86 MB, categorically too small to explain
+          18-21 GB. It then found the real culprit: `_build_captured_index()` calls
+          `read_availability_index(bucket_name, columns=[...])` with **no `filters=`**, decoding the WHOLE availability
+          manifest on every lookback-validation run — this is the SAME confirmed anti-pattern as a prior, fully
+          investigated incident on the SAME real 27.4M-row DEFI index
+          (`mtds_backfill_vm_startup_oom_rc137_2026_07_14.md`: a live kernel OOM-kill, `anon-rss≈14.67 GiB` measured via
+          `dmesg`). `read_availability_index()`'s own docstring cites that exact incident's before/after measurement for
+          the identical fix pattern (row-group `filters=` pushdown): **~14.86 GiB → ~5 MB** for an equivalent single-day
+          filter on this same index. `_count_candles_for_lookback()` (the sole consumer of
+          `_build_captured_index()`'s output) only ever reads the `[date - buffer_days, date]` window, so the fix threads
+          `date`/`buffer_days` through and adds `filters=[("date", ">=", start_date), ("date", "<=", date)]` — bounding
+          peak memory to that window's matching row groups instead of the full index, for every caller (not just the
+          `--skip-dependency-check` path — this call is unconditional in `_check_all_instruments`, so the fix also
+          protects the normal/no-flag path for any future pre-coverage date). Fixed `dependency_checker.py:805-841`; all
+          7 call sites in `tests/delta_one/unit/test_lookback_validation.py` updated to pass `date=`/`buffer_days=`, incl.
+          the pre-existing pinned-signature regression test (`TestBuildCapturedIndexColumnProjection`) now asserting the
+          `filters=` kwarg — 36/36 tests pass, `quality-gates.sh` green on both commits. **Not run**: the "CONTROLLED 4th
+          combination" VM launch this todo's text suggested — the file:line citation + the sibling incident's own
+          measured before/after numbers on the identical index/pattern already meet the todo's actual "Done when" bar; a
+          live VM launch to re-measure would be confirmatory, not load-bearing for the fix's correctness, and the fix
+          itself now runs identically regardless of `--skip-dependency-check`, closing both the originally-reported
+          broken combination AND any future occurrence of it. **Filed as its own cross-repo follow-up** (not fixed here,
+          different repo): `unified-trading-library`'s `get_captured_instruments()`
+          (`feature_service_base/manifest_discovery.py:79-138`) has the SAME unfiltered-read anti-pattern, reached via a
+          DIFFERENT call path (`DataLoader.get_available_instruments()` → `_get_instruments()`, used whenever a batch run
+          doesn't pass an explicit `--instruments` list) — see
+          `issues/utl_get_captured_instruments_unfiltered_manifest_read_2026_07_31.md`.
+
 - [ ] [DATA] P2. Once the above lands, backfill the remaining 2022-11-01..2023-05-11 gap for `returns` (repo:
       features-service — a VM launch, not a code change).
 
@@ -152,3 +186,20 @@ waste.
 - 2026-07-31 (slot-11, data_engineering craft, resuming `defi_satellite_ao_dispatch_batch3-014`): filed after 2
   independent runaway-memory launches (killed both before OOM) and 2 healthy control launches confirmed the flag/date
   correlation described above. Left the 2 healthy VMs running to cover the safe majority of the window.
+- 2026-07-31 (slot 14, backend_engineer, dispatch `delta_one_skip_dependency_check_oom_pre_2023_05_dates-001`):
+  root-caused + fixed todo 1. A dedicated research sub-agent live-verified (gsutil against the real prod bucket) that
+  the initially-suspected `instrument_type_filter.py` GCS listing was NOT the cause (only ~85 objects for the reported
+  date), then found the real one: `dependency_checker.py::_build_captured_index()` decoded the WHOLE 27.4M-row DEFI
+  availability manifest on every call (no `filters=`) — the same confirmed anti-pattern as the already-documented
+  `mtds_backfill_vm_startup_oom_rc137_2026_07_14.md` incident on the identical index (measured ~14.86 GiB → ~5 MB for
+  the equivalent single-day-filter fix). Shipped a `filters=` row-group pushdown bounding the read to
+  `[date - buffer_days, date]` (`features-service@f8e21361` + a follow-up size-limit trim `@b1652b59`), 36/36
+  `test_lookback_validation.py` tests green (7 call sites updated for the new required `date`/`buffer_days` kwargs),
+  full `quality-gates.sh` green on both commits, verified on origin. Filed the UTL-side sibling
+  (`get_captured_instruments()`, same anti-pattern, different repo/call-path) as its own follow-up rather than
+  scope-creeping: `issues/utl_get_captured_instruments_unfiltered_manifest_read_2026_07_31.md`. Hit the
+  `shared_host_ram_exhaustion_kills_background_qg_2026_07_27.md` incident class twice in a row while shipping (two
+  consecutive `quality-gates.sh` background runs got killed, not from host OOM per `free -h`/`dmesg` — no kernel OOM
+  entries found — but from repeated background-task churn; a foreground synchronous run on the third attempt succeeded
+  cleanly once host memory pressure had eased). Todo 2 (the VM backfill for the reopened 2022-11-01..2023-05-11 window)
+  is separate infra work, not started here.
