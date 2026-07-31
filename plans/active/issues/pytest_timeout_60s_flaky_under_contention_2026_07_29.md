@@ -22,12 +22,12 @@ status: open
 nature: issue
 asset_group: [meta]
 stage: [meta]
-repos: [unified-trading-pm, unified-api-contracts]
+repos: [unified-trading-pm, unified-api-contracts, deployment-api, market-data-processing-service, instruments-service, features-service]
 scope: [engineer, admin]
 tags: [quality-gates, flaky-gate, timeout, pytest-timeout, ci, shared-host-contention, xdist]
 related: [/plans/active/issues/adapter_contract_regression_ratchet_60s_timeout_flaky_under_contention_2026_07_27.md]
 created: 2026-07-29
-last_updated: 2026-07-30
+last_updated: 2026-07-31
 parent_epic: infrastructure_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -264,8 +264,13 @@ those commits landed). The escalation's own repo-blocker list (`GET /api/repo-bl
       and a capacity fix applied/ruled out, or (b) the failure pattern shifts to a DIFFERENT self-hosted runner once
       evidence accumulates, which would point back at the test suite's xdist fan-out width rather than this one runner
       specifically.
-
-## Progress Log
+- [ ] 7. [INFRA] P3. **NEW 2026-07-31.** Confirmed (not inferred) all `github-glue-runner-*` self-hosted CI runners for
+      every repo (~24+, one systemd service each) share a SINGLE physical EC2 VM. Check that host's actual vCPU/RAM
+      allocation against the aggregate concurrent demand (N repos' CI runners + N agent-orchestrator slot QG runs, all
+      capable of firing at once) and either right-size it, cap concurrent glue-runner services, or accept the flake rate
+      and keep raising `PYTEST_TIMEOUT_SECONDS` as a mitigation only. **Done when**: the host's provisioning is checked
+      against a real concurrent-demand estimate and a capacity decision (right-size / cap concurrency / accept-and-tune)
+      is made and recorded — not another per-test/per-repo timeout bump.
 
 - **2026-07-29** — Filed while resolving `ldr_qg_failure` escalation `agt-fa86c9` for `unified-api-contracts`
   (`f50defe3`). Diagnosis root-caused to `base-library.sh:391`'s hardcoded `--timeout=60`; confirmed via isolated 0.04s
@@ -457,3 +462,37 @@ those commits landed). The escalation's own repo-blocker list (`GET /api/repo-bl
   `github-glue-runners-instruments-service` is ALSO systematically more contended independent of any one test's
   anti-pattern remains genuinely untested — re-open with a NEW todo (do not reuse this one) if a DIFFERENT,
   non-`gc.collect()`-calling test recurs on this runner post-fix.
+=======
+  `origin` before this doc edit).
+- **2026-07-31** — 7th confirmed instance, 4th repo, and a NEW mechanism + concrete infra evidence for todo 6's open
+  question: `cicd` escalation `agt-5754dd` (`WALL_TYPE=main_ci_red`), features-service. Both `live-defi-rollout`
+  (`quality-gates-v2` runs `30582735118`/`30587006811`/`30590084669`/`30591345565`, spanning `21:16Z`-`23:42Z`, all
+  `qg_red_reason=pytest`) and `main` (push-triggered run `30582695053`, `23:25:14Z`) failed with a `pytest-timeout`
+  `thread`-method stack dump (NOT the `worker_internal_error`/xdist-crash signature of the instruments-service entries
+  above — `timeout_method = "thread"` is set in `features-service/pyproject.toml`, so the dump-and-exit path fires
+  instead) inside the identical call site every time: `features_service/delta_one/app/calculators/base.py:452`
+  `_add_lagged_features`'s `result = pd.concat([features, *lagged_columns], axis=1)` → deep in pandas
+  `concat.py`/`internals/concat.py`/`internals/managers.py`. Two different entry-point tests hit it on two different runs
+  (LDR: `test_round_numbers.py::test_calculate_returns_dataframe`; main: `test_cross_timeframe_sanity.py::
+  test_output_index_matches_input`) — same production code path, different unit tests, both operating on tiny (n=50-row)
+  synthetic OHLCV fixtures. `base.py` has been unchanged since `2026-07-13` (2+ weeks before this window), ruling out a
+  code regression; `_add_lagged_features` is a bounded, deterministic, non-recursive operation (builds `num_lags=3`
+  shifted-Series per numeric column, concats once) with no real I/O or awaited timer — a DIFFERENT flake mechanism than
+  todo 4's real-`asyncio.sleep` or todo 5's unmocked-GCS-probe: here it is a **CPU-bound pandas op that happens to be the
+  single heaviest operation in the whole suite**, so it is the first casualty of pure host scheduling contention, not a
+  per-test anti-pattern. **New concrete infra evidence for todo 6's open "is it shared with other repos' jobs?"
+  question**: confirmed directly via `systemctl list-units | grep glue` + `ls /opt/` on the runner host itself — EVERY
+  repo's self-hosted runner (`github-glue-runner-<repo>@glue-1.service`, ~24+ services including
+  `github-glue-runner-instruments-service`) runs on the SAME single EC2 VM (`ip-172-31-5-118`), one systemd service per
+  repo, not separate provisioned hosts. `uptime` during the failure window showed load average up to `13.64` on a
+  16-core box. This directly answers todo 6's capacity question for the whole fleet, not just instruments-service: yes,
+  it is shared, on one physical host, and load spikes into oversubscription range. **Verified transient, not a code
+  bug**: re-triggered `quality-gates-v2` on both `live-defi-rollout` (run `30592864369`) and `main` (run `30592896907`,
+  cancelled mid-run when the routine `*/15` LDR→main promotion auto-fired a fresh push once LDR went green — its own
+  run `30593757864` is the one that actually matters) once host load had eased (`13.64`→`7.59`) — LDR run passed clean.
+  No features-service code/test change made; this occurrence is added as fleet-wide corroboration, not a new fix.
+  **Todo 6 is not yet closed by this entry** — it strengthens the "genuine host-level contention, not one runner or one
+  test" reading (the pattern now spans 2 repos' runners on the confirmed-same physical host, and a 3rd distinct
+  mechanism class: CPU-bound-heaviest-op, not just awaited-real-timers) — see new todo 7 for the concrete follow-up this
+  entry's infra finding enables (was previously unconfirmed/inferred, now directly observed).
+>>>>>>> Stashed changes
