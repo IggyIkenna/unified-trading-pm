@@ -257,3 +257,26 @@ check above reproduces it from scratch in under a minute.
 - Markdown pre-commit/prettier reformatting can mangle spacing around adjacent inline-code spans in long wrapped
   paragraphs (observed + fixed in this same doc, see the Blocker 3 paragraph above) — worth a visual re-read of any long
   backtick-dense paragraph after it round-trips through a commit, not just a diff-stat check.
+
+## 2026-07-31 ~18:47Z re-check (slot 14) — still queued, still not this doc's work to do
+
+Picked up todo 3 fresh via `/boot`. Re-ran the exact recommended check:
+`gh run list --workflow "CI - Test & Lint" --branch main --repo IggyIkenna/unified-trading-system-ui --json databaseId,status,conclusion,createdAt,updatedAt --limit 15`.
+
+All three runs the prior (slot 7 pre-compact) entry named as pending are **still `queued`, zero progress**:
+`30635331302` (created 13:39:22Z, `updatedAt` unchanged at 13:39:22Z — 5h+ with no state transition at all),
+`30627739825` (created 11:38:27Z, `updatedAt` 18:43:37Z — touched recently but still `queued`, not `in_progress`),
+`30625075106` (created 10:53:00Z, `updatedAt` 18:18:16Z — same). `gh api .../actions/runners` shows the single
+`glue-ip-172-31-5-118-1` runner still `busy: true`. Host `uptime` on this orchestrator VM: load average
+11.02/14.40/14.11 on 16 vCPU — elevated again versus the prior entry's 18:08:44Z "eased" reading (6.00/6.85/7.17),
+consistent with `fleet_wide_qg_capacity_crisis_continues_day2_2026_07_29.md`'s own documented
+"fluctuating-but-still-elevated," not resolved, pattern.
+
+No consecutive-green count is observable yet — the last 3 runs before these are still `queued` are `failure`
+(2026-07-30, pre-dating this doc's own fixes having had a chance to run). Per this doc's own established lesson ("a
+queued-but-not-failed CI run has NO retrigger remedy... don't waste a retrigger on a run that's simply queued"), not
+retriggering. This is the third session in a row (session-3 2026-07-27, slot-7 pre-compact 2026-07-31, this one) to find
+the identical genuinely-external-wait state — nothing left to DO here until the shared runner fleet actually drains and
+one of these runs transitions to `in_progress`/`completed`. Leaving todo 3 unchecked; self-skipping this task rather
+than holding the slot idle-waiting (mirrors slot 10's 2026-07-26 `reason_code: GATED` skip earlier in this same doc) so
+the slot can pick up other queued work instead of busy-polling a condition only external CI capacity can change.
