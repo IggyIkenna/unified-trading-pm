@@ -107,19 +107,33 @@ script-relocation sweep per the canon; fix the env crash. Tracked todos:
       5.65).
 
       **SUPERSEDED (2026-07-30, conflict-check)** — same `cross_cutting_satellite_ao_dispatch_batch1b_2026_07_26.md`
-                                          todo, item (2). **DONE 2026-07-31 — features-service@7717fbee + e2e-testing@4b5a743**;
-                                          see that doc's item (2) for the full writeup (both repos' commit shas, every consumer
-                                          repointed, ratchet-baseline fixes, test verification). Checked here too since this is
-                                          the same underlying work, closed via the batch1b dispatch.
+                                              todo, item (2). **DONE 2026-07-31 — features-service@7717fbee + e2e-testing@4b5a743**;
+                                              see that doc's item (2) for the full writeup (both repos' commit shas, every consumer
+                                              repointed, ratchet-baseline fixes, test verification). Checked here too since this is
+                                              the same underlying work, closed via the batch1b dispatch.
 
 - [ ] [SCRIPT] P3. features-service + deployment-service: retire `scripts/sports/compute_sfi_progressive_only.py` + its
       `deployment-service/scripts/vm/launch-sfi-progressive-features-backfill-vm.sh` launcher once the Phase 4-7
       `--source` CLI filter lands (the script's own named successor).
-- [ ] [SCRIPT] P2. ALL repos: run the `script-homes.md` "Per-repo cleanup sweep" against every repo's `scripts/`
-      (classify → relocate/fold-into-CLI/delete-dead, GCS-orphan-verify before deleting migrations).
+- [x] ✅ [SCRIPT] P2. ~~ALL repos: run the `script-homes.md` "Per-repo cleanup sweep" against every repo's `scripts/`
+      (classify → relocate/fold-into-CLI/delete-dead, GCS-orphan-verify before deleting migrations).~~
 
       **SUPERSEDED (2026-07-30, conflict-check)** — two active docs already claim this ground:
-                                          `plans/active/repo_scripts_governance_audit_2026_06_18.md` (Phase 1, full 21-repo sweep, in progress) AND
-                                          `cross_cutting_satellite_ao_dispatch_batch1b_2026_07_26.md` item (3), which explicitly runs the sweep "EXCLUDING
-                                          features-service's smoke/e2e harnesses already handled in (2)" and cites this doc as source. Do not re-dispatch
-                                          from here.
+                                              `plans/active/repo_scripts_governance_audit_2026_06_18.md` (Phase 1, full 21-repo sweep, in progress) AND
+                                              `cross_cutting_satellite_ao_dispatch_batch1b_2026_07_26.md` item (3), which explicitly runs the sweep "EXCLUDING
+                                              features-service's smoke/e2e harnesses already handled in (2)" and cites this doc as source. Do not re-dispatch
+                                              from here.
+
+          **CLOSED AS DUPLICATE 2026-07-31** (pre-task conflict check on AO dispatch `features_service_coverage_and_script_canon-006`
+          — this still-unchecked box kept re-generating a live backlog task despite the SUPERSEDED prose above, since backlog
+          regen only reads checkbox state). Re-verified both owning docs before touching anything: `repo_scripts_governance_audit_2026_06_18.md`
+          (`assigned_vm: NA`) Phase 1's delete/deprecate/promote execution todos are STILL OPEN and explicitly **GATED +
+          REVIEWED — "do NOT mass-`git rm`"** (its own Finding 1: the biggest DELETE cohort — instruments-service 64 / MTDS
+          22 — is campaign-gated behind the active 2026-06 manifest-canonicalisation campaign; an unsupervised sweep risks
+          deleting campaign-in-flight one-offs). `cross_cutting_satellite_ao_dispatch_batch1b_2026_07_26.md` item (3) already
+          ran the marker-stamping sub-piece (DONE 2026-07-31, slot 10) and explicitly left classify/delete/relocate untouched
+          by design, pending that same governance-audit gate. Both owning docs agree this is human-judgment work, not
+          AO-dispatchable — executing the literal sweep from this task would violate that gating. Checking off this
+          **duplicate tracking checkbox only** (not the underlying sweep, which remains genuinely open and owned solely by
+          `repo_scripts_governance_audit_2026_06_18.md` Phase 1) so it stops re-generating stray/risky AO dispatches. No code
+          changes — doc-hygiene resolution only.
