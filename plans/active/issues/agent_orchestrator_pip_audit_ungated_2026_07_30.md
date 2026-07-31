@@ -13,7 +13,7 @@ summary:
   matching base-service.sh's real invocation exactly) found ONE genuine finding: pyasn1 0.6.3
   (PYSEC-2026-3455/-3456/-3457, fix 0.6.4+) — already fixed fleet-wide as part of the same 2026-07-30 CVE remediation
   session (see Todos). The GATING gap (no pip-audit step at all in this repo's quality-gates.sh) remains real and open."
-status: open
+status: resolved
 nature: issue
 asset_group: [infrastructure]
 stage: [meta]
@@ -30,13 +30,17 @@ source:
   and found its own quality-gates.sh never invokes pip-audit at all. The initial 5-package finding was corrected
   same-day after the operator asked for re-verification and the check was re-run correctly against the repo's own .venv."
 assigned_vm: planning
-resolved_by:
+resolved_by: agent-orchestrator@ec74605
 locked_by:
 execution_scope: orchestrator-agent
 assigned_role: infra
 drift_direction: advance-code
 depends_on: []
 ---
+
+> **✅ ARCHIVED 2026-07-31** — the sole todo (gate the standalone `agent-orchestrator/scripts/quality-gates.sh` on
+> pip-audit) shipped `agent-orchestrator@ec74605` and was verified end-to-end (fresh run + cache-hit run, both green). 0
+> open todos, unlocked. Moved to `plans/archive/issues/`.
 
 # agent-orchestrator's quality-gates.sh never runs pip-audit
 
@@ -68,13 +72,15 @@ been caught by the repo's own gate.
 
 ## Todos
 
-- [ ] [SCRIPT] P2. **Add a pip-audit step to `agent-orchestrator/scripts/quality-gates.sh`.** Use
-      `.venv/bin/python -m pip_audit` (NOT the standalone `pip-audit` binary on PATH — see the methodology correction
-      above for why that resolves to the wrong environment). Wire in `qg-common.sh::QG_PIP_AUDIT_COMMON_IGNORES`
-      (currently empty per the 2026-07-30 fleet re-audit) as the base ignore set, following the same
-      cache/timeout/classify-by-output pattern `base-service.sh` uses rather than inventing a new one. **Done when**:
-      `bash     scripts/quality-gates.sh` in agent-orchestrator runs pip-audit and the step is visible in its output.
-      Repo: agent-orchestrator.
+- [x] ✅ [SCRIPT] P2. **DONE 2026-07-31.** Added a pip-audit step to `agent-orchestrator/scripts/quality-gates.sh` —
+      sources `qg-common.sh` (the generic, repo-type-agnostic shared foundation, NOT `base-service.sh`'s UTL/UAC-
+      specific enforcement) solely to reuse its cache/timeout/classify-by-output pip-audit pattern +
+      `QG_PIP_AUDIT_COMMON_IGNORES` as the single fleet-wide ignore-list source of truth (never duplicated inline). Uses
+      `.venv/bin/python -m pip_audit`, same graceful missing-PM-sibling fallback as the existing ENVIRONMENT block.
+      Verified end-to-end: caught a genuinely stale local `.venv` (msgpack/pip/pyasn1/setuptools behind the
+      already-fixed `uv.lock` pins) on the first run, clean after `uv sync`, cache-hits correctly on a second run.
+      `bash scripts/quality-gates.sh` now runs pip-audit and the step is visible in its output (confirmed both the
+      fresh-run and cache-hit paths). Shipped `agent-orchestrator@ec74605`. Repo: agent-orchestrator.
 
 ## Progress Log
 
