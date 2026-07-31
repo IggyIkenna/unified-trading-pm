@@ -901,3 +901,13 @@ accordingly.
   corrupt-file spike-OOM (16/19/23/44), (2) zero-allocation slow-timing OOM (40/42/22/25), and now (3) the pre-fix
   silent-freeze pattern recurring on at least one shard despite the fix. No action taken (monitoring-only) — will
   self-reap via the in-VM stall-kill per this doc's established pattern.
+- **2026-07-31T05:10Z (slot-15) — a FOURTH distinct signature, genuinely non-memory-related**: shard 13 (`-032349`) died
+  differently again — its `run.log` tail shows NO `rc=137`, no OOM, no silent freeze; instead explicit
+  network-connectivity errors: `upload blocked >90.0s`, then `SSLEOFError` on a GCS upload, a 404 on its own
+  deployment-manifest object, and finally
+  `ERROR migrate failed .../venue=BYBIT/instrument_type=perpetual/data_type=book_snapshot_5/BYBIT:PERPETUAL:AXS-USDT@LIN.parquet: Connection reset by peer`.
+  This looks like a genuine transient network blip on the VM/GCS side, unrelated to the script's own memory behavior —
+  worth excluding from the memory-leak root-cause investigation entirely (it's an infra reliability issue, not a code
+  issue). A fresh relaunch (`canonical-migration-cefi-content-apply-20260731- 051007`, no shard-number in the name — a
+  different launcher naming convention, not mine) is already `RUNNING` (someone else's action). No action taken
+  (monitoring-only).
