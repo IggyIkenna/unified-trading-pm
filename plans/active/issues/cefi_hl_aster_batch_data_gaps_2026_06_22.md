@@ -445,16 +445,16 @@ Synthetic `DEPLOYMENT_FAILED` routed through the real notifier mirrors with the 
       routing split shipped alerting-service@f94b3b5 + deployment-service@94dfcfc 2026-06-23.
 
       **SHIPPED 2026-07-30 (slot 8) — `unified-trading-pm@66fa926d5`.** Executed via
-                                  `plans/active/cefi_satellite_ao_dispatch_batch3_2026_07_26.md`'s owning todo (per the SUPERSEDED note below,
-                                  which this entry preserves for history): both cited shas verified reachable on `origin/live-defi-rollout`, the
-                                  live routing code read directly and confirmed to match the claimed split, codex corrected. Both checkboxes
-                                  flipped citing the same commit, per that todo's own instruction.
+                                      `plans/active/cefi_satellite_ao_dispatch_batch3_2026_07_26.md`'s owning todo (per the SUPERSEDED note below,
+                                      which this entry preserves for history): both cited shas verified reachable on `origin/live-defi-rollout`, the
+                                      live routing code read directly and confirmed to match the claimed split, codex corrected. Both checkboxes
+                                      flipped citing the same commit, per that todo's own instruction.
 
-                                  **SUPERSEDED (2026-07-30, conflict-check `blank_assigned_vm_dispatch_classification_gap_2026_07_26.md`-005)** —
-                                              this exact fix is already carried as its own todo (`[DOCS] P2. Correct the codex Slack-parity contract...`) in the
-                                              currently-active `plans/active/cefi_satellite_ao_dispatch_batch3_2026_07_26.md` (which explicitly cites THIS
-                                              doc/line as its source). Do not dispatch this copy — that plan owns execution; when it ships, flip both
-                                              checkboxes citing the same commit.
+                                      **SUPERSEDED (2026-07-30, conflict-check `blank_assigned_vm_dispatch_classification_gap_2026_07_26.md`-005)** —
+                                                  this exact fix is already carried as its own todo (`[DOCS] P2. Correct the codex Slack-parity contract...`) in the
+                                                  currently-active `plans/active/cefi_satellite_ao_dispatch_batch3_2026_07_26.md` (which explicitly cites THIS
+                                                  doc/line as its source). Do not dispatch this copy — that plan owns execution; when it ships, flip both
+                                                  checkboxes citing the same commit.
 
 ## UAC capture-universe expansion — survivorship-bias-free (operator 2026-06-23)
 
@@ -884,10 +884,40 @@ bad-request, needs a look). Failing instruments are IN-UNIVERSE (e.g. `KRAKEN-FU
       `quality-gates.sh` green. Self-heals on the next nightly `lifecycle-catalogue-regen-cefi` run. **(b) SPLIT to the
       follow-up todo below** — `OKEX`/`ATOM`/`USDC-TRY` need real investigation, not a same-shape fix. ~2k
       `In CSV column #` decode errors remain a separate Tardis-CSV parse class.
-- [ ] [SCRIPT] P2. **Follow-up — CeFi legacy-venue-spelling fold + USDC-TRY quote-bypass check** (split 2026-07-27,
-      investigation-only): (1) `CEFI_VENUE_FOLD` (`unified-api-contracts/.../market_data_categories.py:549-567`, folds
-      `OKEX`/`CRYPTOFACILITIES`/etc.) is wired into an audit script + UI panel only, never the rollup — confirm a raw
-      legacy `venue` reaches `catalog.parquet` first; trace `instrument_id` derivation too — a post-hoc fold could
-      collide with an already-canonical row. (2) Check `_resolve_base_quote()` (tardis/parsing.py) against the real
-      `USDC-TRY` symbol — a failed split bypasses the quote-gate via an empty string, not a genuine leak. (3) **NOT a
-      bug**: `ATOM` in `CEFI_BASE_ASSET_UNIVERSE` is a RULED 2026-06-23 decision — no fix without a fresh ruling.
+- [x] ✅ [SCRIPT] P2. **RESOLVED — investigation-only, NO code fix needed (2026-07-31, slot-10)**. Both parts confirmed,
+      no bug found in either:
+
+      **(1) `CEFI_VENUE_FOLD` rollup wiring — CONFIRMED display/audit-only, no collision risk today.**
+          `CEFI_VENUE_FOLD` (`unified-api-contracts/unified_api_contracts/registry/market_data_categories.py:611-629`) has
+          exactly two consumers repo-wide: `instruments-service/scripts/check_enumeration_completeness.py:43,163,188` (the
+          Honest Coverage v2 Layer-1 completeness **audit**) and `deployment-api/deployment_api/routes/data_status/
+          _distinct_values.py:140-206` (via `CEFI_VENUE_ACCEPTED_NONCANONICAL_ALIASES`, suppressing dialect spellings from
+          "non-canonical drift" badging on the distinct-values **UI panel**). `instruments-service/scripts/
+          build_instrument_catalogue.py` (the script that writes `catalog.parquet`) has NO import of `CEFI_VENUE_FOLD` —
+          a raw legacy venue spelling (`OKEX`, `CRYPTOFACILITIES`, etc.) reaches `catalog.parquet` UNFOLDED, exactly as
+          suspected. `instrument_id` is derived by `unified_api_contracts/internal/reference/canonical_id_builder.py:735-750`
+          (`build_instrument_id(venue, instrument_type, symbol, ...)` → `VENUE:INSTRUMENT_TYPE:SYMBOL`, raw venue embedded
+          verbatim) — so a legacy-spelled row's `instrument_id` (`OKEX:PERPETUAL:BTC-USD`) is byte-distinct from the
+          canonical row's (`OKX:PERPETUAL:BTC-USD`); no collision exists in current code because nothing re-derives
+          `instrument_id` from a folded venue. The collision risk the todo flagged is a real hazard **only if** a future
+          consumer applies the fold to `venue` AND re-derives `instrument_id` before joining against
+          `_aggregate_key()`/`_canonical_instrument_id()` (`build_instrument_catalogue.py:1173-1221`) — noted here as a
+          guardrail for any future write-time use of the fold, not an open defect today.
+
+          **(2) `USDC-TRY` quote-bypass — CONFIRMED fail-safe, but NOT via the hypothesized empty-string mechanism.**
+          `_resolve_base_quote()` lives in **instruments-service** `reference_data/adapters/cefi/tardis/parsing.py:307-415`
+          (not MTDS — MTDS's `tardis_symbol_parsing.py` only comments on IS's function). `TRY` is already a recognized
+          quote currency in `_QUOTE_CURRENCIES` (`parsing.py:81-148`, line 115) — the split on `USDC-TRY` (or concatenated
+          `USDCTRY`) resolves correctly to `("USDC", "TRY")`; **quote never comes back empty**, so the hypothesized
+          failed-split/empty-string bypass does not occur. The row is instead rejected by the ordinary, intended branch of
+          `_passes_asset_filter()` (`parsing.py:581`): `TRY` is not in `CEFI_ACCEPTED_QUOTE_ASSETS = {USDT, USDC, USD}`
+          (`unified-api-contracts/unified_api_contracts/registry/cefi_instrument_universe.py:132-134`) or any per-venue
+          extension, so the non-empty-quote-not-accepted branch fires and the row is dropped — a working, designed gate,
+          not an accidental fallback. (A separate empty-quote/`instrument_type` skip guard also exists at `adapter.py:
+          791-804` as an unrelated second line of defense, for genuine parse failures — not triggered here.) Verdict:
+          fail-safe, not a leak — confirmed, with the correct mechanism now documented in case this resurfaces.
+
+          **(3) `ATOM`** — untouched, per the doc's own note this needs a fresh operator ruling, not a fix; no action taken.
+
+          No code changes required in any repo — both investigations resolved with existing behavior already correct.
+          This doc update is the full deliverable.
