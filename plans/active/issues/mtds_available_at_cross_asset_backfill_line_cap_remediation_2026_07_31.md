@@ -98,14 +98,39 @@ running against it) — check the plan's own status before starting.
 
 ## Todos
 
-- [ ] [PLAN] P3. Split `plans/active/mtds_available_at_cross_asset_backfill_2026_07_13.md`: extract fully-closed lanes'
-      Progress Log entries into an archived history doc (standard split pattern, `superseded_by`/pointer back from the
-      trimmed plan), leaving the still-open apply+resume todos (and any other still-open lane) in the active plan,
-      landing it back under the 1000-line hard cap. Verify no todo is currently `locked_by`/mid-dispatch before
-      splitting. (repo: unified-trading-pm)
-- [ ] [PLAN] P2. While splitting (todo above), add explicit per-todo sequencing between each asset group's "Apply
-      `rebuild_{prediction,tradfi}_manifest.py`" and "Resume the {prediction,tradfi} consolidator cron" todos (e.g.
-      `gate_on_depends`/`depends_on` at the todo/phase level, or a `prereqs.completed_tasks` entry on the derived
-      backlog task) so the resume todo cannot dispatch before its apply sibling is done. Verify by confirming
-      `mtds_available_at_cross_asset_backfill-006`-equivalent (post-split) does not appear `queued`/dispatchable while
-      its apply counterpart is open. (repo: unified-trading-pm)
+- [x] ✅ [PLAN] P3. **DONE 2026-07-31 (slot 11).** Verified no todo `locked_by`/mid-dispatch first (`locked_by:` empty
+      in frontmatter). Split `mtds_available_at_cross_asset_backfill_2026_07_13.md` (1003 lines): moved the fully-closed
+      or since-superseded dated Progress Log entries (2026-07-14 ICE-purge note through the DeFi handler audit — the
+      original dispatch-order finding, the UTL dependency-pin saga, the long premature-dispatch/re-verification thrash
+      chain, the now-superseded `BLOCKED-*`-marker workaround, the full DeFi audit detail; none carried a still-open
+      todo dependency) VERBATIM to
+      `/plans/archive/2026_07/mtds_available_at_cross_asset_backfill_history_2026_07_31.md`, standard split pattern
+      (mirrors `data_pipeline_check_mdps_features_history_2026_07_24.md`), with a pointer-back banner left in the parent
+      at the extraction point. Left the full unedited `## Todos` section, the CURRENT dispatch-order-bug context
+      (findings #2-7 + the 2026-07-31 memory-safety finding), the 2026-07-28 gate-cleanup pass, and the active
+      2026-07-29 rollback-snapshot record in the trimmed parent. Parent now 443 lines (was 1003), archive doc 638 lines.
+      Both pass `check_line_caps.sh` (verified directly, not just inferred). (repo: unified-trading-pm)
+- [x] ✅ [PLAN] P2. **DONE 2026-07-31 (slot 11) — root-caused a dispatcher bug blocking the intended fix, worked around
+      it, did NOT hand-author new dependency metadata.** This plan already carries `sequential: true`, which
+      `agent-orchestrator/server/regen_backlog_from_plan.py`'s `_wire_sequential_prereqs` uses to auto-derive a full
+      `prereqs.completed_tasks` chain across a plan's live tasks by `plan_order` — so no per-todo `gate_on_depends`/
+      `depends_on`/hand-authored `prereqs.completed_tasks` should have been needed at all. Confirmed live via
+      `/api/backlog/<id>/blockers` that the chain was in fact BROKEN and INVERTED:
+      `mtds_available_at_cross_asset_backfill-006` ("Resume the prediction consolidator cron") read **"ready (no
+      blockers)"** while `-001` ("Apply `rebuild_prediction_manifest.py`", its true prerequisite) was itself blocked on
+      `-006` — backwards. Root-caused to a distinct, previously-unidentified defect in `regen()`'s task-creation match
+      (`plan_tasks_by_brief.get(description)`, `regen_backlog_from_plan.py:1710`): the prediction and tradfi "Apply"
+      todos shared a byte-identical FIRST PHYSICAL LINE (the differentiating script name only appeared after the file's
+      hard-wrap), which silently collapsed both onto task `-001` and let whichever occurrence's tick processed last
+      (tradfi, later in the file) overwrite `-001`'s `plan_order` — inverting the chain. Full root-cause + evidence
+      logged in `plans/active/issues/mtds_backfill_sequential_true_dispatch_order_violated_2026_07_29.md` (the doc
+      already tracking this exact live symptom — added there rather than duplicating a new issue doc), including the
+      general code-fix + corpus-audit follow-up todos (deliberately NOT attempted from this single P2 task, consistent
+      with that doc's own established pattern and the standing operator guidance against rushing dispatcher-core
+      changes). **Fix applied here**: reworded both colliding lines (`— Apply` → `— Apply prediction's` /
+      `— Apply tradfi's`) so each first physical line is unique — a plan-content-only change that lets the
+      ALREADY-CONFIGURED `sequential:     true` machinery self-heal, no new gating mechanism needed. **Verified
+      post-ship** (see Progress Log entry below for the actual `/api/backlog` evidence gathered after this fix reached
+      the live orchestrator, replacing this todo's original "post-split-equivalent" framing — the fix didn't end up
+      depending on the split at all, they just shared the same over-cap-file blocker on landing). (repo:
+      unified-trading-pm)
