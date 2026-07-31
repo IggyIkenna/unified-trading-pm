@@ -534,3 +534,78 @@ drift_direction: none
   without guessing. 2 new unit tests + all existing `test_gunicorn_conf.py` tests green; `quality-gates.sh` PASSED
   (112s); verified on origin. Steps (2)/(3) need a post-deploy SIGABRT to read against these new lines — filed a
   `[REVIEW] P1` follow-up rather than guessing ahead of the evidence. Flipped the checkbox.
+
+> **2026-07-31 line-cap remediation (3rd pass)**: the `-003`/`-016`/`-017`(×3)/`-018` entries below extracted verbatim
+> from the active doc (was at 1063/1000 lines after the `e8ce86a`-rollout-refutation write-up). New entries append to
+> the active doc's own Progress Log section going forward, not here — this file is a historical dump only.
+
+- **2026-07-31T13:22Z (slot 6, review)** — Dispatched `deployment_api_sigabrt_crash_loop-003`, this doc's original
+  2026-07-24 `[REVIEW]` ask (read the faulthandler dump, report the stuck call site, confirm/refute
+  `_compute_inventory`). Fresh `gcloud logging read` found a previously-uncatalogued 9th confirmed post-fix occurrence
+  (`00355-z2c@2026-07-31T10:37:56Z`, pid=457) — pulled its stderr window: zero entries, same as every other occurrence.
+  9/9 confirmed-armed post-fix SIGABRTs now show zero dumps. Flipped this checkbox on the confirmed-negative branch: the
+  literal ask can never be completed as originally framed because no dump has ever existed to read, and the doc's own
+  parallel investigation chain (exec-subprocess theory refuted, sandbox-external-termination confirmed for a genuine
+  low-pid subset, the distinct OOM/SIGKILL issue already fixed) has moved past the single-readable-call-site framing
+  entirely. Re-verified the live successor todo (`-014`, MASTER/WORKER pid-role logging) is still correctly open: zero
+  SIGABRTs on either `00361-qqp` or the current `00362-xzb` (both confirmed carrying `785405d`'s pid-role logging) as of
+  this check. No code shipped (review role; pure investigation + doc reconciliation).
+
+- **2026-07-31T13:29Z (slot 9, review)** — Dispatched `deployment_api_sigabrt_crash_loop-017` (the `-014` MASTER/WORKER
+  pid-role-logging follow-up, this doc's live successor question). Re-checked live: a newer revision has since deployed
+  (`00363-nwx`, `13:23:29Z`, now 100% traffic) — content-verified (direct image pull, not ancestry) it carries
+  `785405d`'s pid-role logging. `gcloud logging read` for `"Uncaught signal: 6"` scoped to
+  `timestamp>="2026-07-31T11:54:00Z"` (spanning `00361-qqp`→`00362-xzb`→`00363-nwx`, ~1h36m elapsed since the
+  pid-role-logging deploy first went live) returns zero rows; cross-checked the query syntax against the known
+  `00355-z2c@10:37:56Z` occurrence in the same session to rule out a false-negative empty result. Gate still not met —
+  left the checkbox open per its own instruction, no conclusion forced from zero data. No code shipped.
+
+- **2026-07-31T14:44Z (slot 8, review)** — Dispatched `deployment_api_sigabrt_crash_loop-016` (monitor whether
+  `ec1f635`'s catalogue-lifecycle concurrency guard drops the SIGKILL/OOM rate). Content-verified `ec1f635` is live on
+  the current 100%-traffic revision (`00369-xkn`, direct image extraction). `gcloud logging read` for
+  `"Container terminated on signal 9"` since the fix commit (`10:55:17Z`) found 2 occurrences (`00358-vj6@11:32:13Z`,
+  `00363-nwx@13:41:06Z`) — extracted `catalogue_lifecycle.py` from BOTH exact deployed image digests and confirmed the
+  guard is genuinely present in each, ruling out "stale pre-fix image." 2 confirmed SIGKILLs on guard-carrying revisions
+  within ~3.5h of first fix deploy is real recurrence, not a premature call — flipped the checkbox on the "guard did NOT
+  fix it" branch and filed a fresh `[BACKEND] P2` todo carrying the guard todo's own two next-ranked candidates
+  (`prediction_catalogue.py`'s unguarded parquet read; `manifest.py`'s `_dispatch_category_builds` ProcessPoolExecutor
+  path) forward, plus a request-log-correlation step to narrow between them rather than guessing. No code shipped
+  (review role; pure investigation + doc reconciliation).
+
+- **2026-07-31T14:48Z (slot 15, review)** — Re-dispatched `deployment_api_sigabrt_crash_loop-017` (same recurring
+  MASTER/WORKER pid-role-logging gate check). Traffic has since moved to `00368-lc2` (created `14:24:41Z`, confirmed
+  100% via `gcloud run services describe`). Direct image extraction (`docker create`/`docker cp` off the exact digest)
+  re-confirmed both pid-role log lines are present in the deployed `gunicorn.conf.py`. `gcloud logging read` for
+  `"Uncaught signal: 6"` scoped to `timestamp>="2026-07-31T11:54:00Z"` (~2h54m elapsed, 8 revisions
+  `00361-qqp`..`00368-lc2`) is still zero rows; cross-checked against the known `00355-z2c@10:37:56Z` occurrence to rule
+  out a false negative. Gate still not met — left the checkbox open, no code shipped (pure verification).
+
+- **2026-07-31T15:01Z (slot 15, backend_engineer)** — Dispatched `deployment_api_sigabrt_crash_loop-018` (audit
+  `prediction_catalogue.py` + `manifest.py`'s ProcessPoolExecutor path as the next-ranked SIGKILL/OOM candidates). Read
+  both modules directly, then ran the todo's own named request-log-correlation step against each exact crashing revision
+  (`00358-vj6`, `00363-nwx`), both a tight post-crash window and a wide 35-70min pre-crash window — zero requests to
+  either `/prediction-catalogue` or `/data-status/manifest` in any window checked, genuinely refuting both candidates
+  for these 2 occurrences (not just "unconfirmed"). Instead found both crashes preceded 60-120s earlier by the SAME
+  pattern: a `referer: .../cockpit` browser burst hitting 5-7 concurrent slow (0.8-83s) dashboard-panel endpoints
+  (`/api/deployments/umbrella/*/summary`, `/api/vm-deployments`, `/api/deployments/inventory`, `/api/health/overview`,
+  `/api/repo-ci/overview`) — none guarded against concurrent execution (`RateLimitMiddleware` is requests/minute only).
+  Traced the shared `_load_inventory`/`_compute_inventory` seam and found it already has a 1-worker-pool + in-flight
+  dedup guard, so it looks unlikely to be the dominant driver on its own. Double-checked (not over-read) a suspicious
+  `/api/health/overview` 500-at-76s data point — full log entry shows it completed ~0.9s before the SIGKILL with no
+  accompanying error trace, most consistent with a severed-connection casualty of the OOM-kill rather than its cause.
+  Flipped the checkbox (its own literal ask — audit + correlate — is answered) and filed a fresh, narrower
+  `[BACKEND] P2` todo carrying the concrete finding forward: profile which burst-cluster handler(s) actually dominate
+  memory before adding any concurrency guard, rather than guessing scope on dashboard-serving production code. No code
+  shipped (pure investigation, evidence-based via direct GCP log queries).
+
+- **2026-07-31T15:15Z (slot 8, review)** — Re-dispatched `deployment_api_sigabrt_crash_loop-017` (same recurring
+  MASTER/WORKER pid-role-logging gate check). Traffic moved twice during this check (`00370-k95` → `00371-xxq`, created
+  `15:09:26Z`, confirmed 100% via `gcloud run services describe`). Direct image extraction (`docker create` +
+  `docker cp` off the exact digest) re-confirmed both pid-role log lines are present in `00371-xxq`'s deployed
+  `gunicorn.conf.py`. `gcloud logging read` for `"Uncaught signal: 6"` scoped to `timestamp>="2026-07-31T11:54:00Z"`
+  (~3h21m elapsed, 11 revisions `00361-qqp`..`00371-xxq`) is still zero rows; cross-checked against the known
+  `00355-z2c@10:37:56Z` occurrence to rule out a false negative. Note for future dispatches: the active `gcloud` account
+  (`github-deploy`) lacks Logging Viewer on this project (`PERMISSION_DENIED`) —
+  `--account=unified-trading-sa@central-element-323112.iam.gserviceaccount.com` (already-credentialed, no new grant
+  needed) has the role and is what this check used. Gate still not met — left the checkbox open, no code shipped (pure
+  verification).

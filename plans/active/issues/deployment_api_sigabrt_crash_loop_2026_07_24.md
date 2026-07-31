@@ -757,7 +757,7 @@ cancellation-timeout fix and already shipped). Suggested next steps for whoever 
       situation this todo already flags for `00382-cat`; not a safety issue, just build cruft). No code shipped this
       entry (investigation only — the fix ships under the new todo below).
 
-- [ ] [BACKEND] P1. **NEW, opened 2026-07-31 (slot 7, backend_engineer) — `deployment-api@e8ce86a` (the confirmed
+- [x] ✅ [BACKEND] P1. **NEW, opened 2026-07-31 (slot 7, backend_engineer) — `deployment-api@e8ce86a` (the confirmed
       stdout/stderr-blackout root-cause fix) BLOCKS its own rollout: the resulting Cloud Run revision consistently fails
       the STARTUP TCP probe and never binds port 8080, so the fix cannot reach production yet.** Evidence (todo above):
       2 independent `gcloud run services update-traffic` attempts to revision `uts-shared-deployment-api-00388-9mt`
@@ -785,7 +785,71 @@ cancellation-timeout fix and already shipped). Suggested next steps for whoever 
       difference the deploy picked up (resource limits, concurrency, env vars, service account). Done-when: a revision
       built from `e8ce86a` (or a fix on top of it) successfully receives traffic and serves `/api/health` 200, OR the
       mechanism is refuted/identified with evidence and a fix ships. Until this ships, do NOT force traffic onto a
-      failing revision — leave `00374-4pd` serving (current safe state). (repo: deployment-api)
+      failing revision — leave `00374-4pd` serving (current safe state). (repo: deployment-api) — **2026-07-31 (slot 6,
+      backend_engineer): angle (3) executed with real data — REFUTES the `e8ce86a`-specific framing entirely; this is
+      NOT a code defect, it's a service-wide Cloud Run cold-start failure.** Diffed `00374-4pd` (known-good, warm since
+      `18:39:05Z`) vs `00394-yoh`/`00395-san` — two FRESH revisions tagged `iam-fix-verify`/`iam-fix-retest` by a
+      concurrent, unrelated investigation on this SAME service, deployed `19:32Z`/`19:35Z` — and both use the
+      **IDENTICAL image digest** to `00374-4pd` (`sha256:71a09bfb...`, confirmed via `spec.containers[0].image`) plus
+      byte-identical `spec.serviceAccountName`/env vars/secret refs (confirmed via full `revisions describe` diff — zero
+      difference). Yet both failed the STARTUP TCP probe with the exact same `Starting new instance` →
+      `Container called     exit(0)` (~32s) → `STARTUP TCP probe failed` signature as `00388-9mt`. Since the image and
+      full revision template are byte-identical to the currently-serving-fine `00374-4pd`, **the failure cannot be in
+      application code or revision config at all** — angle (2) is answered by this: a non-`e8ce86a` container (in this
+      case, literally the SAME already-proven container) also fails under current conditions. Independently reproduced
+      live: tagged `00389-d9d` (an `e8ce86a`-era build that had ALREADY achieved `Ready=True` once, at `19:39:06Z`, 0%
+      traffic, no tag) with `--set-tags=e8ce86a-verify=...` to force a fresh cold start — it then failed **6/6
+      consecutive retries** over `21:22:01Z`-`21:25:14Z` (`MANUAL_OR_CUSTOMER_MIN_INSTANCE` reason each time), the
+      identical ~32s exit(0)/probe-fail signature, despite having succeeded on its very first attempt earlier.
+      **Conclusion: cold container startup for `uts-shared-deployment-api` is CURRENTLY, platform-side, broken for ANY
+      fresh instance start regardless of image/digest/config — only the one instance that has been continuously warm
+      since `18:39:05Z` still works** (confirmed serving `/api/health` 200 throughout this entire investigation). This
+      redirects the ENTIRE premise of this todo and its parent (`e8ce86a` is not defective — it was simply the fix being
+      tested during the window this broke) to a NEW, higher-severity, correctly-scoped finding below. Production is safe
+      RIGHT NOW (100% traffic still on warm `00374-4pd`, verified `/api/health`→200 as of this entry) but at real,
+      non-theoretical risk: `minScale=1`, and this SAME service already has 2 CONFIRMED recent
+      `Container terminated on signal 9` (OOM/SIGKILL — a full-container kill, unlike the in-process SIGABRT worker
+      crashes `00374-4pd` has already silently absorbed twice via gunicorn's own worker respawn with zero
+      Cloud-Run-level instance restart, confirmed via `varlog/system`: only ONE `Starting new instance` line since
+      `18:39:05Z` despite 2 `Uncaught signal: 6` events at `19:00:04Z`/`21:22:57Z`) in this doc's own OOM sub-issue — if
+      THAT (or any other full-container-kill event, or a routine redeploy) forces `00374-4pd` to be replaced while this
+      cold-start breakage persists, the service has **no demonstrated path back to a healthy instance**. This also means
+      every OTHER in-flight fix in this doc (e.g. `ec1f635`'s concurrency guard, `785405d`'s pid-role logging) is
+      silently blocked from ever reaching a _routed_ revision the same way `e8ce86a` was — not a per-fix problem, a
+      whole-service deploy-pipeline stall. Filed the correctly-scoped `[INFRA] P0` follow-up below; NOT diagnosing the
+      platform-level mechanism further here (out of backend_engineer craft scope — cloud/IAM/infra provisioning is
+      explicitly `does_not` for this role; escalating). No code shipped (root-cause redirect only). (repo:
+      deployment-api)
+
+- [ ] [INFRA] P0. **NEW, opened 2026-07-31 (slot 6, backend_engineer) — `uts-shared-deployment-api` cold container
+      startup is broken platform-side for ANY fresh instance (not an `e8ce86a`/application-code defect — see the
+      refutation on the todo directly above).** Evidence: 3 independent fresh-cold-start attempts across 2 DIFFERENT
+      image digests (the already-proven-good `71a09bfb` digest via `00394-yoh`/`00395-san`, AND the `e8ce86a`-era
+      `32f081ad` digest via `00389-d9d`, re-tested and failing 6/6 on a second attempt after one earlier success) all
+      failed the STARTUP TCP probe with the identical `Starting new instance` → `Container called exit(0)` (~30-32s) →
+      `Default STARTUP TCP probe failed` signature, zero stdout/stderr in every case — while the ONE already-warm
+      instance (`00374-4pd`, running continuously since `2026-07-31T18:39:05Z`) keeps serving `/api/health` 200
+      throughout. Byte-identical image + env vars + secrets + service account between the warm-working and cold-failing
+      cases rules out application code and revision config as the cause. Timing is suggestive (not proven) of a
+      connection to a CONCURRENT, unrelated investigation tagging revisions `iam-fix-verify`/`iam-fix-retest` on this
+      SAME service in the SAME window (`19:32Z`-`19:35Z`) — no matching plan/issue doc was found for that work
+      (`grep -rl "iam-fix" plans/active/` — 0 hits), so its scope/author/status is unknown; find and coordinate with
+      whoever owns it FIRST rather than re-diagnosing blind. Candidate angles (none confirmed): (1) an IAM policy change
+      (runtime service account role, Secret Manager accessor binding, or Artifact Registry pull permission) that broke
+      cold-start secret/credential resolution while leaving an already-initialized warm instance unaffected — grep Cloud
+      Audit Logs (`protoPayload.methodName:"SetIamPolicy" OR "google.iam"`) scoped to this project +
+      `unified-trading-sa@`/the Cloud Run runtime SA around `19:00Z`-`19:35Z` for the actual change; (2) a Cloud Run
+      quota/capacity limit for `cpu=4`/`memory=16Gi` instances in `asia-northeast1` being exhausted by the high
+      concurrent-deploy volume this SAME crash-loop investigation is generating fleet-wide (7+ revisions of this ONE
+      service created in ~25 min at one point) — check Cloud Monitoring quota-utilization metrics, not just logs; (3) a
+      VPC Access Connector or Secret Manager availability issue specific to cold-start credential fetch. **Severity: P0,
+      not P1** — `minScale=1` with zero demonstrated recovery path if the sole warm instance is ever replaced (a routine
+      redeploy, or this doc's own already-tracked OOM/SIGKILL sub-issue recurring, would trigger exactly that); until
+      fixed, EVERY future deploy of this shared service (all of this doc's in-flight fixes included) is silently blocked
+      at the platform layer regardless of code correctness. Done-when: a freshly-cold-started instance of
+      `uts-shared-deployment-api` (any current image) passes the STARTUP TCP probe, OR the mechanism is
+      identified+fixed. Do NOT attempt further canary deploys against this ALREADY-CONTENDED service while diagnosing —
+      each attempt adds to the churn. (repo: deployment-api, cross-cutting IAM/infra)
 
 - [ ] [BACKEND] P3. **NEW, opened 2026-07-31 (slot 13, backend_engineer) — dead-code cleanup: `workers/auto_sync.py`'s
       entire background-sync implementation is unreachable in production.** Found while tracing the call graph for the
@@ -918,83 +982,20 @@ cancellation-timeout fix and already shipped). Suggested next steps for whoever 
 
 ## Progress Log
 
-> **2026-07-31 line-cap remediation (2nd pass)**: every entry from the original 2026-07-24 finding through the `-014`
-> dispatch (`-009`/`-008`/`-014`, in addition to the earlier `-007`-and-before batch) extracted verbatim to
-> `/plans/archive/2026_07/deployment_api_sigabrt_crash_loop_progress_log_history_2026_07_31.md` (doc was at 1024/1000
-> lines after the blackout-fix flip). New entries append below this note going forward.
-
-- **2026-07-31T13:22Z (slot 6, review)** — Dispatched `deployment_api_sigabrt_crash_loop-003`, this doc's original
-  2026-07-24 `[REVIEW]` ask (read the faulthandler dump, report the stuck call site, confirm/refute
-  `_compute_inventory`). Fresh `gcloud logging read` found a previously-uncatalogued 9th confirmed post-fix occurrence
-  (`00355-z2c@2026-07-31T10:37:56Z`, pid=457) — pulled its stderr window: zero entries, same as every other occurrence.
-  9/9 confirmed-armed post-fix SIGABRTs now show zero dumps. Flipped this checkbox on the confirmed-negative branch: the
-  literal ask can never be completed as originally framed because no dump has ever existed to read, and the doc's own
-  parallel investigation chain (exec-subprocess theory refuted, sandbox-external-termination confirmed for a genuine
-  low-pid subset, the distinct OOM/SIGKILL issue already fixed) has moved past the single-readable-call-site framing
-  entirely. Re-verified the live successor todo (`-014`, MASTER/WORKER pid-role logging) is still correctly open: zero
-  SIGABRTs on either `00361-qqp` or the current `00362-xzb` (both confirmed carrying `785405d`'s pid-role logging) as of
-  this check. No code shipped (review role; pure investigation + doc reconciliation).
-
-- **2026-07-31T13:29Z (slot 9, review)** — Dispatched `deployment_api_sigabrt_crash_loop-017` (the `-014` MASTER/WORKER
-  pid-role-logging follow-up, this doc's live successor question). Re-checked live: a newer revision has since deployed
-  (`00363-nwx`, `13:23:29Z`, now 100% traffic) — content-verified (direct image pull, not ancestry) it carries
-  `785405d`'s pid-role logging. `gcloud logging read` for `"Uncaught signal: 6"` scoped to
-  `timestamp>="2026-07-31T11:54:00Z"` (spanning `00361-qqp`→`00362-xzb`→`00363-nwx`, ~1h36m elapsed since the
-  pid-role-logging deploy first went live) returns zero rows; cross-checked the query syntax against the known
-  `00355-z2c@10:37:56Z` occurrence in the same session to rule out a false-negative empty result. Gate still not met —
-  left the checkbox open per its own instruction, no conclusion forced from zero data. No code shipped.
-
-- **2026-07-31T14:44Z (slot 8, review)** — Dispatched `deployment_api_sigabrt_crash_loop-016` (monitor whether
-  `ec1f635`'s catalogue-lifecycle concurrency guard drops the SIGKILL/OOM rate). Content-verified `ec1f635` is live on
-  the current 100%-traffic revision (`00369-xkn`, direct image extraction). `gcloud logging read` for
-  `"Container terminated on signal 9"` since the fix commit (`10:55:17Z`) found 2 occurrences (`00358-vj6@11:32:13Z`,
-  `00363-nwx@13:41:06Z`) — extracted `catalogue_lifecycle.py` from BOTH exact deployed image digests and confirmed the
-  guard is genuinely present in each, ruling out "stale pre-fix image." 2 confirmed SIGKILLs on guard-carrying revisions
-  within ~3.5h of first fix deploy is real recurrence, not a premature call — flipped the checkbox on the "guard did NOT
-  fix it" branch and filed a fresh `[BACKEND] P2` todo carrying the guard todo's own two next-ranked candidates
-  (`prediction_catalogue.py`'s unguarded parquet read; `manifest.py`'s `_dispatch_category_builds` ProcessPoolExecutor
-  path) forward, plus a request-log-correlation step to narrow between them rather than guessing. No code shipped
-  (review role; pure investigation + doc reconciliation).
-
-- **2026-07-31T14:48Z (slot 15, review)** — Re-dispatched `deployment_api_sigabrt_crash_loop-017` (same recurring
-  MASTER/WORKER pid-role-logging gate check). Traffic has since moved to `00368-lc2` (created `14:24:41Z`, confirmed
-  100% via `gcloud run services describe`). Direct image extraction (`docker create`/`docker cp` off the exact digest)
-  re-confirmed both pid-role log lines are present in the deployed `gunicorn.conf.py`. `gcloud logging read` for
-  `"Uncaught signal: 6"` scoped to `timestamp>="2026-07-31T11:54:00Z"` (~2h54m elapsed, 8 revisions
-  `00361-qqp`..`00368-lc2`) is still zero rows; cross-checked against the known `00355-z2c@10:37:56Z` occurrence to rule
-  out a false negative. Gate still not met — left the checkbox open, no code shipped (pure verification).
-
-- **2026-07-31T15:01Z (slot 15, backend_engineer)** — Dispatched `deployment_api_sigabrt_crash_loop-018` (audit
-  `prediction_catalogue.py` + `manifest.py`'s ProcessPoolExecutor path as the next-ranked SIGKILL/OOM candidates). Read
-  both modules directly, then ran the todo's own named request-log-correlation step against each exact crashing revision
-  (`00358-vj6`, `00363-nwx`), both a tight post-crash window and a wide 35-70min pre-crash window — zero requests to
-  either `/prediction-catalogue` or `/data-status/manifest` in any window checked, genuinely refuting both candidates
-  for these 2 occurrences (not just "unconfirmed"). Instead found both crashes preceded 60-120s earlier by the SAME
-  pattern: a `referer: .../cockpit` browser burst hitting 5-7 concurrent slow (0.8-83s) dashboard-panel endpoints
-  (`/api/deployments/umbrella/*/summary`, `/api/vm-deployments`, `/api/deployments/inventory`, `/api/health/overview`,
-  `/api/repo-ci/overview`) — none guarded against concurrent execution (`RateLimitMiddleware` is requests/minute only).
-  Traced the shared `_load_inventory`/`_compute_inventory` seam and found it already has a 1-worker-pool + in-flight
-  dedup guard, so it looks unlikely to be the dominant driver on its own. Double-checked (not over-read) a suspicious
-  `/api/health/overview` 500-at-76s data point — full log entry shows it completed ~0.9s before the SIGKILL with no
-  accompanying error trace, most consistent with a severed-connection casualty of the OOM-kill rather than its cause.
-  Flipped the checkbox (its own literal ask — audit + correlate — is answered) and filed a fresh, narrower
-  `[BACKEND] P2` todo carrying the concrete finding forward: profile which burst-cluster handler(s) actually dominate
-  memory before adding any concurrency guard, rather than guessing scope on dashboard-serving production code. No code
-  shipped (pure investigation, evidence-based via direct GCP log queries).
-
-- **2026-07-31T15:15Z (slot 8, review)** — Re-dispatched `deployment_api_sigabrt_crash_loop-017` (same recurring
-  MASTER/WORKER pid-role-logging gate check). Traffic moved twice during this check (`00370-k95` → `00371-xxq`, created
-  `15:09:26Z`, confirmed 100% via `gcloud run services describe`). Direct image extraction (`docker create` +
-  `docker cp` off the exact digest) re-confirmed both pid-role log lines are present in `00371-xxq`'s deployed
-  `gunicorn.conf.py`. `gcloud logging read` for `"Uncaught signal: 6"` scoped to `timestamp>="2026-07-31T11:54:00Z"`
-  (~3h21m elapsed, 11 revisions `00361-qqp`..`00371-xxq`) is still zero rows; cross-checked against the known
-  `00355-z2c@10:37:56Z` occurrence to rule out a false negative. Note for future dispatches: the active `gcloud` account
-  (`github-deploy`) lacks Logging Viewer on this project (`PERMISSION_DENIED`) —
-  `--account=unified-trading-sa@central-element-323112.iam.gserviceaccount.com` (already-credentialed, no new grant
-  needed) has the role and is what this check used. Gate still not met — left the checkbox open, no code shipped (pure
-  verification).
+> **2026-07-31 line-cap remediation (3rd pass)**: every entry from the `-003` dispatch through `-018` extracted verbatim
+> to `/plans/archive/2026_07/deployment_api_sigabrt_crash_loop_progress_log_history_2026_07_31.md` (doc was at 1063/1000
+> lines after the `e8ce86a`-rollout-refutation write-up). New entries append below this note.
 
 - **2026-07-31 (slot 8, backend_engineer)** — Dispatched `deployment_api_sigabrt_crash_loop-023` (blackout
   bootstrap/fd-wiring todo). 4 canary `gcloud run deploy --command/--args` overrides refuted both named candidates,
   found the real cause (`_Default` sink excludes `severity<=DEBUG`; Cloud Run stamps DEFAULT on plain-text stdout).
   Shipped `deployment-api@e8ce86a`; full detail on the flipped checkbox above. Filed a `[REVIEW]` follow-up.
+
+- **2026-07-31 (slot 6, backend_engineer)** — Dispatched `deployment_api_sigabrt_crash_loop-026` (diagnose why `e8ce86a`
+  "blocks its own rollout"). Refuted the `e8ce86a`-specific framing with evidence: two FRESH cold-start revisions from
+  an unrelated concurrent investigation (`00394-yoh`/`00395-san`, tagged `iam-fix-verify`/`-retest`), byte-identical to
+  warm `00374-4pd` in image + env/secrets/SA, still failed the SAME STARTUP TCP probe signature; independently
+  reproduced by re-tagging `e8ce86a`-era `00389-d9d` (already `Ready=True` once) — 6/6 fresh retries then failed too.
+  Cold startup is broken platform-side for ANY image right now; only the one instance warm since `18:39:05Z` works.
+  Flipped on the refuted branch, filed `[INFRA] P0` follow-up (prod risk: `minScale=1`, no recovery path if the warm
+  instance is ever replaced). Verified prod safe throughout. No code shipped — infra/IAM-scoped.
