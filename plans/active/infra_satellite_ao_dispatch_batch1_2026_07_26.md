@@ -314,9 +314,10 @@ orphaned?" resolves to "everything," because nothing in the covering set does an
       classification. Repo: deployment-service. Source:
       `issues/vm_billing_waste_first_audit_and_preflight_gate_design_2026_07_24.md`.
 
-- [x] ✅ [BACKEND] P2. **DONE 2026-07-31 (slot 8) — `deployment-service@62acb9d`.** Make the launcher's two best-effort
-      GCS writes reliable — `LAUNCH_PARAMS.json` at create time and the `PREEMPTED` marker at shutdown. (a)
-      `LAUNCH_PARAMS.json`: live-swept all 50 `af-backfill-*` `vm-logs/` dirs
+- [x] ✅ [BACKEND] P2. **DONE 2026-07-31 (slot 8) — `deployment-service@b4503ef`** (rebased onto a concurrent slot-2 fix
+      to the same file's stale comment, `deployment-service@daf3ad5` — no conflict, cleanly rebased). Make the
+      launcher's two best-effort GCS writes reliable — `LAUNCH_PARAMS.json` at create time and the `PREEMPTED` marker at
+      shutdown. (a) `LAUNCH_PARAMS.json`: live-swept all 50 `af-backfill-*` `vm-logs/` dirs
       (`gs://deployment-scripts-central-element-323112/vm-logs/`, 2026-07-17..2026-07-31) — **0/29 present before
       2026-07-25, 21/21 present after** (the 3 launched on 2026-07-25 itself, before the fix actually landed that day,
       are also absent — consistent, not noise). This exactly matches
