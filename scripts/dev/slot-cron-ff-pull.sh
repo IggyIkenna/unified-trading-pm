@@ -338,6 +338,46 @@ with open(out_path, 'w') as fh:
     mv -f "${tmp}" "${FF_RESULT_FILE}" 2>/dev/null || true
 }
 
+# Lightweight lockfile-drift heads-up (deployment_ui_coverage_floor_red_preexisting_2026_07_31
+# follow-up). A package-manager migration or lockfile bump (e.g. the 2026-07-29 npm→pnpm +
+# jsdom→happy-dom switch that produced the false coverage-floor red) can silently desync a
+# long-lived slot clone's `node_modules` — nothing else in this cron ever looks at JS
+# lockfiles. This is deliberately NOT another install call: base-ui.sh's `[0/6] ENVIRONMENT`
+# step already self-heals `node_modules` on every real `quality-gates.sh` run (shipped
+# unified-trading-pm@01ff2a3f5), so re-running `pnpm/yarn/npm install` here on a 5-min cron
+# fanning out across every slot would just add repeated network/latency cost for zero
+# additional correctness. Instead: hash the highest-precedence lockfile present (pnpm > yarn
+# > npm, matching base-ui.sh's own precedence) and compare against this clone's own
+# last-seen hash (persisted per-repo, same keying convention as the min-interval throttle
+# state above — repo_key is this clone's resolved path, so two slots' clones of the same
+# repo NAME never share state). A change since last tick logs one WARN so the drift is
+# visible in the cron log the moment it lands, not discovered days later via a confusing
+# coverage/test failure. No hash on record yet (first tick ever, or state file lost) seeds
+# it silently — never warns on a clone's very first observation. Pure local file reads, no
+# network, no I/O beyond one small state file — safe to call unconditionally, every tick,
+# regardless of this repo's git/dirty/throttle outcome this tick.
+_check_lockfile_drift() {
+    local repo_name="$1" repo_key="$2" lock="" pkg_mgr=""
+    if [[ -f "pnpm-lock.yaml" ]]; then
+        lock="pnpm-lock.yaml"; pkg_mgr="pnpm"
+    elif [[ -f "yarn.lock" ]]; then
+        lock="yarn.lock"; pkg_mgr="yarn"
+    elif [[ -f "package-lock.json" ]]; then
+        lock="package-lock.json"; pkg_mgr="npm"
+    else
+        return 0  # not a JS repo (or no lockfile yet) — nothing to track
+    fi
+    local hash state_file prev_hash
+    hash=$(shasum -a 256 "${lock}" 2>/dev/null | cut -d' ' -f1)
+    [[ -n "${hash}" ]] || return 0
+    state_file="${TMPDIR:-/tmp}/slot-cron-ff-pull.lockhash.$(printf '%s' "${repo_key}" | shasum -a 256 2>/dev/null | cut -d' ' -f1)"
+    prev_hash=$(cat "${state_file}" 2>/dev/null || echo "")
+    if [[ -n "${prev_hash}" && "${prev_hash}" != "${hash}" ]]; then
+        log "[WARN:lockfile-drift] ${repo_name} — ${lock} changed since last tick — node_modules may now be stale (base-ui.sh self-heals at QG time; run '${pkg_mgr} install' now to pre-warm this clone)"
+    fi
+    printf '%s' "${hash}" > "${state_file}" 2>/dev/null || true
+}
+
 _refresh_independent_clone_ref() {
     # Path-B fix (2026-06-12): advance an independent slot clone's
     # refs/remotes/origin/<branch> from its --reference (main-workspace) clone, whose ref was
@@ -370,6 +410,11 @@ ff_one() {
     repo_key="$(pwd)"
     branch=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo "DETACHED")
     int_branch="$(branch_for_repo "${repo_name}")"
+
+    # Lockfile-drift heads-up — runs unconditionally, every tick, regardless of this repo's
+    # git/dirty/throttle outcome below (pure local file reads, no network; see the function's
+    # own comment for the full rationale).
+    _check_lockfile_drift "${repo_name}" "${repo_key}"
 
     # Min-interval throttle (widen-pm-cron-cadence_2026_07_27): skip this repo entirely,
     # before any other per-repo work, if it was processed more recently than its configured
