@@ -38,12 +38,11 @@ code_refs:
 # DeFi Phase 3 Infrastructure
 
 > **[2026-07-31 freshness re-review] — `position-balance-monitor-service`, `risk-and-exposure-service` and
-> `pnl-attribution-service` NO LONGER EXIST as separate repos.** All three were subtree-merged into **`strategy-service`**
-> on 2026-05-20 as the `strategy_service/{position,risk,pnl}/` sub-packages — one Docker image parameterised by
-> `--operation`. Read every mention of those three names below as "the corresponding strategy-service sub-package"; the
-> responsibilities described are unchanged. SSOT:
+> `pnl-attribution-service` NO LONGER EXIST as separate repos.** All three were subtree-merged into
+> **`strategy-service`** on 2026-05-20 as the `strategy_service/{position,risk,pnl}/` sub-packages — one Docker image
+> parameterised by `--operation`. Read every mention of those three names below as "the corresponding strategy-service
+> sub-package"; the responsibilities described are unchanged. SSOT:
 > [`/codex/04-architecture/strategy-service-architecture.md`](/codex/04-architecture/strategy-service-architecture.md).
-
 
 ## Overview
 
@@ -99,8 +98,8 @@ All DeFi fills include gas cost information for accurate P&L attribution. The in
 
 > **NOT SHIPPED (verified 2026-07-31).** There is no `unified_api_contracts/internal/fills` module and no
 > `DeFiFillRecord` class anywhere in the workspace. The nearest shipped type is
-> `unified_api_contracts/internal/reconciliation.py::TradeFillRecord`. Treat the dataclass below as the target
-> schema, not an importable type.
+> `unified_api_contracts/internal/reconciliation.py::TradeFillRecord`. Treat the dataclass below as the target schema,
+> not an importable type.
 
 ```python
 @dataclass
@@ -224,12 +223,18 @@ Implementations:
 
 ### TreasuryMonitor
 
-`position_balance_monitor_service/core/treasury_monitor.py` tracks the treasury wallet balance across chains and emits
-alerts when:
+> **Correction (verified 2026-07-31).** `position_balance_monitor_service` was retired 2026-05-20 into
+> `strategy-service` — real path is `strategy-service/strategy_service/position/core/treasury_monitor.py`. Thresholds
+> are **percent-of-AUM per share class**, not fixed ETH amounts — see below.
 
-- Treasury balance drops below `min_treasury_balance_eth` (default 5 ETH)
-- Trading wallet balance drops below `min_trading_balance_eth` (default 0.5 ETH)
-- Pending withdrawals exceed `max_pending_withdrawal_pct` (default 20%)
+`strategy_service/position/core/treasury_monitor.py`'s `TreasuryMonitor` tracks a per-`(fund_id, share_class)` treasury
+wallet balance and emits alerts when:
+
+- Treasury reserve fraction drops below `TreasuryConfig.min_threshold_pct` (default 10%) → `TREASURY_LOW`
+- Treasury reserve fraction rises above `TreasuryConfig.max_threshold_pct` (default 30%) → `TREASURY_HIGH`
+
+There is no fixed-ETH-amount threshold (`min_treasury_balance_eth`/`min_trading_balance_eth`) and no
+`max_pending_withdrawal_pct` field anywhere in the workspace — both are absent from the code and from this correction.
 
 ## Deployment Topology (DeFi Services)
 

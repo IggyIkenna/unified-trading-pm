@@ -117,7 +117,8 @@ Clean service boundaries match team boundaries.
 
 ## Contract between slow and fast paths
 
-Strategy-service emits `StrategyInstruction` with:
+Strategy-service emits `StrategyInstructionEnvelope` (`unified_api_contracts.internal.architecture_v2.schemas`; not the
+older, separate `StrategyInstruction` in `internal.domain.strategy_service` — verified 2026-07-31) with:
 
 ```
 eligible_venues: [BINANCE, OKX, BYBIT]
@@ -147,7 +148,11 @@ target_instrument: "BINANCE:SPOT:BTC/USDT"
 target_venue: BINANCE
 ```
 
-Execution doesn't SOR; it tries the named venue. Falls back ONLY if explicit `fallback_venues` declared.
+Execution doesn't SOR; it tries the named venue. **Correction (verified 2026-07-31): there is no `fallback_venues` field
+anywhere in the workspace.** `StrategyInstructionEnvelope` (`unified_api_contracts.internal.architecture_v2`) has no
+fallback-venue-list field; the only venue-list field on the envelope is `eligible_venues`, which belongs to
+`SOR_AT_EXECUTION` mode, not `STRATEGY_PICKED`. Today a `STRATEGY_PICKED` instruction that fails at `target_venue` has
+no declared fallback path.
 
 Used when venues are non-fungible (perps with different funding, sports lines on specific books, options with different
 strikes).
@@ -163,6 +168,11 @@ Execution-service:
 
 Strategy declares `unity_child_books_eligible` + `unity_child_book_preferences` at slow path; Unity's fast path uses
 these as hints.
+
+> **NOT SHIPPED (verified 2026-07-31).** Neither `unity_child_books_eligible` nor `unity_child_book_preferences` exists
+> anywhere in the workspace — `StrategyInstructionEnvelope` has no per-child-book hint fields. `META_BROKER` routing
+> mode itself is real (`VenueRoutingMode.META_BROKER`), but child-book preference hinting is design intent, not an
+> implemented field.
 
 ## Slow-fast interaction failures
 

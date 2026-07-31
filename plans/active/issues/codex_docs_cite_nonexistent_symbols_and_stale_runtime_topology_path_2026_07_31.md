@@ -14,7 +14,7 @@ summary: >-
   `deployment-service/configs/runtime-topology.yaml` no longer exists — the SSOT moved to
   `unified-trading-pm/configs/runtime-topology.yaml` (`owner: unified-trading-pm`, `version: 7`) and deployment-service
   now SYNCS it via `scripts/sync/sync-configs.py` — but 4 codex docs still cite the dead deployment-service path.
-status: open
+status: resolved
 nature: issue
 asset_group: [meta]
 stage: [meta]
@@ -42,6 +42,8 @@ locked_by:
 locked_since:
 assigned_vm: planning
 resolved_by:
+  slot-3, 2026-07-31 — all 4 todos (A's per-symbol fix pass, A's offset-0/1 re-run, B's two repoints) done; no open
+  todos remain, no locked_by, no referrers found workspace-wide.
 ---
 
 # Codex docs cite phantom symbols; `runtime-topology.yaml` path stale outside the freshness-c shard
@@ -84,8 +86,49 @@ a sibling symbol from the same module _was_ found, proving the owning module is 
       `fork_url`/`live_rpc_url` (fix — `CHAIN_RPC_TEMPLATES` only carries `rpc_url_template`; fork RPC resolution is a
       separate `FORK_MODE` switch in `get_defi_rpc_url()` using one global `tenderly-fork-rpc-url` secret, not a
       per-chain field).
-- [ ] [DOCS] P3. Re-run the same per-symbol check over the other two freshness shards' docs (offsets 0 and 1) — this
-      sweep only covered offset-2's 37 docs, so the same phantom-symbol class is very likely present in the other 76.
+- [x] ✅ [DOCS] P3. Re-run the same per-symbol check over the other two freshness shards' docs (offsets 0 and 1) — this
+      sweep only covered offset-2's 37 docs, so the same phantom-symbol class is very likely present in the other 76. —
+      unified-trading-pm. Reconstructed the exact offset-0/offset-1 doc sets by replaying the sorted-path-index-mod-3
+      split against the 113-doc pre-fix snapshot (verified byte-identical to the real `44aecd1dc`/`ff8b38f70` commit
+      file lists). Extracted every backticked candidate-symbol token from all 76 docs (2152 raw tokens → 1165
+      code-symbol-shaped after filtering paths/extensions/prose), then verified each of the 1067 unique root symbols
+      **individually** via `rg -F` (not a bulk patternfile — the same prefix-shadowing trap flagged above), yielding 95
+      zero-hit candidates. Triaged all 95 by reading each doc's actual context (not just the grep hit): - **Already
+      fixed by shard offset-0's own commit** (`FixtureStatusReport`/`CrossSourceFixtureVerifier`, `DeFiFillRecord`,
+      `KillSwitchAuditLogPersistenceError`, `MatchingEngineConfig`, `InstrumentProcessingConfig`, `_paper_positions`,
+      `BreakerArmed`): all already carry "verified absent 2026-07-31" banners — no new action. - **False positives**
+      (external protocol/vendor identifiers, illustrative examples, or plan-file slugs, not claimed repo symbols): the
+      entire ~30-symbol `amm-slippage-simulation.md` cluster (Uniswap V4 hook ABI names, Aave/Compound governance
+      contracts, Solana RPC methods, ETH slashing-condition enum values — all framed as external on-chain/subgraph
+      references, and the doc already discloses NOT-YET-shipped pool classes via ❌/Phase markers); the ~9-symbol
+      `sports-scheduling-and-sharding.md` cluster (all are plan-filename slugs with working markdown links to real
+      archived plans, e.g. `utl_manifest_migration_primitives`); illustrative field-rename examples in
+      `schema-versioning.md`; example client IDs in `client-isolation-sla-and-runtime-profiles.md`; external Ethereum
+      JSON-RPC (`eth_sign`) and heuristic prose terms in `mev-protection.md`; `active-plan-inventory-tracker.md`'s
+      `cal_left`/`estimate_calibrated_ai_days` (real generator fields, not phantom); already-disclosed future-work items
+      in `backtest-groups.md`, `scenario-injection-architecture.md`, `live-strategy-config-hot-reload.md` (superseded by
+      the fresher, more detailed `strategy_config_hot_reload_doc_vs_shipped_2026_07_31.md` issue doc — not duplicated
+      here), `fireblocks-integration-spec.md` (whole doc is an explicit "no code shipped yet" spec),
+      `execution-policy.md` (already banner-corrected). - **Genuine fixes applied** (verified against the real code,
+      corrected in place): `amm-slippage-simulation.md` — `hooks.py`'s real shipped interface is `IUniswapV4Hook` + 6
+      named hook classes via `HookRegistry`, not a `BeforeSwapHook`/`AfterSwapHook` Protocol pair.
+      `defi-phase3-infrastructure.md` — `TreasuryMonitor` moved 2026-05-20 to
+      `strategy-service/strategy_service/position/core/treasury_monitor.py`; real thresholds are
+      `TreasuryConfig.min_threshold_pct`/`max_threshold_pct` (percent-of-AUM per share class), not the fixed-ETH
+      `min_treasury_balance_eth`/`min_trading_balance_eth`/`max_pending_withdrawal_pct` the doc claimed (all three
+      absent from every repo). `slow-fast-routing-split.md` — the envelope class is `StrategyInstructionEnvelope`
+      (`unified_api_contracts.internal.architecture_v2`), not the older `StrategyInstruction`; `eligible_venues` /
+      `venue_constraints` / `venue_routing_mode` / `target_venue` all check out as real fields, but `fallback_venues`
+      and `unity_child_books_eligible`/`unity_child_book_preferences` are absent from the workspace — corrected with
+      NOT-SHIPPED banners rather than deleted, since the routing-mode design intent is real.
+      `interface-credential-convention.md` — `ApiKeyReloader`'s real param is `refresh_interval`
+      (`DEFAULT_REFRESH_INTERVAL` = 300s), not `reload_interval_seconds` (default 60s, also wrong).
+      `live-pipeline-architecture.md` — the real symbol is `market_data_processing_service...live_aggregator`'s
+      `parent_fanout(parent: str) -> int` method (counts themselves were correct), not a `parent_timeframe_fanout`
+      field. - **Left as-is, low-confidence** (plausible external/infra names, not worth further digging at P3):
+      `market_tick_asia` (illustrative BQ dataset name), `vault_account_id`/`sub_status`/`freezeVaultAccount`
+      (Fireblocks' own vendor API field/method names, doc already marked no-code-shipped), `usdt_to_usdc_swap_cost`
+      (descriptive, not a literal claimed field).
 
 ### Methodology trap worth keeping
 

@@ -355,8 +355,11 @@ implementations live in `execution-service/execution_service/matching_engine/` p
   `SolidlyCLForkPool` (V3-tick CL clone — Slipstream variants).
 - `aggregator.py` (NEW Phase 2G) — `JupiterAggregatorRoute` (multi-leg route composer reading from Jupiter quote API +
   dispatching per-leg to the appropriate `PoolMatcher`).
-- `hooks.py` (shipped) — V4 `BeforeSwapHook` / `AfterSwapHook` Protocols + custom-curve implementations (constant_sum /
-  constant_mean / polynomial / logarithmic).
+- `hooks.py` (shipped) — **correction (verified 2026-07-31): there is no `BeforeSwapHook`/`AfterSwapHook` Protocol
+  pair.** The real shipped interface is `IUniswapV4Hook` (ABC) with named implementations `DynamicFeeHook`,
+  `LimitOrderHook`, `TWAPOracleHook`, `GeomeanOracleHook`, `VolatilityOracleHook`, `CustomCurveHook` (constant_sum /
+  constant_mean / polynomial / logarithmic curves) registered via `HookRegistry`. The generic `BeforeSwapDelta` /
+  `AfterSwapDelta` hook-return-value concept described above remains Phase 2B, not yet implemented.
 
 **Multi-hop routing** (aggregator path) reuses the Protocol uniformly: each leg's pool is a `PoolMatcher`; the
 aggregator sums per-leg `SwapQuote`s into a composite route quote.
@@ -710,8 +713,8 @@ call this calculator. Backtest yield uses post-trade rate.
 > fields it fetched from The Graph subgraph (line 77-79). Consumers fell back to the static
 > `AAVE_V3_RATE_MODEL_DEFAULTS_BY_ASSET` snapshot ("governance current as of 2026-05-05") — mis-pricing post-trade rates
 > by 10-30 bps on the wing of the kink. **Fixed at mtds@`4b38a9b` + uac@`bd9c202` + features-service@`e292a4d4`**; see
-> `plans/archive/issues/aave_irm_slope_capture_dropped_2026_05_12.md` for full remediation path. **Backfill VM (Step 3 of
-> issue doc) must land before Phase 8A/B carry-archetype + leveraged-funding-arb 1-year replay runs** — otherwise the
+> `plans/archive/issues/aave_irm_slope_capture_dropped_2026_05_12.md` for full remediation path. **Backfill VM (Step 3
+> of issue doc) must land before Phase 8A/B carry-archetype + leveraged-funding-arb 1-year replay runs** — otherwise the
 > replays use the proxy snapshot and the resulting P&L delta is uninterpretable. **Tenderly fork live-vs-sim recon
 > (Phase 8C) WILL mask this drift** — Tenderly forks current chain state which holds today's slopes; the drift only
 > surfaces during historical-replay 8A/8B where the matcher uses today's slopes against historical pool reserves.
