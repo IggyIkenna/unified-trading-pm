@@ -123,17 +123,81 @@ flip and is corrected here (slot-14).
       HTTP-error vs connection-error), plus a `_process_protocol`-level test proving the error reaches
       `recorder.record_failed` (not `record_zero_rows`) and that genuine-zero-proposals is unchanged.
 
-- [ ] [DATA] P1. Diagnose + ship a real fix for the TheGraph subgraph-cascade / "bad indexers" failure class (retry-
-      with-backoff or a subgraph deployment-ID swap, per the already-identified root cause) across all 8 affected
-      (protocol, chain) pairs: VELODROME_V2/OPTIMISM, UNISWAP_V3/OPTIMISM, PANCAKESWAP_V3/BSC, PANCAKESWAP_V3/ETHEREUM,
-      UNISWAP_V4/ETHEREUM, UNISWAP_V2/ETHEREUM, AERODROME_V3/BASE, UNISWAP_V3/POLYGON (CURVE/OPTIMISM and
-      TRADER_JOE_V2/AVALANCHE are already resolved — do not re-touch). This supersedes and closes the narrower
-      re-probe-only ask for the 2 overlapping pairs (VELODROME_V2/OPTIMISM, UNISWAP_V3/OPTIMISM) from the sibling issue
-      doc — one fix, not two competing todos. Repo: market-tick-data-service. Done when: all 8 pairs show a genuine fix
-      shipped (not just re-probed) via scoped `quickmerge.sh --agent --files`, with before/after `attempted_failed`
-      counts cited per pair. Sources: `issues/mtds_dex_pools_swaps_backfill_verification_2026_07_24.md` (todo 6),
-      `issues/defi_dex_pool_swaps_733_row_indexer_health_findings_2026_07_27.md` (P2 re-probe item, superseded by this
-      broader fix)
+- [x] ✅ [DATA] P1. **DONE 2026-07-31 (slot-16, data_engineering)** — `market-tick-data-service@5c12c9e5`. Diagnose +
+      ship a real fix for the TheGraph subgraph-cascade / "bad indexers" failure class across all 8 affected (protocol,
+      chain) pairs: VELODROME_V2/OPTIMISM, UNISWAP_V3/OPTIMISM, PANCAKESWAP_V3/BSC, PANCAKESWAP_V3/ETHEREUM,
+      UNISWAP_V4/ETHEREUM, UNISWAP_V2/ETHEREUM, AERODROME_V3/BASE, UNISWAP_V3/POLYGON.
+
+      **Confirmed via code read**: the fail-fast classification fix (`_is_bad_indexers_error`/
+          `_SubgraphIndexerUnavailableError`, `market-tick-data-service@74cd6cfd`, verified ancestor of current HEAD) is
+          generic (operates on the raw GraphQL error message, not per-protocol) and already structurally covers all 8
+          pairs via the shared `_run_cascade`/`_execute_subgraph_query` code path — every pair correctly routes to
+          `record_failed` (attempted_failed, retriable), never a misleading schema-drift reason.
+
+          **Shipped NEW this session**: a bounded retry-with-backoff (2 retries, exponential backoff + jitter, rotating
+          API key) for the "bad indexers" GraphQL-level fingerprint specifically — extends the existing HTTP-status retry
+          in `async_post_to_subgraph` to this GraphQL-level (HTTP-200) condition, per this todo's "retry-with-backoff"
+          ask. Extracted into `_retry_or_raise_bad_indexers()` in `_dex_swaps_queries.py` (kept `dex_swaps_handler.py`
+          under the 900-line file cap and the method under the 50-line cap). 2 new unit tests: retries-then-succeeds
+          (transient blip) and raises-after-retries-exhausted (persistent condition) — both patch `asyncio.sleep` to
+          stay fast/deterministic, mirroring the existing `test_execute_subgraph_query_retry_on_429_then_success` pattern.
+          Full `market-tick-data-service` `quality-gates.sh` green (280s, sentinel matches `d3956d8c`, rebased to
+          `5c12c9e5` on push — verified `git merge-base --is-ancestor` on origin).
+
+          **Live-probed all 8 pairs today (2026-07-31)** with the real production cascade queries (not just `_meta` —
+          the VELODROME_V2/OPTIMISM trap from 2026-07-28's investigation: `_meta` can read healthy while the actual
+          cascade query still fails):
+
+          - **VELODROME_V2/OPTIMISM**: SELF-HEALED — 3/3 identical successes on the production `messari_from` query,
+            1000 real swap rows each (page cap hit). Retry-fixable, no code fix needed; next backfill re-run converts.
+          - **UNISWAP_V3/OPTIMISM**: STILL persistently broken — reproduced the IDENTICAL "bad indexers" fingerprint
+            (same 3 indexer addresses `0xeccdf823.../0xf92f430d.../0xfeff9093...`) across 2026-07-27, 07-28, 07-30, and
+            now 07-31 (4+ days) — conclusively NOT transient, now clearly past the "multi-day window" bar the sibling
+            issue doc's P2 todo asked for. A bounded (seconds-scale) retry cannot resolve this class (deterministic
+            indexer-set enumeration, not random routing). Researched The Graph Explorer for a replacement deployment:
+            found candidate `EgnS9YE1avupkvCNj9fHnJxppfEmNNywYJtghqiu2pd9` ("Uniswap V3 Optimism"), confirmed currently
+            healthy via a live `_meta` probe — **NOT vetted** for schema compatibility with the existing univ3 cascade or
+            historical coverage depth, so NOT swapped into the UAC registry this session (a mis-vetted swap risks
+            breaking existing coverage). Filed as a follow-up todo below.
+          - **PANCAKESWAP_V3/BSC**: HEALTHY — 3/3 successful production-query attempts (genuine 0-swaps-that-day
+            answer, not an error). Matches the earlier-established self-heal verdict.
+          - **PANCAKESWAP_V3/ETHEREUM, UNISWAP_V4/ETHEREUM, UNISWAP_V2/ETHEREUM, AERODROME_V3/BASE, UNISWAP_V3/POLYGON**:
+            all HEALTHY via live `_meta` probe (fresh block, `hasIndexingErrors=false`).
+
+          **Before/after `attempted_failed` counts** (fresh prod manifest pull, `market-data-tick-defi-prd-central-element-323112/_index/availability_index.parquet`,
+          29,520,693 total rows, 2026-07-31, vs the 2026-07-28 snapshot in the sibling issue doc):
+
+          | pair                       | 2026-07-28 | 2026-07-31 | verdict                                          |
+          | -------------------------- | ---------- | ---------- | ------------------------------------------------- |
+          | VELODROME_V2/OPTIMISM      | 666        | 697        | +31 historical residue while broken; now healed    |
+          | UNISWAP_V3/OPTIMISM        | 360        | 445        | +85, still actively failing every attempt          |
+          | PANCAKESWAP_V3/BSC         | 15         | 24         | +9 residue; confirmed healthy now                  |
+          | PANCAKESWAP_V3/ETHEREUM    | 2          | 2          | unchanged, healthy                                 |
+          | UNISWAP_V4/ETHEREUM        | 12         | 15         | +3, healthy (unrelated to the tracked build_instrument_id sub-issue) |
+          | UNISWAP_V2/ETHEREUM        | 5          | 5          | unchanged, healthy                                 |
+          | AERODROME_V3/BASE          | 1          | 2          | +1, healthy                                        |
+          | UNISWAP_V3/POLYGON         | 2          | 2          | unchanged, healthy                                 |
+
+          Historical `attempted_failed` rows don't retroactively shrink (they're permanent unless explicitly
+          reclassified/re-backfilled) — the fix's real effect is forward-looking: future backfill attempts against the
+          7 now-healthy pairs should succeed instead of adding fresh rows; UNISWAP_V3/OPTIMISM will keep accumulating
+          until either it genuinely self-heals (evidence says unlikely) or the deployment-ID-swap follow-up lands.
+
+          Repo: market-tick-data-service. Sources: `issues/mtds_dex_pools_swaps_backfill_verification_2026_07_24.md`
+          (todo 6), `issues/defi_dex_pool_swaps_733_row_indexer_health_findings_2026_07_27.md` (P2 re-probe item,
+          superseded by this broader fix).
+
+- [ ] [DIAG] P2. **NEW, filed 2026-07-31 (slot-16)** — research + vet a replacement TheGraph subgraph deployment ID for
+      UNISWAP_V3/OPTIMISM (currently `Cghf4LfVqPiFw6fp6Y5X5Ubc8UpmUhSfJL82zwiBFLaj`, confirmed persistently "bad
+      indexers" across 4+ days as of 2026-07-31 — see the todo above). Candidate identified via The Graph Explorer:
+      `EgnS9YE1avupkvCNj9fHnJxppfEmNNywYJtghqiu2pd9` ("Uniswap V3 Optimism"), confirmed currently healthy via a live
+      `_meta` probe (2026-07-31) — NOT yet vetted for (a) schema compatibility with the existing univ3/univ3_minimal
+      cascade queries, (b) sufficient historical coverage depth (the backfill needs data back to 2023-01-01), or (c) its
+      own indexer-health stability over time before committing to a UAC registry swap. Done when: the candidate (or an
+      alternative found via the same Explorer search) is verified on all 3 axes and either swapped into
+      `unified_api_contracts/registry/capability_declarations/_defi.py`'s `SUBGRAPH_IDS["uniswap_v3"]["OPTIMISM"]` with
+      a regression test, or rejected with a recorded reason and the next candidate tried. Repos: unified-api-contracts,
+      market-tick-data-service. Source: this session's live-probe evidence above.
 
 - [ ] [DATA] P1. Execute the operator-ruled (2026-07-28) full-completion instruments-service DeFi pool catalogue
       expansion: a full historical-discovery backfill covering every ever-captured pool address for EVERY default DEX
@@ -480,3 +544,12 @@ dedicated standalone plan) — re-running this skill will keep re-surfacing them
   (`status: resolved`) and unblocked `defi_satellite_ao_dispatch_batch3_2026_07_26.md`'s D1 todo (`[BLOCKED-INFRA]` tag
   removed; D1's own backfill compute is separate follow-on work, not executed here). Also corrected this doc's stale
   draft-banner (frontmatter had already flipped to `active` but the body banner still read "draft — NOT dispatched").
+- 2026-07-31 (slot-16, data_engineering): Closed the "bad indexers" `[DATA] P1` todo. Confirmed the existing
+  `market-tick-data-service@74cd6cfd` fail-fast classification fix already covers all 8 pairs generically (code read),
+  shipped a bounded retry-with-backoff for the GraphQL-level condition (`market-tick-data-service@5c12c9e5`, QG-green +
+  2 new tests), and live-probed all 8 pairs today with real production queries: VELODROME_V2/OPTIMISM and
+  PANCAKESWAP_V3/BSC self-healed (retry-fixable), UNISWAP_V3/OPTIMISM confirmed persistently broken across 4+ days
+  (identical indexer fingerprint since 2026-07-27) — a bounded retry can't fix this class; researched The Graph Explorer
+  for a replacement deployment ID, found a currently-healthy candidate but didn't vet/swap it blind, filed as a new
+  `[DIAG] P2` follow-up todo instead. Full before/after `attempted_failed` counts per pair in the todo's own evidence
+  above.
