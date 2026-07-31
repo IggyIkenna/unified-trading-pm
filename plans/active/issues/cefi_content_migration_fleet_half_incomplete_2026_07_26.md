@@ -202,21 +202,15 @@ canonicalised by this fleet. The migration's own `# Delete-when:` marker on
       testing directly (does a deliberately small, fast-completing shard's canary run finish within the ~45min window
       before any other symptom appears, or does the same script hang at ~45min even on a trivially small input?).
       Relaunched shard 40 (1st genuine failure, within policy).
-- [ ] [SCRIPT] P1. **Verify the pyarrow-pool-release fix (market-tick-data-service@9f4098b1) against a full shard-14
-      run** — the previous todo's own "Done when" bar required this specific verification, which is genuinely separate
-      dispatchable work (a multi-hour VM monitoring job, not a code-writing task). At filing time,
-      `canonical-migration-cefi-content-14-relaunch20260730-134900` is RUNNING but was launched BEFORE the fix shipped
-      (13:49Z vs the fix landing ~18:20Z) — its tarball predates the fix, so this run does NOT verify it; per
-      RB-INFRA-RELAUNCH, do NOT kill an alive, still-potentially-succeeding VM without protective purpose. **Done
-      when**: once that VM naturally dies/completes (self-reaps via the in-VM `STALL_PROGRESS_REGEX` stall-kill, per
-      this doc's established pattern) OR is confirmed to have genuinely completed, relaunch shard 14 fresh (pulls the
-      now-fixed tarball automatically) and confirm via `run.log` grep for `SCRIPT 1 CONTENT MIGRATION SUMMARY` that it
-      runs the full 271,376-file scope without a mid-run stall/freeze (watch specifically past the ~45-50min window this
-      doc's diagnostic evidence identified as the freeze point under the OLD code). If it stalls again at a similar
-      elapsed-time window despite the fix, the periodic-release hypothesis needs revisiting (try tightening the release
-      cadence below every-200-files, or investigate hypothesis (c) — `--workers 12` oversubscription — as a secondary
-      contributor). Repo: market-tick-data-service (verification only, no code change expected unless the fix needs
-      iterating).
+- [x] [SCRIPT] P1. ✅ **Verify the pyarrow-pool-release fix (market-tick-data-service@9f4098b1) against a full shard-14
+      run** — VERIFIED. `canonical-migration-cefi-content-14-verify20260730-221322` (relaunched by slot-7 at `22:13:43Z`
+      once the pre-fix VM naturally concluded) reached the terminal `SCRIPT 1 CONTENT MIGRATION SUMMARY` banner at
+      `2026-07-31T07:57:09Z`, `rc=0`, all 335,111/335,111 files processed, 0 errors, `STOP-ON-SURPRISE bounds: ok=True`,
+      `bytes_allocated=0` at every periodic release throughout the run (no leak growth at any point) — 34,794s (~9.66h)
+      elapsed, comfortably past the ~45-50min freeze window that killed the old code on shards 16/19/40/44. Fix is
+      confirmed working. Evidence:
+      `gs://deployment-scripts-central-element-323112/vm-logs/canonical-migration-cefi-content-14-verify20260730-221322/run.log`.
+      Repo: market-tick-data-service (verification only — no code iteration needed).
 - [ ] [BACKEND] P3. Investigate what actually deleted `canonical-migration-cefi-content-19-relaunch20260730-130600` at
       `2026-07-30T13:33:35Z` (RUNNING, heartbeat blob fresh ~55s prior — ruled out `vm_zombie_watchdog.py`'s documented
       `is_zombie()` heartbeat/shard-staleness paths by direct evidence, see Progress Log). Actor was
