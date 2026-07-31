@@ -107,14 +107,14 @@ result.
       **RULED 2026-07-28** (operator gated-decision closeout pass) from a parked decision into a normal, fully-scoped
       AO-dispatchable todo: do the content-hash task-id rewrite now, full blast radius (`existing_ids`/`existing_briefs`
       bookkeeping in `regen_backlog_from_plan.py`, `slot_skips` keyed by `task_id`, every dashboard/API id reference,
-      and a migration path for already-`done` rows). `/plans/active/ao_satellite_ao_dispatch_batch1_2026_07_26.md`'s
-      Deferred section records the same routing verbatim: "Do NOT draft a competing batch todo here — dispatch that
-      issue doc's todo directly once picked up." This doc's own answer ("confirm task IDs are content-anchored, not
-      purely positional") is exactly that rewrite's outcome. Original text follows. Investigate the 05:41:16Z
-      regen/positional-id collisions (`sync_backlog_to_db: REFUSING to reset …`) — positional task-id assignment appears
-      to shift under a partial snapshot, which both logs scary errors and risks mis-identifying tasks. Confirm task IDs
-      are content-anchored, not purely positional, so a partial plan snapshot cannot collide a new brief onto a done
-      row's id.
+      and a migration path for already-`done` rows).
+      `/plans/archive/2026_07/ao_satellite_ao_dispatch_batch1_2026_07_26.md`'s Deferred section records the same routing
+      verbatim: "Do NOT draft a competing batch todo here — dispatch that issue doc's todo directly once picked up."
+      This doc's own answer ("confirm task IDs are content-anchored, not purely positional") is exactly that rewrite's
+      outcome. Original text follows. Investigate the 05:41:16Z regen/positional-id collisions
+      (`sync_backlog_to_db: REFUSING to reset …`) — positional task-id assignment appears to shift under a partial
+      snapshot, which both logs scary errors and risks mis-identifying tasks. Confirm task IDs are content-anchored, not
+      purely positional, so a partial plan snapshot cannot collide a new brief onto a done row's id.
 
 ## Triage / charter note
 

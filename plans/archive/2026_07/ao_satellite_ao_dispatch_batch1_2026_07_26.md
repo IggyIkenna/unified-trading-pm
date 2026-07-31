@@ -9,7 +9,7 @@ summary: >-
   combined todo citing both — and left the rest in the Deferred sections below, dominated by one large
   worker-liveness/watchdog cluster where two docs prescribe OPPOSITE directions on the same kick/escalation mechanism.
   Every todo below targets files disjoint from every sibling todo, so the plan needs no `sequential` gate.
-status: active
+status: complete
 nature: process
 asset_group: [ao]
 stage: [meta]
@@ -19,7 +19,7 @@ tags: [ao, agent-orchestrator, ao-dispatch, close-out, batch-1, satellite-docs]
 related:
   [
     /plans/archive/2026_07/ao_consolidated_closeout_2026_07_25.md,
-    /plans/active/ao_satellite_ao_dispatch_batch1_finalize_2026_07_26.md,
+    /plans/archive/2026_07/ao_satellite_ao_dispatch_batch1_finalize_2026_07_26.md,
     /plans/active/ao_open_issues_consolidated_close_out_2026_07_17.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]
@@ -48,9 +48,12 @@ source: >-
 
 # AO satellite AO batch 1
 
-> **`status: draft` — NOT ingested, NOT dispatched.** Flipping this to `active` is the operator's call
-> (`/plans/PLAN_FORMAT.md`; CLAUDE.md § "Plan destination — ASK BEFORE CREATING"). It was authored while the operator
-> was away, so it deliberately stops at draft.
+> **🟢 ARCHIVED 2026-08-01** — all 11 todos `[x]`, `locked_by:` empty. Finalized by
+> `/plans/archive/2026_07/ao_satellite_ao_dispatch_batch1_finalize_2026_07_26.md`: every done-claim re-verified against
+> reality, evidence reconciled into all 11 TRUE source docs, every Deferred item's gate re-checked (2 cleared into
+> `/plans/active/ao_satellite_ao_dispatch_batch2_2026_08_01.md`, the rest still genuinely gated or already resolved
+> elsewhere), and the one net-new fully-resolved doc found during that re-check
+> (`escalation_backlog_repo_collision_blind_spot_2026_07_25.md`) archived alongside it.
 
 ## Why this plan exists (the coverage gap, measured)
 
@@ -65,8 +68,8 @@ the 35 satellite docs. This plan extracts the conflict-clear, bounded-outcome su
 - **Put each todo's new test cases in a test module named for that todo's own concern** — never add to a test module
   another todo on this plan also touches. The todos below are file-disjoint by construction; keep them that way.
 - **Do not edit the source issue doc's checkboxes** beyond appending your evidence line to the todo you executed. The
-  paired finalize plan (`/plans/active/ao_satellite_ao_dispatch_batch1_finalize_2026_07_26.md`) reconciles evidence back
-  into every source doc and runs archival.
+  paired finalize plan (`/plans/archive/2026_07/ao_satellite_ao_dispatch_batch1_finalize_2026_07_26.md`) reconciles
+  evidence back into every source doc and runs archival.
 - No todo below deletes prod data, mutates a GCS bucket, launches a VM, or writes a secret — so none carries
   `[OPERATOR]` on those grounds. Todo 9 is explicitly read-only and must not push or delete anything.
 
@@ -247,18 +250,18 @@ the 35 satellite docs. This plan extracts the conflict-clear, bounded-outcome su
       that also names `bootstrap.py`/regen ids — do not touch task-id derivation here.
 
       **2026-07-28 update — the actual root cause was found and fixed at the application level** (an UPDATE status
-                          regression in `release_task_to_queue()`, not a bare DELETE — see the resolved issue doc), which left this
-                          todo's original DELETE-trigger idea a narrower, discretionary defense-in-depth item rather than the primary
-                          mitigation. **2026-08-01 — built as that defense-in-depth backstop.** Added
-                          `bootstrap.py::_migrate_done_task_delete_trace()` — an idempotent migration creating `deleted_done_tasks_trace` +
-                          an `AFTER DELETE ON tasks WHEN OLD.status = 'done'` SQLite trigger, which fires regardless of call site
-                          (including a raw out-of-band SQL delete the application-level guard cannot see, since that guard only catches an
-                          illegal transition made through the ORM). The trigger only INSERTs, never raises. 4 new tests in
-                          `tests/test_done_task_delete_trace.py`: a raw SQL delete of a done row leaves a trace; the sanctioned
-                          `DELETE /api/backlog/{task_id}` path still succeeds unconditionally AND is traced; deleting a non-done task
-                          leaves no trace (the `WHEN` clause is status-specific); the migration is idempotent across repeated
-                          `create_all_tables()` calls. Full detail + evidence in
-                          `/plans/archive/issues/ao_backlog_done_row_disappearance_2026_07_25.md`'s Progress Log.
+                                  regression in `release_task_to_queue()`, not a bare DELETE — see the resolved issue doc), which left this
+                                  todo's original DELETE-trigger idea a narrower, discretionary defense-in-depth item rather than the primary
+                                  mitigation. **2026-08-01 — built as that defense-in-depth backstop.** Added
+                                  `bootstrap.py::_migrate_done_task_delete_trace()` — an idempotent migration creating `deleted_done_tasks_trace` +
+                                  an `AFTER DELETE ON tasks WHEN OLD.status = 'done'` SQLite trigger, which fires regardless of call site
+                                  (including a raw out-of-band SQL delete the application-level guard cannot see, since that guard only catches an
+                                  illegal transition made through the ORM). The trigger only INSERTs, never raises. 4 new tests in
+                                  `tests/test_done_task_delete_trace.py`: a raw SQL delete of a done row leaves a trace; the sanctioned
+                                  `DELETE /api/backlog/{task_id}` path still succeeds unconditionally AND is traced; deleting a non-done task
+                                  leaves no trace (the `WHEN` clause is status-specific); the migration is idempotent across repeated
+                                  `create_all_tables()` calls. Full detail + evidence in
+                                  `/plans/archive/issues/ao_backlog_done_row_disappearance_2026_07_25.md`'s Progress Log.
 
 - [x] ✅ [REVIEW] P3. **DONE-IN-SUBSTANCE 2026-08-01 — via a more rigorous successor pass than this todo originally
       specified, not by literally editing the named doc.** `ao_consolidated_closeout_2026_07_25.md` (the doc this todo's
@@ -372,7 +375,7 @@ the 35 satellite docs. This plan extracts the conflict-clear, bounded-outcome su
 
 ## Deferred — operator decision needed (not batchable, no re-triage will clear it)
 
-- `/plans/active/issues/escalation_backlog_repo_collision_blind_spot_2026_07_25.md` — its Todos heading literally reads
+- `/plans/archive/issues/escalation_backlog_repo_collision_blind_spot_2026_07_25.md` — its Todos heading literally reads
   "NOT for autonomous dispatch as-is"; the first todo is `[OPERATOR-DECISION]` on directionality (a)/(b)/(c) and the
   second is explicitly blocked on it.
 - ~~`/plans/archive/issues/auto_park_no_flipper_rule_not_mechanism_enforced_2026_07_20.md` — a three-way fork whose

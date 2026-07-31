@@ -285,3 +285,8 @@ Review (agt-c83ba7, msg 2013, 13:08Z) flagged and main (agt-52bb99) verified rea
   into agent-orchestrator's own live respawn/dirty-resolution path while an unresolved operator-merge-gate bypass exists
   is explicitly the non-batchable compounding class this workspace's audits are built to catch, not a bounded code fix.
   Correctly skipped, consistent with the standing verdict — no new work done.
+- **2026-08-01** (`ao_satellite_ao_dispatch_batch1_finalize_2026_07_26.md` todo 3): the operator-merge-gate bypass cited
+  above is now resolved (`agent-orchestrator@49c919d`,
+  `watchdog_unpushed_sweep_defeats_operator_merge_gate_2026_07_26.md`). Both `[BACKEND] P2` todos re-checked for
+  file-collision against the whole `plans/active` corpus — zero hits — and drafted into
+  `/plans/active/ao_satellite_ao_dispatch_batch2_2026_08_01.md` (`status: draft`, awaiting operator approval).

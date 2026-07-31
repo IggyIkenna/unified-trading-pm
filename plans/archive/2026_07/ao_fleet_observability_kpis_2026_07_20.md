@@ -388,8 +388,8 @@ is **`details_json`** (not `detail`/`payload`) — a grep for the wrong name ret
   directly on `register_cooldown`, do not write a second cooldown/backoff engine.
 - **na-eligibility-audit 2026-07-30**: KEEP-NA, valid — doc carries an explicit dated LOCAL declaration
   (`assigned_vm: NA # LOCAL execution — operator-assigned agents on this host, NOT AO-dispatched (2026-07-20)` + an
-  `Execution environment — LOCAL` section); `/plans/active/ao_satellite_ao_dispatch_batch1_2026_07_26.md`'s Deferred
-  list already ruled that extracting its todos needs the operator to lift that declaration. Its one open item
+  `Execution environment — LOCAL` section); `/plans/archive/2026_07/ao_satellite_ao_dispatch_batch1_2026_07_26.md`'s
+  Deferred list already ruled that extracting its todos needs the operator to lift that declaration. Its one open item
   (AF-2-followup) is additionally sample-gated — the 2026-07-29 re-measure returned n=2, explicitly recorded as too thin
   to act on.
 

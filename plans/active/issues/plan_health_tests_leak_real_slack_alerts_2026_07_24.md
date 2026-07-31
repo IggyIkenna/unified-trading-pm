@@ -162,8 +162,8 @@ whole suite (1609 passed).
       the current fix already prevents the concrete flood this issue was filed for.
 - [ ] [SCRIPT] P3. **⚠️ BLOCKER CLEARED + DIRECTION SUPERSEDED — this todo is NOT dispatch-ready as written (citation
       added by `/na-eligibility-audit ao` 2026-07-30; doc deliberately left `assigned_vm: NA` for that reason).** Two
-      corrections recorded in `/plans/active/ao_satellite_ao_dispatch_batch1_2026_07_26.md`'s Deferred section: **(1)
-      the stated blocker has CLEARED** — measured 2026-07-26,
+      corrections recorded in `/plans/archive/2026_07/ao_satellite_ao_dispatch_batch1_2026_07_26.md`'s Deferred section:
+      **(1) the stated blocker has CLEARED** — measured 2026-07-26,
       `check_no_empty_string_fallback.py --scope unified-trading-pm` reports `319 (== baseline)`, so the 320>319 ratchet
       breach that forced the revert is resolved and no longer blocks shipping. **(2) The prescribed fix direction is
       superseded** — adding an `os.getenv()`-backed env-var fallback is a QG-BANNED pattern

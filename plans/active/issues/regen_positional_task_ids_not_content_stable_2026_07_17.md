@@ -240,7 +240,7 @@ unauditable tail, reached from a different direction: there they are un-AUDITABL
   normal, fully-scoped AO-dispatchable todo (full blast-radius mandate: `existing_ids`/`existing_briefs`, `slot_skips`,
   dashboard/API id refs, `done_sha` history migration — no partial rewrite). The 2026-07-27 dispatched-row gap todo is
   folded into the same rewrite's gate rather than patched standalone. Mirrored to
-  `/plans/active/ao_satellite_ao_dispatch_batch1_2026_07_26.md` and
+  `/plans/archive/2026_07/ao_satellite_ao_dispatch_batch1_2026_07_26.md` and
   `/plans/archive/2026_07/ao_issue_docs_consolidated_remediation_2026_07_23.md`, both of which carried the same
   BLOCKED-OPERATOR-DECISION framing. Plan-only change, no code shipped.
 - **2026-07-20** — NULL-`brief_hash` tail todo landed, decision (c) accept-permanently (`agent-orchestrator@aaa2db8`,

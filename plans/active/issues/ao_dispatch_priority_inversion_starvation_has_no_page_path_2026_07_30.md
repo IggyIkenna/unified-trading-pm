@@ -50,7 +50,7 @@ tags:
 related:
   [
     /plans/active/issues/cefi_content_migration_fleet_half_incomplete_2026_07_26.md,
-    /plans/active/issues/escalation_backlog_repo_collision_blind_spot_2026_07_25.md,
+    /plans/archive/issues/escalation_backlog_repo_collision_blind_spot_2026_07_25.md,
     /plans/active/issues/dp_escalation_worker_dispatch_no_open_issue_check_2026_07_29.md,
     /codex/04-architecture/agent-orchestrator-alerting.md,
     /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,

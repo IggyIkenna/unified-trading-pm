@@ -31,8 +31,8 @@ related:
     /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
     /plans/archive/2026_07/ci_consolidated_closeout_2026_07_25.md,
     /plans/active/infra_consolidated_closeout_2026_07_25.md,
-    /plans/active/ao_satellite_ao_dispatch_batch1_2026_07_26.md,
-    /plans/active/ao_satellite_ao_dispatch_batch1_finalize_2026_07_26.md,
+    /plans/archive/2026_07/ao_satellite_ao_dispatch_batch1_2026_07_26.md,
+    /plans/archive/2026_07/ao_satellite_ao_dispatch_batch1_finalize_2026_07_26.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]
 created: 2026-07-25
@@ -91,9 +91,9 @@ of its own**" outside the 2 `## Todos` items just closed). Archiving it does NOT
 This doc is a **digest** — being listed as a Source below is discoverability, NOT dispatch, and this doc carries **zero
 todos of its own**. The plans that actually work these docs' open items:
 
-- [ao_satellite_ao_dispatch_batch1_2026_07_26](/plans/active/ao_satellite_ao_dispatch_batch1_2026_07_26.md) —
+- [ao_satellite_ao_dispatch_batch1_2026_07_26](/plans/archive/2026_07/ao_satellite_ao_dispatch_batch1_2026_07_26.md) —
   **`status: draft`, awaiting operator approval** (10 todos) + its gated pair
-  [ao_satellite_ao_dispatch_batch1_finalize_2026_07_26](/plans/active/ao_satellite_ao_dispatch_batch1_finalize_2026_07_26.md).
+  [ao_satellite_ao_dispatch_batch1_finalize_2026_07_26](/plans/archive/2026_07/ao_satellite_ao_dispatch_batch1_finalize_2026_07_26.md).
 - [ao_open_issues_consolidated_close_out_2026_07_17](/plans/active/ao_open_issues_consolidated_close_out_2026_07_17.md)
   — an earlier AO-scope tracker (9 open todos) that is **not** in the Sources lists below but does cover some of them
   (its Recovery-audit Layer-1 producer todo owns `issues/ao_recovery_audit_layer1_deleted_2026_07_15.md`). Whether it
@@ -117,7 +117,7 @@ todos of its own**. The plans that actually work these docs' open items:
 (GATED skip-task auto-park path never pages Slack) ·
 [issues/external_promote_gated_task_redispatch_churn_no_durable_park_2026_07_25.md](/plans/active/issues/external_promote_gated_task_redispatch_churn_no_durable_park_2026_07_25.md)
 (redispatch churn when a task is gated on an external CI promote, no durable park) ·
-[issues/escalation_backlog_repo_collision_blind_spot_2026_07_25.md](/plans/active/issues/escalation_backlog_repo_collision_blind_spot_2026_07_25.md)
+[issues/escalation_backlog_repo_collision_blind_spot_2026_07_25.md](/plans/archive/issues/escalation_backlog_repo_collision_blind_spot_2026_07_25.md)
 (escalation-dispatch vs backlog-dispatch repo-collision blind spot) ·
 [issues/reaper_kills_inflight_detached_quickmerge_false_done_2026_07_24.md](/plans/active/issues/reaper_kills_inflight_detached_quickmerge_false_done_2026_07_24.md)
 (orphan-reaper kills an in-flight detached quickmerge, marks false-done) ·

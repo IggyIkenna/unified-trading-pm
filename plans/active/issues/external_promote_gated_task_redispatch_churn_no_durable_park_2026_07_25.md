@@ -83,11 +83,11 @@ condition fires.
 
 > **✅ CONFLICT RESOLVED 2026-07-31 — OPERATOR RULED OPTION A** (corpus-wide ownership-conflict sweep; this is the
 > decision the "Deferred — HELD" section below was waiting on, and it recommended exactly this). The file-collision was
-> with `/plans/active/ao_satellite_ao_dispatch_batch1_2026_07_26.md`'s `[BACKEND] P3` "Audit every `/skip-current-task`
-> `reason_code` for a silent, unpaged durable park", which is **explicitly AUDIT-ONLY** ("do not change `auto_park.py`
-> in this todo"). **Sequence: batch1's read-only audit lands FIRST, then this doc's implementation dispatches against
-> its findings.** Nobody edits `auto_park.py` until the audit exists — that is what stops the two from racing on the
-> same file.
+> with `/plans/archive/2026_07/ao_satellite_ao_dispatch_batch1_2026_07_26.md`'s `[BACKEND] P3` "Audit every
+> `/skip-current-task` `reason_code` for a silent, unpaged durable park", which is **explicitly AUDIT-ONLY** ("do not
+> change `auto_park.py` in this todo"). **Sequence: batch1's read-only audit lands FIRST, then this doc's implementation
+> dispatches against its findings.** Nobody edits `auto_park.py` until the audit exists — that is what stops the two
+> from racing on the same file.
 >
 > The operator also allowed folding "if that's cleaner once you read current state". It is: the two former todos were a
 > mechanism-design item and a diagnostic question whose answer (why does a `priority_override` park evaporate but a
@@ -123,9 +123,9 @@ honors), and todo 2 is a pure code-read-and-document with a determinable outcome
 
 - **This doc** would change the dispatcher/park path so an external-ref gate produces a durable park, and would document
   why a `priority_override` park does not survive re-derivation while a named `auto_unpark__` prereq does.
-- **`/plans/active/ao_satellite_ao_dispatch_batch1_2026_07_26.md`** (ACTIVE, `assigned_vm: planning`) carries an OPEN
-  `[BACKEND] P3`: "Audit every `/skip-current-task` `reason_code` for a silent, unpaged durable park … Read the skip
-  handler in `agent-orchestrator/server/routes/slots_ops.py` and `server/auto_park.py::maybe_auto_park` (plus
+- **`/plans/archive/2026_07/ao_satellite_ao_dispatch_batch1_2026_07_26.md`** (ACTIVE, `assigned_vm: planning`) carries
+  an OPEN `[BACKEND] P3`: "Audit every `/skip-current-task` `reason_code` for a silent, unpaged durable park … Read the
+  skip handler in `agent-orchestrator/server/routes/slots_ops.py` and `server/auto_park.py::maybe_auto_park` (plus
   `_ESCALATING_REASON_CODES`)". It is **AUDIT-ONLY** by its own wording ("do NOT change `auto_park.py` in this todo") —
   so this is a file-collision + sequencing overlap rather than a verbatim duplicate claim, the same class batch1 itself
   used to defer the AutoSpawn no-eligible-worker gap ("FILE-COLLISION-gated only").

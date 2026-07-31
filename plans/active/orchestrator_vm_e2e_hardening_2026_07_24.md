@@ -449,7 +449,7 @@ bans. Fleet VMs (setup-token env files) are unaffected.
 ## Progress Log
 
 - **na-eligibility-audit 2026-07-30**: KEEP-NA, valid — all 3 open todos are operator-gated and already ruled so in
-  `/plans/active/ao_satellite_ao_dispatch_batch1_2026_07_26.md`'s Deferred list: two `[CREDS]` secret/IAM writes
-  (`ORCHESTRATOR_JWT_SECRET` SM alignment, which the doc itself states is 'permission-blocked by design' for agents; and
-  a `harsh-worker` IAM grant with no self-service path) plus one `[DESIGN]` dirty-worktree policy whose step 4 is an
-  operator-sanctioned hard reset.
+  `/plans/archive/2026_07/ao_satellite_ao_dispatch_batch1_2026_07_26.md`'s Deferred list: two `[CREDS]` secret/IAM
+  writes (`ORCHESTRATOR_JWT_SECRET` SM alignment, which the doc itself states is 'permission-blocked by design' for
+  agents; and a `harsh-worker` IAM grant with no self-service path) plus one `[DESIGN]` dirty-worktree policy whose step
+  4 is an operator-sanctioned hard reset.

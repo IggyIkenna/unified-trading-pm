@@ -57,6 +57,9 @@ locked_by:
 depends_on: []
 ---
 
+> **🟢 ARCHIVED 2026-08-01** — both todos resolved. Operator directionality decision (b) symmetric was made AND
+> implemented in the same commit, `agent-orchestrator@7c937f99e0` (2026-07-31). Zero open todos, `locked_by:` empty.
+
 # Escalation ↔ backlog repo-collision blind spot — two dispatch pipelines, zero shared repo visibility
 
 ## Why this is filed as an issue, not shipped as a bugfix

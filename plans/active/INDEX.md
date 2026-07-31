@@ -17,7 +17,7 @@
 
 <!-- AUTO-INDEX-START -->
 
-_Auto-generated via `scripts/plans/regenerate_active_plan_index.py`. 242 plans across 10 domains. A plan tagged with
+_Auto-generated via `scripts/plans/regenerate_active_plan_index.py`. 241 plans across 10 domains. A plan tagged with
 multiple `asset_group:` values appears under each. Grep this block for a domain keyword before scanning `plans/active/`
 by hand._
 
@@ -825,21 +825,19 @@ by hand._
 - [`v2_engine_venue_buildout_2026_06_15`](./v2_engine_venue_buildout_2026_06_15.md) — Build out real strategy engines
   for 22 engineless archetypes and wire up 9 unwired venues in the v2 strategy framework.
 
-### ao (10)
+### ao (9)
 
 - [`ao_open_issues_consolidated_close_out_2026_07_17`](./ao_open_issues_consolidated_close_out_2026_07_17.md) —
   2026-07-17 operator-session sweep of the 10 open AO issue docs — every doc's claims re-verified against the current
   LDR code AND the production orchestrator on the planning VM (read-only SSM — live state.db, activity_log, process
   table,…
-- [`ao_satellite_ao_dispatch_batch1_2026_07_26`](./ao_satellite_ao_dispatch_batch1_2026_07_26.md) — FIRST AO-dispatch
-  batch for the `ao` topic tranche, produced by the `/ag-closeout-audit` skill's full Phase-0/1/2/3 procedure over all
-  35 AO-tranche-primary docs (2026-07-26, autonomous mode). The tranche had NO batch plan at all and its…
-- [`ao_satellite_ao_dispatch_batch1_finalize_2026_07_26`](./ao_satellite_ao_dispatch_batch1_finalize_2026_07_26.md) —
-  Gated closeout for ao_satellite_ao_dispatch_batch1_2026_07_26.md — machine-held via depends_on + gate_on_depends until
-  every todo in that batch is done. Reconciles each completed todo's evidence back into its TRUE source issue doc (the…
 - [`ao_satellite_ao_dispatch_batch2_2026_07_30`](./ao_satellite_ao_dispatch_batch2_2026_07_30.md) — SECOND AO-dispatch
   batch for the `ao` topic tranche, produced by the `/ag-closeout-audit ao` skill run (2026-07-30, autonomous mode, real
   Workflow per-doc fan-out — unlike the 2026-07-26/07-30 prior audits, which were single-threaded with…
+- [`ao_satellite_ao_dispatch_batch2_2026_08_01`](./ao_satellite_ao_dispatch_batch2_2026_08_01.md) **[draft]** — SECOND
+  AO-dispatch batch for the `ao` topic tranche, produced during
+  `ao_satellite_ao_dispatch_batch1_finalize_2026_07_26.md`'s todo 3 (re-check every Deferred item's gate). Of the 9
+  items batch 1 explicitly named as Deferred, most are…
 - [`ao_satellite_ao_dispatch_batch2_finalize_2026_07_30`](./ao_satellite_ao_dispatch_batch2_finalize_2026_07_30.md) —
   Gated closeout for ao_satellite_ao_dispatch_batch2_2026_07_30.md — machine-held via depends_on + gate_on_depends until
   every todo in that batch is done. Reconciles each completed todo's evidence back into its TRUE source issue doc (the…
