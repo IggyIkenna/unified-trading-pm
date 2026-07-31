@@ -97,10 +97,15 @@ determinism needs.
       → **52**. No `-var-file` exists for this module — `-var` values were recovered from the deployed
       `live-event-log-compactor` Cloud Run job's live env/SA (warm/cold bucket = `central-element-323112-events`,
       compactor SA = `unified-trading-sa@central-element-323112.iam.gserviceaccount.com`).
-- [ ] [INFRA] P1. Verify each recreated subscription's `cloud_storage_config` (bucket / `filename_prefix` /
+- [x] ✅ [INFRA] P1. Verify each recreated subscription's `cloud_storage_config` (bucket / `filename_prefix` /
       `filename_suffix`) matches its own topic's asset_group x data_type pairing 1:1, so no sink writes to the wrong
       path. DoD: a scripted diff of all 52 subscriptions' live `filename_prefix` against `warm_sink.tf`'s declared value
-      shows 0 mismatches.
+      shows 0 mismatches. — deployment-service@95a79a7 (`scripts/verify_warm_sink_subscription_paths.py`, one-off
+      remediation verifier, `Epic: batch_live_symmetry_master`). Parses all 52 `google_pubsub_subscription` blocks in
+      `warm_sink.tf` and diffs each against `gcloud pubsub subscriptions list --filter="name:warm-sink" --format=json`,
+      cross-checking bucket / `filename_prefix` / `filename_suffix` AND that each declared `filename_prefix` actually
+      encodes its own `asset_group`/`data_type` labels (`live-events/warm/{asset_group}/{data_type}/`), plus a
+      no-two-subscriptions-share-a-prefix collision check. Live run: **52 declared, 52 live, 0 mismatches.**
 - [ ] [INFRA] P1. Add the missing build step for `live-event-log-compactor`
       (`deployment-service/deployment_service/jobs/live_event_log_compactor.py`) — a Dockerfile/cloudbuild.yaml step
       that actually builds and pushes its image — and push a real image. DoD:
@@ -148,3 +153,10 @@ determinism needs.
   52 added, 2 changed, 0 destroyed" (50 subscriptions recreated + 2 incidental never-applied publisher IAM grants from
   the same module + 2 already-live prediction subscriptions updated in-place). Live-verified
   `gcloud pubsub subscriptions list --filter="name:warm-sink" --project=central-element-323112` returns exactly 52.
+- **2026-07-31**: Todo 3 done — `scripts/verify_warm_sink_subscription_paths.py` shipped (deployment-service@95a79a7)
+  and run live: parses all 52 `warm_sink.tf` resource blocks, diffs each against the live subscription's
+  `cloud_storage_config`, and cross-checks the declared `filename_prefix` actually encodes that resource's own
+  `asset_group`/`data_type` labels (catches a copy-paste mismatch even if bucket/prefix/suffix happened to still
+  diff-clean). Result: 52 declared, 52 live, **0 mismatches** — no cross-shard write risk. (Active gcloud identity on
+  this shared host kept reverting to `github-actions-deploy`, which lacks `pubsub.subscriptions.list` on this project;
+  switched to the ambient `unified-trading-sa` identity per RULES.md § 5 self-service rule, re-verified live.)
