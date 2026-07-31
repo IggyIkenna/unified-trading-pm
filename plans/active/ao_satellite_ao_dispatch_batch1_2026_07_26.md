@@ -253,18 +253,18 @@ the 35 satellite docs. This plan extracts the conflict-clear, bounded-outcome su
       that also names `bootstrap.py`/regen ids — do not touch task-id derivation here.
 
       **2026-07-28 update — the actual root cause is now found and fixed, this todo is no longer blocking, but is
-                                                                                                                                                          NOT fully redundant.** The source issue's real mechanism was confirmed to be an UPDATE (a status regression via
-                                                                                                                                                          `state_store/tasks.py::release_task_to_queue()` being called with a stale slot pointer to an already-`done` task),
-                                                                                                                                                          not a bare DELETE — by the time `_prune_stale` deletes the row, it has already legitimately regressed to
-                                                                                                                                                          `queued`/undispatched, so a DELETE-trigger alone would never have caught the actual corruption in time, only its
-                                                                                                                                                          downstream symptom. Fixed via an application-level guard directly inside `release_task_to_queue()` (refuses +
-                                                                                                                                                          logs on an already-terminal row; the one legitimate caller,`/reopen`, opts in via `allow_terminal=True`) — see the
-                                                                                                                                                          resolved issue doc for full detail. **This todo's original DELETE-trigger idea is still a legitimate, narrower
-                                                                                                                                                          defense-in-depth item** if the team wants a backstop against a hypothetical raw out-of-band SQL delete bypassing
-                                                                                                                                                          the ORM entirely (the one thing this fix, being Python-level, still cannot catch) — but it is no longer the
-                                                                                                                                                          primary mitigation and is not blocking anything. Left open at the worker's/operator's discretion rather than
-                                                                                                                                                          unilaterally closed, since scoping a DELETE-trigger specifically for the raw-SQL case is a real, separate design
-                                                                                                                                                          decision this session didn't make.
+                                                                                                                                                                      NOT fully redundant.** The source issue's real mechanism was confirmed to be an UPDATE (a status regression via
+                                                                                                                                                                      `state_store/tasks.py::release_task_to_queue()` being called with a stale slot pointer to an already-`done` task),
+                                                                                                                                                                      not a bare DELETE — by the time `_prune_stale` deletes the row, it has already legitimately regressed to
+                                                                                                                                                                      `queued`/undispatched, so a DELETE-trigger alone would never have caught the actual corruption in time, only its
+                                                                                                                                                                      downstream symptom. Fixed via an application-level guard directly inside `release_task_to_queue()` (refuses +
+                                                                                                                                                                      logs on an already-terminal row; the one legitimate caller,`/reopen`, opts in via `allow_terminal=True`) — see the
+                                                                                                                                                                      resolved issue doc for full detail. **This todo's original DELETE-trigger idea is still a legitimate, narrower
+                                                                                                                                                                      defense-in-depth item** if the team wants a backstop against a hypothetical raw out-of-band SQL delete bypassing
+                                                                                                                                                                      the ORM entirely (the one thing this fix, being Python-level, still cannot catch) — but it is no longer the
+                                                                                                                                                                      primary mitigation and is not blocking anything. Left open at the worker's/operator's discretion rather than
+                                                                                                                                                                      unilaterally closed, since scoping a DELETE-trigger specifically for the raw-SQL case is a real, separate design
+                                                                                                                                                                      decision this session didn't make.
 
 - [ ] [REVIEW] P3. **Redefine the ao tranche's membership rule from a hand-maintained Sources list to an epic-based
       rule, then triage the delta.** Added 2026-07-26, resolved `autonomous_session_operator_decisions_2026_07_25.md`
@@ -382,9 +382,8 @@ the 35 satellite docs. This plan extracts the conflict-clear, bounded-outcome su
   secret/IAM writes, one `[DESIGN]` dirty-worktree policy including an operator-sanctioned hard reset).
 - `/plans/archive/2026_07/agent_orchestrator_alert_channel_cleanup_2026_07_13.md` — **RESOLVED 2026-07-27**: all todos
   closed with evidence, plan archived; no longer a candidate here.
-- `/plans/active/ao_fleet_observability_kpis_2026_07_20.md` — carries an explicit "NOT AO-dispatched / operator-driven"
-  declaration in prose, not just the `assigned_vm: NA` default. Its remaining todos are now genuinely actionable (see
-  this run's report) — extracting them needs the operator to lift that declaration.
+- `/plans/archive/2026_07/ao_fleet_observability_kpis_2026_07_20.md` — **RESOLVED 2026-07-31**: its one remaining todo
+  (AF-2-followup) closed via direct live re-measurement, all todos `[x]`, plan archived; no longer a candidate here.
 - `/plans/archive/issues/orchestrator_jwt_secret_not_pinned_causes_fleet_git_status_outage_2026_07_24.md` — **no longer
   operator-gated**: its `[OPERATOR]` P1 todo's sole blocker was needing "an operator-chosen maintenance window" for the
   shared-orchestrator restart, which the 2026-07-28 CLAUDE.md ruling ("Maintenance-window restarts (e.g. orchestrator)

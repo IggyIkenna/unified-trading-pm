@@ -171,6 +171,20 @@ outranks a scheduled task's capacity floor. See `server/config.py`'s reserve/par
 mechanics; SSOT for the historical single-combined-reserve incident this replaces:
 `plans/archive/issues/ao_escalation_and_scheduled_dispatch_slot_starvation_2026_07_27.md`.
 
+**Report-mode dispatch throttle** (`plan_health._report_dispatch_gate`, AF-2
+`plans/archive/2026_07/ao_fleet_observability_kpis_2026_07_20.md`, `agent-orchestrator@d098970`) — a SEPARATE,
+plan_health-local mechanism from the fleet-wide dispatch-cooldown store above, no shared state: `mode="report"`
+dispatches (the only mode this gate covers — `reconcile`/`docs_reconcile`/`ag_closeout`/`na_eligibility`/
+`context_scout` register a disjoint `agent_kind` and are exempt by construction) coalesce onto the most recent
+`agent_kind="plan_health"` `AgentRow` when it is still live (no result posted yet, inside
+`tuning.plan_health_dispatch_timeout_seconds`, default 1800s) or the min-interval hasn't elapsed
+(`tuning.plan_health_min_interval_seconds`, default 7200s/2h) — logged as `plan_health_dispatch_coalesced`. `force=true`
+skips the interval half only; it never bypasses the live-dispatch check. Live-traffic re-measurement (2026-07-31, direct
+read-only query against `data/state/state.db`): zero `superseded-plan_health` reaps in the table's entire history, and
+`plan_health_dispatch_coalesced` has fired zero times since deploy — report-mode traffic (tied to
+`main-backmerge-to-ldr.yml`'s promotion ping) has simply never come in fast enough to exercise the throttle's blocking
+branch; no violation has occurred either.
+
 ## Behaviour domains
 
 The operating model has four domains, each with a dedicated section below and a detailed code-mapped SSOT. Keep the

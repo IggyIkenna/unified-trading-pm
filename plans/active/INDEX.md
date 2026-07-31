@@ -17,7 +17,7 @@
 
 <!-- AUTO-INDEX-START -->
 
-_Auto-generated via `scripts/plans/regenerate_active_plan_index.py`. 241 plans across 10 domains. A plan tagged with
+_Auto-generated via `scripts/plans/regenerate_active_plan_index.py`. 243 plans across 10 domains. A plan tagged with
 multiple `asset_group:` values appears under each. Grep this block for a domain keyword before scanning `plans/active/`
 by hand._
 
@@ -609,7 +609,7 @@ by hand._
   asset_group=prediction so a plan is READY, not to activate live trading now — both asset groups are deliberately
   backtest-only today per…
 
-### cross-cutting (60)
+### cross-cutting (64)
 
 - [`ag_closeout_audit_rollout_2026_07_25`](./ag_closeout_audit_rollout_2026_07_25.md) — Autonomous session (/autonomous,
   operator away, 2026-07-25) driving the /ag-closeout-audit skill across the 4 asset groups that haven't had it yet —
@@ -705,6 +705,9 @@ by hand._
   — The residual per-asset-group data-backfill/scope decisions forked out of
   data_pipeline_hardening_self_monitoring_2026_06_22.md's "TradFi pending work" section + the DeFi/TradFi correctness
   items surfaced during per-AG hardening dispatch,…
+- [`data_pipeline_alerts_batch_remediation_2026_07_15`](./data_pipeline_alerts_batch_remediation_2026_07_15.md) —
+  "Operator pasted a dense batch of data-pipeline-alerts Slack alerts (2026-07-14 23:50 to 2026-07-15 00:19 UTC) —
+  DP_RUN_MOSTLY_EMPTY across sports/cefi/defi/tradfi and DP_VM_EXIT_NONZERO for features-sports VMs — and asked (a) why…
 - [`data_pipeline_e2e_milestones_gate_2026_07_24`](./data_pipeline_e2e_milestones_gate_2026_07_24.md) —
   Operator-specified checklist (2026-07-24) of 14 milestones that must hold, symmetrically, across all 5 asset groups
   (tradfi/defi/cefi/prediction/sports) — across every data source, venue, chain, league, fixture, data_type,
@@ -778,6 +781,18 @@ by hand._
   Extracted 2026-07-24 from data_completion_to_100_all_ag_2026_06_21.md (M-1) per the plan line-cap remediation
   (plans/active/issues/plan_line_cap_remediation_2026_07_23.md, bucket-(d) split, operator-approved). This is the
   still-inline…
+- [`live_event_log_warm_sink_recovery_and_cold_compaction_2026_07_31`](./live_event_log_warm_sink_recovery_and_cold_compaction_2026_07_31.md)
+  — All 52 warm-sink-persist-* Cloud Storage subscriptions were genuinely created 2026-06-29, but 50 of them were
+  silently auto-deleted by Pub/Sub's native 31-day no-message inactivity expiry — warm_sink.tf never sets
+  expiration_policy.ttl="",…
+- [`live_event_log_warm_sink_recovery_and_cold_compaction_2026_07_31_finalize`](./live_event_log_warm_sink_recovery_and_cold_compaction_2026_07_31_finalize.md)
+  — Gated closeout for live_event_log_warm_sink_recovery_and_cold_compaction_2026_07_31.md, added per the
+  finalize-plan-coverage gate (task_template.md §4 — every `assigned_vm: planning` plan needs a companion gated finalize
+  plan so its…
+- [`live_event_log_warm_sink_recovery_and_cold_compaction_2026_07_31_finalize_2026_07_31`](./live_event_log_warm_sink_recovery_and_cold_compaction_2026_07_31_finalize_2026_07_31.md)
+  — Gated closeout for live_event_log_warm_sink_recovery_and_cold_compaction_2026_07_31.md -- machine-held via
+  depends_on + gate_on_depends: true until all of that plan's todos are done. Verifies each of its own checkboxes
+  carries real…
 - [`master_data_canonicalisation_migration_catalogue_2026_06_07`](./master_data_canonicalisation_migration_catalogue_2026_06_07.md)
   — Master coordinator for data + manifest + schema migration + IS catalogue + pipeline_mode standardisation — a pure
   dependency-gated sequencer tracking the global DAG for the whole data-layer cutover.
@@ -814,11 +829,8 @@ by hand._
 - [`v2_engine_venue_buildout_2026_06_15`](./v2_engine_venue_buildout_2026_06_15.md) — Build out real strategy engines
   for 22 engineless archetypes and wire up 9 unwired venues in the v2 strategy framework.
 
-### ao (11)
+### ao (10)
 
-- [`ao_fleet_observability_kpis_2026_07_20`](./ao_fleet_observability_kpis_2026_07_20.md) — Roughly four of five
-  dispatches produce no completion and nothing surfaces it, 43% of CI escalations go unresolved after ~3.8 dispatches
-  each, plan_health burns 55 haiku runs a day of which 13 return nothing, snapshot recency is…
 - [`ao_open_issues_consolidated_close_out_2026_07_17`](./ao_open_issues_consolidated_close_out_2026_07_17.md) —
   2026-07-17 operator-session sweep of the 10 open AO issue docs — every doc's claims re-verified against the current
   LDR code AND the production orchestrator on the planning VM (read-only SSM — live state.db, activity_log, process
@@ -929,11 +941,8 @@ by hand._
 - [`stash_pile_workspace_cleanup_2026_06_03`](./stash_pile_workspace_cleanup_2026_06_03.md) — Runbook for auditing and
   clearing git stash piles across all workspace repos on any host, with archive-first conservative tooling.
 
-### meta (3)
+### meta (2)
 
-- [`data_pipeline_alerts_batch_remediation_2026_07_15`](./data_pipeline_alerts_batch_remediation_2026_07_15.md) —
-  "Operator pasted a dense batch of data-pipeline-alerts Slack alerts (2026-07-14 23:50 to 2026-07-15 00:19 UTC) —
-  DP_RUN_MOSTLY_EMPTY across sports/cefi/defi/tradfi and DP_VM_EXIT_NONZERO for features-sports VMs — and asked (a) why…
 - [`deepseek_claude_blended_provider_routing_2026_07_28`](./deepseek_claude_blended_provider_routing_2026_07_28.md) —
   Register DeepSeek V4 Pro as a second, first-class model provider in agent-orchestrator's account pool, and add a
   routing layer so AutoSpawn decides per-task whether a fresh spawn uses DeepSeek or a Claude Max account — a real
