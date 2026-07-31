@@ -54,7 +54,7 @@ source: >-
 resolved_by:
 locked_by:
 locked_since:
-depends_on: []
+depends_on: [bucket_iam_p2_tier_sa_scope_gap_and_default_compute_sa_overprivilege_2026_07_30]
 ---
 
 # P2.1's literal "remove the god-SA objectAdmin" step would break every live/batch prod GCS write, fleet-wide
@@ -138,7 +138,23 @@ once P2.2 lands per the plan's own note.
       corrected, properly-gated todo breakdown, and split `bucket_iam_write_protection_per_tier_2026_06_09.md`'s P2.2
       into P2.2a-P2.2d (mirroring this plan's own P1.2/P2.1 split precedent) — unified-trading-pm@HEAD. No terraform/IAM
       state mutated.
-- [ ] [TERRAFORM] P2. Once P1 above is live-verified (every write-path runtime confirmed running as its tier SA, not
+- [ ] [OPERATOR] P2. Once P1 above is live-verified (every write-path runtime confirmed running as its tier SA, not
       `unified-trading-sa`), execute `bucket_iam_write_protection_per_tier_2026_06_09.md` P2.1b: remove
       `unified_trading_storage_admin` (`main.tf:598-602`), then verify live/batch prod workloads retain `-prd-` write
-      (now via the tier SA) and a dev/stg credential is IAM-denied a `-prd-` write. (repo: deployment-service)
+      (now via the tier SA) and a dev/stg credential is IAM-denied a `-prd-` write. (repo: deployment-service) Retag to
+      plain `[TERRAFORM]` once the sibling doc's P2.2 chain (see Addendum below) actually lands and is live-verified.
+
+## Addendum (2026-07-31, slot-14)
+
+Third same-shaped recurrence: backlog task `bucket_iam_p2_god_sa_removal_before_runtime_rewire-002` (this doc's P2) was
+dispatched to me (`/api/backlog/<id>/blockers` read `"ready (no blockers)"`) even though P1 above is "done" only in the
+sense of _investigation delivered_ — it explicitly says mechanical completion is NOT safe today — and the real
+precondition ("every write-path runtime confirmed running as its tier SA") still does not hold: the sibling issue doc
+(`bucket_iam_p2_tier_sa_scope_gap_and_default_compute_sa_overprivilege_2026_07_30.md`) that P1 spawned still has its own
+`[OPERATOR] P0` SA-strategy ruling open and unchecked, so P2.2 (wiring runtimes to tier SAs) hasn't started. Executing
+P2 now would remove `unified_trading_storage_admin` from `unified-trading-sa` while nothing authenticates as a tier SA
+yet — an immediate fleet-wide 403 on every live/batch prod GCS write. Did NOT touch any terraform/IAM state. Applied the
+same fix this doc's own prior Addendum used for the identical problem shape: retagged P2 from `[TERRAFORM]` to
+`[OPERATOR]` (routes it off worker dispatch into the operator's blocked-queue) and added a `depends_on` cross-reference
+to the sibling doc (documentation/archival-gating only, per `PLAN_FORMAT.md` — does not itself gate dispatch, hence the
+retag doing the real work here).
