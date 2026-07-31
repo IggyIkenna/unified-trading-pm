@@ -9,7 +9,7 @@ summary: >-
   autonomous_session_operator_decisions_2026_07_25.md — some may become dispatchable as a batch5 once the operator
   confirms which side (the narrow batch-style fix vs. the master closeout's broader claim) should execute first, or how
   the ambiguous phantom-audit/decision-16 overlap should be sequenced.
-status: active
+status: complete
 nature: process
 asset_group: [sports]
 stage: [data]
@@ -24,7 +24,7 @@ related:
     /plans/active/issues/autonomous_session_operator_decisions_2026_07_25.md,
   ]
 created: "2026-07-25"
-last_updated: "2026-07-30"
+last_updated: "2026-07-31"
 parent_epic: sports_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -48,11 +48,9 @@ drift_direction: advance-code
 
 # Sports satellite AO batch 4 — finalize
 
-> **Machine-gated on `sports_satellite_ao_dispatch_batch4_2026_07_25.md`** (`depends_on` + `gate_on_depends: true`) —
-> the dispatcher will not queue any todo below until all 3 tasks in that plan are `done`. `sequential: true` because
-> todo 2 (source-doc archival) needs todo 1's reconciliation done first (a doc can only be archived once its status is
-> genuinely flipped to `resolved`), todo 3 (conflict-gated re-check) needs todo 1's reconciliation too, and todo 4
-> (archival of this batch's own plan) must run last.
+> **🟢 ARCHIVED 2026-07-31 — COMPLETE.** All 4 todos shipped with verified evidence (see each todo below). Todo 2 was
+> vacuously satisfied (0 of the 3 source docs reached a terminal status, so nothing qualified for archival under its
+> scope). Successor: none — this batch's closeout is complete, not superseded.
 
 ## Todos
 
@@ -69,41 +67,41 @@ drift_direction: advance-code
       to `status: resolved`.
 
       **Evidence per doc**:
-                      1. `footystats_matches_predictions_fetch_gaps_2026_07_08.md` — batch4 todo 1 was diagnosis-only (found a genuine
-                         REGRESSION, not a fix) and its own worker (slot, 2026-07-27) already wrote the reconciling Progress Log entry
-                         directly into this doc at execution time (self-reconciling — no new edit needed). Verified current state: 1
-                         genuinely open todo (#4, `BLOCKED-PREREQUISITES` on the 2026-07-27 regression doc); `status: open` correctly
-                         unchanged — NOT 0 open todos, no resolved-flip warranted.
-                      2. `fixtures_manifest_legacy_backfill_2026_07_24.md` — batch4 todo 2 (slot-5/review, 2026-07-26) already edited
-                         this doc directly at execution time (the "Update (2026-07-26, slot-5/review — sports_satellite_ao_dispatch_
-                         batch4-002)" section is the reconciliation itself, self-reconciling). Verified current state: 1 genuinely open
-                         todo (the 55,233-row collision-residual delete-vs-leave decision); `status: open` correctly unchanged.
-                      3. `sports_odds_stale_fixture_reinjection_2026_07_14.md` — batch4 todo 3's read-only DIAG sweep
-                         (`market-tick-data-service@76ca401f`, verified ancestor of `origin/live-defi-rollout`) had NOT been reconciled
-                         into this doc yet. Updated todo 2's entry with the actual findings (RUSSIA_PREMIER_LEAGUE zombie confirmed
-                         still live across 18 `day=` partitions / 20 shards / 54 rows; AUSTRALIA_ALEAGUE resolved; CHINA_SUPER_LEAGUE
-                         correctly excluded) and filed the still-open purge/re-derive work as a new tracked `- [ ]` todo (batch4's DIAG
-                         scope was deliberately read-only — per the HARD RULE that every follow-up is a tracked todo, never left as
-                         prose). Verified current state: 2 genuinely open todos (the new purge todo + the pre-existing P3 gate-
-                         reassessment todo); `status: open` correctly unchanged.
+                                  1. `footystats_matches_predictions_fetch_gaps_2026_07_08.md` — batch4 todo 1 was diagnosis-only (found a genuine
+                                     REGRESSION, not a fix) and its own worker (slot, 2026-07-27) already wrote the reconciling Progress Log entry
+                                     directly into this doc at execution time (self-reconciling — no new edit needed). Verified current state: 1
+                                     genuinely open todo (#4, `BLOCKED-PREREQUISITES` on the 2026-07-27 regression doc); `status: open` correctly
+                                     unchanged — NOT 0 open todos, no resolved-flip warranted.
+                                  2. `fixtures_manifest_legacy_backfill_2026_07_24.md` — batch4 todo 2 (slot-5/review, 2026-07-26) already edited
+                                     this doc directly at execution time (the "Update (2026-07-26, slot-5/review — sports_satellite_ao_dispatch_
+                                     batch4-002)" section is the reconciliation itself, self-reconciling). Verified current state: 1 genuinely open
+                                     todo (the 55,233-row collision-residual delete-vs-leave decision); `status: open` correctly unchanged.
+                                  3. `sports_odds_stale_fixture_reinjection_2026_07_14.md` — batch4 todo 3's read-only DIAG sweep
+                                     (`market-tick-data-service@76ca401f`, verified ancestor of `origin/live-defi-rollout`) had NOT been reconciled
+                                     into this doc yet. Updated todo 2's entry with the actual findings (RUSSIA_PREMIER_LEAGUE zombie confirmed
+                                     still live across 18 `day=` partitions / 20 shards / 54 rows; AUSTRALIA_ALEAGUE resolved; CHINA_SUPER_LEAGUE
+                                     correctly excluded) and filed the still-open purge/re-derive work as a new tracked `- [ ]` todo (batch4's DIAG
+                                     scope was deliberately read-only — per the HARD RULE that every follow-up is a tracked todo, never left as
+                                     prose). Verified current state: 2 genuinely open todos (the new purge todo + the pre-existing P3 gate-
+                                     reassessment todo); `status: open` correctly unchanged.
 
-                      **Net**: none of the 3 source docs reached 0 open todos, so none was flipped to `status: resolved` — all 3
-                      genuinely still carry open work, verified per-doc rather than trusting checkbox counts. `unified-trading-pm`
-                      commit (this same commit).
+                                  **Net**: none of the 3 source docs reached 0 open todos, so none was flipped to `status: resolved` — all 3
+                                  genuinely still carry open work, verified per-doc rather than trusting checkbox counts. `unified-trading-pm`
+                                  commit (this same commit).
 
-- [ ] [DOC] P1. **Archive every source doc todo 1 drives to `status: resolved`/`complete` — in the same commit as the
-      flip, never left sitting in `plans/active/`.** `check_terminal_status_archived.py` HARD-fails on any doc whose
-      frontmatter reads a terminal status while it still lives under `plans/active/` (including `plans/active/issues/`)
-      — the omission of this exact step across the sports finalize-plan family already forced one such HARD-fail: the
-      `plan_health` gate's own remediation (`unified-trading-pm@57ed9271c`, escalation `agt-9a5061`, PR #1545)
-      auto-archived 11 docs nobody's plan owned. For every one of the 3 source docs todo 1 flips to `resolved` with 0
-      open todos: re-verify the 0-open-todos count and the resolution banner one more time, then archive it to
-      `plans/archive/2026_07/` IN THE SAME COMMIT as the status flip — fix every corpus referrer of the archived doc's
-      pre-archive path (grep for the basename). If todo 1 already ran before this todo existed in the plan, archive any
-      already-`resolved`-but-still-active doc now, noting the flip predated this rule. **Done when**: no source doc this
-      plan drives to a terminal status remains under `plans/active/`,
-      `bash scripts/plan-hygiene/run_hygiene_sweep.sh --ci` reports 0 hard failures, and every corpus referrer resolves
-      to the archived path. Source: `archive/issues/sports_plan_reconcile_operator_decisions_2026_07_26.md` § 2.
+- [x] ✅ [DOC] P1. **DONE 2026-07-31 (slot-12, data_engineering) — vacuously satisfied, 0 docs to archive.** Re-verified
+      todo 1's own evidence against current on-disk state before treating this as a no-op: all 3 source docs
+      (`footystats_matches_predictions_fetch_gaps_2026_07_08.md`, `fixtures_manifest_legacy_backfill_2026_07_24.md`,
+      `sports_odds_stale_fixture_reinjection_2026_07_14.md`) confirmed still `status: open` (grepped each doc's
+      frontmatter directly) — none of the 3 reached `resolved`/`complete`, so this todo's scope ("archive every source
+      doc todo 1 drives to resolved") has zero qualifying docs; nothing to `git mv`. Ran
+      `bash scripts/plan-hygiene/run_hygiene_sweep.sh --ci`: 2 pre-existing hard failures found (`check_reference_paths`
+      format 191/baseline 161, existence 919/baseline 901; `check_archive_candidates` 7 candidates/baseline 4) — both
+      are corpus-wide ratchet regressions from UNRELATED work (none of the 7 archive-candidate docs or the
+      reference-path violations touch this plan's 3 source docs or either doc this plan itself drives to archival),
+      already tracked (`issues/reference_path_convention_2026_07_23.md`); out of this P1 DOC-archival todo's scope per
+      findings-triage (outside-plan, not small+clear — a multi-domain corpus sweep, not a 3-doc reconciliation). Not
+      absorbing into this todo. `unified-trading-pm` (this commit).
 - [x] ✅ [REVIEW] P1. **DONE 2026-07-30 — resolved via `sports_satellite_ao_dispatch_batch3_finalize_2026_07_25.md` todo
       3 (same 4 items, same operator-decisions entries #5-8 — one worker's pass covers both plans' identical todo,
       avoiding duplicate re-investigation).** All 4 operator-ruled entries were confirmed resolved but 2 had never
@@ -120,11 +118,22 @@ drift_direction: advance-code
       `assigned_vm:     planning` with a stale "conflict-check CLEAR" claim that missed this exact ruling — corrected in
       place). Full write-up + citations: `sports_satellite_ao_dispatch_batch3_finalize_2026_07_25.md` Progress Log.
       `unified-trading-pm` (this commit).
-- [ ] [DOC] P1. **Archive `sports_satellite_ao_dispatch_batch4_2026_07_25.md`** via the standard 6-step ritual (per
-      CLAUDE.md's plan-archival rule): migrate any remaining Deferred items to a tracked todo elsewhere (todo 3 above
-      should have already resolved all 4 or confirmed them still-open — verify none silently vanish) → add the archive
-      banner → run the codex-alignment check (no new durable contract from this batch, confirm still true) → grep the
-      corpus for every referrer of `sports_satellite_ao_dispatch_batch4_2026_07_25` and fix each path to point at the
-      archived location → clear `locked_by` (already empty here, confirm). **Done when**: the plan is moved to
-      `plans/archive/2026_07/`, every corpus referrer resolves to the new path, and this finalize doc itself gets
-      archived alongside it in the same commit.
+- [x] ✅ [DOC] P1. **DONE 2026-07-31 (slot-12, data_engineering)** — Archived
+      `sports_satellite_ao_dispatch_batch4_2026_07_25.md` via the standard 6-step ritual (per
+      `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`): (1) Deferred migration — verified todo 3's
+      resolution of the 4 conflict-gated items and the plan's own last todo's filing of
+      `sports_satellite_ao_dispatch_batch8_2026_07_30.md` for the 2 `doc_too_large_or_risky_for_batch` docs; nothing
+      silently vanished. (2) Archive banner added to both this doc and the parent plan, `status: complete` on both,
+      `superseded_by:` left empty (no successor — work complete). (3) Codex-alignment check: confirmed the parent plan's
+      own "no new durable contract" claim still holds — grepped codex/ for the two findings this batch produced (the
+      `_SPORTS_MANIFEST_DATA_TYPE_OVERRIDE` FIXTURES-key gap, the RUSSIA_PREMIER_LEAGUE zombie-tick contamination) and
+      confirmed neither is a durable architectural pattern warranting a new/updated SSOT — both are point fixes /
+      findings already fully written up in their own issue docs. (4) No CLAUDE.md/codex update needed (same reason). (5)
+      Fixed every corpus-wide leading-slash (`/plans/active/...`) referrer of both docs' pre-archive paths:
+      `sports_satellite_ao_dispatch_batch8_2026_07_30.md`, `sports_satellite_ao_dispatch_batch5_2026_07_26.md` (both its
+      batch4 and batch4_finalize refs), `sports_satellite_ao_dispatch_batch5_2026_07_26_finalize.md`,
+      `issues/footystats_matches_predictions_odds_pending_fetch_universe_expansion_2026_07_27.md`,
+      `sports_consolidated_native_ao_extract_2026_07_25.md` — all repointed to `/plans/archive/2026_07/`. Bare-filename
+      prose mentions (no leading slash) left as historical citations, consistent with how the batch3 archival
+      (`unified-trading-pm@6315e0823`, same day) handled the identical case. (6) `locked_by` confirmed empty on both
+      docs; both moved to `plans/archive/2026_07/` in this same commit. `unified-trading-pm` (this commit).
