@@ -257,9 +257,19 @@ file-by-file.
       (`test_data_status_service.py`, `test_route_data_status_live.py`,
       `test_data_status_beta_rollup_and_cli_config.py`, `test_data_status_helpers.py`), basedpyright clean, ruff clean,
       full `quality-gates.sh` green (124s). Repo: deployment-api.
-- [ ] [SCRIPT] P2. Decompose the remaining function-size-only violation in
-      `deployment_api/services/data_status/coverage.py`. Remove its exclude entry once compliant; re-run
-      `quality-gates.sh` to confirm no regression.
+- [x] ✅ [SCRIPT] P2. **DONE 2026-07-31 (slot-2, infra craft).** Decomposed 5 oversized methods in
+      `deployment_api/services/data_status/coverage.py`. `deployment-api@d7e42ab`: extracted
+      `_coverage_summary_guarded_build` from `get_coverage_summary` (was 86L), `_stale_coverage_response` +
+      `_refused_coverage_response` from `_coverage_summary_fallback` (was 72L), `_compute_capture_status_counts` +
+      `_out_of_window_empty_count` + `_completion_pct` + `_assemble_coverage_entry` from `_build_coverage_for_cat` (was
+      145L, the largest single method decomposed in this doc so far), and `_fold_cat_entry_into_totals` from
+      `_get_coverage_summary_sync` (was 71L); trimmed `_build_breakdowns`'s docstring (was 57L). Pure code motion +
+      docstring condensing, no logic changes — the OOW/4-state/legacy-coercion business-rule comments were preserved
+      verbatim on their new homes, not summarised away. `FUNCTION_SIZE_EXTRA_EXCLUDES` entry removed — gate passes
+      natively. Verified: 346/347 targeted tests green (the 1 "failure" — `test_thread_pool_disabled_forces_serial` — is
+      a pre-existing test-order/global-state pollution issue, confirmed passing in isolation, not a regression from this
+      change), basedpyright clean, ruff clean, full `quality-gates.sh` green (158s, full suite doesn't hit the
+      isolated-test-order issue). Repo: deployment-api.
 - [ ] [SCRIPT] P2. Decompose the remaining function-size-only violation in
       `deployment_api/services/data_status/defi.py`. Remove its exclude entry once compliant; re-run `quality-gates.sh`
       to confirm no regression.
