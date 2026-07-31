@@ -123,12 +123,54 @@ drift_direction: advance-code
       unchecked. **(b) E10** still open — same search, same result: no per-cron disable-vs-fix ruling found;
       `na-eligibility-audit 2026-07-30` reconfirmed E10 stays parked as-is ("The F4 vacuous-cron item is parked as ci
       batch2 Deferred E10"). No code shipped (pure reconciliation read); Evidence: `unified-trading-pm@<pending-sha>`.
-- [ ] [REVIEW] P2. **Re-verify E7 and E11-E13 have not silently changed state.** E7 (MTDS DEPLOYMENT_ENV leak,
+- [x] ✅ [REVIEW] P2. **Re-verify E7 and E11-E13 have not silently changed state.** E7 (MTDS DEPLOYMENT_ENV leak,
       duplicate-gated on the sibling race doc's cascade-instrumentation step) — has that sibling doc's blocking step run
       yet? E11 (dirty-deps carve-out sibling docs) — still out of batch-2 todo 5's narrow scope, confirm no new doc has
       claimed them. E12/E13 (role-mismatch, UI-touching) — still waiting on a `[UI]`-capable slot cycle; no action
       needed here beyond confirming they have not been separately picked up. **Done when**: each is re-confirmed still
-      in its recorded state, or flagged if changed.
+      in its recorded state, or flagged if changed. **DONE 2026-07-31 (slot 15, review craft).**
+
+      **E7 — UNCHANGED, re-confirmed still open.** Read
+          `plans/active/issues/mtds_deployment_env_race_survives_single_worker_2026_07_23.md` directly: its cascade-
+          instrumentation todo (`- [ ] [INFRA] P2. Instrument quickmerge's cascade/pull step`, line 138) is still
+          unchecked. That same doc already carries its own fresh **2026-07-31** na-eligibility-audit verdict independently
+          confirming E7 unchanged ("CONFIRMS the verdict above, unchanged... Deferred E7 remains open/parked, unchanged"),
+          cross-verified against a same-day `ci_satellite_ao_dispatch_batch4_2026_07_31.md` draft. Annotated the E7 row in
+          `ci_satellite_ao_dispatch_batch2_2026_07_29.md`'s Deferred table with this re-verification.
+
+          **E11 — UNCHANGED, still unclaimed.** The two named sibling docs
+          (`mutable_git_sha_tag_restamping_cloudbuild_2026_07_13.md`,
+          `sports_odds_ownership_registry_split_brain_and_bogus_api_football_denominator_2026_07_15.md`) are both archived
+          (`plans/archive/issues/`) — but for their OWN unrelated primary fixes, not because anyone migrated them to the new
+          `Quickmerge: direct-carveout-dirty-deps` trailer (`check_strict_quickmerge_blind_to_dirty_deps_carveout_2026_07_23.md`'s
+          shipped Option 2, `unified-trading-pm@bbe9a9871`). Grepped the active corpus for `direct-carveout-dirty-deps` and
+          "dirty-deps carve-out" — every hit is either the source doc itself or a commit-body-style USE of the new/old
+          carve-out convention (e.g. `plan_reconcile_autonomous_sweep_2026_07_30.md`'s own direct push), never a doc that
+          targets migrating the sibling docs. No new doc has claimed E11. Annotated the E11 row accordingly.
+
+          **E12 — CHANGED: now fully RESOLVED, no longer role-mismatch-blocked.** Read
+          `plans/archive/issues/ci_test_content_and_tooling_speed_findings_2026_07_28.md` (already archived, `status:
+          resolved`): all 5 constituent `[UI]` todos are `[x]` done — Playwright `--project=chromium` scoping + browser-
+          binary `actions/cache` for the e2e job, ESLint `archive/**` ignore-list fix + `--cache`, `deployment-ui@de5b7af2`
+          npm→pnpm migration (workflow + Dockerfile + cloudbuild.yaml updated), and `vitest.config.ts` jsdom→happy-dom
+          (~30% wall-time win, 1101/1101 tests green). A `[UI]`-capable slot picked this class up between batch-2's
+          2026-07-29 drafting and this finalize pass. **Rewrote the E12 row** in
+          `ci_satellite_ao_dispatch_batch2_2026_07_29.md`'s Deferred table to record RESOLVED with citations — todo 4
+          (archival) needs no further follow-up for E12.
+
+          **E13 — UNCHANGED, still open.** Read `plans/active/monitoring_control_plane_master_2026_06_10.md` directly:
+          "Rollout-ratchet panels" (line 251, `- [ ] [CODE] P0`) and "(G4) Ruleset / branch-protection drift" (line 455,
+          `- [ ] [CODE] P0`, explicitly folds into the Rollout-ratchet panels as a third column) are BOTH still unchecked.
+          Corroborated by that doc's own **2026-07-30** na-eligibility-audit verdict ("KEEP-NA, valid — all four open items
+          are deployment-api + deployment-ui surface work requiring a `[UI]`-capable role... Parked on exactly that basis
+          as... Deferred E13"). Annotated the E13 row with this re-verification.
+
+          Evidence: `unified-trading-pm@<pending-sha>` (this commit — annotates all 4 rows in
+          `ci_satellite_ao_dispatch_batch2_2026_07_29.md`'s Deferred table + flips this checkbox). No code shipped outside
+          unified-trading-pm (pure reconciliation read + doc annotation). Todo 4 (archival) is next in the `sequential:
+          true` chain — it should treat E12 as resolved (no migration needed) and E7/E11/E13 as still-genuinely-open
+          Deferred items to migrate forward per the archival ritual.
+
 - [ ] [DOC] P1. **Archive `ci_satellite_ao_dispatch_batch2_2026_07_29.md`** via the standard 6-step ritual (CLAUDE.md §
       plan archival): migrate any still-unresolved Deferred item to a tracked follow-up (todos 2-3 above should have
       resolved or re-confirmed E1-E14 — verify none silently vanishes) → add the archive banner → run the
@@ -165,3 +207,11 @@ drift_direction: advance-code
   it is NOT simply ready — flagged as mixed rather than force-marked ready; E9/E10 both re-confirmed still open, no
   operator ruling found since 2026-07-29. See todo 2's own inline evidence for full citations. Todo 3 (E7/E11-E13
   re-verify) is next in the `sequential: true` chain.
+
+- **2026-07-31 (slot 15, review craft)** — dispatched todo 3 (E7/E11-E13 re-verify). E7/E11/E13 all re-confirmed still
+  in their recorded state (unchanged) — E7 corroborated by the sibling doc's own fresh 2026-07-31 na-eligibility-audit
+  verdict, E13 by its source doc's 2026-07-30 verdict. **E12 had silently changed** — its source doc
+  (`ci_test_content_and_tooling_speed_findings_2026_07_28.md`) is now fully resolved + archived, all 5 `[UI]` todos
+  done; rewrote the E12 row in `ci_satellite_ao_dispatch_batch2_2026_07_29.md`'s Deferred table to record RESOLVED so
+  todo 4 doesn't need to migrate it forward. See todo 3's own inline evidence for full citations. Todo 4 (archival) is
+  next in the `sequential: true` chain — final step of this finalize plan.
