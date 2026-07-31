@@ -30,7 +30,7 @@ referenced_by:
     /codex/04-architecture/reconciliation-resolution.md,
   ]
 owner: ikenna
-last_reviewed: 2026-05-17
+last_reviewed: 2026-09-01
 code_refs:
 related_codex:
   [
@@ -356,7 +356,8 @@ The 4-set strategy behaviours are service-side decisions on top of the bus event
   from the default MUST cite the rationale in `description`.
 - **Don't compound triggers in a single `BreakerConfig`.** "Oracle deviation > 100bps AND gas > 200 gwei" is TWO
   breakers, not one. The matching engine subscribes to the union; the highest-severity firing action wins.
-- **Don't subscribe directly to `BreakerArmed` events from the risk-controller.** Layer 2 → Layer 3 is one-way via the
+- **Don't subscribe directly to breaker-armed events from the risk-controller.** (The event type is the string
+  `"BREAKER_ARMED"`; there is no `BreakerArmed` class — corrected 2026-07-31.) Layer 2 → Layer 3 is one-way via the
   seam event; the risk-controller doesn't observe breaker state. See [`risk-breaker-seam.md`](risk-breaker-seam.md).
 - **Don't expand `BreakerAction` beyond the 4-set.** Operator-facing vocab is closed at 4. New behaviours go into the
   strategy-side kill-switch 4-set, not into `BreakerAction`.

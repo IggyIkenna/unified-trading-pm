@@ -29,7 +29,7 @@ referenced_by:
     /codex/09-strategy/architecture-v2/cross-cutting/venue-selection-split.md,
   ]
 owner:
-last_reviewed: 2026-05-17
+last_reviewed: 2026-09-04
 code_refs:
 ---
 

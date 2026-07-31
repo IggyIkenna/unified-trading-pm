@@ -1,6 +1,6 @@
 ---
 scope: [engineer, admin]
-last_reviewed: 2026-05-17
+last_reviewed: 2026-08-29
 ---
 
 # Data
@@ -130,7 +130,7 @@ See [subscription-model.md](subscription-model.md) for details.
 All services validate data before writing to GCS:
 
 ```python
-from unified_trading_services import validate_timestamp_date_alignment
+from unified_trading_library import validate_timestamp_date_alignment
 
 def save_features_for_date(date: datetime, features: pd.DataFrame):
     """Save features with validation."""
@@ -279,7 +279,7 @@ Related: [defi-data-type-taxonomy.md](defi-data-type-taxonomy.md) (cluster valid
 ├── cefi-data-types-catalog.md      # CeFi: NEEDS_CANDLE_PROCESSING table (stub — values TBD)
 ├── sports-data-types-catalog.md    # Sports: 8 data types with methodology + schema
 ├── prediction-data-types-catalog.md # Prediction: 3 data types with methodology + schema
-├── availability-manifest-and-data-status.md  # Manifest v8 schema + coverage semantics
+├── availability-manifest-and-data-status.md  # Manifest v9 schema + coverage semantics
 ├── pipeline-coverage-matrix.md     # MTDS/MDPS coverage matrix per (asset_group, data_type)
 ├── subscription-model.md           # Pub/Sub topics, message formats
 └── ...                             # Additional docs: partitioning, hive-compat, sports-sources

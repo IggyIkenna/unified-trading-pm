@@ -16,10 +16,14 @@ created: 2026-03-27
 authoritative_for: [redirect stub — concurrency model lives in 04-architecture README + batch-live-architecture.md]
 referenced_by: [/codex/04-architecture/README.md]
 owner:
-last_reviewed: 2026-05-17
+last_reviewed: 2026-09-01
 code_refs:
 ---
 
 # Concurrency
 
-See 04-architecture/README.md and 04-architecture/BATCH-LIVE-SYMMETRY.md.
+See [`/codex/04-architecture/README.md`](/codex/04-architecture/README.md) and
+[`/codex/04-architecture/batch-live-architecture.md`](/codex/04-architecture/batch-live-architecture.md).
+
+(The old `04-architecture/BATCH-LIVE-SYMMETRY.md` pointer was dead — that file was renamed to
+`batch-live-architecture.md`; corrected 2026-07-31 freshness re-review.)

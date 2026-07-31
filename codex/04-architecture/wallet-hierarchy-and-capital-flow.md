@@ -33,11 +33,19 @@ referenced_by:
     /codex/05-infrastructure/per-archetype-wallet-isolation.md,
   ]
 owner:
-last_reviewed: 2026-05-17
+last_reviewed: 2026-09-05
 code_refs:
 ---
 
 # Wallet Hierarchy & Capital Flow Architecture
+
+> **[2026-07-31 freshness re-review] — `position-balance-monitor-service`, `risk-and-exposure-service` and
+> `pnl-attribution-service` NO LONGER EXIST as separate repos.** All three were subtree-merged into **`strategy-service`**
+> on 2026-05-20 as the `strategy_service/{position,risk,pnl}/` sub-packages — one Docker image parameterised by
+> `--operation`. Read every mention of those three names below as "the corresponding strategy-service sub-package"; the
+> responsibilities described are unchanged. SSOT:
+> [`/codex/04-architecture/strategy-service-architecture.md`](/codex/04-architecture/strategy-service-architecture.md).
+
 
 ## Overview
 

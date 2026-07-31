@@ -27,7 +27,7 @@ referenced_by:
     /codex/09-strategy/architecture-v2/cross-cutting/execution-policies.md,
   ]
 owner:
-last_reviewed: 2026-05-17
+last_reviewed: 2026-09-02
 code_refs:
 ---
 
@@ -265,6 +265,11 @@ After N ticks, promote shadow to primary if exec-alpha improves.
 
 If a resolved algo or param is invalid (algo deprecated, param out of range), execution emits `POLICY_RESOLUTION_FAILED`
 and falls back to `execution_policy_fallback_ref` if declared, else `INSTRUCTION_REJECTED_EXECUTION`.
+
+> **SPEC, not shipped (verified 2026-07-31).** Neither `POLICY_RESOLUTION_FAILED` nor
+> `INSTRUCTION_REJECTED_EXECUTION` exists in code. The shipped analogue on the RISK side is
+> `INSTRUCTION_REJECTED_RISK` (UAC `canonical/crosscutting/risk_rule/_events.py`) — the execution-side counterparts
+> still need to be added to the instruction-lifecycle event set.
 
 ## Security / change control
 

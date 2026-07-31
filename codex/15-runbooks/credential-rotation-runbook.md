@@ -31,7 +31,7 @@ referenced_by:
     /codex/15-runbooks/per-source-credential-rotation-runbook.md,
   ]
 owner: credential-ops (operator) + per-class secondary owner declared in body
-last_reviewed: 2026-05-17
+last_reviewed: 2026-09-08
 code_refs:
 execution:
   {
@@ -52,7 +52,7 @@ last_executed: see per-class rotation log appended in body
 # Credential rotation runbook — per-class cadence + execution-owner
 
 > **Created 2026-05-12** by slot 4 per
-> [`plans/active/api_keys_wallets_accounts_readiness_2026_05_10.md`](../../plans/active/api_keys_wallets_accounts_readiness_2026_05_10.md)
+> [`/plans/archive/2026_05/api_keys_wallets_accounts_readiness_2026_05_10.md`](../..//plans/archive/2026_05/api_keys_wallets_accounts_readiness_2026_05_10.md)
 > Phase 9.D + Phase 5.A.2. Codifies rotation cadence per credential class + the execution-owner per Runbook
 > Execution-Owner SSOT HARD RULE.
 
@@ -75,7 +75,7 @@ Per-class cadence is tuned to risk:
 | Per-venue read-scope                                                                  | 60d                          | Lower exposure (market data only)                                        |
 | Per-venue withdraw-scope                                                              | per-use                      | Manual rotation post-each-withdrawal (operator runbook)                  |
 | Prediction venues                                                                     | 60d                          | Polymarket / Kalshi                                                      |
-| Data sources (api-football, footystats, helius, coingecko, tenderly, barchart, yahoo) | 90d                          | Data only; lower risk                                                    |
+| Data sources (api-football, footystats, helius, coingecko, tenderly, yahoo, databento) | 90d                         | Data only; lower risk. **Barchart REMOVED 2026-07-25** — no longer a source, nothing to rotate |
 | Aux services (Telegram, Firebase SA, Anthropic)                                       | 90d                          | No trading authority                                                     |
 | GHA Workload Identity Federation                                                      | indefinite                   | OIDC-trust; no long-lived PAT to rotate                                  |
 
@@ -212,7 +212,9 @@ creds:
 
 - Sports (api-football, footystats, soccer-football-info): 90d.
 - DeFi data (helius, coingecko, tenderly): 90d.
-- VIX 15m sources (barchart, yahoo): 90d.
+- VIX 15m sources (yahoo): 90d. **Barchart was RETIRED as a source 2026-07-25** — drop any remaining Barchart
+  credential rather than rotating it; SSOT
+  [`/codex/02-data/tradfi-databento-sourcing-ssot.md`](/codex/02-data/tradfi-databento-sourcing-ssot.md).
 - Telegram bot tokens (dev / staging / prod): 90d.
 - Anthropic API: 90d (per-workflow budget cap applies, see Plan Phase 6.D).
 - Firebase SA JSON: 90d (Workload Identity Federation preferred where possible).

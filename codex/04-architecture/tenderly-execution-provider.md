@@ -33,7 +33,7 @@ referenced_by:
     /codex/05-infrastructure/chain-rpc-mev-tenderly.md,
   ]
 owner:
-last_reviewed: 2026-05-17
+last_reviewed: 2026-09-05
 code_refs:
 ---
 

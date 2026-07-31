@@ -31,11 +31,19 @@ created: 2026-04-03
 authoritative_for: [DeFi Phase 3 paper-to-live infrastructure pillars]
 referenced_by: [/codex/04-architecture/defi-risk-monitoring.md, /codex/04-architecture/flash-loan-receiver.md]
 owner:
-last_reviewed: 2026-05-17
+last_reviewed: 2026-09-02
 code_refs:
 ---
 
 # DeFi Phase 3 Infrastructure
+
+> **[2026-07-31 freshness re-review] — `position-balance-monitor-service`, `risk-and-exposure-service` and
+> `pnl-attribution-service` NO LONGER EXIST as separate repos.** All three were subtree-merged into **`strategy-service`**
+> on 2026-05-20 as the `strategy_service/{position,risk,pnl}/` sub-packages — one Docker image parameterised by
+> `--operation`. Read every mention of those three names below as "the corresponding strategy-service sub-package"; the
+> responsibilities described are unchanged. SSOT:
+> [`/codex/04-architecture/strategy-service-architecture.md`](/codex/04-architecture/strategy-service-architecture.md).
+
 
 ## Overview
 
@@ -86,8 +94,13 @@ connector.connect(config={"rpc_url": rpc_url, "wallet_private_key": pk})
 
 ## 2. Gas Schema Alignment
 
-All DeFi fills include gas cost information for accurate P&L attribution. The canonical schema is
-`unified_api_contracts.internal.fills.DeFiFillRecord`:
+All DeFi fills include gas cost information for accurate P&L attribution. The intended canonical schema is
+`DeFiFillRecord`:
+
+> **NOT SHIPPED (verified 2026-07-31).** There is no `unified_api_contracts/internal/fills` module and no
+> `DeFiFillRecord` class anywhere in the workspace. The nearest shipped type is
+> `unified_api_contracts/internal/reconciliation.py::TradeFillRecord`. Treat the dataclass below as the target
+> schema, not an importable type.
 
 ```python
 @dataclass

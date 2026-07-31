@@ -23,7 +23,7 @@ authoritative_for:
   [sports fixture lifecycle state machine, cross-source fixture status verifier, postponed-fixture identity model]
 referenced_by: [/codex/02-data/sports-data-types-catalog.md, /codex/04-architecture/instruments-live-architecture.md]
 owner: sports-domain
-last_reviewed: 2026-05-17
+last_reviewed: 2026-08-30
 code_refs:
 type: data
 ---
@@ -33,7 +33,9 @@ type: data
 > **Note (2026-05-23 split).** The body below uses the split entity names throughout — `entity=fixtures_schedule`
 > (schedule fields incl. `round`) and `entity=fixtures_outcomes` (scores/status), both under
 > `pipeline_mode=batch_api_football/`. Legacy bare `entity=fixtures/` is FROZEN (last real write 2026-05-23) — never an
-> active write target. SSOT: `plans/active/sports_consolidated_closeout_2026_07_19.md` § "Fixtures entity split".
+> active write target. SSOT:
+> [`/plans/active/sports_consolidated_closeout_2026_07_19.md`](/plans/active/sports_consolidated_closeout_2026_07_19.md)
+> § "Fixtures entity split".
 
 > **SSOT for the lifetime of a sports fixture across the ingestion pipeline.** Codifies the state machine, per-state
 > available_at semantics, and cross-source verifier design.
@@ -73,7 +75,7 @@ POSTPONED                                                    (rare; equivalent t
 | ABANDONED | `ABD` / `AWD`               | sparse                           | sparse      | sparse      |
 
 Closed set lives in UAC `MatchStatus` SSOT (UAC@1a831b0 per sports_master). Reference:
-`unified_api_contracts/canonical/domain/sports/match_status.py`.
+`unified_api_contracts/canonical/domain/sports/fixture_status.py` (re-exported from the package `__init__`).
 
 ## available_at semantics per state
 
@@ -110,6 +112,12 @@ but SFI's `timer_seconds` is still advancing (replay or feed lag). Without cross
 features-sports may join post-match stats to a still-running fixture and produce stale features.
 
 ### Verifier responsibilities
+
+> **NOT BUILT (verified 2026-07-31).** `CrossSourceFixtureVerifier`, `FixtureStatusReport` and
+> `FixtureStatusDriftError` do not exist in any repo, and there is no `cross_source_fixture_status` data_type. What
+> DID ship is the per-source helper layer in UTL `unified_trading_library/fixtures/status_verifier.py` —
+> `verify_fixture_status()` returning a `StatusVerification`, plus `CrossSourceMatchSignal`. Everything in this
+> section is the design for the aggregate verifier on top of those helpers, not a description of shipped behaviour.
 
 1. **Detect divergence**: For each fixture, compare `MatchStatus` derived from each source. If sources disagree about
    which lifecycle state the fixture is in, raise a `FixtureStatusDriftError` (severity P1; not fail-fast — issue a
@@ -247,7 +255,8 @@ transient status that disappears once the new kickoff is confirmed.
 
 ### Cross-reference
 
-- **Plan item**: `plans/epics/sports_master.md` line ~764 (§ "Cross-source fixture status verifier")
+- **Plan item**: [`/plans/epics/sports_master.md`](/plans/epics/sports_master.md) § "Cross-source fixture status
+  verifier"
 - **api_football docs**: `/fixtures?status=PST` — only live/in-flight PST fixtures appear; rescheduled ones revert to NS
 
 ## Schema columns supporting lifecycle
@@ -262,9 +271,9 @@ transient status that disappears once the new kickoff is confirmed.
 
 ## Cross-references
 
-- **Plan**: `plans/epics/sports_master.md` § "C.6 + C.10 match_end_time cascade"
+- **Plan**: [`/plans/epics/sports_master.md`](/plans/epics/sports_master.md) § "C.6 + C.10 match_end_time cascade"
 - **Match-end cascade**: [`match-end-time-cascade.md`](match-end-time-cascade.md)
-- **MatchStatus SSOT**: `unified_api_contracts/canonical/domain/sports/match_status.py`
+- **MatchStatus SSOT**: `unified_api_contracts/canonical/domain/sports/fixture_status.py`
 - **Batch=live SSOT**: `/codex/04-architecture/batch-live-architecture.md`
 - **Availability stamping**: `/codex/02-data/availability-manifest-and-data-status.md`
 - **Honest absence**: `/codex/02-data/honest-absence-downstream-handling.md`

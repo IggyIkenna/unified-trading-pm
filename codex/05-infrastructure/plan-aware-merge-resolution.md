@@ -13,18 +13,29 @@ stage: [meta]
 repos: [unified-trading-pm]
 scope: [engineer]
 tags: [quickmerge, reconciliation, orchestrator, plan-hygiene, infrastructure]
-related: [plans/active/per_agent_worktrees_2026_05_10.md]
+related: [/plans/archive/per_agent_worktrees_2026_05_10.md]
 created: 2026-05-10
 authoritative_for: [plan-aware merge conflict resolution]
 referenced_by: [/codex/05-infrastructure/per-tab-worktrees.md]
 owner: ikenna
-last_reviewed: 2026-05-17
+last_reviewed: 2026-09-07
 code_refs:
 last_updated: 2026-05-10
-related_codex: [/codex/05-infrastructure/per-tab-worktrees.md, ../../cursor-configs/CLAUDE.md]
+related_codex: [/codex/05-infrastructure/per-tab-worktrees.md, /cursor-configs/CLAUDE.md]
 ---
 
 # Plan-aware merge resolution — slot master reconciliation protocol
+
+> **⚠️ BRANCH MODEL UPDATED (2026-07-31 freshness re-review) — the conflict taxonomy stands, the plumbing does not.**
+> This doc was written against the `tab/<operator>/<N>` slot-branch model, which was **RETIRED 2026-06-08** in favour of
+> Path-B per-slot reference-clones: each slot is a `git clone --reference` with its own `.git`, checked out directly on
+> `live-defi-rollout`. There are **no `tab/<op>/N` branches, no tab-mirror, no slot-branch push**. SSOT:
+> [`/codex/05-infrastructure/per-tab-worktrees.md`](/codex/05-infrastructure/per-tab-worktrees.md).
+>
+> Read every "push to your slot branch `tab/<op>/<N>`" below as: **rebase onto `origin/live-defi-rollout` and ship via
+> `quickmerge.sh --agent --files`** (quickmerge STAGE 0.4 auto-reconciles ff/rebase-autostash; a genuine same-file
+> conflict exits `QUICKMERGE_BLOCKED`). The **closed 4-shape conflict taxonomy (Shapes A–D) and the escalation formats
+> are model-agnostic and remain current** — that is what this doc is still authoritative for.
 
 **TL;DR.** When a slot master rebases its slot branch onto `origin/live-defi-rollout` per shippable unit and finds
 conflicts, this protocol classifies conflict shape + auto-resolves trivial ones + escalates semantic conflicts to the
@@ -35,8 +46,9 @@ operator with plan-context reasoning. PM repo is the always-touched surface, so 
 
 Under the per-slot worktree model (see [`per-tab-worktrees.md`](per-tab-worktrees.md)):
 
-- Each slot pushes to its slot branch `tab/<operator>/<N>` per shippable unit.
-- Merge into `origin/live-defi-rollout` happens via rebase + fast-forward push.
+- Each slot ships its shippable unit straight at `live-defi-rollout` via `quickmerge.sh --agent --files` (RETIRED: the
+  old `tab/<operator>/<N>` slot branch).
+- Reconciliation with `origin/live-defi-rollout` happens via rebase + fast-forward, inside quickmerge STAGE 0.4.
 - Multiple slots ship to PM in parallel (plan flips, codex updates, issue docs) — conflicts are **expected**, not
   exceptional.
 
@@ -47,14 +59,13 @@ instead of "there's a conflict here, what do?"
 ## The reconciliation step (per shippable unit)
 
 ```bash
-# Slot master, after committing its shippable unit on tab/<operator>/<N>:
-bash unified-trading-pm/scripts/dev/slot-master-rebase.sh
-# OR, equivalently:
-git fetch origin live-defi-rollout
-git rebase origin/live-defi-rollout                  # apply protocol on conflict
-git push origin tab/<operator>/<N>                   # push slot branch
-# (Merge to live-defi-rollout via fast-forward — separate shippable-unit step.)
+# Slot, after gating its shippable unit green:
+bash unified-trading-pm/scripts/dev/slot-master-rebase.sh   # apply protocol on conflict
+# then ship (quickmerge STAGE 0.4 re-reconciles ff/rebase-autostash itself):
+bash scripts/quickmerge.sh "<msg>" --agent --files '<paths>'
 ```
+
+A raw `git push` of code is BANNED — quickmerge is the only path to the integration branch.
 
 The helper script (`slot-master-rebase.sh`) wraps the rebase + emits machine-readable conflict reports the slot master
 agent can parse + reason about.
@@ -81,7 +92,7 @@ different positions, with no overlapping content. Most common shape for PM confl
 resolution commit with message:
 
 ```
-docs(plans): rebase tab/<op>/<N> on live-defi-rollout — append-union merge
+docs(plans): rebase slot-<N> on live-defi-rollout — append-union merge
 
 Incoming:  <sha>  <one-line>  (slot <other-N>'s appended <section>)
 Local:     <sha>  <one-line>  (slot <my-N>'s appended <section>)
@@ -174,8 +185,8 @@ plan's stated direction. The operator confirms or redirects in one line.
   "later commit wins" or "longer commit wins" loses real work. Escalate.
 - **Don't escalate Shape A conflicts.** Append-union is mechanical; operators don't need to be in the loop for "both
   slots flipped different checkboxes, keep both."
-- **Don't push the slot branch without resolving conflicts.** A force-push to `tab/<op>/<N>` with conflict markers in
-  files breaks the slot's history. Rebase, resolve, then push.
+- **Don't ship without resolving conflicts.** Landing conflict markers on `live-defi-rollout` breaks every other slot.
+  Rebase, resolve, then quickmerge. **Never force-push a shared branch.**
 - **Don't bypass via `git merge -X theirs/ours`.** That's auto-pick-one-side, not plan-aware. Use the protocol.
 - **Don't escalate without the 5-line summary.** "There's a conflict" wastes operator time. The summary IS the
   escalation — operator answers in one line.
@@ -185,14 +196,14 @@ plan's stated direction. The operator confirms or redirects in one line.
 - [`per-tab-worktrees.md`](per-tab-worktrees.md) — the slot model this protocol runs inside.
 - `cursor-configs/CLAUDE.md` § "Commit + Push + Flip Plan Checkboxes" — the per-shippable-unit cadence that triggers
   this protocol.
-- `cursor-configs/CLAUDE.md` § "Findings Triage Discipline" — when a conflict surfaces a real finding (not just a
-  reconciliation), case-1-to-5 routing applies.
-- `cursor-configs/CLAUDE.md` § "Daily Work-Split Process" § "Plan-of-record + Q&A bus" — the `## Open questions` section
-  format used for Shape C/D escalations.
+- `cursor-configs/CLAUDE.md` § "Findings triage" — when a conflict surfaces a real finding (not just a
+  reconciliation), the triage routing applies.
+- The `## Open questions` section format used for Shape C/D escalations (the CLAUDE.md § "Daily Work-Split Process"
+  pointer this doc used to carry is dead — that section no longer exists).
 
 ## References
 
-- Plan: [`plans/active/per_agent_worktrees_2026_05_10.md`](../../plans/archive/per_agent_worktrees_2026_05_10.md) Phase
-  3
-- Helper script: [`scripts/dev/slot-master-rebase.sh`](../../scripts/dev/slot-master-rebase.sh)
+- Plan: [`/plans/archive/per_agent_worktrees_2026_05_10.md`](/plans/archive/per_agent_worktrees_2026_05_10.md) Phase 3
+  (ARCHIVED)
+- Helper script: `unified-trading-pm/scripts/dev/slot-master-rebase.sh`
 - Sibling SSOT: [`per-tab-worktrees.md`](per-tab-worktrees.md)

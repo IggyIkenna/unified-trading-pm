@@ -32,7 +32,7 @@ referenced_by:
     /codex/04-architecture/risk-rule-taxonomy.md,
   ]
 owner:
-last_reviewed: 2026-05-17
+last_reviewed: 2026-09-04
 code_refs:
 ---
 

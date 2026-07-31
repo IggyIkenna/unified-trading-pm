@@ -18,13 +18,13 @@ related:
     /codex/02-data/availability-manifest-and-data-status.md,
     /codex/02-data/honest-absence-downstream-handling.md,
     /codex/04-architecture/batch-live-architecture.md,
-    ../../plans/epics/sports_master.md,
+    /plans/epics/sports_master.md,
   ]
 created: 2026-05-13
 authoritative_for: [sports fixture match_end_time resolution cascade]
 referenced_by: [/codex/02-data/sports-fixtures-lifecycle.md]
 owner: sports-domain
-last_reviewed: 2026-05-17
+last_reviewed: 2026-08-29
 code_refs:
 type: data
 ---
@@ -138,8 +138,9 @@ Unit tests at `unified-trading-library/tests/unit/test_fixtures_resolver.py` (UT
 
 ## Cross-references
 
-- **Plan**: `plans/epics/sports_master.md` § "C.6 + C.10 match_end_time cascade"
-- **Implementation**: `unified-trading-library/unified_trading_library/fixtures.py`
+- **Plan**: [`/plans/epics/sports_master.md`](/plans/epics/sports_master.md) § "C.6 + C.10 match_end_time cascade"
+- **Implementation**: `unified-trading-library/unified_trading_library/fixtures/match_end_time.py` (the `fixtures`
+  module is a package — also carries `joined_reader.py`, `match_lifecycle.py`, `status_verifier.py`)
 - **Batch=live SSOT**: `/codex/04-architecture/batch-live-architecture.md`
 - **Availability stamping**: `/codex/02-data/availability-manifest-and-data-status.md`
 - **Honest absence**: `/codex/02-data/honest-absence-downstream-handling.md`

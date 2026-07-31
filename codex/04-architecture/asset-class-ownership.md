@@ -27,14 +27,31 @@ referenced_by:
     plans/epics/cefi_master.md,
   ]
 owner:
-last_reviewed: 2026-05-17
+last_reviewed: 2026-08-31
 code_refs:
 ---
 
 # Asset Class Ownership Map
 
-> SSOT: This document. Referenced from `00-SSOT-INDEX.md`. Companion: `data-ownership-principles.md` (the generic
-> pattern). Each section follows the same structure: External schemas → Normalize → Registry → Interfaces → Services.
+> SSOT: This document. Referenced from [`/codex/00-SSOT-INDEX.md`](/codex/00-SSOT-INDEX.md). Companion:
+> [`/codex/04-architecture/data-ownership-principles.md`](/codex/04-architecture/data-ownership-principles.md) (the
+> generic pattern). Each section follows the same structure: External schemas → Normalize → Registry → Interfaces →
+> Services.
+
+> **[DELTA 2026-07-31 freshness re-review] — orchestration + config rows corrected.** Two families of symbol in the
+> per-asset-group ownership tables below were verified ABSENT workspace-wide and have been replaced:
+>
+> - **`--CEFI` / `--TRADFI` / `--DEFI` flags and `_process_cefi_exchanges()` / `_process_tradfi_exchanges()` /
+>   `_process_defi_protocols()`** — none exist. instruments-service dispatches on the standard
+>   `--operation` / `--mode` / `--asset-group` CLI convention (`instruments_service/cli/main.py`); SSOT
+>   [`/codex/06-coding-standards/cli-convention.md`](/codex/06-coding-standards/cli-convention.md).
+> - **`InstrumentProcessingConfig`** (and its `tradfi_instrument_source` / `defi_instrument_source` fields) — no such
+>   class exists in any repo. Source selection is UAC-registry-driven (`SOURCE_PRIORITY`), not a UCI config object;
+>   SSOT [`/codex/02-data/tradfi-databento-sourcing-ssot.md`](/codex/02-data/tradfi-databento-sourcing-ssot.md) and
+>   [`/codex/02-data/pipeline-mode-partition.md`](/codex/02-data/pipeline-mode-partition.md).
+>
+> The instrument/venue counts under each "Current state" heading are 2026-05 vintage snapshots and were **not**
+> re-measured in this review — treat them as historical, not current.
 
 ---
 
@@ -54,9 +71,9 @@ Binance, Bybit, OKX, Deribit, Coinbase, Upbit, Gemini, Huobi, Phemex, Bitstamp +
 | Venue registry                           | UAC                                                                        | `registry/venue_constants.py`, `VenueMapping`                          |
 | Instrument discovery                     | instruments-service (ref data — formerly unified-reference-data-interface) | `adapters/tardis.py`, `adapters/binance.py`, `adapters/aster.py`, etc. |
 | Market data (ticks)                      | UMI                                                                        | `adapters/cefi/` (Tardis WebSocket, CCXT REST)                         |
-| Instrument orchestration                 | instruments-service                                                        | `--CEFI` flag, `_process_cefi_exchanges()`                             |
+| Instrument orchestration                 | instruments-service                                                        | `--asset-group cefi` (see note below)                                  |
 | Market data orchestration                | market-tick-data-service                                                   | CeFi download handlers                                                 |
-| Config (which venues, batch/live source) | UCI                                                                        | `InstrumentProcessingConfig` in cloud storage                          |
+| Config (which venues, batch/live source) | UCI                                                                        | see note below — `InstrumentProcessingConfig` no longer exists         |
 
 ### Current state: CLEAN
 
@@ -72,7 +89,9 @@ Binance, Bybit, OKX, Deribit, Coinbase, Upbit, Gemini, Huobi, Phemex, Bitstamp +
 ### Venues/Sources
 
 Databento (CME, NASDAQ, NYSE, CBOE VX futures), Yahoo Finance (FX, KRX KOSPI, ICE DXY — ICE is NOT Databento per
-UAC@5480f5d5), IBKR, ECB, OFR, Barchart.
+UAC@5480f5d5), IBKR, ECB, OFR. **Barchart is RETIRED as a source (2026-07-25)** and Massive/Polygon.io was removed
+2026-07-19 — do not add either back; SSOT
+[`/codex/02-data/tradfi-databento-sourcing-ssot.md`](/codex/02-data/tradfi-databento-sourcing-ssot.md).
 
 ### Ownership
 
@@ -85,8 +104,8 @@ UAC@5480f5d5), IBKR, ECB, OFR, Barchart.
 | Dataset mappings         | UAC                            | `external/databento/` dataset constants                                |
 | Instrument discovery     | instruments-service (ref data) | `adapters/databento.py`, `adapters/tardis.py`                          |
 | Market data              | UMI                            | Databento Live/Historical, Tardis replay                               |
-| Instrument orchestration | instruments-service            | `--TRADFI` flag, `_process_tradfi_exchanges()`                         |
-| Config                   | UCI                            | `InstrumentProcessingConfig` — `tradfi_instrument_source: "databento"` |
+| Instrument orchestration | instruments-service            | `--asset-group tradfi` (see note below)                                |
+| Config                   | UCI                            | see note below — `InstrumentProcessingConfig` no longer exists         |
 
 ### Current state: CLEAN
 
@@ -114,9 +133,9 @@ Uniswap V2/V3/V4, Curve, Aave V3, Morpho, Euler, Fluid, EtherFi, Lido, Ethena, B
 | RPC URL templates        | UAC                    | `registry/capability_declarations/_defi.py`                                  |
 | Instrument discovery     | UMI adapters (interim) | `adapters/defi/` — Uniswap, Curve, Aave, Morpho, etc.                        |
 | Market data (on-chain)   | UMI                    | DeFi adapters for OHLCV, funding rates                                       |
-| Instrument orchestration | instruments-service    | `--DEFI` flag, `_process_defi_protocols()`                                   |
+| Instrument orchestration | instruments-service    | `--asset-group defi` (see note below)                                        |
 | The Graph error handling | UMI                    | `adapters/defi/utils.py` — `handle_thegraph_errors()`                        |
-| Config                   | UCI                    | `InstrumentProcessingConfig` — `defi_instrument_source`                      |
+| Config                   | UCI                    | see note below — `InstrumentProcessingConfig` no longer exists               |
 
 ### Current state: MOSTLY CLEAN
 

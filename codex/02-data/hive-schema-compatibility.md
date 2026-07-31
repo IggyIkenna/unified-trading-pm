@@ -17,13 +17,13 @@ related:
   [
     /codex/02-data/per-asset-group-bucket-layouts.md,
     /codex/02-data/availability-manifest-and-data-status.md,
-    ../../plans/epics/mtds_mdps_master.md,
+    /plans/epics/mtds_mdps_master.md,
   ]
 created: 2026-03-27
 authoritative_for: [GCS parquet hive-partitioning cost/rationale + BigQuery-to-GCS migration]
 referenced_by: [/codex/02-data/instrument-pipeline-defi.md]
 owner:
-last_reviewed: 2026-05-17
+last_reviewed: 2026-08-29
 code_refs:
 ---
 
@@ -126,13 +126,15 @@ because the partition key/value pairs are encoded in the directory names.
 
 ## Schema Evolution Strategy
 
-> **[DELTA 2026-05-22]** **Current state:** The workspace completed the migration to GCS-native Parquet (hive-style) as
-> the primary storage format. BigQuery dual-write has been removed; all production data now lands in GCS Parquet via
-> `resolve_bucket_name(...)`. The BigQuery migration phases below are legacy documentation from the original design
-> (2026-Q1/Q2). **Planned delta:** `plans/epics/mtds_mdps_master.md` tracks ongoing GCS path canonicalisation and
-> single-walk bundle migration (`plans/active/gcs_migration_bundle_pipeline_mode_2026_05_08.md`). **Target
-> architecture:** All services read/write GCS Parquet via canonical hive paths — BigQuery is external-table access only
-> for ad-hoc analytics.
+> **[DELTA 2026-05-22, re-confirmed 2026-07-30]** **Current state:** The workspace completed the migration to GCS-native
+> Parquet (hive-style) as the primary storage format. BigQuery dual-write has been removed; all production data now
+> lands in GCS Parquet via `resolve_bucket_name(...)`. **Everything from "Migration Approach" down to the end of this
+> doc is HISTORICAL DESIGN — the phases, timelines, dual-write config, and migration tooling below were never
+> completed as written and MUST NOT be used as a build spec.** **Planned delta:**
+> [`/plans/epics/mtds_mdps_master.md`](/plans/epics/mtds_mdps_master.md) tracks ongoing GCS path canonicalisation
+> (the single-walk bundle migration plan `gcs_migration_bundle_pipeline_mode_2026_05_08.md` completed and is archived
+> under `/plans/archive/2026_05/`). **Target architecture:** All services read/write GCS Parquet via canonical hive
+> paths — BigQuery is external-table access only for ad-hoc analytics.
 
 ### Migration Approach: Short-Term Dual Support
 
@@ -234,7 +236,7 @@ job.result()  # Wait for completion
 
 ### Centralized Schema Ownership
 
-**Pattern:** Service-owned output schemas + unified-trading-services cross-cutting schemas
+**Pattern:** Service-owned output schemas + UTL/UAC cross-cutting schemas
 
 #### Service-Owned Schemas
 
@@ -271,9 +273,10 @@ schema = pa.schema([
 ])
 ```
 
-#### Cross-Cutting Schemas (unified-trading-services)
+#### Cross-Cutting Schemas (unified-trading-library / unified-api-contracts)
 
-**Owned by `unified-trading-services`:**
+**Owned by `unified-trading-library` (UTL) + `unified-api-contracts` (UAC)** — there is no `unified-trading-services`
+repo:
 
 - Event logging schema (lifecycle events)
 - Configuration schema (service configs)
@@ -285,7 +288,7 @@ schema = pa.schema([
 
 ### Pre-Upload Validation (Required)
 
-**From `02-data/schema-governance.md`:**
+**From [`/codex/02-data/schema-governance.md`](/codex/02-data/schema-governance.md):**
 
 Every service must call `validate_timestamp_date_alignment()` before GCS write
 
@@ -298,7 +301,7 @@ Every service must call `validate_timestamp_date_alignment()` before GCS write
 **Implementation:**
 
 ```python
-from unified_trading_services.validators import validate_timestamp_date_alignment
+from unified_trading_library import validate_timestamp_date_alignment
 
 # Before writing to GCS
 data = [
@@ -324,9 +327,14 @@ await parquet_writer.write_to_gcs(bucket, target_partition, data)
 
 ## Migration Tools
 
+> **HISTORICAL — never built.** Both tools below were specified against a `unified-trading-services` repo that does not
+> exist in this workspace (cross-cutting code lives in `unified-trading-library` / `unified-api-contracts`). The
+> BigQuery→GCS conversion never ran as a tool: the workspace re-captured from source instead. Kept for design
+> provenance only.
+
 ### BigQuery to GCS Parquet Converter
 
-**Tool:** `unified-trading-services/scripts/bigquery_to_parquet.py`
+**Tool (never created):** `unified-trading-services/scripts/bigquery_to_parquet.py`
 
 **Usage:**
 
@@ -426,6 +434,9 @@ GROUP BY instrument, year, month, day;
 ---
 
 ## Backwards Compatibility During Migration
+
+> **HISTORICAL.** No `DataSource` switch, `data_source.fallback: bigquery` flag, or dual-read abstraction exists in the
+> shipped code — readers are GCS-Parquet-only. Retained for design provenance.
 
 ### Dual Schema Support (Temporary)
 
@@ -563,13 +574,18 @@ hive_schema:
 
 ## References
 
-- **Schema Governance:** `02-data/schema-governance.md`
-- **GCS Bucket Structure:** `sports-betting-services/docs/local_gcs_folder_structure/GCS_BUCKET_STRUCTURE.md`
-- **BigQuery to GCS Migration:** `unified-trading-services/scripts/bigquery_to_parquet.py` (to be created)
+- **Schema Governance:** [`/codex/02-data/schema-governance.md`](/codex/02-data/schema-governance.md)
+- **GCS Bucket Structure:** [`/codex/02-data/per-asset-group-bucket-layouts.md`](/codex/02-data/per-asset-group-bucket-layouts.md)
+  (the old `sports-betting-services/docs/local_gcs_folder_structure/GCS_BUCKET_STRUCTURE.md` pointer is DEAD — that repo
+  does not exist in this workspace)
+- **BigQuery to GCS Migration:** never built — see the HISTORICAL banner under § Migration Tools
 
 ---
 
 ## Implementation Phases
+
+> **HISTORICAL (original 2026-Q1 design).** Superseded by the DELTA banner above — the GCS-native cutover completed
+> 2026-05-22 and BigQuery dual-write no longer exists. Timelines below never ran as written.
 
 ### Phase 1: Dual Write Setup (Q2 2026)
 
