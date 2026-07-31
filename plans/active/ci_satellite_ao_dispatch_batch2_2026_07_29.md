@@ -289,17 +289,29 @@ concurrent workers do not collide on this file.
       in this plan — not required for this todo's done-when. Source:
       `issues/breaking_change_differ_blind_to_registry_data_dicts_2026_07_09.md` (todos 1-4, 6-7 closed by this; todo 5
       = the parked E8 design fork).
-- [ ] [SCRIPT] P2. **Fix real `sleep()`-based test waste — the non-MTDS fleet.** Mocking the clock instead of sleeping
-      real wall-time, zero behavior risk, across 3 repos (excludes `market-tick-data-service`'s
-      `test_sports_catalog_reader_timeout.py` — that file is ALREADY self-dispatched under
-      `issues/mtds_sports_catalog_reader_timeout_test_flaky_under_contention_2026_07_27.md`, `assigned_vm: planning`; do
-      not duplicate, but flag for whoever picks that task up that monkeypatching `_BLOB_TIMEOUT_SECS` down — this doc's
-      proposed fix — would also resolve that doc's flakiness, since a near-zero timeout removes the wall-clock race
-      entirely, not just widens the margin): (a) `unified-trading-library` —
-      `test_manifest_freshness.py`/`test_agent_action.py`/`test_pipeline_heartbeat_timer.py` sleep-based waits
-      (~11.65s/run); (b) `features-service` — `test_feature_cache.py` `sleep(1.1)`; (c) the smaller batch/low-value
-      sleeps in `deployment-api`, `instruments-service`, `greeks-service`. **Done when**: every named test passes with
-      the real sleep replaced by a mocked/monkeypatched clock and the per-repo `quality-gates.sh` stays green. Source:
+- [x] ✅ [SCRIPT] P2. **CONFIRMED ALREADY SHIPPED (verified 2026-07-31, slot 16) — no new code change needed; this
+      todo's citation predates the fix.** The source issue doc itself already recorded all 5 repos' commits as `[x]`
+      done 2026-07-29 (its own `status: resolved`, archived) — re-verified independently rather than trusting the doc
+      text: (a) `unified-trading-library@2e39d98b0` — `git merge-base --is-ancestor` confirms it's an ancestor of live
+      HEAD (`8dbcfdcf0`); `grep sleep(` on `test_manifest_freshness.py`/`test_agent_action.py` shows zero real `sleep()`
+      calls left (only doc-comment mentions of the removed pattern) — both patched via a `_FakeMonotonic`/
+      `time.monotonic` mock per the source doc; `test_pipeline_heartbeat_timer.py` still carries `time.sleep()` calls
+      but at deliberately trimmed durations (3.5s→1.0s, 1.0s→0.4s) since `threading.Event.wait()`'s timeout is a C-level
+      primitive, not patchable — matches the source doc's own documented tradeoff, not an unfixed gap. (b)
+      `features-service@9506b5e2c` — ancestor confirmed; `test_feature_cache.py` has zero `sleep()` calls (replaced by a
+      monkeypatched `_MockClock`). (c) `deployment-api@23516a78c`/`instruments-service@91991d399`/
+      `greeks-service@758cccdc1` — all ancestors confirmed; `test_data_status_cache.py`/`test_base_adapter_cache.py`/
+      `test_instrument_reader.py` all zero `sleep()` calls (mocked `time.monotonic`).
+      `test_route_deployments_inventory.py:2069`'s `sleep(0.2)` deliberately left real — re-confirmed as a genuine
+      concurrency-proof for a bounded worker pool, not the anti-pattern this todo targets, exactly as the source doc's
+      own parenthetical scoped it. **Full `bash scripts/quality-gates.sh` re-run GREEN in all 5 repos just now** (not
+      just the named test files — the real per-repo gate this todo's done-when requires): `unified-trading-library`
+      (179s, sentinel `8dbcfdcf0`), `features-service` (336s, sentinel `c46509be1`), `deployment-api` (138s, sentinel
+      `0776199540`), `instruments-service` (126s, sentinel `e4fcbe7ca`), `greeks-service` (46s, sentinel `ddfda4ed5`) —
+      all exit 0. MTDS exclusion note is moot:
+      `mtds_sports_catalog_reader_timeout_test_flaky_under_contention_2026_07_27.md` is itself already archived/resolved
+      (its own `_BLOB_TIMEOUT_SECS` monkeypatch shipped `market-tick-data-service@4aaeab698`, per the same source doc) —
+      no flag needed for a task that no longer exists to flag. Source:
       `archive/issues/ci_test_content_and_tooling_speed_findings_2026_07_28.md` (§ "Real sleep()-based test waste").
 - [x] ✅ [SCRIPT] P3. **CONFIRMED ALREADY SHIPPED (verified 2026-07-30, this session's rulings-closeout pass) — no new
       work needed.** Both parts confirmed live in `unified-trading-pm@3ed0fc99d` (2026-07-29, same commit that shipped
@@ -528,3 +540,18 @@ Three questions, quotes/locations/options/recommendation, not resolved autonomou
   Flipped todo 3 `[x]` with full evidence inline; also updated the source issue doc
   (`issues/qg_sentinel_environment_blind_2026_07_23.md` item 3) to record the same finding. MTDS's 2 cases remain
   untouched and genuinely gated (E7, unchanged).
+
+- **2026-07-31 (slot 16, `[INFRA]` dispatch)** — picked up the sleep()-based test waste todo (non-MTDS fleet). The
+  source issue doc (`archive/issues/ci_test_content_and_tooling_speed_findings_2026_07_28.md`) already recorded all 5
+  named repos' fixes as shipped 2026-07-29 and is itself archived/resolved — this batch2 todo's citation simply predates
+  that. Re-verified independently rather than trusting the doc: confirmed all 5 cited commits
+  (`unified-trading-library@2e39d98b0`, `features-service@9506b5e2c`, `deployment-api@23516a78c`,
+  `instruments-service@91991d399`, `greeks-service@758cccdc1`) are ancestors of live HEAD via
+  `git merge-base --is-ancestor`; grepped each named test file directly and confirmed the real `sleep()` calls are gone
+  (replaced by monkeypatched clocks), with the one deliberate exception (`test_pipeline_heartbeat_timer.py`'s
+  trimmed-not-eliminated sleeps, `test_route_deployments_inventory.py`'s intentional concurrency-proof sleep) matching
+  the source doc's own documented rationale. Then ran a full `bash scripts/quality-gates.sh` in all 5 repos
+  (backgrounded, staggered to respect the shared-host QG concurrency cap) — all green, sentinels written, exit 0. No
+  code change was needed. Flipped the todo `[x]` with full evidence inline. The MTDS-exclusion flag in the todo's own
+  text is moot: the self-dispatched MTDS doc it points at is itself already archived/resolved with its
+  `_BLOB_TIMEOUT_SECS` fix shipped — nothing left to flag.
