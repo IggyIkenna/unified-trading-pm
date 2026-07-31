@@ -38,7 +38,6 @@ related:
   - /plans/active/issues/delta_one_candle_loader_no_pass_through_path_defi_2026_07_30.md
   - /plans/active/defi_satellite_ao_dispatch_batch3_2026_07_26.md
 created: "2026-07-31"
-author: slot-2 (data_engineering craft, defi_satellite_ao_dispatch_batch3-014)
 source: [features-delta-one-defi-20260731-020600 full verification-window run, 0/51 completed across ~97 days]
 parent_epic: defi_master
 assigned_vm: planning
