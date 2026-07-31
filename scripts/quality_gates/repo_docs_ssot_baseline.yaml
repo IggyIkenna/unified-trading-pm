@@ -2,9 +2,10 @@
 #
 # SHRINKING ratchet, same convention as doc_body_link_baseline.yaml. `known_violations`
 # is the exact set of "<repo-rel-doc>::<rule>::<literal>" keys tolerated today. A key NOT
-# in this set (a NEW mirror-ref or hardcoded resolver-owned literal in a repo doc) fails
-# the gate. A key IN this set that no longer reproduces (the drift got fixed) is harmless
-# dead weight — remove it by re-running --update-baseline after a cleanup pass.
+# in this set (a NEW mirror-ref, hardcoded resolver-owned literal, or verbatim codex-table
+# duplication in a repo doc) fails the gate. A key IN this set that no longer reproduces (the
+# drift got fixed) is harmless dead weight — remove it by re-running --update-baseline after a
+# cleanup pass.
 #
 # NEVER add an entry here to silence a check you introduced yourself — this baseline is for
 # PRE-EXISTING debt found at seed time (Phase 5 of codex_vs_repo_docs_ssot_audit_2026_06_01),
