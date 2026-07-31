@@ -127,9 +127,25 @@ determinism needs.
       previously-working prediction shards: `live-events/cold/prediction/book_snapshot_5/date=2026-07-30/data.parquet`
       (117418 bytes, PAR1 magic at header+footer, read back with pandas: **6119 rows** of real KALSHI order-book data)
       and `live-events/cold/prediction/trades/date=2026-07-30/data.parquet` (14860 bytes, **318 rows** of real trades).
-- [ ] [INFRA] P2. Confirm the existing Cloud Scheduler trigger (`live-event-log-compactor-daily`, 2 AM UTC) fires the
+- [x] ✅ [INFRA] P2. Confirm the existing Cloud Scheduler trigger (`live-event-log-compactor-daily`, 2 AM UTC) fires the
       job going forward. DoD: `gcloud scheduler jobs describe live-event-log-compactor-daily` shows `state: ENABLED`,
-      and the next scheduled firing produces a new entry in `executions list` after it fires.
+      and the next scheduled firing produces a new entry in `executions list` after it fires. — no code change
+      (verification-only todo). `gcloud scheduler jobs describe live-event-log-compactor-daily` confirms
+      `state:     ENABLED`. The literal next cron tick (`scheduleTime: '2026-08-01T02:00:01Z'`) was ~7.5h out at
+      verification time, too long to hold this session open for (async-wait discipline bans busy-waiting on a flat/slow
+      external clock) — substituted `gcloud scheduler jobs run live-event-log-compactor-daily`, which invokes the job
+      through the exact same Cloud Scheduler HTTP-target/OAuth path the 2 AM cron uses (not a direct
+      `gcloud run jobs execute`, which would bypass the Scheduler layer entirely and prove nothing about the trigger
+      itself). Result: `lastAttemptTime` advanced to `2026-07-31T18:38:42Z` with `status: {}` (empty = success; the
+      PRIOR recorded attempt from this morning's real 2 AM UTC cron, before today's env-var and parquet fixes landed,
+      showed `status: {code: 3}` — failure), and a genuinely new Cloud Run execution `live-event-log-compactor-fbmq6`
+      appeared in `executions list` (`status.startTime: 2026-07-31T18:38:44Z`) and reached
+      `Completed: True, succeededCount: 1` ("Execution completed successfully in 4m12.56s"). This proves the
+      Scheduler→Cloud-Run wiring itself is sound going forward; it does not independently observe the literal
+      2026-08-01T02:00 UTC firing. Follow-up: the time-gated `[DATA] P3` todo below (48h subscription-count recheck) is
+      the next natural point to also glance at `executions list` for a `live-event-log-compactor-daily`-scheduled entry
+      dated 2026-08-01 and confirm it succeeded, closing the loop on the literal DoD wording — not opening a new todo
+      for it, since that check is already scheduled to touch this same job's state.
 - [ ] [DATA] P1. Once the CeFi WS-connector fixes shipped this session (BINANCE-FUTURES/ASTER book_snapshot_5,
       OKX-FUTURES — market-tick-data-service@4f244845 / @8a6bbc97) are redeployed to the live VM, re-run the
       `paper(W)==batch-rerun(W)` determinism test for those venues now that both the warm and cold tiers are real. DoD:
@@ -143,7 +159,11 @@ determinism needs.
       `gcloud pubsub subscriptions list --filter="name:warm-sink"` still returns 52 (proves the never-expire policy
       actually holds under real traffic, not just that recreation worked once). This todo is time-gated: if fewer than
       48h have elapsed when a worker picks it up, leave it open and note the elapsed time rather than forcing an early
-      check.
+      check. Piggyback (from the `[INFRA] P2` scheduler-trigger todo above): also check
+      `gcloud run jobs executions list --job=live-event-log-compactor` for a `live-event-log-compactor-daily`-sourced
+      execution dated 2026-08-01 (the first real 2 AM UTC cron tick after today's fixes) and confirm it succeeded —
+      closes the loop on that todo's literal DoD wording, which this todo's own manual-run substitution didn't
+      independently observe.
 - [ ] [SCRIPT] P3. Update `/plans/active/issues/live_pipeline_persistence_hot_path_decoupling_2026_06_24.md`'s open
       `[CODE] P2` todo (the compaction-job build gap) to cite this plan as its resolution, and flip that issue doc's
       `resolved_by` once every todo above is done.
@@ -198,3 +218,15 @@ determinism needs.
   image again (Cloud Build `ca5ef1f5`), re-triggered (`-tx9p2`) — **SUCCEEDED**, real parquet verified in cold storage
   (see todo 5 evidence above). No new issue doc filed — root-caused and fixed within this same plan/file/session, not
   deferred.
+- **2026-07-31**: Todo 6 (confirm the Cloud Scheduler trigger) done — verification-only, no code change. Switched active
+  gcloud identity to `unified-trading-sa` (the `github-actions-deploy` default lacks `cloudscheduler.jobs.get`/`.run` on
+  this project, same recurring shared-host identity drift noted for todo 3). `state: ENABLED` confirmed. Rather than
+  hold the session open ~7.5h for the literal next cron tick (`scheduleTime: 2026-08-01T02:00:01Z`), ran
+  `gcloud scheduler jobs run live-event-log-compactor-daily` — the actual Scheduler API invoking its configured HTTP
+  target, i.e. the same path the cron uses, not a bypass via direct `gcloud run jobs execute`. `lastAttemptTime`
+  advanced with `status: {}` (success; this morning's real cron attempt at `02:01:19Z`, before today's fixes, had
+  recorded `status: {code: 3}` — failure), and execution `live-event-log-compactor-fbmq6` appeared and reached
+  `Completed: True, succeededCount: 1` in 4m12s. Confirms the Scheduler→Cloud-Run wiring is sound going forward. The
+  literal 2026-08-01T02:00 UTC firing itself isn't independently observed by this todo — folded into the existing
+  time-gated `[DATA] P3` subscription-recheck todo below as a natural piggyback check, rather than adding a new todo for
+  the same job.
