@@ -163,14 +163,26 @@ investigation chain.
 
 # Recommended decision
 
-- [ ] [BACKEND] P1. Decide the fix direction (see the 3 candidates above) and implement a pass-through-aware buffer/
+- [x] ✅ [BACKEND] P1. Decide the fix direction (see the 3 candidates above) and implement a pass-through-aware buffer/
       sufficiency calculation in `buffer_manager.py` (or the `_tf_cluster_helper.py` per-date extraction path) that does
       NOT regress CEFI/TRADFI's existing dense-candle buffer-days behavior. Verify against real raw tick density for
       every DEFI pass-through venue/data_type pair (CHAINLINK + PYTH oracle_prices, HYPERLIQUID perp_funding) — not just
       the ETH/USD case repro'd here. Add a regression test covering the real-data shape confirmed in this issue
       (100-period lookback requirement vs ~5.4 real rows/day density). Repo: features-service. Done when: a DEFI
       `returns` run over the verified-clean window (`2023-05-12..2023-10-31`) shows `Completed N/51 instruments` with
-      N > 0 on multiple real dates, and writes real `record_captured` rows.
+      N > 0 on multiple real dates, and writes real `record_captured` rows. — features-service@9e70fbac. Chose direction
+      2 (row-count-driven adaptive lookback), combined with a conservative calendar floor for the initial fetch:
+      `BufferManager.calculate_buffer_days()` detects pass-through data types via UAC
+      `needs_candle_processing()`/`resolve_data_type_for_feature_group()` and widens the calendar buffer; a new
+      `calculate_passthrough_min_rows()` drives `_extract_date_window()` to widen its per-date slice — bounded to
+      whatever's already loaded, zero extra GCS reads — until enough real rows are found. Strict no-op for CEFI/TRADFI
+      (verified: 2 pre-existing tests that had baked in the bug for DEFI `moving_averages` — resolves to oracle_prices,
+      also pass-through — were caught failing and fixed to assert the corrected behavior). Regression tests added
+      against the confirmed real shape (100-period `returns` lookback vs ~5.4 rows/day CHAINLINK density) in
+      `test_buffer_manager.py` + `test_tf_cluster_helper.py`. `bash scripts/quality-gates.sh` green (18041 passed). NOT
+      done as part of this todo: the "Done when" VM run + per-venue (PYTH, HYPERLIQUID) real-density verification — that
+      requires launching a features-delta-one-defi VM run, which is the P2 `[DATA]` todo below's job, not this
+      `[BACKEND]` implementation todo's.
 - [ ] [DATA] P2. Once the above lands, resume `defi_satellite_ao_dispatch_batch3_2026_07_26.md`'s D1 todo's `returns`
       leg (and `funding_oi`, once its separate OI-absence blocker resolves) over the full captured window. Repo:
       features-service.
@@ -182,3 +194,8 @@ investigation chain.
   range-load level (51/51 vs the pre-fix 27/51), but the run still produces zero completions via a distinct, downstream
   root cause — root-caused via a direct repro against real GCS data (not guessed), confirming 945 real rows exist in the
   full window while the per-date buffer window admits only a handful.
+- 2026-07-31 (slot-4, backend_engineer craft, `delta_one_passthrough_lookback_buffer_too_short_for_sparse_ticks-001`):
+  P1 shipped — `features-service@9e70fbac` (3 commits: `923e8009` the fix, `2e41f736` fixing 2 pre-existing tests that
+  had baked in the bug, `9e70fbac` a method-size QG-limit refactor). `bash scripts/quality-gates.sh` green (18041
+  passed, 0 failed). Landed on `live-defi-rollout` via quickmerge. P2 `[DATA]` todo (the actual VM verification run +
+  per-venue real-density check) is next and unblocked by this fix, but was not run as part of this todo.
