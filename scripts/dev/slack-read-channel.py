@@ -1,6 +1,9 @@
 #!/usr/bin/env python3
-# Epic: github_actions_ci_cost_reduction_2026_07_15 (born there; general-purpose thereafter)
-# Lifecycle: KEEP — recurring triage tool. The operator directed reading Slack directly
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
+# (born under github_actions_ci_cost_reduction_2026_07_15; general-purpose thereafter)
+# Recurring triage tool. The operator directed reading Slack directly
 #   ("you can directly check the slack channels yourself... use that token", 2026-07-17).
 # Why this exists: read-only download of a Slack channel's recent history so alert triage
 #   ("is something broken?") can be done from a terminal, with the raw JSON kept locally for

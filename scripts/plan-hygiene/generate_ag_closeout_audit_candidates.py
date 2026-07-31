@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# Epic: plan_hygiene_master
+# Lifecycle: permanent
+# Delete-when: NA
 """Cheap Phase-0 pre-filter for /ag-closeout-audit: per tranche, which AG-primary docs are NEVER
 cited by basename in any of that tranche's real covering docs (consolidated-closeout's own todos +
 every *_dispatch_batch*/*_finalize* doc; explicitly EXCLUDES *_aggregated_sources* digests, which are

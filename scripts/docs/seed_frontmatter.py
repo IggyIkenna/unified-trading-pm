@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# Epic: agent_operating_framework_master
+# Lifecycle: permanent
+# Delete-when: NA
 """seed_frontmatter — mechanical auto-seed of documentation frontmatter (W3 backfill, cheap step).
 
 Fills only the DERIVABLE universal-core + per-type fields, preserving existing values, and leaves the

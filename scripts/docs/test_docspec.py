@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# Epic: agent_operating_framework_master
+# Lifecycle: permanent
+# Delete-when: NA
 """Unit tests for docspec — the frontmatter validator (3-state logic + enums + precedence).
 
 Run: .venv/bin/python -m pytest scripts/docs/test_docspec.py -q

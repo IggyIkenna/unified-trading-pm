@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 # Toggle AWS image builds fleet-wide — the single switch for the AWS build path.
 #
 #   bash scripts/cicd/toggle-aws-image-builds.sh off          # disable (default state since 2026-07-03)

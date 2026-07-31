@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 # Epic: infrastructure_master
 # Lifecycle: permanent
+# Delete-when: NA
 """QG recurrence-prevention gate: a dynamic-versioned (hatch-vcs ``source = "vcs"``) repo whose
 build runs setuptools-scm on a SHALLOW / TAG-LESS tree MUST resolve the version deterministically,
 else hatch-vcs raises ``LookupError: setuptools-scm was unable to detect version`` → red wheel/image
@@ -103,9 +104,7 @@ def check_repo(repo: str) -> list[str]:
     # inherited by every `FROM base` stage (the standard service-image pattern, e.g. deployment-api
     # Dockerfile.dashboard). Without one of these AND with `.git` absent from the build context,
     # hatch-vcs raises LookupError.
-    dockerfiles = sorted(
-        glob.glob(os.path.join(repo, "Dockerfile")) + glob.glob(os.path.join(repo, "Dockerfile.*"))
-    )
+    dockerfiles = sorted(glob.glob(os.path.join(repo, "Dockerfile")) + glob.glob(os.path.join(repo, "Dockerfile.*")))
     for df in dockerfiles:
         text = _read(df)
         if re.search(r"^[ \t]*RUN\s+.*pip install\s+.*-e\s+\.", text, flags=re.MULTILINE) is None:

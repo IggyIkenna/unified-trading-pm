@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# Epic: agent_operating_framework_master
+# Lifecycle: permanent
+# Delete-when: NA
 """docspec — the machine SSOT for documentation frontmatter.
 
 Implements: codex/11-project-management/doc-frontmatter-schema.md (the human SSOT).

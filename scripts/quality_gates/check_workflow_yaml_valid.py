@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 """QG: every .github/workflows/*.yml MUST PARSE as YAML (+ actionlint if available, informational).
 
 WHY (2026-06-29 incident — plans/active/issues/fleet_promote_schedule_yaml_break_2026_06_29.md):
@@ -41,18 +44,20 @@ def main() -> int:
         print("❌ workflow-yaml: unparseable workflow(s) — GitHub SILENTLY stops scheduling these:")
         for path, err in unparseable:
             print(f"   {path}: {err}")
-        print("   (a YAML break kills scheduled triggers fleet-wide — see "
-              "plans/active/issues/fleet_promote_schedule_yaml_break_2026_06_29.md)")
+        print(
+            "   (a YAML break kills scheduled triggers fleet-wide — see "
+            "plans/active/issues/fleet_promote_schedule_yaml_break_2026_06_29.md)"
+        )
         return 1
 
     # Informational deeper lint — never fails the gate (avoid blocking on pre-existing style noise).
     if shutil.which("actionlint"):
-        result = subprocess.run(
-            ["actionlint", *workflows], capture_output=True, text=True
-        )
+        result = subprocess.run(["actionlint", *workflows], capture_output=True, text=True)
         if result.returncode != 0:
-            print(f"✅ workflow-yaml: {len(workflows)} workflows PARSE (gate green). "
-                  "actionlint flagged issues (informational, non-blocking):")
+            print(
+                f"✅ workflow-yaml: {len(workflows)} workflows PARSE (gate green). "
+                "actionlint flagged issues (informational, non-blocking):"
+            )
             print((result.stdout + result.stderr).strip()[:1500])
             return 0
         print(f"✅ workflow-yaml: {len(workflows)} workflows parse + actionlint clean")

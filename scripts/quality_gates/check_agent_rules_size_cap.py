@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 # Epic: agent_operating_framework_master
 # Lifecycle: permanent
+# Delete-when: NA
 """Hard-cap the agent rule files so they cannot regress to bloat.
 
 CLAUDE.md and SUB_AGENT_MANDATORY_RULES.md are a "lean index" by design: each rule is a
@@ -49,9 +50,7 @@ def main() -> int:
         approx_tokens = size // 4
         over = size > cap
         marker = "OVER" if over else "ok"
-        print(
-            f"  [{marker:>4}] {rel}: {size:,} B (~{approx_tokens:,} tok) / cap {cap:,} B"
-        )
+        print(f"  [{marker:>4}] {rel}: {size:,} B (~{approx_tokens:,} tok) / cap {cap:,} B")
         if over:
             failures.append(
                 f"{rel} is {size:,} B (~{approx_tokens:,} tok), OVER the {cap:,} B hard cap by "
