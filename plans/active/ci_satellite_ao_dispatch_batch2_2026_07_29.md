@@ -256,7 +256,7 @@ concurrent workers do not collide on this file.
       `status: resolved` + archived 2026-07-30 with this exact evidence — this batch2 todo's own citation was drafted
       2026-07-29, one day before that archival, and had simply gone stale.
 - [x] ✅ [FIX] P1. **Close the `detect_breaking_change.py` registry-data-dict blind spot end to end.** — shipped
-      `unified-trading-pm@7e0aab35f` + `unified-api-contracts@e34afc1d` + `system-integration-tests@67db4da`. (a)
+      `unified-trading-pm@5607023a2` + `unified-api-contracts@e34afc1d` + `system-integration-tests@67db4da`. (a)
       design: `# @contract-surface` marker convention (docstring + inline comments in `detect_breaking_change.py`),
       citing the manifest `schema_version` precedent explicitly. (b) implemented: tagged constant → literal snapshot
       (bare-`Name` keys/members resolved against earlier same-file string constants; unresolvable per-key values
