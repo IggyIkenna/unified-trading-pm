@@ -569,3 +569,24 @@ those commits landed). The escalation's own repo-blocker list (`GET /api/repo-bl
   either doc. No code/test action taken — same "orphaned noise against an already-resolved wall" conclusion as every
   prior entry in this doc. Slot left clean (`unified-api-contracts` already on `live-defi-rollout`, 0 commits ahead of
   `origin`, nothing to commit there).
+- **2026-07-31 ~23:05Z (cicd escalation `agt-719421`, slot 7)**: instruments-service promotion PR #1049 (LDR→main),
+  failing run `30669400970` (`QG slice (tests)` job, `pull_request`-triggered, head SHA `111692134aa3`, started
+  `22:19:01Z`). Downloaded the raw job log (`gh api repos/.../actions/jobs/91283678626/logs`) — identical
+  no-source-level-test-attributable signature to the two immediately-preceding entries: `pytest_timeout.py:317 handler`
+  fired inside the xdist worker's own IPC flush path (`execnet/gateway_base.py:577 to_io` → `write` →
+  `outfile.flush()`), `Failed: Timeout (>150.0s)`, cascading into `worker_internal_error`/`AssertionError` in
+  `dsession.py`, `##[error]QG selector 'tests' FAILED (leg=tests, exit=1)` at `22:30:36Z`. A subsequent retry pass in
+  the same job logged `1133 passed, 2 warnings in 277.79s` with no failures — consistent with the scheduling-artifact
+  theory (the same suite content, re-run, passed clean). Confirmed root facts before concluding: PR #1049
+  `state=MERGED`, `mergedAt=2026-07-31T22:16:09Z` — 3 minutes BEFORE the failing run's TESTS phase even started
+  (`22:19:01Z` setup, `22:26:48Z` first test collection) — self-merged via an independent already-green check on the
+  same head SHA, identical self-merge race to every prior entry in this doc.
+  `git merge-base --is-ancestor 111692134aa3 origin/live-defi-rollout` confirmed true. Went further than the
+  immediately-preceding two entries: the standard 15-min promotion cycle had already produced and MERGED the _next_
+  promotion PR too (`#1050`, `promote/instruments-service/b0282cb1f0cf`, `mergedAt=23:00:04Z`), main-backmerge-to-ldr
+  and Semver Agent both `success` on that push — i.e. the pipeline demonstrably kept advancing past this wall without
+  any intervention. Zero open PRs (`gh pr list --state open` empty) and zero open `/api/repo-blockers` entries for
+  instruments-service at investigation time. Same "orphaned noise against an already-resolved wall" conclusion as every
+  prior entry in this doc — no live-defi-rollout code or test change made or needed. Slot left clean
+  (instruments-service + unified-trading-pm both already on `live-defi-rollout`, 0 commits ahead of `origin`, nothing to
+  commit).
