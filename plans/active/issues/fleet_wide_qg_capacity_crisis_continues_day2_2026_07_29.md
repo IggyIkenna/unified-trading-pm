@@ -882,3 +882,32 @@ not just noting.
   reds, resolve via retrigger" posture rather than filing a new issue or a code fix. No repo state changed;
   `features-service` and `unified-trading-pm` slot-7 worktrees left clean on `live-defi-rollout` (only this doc
   touched).
+
+- **2026-07-31 ~20:30-21:04Z (cicd escalation `agt-c92d9e`, slot 2, `features-service` #0, `ldr_qg_failure`)**: 3rd
+  confirmed occurrence at the SAME HEAD `97351fef` the `agt-42e4c4` entry above already root-caused ~1.5-2h earlier —
+  still unresolved between then and now, same commit, same two selectors. `bash scripts/quality-gates.sh` run
+  BACKGROUNDED locally on `97351fef` (per this role's mandatory pattern) came back
+  **`✅ ALL QUALITY GATES PASSED (339s)`** — clean, zero failures. Checked the actual failing GH Actions runs
+  (`30659440157`, `30655029889`, both `headSha=97351fef`) directly via `gh run view --job <id> --log`: `tests` slice —
+  `pytest-timeout` fired mid-run on `test_cross_timeframe_sanity.py::test_output_index_matches_input` (now at the raised
+  150s budget, not the original 60s — confirms `pytest_timeout_60s_flaky_under_contention_2026_07_29.md` todo 1's fix is
+  live and this is a budget-move-not-close recurrence per that doc's own todo 3 finding); isolated local re-run of that
+  exact file: 30 passed / 5 skipped in **7.69s**, slowest single param 0.66s — >200x margin under budget, same signature
+  as every prior entry in both linked docs. `checks` slice — NOT a plain timeout this time but the `qg-governor` itself
+  killing the run: `[qg-governor] features-service (1727MB) waiting: WAIT_HOST_PRESSURE` for **524s** just to be
+  admitted, then
+  `[qg-governor-watchdog] ... host RAM pressure >= 80% for 2 consecutive checks — sending SIGTERM to its process tree`
+  on the typecheck step itself → `❌ Type check FAILED/timeout (exit=124)`. This is the same root (host oversubscription
+  on `ip-172-31-5-118`/`i-0c9b283b31d6b5ca7`) manifesting through the governor's own admission-control safety valve
+  rather than a raw wall-clock timeout — a variant signature, not a new root cause. Host corroboration at write-up time
+  (21:03:35Z): **load average 31.50/30.18/34.84 on a 16-vCPU box** (~2x oversubscribed, matching the 2026-07-31 15:38Z
+  entry's 31.89 reading almost exactly) + 35 live `quality-gates.sh`/`pytest`/`basedpyright` processes vs the
+  shared-host cap of 4. Checked `GET /api/repo-blockers`: zero open entries for `features-service` — nothing is actually
+  stuck waiting on this. A fresh `quality-gates-v2` run (`30663077898`) was already auto-queued on this same HEAD at
+  investigation start and remained `status=queued` throughout (queued, not failed — retriggering would not help a queued
+  run per this doc's own prior finding). Disposition: no code or test change to `features-service` (both selectors
+  independently proven clean — local full-suite green + isolated single-file green); did not force a 4th manual
+  retrigger since one was already in flight; left the wall for the standing "protected-6 stay self-hosted, accept
+  recurring reds, resolve via retrigger" posture to clear on its own once host load eases. No repo state changed;
+  `features-service` and `unified-trading-pm` slot-2 worktrees left clean on `live-defi-rollout` (only this doc
+  touched).
