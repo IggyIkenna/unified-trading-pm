@@ -140,10 +140,13 @@ this service relative to its documented, measured requirement.
 - [x] ✅ [INFRA] P1. **DONE 2026-07-31 (slot-5)** — fixed `deploy-shared.sh`'s stale `--memory=4Gi --cpu=2` to
       `--memory=16Gi --cpu=4`, matching `cloudbuild.yaml`'s live, documented 2026-07-17 sizing for this exact service.
       Shipped `deployment-service@c518cda`. (repo: deployment-service)
-- [ ] [INFRA] P2. Cross-reference this doc's Finding 6 (100%-reproducible fresh-cold-start failure on non-live
-      revisions, `exit(0)`+STARTUP-probe-failed, persists after the resource fix) into
-      `deployment_api_sigabrt_crash_loop_2026_07_24.md`'s next open todo/session as an additional lead — do not
-      re-investigate independently; that doc owns this mechanism. (repo: deployment-api)
+- [x] ✅ [INFRA] P2. **DONE 2026-07-31 (slot-4)** — cross-referenced Finding 6 into the SIGABRT investigation's line.
+      `deployment_api_sigabrt_crash_loop_2026_07_24.md` is at/over its 1000L hard cap (1001 lines), so a direct append
+      would fail the SCOPED prek line-cap gate — filed a satellite lead doc instead (same pattern as
+      `deployment_api_sigabrt_crash_loop_unresolvable_sha_citation_2026_07_31.md`):
+      `deployment_api_sigabrt_crash_loop_coldstart_finding6_lead_2026_07_31.md`, `related:` to both this doc and the
+      SIGABRT doc, carrying a `[BACKEND] P2` todo for whoever next works the SIGABRT investigation. Did not
+      re-investigate independently. (repo: unified-trading-pm)
 - [ ] [INFRA] P3. Once the SIGABRT doc's investigation resolves (or this specific angle is separately confirmed fixed),
       retry the live-traffic cutover for `uts-shared-deployment-api` to a fresh `uts-prd-sa` revision — tag-verify 3-5
       fresh cold starts first, then cut over; update `bucket_iam_write_protection_per_tier_2026_06_09.md` P2.2c to
