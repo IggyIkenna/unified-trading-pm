@@ -27,7 +27,7 @@ scope: [engineer, admin]
 tags: [quality-gates, flaky-gate, timeout, pytest-timeout, ci, shared-host-contention, xdist]
 related: [/plans/active/issues/adapter_contract_regression_ratchet_60s_timeout_flaky_under_contention_2026_07_27.md]
 created: 2026-07-29
-last_updated: 2026-07-30
+last_updated: 2026-07-31
 parent_epic: infrastructure_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -474,3 +474,24 @@ those commits landed). The escalation's own repo-blocker list (`GET /api/repo-bl
   for instruments-service at investigation time. Same "orphaned noise / transient worker-crash under contention"
   conclusion as every prior entry — no code or test change made; the tree was already green by the time of investigation
   and needed no fix. Slot left clean (0 commits ahead of `origin/live-defi-rollout`, nothing to commit).
+- **2026-07-31** — 1st confirmed instance in a NEW repo (market-tick-data-service, previously only named as a
+  `base-service.sh` consumer in this doc, never an actual occurrence): `cicd` escalation `agt-96b341`
+  (`WALL_TYPE=ldr_qg_failure`), promotion PR #804 (LDR→main), failing run `30658462443` (`pull_request`-triggered,
+  started `19:16:27Z`, head SHA `6bcc5154d22fb7a51ff991287c185886924eebdd`, `QG slice (tests)` job, self-hosted runner
+  `glue-ip-172-31-5-118-1`). Failing test:
+  `tests/unit/test_tardis_free_only_gate.py::test_free_only_allows_recent_rolling_window` —
+  `Failed: Timeout (>150.0s) from pytest-timeout.` — `1 failed, 9778 passed, 25 skipped, 1 xpassed` in `3212.47s`
+  (0:53:32). Read the test + its call path (`TickDataHandler.process()` → `_check_early_exit` → `is_tardis_free_date()`
+  (pure date arithmetic, no I/O) → mocked `process_ticks`) — no plausible real-I/O or real-timer path for this specific
+  test (unlike todo 4's `_throttle()` sleep or todo 5's un-mocked GCS probe; `_apply_freshness_skip` is also not
+  reachable here since the fixture sets `h._bucket = ""`, short-circuiting before `check_shard_freshness`). Isolated
+  re-run of the whole 5-test file: **2.58s** (all 5 pass), matching every prior entry's profile of a legitimately-fast
+  test blown out by scheduling contention, not a real hang. Confirmed root-fact before treating it as resolved: PR #804
+  `state=MERGED`, `mergedAt=2026-07-31T19:16:32Z` — 5s after the failing run even started, i.e. self-merged via an
+  independent already-green check on the same head SHA before this slower `pull_request`-triggered run completed
+  (identical mechanism to #1027/#1035/#1038/#1039 above).
+  `git merge-base --is-ancestor 6bcc5154 origin/live-defi-rollout` confirmed true on current LDR HEAD; subsequent LDR
+  `quality-gates-v2` runs (`30640305750`, `30644139336`, `30651592108`) all `success`. Zero open `/api/repo-blockers`
+  entries for market-tick-data-service. Same "orphaned noise against an already-resolved wall" conclusion as every prior
+  entry — no code or test change made. Slot left clean (0 commits ahead of `origin/live-defi-rollout`, nothing to
+  commit).
