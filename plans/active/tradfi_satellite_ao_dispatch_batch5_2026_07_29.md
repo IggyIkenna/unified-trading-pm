@@ -456,6 +456,17 @@ mirroring the batch1/batch2/batch3/batch4 finalize pattern.
   completion before re-running `build-continuous` and the hit-rate measurement — no new backfill launch needed unless
   this fleet is found to have failed.
 
+- **2026-07-31 (slot-16, data_engineering craft, task `tradfi_satellite_ao_dispatch_batch5-001`)** — Resumed todo 2
+  again (`already_in_progress: true`). Found + fixed a real gap in the same fleet slot-2/9/12 have been tracking: a
+  preemption wave at ~03:14-03:20 UTC took out several shards; most years kept a surviving `es`/`es3` sibling, but 2024
+  lost BOTH and had no `PROGRESS.json` to resume from precisely. Relaunched 2024 non-force over the full year
+  (`mdps-backfill-tradfi-y2024es-resume-20260731`, confirmed `RUNNING`) so the launcher's own skip-if-fresh check picks
+  up wherever the two preempted attempts left off. Full detail + a caught-and-fixed self-inflicted mistake (the
+  launcher's `dry` argument still creates a real billable VM, not a local no-op — deleted the errant VM immediately) in
+  the source issue doc's Progress Log. Fleet is 10 VMs now (9 survivors + the 2024 resume), all years covered. Still
+  hours from `build-continuous` + the hit-rate re-measure — skipping rather than busy-waiting, same posture as slot-2's
+  entry above.
+
 ## Codex SSOTs
 
 No new durable contract is created by this plan — every todo executes an already-decided spec from its source doc, or

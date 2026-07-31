@@ -1069,3 +1069,32 @@ anyone, any time — none are blocking.
   (re-measure the `1d`/`24h` hit rate against the `454/2398` baseline via a direct manifest read, per this doc's
   established method) still needs to be done and written up here. Not yet complete as of this entry — the fleet was only
   ~1-2 minutes into its run when checked. No code changed this turn.
+
+- **2026-07-31 (slot 16, `tradfi_satellite_ao_dispatch_batch5-001`, resumed again — same task,
+  `already_in_progress: true` on boot)**: slot 12's watchdog (like slot 9's before it) died with its session teardown —
+  same background-shell-scoped-to-session limitation, no data lost since the underlying GCE VMs run independently.
+  Checked the fleet directly (`gcloud compute instances list`) rather than trusting any watchdog: 9 of the originally
+  ~14 launched VMs (`y{2020,2021,2022,2023,2025,2026}es`/`es3`-`20260731-023743`) are still `RUNNING`, all spot-checked
+  via `run.log` tail showing genuine per-date progress as of ~03:43-03:44 UTC (not stalled). **Found a real gap**:
+  `gcloud compute operations list --filter="operationType=compute.instances.preempted"` showed a preemption wave at
+  ~03:14-03:20 UTC that took out several VMs — most years still have a surviving sibling (`es` or `es3`), but **2024
+  lost BOTH `y2024es-20260731-023743` and `y2024es3-20260731-023743`** (confirmed absent from the instance list, no
+  `PROGRESS.json` written by either, no auto-relaunch appeared since). Per the HARD RULE (resume from measured progress,
+  never blind-replay `START_DATE`) and since no `PROGRESS.json` existed to resume from precisely, relaunched 2024 the
+  same way the other years' correctly-scoped resumes were launched: `launch-mdps-backfill-vm.sh` non-force, full year
+  range (`2024-01-01..2024-12-31`), `--instrument-ids "CME:FUTURE:ES CME:FUTURE:MES"` — relies on the launcher's own
+  skip-if-fresh manifest check to fast-skip whatever 2024 dates the two preempted attempts already completed, rather
+  than guessing an exact resume date. **Self-inflicted mistake, caught and fixed immediately**: this launcher's `dry`
+  positional argument is NOT a local no-op like the sports launcher's `--dry-run` flag — it still creates a real VM
+  (just runs MDPS itself with `--dry-run`), so my first invocation (`... tradfi 2024-01-01 2024-12-31 dry`) launched a
+  live, billable, write-nothing VM. Caught it immediately via the launcher's own `Created [...]`/`RUNNING` output,
+  deleted it (`mdps-backfill-tradfi-y2024es-resume-20260731`, confirmed it was the VM I'd just created seconds earlier,
+  not an ambiguous foreign VM, before deleting), then relaunched correctly with `full` in place of `dry`. New VM
+  `mdps-backfill-tradfi-y2024es-resume-20260731` confirmed `RUNNING`. Fleet is now 10 VMs (9 surviving originals + this
+  2024 resume), all years covered again. Did not touch the `build-continuous` step or re-measure the hit rate — the
+  fleet (now including 2024) needs to fully drain first, which will take more hours; not sitting and polling
+  synchronously for that (async-wait discipline) — skipping so a future dispatch (or this session later) picks up where
+  this leaves off. Whoever resumes: check `gcloud compute instances list --filter="name~mdps-backfill-tradfi"` for 0
+  remaining (all self-deleted cleanly, or diagnose+resume any new preemptions the same way as here), THEN launch
+  `launch-mdps-build-continuous-vm.sh ES 2020-01-01 2026-07-25 full`, THEN re-measure the `1d`/`24h` hit rate against
+  the `454/2398` (~18.9%) baseline and record the result here.
