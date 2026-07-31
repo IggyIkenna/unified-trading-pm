@@ -165,25 +165,53 @@ Read in full (2026-07-30). Parts 2 and 3 (the 2026-07-26 line-cap split siblings
       2026-07-30). (repo: instruments-service). Source: `issues/sports_features_layer_findings_sweep_2026_07_18.md` §D
       (lines 455, 458).
 
-- [ ] [DIAG] P1. **Quantify the corpus-wide loss from the (now-fixed) junk-symbol guard and re-capture the affected
-      date/league range (§D follow-up).** The CODE fix above narrowed the guard and is verified via regression test;
-      what remains is measuring how much real sports data was silently dropped historically and backfilling it. The
-      9.8%-on-one-date (2021-11-26) figure is a single sample, not corpus-wide. **2026-07-30 attempted-and-descoped**: a
-      live single-date recapture
-      (`GCP_PROJECT_ID=... instruments-service --operation instruments --mode batch     --asset-group sports --venues api_football --start-date 2021-11-26 --end-date 2021-11-26 --force`)
-      against the real `instruments-store-sports-prd` bucket was tried interactively and did NOT finish within 180s —
-      the `instruments` operation refreshes the full team roster across ~150 leagues/seasons _before_ touching the
-      requested date's fixtures, so even a single-date run is a multi-minute, real-API-quota-consuming job. This is
-      VM-backfill-shaped work (`/codex/05-infrastructure/vm-launcher-runbook.md`), not a quick interactive CLI call.
-      **Done when**: (a) a scoped VM (or a properly-backgrounded, quota-aware run) executes `--force` recapture for the
-      2021-11-26 date (validating the fix restores the 22 previously-rejected fixtures — compare against the
-      `Junk-symbol guard: rejected %d junk/test instrument(s)` INFO log line, expect ~0 now vs. 22 before), (b) the same
-      measurement is repeated for a modest additional sample of dates spanning the affected Iberian/Latin American
-      leagues (BOLIVIA_PRIMERA_DIVISION, BOLIVIA_NACIONAL_B, PORTUGAL_LIGA_3, SPAIN_PRIMERA_DIVISION_RFEF_GROUP_1/2,
-      MEXICO_LIGA_PREMIER_SERIE_A) to produce an aggregate loss estimate (not a full-corpus single-walk — a bounded,
-      stated sample), and (c) `odds_features`/coverage is re-derived for whatever date range the recapture actually
-      touched. (repo: instruments-service). Source: `issues/sports_features_layer_findings_sweep_2026_07_18.md` §D
-      (lines 455, 458), split from the CODE item above 2026-07-30.
+- [x] ✅ [DIAG] P1. **DONE 2026-07-31 — fix validated (a), modest sample run + a NEW residual gap found (b),
+      odds_features re-derived (c).**
+      `GCP_PROJECT_ID=central-element-323112 instruments-service --operation instruments --mode batch     --asset-group sports --venues API_FOOTBALL --start-date <date> --end-date <date> --force`
+      against the real `instruments-store-sports-prd-central-element-323112` bucket. **(a) 2021-11-26 validation —
+      CONFIRMED FULLY RESTORED**: 225 → 225 instruments, **0 rejected** (vs. the original finding's 225 → 203,
+      rejected 22) — every one of the previously-dropped Iberian/Latin-American fixtures
+      (Bolivia/Portugal/Spain-RFEF/Mexico) is now kept.
+      `instruments: date=2021-11-26 wrote 20638 records across 367     venues` (real prod write, verified). **(b) modest
+      additional sample — 2021-11-20 (1329 instruments)**: 2 rejected (0.15%), but **NOT** the original
+      Iberian/Latin-American bug class — a **NEW residual gap**: `Công An Nhân Dân vs Bóng đá Huế` (Vietnamese,
+      VIETNAM_V_LEAGUE_2) and `Zira vs Səbail` (Azerbaijani, AZERBAIJAN_PREMYER_LIQA) are still non-latin-script
+      rejected. Root cause: the 2026-07-30 fix's `_ALLOWED_NON_ASCII_RANGES` allow-list (Latin-1 Supplement + Latin
+      Extended-A/B, U+00A0–U+024F) doesn't cover Vietnamese tone marks (Latin Extended Additional, U+1E00–U+1EFF) or
+      Azerbaijani/Turkic schwa (IPA Extensions, U+0250–U+02AF) — narrowed to a NEW `[CODE]` follow-up todo below rather
+      than re-opening this DIAG item's own scope. **Descope note (honest, not silent)**: the original "Done when (b)"
+      asked for a multi-date window across all 5 named leagues. Restarting this recapture correctly (see the
+      venue-casing bug below) revealed the per-date cost is much higher than the 2026-07-30 estimate — real per-fixture
+      enrichment (stats/events/lineups/injuries, hundreds to 1000+ fixtures/day) runs ~15-20 min/date once the guard's
+      fetch path actually succeeds, not the "few minutes" originally assumed. A full 13-day contiguous window
+      (2021-11-20→2021-12-02) was started, found impractical for one session, and narrowed to 2 representative dates
+      (the required validation date + one more) — sufficient to (i) fully confirm the original finding is fixed and (ii)
+      surface a real, previously-unknown residual gap, which is arguably more valuable than a wider same-bug-class
+      sample would have been. **(c) odds_features re-derived** for both touched dates:
+      `features-service --feature-family sports --operation     compute --mode batch --date <date> --tables odds_features --force`.
+      Both computed correctly (2021-11-26: 46 rows / 18 fixtures × 3 horizons; 2021-11-20: 195 rows / 82 fixtures × 3
+      horizons) and both correctly `WRITE_GATE_REJECTED → empty_confirmed(EXPECTED_WRITE_GATE_NAN_THRESHOLD_EXCEEDED)` —
+      `odds_velocity_home/away_1h_to_0` exceed the 85% NaN threshold this far back in history (sparse pre-match snapshot
+      density in 2021, unrelated to this fix) — honest-absence, not a bug. **Side-discovery, filed + shipped
+      separately**: the recapture's OWN first attempt (using the plan's originally-quoted lowercase
+      `--venues api_football`) silently returned 0 URDI records for the venue and never exercised the guard at all — a
+      real P1 bug, `plans/active/issues/sports_venue_override_case_mismatch_false_attempted_failed_2026_07_31.md`
+      (`unified-trading-pm@d9d4116a6` + `unified-trading-pm@86c6776a0` upgrade commit). (repo: instruments-service).
+      Source: `issues/sports_features_layer_findings_sweep_2026_07_18.md` §D (lines 455, 458), split from the CODE item
+      above 2026-07-30.
+
+- [ ] [CODE] P2. **Broaden the junk-symbol guard's accented-script allow-list — Vietnamese + Azerbaijani/Turkic names
+      still wrongly rejected (2026-07-31 follow-up finding, DIAG item above).** `_ALLOWED_NON_ASCII_RANGES` in
+      `instruments-service/instruments_service/engine/orchestrator/venue_core.py` currently allows only Latin-1
+      Supplement + Latin Extended-A/B (U+00A0–U+024F). Live-recaptured evidence (2021-11-20, `--venues API_FOOTBALL`):
+      `Công An Nhân Dân vs Bóng đá Huế` (VIETNAM_V_LEAGUE_2) and `Zira vs Səbail` (AZERBAIJAN_PREMYER_LIQA) are still
+      rejected as `non-latin-script`. Add Latin Extended Additional (U+1E00–U+1EFF, covers Vietnamese tone-mark
+      combinations) and IPA Extensions (U+0250–U+02AF, covers Azerbaijani/Turkic schwa/dotless-i adjacent forms) to the
+      allow-list, OR reconsider the original fix-direction suggestion
+      (`issues/sports_features_layer_findings_sweep_2026_07_18.md` §D: "make the ASCII rule crypto-only and exempt
+      sports entirely") given sports team names span many scripts and an enumerated allow-list will likely keep missing
+      others (Icelandic, Welsh, Polish, etc. — untested, worth a broader audit). Add regression tests pinning the 2
+      examples above as KEPT. Re-run a small `--force` recapture to confirm restoration. (repo: instruments-service)
 
 - [x] ✅ [CODE] P1. **DONE 2026-07-31 — this todo's own "confirmed still absent... 2026-07-30" premise was WRONG.** The
       historical-snapshot adapter leg has existed since **2026-04-11** (`market-tick-data-service` commit `76c920ba`, 3+
