@@ -213,16 +213,21 @@ investigated further here, out of scope for this doc.
   graceful restart, since nothing runs `snapshot_session()`'s shutdown hook on a hard kill. `/ws/vm-resources` now reads
   the sampler's on-disk JSONL tail instead of sampling `/proc` itself. Live-downloaded + inspected the S3-mirrored log
   mid-session: 1,344 real samples, iowait averaged 27%, peaked 65.7%.
-- **2026-07-31**: re-attempted both remaining todos. Both re-confirmed genuinely blocked on operator/root access this
-  session's identity doesn't have (no SSM, no SSH key for this host) — re-verified rather than assumed stale. Made
-  partial progress on the P2 EBS-spike investigation via the one avenue that doesn't need root: pulled CloudWatch
-  CPU/network correlation for the window, which reframes the spike as part of a wider 09:30-14:30 UTC bursty-load
-  stretch (not isolated to 10:45-13:41) consistent with the already-diagnosed runner-capacity-crisis pattern —
-  circumstantial, not a full diagnosis. See both todos' inline re-check notes for detail.
+- **2026-07-31**: re-attempted both remaining todos, initially re-confirmed "blocked on operator/root access" — WRONG,
+  based on the false assumption that reaching the orchestrator VM required SSH/SSM. Operator corrected this
+  (`we are on the planning-vm s you dont have to use ssh`): this interactive session's shell runs directly on
+  `i-0c9b283b31d6b5ca7`. Completed both todos for real once that was clear — see their inline resolution notes for full
+  detail. P1: installed both systemd units, found and fixed 3 real bugs in the previously-shipped unit files
+  (unsubstituted `User=hk`, cgroup limits too tight for a transitive scipy import, missing S3 bucket env var), verified
+  a real object landing in S3. P2: this VM has local `sysstat`/`sar` history covering the spike window, confirming
+  genuine sustained swap thrashing drove it — same mechanism as the 2026-07-29 measurement, not a new incident. Also
+  caught a live recurrence of the same pattern happening in real time while working (~12:15-12:30 UTC) and verified (via
+  repeated same-PID sampling, not a single snapshot) that some processes were genuinely stalled, not just momentarily
+  busy. Shipped `agent-orchestrator@d9a23da`.
 
 ## Todos
 
-- [ ] [OPERATOR] P1. **Install the new resource-history systemd units on the live orchestrator VM
+- [x] [OPERATOR] P1. **Install the new resource-history systemd units on the live orchestrator VM
       (`i-0c9b283b31d6b5ca7`)** — shipped in `agent-orchestrator@231125b` (see Progress Log above) but not yet active:
       installing `/etc/systemd/system/*.service`/`*.timer` needs root, which no current AO-worker identity has (same gap
       as this doc's own earlier `orchestrator.service` memory-cap drop-in, and the sibling
@@ -231,13 +236,27 @@ investigated further here, out of scope for this doc.
       `systemctl is-active resource-history-sampler.service` and `resource-history-backup.timer` both report `active`,
       and a fresh object appears at
       `s3://uts-orchestrator-state-427895769566/snapshots/planning/<today>/resource_history.jsonl` within 15 min of
-      starting. **Re-checked 2026-07-31: still blocked, no path found around it.** Re-verified this session's only AWS
-      identity (`ikenna-worker`) still gets `AccessDeniedException` on
-      `ssm:DescribeInstanceInformation`/`ssm:SendCommand` for this instance, and confirmed no SSH keypair for
-      `13.113.200.22` exists in `~/.ssh` (only unrelated `github_ed25519`/`google_compute_engine` keys present) —
-      genuinely needs someone with root/SSM access to this specific instance, not something a code-level fix or retry
-      can route around.
-- [ ] [REVIEW] P2. **Unexplained EBS queue-depth spike, 2026-07-30 ~10:45-13:41 UTC** (`vol-0b4f0237fa0f5cd0f`,
+      starting. — **Done 2026-07-31.** The "blocked on SSM/SSH" framing above was based on a wrong assumption — this
+      interactive session's shell runs directly ON the orchestrator VM itself (`i-0c9b283b31d6b5ca7`, confirmed via
+      IMDSv2 instance-id/public-ipv4), not remotely; `sudo` works locally, no SSH/SSM ever needed. Installing surfaced 3
+      real bugs in the previously-shipped units, all fixed in `agent-orchestrator@d9a23da`: (1) `User=hk`/`Group=hk`
+      hardcoded and never substituted by the install script (only path prefixes were rewritten) — no `hk` user exists on
+      this box, so both units would have failed to start; fixed by extending `render_service()`'s sed to also rewrite
+      `User=`/`Group=`. (2) `TasksMax=20`/`MemoryMax=128M-256M` on both units was too tight — `server/config.py`
+      transitively imports `unified_trading_library` → `scipy`, and OpenBLAS spawns one thread per core (16 on this
+      host); the backup unit crashed outright (`pthread_create... Resource temporarily unavailable`, killed by
+      SIGINT/KeyboardInterrupt) and the sampler silently wrote nothing while pinned at both cgroup caps, forced into
+      100MB+ swap just to import — raised both units to `MemoryMax=512M`/`TasksMax=128`. (3) `ORCHESTRATOR_S3_BUCKET`
+      was never set for either new unit — `orchestrator.service` gets it from a live systemd drop-in
+      (`/etc/systemd/system/orchestrator.service.d/s3-snapshot.conf`) that standalone units don't inherit; added a
+      matching `resource-history-backup.service.d/s3-snapshot.conf` drop-in on the live VM. **Verified end-to-end**:
+      `resource-history-sampler.service` active, writing real 5s samples to
+      `data/state/resource_history/2026-07-31.jsonl`; manually triggered `resource-history-backup.service` exited
+      `0/SUCCESS` and logged
+      `Resource-history log uploaded to s3://.../snapshots/planning/2026-07-31/resource_history.jsonl`; independently
+      confirmed via `aws s3api head-object` (fresh `LastModified`, non-zero `ContentLength`). Both units `enabled`
+      (survive reboot).
+- [x] [REVIEW] P2. **Unexplained EBS queue-depth spike, 2026-07-30 ~10:45-13:41 UTC** (`vol-0b4f0237fa0f5cd0f`,
       CloudWatch `VolumeQueueLength` oscillating 8-17, comparable to the worst 2026-07-28 sustained-contention window,
       but bursty/oscillating rather than pegged) — found live mid-session, never diagnosed against real OS-level
       swap/iowait because this AO-worker identity's `ikenna-worker` AWS role is denied `ssm:SendCommand` on this
@@ -246,22 +265,30 @@ investigated further here, out of scope for this doc.
       JSONL history either — a real, still-open gap in explaining that specific window. Whoever has SSM/root access:
       check `journalctl`/`vmstat`/`free -h` for that window, or pull `CWAgent` swap metrics if a CloudWatch agent gets
       installed later (none was running at check time — confirmed via `aws cloudwatch list-metrics --namespace CWAgent`
-      returning empty). **Re-checked 2026-07-31: still blocked on the same access gap** (re-verified
-      `ssm:DescribeInstanceInformation` still returns `AccessDeniedException` for `ikenna-worker` on this instance; no
-      SSH keypair for `13.113.200.22`/`i-0c9b283b31d6b5ca7` exists in this session's `~/.ssh` either — only
-      `github_ed25519` and `google_compute_engine` keys are present, neither valid for this host). **Pulled the wider
-      CloudWatch picture instead** (the one avenue that doesn't need SSM/root), which reframes rather than resolves
-      this: `VolumeQueueLength` is bursty across the ENTIRE 09:30-14:30 UTC window (not isolated to 10:45-13:41 — that
-      was an undercount of the actual span), and it correlates with sustained heavy `CPUUtilization` over the same
-      stretch (avg 45-86%, repeatedly spiking 90-99%) and bursty `NetworkIn`/`NetworkOut` (5-min-window peaks up to ~8GB
-      `NetworkOut`, ~8GB `NetworkIn`) — a pattern consistent with concurrent CI-runner + AO-worker churn (the same
-      structural mechanism as the standing runner-capacity-crisis doc), not an isolated anomalous event. This narrows
-      the hypothesis but does NOT confirm it — CPU/network correlation is circumstantial without the OS-level
-      swap/iowait breakdown this todo actually asks for, which still requires SSM or SSH access nobody in this session's
-      identity chain has. No `DiskReadOps`/`DiskWriteOps`/`DiskReadBytes`/`DiskWriteBytes` datapoints exist under
-      `AWS/EC2` for this instance (expected — those live under `AWS/EBS`, not surfaced per-instance without the volume
-      already known, which `VolumeQueueLength` above already covers). Genuinely stuck on operator/root access — not
-      re-attempting further without it.
+      returning empty). — **Done 2026-07-31, confirmed with real OS-level data, not just CloudWatch correlation.** Same
+      wrong-assumption correction as the P1 todo above: no SSM/SSH ever needed, this session runs directly on the VM.
+      `sysstat`/`sar` is installed locally with daily rotated logs already covering the window (`/var/log/sysstat/sa30`,
+      retained since at least 2026-07-22 — `journalctl` itself only goes back to this boot, 2026-07-31T02:29:54Z, but
+      `sar`'s binary logs are a separate, longer-retained persistence path). Pulled `sar -u` (CPU/iowait),
+      `sar -r`/`-S`/`-W` (memory/swap utilization + swap in/out rate), `sar -q` (load/runqueue), and `sar -b` (disk
+      transfer rate) for 09:30-14:35 UTC 2026-07-30 — cross-validated the data source first against the
+      already-confirmed 2026-07-29 ~01:00 UTC measurement (`sar -S -f sa29` independently shows 100% `%swpused` at
+      01:00, matching this doc's own manual `free -m` reading from that incident exactly). Findings for the spike
+      window: `%swpused` 21-53% throughout with continuous active swap churn (`pswpin/s`+`pswpout/s` in the
+      thousands/sec the entire window, e.g. 6096/6748 at 09:40, 9931/10127 at 14:30); `%memused` swinging 9-83% across
+      10-min samples; `ldavg-1` swinging 5-64; disk transfer rate (`sar -b`) up to ~14,400 tps with `bread/s`+`bwrtn/s`
+      in the hundreds of thousands — directly explaining the EBS queue-depth bursts. **Conclusion: this is a genuine,
+      measured recurrence of the same swap-exhaustion/runner-capacity mechanism this doc's main body already diagnosed
+      for 2026-07-29, not a new or different incident** — confirmed, not circumstantial. **Also observed live,
+      2026-07-31 ~12:15-12:30 UTC, while working this todo**: the exact same pattern recurring in real time — swap
+      climbed 29%→43% within 20s, `procs blocked` (vmstat) reached 40, 15-20 processes in D-state at once. Checked
+      whether these were genuinely stuck vs. momentarily blocked (sampled specific PIDs repeatedly rather than trusting
+      one snapshot): 3 concurrent CI `tar cache.tzst` cache-creation processes (separate repos' GH Actions runners)
+      stayed in D across all 5 samples over 8s — genuinely stalled, not transient. One QG script
+      (`check_runbook_execution_owner.py`, PID 1190146) was confirmed stuck in kernel `D` (`__wait_on_buffer`) for ~29
+      continuous minutes, which is what caused this same session's own PM-doc quickmerge to stall that long. No new
+      mitigation attempted — the structural remedy (reduce concurrent runner count) is already the standing crisis doc's
+      own recommendation and not this doc's to re-decide.
 - [x] [REVIEW] P3. Post-resize, 52 queued AO tasks were observed all blocked on one upstream task,
       `sports_satellite_ao_dispatch_batch2-0*` — real work, not a resource issue, so out of scope for this doc, but not
       yet investigated by anyone. Whoever picks this up: check
