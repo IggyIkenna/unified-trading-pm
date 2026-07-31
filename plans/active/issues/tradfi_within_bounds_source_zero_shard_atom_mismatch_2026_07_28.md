@@ -302,3 +302,10 @@ population — the "elsewhere" gap that doc pointed at is this manifest bookkeep
   doc's na-audit finding above, a ~81K-row live-manifest CAS mutation needs a recorded operator go-ahead citing these
   measured counts before the real write. Flagged to the operator via this session's `/blocked` on
   `tradfi_satellite_ao_dispatch_batch5-002`; todo 1 above stays unchecked pending that approval.
+
+- **na-eligibility-audit 2026-07-31** (tradfi tranche, dispatch agt-6d6eaf): **KEEP-NA, valid — re-verified.** All 3
+  open todos read end-to-end; count matches tranche-inventory tool. Todo 1 stays operator-gated exactly per the
+  2026-07-30 entry above (still awaiting the `--apply` go-ahead on the now-measured 81,454-row drop); todos 3-4 are
+  genuinely open follow-on work with no new blocking condition. No stale items, no duplicate claim by any other active
+  doc, no archival trigger. Nothing changed since the last verdict beyond the doc being git-touched for unrelated
+  reasons.

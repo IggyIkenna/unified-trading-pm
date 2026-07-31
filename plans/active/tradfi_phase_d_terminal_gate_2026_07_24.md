@@ -111,6 +111,10 @@ source:
 
 ## Progress Log
 
+- **na-eligibility-audit 2026-07-31** (tradfi tranche, dispatch agt-6d6eaf): **KEEP-NA, valid.** Both open checkboxes
+  (P0 MVP-backfill-readiness gate; P1 post-full-backfill reconciliation checkpoint) read end-to-end; count matches
+  tranche-inventory tool (2). Both remain explicitly gated exactly per the 2026-07-30 entry below — no new evidence has
+  cleared either OR-gate since. Nothing changed since the prior verdict; doc stays NA.
 - **2026-07-30 (tradfi_satellite_ao_dispatch_batch1_finalize reconciliation pass)** — Flipped the "VM fleet preemption
   auto-recovery... coverage gap" backtick-wrapped note above to a real `[x]` checkbox, citing
   `unified-trading-pm@3ebdd1a4e` (verified reachable) for the doc-scoping addition and the already-cited

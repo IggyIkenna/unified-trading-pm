@@ -261,6 +261,13 @@ Everything below is scoped so these cells are canonical, honestly-covered, and s
 
 ## Progress Log
 
+- **na-eligibility-audit 2026-07-31** (tradfi tranche, dispatch agt-6d6eaf): **KEEP-NA-STALE, re-verified — citation
+  still accurate, no change needed.** This is this doc's correct owning tranche (per the note below). Independently
+  re-checked the sole open checkbox's duplicate claim against current state, not a rubber-stamp: the extracting doc
+  (`tradfi_consolidated_native_ao_extract_2026_07_25.md`) is still `status: active` / `assigned_vm: planning`, and its
+  own near-verbatim copy of this todo is still unchecked. Only one commit has touched this file since the 2026-07-30
+  marker (`39d663e92`, 2026-07-31 — an unrelated cross-reference path fix), so nothing material changed. `assigned_vm`
+  stays unchanged; no backlog impact.
 - **na-eligibility-audit 2026-07-30** (infra tranche, dispatch agt-30721a): KEEP-NA-STALE — sole remaining native
   checkbox is already duplicated near-verbatim in the active `tradfi_consolidated_native_ao_extract_2026_07_25.md`;
   citation added above, zero `assigned_vm`/backlog impact. NOTE: this doc's real `asset_group` is `[tradfi]`, not

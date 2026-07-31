@@ -254,14 +254,17 @@ not a live regression), but real enough to need their own scoped root-cause-and-
 > `/plans/active/issues/tradfi_autonomous_session_operator_decisions_2026_07_25.md`. These checkboxes stay open until
 > batch5 is activated and its todo lands.
 
-- [ ] [DATA] P1. **RE-CHARACTERIZED 2026-07-31 (slot 3, data_engineering) — NOT a live writer bug; the resolver is
-      already correct. Historical-registration repair split out as its own todo below.** Root-cause: re-measured live
-      (2026-07-31) — the 3,612-row population is BYTE-IDENTICAL to the 2026-07-27 measurement (same count, same
-      `written_at=2026-07-27T16:46:40-48Z` 8-second window), but its `date` (content-day) column spans dozens of
-      DISTINCT historical dates across 2024-2026 (e.g. 2025-01-02, 2025-01-06, 2024-01-29, 2024-01-19, ...), not one
-      live-captured day. A single 8-second write burst covering scattered historical dates is the signature of a
-      metadata-only REGISTRATION/RECOVERY script running once against pre-existing GCS objects (mirrors this doc's own
-      "quarantine staleness"/`recover_tradfi_*`/`register_tradfi_*` script family — see
+- [x] ✅ [DATA] P1. **RE-CHARACTERIZED 2026-07-31 (slot 3, data_engineering) — NOT a live writer bug; the resolver is
+      already correct. Historical-registration repair split out as its own todo below. CLOSED 2026-07-31
+      (na-eligibility-audit, tradfi tranche, dispatch agt-6d6eaf) — this item's own stated ask (root-cause the live-path
+      null-instrument_id writes) is fully answered by the finding below; the only remaining actual work (the historical
+      repair) is tracked separately as the P2 item below ("NEW (2026-07-31, slot 3) — historical manifest repair...").**
+      Root-cause: re-measured live (2026-07-31) — the 3,612-row population is BYTE-IDENTICAL to the 2026-07-27
+      measurement (same count, same `written_at=2026-07-27T16:46:40-48Z` 8-second window), but its `date` (content-day)
+      column spans dozens of DISTINCT historical dates across 2024-2026 (e.g. 2025-01-02, 2025-01-06, 2024-01-29,
+      2024-01-19, ...), not one live-captured day. A single 8-second write burst covering scattered historical dates is
+      the signature of a metadata-only REGISTRATION/RECOVERY script running once against pre-existing GCS objects
+      (mirrors this doc's own "quarantine staleness"/`recover_tradfi_*`/`register_tradfi_*` script family — see
       `tradfi_satellite_ao_dispatch_batch5_2026_07_29.md` todo 7), not a fresh per-day live/scheduled capture path.
       Directly verified via `_resolve_tradfi_manifest_shard(False, "NYSE", "etf", "SPY")` and the NASDAQ/equity case
       already covered by this repo's own test suite — **both resolve to the correct canonical id today** (see new
@@ -271,9 +274,11 @@ not a live regression), but real enough to need their own scoped root-cause-and-
       actual historical-row repair (re-derive + CAS-write a canonical id for these 3,612 already-registered rows) is
       separate, bounded GCS-cross-referencing work — filed as its own follow-up todo below rather than rushed here.
       Repo: market-tick-data-service. Source: this doc's 2026-07-27 re-measurement, finding 1.
-- [ ] [DATA] P2. **RE-CHARACTERIZED 2026-07-31 (slot 3, data_engineering) — same registration-event signature as finding
-      1, not a live capture-scope question.** The 103-row population's `date` column ALSO spans scattered historical
-      dates (2024-01-02, 2025-01-02/03/06/07/08/09/10, 2026-01-06/11, ...) sharing the identical
+- [x] ✅ [DATA] P2. **RE-CHARACTERIZED 2026-07-31 (slot 3, data_engineering) — same registration-event signature as
+      finding 1, not a live capture-scope question. CLOSED 2026-07-31 (na-eligibility-audit, tradfi tranche, dispatch
+      agt-6d6eaf) — same disposition as item 1 above: root-cause fully answered, residual historical repair tracked
+      separately as the P2 item below.** The 103-row population's `date` column ALSO spans scattered historical dates
+      (2024-01-02, 2025-01-02/03/06/07/08/09/10, 2026-01-06/11, ...) sharing the identical
       `written_at=2026-07-27T16:46:40-48Z` burst — same one-time registration event as finding 1, not a distinct "is
       CBOE 15m intraday in-MVP-scope" live-capture question. Directly verified:
       `_resolve_tradfi_manifest_shard(False,     "CBOE", "index", "VIX")` → `("INDEX", "CBOE:INDEX:VIX-USD")` (correct,
@@ -345,6 +350,17 @@ not a live regression), but real enough to need their own scoped root-cause-and-
 
 ## Progress Log
 
+- **na-eligibility-audit 2026-07-31** (tradfi tranche, dispatch agt-6d6eaf): **KEEP-NA, stale items CLOSED (2 of 3).**
+  All 3 open checkboxes read end-to-end; count matches tranche-inventory tool. Items 1 and 2 (lines ~257, ~274) were
+  stale: each item's own text already stated its root-cause ask was fully answered (2026-07-31 re-characterization) with
+  the residual repair work split into the new item below — but items 1/2 themselves were left `[ ]` instead of being
+  flipped alongside items 3/4 in that same edit. Closed both now, citing the split-out residual item as the tracker for
+  the real remaining work. Item 5 (the historical manifest repair, `[DATA] P2`) stays open — genuinely current, bounded,
+  AO-shaped work not yet claimed by any active batch; flagged as a strong `tradfi` batch6 candidate for a future
+  `/ag-closeout-audit` pass, not reclassified here (no shared conflict-check has been run against it). The prior
+  2026-07-30 NOTE's "batch5 is status: draft" citation is now stale prose (batch5 activated + its extracting todo landed
+  2026-07-31) but does not change today's disposition — see the Follow-up section's NOTE box, left as-is (cosmetic,
+  non-blocking). Doc stays NA.
 - **2026-07-21T16:04Z (main session)** — finding measured + written up; dispatched a background agent to locate the
   exact `record_captured` call site, diagnose the divergence, and ship a scoped fix if safe (agent authorized to ship
   directly if the fix is small/well-tested; told to stop and report a design instead if it's not confident). Also

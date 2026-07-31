@@ -88,14 +88,25 @@ the ML pipeline must be running on a representative sample so a post-cutover arc
       (data_type=ohlcv_1m). MDPS process VM launched for 2020-01-01→2026-06-23 (`mdps-backfill-tradfi-20260624-065912`).
       **Sequencing**: process → build-continuous → features (3 VMs in order). See todos below for build-continuous +
       features VM steps.
-- [ ] [AGENT] P0. **BLOCKED-UPSTREAM (re-diagnosed 2026-07-26, was stale BLOCKED-OPERATOR-DECISION).** The
-      operator-decision fork itself is resolved — partial fixes shipped 2026-06-28/29
-      (`market-data-processing-service@cc63d1b`: MDPS's `TradfiTradesAdapter` now writes `data_type=ohlcv_1m`, fixing
-      mismatch (1); `features-service@34a5d4ff`: fixed the blank-`instrument_id` manifest-lookup bug;
-      `market-data-processing-service@7d630a3`: unrelated subprocess-per-date regression fix) — but re-verified live
-      2026-07-26 that this did NOT actually unblock the pipeline: **no successful run has ever landed** (the
-      `features-tradfi-prd-central-element-323112` bucket has NO `_index/availability_index.parquet` at all — 404, not
-      just empty), and mismatches (2) filename format (`panama_core.contract_id_for_expiry` still returns
+- [x] ✅ [AGENT] P0. **DONE — CLOSED 2026-07-31 (na-eligibility-audit, tradfi tranche, dispatch agt-6d6eaf).** This
+      item's own "New done-when" (fix mismatches (2)+(4), then run MDPS `build-continuous --root ES` and confirm output
+      lands) is fully met:
+      `/plans/archive/issues/tradfi_mdps_build_continuous_mismatches_2_and_4_still_open_2026_07_26.md` is now ARCHIVED,
+      `status: resolved`, `resolved_by` citing `market-data-processing-service@62a1255` (mismatch 2,
+      chain-bundle-fallback filename fix) + `features-service@65606d26` (mismatch 4, continuous-future read path) + a
+      verified `MDPS build-continuous` run (`market-data-processing-service@e9edb39`, ES 2020-01-01..2026-07-25, real
+      `timeframe=1d continuous_future` objects confirmed via GCS + parquet-content inspection) + a real
+      `features-delta-one-tradfi-20260726-132027` run landing 4 real feature parquets + 5 manifest rows. Both fixes
+      predate this doc's own 2026-07-30 marker, which carried forward stale "still unfixed" wording from this item's OWN
+      earlier diagnostic text rather than its later resolution. See items below for what remains (full-historical-range
+      launch of features-delta-one/features-volatility, not yet done). **BLOCKED-UPSTREAM (re-diagnosed 2026-07-26, was
+      stale BLOCKED-OPERATOR-DECISION).** The operator-decision fork itself is resolved — partial fixes shipped
+      2026-06-28/29 (`market-data-processing-service@cc63d1b`: MDPS's `TradfiTradesAdapter` now writes
+      `data_type=ohlcv_1m`, fixing mismatch (1); `features-service@34a5d4ff`: fixed the blank-`instrument_id`
+      manifest-lookup bug; `market-data-processing-service@7d630a3`: unrelated subprocess-per-date regression fix) — but
+      re-verified live 2026-07-26 that this did NOT actually unblock the pipeline: **no successful run has ever landed**
+      (the `features-tradfi-prd-central-element-323112` bucket has NO `_index/availability_index.parquet` at all — 404,
+      not just empty), and mismatches (2) filename format (`panama_core.contract_id_for_expiry` still returns
       `CME:FUTURE:{root}-{expiry}` Databento-date format; MDPS's canonical output is still the short-symbol
       `CME:FUTURES:{root}{month}{year}.parquet` form — unchanged) and (4) build-continuous output path vs
       features-service read path (`_DERIVATIVE_DATA_TYPES = {"options_chain", "futures_chain"}` in
@@ -111,44 +122,45 @@ the ML pipeline must be running on a representative sample so a post-cutover arc
       actually lands at
       `processed_candles/by_date/day={D}/timeframe={tf}/data_type=ohlcv_1m/instrument_type=continuous_future/venue=CME/underlying=ES/ticks.parquet`.
       Follow-up: `/plans/archive/issues/tradfi_mdps_build_continuous_mismatches_2_and_4_still_open_2026_07_26.md`.
-- [ ] [AGENT] P0. **BLOCKED-UPSTREAM (re-diagnosed 2026-07-26)** Run `features-delta-one-service` for **tradfi/ES**
-      across its calculators (continuous-series + roll-adjusted; `FuturesRollAdjuster` already shipped per epic).
-      Confirm feature parquets land with no NaN-blanket placeholders and `available_at` correctly stamped per row
-      (write-time). (Epic L245.) Same re-diagnosis as P0 item above: the operator-decision fork is resolved but the
-      underlying pipeline is still unverified working — gated on the SAME mismatches (2)+(4) fix + build-continuous run
-      above landing real `continuous_future` parquets for `underlying=ES` before this can run (and succeed rather than
-      repeat the 3 prior failed VM attempts).
-- [ ] [AGENT] P0. **BLOCKED-UPSTREAM (re-diagnosed 2026-07-29, was stale BLOCKED-UPSTREAM citing an unresolved MDPS
-      gap).** Run `features-volatility-service` for **tradfi/ES + tradfi/CBOE-VIX** (realized-vol + skew;
-      `compute_vix_features()` calculator already shipped per epic — level, contango proxy, momentum, vol-of-vol).
-      Confirm feature parquets land clean. (Epic L247.) The MDPS dependency-gap fork this item originally cited is
-      RESOLVED (`market-data-processing-service@cc63d1b` + `features-service@34a5d4ff` +
-      `market-data-processing-service@7d630a3`, 2026-06-29) — same as the delta-one item above — but that does NOT
-      unblock this VM either:
-      `/plans/archive/issues/tradfi_mdps_build_continuous_mismatches_2_and_4_still_open_2026_07_26.md` (the SAME live
-      tracker the delta-one item above points at) confirms zero tradfi features-volatility captures have ever landed,
-      for the identical reason — mismatch (2) filename format and mismatch (4)
-      `_DERIVATIVE_DATA_TYPES = {"options_chain", "futures_chain"}` (still no `continuous_future` entry,
-      `data_loader.py:650`) are both confirmed still unfixed by direct code read. **Real current precondition**: same as
-      the delta-one item — fix mismatches (2)+(4) and get a real `build-continuous` output landing for
-      `continuous_future`/`underlying=ES` first; no separate features-volatility-specific fix is needed beyond that.
-      Issue: `/plans/archive/issues/features_delta_one_tradfi_mdps_dependency_gap_2026_06_24.md` (resolved fork; kept
-      for history) + `/plans/archive/issues/tradfi_mdps_build_continuous_mismatches_2_and_4_still_open_2026_07_26.md`
-      (the live tracker). **VIX sourcing — see the already-RESOLVED ruling below**: VIX cash index was DELETED
-      2026-06-23; VIX exposure = VX futures via XCBF.PITCH (CFE), and VIX FUTURE is now an MVP instrument
-      (`uac@22e6a534`, MVP +409 expansion). Route `compute_vix_features()` off the existing VX futures OHLCV per the P2
-      items below. Barchart is a retired tradfi source (`CLAUDE.md`: "VIX=VX-futures via XCBF.PITCH, Barchart RETIRED").
-      **Additionally**: `realized_vol` + `vix` calculators exist in features-service but are NOT wired into
-      `FEATURE_GROUPS` or the CLI dispatch — wiring gap todo below.
+- [ ] [AGENT] P0. **CORRECTED 2026-07-31 (na-eligibility-audit, tradfi tranche) — blocking premise was stale, real
+      remaining gap restated below; item stays open.** Run `features-delta-one-service` for **tradfi/ES** across its
+      calculators (continuous-series + roll-adjusted; `FuturesRollAdjuster` already shipped per epic). Confirm feature
+      parquets land with no NaN-blanket placeholders and `available_at` correctly stamped per row (write-time). (Epic
+      L245.) The mismatches (2)+(4) fix + build-continuous landing this item was previously gated on are DONE (see the
+      closed item above) — this is no longer blocked on MDPS. **Real remaining gap**: only a single-day smoke has ever
+      verified-landed (`features-delta-one-tradfi-20260726-132027`, 2024-06-17, `FEATURE_GROUP=futures_basis`, 4/5
+      timeframes) — the full historical range (2020-01-01→present, all calculators) has not been run. Done-when: a real
+      full-range launch with feature parquets landing clean, no NaN-blanket placeholders, `available_at` correctly
+      stamped per row. Follow-up tracker (history):
+      `/plans/archive/issues/tradfi_mdps_build_continuous_mismatches_2_and_4_still_open_2026_07_26.md`.
+- [ ] [AGENT] P0. **CORRECTED 2026-07-31 (na-eligibility-audit, tradfi tranche) — blocking premise was stale, real
+      remaining gap restated below; item stays open.** Run `features-volatility-service` for **tradfi/ES +
+      tradfi/CBOE-VIX** (realized-vol + skew; `compute_vix_features()` calculator already shipped per epic — level,
+      contango proxy, momentum, vol-of-vol). Confirm feature parquets land clean. (Epic L247.) The mismatch (2)+(4)
+      fix + build-continuous landing this item was previously gated on are DONE (see the closed P0 item above) — this is
+      no longer blocked on MDPS. **Real remaining gap**: features-volatility-service has NEVER run even once for tradfi
+      (not even a single-day smoke, unlike features-delta-one above) — the launch itself, at any range, has not
+      happened. Done-when: a real launch (start with a smoke, then full historical range) with feature parquets landing
+      clean, no NaN-blanket placeholders. Issue:
+      `/plans/archive/issues/features_delta_one_tradfi_mdps_dependency_gap_2026_06_24.md` (resolved fork; kept for
+      history) + `/plans/archive/issues/tradfi_mdps_build_continuous_mismatches_2_and_4_still_open_2026_07_26.md` (the
+      live tracker). **VIX sourcing — see the already-RESOLVED ruling below**: VIX cash index was DELETED 2026-06-23;
+      VIX exposure = VX futures via XCBF.PITCH (CFE), and VIX FUTURE is now an MVP instrument (`uac@22e6a534`, MVP +409
+      expansion). Route `compute_vix_features()` off the existing VX futures OHLCV per the P2 items below. Barchart is a
+      retired tradfi source (`CLAUDE.md`: "VIX=VX-futures via XCBF.PITCH, Barchart RETIRED"). **Additionally**:
+      `realized_vol` + `vix` calculators exist in features-service but are NOT wired into `FEATURE_GROUPS` or the CLI
+      dispatch — wiring gap todo below.
 
 - [ ] [AGENT] P2. **DEFERRED: Wire `realized_vol` feature group into features-volatility CLI dispatch** —
       `compute_realized_vol_features()` in `calculators/realized_vol_calculator.py` exists but is NOT in
       `FEATURE_GROUPS` (parser.py) or `_calculate_features` dispatch (feature_group_service.py). Wiring requires: (1)
       add `"realized_vol"` to `FEATURE_GROUPS` list in parser.py, (2) add OHLCV data-load path to `data_loader.py` for
       tradfi ohlcv_1s (bypassing MDPS candle format), (3) add dispatch branch in
-      `feature_group_service._calculate_features`, (4) add unit tests. **BLOCKED-UPSTREAM**: requires MDPS gap fix first
-      for TRADFI, or a direct-ohlcv read path. Named successor: this item, or a new features-service PR once MDPS gap
-      resolution is decided. (Provenance: slot-23 investigation 2026-06-24.)
+      `feature_group_service._calculate_features`, (4) add unit tests. **CORRECTED 2026-07-31 (na-eligibility-audit,
+      tradfi tranche) — "BLOCKED-UPSTREAM: requires MDPS gap fix first" is stale; the MDPS gap (mismatches 2+4) is fixed
+      (see the closed P0 item above).** Item stays open on its own genuine remaining scope: the 4 wiring steps above are
+      unstarted application-code work, not blocked on anything upstream anymore. Named successor: this item, or a new
+      features-service PR. (Provenance: slot-23 investigation 2026-06-24.)
 
 - [x] ✅ [AGENT] P2. **CLOSED 2026-07-27 (na-eligibility-audit) — fully superseded, merged into the successor item
       below.** DEFERRED: CBOE VIX cash index gap — `compute_vix_features()` in `vix_calculator.py` is NOT imported
@@ -196,6 +208,27 @@ here.
 
 ## Progress Log
 
+- **na-eligibility-audit 2026-07-31** (tradfi tranche, dispatch agt-6d6eaf): **KEEP-NA, stale items CORRECTED (1 closed
+  - 3 reworded).** All 8 open todos read end-to-end, plus their two cited blocker docs read in full. **Correcting the
+    2026-07-30 marker below**: its claim that mismatches (2)+(4) were "re-confirmed unfixed by direct code read
+    2026-07-26/29" was itself stale — both were fixed and independently re-verified on 2026-07-26 (mismatch 2:
+    `market-data-processing-service@62a1255`; mismatch 4: `features-service@65606d26`), and a real MDPS build-continuous
+    run landed (`market-data-processing-service@e9edb39`) plus a real features-delta-one smoke
+    (`features-delta-one-tradfi-20260726-132027`) — the cited tracker doc is now ARCHIVED/resolved, not live. The
+    2026-07-30 marker's "unfixed" wording was copied forward from this doc's own opening-diagnosis text rather than its
+    later resolution. **Applied**: closed the P0 "New done-when" item (line ~91) citing the archived tracker's
+    `resolved_by` evidence. Did NOT close the features-delta-one / features-volatility / realized_vol-wiring items
+    (lines ~114/121/144) — their own asks remain genuinely open (only a single-day smoke has ever landed for delta-one;
+    features-volatility has never run at all; the wiring steps are unstarted) — reworded their stale "still
+    blocked/unfixed on MDPS" premises to state the real current gap instead. **Not RECLASSIFY** despite 114/121
+    superficially resembling bounded launch+verify VM tasks: the sibling archived tracker's own history shows landing
+    even ONE single-day smoke required finding+fixing 9 distinct real bugs across 2 repos in one long session, and still
+    left an un-root-caused sparse-coverage issue — extending to the full historical range on this live-dispatch-adjacent
+    TradFi ML chain is real multi-file engineering risk, not a cleanly bounded checkable outcome. Also noting (not
+    acting on): `locked_by: live-defi-rollout` textually blocks only archival per `PLAN_FORMAT.md`, not an `assigned_vm`
+    frontmatter edit — the prior marker's "reclassification would be a state change on a locked doc" reasoning isn't
+    literally supported, though it doesn't change today's verdict (kept NA on the engineering-risk merits above, not the
+    lock). Doc stays NA; 7 open todos remain (was 8).
 - **na-eligibility-audit 2026-07-30** (tradfi tranche): **KEEP-NA, valid.** All 8 open todos read end-to-end.
   `locked_by: live-defi-rollout` is set (archival blocked; reclassification would be a state change on a locked doc). On
   content: 4 items are self-tagged `BLOCKED-UPSTREAM` with a live, still-unfixed tracker

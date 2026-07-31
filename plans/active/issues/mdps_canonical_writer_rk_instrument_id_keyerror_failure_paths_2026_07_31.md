@@ -30,10 +30,13 @@ related:
   ]
 created: 2026-07-31
 parent_epic: infrastructure_master
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 priority: P1
 estimate_class: refactor
+estimate_baseline_ai_days: 0.2
+estimate_calibrated_ai_days: 0.08
+assigned_role: backend_engineer
 drift_direction: advance-code
 depends_on: []
 source:
@@ -118,6 +121,22 @@ row_key for aggregate bundle writes" (2026-07-31 03:03:24Z).
 
 ## Progress Log
 
+- **na-eligibility-audit 2026-07-31** (tradfi tranche, dispatch agt-6d6eaf): **RECLASSIFY — `assigned_vm: NA` →
+  `planning`.** Doc's own filing note (below) already flagged this as review-agent-assessed precisely-scoped/AO-eligible
+  and invited exactly this flip; independently re-verified rather than rubber-stamped. Sole open todo is a single-file,
+  worker-determinable fix with no open design call: the correct safe-access pattern (`rk.get("instrument_id", "")`) is
+  already established 5x in the same file (lines 454, 475, 496, 548, 566), so applying it to the 2 remaining unsafe call
+  sites is mechanical; the stale comment fix is a factual correction, not a design choice; the regression test has a
+  fully stated done-when. Re-verified live against the current repo checkout (HEAD `bcfec9543`, ~8.5h newer than this
+  doc's own 05:05Z check): both `rk["instrument_id"]` call sites (lines 442, 596) still present and unfixed — doc's
+  claims still 100% current. Shared conflict-check
+  (`/codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md` § 3) run and CLEARED: no active
+  `assigned_vm: planning` plan in `parent_epic: infrastructure_master` claims this ground, no sibling batch/finalize doc
+  drafted this run overlaps, and `tradfi_consolidated_closeout_2026_07_18.md`'s own Track content does not mention this
+  fix. Filled previously-missing `assigned_role: backend_engineer` (per the `[BACKEND]` tag mapping) and
+  `estimate_baseline_ai_days: 0.2` / `estimate_calibrated_ai_days: 0.08` (refactor class, single-file bounded fix). Per
+  `check_finalize_plan_coverage.py` (globs `plans/active/*.md` only, not `issues/`), this `doc_type: issue` doc is
+  structurally exempt from the companion finalize-plan requirement — none authored.
 - 2026-07-31 05:05Z (main-agent agt-9f21bc): filed from review-agent (slot-1) msg 2841 after live re-verification of
   both lines and the removing commit. Set `assigned_vm: NA` per the ASK-BEFORE-CREATING hard rule; operator notified
   that the review agent assessed this precisely-scoped/AO-eligible and can flip `assigned_vm: planning` +

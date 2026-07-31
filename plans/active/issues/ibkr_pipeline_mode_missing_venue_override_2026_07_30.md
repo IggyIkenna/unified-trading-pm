@@ -24,13 +24,13 @@ related:
   - plans/archive/issues/mtds_ungated_test_families_2026_07_17.md
 created: 2026-07-30
 parent_epic: infrastructure_master
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 priority: P2
 estimate_class: refactor
 estimate_baseline_ai_days: 0.3
 estimate_calibrated_ai_days: 0.12
-assigned_role: backend
+assigned_role: backend_engineer
 drift_direction: none
 source: >-
   Discovered while executing ci_satellite_ao_dispatch_batch2_2026_07_29.md todo 11 ("Widen MTDS's ungated test
@@ -40,6 +40,7 @@ source: >-
 resolved_by:
 locked_by:
 depends_on: []
+sequential: true
 ---
 
 # IBKR tradfi writes mislabeled pipeline_mode=batch_fred
@@ -102,6 +103,22 @@ inside an unrelated test-widening todo.
 
 ## Progress Log
 
+- **na-eligibility-audit 2026-07-31** (tradfi tranche, dispatch agt-6d6eaf): **RECLASSIFY — `assigned_vm: NA` →
+  `planning`.** This doc was filed as a spun-out issue from an `assigned_vm: planning` parent plan's todo
+  (`ci_satellite_ao_dispatch_batch2_2026_07_29.md` todo 11, which explicitly declined to fix it inline) and defaulted to
+  NA per the workspace's own "default is human unless assessed otherwise" authoring rule — nothing in the doc showed
+  that assessment was ever made. All 5 open todos are bounded, worker-determinable, deterministic-outcome engineering
+  work: a scoped census with a stated done-when, two code changes that mirror an EXISTING, live-verified template
+  (`BATCH_FRED`/`BATCH_ECB`/`BATCH_OFR` in `unified_api_contracts` + their `_VENUE_OVERRIDES` entries), a mechanical
+  test un-xfail, and a small bounded conditional follow-up. No open design/judgment call. Shared conflict-check
+  (`/codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md` § 3) run and CLEARED: no active
+  `assigned_vm: planning` plan in `parent_epic: infrastructure_master` claims this ground, no sibling batch/finalize doc
+  drafted this run overlaps, and `tradfi_consolidated_closeout_2026_07_18.md`'s own Track content does not mention
+  IBKR/pipeline_mode. Corrected `assigned_role: backend` → `backend_engineer` (the former is not a valid role in the
+  live `agents/*.md` registry). Added `sequential: true` — todos 2→3→4 are a real ordering chain (UAC enum must exist
+  before the UTL override references it; the test un-xfail needs both). Per `check_finalize_plan_coverage.py` (globs
+  `plans/active/*.md` only, not `issues/`), this `doc_type: issue` doc is structurally exempt from the companion
+  finalize-plan requirement — none authored.
 - **2026-07-30** — Found while executing `ci_satellite_ao_dispatch_batch2_2026_07_29.md` todo 11 (widen MTDS's ungated
   test coverage). Two long-ungated tests (`test_ibkr_equity_bars_write`, `test_partition_path_uses_category_tradfi`)
   asserted `pipeline_mode=batch_databento` for IBKR writes; live re-verification showed the code actually produces

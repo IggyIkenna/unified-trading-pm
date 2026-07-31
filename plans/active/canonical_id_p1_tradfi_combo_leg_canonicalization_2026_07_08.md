@@ -185,6 +185,14 @@ Read in full before touching any todo — this is the concrete acceptance spec, 
 
 ## Progress Log
 
+- **na-eligibility-audit 2026-07-31** (tradfi tranche, dispatch agt-6d6eaf): **KEEP-NA, valid.** 0 open checkboxes
+  (matches tranche-inventory tool), but this doc is a live "prose-only remaining work" case — the entry below already
+  self-flags that it does not genuinely reach 0 open todos (the residual 91-CBOE + 312-DBEQ historical catalog `--apply`
+  reapply). That residual is operator-gated on citation alone: the doc's own "Rollout methodology (operator,
+  2026-07-09)" section (pause-for-confirmation before any unsupervised sweep) explicitly covers it, and a fresher,
+  independent 2026-07-29 pass (`tradfi_satellite_ao_dispatch_batch5_2026_07_29.md`'s own "Deferred — operator-gated"
+  section) re-confirmed the same disposition 2 days ago. No stale items, no duplicate claim, no reclassify — the pending
+  action is a GCS-catalog `--apply` rewrite genuinely requiring the recorded operator go-ahead.
 - **2026-07-30 (tradfi_satellite_ao_dispatch_batch1_finalize reconciliation pass)** — Flipped the Deribit 1-4 leg
   hard-cap checkbox to `[x]`, citing `instruments-service@9416be7d` (verified reachable). This was the doc's only
   remaining `- [ ]` checkbox — but `status` stays `active`, NOT `resolved`: the "Scope migration mechanics" `[x]` item

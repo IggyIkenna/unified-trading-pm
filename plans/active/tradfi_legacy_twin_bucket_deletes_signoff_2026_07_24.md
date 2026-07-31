@@ -173,6 +173,10 @@ restated here.
 
 ## Progress Log
 
+- **na-eligibility-audit 2026-07-31** (tradfi tranche, dispatch agt-6d6eaf): **KEEP-NA, valid.** Sole open checkbox (the
+  legacy-twin bucket DELETE todo) read end-to-end; count matches tranche-inventory tool (1). The delete gate still
+  correctly does not clear — no new dry-run has been re-run since 2026-07-30 (twin-coverage still last-measured at 0%,
+  not the 100% §3a reversibility carve-out requires). Nothing changed since the prior verdict; doc stays NA.
 - **na-eligibility-audit 2026-07-30** (tradfi tranche): **KEEP-NA, valid — 1 stale item CLOSED.** Both open todos read
   end-to-end. Todo 1 (the `cleanup_legacy_twins.py` dry-run) was flipped `[x]` this pass: its stated definition-of- done
   ("dry-run output cited — report path + row count") is met verbatim by this doc's OWN 2026-07-30 Progress Log entry
