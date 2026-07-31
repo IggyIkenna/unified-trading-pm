@@ -457,3 +457,20 @@ those commits landed). The escalation's own repo-blocker list (`GET /api/repo-bl
   `github-glue-runners-instruments-service` is ALSO systematically more contended independent of any one test's
   anti-pattern remains genuinely untested — re-open with a NEW todo (do not reuse this one) if a DIFFERENT,
   non-`gc.collect()`-calling test recurs on this runner post-fix.
+- **2026-07-31** — Another direct-LDR occurrence (no PR involved this time): `cicd` escalation `agt-64f618`
+  (`WALL_TYPE=ldr_qg_failure`, `PR_NUMBER=0`), instruments-service `quality-gates-v2` run `30635120699`
+  (`workflow_dispatch`, started `13:36:14Z`, head SHA `1872cc5418da784176bf0e57a5ae3e4c99e40670`, `QG slice (tests)` job
+  failed after `2h29m42s`). Downloaded the raw job log (`gh api repos/.../actions/jobs/91176925623/logs`) — same
+  `worker_internal_error` → `RuntimeError: Unexpectedly no active workers available` signature as every prior entry, but
+  this time the captured SIGALRM traceback shows `pytest_timeout.py:317 handler` interrupted INSIDE the xdist worker's
+  own message-send path (`execnet/gateway_base.py:577 to_io` → `write` → `outfile.flush()`), not inside any test's own
+  code — the alarm fired while the worker was flushing a result message, not while executing test logic, so no
+  source-level test file/line is even attributable this time (a variant of the same class, not a new mechanism).
+  Confirmed root-fact first, before treating it as resolved: `git log --oneline 1872cc54..HEAD` on the live-defi-rollout
+  clone showed only 2 non-code commits (`e3fc73eb` promote, `2b488f0e` backmerge) between the failing SHA and current
+  HEAD — i.e. **the exact same SHA `1872cc54` was later re-run via `workflow_dispatch` and came back GREEN** (run
+  `30647722258`, `16:35:17Z`, `13m0s`), with zero code changes in between. Current HEAD (`2b488f0e`) is also green (run
+  `30651585942`, `17:32:49Z`, `38s`, content-sentinel skip). Zero open `/api/repo-blockers` entries and zero open PRs
+  for instruments-service at investigation time. Same "orphaned noise / transient worker-crash under contention"
+  conclusion as every prior entry — no code or test change made; the tree was already green by the time of investigation
+  and needed no fix. Slot left clean (0 commits ahead of `origin/live-defi-rollout`, nothing to commit).
