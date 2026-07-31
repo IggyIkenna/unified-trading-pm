@@ -545,10 +545,28 @@ but we cannot currently refetch a past T-24h window. The only odds cron is `uts-
 **Operator 2026-07-18: credentials are available for BOTH live and batch**, so the remaining work is code + config, not
 a credential ask.
 
-- [ ] [CODE] P1. Implement The Odds API `/v4/historical/sports/{sport}/odds?date=<ISO>` adapter leg so past horizon
-      windows can be backfilled; cost per snapshot must be measured before a full-corpus run.
-- [ ] [DATA] P1. Once (E1) exists, backfill the T-24h (and T-1h / T-0) windows for fixtures that currently have no
-      sample there; re-derive odds_features after.
+- [x] ✅ [CODE] P1. **DONE 2026-07-31 — was ALREADY DONE, since 2026-04-11.** This finding's own "no `/v4/historical`
+      support anywhere in the codebase" claim was WRONG even when written (2026-07-18) —
+      `git log -S     "historical/sports"` on
+      `market_tick_data_service/market_interface/adapters/sports/odds_api_adapter.py` shows the historical-endpoint
+      calls (`_discover_fixtures` + `_run_league_fetch_loop`, both hitting `/v4/historical/sports/{sport}/odds`) landed
+      in commit `76c920ba` (2026-04-11), 3+ months before this finding — and it's wired into production via
+      `market_tick_data_service/adapters/umi_tick_provider.py:658` (`download_batch(date=date, data_types=data_types)`),
+      not orphaned code. `sports_satellite_ao_dispatch_batch8_     2026_07_30.md`'s own triage repeated the same wrong
+      "confirmed still absent... 2026-07-30" claim — a grep that somehow missed this file, propagated forward rather
+      than caught. **Cost-per-snapshot, genuinely not previously measured (only formula-derived:
+      `_CREDITS_PER_CALL = 60` = "10 × 3 markets × 2 implicit regions") — now EMPIRICALLY measured**: one real
+      `/v4/historical/sports/soccer_epl/odds` call, `x-requests-remaining` delta before/after = exactly 60 credits,
+      confirming the formula. (repo: market-tick-data-service, verification only — no code shipped, none needed)
+- [x] ✅ [DATA] P1. **DONE 2026-07-31 — backfill + re-derivation already complete, verified via the existing
+      `verify_ml_readiness.py` tool this codebase already has for exactly this check.** `day=2022-04-16` (this finding's
+      own sample date, originally 25/68 fixtures at T-24h / 29/68 at T-1h / 8/68 at T-0) now reads 100% non-NULL at both
+      target horizons (`T-24h`, `T-1h`; 594/594 cells, gate met). Broadened to an 11-day window
+      (2022-04-10..2022-04-20): 10/10 real matchdays 100% ready; the 1 "missing" date (2022-04-12) has ZERO raw odds
+      tick data at all (confirmed via `gcloud storage ls` — genuinely no fixtures that day, honest absence per the
+      adapter's own documented "non-matchday skip" behavior, not a gap). No indication of WHEN/HOW this backfill ran (no
+      commit/plan doc found citing it) — it simply happened, and this checkbox was never flipped to reflect it. (repo:
+      features-service + market-tick-data-service, verification only — data already correct, no re-derivation needed)
 - [ ] [CONFIG] P1. FORWARD fix — start capture earlier and poll often enough that every fixture is sampled in every
       declared horizon window (the observed 53-min slice of a 120-min T-24h window shows current polling is too sparse).
       **2026-07-30 batch8 triage note**: `sports_live_availability_and_source_latency_2026_07_24.md` (updated

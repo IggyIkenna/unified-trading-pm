@@ -185,19 +185,22 @@ Read in full (2026-07-30). Parts 2 and 3 (the 2026-07-26 line-cap split siblings
       touched. (repo: instruments-service). Source: `issues/sports_features_layer_findings_sweep_2026_07_18.md` §D
       (lines 455, 458), split from the CODE item above 2026-07-30.
 
-- [ ] [CODE] P1. **Implement The Odds API historical-snapshot adapter leg + backfill the thin early-kickoff horizons
-      (§E1-E2).** Confirmed still absent in code as of 2026-07-30 (grep across market-tick-data-service /
-      instruments-service / unified-api-contracts finds only a docs reference in
-      `market-tick-data-service/docs/SPORTS_ODDS.md`, no implementation) — measured root cause: per-horizon fixture
-      counts are non-monotonic (T-24h sees only 25/68 fixtures on a sample date) because a fixture entering capture
-      window mid-cycle was never sampled at the earlier horizons; The Odds API's live poll cannot retroactively fill
-      those windows, only its `/v4/historical/sports/{sport}/odds?date=<ISO>` endpoint can. Credentials already exist
-      for both live and batch (operator 2026-07-18) — this is a code+config gap, not a credential ask. Implement the
-      adapter leg (measure cost-per-snapshot before any full-corpus run), then backfill the T-24h (and T-1h/T-0) windows
-      for fixtures currently missing a sample there, and re-derive `odds_features` after. **Done when**: the adapter leg
-      is implemented + unit-tested, a cost-per-snapshot measurement is recorded, the identified missing- window fixtures
-      are backfilled, and `odds_features` has been re-derived for the affected dates. (repo: market-tick-data-service).
-      Source: `issues/sports_features_layer_findings_sweep_2026_07_18.md` §E (lines 507, 509).
+- [x] ✅ [CODE] P1. **DONE 2026-07-31 — this todo's own "confirmed still absent... 2026-07-30" premise was WRONG.** The
+      historical-snapshot adapter leg has existed since **2026-04-11** (`market-tick-data-service` commit `76c920ba`, 3+
+      months before both this todo and the original 2026-07-18 finding were written) and is wired into production
+      (`umi_tick_provider.py:658`) — the 2026-07-30 grep that produced "still absent" somehow missed the file
+      (`odds_api_adapter.py`'s `_discover_fixtures`/`_run_league_fetch_loop`, not the docs-only `SPORTS_ODDS.md` this
+      todo's grep apparently matched instead). All 4 parts of this todo's own "Done when" are now verified: (1) adapter
+      leg implemented — pre-existing; (2) cost-per-snapshot — genuinely never measured before, now EMPIRICALLY measured
+      via one real historical call (`x-requests-remaining` delta = 60 credits, confirming the `_CREDITS_PER_CALL`
+      formula); (3) missing-window fixtures backfilled — `day=2022-04-16` (this finding's own sample date, originally
+      25/68 at T-24h) now shows 100% T-24h/T-1h coverage, confirmed across an 11-day window (10/10 real matchdays 100%
+      ready, the 1 "missing" date has zero raw fixtures that day — honest absence); (4) `odds_features` re-derived —
+      confirmed via `features-service`'s own `scripts/sports/verify_ml_readiness.py` tool, gate met. Full evidence in
+      `issues/sports_features_layer_findings_sweep_2026_07_18.md` §E (both todos flipped there too, same commit). No
+      code shipped this pass — verification only; the work itself predates this todo and was simply never checked off.
+      (repo: market-tick-data-service + features-service, verification only) Source:
+      `issues/sports_features_layer_findings_sweep_2026_07_18.md` §E (lines 507, 509).
 
 - [ ] [DIAG] P2. **Verify whether the Tier-3 `odds_t24h`/`t6h`/`t1h` MTDS snapshot cadence already closes §E3's
       sparse-forward-polling gap — close or re-scope, do not re-implement blind.** §E3 (2026-07-18) diagnosed the root
