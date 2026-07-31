@@ -699,6 +699,20 @@ genuine-UI, out of scope.
       README/docs/coverage-floor treat it as live) and (b) 2FA automation (README/ARCHITECTURE claim IBGA+TOTP "no human
       2FA"; `DEPLOYMENT_GUIDE`/`FIRST_TIME_LOGIN` describe manual GUI/IB-Key login). Needs an operator/owner call on the
       repo's actual status + the canonical 2FA path before the FIX-STALE rewrite can land. (repo: ibkr-gateway-infra)
+      **⏸ PARKED 2026-07-31 (main, Option A of BLK-273ddfda — false prereq `ibkr-owner-decision-made`, priority:999):**
+      dispatch-scope mismatch — this is an owner decision, not worker/main-determinable, so it was churning through
+      workers. Ground-truth captured for the owner (slot-6, so the eventual rewrite need not re-derive it): (a)
+      **STATUS** — every objective signal says LIVE (active README describing a live deployed gateway;
+      actively-maintained `.coverage-floor-exception.md` @2026-03-08, floor 51% / actual 52.38%; on `live-defi-rollout`;
+      active workspace scope); the lone dissent is `QUALITY_GATE_BYPASS_AUDIT.md` L7 "Repo is archived", which reads
+      STALE — but status was deliberately owner-gated (an intent to wind IBKR down would not be visible in code), so NOT
+      overridden. (b) **2FA** — the README already reconciles the layering (`docker-compose.ibga.yml` IBGA
+      fully-automated TOTP = primary L62; `docker-compose.yml` gnzsnz manual 2FA = fallback L63; `DEPLOYMENT_GUIDE` Step
+      3 frames GUI login as First-Time / One-Time); the one residual is whether the IBGA path is truly zero-touch or
+      still needs that one-time GUI bootstrap (`DEPLOYMENT_GUIDE` L58/L189 + `FIRST_TIME_LOGIN.md` say a first-login IS
+      required on first start / re-provision). **UNPARK**: owner answers (a)+(b) → set `ibkr-owner-decision-made=true`,
+      restore priority 50 + `priority_override:     false`, reload → apply the FIX-STALE rewrite reconciling all 4 ibkr
+      docs per their call. Do NOT proceed before that.
 
 ### deployment-service refreshed registry (2026-07-27) — supersedes the stale Appendix-A `(~52)` entry
 
