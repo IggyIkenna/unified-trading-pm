@@ -113,17 +113,24 @@ locked_since:
    `NRestarts=0`/`ActiveState=active`/`SubState=running`.
 4. Sent a live operator directive to slot 16 (`POST /api/slots/16/message`) about the script-side memory risk —
    superseded by slot 16's own independent root-cause + fix, tracked in the sibling doc referenced above.
+5. **[BACKEND] P1 (below) shipped**: `agent-orchestrator@90a2b2f` extends `ao-self-pull.sh` to also run
+   `install-orchestrator-service.sh --operator ubuntu --restart` unconditionally every tick, after the existing
+   code-pull/restart logic. That install script was already idempotent (diffs the rendered SSOT against the installed
+   unit, no-ops loudly when identical, only restarts when it actually applies a change) — no new diff-detection logic
+   needed, just wiring the existing self-heal-capable command into the cron loop. **Verified end-to-end, live, twice**:
+   reintroduced `--reload` into the deployed unit file only (simulating the exact drift this doc describes), then ran
+   the full `ao-self-pull.sh` exactly as root's crontab invokes it
+   (`sudo ORCHESTRATOR_VM_ID=planning ORCHESTRATOR_VM_ROLE=planning bash scripts/ao-self-pull.sh`) — both times it
+   detected the drift, reinstalled the correct unit, and restarted cleanly within the same tick, with the live process
+   (`/proc/<pid>/cmdline`) and `/api/mode` confirmed healthy afterward. First test done in isolation before the commit;
+   second test run against the real committed code via the actual cron entrypoint, clean tree, no manual intervention
+   beyond simulating the drift.
 
 ## What is NOT yet done
 
-- [ ] [BACKEND] P1. Close the deploy-currency gap for the systemd unit file itself, the same way `rescale-memory-cap.sh`
-      already closed it for the cgroup memory cap (`orchestrator_api_full_outage_stale_cgroup_memory_cap_2026_07_30.md`
-      P2, shipped precedent). Direction: extend `ao-self-pull.sh` to diff `scripts/orchestrator.service` against the
-      installed `/etc/systemd/system/orchestrator.service` (or compare a checksum) each tick, and re-run
-      `install-orchestrator-service.sh --restart` when they drift — best-effort, no-op when already current,
-      piggybacking on the existing ~15-min cron tick exactly like the memory-cap rescale does. Done when: a
-      unit-file-only commit (no app-code change) is proven to reach this VM within one cron tick, with no human running
-      `install-orchestrator-service.sh` by hand.
+- [x] ✅ [BACKEND] P1. **DONE 2026-07-31, `agent-orchestrator@90a2b2f`.** See "Fix applied" item 5 above for the shipped
+      diff + live end-to-end verification (drift simulated twice, self-healed within one tick both times via the real
+      cron entrypoint, API confirmed healthy after each).
 - [ ] [REVIEW] P3. Consider whether `/tmp` (2GB tmpfs, shared across every slot's ad-hoc scripts that don't set
       `TMPDIR`) needs either a size bump or a standing cleanup sweep — it silently filled to 100% from two orphaned
       files unrelated to any tracked epic, and nothing currently enforces the one-off-script self-cleanup convention
@@ -143,3 +150,7 @@ locked_since:
   operator report ("agent-orchestrator down 15+ min"). See "Fix applied" above for exact evidence per step. Both
   findings in this doc (stale unit, full `/tmp`) are fixed as of this session; the `[BACKEND] P1` durable-fix todo and
   the `[REVIEW] P3` monitoring todo remain open.
+- **2026-07-31 (same session, follow-up)**: closed `[BACKEND] P1` — `agent-orchestrator@90a2b2f`, live end-to-end
+  verified twice (drift simulated, self-healed within one cron tick both times, API confirmed healthy after each).
+  `[REVIEW] P3` (`/tmp` sizing/monitoring) intentionally left open — it's an explicit "consider whether" judgment call
+  per its own todo text, not a bounded fix; routing to the operator rather than picking a direction unilaterally.
