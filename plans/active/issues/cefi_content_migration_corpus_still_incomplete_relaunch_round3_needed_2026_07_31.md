@@ -132,14 +132,14 @@ needs an explicit next relaunch round, and none is currently dispatched.
       (a)/(b)/(c) and shards 16/17/21/41 get their round-4 relaunch (or are confirmed covered by the sibling doc's fix).
 
       **Corroborating signal 2026-07-31 13:56Z (review agt-8ce066, gcloud-verified — a DIFFERENT shape than the
-              same-shard-memory-death pattern above):** shards 43 + 44, freshly relaunched this round at 13:39:58Z / 13:40:22Z,
-              were BOTH preempted at 13:51:37Z / 13:51:38Z — ~12 min after launch and only ~2 min after their own T+10 alive-check
-              (13:49:30Z), confirmed via `gcloud compute operations list` `compute.instances.preempted` (ops
-              `systemevent-1785505897347-…` / `systemevent-1785505907671-…`), not inference; 11/13 relaunched shards remain
-              running. A FRESH launch dying fast points to SPOT-capacity pressure in `asia-northeast1-c` today (fleet-wide), NOT a
-              shard-specific memory/data issue — so the operator decision should ALSO weigh (d) a zone/capacity check or a
-              one-shot `--on-demand` fallback (env `ON_DEMAND=true`) for the next relaunch, not only the memory-ceiling options
-              (a)/(b). Non-blocking: 43/44 are idempotent SPOT shards and should re-run cleanly on round-4.
+                  same-shard-memory-death pattern above):** shards 43 + 44, freshly relaunched this round at 13:39:58Z / 13:40:22Z,
+                  were BOTH preempted at 13:51:37Z / 13:51:38Z — ~12 min after launch and only ~2 min after their own T+10 alive-check
+                  (13:49:30Z), confirmed via `gcloud compute operations list` `compute.instances.preempted` (ops
+                  `systemevent-1785505897347-…` / `systemevent-1785505907671-…`), not inference; 11/13 relaunched shards remain
+                  running. A FRESH launch dying fast points to SPOT-capacity pressure in `asia-northeast1-c` today (fleet-wide), NOT a
+                  shard-specific memory/data issue — so the operator decision should ALSO weigh (d) a zone/capacity check or a
+                  one-shot `--on-demand` fallback (env `ON_DEMAND=true`) for the next relaunch, not only the memory-ceiling options
+                  (a)/(b). Non-blocking: 43/44 are idempotent SPOT shards and should re-run cleanly on round-4.
 
 ## Progress Log
 
@@ -240,3 +240,16 @@ needs an explicit next relaunch round, and none is currently dispatched.
   possible round-4 belongs with whoever owns that follow-up, same as the existing `[OPERATOR]` item's posture for
   16/17/21/41. Leaving the parent doc's BLOCKED-ON checkbox unflipped — genuinely still blocked, not a redundant
   re-check.
+- **2026-07-31T14:19Z (worker, slot 4, `cefi_content_migration_fleet_half_incomplete-012`, redispatch of the same
+  parent-doc BLOCKED-ON todo)**: fixed the recurring `gcloud` active-identity poisoning (drifted to
+  `github-actions-deploy` again) back to `unified-trading-sa` first. Bounded re-check (not a full corpus-wide re-grep,
+  same reasoning as the prior slot-4 entry — 4 shards are still unrelaunched pending the `[OPERATOR]` decision, so 44/44
+  isn't reachable yet regardless): `gcloud compute instances list` confirms the same 9/13 round-3 shards are still
+  `RUNNING` (13, 15, 18, 20, 22, 23, 24, 25, 42) with no new deaths since the ~14:0xZ check, and the same 8 shards (16,
+  17, 19, 21, 40, 41, 43, 44) remain with no live VM. Pulled each running shard's `run.log` tail: all 9 show a genuinely
+  ADVANCING `Progress:` counter (e.g. shard 13 at 25,000/292,434, shard 42 at 14,000/73,965) — the benign
+  `WARNING No progress in the last poll window` lines on shards 18/23/25 are the same known per-poll-window heuristic
+  already documented as non-predictive (confirmed by pulling each one's actual last 3 `Progress:` lines directly, which
+  ARE climbing). No stalls, no new failures — this is a healthy-but-slow positive check, not a regression. **Still not
+  44/44; done_definition remains unmet.** Not relaunching 19/40/43/44 or the `[OPERATOR]`-gated 16/17/21/41 myself, same
+  out-of-scope reasoning as the prior entry. Leaving the parent doc's BLOCKED-ON checkbox unflipped.
