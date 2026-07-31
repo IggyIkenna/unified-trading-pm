@@ -26,7 +26,7 @@ locked_by: live-defi-rollout
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
-last_updated: 2026-06-27
+last_updated: 2026-07-31
 ---
 
 # Capability wizard — analysis findings (bugs / conflicting truths / dual implementations)
@@ -646,7 +646,7 @@ F49–F53 are FIXED as of 2026-06-14); trust this table. Status taxonomy: **FIXE
 | Balances                       | F40 (AO writes runtime state into tracked `accounts.json`)                                                                                                    | FIXED agent-orchestrator@6385056                    | agent-orchestrator                                                                                                                  |
 | Reconciliation                 | F1/F2/F3 (service-set truths; coverage warns-not-fails; v2 enums invisible)                                                                                   | FIXED (Phase-0)                                     | —                                                                                                                                   |
 | Reconciliation                 | F12 (config-registry regen empties destructively on non-workspace-venv host)                                                                                  | OPEN (environmental)                                | —                                                                                                                                   |
-| Circuit breakers / kill-switch | F17 (predicates runtime-fired, not engine-introspectable), F16 (`log_event(service_name=)` TypeError on GCS-config path)                                      | LOGIC-FREEZE                                        | strategy-service                                                                                                                    |
+| Circuit breakers / kill-switch | F17 (predicates runtime-fired, not engine-introspectable), F16 (`log_event(service_name=)` TypeError on GCS-config path)                                      | FIXED (F17 2026-07-31; F16 2026-07-30)              | strategy-service@915ff464 (F17), strategy-service@31ee01ec (F16)                                                                    |
 | Circuit breakers / kill-switch | F49 (`custody_provider` node-kind was a dumping ground incl. kill_switch)                                                                                     | FIXED (Waves A/B/C)                                 | —                                                                                                                                   |
 | Redundancy / duplication       | F6, F41, F44, F51, F52                                                                                                                                        | FIXED                                               | —                                                                                                                                   |
 | Registry under-coverage        | F50 (fund_structure), F52 (data_source split), F53 (ml_model 1→8 + signal-grounded edges)                                                                     | FIXED (Wave B/C 2026-06-14)                         | manifest 574/2433                                                                                                                   |
@@ -787,8 +787,31 @@ F49–F53 are FIXED as of 2026-06-14); trust this table. Status taxonomy: **FIXE
       call in the same file. Added regression tests (`TestAdapterFetchFailedLogging` in
       `tests/unit/test_strategy_config_loader.py`) verified to fail against the pre-fix call shape and pass against the
       fix; `quality-gates.sh` green on commit 31ee01ec.
-- [ ] [SPEC] P3. **F17 — expose kill-switch/stop-loss predicates for engine introspection** (currently runtime-fired
-      only — invisible to the capability graph). Post-unfreeze enhancement. Target: strategy-service.
+- [x] ✅ [SPEC] P3. **F17 — expose kill-switch/stop-loss predicates for engine introspection** (currently runtime-fired
+      only — invisible to the capability graph). Post-unfreeze enhancement. Target: strategy-service. — **DONE
+      strategy-service@915ff464.** FREEZE STATUS: verified lifted (same basis as F27/F47/F48/F33-F37 above —
+      `plans/epics/strategy_master.md` carries zero freeze language). Added
+      `BaseArchetypeEngineV2.declare_kill_switch_predicates()` (`engine/strategies/v2/base.py`), a read-only
+      introspection hook following the existing `declare_leg_portfolio_state()`/`declare_pending_dust_basket()`
+      "declare, don't act" convention — it never touches `killed`/`kill_reason`/fires `on_kill_switch`. Backed by a new
+      `KillSwitchRulesEngine.predicate_status_for_archetype()` (`risk/v2/kill_switch_rules.py`) returning a
+      `KillSwitchPredicateStatus` (`reason`, `threshold`, `current_value`, `distance_to_trigger`, `fired`) per
+      registered predicate (drawdown + position-breach), reusing the exact `current >= threshold` inequality
+      `evaluate_archetype_breach()` already applies so the reported `fired` flag can never disagree with the real
+      rules-engine decision. The engine has no NAV/peak-drawdown history of its own (that state is owned by
+      position-balance-monitor's `PeakNavTracker`/`PortfolioRiskState`, one layer up) — callers supply the
+      already-computed current metrics; omitting one reports `current_value`/`distance_to_trigger` as `None` (honest
+      "not observed") instead of guessing. **Scope note**: only the two archetypes with a registered threshold today
+      (`CARRY_STAKED_BASIS`, `ARBITRAGE_PRICE_DISPERSION`) get non-empty predicate lists — no `DAILY_LOSS_BREACH`
+      threshold is registered anywhere in strategy-service yet, so that half of the e2e-testing scenario stepper's
+      `introspection_gap` (`e2e-testing/scripts/strategy/_stepper_engine.py` `build_trigger_evaluations()`) remains a
+      real config gap, not an engine-exposure gap — wiring the stepper to consume the new method + registering a real
+      daily-loss threshold are separate follow-ups (e2e-testing + strategy-service config, not part of this SPEC's
+      target repo). New tests: 8 in `tests/risk/unit/v2/test_v2_risk.py` (predicate math: unregistered archetype,
+      no-current-values honest gap, below/at/above-threshold distance signs, `fired` parity with
+      `evaluate_archetype_breach`) + 3 in `tests/unit/engine/strategies/v2/test_kill_switch_propagation.py`
+      (engine-level: distance reporting, no-current-values gap, `fired=True` predicate never mutates `engine.killed`).
+      `quality-gates.sh` green (5657 passed, 0 failed; 74.0% coverage floor, 83.24% actual).
 
 > The **CeFi-margin-traceability cluster** (CeFi margin emitter DeFi-only · `margin_health` stub · no CeFi balance
 > tracker · collateral runtime consumer) is already tracked as `- [ ]` todos in
