@@ -399,12 +399,18 @@ not a mechanical column-list copy.
       (`plans/audit/results/     available_at_fill_rate_audit_2026_07_13.py:51`,
       `scripts/qg/honest_coverage_ratchet.py:66`): lower-urgency CI/audit-tooling call sites; project if convenient when
       touching these files for other reasons, not worth a dedicated dispatch on their own.
-- [ ] [SCRIPT] P2. **unified-trading-pm** — author a QG check (mirroring the existing writer-side
-      `check_manifest_writer_missing_write_before_return.py` pattern) that flags a NEW bare
-      `read_availability_index(bucket)` call site with no `columns=`/`filters=` kwarg in production (non-test,
-      non-scripts) code, baseline-ratcheted against the current corpus so existing bare calls don't block CI but no NEW
-      ones can land silently. This closes the "no enforcing gate exists" gap for good, not just this one-time audit's
-      findings.
+- [x] ✅ [SCRIPT] P2. **DONE 2026-07-31 (slot-5, checkbox flip verified slot-9)** — `unified-trading-pm@dbce7a24c`.
+      **unified-trading-pm** — added `scripts/quality_gates/check_bare_read_availability_index.py` (AST-walk,
+      production-code-only, mirrors `check_manifest_writer_missing_write_before_return.py`'s shrinking-ratchet pattern
+      exactly: `Finding`/`BaselineEntry` dataclasses, `baseline_key = (repo, file, line, function)`,
+      `# QG-allow: bare-read-availability-index` inline escape) + a bootstrapped 24-entry
+      `read_availability_index_bare_call_baseline.yaml` (classified `wrapper_alias_already_projected_internally` /
+      `intentionally_bare_verbatim_schema_required` / `pending_triage`) + `test_check_bare_read_availability_index.py`
+      regression tests + `base-service.sh` STEP 5.106 wiring. Re-verified 2026-07-31 (slot-9): re-ran a full
+      workspace-wide sweep (`--workspace-root <ws>`, no `--scope`) against current HEAD post-FF-pull — output is exactly
+      the 24 baselined WARNs enumerated in the yaml, `0 new occurrences`, confirming the baseline still matches reality
+      after the intervening commits since bootstrap. This closes the "no enforcing gate exists" gap — a NEW bare call
+      site now fails CI instead of landing silently.
 - [ ] [SCRIPT] P3. **features-service** — investigate whether
       `features_service/volatility/core/orchestration_service.py`'s `VolatilityFeaturesOrchestrator` class is dead code:
       it defines a near-identical (but simpler, no `asset_group`/ `pipeline_mode` derivation) twin of
