@@ -326,14 +326,25 @@ concurrent workers do not collide on this file.
       `grep -n "run_ruff_count_all" scripts/quality_gates/check_ruff_rule_ratchet.py`). Source:
       `archive/issues/ci_test_content_and_tooling_speed_findings_2026_07_28.md` (§ tooling speed) — this batch2 todo's
       citation was drafted 2026-07-29, after the fix had already shipped, and had simply gone stale.
-- [ ] [SCRIPT] P3. **Dead-code cleanup: 3 confirmed-stale deletions.** (a) `execution-service` — re-verify ~40
-      files/~10,082 lines importing a pre-refactor module path are still genuinely dead, then delete; (b)
-      `unified-trading-library` — delete the already-skip-marked dead test importing a moved `ConfigReloader` path; (c)
-      `e2e-testing` — fix the stale `SERVICES` arrays in `run-full-pipeline.sh` referencing archived pre-merge
-      `features-*-service` repos. **Done when**: (a)'s re-verification is recorded before deletion (per "delete
-      deprecated code, no shims" — confirm dead first), all three repos' `quality-gates.sh` stay green post-delete, and
-      (c)'s `SERVICES` array matches the live repo topology. Source:
-      `archive/issues/ci_test_content_and_tooling_speed_findings_2026_07_28.md` (§ dead code).
+- [x] ✅ [SCRIPT] P3. **CONFIRMED ALREADY SHIPPED (verified 2026-07-31, slot 14) — no new code change needed; this
+      todo's citation predates the fix, same stale-citation shape as the two todos above.** The source issue doc
+      (`archive/issues/ci_test_content_and_tooling_speed_findings_2026_07_28.md`, archived, `status: resolved`) already
+      recorded all 3 parts `[x]` done 2026-07-29 — re-verified independently against the live repos rather than trusting
+      the doc text: (a) `execution-service@21486f89026c79b509fec6906ee5146028f1b716` — confirmed an ancestor of
+      `live-defi-rollout`; `tests/live/`, `tests/context7/`, `tests/scripts/` are gone from disk, and
+      `tests/validation/` retains only `test_freshness_gate.py`/`__init__.py` (`verify_live_infrastructure.py`, the one
+      dead file in that dir, is deleted) — matches the source doc's own re-verification note exactly (51 files / 13,955
+      lines). (b) `unified-trading-library@2e39d98b0f73eab56eccecdfa85daded3baa2600` — confirmed an ancestor;
+      `grep -n "TestConfigReloaderReplayAt"` on `tests/config_interface/unit/test_persistence.py` returns nothing — the
+      skip-marked class is gone, and the only remaining `ConfigReloader`-adjacent hit in the repo is the unrelated, live
+      `config_interface/config_reloader_base.py` import (`ConfigReloaderBase`, a different symbol). (c)
+      `e2e-testing@2d2f3ac3c3c671ba4202f017ccd9e85ca53cbdd1` — confirmed an ancestor; `grep` for
+      `features-{sports,cefi,tradfi,prediction,defi}-service` across `scripts/*/run-full-pipeline.sh` returns only a
+      code comment noting the repos were archived+merged, not a live stale reference — matches the source doc's
+      "repointed to `features-service:features_service.<family>`" description. No `quality-gates.sh` re-run needed since
+      no code changed in this session; the source doc's own 2026-07-29 shipping note already recorded each repo's gate
+      green at the time. Source: `archive/issues/ci_test_content_and_tooling_speed_findings_2026_07_28.md` (§ dead
+      code).
 - [x] ✅ [BACKEND] P1. **Widen MTDS's ungated test coverage — fix + widen `PYTEST_UNIT_DIR`.** —
       `market-tick-data-service@4849d4f6`. Real failure count had DRIFTED further since this doc's 2026-07-17 baseline
       (22 real failures) to 35 by 2026-07-30 (13 more days of ungated churn) — all 35 fixed against the CURRENT prod
