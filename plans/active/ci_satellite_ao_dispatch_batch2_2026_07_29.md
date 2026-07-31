@@ -403,19 +403,22 @@ concurrent workers do not collide on this file.
       via a real schedule-triggered run appearing within 48 hours of shipping. **Done when**: (a) records a root cause
       (or a documented, GH-support-escalated absence of one), and (b)'s fix is verified by an actual schedule-fired run
       post-ship. Source: `issues/plan_health_agent_dead_schedule_trigger_2026_07_27.md` (todos 1-2).
-- [ ] [DOC] P2. **`monitoring_control_plane_master_2026_06_10.md` reconciliation + one bounded status check.** (a)
-      Reconcile G3 (manifest-consolidator-health, still literally `- [ ]` since 2026-06-12) against what actually
-      shipped: `unified_deployment_health_cockpit_2026_06_23` (status complete) delivered the underlying capability, and
-      `consolidator_throughput_backlog_monitor_2026_07_09` (active, cross-cutting tranche batch2) extended it further —
-      close G3 against these with an explicit cross-reference, or re-scope it to whatever residual gap remains once
-      those two are read; (b) re-verify the Deferred-work row citing `cicd_contract_hardening_2026_06_01.md`'s (now
-      ARCHIVED) "promote system-integration-tests LDR → main" todo — check whether the routine LDR→main drain has since
-      promoted `system-integration-tests` to `main`, and if not, promote it. **Explicitly excludes** the Rollout-ratchet
-      panels / G4 items (UI-touching, needs a `[UI]`-capable role + `pw:L2` gate, this batch's `assigned_role` is
-      `cicd`) and the "Runtime-level deploy signal v2" P0 item (scope too open-ended for a bounded todo as currently
-      written — see `## Escalated to the operator`) — both deferred. **Done when**: G3 is either closed-with-citation or
-      re-scoped with a stated residual, and (b)'s promotion status is recorded (and acted on if still pending). Source:
-      `monitoring_control_plane_master_2026_06_10.md` (G3 line 429, Deferred-work row line 622).
+- [x] ✅ [DOC] P2. DONE 2026-07-31 — unified-trading-pm (this doc-flip commit).
+      **`monitoring_control_plane_master_2026_06_10.md` reconciliation + one bounded status check.** (a) Reconciled G3
+      (manifest-consolidator-health) against what actually shipped: `unified_deployment_health_cockpit_2026_06_23`
+      (status complete) delivered the underlying standing-element + `assert_consolidator_healthy` state surface, and
+      `consolidator_throughput_backlog_monitor_     2026_07_09` (active) extended it further with a per-AG
+      backlog/throughput view on the same cockpit endpoint — G3 closed-with-citation (`- [x] ✅` at
+      monitoring_control_plane_master.md line 429), no residual gap: both the "standing element" and the
+      `_index`-age/per-VM-shard-count surface exist and are live. (b) Re-verified the Deferred-work row citing
+      `cicd_contract_hardening_2026_06_01.md`'s (now ARCHIVED) "promote system-integration-tests LDR → main" todo: the
+      routine LDR→main drain HAS already promoted it — `system-integration-tests@main` HEAD `4d0b0e7` contains `6ee429a`
+      (the SIT report-back commit), and `origin/main:.github/workflows/full-workspace-sit.yml` carries the live
+      `sit-passed`/`sit-failed` dispatch step — no action needed, row updated to ✅ RE-VERIFIED
+      (monitoring_control_plane_master.md Deferred-work table). Excluded per scope: the Rollout-ratchet panels / G4
+      items (UI-touching, needs `[UI]` role) and the "Runtime-level deploy signal v2" P0 item (open-ended, needs a
+      scoping pass) — both stay deferred per `## Escalated to the operator`. Source:
+      `monitoring_control_plane_master_2026_06_10.md` (G3, Deferred-work row).
 
 ## Deferred
 
