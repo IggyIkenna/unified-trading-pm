@@ -156,6 +156,52 @@ sports-tranche-owned).
       `plans/archive/issues/prediction_arb_live_execution_bridge_2026_07_20.md` (item [5]). **Done when**: back+lay both
       persist for a sampled Betfair market and the source doc's item [5] is marked shipped with the commit SHA.
 
+      **Partial progress 2026-07-31 (slot 7, backend_engineer) — read-side shipped + tested; live capture confirmed
+          BLOCKED-CREDENTIALS, NOT a design gap.** Researched the full chain before writing code: `betfair_yes_bid` is
+          computed in `features-service/features_service/cross_instrument/app/calculators/prediction_cross_venue_betfair.py`
+          (`_betfair_yes_bid_ask`), hardcoded to `None` because the persisted sports odds ticks (MTDS's Odds-API aggregator
+          path) are BACK-ONLY — the kernel's SELL-Betfair edge (`prediction_cross_venue_dispersion.py::_edge_sell_betfair_expr`)
+          was ALREADY wired to consume a non-null bid the moment one appears (per its own docstring). **Shipped
+          (`features-service@d792f421`, full `quality-gates.sh` green)**: extended `_read_betfair_odds`/
+          `_betfair_yes_bid_ask` to compute `betfair_yes_bid` from an optional `lay_price` column via the SAME de-vig math
+          as the existing back-side ask, ONLY when a COMPLETE lay book is present (a lay price for every runner the back
+          book carries — a partial book is treated as honest-absent, never a distorted overround). Fully backward
+          compatible: absent `lay_price` (today's real capture) keeps `bid=None` exactly as before — verified via 47 unit
+          tests (7 new: `_read_betfair_odds` lay-population + `_betfair_yes_bid_ask` bid-computation + one END-TO-END test
+          proving `xv_edge_sell_betfair` actually lights up non-null through the full dispatch pipeline once a synthetic
+          complete back+lay book is fed in — the concrete proof this todo's kernel-wiring claim was correct).
+
+          **Why NOT closed**: the todo's own done-when needs back+lay to persist "for a sampled Betfair market" — i.e. a
+          REAL live capture, which requires the actual Betfair Exchange API (`listMarketBook`, `availableToLay` — already
+          scaffolded, unused, in `market-tick-data-service/market_tick_data_service/market_interface/adapters/sports/
+          betfair_adapter.py`, confirmed via research to already parse both sides). That call needs a session token.
+          **Confirmed BLOCKED-CREDENTIALS, not self-serviceable**: checked GSM directly (via `unified-trading-sa`
+          impersonation, not the ambient CI identity, which lacks `secretmanager.secrets.list`) — only 3 Betfair secrets
+          exist (`betfair-api-key`, `betfair-app-key`, `betfair-username`); NO `betfair-session-token` (the exact secret
+          name execution-service's own `sports_execution/routing.py::_build_betfair` already expects and can't find
+          either — execution-service's real-money Betfair execution path is ALSO not live today for the same reason), no
+          password secret, no cert-login secret. The MTDS `betfair_ws.py` streaming connector's own docstring independently
+          confirms this: "BLOCKED-CREDENTIALS — 2026-07-07... requires a paid Developer app-key + SSO sessionToken — no
+          public tier." This is a genuine external-credential gap (operator/account-holder action — either add a password
+          secret for interactive login or provision cert-based login), not a role/IAM gap I can self-grant per the
+          cloud-identity-self-service rule. New follow-up todo below tracks the credential ask + the actual live-wiring
+          once it lands; this todo stays open (unchecked) rather than falsely marked done, per the honest-completion rule.
+
+- [ ] [OPERATOR] P3. **New, opened 2026-07-31 by the Betfair back+lay todo above.** Provision a live Betfair session
+      token so the real Exchange API (`listMarketBook`) can be called — needed for BOTH this satellite plan's
+      back+lay-persistence todo above AND execution-service's own real-money Betfair execution path
+      (`sports_execution/routing.py::_build_betfair` already expects a `betfair-session-token` GSM secret and can't find
+      it either — confirmed via direct GSM enumeration, not inference). Only `betfair-api-key`/`betfair-app-key`/
+      `betfair-username` exist; no password secret, no cert-login material. Two paths: (a) add a `betfair-password`
+      secret + implement the existing `betfair_adapter.py::authenticate(username, password)` interactive-login refresh
+      on a schedule (session tokens expire ~4-24h per Betfair's own docs — needs a refresh cron, not a one-time call),
+      or (b) provision cert-based login (a client cert + key from the Betfair account holder) — an operator/account
+      decision on which auth model to use, not a worker judgment call. **Done when**: a working `betfair-session-token`
+      is obtainable (either path), unblocking BOTH the back+lay-persistence todo above (repo: market-tick-data-service,
+      wire `betfair_adapter.py` into `factory.py`'s `VENUE_REGISTRY` + persist a `lay_price` column, then re-run this
+      module's live-verification step) and execution-service's real-money Betfair path. Repos: market-tick-data-service,
+      execution-service.
+
 - [x] ✅ [INFRA] P1. **DONE (launch phase) 2026-07-30 — 4 SPOT VMs.** Launch the historical prediction re-backfill under
       the widened catalogue, sharded across several SPOT VMs, full 2025-03-14→today range. RULED 2026-07-28 GO (per the
       source doc's own latest dated section) — no operator decision remains. Qualifies for the safe-idempotent VM-launch
@@ -200,29 +246,29 @@ sports-tranche-owned).
       captured evidence, and both source-doc todos are flipped citing the SHAs/evidence.
 
       **Todo 1 DONE 2026-07-31**: both secrets provisioned + verified non-empty and byte-identical to source (evidence
-                              in the source doc). **Todo 2 BLOCKED-OPERATOR-DECISION 2026-07-31** — found a real conflict this todo's own text
-                              doesn't resolve: this codebase's `OperationalMode.PAPER` never calls any real venue API (routes everything
-                              through a simulated `PaperBettingAdapter` — `execution_service/adapters/sports_factory.py`'s `_PAPER_VENUE_KEYS`
-                              includes `kalshi`), so "paper order" cannot mean that operational mode. `KalshiAdapter`'s default `base_url` is
-                              `https://api.elections.kalshi.com` — Kalshi's LIVE production host, which literally matches this todo's own
-                              "elections-subdomain host" instruction (there's a separate `KALSHI_DEMO_BASE =
-                              "https://demo-api.kalshi.co"` the code supports but does not default to). The operator's 2026-07-28 ruling on the
-                              source doc explicitly scoped itself to the secret-reshape decision and states that step "does not touch the
-                              exchange side at all" — it never separately ruled on the safety/authorization of todo 2 actually placing a live
-                              order with real funds.
+                                  in the source doc). **Todo 2 BLOCKED-OPERATOR-DECISION 2026-07-31** — found a real conflict this todo's own text
+                                  doesn't resolve: this codebase's `OperationalMode.PAPER` never calls any real venue API (routes everything
+                                  through a simulated `PaperBettingAdapter` — `execution_service/adapters/sports_factory.py`'s `_PAPER_VENUE_KEYS`
+                                  includes `kalshi`), so "paper order" cannot mean that operational mode. `KalshiAdapter`'s default `base_url` is
+                                  `https://api.elections.kalshi.com` — Kalshi's LIVE production host, which literally matches this todo's own
+                                  "elections-subdomain host" instruction (there's a separate `KALSHI_DEMO_BASE =
+                                  "https://demo-api.kalshi.co"` the code supports but does not default to). The operator's 2026-07-28 ruling on the
+                                  source doc explicitly scoped itself to the secret-reshape decision and states that step "does not touch the
+                                  exchange side at all" — it never separately ruled on the safety/authorization of todo 2 actually placing a live
+                                  order with real funds.
 
-                              **Question**: how should todo 2 be executed?
+                                  **Question**: how should todo 2 be executed?
 
-                              A: Use Kalshi's demo API host (`KALSHI_DEMO_BASE`) instead of the live default — genuinely risk-free, but
-                              diverges from this todo's literal "elections-subdomain host" text, and needs confirming the demo host accepts
-                              the same provisioned credentials before trying. [WORKER REC]
-                              B: Place a real order on the live host as literally instructed — commits real (if small) funds on a live
-                              regulated exchange; needs an explicit operator go-ahead given the ruling above never covered this specific risk.
-                              C: Some other verification method (e.g. a dry-run / signature-only test that proves the credential wiring works
-                              without submitting a live order) — needs the operator to specify what would count as sufficient evidence.
+                                  A: Use Kalshi's demo API host (`KALSHI_DEMO_BASE`) instead of the live default — genuinely risk-free, but
+                                  diverges from this todo's literal "elections-subdomain host" text, and needs confirming the demo host accepts
+                                  the same provisioned credentials before trying. [WORKER REC]
+                                  B: Place a real order on the live host as literally instructed — commits real (if small) funds on a live
+                                  regulated exchange; needs an explicit operator go-ahead given the ruling above never covered this specific risk.
+                                  C: Some other verification method (e.g. a dry-run / signature-only test that proves the credential wiring works
+                                  without submitting a live order) — needs the operator to specify what would count as sufficient evidence.
 
-                              Not attempted pending an answer — filed as the actionable question, not guessed. `can_continue: true`; other
-                              backlog work continues in the meantime.
+                                  Not attempted pending an answer — filed as the actionable question, not guessed. `can_continue: true`; other
+                                  backlog work continues in the meantime.
 
 - [ ] [DIAG] P2. **Kalshi mass `attempted_failed` unclassified-adapter-error investigation + contingent fix.**
       Internally-sequential 3-step chain (combined into one todo per the skill's own "sequential work → one todo" rule):
