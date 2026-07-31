@@ -280,3 +280,25 @@ the identical genuinely-external-wait state — nothing left to DO here until th
 one of these runs transitions to `in_progress`/`completed`. Leaving todo 3 unchecked; self-skipping this task rather
 than holding the slot idle-waiting (mirrors slot 10's 2026-07-26 `reason_code: GATED` skip earlier in this same doc) so
 the slot can pick up other queued work instead of busy-polling a condition only external CI capacity can change.
+
+## 2026-07-31 ~19:36Z re-check (slot 15) — real partial movement this time, but still not resolved
+
+Picked up todo 3 fresh. Unlike the prior 3 checks (zero state transitions), this session observed **genuine forward
+progress**: run `30635331302`'s `test` job left `queued` for the first time in this doc's history, ran, and
+**succeeded** (`19:03:08Z` → `19:11:12Z`, ~8 min). Watched via a bounded 30-min background poll (5-min interval) rather
+than a single snapshot, specifically to distinguish "still stuck" from "about to move."
+
+**But `registry-drift` itself (the job this todo actually gates on) never got a turn.** Once `test` passed, both
+`registry-drift` and `e2e` immediately re-queued for the same single `glue-ip-172-31-5-118-1` runner and sat there for
+25+ minutes with zero further state change (confirmed via 6 samples at `19:05/19:10/19:15/19:21/19:26/19:31Z`, then a
+final fresh check at `19:36:40Z` — all identical: `registry-drift=queued`). `gh api .../actions/runners` still shows the
+one runner `busy: true` — per this doc's own established lesson, that does not mean progress on THIS run, since the
+runner is shared cross-repo.
+
+**Verdict**: still not this doc's work to do — the blocker is 100% the same tracked external capacity incident
+(`fleet_wide_qg_capacity_crisis_continues_day2_2026_07_29.md`), not a code or config issue. The new data point worth
+keeping for the next picker-upper: `test` passing confirms the pip-install/tag-ancestry fix AND the registry-content
+regen fix (both already shipped) are not themselves blocking anything — the entire remaining gap is queue depth on the
+one shared runner. No consecutive-green count observable yet (0 of 3 target runs have reached `registry-drift`
+completion). Leaving todo 3 unchecked; self-skipping this task (4th session in a row, `reason_code: GATED`) rather than
+holding the slot — same posture as the three prior sessions.
