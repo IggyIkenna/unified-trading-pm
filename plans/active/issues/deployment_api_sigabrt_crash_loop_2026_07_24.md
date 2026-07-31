@@ -655,7 +655,59 @@ cancellation-timeout fix and already shipped). Suggested next steps for whoever 
       live, spanning 11 revisions `00361-qqp`..`00371-xxq`): **zero rows** — re-confirmed the query isn't a false
       negative by re-running it against `timestamp>="2026-07-31T10:00:00Z"`, which correctly surfaces the known
       `00355-z2c@10:37:56Z` occurrence. No code shipped (pure verification). Leaving the checkbox unchecked; re-check on
-      the next dispatch or the next `Uncaught signal: 6` occurrence on a revision at/after `00361-qqp`.
+      the next dispatch or the next `Uncaught signal: 6` occurrence on a revision at/after `00361-qqp`. —
+      **2026-07-31T15:57Z (slot-6, data_engineering craft dispatched as review) — GATE FINALLY MET (a SIGABRT occurred),
+      but the correlation is UNRESOLVABLE — this exposes a deeper, previously-undiscovered root cause: the container's
+      own stdout/stderr has stopped reaching Cloud Logging entirely, well before the pid-role-logging fix even
+      shipped.** Confirmed `00373-7wt` (created `15:39:42Z`, 100% traffic) genuinely carries both pid-role log lines
+      (direct `docker create`/`docker cp` extraction of `gunicorn.conf.py` off digest `sha256:b6d33f50...fbbbf5`). A NEW
+      `Uncaught signal: 6, pid=29, tid=29, fault_addr=0` landed on this exact revision at `15:53:34Z` (instance
+      `001548f7...1031`). But searching for `"gunicorn MASTER"` / `"gunicorn WORKER"` anywhere in the last 4h (any
+      revision) returns **zero rows** — the pid-role log lines this whole investigation chain built have NEVER once
+      appeared in Cloud Logging, despite being content-verified present in 6+ deployed revisions across 4+ hours of
+      uptime by 5 different workers. Root-caused it: pulled EVERY log entry for this instance's full lifetime
+      (`resource.labels.revision_name="uts-shared-deployment-api-00373-7wt"`, raw JSON, ordered) — the only entries are
+      `run.googleapis.com/varlog/system` (Cloud Run platform events: instance-start, probe-success, **and the "Uncaught
+      signal: 6" line itself** — that message is emitted by Cloud Run's OWN crash detector watching the sandbox from
+      outside, not the app's faulthandler) and `run.googleapis.com/requests` (structured HTTP access logs, no
+      textPayload). **Zero `run.googleapis.com/stdout` or `/stderr` entries exist for this revision at all.** Widened to
+      the full service, 24h: the LAST stderr entry anywhere is `08:40:27Z` on revision `00353-dng` — nothing since,
+      across 20+ subsequent revisions and 7+ hours, spanning well before AND after the pid-role-logging deploy
+      (`785405d`, live since `~11:54Z`). Ruled out a project-wide Cloud Logging outage: `market-data-query-service` (a
+      different Cloud Run SERVICE, same project/region) shows fresh `stderr` entries as recent as `16:43:03Z` — logging
+      ingestion works fine right now, just not for this service's container output. **This means the faulthandler dump
+      this entire investigation has been trying to read has likely NEVER been visible in Cloud Logging either** (same
+      delivery path), which would explain why zero faulthandler dumps have ever been captured despite dozens of SIGABRTs
+      across this doc's history — a candidate unifying explanation for a separate open thread in this doc. Strongest
+      candidate cause: the `--execution-environment gen1` pin (`acdd4c8`, already under suspicion in this doc for a
+      different reason — gen1's gVisor sandbox differs from gen2's) may have a distinct stdout/stderr capture path that
+      this service's output isn't satisfying (buffering, fd redirection, or a known gen1 log-agent quirk) — correlate
+      revision `00353-dng`'s deploy timestamp against `acdd4c8`'s merge/deploy time as the next step, not yet done here.
+      **Per this todo's own two anticipated outcomes (MASTER-pid-match / WORKER-pid-match), NEITHER applies — a third,
+      unanticipated outcome: the correlation data doesn't exist.** Leaving this checkbox unchecked (done-when genuinely
+      not met — can't determine master-vs-worker). Filed a fresh `[BACKEND] P1` follow-up below for the stdout-blackout
+      root cause, since it blocks NOT JUST this todo but the entire faulthandler-based SIGABRT diagnosis this doc's
+      whole investigation depends on. No code shipped (pure verification).
+
+- [ ] [BACKEND] P1. **NEW, opened 2026-07-31 (slot-6) — `uts-shared-deployment-api`'s container stdout/stderr has
+      stopped reaching Cloud Logging entirely since `~08:40:27Z` (last entry, revision `00353-dng`), silently blinding
+      every log-based diagnostic this doc's SIGABRT investigation depends on (including the pid-role-logging todo above
+      and, likely, every prior faulthandler-dump attempt in this doc's history).** Evidence: full-lifetime raw-JSON log
+      dump for revision `00373-7wt` (current live, `15:39:42Z`-created) shows ONLY `run.googleapis.com/varlog/system`
+      (platform events, incl. Cloud Run's own externally-observed "Uncaught signal: 6" line) and
+      `run.googleapis.com/     requests` (structured, no textPayload) — zero `stdout`/`stderr` entries. Same for the
+      last 20+ revisions spanning 7+ hours. Ruled out a platform-wide outage: `market-data-query-service` (same
+      project/region) has fresh `stderr` entries as recent as `16:43:03Z`. Prime candidate: the
+      `--execution-environment gen1` pin (`acdd4c8`) — gen1 uses a different gVisor sandbox/log-capture path than gen2,
+      and this doc already flagged gen1-vs-gen2 differences as relevant to a separate sandbox-kill theory. Next steps:
+      (1) confirm `acdd4c8`'s deploy landed at/before `08:40:27Z` (correlate git history against
+      `gcloud run revisions list --format='table(name,creationTimestamp)'` around that time); (2) if confirmed, test
+      reverting to gen2 (or an explicit gen2 pin) on a canary revision and check whether stdout/stderr resumes; (3) if
+      gen1 is NOT the cause, check for a stray `--no-cpu-throttling`/ buffering flag change, a Python-level `sys.stdout`
+      redirect/replace in app startup code, or a Cloud Logging exclusion-filter/sink change scoped to this specific
+      service around the same window. Done-when: `stdout`/`stderr` entries resume appearing for this service in Cloud
+      Logging, confirmed via a fresh `gcloud logging read     logName:"stdout"` after the fix deploys. (repo:
+      deployment-api)
 
 - [ ] [BACKEND] P3. **NEW, opened 2026-07-31 (slot 13, backend_engineer) — dead-code cleanup: `workers/auto_sync.py`'s
       entire background-sync implementation is unreachable in production.** Found while tracing the call graph for the
