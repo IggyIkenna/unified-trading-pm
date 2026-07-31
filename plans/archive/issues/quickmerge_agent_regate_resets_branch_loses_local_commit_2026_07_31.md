@@ -8,7 +8,7 @@ summary:
   `unified-api-contracts` (a high-churn shared repo) — each time the commit was recoverable via `git reflog` + `git
   merge --ff-only`, but a worker that trusts quickmerge's own "✅ Landed" message without independently verifying via
   `git merge-base --is-ancestor <sha> origin/<branch>` would silently lose the change and falsely believe it shipped.
-status: open
+status: resolved
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
@@ -21,12 +21,18 @@ parent_epic: infrastructure_master
 priority: P1
 source: [features_service_coverage_and_script_canon_2026_06_10.md script-canon sweep, slot 10 session 2026-07-31]
 assigned_vm: planning
-resolved_by:
+resolved_by: >-
+  Both todos done: STAGE 5 no-regression guard shipped unified-trading-pm@f93a618e6 (6 new hermetic bats tests, all 14
+  pre-existing tests unaffected); RULES.md/worker.md verification-step docs added unified-trading-pm@cb1d787ad.
 locked_by:
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
 ---
+
+> **🗄️ ARCHIVED 2026-07-31** — both todos are `[x]`, zero remaining, `locked_by:` empty. Per
+> `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`, a doc with every todo done archives
+> immediately.
 
 ## What I found
 
@@ -103,7 +109,12 @@ have a fix or a documented safe workaround.
       plain-checkout path, stays silent on genuine new-branch creation, and stays silent when nothing was snapshotted.
       All 14 pre-existing `test_quickmerge_dep_tier_gate.bats` tests still pass unchanged (no regression). `bash -n`
       syntax-clean.
-- [ ] [DOC] P2. Add an explicit post-`--agent`-quickmerge verification step to `RULES.md` § 2 / `worker.md` § DONE:
-      `git fetch origin <branch> --quiet && git merge-base --is-ancestor <your-sha> origin/<branch>` — treat a "✅
+- [x] ✅ [DOC] P2. **DONE 2026-07-31 — `unified-trading-pm@cb1d787ad`.** Add an explicit post-`--agent`-quickmerge
+      verification step to `RULES.md` § 2 / `worker.md` § DONE:
+      `git fetch origin <branch> --quiet && git merge-base     --is-ancestor <your-sha> origin/<branch>` — treat a "✅
       Landed" message as unverified until this check passes; on failure, recover via `git reflog` +
-      `git merge --ff-only <sha>` and retry. Repo: unified-trading-pm.
+      `git merge --ff-only <sha>` and retry. Repo: unified-trading-pm. Added to `agents/RULES.md` § 2 (right after the
+      ship-loop code snippet) and `agents/worker.md` § DONE (new step b1, between capturing the SHA and the cross-repo
+      plan-flip step), both cross-referencing the STAGE 5 no-regression guard shipped for the sibling `[SCRIPT] P1` todo
+      as the mechanical belt to this manual-check suspenders. Independently verified via `git merge-base --is-ancestor`
+      against `origin/live-defi-rollout` before this flip (practicing the exact discipline being documented).
