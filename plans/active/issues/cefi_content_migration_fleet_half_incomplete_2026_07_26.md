@@ -817,3 +817,14 @@ accordingly.
   but the magnitude/suddenness matches shard 23's confirmed-corrupt-file pattern, not a gradual creep). Fleet now (13,
   14-verify, 15, 17, 18, 20, 21, 22, 24, 25, 29, 40, 41, 42, 43) = 14 shards + the verify run. No action taken
   (monitoring-only).
+- **2026-07-31T04:18Z (slot-15) — a DIFFERENT death signature, possible second leak source**: shard 40 (`-032606`) also
+  OOM-killed (`rc=137`), but this one does NOT fit the corrupt-file pattern — 2764s (~46min, matching the ORIGINAL
+  ~45-50min freeze window this session's earliest diagnostics identified, not the fast 12-40min corrupt-file deaths),
+  24,400/78,210 files (31.2%), and `bytes_allocated=0` at BOTH of the last two release calls before death (no spike at
+  all, unlike 19/23/44). This suggests the periodic-release fix may only be PARTIALLY effective: it correctly tracks and
+  releases pyarrow's own allocator pool, but if RSS is also growing somewhere the fix's `bytes_allocated()` check can't
+  see (e.g. pandas-level object retention, `df.copy()` calls not fully captured by pyarrow's own accounting, or a
+  different native allocator), the periodic release would show a healthy near-zero pool while the process still slowly
+  OOMs at the original ~45-50min mark. **Flagging as a genuinely open question for the fix owner**: is there a second,
+  non-pyarrow-pool leak source, or is this an unrelated one-off? Worth checking if this shard recurs at the same
+  elapsed-time on a future attempt. No action taken (monitoring-only).
