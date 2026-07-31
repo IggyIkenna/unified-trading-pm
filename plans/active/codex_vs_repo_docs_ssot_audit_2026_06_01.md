@@ -454,7 +454,7 @@ deployment-service@`9627260`; instruments-service@`8bea654`+`9ecc4b2`; execution
 market-data-processing-service@`89161dc`; strategy-service@`80d298fe`; e2e-testing@`0de5471`;
 unified-trading-library@`168e649`+`c88278b`; market-tick-data-service@`d97ca3c`.
 
-- [ ] [DOCS] P2. **No NEW URDI refs in instruments-service (was: "Audit + rename in instruments-service" — corrected
+- [x] ✅ [DOCS] P2. **No NEW URDI refs in instruments-service (was: "Audit + rename in instruments-service" — corrected
       2026-07-12, finding 369, §A2 "50 reclassified" blanket ruling)**: `urdi_reference_provider.py` is grep-confirmed
       LOAD-BEARING — imported by `instruments_service/engine/orchestrator/__init__.py` +
       `reference_data/utils/defi_utils.py` + 6 production adapters (cefi/hyperliquid.py, cefi/deribit_combo_adapter.py,
@@ -465,7 +465,35 @@ unified-trading-library@`168e649`+`c88278b`; market-tick-data-service@`d97ca3c`.
       load-bearing module. Original text preserved: "Follow-up: URDI still in instruments-service CODE — docs URDI refs
       fixed, but code still uses URDI symbols (`URDI` is a phantom name per CLAUDE.md). Audit + rename in
       instruments-service." (Note: `cursor-configs/CLAUDE.md`'s system-map "URDI phantom" note is also stale per this
-      finding but is out of scope for this edit — not named in this chunk.)
+      finding but is out of scope for this edit — not named in this chunk.) — **DONE 2026-07-31 (slot-6, opus).** The
+      URDI-is-load-bearing ruling is applied everywhere: the forward guard ("no NEW URDI refs in docs") is already the
+      workspace `cursor-configs/CLAUDE.md` system-map rule ("URDI is a live internal module — 'phantom' label retired
+      2026-07-12"), and `instruments-service/docs/ADAPTER_ARCHITECTURE.md` already frames URDI correctly as the internal
+      load-bearing `reference_data/urdi_reference_provider.py` fetch spine. Fixed the one standalone URDI-scoped stale
+      ref — README flow step 1 cited `urdi_reference_provider.fetch(venue, date)` but the real public API
+      (`engine/urdi_reference_provider.py:71`) is `fetch_instruments_for_all_venues(venues, ...)` → `VenueFetchResult`
+      (**instruments-service@3357250e**). The README architecture-table URDI-as-external-repo ref (L118
+      `unified-reference-data-interface/`) was NOT half-fixed here: it is one row of a 4-row Concern/Location table
+      where every row carries the same BIG-FINDING error class (archived-mirror + 3 nonexistent dep repos), and one
+      row's correct target (L119 sports) is not trivially determinable — so the whole table + broader README rewrite is
+      tracked as the follow-up todo below rather than left inconsistent.
+- [ ] [DOCS] P2. **instruments-service README/docs holistic BIG-FINDING FIX-STALE (beyond URDI — findings-closure from
+      -013, slot-6 2026-07-31)**: the instruments-service refreshed registry below (line ~802) classified the full repo
+      but only the URDI slice shipped; the rest is a determinable, NOT-operator-gated reconciliation that was never a
+      standalone dispatchable todo. Reconcile `README.md` against `SETUP_GUIDE.md`@2026-07-24 +
+      `ADAPTER_ARCHITECTURE.md` @2026-07-19 as ground truth: the Concern/Location table (L116-119) cites the ARCHIVED
+      mirror `unified-trading-codex/02-data/` (→ live PM `/codex/02-data/`) + 3 NONEXISTENT dep repos
+      (`unified-internal-contracts`/UIC, `unified-reference-data-interface`/URDI [→ internal
+      `reference_data/adapters/`], `unified-sports-reference-interface`) — actual editable siblings = UTL + UAC only;
+      `InstrumentRecord`/ `InstrumentGenerator`/`INSTRUMENTS_SCHEMA` live in UAC `.../internal/reference/`, not UIC;
+      stale CLI `--CEFI/--TRADFI/--DEFI/--SPORTS`+`--redo-all` → real `--asset-group CEFI`+`--force`. Plus
+      `CONTRIBUTING.md` + `.github/BRANCH_PROTECTION.md` FIX-STALE (retired
+      `git checkout main`/`python -m pytest`/`quality-gates` check → `quality-gates-v2`, LDR flow),
+      `docs/SETUP_GUIDE.md` `--mode instruments` → `--operation instruments --mode batch`, `docs/SPORTS_INSTRUMENTS.md`
+      `gs://features-sports-{project}/` env-tier verify; + 2 DELETEs (`scripts/README.md` documenting only a
+      non-existent `run_quality_gates.py`; `.github/BRANCH_PROTECTION_SETUP.md` dead manual how-to). All cited codex/UAC
+      targets VERIFIED-EXIST (registry Verification notes, line ~792). Opus-gated editorial rewrite. (repo:
+      instruments-service)
 - [x] ✅ [DOCS] P2. **AUDIT-03 F-45 codex update** — VERIFIED already-correct 2026-07-27 (Phase-2), no codex change
       needed. `rg` across `codex/` finds NO doc claiming `correlation_id` keys/partitions the events GCS path; every
       `correlation_id` reference is a column / PubSub attribute / function param (matches the code). Original finding
