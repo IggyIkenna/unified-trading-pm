@@ -58,6 +58,7 @@ related:
     /plans/active/orchestrator_vm_e2e_hardening_2026_07_24.md,
     /plans/active/deepseek_claude_blended_provider_routing_2026_07_28.md,
     /plans/active/omniroute_llm_gateway_pilot_design_2026_07_30.md,
+    /plans/active/issues/ao_tranche_full_content_audit_findings_2026_07_31.md,
   ]
 created: 2026-07-17
 last_updated: 2026-07-31 # bumped twice today — plans (batch3+finalize, slot-capacity, e2e hardening, deepseek/omniroute) then a full-content issue-doc re-audit (30 more AO issues found never referenced here, 7 correctly tagged + 23 asset_group-mistagged; see the 2 new classification-table rows)
