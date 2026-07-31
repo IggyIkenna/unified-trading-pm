@@ -85,13 +85,16 @@ locked_by:
 locked_since:
 assigned_vm: NA
 execution_scope: local-only
-resolved_by: "market-tick-data-service@339ca767 + unified-api-contracts@8db188fe"
+resolved_by:
+  "market-tick-data-service@339ca767 + unified-api-contracts@8db188fe (contract shape + ts_event) +
+  unified-api-contracts@1c4d8864 (deep-level nullable gap, 2026-07-31)"
 source:
   "CRITICAL DP_RUN_MOSTLY_EMPTY (DP-FETCH-009) escalation agt-ff6e10, dp-fleet-monitor -> agent-orchestrator
   data_pipeline_failure worker (slot-16), fired 2026-07-28, asset_group=cefi data_type=book_snapshot_5, 299,467
   attempted_failed of 1,037,001 attempted (28.9%), flagged Fresh (0d old)."
 last_updated:
-  2026-07-30 (5th dispatch, agt-c271de -- found + confirmed self-resolved a genuinely fresh short-lived tail)
+  2026-07-31 (7th dispatch, agt-716d56 -- found + fixed a genuinely DIFFERENT live bug hiding behind the same truncated
+  error_reason bucket the prior 5 dispatches all inspected)
 ---
 
 # CeFi `book_snapshot_5` schema-contract mismatch -- root cause + fix (2026-07-28)
@@ -244,10 +247,40 @@ against the reproduction script.
       `_WIRE_COLUMN_RENAMES` in `tardis_shared.py` (verified live, 2026-07-30 — `funding_rate`/`open_interest`/
       `mark_price`/`index_price` already match the contract, only the `ts_event` derivation step needed to run).
       Verified live there (VM `mtds-smoke-lighter-dt-fix-v4-20260730`: zero schema failures, ~987K real rows written).
+- [x] ✅ [SERVICE] P1. **DONE 2026-07-31 (`data_pipeline_failure` escalation worker, task `agt-716d56`) —
+      `unified-api-contracts@1c4d8864`.** Found + fixed a THIRD, genuinely-live, previously-undiagnosed gap: the 20
+      `bids[N]/asks[N].price|amount` `ColumnSpec`s were declared `nullable=False` (set 2026-07-28 alongside the
+      contract-shape fix, `8db188fe` -- nullability was never separately reasoned about at the time). A real thin/
+      illiquid order book (fewer than 5 resting levels on one side -- normal for e.g. a newly-listed quote asset) has
+      Tardis emit NaN for the deeper levels, which FATAL-rejected the WHOLE shard (discarding real captured rows
+      alongside the thin one). Changed to `nullable=True`, matching the existing `CEFI_PERPETUAL_DERIVATIVE_TICKER`
+      funding_rate/open_interest/mark_price/index_price precedent; the only real consumer
+      (`market-data-processing-service`'s `book_snapshot_adapter.py`) already NaN-tolerates throughout. See Progress Log
+      for the full diagnostic trail (including why the prior 5 dispatches all missed this).
 - [ ] [SERVICE] P3. `features-service`'s `CrossInstrumentRawDataLoader.load_book_snapshots` expects a third,
       non-existent `l2_book_checkpoints`-shaped input -- a separate, pre-existing reader/writer design gap, unrelated to
       this write-time-validation fix; needs its own scoping (design decision: build the missing writer, or change the
       calculators to read the real flattened columns).
+- [ ] [SERVICE] P2. **Observability gap that caused the 5-dispatch misdiagnosis (a design call, not fixed here).**
+      `_classify_tardis_error()` (`market-tick-data-service/.../tardis_adapter.py:164`) does `raw.split(":", 1)[0]` on
+      the raised exception before it becomes the manifest `error_reason` -- for the `finalise_rows_and_path`
+      schema-contract-violation message
+      (`"schema contract violated for cefi/{venue}/{shard_it}/{data_type}: {N} violation(s); first={msg}"`) this throws
+      away everything after the FIRST colon, so every violation for a given (venue, instrument_type, data_type)
+      collapses to the identical `error_reason` string regardless of WHICH column/check actually failed. This is why
+      dispatches 1-5 on this doc (all `attempted_at`-recency checks against the manifest alone) could not see that a
+      brand-new violation (non-nullable level columns) was hiding behind the old, already-fixed violation's (missing
+      `ts_event`) identical-looking bucket -- the manifest literally cannot distinguish them; only a live reproduction
+      (as this dispatch did) or a Cloud Logging pull of the pre-truncation `SCHEMA_CONTRACT_VIOLATION` event (attempted
+      here, found no VM logs reaching Cloud Logging for the producing instances -- a possibly separate gap, not chased
+      further) can. The truncate-at-first-colon behavior is almost certainly intentional and correct for most Tardis
+      errors (stable, dashboard-groupable HTTP/network error codes) -- this is flagged as a design question, not
+      prescribed a fix: should `finalise_rows_and_path`'s schema-violation `ValueError` message omit the colon (so the
+      WHOLE message survives as one `error_reason` bucket, e.g.
+      `"schema contract violated for cefi/X/Y/Z -- 1 violation(s); first=..."` without a `:` before the count), or
+      should the manifest gain a genuinely separate detail field so classification stays stable AND full detail
+      survives? Needs a maintainer/operator call on the right shape, not a unilateral change from an escalation worker's
+      one-shot scope.
 
 ## Progress Log
 
@@ -373,3 +406,57 @@ against the reproduction script.
   fresh signal found this session was itself already resolved by the second check. No GCS/manifest write, no VM launch,
   no code change (PM plan-doc edits only: this entry + the new sibling issue doc). Pinged `dp-fleet-monitor` (authoring
   slot) with this outcome.
+- **2026-07-31 (`data_pipeline_failure` escalation worker, task `agt-716d56`, 7th dispatch — found + FIXED a genuinely
+  DIFFERENT live bug):** Received another `DP_RUN_MOSTLY_EMPTY` (DP-FETCH-009) CRITICAL page for
+  `(cefi, book_snapshot_5)`: 300,457/1,080,446 = 27.8%, flagged Fresh (0d old). No issue doc was pre-linked in the alert
+  context (`(none — alert carries the details)`); found this doc via `grep -rn "schema contract violated"` from the live
+  code, per the pre-task plan/issue conflict-check rule. Unlike dispatches 2-6, did NOT stop at "numerator static / fix
+  commits still ancestors, therefore stale" — pulled a fresh full manifest
+  (`gs://market-data-tick-cefi-prd-central-element-323112/_index/availability_index.parquet`, 9.62M rows) and found
+  `error_reason` values starting `"schema contract violated"` with `attempted_at` running CONTINUOUSLY from
+  2026-07-27T21:34Z through **2026-07-31T02:31:40Z — inside the hour before this read**, across OKX-SPOT, OKX-SWAP,
+  BINANCE-FUTURES, KRAKEN-SPOT, KRAKEN-FUTURES, BITFINEX-SPOT, BITFINEX-FUTURES, COINBASE-SPOT/FUTURES (6,841 rows
+  total) — NOT a short 2-3h self-resolving tail like dispatches 3-6 each found, a genuinely ongoing signal. **Root cause
+  (new, distinct from the ts_event bug this doc already fixed):** `_classify_tardis_error()` (`tardis_adapter.py:164`)
+  does `raw.split(":", 1)[0]` on the raised `ValueError` before it becomes the manifest `error_reason` — the
+  schema-violation message's format
+  (`"schema contract violated for cefi/{venue}/{type}/{data_type}: {N} violation(s); first={msg}"`) means EVERYTHING
+  after the first colon (the actual violated column + reason) is discarded, so a NEW violation and the OLD already-fixed
+  `ts_event` violation are byte-identical in the manifest — this is exactly why dispatches 2-6, reading only the
+  manifest, never saw a difference. Reproduced live against `finalise_rows_and_path` directly (script: build a synthetic
+  DataFrame matching the real Tardis book_snapshot_5 wire shape but with NaN in the deeper `bids[2..4]`/`asks[3..4]`
+  columns, exactly what a real THIN/illiquid order book snapshot produces when fewer than 5 levels are resting on a
+  side): raised `"...6 violation(s); first=non-nullable column 'bids[2].price' has 1 null value(s)"` — a completely
+  different violation from `missing_column:ts_event`. Cross-checked against real production data: OKX-SPOT's failing
+  symbols on 2020-04-12 in the live manifest are exactly its `-USDC`-quoted pairs (OKB-USDC, LTC-USDC, BCH-USDC,
+  ETC-USDC, EOS-USDC, TRX-USDC, XRP-USDC — all newly-listed/thin in April 2020), while the liquid `-USDT` pairs on the
+  SAME venue/date/batch (BTC-USDT, ETH-USDT, XRP-USDT, ...) captured successfully — consistent with a
+  liquidity-dependent failure, not a code-staleness artifact. Also checked: only one Tardis-sourced CeFi VM was running
+  (`cefi-queue-heavy-binancefutu-x17-20260730-193717`, `VM_DATA_TYPES=trades; book_snapshot_5`,
+  `VM_START_DATE=2020-01-01`) — no concurrent-IP-lock violation, and this doc's own already-fixed
+  `ts_event`/contract-shape commits were reverified still ancestors of `origin/live-defi-rollout` (ruling out a
+  regression/revert). Tried Cloud Logging for the pre-truncation `SCHEMA_CONTRACT_VIOLATION` event detail (would have
+  shortcut straight to this) — zero hits for the running VM's instance name or textPayload over 6h freshness; VM logs
+  are evidently not reaching Cloud Logging for this launcher class, not chased further (read-only investigation,
+  time-boxed). **Fix**: `unified-api-contracts@1c4d8864` — `CEFI_PERPETUAL_BOOK_SNAPSHOT_5`/
+  `CEFI_SPOT_PAIR_BOOK_SNAPSHOT_5`'s 20 `bids[N]/asks[N].price|amount` columns changed `nullable=False` →
+  `nullable=True` (set 2026-07-28 alongside the contract-SHAPE fix in `8db188fe`; nullability itself was never
+  separately reasoned about at the time). Matches the existing `CEFI_PERPETUAL_DERIVATIVE_TICKER` precedent
+  (`funding_rate`/`open_interest`/`mark_price`/`index_price` are ALL `nullable=True` — the same "legitimately absent
+  per-row" numeric-field pattern). Verified the only real consumer, `market-data-processing-service`'s
+  `book_snapshot_adapter.py`, already NaN-tolerates throughout (time-weighted mean/std masked on `~np.isnan` everywhere)
+  — the write-time gate was stricter than the read-time reality it exists to protect. Added a new regression test
+  (`test_book_snapshot_5_thin_book_partial_depth_levels_are_valid`,
+  `unified-api-contracts/tests/internal/unit/test_schema_contracts.py`) proving a partial-depth row now validates clean;
+  re-ran the local reproduction post-fix and confirmed zero violations for full-depth, thin-book, AND a mixed shard (1
+  full-depth + 1 thin row for the same symbol — the mixed case matters because the ORIGINAL bug failed the WHOLE shard
+  on a single bad row, discarding good rows too). `quality-gates.sh` green (both pre- and post-commit runs, 283-304s),
+  shipped via `quickmerge --agent --files`, verified `git merge-base --is-ancestor 1c4d8864 origin/live-defi-rollout` =
+  true. **Also flagged, not fixed** (a design call, filed as its own P2 `[SERVICE]` todo above): the
+  `_classify_tardis_error` first-colon truncation itself — the actual mechanism that hid this bug from five prior
+  sessions — needs a maintainer decision on how to preserve violation detail without breaking the stable
+  dashboard-groupable bucketing that's almost certainly intentional for the general (non-schema-contract) error case.
+  **Historical backlog note**: like every prior fix on this doc, this code change does NOT retroactively clear the
+  accumulated `attempted_failed` rows (300k+ total across all 3 now-fixed bugs) — those clear via a normal idempotent
+  backfill re-attempt, same as this doc's existing recommendation. No GCS/manifest write, no VM launch. Pinged
+  `dp-fleet-monitor` (authoring slot) with this outcome.
