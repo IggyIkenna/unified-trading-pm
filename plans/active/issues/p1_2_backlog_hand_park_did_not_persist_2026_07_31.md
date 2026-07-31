@@ -160,6 +160,19 @@ to this task's `prereqs.prerequisites` list, so there is nothing to gate on.
 
 ## Progress Log
 
+- **2026-07-31 (slot 10, infra)**: `p1_2_backlog_hand_park_did_not_persist-002` (the P1 sandbox-repro todo) was
+  concurrently dispatched to this slot after slot 15 had already closed it in-doc. Independently re-read
+  `server/regen_backlog_from_plan.py` before trusting the duplicate dispatch: confirmed `_reconcile_task_fields()`
+  (lines 1894-1954) only ever writes `task.priority` and only when `not task.priority_override` (line 1938) — it never
+  touches `prereqs.prerequisites`. Grepped every `t.prereqs.prerequisites` mutation site in the file: line 2126
+  (`_wire_gate_on_depends_prereqs`) only `.extend()`s (additive-only, and gated on `gate_on_depends: true` frontmatter
+  the target task's plan doesn't declare); line 2359 (`_migrate_parking_state`) only writes into a successor when the
+  ORIGINAL task was orphaned (brief no longer matches any current todo) —
+  `live_event_log_warm_sink_recovery_and_cold_compaction-011` stayed the same still-current id throughout the incident,
+  so this path never applied to it either. No other `.priority =` or `.prereqs.prerequisites =` write site exists in the
+  file. This independently corroborates todo 1/2's conclusion with a second read: there is no code path capable of
+  reverting a hand-applied park on a still-current task, so the sandbox reproduction this todo called for has nothing to
+  reproduce. Closing `-002` as duplicate/already- resolved by todo 1's investigation — no code change needed.
 - **2026-07-31 (slot 15, infra)**: Investigation todo (P0) done — root cause conclusively identified via
   `journalctl -u orchestrator.service` + a static read of `_reconcile_task_fields()`: main's park never actually wrote
   `backlog.yaml` (only the prerequisite condition was created + a `/reload` was called, neither of which touches a
