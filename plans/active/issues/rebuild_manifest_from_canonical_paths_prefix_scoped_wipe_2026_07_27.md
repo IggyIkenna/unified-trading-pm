@@ -36,6 +36,7 @@ tags: [data-correctness, manifest, gcs, mdps, mtds, candle, orphan, data-loss-ri
 related:
   [
     /plans/active/issues/mdps_cefi_candle_manifest_orphan_reconciliation_2026_07_26.md,
+    /plans/active/issues/mdps_candle_manifest_near_total_coverage_gap_2026_07_27.md,
     /plans/active/data_pipeline_check_mdps_features_2026_07_20.md,
     /plans/active/issues/mdps_backfill_cefi_trades_gap_fill_completion_2026_07_28.md,
     /plans/active/sports_satellite_ao_dispatch_batch6_2026_07_26.md,
@@ -105,8 +106,10 @@ precondition.
 
 ## Two live risk sites
 
-1. **`plans/active/issues/mdps_cefi_candle_manifest_orphan_reconciliation_2026_07_26.md`** (still open, not yet
-   executed) recommends exactly this unsafe call:
+1. **`plans/active/issues/mdps_cefi_candle_manifest_orphan_reconciliation_2026_07_26.md`** (RESOLVED 2026-07-31, about
+   to be archived — its own reconciliation goal was closed as a byproduct of a DIFFERENT, already-shipped tool
+   (`backfill_candle_manifest.py`'s corpus-wide campaign, `mdps_candle_manifest_near_total_coverage_gap_2026_07_27.md`
+   todo 2); the corrected recipe below was never actually invoked against prod) recommended exactly this unsafe call:
    `rebuild_manifest_from_canonical_paths(bucket, service_name="market-data-processing-service", prefix="processed_candles/by_date")`
    for the CEFI candle bucket, to backfill an estimated small number of OOM-era-orphaned candle manifest rows. As
    written this would instead **delete essentially the entire CEFI raw-tick manifest** (per this session's own

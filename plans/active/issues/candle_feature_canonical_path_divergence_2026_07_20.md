@@ -368,10 +368,13 @@ DECLARED template as a **separate** `content_check=non_canonical` verdict collec
 > rows exist today** (`data_type=dex_pool_swaps`, real timeframes `15s/1m/5m/15m/1h/4h/1d`, ~1,129-1,133 each), not 0.
 > So this todo's headline claim ("candle manifest was never systematically populated") is likely STALE for the
 > going-forward emission path — genuine remaining gap, if any, is far smaller than the 20,734-vs-6 framing suggests and
-> is probably now the SAME narrower class as `mdps_cefi_candle_manifest_orphan_reconciliation_2026_07_26.md` (PAST
-> OOM-era orphans only), not a total non-population defect. **Not fully re-verified for cefi/tradfi/prediction this
-> session** — do not close this todo on the DEFI spot-check alone; re-measure each AG with the correct vocabulary before
-> flipping.
+> is probably now the SAME narrower class as the now-archived
+> `mdps_cefi_candle_manifest_orphan_reconciliation_2026_07_26.md` (PAST OOM-era orphans only), not a total
+> non-population defect. **Not fully re-verified for cefi/tradfi/prediction this session** — do not close this todo on
+> the DEFI spot-check alone; re-measure each AG with the correct vocabulary before flipping. **Update 2026-07-31**: the
+> corpus-wide `mdps_candle_manifest_near_total_coverage_gap_2026_07_27.md` since ran exactly this re-measurement for all
+> 4 AGs (cefi 0.11%/defi 0%/tradfi 0.81%/prediction 2.28% pre-backfill coverage) and backfilled the gap; see that doc
+> for the actual numbers instead of re-deriving them here.
 
 - [x] ✅ 7. [DATA] P0. **ROOT-CAUSED + CODE FIX SHIPPED 2026-07-27 (slot-10); FULLY CLOSED 2026-07-27 (slot-8, todo 7 of
       the disconnect plan)** — owned + closed on `plans/active/mdps_candle_manifest_population_disconnect_2026_07_25.md`

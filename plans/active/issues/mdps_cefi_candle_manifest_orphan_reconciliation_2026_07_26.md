@@ -10,7 +10,7 @@ summary: >-
   have lost its in-flight `ManifestWriter.record_captured` write, leaving real file content on disk with zero manifest
   row — confirmed for BITGET-FUTURES/BITFINEX-FUTURES/KRAKEN-FUTURES `day=2026-05-03` specifically. The corpus-wide
   extent of this orphan set is unknown.
-status: open
+status: resolved
 nature: issue
 asset_group: [cefi]
 stage: [data]
@@ -21,9 +21,10 @@ related:
   [
     /plans/archive/2026_07/cefi_satellite_ao_dispatch_batch1_2026_07_25.md,
     /plans/archive/issues/mdps_cefi_candle_manifest_never_emitted_2026_07_26.md,
+    /plans/active/issues/mdps_candle_manifest_near_total_coverage_gap_2026_07_27.md,
   ]
 created: "2026-07-26"
-last_updated: "2026-07-26"
+last_updated: "2026-07-31"
 parent_epic: cefi_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -39,9 +40,16 @@ source: >-
   per CLAUDE.md issue-doc-lifecycle (never archive a doc while leaving real open work stranded inside it).
 locked_by:
 locked_since:
-resolved_by:
+resolved_by: slot-5-review-2026-07-31
 depends_on: []
 ---
+
+> **🟢 RESOLVED 2026-07-31 (slot-5, `review`).** This doc's own todo is superseded, not executed as written — the
+> corpus-wide `backfill_candle_manifest.py` campaign in
+> `/plans/active/issues/mdps_candle_manifest_near_total_coverage_gap_2026_07_27.md` (todo 2, DONE 2026-07-27) closed
+> this exact gap as a byproduct, via a DIFFERENT tool than the `merge_manifest_from_canonical_paths()` recipe below
+> (which was never run). See "Resolution" section under the todo for the live-verified evidence. Archived here;
+> superseded by the corpus-wide doc above.
 
 # MDPS cefi candle-manifest: reconcile pre-fix-era orphaned rows
 
@@ -73,22 +81,50 @@ BITGET-FUTURES/BITFINEX-FUTURES/KRAKEN-FUTURES `day=2026-05-03`; the full extent
 > requires a Tier-2 SPOT VM run per the heavy-I/O rule (not attempted in this session — the actual reconciliation run is
 > separate follow-up work).
 
-- [ ] [DATA] P2. **Reconcile the manifest for candle files orphaned by PAST OOM crashes (before the
-      `market-data-processing-service@335e9cc` OOM fix landed).** An unknown-but-potentially-large set of existing
-      `processed_candles/` parquet files across the corpus (any date/venue processed by a backfill VM that OOM'd mid-run
-      before 2026-07-26) may have zero manifest rows despite real file content on disk — the SAME class of gap confirmed
-      for BITGET-FUTURES/BITFINEX-FUTURES/KRAKEN-FUTURES `day=2026-05-03`. Scope this as its OWN single-walk-compliant
-      run (do NOT re-walk the whole corpus ad hoc): (1) use the new additive `merge_manifest_from_canonical_paths()`
-      (shipped `unified-trading-library@2352e7c8` — see the corrected banner above) that merges newly-discovered candle
-      shards into the EXISTING full index rather than replacing it wholesale — never the original prefix-scoped
-      `rebuild_manifest_from_canonical_paths` call; (2) run it on a Tier-2 SPOT VM per the workspace's heavy-I/O rule,
-      never in-session; (3) verify before/after row counts for a sample of known-orphaned shards (e.g. the
-      BITGET-FUTURES `day=2026-05-03` shard above) AND confirm the MTDS raw-tick row count for the same bucket is
-      UNCHANGED (the exact regression this correction exists to prevent) to confirm the walk actually closes the gap
-      without collateral loss. Repo: market-data-processing-service (consumer) + unified-trading-library (the additive
-      helper). **Done when**: the additive reconciliation run completes over the CEFI candle corpus, a sample of
-      previously-orphaned shards (including the `day=2026-05-03` BITGET/BITFINEX/KRAKEN ones) show real manifest rows,
-      the bucket's MTDS raw-tick row count is verified unchanged, and the launch is evidenced (VM name + log).
-      **VM-launch gating**: the additive helper only adds missing rows and never deletes GCS objects or manifest rows
-      for other prefixes, so once todo 2 of the sister doc lands, the same safe-idempotent carve-out (`task_template.md`
-      finding O) applies — no `[OPERATOR]` tag needed for the corrected recipe.
+- [x] ✅ [DATA] P2. **SUPERSEDED, not executed as written — 2026-07-31 (slot-5, `review`).** The specific gap this todo
+      targeted (candle files orphaned by PAST OOM crashes before `market-data-processing-service@335e9cc` landed,
+      confirmed for BITGET-FUTURES/BITFINEX-FUTURES/KRAKEN-FUTURES `day=2026-05-03`) is now CLOSED — but via the
+      corpus-wide `backfill_candle_manifest.py` campaign
+      (`/plans/active/issues/mdps_candle_manifest_near_total_coverage_gap_2026_07_27.md` todo 2, DONE 2026-07-27,
+      `market-data-processing-service@cf94e23` + `deployment-service@fafde10`/`@b947d9f`), NOT the
+      `merge_manifest_from_canonical_paths()` recipe this todo prescribed (that function was shipped
+      `unified-trading-library@2352e7c8` but never actually invoked against prod — no VM launch for it exists in any
+      log). The corpus-wide backfill's `backfill_candle_manifest.py` is record-only (footer-reads each report row's
+      object at its existing path, calls `record_captured`, never deletes/re-uploads/rebuilds the index), so it carries
+      the same non-destructive safety property this todo's corrected recipe was designed to guarantee — just via a
+      different, already-shipped tool that happened to sweep the WHOLE cefi candle corpus (not just this doc's
+      3-venue/1-day known slice), superseding the narrower scope entirely.
+
+      **Live-verified 2026-07-31** (read-only spot-check, `read_availability_index` with a single-day
+              `filters=[("date",">=","2026-05-03"),("date","<=","2026-05-03")]` row-group-pushdown read — not a corpus walk):
+              all three flagged venues now carry real `captured` MDPS manifest rows for `day=2026-05-03`:
+              - `BITGET-FUTURES`: 29 rows (`trades`/`derivative_ticker`/`book_snapshot_5`/`liquidations` × all 7 timeframes),
+                `written_at` spanning `2026-07-26T23:10:28Z` (the archived `mdps_cefi_candle_manifest_never_emitted_2026_07_26.md`
+                doc's own live-trace `--force`-reprocess test of this exact shard) through `2026-07-27T16:23:49Z` (the
+                corpus-wide backfill campaign's cefi VM, `backfill-candle-manifest-cefi-20260727-151741`).
+              - `BITFINEX-FUTURES`: 14 rows (`derivative_ticker`/`liquidations` × all 7 timeframes), `written_at` uniformly
+                `2026-07-27T16:23:49.93-.95Z` — entirely from the corpus-wide backfill VM (no rows predate it for this venue).
+              - `KRAKEN-FUTURES`: 7 rows (`derivative_ticker` × all 7 timeframes), `written_at` uniformly
+                `2026-07-27T16:23:49.97-.98Z` — same corpus-wide backfill VM.
+
+              This doc's own "done when" bar (previously-orphaned shards show real manifest rows; the reconciliation run is
+              evidenced) is satisfied by the corpus-wide backfill's evidence trail instead of a dedicated run of this todo's
+              recipe. The MTDS raw-tick-row-unchanged safety check this todo called for is satisfied by construction —
+              `backfill_candle_manifest.py` only ever calls `record_captured` for `processed_candles/` shard keys it footer-read
+              from the sweep report, never touching or rebuilding any other prefix's rows (unlike the original unsafe
+              `rebuild_manifest_from_canonical_paths` call this doc's own corrected banner already ruled out).
+
+## Progress Log
+
+- **2026-07-31** (AO dispatch, slot 5, `review`) — Dispatched as `mdps_candle_manifest_near_total_coverage_gap-004`'s
+  own REVIEW cross-check todo (is this doc's narrower CEFI-only scope superseded by the corpus-wide
+  near-total-coverage-gap measurement + backfill?). Verdict: YES. Live-verified via a single-day, row-group-pushdown
+  `read_availability_index` read (not a corpus walk) that BITGET-FUTURES/ BITFINEX-FUTURES/KRAKEN-FUTURES
+  `day=2026-05-03` — the exact shards this doc's own evidence named — now carry real `captured` MDPS manifest rows, with
+  `written_at` timestamps matching the corpus-wide `backfill_candle_manifest.py` campaign's cefi VM
+  (`backfill-candle-manifest-cefi-20260727-151741`, finished ~16:23:49Z 2026-07-27) plus (for BITGET-FUTURES
+  specifically) the earlier 2026-07-26T23:10Z live-trace test from the now-archived
+  `mdps_cefi_candle_manifest_never_emitted_2026_07_26.md`. This doc's own recommended-fix recipe
+  (`merge_manifest_from_canonical_paths()`) was never actually invoked against prod — the gap closed via the corpus-wide
+  campaign instead, which happens to satisfy this doc's own "done when" bar and non-destructive safety property by
+  construction. Flipped the todo, archiving this doc per the 6-step ritual (referrers fixed in the same commit).
