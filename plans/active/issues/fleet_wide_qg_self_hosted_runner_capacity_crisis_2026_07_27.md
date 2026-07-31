@@ -199,23 +199,23 @@ escalate to a `cicd` worker.
       guidance elsewhere in this workspace. If the operator's "capacity freed up" read changes, re-open this VERIFY.
 
       **Re-open trigger fired, 2026-07-28 ~15:28 UTC** (found incidentally while verifying deploy-currency for
-                                                                                                                                                              `agent_orchestrator_mobile_and_worker_tmux_chat_2026_07_28.md` Track 4 — not a re-audit of this issue, just a
-                                                                                                                                                              fresh data point landing in scope): agent-orchestrator's own promote PR
-                                                                                                                                                              (https://github.com/IggyIkenna/agent-orchestrator/pull/691, head `promote/agent-orchestrator/3e83ba8aecc2`) has
-                                                                                                                                                              its `quality-gates-v2` run (`30368810017`) stuck `in_progress` on `QG slice (tests)`/`QG slice (checks)` for
-                                                                                                                                                              **56+ minutes** (started 14:31:47Z) as of this observation. `gh api .../actions/runners` confirms both of
-                                                                                                                                                              agent-orchestrator's own runners (`glue-ip-172-31-5-118-1`, `glue-ip-172-31-5-118-2`) show `online`/`busy` — same
-                                                                                                                                                              runner name (`glue-ip-172-31-5-118-1`) implicated in the SEPARATE `deployment-service` incident write-up
-                                                                                                                                                              (`ldr_to_main_promote_fleet_silently_skips_repo_after_promote_pr_close_2026_07_28.md`) the same day. **Not
-                                                                                                                                                              escalating or intervening**: agent-orchestrator is one of the 2 deliberately-kept-self-hosted verified pools per
-                                                                                                                                                              this doc's own operator ruling above, so reverting its runner labels would be the WRONG fix and isn't what's
-                                                                                                                                                              happening here — this looks like the underlying shared-host contention resurfacing on an otherwise-correctly-
-                                                                                                                                                              configured repo's pool, not a misconfigured allowlist entry. Left the stuck run alone (canceling/retriggering a
-                                                                                                                                                              job two BUSY runners already claimed didn't look likely to help and risked adding load); it will resolve on its
-                                                                                                                                                              own once host contention clears or the `ldr-to-main-promote-fleet.yml` cron supersedes the PR to a newer LDR ref.
-                                                                                                                                                              Net effect on the citing plan: its dashboard-only commit (`agent-orchestrator@f120922`) is genuinely blocked from
-                                                                                                                                                              reaching `main`/Firebase Hosting by THIS pre-existing infra condition, not by anything in that plan's own code —
-                                                                                                                                                              documented there, not duplicated here beyond this evidence note.
+                                                                                                                                                                  `agent_orchestrator_mobile_and_worker_tmux_chat_2026_07_28.md` Track 4 — not a re-audit of this issue, just a
+                                                                                                                                                                  fresh data point landing in scope): agent-orchestrator's own promote PR
+                                                                                                                                                                  (https://github.com/IggyIkenna/agent-orchestrator/pull/691, head `promote/agent-orchestrator/3e83ba8aecc2`) has
+                                                                                                                                                                  its `quality-gates-v2` run (`30368810017`) stuck `in_progress` on `QG slice (tests)`/`QG slice (checks)` for
+                                                                                                                                                                  **56+ minutes** (started 14:31:47Z) as of this observation. `gh api .../actions/runners` confirms both of
+                                                                                                                                                                  agent-orchestrator's own runners (`glue-ip-172-31-5-118-1`, `glue-ip-172-31-5-118-2`) show `online`/`busy` — same
+                                                                                                                                                                  runner name (`glue-ip-172-31-5-118-1`) implicated in the SEPARATE `deployment-service` incident write-up
+                                                                                                                                                                  (`ldr_to_main_promote_fleet_silently_skips_repo_after_promote_pr_close_2026_07_28.md`) the same day. **Not
+                                                                                                                                                                  escalating or intervening**: agent-orchestrator is one of the 2 deliberately-kept-self-hosted verified pools per
+                                                                                                                                                                  this doc's own operator ruling above, so reverting its runner labels would be the WRONG fix and isn't what's
+                                                                                                                                                                  happening here — this looks like the underlying shared-host contention resurfacing on an otherwise-correctly-
+                                                                                                                                                                  configured repo's pool, not a misconfigured allowlist entry. Left the stuck run alone (canceling/retriggering a
+                                                                                                                                                                  job two BUSY runners already claimed didn't look likely to help and risked adding load); it will resolve on its
+                                                                                                                                                                  own once host contention clears or the `ldr-to-main-promote-fleet.yml` cron supersedes the PR to a newer LDR ref.
+                                                                                                                                                                  Net effect on the citing plan: its dashboard-only commit (`agent-orchestrator@f120922`) is genuinely blocked from
+                                                                                                                                                                  reaching `main`/Firebase Hosting by THIS pre-existing infra condition, not by anything in that plan's own code —
+                                                                                                                                                                  documented there, not duplicated here beyond this evidence note.
 
 ## Evidence
 
@@ -291,6 +291,31 @@ repo-blockers for `features-service` at check time (`GET /api/repo-blockers` —
 stays on the operator's 6 explicitly-restored/protected repos (2026-07-28 ruling above); did not touch
 `self_hosted_runner_labels`. Third `features-service` corroboration of this exact signature in 3 days (2026-07-29,
 2026-07-30, this one) — the pattern is firmly established for this repo specifically, not just fleet-wide.
+
+**2026-07-31 ~05:45 UTC corroboration (features-service, escalation agt-97a0b4, cicd agent slot-14,
+wall_type=ldr_qg_failure)**: dispatched on a `quality-gates-v2` FAILURE on promotion PR #912 (head `ce369620`, run
+`30606331366`) — `QG slice (checks)` failed on `Type check FAILED/timeout (exit=143)`: the `[4/6] TYPE CHECK` section
+header printed and the failure fired **under 0.2s later** (05:22:10.8066 → 05:22:10.9825), with 0 errors/0 warnings
+extracted from `basedpyright`'s output — too fast to be the documented 120s `PYRIGHT_TIMEOUT` genuinely elapsing;
+consistent instead with an external SIGTERM to the whole job's process group from host-level contention on the shared
+`glue` runner (same signature class as this doc's other entries, just caught earlier in its lifecycle: signal delivered
+at process start rather than after a multi-minute hang). Reproduced LOCALLY to rule out a code regression: fresh-pulled
+`live-defi-rollout` (HEAD `ce369620`, matches the PR head exactly — not stale), ran
+`QG_SLICE=typecheck bash scripts/quality-gates.sh` backgrounded — completed cleanly, `basedpyright` ran to completion
+and reported `✅ QG_SLICE=typecheck PASSED` (964 pre-existing errors, all under the warn-only path since no
+`BASEDPYRIGHT_MAX_ERRORS` ceiling is configured — non-blocking, unrelated to this failure). By the time I reached this
+escalation, PR #912 had **already merged** (`5e974169`, merged `2026-07-31T05:16:06Z` — **3 seconds** after the failing
+run even started at `05:16:03Z`, the same "merged via an already-satisfied required-check path independent of this
+specific run" pattern as the #904 entry above — LDR's own `quality-gates-v2` at the identical SHA `ce369620` had already
+gone green 14 minutes earlier at `05:01:42Z`) and is on `main`. No code/test change made or needed; no repo push
+required. No open repo-blockers for `features-service` at check time (`GET /api/repo-blockers` → `{"open": []}`).
+`features-service` stays on the operator's 6 explicitly-restored/protected repos (2026-07-28 ruling above); did not
+touch `self_hosted_runner_labels`. Fourth `features-service` corroboration of this exact signature in 3 days
+(2026-07-29, 2026-07-30, 2026-07-31 ×2) — reinforces this is a firmly-established repo-specific pattern, not a one-off.
+Separately observed (out of this escalation's scope, not touched): `main-backmerge-to-ldr` failed twice on
+`features-service` around this same window (runs `30605455733`, `30606335871`, step "Back-merge main into LDR
+(merge-only; conflict → visible PR; never force)") — flagging for whichever worker next touches `features-service` CI
+health, not diagnosed here.
 
 ## Follow-up
 
