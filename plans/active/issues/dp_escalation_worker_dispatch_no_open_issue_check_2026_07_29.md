@@ -238,3 +238,9 @@ regression) is worse.**
   itself, e.g. by escalation_id or by "does an OPEN issue doc already exist for this alert signature"). Session cost:
   doc read + git-ancestor batch check (5 commits) + a Progress Log append in the book_snapshot_5 doc, no GCS read, no
   code change. Still awaiting the operator/design decision on Option A/B/C.
+- **2026-07-31 (data_pipeline_failure escalation worker, agt-406c1f, slot 3) — `(cefi, book_snapshot_5)`'s 14th+
+  dispatch, a fresh (non-duplicate) escalation_id, still zero new work.** Numerator (300,457) byte-identical to the last
+  verified reading; denominator grew +4,574. Git-ancestor check (5 commits) all OK, live manifest re-read skipped per
+  established precedent. Session cost: two file reads + one git-ancestor batch check + a Progress Log append, no GCS
+  read, no code change. Adds no new argument — another data point on the climbing count (now 14+), still awaiting the
+  operator/design decision on Option A/B/C. Full writeup in the book_snapshot_5 doc's own Progress Log.
