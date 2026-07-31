@@ -285,11 +285,13 @@ stale/degraded trading data) — worth tightening but far lower severity than E-
       never touched instruments-service. Decide: (a) finish the removal in instruments-service, or (b) correct the codex
       SSOT + CLAUDE.md text to scope the 2026-07-19 removal accurately. Repos: instruments-service, unified-trading-pm.
 
-- [ ] [BACKEND] P1. **Fix silent fabricated cancel-success** (Finding E-2):
+- [x] ✅ [BACKEND] P1. **Fix silent fabricated cancel-success** (Finding E-2):
       `execution-service/execution_service/trade_execution/adapters/ibkr_tradfi.py::cancel_order()` (lines 412-434) —
       when the target order isn't found in `ib.openTrades()`, it must not unconditionally return `status="cancelled"`.
-      Make it fail loud (raise, matching `get_order_status()`'s `ValueError` at line 479) or return an explicit
-      not-found status. Repo: execution-service.
+      Made it fail loud with `raise ValueError(f"Order {order_id} not found")`, matching `get_order_status()`'s existing
+      not-found behavior; the success return now only happens inside the matched-order branch (the loop no longer falls
+      through past a silent miss). Updated `test_cancel_order_real_not_found` (previously asserted the buggy
+      fabricated-success behavior) to assert the raise instead. Repo: execution-service — execution-service@2514bd6b.
 
 - [ ] [OPERATOR] P1. **DECISION — execution-service tradfi order-routing is entirely unreachable** (Finding E-1): all 6
       venue adapters (`cme_adapter.py`, `cboe_adapter.py`, `nasdaq_adapter.py`, `nyse_adapter.py`, `ice_adapter.py`,
