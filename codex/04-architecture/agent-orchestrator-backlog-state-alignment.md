@@ -288,6 +288,22 @@ causing a new task ID to be issued while the old one remains as an orphan. Fix: 
 `ORCHESTRATOR_VM_ID` scoping eliminates this accumulation going forward. One-shot cleanup requires running `prune_stale`
 once on the affected VM.
 
+### `/done`'s M3 checkbox-flip verification ALSO requires an exact brief match — annotate AFTER, never BEFORE
+
+Same `brief` exact-single-line-match mechanism as "Brief-mutation accumulation" above, but a distinct consumer:
+`server/verify.py::_brief_is_currently_checked` (the M3 gate `POST /api/slots/<N>/done` runs before accepting a
+cross-repo plan-flip) requires a `- [x] <brief>` line where `<brief>` matches the task's dispatched `brief` field
+**exactly**, on that one physical line — not the whole multi-line todo body. Flipping `[ ]`→`[x]` AND prepending your
+own annotation/evidence text before the original brief on that SAME first line (e.g.
+`- [x] ✅ **DONE 2026-...** — <your summary>. <original brief text>`) breaks the exact-match and the `/done` call is
+rejected with `cross_repo_pm_file_touched_no_checkbox_flip` even though the flip genuinely happened (confirmed
+2026-07-31, `defi_satellite_ao_dispatch_batch6-005`) — indistinguishable from the already-documented
+`git mv`-in-same-commit trap in `unified-trading-pm/agents/RULES.md` § 2, but a different root cause. **Fix**: keep the
+checkbox's first line byte-identical to the dispatched `brief` (just `[ ]`→`[x]`); put every annotation/evidence
+paragraph on the lines/paragraphs AFTER it, never before it on the same line — matches the pattern already used
+throughout this corpus for evidence-bearing flips (e.g. `- [x] ✅ [TAG] Pn. <original text unchanged>` followed by a new
+paragraph starting `**DONE <date>** — ...`).
+
 ### A `done` task's checkbox is flipped back to `[ ]` after an audit — does dispatch notice?
 
 **Mechanically**: yes, the work redispatches, but under a **new** task_id, not the old one. Next regen tick, the
