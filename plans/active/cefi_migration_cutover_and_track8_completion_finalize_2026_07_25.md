@@ -23,7 +23,7 @@ related:
     /plans/archive/issues/cefi_shard_enumeration_blindspots_and_canonical_fetch_dependency_2026_07_18.md,
   ]
 created: "2026-07-25"
-last_updated: "2026-07-30"
+last_updated: "2026-07-31"
 parent_epic: cefi_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -77,10 +77,24 @@ drift_direction: advance-code
       `cefi_migration_cutover_and_track8_completion_2026_07_25.md` todo 4); fixed a stale `last_updated: 2026-07-18` →
       `2026-07-27` to match its actual last edit. Repo: unified-trading-pm. Evidence: this commit (see git log for
       `cefi_migration_cutover_and_track8_completion_finalize_2026_07_25.md`).
-- [ ] [DOC] P2. **Archive `/plans/archive/2026_07/cefi_migration_cutover_and_track8_completion_2026_07_25.md`** via the
-      standard 6-step ritual (per CLAUDE.md's plan-archival rule): confirm no Deferred items remain untracked → add the
-      archive banner → run the codex-alignment check → grep the corpus for every referrer of
-      `cefi_migration_cutover_and_track8_completion_2026_07_25` and fix each path to point at the archived location →
-      clear `locked_by` (already empty, confirm). **Done when**: the plan is moved to `plans/archive/2026_07/`, every
-      corpus referrer resolves to the new path, and this finalize doc itself gets archived alongside it in the same
-      commit.
+- [x] ✅ [DOC] P2. **DONE — the target plan is already archived + fully reconciled.** Verified all 6 ritual steps
+      against `/plans/archive/2026_07/cefi_migration_cutover_and_track8_completion_2026_07_25.md`: (1) its own "##
+      Deferred work — migrated to:" section already reads **None** (verified fully complete at archival, zero open
+      todos); (2) the archive banner is present ("🗄️ ARCHIVED 2026-07-28 (plan-hygiene sweep) — role fulfilled"); (3)
+      codex-alignment check: `grep -rl` for the plan's slug across `codex/` returns zero hits — no codex doc references
+      it, nothing to update; (4) no new durable contract from this plan beyond what's already reflected (per its own "No
+      new durable contract is created by this plan" Codex-SSOTs note); (5) corpus-wide referrer grep (33 hits across the
+      repo) — every formal `/plans/...`-prefixed citation already resolves to
+      `/plans/archive/2026_07/cefi_migration_cutover_and_track8_completion_2026_07_25.md` (the referrer-fix already
+      landed in `unified-trading-pm@9f12b267d`, "archive 26 verified-complete plan/issue docs + corpus-wide referrer
+      fixes"); (6) `locked_by` confirmed empty in the archived doc's frontmatter. **Correction to this todo's own "done
+      when" clause**: the target plan's archival happened in a PRIOR commit (`9f12b267d`), not concurrently with this
+      touch, so "archived alongside it in the same commit" is no longer literally achievable — flagging this finalize
+      plan itself as now fully done (all 3 todos `[x]`, unlocked) is the closest correct execution of that intent;
+      archiving it is the immediate follow-up action per
+      `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md` § 1 ("archive the moment a plan is genuinely
+      done"), done as a separate commit per that same doc's HARD RULE against combining a checkbox flip with a `git mv`
+      in one commit (`RULES.md` § 2, 2026-07-30 incident). One stale referrer found + will be fixed in the archival
+      commit: the archived target plan's own `related:` frontmatter still points at
+      `/plans/active/cefi_migration_cutover_and_track8_completion_finalize_2026_07_25.md` (this doc's pre-archival
+      path). Repo: unified-trading-pm.
