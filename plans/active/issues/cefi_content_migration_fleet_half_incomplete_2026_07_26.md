@@ -131,7 +131,9 @@ canonicalised by this fleet. The migration's own `# Delete-when:` marker on
       myself (out of this todo's scope). **~14:0xZ (slot-4)**: round 3 has since launched (13 of 17 relaunched, 4
       skipped on `RB-INFRA-RELAUNCH` budget, pending operator decision) — of those 13, 9 still running, 4 (19, 40,
       43, 44) already died/preempted again. Still not 44/44; still not flipping. Full detail in the split doc's Progress
-      Log.
+      Log. **14:19Z (slot-4, re-check)**: same 9/13 still `RUNNING` with genuinely advancing `Progress:` counters (no
+      new deaths, no stalls), same 8 shards still dead/not-relaunched. Still not 44/44; still not flipping. Full detail
+      in the split doc's Progress Log.
 - [x] [SCRIPT] P2. ✅ **Relaunch the 18 shards still incomplete after this session's wave** (13, 15, 16, 17, 18, 19, 20,
       21, 22, 23, 24, 25, 29, 40, 41, 42, 43, 44), now using the fixed tarball (`market-tick-data-service@9f4098b1`,
       merged 2026-07-30T18:04:44Z) which should clear the memory-leak freeze class that killed most of them. Recover
