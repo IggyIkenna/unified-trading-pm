@@ -122,8 +122,8 @@ launcher's own inline shutdown-script no longer depends on the GCS copy of `setu
 all — as the actual pattern to propagate). Filing as a scoped audit + a design question, not attempting the 139-file
 sweep here.
 
-- [ ] [INFRA] P2. Correct `launcher_common.sh:291-292`'s stale "~80 launchers" comment to the measured count (4) — a
-      one-line doc fix, cheap and immediately actionable. (repo: deployment-service)
+- [x] ✅ [INFRA] P2. Correct `launcher_common.sh:291-292`'s stale "~80 launchers" comment to the measured count (4) — a
+      one-line doc fix, cheap and immediately actionable. (repo: deployment-service) — deployment-service@daf3ad5
 - [ ] [DATA] P2. Determine whether GCS object versioning can be retroactively enabled on
       `deployment-scripts-central-element-323112` (and the other `deployment-scripts-*` buckets) so a future incident of
       this shape has a historical generation to inspect — would have let this session confirm/refute theory 1 directly
