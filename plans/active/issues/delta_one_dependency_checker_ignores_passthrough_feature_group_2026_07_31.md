@@ -21,7 +21,7 @@ summary: >-
   BEFORE instrument discovery even starts) has no equivalent exemption, so a pass-through backfill whose target date
   predates MDPS's DEFI candle-derivation coverage is blocked before it ever reaches the code that would have handled it
   correctly.
-status: open
+status: resolved
 nature: issue
 asset_group: [defi]
 stage: [data]
@@ -46,7 +46,7 @@ assigned_role: backend_engineer
 drift_direction: advance-code
 depends_on: []
 locked_by:
-resolved_by:
+resolved_by: features-service@f57d11ae
 ---
 
 # What I found
@@ -117,7 +117,7 @@ unplanned scope mid-backfill.
 
 # Recommended decision
 
-- [ ] [BACKEND] P2. Thread `feature_group` (or a resolved `candle_data_types: frozenset[str]`) into
+- [x] ✅ [BACKEND] P2. Thread `feature_group` (or a resolved `candle_data_types: frozenset[str]`) into
       `_check_dependencies`/`_run_preflight` (`features_service/delta_one/cli/handlers/batch_handler.py`) and skip (or
       down-weight to non-required) the `market-data-processing-service`/`processed_candles` `UPSTREAM_DEPS` entry when
       every requested feature_group's data_types are pass-through (`not needs_candle_processing(dt)` for all), mirroring
@@ -129,7 +129,8 @@ unplanned scope mid-backfill.
       2022-11-01/DEFI) passing preflight without `--skip-dependency-check`, and confirm CEFI/TRADFI's existing (correct)
       candle-required behavior is unchanged. Repo: features-service. Done when: the described scenario passes preflight
       without `--skip-dependency-check`, `bash scripts/quality-gates.sh` is green, and the fix ships via
-      `quickmerge.sh --agent --files`.
+      `quickmerge.sh --agent --files`. — features-service@f57d11ae (dependency_checker.py 86c0628f + line-cap split
+      f57d11ae), quality-gates.sh green (18055 passed), 5-case regression test added.
 
 # Progress Log
 
@@ -137,3 +138,11 @@ unplanned scope mid-backfill.
   todo's `returns` full-window production launch hit this exact false-negative preflight block on its real
   manifest-verified start date; worked around via `SKIP_DEPENDENCY_CHECK=1` for this session's launch (independently
   verified safe), filing the proper fix as scoped follow-up work rather than absorbing it mid-backfill.
+- 2026-07-31 (slot-7, backend_engineer craft): implemented the fix — added
+  `DependencyChecker.check_dependencies_for_feature_groups` (delegates to a new
+  `_passthrough_dependency_exemption.build_report_for_feature_groups` helper, split out to keep `dependency_checker.py`
+  under the 900-line file-size gate), threaded `feature_groups` through `batch_handler.py`'s
+  `_check_dependencies`/`_run_preflight`, and added
+  `tests/delta_one/unit/test_dependency_checker_passthrough_exemption.py` (DEFI returns/funding_oi skip MDPS, DEFI mixed
+  set + CEFI/TRADFI still require it). `quality-gates.sh` green (18055 passed, 209 skipped). Shipped
+  features-service@f57d11ae, verified ancestor of `origin/live-defi-rollout`.
