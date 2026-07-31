@@ -189,7 +189,7 @@ drift_direction: advance-code
       (the archived doc is cited, not edited). Source: `tradfi_consolidated_closeout_2026_07_18.md` (native, lines
       245-254), narrowed.
 
-- [ ] [BACKEND] P2. **Audit every adapter/handler module under the 3 named tradfi directories for duplicate
+- [x] ✅ [BACKEND] P2. **Audit every adapter/handler module under the 3 named tradfi directories for duplicate
       implementations, a runtime fallback masking a real failure, and dead (referenced-but-never-scheduled) code, per
       `/codex/06-coding-standards/adapter-dead-code-and-fallback-ban.md`.** Source native todo (lines 259-266),
       unmodified — this is already precisely scoped in the closeout doc: audit
@@ -200,7 +200,13 @@ drift_direction: advance-code
       adapter directory, cited with file paths, recorded in a NEW
       `plans/active/issues/tradfi_adapter_dead_code_fallback_audit_2026_07_25.md` doc (do not write into the closeout
       plan directly — this batch's finalize plan reconciles the closeout's own checkbox once this lands). Source:
-      `tradfi_consolidated_closeout_2026_07_18.md` (native, lines 259-266).
+      `tradfi_consolidated_closeout_2026_07_18.md` (native, lines 259-266). — **DONE 2026-07-31 (slot 11)**: 3 parallel
+      sub-agents audited all 47 files across the 3 named directories (11 + 29 + 7). Filed
+      `tradfi_adapter_dead_code_fallback_audit_2026_07_25.md`: 14 findings (1 live silent-fallback feeding the
+      honest-absence gate — `databento/sessions.py` — flagged P1; 8 dead-code instances; a misplaced 8-file Tardis
+      cluster tagged with the wrong venue category; 3 minor consistency gaps; 1 duplicate-implementation pair found just
+      outside the named scope) + a CLAUDE.md doc-accuracy gap, each with a scoped fix todo. 26 of 47 files clean. Both
+      files (this checkbox flip + the new issue doc) land in the same unified-trading-pm commit.
 
 - [ ] [CODE] P2. **Wire a durable classification so billing-gated Databento L2/L3 entitlement-guard rejections
       (`mbp_10`/`trades`/`tbbo` outside the 1-month L3 / 1-year L1 window) do not count as `attempted_failed`.** Source
