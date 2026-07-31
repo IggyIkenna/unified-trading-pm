@@ -110,14 +110,21 @@ row_key for aggregate bundle writes" (2026-07-31 03:03:24Z).
 
 ## Recommended fix (concrete, bounded, worker-determinable — per the review agent)
 
-- [ ] [BACKEND] P1. In `market_data_processing_service/app/core/canonical_writer_streaming.py`: change both
+- [x] ✅ [BACKEND] P1. In `market_data_processing_service/app/core/canonical_writer_streaming.py`: change both
       `rk["instrument_id"]` accesses (line 442 log call, line 596 `_emit_status_for_shard` call) to
       `rk.get("instrument_id", "")`, matching the safe access already used at line ~453; update the now-stale comment at
       lines 580-588 so it no longer claims `instrument_id` is unconditionally present (note aggregate-bundle writes omit
       it per c78285b); add a regression test driving `close_candle_streaming_writer` with an aggregate (empty-
       instrument_id) `row_key` and `error is not None` (and separately a manifest-write exception) asserting it records
       `attempted_failed` with no `KeyError`. Only `instrument_id` was removed by c78285b — `venue`/`date` remain
-      present, so scope the change to `instrument_id`. (repo: market-data-processing-service)
+      present, so scope the change to `instrument_id`. (repo: market-data-processing-service) —
+      market-data-processing-service@001ae56 (2026-07-31): both accesses now use `rk.get("instrument_id", "")` (with
+      `# noqa: qg-empty-fallback` — a new deliberate site over the QG STEP 5.101 baseline, matching the established
+      `chain` pattern in the same file), the stale lines 584-588 comment corrected, and two new regression tests added
+      to `tests/unit/test_streaming_write_per_tf.py`
+      (`test_close_candle_streaming_writer_error_path_aggregate_row_key_no_keyerror`,
+      `test_manifest_write_exception_aggregate_row_key_no_keyerror`) driving both failure paths with an aggregate (no
+      `instrument_id` key) row_key — full `quality-gates.sh` green, SHA verified on `origin/live-defi-rollout`.
 
 ## Progress Log
 
