@@ -855,3 +855,30 @@ not just noting.
   time. Two new todos opened above per main's disposition (`[BACKEND] P1` machine-enforced concurrency gate, `[DOCS] P3`
   boot-read-list gap). No code or infra change made this entry; read-only AO-activity-API + host `uptime`/`free`/`ps`
   queries only; slot 1 left clean on `live-defi-rollout` (only this doc touched).
+
+- **2026-07-31 ~18:19-19:01Z (cicd escalation `agt-42e4c4`, slot 7, `features-service` PR#919, `ldr_qg_failure`)**:
+  corroborating data point, no code fix warranted. The escalation context was a red `quality-gates-v2` on promotion PR
+  #919 (13:31Z run `30634783434`) — by the time I picked it up the PR had already merged (13:31:24Z, `IggyIkenna`) and
+  main's own post-merge gate had already gone green (`b5d7766c`), so nothing was actually blocked. Root-caused the
+  original failure anyway before closing: the `tests` slice hit a `pytest-timeout` on
+  `test_output_index_matches_input[1min-moving_averages]` (60s budget) and the `checks` slice separately hit
+  `Type check FAILED/timeout (exit=124)` on the `typecheck` selector (`PYRIGHT_TIMEOUT:-120` in `base-service.sh`) —
+  both selectors that only touch the same handful of feature calculators every run. Ruled out an actual code regression:
+  locally profiled the flagged `MovingAverages` calculator on the identical synthetic fixture — `calculate()` completes
+  in **1.4s**, nowhere near the 60s test budget. To get an independent confirmation I triggered a fresh
+  `workflow_dispatch` of `quality-gates-v2` on `live-defi-rollout` HEAD (`97351fef`, a routine main→LDR backmerge with
+  no manual diff) — it **also** failed, again on the `typecheck` selector, again at almost exactly the 120s mark
+  (18:51:06.84Z→18:53:07.14Z = ~120.3s), while the immediately-following `lint-codex` slice's own basedpyright sanity
+  check (STEP 5.21/5.22, same binary/cache) passed in ~15s. Two independent timeouts on content that was already proven
+  clean (by profiling, by the prior LDR green at 16:35Z on the pre-backmerge commit, and by main's own green post-merge
+  run) is the signature this doc already tracks, not a fresh regression. Host corroboration: `uptime` on
+  `ip-172-31-5-118` (same box the CI runner `glue-ip-172-31-5-118-1` name resolves to) at 19:01:20Z read **load average
+  15.14/14.26/14.74 on 16 vCPU** — climbed back up from the 18:08:44Z "eased" (6.00) reading two entries above, inside
+  the ~45min window that contains my 18:50-18:53Z basedpyright timeout — consistent with this doc's
+  "fluctuating-but-still-elevated," "burst-not-sustained-worsening" characterization, not a new incident. Disposition:
+  no code change to `features-service`; did not force a third LDR retrigger (PR919 already resolved, nothing currently
+  blocked, and per this doc's own "shared CI-firefighter slot time is not unlimited" guidance a periodic health-check
+  re-run isn't worth spending more of it on). Appended here per the "protected-6 stay self-hosted, accept recurring
+  reds, resolve via retrigger" posture rather than filing a new issue or a code fix. No repo state changed;
+  `features-service` and `unified-trading-pm` slot-7 worktrees left clean on `live-defi-rollout` (only this doc
+  touched).
