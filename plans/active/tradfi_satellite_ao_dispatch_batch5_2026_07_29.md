@@ -543,6 +543,45 @@ mirroring the batch1/batch2/batch3/batch4 finalize pattern.
   were stale this round despite being fresh on the prior 023743/092148/092224 wave — freshness drifts as LDR keeps
   moving, so it must be re-checked per relaunch, not assumed from a prior session's confirmation).
 
+- **2026-07-31 (slot-6, backend_engineer craft, task `tradfi_satellite_ao_dispatch_batch5-001`)** — Resumed todo 2 a
+  fifth time. Did a full fleet audit of all 14 canonical ES/MES shards (2020-2026 × es/es3) via
+  `EXIT_STATUS`/`PROGRESS.json` in `vm-logs/` rather than trusting liveness: **10 of 14 had already reached a terminal
+  EXIT_STATUS** (some `=1` from already-known non-blocking weekend/schema gaps, not real failures) and 2024 was fully
+  complete via slot-12's `y2024-resume3` (`last_completed_date=2024-12-30`). **4 shards were genuinely incomplete and
+  had no VM running anywhere** (2021es3, 2022es, 2022es3, 2025es3) — all preempted/lost early with no PROGRESS.json
+  checkpoint, no relaunch attempted since. Relaunched all 4 non-force (`*-resume-20260731` names, exact original scope
+  from each dead VM's `LAUNCH_PARAMS.json`). **Caught and self-corrected a mistake**: the first relaunch (`y2021es3`)
+  went out on 5 STALE tarballs (the launcher only warns, does not block, unless `LC_TARBALL_FRESHNESS=enforce`) —
+  deleted it before any work was lost, verified all known fixes (`43b043b`, `c78285b`, `75b5735`, `4eeb495f`) are
+  ancestors of the fresh-pulled repos, republished all 5 tarballs, then relaunched all 4 shards cleanly
+  (`lc_verify_tarball_freshness: all 5 tarball(s) current` on every launch). Verified genuine progress past the
+  no-fire-and-forget bar via `run.log` on all 4. **Hit a NEW blocker while investigating a manifest-consolidator
+  staleness error on all 4**: initially found the tradfi consolidator's per-minute cron showing zero invocation logs
+  13:45-18:23Z and (using the wrong audit-log filter) no pause/resume events, drafted a "self-recovered, unexplained"
+  issue doc — then a `git pull` mid-session surfaced the REAL, already-filed explanation:
+  `issues/dp_consolidator_scheduler_paused_tradfi_recurrence_2026_07_31.md` (slot-2/12, resolved). The cron was
+  DELIBERATELY paused by the unrelated `mtds_available_at_cross_asset_backfill_2026_07_13.md` plan's own
+  pause/apply/resume backfill protocol (paused 13:45:52Z); a dp-fleet-monitor escalation briefly (and mistakenly)
+  resumed it, caught the mistake within ~3min (confirmed zero consolidator ticks fired), then re-paused it and
+  registered a proper maintenance window. **Confirmed independently via GCS** (no scheduler IAM needed):
+  `gs://market-data-tick-tradfi-prd-central-element-323112/_index/_maintenance_window.json` reads
+  `{"locked_by": "mtds_available_at_cross_asset_backfill_2026_07_13", "expires_at": "2026-08-03T18:26:16+00:00", ...}` —
+  the tradfi market-data consolidator is intentionally held OFF until that sibling plan's apply+resume todos complete
+  (2026-08-03 at the latest). Withdrew my own draft issue doc (left untracked, never committed — redundant
+  - partly wrong on the "no pause event" claim) rather than duplicate the corpus. **This is now the real gate on todo
+    2**: my 4 relaunched shards (and any other tradfi MDPS consolidator-dependent read) will keep hitting
+    `ManifestConsolidatorStaleError`/bounded-wait until that maintenance window lifts — not something to force through
+    (resuming it myself would race the other plan's protocol, exactly the mistake the escalation worker caught itself
+    making). Declining/skipping rather than busy-waiting or fighting another plan's legitimate hold, same posture as
+    every prior slot on this todo, but with a new explicit dependency now on record. **Next dispatch**: before resuming
+    todo 2, check `gs://market-data-tick-tradfi-prd-central-element-323112/_index/_maintenance_window.json` — if it's
+    gone/expired (past 2026-08-03T18:26:16Z or `mtds_available_at_cross_asset_backfill_2026_07_13` shows its
+    apply+resume todos done), THEN check the 4 `*-resume-20260731` VMs for `EXIT_STATUS` completion (they may need a
+    fresh non-force relaunch if the multi-day consolidator gate stalled them past their SPOT lifetime), re-verify
+    2020/2021es/2023/2025es/2026 (already `EXIT_STATUS=1` from known non-blocking gaps) don't need a redo, then run
+    `build-continuous --root ES` and the 1d/24h hit-rate re-measure against the ~19% (454/2398) baseline in
+    `issues/tradfi_mdps_build_continuous_mismatches_2_and_4_still_open_2026_07_26.md`.
+
 ## Codex SSOTs
 
 No new durable contract is created by this plan — every todo executes an already-decided spec from its source doc, or
