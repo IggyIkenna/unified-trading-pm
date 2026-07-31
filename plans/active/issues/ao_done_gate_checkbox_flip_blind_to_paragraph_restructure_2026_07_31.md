@@ -22,7 +22,7 @@ summary: >-
   FIRST as a plain edit, THEN `git mv` separately) — no `git mv` was involved here at all, and I already followed the
   "flip first, restructure separately" discipline (two separate commits: `f901b683f` did the wording/framing changes,
   `81370aa29` did the actual split+flip) — the SECOND commit alone still failed the check.
-status: open
+status: resolved # (was: open) 2026-07-31 -- fixed + shipped agent-orchestrator@caa1f70
 nature: issue
 asset_group: [ao]
 stage: [meta]
@@ -43,7 +43,7 @@ assigned_vm: NA
 execution_scope: local-only
 estimate_class: research
 assigned_role: backend_engineer
-resolved_by:
+resolved_by: agent-orchestrator@caa1f70
 locked_by:
 depends_on: []
 drift_direction: advance-code
@@ -108,10 +108,24 @@ and correct the doc above once known.
 
 ## Todos
 
-- [ ] [CODE] P2. Root-cause `server/verify.py`'s Mode-2 flip-recognition diff heuristic against the reproduction above
-      (`unified-trading-pm@81370aa29`, task `deployment_api_qg_size_gate_debt-007`) and widen it to recognize a genuine
-      `[ ]`→`[x]` transition even when the surrounding paragraph is reworded/split in the same commit. Repo:
-      agent-orchestrator.
+- [x] ✅ [CODE] P2. **DONE 2026-07-31 (slot-2, infra craft).** Root-caused empirically against the exact reproduction
+      (`unified-trading-pm@81370aa29`/`f901b683f`, task `deployment_api_qg_size_gate_debt-007`): confirmed via
+      `git     show --unified=0` that NEITHER commit's diff alone satisfies `_diff_flips_checkbox` — commit `f901b683f`
+      removes the original brief but adds another still-`[ ]` line (PARTIAL framing); commit `81370aa29` removes the
+      already-reworded (not original) line and adds the real `[x]` line. The exact-brief fallback
+      `_brief_is_currently_checked` also misses it once the closure line is annotated (`✅` + evidence trailer). Fixed
+      by extending the SAME tag+priority-correlated fallback `_archival_rename_disposition` already uses for the rename
+      case (`_brief_is_checked_by_tag_in_text`) to apply WITHOUT requiring a rename — wired into
+      `_mode1_fallback_disposition`, `_mode2_no_recent_commit_disposition`, and the `pm_shas`-non-empty branch of
+      `check_plan_flip` (new `reason="checkbox_checked_tag_correlated"`; fails CLOSED on ambiguous duplicate
+      tag+priority, same as the existing archival fallback). 2 new regression tests added
+      (`test_done_accepts_cross_repo_flip_when_paragraph_reworded_across_two_commits` — confirmed FAILING before the
+      fix, reproducing the exact incident;
+      `test_done_rejects_cross_repo_flip_when_tag_correlation_ambiguous_after_reword` — fail-closed sibling). Verified:
+      both new tests pass, full 33-test `test_done_gate_plan_flip_hard_reject.py` green (no regression across every
+      other disposition), `test_backlog_reconcile_brief.py` + `test_regen_backlog_from_plan.py` green (191 tests),
+      ruff/basedpyright clean, full `quality-gates.sh` green (2157 tests, 0 regressions, 129s). Repo:
+      agent-orchestrator@caa1f70.
 
 ## Progress Log
 
@@ -120,3 +134,8 @@ and correct the doc above once known.
   only the `/done` signal itself is blocked. Ending session without a clean `/done` per the established precedent for
   orchestrator-side `/done` anomalies (see `data_pipeline_failure_one_shot_done_no_agentrow_2026_07_29.md` for the
   sibling precedent on a different `/done` failure class).
+- 2026-07-31 (slot-2, infra craft, same session picked this up interactively after closing out the
+  `deployment_api_qg_size_gate_debt_2026_07_30.md` plan that surfaced it): root-caused + fixed, see the flipped todo
+  above for full detail. `agent-orchestrator@caa1f70`. Resolves the issue — the same reword-then-split pattern this
+  doc's own convention recommends (split a multi-file todo at dispatch time) will now be recognized by `/done` without
+  requiring a workaround.
