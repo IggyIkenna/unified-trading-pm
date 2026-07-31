@@ -48,8 +48,8 @@ source: >-
   /na-eligibility-audit ci skill run 2026-07-31 (autonomous, scheduled dispatch agt-1afa0f, role na_eligibility_auditor,
   slot 3) — Phase 2 conflict-check prep, cross-checking a same-day draft ag-closeout-audit batch before finalizing
   RECLASSIFY-adjacent verdicts.
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 estimate_class: design
 estimate_baseline_ai_days: 0.5
 estimate_calibrated_ai_days: 0.3
@@ -134,11 +134,17 @@ mechanical addition (not a judgment call) and I'd recommend it regardless of how
       finalizing a RECLASSIFY or drafting a new extraction." Update both `na-eligibility-audit/SKILL.md` and
       `ag-closeout-audit/SKILL.md` to reference the new surface explicitly (the former's Phase 2, the latter's own Phase
       3 conflict-check) rather than leaving it to be independently rediscovered per run.
-- [ ] [SCRIPT] P3. Decide question (1) above (operator or design-owning agent), then either (a) add an
-      `assigned_vm != "NA"` guard to `generate_ag_closeout_audit_candidates.py`'s candidate filter and correct nothing
-      else (SKILL.md's claim becomes true), or (b) correct `na-eligibility-audit/SKILL.md`'s "disjoint population" /
-      "`/ag-closeout-audit` correctly never touches it" claim to describe the actual (non-disjoint) boundary, making the
-      4th conflict-check surface above load-bearing rather than defense-in-depth.
+- [ ] [OPERATOR] P3. **RETAGGED (na-eligibility-audit 2026-07-31, was `[SCRIPT]`)** — decide question (1) above
+      (operator or design-owning agent), then either (a) add an `assigned_vm != "NA"` guard to
+      `generate_ag_closeout_audit_candidates.py`'s candidate filter and correct nothing else (SKILL.md's claim becomes
+      true), or (b) correct `na-eligibility-audit/SKILL.md`'s "disjoint population" / "`/ag-closeout-audit` correctly
+      never touches it" claim to describe the actual (non-disjoint) boundary, making the 4th conflict-check surface
+      above load-bearing rather than defense-in-depth. Retagged because this is a genuine design call, not bounded
+      worker-determinable work. **Duplicate-decision note**: this is the SAME underlying question as
+      `plans/active/issues/ag_closeout_audit_orphan_definition_and_digest_citation_defects_2026_07_30.md`'s own open
+      `[OPERATOR] P1 BLOCKED-OPERATOR-DECISION` todo (its Finding 2 — whether an `assigned_vm: NA` doc can be an orphan
+      candidate at all). Whoever rules on either should resolve both in the same pass; do not answer twice
+      independently.
 
 ## What I did NOT do
 
@@ -147,3 +153,17 @@ genuine design call outside a single audit run's scope to resolve unilaterally, 
 skill's owner. Did not flip `assigned_vm` on any of the 3 overlapping docs — see each doc's own
 `## na-eligibility-audit verdict` section (2026-07-31 entries) for the per-doc KEEP-NA-STALE reasoning that avoided the
 duplicate-dispatch risk this run.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-31** (tranche=cross-cutting, dispatch agt-845699): RECLASSIFY (partial) →
+  `assigned_vm: NA → planning` (in place, name unchanged). Todo 1 (add the 4th conflict-check surface to the codex
+  SSOT + both SKILL.md files) is bounded, mechanical, and explicitly stated by this doc's own author as valuable
+  "regardless of how (1) resolves" — left open, now dispatches. Todo 2 (decide the NA-exclusion design question)
+  retagged `[SCRIPT]→[OPERATOR]` and cross-referenced against
+  `ag_closeout_audit_orphan_definition_and_digest_citation_defects_2026_07_30.md`'s own already-open, already-active
+  `[OPERATOR]` decision on the same underlying question (found by this audit's own conflict-check — see that todo's
+  note). Conflict-check (`/codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md` § 3) on todo 1:
+  grepped for any existing claim on "4th conflict-check surface" / cross-skill draft-batch checking anywhere in the
+  active corpus — zero hits besides this doc itself. Also checked every `status:active`+`assigned_vm:planning` doc under
+  `parent_epic:agent_operating_framework_master` (18 docs) for a competing claim — none. CLEARED.

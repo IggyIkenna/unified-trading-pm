@@ -22,14 +22,15 @@ related:
     /plans/archive/issues/launcher_gcloud_continuation_broken_by_disk_sweep_2026_07_18.md,
   ]
 created: 2026-07-18
+last_updated: "2026-07-31"
 parent_epic: infrastructure_master
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 priority: P2
 estimate_class: refactor
 estimate_baseline_ai_days: 1.0
 estimate_calibrated_ai_days: 0.4
-assigned_role: backend
+assigned_role: backend_engineer
 drift_direction: advance-code
 depends_on: []
 source: ["three parallel read-only writer audits run after the 2026-07-18 CeFi disk/throughput investigation"]
@@ -141,3 +142,15 @@ the call is still awaited (ordering preserved), and check the file's line/functi
 - **na-eligibility-audit 2026-07-30**: RECLASSIFY candidate PARKED (conflict) — stays KEEP-NA —
   `cross_cutting_satellite_ao_dispatch_batch1_2026_07_26.md` explicitly records 'GENUINE overlap found' against this
   doc. Not flipped.
+- **na-eligibility-audit 2026-07-31** (tranche=cross-cutting, dispatch agt-845699): RECLASSIFY →
+  `assigned_vm: NA → planning` (in place, name unchanged). The prior 2026-07-30 PARKED-conflict entry above is
+  superseded — the doc's own todo text was independently SCOPE-NARROWED 2026-07-31 by a corpus-wide ownership-conflict
+  sweep (see the todo's own "SCOPE NARROWED 2026-07-31" note), resolving the GENUINE overlap by re-verifying against
+  live code that batch1's fix (`mtds@ff1b5d51`) only covers `solana_defi_handler.py`/`dex_pools_handler.py`, leaving the
+  remaining 8 named DeFi CLI handlers as this doc's own uncontested residual. Conflict-check
+  (`/codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md` § 3), re-run fresh against the narrowed
+  scope: grepped every `status:active`+`assigned_vm:planning` doc under `parent_epic:infrastructure_master`, every
+  sibling `*_ao_dispatch_batch*.md`/`*_finalize_*.md`, and `cross_cutting_consolidated_closeout_2026_07_25.md` for the 8
+  named handler files + `ParallelPerSymbolRunner`/`asyncio.gather`/`Semaphore`/`defi_max_concurrent_fetches` — zero
+  competing dispatch claim found. CLEARED. Also corrected `assigned_role: backend` (not a registered role) →
+  `backend_engineer` (validated against `agents/*.md`).

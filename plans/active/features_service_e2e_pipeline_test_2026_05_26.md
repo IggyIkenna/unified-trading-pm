@@ -21,15 +21,16 @@ related:
   ]
 created: 2026-05-25
 parent_epic: features_and_ml_master
-assigned_vm: NA
+assigned_vm: planning
 execution_scope: orchestrator-agent
 priority: P0
 estimate_class: brand-new
 estimate_baseline_ai_days: 6
 estimate_calibrated_ai_days: 6
-last_updated: 2026-06-03
-locked_by: live-defi-rollout
-locked_since: 2026-05-25
+assigned_role: data_engineering
+last_updated: "2026-07-31"
+locked_by:
+locked_since:
 supersedes:
 superseded_by:
 depends_on:
@@ -703,8 +704,11 @@ zero-risk read→calc smoke. **Next session:** dry-run smoke → then `IS_TEST_R
       **Re-check before dispatch (2026-07-27):** broad CeFi candle-completion work landed since
       (`data_completion_cefi_2026_07_15.md`, `cefi_consolidated_closeout_2026_07_18.md`) but this exact
       date-range/timeframe ask wasn't independently confirmed closed.
-- [ ] [VALIDATE] P2. **`usdc_idle_yield_apy_bps` stub** — confirm leave-as-0-floor (acked) vs wire `venue_funding_yield`
-      upstream; folded with the per-service status-calibration audit. Repo: features-service onchain + delta_one.
+- [ ] [OPERATOR] P2. **RETAGGED (na-eligibility-audit 2026-07-31, was `[VALIDATE]`)** — `usdc_idle_yield_apy_bps` stub**
+      — confirm leave-as-0-floor (acked) vs wire `venue_funding_yield` upstream; folded with the per-service
+      status-calibration audit. Repo: features-service onchain + delta_one. Retagged because this is an open-ended
+      product/strategy judgment call (wire it up vs. explicitly drop the field), not a bounded checkable fact — the
+      other 3 Track-1 items below are worker-determinable and now dispatch; this one needs a decision first.
 
 ## Temporary states + their canonical follow-up plans
 
@@ -735,3 +739,22 @@ Two bare `DEFERRED` mentions, re-audited 2026-07-21:
   named successor in this doc's own "Temporary states + their canonical follow-up plans" table:
   **`features_and_ml_master`** Phase 3 (honest-absence recording for mtf) owns emitting
   `empty_confirmed(NO_INPUT_AVAILABLE)` when `_load_and_join` returns `None`.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-31** (tranche=cross-cutting, dispatch agt-845699): RECLASSIFY (partial) →
+  `assigned_vm: NA → planning` (in place, name unchanged); `locked_by: live-defi-rollout` cleared (the doc's own
+  2026-07-27 "✅ HOLD LIFTED (operator decision)" banner already states the original ROLLOUT-AGENT hold this lock
+  reflected is lifted — clearing the field to match the already-stated fact, not a new judgment call); filled missing
+  `assigned_role: data_engineering`. Of the 4 "Open Track-1 todos": 3 (Phase A onchain e2e, Phase B CeFi MDPS
+  top-up+delta_one re-verify, DEFERRED-fan-out MDPS backfill 2026-04-14→04-30+BITGET-SPOT 4h/24h) are bounded,
+  worker-determinable, conflict-clear — left open, now dispatch. The 4th (`usdc_idle_yield_apy_bps` stub disposition) is
+  an open-ended product/strategy judgment call — retagged `[VALIDATE]→[OPERATOR]` so it stays non-dispatchable now that
+  this doc's `assigned_vm` flips. Conflict-check
+  (`/codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md` § 3): checked the 2 other active
+  `parent_epic:features_and_ml_master` docs (both NA, no overlap), the wider corpus for the exact mechanism strings
+  (zero hits), sibling batch/finalize docs, and `cross_cutting_consolidated_closeout_2026_07_25.md` (zero hits) —
+  CLEARED. Noted for the record: `cross_cutting_satellite_ao_dispatch_batch1_2026_07_26.md`'s own "Deferred —
+  conflict-gated" entry citing this doc is now stale (pre-dates the 2026-07-27 hold-lift/reconciliation that superseded
+  3 of its 7 originally-cited items) — hygiene nit, not a blocker to this reclassify, left for that doc's own next
+  touch.

@@ -22,11 +22,13 @@ scope: [engineer]
 tags: [prettier, prosewrap, tooling, plan-hygiene, cosmetic, lint]
 related: [/codex/06-coding-standards/quality-gates.md]
 created: 2026-07-31
+last_updated: "2026-07-31"
 parent_epic: infrastructure_master
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 priority: P3
 estimate_class: infra
+assigned_role: backend_engineer
 drift_direction: advance-code
 depends_on: []
 source:
@@ -98,3 +100,10 @@ being rediscovered + hand-fixed one commit at a time rather than root-caused onc
   fd1b02c2c and the `.prettierrc` config. Set `assigned_vm: NA` per the ASK-BEFORE-CREATING hard rule; cosmetic /
   non-blocking, so P3. Operator can flip `assigned_vm: planning` + `execution_scope` to auto-dispatch the two
   precisely-scoped todos if desired.
+- **na-eligibility-audit 2026-07-31** (tranche=cross-cutting, dispatch agt-845699): RECLASSIFY →
+  `assigned_vm: NA → planning` (in place, name unchanged) — exactly the flip this doc's own filing note invited. Both
+  todos are precisely-scoped, deterministic-outcome, no judgment call. Conflict-check
+  (`/codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md` § 3): grepped every
+  `status:active`+`assigned_vm:planning` doc under `parent_epic:infrastructure_master` plus a corpus-wide search for
+  "prettier"/"prosewrap" and the named file `sports_stats_delayed_live_capture_still_dead_post_fix_2026_07_29.md` — zero
+  competing claim. CLEARED. Filled missing `assigned_role: backend_engineer` (matches both todos' `[BACKEND]` tag).

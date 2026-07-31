@@ -29,13 +29,16 @@ related:
     /codex/04-architecture/instrument-lifecycle-cache-delta-hot-reload.md,
   ]
 created: 2026-07-31
+last_updated: "2026-07-31"
 priority: P2
 parent_epic: infrastructure_master
-source: "slot-3, codex freshness re-review shard-B, discovered re-reviewing live-strategy-config-hot-reload.md, 2026-07-31"
-execution_scope: local-only
+assigned_role: backend_engineer
+source:
+  "slot-3, codex freshness re-review shard-B, discovered re-reviewing live-strategy-config-hot-reload.md, 2026-07-31"
+execution_scope: orchestrator-agent
 drift_direction: needs-decision
 depends_on: []
-assigned_vm: NA
+assigned_vm: planning
 resolved_by:
 locked_by:
 locked_since:
@@ -45,14 +48,14 @@ locked_since:
 
 ## Doc vs shipped (measured 2026-07-31)
 
-| Doc claim                                                   | Shipped reality                                                                     |
-| ------------------------------------------------------------ | ----------------------------------------------------------------------------------- |
-| `StrategyConfigReloader` class registered at startup        | Module-level `start_domain_config_reloaders(service_config)` on UTL `DomainConfigReloader` |
-| Emits `STRATEGY_CONFIG_RELOADED`                            | Emits `CONFIG_CHANGED` (`details.domain`) + `INSTRUMENT_UNIVERSE_CHANGED`           |
-| Validates diff against a safe-field allow-list              | **No allow-list exists**; unconditional atomic swap                                 |
-| Unsafe fields raise `UnsafeConfigChangeError`               | **Symbol does not exist anywhere in the workspace**                                 |
-| "Underlying instruments — NO, restart required"             | `_on_instruments_reload()` hot-swaps the universe + notifies engines via delta       |
-| "SAME validation rules apply batch and live"                | No validation gate on the live reload path at all                                    |
+| Doc claim                                            | Shipped reality                                                                            |
+| ---------------------------------------------------- | ------------------------------------------------------------------------------------------ |
+| `StrategyConfigReloader` class registered at startup | Module-level `start_domain_config_reloaders(service_config)` on UTL `DomainConfigReloader` |
+| Emits `STRATEGY_CONFIG_RELOADED`                     | Emits `CONFIG_CHANGED` (`details.domain`) + `INSTRUMENT_UNIVERSE_CHANGED`                  |
+| Validates diff against a safe-field allow-list       | **No allow-list exists**; unconditional atomic swap                                        |
+| Unsafe fields raise `UnsafeConfigChangeError`        | **Symbol does not exist anywhere in the workspace**                                        |
+| "Underlying instruments — NO, restart required"      | `_on_instruments_reload()` hot-swaps the universe + notifies engines via delta             |
+| "SAME validation rules apply batch and live"         | No validation gate on the live reload path at all                                          |
 
 Also shipped but undocumented: `VersionGovernanceReloader` / `start_version_governance_reloader()` and
 `StrategyDirectiveReloader` / `start_directive_reloader(poll_interval_seconds=60)`.
@@ -63,8 +66,8 @@ This doc is the SSOT an operator or agent would consult before changing a live s
 a guard-rail that is not there. Two concrete risks:
 
 1. **False confidence in a safety net.** An operator reading "unsafe-field changes raise `UnsafeConfigChangeError` and
-   require a planned restart through DART" may push an archetype-family or instrument-universe change to a live
-   strategy expecting the system to refuse it. Nothing refuses it.
+   require a planned restart through DART" may push an archetype-family or instrument-universe change to a live strategy
+   expecting the system to refuse it. Nothing refuses it.
 2. **Unclear correctness on instrument swaps.** The design asserts that swapping the underlying instrument set breaks
    position-state continuity. The code does exactly that swap, live. Either the design concern is real (and we have a
    live correctness hazard on every instrument-universe reload), or the concern is obsolete (and the doc is scaring
@@ -88,3 +91,16 @@ stating that the allow-list and error type do not exist and that the instrument 
       position-state-safe. Provenance: codex freshness re-review shard-B, 2026-07-31.
 - [ ] [DOC] P3. Document `VersionGovernanceReloader` + `StrategyDirectiveReloader` in
       `/codex/04-architecture/live-strategy-config-hot-reload.md` — both are shipped and currently absent from the SSOT.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-31** (tranche=cross-cutting, dispatch agt-845699): RECLASSIFY (partial) →
+  `assigned_vm: NA → planning` (in place, name unchanged). The `[OPERATOR]` P2 rule-between-A/B/C todo is a genuine
+  live-trading-safety judgment call and was already correctly tagged non-dispatchable — stays gated, no retag needed.
+  The `[DOC]` P3 todo (document the two already-shipped, undocumented reloader classes) is bounded, mechanical,
+  worker-determinable — left open, now dispatches. Conflict-check
+  (`/codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md` § 3): grepped every
+  `status:active`+`assigned_vm:planning` doc under `parent_epic:infrastructure_master` plus a workspace-wide search for
+  `config_reloaders`/`StrategyConfigReloader`/`DomainConfigReloader`/`VersionGovernanceReloader`/
+  `StrategyDirectiveReloader`/`UnsafeConfigChangeError`/`live-strategy-config-hot-reload` — zero competing claim.
+  CLEARED. Filled missing `assigned_role: backend_engineer`.

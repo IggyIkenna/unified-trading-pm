@@ -43,14 +43,14 @@ related:
   ]
 created: "2026-07-24"
 parent_epic: instruments_master
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 priority: P1
 estimate_class: infra
 estimate_baseline_ai_days: 2
 estimate_calibrated_ai_days: 1.6
 assigned_role: data_engineering
-last_updated: "2026-07-24"
+last_updated: "2026-07-31"
 locked_by:
 locked_since:
 supersedes:
@@ -441,12 +441,20 @@ invariants: `venue_noncanon_remaining=0`, `captured_venue_not_on_gcs_remaining=0
       validated (the `--apply` ran green + re-verified). Foreign `databento_tradfi_ws.py` left untouched (never staged).
       The coverage `scripts/*` omit landed independently via the foreign mtds@7d0b3d0 (so the pyproject edit was dropped
       as redundant). **The data deliverable is COMPLETE + verified regardless of the code-ship path.**
-- [ ] [DATA] P2. **pred `_index`: 21 captured `UNKNOWN`-venue `trades` cells (2025-03-14..)** — GCS has
-      `venue=POLYMARKET` only; these legacy `UNKNOWN`-venue rows have blank instrument_id (aggregate/legacy) and no
+- [x] ✅ [DATA] P2. **KEEP-NA-STALE (na-eligibility-audit 2026-07-31) — pred `_index`: 21 captured `UNKNOWN`-venue
+      `trades` cells (2025-03-14..)**. Already claimed verbatim as item (1) of
+      `plans/active/cross_cutting_satellite_ao_dispatch_batch1_2026_07_26.md`'s "Close 5 small bounded residuals from
+      instruments_mtds_consistency_remediation_residuals_2026_07_24.md" todo (~L339, `assigned_vm: planning`, active) —
+      that doc is the dispatch vehicle for this residual; closing here only to avoid a duplicate dispatch now that this
+      doc's own `assigned_vm` flips to `planning` for its other reclassify-eligible items. Original text preserved: GCS
+      has `venue=POLYMARKET` only; these legacy `UNKNOWN`-venue rows have blank instrument_id (aggregate/legacy) and no
       `venue=UNKNOWN` object. Recover the real POLYMARKET venue (join to the same-day
       `pipeline_mode=batch_polymarket_clob/venue=POLYMARKET` object) or route to honest-absence. Composes with N8 (pred
       label drift). — market-tick-data-service
-- [ ] [DATA] P2. **cefi `_index`: `COINBASE`(7)+`OKX`(7) captured rows with BLANK data_type/instrument_type** — GCS has
+- [x] ✅ [DATA] P2. **KEEP-NA-STALE (na-eligibility-audit 2026-07-31)** — already claimed verbatim as item (2) of
+      `plans/active/cross_cutting_satellite_ao_dispatch_batch1_2026_07_26.md`'s 5-residual todo (~L339, active,
+      `assigned_vm: planning`); closing here to avoid duplicate dispatch. Original text preserved: **cefi `_index`:
+      `COINBASE`(7)+`OKX`(7) captured rows with BLANK data_type/instrument_type** — GCS has
       `venue=COINBASE-SPOT`/`OKX-SPOT`/`OKX-SWAP` (market-type-suffixed), NOT bare `COINBASE`/`OKX`. These are malformed
       blank-shard-dim aggregate captured rows with no concrete object; the bare→suffixed map is AMBIGUOUS (SPOT vs
       FUTURES vs SWAP) so NOT a mechanical spelling-canon. Diagnose the writer that emitted blank-dim bare-venue rows;
@@ -472,7 +480,10 @@ the killer leg vs Polymarket BTC binaries) are in `_CME_EVENT_CONTRACTS`
 subscription (no extra dataset), tagged `event_contract`, validity `{trades, ohlcv-1s, tbbo}`. Gather was STARTED, not
 finished. Active plan: `tradfi_cme_event_contract_backfill_2026_06_20.md`.
 
-- [ ] [DATA] P1. **CME EC\* event-contract backfill — v9-certification dependency only** (execution owned by
+- [x] ✅ [DATA] P1. **KEEP-NA-STALE (na-eligibility-audit 2026-07-31)** — already claimed verbatim as item (3) of
+      `plans/active/cross_cutting_satellite_ao_dispatch_batch1_2026_07_26.md`'s 5-residual todo (~L339, active,
+      `assigned_vm: planning`); closing here to avoid duplicate dispatch. Original text preserved: **CME EC\*
+      event-contract backfill — v9-certification dependency only** (execution owned by
       `tradfi_cme_event_contract_backfill_2026_06_20`, tradfi_master). I-2's stake is narrow: verify the EC\* cells (9
       `.OPT`-parent series on GLBX.MDP3, `{trades, ohlcv_1s, tbbo}`) land in the v9 `_index` and that this plan's FINAL
       CERTIFICATION explicitly checks EC\* coverage (esp. ECBTC). Do NOT launch a duplicate EC\* backfill here — defer
@@ -642,8 +653,11 @@ TWIN-VERIFIED-SAFE.** Authoritative per-object reclassification writing to
 - [x] ✅ [DATA] P1. **F4 — SPORTS: captured MTDS cells with NULL `league_id`** — DONE 2026-06-19 (subset of N3a below;
       same combined recovery mtds@ba21ee5). league_id recovered from the GCS object path for every backed cell; unbacked
       → honest `empty_confirmed`/SOURCE_RETURNED_ZERO. No captured cell remains league-less. — market-tick-data-service
-- [ ] [DATA] P3. **F7 — DEFI: 19 Ethereum MTDS cells pre-instruments-genesis (2020-01-01..19)**. Confirm instruments
-      defi genesis should start earlier, or mark those MTDS cells spurious. — instruments-service
+- [x] ✅ [DATA] P3. **KEEP-NA-STALE (na-eligibility-audit 2026-07-31)** — already claimed verbatim as item (4) of
+      `plans/active/cross_cutting_satellite_ao_dispatch_batch1_2026_07_26.md`'s 5-residual todo (~L339, active,
+      `assigned_vm: planning`); closing here to avoid duplicate dispatch. Original text preserved: **F7 — DEFI: 19
+      Ethereum MTDS cells pre-instruments-genesis (2020-01-01..19)**. Confirm instruments defi genesis should start
+      earlier, or mark those MTDS cells spurious. — instruments-service
 
 ## Phase B — instruments internal consistency
 
@@ -654,8 +668,14 @@ TWIN-VERIFIED-SAFE.** Authoritative per-object reclassification writing to
       reconciling `attempted_failed` 1.40M→782,005, genuine `VENUE_FETCH_FAILED`(83,975)+ `HTTP_429`(3,652) preserved
       for backfill. Do not re-diagnose this figure — see "F3 (reframed)" for current state. Original open-todo text
       preserved below for audit-trail purposes:
-- [ ] [DATA] P0. **F3 — CEFI: 1.40M `attempted_failed` MTDS cells (36%)**. Break down by venueÃdata_type; diagnose the
-      failing adapters/venues; backfill. (Data-pipeline-correctness heartbeat — no deferral.) — market-tick-data-service
+- [x] ✅ **CLOSED (na-eligibility-audit 2026-07-31)** — this checkbox preserves the ORIGINAL F3 open-todo text for
+      audit-trail (per the note two lines above); real current state is superseded + DONE at "F3 (reframed)" (~L729,
+      mtds@aaeada9, attempted_failed 1.40M→782,005). Was deliberately left `[ ]` under `assigned_vm: NA` (nothing
+      dispatches from an NA doc regardless of checkbox state) — closing NOW because this doc's `assigned_vm` flips to
+      `planning` for its 7 genuinely-open reclassify-eligible items, and an unmarked open checkbox would otherwise
+      dispatch a stale duplicate "diagnose+backfill 1.40M cells" task. Original preserved text follows verbatim: [DATA]
+      P0. **F3 — CEFI: 1.40M `attempted_failed` MTDS cells (36%)**. Break down by venueÃdata_type; diagnose the failing
+      adapters/venues; backfill. (Data-pipeline-correctness heartbeat — no deferral.) — market-tick-data-service
       **Correction 2026-07-12** (finding id 90, §A2 B-queue ruling): the "confirm whether options ARE listed but not
       captured... close the options capture gap if real" question below is REFUTED, not open — Phase C (line ~949, same
       doc) already confirmed "options ARE captured (CME 8,602 opts/day, ES options_chain 20,956 rows) — the 'thinness'
@@ -663,10 +683,15 @@ TWIN-VERIFIED-SAFE.** Authoritative per-object reclassification writing to
       and tracked separately as "F6 (reframed)" below (line ~1004: unify the two options encodings + stamp
       `instrument_type` on the 182k blank-type cells) — that item is unaffected by this correction and stays open.
       Original text (was: framed as an open capture-gap question) preserved below:
-- [ ] [CODE] P2. **F6 — TRADFI: 182k blank `instrument_type` + thin options (`options_chain` 3,287 vs `futures_chain`
-      15,875)**. Phase-2 sub-agent opens tradfi instruments files to confirm whether options ARE listed but not captured
-      (the "we list options but have no options data" case); fix the instrument_type stamping + close the options
-      capture gap if real. — market-tick-data-service / instruments-service
+- [x] ✅ **CLOSED (na-eligibility-audit 2026-07-31)** — this checkbox preserves the ORIGINAL F6 open-todo text for
+      audit-trail (per the note above); the real still-genuinely-open remainder is tracked at "F6 (reframed)" (~L736,
+      below, unify options encodings + stamp instrument_type). Was deliberately left `[ ]` under `assigned_vm: NA` —
+      closing NOW for the same reason as the F3 closure above (this doc flips to `planning`; an unmarked open checkbox
+      here would dispatch a stale duplicate task, while the real remaining work stays open at "F6 (reframed)"). Original
+      preserved text follows verbatim: [CODE] P2. **F6 — TRADFI: 182k blank `instrument_type` + thin options
+      (`options_chain` 3,287 vs `futures_chain` 15,875)**. Phase-2 sub-agent opens tradfi instruments files to confirm
+      whether options ARE listed but not captured (the "we list options but have no options data" case); fix the
+      instrument_type stamping + close the options capture gap if real. — market-tick-data-service / instruments-service
 - [x] ✅ [DATA] P2. **F5 — SPORTS INSTR index hygiene** — FIXED instruments-service@7b7d3a3 (new
       `scripts/canonicalize_instruments_store_index.py`). sports v2 projection: blank `capture_status` **6,869→0**
       (6,869 malformed blank-data_type+blank-league rows dropped as no-shard-identity), `date='all'` **preserved (2,
@@ -744,9 +769,12 @@ TWIN-VERIFIED-SAFE.** Authoritative per-object reclassification writing to
       dedicated `_audit_sports` + UAC `candidate_parquet_paths` SSOT (bucket kind=instruments-store), and ALL 17
       captured instruments-store-sports data_types (STANDINGS/TEAMS/FIXTURES/ODDS/…) resolve ≥1 candidate path.
       `--apply` will NOT mass-flip on any AG from a prefix-coverage gap. — instruments-service
-- [ ] [DATA] P3. **N8 — PRED index data_type label drift** (`prediction_canonical_question_group` vs GCS
-      `prediction_trades`/`trades`) + 1 blank-reason attempted_failed cell. Confirm intentional rollup label vs drift;
-      type the blank reason. — market-tick-data-service
+- [x] ✅ [DATA] P3. **KEEP-NA-STALE (na-eligibility-audit 2026-07-31)** — already claimed verbatim as item (5) of
+      `plans/active/cross_cutting_satellite_ao_dispatch_batch1_2026_07_26.md`'s 5-residual todo (~L339, active,
+      `assigned_vm: planning`); closing here to avoid duplicate dispatch. Original text preserved: **N8 — PRED index
+      data_type label drift** (`prediction_canonical_question_group` vs GCS `prediction_trades`/`trades`) + 1
+      blank-reason attempted_failed cell. Confirm intentional rollup label vs drift; type the blank reason. —
+      market-tick-data-service
 - [ ] [DATA] P1. **N1b — CEFI: reconcile the ~698k `UNCLASSIFIED_ADAPTER_ERROR` (ex-`LegacyBlankErrorReasonError`,
       blank-itype) attempted_failed cells against the IS expected-universe (Step 4 enumerator) + reconcile (Step 8)**:
       cells the enumerator marks `expected_unattempted` (instrument not listed / pre-coverage) should drop the stale
@@ -867,16 +895,37 @@ TWIN-VERIFIED-SAFE.** Authoritative per-object reclassification writing to
       2.17M cefi / 1.58M defi / 144k tradfi / 804k sports).
 
       CONSEQUENCE: the data-status `_apply_pipeline_mode_filter`
-                                                                                                                                                                                                                                                                                                                                                                                                              chip (`coverage.py`) narrows to ZERO on any `batch_*` filter — the manifest rows have no `pipeline_mode` to match —
-                                                                                                                                                                                                                                                                                                                                                                                                              even though the GCS objects ARE canonically `pipeline_mode={mode}_{source}/`-keyed. Coverage % + the drilldown are
-                                                                                                                                                                                                                                                                                                                                                                                                              UNAFFECTED (they read `capture_status`/ derive canonical segments from UAC, not the manifest pipeline_mode
-                                                                                                                                                                                                                                                                                                                                                                                                              column). FIX = the wholesale v9 `_index` rebuild-and-replace (already tracked per-AG: N5r/N6r for defi, the
-                                                                                                                                                                                                                                                                                                                                                                                                              migrate-first + rebuild for tradfi/sports/pred) must POPULATE `pipeline_mode`+`source`+`asset_group` from the
-                                                                                                                                                                                                                                                                                                                                                                                                              canonical object paths, not just classify capture_status. Re-verify `pipeline_mode` non-blank > 0 post-rebuild per
-                                                                                                                                                                                                                                                                                                                                                                                                              AG. — market-tick-data-service
+                                                                                                                                                                                                                                                                                                                                                                                                                  chip (`coverage.py`) narrows to ZERO on any `batch_*` filter — the manifest rows have no `pipeline_mode` to match —
+                                                                                                                                                                                                                                                                                                                                                                                                                  even though the GCS objects ARE canonically `pipeline_mode={mode}_{source}/`-keyed. Coverage % + the drilldown are
+                                                                                                                                                                                                                                                                                                                                                                                                                  UNAFFECTED (they read `capture_status`/ derive canonical segments from UAC, not the manifest pipeline_mode
+                                                                                                                                                                                                                                                                                                                                                                                                                  column). FIX = the wholesale v9 `_index` rebuild-and-replace (already tracked per-AG: N5r/N6r for defi, the
+                                                                                                                                                                                                                                                                                                                                                                                                                  migrate-first + rebuild for tradfi/sports/pred) must POPULATE `pipeline_mode`+`source`+`asset_group` from the
+                                                                                                                                                                                                                                                                                                                                                                                                                  canonical object paths, not just classify capture_status. Re-verify `pipeline_mode` non-blank > 0 post-rebuild per
+                                                                                                                                                                                                                                                                                                                                                                                                                  AG. — market-tick-data-service
 
 - [x] ✅ [DATA] P3. **N3b — SPORTS: captured cells still NULL source** — DONE 2026-06-19. Live-index audit shows
       captured NULL-source = **0** (already resolved on the live `_index`; the v9 source-stamp populated every captured
       cell — verified `source` nonblank 100%/803,796 pre-recovery). The combined recovery (mtds@ba21ee5) derives
       `source` from the recovered pipeline_mode for every emitted/re-stamped cell, so it stays 0. —
       market-tick-data-service
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-31** (tranche=cross-cutting, dispatch agt-845699): RECLASSIFY (partial) →
+  `assigned_vm: NA → planning` (in place, name unchanged), `execution_scope: local-only → orchestrator-agent`. Full
+  accounting of all 14 open todos at classification time: **5 already claimed verbatim** by
+  `cross_cutting_satellite_ao_dispatch_batch1_2026_07_26.md`'s "Close 5 small bounded residuals from
+  instruments_mtds_consistency_remediation_residuals_2026_07_24.md" todo (~L339, active, `assigned_vm: planning`) —
+  closed here with citation (KEEP-NA-STALE, not reclassify) to avoid duplicate dispatch; **2 were stale
+  preserved-audit-trail checkboxes** (original F3/F6 open-todo text kept unchecked under the old `assigned_vm: NA`
+  regime per this doc's own convention — closed now, citing their real current state at "F3 (reframed)"/"F6 (reframed)",
+  because leaving them open under the new `assigned_vm: planning` would dispatch a stale duplicate task that convention
+  never anticipated); **7 are genuinely bounded, worker-determinable, conflict-cleared** (research `-prd-` bucket index
+  move; tradfi legacy-straggler verify-delete; F1 CEFI Kraken-backfill-verify; N5r/N6r DeFi rebuild-for-real-replace;
+  F6-reframed tradfi option-encoding unification; N1b CEFI ~698k reconcile; Phase D cefi legacy-dupe delete) — left
+  open, doc now dispatches them. Conflict-check
+  (`/codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md` § 3): checked every
+  `status:active`+`assigned_vm:planning` doc under `parent_epic:instruments_master`, the corpus-wide keyword sweep
+  across active planning docs, and `cross_cutting_consolidated_closeout_2026_07_25.md`'s Track 8 digest (milestone-only
+  overlap, protocol-permitted) — CLEARED, zero competing dispatch claim on the 7 remaining items. Companion finalize
+  plan: `instruments_mtds_consistency_remediation_residuals_finalize_2026_07_31.md`.

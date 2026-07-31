@@ -31,10 +31,10 @@ related:
     /plans/active/issues/orchestrator_vm_disk_io_contention_runner_burst_2026_07_28.md,
   ]
 created: 2026-07-29
-last_updated: 2026-07-31
+last_updated: "2026-07-31"
 parent_epic: orchestrator_master
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 priority: P2
 estimate_class: research
 estimate_baseline_ai_days: 0.3
@@ -366,3 +366,13 @@ investigated further here, out of scope for this doc.
 
 - None directly own host-resource-panel metrics. No new contract established here — an existing pattern (the 2026-07-28
   iowait addition) extended with one more metric.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-31** (tranche=cross-cutting, dispatch agt-845699): RECLASSIFY →
+  `assigned_vm: NA → planning` (in place, name unchanged). Sole remaining open todo ([REVIEW] P3, fold a one-line
+  swap/memory + instance-type correction into the standing crisis doc next time someone touches it) is bounded,
+  mechanical, low-priority — every other item in this doc (11 of 12 checkboxes) is already `[x]`. Conflict-check
+  (`/codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md` § 3): enumerated all 14
+  `status:active`+`assigned_vm:planning` docs under `parent_epic:orchestrator_master`, checked for any competing claim
+  on `fleet_wide_qg_self_hosted_runner_capacity_crisis_2026_07_27.md`'s "What I found" section — zero overlap. CLEARED.
