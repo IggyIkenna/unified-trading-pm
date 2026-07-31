@@ -109,10 +109,13 @@ inside an unrelated test-widening todo.
       latter reproduces the exact `derive_pipeline_mode_for_row("IBKR", "tradfi", "ohlcv_1d")` mis-stamp from the
       issue's "Measured live" section and asserts it now resolves to `BATCH_IBKR`, not `BATCH_FRED`). Full
       `quality-gates.sh` green (146s, sentinel `b8db9ba5f63260ca6ce1b8c55a350562e942e5c2`).
-- [ ] [BACKEND] P2. **Un-xfail** `test_ibkr_equity_bars_write` and `test_partition_path_uses_category_tradfi` in
+- [x] ✅ [BACKEND] P2. **Un-xfail** `test_ibkr_equity_bars_write` and `test_partition_path_uses_category_tradfi` in
       `market-tick-data-service/tests/market_interface/adapters/tradfi/test_tradfi_canonical_writes.py` (both currently
       marked `xfail(strict=True)` citing this doc) once the above ship — update their expected `pipeline_mode` to
-      `batch_ibkr` and remove the marker. (repo: market-tick-data-service)
+      `batch_ibkr` and remove the marker. (repo: market-tick-data-service) — market-tick-data-service@cc0be7d9. Removed
+      both `xfail(strict=True)` markers and updated the expected `pipeline_mode` from `batch_databento` to `batch_ibkr`
+      (matching the now-shipped `_VENUE_OVERRIDES` entry from todo 3). Full `quality-gates.sh` green (sentinel
+      `cc0be7d96a1cac5f2373fc3a6dcbfae7bf1638d2` == HEAD).
 - [x] ✅ N/A [BACKEND] P3. **If the census (todo 1) finds real mislabeled prod objects**: file a follow-up migration
       todo to backfill their `pipeline_mode` in the manifest (mirroring whatever backfill approach the FRED/ECB/OFR fix
       used, if any) — do not silently leave stale-mislabeled manifest rows uncorrected. (repo: market-tick-data-service)
