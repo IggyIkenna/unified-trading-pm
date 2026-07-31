@@ -721,9 +721,30 @@ jobs:
           for QG_SLICE in "${SELECTORS[@]}"; do
             export QG_SLICE
             echo "── QG_SLICE=${QG_SLICE} ──"
-            if ! bash scripts/quality-gates.sh --no-fix 2>&1 | tee -a /tmp/qg_output.log; then
+            # Disambiguate via PIPESTATUS[0] (quality-gates.sh's own exit code) instead of
+            # trusting the `set -o pipefail`-aggregated pipeline status on its own. `tee` is a
+            # best-effort side-channel capture (/tmp/qg_output.log is never read back by this
+            # step) — under shared-runner disk/tmp I/O contention it can itself stall or fail
+            # even when quality-gates.sh printed "QG_SLICE=... PASSED" and exited 0, and
+            # pipefail then reports the whole pipeline non-zero purely on tee's account,
+            # red-flagging a selector that actually passed (observed: features-service run
+            # 30625174609, 2026-07-31 — "18050 passed, 209 skipped" + "✅ QG_SLICE=tests PASSED"
+            # immediately followed by a FAILED verdict for the same selector). Same incident
+            # class as the TMPDIR-aware basedpyright capture fix in base-service.sh
+            # (shared_host_tmp_tmpfs_exhaustion_2026_07_26.md) — the capture side-channel must
+            # never be able to flip a passing gate's verdict. The pipeline stays the `if`
+            # condition (required — GH Actions' default `bash -e -o pipefail` would otherwise
+            # abort this step outright on ANY non-zero pipeline exit if it were a bare
+            # statement); PIPESTATUS[0] is read inside the branches, before any other command
+            # can overwrite it.
+            if bash scripts/quality-gates.sh --no-fix 2>&1 | tee -a /tmp/qg_output.log; then
+              _qg_rc=0
+            else
+              _qg_rc="${PIPESTATUS[0]}"
+            fi
+            if [ "${_qg_rc}" -ne 0 ]; then
               FAILED="${FAILED:+${FAILED} }${QG_SLICE}"
-              echo "::error::QG selector '${QG_SLICE}' FAILED (leg=${LEG})"
+              echo "::error::QG selector '${QG_SLICE}' FAILED (leg=${LEG}, exit=${_qg_rc})"
             fi
           done
           if [ -n "${FAILED}" ]; then
