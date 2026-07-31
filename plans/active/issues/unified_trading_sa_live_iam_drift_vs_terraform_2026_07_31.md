@@ -204,7 +204,7 @@ confirm no further self-grants happened in the interim.
 - [x] [INFRA] P0. ✅ Audit `unified-trading-sa`'s IAM policy history (Cloud Audit Logs `SetIamPolicy` for this member,
       or `gcloud logging read` on `protoPayload.serviceName="cloudresourcemanager.googleapis.com"`) to identify how each
       of the 24 undeclared roles was granted and by what identity/process. (repo: deployment-service) —
-      unified-trading-pm@PENDING_SHA. See "Audit findings" section above: 3/24 traceable (all self-granted by the SA
+      unified-trading-pm@7b2ea5656. See "Audit findings" section above: 3/24 traceable (all self-granted by the SA
       itself, today, outside terraform); 21/24 (incl. both self-escalation-capable roles) predate the 400-day Cloud
       Audit Log retention floor and are permanently untraceable via this mechanism. No further audit-log query will
       recover more — investigation exhausted the available evidence.
