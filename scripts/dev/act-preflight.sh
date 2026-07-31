@@ -13,7 +13,7 @@
 #   bash unified-trading-pm/scripts/dev/act-preflight.sh --repo all              # iterate every service repo
 #
 # Defaults:
-#   --workflow      quality-gates.yml
+#   --workflow      quality-gates-v2.yml
 #   --architecture  linux/amd64
 #   --image         catthehacker/ubuntu:act-22.04 (pinned via .actrc per-repo if present)
 #
@@ -24,7 +24,7 @@
 set -euo pipefail
 
 REPO=""
-WORKFLOW="quality-gates.yml"
+WORKFLOW="quality-gates-v2.yml"
 ARCH="linux/amd64"
 WORKSPACE_ROOT="${WORKSPACE_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && cd .. && pwd)}"
 
@@ -33,7 +33,7 @@ usage() {
 Usage: $0 --repo <name|all> [--workflow <yml>] [--architecture <arch>]
 
   --repo <name>      Repo name (e.g. deployment-api) OR 'all' for every service repo
-  --workflow <yml>   Workflow filename under .github/workflows/ (default: quality-gates.yml)
+  --workflow <yml>   Workflow filename under .github/workflows/ (default: quality-gates-v2.yml)
   --architecture <a> Container architecture (default: linux/amd64)
 
 Reports: per-repo {EXIT_CODE, log file path, duration}.
@@ -81,6 +81,11 @@ if [[ "$REPO" == "all" ]]; then
             TARGET_REPOS+=("$repo")
         fi
     done
+    if [[ ${#TARGET_REPOS[@]} -eq 0 ]]; then
+        echo "ERROR: --repo all resolved 0 target repos for workflow '$WORKFLOW' under $WORKSPACE_ROOT" >&2
+        echo "       (check --workflow matches an actual .github/workflows/ filename before trusting a green exit)" >&2
+        exit 2
+    fi
 else
     if [[ ! -d "$WORKSPACE_ROOT/$REPO" ]]; then
         echo "ERROR: repo not found at $WORKSPACE_ROOT/$REPO" >&2
