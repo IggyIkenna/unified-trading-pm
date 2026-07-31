@@ -149,10 +149,29 @@ drift_direction: advance-code
       `tradfi_unreachable_databento_data_types_mbp10_ohlcv_coarse_calendar_2026_07_15.md`'s Progress Log. Source:
       `tradfi_consolidated_closeout_2026_07_18.md` (native, lines 238-244), narrowed.
 
-- [ ] [REVIEW] P2. **Verify the KRX equities intraday registry-vs-adapter mismatch fix still holds live, and separately
-      confirm the FX KRW cell (`FX:SPOT_PAIR:KRW-USD`, daily) has no analogous registry-vs-adapter gap — audit-only.**
-      Source native todo (lines 245-254), narrowed: the `mvp_mode` dead-gate decision bundled in the same native todo is
-      a genuine DESIGN call, already independently tracked as its own doc
+- [x] ✅ [REVIEW] P2. **Verify the KRX equities intraday registry-vs-adapter mismatch fix still holds live, and
+      separately confirm the FX KRW cell (`FX:SPOT_PAIR:KRW-USD`, daily) has no analogous registry-vs-adapter gap —
+      audit-only.** **Live-verified 2026-07-31, both PASS (audit-only, no code changed):** **(a) KRX fix holds** —
+      `unified-api-contracts/unified_api_contracts/registry/expected_coverage.py:200` still declares
+      `"KRX": ["ohlcv_24h"]` (not re-expanded to `ohlcv_1m`/`ohlcv_15m`); `VENUE_DATA_TYPE_CAPABILITIES["KRX"]`
+      (`market_data_categories.py:368-370`) agrees (`ohlcv_24h` only);
+      `market-tick-data-service/market_tick_data_service/     adapters/_umi_yahoo.py:371-373`'s `route_yahoo_tradfi`
+      still honest-empties any non-`ohlcv_24h` request for KRX
+      (`if data_types and "ohlcv_24h" not in data_types: return pd.DataFrame()`) before reaching the Yahoo fetch — the
+      mechanical dispatch-filter fix (originally `market-tick-data-service@e128c5bc`) survives, now living in the
+      refactored `_umi_yahoo.py` module, wired via `umi_tick_provider.py:620-624`. Cites (does not edit) the archived
+      `krx_intraday_ohlcv_registry_vs_adapter_mismatch_2026_07_12.md`. **(b) FX KRW cell has no analogous gap** —
+      `expected_coverage.py:191` declares `"FX": ["ohlcv_24h"]` only; `VENUE_DATA_TYPE_CAPABILITIES["FX"]`
+      (`market_data_categories.py:352-354`) agrees (`ohlcv_24h` only); `FX_SPOT_PAIRS`
+      (`unified_api_contracts/registry/tradfi_instrument_universe.py:429-430`) confirms `FX:SPOT_PAIR:KRW-USD` is
+      registered (`FxSpotPairDef("KRW", "USD", "KRWUSD=X")`); `fetch_yahoo_fx` (same file) only ever calls
+      `download_daily` and hardcodes `data_type="ohlcv_24h"`; the same `route_yahoo_tradfi` honest-empty guard at line
+      371 applies identically to FX. instruments-service carries no separate KRX/FX capability declaration (grep found
+      only a stale comment in `venue_core.py:160`, no live registry) — this is purely a UAC + market-tick-data-service
+      concern, both confirmed consistent, no drift found. Repos: instruments-service (read-only, clean),
+      market-tick-data-service (read-only, clean), unified-api-contracts (read-only, clean). Source native todo (lines
+      245-254), narrowed: the `mvp_mode` dead-gate decision bundled in the same native todo is a genuine DESIGN call,
+      already independently tracked as its own doc
       (`plans/archive/issues/tradfi_mvp_mode_unreachable_dead_gate_2026_07_08.md`) that
       `tradfi_satellite_ao_dispatch_batch2_2026_07_25.md` had classified "0 AO-eligible candidates... genuinely
       operator-gated" — **RULED 2026-07-29: wire via forward-poll opt-in flag, see the issue doc** — NOT included here,
