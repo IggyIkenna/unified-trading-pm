@@ -402,7 +402,7 @@ tooling, historical floors, the cross-repo lineage, and dead-code — findings j
       Pre-filter the date range against the availability manifest/census (same single-walk discipline already codified
       for MDPS elsewhere in this plan) BEFORE spawning a per-date subprocess, instead of discovering absence per-date at
       runtime. Repo: market-data-processing-service / deployment-service (`launch-mdps-backfill-vm.sh`).
-- [ ] 14-followup. [SCRIPT] P1. **NEW 2026-07-31 (slot-4, from todo 14's post-phase codex audit).** Add an
+- [x] ✅ 14-followup. [SCRIPT] P1. **NEW 2026-07-31 (slot-4, from todo 14's post-phase codex audit).** Add an
       "inverse-phantom" `content_check=` verdict to both `/data-pipeline-check-mdps` and `/data-pipeline-check-features`
       drivers: a freshly-written parquet with 100% NaN bins while the manifest records `capture_status=captured` should
       have been `empty_confirmed` with a typed reason (mirrors the already-checked phantom-capture case — manifest
@@ -410,7 +410,20 @@ tooling, historical floors, the cross-repo lineage, and dead-code — findings j
       reconciler (`instruments-service/scripts/reconcile_legacy_nan_placeholder_bars.py`) only catches pre-existing rows
       written before writegate Wave 2.M; it does not catch a NEW inverse-phantom write going forward. Full contract now
       promoted to `/codex/02-data/honest-absence-downstream-handling.md` § "Window-active vs shard-fetched — the
-      two-signal contract". Repos: market-data-processing-service, features-service.
+      two-signal contract". Repos: market-data-processing-service, features-service. — **DONE (slot-8, 2026-07-31)**:
+      shared `check_inverse_phantom()` engine primitive shipped in `unified-trading-library@8b894105`
+      (`pipeline_e2e_check/shard_verify.py` + `ShardCheckResult.content_check`/`content_check_nan_ratio` fields + a
+      report "Content" column); consumed by both drivers — `market-data-processing-service@12a3f6b`
+      (`_check_content_for_inverse_phantom`, consults the SAME `mdps_ohlc_is_nullable` UAC oracle the write seam uses so
+      a legitimate nullable-OHLC honest-absence window is never mislabeled) and `features-service@6afdb414`
+      (`_check_content_for_inverse_phantom`, checks every non-identity numeric column since no per-type nullability
+      oracle exists for feature columns). **Scoped informational-only** in both drivers (never flips a leg's
+      `passed`/`failed` verdict) — no adversarial test coverage yet proves the nullable-detection heuristic is
+      false-positive-free on live data; promoting either to authoritative is natural follow-up work, not done here.
+      While verifying via a real `--dry-enumerate` smoke run, slot-8 also discovered + filed (did NOT fix — out of this
+      todo's scope) a pre-existing, unrelated MDPS enumeration break:
+      `uac_mdps_mvp_universe_data_type_axis_2026_07_30.md` gained a new todo for `_candle_data_types_for_market_ag`'s
+      stale 2-tuple unpack against `mdps_mvp_universe()`'s now-3-tuple return.
 
 ## Progress Log
 
@@ -457,6 +470,40 @@ violate the plans-run-to-actual-completion HARD RULE. Todo 14 itself, however, i
 **Disposition**: todo 14 DONE — its own scope (ship-verify, flip, codex audit) is fully closed. The PLAN remains ACTIVE
 (genuinely open work: 11b/11c, the gated features-numbers todo, 10-followup-a, 14-followup) — no rule-9 whole-plan
 closing report follows from this todo, and the plan should NOT be archived.
+
+### 2026-07-31 (slot-8, data_engineering) — todo 14-followup DONE: inverse-phantom content_check shipped to both drivers
+
+Dispatched to `data_pipeline_check_mdps_features-058` (todo 14-followup). Added the shared `check_inverse_phantom()`
+primitive to `unified_trading_library.pipeline_e2e_check.shard_verify` (bar: every sampled cell across the caller's
+`value_columns` NaN, not merely most — a row with even one real value is never flagged) plus
+`ShardCheckResult.content_check`/`content_check_nan_ratio` + a report "Content" column, all shipped in
+`unified-trading-library@8b894105`. Wired into both drivers: MDPS's `_check_content_for_inverse_phantom`
+(`market-data-processing-service@12a3f6b`) consults the SAME `mdps_ohlc_is_nullable` UAC oracle the write seam itself
+uses (via `_type_token_from_canonical_id` for the instrument_type) before flagging, so a legitimate nullable-OHLC
+honest-absence window (`trades`/`derivative_ticker`/etc) is never mislabeled; features-service's twin
+(`features-service@6afdb414`) has no equivalent per-type oracle, so it checks every non-identity numeric column against
+the same strict 100%-NaN bar.
+
+**Deliberately scoped informational-only in both drivers** — the verdict is threaded into the report/reason string but
+never flips a leg's `passed`/`failed` status. Rationale: this smoke-check is relied on by other slots/CI as a
+currently-green signal, and there is no adversarial test coverage yet proving the nullable-detection heuristic never
+false-positives on real prod-shaped data (a false positive here would silently fail a legitimate leg). Promoting either
+to authoritative once validated against real data is natural, tracked follow-up — not claimed done here.
+
+While QG-verifying the MDPS driver via a real `--dry-enumerate` smoke run (`quality-gates.sh` § "PIPELINE-E2E-CHECK
+DRIVER SMOKE"), surfaced a genuine, PRE-EXISTING, unrelated break (confirmed via diff against the parent commit before
+my change touched this file): `_candle_data_types_for_market_ag` still unpacks `mdps_mvp_universe()`'s return as a
+2-tuple, but the function was extended to a 3-tuple `(venue, instrument_type, data_type)` in
+`unified-api-contracts@724b6633` (see `uac_mdps_mvp_universe_data_type_axis_2026_07_30.md`, whose own caller-update
+sweep only covered UAC-internal callers, not this cross-repo consumer) — every enumeration call raises
+`ValueError: too many values to unpack`. `quality-gates.sh`'s own exit code is 0 (this smoke step is non-blocking), so
+it did not block shipping, but it is a real correctness gap. Per findings triage (not small/clear enough to fix inline —
+needs redesigning the function's data_type derivation, not a 1-line unpack fix) filed as a new todo on the existing,
+still-open issue doc rather than a fresh one (same root cause, already active, `assigned_vm: planning`) — did NOT fix it
+here, out of this todo's scope.
+
+Repos shipped: `unified-trading-library@8b894105`, `market-data-processing-service@12a3f6b`,
+`features-service@6afdb414`.
 
 > **History extracted 2026-07-24 (plan-hygiene line-cap remediation).** The fully-closed dated entries from session
 > start through the first real e2e VM runs (2026-07-20 session-start audit, build-phase kickoff, the

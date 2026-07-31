@@ -93,6 +93,22 @@ ordering hazard).
 - [ ] [BACKEND] P3. Run the post-phase codex audit on any codex doc describing `mdps_mvp_universe()`'s contract/shape
       (grep `codex/` for `mdps_mvp_universe` / `_mvp_scope_mdps`) since its signature changed — update or
       SUPERSEDED-banner anything now stale.
+- [ ] [BACKEND] P2. **NEW 2026-07-31 (slot-8, discovered via `market-data-processing-service`'s `quality-gates.sh` §
+      "PIPELINE-E2E-CHECK DRIVER SMOKE" step — non-blocking on QG's own exit code, but a real enumeration break).**
+      `market-data-processing-service/scripts/pipeline_e2e_check.py::_candle_data_types_for_market_ag` (line ~436) was
+      missed by todo 1's caller-update sweep (that sweep covered only `unified-api-contracts`-internal callers —
+      `liquid_representative.py` x2 + `execution_fidelity.py` — not this cross-repo consumer) — it still does
+      `for venue, instrument_type in mdps_mvp_universe(ag_lower):`, a 2-tuple unpack against the now-3-tuple
+      `(venue, instrument_type, data_type)` return, raising `ValueError: too many values to unpack (expected 2)` on
+      every call. Confirmed pre-existing (present at `market-data-processing-service` HEAD before slot-8's unrelated
+      `content_check` commit touched this file) — repro:
+      `python scripts/pipeline_e2e_check.py --dry-enumerate --asset-group cefi` (or run `bash scripts/quality-gates.sh`,
+      § "PIPELINE-E2E-CHECK DRIVER SMOKE"). Fix: update the unpack to the 3-tuple shape and re-derive
+      `_candle_data_types_for_market_ag`'s per-venue data_type set directly from the enumerated `data_type` axis (the
+      function's whole purpose is producing `(venue, data_type)` pairs — the now-redundant separate
+      `_mvp_data_types_for_cell`/`get_mvp_data_types_for_cefi_venue_itype` derivation downstream may be collapsible into
+      this one read, but verify against the real UAC universe before removing it). Repo:
+      `market-data-processing-service`.
 
 ## Progress Log
 
