@@ -160,3 +160,10 @@ is about routing external-gate tasks through it instead of through the churn pat
   parked as BLOCKED-OPERATOR-DECISION**, see the `## Deferred — HELD by the /na-eligibility-audit ao conflict-check`
   section above for both sides, the three options and the marked recommendation. `assigned_vm` deliberately left `NA`
   pending that ruling.
+- **2026-08-01 — GATE CLEARED.** The prerequisite audit (`ao_satellite_ao_dispatch_batch1_2026_07_26.md`'s
+  `[BACKEND] P3`, AUDIT-ONLY) is done — full per-`reason_code` table now in
+  `/plans/archive/issues/gated_skip_park_no_slack_page_2026_07_25.md`'s Progress Log. Finding relevant to this doc's
+  todo: the audit found **zero uncovered `reason_code` gaps** (BLOCKED/PARKED/GATED all page identically; OTHER never
+  reaches durable-park), so this doc's implementation todo is not folding in a newly-discovered code — it proceeds
+  exactly as scoped above. This doc is now unblocked to dispatch; not implemented in this pass (out of scope for the
+  audit-only batch todo that was gating it).

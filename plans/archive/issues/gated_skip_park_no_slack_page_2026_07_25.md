@@ -110,3 +110,26 @@ completed) — mirroring the existing "every actionable alert gets a ✅ CLOSE b
 Also worth checking (not yet done): whether the dashboard's `BacklogSummary.auto_parked` field (a separately-noticed
 dead/unused TS type field, unrelated root cause) should be wired up as a UI-visible counter alongside the Slack fix, so
 an operator glancing at the dashboard sees parked-task count even without reading Slack.
+
+## Progress Log
+
+- **2026-08-01 — Todo 2's audit executed** (via `ao_satellite_ao_dispatch_batch1_2026_07_26.md`, AUDIT-ONLY, no code
+  changed). `SkipCurrentTaskRequest.reason_code` (`server/models/slots.py:116`) is a closed 4-value
+  `Literal["BLOCKED", "PARKED", "GATED", "OTHER"]` — exhaustive, no other value can reach `/skip-current-task`.
+  `auto_park.maybe_auto_park` (`server/auto_park.py:50`) has exactly one call site in production code
+  (`server/routes/slots_ops.py:816`), fed directly from that field. Per-code table:
+
+  | `reason_code` | Reaches durable park?                                                                                         | Pages Slack on park?                                                                                                             |
+  | ------------- | ------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
+  | `BLOCKED`     | YES — in `_ESCALATING_REASON_CODES`, escalates past `dispatch_cooldown_auto_park_skip_threshold` skips        | YES — `_park_task` (the one park call site) calls `notify_task_auto_parked` unconditionally                                      |
+  | `PARKED`      | YES — same path as `BLOCKED`                                                                                  | YES — same path as `BLOCKED`                                                                                                     |
+  | `GATED`       | YES — same path as `BLOCKED`                                                                                  | YES — this doc's own fix (`agent-orchestrator@fd749e3b6`)                                                                        |
+  | `OTHER`       | NO — `maybe_auto_park` returns `None` immediately (`reason_code not in _ESCALATING_REASON_CODES`, line 56-57) | N/A — never reaches the durable-park mechanism at all; stays a per-slot skip only (`slot_skips` table, visible via dashboard/DB) |
+
+  **Verdict: the fix fully generalizes, no uncovered code found.** `_park_task` is the single call site for
+  `notify_task_auto_parked` and does not branch on `reason_code` value — it treats BLOCKED/PARKED/GATED identically (the
+  doc comment at `server/auto_park.py:96` cites this doc's own slug, confirming the fix was written to close the gap for
+  all three, not just GATED). `OTHER` is structurally exempt — it never reaches `_park_task` at all, so it cannot
+  exhibit this class of silent gap. This clears
+  `/plans/active/issues/external_promote_gated_task_redispatch_churn_no_durable_park_2026_07_25.md`'s GATED prerequisite
+  — its implementation todo can now dispatch.
