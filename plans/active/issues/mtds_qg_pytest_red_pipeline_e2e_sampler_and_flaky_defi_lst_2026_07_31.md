@@ -89,3 +89,18 @@ scope for a tradfi manifest-shard todo).
   regression tests, source: `tradfi_satellite_ao_dispatch_batch5_2026_07_29` todo 4). Declaring repo-blocker via
   `/api/repo-blockers` next; my own commit's tests (`tests/unit/engine/test_tradfi_manifest_shard.py`, 14/14) pass
   cleanly and are unaffected.
+- 2026-07-31 (slot 4, cicd escalation `agt-a1ecae`, RB-6f0ca058): re-verified against `origin/live-defi-rollout` HEAD
+  `17204fca` (2690f5be is not an ancestor/reachable ref in this clone — was local-only in slot 3's worktree at the time
+  of the report). Ran the real `bash scripts/quality-gates.sh` Pass-1 end-to-end: **ALL QUALITY GATES PASSED (263s)**,
+  `.qg_last_passed_sha=17204fca...` sentinel written — zero pytest failures. Additionally tried to reproduce the 2 "FAIL
+  consistently, isolated or not" `test_pipeline_e2e_sampler_prefers_captured.py` assertions directly: PASS in isolation
+  (both tests), PASS when run together with their sibling `test_pipeline_e2e_raw_symbol_sampler.py` (the file whose
+  fixture data — `BINANCE-FUTURES:PERPETUAL:ADA-USDT@LIN` — matches the leaked value originally reported), and PASS when
+  re-run alongside the other 3 originally-failing tests. The gate is GREEN on `live-defi-rollout` right now; resolving
+  repo-blocker `RB-6f0ca058` accordingly so waiters (slot 3) resume immediately. Did reproduce ONE of the 3 flaky tests
+  in that last combo run
+  (`test_rebuild_defi_manifest_chunking.py::test_run_chunked_forces_reemit_absence_false_per_chunk` →
+  `ManifestConsolidatorStaleError`, `consolidated_age_sec: -1.0`), confirming genuine order/fixture-timing dependency
+  for that group — but it did NOT reproduce in the full quality-gates.sh run, so it isn't currently gate-blocking
+  either. Leaving both P2 todos open as-is (real backlog, not currently blocking); not chasing the root cause further
+  here — out of scope for a one-shot gate-unblock escalation.
