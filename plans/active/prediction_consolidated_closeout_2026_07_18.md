@@ -427,7 +427,7 @@ fixture-linked before MVP backfill.
     - **[ANALYSIS] P1.** Persist model + metrics to the ml-models registry; tag `model_family=sports_arb_v1`
     - **[AGENT] P1.** Predictions MTDS completion-% slice — per-(canonical_question_group, day) completion %
 - **Cross-cutting (shared w/ sports)**:
-  - [`plans/active/issues/dp_catalog_not_running_sports_prediction_2026_07_15.md`](/plans/active/issues/dp_catalog_not_running_sports_prediction_2026_07_15.md)
+  - [`plans/archive/issues/dp_catalog_not_running_sports_prediction_2026_07_15.md`](/plans/archive/issues/dp_catalog_not_running_sports_prediction_2026_07_15.md)
     (resolved)
     - **[OPS] P2.** Verify the next scheduled `lifecycle-catalogue-regen-sports` run (next `0 1 * * *` UTC)
     - **[INFRA] P3.** Grant `lifecycle-catalogue-regen@central-element-323112.iam.gserviceaccount.com`

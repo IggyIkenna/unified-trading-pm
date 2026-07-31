@@ -696,7 +696,7 @@ picture.
     — 0 open todos (recounted live 2026-07-26 by `/plan-reconcile defi`, was "1 open"): the
     default-to-yesterday-date-bridge item flipped `[x] ✅ … FIXED 2026-07-16` at `:271`. Archival candidate — see this
     doc's own `## Archival + consolidation candidates` note.
-  - [`plans/active/issues/dp_catalog_not_running_sports_prediction_2026_07_15.md`](/plans/active/issues/dp_catalog_not_running_sports_prediction_2026_07_15.md)
+  - [`plans/archive/issues/dp_catalog_not_running_sports_prediction_2026_07_15.md`](/plans/archive/issues/dp_catalog_not_running_sports_prediction_2026_07_15.md)
     (2 open — sports/prediction-primary, tracked here for cross-AG catalogue overlap)
     - **[OPS] P2.** Verify the next scheduled `lifecycle-catalogue-regen-sports` run promotes successfully and
       `prod/catalog.parquet` row count is `>= 27,216`.

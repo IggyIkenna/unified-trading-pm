@@ -143,3 +143,11 @@ convention's scope).
   stay-in-place-with-banner) that the bounded items depend on for correctness — stays NA as a whole; the mechanical
   cleanup items are individually plausible future RECLASSIFY candidates for a dedicated split once the policy decision
   lands.
+- **sports_satellite_ao_dispatch_batch3_finalize todo 2, 2026-07-31**: ratchet measurement while archiving 2 source docs
+  (`dp_catalog_not_running_sports_prediction_2026_07_15.md`, `sports_fixtures_schedule_wrong_schema_day_2026_04_14.md`
+  restored from a wrong archival) — `check_reference_paths.py` now reads 187 format / 919 existence (baseline 161/901),
+  and `check_archive_candidates.sh` reads 7 (baseline 4). Confirmed via `git stash` that BOTH ratchets were already over
+  baseline on the clean tree before this session's edits — none of the new violations belong to any file this session
+  touched (verified by grep). Pre-existing drift from other slots' concurrent work since the baseline was last lowered,
+  not a regression this session caused. Not fixed here (corpus-wide, well outside this todo's scope) — flagging the live
+  numbers for whoever next runs `--update-baseline` or works this doc's own P3 todos.

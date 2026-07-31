@@ -63,15 +63,15 @@ drift_direction: advance-code
       being done. Its source doc was left untouched (nothing shipped to flip). Of the 8 real source docs behind the
       other 11 done todos: 3 genuinely-open items were found and flipped with independently-verified commit citations (2
       in `issues/sports_derived_features_per_league_layout_unread_by_ml_loader_2026_07_14.md`, 1 IAM-grant item in
-      `issues/dp_catalog_not_running_sports_prediction_2026_07_15.md` — which reached 0 open todos and was flipped to
-      `status: resolved`); 1 prose-form finding (not a checkbox) in `data_completion_sports_2026_07_24.md` was annotated
-      with its investigation outcome + the filed follow-up issue doc; the remaining 5 docs were already correctly
-      reconciled by earlier or later independent sessions (self-flipped at dispatch time, or reconciled by a later pass)
-      — re-editing them would have been redundant churn. **Reconcile all 8 distinct source docs' checkboxes.** For each
-      of `sports_satellite_ao_dispatch_batch3_2026_07_25.md`'s 12 now-done todos: flip the corresponding checkbox/
-      section in its named source doc (each todo's text ends with "Source: `<doc>.md`"), citing the batch-3 commit(s)
-      that shipped it — verify the actual shipped commit exists before citing it. The 8 source docs:
-      `issues/sports_fixtures_schedule_wrong_schema_day_2026_04_14.md`,
+      `/plans/archive/issues/dp_catalog_not_running_sports_prediction_2026_07_15.md` — which reached 0 open todos and
+      was flipped to `status: resolved`); 1 prose-form finding (not a checkbox) in
+      `data_completion_sports_2026_07_24.md` was annotated with its investigation outcome + the filed follow-up issue
+      doc; the remaining 5 docs were already correctly reconciled by earlier or later independent sessions (self-flipped
+      at dispatch time, or reconciled by a later pass) — re-editing them would have been redundant churn. **Reconcile
+      all 8 distinct source docs' checkboxes.** For each of `sports_satellite_ao_dispatch_batch3_2026_07_25.md`'s 12
+      now-done todos: flip the corresponding checkbox/ section in its named source doc (each todo's text ends with
+      "Source: `<doc>.md`"), citing the batch-3 commit(s) that shipped it — verify the actual shipped commit exists
+      before citing it. The 8 source docs: `issues/sports_fixtures_schedule_wrong_schema_day_2026_04_14.md`,
       `issues/sports_odds_team_name_alias_gap_south_america_2026_07_09.md`,
       `sports_consolidated_closeout_aggregated_sources_2026_07_24.md` (6 of the 12 todos),
       `data_completion_sports_2026_07_24.md`, `issues/sports_shard_enumeration_cartesian_blowup_2026_07_20.md` (2
@@ -80,19 +80,38 @@ drift_direction: advance-code
       it genuinely reaches 0 open todos (checkbox AND prose-form — do not trust checkbox count alone). **Done when**:
       all 8 source docs' corresponding checkboxes/sections are flipped with verified evidence, and any doc that
       genuinely reaches 0 open todos is flipped to `status: resolved`.
-- [ ] [DOC] P1. **Archive every source doc todo 1 drives to `status: resolved`/`complete` — in the same commit as the
-      flip, never left sitting in `plans/active/`.** `check_terminal_status_archived.py` HARD-fails on any doc whose
-      frontmatter reads a terminal status while it still lives under `plans/active/` (including `plans/active/issues/`)
-      — the omission of this exact step across the sports finalize-plan family already forced one such HARD-fail: the
-      `plan_health` gate's own remediation (`unified-trading-pm@57ed9271c`, escalation `agt-9a5061`, PR #1545)
-      auto-archived 11 docs nobody's plan owned. For every one of the 8 source docs todo 1 flips to `resolved` with 0
-      open todos: re-verify the 0-open-todos count and the resolution banner one more time, then archive it to
-      `plans/archive/2026_07/` IN THE SAME COMMIT as the status flip — fix every corpus referrer of the archived doc's
-      pre-archive path (grep for the basename). If todo 1 already ran before this todo existed in the plan, archive any
-      already-`resolved`-but-still-active doc now, noting the flip predated this rule. **Done when**: no source doc this
-      plan drives to a terminal status remains under `plans/active/`,
-      `bash scripts/plan-hygiene/run_hygiene_sweep.sh --ci` reports 0 hard failures, and every corpus referrer resolves
-      to the archived path. Source: `archive/issues/sports_plan_reconcile_operator_decisions_2026_07_26.md` § 2.
+- [x] ✅ [DOC] P1. **DONE 2026-07-31.** Re-checked all 8 source docs' physical location + status against todo 1's own
+      doc-by-doc log: 5 needed no action (already correctly `open` and never archived, or already archived by an
+      earlier/later independent session); 1
+      (`plans/archive/issues/instruments_service_codex_compliance_ceiling_drift_2026_07_20.md`) was already archived;
+      only `issues/dp_catalog_not_running_sports_prediction_2026_07_15.md` was genuinely `status: resolved` with 0 open
+      todos (re-verified: all 6 checkboxes `[x]`) while still sitting under `plans/active/issues/` — archived it to
+      `plans/archive/issues/dp_catalog_not_running_sports_prediction_2026_07_15.md` with a `🟢 ARCHIVED` banner, fixed
+      its 8 corpus-wide path referrers (`unified-trading-pm@<pending>`), and ran a codex-alignment check per the
+      ritual's step 3 — `/codex/02-data/instruments-foundation-and-catalogue-completeness.md` was stale on 2 shipped
+      mechanisms this doc's own todos closed (sports FTP frozen-tail merge `instruments-service@24f84e86`, cefi
+      dedup-aware monotonic guard `instruments-service@5c1c3ccb`), updated with both facts + `last_reviewed` bumped.
+      **Adjacent finding, also fixed**: while re-verifying the 8 docs, found
+      `sports_fixtures_schedule_wrong_schema_day_2026_04_14.md` had been WRONGLY archived 2026-07-25 by an earlier
+      100%-checkbox-count sweep (all 4 checkboxes were done, but a genuine "35 leagues need an operator
+      league-registration decision" gap existed only as prose, never a checkbox — the exact § 2 "todos not prose" trap —
+      so `status: open` correctly never flipped, but the doc sat un-bannered in `plans/archive/issues/` anyway,
+      invisible to `regen_backlog_from_plan.py` which only reads `plans/active/*.md`). Added the missing
+      `- [ ] [OPERATOR] P3` todo, restored the doc to `plans/active/issues/`, and fixed its 8 corpus referrers too (2
+      more `related:` frontmatter entries + 2 more prose citations were stale pointing at the doc's pre-restoration
+      archive path, found and fixed in the same pass: `sports_consolidated_closeout_2026_07_19.md`'s "spun off" note,
+      and a THIRD, separate stale reference in the same file to an unrelated already-archived doc,
+      `sports_fixtures_schedule_noncanonical_raw_league_id_folders_2026_07_24.md`). **Hygiene-sweep caveat**: this
+      todo's original done-when cites `run_hygiene_sweep.sh --ci` reporting 0 hard failures — it does NOT (2 hard
+      failures: `check_reference_paths` 187/919 vs baseline 161/901, `check_archive_candidates` 7 vs baseline 4).
+      Verified via `git stash` that BOTH counts were already over baseline on the clean tree before any edit this
+      session made, and confirmed via grep that none of the violating files were touched this session — pre-existing
+      corpus drift from other slots' concurrent work, not a regression this todo introduced. Logged the live numbers in
+      `issues/reference_path_convention_2026_07_23.md`'s Progress Log rather than silently claiming a clean sweep; not
+      fixed here (corpus-wide, unrelated docs, well outside this todo's scope). No source doc this plan drives to a
+      terminal status remains under `plans/active/` (the one true positive is archived); every corpus referrer this todo
+      is responsible for resolves to its correct current path. Source:
+      `archive/issues/sports_plan_reconcile_operator_decisions_2026_07_26.md` § 2.
 - [x] ✅ [REVIEW] P1. **DONE 2026-07-30 (slot-8, `review` craft).** Resolved the conflict-gated Deferred section from
       batch3's own doc — see Progress Log for full per-item disposition + citations. Summary: of the 6 docs / 7
       candidates, 3 (footystats, fixtures_manifest_legacy_backfill, sports_odds_stale_fixture_reinjection) were already
@@ -133,7 +152,7 @@ drift_direction: advance-code
     the digest), `sports_consolidated_closeout_aggregated_sources_2026_07_24.md`'s digest pointed at 2 REAL docs for its
     3 covered todos — `issues/sports_derived_features_per_league_layout_unread_by_ml_loader_2026_07_14.md`
     (features-bucket SSOT + odds_api_team_mapping coverage, 2 todos) and
-    `issues/dp_catalog_not_running_sports_prediction_2026_07_15.md` (IAM grant, 1 todo) —,
+    `/plans/archive/issues/dp_catalog_not_running_sports_prediction_2026_07_15.md` (IAM grant, 1 todo) —,
     `issues/api_football_reverify_attempted_failed_and_asset_group_2026_07_14.md`,
     `plans/archive/issues/instruments_service_codex_compliance_ceiling_drift_2026_07_20.md`,
     `data_completion_sports_2026_07_24.md`, `issues/sports_shard_enumeration_cartesian_blowup_2026_07_20.md` (2 todos) —
@@ -151,8 +170,8 @@ drift_direction: advance-code
     todos: features-bucket path SSOT — verified `/codex/02-data/sports-features-bucket-path-layout.md` exists and is
     registered in `sports_consolidated_closeout_2026_07_19.md`'s Codex SSOTs list; odds_api_team_mapping coverage gap —
     verified `instruments-service@dd3ecff1` is a real ancestor of current HEAD), and
-    `issues/dp_catalog_not_running_sports_prediction_2026_07_15.md` (flipped the IAM-grant P3 todo, verified
-    `deployment-service@48d5e0d` is a real ancestor of current HEAD, actually adds
+    `/plans/archive/issues/dp_catalog_not_running_sports_prediction_2026_07_15.md` (flipped the IAM-grant P3 todo,
+    verified `deployment-service@48d5e0d` is a real ancestor of current HEAD, actually adds
     `terraform/gcp/live_event_log/events_bucket_iam.tf` — batch3's own todo 8 text only cited a placeholder
     "`<see plan flip commit>`" SHA, so this required an independent `git log` lookup rather than trusting the plan text;
     this doc reached genuinely 0 open todos as a result — checkbox AND prose both confirm, per its own 2026-07-30 update

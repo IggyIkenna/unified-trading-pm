@@ -100,10 +100,11 @@ drift_direction: advance-code
       previously-matched canonical league_ids have dropped out of `LEAGUE_REGISTRY`; (2) live-checked all 50 registered
       canonical `day=2026-04-14` fixtures_schedule shards — all 50 now read with the correct schema (confirming the
       instruments-service@a9f42320 write genuinely landed, not just the checkbox claim), zero contaminated/missing/
-      errors. Full written report appended as a new dated section to the archived issue doc
-      (`plans/archive/issues/sports_fixtures_schedule_wrong_schema_day_2026_04_14.md` §"Post-remediation verification of
-      the 85-league mapping + GCS state (2026-07-27, slot-10, data_engineering)"). No PROD GCS object was written,
-      moved, or deleted — verification only.**
+      errors. Full written report appended as a new dated section to the issue doc
+      (`plans/active/issues/sports_fixtures_schedule_wrong_schema_day_2026_04_14.md` §"Post-remediation verification of
+      the 85-league mapping + GCS state (2026-07-27, slot-10, data_engineering)"; that doc was briefly, wrongly archived
+      2026-07-25→2026-07-31 on a false-positive checkbox scan and has since been restored to `plans/active/`). No PROD
+      GCS object was written, moved, or deleted — verification only.**
 - [x] ✅ [CODE] P1. **DONE 2026-07-27 (slot-13)** — **Close the PRIMERA_DIVISION (Chile) Odds-API team-name alias gap**
       — unified-api-contracts@96d15ba7. Re-ran the `validate_team_resolution()` match-rate measurement against every
       real captured `pipeline_mode=batch_odds_api` day for the league across the full manifest history in

@@ -475,7 +475,7 @@ drift_direction: advance-code
       reserved for whole-plan migrations per the plan-discipline gate — this is a single low-priority research idea, not
       a plan-level deferral, and has no successor plan to banner): volume as a first-class feature for the cs/ext ML
       models.
-  - [`plans/active/issues/dp_catalog_not_running_sports_prediction_2026_07_15.md`](/plans/active/issues/dp_catalog_not_running_sports_prediction_2026_07_15.md)
+  - [`plans/archive/issues/dp_catalog_not_running_sports_prediction_2026_07_15.md`](/plans/archive/issues/dp_catalog_not_running_sports_prediction_2026_07_15.md)
     (status: resolved, 2 open)
     - **[OPS] P2.** Verify the next scheduled `lifecycle-catalogue-regen-sports` run promotes successfully +
       `prod/catalog.parquet` row count is `>= 27,216`.

@@ -368,7 +368,7 @@ drift_direction: advance-code
     — `status: resolved`, 0 open todos.
   - [`plans/archive/issues/sports_shard_enumeration_cartesian_blowup_2026_07_20.md`](/plans/archive/issues/sports_shard_enumeration_cartesian_blowup_2026_07_20.md)
     — 0 open todos.
-  - [`plans/active/issues/dp_catalog_not_running_sports_prediction_2026_07_15.md`](/plans/active/issues/dp_catalog_not_running_sports_prediction_2026_07_15.md)
+  - [`plans/archive/issues/dp_catalog_not_running_sports_prediction_2026_07_15.md`](/plans/archive/issues/dp_catalog_not_running_sports_prediction_2026_07_15.md)
     — `status: resolved`, 2 residual (cross-AG with prediction, also referenced in
     `prediction_consolidated_closeout_2026_07_18.md`):
     - **[OPS] P2.** Verify the next scheduled `lifecycle-catalogue-regen-sports` run

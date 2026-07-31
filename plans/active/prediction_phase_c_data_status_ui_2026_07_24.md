@@ -93,7 +93,8 @@ source: >-
       (repos: deployment-api, deployment-ui)
 - [ ] [BACKEND] P2. **DP_CATALOG stale alert (shared w/ sports)** — the `DP_CATALOG_NOT_RUNNING` alert fired for both
       sports + prediction `prod/catalog.parquet` (~25h stale); confirm the prediction catalogue writer runs on schedule.
-      Cross-link `issues/dp_catalog_not_running_sports_prediction_2026_07_15.md` (owned jointly with sports_master).
+      Cross-link `/plans/archive/issues/dp_catalog_not_running_sports_prediction_2026_07_15.md` (owned jointly with
+      sports_master; archived 2026-07-30 — doc reached 0 open todos).
 
 ## Progress Log
 
