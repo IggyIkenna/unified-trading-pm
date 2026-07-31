@@ -132,37 +132,38 @@ needs an explicit next relaunch round, and none is currently dispatched.
       (a)/(b)/(c) and shards 16/17/21/41 get their round-4 relaunch (or are confirmed covered by the sibling doc's fix).
 
       **Corroborating signal 2026-07-31 13:56Z (review agt-8ce066, gcloud-verified — a DIFFERENT shape than the
-                          same-shard-memory-death pattern above):** shards 43 + 44, freshly relaunched this round at 13:39:58Z / 13:40:22Z,
-                          were BOTH preempted at 13:51:37Z / 13:51:38Z — ~12 min after launch and only ~2 min after their own T+10 alive-check
-                          (13:49:30Z), confirmed via `gcloud compute operations list` `compute.instances.preempted` (ops
-                          `systemevent-1785505897347-…` / `systemevent-1785505907671-…`), not inference; 11/13 relaunched shards remain
-                          running. A FRESH launch dying fast points to SPOT-capacity pressure in `asia-northeast1-c` today (fleet-wide), NOT a
-                          shard-specific memory/data issue — so the operator decision should ALSO weigh (d) a zone/capacity check or a
-                          one-shot `--on-demand` fallback (env `ON_DEMAND=true`) for the next relaunch, not only the memory-ceiling options
-                          (a)/(b). Non-blocking: 43/44 are idempotent SPOT shards and should re-run cleanly on round-4.
+                              same-shard-memory-death pattern above):** shards 43 + 44, freshly relaunched this round at 13:39:58Z / 13:40:22Z,
+                              were BOTH preempted at 13:51:37Z / 13:51:38Z — ~12 min after launch and only ~2 min after their own T+10 alive-check
+                              (13:49:30Z), confirmed via `gcloud compute operations list` `compute.instances.preempted` (ops
+                              `systemevent-1785505897347-…` / `systemevent-1785505907671-…`), not inference; 11/13 relaunched shards remain
+                              running. A FRESH launch dying fast points to SPOT-capacity pressure in `asia-northeast1-c` today (fleet-wide), NOT a
+                              shard-specific memory/data issue — so the operator decision should ALSO weigh (d) a zone/capacity check or a
+                              one-shot `--on-demand` fallback (env `ON_DEMAND=true`) for the next relaunch, not only the memory-ceiling options
+                              (a)/(b). Non-blocking: 43/44 are idempotent SPOT shards and should re-run cleanly on round-4.
 
-              **Corroborating signal 2026-07-31 14:43Z (`data_pipeline_failure` escalation `agt-b58993`, slot 1,
-              `DP_VM_EXIT_NONZERO`/DP-VM-001 for `canonical-migration-cefi-content-42-relaunch20260731-133929`):** shard 42 —
-              one of round 3's 13 relaunched shards, confirmed healthy at both the 13:49Z and 14:19Z checks above
-              (14,000/73,965 files, climbing) — has now ALSO died the identical way: `EXIT_STATUS=137`,
-              `completed_at=2026-07-31T14:43:34Z` at 21,600/73,965 files (29%), confirmed via `DeploymentsRegistry` archive
-              (`deployment_id=f8b972e6-e4c6-4e5c-af87-8c42448294c6`, `git_commit=89739b64931699798cc54920cc636e72948d2cc7` —
-              the SAME commit this doc's own 13:35Z Progress Log entry cites, confirming `e2-standard-16` + both shipped fixes
-              (`9f4098b1`, `55d051bd`) were genuinely live on this run, not a stale tarball). `host_metrics_window` shows the
-              identical spike-then-death signature already diagnosed for 16/17/19/21/40/41: `mem_pct` plateaued ~75-85% across
-              9 samples (14:33:58Z-14:42:06Z) then jumped to **95.3%** (`mem_slope=2.0`) in the final sample before the process
-              was OOM-killed (`bash: ... Killed`) ~26s later — not a new failure mode, the 7th confirmed instance of the same
-              ceiling. **Budget check** (`DeploymentsRegistry.list_recent_archive(days=1)`, filtered to `content-42`): exactly
-              2 archived today (`-032606` failed `exit_code=137` at 04:34:48Z, `-133929` failed `exit_code=137` at 14:43:34Z) —
-              shard 42 is now AT the `≤2/(vm-prefix,day)` cap, same posture as 16/21. **Not relaunching a 3rd time** — folding
-              shard 42 into this todo instead, consistent with the existing posture for the other repeat-offender shards.
-              **Updated shard list needing the operator decision: 16, 17, 19, 21, 23, 40, 41, 42 (8 shards)** — 19/40 were
-              flagged in the Progress Log below but never folded into this todo's own text until now; 23 added
-              2026-07-31T15:1xZ (see Progress Log — DP-VM-003 `agt-71ccbf`). Eight independent shards hitting the
-              identical ceiling on `e2-standard-16` increasingly points toward the sibling memory-freeze doc's leading
-              theory (a data-content-driven spike, e.g. a single anomalously large/malformed file) rather than a per-shard
-              sizing gap — since e2-standard-16 was expected to be adequate headroom and demonstrably isn't for these specific
-              shards. Does not change the pending (a)/(b)/(c)/(d) decision options, just the shard count and urgency.
+                  **Corroborating signal 2026-07-31 14:43Z (`data_pipeline_failure` escalation `agt-b58993`, slot 1,
+                  `DP_VM_EXIT_NONZERO`/DP-VM-001 for `canonical-migration-cefi-content-42-relaunch20260731-133929`):** shard 42 —
+                  one of round 3's 13 relaunched shards, confirmed healthy at both the 13:49Z and 14:19Z checks above
+                  (14,000/73,965 files, climbing) — has now ALSO died the identical way: `EXIT_STATUS=137`,
+                  `completed_at=2026-07-31T14:43:34Z` at 21,600/73,965 files (29%), confirmed via `DeploymentsRegistry` archive
+                  (`deployment_id=f8b972e6-e4c6-4e5c-af87-8c42448294c6`, `git_commit=89739b64931699798cc54920cc636e72948d2cc7` —
+                  the SAME commit this doc's own 13:35Z Progress Log entry cites, confirming `e2-standard-16` + both shipped fixes
+                  (`9f4098b1`, `55d051bd`) were genuinely live on this run, not a stale tarball). `host_metrics_window` shows the
+                  identical spike-then-death signature already diagnosed for 16/17/19/21/40/41: `mem_pct` plateaued ~75-85% across
+                  9 samples (14:33:58Z-14:42:06Z) then jumped to **95.3%** (`mem_slope=2.0`) in the final sample before the process
+                  was OOM-killed (`bash: ... Killed`) ~26s later — not a new failure mode, the 7th confirmed instance of the same
+                  ceiling. **Budget check** (`DeploymentsRegistry.list_recent_archive(days=1)`, filtered to `content-42`): exactly
+                  2 archived today (`-032606` failed `exit_code=137` at 04:34:48Z, `-133929` failed `exit_code=137` at 14:43:34Z) —
+                  shard 42 is now AT the `≤2/(vm-prefix,day)` cap, same posture as 16/21. **Not relaunching a 3rd time** — folding
+                  shard 42 into this todo instead, consistent with the existing posture for the other repeat-offender shards.
+                  **Updated shard list needing the operator decision: 16, 17, 18, 19, 21, 23, 40, 41, 42 (9 shards)** — 19/40 were
+                  flagged in the Progress Log below but never folded into this todo's own text until now; 23 added
+                  2026-07-31T15:1xZ (see Progress Log — DP-VM-003 `agt-71ccbf`); 18 added 2026-07-31T15:5xZ (see Progress
+                  Log — DP-VM-001 `agt-95d7c6`). Nine independent shards hitting the
+                  identical ceiling on `e2-standard-16` increasingly points toward the sibling memory-freeze doc's leading
+                  theory (a data-content-driven spike, e.g. a single anomalously large/malformed file) rather than a per-shard
+                  sizing gap — since e2-standard-16 was expected to be adequate headroom and demonstrably isn't for these specific
+                  shards. Does not change the pending (a)/(b)/(c)/(d) decision options, just the shard count and urgency.
 
 ## Progress Log
 
@@ -310,5 +311,24 @@ needs an explicit next relaunch round, and none is currently dispatched.
   precedent for repeat-offender shards (16/21/42), did NOT relaunch a 3rd time — folded shard 23 into the
   `[OPERATOR] P1` todo's shard list instead (now 8: 16, 17, 19, 21, 23, 40, 41, 42). Pinged the authoring fleet-monitor
   slot (`dp-fleet-monitor`) with this outcome. No code change shipped — same reasoning as the sibling shard-42 entry
+  above: root cause is the sibling memory-freeze doc's open P2 investigation, remediation choice is the pending
+  `[OPERATOR]` decision.
+- 2026-07-31T15:5xZ (`data_pipeline_failure` escalation `agt-95d7c6`, slot 13, dispatched via `DP_VM_EXIT_NONZERO`/
+  DP-VM-001 for `canonical-migration-cefi-content-18-relaunch20260731-133548`, `exit_code=137`): confirmed the OOM via
+  `run.log` (39,000/104,813 files at death, 2h11m runtime, throughput decaying ~49->5 files/sec, `bash: ... Killed` +
+  clean `EXIT_STATUS=137` write + shutdown) and the `DeploymentsRegistry` archive entry
+  (`deployment_id=87da019c-d9ec-417a-adc9-989e56b73775`, `git_commit=89739b64931699798cc54920cc636e72948d2cc7` — the
+  SAME commit this doc's own 13:35Z round-3 relaunch table cites for shard 18, confirming `e2-standard-16` + both
+  shipped fixes (`9f4098b1`, `55d051bd`) were genuinely live on this run, not a stale tarball — this run WAS round 3's
+  own shard-18 relaunch). `host_metrics_window` (10 samples, 15:39:42Z-15:48:58Z) shows the identical spike-then-death
+  signature already diagnosed for 16/17/19/21/23/40/41/42: `mem_pct` plateaued ~72-88% across 8 samples, then jumped to
+  84.5% and finally **98.0%** (`mem_slope=1.06`) in the last two samples, `cpu_pct` also spiking 13%->65.5% and
+  `net_recv_rate_bytes_sec` collapsing from ~40-59MB/s to 2.2MB/s (thrashing) immediately before the kernel OOM-killed
+  the process. **Budget check** (`DeploymentsRegistry.list_recent_archive(days=1)`, filtered to `content-18`): exactly 2
+  archived today (`-032349` failed `exit_code=137` at 07:40:03Z, `-133548` failed `exit_code=137` at 15:49:00Z) — shard
+  18 is now AT the `RB-INFRA-RELAUNCH` `≤2/(vm-prefix,day)` cap. Per this doc's own established precedent for
+  repeat-offender shards (16/21/23/42), did NOT relaunch a 3rd time — folded shard 18 into the `[OPERATOR] P1` todo's
+  shard list instead (now 9: 16, 17, 18, 19, 21, 23, 40, 41, 42). Pinged the authoring fleet-monitor slot
+  (`dp-fleet-monitor`) with this outcome. No code change shipped — same reasoning as the sibling shard-23/42 entries
   above: root cause is the sibling memory-freeze doc's open P2 investigation, remediation choice is the pending
   `[OPERATOR]` decision.
