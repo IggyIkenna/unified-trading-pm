@@ -339,16 +339,14 @@ concurrent workers do not collide on this file.
       comment there, and this doc's other promote-fleet todo is gated on an unmade direction ruling, `## Deferred` D12).
       **Done when**: the detector fires on a synthetic N-tick block and stays silent on a block→revalidate→pass cycle.
       Source: `issues/sit_validated_tree_treadmill_blocks_breaking_promotes_2026_07_20.md` ([DEVOPS] P3).
-- [ ] [INFRA] P2. **Apply the shipped sha-tag-guard to deployment-api's two unguarded secondary cloudbuild configs.**
-      `deployment-api/cloudbuild-tier3.yaml` writes the SAME `${_REGISTRY_REPO}/${_SERVICE_NAME}:$SHORT_SHA` image path
-      and `cloudbuild-dashboard.yaml` carries the same unguarded pattern; both are manual-submit-only vectors today (all
-      3 live deployment-api triggers point at `cloudbuild.yaml`), which is why they were left for "next touch". Apply
-      the first-push-wins guard exactly as shipped across the other 19 repos: `sha-tag-guard` step writing
-      `/workspace/.sha_tag_preexists`, conditional push, and drop any sha entry from `images:`. **Done when**: both
-      files carry the guard, `scripts/validation/validate-cloudbuild.py` +
-      `scripts/quality_gates/check_cloudbuild_substitutions.py` are clean on both, and no sha tag remains in `images:`.
-      Source: `/plans/archive/issues/mutable_git_sha_tag_restamping_cloudbuild_2026_07_13.md` (archived 2026-07-30)
-      ([INFRA] P3, third item).
+- [x] ✅ [INFRA] P2. **Apply the shipped sha-tag-guard to deployment-api's two unguarded secondary cloudbuild configs.**
+      Applied the identical first-push-wins guard from `cloudbuild.yaml` to both `cloudbuild-tier3.yaml` and
+      `cloudbuild-dashboard.yaml`: a `sha-tag-guard` step writing `/workspace/.sha_tag_preexists`, a conditional push
+      (immutable `:$SHORT_SHA` kept, `:latest` re-pushed), and dropped the sha entry from `images:` on both.
+      `scripts/validation/validate-cloudbuild.py` + `scripts/quality_gates/check_cloudbuild_substitutions.py` both clean
+      on both files; full `quality-gates.sh` green. — deployment-api@a3f5822 Source:
+      `/plans/archive/issues/mutable_git_sha_tag_restamping_cloudbuild_2026_07_13.md` (archived 2026-07-30) ([INFRA] P3,
+      third item).
 - [ ] [INFRA] P2. **Sync `deployment-service/configs/gcp_service_accounts.yaml` against live IAM.** The per-service
       SA/IAM registry has NO entry at all for `unified-trading-sa@central-element-323112` (deployment-api's actual
       runtime SA) and its own footer admits `last_executed: NEVER` — an aspirational registry is worse than none,
