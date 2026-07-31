@@ -6,7 +6,7 @@ summary:
   `citadel_paper_batch_live_reconciliation_2026_06_19.md`), G1 shipped clean but G3 and G10 turned out to need a real
   design decision / a whole missing gateway layer, not a mechanical "wire the call" — rehoming as their own scoped
   finding per the backend_engineer craft escalation rule.
-status: open
+status: resolved
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
@@ -30,7 +30,12 @@ source:
     unified-trading-system-ui/hooks/api/use-reports.ts,
   ]
 assigned_vm: planning
-resolved_by:
+resolved_by: >-
+  All 4 todos done: G3 design-decision + design-plan-authoring resolved via
+  `plans/active/daily_trading_analyst_llm_job_design_2026_07_29.md` (unified-trading-pm@b30848f1c); G10's two gateway
+  proxies shipped unified-trading-api@d7fdea4 + unified-trading-api@df6d5ee; G10's UI wiring shipped
+  unified-trading-system-ui@c92078e2 (useResolveBreak/useBookCorrection wired into the reconciliation page's resolve
+  dialog + book-correction action, plus a discovered `/api/reporting/*` gateway-rewrite fix).
 locked_by:
 locked_since:
 execution_scope: orchestrator-agent
@@ -39,6 +44,11 @@ depends_on: []
 ---
 
 # BLRS G3 + G10 — rescope after verification (2026-07-28)
+
+> **🗄️ ARCHIVED 2026-07-31** — all 4 todos are `[x]`, zero remaining, `locked_by:` empty. Per
+> `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`, a doc with every todo done archives
+> immediately. G3's build-phase follow-up work lives in
+> `plans/active/daily_trading_analyst_llm_job_design_2026_07_29.md` §5 (not duplicated here).
 
 ## What I found
 
@@ -140,23 +150,23 @@ silently skip them again, which is how this sat unaddressed since 2026-05-27.
       section. `assigned_vm: NA` (a design plan, not yet AO-dispatchable) per the plan-destination default.
 
       **DONE 2026-07-29 (slot 16)** — `plans/active/daily_trading_analyst_llm_job_design_2026_07_29.md`
-                                                                                                                                                                                                                                                                                                          (unified-trading-pm@b30848f1c). All 4 points answered, each grounded in a dedicated research pass rather than
-                                                                                                                                                                                                                                                                                                          assumed: (1) traced the 4 live systemd-timer reconciler jobs end-to-end (dispatch script → `plan_health.py` →
-                                                                                                                                                                                                                                                                                                          `agents/<role>.md`) for the exact scheduling/account/slot mechanics — no new slot config needed, inherits the
-                                                                                                                                                                                                                                                                                                          shared headroom pool + scheduled-task reserve automatically; also found the referenced codex table
-                                                                                                                                                                                                                                                                                                          (`agent-orchestrator-single-vm-architecture.md`) is stale (says opus/daily; live reality is sonnet/hourly-retry)
-                                                                                                                                                                                                                                                                                                          and filed that as a follow-up. (2) The `pipeline_mode`-uniformity assumption is **VERIFIED FALSE** — 5 distinct,
-                                                                                                                                                                                                                                                                                                          mutually-inconsistent mode-differentiation mechanisms exist across trades/PnL/positions/ML/strategy datasets
-                                                                                                                                                                                                                                                                                                          (several with a dead no-op `mode=` kwarg the path template silently drops), with code:line citations for each;
-                                                                                                                                                                                                                                                                                                          the design routes around this by reusing BLRS's own already-working per-stage adapters rather than building a
-                                                                                                                                                                                                                                                                                                          uniform reader. (3) Prompt contract + dedup mechanism specified, reusing this workspace's own
-                                                                                                                                                                                                                                                                                                          pre-task-plan-conflict-check discipline for the dedup step. (4) Scoping question answered in the new plan's own
-                                                                                                                                                                                                                                                                                                          §0: this job completes BLRS Stage 4's never-built LLM-dispatch leg (confirmed via full code read that Stage 4
-                                                                                                                                                                                                                                                                                                          today only builds a markdown prompt and never calls an LLM) — not a superset (BLRS's batch-vs-live symmetry
-                                                                                                                                                                                                                                                                                                          engine stays necessary) and not fully separate (consumes BLRS's `summary_{date}.json` as one input). 6 scoped
-                                                                                                                                                                                                                                                                                                          follow-up build-phase todos filed in the new plan's §5 (skill/role-file build, scheduling wire-up, Stage 4
-                                                                                                                                                                                                                                                                                                          artifact removal, the dead-mode-kwarg bug, the stale codex table, 2 operator policy calls) — none bundled into
-                                                                                                                                                                                                                                                                                                          this design todo's own scope.
+                                                                                                                                                                                                                                                                                                                  (unified-trading-pm@b30848f1c). All 4 points answered, each grounded in a dedicated research pass rather than
+                                                                                                                                                                                                                                                                                                                  assumed: (1) traced the 4 live systemd-timer reconciler jobs end-to-end (dispatch script → `plan_health.py` →
+                                                                                                                                                                                                                                                                                                                  `agents/<role>.md`) for the exact scheduling/account/slot mechanics — no new slot config needed, inherits the
+                                                                                                                                                                                                                                                                                                                  shared headroom pool + scheduled-task reserve automatically; also found the referenced codex table
+                                                                                                                                                                                                                                                                                                                  (`agent-orchestrator-single-vm-architecture.md`) is stale (says opus/daily; live reality is sonnet/hourly-retry)
+                                                                                                                                                                                                                                                                                                                  and filed that as a follow-up. (2) The `pipeline_mode`-uniformity assumption is **VERIFIED FALSE** — 5 distinct,
+                                                                                                                                                                                                                                                                                                                  mutually-inconsistent mode-differentiation mechanisms exist across trades/PnL/positions/ML/strategy datasets
+                                                                                                                                                                                                                                                                                                                  (several with a dead no-op `mode=` kwarg the path template silently drops), with code:line citations for each;
+                                                                                                                                                                                                                                                                                                                  the design routes around this by reusing BLRS's own already-working per-stage adapters rather than building a
+                                                                                                                                                                                                                                                                                                                  uniform reader. (3) Prompt contract + dedup mechanism specified, reusing this workspace's own
+                                                                                                                                                                                                                                                                                                                  pre-task-plan-conflict-check discipline for the dedup step. (4) Scoping question answered in the new plan's own
+                                                                                                                                                                                                                                                                                                                  §0: this job completes BLRS Stage 4's never-built LLM-dispatch leg (confirmed via full code read that Stage 4
+                                                                                                                                                                                                                                                                                                                  today only builds a markdown prompt and never calls an LLM) — not a superset (BLRS's batch-vs-live symmetry
+                                                                                                                                                                                                                                                                                                                  engine stays necessary) and not fully separate (consumes BLRS's `summary_{date}.json` as one input). 6 scoped
+                                                                                                                                                                                                                                                                                                                  follow-up build-phase todos filed in the new plan's §5 (skill/role-file build, scheduling wire-up, Stage 4
+                                                                                                                                                                                                                                                                                                                  artifact removal, the dead-mode-kwarg bug, the stale codex table, 2 operator policy calls) — none bundled into
+                                                                                                                                                                                                                                                                                                                  this design todo's own scope.
 
 - [x] ✅ [CODE] P3. Build the BLRS resolution-API gateway proxy — `GET /api/reporting/reconciliation/breaks`,
       `POST /api/reporting/reconciliation/resolve`, `POST /api/reporting/reconciliation/book-correction` in
@@ -192,6 +202,22 @@ silently skip them again, which is how this sat unaddressed since 2026-05-27.
       it doesn't fit this endpoint's real field names) built on UAC's `ReconciliationAction` enum (reused, not
       re-implemented). 15 new unit tests (mock-mode + real-mode-via-monkeypatched-`httpx.AsyncClient`) in
       `test_positions_reconciliation_proxy.py`; full `quality-gates.sh` green (72s).
-- [ ] [UI] P3. Once the two gateway proxies above ship, wire at least one operator-facing page/component to consume the
-      9 existing `use-reports.ts` reconciliation hooks (currently zero consumers) — pick the page during that todo's own
-      scoping, don't invent one here. Repo: unified-trading-system-ui.
+- [x] ✅ [UI] P3. Once the two gateway proxies above ship, wire at least one operator-facing page/component to consume
+      the 9 existing `use-reports.ts` reconciliation hooks (currently zero consumers) — pick the page during that todo's
+      own scoping, don't invent one here. Repo: unified-trading-system-ui. — **DONE —
+      unified-trading-system-ui@c92078e2.** Picked `/services/reports/reconciliation` (already the
+      resolve/book-correction UX, but the dialog only mutated local React state — no backend call). Wired
+      `useResolveBreak()` into the resolve dialog's Confirm action (POSTs `{break_id, action, note, resolved_by}` to the
+      BLRS proxy; pending/error states surfaced in the dialog) and `useBookCorrection()` into the Book Correction action
+      (POSTs `{break_id}`, threads the real venue/instrument_id/side/quantity/execution_mode/reason into the
+      trading-book prefill on success, falls back to the existing client-derived estimate on a 404/no-live-break — same
+      honest-fallback pattern the gateway proxy itself uses). 3 new Vitest tests
+      (`tests/unit/components/reports/reconciliation-client.test.tsx`) mock the two hooks + assert the exact
+      payload/response wiring; `tsc --noEmit` + `eslint` clean; full `quality-gates.sh` green (170s, 288 tests). **Also
+      fixed a discovered gateway bug while browser-verifying this against a live `unified-trading-api` mock-mode
+      instance**: `next.config.mjs`'s `/api/reporting/:path*` rewrite pointed at `client-reporting-api` (port 8014) —
+      which has no `/api/reporting` prefix at all (confirmed by grep: its own routes are `/api/reports`,
+      `/api/v1/documents`, etc.) — instead of `unified-trading-api`'s own `/reporting` router (routes/reporting.py)
+      where these hooks' endpoints, and the whole rest of `use-reports.ts`'s domain, actually live. Verified via curl
+      before (404 through the Next proxy) and after (real backend JSON) the fix. This was silently breaking all 16
+      `use-reports.ts` hooks in real (non-mock) deployments, not just the 2 wired here.

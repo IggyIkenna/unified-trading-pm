@@ -178,16 +178,22 @@ audit) — 3 genuinely orphaned BLRS gaps, no successor plan previously tracked 
       `summary_{date}.json` from the recon bucket, falling back to the mock set only when no run has ever produced a
       summary; `stage5_results_writer.py` now serializes per-deviation detail into the summary JSON. 6 new unit tests,
       full QG green. Repo: batch-live-reconciliation-service.
-- [ ] [CODE] P2.BLRS2 (was G3, P2) — RESCOPED, not done. **stage4 agent dispatch to trading-agent-service** turned out
-      to need a real design decision, not a mechanical wire-up: `trading-agent-service` exposes zero inbound consumption
-      surface for a "reconciliation analysis task" today (health/readiness only). See
-      `/plans/active/issues/blrs_g3_g10_rescope_2026_07_28.md` for the 3 options + recommendation. Repo:
-      batch-live-reconciliation-service / trading-agent-service.
-- [ ] [UI] P3.BLRS3 (was G10, P3) — VERIFIED, not done. **UI→resolution-API wiring is confirmed broken on BOTH sides**
-      (not just BLRS's): `unified-trading-system-ui`'s 9 `use-reports.ts` reconciliation hooks call gateway routes that
-      don't exist anywhere in `unified-trading-api` (`reporting.py`/`positions.py`) — but zero UI pages consume those
-      hooks, so nothing is live-broken today. See `/plans/active/issues/blrs_g3_g10_rescope_2026_07_28.md` for the
-      per-repo build todos. Gated behind P1.BLRS1 (now done) + the gateway-proxy build.
+- [x] ✅ [CODE] P2.BLRS2 (was G3, P2) — RESCOPED, then DONE at its own scope. **stage4 agent dispatch to
+      trading-agent-service** turned out to need a real design decision, not a mechanical wire-up — resolved via
+      `/plans/active/issues/blrs_g3_g10_rescope_2026_07_28.md`'s 2 todos: operator-ruled 2026-07-29 (a daily-scheduled
+      LLM analysis job on the planning VM, not a trading-agent-service endpoint or PubSub consumer) + the scoped design
+      plan authored per that ruling — `plans/active/daily_trading_analyst_llm_job_design_2026_07_29.md`
+      (unified-trading-pm@b30848f1c). That design plan's own §5 carries the 6 build-phase follow-up todos (not
+      duplicated here). Repo: batch-live-reconciliation-service / trading-agent-service.
+- [x] ✅ [UI] P3.BLRS3 (was G10, P3) — VERIFIED, then DONE. **UI→resolution-API wiring** — both gateway proxies shipped
+      (unified-trading-api@d7fdea4 BLRS breaks/resolve/book-correction proxy; unified-trading-api@df6d5ee
+      strategy-service/position deviations/balances/pnl/summary/resolve/auto-recon-history proxy), then wired into an
+      operator-facing page: `unified-trading-system-ui@c92078e2` hooks `useResolveBreak`/`useBookCorrection` into
+      `/services/reports/reconciliation`'s existing resolve dialog + book-correction action (previously local-React-
+      state-only, no backend call). Also fixed a discovered `/api/reporting/:path*` gateway-rewrite bug in
+      `next.config.mjs` (pointed at client-reporting-api, which has no matching routes, instead of unified-trading-api's
+      own `/reporting` router) that was silently breaking this and the other 7 `use-reports.ts` reporting hooks in real
+      (non-mock) deployments. See `/plans/active/issues/blrs_g3_g10_rescope_2026_07_28.md` for the full evidence.
 
 ---
 
