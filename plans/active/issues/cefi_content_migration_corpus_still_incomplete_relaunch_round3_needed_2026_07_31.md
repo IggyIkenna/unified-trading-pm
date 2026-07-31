@@ -156,13 +156,14 @@ needs an explicit next relaunch round, and none is currently dispatched.
               2 archived today (`-032606` failed `exit_code=137` at 04:34:48Z, `-133929` failed `exit_code=137` at 14:43:34Z) —
               shard 42 is now AT the `≤2/(vm-prefix,day)` cap, same posture as 16/21. **Not relaunching a 3rd time** — folding
               shard 42 into this todo instead, consistent with the existing posture for the other repeat-offender shards.
-              **Updated shard list needing the operator decision: 16, 17, 19, 21, 23, 40, 41, 42 (8 shards)** — 19/40 were
+              **Updated shard list needing the operator decision: 16, 17, 19, 21, 23, 24, 40, 41, 42 (9 shards)** — 19/40 were
               flagged in the Progress Log below but never folded into this todo's own text until now; 23 added
-              2026-07-31T15:1xZ (see Progress Log — DP-VM-003 `agt-71ccbf`). Eight independent shards hitting the
-              identical ceiling on `e2-standard-16` increasingly points toward the sibling memory-freeze doc's leading
-              theory (a data-content-driven spike, e.g. a single anomalously large/malformed file) rather than a per-shard
-              sizing gap — since e2-standard-16 was expected to be adequate headroom and demonstrably isn't for these specific
-              shards. Does not change the pending (a)/(b)/(c)/(d) decision options, just the shard count and urgency.
+              2026-07-31T15:1xZ (see Progress Log — DP-VM-003 `agt-71ccbf`); 24 added 2026-07-31T15:3xZ (see Progress
+              Log — DP-VM-003 `agt-f964b3`). Nine independent shards hitting the identical ceiling on `e2-standard-16`
+              increasingly points toward the sibling memory-freeze doc's leading theory (a data-content-driven spike,
+              e.g. a single anomalously large/malformed file) rather than a per-shard sizing gap — since e2-standard-16
+              was expected to be adequate headroom and demonstrably isn't for these specific shards. Does not change the
+              pending (a)/(b)/(c)/(d) decision options, just the shard count and urgency.
 
 ## Progress Log
 
