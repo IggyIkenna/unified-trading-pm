@@ -35,7 +35,7 @@ referenced_by:
     /codex/04-architecture/share-class-architecture.md,
   ]
 owner:
-last_reviewed: 2026-05-17
+last_reviewed: 2026-10-12
 code_refs:
 ---
 

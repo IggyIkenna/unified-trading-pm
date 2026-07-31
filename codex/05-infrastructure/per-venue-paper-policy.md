@@ -29,7 +29,7 @@ referenced_by:
     plans/epics/defi_master.md,
   ]
 owner:
-last_reviewed: 2026-05-17
+last_reviewed: 2026-10-16
 code_refs:
 overview:
   SSOT for the per-venue paper-mode policy — simulate-first floor for every venue (matching engine is the universal
@@ -175,7 +175,7 @@ paper-mode. Real-time TradFi paper would be matching-engine against live tick st
 
 Per-venue paper credentials (testnet API keys + Tenderly tokens + Solana devnet wallets) live in a separate Secret
 Manager namespace from live keys. Exact path scoping in
-[`api_keys_wallets_accounts_readiness_2026_05_08.md`](../../plans/questions/api_keys_wallets_accounts_readiness_2026_05_08.md);
+[`api_keys_wallets_accounts_readiness_2026_05_08.md`](../../plans/archive/2026_05/api_keys_wallets_accounts_readiness_2026_05_10.md);
 banner mutual.
 
 ## Composes with

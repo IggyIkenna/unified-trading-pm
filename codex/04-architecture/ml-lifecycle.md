@@ -4,7 +4,8 @@ title: ML Lifecycle — Model Registry, Inference, and Deployment
 summary:
   "Canonical ML lifecycle decisions — ModelArtifactRegistry (UAC) as the model-artifact SSOT read by ml-inference at
   startup / hot-reload, paper-snapshot version freeze for reproducibility, weekly live hot-reload cadence, per-bar batch
-  inference replay (vectorized daily pass banned), and the p99 ≤ 200ms inference latency SLA."
+  inference replay (vectorized daily pass banned). Latency SLO is owned by the UAC threshold
+  ml_inference_latency_p99_ms (500ms), not by this doc."
 status: current
 nature: ssot
 asset_group: [meta]
@@ -29,7 +30,7 @@ authoritative_for:
   ]
 referenced_by: [/codex/04-architecture/ml-experiment-lifecycle.md, /codex/04-architecture/ml-service-architecture.md]
 owner: topology_qgroup_gap_closure_2026_05_09 Phase 2
-last_reviewed: 2026-05-17
+last_reviewed: 2026-10-09
 code_refs:
 updated: 2026-05-15
 closes: GAP-7, GAP-8
@@ -48,16 +49,25 @@ GCS URI. Direct GCS path lookup without registry is banned.
 
 ## 2. Paper-Snapshot Semantics
 
-When a paper trading run starts, the orchestrator calls `freeze_model_artifact(strategy_id, model_id)` which writes
+When a paper trading run starts, the orchestrator freezes the artifact by writing
 `paper_snapshot_version = <current version>` to the registry record. The paper run uses this frozen version for its
 entire lifetime — no hot-reloads during a paper run. This preserves reproducibility: replay of the same paper run
 re-loads the same artifact version.
 
+> **Implementation status (verified 2026-07-31):** the `paper_snapshot_version` **field** exists on
+> `ModelArtifactRegistry`, but the `freeze_model_artifact(strategy_id, model_id)` helper this section originally named
+> is **not implemented** anywhere in the workspace — the freeze is a declared contract, not shipped code. Treat the
+> semantics above as the target; do not import a `freeze_model_artifact` symbol.
+
 ## 3. Live Hot-Reload Cadence
 
-Default: weekly (`live_hot_reload_cadence_days = 7`). Per-archetype override in `StrategyConfig.ml_reload_cadence_days`.
-Hot-reload is atomic: new model loaded + validated on shadow traffic before the primary pointer is swapped. On
-validation failure the old model stays active and an alert is emitted.
+Default: weekly (`live_hot_reload_cadence_days = 7`, a real field on `ModelArtifactRegistry`). Hot-reload is atomic: new
+model loaded + validated on shadow traffic before the primary pointer is swapped. On validation failure the old model
+stays active and an alert is emitted.
+
+> **Implementation status (verified 2026-07-31):** the per-archetype override this section originally cited as
+> `StrategyConfig.ml_reload_cadence_days` does **not** exist — no such field is defined anywhere in the workspace. The
+> registry-level `live_hot_reload_cadence_days` is the only cadence knob that actually exists today.
 
 ## 4. Monolithic ML Cluster — May-23 Decision
 
@@ -86,10 +96,21 @@ for bar T must not use features with `available_at > T`.
 
 ## 6. Latency SLA
 
-p99 inference latency ≤ 200ms per signal, measured at the strategy-service boundary (time from feature-vector assembly
-to `MLPrediction` available). Enforced by:
+Inference p99 latency is measured at the strategy-service boundary (time from feature-vector assembly to `MLPrediction`
+available).
 
-1. pytest in `strategy-service/tests/integration/test_ml_inference_latency_sla.py`
-2. Grafana alert: `ml_inference_latency_p99_ms > 200` fires `ML_INFERENCE_LATENCY_BREACH`
+> **Corrected 2026-07-31 — the shipped SLO is 500ms, not 200ms.** The machine SSOT is the UAC threshold
+> `ml_inference_latency_p99_ms`, whose `default_value` is **500** (`canonical/crosscutting/alerting/thresholds.py`),
+> with the stated rationale that CeFi ML archetypes run on a 1-min bar cadence so 500ms p99 leaves ample headroom, and
+> that sub-100ms HFT archetypes (not shipped pre-May-23) would override per-archetype. This doc previously asserted
+> ≤200ms; that figure was never the enforced threshold. This doc is **not** `authoritative_for` the latency SLA — the
+> UAC threshold is. Read the threshold, don't copy a number from here.
 
-Alert code `ML_INFERENCE_LATENCY_BREACH` is declared in UAC `canonical/crosscutting/alerting/codes.py` (existing).
+Enforcement that actually exists:
+
+- An `AlertRule` for `AlertCode.ML_INFERENCE_LATENCY_BREACH` in UAC `canonical/crosscutting/alerting/rules.py` — it
+  binds the threshold named `ml_inference_latency_p99_ms`, at severity `WARN`, on the `SLACK` channel. The alert code
+  itself is declared in UAC `canonical/crosscutting/alerting/codes.py`. Routing is **Slack**, not Grafana.
+- **No pytest gate.** This section previously cited
+  `strategy-service/tests/integration/test_ml_inference_latency_sla.py`; no such test exists anywhere in the workspace.
+  The SLA is alert-enforced at runtime only.

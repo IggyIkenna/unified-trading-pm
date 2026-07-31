@@ -26,7 +26,7 @@ referenced_by:
     /codex/14-customer-journeys/roadmap/plan-references.md,
   ]
 owner:
-last_reviewed: 2026-05-17
+last_reviewed: 2026-10-12
 code_refs:
 ---
 

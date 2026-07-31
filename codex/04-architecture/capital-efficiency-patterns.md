@@ -32,7 +32,7 @@ referenced_by:
     /codex/09-strategy/architecture-v2/archetypes/market-making-continuous.md,
   ]
 owner:
-last_reviewed: 2026-05-17
+last_reviewed: 2026-10-04
 code_refs:
 ---
 

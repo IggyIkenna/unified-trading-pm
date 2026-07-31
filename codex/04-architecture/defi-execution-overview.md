@@ -33,7 +33,7 @@ referenced_by:
     /codex/04-architecture/strategy-ensemble-topology.md,
   ]
 owner:
-last_reviewed: 2026-05-17
+last_reviewed: 2026-10-07
 code_refs:
 ---
 
@@ -61,7 +61,9 @@ The strategy→execution boundary has explicit manifest emission on both sides f
 **QG enforcement**: `unified-trading-pm/scripts/qg/no_silent_absence_handlers.sh` Phase Qa/Qb explicitly checks both
 files for presence of `record_captured|record_empty|record_failed`.
 
-SSOT: `plans/active/strategy_execution_contract_remediation_2026_05_20.md`.
+Origin record (not an SSOT — plans archive, codex owns the durable rule):
+[`/plans/archive/2026_05/strategy_execution_contract_remediation_2026_05_20.md`](/plans/archive/2026_05/strategy_execution_contract_remediation_2026_05_20.md)
+(`status: complete`).
 
 ## Live Execution Flow
 
@@ -208,8 +210,9 @@ Error format: `ERROR_CODE: AAVE V3 transaction failed -- <raw message>`
 
 ### Recursive-loop orchestrator codes (7)
 
-Used by `execution-service/defi_execution/protocols/recursive_loop_orchestrator.py` — emitted directly (not via
-`classify_venue_error`). Added 2026-05-12 per Phase 5 design.
+Used by `execution-service/execution_service/defi_execution/orchestrators/recursive_loop_orchestrator.py` — emitted
+directly (not via `classify_venue_error`). Added 2026-05-12 per Phase 5 design. (The module lives under
+`orchestrators/`, not `protocols/`.)
 
 | Code                                        | Action | When                                              |
 | ------------------------------------------- | ------ | ------------------------------------------------- |

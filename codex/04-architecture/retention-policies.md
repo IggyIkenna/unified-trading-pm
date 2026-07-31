@@ -17,7 +17,7 @@ created: 2026-03-27
 authoritative_for: [data retention schedule and lifecycle-rule enforcement]
 referenced_by:
 owner:
-last_reviewed: 2026-05-17
+last_reviewed: 2026-10-10
 code_refs:
 ---
 

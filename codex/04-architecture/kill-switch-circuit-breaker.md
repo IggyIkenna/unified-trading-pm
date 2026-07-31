@@ -41,7 +41,7 @@ referenced_by:
     /codex/04-architecture/mev-protection.md,
   ]
 owner:
-last_reviewed: 2026-05-17
+last_reviewed: 2026-10-08
 code_refs:
 ---
 
@@ -233,17 +233,22 @@ HALF_OPEN -(probe succeeds)---------> CLOSED  (consecutive_open_cycles reset)
 HALF_OPEN -(probe fails)------------> OPEN    (cooldown doubles, exponential backoff)
 ```
 
-### Thresholds (actual, from code)
+### Thresholds (actual, from code — re-verified 2026-07-31)
 
-| Parameter                         | Default | Notes                                            |
-| --------------------------------- | ------- | ------------------------------------------------ |
-| `failure_threshold`               | 5       | Consecutive failures before CLOSED -> OPEN       |
-| `cooldown_seconds`                | 300     | Base cooldown in OPEN before HALF_OPEN probe     |
-| `max_cooldown_seconds`            | 3600    | Cap on exponential backoff                       |
-| `degraded_failure_rate_threshold` | 0.30    | 30% failure rate triggers DEGRADED               |
-| `open_failure_rate_threshold`     | 0.60    | 60% failure rate triggers OPEN                   |
-| `failure_rate_window`             | 20      | Sliding window size for failure rate calculation |
-| `failure_rate_min_samples`        | 5       | Minimum samples before rate-based transitions    |
+| Parameter            | Default | Where                                                              | Notes                                        |
+| -------------------- | ------- | ------------------------------------------------------------------ | -------------------------------------------- |
+| `failure_threshold`  | 5       | `unified_api_contracts/internal/reference/circuit_breaker_config.py` | Consecutive failures before CLOSED -> OPEN |
+| `cooldown_seconds`   | 300.0   | same                                                               | Base cooldown in OPEN before HALF_OPEN probe |
+| `_MAX_COOLDOWN_SECONDS` | 3600.0 | `execution-service/execution_service/engine/circuit_breaker.py`   | Cap on exponential backoff (module constant, not a config field) |
+
+> **Corrected 2026-07-31 — the breaker is consecutive-failure based, not failure-rate based.** Earlier revisions of this
+> table listed four failure-**rate** parameters (`degraded_failure_rate_threshold` 0.30,
+> `open_failure_rate_threshold` 0.60, `failure_rate_window` 20, `failure_rate_min_samples` 5). **None of them exist in
+> any repo**, and there is no sliding-window rate computation in the implementation — the transition to OPEN is driven
+> purely by `failure_threshold` consecutive failures. `BreakerConfig`
+> (`unified_api_contracts/canonical/crosscutting/circuit_breaker/_models.py`) declares exactly: `breaker_id`, `scope`,
+> `applies_to`, `trigger`, `action`, `recovery_mode`, `cooldown_seconds`, `alerting_severity`, `description`. Do not
+> code against a rate threshold from this doc.
 
 ### Exponential Backoff
 

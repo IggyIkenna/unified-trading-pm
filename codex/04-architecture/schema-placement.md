@@ -22,7 +22,7 @@ created: 2026-03-27
 authoritative_for: [schema placement rules (which repo owns a type), UAC-external-vs-UIC-internal type ownership matrix]
 referenced_by: [/codex/04-architecture/schema-versioning.md, /codex/04-architecture/separation-of-concerns.md]
 owner:
-last_reviewed: 2026-05-17
+last_reviewed: 2026-10-11
 code_refs:
 ---
 
@@ -50,7 +50,8 @@ a service. Services own only their internal processing state types.
 
 UAC owns types that classify, normalize, or route external data:
 
-- **Error codes**: `DefiErrorCode` (13 structured codes — FAIL/RETRY/SKIP prefix)
+- **Error codes**: `DefiErrorCode` (35 structured codes — FAIL/RETRY/SKIP prefix; the enum is the SSOT, don't copy the
+  count)
 - **Alert types**: `DefiAlertType`
 - **Data sources**: `DeFiDataSource`
 - **Chain infrastructure**: `CHAIN_RPC_TEMPLATES`, `SUBGRAPH_IDS`
@@ -86,10 +87,10 @@ Services own types that never cross service boundaries:
 
 | Type                   | Owner | Path                                        |
 | ---------------------- | ----- | ------------------------------------------- |
-| `DefiErrorCode`        | UAC   | `canonical/domain/defi.py`                  |
-| `DefiAlertType`        | UAC   | `canonical/domain/defi.py`                  |
-| `DeFiDataSource`       | UAC   | `canonical/domain/defi.py`                  |
-| `CHAIN_RPC_TEMPLATES`  | UAC   | `registry/capability_declarations/_defi.py` |
+| `DefiErrorCode`        | UAC   | `canonical/crosscutting/errors/defi.py`                |
+| `DefiAlertType`        | UAC   | `canonical/crosscutting/errors/defi.py`                |
+| `DeFiDataSource`       | UAC   | `registry/capability_declarations/_defi.py`            |
+| `CHAIN_RPC_TEMPLATES`  | UAC   | `registry/capability_declarations/_defi_chain_data.py` |
 | `DeFiSwapResult`       | UIC   | `domain/execution/`                         |
 | `FlashLoanResult`      | UIC   | `domain/execution/`                         |
 | `DefiAlert`            | UIC   | `domain/alerts/`                            |

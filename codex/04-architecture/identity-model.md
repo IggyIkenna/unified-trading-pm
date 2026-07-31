@@ -21,7 +21,7 @@ created: 2026-04-16
 authoritative_for: [client/account/strategy composite-key identity model]
 referenced_by:
 owner:
-last_reviewed: 2026-05-17
+last_reviewed: 2026-10-08
 code_refs:
 ---
 

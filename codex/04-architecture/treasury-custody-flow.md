@@ -29,7 +29,7 @@ referenced_by:
     /codex/04-architecture/wallet-hierarchy-and-capital-flow.md,
   ]
 owner:
-last_reviewed: 2026-05-17
+last_reviewed: 2026-10-13
 code_refs:
 ---
 

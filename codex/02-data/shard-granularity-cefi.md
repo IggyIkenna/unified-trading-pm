@@ -26,7 +26,7 @@ authoritative_for:
   ]
 referenced_by:
 owner:
-last_reviewed: 2026-05-17
+last_reviewed: 2026-10-02
 code_refs:
 ---
 
@@ -41,21 +41,25 @@ code_refs:
 > ML+strategy+execution job_id / TradFi EVENT_CONTRACT).
 
 **Status:** v6 columns (`quote_asset` / `margin_type` / `combo_type` / `leg_weights`) active as of 2026-04-23 (manifest
-schema v6 shipped). Current overall schema is **v9** (`MANIFEST_SCHEMA_VERSION = 9` in UTL `manifest_writer.py`) — v7
+schema v6 shipped). Current overall schema is **v9** (`MANIFEST_SCHEMA_VERSION = 9` in UTL
+`manifest_writer/_schema.py` — `manifest_writer` is a package, not a module) — v7
 added `fixture_id` (sports per-fixture) + `job_id` (ML / strategy / execution experiment-keyed services); v8 added
 `pipeline_mode` + `service_emission_state` + `last_emission_decision_at` + `expected_window_completeness_pct`; v9 added
 `source` (universal provider tag, 2026-05-30); the v6 CeFi columns described in this doc are unchanged under v7/v8/v9.
 
-> **[DELTA 2026-06-01]** **Current state:** `MANIFEST_SCHEMA_VERSION = 9` (code constant rolled 2026-05-30). Data-side
-> migration target is 100% of production rows at v9. The Phase 2.2 single-walk migration
-> (`plans/active/gcs_migration_bundle_pipeline_mode_2026_05_08.md`) is in progress as a per-AG L3 walk rider. **Target
-> architecture:** 100% of production rows at v9.
+> **[DELTA 2026-06-01, re-verified 2026-07-31]** **Current state:** `MANIFEST_SCHEMA_VERSION = 9` (code constant rolled
+> 2026-05-30) — confirmed still 9. Data-side migration target is 100% of production rows at v9. The Phase 2.2
+> single-walk migration plan
+> ([`/plans/archive/2026_05/gcs_migration_bundle_pipeline_mode_2026_05_08.md`](/plans/archive/2026_05/gcs_migration_bundle_pipeline_mode_2026_05_08.md))
+> is now **archived** — it is no longer an in-progress rider, so do not treat it as live tracking. Per CLAUDE.md
+> § "Working on DATA", trust the measured row distribution, not this constant. **Target architecture:** 100% of
+> production rows at v9.
 
 Cluster validation as 4th write-gate pillar in progress (writegate Phase 1A + 2.B). **SSOT:**
 [availability-manifest-and-data-status.md](./availability-manifest-and-data-status.md) for the canonical schema-version
 constant + full column list; this doc is the CeFi-specific v6 column rollout reference.
 `unified-trading-pm/plans/archive/manifest_schema_v6_quote_margin_combo_2026_04_23.plan.md` +
-`unified-trading-pm/plans/active/writegate_honest_coverage_endtoend_2026_05_06.md`. **Related:**
+`unified-trading-pm/plans/archive/2026_05/writegate_honest_coverage_endtoend_2026_05_06.md`. **Related:**
 [partitioning.md](./partitioning.md),
 [04-architecture/shard-level-failure-isolation.md](/codex/04-architecture/shard-level-failure-isolation.md),
 [06-coding-standards/validation-and-errors.md](/codex/06-coding-standards/validation-and-errors.md).

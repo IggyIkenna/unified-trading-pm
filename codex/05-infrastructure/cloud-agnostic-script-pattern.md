@@ -23,18 +23,21 @@ authoritative_for:
   The mandatory pattern every workspace script that touches cloud resources must follow — `--cloud {gcp,aws}` flag
   default from `CLOUD_PROVIDER` env, no direct gcloud/gsutil/google.cloud.storage without an AWS branch, UCI factory
   pattern for SDK construction.
-referenced_by: [plans/active/aws_migration_defi_first_2026_05_07.md]
+referenced_by: [plans/archive/2026_05/aws_migration_defi_first_2026_05_07.md]
 owner:
-last_reviewed: 2026-05-17
+last_reviewed: 2026-10-15
 code_refs:
 last_updated: 2026-05-22
 ---
 
 # Cloud-Agnostic Script Pattern
 
-> **[DELTA 2026-05-22]** **Current state:** Phase 2 prep landed (`cloud-providers.yaml` extended +
-> `setup-defi-buckets.sh` shipped). `lib/cloud-helpers.sh` is still empty; the Python UCI factory and QG lint rule are
-> advisory-only (not hard-error). Bucket SSOT canonicalisation (`resolve_bucket_name`) is enforced by QG STEP 5.69.
+> **[DELTA 2026-05-22, re-verified 2026-07-31]** **Current state:** Phase 2 prep landed (`cloud-providers.yaml`
+> extended + `setup-defi-buckets.sh` shipped — both confirmed present). `deployment-service/scripts/lib/cloud-helpers.sh`
+> **still does not exist** (neither the file nor the `scripts/lib/` directory — it is unwritten, not merely empty); the
+> Python UCI factory (`unified_trading_library/cloud_interface/factory.py`, confirmed present) and the QG lint rule are
+> advisory-only (not hard-error). Bucket SSOT canonicalisation (`resolve_bucket_name`) is enforced by the inline-URI
+> ratchet step in `scripts/quality-gates-base/base-service.sh`.
 > **Planned delta:** Remaining phases tracked under `plans/epics/infrastructure_master.md`. **Target architecture:**
 > Every workspace script uses `lib/cloud-helpers.sh` + UCI factory; QG lint rule is a hard error for non-compliant
 > scripts.
@@ -44,7 +47,7 @@ last_updated: 2026-05-22
 > phases populate `lib/cloud-helpers.sh` + the Python factory + the QG lint rule.
 
 > **🟡 IN-FLIGHT REFACTOR — operator decision (b+) 2026-05-11.** Per
-> [`plans/active/bucket_name_ssot_canonicalisation_2026_05_10.md`](../../plans/active/bucket_name_ssot_canonicalisation_2026_05_10.md)
+> [`plans/archive/2026_05/bucket_name_ssot_canonicalisation_2026_05_10.md`](../../plans/archive/2026_05/bucket_name_ssot_canonicalisation_2026_05_10.md)
 > Phase 0a, the env-tier convention extends to ALL buckets (Group-A `instruments-store` / `market-data` / raw-tick +
 > Group-B features-\*/ml-\*/strategy/execution) across both clouds × 3 envs. New requirements for cloud-agnostic
 > scripts:
@@ -116,7 +119,7 @@ case "$CLOUD" in
 esac
 ```
 
-Once `deployment-service/scripts/lib/cloud-helpers.sh` lands (Phase 2 follow-up — currently empty), this branching
+Once `deployment-service/scripts/lib/cloud-helpers.sh` lands (Phase 2 follow-up — not yet created), this branching
 pattern moves into helpers (`cloud_cp_local_to_remote`, `cloud_ls_remote`, `cloud_cat_remote`) so call sites read as
 single-line operations. Until then, inline branching with the case-statement above is acceptable.
 
@@ -326,7 +329,7 @@ is (per the AWS migration plan Phase 1.5):
 
 ## Cross-references
 
-- **Plan(s) implementing this:** [`aws_migration_defi_first`](../../plans/active/aws_migration_defi_first_2026_05_07.md)
+- **Plan(s) implementing this:** [`aws_migration_defi_first`](../../plans/archive/2026_05/aws_migration_defi_first_2026_05_07.md)
   Phase 1.5 + Phase 2.
 - **Related codex SSOTs:** [`cloud-agnostic-audit-2026-05-07`](./cloud-agnostic-audit-2026-05-07.md),
   [`cloud-agnostic-build-lineage`](./cloud-agnostic-build-lineage.md).

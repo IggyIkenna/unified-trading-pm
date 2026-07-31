@@ -5,7 +5,7 @@ summary: >-
   Per-source co-location pattern SSOT — every external data source gets ONE flat
   unified_api_contracts/external/{source}/ dir (schemas.py + normalize.py + mocks/ VCR cassettes + examples/);
   normalize_utils/ holds the shared helpers and is UAC-internal (consumers use the unified_api_contracts.{domain}
-  facade, never import normalize_utils). 49 sources have normalize.py, 25 are schemas-only.
+  facade, never import normalize_utils). 108 source dirs — 53 with normalize.py, 43 schemas-only (re-count, it drifts).
 status: current
 nature: ssot
 asset_group: [meta]
@@ -23,7 +23,7 @@ created: 2026-03-27
 authoritative_for: [UAC external/ per-source co-location directory layout]
 referenced_by: [/codex/02-data/operation-capability-registry.md, /codex/02-data/schema-governance.md]
 owner:
-last_reviewed: 2026-05-17
+last_reviewed: 2026-10-02
 code_refs:
 ---
 
@@ -104,8 +104,10 @@ def normalize_binance_ticker(raw: BinanceTicker) -> CanonicalTicker:
 
 ## Current Coverage
 
-49 sources have `normalize.py`. 25 sources have `schemas.py` only (normalizers not yet written or source does not
-produce normalizable data).
+Measured 2026-07-31: **108** source directories under `unified_api_contracts/external/`, of which **53** have a
+`normalize.py` (or `normalize/` package) and **43** are schemas-only (normalizers not yet written, or the source does
+not produce normalizable data). The directory listing is the SSOT — re-count rather than trusting this line, it drifts
+every time a venue is onboarded.
 
 ---
 
