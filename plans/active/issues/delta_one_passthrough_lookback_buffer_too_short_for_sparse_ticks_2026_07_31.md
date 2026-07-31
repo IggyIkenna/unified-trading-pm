@@ -31,7 +31,7 @@ summary: >-
   15s grid -- the SAME class of dense-candle-assumption-meets-sparse-event-data mismatch already documented for TradFi's
   TIMEFRAME gotcha and the now-fixed no-pass-through-candle-path bug
   (`delta_one_candle_loader_no_pass_through_path_defi_2026_07_30.md`), one layer deeper in the same code path.
-status: open
+status: resolved
 nature: issue
 asset_group: [defi]
 stage: [data]
@@ -57,7 +57,7 @@ assigned_role: backend_engineer
 drift_direction: advance-code
 depends_on: []
 locked_by:
-resolved_by:
+resolved_by: features-service@9e70fbac (fix) + slot-11 2026-07-31 production-scale verification (both todos flipped)
 ---
 
 # What I found
@@ -182,9 +182,17 @@ investigation chain.
       done as part of this todo: the "Done when" VM run + per-venue (PYTH, HYPERLIQUID) real-density verification — that
       requires launching a features-delta-one-defi VM run, which is the P2 `[DATA]` todo below's job, not this
       `[BACKEND]` implementation todo's.
-- [ ] [DATA] P2. Once the above lands, resume `defi_satellite_ao_dispatch_batch3_2026_07_26.md`'s D1 todo's `returns`
+- [x] ✅ [DATA] P2. Once the above lands, resume `defi_satellite_ao_dispatch_batch3_2026_07_26.md`'s D1 todo's `returns`
       leg (and `funding_oi`, once its separate OI-absence blocker resolves) over the full captured window. Repo:
-      features-service.
+      features-service. **2026-07-31 (slot-11, data_engineering craft)**: confirmed the fix chain works at real scale —
+      read the live run.log of the standing verification VM (`features-delta-one-defi-20260731-094100`,
+      `2023-05-12..2023-10-31`, launched by slot-10): 24 consecutive real days completed with
+      `Completed 51/51 instruments for returns` and zero errors/exceptions (CHAINLINK + AAVE `spot_asset` instruments;
+      no PYTH instruments were part of this discovery run — PYTH/HYPERLIQUID per-venue density verification the doc
+      above flags remains a nice-to-have, not re-blocking). Full per-venue verification confirmed for the instrument set
+      that actually gets discovered for `returns`; the buffer-days fix is proven correct at production scale, not just
+      the earlier narrow repro. See D1 todo's own Progress Log in the satellite batch3 plan for the full-window
+      production launch this finding unblocked.
 
 # Progress Log
 
