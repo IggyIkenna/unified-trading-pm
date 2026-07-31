@@ -8,14 +8,12 @@
 >
 > **Conditional format (the organizing rule)**: the body splits into **always-on** (apply to every task — read it) and a
 > **conditional domain index** (`§ When your task touches X`). **Only open a codex SSOT when your current task actually
-> involves that rule/domain** — don't read the service / data / UI / DeFi / infra codex for a task that doesn't touch
-> it. A grep-0 on a domain you're not working in is irrelevant; a rule you ARE working under, you read in full first.
-> **Placing a new rule**: always-on block only if it applies to EVERY task; otherwise a one-liner under the matching
-> conditional `§` (+ its codex SSOT).
+> involves that rule/domain** — a grep-0 on a domain you're not working in is irrelevant; a rule you ARE working under,
+> you read in full first. **Placing a new rule**: always-on block only if it applies to EVERY task; otherwise a
+> one-liner under the matching conditional `§` (+ its codex SSOT).
 >
 > **Durable facts live in codex (SSOT) + a one-liner here, NEVER in agent `memory/` (HARD RULE)**: memory is per-cwd,
-> local-only (never git-tracked, never reaches a VM/teammate), NOT inherited by sub-agents. Sub-agents reach
-> topic-parity via `SUB_AGENT_MANDATORY_RULES.md`.
+> local-only, NOT inherited by sub-agents. Sub-agents reach topic-parity via `SUB_AGENT_MANDATORY_RULES.md`.
 >
 > **Agent memory writes are BANNED (HARD RULE)**: agents MUST NOT write to the `memory/` directory or `MEMORY.md`.
 > Session-scoped findings go into the active plan's **Progress Log** section; personal/secrets-adjacent state is the
