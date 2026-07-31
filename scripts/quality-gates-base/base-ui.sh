@@ -13,6 +13,7 @@
 # Optional caller variables:
 #   MAX_DURATION     — duration limit in seconds (default: 180)
 #   MIN_UI_COVERAGE  — coverage floor % (default: 70)
+#   STEP_TIMEOUT_INSTALL — timeout for the node_modules freshness auto-refresh (default: 180)
 #   CODEX_COLOUR_EXCLUDE_GLOBS — extra --glob exclusions for the hardcoded-colour check
 #                                e.g. CODEX_COLOUR_EXCLUDE_GLOBS=("!src/lib/theme-overrides.ts")
 #
@@ -78,6 +79,7 @@ STEP_TIMEOUT_TYPECHECK=${STEP_TIMEOUT_TYPECHECK:-60}
 STEP_TIMEOUT_LINT=${STEP_TIMEOUT_LINT:-60}
 STEP_TIMEOUT_TEST=${STEP_TIMEOUT_TEST:-120}
 STEP_TIMEOUT_BUILD=${STEP_TIMEOUT_BUILD:-900}  # bumped 2026-06-20: the unified-trading-system-ui Next.js production build (~302 routes) legitimately exceeds 240s/420s cold-cache — raise the ceiling rather than skip the build (CLAUDE.md "bump MAX_DURATION over suppressing the time check")
+STEP_TIMEOUT_INSTALL=${STEP_TIMEOUT_INSTALL:-180}
 
 # ── PROCESS CLEANUP (prevent zombie node processes) ──────────────────────────
 # When 14 UIs run in parallel and the parent (Cursor/shell) dies, orphaned
@@ -196,6 +198,38 @@ if [ ! -f "package.json" ]; then
   log_fail "No package.json found — run from repo root"; exit 1
 fi
 
+# node_modules freshness — a lockfile change (dependency bump, package-manager
+# migration) does NOT automatically refresh an already-checked-out slot clone's
+# node_modules: slot provisioning only `git pull`s, it never reinstalls. A
+# stale/incomplete node_modules silently zeroes out coverage instead of failing
+# loud (a missing test-env dep like happy-dom errors every component test at
+# setup, dropping coverage to ~0 for those files rather than raising an error).
+# Detect the package manager from the lockfile present and self-heal via a
+# frozen-lockfile install whenever the lockfile is newer than node_modules
+# (fast no-op the rest of the time, since this only runs on genuine staleness).
+# SSOT: plans/active/issues/deployment_ui_coverage_floor_red_preexisting_2026_07_31.md
+if [ -f "pnpm-lock.yaml" ]; then
+  PKG_MANAGER="pnpm"; LOCKFILE="pnpm-lock.yaml"; INSTALL_CMD=(pnpm install --frozen-lockfile)
+elif [ -f "yarn.lock" ]; then
+  PKG_MANAGER="yarn"; LOCKFILE="yarn.lock"; INSTALL_CMD=(yarn install --frozen-lockfile)
+elif [ -f "package-lock.json" ]; then
+  PKG_MANAGER="npm"; LOCKFILE="package-lock.json"; INSTALL_CMD=(npm ci)
+else
+  PKG_MANAGER="npm"; LOCKFILE=""; INSTALL_CMD=(npm install)
+fi
+
+if [ -n "$LOCKFILE" ] && { [ ! -d "node_modules" ] || [ "$LOCKFILE" -nt "node_modules" ]; }; then
+  log_warn "node_modules missing or older than ${LOCKFILE} — refreshing via \"${INSTALL_CMD[*]}\""
+  if _install_out=$(run_timeout "$STEP_TIMEOUT_INSTALL" "${INSTALL_CMD[@]}" 2>&1); then
+    touch node_modules  # bump mtime so the next run reads fresh without reinstalling
+    log_success "node_modules refreshed (${PKG_MANAGER})"
+  else
+    echo "$_install_out"
+    log_fail "node_modules is stale/incomplete for ${PKG_MANAGER} and auto-refresh failed — run manually: ${INSTALL_CMD[*]}"
+    exit 1
+  fi
+fi
+
 # Node version ≥ 22 — the UI stack (jsdom@29 / vite@8 / vitest@4) has ESM-only
 # transitive deps (@exodus/bytes, @csstools/css-calc) the vitest forks pool can only
 # require() on Node's stable require(esm) (Node ≥22; Node 20 crashes ERR_REQUIRE_ESM).
@@ -231,7 +265,7 @@ if node_modules/.bin/vitest --version >/dev/null 2>&1; then
   VITEST_VER=$(node_modules/.bin/vitest --version 2>/dev/null || echo "?")
   log_success "vitest ${VITEST_VER}"
 else
-  log_warn "vitest not found in node_modules — run npm install; unit tests will be skipped"
+  log_warn "vitest not found in node_modules — run ${INSTALL_CMD[*]}; unit tests will be skipped"
 fi
 
 # ── [1/6] TYPE CHECK ────────────────────────────────────────────────────────
