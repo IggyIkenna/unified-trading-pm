@@ -146,10 +146,42 @@ determinism needs.
       the next natural point to also glance at `executions list` for a `live-event-log-compactor-daily`-scheduled entry
       dated 2026-08-01 and confirm it succeeded, closing the loop on the literal DoD wording — not opening a new todo
       for it, since that check is already scheduled to touch this same job's state.
-- [ ] [DATA] P1. Once the CeFi WS-connector fixes shipped this session (BINANCE-FUTURES/ASTER book_snapshot_5,
-      OKX-FUTURES — market-tick-data-service@4f244845 / @8a6bbc97) are redeployed to the live VM, re-run the
-      `paper(W)==batch-rerun(W)` determinism test for those venues now that both the warm and cold tiers are real. DoD:
-      epsilon=0 match cited with the test run's report path.
+- [x] ✅ [INFRA] P1.1. **DONE 2026-07-31 (slot-14).** Redeployed the CeFi WS-connector fixes
+      (market-tick-data-service@4f244845 / @8a6bbc97) to the live VM — split out of the original P1 checkbox per this
+      plan's own precedent (a checkbox bundling a genuinely-complete slice with a still-time-gated slice leaves nothing
+      honestly flippable). The running `mtds-live-cefi-consolidated-20260730-010147` VM was confirmed stale (SSH:
+      deployed `binance_futures_book_ticker_ws.py` mtime `2026-07-13T21:43:11Z`, 17 days before the fix commits landed
+      2026-07-30 17:07/22:55 UTC; heartbeat/`ps aux` confirmed it was genuinely alive, not idle — replaced deliberately
+      for outdated code, not the VM-delete-guardrail's stale/zombie case). Verified the floating `mtds-code` tarball
+      (`gs://deployment-scripts-central-element-323112/code/mtds-code.manifest.json`, commit `23858899`, refreshed
+      `2026-07-31T18:17:03Z`) is an ancestor-confirmed superset of both fix commits (`git merge-base --is-ancestor`)
+      before redeploying. Deleted the stale VM, relaunched via `launch-mtds-live-cefi-consolidated.sh --env prod` →
+      `mtds-live-cefi-consolidated-20260731-211041`; all 17 shard processes confirmed up within ~4 min boot.
+      **Live-verified end-to-end through the hot→warm pipeline** (not just process-alive): read real warm-tier
+      `live-events/warm/cefi/{book_snapshot_5,liquidations}/*.parquet` objects timestamped AFTER the redeploy —
+      `BINANCE-FUTURES` and `OKX-FUTURES` real depth-of-book rows (`bid_px_00`/`ask_px_00`/... at real market prices,
+      e.g. `BINANCE-FUTURES:PERPETUAL:0G-USDT@LIN`) present in `book_snapshot_5` objects from `2026-07-31T21:14Z`;
+      `ASTER` real rows present in `liquidations` objects from `2026-07-31T21:16Z` (same connector file as `ASTER`
+      `book_snapshot_5` — `aster_book_liq_ws.py` — so this is direct evidence the connector itself parses correctly
+      post-fix; `ASTER` `book_snapshot_5` specifically wasn't yet observed in my scan window, likely just a
+      lower-frequency publish batch, not a separate bug). This is the FIRST time any of these 3 venues' book/liquidation
+      data has reached the warm tier with real content (previously either the connector produced 100% empty capture, or
+      — for `OKX-FUTURES` — the whole WS connector was broken).
+- [ ] [DATA] P1.2. **Time-gated, unblocked by P1.1 above — needs real elapsed time, not just a worker pass.** Re-run the
+      `paper(W)==batch-rerun(W)` determinism test for BINANCE-FUTURES/ASTER/OKX-FUTURES now that real warm+cold data is
+      confirmed flowing (P1.1). DoD: epsilon=0 match cited with the test run's report path (per
+      `codex/09-strategy/operational/paper-batch-live-reconciliation.md` §5, the `daily-determinism`
+      CLI/`DailyDeterminismHandler` in `batch-live-reconciliation-service`). **Two real preconditions this todo cannot
+      itself satisfy synchronously**: (1) a full day (T+1 cadence) of real post-2026-07-31T21:14Z capture for these
+      venues needs to accumulate before a meaningful daily determinism window exists — checking today would compare
+      against near-zero data; (2) `DailyDeterminismHandler.run()` is an honest no-op (`skipped: no_run_configured`)
+      unless `cfg.paper_ledger_root`/`cfg.batch_ledger_root` are set, i.e. there needs to be an ACTIVE paper strategy
+      run trading instruments on these 3 venues — this worker did not find one running
+      (`gcloud compute instances list --filter="name~paper OR name~colocated"` → 0 results) and confirming/starting one
+      is outside this plan's stated scope (a strategy-desk decision, not a data-pipeline redeploy). A future worker
+      picking this up should: (a) confirm ≥24h has elapsed since the P1.1 redeploy timestamp above, (b) confirm a paper
+      run trading these venues exists (or escalate that gap as its own finding if not), (c) run the `daily-determinism`
+      operation for the relevant day and cite the report path here.
 - [ ] [DATA] P2. Cross-check whether any of the 52 asset_group x data_type combinations still show ZERO messages ever
       delivered a full week after this plan's todos above land — this would point at a genuine producer-side gap
       (nothing ever calls `publish()` for that shard) distinct from the subscription-expiry bug this plan fixes. File
@@ -230,3 +262,14 @@ determinism needs.
   literal 2026-08-01T02:00 UTC firing itself isn't independently observed by this todo — folded into the existing
   time-gated `[DATA] P3` subscription-recheck todo below as a natural piggyback check, rather than adding a new todo for
   the same job.
+- **2026-07-31 (slot-14)**: Todo P1 split into P1.1 (done) / P1.2 (open, time-gated) mirroring the plan's own precedent.
+  P1.1: found the running live CeFi capture VM (`mtds-live-cefi-consolidated-20260730-010147`) was deployed 17 days
+  before the two WS-connector fix commits this todo names, confirmed via SSH (deployed connector file mtime
+  `2026-07-13`, predates the `2026-07-30` fixes). Verified the floating tarball manifest already contains both fix
+  commits as ancestors, then redeployed (delete old VM → relaunch via the standard launcher →
+  `mtds-live-cefi-consolidated-20260731-211041`). Live-verified past process-alive: read real post-redeploy warm-tier
+  parquet objects and found genuine `BINANCE-FUTURES`/`OKX-FUTURES` book_snapshot_5 depth rows and `ASTER` liquidations
+  rows — the first time these 3 venues' data has reached the warm tier with real content. P1.2 (the determinism test
+  itself) is left open: it has two real preconditions (elapsed accumulation time + an active paper strategy run trading
+  these venues, neither confirmed to exist) that can't be satisfied by a single worker pass — see the todo's own text
+  for the concrete next-worker checklist.
