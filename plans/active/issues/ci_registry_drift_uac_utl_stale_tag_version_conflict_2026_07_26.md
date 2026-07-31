@@ -201,13 +201,16 @@ work — noting it here so the "3 consecutive greens" bar isn't miscounted again
 **Blocker 3, newly found — a flaky `test` job failure, NOT filing a new issue doc, cross-referencing instead.** 3 of the
 last ~10 `main` CI runs (e.g. `30544453841`, `30543110912`, `30403417035`) show the `test` job itself failing on
 `tests/unit/components/strategy-catalogue/admin-editor-wiring.test.tsx` ("surfaces the load error banner on GET failure"
-—
-`TestingLibraryElementError: Unable to find an element by: [data-testid="admin-editor-load-error"]"), which skips `registry-drift`/`e2e`entirely (both`needs:
-test`). Ran this exact test file in isolation locally 5/5 times — 100% pass, 6-8s each — ruling out a real app/test bug. The failing CI runs show adjacent `ECONNREFUSED
-127.0.0.1:8030`/`socket hang up`noise from concurrent workers in the same log, and separately observed`gh api
-.../actions/runners`showing exactly ONE`glue-ip-172-31-5-118-1`runner (shared, frequently`busy`) with 2-3 runs sitting `queued`for 1-2.5+ hours at time of writing. This matches, symptom-for-symptom, the ALREADY-TRACKED, still-open multi-day incident`plans/active/issues/fleet_wide_qg_capacity_crisis_continues_day2_2026_07_29.md`(host-contention-induced timeouts/hangs on the same shared`glue`runner fleet,`i-0c9b283b31d6b5ca7`)
-— that doc's own entries repeatedly conclude "host contention, no code fix" for symptomatically-identical CI flakes. Not
-duplicating a new issue doc for this; deliberately cross-referencing instead.
+— `TestingLibraryElementError: Unable to find an element by: [data-testid="admin-editor-load-error"]`), which skips
+`registry-drift`/`e2e` entirely (both `needs: test`). Ran this exact test file in isolation locally 5/5 times — 100%
+pass, 6-8s each — ruling out a real app/test bug. The failing CI runs show adjacent
+`ECONNREFUSED 127.0.0.1:8030`/`socket hang up` noise from concurrent workers in the same log, and separately observed
+`gh api .../actions/runners` showing exactly ONE `glue-ip-172-31-5-118-1` runner (shared, frequently `busy`) with 2-3
+runs sitting `queued` for 1-2.5+ hours at time of writing. This matches, symptom-for-symptom, the ALREADY-TRACKED,
+still-open multi-day incident `plans/active/issues/fleet_wide_qg_capacity_crisis_continues_day2_2026_07_29.md`
+(host-contention-induced timeouts/hangs on the same shared `glue` runner fleet, `i-0c9b283b31d6b5ca7`) — that doc's own
+entries repeatedly conclude "host contention, no code fix" for symptomatically-identical CI flakes. Not duplicating a
+new issue doc for this; deliberately cross-referencing instead.
 
 **Verdict / what's left**: this doc's registry-drift-specific scope is now fully unblocked in principle (both real
 blockers fixed). The "3 consecutive green `main` pushes" bar itself is NOT yet observed — it requires the fix above to
@@ -218,3 +221,39 @@ whoever next has a natural CI-status check in flight (or the next `/check-agent-
 glance at `gh run list --workflow "CI - Test & Lint" --branch main --repo IggyIkenna/unified-trading-system-ui` and, if
 3 consecutive `registry-drift: success` are visible, flip the checkbox and move on to the
 capability-manifest.json/capability-verdict-matrix.json CI-check extension the todo also names.
+
+## Deferred work after 2026-07-31 (pre-compact checkpoint, slot 7)
+
+| Item                                                                               | State / why deferred                                                                                                                                                                                  | Blocked on                                                                                                                                     |
+| ---------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| Todo 3: 3 consecutive `registry-drift: success` on `main`                          | Cannot be done yet — the fix (`unified-trading-system-ui@dfbfff68`) is shipped and its first verification run (`30635331302`) has been `queued` since 13:39:22Z (2h43m+ at last check, zero movement) | Elapsed real time on the contended shared `glue` runner (see `fleet_wide_qg_capacity_crisis_continues_day2_2026_07_29.md`) — not work, waiting |
+| Todo 4: capability-manifest.json/capability-verdict-matrix.json CI-check extension | Not started — explicitly gated behind todo 3 by the todo's own wording ("Once the above is resolved... THEN pick up...")                                                                              | Todo 3                                                                                                                                         |
+
+**Recommended next item**: re-check
+`gh run list --workflow "CI - Test & Lint" --branch main --repo IggyIkenna/unified-trading-system-ui --json databaseId,status,conclusion,createdAt --limit 10`
+and, per-run,
+`gh run view <id> --repo IggyIkenna/unified-trading-system-ui --json jobs -q '.jobs[] | select(.name=="registry-drift") | .conclusion'`
+— once `30635331302` (or its successor push) resolves, count consecutive `registry-drift: success` results back from the
+newest completed run. 3 in a row → flip todo 3's checkbox with the run IDs as evidence, then start todo 4 (the
+capability-manifest/verdict-matrix CI-check YAML is already drafted per
+`defi_wizard_batch2_018_residual_findings-004`/`-005`, cited above — it just needs a clean real-CI merge). A background
+poller (5-min interval, self-heartbeating, `MAX_CYCLES=48` ≈ 4h cap) may still be running in slot 7's session scratchpad
+watching exactly this — if so, its next completion notification carries the answer; if that session has since ended, the
+check above reproduces it from scratch in under a minute.
+
+**Lessons for whoever picks this up next**:
+
+- The registry-drift job's own `main`-tip-vs-committed-file diff check is CI-faithful only if you regenerate against
+  UAC/UTL/PM's actual `main` tips (via `git worktree add ... origin/main --detach`), NOT `live-defi-rollout` — the two
+  can differ meaningfully (confirmed here: LDR-tip UAC differs from main-tip UAC often enough that this file drifts
+  repeatedly, per the git history of `fix(registry): refresh/regenerate ...` commits on this same file).
+- `busy: true` on `gh api .../actions/runners` does NOT mean YOUR run is progressing — cross-check
+  `gh api .../actions/runs?status=in_progress` for the SAME repo; if that's empty while the runner is busy, the runner
+  is busy on a DIFFERENT repo's job (the "glue" runner fleet is shared cross-repo by name, not per-repo-exclusive
+  despite each repo having its own `/actions/runners` registration entry).
+- A queued-but-not-failed CI run has NO retrigger remedy — the established "resolve via retrigger" posture in the
+  capacity-crisis doc applies to runs that already failed/died from contention, not ones still waiting for the runner.
+  Don't waste a retrigger on a run that's simply queued.
+- Markdown pre-commit/prettier reformatting can mangle spacing around adjacent inline-code spans in long wrapped
+  paragraphs (observed + fixed in this same doc, see the Blocker 3 paragraph above) — worth a visual re-read of any long
+  backtick-dense paragraph after it round-trips through a commit, not just a diff-stat check.
