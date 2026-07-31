@@ -992,3 +992,7 @@ accordingly.
   else" — that was me, checkpoint-resumed from `2026-01-18`, verified STARTED/PROGRESS. Root cause + a separate
   checkpoint-resume actuator bug fix (`deployment-service@b34e85a`) split into their own doc (this doc is near its line
   cap): `cefi_content_migration_shard13_network_error_and_checkpoint_resume_bug_2026_07_31.md`.
+- **2026-07-31T05:58Z (`data_pipeline_failure` escalation `agt-e727b6`, slot 2, DP-VM-003)**: shard 41 (`-042031`), same
+  silent-freeze wedge; checkpoint `monotonic=false` so resumed from its own original `2024-10-04` (not past the unsafe
+  frontier) — 2nd relaunch today, within budget. 1st retry (`-054648`) preempted at 98s (unrelated); `-055259` verified
+  STARTED+PROGRESS. gcloud active-identity poisoning recurred 2x this session — reset both times, no code changed.
