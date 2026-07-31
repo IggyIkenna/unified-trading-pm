@@ -20,7 +20,7 @@ priority: P0
 estimate_class: infra
 estimate_baseline_ai_days: 3
 estimate_calibrated_ai_days: 2.4
-last_updated: 2026-06-27
+last_updated: 2026-07-31
 locked_by: live-defi-rollout
 locked_since: 2026-06-20
 supersedes:
@@ -175,6 +175,17 @@ perpetual-code normalization ~400). These need per-cluster real-vs-false-positiv
       unclassified rows.**
 
 ## Success criteria
+
+> **🟡 [2026-07-31 finalize-reconciliation finding]** — this plan's own todos above are all `[x]` and accurate for the
+> actions taken, but the Success criterion immediately below is **NOT yet met**: DERIBIT `options_chain`/`futures_chain`
+> remains a genuine, still-open capture gap (113,615/1 and 112,728/0 `attempted_failed`/`captured` respectively as of
+> 2026-07-29/30 — see `issues/deribit_options_chain_af_g4_blocker_2026_07_03.md`, `status: open`), gated on the Track-2
+> coverage backfill (`plans/active/cefi_track2_coverage_backfill_checkpoints_2026_07_25.md`) actually completing — its
+> backfill VM was preempted 2026-07-28 and has not been recovered
+> (`issues/cefi_track2_backfill_vm_preempted_no_recovery_2026_07_30.md`). Per
+> `cefi_deribit_binance_futures_bundle_verification_2026_06_20_finalize_2026_07_27.md`'s reconciliation, this plan stays
+> `status: active` — do NOT archive it yet. Re-check is tracked as todo 4 of
+> `cefi_track2_coverage_backfill_checkpoints_finalize_2026_07_25.md` (gated on Track-2 finishing).
 
 - DERIBIT options/futures + BINANCE-FUTURES bundle coverage is manifest-verified (not assumed): every (venue, data_type,
   day) cell is `captured`, honestly `empty_confirmed`/`expected_unattempted`, or has a genuine-gap backfill that ran to
