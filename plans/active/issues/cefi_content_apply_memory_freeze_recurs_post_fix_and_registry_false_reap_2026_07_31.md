@@ -161,3 +161,22 @@ depend on.
   verification in flight). Did not attempt to fix either library bug (Findings 2/3) directly in this one-shot escalation
   — consistent with how the sibling shard-13 doc's own adjacent GCS-retry-predicate finding was handled (documented, not
   fixed, given the shared-library blast radius vs. a one-shot task's remit).
+- 2026-07-31 update (~20min later, same escalation): the `e2-standard-16` relaunch above was **preempted 94s after
+  creation** (`compute.instances.preempted` at `2026-07-30T23:04:29.698-07:00`, `--instance-termination-action=DELETE`
+  self-deleted it) — never wrote a single new heartbeat/run.log line. Retried on-demand `e2-standard-16` (matching this
+  fleet's own proven SPOT-contention fix) — that attempt **failed to even create**:
+  `ZONE_RESOURCE_POOL_EXHAUSTED_WITH_DETAILS` — `asia-northeast1-c` has **zero `e2-standard-16` capacity available at
+  all right now** (the error suggested `asia-northeast1-b`/`-a`, which this launcher cannot target — `ZONE` is a hard
+  constant in `launch-canonical-migration-vm.sh`, no env override exists). **New finding, material to this doc's own
+  parent's open todo** ("Change `cefi-content-apply`'s default `MACHINE_TYPE` from `e2-standard-8` to
+  `e2-standard-16`"): that change may not be safely fleet-wide-deployable right now given this zone's currently measured
+  `e2-standard-16` stockout — likely self-inflicted, since this same fleet's other shards were converted to
+  `e2-standard-16` on-demand yesterday and are still occupying that exact capacity class in the same zone. Fell back to
+  `e2-standard-8` SPOT (the category's tool default; 3rd relaunch attempt overall today for this vm identity, but a
+  materially different configuration each time, not a blind repeat of the same failure) — created successfully,
+  confirmed **T+10min PROGRESS**: `run.log` climbing steadily (1400->3600/292434 files, ~15 files/sec, healthy),
+  `PIPELINE_HEARTBEAT` present, `pipeline_heartbeat_age_min=1.96`/`run_log_age_min=1.74`/sidecar `age_min=0.85` — all
+  fresh, no new preemption op recorded. **Final state: VM healthy and progressing on `e2-standard-8` SPOT** — accepted
+  the reintroduced memory-freeze risk (Finding 1) over an indefinite wait for `e2-standard-16` zone capacity; if this
+  instance also freezes/dies, per `RB-INFRA-RELAUNCH`'s bound this vm identity should NOT be relaunched a 4th time today
+  — page the operator / leave to the in-VM stall-kill instead.
