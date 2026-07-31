@@ -390,7 +390,7 @@ concurrent workers do not collide on this file.
       and the self-heal recognises the husky installs. Source:
       `issues/provenance_gate_override_and_unenforced_quickmerge_hook_2026_07_17.md` ([DEVOPS] P3).
 - [x] ✅ [INFRA] P2. **D13 orphan-reader census + remediate `sync-manifest-versions.py`.** —
-      unified-trading-pm@1e60cff15 + agent-orchestrator@12e0f2e. Census: live-measured all 24 manifest repos — only
+      unified-trading-pm@45b25799b + agent-orchestrator@12e0f2e. Census: live-measured all 24 manifest repos — only
       `unified-trading-pm` itself still carries a static `[project].version` line, every other `version_source: git-tag`
       repo is fully migrated to hatch-vcs dynamic versioning, so the script silently skipped 22/24 repos; for the one
       repo it could still act on, it would have `--apply`'d the STALE pyproject value (1.2.596) OVER the more-current
