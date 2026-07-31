@@ -196,10 +196,21 @@ file-by-file.
       gates now pass natively. Verified: 331 targeted tests green, basedpyright shows only the 2 pre-existing errors
       (confirmed byte-identical against baseline), full `quality-gates.sh` green (5052 tests, 0 regressions). Repo:
       deployment-api.
-- [ ] [SCRIPT] P2. Extract helpers from the 8 oversized methods in
-      `deployment_api/services/data_status/breakdowns_domain.py` (same `_build_*_breakdown()`-family shape as the now-
-      completed `breakdowns_core.py` sibling above — use it as the extraction pattern reference). Remove its
-      `FUNCTION_SIZE_EXTRA_EXCLUDES` entry once compliant; re-run `quality-gates.sh` to confirm no regression.
+- [x] ✅ [SCRIPT] P2. **DONE 2026-07-31 (slot-2, infra craft).** Extracted helpers from the 8 oversized methods in
+      `deployment_api/services/data_status/breakdowns_domain.py` (`_build_league_breakdown`,
+      `_build_defi_sub_dimension_breakdown`, `_build_chain_breakdown`, `_build_feature_group_breakdown`,
+      `_build_underlying_grouping`, `_build_data_type_grouping`, `_build_sports_entity_entry`,
+      `_build_v4_sub_dimensions`), same mechanical pure-code-motion pattern as the `breakdowns_core.py` sibling above.
+      `deployment-api@7013ab3`: file 894L (started 895L; extraction grew it past the 900L cap mid-work, recovered by
+      condensing docstrings), zero methods over `MAX_METHOD_LINES=50`. Hit and fixed one MRO name collision along the
+      way — `_build_single_underlying_entry` already existed on `CoreBreakdownsMixin` (a subclass of
+      `DomainBreakdownsMixin` in this file's inheritance chain), silently shadowing the new same-named helper and
+      calling the wrong 7-arg method with 8 args; renamed to `_build_single_underlying_grouping_entry` and verified no
+      other new helper name collides anywhere in the mixin chain. `breakdowns_domain.py`'s
+      `FUNCTION_SIZE_EXTRA_EXCLUDES` entry removed — both file-size and function-size gates now pass natively. Verified:
+      267 targeted tests green (incl. the two test files that `patch.object()` `_build_sports_entity_entry` and
+      `_build_v4_sub_dimensions` by name), basedpyright clean, full `quality-gates.sh` green (102s). Repo:
+      deployment-api.
 - [ ] [SCRIPT] P2. Decompose the remaining function-size-only violation in `deployment_api/routes/deployment_state.py`
       (`refresh_deployment_status_sync()`, 234L). Remove its `FUNCTION_SIZE_EXTRA_EXCLUDES` entry once compliant; re-run
       `quality-gates.sh` to confirm no regression.
