@@ -103,9 +103,24 @@ drift_direction: advance-code
       resolve_lookback pass from the new cross-repo location; `quality-gates.sh` green in both repos. Also fixed a
       pre-existing unrelated bug found in the same session (`coverage_harness.py`'s `MdpsUniverseProvider.iter_atoms`
       still unpacked `mdps_mvp_universe()` as a 2-tuple after it was upgraded to 3-tuples) — landed independently by
-      another slot as e2e-testing@65f43f4, reconciled via rebase.** (3) run the `script-homes.md` "Per-repo cleanup
-      sweep" (classify → relocate/fold-into-CLI/delete-dead, GCS-orphan-verify before any migration-script delete)
-      across every repo's `scripts/` EXCLUDING features-service's smoke/e2e harnesses already handled in (2). Source:
+      another slot as e2e-testing@65f43f4, reconciled via rebase. **CI-only gap found + fixed 2026-07-31 (cicd agent,
+      escalation agt-ddbcde, features-service#910 LDR→main promotion red):** the "locally green in both repos" claim
+      above was true but incomplete — it never exercised CI's clone topology. `dep_repos` (the space-separated sibling
+      list `python-quality-gates-v2.yml` clones per-repo) is derived ONLY from the pyproject `path = "../<repo>"`
+      editable-deps closure; e2e-testing has no `[build-system]` (scripts-only) so it can never appear there, meaning CI
+      never cloned it even though every local slot worktree already has it as a sibling. Result: features-service's 8
+      `tests/<domain>/unit/test_smoke_matrix.py` files hard-failed in real CI (117 broken pytest outcomes — 8 FAILED +
+      109 setup ERRORs, all `FileNotFoundError` on the relocated cross-repo path) while passing clean locally. Fixed via
+      unified-trading-pm@aa8f111 (new `extra-dep-repos.txt` override + `get_extra_dep_repos()` in
+      `rollout-workflow-templates.sh`, for exactly this shape: a sibling consumed by raw file path rather than as a
+      `uv sync`-installed package) + features-service@ce369620 (regenerated `dep_repos` to
+      `"unified-trading-library unified-api-contracts e2e-testing"`). Verified GREEN in a live `workflow_dispatch`
+      re-run on the fixed `live-defi-rollout` HEAD (features-service run 30605670801, `quality-gates-v2`
+      conclusion=success, including the `QG slice (tests)` job that previously failed). PR#910 itself is a frozen-head
+      ref pinned to the old (broken) LDR SHA — the fleet promote bot supersedes it with a fresh promote PR off the fixed
+      HEAD on its next ~15min tick, no manual PR action needed.** (3) run the `script-homes.md` "Per-repo cleanup sweep"
+      (classify → relocate/fold-into-CLI/delete-dead, GCS-orphan-verify before any migration-script delete) across every
+      repo's `scripts/` EXCLUDING features-service's smoke/e2e harnesses already handled in (2). Source:
       `plans/active/issues/features_service_coverage_and_script_canon_2026_06_10.md`. Done when: per-module coverage
       runs green on Python 3.13 locally; the 8 smoke_matrix.py + e2e/* files exist under `e2e-testing/scripts/<domain>/`
       and no longer under features-service, wired to that repo's QG; every repo's `scripts/` directory has been
