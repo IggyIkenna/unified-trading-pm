@@ -295,26 +295,37 @@ drift_direction: advance-code
       reported via this todo's own commit/dispatch outcome (this batch's finalize plan updates the closeout's own "STILL
       OPEN" note). Source: `tradfi_consolidated_closeout_2026_07_18.md` (native, lines 392-400).
 
-- [ ] [REVIEW] P2. **Run the adversarial AO-dispatch-readiness pass against `tradfi_consolidated_closeout_2026_07_18.md`
-      itself, for the 3 categories the doc's own 2026-07-24 spot-check left "still owed."** Source native todo (lines
-      418-430), narrowed: the doc's own in-line spot-check already confirmed clean for 3 of the 6 defect classes (bare
-      `§X` cross-doc shorthand, ambiguous non-literal verbs, delete-risk `[OPERATOR]` tagging consistency) — do NOT
-      re-check those 3, they're already recorded clean. This session's OWN triage pass (the one that produced this
-      extraction doc) additionally spot-checked the parent's 13 native todos directly and found: (i) the parent's own
-      Split-notice digest table is STALE relative to the child plan's live checkboxes (see this doc's frontmatter
-      `summary` and the "why 3 of 13 are not here" section above — catalogue Surface A migration shows "NOT yet
-      executed" in the digest but `[x]` "SHIPPED + APPLIED LIVE 2026-07-25" in the child); (ii) no digest-checkbox
-      misuse found among the native todos checked (all real `- [ ]`/`- [x]`, the Aggregated-source-docs section
-      correctly uses bold-no-brackets digest format). What's left for the full 6-category sweep: a formal stale-checkbox
-      sweep (the digest-staleness above is one instance — check for more) and a formal missing-definition-of-done sweep
-      across every native todo (this triage found all 13 DID carry a stated done-when, so this may resolve to a clean
-      verdict — but the closeout doc's own todo asks for the sweep to be run and recorded formally, not just spot-
-      checked). Repo: unified-trading-pm. **Done when**: a filed finding list (or a stated "clean" verdict) covering the
-      2 remaining categories (stale checkboxes, missing definition-of-done), with any fixes applied directly to
-      `tradfi_consolidated_closeout_2026_07_18.md` in the same commit, INCLUDING correcting the Split-notice digest's
-      stale catalogue-migration line found by this extraction. This is the ONE todo in this batch that edits the
-      closeout doc directly — no other todo in this batch touches that file. Source:
-      `tradfi_consolidated_closeout_2026_07_18.md` (native, lines 418-430), narrowed to the 3 still-owed categories.
+- [x] ✅ [REVIEW] P2. **Run the adversarial AO-dispatch-readiness pass against
+      `tradfi_consolidated_closeout_2026_07_18.md` itself, for the 3 categories the doc's own 2026-07-24 spot-check left
+      "still owed."** Source native todo (lines 418-430), narrowed: the doc's own in-line spot-check already confirmed
+      clean for 3 of the 6 defect classes (bare `§X` cross-doc shorthand, ambiguous non-literal verbs, delete-risk
+      `[OPERATOR]` tagging consistency) — do NOT re-check those 3, they're already recorded clean. This session's OWN
+      triage pass (the one that produced this extraction doc) additionally spot-checked the parent's 13 native todos
+      directly and found: (i) the parent's own Split-notice digest table is STALE relative to the child plan's live
+      checkboxes (see this doc's frontmatter `summary` and the "why 3 of 13 are not here" section above — catalogue
+      Surface A migration shows "NOT yet executed" in the digest but `[x]` "SHIPPED + APPLIED LIVE 2026-07-25" in the
+      child); (ii) no digest-checkbox misuse found among the native todos checked (all real `- [ ]`/`- [x]`, the
+      Aggregated-source-docs section correctly uses bold-no-brackets digest format). What's left for the full 6-category
+      sweep: a formal stale-checkbox sweep (the digest-staleness above is one instance — check for more) and a formal
+      missing-definition-of-done sweep across every native todo (this triage found all 13 DID carry a stated done-when,
+      so this may resolve to a clean verdict — but the closeout doc's own todo asks for the sweep to be run and recorded
+      formally, not just spot- checked). Repo: unified-trading-pm. **Done when**: a filed finding list (or a stated
+      "clean" verdict) covering the 2 remaining categories (stale checkboxes, missing definition-of-done), with any
+      fixes applied directly to `tradfi_consolidated_closeout_2026_07_18.md` in the same commit, INCLUDING correcting
+      the Split-notice digest's stale catalogue-migration line found by this extraction. This is the ONE todo in this
+      batch that edits the closeout doc directly — no other todo in this batch touches that file. Source:
+      `tradfi_consolidated_closeout_2026_07_18.md` (native, lines 418-430), narrowed to the 3 still-owed categories. —
+      **2026-07-31 (slot 14):** unified-trading-pm — done in `tradfi_consolidated_closeout_2026_07_18.md` directly (see
+      its own new Progress Log entry). Real-checkbox sweep: only 2 native todos exist in that file, both carry a stated
+      definition-of-done, neither stale — **missing-dod sweep: clean**. Stale-checkbox-class sweep (digest bullets):
+      live-re-derived 4 digest sections against their cited children's actual open-todo counts; found + fixed 4 stale
+      entries (the flagged-but-never-actually-corrected Split-notice catalogue-migration line, an unflagged
+      backfill-throughput 6→1 drift, a THIRD even-staler duplicate digest for the same 3 children in "Aggregated source
+      docs § Child plans" citing the ORIGINAL 2026-07-24 P0s, and an 11→14 count-drift in the Phase A2+C fork's digest
+      for the registry-coverage child). `tradfi_phase_d_terminal_gate`'s digest re-verified accurate, untouched. Not
+      exhaustive across all ~40 referenced docs (out of 1h scope) — the 4 corrected were the highest-risk, most-cited
+      digests. Both files (this checkbox flip + the closeout doc's own fixes) land in the same unified-trading-pm
+      commit.
 
 ## Deferred — stays human (3 of the 13 native todos)
 

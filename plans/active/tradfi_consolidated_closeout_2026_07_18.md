@@ -139,28 +139,27 @@ source:
 > | [`tradfi_backfill_throughput_followups_2026_07_24.md`](tradfi_backfill_throughput_followups_2026_07_24.md)               | Phase A3/A3.1 — download/backfill throughput follow-ups (DNS-starvation fix, T+1 job, OOM hardening, Databento e2e throughput optimization)   |
 > | [`tradfi_phase_d_terminal_gate_2026_07_24.md`](tradfi_phase_d_terminal_gate_2026_07_24.md)                               | Phase D — the post-migration all-shards re-smoke-test terminal gate                                                                           |
 >
-> **Per-child open-todo digest (2026-07-24, so this split is AO-legible without opening the children)**:
+> **Per-child open-todo digest — RE-DERIVED LIVE 2026-07-31 (slot 14, AO-dispatch-readiness sweep)**: the prior digest
+> text (2026-07-24/25 vintage) was stale relative to each child's own current checkboxes; live `grep -c '^- \[ \]'`
+> counts substituted below, replacing the earlier "8 open" / "6 open" figures rather than layering another banner on top
+> of them.
 >
-> - `tradfi_manifest_content_recovery_completion_2026_07_24.md` — digest below is **STALE as of 2026-07-27** (see the
->   Ground-truth verdict supersede banner above): the "top P0s still open" it names are now BOTH done — catalogue
->   (Surface A) SHIPPED+APPLIED LIVE 2026-07-25 (instruments-service@52d8b3ef) and chain-bundle content (Surfaces C+D)
->   GATE CLOSED 2026-07-27 (checked=961 canonical=961 violations=0). Re-derive the live open-todo count from the child
->   plan directly rather than trusting the count below. Original 2026-07-24 digest text retained for history: **8 open**
->   (2×P0, 5×P1, 1×P2, re-verified 2026-07-25 against the child's own checkboxes — down from the earlier 11-open/5×P0
->   count). Top P0s said still open: (1) **Migrate the catalogue (Surface A)** via
->   `canonicalize_tradfi_catalogue_usd_lin_*.py` — NOT yet executed (DURABILITY TRAP: a `prod/n`-only rewrite silently
->   reverts on the next `build_instrument_catalogue.py` rebuild — must also migrate the per-day corpus); (2) **Migrate
->   GCS filenames + tick CONTENT (Surfaces C+D)**. The manifest migration (Surface B) is now DONE + RE-VERIFIED LIVE
->   2026-07-25, and the enumeration-driven-migration casing sub-scope CLOSED 2026-07-25 (its semantic-mislabel +
->   null/blank residual moved to a separate open P1) — both are no longer open P0s.
-> - `tradfi_backfill_throughput_followups_2026_07_24.md` — **6 open as of 2026-07-25 (was 11 at this digest's 2026-07-24
->   generation; 3 more shipped independently since — SIGKILL verify, phantom-row retirement, concurrency-cap raise —
->   corrected via plan-reconcile; expect this to drop further once tradfi batch2 lands)**. Top P1s: (1) Backfill-VM
->   startup OOM rc137 + OOM remediation baked default + consolidator throughput/backlog monitor (3 sub-issues bundled);
->   (2) TradFi has NO working T+1 forward-fill job — add source-scoped `…-tradfi-databento-t1-recon` Cloud Run job.
-> - `tradfi_phase_d_terminal_gate_2026_07_24.md` — **2 open** (1×P0, 1×P1). The P0: MVP backfill readiness gate — run
->   the tradfi MVP backfills only after A-D are green; **still blocked** on the chain-bundle sampler follow-up. The P1:
->   post-full-backfill `/data-pipeline-reconciliation` RUN checkpoint, gated on the P0.
+> - `tradfi_manifest_content_recovery_completion_2026_07_24.md` — **3 open (live 2026-07-31)**, down from the 2026-07-24
+>   vintage's 8. The 2 P0s that digest named (catalogue Surface A migration, GCS-filename/tick-content Surfaces C+D
+>   migration) are BOTH now done — catalogue SHIPPED+APPLIED LIVE 2026-07-25 (`instruments-service@52d8b3ef`),
+>   chain-bundle content GATE CLOSED 2026-07-27 (checked=961 canonical=961 violations=0). What remains open now is
+>   different work entirely: (1) a 2026-07-28-ruled qualifier-normalization fix, (2) a 2026-07-28-ruled decision on the
+>   1,328-cell unrecoverable population, (3) a verify-and-close pointer to
+>   `candle_feature_canonical_path_divergence_2026_07_20.md` todo 3.
+> - `tradfi_backfill_throughput_followups_2026_07_24.md` — **1 open (live 2026-07-31)**, down from the 2026-07-25
+>   digest's 6 (both named P1s — the OOM/monitor bundle and the T+1 forward-fill job — the T+1 job has since shipped;
+>   `tradfi_t1_no_working_mtds_job_2026_07_17.md` is archived `status: resolved` per this same doc's own Aggregated
+>   source docs section below). The one remaining open item is the Backfill-VM startup OOM rc137 + OOM-remediation +
+>   consolidator throughput/backlog-monitor bundle.
+> - `tradfi_phase_d_terminal_gate_2026_07_24.md` — **2 open (live 2026-07-31, unchanged from the 2026-07-24 digest)**:
+>   re-verified accurate, no correction needed. The P0: MVP backfill readiness gate — run the tradfi MVP backfills only
+>   after A-D are green; **still blocked** on the chain-bundle sampler follow-up. The P1: post-full-backfill
+>   `/data-pipeline-reconciliation` RUN checkpoint, gated on the P0.
 >
 > **Retained here (as of 2026-07-24)**: the ground-truth verdict + MVP universe (foundational context for all children),
 > Phase A2 (adapter/registry correctness), Phase C (data-status + honest-coverage), the aggregated Codex SSOT +
@@ -261,6 +260,29 @@ Everything below is scoped so these cells are canonical, honestly-covered, and s
 
 ## Progress Log
 
+- **AO-dispatch-readiness sweep 2026-07-31 (slot 14, via `tradfi_consolidated_native_ao_extract_2026_07_25.md` todo 10 —
+  the 2 remaining categories: stale checkboxes, missing definition-of-done)**: `sports_consolidated_closeout`'s Track Y
+  method applied to the 2 categories this file's own todo (below, `[x]` closed 2026-07-25) left owed after closing for
+  A2+Phase C content only. **Real-checkbox sweep**: `grep -n '^- \[ \]\|^- \[x\]'` finds exactly 2 native todos in this
+  file (line ~250 `[DATA] P2` MVP-cell-wiring-proof, line ~324 `[REVIEW] P2` the audit-pass todo itself) — both carry a
+  stated definition-of-done, neither is stale (the P2 correctly cross-references its live tracking location; the REVIEW
+  todo's own `[x]` closure text is accurate for its stated A2+Phase C scope). **Missing-dod sweep: clean, 0 findings.**
+  **Stale-checkbox-class sweep (the digest bullets, not real checkboxes, per this file's own bold-no-brackets
+  convention)**: live re-derived 4 digest sections against their cited child docs' actual `- [ ]` counts — found + fixed
+  3 stale entries: (1) Split-notice digest's `tradfi_manifest_content_recovery_ completion_2026_07_24.md` line
+  (previously flagged stale by an earlier pass but never actually corrected — this pass replaced the "8 open, catalogue
+  NOT yet executed" text with the true 3-open/all-done state); (2) same digest's
+  `tradfi_backfill_throughput_followups_2026_07_24.md` line (6→1, T+1 job shipped+archived, not previously flagged); (3)
+  the separate "Aggregated source docs § Child plans" digest for the SAME 3 children, which cited yet a THIRD,
+  even-more-stale set of counts (11/11/2) naming the ORIGINAL 2026-07-24 P0s that are now done — corrected to match.
+  Also re-derived the Phase A2+C fork's own digest for `tradfi_registry_coverage_and_ao_readiness_2026_07_25.md` (11→14
+  open; 3 genuinely new todos landed since 2026-07-25 plus the child's own copy of this same audit-pass todo) —
+  corrected with a count-drift note rather than a full item-by-item rewrite (all 11 originally-named items are still
+  open and still accurately described; only the total was stale). `tradfi_phase_d_terminal_gate_2026_07_24.md`'s digest
+  (2 open) was independently re-verified accurate, no correction needed. Evidence: live grep counts run 2026-07-31
+  against each child's current `plans/active/*.md`. No new stale entries found beyond these 4; not an exhaustive
+  re-verification of every one of the ~40 docs referenced in the Aggregated source docs section (out of this todo's
+  1h-class scope) — the 4 corrected here were the highest-risk (most recently active, most-cited) digests.
 - **na-eligibility-audit 2026-07-31** (tradfi tranche, dispatch agt-6d6eaf): **KEEP-NA-STALE, re-verified — citation
   still accurate, no change needed.** This is this doc's correct owning tranche (per the note below). Independently
   re-checked the sole open checkbox's duplicate claim against current state, not a rubber-stamp: the extracting doc
@@ -303,18 +325,27 @@ Everything below is scoped so these cells are canonical, honestly-covered, and s
 > (`tradfi_registry_coverage_and_ao_readiness_2026_07_25_finalize.md`) reconciles + archives that child once its content
 > is fully closed.
 >
-> **Open-todo digest (2026-07-25, so this fork is AO-legible without opening the child)**:
+> **Open-todo digest (2026-07-25, so this fork is AO-legible without opening the child)** — **STALE, count-corrected
+> 2026-07-31 (slot 14, AO-dispatch-readiness sweep)**: live `grep -c '^- \[ \]'` against the child shows **14 open**
+> (not 11) as of 2026-07-31 — 3 genuinely new todos landed since 2026-07-25 (a 2026-07-29 historical-backfill execution
+> todo, a 2026-07-29 operator-ruling dry-run todo, a 2026-07-29 Databento `by_date` re-feed P0), plus the child itself
+> now carries its own copy of this same audit-obligation `[REVIEW]` todo (added when the child was created — an audit
+> todo is re-run per-file as content evolves, per this parent's own established convention above). The 11 items
+> originally named below are still open (still accurate as descriptions), just no longer the complete set — re-derive
+> the live list from the child directly rather than trusting "11" as the total:
 >
-> - **A2 (adapter/registry correctness)** — 5 open: CME mbp_10/trades/tbbo capability-declaration verify (P1, the
+> - **A2 (adapter/registry correctness)** — CME mbp_10/trades/tbbo capability-declaration verify (P1, the
 >   `ohlcv_15m/24h` writer DESIGN decision split out as a non-dispatchable pointer), KRX equities registry-vs-adapter
 >   verify (P2, the `mvp_mode` DECISION split out as a non-dispatchable pointer), Full MTDS+IS adapter smoke findings
 >   re-verify (P2), adapter dead-code/fallback audit (P2), the "two live defects" digest pointer (source-mislabel + FX
->   manifest id, reformatted non-checkbox per finding H).
-> - **Phase C (data-status/honest-coverage) — still-open residue only** — 6 open: billing-gated Databento L2/L3
->   classification (P2), data-status page canonical render (P1), distinct-values/axis-value census (P1),
->   denominator/catalogue-completeness re-verify (P2), KRX name-column follow-up tracking (P2, rewritten inline per the
->   fork), and the BLOCKED-INFRA "Certify tradfi Layer-1" gate (P0, still blocked as of 2026-07-25 — the catalogue
->   rebuild+promote "FINAL STEP" in `tradfi_backfill_throughput_followups_2026_07_24.md` remains pending).
+>   manifest id, reformatted non-checkbox per finding H — NOT a real `- [ ]` line, so the original "5 open" count for
+>   this sub-group over-counted by 1; the 4 real checkboxes above are A2's actual open total).
+> - **Phase C (data-status/honest-coverage) — still-open residue only** — 6 open (verified still accurate):
+>   billing-gated Databento L2/L3 classification (P2), data-status page canonical render (P1),
+>   distinct-values/axis-value census (P1), denominator/catalogue-completeness re-verify (P2), KRX name-column follow-up
+>   tracking (P2, rewritten inline per the fork), and the BLOCKED-INFRA "Certify tradfi Layer-1" gate (P0, still blocked
+>   as of 2026-07-31 — the catalogue rebuild+promote "FINAL STEP" in
+>   `tradfi_backfill_throughput_followups_2026_07_24.md` remains pending).
 >
 > **Retained here**: the ground-truth verdict + MVP universe (unchanged), the Codex SSOTs index, and the Aggregated
 > source docs digest (untouched, 421 lines).
@@ -363,22 +394,21 @@ Everything below is scoped so these cells are canonical, honestly-covered, and s
 > todos list every P0/P1 in full and cap P2/P3 with a `+N more` marker (never a silent drop).
 
 - **Child plans (forked from this parent, 2026-07-24 split — digested here too so this section alone is complete without
-  needing the Split-notice table above)**:
+  needing the Split-notice table above)**. **STALE digest corrected 2026-07-31 (slot 14, AO-dispatch-readiness sweep)**
+  — this section's item-level text still named the ORIGINAL 2026-07-24 P0s (catalogue/enumeration migration), both now
+  done; see the Split-notice table above for the fuller re-derivation + evidence citations:
   - [`plans/active/tradfi_manifest_content_recovery_completion_2026_07_24.md`](/plans/active/tradfi_manifest_content_recovery_completion_2026_07_24.md)
-    (11 open — capped)
-    - **[DATA] P0.** Migrate the catalogue (Surface A) via `canonicalize_tradfi_catalogue_usd_lin_*.py`
-    - **[DATA] P0.** Enumeration-driven migration (SINGLE SOURCE OF TRUTH, operator 2026-07-18) — must be driven by the
-      full distinct dimension-value set, not sampled shapes
-    - +9 more (P0/P1/P2) — see file for the rest
+    (3 open — live 2026-07-31, down from 11)
+    - **[DATA] P2.** RULED 2026-07-28 — qualifier-normalization fix (Option A)
+    - **[DATA] P1.** RULED 2026-07-28 — decision on the 1,328-cell unrecoverable population
+    - **[DATA] P2.** Verify + close `candle_feature_canonical_path_divergence_2026_07_20.md` todo 3
   - [`plans/active/tradfi_backfill_throughput_followups_2026_07_24.md`](/plans/active/tradfi_backfill_throughput_followups_2026_07_24.md)
-    (11 open — capped)
+    (1 open — live 2026-07-31, down from 11; the T+1 forward-fill job shipped + archived, see Aggregated source docs §
+    Throughput / jobs / VMs below)
     - **[INFRA] P1.** Backfill-VM startup OOM rc137 + OOM remediation baked default + consolidator throughput/backlog
       monitor (3 sub-issues bundled)
-    - **[DATA] P1.** TradFi has NO working T+1 forward-fill job — add source-scoped `…-tradfi-databento-t1-recon` Cloud
-      Run job
-    - +9 more (P1/P2) — see file for the rest
   - [`plans/active/tradfi_phase_d_terminal_gate_2026_07_24.md`](/plans/active/tradfi_phase_d_terminal_gate_2026_07_24.md)
-    (2 open)
+    (2 open — live 2026-07-31, unchanged)
     - **[DATA] P0.** MVP backfill readiness gate — run the tradfi MVP backfills only after A-D are green; still blocked
       on the chain-bundle sampler follow-up
     - **[DATA] P1.** Post-full-backfill reconciliation RUN checkpoint (both raw-tick and candles layers), gated on the
