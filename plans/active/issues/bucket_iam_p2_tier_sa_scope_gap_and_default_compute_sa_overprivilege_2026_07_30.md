@@ -232,6 +232,60 @@ for the dispatched task.
 session (`deployment-service@e8684fe`) — see the flipped checkboxes below. `sequential: true` remains correct for the
 still-open P2 (depends on P1, now met) and P3.2 (depends on P0, now met); no change needed to the frontmatter.
 
+## Finding 4 — deployment-api writes to 2 singleton infra buckets the hybrid (C) table never scoped; wiring it to
+
+`uts-prd-sa` today as literally specified would break VM admin + the deployments registry (2026-07-31, slot-9)
+
+Dispatched P2 ("wire `deploy-shared.sh` to the winning SA from P0"). Static-verified (source read, no terraform/IAM
+state touched) before wiring anything: `deploy-shared.sh:37` currently sets `SA=unified-trading-sa@...`; per the Hybrid
+(C) table, deployment-api is not a Group A/B raw-data bucket owner nor one of the 19 already-migrated domain services in
+`gcp_service_accounts.yaml` (that YAML's own 2026-07-31 drift-audit note, lines ~16-24, confirms deployment-api's live
+runtime SA is `unified-trading-sa`, not a per-service SA) — so per-tier (`uts-prd-sa`, the prod Cloud Run service
+`uts-shared-deployment-api` per `DEPLOYMENT_ENV=prod`) is the literal reading of "the winning SA".
+
+**The blocker**: `deployment-api` writes (not just reads) to two buckets that are outside `uts-prd-sa`'s IAM Condition
+scope entirely:
+
+- `unified-deployment-state-{project_id}` (`unified_trading_library/deployment_registry.py:_resolve_default_bucket`'s
+  fallback via `deployment_api_config.py:824 effective_state_bucket`) — deployment-lock writes
+  (`deployment_api/workers/auto_sync.py:132,182` `lock_blob.upload_from_string`) and per-deployment state JSON
+  (`workers/deployment_processor.py:168`, `workers/_deployment_processor_vm_cleanup.py:279,327`,
+  `services/sync_service.py:144`, `routes/service_status_cache.py:68`).
+- `deployment-scripts-{project_id}` (`unified_trading_library.deployment_registry.DEFAULT_BUCKET`) — the deployments
+  registry (`DeploymentsRegistry(bucket=DEFAULT_BUCKET)` in `registry_reader.py`, `routes/vm_admin.py`,
+  `routes/vm_deployments.py`, `routes/monitor_*.py`), VM admin kill-signal writes
+  (`routes/vm_admin.py:164 write_object_text(DEFAULT_BUCKET, signal_key, ...)`), and log-archive/tarball-staleness
+  writes (`services/tarball_staleness.py:428`).
+
+Neither bucket matches `bucket_iam_per_tier_sa.tf`'s `group_a_bucket_prefixes`
+(`market-data-tick-`/`instruments-store-`/`features-calendar-`) or `group_b_bucket_prefixes`
+(`features-{cefi,tradfi,defi,pred,sports}-`) — `uts-prd-sa`'s only grant that could cover them is the project-wide,
+READ-ONLY `roles/storage.objectViewer` (`uts_prd_objectviewer` in the same .tf file); its `roles/storage.objectAdmin`
+(write) is IAM-Condition-scoped to the two prefix lists above, via `startsWith`, and does not match either bucket name.
+Confirmed both buckets are genuinely non-tiered singletons, not a missed `-prd-`/`-test-` variant: `main.tf:201`
+declares `deployment-scripts-{project_id}` as a literal "SINGLETON bucket (one physical bucket in the central
+project...)" with no env suffix; `unified-deployment-state-{project_id}` (`cost_snapshot_scheduler.tf:25`'s comment) is
+the same shape. **Neither bucket appears anywhere in this doc's own Hybrid (C) boundary-proposal table** (§ above) —
+that table only adjudicated Group A/B raw-data, Group B's other folds, and the 19 domain services; deployment-api's own
+admin/registry infra buckets are a category the P0 ruling never reached. Mechanically wiring `deploy-shared.sh` to
+`uts-prd-sa` today, exactly as P2 is worded, would 403 every deployment-lock write, deployment-state write, VM
+kill-signal write, and deployments-registry write the first time any of those code paths fire on the shared prod service
+everyone on the team hits — the same functional-regression failure mode Finding 1 already flagged, just against 2
+buckets outside the table's coverage instead of the Secret Manager / Pub/Sub / BigQuery APIs Finding 1/P1 already fixed.
+I did not edit `deploy-shared.sh`, apply any terraform, or run any deploy — this is read-only source verification,
+mirroring this doc's own precedent for "found a gap the ruling didn't cover, escalate before acting."
+
+**Recommended fix** (cheap, low-blast-radius, precedented in this same terraform dir): add two scoped
+`google_storage_bucket_iam_member` (bucket-level, NOT project-wide) `roles/storage.objectAdmin` grants for `uts-prd-sa`
+on `deployment-scripts-${var.project_id}` and `unified-deployment-state-${var.project_id}` — mirrors the exact pattern
+already used for `t1_batch_deployment_scripts_admin` in `qg_snapshot_scheduler.tf:100-107` (a one-off per-bucket admin
+grant for a specific SA's functional need, not a project-wide condition rewrite). This does not touch or reinterpret the
+Hybrid (C) Group A/B table — it's an orthogonal, additive grant for 2 named infra buckets deployment-api structurally
+requires to run at all, which have no test-tier variant to isolate from. Flagging for an operator/main ruling rather
+than shipping it unilaterally: it does expand `uts-prd-sa`'s footprint beyond what P0's ruling text explicitly
+enumerated, and this whole plan exists specifically to keep per-tier SA scope tight and auditable — the same discipline
+that made Findings 1-3 worth escalating instead of guessing.
+
 ## Todos
 
 - [x] ✅ [OPERATOR] P0. **RESOLVED 2026-07-31** — operator ruling on BLK-0c84ceac: **"C: hybrid"**, ratifying this doc's
@@ -249,9 +303,18 @@ still-open P2 (depends on P1, now met) and P3.2 (depends on P0, now met); no cha
       hybrid split) are NOT touched by this todo — their own role/bucket scoping is `gcp_service_accounts.yaml`'s
       existing, separate mechanism (Finding 3's `last_executed: NEVER` staleness on that YAML's drift-verifier is still
       open — not this todo's scope). (repo: deployment-service)
+- [ ] [OPERATOR] P1.5. **BLOCKED 2026-07-31 (slot-9), gates P2 below.** Per Finding 4 above: rule on whether
+      `uts-prd-sa` should be granted `roles/storage.objectAdmin` (bucket-level, not project-wide) on the 2 singleton
+      infra buckets deployment-api requires write access to (`deployment-scripts-{project_id}`,
+      `unified-deployment-state-{project_id}`) — neither bucket is covered by the Hybrid (C) boundary table. Options:
+      (a) grant the 2 scoped bucket-level admin roles (recommended — precedented, low blast radius, doesn't touch the
+      Group A/B project-wide condition design), (b) keep `deploy-shared.sh` on `unified-trading-sa` for now and defer
+      deployment-api's tier-SA migration to a follow-up once its own bucket dependencies are fully catalogued, (c) some
+      other scoping the operator prefers. (repo: unified-trading-pm)
 - [ ] [CODE] P2. Wire `scripts/cloud-run/deploy-shared.sh` (deployment-api's Cloud Run identity) to the winning SA from
-      P0, gated on P1's role grants being live-verified first; live-verify via a real deploy that Secret Manager /
-      Pub/Sub / BigQuery access still works. (repo: deployment-service)
+      P0, gated on P1's role grants being live-verified first AND on P1.5's bucket-scope ruling above; live-verify via a
+      real deploy that Secret Manager / Pub/Sub / BigQuery access AND deployment-lock / VM-admin / deployments- registry
+      GCS writes still work. (repo: deployment-service)
 - [ ] [INFRA] P3.1. Security hardening, independent of the P0/P1/P2 SA-strategy question: the GCP default compute SA
       (`{project_number}-compute@developer.gserviceaccount.com`, the identity 155/165 VM launchers actually run as)
       holds 28 unconditional project-wide roles incl. `roles/storage.admin` and `roles/iam.serviceAccountTokenCreator` —
