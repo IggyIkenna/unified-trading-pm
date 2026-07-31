@@ -26,7 +26,7 @@ execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
 source: [deployment_full_estate_cost_provenance_2026_07_09 DEFERRED managed_by_label item]
-last_updated: 2026-07-13
+last_updated: 2026-07-31
 ---
 
 # `managed-by` launcher label standardization (deferred from cost-provenance)
@@ -44,9 +44,18 @@ last_updated: 2026-07-13
 
 ## Work
 
-- [ ] [DEVOPS] P3. Standardize a `managed-by=<launcher>` label across the VM launchers
+- [x] ✅ [DEVOPS] P3. Standardize a `managed-by=<launcher>` label across the VM launchers
       (`deployment-service/scripts/vm/launch-*.sh`) + Cloud-Run job terraform, using the same launcher taxonomy as
-      `launched_by`. — **deployment-service**
+      `launched_by`. — **deployment-service@db67173**. `lc_gcloud_create`/`aws_ec2_launch_lib.sh` already stamped
+      `managed-by=deployment-service` centrally, but only ~9 launchers actually called those helpers; the other 137
+      `launch-*.sh` scripts built their `gcloud compute instances create` call inline and never inherited the label.
+      Appended `,managed-by=deployment-service` to every direct `--labels=` construction (132 files via a scripted
+      transform on the exact `--labels=` value span, verified with `bash -n` on every touched file + `git diff` review;
+      5 files that build the value in a `labels`/`LABELS` variable, edited at the assignment site instead). Skipped
+      `launch-deribit-dvol-backfill-vm.sh` + `launch-planning-vm.sh` (already carried their own deliberate `managed-by`
+      value). Also added the missing `labels` block (`managed-by=terraform`) to the one `google_cloud_run_v2_job`
+      resource in `terraform/gcp/` that had none (`vm_log_archival_scheduler.tf`) — every other Cloud-Run job (via the
+      `container-job` module or hand-declared) already carried it; `tofu validate` clean.
 - [ ] [BACKEND] P3. Once the label is standardized, wire the `managed_by` echo in the deployment-api inventory item (the
       `labels` read is already scaffolded) + a unit asserting the round-trip. — **deployment-api**
 
