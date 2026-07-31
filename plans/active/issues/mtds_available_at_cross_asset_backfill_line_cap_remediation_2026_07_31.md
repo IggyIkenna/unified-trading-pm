@@ -104,8 +104,50 @@ running against it) — check the plan's own status before starting.
       landing it back under the 1000-line hard cap. Verify no todo is currently `locked_by`/mid-dispatch before
       splitting. (repo: unified-trading-pm)
 - [ ] [PLAN] P2. While splitting (todo above), add explicit per-todo sequencing between each asset group's "Apply
-      `rebuild_{prediction,tradfi}_manifest.py`" and "Resume the {prediction,tradfi} consolidator cron" todos (e.g.
-      `gate_on_depends`/`depends_on` at the todo/phase level, or a `prereqs.completed_tasks` entry on the derived
-      backlog task) so the resume todo cannot dispatch before its apply sibling is done. Verify by confirming
-      `mtds_available_at_cross_asset_backfill-006`-equivalent (post-split) does not appear `queued`/dispatchable while
-      its apply counterpart is open. (repo: unified-trading-pm)
+      `rebuild_{prediction,tradfi}_manifest.py`" and "Resume the {prediction,tradfi} consolidator cron" todos via the
+      **cross-plan `depends_on` + `gate_on_depends: true` split** (see 2026-07-31 Progress Log entry below — the
+      `prereqs.completed_tasks`-on-a-single-todo mechanism this todo originally suggested is NOT a valid authoring
+      mechanism; do not attempt it) so the resume todo cannot dispatch before its apply sibling is done. Verify by
+      confirming `mtds_available_at_cross_asset_backfill-006`-equivalent (post-split) does not appear
+      `queued`/dispatchable while its apply counterpart is open. (repo: unified-trading-pm)
+
+## Progress Log
+
+**2026-07-31 (slot 4, data_engineering)**: dispatched to the `[PLAN] P2` todo above. Did NOT execute the split — two
+blocking findings, neither of which is a normal "wait for the prerequisite" situation the dispatcher would otherwise
+gate on:
+
+1. **This todo's own suggested mechanism is invalid.** `task_template.md` (corrected 2026-07-21, "Ordering + how
+   prerequisites ACTUALLY work") states plainly: _"there is NO per-todo prereq syntax; regen never parses prereqs from
+   todo text"_ and _"the earlier 'add explicit `prereqs.completed_tasks`' advice was wrong"_ — `RULES.md` confirms
+   `regen_backlog_from_plan.py` does not derive per-task `prereqs.completed_tasks` from plan content, and hand-editing
+   `backlog.yaml` to add them is explicitly banned ("NEVER hand-edit `backlog.yaml` to add prereqs — author the
+   frontmatter; the backend derives them"). The only two real mechanisms are (a) `sequential: true` (already set on the
+   target plan, and independently confirmed STILL not reliably gating dispatch order as of today — see
+   `issues/mtds_backfill_sequential_true_dispatch_order_violated_2026_07_29.md`'s 2026-07-31 entries, two fresh
+   unrelated-plan recurrences hours after the `agent-orchestrator@77769ab` fix landed), or (b)
+   `depends_on: [plan-slug]` + `gate_on_depends: true` — a CROSS-PLAN mechanism (`_wire_gate_on_depends_prereqs`), which
+   gates at plan granularity, not per-todo. Given (a) is demonstrably unreliable for exactly this apply/resume ordering
+   right now, the template's own prescribed fix for "partial-parallelism isn't expressible in one plan" is to **SPLIT**:
+   an "apply" plan (prediction/tradfi/defi applies, safely parallel across asset groups) and a separate "resume" plan
+   with `depends_on: [<apply-plan-slug>]` + `gate_on_depends: true`. Corrected this todo's own text above to point at
+   the real mechanism.
+2. **Unsafe to execute right now regardless of mechanism** — before touching the target plan, checked `GET /api/backlog`
+   for any todo currently `dispatched`/mid-flight on it (per this todo's own sibling `-001`'s "verify no todo is
+   currently `locked_by`/mid-dispatch before splitting" precondition, which applies equally here since both todos edit
+   the same file): `mtds_available_at_cross_asset_backfill-006` ("Resume the prediction consolidator cron") is
+   `status: dispatched`, `dispatched_to: 12`, `dispatched_at: 2026-07-31T23:13:54Z` — i.e. RIGHT NOW, live, on this
+   exact plan file. Every prior slot dispatched this same premature "-006" class of task (the plan's own Progress Log:
+   findings #2-#7, plus the sibling sequential-dispatch-bug issue doc's 2026-07-30/31 entries) resolved it by
+   declining + appending a Progress Log entry to the SAME plan file — a likely-imminent concurrent commit to the exact
+   file this todo needs to restructure (extract history, fork into 2 new plan docs). Running the split concurrently
+   risks a rebase collision or a dropped append during conflict resolution. The sibling `-001` split todo is ALSO still
+   `status: queued`/unclaimed (never executed) — this todo's own precondition ("while splitting the todo above") is not
+   met either.
+
+**Declined to execute** (skipping this task rather than forcing a same-file edit concurrent with a live dispatch, or
+attempting the invalid `prereqs.completed_tasks` mechanism the todo originally named). No files in the target plan
+touched. Recommend re-dispatch once (a) `-006`/the plan's currently-dispatched task clears (done or declined+skipped)
+and (b) the sibling `-001` split todo is picked up — ideally both `-001` (split) and this todo (cross-plan
+`depends_on`+`gate_on_depends` restructure) are done together in one pass, per this todo's own "while splitting"
+framing, by whichever worker claims `-001`.
