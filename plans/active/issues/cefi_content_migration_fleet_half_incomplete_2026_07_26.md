@@ -888,3 +888,7 @@ accordingly.
   (16, 19, 23, 44) showing the corrupt-file/spike signature** — two genuinely separate failure modes surviving the fix,
   not one anomaly. Strengthens the open question raised in the 04:18Z entry: the periodic pyarrow-pool release may not
   be catching all memory growth. No action taken (monitoring-only).
+- **2026-07-31T04:39Z (slot-15)**: shard 25 (`-032606`) is a 4th instance of the zero-`bytes_allocated`/slow-timing
+  pattern — 3966s (~66min), 46,600/169,594 files (27.5%), `bytes_allocated=0` at last release. Tally now stands at 4
+  shards (40, 42, 22, 25) for this signature vs 4 (16, 19, 23, 44) for the confirmed corrupt-file spike signature — a
+  roughly even split across the 18-shard relaunch batch so far. No action taken (monitoring-only).
