@@ -487,7 +487,7 @@ fi
 #   PB-19: no mode-branching in PBMS engine/core
 #   UI-18: no React/Next/Vite/Webpack package.json in any Python service repo
 # Current baseline 0 — any new violation in any rule = regression.
-ARCH_RATCHETS_CHECKER="${REPO_ROOT}/unified-trading-pm/scripts/quality_gates/check_architectural_ratchets.py"
+ARCH_RATCHETS_CHECKER="${REPO_ROOT}/scripts/quality_gates/check_architectural_ratchets.py"
 if [ -f "$ARCH_RATCHETS_CHECKER" ] && [ -n "${WORKSPACE_ROOT:-}" ]; then
     echo "Running Architectural ratchets check (ST-19 + PB-19 + UI-18)..."
     if python3 "$ARCH_RATCHETS_CHECKER" --workspace-root "$WORKSPACE_ROOT" >/dev/null; then
@@ -508,7 +508,7 @@ fi
 # flags any repo with a tests/<family>/unit/ dir its PYTEST_UNIT_DIR doesn't
 # reach. Current baseline 1 (execution-service tests/sports_execution/unit/,
 # pre-existing, this todo doesn't fix it) — ratchet down as families get gated.
-PYTEST_UNIT_DIR_COVERAGE_CHECKER="${REPO_ROOT}/unified-trading-pm/scripts/quality_gates/check_pytest_unit_dir_coverage.py"
+PYTEST_UNIT_DIR_COVERAGE_CHECKER="${REPO_ROOT}/scripts/quality_gates/check_pytest_unit_dir_coverage.py"
 if [ -f "$PYTEST_UNIT_DIR_COVERAGE_CHECKER" ] && [ -n "${WORKSPACE_ROOT:-}" ]; then
     echo "Running PYTEST_UNIT_DIR fleet coverage sweep (ratchet mode)..."
     if python3 "$PYTEST_UNIT_DIR_COVERAGE_CHECKER" --workspace-root "$WORKSPACE_ROOT" >/dev/null; then
