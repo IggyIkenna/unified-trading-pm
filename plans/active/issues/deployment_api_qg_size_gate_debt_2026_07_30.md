@@ -270,9 +270,14 @@ file-by-file.
       a pre-existing test-order/global-state pollution issue, confirmed passing in isolation, not a regression from this
       change), basedpyright clean, ruff clean, full `quality-gates.sh` green (158s, full suite doesn't hit the
       isolated-test-order issue). Repo: deployment-api.
-- [ ] [SCRIPT] P2. Decompose the remaining function-size-only violation in
-      `deployment_api/services/data_status/defi.py`. Remove its exclude entry once compliant; re-run `quality-gates.sh`
-      to confirm no regression.
+- [x] ✅ [SCRIPT] P2. **DONE 2026-07-31 (slot-2, infra craft).** Decomposed the oversized method in
+      `deployment_api/services/data_status/defi.py` (`_read_defi_merged_index()`, was 107L). `deployment-api@cfd1b8b`:
+      extracted `_resolve_defi_main_bucket`, `_collect_defi_index_frames`, and `_postprocess_defi_merged_index` — pure
+      code motion, no logic changes. `FUNCTION_SIZE_EXTRA_EXCLUDES` entry removed — gate passes natively. Verified: 252
+      targeted tests green (`test_data_status_service.py`, `test_data_status_turbo.py`,
+      `test_v4_sub_dimensions_chain_gated_on_defi.py`, `test_chain_breakdown_shards_vs_dates.py`); basedpyright's 5
+      remaining errors confirmed pre-existing (byte-identical against origin, same 5 lines before this change); ruff
+      clean; full `quality-gates.sh` green (153s). Repo: deployment-api.
 - [ ] [SCRIPT] P2. Decompose the remaining function-size-only violation in
       `deployment_api/services/data_status/instrument_coverage.py` (`per_instrument_coverage()`, 364L). Remove its
       exclude entry once compliant; re-run `quality-gates.sh` to confirm no regression.
