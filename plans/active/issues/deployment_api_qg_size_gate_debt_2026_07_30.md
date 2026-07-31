@@ -219,9 +219,15 @@ file-by-file.
       Verified: 92 targeted tests green (`test_deployment_state_helpers.py`, `test_route_deployment_state.py`,
       `test_deployment_state_service.py`), basedpyright clean, ruff clean, full `quality-gates.sh` green (104s). Repo:
       deployment-api.
-- [ ] [SCRIPT] P2. Decompose the remaining function-size-only violation in
-      `deployment_api/services/artifact_pipeline/service.py`. Remove its exclude entry once compliant; re-run
-      `quality-gates.sh` to confirm no regression.
+- [x] ✅ [SCRIPT] P2. **DONE 2026-07-31 (slot-2, infra craft).** Decomposed
+      `deployment_api/services/artifact_pipeline/service.py` (`ArtifactPipelineService.health()`, was 165L).
+      `deployment-api@2898e2f`: extracted each of the 7 independent condition checks (`_live_failed_condition`,
+      `_recent_failed_builds_condition`, `_duplicate_builds_condition`, `_floating_tag_condition`,
+      `_hand_deployed_condition`, `_tarball_lane_condition`, `_registry_sprawl_condition`, plus the always-on
+      `_aws_not_read_condition`) into named module-level functions returning `HealthCondition | None`, filtered into the
+      conditions list — pure code motion, no logic changes. `FUNCTION_SIZE_EXTRA_EXCLUDES` entry removed — gate passes
+      natively. Verified: 46 targeted tests green (`tests/unit/api/test_artifact_pipeline.py`), basedpyright clean, ruff
+      clean, full `quality-gates.sh` green (121s). Repo: deployment-api.
 - [ ] [SCRIPT] P2. Decompose the remaining function-size-only violation in
       `deployment_api/services/data_analytics_service.py`. Remove its exclude entry once compliant; re-run
       `quality-gates.sh` to confirm no regression.
