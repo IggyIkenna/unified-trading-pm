@@ -331,3 +331,51 @@ coverage asserting a DEFI `funding_oi`/`returns` run actually loads non-empty da
   Real (non-dry) `returns` verification-window run relaunched against the corrected fix
   (`features-delta-one-defi-20260731-011445`) — result pending as this note is written; see this doc's next update or
   the D1 todo's progress log for the outcome.
+- **2026-07-31 (slot-2, data_engineering craft) — the `features-service@c46509be` fix above ELIMINATED the SchemaError
+  (confirmed live: relaunched run `features-delta-one-defi-20260731-011445` progressed cleanly through the loading step
+  with zero crashes) but exposed a DEEPER, more serious bug it had been masking: a DATA-CORRECTNESS defect, not just a
+  dtype mismatch. Root-caused + fixed + shipped `features-service@94fd3c8b` — flagging as a BIG FINDING per CLAUDE.md's
+  data-correctness HARD RULE (this note IS the notification; no separate escalation needed, the fix is already shipped
+  and the corpus was never corrupted — see "blast radius" below).**
+  - **What was wrong**: `_resolve_passthrough_timestamp()`'s "available_at wins outright" priority (as designed by the
+    ORIGINAL `a5a5bf7d` fix, and preserved by my own `c46509be` fix above) treats `available_at` as if it were the event
+    timestamp. It is NOT — `available_at` is a PIPELINE-INGESTION timestamp (when the row was written/migrated INTO the
+    system). Confirmed via direct data inspection: a real `2023-05-31` oracle_prices row's `available_at` value was
+    `2026-07-22T05:57:17` — the date the historical-migration script actually ran, over 3 YEARS after the real 2023
+    price event that row represents. For LIVE-captured rows the gap is smaller (minutes to a couple days) but still real
+    and non-zero.
+  - **Observed symptom (why it took two fix attempts to find)**: this does NOT raise an exception — it's a SILENT
+    correctness bug. Every row got a real, validly-typed, UTC-aware `timestamp`... just the WRONG one (the 2026
+    migration date instead of the real 2023 event date). Every downstream per-date range-filter (`_extract_date_window`
+    in `_tf_cluster_helper.py`) then correctly filtered based on that wrong timestamp, finding zero rows for every one
+    of the 172 requested 2023 dates (all the real data got mis-filed under 2026-07-22 instead). Net effect on the
+    relaunched run: 12,000+ log lines, "No pre-loaded candles" for all 51 instruments on every date, zero writes,
+    `ERROR ALL feature groups failed` — a silent, total failure with no exception anywhere in the chain, exactly
+    matching a genuine sparse-historical-data absence pattern (which is why the first read of this log looked like
+    honest-absence rather than a bug — confirmed it was a bug only by cross-checking real GCS day-density: ETH_USD
+    oracle_prices has real data on 184/173 days in the exact verification window, i.e. dense, not sparse).
+  - **Fix**: reversed the priority order. Real EVENT-time fields now win, in order: an already-Datetime `timestamp`
+    (normalised to UTC), an integer `publish_time`/`timestamp` (Unix seconds), a string `date`. `available_at` is now
+    the LAST-RESORT fallback ONLY when no real event-time field exists at all (a legitimate use — some feeds may
+    genuinely have nothing better). Verified against real production data locally (not just unit tests): downloaded 4
+    consecutive real ETH_USD oracle_prices day-parquets, ran them through the fixed function, confirmed the resolved
+    `timestamp` values are the real 2023 event dates (not 2026) and that `_extract_date_window`'s exact filter
+    (reproduced locally) now returns non-empty windows. 7 tests rewritten/added in `TestResolvePassthroughTimestamp`
+    (the old tests literally encoded the wrong priority as their expected behavior — e.g.
+    `test_prefers_available_at_when_datetime` asserted `available_at` should win, which is now the confirmed-wrong
+    premise); full `quality-gates.sh` green (114/114 `test_data_loader.py`). Shipped: `features-service@94fd3c8b`.
+  - **Blast radius / why this is a "big finding" but NOT a "corrupt the corpus" incident**:
+    `_resolve_passthrough_timestamp` is used by every DEFI delta_one pass-through data_type
+    (`funding_oi`→`perp_funding`, `returns`→`oracle_prices`, and the `derivative_ticker` alias) — but it was only
+    introduced today (`a5a5bf7d`, this same issue doc's todo 1) and EVERY attempt to actually run it against production
+    GCS since then has failed with either the SchemaError (before `c46509be`) or the silent zero-match symptom above
+    (between `c46509be` and `94fd3c8b`) — meaning `features-delta-one-defi` genuinely has NO INDEX yet (confirmed:
+    `gs://features-defi-prd-.../` still has no `delta_one/` prefix as of this note). No wrong data was ever actually
+    written to prod — the corpus was protected by the fact that every prior attempt also failed for an unrelated reason
+    (SchemaError) before this correctness bug could silently succeed and write bad rows. This is a near-miss, not an
+    incident, but it would NOT have been caught before writing bad data had the SchemaError not existed first — flagging
+    so nobody assumes "it ran clean, therefore it's correct" the next time a pass-through feature type's real
+    event-timestamp assumption changes.
+  - **Not yet done**: the real (non-dry) `returns` verification-window run has not been re-relaunched against `94fd3c8b`
+    as this note is written (session ending on context pressure — see the D1 todo's Progress Log for the exact resume
+    command). `features-service@94fd3c8b` itself is shipped and green.
