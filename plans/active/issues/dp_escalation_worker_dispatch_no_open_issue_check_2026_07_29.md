@@ -202,3 +202,14 @@ regression) is worse.**
   whose numerator is merely unchanged rather than one whose recent volume has fallen below a materiality floor — e.g.
   `(cefi, derivative_ticker)`'s repeated dispatches above still need that separate, still-undecided fix). Full writeup
   in the book_snapshot_5 doc's own Progress Log.
+- **2026-07-31 (data_pipeline_failure escalation worker, agt-164899, slot 12) — `(cefi, book_snapshot_5)`'s 10th+
+  dispatch, confirming the materiality fix (`deployment-service@a564cca`) is working but the escalation-worker spawn
+  itself still fires anyway.** The dispatch context for this session already carried the STATIC BACKLOG materiality
+  annotation (95 rows/24h, below the 500-row floor) — i.e. the alert severity/classification fix from the entry above IS
+  correctly suppressing the false-Fresh label now. But a full `data_pipeline_failure` orchestrator-agent session still
+  spawned anyway (this one) to handle it — the materiality fix downgrades CRITICAL to WARN routing/paging, it does not
+  stop the `repository_dispatch escalate-to-orchestrator` fast path from firing, which is this doc's own still-open
+  Option A/B/C. Session cost: two file reads + a git-ancestor check (4 commits) + one bounded column-projected manifest
+  read + a Progress Log append, no code change. Further corroborates that Option A (dedup at the escalation-dispatch
+  layer itself) is the fix that actually closes this doc's waste — the 9th dispatch's alerting-materiality fix is a
+  genuinely useful, complementary layer (correct classification) but does not substitute for it.

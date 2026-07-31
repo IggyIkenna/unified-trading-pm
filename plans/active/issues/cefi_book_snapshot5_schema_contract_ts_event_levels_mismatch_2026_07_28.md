@@ -95,10 +95,10 @@ source:
   data_pipeline_failure worker (slot-16), fired 2026-07-28, asset_group=cefi data_type=book_snapshot_5, 299,467
   attempted_failed of 1,037,001 attempted (28.9%), flagged Fresh (0d old)."
 last_updated:
-  2026-07-31 (9th+ dispatch, agt-79b187 -- confirmed the nullable=True fix (agt-716d56) still holds (a ~9-minute
-  post-fix tail was the same self-resolving in-flight-VM-stale-code pattern already documented for this doc's earlier
-  tails, not a regression); additionally shipped deployment-service@a564cca, a DP-FETCH-009 alerting-materiality fix
-  that should substantially cut the repeated full-worker-dispatch waste this doc's own Progress Log has accumulated)
+  2026-07-31 (10th+ dispatch, agt-164899 -- confirmed the nullable=True fix (agt-716d56) still holds; a tiny 5-row
+  post-fix tail (04:02-04:18Z) already self-resolved with zero further activity 80min later. Also confirms
+  deployment-service@a564cca's materiality fix is now correctly labeling this cell STATIC BACKLOG (95 rows/24h, below
+  the 500-row floor) instead of Fresh -- the mechanism this doc's 9th dispatch shipped is working as intended.)
 ---
 
 # CeFi `book_snapshot_5` schema-contract mismatch -- root cause + fix (2026-07-28)
@@ -530,4 +530,28 @@ against the reproduction script.
   green (deployment-service, 2 full runs), 3 new/updated unit tests including one that reproduces this exact incident's
   real numbers. Full writeup + evidence: `deployment-service@a564cca`'s commit message; cross-linked from
   `dp_escalation_worker_dispatch_no_open_issue_check_2026_07_29.md`. No GCS/manifest write, no VM launch. Pinged
+  `dp-fleet-monitor` (authoring slot) with this outcome.
+
+- **2026-07-31 (`data_pipeline_failure` escalation worker, task `agt-164899`, slot 12) — 10th+ dispatch, materiality fix
+  confirmed working; tail confirmed self-resolved.** Received another `DP_RUN_MOSTLY_EMPTY` (DP-FETCH-009) page for
+  `(cefi, book_snapshot_5)`: 300,442/1,082,871 = 27.7% — this time the alert context itself already carried the
+  `deployment-service@a564cca` materiality annotation: "STATIC BACKLOG — only 95 attempted_failed row(s) in the last 1d
+  (below the 500-row materiality floor); a decaying trickle on already-tracked backlog, not a fresh regression" —
+  confirming the 9th dispatch's alerting-layer fix is now correctly classifying this cell instead of reading it as
+  Fresh. Read this doc first per the pre-task plan/issue conflict-check rule. Re-verified all four fix commits
+  (`unified-api-contracts@8db188fe`/`@1c4d8864`, `market-tick-data-service@339ca767`/`@6bf568ee`) are still ancestors of
+  `origin/live-defi-rollout` via `git merge-base --is-ancestor`. Per this doc's own P2 todo about the
+  `_classify_tardis_error` truncation potentially hiding a new bug behind the same manifest bucket, did a bounded
+  column-projected live read (not just an ancestor check) of
+  `gs://market-data-tick-cefi-prd-central-element-323112/_index/availability_index.parquet` filtered to
+  `(asset_group=cefi, data_type=book_snapshot_5, capture_status=attempted_failed)`: total 300,442 rows (matches the
+  alert exactly), found 5 rows with `attempted_at` after the last confirmed post-fix reading (`agt-79b187`'s
+  `2026-07-31T04:02:15Z`) — all `"schema contract violated"` on OKX-SPOT (3) / OKX-SWAP (2), `attempted_at`
+  04:02:15-04:18:05Z, i.e. the SAME ~9-16min self-resolving in-flight-stale-code tail `agt-79b187` had already spotted
+  and was still finishing when that session ended. Re-read the manifest 80 minutes later (05:38:23Z): row count
+  unchanged (300,442), max `attempted_at` unchanged (04:18:05Z), zero rows since — the tail has stopped, matching the
+  same self-resolving pattern documented 5+ times in this doc's history, not a new regression. **Conclusion: no code fix
+  needed this session** — all three root-cause fixes (contract shape, ts_event derivation, nullable levels) continue to
+  hold under production load, and the alerting-materiality fix is now correctly suppressing the Fresh mislabel for this
+  decaying trickle. No GCS/manifest write, no VM launch, no code change (PM plan-doc edit only). Pinged
   `dp-fleet-monitor` (authoring slot) with this outcome.
