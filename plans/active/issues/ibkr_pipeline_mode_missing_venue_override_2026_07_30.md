@@ -67,10 +67,12 @@ Real IBKR-fetched equity bars are stamped as FRED-sourced. This is the exact sam
 FRED/ECB/OFR fix addressed — just not extended to IBKR at the time (IBKR uses `ohlcv_1d`/`yield_curve` types that
 overlap with FRED's, so `SOURCE_PRIORITY[("tradfi", "ohlcv_1d")]` resolving fred-first silently catches IBKR too).
 
-**Not yet confirmed live-firing in prod** (no GCS census run as part of this finding — same caveat the 2026-07-29 fix
-itself carried) — this is a code-path finding, not a confirmed-prod mislabel count. IBKR is currently a lower-volume
-tradfi source than FRED, so the blast radius on real objects is unknown until someone runs the manifest/GCS census for
-`venue=IBKR`.
+**CONFIRMED 2026-07-31 (todo 1 census): zero real-prod blast radius today.** See Progress Log entry below — the tradfi
+manifest has 0 rows with `venue=IBKR` (any `pipeline_mode`), so no real prod object is currently mislabeled. The bug is
+real in the code path (confirmed via direct adapter re-verification / the two `xfail`-marked tests) but IBKR has not yet
+written any canonical shard to the prod tradfi bucket, so nothing needs backfilling — todos 2-4 remain required (the bug
+will mislabel the FIRST real IBKR write the moment IBKR ingestion goes live), but todo 5's conditional backfill migration
+is NOT triggered.
 
 ## Why this isn't a same-commit fix
 
@@ -83,9 +85,10 @@ inside an unrelated test-widening todo.
 
 ## Todos
 
-- [ ] [BACKEND] P2. **Confirm real-prod blast radius**: run a manifest/GCS census for `asset_group=tradfi venue=IBKR` —
+- [x] ✅ [BACKEND] P2. **Confirm real-prod blast radius**: run a manifest/GCS census for `asset_group=tradfi venue=IBKR` —
       count objects currently stamped `pipeline_mode=batch_fred` (or any non-`batch_databento`/`batch_ibkr` value) that
-      were actually IBKR-fetched. (repo: market-tick-data-service)
+      were actually IBKR-fetched. (repo: market-tick-data-service) — market-tick-data-service@PENDING_SHA. **Result: 0
+      rows.** See Progress Log 2026-07-31.
 - [ ] [BACKEND] P2. **Add `PipelineMode.BATCH_IBKR = "batch_ibkr"`** to
       `unified_api_contracts/canonical/crosscutting/pipeline_mode.py`, following the exact pattern of the existing
       `BATCH_FRED`/`BATCH_ECB`/`BATCH_OFR` members (incl. any exhaustiveness/coverage tests in UAC that enumerate
@@ -97,12 +100,29 @@ inside an unrelated test-widening todo.
       `market-tick-data-service/tests/market_interface/adapters/tradfi/test_tradfi_canonical_writes.py` (both currently
       marked `xfail(strict=True)` citing this doc) once the above ship — update their expected `pipeline_mode` to
       `batch_ibkr` and remove the marker. (repo: market-tick-data-service)
-- [ ] [BACKEND] P3. **If the census (todo 1) finds real mislabeled prod objects**: file a follow-up migration todo to
+- [x] ✅ N/A [BACKEND] P3. **If the census (todo 1) finds real mislabeled prod objects**: file a follow-up migration todo to
       backfill their `pipeline_mode` in the manifest (mirroring whatever backfill approach the FRED/ECB/OFR fix used, if
-      any) — do not silently leave stale-mislabeled manifest rows uncorrected. (repo: market-tick-data-service)
+      any) — do not silently leave stale-mislabeled manifest rows uncorrected. (repo: market-tick-data-service) —
+      condition not met: todo 1's census found 0 real prod objects, so no backfill migration is needed.
 
 ## Progress Log
 
+- **2026-07-31 (todo 1 — census)**: Ran a read-only, single-filtered-read manifest census (no whole-corpus GCS walk;
+  no GCS listing) via
+  `market-tick-data-service/scripts/one_offs/ibkr_tradfi_pipeline_mode_census_2026_07_31.py`:
+  `read_availability_index(bucket=resolve_bucket_name(cloud="gcp", kind="market-data", asset_group="tradfi"),
+  columns=[...], filters=[("venue", "==", "IBKR")])` against the live prod tradfi manifest
+  (`market-data-tick-tradfi-prd-central-element-323112`). **Result: 0 rows.** Sanity-checked the read path itself
+  (not just the filter) by pulling all 6,380,269 tradfi manifest rows unfiltered — real venues present are
+  `NASDAQ/CME/NYSE/ICE/KRX/CBOE/FX/BARCHART/FRED/YAHOO_FINANCE`, confirming the manifest read genuinely returns data
+  and `IBKR` is genuinely absent, not silently erroring. Also confirmed `kind="tick-data"` resolves to the identical
+  bucket name for tradfi, so there is no second bucket to check separately. **Conclusion: the `_VENUE_OVERRIDES`
+  bug is real in the code path (confirmed via direct adapter re-verification + the two `xfail`-marked tests) but IBKR
+  has never actually written a canonical shard to the prod tradfi manifest — the blast radius on real objects today
+  is zero.** Flipped todo 1 to done with this result, and flipped todo 5 to N/A (its trigger condition — "census
+  finds real mislabeled prod objects" — did not occur, so no backfill-migration todo is needed). Todos 2-4 remain
+  open and still matter: the bug will mislabel the very first real IBKR write the moment IBKR ingestion goes live
+  in prod, so shipping the `_VENUE_OVERRIDES` fix ahead of that is still the point.
 - **na-eligibility-audit 2026-07-31** (tradfi tranche, dispatch agt-6d6eaf): **RECLASSIFY — `assigned_vm: NA` →
   `planning`.** This doc was filed as a spun-out issue from an `assigned_vm: planning` parent plan's todo
   (`ci_satellite_ao_dispatch_batch2_2026_07_29.md` todo 11, which explicitly declined to fix it inline) and defaulted to
