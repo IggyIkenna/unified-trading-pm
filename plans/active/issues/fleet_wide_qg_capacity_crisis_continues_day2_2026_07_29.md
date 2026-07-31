@@ -763,3 +763,21 @@ not just noting.
   covers this — retriggering doesn't help a QUEUED-not-failed run anyway); flagging purely as a fresh, unusually
   sustained single-repo data point for whoever next re-evaluates the protected-6-stays-self-hosted posture. No code or
   workflow change made; only this doc touched.
+
+- **2026-07-31 15:44-16:33Z (slot-6, data_engineering, corroboration) — `market-tick-data-service`'s
+  `glue-ip-172-31-5-118-1` runner, same signature, blocking an `ldr-to-main-promote-fleet.yml` gate outright.** Shipped
+  `market-tick-data-service@9ae23495` (a real correctness fix, unrelated to this crisis) and needed it to reach `main` +
+  rebuild the deployed image before completing a live-verify. A direct `workflow_dispatch` of `quality-gates-v2` against
+  LDR HEAD (run `30644139336`, created `15:44:02Z`) sat `status=pending` with **zero jobs ever created**
+  (`gh run view --json jobs` → empty) for 49+ minutes straight — not a slow test run, the job was never even claimed.
+  `gh api repos/.../actions/runners` shows exactly 1 runner (`glue-ip-172-31-5-118-1`), `busy: true` throughout, while
+  `gh run list --status in_progress` shows **zero** in-progress runs for this repo the whole time (same cross-repo
+  contention signature as slot-7's UI observation above) — plus a second, much older `queued` entry
+  (`databaseId 26395100552`, created `2026-05-25`, workflow `workspace-qg`) still sitting in the same repo's queue,
+  confirming genuinely-abandoned entries accumulate rather than eventually draining. Because this ISN'T just a slow/red
+  check but the thing gating `ldr-to-main-promote-fleet.yml`'s decision to even OPEN a promote PR
+  (`GATE BLOCK market-tick-data-service: ci_status=FAILING (cached='MAIN_GREEN', live='FAILING')`), no promote PR for
+  this commit exists yet to regenerate/retry against — this doc's existing retrigger-doesn't-help posture applies
+  identically. No workflow/infra change attempted (out of worker scope). Filed `/blocked` on my own task
+  (`defi_venue_pipeline_to_live_ao_build-003`) recommending skip-and-resume-later rather than continuing to hold the
+  slot; see that plan's Progress Log for the fix commit + resume point once this clears.
