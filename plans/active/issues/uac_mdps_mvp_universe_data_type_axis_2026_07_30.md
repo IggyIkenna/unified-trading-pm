@@ -69,17 +69,27 @@ ordering hazard).
 
 ## Todos
 
-- [ ] [BACKEND] P2. In `unified-api-contracts/unified_api_contracts/canonical/crosscutting/_mvp_scope_mdps.py`, extend
-      `mdps_mvp_universe(asset_group)` so its return carries the `data_type` axis alongside the existing `venue` (and,
-      if still needed by its current callers, `instrument_type`) — derived from the same canonical config the function
-      already reads, so the new axis stays identical to the writer's shard atom (no second, hand-maintained definition).
-      Evidence: the new return shape + a passing regression test asserting it against at least one known
-      `(venue, data_type)` pair per currently-supported asset_group.
-- [ ] [BACKEND] P2. Fix the `ValueError` `mdps_mvp_universe()` raises for `sports`/`prediction`/`models` so the function
-      is total over every asset_group value a co-located MDPS+features live VM can run for (the exec-dispatch wiring
-      todo calls this at boot with whatever `asset_group` the launcher was given — a partial function there reintroduces
-      the same silent-failure class this whole issue chain is about). Evidence: a passing regression test calling
-      `mdps_mvp_universe()` for `sports`, `prediction`, and `models` without raising.
+- [x] ✅ [BACKEND] P2. In `unified-api-contracts/unified_api_contracts/canonical/crosscutting/_mvp_scope_mdps.py`,
+      extend `mdps_mvp_universe(asset_group)` so its return carries the `data_type` axis alongside the existing `venue`
+      (and, if still needed by its current callers, `instrument_type`) — derived from the same canonical config the
+      function already reads, so the new axis stays identical to the writer's shard atom (no second, hand-maintained
+      definition). Evidence: `unified-api-contracts@724b6633` — `mdps_mvp_universe` now returns
+      `frozenset[tuple[venue, instrument_type, data_type]]`, derived via `get_mvp_data_types_for_cefi_venue_itype` for
+      cefi and the flat `data_types` product for defi/tradfi (same canonical config as before, no second definition).
+      `TestMdpsMvpUniverse` in `tests/unit/test_mvp_scope.py` asserts exact-set identity against `MVP_SCOPE` for
+      cefi/defi/tradfi (implies every individual `(venue, data_type)` pair) plus explicit known-pair spot-checks
+      (`DERIBIT/OPTION/options_chain`, `BINANCE-FUTURES/PERPETUAL/trades`, `CME/FUTURE/ohlcv_1m`,
+      `NASDAQ/EQUITY/ohlcv_1m`). The 3 existing 2-tuple callers (`liquid_representative.py` x2, `execution_fidelity.py`)
+      were updated to project down to `(venue, instrument_type)` in the same commit.
+- [x] ✅ [BACKEND] P2. Fix the `ValueError` `mdps_mvp_universe()` raises for `sports`/`prediction`/`models` so the
+      function is total over every asset_group value a co-located MDPS+features live VM can run for (the exec-dispatch
+      wiring todo calls this at boot with whatever `asset_group` the launcher was given — a partial function there
+      reintroduces the same silent-failure class this whole issue chain is about). Evidence:
+      `unified-api-contracts@724b6633` (same commit as above — the two todos shipped together) —
+      `test_sports_is_total_returns_empty`, `test_prediction_is_total_returns_empty`,
+      `test_models_is_total_returns_empty` all assert `mdps_mvp_universe(...) == frozenset()` with no raise;
+      `test_unknown_asset_group_raises` confirms a genuinely undeclared asset_group still raises, so the two cases stay
+      distinguishable.
 - [ ] [BACKEND] P3. Run the post-phase codex audit on any codex doc describing `mdps_mvp_universe()`'s contract/shape
       (grep `codex/` for `mdps_mvp_universe` / `_mvp_scope_mdps`) since its signature changed — update or
       SUPERSEDED-banner anything now stale.
@@ -88,3 +98,9 @@ ordering hazard).
 
 - **2026-07-30**: Forked out of `mdps_features_live_launcher_exec_dispatch_never_wired_2026_07_27.md` per operator
   ruling on BLK-fd70b57c — that doc's exec-dispatch wiring todo now `depends_on` + `gate_on_depends: true` this doc.
+- **2026-07-31 (slot-9)**: Todos 1+2 were already shipped together in `unified-api-contracts@724b6633`
+  (`feat(mvp-scope): extend mdps_mvp_universe with a data_type axis`) — landed on `live-defi-rollout` and already
+  promoted through to `main`, commit status `success` (`sit-gate/fleet-green` green), but the checkbox flip was never
+  done (a Commit+Push+Flip gap on whoever shipped it). Verified via source read + the `TestMdpsMvpUniverse` regression
+  suite + the GitHub commit-status API, then flipped both checkboxes here to match shipped reality. Todo 3 (codex audit)
+  is untouched — genuinely not yet done, left for its own dispatch (`uac_mdps_mvp_universe_data_type_axis-003`).
