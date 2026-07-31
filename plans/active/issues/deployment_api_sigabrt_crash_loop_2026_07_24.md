@@ -608,7 +608,19 @@ cancellation-timeout fix and already shipped). Suggested next steps for whoever 
       rows** — query syntax cross-checked against the known `00355-z2c@10:37:56Z` occurrence in the same run to confirm
       it isn't a false-negative empty result. No code shipped (pure verification). Leaving the checkbox unchecked per
       this todo's own instruction; re-check on the next dispatch or the next `Uncaught signal: 6` occurrence on a
-      revision at/after `00361-qqp`.
+      revision at/after `00361-qqp`. — **2026-07-31T14:26Z (slot 4, review): re-checked, still gate NOT met — still
+      correctly open.** Traffic has since moved through 4 more revisions (`00364-xlc`→`00365-pps`→`00366-v7t`→
+      `00367-kh7`, the last now serving 100%, created `14:10:36Z`). `docker pull`/`create` of `00367-kh7`'s image timed
+      out (2min) so could not directly extract `gunicorn.conf.py` this check — fell back to
+      `git log -- gunicorn.conf.py` in the deployment-api worktree, which confirms `785405d` (the pid-role-logging
+      commit) is still the latest commit touching that file with nothing reverting it, so the code is present at current
+      HEAD; not as strong as the direct image-extraction method the prior two checks used, flagging honestly. Re-ran
+      `gcloud logging read` for `"Uncaught signal: 6"` scoped to `timestamp>="2026-07-31T11:54:00Z"` (now ~2h32m elapsed
+      since the pid-role-logging deploy first went live, spanning 7 revisions `00361-qqp`..`00367-kh7`): **zero rows** —
+      re-confirmed the query isn't a false negative by re-running it against `timestamp>="2026-07-31T10:00:00Z"`, which
+      correctly surfaces the known `00355-z2c@10:37:56Z` occurrence. No code shipped (pure verification). Leaving the
+      checkbox unchecked; re-check on the next dispatch or the next `Uncaught signal: 6` occurrence on a revision
+      at/after `00361-qqp`.
 
 - [ ] [BACKEND] P3. **NEW, opened 2026-07-31 (slot 13, backend_engineer) — dead-code cleanup: `workers/auto_sync.py`'s
       entire background-sync implementation is unreachable in production.** Found while tracing the call graph for the
