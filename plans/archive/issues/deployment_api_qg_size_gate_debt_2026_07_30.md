@@ -10,7 +10,7 @@ summary:
   agt-46da69) by adding all 27 affected files to FUNCTION_SIZE_EXTRA_EXCLUDES (deployment-api/scripts/quality-gates.sh),
   the same sanctioned per-repo allow-list mechanism strategy-service already uses for analogous legacy debt — this is a
   stopgap, not a fix; the actual decomposition work is this doc."
-status: open
+status: resolved # (was: open) 2026-07-31 — all 27 files decomposed, FUNCTION_SIZE_EXTRA_EXCLUDES now empty
 nature: issue
 asset_group: [meta]
 stage: [meta]
@@ -20,7 +20,7 @@ tags: [code-quality, function-size, file-size, qg-ratchet, quality-gates, deploy
 related:
   - /plans/archive/issues/qg_size_gate_sentinel_skip_root_cause_2026_07_25.md
 created: 2026-07-30
-last_updated: 2026-07-30
+last_updated: 2026-07-31 # status flipped resolved -- 0 open todos remain, closing fix deployment-api@2658beb
 parent_epic: deployment_and_user_management_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -30,7 +30,7 @@ estimate_baseline_ai_days: 3.0
 estimate_calibrated_ai_days: 1.2
 assigned_role: infra
 drift_direction: advance-code
-resolved_by:
+resolved_by: deployment-api@2658beb
 locked_by:
 locked_since:
 depends_on: []

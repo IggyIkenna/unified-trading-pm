@@ -32,7 +32,7 @@ tags: [agent-orchestrator, done-gate, plan-flip-verification, bug, verify-py]
 related:
   [
     /plans/active/issues/ao_done_gate_no_carveout_for_red_gate_evidence_only_closure_2026_07_28.md,
-    /plans/active/issues/deployment_api_qg_size_gate_debt_2026_07_30.md,
+    /plans/archive/issues/deployment_api_qg_size_gate_debt_2026_07_30.md,
   ]
 created: 2026-07-31
 priority: P2
