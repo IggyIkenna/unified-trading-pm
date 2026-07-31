@@ -110,29 +110,29 @@ produced reports) — see the plan diff in the same commit as this issue doc.
       deployment-service.
 
       **Evidence**: read the preempted VM's own recorded `gs://deployment-scripts-central-element-323112/vm-logs/cefi-queue-heavy-binancefutu-x17-20260727-210013/LAUNCH_PARAMS.json`
-                                                          (written by `lc_write_launch_params` at original launch time) and reproduced its EXACT env
-                                                          (`VENUES="BINANCE-FUTURES BINANCE-SPOT BYBIT BYBIT-SPOT DERIBIT COINBASE-SPOT COINBASE-FUTURES OKX-SPOT OKX-SWAP
-                                                          OKX-FUTURES KRAKEN-SPOT KRAKEN-FUTURES BITFINEX-SPOT BITFINEX-FUTURES BITGET-SPOT BITGET-FUTURES UPBIT"
-                                                          LAUNCH_GROUPS=heavy SINGLE_VM_QUEUE=1 START_DATE=2026-02-01 TARDIS_CONCURRENCY_LEASE=1
-                                                          TARDIS_MAX_CONCURRENT_DOWNLOADS=32 DEPLOYMENT_ENV=prod`) rather than a blind re-invocation, per the
-                                                          SPOT-preemption relaunch-gap contract. **N=1 Tardis cap confirmed clear both clouds before treating the launch
-                                                          as valid**: GCP `gcloud compute instances list` showed no other Tardis-consuming VM running; AWS
-                                                          `describe-instances` showed only the two standing orchestrator VMs (no Tardis consumers). New VM
-                                                          `cefi-queue-heavy-binancefutu-x17-20260730-161443` (created `2026-07-30T09:14:58-07:00` = `16:14:58 UTC`,
-                                                          `RUNNING`, `provisioningModel=SPOT`) carries `VM_START_DATE=2020-01-01 VM_END_DATE=2026-07-29` (min/max across
-                                                          the SINGLE_VM_QUEUE bucket — matches the original scope). **Progress climbing confirmed over 2+ successive
-                                                          checks** (`run.log`, ~2 min apart): 828 lines (pre-flight skip-if-fresh entries for `date=2020-01-05`, most
-                                                          venues already-covered honest-skips per the manifest) → 1009 lines, with a genuine day-completion in between —
-                                                          `Processed date=2020-01-05: 2 venues ok, 0 failed, 0 skipped, 10498157 total records` — plus
-                                                          `RESOURCE_SAMPLE` RSS climbing 11.6GB→13.7GB at CPU~100%, confirming real compute (not just the
-                                                          `PIPELINE_HEARTBEAT` noise the async-wait discipline warns can mask a hung worker). Skip-if-fresh pre-flight
-                                                          entries confirm the manifest-driven idempotency will fast-skip the ~55 already-captured days
-                                                          (2020-01-01..~2020-03-27) and resume genuine new work from there, without replaying `START_DATE` blind
-                                                          (`no_parquet_at`/`ManifestConsolidatedFallback` risk avoided — see the launcher's own
-                                                          `MANIFEST_CONSOLIDATED_STALENESS_SEC`/`MANIFEST_FAIL_ON_STALE_FALLBACK` metadata, unchanged from the original
-                                                          launch). No `PROGRESS.json` checkpoint exists for this new VM either (todo below fixes that) — resume relied on
-                                                          the manifest's own skip-if-fresh gate, not a checkpoint file, consistent with how the ORIGINAL VM was idempotent
-                                                          by design even without one.
+                                                              (written by `lc_write_launch_params` at original launch time) and reproduced its EXACT env
+                                                              (`VENUES="BINANCE-FUTURES BINANCE-SPOT BYBIT BYBIT-SPOT DERIBIT COINBASE-SPOT COINBASE-FUTURES OKX-SPOT OKX-SWAP
+                                                              OKX-FUTURES KRAKEN-SPOT KRAKEN-FUTURES BITFINEX-SPOT BITFINEX-FUTURES BITGET-SPOT BITGET-FUTURES UPBIT"
+                                                              LAUNCH_GROUPS=heavy SINGLE_VM_QUEUE=1 START_DATE=2026-02-01 TARDIS_CONCURRENCY_LEASE=1
+                                                              TARDIS_MAX_CONCURRENT_DOWNLOADS=32 DEPLOYMENT_ENV=prod`) rather than a blind re-invocation, per the
+                                                              SPOT-preemption relaunch-gap contract. **N=1 Tardis cap confirmed clear both clouds before treating the launch
+                                                              as valid**: GCP `gcloud compute instances list` showed no other Tardis-consuming VM running; AWS
+                                                              `describe-instances` showed only the two standing orchestrator VMs (no Tardis consumers). New VM
+                                                              `cefi-queue-heavy-binancefutu-x17-20260730-161443` (created `2026-07-30T09:14:58-07:00` = `16:14:58 UTC`,
+                                                              `RUNNING`, `provisioningModel=SPOT`) carries `VM_START_DATE=2020-01-01 VM_END_DATE=2026-07-29` (min/max across
+                                                              the SINGLE_VM_QUEUE bucket — matches the original scope). **Progress climbing confirmed over 2+ successive
+                                                              checks** (`run.log`, ~2 min apart): 828 lines (pre-flight skip-if-fresh entries for `date=2020-01-05`, most
+                                                              venues already-covered honest-skips per the manifest) → 1009 lines, with a genuine day-completion in between —
+                                                              `Processed date=2020-01-05: 2 venues ok, 0 failed, 0 skipped, 10498157 total records` — plus
+                                                              `RESOURCE_SAMPLE` RSS climbing 11.6GB→13.7GB at CPU~100%, confirming real compute (not just the
+                                                              `PIPELINE_HEARTBEAT` noise the async-wait discipline warns can mask a hung worker). Skip-if-fresh pre-flight
+                                                              entries confirm the manifest-driven idempotency will fast-skip the ~55 already-captured days
+                                                              (2020-01-01..~2020-03-27) and resume genuine new work from there, without replaying `START_DATE` blind
+                                                              (`no_parquet_at`/`ManifestConsolidatedFallback` risk avoided — see the launcher's own
+                                                              `MANIFEST_CONSOLIDATED_STALENESS_SEC`/`MANIFEST_FAIL_ON_STALE_FALLBACK` metadata, unchanged from the original
+                                                              launch). No `PROGRESS.json` checkpoint exists for this new VM either (todo below fixes that) — resume relied on
+                                                              the manifest's own skip-if-fresh gate, not a checkpoint file, consistent with how the ORIGINAL VM was idempotent
+                                                              by design even without one.
 
 - [x] ✅ [INFRA] P2. **DONE 2026-07-30 (slot-14, infra)** — `deployment-service@28b7dce`. Add `PROGRESS.json` checkpoint
       emission to the cefi coverage-backfill launcher (`scripts/vm/launch-cefi-sharded-backfill.sh` or its underlying
@@ -140,30 +140,30 @@ produced reports) — see the plan diff in the same commit as this issue doc.
       a manual run.log tail. Repo: deployment-service.
 
       **Root cause (deeper than expected)**: the launcher stamped the GENERIC `VM_TASK=cefi-backfill` label, which —
-                                                  confirmed via grep — is reused verbatim by ~15 UNRELATED launchers (tradfi/prediction/defi/solana backfills,
-                                                  a historical copy-paste constant, not a real semantic dispatch key). None of them has a dedicated dispatch
-                                                  branch in `setup-data-pipeline-vm.sh`, so ALL fall through to the generic single-shot `elif [ -n "$VM_TASK" ]`
-                                                  fallback: one CLI call over the ENTIRE date range, no chunk boundary to hang a checkpoint marker on — the same
-                                                  "OPEN GAP" class the codex doc already flags for `mtds-dex-swaps-backfill`/`af-backfill`. Adding a dedicated
-                                                  branch keyed on the literal string `cefi-backfill` (the initially-obvious fix) would have silently redirected
-                                                  all ~15 other launchers through a cefi-specific chunk-loop — verified this would be wrong before writing any
-                                                  code.
+                                                      confirmed via grep — is reused verbatim by ~15 UNRELATED launchers (tradfi/prediction/defi/solana backfills,
+                                                      a historical copy-paste constant, not a real semantic dispatch key). None of them has a dedicated dispatch
+                                                      branch in `setup-data-pipeline-vm.sh`, so ALL fall through to the generic single-shot `elif [ -n "$VM_TASK" ]`
+                                                      fallback: one CLI call over the ENTIRE date range, no chunk boundary to hang a checkpoint marker on — the same
+                                                      "OPEN GAP" class the codex doc already flags for `mtds-dex-swaps-backfill`/`af-backfill`. Adding a dedicated
+                                                      branch keyed on the literal string `cefi-backfill` (the initially-obvious fix) would have silently redirected
+                                                      all ~15 other launchers through a cefi-specific chunk-loop — verified this would be wrong before writing any
+                                                      code.
 
-                                                  **Fix**: renamed ONLY this launcher's `VM_TASK` (both the per-shard and `SINGLE_VM_QUEUE` combined-VM paths) to
-                                                  a launcher-specific value, `cefi-coverage-backfill`, then added a dedicated `elif` branch in
-                                                  `setup-data-pipeline-vm.sh` mirroring the already-proven `mtds-backfill` day-chunked loop verbatim (Tardis
-                                                  ≤7-day window via `VM_CHUNK_DAYS`; `HAD_FAILURE`-gated `[[VM_PROGRESS]] last_completed_date=... monotonic=true`
-                                                  marker so a later chunk's success can never paper over an earlier gap). The other ~15 launchers still using
-                                                  `VM_TASK=cefi-backfill` are byte-for-byte untouched. Multi-process fan-out (`VM_NUM_WORKERS`, opt-in/rarely
-                                                  used, not used by the actual incident VM) is explicitly NOT yet supported in the new checkpointed branch — logs
-                                                  an informational note and degrades to single-process (correctness-preserving, throughput-only tradeoff),
-                                                  documented as a scoping decision rather than silently dropped.
+                                                      **Fix**: renamed ONLY this launcher's `VM_TASK` (both the per-shard and `SINGLE_VM_QUEUE` combined-VM paths) to
+                                                      a launcher-specific value, `cefi-coverage-backfill`, then added a dedicated `elif` branch in
+                                                      `setup-data-pipeline-vm.sh` mirroring the already-proven `mtds-backfill` day-chunked loop verbatim (Tardis
+                                                      ≤7-day window via `VM_CHUNK_DAYS`; `HAD_FAILURE`-gated `[[VM_PROGRESS]] last_completed_date=... monotonic=true`
+                                                      marker so a later chunk's success can never paper over an earlier gap). The other ~15 launchers still using
+                                                      `VM_TASK=cefi-backfill` are byte-for-byte untouched. Multi-process fan-out (`VM_NUM_WORKERS`, opt-in/rarely
+                                                      used, not used by the actual incident VM) is explicitly NOT yet supported in the new checkpointed branch — logs
+                                                      an informational note and degrades to single-process (correctness-preserving, throughput-only tradeoff),
+                                                      documented as a scoping decision rather than silently dropped.
 
-                                                  **Verification**: `bash -n` + `shellcheck -S error` clean on both files; local standalone simulation of the
-                                                  chunk-loop with an injected mid-run chunk failure (chunk 2/3 forced to exit 137) confirmed chunk 1 emits the
-                                                  marker, chunk 2 correctly emits none, and chunk 3 — which succeeds — is ALSO correctly suppressed by
-                                                  `HAD_FAILURE`, proving the no-silent-gap invariant holds. Full `deployment-service` `quality-gates.sh` green
-                                                  (206s, sentinel matches `28b7dce`). Shipped via quickmerge.
+                                                      **Verification**: `bash -n` + `shellcheck -S error` clean on both files; local standalone simulation of the
+                                                      chunk-loop with an injected mid-run chunk failure (chunk 2/3 forced to exit 137) confirmed chunk 1 emits the
+                                                      marker, chunk 2 correctly emits none, and chunk 3 — which succeeds — is ALSO correctly suppressed by
+                                                      `HAD_FAILURE`, proving the no-silent-gap invariant holds. Full `deployment-service` `quality-gates.sh` green
+                                                      (206s, sentinel matches `28b7dce`). Shipped via quickmerge.
 
 - [ ] [REVIEW] P1. Once the relaunched VM genuinely completes (measured exit, not a wall-clock guess), re-run
       `cefi_track2_coverage_backfill_checkpoints_2026_07_25.md`'s `-004`/`-005` POST-BACKFILL gate todos, then resume
@@ -177,36 +177,36 @@ produced reports) — see the plan diff in the same commit as this issue doc.
       checkout). Repo: deployment-service.
 
       **Bound check**: this is the 2nd relaunch of the `cefi-queue-` prefix TODAY (2026-07-30) — 1st was slot-8's
-                                          todo-1 relaunch producing `...x17-20260730-161443`; this is the relaunch of THAT VM after its own preemption
-                                          (`compute.instances.preempted` DONE `2026-07-30T18:48:48 UTC`, ~2.5h uptime). Within the `≤2/(vm-prefix,day)`
-                                          bound — no page needed.
+                                              todo-1 relaunch producing `...x17-20260730-161443`; this is the relaunch of THAT VM after its own preemption
+                                              (`compute.instances.preempted` DONE `2026-07-30T18:48:48 UTC`, ~2.5h uptime). Within the `≤2/(vm-prefix,day)`
+                                              bound — no page needed.
 
-                                          **Root-cause verification BEFORE relaunching** (why the 2nd VM had no `PROGRESS.json` despite `28b7dce` already
-                                          being merged): fetched the LIVE GCS-hosted boot script
-                                          (`gsutil cp gs://deployment-scripts-central-element-323112/vm/setup-data-pipeline-vm.sh`) and confirmed it
-                                          ALREADY contains the dedicated `elif [[ "$VM_TASK" == "cefi-coverage-backfill" ]]` branch + `[[VM_PROGRESS]]`
-                                          emission (i.e. the GCS copy had since been updated — the prior gap was a timing race between the 2nd VM's launch
-                                          and the boot-script upload, not a missing fix). Confirmed the local launcher
-                                          (`scripts/vm/launch-cefi-sharded-backfill.sh`) stamps `VM_TASK=cefi-coverage-backfill` for the `SINGLE_VM_QUEUE`
-                                          path (lines 415/754).
+                                              **Root-cause verification BEFORE relaunching** (why the 2nd VM had no `PROGRESS.json` despite `28b7dce` already
+                                              being merged): fetched the LIVE GCS-hosted boot script
+                                              (`gsutil cp gs://deployment-scripts-central-element-323112/vm/setup-data-pipeline-vm.sh`) and confirmed it
+                                              ALREADY contains the dedicated `elif [[ "$VM_TASK" == "cefi-coverage-backfill" ]]` branch + `[[VM_PROGRESS]]`
+                                              emission (i.e. the GCS copy had since been updated — the prior gap was a timing race between the 2nd VM's launch
+                                              and the boot-script upload, not a missing fix). Confirmed the local launcher
+                                              (`scripts/vm/launch-cefi-sharded-backfill.sh`) stamps `VM_TASK=cefi-coverage-backfill` for the `SINGLE_VM_QUEUE`
+                                              path (lines 415/754).
 
-                                          **N=1 Tardis cap confirmed clear both clouds** before launching: GCP `gcloud compute instances list` showed only
-                                          `cefi-hyperliquid-*` VMs running (HYPERLIQUID is a non-Tardis venue, exempt) — no other Tardis-consuming VM; AWS
-                                          `describe-instances` showed only the two standing orchestrator VMs.
+                                              **N=1 Tardis cap confirmed clear both clouds** before launching: GCP `gcloud compute instances list` showed only
+                                              `cefi-hyperliquid-*` VMs running (HYPERLIQUID is a non-Tardis venue, exempt) — no other Tardis-consuming VM; AWS
+                                              `describe-instances` showed only the two standing orchestrator VMs.
 
-                                          **Launched** by reproducing the exact prior `LAUNCH_PARAMS.json` env (`VENUES=... LAUNCH_GROUPS=heavy
-                                          SINGLE_VM_QUEUE=1 START_DATE=2026-02-01 TARDIS_CONCURRENCY_LEASE=1 TARDIS_MAX_CONCURRENT_DOWNLOADS=32
-                                          DEPLOYMENT_ENV=prod`) via `launch-cefi-sharded-backfill.sh` — dry-run first, then the real launch. New VM
-                                          `cefi-queue-heavy-binancefutu-x17-20260730-193717` (RUNNING, SPOT, `VM_TASK=cefi-coverage-backfill`,
-                                          `VM_START_DATE=2020-01-01`/`VM_END_DATE=2026-07-29` matching the SINGLE_VM_QUEUE bucket scope).
+                                              **Launched** by reproducing the exact prior `LAUNCH_PARAMS.json` env (`VENUES=... LAUNCH_GROUPS=heavy
+                                              SINGLE_VM_QUEUE=1 START_DATE=2026-02-01 TARDIS_CONCURRENCY_LEASE=1 TARDIS_MAX_CONCURRENT_DOWNLOADS=32
+                                              DEPLOYMENT_ENV=prod`) via `launch-cefi-sharded-backfill.sh` — dry-run first, then the real launch. New VM
+                                              `cefi-queue-heavy-binancefutu-x17-20260730-193717` (RUNNING, SPOT, `VM_TASK=cefi-coverage-backfill`,
+                                              `VM_START_DATE=2020-01-01`/`VM_END_DATE=2026-07-29` matching the SINGLE_VM_QUEUE bucket scope).
 
-                                          **STARTED@T+65s**: `gcloud compute instances describe` → `RUNNING`/SPOT. **PROGRESS@T+10min — the actual fix
-                                          confirmation**: `gsutil ls .../vm-logs/cefi-queue-heavy-binancefutu-x17-20260730-193717/` now shows
-                                          `PROGRESS.json` (absent from both prior VMs) with content
-                                          `{"last_completed_date":"2020-01-07","monotonic":true,"vm_name":"cefi-queue-heavy-binancefutu-x17-20260730-193717","updated":"2026-07-30T19:44:59Z"}`
-                                          — the checkpoint contract is genuinely live on this VM. `run.log` tail shows real advancing progress
-                                          (`date=2020-01-11` → `date=2020-01-12`, skip-if-fresh pre-flight fast-forwarding through already-captured shards)
-                                          plus a `PIPELINE_HEARTBEAT` and `RESOURCE_SAMPLE cpu=183.6% rss=7031MiB` — genuine compute, not a hung/idle VM.
+                                              **STARTED@T+65s**: `gcloud compute instances describe` → `RUNNING`/SPOT. **PROGRESS@T+10min — the actual fix
+                                              confirmation**: `gsutil ls .../vm-logs/cefi-queue-heavy-binancefutu-x17-20260730-193717/` now shows
+                                              `PROGRESS.json` (absent from both prior VMs) with content
+                                              `{"last_completed_date":"2020-01-07","monotonic":true,"vm_name":"cefi-queue-heavy-binancefutu-x17-20260730-193717","updated":"2026-07-30T19:44:59Z"}`
+                                              — the checkpoint contract is genuinely live on this VM. `run.log` tail shows real advancing progress
+                                              (`date=2020-01-11` → `date=2020-01-12`, skip-if-fresh pre-flight fast-forwarding through already-captured shards)
+                                              plus a `PIPELINE_HEARTBEAT` and `RESOURCE_SAMPLE cpu=183.6% rss=7031MiB` — genuine compute, not a hung/idle VM.
 
 ## Progress log
 
@@ -384,6 +384,8 @@ produced reports) — see the plan diff in the same commit as this issue doc.
   10 distinct review-craft slots across ~36h with zero net progress toward its own done_definition each time — the gate
   is a genuinely long-running external condition (a multi-day SPOT backfill, chronically preempted 3x so far, averaging
   ~50-130 days of a ~2372-day span per attempt before dying), not a judgment call any review dispatch can resolve.
+  Follow-up: formalized the 4th relaunch as a tracked `[INFRA]` todo (see below) rather than leaving it prose-only, per
+  the "every follow-up is a tracked todo" HARD RULE — the recommendation itself was already prose in this same entry.
   Recommended to main: (a) dispatch a 4th relaunch via `[INFRA]` craft (this VM's death is fresh, no replacement
   running) reproducing the prior `LAUNCH_PARAMS.json` env per the established recipe, AND (b) park this specific `-003`
   todo behind a `prerequisites` condition gated on the backfill's actual terminal state (e.g. a
@@ -392,3 +394,30 @@ produced reports) — see the plan diff in the same commit as this issue doc.
   backlog-tuning action for main/operator, not something I should hand-edit as a review-craft worker. Also worth
   re-weighing Recommended-decision-B in this issue doc's own "Recommended decision" section: 3 preemptions and ~5%
   measured progress after ~4 days materially undercuts the original throughput assumption further.
+
+- 2026-07-31 (slot-15, review craft): Picked up todo 3 (`-003`) again — the 11th consecutive review-craft dispatch to
+  this same unmet gate. Independently re-verified: confirmed slot-16's finding stands —
+  `gcloud compute instances describe cefi-queue-heavy-binancefutu-x17-20260730-193717 --zone=asia-northeast1-c` → NOT
+  FOUND; `gcloud compute operations list --filter="targetLink:cefi-queue-heavy-binancefutu-x17-20260730-193717"`
+  confirms `compute.instances.preempted` DONE `2026-07-30T23:14:12.019-07:00` (= `2026-07-31T06:14:12 UTC`, the 3rd
+  preemption). `PROGRESS.json` last write unchanged since slot-16's check:
+  `{"last_completed_date":"2020-04-28",...,"updated":"2026-07-31T05:05:38Z"}`.
+  `gcloud compute instances list --filter="name~cefi-queue"` still empty — no 4th relaunch has landed yet. Checked the
+  live backlog entry directly (`GET /api/backlog` for this task id): still `priority: 20`, no `prereqs` — confirms it
+  has NOT yet been parked despite slot-16's recommendation ~hours ago. Took two concrete actions rather than repeating a
+  10th identical decline: (1) converted the prose 4th-relaunch recommendation into a tracked `[INFRA] P1` todo in this
+  doc (below) so it actually enters the backlog via the next `PlanRegenLoop` tick instead of staying advisory-only; (2)
+  posted directly to role=main via `/api/agents/by-role/main/message` restating the parking recommendation with the
+  concrete prerequisite name and citing this being escalation #2 after 10 unactioned prior recommendations — did NOT
+  hand-edit `backlog.yaml`/`prerequisites` myself (that is main/operator's call per RULES.md § "Park a task", consistent
+  with slot-16's read). Declining todo 3 and skipping this task rather than holding the slot for a multi-day backfill,
+  per the same posture as all prior entries above.
+
+- [ ] [INFRA] P1. 4th relaunch of the cefi coverage-backfill VM after its 3rd preemption (`compute.instances.preempted`
+      DONE `2026-07-31T06:14:00 UTC`, ~10.6h uptime, reached only `date=2020-04-28` of the `2020-01-01..2026-07-29`
+      span, ~119/2372 days ≈5.0%). Confirm N=1 Tardis cap clear both clouds, reproduce the exact `LAUNCH_PARAMS.json`
+      env used by all 3 prior launches
+      (`VENUES=... LAUNCH_GROUPS=heavy SINGLE_VM_QUEUE=1     START_DATE=2026-02-01 TARDIS_CONCURRENCY_LEASE=1 TARDIS_MAX_CONCURRENT_DOWNLOADS=32 DEPLOYMENT_ENV=prod`)
+      via `launch-cefi-sharded-backfill.sh`, verify STARTED@T+65s + a genuine advancing `PROGRESS.json` at T+10min.
+      Repo: deployment-service. **Bound check before launching**: this is the 1st relaunch of the day for this vm-prefix
+      on 2026-07-31 (within the `≤2/(vm-prefix,day)` bound).
