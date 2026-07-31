@@ -138,7 +138,7 @@ canonicalised by this fleet. The migration's own `# Delete-when:` marker on
       (give `classify_no_capture_reason()` a "task never writes the manifest" exemption for this script family) — these
       21 dead VMs are a second, larger, concrete instance of exactly the alerting gap that doc already diagnosed from
       one VM; worth citing as corroborating evidence when that fix is prioritized.
-- [ ] [SCRIPT] P2. Change `cefi-content-apply`'s default `MACHINE_TYPE` from `e2-standard-8` to `e2-standard-16` in
+- [x] [SCRIPT] P2. ✅ Change `cefi-content-apply`'s default `MACHINE_TYPE` from `e2-standard-8` to `e2-standard-16` in
       `deployment-service/scripts/vm/launch-canonical-migration-vm.sh` (the category-specific default, not the
       launcher's global default — other categories are unaffected). Confirmed root cause 2026-07-30: 3 independent
       shards (17, 18, 41) OOM-killed (`rc=137`, worker process killed while VM stayed alive, no preemption event) on
@@ -146,7 +146,9 @@ canonicalised by this fleet. The migration's own `# Delete-when:` marker on
       death points after being individually relaunched on `e2-standard-16`. Likely cause: the script's in-memory
       catalogue load (`Loaded N catalogue rows from instruments-store-cefi-prd-...`) has grown since the category's
       original 2026-07-19 launch (11 days of continued live capture), pushing every shard closer to the 32GB ceiling.
-      Repo: deployment-service.
+      Repo: deployment-service. **Shipped `deployment-service@9e6004a`** (`agt-ad6632`, slot 11, 2026-07-31, DP-VM-003)
+      — evidence in the split-out doc `cefi_content_migration_shard17_default_bump_2026_07_31.md` (this doc is at its
+      line cap).
 - [x] [BACKEND] P1. ✅ **Shard 16 died a 3rd time TODAY, this time neither SPOT-preempted nor OOM-killed on
       `e2-standard-8` — both causes this doc already fixed and confirmed** — root cause IDENTIFIED + fix SHIPPED
       (market-tick-data-service@9f4098b1, 2026-07-30, slot 2) — see "2026-07-30 root cause + fix shipped" note below.
