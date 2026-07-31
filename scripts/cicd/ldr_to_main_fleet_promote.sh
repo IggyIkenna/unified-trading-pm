@@ -895,9 +895,16 @@ process_repo() {
   # PAT-authored PR fires the pull_request workflow normally. Proven by A/B on a HELD head SHA
   # (WS-L 2026-06-27): App-created → action_required; PAT-created → ran → success → merged.
   # The App token stays for the rate-limited gh-api READS elsewhere (separate 5000/hr pool).
+  # Hardening (2026-07-31, ldr_to_main_promote_fleet_silently_skips_repo_after_promote_pr_close_2026_07_28.md):
+  # capture stderr instead of swallowing it — when `gh pr create` fails for a reason other than
+  # "PR already exists" (rate limit, permission, transient API error), the WARN below now names the
+  # actual cause instead of leaving the repo's absence from every tick's tally unexplained.
+  _PR_CREATE_ERR="$(mktemp)"
   PR_URL=$(GH_TOKEN="$GH_PAT_FOR_ARM" gh pr create --repo "$OWNER/$REPO" \
     --title "chore(promote): LDR → main (Option-B direct)" \
-    --body "$BODY" --base main --head "$PROMOTE_HEAD" 2>/dev/null || true)
+    --body "$BODY" --base main --head "$PROMOTE_HEAD" 2>"$_PR_CREATE_ERR" || true)
+  _PR_CREATE_STDERR="$(cat "$_PR_CREATE_ERR" 2>/dev/null || true)"
+  rm -f "$_PR_CREATE_ERR"
 
   if [ -n "$PR_URL" ]; then
     echo "  PR: $PR_URL"
@@ -1014,7 +1021,16 @@ process_repo() {
       _done PROMOTED; return 0
     fi
   else
-    echo "  WARN $REPO: PR creation failed and no open PR found"; return 0
+    # Hardening (2026-07-31, ldr_to_main_promote_fleet_silently_skips_repo_after_promote_pr_close_2026_07_28.md):
+    # this is the exact silent-no-op the doc reproduced twice against deployment-service — a bare
+    # `return 0` here never calls `_done`, so `$RESULT_DIR/$REPO` is never written and the repo drops
+    # out of every Promoted/Blocked/Conflicted tally with zero trace. Log the captured `gh pr create`
+    # stderr (previously discarded) and mark BLOCKED so the repo shows up for the next tick / a human.
+    echo "  ⛔ WARN $REPO: PR creation failed and no open PR found for frozen head $PROMOTE_HEAD"
+    if [ -n "$_PR_CREATE_STDERR" ]; then
+      echo "  gh pr create stderr: $_PR_CREATE_STDERR"
+    fi
+    _done BLOCKED; return 0
   fi
 }
 
