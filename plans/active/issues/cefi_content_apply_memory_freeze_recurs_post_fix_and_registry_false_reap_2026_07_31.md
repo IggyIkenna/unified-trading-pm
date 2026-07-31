@@ -150,6 +150,16 @@ depend on.
       window (2026-01-18..2026-02-13) + its exact freeze timestamp (`2026-07-31T05:31:18Z`, sample-over- sample
       mem_slope 7.09) is a further, precisely-timestamped data point worth checking against whatever file(s) the
       migration was processing at that instant.
+- [ ] [SCRIPT] P3. Another data point, added 2026-07-31 14:5xZ (`data_pipeline_failure` escalation `agt-b58993`, slot 1,
+      DP-VM-001 for `canonical-migration-cefi-content-42-relaunch20260731-133929`): shard 42's window
+      (2024-12-27..2025-01-09, 73,965 files across 47 venue×pipeline_mode pairs) froze the same way —
+      `host_metrics_window` shows `mem_pct` plateaued ~75-85% across 9 one-minute samples then jumped to 95.3%
+      (`mem_slope=2.0`) in the final sample at `2026-07-31T14:43:08Z`, OOM-killed ~26s later at 21,600/73,965 files
+      processed. Full detail + budget/relaunch decision in
+      `cefi_content_migration_corpus_still_incomplete_relaunch_round3_needed_2026_07_31.md`'s `[OPERATOR] P1` todo (not
+      duplicated here). When the shard-16 fast-OOM investigation resumes, this is the 3rd precisely-timestamped
+      freeze-moment data point (after shard 16 and the `-051007` VM above) to cross-check against the file(s) each
+      migration was processing at its exact freeze instant.
 
 ## Progress Log
 
