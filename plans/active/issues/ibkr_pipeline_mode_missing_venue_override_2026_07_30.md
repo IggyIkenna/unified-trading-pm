@@ -6,7 +6,7 @@ summary:
   falls through to `SOURCE_PRIORITY[("tradfi", data_type)]` — which resolves to `fred` for `ohlcv_1d`, mislabeling real
   IBKR-fetched equity/FX/bond/index bars as FRED-sourced. Surfaced 2026-07-30 while widening MTDS's ungated test
   coverage (`ci_satellite_ao_dispatch_batch2_2026_07_29.md` todo 11).
-status: open
+status: resolved
 nature: issue
 asset_group: [tradfi]
 stage: [meta]
@@ -37,13 +37,19 @@ source: >-
   coverage"). `test_ibkr_equity_bars_write` and `test_partition_path_uses_category_tradfi` in
   `market-tick-data-service/tests/market_interface/adapters/tradfi/test_tradfi_canonical_writes.py` both expect
   `pipeline_mode=batch_databento` for an IBKR write and instead observe `pipeline_mode=batch_fred`.
-resolved_by:
+resolved_by: market-tick-data-service@cc0be7d9
 locked_by:
 depends_on: []
 sequential: true
 ---
 
 # IBKR tradfi writes mislabeled pipeline_mode=batch_fred
+
+> **ARCHIVED (2026-07-31) — complete.** All 5 todos done: the UAC `PipelineMode.BATCH_IBKR` member + `SOURCE_PRIORITY`
+> registration (`unified-api-contracts@ab7d8c83`), the UTL `_VENUE_OVERRIDES` entry
+> (`unified-trading-library@b8db9ba5`), and the test un-xfail (`market-tick-data-service@cc0be7d9`) all shipped
+> quality-gates-green; the blast-radius census (todo 1) found 0 real prod objects mislabeled, so the conditional
+> backfill-migration todo (todo 5) was never triggered (N/A).
 
 ## The finding (measured, 2026-07-30)
 
