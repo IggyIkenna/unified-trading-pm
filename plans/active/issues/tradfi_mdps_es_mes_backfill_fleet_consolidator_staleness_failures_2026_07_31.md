@@ -137,14 +137,75 @@ ops/follow-up:
       `unified-trading-library` tarball (`2fa09f1db921`, ancestor of the `75b5735` staleness-budget fix) the healthy
       `es`-wave VMs are running on. Confirmed all 7 GCE-`RUNNING` and all 7 registered `status=running` in
       `DeploymentsRegistry` with fresh heartbeats (01:49-01:52Z) — zero self-terminations, unlike the earlier duplicate.
-- [ ] [OPS] P2. Once the `011358`-wave VMs complete, spot-check `rows_out`/manifest coverage for the `es`/`es3`
+- [x] ✅ [OPS] P2. Once the `011358`-wave VMs complete, spot-check `rows_out`/manifest coverage for the `es`/`es3`
       2020-2026 range to confirm the backfill actually completed (this doc only confirms the VMs are alive, not that the
-      full year ranges finished cleanly).
+      full year ranges finished cleanly). — **ANSWERED, not by waiting: the VMs staying alive would NEVER have produced
+      candles regardless of runtime — see "Update 2026-07-31" below.** A SECOND, distinct silent-zero was found on the
+      `011358`-wave's own `y2020es` VM (DP-VM-002, escalation agt-1b9670) and fixed at
+      market-data-processing-service@43b043b. `rows_out` spot-check should be re-run once the FIXED code is on a fresh
+      relaunch of this fleet (the currently-running `011358`/`014643` waves pinned an OLDER tarball and will still
+      silently produce 0 candles even though they show "alive" — being alive was never sufficient evidence here).
 - [ ] [INFRA] P3. Identify what launched the `011358` wave (not found by this worker — check `agent-orchestrator`
       dispatch logs / other `dp-fleet-monitor` escalations around 01:13Z) so future incidents don't need to re-derive
       "who else might already be fixing this" from the registry by hand. If it was another `data_pipeline_failure`
       escalation worker, no action needed — just confirms the multi-escalation dispatch model is working as intended for
       a fleet-wide failure.
+- [ ] [OPS] P0. Relaunch the whole `es`+`es3` fleet (14 shards, 2020-2026) with the market-data-processing-service code
+      AFTER `43b043b` (deploys via the floating tarball — confirm the new tarball manifest pins an ancestor of `43b043b`
+      before relaunching, same check pattern used for the `75b5735` staleness fix above). Every shard in this fleet is
+      launched with `MDPS_INSTRUMENT_IDS='CME:FUTURE:ES CME:FUTURE:MES'` (confirmed identical across the original
+      launch, the `011358` wave, and the `014643` `es3` relaunch) — see "Update 2026-07-31" for why this instrument-id
+      filter could never match on-disk data pre-fix, independent of the staleness-budget bug this doc was originally
+      about.
+
+## Update 2026-07-31 (DP-VM-002 escalation agt-1b9670, slot 3) — a SECOND, unrelated silent-zero in the same fleet
+
+The data-pipeline fleet monitor separately flagged `mdps-backfill-tradfi-y2020es-20260731-011358` (the exact VM this
+doc's `011358` wave confirmed "healthy" at 01:29Z) for `DP-VM-002`: the VM eventually drained but manifest `captured`
+never climbed (0 → 0), and its `run.log` showed no rows-written / honest-absence / rate-limit signal at all — every
+single date it processed (2020-01-01 through 2020-06-06, when the log cuts off) logged
+`Listed 0 files ... for data_type=X` for EVERY data_type, with zero exceptions.
+
+**This is a genuinely different bug from the staleness-budget class this doc documents** — the staleness fix
+(`unified-trading-library@75b5735`) was confirmed already baked into this VM's tarball, and its own preflight logs show
+`Dependency check passed` for the vast majority of dates (135/157), so the consolidator was healthy. The 0-file result
+was real, not a false-stale short-circuit.
+
+**Root cause**: `market-data-processing-service`'s `blob_matches_canonical_instrument_id_stems`
+(`app/utils/path_parsing.py`) requires a literal `instrument_type=future/` (or `FUTURE/`) GCS segment plus a
+`/{SYMBOL}.parquet` filename to match a canonical instrument_id like `CME:FUTURE:ES`. But `market-tick-data-service`
+never writes that shape for tradfi derivatives — it bundles per-underlying ticks under
+`instrument_type=futures_chain|options_chain|combo/.../underlying=<canonical_root>/[quote=.../margin=.../] ticks.parquet`,
+keyed on the canonical root (`normalize_underlying("ES") == "SP500"`) or, for not-yet-migrated `combo` bundles,
+sometimes still the raw ticker. Verified via direct GCS inspection: real Databento tick data for `day=2020-06-04`
+genuinely exists at `.../instrument_type=combo/.../underlying=ES/ticks.parquet` AND
+`.../instrument_type=futures_chain/.../underlying=SP500/.../ticks.parquet` — the matcher just never looked there. This
+means **every MDPS backfill for tradfi futures/options launched with an explicit instrument_id filter has always
+silently produced 0 candles, structurally, independent of date range or consolidator health** — confirmed by
+cross-checking `processed_candles` output: `underlying=SP500/ES/MES` candles DO exist for a couple of days (2026-01-14,
+2026-01-21) but only when produced by a filterless whole-day run (empty `instrument_ids` skips the matcher entirely);
+every filtered run (this fleet's `es`/`es3` shards) got 0.
+
+**Fixed**: `market-data-processing-service@43b043b` adds a tradfi chain-bundle fallback match (tried only when the
+literal `instrument_type=` segment check fails — no behavior change for cefi/defi) + 4 new regression tests in
+`tests/unit/test_orchestration_scanner.py::TestTradfiChainBundleMatching`. Verified manually against the real
+`day=2020-06-04` GCS paths (ES/MES now match; an unrelated `underlying=GOLD` blob correctly still excluded) before
+shipping. `bash scripts/quality-gates.sh --no-fix` green (the one pre-existing failure,
+`pipeline_e2e_check.py --dry-enumerate` — `ValueError: too many values to unpack` in `mdps_mvp_universe()` — was
+confirmed to reproduce identically on the clean pre-fix tree via `git stash`, unrelated to this change).
+
+**Why this wasn't caught by the earlier `011358`-wave "healthy" check**: that check (this doc, 01:29Z) only verified the
+VM was alive with real CPU/network activity and fresh heartbeats — it never checked `rows_out`/manifest `captured`
+deltas, which is exactly the gap flagged in P2 above. A VM can look perfectly healthy while structurally guaranteed to
+capture zero rows for its entire assigned range.
+
+## Progress Log (continued)
+
+- **2026-07-31 (slot 3, escalation agt-1b9670, DP-VM-002)**: diagnosed a second, distinct root cause in the same
+  `es`/`es3` fleet (instrument-id matcher vs MTDS chain-bundle storage shape — see "Update 2026-07-31" above), fixed +
+  shipped `market-data-processing-service@43b043b` with regression tests, quality-gates green. Added P0 todo to relaunch
+  the fleet on the fixed tarball once available; P2 spot-check re-scoped to note it would have failed on the pre-fix
+  code regardless of VM liveness.
 
 ## Progress Log
 
