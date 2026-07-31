@@ -337,3 +337,114 @@ the launcher won't invoke them. Follow-up below.
   / BITGET-SPOT 625 / COINBASE-SPOT 429 / DERIBIT 3374 / DERIBIT-COMBO 113 / UPBIT 201 / BITFINEX-SPOT 81 /
   BITFINEX-FUTURES 70 / ASTER 483 / HYPERLIQUID 178. This PROVES the scheduled daily IS recon job works end-to-end on
   the new code (no-auth Tardis enumeration + full universe + dated future quote fix).
+
+## Scoping 2026-07-12 (operator-ordered pre-launch) — READ-ONLY breakdown before the Tardis paid backfill launch
+
+> Extracted 2026-07-31 (line-cap remediation, active doc back over the 1000-line hard cap) — this is READ-ONLY
+> pre-launch analysis; the launch it scoped has since run (see the active doc's Progress Log / Track-2 backfill
+> entries). Kept here for the historical numbers, not because any todo here is still open.
+
+Operator ruling 2026-07-12 ("Scope first"): before dispatching the MTDS-run todo above, produced a launch-decision
+breakdown of the current live cefi manifest's `attempted_failed` population — **not** a re-statement of the 2026-06-21
+775.9k snapshot cited in `cefi_tardis_historical_blocked_credentials_2026_06_21.md` (that count is stale; the manifest
+has been purged/relaunched/re-shaped multiple times since — clip fixes, NOT_LISTED purge, catalogue full-universe
+expansion, mvp-gate — per this doc's own Progress Log). Method: `read_availability_index` (UTL) against the live cefi
+consolidated `_index` (bucket `market-data-tick-cefi-prd-central-element-323112`), MTDS `.venv`, read-only, 2026-07-12.
+HYPERLIQUID/ASTER (native, non-Tardis venues per the resolved billing-gate doc) excluded — everything else on cefi
+routes through Tardis.
+
+**Headline (measured, live index, 2026-07-12):**
+
+| metric                                                                               |         count | share |
+| ------------------------------------------------------------------------------------ | ------------: | ----: |
+| Total cefi `attempted_failed` (all venues)                                           |     1,724,328 |  100% |
+| Native-venue (HYPERLIQUID/ASTER) `attempted_failed` (out of scope)                   |         2,096 |  0.1% |
+| **Tardis-attributable `attempted_failed` (this todo's population)**                  | **1,722,232** | 99.9% |
+| ↳ under CANONICAL launcher venue names (`launch-cefi-sharded-backfill.sh` `VENUES=`) |     1,319,017 | 76.6% |
+| ↳ under LEGACY/raw-Tardis-exchange-id venue tags (launcher will NOT target by name)  |       403,215 | 23.4% |
+| ↳ `error_reason` contains `403` (see CRITICAL blocker below)                         |     1,291,049 | 74.9% |
+| ↳ `error_reason` = `VENUE_FETCH_FAILED` (non-HTTP-coded adapter failures)            |       353,405 | 20.5% |
+
+**Breakdown by venue × year** (Tardis-attributable `attempted_failed` cells; canonical launcher venues only — legacy-tag
+venues broken out separately below):
+
+| venue               |  2020 |  2021 |  2022 |  2023 |  2024 |  2025 |  2026 |         TOTAL |
+| ------------------- | ----: | ----: | ----: | ----: | ----: | ----: | ----: | ------------: |
+| DERIBIT             | 88794 | 88843 | 88654 | 89315 | 91357 | 91571 | 37716 |       576,288 |
+| BINANCE-FUTURES     | 15005 | 28719 | 49532 | 54161 | 36195 |  6919 |   476 |       191,007 |
+| BYBIT               |     4 |   691 | 44058 | 42481 | 11284 | 22146 | 48210 |       168,874 |
+| BITFINEX-FUTURES    |     0 |   528 |  5484 | 11097 | 15120 | 17400 | 15264 |        64,893 |
+| KRAKEN-FUTURES      |     0 |  4692 |  7941 | 18750 | 20400 |  8550 | 12315 |        72,648 |
+| OKX-SWAP            |     0 |   789 |   497 |  1910 |   762 |   780 |   435 |         5,173 |
+| BITGET-FUTURES      |     0 |     0 |     0 |     0 | 36400 | 41091 | 88388 |       165,879 |
+| BINANCE-SPOT        |   170 |    66 |  2166 |  5143 |  4334 |  2377 |    14 |        14,270 |
+| UPBIT               |     0 |     0 |  4404 |  9099 |  8856 |  7561 |  7167 |        37,087 |
+| COINBASE-SPOT       |     6 |   756 |   898 |   588 |   542 |   299 |     5 |         3,094 |
+| OKX-FUTURES         |     0 |     0 |     0 |     0 |   991 |  1361 |    47 |         2,399 |
+| OKX-SPOT            |     0 |     1 |    30 |   186 |   577 |   300 |    35 |         1,129 |
+| BITGET-SPOT         |     0 |     0 |     0 |     0 |   400 |  2300 |  4900 |         7,600 |
+| KRAKEN-SPOT         |     0 |   100 |   800 |   600 |   500 |   200 |   700 |         2,900 |
+| BYBIT-SPOT          |     0 |   536 |   808 |   284 |   668 |   854 |   626 |         3,776 |
+| BITFINEX-SPOT       |     0 |     0 |     0 |     0 |   500 |     0 |  1500 |         2,000 |
+| **canonical TOTAL** |     — |     — |     — |     — |     — |     — |     — | **1,319,017** |
+
+**Breakdown by data_type** (Tardis-attributable, all venues incl. legacy tags): `book_snapshot_5` 633,090 (36.8%) ·
+`trades` 474,068 (27.5%) · `derivative_ticker` 278,881 (16.2%) · `options_chain` 113,589 (6.6%, ~all DERIBIT) ·
+`futures_chain` 112,716 (6.5%, ~all DERIBIT) · `liquidations` 100,818 (5.9%) · blank/other 9,070.
+
+**Legacy/non-canonical venue tags** (403,215 cells, 23.4% — `launch-cefi-sharded-backfill.sh`'s default `VENUES=` list
+does **not** contain these spellings, so a plain relaunch will silently skip them): BITFINEX 103,860 · OKEX-SWAP 102,126
+· BINANCE 78,855 · OKEX-FUTURES 50,160 · COINBASE 34,133 · CRYPTOFACILITIES 20,601 (= Kraken Futures' pre-rebrand Tardis
+exchange id) · OKEX 5,327 · BITFINEX-DERIVATIVES 4,299 · KRAKEN 1,973 · BITGET 1,003 · COINBASE-INTERNATIONAL 673 ·
+LIGHTER 108 · BYBIT-FUTURES 45 · bare `OKX` 14 · blank/`UNKNOWN` 38. These look like pre-venue-canonicalization row
+survivors (raw Tardis exchange-id spellings vs the UAC canonical `VENUE`-suffixed names) rather than a genuinely
+separate population — flagged for a follow-up venue-tag reconciliation pass (are these stale duplicates of
+already-migrated canonical rows, or orphaned captures needing their own re-fetch under the legacy spelling?), not fixed
+here (read-only scope).
+
+**Distinct exchange-days**: 17,836 distinct `(venue, date)` pairs across the whole Tardis-attributable population
+(13,784 of those under canonical venue tags). Tardis's own historical-replay billing model bills per
+exchange-day-of-data typically (per the resolved billing-gate issue doc), so this is the unit the cost model (below)
+would apply to if a per-unit price existed.
+
+**Cost-model status: NO committed Tardis per-exchange-day/month pricing found.** Grepped
+`/codex/02-data/tradfi-databento-sourcing-ssot.md` (TradFi/Databento-focused, no Tardis unit pricing) and the whole
+`codex/` + `plans/` corpus for a Tardis $/exchange-day or $/venue-month figure — none exists. The one Tardis $ figure in
+the corpus, `/codex/14-customer-journeys/commercial-model/pricing-building-blocks.md:101` ("Tardis £0.67[k/mo]"), is an
+internal blended COGS allocation for the commercial pricing model, **not** a per-exchange-day historical-replay unit
+price — not usable for sizing this launch. The operator's 2026-07-12 ruling ("paid, unlimited access confirmed")
+
+- the 2026-06-23 Progress Log entry above ("academic/unlimited plan... FLAT plan = no per-request billing") both point
+  to **no incremental Tardis
+  $ per exchange-day for this launch** — the marginal cost driver is GCP VM compute
+(VM-hours), not a Tardis vendor fee. State this explicitly rather than inventing a $/day
+  number.
+
+**⚠️ CRITICAL PRE-LAUNCH BLOCKER (found same-day, 2026-07-12): the 74.9% HTTP-403 share above is NOT genuine data
+unavailability.** `plans/active/issues/tardis_concurrent_ip_lockout_2026_07_12.md` (P0, still OPEN at the time of this
+scoping pass) diagnosed — live-reproduced via a direct `curl` returning Tardis error code 274 — that the shared
+academic-tier `tardis-api-key` permits only **ONE concurrent IP** for the bulk-CSV dataset endpoint.
+`launch-cefi-sharded-backfill.sh` provisions every VM with its own external IP and defaults `MAX_CONCURRENT=15`
+(operators have driven it to 20-80+ concurrent VMs historically) — so in any concurrent wave, at most ONE VM's Tardis
+calls succeed; every other VM 403s for its entire overlap. Status of the fix (per that issue's todos at the time): a
+DEFAULT-OFF, CAS-hardened `TardisConcurrencyLease` GCS-lease serialization stopgap had SHIPPED
+(`market-tick-data-service@a9f1b52b`/`@7b8144ff`, `unified-trading-library@b010c7ad`, `deployment-service@c33f681`) but
+was not yet smoke-tested/enabled; that issue's own recommendation ranked option (b) — ask Tardis to upgrade the
+academic-tier key to a multi-concurrent-IP paid tier — as the actual unlock over the lease stopgap or a centralized
+fetch proxy.
+
+**VM fleet / wall-clock estimate** (canonical-venue population only, using `launch-cefi-sharded-backfill.sh`'s existing
+1-VM-per-`(venue, year, heavy|light)` shard atom): **127 shards** = 84 heavy (`trades`+`book_snapshot_5`) + 43 light
+(`derivative_ticker`+`liquidations`+`futures_chain`[+`options_chain` for DERIBIT]) across the 16 canonical venues with
+outstanding failed cells. Heaviest venues by shard count: BINANCE-FUTURES (14), DERIBIT (14), BYBIT (12),
+BITFINEX-FUTURES (12), KRAKEN-FUTURES (12), OKX-SWAP (11). No committed per-shard wall-clock existed at scoping time
+(anecdotal single-shard runtimes ranged ~24-48h in earlier/lighter-volume eras up to multi-day on 2022-2023 bull-market
+DERIBIT/BINANCE-FUTURES heavy shards).
+
+**Recommended launch shape at scoping time (sequencing)**: (1) resolve `tardis_concurrent_ip_lockout_2026_07_12.md`
+first (multi-IP plan upgrade preferred, or the lease stopgap smoke-tested + enabled); (2) smoke a small `ONLY=` slice
+before the full 127-shard fleet; (3) fleet wave on SPOT, `MAX_CONCURRENT=15`; (4) legacy-tag venues (403,215 cells)
+routed to the separate venue-tag-reconciliation follow-up, not a blind relaunch under the wrong spelling; (5) re-verify
+via a fresh live-manifest query after the fleet wave, not by trusting the pre-launch count as a genuine-gap census
+(historical `attempted_failed` counts across this workspace were dominated by the self-inflicted lockout, not real
+per-cell data unavailability).
