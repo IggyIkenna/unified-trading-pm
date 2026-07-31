@@ -559,8 +559,8 @@ mirroring the batch1/batch2/batch3/batch4 finalize pattern.
   staleness error on all 4**: initially found the tradfi consolidator's per-minute cron showing zero invocation logs
   13:45-18:23Z and (using the wrong audit-log filter) no pause/resume events, drafted a "self-recovered, unexplained"
   issue doc — then a `git pull` mid-session surfaced the REAL, already-filed explanation:
-  `issues/dp_consolidator_scheduler_paused_tradfi_recurrence_2026_07_31.md` (slot-2/12, resolved). The cron was
-  DELIBERATELY paused by the unrelated `mtds_available_at_cross_asset_backfill_2026_07_13.md` plan's own
+  `/plans/archive/issues/dp_consolidator_scheduler_paused_tradfi_recurrence_2026_07_31.md` (slot-2/12, resolved). The
+  cron was DELIBERATELY paused by the unrelated `mtds_available_at_cross_asset_backfill_2026_07_13.md` plan's own
   pause/apply/resume backfill protocol (paused 13:45:52Z); a dp-fleet-monitor escalation briefly (and mistakenly)
   resumed it, caught the mistake within ~3min (confirmed zero consolidator ticks fired), then re-paused it and
   registered a proper maintenance window. **Confirmed independently via GCS** (no scheduler IAM needed):
