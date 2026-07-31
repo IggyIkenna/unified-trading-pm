@@ -554,3 +554,28 @@ Phase B itself is a large multi-repo migration that warrants its own dedicated p
   watchdog script (`heartbeat_watchdog_4bi.sh`, also harness-tracked `run_in_background`) posting `/progress` every 5
   min with the live checkpoint line-count, specifically to avoid the `WorkerLivenessWatchdog` collateral-kill this doc's
   slot-7/slot-8/slot-15 entries already hit repeatedly. Still running — see next entry for the outcome.
+- 2026-07-31T23:0xZ (slot 15, `data_engineering`, backlog task `prediction_satellite_ao_dispatch_batch4-023`):
+  re-dispatched to this same 4b-i resume. **Real substantial progress confirmed**: slot-6's 2026-07-30 relaunch (and at
+  least one further unrecorded resume — no closing Progress Log entry exists between then and now, the same
+  "silent-under-reporting" pattern this doc has already flagged twice) drove the checkpoint from 157/348 to **299/348**
+  before dying again with no live process found (`ps aux` clean, no `migrate_prediction_trades`/`watchdog`/`resume_4bi`
+  process). Found the frontier scattered across 13 scratchpad copies (slots 6/7/8/9×2/10/12/13/15, newest dated
+  `2026-07-31T22:37Z`) — merged all by `day` (dedup, prefer higher `canonical_enriched`): **299/348 unique days, 0
+  anomalies, 0 errors** across the merge. **Fixed the durability gap this doc has now flagged 3 times**: uploaded the
+  merged checkpoint to
+  `gs://market-data-tick-pred-prd-central-element-323112/_ops/prediction_trades_migration_checkpoint_2026_07_31.jsonl`
+  (durable, bucket-colocated with the data it tracks) rather than leaving it scratchpad-only — any future resumer should
+  pull from there first, not re-scavenge scratchpads. **Blocker reproduces immediately on resume** (dry-run 1-day
+  probe): same `ManifestConsolidatorStaleError` as the 2026-07-29 episode. **This time confirmed NOT a bug** —
+  live-checked `uts-prod-manifest-consolidator-market-data-prediction-cron` is genuinely `PAUSED` (asia-northeast1) as
+  part of `mtds_available_at_cross_asset_backfill_2026_07_13.md`'s OWN currently-in-progress Apply/Resume protocol (that
+  plan's Progress Log #7, 2026-07-31 slot-16: snapshot+pause both complete, Apply not yet run, a real unbounded-memory
+  risk was found and its fix issue (`mtds_manifest_rebuild_scripts_unbounded_memory_no_chunking_2026_07_31.md`) already
+  SHIPPED same day — both its todos are `[x]`). So the sibling plan is legitimately mid-maintenance-window, not stuck on
+  the earlier dispatch-order bug this time. Per this doc's own established precedent (slot-14/15 2026-07-29): **not**
+  touching that plan's cron, **not** arming another watcher this pass (a proven-working pattern, but this todo alone has
+  now churned across 9 dispatches over 3 days largely re-deriving the same external-wait state — the
+  merge+durable-upload above is the actual new value this touch adds). Released via
+  `/skip-current-task {"reason_code": "GATED"}`. **For the next resumer**: pull the checkpoint from the GCS path above
+  (or any scratchpad copy — content-identical), re-verify the cron state fresh, and if `ENABLED`, resume with
+  `--report <checkpoint>` from day 300/348 (49 days remaining).
