@@ -442,3 +442,14 @@ and the residual-KeyError defense-in-depth path.
   redundant-dispatch waste `dp_escalation_worker_dispatch_no_open_issue_check_2026_07_29.md` already tracks (still
   `status: open`, P2, awaiting an operator/design decision that this 9th+ redundant dispatch further corroborates the
   need for).
+- **2026-07-31 (data_pipeline_failure escalation worker, agt-7f0c1a, slot 9) — 10th+ dispatch, numerator still
+  byte-identical.** Re-fired again: 158,475/1,518,154 attempted_failed (10.4%), labeled "STATIC BACKLOG — no new
+  attempted_failed activity in 2d". Numerator (158,475) is byte-identical to agt-fc78d0's immediately-prior verified
+  reading — only `attempted` (denominator) grew (1,509,137 → 1,518,154, +9,017), consistent with ordinary
+  forward-progress elsewhere, not this backlog moving. Per the established skip rule, did not re-run the live bounded
+  manifest read — did only a `git merge-base --is-ancestor` check on both shipped fix commits
+  (`market-tick-data-service@6a067cf1` aiodns, `@6c6fab03` HYPERLIQUID 429/K\*-symbol), both still ancestors of
+  `origin/live-defi-rollout`; working tree clean, no uncommitted changes in this slot's `market-tick-data-service`
+  clone. **No code change, no new todo** — same redundant-dispatch waste
+  `dp_escalation_worker_dispatch_no_open_issue_check_2026_07_29.md` already tracks (still `status: open`, P2, awaiting
+  an operator/design decision that this 10th+ redundant dispatch further corroborates the need for).

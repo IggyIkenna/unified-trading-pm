@@ -252,3 +252,10 @@ regression) is worse.**
   condition, it cannot deduplicate two dispatches of the identical event) — squarely Option A/B/C's territory. Session
   cost: doc read + git-ancestor batch check (5 commits) + a Progress Log append in the book_snapshot_5 doc, no GCS read,
   no code change. Still awaiting the operator/design decision on Option A/B/C.
+- **2026-07-31 (data_pipeline_failure escalation worker, agt-7f0c1a, slot 9) — `(cefi, derivative_ticker)` now at its
+  10th+ dispatch.** Same condition re-fired again with a byte-identical `attempted_failed` numerator (158,475) to
+  agt-fc78d0's immediately-prior verified reading; only `attempted` (denominator) moved (+9,017). Session cost: two file
+  reads + one `git merge-base --is-ancestor` check (both fix commits still in place) + a Progress Log append, no GCS
+  read, no code change. Combined across both tracked conditions in this doc ((cefi, derivative_ticker) at 10th+, (cefi,
+  book_snapshot_5) at 15th+), this backlog has now consumed 25+ full orchestrator-agent dispatches with no sign of the
+  underlying dedup gap closing — still awaiting the operator/design decision on Option A/B/C.
