@@ -89,19 +89,40 @@ drift_direction: advance-code
       referrers (`ci_satellite_ao_dispatch_batch2_2026_07_29.md` todo 13's own citation, and
       `ci_satellite_ao_dispatch_batch4_2026_07_31.md`'s archival-readiness table) to the new path — unified-trading-pm
       (this doc-flip commit).
-- [ ] [REVIEW] P1. **Re-check the 5 file-contention Deferred items (E1-E5) and re-verify E9-E10 (still-open F4 items).**
-      Each names the specific file/blocker it collided with, so this is a few greps and reads, not fresh investigation.
-      In particular: is `scripts/quality-gates-base/base-service.sh` free again (batch-2 todo 1 landed)? If so, E1
-      (`pm_bats_tests`' BATS phase) and the `--durations=25`/`base-library.sh` half of E2 are both unblocked as FILES —
-      note each as ready-for-batch-3 extraction. Is `scripts/quickmerge.sh` free again? If so, E3 (STAGE 1.6 dormancy
-      gate) and E4 (delete redundant pre-push hook) are both unblocked as FILES, in that priority order (E4 is P3/fully
-      conflict-cleared already — E3 is P2 with an operator-confirmed ruling behind it; note the file contention between
-      them for batch-3's own conflict-check to resolve). For E9/E10 (F4 crons/digest-drift-sweep): has the operator
-      ruled since 2026-07-29? **Do NOT draft the follow-up todos here** — this plan's scope is reconciliation, not fresh
-      drafting; note each as ready-for-batch-3 instead. Do NOT re-ask an operator question that was already escalated
-      (E6, E8, E14); just record whether it has been answered. **Done when**: each of E1-E5, E9, E10 has either (a) a
-      note that it is ready for batch-3 extraction because its file/blocker cleared, or (b) a re-verified confirmation
-      the contention/gate is still open.
+- [x] ✅ [REVIEW] P1. **Re-check the 5 file-contention Deferred items (E1-E5) and re-verify E9-E10 (still-open F4
+      items).** Each names the specific file/blocker it collided with, so this is a few greps and reads, not fresh
+      investigation. In particular: is `scripts/quality-gates-base/base-service.sh` free again (batch-2 todo 1 landed)?
+      If so, E1 (`pm_bats_tests`' BATS phase) and the `--durations=25`/`base-library.sh` half of E2 are both unblocked
+      as FILES — note each as ready-for-batch-3 extraction. Is `scripts/quickmerge.sh` free again? If so, E3 (STAGE 1.6
+      dormancy gate) and E4 (delete redundant pre-push hook) are both unblocked as FILES, in that priority order (E4 is
+      P3/fully conflict-cleared already — E3 is P2 with an operator-confirmed ruling behind it; note the file contention
+      between them for batch-3's own conflict-check to resolve). For E9/E10 (F4 crons/digest-drift-sweep): has the
+      operator ruled since 2026-07-29? **Do NOT draft the follow-up todos here** — this plan's scope is reconciliation,
+      not fresh drafting; note each as ready-for-batch-3 instead. Do NOT re-ask an operator question that was already
+      escalated (E6, E8, E14); just record whether it has been answered. **Done when**: each of E1-E5, E9, E10 has
+      either (a) a note that it is ready for batch-3 extraction because its file/blocker cleared, or (b) a re-verified
+      confirmation the contention/gate is still open. **DONE 2026-07-31 (slot 3, review craft).** Confirmed batch-2 todo
+      1 ([x]) and todo 11 ([x], line 386, the `${TMPDIR:-/tmp}` port) both landed, so all 3 contended files are free:
+      **(a) E1** ready for batch-3 — `base-service.sh` free. **(a) E2** ready for batch-3 — `base-library.sh` free (todo
+      11); note the `base-service.sh` half of this same source item was ALREADY shipped via todo 1(c) (`--durations=25`,
+      confirmed 2026-07-30), so only the `base-library.sh` add remains to extract. **(a) E3** ready for batch-3 —
+      `quickmerge.sh` free, P2, operator-ruled. **(a) E4** ready for batch-3 — `quickmerge.sh` free, P3, fully
+      conflict-cleared, top of the batch-3 queue for this file. **Mixed: E5** — file contention on `quickmerge.sh` is
+      cleared, but its own internal step-2 precondition is NOT: re-read
+      `quickmerge_environment_autodetect_forces_dev_off_main_2026_07_25.md` directly — its "Suggested next steps" #2
+      (`UnifiedCloudServicesConfig.environment`'s alias-precedence caller audit, the real root cause) and its own
+      `## Todos` entry (steps 2-4 bundled) are both still `- [ ]` unstarted; step 3 (the quickmerge.sh branch-check
+      broadening) is explicitly gated on step 2 by that doc's own text, independent of file availability. So E5 is
+      file-clear but blocker-still-open — batch-3 cannot dispatch step 3 alone; step 2 (the alias-precedence fix +
+      caller audit, NOT a quickmerge.sh touch) is the actual next actionable unit. **(b) E9** still open — searched for
+      any operator ruling since 2026-07-29 on the `digest-drift-sweep` non-convergence: found none. The only ruling on
+      record (`autonomous_session_operator_decisions_2026_07_25.md` item #28, dated 2026-07-26, "resolved — option A")
+      predates E9's creation and is already fully incorporated into its framing (that ruling only scoped the
+      hardening-fix todo, explicitly deferring the non-convergence root cause — which is exactly what E9 tracks). The
+      underlying `[INFRA] P2` todo in `post_cutover_silent_assumption_sweep_2026_07_23.md` (line 541) remains `- [ ]`
+      unchecked. **(b) E10** still open — same search, same result: no per-cron disable-vs-fix ruling found;
+      `na-eligibility-audit 2026-07-30` reconfirmed E10 stays parked as-is ("The F4 vacuous-cron item is parked as ci
+      batch2 Deferred E10"). No code shipped (pure reconciliation read); Evidence: `unified-trading-pm@<pending-sha>`.
 - [ ] [REVIEW] P2. **Re-verify E7 and E11-E13 have not silently changed state.** E7 (MTDS DEPLOYMENT_ENV leak,
       duplicate-gated on the sibling race doc's cascade-instrumentation step) — has that sibling doc's blocking step run
       yet? E11 (dirty-deps carve-out sibling docs) — still out of batch-2 todo 5's narrow scope, confirm no new doc has
@@ -137,3 +158,10 @@ drift_direction: advance-code
   `draft`-status banner (frontmatter has read `active` since the gate cleared 2026-07-31, body text hadn't caught up).
   See todo 1's own inline evidence for the full per-doc breakdown. Todo 2 (Deferred-item re-check) is next in the
   `sequential: true` chain.
+
+- **2026-07-31 (slot 3, review craft)** — dispatched todo 2 (all 3 contended files confirmed free: batch-2 todos 1 and
+  11 both landed). Re-checked all 7 items: E1-E4 all ready-for-batch-3-extraction (files clear); E5 file-clear but its
+  own internal step-2 precondition (a separate alias-precedence fix, not a file-contention issue) is still unstarted, so
+  it is NOT simply ready — flagged as mixed rather than force-marked ready; E9/E10 both re-confirmed still open, no
+  operator ruling found since 2026-07-29. See todo 2's own inline evidence for full citations. Todo 3 (E7/E11-E13
+  re-verify) is next in the `sequential: true` chain.
