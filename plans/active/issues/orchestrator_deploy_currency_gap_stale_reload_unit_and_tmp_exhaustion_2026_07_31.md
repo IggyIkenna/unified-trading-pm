@@ -17,7 +17,7 @@ summary: >-
   Fixed live via install-orchestrator-service.sh --restart. (2) /tmp (a 2GB tmpfs) was found 100% full, independently
   capable of breaking tmux worker-spawn, from two orphaned files (1.1G stale parquet + 453M interrupted GCS upload)
   unrelated to any tracked epic — cleared live.
-status: open
+status: resolved # (was: open) 2026-07-31 -- both todos done live, agent-orchestrator@90a2b2f + /tmp 2G->8G on-host
 nature: issue
 asset_group: [ao]
 stage: [meta]
@@ -47,7 +47,7 @@ depends_on: []
 source: >-
   Discovered live on the orchestrator VM (ip-172-31-5-118) via an interactive Claude Code session with direct host
   access, in response to an operator report ("agent-orchestrator down 15+ min").
-resolved_by:
+resolved_by: agent-orchestrator@90a2b2f (unit-file self-heal; /tmp 2G->8G was a live host fstab edit, no commit)
 locked_by:
 locked_since:
 ---
@@ -131,12 +131,20 @@ locked_since:
 - [x] ✅ [BACKEND] P1. **DONE 2026-07-31, `agent-orchestrator@90a2b2f`.** See "Fix applied" item 5 above for the shipped
       diff + live end-to-end verification (drift simulated twice, self-healed within one tick both times via the real
       cron entrypoint, API confirmed healthy after each).
-- [ ] [REVIEW] P3. Consider whether `/tmp` (2GB tmpfs, shared across every slot's ad-hoc scripts that don't set
-      `TMPDIR`) needs either a size bump or a standing cleanup sweep — it silently filled to 100% from two orphaned
-      files unrelated to any tracked epic, and nothing currently enforces the one-off-script self-cleanup convention
-      `/codex/06-coding-standards/script-homes.md` implies. Not urgent (cleared this session, currently 27% used), but
-      the failure mode (silent full-disk breaking tmux spawn) will recur without a monitor. Low priority — flag, don't
-      block on it.
+- [x] ✅ [REVIEW] P3. **DONE 2026-07-31 — operator ruling: size bump only** (asked via a scoped question rather than
+      picking a direction unilaterally, since this todo was an open "consider whether" call, not a bounded spec; a
+      standing cleanup sweep was explicitly declined). Bumped `/tmp` from 2G→8G on this VM: `/etc/fstab`'s
+      `tmpfs /tmp tmpfs ... size=2G ...` → `size=8G`, applied live via `mount -o remount,size=8G /tmp` (no unmount, no
+      disruption to open files) — confirmed `df -h /tmp` → `8.0G size, 6.1G avail`. **Deliberately did NOT touch**
+      `bootstrap_vm.sh`'s fleet-wide `TMP_TMPFS_SIZE:-2G` default: that script bootstraps the whole VM fleet, including
+      16GB worker VMs where the existing comment ("2G is safe on the 16G fleet VMs") is a real, still-valid constraint
+      an 8G default would violate — this incident's evidence (a 43.6GB-RSS runaway process, a 42GB gap between the old
+      2G cap and this 64GB central orchestrator VM's actual headroom) doesn't generalize to the smaller fleet. **Durable
+      without a code change**: `bootstrap_vm.sh` Step 7.6's own idempotency check
+      (`grep -qE '^tmpfs /tmp tmpfs' /etc/fstab`) only writes the fstab line when ABSENT — since one now exists (at 8G),
+      a future re-bootstrap of this VM will log "already present" and leave it untouched; only a from-scratch rebuild
+      (empty `/etc/fstab`) would regress to the 2G fleet default, a known, accepted, low-probability residual (this VM
+      has run continuously since its 2026-07-29 resize, no rebuild in its history).
 
 ## Codex SSOTs
 
@@ -154,3 +162,7 @@ locked_since:
   verified twice (drift simulated, self-healed within one cron tick both times, API confirmed healthy after each).
   `[REVIEW] P3` (`/tmp` sizing/monitoring) intentionally left open — it's an explicit "consider whether" judgment call
   per its own todo text, not a bounded fix; routing to the operator rather than picking a direction unilaterally.
+- **2026-07-31 (same session, second follow-up)**: operator chose "size bump only" for `[REVIEW] P3`. Closed — `/tmp`
+  bumped 2G→8G live on this VM (fstab + live remount, no restart/disruption), durable via `bootstrap_vm.sh`'s existing
+  idempotency (won't overwrite an already-present fstab line), fleet-wide default deliberately left untouched (see todo
+  for the 16GB-worker-VM rationale). Both todos in this doc are now closed; doc has no remaining open work.

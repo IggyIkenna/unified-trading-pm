@@ -52,7 +52,7 @@ authoritative_for:
   ]
 referenced_by: [cursor-configs/CLAUDE.md, cursor-configs/skills/check-agent-orchestrator/SKILL.md]
 owner:
-last_reviewed: 2026-07-21
+last_reviewed: 2026-07-31
 code_refs:
   [
     agent-orchestrator/server/regen_backlog_from_plan.py,
@@ -399,6 +399,18 @@ logs + skips) and `systemctl restart`s the orchestrator only when HEAD moved, or
 checkout HEAD. A deduped Slack alert (`_alert_wedge`) fires when the pull is wedged AND the clone is `≥10` commits
 behind. Full SSOT + the open "current-checkout-but-stale-process" hardening gap:
 [overview.md § "Deployment scripts"](/codex/04-architecture/agent-orchestrator-overview.md).
+
+**Deploy currency covers the systemd unit file too, not just app code** (closed 2026-07-31,
+`orchestrator_deploy_currency_gap_stale_reload_unit_and_tmp_exhaustion_2026_07_31.md`, `agent-orchestrator@90a2b2f`): a
+9-day-stale `/etc/systemd/system/orchestrator.service` (still running a removed `--reload` flag) survived two
+cron-triggered `systemctl restart`s on the same day, because `systemctl restart` reuses whatever unit is already
+installed — the code-currency loop above has no equivalent for the unit file itself. `ao-self-pull.sh` now also runs
+`install-orchestrator-service.sh --operator ubuntu --restart` unconditionally every tick, after the code-pull logic;
+that script was already idempotent (diffs the rendered SSOT `scripts/orchestrator.service` against the installed copy,
+no-ops when identical, restarts only when it actually applies a change), so no new diff-detection logic was needed —
+just wiring the existing self-heal-capable command into the cron loop — the same "extract the idempotent check, run it
+every tick regardless of what triggered this tick" pattern `rescale-memory-cap.sh` already established for the cgroup
+memory cap (`orchestrator_api_full_outage_stale_cgroup_memory_cap_2026_07_30.md`).
 
 ## Checking live status from a dev checkout (read-only)
 
