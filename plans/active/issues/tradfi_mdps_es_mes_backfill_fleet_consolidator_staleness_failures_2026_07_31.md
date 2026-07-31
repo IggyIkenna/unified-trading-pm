@@ -48,22 +48,22 @@ depends_on: []
 
 Fleet impact (`DeploymentsRegistry`, prefix `mdps-backfill-tradfi-`, 1-day archive as of 2026-07-31T01:30Z):
 
-| Shard    | Original failure                            | Relaunch status as of 01:30Z                                                                             |
-| -------- | ------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
-| y2020es  | failed exit=1 (00:00-01:00Z)                | **covered** — `mdps-backfill-tradfi-y2020es-20260731-011358` RUNNING, healthy (cpu 14%, fresh heartbeat) |
-| y2021es  | failed exit=1                               | **covered** — `...-y2021es-20260731-011358-r2` RUNNING                                                   |
-| y2022es  | failed exit=125 (reaped, likely same class) | **covered** — `...-y2022es-20260731-011358-r2` RUNNING                                                   |
-| y2023es  | failed exit=125 (reaped)                    | **covered** — `...-y2023es-20260731-011358` RUNNING                                                      |
-| y2024es  | failed exit=125 (reaped)                    | **covered** — `...-y2024es-20260731-011358` RUNNING                                                      |
-| y2025es  | failed exit=1                               | **covered** — `...-y2025es-20260731-011358` RUNNING                                                      |
-| y2026es  | failed exit=1                               | **covered** — `...-y2026es-20260731-011358` RUNNING                                                      |
-| y2020es3 | failed exit=1                               | **covered** — `...-y2020es3-20260731-014643` RUNNING (relaunched by this worker, 01:46:43Z)              |
-| y2021es3 | failed exit=1                               | **covered** — `...-y2021es3-20260731-014643` RUNNING (relaunched by this worker, 01:47:30Z)              |
-| y2022es3 | failed exit=1                               | **covered** — `...-y2022es3-20260731-014643` RUNNING (relaunched by this worker, 01:47:54Z)              |
-| y2023es3 | failed exit=1                               | **covered** — `...-y2023es3-20260731-014643` RUNNING (relaunched by this worker, 01:48:17Z)              |
-| y2024es3 | failed exit=1                               | **covered** — `...-y2024es3-20260731-014643` RUNNING (relaunched by this worker, 01:48:37Z)              |
-| y2025es3 | failed exit=1                               | **covered** — `...-y2025es3-20260731-014643` RUNNING (relaunched by this worker, 01:49:05Z)              |
-| y2026es3 | failed exit=1                               | **covered** — `...-y2026es3-20260731-014643` RUNNING (relaunched by this worker, 01:49:27Z)              |
+| Shard    | Original failure                            | Relaunch status as of 01:30Z                                                                                                                                                                           |
+| -------- | ------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| y2020es  | failed exit=1 (00:00-01:00Z)                | **covered** — `mdps-backfill-tradfi-y2020es-20260731-011358` RUNNING, healthy (cpu 14%, fresh heartbeat)                                                                                               |
+| y2021es  | failed exit=1                               | **covered** — `...-y2021es-20260731-011358-r2` RUNNING                                                                                                                                                 |
+| y2022es  | failed exit=125 (reaped, likely same class) | **covered** — `...-y2022es-20260731-011358-r2` RUNNING                                                                                                                                                 |
+| y2023es  | failed exit=125 (reaped)                    | **covered** — `...-y2023es-20260731-011358` RUNNING                                                                                                                                                    |
+| y2024es  | failed exit=125 (reaped)                    | **covered** — `...-y2024es-20260731-011358` RUNNING                                                                                                                                                    |
+| y2025es  | failed exit=1                               | **covered** — `...-y2025es-20260731-011358` RUNNING                                                                                                                                                    |
+| y2026es  | failed exit=1                               | **covered** — `...-y2026es-20260731-011358` RUNNING                                                                                                                                                    |
+| y2020es3 | failed exit=1                               | **covered** — `...-y2020es3-20260731-014643` RUNNING (relaunched by this worker, 01:46:43Z)                                                                                                            |
+| y2021es3 | failed exit=1                               | **covered** — `...-y2021es3-20260731-014643` RUNNING (relaunched by this worker, 01:47:30Z)                                                                                                            |
+| y2022es3 | failed exit=1                               | **covered** — `...-y2022es3-20260731-014643` RUNNING (relaunched by this worker, 01:47:54Z)                                                                                                            |
+| y2023es3 | failed exit=1                               | **covered** — `...-y2023es3-20260731-014643` RUNNING (relaunched by this worker, 01:48:17Z)                                                                                                            |
+| y2024es3 | failed exit=1                               | **covered** — `...-y2024es3-20260731-014643` RUNNING (relaunched by this worker, 01:48:37Z)                                                                                                            |
+| y2025es3 | failed exit=1                               | **covered** — `...-y2025es3-20260731-014643` RUNNING (relaunched by this worker, 01:49:05Z)                                                                                                            |
+| y2026es3 | failed exit=1                               | `...-y2026es3-20260731-014643` (01:49:27Z relaunch) drained pre-`43b043b`, hit DP-VM-002, 0 candles — covered by slot-2's fleet-wide `023743` relaunch (see P0 above), verified producing real candles |
 
 **Root cause** (all 14 shards, same signature — `run.log` tail on the original y2020es VM):
 
@@ -236,3 +236,29 @@ capture zero rows for its entire assigned range.
   P2 (post-completion rows_out/manifest spot-check) and P3 (identify `011358`-wave origin) remain open — P2 can't run
   yet (VMs are still mid-backfill); P3 is outside this worker's scope (registry has no dispatch-origin field to trace
   from, per the prior worker's note).
+- **2026-07-31 (slot 3, escalation agt-107d9b, DP-VM-002)**: a THIRD dp-fleet-monitor escalation for this same fleet,
+  this time flagging `mdps-backfill-tradfi-y2026es3-20260731-014643` specifically (the `011358`/`014643`-wave relaunch
+  of the `y2026es3` shard, launched 01:49:27Z — 20 min BEFORE `43b043b` landed at 02:10:11Z). Confirmed via `run.log`
+  this VM hit the exact chain-bundle-match bug documented above: `Listed 0 files`/`No files found` for every `data_type`
+  on every date it processed (2026-01-01..2026-05-22), then hard `DEPENDENCY CHECK FAILED` from 2026-05-23 onward — 0/0
+  candles for its whole assigned range, VM since drained. No new code fix needed (root cause + fix already covered by
+  `43b043b` above, per the "Update 2026-07-31" section). Verified the current floating `market-data-processing-service`
+  tarball (`4b84d5c`, manifest `created_at=2026-07-31T02:34:07Z`) is a descendant of `43b043b`
+  (`git merge-base --is-ancestor` confirmed), then relaunched this ONE shard —
+  `mdps-backfill-tradfi-y2026es3-20260731-024028` — with the exact original scope recovered from the dead VM's
+  `LAUNCH_PARAMS.json` (`CME:FUTURE:ES CME:FUTURE:MES`, 2026-01-01..2026-07-24, full, SPOT). Verified STARTED (GCE
+  RUNNING within 60s, `run.log` present ~2min after launch) and, past the no-fire-and-forget bar, verified the FIX
+  ITSELF works end-to-end: the first ~9 processed dates (2026-01-01..01-09) show real non-zero candle counts (305-761
+  candles per weekday) interleaved with correct 0-candle/`record_failed(NO_RAW_TICK_DATA_FOR_SHARD)` results on
+  non-trading days (e.g. Saturday 2026-01-03) — the pre-existing "finding 2" honest-failure signal (2026-07-27) working
+  as designed, not a new bug. This is the first concrete evidence in this doc that the `43b043b` fix produces REAL
+  candles in production, not just that a VM stays alive. **Discovered mid-verification that slot-2 (backend_engineer
+  craft) independently republished the tarball and fleet-relaunched all 14 shards (`RUN_TS=20260731-023743`, ~3 min
+  before my relaunch, see the P0 entry above) — including a SECOND concurrent `y2026es3` VM
+  (`...-y2026es3-20260731-023743`) with identical scope on the same fixed tarball.** `gcloud compute instances list`
+  confirmed both VMs genuinely RUNNING at once (real duplicate, not a self-terminating race like the earlier `es`-wave
+  duplicate). Deleted my own `...-024028` VM (SPOT, idempotent, zero rows captured by either VM before the delete — no
+  data lost) to leave slot-2's earlier, fleet-wide-tracked `023743` relaunch as the sole `y2026es3` writer and avoid
+  doubling SPOT compute/GCS write load. The candle-output verification above is still valid evidence the `43b043b` fix
+  works (observed on my VM before deleting it); P0 (fleet-wide relaunch) is fully covered by slot-2's work, nothing
+  further needed for `y2026es3` specifically.
