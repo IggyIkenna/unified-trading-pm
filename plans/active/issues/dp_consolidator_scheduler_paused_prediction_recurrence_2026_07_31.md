@@ -18,7 +18,7 @@ summary: >-
   already assigns to a DIFFERENT event (`DP_FLEET_MONITOR_RUN_FAILED`) — same failure class as the 2026-07-27
   DIGEST-003/004 gap, not yet retrofitted for this event. Filed as a follow-up todo, not fixed in this pass (needs a
   fresh registry_id + multi-repo edit, out of this one-shot escalation's scope).
-status: open
+status: resolved
 nature: issue
 asset_group: [prediction]
 stage: [data]
@@ -50,12 +50,20 @@ source: >-
   data_pipeline_failure escalation agt-e8d228 (dp-fleet-monitor → slot-2), CONTEXT: "CRITICAL
   DP_CONSOLIDATOR_SCHEDULER_PAUSED (DP-WATCHER-003) — manifest-consolidator scheduler
   'uts-prod-manifest-consolidator-market-data-prediction-cron' is PAUSED (not -legacy-)."
-resolved_by:
+resolved_by: slot-11 (dp_consolidator_scheduler_paused_prediction_recurrence-001, 2026-07-31)
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
 last_updated: 2026-07-31
 ---
+
+> **🗄️ ARCHIVED 2026-07-31** — `status: resolved`. Both todos done: the maintenance window is registered (live
+> 2026-07-31T04:56Z, TTL 4320min) and the `DP_CONSOLIDATOR_SCHEDULER_PAUSED`/`DP-WATCHER-003` registry_id collision is
+> fixed — `DP-WATCHER-004` assigned in `unified-api-contracts@02071c9f` + `deployment-service@bd9e962` (both
+> quality-gates.sh green, quickmerge-shipped), also reflected in `/codex/05-infrastructure/data-pipeline-alerts.md` +
+> `/codex/05-infrastructure/data-pipeline-alerts.registry.yaml`. The underlying prediction-cron pause itself remains
+> open, tracked separately in `/plans/active/mtds_available_at_cross_asset_backfill_2026_07_13.md` (not this doc's
+> scope). No further open work in this doc.
 
 # DP_CONSOLIDATOR_SCHEDULER_PAUSED recurrence — prediction cron (2026-07-31)
 
@@ -154,10 +162,13 @@ follow-up (mirrors the already-shipped DIGEST-003/004 and VM-008..011 fixes exac
 
 - [x] ✅ [OPS] P1. **Retroactively registered the maintenance window — DONE live 2026-07-31T04:56Z** (see command +
       verification above). No code shipped; pure infra CAS write via the sanctioned CLI. (repo: NA)
-- [ ] [CODE] P2. Fix the `DP_CONSOLIDATOR_SCHEDULER_PAUSED` / `DP-WATCHER-003` registry_id collision: assign
-      `DP_CONSOLIDATOR_SCHEDULER_PAUSED` its own stable id (e.g. `DP-WATCHER-004`, next free in the WATCHER category —
-      confirm against `codex/05-infrastructure/data-pipeline-alerts.registry.yaml` first), add the corresponding
-      `_dp_rule(...)` entry to `unified-api-contracts/unified_api_contracts/canonical/crosscutting/alerting/rules.py`'s
+- [x] ✅ [CODE] P2. Fix the `DP_CONSOLIDATOR_SCHEDULER_PAUSED` / `DP-WATCHER-003` registry_id collision — assigned
+      `DP_CONSOLIDATOR_SCHEDULER_PAUSED` its own stable id `DP-WATCHER-004` (next free in the WATCHER category, per
+      `codex/05-infrastructure/data-pipeline-alerts.registry.yaml`), added the corresponding `_dp_rule(...)` entry to
+      `unified-api-contracts/unified_api_contracts/canonical/crosscutting/alerting/rules.py`'s
       `DATA_PIPELINE_ALERT_RULES` (severity CRITICAL, escalation `page_operator`, mirroring `DP-CATALOG-001`'s shape),
-      update `consolidator_scheduler_watcher.py` line 136's `registry_id=` to the new id, and update the registry yaml +
-      its closed-set sync test. (repo: unified-api-contracts, deployment-service)
+      updated `consolidator_scheduler_watcher.py` line 136's `registry_id=` to `DP-WATCHER-004`, and updated the
+      registry yaml + the closed-set sync test (new `test_consolidator_scheduler_paused_has_own_registry_id`) + the
+      adjacent `meta_watchers.py` docstring and `test_data_pipeline_monitors.py` section comments. —
+      unified-api-contracts@02071c9f, deployment-service@bd9e962 (both quality-gates.sh green, quickmerge-shipped)
+      (repo: unified-api-contracts, deployment-service)

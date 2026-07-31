@@ -576,6 +576,20 @@ failure_modes:
       fires:
         "dp-fleet-monitor's own run_lifecycle() terminal-failure event (meta, like the watcher-down siblings above)",
     }
+  - {
+      id: DP-WATCHER-004,
+      category: WATCHER,
+      severity: CRITICAL,
+      event: DP_CONSOLIDATOR_SCHEDULER_PAUSED,
+      detector: check_consolidator_scheduler_paused,
+      kind: scriptable,
+      escalation: page_operator,
+      status: verbose,
+      fires:
+        "non--legacy- manifest-consolidator Cloud Scheduler job is PAUSED with no live maintenance window covering it
+        (accidental pause, not a sanctioned backfill pause) — previously misassigned DP-WATCHER-003's id, colliding with
+        DP_FLEET_MONITOR_RUN_FAILED",
+    }
 
   # --- DP-DIGEST (daily summaries, INFO) ---
   - {
