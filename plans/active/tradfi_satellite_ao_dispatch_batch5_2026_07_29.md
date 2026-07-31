@@ -467,6 +467,37 @@ mirroring the batch1/batch2/batch3/batch4 finalize pattern.
   hours from `build-continuous` + the hit-rate re-measure — skipping rather than busy-waiting, same posture as slot-2's
   entry above.
 
+- **2026-07-31 (slot-9, data_engineering craft, task `tradfi_satellite_ao_dispatch_batch5-001`)** — Resumed todo 2 a
+  third time. **Source doc is now STALE**:
+  `issues/tradfi_mdps_build_continuous_mismatches_2_and_4_still_open_2026_07_26.md` was archived 2026-07-30 (status:
+  resolved, 0 open todos) — this todo's own "flip the doc's open item" instruction no longer applies to that doc; the
+  live continuation of this exact thread is
+  `issues/tradfi_mdps_es_mes_backfill_fleet_consolidator_staleness_failures_2026_07_31.md` (filed today, still open,
+  P2/P3 items unresolved there). That doc revealed the `023743` fleet (launched 02:37:43Z, the one slot-2/16 were
+  tracking) has had THREE separate root-cause fixes land during/after its own launch: `unified-trading-library@75b5735`
+  (consolidator staleness-budget, 00:34:02Z — predates 023743, included), `market-data-processing-service@43b043b`
+  (chain-bundle instrument-id matcher, 02:10:11Z — predates 023743, included), `unified-api-contracts@4eeb495f` (missing
+  `ohlcv_1s` SchemaContract for tradfi COMBO/FUTURE, 03:30:26Z — **postdates** 023743's launch, NOT included).
+  Re-audited the full `023743` fleet directly (GCS `EXIT_STATUS` + `run.log` per shard, not just VM liveness):
+  2020/2021/2023/2025/2026 have a completed `es` (or `es`+`es3`) shard each (`EXIT_STATUS=1`, but only because the
+  missing-schema gap fails 6/36 sub-dimensions per date — a narrow, already-tracked, non-blocking `ohlcv_1s` gap, not a
+  hit-rate-relevant one). **2022 and 2024 had ZERO completed shards** — both `es`+`es3` were preempted early (~day
+  101/365 for 2022, before any `EXIT_STATUS` or `PROGRESS.json`), and slot-16's own 2024-resume attempt
+  (`y2024es-resume-20260731`) was ALSO preempted (cut off at day ~59/365, no exit marker) — so 2024 has never had a
+  shard survive to completion across 3 attempts. Relaunched both fresh: `mdps-backfill-tradfi-20260731-092148` (2022,
+  full year) and `mdps-backfill-tradfi-20260731-092224` (2024, full year), both non-force/SPOT via
+  `launch-mdps-backfill-vm.sh`. Verified all 3 fixes above are ancestors of the CURRENT floating tarballs before
+  launching (`git merge-base --is-ancestor <fix-sha> <manifest-pinned-sha>` — all 3 YES: mdps manifest `4b84d5c1`, uac
+  manifest `9ce47376`, utl manifest `5a4592f3`), so these two relaunches carry every known fix, unlike the `023743`
+  wave. Verified genuine progress past the no-fire-and-forget bar (not just VM liveness): both VMs' `run.log` show real
+  per-date subprocess iteration with passing dependency checks and real candle output within ~4-5 min of launch (2022 at
+  day 4/365, 2024 at day 3/366). Still hours from full-year completion on both — `build-continuous`
+  - the hit-rate re-measure remain gated on this. Declining/skipping rather than busy-waiting, same posture as slot-2
+    and slot-16 above. **Next dispatch**: check `mdps-backfill-tradfi-20260731-092148`/`-092224` for completion
+    (`EXIT_STATUS` in their `vm-logs/` dirs) before running `build-continuous --root ES` + the 1d/24h hit-rate
+    re-measure; if either was preempted again, relaunch non-force (skip-if-fresh resumes cleanly) rather than replaying
+    day one.
+
 ## Codex SSOTs
 
 No new durable contract is created by this plan — every todo executes an already-decided spec from its source doc, or
