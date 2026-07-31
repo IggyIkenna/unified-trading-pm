@@ -21,7 +21,7 @@ summary: >-
   further here, per that doc's ownership of the mechanism — filed as a satellite lead doc because the SIGABRT doc is
   at/over its 1000L hard cap (1001 lines), so a direct append would fail the SCOPED prek line-cap gate on any commit
   touching that file.
-status: open
+status: resolved
 nature: issue
 asset_group: [ui]
 stage: [meta]
@@ -48,11 +48,15 @@ source: >-
   Surfaced 2026-07-31 (slot-4, infra) executing the P2 cross-reference todo in
   `deployment_api_cloud_run_coldstart_flaky_exit0_blocks_prd_sa_cutover_2026_07_31.md`, itself filed 2026-07-31 (slot-5,
   infra) while executing `bucket_iam_write_protection_per_tier_2026_06_09.md` P2.2c.
-resolved_by:
+resolved_by: "slot-14 2026-07-31T22:20Z, folded into deployment_api_sigabrt_crash_loop_2026_07_24.md's [INFRA] P0 todo"
 locked_by:
 locked_since:
 depends_on: []
 ---
+
+> **🟢 RESOLVED / ARCHIVED 2026-07-31 — this doc's one todo is done and folded into
+> `/plans/active/issues/deployment_api_sigabrt_crash_loop_2026_07_24.md`'s open `[INFRA] P0` cold-container todo (slot
+> 14, 2026-07-31T22:20Z). No further action here — see that doc for the live investigation.**
 
 # Additional lead for the SIGABRT crash-loop investigation: reproducible fresh-cold-start failure on non-live revisions
 
