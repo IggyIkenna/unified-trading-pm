@@ -662,7 +662,7 @@ file, not here.
       2026-07-23) with 0 genuine HTTP 429s and 0 `attempted_failed` shard corruption across 92,317+43,913 run.log lines,
       proving the shared TheGraph key pool holds at N=2. Full evidence + the companion pagination-fix re-backfill
       validation (which also surfaced an unrelated COMPOUND_V3 regression, filed separately) in
-      `plans/active/issues/defi_mvp_backfill_optimization_ready_2026_07_20.md`'s corresponding todo.
+      `plans/archive/issues/defi_mvp_backfill_optimization_ready_2026_07_20.md`'s corresponding todo.
 - [ ] [DATA] P1. **Resume paused DeFi crons NOT scoped to `dex_pool_state`** + fix the honest-coverage-nightly
       right-size + codex-drift doc — gated on Track 1 (LENDING migration + canon walk above) + Track 2 (path-shape-pin
       code half) + the currently-running per-instrument migration VM finishing first (resuming now would race live
@@ -682,6 +682,16 @@ file, not here.
       `dex_pools_handler.py` writer's own collision exposure) tracked in
       `defi_track01_per_instrument_and_canon_id_2026_07_24.md` (§ "Per-instrument re-architecture", the Solana
       pool-symbol todo) — not duplicated here.
+- [ ] [REVIEW] P3. **Decide whether the DeFi writers should stop emitting PHYSICAL zero-row absence-marker parquets at
+      all, in favour of manifest-only absence** (`record_empty()` as the sole SSOT, per
+      `/codex/02-data/honest-absence-downstream-handling.md:101-102`). **Migrated here 2026-07-31** from
+      `/plans/archive/issues/defi_lst_empty_marker_hardcoded_venue_2026_07_27.md` (archival ritual step 1 — it was
+      prose-only there, so it would have evaporated with the archive). That doc's own fix was correctly narrower
+      (eliminate the hardcoded/fallback `venue=LST`, `mtds@5bf8a3c7`); this is the remaining, genuinely-open
+      architectural question it explicitly left out of scope. **Why `[REVIEW]`/NA, not AO-dispatchable**: the blocker is
+      a real unknown — `_write_empty_lst_marker`'s docstring claims a GCS-scan consumer depends on the physical marker
+      existing. Done-when: either that consumer is identified (→ keep the marker, record why) or proven not to exist (→
+      file the removal as its own bounded todo).
 
 ## Contradiction resolution (pre-SSOT) — archived, 95% closed
 

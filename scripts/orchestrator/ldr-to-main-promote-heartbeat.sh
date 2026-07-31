@@ -8,7 +8,7 @@
 # GitHub Actions' `schedule:` trigger.
 #
 # WHY (operator decision 2026-07-27/28, Option A of
-# plans/active/cicd_mvp_ldr_to_main_pipeline_2026_06_30.md Phase-2 "Cron reliability"):
+# plans/archive/2026_07/cicd_mvp_ldr_to_main_pipeline_2026_06_30.md Phase-2 "Cron reliability"):
 # GHA silently drops a meaningful fraction of scheduled ticks under load (measured ~37% at
 # one point; corrected to ~80-90% 2026-07-21 per codex/08-workflows/ci-cd-flow.md — but even
 # at 80-90% delivery, a run of dropped ticks can still stretch an intended 15-min drain
@@ -44,7 +44,7 @@
 #   PM_REPO_OWNER    — GitHub owner (default: IggyIkenna)
 #   PROMOTE_REF      — ref to dispatch workflow_dispatch against (default: live-defi-rollout)
 #
-# SSOT: plans/active/cicd_mvp_ldr_to_main_pipeline_2026_06_30.md Phase-2 "Cron reliability".
+# SSOT: plans/archive/2026_07/cicd_mvp_ldr_to_main_pipeline_2026_06_30.md Phase-2 "Cron reliability".
 
 set -uo pipefail # deliberately NOT -e: one workflow's dispatch failing must not skip the other
 

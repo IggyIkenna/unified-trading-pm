@@ -978,7 +978,7 @@ disable dead staging crons, **leave promotion crons at `*/15`** (they're $0 self
 - `codex/05-infrastructure/` — runner + VM infra conventions; workflow-template rollout
 - `/codex/04-architecture/ci-alerting.md` — notify-slack carrier (touched if cron cadence changes)
 - Related: `plans/archive/issues/github_billing_dashboard_access_2026_07_09.md` (the billing-token that made this
-  measurable), `plans/active/cicd_mvp_ldr_to_main_pipeline_2026_06_30.md` (the LDR→main promotion refactor this
+  measurable), `plans/archive/2026_07/cicd_mvp_ldr_to_main_pipeline_2026_06_30.md` (the LDR→main promotion refactor this
   overlaps)
 
 ## Progress Log

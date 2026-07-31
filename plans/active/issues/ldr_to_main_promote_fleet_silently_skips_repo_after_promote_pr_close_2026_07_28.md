@@ -43,7 +43,7 @@ scope: [engineer, admin]
 tags: [ci-cd, ldr-to-main, promote-fleet, automation-gap, self-hosted-runners, deployment-service]
 related:
   - /plans/active/issues/fleet_wide_qg_self_hosted_runner_capacity_crisis_2026_07_27.md
-  - /plans/active/cicd_mvp_ldr_to_main_pipeline_2026_06_30.md
+  - /plans/archive/2026_07/cicd_mvp_ldr_to_main_pipeline_2026_06_30.md
   - /codex/08-workflows/ci-cd-flow.md
 created: 2026-07-28
 parent_epic: infrastructure_master

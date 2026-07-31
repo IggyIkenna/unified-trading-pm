@@ -11,7 +11,7 @@ summary:
   supersedes the WS-L plan family and resolves the promotion-stall issue docs. It also folds in the still-real HEALTH
   work needed to keep the MVP flowing (harden the flaky QG dep-clone, the legacy-ref cleanup, the --delete-branch guard,
   cron reliability, local↔CI parity)."
-status: active
+status: complete
 nature: process
 asset_group: [ci]
 stage: [meta]
@@ -28,9 +28,9 @@ priority: P0
 estimate_class: refactor
 estimate_baseline_ai_days: 3
 estimate_calibrated_ai_days: 1.2
-last_updated: 2026-07-28
-locked_by: live-defi-rollout
-locked_since: 2026-06-30
+last_updated: 2026-07-31
+locked_by:
+locked_since:
 supersedes:
   [
     cicd_consolidated_remaining_2026_06_24.md,
@@ -54,6 +54,16 @@ source:
 assigned_role: infra
 drift_direction: advance-code
 ---
+
+> **🗄️ ARCHIVED 2026-07-31 (operator-ruled locked-plan unlock + archive sweep, 2026-07-30 Q&A session)** — all 29 todos
+> verified `[x]` done; the `locked_by: live-defi-rollout` lock (a branch name, never a person) was cleared under the
+> operator's explicit `[unlock-plan]` ruling covering all 7 fully-done locked docs. The durable MVP pipeline contract
+> this plan shipped lives in `/codex/08-workflows/ci-cd-flow.md` (the SSOT) and `CLAUDE.md` § "Git discipline + shipping
+> pipeline" — both were repointed off this plan in the same commit, so nothing depends on it being "the in-flight
+> plan-of-record" any more. **No open deferrals**: the WS-I re-home landed in
+> `/plans/archive/2026_07/ws_i_service_to_service_auth_migration_2026_07_28.md`, and the `AWS_BUILD_ROLE_ARN` credential
+> ask is a documented **reversible switch** (`AWS_BUILDS_ENABLED`, default OFF per the operator's "AWS builds were a
+> TEST" ruling), not pending work. Per `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`.
 
 ## Deferred work — migrated to:
 

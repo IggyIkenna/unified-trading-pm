@@ -667,7 +667,7 @@ BP_VER=$("$BASEDPYRIGHT_CMD" --version 2>/dev/null | head -1 | awk '{print $NF}'
 # promoter died ~7h 2026-06-29; the SIT-producer break slipped through because this gate used to be wired
 # ONLY into PM's repo-specific quality-gates.sh, not this shared base). Lives here so EVERY repo runs the
 # single script against its own workflows — no per-repo copies to maintain. (pyyaml is present in all repo
-# venvs + system python.) SSOT: plans/active/cicd_mvp_ldr_to_main_pipeline_2026_06_30.md.
+# venvs + system python.) SSOT: plans/archive/2026_07/cicd_mvp_ldr_to_main_pipeline_2026_06_30.md.
 _WF_YAML_GATE="${WORKSPACE_ROOT:-$(cd "$REPO_ROOT/.." && pwd)}/unified-trading-pm/scripts/quality_gates/check_workflow_yaml_valid.py"
 if [[ -f "$_WF_YAML_GATE" ]]; then
     if python3 "$_WF_YAML_GATE"; then

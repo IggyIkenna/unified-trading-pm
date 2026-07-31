@@ -417,7 +417,7 @@ Manifest correctness / denominator / honest-coverage work (excludes pure backfil
    retire DERIBIT-COMBO as its own venue key, remove phantom `OPTION` from bare OKX, move `market_metadata` off the MTDS
    daily axis, backfill historical rows, add `missing_dates` to breakdown entries, spot-check 5 more CeFi venues.
 
-9. **Phantom captures — defi manifest (2026-06-28)** `plans/active/issues/phantom_captures_defi_2026_06_28.md` 219,529
+9. **Phantom captures — defi manifest (2026-06-28)** `plans/archive/issues/phantom_captures_defi_2026_06_28.md` 219,529
    `captured` rows with no backing parquet (10.5% of captured defi scope), concentrated in `swaps_ohlcv_*`/UNISWAP_V4. 3
    unchecked: diagnose systematic writer failure, apply reconciliation, confirm no recurrence.
 

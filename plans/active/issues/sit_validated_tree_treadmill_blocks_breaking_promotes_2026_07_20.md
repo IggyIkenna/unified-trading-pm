@@ -22,7 +22,7 @@ tags: [ci-cd, sit, promotion, ldr-main, race-condition, quality-gates]
 related:
   [
     /plans/active/issues/uac_value_only_config_change_breaks_utl_untested_2026_07_20.md,
-    /plans/active/cicd_mvp_ldr_to_main_pipeline_2026_06_30.md,
+    /plans/archive/2026_07/cicd_mvp_ldr_to_main_pipeline_2026_06_30.md,
   ]
 created: 2026-07-20
 parent_epic: infrastructure_master

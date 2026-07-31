@@ -6,7 +6,7 @@ title:
 summary:
   "A local `docker build` of all 15 cloned Python service images (current code, amd64, against the current UTL base
   digest) split cleanly into **two build contracts**:"
-status: open
+status: resolved
 nature: process
 asset_group: [infrastructure]
 stage: [meta]
@@ -35,12 +35,20 @@ source:
   ]
 assigned_vm: planning
 resolved_by:
-locked_by: live-defi-rollout
+  "Pattern-A normalization ruled + canaried on alerting-service, then fanned out to all remaining Pattern-B services
+  (2026-07-28); the strategy-service market-tick-data-service vendoring was confirmed a non-issue (the real dependency
+  was dropped 2026-06-10 in d1f5a6a8) and its vestigial COPY removed as a side effect"
+locked_by:
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
-last_updated: 2026-07-28
+last_updated: 2026-07-31
 ---
+
+> **🗄️ ARCHIVED 2026-07-31 (operator-ruled locked-plan unlock + archive sweep, 2026-07-30 Q&A session)** — 0 open / 4
+> done, re-verified today. The `locked_by: live-defi-rollout` lock (a branch name, never a person) is cleared under the
+> operator's explicit `[unlock-plan]` ruling covering all 7 fully-done locked docs. Per
+> `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`.
 
 # Service Dockerfiles inconsistent — normalize Pattern B → Pattern A
 

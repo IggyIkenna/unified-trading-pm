@@ -146,7 +146,8 @@ bookkeeping.
 ## §4 — P2 cross-repo CODE defect: deployment-ui hard-codes a `staging` promotion stage
 
 **Docs:** `plans/active/monitoring_control_plane_master_2026_06_10.md` ↔
-`plans/active/cicd_mvp_ldr_to_main_pipeline_2026_06_30.md` · **Code:** `deployment-ui/src/pages/RepoCi.tsx` L1432-1490
+`plans/archive/2026_07/cicd_mvp_ldr_to_main_pipeline_2026_06_30.md` · **Code:** `deployment-ui/src/pages/RepoCi.tsx`
+L1432-1490
 
 The shipped deployment-ui "promotion-pipeline strip" hard-codes 5 stages including `staging`, but the fleet default is
 **LDR→`main` DIRECT, staging BYPASSED** (per-repo `ldr_main` toggle). The verifier's judgement: _"the plan text is a

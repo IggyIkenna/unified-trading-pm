@@ -23,7 +23,7 @@ scope: [engineer, admin]
 tags: [ci-cd, quickmerge, workspace-manifest, staging, versions, dependency-gate]
 related:
   - /plans/archive/2026_07/github_actions_ci_cost_reduction_2026_07_15.md
-  - /plans/active/cicd_mvp_ldr_to_main_pipeline_2026_06_30.md
+  - /plans/archive/2026_07/cicd_mvp_ldr_to_main_pipeline_2026_06_30.md
   - /plans/active/issues/post_cutover_silent_assumption_sweep_2026_07_23.md
 created: 2026-07-23
 priority: P2

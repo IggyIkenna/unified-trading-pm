@@ -272,8 +272,8 @@ validated against UAC v1 can promote after UAC v2 lands.
 
 > ## ⛔ SUPERSEDED 2026-07-25 — OPTION B WAS NEVER BUILT; THE SEMVER-AGENT RETARGET SHIPPED INSTEAD
 >
-> _(Recorded 2026-07-26 by `/plan-reconcile ci`. `/plans/active/cicd_mvp_ldr_to_main_pipeline_2026_06_30.md` § Phase 4
-> already logged that "the codex `ci-cd-flow.md` § 'Release tag reconciler' **+ the Option-B doc** are now
+> _(Recorded 2026-07-26 by `/plan-reconcile ci`. `/plans/archive/2026_07/cicd_mvp_ldr_to_main_pipeline_2026_06_30.md` §
+> Phase 4 already logged that "the codex `ci-cd-flow.md` § 'Release tag reconciler' **+ the Option-B doc** are now
 > stale/contradictory and need reconciliation" — the codex half landed 2026-07-25; this is the doc half.)_
 >
 > **Everything below this banner describes a decision that was reversed two days later.** Do not implement the
@@ -285,8 +285,8 @@ validated against UAC v1 can promote after UAC v2 lands.
 > - `semver-agent`'s trigger was retargeted `branches: [staging]` → **`push: branches: [main]`** in the fleet SSOT
 >   template — `unified-trading-pm@0b128a725` (verified ancestor of `origin/live-defi-rollout` this session).
 > - Rolled to **all 22** `ldr_main` + `version_source=git-tag` repos (per-repo shas in
->   `/plans/active/cicd_mvp_ldr_to_main_pipeline_2026_06_30.md` § Phase 4). Verified independently here by reading an
->   installed copy: `unified-api-contracts/.github/workflows/semver-agent.yml` is `push: branches: [main]`.
+>   `/plans/archive/2026_07/cicd_mvp_ldr_to_main_pipeline_2026_06_30.md` § Phase 4). Verified independently here by
+>   reading an installed copy: `unified-api-contracts/.github/workflows/semver-agent.yml` is `push: branches: [main]`.
 > - **Proven live end-to-end**: semver-agent fired on `unified-api-contracts` main 2026-07-25T20:01:24Z, and
 >   `unified-trading-library` **v0.57.0 was genuinely published to Artifact Registry** — the first real publish since
 >   2026-06-27.
@@ -432,7 +432,7 @@ codex, or a future staging re-entry gets a dead pipeline.
       repos, and proven live (`unified-trading-library` v0.57.0 published to Artifact Registry, the first real publish
       since 2026-06-27). The PM-reconciler minter was **never built** and is architecturally incoherent for git-tag
       repos. See the ⛔ banner on § "Option B" below and
-      [/plans/active/cicd_mvp_ldr_to_main_pipeline_2026_06_30.md](/plans/active/cicd_mvp_ldr_to_main_pipeline_2026_06_30.md)
+      [/plans/archive/2026_07/cicd_mvp_ldr_to_main_pipeline_2026_06_30.md](/plans/archive/2026_07/cicd_mvp_ldr_to_main_pipeline_2026_06_30.md)
       § Phase 4. Left unticked because the item as _worded_ must not be executed; its retirement is parked for the
       operator.
 - [x] ✅ [INFRA] P1. **Fix F2 — make the BACKSTOP able to report the outage.** `scripts/cicd/reconcile_release_tags.py`

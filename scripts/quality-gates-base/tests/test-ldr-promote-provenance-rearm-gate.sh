@@ -4,7 +4,7 @@
 # Delete-when: NA
 #
 # Regression test for the LDR->main fleet promoter's "provenance re-arm leak" fix
-# (plans/active/cicd_mvp_ldr_to_main_pipeline_2026_06_30.md, "Operator decisions / notes"
+# (plans/archive/2026_07/cicd_mvp_ldr_to_main_pipeline_2026_06_30.md, "Operator decisions / notes"
 # -- "Provenance-gate leak" -- closed 2026-07-28).
 #
 # Bug (found 2026-06-30): `.github/workflows/ldr-to-main-promote-fleet.yml` ran the

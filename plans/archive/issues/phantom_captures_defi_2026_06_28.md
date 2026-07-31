@@ -4,7 +4,12 @@ title: Phantom captures — defi manifest (2026-06-28)
 summary:
   219,529 phantom captures (10.5% of captured scope) in defi MTDS manifest — swaps_ohlcv_* dominant across Uniswap
   V3/V4, Balancer, SushiSwap. Major data integrity finding.
-status: open # 2026-07-27: todo 2 verified done + flipped; todo 1's "already covered" [x] was FALSE (see Progress Log) -- reverted. 2026-07-28 (slot-15): todo 1 genuinely completed (root cause diagnosed, see Progress Log) -- all 3 todos now done, but locked_by blocks archival (needs [unlock-plan], never autonomous) -- see 2026-07-30 finalize-reconciliation note in Progress Log
+status:
+  resolved # all 3 todos genuinely done: todo 2 verified + flipped 2026-07-27; todo 1 genuinely completed 2026-07-28
+  # (slot-15, root cause diagnosed via git/commit archaeology, same evidence as
+  # defi_satellite_ao_dispatch_batch1_2026_07_25 todo 52); todo 3 done 2026-07-26. The earlier "todo 1's [x] was FALSE"
+  # note described a transient 2026-07-27 state that the 2026-07-28 completion superseded -- it is no longer true.
+  # Unlocked + archived 2026-07-31 under the operator's [unlock-plan] ruling.
 nature: process
 asset_group: [defi]
 stage: [meta]
@@ -18,18 +23,28 @@ priority: P1
 source: [reconcile_phantom_manifest_rows_all.py, mvp_catalogue_finalization_v10_2026_06_27.md (G3 phantom audit task)]
 assigned_vm: NA
 resolved_by:
-locked_by: live-defi-rollout
+  "reconciliation applied 2026-06-28 (run bj755413o, exit_code=0, 219,632 phantom rows flipped to attempted_failed);
+  root cause diagnosed 2026-07-28 (slot-15) with the same evidence as defi_satellite_ao_dispatch_batch1_2026_07_25 todo
+  52; current-writer confirmation 2026-07-26"
+locked_by:
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
-last_updated: 2026-07-27
-locked_since: 2026-05-21
+last_updated: 2026-07-31
+locked_since:
 ---
 
 # Phantom captures — defi manifest (2026-06-28)
 
-> **⚠️ NOT ARCHIVED (2026-07-27 /plan-vintage-audit correction; UPDATED 2026-07-30)** — a 2026-07-27 pass verified todo
-> 2 ("apply reconciliation") is genuinely done (2026-06-28T21:35:53Z, `bj755413o`, exit_code=0, 219,632 phantoms
+> **🗄️ ARCHIVED 2026-07-31 (operator-ruled locked-plan unlock + archive sweep, 2026-07-30 Q&A session)** — all 3 todos
+> verified `[x]` done today; the `locked_by: live-defi-rollout` lock (a branch name, never a person) is cleared under
+> the operator's explicit `[unlock-plan]` ruling covering all 7 fully-done locked docs. The history below is retained
+> verbatim as the record — note the "todo 1's `[x]` was FALSE" line describes a **transient 2026-07-27 state that the
+> 2026-07-28 (slot-15) completion superseded**; it is not a live caveat. Per
+> `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`.
+
+> **⚠️ Historical note (2026-07-27 /plan-vintage-audit correction; UPDATED 2026-07-30)** — a 2026-07-27 pass verified
+> todo 2 ("apply reconciliation") is genuinely done (2026-06-28T21:35:53Z, `bj755413o`, exit_code=0, 219,632 phantoms
 > flipped, verified against `plans/archive/mvp_backfill_defi_onchain_v10_operational_log_2026_07_24.md:754-762` +
 > `plans/active/mvp_backfill_defi_onchain_v10_2026_06_27.md`'s banner) and flipped it. Todo 1's `[x]` was then found
 > FALSE on 2026-07-27 (its "already covered by `defi_satellite_ao_dispatch_batch1_2026_07_25.md`" citation didn't hold
@@ -40,9 +55,8 @@ locked_since: 2026-05-21
 > identical evidence. **All 3 todos in this doc are now `[x]` done.** Confirmed 2026-07-30
 > (defi_satellite_ao_dispatch_batch1 finalize reconciliation pass): re-verified batch1 todo 52 is checked done with this
 > same evidence before touching this doc, per the finalize plan's explicit instruction not to flip anything here without
-> that confirmation. **Still NOT archived** — `locked_by: live-defi-rollout` blocks archival pending an explicit
-> `[unlock-plan]` ask (never autonomous); `status` intentionally left as-is pending that unlock, per the finalize task's
-> own instruction not to change this doc's status.
+> that confirmation. **The `[unlock-plan]` ask this paragraph was waiting on was granted by the operator on 2026-07-30**
+> — lock cleared, `status` flipped to `resolved`, archived 2026-07-31 (see the banner above).
 
 > Auto-filed by the G3 phantom-manifest audit (`reconcile_phantom_manifest_rows_all.py --asset-group defi --dry-run`)
 > run during Phase-0 catalogue finalization. Found 219,529 `capture_status=captured` rows in the MTDS defi manifest

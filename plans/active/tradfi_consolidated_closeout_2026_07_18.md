@@ -561,7 +561,7 @@ Everything below is scoped so these cells are canonical, honestly-covered, and s
   skills, no bare `.md` todo tracker to check).
 
 - **TradFi-specific residuals**:
-  - [`plans/active/issues/cme_combo_underlying_extraction_garbage_2026_07_19.md`](/plans/active/issues/cme_combo_underlying_extraction_garbage_2026_07_19.md)
+  - [`plans/archive/issues/cme_combo_underlying_extraction_garbage_2026_07_19.md`](/plans/archive/issues/cme_combo_underlying_extraction_garbage_2026_07_19.md)
     — 0 open todos (closed/archived/record-only)
   - [`plans/archive/issues/instruments_service_fx_adapter_key_unresolved_2026_07_23.md`](/plans/archive/issues/instruments_service_fx_adapter_key_unresolved_2026_07_23.md)
     (`status: resolved`) — 0 open todos (closed/archived/record-only)

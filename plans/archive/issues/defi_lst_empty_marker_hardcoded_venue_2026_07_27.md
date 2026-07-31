@@ -11,7 +11,7 @@ summary: >-
   `venue=LST` aggregate path with no manifest row pointing at them. 551 such objects (334 `_migrated_` tombstones from
   the 2026-06 canonicalisation pass + 217 freshly-written `empty.parquet` files dated 2026-07-26) were found and deleted
   this session; the write-path bug itself is still live as of commit 45a9fe69 (2026-07-26).
-status: open
+status: resolved
 nature: issue
 asset_group: defi
 stage: [data]
@@ -40,9 +40,22 @@ source:
     after fresh-verifying the bucket's 7-day soft-delete retention",
   ]
 resolved_by:
-locked_by: live-defi-rollout
-locked_since: 2026-05-21
+  "market-tick-data-service@5bf8a3c7 (2026-07-29) — _write_empty_lst_marker now loops the 4 real (venue, chain) pairs
+  with no fallback/placeholder venue; the 551 orphaned venue=LST objects were deleted 2026-07-27 after a fresh
+  soft-delete-retention check"
+locked_by:
+locked_since:
 ---
+
+> **🗄️ ARCHIVED 2026-07-31 (operator-ruled locked-plan unlock + archive sweep, 2026-07-30 Q&A session)** — the lock on
+> this doc was **INVALID on its face**: `locked_by: live-defi-rollout` is a branch name, not a person, and
+> `locked_since: 2026-05-21` predated this doc's own `created: 2026-07-27` by two months. Operator ruling: clear the
+> invalid lock, then apply the normal unlock-and-archive-if-done logic. It is done — the single `[BACKEND]` todo shipped
+> (`market-tick-data-service@5bf8a3c7`). Its one remaining item was **prose-only** (the architectural question of
+> whether to drop the physical zero-row marker write entirely in favour of manifest-only absence), so per archival
+> ritual step 1 it was migrated into a real tracked `- [ ]` todo before this archive landed:
+> `/plans/active/defi_consolidated_closeout_2026_07_18.md` § "Open follow-ups" (`[REVIEW] P3`). Per
+> `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`.
 
 # lst_rates empty-marker writer hardcodes venue=LST
 
@@ -180,11 +193,12 @@ venue-vs-`VENUE_TO_ADAPTER_KEY` membership check is added to the canonicality or
       `/codex/02-data/honest-absence-downstream-handling.md:101-102` in favor of manifest-only absence recording)
       remains genuinely open and out of this shipping todo's scope — not resolved here, left for a future decision.
 
-**Note on `locked_by`**: this doc's frontmatter carries `locked_by: live-defi-rollout` / `locked_since: 2026-05-21` —
-both look like a stale/invalid artifact (a branch name is not a valid locker identity, and the lock date predates this
-doc's own `created: 2026-07-27`). Not cleared autonomously (never auto-unlock); flagged here for operator review. This
-does not block the checkbox flip above, only this doc's own archival (which isn't due yet regardless — the
-architectural-question sub-item stays open).
+**Note on `locked_by` — RESOLVED 2026-07-31**: this doc's frontmatter carried `locked_by: live-defi-rollout` /
+`locked_since: 2026-05-21`, flagged here as a stale/invalid artifact (a branch name is not a valid locker identity, and
+the lock date predated this doc's own `created: 2026-07-27`). The operator reviewed exactly this flag on 2026-07-30 and
+ruled the lock invalid — cleared, and the doc archived. The architectural-question sub-item did NOT evaporate with the
+archive: it is now a tracked `- [ ]` todo in `/plans/active/defi_consolidated_closeout_2026_07_18.md` § "Open
+follow-ups".
 
 ## Provenance
 

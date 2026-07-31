@@ -6,7 +6,7 @@ summary:
   live correctness defects. The fixes are designed against proven in-repo patterns and ready to implement, but every one
   changes the live capture path and its validation needs a 2-VM TheGraph canary + a re-backfill — both blocked by the
   expired gcloud CLI auth. This doc is the dispatchable unit.
-status: open
+status: resolved
 nature: issue
 asset_group: defi
 stage: [data]
@@ -26,9 +26,19 @@ drift_direction: stable
 depends_on: []
 source: ["filed 2026-07-20 during DeFi MVP backfill work; frontmatter completed 2026-07-21 to pass the schema gate"]
 resolved_by:
-locked_by: live-defi-rollout
-locked_since: 2026-05-21
+  "mtds@6e2677b9 (pagination) + deployment-service@684813a (SPOT preemption contract) + the 2026-07-29 slot-5 live
+  validation (2-VM TheGraph canary satisfied by mtds-dex-swaps-backfill-1/-2 production evidence;
+  mtds-lending-indices-20260729-193529 proved the pagination fix past the 1000-item cap)"
+locked_by:
+locked_since:
 ---
+
+> **🗄️ ARCHIVED 2026-07-31 (operator-ruled locked-plan unlock + archive sweep, 2026-07-30 Q&A session)** — 0 open / 5
+> done, re-verified today. The `locked_by: live-defi-rollout` lock (a branch name, never a person; its
+> `locked_since: 2026-05-21` predated this doc's own `created: 2026-07-20`) is cleared under the operator's explicit
+> `[unlock-plan]` ruling. **No dangling deferrals**: the final todo's "follow-up verification todo filed" resolves to
+> `/plans/archive/issues/defi_compound_v3_lending_indices_zero_capture_regression_2026_07_29.md`, whose verification
+> todo is itself `[x]` done (2026-07-30). Per `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`.
 
 # DeFi-MVP backfill optimization + correctness defects — READY
 
@@ -90,23 +100,23 @@ watch the 429 rate before any wide wave.**
       reorder/drop. **CANARY at 2 VMs, watch 429, before any wide wave.**
 
       **DONE 2026-07-27 (slot-6).** (a)/(b)/(c) as originally scoped were ALREADY SHIPPED — `mtds@ff1b5d51`
-                                      "feat(defi): MTDS DeFi perf bundle -- concurrency knobs + async fan-out + executor-offload", ancestor of
-                                      `origin/live-defi-rollout`. `defi_max_inflight_tasks`/`defi_max_concurrent_uploads` are live-consumed
-                                      (`ParallelPerSymbolRunner` fan-out in `solana_defi_handler.py`/`dex_pools_handler.py`; dedicated
-                                      `_defi_upload_executor.py` mirroring `tardis_csv_transport._get_parse_executor`). This dispatch closed the ONE
-                                      real gap found: `defi_max_concurrent_fetches` was declared but never read (grep confirmed zero non-definition
-                                      references), contradicting its own docstring's decoupled-from-defi_max_inflight_tasks promise. Fixed in
-                                      `mtds@4cf0ea3d` — new `_defi_fetch_semaphore.py` (lazy-singleton `asyncio.Semaphore`, mirrors
-                                      `_defi_upload_executor.py`'s shape) applied at the 3 fetch call sites in this todo's scope: `solana_defi_handler.py`'s
-                                      `collector(session)` dispatch, and `_dex_pools_subgraph.py`'s Solana-native `fetch_*` dispatch + the shared
-                                      EVM/TheGraph `_execute_subgraph_query`'s `session.post(...)` (the doc's own "structural fact" — the shared key
-                                      pool is the real ceiling — held only for the request, released before the retry backoff). New
-                                      `tests/unit/test_defi_fetch_semaphore.py` (4 tests) + 132 pre-existing solana_defi/dex_pools handler tests + the
-                                      full `quality-gates.sh` suite (7101 items) all green. Deliberately did NOT touch
-                                      `evm_defi_handler.py`/`lending_indices_handler.py`/`risk_params_handler.py` — each has its own separate
-                                      `_execute_subgraph_query` copy, out of this todo's named scope. **CANARY at 2 VMs still required before any wide
-                                      wave** — unchanged, still gated on the Auth block (§ below); this todo covers the CODE only, per the doc's own
-                                      "safe to implement + unit-test without it; only their live validation is blocked."
+                                              "feat(defi): MTDS DeFi perf bundle -- concurrency knobs + async fan-out + executor-offload", ancestor of
+                                              `origin/live-defi-rollout`. `defi_max_inflight_tasks`/`defi_max_concurrent_uploads` are live-consumed
+                                              (`ParallelPerSymbolRunner` fan-out in `solana_defi_handler.py`/`dex_pools_handler.py`; dedicated
+                                              `_defi_upload_executor.py` mirroring `tardis_csv_transport._get_parse_executor`). This dispatch closed the ONE
+                                              real gap found: `defi_max_concurrent_fetches` was declared but never read (grep confirmed zero non-definition
+                                              references), contradicting its own docstring's decoupled-from-defi_max_inflight_tasks promise. Fixed in
+                                              `mtds@4cf0ea3d` — new `_defi_fetch_semaphore.py` (lazy-singleton `asyncio.Semaphore`, mirrors
+                                              `_defi_upload_executor.py`'s shape) applied at the 3 fetch call sites in this todo's scope: `solana_defi_handler.py`'s
+                                              `collector(session)` dispatch, and `_dex_pools_subgraph.py`'s Solana-native `fetch_*` dispatch + the shared
+                                              EVM/TheGraph `_execute_subgraph_query`'s `session.post(...)` (the doc's own "structural fact" — the shared key
+                                              pool is the real ceiling — held only for the request, released before the retry backoff). New
+                                              `tests/unit/test_defi_fetch_semaphore.py` (4 tests) + 132 pre-existing solana_defi/dex_pools handler tests + the
+                                              full `quality-gates.sh` suite (7101 items) all green. Deliberately did NOT touch
+                                              `evm_defi_handler.py`/`lending_indices_handler.py`/`risk_params_handler.py` — each has its own separate
+                                              `_execute_subgraph_query` copy, out of this todo's named scope. **CANARY at 2 VMs still required before any wide
+                                              wave** — unchanged, still gated on the Auth block (§ below); this todo covers the CODE only, per the doc's own
+                                              "safe to implement + unit-test without it; only their live validation is blocked."
 
 ## Descoped / do-NOT-implement-as-specced (workflow demolished these)
 

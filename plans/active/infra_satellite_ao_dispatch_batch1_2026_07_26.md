@@ -55,7 +55,7 @@ related:
     /plans/active/issues/issue_docs_remediation_sweep_2026_06_02.md,
     /plans/active/codex_violations_ratchet_to_five_2026_06_10.md,
     /plans/active/repo_scripts_governance_audit_2026_06_18.md,
-    /plans/active/issues/service_dockerfile_pattern_normalization_2026_06_17.md,
+    /plans/archive/issues/service_dockerfile_pattern_normalization_2026_06_17.md,
     /plans/active/codex_vs_repo_docs_ssot_audit_2026_06_01.md,
     /plans/active/issues/prod_terraform_drift_backlog_reconcile_2026_07_24.md,
     /plans/archive/issues/plan_hygiene_precommit_and_agentic_resolution_2026_06_10.md,

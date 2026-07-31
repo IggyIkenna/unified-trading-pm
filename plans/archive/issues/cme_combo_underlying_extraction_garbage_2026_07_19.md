@@ -9,7 +9,7 @@ summary:
   the v9 migrator. 88% are batch_databento (9,974) vs 12% batch_massive (1,321), so the Massive purge does NOT fix it.
   These cannot resolve to a real product root, so they block canonical per-underlying bundling for combo/chains and are
   QUARANTINED (loud, never fake-canonicalized) by the canonical-path migration.
-status: open
+status: resolved
 nature: issue
 asset_group: [tradfi]
 stage: [data]
@@ -25,12 +25,20 @@ source: "Massive-removal scoping (workflow wlixucotm) + migration dry-run (mtds@
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
-locked_by: live-defi-rollout
-locked_since: 2026-05-21
+locked_by:
+locked_since:
 assigned_vm: planning
 resolved_by: mtds@f645ea02+uac@7e179ae8 (recovery+guard, 2026-07-20); root-cause doc uac@8080b645+mtds@377dd90c
-  (2026-07-26) # all 3 Remediation items now struck through/done; locked_by blocks archival — leave status/lock as-is
+  (2026-07-26) # all 3 Remediation items struck through/done
 ---
+
+> **🗄️ ARCHIVED 2026-07-31 (operator-ruled locked-plan unlock + archive sweep, 2026-07-30 Q&A session)** — all 3
+> Remediation items below are struck-through/DONE (content-recovery pass 2026-07-20, root cause + write-time guard
+> verified 2026-07-26, unrecoverable rows quarantined with `attempted_failed`). This doc carries no checkboxes by
+> construction — its work is tracked in the numbered Remediation list. The `locked_by: live-defi-rollout` lock (a branch
+> name, never a person; its `locked_since: 2026-05-21` predated this doc's own `created: 2026-07-19`) is cleared under
+> the operator's explicit `[unlock-plan]` ruling. Per
+> `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`.
 
 # CME combo/chain `underlying=` garbage — pre-existing extraction defect
 

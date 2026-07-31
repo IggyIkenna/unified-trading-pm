@@ -330,7 +330,7 @@ picture.
       completed run, no re-walk needed.
   - [`plans/active/issues/phantom_audit_estate_coverage_gap_2026_07_10.md`](/plans/active/issues/phantom_audit_estate_coverage_gap_2026_07_10.md)
     — 0 open todos (closed/archived/record-only).
-  - [`plans/active/issues/phantom_captures_defi_2026_06_28.md`](/plans/active/issues/phantom_captures_defi_2026_06_28.md)
+  - [`plans/archive/issues/phantom_captures_defi_2026_06_28.md`](/plans/archive/issues/phantom_captures_defi_2026_06_28.md)
     (3 open)
     - **[SCRIPT] P1.** Diagnose defi phantom root cause: uniform ~25,400 counts across 7 `swaps_ohlcv_*` granularities
       suggest a single batch writer failure.
@@ -477,7 +477,7 @@ picture.
     - **[VERIFY] P3.** Reconcile the `swaps_ohlcv_4h` timeframe discrepancy before either path ships.
   - [`plans/active/issues/defi_five_never_captured_venues_fix_2026_07_22.md`](/plans/archive/issues/defi_five_never_captured_venues_fix_2026_07_22.md)
     — 0 open todos (closed/archived/record-only).
-  - [`plans/active/issues/defi_mvp_backfill_optimization_ready_2026_07_20.md`](/plans/active/issues/defi_mvp_backfill_optimization_ready_2026_07_20.md)
+  - [`plans/archive/issues/defi_mvp_backfill_optimization_ready_2026_07_20.md`](/plans/archive/issues/defi_mvp_backfill_optimization_ready_2026_07_20.md)
     (3 open)
     - **[SCRIPT] P0.** Both DeFi launchers MISS the SPOT preemption contract (zero
       `lc_write_preemption_signal_file`/`lc_write_launch_params` calls) — must land before any wide SPOT wave.

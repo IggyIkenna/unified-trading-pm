@@ -40,12 +40,12 @@ last_updated: 2026-07-27
 > **[2026-07-12 correction, findings 347 (P1) + 86 (P2, near-duplicate), §A2 B-queue**
 > (`plans/active/issues/plan_reconciliation_operator_decisions_2026_07_11.md`)**]**: this doc's "`staging→main` /
 > `LDR→staging` promote PRs" framing below (was written 2026-06-25, last updated 2026-06-27) describes a staging-routed
-> pipeline shape that is now stale. Per `plans/active/cicd_mvp_ldr_to_main_pipeline_2026_06_30.md` (operator-reaffirmed
-> 2026-06-30, the current pipeline SSOT): **staging is DORMANT** — the MVP default is LDR→main DIRECT (SIT-green +
-> quality-gates-v2 + quickmerge-provenance only), not `LDR→staging`/`staging→main`. Separately, hard evidence further
-> moots the noise this issue describes: **all native GitHub webhooks on the 18 CodeBuild projects in AWS account
-> `427895769566`/ap-northeast-1 were deleted 2026-07-03** (verified commits `f22fde880` "disable AWS image builds per
-> operator 2026-07-03" + `d93388305` "AWS image builds behind `AWS_BUILDS_ENABLED` switch... +
+> pipeline shape that is now stale. Per `plans/archive/2026_07/cicd_mvp_ldr_to_main_pipeline_2026_06_30.md`
+> (operator-reaffirmed 2026-06-30, the current pipeline SSOT): **staging is DORMANT** — the MVP default is LDR→main
+> DIRECT (SIT-green + quality-gates-v2 + quickmerge-provenance only), not `LDR→staging`/`staging→main`. Separately, hard
+> evidence further moots the noise this issue describes: **all native GitHub webhooks on the 18 CodeBuild projects in
+> AWS account `427895769566`/ap-northeast-1 were deleted 2026-07-03** (verified commits `f22fde880` "disable AWS image
+> builds per operator 2026-07-03" + `d93388305` "AWS image builds behind `AWS_BUILDS_ENABLED` switch... +
 > `toggle-aws-image-builds.sh`", both in this repo's history; no commits since have touched
 > `scripts/cicd/toggle-aws-image-builds.sh` or the AWS build workflows, so the switch remains OFF as of 2026-07-12) —
 > with the webhooks gone, CodeBuild no longer fires on PR events at all, so the `failure` commit-status this issue

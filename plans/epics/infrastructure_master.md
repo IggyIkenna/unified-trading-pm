@@ -38,7 +38,7 @@ related_plans:
   - ../active/bucket_fold_portfolio_state_2026_07_17.md
   - ../active/bucket_iam_write_protection_per_tier_2026_06_09.md
   - ../active/candle_canonical_path_migration_execution_2026_07_24.md
-  - ../active/cicd_mvp_ldr_to_main_pipeline_2026_06_30.md
+  - ../archive/2026_07/cicd_mvp_ldr_to_main_pipeline_2026_06_30.md
   - ../active/codex_violations_ratchet_to_five_2026_06_10.md
   - ../active/data_pipeline_check_mdps_features_2026_07_20.md
   - ../archive/2026_07/defi_dedicated_bucket_shared_migration_2026_07_13.md
@@ -531,10 +531,11 @@ per-tier/per-domain SAs replace the project-wide god-SA (§8 implementation)
 
 **status**: active · **estimate**: 4.0 cal AI-days (class: infra)
 
-### [`cicd_mvp_ldr_to_main_pipeline_2026_06_30`](../active/cicd_mvp_ldr_to_main_pipeline_2026_06_30.md)
+### [`cicd_mvp_ldr_to_main_pipeline_2026_06_30`](../archive/2026_07/cicd_mvp_ldr_to_main_pipeline_2026_06_30.md)
 
-**status**: active · **estimate**: 1.2 cal AI-days (class: refactor) **title**: CI/CD MVP — LDR→SIT→main, simplified
-single-path pipeline (supersedes the WS-L complex pipeline)
+**status**: complete (archived 2026-07-31 — 29/29 todos done; durable SSOT is `/codex/08-workflows/ci-cd-flow.md`) ·
+**estimate**: 1.2 cal AI-days (class: refactor) **title**: CI/CD MVP — LDR→SIT→main, simplified single-path pipeline
+(supersedes the WS-L complex pipeline)
 
 ### [`data_pipeline_check_mdps_features_2026_07_20`](../active/data_pipeline_check_mdps_features_2026_07_20.md)
 

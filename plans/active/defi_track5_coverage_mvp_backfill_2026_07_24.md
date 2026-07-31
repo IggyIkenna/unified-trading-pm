@@ -22,7 +22,7 @@ related:
     /plans/active/mvp_backfill_defi_onchain_v10_2026_06_27.md,
     /plans/active/defi_pipeline_e2e_and_coverage_validation_2026_06_20.md,
     /plans/archive/2026_07/defi_onchain_derivable_values_and_date_drift_2026_06_20.md,
-    /plans/active/issues/defi_mvp_backfill_optimization_ready_2026_07_20.md,
+    /plans/archive/issues/defi_mvp_backfill_optimization_ready_2026_07_20.md,
     /plans/archive/2026_07/candle_canonical_path_migration_execution_2026_07_24.md,
   ]
 created: "2026-07-24"
@@ -106,7 +106,7 @@ drift_direction: advance-code
       (sub-agent investigation): WRONG per this item's own cited source** —
       `plans/archive/2026_07/defi_consolidated_closeout_history_2026_07_18.md:617` states the knobs (none of the 3 exist
       yet — confirmed via grep) are "inert alone — 0% gain, 3 unread fields — ship knobs+fanout+executors as ONE commit
-      or not at all." `plans/active/issues/defi_mvp_backfill_optimization_ready_2026_07_20.md` (open, locked_by:
+      or not at all." `plans/archive/issues/defi_mvp_backfill_optimization_ready_2026_07_20.md` (open, locked_by:
       live-defi-rollout) already carries the correctly-bundled todo; nothing shipped standalone. **Separately**: the
       2-VM TheGraph canary is operator-owned ("ship code + I run the canary") — do not launch VMs for it. (repo:
       market-tick-data-service)

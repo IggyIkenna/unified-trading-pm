@@ -97,7 +97,8 @@ UAC-internal.
   branch.**
 - SSOTs: `/codex/08-workflows/ci-cd-flow.md` (gate set / quickmerge / strict-quickmerge / LDR-is-SSOT /
   branch-protection / semver + wheel release / deployment flow) + `/codex/05-infrastructure/per-tab-worktrees.md`
-  (commit attribution); in-flight refactor `plans/active/cicd_mvp_ldr_to_main_pipeline_2026_06_30.md`.
+  (commit attribution). The MVP-pipeline refactor that established this model **COMPLETED + ARCHIVED 2026-07-31** —
+  every contract above now lives in the codex SSOT; there is no in-flight plan-of-record.
 
 ## CI verification after every push
 

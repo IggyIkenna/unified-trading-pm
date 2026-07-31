@@ -85,7 +85,7 @@ binary drifted off its pinned version on the VM fleet) ·
 (ARCHIVED 2026-07-27; UTL/UAC dedup/reimplementation consolidation refactor) ·
 [stash_pile_workspace_cleanup_2026_06_03.md](/plans/active/stash_pile_workspace_cleanup_2026_06_03.md) (cross-host git
 stash-pile audit/cleanup runbook) ·
-[issues/service_dockerfile_pattern_normalization_2026_06_17.md](/plans/active/issues/service_dockerfile_pattern_normalization_2026_06_17.md)
+[issues/service_dockerfile_pattern_normalization_2026_06_17.md](/plans/archive/issues/service_dockerfile_pattern_normalization_2026_06_17.md)
 (9 services' Dockerfiles inconsistent vs the clean base-image pattern) ·
 [issues/execution_service_aioresponses_to_adapter_mock_migration_2026_06_23.md](/plans/archive/issues/execution_service_aioresponses_to_adapter_mock_migration_2026_06_23.md)
 (ARCHIVED 2026-07-27, RESOLVED — execution-service@9ce159a7, aiohttp-3.14 CVE bump unblocked).

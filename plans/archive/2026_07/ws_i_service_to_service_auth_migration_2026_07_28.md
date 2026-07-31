@@ -19,7 +19,7 @@ related:
   [
     /codex/07-security/service-to-service-auth.md,
     /plans/archive/2026_06/cicd_consolidated_remaining_2026_06_24.md,
-    /plans/active/cicd_mvp_ldr_to_main_pipeline_2026_06_30.md,
+    /plans/archive/2026_07/cicd_mvp_ldr_to_main_pipeline_2026_06_30.md,
   ]
 created: 2026-07-28
 last_updated: 2026-07-28
@@ -37,7 +37,7 @@ superseded_by:
 depends_on: []
 source:
   "Re-homed from the archived plans/archive/2026_06/cicd_consolidated_remaining_2026_06_24.md ▸ WS-I (contract_hardening
-  #3), per operator decision 2026-07-27 (relayed via plans/active/cicd_mvp_ldr_to_main_pipeline_2026_06_30.md's
+  #3), per operator decision 2026-07-27 (relayed via plans/archive/2026_07/cicd_mvp_ldr_to_main_pipeline_2026_06_30.md's
   'Archival caveat' note: WS-I is still wanted; the other ~51 non-WS-I todos in that archived plan — D13
   version-out-of-source, misc P2/P3 hygiene — stay deferred/archived, NOT re-homed here)."
 assigned_role: backend_engineer

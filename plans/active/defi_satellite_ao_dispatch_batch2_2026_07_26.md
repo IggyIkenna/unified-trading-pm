@@ -332,7 +332,7 @@ drift_direction: advance-code
       `defi_track5_coverage_mvp_backfill_2026_07_24.md`'s own deferral to this doc) and is separately gated on the
       auth-blocked `gcloud compute` access noted in this doc's § Auth block; this todo covers the code + unit-test
       portion only, which the source doc states is safe to implement without live infra. Source:
-      `plans/active/issues/defi_mvp_backfill_optimization_ready_2026_07_20.md` § "Optimization — the perf bundle" (P1
+      `plans/archive/issues/defi_mvp_backfill_optimization_ready_2026_07_20.md` § "Optimization — the perf bundle" (P1
       item). Done when: the 3 new knobs exist in `service_config.py`; `solana_defi_handler.py` and
       `dex_pools_handler.py` fan out fetch+upload via `ParallelPerSymbolRunner` with sequential post-loop
       manifest-write/heartbeat application; blocking upload calls run on a dedicated `ThreadPoolExecutor`; new/updated

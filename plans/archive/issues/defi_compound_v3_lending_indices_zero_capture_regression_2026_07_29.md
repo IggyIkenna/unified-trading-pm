@@ -37,7 +37,7 @@ scope: [engineer]
 tags: [defi, lending-indices, compound_v3, honest-absence, regression, data-correctness]
 related:
   [
-    plans/active/issues/defi_mvp_backfill_optimization_ready_2026_07_20.md,
+    plans/archive/issues/defi_mvp_backfill_optimization_ready_2026_07_20.md,
     plans/active/defi_consolidated_closeout_2026_07_18.md,
   ]
 created: 2026-07-29

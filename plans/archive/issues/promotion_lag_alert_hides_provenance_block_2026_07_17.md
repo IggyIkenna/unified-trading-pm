@@ -15,7 +15,7 @@ summary: |
   `feat(cefi): canonical-completeness write side — 3-tuple builder (FIX 0), decompose ALL venues (D1)...` — real
   feature code, no trailer, not a carve-out. deployment-ui carries the same marker (its Vercel team-permission comment
   on top is unrelated noise that makes the PR read `UNSTABLE`).
-status: open
+status: resolved
 nature: process
 asset_group: [ci]
 stage: [meta]
@@ -26,7 +26,7 @@ related:
   [
     "/codex/08-workflows/ci-cd-flow.md",
     "/codex/04-architecture/ci-alerting.md",
-    "/plans/active/cicd_mvp_ldr_to_main_pipeline_2026_06_30.md",
+    "/plans/archive/2026_07/cicd_mvp_ldr_to_main_pipeline_2026_06_30.md",
     "/plans/archive/issues/hatch_vcs_main_tag_ancestry_gap_breaks_cross_repo_pip_install_2026_07_26.md",
   ]
 created: 2026-07-17
@@ -45,9 +45,17 @@ source: >-
   block-scalar — a wrapped title continuation starting with a quote breaks YAML — stage enum + missing keys) by slot
   main·harsh_pc to unblock the PM lint-codex gate, content untouched
 resolved_by:
-locked_by: live-defi-rollout
-locked_since: 2026-05-21
+  "all 3 Fix-direction items verified resolved: #1 cause-naming already shipped in promotion_lag_monitor.py; #2 live
+  provenance blocks cleared 2026-07-30; #3 _backmerge carve-out confirmed in check_strict_quickmerge.py"
+locked_by:
+locked_since:
 ---
+
+> **🗄️ ARCHIVED 2026-07-31 (operator-ruled locked-plan unlock + archive sweep, 2026-07-30 Q&A session)** — 0 open / 3
+> done. This doc's own `na-eligibility-audit 2026-07-30` verdict was "ARCHIVE-READY, but blocked pending
+> `[unlock-plan]`"; the operator granted exactly that unlock for all 7 fully-done locked docs. The
+> `locked_by: live-defi-rollout` lock (a branch name, never a person) is cleared. Per
+> `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`.
 
 # "PROMOTION LAG" hides the provenance block
 

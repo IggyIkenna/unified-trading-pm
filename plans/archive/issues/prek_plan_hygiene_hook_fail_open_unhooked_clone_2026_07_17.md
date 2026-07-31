@@ -27,7 +27,7 @@ related:
   [
     "/codex/11-project-management/doc-frontmatter-schema.md",
     "/codex/08-workflows/ci-cd-flow.md",
-    "plans/active/issues/promotion_lag_alert_hides_provenance_block_2026_07_17.md",
+    "plans/archive/issues/promotion_lag_alert_hides_provenance_block_2026_07_17.md",
     "plans/active/issues/slot_branch_realign_discards_uncommitted_worktree_2026_07_17.md",
   ]
 created: 2026-07-17

@@ -98,8 +98,8 @@ depends_on: []
 >
 > **The real minter is `semver-agent` on `push:[main]`**, retargeted off the dormant `staging` branch 2026-07-25 —
 > `unified-trading-pm@0b128a725` (ancestor-verified), fleet-rolled to all 22 `ldr_main`+git-tag repos, and confirmed
-> live in `/plans/active/cicd_mvp_ldr_to_main_pipeline_2026_06_30.md` § "Phase 4". Verified independently here by
-> reading the installed copy: `unified-api-contracts/.github/workflows/semver-agent.yml` is `push: branches: [main]`.
+> live in `/plans/archive/2026_07/cicd_mvp_ldr_to_main_pipeline_2026_06_30.md` § "Phase 4". Verified independently here
+> by reading the installed copy: `unified-api-contracts/.github/workflows/semver-agent.yml` is `push: branches: [main]`.
 >
 > **Everything above the "Verdict" section is still accurate as the historical diagnosis** — it is what motivated the
 > repurpose, and the fixed script's own docstring quotes this doc's `created 0 tag(s); 24 repo(s) had no main version`

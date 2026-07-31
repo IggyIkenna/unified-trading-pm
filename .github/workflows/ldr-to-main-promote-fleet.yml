@@ -526,7 +526,7 @@ jobs:
             # only ever opens promote PRs from the immutable per-SHA ref (promote/<repo>/<sha>), so an
             # LDR-headed promote PR into main is necessarily a stale land-mine — close it BEFORE any arm path
             # can touch it. (Backmerge PRs are base=live-defi-rollout, head=main → not matched.)
-            # SSOT: plans/active/cicd_mvp_ldr_to_main_pipeline_2026_06_30.md.
+            # SSOT: plans/archive/2026_07/cicd_mvp_ldr_to_main_pipeline_2026_06_30.md.
             if [ "$DRY_RUN" != "true" ]; then
               for _ldr_pr in $(gh pr list --repo "$OWNER/$REPO" --base main --head live-defi-rollout \
                   --state open --json number --jq '.[].number' 2>/dev/null); do
@@ -557,7 +557,7 @@ jobs:
 
             # ── Dep-order gate — REMOVED for the CI/CD MVP (2026-06-30) ──────────────────
             # MVP gate set = SIT + quality-gates-v2 + quickmerge only (SSOT:
-            # plans/active/cicd_mvp_ldr_to_main_pipeline_2026_06_30.md). SIT already validates the
+            # plans/archive/2026_07/cicd_mvp_ldr_to_main_pipeline_2026_06_30.md). SIT already validates the
             # assembled cross-repo workspace, so dep-order is redundant — and it amplified a flaky
             # tier-0 ci_status into a fleet-wide promotion freeze. Advisory-only now (NOT enforced);
             # the upfront DEP_BLOCKED computation is kept purely for the log signal.
@@ -742,7 +742,7 @@ jobs:
               # downstream Python consumers — there is no cross-repo contract for them to break, so the
               # cross-repo SIT gate is vacuous. Fail-OPEN: the promote PR is still gated by
               # quality-gates-v2 + content-tree + Tier-A (ci_status!=FAILING) on auto-merge, so a red
-              # repo still cannot reach main. SSOT: plans/active/cicd_mvp_ldr_to_main_pipeline_2026_06_30.md.
+              # repo still cannot reach main. SSOT: plans/archive/2026_07/cicd_mvp_ldr_to_main_pipeline_2026_06_30.md.
               echo "SIT GATE N/A $REPO: not in sit_cross_repo_validated_repos (${BREAKING}-delta; SIT leaf/infra, no cross-repo surface the suite validates) — promoting on v2+content+Tier-A. SIT can NEVER stamp this repo, so fail-OPEN here (a fail-closed block would be permanent, not transient)."
             else
               # COVERED repo + BREAKING/unknown → require this EXACT LDR tree to be SIT-validated. The proof
@@ -837,7 +837,7 @@ jobs:
                 # the semver-agent's responsibility, not the LDR→main promote gate — and this check carried
                 # a range-asymmetry false-block (EXPECTED from the LATEST commit subject vs COMPUTED from the
                 # whole-range max), which false-blocked correctly-labeled repos (UAC, mtds). Advisory only.
-                # SSOT: plans/active/cicd_mvp_ldr_to_main_pipeline_2026_06_30.md.
+                # SSOT: plans/archive/2026_07/cicd_mvp_ldr_to_main_pipeline_2026_06_30.md.
                 echo "  LABEL-CHECK (advisory, NOT enforced under MVP) $REPO: label='$EXPECTED' vs diff='$COMPUTED' — promoting anyway"
               fi
               echo "  LABEL-CHECK PASS $REPO: label matches computed bump (${COMPUTED:-none})"

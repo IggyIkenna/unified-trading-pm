@@ -83,14 +83,15 @@ behaviour, so it wants a deliberate test, not a hot-patch under time pressure.
 > **[2026-07-12 correction, finding 348, §A2 B-queue**
 > (`plans/active/issues/plan_reconciliation_operator_decisions_2026_07_11.md`)**]**: the "Owner" pointer above is doubly
 > dead — `cicd_quality_gates_2026_06_18.md` was superseded 2026-06-24 into `cicd_consolidated_remaining_2026_06_24.md`,
-> which was itself superseded 2026-06-30 by `plans/active/cicd_mvp_ldr_to_main_pipeline_2026_06_30.md` (verified via
-> both docs' own `status: superseded` / `superseded_by` frontmatter). `cicd_mvp_ldr_to_main_pipeline_2026_06_30.md`,
-> which declares itself the sole current SSOT for the pipeline/quickmerge area, does not mention this bug (grep for
-> "untracked"/"1175" returns zero hits there). Re-verified 2026-07-12: the underlying bug is still live — current
-> `scripts/quickmerge.sh` line ~1188 still gates only on `git diff origin/main` (untracked-blind), unchanged. This P1
-> bug is therefore untracked by any live plan; not reassigned here (picking a new owner is an operator/triage call, out
-> of this chunk's file scope) — flagging so the next triage pass routes it (candidate:
-> `cicd_mvp_ldr_to_main_pipeline_2026_06_30.md`, since it claims exclusive current SSOT status for this exact contract).
+> which was itself superseded 2026-06-30 by `plans/archive/2026_07/cicd_mvp_ldr_to_main_pipeline_2026_06_30.md`
+> (verified via both docs' own `status: superseded` / `superseded_by` frontmatter).
+> `cicd_mvp_ldr_to_main_pipeline_2026_06_30.md`, which declares itself the sole current SSOT for the pipeline/quickmerge
+> area, does not mention this bug (grep for "untracked"/"1175" returns zero hits there). Re-verified 2026-07-12: the
+> underlying bug is still live — current `scripts/quickmerge.sh` line ~1188 still gates only on `git diff origin/main`
+> (untracked-blind), unchanged. This P1 bug is therefore untracked by any live plan; not reassigned here (picking a new
+> owner is an operator/triage call, out of this chunk's file scope) — flagging so the next triage pass routes it
+> (candidate: `cicd_mvp_ldr_to_main_pipeline_2026_06_30.md`, since it claims exclusive current SSOT status for this
+> exact contract).
 
 > **[2026-07-14 correction, findings 107/201]**: routed per the candidate above — this bug is now recorded as an open P1
 > todo in `cicd_mvp_ldr_to_main_pipeline_2026_06_30.md` Phase 2 (its pipeline/quickmerge health-work section), so it is

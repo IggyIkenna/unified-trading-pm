@@ -127,7 +127,7 @@ closed; the deploy SA's Secret Manager access scoped down.
 **Sources**:
 [issues/sit_validated_tree_treadmill_blocks_breaking_promotes_2026_07_20.md](/plans/active/issues/sit_validated_tree_treadmill_blocks_breaking_promotes_2026_07_20.md)
 (SIT gate compares against a moving LDR tip, can block breaking promotes indefinitely) ·
-[issues/promotion_lag_alert_hides_provenance_block_2026_07_17.md](/plans/active/issues/promotion_lag_alert_hides_provenance_block_2026_07_17.md)
+[issues/promotion_lag_alert_hides_provenance_block_2026_07_17.md](/plans/archive/issues/promotion_lag_alert_hides_provenance_block_2026_07_17.md)
 (promotion-lag alert masks the real quickmerge provenance-block root cause) ·
 [issues/silent_failures_surfacing_as_generic_promotion_lag_2026_07_17.md](/plans/active/issues/silent_failures_surfacing_as_generic_promotion_lag_2026_07_17.md)
 (three unrelated failures all surfaced as one generic "PROMOTION LAG" alert) ·

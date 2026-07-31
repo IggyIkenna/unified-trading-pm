@@ -95,7 +95,7 @@ autonomous workers — relocate via `git mv`, ask the operator for true deletion
       agent this wave). Now at `plans/archive/issues/`. Also annotated
       `defi_satellite_ao_dispatch_batch3_2026_07_26_finalize.md`'s own pending archive-todo for this doc so it isn't
       redone.
-- [ ] [PLAN] P2. `plans/active/issues/phantom_captures_defi_2026_06_28.md` — **NOT ARCHIVED — citation partially WRONG,
+- [ ] [PLAN] P2. `plans/archive/issues/phantom_captures_defi_2026_06_28.md` — **NOT ARCHIVED — citation partially WRONG,
       corrected in place, unified-trading-pm@(this commit).** The "apply reconciliation" todo IS genuinely done
       (verified real: `mvp_backfill_defi_onchain_v10_operational_log_2026_07_24.md:754-762` APPLY COMPLETE, corroborated
       by `mvp_backfill_defi_onchain_v10_2026_06_27.md`'s banner) and was flipped citing that evidence. **But** the doc's
@@ -449,7 +449,7 @@ autonomous workers — relocate via `git mv`, ask the operator for true deletion
       schema-provenance catch-all into batch2 once drafted. **Locked (`locked_by: live-defi-rollout`) — needs
       `[unlock-plan]`** before any archival (not yet archivable anyway — real remainder exists).
 - [x] ✅ [PLAN] P2. **DONE 2026-07-28 — checkboxes flipped in the source doc, greeks/strategy normalized + shipped.**
-      `plans/active/issues/service_dockerfile_pattern_normalization_2026_06_17.md` fully updated: the 6
+      `plans/archive/issues/service_dockerfile_pattern_normalization_2026_06_17.md` fully updated: the 6
       already-normalized repos (alerting-service, batch-live-reconciliation-service, fund-administration-service,
       market-data-processing-service, ml-service, trading-agent-service) re-verified by reading each live
       `Dockerfile`+`cloudbuild.yaml` in full (confirmed Pattern-A shaped, no code change needed) and their checkboxes

@@ -848,7 +848,7 @@ fi
 # ── Workflow YAML parse gate — MOVED to the shared base (2026-06-30) ──
 # Was here (PM-only), so only PM's workflows were validated → the SIT-producer YAML break slipped through.
 # Now lives in scripts/quality-gates-base/base-service.sh [0/6] so EVERY repo runs the ONE PM-hosted
-# checker against its own .github/workflows. SSOT: plans/active/cicd_mvp_ldr_to_main_pipeline_2026_06_30.md.
+# checker against its own .github/workflows. SSOT: plans/archive/2026_07/cicd_mvp_ldr_to_main_pipeline_2026_06_30.md.
 
 # ── Post-gates: STEP 5.64 — PM script path-reference ratchet (blocking) ──
 # SSOT: CLAUDE.md § "Grep-Then-Read, Not Grep-Then-Conclude" + scripts/quality_gates/check_pm_script_path_refs.py.

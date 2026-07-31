@@ -14,7 +14,7 @@
 # [OPERATOR] This installer must be RUN ON THE ORCHESTRATOR VM ITSELF (not from a dev
 # checkout / slot worktree) -- it writes into /etc/systemd/system and calls systemctl, which
 # require root on that box. See the plan's Task-1 handoff note in
-# plans/active/cicd_mvp_ldr_to_main_pipeline_2026_06_30.md for the exact command.
+# plans/archive/2026_07/cicd_mvp_ldr_to_main_pipeline_2026_06_30.md for the exact command.
 
 set -euo pipefail
 
