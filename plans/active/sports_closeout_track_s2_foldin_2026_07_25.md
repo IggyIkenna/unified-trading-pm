@@ -291,7 +291,14 @@ drift_direction: advance-code
       this todo has now bounced across at least 4 separate slots (10/15/6/14/8) purely on this same mechanical gap — the
       issue doc's own P2 audit todo (converting this to a structural `depends_on`+`gate_on_depends` split, per its
       "Recommended decision" §(b)) would stop the churn; that audit is `assigned_vm: NA` there and hasn't been picked up
-      yet.
+      yet. — **2026-07-31 (slot 5): re-dispatched again, same-day, still genuinely blocked — P2c unchanged.** Confirmed
+      via `GET /api/backlog/sports_closeout_track_s2_foldin-008/blockers` that this task_id carried NO armed fleet
+      cooldown before this dispatch (`"ready (no blockers)"`) — prior dispatches evidently closed via a no-op `/done`
+      rather than `/skip-current-task`, which never exercises `register_cooldown`/the auto-park counter
+      (`server/state_store/cooldown.py`, `dispatch_cooldown_auto_park_skip_threshold` default 3). Closing THIS dispatch
+      via `/skip-current-task` with `reason_code: GATED` instead, so it actually arms the fleet-scoped cooldown and
+      counts toward durable auto-park — future dispatches of this same todo should do likewise (not `/done`) until it
+      either auto-parks or P2c genuinely lands.
 - [x] ✅ [DATA] P2. **RETAGGED 2026-07-28 (stale-tag audit — already ruled 2026-07-26, `[OPERATOR]` never removed).**
       Unresolved cefi-before-sports gate TENSION, never ruled (flagged 2026-07-14, still open).
       `instruments_foundation_completeness_2026_06_24.md` states sports does NOT start its G1→G5 until cefi is DONE, but
