@@ -14,7 +14,7 @@ scope: [engineer]
 tags: [ao-dispatch, close-out, reclassification, na-audit, scenario-injection]
 related:
   [
-    /plans/active/scenario_library_completion_13_16_2026_07_27.md,
+    /plans/archive/2026_07/scenario_library_completion_13_16_2026_07_27.md,
     /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
   ]
 created: "2026-07-30"
@@ -46,8 +46,8 @@ source:
 
 > **ARCHIVED (2026-07-31) — all 3 todos shipped, source plan archived alongside this doc.**
 
-> **Gated twin.** `depends_on` + `gate_on_depends: true` hold every todo here until every todo in
-> `/plans/active/scenario_library_completion_13_16_2026_07_27.md` is done. Do not start these before that.
+> **Gated twin.** `depends_on` + `gate_on_depends: true` held every todo here until every todo in
+> `/plans/archive/2026_07/scenario_library_completion_13_16_2026_07_27.md` was done — satisfied 2026-07-31.
 
 ## Todos
 

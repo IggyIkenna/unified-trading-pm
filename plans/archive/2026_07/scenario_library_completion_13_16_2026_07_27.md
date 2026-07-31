@@ -46,7 +46,8 @@ drift_direction: none
 
 > **ARCHIVED (2026-07-31) — all 3 todos shipped.** Both `ScenarioOverlay` entries landed
 > (`unified-api-contracts@15ab5a48`) and are verified consumable by the UTL applier with zero applier-code changes.
-> Gated finalize twin `scenario_library_completion_13_16_finalize_2026_07_30.md` archived alongside this doc.
+> Gated finalize twin `/plans/archive/2026_07/scenario_library_completion_13_16_finalize_2026_07_30.md` archived
+> alongside this doc.
 
 ## Context
 

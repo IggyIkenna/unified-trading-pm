@@ -311,9 +311,7 @@ epic._
 | [`deployment_registry_firestore_migration_2026_07_14`](./deployment_registry_firestore_migration_2026_07_14.md)                                                                           | master           | infra     | 1/1        | 100%         | 0.0      | —        |
 | [`market_tick_data_service_lending_instrument_type_historical_restamp_2026_07_24`](./market_tick_data_service_lending_instrument_type_historical_restamp_2026_07_24.md)                   | master           | infra     | 5/5        | 100%         | 0.0      | —        |
 | [`prediction_consolidated_closeout_2026_07_18`](./prediction_consolidated_closeout_2026_07_18.md)                                                                                         | master           | infra     | 1/1        | 100%         | 0.0      | —        |
-| [`scenario_library_completion_13_16_2026_07_27`](./scenario_library_completion_13_16_2026_07_27.md)                                                                                       | **orphan**       | brand-new | 3/3        | 100%         | 0.0      | —        |
-| [`scenario_library_completion_13_16_finalize_2026_07_30`](./scenario_library_completion_13_16_finalize_2026_07_30.md)                                                                     | **orphan**       | refactor  | 3/3        | 100%         | 0.0      | —        |
-| **TOTAL** (243 plans)                                                                                                                                                                     | 2 orphans, 0 TBD | —         | —          | **54% done** | **347**  | —        |
+| **TOTAL** (241 plans)                                                                                                                                                                     | 0 orphans, 0 TBD | —         | —          | **53% done** | **347**  | —        |
 
 <!-- AUTO-INVENTORY-END -->
 
