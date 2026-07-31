@@ -306,8 +306,10 @@ future batch's re-triage; the rest need direct operator/human action, elapsed ti
   only an operator `[unlock-plan]` on `locked_by: live-defi-rollout` to actually archive.
 - `cicd_mvp_ldr_to_main_pipeline_2026_06_30.md` — `archivable_now`; 29/29 todos done, own 2026-07-30
   na-eligibility-audit verdict independently confirms ARCHIVE-READY, awaiting the same operator `[unlock-plan]` step.
-- `plan_health_agent_dead_schedule_trigger_2026_07_27.md`,
-  `ldr_to_main_promote_fleet_silently_skips_repo_after_promote_pr_close_2026_07_28.md`,
+- `/plans/archive/issues/plan_health_agent_dead_schedule_trigger_2026_07_27.md` — was `archivable_after_planned_work`;
+  batch2 todo 13 landed (resolved as moot 2026-07-31). **Archived 2026-07-31** during the batch2 finalize
+  (`ci_satellite_ao_dispatch_batch2_finalize_2026_07_29.md` todo 1) — no longer active-corpus work.
+- `ldr_to_main_promote_fleet_silently_skips_repo_after_promote_pr_close_2026_07_28.md`,
   `qg_mem_wrap_systemd_bus_unavailable_2026_07_26.md`, `fleet_wide_qg_capacity_crisis_continues_day2_2026_07_29.md` —
   all `archivable_after_planned_work`: either batch2's own active todo or genuinely self-dispatched
   (`assigned_vm: planning`), confirmed still live/being worked through 2026-07-31. No new coverage needed.

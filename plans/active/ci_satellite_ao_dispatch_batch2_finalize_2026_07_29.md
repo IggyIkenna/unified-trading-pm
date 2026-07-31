@@ -48,8 +48,10 @@ drift_direction: advance-code
 
 # CI satellite AO batch 2 — finalize
 
-> **⚠️ STATUS: `draft` — NOT dispatched.** Flips to `active` only with the batch it gates, on explicit operator
-> approval. Drafted 2026-07-29 as part of a scheduled autonomous `/ag-closeout-audit ci` run.
+> **🟢 STATUS: `active` — dispatched.** Drafted 2026-07-29 as part of a scheduled autonomous `/ag-closeout-audit ci`
+> run; flipped active alongside the batch it gates once all 14 of that plan's todos completed (2026-07-31). Stale banner
+> corrected 2026-07-31 (this doc-flip commit) — the frontmatter has read `status: active` since the gate cleared; the
+> body text simply never caught up until now.
 
 > **Machine-gated on `ci_satellite_ao_dispatch_batch2_2026_07_29.md`** (`depends_on` + `gate_on_depends: true`) — the
 > dispatcher will not queue anything below until all 14 of that plan's todos are `done`. `sequential: true` because todo
@@ -57,14 +59,36 @@ drift_direction: advance-code
 
 ## Todos
 
-- [ ] [REVIEW] P1. **Reconcile all 14 batch-2 todos' source docs.** Each batch-2 todo ends with `Source:` naming one or
-      more docs (todo 1 cites two, todo 6 cites one 7-todo doc, several cite a single doc's multiple items). For each:
-      flip the corresponding checkbox or annotate the corresponding prose section in EVERY cited doc, citing the batch-2
-      commit that shipped it — **verify the cited commit exists and is an ancestor of `origin/live-defi-rollout` before
-      citing it** (`git merge-base --is-ancestor`). Then, per doc, re-check whether it now has zero open work **in
-      checkbox AND prose form**. Only set `status: resolved` on a doc that genuinely reaches zero. **Done when**: every
-      cited doc is flipped/annotated with verified evidence, and each doc that genuinely reaches zero open work is
-      `status: resolved`.
+- [x] ✅ [REVIEW] P1. **Reconcile all 14 batch-2 todos' source docs.** Each batch-2 todo ends with `Source:` naming one
+      or more docs (todo 1 cites two, todo 6 cites one 7-todo doc, several cite a single doc's multiple items). For
+      each: flip the corresponding checkbox or annotate the corresponding prose section in EVERY cited doc, citing the
+      batch-2 commit that shipped it — **verify the cited commit exists and is an ancestor of `origin/live-defi-rollout`
+      before citing it** (`git merge-base --is-ancestor`). Then, per doc, re-check whether it now has zero open work
+      **in checkbox AND prose form**. Only set `status: resolved` on a doc that genuinely reaches zero. **Done when**:
+      every cited doc is flipped/annotated with verified evidence, and each doc that genuinely reaches zero open work is
+      `status: resolved`. **DONE 2026-07-31 (slot 6, review craft).** Enumerated all 14 batch-2 todos' `Source:`
+      citations → 9 distinct docs: `qg_sentinel_environment_blind_2026_07_23.md` (todos 1/2/3),
+      `ci_test_content_and_tooling_speed_findings_2026_07_28.md` (todos 1/7/8/9),
+      `promotion_lag_alert_hides_provenance_block_2026_07_17.md` (todo 4),
+      `check_strict_quickmerge_blind_to_dirty_deps_carveout_2026_07_23.md` (todo 5),
+      `breaking_change_differ_blind_to_registry_data_dicts_2026_07_09.md` (todo 6),
+      `mtds_ungated_test_families_2026_07_17.md` (todos 10/11),
+      `qg_hardcoded_tmp_paths_false_failures_on_full_tmpfs_2026_07_26.md` (todo 12),
+      `plan_health_agent_dead_schedule_trigger_2026_07_27.md` (todo 13), `monitoring_control_plane_master_2026_06_10.md`
+      (todo 14). Verified all cited SHAs
+      (`4545df4c6`/`3ed0fc99d`/`51b93ec0a`/`bbe9a9871`/`5607023a2`/`481e72d6f`/`f2f227ff9`, this repo) are ancestors of
+      `origin/live-defi-rollout` via `git merge-base --is-ancestor`. 8 of 9 docs were **already** correctly
+      flipped/archived by prior sessions (`qg_sentinel_environment_blind` and `breaking_change_differ_...` both
+      genuinely stay `status: open` — each has one real remaining item outside batch-2's scope, correctly not
+      force-closed; `ci_test_content_...`/`promotion_lag_alert_...`/`check_strict_quickmerge_...`/
+      `mtds_ungated_test_families_...`/`qg_hardcoded_tmp_paths_...` all already `status: resolved`, 0 open checkboxes,
+      already archived; `monitoring_control_plane_master` correctly stays `status: active` — G3 closed-with-citation, 3
+      other genuinely-unrelated open items remain, deferred as batch2's own E13/E14). **1 gap found + fixed**:
+      `plan_health_agent_dead_schedule_trigger_2026_07_27.md` was `status: resolved` with 0 open todos but had never
+      been archived — moved to `/plans/archive/issues/`, added the standard ARCHIVED banner, and repointed both corpus
+      referrers (`ci_satellite_ao_dispatch_batch2_2026_07_29.md` todo 13's own citation, and
+      `ci_satellite_ao_dispatch_batch4_2026_07_31.md`'s archival-readiness table) to the new path — unified-trading-pm
+      (this doc-flip commit).
 - [ ] [REVIEW] P1. **Re-check the 5 file-contention Deferred items (E1-E5) and re-verify E9-E10 (still-open F4 items).**
       Each names the specific file/blocker it collided with, so this is a few greps and reads, not fresh investigation.
       In particular: is `scripts/quality-gates-base/base-service.sh` free again (batch-2 todo 1 landed)? If so, E1
@@ -106,3 +130,10 @@ drift_direction: advance-code
 
 - **2026-07-29** — Drafted alongside `ci_satellite_ao_dispatch_batch2_2026_07_29.md` by `/ag-closeout-audit ci`
   (autonomous mode, `ag_closeout_auditor` scheduled worker, slot 7). Both are `status: draft`; neither is dispatched.
+
+- **2026-07-31 (slot 6, review craft)** — dispatched todo 1 (gate cleared: all 14 batch-2 todos done). Reconciled all 9
+  distinct source docs the 14 todos cite; found + fixed 1 gap (`plan_health_agent_dead_schedule_trigger_2026_07_27.md`
+  was resolved but never archived — archived it + fixed both corpus referrers). Also corrected this plan's own stale
+  `draft`-status banner (frontmatter has read `active` since the gate cleared 2026-07-31, body text hadn't caught up).
+  See todo 1's own inline evidence for the full per-doc breakdown. Todo 2 (Deferred-item re-check) is next in the
+  `sequential: true` chain.

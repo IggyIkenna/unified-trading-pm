@@ -404,8 +404,8 @@ concurrent workers do not collide on this file.
       logged at 2026-07-31T00:01:38Z (`{"ok":true,"dispatch_id":"agt-151fd0",...}|HTTP:200`) and correct
       retry-until-capacity behavior past two transient connect-timeouts. No fix was possible or needed — there is no
       longer a schedule trigger to fix, and its function is proven live elsewhere. Source doc updated to
-      `status: resolved` with full resolution writeup + both its todos closed:
-      `issues/plan_health_agent_dead_schedule_trigger_2026_07_27.md`.
+      `status: resolved` with full resolution writeup + both its todos closed, then **archived 2026-07-31** (finalize
+      todo 1): `/plans/archive/issues/plan_health_agent_dead_schedule_trigger_2026_07_27.md`.
 - [x] ✅ [DOC] P2. DONE 2026-07-31 — unified-trading-pm (this doc-flip commit).
       **`monitoring_control_plane_master_2026_06_10.md` reconciliation + one bounded status check.** (a) Reconciled G3
       (manifest-consolidator-health) against what actually shipped: `unified_deployment_health_cockpit_2026_06_23`

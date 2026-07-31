@@ -41,6 +41,11 @@ source:
   that scheduler is tested... theres 2 more daily tasks to check").
 ---
 
+> **ARCHIVED (2026-07-31) — complete.** Both todos resolved as moot: the `schedule:` trigger under investigation was
+> removed by an unrelated 2026-07-28 decision (`unified-trading-pm@481e72d6f`, RULE-11 prove-then-retire) before
+> root-causing completed; its daily-hygiene function is fully superseded by `plan-reconciler.timer` (systemd,
+> independently verified alive and firing). See `## Resolution — 2026-07-31` below.
+
 # plan-health-agent.yml's dead schedule trigger — 2026-07-27
 
 ## What I found
