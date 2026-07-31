@@ -317,14 +317,32 @@ Two independent gates because Group A and Group B are at different stages:
 
 - [ ] [OPERATOR] P2.2a. Rule on the competing bucket-write-protection SA strategies (per-tier vs per-service vs the
       undocumented ad-hoc SA family) — see the linked issue doc's Todos P0. Unblocks P2.2b-P2.2d.
-- [ ] [TERRAFORM] P2.2b. Once P2.2a resolves, grant the winning SA(s) the non-storage roles real runtimes need
-      (secretmanager/pubsub/bigquery/run.invoker/serviceAccountUser+computeInstanceAdmin for self-impersonating VM
-      launches) — mirror `unified-trading-sa`'s current grant set, scoped. Gated on P2.2a.
-- [ ] [CODE] P2.2c. Wire Cloud Run service identities (start with `scripts/cloud-run/deploy-shared.sh` /
+- [ ] [TERRAFORM][OPERATOR] P2.2b. **`[OPERATOR]`-tagged 2026-07-31 (slot-10)** — mirrors the P2.1b precedent above:
+      this todo has no structured `depends_on`/`gate_on_depends` link to P2.2a (same-plan todos can't express a per-todo
+      prereq — CLAUDE.md), so it is dispatchable to workers despite being prose-gated on P2.2a, which is itself still
+      open/unresolved (`issues/bucket_iam_p2_tier_sa_scope_gap_and_default_compute_sa_overprivilege_2026_07_30.md` P0
+      unchecked as of this edit). `[OPERATOR]` routes this to the operator's blocked-queue instead of re-offering it to
+      workers who can only re-derive the same "not yet" verdict. Once P2.2a resolves, **retag back to plain
+      `[TERRAFORM]`** — do not leave this tag stale per CLAUDE.md's retag-on-resolve rule. Once P2.2a resolves, grant
+      the winning SA(s) the non-storage roles real runtimes need (secretmanager/pubsub/bigquery/run.invoker/
+      serviceAccountUser+computeInstanceAdmin for self-impersonating VM launches) — mirror `unified-trading-sa`'s
+      current grant set, scoped. Gated on P2.2a.
+- [ ] [CODE][OPERATOR] P2.2c. **`[OPERATOR]`-tagged 2026-07-31 (slot-10, dispatched task
+      `bucket_iam_write_protection_per_tier-011`)** — same reasoning as P2.2b immediately above: this todo is
+      prose-gated on P2.2b (itself now also `[OPERATOR]`-tagged, chained back to the still-unresolved P2.2a), but had no
+      tag/structural link preventing dispatch — it was dispatched to this slot despite the chain being unresolved.
+      Investigated live: `issues/bucket_iam_p2_tier_sa_scope_gap_and_default_compute_sa_overprivilege_2026_07_30.md`'s
+      "Explicit operator ask" (hybrid-C boundary proposal) is still `operator_pending` per that doc's own "Dispatch-
+      gating note" section — wiring Cloud Run identities today would mean guessing the SA strategy, which is exactly
+      what that doc says must not happen before the ruling lands. No terraform/IAM/code change made this pass (pure
+      re-diagnosis + gating fix, no state mutated). Once P2.2b resolves, **retag back to plain `[CODE]`** — do not leave
+      this tag stale. Wire Cloud Run service identities (start with `scripts/cloud-run/deploy-shared.sh` /
       deployment-api), live-verifying Secret Manager/Pub/Sub/BigQuery access after each. Gated on P2.2b.
-- [ ] [CODE] P2.2d. Wire VM launchers (165 `scripts/vm/launch-*.sh`, only 4 via the shared `lc_gcloud_create()` helper)
-      — its own large effort needing a per-launcher tier classification pass, not a bulk mechanical edit. Gated on
-      P2.2a.
+- [ ] [CODE][OPERATOR] P2.2d. **`[OPERATOR]`-tagged 2026-07-31 (slot-10)** — same reasoning as P2.2b/P2.2c above:
+      prose-gated on P2.2a (unresolved), no tag preventing dispatch. Once P2.2a resolves, **retag back to plain
+      `[CODE]`** — do not leave this tag stale. Wire VM launchers (165 `scripts/vm/launch-*.sh`, only 4 via the shared
+      `lc_gcloud_create()` helper) — its own large effort needing a per-launcher tier classification pass, not a bulk
+      mechanical edit. Gated on P2.2a.
 - [ ] [TEST] P2.3. Negative tests: `ENVIRONMENT=staging` write to a `*-prod-*` bucket → `403` at IAM; migration SA →
       allowed. Add as a deployment-service QG check.
 
