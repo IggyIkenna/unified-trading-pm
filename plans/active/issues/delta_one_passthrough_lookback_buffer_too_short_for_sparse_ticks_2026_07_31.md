@@ -198,3 +198,10 @@ investigation chain.
   had baked in the bug, `9e70fbac` a method-size QG-limit refactor). `bash scripts/quality-gates.sh` green (18041
   passed, 0 failed). Landed on `live-defi-rollout` via quickmerge. P2 `[DATA]` todo (the actual VM verification run +
   per-venue real-density check) is next and unblocked by this fix, but was not run as part of this todo.
+- 2026-07-31 (slot-10, data_engineering craft, running the P2 `[DATA]` VM-verification todo): running the actual
+  verification VM surfaced a 6th, DIFFERENT bug masking this fix's own success — every shard was rejected by the NaN
+  shard-quality-gate on `btc_trailing_return_6m/12m`'s EXPECTED warmup NaN (up to 252-bar/~12-month lookback,
+  `nan_policy: warmup_only` in the registry), unrelated to this issue's buffer-sizing fix. Fixed separately
+  (`features-service@12a64eb9`, added an `EXPECTED_SPARSE_COLUMNS["returns"]` exemption) — full detail + relaunch status
+  in `/plans/active/defi_satellite_ao_dispatch_batch3_2026_07_26.md`'s D1 todo (this issue's P2 todo IS that D1 todo's
+  resume — logging here so a reader of this doc's chain sees the fix landed and isn't re-blocked by a stale read).
