@@ -219,12 +219,23 @@ from scope).
       mostly legitimately-absent (non-data-writing repos have no GCS/schema) — captured as a scoping finding in
       `/plans/active/issues/s5_7_required_docs_gaps_2026_07_29.md` (out of this dedup plan's scope; operator/main
       tiering decision).
-- [ ] [DOCS] P3. **Phase 5 follow-up — semantic codex-table-duplication detector.** `check_repo_docs_ssot.py` (Phase 5)
-      enforces the deterministic clauses (archived-mirror refs + hardcoded resolver-owned literals) but does NOT yet
-      detect a repo doc that reproduces a codex TABLE/contract verbatim (S5.11's core "no duplication" rule) — a
+- [x] ✅ [DOCS] P3. **Phase 5 follow-up — semantic codex-table-duplication detector.** `check_repo_docs_ssot.py`
+      (Phase 5) enforces the deterministic clauses (archived-mirror refs + hardcoded resolver-owned literals) but does
+      NOT yet detect a repo doc that reproduces a codex TABLE/contract verbatim (S5.11's core "no duplication" rule) — a
       verbatim-block detector is false-positive-prone (codex tables get legitimately quoted/referenced) and needs a
       calibrated heuristic. Design + add it as a third rule to `check_repo_docs_ssot.py`, baselined. (repo:
-      unified-trading-pm)
+      unified-trading-pm) **DONE 2026-07-31 — unified-trading-pm@dc1c65c80.** Added the `table-duplication` rule:
+      extracts markdown pipe-tables from BOTH the live codex corpus and each repo doc, canonicalizes cell content
+      (whitespace/pipe-alignment-blind via a `\x1f` join, case-preserving, separator row dropped), and flags an EXACT
+      whole-table match against a codex table that clears a significance floor (`_MIN_TABLE_ROWS=3` /
+      `_MIN_TABLE_CHARS     =100`). The floor is the false-positive control the todo called out: calibrated against the
+      live corpus (2358 codex tables) it drops the 88 trivial 2-row idiom-shaped tables that get legitimately echoed,
+      while still indexing >2200 real tables. Exact-match (not fuzzy) keeps the FP rate at the same bar as the other two
+      rules — a fuzzy pass is noted as future work in the docstring. Ratchets against the same
+      `repo_docs_ssot_baseline.yaml`; live-corpus scan finds ZERO new table-duplication violations (baseline content
+      unchanged — the codex/repo-doc corpus is already S5.11-clean on tables). +6 unit tests
+      (flag/no-flag/floor/backward-compat/archived-codex-exclusion), full suite 13 green; QG-green sentinel==HEAD,
+      quickmerge --agent, verified on origin.
 
 ## Phase 2 progress (2026-07-27)
 
