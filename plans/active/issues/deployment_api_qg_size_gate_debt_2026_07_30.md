@@ -211,9 +211,14 @@ file-by-file.
       267 targeted tests green (incl. the two test files that `patch.object()` `_build_sports_entity_entry` and
       `_build_v4_sub_dimensions` by name), basedpyright clean, full `quality-gates.sh` green (102s). Repo:
       deployment-api.
-- [ ] [SCRIPT] P2. Decompose the remaining function-size-only violation in `deployment_api/routes/deployment_state.py`
-      (`refresh_deployment_status_sync()`, 234L). Remove its `FUNCTION_SIZE_EXTRA_EXCLUDES` entry once compliant; re-run
-      `quality-gates.sh` to confirm no regression.
+- [x] ✅ [SCRIPT] P2. **DONE 2026-07-31 (slot-2, infra craft).** Decomposed the function-size-only violation in
+      `deployment_api/routes/deployment_state.py` (`refresh_deployment_status_sync()`, was 234L).
+      `deployment-api@a3524df`: extracted `_refresh_cloud_run_batch_shards`, `_vm_zones_for_shards`,
+      `_refresh_vm_shards_in_zone`, `_refresh_vm_shards`, `_flag_succeeded_shards_with_log_errors` — pure code motion,
+      no logic changes; main function now ~55L. `FUNCTION_SIZE_EXTRA_EXCLUDES` entry removed — gate passes natively.
+      Verified: 92 targeted tests green (`test_deployment_state_helpers.py`, `test_route_deployment_state.py`,
+      `test_deployment_state_service.py`), basedpyright clean, ruff clean, full `quality-gates.sh` green (104s). Repo:
+      deployment-api.
 - [ ] [SCRIPT] P2. Decompose the remaining function-size-only violation in
       `deployment_api/services/artifact_pipeline/service.py`. Remove its exclude entry once compliant; re-run
       `quality-gates.sh` to confirm no regression.
