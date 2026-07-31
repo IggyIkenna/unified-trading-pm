@@ -805,7 +805,29 @@ cancellation-timeout fix and already shipped). Suggested next steps for whoever 
       to isolate a REAL candidate (a scoped, deliberate A/B test is not the same as undirected canary churn). Done-when:
       a freshly-cold-started instance of `uts-shared-deployment-api` (at ANY resource profile, informing whether the
       current prod profile needs to change) passes the STARTUP TCP probe, OR the exec-layer mechanism is identified.
-      (repo: deployment-api, cross-cutting IAM/infra)
+      (repo: deployment-api, cross-cutting IAM/infra) — **2026-07-31 22:35-22:48Z (slot 15, infra): candidates (1) and
+      (2) BOTH refuted with real evidence; new, more severe finding — the failure is NOT resource/image-specific, it's
+      "any new instance right now."** 4 clean `--no-traffic`-tagged A/B tests via `gcloud run deploy`, each checked
+      against the diagnostic sink: `WORKERS=1` (refutes the fork-storm sub-hypothesis) → same deterministic
+      `Starting new instance → zero output → Container called exit(0) → STARTUP TCP probe failed`, ~31.5s.
+      `--execution-environment gen2` (candidate 2) → same signature, ~31.5s. A genuinely light profile (`1cpu/4Gi`, not
+      just fewer workers) → same signature. Most decisive: redeploying the EXACT image digest `71a09bfb...` that
+      `00374-4pd` is serving 100% of live traffic on RIGHT NOW, as a fresh `--no-traffic` revision → **also fails**,
+      same signature — so it cannot be this image/build. A genuinely new revision forced onto the real-traffic path
+      (`--revision-suffix`/env-var diff, no `--no-traffic`) never got a diagnostic-sink attempt logged at all
+      (`Retired`, no message) — inconclusive on whether canary-vs-real-traffic changes anything; not re-tested further
+      given the controlled-experiment budget already spent. **Conclusion: every named candidate (workers, gen1/gen2,
+      resource size, even the known-good image) is refuted — this points at platform-side new-instance provisioning for
+      THIS SERVICE specifically, not a config/image variable anything in this repo controls.** Left all 4 new diagnostic
+      revisions live (`diag-w1-0731`, `diag-gen2-0731`, `diag-light-0731`, `diag-oldimg-0731`, all `--no-traffic`, zero
+      cost/risk) for the next investigator per this doc's convention. Production re-verified healthy throughout (100%
+      traffic still on `00374-4pd`, `/api/health` 200 in 0.2s after every test). Not flipping this checkbox (done-when
+      still not met). **Recommending the doc's own named fallback**: this now has enough converging evidence (multiple
+      investigators, hours, every code-level hypothesis refuted) to warrant a Google Cloud Support case for
+      `uts-shared-deployment-api`/`central-element-323112` — filing a support case is outside this session's tool
+      access; flagging to the operator via `/blocked` rather than silently stopping. Also: this doc itself is now
+      979/1000 lines (was 970) — approaching the same line-cap remediation class as
+      `mtds_available_at_cross_asset_backfill_2026_07_13.md` elsewhere in today's corpus; a future split candidate.
 
 - [ ] [BACKEND] P3. **NEW, opened 2026-07-31 (slot 13, backend_engineer) — dead-code cleanup: `workers/auto_sync.py`'s
       entire background-sync implementation is unreachable in production.** Found while tracing the call graph for the
