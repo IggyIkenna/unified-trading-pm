@@ -102,9 +102,13 @@ inside an unrelated test-widening todo.
       `test_source_mode_capability_matches_ratified_matrix_exactly`'s `EXPECTED_SOURCE_MODE_CAPABILITY` (both caught by
       the full `quality-gates.sh` run, mirroring the exact 2 extra registries the FRED/ECB/OFR fix also had to touch).
       Full `quality-gates.sh` green (298s, sentinel `ab7d8c8355b1722e3f5d8262baddac59a991c284`).
-- [ ] [BACKEND] P2. **Add `"IBKR": PipelineMode.BATCH_IBKR`** to `_VENUE_OVERRIDES` in
+- [x] ✅ [BACKEND] P2. **Add `"IBKR": PipelineMode.BATCH_IBKR`** to `_VENUE_OVERRIDES` in
       `unified_trading_library/pipeline_mode_resolver.py`, mirroring the FRED/ECB/OFR entries added 2026-07-29. (repo:
-      unified-trading-library)
+      unified-trading-library) — `unified-trading-library@b8db9ba5`. Added the `IBKR` entry mirroring FRED/ECB/OFR +
+      regression unit tests (`test_ibkr_venue_override`, `test_ibkr_ohlcv_1d_resolves_to_batch_ibkr_not_fred` — the
+      latter reproduces the exact `derive_pipeline_mode_for_row("IBKR", "tradfi", "ohlcv_1d")` mis-stamp from the
+      issue's "Measured live" section and asserts it now resolves to `BATCH_IBKR`, not `BATCH_FRED`). Full
+      `quality-gates.sh` green (146s, sentinel `b8db9ba5f63260ca6ce1b8c55a350562e942e5c2`).
 - [ ] [BACKEND] P2. **Un-xfail** `test_ibkr_equity_bars_write` and `test_partition_path_uses_category_tradfi` in
       `market-tick-data-service/tests/market_interface/adapters/tradfi/test_tradfi_canonical_writes.py` (both currently
       marked `xfail(strict=True)` citing this doc) once the above ship — update their expected `pipeline_mode` to
