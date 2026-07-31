@@ -136,7 +136,8 @@ own, verify against `FETCH_HEAD` (use `git merge-base --is-ancestor`), or force-
 → rebase + keep the MERGED combination; autostash conflict → `rebase --abort` + stash by name (never `git stash drop`
 foreign WIP). Inherited-dirty-WIP is **LIVENESS-gated** (dead claim → inherit + commit; live claim / mtime <120s →
 PROTECT). An interactive session IS slot N (long uncommitted WIP = stale-worker anti-pattern; `slot-cron-ff-pull.sh` +
-`slot-git-status-report.sh` every 5 min). SSOT: `/codex/05-infrastructure/per-tab-worktrees.md`.
+`slot-git-status-report.sh` every 5 min). SSOT: `/codex/05-infrastructure/per-tab-worktrees.md` (`Troubleshooting`:
+stale sibling `.venv`s → `uv sync`).
 
 ## Agent behavior
 
