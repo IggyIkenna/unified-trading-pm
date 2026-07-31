@@ -28,7 +28,7 @@ related:
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]
 created: 2026-07-25
-last_updated: "2026-07-25"
+last_updated: "2026-07-31"
 parent_epic: infrastructure_master
 assigned_vm: NA
 execution_scope: local-only
@@ -326,3 +326,16 @@ not data-pipeline).
   `cross_cutting_satellite_ao_dispatch_batch1b_2026_07_26.md`'s own claim on the same file is still open. G3
   (`DataStatusTab.tsx`) unchanged. No new `[REVIEW]` Track criteria needed above — the 3 existing ones still accurately
   measure this tranche's completeness.
+- **2026-07-31 ~21:26 UTC** — `/ag-closeout-audit infra` re-dispatched same-day (autonomous mode, scheduled, slot 13,
+  ~7h after the run above). Re-verification, not a from-scratch re-audit: candidate set re-derived twice
+  (`generate_ag_closeout_audit_candidates.py --tranche infra`, 32→36→37 members across a mid-run `git pull --ff-only`);
+  every net-new-since-14:06 doc (3) and the one persistently-never-cited candidate direct-read rather than re-running
+  the full Phase 1 Workflow (justified in the parked-findings doc's own Progress Log — mirrors the sibling `prediction`
+  tranche's same-day precedent, `unified-trading-pm@e89cdd5eb`). Result: **0 new genuine infra orphans, no batch5
+  drafted.** The 3 new docs are all already self-dispatched (`assigned_vm: planning`) and well-fitted to their Tracks.
+  The one never-cited candidate (`ao_self_pull_wedged_by_main_inbox_untracked_file_2026_07_30.md`) is a likely
+  `asset_group` mistag — real owning tranche is `ao` (its content is agent-orchestrator dispatch/worker- lifecycle,
+  `parent_epic: orchestrator_master`), not `infra` — reported as finding 3 in the parked-findings doc rather than
+  retagged directly (owning-tranche-writes-only rule, concurrent sharded workers). Findings 1-2 from the 14:06 run
+  re-checked live: both still open/unreconciled, no drift. Batch4 re-checked: still `status: draft`, untouched. Deferred
+  gates G1/G3 re-checked against live checkbox state: both unchanged, nothing newly cleared.
