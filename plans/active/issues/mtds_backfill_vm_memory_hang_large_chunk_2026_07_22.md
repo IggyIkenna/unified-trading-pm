@@ -449,3 +449,40 @@ mitigation ladder (bigger machine → smaller chunks) is exhausted; only the cod
   stop-and-escalate instruction. No code fix attempted (out of scope for a one-shot relaunch-escalation worker). The P1
   root-cause todo below is now the only remaining path to a reliable full-range run and should be treated as blocking
   further sports odds_api backfill attempts, not just a nice-to-have follow-up.
+- **2026-07-31 (slot 3, data_engineering, task `sports_odds_api_scattered_multiyear_gaps-004`) — started the P1
+  root-cause investigation itself (per the sibling doc's own "check that P1 first, do not relaunch again"
+  instruction).** Confirmed via `mtds_chunk_loop.sh` (`deployment-service/scripts/vm/setup-data-pipeline-vm.sh`) that
+  each CHUNK is a fresh `python -m market_tick_data_service --start-date CS --end-date CE` subprocess — the shell
+  `while` loop persists across chunks, but the Python process (and everything in its heap) does NOT. So any leak must
+  accumulate WITHIN one chunk's date range (confirmed real: `--chunk-size 5` still OOM'd after processing only ~5 dates
+  per subprocess in some cases), not across chunks. **Ruled out `FixtureIdResolver._cache`
+  (`market_interface/adapters/sports/fixture_id_resolver.py`) as the leak source** — traced
+  `umi_tick_provider.py::_route_sports` (the actual per-date, per-venue dispatch call site) and confirmed it calls
+  `get_adapter(venue.lower(), **_sports_kwargs)` fresh for EVERY date (no caching in `get_adapter`/`factory.py`), so a
+  brand-new `OddsApiAdapter` — and hence a brand-new, empty `FixtureIdResolver._cache = {}` — is created each date; the
+  cache cannot survive to accumulate across dates. This was my leading hypothesis before tracing the call site; a real,
+  useful negative result, not a dead end (rules out re-deriving this same wrong lead later). Promoted a reusable local
+  tracemalloc profiling harness (mirrors production exactly: fresh adapter per date + `gc.collect()`/`malloc_trim(0)`
+  after each, matching `tick_data_handler.py::TickDataHandler.process()`) to
+  `market-tick-data-service/scripts/profile_odds_api_backfill_memory_2026_07_31.py` — runnable locally against the real
+  odds-api (now-working key) for a few consecutive real-fetch dates, no VM launch needed, per this todo's own
+  "memray/tracemalloc profile across 2-3 consecutive real-fetch days" methodology. **Launched but NOT YET COMPLETE at
+  session-end** (a single real-fetch date takes 60-190+s — dozens of leagues × multiple rate-limited API calls each);
+  partial result so far: `2026-04-16` (0 rows, a genuinely quiet day) → 111.17 MB traced heap; `2026-04-17` (a
+  real-fetch-dense day, many leagues with real fixtures) still in progress when this entry was written. **Next steps for
+  whoever resumes**: re-run the promoted script directly
+  (`GCP_PROJECT_ID=central-element-323112 CLOUD_PROVIDER=gcp .venv/bin/python scripts/profile_odds_api_backfill_memory_2026_07_31.py <date1> <date2> <date3>`,
+  picking 2-3 real-fetch-dense dates from the known-problematic tail e.g. `2026-04-16..2026-07-29`) and read its
+  `tracemalloc.compare_to` output — if traced-heap-per-date grows monotonically across dates despite the fresh-adapter
+  pattern, the leak is module-level/global state (check for module-level `@lru_cache`/mutable-default caches anywhere in
+  the sports adapter's import chain) or something outside Python's tracked heap entirely (aiohttp connector-pool state
+  that `_make_session()`'s `async with` should already close per-request, or glibc arena fragmentation `malloc_trim`
+  can't reach). If it does NOT grow, the leak is likely something `tracemalloc` itself can't see (C-extension buffers,
+  e.g. inside `aiohttp`/`pandas`/`pyarrow` native code) and the investigation should shift to `memray` (which tracks
+  native allocations tracemalloc misses) instead of assuming the code is clean. **Trap hit**:
+  `gcloud secrets versions access` can silently return an EMPTY string (not error) if the ambient `gcloud` CLI active
+  account has drifted to a lower-privileged identity (`github-actions-deploy` instead of `unified-trading-sa`, same
+  drift class `sports_odds_api_scattered_multiyear_gaps_2026_07_27.md` already documented) — this is a SEPARATE
+  credential path from `GOOGLE_APPLICATION_CREDENTIALS`/ADC (what the Python client actually uses), so a CLI-level
+  failure does not necessarily mean the real fetch path is broken; check `gcloud config get-value account` before
+  concluding the key itself needs re-verification.
