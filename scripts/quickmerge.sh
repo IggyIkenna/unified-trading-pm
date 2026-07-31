@@ -1611,6 +1611,16 @@ fi
 
 echo ""
 
+# Snapshot of the QG-certified commit + branch, taken the instant Stage 3 finishes.
+# STAGE 5 below resolves/checks-out a branch by NAME and can, on the same-named branch,
+# land on a ref that no longer contains this commit (checkout -B origin/$BRANCH silently
+# resets refs/heads/$BRANCH when it isn't recognised as already checked out — the same
+# reset-vs-rebase class already fixed once in cascade_dep_branch, 2026-07-22; see
+# quickmerge_agent_regate_resets_branch_loses_local_commit_2026_07_31.md for the repro).
+# STAGE 5 verifies this snapshot is still reachable before it ever pushes.
+_QM_PRE_STAGE5_HEAD=$(git rev-parse HEAD 2>/dev/null || echo "")
+_QM_PRE_STAGE5_BRANCH=$(git branch --show-current 2>/dev/null || echo "")
+
 # ============================================================================
 # STAGE 4: ACT SIMULATION (skip with --quick)
 # ============================================================================
@@ -1693,6 +1703,27 @@ else
   fi
 fi
 echo ""
+
+# ============================================================================
+# No-regression guard (quickmerge_agent_regate_resets_branch_loses_local_commit_2026_07_31.md):
+# the branch-selection block above just ran a `checkout -B $BRANCH origin/$BRANCH` in its
+# `elif` arm whenever `refs/heads/$BRANCH` wasn't recognised — on the SAME branch name we
+# were already committed on, that call resets refs/heads/$BRANCH straight to origin,
+# silently discarding the QG-certified commit captured in _QM_PRE_STAGE5_HEAD above (reflog
+# still has it — "branch: Reset to origin/<branch>" — but nothing else does). Only meaningful
+# when $BRANCH is the SAME branch we snapshotted (a genuinely NEW PR branch created fresh off
+# origin/main is expected to NOT contain it — that's not a regression, it's branch creation).
+if [ -n "$_QM_PRE_STAGE5_HEAD" ] && [ "$BRANCH" = "$_QM_PRE_STAGE5_BRANCH" ] \
+   && ! git merge-base --is-ancestor "$_QM_PRE_STAGE5_HEAD" HEAD 2>/dev/null; then
+  _QM_LOST_PRESERVE_REF="refs/wip-preserve/quickmerge-stage5-regate-${_QM_PRE_STAGE5_HEAD:0:12}"
+  git update-ref "$_QM_LOST_PRESERVE_REF" "$_QM_PRE_STAGE5_HEAD" 2>/dev/null || true
+  echo "[$REPO_NAME] ❌ STAGE 5 branch resolution DROPPED the QG-certified commit ${_QM_PRE_STAGE5_HEAD:0:9}"
+  echo "    (branch '$BRANCH' no longer contains it after checkout). Recovered — preserved at:"
+  echo "      $_QM_LOST_PRESERVE_REF"
+  echo "    Recover with: git checkout $BRANCH && git merge --ff-only $_QM_LOST_PRESERVE_REF"
+  echo "    (or, if $BRANCH has since moved further, rebase it back on: git rebase $_QM_LOST_PRESERVE_REF)"
+  exit 1
+fi
 
 # Restore stash on new branch
 if [ "$RESTORE_STASH" = 1 ] && git stash list | grep -q "quickmerge-$$"; then
