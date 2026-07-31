@@ -589,3 +589,19 @@ legitimate, actively-progressing VM (not stale) — did not force past the lock 
 `bash deployment-service/scripts/vm/launch-api-football-backfill-vm.sh --force --entity FIXTURE_EVENTS --recovery-fixture-ids gs://deployment-scripts-central-element-323112/sports_fixture_events_refetch_2026_07_25/recovery_fixture_ids_2026_07_30.parquet 2020-06-06 2026-07-25`
 (the `--force` here bypasses the singleton lock ONLY once confirmed clear — not a bypass of a live VM), then repeat the
 health-check → re-census → (repeat if still non-zero) cycle this campaign has followed throughout.
+
+**Health-checked 2026-07-31T00:57Z (slot-12, data_engineering)**: lock still NOT clear —
+`gcloud compute instances list --filter='name~"^af-backfill-|^af-audit-"'` shows `af-backfill-20260730-220243` still
+`RUNNING` (the 3 other listed `af-backfill-*` VMs are prior campaigns, all `TERMINATED`). Confirmed it's genuinely live,
+not stale, before declining to force past it: heartbeat blob epoch `1785459408` = `2026-07-31T00:56:48Z` (~52s old at
+check time); `run.log` tail actively growing with real `Fetched N teams for league=X season=Y` lines +
+`PIPELINE_HEARTBEAT vm=af-backfill-20260730-220243 ag=SPORTS task=instruments-backfill` markers every ~60s through
+`00:56:36Z` — a different, legitimate, actively-progressing task (`instruments-backfill`, not this campaign's
+FIXTURE_EVENTS recovery), same as slot-3's 22:20Z finding. Did NOT force past the lock or delete it (VM-delete
+guardrail: only genuinely stale VMs qualify, and this one is clearly alive). Not completable this turn — the recovery
+re-fetch for the remaining 4,327 non-canonical objects still cannot launch. Recovery-ids parquet from the 2026-07-30
+post-refetch census remains staged at
+`gs://deployment-scripts-central-element-323112/sports_fixture_events_refetch_2026_07_25/recovery_fixture_ids_2026_07_30.parquet`
+(unchanged, no need to rebuild). Releasing via `/skip-current-task {"reason_code": "GATED"}`, not duplicate-launched.
+Next dispatch: repeat this lock-check (`gcloud compute instances list --filter='name~"^af-backfill-|^af-audit-"'`); once
+clear, launch the recovery command above, then repeat the health-check → re-census cycle.
