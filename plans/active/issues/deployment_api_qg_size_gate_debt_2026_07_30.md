@@ -363,8 +363,18 @@ file-by-file.
       basedpyright 0 errors, ruff clean, 161 targeted tests green (`test_event_processor_service.py`,
       `test_sync_service.py`, `test_event_processor.py`), full `quality-gates.sh --no-fix` green (145s, sentinel
       `1e824699d21451babceadf3d65ce5a570339ce85`). Repo: deployment-api@867d88e.
-- [ ] [SCRIPT] P2. Decompose the remaining function-size-only violation in `deployment_api/services/state_manager.py`.
-      Remove its exclude entry once compliant; re-run `quality-gates.sh` to confirm no regression.
+- [x] ✅ [SCRIPT] P2. **DONE 2026-07-31 (slot-2, infra craft).** Decomposed `deployment_api/services/state_manager.py`.
+      Extracted `_new_lock_payload`/`_upload_lock_payload`/`_renew_existing_lock` from `try_acquire_deployment_lock`
+      (was 73L); extracted `_maybe_delete_expired_state` from `cleanup_state_ttl` (was 64L). Pure code motion, no logic
+      changes. `FUNCTION_SIZE_EXTRA_EXCLUDES` entry removed — gate passes natively. Verified: AST size check clean,
+      basedpyright 0 errors, ruff clean, 500 targeted tests green run individually per-file (whole-batch collection hit
+      a pre-existing circular-import artifact confirmed to reproduce identically on origin HEAD before this change —
+      `test_state_manager.py` 43, `test_state_manager_service.py` 25, `test_deployments_helpers.py` 62,
+      `test_deployment_state_service.py` 34, `test_sync_service.py` 77, `test_route_deployments.py` 73,
+      `test_route_deployment_state.py` 40, `test_background_sync.py` 20, `test_log_analysis.py` 26,
+      `test_deployment_worker.py` 13, `test_local_state_manager.py` 27, `test_deployment_processor.py` 60), full
+      `quality-gates.sh --no-fix` green (106s, sentinel `1db91b064cac0fcd9dee415fd78e8243aa584c90`). Repo:
+      deployment-api@b68758a.
 - [ ] [SCRIPT] P2. Decompose the remaining function-size-only violation in `deployment_api/services/sync_service.py`.
       Remove its exclude entry once compliant; re-run `quality-gates.sh` to confirm no regression.
 - [ ] [SCRIPT] P2. Decompose the remaining function-size-only violation in
