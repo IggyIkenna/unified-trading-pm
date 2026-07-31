@@ -107,13 +107,16 @@ substrings inside a path or an unrelated flag's spelling can no longer match, wh
 
 ## Suggested todos
 
-- [ ] [INFRA] P2. Fix the recursive-rm pattern in `agent-orchestrator/scripts/hooks/block_destructive_commands.py` to
+- [x] ✅ [INFRA] P2. Fix the recursive-rm pattern in `agent-orchestrator/scripts/hooks/block_destructive_commands.py` to
       require the `-r`/`-rf`/`--recursive` match sit at an actual whitespace-delimited flag-token boundary, not anywhere
       inside a hyphenated path segment or an unrelated flag's spelling. Add negative-test cases to the hook's existing
       test coverage (if any exists — check for a `test_block_destructive_commands.py` sibling first) covering:
       `git rm path/to/sync-manifest-versions.py` (must now ALLOW), `rm path/to/foo.py && git status --porcelain` (must
       now ALLOW), plus confirm every existing true-positive case (`rm -rf`, `rm -fr dir`, `rm --recursive dir`,
-      `rm dir -r`) still BLOCKS. Repo: agent-orchestrator.
+      `rm dir -r`) still BLOCKS. Repo: agent-orchestrator. — agent-orchestrator@7b1a251. Pattern now anchored via
+      `(?<=\s)` before the leading `-` and a trailing `\b` after the letter run
+      (`-[A-Za-z]*[rR][A-Za-z]*\b|--recursive\b`); added the two negative cases plus `rm --recursive dir`/`rm dir -r` to
+      the BLOCKED list; full 48-test suite green + repo QG green.
 - [ ] [INFRA] P3. Audit the other `[A-Za-z]*[rR]`/`[A-Za-z]*[fdx]`-shaped patterns in the same `_DESTRUCTIVE` list
       (`git clean -f/-d/-x` at line 80 uses the same unanchored shape) for the identical false-positive class; tighten
       or confirm each is already narrow enough (the `chmod -R`/`chown -R` patterns at lines 87-88 use a stricter `-R\b`
