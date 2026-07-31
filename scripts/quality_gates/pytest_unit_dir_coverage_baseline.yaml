@@ -1,0 +1,46 @@
+# Baseline for the PYTEST_UNIT_DIR coverage fleet sweep — SHRINKING ratchet.
+#
+# repos[<repo>] is the number of `tests/<family>/unit/` dirs this checker
+# tolerates as UNGATED (not reachable via that repo's PYTEST_UNIT_DIR) in
+# that repo. A repo whose live ungated-family count EXCEEDS its baseline
+# fails the gate — a NEW per-family test dir landed without being wired
+# into PYTEST_UNIT_DIR (the exact MTDS bug this checker exists to catch).
+# Fix by adding the family dir (or its parent) to that repo's
+# `PYTEST_UNIT_DIR=` in scripts/quality-gates.sh, proving the widened gate
+# is still GREEN (rule 11a), then re-run `--update-baseline`.
+#
+# LOWER counts as families get gated. NEVER raise a count. Repos not
+# listed (or not using the PYTEST_UNIT_DIR contract) default to 0.
+#
+# SSOT: plans/active/issues/mtds_ungated_test_families_2026_07_17.md
+# (todo 5) + plans/active/ci_satellite_ao_dispatch_batch2_2026_07_29.md
+# (todo 12).
+note:
+  "Seeded 2026-07-31 — ci_satellite_ao_dispatch_batch2 todo 12. Known pre-existing gap: execution-service
+  tests/sports_execution/unit/ is not named in PYTEST_UNIT_DIR (scripts/quality-gates.sh only lists trade_execution/unit
+  + defi_execution's one lateral-loader file) — ratchet down by widening PYTEST_UNIT_DIR there, proving quality-gates.sh
+  stays green."
+repos:
+  agent-orchestrator: 0
+  alerting-service: 0
+  batch-live-reconciliation-service: 0
+  client-reporting-api: 0
+  deployment-api: 0
+  deployment-service: 0
+  e2e-testing: 0
+  execution-service: 1
+  features-service: 0
+  fund-administration-service: 0
+  greeks-service: 0
+  ibkr-gateway-infra: 0
+  instruments-service: 0
+  market-data-processing-service: 0
+  market-tick-data-service: 0
+  ml-service: 0
+  strategy-service: 0
+  system-integration-tests: 0
+  trading-agent-service: 0
+  unified-api-contracts: 0
+  unified-trading-api: 0
+  unified-trading-library: 0
+  unified-trading-pm: 0

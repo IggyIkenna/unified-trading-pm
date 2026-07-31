@@ -499,6 +499,28 @@ if [ -f "$ARCH_RATCHETS_CHECKER" ] && [ -n "${WORKSPACE_ROOT:-}" ]; then
     fi
 fi
 
+# ── Post-gates: PYTEST_UNIT_DIR fleet coverage sweep — baselined ratchet ──
+# SSOT: plans/active/issues/mtds_ungated_test_families_2026_07_17.md (todo 5) +
+# plans/active/ci_satellite_ao_dispatch_batch2_2026_07_29.md (todo 12).
+# MTDS never set PYTEST_UNIT_DIR, so its whole tests/market_interface/ family
+# (49 unit modules) silently never ran in the gate. This is the fleet-wide
+# guard so the next per-family repo doesn't slip into the same gap unnoticed —
+# flags any repo with a tests/<family>/unit/ dir its PYTEST_UNIT_DIR doesn't
+# reach. Current baseline 1 (execution-service tests/sports_execution/unit/,
+# pre-existing, this todo doesn't fix it) — ratchet down as families get gated.
+PYTEST_UNIT_DIR_COVERAGE_CHECKER="${REPO_ROOT}/unified-trading-pm/scripts/quality_gates/check_pytest_unit_dir_coverage.py"
+if [ -f "$PYTEST_UNIT_DIR_COVERAGE_CHECKER" ] && [ -n "${WORKSPACE_ROOT:-}" ]; then
+    echo "Running PYTEST_UNIT_DIR fleet coverage sweep (ratchet mode)..."
+    if python3 "$PYTEST_UNIT_DIR_COVERAGE_CHECKER" --workspace-root "$WORKSPACE_ROOT" >/dev/null; then
+        log_success "PYTEST_UNIT_DIR fleet coverage sweep passed (at-or-below baseline)"
+    else
+        echo "❌ PYTEST_UNIT_DIR fleet coverage regression — a tests/<family>/unit/ dir isn't reachable via that repo's PYTEST_UNIT_DIR" >&2
+        echo "   Add the family dir to that repo's PYTEST_UNIT_DIR= (scripts/quality-gates.sh), proving the widened gate stays GREEN (rule 11a)," >&2
+        echo "   or re-baseline with --update-baseline after intentional debt. See mtds_ungated_test_families_2026_07_17.md." >&2
+        _post_gate_fail "pytest-unit-dir-coverage"
+    fi
+fi
+
 # ── Post-gates: Plan discipline (Group A of governance_qg_automation_gaps) — baselined ratchet ──
 # SSOT: governance_qg_automation_gaps_post_cutover_2026_05_12.md § Group A (G-2 + G-5 + G-13).
 # Three sub-rules: (a) DEFERRED-without-migration-banner, (b) filename-convention,
