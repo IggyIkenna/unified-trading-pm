@@ -118,16 +118,31 @@ and the catalogue has **no `margin_type` field**. Deribit inverse is the only co
       MTDS's `cefi_catalog_reader.py` capture-universe derivation for BYBIT/OKX-SWAP/KRAKEN-FUTURES so only the winning
       margin type is actually captured (today both are captured, unfiltered — safe but not cost-minimal) — see the new
       todo below.
-- [ ] [MTDS] P3. **Wire `margin_type_representative` (unified-api-contracts, shipped `cae957ab`) into MTDS's capture
-      layer** — `market-tick-data-service/market_tick_data_service/engine/cefi_catalog_reader.py`'s capture-universe
-      derivation currently captures BOTH linear and inverse legs for any (venue, base) where a venue exposes both under
-      one canonical key (BYBIT, OKX-SWAP, KRAKEN-FUTURES — confirmed via `_infer_margin_type` in instruments-service
-      `tardis/parsing.py`), because `is_in_mvp_capture_universe` has no margin_type-awareness. Needs: (1) a
-      volume-observation source for `MarginVolumeObservation` (candle/manifest-derived aggregate — the same "computed
-      once per window" basis the existing spot/perp selectors use, likely from MDPS candle volume); (2) call
-      `margin_type_representative` per (venue, base) for the 3 dual-margin venues and skip capturing the losing margin
-      type's instruments. NOT margin-gating DERIBIT (both legs stay unconditional) or BINANCE-DELIVERY (already fully
-      out of MVP scope, nothing to wire).
+- [x] ✅ [MTDS] P3. **Wire `margin_type_representative` (unified-api-contracts, shipped `cae957ab`) into MTDS's capture
+      layer** — market-tick-data-service@d9ce3b3d | Investigated first (BLK-4cb04e0d, 2026-07-31): a real
+      `MarginVolumeObservation` source needs new manifest-query infra (no service↔service dep to MDPS is allowed, and
+      the sibling `feature_perp_representative` selector is STILL unwired in prod for the same reason) — building it
+      properly exceeds this P3's scope. Main-agent interim ruling (Option B, disposition=partial pending operator
+      ratification): shipped the SAFE subset now — `cefi_catalog_reader.py`'s `_margin_leg_gated` calls
+      `margin_type_representative` with NO observations (its documented no-data default is LINEAR) for the 3 dual-margin
+      venues (BYBIT/OKX-SWAP/KRAKEN-FUTURES), dropping the INVERSE leg for ALTS only. BTC/ETH are EXEMPTED
+      (`_MARGIN_GATE_EXEMPT_BASES`) — both legs stay captured, matching today's safe behavior — because the issue doc
+      documents INVERSE as historically more liquid than LINEAR for those two bases on some venues, so a fake no-data
+      default would risk dropping the actually-more-liquid leg (a correctness regression, not a cost optimization).
+      DERIBIT/BINANCE-DELIVERY untouched, as scoped. 5 new unit tests (`test_cefi_catalog_reader_margin_gate.py`) +
+      updated the existing mvp-gate test for the new `venue` param. Full QG green. Follow-up (real volume source)
+      tracked below — NOT done here.
+- [ ] [MTDS] P2. **Build a shared manifest-volume-aggregation utility + wire it into BOTH the BTC/ETH margin-leg gate
+      above (`cefi_catalog_reader.py` `_MARGIN_GATE_EXEMPT_BASES`) AND the still-unwired `feature_perp_representative`
+      call in `features-service/features_service/delta_one/cli/handlers/batch_handler.py` (currently calls
+      `filter_instruments_for_family` with no `venue_volumes`, so it's a permanent no-op).** Source: MTDS's OWN manifest
+      row_count, trailing N-day aggregate per (venue, base[, margin_type]) — MTDS already captures trades for both
+      margin legs today, so this is genuinely "data we already capture" (the UAC `liquid_representative.py` docstring's
+      design basis), with NO new service↔service dependency (MDPS candle volume is out of reach per
+      `/codex/04-architecture/tier-and-import-architecture.md`'s no-service-deps rule). Build ONCE, consume from both
+      sites — a one-off just for the margin gate is not the move (main-agent ruling, BLK-4cb04e0d, 2026-07-31). Once
+      real observations exist for BTC/ETH, drop them from `_MARGIN_GATE_EXEMPT_BASES` and re-verify against measured
+      volume instead of the historical-default assumption.
 
 ## EXCEPTION — staking/restaking/LST spot (spot-without-perp allow-list, operator 2026-06-23)
 
