@@ -218,67 +218,67 @@ gate is satisfied.
       fix is pending.
 
       **[2026-07-28 note, slot-6]**: the UTL `_IncludedRouter`/`.path` route-introspection fix landed today
-                                                                                                  (`unified-trading-library@3b99d19d`, slot-12, `fastapi>=0.137/starlette>=1.3.1`, quickmerge to
-                                                                                                  `live-defi-rollout`) — I hit the resulting `ImportError: iter_route_contexts` live in market-tick-data-service
-                                                                                                  while running the `data-pipeline-check-mtds` MID-BACKFILL spot-check
-                                                                                                  (`cefi_track2_coverage_backfill_checkpoints_2026_07_25.md`). slot-3 independently found + filed the full
-                                                                                                  analysis first and got the direction right (UTL + client-reporting-api are the ones DRIFTED from the
-                                                                                                  `canonical-dependency-manifest.json` SSOT, not the ~10 repos still on the old bound) — see
-                                                                                                  `issues/fleet_fastapi_upper_bound_stale_vs_utl_floor_bump_2026_07_28.md` (P0, `[OPERATOR]`-gated on choosing
-                                                                                                  roll-forward vs revert, correctly not something a worker should pick unilaterally). I initially bumped
-                                                                                                  market-tick-data-service's own `pyproject.toml` cap to unblock my task, then reverted that tracked change after
-                                                                                                  finding slot-3's doc mid-session — same reasoning: direction isn't mine to pick. Left my local `.venv` on the
-                                                                                                  newer fastapi (untracked, session-only) so my own check could proceed without prejudging the fleet decision.
+                                                                                                      (`unified-trading-library@3b99d19d`, slot-12, `fastapi>=0.137/starlette>=1.3.1`, quickmerge to
+                                                                                                      `live-defi-rollout`) — I hit the resulting `ImportError: iter_route_contexts` live in market-tick-data-service
+                                                                                                      while running the `data-pipeline-check-mtds` MID-BACKFILL spot-check
+                                                                                                      (`cefi_track2_coverage_backfill_checkpoints_2026_07_25.md`). slot-3 independently found + filed the full
+                                                                                                      analysis first and got the direction right (UTL + client-reporting-api are the ones DRIFTED from the
+                                                                                                      `canonical-dependency-manifest.json` SSOT, not the ~10 repos still on the old bound) — see
+                                                                                                      `issues/fleet_fastapi_upper_bound_stale_vs_utl_floor_bump_2026_07_28.md` (P0, `[OPERATOR]`-gated on choosing
+                                                                                                      roll-forward vs revert, correctly not something a worker should pick unilaterally). I initially bumped
+                                                                                                      market-tick-data-service's own `pyproject.toml` cap to unblock my task, then reverted that tracked change after
+                                                                                                      finding slot-3's doc mid-session — same reasoning: direction isn't mine to pick. Left my local `.venv` on the
+                                                                                                      newer fastapi (untracked, session-only) so my own check could proceed without prejudging the fleet decision.
 
-                                                                                              **[2026-07-28 note, slot-7/cicd escalation `agt-db0abf`]**: hit the same `ImportError: iter_route_contexts` as a
-                                                                                                  hard `quality-gates-v2` red blocking ml-service's LDR→main promotion PR #306 (not a side-effect of an
-                                                                                                  unrelated task — this WAS the escalated wall). Unlike slot-6/slot-8, I shipped the mechanical direction-A
-                                                                                                  bump (`ml-service@8914d555`: `fastapi>=0.137.0,<1.0.0`, regenerated `uv.lock` → resolved 0.140.7) rather than
-                                                                                                  reverting, because (a) my mandate is specifically to get this gate green, not to audit the fleet, and (b) I
-                                                                                                  checked for slot-8's found landmine (a test iterating `app.routes`/`isinstance(route, APIRoute)` post
-                                                                                                  `include_router()`, which `_IncludedRouter` wrapping can silently empty) — ml-service's only matching-looking
-                                                                                                  test (`tests/inference/unit/test_prediction_stream.py:112`) walks a raw pre-include `APIRouter.routes`, never
-                                                                                                  an app's aggregated `.routes`, so it is NOT exposed to the `_IncludedRouter` wrapping. Full
-                                                                                                  `quality-gates.sh --no-fix` ran clean (2111 passed, 4 skipped, 80% coverage) both before and after the
-                                                                                                  fastapi bump with no count drop. Full details + Progress Log entry in
-                                                                                                  `issues/fleet_fastapi_upper_bound_stale_vs_utl_floor_bump_2026_07_28.md`. Flagging for the pending
-                                                                                                  `[OPERATOR]` direction call: if direction B (revert UTL) is chosen, ml-service's `8914d555` needs a matching
-                                                                                                  mechanical revert — trivial, already scoped.
-                                                                                                  This todo and the new P0 doc now cover the same ground; resolve via the P0 doc's `[OPERATOR]` todo, not here.
+                                                                                                  **[2026-07-28 note, slot-7/cicd escalation `agt-db0abf`]**: hit the same `ImportError: iter_route_contexts` as a
+                                                                                                      hard `quality-gates-v2` red blocking ml-service's LDR→main promotion PR #306 (not a side-effect of an
+                                                                                                      unrelated task — this WAS the escalated wall). Unlike slot-6/slot-8, I shipped the mechanical direction-A
+                                                                                                      bump (`ml-service@8914d555`: `fastapi>=0.137.0,<1.0.0`, regenerated `uv.lock` → resolved 0.140.7) rather than
+                                                                                                      reverting, because (a) my mandate is specifically to get this gate green, not to audit the fleet, and (b) I
+                                                                                                      checked for slot-8's found landmine (a test iterating `app.routes`/`isinstance(route, APIRoute)` post
+                                                                                                      `include_router()`, which `_IncludedRouter` wrapping can silently empty) — ml-service's only matching-looking
+                                                                                                      test (`tests/inference/unit/test_prediction_stream.py:112`) walks a raw pre-include `APIRouter.routes`, never
+                                                                                                      an app's aggregated `.routes`, so it is NOT exposed to the `_IncludedRouter` wrapping. Full
+                                                                                                      `quality-gates.sh --no-fix` ran clean (2111 passed, 4 skipped, 80% coverage) both before and after the
+                                                                                                      fastapi bump with no count drop. Full details + Progress Log entry in
+                                                                                                      `issues/fleet_fastapi_upper_bound_stale_vs_utl_floor_bump_2026_07_28.md`. Flagging for the pending
+                                                                                                      `[OPERATOR]` direction call: if direction B (revert UTL) is chosen, ml-service's `8914d555` needs a matching
+                                                                                                      mechanical revert — trivial, already scoped.
+                                                                                                      This todo and the new P0 doc now cover the same ground; resolve via the P0 doc's `[OPERATOR]` todo, not here.
 
-                                                                                              **[2026-07-28 note, slot-12]**: this todo is FULLY EXECUTED, but leaving the checkbox unflipped pending the
-                                                                                                  P0 doc's `[OPERATOR]` ratification (see below) — same discipline as the notes above. I authored the
-                                                                                                  original `unified-trading-library@3b99d19d` fix (`get_route_paths`/`find_matching_route` in
-                                                                                                  `service_framework/fastapi_factory.py`, unit-tested) from this exact todo, then completed the whole
-                                                                                                  coordinated exercise it describes before finding `fleet_fastapi_upper_bound_stale_vs_utl_floor_bump_2026_07_28.md`
-                                                                                                  (filed by slot-3 partway through my session): fixed the route-introspection tests in
-                                                                                                  strategy-service/client-reporting-api/features-service (as scoped) **+ market-tick-data-service/
-                                                                                                  deployment-api** (the two landmines slot-3/slot-6/slot-8 found — `deployment-api`'s ordering-regression
-                                                                                                  test now uses `find_matching_route` so it survives `_IncludedRouter` wrapping instead of silently
-                                                                                                  matching nothing); bumped `workspace-constraints.toml` + `canonical-dependency-manifest.json` to
-                                                                                                  `fastapi>=0.137.0,<1.0.0` / `starlette>=1.3.1,<2.0.0`; bumped + relocked + full-QG'd + shipped ALL 14
-                                                                                                  declaring repos (`unified-trading-library`, `strategy-service`, `client-reporting-api`,
-                                                                                                  `features-service`, `market-tick-data-service`, `deployment-api`, `alerting-service`,
-                                                                                                  `fund-administration-service`, `execution-service`, `greeks-service`, `unified-trading-api`,
-                                                                                                  `deployment-service`, `agent-orchestrator`, `trading-agent-service` — current HEADs:
-                                                                                                  unified-trading-library@4f0ac48d, strategy-service@d426da98, client-reporting-api@42a9013,
-                                                                                                  features-service@4eeebebb, market-tick-data-service@aec1acf5, deployment-api@2c1d446,
-                                                                                                  alerting-service@d226937, fund-administration-service@f214f1a, execution-service@204ff58c,
-                                                                                                  greeks-service@cfc0137, unified-trading-api@7a7029d, deployment-service@161a979,
-                                                                                                  agent-orchestrator@6d20faa, trading-agent-service@67cbb4b); dropped the CVE-2026-54283/-54282
-                                                                                                  `--ignore-vuln` entries from `qg-common.sh` (mirrored in `base-service.sh`/`base-library.sh` comments).
-                                                                                                  `check-dependency-alignment.py` now reports fully aligned fleet-wide (was drifted before — that IS the
-                                                                                                  P0 doc's contradiction, now resolved). Full details + recommendation (ratify, don't revert) in the P0
-                                                                                                  doc's Progress Log. Escalated via `/blocked` to main rather than flipping either todo myself.
+                                                                                                  **[2026-07-28 note, slot-12]**: this todo is FULLY EXECUTED, but leaving the checkbox unflipped pending the
+                                                                                                      P0 doc's `[OPERATOR]` ratification (see below) — same discipline as the notes above. I authored the
+                                                                                                      original `unified-trading-library@3b99d19d` fix (`get_route_paths`/`find_matching_route` in
+                                                                                                      `service_framework/fastapi_factory.py`, unit-tested) from this exact todo, then completed the whole
+                                                                                                      coordinated exercise it describes before finding `fleet_fastapi_upper_bound_stale_vs_utl_floor_bump_2026_07_28.md`
+                                                                                                      (filed by slot-3 partway through my session): fixed the route-introspection tests in
+                                                                                                      strategy-service/client-reporting-api/features-service (as scoped) **+ market-tick-data-service/
+                                                                                                      deployment-api** (the two landmines slot-3/slot-6/slot-8 found — `deployment-api`'s ordering-regression
+                                                                                                      test now uses `find_matching_route` so it survives `_IncludedRouter` wrapping instead of silently
+                                                                                                      matching nothing); bumped `workspace-constraints.toml` + `canonical-dependency-manifest.json` to
+                                                                                                      `fastapi>=0.137.0,<1.0.0` / `starlette>=1.3.1,<2.0.0`; bumped + relocked + full-QG'd + shipped ALL 14
+                                                                                                      declaring repos (`unified-trading-library`, `strategy-service`, `client-reporting-api`,
+                                                                                                      `features-service`, `market-tick-data-service`, `deployment-api`, `alerting-service`,
+                                                                                                      `fund-administration-service`, `execution-service`, `greeks-service`, `unified-trading-api`,
+                                                                                                      `deployment-service`, `agent-orchestrator`, `trading-agent-service` — current HEADs:
+                                                                                                      unified-trading-library@4f0ac48d, strategy-service@d426da98, client-reporting-api@42a9013,
+                                                                                                      features-service@4eeebebb, market-tick-data-service@aec1acf5, deployment-api@2c1d446,
+                                                                                                      alerting-service@d226937, fund-administration-service@f214f1a, execution-service@204ff58c,
+                                                                                                      greeks-service@cfc0137, unified-trading-api@7a7029d, deployment-service@161a979,
+                                                                                                      agent-orchestrator@6d20faa, trading-agent-service@67cbb4b); dropped the CVE-2026-54283/-54282
+                                                                                                      `--ignore-vuln` entries from `qg-common.sh` (mirrored in `base-service.sh`/`base-library.sh` comments).
+                                                                                                      `check-dependency-alignment.py` now reports fully aligned fleet-wide (was drifted before — that IS the
+                                                                                                      P0 doc's contradiction, now resolved). Full details + recommendation (ratify, don't revert) in the P0
+                                                                                                      doc's Progress Log. Escalated via `/blocked` to main rather than flipping either todo myself.
 
-                                                                                  **[2026-07-28 status, slot-12]**: `BLK-0d51ff66` answered by main with INTERIM guidance — hold exactly as-is,
-                                                                                      do NOT revert (already shipped + QG-green + a CVE remediation; reverting is the higher-risk action; UTL
-                                                                                      is already HEAD-pinned via the editable install and hard-requires the new floor via
-                                                                                      `iter_route_contexts`, so "narrower fix" isn't viable now anyway; a revert would also re-break
-                                                                                      agent-orchestrator, which crash-looped on this exact `ImportError` after a restart and was recovered by
-                                                                                      the same fix direction). Main explicitly reserved the actual `[OPERATOR]` ratification for the operator
-                                                                                      and told me not to sit idle waiting on it — proceeding to other backlog work. Checkbox stays unflipped
-                                                                                      until that ratification lands.
+                                                                                      **[2026-07-28 status, slot-12]**: `BLK-0d51ff66` answered by main with INTERIM guidance — hold exactly as-is,
+                                                                                          do NOT revert (already shipped + QG-green + a CVE remediation; reverting is the higher-risk action; UTL
+                                                                                          is already HEAD-pinned via the editable install and hard-requires the new floor via
+                                                                                          `iter_route_contexts`, so "narrower fix" isn't viable now anyway; a revert would also re-break
+                                                                                          agent-orchestrator, which crash-looped on this exact `ImportError` after a restart and was recovered by
+                                                                                          the same fix direction). Main explicitly reserved the actual `[OPERATOR]` ratification for the operator
+                                                                                          and told me not to sit idle waiting on it — proceeding to other backlog work. Checkbox stays unflipped
+                                                                                          until that ratification lands.
 
 - [x] ✅ [TEST] P3. **RESOLVED via the canonical copy — 2026-07-31 (slot-13).** The canonical duplicate at
       `plans/active/infra_satellite_ao_dispatch_batch1_2026_07_26.md` (superseded-note below) is now flipped DONE:
@@ -290,8 +290,8 @@ gate is satisfied.
       investigation); exploratory lock upgrade reverted. Repo: alerting-service.
 
       **SUPERSEDED (2026-07-30, conflict-check)** — `plans/active/infra_satellite_ao_dispatch_batch1_2026_07_26.md:571-581`
-                                                              already carries a near-identical `[TEST] P3` todo for this same test, same repo, same reproduction method. Do not
-                                                              re-dispatch from here.
+                                                                  already carries a near-identical `[TEST] P3` todo for this same test, same repo, same reproduction method. Do not
+                                                                  re-dispatch from here.
 
 - [x] ✅ [SCRIPT] P2. **aiohttp / vcrpy unblock — biggest CVE cluster — DONE 2026-06-23.** vcrpy 8.2.1 confirmed
       aiohttp-3.14-compatible (`MockStream` rewritten; UAC 649-cassette suite green on 3.14.1, conftest shim removed).
@@ -320,14 +320,14 @@ gate is satisfied.
       commit the sibling ignore-drop todo cites).
 
       **Superseded-note correction (2026-07-30 conflict-check, now stale)**: the note below originally pointed at
-              `plans/active/infra_satellite_ao_dispatch_batch1_2026_07_26.md`'s Deferred § item 2 ("batch 4 deferred infra
-              items into the NEXT infra batch"). That bundling never materialized as a dispatched batch — this item got
-              resolved independently and sooner via the ignore-list re-audit instead. Leaving the historical note below for
-              context but it no longer describes where to look for this specific item.
+                  `plans/active/infra_satellite_ao_dispatch_batch1_2026_07_26.md`'s Deferred § item 2 ("batch 4 deferred infra
+                  items into the NEXT infra batch"). That bundling never materialized as a dispatched batch — this item got
+                  resolved independently and sooner via the ignore-list re-audit instead. Leaving the historical note below for
+                  context but it no longer describes where to look for this specific item.
 
-              ~~**SUPERSEDED (2026-07-30, conflict-check)** — named verbatim in
-              `plans/active/infra_satellite_ao_dispatch_batch1_2026_07_26.md`'s own Deferred § item 2, explicitly queued for
-              "the NEXT infra batch." Do not re-dispatch from here.~~
+                  ~~**SUPERSEDED (2026-07-30, conflict-check)** — named verbatim in
+                  `plans/active/infra_satellite_ao_dispatch_batch1_2026_07_26.md`'s own Deferred § item 2, explicitly queued for
+                  "the NEXT infra batch." Do not re-dispatch from here.~~
 
 - [x] ✅ [SCRIPT] P3. **DONE — already resolved, checkbox reconciled 2026-07-31 (slot 14).** Same stale-SUPERSEDED
       pattern as the two sibling todos above in this doc: the referenced batch never actually bundled this item —
@@ -349,18 +349,39 @@ gate is satisfied.
       compatible with our code — no mass updates, validating QG per dep (the broadened audit scope above). Repo:
       per-dep.
 
+      **2026-07-31 fresh full-fleet pip-audit re-verification (slot-3) — zero real gaps, checkbox left open (inherently
+          unbounded scope).** Ran `.venv/bin/python -m pip_audit --format json` against all 17 repos available in this
+          slot (agent-orchestrator, alerting-service, client-reporting-api, deployment-api, deployment-service,
+          e2e-testing, features-service, greeks-service, instruments-service, market-data-processing-service,
+          market-tick-data-service, strategy-service, system-integration-tests, trading-agent-service,
+          unified-api-contracts, unified-trading-library, unified-trading-pm). **First pass found "vulnerabilities" in 6
+          repos** (alerting-service, client-reporting-api, deployment-api, greeks-service, strategy-service,
+          trading-agent-service — idna/msgpack/pip/pyasn1/pydantic-settings/setuptools/starlette/twisted/ujson, all
+          already-tracked advisories) — **investigated before reporting, and it was a THIRD false-positive class this doc
+          hadn't hit yet** (distinct from the pyenv-shim false lead documented above): this slot's per-repo `.venv`s
+          predate the 2026-07-30 fleet-wide CVE-fix commits and were never re-synced (`.venv/pyvenv.cfg` mtime older than
+          `uv.lock` mtime in every flagged repo); each repo's own `pyproject.toml`/`uv.lock` already carried the correct
+          fixed floors the whole time. `uv sync --frozen` in each of the 6 repos (env-only — no lock/pyproject content
+          changed, `git status --porcelain` confirms zero diff in all 6) resolved the drift; **re-running pip-audit
+          afterward: all 17 repos report "No known vulnerabilities found."** This is a genuine, useful confirmation (the
+          fleet-wide bump really is complete, not just claimed) but does NOT close this todo — the todo's own scope is the
+          much broader non-CVE "latest compatible version, one dep at a time" audit (per the operator's 2026-06-18
+          scope-broadening note above), which is inherently open-ended (new dep releases ship continuously) and can't be
+          marked "done" by any single pass. Recommend treating this as a standing/recurring check rather than a
+          one-shot-closeable todo. Directly closes the separate, properly-bounded e2e-testing/system-integration-tests
+          todo below (same sweep covered both, per that todo's own done-when bar) — see that todo's flip.
+
 - [x] ✅ [SCRIPT] P2. **DONE 2026-07-30.** Dropped all 9 now-resolvable `QG_PIP_AUDIT_COMMON_IGNORES` entries
       (`CVE-2026-4539`/pygments, `PYSEC-2026-215`/idna, `CVE-2026-3219`/`CVE-2026-6357`/`PYSEC-2026-196`/pip,
       `GHSA-6v7p-g79w-8964`/msgpack, `GHSA-4xgf-cpjx-pc3j`/pydantic-settings, `CVE-2026-54911`/ujson,
       `PYSEC-2026-3447`/setuptools) once every repo's `uv.lock` bump was confirmed landed fleet-wide.
       `unified-trading-pm@af08848b9`. `QG_PIP_AUDIT_COMMON_IGNORES=""` verified on `origin/live-defi-rollout`.
-- [ ] [SCRIPT] P3. **Re-verify e2e-testing and system-integration-tests via a correctly-scoped standalone pip-audit.**
-      The 2026-07-30 second-pass sweep (see banner above) could not check these 2 repos — `.venv/bin/python` did not
-      exist at the expected path in this session's checkout, so their clean status rests only on repeated green
-      `bash scripts/quality-gates.sh` runs, not an independent out-of-band check like the one that caught
-      pyasn1/curl-cffi elsewhere. **Done when**: find each repo's actual venv/python path, run
-      `<python> -m pip_audit --format json` against it, and confirm zero unignored vulnerable packages (or file+fix any
-      found). Repo: e2e-testing, system-integration-tests.
+- [x] ✅ [SCRIPT] P3. **DONE 2026-07-31 (slot-3).** Found both repos' actual venv python at `<repo>/.venv/bin/python`
+      (present in this slot's checkout) and ran `.venv/bin/python -m pip_audit --format json` against each directly —
+      **e2e-testing: "No known vulnerabilities found."** **system-integration-tests: "No known vulnerabilities found."**
+      Zero unignored vulnerable packages in either, confirming the standing green-QG-only status was correct. Same
+      sweep + methodology as the "walk the remaining external deps" todo above. Repo: unified-trading-pm (doc only — no
+      code changes needed, both repos already clean).
 - [x] ✅ [SCRIPT] P3. **DONE — VERIFIED 2026-07-31 (agent_orchestrator_pip_audit_ungated pip-audit-gate dispatch, slot
       2).** The corrected doc content (methodology correction + real pyasn1 finding) was already committed + pushed to
       `origin/live-defi-rollout` by the time this todo was picked up — confirmed via a direct read of
