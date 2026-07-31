@@ -123,9 +123,18 @@ drift_direction: advance-code
       Progress Log citation. The closeout's own MVP-cell table gets updated by this batch's companion finalize plan, not
       by this todo directly. Source: `tradfi_consolidated_closeout_2026_07_18.md` (native, lines 218-224).
 
-- [ ] [REVIEW] P2. **Verify CME's `VENUE_DATA_TYPE_CAPABILITIES` declares `mbp_10`/`trades`/`tbbo` as billing-gated (not
-      chased to full L3 history) — audit-only, no code change.** Source native todo (lines 238-244): the closeout's
-      framing that "no `ohlcv_15m/24h` aggregation writer exists" is **STALE** — live-checked against
+- [x] ✅ [REVIEW] P2. **Verify CME's `VENUE_DATA_TYPE_CAPABILITIES` declares `mbp_10`/`trades`/`tbbo` as billing-gated
+      (not chased to full L3 history) — audit-only, no code change.** **Live-verified 2026-07-31 (read-only, no code
+      shipped)**: `VENUE_DATA_TYPE_CAPABILITIES["CME"]` currently declares only `{ohlcv_1s, ohlcv_1m}` — `mbp_10`/
+      `trades`/`tbbo` are absent from that registry entirely (neither declared billing-gated nor unrestricted), per the
+      operator's still-standing 2026-05-15 OHLCV-only MVP scope decision. Separately confirmed the actual billing
+      enforcement mechanism IS live and correct: `unified_api_contracts/registry/databento_subscription_allowlist.py`'s
+      `LEVEL_MAX_LOOKBACK_DAYS = {L1: 365, L2: 30, L3: 30}` + `assert_databento_request_allowed()` fail-closed on any
+      request past the free window, tested by `tests/unit/test_databento_subscription_allowlist.py`. No path anywhere
+      declares these 3 data types unrestricted for CME — clean pass, no finding to file. Full evidence in
+      `tradfi_unreachable_databento_data_types_mbp10_ohlcv_coarse_calendar_2026_07_15.md`'s Progress Log
+      (unified-trading-pm, this commit). Source native todo (lines 238-244): the closeout's framing that "no
+      `ohlcv_15m/24h` aggregation writer exists" is **STALE** — live-checked against
       `tradfi_satellite_ao_dispatch_batch2_2026_07_25.md`'s todo 1, which found the writer code already shipped
       (`canonical_writer` fixes, tests green) and merely pending a tarball-rebuild deploy (that deploy is THAT todo's
       own scope, not re-drafted here). The **decision on whether to feed `vix_features`** is a genuine DESIGN call —
