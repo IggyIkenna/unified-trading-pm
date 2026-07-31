@@ -170,8 +170,15 @@ file-by-file.
       collaborator off its own globals. Verified: full `quality-gates.sh` green (5052 tests pass, 0 regressions,
       `✅ File size OK`, `✅ Function/class/method size OK`); `FUNCTION_SIZE_EXTRA_EXCLUDES` entry for
       `health_consolidator.py` removed from `deployment-api/scripts/quality-gates.sh`.
-- [ ] [SCRIPT] P2. Decompose `deployment_api/routes/data_status/_live_coverage.py` (920L, just over the cap). Remove its
-      exclude entry once compliant.
+- [x] ✅ [SCRIPT] P2. **DONE 2026-07-31 (slot-2, infra craft)** — `deployment-api@16403d1`. Split the 3 independent
+      endpoint groups into sibling modules (pure code motion, mirroring the `mtds.py`/`manifest.py` precedents):
+      `_live_coverage.py` (575L, keeps `/live`), `_live_coverage_honest.py` (147L, new, `/honest-coverage`),
+      `_live_coverage_venue_year.py` (236L, new, `/venue-year-coverage`). All three keep resolving patched collaborators
+      through the package facade (`_ds`) at call time, so every existing test-patch target
+      (`deployment_api.routes.data_status.<name>`) kept intercepting unchanged — confirmed via a pre-check of every test
+      file's `patch()` targets (all facade-qualified or original-library-qualified, none `_live_coverage`- internal).
+      Verified: 112 targeted endpoint tests green, full `quality-gates.sh` green (5052 tests, 0 regressions, native
+      `✅ File size OK` / `✅ Function/class/method size OK` with the `FUNCTION_SIZE_EXTRA_EXCLUDES` entry removed).
 - [ ] [SCRIPT] P2. Extract helpers from the 8 oversized methods in
       `deployment_api/services/data_status/breakdowns_core.py` + `breakdowns_domain.py` (both are pure-decomposition
       candidates — mostly independent `_build_*_breakdown()` methods). Remove both exclude entries once compliant.
@@ -284,3 +291,7 @@ file-by-file.
   for the full evidence chain. Rebased onto 2 peer decompositions (`health_consolidator.py`@c11f56f,
   `manifest.py`@a42a57e) mid-task with no conflicts. `deployment-api@fc093fd`. 21 P2 decomposition todos remain open for
   follow-up dispatch.
+- 2026-07-31 (slot-2, infra craft): Flipped the `_live_coverage.py` todo — split into 3 sibling modules by endpoint
+  (`_live_coverage.py`/`_live_coverage_honest.py`/`_live_coverage_venue_year.py`, 575L/147L/236L). See the flipped
+  checkbox above for the full evidence chain (patch-surface pre-check, verification detail). `deployment-api@16403d1`.
+  20 P2 decomposition todos remain open for follow-up dispatch.
