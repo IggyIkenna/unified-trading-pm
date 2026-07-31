@@ -172,9 +172,16 @@ guessed/placeholder environment values, cost is not a blocker (this is code + CI
       first (silencing the symptom) risks making the leak permanently invisible before its cause is confirmed.
       `deployment-api`/`strategy-service` are NOT the reproducer and are not gated by this — proceed on those two
       independently whenever convenient.
-- [ ] [DOC] P2. Correct the "re-run quality-gates.sh --no-fix then retry" guidance wherever it is taught (agent prompts,
-      runbooks): as written it is a sentinel-laundering step, not a fix. It is only safe once the sentinel binds
-      configuration.
+- [x] ✅ [DOC] P2. Correct the "re-run quality-gates.sh --no-fix then retry" guidance wherever it is taught (agent
+      prompts, runbooks): as written it is a sentinel-laundering step, not a fix. It is only safe once the sentinel
+      binds configuration. — **Verified 2026-07-31: already done as a byproduct of the sentinel-binding fix above
+      (`unified-trading-pm@4545df4c6`).** Full-corpus sweep (every agent/_.md, cursor-configs/_.md + symlinked copies in
+      all repos, codex/**/_.md, codex/15-runbooks/, quickmerge.sh, quality-gates-base/_.sh) found no file teaching the
+      unsafe pattern as live guidance — the phrase only appears in THIS doc, as the historical bug description. The 3
+      SSOT docs describing the recovery flow (`ci-cd-flow.md`, `quality-gates.md`, `quickmerge-architecture.md`) already
+      reflect the post-fix, genuinely-safe behavior (sentinel binds `ENVIRONMENT`/`DEPLOYMENT_ENV`; a config mismatch is
+      refused with `Re-run: bash scripts/quality-gates.sh`, not silently laundered). Full write-up:
+      `/plans/active/ci_satellite_ao_dispatch_batch2_2026_07_29.md` todo (same item).
 - [ ] [INFRA] P2. **The "fix the gate" half of the 2026-07-28 BOTH ruling — make quickmerge's and a standalone
       `quality-gates.sh --no-fix` run resolve the SAME explicit `ENVIRONMENT` for the same branch context**, so the two
       invocation paths can never again silently diverge (today: quickmerge always exports `development` for any

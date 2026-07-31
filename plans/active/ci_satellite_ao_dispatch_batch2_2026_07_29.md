@@ -171,11 +171,28 @@ concurrent workers do not collide on this file.
       fix; filed `issues/deployment_flow_doc_stale_pre_ldr_direct_mvp_2026_07_30.md` rather than absorbing that larger,
       unrelated rewrite into this todo. **(c)** was already confirmed shipped in the 2026-07-30 rulings-closeout pass
       above; no change needed here.
-- [ ] [DOC] P2. **Correct the "re-run quality-gates.sh --no-fix then retry" recovery guidance** wherever it is taught
-      (agent prompts, runbooks) — as written today it is a sentinel-laundering step, not a fix; correct it to describe
-      the post-todo-1 behavior (sentinel now binds configuration, so the recovery is genuinely safe). Sequenced after
-      todo 1 lands (describes its outcome). Source: `issues/qg_sentinel_environment_blind_2026_07_23.md` (Resolution
-      checklist item 4).
+- [x] ✅ [DOC] P2. **Correct the "re-run quality-gates.sh --no-fix then retry" recovery guidance** wherever it is taught
+      — **verified 2026-07-31: already done, as a byproduct of todo 1's own shipped fix; no separate correction commit
+      needed.** Full-corpus sweep (agents/_.md incl. every craft file, cursor-configs/_.md + all 24 repos' symlinked
+      copies, codex/**/_.md, codex/15-runbooks/, scripts/quickmerge.sh, scripts/quality-gates-base/_.sh, every sibling
+      repo's own docs) found **no file anywhere that currently teaches the unsafe pattern as live/positive instruction**
+      — the only place the literal phrase appears is inside this todo's own source issue doc
+      (`qg_sentinel_environment_blind_2026_07_23.md`), where it is quoted as the historical BUG DESCRIPTION being fixed,
+      not instructional copy misleading a reader. The 3 canonical SSOT docs that DO describe the recovery flow were
+      already updated as part of todo 1's landing (`unified-trading-pm@4545df4c6`, 2026-07-30) to describe the post-fix,
+      genuinely-safe behavior: `codex/08-workflows/ci-cd-flow.md` (lines ~384-405, sentinel now appends
+      `ENVIRONMENT=`/`DEPLOYMENT_ENV=` + `_qm_check_agent_sentinel()`-equivalent config-mismatch check),
+      `codex/06-coding-standards/quality-gates.md` § "Do-less-work levers" (content-hash now folds resolved
+      `ENVIRONMENT`/`DEPLOYMENT_ENV`), `codex/05-infrastructure/quickmerge-architecture.md` § "Environment Awareness" /
+      "Sentinel integration" (shared `qg_resolve_environment()` single source of truth). `scripts/quickmerge.sh`'s
+      `_qm_check_agent_sentinel()` (lines ~1484-1527) already emits the correct, safe framing on a config mismatch
+      (`❌ Pass 1 sentinel config mismatch` + `Re-run: bash scripts/quality-gates.sh`), and its own regression test
+      (`scripts/quality-gates-base/tests/test-quickmerge-sentinel-environment-mismatch.sh`) quotes the OLD bug purely as
+      historical test-rationale context (correct, expected use — not stale guidance). `agents/worker.md:417`'s "commit
+      it, re-run quality-gates.sh, quickmerge push" is the normal two-pass ship flow, not the environment-laundering
+      pattern, and is accurate as written (now genuinely safe since the sentinel binds environment). **No corpus edit
+      was required by this todo** — Sequenced after todo 1 (already `[x]` above). Source:
+      `issues/qg_sentinel_environment_blind_2026_07_23.md` (Resolution checklist item 4, also flipped).
 - [ ] [INFRA] P2. **Fix the env-coupled `ENVIRONMENT`-ambient-default tests in `deployment-api` and `strategy-service`**
       (set the environment explicitly per-test instead of relying on the ambient default, same pattern already shipped
       in `unified-trading-library`). **Explicitly excludes the two `market-tick-data-service` cases** — those stay gated
