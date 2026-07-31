@@ -395,11 +395,35 @@ file-by-file.
       basedpyright 0 errors, ruff clean, 38 targeted tests green (`test_tarball_staleness.py` 27,
       `api/test_cost_snapshot.py` 11), full `quality-gates.sh --no-fix` green (128s, sentinel
       `aba3150dd8d15da6ff307ea595d5c7da7b98727b`). Repo: deployment-api@a88d1d9.
-- [ ] [SCRIPT] P2. Decompose the remaining function-size-only violation in `deployment_api/utils/path_combinatorics.py`.
-      Remove its exclude entry once compliant; re-run `quality-gates.sh` to confirm no regression.
-- [ ] [SCRIPT] P3. Once every file above is decomposed and removed from `FUNCTION_SIZE_EXTRA_EXCLUDES`, re-measure
-      `CODEX_MAX_VIOLATIONS` honestly (currently 5) and ratchet it down if the size class was the only thing keeping it
-      non-zero — verify actual `V` via `QG_SLICE=lint-codex`, don't guess.
+- [x] ✅ [SCRIPT] P2. **DONE 2026-07-31 (slot-2, infra craft).** Decomposed `deployment_api/utils/path_combinatorics.py`
+      — the LAST file in `FUNCTION_SIZE_EXTRA_EXCLUDES`, which is now an empty array. Extracted
+      `_build_combinatorics_for_venue` from `_build_combinatorics` (was 63L); extracted
+      `_instruments_service_prefixes`/`_feature_group_service_prefixes`/`_calendar_service_prefixes` from
+      `get_service_prefixes_for_date` (was 80L, docstring also condensed); extracted
+      `_filter_by_asset_group_venues_folders`/`_filter_base_combinatorics` (shared) from `get_combinatorics` (was 52L)
+      and `_expand_with_timeframes` from `_get_processing_combinatorics` (was 55L); extracted `_filter_combos_for_date`
+      from `get_prefixes_for_date` (was 69L, docstring condensed); extracted `_default_prefix_query`/
+      `_gather_parallel_query_results` from `parallel_query_prefixes` (was 70L, docstring condensed). Pure code motion,
+      no logic changes. `FUNCTION_SIZE_EXTRA_EXCLUDES` entry removed (array now empty) — gate passes natively. Verified:
+      AST size check clean, basedpyright 0 errors, ruff clean, 145 targeted tests green (`test_path_combinatorics.py`
+      49+2skip, `test_data_status_turbo.py` 80+1skip, `test_batch_query_engine.py` 16), full `quality-gates.sh --no-fix`
+      green (128s, sentinel `a88d1d925812b9accece9f119e8b38a35753614e`). Quickmerge's ruff-format auto-reformatted on
+      land; re-verified size gate + basedpyright clean on the post-format tree. Repo: deployment-api@c9ddb43.
+- [x] ✅ [SCRIPT] P3. **DONE 2026-07-31 (slot-2, infra craft).** All 27 files decomposed + removed from
+      `FUNCTION_SIZE_EXTRA_EXCLUDES` (now an empty array, across every slot's work this doc tracks). Re-measured
+      `CODEX_MAX_VIOLATIONS` honestly via `QG_SLICE=lint-codex`: **V=3**, not 0 — STEP 5.5z (2026-07-30) moved
+      file/function/class/method size OUT of the `V` aggregate into its own zero-tolerance hard gate on the same day
+      this stopgap's exclude list was added, so decomposing the 27 files never touched `V` at all (confirmed: `V` was
+      already 3 pre-decomposition, unaffected throughout this doc's work). The 3 honest violations are all PRE-EXISTING
+      and unrelated to size: (1) imports-inside-functions — 103 hits, mostly lazy `google.cloud`/ `google.auth` imports
+      in `firebase_auth.py`/`health_routes.py`/`workers/_deployment_processor_vm_cleanup.py`; (2) direct cloud SDK
+      imports — 2 files (`health_routes.py`, `services/artifact_pipeline/providers.py` — the latter carries a
+      `# noqa: TID251` sanctioned-boundary comment that the pre-STEP-5.10 codex check doesn't honor, unlike STEP 5.10
+      itself which passes clean); (3) broad `except Exception` — 4 files. Ratcheted `CODEX_MAX_VIOLATIONS` 5→3 to match
+      the honest count (per this variable's own established ratchet-to-measured-V history in the file). Full
+      `quality-gates.sh --no-fix` green post-ratchet (108s, sentinel `c9ddb43c5cfd071aafa4097db3e64c1c7efead3b`). Repo:
+      deployment-api@2658beb. **This closes the plan — every todo above is now done; archive per the
+      plan-completion-and-archival-discipline SSOT.**
 
 ## Progress Log
 
