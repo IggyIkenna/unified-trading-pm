@@ -305,11 +305,11 @@ Two independent gates because Group A and Group B are at different stages:
       compute SA) — do not leave this tag stale per CLAUDE.md's retag-on-resolve rule.
 
       > **🟥 Note (2026-07-31, slot-14)**: even once this todo removes `unified-trading-sa`'s `storage.objectAdmin`,
-                  > that SA still live-holds `roles/resourcemanager.projectIamAdmin` + `roles/iam.serviceAccountAdmin` (undeclared
-                  > in any terraform in this repo) — both self-escalation-capable, i.e. it could re-grant itself storage access
-                  > (or any other role) without going through terraform at all. See
-                  > `issues/unified_trading_sa_live_iam_drift_vs_terraform_2026_07_31.md` — a full de-privilege of this SA is not
-                  > actually complete until that doc's P1/P2 also land.
+                      > that SA still live-holds `roles/resourcemanager.projectIamAdmin` + `roles/iam.serviceAccountAdmin` (undeclared
+                      > in any terraform in this repo) — both self-escalation-capable, i.e. it could re-grant itself storage access
+                      > (or any other role) without going through terraform at all. See
+                      > `issues/unified_trading_sa_live_iam_drift_vs_terraform_2026_07_31.md` — a full de-privilege of this SA is not
+                      > actually complete until that doc's P1/P2 also land.
 
 > **🟥 P2.2 SCOPE GAP found 2026-07-30 (slot-12) — "wire each runtime to its tier SA" is not mechanically executable
 > today.** Investigation (live GCP IAM queries + static analysis, no state mutated) found 3 independently-blocking
@@ -355,9 +355,26 @@ Two independent gates because Group A and Group B are at different stages:
       **`uts-prd-sa`'s functional readiness for deployment-api is thoroughly confirmed** — the remaining live-traffic
       cutover is split out below as P2.2e (new finding, blocked on a separate reliability issue, not on anything this
       checkbox covers).
-- [ ] [CODE] P2.2d. **Retagged back to plain `[CODE]` 2026-07-31 (slot-14)** — its gate (P2.2a) is now resolved above.
-      Wire VM launchers (165 `scripts/vm/launch-*.sh`, only 4 via the shared `lc_gcloud_create()` helper) — its own
-      large effort needing a per-launcher tier classification pass, not a bulk mechanical edit. Gated on P2.2a (met).
+- [x] ✅ [CODE] P2.2d1. **DONE 2026-07-31 (slot-7) — `deployment-service@0ff5bc8`.** Split out of P2.2d (single checkbox
+      covering both a genuinely-complete slice and a large still-open one — mirrors this plan's own P1.2a/P1.2b,
+      P2.1a/P2.1b, P2.2a-e precedent). Added `lc_tier_service_account <env> <project>` to
+      `scripts/vm/lib/launcher_common.sh` (env→`uts-prd-sa`/`uts-test-sa` resolver, `LC_RUNTIME_SA=` override for an
+      instant revert — mirrors `deploy-shared.sh`'s `RUNTIME_SA=` pattern from P2.2c) and an optional 8th
+      `service_account` arg to `lc_gcloud_create()` (omitted/empty preserves prior default-compute-SA behavior — fully
+      backward-compatible). Wired all 3 real `lc_gcloud_create()` callers whose target buckets are unambiguously Group
+      A/B raw-data per the ratified bucket→scheme table (`launch-canonical-smoke-vm.sh`,
+      `launch-instruments-smoke-vm.sh`, `launch-deribit-options-chain-daily.sh`) — dry-run verified
+      `--env prod/staging/dev` each resolve to the correct tier SA email. `launch-qg-snapshot-vm.sh` (the 4th
+      `lc_gcloud_create()` caller) deliberately left UNWIRED — its write target (`${PROJECT}-deployment-events`) doesn't
+      match the ratified table's Group A/B raw-data definition; folded into P2.2d2 below rather than guessed.
+- [ ] [CODE] P2.2d2. **Remaining VM-launcher tier-SA wiring** (161 of 165 `scripts/vm/launch-*.sh`: 141 direct-`gcloud`
+      callers that bypass `lc_gcloud_create()` entirely, plus `launch-qg-snapshot-vm.sh`) — its own large effort needing
+      a per-launcher tier classification pass against the ratified bucket→scheme table (Group A/B raw-data → per-tier SA
+      via `lc_tier_service_account`; the other 4 Group B folds + 19 named domain services → per-service SA, NOT this
+      helper), not a bulk mechanical edit. `lc_tier_service_account`/`lc_gcloud_create`'s SA arg (P2.2d1) are the
+      reusable building blocks — direct-`gcloud`-caller launchers will additionally need per-script conversion to route
+      through `lc_gcloud_create()` (or gain their own `--service-account=$(lc_tier_service_account ...)` flag) before
+      they can adopt it. Gated on P2.2a (met) + P2.2d1 (met, provides the helper).
 - [ ] [INFRA] P2.2e. **NEW, opened 2026-07-31 (slot-5).** Cut `uts-shared-deployment-api`'s live traffic
       (`spec.traffic`) over to a `uts-prd-sa` revision (P2.2c wired the identity + resource sizing; this is the separate
       step of actually promoting it). **Currently BLOCKED**: every fresh cold-start of a new/tagged revision fails
