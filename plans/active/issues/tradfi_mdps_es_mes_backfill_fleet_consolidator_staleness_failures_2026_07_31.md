@@ -262,3 +262,21 @@ capture zero rows for its entire assigned range.
   doubling SPOT compute/GCS write load. The candle-output verification above is still valid evidence the `43b043b` fix
   works (observed on my VM before deleting it); P0 (fleet-wide relaunch) is fully covered by slot-2's work, nothing
   further needed for `y2026es3` specifically.
+- **2026-07-31 (slot 13, DP-VM-001 escalation agt-4ad654)**: dispatched to relaunch
+  `mdps-backfill-tradfi-y2020es3-20260731-014643` (exit_code=1, self-deleted). Investigated fresh: that VM's `run.log`
+  shows it ran the full 245-date range with per-date subprocess `rc=0`, but the outer handler still exited 1 on
+  aggregate because a subset of dates hit real `DEPENDENCY CHECK FAILED` (missing upstream `market-tick-data-service`
+  raw ticks for those specific dates) — a distinct symptom from, but consistent with, the chain-bundle-matcher gap this
+  doc's P0 update already fixed (`43b043b`) and from the pre-existing upstream-MTDS-coverage gaps tracked elsewhere in
+  the tradfi corpus. By the time I checked `DeploymentsRegistry`, this exact shard was **already covered** by the P0
+  fleet-wide relaunch above: `mdps-backfill-tradfi-y2020es3-20260731-023743` was RUNNING, healthy (fresh heartbeat, real
+  CPU/network, `POLARS AGGREGATED` candle-write lines in its `run.log`), pinned to
+  `market-data-processing-service@4b84d5c11ede` (confirmed via `git merge-base --is-ancestor 43b043b 4b84d5c…` = true).
+  Independently hit the exact same
+  `No SchemaContract registered for asset_group='tradfi' instrument_type='COMBO' data_type='ohlcv_1s' venue='CME'` line
+  (121× in that VM's log) that slot-2 had already filed as Gap 2 in
+  `/plans/active/issues/mdps_tradfi_chain_bundle_aggregate_write_malformed_row_key_2026_07_31.md` — no new finding, no
+  action taken (already correctly triaged there as a P3 needing a scope decision, not a guess-fix). **No relaunch
+  performed** — a 3rd launch of this shard today would have been a pointless duplicate of the already-healthy `023743`
+  VM. Pinged the authoring slot (`dp-fleet-monitor`) confirming coverage; no code or ops change needed from this
+  escalation.
