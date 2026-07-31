@@ -11,7 +11,7 @@ summary: >-
   zero flagged conflict, or a flagged conflict whose topic provably does not overlap the specific extracted item). The
   23 conflict-gated candidates are NOT dropped — they're preserved with full detail in the Deferred section below and
   queued for the operator in `plans/active/issues/autonomous_session_operator_decisions_2026_07_25.md`.
-status: active
+status: complete
 nature: process
 asset_group: [sports]
 stage: [data]
@@ -35,7 +35,7 @@ related:
     /plans/active/issues/autonomous_session_operator_decisions_2026_07_25.md,
   ]
 created: "2026-07-25"
-last_updated: "2026-07-25"
+last_updated: "2026-07-31"
 parent_epic: sports_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -59,11 +59,10 @@ drift_direction: advance-code
 
 # Sports satellite AO batch 3 — conflict-cleared extraction
 
-> **Status: draft.** Per CLAUDE.md's plan-destination rule and the ag-closeout-audit skill's autonomous-mode guidance, a
-> skill-drafted AO batch is never auto-shipped to `active` — flip this frontmatter's `status` to `active` only after
-> operator review. Every todo below is same-priority and touches distinct files (verified — see the per-todo
-> `files_touched` provenance in the triage workflow journal, `subagents/workflows/wf_74a99101-69b/journal.jsonl`) so
-> they are safe to dispatch concurrently once activated.
+> **🟢 ARCHIVED 2026-07-31 — COMPLETE.** All 12 todos shipped with verified evidence (see each todo + the Progress Log
+> below). The Deferred section's 6 docs / 7 conflict-gated candidates were fully resolved by
+> `sports_satellite_ao_dispatch_batch3_finalize_2026_07_25.md`'s todo 3 (2026-07-30) — see that doc (also archived
+> alongside this one) for the per-item disposition. Successor: none (this batch's work is complete, not superseded).
 
 ## Todos
 
@@ -340,6 +339,15 @@ drift_direction: advance-code
       `issues/sports_shard_enumeration_cartesian_blowup_2026_07_20.md`.
 
 ## Deferred — conflict-gated (NOT dispatched; queued for operator review)
+
+> **RESOLVED 2026-07-30** — all 6 docs / 7 candidates below were given a final disposition by
+> `sports_satellite_ao_dispatch_batch3_finalize_2026_07_25.md` todo 3 (3 already shipped via batch4, confirmed; 4
+> operator-ruled per `autonomous_session_operator_decisions_2026_07_25.md` #5-8 — 2 converted from prose into real
+> tracked todos in `data_completion_sports_2026_07_24.md`, 1 confirmed already tracked via the
+> `sports_legacy_fixtures_path_migration_2026_07_24.md` census todo, 1 folded into `batch7`'s decision-16 todo). The 2
+> `doc_too_large_or_risky_for_batch` docs' recommendation was independently executed by
+> `sports_satellite_ao_dispatch_batch8_2026_07_30.md`'s dedicated triage/design pass. Nothing below is still awaiting
+> action — kept as the historical record of what was deferred and why.
 
 The 26-agent triage workflow (`wf_74a99101-69b`) found 13 more AO-eligible candidates across the same 26 orphaned docs
 that carried a flagged conflict against `sports_consolidated_closeout_2026_07_19.md`'s own open todos — a broader or

@@ -19,7 +19,7 @@ related:
   [
     /plans/active/sports_consolidated_native_ao_extract_2026_07_25.md,
     /plans/active/sports_consolidated_closeout_2026_07_19.md,
-    /plans/active/sports_satellite_ao_dispatch_batch3_finalize_2026_07_25.md,
+    /plans/archive/2026_07/sports_satellite_ao_dispatch_batch3_finalize_2026_07_25.md,
     /plans/active/issues/autonomous_session_operator_decisions_2026_07_25.md,
   ]
 created: "2026-07-25"

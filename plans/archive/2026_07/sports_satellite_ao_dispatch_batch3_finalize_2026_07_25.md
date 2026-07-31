@@ -8,7 +8,7 @@ summary: >-
   re-check the 6 conflict-gated Deferred items once the operator has ruled on the queued decision in
   autonomous_session_operator_decisions_2026_07_25.md — some may become dispatchable once the operator confirms which
   side (the narrow batch3-style fix vs. the master closeout's broader claim) should execute first.
-status: active
+status: complete
 nature: process
 asset_group: [sports]
 stage: [data]
@@ -17,13 +17,13 @@ scope: [engineer]
 tags: [sports, ao-dispatch, close-out, batch-3, satellite-docs, archival]
 related:
   [
-    /plans/active/sports_satellite_ao_dispatch_batch3_2026_07_25.md,
+    /plans/archive/2026_07/sports_satellite_ao_dispatch_batch3_2026_07_25.md,
     /plans/active/sports_consolidated_closeout_2026_07_19.md,
     /plans/active/sports_satellite_ao_dispatch_batch2_finalize_2026_07_24.md,
     /plans/active/issues/autonomous_session_operator_decisions_2026_07_25.md,
   ]
 created: "2026-07-25"
-last_updated: "2026-07-30"
+last_updated: "2026-07-31"
 parent_epic: sports_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -47,11 +47,11 @@ drift_direction: advance-code
 
 # Sports satellite AO batch 3 — finalize
 
-> **Machine-gated on `sports_satellite_ao_dispatch_batch3_2026_07_25.md`** (`depends_on` + `gate_on_depends: true`) —
-> the dispatcher will not queue any todo below until all 12 tasks in that plan are `done`. `sequential: true` because
-> todo 2 (source-doc archival) needs todo 1's reconciliation done first (a doc can only be archived once its status is
-> genuinely flipped to `resolved`), todo 3 (conflict-gated re-check) needs todo 1's reconciliation too, and todo 4
-> (archival of this batch's own plan) must run last.
+> **🟢 ARCHIVED 2026-07-31 — COMPLETE.** All 4 todos done; the gated parent
+> `/plans/archive/2026_07/sports_satellite_ao_dispatch_batch3_2026_07_25.md` is archived alongside this doc in the same
+> commit. Was machine-gated on the parent (`depends_on` + `gate_on_depends: true`) until all 12 of its tasks were
+> `done`; `sequential: true` enforced todo 2 (source-doc archival) after todo 1, todo 3 (conflict-gated re-check) after
+> todo 1, and todo 4 (this doc's own archival) last of all.
 
 ## Todos
 
@@ -87,7 +87,7 @@ drift_direction: advance-code
       only `issues/dp_catalog_not_running_sports_prediction_2026_07_15.md` was genuinely `status: resolved` with 0 open
       todos (re-verified: all 6 checkboxes `[x]`) while still sitting under `plans/active/issues/` — archived it to
       `plans/archive/issues/dp_catalog_not_running_sports_prediction_2026_07_15.md` with a `🟢 ARCHIVED` banner, fixed
-      its 8 corpus-wide path referrers (`unified-trading-pm@<pending>`), and ran a codex-alignment check per the
+      its 8 corpus-wide path referrers (`unified-trading-pm@5fb83f4ea`), and ran a codex-alignment check per the
       ritual's step 3 — `/codex/02-data/instruments-foundation-and-catalogue-completeness.md` was stale on 2 shipped
       mechanisms this doc's own todos closed (sports FTP frozen-tail merge `instruments-service@24f84e86`, cefi
       dedup-aware monotonic guard `instruments-service@5c1c3ccb`), updated with both facts + `last_reviewed` bumped.
@@ -121,15 +121,26 @@ drift_direction: advance-code
       tracked work despite a stale `[DECISION] P2` claim in batch4 that they had been — now genuinely closed out. The 2
       `doc_too_large_or_risky_for_batch` docs' recommendation was already answered and executed:
       `sports_satellite_ao_dispatch_batch8_2026_07_30.md` ran the dedicated triage/design pass (part 1 of 3).
-- [ ] [DOC] P1. **Archive `sports_satellite_ao_dispatch_batch3_2026_07_25.md`** via the standard 6-step ritual (per
-      CLAUDE.md's plan-archival rule): migrate any remaining Deferred items to a tracked todo elsewhere (todo 3 above
-      should have already resolved all 6 — verify none remain) → add the archive banner → run the codex-alignment check
-      (does `sports-features-bucket-path-ssot.md` under `codex/02-data/`, created by this batch's own todo 5, need any
-      further cross-referencing) → grep the corpus for every referrer of
-      `sports_satellite_ao_dispatch_batch3_2026_07_25` and fix each path to point at the archived location → clear
-      `locked_by` (already empty here, confirm). **Done when**: the plan is moved to `plans/archive/2026_07/`, every
-      corpus referrer resolves to the new path, and this finalize doc itself gets archived alongside it in the same
-      commit.
+- [x] ✅ [DOC] P1. **DONE 2026-07-31.** Archived `sports_satellite_ao_dispatch_batch3_2026_07_25.md` via the standard
+      6-step ritual. **Blocking prerequisite found + resolved first**: the parent plan's own todo 4 (KALSHI-row
+      disposition, `market-data-tick-sports-prd`'s 20,785 `venue=KALSHI`/`empty_confirmed` rows) was still genuinely
+      `- [ ]` despite this finalize plan being machine-gated on all 12 parent todos being done — the SAME
+      gate-vs-reality mismatch todo 1 already flagged for its own scope. Investigated via a read-only sub-agent:
+      classified as (b) a dormant legacy artifact (live-remeasured, zero drift, single 80s write-touch from an unrelated
+      2026-07-13 reason-taxonomy rebuild, not a live reasserting bug), no remediation warranted — see
+      `unified-trading-pm@7f3ae6104` (also answers the identical open todo 15 in
+      `cross_ag_prediction_rows_bleed_into_sports_instruments_index_2026_07_20.md`). Parent's 12/12 todos now done.
+      Deferred section: confirmed todo 3 above already resolved all 6 docs/7 candidates — none remain, added a closing
+      annotation to the parent's own Deferred section pointing at that resolution. Archive banner added. Codex-alignment
+      check: `/codex/02-data/sports-features-bucket-path-layout.md` (the doc's real name — the `-ssot.md` name in this
+      todo's own text was never accurate) already verified registered in `sports_consolidated_closeout_2026_07_19.md`'s
+      Codex SSOTs list (confirmed independently by todo 1 above and re-confirmed here) — no further cross-referencing
+      needed. Fixed all 9 other corpus-wide full-path referrers of the parent plan's pre-archive path (both active and
+      already-archived citing docs — the existence checker scans body prose too, not just `related:`) to point at its
+      new archive location; left bare-filename prose mentions (no path prefix) as historical narrative, since those are
+      outside `check_reference_paths.py`'s scope either way. `locked_by` confirmed empty on both docs. Moved
+      `sports_satellite_ao_dispatch_batch3_2026_07_25.md` → `plans/archive/2026_07/` and this finalize doc alongside it,
+      same commit.
 
 ## Progress Log
 

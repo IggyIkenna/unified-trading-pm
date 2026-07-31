@@ -41,7 +41,10 @@ repos: [instruments-service, deployment-service, unified-trading-pm]
 scope: [engineer, admin]
 tags: [sports, manifest, expected-unattempted, honest-coverage, enumeration-grain, bounded-window, data-completeness]
 related:
-  [/plans/active/data_completion_sports_2026_07_24.md, /plans/active/sports_satellite_ao_dispatch_batch3_2026_07_25.md]
+  [
+    /plans/active/data_completion_sports_2026_07_24.md,
+    /plans/archive/2026_07/sports_satellite_ao_dispatch_batch3_2026_07_25.md,
+  ]
 created: 2026-07-27
 parent_epic: infrastructure_master
 assigned_vm: planning

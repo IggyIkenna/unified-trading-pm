@@ -32,7 +32,7 @@ tags: [sports, scheduler, post-match-trigger, data-completeness, bug, live-pipel
 related:
   [
     /plans/active/sports_live_availability_and_source_latency_2026_07_24.md,
-    /plans/active/sports_satellite_ao_dispatch_batch3_2026_07_25.md,
+    /plans/archive/2026_07/sports_satellite_ao_dispatch_batch3_2026_07_25.md,
     /plans/active/issues/sports_stats_delayed_live_capture_still_dead_post_fix_2026_07_29.md,
   ]
 created: 2026-07-27
@@ -309,32 +309,32 @@ same conclusion, plus two provenance details worth keeping on record:
       correctly withheld pending the ancestor check reading YES.
 
       **Check 4 (2026-07-29, slot-2) — MERGED + DEPLOYED, trigger now fires live, but manifest query is
-              NEGATIVE — escalating per this todo's own done-when.** `git merge-base --is-ancestor 5b5d227 origin/main` still
-              reads NO (the LDR→main promote flow squash/rebases, losing the exact SHA) — but a direct content diff proves the
-              fix landed anyway: `origin/live-defi-rollout`'s and `origin/main`'s current `sports_trigger_scheduler.py` /
-              `sports_trigger_state.py` are byte-identical, and the commit that actually carried `5b5d227`'s content into
-              `main` (`c988d1c`, 2026-07-27T20:40:55Z) IS an ancestor of `main` HEAD `252792f`. Resolved the deployed Cloud Run
-              Job's `sports-scheduler:latest` image digest to SHA-tagged image `252792f...` (= main HEAD), built
-              **2026-07-28T22:37:45Z**; the job's `latestCreatedExecution` at query time (`2026-07-29T00:40:01Z`) confirms
-              it's running that image. **Redeploy cutoff: 2026-07-28T22:37:45Z.**
+                      NEGATIVE — escalating per this todo's own done-when.** `git merge-base --is-ancestor 5b5d227 origin/main` still
+                      reads NO (the LDR→main promote flow squash/rebases, losing the exact SHA) — but a direct content diff proves the
+                      fix landed anyway: `origin/live-defi-rollout`'s and `origin/main`'s current `sports_trigger_scheduler.py` /
+                      `sports_trigger_state.py` are byte-identical, and the commit that actually carried `5b5d227`'s content into
+                      `main` (`c988d1c`, 2026-07-27T20:40:55Z) IS an ancestor of `main` HEAD `252792f`. Resolved the deployed Cloud Run
+                      Job's `sports-scheduler:latest` image digest to SHA-tagged image `252792f...` (= main HEAD), built
+                      **2026-07-28T22:37:45Z**; the job's `latestCreatedExecution` at query time (`2026-07-29T00:40:01Z`) confirms
+                      it's running that image. **Redeploy cutoff: 2026-07-28T22:37:45Z.**
 
-              Queried `_index/latency_observations/`: `stats_delayed` now has **1382** lifetime rows (was 0), first at
-              **2026-07-27T20:46:17Z** — the lookback-window fix demonstrably works, the trigger fires live now. **But**: ALL
-              1382 rows have `first_success=False` / `fetched_rows=-1` (never once flipped to a genuine success in 28+ hours),
-              and the manifest's `data_type=XG` `captured` rows remain 100% `pipeline_mode=batch_understat` (the same
-              2026-07-13..22 one-shot backfill as before) — **zero fresh, non-backfill XG captures post-redeploy.** This meets
-              the "escalate — second, still-undiagnosed issue" criterion this todo's done-when called for.
+                      Queried `_index/latency_observations/`: `stats_delayed` now has **1382** lifetime rows (was 0), first at
+                      **2026-07-27T20:46:17Z** — the lookback-window fix demonstrably works, the trigger fires live now. **But**: ALL
+                      1382 rows have `first_success=False` / `fetched_rows=-1` (never once flipped to a genuine success in 28+ hours),
+                      and the manifest's `data_type=XG` `captured` rows remain 100% `pipeline_mode=batch_understat` (the same
+                      2026-07-13..22 one-shot backfill as before) — **zero fresh, non-backfill XG captures post-redeploy.** This meets
+                      the "escalate — second, still-undiagnosed issue" criterion this todo's done-when called for.
 
-              Traced two further, independent causes (full evidence + recommended fixes in the new issue doc below): (A)
-              `FirstSuccessPoller`'s retry state (`deployment_service/sports_latency_observation.py`) is a plain in-memory
-              dict with no persistence, while the deployed job runs `--one-shot` (fresh container every 5-min Cloud Scheduler
-              tick) — any registered retry is discarded before it can ever be polled, so `first_success` can structurally
-              never become `True` in this deployment model, independent of whether the real fetch succeeds. (B) `UNDERSTAT`
-              (+ 4 sibling enrichment venues) has **zero** entry in `unified_api_contracts/registry/venue_adapter_keys.py` —
-              confirmed via direct grep — despite a working `UnderstatAdapter` already registered in instruments-service's own
-              factory; live logs repeatedly show `ERROR URDI fetch: 5 venue(s) failed with PERMANENT errors: [...,
-              ('UNDERSTAT', 'UNSUPPORTED'), ...]` roughly every 5 minutes in production. (B) looks like the more likely
-              explanation for the zero-XG-captures residual and is NOT fully isolated to the XG entity-scoped path
-              specifically (see the new doc's caveat) but is an objective, confirmed, independently-worth-fixing code gap
-              either way. New issue doc with full evidence + 3 scoped follow-up todos:
-              `plans/active/issues/sports_stats_delayed_live_capture_still_dead_post_fix_2026_07_29.md`.
+                      Traced two further, independent causes (full evidence + recommended fixes in the new issue doc below): (A)
+                      `FirstSuccessPoller`'s retry state (`deployment_service/sports_latency_observation.py`) is a plain in-memory
+                      dict with no persistence, while the deployed job runs `--one-shot` (fresh container every 5-min Cloud Scheduler
+                      tick) — any registered retry is discarded before it can ever be polled, so `first_success` can structurally
+                      never become `True` in this deployment model, independent of whether the real fetch succeeds. (B) `UNDERSTAT`
+                      (+ 4 sibling enrichment venues) has **zero** entry in `unified_api_contracts/registry/venue_adapter_keys.py` —
+                      confirmed via direct grep — despite a working `UnderstatAdapter` already registered in instruments-service's own
+                      factory; live logs repeatedly show `ERROR URDI fetch: 5 venue(s) failed with PERMANENT errors: [...,
+                      ('UNDERSTAT', 'UNSUPPORTED'), ...]` roughly every 5 minutes in production. (B) looks like the more likely
+                      explanation for the zero-XG-captures residual and is NOT fully isolated to the XG entity-scoped path
+                      specifically (see the new doc's caveat) but is an objective, confirmed, independently-worth-fixing code gap
+                      either way. New issue doc with full evidence + 3 scoped follow-up todos:
+                      `plans/active/issues/sports_stats_delayed_live_capture_still_dead_post_fix_2026_07_29.md`.
