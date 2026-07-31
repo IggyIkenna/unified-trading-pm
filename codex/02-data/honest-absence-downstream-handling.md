@@ -1218,6 +1218,46 @@ on `capture_status`:
 
 ---
 
+## Window-active vs shard-fetched — the two-signal contract (codified 2026-07-20)
+
+> Operator, verbatim (2026-07-20): _"the key is knowing what is empty data because there's nothing to aggregate in the
+> window vs not fetched yet — that's where the manifest needs to help, and different consumers (live and batch) will
+> have different ways of handling depending on their needs."_ Source:
+> `/plans/active/data_pipeline_check_mdps_features_2026_07_20.md` (MDPS/features e2e-check build); promoted here at the
+> plan's post-phase codex audit per the SSOT-direction rule (durable content belongs in codex, not the plan).
+
+A consumer asks one of two DIFFERENT questions about a candle/feature bin, and only one surface can answer each — never
+infer one from the other:
+
+| Question a consumer asks                   | Which surface answers it        | Representation                                                                                                        |
+| ------------------------------------------ | ------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
+| "Was this WINDOW active?"                  | the **parquet**, per bin        | Row EXISTS on the session grid with **NaN price-like fields + 0 volume/trade_count** — covered, nothing to aggregate. |
+| "Was this SHARD-DAY ever fetched/derived?" | the **manifest**, per shard-day | 4-state `capture_status` (`captured` / `empty_confirmed` / `attempted_failed` / `expected_unattempted`, see above).   |
+
+**Why it matters**: NaN alone cannot carry both meanings. A consumer must never infer "was this fetched?" from NaN in a
+parquet bin, nor "was this window active?" from the manifest alone — live and batch consumers handle each case
+differently per their own needs, so the pipeline's job is to PRESERVE the distinction faithfully, never paper over it.
+This is exactly why carry-forward (LOCF) is wrong for `derivative_ticker`-class adapters not routed through
+`_finalize_session_grid` (`supports_prior_day_seed=False`, see the `content_check`/all-NaN-OHLC discussion above, Phase
+3A CeFi adapter audit): LOCF fabricates an observation in a window that had none, conflating "nothing to aggregate" with
+"not yet fetched" and destroying the distinction.
+
+**Two failure modes this makes checkable** (both already have manifest-side tooling; the parquet-content-side check for
+case 2 below is a real remaining code gap, not yet built into the `/data-pipeline-check-mdps` /
+`/data-pipeline-check-features` drivers as of this writing):
+
+1. **Phantom capture** — manifest says `captured` but NO parquet object exists. Already checked (MTDS
+   `PHANTOM_CAPTURED_NO_OBJECT`, § "Phase 3A CeFi adapter audit results" above).
+2. **Inverse phantom** — parquet present but **100% NaN bins** while the manifest says `captured` (should have been
+   `empty_confirmed` with a typed reason). The historical case (`capture_status=captured` with all-NaN OHLC) is
+   documented above under "Phase 3A CeFi adapter audit results" with its scan-only reconciler
+   (`instruments-service/scripts/reconcile_legacy_nan_placeholder_bars.py`); that reconciler is a historical-scan tool,
+   not a live driver assertion. Adding a corresponding `content_check=` verdict to the MDPS/features e2e-check drivers
+   (so a fresh run catches a NEW inverse-phantom write, not just a historical scan) remains open — tracked as its own
+   `[SCRIPT] P1` follow-up, not folded into this doc-only promotion.
+
+---
+
 ## Zero-activity-bar shape (case-D design — implementation deferred post-cutover)
 
 > **⚠️ MARKER RECONCILIATION (B2, 2026-06-02 — `fleet_audit_triad_deferred_followups_2026_06_01.md`).** The
