@@ -724,7 +724,7 @@ cancellation-timeout fix and already shipped). Suggested next steps for whoever 
       match. Not yet confirmed causal (single sample; exact call site not pinned). Narrower follow-up filed below. No
       fix shipped — done-when not met, leaving unchecked.
 
-- [ ] [BACKEND] P1. **NEW, opened 2026-07-31 (slot 4, backend_engineer) — pin the exact call site for the
+- [x] ✅ [BACKEND] P1. **NEW, opened 2026-07-31 (slot 4, backend_engineer) — pin the exact call site for the
       truncated-sync-HTTPS-traceback-then-permanent-silence pattern found in the todo above and confirm/refute it as the
       blackout trigger.** (1) cross-reference `run.googleapis.com/requests` for instance `001548f729ad...` (`00353-dng`)
       in a ±5s window around `08:40:27Z` to find the exact route/URL, pinning which of the 6 sync-HTTPS call sites
@@ -733,7 +733,27 @@ cancellation-timeout fix and already shipped). Suggested next steps for whoever 
       4-fragment-then-silence signature recurs at other points in this service's history (independent of the gen1 pin) —
       recurrence strengthens this theory, a one-off weakens it. Done-when: call site identified AND either a fix ships
       (add `timeout=`, or move the call off the event loop via `run_in_threadpool`) with stdout/stderr confirmed
-      resuming, or the theory is refuted with evidence (not re-guessed). (repo: deployment-api)
+      resuming, or the theory is refuted with evidence (not re-guessed). (repo: deployment-api) —
+      `deployment-api@6e7bf27`. Step (1) pinned it exactly: `run.googleapis.com/requests` shows
+      `POST /api/internal/reap-tick@08:40:00.582Z`, latency **27.25s**, status **500**, completing `08:40:27.83Z` —
+      matches the traceback timestamps to the ms. Call site: `_reap_scheduler.py`'s `verify_reap_scheduler_oidc` →
+      `google_id_token.verify_oauth2_token()` (real HTTPS cert fetch). Step (2): the call DOES have an effective default
+      (google-auth's own `_DEFAULT_TIMEOUT=120s`, confirmed in package source) — a different real bug instead:
+      `TransportError` IS a `GoogleAuthError` subclass, but a raw SSL/socket exception below `requests`'s own wrapping
+      can escape BOTH that AND this file's narrow `except (GoogleAuthError, ValueError)` — matching the observed
+      unhandled 500. **Shipped**: (a) wrap the verify call in `asyncio.to_thread` (was blocking the event loop directly,
+      unlike every other I/O call in this file), (b) broaden the except clause → clean 503 (Cloud Scheduler retries)
+      instead of an unhandled 500 + raw traceback. 8 new unit tests, all green; `quality-gates.sh` PASSED (101s);
+      verified on origin via `merge-base --is-ancestor`. Step (3) not run (time-boxed). Not 100%-confirmed as the full
+      mechanism (still unexplained: why one request's failure would blind ALL subsequent revisions, not just this one) —
+      added a `[REVIEW]` monitoring follow-up below.
+
+- [ ] [REVIEW] P2. **NEW, opened 2026-07-31 (slot 4) — once `deployment-api@6e7bf27` (todo above) reaches a live Cloud
+      Run deploy, check whether `stdout`/`stderr` entries resume for `uts-shared-deployment-api`.** Verify the deploy
+      via direct image extraction (not ancestry), then `gcloud logging read` for `stdout`/`stderr` scoped to
+      `timestamp>=<deploy-time>`. Resume → this fix was the trigger, update this doc's framing. Persists → re-open with
+      a fresh evidence-backed todo (why does one request's failure affect ALL subsequent instances, not just the one it
+      happened on) rather than re-guessing. (repo: deployment-api)
 
 - [ ] [BACKEND] P3. **NEW, opened 2026-07-31 (slot 13, backend_engineer) — dead-code cleanup: `workers/auto_sync.py`'s
       entire background-sync implementation is unreachable in production.** Found while tracing the call graph for the
