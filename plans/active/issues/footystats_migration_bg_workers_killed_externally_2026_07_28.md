@@ -39,7 +39,7 @@ assigned_vm: planning
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
-last_updated: 2026-07-30
+last_updated: 2026-07-31
 ---
 
 # footystats migration background workers killed externally — 2026-07-28
@@ -115,12 +115,21 @@ inconsistent state.
       `pkill_broad_pattern_cross_slot_qg_kill_2026_07_28.md` or a different mechanism (session/cgroup boundary reaping,
       given both the python child AND its bash supervisor parent vanished together with no error, which a narrow
       `pkill -f <python-script-name>` alone would not explain).
-- [ ] [DOC] P3. Document the self-restarting-supervisor + harness-`run_in_background` pattern as the standard approach
-      for any future multi-hour LOCAL (non-VM) background migration on a shared slot host, in
+- [x] ✅ [DOC] P3. Document the self-restarting-supervisor + harness-`run_in_background` pattern as the standard
+      approach for any future multi-hour LOCAL (non-VM) background migration on a shared slot host, in
       `/codex/12-agent-workflow/async-wait-and-poll-discipline.md` or `/codex/05-infrastructure/per-tab-worktrees.md`
       (whichever owns shared-host background-process guidance) — so the next agent doesn't have to rediscover that raw
       `nohup`/`setsid` shell-backgrounding is NOT reliably durable across whatever is reaping processes on this host,
       but the harness's own tracked background-task mechanism is. (repo: unified-trading-pm)
+
+      **Shipped 2026-07-31** — added item 6 to `/codex/12-agent-workflow/async-wait-and-poll-discipline.md` (the doc
+          already owned a closely-related item 5 on `run_in_background` limits, so this landed as a direct continuation
+          rather than `per-tab-worktrees.md`). Captures both confirmed kill mechanisms from this doc's full incident
+          history (fixed ~1-3 min nohup/disown session-boundary reap, independent of load; a separate genuine
+          resource-exhaustion kill that can still catch `run_in_background` at severe host contention, ~10x more durable
+          but not immune), the self-restarting-supervisor-on-`run_in_background` mitigation, the `/tmp` tmpfs-corruption
+          distinct-failure-mode warning (§ "Disk-full tmpfs corruption" above), and the swap-recovers-faster-than-load
+          guidance for when to safely retry.
 
 ## Update 2026-07-28 (later, slot-14) — CORRECTION: harness `run_in_background` is NOT immune either; strong new
 

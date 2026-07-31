@@ -243,6 +243,38 @@ as "still waiting". Worse, the awaited mechanism **could never fire**: the stagi
    monitor it. If the work will run longer than one heartbeat window, plan the check-in cadence around the heartbeat
    requirement, not around how often the underlying job's own progress changes.
 
+6. **Self-restarting supervisor + harness `run_in_background` is the standard pattern for a multi-hour LOCAL (non-VM)
+   resumable background migration/backfill on a shared slot host (codified 2026-07-31,
+   `plans/active/issues/footystats_migration_bg_workers_killed_externally_2026_07_28.md`).** Two DISTINCT kill
+   mechanisms were confirmed on this workspace's shared hosts, hitting different weight classes — don't assume a single
+   fix covers both:
+   - **`nohup ... & disown` (or `setsid`-detached) dies in a fixed ~1-3 minutes, independent of host load.** Confirmed
+     across repeated attempts at wildly different load levels (load 22 through load 49, one even at LOW load
+     `1.39 2.05 3.09`) — this fits a fixed-duration, session/cgroup-boundary reap of nohup-detached processes, not a
+     load-triggered OOM kill. Relaunching the identical work directly under the harness's own tracked
+     `run_in_background` (no `nohup`/`disown` at all) survived well past the same ~1-3 minute window and ran healthily
+     for 90+ minutes before eventually succumbing to a genuine, severe resource-exhaustion event — roughly **10x more
+     durable, not immune**.
+   - **A genuinely heavy job (e.g. a full `quality-gates.sh` run, or the same lightweight script under sustained
+     100%-swap host pressure) CAN still be killed under `run_in_background`** — confirmed at host loads of 62-325 (on a
+     16-core host) and swap 87-100% used, `status: "failed"`/`"killed"`/`"stopped"`, exit code 144, zero traceback. This
+     is a DIFFERENT failure mode from item 5 above (that one is the `WorkerLivenessWatchdog` reaping a heartbeat-stale
+     PANE); this one is genuine host-level resource exhaustion (OOM-killer-class) that item 5's heartbeat fix does not
+     touch.
+   - **Rule for any multi-hour LOCAL background migration/backfill**: (a) never `nohup ... & disown` — launch the work
+     directly under the harness's `run_in_background` instead, which moves the typical failure window from minutes to an
+     hour-plus; (b) wrap it in a self-restarting supervisor loop (`while ! success; do relaunch; done`, capped retries)
+     keyed off a resumable checkpoint/`--resume-log`, itself run under `run_in_background`, so a kill from EITHER
+     mechanism above is auto-recovered without a fresh agent turn having to notice and manually relaunch — this requires
+     the underlying work to be CAS-idempotent/resumable, not a prerequisite this pattern can create on its own; (c) the
+     checkpoint/resume-log file MUST live on the repo worktree's real disk, never `/tmp` — this workspace's shared hosts
+     often mount a small (~2GB) `tmpfs` at `/tmp` that another slot's own temp usage can fill, corrupting a mid-write
+     checkpoint with an `OSError: No space left on device` that looks like this same incident class at a glance but is a
+     distinct, already-understood failure mode (disk-full, not a clean kill — it leaves a real traceback); (d) on a
+     confirmed severe-contention host state (load 100+, swap >80% used), back off and wait for real recovery before
+     retrying rather than blindly retrying into the same wall — swap-used% recovers faster and more directly than the
+     5/15-min load average, which lags by design and can still read "elevated" well after swap has actually cleared.
+
 Composes with: Poll cadence + stall-intervention (above) — a flat metric and a silent watcher are the same smell;
 Background-task honesty (`CLAUDE.md`) — "no output yet" ≠ "finished" ≠ "still running", and "proxy reached its state" ≠
 "chain completed", until a verdict line says which from a real measurement.
