@@ -41,7 +41,7 @@ related:
     /codex/08-workflows/ci-cd-flow.md,
   ]
 created: 2026-07-29
-last_updated: 2026-07-30
+last_updated: 2026-07-31
 priority: P1
 parent_epic: infrastructure_master
 source:
@@ -149,9 +149,17 @@ not just noting.
       worker (a distinct failure mode from "slow due to contention"). **DIAGNOSED 2026-07-30 (slot 4, backend_engineer)
       — SAME root cause, no independent bottleneck; a genuine but different mechanism than pure host contention. Full
       breakdown in Progress Log below.**
-- [ ] [SCRIPT] P2. Once `fleet_wide_qg_self_hosted_runner_capacity_crisis_2026_07_27.md`'s Recommended-fix-path section
-      is next revisited, consider splitting that doc (archive the day-1 Progress Log, keep an active continuation) so
-      future corroborations have somewhere to land instead of spawning sibling docs like this one.
+- [x] ✅ [SCRIPT] P2. **Already done — closing as a stale duplicate, confirmed 2026-07-31 (slot 9, cicd close-out
+      pass).** The split this todo asks for was executed the same day this todo was authored: the original doc's own
+      `## Follow-up` section already records
+      `[x] [REVIEW] P3. DONE 2026-07-29. Split done — Progress Log history     hoisted to /plans/archive/2026_07/fleet_wide_qg_self_hosted_runner_capacity_crisis_progress_log_history_2026_07_29.md     (768 lines extracted, doc went from 1015L to 250L)`.
+      Re-verified live: the original doc is currently 313 lines (well under the 1000-line cap), its
+      `## Recommended fix path` section is fully DECIDED/DONE (no open items — closed by the operator's 2026-07-28 live
+      ruling), and its `## Progress Log` carries an explicit "new entries append below this note going forward" marker
+      that is demonstrably working — 3 fresh corroboration entries dated 2026-07-29, 2026-07-30, and 2026-07-31 have
+      landed directly in the original doc's own Progress Log post-split, none spawning a further sibling doc. This
+      confirms the todo's stated goal ("future corroborations have somewhere to land instead of spawning sibling docs
+      like this one") is already achieved in practice; no further doc-split action is needed.
 - [ ] [DATA] P2. **New, opened by the P1 cost-quantification finding above.** The retry storm's real, expensive cost
       bucket is AWS EC2 wall-clock/compute on the oversubscribed shared host (`i-0c9b283b31d6b5ca7`) from the 815 real
       agent-dispatch attempts recorded against `ldr_qg_failure` escalations since 2026-07-27 (self-hosted GH Actions
