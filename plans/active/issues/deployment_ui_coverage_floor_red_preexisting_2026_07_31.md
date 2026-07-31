@@ -102,6 +102,17 @@ the integration-branch/CI level, only local pre-commit QG reproduction in stale 
       absolute path at runtime (never copied per-repo per the rollout script's own `copy_quality_gates()`), so the fix
       is immediately live workspace-wide; running the rollout for real would in fact overwrite each repo's hand-tuned
       per-repo config blocks (STEP_TIMEOUT overrides, CODEX_*_EXCLUDE_GLOBS) — not something to do incidentally here.
-- [ ] [SCRIPT] P3. `unified-trading-pm/scripts/dev/slot-cron-ff-pull.sh`: consider a lightweight post-pull check per
-      repo (e.g. lockfile hash changed since last install → warn or auto `pnpm install`) so a package-manager / lockfile
-      migration doesn't silently desync every long-lived slot clone. Repo: unified-trading-pm.
+- [x] ✅ [SCRIPT] P3. **DONE 2026-07-31 (slot-3).** `unified-trading-pm@5e13d9421`. Added `_check_lockfile_drift()` to
+      `slot-cron-ff-pull.sh`, called unconditionally near the top of `ff_one()` (before the min-interval throttle, so it
+      fires every tick regardless of this repo's git/dirty/throttle outcome that tick). Detects the highest-precedence
+      lockfile present (pnpm > yarn > npm, matching `base-ui.sh`'s own precedence), hashes it, and compares against a
+      per-clone state file (keyed by the clone's resolved path, same convention as the existing min-interval throttle
+      state) — logs one `[WARN:lockfile-drift]` the moment the hash changes since the last tick. **Chose WARN over
+      auto-install**: `base-ui.sh`'s `[0/6] ENVIRONMENT` step already self-heals `node_modules` on every real
+      `quality-gates.sh` run (`unified-trading-pm@01ff2a3f5`, the sibling DONE todo above) — re-running
+      `pnpm/yarn/npm install` here too would just add a real network/latency cost fanning out across every slot every 5
+      minutes for zero additional correctness; a pure-local hash comparison (no network, no install call) gives the same
+      early-visibility benefit at effectively zero cost. Smoke-tested live in this slot (`--dry-run     --no-prefetch`):
+      first tick seeds silently (no false-positive storm on rollout), a simulated `deployment-ui/pnpm-lock.yaml` edit
+      correctly fired the WARN on the next tick, reverting the edit left the repo clean. `bash -n` syntax-checked; full
+      `quality-gates.sh` green on the shipped SHA. Repo: unified-trading-pm.
