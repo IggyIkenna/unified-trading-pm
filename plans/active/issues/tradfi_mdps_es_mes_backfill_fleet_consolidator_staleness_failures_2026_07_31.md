@@ -126,7 +126,7 @@ ops/follow-up:
       (`bash deployment-service/scripts/vm/launch-mdps-backfill-vm.sh --env prod     --vm-name mdps-backfill-tradfi-y2020es3-<ts> tradfi 2020-01-01 2020-12-31 full`
       with the `es3` group's original `MDPS_INSTRUMENT_IDS` recovered from each dead VM's
       `vm-logs/<vm>/LAUNCH_PARAMS.json` — do not guess the instrument-id filter). Check `DeploymentsRegistry` for a
-      fresh `es3` relaunch before acting (avoid a 3rd duplicate). — unified-trading-pm@THIS_COMMIT. Verified via
+      fresh `es3` relaunch before acting (avoid a 3rd duplicate). — unified-trading-pm@c99445806. Verified via
       `DeploymentsRegistry` (01:45Z) that no one had relaunched `es3` (still all `failed` original entries, no
       `011358`-wave coverage — confirming the doc's original finding). Recovered each shard's exact original
       `RESUME_START_DATE`/`RESUME_END_DATE`/`MDPS_INSTRUMENT_IDS` from its dead VM's
