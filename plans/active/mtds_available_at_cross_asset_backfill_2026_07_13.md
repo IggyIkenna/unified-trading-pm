@@ -20,6 +20,7 @@ related:
   [
     plans/active/issues/manifest_writer_record_captured_available_at_never_persisted_2026_07_13.md,
     plans/active/issues/sports_cf8_available_at_backfill_regression_2026_07_13.md,
+    plans/active/issues/mtds_manifest_rebuild_scripts_unbounded_memory_no_chunking_2026_07_31.md,
     plans/audit/results/available_at_fill_rate_audit_2026_07_13.py,
     /codex/02-data/availability-manifest-and-data-status.md,
   ]
@@ -334,15 +335,12 @@ time — a backend prereq-wiring bug despite `sequential: true`
 (`GATED`) rather than resume the cron out of order; none touched production.
 
 **#7 — 2026-07-31 (slot 16) — breaking the loop: `-001`'s own prerequisites (snapshot + cron-pause) are both already
-complete, so it's stuck on the dispatch bug, not a real gate.** Verified cron still `PAUSED` live. Determined real
-capture bounds via `read_availability_index(..., MANIFEST_ALLOW_STALE_FALLBACK=true)`: `2025-03-13..2026-07-28`, both
-`KALSHI`/`POLYMARKET` present. Launched a full-range dry-run (prior dry-run only covered 5 days) as the final safety
-check before the live write. **Found + acted on a real resource-safety issue**: RSS climbed 3.6→13.7GB, no plateau — the
-"unbounded scan on a shared host" pattern CLAUDE.md's heavy-compute rule bans. Killed by exact PID before risking OOM on
-other slots. Did NOT proceed to the real apply this session (same unbounded shape would recur — no `--chunk-size` on
-this script). **Next for `-001`**: re-run in bounded sub-ranges (e.g. quarterly) or via
-`scripts/dev/run-bounded-analysis.sh`/a dedicated VM. Cron still `PAUSED`, snapshot still valid, nothing written to
-production.
+complete, so it's stuck on the dispatch bug, not a real gate.** Verified cron still `PAUSED` live; determined real
+capture bounds (`2025-03-13..2026-07-28`, both `KALSHI`/`POLYMARKET`). Launched a full-range dry-run as a final safety
+check before the live write and found a real unbounded-memory risk (killed before it could OOM the shared host) — full
+evidence + fix recommendation filed as
+`issues/mtds_manifest_rebuild_scripts_unbounded_memory_no_chunking_2026_07_31.md`. Did NOT proceed to the real apply
+this session. Cron still `PAUSED`, snapshot still valid, nothing written to production.
 
 **2026-07-14 (ICE-purge session, cross-plan note)**: the operator AUTHORIZED and USED a tradfi consolidator-cron pause
 window today for the ICE non-24h purge (`purge_tradfi_ice_non_24h_2026_07_14.py`, market-tick-data-service@fffd7f82):
