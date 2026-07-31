@@ -190,6 +190,18 @@ not just noting.
       starve `plan_health`'s (or vice versa) dispatch attempts. Done when: either a deliberate "leave as-is, here's why"
       ruling is recorded, or a scaled/partitioned retry budget ships + is verified to cut tail dispatch latency on the
       next comparable burst.
+- [ ] [SCRIPT] P2. **New, opened by the `main-backmerge-to-ldr` pipefail+`-e` root-cause fix below.** The template SSOT
+      (`unified-trading-pm@598aefd8`) and 2 repos' live copies (`features-service@ccd01cb8`,
+      `agent-orchestrator@d43bbde`) are fixed, but `detect_template_drift.py --workflows` shows this template has 28
+      baselined/grandfathered-drift + more not-yet-diverged copies across the ~25-repo fleet — every repo still on the
+      OLD copy carries the SAME latent bug (silently dies, zero output, whenever the oldest commit in a
+      `live-defi-rollout..main` range lacks a `Promoted-From-LDR:` trailer — not rare, any non-squash-promote commit mix
+      triggers it). Run the fleet-wide rollout
+      (`bash scripts/workflow-templates/rollout-workflow-templates.sh     --template main-backmerge-to-ldr.yml`, no
+      `--repo` filter) + a quickmerge per touched repo, once host capacity allows (this session deliberately scoped to
+      only the 2 repos actively observed broken, to avoid piling more QG load onto the same contended box this doc
+      tracks). Done when: `detect_template_drift.py --workflows` shows 0 copies still carrying the pre-fix content for
+      this template.
 
 ## Evidence
 
@@ -666,3 +678,52 @@ not just noting.
   re-trigger, matching `agt-5754dd`'s own stated posture — three concurrent escalations already converged on "host
   contention, no code fix" for the same wall; a further retry would only add load. **No code or workflow change made or
   needed.** Slot left clean on `live-defi-rollout`, only this doc touched.
+
+- **2026-07-31 ~06:00-08:47Z (cicd escalation `agt-563fa4`, slot 3, `wall_type=main_ci_red`) — the dispatched wall WAS
+  this doc's established pattern; a SEPARATE adjacent failure was NOT, and turned out to be a real bug, now fixed**:
+  dispatched for `features-service` `quality-gates-v2` RED on `main` (commit `939f1967`, PR #913 "LDR → main (Option-B
+  direct)"). Confirmed the promotion itself was not stuck (the PR's own qg-v2 run `30608398858` was green before merge);
+  the post-merge push-triggered run on `main` (`30608403598`) died mid-`QG slice (tests)` inside
+  `test_pubsub_subscriber.py` with exit 143 / "the runner has received a shutdown signal" — this doc's established
+  signature. Re-ran the failed jobs once `glue-ip-172-31-5-118-1` was confirmed online+idle; went green (reconfirmed via
+  `ci_status` at write-up time, `conclusion: success`, `blocked: false`).
+
+  **Separately, `main-backmerge-to-ldr` failed on the same push (run `30608403128`) and 2 manual reruns — this was NOT
+  this doc's host-contention class, despite superficially looking like one.** All 3 attempts died identically: ~0.7-0.8s
+  after checkout, ZERO script output, empty `decision`/`reason` outputs on the downstream notify step, generic
+  `exit code 1` — too consistent/deterministic across 3 attempts spanning 2h15m to be random contention (this doc's
+  other entries show variable hang LOCATIONS and multi-minute durations; this was instant and identical every time).
+  Reproduced locally with plain `bash -e` (not just reading the script): the `Promoted-From-LDR` trailer -detection
+  loop's
+  `_extracted="$(printf '%s' "$_msg" | grep -oE '^Promoted-From-LDR: [0-9a-f]{7,40}' | head -1 | awk '{print $2}')"`
+  (template line 138) has no fallback for the — common, not edge-case — no-match result: under the script's own
+  `set -o pipefail` + the step's `shell: bash -e {0}`, `grep` exiting 1 (no trailer on that candidate commit) propagates
+  through the pipe as the bare assignment's exit status, and `-e` aborts the WHOLE SCRIPT immediately and silently,
+  before any `echo` fires — exactly reproducing all 3 observed failures
+  (`bash -e -c 'set -uo pipefail; _x="$(printf "%s" "no match" | grep -oE "nomatch" | head -1)"; echo "unreached"'`
+  exits 1 with zero output). Most commits in a `live-defi-rollout..main` range won't carry the trailer (only
+  squash-promotes do), so this triggers whenever a non-trailer commit happens to be OLDEST in the range — not rare.
+
+  **Fixed + verified end-to-end, not just locally**: added `|| true` to the pipeline (comment explains why it's
+  load-bearing) in the template SSOT (`unified-trading-pm@598aefd8` — bundled with an unrelated pre-existing
+  `agent-rules-size-cap` fix below in the same push), then rolled out to the 2 repos whose live copies were confirmed
+  actually broken — `features-service@ccd01cb8`, `agent-orchestrator@d43bbde` (the latter picked up only because
+  `workflow-template-parity`'s ratchet gate flagged it as NEW drift once the template changed; it wasn't independently
+  observed failing). Manually fired `workflow_dispatch` against `live-defi-rollout` post-fix (first attempt mistakenly
+  targeted `main`, which doesn't have the fix yet — main only updates via the separate promotion cycle — and correctly
+  re-failed on the old code, a methodology error not a fix failure): run `30617276725` succeeded, log shows
+  `[backmerge] Promoted-From-LDR trailer found on 5e974169: using ce369620aa13 as explicit merge-base` →
+  `explicit-base merge clean` → `DECISION: merged` — the loop now correctly walks past the no-match candidate instead of
+  dying on it. This resolves the `main-backmerge-to-ldr` failures this doc's 2026-07-31 ~05:45Z entry flagged as "not
+  diagnosed... flagging for whichever worker next touches features-service CI health" — that was me.
+
+  **Also fixed, incidentally**: `cursor-configs/CLAUDE.md` was 83B over the 40,960B hard cap (`agent-rules-size-cap` QG
+  check), blocking every PM commit's post-gate checks fleet-wide, not just mine — condensed 2 redundant clauses in the
+  file's own maintenance preamble (`unified-trading-pm@598aefd8`, same push as the template fix), no meaning lost,
+  40,900B after.
+
+  **Deliberately NOT done**: the fleet-wide rollout of the backmerge fix to the ~22 other repos still carrying the same
+  latent bug (`detect_template_drift.py --workflows` confirms) — scoped this escalation to the repos actually observed
+  broken, to avoid piling more QG load onto the same contended host this doc tracks; tracked as a fresh `[SCRIPT] P2`
+  todo above. Pinged `AUTHORING_SLOT=ci-reconcile` with the full outcome. All 3 touched repos (`features-service`,
+  `unified-trading-pm`, `agent-orchestrator`) left clean on `live-defi-rollout`.
