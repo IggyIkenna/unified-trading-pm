@@ -810,3 +810,10 @@ accordingly.
   sanity pass (no full read) before the next relaunch attempt — a corrupt file will keep killing any relaunch regardless
   of the memory-leak fix. No action taken (monitoring-only); not attempting the file-corruption scan myself (out of
   scope for continued fleet monitoring).
+- **2026-07-31T04:10Z (slot-15)**: shard 19 (`-032349`) is a 4th shard hitting this fast-OOM pattern — `rc=137` at 2435s
+  (~40min), 19,000/153,655 files (12.4%). `bytes_allocated` jumped from `32,936,256` to `2,539,327,808` (~32MB → ~2.5GB)
+  in a single release-cycle right before death — the largest single-step spike observed yet, further reinforcing the
+  corrupt-file theory over the original slow-leak mechanism (no explicit `ERROR` line survived in the tail this time,
+  but the magnitude/suddenness matches shard 23's confirmed-corrupt-file pattern, not a gradual creep). Fleet now (13,
+  14-verify, 15, 17, 18, 20, 21, 22, 24, 25, 29, 40, 41, 42, 43) = 14 shards + the verify run. No action taken
+  (monitoring-only).
