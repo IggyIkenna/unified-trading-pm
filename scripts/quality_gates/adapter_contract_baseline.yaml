@@ -24,7 +24,7 @@ baseline:
     count: 1
   deployment-api/deployment_api/services/data_status/coverage_metrics.py:
     count: 1
-  deployment-api/deployment_api/services/data_status/mtds.py:
+  deployment-api/deployment_api/services/data_status/mtds_meta.py:
     count: 5
   deployment-api/deployment_api/services/data_status/sports_helpers.py:
     count: 1
