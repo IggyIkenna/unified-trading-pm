@@ -311,3 +311,26 @@ checkpoint time, ~47% through the unit suite on a loaded shared host):
 **Lesson for whoever re-derives a "should route to RPC fallback" claim in this codebase**: verify against the ACTUAL
 call path used by the real CLI entrypoint, not just a direct in-process function call — `_fetch_aave_v3_via_rpc` being
 correctly wired and reachable are two different claims, and this doc's own todo 3 conflated them.
+
+## 2026-07-31 continued (slot 15) — RPC-fallback fix shipped + proven; manifest-write blocked on a NEW, more severe infra bug
+
+The fix shipped (`market-tick-data-service@9d6fc8cc`, verified ancestor of `origin/live-defi-rollout`, QG green). Real
+(non-dry-run) capture confirmed the fix works end-to-end:
+`Aave V3 RPC fallback: 18 rows for PLASMA (18 reserves x 1 blocks)` then
+`Wrote 18 rows across 18 instrument shard(s) to gs://market-data-tick-defi-prd-central-element-323112`.
+
+**But the manifest-write leg hit something much bigger than this doc's scope**: the CLI process, after writing the data,
+triggered `unified_trading_library.manifest_consolidator.consolidate()`'s full DuckDB merge inline (via a
+stale-lock-clear path) — a function documented as memory-bounded ONLY for a 16GB Cloud Run job, with no equivalent cap
+when run from a bare CLI process. RSS grew to 44.4GB on this 61GB shared host before I killed it (safe — host recovered
+fully, no data lost, the 18 rows were already durably in GCS). Filed as its own P1 infra issue (this is a real
+host-safety bug, not Plasma-specific — could hit any defi capture, any time the consolidator lock goes stale):
+`/plans/active/issues/manifest_consolidator_inline_unbounded_memory_cli_2026_07_31.md`.
+
+**Net for this todo**: confirmed (via a targeted, filtered manifest read, not a bucket walk) that
+`venue=AAVE_V3, chain=PLASMA` has **0 rows** in the manifest — the registration genuinely did not complete, so
+`defi_venues.py`'s `AAVE-PLASMA` phase stays `"pipeline"`, NOT flipped to `"live"`. **Deliberately NOT retrying the
+capture command** — per the new issue doc's own lesson, a blind retry could hit the identical unbounded-memory path
+again (the stale-lock condition is a property of the bucket's consolidator state, not this capture's inputs). This todo
+is now genuinely blocked on the new issue doc's fix landing, not on more Plasma-specific work — leaving unchecked,
+cross-referencing rather than duplicating the remediation steps here.
