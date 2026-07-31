@@ -10,7 +10,7 @@ summary:
   instruction."
 status: active
 nature: process
-asset_group: [meta]
+asset_group: [cross-cutting] # corrected 2026-07-31 (ag-closeout-audit cross-cutting Phase 0 meta-tag sweep) -- was [meta], a genuine mistag: multi-AG data-pipeline-alerts/consolidator remediation content, not process-level/spans-nothing meta
 stage: [data]
 repos:
   [
