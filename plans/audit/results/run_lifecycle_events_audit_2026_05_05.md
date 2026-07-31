@@ -25,7 +25,7 @@ created: 2026-05-05
 authoritative_for: [run_lifecycle entry-point rollout classification (2026-05-05 audit)]
 referenced_by: [plans/audit/results/vm_event_emission_audit_2026_05_15.md]
 owner:
-last_reviewed: 2026-05-17
+last_reviewed: 2026-09-26
 code_refs:
 auditor: ikenna
 severity: P2

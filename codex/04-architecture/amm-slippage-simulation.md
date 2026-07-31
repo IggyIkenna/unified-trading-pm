@@ -40,7 +40,7 @@ referenced_by:
     /codex/09-strategy/architecture-v2/cross-cutting/pnl-attribution.md,
   ]
 owner:
-last_reviewed: 2026-05-17
+last_reviewed: 2026-09-17
 code_refs:
 ---
 
@@ -710,7 +710,7 @@ call this calculator. Backtest yield uses post-trade rate.
 > fields it fetched from The Graph subgraph (line 77-79). Consumers fell back to the static
 > `AAVE_V3_RATE_MODEL_DEFAULTS_BY_ASSET` snapshot ("governance current as of 2026-05-05") — mis-pricing post-trade rates
 > by 10-30 bps on the wing of the kink. **Fixed at mtds@`4b38a9b` + uac@`bd9c202` + features-service@`e292a4d4`**; see
-> `plans/active/issues/aave_irm_slope_capture_dropped_2026_05_12.md` for full remediation path. **Backfill VM (Step 3 of
+> `plans/archive/issues/aave_irm_slope_capture_dropped_2026_05_12.md` for full remediation path. **Backfill VM (Step 3 of
 > issue doc) must land before Phase 8A/B carry-archetype + leveraged-funding-arb 1-year replay runs** — otherwise the
 > replays use the proxy snapshot and the resulting P&L delta is uninterpretable. **Tenderly fork live-vs-sim recon
 > (Phase 8C) WILL mask this drift** — Tenderly forks current chain state which holds today's slopes; the drift only
@@ -1552,7 +1552,7 @@ per cross_cutting #4; cross-side coordinate). Operator clicks APPROVE / REJECT b
 - Plan: [`defi_simulation_realism_2026_05_10.md`](../../plans/archive/defi_simulation_realism_2026_05_10.md) — owns
   implementation.
 - Plan:
-  [`defi_catalogue_chain_primitives_2026_05_10.md`](../../plans/active/defi_catalogue_chain_primitives_2026_05_10.md)
+  [`defi_catalogue_chain_primitives_2026_05_10.md`](../../plans/archive/2026_05/defi_catalogue_chain_primitives_2026_05_10.md)
   Phase 3 — ships data_types this doc consumes.
 - Codex: [`defi-data-type-taxonomy.md`](/codex/02-data/defi-data-type-taxonomy.md) — input data shapes.
 - Codex: [`concentrated-liquidity.md`](concentrated-liquidity.md) — V3/V4 + Solana CLMM addendum (Phase 9B update).

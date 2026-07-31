@@ -40,7 +40,7 @@ referenced_by:
     /codex/15-runbooks/position-reconciliation-deploy-gate.md,
   ]
 owner:
-last_reviewed: 2026-05-17
+last_reviewed: 2026-09-10
 code_refs:
 ---
 

@@ -40,7 +40,7 @@ referenced_by:
     /codex/05-infrastructure/credentials-matrix.md,
   ]
 owner:
-last_reviewed: 2026-05-17
+last_reviewed: 2026-09-25
 code_refs:
 ---
 
@@ -136,7 +136,7 @@ table.
 > `wallet_provisioning.json` to the staging bucket, (b) asserts `get_custody_provider()` returns the new provider class
 > within `ApiKeyReloader`'s polling interval (no service restart), and (c) confirms the `WALLET_PROVISIONING_RELOADED`
 > event fires. Test location: `execution-service/tests/integration/test_signing_surface_hot_reload.py` (to be added;
-> tracked in `plans/active/api_keys_wallets_accounts_readiness_2026_05_10.md`).
+> tracked in `plans/archive/2026_05/api_keys_wallets_accounts_readiness_2026_05_10.md`).
 >
 > ```yaml
 > execution:

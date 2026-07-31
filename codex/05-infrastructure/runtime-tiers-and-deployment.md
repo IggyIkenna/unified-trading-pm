@@ -34,7 +34,7 @@ referenced_by:
     /codex/05-infrastructure/deployment-ui-environment-tiers.md,
   ]
 owner:
-last_reviewed: 2026-05-17
+last_reviewed: 2026-09-20
 code_refs:
 ---
 
@@ -302,7 +302,7 @@ Before v7, a deployer set five env vars separately: `CLOUD_MOCK_MODE`, `MOCK_STA
 ## Per-mode credential subset (added 2026-05-12 per Phase 7.A)
 
 Per
-[`api_keys_wallets_accounts_readiness_2026_05_10.md`](../../plans/active/api_keys_wallets_accounts_readiness_2026_05_10.md)
+[`api_keys_wallets_accounts_readiness_2026_05_10.md`](../../plans/archive/2026_05/api_keys_wallets_accounts_readiness_2026_05_10.md)
 Phase 7.A, each pipeline mode (paper / batch / live) declares its required credential set. SSOT yaml:
 [`unified-api-contracts/config/credentials_per_mode.yaml`](../../unified-api-contracts/unified_api_contracts/config/credentials_per_mode.yaml).
 
@@ -404,5 +404,5 @@ the slowest cutover-pipeline stage inside the Group F item 18 "operationally-acc
 `e2-standard-N`. The per-stage profile + per-`(archetype, vm_shape)` recommendation matrix come from the synthetic-data
 benchmark harness — see [`synthetic-data-benchmarking.md`](synthetic-data-benchmarking.md). Until that matrix is
 populated (real-VM runs are blocked on the Phase-4-tail per
-`plans/active/mock_data_pipeline_benchmarking_2026_05_10.md`), machine-type defaults remain hand-set; treat them as
+`plans/archive/mock_data_pipeline_benchmarking_2026_05_10.md`), machine-type defaults remain hand-set; treat them as
 provisional.

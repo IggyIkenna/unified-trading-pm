@@ -18,9 +18,9 @@ created: 2026-05-07
 authoritative_for:
   Per-bucket size estimate (DeFi instruments, MTDS, MDPS, manifests) at a snapshot point 2026-05-07. Feeds the AWS S3
   cost projection + the cross-cloud migration time estimate (storage transfer hours).
-referenced_by: [plans/active/aws_migration_defi_first_2026_05_07.md]
+referenced_by: [/plans/archive/2026_05/aws_migration_defi_first_2026_05_07.md]
 owner:
-last_reviewed: 2026-05-17
+last_reviewed: 2026-09-23
 code_refs:
 ---
 
@@ -28,6 +28,11 @@ code_refs:
 
 > **Status:** PLANNED — stub created 2026-05-07 to anchor forward-references from active plans. Body to be filled in
 > with `gcloud storage du -s` output once the workspace runs the size audit.
+>
+> **⚠️ ORPHANED (verified 2026-07-31).** The stub was never filled, and the only plan that referenced it —
+> `aws_migration_defi_first_2026_05_07.md` — has been ARCHIVED to `/plans/archive/2026_05/`. Nothing active is driving
+> the `gcloud storage du` audit this doc is a placeholder for. Either re-open it under a current plan or retire the
+> stub; do not treat the empty size table as "audit pending".
 
 ## Purpose
 
@@ -59,7 +64,7 @@ cutover plan.
 ## Cross-references
 
 - **Plan(s) implementing this:**
-  [`aws_migration_defi_first`](../../plans/active/aws_migration_defi_first_2026_05_07.md).
+  [`aws_migration_defi_first`](../../plans/archive/2026_05/aws_migration_defi_first_2026_05_07.md) (ARCHIVED).
 - **Related codex SSOTs:** [`cloud-agnostic-build-lineage`](/codex/05-infrastructure/cloud-agnostic-build-lineage.md),
   [`availability-manifest-and-data-status`](/codex/02-data/availability-manifest-and-data-status.md).
 - **Code:** TBD audit helper — likely a `gcloud storage du` wrapper script that materialises the table.

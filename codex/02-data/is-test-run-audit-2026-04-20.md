@@ -19,7 +19,7 @@ created: 2026-04-20
 authoritative_for: [IS_TEST_RUN test-bucket write routing per-service audit (2026-04-20)]
 referenced_by:
 owner:
-last_reviewed: 2026-05-17
+last_reviewed: 2026-09-11
 code_refs:
 ---
 

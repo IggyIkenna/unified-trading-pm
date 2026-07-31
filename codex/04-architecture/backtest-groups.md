@@ -32,7 +32,7 @@ referenced_by:
     /codex/09-strategy/README.md,
   ]
 owner:
-last_reviewed: 2026-05-17
+last_reviewed: 2026-09-18
 code_refs:
 ---
 
@@ -101,7 +101,9 @@ Versioned model artifact in registry: `CRYPTO_BTC_CATBOOST_V4@v3` with metadata:
 
 ### Infra
 
-Dedicated VMs for training runs. See memory feedback `run_backtests_on_vms.md`.
+Dedicated VMs for training runs — see [`/codex/05-infrastructure/vm-launcher-runbook.md`](/codex/05-infrastructure/vm-launcher-runbook.md).
+(Previously cited a `run_backtests_on_vms.md` "memory feedback" note. No such file exists, and agent `memory/` is a
+banned SSOT location per CLAUDE.md — durable rules live in codex. Corrected 2026-07-31.)
 
 ## Group B — Strategy
 
@@ -312,7 +314,10 @@ simulate.
 - **Group B**: stateless workers, parallel config-grid execution
 - **Group C**: large-disk VMs (full orderbook replay), sequential (single playback)
 
-See memory feedback `run_backtests_on_vms.md`: always use colocated VMs, never local.
+Always use colocated VMs, never local — the heavy-I/O HARD RULE in
+[`/codex/05-infrastructure/vm-launcher-runbook.md`](/codex/05-infrastructure/vm-launcher-runbook.md) is the SSOT.
+(Previously cited a `run_backtests_on_vms.md` "memory feedback" note; no such file, and agent `memory/` is a banned
+SSOT location. Corrected 2026-07-31.)
 
 ## Cross-references
 

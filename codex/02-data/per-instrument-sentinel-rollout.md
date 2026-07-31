@@ -18,7 +18,7 @@ created: 2026-04-21
 authoritative_for: [MTDS per-instrument sentinel cap thresholds, sentinel tier-promotion gates]
 referenced_by: [/codex/02-data/mtds-data-source-coverage-matrix.md]
 owner:
-last_reviewed: 2026-05-17
+last_reviewed: 2026-09-13
 code_refs:
 ---
 
@@ -73,7 +73,8 @@ execution:
   verifier: |
     Per § 4 "Observability gates" checklist below — each promotion gate requires evidence from telemetry that the
     prior tier's manifest-write-rate / object-budget / phantom-audit cadence are within tolerance.
-    Records last-promotion timestamp + cap value in `plans/active/issues/sentinel_rollout_history.md` (TBD).
+    Records last-promotion timestamp + cap value in `plans/active/issues/sentinel_rollout_history.md` (STILL NOT
+    CREATED as of 2026-07-31 — no such file exists anywhere in plans/).
   last_executed: NEVER (MVP tier is the default; first Expanded promotion gated on day-91 bake)
 ```
 
@@ -95,6 +96,10 @@ All of the following must be true for 30 consecutive days:
   within ±2pp of the steady-state baseline observed at day 30 of MVP. A single sudden drop >5pp is the rollback signal.
 - **No new `INSTRUMENT_PROVIDER_FAILED` events.** Shard-level failure isolation (D10) on the orchestrator emits this
   when `instruments_provider` raises; any uptick beyond the MVP baseline blocks promotion until root-caused.
+  > **⚠️ This gate is currently unmeasurable (verified 2026-07-31).** No code anywhere in the workspace emits an event
+  > named `INSTRUMENT_PROVIDER_FAILED` — `rg 'INSTRUMENT_PROVIDER_FAILED'` over all `*.py` returns zero hits. An event
+  > explorer filtered on `event_name=INSTRUMENT_PROVIDER_FAILED` therefore always returns 0, so this gate **silently
+  > always passes**. Identify the real event name (or emit this one) before using it as a promotion gate.
 - **Manifest-writer latency < p99 2s** on the `record_empty` / `record_failed` batch path. The ManifestWriter in UTL is
   cap-sensitive: Expanded-tier (cap=200) is 4× the write volume, so verifying p99 stays under 2s before promotion avoids
   tripping MDPS's 60-second staleness threshold downstream.

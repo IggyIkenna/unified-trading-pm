@@ -32,13 +32,14 @@ referenced_by:
     /codex/09-strategy/architecture-v2/strategy-questionnaire-mapping.md,
   ]
 owner:
-last_reviewed: 2026-05-17
+last_reviewed: 2026-09-21
 code_refs:
 ---
 
 # Commercial Service Families — DART Full vs Signals-In (+ IM, Reg Umbrella)
 
-> **Created 2026-05-08** (Phase E.1 of `plans/active/codex_refactor_2026_05_08.md`) — renamed from
+> **Created 2026-05-08** (Phase E.1 of `codex_refactor_2026_05_08.md` — that plan no longer exists in `plans/`,
+> neither active nor archived; kept here as provenance only) — renamed from
 > `service-family-scope.md`. The rename clarifies scope: this doc is the **commercial / UX** service-family SSOT (which
 > commercial shape is sold to whom, what feature matrix each tier unlocks, locked-section UI design, demo plan toggle).
 > It is NOT an architecture-tier doc — for the import-tier model + protocol-injection contract see

@@ -32,7 +32,7 @@ referenced_by:
     plans/epics/strategy_master.md,
   ]
 owner:
-last_reviewed: 2026-05-17
+last_reviewed: 2026-09-11
 code_refs:
 ---
 

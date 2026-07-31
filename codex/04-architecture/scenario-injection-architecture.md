@@ -37,14 +37,14 @@ referenced_by:
     /codex/05-infrastructure/replay-subsystem.md,
   ]
 owner: simulation-platform
-last_reviewed: 2026-05-17
+last_reviewed: 2026-09-09
 code_refs:
 type: architecture
 ---
 
 # Scenario injection architecture
 
-> **Phase 8.A of `plans/active/simulation_scenarios_topology_price_shocks_2026_05_09.md`.** Codifies the
+> **Phase 8.A of `plans/archive/2026_05/simulation_scenarios_topology_price_shocks_2026_05_09.md`.** Codifies the
 > synthetic-adversarial scenario harness — the closed-set scenario taxonomy + per-mutation applier + outcome checker +
 > matrix runner. Stub doc shipped 2026-05-12 (slot 7 Day-3 / Day-4); full content updates as Harsh slot 5 implements
 > Phase 3.E + 3.F service wire-ins.
