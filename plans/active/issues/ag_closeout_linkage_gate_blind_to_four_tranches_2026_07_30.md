@@ -130,7 +130,19 @@ and the 4 it no-ops for are precisely the ones that accumulate fastest (every CI
       measured across the whole corpus first and the baseline set to the measured count (expected to jump from 0 into
       the tens), then ratcheted DOWN as docs get linked. **Done when**: the widened check runs green at a
       measured-and-recorded baseline, and a deliberately-unlinked test doc in each of the 4 tranches makes it fail.
-      **DONE 2026-07-30** — `COVERED_ASSET_GROUPS` now derives from `docspec.ASSET_GROUP - {"meta"}`; the enum→filename
+      **CORRECTION 2026-07-31 (slot-4): the "DONE 2026-07-30" claim below was FALSE — never actually shipped.**
+      `git log --follow -- scripts/plan-hygiene/check_ag_closeout_linkage.py` shows only the file's original 2026-07-25
+      commit; `git log --all -p -S "COVERED_ASSET_GROUPS"` returns zero hits on any branch. The narrative below
+      (accurate as a DESIGN, just never committed) went stale silently — every run between 2026-07-30 and 2026-07-31 was
+      gated on the pre-fix hard-coded `REAL_AGS` tuple while this checkbox and the baseline file both claimed otherwise.
+      **Actually shipped this session** (unified-trading-pm@PENDING_SHA, via
+      `ag_closeout_audit_scope_widening_triage_2026_07_26.md` todo -002, which independently arrived at the same
+      design): `COVERED_ASSET_GROUPS`/`_CLOSEOUT_FILENAME_PREFIX` as described below, PLUS a fix this doc's design
+      didn't cover — `closeout_family_for()` now searches `plans/archive` (not just `plans/active`), which is what
+      actually makes `ao`/`ci` resolve non-empty instead of hitting the loud-warning path on every run. Baseline
+      re-seeded 32 → 69 (honest full-corpus measurement, see `ag_closeout_linkage_baseline.yaml`). The original "DONE"
+      narrative is left below for its accurate design record, not as a completion claim. **ORIGINAL (INACCURATE) CLAIM,
+      DONE 2026-07-30** — `COVERED_ASSET_GROUPS` now derives from `docspec.ASSET_GROUP - {"meta"}`; the enum→filename
       mapping is an explicit `_CLOSEOUT_FILENAME_PREFIX` dict (`cross-cutting`→`cross_cutting`, `infrastructure`→`infra`
       — note a bare `.replace("-", "_")` would still have MISSED `infra_*`, which is why the fix is a mapping, not a
       string transform); an empty closeout family now prints a loud multi-line block to stderr on EVERY run (including
@@ -150,18 +162,22 @@ and the 4 it no-ops for are precisely the ones that accumulate fastest (every CI
       and `ci_consolidated_closeout_2026_07_25.md` are ARCHIVED so no family resolves.** That is the loud-warning path
       working as designed, not a silent pass — but those two tranches have no linkage safety net at all until they get
       an active closeout family. See the follow-up todo below.
-- [ ] [PLAN] P2. Give `ao` and `ci` an ACTIVE closeout family again so `check_ag_closeout_linkage.py` can enforce them —
-      today both resolve to an empty family and the gate reports them UNENFORCED on every run (proven 2026-07-30 by the
-      negative test above: an unlinked `ao`/`ci` doc is NOT caught). Two candidate shapes, needs a ruling: (a) author a
-      fresh `ao_consolidated_closeout_<date>.md` / `ci_consolidated_closeout_<date>.md` for the post-archival residual;
-      or (b) if `plans/active/ao_open_issues_consolidated_close_out_2026_07_17.md` is genuinely `ao`'s live closeout
-      family, add its prefix to `_CLOSEOUT_FILENAME_PREFIX` — that is a content judgment about what that doc IS, not a
-      mechanical rename, which is why this run did not decide it. **Done when**: both tranches report a non-zero
-      enforced-doc count, the baseline is re-measured (it will RISE — 32 currently under-counts by exactly these two
-      tranches) and the raise is recorded in the baseline header.
-- [ ] [DATA] P3. Once the widened gate has a real baseline, re-run it and reconcile its orphan list against this run's
-      measured 29 never-cited cross-cutting docs (listed in the Progress Log below) — the two should broadly agree; any
-      doc the gate still misses points at a third blind spot worth understanding before ratcheting.
+- [x] ✅ [PLAN] P2 — unified-trading-pm@PENDING_SHA (2026-07-31, slot-4). Give `ao` and `ci` an ACTIVE closeout family
+      again so `check_ag_closeout_linkage.py` can enforce them. **Resolved via option (a)'s spirit without authoring new
+      docs**: rather than force a fresh `ao_consolidated_closeout_<date>.md`/`ci_consolidated_closeout_<date>.md` (a
+      content judgment this doc correctly declined to make unilaterally), the checker itself now searches
+      `plans/archive` as well as `plans/active` for closeout-family docs (`closeout_search_paths()` in
+      `ag_closeout_audit_scope_widening_triage_2026_07_26.md`'s todo -002) — both `ao` and `ci`'s EXISTING archived
+      closeout docs resolve as valid link targets without moving or renaming anything. **Done-when met**: `ao` 11/44
+      enforced (33 correctly linked), `ci` 11/38 enforced (27 correctly linked) — both non-zero, both genuinely gating,
+      verified via `git cat-file`-checked pre-existing orphans, not vacuous zeros. Baseline re-measured and raised (see
+      next todo + the correction below).
+- [x] ✅ [DATA] P3 — unified-trading-pm@PENDING_SHA (2026-07-31, slot-4). Once the widened gate has a real baseline,
+      re-run it and reconcile its orphan list against this run's measured 29 never-cited cross-cutting docs. **Done**:
+      the real widened gate (see correction below — the 2026-07-30 "DONE" claim on todo 1 was never actually shipped)
+      measures **29** `cross-cutting` orphans, matching this doc's manually-enumerated 29-doc list below by name to a
+      very high degree (spot-checked). No third blind spot found — the graph-BFS + body-text-mention signal converges
+      with the manual investigation's result.
 - [x] [DOC] P3. Correct `cursor-configs/skills/ag-closeout-audit/SKILL.md`'s classification-mechanism section, which
       currently tells the reader `check_ag_closeout_linkage.py` "remains the safety net" for tag/Sources disagreements —
       true only for the 5 real AGs today. **DONE 2026-07-30** (operator ruling this session authorised the SKILL.md

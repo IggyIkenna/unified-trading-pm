@@ -67,15 +67,18 @@ a habitually-typed `cross-cutting` tag (old muscle memory) or a blank/mistagged 
 content-judgment fallback the old workaround used: read that tranche's own consolidated-closeout doc's Track/Sources
 lists, or read the doc itself, before concluding it's out of scope. **Still do not fully trust `asset_group` alone
 without a linkage check** — `check_ag_closeout_linkage.py` is the safety net for any doc the tag and the Sources lists
-disagree about. **Read that gate's real coverage before relying on it (corrected 2026-07-30)**: until today it enforced
-only the 5 original AGs — a hand-listed `REAL_AGS` that never got the 2026-07-27 `ao`/`ci`/`infrastructure` expansion,
-plus a filename-prefix bug that silently matched zero closeout docs for `cross-cutting` and `infrastructure` — so it
-reported a comfortable "0 orphans" while checking nothing at all for 5 of 10 tranches. It now derives its covered set
-from docspec's live `ASSET_GROUP` enum minus `meta` (baseline re-seeded 0 → 32 at the measured count) and reports any
-tranche with no discoverable closeout family LOUDLY instead of skipping it in silence. **`ao` and `ci` are still
-UNENFORCED** — both closeout docs are archived, so no family resolves; the gate says so on every run, and a doc in
-either tranche gets no linkage safety net at all until that's fixed. Track:
-`/plans/active/issues/ag_closeout_linkage_gate_blind_to_four_tranches_2026_07_30.md`.
+disagree about. **Read that gate's real coverage before relying on it (corrected 2026-07-31)**: it used to enforce only
+the 5 original AGs — a hand-listed `REAL_AGS` that never got the 2026-07-27 `ao`/`ci`/`infrastructure` expansion, plus a
+filename-prefix bug that silently matched zero closeout docs for `cross-cutting` and `infrastructure` — so it reported a
+comfortable "0 orphans" while checking nothing at all for 5 of 10 tranches. A 2026-07-30 attempt to fix this was
+recorded as DONE in `ag_closeout_linkage_gate_blind_to_four_tranches_2026_07_30.md` but never actually shipped
+(`git log --follow` on the script showed only its original 2026-07-25 commit); this line went stale for a day as a
+result. It now genuinely derives its covered set from docspec's live `ASSET_GROUP` enum minus `meta`, searches BOTH
+`plans/active` and `plans/archive` for each tranche's closeout family (closing the `ao`/`ci` gap for real — both are
+archived-only and now resolve non-empty, 11/44 and 11/38 enforced respectively), and reports any tranche with no
+discoverable closeout family LOUDLY instead of skipping it in silence. Baseline re-seeded 32 → 69 at the honest measured
+count. Track: `/plans/active/issues/ag_closeout_linkage_gate_blind_to_four_tranches_2026_07_30.md`,
+`/plans/active/issues/ag_closeout_audit_scope_widening_triage_2026_07_26.md`.
 
 **`ui`**: **`ui` is a real dedicated `asset_group` enum value from the day it was added** (2026-07-30,
 `unified-trading-pm@<sha-this-session>` — `docspec.py`/`PLAN_FORMAT.md`/`doc-frontmatter-schema.md` §5, now 11 values:

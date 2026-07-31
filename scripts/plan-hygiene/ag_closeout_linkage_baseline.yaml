@@ -27,8 +27,27 @@
 # not by absorbing it into the baseline. A later run reading HIGHER than 32 means a new
 # unlinked doc landed — link it, do not raise this.
 #
-# NOTE: `ao` and `ci` are still UNENFORCED (their closeout docs are archived, so no
-# family resolves) — the run prints that loudly on every invocation. 32 therefore
-# UNDER-counts the true corpus figure; expect it to rise once those two tranches
-# get an active closeout family again, and record that raise here too.
-orphan_count: 32
+# 2026-07-31 RE-SEED 32 -> 69 (SECOND documented exception to the never-raise rule; see
+# ag_closeout_audit_scope_widening_triage_2026_07_26.md todo -002). The "32" above was never
+# actually enforced by shipped code: `ag_closeout_linkage_gate_blind_to_four_tranches_2026_07_
+# 30.md` todo 1 claimed the widening (COVERED_ASSET_GROUPS, archived-family resolution, loud
+# empty-family warning) was DONE 2026-07-30, but `git log --follow` on
+# check_ag_closeout_linkage.py shows only its ORIGINAL 2026-07-25 commit ever touched the file
+# — that fix was never actually committed, so every run since 2026-07-30 was silently still
+# gated on the stale hard-coded `REAL_AGS = (cefi, defi, tradfi, prediction, sports)`, and the
+# "32" this file recorded never corresponded to any code that ran (a fresh run against that
+# code measures 12, not 32). This session implemented the widening for real:
+# COVERED_ASSET_GROUPS = docspec.ASSET_GROUP - {meta} (10 tranches); closeout_family_for() now
+# searches plans/active + plans/archive, closing the `ao`/`ci` archived-family gap the prior
+# attempt only warned about (no empty-family warning fires — both resolve non-empty); an
+# empty family still prints loudly to stderr unconditionally, never a silent continue.
+# Measured fresh against the real widened code: ao 11, cefi 3, ci 11, cross-cutting 29,
+# defi 4, infrastructure 7, sports 1, tradfi 3 (prediction 0, ui 0) = 69 total. Every one of
+# the 69 pre-dates this change (spot-verified `git cat-file -e HEAD:<path>` on the
+# most-recently-dated hits; none were created this session). This is the corpus's true, now
+# actually-measured figure — no bug remains to ratchet in as legitimate debt (the `ci`
+# family-resolution defect the prior unshipped attempt would have papered over is fixed, not
+# absorbed: its 11 orphans are measured against a real resolved archived closeout family).
+# Ratchet DOWN from here as docs get linked; NEVER hand-raise again without a fresh measured
+# justification of this same shape.
+orphan_count: 69

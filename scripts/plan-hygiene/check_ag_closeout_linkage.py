@@ -12,15 +12,28 @@ standing gate, not just a periodic audit).
 ASSET_GROUP enum; see check_frontmatter_schema.py) and already supports multi-value lists
 — this script does not add a new field, it adds a new CONSEQUENCE for the existing one:
 
-- A doc whose `asset_group` is a SINGLE real AG value (cefi/defi/tradfi/prediction/sports)
-  must have a findable path to that AG's `<ag>_consolidated_closeout_*.md` family
-  (the base closeout doc + its discovered companions: `_aggregated_sources_*`,
-  `_history_*`, `_audit_*` — discovered by filename glob, never hand-hardcoded per AG, so
-  a new companion doc is picked up automatically the moment it exists).
-- A doc whose `asset_group` has MULTIPLE values, or is `cross-cutting`/`meta`/
-  `infrastructure`, is EXEMPT by construction — that is exactly what those values already
-  signal (this is a consequence of the existing tag, not a new one).
+- A doc whose `asset_group` is a SINGLE COVERED value must have a findable path to that
+  tranche's `<prefix>_consolidated_closeout_*.md` family (the base closeout doc + its
+  discovered companions: `_aggregated_sources_*`, `_history_*`, `_audit_*` — discovered by
+  filename glob, never hand-hardcoded per tranche, so a new companion doc is picked up
+  automatically the moment it exists). COVERED = every real `asset_group` enum value except
+  `meta` (cefi/defi/tradfi/prediction/sports/cross-cutting/ao/ci/infrastructure/ui) — the
+  2026-07-27 schema expansion (`unified-trading-pm@a97bc7bed`) made `ao`/`ci`/`infrastructure`
+  real dedicated enum values with their own closeout families, not generic exemption
+  markers, so treating them as exempt (the 2026-07-25 original design) was stale; see
+  `ag_closeout_linkage_gate_blind_to_four_tranches_2026_07_30.md`. Two tranches' filename
+  PREFIX differs from their enum value (`cross-cutting` -> `cross_cutting_`, `infrastructure`
+  -> `infra_`) — an explicit mapping, not a `.replace("-", "_")` transform (that alone would
+  still miss `infra_`).
+- A doc whose `asset_group` has MULTIPLE values, or is `meta` (never had its own tranche), is
+  EXEMPT by construction.
 - The closeout-family docs themselves are self-exempt (a doc cannot orphan itself).
+- A covered tranche's closeout family can itself be ARCHIVED (e.g. `ao`, `ci` — both
+  consolidated-closeout docs moved to `plans/archive/`) and is still a valid link TARGET; the
+  family search spans `plans/active` + `plans/archive`. Only orphan CANDIDATES are restricted
+  to `plans/active` (archived docs can never be live orphans). A tranche whose family
+  resolves to genuinely ZERO docs anywhere prints a loud UNENFORCED warning on every run
+  (never a silent no-op `continue`) — a family of zero must never read as "nothing to check".
 
 TWO signals count as "findable", checked together because a same-day investigation
 (2026-07-25) found real docs missed by either signal alone:
@@ -63,10 +76,19 @@ import docspec
 PM_DIR = Path(__file__).resolve().parents[2]
 BASELINE_PATH = Path(__file__).resolve().parent / "ag_closeout_linkage_baseline.yaml"
 
-REAL_AGS = ("cefi", "defi", "tradfi", "prediction", "sports")
+# Every real asset_group enum value except `meta`, which never had its own tranche (see
+# module docstring). Sorted for deterministic iteration/printing order.
+COVERED_ASSET_GROUPS = tuple(sorted(docspec.ASSET_GROUP - {"meta"}))
+# Filename PREFIX differs from the enum value for two tranches — an explicit mapping, never
+# a `.replace("-", "_")` transform (that alone would still miss `infra_`).
+_CLOSEOUT_FILENAME_PREFIX = {"cross-cutting": "cross_cutting", "infrastructure": "infra"}
 MAX_HOPS = 3
 
 TARGET_DIRS = ("plans/active", "plans/active/issues")
+# Where a closeout family doc can physically live — broader than TARGET_DIRS, since an
+# archived closeout doc (ao/ci today) is still a valid link target, just never an orphan
+# candidate itself.
+CLOSEOUT_SEARCH_DIRS = ("plans/active", "plans/archive")
 
 
 def target_files() -> list[Path]:
@@ -105,9 +127,17 @@ def resolve_related_entry(entry: str, from_path: Path) -> Path | None:
     return None
 
 
-def build_related_graph(all_docs: dict[Path, dict]) -> dict[Path, set[Path]]:
-    """Undirected adjacency from every doc's related: list, resolved to real files."""
-    graph: dict[Path, set[Path]] = {p: set() for p in all_docs}
+def build_related_graph(
+    all_docs: dict[Path, dict], extra_nodes: frozenset[Path] = frozenset()
+) -> dict[Path, set[Path]]:
+    """Undirected adjacency from every doc's related: list, resolved to real files.
+
+    `extra_nodes` seeds additional graph nodes (with no outgoing edges of their own) BEFORE
+    edge resolution runs, so a `related:` entry that resolves to one of them (e.g. an active
+    doc linking to an ARCHIVED closeout family doc) is still recorded as an edge — the target
+    membership check below (`target in graph`) would otherwise silently drop it.
+    """
+    graph: dict[Path, set[Path]] = {p: set() for p in (*all_docs, *extra_nodes)}
     for path, fm in all_docs.items():
         for entry in docspec._as_list(fm.get("related")):
             if not isinstance(entry, str):
@@ -137,12 +167,26 @@ def bfs_reaches(graph: dict[Path, set[Path]], start: Path, targets: set[Path], m
     return False
 
 
-def closeout_family_for(ag: str, all_paths: list[Path]) -> set[Path]:
-    """Discover the AG's closeout-family docs by filename glob — never hand-hardcoded,
+def closeout_search_paths() -> list[Path]:
+    """Every candidate closeout-family filename across the corpus — `plans/active` AND
+    `plans/archive`, since a tranche's own closeout family can itself be archived (ao, ci
+    today: both consolidated-closeout docs moved to `plans/archive/2026_07/`) while its
+    members still need gating. Deliberately broader than `target_files()`: closeout docs are
+    valid link TARGETS even when archived; only active docs are ever orphan CANDIDATES."""
+    paths: list[Path] = []
+    for rel in CLOSEOUT_SEARCH_DIRS:
+        base = PM_DIR / rel
+        if base.is_dir():
+            paths.extend(sorted(base.rglob("*.md")))
+    return paths
+
+
+def closeout_family_for(ag: str, search_paths: list[Path]) -> set[Path]:
+    """Discover the tranche's closeout-family docs by filename glob — never hand-hardcoded,
     so a new companion (_aggregated_sources_/_history_/_audit_) is picked up the moment
     it exists."""
-    prefix = f"{ag}_consolidated_"
-    return {p for p in all_paths if p.name.startswith(prefix)}
+    prefix = f"{_CLOSEOUT_FILENAME_PREFIX.get(ag, ag)}_consolidated_"
+    return {p for p in search_paths if p.name.startswith(prefix)}
 
 
 def mentions_stem(text: str, stem: str) -> bool:
@@ -164,18 +208,41 @@ def main() -> int:
         all_docs[p] = fm
         all_bodies[p] = body
 
-    graph = build_related_graph(all_docs)
-    all_paths = list(all_docs)
+    search_paths = closeout_search_paths()
+    closeout_family: dict[str, set[Path]] = {ag: closeout_family_for(ag, search_paths) for ag in COVERED_ASSET_GROUPS}
 
-    closeout_family: dict[str, set[Path]] = {ag: closeout_family_for(ag, all_paths) for ag in REAL_AGS}
-    closeout_body_blob: dict[str, str] = {
-        ag: "\n".join(all_bodies[p] for p in fam if p in all_bodies) for ag, fam in closeout_family.items()
-    }
+    empty_families = sorted(ag for ag, fam in closeout_family.items() if not fam)
+    if empty_families:
+        # LOUD by design, printed unconditionally (even under --quiet, run_hygiene_sweep.sh's
+        # invocation mode) — a family of zero must never read as "nothing to check" for that
+        # tranche. See closeout_search_paths()'s docstring for why archived-only families
+        # (ao/ci today) are still expected to resolve non-empty here.
+        print(
+            f"⚠️  check_ag_closeout_linkage: EMPTY closeout family (UNENFORCED): {', '.join(empty_families)}",
+            file=sys.stderr,
+        )
+
+    closeout_targets = frozenset(p for fam in closeout_family.values() for p in fam)
+    graph = build_related_graph(all_docs, extra_nodes=closeout_targets)
+
+    closeout_body_blob: dict[str, str] = {}
+    for ag, fam in closeout_family.items():
+        bodies: list[str] = []
+        for p in fam:
+            body = all_bodies.get(p)
+            if body is None:
+                # archived closeout doc — not in the active-only all_docs/all_bodies scan.
+                try:
+                    _, body = docspec.parse_frontmatter(p.read_text(encoding="utf-8"))
+                except (OSError, UnicodeDecodeError):
+                    body = None
+            bodies.append(body or "")
+        closeout_body_blob[ag] = "\n".join(bodies)
 
     violations: list[str] = []
     for path, fm in all_docs.items():
         ag_values = [v for v in docspec._as_list(fm.get("asset_group")) if isinstance(v, str)]
-        if len(ag_values) != 1 or ag_values[0] not in REAL_AGS:
+        if len(ag_values) != 1 or ag_values[0] not in COVERED_ASSET_GROUPS:
             continue
         ag = ag_values[0]
         family = closeout_family[ag]
