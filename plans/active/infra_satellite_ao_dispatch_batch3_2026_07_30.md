@@ -88,16 +88,16 @@ than scheduling a batch4 against this tranche.**
 
 ## Why a batch + finalize PAIR rather than a single thin plan
 
-Considered and rejected: the same-day sibling `ci_satellite_ao_dispatch_batch3_2026_07_30.md` shape (one plan, no
-finalize twin, archival folded into the single todo's done-when). That shape is only available under `task_template.md`
-§4's **single-todo** carve-out, which `scripts/quality_gates/check_finalize_plan_coverage.py` implements literally
-(`_todo_count(...) <= 1`, and it filters on `assigned_vm: planning` — NOT on `status`, so a `draft` plan counts too).
-Measured on this tree before authoring: the check reports **0 violations at baseline 0**, so a 2-todo
-`assigned_vm: planning` plan with no gated twin would be a **hard regression (exit 1)**, not a warning. Artificially
-fusing the two todos into one to qualify for the carve-out was also rejected — they are in different repos
-(`unified-trading-pm` vs `agent-orchestrator`), share no file and no dependency, and fusing them would serialize
-unrelated work onto one worker purely to dodge a gate. So: a real pair, with a genuinely small finalize twin
-(`infra_satellite_ao_dispatch_batch3_finalize_2026_07_30.md`).
+Considered and rejected: the same-day sibling `/plans/archive/2026_07/ci_satellite_ao_dispatch_batch3_2026_07_30.md`
+shape (one plan, no finalize twin, archival folded into the single todo's done-when — since archived, its work verified
+already complete under separate dispatch). That shape is only available under `task_template.md` §4's **single-todo**
+carve-out, which `scripts/quality_gates/check_finalize_plan_coverage.py` implements literally (`_todo_count(...) <= 1`,
+and it filters on `assigned_vm: planning` — NOT on `status`, so a `draft` plan counts too). Measured on this tree before
+authoring: the check reports **0 violations at baseline 0**, so a 2-todo `assigned_vm: planning` plan with no gated twin
+would be a **hard regression (exit 1)**, not a warning. Artificially fusing the two todos into one to qualify for the
+carve-out was also rejected — they are in different repos (`unified-trading-pm` vs `agent-orchestrator`), share no file
+and no dependency, and fusing them would serialize unrelated work onto one worker purely to dodge a gate. So: a real
+pair, with a genuinely small finalize twin (`infra_satellite_ao_dispatch_batch3_finalize_2026_07_30.md`).
 
 The twin also does real work here rather than being ceremony: **neither source doc becomes archivable** when its
 extracted item lands (each keeps judgment-gated todos at `assigned_vm: NA`), so the finalize step must reconcile

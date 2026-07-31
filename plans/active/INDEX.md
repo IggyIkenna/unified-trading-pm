@@ -17,7 +17,7 @@
 
 <!-- AUTO-INDEX-START -->
 
-_Auto-generated via `scripts/plans/regenerate_active_plan_index.py`. 246 plans across 10 domains. A plan tagged with
+_Auto-generated via `scripts/plans/regenerate_active_plan_index.py`. 243 plans across 10 domains. A plan tagged with
 multiple `asset_group:` values appears under each. Grep this block for a domain keyword before scanning `plans/active/`
 by hand._
 
@@ -388,7 +388,7 @@ by hand._
   — Run ES feature calculations and ML training smoke test, and complete the full S&P 500 backtest for price-arb and
   prediction strategies.
 
-### sports (41)
+### sports (39)
 
 - [`ag_closeout_audit_rollout_2026_07_25`](./ag_closeout_audit_rollout_2026_07_25.md) — Autonomous session (/autonomous,
   operator away, 2026-07-25) driving the /ag-closeout-audit skill across the 4 asset groups that haven't had it yet —
@@ -481,13 +481,6 @@ by hand._
   — Gated closeout for sports_satellite_ao_dispatch_batch2_2026_07_24.md — machine-held via depends_on +
   gate_on_depends: true until all 37 of that plan's todos are done (corrected 2026-07-25 plan-reconcile, was 36), so
   this never dispatches…
-- [`sports_satellite_ao_dispatch_batch3_2026_07_25`](./sports_satellite_ao_dispatch_batch3_2026_07_25.md) — Third
-  AO-dispatch batch for sports, extracted from the 2026-07-25 orphan-audit's 26 genuinely-orphaned satellite docs (of 72
-  sports-primary docs total; see `ag_closeout_audit_rollout_2026_07_25.md` for the full audit). A 26-agent…
-- [`sports_satellite_ao_dispatch_batch3_finalize_2026_07_25`](./sports_satellite_ao_dispatch_batch3_finalize_2026_07_25.md)
-  — Gated closeout for sports_satellite_ao_dispatch_batch3_2026_07_25.md — machine-held via depends_on +
-  gate_on_depends: true until all 12 of that plan's todos are done. Mirrors
-  sports_satellite_ao_dispatch_batch2_finalize_2026_07_24.md's…
 - [`sports_satellite_ao_dispatch_batch4_2026_07_25`](./sports_satellite_ao_dispatch_batch4_2026_07_25.md) — Fourth
   AO-dispatch batch for sports, produced by the `/ag-closeout-audit` skill's "batchN methodology" (iterative drain):
   re-checks batch3's own `## Deferred — conflict-gated` section (6 docs, 7 AO-eligible candidates, 2026-07-25) against…
@@ -874,7 +867,7 @@ by hand._
   monitoring_control_plane_master_2026_06_10.md as a file-disjoint scope-creep section (agent-orchestrator internals,
   not the…
 
-### ci (10)
+### ci (9)
 
 - [`capability_wizard_client_lite_and_ci_regen_followup_2026_07_24`](./capability_wizard_client_lite_and_ci_regen_followup_2026_07_24.md)
   — Small follow-up plan forking the 2 residual items left open when `capability_wizard_and_manifest_2026_06_11.md`
@@ -893,9 +886,6 @@ by hand._
 - [`ci_satellite_ao_dispatch_batch2_finalize_2026_07_29`](./ci_satellite_ao_dispatch_batch2_finalize_2026_07_29.md) —
   Gated closeout for ci_satellite_ao_dispatch_batch2_2026_07_29.md — machine-held via depends_on + gate_on_depends: true
   until all 14 of that plan's todos are done. Reconciles each distinct source doc's checkboxes/prose independently,…
-- [`ci_satellite_ao_dispatch_batch3_2026_07_30`](./ci_satellite_ao_dispatch_batch3_2026_07_30.md) — Third AO-dispatch
-  batch for the `ci` topic tranche, produced by `/ag-closeout-audit ci` (autonomous mode, 2026-07-30). Phase 0
-  re-checked batch1's still-open conflict-gated Deferred items (D2-D6) and batch2's (E1-E5): none have newly…
 - [`cicd_mvp_ldr_to_main_pipeline_2026_06_30`](./cicd_mvp_ldr_to_main_pipeline_2026_06_30.md) — "OPERATOR DECISION
   (Harsh + Ikenna, reaffirmed 2026-06-30): we do NOT need the complex CI/CD pipeline. The MVP is: commits reach LDR via
   local-green quality-gates + quickmerge (already enforced) → SIT validates → merge LDR→main. Staging is…
