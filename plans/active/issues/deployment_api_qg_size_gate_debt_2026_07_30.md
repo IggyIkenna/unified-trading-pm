@@ -94,7 +94,7 @@ file-by-file.
       losing type inference through the `_inv.` indirection, fixed by replacing the lambdas with explicitly-typed nested
       functions); full `quality-gates.sh` green both before and after removing the now-obsolete
       `FUNCTION_SIZE_EXTRA_EXCLUDES` entry (confirmed `✅ File size OK` with the exclude removed).
-- [ ] [SCRIPT] P1. **PARTIAL 2026-07-31 (slot-5, infra craft)** — `deployment-api@0b4c6a8`. Extracted the named
+- [x] ✅ [SCRIPT] P1. **2026-07-31 (slot-5, infra craft)** — `deployment-api@0b4c6a8`. Extracted the named
       `_build_manifest_category()` (360L) + its data_type-grouping/MTDS-annotation helpers into a NEW sibling module
       `manifest_category_builder.py`, inserted into the mixin chain between `missing_shards` and `manifest` (pure code
       motion; updated the chain-description docstring in all 9 sibling mixin files for consistency). Decomposed the 360L
@@ -103,11 +103,26 @@ file-by-file.
       1131L→683L. Verified: 257 tests green
       (`test_data_status_service.py`/`test_data_status_turbo.py`/`test_data_status_beta_rollup_and_cli_config.py`),
       `basedpyright` clean (only 3 pre-existing errors remain, confirmed byte-identical against origin before this
-      change — not introduced by this decomposition), full `quality-gates.sh` green. **`manifest.py`'s own exclude entry
-      stays — NOT yet removable**: 4 OTHER pre-existing oversized methods remain untouched (`get_manifest_status` 147L,
-      `_get_manifest_status_sync` 132L, `_dispatch_category_builds` 102L, `_live_build_fallback` 71L) — different
-      concern (live-build OOM guard, subprocess dispatch), out of scope for this todo's specifically-named target. A
-      future dispatch decomposing those 4 can then remove `manifest.py`'s exclude entry.
+      change — not introduced by this decomposition), full `quality-gates.sh` green. **2026-07-31 (slot-8, infra craft)
+      — `deployment-api@a42a57e`**: decomposed the remaining 4 oversized methods (`get_manifest_status` 147L,
+      `_get_manifest_status_sync` 132L, `_dispatch_category_builds` 102L, `_live_build_fallback` 71L) into a NEW sibling
+      `manifest_status_helpers.py` (`ManifestStatusHelpersMixin`, inserted between `manifest_category_builder` and
+      `manifest`), using two small dataclasses (`_ManifestBuildRequest`, `_CategoryBuildContext`) to bundle the ~10
+      params travelling together across the internal call chain so every extracted method's own signature stays short.
+      `run_bounded` / `ThreadPoolExecutor` / `slice_rollup_to_window` call sites stayed physically in `manifest.py` —
+      `tests/unit/test_data_status_service.py` / `tests/unit/services/test_manifest_source.py` /
+      `tests/unit/test_data_status_beta_rollup_and_cli_config.py` patch each by the literal module path
+      `deployment_api.services.data_status.manifest.<name>`, which only intercepts a bare-name lookup resolved through
+      the PATCHED module's own globals — moving those specific calls would have silently stopped the patches from taking
+      effect (caught empirically: an early draft moved `mtds_expected_dates_for_venue_dt`-style logic and broke 2
+      seeded-denominator tests the same way on the sibling `mtds.py` todo above). Also respected the mixin chain's
+      ordering invariant (an earlier link can never call a method defined only on a later one) when deciding which leaf
+      helpers were safe to move. Updated one test (`test_both_pools_cap_fan_out_with_max_build_workers`) whose
+      `inspect.getsource()` assertion targeted the now-split-out pool-instantiation code — same regression-guard intent,
+      now sourced from the two dispatch-leg methods that actually contain it. `manifest.py`'s
+      `FUNCTION_SIZE_EXTRA_EXCLUDES` entry REMOVED — both the 900L file-size gate and the 50L method-size gate now pass
+      natively for `manifest.py` (577L) and the new `manifest_status_helpers.py` (346L). Full `quality-gates.sh` green
+      (5052 tests pass, 0 regressions).
 - [x] ✅ [SCRIPT] P1. Decompose `deployment_api/services/data_status/mtds.py` (1059L, contains the 220L
       `mtds_honest_coverage_for_venue()`). Remove its exclude entry once compliant. — deployment-api@a483514: split into
       `mtds_meta.py` (category/PREDICTION metadata), `mtds_defi_alias.py` (DEFI alias maps + canonicaliser),
@@ -238,3 +253,8 @@ file-by-file.
   into a 6-module facade package. See the flipped checkbox above for the full evidence chain (which functions stayed in
   the facade to preserve the test-patch surface, verification detail). `deployment-api@c11f56f`. 6 P1/P2 decomposition
   todos remain open for follow-up dispatch.
+- 2026-07-31 (slot-8, infra craft): Completed todo 2 (previously PARTIAL) — decomposed `manifest.py`'s last 4 oversized
+  methods into a new `manifest_status_helpers.py` sibling, removing `manifest.py`'s `FUNCTION_SIZE_EXTRA_EXCLUDES` entry
+  entirely. See the flipped checkbox above for the full evidence chain (mock.patch call-site constraints, the
+  mixin-ordering invariant, the dataclass-bundling technique used to keep every extracted method under 50L).
+  `deployment-api@a42a57e`. 6 P1/P2 decomposition todos remain open for follow-up dispatch.
