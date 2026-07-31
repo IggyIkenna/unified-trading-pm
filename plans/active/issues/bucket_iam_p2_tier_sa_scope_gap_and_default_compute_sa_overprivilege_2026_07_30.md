@@ -53,6 +53,7 @@ estimate_class: infra
 estimate_baseline_ai_days: 0.5
 estimate_calibrated_ai_days: 0.4
 assigned_role: infra
+sequential: true
 drift_direction: correct-plan
 source: >-
   Surfaced 2026-07-30 (slot-12, infra) while executing bucket_iam_p2_god_sa_removal_before_runtime_rewire-001, which
@@ -170,6 +171,17 @@ keep.
 I split P2.2 in the plan into P2.2a (blocked, [OPERATOR] SA-strategy decision) / P2.2b (blocked on P2.2a, grant
 non-storage roles) / P2.2c (blocked on P2.2b, wire Cloud Run) / P2.2d (its own large VM-launcher effort, blocked on
 P2.2a) — mirroring this plan's own P1.2→P1.2a/P1.2b and P2.1→P2.1a/P2.1b precedent.
+
+## Dispatch-gating note (2026-07-31)
+
+`sequential: true` added after the backlog dispatched P1 (todo 2, "grant the winning SA the non-storage roles") to a
+worker while P0 (todo 1, the `[OPERATOR]` ruling) was still open and unchecked — `/api/backlog/<id>/blockers` confirmed
+the derived task read `"ready (no blockers)"`, i.e. nothing in the backlog was gating it on P0's completion. Executing
+P1 today would mean guessing the operator-only SA-strategy call. This also protects P2/P3.2 (todos 3/5), which depend on
+the same ruling, from the identical premature-dispatch risk. Accepted cost: P3.1 (todo 4, the independent
+default-compute-SA hardening effort) also waits behind P0-P2 under strict sequential ordering, even though it doesn't
+depend on the SA-strategy outcome — a full plan split would avoid that, but wasn't done here to keep this fix in-scope
+for the dispatched task.
 
 ## Todos
 
