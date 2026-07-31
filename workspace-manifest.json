@@ -208,10 +208,10 @@
       "ldr_ci_status": "GREEN",
       "cascade_invalidated_by": "unified-trading-library=0.66.0",
       "codebase_health": {
+        "qg_red_reason": null,
         "warn_file_count": 0,
         "large_file_count": 0,
-        "qg_red_reason": null,
-        "coverage_pct": null
+        "coverage_pct": 87.6
       }
     },
     "client-reporting-api": {
@@ -342,10 +342,10 @@
       "ldr_ci_status": "GREEN",
       "cascade_invalidated_by": "unified-trading-library=0.66.0",
       "codebase_health": {
-        "large_file_count": 0,
-        "coverage_pct": null,
         "qg_red_reason": null,
-        "warn_file_count": 18
+        "warn_file_count": 18,
+        "large_file_count": 0,
+        "coverage_pct": 83.06
       }
     },
     "deployment-service": {
@@ -487,7 +487,7 @@
           "required": true
         }
       ],
-      "ci_status": "FEATURE_GREEN",
+      "ci_status": "MAIN_GREEN",
       "coverage_pct": 70,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "integration",
@@ -888,9 +888,9 @@
       "ldr_ci_status": "GREEN",
       "codebase_health": {
         "qg_red_reason": null,
+        "warn_file_count": 46,
         "large_file_count": 0,
-        "coverage_pct": 83.7,
-        "warn_file_count": 46
+        "coverage_pct": null
       },
       "cascade_invalidated_by": "unified-trading-library=0.66.0"
     },
