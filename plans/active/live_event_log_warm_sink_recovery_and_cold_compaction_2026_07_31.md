@@ -273,3 +273,12 @@ determinism needs.
   itself) is left open: it has two real preconditions (elapsed accumulation time + an active paper strategy run trading
   these venues, neither confirmed to exist) that can't be satisfied by a single worker pass — see the todo's own text
   for the concrete next-worker checklist.
+- **2026-07-31 (slot-8)**: Picked up P1.2. Reconfirmed both preconditions still unmet at `2026-07-31T22:03:41Z`: (1)
+  only ~49 minutes elapsed since the P1.1 redeploy (`2026-07-31T21:14-21:16Z`) — nowhere near the 24h needed for a
+  meaningful accumulation window; (2) `gcloud compute instances list --filter="name~paper OR name~colocated"` still
+  returns zero results (same finding as slot-14's same-day check). Per the todo's own instruction to escalate the
+  paper-run gap as its own finding if unresolved, filed
+  `/plans/active/issues/no_active_paper_run_blocks_p1_2_determinism_recheck_2026_07_31.md` — this gap is potentially
+  permanent (not just time-gated), since no active paper deployment trades these 3 venues under any name this search
+  matched. Leaving P1.2 open/unflipped; the time-gate alone means today is genuinely too early regardless of the
+  paper-run question.
