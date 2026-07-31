@@ -71,10 +71,40 @@ mechanism designed to catch that class of bug has itself been broken for 3 weeks
 
 ## Recommended next steps
 
-- [ ] [BACKEND] P2. Pull execution logs for `lifecycle-catalogue-full-tradfi-hlvh9` (2026-07-25, most recent failure)
+- [x] ✅ [BACKEND] P2. Pull execution logs for `lifecycle-catalogue-full-tradfi-hlvh9` (2026-07-25, most recent failure)
       via `gcloud logging read` / Cloud Run execution log, identify the actual failure mode (timeout, OOM, exception,
       exit code), and determine whether it's a `--mode full` code-path bug in `build_instrument_catalogue.py` or an
-      infra/resource issue. (repo: instruments-service)
+      infra/resource issue. (repo: instruments-service) — **2026-07-31 (slot 14, backend_engineer)**:
+      `gcloud run jobs     executions describe lifecycle-catalogue-full-tradfi-hlvh9` confirms `NonZeroExitCode`/exit
+      code 1 ("The container exited with an error"), ran `05:00:08Z`→`09:02:22Z` (~4h02m of the 6h `timeoutSeconds`
+      budget — **NOT a timeout**). `gcloud logging read` across every log name/severity for this exact execution
+      (`labels."run.googleapis.com/execution_name"="lifecycle-catalogue-full-tradfi-hlvh9"`, no filter narrower than
+      that) returns **exactly ONE entry total**: the platform's own completion audit event — **zero application
+      stdout/stderr for the entire ~4h run**, including no `[BISECT-A]` (the very first `print(..., flush=True)` in
+      `run_rollup()`, `build_instrument_catalogue.py:4763`) and no `logger.exception` traceback from the
+      `if __name__ == "__main__":` safety net (`:5122-5130`, itself written specifically to survive Cloud Logging's
+      multi-line-traceback truncation — see its own comment citing this exact truncation history). No
+      `"Memory limit exceeded"`/OOM-style system log line found in the surrounding `varlog/system` window either — **not
+      a classic OOM signature**. **Corroborated as a real, repeatable pattern, not a one-off**: the PRIOR weekly failure
+      (`lifecycle-catalogue-full-tradfi-8m6wx`, 2026-07-18) shows the identical signature — `NonZeroExitCode`/exit 1,
+      ran `05:00:03Z`→`09:49:31Z` (~4h49m), zero log output. By contrast the daily incremental job
+      (`lifecycle-catalogue-regen-tradfi-hdpmq`, same script/image family, same project) logs profusely from
+      `[BISECT-A]` onward and completed cleanly. **Conclusion**: not a timeout, not a classic OOM-kill (no memory-limit
+      log line), and — critically — not a clean, traceable Python exception either (the safety net built specifically to
+      surface exactly this class of failure produced nothing, twice). The complete absence of even the FIRST-line print
+      statement across two separate multi-hour `--mode full` runs points toward an infra/resource-level termination
+      (silently discards buffered output) rather than an in-app code-path bug — but the EXACT external mechanism is not
+      pinned from logs alone; no Cloud Monitoring `container/memory/utilizations` time series exists for this Cloud Run
+      JOB resource type (queried, zero series returned — jobs don't populate that metric the same way services do), so a
+      definitive memory-pressure correlation could not be drawn either way this session. Runtime SA is
+      `lifecycle-catalogue-regen@central-element-323112.iam.gserviceaccount.com` (unrelated to the concurrent
+      `uts-prd-sa` migration investigation elsewhere in the corpus — different SA, different service, ruled out as a
+      connection). Handoff for the next `[BACKEND]` todo (fix + re-verify): since app-level logs don't exist to debug
+      against, the highest-leverage next step is likely a manual
+      `gcloud run jobs execute lifecycle-catalogue-full-tradfi` re-run WHILE actively tailing `gcloud logging tail` in
+      real time (catches output a post-hoc `read` might still be missing) or a scoped diagnostic sink (mirroring the
+      pattern used in `deployment_api_sigabrt_crash_loop_2026_07_24.md`'s cold-container investigation) — NOT another
+      blind re-trigger without first arming a way to observe it.
 - [ ] [BACKEND] P2. Fix the identified root cause and manually re-trigger
       `gcloud run jobs execute lifecycle-catalogue-full-tradfi` to confirm green before the next scheduled Saturday
       05:00 UTC run. (repo: instruments-service, deployment-service)
