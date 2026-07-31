@@ -199,6 +199,31 @@ sports-tranche-owned).
       todos). **Done when**: both secrets exist and verify non-empty, a real paper order completes end-to-end with
       captured evidence, and both source-doc todos are flipped citing the SHAs/evidence.
 
+      **Todo 1 DONE 2026-07-31**: both secrets provisioned + verified non-empty and byte-identical to source (evidence
+              in the source doc). **Todo 2 BLOCKED-OPERATOR-DECISION 2026-07-31** — found a real conflict this todo's own text
+              doesn't resolve: this codebase's `OperationalMode.PAPER` never calls any real venue API (routes everything
+              through a simulated `PaperBettingAdapter` — `execution_service/adapters/sports_factory.py`'s `_PAPER_VENUE_KEYS`
+              includes `kalshi`), so "paper order" cannot mean that operational mode. `KalshiAdapter`'s default `base_url` is
+              `https://api.elections.kalshi.com` — Kalshi's LIVE production host, which literally matches this todo's own
+              "elections-subdomain host" instruction (there's a separate `KALSHI_DEMO_BASE =
+              "https://demo-api.kalshi.co"` the code supports but does not default to). The operator's 2026-07-28 ruling on the
+              source doc explicitly scoped itself to the secret-reshape decision and states that step "does not touch the
+              exchange side at all" — it never separately ruled on the safety/authorization of todo 2 actually placing a live
+              order with real funds.
+
+              **Question**: how should todo 2 be executed?
+
+              A: Use Kalshi's demo API host (`KALSHI_DEMO_BASE`) instead of the live default — genuinely risk-free, but
+              diverges from this todo's literal "elections-subdomain host" text, and needs confirming the demo host accepts
+              the same provisioned credentials before trying. [WORKER REC]
+              B: Place a real order on the live host as literally instructed — commits real (if small) funds on a live
+              regulated exchange; needs an explicit operator go-ahead given the ruling above never covered this specific risk.
+              C: Some other verification method (e.g. a dry-run / signature-only test that proves the credential wiring works
+              without submitting a live order) — needs the operator to specify what would count as sufficient evidence.
+
+              Not attempted pending an answer — filed as the actionable question, not guessed. `can_continue: true`; other
+              backlog work continues in the meantime.
+
 - [ ] [DIAG] P2. **Kalshi mass `attempted_failed` unclassified-adapter-error investigation + contingent fix.**
       Internally-sequential 3-step chain (combined into one todo per the skill's own "sequential work → one todo" rule):
       (1) check whether the mass-`attempted_failed` anomaly recurred on a recent date; (2) pull actual adapter
