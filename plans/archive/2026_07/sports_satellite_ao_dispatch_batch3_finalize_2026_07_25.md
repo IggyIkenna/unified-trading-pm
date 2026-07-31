@@ -80,9 +80,12 @@ drift_direction: advance-code
       it genuinely reaches 0 open todos (checkbox AND prose-form — do not trust checkbox count alone). **Done when**:
       all 8 source docs' corresponding checkboxes/sections are flipped with verified evidence, and any doc that
       genuinely reaches 0 open todos is flipped to `status: resolved`.
-- [x] ✅ [DOC] P1. **DONE 2026-07-31.** Re-checked all 8 source docs' physical location + status against todo 1's own
-      doc-by-doc log: 5 needed no action (already correctly `open` and never archived, or already archived by an
-      earlier/later independent session); 1
+- [x] ✅ [DOC] P2. **DONE 2026-07-31** (retagged P1→P2 same-day: source-doc reconciliation, distinct from and
+      lower-stakes than todo 4's plan-closing archival below — both were `[DOC] P1` originally, which is otherwise
+      indistinguishable to the AO done-gate's tag+priority disambiguator when both close in the same commit as a
+      self-archival rename; see `server/verify.py::_brief_is_checked_by_tag_in_text`). Re-checked all 8 source docs'
+      physical location + status against todo 1's own doc-by-doc log: 5 needed no action (already correctly `open` and
+      never archived, or already archived by an earlier/later independent session); 1
       (`plans/archive/issues/instruments_service_codex_compliance_ceiling_drift_2026_07_20.md`) was already archived;
       only `issues/dp_catalog_not_running_sports_prediction_2026_07_15.md` was genuinely `status: resolved` with 0 open
       todos (re-verified: all 6 checkboxes `[x]`) while still sitting under `plans/active/issues/` — archived it to
