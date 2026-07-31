@@ -54,6 +54,7 @@ source: >-
   Surfaced while completing defi_plasma_chain_onboarding_gap_2026_07_26.md's manifest-write leg (slot 15, 2026-07-31) —
   the capture itself worked (RPC-fallback fix confirmed via 18 real rows written to GCS), but the manifest registration
   step triggered this unrelated, more severe host-safety issue.
+drift_direction: advance-code
 ---
 
 # CLI-triggered inline manifest consolidation has no memory cap, unlike the dedicated Cloud Run job
