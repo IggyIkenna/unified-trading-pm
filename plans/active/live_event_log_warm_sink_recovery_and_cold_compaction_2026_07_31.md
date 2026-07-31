@@ -106,10 +106,15 @@ determinism needs.
       cross-checking bucket / `filename_prefix` / `filename_suffix` AND that each declared `filename_prefix` actually
       encodes its own `asset_group`/`data_type` labels (`live-events/warm/{asset_group}/{data_type}/`), plus a
       no-two-subscriptions-share-a-prefix collision check. Live run: **52 declared, 52 live, 0 mismatches.**
-- [ ] [INFRA] P1. Add the missing build step for `live-event-log-compactor`
+- [x] ✅ [INFRA] P1. Add the missing build step for `live-event-log-compactor`
       (`deployment-service/deployment_service/jobs/live_event_log_compactor.py`) — a Dockerfile/cloudbuild.yaml step
       that actually builds and pushes its image — and push a real image. DoD:
-      `gcloud run jobs describe     live-event-log-compactor` shows `Ready: True`, no `ContainerMissing`.
+      `gcloud run jobs describe     live-event-log-compactor` shows `Ready: True`, no `ContainerMissing`. —
+      deployment-service@8f0137d: pointed `compactor_image` at the shared maintenance-jobs image (same one
+      uts-prod-tarball-cleanup/vm-log-archival-prd use) with an overridden container command
+      (`-m deployment_service.jobs.live_event_log_compactor`), added the job to the shared cloudbuild.yaml's
+      redeploy-jobs list, applied via `terraform apply` (0 added, 1 changed, 0 destroyed). Verified live:
+      `gcloud run jobs describe live-event-log-compactor` → `Ready: True`.
 - [ ] [INFRA] P1. Manually trigger the `live-event-log-compactor` Cloud Run Job once and verify a full, successful
       execution. DoD: `gcloud run jobs executions list` shows a SUCCEEDED execution, and
       `live-events/cold/<asset_group>/<data_type>/date=.../` contains real, non-empty parquet for at least the 2
