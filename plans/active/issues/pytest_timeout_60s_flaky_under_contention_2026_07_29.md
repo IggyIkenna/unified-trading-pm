@@ -542,3 +542,30 @@ those commits landed). The escalation's own repo-blocker list (`GET /api/repo-bl
   continues to point at genuine runner-level contention on `github-glue-runners-instruments-service`, not a per-test
   anti-pattern, since this latest one has no I/O/timer/subprocess surface at all to blame). Slot left clean (0 commits
   ahead of `origin/live-defi-rollout` on instruments-service, nothing to commit).
+- **2026-07-31 ~22:34Z (cicd escalation `agt-29d892`, slot 11)**: `unified-api-contracts` promotion PR #821 (LDR→main,
+  "Option-B direct"), failing run `30658448355` (`QG slice (tests)` job, databaseId `91248622261`, self-hosted runner
+  `glue-ip-172-31-5-118-1` — confirmed via the job's own setup-log group, and the SAME exact runner named in the
+  immediately-preceding market-tick-data-service PR#804 entry above; instruments-service PR#1048's failure two entries
+  up also started in this same `~19:16-19:22Z` window, a 3rd repo hitting the box simultaneously). A quieter variant of
+  this doc's signature: entered `── [3/6] TESTS ──` at `19:22:11Z`, then **zero output of any kind** (no per-test dots,
+  no pytest-timeout SIGALRM traceback, nothing) until the wrapper shell's own `Killed` message at `19:31:27.89Z` —
+  `exit=137` (SIGKILL), `9m16s` of complete silence, no source-level test attributable at all (not even the
+  execnet-IPC-flush frame the two entries above captured) — consistent with a straight external OOM-kill of the whole
+  process (SIGKILL gives no chance to flush pytest's buffered stdout), one step further along the same spectrum as the
+  captured-traceback variants. Confirmed root facts before concluding: PR #821 `state=MERGED`, `mergedAt=19:16:17Z` — 5
+  min BEFORE the failing run's own TESTS phase even started — self-merged via an independent already-green check on the
+  same head SHA (`fb792b7a`), identical self-merge race to every prior entry. `live-defi-rollout` HEAD (`2b7454a8`)
+  matches my slot clone exactly AND matches the head SHA of the very next `quality-gates-v2` run (`30659459010`,
+  success, `19:32:10Z` — 5 min after the kill) — 8 consecutive green LDR runs since, sustained ~3h to investigation
+  time. Zero open `/api/repo-blockers`, zero open PRs, for `unified-api-contracts`. Given CI itself already produced a
+  green run on this exact commit, chose NOT to additionally burn a full local `quality-gates.sh` repro (the default
+  `ldr_qg_failure` recipe) after checking host state first: my own slot host measured `load average: 27.20` on 16 vCPUs
+  (~1.7x oversubscribed), `18Gi/47Gi` swap in active use, and **14 concurrent `quality-gates.sh --no-fix` processes**
+  already running (`pgrep -af`) at investigation time — a 15th full pass would only have added to the exact contention
+  this doc and `fleet_wide_qg_capacity_crisis_continues_day2_2026_07_29.md` track, for strictly less information than
+  the CI run already provided on the identical SHA. This live host snapshot is fresh, direct, first-hand corroboration
+  for that sibling doc's still-open `[BACKEND] P1` "machine-enforced shared-host QG concurrency gate" todo (14 observed
+  vs. its own `max(2, floor(cores/4))`-derived cap of ~4) — cross-referenced here, not duplicated as a new todo in
+  either doc. No code/test action taken — same "orphaned noise against an already-resolved wall" conclusion as every
+  prior entry in this doc. Slot left clean (`unified-api-contracts` already on `live-defi-rollout`, 0 commits ahead of
+  `origin`, nothing to commit there).
