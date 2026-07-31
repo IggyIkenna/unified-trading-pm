@@ -313,9 +313,18 @@ file-by-file.
       (`test_coverage_drift.py`, `test_coverage_drift_worker.py`, `test_data_status_service.py`,
       `test_features_sports_per_feature_axis.py`, `test_teams_per_league_axis.py`), basedpyright clean, ruff clean, full
       `quality-gates.sh` green (120s). Repo: deployment-api.
-- [ ] [SCRIPT] P2. Decompose the remaining function-size-only violation in
-      `deployment_api/services/data_status/venue_resolution.py`. Remove its exclude entry once compliant; re-run
-      `quality-gates.sh` to confirm no regression.
+- [x] ✅ [SCRIPT] P2. **DONE 2026-07-31 (slot-2, infra craft).** Decomposed 2 oversized methods in
+      `deployment_api/services/data_status/venue_resolution.py`. `deployment-api@b94bc25`: extracted
+      `_has_data_type_column`/`_maybe_reference_expected_dates`/`_sports_reference_fixture_calendar`/
+      `_build_one_venue_entry` from `_build_venue_breakdown` (was 94L), and
+      `_cefi_instruments_provider_for_category`/`_mtds_honest_coverage_for_one_venue`/
+      `_apply_honest_coverage_to_all_venues`/`_fold_honest_coverage_into_venue`/
+      `_fold_legacy_only_venue`/`_base_venue_entry` from `_apply_mtds_honest_coverage` (was 181L) — pure code motion +
+      docstring condensing, no logic changes. `FUNCTION_SIZE_EXTRA_EXCLUDES` entry removed — gate passes natively.
+      Verified: 430 targeted tests green (broad set given this shared mixin's blast radius —
+      `test_data_status_service.py`, `test_mdps_timeframe_aware_honest_coverage.py`,
+      `test_mtds_honest_coverage_for_bookmaker.py`, `test_oow_denominator.py`, `test_data_status_turbo.py`, + 9 more),
+      basedpyright clean, ruff clean, full `quality-gates.sh` green (128s). Repo: deployment-api.
 - [ ] [SCRIPT] P2. Decompose the remaining function-size-only violation in
       `deployment_api/services/deploy_missing_launch.py` (`launch_deploy_missing_vm()`, 236L). Remove its exclude entry
       once compliant; re-run `quality-gates.sh` to confirm no regression.
