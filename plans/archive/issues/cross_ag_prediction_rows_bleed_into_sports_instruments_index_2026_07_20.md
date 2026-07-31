@@ -534,8 +534,129 @@ not a new root-cause claim.
 
 ### New todo (does not renumber or supersede todos 1-14 above)
 
-- [ ] 15. [DATA] P2. Determine whether `market-data-tick-sports-prd`'s 20,785 `venue=KALSHI`/`empty_confirmed` rows are
-      (a) an independent instance of the same writer/consolidator mislabeling class documented above, (b) a legacy
-      artifact from before the sports/prediction venue split existed, or (c) something else entirely — and whether they
-      warrant their own remediation (lower urgency than todos 1-14 since `row_count=0` throughout: no real data is at
-      risk, only manifest-vocabulary hygiene) (repo: market-tick-data-service / unified-trading-library).
+- [x] 15. [DATA] P2. ✅ **DONE 2026-07-31.** Determine whether `market-data-tick-sports-prd`'s 20,785 `venue=KALSHI`/
+      `empty_confirmed` rows are (a) an independent instance of the same writer/consolidator mislabeling class
+      documented above, (b) a legacy artifact from before the sports/prediction venue split existed, or (c) something
+      else entirely — and whether they warrant their own remediation (lower urgency than todos 1-14 since `row_count=0`
+      throughout: no real data is at risk, only manifest-vocabulary hygiene) (repo: market-tick-data-service /
+      unified-trading-library). **Classified as a dormant legacy artifact (b), NOT a live instance of the TOCTOU class
+      (a) — no remediation warranted beyond an optional future low-priority cleanup.** Full evidence + reasoning in the
+      new "2026-07-31 update" section below.
+
+## 2026-07-31 update — market-data-tick-sports-prd KALSHI/polymarket_clob classification
+
+**Read-only investigation, no manifest/GCS/code writes.** Answers todo 15 (this doc) and the identical open todo in
+`sports_satellite_ao_dispatch_batch3_2026_07_25.md` (both flipped, same evidence cited in both).
+
+**Classification: (b) — a dormant legacy artifact, NOT a live instance of the (a)-class TOCTOU bug.** Some evidence
+plausibly ties its historical origin to the SAME upstream registry defect ROUND 4-6 above root-caused (see below), but
+the manifestation mechanism in THIS bucket is completely different from the sibling bucket's — a static, one-time
+population, not a continuously-reasserting write race. Could not pin the exact originating commit/script within this
+bounded, scoped investigation (that would need deeper git archaeology than a targeted read-only pass); the MECHANISM
+CLASS (dormant fossil vs. live-reasserting bug) is what's being classified here, and that is well-evidenced.
+
+**Live re-measurement (2026-07-31,
+`read_availability_index(bucket="market-data-tick-sports-prd-central-element-323112", columns=[...])`, UTL
+column-projected slim read against the freshly-consolidated canonical index — object `update_time` was ~16s before this
+read, generation `1785457728178929`, no stale-shard fallback):**
+
+- Full bucket: 628,349 rows. `venue=="KALSHI"`: **20,785**. `source=="polymarket_clob"` (any venue): **20,785**.
+  `venue=="KALSHI" AND source=="polymarket_clob"`: **20,785** — the two populations are IDENTICAL (perfect overlap),
+  confirming this is one single row set, not two overlapping ones.
+- **Exact match to the 2026-07-25 addendum's count** (this doc, above) — zero drift over 6 days. `capture_status`: 100%
+  `empty_confirmed`. `row_count`: 100% `0.0`. `error_reason`: 100% `SOURCE_RETURNED_ZERO`. `data_type`: 100% `trades`.
+  `pipeline_mode`: 100% `batch_polymarket_clob`. `service_name`: 100% `market-tick-data-service`. `schema_version`: 100%
+  `9`. `league_id`: spans 20+ football leagues (top: `SEGUNDA_DIVISION` 939, `LA_LIGA` 833, `ARGENTINA_PRIMERA` 826,
+  `SUPER_LIG` 781, `LIGA_MX` 777, ... down to `BUNDESLIGA` 599), each with a few hundred to ~1,000 rows — well under one
+  row per calendar day per league (2020-06-06→2026-05-21 is ~2,172 days), consistent with a FIXTURE-DAY-scoped
+  population (rows exist only for real match days), not a blind daily grid.
+- Shard `date` (the DATA date, not write date) by year: **2020: 1,614 · 2021: 3,781 · 2022: 3,420 · 2023: 3,473 · 2024:
+  3,420 · 2025: 3,493 · 2026 (partial, through May): 1,584** — roughly even across the full 6-year sports-data history,
+  starting exactly at the sports 2020-06-06 DATA FLOOR. This is the signature of a COMPLETED FULL-HISTORY pass, not a
+  narrow recent bug window.
+- **`written_at`/`attempted_at`: 100% of rows cluster in an 80-SECOND window: `2026-07-13T23:54:39.065321+00:00` to
+  `2026-07-13T23:55:59.362093+00:00`.** Despite the shard `date` column spanning 6 years, every row's write-timestamp is
+  identical-window. Zero rows written outside this window; zero growth since (confirmed static at exactly 20,785 both on
+  2026-07-25, per this doc's own addendum, and today 2026-07-31 — 6 days, zero drift).
+
+**Why the write-timestamp cluster does NOT mean "created 2026-07-13" — it means "last RE-TOUCHED 2026-07-13" by an
+unrelated reason-taxonomy rebuild, not new-row creation:**
+
+`market_tick_data_service/scripts/rebuild_sports_manifest_v9.py`'s own module docstring documents, as of its 2026-06-01
+CF-audit baseline, that `market-data-tick-sports-prd-{project}` ALREADY held "**584,177 ALL blanket
+SOURCE_RETURNED_ZERO**" `empty_confirmed` rows needing reason-taxonomy relabeling (the "keystone mislabel" this script
+exists to fix) — i.e. the aggregate `empty_confirmed` population in this exact bucket predates 2026-07-13 by 6+ weeks.
+MTDS git history confirms 3 same-day commits touching this exact script/taxonomy area on **2026-07-13**: `52c695d5`
+(audit script, 22:00 UTC), `12223d76` (companion re-emit script, 22:29 UTC), `d936444d` (classifier fix, 23:10 UTC) —
+this is the `--surface mdps` rebuild run that re-touched our KALSHI rows at 23:54-23:55 UTC that same day. The script's
+own docstring documents its classifier's step 6.7/7/8 fallback: for `empty_confirmed` cells whose `data_type` is NOT in
+`_FIXTURE_GUARANTEED_DATA_TYPES` (that frozenset = `FIXTURES`, `FIXTURE_STATS`, `FIXTURE_EVENTS`, `FIXTURE_LINEUPS`,
+`STANDINGS`, `ODDS`, `ODDS_SNAPSHOT`, `ODDS_MOVEMENT` — **`trades` is NOT a member**), the classifier "keep[s]
+`SOURCE_RETURNED_ZERO` (can legitimately be empty on a match day)" — an unconditional touch-and-rewrite (re-stamping
+`written_at`) even when its conclusion is "no change." This fully explains the observed pattern: a REBUILD/RELABEL pass
+over PRE-EXISTING rows, not a new-row-creation event on 2026-07-13.
+
+**Plausible historical root cause (circumstantial, not proven) — the same upstream registry defect ROUND 4-6 above
+root-caused, via a different, already-dormant mechanism:**
+
+- `unified_api_contracts/registry/venue_constants.py` confirms (git-blame: commit `f8e0d8d8`, **2026-07-24T17:36:58Z**,
+  `"fix(registry): KALSHI/POLYMARKET asset_group corrected sports->prediction — closes the live SSOT contradiction behind the cross_ag_prediction sports-index bleed"`)
+  that `VENUE_CATEGORY_MAP[KALSHI]` was ONLY corrected to `"prediction"` on that date — this is the exact
+  ROUND-5/todo-10 fix cited above. For the entire period up to AND INCLUDING the 2026-07-13 rebuild touch, the live
+  registry still classified KALSHI as `"sports"` via
+  `SPORTS_VENUES ⊇ SPORTS_PREDICTION_MARKET_VENUES ⊇ {KALSHI, POLYMARKET, NOVIG, BETOPENLY, PROPHETX}`. Any historical
+  enumerator that sourced candidate sports venues from that registry would have included KALSHI at any point before
+  2026-07-24.
+- Separately (and NOT a bug — an intentional design choice), UAC's
+  `unified_api_contracts/registry/venue_manifest/betting_sports.py::BETTING_SPORTS_VENUES` — a deliberate catalog of
+  "prediction markets and sportsbooks" (module docstring) — has ALWAYS included both `"kalshi"` and `"polymarket"`
+  alongside real sportsbooks (`betfair`, `pinnacle`, `odds_api`, etc.), because they genuinely do list sports-outcome
+  contracts.
+- **However, `market_tick_data_service/market_interface/sports/registry.py::_ADAPTER_PATHS`** — the actual set of LIVE,
+  wired sports-data-FETCHING adapters MTDS uses TODAY — contains exactly 7 keys: `betfair`, `matchbook`, `onexbet`,
+  `odds_api`, `opticodds`, `odds_engine`, `metabet`. **`kalshi` and `polymarket` are NOT members** (verified by direct
+  read, current HEAD). This same file's docstring documents two ROUNDS of historical narrowing of this candidate set (14
+  UK/EU scraper bookmakers removed 2026-05-12; their adapter source files deleted outright 2026-07-08) — i.e. an
+  ongoing, multi-round pruning of "which venues MTDS actually fetches sports data from." This is consistent with KALSHI
+  having been part of an earlier/broader candidate-venue universe (plausibly via the `VENUE_CATEGORY_MAP` defect above,
+  or an early speculative inclusion given `BETTING_SPORTS_VENUES` catalogs it) that attempted real
+  per-`(league_id, day)` "trades" fetches — always returning zero, since Kalshi's real API does not serve
+  football-league-day-granular trade data in this shape — and was pruned from the live fetch set at some earlier point,
+  leaving these confirmed-empty rows behind as a dormant fossil.
+
+**Why this rules out class (a):** the (a)-class TOCTOU bug's signature (per ROUND 3/4/6 above) is CONTINUOUS
+reassertion/regrowth across MULTIPLE SEPARATE consolidation cycles and calendar days (e.g. the sibling bucket's 07-17,
+07-19, 07-20, 07-21, 07-22 distinct `written_at` dates), because a live external writer keeps racing a live
+consolidator. This KALSHI/`polymarket_clob` population shows the OPPOSITE signature: one single 80-second write-touch
+instant, a `date` distribution spanning the FULL 6-year sports-data history (the mark of a long-since-completed pass,
+not a narrow-window active bug), and zero growth for the 6 days before AND the 6 days after this measurement — spanning
+both the 2026-07-24 registry fix and the confirmed-holding TOCTOU fix (`unified-trading-library@14301571`). There is no
+reassertion to observe because nothing has ever attempted to remove these rows.
+
+**Remediation recommendation: LOW urgency, no action required — agrees with this doc's own framing.** `row_count=0`
+throughout means zero real data at risk (pure manifest-vocabulary hygiene, no GCS object exists for any of these rows —
+a manifest-only population). Both plausible historical root-cause contributors are ALREADY independently fixed
+(`VENUE_CATEGORY_MAP[KALSHI/POLYMARKET]` → `"prediction"`, 2026-07-24; live `_ADAPTER_PATHS` never fetches sports data
+from Kalshi/Polymarket) — no new rows of this shape can be created going forward via the current code path.
+Additionally, per this doc's own § "Annotate-once, read-everywhere" formula cite
+(`reachable_coverage = captured / (captured + attempted_failed + expected_unattempted)`, `empty_confirmed` EXCLUDED),
+these rows do not even participate in the live honest-coverage denominator today — unlike the sibling bucket's bleed
+(which involved real `captured` rows inflating a denominator), this population is formula-inert as well as dormant.
+Recommend leaving as-is; if ever addressed, fold it into a general future "prediction-venue-labeled dormant
+`empty_confirmed` rows outside the prediction bucket" cleanup rather than a dedicated remediation plan — not worth its
+own plan/VM dispatch given the above. Not filing a new issue doc for this (findings-triage HARD RULE: small, clear,
+low-urgency, fully diagnosed here; a fresh issue doc would just duplicate this section).
+
+**Adjacent finding (not fixed here, out of this todo's scope): the original "## Todos" section's items 1-4 (top of this
+doc, written 2026-07-20 at file creation, before the ROUND system existed) are still unchecked `- [ ]` despite this
+doc's own `status: resolved` + 🟢 RESOLVED banner + `resolved_by` evidence.** On a skim, each appears superseded in
+substance by a later ROUND section (1↔ROUND-2/4 count-pinning, 2↔ROUND 6 writer/root-cause location, 3↔the
+`unified-trading-library@14301571` TOCTOU fix, 4↔ROUND 8's hold-check-verified remediation) — but confirming that
+mapping with cited evidence per item (the same bar this section's own classification met) needs a dedicated read of
+ROUND-2/4/6/8 against each todo's literal done-when, which this bounded classification task did not do. Tracked so it
+isn't lost:
+
+- [ ] [REVIEW] P3. Audit this doc's original todos 1-4 against ROUND-2/4/6/8's actual resolution — either flip each
+      `[x]` with a cited commit/evidence per item, or add an explicit superseded-by-ROUND-N note if a todo's literal
+      scope was overtaken rather than completed as originally written. Doc already `status: resolved` and archived; this
+      is a checkbox-hygiene-only fix, does not change the doc's disposition.

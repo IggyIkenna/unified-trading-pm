@@ -146,21 +146,29 @@ drift_direction: advance-code
       filed follow-up). `quality-gates.sh` green. Source: `sports_live_availability_and_source_latency_2026_07_24.md`
       (corrected 2026-07-25 plan-reconcile — the digest cited here as Source has 0 checkboxes and is not the real
       dispatch/reconciliation target; the actual open checkbox for this work lives in the doc now cited).
-- [ ] [DATA] P1. Determine the disposition of `market-data-tick-sports-prd`'s 20,785 `venue=KALSHI`/
-      `empty_confirmed`/`row_count=0` rows (paired with `source=polymarket_clob`, dates 2020-06-06..2026-05-21) —
-      classify as (a) an independent instance of the same writer/consolidator asset_group-mislabeling class the
-      fleet-wide TOCTOU bug (ROUND 4-6) produces in the sibling `instruments-store-sports-prd` bucket, (b) a legacy
-      artifact predating the sports/prediction venue split, or (c) something else — and state whether it warrants its
-      own remediation (lower urgency: `row_count=0` throughout, no real data at risk). Investigation/ classification
-      only — do NOT attempt any manifest write or remediation (the parent issue's ROUND 6/7 fix for the sibling bucket
-      is explicitly BLOCKED-OPERATOR-DECISION; this is a read-only classification task on a DIFFERENT, lower-risk
-      population in a different bucket). Repo: market-tick-data-service / unified-trading-library (read-only). **Done
-      when**: Todo 15 in `cross_ag_prediction_rows_bleed_into_sports_instruments_index_2026_07_20.md` is answered with a
-      cited classification (a/b/c) and an explicit remediation recommendation, recorded as a new dated section in that
-      same doc; the doc's own `status: open` and ROUND 6/7 gating on the unrelated population are left untouched.
-      Source: `cross_ag_prediction_rows_bleed_into_sports_instruments_index_2026_07_20.md` (corrected 2026-07-25
-      plan-reconcile — this todo's own Done-when already names the real target, todo 15 in that doc; the digest cited
-      here as Source has 0 checkboxes).
+- [x] ✅ [DATA] P1. **DONE 2026-07-31.** Determine the disposition of `market-data-tick-sports-prd`'s 20,785
+      `venue=KALSHI`/`empty_confirmed`/`row_count=0` rows (paired with `source=polymarket_clob`, dates
+      2020-06-06..2026-05-21) — classify as (a) an independent instance of the same writer/consolidator
+      asset_group-mislabeling class the fleet-wide TOCTOU bug (ROUND 4-6) produces in the sibling
+      `instruments-store-sports-prd` bucket, (b) a legacy artifact predating the sports/prediction venue split, or (c)
+      something else — and state whether it warrants its own remediation (lower urgency: `row_count=0` throughout, no
+      real data at risk). Investigation/ classification only — do NOT attempt any manifest write or remediation (the
+      parent issue's ROUND 6/7 fix for the sibling bucket is explicitly BLOCKED-OPERATOR-DECISION; this is a read-only
+      classification task on a DIFFERENT, lower-risk population in a different bucket). Repo: market-tick-data-service /
+      unified-trading-library (read-only). **Done when**: Todo 15 in
+      `cross_ag_prediction_rows_bleed_into_sports_instruments_index_2026_07_20.md` is answered with a cited
+      classification (a/b/c) and an explicit remediation recommendation, recorded as a new dated section in that same
+      doc; the doc's own `status: open` and ROUND 6/7 gating on the unrelated population are left untouched. **Answered:
+      classification (b) — a dormant legacy artifact (live count re-confirmed unchanged at exactly 20,785, all
+      `written_at` clustered in one 80-second 2026-07-13 window from an unrelated reason-taxonomy rebuild touching
+      pre-existing rows — not new writes; `date` spans the full 2020-2026 history, not a recent window; zero growth 6
+      days before/after; the live `_ADAPTER_PATHS` sports-fetch registry never targets Kalshi/Polymarket today; NOT the
+      live TOCTOU class (a), which reasserts continuously — no remediation warranted, `empty_confirmed` is excluded from
+      the honest-coverage denominator so this is also formula-inert.** Full evidence in the new "## 2026-07-31 update"
+      section appended to that doc (todo 15). Source:
+      `cross_ag_prediction_rows_bleed_into_sports_instruments_index_2026_07_20.md` (corrected 2026-07-25 plan-reconcile
+      — this todo's own Done-when already names the real target, todo 15 in that doc; the digest cited here as Source
+      has 0 checkboxes).
 - [x] ✅ [DOC] P1. **DONE 2026-07-27 (slot-13)** — Wrote the sports features-bucket (`sports_features/`) path-layout
       SSOT in codex/02-data — documents that `odds_features`/`odds_targets` are day-level
       (`sports_features/by_date/day=<D>/feature_group={odds_features,odds_targets}/features.parquet`) while
