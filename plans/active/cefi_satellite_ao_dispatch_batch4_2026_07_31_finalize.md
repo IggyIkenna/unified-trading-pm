@@ -98,7 +98,7 @@ drift_direction: advance-code
 
 ## Codex SSOTs
 
-- `/codex/11-project-management/plan-completion-and-archival-discipline.md` — the 6-step archival ritual this plan's
-  todo 3 executes.
-- `/codex/05-infrastructure/gcs-and-manifest-delete-safety-protocol.md` § 3a — the reversibility bar todo 2(c) checks
-  for before any `onchain_venues_mislabeled_batch_tardis_lane` re-partition candidate can move to a future batch.
+- `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md` — the 6-step archival ritual this plan's todo 3
+  executes.
+- `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` § 3a — the reversibility bar todo 2(c) checks for before
+  any `onchain_venues_mislabeled_batch_tardis_lane` re-partition candidate can move to a future batch.

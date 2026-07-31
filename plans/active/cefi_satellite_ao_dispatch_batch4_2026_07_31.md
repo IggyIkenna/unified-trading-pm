@@ -189,11 +189,11 @@ batch1/batch2/batch3 finalize pattern.
 
 ## Codex SSOTs
 
-- `/codex/11-project-management/plan-completion-and-archival-discipline.md` — the 6-step archival ritual this batch's
+- `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md` — the 6-step archival ritual this batch's
   finalize plan executes.
 - `/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md` § "Dispatch-scope eligibility" — the
   bounded-vs-judgment-call test applied to every Phase-1/Phase-3 verdict above.
 - `/codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md` — the shared conflict-check protocol
   this batch's Phase 3 ran before drafting.
-- `/codex/05-infrastructure/gcs-and-manifest-delete-safety-protocol.md` § 3a — the reversibility bar the
-  too-large-or-risky Deferred item above did not clear this run.
+- `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` § 3a — the reversibility bar the too-large-or-risky
+  Deferred item above did not clear this run.

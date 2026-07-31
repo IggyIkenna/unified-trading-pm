@@ -17,11 +17,11 @@
 
 <!-- AUTO-INDEX-START -->
 
-_Auto-generated via `scripts/plans/regenerate_active_plan_index.py`. 241 plans across 10 domains. A plan tagged with
+_Auto-generated via `scripts/plans/regenerate_active_plan_index.py`. 243 plans across 10 domains. A plan tagged with
 multiple `asset_group:` values appears under each. Grep this block for a domain keyword before scanning `plans/active/`
 by hand._
 
-### cefi (34)
+### cefi (36)
 
 - [`ag_closeout_audit_rollout_2026_07_25`](./ag_closeout_audit_rollout_2026_07_25.md) — Autonomous session (/autonomous,
   operator away, 2026-07-25) driving the /ag-closeout-audit skill across the 4 asset groups that haven't had it yet —
@@ -81,6 +81,13 @@ by hand._
   — Gated closeout for cefi_satellite_ao_dispatch_batch3_2026_07_26.md — machine-held via depends_on + gate_on_depends:
   true until all 5 of that plan's todos are done. Mirrors the batch1/batch2 finalize pattern: reconcile each source
   doc's…
+- [`cefi_satellite_ao_dispatch_batch4_2026_07_31`](./cefi_satellite_ao_dispatch_batch4_2026_07_31.md) **[draft]** —
+  Fourth AO-dispatch batch for cefi, produced by the `/ag-closeout-audit` skill run 2026-07-31 (scheduled autonomous
+  dispatch, tranche=cefi). Phase 0 re-derived the covering-plan set via `generate_ag_closeout_audit_candidates.py` (101…
+- [`cefi_satellite_ao_dispatch_batch4_2026_07_31_finalize`](./cefi_satellite_ao_dispatch_batch4_2026_07_31_finalize.md)
+  — Gated closeout for cefi_satellite_ao_dispatch_batch4_2026_07_31.md — machine-held via depends_on + gate_on_depends:
+  true until all 7 of that plan's todos are done. Mirrors the batch1/batch2/batch3 finalize pattern: reconcile each
+  source…
 - [`cefi_track2_coverage_backfill_checkpoints_2026_07_25`](./cefi_track2_coverage_backfill_checkpoints_2026_07_25.md) —
   Resumes the CeFi Tardis COVERAGE backfill (reversing the archived "honest-done 50.79%" verdict — the throughput
   ceiling was a ~350x code bug, now fixed and measured live) and brackets it with the MID/POST…
