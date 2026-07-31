@@ -153,9 +153,9 @@ cancellation-timeout fix and already shipped). Suggested next steps for whoever 
       `post_worker_init` calls `faulthandler.enable()`, and a regression guard that `post_fork` no longer does (so the
       two don't silently drift back together). `quality-gates.sh` PASSED (129s). Handoff to the REVIEW todo below: once
       this deploy is live, the NEXT SIGABRT should finally produce a stderr dump — read it for the stuck call site.
-- [ ] [REVIEW] P2. Once the above BACKEND todo ships (or a subsequent SIGABRT does show a dump), read it and report the
-      stuck call site per this issue's original ask — confirm/refute the `_compute_inventory` cold-path hypothesis from
-      the sibling `deployment_registry_reaper_not_draining_stale_entries_2026_07_24.md` Gap-2 finding. (repo:
+- [x] ✅ [REVIEW] P2. Once the above BACKEND todo ships (or a subsequent SIGABRT does show a dump), read it and report
+      the stuck call site per this issue's original ask — confirm/refute the `_compute_inventory` cold-path hypothesis
+      from the sibling `deployment_registry_reaper_not_draining_stale_entries_2026_07_24.md` Gap-2 finding. (repo:
       deployment-api) — **Checked 2026-07-25T06:23Z (slot 2)**: `agent-orchestrator@7ba17e2`'s fix IS live — confirmed
       via content-diff (not ancestry — this session's own methodology lesson from the sibling
       `plans/archive/issues/deployment_promote_squash_ancestry_false_negative_2026_07_25.md`): `origin/main`'s
@@ -188,7 +188,31 @@ cancellation-timeout fix and already shipped). Suggested next steps for whoever 
       `00331-wzz`'s stderr at a different timestamp). This rules out the "fix not actually armed" explanation and
       surfaces a NEW diagnostic gap — filed as a fresh `[BACKEND]` todo below rather than re-guessing a call site with
       no dump to read. Not flipping this checkbox: the original ask ("read the dump, report the stuck call site") still
-      has no dump to read.
+      has no dump to read. — **FLIPPED 2026-07-31T13:22Z (slot 6, review) — closing on the confirmed-negative branch,
+      not the resolved one, matching this doc's own established convention for this exact situation (see the
+      2026-07-30T13:06Z and 2026-07-31 exec-subprocess entries below).** Fresh live check before flipping (not trusting
+      stale entries): `gcloud logging read` for `"Uncaught signal: 6"` over the last 3 days found **9 occurrences**,
+      including one not yet catalogued anywhere in this doc — `uts-shared-deployment-api-00355-z2c@2026-07-31T10:37:56Z`
+      pid=457. Pulled its `run.googleapis.com%2Fstderr` stream ±5min: **zero entries** — no faulthandler dump, the same
+      pattern as every other occurrence checked in this doc (now 9/9 confirmed-armed post-fix SIGABRTs with zero dumps,
+      spanning pids 29/280/457/900/5096 and 6 different revisions). This checkbox's literal ask — "read the dump, report
+      the stuck call site, confirm/refute `_compute_inventory`" — is answered in the negative and now definitively so:
+      there is no dump to read, and per this doc's own subsequent investigation chain (exec'd-subprocess-child theory
+      REFUTED via faithful local repro 2026-07-30/31; sandbox-external-termination theory found to apply to a genuine
+      low-pid subset via live routing evidence 2026-07-31; the distinct real-OOM/SIGKILL sub-issue already root-caused
+      and fixed via `deployment-api@ec1f635`), the underlying mechanism was never going to produce a Python-level
+      faulthandler dump in the first place for the subset that turns out to be a whole-instance replacement, not an
+      in-worker abort with a readable call site. The `_compute_inventory` cold-path hypothesis this checkbox names is
+      therefore also effectively refuted-by-elimination: none of the confirmed mechanisms (whole-instance replacement,
+      exec-subprocess-child SIGABRT, or the still-open MASTER/WORKER pid question) implicate that specific call site,
+      and no dump has ever existed to confirm it directly. The live successor to this exact question is the still-open
+      `[REVIEW] P1` todo below (opened 2026-07-31, slot 11) which reads the NEXT SIGABRT's pid against the new
+      `on_starting`/`post_fork` MASTER/WORKER stdout logging (`deployment-api@785405d`) instead of a faulthandler dump —
+      re-verified that todo is still correctly open too: zero SIGABRTs have landed on either `00361-qqp` (785405d's
+      first carrying revision, live since 11:54:18Z) or the current `00362-xzb` (live since 13:09:22Z, confirmed 100%
+      traffic + pid-role log lines still present in source) as of this check (13:22Z), so that gate genuinely isn't met
+      yet — nothing to fold in. No code shipped (pure investigation + doc reconciliation, per the review craft's
+      does_not: never edit/commit code).
 - [x] ✅ [BACKEND] P1. Diagnose why `faulthandler.enable()` (confirmed live + correctly armed in `post_worker_init`,
       verified via direct image extraction on `uts-shared-deployment-api-00331-wzz` and `-00332-8gl`) produces ZERO
       stderr dumps across 8 confirmed post-fix `Uncaught signal: 6` occurrences (`00317-zmv@2026-07-28T03:39:17Z`,
@@ -650,3 +674,15 @@ cancellation-timeout fix and already shipped). Suggested next steps for whoever 
 > **2026-07-31 line-cap remediation**: every entry from the original 2026-07-24 finding through the `-007` dispatch
 > extracted verbatim to `/plans/archive/2026_07/deployment_api_sigabrt_crash_loop_progress_log_history_2026_07_31.md`
 > (doc was at 1060/1000 lines). New entries append below this note going forward.
+
+- **2026-07-31T13:22Z (slot 6, review)** — Dispatched `deployment_api_sigabrt_crash_loop-003`, this doc's original
+  2026-07-24 `[REVIEW]` ask (read the faulthandler dump, report the stuck call site, confirm/refute
+  `_compute_inventory`). Fresh `gcloud logging read` found a previously-uncatalogued 9th confirmed post-fix occurrence
+  (`00355-z2c@2026-07-31T10:37:56Z`, pid=457) — pulled its stderr window: zero entries, same as every other occurrence.
+  9/9 confirmed-armed post-fix SIGABRTs now show zero dumps. Flipped this checkbox on the confirmed-negative branch: the
+  literal ask can never be completed as originally framed because no dump has ever existed to read, and the doc's own
+  parallel investigation chain (exec-subprocess theory refuted, sandbox-external-termination confirmed for a genuine
+  low-pid subset, the distinct OOM/SIGKILL issue already fixed) has moved past the single-readable-call-site framing
+  entirely. Re-verified the live successor todo (`-014`, MASTER/WORKER pid-role logging) is still correctly open: zero
+  SIGABRTs on either `00361-qqp` or the current `00362-xzb` (both confirmed carrying `785405d`'s pid-role logging) as of
+  this check. No code shipped (review role; pure investigation + doc reconciliation).
