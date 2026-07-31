@@ -316,7 +316,7 @@ drift_direction: advance-code
       FOUND, reported honestly with this caveat rather than guessed. DESIGN taxonomy item correctly left to a human, not
       touched. No code shipped (pure re-measurement + citation, per this todo's own scope).
 
-- [ ] [BACKEND] P2. **KRX name-column "STILL OPEN" tracking (added 2026-07-25) — confirm or execute the 2 named
+- [x] ✅ [BACKEND] P2. **KRX name-column "STILL OPEN" tracking (added 2026-07-25) — confirm or execute the 2 named
       remaining pieces.** Source native todo (lines 392-400), unmodified: (a) the availability-manifest `name` column —
       per the parent P1 item's own STILL OPEN note this was **deliberately deferred** in favor of catalogue-as-SSOT +
       display-time join (manifest shard-atom/writer "owned by another agent") — this todo's job for (a) is to CONFIRM
@@ -331,7 +331,25 @@ drift_direction: advance-code
       live catalogue read shows the `name` column populated for KRX rows
       (`SK Hynix`/`Samsung Electronics`/`Hyundai     Motor` or equivalent), with the regen commit/run cited. Evidence
       reported via this todo's own commit/dispatch outcome (this batch's finalize plan updates the closeout's own "STILL
-      OPEN" note). Source: `tradfi_consolidated_closeout_2026_07_18.md` (native, lines 392-400).
+      OPEN" note). Source: `tradfi_consolidated_closeout_2026_07_18.md` (native, lines 392-400). — **DONE 2026-07-31
+      (slot-6, backend_engineer), audit-only, no code changed.** **(a) CONFIRMED still stands**: grepped
+      `unified-trading-library`'s manifest schema/writer (`manifest_writer/_schema.py`, `_rows.py`, `_core.py`,
+      `_queries.py`) and MTDS's manifest-write call sites — no `name` field exists anywhere in the manifest
+      schema/writer; catalogue-as-SSOT + display-time join remains the sole live mechanism, unchanged since
+      2026-07-20/25. **(b) ALREADY LANDED LIVE, no manual run needed** — the standing `lifecycle-catalogue-regen-tradfi`
+      daily Cloud Scheduler + Cloud Run Job
+      (`instruments-service/scripts/build_instrument_catalogue.py --asset-group tradfi`,
+      `deployment-service/terraform/     gcp/lifecycle_catalogue_scheduler.tf`) has run green every day 2026-07-22
+      through 2026-07-31 (`gcloud run jobs executions list --job=lifecycle-catalogue-regen-tradfi`; most recent
+      `lifecycle-catalogue-regen-tradfi-hdpmq`, Completed 2026-07-31T01:05:32Z). Live-read verification of
+      `gs://instruments-store-tradfi-prd-central-element-323112/prod/catalog.parquet` (generation 1785459927241567,
+      update_time 2026-07-31T01:05:27Z) confirms all 6 KRX single-stock-equity rows carry the `name` column:
+      `KRX:EQUITY:000660`→"SK Hynix", `KRX:EQUITY:005380`→"Hyundai Motor", `KRX:EQUITY:005930`→"Samsung Electronics"
+      (both bare and `.KS-USD` id variants); the 4 KRX index rows correctly have no name (indices, not equities). Row
+      count unchanged at 10 (no new KRX listings since 2026-07-20 — expected). Side finding (not blocking this todo,
+      filed separately): the weekly `lifecycle-catalogue-full-tradfi` self-heal job has failed its last 3 consecutive
+      runs (2026-07-11/18/25) — tracked as a new issue doc,
+      `plans/active/issues/tradfi_catalogue_full_regen_job_failing_2026_07_31.md`.
 
 - [x] ✅ [REVIEW] P2. **Run the adversarial AO-dispatch-readiness pass against
       `tradfi_consolidated_closeout_2026_07_18.md` itself, for the 3 categories the doc's own 2026-07-24 spot-check left
