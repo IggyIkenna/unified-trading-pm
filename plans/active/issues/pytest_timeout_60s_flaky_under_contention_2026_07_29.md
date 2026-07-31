@@ -518,3 +518,27 @@ those commits landed). The escalation's own repo-blocker list (`GET /api/repo-bl
   `ssm:DescribeInstanceInformation` also denied for the current IAM identity, confirming no ambient access to this box
   either way). No code/test action taken — same "orphaned noise against an already-resolved wall" conclusion as every
   prior entry in this doc. Slot left clean (0 commits ahead of `origin/live-defi-rollout` on instruments-service).
+- **2026-07-31 (cicd escalation `agt-d404d8`, slot 7)**: the retry run the immediately-preceding entry left "STILL
+  queued" (`30659447161`, live-defi-rollout@`df9b6daa`) eventually got a runner and completed — `failure`, `2h39m34s`
+  total. This time a source-level test IS attributable (unlike the two immediately-preceding IPC-flush-only entries):
+  `FAILED tests/unit/test_event_logging.py::test_required_lifecycle_events_importable - Failed: Timeout (>150.0s) from pytest-timeout.`
+  — `1 failed, 5119 passed, 7 skipped, 11 warnings in 2470.61s (0:41:10)`. This is a NEW test for this doc (not
+  `test_understat_adapter_coverage.py`/`test_orchestrator_sports_pipeline.py`/etc from prior entries). Read the test: a
+  pure `ast.parse()` walk over ~a dozen small `.py` files in `instruments_service/engine/orchestrator/` — no I/O, no
+  network, no real timer, no subprocess; isolated local re-run: **7.55s** (`1 passed`), a ~20x margin under the 150s
+  budget, matching every prior entry's "legitimately fast, blown out by scheduling" profile even more starkly than most
+  (an AST walk over small files has essentially no plausible slow path at all). Confirmed root-fact before concluding:
+  `git log --oneline df9b6daa..origin/live-defi-rollout` shows 2 further commits landed since (`11169213` deps-pin
+  refresh, `1bf5467c` docs-only) — current HEAD is `51f85d9c`. That HEAD's own `quality-gates-v2` run (`30669732609`,
+  `workflow_dispatch`, created `22:22:23Z`) passed its `content sentinel` job (`success`, `22:22:38Z`) but its
+  `QG slice (tests)`/`QG slice (checks)` jobs are themselves still `queued` (checked `22:33Z`, ~11min in queue) —
+  consistent with the same self-hosted protected-6 backlog the immediately-preceding entry already diagnosed (not a dead
+  runner; did not add a redundant retrigger). Zero open `/api/repo-blockers` entries for instruments-service
+  (`{"open": []}`). No code/test action taken — same "orphaned noise / known flake class, tree not actually broken"
+  conclusion as every prior entry in this doc; this occurrence's only new information is a 6th distinct
+  attributable-test instance (this doc's list so far: bybit/ticker.yaml cassette, Dockerfile-parsing, 2x
+  `test_understat_adapter_coverage.py` mechanisms, `test_orchestrator_sports_pipeline.py`,
+  `test_tardis_free_only_gate.py`, now `test_event_logging.py::test_required_lifecycle_events_importable` — the breadth
+  continues to point at genuine runner-level contention on `github-glue-runners-instruments-service`, not a per-test
+  anti-pattern, since this latest one has no I/O/timer/subprocess surface at all to blame). Slot left clean (0 commits
+  ahead of `origin/live-defi-rollout` on instruments-service, nothing to commit).
