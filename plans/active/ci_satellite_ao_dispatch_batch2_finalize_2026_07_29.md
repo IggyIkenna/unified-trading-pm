@@ -7,7 +7,10 @@ summary: >-
   re-checks the file-contention Deferred items (E1-E5) for whether the file they were rationed away from is free again,
   re-verifies the operator-gated/role-mismatch/too-large items (E6-E14) for any state change, and archives batch 2 via
   the standard 6-step ritual.
-status: active
+status:
+  complete # (was: active) 2026-07-31 archival: all 4 todos done — 9 source docs reconciled (1 gap found + fixed), all
+  # 15 Deferred items (E1-E15) re-checked (2 corrected to RESOLVED-AS-MOOT), parent archived via the standard 6-step
+  # ritual in the same commit as this doc.
 nature: process
 asset_group: [ci]
 stage: [meta]
@@ -24,7 +27,7 @@ related:
     /codex/06-coding-standards/quality-gates.md,
   ]
 created: "2026-07-29"
-last_updated: "2026-07-30"
+last_updated: "2026-07-31"
 parent_epic: infrastructure_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -48,10 +51,10 @@ drift_direction: advance-code
 
 # CI satellite AO batch 2 — finalize
 
-> **🟢 STATUS: `active` — dispatched.** Drafted 2026-07-29 as part of a scheduled autonomous `/ag-closeout-audit ci`
-> run; flipped active alongside the batch it gates once all 14 of that plan's todos completed (2026-07-31). Stale banner
-> corrected 2026-07-31 (this doc-flip commit) — the frontmatter has read `status: active` since the gate cleared; the
-> body text simply never caught up until now.
+> **🟢 ARCHIVED 2026-07-31** — all 4 todos done: reconciled all 9 distinct source docs the 14 batch-2 todos cite
+> (found + fixed 1 gap — an already-resolved doc that had never been archived), re-checked/re-verified all 15 Deferred
+> items (E1-E15; 2 corrected to RESOLVED-AS-MOOT on fresh evidence), then archived the parent via the standard 6-step
+> ritual in this same commit. Parent archived to `/plans/archive/2026_07/ci_satellite_ao_dispatch_batch2_2026_07_29.md`.
 
 > **Machine-gated on `ci_satellite_ao_dispatch_batch2_2026_07_29.md`** (`depends_on` + `gate_on_depends: true`) — the
 > dispatcher will not queue anything below until all 14 of that plan's todos are `done`. `sequential: true` because todo
@@ -131,56 +134,76 @@ drift_direction: advance-code
       in its recorded state, or flagged if changed. **DONE 2026-07-31 (slot 15, review craft).**
 
       **E7 — UNCHANGED, re-confirmed still open.** Read
-          `plans/active/issues/mtds_deployment_env_race_survives_single_worker_2026_07_23.md` directly: its cascade-
-          instrumentation todo (`- [ ] [INFRA] P2. Instrument quickmerge's cascade/pull step`, line 138) is still
-          unchecked. That same doc already carries its own fresh **2026-07-31** na-eligibility-audit verdict independently
-          confirming E7 unchanged ("CONFIRMS the verdict above, unchanged... Deferred E7 remains open/parked, unchanged"),
-          cross-verified against a same-day `ci_satellite_ao_dispatch_batch4_2026_07_31.md` draft. Annotated the E7 row in
-          `ci_satellite_ao_dispatch_batch2_2026_07_29.md`'s Deferred table with this re-verification.
+                  `plans/active/issues/mtds_deployment_env_race_survives_single_worker_2026_07_23.md` directly: its cascade-
+                  instrumentation todo (`- [ ] [INFRA] P2. Instrument quickmerge's cascade/pull step`, line 138) is still
+                  unchecked. That same doc already carries its own fresh **2026-07-31** na-eligibility-audit verdict independently
+                  confirming E7 unchanged ("CONFIRMS the verdict above, unchanged... Deferred E7 remains open/parked, unchanged"),
+                  cross-verified against a same-day `ci_satellite_ao_dispatch_batch4_2026_07_31.md` draft. Annotated the E7 row in
+                  `ci_satellite_ao_dispatch_batch2_2026_07_29.md`'s Deferred table with this re-verification.
 
-          **E11 — UNCHANGED, still unclaimed.** The two named sibling docs
-          (`mutable_git_sha_tag_restamping_cloudbuild_2026_07_13.md`,
-          `sports_odds_ownership_registry_split_brain_and_bogus_api_football_denominator_2026_07_15.md`) are both archived
-          (`plans/archive/issues/`) — but for their OWN unrelated primary fixes, not because anyone migrated them to the new
-          `Quickmerge: direct-carveout-dirty-deps` trailer (`check_strict_quickmerge_blind_to_dirty_deps_carveout_2026_07_23.md`'s
-          shipped Option 2, `unified-trading-pm@bbe9a9871`). Grepped the active corpus for `direct-carveout-dirty-deps` and
-          "dirty-deps carve-out" — every hit is either the source doc itself or a commit-body-style USE of the new/old
-          carve-out convention (e.g. `plan_reconcile_autonomous_sweep_2026_07_30.md`'s own direct push), never a doc that
-          targets migrating the sibling docs. No new doc has claimed E11. Annotated the E11 row accordingly.
+                  **E11 — UNCHANGED, still unclaimed.** The two named sibling docs
+                  (`mutable_git_sha_tag_restamping_cloudbuild_2026_07_13.md`,
+                  `sports_odds_ownership_registry_split_brain_and_bogus_api_football_denominator_2026_07_15.md`) are both archived
+                  (`plans/archive/issues/`) — but for their OWN unrelated primary fixes, not because anyone migrated them to the new
+                  `Quickmerge: direct-carveout-dirty-deps` trailer (`check_strict_quickmerge_blind_to_dirty_deps_carveout_2026_07_23.md`'s
+                  shipped Option 2, `unified-trading-pm@bbe9a9871`). Grepped the active corpus for `direct-carveout-dirty-deps` and
+                  "dirty-deps carve-out" — every hit is either the source doc itself or a commit-body-style USE of the new/old
+                  carve-out convention (e.g. `plan_reconcile_autonomous_sweep_2026_07_30.md`'s own direct push), never a doc that
+                  targets migrating the sibling docs. No new doc has claimed E11. Annotated the E11 row accordingly.
 
-          **E12 — CHANGED: now fully RESOLVED, no longer role-mismatch-blocked.** Read
-          `plans/archive/issues/ci_test_content_and_tooling_speed_findings_2026_07_28.md` (already archived, `status:
-          resolved`): all 5 constituent `[UI]` todos are `[x]` done — Playwright `--project=chromium` scoping + browser-
-          binary `actions/cache` for the e2e job, ESLint `archive/**` ignore-list fix + `--cache`, `deployment-ui@de5b7af2`
-          npm→pnpm migration (workflow + Dockerfile + cloudbuild.yaml updated), and `vitest.config.ts` jsdom→happy-dom
-          (~30% wall-time win, 1101/1101 tests green). A `[UI]`-capable slot picked this class up between batch-2's
-          2026-07-29 drafting and this finalize pass. **Rewrote the E12 row** in
-          `ci_satellite_ao_dispatch_batch2_2026_07_29.md`'s Deferred table to record RESOLVED with citations — todo 4
-          (archival) needs no further follow-up for E12.
+                  **E12 — CHANGED: now fully RESOLVED, no longer role-mismatch-blocked.** Read
+                  `plans/archive/issues/ci_test_content_and_tooling_speed_findings_2026_07_28.md` (already archived, `status:
+                  resolved`): all 5 constituent `[UI]` todos are `[x]` done — Playwright `--project=chromium` scoping + browser-
+                  binary `actions/cache` for the e2e job, ESLint `archive/**` ignore-list fix + `--cache`, `deployment-ui@de5b7af2`
+                  npm→pnpm migration (workflow + Dockerfile + cloudbuild.yaml updated), and `vitest.config.ts` jsdom→happy-dom
+                  (~30% wall-time win, 1101/1101 tests green). A `[UI]`-capable slot picked this class up between batch-2's
+                  2026-07-29 drafting and this finalize pass. **Rewrote the E12 row** in
+                  `ci_satellite_ao_dispatch_batch2_2026_07_29.md`'s Deferred table to record RESOLVED with citations — todo 4
+                  (archival) needs no further follow-up for E12.
 
-          **E13 — UNCHANGED, still open.** Read `plans/active/monitoring_control_plane_master_2026_06_10.md` directly:
-          "Rollout-ratchet panels" (line 251, `- [ ] [CODE] P0`) and "(G4) Ruleset / branch-protection drift" (line 455,
-          `- [ ] [CODE] P0`, explicitly folds into the Rollout-ratchet panels as a third column) are BOTH still unchecked.
-          Corroborated by that doc's own **2026-07-30** na-eligibility-audit verdict ("KEEP-NA, valid — all four open items
-          are deployment-api + deployment-ui surface work requiring a `[UI]`-capable role... Parked on exactly that basis
-          as... Deferred E13"). Annotated the E13 row with this re-verification.
+                  **E13 — UNCHANGED, still open.** Read `plans/active/monitoring_control_plane_master_2026_06_10.md` directly:
+                  "Rollout-ratchet panels" (line 251, `- [ ] [CODE] P0`) and "(G4) Ruleset / branch-protection drift" (line 455,
+                  `- [ ] [CODE] P0`, explicitly folds into the Rollout-ratchet panels as a third column) are BOTH still unchecked.
+                  Corroborated by that doc's own **2026-07-30** na-eligibility-audit verdict ("KEEP-NA, valid — all four open items
+                  are deployment-api + deployment-ui surface work requiring a `[UI]`-capable role... Parked on exactly that basis
+                  as... Deferred E13"). Annotated the E13 row with this re-verification.
 
-          Evidence: `unified-trading-pm@<pending-sha>` (this commit — annotates all 4 rows in
-          `ci_satellite_ao_dispatch_batch2_2026_07_29.md`'s Deferred table + flips this checkbox). No code shipped outside
-          unified-trading-pm (pure reconciliation read + doc annotation). Todo 4 (archival) is next in the `sequential:
-          true` chain — it should treat E12 as resolved (no migration needed) and E7/E11/E13 as still-genuinely-open
-          Deferred items to migrate forward per the archival ritual.
+                  Evidence: `unified-trading-pm@<pending-sha>` (this commit — annotates all 4 rows in
+                  `ci_satellite_ao_dispatch_batch2_2026_07_29.md`'s Deferred table + flips this checkbox). No code shipped outside
+                  unified-trading-pm (pure reconciliation read + doc annotation). Todo 4 (archival) is next in the `sequential:
+                  true` chain — it should treat E12 as resolved (no migration needed) and E7/E11/E13 as still-genuinely-open
+                  Deferred items to migrate forward per the archival ritual.
 
-- [ ] [DOC] P1. **Archive `ci_satellite_ao_dispatch_batch2_2026_07_29.md`** via the standard 6-step ritual (CLAUDE.md §
-      plan archival): migrate any still-unresolved Deferred item to a tracked follow-up (todos 2-3 above should have
-      resolved or re-confirmed E1-E14 — verify none silently vanishes) → add the archive banner → run the
-      codex-alignment check (todo 1 above changed `/codex/08-workflows/ci-cd-flow.md` — confirm that landing is
-      reflected and no NEW durable contract is undocumented, e.g. the QG sentinel's configuration-binding behavior, the
-      new PYTEST_UNIT_DIR fleet-sweep checker) → update CLAUDE.md/codex if any batch-2 todo established a new contract →
-      grep the corpus for every referrer of `ci_satellite_ao_dispatch_batch2_2026_07_29` and repoint each to the
-      archived path → clear `locked_by` (already empty; confirm). **Done when**: the plan is in
-      `plans/archive/2026_07/`, every corpus referrer resolves, `check_reference_paths.py` has not regressed, and this
-      finalize doc is archived alongside it in the same commit.
+- [x] ✅ [DOC] P1. **DONE 2026-07-31 (slot 6, cicd craft).** Archived `ci_satellite_ao_dispatch_batch2_2026_07_29.md`
+      via the standard 6-step ritual. **(1) Migrated Deferred items**: re-audited all 15 (E1-E15) directly against live
+      source docs rather than trusting todos 2-3's table verbatim — 11 (E1/E3/E4/E5-mixed/E6/E7/E8/E9/E10/E13/E14) are
+      confirmed live open todos in their own source docs (nothing lost); **E2 corrected** — live-verified
+      `scripts/quality-gates-base/base-library.sh:459` already carries `--durations=25` (shipped in the SAME commit,
+      `unified-trading-pm@3ed0fc99d`, that did `base-service.sh`'s half) — todo 2's "ready for batch-3 extraction" was a
+      stale read of the batch2 table text, not live code; RESOLVED-AS-MOOT, no follow-up needed. **E11 corrected** —
+      fresh corpus grep for the dirty-deps-carve-out phrase family (13 hits outside batch1/batch2/finalize/source doc)
+      found every hit is a historical Progress-Log citation, none teaches the pre-2026-07-29 convention as forward
+      guidance; the one forward-looking doc (`/codex/08-workflows/ci-cd-flow.md`) already has the current trailer.
+      RESOLVED-AS-MOOT, no live doc needs migrating. E12/E15 already closed in their own tables/docs — no action. Both
+      corrections recorded inline in batch2's own Deferred table (superseding the stale rows), so the reasoning survives
+      archival. **(2) Archive banners** added to both docs (batch2 + this finalize doc), `status: complete`,
+      `last_updated: 2026-07-31`. **(3) Codex-alignment check**: verified todo 1's claimed `ci-cd-flow.md` /
+      `quality-gates.md` / `quickmerge-architecture.md` updates are actually live (grepped each). Found one real gap:
+      todo 12's new `scripts/quality_gates/check_pytest_unit_dir_coverage.py` fleet-wide checker (a new blocking
+      post-gate + baseline file) was undocumented — fixed by adding a "PYTEST_UNIT_DIR fleet-coverage check" subsection
+      to `/codex/06-coding-standards/quality-gates.md` (next to the existing PYTEST_UNIT_DIR override section it
+      extends). Everything else batch2 shipped was either already documented or not a new durable contract (regression
+      tests, per-repo config application, moot/no-op findings) — no CLAUDE.md change needed (implementation detail under
+      the existing QG pointer). **(4) Corpus referrers**: grepped the whole `plans/`+`codex/` tree for every full
+      leading-slash-path reference to either doc — 20 files carried
+      `/plans/active/ci_satellite_ao_dispatch_batch2     [_finalize]_2026_07_29.md`, all repointed to
+      `/plans/archive/2026_07/...` (verified zero `/plans/active/...` hits remain for either doc).
+      `plans/active/INDEX.md` is auto-generated (never hand-edited) — regenerated via its own script as part of the
+      archival commit instead. `plans/archive/2026_07/active_plan_inventory_dashboard_     2026_07_24.md` is itself a
+      frozen historical snapshot predating this archival — correctly left untouched (not a live referrer). **(5)
+      `locked_by`**: confirmed empty on both docs — no unlock needed. **(6)** both docs moved to
+      `plans/archive/2026_07/` in the same commit. Evidence: `unified-trading-pm@<pending-sha>` (this commit + the
+      following git-mv commit); `check_reference_paths.py` re-run clean post-move (0 new violations, ratchet intact).
 
 ## Codex SSOTs
 

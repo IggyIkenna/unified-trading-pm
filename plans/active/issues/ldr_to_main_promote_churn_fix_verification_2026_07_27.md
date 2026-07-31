@@ -106,5 +106,5 @@ change mid-loop.
 **na-eligibility-audit 2026-07-30** (tranche `ci`, autonomous): KEEP-NA, valid — todo 1 explicitly requires operator
 confirmation before removing quickmerge.sh's PM-specific Option-B direct-PR-open step (this doc's own "Why this needs
 explicit confirmation before shipping" section: it changes the fleet's core shipping gatekeeper's observable behaviour
-for PM). Parked as `/plans/active/ci_satellite_ao_dispatch_batch2_2026_07_29.md` Deferred **E6** and escalated there as
-operator question 3. Todo 2 (the before/after churn re-measurement) is gated on todo 1 landing.
+for PM). Parked as `/plans/archive/2026_07/ci_satellite_ao_dispatch_batch2_2026_07_29.md` Deferred **E6** and escalated
+there as operator question 3. Todo 2 (the before/after churn re-measurement) is gated on todo 1 landing.

@@ -41,7 +41,7 @@ related:
   [
     /plans/archive/issues/ag_closeout_auditor_one_shot_complete_no_agentrow_2026_07_26.md,
     /plans/archive/issues/slot_stale_spawn_base_role_stuck_task_less_2026_07_25.md,
-    /plans/active/ci_satellite_ao_dispatch_batch2_2026_07_29.md,
+    /plans/archive/2026_07/ci_satellite_ao_dispatch_batch2_2026_07_29.md,
   ]
 created: "2026-07-29"
 last_updated: "2026-07-29"

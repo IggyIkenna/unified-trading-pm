@@ -172,5 +172,5 @@ was hiding.
 **na-eligibility-audit 2026-07-30** (tranche `ci`, autonomous): KEEP-NA, valid — the open items sit under this doc's own
 "Remaining / for the operator" heading, and the head item is a genuine judgment call ("decide whether the 33 laundered
 commits need any dep-order spot-check, or whether this doc closes it"). The P3 hook-deletion item is separately
-conflict-gated as `/plans/active/ci_satellite_ao_dispatch_batch2_2026_07_29.md` Deferred **E4**, and the husky-UI-repos
-P3 item is already claimed by `/plans/active/ci_satellite_ao_dispatch_batch1_2026_07_26.md`.
+conflict-gated as `/plans/archive/2026_07/ci_satellite_ao_dispatch_batch2_2026_07_29.md` Deferred **E4**, and the
+husky-UI-repos P3 item is already claimed by `/plans/active/ci_satellite_ao_dispatch_batch1_2026_07_26.md`.

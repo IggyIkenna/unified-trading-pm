@@ -170,7 +170,7 @@ change needs a caller audit across the repo before touching it — out of scope 
 ## na-eligibility-audit verdict
 
 **na-eligibility-audit 2026-07-30** (tranche `ci`, autonomous): KEEP-NA, valid — conflict-gated as
-`/plans/active/ci_satellite_ao_dispatch_batch2_2026_07_29.md` Deferred **E5**: steps 2-4 touch `scripts/quickmerge.sh`,
-which that batch's todo 1 owns this round, and E5 further notes the item's own internal step-2 precondition (the
-`UnifiedCloudServicesConfig` caller audit) was not re-verified. Step 3 is explicitly gated on step 2 by this doc's own
-text.
+`/plans/archive/2026_07/ci_satellite_ao_dispatch_batch2_2026_07_29.md` Deferred **E5**: steps 2-4 touch
+`scripts/quickmerge.sh`, which that batch's todo 1 owns this round, and E5 further notes the item's own internal step-2
+precondition (the `UnifiedCloudServicesConfig` caller audit) was not re-verified. Step 3 is explicitly gated on step 2
+by this doc's own text.

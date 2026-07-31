@@ -182,7 +182,7 @@ guessed/placeholder environment values, cost is not a blocker (this is code + CI
       from `-prd-` literals, unlike MTDS's 2 explicitly-named/verified reproducers) does not hold up under direct
       verification; `git log` in both repos shows no intervening fix commit, so this wasn't silently patched elsewhere
       either. Box stays open only because the MTDS half (E7 above) remains genuinely unresolved. Full write-up:
-      `/plans/active/ci_satellite_ao_dispatch_batch2_2026_07_29.md` todo 3.
+      `/plans/archive/2026_07/ci_satellite_ao_dispatch_batch2_2026_07_29.md` todo 3.
 - [x] ✅ [DOC] P2. Correct the "re-run quality-gates.sh --no-fix then retry" guidance wherever it is taught (agent
       prompts, runbooks): as written it is a sentinel-laundering step, not a fix. It is only safe once the sentinel
       binds configuration. — **Verified 2026-07-31: already done as a byproduct of the sentinel-binding fix above
@@ -192,7 +192,7 @@ guessed/placeholder environment values, cost is not a blocker (this is code + CI
       SSOT docs describing the recovery flow (`ci-cd-flow.md`, `quality-gates.md`, `quickmerge-architecture.md`) already
       reflect the post-fix, genuinely-safe behavior (sentinel binds `ENVIRONMENT`/`DEPLOYMENT_ENV`; a config mismatch is
       refused with `Re-run: bash scripts/quality-gates.sh`, not silently laundered). Full write-up:
-      `/plans/active/ci_satellite_ao_dispatch_batch2_2026_07_29.md` todo (same item).
+      `/plans/archive/2026_07/ci_satellite_ao_dispatch_batch2_2026_07_29.md` todo (same item).
 - [x] ✅ [INFRA] P2. **The "fix the gate" half of the 2026-07-28 BOTH ruling — make quickmerge's and a standalone
       `quality-gates.sh --no-fix` run resolve the SAME explicit `ENVIRONMENT` for the same branch context**, so the two
       invocation paths can never again silently diverge (today: quickmerge always exports `development` for any
@@ -218,11 +218,11 @@ guessed/placeholder environment values, cost is not a blocker (this is code + CI
 ## na-eligibility-audit verdict
 
 **na-eligibility-audit 2026-07-30** (tranche `ci`, autonomous): **KEEP-NA-STALE (already-duplicated)** — all four open
-items are extracted into `/plans/active/ci_satellite_ao_dispatch_batch2_2026_07_29.md`: Resolution-checklist items 2 and
-5 into its todo 1 (sentinel config-binding + quickmerge/standalone `ENVIRONMENT` alignment), item 4 into its todo 2
-(recovery-guidance correction), and item 3's non-MTDS half into its todo 3 (`deployment-api` + `strategy-service`). Item
-3's MTDS half stays deliberately sequenced behind that batch's Deferred **E7**. Citation recorded; `assigned_vm`
-deliberately NOT flipped — that would dispatch a duplicate.
+items are extracted into `/plans/archive/2026_07/ci_satellite_ao_dispatch_batch2_2026_07_29.md`: Resolution-checklist
+items 2 and 5 into its todo 1 (sentinel config-binding + quickmerge/standalone `ENVIRONMENT` alignment), item 4 into its
+todo 2 (recovery-guidance correction), and item 3's non-MTDS half into its todo 3 (`deployment-api` +
+`strategy-service`). Item 3's MTDS half stays deliberately sequenced behind that batch's Deferred **E7**. Citation
+recorded; `assigned_vm` deliberately NOT flipped — that would dispatch a duplicate.
 
 **na-eligibility-audit 2026-07-31** (tranche `ci`, autonomous): **KEEP-NA-STALE bucket confirmed, checkbox gap closed.**
 Items 2, 4, and 5 (all confirmed shipped via `ci_satellite_ao_dispatch_batch2_2026_07_29.md` todo 1 parts (a)/(b),

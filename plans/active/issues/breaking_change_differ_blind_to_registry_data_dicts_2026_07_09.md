@@ -206,11 +206,11 @@ reusable fix."** Resolve the CI-gate fix here.
 ## na-eligibility-audit verdict
 
 **na-eligibility-audit 2026-07-30** (tranche `ci`, autonomous): **KEEP-NA-STALE (already-duplicated)** — todos 1-4 and
-6-7 are extracted near-verbatim into `/plans/active/ci_satellite_ao_dispatch_batch2_2026_07_29.md` todo 6 (which cites
-this doc as its Source and carries the allowlist spec, the differ change, the `23fa3a99` regression fixture, the SIT
-`build_expected` invariant, the xfail resolution and the codex update as its own (a)-(f)). Todo 5 (the [DESIGN] P2
-consumer-QG fan-out question) is parked there as Deferred **E8** and escalated as that batch's operator question 1.
-Citation recorded; `assigned_vm` deliberately NOT flipped — that would dispatch a duplicate.
+6-7 are extracted near-verbatim into `/plans/archive/2026_07/ci_satellite_ao_dispatch_batch2_2026_07_29.md` todo 6
+(which cites this doc as its Source and carries the allowlist spec, the differ change, the `23fa3a99` regression
+fixture, the SIT `build_expected` invariant, the xfail resolution and the codex update as its own (a)-(f)). Todo 5 (the
+[DESIGN] P2 consumer-QG fan-out question) is parked there as Deferred **E8** and escalated as that batch's operator
+question 1. Citation recorded; `assigned_vm` deliberately NOT flipped — that would dispatch a duplicate.
 
 **na-eligibility-audit 2026-07-31** (tranche `ci`, autonomous): **KEEP-NA, valid — refines the category label, bottom
 line unchanged.** Todos 1-4/6-7 are now `[x]` **directly in this doc** (flipped 2026-07-31, citing

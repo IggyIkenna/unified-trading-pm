@@ -2950,6 +2950,19 @@ spot-check that the integration-test exclusion logic still holds).
 > venue credentials in CI). These tests are skipped, not excluded — they will run when credentials land per
 > `BLOCKED-CREDENTIALS` workflow.
 
+### PYTEST_UNIT_DIR fleet-coverage check — SHIPPED 2026-07-30
+
+The override pattern above is opt-in and easy to silently miss when a repo grows a new `tests/<family>/unit/` dir after
+its `PYTEST_UNIT_DIR` was last set (exactly the class of bug MTDS hit — see
+`plans/archive/issues/mtds_ungated_test_families_2026_07_17.md`, 35 real failures accumulated ungated over 13 days).
+PM's own `quality-gates.sh` wires in `scripts/quality_gates/check_pytest_unit_dir_coverage.py`
+(`unified-trading-pm@bf583ea3b`) as a new blocking post-gate: for every fleet repo, it resolves that repo's effective
+`PYTEST_UNIT_DIR` (literal assignment / self-discovering via `find ... -name unit` / the `tests/unit/` base default) and
+flags any `tests/<family>/unit/` directory with zero overlap with the resolved scope. Shrinking-ratchet baseline:
+`pytest_unit_dir_coverage_baseline.yaml`, seeded at the real fleet count when shipped (1 pre-existing gap,
+`execution-service`'s `tests/sports_execution/unit/`, not fixed by this checker's introduction). New repos/families must
+close any real gap the checker finds rather than widen the baseline.
+
 ---
 
 ## STEP 5.94 + 5.95 — grep-able-rule ratchets (fallback-imports · DTZ · TID251) — SHIPPED 2026-06-10

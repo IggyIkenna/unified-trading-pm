@@ -159,6 +159,6 @@ a trigger that was intentionally retired.
 ## na-eligibility-audit verdict
 
 **na-eligibility-audit 2026-07-30** (tranche `ci`, autonomous): **KEEP-NA-STALE (already-duplicated)** — both open todos
-are extracted verbatim into `/plans/active/ci_satellite_ao_dispatch_batch2_2026_07_29.md` todo 13 (combined (a)
+are extracted verbatim into `/plans/archive/2026_07/ci_satellite_ao_dispatch_batch2_2026_07_29.md` todo 13 (combined (a)
 root-cause + (b) fix, carrying this doc's already-ruled-out candidates and its 48-hour schedule-fired verification, and
 citing this doc as Source). Citation recorded; `assigned_vm` deliberately NOT flipped — that would dispatch a duplicate.

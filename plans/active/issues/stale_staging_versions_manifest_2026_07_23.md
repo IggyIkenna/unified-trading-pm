@@ -222,5 +222,6 @@ it.
 
 **na-eligibility-audit 2026-07-30** (tranche `ci`, autonomous): KEEP-NA, valid — the sole open todo (confirm the wasted
 `main-backmerge-to-ldr` auto-heal dispatch no longer fires) is a verification gated on the STAGE 1.6 dormancy-aware
-dep-gate fix landing first. That fix is conflict-gated as `/plans/active/ci_satellite_ao_dispatch_batch2_2026_07_29.md`
-Deferred **E3**, which names it "genuinely next in line for batch 3".
+dep-gate fix landing first. That fix is conflict-gated as
+`/plans/archive/2026_07/ci_satellite_ao_dispatch_batch2_2026_07_29.md` Deferred **E3**, which names it "genuinely next
+in line for batch 3".
