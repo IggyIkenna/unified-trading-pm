@@ -274,10 +274,10 @@
       "ldr_ci_status": "RED",
       "cascade_invalidated_by": "unified-trading-library=0.66.0",
       "codebase_health": {
+        "qg_red_reason": "pytest",
+        "coverage_pct": 74.71,
         "large_file_count": 0,
-        "qg_red_reason": null,
-        "warn_file_count": 4,
-        "coverage_pct": null
+        "warn_file_count": 4
       }
     },
     "deployment-api": {
@@ -1222,10 +1222,10 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
+        "qg_red_reason": null,
+        "coverage_pct": 96.46,
         "large_file_count": 27,
-        "qg_red_reason": "pytest",
-        "warn_file_count": 34,
-        "coverage_pct": null
+        "warn_file_count": 34
       }
     },
     "unified-trading-library": {
@@ -1506,7 +1506,7 @@
       "version_source": "git-tag",
       "status": "active",
       "notes": "Canonical orchestrator — IggyIkenna/agent-orchestrator holds all the code (no external upstream; the original CosmicTrader/orchastrator evaluation fork is superseded). Slot worktrees integrate via live-defi-rollout like every repo (server code ships from LDR via systemd restart; tab→LDR→main promotion); `main` is only the dashboard-SPA deploy branch + CI gate. A `main` slot base reads as diverged — 2026-05-24 incident.",
-      "ci_status": "FAILING",
+      "ci_status": "FEATURE_GREEN",
       "coverage_pct": null,
       "bypass_audit_path": null,
       "testing_level": "none",
