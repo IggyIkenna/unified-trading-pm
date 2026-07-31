@@ -232,7 +232,7 @@ those commits landed). The escalation's own repo-blocker list (`GET /api/repo-bl
       when**: either (a) this exact test recurs again and the unmocked GCS-probe path is confirmed/ruled out as the
       mechanism, or (b) 5+ more clean GH Actions `quality-gates-v2` runs pass with no new recurrence, closing this as
       noise.
-- [ ] 6. [INFRA] P3. **NEW 2026-07-30.** Todo 4's closing text left one door open: "Whether
+- [x] ✅ 6. [INFRA] P3. **NEW 2026-07-30.** Todo 4's closing text left one door open: "Whether
       `github-glue-runners-instruments-service` is ALSO systematically more contended than other runners (independent of
       this one test) remains genuinely open." This occurrence supplies the first real evidence FOR that broader claim:
       `cicd` escalation `agt-dcbfa1`, instruments-service promotion PR #1039 (LDR→main), failing run `30584685103`
@@ -421,4 +421,39 @@ those commits landed). The escalation's own repo-blocker list (`GET /api/repo-bl
   `gh api .../commits/live-defi-rollout` matching local clone HEAD) already reflects the merged state; zero open
   `/api/repo-blockers` entries for instruments-service — the same "orphaned noise against an already-resolved wall"
   pattern as every prior entry in this doc. Slot left clean (both repos confirmed on `live-defi-rollout`, zero diff vs
-  `origin` before this doc edit).
+  `origin` before this doc edit). — **ROOT-CAUSED + FIXED 2026-07-31 (`cicd` redispatch of the SAME escalation id
+  `agt-dcbfa1`, re-triaging this exact wall).** Re-verified first: PR #1039 confirmed `state=MERGED`
+  (`mergedAt=2026-07-30T21:46:11Z`), `live-defi-rollout` `quality-gates-v2` green on every run since
+  (`30583363654`…`30590351876`, latest `23:23:25Z`, ~1.5h of stability), zero open `/api/repo-blockers` — same
+  already-resolved-wall conclusion holds. But rather than stop at a 7th "no action" entry, downloaded the raw failing
+  job log (`gh api repos/.../actions/jobs/91013203456/logs`) instead of only the `gh run view` summary every prior entry
+  in this doc used — that surfaces the pytest-timeout dump's OWN captured stack frame for the test's execution path (not
+  just the background heartbeat/execnet threads every prior entry inspected). Both failures landed at the IDENTICAL
+  line: `understat.py:140: in get_fixtures` →
+  `gc.collect()  # release prior league's season JSON blob before fetching the next` — a REAL, synchronous, CPU-bound,
+  non-yielding `gc.collect()` call, not an awaited I/O step. This is a 5th, previously un-investigated mechanism
+  distinct from every prior fix in this doc (leaked rate-limiter state, real `_throttle()` sleeps, un-mocked
+  TCPConnector construction) — none of those are CPU-bound, so an OS-scheduler-descheduled-await theory can't explain a
+  hang mid-`gc.collect()`. `gc.collect()`'s cost scales with the TOTAL tracked-object count in the process;
+  instruments-service's ~5100-test suite in one pytest-xdist worker holds orders of magnitude more live objects than a
+  standalone run, so an occasional slow full collection pass can burn the entire 150s budget outright — explaining why
+  only 2 of ~9 `get_fixtures()`-calling sibling tests failed this run (heap size at the moment of the call, not a shared
+  code-path property, is what varies) and why raising the timeout 3x running never closed this doc's flake class.
+  Confirmed the call is load-bearing in PRODUCTION before touching it — `git log -p` on `understat.py` shows it was
+  added by commit `e6c753fc` ("add gc.collect() between league fetches to prevent OOM") specifically because its
+  predecessor `bd324244a` (plain `raw_response = None` refcounting) was NOT sufficient and production hit exit code 137
+  — so REMOVING it from the adapter would trade a CI flake for a real backfill OOM-crash risk; ruled out and reverted an
+  initial edit that attempted this. **Instead fixed at the correct layer**: added an autouse
+  `monkeypatch.setattr("gc.collect", lambda: 0)` fixture to `tests/unit/test_understat_adapter_coverage.py` — these unit
+  tests exercise fixture-parsing logic against a handful of small mocked responses and have no OOM exposure of their
+  own, so the real GC pass buys nothing in-test; it does NOT disable Python's automatic threshold-triggered generational
+  GC (a C-level mechanism independent of the `gc.collect()` Python function), only this adapter's explicit extra pass,
+  and does not touch adapter/production code at all — instruments-service@e941d393. Verified: isolated file re-run 54/54
+  passed in 1.72s (down from a >150s hang); full `quality-gates.sh` green (5106 passed, 7 skipped, 44.65s; whole-gate
+  wall clock 87-89s), shipped via `quickmerge --agent --files 'tests/unit/test_understat_adapter_coverage.py'`, landed
+  on `live-defi-rollout` at `e941d393` (0 commits ahead of origin post-push). Closing todo 6 as root-caused-and-fixed.
+  Note this narrows, but does not fully resolve, todo 6's own reopened question: this specific mechanism (`gc.collect()`
+  cost scaling with process-wide tracked-object count) is now closed, but whether
+  `github-glue-runners-instruments-service` is ALSO systematically more contended independent of any one test's
+  anti-pattern remains genuinely untested — re-open with a NEW todo (do not reuse this one) if a DIFFERENT,
+  non-`gc.collect()`-calling test recurs on this runner post-fix.
