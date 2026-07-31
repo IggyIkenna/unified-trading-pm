@@ -217,7 +217,17 @@ directions and I could not fully reconcile them in this read-only pass:
    short-circuits `GONE_NO_CAPTURE` entirely for that class, since new one-off `canonical-migration-*` scripts will keep
    recurring here (this is at least the second content-canonicalisation script in this family — see
    `tradfi-cid`/`rewrite_tradfi_content_id_2026_07_21` in `launch-canonical-migration-vm.sh`, which likely has the
-   identical gap and wasn't checked in this pass).
+   identical gap and wasn't checked in this pass). — **SHIPPED + CROSS-REFERENCED 2026-07-31 (worker, slot 11,
+   `cefi_content_migration_fleet_half_incomplete-003`)**: confirmed live in
+   `deployment-service/deployment_service/data_pipeline_monitors/_gcs.py:809-819` — `_PROGRESS_RE` now matches
+   `would_patch`/`already_canonical_skipped`/`SCRIPT 1 CONTENT MIGRATION SUMMARY` (the exact cheapest-signal fix
+   recommended here), shipped per this doc's own `resolved_by:` frontmatter (`deployment-service@559ca9a`,
+   `deployment-service@3366610`, `alerting-service@7c4a063`). **Corroborating evidence, as flagged**:
+   `/plans/active/issues/cefi_content_migration_fleet_half_incomplete_2026_07_26.md` documents the SAME alerting gap
+   recurring at fleet scale — 21/44 shards of the later sharded `--apply` fleet (running this identical script) died
+   silently with no distinguishing alert, the second and much larger concrete instance of the exact category error
+   diagnosed here from one VM. The fix above is already live for any future run of this script family; the fleet doc's
+   remaining scope is the migration's own completion, not this alerting gap.
 2. **[deployment-service] Reconcile orphaned `deployments/active/*.json` records whose GCE instance no longer exists** —
    this VM's record is proof the vm-exec wrapper's own EXIT-trap archival path is skipped entirely by an external
    `gcloud instances delete` (vs. the script's own graceful self-delete), leaving a permanently stale "running" record.

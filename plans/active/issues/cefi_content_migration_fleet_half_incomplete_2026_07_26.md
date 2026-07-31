@@ -135,10 +135,11 @@ canonicalised by this fleet. The migration's own `# Delete-when:` marker on
       investigation if it recurs — flag rather than silently re-relaunching it a 3rd+ time if so. **No `[OPERATOR]` gate
       needed** for the same reason as the original P1 todo above (VM launches are AO-dispatchable by default). Repo:
       deployment-service (launch) + market-tick-data-service (verify). Done — see 2026-07-31T03:30Z Progress Log entry.
-- [ ] [BACKEND] P2. Cross-reference with `cefi_content_migration_vm_wedged_worker_2026_07_23.md`'s Recommendation item 1
-      (give `classify_no_capture_reason()` a "task never writes the manifest" exemption for this script family) — these
-      21 dead VMs are a second, larger, concrete instance of exactly the alerting gap that doc already diagnosed from
-      one VM; worth citing as corroborating evidence when that fix is prioritized.
+- [x] [BACKEND] P2. ✅ Cross-referenced with `cefi_content_migration_vm_wedged_worker_2026_07_23.md`'s Recommendation
+      item 1. **Verified live**: `deployment-service/.../_gcs.py:809-819` `_PROGRESS_RE` already matches
+      `would_patch`/`already_canonical_skipped`/`SCRIPT 1 CONTENT MIGRATION SUMMARY` (shipped
+      `deployment-service@559ca9a` et al, DONE 2026-07-26). Added this doc's 21-dead-shard corroboration to that doc's
+      item 1 directly — no further code change needed. — slot 11, 2026-07-31.
 - [x] [SCRIPT] P2. ✅ Change `cefi-content-apply`'s default `MACHINE_TYPE` from `e2-standard-8` to `e2-standard-16` in
       `deployment-service/scripts/vm/launch-canonical-migration-vm.sh` (the category-specific default, not the
       launcher's global default — other categories are unaffected). Confirmed root cause 2026-07-30: 3 independent
