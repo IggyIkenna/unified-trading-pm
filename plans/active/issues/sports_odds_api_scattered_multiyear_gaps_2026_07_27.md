@@ -169,6 +169,23 @@ access (likely expired for the older ranges) or VM run-log archaeology, out of s
       `odds-api-key` (Secret Manager, project `central-element-323112`) to a new key on a 5,000,000-credits/month
       subscription, live-verified via direct curl (HTTP 200, `x-requests-remaining: 5000000`) — see
       `sports_odds_api_key_deactivated_2026_07_26.md`. (repo: deployment-service)
+
+      **2026-07-31 (slot 16) — LAUNCHED, in progress, NOT flipping yet.** `mtds-backfill-odds-sentinel-fix-20260731`
+          (`asia-northeast1-c`, `e2-highmem-4`, SPOT, `--start 2020-06-06 --end 2026-07-31`, no `--force`), confirmed
+          `RUNNING` at T+~2min (log not yet populated — normal boot lag, tarball fetch + startup script still running).
+          MTDS + UTL tarballs (the repos carrying the actual fix) confirmed fresh at launch; `unified-api-contracts` +
+          `deployment-service` tarballs were stale per the launcher's freshness check but the fix lives entirely in
+          MTDS/UTL, not those two, so proceeded rather than blocking on an unrelated staleness warning. Self-deletes on
+          completion (`VM_SHUTDOWN_ON_COMPLETION=true`). **Next steps for whoever resumes**: check
+          `gcloud compute instances describe mtds-backfill-odds-sentinel-fix-20260731 --zone=asia-northeast1-c` (absence =
+          terminal) and tail
+          `gs://deployment-scripts-central-element-323112/vm-logs/mtds-backfill-odds-sentinel-fix-20260731/run.log`; once
+          terminal, re-run the data_type-aware census (per this doc's own earlier finding — day-level presence alone
+          under-reports; check data_type completeness too) against
+          `gs://instruments-store-sports-prd-central-element-323112/_index/availability_index.parquet` for
+          `source=odds_api, date>=2020-06-06` — if genuinely 0 gaps (or only structurally unfillable ones), flip this
+          checkbox with the manifest evidence, then do the P2 VERIFY todo's own re-census.
+
 - [ ] [VERIFY] P2. Depends on the P1 backfill above. **Census re-run 2026-07-30 (slot 3) against a snapshotted canonical
       (11,789,693 rows): STILL 595 missing days** across `2020-06-06..2026-04-15` (1,545 of 2,140 days present) —
       unchanged, because P1 never actually fetched anything (see the re-triage above). The consolidator is NOT the
