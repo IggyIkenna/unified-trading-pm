@@ -281,8 +281,8 @@ Two independently scoped, mechanically-determinable fixes (neither is a design c
       chain on the same cadence. If, once verified, the `No URDI adapter`/`URDI fetch...failed` lines for these 5 venues
       persist despite this fix, that would mean a THIRD, still-undiagnosed emission path — escalate rather than assume
       this fix alone closes the doc.
-- [ ] [VERIFY] P1. **Depends on the todo above landing + redeploying (or on confirming no fix is needed).** After a full
-      day-plus of live operation post-that-fix, re-run this doc's Step 3 manifest query (`data_type=XG`,
+- [x] ✅ [VERIFY] P1. **Depends on the todo above landing + redeploying (or on confirming no fix is needed).** After a
+      full day-plus of live operation post-that-fix, re-run this doc's Step 3 manifest query (`data_type=XG`,
       `capture_status=captured`, `written_at` > the new redeploy cutoff, `pipeline_mode != batch_understat`) — confirm a
       fresh row appears (closes this issue) or, if still zero, escalate further (a fourth cause would remain). **Also
       confirms item-2's own done-when** (added 2026-07-29 alongside item-2's fix, `instruments-service@12c176f8`): over
@@ -394,7 +394,56 @@ Two independently scoped, mechanically-determinable fixes (neither is a design c
       from the 10:54Z check's deploy state. Current time (`11:59Z`) is still ~6h03m before the day-plus gate
       (`2026-07-30T18:02Z`). No change since the 10:54Z check. Releasing via
       `/skip-current-task {"reason_code": "GATED"}`. Next dispatch: same condition as above — once `2026-07-30T18:02Z`
-      passes, re-run both the Step-3 manifest query and the `gcloud logging read` sweep for the real verdict.
+      passes, re-run both the Step-3 manifest query and the `gcloud logging read` sweep for the real verdict. —
+      **Checked 2026-07-31T06:18Z-06:55Z (slot 14, worker): day-plus gate PASSED (2026-07-31T06:18Z, ~12h16m past
+      `2026-07-30T18:02Z`) — first real verdict, both original gates now genuinely satisfied. Full re-run done: item-2's
+      own gate CONFIRMED CLOSED (zero adapter-key error recurrence); Step-3 manifest STILL zero fresh XG captures — but
+      root cause is now identified and it is NOT a code defect (a fourth, benign cause).** 1. **`gcloud logging read`
+      sweep, `uts-prod-instruments-service-sports-fixtures`, `timestamp>="2026-07-29T18:02:00Z"` through now (~36h
+      window)**: ZERO `No URDI adapter for N venue(s)` / `URDI fetch: N venue(s) failed with        PERMANENT errors`
+      lines mentioning any of FOOTYSTATS/UNDERSTAT/TRANSFERMARKT/SOCCER_FOOTBALL_INFO/OPEN_METEO. Sanity-checked the
+      query itself is valid (same filter minus the timestamp bound returns the pre-fix occurrences, last one at
+      `2026-07-29T17:49:26Z` — 13 min before the `18:02:00Z` cutoff, i.e. it stopped exactly at deploy). **Item-2's own
+      done-when is CONFIRMED MET.** 2. **Step-3 manifest re-run** (`availability_index.parquet`, `data_type=XG`,
+      `capture_status='captured'`, `written_at > '2026-07-29T18:02:00Z'`): **0 rows**, confirmed both with the doc's
+      original filter (`pipeline_mode != batch_understat`) AND with that filter DROPPED entirely — same 0-row result
+      either way. All 7,714 all-time `captured` XG rows remain 100% `batch_understat`, max `written_at` unchanged at
+      `2026-07-22T05:23:36Z`. 3. **Methodology correction (real, but doesn't change the verdict)**: the doc's own
+      `pipeline_mode !=        batch_understat` filter is unsound as a live-vs-batch discriminator. Grepped
+      `instruments_service/engine/orchestrator/understat.py`: **every** write from `_fetch_understat_xg` /
+      `_run_understat_shots_date` hardcodes `pipeline_mode=PipelineMode.BATCH_UNDERSTAT` unconditionally — it is a
+      source-literal, not a live/batch tag. Confirmed both call sites use it identically: `process_preflight.py:317-318`
+      (the periodic completeness/"Date filter" sweep) AND `process_enrichment.py:293/306` (the REAL live per-fixture
+      `_run_remaining_enrichment` dispatch this whole doc is about) — so a genuine live-triggered capture would ALSO
+      show `pipeline_mode=batch_understat`, making the doc's filter unable to ever distinguish the two. Re-ran Step-3
+      with the filter dropped (see #2) — result unchanged (still 0), so this flaw did NOT mask a false negative here,
+      but future checks of this doc should drop the `pipeline_mode !=` clause entirely and rely on `written_at`
+      alone. 4. **Traced the actual dispatch gate** (`process_enrichment.py:291`:
+      `if "UNDERSTAT" in active_venues_set and        entity_wanted("XG")`) to rule out item-2's own fix having broken
+      it: read `process_fetch.py:96-142` (`_fetch_urdi_records`) — the `_ENRICHMENT_PROVIDERS` exclusion builds a NEW
+      local `_fetchable_venues` list (line 135); the caller's original `active_venues` parameter is never mutated. So
+      the enrichment-stage gate at line 291 is intact and unaffected by item-2's fix — ruled out as the 4th cause. 5.
+      **THE ACTUAL FOURTH CAUSE, confirmed via two independent data sources — genuinely benign, not a bug**: Understat
+      only covers 5 leagues (`UNDERSTAT_NAMES` in
+      `unified-api-contracts/unified_api_contracts/canonical/domain/sports/provider_league_ids.py`:
+      `BUNDESLIGA`/`EPL`/`LA_LIGA`/`LIGUE_1`/`SERIE_A`). Downloaded + queried the live `latency_observations` parquet
+      index (`day=2026-07-29`..`2026-07-31` shards): **1767** `stats_delayed` trigger fires occurred in the post-cutoff
+      window (`recorded_at_utc > '2026-07-29T18:02:00Z'`) — but **ZERO** of them are for any of the 5 Understat-covered
+      `league_id` values (the 1767 fires span ROMANIA_CUP/ARGENTINA_PRIMERA/
+      BRASILEIRAO/UCL/UECL/KOREAN_FA_CUP/COLOMBIA_CUP/etc. — South American leagues + continental competitions, none of
+      which Understat covers). Cross-checked independently via the `availability_index` manifest's own
+      `data_type=FIXTURES` rows for the 5 covered leagues: **`instrument_count=0` for every date `2026-07-25` through
+      `2026-08-01`** (the manifest's current forward-lookahead ceiling) across all 5 leagues — i.e. there are genuinely
+      no scheduled/known fixtures for EPL/Bundesliga/La Liga/Ligue 1/Serie A anywhere in this window (mid-to-late-July
+      is these leagues' off-season; 2026-27 season fixtures aren't in the manifest's lookahead window yet). **The live
+      pipeline cannot have captured Understat XG data in this window because no Understat-covered-league match ever
+      kicked off to fire `stats_delayed` for it — this is a data-availability gap, not a pipeline defect.** Both
+      structural fixes (item-1 registry sentinels, item-2 active_venues exclusion) are confirmed deployed and working
+      (zero error-log recurrence); the pipeline is validated as far as it CAN be validated without a real covered-league
+      match. **Flipping this todo done** — its own done-when ("confirm a fresh row appears... or, if still zero,
+      escalate further") is satisfied: escalated, found, and the 4th cause is identified as benign. Added a new
+      follow-up todo below (not prose, per `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md` § 2) to
+      re-verify once a real covered-league fixture exists — that is the first opportunity for genuine end-to-end proof.
 - [x] ✅ [INFRA] P2. Persist `FirstSuccessPoller._pending` across `--one-shot` invocations (state-bucket-backed, same
       pattern as `PeriodicTierState`) so `first_success=True` / genuine `fetched_rows` confirmations become structurally
       possible. Lower urgency than the two todos above (observability/confirmation only — does not gate the real
@@ -403,22 +452,45 @@ Two independently scoped, mechanically-determinable fixes (neither is a design c
       Repo: deployment-service.
 
       **DONE 2026-07-30 — deployment-service@a172915.** `FirstSuccessPoller` (`sports_latency_observation.py`) now
-                                                                                                                                                                                  accepts `bucket`/`key`/`storage` (mirrors `PeriodicTierState`'s exact adapter shape — `default_state_storage()`
-                                                                                                                                                                                  promoted from module-private to shared-public for this reuse); loads persisted `_pending` on construction,
-                                                                                                                                                                                  persists after every real mutation in `register_from_event()` (only when at least one entity was actually
-                                                                                                                                                                                  registered) and `poll()` (only when something was removed/updated) — best-effort, `except Exception` (broadened
-                                                                                                                                                                                  from the initially-narrower `(OSError, ValueError)` after discovering it could crash the live dispatch path on a
-                                                                                                                                                                                  transient storage failure; persistence must never block a real trigger fire). `SportsTriggerScheduler.__init__`
-                                                                                                                                                                                  wires it via a new `_build_first_success_poller()` (same `state_bucket or resolve_state_bucket()` + full-failure
-                                                                                                                                                                                  fallback-to-in-memory-only shape as the existing `_build_periodic_state()`). **The regression test asked for is
-                                                                                                                                                                                  exactly `test_first_success_poller_survives_fresh_instance_across_one_shot_restart`** (registers on instance A,
-                                                                                                                                                                                  discards it, constructs a brand-new instance B against the same bucket/storage, asserts B's `.pending` already
-                                                                                                                                                                                  contains the entry with no `register_from_event` call) — plus persist-on-register, persist-on-poll-removal,
-                                                                                                                                                                                  malformed-state-starts-fresh, and no-bucket-stays-in-memory-only (back-compat) tests, 5 new tests total in
-                                                                                                                                                                                  `tests/unit/test_sports_latency_observation.py`. Found + fixed a real test-isolation gap while wiring this in:
-                                                                                                                                                                                  the shared `_make_scheduler_with_recorder()` test helper (used by ~10 pre-existing tests) never overrode
-                                                                                                                                                                                  `state_bucket`, so every test sharing the default `resolve_state_bucket()` bucket name was reading/writing the
-                                                                                                                                                                                  SAME `CLOUD_MOCK_MODE=true` mock-storage-backed state file — invisible before this change because no prior code
-                                                                                                                                                                                  path actually persisted real content there; now scoped to a per-test-unique bucket
-                                                                                                                                                                                  (`f"deployment-scripts-test-{uuid.uuid4().hex}"`), fixing a latent cross-test-pollution risk for
-                                                                                                                                                                                  `PeriodicTierState` too, not just this new code. Full `quality-gates.sh` green (2967 passed).
+                                                                                                                                                                                              accepts `bucket`/`key`/`storage` (mirrors `PeriodicTierState`'s exact adapter shape — `default_state_storage()`
+                                                                                                                                                                                              promoted from module-private to shared-public for this reuse); loads persisted `_pending` on construction,
+                                                                                                                                                                                              persists after every real mutation in `register_from_event()` (only when at least one entity was actually
+                                                                                                                                                                                              registered) and `poll()` (only when something was removed/updated) — best-effort, `except Exception` (broadened
+                                                                                                                                                                                              from the initially-narrower `(OSError, ValueError)` after discovering it could crash the live dispatch path on a
+                                                                                                                                                                                              transient storage failure; persistence must never block a real trigger fire). `SportsTriggerScheduler.__init__`
+                                                                                                                                                                                              wires it via a new `_build_first_success_poller()` (same `state_bucket or resolve_state_bucket()` + full-failure
+                                                                                                                                                                                              fallback-to-in-memory-only shape as the existing `_build_periodic_state()`). **The regression test asked for is
+                                                                                                                                                                                              exactly `test_first_success_poller_survives_fresh_instance_across_one_shot_restart`** (registers on instance A,
+                                                                                                                                                                                              discards it, constructs a brand-new instance B against the same bucket/storage, asserts B's `.pending` already
+                                                                                                                                                                                              contains the entry with no `register_from_event` call) — plus persist-on-register, persist-on-poll-removal,
+                                                                                                                                                                                              malformed-state-starts-fresh, and no-bucket-stays-in-memory-only (back-compat) tests, 5 new tests total in
+                                                                                                                                                                                              `tests/unit/test_sports_latency_observation.py`. Found + fixed a real test-isolation gap while wiring this in:
+                                                                                                                                                                                              the shared `_make_scheduler_with_recorder()` test helper (used by ~10 pre-existing tests) never overrode
+                                                                                                                                                                                              `state_bucket`, so every test sharing the default `resolve_state_bucket()` bucket name was reading/writing the
+                                                                                                                                                                                              SAME `CLOUD_MOCK_MODE=true` mock-storage-backed state file — invisible before this change because no prior code
+                                                                                                                                                                                              path actually persisted real content there; now scoped to a per-test-unique bucket
+                                                                                                                                                                                              (`f"deployment-scripts-test-{uuid.uuid4().hex}"`), fixing a latent cross-test-pollution risk for
+                                                                                                                                                                                              `PeriodicTierState` too, not just this new code. Full `quality-gates.sh` green (2967 passed).
+
+- [ ] [VERIFY] P2. **New, opened 2026-07-31 by the VERIFY P1 todo above.** Both structural fixes (venue-adapter-key
+      registry sentinels + `active_venues` enrichment-provider exclusion) are confirmed deployed and working (zero
+      recurrence of `No URDI adapter`/`URDI fetch...failed` error-log lines mentioning the 5 enrichment venues over a
+      36h+ window). But the day-plus live-operation re-check found the reason Step-3's manifest query still shows zero
+      fresh Understat XG captures is NOT a code defect: Understat only covers 5 leagues
+      (BUNDESLIGA/EPL/LA_LIGA/LIGUE_1/SERIE_A) and all 5 are confirmed in their off-season — zero `stats_delayed`
+      trigger fires for any of them in the 36h post-fix window (1767 fires total, all for OTHER leagues), and the
+      `availability_index` manifest shows `instrument_count=0` FIXTURES for all 5 leagues through `2026-08-01` (the
+      manifest's current forward-lookahead ceiling). The live capture pipeline has therefore never had a real
+      opportunity to prove it works end-to-end since the fixes landed. **Done when**: once any of the 5
+      Understat-covered leagues has a real fixture whose `stats_delayed` trigger fires live (check via the
+      `latency_observations` parquet index, `trigger_name='stats_delayed'` + `league_id` in the 5-league set,
+      `recorded_at_utc` after the fixture is confirmed scheduled), re-run Step 3's manifest query (`data_type=XG`,
+      `capture_status='captured'`, `written_at` after that fire) — a fresh captured (or honestly `empty_confirmed`, if
+      Understat itself has no data for that specific match) row confirms the live pipeline genuinely works end-to-end;
+      if it's STILL zero despite a real covered-league match having fired, that would be a genuine fifth cause worth
+      escalating. **Also note for whoever picks this up**: the doc's original Step-3 filter
+      (`pipeline_mode != batch_understat`) is NOT a reliable live-vs-batch discriminator —
+      `instruments_service/engine/orchestrator/understat.py` hardcodes `pipeline_mode=PipelineMode.BATCH_UNDERSTAT` on
+      every write regardless of caller (both the periodic completeness sweep AND the real live per-fixture dispatch use
+      it identically) — query on `written_at` alone, don't filter on `pipeline_mode`. Repo: instruments-service
+      (read-only check, no code change expected unless a genuine 5th cause surfaces).
