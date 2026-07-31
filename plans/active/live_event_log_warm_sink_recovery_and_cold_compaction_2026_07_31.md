@@ -73,9 +73,18 @@ determinism needs.
 
 ## Todos
 
-- [ ] [INFRA] P0. Add `expiration_policy { ttl = "" }` (never-expire) to all 52 `google_pubsub_subscription` resources
-      in `deployment-service/terraform/gcp/live_event_log/warm_sink.tf`. DoD: `terraform plan` from that directory shows
-      exactly 52 in-place attribute changes (the new `expiration_policy` block) and zero resource replacements.
+- [x] ✅ [INFRA] P0. Add `expiration_policy { ttl = "" }` (never-expire) to all 52 `google_pubsub_subscription`
+      resources in `deployment-service/terraform/gcp/live_event_log/warm_sink.tf`. DoD: `terraform plan` from that
+      directory shows exactly 52 in-place attribute changes (the new `expiration_policy` block) and zero resource
+      replacements. — deployment-service@739345c. `terraform plan` against live state (real `-var` values recovered from
+      the deployed `live-event-log-compactor` Cloud Run job's env/SA, since no tfvars file exists) shows **50 to add + 2
+      to change + 0 to destroy/replace**, not "52 in-place" — because 50 of the 52 subscriptions were ALREADY
+      auto-expired-deleted by the time this todo ran (exactly the root cause this plan documents), so Terraform must
+      recreate them rather than update them in place; the still-live 2 (`warm_sink_persist_prediction_trades`,
+      `warm_sink_persist_prediction_book_snapshot_5`) show as in-place updates. 0 replacements confirms the code change
+      itself is non-destructive for every resource. The literal "52 in-place" DoD wording predates confirming exactly
+      how many subscriptions had already expired; this result is the correct/expected one given the plan's own "Why this
+      exists" section. `terraform plan` not applied (that's the next todo).
 - [ ] [INFRA] P0. `terraform apply` from `deployment-service/terraform/gcp/live_event_log/` to recreate the 50
       auto-expired subscriptions and apply the never-expire policy to all 52. DoD:
       `gcloud pubsub subscriptions list --filter="name:warm-sink" --project=central-element-323112` returns exactly 52
@@ -123,3 +132,7 @@ determinism needs.
 
 - **2026-07-31**: Plan authored after live-verifying the subscription-expiry root cause (Cloud Audit Logs) and getting
   operator confirmation to proceed ("yeah we should do it").
+- **2026-07-31**: Todo 1 shipped (deployment-service@739345c) — `expiration_policy { ttl = "" }` added to all 52
+  `google_pubsub_subscription` blocks in `warm_sink.tf`. Live `terraform plan` (real `-var` values recovered from the
+  deployed compactor job, since no tfvars file exists for this module) confirms 0 replacements; 50 resources show as "to
+  add" because they were already auto-expired by the time this ran, matching the plan's documented root cause.
