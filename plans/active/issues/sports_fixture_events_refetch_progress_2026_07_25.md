@@ -645,3 +645,38 @@ ids parquet for the 4,327 remaining non-canonical objects remains staged unchang
 Next dispatch: re-check the lock; given the ~5.8-day ETA just for this VM's 5-week window, widen the monitoring interval
 (30-60 min is wasteful at this timescale) rather than tight-looping — a stall check only needs to confirm the
 heartbeat/date-boundary is still climbing, not tick every 30 min for days.
+
+**Health-checked 2026-07-31T08:43Z (slot-16, data_engineering), lock STILL held — by a brand-new VM, not the one from
+the 08:00Z-08:20Z check.** `gcloud compute instances list --filter='name~"^af-backfill-|^af-audit-"'` shows
+`af-backfill-20260730-220243` (the 08:00Z-08:20Z check's `--entity FIXTURES` resume) is now GONE from the list entirely
+(not even `TERMINATED`) — confirmed via
+`gcloud compute operations list --filter="targetLink~'af-backfill-20260730-220243'"`: `stop` DONE at
+`2026-07-31T01:39:29-07:00` (=`08:39:29Z`) then `delete` DONE at `01:40:28-07:00` (=`08:40:28Z`), both by the ambient
+compute default SA — a clean stop+delete, not a preemption. A NEW VM, `af-backfill-20260731-094047`, was created
+2026-07-31T01:41:37-07:00 (=`08:41:37Z`, ~1min after the delete) and is `RUNNING` in `asia-northeast1-c`.
+`LAUNCH_PARAMS.json` shows it's **another** `--entity FIXTURES` resume (`RESUME_START_DATE=2026-06-26`,
+`RESUME_END_DATE=2026-07-30`) — the same recurring window/entity as the VM that just finished, not this campaign's
+FIXTURE_EVENTS recovery. Checked at `08:43:41Z`, ~2min after creation — no `run.log`/heartbeat blob exists yet (still
+booting/pulling tarballs, expected at this age, not a stall signature); confirmed genuinely fresh via
+`gcloud compute instances describe` creationTimestamp rather than assuming staleness from an absent log. Per the
+VM-delete guardrail this is unambiguously a live, brand-new VM — did not force past the lock or delete it.
+
+**Process observation, not yet escalating**: this is the second time in ~35min this campaign's singleton lock has been
+retaken immediately by a fresh `--entity FIXTURES` resume for essentially the same `2026-06-26→2026-07-30` window right
+as the prior instance finished — consistent with the 08:00Z-08:20Z entry's root-cause theory (the widened
+`SPORTS_ENTITY_LEAGUE_COVERAGE` 96→383 leagues makes this "routine" catch-up job hit the same hard 2 req/min
+per-fixture-cascade ceiling, so it now takes ~days instead of minutes and recurs before this recovery task's window ever
+gets a turn). Not filing a fresh escalation this touch — nothing new beyond what the 08:00Z-08:20Z entry already flagged
+(an Explore agent's findings on the throttle question are still pending), and one repeat data point isn't yet a
+confirmed starvation pattern. If a THIRD consecutive fresh FIXTURES-resume VM is observed retaking this lock immediately
+after another completes, that graduates to a real "this recovery task may never get the lock" finding worth a `/blocked`
+to main/operator (candidate options: relax the per-fixture 2 req/min throttle if it's a conservative hardcoded default
+rather than the vendor's real limit; or carve out a second API-Football key so FIXTURE_EVENTS recovery and routine
+FIXTURES catch-up don't share one singleton lock).
+
+Recovery-ids parquet for the 4,327 remaining non-canonical objects remains staged unchanged, no rebuild needed.
+Releasing via `/skip-current-task {"reason_code": "GATED"}`, not duplicate-launched. Next dispatch: per the prior
+entry's own guidance, widen the monitoring interval (this VM's sibling took ~6.5h+ just to fetch teams for all 383
+leagues before any per-fixture cascade even started) — a stall check only needs to confirm the lock-holding VM's
+heartbeat/log is still advancing, not tick every 30-60min. If the THIRD-consecutive-immediate-retake pattern above is
+confirmed on the next check, escalate via `/blocked` instead of continuing to just log it.
