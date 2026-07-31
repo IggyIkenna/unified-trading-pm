@@ -554,12 +554,11 @@ reconciling + signing off, not redoing.)_
 
 ## Folded-in scope 2026-07-15 (plan-reconcile §6)
 
-- [ ] [UI] P2. Surface the drill-down/roll-up in the data-status UI (defer until the harness schema is stable; `[UI]`
-      gate applies). **→ MOVED to `instruments_completion_tracker_2026_07_06.md` Stage 6 (last open `honest_coverage_v2`
-      item; too small for its own AO plan, tracked as tracker hygiene singleton per operator 2026-07-06).** This plan's
-      **measurement track is now CLOSED** — every Phase 0/1/2 measurement item complete; only this UI drill-down
-      remains, and it is now owned by tracker Stage 6. (FOLDED IN from
-      honest_coverage_v2_instrument_denominator_2026_06_28, 2026-07-15, plan-reconcile §6 operator ruling)
+- [x] ✅ **KEEP-NA-STALE, self-duplicate (na-eligibility-audit 2026-07-31)** — this is a leftover fold-in marker;
+      the real, single open item is tracked once above at L537 ("data-status UI drill-down"), never removed here
+      after the fold-in completed. Original: Surface the drill-down/roll-up in the data-status UI (defer until the
+      harness schema is stable; `[UI]` gate applies). **→ MOVED to `instruments_completion_tracker_2026_07_06.md`
+      Stage 6.** (FOLDED IN from honest_coverage_v2_instrument_denominator_2026_06_28, 2026-07-15, plan-reconcile §6)
 
 ---
 
@@ -598,6 +597,7 @@ reconciling + signing off, not redoing.)_
 
 ## 📓 Progress Log
 
+- **na-eligibility-audit 2026-07-31**: KEEP-NA, stale item — closed the L557 self-duplicate marker (real item at L537).
 - **2026-07-28 (gate-cleanup pass)** — updated the legacy-twin deletes note (Stage 1) to match its forked child's own
   2026-07-28 retag: the §3a reversibility carve-out now covers hard-stop #2 (legacy-object-delete-after-copy) once Part
   5's twin-coverage proof independently confirms 100% coverage

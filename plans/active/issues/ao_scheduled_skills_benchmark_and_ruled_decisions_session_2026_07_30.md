@@ -210,3 +210,9 @@ and shipped — do NOT re-run those two if resuming from the script (their branc
 - Several `stash_N.patch` / `RECOVERED_*.patch` / `FOREIGN_*.patch` files in the scratchpad from the orphaned-commit
   recovery work — that agent's own report confirmed nothing was lost (foreign WIP was round-tripped back through the
   shared stash under greppable messages), so these are backups-of-backups at this point, not the only copy of anything.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-31** (tranche=cross-cutting, dispatch agt-845699): KEEP-NA, valid — session-checkpoint
+  handoff ledger; all 12 open items are `[OPERATOR]`-tagged live-state verifications or reference a session-scoped
+  scratchpad script requiring judgment about what's safe to retry in a fresh session. Genuinely operator-gated.

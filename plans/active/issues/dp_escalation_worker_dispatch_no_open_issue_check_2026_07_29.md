@@ -110,6 +110,9 @@ regression) is worse.**
 
 ## Progress Log
 
+- **na-eligibility-audit 2026-07-31** (tranche=cross-cutting, dispatch agt-845699): KEEP-NA, valid — both open todos
+  gated on an operator/design decision on dedup semantics. Confirms the prior 2026-07-30 na-eligibility-audit KEEP-NA
+  verdict on the same self-documented basis; 10+ subsequent Progress Log entries corroborate without resolving it.
 - **2026-07-29 (data_pipeline_failure escalation worker, agt-0df274):** Filed this issue after finding a third
   escalation-worker spawn for the same static DP-FETCH-009 condition already fully diagnosed by two prior sessions. Did
   not implement a fix (design decision + wrong-repo for this one-shot's target repo). Cross-referenced from

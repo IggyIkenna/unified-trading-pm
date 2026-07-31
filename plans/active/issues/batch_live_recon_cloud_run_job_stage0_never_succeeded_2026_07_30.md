@@ -131,6 +131,10 @@ this session's available repo set) to find where (if anywhere) those exact GCS p
 
 ## Progress Log
 
+- **na-eligibility-audit 2026-07-31** (tranche=cross-cutting, dispatch agt-845699): KEEP-NA, valid — todo 1 is an
+  explicitly-stated unresolved design question requiring source reads outside this session's scope; todos 2-3 are
+  follow-on judgment calls conditioned on todo 1's outcome. Doc's own Progress Log: "genuine judgment call, not a
+  mechanical fix."
 - **2026-07-30** — Filed while resolving a sibling doc's verification todo. Read-only investigation
   (`gcloud run jobs`/`gcloud logging read`/`gsutil ls`, no writes). Not escalated further this session — the
   live-wallet-gate hypothesis makes P0/P1 unlikely, but not attempting the strategy/ml/execution-service source read

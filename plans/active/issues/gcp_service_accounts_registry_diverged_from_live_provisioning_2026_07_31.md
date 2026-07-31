@@ -119,6 +119,9 @@ Two directions are both plausible and this is an architecture decision, not a bo
 
 ## Progress Log
 
+- **na-eligibility-audit 2026-07-31** (tranche=cross-cutting, dispatch agt-845699): KEEP-NA, valid — todo 1 is an
+  explicit architecture-decision gate ("Blocks the rest of this list"); todos 2-4 all feed or are conditioned on that
+  same decision. Doc's own text: "this is an architecture decision, not a bounded fact-check."
 - **2026-07-31**: Filed during ci_satellite_ao_dispatch_batch1-016 (sync gcp_service_accounts.yaml against live IAM).
   Full read-only audit performed; unified-trading-sa entry added to the registry; this doc captures the larger
   systemic-divergence finding that's out of scope for that bounded todo.

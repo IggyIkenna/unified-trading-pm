@@ -148,3 +148,24 @@ content).
 Cross-repo, blocks the entire fleet's shipping pipeline, and is actively ongoing at time of filing — meets this
 workspace's own "big finding" bar (cross-repo, CI/audit-priority) for immediate operator notification rather than quiet
 logging.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-31** (tranche=cross-cutting, dispatch agt-845699): RECLASSIFY candidate PARKED
+  (conflict) — stays KEEP-NA. Todo 1 ([OPERATOR], billing UI check) is correctly non-dispatchable, undisputed. Todos
+  2-3 ([BACKEND] re-verify 8 named commits on GitHub's real quality-gates-v2; [DATA] cross-check whether elevated
+  `ldr_qg_failure`/`plan_health` escalation counts were attributable to this outage) initially read as bounded, but
+  conflict-check (`/codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md` § 3) found two
+  independent overlaps under `parent_epic:infrastructure_master`: todo 3's attribution question is already answered
+  by `fleet_wide_qg_capacity_crisis_continues_day2_2026_07_29.md`'s own `[x]` diagnosis (plan_health and
+  `ldr_qg_failure` share the same host-contention root cause via slot-competition, not an independent/additive cause);
+  todo 2's re-verify ask sits on ground `ao_slot_capacity_policy_ci_scheduled_split_2026_07_29.md` (active,
+  `assigned_vm: NA`, same parent_epic) already tracks as pending-on-this-exact-outage in its own text. Additionally,
+  `ci_satellite_ao_dispatch_batch4_2026_07_31.md` (draft, `assigned_vm: planning`) explicitly declined to extract
+  from this incident cluster while it's still hot, a precedent that applies identically here. Per protocol: NOT
+  cleared — do not reclassify. **Separately flagged, not resolved here** (outside this skill's scope, routes to
+  `/plan-reconcile`): this doc's own "GitHub Actions total fleet outage" and the sibling
+  `github_actions_billing_wall_recurrence_2026_07_29.md` may be two writeups of the SAME incident — a prior
+  `/plan-reconcile` pass apparently already treated the "total_fleet_outage" filename as not existing and repointed to
+  the billing-wall doc instead (per `ao_slot_capacity_policy_ci_scheduled_split_2026_07_29.md`'s own note). Worth a
+  fold/cross-reference check before either doc's todos are next touched.

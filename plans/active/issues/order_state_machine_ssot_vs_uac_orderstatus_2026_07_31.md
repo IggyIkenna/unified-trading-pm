@@ -97,3 +97,9 @@ Interim mitigation already applied: both codex docs now carry a ⚠️ block sta
 - [ ] [TEST] P2. Once ruled, create `execution-service/tests/unit/orders/test_state_machine.py` (the doc's declared
       `verifier:`, never written) asserting the enum members match the codex state table, so this cannot silently
       diverge again.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-31** (tranche=cross-cutting, dispatch agt-845699): KEEP-NA, valid — todo 1 is
+  explicitly stated as "a design call, not a mechanical fix — hence `assigned_vm: NA`" (a breaking UAC enum change
+  with fleet-wide consumers); todo 2 is gated on that ruling.

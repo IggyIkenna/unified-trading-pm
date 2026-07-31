@@ -7,7 +7,7 @@ summary: >-
   archival ritual once the source plan is genuinely done (its own remaining `[OPERATOR]` judgment call notwithstanding —
   archive once the 3 dispatched items are done and either the 4th is separately resolved or this plan's scope is
   re-split).
-status: draft
+status: active
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]

@@ -293,28 +293,13 @@ parallel-safe.
       `canonical-migration-prediction-20260629-053038` rc=0 (500,128 objects, processed_candles/by_date); IS v9
       migration done; enumerate seed 9,120 rows (EXPECTED_PRE_VENUE_LAUNCH); IS catalogue 2,486,092 rows monotonic_ok
       (current — no write needed). ✅ COMPLETE.
-- [ ] [DATA] P0. **slot 6 (TradFi) — G4 `--apply`** (databento/massive; daily listing). Repos: as above. **🟢 CF-11
-      CLOSED + DRY-RUN-GREEN (slot-6, 2026-06-08)** — the `databento.py:826` (+ L802) ZERO-signal swallow re-raises →
-      `attempted_failed` ON LDR (instruments-service@f7744fbf + @c0f2f39c, re-verified
-      `git show origin/live-defi-rollout`; the prior "🔴 GATED" was stale — keyed off `bd1456aa` read as not-on-LDR, its
-      content re-SHA'd as f7744fbf). Migrator + rebuild `--dry-run` clean on real-prod GCS (recent 984/0-err; old-tail
-      `category=`→`asset_group=` T-OLD fix proven); Era-B count=0; rollback snapshot present. **APPLY-READY — REGRESSION
-      RISK: NONE** (tradfi plan ①–⑫). cefi already closed (`e2e008f0`); source-provenance write-path shipped (#4
-      non-block). Operator fires `--apply` (`--also-legacy` per R1). — **🔴 BLOCKED 2026-06-29**: VM
-      `canonical-migration-tradfi-20260629-053023` launched at 05:53 UTC; log stalled at 06:02 (SSL `UNEXPECTED_EOF` +
-      connection-pool-full warnings); no EXIT_STATUS written; ~37k/3.8M processed_candles migrated (~1%); serial console
-      shows continuous memory pressure from 06:12–07:49+ (OOM-kill suspected). VM still RUNNING but Python process dead.
-      **OPERATOR ACTION REQUIRED**: restart TradFi migration (the migrator is idempotent — already-copied objects skip;
-      suggest lower concurrency or larger VM to avoid OOM). IS v9 migration done; enumerate seed + IS catalogue NOT YET
-      RUN (awaiting MTDS migration success). **NOTE 2026-07-12 (doc-reconciliation, plan-reconciliation finding 128 —
-      `plans/active/issues/plan_reconciliation_operator_decisions_2026_07_11.md` §A2):** this checkbox's body above is
-      frozen at the 2026-06-29 OOM state and is STALE — the TradFi MTDS raw-tick v9 `--apply` this checkbox names is now
-      DONE (2020-2026, 7 VMs, exit_code=0 fatal=0, completed 2026-07-06; GCS re-verified 2026-07-12 — see the updated
-      plan banner above). Checkbox is left UNFLIPPED here because this line's own literal criterion bundles more than
-      the apply (its text above still reads "enumerate seed + IS catalogue NOT YET RUN") — the current, authoritative
-      status of every post-apply sub-part (manifest rebuild, enumerate-seed, IS catalogue, CF-audit, RESUME runbook) is
-      tracked in `tradfi_v9_stage1_finish_2026_07_06.md` + `instruments_completion_tracker_2026_07_06.md`; defer to
-      those trackers rather than this frozen note.
+- [x] ✅ **DONE (na-eligibility-audit 2026-07-31)** — [DATA] P0, was: slot 6 (TradFi) G4 `--apply` (blocked
+      2026-06-29 by an OOM'd migration VM, frozen state noted 2026-07-12 as stale). The TradFi MTDS raw-tick v9
+      `--apply` this checkbox named is DONE (2020-2026, 7 VMs, exit_code=0 fatal=0, completed 2026-07-06, GCS
+      re-verified 2026-07-12); every post-apply sub-part (manifest rebuild, enumerate-seed, IS catalogue, CF-audit) is
+      independently confirmed complete in `plans/archive/2026_07/tradfi_v9_stage1_finish_2026_07_06.md` (`status:
+      resolved`, all todos `[x]`) and reconciled against `instruments_completion_tracker_2026_07_06.md` Stage 1
+      (2026-07-28). Nothing left for this checkbox to gate.
 - [x] ✅ [CODE] P1. **slot 7 (cross-cutting) — audit-criteria automation DONE** (Tier-2 + Tier-3 + cron all shipped; see
       the § "Cross-cutting audit verdict (slot-7)" in
       `/plans/archive/2026_07/master_data_canonicalisation_migration_catalogue_history_2026_07_24.md` — extracted
@@ -460,7 +445,9 @@ parallel-safe.
       `cefi-batch-live.md` §7, `replay-subsystem.md` SUPERSEDED banner, `availability-manifest-and-data-status.md`
       live-taxonomy reconcile) — ratified-with-gated-tranche named (`M1-BREAKING`). slot-7→slot-4. Repo:
       unified-trading-pm.
-- [ ] [DATA] P0. **R8-sports/pred gates** (sports portions ✅ DONE 2026-06-11; prediction regen remains):
+- [x] ✅ **DONE (na-eligibility-audit 2026-07-31)** — [DATA] P0. **R8-sports/pred gates**: parent left unflipped
+      while all 3 of its own sub-bullets below were already `[x]` (sports portions DONE 2026-06-11; prediction regen
+      DONE 2026-06-17, per the sub-bullets' own text — exactly the "prediction regen remains" this line named):
   - [x] ✅ sports-specific orphan sweep (candidate_parquet_paths-driven) built + run → characterize/backfill to **E==0 +
         unknown_prefixes==0 on BOTH sports buckets (2026-06-11 ~16:12Z)** — `migration_orphan_sweep_sports.py` +
         `backfill_orphan_class_e_sports.py`, instruments-service@94ea099 + @37793dd, 38 tests. odds: E 20→0 (smoke-probe
@@ -997,3 +984,10 @@ Two genuine hits, both already carry a named successor inline:
    successor: THIS item; gated on operator review of the 190M index-size blow-up)." Self-named — the successor is this
    same plan's own open `- [ ]` [DATA] P2 todo; no separate plan is needed since it remains an active, tracked todo
    within this coordinator awaiting operator sign-off on the index-size trade-off.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-31** (tranche=cross-cutting, dispatch agt-845699): KEEP-NA, stale items — 2 of 6 open
+  checkboxes closed with citation (TradFi G4 apply DONE, R8-sports/pred parent DONE — see inline markers above). Doc
+  stays NA for its other 4 items (slot-7 post-apply cleanup xref, WAVE 5 live-side gate, R5-fix-7 re-probe, G1-ENUM
+  quantify-first audit).

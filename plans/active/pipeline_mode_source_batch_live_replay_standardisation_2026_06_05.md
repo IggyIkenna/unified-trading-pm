@@ -958,3 +958,11 @@ design fix) are tracked here as the owning doc and ALSO surfaced (as a pointer, 
 same live status. The 2 CICD todos + the sports test-hermeticity followup that were also cross-cutting-listed there have
 been closed/rehomed here (see below) — that cross-reference entry is stale on those 3 items specifically, not on
 M6/M7/T+1/M8.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-31** (tranche=cross-cutting, dispatch agt-845699): KEEP-NA, valid — P0 foundation/gate
+  plan, `locked_by: live-defi-rollout` (real, current), own banner "KEPT STANDALONE per operator ruling 2026-07-13,
+  in-flight". All 7 open items are substantial undecided cross-repo design/build work (M6/M7 unbuilt features, T+1
+  gated-next-tranche, M8 4-repo wiring, DOCS audit scope not yet dispatch-scoped, an explicit open dedup-key design
+  fork) — none is a bounded fact-check mis-defaulted to NA.

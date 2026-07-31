@@ -6,7 +6,7 @@ summary: >-
   na-eligibility-audit RECLASSIFY (NA -> planning, partial: 7 of 14 open todos). Reconciles the 7 dispatched todos'
   evidence, re-verifies the 5 KEEP-NA-STALE citations still resolve once cross_cutting_satellite_ao_dispatch_batch1's
   own residual todo lands, and runs the 6-step archival ritual once the source plan is genuinely done.
-status: draft
+status: active
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]

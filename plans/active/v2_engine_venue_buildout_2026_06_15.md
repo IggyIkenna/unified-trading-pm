@@ -227,7 +227,9 @@ matrix-flip; if no, honest `not_available` + a single shared blocker todo for th
     `VolTermStructureSlopeEngine` (`vol_trading/term_structure_slope.py`): directional calendar on `iv_slope_1m_3m` vs a
     reference — steeper than ref → bet flatten (BUY near / SELL far); flatter → bet steepen (inverse). Leg tests pin the
     slope-view direction + reference-feature override. **NOT registered** + matrix UNCHANGED. Tardis to backtest.
-- [ ] [SCRIPT] P2. **→ SPLIT to
+- [ ] [SCRIPT] P2. **na-eligibility-audit 2026-07-31: citation VERIFIED accurate** (`vol_dvol_backtestable_engines_2026_07_13.md`
+      is genuinely `status: active`, `assigned_vm: planning`) — real work not yet done, correctly tracked there, left
+      open here, not closed. **→ SPLIT to
       [`vol_dvol_backtestable_engines_2026_07_13.md`](vol_dvol_backtestable_engines_2026_07_13.md) 2026-07-13,
       dispatched to AO** (bundled with VOL_CARRY). Backtest+register work no longer tracked here. **VOL_ARB_RV_IV** —
       real engine SHIPPED (wave 2). Repo: strategy-service.
@@ -244,7 +246,7 @@ matrix-flip; if no, honest `not_available` + a single shared blocker todo for th
     - hedge) when `rv_intraday - iv_term_1w ≥ entry`; emit a re-hedge leg (`-delta`) when delta drifts past
       `rehedge_delta`; close (SELL back) when the edge collapses. Leg tests pin open/rehedge/no-rehedge/close. **NOT
       registered** + matrix UNCHANGED.
-- [ ] [SCRIPT] P3. **→ SPLIT to
+- [ ] [SCRIPT] P3. **na-eligibility-audit 2026-07-31: same verified citation as VOL_ARB_RV_IV above.** **→ SPLIT to
       [`vol_dvol_backtestable_engines_2026_07_13.md`](vol_dvol_backtestable_engines_2026_07_13.md) 2026-07-13,
       dispatched to AO** (bundled with VOL_ARB_RV_IV — both are DVOL-index-backtestable, don't need Tardis).
       Backtest+register work no longer tracked here. **VOL_CARRY** — real engine SHIPPED (template wave).
@@ -512,6 +514,16 @@ named operator credential ask. These are the engines' true predecessors.
 
 (loop handoff lands here — never a separate _\_HANDOFF.md / _\_SUMMARY.md)
 
+- **na-eligibility-audit 2026-07-31** (tranche=cross-cutting, dispatch agt-845699): KEEP-NA, stale items — 10 of 36
+  open checkboxes closed with citation (3 child plans now `status: complete`: `uac_venue_registry_completion`,
+  `fleet_hygiene_crypto_ghsa_mtds_baseline`, `vol_surface_feature_exposure` — 6/2/2 lines respectively); 2 more
+  (VOL_ARB_RV_IV/VOL_CARRY) verified as accurately citing a genuinely-active `vol_dvol_backtestable_engines_2026_07_13.md`
+  (`assigned_vm: planning`) — left open, not closed, real work not yet done; 1 more (deeper-L2-book capture) found to
+  cite a STALE "dispatched to AO" claim (`l2_book_microstructure_capture_2026_07_13.md` is itself `assigned_vm: NA`,
+  unresolved) — flagged inline, not closed, out of this run's scope. Remaining 26 open items are genuinely operator/
+  credential-gated (Tardis backtest-pending, BLOCKED-model-variant, Tier-3 design decisions) per this doc's own
+  2026-07-13 triage — doc correctly stays NA overall.
+
 ### 2026-07-13 — Split into 5 AO-dispatched child plans; parent stays NA/human for the remainder
 
 Reviewed remaining todos: 30 real items + 1 decommissioned across 3 tiers — 13 fully unblocked, 15 blocked on Tardis
@@ -628,7 +640,10 @@ backtests need historical L5 book replay; no backfill authorised → registering
 
 ## Follow-ups discovered during Phase D / template wave (2026-06-15)
 
-- [ ] [REGISTRY] P2. **→ SPLIT to
+- [x] ✅ **DONE-ELSEWHERE (na-eligibility-audit 2026-07-31)** — child plan `uac_venue_registry_completion_2026_07_13.md`
+      is now `status: complete` (2026-07-15 plan-reconcile: all todos `[x]`, evidence spot-checked); every sub-item
+      below is resolved there. Original scope preserved below for audit-trail.
+- [x] [REGISTRY-CLOSED] P2. **→ SPLIT to
       [`uac_venue_registry_completion_2026_07_13.md`](uac_venue_registry_completion_2026_07_13.md) 2026-07-13,
       dispatched to AO (`assigned_vm: planning`).** Work no longer tracked here — see that plan for live status.
       Original scope retained below for history only. ~~Add FX/BITFINEX/BITGET/KRAKEN to `VENUE_CATEGORY_MAP` +
@@ -638,7 +653,7 @@ backtests need historical L5 book replay; no backfill authorised → registering
       mix of real gaps, narrower-than-claimed gaps, and one outright false positive. Confirmed against
       `unified-api-contracts/unified_api_contracts/registry/venue_constants.py` + `venue-coverage-report.md` +
       `capability-verdict-matrix.json` directly (not grep-0):
-  - [ ] **FX** — REAL gap, confirmed as originally claimed. Execution adapter exists
+  - [x] **FX** — REAL gap, confirmed as originally claimed. Execution adapter exists
         (`execution-service/.../adapters/fx_adapter.py`, IBKR OTC forex via `FXAdapter`, routed in `factory.py:292` as a
         "composite" TradFi venue), but `FX` is absent from `KNOWN_VENUE_TOKENS`, `VENUE_CATEGORY_MAP`, AND
         `capability-verdict-matrix.json` (0 rows) — `venue-coverage-report.md:68` confirms
@@ -652,7 +667,7 @@ backtests need historical L5 book replay; no backfill authorised → registering
         hardcoded to Yahoo in MTDS `umi_tick_provider.py`, not looked up via this key). **Fix this key to the correct
         vendor (or a dedicated `yahoo_finance` key) as part of the same registry pass** — don't propagate the stale
         `databento` tag when adding FX's `VENUE_CATEGORY_MAP` entry.
-  - [ ] **BITFINEX** (bare + `BITFINEX-SPOT` + `BITFINEX-FUTURES`) — REAL gap, worst-off of the 3 CEX siblings. NOT a
+  - [x] **BITFINEX** (bare + `BITFINEX-SPOT` + `BITFINEX-FUTURES`) — REAL gap, worst-off of the 3 CEX siblings. NOT a
         naming mismatch (tested the "bare absent, `-derivatives` variant present" hypothesis directly — `bitfinex` is
         missing from `VENUE_CATEGORY_MAP`/`VENUE_CAPABILITIES` in EVERY form, bare and suffixed alike,
         `venue_constants.py:326-368,554-590`). Fully wired everywhere else (adapter `bitfinex_native.py`, live WS
@@ -662,12 +677,12 @@ backtests need historical L5 book replay; no backfill authorised → registering
         appear in that report. Root cause traced to a stale 2026-05-21 canary note (`orphan-decisions.yaml:51`: "no
         production adapter in any service repo") that predates the actual adapter (shipped 2026-06-11) — the premise was
         fixed in code, the registry entries never caught up. Needs category-map entry + leg eligibility for BOTH legs.
-  - [ ] **BITGET-SPOT / BITGET-FUTURES** — REAL but NARROWER gap than bitfinex. Missing from `VENUE_CATEGORY_MAP`/
+  - [x] **BITGET-SPOT / BITGET-FUTURES** — REAL but NARROWER gap than bitfinex. Missing from `VENUE_CATEGORY_MAP`/
         `VENUE_CAPABILITIES` only (`venue_constants.py:326-367,554-590`) — but IS already leg-eligible
         (`capability-verdict-matrix.json` 44 `"venue":"bitget"` rows; `venue-coverage-report.md:42-44` shows
         `leg_eligible=yes`, `WIRED(22)` bucket). Adapter (`bitget_native.py`) + adapter-key map fully wired. Needs ONLY
         the category-map entry, not leg eligibility.
-  - [ ] **KRAKEN-SPOT / KRAKEN-FUTURES** — same shape as bitget: missing ONLY from `VENUE_CATEGORY_MAP`/
+  - [x] **KRAKEN-SPOT / KRAKEN-FUTURES** — same shape as bitget: missing ONLY from `VENUE_CATEGORY_MAP`/
         `VENUE_CAPABILITIES` (`venue_constants.py:326-368,554-589`); already leg-eligible
         (`capability-verdict-matrix.json:23809` `venue_buildable:true`, 44 rows total), full execution adapter
         (`kraken_rest_adapter.py`). Needs ONLY the category-map entry.
@@ -682,7 +697,7 @@ backtests need historical L5 book replay; no backfill authorised → registering
         `unified_api_contracts/internal/market_category.py` (a bare `MarketCategory` enum with zero venue tokens — wrong
         file) instead of the real registry. Real residual gap confirmed by direct grep: `archetype_leg_spec_seeds.py`
         has 0 `nyse` hits — leg eligibility only, tracked below.
-  - [ ] **Archetype-leg eligibility follow-on** (separate from the category-map work above): wire FX + BITFINEX-SPOT +
+  - [x] **Archetype-leg eligibility follow-on** (separate from the category-map work above): wire FX + BITFINEX-SPOT +
         BITFINEX-FUTURES + NASDAQ + NYSE into `ARCHETYPE_LEG_STRUCTURES`/`eligible_venue_ids`
         (`internal/architecture_v2/archetype_leg_spec_seeds.py`) — confirmed 0 hits for all 5 today. BITGET/KRAKEN do
         NOT need this (already leg-eligible).
@@ -691,7 +706,10 @@ backtests need historical L5 book replay; no backfill authorised → registering
     2026-07-13; naming-mismatch verification completed 2026-07-13 (`wf_6df96698-5dc`, full evidence in that run's
     journal). This todo is now precisely scoped and buildable — no further audit needed before starting.
 
-- [ ] [SCRIPT] P2. **→ SPLIT to
+- [x] ✅ **DONE-ELSEWHERE (na-eligibility-audit 2026-07-31)** — child plan
+      `fleet_hygiene_crypto_ghsa_mtds_baseline_2026_07_13.md` is now `status: complete` (2026-07-15 plan-reconcile: all
+      todos `[x]`, evidence spot-checked). Original scope preserved below.
+- [x] [SCRIPT-CLOSED] P2. **→ SPLIT to
       [`fleet_hygiene_crypto_ghsa_mtds_baseline_2026_07_13.md`](fleet_hygiene_crypto_ghsa_mtds_baseline_2026_07_13.md)
       2026-07-13, dispatched to AO** (bundled with the baseline ratchet below). **Bump cryptography fleet-wide off the
       GHSA-537c-gmf6-5ccf line + drop its --ignore-vuln** — the 2026-06-15 advisory flagged cryptography 46.0.7
@@ -699,12 +717,15 @@ backtests need historical L5 book replay; no backfill authorised → registering
       per-repo `uv lock` regen, not a permanent ignore. The ignore (PM base-service.sh + base-library.sh, PM@e6c7b52c9)
       is the transient speed>security unblock. Repos: fleet-wide (all repos declaring cryptography transitively) +
       remove the GHSA ignore from both base-\*.sh once bumped.
-- [ ] [SCRIPT] P3. **→ SPLIT to
+- [x] [SCRIPT-CLOSED] P3. **→ SPLIT to
       [`fleet_hygiene_crypto_ghsa_mtds_baseline_2026_07_13.md`](fleet_hygiene_crypto_ghsa_mtds_baseline_2026_07_13.md)
       2026-07-13, dispatched to AO.** **Ratchet DOWN the MTDS DTZ + fallback-import baselines** — after the DTZ noqa
       fix, MTDS is below both `ruff_rule_ratchet_baseline.yaml` (32) and `no_fallback_imports_baseline.yaml` (3); re-run
       `--update-baseline` for market-tick-data-service. Repo: unified-trading-pm.
-- [ ] [SCRIPT] P2. **→ SPLIT to
+- [x] ✅ **DONE-ELSEWHERE (na-eligibility-audit 2026-07-31)** — child plan `vol_surface_feature_exposure_2026_07_13.md`
+      is now `status: complete` (2026-07-15 plan-reconcile: all todos `[x]`, evidence spot-checked). Original scope
+      preserved below (both items).
+- [x] [SCRIPT-CLOSED] P2. **→ SPLIT to
       [`vol_surface_feature_exposure_2026_07_13.md`](vol_surface_feature_exposure_2026_07_13.md) 2026-07-13, dispatched
       to AO** (bundled with the multi-underlying vector below). **Expose a per-strike IV-by-moneyness surface feature
       (vol-surface grid)** — the features-service vol feed exposes the surface as FLAT scalar buckets (`iv_atm`,
@@ -713,7 +734,7 @@ backtests need historical L5 book replay; no backfill authorised → registering
       configured leg instruments; a denser strike ladder (a finer replication strip, arbitrary-strike condors) needs a
       per-strike surface feature. Provenance: `VOL_*` wave 2 (strategy-service@1a058e88). Repos: features-service
       (feature) + strategy-service (consume).
-- [ ] [SCRIPT] P2. **→ SPLIT to
+- [x] [SCRIPT-CLOSED] P2. **→ SPLIT to
       [`vol_surface_feature_exposure_2026_07_13.md`](vol_surface_feature_exposure_2026_07_13.md) 2026-07-13, dispatched
       to AO.** **Expose a multi-underlying vol-surface feature vector (index + components / two assets)** — the flat
       `dict[str,float]` `on_tick` feed exposes ONE surface per tick. `VOL_DISPERSION` runs a degraded single-surface
@@ -735,7 +756,10 @@ backtests need historical L5 book replay; no backfill authorised → registering
       **BLOCKED-model-variant** for any live/backtest signal. Neither fabricates a direction from the book (honest
       absence → symmetric quote). Provenance: MM wave (Phase E1, strategy-service@257df34a). Repo: ml-service (model
       variant) → strategy-service (consume).
-- [ ] [SCRIPT] P2. **→ SPLIT to
+- [ ] [SCRIPT] P2. **na-eligibility-audit 2026-07-31 note: NOT closed here** — this line's own "dispatched to AO" claim
+      is stale; `l2_book_microstructure_capture_2026_07_13.md` is `status: active` but itself `assigned_vm: NA`
+      (double-tracked, unresolved anywhere). Left open here; flag for that doc's own next audit rather than this one.
+      **→ SPLIT to
       [`l2_book_microstructure_capture_2026_07_13.md`](l2_book_microstructure_capture_2026_07_13.md) 2026-07-13,
       dispatched to AO.** Work no longer tracked here. **Capture a deeper-than-L5 / full-L2 order book to populate
       `queue_position_*` (for MARKET_MAKING_QUEUE_MICROSTRUCTURE)** — `MarketMakingQueueMicrostructureEngine`

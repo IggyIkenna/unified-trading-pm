@@ -463,6 +463,11 @@ exclusions remain in this loop's termination criteria. [SYNCED 2026-07-14, findi
 
 ## Progress Log
 
+- **na-eligibility-audit 2026-07-31** (tranche=cross-cutting, dispatch agt-845699): KEEP-NA, stale items — 2 of 16
+  open checkboxes closed with citation (Massive bar-edge item MOOT, cf-manifest-audit item RESOLVED — see inline
+  markers above); doc stays NA for its other 14 items (mix of operator/credential-gated + genuinely still-open
+  backfill/code work).
+
 ### 2026-07-14 (bucket-decommission follow-through — `perp-funding-test-central-element-323112` DELETED, re-verified live)
 
 > **Moved to `data_completion_defi_2026_07_15.md` § Progress Log (2026-07-24 fold-in, verbatim, per-DeFi-lane; plan
@@ -898,12 +903,10 @@ formula.) (v9 `schema_version` uniformity is a SEPARATE P3 axis, HARD-gated on a
 
 ### From `bar_edge_left_vs_right_remediation_2026_06_08.md` (archived 2026-07-13 -- Bar-edge (open/left vs close/right) systemic remediation)
 
-- [ ] [CODE] P1. Massive: `tradfi/massive_tradfi_rest_connector.py:490` (`t` open) — **coordinate with
-      `tradfi_massive_dual_source_2026_05_28.md` Phase 4b** (Massive #5 already requires interval-aware right-edge
-      conversion; do not double-fix — converge there). Massive raw must match Databento raw's representation so MDPS
-      normalizes both identically. ALSO fold in: batch rows pre-stamp `available_at=now(UTC)` (`:472/:484/:503`) which
-      the writer persists (orchestrator stamps only when the column is absent) — must become `t_close`-anchored.
-      **(MIGRATED FROM: `bar_edge_left_vs_right_remediation_2026_06_08.md`, 2026-07-13 per MTDS consolidation ruling.)**
+- [x] ✅ **MOOT (na-eligibility-audit 2026-07-31)** — [CODE] P1, was: Massive bar-edge `t`-open coordinate-fix
+      (`tradfi/massive_tradfi_rest_connector.py:490`). Massive fully REMOVED as tradfi source (op. ruling
+      2026-07-19/21, `uac@a2beed46`); `tradfi_massive_dual_source_2026_05_28.md` now `status: superseded` — no
+      connector remains for this fix to apply to.
 
 ### 2026-07-13 (defi + cefi lanes, slot-3) — legacy bucket terraform-drift fix, defi dtype fix, cefi CF-1..CF-14 audit
 
@@ -925,17 +928,10 @@ above):**
       This is a physical-relabel/backfill migration pass, not a blind same-session fix — parking it here as an explicit
       todo per the discoveries-as-todos rule rather than only mentioning it in a summary. Needs operator confirmation on
       scope/priority before dispatch. parent_epic: mtds_mdps_master.
-- [ ] [INFRA] P1. **Cross-cutting — scheduled `uts-prod-cf-manifest-audit` Cloud Run Job has NEVER produced a successful
-      run in this window** (asia-northeast1, meant to run this exact CF-1..CF-14 audit daily 06:00 UTC for ALL 5
-      asset_groups automatically). Confirmed failing every day 2026-07-04→2026-07-13 ("Application exec likely failed" /
-      exit 1 most days; today specifically OOM'd at its 4Gi container limit on `--all-ags`).
-      `gs://cf-manifest-audit-central-element-323112/cf_audit/` has 0 objects — the automated pipeline that is supposed
-      to produce this daily for every asset_group (cefi/defi/tradfi/sports/prediction, all equally affected) has never
-      succeeded, which is WHY this session's cefi audit (and every other AG's CF-audit numbers cited this session) had
-      to be run manually. Filed as its own tracked issue (not fixed here — this is bigger than cefi and needs a
-      dedicated infra pass): `plans/archive/issues/cf_manifest_audit_scheduled_job_daily_failure_2026_07_13.md`. Likely
-      fix: bump the job's memory limit above 4Gi, or split `--all-ags` into 5 per-asset_group Cloud Run executions.
-      parent_epic: mtds_mdps_master.
+- [x] ✅ **RESOLVED (na-eligibility-audit 2026-07-31)** — [INFRA] P1, was: scheduled `uts-prod-cf-manifest-audit`
+      Cloud Run Job never producing a successful run (OOM at 4Gi limit). Linked issue
+      `plans/archive/issues/cf_manifest_audit_scheduled_job_daily_failure_2026_07_13.md` is `status: resolved`, job
+      now runs to completion daily. parent_epic: mtds_mdps_master.
 
 ### 2026-07-14 (defi + infra lanes, slot-3) — features-onchain-defi / config-store / ml-models-store / dex-pools-test legacy bucket migrate-verify-delete sessions
 
