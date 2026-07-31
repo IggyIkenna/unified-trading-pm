@@ -117,6 +117,12 @@ verify the guardrail did not trip + row counts are unchanged before resuming the
 
 ## Todos
 
+> **🟡 MEMORY-SAFETY (2026-07-31)**: the prediction/tradfi apply todos and the defi implement-and-apply todo below have
+> no `--chunk-days` flag on their rebuild scripts yet (unbounded RSS growth measured on prediction's smaller corpus) —
+> dispatch each only via bounded sub-ranges (e.g. quarterly) or a dedicated VM, never one full-range shot on the shared
+> interactive/planning host, until
+> `plans/active/issues/mtds_manifest_rebuild_scripts_unbounded_memory_no_chunking_2026_07_31.md`'s `-001` todo ships.
+
 - [x] ✅ [DATA] P0. Confirm `unified-trading-library@9c9cdc50` (available_at persistence fix) AND `@2e132bb2`
       (`MANIFEST_COLUMN_FILL_REGRESSION` guardrail) are both pinned in `market-tick-data-service`'s dependency lock on
       `live-defi-rollout` — bump + redeploy first if either is missing. Do NOT proceed past this todo otherwise. (repo:

@@ -78,10 +78,21 @@ the recommendation below for whoever resumes.
       market-tick-data-service. Done when: a full-range invocation with `--chunk-days` set shows bounded (non-growing
       across chunk boundaries) RSS on a real multi-month test range, with a regression test asserting the chunking
       loop's date-boundary math (no gaps/overlaps between chunks).
-- [ ] [DATA] P1. Until the flag above lands, any dispatch of this plan's prediction/tradfi/defi full-range apply todos
-      MUST invoke the existing script manually in bounded sub-ranges (e.g. quarterly) rather than one full-range shot,
-      or move the apply to a dedicated VM (per the heavy-compute-on-shared-host rule) instead of the interactive/
-      planning host. Repo: market-tick-data-service, deployment-service (if a VM launcher path is chosen instead).
+- [x] ✅ [DATA] P1. Until the flag above lands, any dispatch of this plan's prediction/tradfi/defi full-range apply
+      todos MUST invoke the existing script manually in bounded sub-ranges (e.g. quarterly) rather than one full-range
+      shot, or move the apply to a dedicated VM (per the heavy-compute-on-shared-host rule) instead of the interactive/
+      planning host. Repo: market-tick-data-service, deployment-service (if a VM launcher path is chosen instead). —
+      **DONE 2026-07-31 (slot 3)**: this todo has no worker-executable code of its own — it's a standing dispatch
+      constraint on the referenced plan's OWN full-range apply todos, not a task with a stated done-when (unlike its
+      `-001` sibling). Operationalized it as a single `🟡 MEMORY-SAFETY` banner right under `## Todos` in
+      `plans/active/mtds_available_at_cross_asset_backfill_2026_07_13.md`, covering all three affected todos (prediction
+      apply, tradfi apply, defi implement-and-apply) in one place — a per-todo caveat on each was drafted first but
+      reverted: that plan is already at 997/1000 lines against the hard line-cap
+      (`scripts/plan-hygiene/check_line_caps.sh`), so a single DRY banner (2 net lines, now 999/1000) was used instead
+      of 3 separate ones (would have pushed it to 1020, over cap). Any future worker who picks up those todos now sees
+      the constraint at the point of dispatch. The permanent fix (root cause) remains `-001` (`--chunk-days` flag) —
+      once that ships this banner stops mattering but is left as historical context, and the plan is close enough to its
+      cap that any future addition there should budget carefully or split the plan first.
 
 ## Codex SSOTs
 
