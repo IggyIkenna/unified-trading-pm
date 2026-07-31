@@ -248,8 +248,15 @@ file-by-file.
       `test_data_query_service.py`, `test_route_data_status_live.py`); basedpyright's 2 remaining errors confirmed
       pre-existing (byte-identical against origin, same 2 lines before this change); ruff clean; full `quality-gates.sh`
       green (187s). Repo: deployment-api.
-- [ ] [SCRIPT] P2. Decompose the remaining function-size-only violation in `deployment_api/services/data_status/cli.py`.
-      Remove its exclude entry once compliant; re-run `quality-gates.sh` to confirm no regression.
+- [x] ✅ [SCRIPT] P2. **DONE 2026-07-31 (slot-2, infra craft).** Decomposed 4 oversized methods in
+      `deployment_api/services/data_status/cli.py`. `deployment-api@f84a8c3`: extracted `_append_cli_filter_flags` from
+      `_build_cli_cmd` (was 59L), `_execute_cli_subprocess` from `run_data_status_cli` (was 58L),
+      `_last_updated_for_category` from `get_last_updated_info` (was 60L), `_build_completeness_validation` +
+      `_extract_venues_list` from `validate_data_completeness` (was 87L) — pure code motion, no logic changes.
+      `FUNCTION_SIZE_EXTRA_EXCLUDES` entry removed — gate passes natively. Verified: 249 targeted tests green
+      (`test_data_status_service.py`, `test_route_data_status_live.py`,
+      `test_data_status_beta_rollup_and_cli_config.py`, `test_data_status_helpers.py`), basedpyright clean, ruff clean,
+      full `quality-gates.sh` green (124s). Repo: deployment-api.
 - [ ] [SCRIPT] P2. Decompose the remaining function-size-only violation in
       `deployment_api/services/data_status/coverage.py`. Remove its exclude entry once compliant; re-run
       `quality-gates.sh` to confirm no regression.
