@@ -178,16 +178,15 @@ sports-tranche-owned).
       todo stays marked `[~]` in-progress (not `[x]`) to reflect that fuller bar accurately. **Source**:
       `plans/active/issues/prediction_lifecycle_prefetch_gate_and_resolution_day_catalogue_2026_07_14.md`.
 
-- [ ] [DIAG] P1. **Confirm the 4-shard prediction re-backfill (launched above, 2026-07-30) reaches terminal completion
-      and re-run the VERIFY.** Check all 4 VMs (`mtds-prediction-polymarket-20260730-{161607,161641,161707,161832}`)
-      reach `STOPPED` (SPOT-terminated-on-completion) with 0 `attempted_failed` pileup — a preempted shard auto-resumes
-      via the PROGRESS-checkpoint contract, so re-check rather than assume a `TERMINATED` status means done; if any
-      shard is genuinely stuck (no heartbeat progress for hours), diagnose before relaunching. Once all 4 are confirmed
-      complete, re-run `prediction_lifecycle_prefetch_gate_and_resolution_day_catalogue_2026_07_14.md`'s own P2 VERIFY
-      methodology (`read_capture_status_counts`, manifest-only, no GCS walk) at full-corpus scale
-      (2025-03-14→2026-06-15) and append the before/after numbers there. **Done when**: all 4 shards confirmed STOPPED
-      with the VERIFY numbers recorded, and both this todo and the source issue doc's `[INFRA] P1` item are flipped to
-      `[x]` citing the numbers.
+- [x] ✅ [DIAG] P1. **Confirm the 4-shard prediction re-backfill (launched above, 2026-07-30) reaches terminal
+      completion and re-run the VERIFY.** — `unified-trading-pm@<pending>`. All 4 original shards terminal (`...161607`/
+      `...161641`/`...161832` self-deleted `EXIT_STATUS=0`; `...161707` PREEMPTED, relaunched by slot-3 as `...220658`
+      for the missing `2026-04-02→2026-04-27` tail, confirmed terminal `EXIT_STATUS=0` this dispatch — no
+      `attempted_failed` pileup anywhere). Full-corpus VERIFY re-run (`read_capture_status_counts`, bucket
+      `market-data-tick-pred-prd-central-element-323112`, `2025-03-14→2026-06-15`):
+      `captured=270665,     empty_confirmed=60139, attempted_failed=0, expected_unattempted_pending_fetch=1032, out_of_window=29021`
+      — 81.8% captured of attempted, zero retry-pileup. Full numbers + methodology in the source issue doc's Progress
+      Log. Both this todo and the source issue doc's `[INFRA] P1` item flipped to `[x]` in the same turn.
 
 - [ ] [SCRIPT] P1. **Kalshi execution credential reshape + live paper-order verify.** Todo 1: read the existing
       `kalshi-api-credentials` bundled JSON secret's fields and provision two new Secret Manager secrets

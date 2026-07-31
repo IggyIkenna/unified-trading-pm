@@ -115,24 +115,57 @@ locked_since:
 - [x] ✅ [VERIFY] P2. Post-fix: re-measure prediction attempted/captured trajectory on a sampled window; append
       before/after counts here and to the coverage docs if the model description changes. — `unified-trading-pm` (this
       doc's Progress Log below). Verdict: **improvement CONFIRMED, no model-description change needed.**
-- [~] [INFRA] P1. **IN PROGRESS 2026-07-30 — launched, healthy, not yet complete (see Progress Log).** RULED 2026-07-28
-  — GO. Retagged away from its prior operator-decision gate. Applying the operator's general theme ("full backfills,
-  full migrations... as long as an item isn't superseded by more recent work, DO IT"; "cost under $100 is not a
-  concern"; "do not allow anything to partially complete"): launch the historical prediction re-backfill under the
-  widened catalogue, **SHARDED ACROSS SEVERAL SPOT VMs** (the ~2-3-day option, not the ~9-11-day single-process option)
-  — cost estimate in `## Re-backfill cost quantification` below (≈16.1M additional (conditionId × day) fetch attempts
-  over 2025-03-14→2026-07-14; expected NEW captured cells order 10^6). This is a real, quantified, closeable
-  data-correctness gap (the historical corpus is resolution-day-scoped, not active-window-scoped, per this issue's own
-  Finding 2) and nothing since 2026-07-14 has superseded or replaced the need for it. **Full-completion mandate for
-  whoever dispatches this**: cover the ENTIRE 2025-03-14→today range in one pass — do not stop at a bounded recent
-  window and call it done; launch via a sanctioned VM launcher (grep `deployment-service/scripts/vm/`'s
-  `VM_PREFIX_TO_BUCKET` registry first, never hand-roll a name), default `--provisioning-model=SPOT` per the backfill-VM
-  HARD RULE, wire the PROGRESS-checkpoint contract so a preemption resumes from measured progress rather than replaying
-  `START_DATE`, and re-run this issue's own P2 VERIFY methodology (`read_capture_status_counts`, manifest-only, no GCS
-  walk) once the backfill completes to confirm the captured-fraction improvement holds at full historical-corpus scale,
-  not just the sampled live-window scale already measured above.
+- [x] ✅ [INFRA] P1. **COMPLETE 2026-07-30 — all shards terminal, full-corpus VERIFY re-run (see Progress Log).** RULED
+      2026-07-28 — GO. Retagged away from its prior operator-decision gate. Applying the operator's general theme ("full
+      backfills, full migrations... as long as an item isn't superseded by more recent work, DO IT"; "cost under $100 is
+      not a concern"; "do not allow anything to partially complete"): launch the historical prediction re-backfill under
+      the widened catalogue, **SHARDED ACROSS SEVERAL SPOT VMs** (the ~2-3-day option, not the ~9-11-day single-process
+      option) — cost estimate in `## Re-backfill cost quantification` below (≈16.1M additional (conditionId × day) fetch
+      attempts over 2025-03-14→2026-07-14; expected NEW captured cells order 10^6). This is a real, quantified,
+      closeable data-correctness gap (the historical corpus is resolution-day-scoped, not active-window-scoped, per this
+      issue's own Finding 2) and nothing since 2026-07-14 has superseded or replaced the need for it. **Full-completion
+      mandate for whoever dispatches this**: cover the ENTIRE 2025-03-14→today range in one pass — do not stop at a
+      bounded recent window and call it done; launch via a sanctioned VM launcher (grep
+      `deployment-service/scripts/vm/`'s `VM_PREFIX_TO_BUCKET` registry first, never hand-roll a name), default
+      `--provisioning-model=SPOT` per the backfill-VM HARD RULE, wire the PROGRESS-checkpoint contract so a preemption
+      resumes from measured progress rather than replaying `START_DATE`, and re-run this issue's own P2 VERIFY
+      methodology (`read_capture_status_counts`, manifest-only, no GCS walk) once the backfill completes to confirm the
+      captured-fraction improvement holds at full historical-corpus scale, not just the sampled live-window scale
+      already measured above.
 
 ## Progress log
+
+- **2026-07-30 (slot-11, data_engineering craft, dispatch `prediction_satellite_ao_dispatch_batch6-014`) — TERMINAL,
+  VERIFY RE-RUN, FLIPPED TO DONE.** Picked up from slot-3's handoff (all 3 original shards `...161607`/`...161641`/
+  `...161832` already confirmed `EXIT_STATUS=0`; the 4th, `...161707`, had been PREEMPTED mid-run and relaunched by
+  slot-3 as `mtds-prediction-polymarket-20260730-220658` for the missing tail `2026-04-02→2026-04-27`). Confirmed
+  `...220658` reached terminal state:
+  `gs://deployment-scripts-central-element-323112/vm-logs/mtds-prediction-polymarket-20260730-220658/EXIT_STATUS` = `0`;
+  `run.log` tail shows it processed through `date=2026-04-27` (its end date), wrote the final manifest batch, received
+  `SIGTERM`, and self-deleted cleanly (`VM_SHUTDOWN_ON_COMPLETION=true`) — no longer present in
+  `gcloud compute instances list`. All 5 VMs (4 original shards + 1 gap-filler relaunch) now terminal with
+  `EXIT_STATUS=0` and zero fire-and-forget/stuck cases.
+
+  Re-ran this issue's own P2 VERIFY methodology (`unified_trading_library.manifest_writer.read_capture_status_counts`,
+  single manifest-index read, no whole-corpus GCS walk) at full historical-corpus scale, bucket
+  `market-data-tick-pred-prd-central-element-323112`, `date_range= (2025-03-14, 2026-06-15)` (the full mandate range
+  covered by the 4 shards):
+
+  ```
+  CaptureStatusCounts(captured=270665, empty_confirmed=60139, attempted_failed=0,
+                       expected_unattempted_known_empty=0, expected_unattempted_pending_fetch=1032,
+                       out_of_window=29021)
+  ```
+
+  **captured ÷ (captured+empty_confirmed+attempted_failed) = 270,665 / 330,804 = 81.8%**, `attempted_failed=0` (no
+  retry-pileup from the backfill), `expected_unattempted_pending_fetch=1032` (small honest residual, not a defect). This
+  is the full-historical-corpus figure the earlier 2026-07-27 VERIFY (97.9% on a live-cron sampled window) could only
+  gesture at — this run is the actual backfilled-range measurement the fix was for. Not directly comparable to Finding
+  1's pre-fix "755,943 shards, 6.0% captured" figure (that number spans the WHOLE prediction panel across all venues
+  pre-fix, not this Polymarket-only 2025-03-14→2026-06-15 slice), so recorded as a standalone post-backfill measurement
+  rather than a false-precision before/after delta. Done-when bar met: all shards terminal + VERIFY numbers recorded.
+  Flipping this checkbox and the sibling `prediction_satellite_ao_dispatch_batch6_2026_07_29.md` todo to `[x]` in the
+  same turn.
 
 - **2026-07-30 (slot 4, infra, dispatch `prediction_satellite_ao_dispatch_batch6-004`) — LAUNCHED, IN PROGRESS, not
   complete.** Sharded across 4 concurrent SPOT VMs via
