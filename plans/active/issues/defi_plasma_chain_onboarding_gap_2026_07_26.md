@@ -121,6 +121,50 @@ attempting the full build here:
       above) before its `PROTOCOL_LAUNCH_DATES` entry can land — that's a prerequisite for `FLUID-PLASMA` specifically,
       not for `AAVE-PLASMA`. Repos: unified-api-contracts, market-tick-data-service.
 
+## 2026-07-31 partial progress (slot-3) — wiring done ((1)-(3)), live verification + phase flip still open ((4))
+
+Picked up this doc's own P3 todo fresh. Completed the three wiring sub-items, live-verified as shipped:
+
+- **(1) UAC `CHAIN_CONFIGS[9745]`** — added, with `reorg_depth=30`/`avg_block_time_s=1.0` (PlasmaBFT gives sub-second
+  block production + Bitcoin-anchored fast finality per live web search — matches the existing fast-finality-L2
+  convention already used for INK/WORLDCHAIN/UNICHAIN, not a slow-L1 value) and `native_gas_token="XPL"`. **Adjacent
+  finding fixed in the same commit**: `VENUE_CHAIN_MAP[AAVE_PLASMA]`/`[FLUID_PLASMA]` in `venue_constants.py` were still
+  mapped to the placeholder `"ethereum"` value from before real chain identity was resolved — corrected to `"plasma"`.
+  Shipped: `unified-api-contracts@fb792b7a`, verified on `origin/live-defi-rollout`, full `quality-gates.sh` green
+  (incl. the DeFi-address citation ratchet).
+- **(2) MTDS `_AAVE_V3_POOL_ADDRESSES`/`_AAVE_V3_DATA_PROVIDER_ADDRESSES["PLASMA"]`** — added, addresses **re-verified
+  live** via a fresh fetch of `bgd-labs/aave-address-book`'s `AaveV3Plasma.sol` (not trusted from this doc's earlier
+  transcription, per its own instruction): `POOL=0x925a2A7214Ed92428B5b1B090F80b25700095e12`,
+  `AAVE_PROTOCOL_DATA_PROVIDER=0xf2D6E38B407e31E7E7e4a16E6769728b76c7419F` — both byte-identical to the P2 scoping
+  section's transcription below, so that transcription was accurate. Confirmed (per the P2 note) this data-provider
+  address does NOT match the shared CREATE2 address used by ARBITRUM/OPTIMISM/POLYGON/AVALANCHE — documented inline.
+- **(3) `FluidAdapter`/`fluid_liquidity_resolver.py` chain="PLASMA" spot-check** — done. `fluid_liquidity_resolver.py`
+  needs no change (the `FLUID_LIQUIDITY_RESOLVER_ADDRESS` constant is already the same CREATE2 address across chains,
+  confirmed in the P2 section below). **`fluid_adapter.py` DID have an Ethereum-only hardcode this spot-check caught**:
+  `self.venue = "FLUID-ETHEREUM"` was a literal, unconditional on the `chain=` constructor arg — with Plasma capture
+  dispatched, every `FLUID-PLASMA` row would have been mislabeled `FLUID-ETHEREUM` (wrong venue on every downstream row:
+  instrument keys, error classification, manifest writes). Fixed to `self.venue = f"FLUID-{self.chain}"` (produces
+  `FLUID-PLASMA` for `chain="PLASMA"`, preserves `FLUID-ETHEREUM` for the existing default). The actual
+  `download_market_data()` RPC path (`_ensure_alchemy_client`, `BlockResolver(w3, chain=self.chain)`) was already
+  chain-aware — no other hardcoding found. Note: a SEPARATE, unrelated dead-code path in the same file, `_ensure_web3()`
+  / `self.web3`, DOES hardcode `eth-mainnet.g.alchemy.com` — left as-is because it has zero call sites anywhere in the
+  adapter (confirmed via grep — `_ensure_web3()` is defined but never invoked), so it cannot affect Plasma capture;
+  flagging here rather than silently leaving an unexplained hardcode in a reviewer's path. Shipped:
+  `market-tick-data-service@6bcc5154`, verified on `origin/live-defi-rollout`, full `quality-gates.sh` green.
+
+**(4) NOT done this session — genuinely needs a live run, not more code.** "Verify real rows land in the manifest and
+flip `defi_venues.py`'s phase from `pipeline` to `live`" requires actually dispatching a real MTDS `lending_indices`
+capture for `AAVE-PLASMA` against prod GCS/manifest and confirming rows land — this session's shell had no
+`GCP_PROJECT_ID`/`AWS_ACCOUNT_ID` set (`get_secret_client()` fails closed:
+`"GCP_PROJECT_ID or AWS_ACCOUNT_ID must be set in environment"`), so no live Alchemy RPC / Secret Manager / GCS write
+could be exercised from this session to produce genuine manifest evidence. Not faking this with a "should work" phase
+flip — leaving todo 3's checkbox UNCHECKED and phase `AAVE-PLASMA`/`FLUID-PLASMA` at `"pipeline"` until someone with a
+live-capture-capable environment runs it for real. **Recommended next step**: dispatch a real (or at minimum
+staging/test-bucket) MTDS `lending_indices` capture for `AAVE-PLASMA` for a recent day, confirm rows appear in the
+manifest with `venue=AAVE-PLASMA`/`chain=PLASMA`, then flip `defi_venues.py`'s `"AAVE-PLASMA": "pipeline"` → `"live"`
+(and `FLUID-PLASMA` once its still-open `PROTOCOL_LAUNCH_DATES` date is confirmed per the P1 todo above) and finally
+check this todo's box.
+
 ## Data-source scoping (P2 findings, 2026-07-28, slot-8)
 
 **Verdict: direct RPC via Alchemy for both venues — no subgraph exists for either.** Evidence below (web search + GitHub
