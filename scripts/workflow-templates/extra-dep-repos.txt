@@ -1,0 +1,23 @@
+# Extra dep_repos for a consumer repo's quality-gates-v2, NOT expressible via the pyproject
+# `path = "../<repo>"` editable-deps closure get_dep_repos() walks in rollout-workflow-templates.sh.
+# That closure only ever contains repos the consumer `uv sync`-installs as a package — it has no
+# way to express "clone this sibling on disk too, but never install it", which is exactly what a
+# consumer needs when it loads another repo's files by raw file path
+# (importlib.util.spec_from_file_location) instead of importing them as a package. A repo with no
+# [build-system] (scripts-only, e.g. e2e-testing's `[tool.setuptools] packages = []`) can never
+# appear in the pyproject closure for this same reason, even though CI still needs it on disk.
+#
+# Format: `<repo>: <space-separated extra repo names>` — one line per repo, # comments ignored.
+# get_extra_dep_repos() unions this (deduped) into get_dep_repos()'s output for the named repo.
+#
+# features-service needs e2e-testing cloned as a CI sibling (ldr_qg_failure escalation agt-ddbcde,
+# 2026-07-31, PR features-service#910): the 8 `features_service/<domain>/smoke.py` thin
+# re-exporters (relocated 2026-07-31 per script-homes.md,
+# plans/active/cross_cutting_satellite_ao_dispatch_batch1b_2026_07_26.md item (2)) load
+# `e2e-testing/scripts/<domain>/smoke_matrix.py` via
+# `Path(__file__).resolve().parent.parent.parent.parent / "e2e-testing" / ...` at import time —
+# resolves fine in every local slot worktree (all repos already siblings there) but 404s in CI,
+# which only clones dep_repos. Without this override, features-service's 8
+# `tests/<domain>/unit/test_smoke_matrix.py` files hard-fail in CI (117 broken outcomes: 8
+# FAILED + 109 setup ERRORs, all FileNotFoundError) even though "locally green" claims held.
+features-service: e2e-testing
