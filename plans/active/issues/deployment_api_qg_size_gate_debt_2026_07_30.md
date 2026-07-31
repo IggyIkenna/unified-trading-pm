@@ -385,9 +385,16 @@ file-by-file.
       green (`test_lifespan.py` 10, `test_sync_service.py` 77, `test_background_sync.py` 20), full
       `quality-gates.sh --no-fix` green (107s, sentinel `b68758a4ed87104f2fd33dbd31e4a2e27080b160`). Repo:
       deployment-api@aba3150.
-- [ ] [SCRIPT] P2. Decompose the remaining function-size-only violation in
-      `deployment_api/services/tarball_staleness.py`. Remove its exclude entry once compliant; re-run `quality-gates.sh`
-      to confirm no regression.
+- [x] ✅ [SCRIPT] P2. **DONE 2026-07-31 (slot-2, infra craft).** Decomposed
+      `deployment_api/services/tarball_staleness.py`. Extracted
+      `_ensure_fresh_precheck`/`_log_refresh_outcome`/`_build_refresh_result` from `ensure_fresh` (was 98L). Pure code
+      motion, no logic changes (2 pre-existing typing gaps fixed along the way: `_build_refresh_result`'s `log_url`
+      param widened to `str | None` to match `trigger_refresh`'s actual return type, and 2 unnecessary quoted
+      forward-refs to `RefreshResult` removed per ruff UP037 — `RefreshResult` is already defined above both call
+      sites). `FUNCTION_SIZE_EXTRA_EXCLUDES` entry removed — gate passes natively. Verified: AST size check clean,
+      basedpyright 0 errors, ruff clean, 38 targeted tests green (`test_tarball_staleness.py` 27,
+      `api/test_cost_snapshot.py` 11), full `quality-gates.sh --no-fix` green (128s, sentinel
+      `aba3150dd8d15da6ff307ea595d5c7da7b98727b`). Repo: deployment-api@a88d1d9.
 - [ ] [SCRIPT] P2. Decompose the remaining function-size-only violation in `deployment_api/utils/path_combinatorics.py`.
       Remove its exclude entry once compliant; re-run `quality-gates.sh` to confirm no regression.
 - [ ] [SCRIPT] P3. Once every file above is decomposed and removed from `FUNCTION_SIZE_EXTRA_EXCLUDES`, re-measure
