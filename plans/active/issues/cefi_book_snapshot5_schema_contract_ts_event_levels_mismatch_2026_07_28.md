@@ -87,14 +87,18 @@ assigned_vm: NA
 execution_scope: local-only
 resolved_by:
   "market-tick-data-service@339ca767 + unified-api-contracts@8db188fe (contract shape + ts_event) +
-  unified-api-contracts@1c4d8864 (deep-level nullable gap, 2026-07-31)"
+  unified-api-contracts@1c4d8864 (deep-level nullable gap, 2026-07-31); deployment-service@a564cca (2026-07-31,
+  DP-FETCH-009 alerting-materiality fix — closes the repeated-duplicate-dispatch waste this doc's own Progress Log
+  documents, see dp_escalation_worker_dispatch_no_open_issue_check_2026_07_29.md)"
 source:
   "CRITICAL DP_RUN_MOSTLY_EMPTY (DP-FETCH-009) escalation agt-ff6e10, dp-fleet-monitor -> agent-orchestrator
   data_pipeline_failure worker (slot-16), fired 2026-07-28, asset_group=cefi data_type=book_snapshot_5, 299,467
   attempted_failed of 1,037,001 attempted (28.9%), flagged Fresh (0d old)."
 last_updated:
-  2026-07-31 (8th+ dispatch, agt-cfaab9 -- confirmed the nullable=True fix (agt-716d56) holds, zero post-fix
-  attempted_failed activity, duplicate/stale-snapshot re-page of the identical pre-fix condition)
+  2026-07-31 (9th+ dispatch, agt-79b187 -- confirmed the nullable=True fix (agt-716d56) still holds (a ~9-minute
+  post-fix tail was the same self-resolving in-flight-VM-stale-code pattern already documented for this doc's earlier
+  tails, not a regression); additionally shipped deployment-service@a564cca, a DP-FETCH-009 alerting-materiality fix
+  that should substantially cut the repeated full-worker-dispatch waste this doc's own Progress Log has accumulated)
 ---
 
 # CeFi `book_snapshot_5` schema-contract mismatch -- root cause + fix (2026-07-28)
@@ -482,3 +486,48 @@ against the reproduction script.
   since the 2026-07-30 marker). Both open todos are explicit design/maintainer-judgment calls ("a design decision,"
   "needs a maintainer/operator call on the right shape, not a unilateral change from an escalation worker's one-shot
   scope") — not worker-determinable.
+- **2026-07-31 (`data_pipeline_failure` escalation worker, task `agt-79b187`, slot 13) — 9th+ dispatch: fix confirmed
+  holding (self-resolving tail, not a regression); shipped an adjacent alerting-layer fix that should stop most future
+  duplicate dispatches for this exact pattern.** Received another `DP_RUN_MOSTLY_EMPTY` (DP-FETCH-009) CRITICAL page for
+  `(cefi, book_snapshot_5)`: 300,458/1,081,588 = 27.8%, flagged Fresh (0d old). No issue doc pre-linked in the alert
+  context; found this doc via a live grep of `market-tick-data-service` for `"schema contract violated"` before reading
+  it, per the pre-task plan/issue conflict-check rule.
+
+  **Part 1 — verified the nullable=True fix (`agt-716d56`, `unified-api-contracts@1c4d8864`) is still holding, no
+  regression.** Unlike `agt-cfaab9`'s reading (which found the cell-wide max `attempted_at` at `2026-07-31T02:31:40Z`,
+  strictly BEFORE the fix's `03:53:04Z` landing and concluded "duplicate/stale-snapshot re-page"), a fresh
+  column-projected read of the live manifest this session found the max had since advanced to
+  `2026-07-31T04:02:15.877913Z` — genuinely AFTER the fix landed, ~9 minutes post-ship — with a small last-24h tail (91
+  rows total, 89 of them `"schema contract violated"`) spanning OKX-SWAP (44), BINANCE-FUTURES (21), OKX-SPOT (15),
+  KRAKEN-SPOT (5), BITFINEX-SPOT (3), BITFINEX-FUTURES (1). A re-read ~50 minutes later (04:51Z) found ZERO further
+  activity — the tail had already stopped. This is the SAME "in-flight VM/worker process resolving pre-fix code,
+  self-resolving within hours" pattern this doc's Progress Log already documents four separate times (KRAKEN-SPOT/
+  OKX-SWAP 2026-07-28T10:48-10:49Z, COINBASE 2026-07-28/29, the 2020-Q1-dated tail 2026-07-30T16:21-18:45Z, and now this
+  one) — not a fresh code regression. No further code fix needed for the schema-contract mechanism itself (already fixed
+  3x across this doc's history: contract shape `8db188fe`, ts_event derivation `339ca767`/`6bf568ee`, nullable-levels
+  `1c4d8864`).
+
+  **Part 2 — shipped a genuinely new fix at a DIFFERENT layer (alerting materiality, not the schema contract):**
+  `deployment-service@a564cca`. This doc's own Progress Log documents 8 prior dispatches, most of which found nothing
+  new to fix and spent a full escalation-worker session re-confirming a static/self-resolving condition (exactly the
+  waste `dp_escalation_worker_dispatch_no_open_issue_check_2026_07_29.md` tracks). Root cause of WHY this keeps
+  CRITICAL-paging despite the fix holding: `attempted_failed_staleness.py`'s `stale_backlog_annotation()` (the
+  already-shipped STATIC BACKLOG severity-downgrade mechanism, `alerting-service@bb76cae`, per
+  `cefi_high_attempted_failed_batch_cluster_2026_07_23.md`) only checks whether the SINGLE newest row is `>=1` day old —
+  a cell with even a SMALL non-zero trickle (this cell: 91 rows/24h, decaying — 5,500 on 07-28, 444 on 07-29, 75 on
+  07-30, 16-91 rolling-window since) reads as permanently "Fresh" and never gets the downgrade, even though 97%+ of its
+  300k-row total is old, already-root-caused debt. Fixed by adding a recent-window MATERIALITY check: a cell's own
+  last-24h `attempted_failed` volume must itself cross `ATTEMPTED_FAILED_ABS_THRESHOLD` (the SAME bar the alert uses to
+  decide "high" in the first place) to read as genuinely Fresh; below that, it now labels STATIC BACKLOG even at
+  `stale_days == 0`. Verified against the live cefi manifest: book_snapshot_5's 91/24h trickle now reads "STATIC BACKLOG
+  — only 91 attempted_failed row(s) in the last 1d (below the 500-row materiality floor)" instead of "Fresh". Since
+  `router.py`'s `effective_severity()` downgrades CRITICAL→WARN (Slack-only, no PagerDuty/Telegram page) for
+  `is_static_backlog=True` cells BEFORE the paging-channel check, this should also stop the
+  `wall_type= data_pipeline_failure` escalation fast path from firing on future re-evaluations of this exact
+  decaying-trickle shape — a genuinely different, complementary layer from
+  `dp_escalation_worker_dispatch_no_open_issue_check_2026_07_29 .md`'s still-open Option A/B/C (worker-spawn dedup at
+  the orchestrator layer, which stays untouched and still needs its own operator/design decision). `quality-gates.sh`
+  green (deployment-service, 2 full runs), 3 new/updated unit tests including one that reproduces this exact incident's
+  real numbers. Full writeup + evidence: `deployment-service@a564cca`'s commit message; cross-linked from
+  `dp_escalation_worker_dispatch_no_open_issue_check_2026_07_29.md`. No GCS/manifest write, no VM launch. Pinged
+  `dp-fleet-monitor` (authoring slot) with this outcome.

@@ -54,7 +54,7 @@ resolved_by:
 source:
   "data_pipeline_failure escalation worker (agt-0df274), found while working
   cefi_derivative_ticker_tardis_resolver_aiodns_hardfail_2026_07_28.md's third re-fire"
-last_updated: 2026-07-30
+last_updated: 2026-07-31
 ---
 
 # Escalation-worker dispatch has no "already an open issue doc" dedup check
@@ -182,3 +182,23 @@ regression) is worse.**
   backlog whose root-cause-relevant state has not changed since the second dispatch fixed it — the per-dispatch cost is
   small but the count keeps climbing with no sign of the underlying dedup gap closing; still awaiting the
   operator/design decision on Option A/B/C.
+- **2026-07-31 (data_pipeline_failure escalation worker, agt-79b187, slot 13) — `(cefi, book_snapshot_5)` at its 9th+
+  dispatch; shipped a complementary, DIFFERENT-layer mitigation (not this doc's Option A/B/C, which stays open).**
+  `cefi_book_snapshot5_schema_contract_ts_event_levels_mismatch_2026_07_28.md` re-fired again — its own root-cause fix
+  (`unified-api-contracts@1c4d8864`, nullable-levels) confirmed still holding (a short post-fix tail was the same
+  self-resolving in-flight-stale-code pattern already documented there 4 times, not a regression). Rather than adding a
+  9th "nothing new, git-ancestor-check only" entry, traced WHY this specific condition keeps re-triggering a CRITICAL
+  page + escalation-worker spawn despite being 97%+ resolved: the already-shipped STATIC BACKLOG severity-downgrade
+  (`alerting-service@bb76cae`, `cefi_high_attempted_failed_batch_cluster_2026_07_23.md`) only fires when a cell's newest
+  row is `>=1` day old — a cell with a small but NONZERO decaying trickle (this one: 91 rows/24h against a 300k-row
+  total) never qualifies, so it reads "Fresh" and keeps CRITICAL-paging forever even after full root-cause resolution.
+  Shipped `deployment-service@a564cca`: a cell's own last-24h volume must now cross `ATTEMPTED_FAILED_ABS_THRESHOLD`
+  (the same bar the alert itself uses) to count as genuinely Fresh; below that it reads STATIC BACKLOG even at
+  `stale_days == 0`. Since `router.py` applies the severity downgrade BEFORE the PagerDuty/Telegram paging-channel
+  check, this should also stop the `wall_type=data_pipeline_failure` escalation fast path from re-firing for THIS
+  specific decaying-trickle shape going forward (and for any other DP-FETCH-009 cell in the same shape, e.g.
+  `cefi_liquidations_attempted_failed_lifetime_count_stale_2026_07_30.md` if it has a similar tail). **This does NOT
+  resolve this doc's own open Option A/B/C** (worker-spawn dedup at the orchestrator-dispatch layer for a condition
+  whose numerator is merely unchanged rather than one whose recent volume has fallen below a materiality floor — e.g.
+  `(cefi, derivative_ticker)`'s repeated dispatches above still need that separate, still-undecided fix). Full writeup
+  in the book_snapshot_5 doc's own Progress Log.
