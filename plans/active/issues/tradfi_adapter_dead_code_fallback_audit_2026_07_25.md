@@ -300,10 +300,19 @@ stale/degraded trading data) — worth tightening but far lower severity than E-
       plan family's open todo 1 (backfill=paper=live wiring proof). Decide: bridge the two vocabulary gates, or document
       as intentional not-yet-activated scaffolding. Repos: execution-service, unified-api-contracts.
 
-- [ ] [BACKEND] P2. **instruments-service `ibkr.py` dead-code candidate** (Finding I-3): registered twice
+- [x] ✅ [BACKEND] P2. **instruments-service `ibkr.py` dead-code candidate** (Finding I-3): registered twice
       (`factory.py:168`, `router.py:236,329`), tested, but zero entries for adapter key `"ibkr"` in UAC's
       `VENUE_TO_ADAPTER_KEY` and no confirmed external caller workspace-wide. Either delete it, or add an explicit
-      docstring/comment stating its intended external activation path. Repo: instruments-service.
+      docstring/comment stating its intended external activation path. Repo: instruments-service. — **2026-07-31 (slot
+      6, backend_engineer)**: confirmed unreachable via full call-graph tracing of BOTH registration points (not just a
+      class-name grep) — `create_reference_data_adapter()`'s only real caller resolves adapter keys through UAC
+      `VENUE_TO_ADAPTER_KEY` (zero "ibkr" entries), and `create_reference_data_adapter_for_source()` has no caller
+      anywhere in the workspace outside its own tests. Chose DOCUMENT over DELETE, per this same audit's own
+      `databento_equity.py` precedent ("document why it's kept") — substantial, well-tested adapter, and
+      `ibkr-gateway-infra` exists workspace-wide suggesting real planned IBKR integration, just not yet wired to
+      reference-data. Added a STATUS note to `ibkr.py`'s module docstring (full explanation + activation path) + short
+      pointer comments at both registration sites. `instruments-service@1bf5467c`, `quality-gates.sh` PASSED (122s),
+      verified on origin.
 
 - [ ] [OPERATOR] P2. **DECISION — 4 unregistered MTDS macro adapters** (Finding M-2): `baker_hughes_adapter.py`,
       `cftc_cot_adapter.py`, `eia_adapter.py`, `fear_greed_adapter.py` are complete + tested but never registered in
