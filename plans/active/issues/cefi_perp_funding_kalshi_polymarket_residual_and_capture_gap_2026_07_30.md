@@ -58,10 +58,10 @@ related:
     gcs-and-manifest-delete-safety-protocol,
   ]
 created: 2026-07-30
-last_updated: 2026-07-30
+last_updated: 2026-07-31
 parent_epic: manifest_master
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 priority: P1
 estimate_class: research
 estimate_baseline_ai_days: 1.5
@@ -222,3 +222,29 @@ workspace has already been burned by once.
       attempted this session** — deliberately deferred once the identical `DefiManifestRecorder` local-timeout wall hit
       the todo above; the same VM/faster-path prerequisite applies. Lower priority than the cefi items above (pure
       hygiene, no live-collection-failure component).
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-31** (tranche=cefi, autonomous): **RECLASSIFY, conflict-cleared** — both remaining open
+  todos are bounded, deterministic manifest re-stamp work with the target row-level actions already fully enumerated and
+  dry-run-verified; blocked purely on infra (local-machine heavy-I/O timeout against the 9.5M-row consolidated manifest,
+  per `/codex/05-infrastructure/vm-launcher-runbook.md`'s heavy-I/O rule), not on any open judgment call. Stated
+  safe-idempotent justification present in the P1 todo's own text ("Dedup/upsert semantics mean this is purely additive
+  — nothing to undo if a partial run lands before a full one succeeds"), satisfying the VM-launch/`--apply` gating rule
+  without an `[OPERATOR]` tag. **Conflict-check (3 surfaces) clear**: (a) no currently-active `assigned_vm: planning`
+  plan in `parent_epic: manifest_master` (or elsewhere) claims this exact row set — the adjacent
+  `defi_kalshi_perp_perp_funding_source_not_registered_2026_07_23.md` and
+  `defi_track01_per_instrument_and_canon_id_2026_07_24.md` cover a DIFFERENT, already-resolved set (the DEFI-asset_group
+  KALSHI_PERP rows, removed 2026-07-26 via `remove_kalshi_polymarket_defi_manifest_rows_2026_07_26.py`), not this doc's
+  CEFI-asset_group rows; (b) no sibling batch/finalize doc drafted this run; (c) not cited by any
+  `cefi_consolidated_closeout_*.md` aggregation doc. Flipped `assigned_vm: NA → planning`,
+  `execution_scope: local-only → orchestrator-agent`, `assigned_role: data_engineering` (verified against the live
+  `agents/*.md` registry). **No companion finalize plan authored** — this is a `doc_type: issue` doc, structurally
+  exempt from `task_template.md`'s finalize-plan-coverage rule (`check_finalize_plan_coverage.py` only globs
+  `plans/active/*.md`, not `plans/active/issues/*.md`), per the skill's own explicit carve-out. **Caveat for the
+  dispatched worker**: the P1 todo's cited corrective script lives at an ephemeral scratch path
+  (`/private/tmp/claude-501/.../scratchpad/restamp_perp_funding_manifest_FINAL.py`) that will almost certainly not exist
+  by dispatch time — re-derive the script from the todo's own fully-enumerated row-level spec (4 KALSHI_PERP captured
+  rows → `venue=KALSHI-PERP`; 2 KALSHI_PERP captured rows → `record_failed`/`PHANTOM_CAPTURED_ROW`; 4 POLYMARKET_PERP
+  attempted_failed rows → `venue=POLYMARKET-PERP` + `SOURCE_UNREACHABLE`), do not depend on the original file being
+  present.
