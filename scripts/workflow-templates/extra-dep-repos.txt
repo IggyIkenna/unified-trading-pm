@@ -20,4 +20,14 @@
 # which only clones dep_repos. Without this override, features-service's 8
 # `tests/<domain>/unit/test_smoke_matrix.py` files hard-fail in CI (117 broken outcomes: 8
 # FAILED + 109 setup ERRORs, all FileNotFoundError) even though "locally green" claims held.
-features-service: e2e-testing
+#
+# execution-service + strategy-service ADDED (ldr_qg_failure escalation agt-bae44d, 2026-07-31):
+# this extras list is a flat override, NOT transitively expanded — adding e2e-testing alone clones
+# it but the reusable workflow's "Install test-only sibling dep" step then runs
+# `uv pip install -e ../e2e-testing`, which needs e2e-testing's OWN pyproject path deps
+# (execution-service, strategy-service — unified-api-contracts already covered by the pyproject
+# closure) present on disk too. Without them, that editable install fails with "Distribution not
+# found at file:///.../execution-service", e2e-testing never resolves in .venv, and basedpyright's
+# Unknown-cascade (base-service.sh:316-327) reds the `checks` slice with hundreds of reportAny
+# errors across every e2e-testing/scripts/*/smoke_matrix.py file (not a features-service code bug).
+features-service: e2e-testing execution-service strategy-service
