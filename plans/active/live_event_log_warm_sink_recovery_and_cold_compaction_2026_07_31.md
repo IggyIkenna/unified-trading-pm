@@ -167,7 +167,11 @@ determinism needs.
       lower-frequency publish batch, not a separate bug). This is the FIRST time any of these 3 venues' book/liquidation
       data has reached the warm tier with real content (previously either the connector produced 100% empty capture, or
       — for `OKX-FUTURES` — the whole WS connector was broken).
-- [ ] [DATA] P1.2. **Time-gated, unblocked by P1.1 above — needs real elapsed time, not just a worker pass.** Re-run the
+- [ ] [DATA] P1.2. **⏸ PARKED 2026-07-31 (main, Option A — gated behind false prereq `p1-2-preconditions-met`,
+      priority:999).** Doubly-blocked and NOT worker-satisfiable: unpark only once BOTH (a) ≥24h since the P1.1 redeploy
+      (`2026-07-31T21:14Z`, i.e. ~`2026-08-01T21:14Z`) have elapsed AND (b) a paper run trading these 3 venues is
+      confirmed (see `/plans/active/issues/no_active_paper_run_blocks_p1_2_determinism_recheck_2026_07_31.md`).
+      **Time-gated, unblocked by P1.1 above — needs real elapsed time, not just a worker pass.** Re-run the
       `paper(W)==batch-rerun(W)` determinism test for BINANCE-FUTURES/ASTER/OKX-FUTURES now that real warm+cold data is
       confirmed flowing (P1.1). DoD: epsilon=0 match cited with the test run's report path (per
       `codex/09-strategy/operational/paper-batch-live-reconciliation.md` §5, the `daily-determinism`
@@ -282,3 +286,16 @@ determinism needs.
   permanent (not just time-gated), since no active paper deployment trades these 3 venues under any name this search
   matched. Leaving P1.2 open/unflipped; the time-gate alone means today is genuinely too early regardless of the
   paper-run question.
+- **2026-07-31 (slot-6)**: Picked up P1.2 a third time (~90 min after slot-14→8). Re-verified both preconditions still
+  unmet at `2026-07-31T22:20Z`: (1) only ~66 min elapsed since the P1.1 redeploy (`21:14Z`) vs the ≥24h needed (clears
+  ~`2026-08-01T21:14Z`); (2) no paper run — reconfirmed via a **broader-than-VM-name** check (ALL `RUNNING` compute
+  instances **and** Cloud Run services on `central-element-323112`, addressing the issue doc's own note that a
+  differently-named or non-VM paper deployment could exist): no paper/strategy trading deployment exists for these
+  venues; the only recon-related service is `batch-live-reconciliation-service`, which is the determinism _consumer_ (a
+  no-op without `paper_ledger_root`/`batch_ledger_root` from an active paper run). Refused to fabricate an ε=0 result
+  against near-zero data. Since P1.2 had now churned through 3 workers in ~90 min with zero possible progress, escalated
+  the operational churn via `/blocked` (**BLK-085fef5e**). **Main answered Option A and parked the backlog entry**
+  (`priority:999` + `priority_override:true` + false prereq `p1-2-preconditions-met`; blockers endpoint confirms gated)
+  — stops the fleet churn. Option B (start a paper run) is explicitly left as the `[OPERATOR]` strategy-desk decision
+  already tracked in the issue doc, not made here. P1.2 stays open/unflipped (parked, not done); unpark = flip
+  `p1-2-preconditions-met` GREEN once BOTH the 24h window has elapsed AND a paper run is confirmed.
