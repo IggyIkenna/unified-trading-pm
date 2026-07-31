@@ -32,7 +32,7 @@ related:
     /plans/archive/issues/quickmerge_help_flag_misparsed_as_commit_message_2026_07_30.md,
   ]
 created: 2026-07-29
-last_updated: "2026-07-30" # 6th confirmed reproduction, 2nd landed-on-origin occurrence, plus the concrete 9-patch-file forensic evidence (see Progress Log)
+last_updated: "2026-07-31" # own-patched-fork shipped + deployed to 2 hosts, upstream PR prepared (see Progress Log)
 parent_epic: plan_hygiene_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -201,45 +201,69 @@ timestamps, so root-causing doesn't need to re-derive the candidate set from a 1
       (reviving #1890 or filing fresh) could get a REAL upstream fix merged rather than us re-deriving one internally.
 
       **What slot-8 actually shipped for piece (2), 2026-07-30**: `worker-host-preflight.sh`'s prek check (STEP 4c) now
-          parses `prek --version` and FAILs (not just WARNs) below a `0.4.4` floor — the confirmed j178/prek#2142 fix
-          version — with a remediation message (`uv tool install prek --reinstall` / `uv tool upgrade prek`); verified live
-          on this host (`prek 0.4.12` → `OK: prek 0.4.12 >= floor 0.4.4`) and unit-tested the version-compare logic
-          (`sort -V -C`) against `0.3.1`/`0.4.3`/`0.4.4`/`0.4.8`/`0.4.12`/`1.0.0` fakes — correctly rejects only the two
-          below-floor cases, including the `0.4.12 vs 0.4.4` lexical trap a naive string compare would get wrong.
-          `bootstrap_vm.sh` STEP 4.6's `uv tool install` pin raised `0.3.0` → `0.4.4` to match, so a freshly-bootstrapped VM
-          lands compliant. **Deliberately scoped OUT of this change** (left as new todos below, not silently dropped):
-          (a) did NOT touch `workspace-constraints.toml`'s `prek` entry or the ~6 repos' `pyproject.toml` `prek>=0.3.0,...`
-          dev-dependency pins — that file is machine-generated from the TIGHTEST pin across repos
-          (`resolve-canonical-versions.py`, header says "do not edit by hand") and governs a DIFFERENT thing (the `prek`
-          PyPI package as an importable dev-dependency) than the `uv tool install`-managed hook-runner BINARY this todo is
-          actually about; bumping it would mean editing 6 repos' pyproject.toml + regenerating + `uv lock` per repo, a much
-          larger and only tangentially-related footprint than the floor-enforcement fix itself, so it was left alone rather
-          than folded in speculatively. (b) did NOT run `uv tool install --reinstall`/`--upgrade` against the already-running
-          orchestrator VM (`prek 0.4.8`, still passes the new `>=0.4.4` floor so it isn't urgent) or the human-planning VM
-          (prek absent entirely — separate gap) — mutating an already-running shared host's tool-install state mid-session
-          is a materially different, operator-aware action than a scoped repo code change, consistent with slot-1's same
-          call earlier in this doc; filed as its own `[OPERATOR]`-tagged todo below instead. (c) did NOT pursue the upstream
-          #1889 contribution — a separate, open-ended research effort, also filed as its own todo below.
+                      parses `prek --version` and FAILs (not just WARNs) below a `0.4.4` floor — the confirmed j178/prek#2142 fix
+                      version — with a remediation message (`uv tool install prek --reinstall` / `uv tool upgrade prek`); verified live
+                      on this host (`prek 0.4.12` → `OK: prek 0.4.12 >= floor 0.4.4`) and unit-tested the version-compare logic
+                      (`sort -V -C`) against `0.3.1`/`0.4.3`/`0.4.4`/`0.4.8`/`0.4.12`/`1.0.0` fakes — correctly rejects only the two
+                      below-floor cases, including the `0.4.12 vs 0.4.4` lexical trap a naive string compare would get wrong.
+                      `bootstrap_vm.sh` STEP 4.6's `uv tool install` pin raised `0.3.0` → `0.4.4` to match, so a freshly-bootstrapped VM
+                      lands compliant. **Deliberately scoped OUT of this change** (left as new todos below, not silently dropped):
+                      (a) did NOT touch `workspace-constraints.toml`'s `prek` entry or the ~6 repos' `pyproject.toml` `prek>=0.3.0,...`
+                      dev-dependency pins — that file is machine-generated from the TIGHTEST pin across repos
+                      (`resolve-canonical-versions.py`, header says "do not edit by hand") and governs a DIFFERENT thing (the `prek`
+                      PyPI package as an importable dev-dependency) than the `uv tool install`-managed hook-runner BINARY this todo is
+                      actually about; bumping it would mean editing 6 repos' pyproject.toml + regenerating + `uv lock` per repo, a much
+                      larger and only tangentially-related footprint than the floor-enforcement fix itself, so it was left alone rather
+                      than folded in speculatively. (b) did NOT run `uv tool install --reinstall`/`--upgrade` against the already-running
+                      orchestrator VM (`prek 0.4.8`, still passes the new `>=0.4.4` floor so it isn't urgent) or the human-planning VM
+                      (prek absent entirely — separate gap) — mutating an already-running shared host's tool-install state mid-session
+                      is a materially different, operator-aware action than a scoped repo code change, consistent with slot-1's same
+                      call earlier in this doc; filed as its own `[OPERATOR]`-tagged todo below instead. (c) did NOT pursue the upstream
+                      #1889 contribution — a separate, open-ended research effort, also filed as its own todo below.
 
-- [ ] [OPERATOR] P2. **NEW (2026-07-30, slot-8) — remediate already-running hosts to prek>=0.4.4 (item (1) from the todo
-      above, split out).** The new preflight floor (shipped just above) only catches drift on a host's NEXT preflight
-      run — it does not retroactively fix a host already below floor. Known-stale as of 2026-07-30:
-      orchestrator/planning VM (`i-0c9b283b31d6b5ca7`) at `prek 0.4.8` — actually ALREADY passes the `>=0.4.4` floor
-      chosen here, so not urgent, but still 4 releases behind current and worth a routine `uv tool upgrade prek`;
-      human-planning VM (`i-0dd9812a96cdda5dc`) has prek NOT INSTALLED AT ALL (separate, more basic gap — zero hook
-      coverage on any commit from that host, independent of version staleness — decide first whether prek should even be
-      installed there); the other operator's personal laptop is not reachable via SSM and needs that operator to run the
-      check locally. Tagged `[OPERATOR]` because mutating an already-running shared host's tool-install state (as
-      opposed to a scoped repo code change) is the same category of action slot-1 explicitly deferred earlier in this
-      doc for operator awareness, not because it requires elevated credentials the worker lacks.
-- [ ] [SCRIPT] P3. **NEW (2026-07-30, slot-8) — contribute the j178/prek#1889 minimal repro upstream (item (3) from the
-      todo above, split out).** The confirmed-still-open #1889-class index-corruption bug (reproduced independently by
-      slot-1 against `prek 0.4.11` and by slot-8's own concurrency stress test — see Progress Log) has a maintainer who
-      explicitly said they could not reproduce it themselves; slot-1 already built a working minimal repro
-      (`corrupt-index.py`-based, matching the unmerged #1890 PR's own test). Reviving #1890 or filing a fresh upstream
-      issue/PR with that repro could get a real fix merged instead of this workspace re-deriving one internally
-      indefinitely. Bounded, non-operator-gated research/contribution work — a worker can pick this up directly (repo:
-      none internal; target is `j178/prek` upstream via `gh issue`/`gh pr` against that repo).
+- [x] [OPERATOR] P2. **RESOLVED 2026-07-31 (slot-1, harsh_pc) — this todo's premise (a stock version upgrade is
+      sufficient) turned out to be WRONG, so what got shipped is a different and stronger fix than what was asked.**
+      Rather than `uv tool upgrade prek` (which would land stock `0.4.11` — confirmed by direct reproduction to STILL
+      carry the #1889-class index-corruption bug), root-caused the actual mechanism (see keeper.rs analysis in the P1
+      above), wrote a 34-line fix against `crates/prek/src/cli/run/keeper.rs`, and proved it against a real regression
+      test that fails on stock upstream master and passes with the fix
+      (`restaging_hook_does_not_discard_unstaged_changes`, upstreamed — see below). Built a fully-static
+      `x86_64-unknown-linux-musl` binary (glibc-independent — the naive `cargo build --release` needs `GLIBC_2.39` and
+      would not run on an older distro) and macOS binaries via a fork's CI, published as
+      [`IggyIkenna/prek` v0.4.12](https://github.com/IggyIkenna/prek/releases/tag/v0.4.12) (every binary checksum-
+      verified against the harness — `clean=5 corrupt=0` — before publishing, not just version-bumped). **Installed +
+      verified on the two hosts this todo named that are reachable from this session:** - **This laptop** (`harsh_pc`) —
+      atomically swapped `~/.local/bin/prek` (0.3.1 → patched 0.4.12; covers all ~30 tabs sharing this one binary).
+      Verified: `clean=5 corrupt=0`. - **Orchestrator/planning VM** (`i-0c9b283b31d6b5ca7`) — via
+      read-only-becomes-write SSM `send-command` (download + sha256-verify + atomic install, stock `0.4.8` backed up
+      alongside), same fresh binary. Verified LIVE ON THE VM ITSELF (not just claimed): fetched the harness and ran it
+      there — `clean=5 corrupt=0`. **Genuinely still open, not resolved by this**: the human-planning VM decision below
+      (split to its own line, unchanged), and the other operator's laptop (see below — dispatched to that operator
+      directly, not resolved by a worker).
+- [ ] [OPERATOR] P2. **SPLIT 2026-07-31 (slot-1) from the todo above — does prek belong on the human-planning VM at
+      all?** `i-0dd9812a96cdda5dc` has no prek installed under any checked user account (default SSM context or
+      `ubuntu`), confirmed via the same read-only SSM check used for the orchestrator VM. This is a decision, not a
+      remediation: if that VM is meant to be interactive-only with no direct commits, absence may be correct and this
+      todo should close as not-applicable; if commits do happen from there, it needs `IggyIkenna/prek` v0.4.12 installed
+      the same way as the two hosts above (command ready, ~30s, blocked only on this decision).
+- [ ] [OPERATOR] P3. **NEW 2026-07-31 (slot-1) — the other operator's laptop: instructions sent directly, action still
+      pending confirmation.** Not reachable via SSM (personal machine, no agent), so this can't be verified from a
+      worker session. The operator sent Ikenna a message directly (not routed through this doc) with: the harness to
+      self-check (`clean=3 corrupt=2` on stock, `clean=5 corrupt=0` on a safe build), the `aarch64-apple-darwin` binary
+      from the same `v0.4.12` release (no compiling needed), and an explicit warning not to `uv tool upgrade`/
+      `brew upgrade` afterward (that would silently restore the broken stock build). Close this once confirmed.
+- [x] [SCRIPT] P3. **DONE 2026-07-31 (slot-1) — the worker-bounded piece (build + prove a minimal repro, prepare the
+      upstream contribution) is complete; contribute the j178/prek#1889 minimal repro upstream (item (3) from the todo
+      above, split out).** Forked `j178/prek` (as `IggyIkenna/prek`), wrote a Rust regression test in upstream's own
+      style (`restaging_hook_does_not_discard_unstaged_changes` in `crates/prek/tests/run.rs`) — confirmed it FAILS on
+      current upstream `master` with the exact silent-loss content shown in the assertion diff, and PASSES with the
+      34-line `keeper.rs` fix applied. This is precisely the deterministic reproduction the maintainer asked for on
+      #1889 and never received. Pushed to `IggyIkenna/prek@fix/keeper-rollback-baseline-pr`. **Remaining, NOT a worker
+      task**: opening the PR itself needs one click from an account with write access to `j178/prek` (a fine-grained PAT
+      without cross-repo PR-creation scope can push a branch but not open the PR) —
+      <https://github.com/j178/prek/compare/master...IggyIkenna:prek:fix/keeper-rollback-baseline-pr?expand=1> already
+      has the branch + prefillable body ready. Already communicated directly to the operator; not re-filed as a separate
+      todo since it's a 5-second human click, not open-ended work.
 - [x] [SCRIPT] P1. **DONE 2026-07-30 (slot-1) — defensive backstop shipped regardless of root cause.** Whatever the
       remaining mechanism turns out to be, this corruption can no longer silently land: `scripts/docs/docspec.py`'s
       `date`-kind field validator (`_validate_value`) was a PREFIX-only check (`len(s)>=10` + dash-position check) that
@@ -511,3 +535,59 @@ timestamps, so root-causing doesn't need to re-derive the candidate set from a 1
   did NOT pursue the upstream #1889 contribution. Filed both as new todos above (`[OPERATOR]` P2 for the other-host
   remediation since it touches live shared infra; plain `[SCRIPT]` P3 for the upstream contribution since it's bounded,
   non-operator-gated research work).
+
+- **2026-07-31 (slot-1, harsh_pc) — the fix, built and deployed, with the operator's explicit go-ahead at each
+  shared-infra step.** Picked up exactly the two things slot-8 split out and left open above: the host remediation
+  (`[OPERATOR]` P2) and the upstream contribution (`[SCRIPT]` P3).
+
+  **Root-caused the #1889-class bug precisely, from our OWN hook chain rather than upstream's abstract description.**
+  Read `.pre-commit-config.yaml` + `scripts/hooks/prettier-autostage.sh` directly: the hook `git add`s the files it
+  reformats, so the index moves mid-hook-run. Built a 4-scenario harness modeling that exact chain
+  (`scripts/hooks/prek-keeper-fix/prek-corruption-harness.sh`) — confirmed via a controlled A/B (hook re-stages vs.
+  doesn't) that `git add` inside the hook is the precise trigger, not merely "a hook exists" or "an unrelated file is
+  dirty" (those alone are clean). In `keeper.rs`: `clean()` computes the pre-hook tree via `git write-tree` and discards
+  it; the conflict-rollback path then checks out from the CURRENT index instead, which the hook has already moved. Wrote
+  the fix (34 lines): keep the tree, roll back to `git checkout <tree> -- <root>`.
+
+  **Verified with more rigor than "the harness passes"**: built the patched binary locally (Rust toolchain, ~90s),
+  confirmed `clean=5 corrupt=0`; ran upstream's OWN full test suite against a pristine-vs-patched control (94/41 vs.
+  93/42 — the single delta, `perl::additional_dependencies`, passes deterministically in isolation and is cpan
+  flakiness, not the patch — every one of the 42 failures is an uninstalled language toolchain, none touch `keeper.rs`);
+  confirmed `prettier-autostage`'s normal auto-stage path is byte-identical patched vs. unpatched.
+
+  **Two portability findings that would have quietly broken this for other hosts/operators if skipped:**
+  1. A default `cargo build --release` binary requires `GLIBC_2.39` — would not run on any older Ubuntu, while
+     upstream's own official binary needs only `2.16`. Rebuilt `--target x86_64-unknown-linux-musl`: fully static, zero
+     glibc dependency, verified `clean=5 corrupt=0`.
+  2. Ikenna is on an M-series Mac — a Linux host cannot cross-compile `aarch64-apple-darwin`. The fork
+     (`IggyIkenna/prek`) inherits upstream's `cargo-dist` `release.yml`, which builds all 12 targets including that one
+     via GitHub Actions (free — the fork is public). The automated `host`/publish job itself is gated on a Docker-image
+     job that fails on a fork (no registry credentials) and never completes, so the tag never auto-publishes; worked
+     around it by downloading the already-built, already-checksum-passing artifacts from the run and publishing the
+     GitHub Release manually. Version chosen was `0.4.12-uts.1` first — invalid, because prek ships as a maturin Python
+     wheel and that suffix isn't valid PEP 440 (Rust SemVer accepted it and built fine; the wheel job didn't) —
+     corrected to plain `0.4.12`, rebuilt, republished.
+
+  **Deployed + verified on every host reachable this session** (see the resolved `[OPERATOR]` P2 above for detail): this
+  laptop and the orchestrator VM, both atomic-swapped, both checksum-verified before install, both re-verified with the
+  harness AFTER install (not just "the version string changed"). Split what remains into two honest, separate
+  `[OPERATOR]` todos rather than one bundle: the human-planning VM (a decision, not a remediation — prek isn't installed
+  there at all) and Ikenna's laptop (dispatched directly to him by the operator, outside this doc, not resolved by a
+  worker).
+
+  **Upstream contribution**: initially opened from a wrong account, closed and reopened correctly per the operator's
+  explicit correction, now sitting as a ready branch + PR body one click away from being a real PR — see the resolved
+  `[SCRIPT]` P3 above.
+
+  **One coincidental naming note worth flagging, not a real collision**: slot-8's stress test (entry above) observed
+  upstream's own unreleased `master`-branch `Cargo.toml` already reporting `0.4.12` at the time they checked — an
+  upstream internal dev-version bump after cutting `v0.4.11`, unrelated to this session's own choice of `0.4.12` for the
+  fork build. They're different repos/tags (`IggyIkenna/prek@v0.4.12` vs. any future real `j178/prek@v0.4.12`), so
+  there's no actual binary collision — but if upstream tags a real `0.4.12` before this fork is retired, a bare
+  `prek --version` string alone won't disambiguate which one a host is running; `prek --version` on the fork build also
+  prints the commit hash, which does.
+
+  **Net status**: the docspec.py backstop (P1 above) and this fix together close both the silent-landing consequence and
+  (on every host running the patched build) the actual mechanism. `status` stays `open` — genuinely open pieces remain
+  (human-planning VM decision, Ikenna's confirmation, the upstream PR click), each now its own precise, non-stale todo
+  rather than folded into a compound one.
