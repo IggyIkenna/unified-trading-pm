@@ -183,3 +183,26 @@ paired `_finalize` sibling will show the same gap; prediction is a confirmed liv
   (`issues/prediction_closeout_tag_and_batch_claim_findings_2026_07_30.md`) were fixed directly in this same run — see
   that doc's own Todos/Progress-Log, not repeated here. parked_findings ledger: 2 findings this doc (Finding 1,
   Finding 2) == 2 entries written to this doc. Balanced.
+
+- **2026-07-31T20:45Z (slot 3, ag_closeout_auditor, dispatch agt-7ae586):** Re-dispatched
+  `/ag-closeout-audit prediction` ~14.5h after the same-day agt-592e74 run above (cause of the re-fire not diagnosed —
+  the AO scheduling/dispatch mechanism is `ao`-tranche/orchestrator-owned, out of this run's file-ownership scope per
+  the skill's primary-owner rule; flagging the observation in this run's `/done` evidence for the operator/main agent,
+  not investigating agent-orchestrator internals here). Per the skill's iterative-drain step 1, verified the prior run's
+  state before considering any fresh Phase-1 triage: live re-run of
+  `generate_ag_closeout_audit_candidates.py --tranche prediction --json` returned an IDENTICAL corpus fingerprint to the
+  morning run — `total_members=52`, `never_cited_count=11` (spot-checked 3 of the 11 basenames: all still carry 4-5
+  `asset_group` tags each, confirmed genuinely cross-cutting, not a fresh mistag), `covering_paths=7` unchanged.
+  `git log --since="2026-07-31 06:08:26" --diff-filter=A` across `plans/active/*.md` + `plans/active/issues/*.md` found
+  ~30 new docs created workspace-wide since the morning run; none carry `asset_group: [..., prediction, ...]` (checked
+  every one). The two Finding-1 issue docs are untouched (still `status: open` / `assigned_vm: NA`);
+  `prediction_consolidated_closeout_2026_07_18.md`,
+  `prediction_consolidated_native_ao_extract_2026_07_25.md`(+finalize), and
+  `prediction_satellite_ao_dispatch_batch4_2026_07_26.md`(+finalize) have zero commits since 06:08. The ONLY in-corpus
+  activity was normal AO worker churn on `batch6`'s own todos (todo `batch6-008` fixture-pairing closed 18:51Z per main
+  ruling `BLK-a1613863`, plus a prettier re-wrap) — expected progress on an already-covering plan, not an
+  orphan-relevant change. **Verdict: state is confirmed unchanged from the morning run — 0 new orphans, no new batch
+  warranted.** Did NOT re-run a full Phase-1 Workflow fan-out over all 52 candidates given the fingerprint was confirmed
+  identical to the morning run; re-litigating an unchanged, hours-old, already-thoroughly-audited corpus would reproduce
+  the same result at real token cost for zero new information. parked_findings ledger: 0 new findings this run (this
+  entry is a re-verification record, not a new parked finding — nothing else appended).
