@@ -498,6 +498,43 @@ mirroring the batch1/batch2/batch3/batch4 finalize pattern.
     re-measure; if either was preempted again, relaunch non-force (skip-if-fresh resumes cleanly) rather than replaying
     day one.
 
+- **2026-07-31 (slot-12, data_engineering craft, task `tradfi_satellite_ao_dispatch_batch5-001`)** — Resumed todo 2 a
+  fourth time. `gcloud compute instances list` showed only `mdps-backfill-tradfi-20260731-092148` (2022, slot-9's
+  relaunch) still alive; `-092224` (2024) was gone. Confirmed via `gcloud compute operations list` it was preempted at
+  02:28:33Z, ~6 min after its 02:21:58Z launch — no auto-relaunch or newer 2024 attempt existed in `vm-logs/` or the
+  live instance list. Recovered its exact scope from `LAUNCH_PARAMS.json` (`RESUME_START_DATE=2024-01-01`,
+  `RESUME_END_DATE=2024-12-31`, `full`, `FORCE=false`, `MDPS_INSTRUMENT_IDS='CME:FUTURE:ES CME:FUTURE:MES'`, no
+  `PROGRESS.json` existed — it died on day 3, so nothing to lose by a fresh non-force relaunch). First relaunch attempt
+  (`mdps-backfill-tradfi-y2024-resume2-20260731`) surfaced a NEW staleness warning: the floating
+  `market-data-processing-service` tarball was pinned `4b84d5c11ede` but repo HEAD was `c53c8c1f90fa` — `git log` on
+  that range showed `c78285b fix(manifest): omit empty instrument_id from row_key for aggregate bundle writes`, which is
+  exactly the already-tracked-but-unfixed `MalformedRowKeyError` gap (Gap 2 in
+  `mdps_tradfi_chain_bundle_aggregate_write_malformed_row_key_2026_07_31.md` — independently reconfirmed still firing on
+  the live `092148` (2022) VM this session: 1,560 occurrences across 33/48 processed days, all `instrument_type=COMBO`
+  `data_type=ohlcv_1s` for the `SP500`/`MICRO-SP500` underlyings — no new issue doc needed, already correctly triaged
+  there as non-blocking to the per-instrument candle output this fleet exists to produce). Since the just-launched VM
+  had produced zero log output yet (checked `run.log` — not found, i.e. still in startup), deleted it before any work
+  was lost, republished the tarball
+  (`bash deployment-service/scripts/vm/create-code-tarballs.sh --include market-data-processing-service --include deployment-service`,
+  now pins `c53c8c1f90fa`, confirmed `git merge-base --is-ancestor c78285b c53c8c1f90fa` = true), then relaunched
+  cleanly as `mdps-backfill-tradfi-y2024-resume3-20260731` — launcher reported **all 5 tarballs fresh**, no warnings.
+  Verified genuine progress past the no-fire-and-forget bar: `run.log` for 2024-01-03 shows
+  `26 success / 0 failed / 0 skipped`, 30,239 candles, "All (data_type x instrument_type) combinations passed" — clean,
+  no row-key errors visible in this excerpt. 2022 (`092148`) independently confirmed still alive and progressing
+  normally (day 2022-03-10, ~19% through its year) on its original (pre-`c78285b`) pin — left running as-is rather than
+  restarting an already ~30-min-invested VM just to pick up a fix for an already-non-blocking gap; not required for this
+  todo's actual goal (the ES/MES per-contract `continuous_future` hit rate, a different data_type/instrument_type axis
+  than the COMBO ohlcv_1s writes the gap affects). Both VMs confirmed `RUNNING` via a final fresh
+  `gcloud compute instances list`. Still genuinely hours from full-year completion on both (2022 ETA ~1.5-2h remaining;
+  2024 is a fresh full-year start, ~2.5h). Declining/ skipping rather than busy-waiting, same posture as every prior
+  slot on this todo. **Next dispatch**: check `mdps-backfill-tradfi-20260731-092148` (2022) and
+  `mdps-backfill-tradfi-y2024-resume3-20260731` (2024) for completion (`EXIT_STATUS` in their `vm-logs/` dirs, not just
+  liveness) before running `build-continuous --root ES` + the 1d/24h hit-rate re-measure against the ~19% (454/2398)
+  baseline; if either was preempted again, relaunch non-force (skip-if-fresh resumes cleanly) rather than replaying day
+  one, and re-verify tarball freshness for `market-data-processing-service`/`deployment-service` before launching (both
+  were stale this round despite being fresh on the prior 023743/092148/092224 wave — freshness drifts as LDR keeps
+  moving, so it must be re-checked per relaunch, not assumed from a prior session's confirmation).
+
 ## Codex SSOTs
 
 No new durable contract is created by this plan — every todo executes an already-decided spec from its source doc, or
