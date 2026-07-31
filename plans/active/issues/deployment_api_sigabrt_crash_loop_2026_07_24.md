@@ -308,9 +308,122 @@ cancellation-timeout fix and already shipped). Suggested next steps for whoever 
       DIFFERENT gVisor sandboxing profile than gen2 — this doc's earlier `cloudbuild.yaml` comment cited a
       gen1-fixes-native-crashes precedent from `${_ROLLUP_JOB}`, but that precedent was never itself confirmed to be
       sandbox-kill-related — worth re-examining whether gen1 helps, hurts, or is orthogonal to THIS specific failure
-      mode). (repo: deployment-api)
+      mode). (repo: deployment-api) — **2026-07-31 (slot 11, backend_engineer)**: concrete next steps (1)+(2) executed
+      with real Cloud Monitoring API data (not log-archaeology). **Finding A — the sandbox-external-whole-container-kill
+      theory is REFUTED for the clean (low-traffic, single-instance) case.** 3 fresh post-pin SIGABRTs found since the
+      12:09Z catalogue (`00341-6vh@14:46:15Z` pid=29, `00341-6vh@14:54:25Z` pid=280, `00343-tf5@21:14:18Z` pid=900 — all
+      2026-07-30, all still zero faulthandler dumps, gen1 pin confirmed live throughout). For `00343-tf5` (minScale=1,
+      confirmed single active instance the whole window via the `run.googleapis.com/container/instance_count` metric),
+      checked the FULL `run.googleapis.com%2Fvarlog%2Fsystem` stream for that revision: **no `"Starting new instance"`
+      line appears after the SIGABRT** — the same instance keeps serving `/health` 200s immediately before (`21:14:12Z`)
+      and after (`21:14:18Z`/`21:15:49Z`) with zero gap, and the per-instance CPU/memory Monitoring API time series
+      (`run.googleapis.com/container/{cpu,memory}/utilizations`, queried directly via the REST API, not just log-based
+      threshold messages) show near-idle load throughout (±6min window: CPU 0.26%-1.44% of 4 vCPU, memory ~14.2-14.4% of
+      16Gi) — no resource spike, no restart. **If the sandbox supervisor were killing the whole container, a fresh
+      `"Starting new instance"` would be expected** (this is exactly what real OOM-kills on this SAME service DO produce
+      — see Finding B); its absence here means the container/gunicorn-master survives and only a single in-container
+      PROCESS received the signal. **Finding B — DISCOVERED a second, previously-conflated, already-diagnosable failure
+      mode on this service: real OOM-kills.** Reading the full system-log stream for `00331-wzz` (2026-07-29, the
+      revision this doc catalogued as carrying 6/8 historical SIGABRTs) surfaced a DISTINCT, unrelated pattern occurring
+      5+ times that same day: `"Memory limit of 16384 MiB exceeded with NNNNN MiB used"` (ERROR) immediately followed
+      within ~5s by `"Container terminated on signal 9"` (WARNING — SIGKILL, not SIGABRT) and then a real
+      `"Starting new instance. Reason: AUTOSCALING"`. This is signal 9, a genuine, already-self-explanatory OOM-kill —
+      completely different from this doc's signal-6 mystery — but happening on the SAME revision in the SAME log stream,
+      which is almost certainly why the doc's earlier "memory-limit correlation" lead kept coming back "weak" (2/8, then
+      0/2): it was testing memory-limit-exceeded proximity against the wrong signal's timestamps. Filed as its own
+      `[BACKEND]` todo below rather than folding into this one. **Finding C — local repro confirms a clean,
+      evidence-consistent alternative mechanism**: wrote `/tmp/repro_exec_subprocess_sigabrt.py` (scratch, not
+      committed) mirroring the exact production disposition state (`signal.signal(SIGABRT, SIG_DFL)` then
+      `faulthandler.enable()`, same as `post_worker_init`), then
+      `subprocess.run([sys.executable, "-c", "import os; os.abort()"])` — a genuinely EXEC'd child (not a
+      `ProcessPoolExecutor` fork child, already proven by the 2026-07-30T12:09Z repro to correctly inherit + dump).
+      Result: child `returncode=-6` (SIGABRT), **zero stdout/stderr from the child** (POSIX resets signal dispositions
+      to `SIG_DFL` on `exec()`, so the fresh child never has `faulthandler` armed — it doesn't inherit the parent's
+      per-process handler table), and the **parent process is completely unaffected and keeps running**. This exactly
+      reproduces every observed signature with a mundane, well-understood mechanism: pid==tid (fresh single-threaded
+      process), zero dump, container/gunicorn-master survives. `deployment_api/` has 15+ `subprocess.run()`/`Popen` call
+      sites (`deployment_diff.py`, `builds.py`, `backfill_launch.py`, `deploy_missing_launch.py`, `strategy_shard.py`,
+      `execution_backtest_launch.py`, `monitor_live.py`, `service_status_checkers.py`, `monitor_experiments.py`,
+      `monitor_scheduled.py`, `strategy_backtest_launch.py` — full list via
+      `grep -rn 'subprocess\.\(run\|Popen\)' deployment_api/`). None of the 3 fresh occurrences correlate with a
+      non-`/health` request in the surrounding ±15min request log, so if this theory holds the trigger is most likely a
+      BACKGROUND/scheduled code path, not a synchronous request handler — not yet identified. Filed a narrower, more
+      targeted `[BACKEND]` follow-up todo below. No code shipped this session (investigation only, confirmed via real
+      Monitoring-API data + a local repro, not log-archaeology); the doc-wide root cause remains OPEN — this checkbox
+      stays unflipped.
+
+- [ ] [BACKEND] P2. **NEW, opened 2026-07-31 (slot 11, backend_engineer) — narrow the exec'd-subprocess-SIGABRT theory
+      to a specific call site.** Per the todo above's Finding C: a `subprocess.run()`/`Popen`-spawned child crashing
+      with `SIGABRT` reproduces every observed signature (pid==tid, zero faulthandler dump, container survives) — unlike
+      a `ProcessPoolExecutor` fork child (already proven, 2026-07-30, to correctly dump). None of the 3 freshest
+      occurrences (`00341-6vh@14:46:15Z`/`14:54:25Z`, `00343-tf5@21:14:18Z`, all 2026-07-30) correlate with a
+      non-`/health` request in the surrounding request log, so the trigger — if this theory holds — is likely a
+      BACKGROUND/scheduled path, not a request handler. Next steps: (1) audit `deployment_api/`'s 15+
+      `subprocess.run()`/`Popen` call sites for which are reachable WITHOUT a corresponding inbound HTTP request (a
+      background `asyncio` loop, a lazily-triggered retry, a cached/memoized call that doesn't show per-invocation in
+      request logs) — `background_sync.py`/`workers/auto_sync.py`'s 30-60s loop and `_reap_scheduler.py`'s
+      `/api/internal/reap-tick` (confirmed firing every ~10min via Cloud Scheduler, visible in request logs) were
+      grepped this session and do NOT themselves call `subprocess` directly, but audit their FULL call graph
+      (`SyncService`, `DeploymentsRegistry.reap_stale`, and whatever `_run_ttl_cleanup` calls) since a subprocess call
+      could be nested several layers down; (2) once a plausible reachable call site is found, add defensive
+      instrumentation (log `returncode`/negative-signal + `stderr` on a non-zero/signal exit, e.g.
+      `if result.returncode < 0: logger.error(...)`) so the NEXT occurrence is attributable to an exact call site from
+      application logs alone, without needing a gVisor-cooperative faulthandler dump; (3) if no background call site is
+      found, re-open the sandbox-external-termination theory specifically for the HIGHER-traffic/multi-instance
+      revisions (where Finding A's clean single-instance evidence doesn't directly apply) using the same
+      instance_count-based restart-detection method demonstrated this session. (repo: deployment-api)
+
+- [ ] [BACKEND] P2. **NEW, opened 2026-07-31 (slot 11, backend_engineer) — real OOM-kills (`SIGKILL`, distinct from this
+      doc's `SIGABRT` mystery) recur on this service and are currently untracked.** While reading `00331-wzz`'s full
+      `run.googleapis.com%2Fvarlog%2Fsystem` stream for Finding B above, found 5+ occurrences on 2026-07-29 alone of
+      `"Memory limit of 16384 MiB exceeded with NNNNN MiB used"` (16513-17004 MiB against the 16384 MiB limit) followed
+      within ~5s by `"Container terminated on signal 9"` and a real `"Starting new instance. Reason: AUTOSCALING"` —
+      i.e. genuine, already-self-explanatory OOM-kills, NOT the signal-6 crash this doc tracks (confirmed distinct:
+      SIGKILL vs SIGABRT, and each OOM event has its own adjacent `"Memory limit exceeded"` line, unlike the SIGABRT
+      occurrences which consistently do NOT). This pattern appears to correlate with AUTOSCALING-triggered fresh
+      instances (multiple `"Starting new instance"` lines cluster right before each OOM), suggesting a cold-start memory
+      spike under concurrent load rather than a slow leak. Not previously tracked as its own issue — this doc's
+      "memory-limit correlation" lead was being tested against the WRONG signal's timestamps (SIGABRT, not SIGKILL),
+      which explains why that lead kept coming back weak. Next steps: (1) `gcloud logging read` a wider window (7+ days)
+      scoped to `"Container terminated on signal 9"` across all revisions to quantify true frequency/cost (each OOM-kill
+      is a full cold-restart — throughput + latency impact, and Cloud Run bills for the restart); (2) profile what the
+      container imports/allocates at startup under concurrent-instance-cold-start conditions (candidate: the same
+      `deployment_api/services/data_status/manifest.py` pyarrow/pandas compute paths already flagged as memory-heavy in
+      this doc's `2026-07-30T04:15Z` entry) to find the actual spike source; (3) consider whether raising the memory
+      limit further, or capping `containerConcurrency`/max concurrent cold-starts, is the pragmatic mitigation while
+      root-causing continues. (repo: deployment-api)
 
 ## Progress Log
+
+- **2026-07-31T09:32Z (slot 11, backend_engineer)** — Dispatched `deployment_api_sigabrt_crash_loop-006` (the
+  `[BACKEND] P2` sandbox-external-termination todo, 17th+ dispatch on this doc). Fresh-pulled all slot repos; confirmed
+  no new deployment-api commit touching `cloudbuild.yaml`/`gunicorn.conf.py`/`deployment_api/` since the last progress
+  entry. Confirmed current live revision is `uts-shared-deployment-api-00353-dng` (100% traffic, `07:10:20Z`), gen1 pin
+  still present. Executed the todo's own concrete next steps (1)+(2) with real data instead of re-verifying the
+  already-settled precondition checks: `gcloud logging read` found 3 fresh post-catalogue SIGABRTs
+  (`00341-6vh@14:46:15Z`/`14:54:25Z`, `00343-tf5@21:14:18Z`, all 2026-07-30) — gen1 pin conclusively still doesn't stop
+  it (5 total post-pin now). Queried the Cloud Monitoring REST API directly (`timeSeries.list` on
+  `container/{cpu,memory}/utilizations` and `container/instance_count`, not just log-based threshold messages) for
+  `00343-tf5`'s clean single-instance window around `21:14:18Z`: CPU/memory both near-idle, and — the key new fact —
+  `instance_count` never drops to 0 and the system log shows NO `"Starting new instance"` after the crash, meaning the
+  container/gunicorn-master genuinely survives. This is direct evidence AGAINST the sandbox-whole-container-kill theory
+  this todo was chasing (a real sandbox-initiated kill should produce a fresh instance-start, exactly as seen for actual
+  OOM-kills — see below). While reading `00331-wzz`'s full system-log stream for comparison, discovered a SEPARATE,
+  previously-conflated failure mode: real `SIGKILL`/"Container terminated on signal 9" OOM-kills (5+ on 2026-07-29
+  alone, each with its own adjacent `"Memory limit exceeded"` line and a genuine restart) — distinct from this doc's
+  SIGABRT mystery, filed as its own fresh `[BACKEND]` todo rather than continuing to conflate the two signals. Wrote and
+  ran a local repro (`/tmp/repro_exec_subprocess_sigabrt.py`, scratch/uncommitted) mirroring the exact
+  `post_worker_init` disposition sequence, then `subprocess.run()`-spawning a genuinely EXEC'd child that `os.abort()`s:
+  reproduces every observed signature exactly (child `returncode=-6`, zero stdout/stderr — POSIX resets signal
+  dispositions on `exec()`, so the armed `faulthandler` in the parent is never inherited by an exec'd child — and the
+  parent/container is completely unaffected). `deployment_api/` has 15+ `subprocess.run()`/`Popen` call sites; none of
+  the 3 fresh occurrences correlate with a non-`/health` request nearby, so the trigger (if this theory holds) is most
+  likely background/scheduled, not request-triggered — filed a narrower follow-up `[BACKEND]` todo to find the specific
+  call site and add signal-exit instrumentation so the next occurrence self-attributes without needing a gVisor-side
+  dump. Not flipping this checkbox: the doc-wide root cause remains genuinely open (the exec-subprocess theory is
+  evidence-consistent, not yet directly confirmed against production — no code shipped this session, this was
+  investigation + a local repro only, per this doc's own established evidentiary bar of "faithful repro over
+  log-archaeology or re-guessing").
 
 - **2026-07-30T13:06Z (slot 16, review)** — Dispatched `deployment_api_sigabrt_crash_loop-005` (this `[REVIEW] P2` todo,
   13th+ dispatch). Fresh-pulled all slot repos first. Re-verified from scratch rather than trusting the 21min-old 12:45Z
