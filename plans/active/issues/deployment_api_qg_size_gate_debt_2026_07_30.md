@@ -325,9 +325,14 @@ file-by-file.
       `test_data_status_service.py`, `test_mdps_timeframe_aware_honest_coverage.py`,
       `test_mtds_honest_coverage_for_bookmaker.py`, `test_oow_denominator.py`, `test_data_status_turbo.py`, + 9 more),
       basedpyright clean, ruff clean, full `quality-gates.sh` green (128s). Repo: deployment-api.
-- [ ] [SCRIPT] P2. Decompose the remaining function-size-only violation in
-      `deployment_api/services/deploy_missing_launch.py` (`launch_deploy_missing_vm()`, 236L). Remove its exclude entry
-      once compliant; re-run `quality-gates.sh` to confirm no regression.
+- [x] ✅ [SCRIPT] P2. **DONE 2026-07-31 (slot-2, infra craft).** Decomposed
+      `deployment_api/services/deploy_missing_launch.py` (`launch_deploy_missing_vm()`, was 236L).
+      `deployment-api@b703131`: extracted `_validate_deploy_missing_row_key`, `_inflight_launch_result`,
+      `_run_tarball_freshness_gate`, `_dry_run_launch_result`, `_build_launcher_env`, `_run_launcher_subprocess` — each
+      maps to one step of the function's own documented 8-step launch sequence. Pure code motion, no logic changes.
+      `FUNCTION_SIZE_EXTRA_EXCLUDES` entry removed — gate passes natively. Verified: 23 targeted tests green
+      (`test_deploy_missing_launch.py`), basedpyright clean, ruff clean (3 pre-existing `# noqa` format warnings
+      confirmed unchanged via stash-diff), full `quality-gates.sh` green (162s). Repo: deployment-api.
 - [ ] [SCRIPT] P2. Decompose the remaining function-size-only violation in
       `deployment_api/services/deployment_manager.py`. Remove its exclude entry once compliant; re-run
       `quality-gates.sh` to confirm no regression.
