@@ -707,3 +707,12 @@ accordingly.
   a relaunch round of the 18 remaining shards using the now-fixed tarball (post-`market-tick-data-service@9f4098b1`),
   which should be dispatched as its own todo/decision rather than done by me unilaterally given the standing
   dispatch-deadlock/monitoring-hostage concerns already on record above.
+- **2026-07-31T00:41Z (slot-15)**: **positive signal on the fix-verification todo** —
+  `canonical-migration-cefi- content-14-verify20260730-221322` (a fresh shard-14 relaunch someone else dispatched,
+  post-fix tarball) is now at 8632s elapsed (~2.4h), 76,800/335,111 files (22.9%) — well past the ~45-50min freeze
+  window that killed nearly every pre-fix run this session. `run.log` shows the fix's new diagnostic line
+  (`pyarrow pool release: bytes_allocated=X (before release_unused call)`) firing on the established every-200-files
+  cadence, confirming the fix code is genuinely deployed and active on this run, not just merged. Not conclusive yet
+  (needs to reach the terminal summary to fully verify), but this is the strongest direct evidence so far that the
+  periodic-pool-release fix works. Monitoring-only, not touching this VM (it's the dedicated verification todo's run,
+  not mine).
