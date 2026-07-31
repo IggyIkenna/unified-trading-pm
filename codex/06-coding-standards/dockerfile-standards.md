@@ -175,6 +175,35 @@ The shared base image works seamlessly with private Artifact Registry Python pac
 
 Each service owns its own `pyproject.toml` dependencies. The base image provides the shared foundation.
 
+## uv pip install Retry Wrapper (BuildKit-secret GAR auth)
+
+**Canonical convention (established 2026-07-30,
+`plans/active/issues/cloud_build_unified_api_contracts_publish_ordering_race_2026_07_29.md`)** — every production
+Dockerfile whose editable install resolves `unified-trading-library`/`unified-api-contracts` from the LIVE Artifact
+Registry index (i.e. carries a `RUN --mount=type=secret,id=gar_token` layer, as opposed to a vendored-local-path
+install) MUST wrap that `uv pip install ... --no-sources` call in a 3-attempt retry loop with exponential backoff, to
+absorb the transient publish-ordering race between a downstream repo's floor-bump landing and the upstream wheel fully
+propagating through the registry:
+
+```dockerfile
+RUN --mount=type=secret,id=gar_token \
+    UV_EXTRA_INDEX_URL="https://oauth2accesstoken:$(cat /run/secrets/gar_token)@asia-northeast1-python.pkg.dev/central-element-323112/unified-libraries/simple/" \
+    sh -c 'i=1; until uv pip install --system --no-sources -e .; do [ "$i" -ge 3 ] && { echo "uv pip install failed after 3 attempts" >&2; exit 1; }; w=$((15 * i)); echo "uv pip install failed (attempt $i/3) -- retrying in ${w}s"; sleep "$w"; i=$((i + 1)); done'
+```
+
+Applied identically (verbatim, modulo each service's own install flags/extras) across 8 repos as of 2026-07-30:
+`strategy-service`, `ml-service`, `market-data-processing-service`, `instruments-service`, `trading-agent-service`,
+`greeks-service`, `alerting-service`, `fund-administration-service`. **Not applicable** to `market-tick-data-service`
+(installs UTL/UAC from vendored local `.deps/` paths, never resolves from the live GAR index at build time) or
+`unified-trading-system-ui` (no Cloud Build trigger).
+
+**Not yet automated** — unlike the `BASE_IMAGE_DIGEST` pin (§ Layer Caching,
+`scripts/propagation/ add-dockerfile-digest-arg.py` + `scripts/quality_gates/check_base_image_digest_drift.py` + STEP
+5.79), there is currently no propagation script or fleet drift-checker enforcing this pattern — it was hand-applied per
+repo. A new repo, or a future edit to one of the 8 above, can silently drop the retry wrapper with nothing to catch it.
+Building that automation (mirroring the digest-pin precedent) is tracked as its own follow-up todo rather than folded
+into the doc-only pass that added this section — see the issue doc above.
+
 ## Security
 
 - **Never bake secrets into images** — use `get_secret_client()` at runtime

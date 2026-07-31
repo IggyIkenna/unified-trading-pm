@@ -245,10 +245,27 @@ applied to every repo this grep surfaces, not just instruments-service.
       `293cc110-4730-444e-b0e2-6dac9430fded`, `status: SUCCESS`, same clean first-attempt confirmation. (Both logs show
       an unrelated `publish-wheel` step `400 Bad Request` — a pre-existing "wheel version already published" re-trigger
       artifact, orthogonal to this fix and not gating build SUCCESS.)
-  - [ ] [SCRIPT] P3. Once a retry pattern is chosen for one repo and verified, consider whether it's worth promoting to
-        a shared Dockerfile snippet/base-image convention (mirrors the `quality-gates-v2.yml.tmpl` precedent) rather
-        than repeating the same edit 7+ times by hand. **Pattern is now consistently applied across all 8 affected repos
-        (2026-07-30) — still an open judgment call whether to further consolidate into a shared snippet.**
+  - [x] ✅ [SCRIPT] P3. **DECIDED + DOCUMENTED 2026-07-31 (slot 7, cicd craft dispatch).** Judgment call: YES, worth
+        promoting — the retry-wrapper `RUN` block is byte-identical (modulo each repo's own install flags/extras) across
+        all 8 affected repos, and the workspace already has a proven precedent for exactly this problem shape (the
+        `BASE_IMAGE_DIGEST` pin: SSOT doc + `scripts/propagation/add-dockerfile-digest-arg.py` +
+        `scripts/quality_gates/check_base_image_digest_drift.py` + QG STEP 5.79). Documented the canonical pattern as a
+        new SSOT section in `codex/06-coding-standards/dockerfile-standards.md` § "uv pip install Retry Wrapper
+        (BuildKit-secret GAR auth)" — `unified-trading-pm@<see Progress Log for sha>`. **Scoped down from the full
+        automation** (propagation script + fleet drift-checker + QG step mirroring the digest-pin precedent) — that is a
+        multi-hour build, not a 1-hour P3 doc-decision task, so it's split into its own properly-scoped follow-up below
+        rather than crammed into this todo.
+  - [ ] [SCRIPT] P3. Build the retry-wrapper drift-checker automation now that the canonical pattern is documented
+        (`codex/06-coding-standards/dockerfile-standards.md` § "uv pip install Retry Wrapper"): mirror the
+        `BASE_IMAGE_DIGEST` precedent exactly — (a) a PM-level fleet checker script under `scripts/quality_gates/` (e.g.
+        `check_uv_install_retry_wrapper_drift.py`, warn-only post-gate, modeled on `check_base_image_digest_drift.py`)
+        that scans every repo's production Dockerfile(s) for a `RUN --mount=type=secret,id=gar_token` layer whose
+        `uv pip install ... --no-sources` call is NOT wrapped in the documented 3-attempt retry loop, and flags it; (b)
+        a propagation script under `scripts/propagation/` (e.g. `apply-uv-install-retry-wrapper.py`, modeled on
+        `add-dockerfile-digest-arg.py`, idempotent + `--dry-run` + `--repo`) that can auto-apply the wrapper to a repo
+        missing it. Scope explicitly EXCLUDES `market-tick-data-     service` (vendored-local installs) and
+        `unified-trading-system-ui` (no Cloud Build trigger) — same exclusions as documented in the SSOT section. (repo:
+        unified-trading-pm)
 - [x] ✅ [SCRIPT] P3. **FIXED 2026-07-30 (slot 1, `/autonomous` dispatch)** —
       `unified-trading-pm@<pending-sha, see     Progress Log>`. Added `active_trigger_repos()` to
       `stale_build_monitor.py` (one `gcloud builds triggers list` call, cached across the run) and wired it into
