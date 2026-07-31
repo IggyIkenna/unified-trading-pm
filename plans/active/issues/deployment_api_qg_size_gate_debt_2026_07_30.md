@@ -76,10 +76,24 @@ file-by-file.
 
 ## Acceptance
 
-- [ ] [SCRIPT] P1. Decompose `deployment_api/routes/deployments_inventory.py` (2592L, the largest offender) into a
-      facade package (mirrors the 2026-06-11 precedent noted in this repo's own `quality-gates.sh` history: "routes/
-      deployments 968 → 3-module package"). Remove its `FUNCTION_SIZE_EXTRA_EXCLUDES` entry once <900L and its own
-      functions are compliant; re-run `quality-gates.sh` to confirm no regression.
+- [x] ✅ [SCRIPT] P1. **DONE 2026-07-31 (slot-2, infra craft)** — `deployment-api@75584a8` (split) +
+      `deployment-api@17361fd` (exclude-list cleanup). Decomposed `deployment_api/routes/deployments_inventory.py`
+      (2592L) into a 6-module facade package
+      (`deployments_inventory/{__init__,_classification,_registry_io,     _mock_data,_aggregation,_routes}.py`, every
+      module <900L), mirroring the 2026-06-11 `routes/deployments` precedent (pure code motion). The precedent's own
+      docstring ("patched module-level collaborators resolved through the facade module at call time") turned out to be
+      load-bearing here: `tests/mocks.py`'s `patch_inventory_secondary_census` + ~120 `patch()`/`patch.object()` call
+      sites across `test_route_deployments_inventory.py` and 8 other test files target
+      `deployment_api.routes.     deployments_inventory.<name>` directly (27 distinct "seam" collaborators — `_cfg`,
+      `get_storage_client`, `_load_registry_entries`, `CostObservabilityService`, etc.) — every submodule resolves these
+      via `import ... as _inv; _inv.<name>(...)` at call time rather than a direct import, so the existing patch surface
+      keeps intercepting regardless of which file now defines/calls the seam. Verified empirically, not just by
+      inspection: all 186 tests across every consuming test file pass unchanged; `basedpyright`/`ruff` clean (fixed 2
+      real gaps found along the way — 120 `reportPrivateUsage` cross-submodule accesses needing
+      `# pyright: ignore[reportPrivateUsage]` per the same precedent convention, and 4 `pool.map(lambda ...)` call sites
+      losing type inference through the `_inv.` indirection, fixed by replacing the lambdas with explicitly-typed nested
+      functions); full `quality-gates.sh` green both before and after removing the now-obsolete
+      `FUNCTION_SIZE_EXTRA_EXCLUDES` entry (confirmed `✅ File size OK` with the exclude removed).
 - [ ] [SCRIPT] P1. Decompose `deployment_api/services/data_status/manifest.py` (1131L, contains the 360L
       `_build_manifest_category()` — also a function-size violation) into sibling modules under `services/data_status/`.
       Remove its exclude entry once compliant.
@@ -171,3 +185,8 @@ file-by-file.
   violators" todo (19 files in one checkbox) into 19 one-file todos, per this doc's own "one todo per file recommended
   when this doc is worked... split at dispatch time if promoted to `assigned_vm: planning`" note — total open todo count
   is now 27 (was 9), still well under the 10-100 authoring cap.
+- 2026-07-31 (slot-2, infra craft): Flipped todo 1 — decomposed `deployment_api/routes/deployments_inventory.py` (2592L,
+  the largest offender) into a 6-module facade package. See the flipped checkbox above for the full evidence chain
+  (patch-surface mapping, basedpyright/ruff fixes, test verification). `deployment-api@75584a8` (split) +
+  `deployment-api@17361fd` (removed the now-obsolete `FUNCTION_SIZE_EXTRA_EXCLUDES` entry, re-verified `✅ File size OK`
+  with it gone). 8 P1/P2 decomposition todos remain open for follow-up dispatch.
