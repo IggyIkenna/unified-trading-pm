@@ -171,53 +171,53 @@ access (likely expired for the older ranges) or VM run-log archaeology, out of s
       `sports_odds_api_key_deactivated_2026_07_26.md`. (repo: deployment-service)
 
       **2026-07-31 (slot 16) — LAUNCHED, in progress, NOT flipping yet.** `mtds-backfill-odds-sentinel-fix-20260731`
-              (`asia-northeast1-c`, `e2-highmem-4`, SPOT, `--start 2020-06-06 --end 2026-07-31`, no `--force`), confirmed
-              `RUNNING` at T+~2min (log not yet populated — normal boot lag, tarball fetch + startup script still running).
-              MTDS + UTL tarballs (the repos carrying the actual fix) confirmed fresh at launch; `unified-api-contracts` +
-              `deployment-service` tarballs were stale per the launcher's freshness check but the fix lives entirely in
-              MTDS/UTL, not those two, so proceeded rather than blocking on an unrelated staleness warning. Self-deletes on
-              completion (`VM_SHUTDOWN_ON_COMPLETION=true`). **Next steps for whoever resumes**: check
-              `gcloud compute instances describe mtds-backfill-odds-sentinel-fix-20260731 --zone=asia-northeast1-c` (absence =
-              terminal) and tail
-              `gs://deployment-scripts-central-element-323112/vm-logs/mtds-backfill-odds-sentinel-fix-20260731/run.log`; once
-              terminal, re-run the data_type-aware census (per this doc's own earlier finding — day-level presence alone
-              under-reports; check data_type completeness too) against
-              `gs://instruments-store-sports-prd-central-element-323112/_index/availability_index.parquet` for
-              `source=odds_api, date>=2020-06-06` — if genuinely 0 gaps (or only structurally unfillable ones), flip this
-              checkbox with the manifest evidence, then do the P2 VERIFY todo's own re-census.
+                  (`asia-northeast1-c`, `e2-highmem-4`, SPOT, `--start 2020-06-06 --end 2026-07-31`, no `--force`), confirmed
+                  `RUNNING` at T+~2min (log not yet populated — normal boot lag, tarball fetch + startup script still running).
+                  MTDS + UTL tarballs (the repos carrying the actual fix) confirmed fresh at launch; `unified-api-contracts` +
+                  `deployment-service` tarballs were stale per the launcher's freshness check but the fix lives entirely in
+                  MTDS/UTL, not those two, so proceeded rather than blocking on an unrelated staleness warning. Self-deletes on
+                  completion (`VM_SHUTDOWN_ON_COMPLETION=true`). **Next steps for whoever resumes**: check
+                  `gcloud compute instances describe mtds-backfill-odds-sentinel-fix-20260731 --zone=asia-northeast1-c` (absence =
+                  terminal) and tail
+                  `gs://deployment-scripts-central-element-323112/vm-logs/mtds-backfill-odds-sentinel-fix-20260731/run.log`; once
+                  terminal, re-run the data_type-aware census (per this doc's own earlier finding — day-level presence alone
+                  under-reports; check data_type completeness too) against
+                  `gs://instruments-store-sports-prd-central-element-323112/_index/availability_index.parquet` for
+                  `source=odds_api, date>=2020-06-06` — if genuinely 0 gaps (or only structurally unfillable ones), flip this
+                  checkbox with the manifest evidence, then do the P2 VERIFY todo's own re-census.
 
-              **2026-07-31 (slot 5) — `mtds-backfill-odds-sentinel-fix-20260731` reached terminal, but NOT via a clean
-              completion: nearly every chunk OOM-killed (self-deleted after ~1.5h of VM time with minimal net progress).**
-              Confirmed absent via `gcloud compute instances describe` (terminal); `run.log` shows chunks 1-6 of 9 all
-              ending `CHUNK_FAILED: ... exit=137 reason=OOM_KILLED` (chunk 7's log cuts off mid-run at 04:12:11Z with no
-              further lines — the same "silent freeze" signature `mtds_backfill_vm_memory_hang_large_chunk_2026_07_22.md`
-              already documented). Fresh data_type-aware census (single read, `source=odds_api, date>=2020-06-06..
-              2026-07-31`): **590 of 2247 calendar days still missing** (was 595 before this run — only ~5 days of net
-              progress from 1.5h of `e2-highmem-4` SPOT compute). The previously-claimed-closed `2026-02-22..2026-03-28`
-              (35-day) range is confirmed STILL missing — consistent with
-              `sports_manifest_consolidator_zero_growth_stall_2026_07_29.md`'s own later correction that the earlier
-              "closed" claim was a misread of SKIP-vs-Processed log lines (0 real `Processed` lines for that range, not
-              data loss). **New, more severe evidence for the OOM root-cause**: this run used the launcher's DEFAULT
-              `--chunk-size 250` (not the validated `--chunk-size 5` tail mitigation), and OOM-killed on `e2-highmem-4`
-              (32GB) even though chunks 1-6 were mostly `SKIP` days (only 7 `Processed date=` lines across the whole
-              visible log) — the machine-type bump alone is no longer sufficient even for SKIP-dense older history, a
-              worse severity than the sibling doc's "cross-day accumulation" finding (which was scoped to the dense
-              recent tail). Filed as new evidence in that doc. **Mitigation applied**: relaunched as
-              `mtds-backfill-odds-smallchunk-20260731` (`--start 2020-06-06 --end 2026-07-31 --chunk-size 5`, same
-              `e2-highmem-4`, SPOT) — the best validated workaround per the sibling doc, though not guaranteed (that
-              doc's own conclusion: "no reliable workaround identified"; chunk-size 5 was 0/3 successful on the tail's
-              dense real-fetch window previously). Verified STARTED (`RUNNING` within seconds of `gcloud compute
-              instances create`). **Still open, NOT flipping**: the underlying OOM defect is an unresolved P1 in the
-              sibling doc ("root-cause the actual retained-memory object(s)") — this backfill cannot be reliably
-              completed until that lands or until this small-chunk relaunch is confirmed to finish clean. **Next steps
-              for whoever resumes**: check `gcloud compute instances describe mtds-backfill-odds-smallchunk-20260731
-              --zone=asia-northeast1-c` (absence = terminal, self-deletes on completion) and tail
-              `gs://deployment-scripts-central-element-323112/vm-logs/mtds-backfill-odds-smallchunk-20260731/run.log` for
-              any `CHUNK_FAILED` lines; once terminal, re-run this same data_type-aware census — if genuinely 0 gaps (or
-              only structurally unfillable ones), flip this checkbox with the manifest evidence, then do the P2 VERIFY
-              todo's own re-census. If chunks are still failing even at `--chunk-size 5`, this todo is genuinely blocked
-              on the sibling doc's P1 root-cause fix landing — do not keep relaunching with the same parameters expecting
-              a different result; escalate via that doc instead.
+                  **2026-07-31 (slot 5) — `mtds-backfill-odds-sentinel-fix-20260731` reached terminal, but NOT via a clean
+                  completion: nearly every chunk OOM-killed (self-deleted after ~1.5h of VM time with minimal net progress).**
+                  Confirmed absent via `gcloud compute instances describe` (terminal); `run.log` shows chunks 1-6 of 9 all
+                  ending `CHUNK_FAILED: ... exit=137 reason=OOM_KILLED` (chunk 7's log cuts off mid-run at 04:12:11Z with no
+                  further lines — the same "silent freeze" signature `mtds_backfill_vm_memory_hang_large_chunk_2026_07_22.md`
+                  already documented). Fresh data_type-aware census (single read, `source=odds_api, date>=2020-06-06..
+                  2026-07-31`): **590 of 2247 calendar days still missing** (was 595 before this run — only ~5 days of net
+                  progress from 1.5h of `e2-highmem-4` SPOT compute). The previously-claimed-closed `2026-02-22..2026-03-28`
+                  (35-day) range is confirmed STILL missing — consistent with
+                  `sports_manifest_consolidator_zero_growth_stall_2026_07_29.md`'s own later correction that the earlier
+                  "closed" claim was a misread of SKIP-vs-Processed log lines (0 real `Processed` lines for that range, not
+                  data loss). **New, more severe evidence for the OOM root-cause**: this run used the launcher's DEFAULT
+                  `--chunk-size 250` (not the validated `--chunk-size 5` tail mitigation), and OOM-killed on `e2-highmem-4`
+                  (32GB) even though chunks 1-6 were mostly `SKIP` days (only 7 `Processed date=` lines across the whole
+                  visible log) — the machine-type bump alone is no longer sufficient even for SKIP-dense older history, a
+                  worse severity than the sibling doc's "cross-day accumulation" finding (which was scoped to the dense
+                  recent tail). Filed as new evidence in that doc. **Mitigation applied**: relaunched as
+                  `mtds-backfill-odds-smallchunk-20260731` (`--start 2020-06-06 --end 2026-07-31 --chunk-size 5`, same
+                  `e2-highmem-4`, SPOT) — the best validated workaround per the sibling doc, though not guaranteed (that
+                  doc's own conclusion: "no reliable workaround identified"; chunk-size 5 was 0/3 successful on the tail's
+                  dense real-fetch window previously). Verified STARTED (`RUNNING` within seconds of `gcloud compute
+                  instances create`). **Still open, NOT flipping**: the underlying OOM defect is an unresolved P1 in the
+                  sibling doc ("root-cause the actual retained-memory object(s)") — this backfill cannot be reliably
+                  completed until that lands or until this small-chunk relaunch is confirmed to finish clean. **Next steps
+                  for whoever resumes**: check `gcloud compute instances describe mtds-backfill-odds-smallchunk-20260731
+                  --zone=asia-northeast1-c` (absence = terminal, self-deletes on completion) and tail
+                  `gs://deployment-scripts-central-element-323112/vm-logs/mtds-backfill-odds-smallchunk-20260731/run.log` for
+                  any `CHUNK_FAILED` lines; once terminal, re-run this same data_type-aware census — if genuinely 0 gaps (or
+                  only structurally unfillable ones), flip this checkbox with the manifest evidence, then do the P2 VERIFY
+                  todo's own re-census. If chunks are still failing even at `--chunk-size 5`, this todo is genuinely blocked
+                  on the sibling doc's P1 root-cause fix landing — do not keep relaunching with the same parameters expecting
+                  a different result; escalate via that doc instead.
 
 - [ ] [VERIFY] P2. Depends on the P1 backfill above. **Census re-run 2026-07-30 (slot 3) against a snapshotted canonical
       (11,789,693 rows): STILL 595 missing days** across `2020-06-06..2026-04-15` (1,545 of 2,140 days present) —
@@ -381,6 +381,31 @@ access (likely expired for the older ranges) or VM run-log archaeology, out of s
   `estimated_unblock_minutes` left to policy default since the relaunch's total runtime is genuinely unknown —
   full-range chunk-size-5 could take multiple hours) so a future dispatch checks the relaunch's terminal state and
   re-censuses rather than re-attempting the same default-chunk-size launch that just failed.
+- 2026-07-31 (slot 12, data_engineering): Dispatched `sports_odds_api_scattered_multiyear_gaps-002` (this doc's P2
+  VERIFY todo) again. Checked the P1 backfill's actual VM state (not a bare git-log check) this time.
+  `mtds-backfill-odds-smallchunk-20260731` (the run the prior slot-5 entry above just launched) was preempted ~55s after
+  insert (`gcloud compute operations list`: `insert` 2026-07-31T08:29:45Z, `compute.instances.preempted` 08:30:40Z) — it
+  never got far enough to write even a `run.log` (only `LAUNCH_PARAMS.json` exists under its log prefix).
+  **Auto-recovery correctly relaunched it** ~4 min later as `mtds-backfill-odds-smallchunk2-20260731` (same SPOT params:
+  `--chunk-size 5`, full `2020-06-06..2026-07-31` range) — no Progress Log entry claims credit for that second launch,
+  confirming this is the PROGRESS-checkpoint auto-resume contract working end-to-end for this venue (CLAUDE.md § VM
+  launches — "preemption recovery MUST resume from measured PROGRESS"), not a silently-dead VM. Confirmed `smallchunk2`
+  currently RUNNING and healthy: `PROGRESS.json` shows `last_completed_date=2020-08-14, monotonic=true` (chunk 14/450
+  per the run.log's own counter), `run.log` shows every date so far as `SKIP ... all 1 venues fresh` (0 real fetches yet
+  — this early range was already captured pre-backfill), 0 `CHUNK_FAILED` lines, RSS ~1.9GB / mem 9.6% (well under the
+  85% watchdog threshold) — no OOM signature yet, unlike the sentinel-fix and first smallchunk attempts. Since only
+  14/450 chunks have landed and all are SKIPs (no real gap-filling has actually happened yet), re-running the
+  day/data_type census now would reproduce the same 590/595-missing-days result — not doing that, same reasoning as
+  every prior skip on this todo. Skipping again (`reason_code=BLOCKED`) — genuinely new information this time (ruled out
+  "VM silently died," confirmed the checkpoint-resume fix works end-to-end for a real preemption on this exact venue),
+  but the VERIFY still can't complete until the backfill actually reaches and clears the real gap days (chunk 14/450 is
+  still in the easy, already-captured early range — the dense recent tail is the historical OOM-risk zone and hasn't
+  been reached yet). **Next dispatch**: check
+  `gcloud compute instances describe mtds-backfill-odds-smallchunk2-20260731 --zone=asia-northeast1-c` (absence =
+  terminal, self-deletes on completion) and its `PROGRESS.json`/`run.log` for any `CHUNK_FAILED` lines; once terminal
+  (or once `last_completed_date` has meaningfully passed the known gap ranges), re-run the data_type-aware census — if
+  genuinely 0 gaps (or only structurally unfillable ones), flip the P1 checkbox above with the manifest evidence, then
+  this P2 VERIFY todo's own census, then this doc is archive-eligible.
 
 ## Codex SSOTs
 
