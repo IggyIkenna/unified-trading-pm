@@ -31,8 +31,9 @@ code_refs:
 # Service Pair Flows
 
 **SSOT:** This document describes canonical service-to-service interaction flows. Runtime behavior is defined in
-`deployment-service/configs/runtime-topology.yaml`. Code dependencies (imports) are validated by
-`workspace-manifest.json` arch_tier.
+`unified-trading-pm/configs/runtime-topology.yaml` (owner: unified-trading-pm; `deployment-service` syncs a copy via
+`scripts/sync/sync-configs.py` — it no longer carries its own `configs/runtime-topology.yaml`). Code dependencies
+(imports) are validated by `workspace-manifest.json` arch_tier.
 
 ## Transport Modes
 
@@ -59,6 +60,7 @@ code_refs:
 
 ## References
 
-- `deployment-service/configs/runtime-topology.yaml` — runtime SSOT
+- `unified-trading-pm/configs/runtime-topology.yaml` — runtime SSOT (synced to `deployment-service` via
+  `scripts/sync/sync-configs.py`)
 - `04-architecture/runtime-deployment-topology.md` — design decisions
 - `04-architecture/tier-and-import-architecture.md` — tier boundaries

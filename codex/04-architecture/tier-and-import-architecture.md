@@ -314,7 +314,8 @@ Use new package names in all new code. Alias packages ensure backward compat dur
 # Part 2 — N-Tier Protocol Injection Contract
 
 **SSOT for:** How libraries know which cloud protocol to use at runtime. **Related:**
-`unified-trading-pm/TOPOLOGY-DAG.md` · `deployment-service/configs/runtime-topology.yaml` **Implementation:**
+`unified-trading-pm/TOPOLOGY-DAG.md` · `unified-trading-pm/configs/runtime-topology.yaml` (synced to
+`deployment-service` via `scripts/sync/sync-configs.py`) **Implementation:**
 `unified-cloud-interface/unified_cloud_interface/factory.py`
 
 ## The Core Invariant
@@ -448,7 +449,8 @@ Both are in `quality-gates.sh`. Any violation blocks merge. Exceptions: `unified
 ## Cross-References
 
 - `unified-trading-pm/TOPOLOGY-DAG.md` — tier diagram (human-readable DAG)
-- `deployment-service/configs/runtime-topology.yaml` — per-service env var wiring
+- `unified-trading-pm/configs/runtime-topology.yaml` — per-service env var wiring (synced to `deployment-service` via
+  `scripts/sync/sync-configs.py`)
 - `unified-cloud-interface/unified_cloud_interface/factory.py` — implementation
 - `unified-cloud-interface/unified_cloud_interface/protocol.py` — DataSink/DataSource/EventBus ABCs
 - `unified-trading-pm/plans/archive/service_protocol_abstraction.plan.md` — plan defining this architecture

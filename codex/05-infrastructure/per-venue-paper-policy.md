@@ -132,9 +132,13 @@ pvl-p20b audit confirms: Hyperliquid testnet wired; Binance/Bybit/OKX/Aster pend
 
 ### DeFi (EVM)
 
-Tenderly fork is the canonical paper target for every EVM chain we trade. Per chain → fork URL via
-`unified_api_contracts/canonical/registry/capability_declarations/_defi.py:CHAIN_RPC_TEMPLATES` (extended to carry
-`fork_url` alongside `live_rpc_url`).
+Tenderly fork is the canonical paper target for every EVM chain we trade. `CHAIN_RPC_TEMPLATES`
+(`unified_api_contracts/registry/capability_declarations/_defi_chain_data.py`, re-exported via `_defi.py`) carries only
+the live/mainnet RPC template per chain (`ChainConfig.rpc_url_template`) — there is no per-chain `fork_url` field. The
+fork RPC is resolved separately by `get_defi_rpc_url()` (`execution_service/defi_execution/protocols/base.py`) via a
+`FORK_MODE` switch: `anvil` → `http://localhost:8545`; `tenderly` → a single global Secret Manager secret
+`tenderly-fork-rpc-url` (not per-chain), injected into the connector config as `tenderly_fork_rpc_url`. See
+`unified-api-contracts/docs/DEFI_DATA_ORDER_STRATEGY_MATRIX.md` § Position Routing Architecture.
 
 ### DeFi (Solana / non-EVM)
 

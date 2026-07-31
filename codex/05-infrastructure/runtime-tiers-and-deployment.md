@@ -256,20 +256,20 @@ deploy-shards cluster status --cluster cefi
 
 ## Key Files
 
-| What                                                                            | Where                                                                                         |
-| ------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
-| Tier startup script                                                             | `unified-trading-system-ui/scripts/dev-tiers.sh`                                              |
-| Health page                                                                     | `unified-trading-system-ui/app/health/page.tsx`                                               |
-| Tier plan (detailed, archived — superseded by this doc)                         | `unified-trading-pm/plans/archive/2026_07/e2e_testing_system_tiers_2026_03_22.md`             |
-| Deployment orchestration plan (archived — capability now in deployment-service) | `unified-trading-pm/plans/archive/2026_07/e2e_testing_deployment_orchestration_2026_03_22.md` |
-| Cluster configs                                                                 | `deployment-service/configs/clusters/*.yaml`                                                  |
-| Service dependency DAG                                                          | `deployment-service/configs/dependencies.yaml`                                                |
-| T1Orchestrator                                                                  | `deployment-service/deployment_service/orchestrator.py`                                       |
-| Cluster orchestrator                                                            | `deployment-service/deployment_service/cluster.py`                                            |
-| Local process backend                                                           | `deployment-service/deployment_service/backends/local_process.py`                             |
-| CLI commands                                                                    | `deployment-service/deployment_service/cli/commands/cluster.py`                               |
-| API routes                                                                      | `deployment-service/deployment_service/api/routes/orchestration.py`                           |
-| Runtime topology                                                                | `deployment-service/configs/runtime-topology.yaml` (symlink from PM)                          |
+| What                                                                            | Where                                                                                                                                  |
+| ------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| Tier startup script                                                             | `unified-trading-system-ui/scripts/dev-tiers.sh`                                                                                       |
+| Health page                                                                     | `unified-trading-system-ui/app/health/page.tsx`                                                                                        |
+| Tier plan (detailed, archived — superseded by this doc)                         | `unified-trading-pm/plans/archive/2026_07/e2e_testing_system_tiers_2026_03_22.md`                                                      |
+| Deployment orchestration plan (archived — capability now in deployment-service) | `unified-trading-pm/plans/archive/2026_07/e2e_testing_deployment_orchestration_2026_03_22.md`                                          |
+| Cluster configs                                                                 | `deployment-service/configs/clusters/*.yaml`                                                                                           |
+| Service dependency DAG                                                          | `deployment-service/configs/dependencies.yaml`                                                                                         |
+| T1Orchestrator                                                                  | `deployment-service/deployment_service/orchestrator.py`                                                                                |
+| Cluster orchestrator                                                            | `deployment-service/deployment_service/cluster.py`                                                                                     |
+| Local process backend                                                           | `deployment-service/deployment_service/backends/local_process.py`                                                                      |
+| CLI commands                                                                    | `deployment-service/deployment_service/cli/commands/cluster.py`                                                                        |
+| API routes                                                                      | `deployment-service/deployment_service/api/routes/orchestration.py`                                                                    |
+| Runtime topology                                                                | `unified-trading-pm/configs/runtime-topology.yaml` (synced to `deployment-service` via `scripts/sync/sync-configs.py` — not a symlink) |
 
 ---
 

@@ -140,7 +140,7 @@ flows.
 ```python
 log_event("CONFIG_CHANGED", metadata={
     "correlation_id": deploy_id,
-    "config_file": "deployment-service/configs/runtime-topology.yaml",
+    "config_file": "unified-trading-pm/configs/runtime-topology.yaml",
     "changed_by": "deploy-sa@project.iam.gserviceaccount.com",
     "authorized": True,
     "change_type": "update",

@@ -74,12 +74,12 @@ This document is the canonical SSOT for treasury custody in the unified trading 
 
 ### CopperEndpoint
 
-| Field             | Type                | Notes                                               |
-| ----------------- | ------------------- | --------------------------------------------------- |
-| `portfolio_id`    | `str`               | Copper portfolio identifier; scoped per venue       |
-| `api_key_id`      | `str`               | References Secret Manager id — never inline API key |
-| `organization_id` | `str`               | Copper org id for MPC signing authority             |
-| `environment`     | `CopperEnvironment` | `SANDBOX` / `PRODUCTION`                            |
+| Field               | Type   | Notes                                                                      |
+| ------------------- | ------ | -------------------------------------------------------------------------- |
+| `portfolio_id`      | `str`  | Copper portfolio identifier; scoped per venue                              |
+| `api_key_id`        | `str`  | References Secret Manager id — never inline API key                        |
+| `webhook_secret_id` | `str`  | Credential-registry id for webhook HMAC secret; empty if webhooks disabled |
+| `is_live`           | `bool` | `True` for mainnet Copper; `False` for testnet (default)                   |
 
 `api_key_id` follows the credential-registry-id reference pattern (see
 [`interface-credential-convention.md`](interface-credential-convention.md) § Custody endpoint credentials). The
@@ -87,11 +87,11 @@ execution-service resolves the actual API key from Secret Manager at runtime usi
 
 ### CEFFUEndpoint
 
-| Field         | Type               | Notes                                               |
-| ------------- | ------------------ | --------------------------------------------------- |
-| `ceffu_uid`   | `str`              | CEFFU institutional account UID                     |
-| `api_key_id`  | `str`              | References Secret Manager id — never inline API key |
-| `environment` | `CEFFUEnvironment` | `SANDBOX` / `PRODUCTION`                            |
+| Field        | Type   | Notes                                                     |
+| ------------ | ------ | --------------------------------------------------------- |
+| `ceffu_uid`  | `str`  | CEFFU institutional account UID                           |
+| `api_key_id` | `str`  | References Secret Manager id — never inline API key       |
+| `is_live`    | `bool` | `True` for mainnet Binance; `False` for testnet (default) |
 
 ### DefiWalletKeyMaterial
 
@@ -173,19 +173,21 @@ on-chain txid. PII is never inlined — approver identity is a registry referenc
 
 `WithdrawalApprovalRule` configures per-source thresholds:
 
-| Field                  | Type             | Notes                                              |
-| ---------------------- | ---------------- | -------------------------------------------------- |
-| `treasury_source`      | `TreasurySource` | The source this rule applies to                    |
-| `amount_threshold_usd` | `Decimal`        | Below threshold: single approver sufficient        |
-| `quorum_required`      | `int`            | Number of approvals required at or above threshold |
-| `total_approvers`      | `int`            | Total approver pool size (M in N-of-M)             |
-| `timeout_seconds`      | `int`            | Seconds before pending approval request expires    |
+| Field                  | Type             | Notes                                                       |
+| ---------------------- | ---------------- | ----------------------------------------------------------- |
+| `treasury_source`      | `TreasurySource` | The source this rule applies to                             |
+| `amount_bucket`        | `str`            | Human label (`SMALL`/`MEDIUM`/`LARGE`) — informational only |
+| `threshold_amount_usd` | `Decimal`        | Above threshold (exclusive): quorum required                |
+| `required_approvers`   | `int`            | Number of approvals N needed (N-of-M quorum)                |
+| `approver_pool`        | `frozenset[str]` | Set of operator IDs eligible to approve (pool size M)       |
 
-**Single approver below threshold:** when `withdrawal_amount_usd < amount_threshold_usd`, one approved signature from
-any registered approver is sufficient to advance to `APPROVED`.
+**Single approver at/below threshold:** when `withdrawal_amount_usd <= threshold_amount_usd`, one approved signature
+from any registered approver is sufficient to advance to `APPROVED`.
 
-**Quorum at or above threshold:** `quorum_required` distinct approvers must sign. The `ApprovalBus` collects signatures
-and advances state when the quorum is met, or expires the request after `timeout_seconds`.
+**Quorum above threshold:** `required_approvers` distinct approvers (drawn from `approver_pool`) must sign. UTL
+`ApprovalBus` (`unified_trading_library/treasury/approval_bus.py`) collects `WithdrawalApprovedEvent`s and advances
+state when the quorum is met, or expires the request after `request_ttl_hours` (constructor arg, default 24h) — there is
+no `timeout_seconds` field on the rule itself.
 
 The approval collection is handled by UTL `ApprovalBus`; execution-service `WithdrawalExecutor` consumes the `APPROVED`
 event to broadcast.
@@ -259,6 +261,8 @@ from a fresh source query after on-chain confirmation.
   config files or plan docs.
 - **Never skip reconciliation.** Every `EXECUTED` withdrawal must reach `RECONCILED` before the withdrawal record is
   considered closed. Skipping reconciliation on "obviously clean" transactions is how balance drift goes undetected.
-- **Never allow single-approver withdrawals above the quorum threshold.** The `WithdrawalApprovalRule` threshold is
-  hard-coded per source; bypassing it requires an explicit operator override with a separate `force_single_approve` flag
-  that itself is audit-logged.
+- **Never allow single-approver withdrawals above the quorum threshold.** `WithdrawalApprovalRule.__post_init__`
+  enforces `required_approvers >= 1` and `len(approver_pool) >= required_approvers` at construction time. There is no
+  bypass flag in code today (no `force_single_approve` or equivalent override exists in `unified-api-contracts` or
+  `unified-trading-library`) — quorum is unconditional. If an operator-override bypass is ever needed, it must be
+  designed and built as new, audit-logged functionality, not assumed to already exist.
