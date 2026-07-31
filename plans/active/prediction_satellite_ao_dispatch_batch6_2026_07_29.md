@@ -157,35 +157,35 @@ sports-tranche-owned).
       persist for a sampled Betfair market and the source doc's item [5] is marked shipped with the commit SHA.
 
       **Partial progress 2026-07-31 (slot 7, backend_engineer) — read-side shipped + tested; live capture confirmed
-                  BLOCKED-CREDENTIALS, NOT a design gap.** Researched the full chain before writing code: `betfair_yes_bid` is
-                  computed in `features-service/features_service/cross_instrument/app/calculators/prediction_cross_venue_betfair.py`
-                  (`_betfair_yes_bid_ask`), hardcoded to `None` because the persisted sports odds ticks (MTDS's Odds-API aggregator
-                  path) are BACK-ONLY — the kernel's SELL-Betfair edge (`prediction_cross_venue_dispersion.py::_edge_sell_betfair_expr`)
-                  was ALREADY wired to consume a non-null bid the moment one appears (per its own docstring). **Shipped
-                  (`features-service@d792f421`, full `quality-gates.sh` green)**: extended `_read_betfair_odds`/
-                  `_betfair_yes_bid_ask` to compute `betfair_yes_bid` from an optional `lay_price` column via the SAME de-vig math
-                  as the existing back-side ask, ONLY when a COMPLETE lay book is present (a lay price for every runner the back
-                  book carries — a partial book is treated as honest-absent, never a distorted overround). Fully backward
-                  compatible: absent `lay_price` (today's real capture) keeps `bid=None` exactly as before — verified via 47 unit
-                  tests (7 new: `_read_betfair_odds` lay-population + `_betfair_yes_bid_ask` bid-computation + one END-TO-END test
-                  proving `xv_edge_sell_betfair` actually lights up non-null through the full dispatch pipeline once a synthetic
-                  complete back+lay book is fed in — the concrete proof this todo's kernel-wiring claim was correct).
+                      BLOCKED-CREDENTIALS, NOT a design gap.** Researched the full chain before writing code: `betfair_yes_bid` is
+                      computed in `features-service/features_service/cross_instrument/app/calculators/prediction_cross_venue_betfair.py`
+                      (`_betfair_yes_bid_ask`), hardcoded to `None` because the persisted sports odds ticks (MTDS's Odds-API aggregator
+                      path) are BACK-ONLY — the kernel's SELL-Betfair edge (`prediction_cross_venue_dispersion.py::_edge_sell_betfair_expr`)
+                      was ALREADY wired to consume a non-null bid the moment one appears (per its own docstring). **Shipped
+                      (`features-service@d792f421`, full `quality-gates.sh` green)**: extended `_read_betfair_odds`/
+                      `_betfair_yes_bid_ask` to compute `betfair_yes_bid` from an optional `lay_price` column via the SAME de-vig math
+                      as the existing back-side ask, ONLY when a COMPLETE lay book is present (a lay price for every runner the back
+                      book carries — a partial book is treated as honest-absent, never a distorted overround). Fully backward
+                      compatible: absent `lay_price` (today's real capture) keeps `bid=None` exactly as before — verified via 47 unit
+                      tests (7 new: `_read_betfair_odds` lay-population + `_betfair_yes_bid_ask` bid-computation + one END-TO-END test
+                      proving `xv_edge_sell_betfair` actually lights up non-null through the full dispatch pipeline once a synthetic
+                      complete back+lay book is fed in — the concrete proof this todo's kernel-wiring claim was correct).
 
-                  **Why NOT closed**: the todo's own done-when needs back+lay to persist "for a sampled Betfair market" — i.e. a
-                  REAL live capture, which requires the actual Betfair Exchange API (`listMarketBook`, `availableToLay` — already
-                  scaffolded, unused, in `market-tick-data-service/market_tick_data_service/market_interface/adapters/sports/
-                  betfair_adapter.py`, confirmed via research to already parse both sides). That call needs a session token.
-                  **Confirmed BLOCKED-CREDENTIALS, not self-serviceable**: checked GSM directly (via `unified-trading-sa`
-                  impersonation, not the ambient CI identity, which lacks `secretmanager.secrets.list`) — only 3 Betfair secrets
-                  exist (`betfair-api-key`, `betfair-app-key`, `betfair-username`); NO `betfair-session-token` (the exact secret
-                  name execution-service's own `sports_execution/routing.py::_build_betfair` already expects and can't find
-                  either — execution-service's real-money Betfair execution path is ALSO not live today for the same reason), no
-                  password secret, no cert-login secret. The MTDS `betfair_ws.py` streaming connector's own docstring independently
-                  confirms this: "BLOCKED-CREDENTIALS — 2026-07-07... requires a paid Developer app-key + SSO sessionToken — no
-                  public tier." This is a genuine external-credential gap (operator/account-holder action — either add a password
-                  secret for interactive login or provision cert-based login), not a role/IAM gap I can self-grant per the
-                  cloud-identity-self-service rule. New follow-up todo below tracks the credential ask + the actual live-wiring
-                  once it lands; this todo stays open (unchecked) rather than falsely marked done, per the honest-completion rule.
+                      **Why NOT closed**: the todo's own done-when needs back+lay to persist "for a sampled Betfair market" — i.e. a
+                      REAL live capture, which requires the actual Betfair Exchange API (`listMarketBook`, `availableToLay` — already
+                      scaffolded, unused, in `market-tick-data-service/market_tick_data_service/market_interface/adapters/sports/
+                      betfair_adapter.py`, confirmed via research to already parse both sides). That call needs a session token.
+                      **Confirmed BLOCKED-CREDENTIALS, not self-serviceable**: checked GSM directly (via `unified-trading-sa`
+                      impersonation, not the ambient CI identity, which lacks `secretmanager.secrets.list`) — only 3 Betfair secrets
+                      exist (`betfair-api-key`, `betfair-app-key`, `betfair-username`); NO `betfair-session-token` (the exact secret
+                      name execution-service's own `sports_execution/routing.py::_build_betfair` already expects and can't find
+                      either — execution-service's real-money Betfair execution path is ALSO not live today for the same reason), no
+                      password secret, no cert-login secret. The MTDS `betfair_ws.py` streaming connector's own docstring independently
+                      confirms this: "BLOCKED-CREDENTIALS — 2026-07-07... requires a paid Developer app-key + SSO sessionToken — no
+                      public tier." This is a genuine external-credential gap (operator/account-holder action — either add a password
+                      secret for interactive login or provision cert-based login), not a role/IAM gap I can self-grant per the
+                      cloud-identity-self-service rule. New follow-up todo below tracks the credential ask + the actual live-wiring
+                      once it lands; this todo stays open (unchecked) rather than falsely marked done, per the honest-completion rule.
 
 - [ ] [OPERATOR] P3. **New, opened 2026-07-31 by the Betfair back+lay todo above.** Provision a live Betfair session
       token so the real Exchange API (`listMarketBook`) can be called — needed for BOTH this satellite plan's
@@ -246,29 +246,29 @@ sports-tranche-owned).
       captured evidence, and both source-doc todos are flipped citing the SHAs/evidence.
 
       **Todo 1 DONE 2026-07-31**: both secrets provisioned + verified non-empty and byte-identical to source (evidence
-                                          in the source doc). **Todo 2 BLOCKED-OPERATOR-DECISION 2026-07-31** — found a real conflict this todo's own text
-                                          doesn't resolve: this codebase's `OperationalMode.PAPER` never calls any real venue API (routes everything
-                                          through a simulated `PaperBettingAdapter` — `execution_service/adapters/sports_factory.py`'s `_PAPER_VENUE_KEYS`
-                                          includes `kalshi`), so "paper order" cannot mean that operational mode. `KalshiAdapter`'s default `base_url` is
-                                          `https://api.elections.kalshi.com` — Kalshi's LIVE production host, which literally matches this todo's own
-                                          "elections-subdomain host" instruction (there's a separate `KALSHI_DEMO_BASE =
-                                          "https://demo-api.kalshi.co"` the code supports but does not default to). The operator's 2026-07-28 ruling on the
-                                          source doc explicitly scoped itself to the secret-reshape decision and states that step "does not touch the
-                                          exchange side at all" — it never separately ruled on the safety/authorization of todo 2 actually placing a live
-                                          order with real funds.
+                                              in the source doc). **Todo 2 BLOCKED-OPERATOR-DECISION 2026-07-31** — found a real conflict this todo's own text
+                                              doesn't resolve: this codebase's `OperationalMode.PAPER` never calls any real venue API (routes everything
+                                              through a simulated `PaperBettingAdapter` — `execution_service/adapters/sports_factory.py`'s `_PAPER_VENUE_KEYS`
+                                              includes `kalshi`), so "paper order" cannot mean that operational mode. `KalshiAdapter`'s default `base_url` is
+                                              `https://api.elections.kalshi.com` — Kalshi's LIVE production host, which literally matches this todo's own
+                                              "elections-subdomain host" instruction (there's a separate `KALSHI_DEMO_BASE =
+                                              "https://demo-api.kalshi.co"` the code supports but does not default to). The operator's 2026-07-28 ruling on the
+                                              source doc explicitly scoped itself to the secret-reshape decision and states that step "does not touch the
+                                              exchange side at all" — it never separately ruled on the safety/authorization of todo 2 actually placing a live
+                                              order with real funds.
 
-                                          **Question**: how should todo 2 be executed?
+                                              **Question**: how should todo 2 be executed?
 
-                                          A: Use Kalshi's demo API host (`KALSHI_DEMO_BASE`) instead of the live default — genuinely risk-free, but
-                                          diverges from this todo's literal "elections-subdomain host" text, and needs confirming the demo host accepts
-                                          the same provisioned credentials before trying. [WORKER REC]
-                                          B: Place a real order on the live host as literally instructed — commits real (if small) funds on a live
-                                          regulated exchange; needs an explicit operator go-ahead given the ruling above never covered this specific risk.
-                                          C: Some other verification method (e.g. a dry-run / signature-only test that proves the credential wiring works
-                                          without submitting a live order) — needs the operator to specify what would count as sufficient evidence.
+                                              A: Use Kalshi's demo API host (`KALSHI_DEMO_BASE`) instead of the live default — genuinely risk-free, but
+                                              diverges from this todo's literal "elections-subdomain host" text, and needs confirming the demo host accepts
+                                              the same provisioned credentials before trying. [WORKER REC]
+                                              B: Place a real order on the live host as literally instructed — commits real (if small) funds on a live
+                                              regulated exchange; needs an explicit operator go-ahead given the ruling above never covered this specific risk.
+                                              C: Some other verification method (e.g. a dry-run / signature-only test that proves the credential wiring works
+                                              without submitting a live order) — needs the operator to specify what would count as sufficient evidence.
 
-                                          Not attempted pending an answer — filed as the actionable question, not guessed. `can_continue: true`; other
-                                          backlog work continues in the meantime.
+                                              Not attempted pending an answer — filed as the actionable question, not guessed. `can_continue: true`; other
+                                              backlog work continues in the meantime.
 
 - [ ] [DIAG] P2. **Kalshi mass `attempted_failed` unclassified-adapter-error investigation + contingent fix.**
       Internally-sequential 3-step chain (combined into one todo per the skill's own "sequential work → one todo" rule):
@@ -305,62 +305,62 @@ sports-tranche-owned).
       todo + SHAs).
 
       **Partial progress 2026-07-31 (slot 14, backend_engineer) — 3 of 4 repos shipped for MLB; the remaining
-                  residual is a genuine data-engineering gap (team-alias tables for non-soccer leagues), not a code-wiring gap,
-                  so it is NOT fabricated here — new follow-up todo below.** Researched the full existing mechanism before
-                  writing code (a dedicated Explore agent + direct reads across UAC/IS/features-service/strategy-service — see
-                  this todo's evidence below), which surfaced that most of the "arb-layer wiring" (3c) already existed and
-                  only needed a genuine gap closed in each of 3 repos, plus confirmed a 4th (features-service) needed NO
-                  changes at all:
+                      residual is a genuine data-engineering gap (team-alias tables for non-soccer leagues), not a code-wiring gap,
+                      so it is NOT fabricated here — new follow-up todo below.** Researched the full existing mechanism before
+                      writing code (a dedicated Explore agent + direct reads across UAC/IS/features-service/strategy-service — see
+                      this todo's evidence below), which surfaced that most of the "arb-layer wiring" (3c) already existed and
+                      only needed a genuine gap closed in each of 3 repos, plus confirmed a 4th (features-service) needed NO
+                      changes at all:
 
-                  - **UAC (`unified-api-contracts@1dddc680`)**: `_build_mapping()` computed the numeric `af_fixture_id` to
-                    build the strong `SPORTS_FIX::` match key but discarded it afterward — the dedicated
-                    `PredictionMarketCrossVenueMapping.api_football_fixture_id` schema field was declared but never
-                    populated. Stamped it back (2 new tests: the field populates on a strong-key match, stays honestly `None`
-                    on a fuzzy-pairing_key match).
-                  - **instruments-service (`instruments-service@62a8b1d8`)**: the Polymarket adapter already computes
-                    `canonical_instrument_id` for EVERY sports league `fixture_parsing.py` parses (MLB/NFL/NBA/tennis/soccer)
-                    via the Sports asset group's own local, no-network `build_fixture_id`/`build_team_id` builders — but the
-                    Kalshi adapter only had the SOCCER-specific `af_fixture_id` path (via `fixture_match.py`'s
-                    API-Football-backed resolver), never the general `canonical_instrument_id` stamp. Mirrored Polymarket's
-                    existing pattern onto Kalshi (2 new tests: an MLB fixture stamps the expected id, a season-future/award
-                    ticker honestly stays `None`).
-                  - **strategy-service (`strategy-service@d71c8aa4`)**: confirmed `_on_tick_cross_venue_prediction`
-                    (`price_dispersion.py`) and `select_prediction_arb_direction`/`build_prediction_arb_legs`
-                    (`prediction_venue_dispersion.py`) are ALREADY fully venue- and league-agnostic — they read whatever
-                    `xv_*` features a tick carries, keyed by nothing sport-specific. The only real gap was a live catalogue
-                    SLOT to actually route MLB-cqg ticks into that engine (mirroring the existing `PREDICTION_ARB_BTC` slot's
-                    shape 1:1). Added `PREDICTION_ARB_MLB` to `archetype_slots_sports.py` (`canonical_question_group:
-                    SPORTS_MLB_MATCH`) + its required `STRATEGY_CATEGORIES` registration
-                    (`cli/handlers/batch_utils.py` — a real gap the existing `test_every_resolver_entry_has_factory_counterpart`
-                    test caught). The pre-existing generic per-slot test harness
-                    (`test_all_catalogued_archetypes_construct_and_fire.py`) automatically exercises the new slot with the
-                    SAME synthetic `cross-venue-prediction-dispersion` features `PREDICTION_ARB_BTC` uses and fires a real
-                    instruction — no bespoke test needed; also updated the documented-row-count sanity test (5→6).
-                  - **features-service — confirmed NO changes needed.** `prediction_cross_venue_dispatch.py` /
-                    `PredictionCrossVenueDispersionCalculator` already thread the six soccer fixture-match columns straight
-                    through from the parquet and are a pure kernel with zero sport-specific branching; its EXISTING test
-                    suite (`test_prediction_cross_venue_dispatch.py`) already exercises both the `SPORTS_FIX::` and fuzzy
-                    `SPORTS::` mapping forms end-to-end. This confirms the "4 repos" in this todo's title needed real work in
-                    only 3 — features-service was already correct.
+                      - **UAC (`unified-api-contracts@1dddc680`)**: `_build_mapping()` computed the numeric `af_fixture_id` to
+                        build the strong `SPORTS_FIX::` match key but discarded it afterward — the dedicated
+                        `PredictionMarketCrossVenueMapping.api_football_fixture_id` schema field was declared but never
+                        populated. Stamped it back (2 new tests: the field populates on a strong-key match, stays honestly `None`
+                        on a fuzzy-pairing_key match).
+                      - **instruments-service (`instruments-service@62a8b1d8`)**: the Polymarket adapter already computes
+                        `canonical_instrument_id` for EVERY sports league `fixture_parsing.py` parses (MLB/NFL/NBA/tennis/soccer)
+                        via the Sports asset group's own local, no-network `build_fixture_id`/`build_team_id` builders — but the
+                        Kalshi adapter only had the SOCCER-specific `af_fixture_id` path (via `fixture_match.py`'s
+                        API-Football-backed resolver), never the general `canonical_instrument_id` stamp. Mirrored Polymarket's
+                        existing pattern onto Kalshi (2 new tests: an MLB fixture stamps the expected id, a season-future/award
+                        ticker honestly stays `None`).
+                      - **strategy-service (`strategy-service@d71c8aa4`)**: confirmed `_on_tick_cross_venue_prediction`
+                        (`price_dispersion.py`) and `select_prediction_arb_direction`/`build_prediction_arb_legs`
+                        (`prediction_venue_dispersion.py`) are ALREADY fully venue- and league-agnostic — they read whatever
+                        `xv_*` features a tick carries, keyed by nothing sport-specific. The only real gap was a live catalogue
+                        SLOT to actually route MLB-cqg ticks into that engine (mirroring the existing `PREDICTION_ARB_BTC` slot's
+                        shape 1:1). Added `PREDICTION_ARB_MLB` to `archetype_slots_sports.py` (`canonical_question_group:
+                        SPORTS_MLB_MATCH`) + its required `STRATEGY_CATEGORIES` registration
+                        (`cli/handlers/batch_utils.py` — a real gap the existing `test_every_resolver_entry_has_factory_counterpart`
+                        test caught). The pre-existing generic per-slot test harness
+                        (`test_all_catalogued_archetypes_construct_and_fire.py`) automatically exercises the new slot with the
+                        SAME synthetic `cross-venue-prediction-dispersion` features `PREDICTION_ARB_BTC` uses and fires a real
+                        instruction — no bespoke test needed; also updated the documented-row-count sanity test (5→6).
+                      - **features-service — confirmed NO changes needed.** `prediction_cross_venue_dispatch.py` /
+                        `PredictionCrossVenueDispersionCalculator` already thread the six soccer fixture-match columns straight
+                        through from the parquet and are a pure kernel with zero sport-specific branching; its EXISTING test
+                        suite (`test_prediction_cross_venue_dispatch.py`) already exercises both the `SPORTS_FIX::` and fuzzy
+                        `SPORTS::` mapping forms end-to-end. This confirms the "4 repos" in this todo's title needed real work in
+                        only 3 — features-service was already correct.
 
-                  **Why NOT closed — the genuine remaining residual, honestly scoped, not fabricated.** The todo's own text
-                  demands "the FULL mechanism (no partial/heuristic-only pairing)" across every league `fixture_parsing.py`
-                  covers (MLB/NFL/NBA/tennis), not just MLB. Investigated exactly how far that could safely go this session:
-                  `build_team_id`/`build_fixture_id` (the mechanism used above) and the fuzzy `SportsFixtureKey.pairing_key()`
-                  fallback BOTH require the two venues to render the IDENTICAL team-name string (no alias resolution) — and
-                  confirmed via direct reads that NO team-name alias registry exists anywhere in this codebase for MLB/NFL/
-                  NBA/tennis (only soccer has one, `unified_api_contracts/external/api_football/team_mappings.py`, explicitly
-                  scoped to "all 33 [football] prediction leagues"; `get_canonical_team_for_polymarket` is ALSO
-                  football-only despite its generic-sounding name). Building real alias tables for 4 non-soccer leagues from
-                  scratch, unvalidated against real venue samples, would be exactly the "false arb pair" risk this workspace's
-                  "no false pairs" mandate (and this same todo's own text) explicitly warns against — so it is NOT fabricated
-                  here. MLB was chosen as the one league seeded live because it is the SAME league the pre-existing UAC test
-                  suite (`test_prediction_cross_venue_mapping.py`'s sports tests) already exercises with real-shaped ticker/
-                  slug samples, giving the shipped code a concrete, testable anchor. NFL/NBA/tennis need the alias-table
-                  build (real data-sourcing + validation work, not a code-wiring task) before they can safely widen — tracked
-                  as a new `- [ ]` follow-up todo immediately below, per CLAUDE.md's "every follow-up is a todo, never prose"
-                  rule, rather than left as this note's prose. This todo stays open (unchecked) per the honest-completion
-                  rule — same disposition as this plan's sibling Betfair back+lay todo above.
+                      **Why NOT closed — the genuine remaining residual, honestly scoped, not fabricated.** The todo's own text
+                      demands "the FULL mechanism (no partial/heuristic-only pairing)" across every league `fixture_parsing.py`
+                      covers (MLB/NFL/NBA/tennis), not just MLB. Investigated exactly how far that could safely go this session:
+                      `build_team_id`/`build_fixture_id` (the mechanism used above) and the fuzzy `SportsFixtureKey.pairing_key()`
+                      fallback BOTH require the two venues to render the IDENTICAL team-name string (no alias resolution) — and
+                      confirmed via direct reads that NO team-name alias registry exists anywhere in this codebase for MLB/NFL/
+                      NBA/tennis (only soccer has one, `unified_api_contracts/external/api_football/team_mappings.py`, explicitly
+                      scoped to "all 33 [football] prediction leagues"; `get_canonical_team_for_polymarket` is ALSO
+                      football-only despite its generic-sounding name). Building real alias tables for 4 non-soccer leagues from
+                      scratch, unvalidated against real venue samples, would be exactly the "false arb pair" risk this workspace's
+                      "no false pairs" mandate (and this same todo's own text) explicitly warns against — so it is NOT fabricated
+                      here. MLB was chosen as the one league seeded live because it is the SAME league the pre-existing UAC test
+                      suite (`test_prediction_cross_venue_mapping.py`'s sports tests) already exercises with real-shaped ticker/
+                      slug samples, giving the shipped code a concrete, testable anchor. NFL/NBA/tennis need the alias-table
+                      build (real data-sourcing + validation work, not a code-wiring task) before they can safely widen — tracked
+                      as a new `- [ ]` follow-up todo immediately below, per CLAUDE.md's "every follow-up is a todo, never prose"
+                      rule, rather than left as this note's prose. This todo stays open (unchecked) per the honest-completion
+                      rule — same disposition as this plan's sibling Betfair back+lay todo above.
 
 - [ ] [DATA] P2. **New, opened 2026-07-31 by the fixture-pairing residual todo above.** Build + validate cross-venue
       team-name alias tables for the non-soccer leagues
@@ -617,3 +617,11 @@ sports-odds/sports-registry content with zero prediction-market-specific work �
   workspace's mandate warns against, so none was added speculatively. Checkbox correctly stays open; no code shipped.
   Released the task (`/skip-current-task`) rather than force unvalidated work — the genuine next step is the `[DATA] P2`
   alias-table follow-up todo above, which needs data-engineering craft, not backend.
+
+- **2026-07-31 (slot 8, backend_engineer)** — Re-dispatched `prediction_satellite_ao_dispatch_batch6-008` a 3rd time
+  today. Independently re-verified: all 3 SHAs (`unified-api-contracts@1dddc680`, `instruments-service@62a8b1d8`,
+  `strategy-service@d71c8aa4`) still confirmed live on origin; fresh grep for `*_ALIASES` in unified-api-contracts still
+  finds only soccer-scoped tables (`BUNDESLIGA_TEAM_ALIASES`, `EPL_TEAM_ALIASES` — re-exports from
+  `api_football/team_mappings.py`), no MLB/NFL/NBA/tennis registry exists. Nothing changed since slot 15's 14:54Z check;
+  same verdict holds. Skipping rather than re-deriving — the `[DATA] P2` alias-table follow-up todo above is the correct
+  next step.
