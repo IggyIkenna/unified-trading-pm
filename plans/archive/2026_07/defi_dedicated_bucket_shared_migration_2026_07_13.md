@@ -290,7 +290,7 @@ readers still point at the dedicated buckets.
       resolves via `resolve_bucket_name(cloud=cloud, kind="tick-data", asset_group="defi")` (`:180`), the template
       constant is gone, and `:106-107` carries the dated in-code note that the old flat forms "were deleted
       2026-07-10/07-13; the perp-funding data now lives in the shared canonical DeFi" bucket.
-- [ ] [CHORE] P3. (Found by the final verification sweep) Housekeeping cluster, all low-risk/low-value — 3 of 4
+- [x] ✅ [CHORE] P3. (Found by the final verification sweep) Housekeeping cluster, all low-risk/low-value — 3 of 4
       sub-items now resolved, sub-item (3) remains genuinely open (out of batch1's scope): (1)
       `market_tick_data_service/scripts/migrate_lst_perp_shared_bucket_gap_2026_07_13.py` — its own documented
       `Delete-when: dex-pools-prd/lst-rates-prd/perp-funding-prd are deleted` condition is now satisfied, script should
@@ -311,9 +311,27 @@ readers still point at the dedicated buckets.
       (defi_satellite_ao_dispatch_batch1 finalize reconciliation; shipped strategy-service@4a7fbb17 per
       defi_satellite_ao_dispatch_batch1_2026_07_25.md todo 5) — the 2 stale comments in
       strategy_service/cli/handlers/paper_run_handler.py describing classes as "kind perp-funding"/"kind dex-pools"
-      (code already resolves kind="tick-data") were corrected, comment-only, no behavior change.
+      (code already resolves kind="tick-data") were corrected, comment-only, no behavior change. **Sub-item (3) DONE
+      2026-07-26** (na-eligibility-audit 2026-07-31 checkbox-citation fix, tranche=defi — this sub-item's own ask was
+      already fulfilled 3 days before the 2026-07-29 note above, just never cross-referenced here):
+      `defi_satellite_ao_dispatch_batch2_2026_07_26.md`'s `[CHORE] P3` todo (DONE, worker slot 6) audited all 10
+      campaign scripts and reached exactly this sub-item's requested outcome — "repoint... or a documented reason no fix
+      is needed" — 9 of 10 reference now-confirmed-dead buckets with their governing plan archived, left in place
+      because the "GCS orphan sweep = 0" half of their `Delete-when` is genuinely ambiguous (the archived
+      `defi_manifest_canonicalisation_2026_06_01.md` still carries its own unchecked `C0-RD5`/`C0-RD5b` orphan-sweep
+      todos, unreachable since that plan archived without migrating them forward — flagged separately in
+      `issues/defi_c0_rd5_orphan_sweep_todos_stranded_in_archived_plan_2026_07_31.md`, not chased to resolution here);
+      the 10th script has its own unrelated condition. All 4 sub-items now closed — parent todo done.
 
 ## Progress Log
+
+- **na-eligibility-audit 2026-07-31** (tranche=defi, autonomous): KEEP-NA valid → now ARCHIVING — the doc's sole open
+  todo (housekeeping-cluster sub-item 3) was already fulfilled by `defi_satellite_ao_dispatch_batch2_2026_07_26.md`'s
+  DONE audit (2026-07-26), just never cited here; checkbox-citation fix applied above, flipping the doc to 0 open todos.
+  Per `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md` (zero open todos + unlocked = archive
+  immediately), archiving this doc now. Byproduct discovery (the archived governing plan's own stranded C0-RD5/C0-RD5b
+  orphan-sweep todos) filed as `issues/defi_c0_rd5_orphan_sweep_todos_stranded_in_archived_plan_2026_07_31.md` rather
+  than chased to resolution here — out of this audit's scope.
 
 - **2026-07-14 (final todo shipped — `defi_lateral_loader.py` fixed, all 3 buckets confirmed deleted, TF state clean,
   cross-plan docs updated)** — Fixed the last broken reader (`execution-service@a7e42c932`): `defi_lateral_loader.py`'s

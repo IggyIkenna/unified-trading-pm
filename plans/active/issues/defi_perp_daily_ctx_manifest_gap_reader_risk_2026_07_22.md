@@ -39,7 +39,7 @@ related:
   [
     plans/archive/2026_07/distinct_values_noncanonical_audit_2026_07_20.md,
     plans/archive/issues/defi_perp_funding_canonicalisation_derivative_ticker_all_perps_2026_07_15.md,
-    plans/active/defi_dedicated_bucket_shared_migration_2026_07_13.md,
+    /plans/archive/2026_07/defi_dedicated_bucket_shared_migration_2026_07_13.md,
     plans/active/issues/downstream_funding_staking_canonical_reader_audit_2026_07_21.md,
     plans/archive/issues/mtds_plan_reconciliation_2026_06_29.md,
   ]
@@ -110,7 +110,7 @@ Proposed fix: migrate both onto the `derivative_ticker` data_type/schema (`DEFI_
 3. **The current `perp_funding`/`perp_daily_ctx` rows in the shared bucket are REAL, migrated PRODUCTION history, not
    placeholder/test data.**
    `market-tick-data-service/market_tick_data_service/scripts/ migrate_lst_perp_shared_bucket_gap_2026_07_13.py`
-   (referenced from `plans/active/defi_dedicated_bucket_shared_migration_2026_07_13.md`) copied years of real
+   (referenced from `/plans/archive/2026_07/defi_dedicated_bucket_shared_migration_2026_07_13.md`) copied years of real
    HYPERLIQUID/GMX/CeFi funding + mark-price history from the now-deleted dedicated `perp-funding-{project}` bucket into
    the shared bucket at the IDENTICAL `perp_funding`/`perp_daily_ctx` path shape (same key, `gcs_copy_object`, no
    transform). Verified counts from that plan's Progress Log: HL `perp_daily_ctx` 1,109 objects + a later 6,941-object
@@ -124,10 +124,12 @@ Proposed fix: migrate both onto the `derivative_ticker` data_type/schema (`DEFI_
    outright, not silently succeed. This is corroborated by
    `plans/active/issues/downstream_funding_staking_canonical_reader_audit_2026_07_21.md` ("3 funding diagnostic scripts
    on the deleted `perp-funding-{pid}` bucket ... deleted 2026-07-10") and by
-   `defi_dedicated_bucket_shared_migration_2026_07_13.md`'s own already-open P3 housekeeping todo, which explicitly
-   names `backfill_hl_*_2026_06_17.py` as hardcoding a dead bucket name tied to an already-completed migration — **this
-   script's disposition is ALREADY tracked in that OTHER active plan.** Not touched here to avoid collision with whoever
-   owns that plan's cleanup pass. Its own lifecycle marker
+   `defi_dedicated_bucket_shared_migration_2026_07_13.md`'s P3 housekeeping todo (open when this was written; closed
+   2026-07-31 per na-eligibility-audit — doc now archived at
+   `/plans/archive/2026_07/defi_dedicated_bucket_shared_migration_2026_07_13.md`), which explicitly names
+   `backfill_hl_*_2026_06_17.py` as hardcoding a dead bucket name tied to an already-completed migration — **this
+   script's disposition was tracked in that OTHER plan.** Not touched here to avoid collision with whoever owns that
+   plan's cleanup pass. Its own lifecycle marker
    (`# Delete-when: after HyperLiquid mark-price backfill prod-run verified + GCS orphan sweep = 0`) appears already
    satisfied — the backfill's real historical output is the exact data the 2026-07-13 migration copied forward, and the
    source bucket is confirmed gone.
@@ -202,11 +204,13 @@ list?) before executing autonomously — flagging for operator awareness rather 
 
 ## What was deliberately NOT touched (collision avoidance)
 
-- `market-tick-data-service/scripts/backfill_hl_mark_price_from_s3_asset_ctxs_2026_06_17.py` — disposition already
-  tracked as an open P3 todo in `defi_dedicated_bucket_shared_migration_2026_07_13.md` (housekeeping cluster, item 3).
-  Not deleted or edited here.
+- `market-tick-data-service/scripts/backfill_hl_mark_price_from_s3_asset_ctxs_2026_06_17.py` — disposition was tracked
+  as a P3 todo in `defi_dedicated_bucket_shared_migration_2026_07_13.md` (housekeeping cluster, item 3; closed
+  2026-07-31, doc now archived at `/plans/archive/2026_07/defi_dedicated_bucket_shared_migration_2026_07_13.md`). Not
+  deleted or edited here.
 - `market-tick-data-service/market_tick_data_service/scripts/migrate_lst_perp_shared_bucket_gap_2026_07_13.py` — same
-  plan's P3 item 1 (its own `Delete-when` condition is now satisfied). Not deleted here.
+  plan's P3 item 1 (its own `Delete-when` condition was already satisfied and the file deleted — see the archived doc).
+  Not deleted here.
 - `strategy-service/strategy_service/engine/core/canonical_perp_funding_provider.py` — the live reader. Not touched.
 - `features-service/features_service/cefi/calculators/perp_funding_corpus.py` — the unrun CeFi writer. Not touched (its
   current schema is already correct for what the reader expects; only the manifest-writing gap is real).

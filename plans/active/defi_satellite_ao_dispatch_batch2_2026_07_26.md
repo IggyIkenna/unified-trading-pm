@@ -108,7 +108,7 @@ drift_direction: advance-code
       `backfill_hl_*_2026_06_17.py` scripts (all tagged `Lifecycle: campaign`) for hardcoded dead bucket-name templates
       tied to earlier, already-completed migrations — repoint or mark for deletion per each script's own Lifecycle
       marker; not urgent but currently orphaned. Source:
-      plans/active/defi_dedicated_bucket_shared_migration_2026_07_13.md. Done when:
+      /plans/archive/2026_07/defi_dedicated_bucket_shared_migration_2026_07_13.md. Done when:
       `migrate_lst_perp_shared_bucket_gap_2026_07_13.py` is deleted (or its deletion is confirmed already done with a
       cited commit), and each of the ~8 campaign scripts has been checked for dead bucket-name templates with either a
       repoint applied or a documented reason no fix is needed.

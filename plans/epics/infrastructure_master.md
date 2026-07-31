@@ -41,7 +41,7 @@ related_plans:
   - ../active/cicd_mvp_ldr_to_main_pipeline_2026_06_30.md
   - ../active/codex_violations_ratchet_to_five_2026_06_10.md
   - ../active/data_pipeline_check_mdps_features_2026_07_20.md
-  - ../active/defi_dedicated_bucket_shared_migration_2026_07_13.md
+  - ../archive/2026_07/defi_dedicated_bucket_shared_migration_2026_07_13.md
   - ../active/lst_rate_honest_coverage_2026_07_21.md
   - ../active/mtds_retry_safe_default_audit_2026_07_14.md
   - ../active/qg_host_adaptive_resource_governor_2026_07_14.md
@@ -540,10 +540,12 @@ single-path pipeline (supersedes the WS-L complex pipeline)
 
 **status**: active · **estimate**: 6.4 cal AI-days (class: infra)
 
-### [`defi_dedicated_bucket_shared_migration_2026_07_13`](../active/defi_dedicated_bucket_shared_migration_2026_07_13.md)
+### [`defi_dedicated_bucket_shared_migration_2026_07_13`](../archive/2026_07/defi_dedicated_bucket_shared_migration_2026_07_13.md)
 
-**status**: active · **estimate**: 1.6 cal AI-days (class: infra) **title**: Migrate dex-pools/lst-rates/perp-funding
-off dedicated buckets onto the shared DeFi tick bucket
+**status**: archived 2026-07-31 (na-eligibility-audit, tranche=defi — last open todo was a stale checkbox citing
+already-done work in `defi_satellite_ao_dispatch_batch2_2026_07_26.md`; fixed + archived, 6-step ritual) · **estimate**:
+1.6 cal AI-days (class: infra) **title**: Migrate dex-pools/lst-rates/perp-funding off dedicated buckets onto the shared
+DeFi tick bucket
 
 ### [`lst_rate_honest_coverage_2026_07_21`](../active/lst_rate_honest_coverage_2026_07_21.md)
 

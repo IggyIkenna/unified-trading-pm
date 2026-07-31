@@ -30,7 +30,7 @@ related:
   [
     /plans/archive/2026_07/bucket_estate_consolidation_to_sub100_2026_07_13.md,
     /plans/active/issues/recon_bucket_missing_nightly_recon_failing_2026_07_13.md,
-    /plans/active/defi_dedicated_bucket_shared_migration_2026_07_13.md,
+    /plans/archive/2026_07/defi_dedicated_bucket_shared_migration_2026_07_13.md,
     /plans/archive/issues/plan_line_cap_remediation_2026_07_23.md,
   ]
 created: "2026-07-24"

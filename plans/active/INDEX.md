@@ -17,7 +17,7 @@
 
 <!-- AUTO-INDEX-START -->
 
-_Auto-generated via `scripts/plans/regenerate_active_plan_index.py`. 241 plans across 10 domains. A plan tagged with
+_Auto-generated via `scripts/plans/regenerate_active_plan_index.py`. 240 plans across 10 domains. A plan tagged with
 multiple `asset_group:` values appears under each. Grep this block for a domain keyword before scanning `plans/active/`
 by hand._
 
@@ -142,7 +142,7 @@ by hand._
   — Gated closeout for vol_dvol_backtestable_engines_2026_07_13.md, reclassified `assigned_vm: NA -> planning` by the
   na-eligibility-audit cefi-tranche run 2026-07-30 (retroactive-reclassification shape, codex…
 
-### defi (43)
+### defi (42)
 
 - [`ag_closeout_audit_rollout_2026_07_25`](./ag_closeout_audit_rollout_2026_07_25.md) — Autonomous session (/autonomous,
   operator away, 2026-07-25) driving the /ag-closeout-audit skill across the 4 asset groups that haven't had it yet —
@@ -186,9 +186,6 @@ by hand._
 - [`defi_consolidated_native_ao_extract_2026_07_25_finalize`](./defi_consolidated_native_ao_extract_2026_07_25_finalize.md)
   — Gated closeout for defi_consolidated_native_ao_extract_2026_07_25.md — machine-held via depends_on +
   gate_on_depends: true until all 4 of that plan's todos are done. Reconciles each shipped todo's evidence back into…
-- [`defi_dedicated_bucket_shared_migration_2026_07_13`](./defi_dedicated_bucket_shared_migration_2026_07_13.md) — The 3
-  remaining kind-dedicated DeFi buckets (dex-pools-prd, lst-rates-prd, perp-funding-prd) were kept out of the earlier
-  gcs_bucket_estate_cleanup consolidation specifically because they have real, live readers…
 - [`defi_dex_pool_symbol_fix_backfill_purge_2026_07_25`](./defi_dex_pool_symbol_fix_backfill_purge_2026_07_25.md) —
   Operator decision 2026-07-25 -- delete the bad unattributed TRADER_JOE_V2/VELODROME_V2/CURVE dex_pool_state data, fix
   the subgraph-query bug that caused it (see issues/defi_dex_pools_subgraph_query_missing_input_tokens_2026_07_25.md),
