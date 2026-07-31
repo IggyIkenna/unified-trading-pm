@@ -244,3 +244,11 @@ regression) is worse.**
   established precedent. Session cost: two file reads + one git-ancestor batch check + a Progress Log append, no GCS
   read, no code change. Adds no new argument — another data point on the climbing count (now 14+), still awaiting the
   operator/design decision on Option A/B/C. Full writeup in the book_snapshot_5 doc's own Progress Log.
+- **2026-07-31 (data_pipeline_failure escalation worker, agt-406c1f, slot 2) — 15th+ dispatch, and this time the SAME
+  escalation_id (`agt-406c1f`) as the entry directly above, not just the same condition.** Third confirmed
+  exact-duplicate-escalation_id case (after `agt-ccb54c` 2026-07-30 and `agt-0bf4a3` 2026-07-31) — the literal same
+  escalation event dispatched to two different slots (slot 3, then slot 2) with byte-identical alert numbers
+  (300,457/1,090,436). Not addressed by the materiality fix (that fix changes classification/paging severity for a
+  condition, it cannot deduplicate two dispatches of the identical event) — squarely Option A/B/C's territory. Session
+  cost: doc read + git-ancestor batch check (5 commits) + a Progress Log append in the book_snapshot_5 doc, no GCS read,
+  no code change. Still awaiting the operator/design decision on Option A/B/C.
