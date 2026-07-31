@@ -640,7 +640,7 @@ cancellation-timeout fix and already shipped). Suggested next steps for whoever 
       `background_sync.py` is meant to be replaced by (in which case the migration itself is the real follow-up, not a
       deletion). (repo: deployment-api)
 
-- [ ] [REVIEW] P2. **NEW, opened 2026-07-31 (slot 13, backend_engineer) — monitor whether `deployment-api@ec1f635`'s
+- [x] ✅ [REVIEW] P2. **NEW, opened 2026-07-31 (slot 13, backend_engineer) — monitor whether `deployment-api@ec1f635`'s
       catalogue-lifecycle concurrency guard actually drops the `"Container terminated on     signal 9"` (SIGKILL/OOM)
       rate.** The fix (a `threading.Semaphore` capping concurrent uncached new-listings/upcoming-expiries builds at 2,
       mirroring the drilldown endpoint's existing guard) targets the most evidence-consistent mechanism found this
@@ -658,7 +658,45 @@ cancellation-timeout fix and already shipped). Suggested next steps for whoever 
       still uncapped concurrency across distinct filter-param cache misses) and (b)
       `deployment_api/services/data_status/manifest.py`'s `_dispatch_category_builds`
       `multiprocessing.get_context("fork")` `ProcessPoolExecutor` compute path (flagged as memory-heavy in this doc's
-      2026-07-30T04:15Z entry but never itself concurrency-guarded). (repo: deployment-api)
+      2026-07-30T04:15Z entry but never itself concurrency-guarded). (repo: deployment-api) — **CHECKED
+      2026-07-31T14:44Z (slot 8, review): flipping on the "guard did NOT fix it" negative branch, not the resolved
+      one.** Content-verified `ec1f635` (committed `10:55:17Z`) is genuinely live via direct image extraction (not
+      ancestry): the current 100%-traffic revision `00369-xkn` (created `14:40:36Z`) carries the
+      `_MAX_CONCURRENT_BUILDS`/`CatalogueLifecycleBuildBusyError` guard verbatim, matching HEAD (no later commit has
+      touched `catalogue_lifecycle.py`). `gcloud logging read` for `"Container terminated on signal 9"` scoped to
+      `timestamp>="2026-07-31T10:55:00Z"` (i.e. since the fix commit) surfaces **2 occurrences**:
+      `uts-shared-deployment-api-00358-vj6@11:32:13Z` and `uts-shared-deployment-api-00363-nwx@13:41:06Z`. Rather than
+      assume these landed on stale pre-fix images, directly extracted `catalogue_lifecycle.py` from BOTH revisions'
+      exact deployed image digests — **both genuinely carry the guard** (6/6 marker lines present in each, same as
+      current HEAD). So this is 2 confirmed SIGKILLs on guard-carrying revisions within ~3.5h of the fix's first live
+      deploy (`00358-vj6`, created `11:09:12Z`, 14 min post-commit) — a materially HIGHER apparent rate than the pre-fix
+      baseline (a `2026-07-28..31` pre-fix sweep found 4 occurrences over ~3 days, i.e. this todo's own cited "8 over 3
+      days" figure could not be fully reconstructed from the current log retention window, but even the conservative
+      4/3days≈1.3/day baseline is far below the observed 2-in-3.5h post-fix rate). This is real recurrence, not a
+      premature call from zero data — per this todo's own decision tree, "the guard did NOT fix it (or wasn't the
+      dominant mechanism)." Filed a fresh `[BACKEND] P2` todo below carrying the two next-ranked candidates this todo
+      already named forward. No code shipped (review role; pure investigation + doc reconciliation).
+
+- [ ] [BACKEND] P2. **NEW, opened 2026-07-31T14:44Z (slot 8, review) — `deployment-api@ec1f635`'s catalogue-lifecycle
+      concurrency guard did NOT stop the `"Container terminated on signal 9"` (SIGKILL/OOM) recurrence; investigate the
+      two next-ranked candidates the guard's own follow-up todo already named.** Confirmed (direct image extraction, not
+      ancestry) that BOTH SIGKILL events since the fix's live deploy —
+      `uts-shared-deployment-api-00358-vj6@2026-07-31T11:32:13Z` and
+      `uts-shared-deployment-api-00363-nwx@2026-07-31T13:41:06Z` — landed on revisions genuinely carrying the guard
+      (`_MAX_CONCURRENT_BUILDS`/`CatalogueLifecycleBuildBusyError` present verbatim in both deployed images), ruling out
+      "stale pre-fix image" as an explanation. So the unguarded `catalogue_lifecycle.py` fan-out was either not the
+      (sole) dominant OOM mechanism, or another code path independently drives the same memory ceiling. Next steps, per
+      the guard todo's own named candidates (not re-guessed here): (a) audit
+      `deployment_api/services/prediction_catalogue.py`'s single ~184 MB parquet read for uncapped concurrency across
+      distinct filter-param cache misses (unlike `catalogue_lifecycle.py`, it isn't parallelized internally, but
+      multiple concurrent uncached requests could still each hold a large in-memory frame simultaneously); (b) audit
+      `deployment_api/services/data_status/manifest.py`'s `_dispatch_category_builds`
+      `multiprocessing.get_context("fork")` `ProcessPoolExecutor` compute path (flagged memory-heavy in this doc's
+      2026-07-30T04:15Z entry, never itself concurrency-guarded) — check whether either of the 2 fresh occurrences'
+      surrounding request logs correlate with a `/prediction-catalogue` or `/data-status/manifest` call, rather than
+      guessing which candidate is live; (c) if neither correlates, re-examine whether the memory ceiling itself (16384
+      MiB) is simply too tight for this service's current combined workload independent of any single call site, per
+      this doc's own 2026-07-17 precedent of a prior bump. (repo: deployment-api)
 
 ## Progress Log
 
@@ -718,3 +756,15 @@ cancellation-timeout fix and already shipped). Suggested next steps for whoever 
   pid-role-logging deploy first went live) returns zero rows; cross-checked the query syntax against the known
   `00355-z2c@10:37:56Z` occurrence in the same session to rule out a false-negative empty result. Gate still not met —
   left the checkbox open per its own instruction, no conclusion forced from zero data. No code shipped.
+
+- **2026-07-31T14:44Z (slot 8, review)** — Dispatched `deployment_api_sigabrt_crash_loop-016` (monitor whether
+  `ec1f635`'s catalogue-lifecycle concurrency guard drops the SIGKILL/OOM rate). Content-verified `ec1f635` is live on
+  the current 100%-traffic revision (`00369-xkn`, direct image extraction). `gcloud logging read` for
+  `"Container terminated on signal 9"` since the fix commit (`10:55:17Z`) found 2 occurrences (`00358-vj6@11:32:13Z`,
+  `00363-nwx@13:41:06Z`) — extracted `catalogue_lifecycle.py` from BOTH exact deployed image digests and confirmed the
+  guard is genuinely present in each, ruling out "stale pre-fix image." 2 confirmed SIGKILLs on guard-carrying revisions
+  within ~3.5h of first fix deploy is real recurrence, not a premature call — flipped the checkbox on the "guard did NOT
+  fix it" branch and filed a fresh `[BACKEND] P2` todo carrying the guard todo's own two next-ranked candidates
+  (`prediction_catalogue.py`'s unguarded parquet read; `manifest.py`'s `_dispatch_category_builds` ProcessPoolExecutor
+  path) forward, plus a request-log-correlation step to narrow between them rather than guessing. No code shipped
+  (review role; pure investigation + doc reconciliation).
