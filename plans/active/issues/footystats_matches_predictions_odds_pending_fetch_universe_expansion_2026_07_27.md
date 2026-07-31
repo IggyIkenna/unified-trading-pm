@@ -29,7 +29,7 @@ tags: [footystats, honest-coverage, fetch-gap, pending-fetch-regression, sports-
 related:
   [
     /plans/active/issues/footystats_matches_predictions_fetch_gaps_2026_07_08.md,
-    /plans/active/sports_satellite_ao_dispatch_batch4_2026_07_25.md,
+    /plans/archive/2026_07/sports_satellite_ao_dispatch_batch4_2026_07_25.md,
     /plans/active/sports_canonical_universe_and_apifootball_reference_expansion_2026_06_24.md,
     /codex/02-data/honest-coverage-model.md,
     /codex/02-data/honest-absence-downstream-handling.md,

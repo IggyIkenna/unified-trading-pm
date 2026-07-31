@@ -17,7 +17,7 @@
 
 <!-- AUTO-INDEX-START -->
 
-_Auto-generated via `scripts/plans/regenerate_active_plan_index.py`. 243 plans across 10 domains. A plan tagged with
+_Auto-generated via `scripts/plans/regenerate_active_plan_index.py`. 241 plans across 10 domains. A plan tagged with
 multiple `asset_group:` values appears under each. Grep this block for a domain keyword before scanning `plans/active/`
 by hand._
 
@@ -388,7 +388,7 @@ by hand._
   — Run ES feature calculations and ML training smoke test, and complete the full S&P 500 backtest for price-arb and
   prediction strategies.
 
-### sports (39)
+### sports (37)
 
 - [`ag_closeout_audit_rollout_2026_07_25`](./ag_closeout_audit_rollout_2026_07_25.md) — Autonomous session (/autonomous,
   operator away, 2026-07-25) driving the /ag-closeout-audit skill across the 4 asset groups that haven't had it yet —
@@ -481,13 +481,6 @@ by hand._
   — Gated closeout for sports_satellite_ao_dispatch_batch2_2026_07_24.md — machine-held via depends_on +
   gate_on_depends: true until all 37 of that plan's todos are done (corrected 2026-07-25 plan-reconcile, was 36), so
   this never dispatches…
-- [`sports_satellite_ao_dispatch_batch4_2026_07_25`](./sports_satellite_ao_dispatch_batch4_2026_07_25.md) — Fourth
-  AO-dispatch batch for sports, produced by the `/ag-closeout-audit` skill's "batchN methodology" (iterative drain):
-  re-checks batch3's own `## Deferred — conflict-gated` section (6 docs, 7 AO-eligible candidates, 2026-07-25) against…
-- [`sports_satellite_ao_dispatch_batch4_finalize_2026_07_25`](./sports_satellite_ao_dispatch_batch4_finalize_2026_07_25.md)
-  — Gated closeout for sports_satellite_ao_dispatch_batch4_2026_07_25.md — machine-held via depends_on +
-  gate_on_depends: true until all 3 of that plan's todos are done. Mirrors
-  sports_satellite_ao_dispatch_batch3_finalize_2026_07_25.md's…
 - [`sports_satellite_ao_dispatch_batch5_2026_07_26`](./sports_satellite_ao_dispatch_batch5_2026_07_26.md) — Fifth
   AO-dispatch batch for sports, produced by the `/ag-closeout-audit` skill's full Phase-1 (per-doc classify) + Phase-3
   (conflict-check + draft) triage over all 60 sports AG-primary docs not already covered by the consolidated closeout,…

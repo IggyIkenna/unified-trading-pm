@@ -18,7 +18,7 @@ scope: [engineer]
 tags: [sports, ao-dispatch, close-out, batch-4, satellite-docs, archival]
 related:
   [
-    /plans/active/sports_satellite_ao_dispatch_batch4_2026_07_25.md,
+    /plans/archive/2026_07/sports_satellite_ao_dispatch_batch4_2026_07_25.md,
     /plans/active/sports_consolidated_closeout_2026_07_19.md,
     /plans/archive/2026_07/sports_satellite_ao_dispatch_batch3_finalize_2026_07_25.md,
     /plans/active/issues/autonomous_session_operator_decisions_2026_07_25.md,
@@ -67,27 +67,27 @@ drift_direction: advance-code
       to `status: resolved`.
 
       **Evidence per doc**:
-                                  1. `footystats_matches_predictions_fetch_gaps_2026_07_08.md` — batch4 todo 1 was diagnosis-only (found a genuine
-                                     REGRESSION, not a fix) and its own worker (slot, 2026-07-27) already wrote the reconciling Progress Log entry
-                                     directly into this doc at execution time (self-reconciling — no new edit needed). Verified current state: 1
-                                     genuinely open todo (#4, `BLOCKED-PREREQUISITES` on the 2026-07-27 regression doc); `status: open` correctly
-                                     unchanged — NOT 0 open todos, no resolved-flip warranted.
-                                  2. `fixtures_manifest_legacy_backfill_2026_07_24.md` — batch4 todo 2 (slot-5/review, 2026-07-26) already edited
-                                     this doc directly at execution time (the "Update (2026-07-26, slot-5/review — sports_satellite_ao_dispatch_
-                                     batch4-002)" section is the reconciliation itself, self-reconciling). Verified current state: 1 genuinely open
-                                     todo (the 55,233-row collision-residual delete-vs-leave decision); `status: open` correctly unchanged.
-                                  3. `sports_odds_stale_fixture_reinjection_2026_07_14.md` — batch4 todo 3's read-only DIAG sweep
-                                     (`market-tick-data-service@76ca401f`, verified ancestor of `origin/live-defi-rollout`) had NOT been reconciled
-                                     into this doc yet. Updated todo 2's entry with the actual findings (RUSSIA_PREMIER_LEAGUE zombie confirmed
-                                     still live across 18 `day=` partitions / 20 shards / 54 rows; AUSTRALIA_ALEAGUE resolved; CHINA_SUPER_LEAGUE
-                                     correctly excluded) and filed the still-open purge/re-derive work as a new tracked `- [ ]` todo (batch4's DIAG
-                                     scope was deliberately read-only — per the HARD RULE that every follow-up is a tracked todo, never left as
-                                     prose). Verified current state: 2 genuinely open todos (the new purge todo + the pre-existing P3 gate-
-                                     reassessment todo); `status: open` correctly unchanged.
+                                          1. `footystats_matches_predictions_fetch_gaps_2026_07_08.md` — batch4 todo 1 was diagnosis-only (found a genuine
+                                             REGRESSION, not a fix) and its own worker (slot, 2026-07-27) already wrote the reconciling Progress Log entry
+                                             directly into this doc at execution time (self-reconciling — no new edit needed). Verified current state: 1
+                                             genuinely open todo (#4, `BLOCKED-PREREQUISITES` on the 2026-07-27 regression doc); `status: open` correctly
+                                             unchanged — NOT 0 open todos, no resolved-flip warranted.
+                                          2. `fixtures_manifest_legacy_backfill_2026_07_24.md` — batch4 todo 2 (slot-5/review, 2026-07-26) already edited
+                                             this doc directly at execution time (the "Update (2026-07-26, slot-5/review — sports_satellite_ao_dispatch_
+                                             batch4-002)" section is the reconciliation itself, self-reconciling). Verified current state: 1 genuinely open
+                                             todo (the 55,233-row collision-residual delete-vs-leave decision); `status: open` correctly unchanged.
+                                          3. `sports_odds_stale_fixture_reinjection_2026_07_14.md` — batch4 todo 3's read-only DIAG sweep
+                                             (`market-tick-data-service@76ca401f`, verified ancestor of `origin/live-defi-rollout`) had NOT been reconciled
+                                             into this doc yet. Updated todo 2's entry with the actual findings (RUSSIA_PREMIER_LEAGUE zombie confirmed
+                                             still live across 18 `day=` partitions / 20 shards / 54 rows; AUSTRALIA_ALEAGUE resolved; CHINA_SUPER_LEAGUE
+                                             correctly excluded) and filed the still-open purge/re-derive work as a new tracked `- [ ]` todo (batch4's DIAG
+                                             scope was deliberately read-only — per the HARD RULE that every follow-up is a tracked todo, never left as
+                                             prose). Verified current state: 2 genuinely open todos (the new purge todo + the pre-existing P3 gate-
+                                             reassessment todo); `status: open` correctly unchanged.
 
-                                  **Net**: none of the 3 source docs reached 0 open todos, so none was flipped to `status: resolved` — all 3
-                                  genuinely still carry open work, verified per-doc rather than trusting checkbox counts. `unified-trading-pm`
-                                  commit (this same commit).
+                                          **Net**: none of the 3 source docs reached 0 open todos, so none was flipped to `status: resolved` — all 3
+                                          genuinely still carry open work, verified per-doc rather than trusting checkbox counts. `unified-trading-pm`
+                                          commit (this same commit).
 
 - [x] ✅ [DOC] P1. **DONE 2026-07-31 (slot-12, data_engineering) — vacuously satisfied, 0 docs to archive.** Re-verified
       todo 1's own evidence against current on-disk state before treating this as a no-op: all 3 source docs
