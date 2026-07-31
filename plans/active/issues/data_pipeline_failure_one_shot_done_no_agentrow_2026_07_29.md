@@ -158,3 +158,14 @@ still in flight.
 - **na-eligibility-audit 2026-07-30**: RECLASSIFY NA → planning — both todos are bounded: query the live
   AgentRow/`escalation_dispatched` record for a named escalation_id, then fix whichever of the two stated hypotheses it
   proves, with a named precedent regression test. All 3 citations are `related:` cross-refs, not dispatch claims.
+
+- **2026-07-31 (data_pipeline_failure escalation worker, slot 2, `agt-8fa8d1`, wall_type=`data_pipeline_failure`,
+  repo=`market-tick-data-service`):** fourth corroboration, same shape — 400 on three `/done {one_shot_complete: true}`
+  attempts (`task_id: ""`, `task_id: "agt-8fa8d1"`, retried after a `heartbeat` call whose `dispatch_reason` read "spawn
+  registration pending (grace window, holding slot)" — that text did not resolve the mismatch; heartbeat itself
+  succeeded normally every time, only the AgentRow lookup fails, matching all three prior reports). This session's
+  actual assigned root-cause fix (DP-VM-002 false-CRITICAL on an early-SPOT-preempted VM whose in-guest shutdown-script
+  never ran) shipped clean and unrelated: `unified-trading-library@61566617` + `deployment-service@09a2374`, both
+  QG-green on `live-defi-rollout`. Ending session without a clean `/done` per the established precedent; relying on the
+  idle-lingering-reclaim reaper path. Not attempting the diagnostic todos below (no orchestrator-DB/dashboard access
+  from this worker slot, same constraint every prior reporter hit).
