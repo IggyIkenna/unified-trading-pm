@@ -172,3 +172,40 @@ indistinguishable from no detector — and costs more, because it looks like cov
 5. **Delete the vestigial `repositories{}.version` scalar**, per the checker's own remedy.
 6. **Make `assert_version_coherence.py` gate** once 1-5 land — otherwise this recurs silently.
 7. **Re-sweep for other D13 orphans** — the table above is a sample, not a census.
+
+## Census addendum (2026-07-31, ci_satellite_ao_dispatch_batch1-019, steps 3 + 7)
+
+**Step 3 resolution — `sync-manifest-versions.py` DELETED**, not fixed. Live-measured before deletion:
+`get_repo_type`/`read_pyproject_version` sweep across all 24 manifest repos shows only ONE (`unified-trading-pm` itself)
+still carries a static `[project].version` line — every other `version_source: git-tag` repo has been fully migrated to
+`dynamic = ["version"]` (hatch-vcs), so the script silently skipped all 22 of them (harmless-but-vacuous). For the one
+repo it could still act on, running it live (`python3.13 scripts/manifest/sync-manifest-versions.py`) produced
+`DRIFT: unified-trading-pm manifest=1.2.655 pyproject=1.2.596` exit=1 — and `--apply` would have overwritten the
+manifest's more-current, tag-derived value (1.2.655) with the STALE, un-migrated pyproject line (1.2.596), i.e. active
+data loss in the wrong direction (D13's model: the tag is SSOT, pyproject is not). The tool was not just inert, it was
+actively harmful in its one remaining live case. Confirmed zero dangling referrers before deletion: no
+workflow/script/test invokes it (only historical mentions in archived plans/docs); `assert_version_coherence.py`
+(already wired into `scripts/quality-gates.sh:979`, git-tag-aware, correct-direction) fully supersedes its function.
+Deleted via `unified-trading-pm@<see plan checkbox for sha>`.
+
+**Step 7 re-sweep — 2 more D13 orphans found beyond the original sample table** (broader grep for
+`project.get("version")` / `data["project"]["version"]` across all repos' `scripts/`):
+
+| script                                   | repo                  | reads                      | state                                                                                                                                                                                                                                                                                                                     |
+| ---------------------------------------- | --------------------- | -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `server/config.py::app_version()`        | agent-orchestrator    | own installed dist version | ❌ was dead (KeyError → always `"unknown"`, silently regressing the dashboard version pill since D13) — **FIXED live 2026-07-31** to `importlib.metadata.version("orchestrator")`, the established D13 API-2 pattern already used by `deployment-api/deployment_api/__init__.py`.                                         |
+| `check_workspace_pyproject_pin_drift.py` | unified-trading-pm    | ALL repos' own version     | ❌ vacuous for the same reason as `sync-manifest-versions.py` (dynamic repos never populate `name_to_version`) — NOT wired to `quality-gates.sh` or any workflow today (grep-confirmed), so currently inert rather than actively harmful. Followup todo filed.                                                            |
+| `check_sdk_version_alignment.py`         | unified-api-contracts | api-contracts' own version | ❌ `_get_api_contracts_version()` always returns `""` for the (git-tag/dynamic) api-contracts repo; `_version_satisfies_spec` treats empty as "always satisfies", so the api-contracts-version-overlap check silently no-ops. NOT wired to any workflow today (grep-confirmed) — inert, not harmful. Followup todo filed. |
+
+`agent-orchestrator/server/config.py` was fixed inline (small, clear, high-value — a live user-visible regression with
+an already-established fix pattern elsewhere in the fleet). The other two are NOT wired to anything today, so lower
+urgency; followup todos filed in `plans/active/ci_satellite_ao_dispatch_batch1_2026_07_26.md` rather than fixed inline
+to keep this unit bounded. Also found (unrelated to D13, hit as a side effect while deleting the dead script): a
+false-positive in the `block_destructive_commands.py` PreToolUse guardrail's recursive-rm regex — tracked separately at
+`/plans/active/issues/destructive_rm_guardrail_regex_false_positive_on_hyphenated_filenames_2026_07_31.md`.
+
+Census now closed — the table above plus the original sample table cover every repo's `scripts/` tree for a
+`tomllib`-based reader of `[project].version` (broader sweep also checked `grep`/`sed`-based static-line readers in
+shell/workflow files; none found beyond the fleet-standard
+`semver-agent`/`request-major-bump`/`update-dependency- version` workflow set, which are already correctly git-tag-aware
+post-D13).

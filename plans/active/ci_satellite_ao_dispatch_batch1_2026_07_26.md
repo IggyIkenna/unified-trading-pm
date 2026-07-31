@@ -389,17 +389,39 @@ concurrent workers do not collide on this file.
       file. **Done when**: a synthetic non-quickmerge code push is blocked in both repos, a quickmerged range passes,
       and the self-heal recognises the husky installs. Source:
       `issues/provenance_gate_override_and_unenforced_quickmerge_hook_2026_07_17.md` ([DEVOPS] P3).
-- [ ] [INFRA] P2. **D13 orphan-reader census + remediate `sync-manifest-versions.py`.** D13 (2026-06-27) made the git
-      tag the version SSOT and deleted the static `version = "X.Y.Z"` pyproject line, but only migrated ONE reader.
-      `scripts/manifest/sync-manifest-versions.py` still has 28 pyproject refs / 0 git-tag-aware branches and a
-      docstring that still says "Sync manifest versions section with pyproject.toml versions" — and because it is a
-      manual tool wired to no workflow, it fails only when someone reaches for it, i.e. exactly when it is trusted. Two
-      steps, one unit: (i) run the census the source doc explicitly says is owed ("this table is a sample, not a
-      census") — sweep for every remaining reader of a static `version =` and check each against its repo's
-      `version_source`; (ii) make `sync-manifest-versions.py` D13-correct, or delete it and repoint referrers per
-      "delete deprecated code (no shims)" — state which and why. **Done when**: the census is recorded in the source
-      doc, and the script either no longer parses a deleted field or is gone with zero dangling referrers. Source:
-      `issues/d13_orphaned_version_readers_and_manifest_drift_2026_07_17.md` (steps 3 + 7).
+- [x] ✅ [INFRA] P2. **D13 orphan-reader census + remediate `sync-manifest-versions.py`.** —
+      unified-trading-pm@1e60cff15 + agent-orchestrator@12e0f2e. Census: live-measured all 24 manifest repos — only
+      `unified-trading-pm` itself still carries a static `[project].version` line, every other `version_source: git-tag`
+      repo is fully migrated to hatch-vcs dynamic versioning, so the script silently skipped 22/24 repos; for the one
+      repo it could still act on, it would have `--apply`'d the STALE pyproject value (1.2.596) OVER the more-current
+      manifest cache value (1.2.655) — wrong-direction data loss, not just inert. **Deleted** (superseded by
+      `assert_version_coherence.py`, already wired + git-tag-aware; zero dangling referrers confirmed). Re-sweep found 2
+      more orphans (followup todos below) + fixed one live regression inline:
+      `agent-orchestrator/server/config.py::app_version()` was silently returning `"unknown"` always since D13 (now
+      reads `importlib.metadata.version("orchestrator")`, the established D13 API-2 pattern). Full census recorded in
+      `plans/archive/issues/d13_orphaned_version_readers_and_manifest_drift_2026_07_17.md` § "Census addendum
+      (2026-07-31)". Source: `issues/d13_orphaned_version_readers_and_manifest_drift_2026_07_17.md` (steps 3 + 7).
+- [ ] [INFRA] P3. **`check_workspace_pyproject_pin_drift.py` is D13-blind, same bug class as
+      `sync-manifest-versions.py`.** Found via the D13 orphan-reader re-sweep (census in
+      `plans/archive/issues/d13_orphaned_version_readers_and_manifest_drift_2026_07_17.md` § "Census addendum
+      (2026-07-31)"). `_extract_version()` reads `project.get("version")` from every repo's live pyproject.toml, but
+      21/22 `version_source: git-tag` repos are dynamic (no static line) — `name_to_version` ends up populated only by
+      static-version repos, so the peer-pin-drift comparison silently never fires for any dynamic repo's dependents. NOT
+      currently wired to `quality-gates.sh` or any workflow (grep-confirmed) — inert today, not actively harmful, but
+      the same "trusted exactly when someone reaches for it manually" trap as the original bug. Either make it
+      git-tag-aware (resolve a git-tag repo's current version from `workspace-manifest.json`'s `versions{}` cache
+      instead of the source pyproject, mirroring `assert_version_coherence.py`'s `_version_source()` dispatch) or delete
+      it if genuinely superseded — state which and why. **Done when**: the script either correctly resolves git-tag repo
+      versions or is gone with zero dangling referrers. Repo: unified-trading-pm.
+- [ ] [INFRA] P3. **`check_sdk_version_alignment.py`'s `_get_api_contracts_version()` is D13-blind.** Found via the same
+      re-sweep. `unified-api-contracts` is `version_source: git-tag` (dynamic pyproject), so
+      `_get_api_contracts_version()` always returns `""`; `_version_satisfies_spec()` treats an empty version as "always
+      satisfies", so the "interface uses api-contracts but version range does not include api-contracts version" check
+      silently no-ops for every caller. NOT currently wired to any workflow (grep-confirmed) — inert today. Make it
+      git-tag-aware (read the current version from `workspace-manifest.json`'s `versions{}` cache, or the published git
+      tag, rather than the source pyproject) or delete it if superseded — state which and why. **Done when**: the
+      api-contracts-version-overlap check either correctly resolves the git-tag version or the script is gone with zero
+      dangling referrers. Repo: unified-api-contracts.
 - [ ] [INFRA] P2. **Fleet version/tag-state census (read-only, NO tag minting).** Three docs each ask for a slice of the
       same measurement; do it once. (a) Re-derive manifest `versions{}` vs the highest real `vX.Y.Z` tag across all 24
       repos (last measured 2026-07-17: 13 in sync / 9 LAGGING / 1 AHEAD — worst `e2e-testing` 0.6.0 vs v0.40.0). (b)
