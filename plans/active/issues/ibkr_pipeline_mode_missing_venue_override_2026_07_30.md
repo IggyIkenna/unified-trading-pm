@@ -89,10 +89,19 @@ inside an unrelated test-widening todo.
       — count objects currently stamped `pipeline_mode=batch_fred` (or any non-`batch_databento`/`batch_ibkr` value)
       that were actually IBKR-fetched. (repo: market-tick-data-service) — market-tick-data-service@233f852e. **Result: 0
       rows.** See Progress Log 2026-07-31.
-- [ ] [BACKEND] P2. **Add `PipelineMode.BATCH_IBKR = "batch_ibkr"`** to
+- [x] ✅ [BACKEND] P2. **Add `PipelineMode.BATCH_IBKR = "batch_ibkr"`** to
       `unified_api_contracts/canonical/crosscutting/pipeline_mode.py`, following the exact pattern of the existing
       `BATCH_FRED`/`BATCH_ECB`/`BATCH_OFR` members (incl. any exhaustiveness/coverage tests in UAC that enumerate
-      `PipelineMode` members). (repo: unified-api-contracts)
+      `PipelineMode` members). (repo: unified-api-contracts) — `unified-api-contracts@ab7d8c83`. Added `BATCH_IBKR` +
+      registered the matching closed-set entries (`SOURCE_PRIORITY[("tradfi","ohlcv_1d")]` now `["fred","ecb","ibkr"]`,
+      `SOURCE_MODE_CAPABILITY["ibkr"]=BATCH-only`, `EMISSION_LATENCY_MS_BY_SOURCE["ibkr"]=86_400_000`) — same
+      never-actually-competes rationale as FRED/ECB (write-time always resolves via the UTL venue override once todo 3
+      lands; this registration exists purely to satisfy the `PipelineMode<->SOURCE_PRIORITY` closed-set round-trip, per
+      the confirmed real caller's `data_type="ohlcv_1d"` — see the issue's own "Measured live" section). Also bumped
+      `test_extra_live_probe_sources_do_not_leak_cross_ag`'s pinned tradfi prefix count 12→13 and
+      `test_source_mode_capability_matches_ratified_matrix_exactly`'s `EXPECTED_SOURCE_MODE_CAPABILITY` (both caught by
+      the full `quality-gates.sh` run, mirroring the exact 2 extra registries the FRED/ECB/OFR fix also had to touch).
+      Full `quality-gates.sh` green (298s, sentinel `ab7d8c8355b1722e3f5d8262baddac59a991c284`).
 - [ ] [BACKEND] P2. **Add `"IBKR": PipelineMode.BATCH_IBKR`** to `_VENUE_OVERRIDES` in
       `unified_trading_library/pipeline_mode_resolver.py`, mirroring the FRED/ECB/OFR entries added 2026-07-29. (repo:
       unified-trading-library)
