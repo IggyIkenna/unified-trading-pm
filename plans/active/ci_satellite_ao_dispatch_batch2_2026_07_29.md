@@ -372,13 +372,16 @@ concurrent workers do not collide on this file.
       segment (PM's own `REPO_ROOT` is already the PM repo root, not the workspace root), so the Architectural-ratchets
       (ST-19/PB-19/UI-18) gate had been silently a no-op; fixed + verified it now runs clean (0 violations, baseline 0).
       Source: `/plans/archive/issues/mtds_ungated_test_families_2026_07_17.md` (todo 5; doc archived 2026-07-31).
-- [ ] [INFRA] P2. **Port the `${TMPDIR:-/tmp}` hardcoded-path fix to `scripts/quality-gates-base/base-library.sh`.**
-      Mirrors the already-shipped `base-service.sh` fix in the same source doc — grep for the ~10+ named hardcoded
-      `/tmp/` checker-capture sites in `base-library.sh`, apply the identical substitution pattern, verify `bash -n`,
-      re-run `quality-gates.sh` on a library-tier repo (e.g. `unified-api-contracts`). **Done when**: every named site
-      uses `${TMPDIR:-/tmp}`, `bash -n` passes, and the named library-tier repo's `quality-gates.sh` is green on a full
-      tmpfs. Source: `archive/issues/qg_hardcoded_tmp_paths_false_failures_on_full_tmpfs_2026_07_26.md` (sole open
-      todo).
+- [x] ✅ [INFRA] P2. **Port the `${TMPDIR:-/tmp}` hardcoded-path fix to `scripts/quality-gates-base/base-library.sh`.**
+      — ALREADY SHIPPED pre-dispatch: `unified-trading-pm@f2f227ff9` (2026-07-27) landed this exact fix, already
+      verified live 2026-07-30 in its source issue doc's own Todos. Independently re-verified at dispatch time
+      (2026-07-31): `grep -c '/tmp/'` minus `TMPDIR` sites = 0 bare literals (37 `${TMPDIR:-/tmp}` sites total),
+      `bash -n scripts/quality-gates-base/base-library.sh` clean, and a fresh full `quality-gates.sh --no-fix` run on
+      library-tier repo `unified-api-contracts` (sentinel `9ce47376ed2cfb2dcefd50ebe3def840987cba2f`) →
+      `ALL QUALITY GATES PASSED (273s)`. No new code shipped — this todo's checkbox was simply stale relative to the
+      already-completed fix; flipping only. Source:
+      `archive/issues/qg_hardcoded_tmp_paths_false_failures_on_full_tmpfs_2026_07_26.md` (its own Todos already show
+      this done + archived).
 - [ ] [BACKEND] P2. **Root-cause and fix `plan-health-agent.yml`'s dead `schedule` trigger (1/200 firings since
       2026-03-07).** One combined todo (todo 2 is gated on todo 1's output, same source doc): (a) compare the workflow's
       trigger/concurrency/permissions blocks line-by-line against 2-3 reliably-firing sibling crons — the doc has
