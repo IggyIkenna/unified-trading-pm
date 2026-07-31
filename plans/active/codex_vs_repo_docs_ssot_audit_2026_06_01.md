@@ -403,7 +403,21 @@ either already-satisfied or stale. This session (Phase-2 worker) executed the **
       `unified-trading-pm@c6b2d9eb1` 2026-06-22**: reconciled 5 codex docs against the live code as of that date
       (PlanRegenLoop cadence 6h→30min; AutoSpawn ceilings 50/80→95/95 + env-name fixes; backend port 8026→8765 across
       overview/worker-liveness/multi-vm-topology; ES256 internal-token + HS256-retired in the multi-vm auth diagram).
-- [ ] [DOCS] P2. **deployment-api** (8) / **client-reporting-api** (8) / **alerting-service** (8).
+- [x] ✅ [DOCS] P2. **deployment-api** (8) / **client-reporting-api** (8) / **alerting-service** (8). — **DONE
+      2026-07-31** (Phase-3/4 apply, gate cleared). Ground-truthed each repo vs the Appendix-B registry before applying;
+      all cited codex targets VERIFIED-EXIST. **deployment-api@74785bf**: README un-archived (dropped the WRONG
+      `unified-trading-deployment-v3 — ARCHIVED` banner — it IS the live deploy/launch+subscriptions backend for both
+      UIs); TESTING → `scripts/quality-gates.sh` entrypoint (never-run-pytest); DEPLOYMENT_GUIDE `gcr.io/` → Artifact
+      Registry; DELETE `docs/specs/{PLANS_ALIGNMENT,README}.md` (dead dumps, all 5 cited plans archived). (Adopted this
+      slot's prior interrupted-session WIP that matched the registry exactly.) **client-reporting-api@93374e9**:
+      GCS_PATHS rewritten — the `does not read/write GCS` claim was STALE (service is a live GCS reader/writer via
+      `core/{hwm_reader,attribution_reader,ledger_views,invoice_state,recon_view}.py`, `resolve_bucket_name` kinds
+      `client-statements`/`client-reports`; layout deferred to the CLIENT_OPERATIONS_GUIDE runbook + codex bucket/object
+      SSOTs); TESTING → QG entrypoint; DEPLOYMENT_GUIDE `gcr.io/` → Artifact Registry (the MIGRATE-TO-CODEX
+      commercial-facts deltas were already shipped 2026-07-29, see the Phase-1 todo above).
+      **alerting-service@5d96dd2**: TESTING → QG entrypoint; DELETE `docs/specs/{PLANS_ALIGNMENT,README}.md` (dead
+      dumps, all 5 cited plans archived). KEEP-class docs untouched. Each shipped Pass-1 QG-green →
+      `quickmerge --agent`, verified on origin; all changed `.md` prettier-clean.
 - [ ] [DOCS] P2. **trading-agent-service** (7) / **ibkr-gateway-infra** (4) / **batch-live-reconciliation-service** (1)
       / **system-integration-tests** (1).
 - [ ] [DOCS] P2. **deployment-ui** (3) (`user-management-ui` dropped — ARCHIVED 2026-04-20, corrected 2026-07-15,
