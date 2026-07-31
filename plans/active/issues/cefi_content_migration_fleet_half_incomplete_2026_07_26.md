@@ -232,7 +232,16 @@ canonicalised by this fleet. The migration's own `# Delete-when:` marker on
       clean relaunch on `e2-standard-16` completes past the point of this pattern recurring twice, confirming it was
       transient. **Budget note**: shard 16 has now used its full `RB-INFRA-RELAUNCH` `≤2/(vm-prefix,day)` allowance for
       2026-07-31 (1 dead attempt + 1 relaunch in flight) — do NOT relaunch a 3rd time today if this one also fails; page
-      per the runbook instead. Repo: market-tick-data-service.
+      per the runbook instead. Repo: market-tick-data-service. **2026-07-31T04:02Z update**: the "single anomalously
+      large/malformed file" hypothesis is now CONFIRMED for shard 23 (a 3rd shard hitting this same fast-OOM pattern) —
+      its `run.log` shows an explicit
+      `ERROR read failed     .../venue=DERIBIT/instrument_type=perpetual/data_type=trades/XRP_USDC-26SEP25-4D6-C.parquet: Could not open     Parquet input source '<Buffer>': Couldn't deserialize thrift: TProtocolException: Exceeded size limit`
+      immediately before its OOM-kill. This is very likely the SAME mechanism killing shards 16 and 44 (no corresponding
+      ERROR line survived in their truncated tails, but the fast/anomalous-spike signature matches exactly).
+      **Recommended fix approach**: wrap the per-file `pd.read_parquet`/pyarrow open call in a try/except that catches
+      `pyarrow.lib.ArrowInvalid`/thrift-deserialize errors, logs the specific file path, and SKIPS it (flagged for
+      separate manual repair) rather than letting it propagate into whatever retry/buffer-growth path is causing the
+      OOM. Repo: market-tick-data-service.
 - [ ] [OPERATOR] P0. **Break the `-006`/`-002` dispatch deadlock.** Live-reverified 2026-07-30T16:35Z (backlog API +
       `/api/state`, not relayed): `-002` (this doc's P2 corpus-wide re-verify+delete todo, monitoring-only) has held
       slot 15 continuously since `2026-07-30T12:16:10Z` — **4h20m and counting**, `status=working` the whole time, no
@@ -789,3 +798,15 @@ accordingly.
   individual files/batches. Fleet still at 19 (someone relaunched shard 16 separately, `-035409`, now `RUNNING`). No
   action taken (monitoring-only) — flagging both early-death shards (16, 44) together as worth the root-cause owner's
   attention if this pattern repeats across more shards.
+- **2026-07-31T04:02Z (slot-15) — likely explains the early-death pattern**: shard 23 (`-032606`) also OOM-killed
+  (`rc=137`) early — 1699.5s (~28min), 18,200/218,799 files (8.3%). Unlike 16/44, this one logged an explicit `ERROR`
+  immediately before death:
+  `read failed raw_tick_data/by_date/day=2025-09-15/.../venue=DERIBIT/instrument_type=perpetual/data_type=trades/ XRP_USDC-26SEP25-4D6-C.parquet: Could not open Parquet input source '<Buffer>': Couldn't deserialize thrift: TProtocolException: Exceeded size limit`.
+  This is a genuinely CORRUPT/malformed parquet file (thrift metadata block exceeds pyarrow's size sanity-check), not a
+  data-volume leak — and pyarrow's error-handling path for a corrupt file is a plausible mechanism for the OTHER two
+  early deaths too (16, 44): a malformed file could cause an internal retry/buffer-growth loop before finally erroring,
+  consistent with 44's observed `bytes_allocated` spike. **Recommendation for whoever owns further investigation**:
+  check shards 16/23/44's date windows for other corrupt files via a targeted `pyarrow.parquet.ParquetFile()` open-only
+  sanity pass (no full read) before the next relaunch attempt — a corrupt file will keep killing any relaunch regardless
+  of the memory-leak fix. No action taken (monitoring-only); not attempting the file-corruption scan myself (out of
+  scope for continued fleet monitoring).
