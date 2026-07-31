@@ -28,16 +28,17 @@ related:
   ]
 created: 2026-07-31
 parent_epic: predictions_master
-assigned_vm: planning
-execution_scope: orchestrator-agent
+assigned_vm: NA
+execution_scope: local-only
 priority: P2
 estimate_class: refactor
 drift_direction: advance-code
 depends_on: []
 source:
   [
-    "Found 2026-07-31 (slot-12, backend_engineer) while executing prediction_consolidated_native_ao_extract_2026_07_25.md
-    todo 1's adapter dead-code/fallback audit, per /codex/06-coding-standards/adapter-dead-code-and-fallback-ban.md.",
+    "Found 2026-07-31 (slot-12, backend_engineer) while executing
+    prediction_consolidated_native_ao_extract_2026_07_25.md todo 1's adapter dead-code/fallback audit, per
+    /codex/06-coding-standards/adapter-dead-code-and-fallback-ban.md.",
   ]
 resolved_by:
 locked_by:
@@ -60,41 +61,43 @@ download_batch() -> {get_trades_batch, get_books_batch} -> {_fetch_trades_for_da
 Confirmed via repo-wide grep (excluding `tests/`) — every one of the following methods has ZERO non-test call sites:
 
 **`market_tick_data_service/market_interface/adapters/prediction/kalshi_adapter.py`** (`KalshiAdapter`):
+
 - `parse_market()`, `parse_trade()`, `parse_order_book()` (lines 129-139)
 - `normalize_market()` (141-172), `normalize_odds()` (174-190)
-- `_load_tickers_from_gcs()` (476-484) — its own docstring says "Legacy convenience wrapper... Retained for callers
-  that only need the ticker list" but grep confirms there are no such callers anywhere, including tests.
+- `_load_tickers_from_gcs()` (476-484) — its own docstring says "Legacy convenience wrapper... Retained for callers that
+  only need the ticker list" but grep confirms there are no such callers anywhere, including tests.
 
 **`market_tick_data_service/market_interface/adapters/prediction/polymarket_adapter.py`** (`PolymarketAdapter`):
-- `get_markets()` (146-192), `get_prices()` (194-229), `_convert_gamma_market()` (110-144),
-  `_build_order_book_record()` (231-250)
+
+- `get_markets()` (146-192), `get_prices()` (194-229), `_convert_gamma_market()` (110-144), `_build_order_book_record()`
+  (231-250)
 - `parse_market()`, `parse_token()`, `parse_order_book()` (252-262)
 - `normalize_market()` (264-297), `normalize_odds()` (299-321)
-- `_load_condition_ids_from_gcs()` (816-819) — self-labeled "Legacy wrapper — use `_load_instruments_from_gcs` for
-  shard info", zero callers anywhere.
+- `_load_condition_ids_from_gcs()` (816-819) — self-labeled "Legacy wrapper — use `_load_instruments_from_gcs` for shard
+  info", zero callers anywhere.
 
-`normalize_market`/`parse_market`/`parse_order_book`/etc. ARE covered by `tests/market_interface/unit/
-test_prediction_adapters.py` and friends, and `PolymarketAdapter.get_markets`/`get_prices` are covered by
-`tests/integration/test_polymarket_integration.py` — so this is real, deliberately-tested code, not a stub. It reads
-like the remnant of an earlier live-REST-polling design (`get_markets`/`get_prices` naming and the Gamma-API-only
-`ENDPOINT_STATUS = "IMPLEMENTED"` marker in polymarket_adapter.py both suggest a pre-`download_batch()` architecture)
-that the batch/lifecycle-gated pipeline superseded without deleting the superseded interface.
+`normalize_market`/`parse_market`/`parse_order_book`/etc. ARE covered by
+`tests/market_interface/unit/ test_prediction_adapters.py` and friends, and `PolymarketAdapter.get_markets`/`get_prices`
+are covered by `tests/integration/test_polymarket_integration.py` — so this is real, deliberately-tested code, not a
+stub. It reads like the remnant of an earlier live-REST-polling design (`get_markets`/`get_prices` naming and the
+Gamma-API-only `ENDPOINT_STATUS = "IMPLEMENTED"` marker in polymarket_adapter.py both suggest a pre-`download_batch()`
+architecture) that the batch/lifecycle-gated pipeline superseded without deleting the superseded interface.
 
-This is exactly the class of gap `/codex/06-coding-standards/adapter-dead-code-and-fallback-ban.md` names explicitly:
-"a module/class/function that is defined and registered somewhere... but never actually reached by any live code path
-is dead code, even though `vulture` won't flag it (it IS referenced)" — referenced here by tests, not by any caller
-that a production run would ever exercise.
+This is exactly the class of gap `/codex/06-coding-standards/adapter-dead-code-and-fallback-ban.md` names explicitly: "a
+module/class/function that is defined and registered somewhere... but never actually reached by any live code path is
+dead code, even though `vulture` won't flag it (it IS referenced)" — referenced here by tests, not by any caller that a
+production run would ever exercise.
 
 ## Why it matters
 
 - ~200 lines of adapter surface area (two files) that nobody maintaining the live pipeline needs to reason about, but
   that every future adapter change/audit has to read past to find the actually-live code.
-- Test coverage on dead code inflates the coverage numbers for files that need review attention on the parts that
-  matter (the lifecycle-gating / CF-11 failure-signalling logic actually in the request path).
+- Test coverage on dead code inflates the coverage numbers for files that need review attention on the parts that matter
+  (the lifecycle-gating / CF-11 failure-signalling logic actually in the request path).
 - If Kalshi/Polymarket ever DOES need a live-polling path again (vs. batch), reviving THIS code without re-verifying it
   against the current lifecycle-gating contract (`compute_lifecycle_window_ts`, CF-11 `attempted_failed` signalling)
-  would silently reintroduce the exact classes of bug (silent-empty, no lifecycle gate) the rest of these two files
-  were hardened against.
+  would silently reintroduce the exact classes of bug (silent-empty, no lifecycle gate) the rest of these two files were
+  hardened against.
 
 ## Recommended decision
 
@@ -110,10 +113,9 @@ Not adjudicated here (genuine judgment call on scope, not auto-resolved):
 ## Todos
 
 - [ ] [BACKEND] P2. Decide (A) vs (B) above with the operator/plan owner, then either delete
-      `KalshiAdapter.{parse_market,parse_trade,parse_order_book,normalize_market,normalize_odds,_load_tickers_from_gcs}`
-      + `PolymarketAdapter.{get_markets,get_prices,_convert_gamma_market,_build_order_book_record,parse_market,
-      parse_token,parse_order_book,normalize_market,normalize_odds,_load_condition_ids_from_gcs}` and their
-      dedicated tests, or add the concrete activation-path documentation the codex rule requires to keep them.
+      `KalshiAdapter.{parse_market,parse_trade,parse_order_book,normalize_market,normalize_odds,_load_tickers_from_gcs}` +
+      `PolymarketAdapter.{get_markets,get_prices,_convert_gamma_market,_build_order_book_record,parse_market,     parse_token,parse_order_book,normalize_market,normalize_odds,_load_condition_ids_from_gcs}`
+      and their dedicated tests, or add the concrete activation-path documentation the codex rule requires to keep them.
       (repo: market-tick-data-service)
 
 ## Progress Log

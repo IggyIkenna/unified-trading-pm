@@ -7,12 +7,12 @@ summary: >-
   `PolymarketReferenceDataAdapter.__init__` accepts `api_football_api_key`, stores it as `self._api_football_key`, and
   maintains a `self._fixture_cache` dict — all in service of the single method that reads them,
   `_cross_reference_fixture()` (async, calls `ApiFootballAdapter.get_fixtures`). `instruments_service/reference_data/
-  factory.py::get_or_create_adapter` resolves a real `api_football` secret from `extra_api_keys` and threads it into
-  the constructor for every Polymarket adapter built via the factory (the only production construction path) — so the
+  factory.py::get_or_create_adapter` resolves a real `api_football` secret from `extra_api_keys` and threads it into the
+  constructor for every Polymarket adapter built via the factory (the only production construction path) — so the
   factory does real work (secret resolution) to feed a capability nothing calls. `_cross_reference_fixture()` has zero
   call sites anywhere outside its own dedicated test file
-  (`tests/unit/test_prediction_adapters_comprehensive.py::TestCrossReferenceFixture`); the ONLY other reference to it
-  in the codebase is `_build_sports_id()`'s own docstring, which explicitly calls it "the unused, network-dependent
+  (`tests/unit/test_prediction_adapters_comprehensive.py::TestCrossReferenceFixture`); the ONLY other reference to it in
+  the codebase is `_build_sports_id()`'s own docstring, which explicitly calls it "the unused, network-dependent
   `_cross_reference_fixture()`" and states it was deliberately left unwired for capture-throughput reasons.
 status: open
 nature: issue
@@ -29,16 +29,17 @@ related:
   ]
 created: 2026-07-31
 parent_epic: predictions_master
-assigned_vm: planning
-execution_scope: orchestrator-agent
+assigned_vm: NA
+execution_scope: local-only
 priority: P2
 estimate_class: refactor
 drift_direction: advance-code
 depends_on: []
 source:
   [
-    "Found 2026-07-31 (slot-12, backend_engineer) while executing prediction_consolidated_native_ao_extract_2026_07_25.md
-    todo 1's adapter dead-code/fallback audit, per /codex/06-coding-standards/adapter-dead-code-and-fallback-ban.md.",
+    "Found 2026-07-31 (slot-12, backend_engineer) while executing
+    prediction_consolidated_native_ao_extract_2026_07_25.md todo 1's adapter dead-code/fallback audit, per
+    /codex/06-coding-standards/adapter-dead-code-and-fallback-ban.md.",
   ]
 resolved_by:
 locked_by:
@@ -60,14 +61,14 @@ def __init__(self, project_id=None, api_key=None, api_football_api_key=None) -> 
     self._fixture_cache: dict[str, str] = {}  # "LEAGUE:HOME:AWAY:DATE" → fixture_id
 ```
 
-`instruments_service/reference_data/adapters/prediction/polymarket/parsing.py::_cross_reference_fixture()` (line 430)
-is the only method that reads `self._api_football_key` / `self._fixture_cache`. Grep across the repo (excluding
-`tests/`) for `_cross_reference_fixture` returns exactly two hits: its own `async def` and the comment in
-`_build_sports_id()` (parsing.py:356-360) that names it:
+`instruments_service/reference_data/adapters/prediction/polymarket/parsing.py::_cross_reference_fixture()` (line 430) is
+the only method that reads `self._api_football_key` / `self._fixture_cache`. Grep across the repo (excluding `tests/`)
+for `_cross_reference_fixture` returns exactly two hits: its own `async def` and the comment in `_build_sports_id()`
+(parsing.py:356-360) that names it:
 
-> "deliberately NOT wired through the unused, network-dependent `_cross_reference_fixture()` (a per-market
-> API-Football call in the hot adapter-parsing path would be a real capture-throughput regression); that method
-> remains available as a higher-fidelity follow-up for an async, rate-limited pipeline stage."
+> "deliberately NOT wired through the unused, network-dependent `_cross_reference_fixture()` (a per-market API-Football
+> call in the hot adapter-parsing path would be a real capture-throughput regression); that method remains available as
+> a higher-fidelity follow-up for an async, rate-limited pipeline stage."
 
 Yet `instruments_service/reference_data/factory.py:697-704` — the ONLY production adapter-construction path
 (`get_or_create_adapter`) — does real work to feed this dead capability:
@@ -78,21 +79,21 @@ elif adapter_key == "polymarket" and extra_api_keys:
     adapter = PolymarketReferenceDataAdapter(project_id=project_id, api_key=api_key, api_football_api_key=af_key)
 ```
 
-So a real `api_football` secret is resolved and passed into every live Polymarket adapter instance, purely to sit
-unused in `self._api_football_key`.
+So a real `api_football` secret is resolved and passed into every live Polymarket adapter instance, purely to sit unused
+in `self._api_football_key`.
 
-Per `/codex/06-coding-standards/adapter-dead-code-and-fallback-ban.md` rule 1: "a module/class/function that is
-defined and registered somewhere... but never actually reached by any live code path is dead code, even though
-`vulture` won't flag it... Either delete it or document why it's intentionally kept (e.g. behind a feature flag with a
-stated activation path)." The comment here documents WHY it's unwired (throughput), but not a concrete activation
-path — "remains available as a higher-fidelity follow-up for an async, rate-limited pipeline stage" is aspirational
-future-work framing, not a feature flag or a scheduled follow-up plan item.
+Per `/codex/06-coding-standards/adapter-dead-code-and-fallback-ban.md` rule 1: "a module/class/function that is defined
+and registered somewhere... but never actually reached by any live code path is dead code, even though `vulture` won't
+flag it... Either delete it or document why it's intentionally kept (e.g. behind a feature flag with a stated activation
+path)." The comment here documents WHY it's unwired (throughput), but not a concrete activation path — "remains
+available as a higher-fidelity follow-up for an async, rate-limited pipeline stage" is aspirational future-work framing,
+not a feature flag or a scheduled follow-up plan item.
 
 (The soccer-fixture join Polymarket DOES ship live — `af_fixture_id`/`home_team_canonical_id`/etc. via
 `PredictionFixtureResolver.resolve()` in `fixture_match.py`, called from `_build_sports_id()` — is a SEPARATE,
-GCS-parquet-based mechanism with no API-Football network call in the hot path. That one is live and out of scope
-here; this finding is specifically about the unused constructor-injected `api_football_api_key` / `_cross_reference_
-fixture()` pair.)
+GCS-parquet-based mechanism with no API-Football network call in the hot path. That one is live and out of scope here;
+this finding is specifically about the unused constructor-injected `api_football_api_key` /
+`_cross_reference_ fixture()` pair.)
 
 ## Why it matters
 
