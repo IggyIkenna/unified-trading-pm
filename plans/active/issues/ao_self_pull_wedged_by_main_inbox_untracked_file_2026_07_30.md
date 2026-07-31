@@ -172,11 +172,22 @@ host/root-clone access (main agent's own session, or the operator).
 - [ ] [OPERATOR] P2. Set `AGENT_ORCHESTRATOR_SLACK_WEBHOOK` in the planning VM's `.env.local` so future
       `ao-self-pull.sh` wedge/drift alerts actually page instead of logging `no webhook` (repo: agent-orchestrator,
       host-level config).
-- [ ] [INFRA] P2. Root-cause why the main agent's `${WORKSPACE_ROOT}/.orch-main-inbox.json` checkpoint (agents/ main.md)
-      landed inside the agent-orchestrator repo checkout instead of the true workspace root — likely an unresolved/unset
-      `WORKSPACE_ROOT` env var or a cwd assumption in the main agent's own session/tooling. Fix so future scratch-inbox
-      writes land at the correct absolute path regardless of cwd (repo: unified-trading-pm and/or agent-orchestrator,
-      whichever owns the main agent's execution environment).
+- [x] ✅ [INFRA] P2. Root-cause why the main agent's `${WORKSPACE_ROOT}/.orch-main-inbox.json` checkpoint (agents/
+      main.md) landed inside the agent-orchestrator repo checkout instead of the true workspace root — likely an
+      unresolved/unset `WORKSPACE_ROOT` env var or a cwd assumption in the main agent's own session/tooling. Fix so
+      future scratch-inbox writes land at the correct absolute path regardless of cwd (repo: unified-trading-pm and/or
+      agent-orchestrator, whichever owns the main agent's execution environment). — Root cause confirmed:
+      `WORKSPACE_ROOT` is NEVER delivered to the main agent's session — `agents/main.md`'s own "Your boot message
+      provides" list (§ near the top) enumerates only `server_url`/`model`/`machine`/`rc_url`/`loop_seconds`, no
+      `WORKSPACE_ROOT` — yet the checkpoint instruction (line ~307) referenced the bare `${WORKSPACE_ROOT}` token with
+      NO fallback, unlike `worker.md`'s own fresh-pull script which already defends against exactly this with
+      `${WORKSPACE_ROOT:-$HOME/unified-trading-system-repos}`. An unset var expands empty in bash, so the resolved path
+      is cwd-dependent — landing wherever the main agent's shell happened to be (here, inside the `agent-orchestrator`
+      checkout) instead of the true workspace root. Fixed both `${WORKSPACE_ROOT}` usages in
+      `unified-trading-pm/agents/main.md` (the scratch-inbox checkpoint line + the `/plan-status` skill's plan-file
+      path) to use the same cwd-independent `${WORKSPACE_ROOT:-$HOME/unified-trading-system-repos}` fallback pattern, so
+      future writes/reads resolve to the correct absolute path regardless of the main agent's cwd —
+      unified-trading-pm@186fb7c57.
 
 # Codex SSOTs
 
