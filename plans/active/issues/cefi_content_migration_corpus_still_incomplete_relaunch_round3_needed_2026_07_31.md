@@ -119,3 +119,24 @@ needs an explicit next relaunch round, and none is currently dispatched.
   shards myself — out of this dispatched todo's scope (re-verify only) and consistent with the parent doc's own
   established policy (slot-15's self-correction entry) of deferring manual relaunch actions to a dedicated todo/the
   `data_pipeline_failure` fleet-monitor rather than doing it ad hoc while just re-verifying.
+- 2026-07-31T13:24Z (worker, slot 8, `cefi_content_migration_fleet_half_incomplete-002`, redispatched 20 min after the
+  13:04Z check above): re-ran the identical corpus-wide grep independently — fixed the SAME recurring `gcloud`
+  active-identity poisoning first (drifted to `github-actions-deploy` again, switched back to `unified-trading-sa`),
+  confirmed fleet still fully empty (`gcloud compute instances list`, zero `canonical-migration-cefi-content-*` VMs),
+  fetched all 198 in-fleet `run.log` objects (16-way parallel `gcloud storage cat`) and grepped each for the terminal
+  banner. **Result: byte-identical to 13:04Z — 27/44 confirmed (01-12, 14, 26-39), same 17 shards incomplete (13, 15,
+  16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 40, 41, 42, 43, 44). Zero net progress in this 20-minute window**, which is
+  expected: no relaunch has landed for any of these shards since the fleet went empty at 13:04Z (round-3 relaunch todo
+  above is still `queued`, `dispatched_to: null`, per `GET /api/backlog`). Did not relaunch myself, same out-of-scope
+  reasoning as slot-12's entry above — this task's own dispatched scope is re-verify only, and the round-3 relaunch is a
+  properly-scoped separate backlog task (`cefi_content_migration_corpus_still_incomplete_relaunch_round3_needed-001`)
+  that requires its own per-shard `RB-INFRA-RELAUNCH` budget check, not a quick add-on to a re-verify pass. **Flagging
+  the redispatch pattern itself**: this is now the 3rd consecutive dispatch of
+  `cefi_content_migration_fleet_half_incomplete-002` (slot-15@08:05Z, slot-12@13:04Z, slot-8@13:24Z) producing the
+  identical "still 27/44, unchanged" finding, because the actual unblocking action (round-3 relaunch) has not yet been
+  dispatched to any slot despite being `queued` with the same `tier=1, priority=50` as `-002` — it simply lands later in
+  FIFO order (`queued_at: 2026-07-31T13:16:51Z` vs `-002`'s `2026-07-31T12:45:58Z`) each time `-002` gets re-queued and
+  re-picked first. Recommend main/operator either bump round-3's priority above `-002`'s so it dispatches next, or
+  accept this as intentional periodic-monitoring cadence — but as-is, `-002` will likely keep winning the race and
+  re-producing this same no-op finding until round-3 actually lands. Not self-acting on the priority bump (backlog
+  priority tuning is main/operator territory per `RULES.md` § 4).
