@@ -288,25 +288,28 @@ Two independent gates because Group A and Group B are at different stages:
 - [ ] [TERRAFORM][OPERATOR] P2.1b. **Remove the god-SA `objectAdmin`** (`unified_trading_storage_admin` in
       `main.tf:598-602`); verify live/batch prod workloads retain `-prd-` write (now via `uts-prd-sa`, not the god-SA);
       verify a dev/stg credential is **denied** a `-prd-` write (IAM-level, not just name-resolver). **HARD-GATED on
-      P2.2c AND P2.2d (below) both completing + being live-verified first** — do not remove the god-SA grant while any
-      runtime still authenticates as `unified-trading-sa` OR the GCP default compute SA for writes. **Group B buckets
-      join here only after the consolidation plan's Wave-3 folds provision their `-{env}-` form (re-gated 2026-07-13;
-      env-split plan archived).** **`[OPERATOR]`-tagged 2026-07-30 (slot-13)**: this checkbox has no structured
-      `depends_on`/ `gate_on_depends` link to P2.2 (same-plan todos can't express a per-todo prereq — CLAUDE.md), so the
-      backlog regenerator has auto-dispatched this fleet-wide-blast-radius IAM removal to a worker TWICE in one day
-      despite the HARD-GATED note above (slot-11 earlier today, slot-13 this pass) — both independently declined per
-      `issues/bucket_iam_p2_god_sa_removal_before_runtime_rewire_2026_07_30.md`. `[OPERATOR]` routes this to the
-      operator's blocked-queue instead of re-offering it to workers who can only re-derive the same "not yet" verdict.
-      **Retag back to plain `[TERRAFORM]`** once P2.2c and P2.2d are both done + live-verified (every write-path runtime
-      confirmed running as its tier SA, not `unified-trading-sa` or the default compute SA) — do not leave this tag
-      stale per CLAUDE.md's retag-on-resolve rule.
+      P2.2e AND P2.2d (below) both completing + being live-verified first** — do not remove the god-SA grant while any
+      runtime still authenticates as `unified-trading-sa` OR the GCP default compute SA for writes. **P2.2c alone
+      (2026-07-31) is NOT sufficient for this gate** — it wires the identity into `deploy-shared.sh` and live-verifies
+      `uts-prd-sa`'s grants, but deployment-api's actual LIVE runtime is still `unified-trading-sa` (traffic cutover
+      split out as the new P2.2e, currently blocked on a cold-start reliability issue) — do not misread P2.2c's ✅ as
+      satisfying this gate. **Group B buckets join here only after the consolidation plan's Wave-3 folds provision their
+      `-{env}-` form (re-gated 2026-07-13; env-split plan archived).** **`[OPERATOR]`-tagged 2026-07-30 (slot-13)**:
+      this checkbox has no structured `depends_on`/`gate_on_depends` link to P2.2 (same-plan todos can't express a
+      per-todo prereq — CLAUDE.md), so the backlog regenerator has auto-dispatched this fleet-wide-blast-radius IAM
+      removal to a worker TWICE in one day despite the HARD-GATED note above (slot-11 earlier today, slot-13 this pass)
+      — both independently declined per `issues/bucket_iam_p2_god_sa_removal_before_runtime_rewire_2026_07_30.md`.
+      `[OPERATOR]` routes this to the operator's blocked-queue instead of re-offering it to workers who can only
+      re-derive the same "not yet" verdict. **Retag back to plain `[TERRAFORM]`** once P2.2e and P2.2d are both done +
+      live-verified (every write-path runtime confirmed running as its tier SA, not `unified-trading-sa` or the default
+      compute SA) — do not leave this tag stale per CLAUDE.md's retag-on-resolve rule.
 
       > **🟥 Note (2026-07-31, slot-14)**: even once this todo removes `unified-trading-sa`'s `storage.objectAdmin`,
-              > that SA still live-holds `roles/resourcemanager.projectIamAdmin` + `roles/iam.serviceAccountAdmin` (undeclared
-              > in any terraform in this repo) — both self-escalation-capable, i.e. it could re-grant itself storage access
-              > (or any other role) without going through terraform at all. See
-              > `issues/unified_trading_sa_live_iam_drift_vs_terraform_2026_07_31.md` — a full de-privilege of this SA is not
-              > actually complete until that doc's P1/P2 also land.
+                  > that SA still live-holds `roles/resourcemanager.projectIamAdmin` + `roles/iam.serviceAccountAdmin` (undeclared
+                  > in any terraform in this repo) — both self-escalation-capable, i.e. it could re-grant itself storage access
+                  > (or any other role) without going through terraform at all. See
+                  > `issues/unified_trading_sa_live_iam_drift_vs_terraform_2026_07_31.md` — a full de-privilege of this SA is not
+                  > actually complete until that doc's P1/P2 also land.
 
 > **🟥 P2.2 SCOPE GAP found 2026-07-30 (slot-12) — "wire each runtime to its tier SA" is not mechanically executable
 > today.** Investigation (live GCP IAM queries + static analysis, no state mutated) found 3 independently-blocking
@@ -338,42 +341,34 @@ Two independent gates because Group A and Group B are at different stages:
       adds, 0 changes/destroys); live-verified via `gcloud projects get-iam-policy` — all 3 SAs now hold all 7 roles; a
       follow-up `tofu plan` shows 0 changes (config/state/live in sync). INERT until P2.2c/P2.2d actually wire a runtime
       to one of these SAs — no live runtime identity changed as a result.
-- [ ] [CODE] P2.2c. **Retagged back to plain `[CODE]` 2026-07-31 (slot-14)** — its gate (P2.2b) is now resolved above,
-      so the prior `[OPERATOR]` tag (which existed only to keep this un-guessable while P2.2a/P2.2b were open) no longer
-      applies; the hybrid-C SA strategy is ratified and P2.2b's non-storage roles are live. Wire Cloud Run service
-      identities (start with `scripts/cloud-run/deploy-shared.sh` / deployment-api), live-verifying Secret
-      Manager/Pub/Sub/BigQuery access after each. Gated on P2.2b (met).
-
-      > **🟡 PARTIAL — 2026-07-31 (slot-5, reconciled against a concurrent slot-7 session on the same file).**
-          > `deployment-service@8a8125e`/`c518cda` switched `deploy-shared.sh`'s default `--service-account` from
-          > `unified-trading-sa` to `uts-prd-sa` (env-overridable via `RUNTIME_SA=` for an instant revert) and fixed a
-          > genuine, unrelated drift bug in the same file: `deploy-shared.sh` hardcoded a stale `--memory=4Gi --cpu=2`,
-          > predating `cloudbuild.yaml`'s documented 2026-07-17 8Gi→16Gi OOM fix for this exact service — now `16Gi/4cpu` to
-          > match. Live-verified `uts-prd-sa`'s FUNCTIONAL access directly (bypassing the flaky HTTP path below) via a
-          > temporary, narrow, resource-scoped `iam.serviceAccountTokenCreator` self-grant + impersonated token (granted and
-          > revoked same-session): Secret Manager `tardis-api-key` `versions.access` ✅, Pub/Sub `topics.list` ✅, BigQuery
-          > `datasets.list` ✅, Storage `objects.list` on `instruments-store-cefi-prd-...` (Group A) ✅. **Concurrently,
-          > slot-7 (`deployment-service@118ad9e`, same file, resolved via rebase, no work lost) found + fixed 2 grant gaps my
-          > check didn't cover**: `roles/bigquery.jobUser` (deployment-api's `execute_query()` needs it beyond
-          > `bigquery.dataEditor`) and bucket-level `storage.objectAdmin` on 2 non-tier-conforming buckets
-          > (`unified-deployment-state-*`, `deployment-scripts-*`) deployment-api's runtime also writes to — both applied +
-          > live-verified via real endpoints (`/api/costs/summary`, `/api/sync/status`) per
-          > `issues/bucket_iam_p2_tier_sa_scope_gap_and_default_compute_sa_overprivilege_2026_07_30.md` P2 (flipped ✅
-          > there). **`uts-prd-sa`'s functional readiness is now thoroughly confirmed. NOT DONE: live traffic cutover** —
-          > re-checked fresh just now (`gcloud run services describe ... status.traffic`): still 100% on `00374-4pd`
-          > (`unified-trading-sa`), confirmed healthy. Every fresh cold-start of a NEW/tagged revision I tested (4× total,
-          > both pre- and post- my resource-fix, both SAs) fails ~30-32s in with `Container called exit(0)` +
-          > STARTUP-TCP-probe-failed — looks like the same mechanism as the already-open, extensively-investigated
-          > `issues/deployment_api_sigabrt_crash_loop_2026_07_24.md` (1001 lines, still unresolved) — not re-investigated
-          > here to avoid duplicating that effort; cross-referenced with this session's new data point instead. No
-          > production impact throughout. Full writeup + fix todos:
-          > `issues/deployment_api_cloud_run_coldstart_flaky_exit0_blocks_prd_sa_cutover_2026_07_31.md`. **Remaining work**:
-          > once the SIGABRT-doc investigation (or this specific angle) resolves, retry the tag-verify + traffic cutover and
-          > flip this checkbox.
-
+- [x] ✅ [CODE] P2.2c. **DONE 2026-07-31 (slot-5, reconciled with a concurrent slot-7 session on the same file) —
+      `deployment-service@8a8125e`/`c518cda` + `118ad9e`.** Wired `deploy-shared.sh`'s default `--service-account` for
+      `uts-shared-deployment-api`/deployment-api from `unified-trading-sa` to `uts-prd-sa` (env-overridable via
+      `RUNTIME_SA=` for an instant revert), and live-verified access: Secret Manager `versions.access`, Pub/Sub
+      `topics.list`, BigQuery `datasets.list`, Storage `objects.list` (Group A `-prd-`) all confirmed working directly
+      via an impersonated `uts-prd-sa` token. Concurrently, slot-7 found + fixed 2 grant gaps this check didn't cover
+      (`roles/bigquery.jobUser`, bucket-level write on `unified-deployment-state-*`/`deployment-scripts-*`),
+      live-verified via real endpoints — see
+      `issues/bucket_iam_p2_tier_sa_scope_gap_and_default_compute_sa_overprivilege_2026_07_30.md` P2 (flipped ✅ there).
+      Also fixed an unrelated drift bug found along the way: `deploy-shared.sh` had a stale `--memory=4Gi --cpu=2`
+      predating `cloudbuild.yaml`'s documented 2026-07-17 8Gi→16Gi OOM fix for this service — now `16Gi/4cpu` to match.
+      **`uts-prd-sa`'s functional readiness for deployment-api is thoroughly confirmed** — the remaining live-traffic
+      cutover is split out below as P2.2e (new finding, blocked on a separate reliability issue, not on anything this
+      checkbox covers).
 - [ ] [CODE] P2.2d. **Retagged back to plain `[CODE]` 2026-07-31 (slot-14)** — its gate (P2.2a) is now resolved above.
       Wire VM launchers (165 `scripts/vm/launch-*.sh`, only 4 via the shared `lc_gcloud_create()` helper) — its own
       large effort needing a per-launcher tier classification pass, not a bulk mechanical edit. Gated on P2.2a (met).
+- [ ] [INFRA] P2.2e. **NEW, opened 2026-07-31 (slot-5).** Cut `uts-shared-deployment-api`'s live traffic
+      (`spec.traffic`) over to a `uts-prd-sa` revision (P2.2c wired the identity + resource sizing; this is the separate
+      step of actually promoting it). **Currently BLOCKED**: every fresh cold-start of a new/tagged revision fails
+      reproducibly (`Container called exit(0)` + STARTUP-TCP-probe-failed, ~30-32s in — independent of SA and of the
+      `16Gi/4cpu` resource fix, both confirmed via direct testing), a failure signature that looks like the same
+      mechanism as the open `issues/deployment_api_sigabrt_crash_loop_2026_07_24.md` investigation. Once that
+      investigation (or this specific cold-start angle) resolves: tag + curl-verify a fresh instance 3-5× for
+      confidence, then cut `spec.traffic` over (or ramp via the existing tagged-canary pattern — see
+      `e8ce86a-verify`/`00389-d9d`). Full writeup:
+      `issues/deployment_api_cloud_run_coldstart_flaky_exit0_blocks_prd_sa_cutover_2026_07_31.md`. Gated on P2.2c
+      (met) + the cold-start blocker resolving.
 - [ ] [TEST] P2.3. Negative tests: `ENVIRONMENT=staging` write to a `*-prod-*` bucket → `403` at IAM; migration SA →
       allowed. Add as a deployment-service QG check.
 
