@@ -1050,3 +1050,22 @@ anyone, any time — none are blocking.
   self-delete, then re-measure the `1d`/`24h` hit rate against the `454/2398` (~18.9%) baseline this doc has tracked
   across two prior full passes, and record here whether `_retry_empty_day_listing`
   (`market-data-processing-service@22b926c`) moved the number.
+
+- **2026-07-31 (slot 12, `tradfi_satellite_ao_dispatch_batch5-001`, resumed from slot 9's session — same task,
+  `already_in_progress: true` on boot)**: slot 9's own background watchdog process died with its session teardown (a
+  background shell is scoped to its owning session/tmux pane, not to the task), but the 7 GCE SPOT VMs it launched keep
+  running independently of any session, so nothing was lost. Verified all 7 correctly-scoped
+  `y{2020..2026}es3-20260731-014643` VMs (`VM_INSTRUMENT_IDS=CME:FUTURE:ES;CME:FUTURE:MES`) still `RUNNING` via
+  `gcloud compute instances list`, and spot-checked each VM's live `run.log` tail — all making genuine forward progress
+  (dates in Feb-March of their respective years already processed, `rc=0` per date, no stall). Re-armed a fresh
+  `run_in_background` watchdog (`tradfi_es_mes_third_rerun_watchdog.sh`, 240s poll, 10h ceiling,
+  `/api/slots/12/progress` heartbeat every poll) that: (1) waits for all 7 VMs to vanish from the instance list,
+  classifying each as clean-complete (run.log ends with the launcher's own `scheduling self-delete of <vm>` line) vs.
+  preempted (vanished without that marker) — a preemption intentionally does NOT auto-relaunch (HARD RULE: resume must
+  come from measured progress, not a blind restart; the script instead writes a `NEEDS_RESUME` status file naming the
+  preempted year + its last completed date for a human/agent to relaunch correctly); (2) once all 7 are clean, launches
+  `launch-mdps-build-continuous-vm.sh ES 2020-01-01 2026-07-25 full` and polls that single VM to completion the same
+  way; (3) on a clean finish writes `READY_FOR_MEASUREMENT` to the status file, at which point the final step
+  (re-measure the `1d`/`24h` hit rate against the `454/2398` baseline via a direct manifest read, per this doc's
+  established method) still needs to be done and written up here. Not yet complete as of this entry — the fleet was only
+  ~1-2 minutes into its run when checked. No code changed this turn.
