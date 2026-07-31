@@ -118,15 +118,15 @@ canonicalised by this fleet. The migration's own `# Delete-when:` marker on
       default posture. Resume from each shard's own checkpoint/progress state if the script supports it, otherwise
       re-run those date ranges from scratch. **Done when**: all 21 shards' `run.log` show the terminal summary (feeds
       directly into the P2 todo below).
-- [ ] [SCRIPT] P2. BLOCKED-ON:cefi_content_migration_corpus_still_incomplete_relaunch_round3_needed_2026_07_31 Once
-      relaunched shards complete, re-run this same corpus-wide `run.log` grep to confirm all 44/44 show the terminal
-      summary, THEN delete `migrate_cefi_content_instrument_id_catalogue_2026_07_17.py` per its own `# Delete-when:`
-      marker. Repo: market-tick-data-service. **2026-07-31T08:05Z (slot-15)**: re-ran grep (fleet empty, 392 objects) —
-      27/44 (was 26), 17 shards remain: 13, 15-25, 40-44. Stays open. **13:04Z (slot-12)**: re-verified, IDENTICAL
-      (27/44, same 17). Detail split to
-      `cefi_content_migration_corpus_still_incomplete_relaunch_round3_needed_2026_07_31.md` (line cap). **13:24Z
-      (slot-8)**: re-verified again, IDENTICAL (27/44, same 17, fleet still empty) — see split doc for full evidence.
-      Genuinely blocked on relaunch round 3 (tracked as its own queued backlog task,
+- [ ] [SCRIPT] P2. BLOCKED-ON:cefi_content_migration_corpus_still_incomplete_relaunch_round3_needed_2026_07_31 (still
+      open — slot-4 confirmed round-3 remains in flight, see below) Once relaunched shards complete, re-run this same
+      corpus-wide `run.log` grep to confirm all 44/44 show the terminal summary, THEN delete
+      `migrate_cefi_content_instrument_id_catalogue_2026_07_17.py` per its own `# Delete-when:` marker. Repo:
+      market-tick-data-service. **2026-07-31T08:05Z (slot-15)**: re-ran grep (fleet empty, 392 objects) — 27/44 (was
+      26), 17 shards remain: 13, 15-25, 40-44. Stays open. **13:04Z (slot-12)**: re-verified, IDENTICAL (27/44, same
+      17). Detail split to `cefi_content_migration_corpus_still_incomplete_relaunch_round3_needed_2026_07_31.md` (line
+      cap). **13:24Z (slot-8)**: re-verified again, IDENTICAL (27/44, same 17, fleet still empty) — see split doc for
+      full evidence. Genuinely blocked on relaunch round 3 (tracked as its own queued backlog task,
       `cefi_content_migration_corpus_still_incomplete_relaunch_round3_needed-001`) — not flipping, not relaunching
       myself (out of this todo's scope). **~14:0xZ (slot-4)**: round 3 has since launched (13 of 17 relaunched, 4
       skipped on `RB-INFRA-RELAUNCH` budget, pending operator decision) — of those 13, 9 still running, 4 (19, 40,
