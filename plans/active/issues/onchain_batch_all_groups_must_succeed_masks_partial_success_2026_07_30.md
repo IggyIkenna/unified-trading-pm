@@ -125,12 +125,25 @@ to avoid being blocked by unrelated calculator gaps. Separately, root-cause the 
 
 ## Todos
 
-- [ ] [DESIGN] P2. Decide the onchain batch exit-code policy: partial-success-distinct-from-total-failure (align with
+- [x] [DESIGN] P2. Decide the onchain batch exit-code policy: partial-success-distinct-from-total-failure (align with
       delta_one's existing `_process_groups()` ANY-succeeded policy) vs.
       document-and-recommend-`--feature-group`-scoping. Repo: features-service. Done when: an operator/main ruling is
       recorded here and the chosen behavior is implemented in `features_service/onchain/cli/handlers/batch_handler.py`
       (or the launcher's usage docs are updated if option (b) is chosen), with a regression test covering the chosen
-      exit-code contract.
+      exit-code contract. ✅ — **Ruling: option (a)**, aligned with delta_one's ANY-succeeded policy. Rationale: (1)
+      onchain and delta_one are sibling batch handlers over the same features-service CLI convention — disagreeing
+      success semantics for no functional reason is itself a defect; (2) the per-group manifest
+      (`record_captured`/`record_failed`/`record_empty`) already carries the authoritative per-group truth, so the
+      process-level exit code throwing that away on any single unrelated group's pre-existing gap is strictly a
+      regression of information, not a safety property; (3) option (b) (document-only) leaves every full-family DEFI
+      onchain launch permanently unable to report `DEPLOYMENT_SUCCEEDED` until all 13 groups' calculators are fixed — an
+      unbounded gate on an unrelated concern. `_emit_batch_completion()` in
+      `features_service/onchain/cli/handlers/batch_handler.py` now returns `success_count > 0` (True unless EVERY group
+      failed), logging `"Partial success — N/M groups succeeded; continuing."` on partial and
+      `"ALL feature groups failed: [...]"` only when nothing succeeded — mirrors delta_one's `_process_groups()`
+      docstring contract exactly. Regression coverage: `TestEmitBatchCompletion` in
+      `tests/onchain/unit/test_batch_handler.py` (all-succeed / partial-success / all-fail cases). —
+      features-service@ca5e5a96
 - [ ] [BACKEND] P3. Root-cause `calculator_produced_base_columns_only` for the `rewards`/`flash_loan_availability`/
       `health_factor`/`liquidation_events` onchain DEFI feature groups (confirmed reproducing on
       `2023-06-01..2023-06-07`, a clean dependency window — not a data-availability gap for THIS finding's window, but
@@ -142,3 +155,7 @@ to avoid being blocked by unrelated calculator gaps. Separately, root-cause the 
 - 2026-07-30 (slot-3): filed while executing D1's onchain leg. Fixed the co-discovered `perp_funding_rates` symbol bug
   in the same session (separate, unrelated code path) — see `features-service` commit referenced in
   `defi_satellite_ao_dispatch_batch3_2026_07_26.md`'s D1 todo note.
+- 2026-07-30 (slot-5): resolved the [DESIGN] todo — ruled option (a), implemented + shipped `features-service@ca5e5a96`
+  (`_emit_batch_completion()` now returns `success_count > 0`, matching delta_one's `_process_groups()` ANY-succeeded
+  contract), added `TestEmitBatchCompletion` regression coverage. P3 root-cause todo for the 4
+  `calculator_produced_base_columns_only` groups remains open, out of scope for this todo.
