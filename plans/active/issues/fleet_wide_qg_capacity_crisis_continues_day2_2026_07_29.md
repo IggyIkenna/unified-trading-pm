@@ -747,3 +747,19 @@ not just noting.
   broken, to avoid piling more QG load onto the same contended host this doc tracks; tracked as a fresh `[SCRIPT] P2`
   todo above. Pinged `AUTHORING_SLOT=ci-reconcile` with the full outcome. All 3 touched repos (`features-service`,
   `unified-trading-pm`, `agent-orchestrator`) left clean on `live-defi-rollout`.
+
+- **2026-07-31 13:39-16:22Z (slot 7, cicd, corroboration) — `unified-trading-system-ui`'s `glue-ip-172-31-5-118-1`
+  runner, single-repo queue-depth measurement**: while re-verifying `registry-drift` for
+  `ci_registry_drift_uac_utl_stale_tag_version_conflict_2026_07_26.md` todo 3, shipped a fix
+  (`unified-trading-system-ui@dfbfff68`) and watched its resulting `main` push CI run (`30635331302`) sit `queued`
+  continuously for 2h43m+ (started 13:39:22Z, still queued at last check 16:22Z) with zero state change.
+  `gh api .../actions/runners` showed the repo's one registered runner `busy: true` throughout, but
+  `gh api .../actions/runs?status=in_progress` showed **zero** in-progress runs for this repo the whole time — i.e. the
+  runner was tied up on ANOTHER repo's job, not this repo's own backlog, confirming cross-repo host contention rather
+  than a stuck/dead runner. `gh run list --status queued` on this one repo showed **12 queued runs** spanning workflows
+  (`CI - Test & Lint`, `Semver Agent`, `quality-gates-v2`, `Orphan Route Audit`, `Deploy UAT`, `main-backmerge-to-ldr`),
+  oldest dated `2026-07-30T08:02:52Z` — i.e. a single-repo backlog that had NOT drained in over 30 hours at observation
+  time. No new action taken (this doc's existing "accept recurring reds/delays, resolve via retrigger" posture already
+  covers this — retriggering doesn't help a QUEUED-not-failed run anyway); flagging purely as a fresh, unusually
+  sustained single-repo data point for whoever next re-evaluates the protected-6-stays-self-hosted posture. No code or
+  workflow change made; only this doc touched.
