@@ -104,7 +104,14 @@ drift_direction: advance-code
       against it in the interim. Also pre-resolved the archiving requirement below: the one doc todo 1 flipped to
       `status: resolved` (`sports_t6_8_oneoff_retirement_residual_2026_07_25.md`) is already archived at
       `plans/archive/issues/sports_t6_8_oneoff_retirement_residual_2026_07_25.md` — nothing outstanding there. Releasing
-      again via `/skip-current-task {"reason_code": "GATED"}`. **Archive every source doc todo 1 drives to
+      again via `/skip-current-task {"reason_code": "GATED"}`. **Reconfirmed 2026-07-31T10:57Z (slot 16,
+      data_engineering): gate still open, zero drift since slot 3's check.** Direct re-read of
+      `sports_satellite_ao_dispatch_batch5_2026_07_26.md`: the zombie-tick purge/re-derive + ML-readiness gate-semantics
+      todo (line 107) is still `[ ]` — no commits landed against it. Confirmed no `slot_done` activity in the last 30
+      events references this todo or batch5 either. Its own input (batch4's read-only sweep report,
+      `market-tick-data-service@76ca401f`, done 2026-07-27) remains available, so that todo is itself dispatchable as
+      its own backlog task derived from batch5's doc — just not yet picked up/executed. Releasing again via
+      `/skip-current-task {"reason_code": "GATED"}`. **Archive every source doc todo 1 drives to
       `status: resolved`/`complete` — in the same commit as the flip, never left sitting in `plans/active/`.**
       `check_terminal_status_archived.py` HARD-fails on any doc whose frontmatter reads a terminal status while it still
       lives under `plans/active/` (including `plans/active/issues/`) — the omission of this exact step across the sports
