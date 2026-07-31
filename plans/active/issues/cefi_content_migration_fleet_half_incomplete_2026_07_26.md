@@ -880,3 +880,11 @@ accordingly.
   completed in 40.4s (69,630 in-scope files across the narrowed 41-day window) and per-file migration progress
   (`Progress: 200/69630 files...`) is now emitting normally. Pinged the authoring fleet-monitor slot with this outcome;
   no `market-tick-data-service` code changed this session (relaunch + issue-doc update only).
+- **2026-07-31T04:35Z (slot-15) — zero-`bytes_allocated` pattern now confirmed recurring, not a one-off**: shards 42 and
+  22 (`-032606`, both) also OOM-killed (`rc=137`) with `bytes_allocated=0` at their last release call before death —
+  shard 42 at 3763s (~62.7min, 28.1%), shard 22 at 3854s (~64.2min, 22.7%). Both fit the SAME pattern as shard 40 above
+  (elapsed time well past the original ~45-50min diagnostic window, zero pool allocation at death, no spike). That's now
+  **3 independent shards (40, 42, 22) showing the zero-allocation/slow-timing signature**, distinct from the **4 shards
+  (16, 19, 23, 44) showing the corrupt-file/spike signature** — two genuinely separate failure modes surviving the fix,
+  not one anomaly. Strengthens the open question raised in the 04:18Z entry: the periodic pyarrow-pool release may not
+  be catching all memory growth. No action taken (monitoring-only).
