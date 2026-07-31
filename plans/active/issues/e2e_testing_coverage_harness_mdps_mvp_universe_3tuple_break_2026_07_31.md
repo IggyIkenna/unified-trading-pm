@@ -10,7 +10,7 @@ summary: >-
   every cefi/defi/tradfi call. Confirmed pre-existing (reproduces on a clean live-defi-rollout tree via git stash),
   unrelated to the smoke_matrix.py/scripts-e2e relocation this was discovered during. Blocks e2e-testing's
   quality-gates.sh from going fully green.
-status: open
+status: resolved
 nature: issue
 asset_group: [cross-cutting]
 stage: [data]
@@ -21,7 +21,7 @@ related: []
 created: 2026-07-31
 parent_epic: infrastructure_master
 assigned_vm: planning
-resolved_by:
+resolved_by: e2e-testing@65f43f4
 locked_by:
 execution_scope: orchestrator-agent
 drift_direction: advance-code
@@ -80,10 +80,18 @@ Fix `iter_atoms` to consume the new 3-tuple shape directly instead of re-derivin
 already make some of that filtering redundant? Not a same-commit fix for this relocation task (different repo area,
 different root cause, needs its own review) — tracked here instead.
 
-- [ ] [CODE] P1. e2e-testing: fix `MdpsUniverseProvider.iter_atoms` (`scripts/build_smoke/coverage_harness.py:384`) to
-      iterate the `mdps_mvp_universe()` `(venue, instrument_type, data_type)` 3-tuples directly, reconciling the
+- [x] ✅ [CODE] P1. e2e-testing: fix `MdpsUniverseProvider.iter_atoms` (`scripts/build_smoke/coverage_harness.py:384`)
+      to iterate the `mdps_mvp_universe()` `(venue, instrument_type, data_type)` 3-tuples directly, reconciling the
       existing `bundled_data_types` / `data_type_to_instrument_type` per-cell filtering against the new per-cell
       `data_type` (drop the now-likely-redundant `registered_data_types_for_asset_group` cartesian expansion, or justify
       keeping it as a genuine additional filter — read both call sites before deciding). Done when:
       `test_bundled_data_type_emits_one_atom_per_instrument_type_cell` and the rest of
-      `tests/unit/test_coverage_harness.py` pass, and `quality-gates.sh` is green in e2e-testing.
+      `tests/unit/test_coverage_harness.py` pass, and `quality-gates.sh` is green in e2e-testing. — e2e-testing@65f43f4.
+      `mdps_mvp_universe()`'s 3-tuple already encodes each cell's EFFECTIVE data_type set (the per-venue/per-itype
+      override resolution for cefi, flat cartesian for defi/tradfi) — the `registered_data_types_for_asset_group()`
+      cartesian expansion was genuinely redundant against it (that helper only exists for the separate "no combo
+      silently skipped" `resolve_required_window` gate), so it was dropped along with its now-unused import.
+      `data_type_to_instrument_type` is kept as a real additional per-cell filter (unrelated axis — caller-supplied
+      narrowing, currently unpopulated by any caller but a legitimate extension point).
+      `test_bundled_data_type_emits_one_atom_per_instrument_type_cell` passes; full e2e-testing unit suite 166/166
+      passed; `quality-gates.sh` green (sentinel `65f43f4`).
