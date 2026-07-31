@@ -197,25 +197,29 @@ workspace has already been burned by once.
       no `written_at` timestamp exists for any of the 3 venues' perp_funding rows in the 14:00-16:30 UTC window (the
       daily batch cron runs once ~01:15 UTC and did not fire again inside the regression window).
       `cefi_sports_prediction_first_census_small_drift_2026_07_30.md` corrected to retract the finding.
-- [ ] [DATA] P1. **Re-stamp the 8 KALSHI_PERP/POLYMARKET_PERP manifest rows — BLOCKED on local-machine infra, not a
-      logic gap.** Corrected script ready and dry-run-verified (venue + chain values confirmed correct against the
-      reverted source's own `_chain_map`) — script preserved at
-      `/private/tmp/claude-501/.../scratchpad/restamp_perp_funding_manifest_FINAL.py` (paste into a fresh script on
-      whichever runner executes this). **Every one of 8 `--apply` attempts timed out** (120s client timeout,
-      `HTTPSConnectionPool read timed out` / `write operation timed out` / one DNS resolution failure) across ~90
-      minutes of retries from this interactive session. Root cause: `DefiManifestRecorder` triggers a full
-      read-merge-write of the ENTIRE consolidated `_index/availability_index.parquet` (9.5M rows) on every instantiation
-      — this is exactly the class of operation `/codex/05-infrastructure/vm-launcher-runbook.md`'s heavy-I/O rule
-      reserves for a VM in-region, never the operator's local machine ("manifest-index rewrites go on a VM ALWAYS").
-      Running it from a local interactive session against a 9.5M-row index is very plausibly the actual cause of the
-      sustained timeouts, not incidental network flakiness — 8 consecutive failures over 90 minutes is the
-      stable-condition signal, not flapping. **Recipe for the next attempt** (VM, or a session with a demonstrably
-      faster path to this bucket): run the preserved script with `--apply`; it write-corrects 4 KALSHI_PERP `captured`
-      rows (07-28/07-29, matching the now-real objects) to `venue=KALSHI-PERP`, 2 KALSHI_PERP `captured` rows
-      (07-26/07-27, the confirmed-phantom Finding C rows) to `record_failed` with an explicit `PHANTOM_CAPTURED_ROW`
-      reason, and 4 POLYMARKET_PERP `attempted_failed` rows to `venue=POLYMARKET-PERP` with the corrected
-      `SOURCE_UNREACHABLE` reason. Dedup/upsert semantics mean this is purely additive — nothing to undo if a partial
-      run lands before a full one succeeds.
+- [x] [DATA] P1. ✅ **Re-stamp the 8 KALSHI_PERP/POLYMARKET_PERP manifest rows** — market-tick-data-service@5d856acb.
+      The prior interactive session's timeouts were confirmed heavy-I/O-on-local-machine, not a logic gap: run from an
+      AO-fleet slot VM (exempt per `/codex/05-infrastructure/vm-launcher-runbook.md`'s heavy-I/O rule), the same
+      9.5M-row read-merge-write completed in ~72s (download 1.0s, pre-write gate 27s, CAS write 21s, post-write verify
+      11s) — confirming the root cause was local-machine network path, not the operation itself. Re-derived the script
+      from this todo's own fully-enumerated spec (the original ephemeral scratch-path script was gone, as expected) as
+      `market-tick-data-service/scripts/restamp_cefi_perp_funding_kalshi_polymarket_venue_2026_07_31.py`, with a
+      read-only dry-run mode + a per-row precondition check (aborts on any mismatch vs. the exact values this todo
+      documented, never guesses) + a collision check against the candidate-venue subset before any write. Applied
+      2026-07-31T05:39 UTC, generation `1785474578081701` → `1785476391377825`, row count unchanged at 9,629,206 (pure
+      in-place field edits, no add/drop), pre-apply snapshot at
+      `gs://market-data-tick-cefi-prd-central-element-323112/_index/backups/availability_index.pre_perp_funding_kalshi_polymarket_restamp_20260731T053926Z.parquet`.
+      All 8 rows post-write-verified: 2 KALSHI_PERP `captured` rows (2026-07-26/27, confirmed-phantom) →
+      `attempted_failed`/`PHANTOM_CAPTURED_ROW`, venue left as-is (no real object to anchor a rename to); 2 KALSHI_PERP
+      `captured` rows (2026-07-28/29, confirmed-real, GCS-side already migrated) → `venue=KALSHI-PERP`; 4
+      POLYMARKET_PERP `attempted_failed` rows (2026-07-26..29) → `venue=POLYMARKET-PERP` +
+      `error_reason=SOURCE_UNREACHABLE` (was the literal string `"polymarket_perp"`) — this exact corrected shape was
+      cross-checked against the real 2026-07-30 canonical row the writer fix had already produced by the time this ran
+      (`venue=POLYMARKET-PERP chain=POLYMARKET_PERP error_reason=SOURCE_UNREACHABLE`), confirming both the venue-naming
+      and error_reason-token conventions independently before applying. `chain` intentionally left untouched on every
+      row — the live reference row showed `chain` deliberately stays the underscore form (`_chain_map` in
+      `perp_funding_handler.py`) even for the now-canonical hyphenated `venue`, so venue/chain equality is NOT the
+      post-fix invariant (only the 8 pre-fix rows had that property, and only by coincidence of the pre-fix bug).
 - [ ] [DATA] P3. **Migrate/correct the ~76 prediction `instrument_type=prediction` manifest rows** (from
       `cefi_sports_prediction_first_census_small_drift_2026_07_30.md` items 6-7) — confirmed CQG bundle rows with no 1:1
       GCS object (manifest-only), so this is a pure `record_captured_from_counts` re-stamp, no object migration. **Not
@@ -248,3 +252,14 @@ workspace has already been burned by once.
   rows → `venue=KALSHI-PERP`; 2 KALSHI_PERP captured rows → `record_failed`/`PHANTOM_CAPTURED_ROW`; 4 POLYMARKET_PERP
   attempted_failed rows → `venue=POLYMARKET-PERP` + `SOURCE_UNREACHABLE`), do not depend on the original file being
   present.
+
+- **worker (slot 16, data_engineering) 2026-07-31**: P1 todo SHIPPED — `market-tick-data-service@5d856acb`. The
+  heavy-I/O hypothesis was confirmed rather than just plausible: run from this AO fleet slot (already cloud-hosted,
+  exempt from the local-machine restriction), the exact same 9.5M-row full read-merge-write completed in ~72s total
+  end-to-end, vs. 8/8 timeouts at 120s each from the prior interactive session. All 8 target rows corrected + verified
+  (generation `1785474578081701` → `1785476391377825`, row count invariant at 9,629,206, snapshot taken pre-write). One
+  correction to the recipe as originally written: it said "4 KALSHI_PERP captured rows (07-28/07-29) ->
+  venue=KALSHI-PERP" — the correct count is 2 (one per date), matching the total of 4 KALSHI_PERP rows split 2-phantom /
+  2-real; applied as 2, not 4. Only 6 of the 8 rows needed a venue rename (the 2 phantom KALSHI_PERP rows keep their
+  original venue, per the recipe's own wording — nothing to anchor a rename to since no GCS object ever existed for
+  those 2 dates).
