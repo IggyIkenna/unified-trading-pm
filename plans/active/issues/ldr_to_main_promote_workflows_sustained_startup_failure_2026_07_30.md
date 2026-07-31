@@ -60,7 +60,7 @@ summary: >-
   exactly the pattern GitHub's abuse-rate-limiting targets. This cannot be confirmed via REST API with the available PAT
   (no `checks:read`, no billing-scope access) — it needs a human to check the github.com account/repo Actions UI for a
   rate-limit/abuse banner, and/or check email for a GitHub compliance notice.
-status: open
+status: resolved
 nature: issue
 asset_group:
   [ci] # corrected 2026-07-30 (/ag-closeout-audit ci) -- was [meta]; content is a GitHub Actions
@@ -90,6 +90,7 @@ source:
   "cicd agent, slot-11, follow-on discovery while diagnosing
   ldr_to_main_promote_fleet_silently_skips_repo_after_promote_pr_close_2026_07_28.md, 2026-07-30"
 resolved_by:
+  interactive session, 2026-07-31 — GitHub Actions billing wall (root cause) confirmed cleared via live gh run checks
 ---
 
 ## What I found
@@ -112,19 +113,18 @@ historical one.
 
 ## Recommended decision (needs operator — [OPERATOR])
 
-- [ ] [OPERATOR] P0. Check the github.com web UI for `IggyIkenna`'s account/repo Actions settings — look specifically
-      for any rate-limit, abuse-flag, or "temporarily restricted" banner on Actions usage, and check the email
-      associated with the account for a GitHub compliance/abuse notification. This is the one diagnostic step a REST PAT
-      cannot perform (checks-API and billing-API both 403 for this token's scope).
-- [ ] [OPERATOR] P0. If a throttle/restriction is confirmed: decide whether to reduce the `workflow_dispatch` heartbeat
-      frequency (`scripts/orchestrator/ldr-to-main-promote-heartbeat.sh`, currently every ~15 min matching the cron
-      installer) and/or de-over-declare `ldr-to-main-promote-fleet.yml`'s `*/5 * * * *` cron back down, since
-      high-frequency automated dispatch is the most likely trigger for an abuse-throttle and both were deliberately
-      over-declared to fight a DIFFERENT reliability problem (GH silently dropping scheduled ticks) — those two
-      mitigations may now be in tension.
-  - [ ] [CI] P1. Once the operator confirms root cause (throttle vs something else), file the concrete fix as its own
-        todo here (e.g., lower dispatch frequency, contact GH support, or — if it turns out to be something else
-        entirely — the actual fix path found).
+- [x] ✅ **RESOLVED/MOOT 2026-07-31** — [OPERATOR] P0. Check the github.com web UI for a rate-limit/abuse-flag banner.
+      Superseded by the sibling doc's finding: this was the same account-level GitHub Actions billing/spending-limit
+      wall as `github_actions_billing_wall_recurrence_2026_07_29.md` (identical `startup_failure`/`jobs:[]` signature,
+      identical timing), not a throttle specific to this workflow's dispatch frequency. Symptom already self-cleared per
+      this doc's own 2026-07-30 slot-3 log (5/5 consecutive successes from 21:52Z) and re-confirmed independently
+      2026-07-31T08:16Z (real run durations + a clean full LDR→main promote chain on `instruments-service`). No
+      throttle-specific action needed.
+- [x] ✅ **RESOLVED/MOOT 2026-07-31** — [OPERATOR] P0. Decide whether to reduce heartbeat/cron dispatch frequency. Moot
+      — root cause was the account-level billing wall, not dispatch-frequency-triggered throttling; no frequency change
+      needed.
+  - [x] ✅ **RESOLVED/MOOT 2026-07-31** — [CI] P1. File the concrete fix once root cause confirmed. Moot per above — the
+        root cause was the billing wall (now cleared), not a dispatch-frequency issue requiring a fix here.
 - [ ] [SCRIPT] P2. Add a lightweight standing monitor (or extend an existing one, e.g.
       `scripts/cicd/promotion_lag_monitor.py`) that alerts when `ldr-to-main-promote-fleet.yml` /
       `ldr-to-main-promote.yml` post 3+ consecutive `startup_failure` runs — this incident ran silently for ~10h before
@@ -174,6 +174,13 @@ historical one.
 
 ## Progress Log
 
+- **2026-07-31 (interactive)**: root cause identified as the same account-level GitHub Actions billing wall tracked in
+  `github_actions_billing_wall_recurrence_2026_07_29.md`, confirmed cleared live (real run durations + a clean
+  end-to-end LDR→main promote chain on `instruments-service`). Flipped the 2 `[OPERATOR]` P0 todos + their gated `[CI]`
+  P1 sub-item to resolved/moot; `status` flipped to `resolved`. The `[SCRIPT] P2` standing monitor and the separate
+  `[CI] P1` market-tick-data-service auto-merge bug (unrelated — a `gh pr merge --auto` gap, not caused by the billing
+  wall) are already tracked in `ci_satellite_ao_dispatch_batch4_2026_07_31.md` per the na-eligibility-audit verdict
+  below — left open, untouched here to avoid duplicating that batch's coverage.
 - **2026-07-30 (slot-11)**: filed, evidence-gathered, escalated to main via chat (message id 2649). Awaiting operator
   check of the GH account/repo Actions UI (not REST-accessible with the available PAT).
 - **2026-07-30 (slot-6)**: independent blast-radius confirmation from a DIFFERENT task

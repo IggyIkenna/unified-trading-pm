@@ -28,7 +28,7 @@ summary: >-
   change that correlates with the failure window is strong circumstantial evidence for a spending-limit block, but this
   is a **hypothesis, not a confirmed root cause** — needs a human to check the GitHub billing UI directly (the one view
   this session has no API path to).
-status: open
+status: resolved
 nature: issue
 asset_group: [cross-cutting]
 stage: [meta]
@@ -52,7 +52,7 @@ drift_direction: advance-code
 context_scope: [/codex/08-workflows/ci-cd-flow.md, /codex/15-runbooks/devops-ci-walls.md]
 depends_on: []
 assigned_vm: NA
-resolved_by:
+resolved_by: interactive session, 2026-07-31 — GitHub Actions billing wall confirmed cleared via live gh run checks
 locked_by:
 locked_since:
 ---
@@ -121,11 +121,14 @@ content).
 
 ## Todos
 
-- [ ] [OPERATOR] P1 (downgraded from P0 — symptom resolved, cause unconfirmed). **Check the GitHub billing UI
-      directly**: https://github.com/settings/billing (Plans and usage → Spending limits, for account `IggyIkenna`).
-      Confirming whether this really was a spending-limit cap (and whether it could recur) is still valuable even though
-      CI has resumed on its own — if it was a limit and the account is close to it again next cycle, this exact outage
-      repeats.
+- [x] ✅ **RESOLVED 2026-07-31** — [OPERATOR] P1. This doc's own 06:11 UTC 2026-07-30 self-check below (claiming
+      "symptom resolved") turned out to be a transient blip, not real recovery — the sibling doc
+      `github_actions_billing_wall_recurrence_2026_07_29.md` independently re-confirmed the wall still fully active at
+      the same 06:11-06:16Z timestamp and through the rest of 2026-07-30. Genuinely confirmed cleared 2026-07-31T08:16Z:
+      real run durations on `unified-trading-pm` + a full 25m28s `quality-gates-v2` run and clean LDR→main promote chain
+      on `instruments-service`. This doc is a duplicate write-up of the same incident as
+      `github_actions_billing_wall_recurrence_2026_07_29.md` (the canonical doc, which carries the fuller timeline) —
+      resolving both together.
 - [x] ✅ [DATA] P1. **DONE 2026-07-30 ~06:11 UTC.** Re-checked whether CI has resumed via a fresh triggered run (not a
       passive check) — confirmed:
       `gh run list --repo IggyIkenna/unified-trading-pm --branch live-defi-rollout     --workflow quality-gates-v2.yml --limit 1`
@@ -148,3 +151,10 @@ content).
 Cross-repo, blocks the entire fleet's shipping pipeline, and is actively ongoing at time of filing — meets this
 workspace's own "big finding" bar (cross-repo, CI/audit-priority) for immediate operator notification rather than quiet
 logging.
+
+## Progress Log
+
+- **2026-07-31** — Wall confirmed genuinely cleared (see resolved OPERATOR todo above for evidence + the note on the
+  06:11 UTC 2026-07-30 false-positive). `status` flipped to `resolved`. The remaining `[BACKEND]`/`[DATA]` todos
+  (re-verify shipped commits went CI-green, separate the outage's contribution to the 2026-07-29 escalation spike) are
+  standing hygiene follow-ups, left open.

@@ -213,19 +213,14 @@ From `/plans/active/issues/fleet_wide_qg_capacity_crisis_continues_day2_2026_07_
       teens. The remaining activity is now concentrated on `instruments-service` specifically, which on investigation
       turned out to be a DIFFERENT, separate, much bigger problem — see the new P0 issue immediately below, not a
       continuation of the host-contention story this todo was tracking.
-- [ ] [OPERATOR] **NEW, P0 — GitHub Actions is down fleet-wide right now.** Found while investigating the
-      instruments-service `ldr_qg_failure` spike above: every workflow on every repo (including PM itself and
-      `deployment-ui`, an unrelated non-Python/non-self-hosted stack) is failing instantly with `startup_failure` and 0
-      jobs created — PM's own last 60 runs (2h12m span) are 60/60 `startup_failure`. Strong circumstantial evidence
-      (July Actions spend $1,112.69, matching the ~$1,150-1,200/mo baseline this account has hovered near) points at a
-      GitHub Actions spending-limit cap, but the actual limit value isn't readable via the API this session has
-      (`/users/{user}/settings/billing/actions` is deprecated, 410). Needs the operator to check
-      https://github.com/settings/billing directly — full writeup + evidence:
-      `/plans/active/issues/github_actions_billing_wall_recurrence_2026_07_29.md` (repointed 2026-07-30 by
-      `/plan-reconcile`: the originally-cited `github_actions_total_fleet_outage_startup_failure_2026_07_30.md` filename
-      never existed anywhere in the corpus; this doc is the one carrying that fleet-wide 0-step `startup_failure`
-      writeup + the `settings/billing` evidence). Pushed a notification given the operator is away ~6h and this is the
-      one thing this session cannot fix itself.
+- [x] ✅ **RESOLVED 2026-07-31 — GitHub Actions billing wall cleared, fleet running clean.** Was: NEW P0, GitHub Actions
+      down fleet-wide (every workflow on every repo failing instantly with `startup_failure`, 0 jobs created), strong
+      evidence of a spending-limit cap. Re-verified live 2026-07-31T08:16Z: `unified-trading-pm` runs completing with
+      real durations (67s-1m9s, incl. a 9-step job that ran and failed on its own merits, not `jobs:[]`);
+      `instruments-service` `quality-gates-v2` ran a full 25m28s and the LDR→main promote chain
+      (`quality-gates-v2`→`main-backmerge-to-ldr`→`Semver Agent`) completed clean end-to-end — the exact fleet-wide
+      promote path the incident had blocked. Full evidence + timeline in
+      `/plans/active/issues/github_actions_billing_wall_recurrence_2026_07_29.md`.
 
 ## Codex SSOTs
 
@@ -264,3 +259,8 @@ From `/plans/active/issues/fleet_wide_qg_capacity_crisis_continues_day2_2026_07_
   Nothing left to re-attempt from that pair. The one remaining open item (§6, GitHub Actions billing wall) is correctly
   `[OPERATOR]`-gated — genuinely needs the operator's own `github.com/settings/billing` access, not something any agent
   can resolve. No action taken; no changes needed.
+- **2026-07-31** — GitHub Actions billing wall confirmed cleared (live `gh run list`/`timing` checks on
+  `unified-trading-pm` and `instruments-service`, real run durations + a completed LDR→main promote chain, vs. the
+  incident's `run_duration_ms:1000`/`jobs:[]` signature). Flipped the sole remaining todo (§6) to done. **All 8/8 todos
+  now done — plan is complete, left `status: active`/not archived per operator instruction** (not yet run through the
+  archival ritual).

@@ -9,7 +9,7 @@ summary:
   github_actions_billing_wall_2026_06_11.md signature (GitHub account-level: recent payment failure / spending limit),
   which recurred again 2026-06-23 and self-recovered both times without any code change. Operator-only fix: check
   github.com/settings/billing. No workflow file, test, or code change can resolve this class."
-status: open
+status: resolved
 nature: issue
 asset_group:
   [ci] # corrected 2026-07-30 (/ag-closeout-audit ci) -- was [cross-cutting]; content is a GitHub Actions
@@ -47,7 +47,7 @@ execution_scope: orchestrator-agent
 drift_direction: none
 depends_on: []
 assigned_vm: NA
-resolved_by:
+resolved_by: interactive session, 2026-07-31 — GitHub Actions billing wall confirmed cleared via live gh run checks
 locked_by:
 locked_since:
 ---
@@ -134,8 +134,11 @@ return to a normal (non-zero-job) run.
 
 ## Todos
 
-- [ ] [OPERATOR] P0. Check `github.com/settings/billing` (payment method / Actions spending limit) and clear the block.
-      Re-test via `gh workflow run quality-gates-v2.yml --repo IggyIkenna/deployment-api --ref live-defi-rollout` after.
+- [x] ✅ **RESOLVED 2026-07-31** — [OPERATOR] P0. Check `github.com/settings/billing` (payment method / Actions spending
+      limit) and clear the block. Verified live 2026-07-31T08:16Z: `unified-trading-pm` runs completing with real
+      durations (67s-1m9s, incl. a 9-step job reaching a genuine `failure` conclusion, not `jobs:[]`);
+      `instruments-service` `quality-gates-v2` ran a full 25m28s and the LDR→main promote chain completed clean
+      end-to-end. Wall cleared fleet-wide, no longer blocking.
 - [ ] [BACKEND] P2. This is the 3rd+ recurrence of this exact class (2026-06-11, 2026-06-23, 2026-07-29) — the archived
       doc's own P3 remediation item (spend telemetry / 50-80-95% budget alert, `BLOCKED-ON-DECISION` pending an
       operator-minted `Plan: read` billing-scoped token) was never unblocked. Worth revisiting now that it has recurred
@@ -377,3 +380,9 @@ return to a normal (non-zero-job) run.
 - **na-eligibility-audit 2026-07-30** (tranche=cross-cutting, autonomous): KEEP-NA, valid — the P0 is `[OPERATOR]`
   (github.com/settings/billing, no agent-held token can read or clear it) and the P2 remediation is gated on an
   operator-minted billing-scoped token.
+- **2026-07-31** — Wall confirmed cleared via live `gh run list`/`timing` checks on `unified-trading-pm` and
+  `instruments-service` (real run durations, a completed LDR→main promote chain), vs. this doc's own
+  `run_duration_ms:1000`/`jobs:[]` signature through 2026-07-30 06:16Z. Flipped the P0 todo to done and this doc's
+  `status` to `resolved`. The 3 remaining `[BACKEND]` P2/P3 todos (spend-telemetry self-detection, outage-aware v2
+  status dispatch, the `authoring_slot="ci-reconcile"` 400) are genuine standing hygiene follow-ups, independent of the
+  wall itself clearing — left open, not part of this resolution.
