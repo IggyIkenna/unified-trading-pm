@@ -144,6 +144,19 @@ and the catalogue has **no `margin_type` field**. Deribit inverse is the only co
       real observations exist for BTC/ETH, drop them from `_MARGIN_GATE_EXEMPT_BASES` and re-verify against measured
       volume instead of the historical-default assumption.
 
+- [ ] [MTDS] P2. **RECOVERY (backstop) — a COMPLETE implementation of the todo above already exists as
+      committed-but-unpushed WIP in slot 8's worktree; INHERIT it, do NOT re-implement.** As of 2026-07-31 the UTL half
+      (`aggregate_cefi_manifest_volume` in `unified_trading_library/manifest_writer/_volume_aggregation.py`) is already
+      on origin; the two consumer halves are stranded ahead=1 in slot 8's `.tabs/8`:
+      `market-tick-data-service@a89e4114057e` (the `cefi_catalog_reader.py` margin-gate wiring) and
+      `features-service@2f480da24764` (the `batch_handler.py` `feature_perp_representative` wiring). Both carry a
+      `Quickmerge: agent` trailer, but NEITHER repo's `.qg_last_passed_sha` sentinel matches HEAD — so this is NOT a
+      same-SHA `quickmerge --agent` retry. Recovery path, from slot 8 itself (still live, still holding both commits) or
+      a live inheritor of `.tabs/8` once its liveness gate is clear: re-run Pass-1 `quality-gates.sh` on each EXACT HEAD
+      → `quickmerge --agent` per repo → flip the `[MTDS] P2` build checkbox above, citing both SHAs. Do NOT
+      `reset_worktree` slot 8 until both land. Provenance: review-role agt-8ce066 (msgs 2969/2972) pinged slot 8
+      directly; this todo is the durable backstop if that worker-actionable ping is missed on a slot-8 recycle.
+
 ## EXCEPTION — staking/restaking/LST spot (spot-without-perp allow-list, operator 2026-06-23)
 
 The "spot requires a perp for the base at that venue" rule has a CLOSED allow-list of **staking / restaking /
@@ -299,6 +312,13 @@ rotating baskets).
 
 ## Progress Log
 
+- **2026-07-31 ~13:33Z (main-agent agt-9f21bc): slot-8 stranded-WIP recovery backstop filed.** The `[MTDS] P2` build
+  todo above was fully implemented then stranded when slot 8 died (tmux_session_lost 13:15:34Z) with the work committed
+  but unpushed — `market-tick-data-service@a89e4114057e` + `features-service@2f480da24764` (the UTL half was already on
+  origin). Slot 8 respawned 13:22:01Z and still carries both ahead=1 commits (ff-pull preserves them); review-role
+  agt-8ce066 (msgs 2969/2972) pinged it directly with ship instructions. The recovery todo above + this entry are the
+  durable backstop per every-follow-up-is-a-todo, in case the direct ping is missed before a recycle. Main does NOT do
+  the git recovery itself (cross-slot worktree / quickmerge is worker-craft).
 - **2026-06-23 (venue-gaps dispatch — MATERIALIZED + VERIFIED, COMPLETE)** — re-enumerated the 6 affected venues for
   day=2026-06-23 via the orchestrator `process_instruments(redo_all=True, venue_override=[...], mode="batch")` path
   directly (the ServiceBootstrap CLI swallows stdout + skips already-captured cells; the direct call needs
