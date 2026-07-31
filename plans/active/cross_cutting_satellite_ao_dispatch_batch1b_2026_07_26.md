@@ -88,17 +88,24 @@ drift_direction: advance-code
       fix writeup: an early pytest plugin, `tests/_native_lib_early_preimport.py`, pre-imports
       numpy/scipy/talib/`unified_trading_library` before `coverage.start()` runs, so its `source=` probe-import never
       purges-then-reloads their C-extension/pydantic-schema state; the whole-package `--cov=features_service` CI gate
-      was already unaffected and remains so); (2) relocate the smoke/e2e harnesses (`scripts/*/smoke_matrix.py` ×8,
+      was already unaffected and remains so); (2) ~~relocate the smoke/e2e harnesses (`scripts/*/smoke_matrix.py` ×8,
       `scripts/e2e/*`) from features-service to `e2e-testing/scripts/<domain>/` per
-      `/codex/06-coding-standards/script-homes.md`, rewiring them to the primary-consumer QG (STEP 5.65) — note this is
-      a physical relocation, distinct from the separate already-open "repoint smoke_matrix.py SSOT citations" todo
-      (`mdps_features_deadcode_consolidation_2026_07_20.md` #7 / duplicated across the cefi/tradfi/defi/prediction
-      closeout docs), do not touch that doc's citation-only scope; **Coordinate with the sibling
-      `silent_wrong_answer_audit_candidates_2026_07_20.md` todo above — it recovers a stash fix touching
-      `smoke_matrix.py` before this relocation; sequence this relocation AFTER that stash-recovery lands (or re-verify
-      no conflict if this lands first).** (3) run the `script-homes.md` "Per-repo cleanup sweep" (classify →
-      relocate/fold-into-CLI/delete-dead, GCS-orphan-verify before any migration-script delete) across every repo's
-      `scripts/` EXCLUDING features-service's smoke/e2e harnesses already handled in (2). Source:
+      `/codex/06-coding-standards/script-homes.md`, rewiring them to the primary-consumer QG (STEP 5.65)~~ **DONE
+      2026-07-31 — features-service@7717fbee (relocation + every real consumer repointed: the 8
+      `features_service/<domain>/smoke.py` package re-exporters, the 8 `tests/<domain>/unit/test_smoke_matrix.py`
+      dynamic loaders, `quality-gates.sh`'s E2E-driver/backfill-tooling smoke invocations, `pipeline_e2e_check.py`'s
+      `resolve_lookback.py` subprocess path) + e2e-testing@4b5a743 (the 13 relocated files landed under
+      `scripts/{delta_one,commodity,cross_instrument,calendar,sports,multi_timeframe,volatility,onchain,     features}/`,
+      wired into features-service's peripheral-dir QG loop for all 9 domains; kept e2e-testing's own
+      fallback-import/DTZ-TID251/empty-string-fallback ratchet baselines at-or-below via targeted `# noqa:` markers —
+      these only trip once the files land in e2e-testing's own scan scope, separate from features-service's). Verified:
+      117/117 features-service smoke_matrix unit tests + manual dry-run smokes of run_pipeline_e2e/run_backfill/
+      resolve_lookback pass from the new cross-repo location; `quality-gates.sh` green in both repos. Also fixed a
+      pre-existing unrelated bug found in the same session (`coverage_harness.py`'s `MdpsUniverseProvider.iter_atoms`
+      still unpacked `mdps_mvp_universe()` as a 2-tuple after it was upgraded to 3-tuples) — landed independently by
+      another slot as e2e-testing@65f43f4, reconciled via rebase.** (3) run the `script-homes.md` "Per-repo cleanup
+      sweep" (classify → relocate/fold-into-CLI/delete-dead, GCS-orphan-verify before any migration-script delete)
+      across every repo's `scripts/` EXCLUDING features-service's smoke/e2e harnesses already handled in (2). Source:
       `plans/active/issues/features_service_coverage_and_script_canon_2026_06_10.md`. Done when: per-module coverage
       runs green on Python 3.13 locally; the 8 smoke_matrix.py + e2e/* files exist under `e2e-testing/scripts/<domain>/`
       and no longer under features-service, wired to that repo's QG; every repo's `scripts/` directory has been

@@ -102,12 +102,15 @@ script-relocation sweep per the canon; fix the env crash. Tracked todos:
       `status: draft` (never dispatched), so this item (1) of its combined todo should be marked done there too when
       that doc is next touched/activated, citing this commit.
 
-- [ ] [SCRIPT] P2. features-service → e2e-testing: relocate the smoke/e2e harnesses (`scripts/*/smoke_matrix.py` ×8,
+- [x] ✅ [SCRIPT] P2. features-service → e2e-testing: relocate the smoke/e2e harnesses (`scripts/*/smoke_matrix.py` ×8,
       `scripts/e2e/*`) to `e2e-testing/scripts/<domain>/` per `script-homes.md`, wired to primary-consumer QG (STEP
       5.65).
 
       **SUPERSEDED (2026-07-30, conflict-check)** — same `cross_cutting_satellite_ao_dispatch_batch1b_2026_07_26.md`
-                              todo, item (2): same file list, same target path, same source citation. Do not re-dispatch from here.
+                                          todo, item (2). **DONE 2026-07-31 — features-service@7717fbee + e2e-testing@4b5a743**;
+                                          see that doc's item (2) for the full writeup (both repos' commit shas, every consumer
+                                          repointed, ratchet-baseline fixes, test verification). Checked here too since this is
+                                          the same underlying work, closed via the batch1b dispatch.
 
 - [ ] [SCRIPT] P3. features-service + deployment-service: retire `scripts/sports/compute_sfi_progressive_only.py` + its
       `deployment-service/scripts/vm/launch-sfi-progressive-features-backfill-vm.sh` launcher once the Phase 4-7
@@ -116,7 +119,7 @@ script-relocation sweep per the canon; fix the env crash. Tracked todos:
       (classify → relocate/fold-into-CLI/delete-dead, GCS-orphan-verify before deleting migrations).
 
       **SUPERSEDED (2026-07-30, conflict-check)** — two active docs already claim this ground:
-                              `plans/active/repo_scripts_governance_audit_2026_06_18.md` (Phase 1, full 21-repo sweep, in progress) AND
-                              `cross_cutting_satellite_ao_dispatch_batch1b_2026_07_26.md` item (3), which explicitly runs the sweep "EXCLUDING
-                              features-service's smoke/e2e harnesses already handled in (2)" and cites this doc as source. Do not re-dispatch
-                              from here.
+                                          `plans/active/repo_scripts_governance_audit_2026_06_18.md` (Phase 1, full 21-repo sweep, in progress) AND
+                                          `cross_cutting_satellite_ao_dispatch_batch1b_2026_07_26.md` item (3), which explicitly runs the sweep "EXCLUDING
+                                          features-service's smoke/e2e harnesses already handled in (2)" and cites this doc as source. Do not re-dispatch
+                                          from here.
