@@ -987,3 +987,8 @@ accordingly.
   synchronously — it confirmed genuine per-file `Progress: 1200/131776 files (11.5 files/sec, 104.7s elapsed)` at
   ~T+2min. Both STARTED and PROGRESS checks per `rb_infra_relaunch.md` satisfied. Pinged the authoring fleet-monitor
   slot with this outcome; no code changed this session (relaunch + issue-doc update only).
+- **2026-07-31T05:22Z (`data_pipeline_failure` escalation `agt-5a8706`, slot 4, DP-VM-003)**: attributing the shard-13
+  `-032349` relaunch (`canonical-migration-cefi-content-apply-20260731-051007`) slot-15 saw at `05:10Z` as "someone
+  else" — that was me, checkpoint-resumed from `2026-01-18`, verified STARTED/PROGRESS. Root cause + a separate
+  checkpoint-resume actuator bug fix (`deployment-service@46136b6`) split into their own doc (this doc is near its line
+  cap): `cefi_content_migration_shard13_network_error_and_checkpoint_resume_bug_2026_07_31.md`.
