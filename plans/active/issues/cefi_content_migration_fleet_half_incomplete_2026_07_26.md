@@ -962,3 +962,28 @@ accordingly.
   wedged. No action taken myself (monitoring-only) — the correct remediation (delete + republish tarball + relaunch) is
   what slot-3 already did for shard 17; deferring to whoever picks up shard 21 next to do the same, and re-tagging my
   earlier "THIRD distinct failure mode" framing as RESOLVED/root-caused rather than open.
+- **2026-07-31T05:20Z (`data_pipeline_failure` escalation `agt-1a06b5`, slot 2, DP-VM-003 `DP_VM_STALL`)**: dispatched
+  by the fleet monitor for this exact VM (`canonical-migration-cefi-content-21-relaunch20260731-032606`, heartbeat 33min
+  stale at dispatch) — this is the remediation slot-15's entry immediately above deferred to. Independently confirmed
+  the same diagnosis before acting (genuine silent freeze, GCE `RUNNING`, ~11min past its own `STALL_PROGRESS_REGEX`
+  30-min self-kill deadline which had not fired), plus one wrinkle worth flagging: the `DeploymentsRegistry` archive
+  already carried this `deployment_id` (`c251e3f9`) as `status=failed`, `reap_reason=vm_not_running`,
+  `completed_at=04:47:57Z` — 30+ min before I found it still genuinely `RUNNING` on GCE (single `insert` op only, no
+  `preempted`/`delete` op; independent `vm-heartbeat/<vm>.txt` blob + `run.log` mtime both corroborate the freeze at
+  `~04:39Z`, not a `04:48Z` reap). Did not trust the registry's stale/wrong verdict — cross-checked GCE + the heartbeat
+  blob directly. Not filing a separate issue for this single mismatch (worth a look if `reap_stale()`'s
+  `running_vm_names` check produces this false-positive again elsewhere). Fixed the recurring `gcloud` active-identity
+  poisoning (`slot15-work` had drifted to `github-actions-deploy@…`; reset to `unified-trading-sa@…`, same as this doc's
+  prior occurrences). **Registry-verified relaunch budget for this vm-prefix TODAY (2026-07-31)**: 1 prior dead attempt
+  (`-032606` itself) — 1/2 used, within `RB-INFRA-RELAUNCH` bound; this is the 2nd and exhausts today's budget for shard
+  21 — a 3rd death today should page, not relaunch. Deleted the wedged VM (protective — well past its own self-kill
+  deadline, zero productive work, still billing), read its `PROGRESS.json` checkpoint
+  (`last_completed_date=2025-05-13, monotonic=true`) and, per the checkpoint-aware-resume HARD RULE, relaunched from
+  `2025-05-14` (not a blind replay of the original `2025-05-04` start; end unchanged `2025-06-26`) as
+  `canonical-migration-cefi-content-21-relaunch20260731-052154` (`MACHINE_TYPE=e2-standard-16`, SPOT default). Confirmed
+  the launch pulled the already-fixed `mtds-code@55d051bd` tarball fresh — slot-3's stall-timeout fix above had already
+  republished it, so no separate republish was needed this time. **Verified, not fire-and-forget**: `RUNNING` confirmed
+  at T+~15s; armed an 11-min bounded background monitor (`run_in_background`, self-heartbeating) rather than blocking
+  synchronously — it confirmed genuine per-file `Progress: 1200/131776 files (11.5 files/sec, 104.7s elapsed)` at
+  ~T+2min. Both STARTED and PROGRESS checks per `rb_infra_relaunch.md` satisfied. Pinged the authoring fleet-monitor
+  slot with this outcome; no code changed this session (relaunch + issue-doc update only).
