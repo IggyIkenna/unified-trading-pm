@@ -597,7 +597,18 @@ cancellation-timeout fix and already shipped). Suggested next steps for whoever 
       of this check. Per this todo's own done-when clause, correctly leaving it open rather than forcing a conclusion
       from zero data. No code shipped (pure verification). Re-check next time a fresh dispatch of this task fires, or
       whenever a new `Uncaught signal: 6` log line appears for `uts-shared-deployment-api` on a revision at/after
-      `00361-qqp`.
+      `00361-qqp`. — **2026-07-31T13:29Z (slot 9, review): re-checked, still gate NOT met — still correctly open, no new
+      data to force a conclusion from.** A newer revision has since gone live (`uts-shared-deployment-api-00363-nwx`,
+      created `13:23:29Z`, now 100% traffic — supersedes the `00361-qqp`/`00362-xzb` pair both prior checks inspected).
+      Content-verified (direct image pull + extraction, not ancestry) that `785405d`'s pid-role logging is genuinely
+      present in `00363-nwx`'s deployed `gunicorn.conf.py` (both `"gunicorn MASTER (arbiter) started, pid=%s"` and
+      `"gunicorn WORKER forked, pid=%s age=%s"` lines confirmed in the extracted file). Re-ran the same
+      `gcloud logging read` for `"Uncaught signal: 6"` scoped to `timestamp>="2026-07-31T11:54:00Z"` (covering
+      `00361-qqp`→`00362-xzb`→`00363-nwx`, ~1h36m elapsed since the pid-role-logging deploy first went live): **zero
+      rows** — query syntax cross-checked against the known `00355-z2c@10:37:56Z` occurrence in the same run to confirm
+      it isn't a false-negative empty result. No code shipped (pure verification). Leaving the checkbox unchecked per
+      this todo's own instruction; re-check on the next dispatch or the next `Uncaught signal: 6` occurrence on a
+      revision at/after `00361-qqp`.
 
 - [ ] [BACKEND] P3. **NEW, opened 2026-07-31 (slot 13, backend_engineer) — dead-code cleanup: `workers/auto_sync.py`'s
       entire background-sync implementation is unreachable in production.** Found while tracing the call graph for the
@@ -686,3 +697,12 @@ cancellation-timeout fix and already shipped). Suggested next steps for whoever 
   entirely. Re-verified the live successor todo (`-014`, MASTER/WORKER pid-role logging) is still correctly open: zero
   SIGABRTs on either `00361-qqp` or the current `00362-xzb` (both confirmed carrying `785405d`'s pid-role logging) as of
   this check. No code shipped (review role; pure investigation + doc reconciliation).
+
+- **2026-07-31T13:29Z (slot 9, review)** — Dispatched `deployment_api_sigabrt_crash_loop-017` (the `-014` MASTER/WORKER
+  pid-role-logging follow-up, this doc's live successor question). Re-checked live: a newer revision has since deployed
+  (`00363-nwx`, `13:23:29Z`, now 100% traffic) — content-verified (direct image pull, not ancestry) it carries
+  `785405d`'s pid-role logging. `gcloud logging read` for `"Uncaught signal: 6"` scoped to
+  `timestamp>="2026-07-31T11:54:00Z"` (spanning `00361-qqp`→`00362-xzb`→`00363-nwx`, ~1h36m elapsed since the
+  pid-role-logging deploy first went live) returns zero rows; cross-checked the query syntax against the known
+  `00355-z2c@10:37:56Z` occurrence in the same session to rule out a false-negative empty result. Gate still not met —
+  left the checkbox open per its own instruction, no conclusion forced from zero data. No code shipped.
