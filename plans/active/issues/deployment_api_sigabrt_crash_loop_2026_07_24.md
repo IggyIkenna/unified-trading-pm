@@ -435,7 +435,7 @@ cancellation-timeout fix and already shipped). Suggested next steps for whoever 
       limit further, or capping `containerConcurrency`/max concurrent cold-starts, is the pragmatic mitigation while
       root-causing continues. (repo: deployment-api)
 
-- [ ] [BACKEND] P2. **NEW, opened 2026-07-31 (slot 13, backend_engineer) — re-open the sandbox-external-termination
+- [x] ✅ [BACKEND] P2. **NEW, opened 2026-07-31 (slot 13, backend_engineer) — re-open the sandbox-external-termination
       theory specifically for HIGHER-traffic/multi-instance revisions.** This session exhaustively ruled out the
       exec'd-subprocess-in-background-loop theory (see the todo above) via a full call-graph audit — the one background
       loop actually wired into production (`background_sync.auto_sync_running_deployments`, confirmed via
@@ -456,6 +456,47 @@ cancellation-timeout fix and already shipped). Suggested next steps for whoever 
       (would support sandbox-external-kill) vs. its absence (would support genuinely in-process, still-unexplained); (3)
       if no multi-instance occurrence exists yet in the historical catalogue, this todo stays open until the next
       SIGABRT lands on a multi-instance revision — don't force a conclusion from single-instance data. (repo:
+      deployment-api) — **2026-07-31 (slot 7, backend_engineer)**: all 3 steps done with live Cloud Monitoring + Logging
+      data. (1) `run.googleapis.com/container/instance_count` (Monitoring API v3 REST, no `gcloud monitoring` CLI
+      subcommand exists) at 1-min res around every queryable cataloged timestamp (`00317-zmv`/`00330-tth` have rolled
+      off the `varlog/system` retention window — verified via a zero-row bare-timestamp query, not assumed) found
+      `00338-4qv@2026-07-30T11:17:37Z` (pid=29) at `instance_count=2`, the needed multi-instance case. (2) Applying
+      Finding A's method here surfaces a signal it missed: the request log's per-instance-ID trace, not just system-log
+      `"Starting new instance"` presence. Pre-crash instance `001548f72951...` (613 reqs since `09:26:10Z`) served its
+      LAST request `11:17:27.722Z` (9.6s pre-crash) and never serves again; a co-existing already-warming instance
+      `001548f729a8...` (spun up `11:15:20Z` for an unrelated autoscale event) absorbs all traffic from `11:17:56.505Z`
+      (19.2s post-crash) — genuine instance abandonment with no NEW `"Starting new instance"` line needed since spare
+      capacity already existed (Finding A's line-absence test is a false negative here: it checks _provisioning_, not
+      _routing abandonment_). Cross-checked a genuinely single-instance pid=29 case, `00337-lrr@09:05:15Z`
+      (`instance_count=1` throughout): here a REAL `"Starting new instance. Reason: AUTOSCALING"` line DOES fire, 2.58s
+      post-crash, paired with a `"Truncated response body ... application exited before the response was finished"`
+      WARNING, plus a hard instance-ID swap in the request log (`...e3c2...`→`...df14...`) — i.e. Cloud Run silently
+      kill-replaced the whole instance under a generic `AUTOSCALING` tag indistinguishable by text alone from a benign
+      scale event. **This directly contradicts Finding A's blanket "refuted for the clean case," which was drawn from
+      one pid=900 sample.** (3) Checked pid as the differentiator: Finding A's clean case was pid=900; both disrupted
+      cases here are pid=29. A third check, `00341-6vh@14:54:25Z` (pid=280), shows the SAME instance ID serving
+      continuously through the crash, zero gap — matching the pid=900 pattern. **4/4 occurrences split cleanly by pid:
+      low (28/29, plausibly gunicorn master/earliest worker) → genuine whole-instance replacement; high (280/900/5096,
+      plausibly recycled workers) → zero disruption.** Tried to CONFIRM (not just correlate) the master/worker mapping
+      via gunicorn's own boot logging on `stdout`/`stderr` — zero such lines emitted (a real logging gap, not
+      retention), so the mapping is a strong 4/4 correlation, not yet mechanistically proven. Filed a `[BACKEND] P1`
+      follow-up to confirm it directly and reconcile the doc's framing — this reframes the doc's core question as "TRUE
+      for the low-pid subset, confirmed via live routing evidence," not the "refuted" verdict the prior single-sample
+      check reached. No code shipped (pure investigation, 4 occurrences × 2 log streams each).
+
+- [ ] [BACKEND] P1. **NEW, opened 2026-07-31 (slot 7, backend_engineer) — confirm whether the low-pid (28/29) vs
+      high-pid (280/900/5096) split found this session (see the todo above) actually maps to gunicorn MASTER vs
+      recycled-WORKER roles, and reconcile the doc's headline conclusion.** 4/4 checked occurrences split cleanly: low
+      pids → genuine whole-instance replacement (request abandonment, instance-ID swap, sometimes a
+      generically-`AUTOSCALING`-tagged `"Starting new instance"` line); high pids → zero disruption. Strong correlation,
+      not yet a confirmed mechanism — gunicorn's own boot-time PID/role logging doesn't reach Cloud Logging on this
+      service (checked `stdout`/`stderr` around `00337-lrr`'s boot, zero matching lines). Next: (1) add explicit
+      PID-role logging in `gunicorn.conf.py`'s `on_starting` (arbiter) vs `post_fork` (per-worker) hooks so the next
+      SIGABRT's pid maps to a role without guessing; (2) if confirmed, update this doc's framing — the original
+      "crash-loop compounding the reaper" claim is TRUE for the low-pid subset (not refuted, as the pid=900
+      single-sample check had concluded), just mislabeled by Cloud Run's generic `AUTOSCALING` reason string; (3) then
+      investigate WHY the master itself calls `abort()` (never established — this doc only traced supervisory mechanics;
+      `faulthandler` is only armed worker-side, so an arbiter-side abort has no dump to read yet). (repo:
       deployment-api)
 
 - [ ] [BACKEND] P3. **NEW, opened 2026-07-31 (slot 13, backend_engineer) — dead-code cleanup: `workers/auto_sync.py`'s
@@ -477,6 +518,16 @@ cancellation-timeout fix and already shipped). Suggested next steps for whoever 
       deletion). (repo: deployment-api)
 
 ## Progress Log
+
+- **2026-07-31 (slot 7, backend_engineer)** — Dispatched `deployment_api_sigabrt_crash_loop-009` (the sandbox-
+  external-termination-for-multi-instance todo). Executed all 3 named steps with live Cloud Monitoring/Logging data;
+  full evidence is inline on that checkbox above, not duplicated here. Headline: found the needed multi-instance
+  occurrence (`00338-4qv@11:17:37Z`, pid=29, `instance_count=2`), and applying Finding A's method to it (plus 2 more
+  cross-checks) surfaced a pid-based split across 4 occurrences — low pids (28/29) correlate with genuine whole-instance
+  replacement (incl. a real `"Starting new instance"`/`AUTOSCALING`-tagged line + a `"Truncated response body"` line on
+  the single-instance pid=29 case), high pids (280/900) show zero disruption — which CONTRADICTS Finding A's blanket
+  "refuted" conclusion (drawn from one pid=900 sample). Flipped the checkbox; filed a `[BACKEND] P1` follow-up to
+  confirm the pid↔gunicorn-role mapping and reconcile the doc's framing. No code shipped (pure investigation).
 
 - **2026-07-31 (slot 13, backend_engineer)** — Dispatched `deployment_api_sigabrt_crash_loop-007` (the `[BACKEND] P2`
   "narrow the exec'd-subprocess-SIGABRT theory" todo). Fresh-pulled all slot repos. Executed step (1) exhaustively
