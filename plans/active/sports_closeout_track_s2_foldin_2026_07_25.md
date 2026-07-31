@@ -283,7 +283,15 @@ drift_direction: advance-code
       keeps re-dispatching despite the plan's own banner intent. Not re-tagging to an operator/credential marker
       (inaccurate — this is a genuine same-corpus todo dependency, not an external gate). No code shipped, no gate
       re-run attempted (P2c isn't done yet — forcing one now would be exactly the "don't mark it DONE early" this todo
-      warns against). Logged as a disposition entry rather than silently re-bouncing.
+      warns against). Logged as a disposition entry rather than silently re-bouncing. — **2026-07-31 (slot 8):
+      re-dispatched again same day, still genuinely blocked — no change since slot 14's 15:15Z check: P2c (line ~271)
+      still `[ ]`, and P2b's own text confirms the odds_api backfill run itself still hasn't happened. Same root cause
+      (`blocked_prerequisites_marker_not_in_non_dispatchable_regex_2026_07_28.md` — `_NON_DISPATCHABLE_RE` doesn't
+      recognize `PREREQUISITES`). No new diagnosis needed; no code shipped; checkbox correctly stays open. Flagging that
+      this todo has now bounced across at least 4 separate slots (10/15/6/14/8) purely on this same mechanical gap — the
+      issue doc's own P2 audit todo (converting this to a structural `depends_on`+`gate_on_depends` split, per its
+      "Recommended decision" §(b)) would stop the churn; that audit is `assigned_vm: NA` there and hasn't been picked up
+      yet.
 - [x] ✅ [DATA] P2. **RETAGGED 2026-07-28 (stale-tag audit — already ruled 2026-07-26, `[OPERATOR]` never removed).**
       Unresolved cefi-before-sports gate TENSION, never ruled (flagged 2026-07-14, still open).
       `instruments_foundation_completeness_2026_06_24.md` states sports does NOT start its G1→G5 until cefi is DONE, but
