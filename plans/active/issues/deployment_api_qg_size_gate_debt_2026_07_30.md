@@ -354,8 +354,15 @@ file-by-file.
       `test_route_deployments_mock.py`, `test_route_ordering_inventory.py`, `test_service_status_checkers.py`), full
       `quality-gates.sh --no-fix` green (136s, sentinel `efdbe42b30efe09a1e99d873a44b1096d28fbce1`). Repo:
       deployment-api@6fca1a4.
-- [ ] [SCRIPT] P2. Decompose the remaining function-size-only violation in `deployment_api/services/event_processor.py`.
-      Remove its exclude entry once compliant; re-run `quality-gates.sh` to confirm no regression.
+- [x] ✅ [SCRIPT] P2. **DONE 2026-07-31 (slot-2, infra craft).** Decomposed
+      `deployment_api/services/event_processor.py`. Extracted
+      `_update_one_shard_vm_status`/`_apply_shard_event_status`/`_apply_shard_vm_status` from `process_vm_updates` (was
+      71L); extracted `_collect_orphan_tuples`/`_fire_orphan_cleanup`/ `_resolve_orphan_cancel_backend` from
+      `process_orphan_vm_cleanup` (was 57L) and the former `_fire_orphan_cleanup` (was 53L). Pure code motion, no logic
+      changes. `FUNCTION_SIZE_EXTRA_EXCLUDES` entry removed — gate passes natively. Verified: AST size check clean,
+      basedpyright 0 errors, ruff clean, 161 targeted tests green (`test_event_processor_service.py`,
+      `test_sync_service.py`, `test_event_processor.py`), full `quality-gates.sh --no-fix` green (145s, sentinel
+      `1e824699d21451babceadf3d65ce5a570339ce85`). Repo: deployment-api@867d88e.
 - [ ] [SCRIPT] P2. Decompose the remaining function-size-only violation in `deployment_api/services/state_manager.py`.
       Remove its exclude entry once compliant; re-run `quality-gates.sh` to confirm no regression.
 - [ ] [SCRIPT] P2. Decompose the remaining function-size-only violation in `deployment_api/services/sync_service.py`.
