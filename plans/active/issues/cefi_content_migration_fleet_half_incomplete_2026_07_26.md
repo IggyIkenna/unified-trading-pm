@@ -817,6 +817,39 @@ accordingly.
   but the magnitude/suddenness matches shard 23's confirmed-corrupt-file pattern, not a gradual creep). Fleet now (13,
   14-verify, 15, 17, 18, 20, 21, 22, 24, 25, 29, 40, 41, 42, 43) = 14 shards + the verify run. No action taken
   (monitoring-only).
+- **2026-07-31T04:20Z (slot-7, `cefi_content_migration_fleet_half_incomplete-008`, this todo's own dispatched worker —
+  attribution for the "someone else's dispatch" note in the 2026-07-31T00:41Z/03:23Z entries above)**: dispatched this
+  P1 verification todo. The only live shard-14 VM at pickup
+  (`canonical-migration-cefi-content-14-relaunch20260730-134900`) was running pre-fix code (launched 13:49Z, fix landed
+  ~18:20Z) per this todo's own done-when — did NOT kill it (no gratuitous kill), instead launched a bounded background
+  lifecycle monitor (`bash`, `run_in_background`, 5min poll, self-heartbeating to the orchestrator every cycle so the
+  slot stays live without manual polling) that: (1) waited for that VM to naturally conclude, (2) relaunched shard 14
+  fresh on the fixed tarball, (3) is now watching that fresh run for the terminal summary vs a stall. Timeline: old VM
+  completed naturally at `22:06:07Z` (`exit_code=0`, full 335,111/335,111 — matches slot-15's `22:06Z` entry above, same
+  VM, independently confirmed); relaunched fresh as `canonical-migration-cefi-content-14-verify20260730-221322` at
+  `22:13:43Z` (T+60s confirmed `RUNNING` — the same VM slot-15's `00:41Z`/`03:41Z` entries above have been independently
+  tracking as "someone else's dispatch"). **Confirmed crossing the ~45-50min old-code freeze window alive** at
+  `22:55:10Z` (~45min elapsed, 22,400/335,111, 6.7%) — first direct evidence the fix clears the exact window that killed
+  shards 16/19/40/44 under the old code. As of this entry (last poll `04:13:15Z`): still `RUNNING`, 190,000/335,111
+  files (56.7%), steady ~9.0 files/sec, zero stalls/freezes across ~5.85h elapsed — well past the freeze window with no
+  sign of the original slow-creep leak. **Not yet done**: this todo's "done when" requires the terminal
+  `SCRIPT 1 CONTENT MIGRATION SUMMARY` banner on the full 335,111-file scope, which has not yet fired — leaving the
+  checkbox unflipped. Checkpointing this entry now (session context approaching its compaction threshold) so the
+  in-flight state survives independently of this session: **the VM itself
+  (`canonical-migration-cefi-content-14-verify20260730-221322`) is the durable source of truth** — check
+  `gcloud compute instances describe canonical-migration-cefi-content-14-verify20260730-221322 --zone=asia-northeast1-c`
+  (NOTFOUND once it self-deletes) and
+  `gcloud storage cat gs://deployment-scripts-central-element-323112/vm-logs/canonical-migration-cefi-content-14-verify20260730-221322/run.log`
+  (grep for the terminal banner) directly — no dependency on this session's own background monitor script (a disposable,
+  session-scratchpad polling wrapper around the same launcher, not committed) surviving. **Next action for whoever picks
+  this up**: once that VM concludes (naturally or via its own `STALL_TIMEOUT_SEC=1800` self-reap), grep its final
+  `run.log` for the terminal summary — SUCCESS ⇒ flip this todo's checkbox with the evidence line; STALL/freeze despite
+  the fix ⇒ do NOT flip, instead revisit the periodic-release cadence (tighten below every-200-files) or hypothesis (c)
+  (`--workers 12` oversubscription) per this todo's own text above. Separately: this session observed the parallel
+  18-shard relaunch (todo `-009`, slot-13) hitting a DIFFERENT, seemingly corrupt-parquet-file early-death pattern
+  (shards 16/23/44/19 per slot-15's 03:41Z-04:10Z entries above) — that is explicitly OUT OF SCOPE for this shard-14
+  fix-verification todo (different shards, different failure signature, already flagged by slot-15 for the root-cause
+  owner) and is not addressed here.
 - **2026-07-31T04:18Z (slot-15) — a DIFFERENT death signature, possible second leak source**: shard 40 (`-032606`) also
   OOM-killed (`rc=137`), but this one does NOT fit the corrupt-file pattern — 2764s (~46min, matching the ORIGINAL
   ~45-50min freeze window this session's earliest diagnostics identified, not the fast 12-40min corrupt-file deaths),
