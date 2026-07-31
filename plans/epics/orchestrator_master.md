@@ -42,6 +42,8 @@ related_plans:
   - ../active/ao_fleet_observability_kpis_2026_07_20.md
   - ../active/ao_open_issues_consolidated_close_out_2026_07_17.md
   - ../active/ao_satellite_ao_dispatch_batch1_2026_07_26.md
+  - ../active/ao_satellite_ao_dispatch_batch3_2026_07_31.md
+  - ../active/ao_satellite_ao_dispatch_batch3_finalize_2026_07_31.md
 last_updated: 2026-07-16
 locked_by: live-defi-rollout
 locked_since: 2026-05-21
@@ -336,6 +338,13 @@ picture.
 
 **status**: active · **estimate**: 1.6 cal AI-days (class: refactor) **title**: AO satellite AO batch 1 — first dispatch
 batch extracted from the AO tranche's satellite docs
+
+### [`ao_satellite_ao_dispatch_batch3_2026_07_31`](../active/ao_satellite_ao_dispatch_batch3_2026_07_31.md)
+
+**status**: draft (not yet operator-approved) · **estimate**: 1.4 cal AI-days (class: refactor) **title**: AO satellite
+AO batch 3 — third dispatch batch extracted from the AO tranche's satellite docs. Paired with
+[`ao_satellite_ao_dispatch_batch3_finalize_2026_07_31`](../active/ao_satellite_ao_dispatch_batch3_finalize_2026_07_31.md)
+(gated, `status: active`, holds via `gate_on_depends` until the batch's todos are done).
 
 ## P2 — useful; opportunistic
 

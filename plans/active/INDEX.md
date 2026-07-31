@@ -17,7 +17,7 @@
 
 <!-- AUTO-INDEX-START -->
 
-_Auto-generated via `scripts/plans/regenerate_active_plan_index.py`. 240 plans across 10 domains. A plan tagged with
+_Auto-generated via `scripts/plans/regenerate_active_plan_index.py`. 244 plans across 10 domains. A plan tagged with
 multiple `asset_group:` values appears under each. Grep this block for a domain keyword before scanning `plans/active/`
 by hand._
 
@@ -824,7 +824,7 @@ by hand._
 - [`v2_engine_venue_buildout_2026_06_15`](./v2_engine_venue_buildout_2026_06_15.md) — Build out real strategy engines
   for 22 engineless archetypes and wire up 9 unwired venues in the v2 strategy framework.
 
-### ao (9)
+### ao (11)
 
 - [`ao_fleet_observability_kpis_2026_07_20`](./ao_fleet_observability_kpis_2026_07_20.md) — Roughly four of five
   dispatches produce no completion and nothing surfaces it, 43% of CI escalations go unresolved after ~3.8 dispatches
@@ -845,6 +845,13 @@ by hand._
 - [`ao_satellite_ao_dispatch_batch2_finalize_2026_07_30`](./ao_satellite_ao_dispatch_batch2_finalize_2026_07_30.md) —
   Gated closeout for ao_satellite_ao_dispatch_batch2_2026_07_30.md — machine-held via depends_on + gate_on_depends until
   every todo in that batch is done. Reconciles each completed todo's evidence back into its TRUE source issue doc (the…
+- [`ao_satellite_ao_dispatch_batch3_2026_07_31`](./ao_satellite_ao_dispatch_batch3_2026_07_31.md) **[draft]** — THIRD
+  AO-dispatch batch for the `ao` topic tranche, produced by the `/ag-closeout-audit ao` skill run (2026-07-31,
+  autonomous mode, scheduled dispatch agt-23935a). Phase 0 re-derived the tranche's 41 current members via…
+- [`ao_satellite_ao_dispatch_batch3_finalize_2026_07_31`](./ao_satellite_ao_dispatch_batch3_finalize_2026_07_31.md) —
+  Gated closeout for ao_satellite_ao_dispatch_batch3_2026_07_31.md — machine-held via depends_on + gate_on_depends until
+  every todo in that batch is done. Reconciles each completed todo's evidence back into its TRUE source issue doc(s)
+  (the…
 - [`context_scout_completion_and_plan_brainstorm_skill_2026_07_30`](./context_scout_completion_and_plan_brainstorm_skill_2026_07_30.md)
   — Operator asked me to evaluate a set of other coding-agent ideas (OpenCode's Scout subagent, Paperclip's fleet
   control-plane, Pi's harness, Superpowers' brainstorming skill) against this workspace's
@@ -857,7 +864,7 @@ by hand._
   monitoring_control_plane_master_2026_06_10.md as a file-disjoint scope-creep section (agent-orchestrator internals,
   not the…
 
-### ci (9)
+### ci (11)
 
 - [`capability_wizard_client_lite_and_ci_regen_followup_2026_07_24`](./capability_wizard_client_lite_and_ci_regen_followup_2026_07_24.md)
   — Small follow-up plan forking the 2 residual items left open when `capability_wizard_and_manifest_2026_06_11.md`
@@ -876,6 +883,12 @@ by hand._
 - [`ci_satellite_ao_dispatch_batch2_finalize_2026_07_29`](./ci_satellite_ao_dispatch_batch2_finalize_2026_07_29.md) —
   Gated closeout for ci_satellite_ao_dispatch_batch2_2026_07_29.md — machine-held via depends_on + gate_on_depends: true
   until all 14 of that plan's todos are done. Reconciles each distinct source doc's checkboxes/prose independently,…
+- [`ci_satellite_ao_dispatch_batch4_2026_07_31`](./ci_satellite_ao_dispatch_batch4_2026_07_31.md) **[draft]** — Fourth
+  AO-dispatch batch for the `ci` topic tranche, produced by `/ag-closeout-audit ci` (autonomous mode, 2026-07-31,
+  ag_closeout_auditor scheduled worker, slot 12). Phase 0 re-checked batch1's still-open conflict-gated Deferred items…
+- [`ci_satellite_ao_dispatch_batch4_finalize_2026_07_31`](./ci_satellite_ao_dispatch_batch4_finalize_2026_07_31.md) —
+  Gated closeout for ci_satellite_ao_dispatch_batch4_2026_07_31.md — machine-held via depends_on + gate_on_depends: true
+  until all 9 of that plan's todos are done. Reconciles each distinct source doc's checkboxes/prose independently,…
 - [`cicd_mvp_ldr_to_main_pipeline_2026_06_30`](./cicd_mvp_ldr_to_main_pipeline_2026_06_30.md) — "OPERATOR DECISION
   (Harsh + Ikenna, reaffirmed 2026-06-30): we do NOT need the complex CI/CD pipeline. The MVP is: commits reach LDR via
   local-green quality-gates + quickmerge (already enforced) → SIT validates → merge LDR→main. Staging is…
