@@ -132,7 +132,7 @@ and the catalogue has **no `margin_type` field**. Deribit inverse is the only co
       DERIBIT/BINANCE-DELIVERY untouched, as scoped. 5 new unit tests (`test_cefi_catalog_reader_margin_gate.py`) +
       updated the existing mvp-gate test for the new `venue` param. Full QG green. Follow-up (real volume source)
       tracked below — NOT done here.
-- [ ] [MTDS] P2. **Build a shared manifest-volume-aggregation utility + wire it into BOTH the BTC/ETH margin-leg gate
+- [x] [MTDS] P2. ✅ **Build a shared manifest-volume-aggregation utility + wire it into BOTH the BTC/ETH margin-leg gate
       above (`cefi_catalog_reader.py` `_MARGIN_GATE_EXEMPT_BASES`) AND the still-unwired `feature_perp_representative`
       call in `features-service/features_service/delta_one/cli/handlers/batch_handler.py` (currently calls
       `filter_instruments_for_family` with no `venue_volumes`, so it's a permanent no-op).** Source: MTDS's OWN manifest
@@ -142,9 +142,13 @@ and the catalogue has **no `margin_type` field**. Deribit inverse is the only co
       `/codex/04-architecture/tier-and-import-architecture.md`'s no-service-deps rule). Build ONCE, consume from both
       sites — a one-off just for the margin gate is not the move (main-agent ruling, BLK-4cb04e0d, 2026-07-31). Once
       real observations exist for BTC/ETH, drop them from `_MARGIN_GATE_EXEMPT_BASES` and re-verify against measured
-      volume instead of the historical-default assumption.
+      volume instead of the historical-default assumption. **Shipped — market-tick-data-service@a89e4114 (margin-gate
+      wiring) + features-service@48911e87 (originally committed as 2f480da2, rewritten by an autostash-rebase during
+      push; `batch_handler.py` wiring) — both re-verified via a fresh Pass-1 `quality-gates.sh` on their exact HEAD
+      (neither sentinel matched, so this was a genuine QG run, not a same-SHA retry) then landed via Pass-2
+      `quickmerge --agent`, both confirmed on origin/live-defi-rollout. slot-8, 2026-07-31T13:45Z.**
 
-- [ ] [MTDS] P2. **RECOVERY (backstop) — a COMPLETE implementation of the todo above already exists as
+- [x] [MTDS] P2. ✅ **RECOVERY (backstop) — a COMPLETE implementation of the todo above already exists as
       committed-but-unpushed WIP in slot 8's worktree; INHERIT it, do NOT re-implement.** As of 2026-07-31 the UTL half
       (`aggregate_cefi_manifest_volume` in `unified_trading_library/manifest_writer/_volume_aggregation.py`) is already
       on origin; the two consumer halves are stranded ahead=1 in slot 8's `.tabs/8`:
@@ -156,6 +160,7 @@ and the catalogue has **no `margin_type` field**. Deribit inverse is the only co
       → `quickmerge --agent` per repo → flip the `[MTDS] P2` build checkbox above, citing both SHAs. Do NOT
       `reset_worktree` slot 8 until both land. Provenance: review-role agt-8ce066 (msgs 2969/2972) pinged slot 8
       directly; this todo is the durable backstop if that worker-actionable ping is missed on a slot-8 recycle.
+      **Recovery completed by slot 8 itself (the live original holder) — see evidence on the todo above.**
 
 ## EXCEPTION — staking/restaking/LST spot (spot-without-perp allow-list, operator 2026-06-23)
 
