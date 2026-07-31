@@ -151,3 +151,29 @@ touched. Recommend re-dispatch once (a) `-006`/the plan's currently-dispatched t
 and (b) the sibling `-001` split todo is picked up — ideally both `-001` (split) and this todo (cross-plan
 `depends_on`+`gate_on_depends` restructure) are done together in one pass, per this todo's own "while splitting"
 framing, by whichever worker claims `-001`.
+
+**2026-07-31 (slot 13, data_engineering)**: dispatched to the `[PLAN] P3` todo above (`-001`, the split itself, distinct
+from slot 4's touch on `-002`). Read the full target plan (1004 lines) end to end and confirmed the split shape slot 4's
+finding + this doc's "What I found" section describe still holds: 6 still-open todos (prediction apply/resume, tradfi
+apply/resume, defi go/no-go + implement-and-apply, lines 164/169/288/297/311/323), everything else in the Todos section
+`[x]`, and the ~670-line Progress Log (lines 336-1004) is entirely historical narrative for already-closed lanes
+(dispatch-order-bug findings #2-#8, snapshot/pause evidence, the tradfi bundled/non-bundled investigation + dead-branch
+fix, the DeFi handler audit) — a real, ready-to-execute split.
+
+Before touching the target plan, checked this todo's own precondition ("verify no todo is currently `locked_by`/
+mid-dispatch before splitting") via `GET /api/backlog`: `mtds_available_at_cross_asset_backfill-006` ("Resume the
+prediction consolidator cron") is `status: dispatched`, `dispatched_to: 3`, `dispatched_at: 2026-07-31T23:33:21Z` —
+still live 13+ minutes in at the time of this check (23:46:29Z), unchanged from slot 4's identical finding on the
+sibling todo earlier today. Per this plan's own extensive Progress Log precedent (dispatch-order findings #2-#8), a
+`-006`-class dispatch that gets declined (the overwhelmingly likely outcome — every prior `-006`/`-014` dispatch across
+8+ touches was declined, and each decline appended a new Progress Log entry to the exact file this split needs to
+restructure) lands a same-region commit on `plans/active/mtds_available_at_cross_asset_backfill_2026_07_13.md` — the
+identical file whose Progress Log section this split rewrites/relocates in its entirety. A concurrent append there
+during a full-file restructure is a near-certain rebase collision, not just a theoretical one.
+
+**Declined to execute**, same reasoning as slot 4's touch above: no files in the target plan touched, no split
+performed. This is now the SECOND independent confirmation (slot 4 on `-002`, this touch on `-001`) that `-006`'s
+live-dispatch status is blocking BOTH split-related todos from proceeding safely. Calling `/skip-current-task` so
+another slot can retry once `-006` clears (done or declined+skipped) — recommend whoever picks this up next re-check
+`GET /api/backlog` for `-006`'s status FIRST, before re-reading the full plan, to avoid burning a full read cycle only
+to hit the same block.
