@@ -7,7 +7,7 @@ summary: >-
   batch3-finalize pattern: reconcile the two source docs, re-check batch4's dropped-by-conflict-check items in case
   batch3's competing claims changed, record an explicit stop-or-continue verdict for the defi tranche with its residual
   orphan count, then archive batch4. Also status: draft until the operator approves batch4 itself.
-status: active
+status: complete
 nature: process
 asset_group: [defi]
 stage: [meta]
@@ -46,10 +46,10 @@ drift_direction: advance-code
 
 # DeFi satellite AO batch 4 — finalize
 
-> **`status: draft` — NOT dispatched**, and additionally machine-gated on
-> `/plans/archive/2026_07/defi_satellite_ao_dispatch_batch4_2026_07_26.md` (`depends_on` plus `gate_on_depends: true`),
-> so even once flipped `active` no todo below is queued until both batch4 todos are `done`. `sequential: true` because
-> todo 2 needs todo 1's reconciliation first and todo 4 (archival) must run last.
+> **🟢 ARCHIVED 2026-07-31.** All 4 todos done: source-doc reconciliation (todo 1), dropped-item re-check (todo 2, zero
+> net-new orphans, one stale duplicate found+fixed in batch3), the explicit STOP verdict (todo 3, 21 residual
+> defi-primary orphans, all non-batchable) — and this archival itself (todo 4), alongside
+> `defi_satellite_ao_dispatch_batch4_2026_07_26.md` (already archived 2026-07-28).
 
 ## Todos
 

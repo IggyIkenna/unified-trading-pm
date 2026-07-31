@@ -139,7 +139,7 @@ by hand._
   — Gated closeout for vol_dvol_backtestable_engines_2026_07_13.md, reclassified `assigned_vm: NA -> planning` by the
   na-eligibility-audit cefi-tranche run 2026-07-30 (retroactive-reclassification shape, codex…
 
-### defi (40)
+### defi (39)
 
 - [`ag_closeout_audit_rollout_2026_07_25`](./ag_closeout_audit_rollout_2026_07_25.md) — Autonomous session (/autonomous,
   operator away, 2026-07-25) driving the /ag-closeout-audit skill across the 4 asset groups that haven't had it yet —
@@ -217,10 +217,6 @@ by hand._
   — Gated closeout for defi_satellite_ao_dispatch_batch3_2026_07_26.md — machine-held via depends_on + gate_on_depends:
   true until all 12 of that plan's todos are done. Mirrors batch1/batch2-finalize's pattern (reconcile each distinct
   source…
-- [`defi_satellite_ao_dispatch_batch4_2026_07_26_finalize`](./defi_satellite_ao_dispatch_batch4_2026_07_26_finalize.md)
-  — Gated closeout for defi_satellite_ao_dispatch_batch4_2026_07_26.md — machine-held via depends_on plus
-  gate_on_depends: true until both of that plan's todos are done. Small by construction, mirroring the batch2-finalize
-  and batch3-finalize…
 - [`defi_satellite_ao_dispatch_batch5_2026_07_27`](./defi_satellite_ao_dispatch_batch5_2026_07_27.md) — Fifth
   AO-dispatch batch for defi, produced by the scheduled `ag_closeout_auditor` role running the `/ag-closeout-audit`
   skill's Phase-1 (per-doc classify) + Phase-3 (conflict-check + draft) triage over all 65 defi AG-primary docs, run
@@ -939,7 +935,7 @@ by hand._
 - [`stash_pile_workspace_cleanup_2026_06_03`](./stash_pile_workspace_cleanup_2026_06_03.md) — Runbook for auditing and
   clearing git stash piles across all workspace repos on any host, with archive-first conservative tooling.
 
-### meta (2)
+### meta (3)
 
 - [`deepseek_claude_blended_provider_routing_2026_07_28`](./deepseek_claude_blended_provider_routing_2026_07_28.md) —
   Register DeepSeek V4 Pro as a second, first-class model provider in agent-orchestrator's account pool, and add a
@@ -948,6 +944,10 @@ by hand._
 - [`qg_host_adaptive_resource_governor_2026_07_14`](./qg_host_adaptive_resource_governor_2026_07_14.md) — Replace
   quality-gates.sh's fixed-K host-concurrency token bucket with a host-adaptive admission controller that reads each
   host's real MemTotal/MemAvailable + physical cores at runtime and admits a QG heavy phase only when BOTH a RAM…
+- [`quality_gates_quickmerge_timing_baseline_2026_07_31`](./quality_gates_quickmerge_timing_baseline_2026_07_31.md) —
+  Measure wall-clock + per-phase timing of `quality-gates.sh` (across its mode/scope flags) and `quickmerge.sh` on
+  unified-trading-pm — first a single-agent baseline on this host, then the same measurements on the planning-vm where
+  ~15…
 
 <!-- AUTO-INDEX-END -->
 

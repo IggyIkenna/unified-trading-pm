@@ -18,7 +18,7 @@ related:
   [
     /plans/active/defi_satellite_ao_dispatch_batch5_2026_07_27.md,
     /plans/active/defi_consolidated_closeout_2026_07_18.md,
-    /plans/active/defi_satellite_ao_dispatch_batch4_2026_07_26_finalize.md,
+    /plans/archive/2026_07/defi_satellite_ao_dispatch_batch4_2026_07_26_finalize.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]
 created: "2026-07-27"
