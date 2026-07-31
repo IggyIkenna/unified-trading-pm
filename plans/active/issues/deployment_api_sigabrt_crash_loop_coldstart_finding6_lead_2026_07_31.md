@@ -101,8 +101,17 @@ volume).
 
 ## Todos
 
-- [ ] [BACKEND] P2. Read `deployment_api_cloud_run_coldstart_flaky_exit0_blocks_prd_sa_cutover_2026_07_31.md` Finding 6
-      (100%-reproducible fresh-cold-start `exit(0)`+STARTUP-probe failure on non-live revisions) as an additional lead
+- [x] ✅ [BACKEND] P2. Read `deployment_api_cloud_run_coldstart_flaky_exit0_blocks_prd_sa_cutover_2026_07_31.md` Finding
+      6 (100%-reproducible fresh-cold-start `exit(0)`+STARTUP-probe failure on non-live revisions) as an additional lead
       when next working `deployment_api_sigabrt_crash_loop_2026_07_24.md`'s SIGABRT investigation — determine whether it
       shares the same root cause as the always-warm signal-6 crash, or is a distinct failure mode. (repo:
-      deployment-api)
+      deployment-api) — **DONE 2026-07-31T22:20Z (slot 14, infra)**: read + folded in via a new dated entry directly on
+      `deployment_api_sigabrt_crash_loop_2026_07_24.md`'s open `[INFRA] P0` cold-container todo. Independently
+      corroborates this doc's own "SA identity is not the driving variable" finding: fixed BOTH the project-role gap AND
+      a separately-found empty SA-level Cloud Run Service Agent `tokenCreator` binding on `uts-prd-sa`, retested, zero
+      effect on the failure. Went further via a scoped diagnostic log sink (bypasses the project's `_Default`
+      severity-exclusion for just this service): the failing container emits ZERO output ever, before gunicorn's own
+      first log line, while a concurrent canary logs fine in the same window — narrows the shared mechanism to the
+      container-exec layer for this resource profile, not IAM/SA identity, not the app. Filed a fresh `[INFRA]`
+      follow-up on the SIGABRT doc carrying this forward (test lighter resource profile / gen2, or escalate to Google
+      Cloud Support). This satellite doc's own scope is now fully folded in — no further action needed here.

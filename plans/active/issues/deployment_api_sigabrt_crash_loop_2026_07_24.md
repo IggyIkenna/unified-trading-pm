@@ -493,82 +493,12 @@ cancellation-timeout fix and already shipped). Suggested next steps for whoever 
       A/B) — added a `[REVIEW]` monitoring todo below per this doc's own established convention for exactly this
       situation.
 
-- [x] ✅ [BACKEND] P2. **NEW, opened 2026-07-31 (slot 13, backend_engineer) — re-open the sandbox-external-termination
-      theory specifically for HIGHER-traffic/multi-instance revisions.** This session exhaustively ruled out the
-      exec'd-subprocess-in-background-loop theory (see the todo above) via a full call-graph audit — the one background
-      loop actually wired into production (`background_sync.auto_sync_running_deployments`, confirmed via
-      `main.py:140`'s `lifespan=lifespan` import chain) has zero reachable `subprocess`/`Popen` call sites anywhere in
-      its call graph (`SyncService`, `vm_utils.list_running_vm_names`, `DeploymentsRegistry.reap_stale`,
-      `StateManager.cleanup_state_ttl` — none call subprocess; the one path that could,
-      `SyncService._acquire_and_launch` → `orch.submit_shard`, is dead code since `DeploymentOrchestrator` has no
-      `submit_shard` method). With the background-exec-subprocess theory now refuted (not just the arbiter and
-      pyarrow-signal-handler theories from earlier in this doc) and Finding A (2026-07-31, slot 11) having only checked
-      the CLEAN single-instance case for the sandbox-external-termination theory, the natural next step is re-running
-      Finding A's exact method (per-instance `container/{cpu,memory}/utilizations` + `instance_count` Cloud Monitoring
-      queries, `"Starting new instance"` presence/absence in the system log) against a SIGABRT that landed on a revision
-      actively running MULTIPLE concurrent instances — Finding A's own caveat is that its clean evidence doesn't
-      directly apply there. Concrete next steps: (1) `gcloud logging read` for
-      `run.googleapis.com/container/instance_count` (or the Monitoring API equivalent) around each of the 9 cataloged
-      post-fix SIGABRT timestamps in this doc to find one where `instance_count` > 1 at the time of the crash; (2) for
-      that occurrence, apply Finding A's exact method — check for a `"Starting new instance"` line immediately after
-      (would support sandbox-external-kill) vs. its absence (would support genuinely in-process, still-unexplained); (3)
-      if no multi-instance occurrence exists yet in the historical catalogue, this todo stays open until the next
-      SIGABRT lands on a multi-instance revision — don't force a conclusion from single-instance data. (repo:
-      deployment-api) — **2026-07-31 (slot 7, backend_engineer)**: all 3 steps done with live Cloud Monitoring + Logging
-      data. (1) `run.googleapis.com/container/instance_count` (Monitoring API v3 REST, no `gcloud monitoring` CLI
-      subcommand exists) at 1-min res around every queryable cataloged timestamp (`00317-zmv`/`00330-tth` have rolled
-      off the `varlog/system` retention window — verified via a zero-row bare-timestamp query, not assumed) found
-      `00338-4qv@2026-07-30T11:17:37Z` (pid=29) at `instance_count=2`, the needed multi-instance case. (2) Applying
-      Finding A's method here surfaces a signal it missed: the request log's per-instance-ID trace, not just system-log
-      `"Starting new instance"` presence. Pre-crash instance `001548f72951...` (613 reqs since `09:26:10Z`) served its
-      LAST request `11:17:27.722Z` (9.6s pre-crash) and never serves again; a co-existing already-warming instance
-      `001548f729a8...` (spun up `11:15:20Z` for an unrelated autoscale event) absorbs all traffic from `11:17:56.505Z`
-      (19.2s post-crash) — genuine instance abandonment with no NEW `"Starting new instance"` line needed since spare
-      capacity already existed (Finding A's line-absence test is a false negative here: it checks _provisioning_, not
-      _routing abandonment_). Cross-checked a genuinely single-instance pid=29 case, `00337-lrr@09:05:15Z`
-      (`instance_count=1` throughout): here a REAL `"Starting new instance. Reason: AUTOSCALING"` line DOES fire, 2.58s
-      post-crash, paired with a `"Truncated response body ... application exited before the response was finished"`
-      WARNING, plus a hard instance-ID swap in the request log (`...e3c2...`→`...df14...`) — i.e. Cloud Run silently
-      kill-replaced the whole instance under a generic `AUTOSCALING` tag indistinguishable by text alone from a benign
-      scale event. **This directly contradicts Finding A's blanket "refuted for the clean case," which was drawn from
-      one pid=900 sample.** (3) Checked pid as the differentiator: Finding A's clean case was pid=900; both disrupted
-      cases here are pid=29. A third check, `00341-6vh@14:54:25Z` (pid=280), shows the SAME instance ID serving
-      continuously through the crash, zero gap — matching the pid=900 pattern. **4/4 occurrences split cleanly by pid:
-      low (28/29, plausibly gunicorn master/earliest worker) → genuine whole-instance replacement; high (280/900/5096,
-      plausibly recycled workers) → zero disruption.** Tried to CONFIRM (not just correlate) the master/worker mapping
-      via gunicorn's own boot logging on `stdout`/`stderr` — zero such lines emitted (a real logging gap, not
-      retention), so the mapping is a strong 4/4 correlation, not yet mechanistically proven. Filed a `[BACKEND] P1`
-      follow-up to confirm it directly and reconcile the doc's framing — this reframes the doc's core question as "TRUE
-      for the low-pid subset, confirmed via live routing evidence," not the "refuted" verdict the prior single-sample
-      check reached. No code shipped (pure investigation, 4 occurrences × 2 log streams each).
-
-- [x] ✅ [BACKEND] P1. **NEW, opened 2026-07-31 (slot 7, backend_engineer) — confirm whether the low-pid (28/29) vs
-      high-pid (280/900/5096) split found this session (see the todo above) actually maps to gunicorn MASTER vs
-      recycled-WORKER roles, and reconcile the doc's headline conclusion.** 4/4 checked occurrences split cleanly: low
-      pids → genuine whole-instance replacement (request abandonment, instance-ID swap, sometimes a
-      generically-`AUTOSCALING`-tagged `"Starting new instance"` line); high pids → zero disruption. Strong correlation,
-      not yet a confirmed mechanism — gunicorn's own boot-time PID/role logging doesn't reach Cloud Logging on this
-      service (checked `stdout`/`stderr` around `00337-lrr`'s boot, zero matching lines). Next: (1) add explicit
-      PID-role logging in `gunicorn.conf.py`'s `on_starting` (arbiter) vs `post_fork` (per-worker) hooks so the next
-      SIGABRT's pid maps to a role without guessing; (2) if confirmed, update this doc's framing — the original
-      "crash-loop compounding the reaper" claim is TRUE for the low-pid subset (not refuted, as the pid=900
-      single-sample check had concluded), just mislabeled by Cloud Run's generic `AUTOSCALING` reason string; (3) then
-      investigate WHY the master itself calls `abort()` (never established — this doc only traced supervisory mechanics;
-      `faulthandler` is only armed worker-side, so an arbiter-side abort has no dump to read yet). (repo:
-      deployment-api) — **2026-07-31 (slot 11, backend_engineer)**: shipped step (1), the only part of this todo
-      determinable without waiting for a future SIGABRT. `deployment-api@785405d`: added an `on_starting` hook (fires
-      ONCE, in the master/arbiter, before any fork) logging `"gunicorn MASTER (arbiter) started, pid=%s"` via
-      `server.log.info` (reaches stdout — `errorlog = "-"`/`accesslog = "-"` are already confirmed-working delivery
-      paths per this doc's earlier findings), and extended the existing `post_fork` hook to also log
-      `"gunicorn WORKER forked, pid=%s age=%s"` per worker fork (age = gunicorn's own spawn-order counter, already used
-      for leader-election — 0..N-1 = initial spawn, N+ = a post-recycle re-fork). Together these give a durable stdout
-      record mapping every pid this container ever forks to a role (MASTER vs WORKER) + spawn generation, so the NEXT
-      SIGABRT's pid can be looked up against these lines instead of inferred from magnitude. 2 new unit tests
-      (`TestOnStarting.test_logs_master_pid`, `TestPostFork.test_logs_worker_pid_and_age`) + all existing
-      `test_gunicorn_conf.py` tests green; `quality-gates.sh` PASSED (112s); verified live on origin via
-      `merge-base --is-ancestor`. Steps (2)/(3) are NOT actionable yet — they require reading a SIGABRT that occurs
-      AFTER this ships and matching its pid against these new log lines; filed as a `[REVIEW]` follow-up below rather
-      than guessing ahead of the evidence.
+- [x] ✅ [BACKEND] P2 + [BACKEND] P1 (2 entries). **2026-07-31 line-cap remediation (4th pass, slot 14)**: the
+      sandbox-external-termination multi-instance re-check (slot 13→7, found the low-pid/high-pid split) and its
+      MASTER/WORKER-mapping confirm todo (slot 7→11, shipped `deployment-api@785405d`'s pid-role logging) extracted
+      verbatim to `/plans/archive/2026_07/deployment_api_sigabrt_crash_loop_progress_log_history_2026_07_31.md` §
+      "4th-pass extraction". Both fully resolved/shipped; superseded by the still-open `[REVIEW] P1` pid-role-match todo
+      below.
 
 - [ ] [REVIEW] P1. **NEW, opened 2026-07-31 (slot 11, backend_engineer) — once `deployment-api@785405d`'s MASTER/WORKER
       pid-role logging (todo above) reaches a live Cloud Run deploy of `uts-shared-deployment-api` (verify via direct
@@ -662,54 +592,14 @@ cancellation-timeout fix and already shipped). Suggested next steps for whoever 
       awaits that fix reaching a live deploy — tracked by the `[REVIEW]` todo below, not re-guessed here, hence
       DEFERRED-BY-DESIGN rather than a false flip.
 
-- [x] ✅ [BACKEND] P1. **NEW, opened 2026-07-31 (slot 4, backend_engineer) — pin the exact call site for the
-      truncated-sync-HTTPS-traceback-then-permanent-silence pattern found in the todo above and confirm/refute it as the
-      blackout trigger.** (1) cross-reference `run.googleapis.com/requests` for instance `001548f729ad...` (`00353-dng`)
-      in a ±5s window around `08:40:27Z` to find the exact route/URL, pinning which of the 6 sync-HTTPS call sites
-      fired; (2) check whether that call site's `requests`/`AuthorizedSession`/`fetch_id_token()` call has no explicit
-      socket `timeout=` (an indefinite hang matches "never completes, never logs the rest"); (3) check whether this same
-      4-fragment-then-silence signature recurs at other points in this service's history (independent of the gen1 pin) —
-      recurrence strengthens this theory, a one-off weakens it. Done-when: call site identified AND either a fix ships
-      (add `timeout=`, or move the call off the event loop via `run_in_threadpool`) with stdout/stderr confirmed
-      resuming, or the theory is refuted with evidence (not re-guessed). (repo: deployment-api) —
-      `deployment-api@6e7bf27`. (1) pinned exactly: `POST /api/internal/reap-tick@08:40:00.582Z`, latency **27.25s**,
-      status **500**, completing `08:40:27.83Z` — matches the traceback to the ms. Call site: `_reap_scheduler.py`'s
-      `verify_reap_scheduler_oidc` → `google_id_token.verify_oauth2_token()`. (2) has an effective 120s default — real
-      bug: a raw SSL/socket exception escapes both `GoogleAuthError` and this file's narrow
-      `except (GoogleAuthError, ValueError)`. **Shipped**: `asyncio.to_thread` wrap + broadened except → clean 503
-      instead of unhandled 500. 8 new tests, green; QG PASSED. (3) not run. Still unexplained: why would one request
-      blind ALL subsequent revisions — added a `[REVIEW]` follow-up below.
-
-- [x] ✅ [REVIEW] P2. **NEW, opened 2026-07-31 (slot 4) — once `deployment-api@6e7bf27` (todo above) reaches a live
-      Cloud Run deploy, check whether `stdout`/`stderr` entries resume for `uts-shared-deployment-api`.** Verify the
-      deploy via direct image extraction (not ancestry), then `gcloud logging read` for `stdout`/`stderr` scoped to
-      `timestamp>=<deploy-time>`. Resume → this fix was the trigger, update this doc's framing. Persists → re-open with
-      a fresh evidence-backed todo (why does one request's failure affect ALL subsequent instances, not just the one it
-      happened on) rather than re-guessing. (repo: deployment-api) — **ANSWERED (slot-6)**: PERSISTS on unrelated
-      instances too, `6e7bf27` worthwhile but not the full explanation.
-
-- [x] ✅ [BACKEND] P1. **NEW, opened 2026-07-31 (slot-6) — test whether `--execution-environment gen1` (suspected twice)
-      is the blackout's mechanism.** — **DONE, REFUTED**: `deployment-api` is the ONLY gen1 service in the region (cited
-      rollup precedent is actually gen2 live); a zero-traffic gen2 canary (same image) still produced zero stdout. Test
-      revisions cleaned up (live traffic stayed on gen1 throughout). (repo: deployment-api)
-
-- [x] ✅ [BACKEND] P1. **DONE 2026-07-31 (slot 8) — `deployment-api@e8ce86a`. Both named candidates REFUTED by 4 live
-      canary experiments; found + fixed the REAL root cause.** (Slot-6 independently ran the same bare-interpreter
-      canary concurrently and reached the identical refutation — corroborating, not conflicting; this entry carries the
-      investigation the rest of the way to the actual root cause + fix.) Deployed 4 zero-traffic canaries on
-      `uts-shared-deployment-api` overriding `--command`/`--args` to bypass tini+gunicorn+app entirely: (1) bare
-      `--command=python3` print loop → zero stdout, refuting BOTH named candidates (no `preload_app`, no app import at
-      all); (2) same + `--no-cpu-throttling` → still zero, ruling that out too; (3) a structured
-      `{"severity":"ERROR",...}` JSON line on stdout → **appeared**; (4) same at `severity=INFO` → **appeared**. Root
-      cause: Cloud Run stamps `severity=DEFAULT` (0) on any non-JSON-structured stdout/stderr line, and this project's
-      `_Default` Cloud Logging sink excludes `severity <= "DEBUG"` (100) for cost control — silently dropping every
-      plain-text line this service ever wrote (gunicorn hooks, faulthandler dumps, this app's own
-      `logging.basicConfig()`), regardless of what the app logged. **Fixed**: `main.py` now calls
-      `unified_trading_library.setup_cloud_logging()` (its `CloudRunJSONFormatter` already emits GCP-recognized JSON
-      with an explicit `severity`, surviving the exclusion at INFO+). 3 new tests (`test_main_logging_bootstrap.py`) pin
-      the regression; `quality-gates.sh` PASSED; verified on origin. Cleaned up 6 of 7 stray canary revisions (incl. the
-      pre-existing `00375-yic`); the 7th (`00382-cat`) is the Cloud-Run "latest" pointer and can only be deleted once a
-      real deploy supersedes it — tracked in the REVIEW todo below. (repo: deployment-api)
+- [x] ✅ [BACKEND]/[REVIEW] P1/P2 (4 entries). **2026-07-31 line-cap remediation (4th pass, slot 14)**: the
+      stdout/stderr-blackout root-cause chain extracted verbatim to
+      `/plans/archive/2026_07/deployment_api_sigabrt_crash_loop_progress_log_history_2026_07_31.md` § "4th-pass
+      extraction" — pinning the truncated-sync-HTTPS call site (`deployment-api@6e7bf27`), confirming the blackout
+      PERSISTS beyond that fix, refuting the gen1-pin theory, and finally root-causing + fixing it for real
+      (`deployment-api@e8ce86a`: Cloud Run stamps `severity=DEFAULT` on non-JSON stdout/stderr, and the project's
+      `_Default` sink excludes `severity<=DEBUG` — `main.py` now calls `setup_cloud_logging()`'s `CloudRunJSONFormatter`
+      to survive the exclusion). All 4 fully resolved/shipped.
 
 - [ ] [REVIEW] P1. **NEW, opened 2026-07-31 (slot 8) — once `deployment-api@e8ce86a` (todo above) reaches a live Cloud
       Run deploy of `uts-shared-deployment-api`, confirm real stdout/stderr resume AND read the next SIGABRT's dump.**
@@ -849,7 +739,73 @@ cancellation-timeout fix and already shipped). Suggested next steps for whoever 
       at the platform layer regardless of code correctness. Done-when: a freshly-cold-started instance of
       `uts-shared-deployment-api` (any current image) passes the STARTUP TCP probe, OR the mechanism is
       identified+fixed. Do NOT attempt further canary deploys against this ALREADY-CONTENDED service while diagnosing —
-      each attempt adds to the churn. (repo: deployment-api, cross-cutting IAM/infra)
+      each attempt adds to the churn. (repo: deployment-api, cross-cutting IAM/infra) — **2026-07-31 22:00-22:20Z (slot
+      14, infra): candidate (1) tested with real evidence — a genuine IAM gap FOUND + FIXED, but it did NOT resolve the
+      symptom, so it's ruled out as sole cause. Confirmed via a scoped diagnostic log bypass that the crash happens
+      BEFORE gunicorn's own first log line — a materially narrower finding than anything else in this doc.** (1)
+      `gcloud logging read` for `SetIamPolicy` audit entries confirmed `uts-prd-sa` (the runtime SA,
+      `spec.template.spec.serviceAccountName`) had its PROJECT-level roles stripped to just 2 storage roles at exactly
+      `19:32:14Z` — matching the doc's own cited `iam-fix-verify`/`-retest` window — then partially restored over the
+      next ~2h (7 roles by `20:03Z`, all 8 by `21:40:51Z`, confirmed via a diff across every audit snapshot). Separately
+      found the runtime SA's OWN SA-level IAM policy (who may mint tokens as it, e.g. the Cloud Run Service Agent
+      `service-1060025368044@serverless-robot-prod.iam.gserviceaccount.com`) was COMPLETELY EMPTY — a real, previously
+      undiscovered gap distinct from the project-role strip. **Fixed**: granted that Service Agent
+      `roles/iam.serviceAccountTokenCreator` on `uts-prd-sa` (self-service per RULES.md §5, no operator ask needed).
+      **Result: no effect.** Retested via the existing 0%-traffic `prd-sa-verify`-tagged revision's own URL (no new
+      canary deployed, per this todo's own no-more-canaries instruction) 3× across ~20 min (immediately, +6min, +14min
+      post-grant) — every attempt: identical `503` at **31.3-31.4s**, to the millisecond-order, every time. This
+      determinism (not "sometimes works, sometimes doesn't" — literally the same duration every single attempt across
+      hours regardless of which IAM state was live) is itself evidence against a stochastic IAM-propagation explanation.
+      **New, more diagnostic finding**: created a narrowly-scoped temporary log sink (`deployment-api-diag-sink` →
+      bucket `deployment-api-diag-temp`, 7-day retention, filtered to ONLY this service, so it captures every severity
+      the project's `_Default` sink's `severity<=DEBUG` cost-control exclusion normally drops — see the archived
+      `e8ce86a` root-cause entry above; this bypass does NOT touch that project-wide exclusion, it's a fully separate,
+      reversible, single-service sink). Result, read across 2 fresh triggered cold-starts: **ZERO log entries of ANY
+      kind from the failing revision itself, from `Starting new instance` to `Container called exit(0)`** — not
+      gunicorn's `on_starting` MASTER-pid line (`785405d`, confirmed present in the deployed image), not the raw
+      `sys.stderr.write("[STARTUP-DIAGNOSTIC] lifespan entered")` already in `lifespan.py:205-206`, nothing. Crucially,
+      this ISN'T a logging-pipe artifact: the SAME bypass sink, in the SAME ~30s window, captured plain-text output from
+      a DIFFERENT concurrent canary (`IAM-FIX-RETEST-STDOUT`/`-STDERR` lines, evidently from the parallel `iam-fix`
+      investigation's own lighter test container) and from the warm `00374-4pd` instance's normal background activity —
+      so stdout/stderr capture itself is NOT broken right now. **Conclusion: the failure is upstream of gunicorn's own
+      arbiter-level `on_starting` hook — before or during process exec / Python interpreter bootstrap / gunicorn's own
+      config load for THIS specific heavy container profile (`cpu=4`, `memory=16Gi`, gen1, `preload_app=True`, 4
+      workers)** — while a lighter bare-process canary boots and logs fine. This rules out every in-app hypothesis this
+      doc has tried (IAM/credentials, subprocess, OOM, sandbox-kill-with-recovery) as the proximate cause of THIS
+      specific symptom, and narrows it to something in the container-exec layer specific to this resource shape. Left
+      both the IAM grant (harmless, closes a real gap) and the diagnostic sink/bucket in place (7-day auto-expiry,
+      `[Lifecycle: delete-when this issue closes or 2026-08-07, whichever first]`) for the next investigator — do not
+      delete until this issue resolves. Production still safe: `00374-4pd` confirmed serving `/api/health` 200
+      throughout. Not flipping this checkbox (done-when genuinely not met — no successful cold start, no confirmed
+      mechanism); IAM is now a ruled-out branch, not an open one. Filed a narrower `[INFRA]` follow-up below carrying
+      the concrete new lead (resource-profile-specific exec failure) forward, per this doc's own established convention.
+
+- [ ] [INFRA] P0. **NEW, opened 2026-07-31 22:20Z (slot 14, infra) — narrow WHY `uts-shared-deployment-api`'s cold
+      container exec fails before gunicorn's own first log line, for this specific heavy resource profile.** Per the
+      todo above: IAM (project-role strip AND the separately-found empty SA-level Service-Agent tokenCreator binding) is
+      now RULED OUT via direct fix-and-retest — restoring both had zero effect, and a scoped diagnostic sink
+      (`deployment-api-diag-sink`/`deployment-api-diag-temp`, still live, bypasses the project's `_Default` sink's
+      `severity<=DEBUG` exclusion for this ONE service) proved the failing container produces LITERALLY ZERO output from
+      `Starting new instance` to `Container called exit(0)` (~31s, deterministic to the millisecond across every
+      observed attempt) — while a concurrent, lighter canary (from the parallel `iam-fix` investigation) DID log
+      successfully in the same window, ruling out a logging-pipe explanation. Candidate angles for whoever picks this up
+      (none confirmed — do not re-guess without evidence): (1) test whether a LIGHTER resource profile for the SAME
+      image (fewer workers, e.g. `WORKERS=1`, or reduced `--memory`/`--cpu`) cold-starts successfully — if it does, the
+      failure is tied to this specific heavy shape (possibly a Cloud Run gen1 sandbox resource-provisioning fault
+      specific to 4-vCPU/16Gi, or a `preload_app=True` + 4-worker fork-storm the sandbox can't service fast enough
+      before its own internal exec budget); (2) test `--execution-environment gen2` for a like-for-like comparison (this
+      doc's earlier gen1-pin work was about a DIFFERENT symptom — the SIGABRT/faulthandler mystery — and was never
+      re-examined against THIS cold-start-exec-failure symptom specifically); (3) if (1)/(2) don't isolate it, this may
+      warrant a Google Cloud Support case — the balance of evidence (byte-identical image/config across warm-working and
+      cold-failing instances, multiple independent investigators across hours, IAM ruled out with direct fix-and-retest,
+      zero app-level output ever) points at a platform-side provisioning fault for this exact resource shape rather than
+      anything in this repo's own code or config. Any test here should use the EXISTING diagnostic sink (query
+      `--bucket=deployment-api-diag-temp --location=global --view=_AllLogs`) rather than creating a new one, and should
+      respect this doc's standing "do not pile on more canary deploys" caution unless the test is itself the fastest way
+      to isolate a REAL candidate (a scoped, deliberate A/B test is not the same as undirected canary churn). Done-when:
+      a freshly-cold-started instance of `uts-shared-deployment-api` (at ANY resource profile, informing whether the
+      current prod profile needs to change) passes the STARTUP TCP probe, OR the exec-layer mechanism is identified.
+      (repo: deployment-api, cross-cutting IAM/infra)
 
 - [ ] [BACKEND] P3. **NEW, opened 2026-07-31 (slot 13, backend_engineer) — dead-code cleanup: `workers/auto_sync.py`'s
       entire background-sync implementation is unreachable in production.** Found while tracing the call graph for the
@@ -999,3 +955,16 @@ cancellation-timeout fix and already shipped). Suggested next steps for whoever 
   Cold startup is broken platform-side for ANY image right now; only the one instance warm since `18:39:05Z` works.
   Flipped on the refuted branch, filed `[INFRA] P0` follow-up (prod risk: `minScale=1`, no recovery path if the warm
   instance is ever replaced). Verified prod safe throughout. No code shipped — infra/IAM-scoped.
+
+- **2026-07-31 22:00-22:20Z (slot 14, infra)** — Dispatched `deployment_api_sigabrt_crash_loop-027` (the `[INFRA] P0`
+  cold-container todo). Found + fixed a real IAM gap (runtime SA's project roles were stripped 19:32Z, matching the
+  `iam-fix` window; separately, the SA's OWN SA-level policy — who may mint tokens as it — was completely empty; granted
+  the Cloud Run Service Agent `serviceAccountTokenCreator` on it). Neither fix changed the symptom: 3 retests over
+  ~20min all failed at 31.3-31.4s, deterministic to the ms. Built a scoped diagnostic log sink bypassing the project's
+  `_Default` severity exclusion for just this service, and proved the failing container emits ZERO log output ever (not
+  even gunicorn's own `on_starting` line) while a concurrent different canary logs fine in the same window — narrows the
+  fault to the container-exec layer, upstream of gunicorn/Python, specific to this heavy resource profile. Also did a
+  4th-pass line-cap remediation (doc was at 1001/1000 lines) extracting 6 more fully- resolved checklist entries to the
+  same archive file. IAM ruled out; filed a narrower `[INFRA]` follow-up (test a lighter resource profile / gen2, or
+  escalate to Google Cloud Support). Left the IAM grant + diagnostic sink live for the next investigator. Production
+  safe throughout (`00374-4pd` still serving 200s). No code shipped — pure infra/IAM investigation + doc reconciliation.
