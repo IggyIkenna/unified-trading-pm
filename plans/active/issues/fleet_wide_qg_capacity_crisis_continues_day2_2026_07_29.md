@@ -222,6 +222,17 @@ not just noting.
       `worker.md`'s resume contract. Host load fluctuated 9-28 (16 vCPU) throughout, consistent with this doc's standing
       "fluctuating-but-still-elevated, not resolved" characterization — no QG failures attributable to contention this
       pass.
+- [ ] [SCRIPT] P3. **New, opened by the 2026-07-31 stale-duplicate-run finding below.** The
+      "Escalate LDR-QG failure to orchestrator (promotion PR only)" workflow step fires `ldr_qg_failure` unconditionally
+      on a `QG slice`/`quality-gates-v2` job failure, with no check for whether the PR it's attached to is still open.
+      Observed concretely: `agent-orchestrator` PR #741 merged at 13:01:38Z off an earlier green `workflow_dispatch`
+      pre-check on the identical SHA; the `pull_request`-triggered duplicate run (created the SAME second) then sat
+      queued ~1h on the contended `glue` pool before failing on a transient `uv`-cache race — and still escalated,
+      paging a cicd worker to diagnose an already-merged promotion as if it were live and blocking. Add a cheap guard
+      before the escalate step (`gh pr view <pr_number> --json state` != OPEN → skip) so a stale duplicate run can't
+      generate a false-alarm dispatch for a promotion that already succeeded. Done when: the guard ships in
+      `quality-gates-v2.yml.tmpl` + rolls out fleet-wide, and this exact timing pattern (duplicate run outliving its own
+      merged PR) no longer escalates.
 
 ## Evidence
 
