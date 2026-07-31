@@ -131,8 +131,22 @@ needs an explicit next relaunch round, and none is currently dispatched.
       relaunch budget), or (c) wait for tomorrow's budget reset and relaunch cleanly. **Done when**: operator picks
       (a)/(b)/(c) and shards 16/17/21/41 get their round-4 relaunch (or are confirmed covered by the sibling doc's fix).
 
+      **Corroborating signal 2026-07-31 13:56Z (review agt-8ce066, gcloud-verified — a DIFFERENT shape than the
+          same-shard-memory-death pattern above):** shards 43 + 44, freshly relaunched this round at 13:39:58Z / 13:40:22Z,
+          were BOTH preempted at 13:51:37Z / 13:51:38Z — ~12 min after launch and only ~2 min after their own T+10 alive-check
+          (13:49:30Z), confirmed via `gcloud compute operations list` `compute.instances.preempted` (ops
+          `systemevent-1785505897347-…` / `systemevent-1785505907671-…`), not inference; 11/13 relaunched shards remain
+          running. A FRESH launch dying fast points to SPOT-capacity pressure in `asia-northeast1-c` today (fleet-wide), NOT a
+          shard-specific memory/data issue — so the operator decision should ALSO weigh (d) a zone/capacity check or a
+          one-shot `--on-demand` fallback (env `ON_DEMAND=true`) for the next relaunch, not only the memory-ceiling options
+          (a)/(b). Non-blocking: 43/44 are idempotent SPOT shards and should re-run cleanly on round-4.
+
 ## Progress Log
 
+- 2026-07-31 ~13:58Z (main-agent agt-9f21bc): folded review agt-8ce066's (msg 2981) gcloud-verified shards-43/44
+  fresh-preemption evidence into the `[OPERATOR] P1` todo above as a corroborating signal + a new option (d)
+  zone-capacity/on-demand consideration. Distinct from the same-shard memory-death pattern; non-blocking (idempotent
+  SPOT shards). Decision remains operator's.
 - 2026-07-31T13:04Z (worker, slot 12, `cefi_content_migration_fleet_half_incomplete-002`): filed after re-running the
   parent doc's corpus-wide re-verify grep and confirming zero forward progress since the 08:05Z check. Did not relaunch
   shards myself — out of this dispatched todo's scope (re-verify only) and consistent with the parent doc's own
