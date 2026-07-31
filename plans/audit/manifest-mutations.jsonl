@@ -1036,3 +1036,5 @@
 {"timestamp": "2026-07-31T10:04:09Z", "workflow": "update-repo-version", "actor": "IggyIkenna", "changes_summary": "unified-trading-api=0.3.0 (branch=main, bump=minor)", "commit_sha": "783d8cb89bb792be5ccdc9aa0a79dbe8cab41d12"}
 {"timestamp": "2026-07-31T10:33:05Z", "workflow": "update-repo-version/received", "actor": "IggyIkenna", "changes_summary": "strategy-service=0.51.0 (branch=main, run=30623903239)", "commit_sha": "7b190bb557785b583cca17a0219fa92c3a581ef3"}
 {"timestamp": "2026-07-31T10:33:13Z", "workflow": "update-repo-version", "actor": "IggyIkenna", "changes_summary": "strategy-service=0.51.0 (branch=main, bump=minor)", "commit_sha": "7b190bb557785b583cca17a0219fa92c3a581ef3"}
+{"timestamp": "2026-07-31T10:34:32Z", "workflow": "update-repo-version/received", "actor": "IggyIkenna", "changes_summary": "unified-trading-api=0.4.0 (branch=main, run=30623935386)", "commit_sha": "7b190bb557785b583cca17a0219fa92c3a581ef3"}
+{"timestamp": "2026-07-31T10:34:35Z", "workflow": "update-repo-version", "actor": "IggyIkenna", "changes_summary": "unified-trading-api=0.4.0 (branch=main, bump=minor)", "commit_sha": "7b190bb557785b583cca17a0219fa92c3a581ef3"}
