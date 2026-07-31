@@ -109,12 +109,19 @@ flip and is corrected here (slot-14).
       with a fixed/justified verdict for each, and any drifted site is corrected + regression-tested. Source:
       `issues/defi_broader_local_fallback_vs_uac_sweep_2026_07_27.md`
 
-- [ ] [CODE] P1. Fix `governance_adapter.py`'s swallowed-exception bug: `_fetch_subgraph_proposals`/
+- [x] ✅ [CODE] P1. Fix `governance_adapter.py`'s swallowed-exception bug: `_fetch_subgraph_proposals`/
       `_fetch_snapshot_proposals` currently swallow real HTTP/network errors into an empty list instead of raising to
       `record_failed`. Repo: market-tick-data-service. Done when: both methods raise on a genuine transport error (only
       a real "no proposals" response short-circuits to empty), covered by a new unit test asserting the distinction,
       shipped via scoped `quickmerge.sh --agent --files`. Source:
-      `issues/defi_clean_path_fetch_evidence_fidelity_scope_2026_07_28.md`
+      `issues/defi_clean_path_fetch_evidence_fidelity_scope_2026_07_28.md` — market-tick-data-service@d74984b0 (fix
+      d040d457 + a stale test fixed to match d74984b0). Both fetch functions now let a genuine transport error propagate
+      (removed the `except (aiohttp.ClientError, OSError, ValueError): return []` swallow); a real 200+empty response
+      still short-circuits to `[]` unchanged. `_fetch_both_sources` now uses
+      `asyncio.gather(..., return_exceptions=True)` so a raise from one source doesn't leave the other task's exception
+      unretrieved. New tests: unit coverage on `_fetch_subgraph_proposals`/`_fetch_snapshot_proposals` (genuine-empty vs
+      HTTP-error vs connection-error), plus a `_process_protocol`-level test proving the error reaches
+      `recorder.record_failed` (not `record_zero_rows`) and that genuine-zero-proposals is unchanged.
 
 - [ ] [DATA] P1. Diagnose + ship a real fix for the TheGraph subgraph-cascade / "bad indexers" failure class (retry-
       with-backoff or a subgraph deployment-ID swap, per the already-identified root cause) across all 8 affected
