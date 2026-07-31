@@ -605,3 +605,43 @@ post-refetch census remains staged at
 (unchanged, no need to rebuild). Releasing via `/skip-current-task {"reason_code": "GATED"}`, not duplicate-launched.
 Next dispatch: repeat this lock-check (`gcloud compute instances list --filter='name~"^af-backfill-|^af-audit-"'`); once
 clear, launch the recovery command above, then repeat the health-check → re-census cycle.
+
+**Health-checked 2026-07-31T08:00Z-08:20Z (autonomous continuation), lock still held, genuinely alive — but ETA is now
+DAYS, not hours, and the cause looks self-inflicted by this campaign's own widening.** `af-backfill-20260730-220243`
+still `RUNNING` (heartbeat epoch `1785485539` vs. probe-time epoch `1785485571`, ~32s old); no preemption/delete op
+against it (`gcloud compute operations list --filter="targetLink~'af-backfill-20260730-220243'"` shows only the original
+`insert`). Pulled the full `run.log` (1,954 lines) to grep: **0** failure signatures
+(`attempted_failed|fail_fast|reached the request limit|Traceback|Killed|exit_code|DEPLOYMENT_COMPLETED`) — genuinely
+healthy, not stalled. `LAUNCH_PARAMS.json` shows this is a routine-looking `--entity FIXTURES` resume for
+`2026-06-26→2026-07-30` (5 weeks) — but it took ~6.5h just to fetch teams for all 383 leagues
+(`grep -c "Fetched .* teams for league"` = 383), then logged
+`Per-fixture enrichment: 180 fixtures x 4 entities = 494 calls queued (concurrency=10, skipped_already_captured=0)` for
+**a single day** (`2026-06-26`) — and `concurrency=10` doesn't help: the adapter's own rate-budget log
+(`Sports adapter api_football rate-budget set: 2 req/min -> _min_request_interval=30.0000s + UTC-minute window cap=2 (PRIMARY throttle)`)
+is a hard per-key ceiling, not per-worker, confirmed by measured throughput (79 distinct `fixture=` player-stat fetches
+between `07:35:37Z` and `08:14:37Z`, 39 min → ~2.03/min, matching the throttle exactly). At 2/min, 494 calls/day ≈
+4.1h/day × 35 days ≈ **~5.8 days** just for this 5-week window's per-fixture cascade — this is why the singleton lock,
+which looked like it should free up in hours, is now a multi-day hold.
+
+**Likely root cause, flagged for verification (dispatched an Explore agent, not yet returned as of this entry)**: this
+campaign's own `SPORTS_ENTITY_LEAGUE_COVERAGE` widening (todo #2/#3 above — FIXTURE_STATS/FIXTURE_LINEUPS from 96
+MVP-only → 383 all-curated leagues, `unified-api-contracts`/`instruments-service` quickmerges already shipped) is the
+strong suspect: the per-fixture task-queueing loop likely always cascades `--entity FIXTURES` into all 4 applicable
+per-fixture entities regardless of the CLI filter, and previously skipped ~287 non-MVP leagues entirely via the
+now-removed MVP pre-filter — meaning a "routine" 5-week FIXTURES catch-up used to be fast (96 leagues' worth of
+per-fixture cascade) and is now ~4x wider in league scope, hitting the SAME hard 2 req/min vendor ceiling. **If
+confirmed, this has a real capacity implication beyond this one VM**: todo #10 below (FIXTURE_STATS/FIXTURE_LINEUPS
+all-leagues backfill) would hit the identical 2 req/min ceiling across a much longer historical range
+(2020-06-06→present per the sports 2020-06 data floor), which at this measured rate is not a multi-day job but
+potentially a multi-week/multi-month one on a single VM — this changes the completion expectation for todo #10 from
+"launch and monitor to completion" to "launch and let it run for the long haul, monitor on a much longer cadence." Not
+escalating to a fresh `BLOCKED-OPERATOR` entry yet (nothing is broken, no decision is needed to keep going — just
+documenting the discovered timeline reality so nobody mistakes a healthy multi-day run for a stall). Will append the
+Explore agent's findings (hardcoded throttle vs. real vendor-plan limit; whether `--entity` truly doesn't gate the
+per-fixture cascade) once it returns, and reassess whether the 2 req/min figure itself is adjustable.
+
+Not completable this turn. Did NOT force past the lock (still genuinely alive, per the VM-delete guardrail). Recovery-
+ids parquet for the 4,327 remaining non-canonical objects remains staged unchanged. Releasing without duplicate-launch.
+Next dispatch: re-check the lock; given the ~5.8-day ETA just for this VM's 5-week window, widen the monitoring interval
+(30-60 min is wasteful at this timescale) rather than tight-looping — a stall check only needs to confirm the
+heartbeat/date-boundary is still climbing, not tick every 30 min for days.
