@@ -27,7 +27,6 @@ related:
   [
     /cursor-configs/skills/docs-reconcile/SKILL.md,
     /codex/11-project-management/doc-frontmatter-schema.md,
-    /codex/09-strategy/architecture-v2/naming-convention.md,
     /codex/06-coding-standards/strategy-identity-versioning.md,
     /plans/active/issues/plan_reconcile_autonomous_sweep_2026_07_30.md,
     /plans/archive/2026_07/docs_retrieval_layer_reconcile_2026_07_23.md,
