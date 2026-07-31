@@ -781,3 +781,11 @@ accordingly.
   unrelated to the periodic-leak fix. Contrast with the concurrent shard-14 verify run (same fix, same machine type, now
   past 4.7h/46% with zero issues) — the fix is clearly working in general, this looks like a shard-specific anomaly
   worth a closer look if it recurs on retry. No action taken (monitoring-only).
+- **2026-07-31T03:57Z (slot-15)**: shard 44 (`-032606`) also OOM-killed (`rc=137`) early — 1465s (~24min), 11,800/80,026
+  files (14.7%). **Different signature from shard 16**: `bytes_allocated` was actively RISING right before death
+  (`41,878,784` → `274,933,504` across the last 3 release calls, ~7x growth in ~90s) rather than staying near-zero —
+  this looks more consistent with the original slow-leak mechanism hitting a burst, not a one-off anomalous file.
+  Possible read: the periodic release cadence (every 200 files) may not be tight enough for shards with unusually large
+  individual files/batches. Fleet still at 19 (someone relaunched shard 16 separately, `-035409`, now `RUNNING`). No
+  action taken (monitoring-only) — flagging both early-death shards (16, 44) together as worth the root-cause owner's
+  attention if this pattern repeats across more shards.
