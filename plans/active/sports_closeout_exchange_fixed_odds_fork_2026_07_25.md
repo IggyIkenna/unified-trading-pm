@@ -310,6 +310,17 @@ drift_direction: advance-code
       sports canonical-naming codex doc with the new instrument_types + migration order. (repo: unified-trading-pm).
       **Done when**: both named codex docs cite EXCHANGE_ODDS/FIXED_ODDS and the migration ordering used.
 
+      **DISPATCHED PREMATURELY 2026-07-31T15:38Z (slot 14) — declined, still genuinely blocked.** This plan's own
+          banner states the intended chain ends `... → cutover → retire legacy → codex audit`, but both predecessors
+          are still `[ ]` open at dispatch time: the "cut the live sports odds writers over" todo (2 above) and the
+          "retire the legacy `odds` contract entry" todo (1 above). Writing the codex "migration ordering used" section
+          now would describe an ordering that hasn't actually finished executing yet. This is the SAME `sequential: true`
+          dispatch-order gap already tracked in
+          `plans/active/issues/mtds_backfill_sequential_true_dispatch_order_violated_2026_07_29.md` (now confirmed across
+          4 independent plans — mtds prediction-lane, mdps tradfi ohlcv, and now this sports fork) — added as further
+          corroborating evidence there rather than re-diagnosing here. Declined to write the codex update prematurely; no
+          code shipped.
+
 ## Codex SSOTs
 
 `/codex/02-data/availability-manifest-and-data-status.md`, `/codex/02-data/sports-data-types-catalog.md`,

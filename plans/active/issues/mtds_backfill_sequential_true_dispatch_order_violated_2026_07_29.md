@@ -132,20 +132,20 @@ which of the 3 hypotheses above (or another) is the actual cause — then fix + 
       agent-orchestrator)
 
       **2026-07-30 (slot-3, data_engineering craft) — STILL VIOLATED live, ~2h+ after the fix commit.** Dispatched
-              `mtds_available_at_cross_asset_backfill-006` ("Resume the prediction consolidator cron") directly via `/boot`.
-              Confirmed via `git merge-base --is-ancestor 77769ab HEAD` in this session's `agent-orchestrator` worktree —
-              `77769ab` IS an ancestor of current `live-defi-rollout` HEAD (`41f69878e`), so the fix is present in the repo. But
-              a fresh `GET /api/backlog` query against the LIVE orchestrator server (the same one that dispatched `-006` to me)
-              shows `mtds_available_at_cross_asset_backfill-001` (Apply `rebuild_prediction_manifest.py`, the true predecessor)
-              still `status: queued`, `dispatched_to: null` — never assigned to anyone — while `-006` (its downstream "resume
-              cron" sibling) was `dispatched` to this slot. The exact violation this VERIFY todo asks to check for is still
-              reproducing in production. Did not dig further into whether this is (a) the fix genuinely present in code but the
-              running orchestrator SERVER PROCESS not yet restarted/redeployed to pick it up (repo-merge ≠ live-deploy for a
-              long-running server), or (b) a residual gap in the fix itself — that root-cause split needs `backend_engineer`
-              craft + the server's own deploy/restart history, out of scope for a `data_engineering` task. Declined `-006`
-              itself (nothing to resume — the backfill still hasn't been applied) per the established precedent in the
-              source plan's Progress Log (dispatch-order findings #2–#5). Leaving this checkbox unflipped — the fix is not yet
-              confirmed live-effective.
+                  `mtds_available_at_cross_asset_backfill-006` ("Resume the prediction consolidator cron") directly via `/boot`.
+                  Confirmed via `git merge-base --is-ancestor 77769ab HEAD` in this session's `agent-orchestrator` worktree —
+                  `77769ab` IS an ancestor of current `live-defi-rollout` HEAD (`41f69878e`), so the fix is present in the repo. But
+                  a fresh `GET /api/backlog` query against the LIVE orchestrator server (the same one that dispatched `-006` to me)
+                  shows `mtds_available_at_cross_asset_backfill-001` (Apply `rebuild_prediction_manifest.py`, the true predecessor)
+                  still `status: queued`, `dispatched_to: null` — never assigned to anyone — while `-006` (its downstream "resume
+                  cron" sibling) was `dispatched` to this slot. The exact violation this VERIFY todo asks to check for is still
+                  reproducing in production. Did not dig further into whether this is (a) the fix genuinely present in code but the
+                  running orchestrator SERVER PROCESS not yet restarted/redeployed to pick it up (repo-merge ≠ live-deploy for a
+                  long-running server), or (b) a residual gap in the fix itself — that root-cause split needs `backend_engineer`
+                  craft + the server's own deploy/restart history, out of scope for a `data_engineering` task. Declined `-006`
+                  itself (nothing to resume — the backfill still hasn't been applied) per the established precedent in the
+                  source plan's Progress Log (dispatch-order findings #2–#5). Leaving this checkbox unflipped — the fix is not yet
+                  confirmed live-effective.
 
 ## Deferred — HELD by the `/na-eligibility-audit ao` conflict-check (2026-07-30)
 
@@ -236,3 +236,17 @@ stall blocking a SECOND in-flight plan (`prediction_satellite_ao_dispatch_batch4
   (`unified-trading-pm@e2fe5a469`). Not root-caused further from here (same `backend_engineer`/agent-orchestrator scope
   as the `[VERIFY] P2` todo above) — adding as corroborating evidence that the `77769ab` fix's live-deploy status (or a
   residual gap) still needs confirming, per that todo's own open question.
+- **2026-07-31T15:38Z (slot 14): a FOURTH independent plan hit the same class, minutes after the third.** Dispatched
+  `sports_closeout_exchange_fixed_odds_fork-011` (`plans/active/sports_closeout_exchange_fixed_odds_fork_2026_07_25.md`,
+  `sequential: true`) — its LAST todo in the chain (`[REVIEW] P2` "Post-phase codex audit", line 309) was dispatched
+  while its own plan's stated chain end (`... → cutover → retire legacy → codex audit`) has BOTH predecessor todos
+  (`cut the live sports odds writers over`, `retire the legacy odds contract entry`) still `[ ]` open. Declined to write
+  the codex update prematurely (it would describe a migration ordering that hasn't finished executing) — documented in
+  that plan's own todo (unified-trading-pm commit follows) and skipped. Two live recurrences within ~8 minutes of each
+  other, on two unrelated plans, both AFTER the `77769ab` fix supposedly landed — this now reads less like a residual
+  edge case and more like the fix either never reached the live orchestrator server process, or only covers the specific
+  mid-flight-reword mechanism it targeted (not the general "later-todo dispatched while an earlier same-chain todo is
+  still queued" case this VERIFY todo was written to confirm). Recommend a `backend_engineer` re-open this VERIFY todo
+  with priority: neither of these two docs' `-001`/predecessor-style todos were mid-flight reworded recently (unlike the
+  mtds `-001`/`-006` pair `77769ab` fixed), so hypothesis "orphaned-reword corrupts the chain" does NOT explain these
+  two — a genuinely distinct mechanism may be in play.
