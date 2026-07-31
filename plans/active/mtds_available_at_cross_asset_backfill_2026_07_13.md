@@ -117,11 +117,12 @@ verify the guardrail did not trip + row counts are unchanged before resuming the
 
 ## Todos
 
-> **🟡 MEMORY-SAFETY (2026-07-31)**: the prediction/tradfi apply todos and the defi implement-and-apply todo below have
-> no `--chunk-days` flag on their rebuild scripts yet (unbounded RSS growth measured on prediction's smaller corpus) —
-> dispatch each only via bounded sub-ranges (e.g. quarterly) or a dedicated VM, never one full-range shot on the shared
-> interactive/planning host, until
-> `plans/active/issues/mtds_manifest_rebuild_scripts_unbounded_memory_no_chunking_2026_07_31.md`'s `-001` todo ships.
+> **🟢 MEMORY-SAFETY RESOLVED (2026-07-31, slot-9)**: `--chunk-days` shipped
+> (`market-tick-data-service@749ca622`) on all three rebuild scripts. Dispatch each apply todo with
+> `--chunk-days 60` (or similar bounded window) — confirmed live on prediction's own corpus: RSS oscillates
+> ~650MB-1.2GB and resets at each chunk boundary instead of growing unbounded (was 3.6GB→7.8GB→13.7GB
+> unchunked). The prior "bounded sub-ranges via manual re-invocation or a dedicated VM" workaround is no longer
+> needed — the flag itself bounds RSS in one invocation.
 
 - [x] ✅ [DATA] P0. Confirm `unified-trading-library@9c9cdc50` (available_at persistence fix) AND `@2e132bb2`
       (`MANIFEST_COLUMN_FILL_REGRESSION` guardrail) are both pinned in `market-tick-data-service`'s dependency lock on
