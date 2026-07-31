@@ -85,10 +85,18 @@ determinism needs.
       itself is non-destructive for every resource. The literal "52 in-place" DoD wording predates confirming exactly
       how many subscriptions had already expired; this result is the correct/expected one given the plan's own "Why this
       exists" section. `terraform plan` not applied (that's the next todo).
-- [ ] [INFRA] P0. `terraform apply` from `deployment-service/terraform/gcp/live_event_log/` to recreate the 50
+- [x] ✅ [INFRA] P0. `terraform apply` from `deployment-service/terraform/gcp/live_event_log/` to recreate the 50
       auto-expired subscriptions and apply the never-expire policy to all 52. DoD:
       `gcloud pubsub subscriptions list --filter="name:warm-sink" --project=central-element-323112` returns exactly 52
-      entries (cite the actual count from the command output).
+      entries (cite the actual count from the command output). — applied deployment-service@739345c (no code diff, pure
+      infra apply). `terraform apply` result: **"Apply complete! Resources: 52 added, 2 changed, 0 destroyed."** (50
+      recreated subscriptions + 2 incidental pre-existing-but-never-applied `google_project_iam_member` pubsub.publisher
+      grants for the compute-default and unified-trading-sa publisher SAs, from the same module's `publisher_iam.tf`; 2
+      already-live prediction subscriptions updated in-place with the new policy). Live-verified post-apply:
+      `gcloud pubsub subscriptions list --filter="name:warm-sink" --project=central-element-323112 --format="value(name)"     | wc -l`
+      → **52**. No `-var-file` exists for this module — `-var` values were recovered from the deployed
+      `live-event-log-compactor` Cloud Run job's live env/SA (warm/cold bucket = `central-element-323112-events`,
+      compactor SA = `unified-trading-sa@central-element-323112.iam.gserviceaccount.com`).
 - [ ] [INFRA] P1. Verify each recreated subscription's `cloud_storage_config` (bucket / `filename_prefix` /
       `filename_suffix`) matches its own topic's asset_group x data_type pairing 1:1, so no sink writes to the wrong
       path. DoD: a scripted diff of all 52 subscriptions' live `filename_prefix` against `warm_sink.tf`'s declared value
@@ -136,3 +144,7 @@ determinism needs.
   `google_pubsub_subscription` blocks in `warm_sink.tf`. Live `terraform plan` (real `-var` values recovered from the
   deployed compactor job, since no tfvars file exists for this module) confirms 0 replacements; 50 resources show as "to
   add" because they were already auto-expired by the time this ran, matching the plan's documented root cause.
+- **2026-07-31**: Todo 2 done — `terraform apply` executed against the saved plan. Result: "Apply complete! Resources:
+  52 added, 2 changed, 0 destroyed" (50 subscriptions recreated + 2 incidental never-applied publisher IAM grants from
+  the same module + 2 already-live prediction subscriptions updated in-place). Live-verified
+  `gcloud pubsub subscriptions list --filter="name:warm-sink" --project=central-element-323112` returns exactly 52.
