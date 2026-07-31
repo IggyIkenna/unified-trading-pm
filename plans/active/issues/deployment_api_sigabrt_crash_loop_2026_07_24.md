@@ -655,7 +655,18 @@ cancellation-timeout fix and already shipped). Suggested next steps for whoever 
       live, spanning 11 revisions `00361-qqp`..`00371-xxq`): **zero rows** — re-confirmed the query isn't a false
       negative by re-running it against `timestamp>="2026-07-31T10:00:00Z"`, which correctly surfaces the known
       `00355-z2c@10:37:56Z` occurrence. No code shipped (pure verification). Leaving the checkbox unchecked; re-check on
-      the next dispatch or the next `Uncaught signal: 6` occurrence on a revision at/after `00361-qqp`.
+      the next dispatch or the next `Uncaught signal: 6` occurrence on a revision at/after `00361-qqp`. —
+      **2026-07-31T15:32Z (slot 13, backend_engineer): re-checked, still gate NOT met — still correctly open.** Traffic
+      moved to `uts-shared-deployment-api-00372-9th` (created `15:24:41Z`, confirmed 100% traffic via
+      `gcloud run services describe`). Content-verified via direct image extraction (`docker create` +
+      `docker cp /app/gunicorn.conf.py` off the exact digest `sha256:8f600111...8b82796` backing `00372-9th`) that both
+      pid-role log lines are genuinely present in the deployed bytes. Re-ran `gcloud logging read` for
+      `"Uncaught signal: 6"` scoped to `timestamp>="2026-07-31T11:54:00Z"` (now ~3h39m elapsed since the
+      pid-role-logging deploy first went live, spanning 12 revisions `00361-qqp`..`00372-9th`): **zero rows** —
+      re-confirmed the query isn't a false negative by re-running it against `timestamp>="2026-07-31T10:00:00Z"`, which
+      correctly surfaces the known `00355-z2c@10:37:56Z` occurrence. No code shipped (pure verification). Leaving the
+      checkbox unchecked; re-check on the next dispatch or the next `Uncaught signal: 6` occurrence on a revision
+      at/after `00361-qqp`.
 
 - [ ] [BACKEND] P3. **NEW, opened 2026-07-31 (slot 13, backend_engineer) — dead-code cleanup: `workers/auto_sync.py`'s
       entire background-sync implementation is unreachable in production.** Found while tracing the call graph for the
@@ -894,3 +905,13 @@ cancellation-timeout fix and already shipped). Suggested next steps for whoever 
   `--account=unified-trading-sa@central-element-323112.iam.gserviceaccount.com` (already-credentialed, no new grant
   needed) has the role and is what this check used. Gate still not met — left the checkbox open, no code shipped (pure
   verification).
+
+- **2026-07-31T15:32Z (slot 13, backend_engineer)** — Re-dispatched `deployment_api_sigabrt_crash_loop-017` (same
+  recurring MASTER/WORKER pid-role-logging gate check). Traffic now on `00372-9th` (created `15:24:41Z`, confirmed 100%
+  via `gcloud run services describe`). Direct image extraction (`docker create` + `docker cp` off the exact digest)
+  re-confirmed both pid-role log lines present in `00372-9th`'s deployed `gunicorn.conf.py`; cross-checked against the
+  local worktree (`deployment-api` HEAD `2658beb`, no commit since `785405d` touches `gunicorn.conf.py`) as a second,
+  independent confirmation. `gcloud logging read` for `"Uncaught signal: 6"` scoped to
+  `timestamp>="2026-07-31T11:54:00Z"` (~3h39m elapsed, 12 revisions `00361-qqp`..`00372-9th`) is still zero rows;
+  cross-checked against the known `00355-z2c@10:37:56Z` occurrence to rule out a false negative. Gate still not met —
+  left the checkbox open, no code shipped (pure verification).
