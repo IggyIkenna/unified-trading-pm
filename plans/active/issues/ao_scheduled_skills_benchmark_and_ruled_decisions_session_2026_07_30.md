@@ -24,7 +24,7 @@ related:
     /plans/active/issues/sports_manifest_consolidator_zero_growth_stall_2026_07_29.md,
     /plans/active/issues/aws_codebuild_terraform_import_pending_2026_07_22.md,
     /plans/active/issues/ag_closeout_linkage_gate_blind_to_four_tranches_2026_07_30.md,
-    /plans/active/issues/sharded_per_tranche_audit_stash_race_and_multitranche_marker_gap_2026_07_30.md,
+    /plans/archive/issues/sharded_per_tranche_audit_stash_race_and_multitranche_marker_gap_2026_07_30.md,
     /plans/active/issues/stale_agentwork_scratch_clone_not_deletable_unpushed_stashes_2026_07_30.md,
   ]
 created: 2026-07-30

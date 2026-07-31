@@ -17,7 +17,7 @@ summary: >-
   Progress-Log verdict marker produce an N-way merge conflict at integration; whichever ones skip it leave the doc
   unmarked, so Phase 0's incremental-skip filter can never skip it and every future daily run re-reads it in full. The
   incremental mode therefore does not actually apply to roughly half the corpus.
-status: open
+status: resolved
 nature: issue
 asset_group: [meta, cross-cutting]
 stage: [meta]
@@ -47,12 +47,20 @@ locked_by:
 locked_since:
 supersedes:
 superseded_by:
-resolved_by:
+resolved_by: >-
+  All 3 todos done: operator ruling (option A, parent_epic-derived ownership); the "never git stash in a sharded run"
+  rule added to both skills + per-tab-worktrees.md (2026-07-30); owning_tranche shipped in
+  generate_na_doc_tranche_inventory.py, unified-trading-pm@afedd21eb (2026-07-31).
 source: >-
   Observed live 2026-07-30 during a real sharded `/na-eligibility-audit` run (tranche=tradfi, one of 9 concurrent
   per-tranche workers against the same unified-trading-pm clone, branch ao-bench-na-tradfi). Both defects were hit in a
   single run; neither is hypothetical.
 ---
+
+> **🗄️ ARCHIVED 2026-07-31** — all 3 todos are `[x]` (the operator ruling, the codex/skill "never `git stash`"
+> additions, and the `owning_tranche` script implementation), zero remaining, `locked_by:` empty. Per
+> `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`, a doc with every todo done archives
+> immediately.
 
 # Sharded per-tranche audits: a shared-`refs/stash` race and a structural incremental-marker gap
 
@@ -149,9 +157,18 @@ For **(2) the multi-tranche marker gap** — recommended **A**:
       sharded tranche workers", and `/codex/05-infrastructure/per-tab-worktrees.md` § "What worktree isolation does NOT
       cover" (which now states that `refs/stash` is one shared LIFO stack per `.git`, and that a shared scratch/temp
       path is likewise not isolated).
-- [ ] [SCRIPT] P2. Have `generate_na_doc_tranche_inventory.py` emit an explicit `owning_tranche` per doc (however § 2 is
-      ruled) so a worker can filter to the docs it owns instead of each tranche independently re-deriving membership
-      from the full `asset_group` list.
+- [x] ✅ [SCRIPT] P2. **DONE 2026-07-31 — `unified-trading-pm@afedd21eb`.** Have `generate_na_doc_tranche_inventory.py`
+      emit an explicit `owning_tranche` per doc (however § 2 is ruled) so a worker can filter to the docs it owns
+      instead of each tranche independently re-deriving membership from the full `asset_group` list. Implemented per the
+      ruling above: `owning_tranche` is derived from `parent_epic` via a new static `EPIC_TO_TRANCHE` table (every real
+      epic mapped to its dominant tranche, citing the ag-closeout-audit SKILL.md classification-mechanism section + the
+      existing `DATA_EPICS` set), falling back to the doc's first classified tranche when `parent_epic` is unmapped or
+      maps to a tranche the doc isn't otherwise a member of (never assigns ownership outside a doc's real
+      classification). Added `--owned-only` so a worker can filter directly (`--tranche <t> --owned-only`) instead of
+      post-filtering the full membership list. 5 new regression tests (single-membership triviality, parent_epic winning
+      over asset_group list-order, the unmapped-epic fallback, `--owned-only` filtering, and its usage-error guard
+      against `--tranche all`) — all 13 tests in `tests/unit/test_generate_na_doc_tranche_inventory.py` pass; full repo
+      `quality-gates.sh` green (1561 passed, 17 skipped, basedpyright clean, sentinel written).
 
 ## Progress Log
 

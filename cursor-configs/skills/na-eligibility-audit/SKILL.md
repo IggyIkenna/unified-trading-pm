@@ -125,7 +125,7 @@ marker is re-read in full every single run, forever).
 been validated over a few real runs, `scripts/plan-hygiene/generate_na_doc_tranche_inventory.py` should emit an explicit
 `owning_tranche` field per doc so a worker filters to the docs it owns instead of re-deriving the mapping inline. That
 work is the `[SCRIPT] P2` todo already tracked in
-`/plans/active/issues/sharded_per_tranche_audit_stash_race_and_multitranche_marker_gap_2026_07_30.md` — do not open a
+`/plans/archive/issues/sharded_per_tranche_audit_stash_race_and_multitranche_marker_gap_2026_07_30.md` — do not open a
 second one here.
 
 ### NEVER `git stash` as one of several concurrent sharded tranche workers (HARD, added 2026-07-30)
