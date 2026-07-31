@@ -57,13 +57,13 @@ Fleet impact (`DeploymentsRegistry`, prefix `mdps-backfill-tradfi-`, 1-day archi
 | y2024es  | failed exit=125 (reaped)                    | **covered** — `...-y2024es-20260731-011358` RUNNING                                                      |
 | y2025es  | failed exit=1                               | **covered** — `...-y2025es-20260731-011358` RUNNING                                                      |
 | y2026es  | failed exit=1                               | **covered** — `...-y2026es-20260731-011358` RUNNING                                                      |
-| y2020es3 | failed exit=1                               | **NOT relaunched**                                                                                       |
-| y2021es3 | failed exit=1                               | **NOT relaunched**                                                                                       |
-| y2022es3 | failed exit=1                               | **NOT relaunched**                                                                                       |
-| y2023es3 | failed exit=1                               | **NOT relaunched**                                                                                       |
-| y2024es3 | failed exit=1                               | **NOT relaunched**                                                                                       |
-| y2025es3 | failed exit=1                               | **NOT relaunched**                                                                                       |
-| y2026es3 | failed exit=1                               | **NOT relaunched**                                                                                       |
+| y2020es3 | failed exit=1                               | **covered** — `...-y2020es3-20260731-014643` RUNNING (relaunched by this worker, 01:46:43Z)              |
+| y2021es3 | failed exit=1                               | **covered** — `...-y2021es3-20260731-014643` RUNNING (relaunched by this worker, 01:47:30Z)              |
+| y2022es3 | failed exit=1                               | **covered** — `...-y2022es3-20260731-014643` RUNNING (relaunched by this worker, 01:47:54Z)              |
+| y2023es3 | failed exit=1                               | **covered** — `...-y2023es3-20260731-014643` RUNNING (relaunched by this worker, 01:48:17Z)              |
+| y2024es3 | failed exit=1                               | **covered** — `...-y2024es3-20260731-014643` RUNNING (relaunched by this worker, 01:48:37Z)              |
+| y2025es3 | failed exit=1                               | **covered** — `...-y2025es3-20260731-014643` RUNNING (relaunched by this worker, 01:49:05Z)              |
+| y2026es3 | failed exit=1                               | **covered** — `...-y2026es3-20260731-014643` RUNNING (relaunched by this worker, 01:49:27Z)              |
 
 **Root cause** (all 14 shards, same signature — `run.log` tail on the original y2020es VM):
 
@@ -121,12 +121,22 @@ shard IS being correctly reprocessed by the other wave.
 No code action needed here (the fix already shipped and is validated in-flight). Remaining open items are pure
 ops/follow-up:
 
-- [ ] [OPS] P1. Confirm ownership of the `es3` relaunch — either the `011358`-wave's author intends to cover them next,
-      or they need an explicit relaunch
+- [x] ✅ [OPS] P1. Confirm ownership of the `es3` relaunch — either the `011358`-wave's author intends to cover them
+      next, or they need an explicit relaunch
       (`bash deployment-service/scripts/vm/launch-mdps-backfill-vm.sh --env prod     --vm-name mdps-backfill-tradfi-y2020es3-<ts> tradfi 2020-01-01 2020-12-31 full`
       with the `es3` group's original `MDPS_INSTRUMENT_IDS` recovered from each dead VM's
       `vm-logs/<vm>/LAUNCH_PARAMS.json` — do not guess the instrument-id filter). Check `DeploymentsRegistry` for a
-      fresh `es3` relaunch before acting (avoid a 3rd duplicate).
+      fresh `es3` relaunch before acting (avoid a 3rd duplicate). — unified-trading-pm@THIS_COMMIT. Verified via
+      `DeploymentsRegistry` (01:45Z) that no one had relaunched `es3` (still all `failed` original entries, no
+      `011358`-wave coverage — confirming the doc's original finding). Recovered each shard's exact original
+      `RESUME_START_DATE`/`RESUME_END_DATE`/`MDPS_INSTRUMENT_IDS` from its dead VM's
+      `gs://deployment-scripts-central-element-323112/vm-logs/<vm>/LAUNCH_PARAMS.json` (note: `y2020es3` was a partial
+      resume `2020-05-01..2020-12-31`, not the full year — would have been wrong to guess `2020-01-01`; `y2026es3` was
+      `2026-01-01..2026-07-24`). Relaunched all 7 with `--vm-name mdps-backfill-tradfi-y{year}es3-20260731-014643` (same
+      RUN_TS tag), `--instrument-ids "CME:FUTURE:ES CME:FUTURE:MES"`, SPOT (default), same fixed floating
+      `unified-trading-library` tarball (`2fa09f1db921`, ancestor of the `75b5735` staleness-budget fix) the healthy
+      `es`-wave VMs are running on. Confirmed all 7 GCE-`RUNNING` and all 7 registered `status=running` in
+      `DeploymentsRegistry` with fresh heartbeats (01:49-01:52Z) — zero self-terminations, unlike the earlier duplicate.
 - [ ] [OPS] P2. Once the `011358`-wave VMs complete, spot-check `rows_out`/manifest coverage for the `es`/`es3`
       2020-2026 range to confirm the backfill actually completed (this doc only confirms the VMs are alive, not that the
       full year ranges finished cleanly).
@@ -142,3 +152,9 @@ ops/follow-up:
   already fixed in `unified-trading-library@75b5735`), confirmed fix is in the live floating tarball, attempted a
   relaunch of the assigned VM (duplicate of an already-in-flight relaunch, self-terminated harmlessly), filed this doc
   to flag the `es3` gap and close the loop on the wider fleet impact.
+- **2026-07-31 (slot 11, backend_engineer)**: closed P1 — reconfirmed `es3` was still un-relaunched, recovered exact
+  per-shard `LAUNCH_PARAMS.json` (no guessing), relaunched all 7 `es3` year-shard VMs (RUN_TS `20260731-014643`) on the
+  already-fixed tarball, verified GCE-`RUNNING` + `DeploymentsRegistry` `status=running` with live heartbeats for all 7.
+  P2 (post-completion rows_out/manifest spot-check) and P3 (identify `011358`-wave origin) remain open — P2 can't run
+  yet (VMs are still mid-backfill); P3 is outside this worker's scope (registry has no dispatch-origin field to trace
+  from, per the prior worker's note).
