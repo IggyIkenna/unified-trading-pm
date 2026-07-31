@@ -94,9 +94,20 @@ file-by-file.
       losing type inference through the `_inv.` indirection, fixed by replacing the lambdas with explicitly-typed nested
       functions); full `quality-gates.sh` green both before and after removing the now-obsolete
       `FUNCTION_SIZE_EXTRA_EXCLUDES` entry (confirmed `✅ File size OK` with the exclude removed).
-- [ ] [SCRIPT] P1. Decompose `deployment_api/services/data_status/manifest.py` (1131L, contains the 360L
-      `_build_manifest_category()` — also a function-size violation) into sibling modules under `services/data_status/`.
-      Remove its exclude entry once compliant.
+- [ ] [SCRIPT] P1. **PARTIAL 2026-07-31 (slot-5, infra craft)** — `deployment-api@0b4c6a8`. Extracted the named
+      `_build_manifest_category()` (360L) + its data_type-grouping/MTDS-annotation helpers into a NEW sibling module
+      `manifest_category_builder.py`, inserted into the mixin chain between `missing_shards` and `manifest` (pure code
+      motion; updated the chain-description docstring in all 9 sibling mixin files for consistency). Decomposed the 360L
+      method itself down to ~20 small helper methods, EVERY ONE ≤50L (the real `MAX_METHOD_LINES` gate, not just the
+      file-size cap) — `manifest_category_builder.py` needs NO exclude-list entry at all. `manifest.py` itself shrank
+      1131L→683L. Verified: 257 tests green
+      (`test_data_status_service.py`/`test_data_status_turbo.py`/`test_data_status_beta_rollup_and_cli_config.py`),
+      `basedpyright` clean (only 3 pre-existing errors remain, confirmed byte-identical against origin before this
+      change — not introduced by this decomposition), full `quality-gates.sh` green. **`manifest.py`'s own exclude entry
+      stays — NOT yet removable**: 4 OTHER pre-existing oversized methods remain untouched (`get_manifest_status` 147L,
+      `_get_manifest_status_sync` 132L, `_dispatch_category_builds` 102L, `_live_build_fallback` 71L) — different
+      concern (live-build OOM guard, subprocess dispatch), out of scope for this todo's specifically-named target. A
+      future dispatch decomposing those 4 can then remove `manifest.py`'s exclude entry.
 - [ ] [SCRIPT] P1. Decompose `deployment_api/services/data_status/mtds.py` (1059L, contains the 220L
       `mtds_honest_coverage_for_venue()`). Remove its exclude entry once compliant.
 - [ ] [SCRIPT] P1. Decompose `deployment_api/services/cost_observability/service.py` (1055L, 6 oversized methods).
