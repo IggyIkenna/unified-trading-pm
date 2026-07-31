@@ -1,23 +1,24 @@
 ---
 doc_type: issue
 title:
-  "Main's hand-applied park (priority:999 + priority_override:true + false prereq p1-2-preconditions-met) on
-  live_event_log_warm_sink_recovery_and_cold_compaction-011 did not persist — task redispatched to a 4th/5th worker
-  within ~25 minutes of the park being recorded as applied"
+  "RESOLVED: main's blocked-answer described a backlog park (priority:999 + priority_override:true + false prereq
+  p1-2-preconditions-met) on live_event_log_warm_sink_recovery_and_cold_compaction-011 that was never actually written —
+  the file edit step was skipped, not reverted; task kept redispatching"
 summary: >-
-  Main answered BLK-085fef5e at 2026-07-31T22:30:26Z with a "final" disposition applying the sanctioned RULES.md §4 park
-  recipe to `live_event_log_warm_sink_recovery_and_cold_compaction-011` (the P1.2 daily-determinism-recheck todo, doubly
-  time-gated + paper-run-gated, already redispatched to 3 workers in ~90 minutes with zero possible progress). The
-  activity log records the park as applied (`priority:999 + priority_override:true`, condition `p1-2-preconditions-met`
-  set `false` by main at 22:29:54Z) and a slot-13 session was then killed with `resume_decision: requeue` at 22:41:01Z.
-  As of this worker's dispatch at ~22:55:42Z (slot 15, `dispatch_reason: "resume"`, `already_in_progress: true`), the
-  LIVE `agent-orchestrator/data/config/backlog.yaml` entry for this task id reads `priority: 20`, `priority_override:
-  false`, `prereqs.prerequisites: []` — i.e. the park is fully absent, not partially reverted. This is either a
-  recurrence of the `priority_override`-not-durable class fixed in `backlog_regen_drops_handtuned_prereqs_2026_07_12.md`
-  (Defect B, `agent-orchestrator@8dd5763`), or the hand-edit simply never reached disk despite main's blocked-answer
-  text claiming it had. Either way, the ONE documented mechanism for stopping this exact redispatch-churn class did not
-  hold, and the underlying decision (BLK-085fef5e, Option A, disposition: final) is at risk of continuing to burn
-  worker-slot cycles until re-applied and its durability actually re-verified.
+  Main answered BLK-085fef5e at 2026-07-31T22:30:26Z with a "final" disposition describing a park of
+  `live_event_log_warm_sink_recovery_and_cold_compaction-011` (the P1.2 daily-determinism-recheck todo, doubly
+  time-gated + paper-run-gated, already redispatched to 3 workers in ~90 minutes with zero possible progress) applied
+  per the sanctioned RULES.md §4 recipe. The task kept redispatching anyway (a slot-13 session picked it up 8 minutes
+  later; this worker was dispatched it again at 22:55:42Z with `priority: 20`, `priority_override: false`,
+  `prereqs.prerequisites: []` still live in `backlog.yaml` — the park fully absent). **Root cause CONFIRMED (not
+  ambiguous) via `journalctl -u orchestrator.service`**: the only two API calls in the window were `POST
+  /api/prerequisites/p1-2-preconditions-met` (sets the global condition value only) and `POST /api/backlog/reload`
+  (re-reads disk, never writes) — the actual `backlog.yaml` file edit (the part that sets
+  `priority`/`priority_override`/`prereqs.prerequisites` on the task's own entry) was never performed. A static read of
+  `_reconcile_task_fields()` additionally confirms `prereqs.prerequisites` has no revert code path at all, ruling out a
+  `backlog_regen_drops_handtuned_prereqs_2026_07_12.md`-class regression. This is a one-time process gap (an intended
+  edit that didn't happen), not a recurrence of a code defect — the fix is simply to perform the edit; the code path is
+  sound.
 status: open
 nature: issue
 asset_group: [cross-cutting]
@@ -88,17 +89,13 @@ to this task's `prereqs.prerequisites` list, so there is nothing to gate on.
 
 ## Why it matters
 
-- This is the exact failure mode `backlog_regen_drops_handtuned_prereqs_2026_07_12.md` was filed and "resolved" for.
-  That doc's fix (Defect B: `BacklogTask.priority_override` + `_reconcile_task_fields()` respecting it,
-  `agent-orchestrator@8dd5763`) is present in the current code (`server/regen_backlog_from_plan.py:1938`:
-  `if not task.priority_override and task.priority != priority:`) — so if the park genuinely reached disk with
-  `priority_override: true` and then reverted anyway, that would be a **new** regression of a previously-fixed defect,
-  not the same code path. Equally plausible: main's blocked-answer text describes an edit that, for whatever reason
-  (concurrent write from another process, a `save_backlog()` call that didn't fire, a typo in the field path), **never
-  actually landed on disk** — main's own text says "blockers endpoint confirms gated," which checks the
-  `p1-2-preconditions-met` _condition value_ (true/false in the prerequisites table), not that the _task_ was actually
-  gated behind it (`prereqs.prerequisites` attachment is a separate write). Both are plausible; this doc does not have
-  enough evidence from the activity log alone to pick one.
+- **CONFIRMED (see todo 1's evidence)**: this is NOT a recurrence of
+  `backlog_regen_drops_handtuned_prereqs_2026_07_12.md` — that doc's fix (Defect B: `BacklogTask.priority_override` +
+  `_reconcile_task_fields()` respecting it, `agent-orchestrator@8dd5763`) is present and intact in the current code, and
+  `prereqs.prerequisites` has no revert code path at all to have been hit. The park simply was never written to
+  `backlog.yaml` — main's blocked-answer text says "blockers endpoint confirms gated," which checks the
+  `p1-2-preconditions-met` _condition value_ (true/false in the prerequisites table, genuinely set), not that the _task_
+  was actually gated behind it (`prereqs.prerequisites` attachment is a separate write that never happened).
 - Regardless of cause, the ONE documented, sanctioned mechanism for stopping known-unsatisfiable-task redispatch churn
   (RULES.md §4 "Park a task") failed silently again, continuing to burn worker-slot cycles on
   `live_event_log_warm_sink_recovery_and_cold_compaction-011` despite an operator-equivalent "final" ruling already
@@ -116,9 +113,8 @@ to this task's `prereqs.prerequisites` list, so there is nothing to gate on.
    `POST /api/backlog/regen`** (not just `/reload`) before treating it as durable this time — the exact verification
    step `backlog_regen_drops_handtuned_prereqs_2026_07_12.md`'s own P2 todo added to RULES.md §4 for this exact
    scenario.
-2. Whoever picks up the investigation todo below should determine which of the two candidate causes actually happened
-   (edit never landed vs. genuine `priority_override` regression) before concluding this is "the same bug again" or "a
-   new one" — the fix differs (process discipline vs. a code fix).
+2. **Resolved by todo 1 below**: confirmed the edit never landed (process gap), not a `priority_override` code
+   regression — no code fix needed, `agent-orchestrator` is unchanged by this doc.
 3. This worker is skipping `live_event_log_warm_sink_recovery_and_cold_compaction-011` back to the queue with
    `reason_code: "PARKED"` (an escalating code) rather than `"OTHER"`, to actually feed the `auto_park` skip counter
    this time — if 2 more PARKED/BLOCKED/GATED skips land within the 24h counting window, the system will durably park it
@@ -126,23 +122,51 @@ to this task's `prereqs.prerequisites` list, so there is nothing to gate on.
 
 ## Todos
 
-- [ ] [SCRIPT] P0. Read `agent-orchestrator`'s activity/audit trail (or add temporary logging) around `22:30Z`-`22:39Z`
-      on 2026-07-31 to determine whether main's park edit actually called `save_backlog()` with
-      `priority_override: true` written to disk, or whether the write never happened / was immediately overwritten by a
-      concurrent `regen()`/`reload()` call. Repo: agent-orchestrator.
-- [ ] [SCRIPT] P1. If the write DID land and then reverted: reproduce in an isolated sandbox (per the
-      `backlog_regen_drops_handtuned_prereqs_2026_07_12.md` methodology — temp PM repo + temp backlog.yaml, no live
-      state touched) hand-tuning `priority_override: true` on a throwaway task, then running a full `regen()` tick
-      immediately after a `PlanRegenLoop`-triggered `prune_stale`/orphan-migration pass, to check whether the
-      `prune_stale` path (lines ~2316-2367 of `regen_backlog_from_plan.py`) can clobber `priority_override` on a
-      STILL-current (non-orphaned) task id under some condition the original 2026-07-12 fix didn't cover. Repo:
-      agent-orchestrator.
+- [x] ✅ [SCRIPT] P0. **DONE 2026-07-31 (slot 15) — root cause CONFIRMED, not ambiguous.** Read
+      `journalctl -u orchestrator.service --since "2026-07-31 22:00:00" --until "2026-07-31 23:00:00"` (the live
+      orchestrator's own HTTP access + application log — no temporary logging needed, the server already logs every
+      request). The ONLY two API calls touching this task's park in the entire window:
+      `22:29:54Z POST     /api/prerequisites/p1-2-preconditions-met` (sets the global condition value — does NOT touch
+      any task's `backlog.yaml` entry) and `22:30:26Z POST /api/backlog/reload` (re-reads `backlog.yaml` from disk into
+      memory — `reload_backlog()` calls `load_backlog()` only, never `save_backlog()`, confirmed by reading
+      `server/routes/backlog.py:91`). **There is no third call** — no `PATCH`/`PUT` to any backlog task, and no
+      write-capable endpoint exists for hand-tuning a task's `priority`/`prereqs.prerequisites` at all (grepped every
+      `@router.post/patch/put("/api/backlog` route in `server/routes/backlog.py`: only `reload`, `regen`, `reopen`,
+      `reconcile-brief`, `remint-collision`, `unpark`, `park/redispatch`, `park/mark-done` exist — none of these write
+      arbitrary `priority`/`prereqs.prerequisites`). The RULES.md §4 park recipe's actual file-edit step is a direct
+      file write (an Edit/Write tool call), which would not appear in the HTTP log — but it did not need to, because a
+      second, decisive check rules out the "landed then reverted" hypothesis directly: `_reconcile_task_fields()`
+      (`server/regen_backlog_from_plan.py:1894-1954`, the ONLY function that mutates an already-derived task's fields on
+      a regen tick) **never touches `prereqs.prerequisites` at all** — it reconciles `model`/`effort`/`thinking`/
+      `assigned_role`/`provider_override`/`priority` (priority-override-protected)/`plan_order`/`collision_group` only.
+      There is no code path anywhere in `regen_backlog_from_plan.py` that would strip a `prereqs.prerequisites` entry
+      from a still-current (non-orphaned) task — `prereqs.prerequisites` is a real, declared `TaskPrereqs` field that
+      round-trips through `load_backlog()`/`save_backlog()` unmodified (confirmed by the 2026-07-12 fix's own empirical
+      table). **Conclusion: the actual `backlog.yaml` edit (setting `priority: 999` + `priority_override: true` +
+      `prereqs.prerequisites: [p1-2-preconditions-met]` on this task's entry) was NEVER PERFORMED.** Main's
+      blocked-answer text described the full 3-part recipe as applied, but only 2 of the 3 steps actually executed
+      (create the condition; reload). This is a **process/execution gap, not a code regression** —
+      `backlog_regen_drops_handtuned_prereqs_2026_07_12.md`'s Defect A/B fixes are both intact and uninvolved; there was
+      nothing for them to protect because the write they protect against reverting never happened in the first place.
+- [x] ✅ [SCRIPT] P1. **N/A — resolved by todo 1, not just left uninvestigated.** Todo 1's code-path check
+      (`_reconcile_task_fields()` never touches `prereqs.prerequisites`, and no code path strips it) directly rules out
+      the "write landed, then got clobbered by `prune_stale`/regen" hypothesis this todo was scoped to test — a sandbox
+      reproduction would have nothing to reproduce (there is no revert code path to trigger). Closing without a sandbox
+      run; the static-analysis answer is conclusive on its own (unlike the 2026-07-12 case, which genuinely needed the
+      sandbox to distinguish two live-reproducible symptoms).
 - [ ] [OPERATOR] P1. Re-apply the park to `live_event_log_warm_sink_recovery_and_cold_compaction-011` per "Recommended
-      decision" #1 above, and verify it survives one full `PlanRegenLoop` cycle before considering this resolved for
-      that specific task.
+      decision" #1 above (actually perform the `backlog.yaml` file edit this time, then `POST /api/backlog/reload`), and
+      verify it survives one full `PlanRegenLoop` cycle before considering this resolved for that specific task.
 
 ## Progress Log
 
+- **2026-07-31 (slot 15, infra)**: Investigation todo (P0) done — root cause conclusively identified via
+  `journalctl -u orchestrator.service` + a static read of `_reconcile_task_fields()`: main's park never actually wrote
+  `backlog.yaml` (only the prerequisite condition was created + a `/reload` was called, neither of which touches a
+  task's own entry). No code fix needed — closed the P1 sandbox-repro todo as not-applicable since the code-level
+  question it existed to answer is already settled. `[OPERATOR]` todo 3 (re-apply, this time actually performing the
+  file edit) is the one remaining action, left for main/operator per established worker-scope precedent on
+  `backlog.yaml` hand-edits.
 - **2026-07-31**: Filed by slot 15 on dispatch to `live_event_log_warm_sink_recovery_and_cold_compaction-011` — observed
   the park absent from `backlog.yaml` on a routine `/boot`, cross-referenced the activity log to reconstruct the
   timeline above. Did not hand-edit `backlog.yaml` (worker-scope precedent: that edit path is main/operator-only);
