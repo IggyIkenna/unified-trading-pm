@@ -314,27 +314,40 @@ orphaned?" resolves to "everything," because nothing in the covering set does an
       classification. Repo: deployment-service. Source:
       `issues/vm_billing_waste_first_audit_and_preflight_gate_design_2026_07_24.md`.
 
-- [ ] [BACKEND] P2. **Make the launcher's two best-effort GCS writes reliable — `LAUNCH_PARAMS.json` at create time and
-      the `PREEMPTED` marker at shutdown (combined: both are `scripts/vm/lib/launcher_common.sh`'s best-effort writes
-      failing to land, and both break the same downstream actuator).** (a) `LAUNCH_PARAMS.json` was ABSENT from
-      `vm-logs/af-backfill-20260718-141638/` despite `launch-api-football-backfill-vm.sh` calling
-      `lc_write_launch_params` at create time and despite `exit_code_fleet_monitor.py` sourcing the SPOT-preemption
-      relaunch actuator's `launch_env` from exactly that file (`_gcs.read_launch_params`). That launcher's `--force`
-      full-history mode (`--start-date 2019-01-01 … --force`) is the documented dangerous case
-      (`force_run_not_replayable` → PAGE when no checkpoint). The observed relaunch DID advance its start date
-      (`2019-01-01` → `2019-01-10`) by an unconfirmed mechanism — determine whether that is a genuine
-      entity-level/manifest-derived resume path outside the generic contract, or whether the "best-effort, non-fatal"
-      write is silently failing and the advance was coincidental (e.g. an operator-adjusted manual relaunch). (b) The
-      `PREEMPTED` marker write (a one-line `gcloud storage cp`) did not complete before `af-backfill-20260726-013313`
-      was reclaimed — and that marker is the SAME mechanism `zombie_watchdog`/`exit_code_fleet_monitor` rely on to
-      classify a gone VM as a benign preemption vs an unexplained disappearance. Audit whether the shutdown-script grace
-      period is survivable in practice fleet-wide, and either produce measured evidence the race is rare (a one-off) or
-      make the write more defensive (e.g. write it earlier / idempotently at multiple points). **Done when**: (a) the
-      `af-backfill` resume mechanism is named with evidence and, if the write is failing, made fail-loud or retried; and
-      (b) a stated verdict on the marker race backed by more than one sampled preemption, plus the mitigation if the
-      race is not rare. Repo: deployment-service. Sources:
-      `issues/vm_billing_waste_first_audit_and_preflight_gate_design_2026_07_24.md`,
-      `issues/session_bound_vm_monitoring_reliability_gap_2026_07_26.md`.
+- [x] ✅ [BACKEND] P2. **DONE 2026-07-31 (slot 8) — `deployment-service@62acb9d`.** Make the launcher's two best-effort
+      GCS writes reliable — `LAUNCH_PARAMS.json` at create time and the `PREEMPTED` marker at shutdown. (a)
+      `LAUNCH_PARAMS.json`: live-swept all 50 `af-backfill-*` `vm-logs/` dirs
+      (`gs://deployment-scripts-central-element-323112/vm-logs/`, 2026-07-17..2026-07-31) — **0/29 present before
+      2026-07-25, 21/21 present after** (the 3 launched on 2026-07-25 itself, before the fix actually landed that day,
+      are also absent — consistent, not noise). This exactly matches
+      `vm_tarball_upload_expired_wif_token_interactive_slot_2026_07_25.md`'s already-shipped fix (`gsutil -q cp` →
+      `gcloud storage cp`, ADC-backed instead of the CLI's active-account credential) — that fix predates none of the
+      "before" sample and postdates all of the "after" sample. Mechanism named: the write WAS silently failing under the
+      WIF-token-expiry bug (not a genuine entity-level resume path); it is already fixed, no further code change needed.
+      (b) `PREEMPTED` marker: cross-referenced the same 50 VMs against
+      `gcloud compute operations list     --filter="operationType=compute.instances.preempted AND targetLink~'af-backfill'"`
+      — **5 confirmed preemptions (2026-07-25..2026-07-31), marker missing 5/5 (100%)**, not a one-off. Root cause: this
+      launcher hand-rolled its own inline shutdown-script (unlike the 14 other launchers already calling
+      `lc_write_preemption_signal_file`) that queried `VM_NAME`/`PROJECT` live via 2 metadata round-trips and shelled
+      out to `gcloud storage cp` (multi-second Python-CLI cold start) — both add latency inside the ~30s GCE preemption
+      grace window. **Fix**: `lc_write_preemption_signal_file` (`launcher_common.sh`) now takes optional
+      `vm_name`/`project` args to bake identity in at launch time (skips 2 of 3 round-trips; backward-compatible —
+      omitting both falls back to the original live-metadata form the 14 existing callers still use) and uploads via a
+      lightweight curl+retry PUT to the GCS JSON API (the VM's own metadata-server OAuth token) instead of the gcloud
+      CLI. `launch-api-football-backfill-vm.sh` now calls this hardened helper instead of its inline duplicate, and also
+      gained the `lc_verify_setup_script_freshness` guard (it calls `gcloud compute instances create` directly, so it
+      never got this guard automatically — see the new fleet-wide finding below). 6 new tests
+      (`TestApiFootballLauncherHardenedPreemptionSignal`, `deployment-service/tests/unit/test_vm_launcher_scripts.py`)
+      prove the baked identity, the curl-based upload, and shellcheck/syntax cleanliness of the generated shutdown
+      script — full 148/148 `test_vm_launcher_scripts.py` suite green, `quality-gates.sh` green. **New finding, filed
+      rather than absorbed as unplanned scope**: investigating WHY the fleet-wide `uts-preemption-signal.service`
+      systemd unit (`setup-data-pipeline-vm.sh`, already hardened 2026-07-20/21 with its own retry) also missed 5/5
+      surfaced that 139 of 143 launchers (incl. af-backfill before this fix) call `gcloud compute instances create`
+      directly and never invoke `lc_verify_setup_script_freshness` — only 4 launchers use the `lc_gcloud_create` wrapper
+      that auto-checks it, not the "~80" `launcher_common.sh`'s own comment claims. Could not confirm whether a stale
+      GCS copy of `setup-data-pipeline-vm.sh` explains the 5/5 miss (the bucket has no object versioning, no historical
+      generation to inspect) — filed as `issues/vm_launcher_setup_script_freshness_gap_2026_07_31.md` with the measured
+      evidence + a scoped operator-decision todo (too large — up to 139 files — for this todo to absorb).
 
 - [x] ✅ [DOCS] P1. **Reconcile `utl_uac_reuse_consolidation_remediation_2026_06_10.md`'s 25 open checkboxes against its
       10 ARCHIVED split children — this is almost certainly false-unchecked split residue, not open work.** That
