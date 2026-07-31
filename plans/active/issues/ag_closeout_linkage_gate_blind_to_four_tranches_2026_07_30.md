@@ -135,7 +135,7 @@ and the 4 it no-ops for are precisely the ones that accumulate fastest (every CI
       commit; `git log --all -p -S "COVERED_ASSET_GROUPS"` returns zero hits on any branch. The narrative below
       (accurate as a DESIGN, just never committed) went stale silently — every run between 2026-07-30 and 2026-07-31 was
       gated on the pre-fix hard-coded `REAL_AGS` tuple while this checkbox and the baseline file both claimed otherwise.
-      **Actually shipped this session** (unified-trading-pm@PENDING_SHA, via
+      **Actually shipped this session** (unified-trading-pm@3a5b294ef, via
       `ag_closeout_audit_scope_widening_triage_2026_07_26.md` todo -002, which independently arrived at the same
       design): `COVERED_ASSET_GROUPS`/`_CLOSEOUT_FILENAME_PREFIX` as described below, PLUS a fix this doc's design
       didn't cover — `closeout_family_for()` now searches `plans/archive` (not just `plans/active`), which is what
@@ -162,7 +162,7 @@ and the 4 it no-ops for are precisely the ones that accumulate fastest (every CI
       and `ci_consolidated_closeout_2026_07_25.md` are ARCHIVED so no family resolves.** That is the loud-warning path
       working as designed, not a silent pass — but those two tranches have no linkage safety net at all until they get
       an active closeout family. See the follow-up todo below.
-- [x] ✅ [PLAN] P2 — unified-trading-pm@PENDING_SHA (2026-07-31, slot-4). Give `ao` and `ci` an ACTIVE closeout family
+- [x] ✅ [PLAN] P2 — unified-trading-pm@3a5b294ef (2026-07-31, slot-4). Give `ao` and `ci` an ACTIVE closeout family
       again so `check_ag_closeout_linkage.py` can enforce them. **Resolved via option (a)'s spirit without authoring new
       docs**: rather than force a fresh `ao_consolidated_closeout_<date>.md`/`ci_consolidated_closeout_<date>.md` (a
       content judgment this doc correctly declined to make unilaterally), the checker itself now searches
@@ -172,7 +172,7 @@ and the 4 it no-ops for are precisely the ones that accumulate fastest (every CI
       enforced (33 correctly linked), `ci` 11/38 enforced (27 correctly linked) — both non-zero, both genuinely gating,
       verified via `git cat-file`-checked pre-existing orphans, not vacuous zeros. Baseline re-measured and raised (see
       next todo + the correction below).
-- [x] ✅ [DATA] P3 — unified-trading-pm@PENDING_SHA (2026-07-31, slot-4). Once the widened gate has a real baseline,
+- [x] ✅ [DATA] P3 — unified-trading-pm@3a5b294ef (2026-07-31, slot-4). Once the widened gate has a real baseline,
       re-run it and reconcile its orphan list against this run's measured 29 never-cited cross-cutting docs. **Done**:
       the real widened gate (see correction below — the 2026-07-30 "DONE" claim on todo 1 was never actually shipped)
       measures **29** `cross-cutting` orphans, matching this doc's manually-enumerated 29-doc list below by name to a
