@@ -780,7 +780,7 @@ Verification notes (all cited targets ground-truthed):
 - `/codex/08-workflows/ci-cd-flow.md`, `/codex/06-coding-standards/quality-gates.md`,
   `/codex/06-coding-standards/cli-convention.md` — **VERIFIED-EXIST** (CONTRIBUTING/BRANCH_PROTECTION repoint;
   scripts/README's real QG replacement; SETUP_GUIDE `--mode` fix authority).
-- README L35 `unified-trading-codex/09-strategy/cross-cutting/operational-modes-matrix.md` →
+- README L35 `unified-trading-/codex/09-strategy/cross-cutting/operational-modes-matrix.md` →
   `/codex/09-strategy/architecture-v2/cross-cutting/operational-modes-matrix.md` — **VERIFIED-EXIST** (note the
   `architecture-v2/` path drift). L116/L123 `unified-trading-codex/{02-data,06-coding-standards}/` → live `/codex/…`
   dirs — **VERIFIED-EXIST**. L124 `unified-trading-codex/09-strategy/defi/` — **NEEDS-MANUAL-PICK** (no 1:1 live target;

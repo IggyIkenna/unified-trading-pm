@@ -428,7 +428,7 @@ here to finish the remaining locally-doable todos.**
 closing the AgentKeeper/ensure_review_agents always-on gaps in code — those are load-bearing design decisions, not bugs;
 documenting them accurately is the safer, correct-scoped fix).**
 
-- **New codex-runbook**: `codex/15-runbooks/agent-orchestrator-local-pilot-isolation-runbook.md`. Verifies (against
+- **New codex-runbook**: `/codex/15-runbooks/agent-orchestrator-local-pilot-isolation-runbook.md`. Verifies (against
   `server/config.py`'s actual `Field` definitions, not assumed) exactly which pilot-isolation env vars are real
   (`ORCHESTRATOR_DB_PATH`/`BACKLOG`/`ACCOUNTS`/`BACKENDS`/`USERS_JSON`/`CLAUDE_CONFIG_BASE`/`CORS_ORIGINS`/`VM_ID`/
   `STANDALONE`/`SERVER_URL`/`REVIEW_SLOTS`/`AUTOSPAWN_ENABLED` — all top-level `OrchestratorConfig` fields with a real
@@ -540,7 +540,7 @@ graph → file ranking, targeting ~500k→200k token code context) is a DIFFEREN
 existing grep-native L0-L4 system (`context_scout`/`context_scope`, targets plan/codex/frontmatter retrieval, not
 general source-code symbol lookup) — so there's no direct doc-vs-doc conflict. But this workspace has an explicit,
 broadly-worded governing principle on record: _"The whole retrieval design is grep-native, NOT vector-RAG... embeddings
-rejected"_ (`codex/11-project-management/doc-frontmatter-schema.md:49`). Any code-context-reduction work should evaluate
+rejected"_ (`/codex/11-project-management/doc-frontmatter-schema.md:49`). Any code-context-reduction work should evaluate
 grep/symbol-based techniques (ripgrep, ctags/AST-grep-style symbol lookup, import/dependency graphs derivable from
 existing tooling) FIRST, consistent with that principle — a vector-embedding code-retrieval layer is its own separate,
 explicitly-flagged decision if grep/symbol-based reduction proves insufficient, never something to adopt by default from

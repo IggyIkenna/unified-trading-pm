@@ -307,7 +307,7 @@ Session status at checkpoint (a fresh session picking this up should verify curr
   terminal status. `greeks-service` — still actively diagnosing/verifying as of this checkpoint; if a fresh session
   finds no completion report, re-check `gcloud builds list`/`gh run list` for this repo directly rather than
   re-diagnosing from scratch (a lot of the pattern-matching for this repo class is already in this doc above).
-- **Known incomplete, NOT mine to finish**: `codex/14-customer-journeys/commercial-model/ODUM_SLA_v4_2026-07-24.md` (an
+- **Known incomplete, NOT mine to finish**: `/codex/14-customer-journeys/commercial-model/ODUM_SLA_v4_2026-07-24.md` (an
   unrelated file from another concurrent session, missing `scope:` frontmatter) was blocking the fleet-wide
   `codex-scope-coverage` QG gate for EVERY commit in this shared checkout. Added the minimal `scope: [admin]` line
   (matching its own sibling files in the same batch, e.g. `elysium-delay-letter-2026-07-20.md`) to unblock the shared

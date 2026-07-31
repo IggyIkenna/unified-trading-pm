@@ -75,7 +75,7 @@ Rather than build a new, redundant "file-scope scout" feature, the right move wa
 Along the way, found the `context_scope` field itself had the same kind of gap one level up: `scripts/docs/docspec.py`
 (the doc-frontmatter-schema.md's own machine mirror, "Mirrors it in lockstep" per its own docstring) already validated
 `context_scope` as an elective field on `plan` and `issue` docs, but the human SSOT
-(`codex/11-project-management/doc-frontmatter-schema.md`) never documented it — exactly the "schema<->generator drift"
+(`/codex/11-project-management/doc-frontmatter-schema.md`) never documented it — exactly the "schema<->generator drift"
 class `/docs-reconcile` exists to catch, fixed here since it's directly adjacent to this doc's own subject matter.
 
 The other two ideas evaluated (Paperclip, Pi) turned out to be mostly redundant with what this workspace's fleet already

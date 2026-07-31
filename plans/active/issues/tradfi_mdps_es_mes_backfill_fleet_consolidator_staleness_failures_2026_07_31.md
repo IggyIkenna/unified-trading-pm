@@ -26,7 +26,7 @@ stage: [data]
 repos: [unified-trading-library, deployment-api, deployment-service, market-data-processing-service]
 scope: [engineer, admin]
 tags: [manifest, consolidator, staleness, tradfi, data-correctness, false-stale, vm-fleet, dp-vm-001]
-related: [manifest-consolidator-ssot.md, sports_manifest_read_staleness_budget_missing_2026_07_15.md]
+related: [/codex/05-infrastructure/manifest-consolidator-ssot.md, /plans/active/issues/sports_manifest_read_staleness_budget_missing_2026_07_15.md]
 created: 2026-07-31
 parent_epic: infrastructure_master
 source:

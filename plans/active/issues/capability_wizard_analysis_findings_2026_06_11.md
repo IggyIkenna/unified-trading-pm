@@ -399,7 +399,7 @@ ALGORITHMS_BY_INSTRUCTION_TYPE — resolved as an intentional, now-documented tw
 (SEQUENTIAL_LEGS/SPREAD_ROLL/BEST_PRICE/KELLY_STAKE valid in enums but unimplemented — verified fail-loud not silent,
 inline-flagged), **F36 heuristic_selector_bypasses_instruction_type** (live selection path ignored the instruction-type
 map — the dead, never-instantiated heuristic selector was deleted), **F37 missing_ssot_doc** (no codex SSOT for algo
-selection — created `codex/04-architecture/execution-algorithm-selection.md`). Exactly the operator's "codebase isn't
+selection — created `/codex/04-architecture/execution-algorithm-selection.md`). Exactly the operator's "codebase isn't
 blocking impossible combinations" — the impossible combinations were already declared/blocked in the verdict matrix;
 execution-service remediation is now complete.
 

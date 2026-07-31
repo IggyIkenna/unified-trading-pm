@@ -437,7 +437,7 @@ canonicalised by this fleet. The migration's own `# Delete-when:` marker on
   cases) — genuinely different from the shard-19 mystery too: the actor deleting it was `unified-trading-sa` via
   `python-requests` (a Python GCP-API client), NOT `vm_zombie_watchdog.py`'s gcloud-CLI invocation pattern — this is
   almost certainly the same `data_pipeline_failure`/fleet-monitor `auto_recover` actuator described in
-  `RB-INFRA-RELAUNCH` (`codex/15-runbooks/incidents/rb_infra_relaunch.md`), triggering on a stalled-heartbeat detection,
+  `RB-INFRA-RELAUNCH` (`/codex/15-runbooks/incidents/rb_infra_relaunch.md`), triggering on a stalled-heartbeat detection,
   distinct from both the zombie-watchdog AND the still-unresolved shard-19 delete. Heartbeat blob confirmed genuinely
   stale (45m50s at delete time — `14:10:07Z` last update vs `14:55:57Z` delete), so THIS instance's reaper verdict was
   correct, unlike shard 19's. **Read `RB-INFRA-RELAUNCH` before relaunching**: it bounds relaunches to

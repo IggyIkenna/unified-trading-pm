@@ -1,6 +1,6 @@
 ---
 doc_type: issue
-title: codex/08-workflows/deployment-flow.md still describes the retired staging-mediated pipeline as current
+title: /codex/08-workflows/deployment-flow.md still describes the retired staging-mediated pipeline as current
 summary: >-
   Discovered as a side effect of the qg_sentinel_environment_blind_2026_07_23.md fix (ci_satellite_ao_dispatch_batch2
   todo 1): deployment-flow.md's "Full Pipeline: LDR → Cloud Build" diagram and Gate 1/2/3 walkthrough describe the OLD
@@ -44,7 +44,7 @@ source:
 
 ## What I found
 
-`codex/08-workflows/deployment-flow.md`'s "Full Pipeline: LDR → Cloud Build" ASCII diagram (§ near the top) and its Gate
+`/codex/08-workflows/deployment-flow.md`'s "Full Pipeline: LDR → Cloud Build" ASCII diagram (§ near the top) and its Gate
 1/2/3 walkthrough sections describe promotion as: quickmerge → `gh pr create` to `staging` (auto-merge) → `workspace-qg`
 GHA on the staging PR → semver-agent bumps on staging → `staging-to-main.yml` squash-merges to `main`.
 
@@ -84,7 +84,7 @@ CLAUDE.md's current § "Git discipline"), so it's AO-dispatchable once picked up
 
 ## Todos
 
-- [ ] [DOC] P2. Rewrite `codex/08-workflows/deployment-flow.md`'s "Full Pipeline: LDR → Cloud Build" diagram + Gate
+- [ ] [DOC] P2. Rewrite `/codex/08-workflows/deployment-flow.md`'s "Full Pipeline: LDR → Cloud Build" diagram + Gate
       1/2/3 walkthrough to reflect the LDR-direct-promote-with-dormant-staging model (mirror `ci-cd-flow.md`'s already-
       shipped rewrite, `unified-trading-pm@b9d0b9209`, for the target shape). Done when: the two sibling docs (engineer
       view / operator view) describe the SAME pipeline shape, and every staging-mediated-as-default claim in

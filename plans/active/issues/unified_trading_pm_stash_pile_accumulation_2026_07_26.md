@@ -74,8 +74,8 @@ accidental `git stash clear` (a real, if unlikely, destructive action).
       individually-authored entries (stash@{17,20,21,22,23,24}):** spot-checked in full (`-p`, not just `--stat`) since
       these looked most likely to carry real content: - stash@{21}: a genuine new codex HARD RULE ("Heavy COMPUTE/MEMORY
       on the shared planning-vm", from the real 2026-07-27 `candle_coverage_gap.py` 15.8GB RSS incident) — verified
-      **verbatim present** in current `codex/05-infrastructure/vm-launcher-runbook.md`,
-      `codex/06-coding-standards/quality-gates-memory-governance.md`, and `cursor-configs/CLAUDE.md` (this repo's own
+      **verbatim present** in current `/codex/05-infrastructure/vm-launcher-runbook.md`,
+      `/codex/06-coding-standards/quality-gates-memory-governance.md`, and `cursor-configs/CLAUDE.md` (this repo's own
       root CLAUDE.md quotes the same "heavy-compute-on-shared-host" phrase today). - stash@{20}: a `/plan-vintage-audit`
       migration pass (RULE-11 rehoming, G-TRACE/lifecycle-rule orphan rehoming, an active→archive rename for
       `l0_doc_index_generator_2026_06_24.md`). Verified: the rename already landed
