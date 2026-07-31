@@ -689,15 +689,15 @@ cancellation-timeout fix and already shipped). Suggested next steps for whoever 
       root cause, since it blocks NOT JUST this todo but the entire faulthandler-based SIGABRT diagnosis this doc's
       whole investigation depends on. No code shipped (pure verification).
 
-- [ ] [BACKEND] P1. **NEW, opened 2026-07-31 (slot-6) — `uts-shared-deployment-api`'s container stdout/stderr has
-      stopped reaching Cloud Logging entirely since `~08:40:27Z` (last entry, revision `00353-dng`), silently blinding
-      every log-based diagnostic this doc's SIGABRT investigation depends on (including the pid-role-logging todo above
-      and, likely, every prior faulthandler-dump attempt in this doc's history).** Evidence: full-lifetime raw-JSON log
-      dump for revision `00373-7wt` (current live, `15:39:42Z`-created) shows ONLY `run.googleapis.com/varlog/system`
-      (platform events, incl. Cloud Run's own externally-observed "Uncaught signal: 6" line) and
-      `run.googleapis.com/     requests` (structured, no textPayload) — zero `stdout`/`stderr` entries. Same for the
-      last 20+ revisions spanning 7+ hours. Ruled out a platform-wide outage: `market-data-query-service` (same
-      project/region) has fresh `stderr` entries as recent as `16:43:03Z`. Prime candidate: the
+- [ ] [BACKEND] P1. DEFERRED-BY-DESIGN. **NEW, opened 2026-07-31 (slot-6) — `uts-shared-deployment-api`'s container
+      stdout/stderr has stopped reaching Cloud Logging entirely since `~08:40:27Z` (last entry, revision `00353-dng`),
+      silently blinding every log-based diagnostic this doc's SIGABRT investigation depends on (including the
+      pid-role-logging todo above and, likely, every prior faulthandler-dump attempt in this doc's history).** Evidence:
+      full-lifetime raw-JSON log dump for revision `00373-7wt` (current live, `15:39:42Z`-created) shows ONLY
+      `run.googleapis.com/varlog/system` (platform events, incl. Cloud Run's own externally-observed "Uncaught signal:
+      6" line) and `run.googleapis.com/     requests` (structured, no textPayload) — zero `stdout`/`stderr` entries.
+      Same for the last 20+ revisions spanning 7+ hours. Ruled out a platform-wide outage: `market-data-query-service`
+      (same project/region) has fresh `stderr` entries as recent as `16:43:03Z`. Prime candidate: the
       `--execution-environment gen1` pin (`acdd4c8`) — gen1 uses a different gVisor sandbox/log-capture path than gen2,
       and this doc already flagged gen1-vs-gen2 differences as relevant to a separate sandbox-kill theory. Next steps:
       (1) confirm `acdd4c8`'s deploy landed at/before `08:40:27Z` (correlate git history against
@@ -723,8 +723,8 @@ cancellation-timeout fix and already shipped). Suggested next steps for whoever 
       `routes/_code_builds_aws.py`, `services/cost_observability/aws_wif.py`, `utils/artifact_registry.py`) — any could
       match. Not yet confirmed causal (single sample; exact call site not pinned). Narrower follow-up filed below. Root
       cause + fix now shipped (`deployment-api@e8ce86a`, see todo below); this todo's own done-when (stdout resuming)
-      awaits that fix reaching a live deploy — tracked by the `[REVIEW]` todo below, not re-guessed here.
-      DEFERRED-BY-DESIGN — no fix shipped BY THIS todo directly (e8ce86a live-deploy pending), leaving unchecked.
+      awaits that fix reaching a live deploy — tracked by the `[REVIEW]` todo below, not re-guessed here, hence
+      DEFERRED-BY-DESIGN rather than a false flip.
 
 - [x] ✅ [BACKEND] P1. **NEW, opened 2026-07-31 (slot 4, backend_engineer) — pin the exact call site for the
       truncated-sync-HTTPS-traceback-then-permanent-silence pattern found in the todo above and confirm/refute it as the
