@@ -527,3 +527,23 @@ mitigation ladder (bigger machine → smaller chunks) is exhausted; only the cod
   range already show zero signal. The `ThreadedResolver`/native-memory hypothesis above is the only lead standing; next
   step is still the `memray` run (or the thread-count/RSS-per-`_make_session()`-call correlation check), not more
   tracemalloc dates.
+- **2026-07-31 (slot 3, same session) — shipped the session-reuse fix as a resource-efficiency improvement; live
+  re-profile does NOT confirm it closes the OOM. Todo stays OPEN.** Shipped `market-tick-data-service@6ca2d278`
+  (verified landed via `git merge-base --is-ancestor`): folded reuse-or-create into `_make_session(existing=None)`
+  itself (`@contextlib.asynccontextmanager`) so `_fetch_all_leagues` opens ONE real session/`ThreadedResolver` for a
+  whole `download_batch()` call instead of one per HTTP request; two new regression tests
+  (`tests/market_interface/unit/sports/test_odds_api_session_reuse.py`) assert exactly 1 real construction per batch and
+  were verified to genuinely fail (18 and 2 constructions) against the true pre-fix SHA `86da3fa1` before trusting them
+  green. File is 897/900 lines (was exactly 900; required folding an `AsyncExitStack`-based first attempt into the
+  leaner `existing=` design to fit). **This is a real, verified, worthwhile change on its own merits** — fewer OS thread
+  pools/sockets churned per batch is strictly better regardless of the OOM outcome. **However**: a live re-profile of
+  the fixed adapter (same 3-date harness) showed RSS **comparable-to-or-higher** than the pre-fix baseline, not reduced
+  — so this does **NOT** confirm the `ThreadedResolver`/native-memory hypothesis above as the actual OOM cause. Either
+  (a) the hypothesis is wrong and something else drives the native growth, or (b) the fix is real but too small relative
+  to other allocators (pandas/pyarrow buffers, the underlying `aiohttp` connection pool itself) to show up in this
+  harness's 3-date range. **Do not claim the OOM is fixed anywhere** — this todo remains `[ ]` open. **Next step,
+  unchanged in kind but now sharper**: a real `memray` run (tracks native allocations tracemalloc cannot see) across the
+  same 3 dates, run on BOTH the pre-fix and post-fix code, to see whether the session-reuse fix moved the needle on
+  native allocations at all — if `memray` also shows no native-heap signal correlated with request count, the
+  `ThreadedResolver` hypothesis should be considered refuted and the search should widen to `pandas`/`pyarrow` (both do
+  their own native buffer management) or the OS-level page-cache/malloc-arena fragmentation class of causes instead.
