@@ -222,6 +222,17 @@ canonicalised by this fleet. The migration's own `# Delete-when:` marker on
       `vm_zombie_watchdog.py`'s other code paths (`_reap_terminated_vms`/`should_reap()`) and any other automated
       process running under the GCE default compute SA that could issue `compute.instances.delete` against a
       `canonical-migration-cefi-` VM. Repo: deployment-service.
+- [ ] [BACKEND] P2. **Investigate shard 16's fast-OOM anomaly in its date range (2024-08-20..2024-11-13)** — this is now
+      its 2nd distinct OOM on `e2-standard-16` itself (03:41Z entry: 706s/3.4% before death; 2026-07-31 03:27-03:41Z
+      entry below: also fast, ~14min, `mem_pct` jumping 20.0%→51.7% in a single ~1min sample). Both are far too fast for
+      the slow pyarrow-pool-creep the shipped fix (`market-tick-data-service@9f4098b1`) targets — the diagnostic line
+      confirms the fix IS firing on this shard, so this is a DIFFERENT, unaddressed failure mode, most likely a single
+      anomalously large/malformed file early in this window causing a one-time in-memory spike. **Done when**: either
+      the poison-pill file is identified + handled (streamed/chunked read, or a size-based skip-and-flag), or a 3rd
+      clean relaunch on `e2-standard-16` completes past the point of this pattern recurring twice, confirming it was
+      transient. **Budget note**: shard 16 has now used its full `RB-INFRA-RELAUNCH` `≤2/(vm-prefix,day)` allowance for
+      2026-07-31 (1 dead attempt + 1 relaunch in flight) — do NOT relaunch a 3rd time today if this one also fails; page
+      per the runbook instead. Repo: market-tick-data-service.
 - [ ] [OPERATOR] P0. **Break the `-006`/`-002` dispatch deadlock.** Live-reverified 2026-07-30T16:35Z (backlog API +
       `/api/state`, not relayed): `-002` (this doc's P2 corpus-wide re-verify+delete todo, monitoring-only) has held
       slot 15 continuously since `2026-07-30T12:16:10Z` — **4h20m and counting**, `status=working` the whole time, no
@@ -716,6 +727,24 @@ accordingly.
   (needs to reach the terminal summary to fully verify), but this is the strongest direct evidence so far that the
   periodic-pool-release fix works. Monitoring-only, not touching this VM (it's the dedicated verification todo's run,
   not mine).
+- **2026-07-31T03:56Z (`data_pipeline_failure` escalation `agt-c52482`, slot 10, DP-VM-001 `DP_VM_EXIT_NONZERO`)**:
+  dispatched by the fleet monitor for `canonical-migration-cefi-content-16-relaunch20260731-032349` (`exit_code=137`,
+  `deployment_id=51dc4590-72f2-4c5c-9f21-88875febcba0`) per `rb_infra_relaunch.md` — the SAME death slot-15 already
+  logged above at `03:41Z` ("notable exception to the fix's otherwise-good track record"); the alert and slot-15's
+  monitoring converged on the same VM, not a new event. Confirmed via `DeploymentsRegistry.host_metrics_window` this was
+  a genuine, fast, accelerating memory spike, not a slow creep: `mem_pct` 13.6%→15.6%→16.8%→20.0%→**51.7%** across the
+  last 5 samples (`mem_slope` jumping from ~1.0-1.3 to 4.54 on the final sample before death at `03:41:14Z`) —
+  corroborates slot-15's "distinct cause... one-time spike" hypothesis over the pyarrow-creep mechanism the shipped fix
+  targets. **Registry-verified relaunch budget for this vm-prefix TODAY (2026-07-31)**: only this one dead attempt on
+  record (the 3 earlier `exit_code=125` attempts are from 2026-07-30, a different calendar day — budget resets daily per
+  `RB-INFRA-RELAUNCH`) — 1/2 used, within bound. Relaunched shard 16 on the SAME `MACHINE_TYPE=e2-standard-16` /
+  `--start-date 2024-08-20 --end-date 2024-11-13 full` config (matching slot-13's 03:30Z batch — this is genuinely a 2nd
+  try at an already-correctly-sized machine, not a fresh escalation, since e2-standard-16 was already in use when it
+  died) as `canonical-migration-cefi-content-16-relaunch20260731-035409`, verified `RUNNING` via
+  `gcloud compute instances describe` at dispatch+~2min. This is now shard 16's 2nd relaunch today — budget exhausted;
+  do **not** relaunch a 3rd time today if this one also dies (page instead, per the runbook). Added a tracked P2 todo
+  above for the actual root-cause investigation (poison-pill file in this shard's date range) — genuinely out of this
+  one-shot escalation's scope. Pinging the authoring fleet-monitor slot with this outcome; no code changed.
 - **2026-07-31T03:23Z (slot-15)**: **relaunch-remaining-18 todo appears dispatched** — 4 new VMs appeared
   (`canonical-migration-cefi-content-{13,15,16,17}-relaunch20260731-032349`), all `RUNNING`, using the shared `-032349`
   launch-batch suffix (someone else's dispatch, not mine). These are 4 of the 18 shards this doc's corpus-wide re-verify
