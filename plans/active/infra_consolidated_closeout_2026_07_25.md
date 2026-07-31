@@ -302,3 +302,27 @@ not data-pipeline).
   clause from the Track 2 body criterion but missed the todo restating it, so the todo would have sent a reviewer
   hunting for "stale" refs that are the intended permanent state. Clause removed with the ruling cited inline. No
   conflict-check needed (no RECLASSIFY).
+- **2026-07-31** — `/ag-closeout-audit infra` re-run (autonomous mode, scheduled daily run, slot 13). Covering set is
+  now 9 docs (batch1/finalize + batch2/finalize + batch3(draft)/finalize(draft) + this hub +
+  `infra_capture_and_devops_ leftovers`/finalize — batch2 and batch3 existed since 2026-07-27/30 but were never
+  previously logged in this hub's own Progress Log, a discoverability gap worth noting for the next reader).
+  `generate_ag_closeout_audit_candidates.py --tranche infra` now reports 32 members (corpus has grown/shrunk since
+  2026-07-26's 34). Phase 1 ran a 10-agent Workflow over the 9 currently-never-cited docs plus a targeted re-check of
+  `codex_violations_ratchet_to_five_2026_06_ 10.md` (whose citation in batch1 turned out to only partially cover its
+  remaining work on full re-read): 8 of the 9 never-cited docs are legitimately self-dispatched
+  (`assigned_vm: planning`, not orphans by the skill's own tooling definition), 1
+  (`stale_agentwork_scratch_clone_not_deletable_unpushed_stashes_2026_07_30.md`) is a genuine orphan but
+  guardrail-blocked operator-only work (non-batchable), and `codex_violations_ratchet_to_five` has 5 of 7 open items
+  genuinely uncovered — 3 remain correctly gated by batch1's own pre-existing Deferred classification (unchanged), 1
+  (`delta_proxy_repricer.py`) turned out to be ALREADY SHIPPED (`execution-service@89fbf99d`) with a stale checkbox, and
+  1 (`_solana_utils.py` line-cap split) was genuinely new, conflict-clear, and bounded. Phase 3 drafted a single-todo
+  `infra_satellite_ao_dispatch_batch4_2026_07_31.md` (`status: draft`, no finalize twin per the single-todo carve-out)
+  for that one item. The stale-checkbox finding plus a filesystem-vs-doc discrepancy on the stash-clone deletion (target
+  directory already absent from disk in this session's environment, but the doc's todo still shows it open) are parked
+  in `issues/ag_closeout_audit_infra_parked_2026_07_31.md` per the "parked findings always get a durable issue doc" hard
+  rule — both are `/plan-reconcile`'s job to reconcile, not this skill's (false-unchecked-flip is out of scope here). G1
+  (`base-service.sh`/`base-library.sh` serialization) shows partial progress
+  (`ci_satellite_ao_dispatch_batch2_2026_ 07_29.md`'s both claims now `[x]`) but remains gated —
+  `cross_cutting_satellite_ao_dispatch_batch1b_2026_07_26.md`'s own claim on the same file is still open. G3
+  (`DataStatusTab.tsx`) unchanged. No new `[REVIEW]` Track criteria needed above — the 3 existing ones still accurately
+  measure this tranche's completeness.
