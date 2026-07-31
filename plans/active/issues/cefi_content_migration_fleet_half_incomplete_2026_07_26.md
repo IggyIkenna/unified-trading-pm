@@ -124,7 +124,11 @@ canonicalised by this fleet. The migration's own `# Delete-when:` marker on
       grep again (fleet fully empty, 392 log objects checked). Result: 27/44 confirmed (was 26 at 22:06Z, then 23
       originally) — still NOT 44/44, 17 shards remain: 13, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 40, 41, 42, 43,
       44 (shard 29 completed since the last check, on top of shard 14's now-VERIFIED fix-confirmation run). This todo
-      stays open; do NOT delete the script yet — the remaining 17 need another relaunch round.
+      stays open; do NOT delete the script yet — the remaining 17 need another relaunch round. **2026-07-31T13:04Z
+      update (slot-12)**: re-verified — IDENTICAL result (27/44, same 17 shards, fleet still fully empty). Full detail +
+      relaunch-round-3 recommendation split to
+      `cefi_content_migration_corpus_still_incomplete_relaunch_round3_needed_2026_07_31.md` (this doc at its line cap).
+      Still stays open.
 - [x] [SCRIPT] P2. ✅ **Relaunch the 18 shards still incomplete after this session's wave** (13, 15, 16, 17, 18, 19, 20,
       21, 22, 23, 24, 25, 29, 40, 41, 42, 43, 44), now using the fixed tarball (`market-tick-data-service@9f4098b1`,
       merged 2026-07-30T18:04:44Z) which should clear the memory-leak freeze class that killed most of them. Recover
