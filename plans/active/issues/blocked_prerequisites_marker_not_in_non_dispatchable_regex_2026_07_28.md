@@ -33,10 +33,10 @@ last_updated: 2026-07-28
 parent_epic: agent_operating_framework_master
 priority: P2
 source: [sports_odds_api_scattered_multiyear_gaps-002]
-assigned_vm: planning
+assigned_vm: NA
 resolved_by:
 locked_by:
-execution_scope: orchestrator-agent
+execution_scope: local-only
 estimate_class: research
 estimate_baseline_ai_days: 1.0
 estimate_calibrated_ai_days: 1.2

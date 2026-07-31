@@ -43,8 +43,8 @@ source:
   agent-orchestrator/server/regen_backlog_from_plan.py"
 resolved_by:
 locked_by:
-assigned_vm: planning
-execution_scope: orchestrator-agent
+assigned_vm: NA
+execution_scope: local-only
 assigned_role: backend_engineer
 drift_direction: advance-code
 depends_on: []

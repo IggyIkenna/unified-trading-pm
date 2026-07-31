@@ -30,10 +30,10 @@ parent_epic: agent_operating_framework_master
 source:
   "mtds_empty_string_fallback_baseline_drift-001 (slot 6), 2026-07-30 — discovered while shipping the real fix for the
   same issue"
-execution_scope: orchestrator-agent
+execution_scope: local-only
 drift_direction: advance-code
 depends_on: []
-assigned_vm: planning
+assigned_vm: NA
 resolved_by: ""
 locked_by: ""
 ---

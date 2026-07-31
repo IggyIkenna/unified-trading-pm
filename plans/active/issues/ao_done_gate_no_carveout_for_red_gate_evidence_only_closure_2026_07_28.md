@@ -33,8 +33,8 @@ created: 2026-07-28
 priority: P2
 parent_epic: orchestrator_master
 source: "worker, slot 12, hit live while closing out data_completion_cefi-011 per main's BLOCKED-Q ruling"
-assigned_vm: planning
-execution_scope: orchestrator-agent
+assigned_vm: NA
+execution_scope: local-only
 estimate_class: refactor
 assigned_role: backend_engineer
 sequential: true # all 4 todos change the same file (server/verify.py) — same-file overlap, must serialise

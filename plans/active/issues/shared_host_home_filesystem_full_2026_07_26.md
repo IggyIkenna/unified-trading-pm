@@ -24,8 +24,8 @@ created: 2026-07-26
 priority: P1
 parent_epic: infrastructure_master
 source: "slot 2, discovered mid-task via a git-push ENOSPC failure, 2026-07-26 ~19:10 UTC"
-assigned_vm: planning
-execution_scope: orchestrator-agent
+assigned_vm: NA
+execution_scope: local-only
 drift_direction: advance-code
 depends_on: []
 locked_by:

@@ -39,8 +39,8 @@ priority: P2
 parent_epic: orchestrator_master
 source:
   "worker, slot 2, hit live while closing out deployment_api_qg_size_gate_debt-007 (breakdowns_core.py decomposition)"
-assigned_vm: planning
-execution_scope: orchestrator-agent
+assigned_vm: NA
+execution_scope: local-only
 estimate_class: research
 assigned_role: backend_engineer
 resolved_by:

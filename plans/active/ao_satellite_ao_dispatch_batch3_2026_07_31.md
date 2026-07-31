@@ -33,8 +33,8 @@ related:
 created: "2026-07-31"
 last_updated: "2026-07-31"
 parent_epic: orchestrator_master
-assigned_vm: planning
-execution_scope: orchestrator-agent
+assigned_vm: NA
+execution_scope: local-only
 priority: P1
 estimate_class: refactor
 estimate_baseline_ai_days: 3.5

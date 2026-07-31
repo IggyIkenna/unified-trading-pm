@@ -15,7 +15,7 @@ tags: [dashboard, playwright, e2e, flaky-test, backlog]
 related: [/plans/archive/2026_07/ao_backlog_collision_alert_and_remediation_ui_2026_07_26.md]
 created: 2026-07-26
 parent_epic: orchestrator_master
-assigned_vm: planning
+assigned_vm: NA
 execution_scope: local-only
 priority: P2
 estimate_class: research

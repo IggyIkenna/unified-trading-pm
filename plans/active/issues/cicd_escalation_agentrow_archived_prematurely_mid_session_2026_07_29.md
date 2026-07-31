@@ -56,8 +56,8 @@ estimate_class: refactor
 estimate_baseline_ai_days: 1.0
 estimate_calibrated_ai_days: 0.4
 assigned_role: backend_engineer
-assigned_vm: planning
-execution_scope: orchestrator-agent
+assigned_vm: NA
+execution_scope: local-only
 sequential: true
 depends_on: []
 locked_by:

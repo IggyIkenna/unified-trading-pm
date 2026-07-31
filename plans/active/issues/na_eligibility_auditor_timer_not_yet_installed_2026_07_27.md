@@ -29,12 +29,12 @@ source: >-
   Session 2026-07-27, building /na-eligibility-audit as a sibling to /ag-closeout-audit/plan-reconcile/docs-reconcile.
   The three sibling timers (plan-reconciler, docs-reconciler, ag-closeout-auditor) were already live on the central VM
   when this session started; this fourth one only reaches parity once actually installed there too.
-assigned_vm: planning
+assigned_vm: NA
 assigned_role: infra
 sequential: true # both todos touch the same timer/install-script + the same first-fire verification surface
 resolved_by:
 locked_by:
-execution_scope: orchestrator-agent
+execution_scope: local-only
 drift_direction: advance-code
 depends_on: []
 ---

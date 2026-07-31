@@ -47,11 +47,11 @@ parent_epic: infrastructure_master
 source:
   "operator #ci-failures Slack dump + operator ask to verify PM#1746/1747/1748 + 2 ldr_qg_failure items over 30-40min,
   2026-07-29 ~01:05Z"
-execution_scope: orchestrator-agent
+execution_scope: local-only
 assigned_role: cicd
 drift_direction: advance-code
 depends_on: []
-assigned_vm: planning
+assigned_vm: NA
 resolved_by:
 locked_by:
 locked_since:

@@ -32,8 +32,8 @@ priority: P1
 source:
   - operator-requested 2026-07-15 ("reconcile the AO plans / issue docs / codex / AO docs; find drift, contradictions,
     gaps")
-assigned_vm: planning
-execution_scope: orchestrator-agent
+assigned_vm: NA
+execution_scope: local-only
 resolved_by:
 locked_by:
 locked_since:

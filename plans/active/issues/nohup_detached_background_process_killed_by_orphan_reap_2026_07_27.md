@@ -29,8 +29,8 @@ source: "found while verifying instrument_availability_hive_canonicalisation-001
 parent_epic: agent_operating_framework_master
 priority: P2
 estimate_class: research
-assigned_vm: planning
-execution_scope: orchestrator-agent
+assigned_vm: NA
+execution_scope: local-only
 drift_direction: advance-code
 resolved_by:
 locked_by:

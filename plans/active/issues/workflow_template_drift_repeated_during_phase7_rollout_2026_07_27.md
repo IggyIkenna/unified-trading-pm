@@ -29,10 +29,10 @@ created: 2026-07-27
 priority: P2
 parent_epic: infrastructure_master
 source: "slot-3, infra, discovered while shipping unrelated plan-doc updates, 2026-07-27"
-execution_scope: orchestrator-agent
+execution_scope: local-only
 drift_direction: advance-code
 depends_on: []
-assigned_vm: planning
+assigned_vm: NA
 resolved_by:
 locked_by:
 locked_since:

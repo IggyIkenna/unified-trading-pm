@@ -34,10 +34,10 @@ source:
   verification todo (slot 14): two --ruling backlog tasks would not dispatch; root cause traced past a confounding regen
   prereq bug into a 7h+ live ao-self-pull.sh dirty-gate wedge, confirmed via /var/log/ao-self-pull.log tick history +
   git status on the root agent-orchestrator checkout"
-execution_scope: orchestrator-agent
+execution_scope: local-only
 drift_direction: advance-code
 depends_on: []
-assigned_vm: planning
+assigned_vm: NA
 sequential: false
 resolved_by:
 locked_by:

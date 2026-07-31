@@ -29,8 +29,8 @@ related:
   ]
 created: 2026-07-29
 parent_epic: agent_operating_framework_master
-assigned_vm: planning
-execution_scope: orchestrator-agent
+assigned_vm: NA
+execution_scope: local-only
 priority: P2
 estimate_class: research
 estimate_baseline_ai_days: 0.3

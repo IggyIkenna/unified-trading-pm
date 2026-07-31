@@ -22,7 +22,7 @@ summary: >-
   per-slot clones may carry their own crontab); and the github-glue-slot-refresh.timer that IS firing is unrelated (it
   refreshes the GitHub-glue runner's clone to main, not worker-slot LDR ff-pull). P2.
 status: open
-assigned_vm: planning
+assigned_vm: NA
 resolved_by:
 locked_by:
 nature: issue
@@ -51,7 +51,7 @@ source:
   "review role (msg 2387 to main agt-498659) reported fleet git-health reporter_stale_slots/ff_cron_stale_slots flat at
   19/19 for 3+ ticks; main (agt-498659) partially verified from the orchestrator vantage and captured it here so the
   finding survives compaction (review role never commits)."
-execution_scope: orchestrator-agent
+execution_scope: local-only
 drift_direction: advance-code
 depends_on: []
 ---
