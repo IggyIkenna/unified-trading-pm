@@ -44,6 +44,10 @@ locked_since:
 
 # act-preflight.sh default `--workflow` points at a retired filename
 
+> **🗄️ ARCHIVED 2026-07-31** — both todos are `[x]`, zero remaining, `locked_by:` empty. Per
+> `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`, a doc with every todo done archives
+> immediately.
+
 ## What I found
 
 Re-reviewing `/codex/05-infrastructure/act-preflight-coverage.md` (which carried a `last_reviewed: 2026-05-17` stamp and
