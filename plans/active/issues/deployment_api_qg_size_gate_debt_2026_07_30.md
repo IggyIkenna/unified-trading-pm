@@ -299,9 +299,20 @@ file-by-file.
       no logic changes. `FUNCTION_SIZE_EXTRA_EXCLUDES` entry removed — gate passes natively. Verified: 246 targeted
       tests green (`test_data_status_turbo.py`, `test_data_status_service.py`), basedpyright clean, ruff clean, full
       `quality-gates.sh` green (137s). Repo: deployment-api.
-- [ ] [SCRIPT] P2. Decompose the remaining function-size-only violation in
-      `deployment_api/services/data_status/sports_helpers.py` (`sports_honest_coverage()`, 300L). Remove its exclude
-      entry once compliant; re-run `quality-gates.sh` to confirm no regression.
+- [x] ✅ [SCRIPT] P2. **DONE 2026-07-31 (slot-2, infra craft).** Decomposed
+      `deployment_api/services/data_status/sports_helpers.py` (`sports_honest_coverage()`, was 300L).
+      `deployment-api@1a578a6`: the function's existing per-`SportsAxis` if/elif chain was already a clean dispatch
+      boundary, so extracted `_sports_entity_rows` (row-filtering) + one helper per axis
+      (`_honest_coverage_per_feature`, `_honest_coverage_global_trigger`, `_honest_coverage_per_league_trigger`,
+      `_honest_coverage_global`, `_honest_coverage_per_league`) + `_bucket_match_league_coverage` (the periodic-cadence
+      bucket-match fix). Pure code motion, no logic changes. Fixed 2 basedpyright regressions the extraction introduced
+      along the way: typed `expected_leagues` as `list[LeagueDefinition]` (was inferring `Any` once it crossed a
+      function boundary) and kept `meta` as `dict[str, object]` rather than `dict[str, Any]` in the helper signatures —
+      both confirmed via a stash-diff against origin (0 errors before, 26 after the first pass, 0 after the fix).
+      `FUNCTION_SIZE_EXTRA_EXCLUDES` entry removed — gate passes natively. Verified: 212 targeted tests green
+      (`test_coverage_drift.py`, `test_coverage_drift_worker.py`, `test_data_status_service.py`,
+      `test_features_sports_per_feature_axis.py`, `test_teams_per_league_axis.py`), basedpyright clean, ruff clean, full
+      `quality-gates.sh` green (120s). Repo: deployment-api.
 - [ ] [SCRIPT] P2. Decompose the remaining function-size-only violation in
       `deployment_api/services/data_status/venue_resolution.py`. Remove its exclude entry once compliant; re-run
       `quality-gates.sh` to confirm no regression.
