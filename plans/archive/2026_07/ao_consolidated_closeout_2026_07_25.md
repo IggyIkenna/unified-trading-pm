@@ -183,8 +183,8 @@ pinned across the fleet; VM log backup wired; the e2e hardening suite green; the
 **Sources**:
 [agent_orchestrator_alert_channel_cleanup_2026_07_13.md](/plans/archive/2026_07/agent_orchestrator_alert_channel_cleanup_2026_07_13.md)
 (complete, archived 2026-07-27 — AO alerts Slack channel dedup/lifecycle-churn/BLOCKED-schema redesign) ·
-[ao_fleet_observability_kpis_2026_07_20.md](/plans/active/ao_fleet_observability_kpis_2026_07_20.md)
-(dispatch-completion/escalator-efficacy/account-burn observability KPIs) ·
+[ao_fleet_observability_kpis_2026_07_20.md](/plans/archive/2026_07/ao_fleet_observability_kpis_2026_07_20.md)
+(dispatch-completion/escalator-efficacy/account-burn observability KPIs, archived 2026-07-31) ·
 [issues/plan_health_tests_leak_real_slack_alerts_2026_07_24.md](/plans/active/issues/plan_health_tests_leak_real_slack_alerts_2026_07_24.md)
 (`plan_health` test suite firing real Slack posts to the AO alerts channel) ·
 [issues/ao_repo_docs_deleted_against_instructions_dead_code_refs_2026_07_23.md](/plans/archive/issues/ao_repo_docs_deleted_against_instructions_dead_code_refs_2026_07_23.md)
