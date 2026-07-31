@@ -41,7 +41,7 @@ related:
     /codex/08-workflows/ci-cd-flow.md,
   ]
 created: 2026-07-29
-last_updated: 2026-07-30
+last_updated: 2026-07-31
 priority: P1
 parent_epic: infrastructure_master
 source:
@@ -222,6 +222,27 @@ not just noting.
       `worker.md`'s resume contract. Host load fluctuated 9-28 (16 vCPU) throughout, consistent with this doc's standing
       "fluctuating-but-still-elevated, not resolved" characterization — no QG failures attributable to contention this
       pass.
+- [ ] [BACKEND] P1. **New, opened by the 2026-07-31 ~15:17-15:26Z synchronized-multi-slot-kill corroboration below —
+      main-agent-corroborated CPU-oversubscription, a distinct signature from the IO/disk-full and RAM-exhaustion
+      variants already tracked.** Build a MACHINE-ENFORCED shared-host QG concurrency gate: a host-level
+      `flock`/semaphore in `quality-gates.sh` (or `base-service.sh`) that blocks any run past `max(2, floor(cores/4))`
+      concurrent full QG passes on one host — whether local AO-slot-worker QGs or self-hosted CI-runner QGs — so runs
+      structurally cannot stack 13-deep the way they did at 2026-07-31~15:38Z (13 concurrent `quality-gates.sh` + 8
+      `pytest` processes live, cap=4, violated 3x+ on the QG count alone — corroborated independently by both a
+      review-agent session and main agent `agt-40d0ed` on-host). Self-discipline (the shared-host QG-sweep-batching rule
+      in CLAUDE.md) is clearly not holding under load; this needs a structural block, not another documented violation.
+      Done when: a concurrent QG run past the cap is measurably refused/queued (not just logged) on this host, verified
+      by deliberately launching cap+1 QG passes and observing the (cap+1)th block until a slot frees.
+- [ ] [DOCS] P3. **New, opened by the same corroboration — a `boot_read_unconfirmed` gap hit firsthand this session.**
+      `review.md`'s own "Boot — read the canonical files first" section names only `RULES.md` as the required pre-poll
+      read; it never explicitly lists `worker.md`, yet the live `/api/slots/<N>/boot` endpoint's required-file check
+      DOES enforce `worker.md` for the review role — confirmed directly: this session's own first `/boot` call was
+      rejected 428 (`"missing": ["...agents/worker.md"]`) even after declaring `RULES.md` + `review.md` read
+      (`GET /api/activity?slot=1` event `boot_read_unconfirmed` at 2026-07-31T18:04:34Z is this exact rejection). Add
+      `worker.md` to the explicit required-pre-read list in both `review.md`'s boot section and `RULES.md` (wherever it
+      enumerates per-role required reads), so a fresh review session's own docs tell it the true required set instead of
+      discovering it via a 428 round-trip. Done when: `review.md` explicitly names `worker.md` as a required STEP-0/1
+      read, and the documented set matches the server's actually-enforced set for role=review.
 
 ## Evidence
 
@@ -781,3 +802,56 @@ not just noting.
   identically. No workflow/infra change attempted (out of worker scope). Filed `/blocked` on my own task
   (`defi_venue_pipeline_to_live_ao_build-003`) recommending skip-and-resume-later rather than continuing to hold the
   slot; see that plan's Progress Log for the fix commit + resume point once this clears.
+
+- **2026-07-31 ~15:17-15:26Z (review agent `agt-65ba48`, slot 1) — a THIRD `tmux_session_lost`-cluster signature this
+  doc tracks: CPU-oversubscription, distinct from the IO/disk-full and RAM-exhaustion variants already logged above —
+  formalizing (per main agent `agt-40d0ed`'s explicit disposition) a chat finding a prior review-agent session (this
+  same persistent role) reported before itself being killed mid-conversation.** Independently re-verified via
+  `GET /api/activity?type=tmux_session_lost&since=2026-07-31T15:00:00Z` (not relayed) — **THREE back-to-back kill waves
+  in under 9 minutes, one more than main's own chat summary named**: **15:17:54Z** — slots 4, 8, 9, 12, 14 killed
+  together (slot 9 released `prediction_satellite_ao_dispatch_batch4-023`, slot 8 released
+  `tradfi_satellite_ao_dispatch_batch5-001`); **15:18:55Z** — slots 1, 5, 10 killed (slot 5 released
+  `mdps_candle_manifest_near_total_coverage_gap-004`); **15:25:59Z** — slots 1, 4, 10, 12 killed (slot 4 released
+  `ibkr_pipeline_mode_missing_venue_override-002`, slot 10 released `defi_satellite_ao_dispatch_batch3-015`, slot 12
+  released `mtds_available_at_cross_asset_backfill-006`). That's **6 requeued tasks across all 3 waves** — the 15:17:54Z
+  wave wasn't part of the original chat report to main; found it independently while pulling the raw event ids for this
+  write-up (main's "4 requeued tasks" matches exactly the other two waves alone). Slot 1 (this review role's own slot)
+  was killed repeatedly through the window — 15:18:55Z, 15:25:59Z, then again at 15:36:03Z, 15:40:08Z, and 15:48:41Z (5
+  kills in ~30min).
+
+  **New finding beyond the original chat report: the review role stayed down for ~2h15m after the last kill, not just
+  slow to notice.** `GET /api/activity?slot=1&since=2026-07-31T15:45:00Z` shows the AutoSpawn respawn mechanism itself
+  failing repeatedly after the 15:48:41Z kill: `spawn_retry_cap_reached` at **16:05:48Z** (retry_count=2,
+  session_alive=false, pane_state="no_session") and again at **17:00:26Z** (same signature, session_alive=false) — two
+  full retry cycles that never produced a live tmux session — before `agentkeeper_review_succeeded` finally landed at
+  **18:04:03Z**, immediately followed by this session's own boot (`slot_boot` 18:04:44Z; the `boot_read_unconfirmed` 428
+  the new `[DOCS] P3` todo above cites is this session's own 18:04:34Z rejection). Net: the review role — the fleet's
+  only PR/discipline watcher — had **zero coverage for ~2h15m** (15:48:41Z→18:04:03Z), which is also the literal reason
+  main's 15:38:12Z message sat unanswered until now. Working theory, not operator-confirmed: the same
+  CPU-oversubscription this entry documents (load ~2x core count, 21 QG-related processes live) plausibly also made
+  spawning a NEW tmux session + `claude` process unreliable on this host, i.e. the incident may have disabled its own
+  oversight mechanism for the duration — consistent with, but not proven by, the timing (both failed-spawn attempts fall
+  inside the elevated-load window; the eventual success at 18:04Z lines up with this entry's own fresh reading below
+  showing load back down). Not opening a third todo for this unilaterally (main didn't ask for one and `does_not` on
+  backlog-authoring applies) — flagging it to main via chat instead, for main to judge whether AutoSpawn's retry
+  cap/backoff needs a longer allowance specifically for singleton roles (review/main) where a respawn failure means
+  fleet-wide coverage drops to zero, vs. an ordinary worker slot where one task waits.
+
+  **Root cause confirmed CPU-oversubscription, not IO/memory** — main agent `agt-40d0ed` corroborated on-host (same box,
+  `ip-172-31-5-118`) at message time (2026-07-31T15:38:12Z): load 31.89 on 16 vCPU (~2x core count), memory fine (53Gi
+  free — ruling out the RAM-exhaustion variant `orchestrator_vm_disk_io_contention_runner_burst_2026-07-28.md` tracks),
+  but **13 concurrent `quality-gates.sh` + 8 concurrent `pytest` processes live** against the shared-host cap
+  `max(2, floor(16/4))=4` — violated 3x+ on the QG count alone. Disposition (main, same message): same standing P1 root
+  this doc's chain already tracks (`fleet_wide_qg_self_hosted_runner_capacity_crisis_2026_07_27.md`, parent_epic
+  `infrastructure_master`) — CPU-oversubscription is a NEW signature of that root, not a fresh incident; append here
+  rather than file a new doc (784 lines at the time, well under the 1000 cap).
+
+  **Current re-check (this write-up, 2026-07-31T18:08:44Z, ~2.5h after main's reading) — EASED, not worse**: load
+  average now 6.00/6.85/7.17 (1/5/15-min) on 16 vCPU, comfortably under core count; `free -h` shows 29Gi free/45Gi
+  available and swap 16Gi/47Gi used (still nonzero — consistent with this doc's standing
+  "fluctuating-but-still-elevated" characterization, not "resolved"); QG-related process count back near cap — 3
+  `quality-gates.sh` + 2 `pytest` = 5 vs cap 4, nowhere near the 21-process peak. Same "burst-not-sustained-worsening"
+  pattern the 2026-07-30 16:39Z entry above established for that day's larger wave — not an ongoing crisis at write-up
+  time. Two new todos opened above per main's disposition (`[BACKEND] P1` machine-enforced concurrency gate, `[DOCS] P3`
+  boot-read-list gap). No code or infra change made this entry; read-only AO-activity-API + host `uptime`/`free`/`ps`
+  queries only; slot 1 left clean on `live-defi-rollout` (only this doc touched).
