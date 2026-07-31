@@ -21,7 +21,7 @@ related:
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]
 created: "2026-07-26"
-last_updated: "2026-07-29"
+last_updated: "2026-07-31"
 parent_epic: sports_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -98,7 +98,13 @@ drift_direction: advance-code
       todo shipped `market-tick-data-service@76ca401f`, done 2026-07-27) — so the remaining batch5 todo is itself now
       dispatchable, it just hasn't been picked up/executed yet. This finalize closeout has nothing further for THIS todo
       to do until that separate batch5 todo lands. Releasing via `/skip-current-task {"reason_code": "GATED"}`. Next
-      dispatch: re-check once batch5's zombie-tick todo flips `[x]`. **Archive every source doc todo 1 drives to
+      dispatch: re-check once batch5's zombie-tick todo flips `[x]`. **Reconfirmed 2026-07-31 (slot 3,
+      data_engineering): gate still open, zero drift since slot 11's check.** Direct re-read of
+      `sports_satellite_ao_dispatch_batch5_2026_07_26.md` shows its zombie-tick todo still `[ ]`, no commits landed
+      against it in the interim. Also pre-resolved the archiving requirement below: the one doc todo 1 flipped to
+      `status: resolved` (`sports_t6_8_oneoff_retirement_residual_2026_07_25.md`) is already archived at
+      `plans/archive/issues/sports_t6_8_oneoff_retirement_residual_2026_07_25.md` — nothing outstanding there. Releasing
+      again via `/skip-current-task {"reason_code": "GATED"}`. **Archive every source doc todo 1 drives to
       `status: resolved`/`complete` — in the same commit as the flip, never left sitting in `plans/active/`.**
       `check_terminal_status_archived.py` HARD-fails on any doc whose frontmatter reads a terminal status while it still
       lives under `plans/active/` (including `plans/active/issues/`) — the omission of this exact step across the sports
