@@ -306,3 +306,29 @@ coverage asserting a DEFI `funding_oi`/`returns` run actually loads non-empty da
     — a `DEFI_SUPPORTED_TIMEFRAMES`-style allowlist (mirroring `TRADFI_SUPPORTED_TIMEFRAMES`) would be a cleaner
     long-term fix once someone with the real perp_funding/oracle_prices native-cadence knowledge scopes it; today's fix
     is the safe, general, no-domain-knowledge-required floor (never mask a working TF, whatever the ladder contains).
+- **2026-07-31 (slot-2, data_engineering craft) — todo 2 attempted; `funding_oi` confirmed structurally blocked
+  (separate issue filed), found + fixed a FOURTH bug (in two passes — first attempt was incomplete) blocking `returns`,
+  real verification run now in flight on the corrected fix.** Ran a `--launch-mode dry` verification-window pass first
+  (`funding_oi`, `2023-05-12..2023-10-31`) per this todo's own "verified-clean manifest window" instruction — the
+  pass-through loader now loads real rows (no more "No upstream MDPS data"), but `funding_oi` fails a DIFFERENT gate:
+  HYPERLIQUID's raw `perp_funding` rows never carry `open_interest`/ `mark_price`/`index_price` in either capture era
+  (confirmed via direct raw-parquet inspection, not simulated) — a genuine data-availability gap, not a loader bug.
+  Filed `/plans/active/issues/defi_delta_one_funding_oi_hyperliquid_missing_open_interest_2026_07_31.md` (does not
+  re-attempt `funding_oi` further — deterministic, fix-direction is operator/repo-owner scoped). Separately dry-ran
+  `returns` (`oracle_prices`) over the same window — 27/51 instruments loaded real candles, then hit
+  `_resolve_passthrough_timestamp()` raising a polars `SchemaError` (tz-naive vs tz-aware `Datetime` compared in the
+  downstream range filter). **First fix attempt (`features-service@3bce3997`) was INCOMPLETE**: it made `available_at`
+  win outright whenever it's a native `pl.Datetime` — correct per the function's docstring, but that branch never
+  actually fires in production, because `available_at` is written to disk as an ISO-8601 **STRING** (confirmed via
+  direct polars-schema inspection of both the oracle_prices and perp_funding raw parquets — pandas' pyarrow auto-parse
+  had made it LOOK like a real datetime on first inspection, masking this). So the real (non-dry) run against `3bce3997`
+  reproduced the IDENTICAL SchemaError, falling through to the `publish_time` int-epoch branch
+  (`pl.from_epoch(..., time_unit="s")`, tz-naive by default) exactly as before the "fix". **Second fix
+  (`features-service@c46509be`)** properly parses `available_at` as a string (`str.to_datetime(time_zone="UTC")`) and
+  normalises EVERY branch's output (already-Datetime `timestamp`, `publish_time`/`timestamp` int-epoch, `date` string)
+  to UTC-tz-aware via a small extracted `_utc_expr()` helper (needed to stay under the 50-line method cap after the
+  added branches). 4 new/updated regression tests, including one asserting the exact production range-filter comparison
+  (`>=`/`<` against a tz-aware literal) no longer raises. Full `quality-gates.sh` green (112/112 `test_data_loader.py`).
+  Real (non-dry) `returns` verification-window run relaunched against the corrected fix
+  (`features-delta-one-defi-20260731-011445`) — result pending as this note is written; see this doc's next update or
+  the D1 todo's progress log for the outcome.
