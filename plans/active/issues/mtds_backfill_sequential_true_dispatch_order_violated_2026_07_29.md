@@ -132,20 +132,20 @@ which of the 3 hypotheses above (or another) is the actual cause — then fix + 
       agent-orchestrator)
 
       **2026-07-30 (slot-3, data_engineering craft) — STILL VIOLATED live, ~2h+ after the fix commit.** Dispatched
-          `mtds_available_at_cross_asset_backfill-006` ("Resume the prediction consolidator cron") directly via `/boot`.
-          Confirmed via `git merge-base --is-ancestor 77769ab HEAD` in this session's `agent-orchestrator` worktree —
-          `77769ab` IS an ancestor of current `live-defi-rollout` HEAD (`41f69878e`), so the fix is present in the repo. But
-          a fresh `GET /api/backlog` query against the LIVE orchestrator server (the same one that dispatched `-006` to me)
-          shows `mtds_available_at_cross_asset_backfill-001` (Apply `rebuild_prediction_manifest.py`, the true predecessor)
-          still `status: queued`, `dispatched_to: null` — never assigned to anyone — while `-006` (its downstream "resume
-          cron" sibling) was `dispatched` to this slot. The exact violation this VERIFY todo asks to check for is still
-          reproducing in production. Did not dig further into whether this is (a) the fix genuinely present in code but the
-          running orchestrator SERVER PROCESS not yet restarted/redeployed to pick it up (repo-merge ≠ live-deploy for a
-          long-running server), or (b) a residual gap in the fix itself — that root-cause split needs `backend_engineer`
-          craft + the server's own deploy/restart history, out of scope for a `data_engineering` task. Declined `-006`
-          itself (nothing to resume — the backfill still hasn't been applied) per the established precedent in the
-          source plan's Progress Log (dispatch-order findings #2–#5). Leaving this checkbox unflipped — the fix is not yet
-          confirmed live-effective.
+              `mtds_available_at_cross_asset_backfill-006` ("Resume the prediction consolidator cron") directly via `/boot`.
+              Confirmed via `git merge-base --is-ancestor 77769ab HEAD` in this session's `agent-orchestrator` worktree —
+              `77769ab` IS an ancestor of current `live-defi-rollout` HEAD (`41f69878e`), so the fix is present in the repo. But
+              a fresh `GET /api/backlog` query against the LIVE orchestrator server (the same one that dispatched `-006` to me)
+              shows `mtds_available_at_cross_asset_backfill-001` (Apply `rebuild_prediction_manifest.py`, the true predecessor)
+              still `status: queued`, `dispatched_to: null` — never assigned to anyone — while `-006` (its downstream "resume
+              cron" sibling) was `dispatched` to this slot. The exact violation this VERIFY todo asks to check for is still
+              reproducing in production. Did not dig further into whether this is (a) the fix genuinely present in code but the
+              running orchestrator SERVER PROCESS not yet restarted/redeployed to pick it up (repo-merge ≠ live-deploy for a
+              long-running server), or (b) a residual gap in the fix itself — that root-cause split needs `backend_engineer`
+              craft + the server's own deploy/restart history, out of scope for a `data_engineering` task. Declined `-006`
+              itself (nothing to resume — the backfill still hasn't been applied) per the established precedent in the
+              source plan's Progress Log (dispatch-order findings #2–#5). Leaving this checkbox unflipped — the fix is not yet
+              confirmed live-effective.
 
 ## Deferred — HELD by the `/na-eligibility-audit ao` conflict-check (2026-07-30)
 
@@ -224,3 +224,15 @@ stall blocking a SECOND in-flight plan (`prediction_satellite_ao_dispatch_batch4
   root-cause fix above, or (b) as a pragmatic unblock, have any data_engineering worker directly execute
   `mtds_available_at_cross_asset_backfill-001` (apply + guardrail-verify) since its prerequisites are already satisfied,
   which would unblock both stalled plans in one move.
+- **2026-07-31T15:30Z (slot 14): a THIRD independent plan hit the same class, confirming this is not
+  `mtds_available_at_cross_asset_backfill`-specific.** Dispatched `mdps_tradfi_ohlcv_15m_24h_conversion_still_zero-003`
+  (`plans/active/issues/mdps_tradfi_ohlcv_15m_24h_conversion_still_zero_2026_07_27.md`, `sequential: true` set on that
+  doc too) — its `[SCRIPT] P2` "re-run mdps-backfill-tradfi-*" todo (line 243) was dispatched while its explicit
+  predecessor, the `[DATA] P2` "Deeper root cause" todo (line 200), is still `[ ]` open (independently re-verified: the
+  blocking code gap — `related_data_types` undefined on the TradFi ohlcv adapters — is still genuinely unfixed). Same
+  shape as the mtds case above: `sequential: true` present, later todo dispatched anyway ahead of its still-open
+  predecessor. Declined to run the backfill (would reproduce a known `Candles=0` result at real VM/GCS cost);
+  documented + skipped per the established precedent — see that doc's own new re-check entry
+  (`unified-trading-pm@e2fe5a469`). Not root-caused further from here (same `backend_engineer`/agent-orchestrator scope
+  as the `[VERIFY] P2` todo above) — adding as corroborating evidence that the `77769ab` fix's live-deploy status (or a
+  residual gap) still needs confirming, per that todo's own open question.
