@@ -177,3 +177,44 @@ the full command trail. Re-ran this doc's own P3 todo (`gh run rerun 30217824955
   newly-exposed blockers are independently fixed" rather than re-diagnosing tags again. Not filing new issue docs for
   the 2 new blockers in this pass (out of this doc's scope, no further investigation done on either) — flagging here so
   the next picker-upper doesn't mistake them for a tag-fix regression.
+
+## 2026-07-31 blocker 1 fixed (registry content regen); blocker 2 already fixed; a 3rd blocker found — NOT this doc's scope
+
+Picked up this doc's own P3 todo 3 fresh. Fresh-pulled the fleet, re-checked `main`'s last 10+ `CI - Test & Lint` runs.
+
+**Blocker 1 (registry-drift's own stale-content failure) — FIXED this session.** Set up `git worktree` checkouts of
+UAC/UTL/PM at their actual `main` tips (the exact refs `registry-drift`'s job checks out — NOT `live-defi-rollout`,
+which can differ), built a throwaway py3.13 venv, and ran the documented regen command CI-faithfully. Confirmed genuine,
+large drift: `archetype_count` 23→53 (+30 archetypes accumulated on UAC main since the file was last regenerated —
+TSMOM/DEFI_LP/PORTFOLIO_FACTOR_ALLOCATION/etc — 6197 lines of content-normalized diff, not a formatting artifact). No
+`MVP_CME_EXCHANGE_CODES` import warning this time (38 codes extracted cleanly) — that part of the 07-27 finding is gone
+(unrelated prior fix, not reinvestigated). Regenerated, ran `prettier --write` to match the committed style, and
+confirmed the new committed file content-normalizes BYTE-IDENTICAL to a fresh generation (the exact check
+`registry-drift`'s `Diff ui-reference-data.json` step runs). Shipped: `unified-trading-system-ui@dfbfff68`
+(`fix(registry): regenerate ui-reference-data.json from UAC/UTL main`).
+
+**Blocker 2 (e2e's `.gitleaks.toml` ENOENT) — already fixed by someone else, prior to this session.** `git log` shows
+`1306658c fix(ci): replace dangling .gitleaks.toml symlink with real file copy`, already on both `main` and
+`live-defi-rollout` (`git ls-tree` confirms `100644` regular blob, not a `120000` symlink, on both). Not this session's
+work — noting it here so the "3 consecutive greens" bar isn't miscounted against a blocker that's already gone.
+
+**Blocker 3, newly found — a flaky `test` job failure, NOT filing a new issue doc, cross-referencing instead.** 3 of the
+last ~10 `main` CI runs (e.g. `30544453841`, `30543110912`, `30403417035`) show the `test` job itself failing on
+`tests/unit/components/strategy-catalogue/admin-editor-wiring.test.tsx` ("surfaces the load error banner on GET failure"
+—
+`TestingLibraryElementError: Unable to find an element by: [data-testid="admin-editor-load-error"]"), which skips `registry-drift`/`e2e`entirely (both`needs:
+test`). Ran this exact test file in isolation locally 5/5 times — 100% pass, 6-8s each — ruling out a real app/test bug. The failing CI runs show adjacent `ECONNREFUSED
+127.0.0.1:8030`/`socket hang up`noise from concurrent workers in the same log, and separately observed`gh api
+.../actions/runners`showing exactly ONE`glue-ip-172-31-5-118-1`runner (shared, frequently`busy`) with 2-3 runs sitting `queued`for 1-2.5+ hours at time of writing. This matches, symptom-for-symptom, the ALREADY-TRACKED, still-open multi-day incident`plans/active/issues/fleet_wide_qg_capacity_crisis_continues_day2_2026_07_29.md`(host-contention-induced timeouts/hangs on the same shared`glue`runner fleet,`i-0c9b283b31d6b5ca7`)
+— that doc's own entries repeatedly conclude "host contention, no code fix" for symptomatically-identical CI flakes. Not
+duplicating a new issue doc for this; deliberately cross-referencing instead.
+
+**Verdict / what's left**: this doc's registry-drift-specific scope is now fully unblocked in principle (both real
+blockers fixed). The "3 consecutive green `main` pushes" bar itself is NOT yet observed — it requires the fix above to
+actually run to completion on `main` via the LDR→main promotion cycle, competing for the same contended single runner
+tracked by the day2 capacity doc, so wall-clock to observe 3 greens could span hours and depends on that separate
+incident's trajectory, not on anything left to do in THIS doc. Leaving todo 3 unchecked pending that live observation —
+whoever next has a natural CI-status check in flight (or the next `/check-agent-orchestrator`-adjacent session) should
+glance at `gh run list --workflow "CI - Test & Lint" --branch main --repo IggyIkenna/unified-trading-system-ui` and, if
+3 consecutive `registry-drift: success` are visible, flip the checkbox and move on to the
+capability-manifest.json/capability-verdict-matrix.json CI-check extension the todo also names.
