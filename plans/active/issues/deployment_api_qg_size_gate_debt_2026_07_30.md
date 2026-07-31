@@ -108,8 +108,16 @@ file-by-file.
       `_get_manifest_status_sync` 132L, `_dispatch_category_builds` 102L, `_live_build_fallback` 71L) — different
       concern (live-build OOM guard, subprocess dispatch), out of scope for this todo's specifically-named target. A
       future dispatch decomposing those 4 can then remove `manifest.py`'s exclude entry.
-- [ ] [SCRIPT] P1. Decompose `deployment_api/services/data_status/mtds.py` (1059L, contains the 220L
-      `mtds_honest_coverage_for_venue()`). Remove its exclude entry once compliant.
+- [x] ✅ [SCRIPT] P1. Decompose `deployment_api/services/data_status/mtds.py` (1059L, contains the 220L
+      `mtds_honest_coverage_for_venue()`). Remove its exclude entry once compliant. — deployment-api@a483514: split into
+      `mtds_meta.py` (category/PREDICTION metadata), `mtds_defi_alias.py` (DEFI alias maps + canonicaliser),
+      `mtds_expected.py` (expected-venues/-dates helpers), `mtds_dt_entries.py` (per-dt coverage-entry builders);
+      `mtds.py` (376L) stays the re-export facade every caller/test imports from. `mtds_honest_coverage_for_venue`
+      shrunk 220L → ~150L (venue-row filtering + per-dt dispatch extracted to `mtds_dt_entries.py`, but the
+      `mtds_expected_dates_for_venue_dt()` call itself stays inline in `mtds.py` so the existing `unittest.mock.patch`
+      target in `tests/unit/test_data_status_seeded_4state_denominator.py` keeps intercepting it).
+      `FUNCTION_SIZE_EXTRA_EXCLUDES` entry for `mtds.py` removed. Full `quality-gates.sh` green (5052 tests pass, 0
+      regressions).
 - [ ] [SCRIPT] P1. Decompose `deployment_api/services/cost_observability/service.py` (1055L, 6 oversized methods).
       Remove its exclude entry once compliant.
 - [ ] [SCRIPT] P1. Decompose `deployment_api/routes/health_consolidator.py` (1082L). Remove its exclude entry once
@@ -201,3 +209,15 @@ file-by-file.
   (patch-surface mapping, basedpyright/ruff fixes, test verification). `deployment-api@75584a8` (split) +
   `deployment-api@17361fd` (removed the now-obsolete `FUNCTION_SIZE_EXTRA_EXCLUDES` entry, re-verified `✅ File size OK`
   with it gone). 8 P1/P2 decomposition todos remain open for follow-up dispatch.
+- 2026-07-31 (slot-8, infra craft): Flipped todo 3 — decomposed `deployment_api/services/data_status/mtds.py` (1059L)
+  into `mtds_meta.py` / `mtds_defi_alias.py` / `mtds_expected.py` / `mtds_dt_entries.py`, keeping `mtds.py` (376L) as
+  the re-export facade every existing caller + test imports from unchanged. Also shrunk `mtds_honest_coverage_for_venue`
+  from 220L to under the 200L function-size gate. First full-QG pass surfaced 2 genuine regressions
+  (`tests/unit/test_data_status_seeded_4state_denominator.py`'s
+  `unittest.mock.patch.object(_dss_mod, "mtds_expected_dates_for_venue_dt", ...)` stopped intercepting calls once that
+  call moved into the new `mtds_dt_entries.py` module — `patch.object` only affects the attribute on the patched module,
+  not a same-named import bound into a different module's globals) — fixed by keeping the
+  `mtds_expected_dates_for_venue_dt()` call physically inside `mtds.py`'s own function body and only extracting the
+  seeded/derived dispatch + count bookkeeping into `mtds_dt_entries.py` helpers that take `expected_dates` as a
+  parameter. Re-verified: `deployment-api@a483514`, full `quality-gates.sh` green (5052 tests pass, `✅ File size OK`,
+  `✅ Function/class/method size OK`, 0 regressions). 7 P1/P2 decomposition todos remain open for follow-up dispatch.
