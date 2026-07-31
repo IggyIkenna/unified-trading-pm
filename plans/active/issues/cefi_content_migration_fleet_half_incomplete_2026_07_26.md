@@ -953,3 +953,12 @@ accordingly.
   the periodic pyarrow pool-release diagnostic firing normally (`bytes_allocated=61,239,168` at the next 200-file
   checkpoint) — both STARTED and PROGRESS checks per `rb_infra_relaunch.md` satisfied. Pinged the authoring
   fleet-monitor slot with this outcome.
+- **2026-07-31T05:21Z (slot-15)**: shard 21 (`-032606`) is a 2nd instance of the same silent-freeze failure mode —
+  `run.log` `Update time` frozen at 04:39:47Z (~42min stale at check time), no `rc=137`, at 4111s (~68.5min),
+  32,000/159,027 files (20.1%), `bytes_allocated` near-zero throughout (not the OOM-spike pattern). Per slot-3's
+  root-cause above (the `hard_deadline` scaling bug, now fixed in `market-tick-data-service@55d051bd`), this is almost
+  certainly the SAME already-diagnosed-and-fixed bug, not a new mystery — this VM was launched (03:26Z, the `-032606`
+  batch) before that fix shipped (~05:13Z), so it's running pre-fix code and was always going to hang indefinitely once
+  wedged. No action taken myself (monitoring-only) — the correct remediation (delete + republish tarball + relaunch) is
+  what slot-3 already did for shard 17; deferring to whoever picks up shard 21 next to do the same, and re-tagging my
+  earlier "THIRD distinct failure mode" framing as RESOLVED/root-caused rather than open.
