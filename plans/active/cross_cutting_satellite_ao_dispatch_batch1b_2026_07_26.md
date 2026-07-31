@@ -128,30 +128,30 @@ drift_direction: advance-code
       required lifecycle marker.
 
       **PARTIAL PROGRESS 2026-07-31 (slot 10) — lifecycle-marker stamping sub-piece DONE, classify/delete/relocate
-              NOT done.** Fleet-wide `grep -rL '^# Delete-when:' */scripts/ --include='*.py' --include='*.sh'` found 32
-              remaining unstamped scripts across 12 repos (client-reporting-api, deployment-service, deployment-ui,
-              e2e-testing, features-service, fund-administration-service, greeks-service, instruments-service,
-              market-data-processing-service, market-tick-data-service, unified-api-contracts, unified-trading-pm) — every
-              other repo in the fleet was already fully stamped from the prior rollout. Stamped all 32 using the
-              already-decided classification embedded in each script (existing `Epic:`/`Lifecycle:` prose where present) or
-              the nearest sibling-file epic convention (mechanical, no new judgment calls), then shipped per-repo via the
-              normal QG→quickmerge flow: client-reporting-api@c47835f, deployment-service@1261ce7, deployment-ui@5a4ce5a,
-              e2e-testing@42be3c1, features-service@3966bfcb, fund-administration-service (pending final quickmerge, commit
-              c0402e0 already QG-green), greeks-service@aee891d, instruments-service@240d80a7,
-              market-data-processing-service@0d43a64, market-tick-data-service@fe1c4ca2, unified-api-contracts@a4b1345d
-              (recovered via reflog after a quickmerge branch-reset bug — see
-              `plans/archive/issues/quickmerge_agent_regate_resets_branch_loses_local_commit_2026_07_31.md`), unified-trading-pm
-              (this commit). **The classify/delete/relocate portion of this item's done-when is intentionally NOT attempted
-              here** — that work requires per-script KEEP/DELETE/DEPRECATE/PROMOTE-TO-CLI judgment calls (campaign-gating
-              awareness, GCS-orphan-verification before any delete) that are explicitly scoped as
-              GATED+REVIEWED/human-judgment in `plans/active/repo_scripts_governance_audit_2026_06_18.md` (`assigned_vm: NA`)
-              — an AO worker attempting a fleet-wide classify+delete sweep unsupervised would risk deleting
-              campaign-in-flight one-offs (that governance-audit doc's own Finding 1 flags this exact risk for
-              instruments-service/MTDS). This item stays open; the marker-stamping done-when clause is satisfied, the
-              delete/relocate clauses are not — do not re-flip this checkbox until the governance-audit plan's Phase-1
-              delete/deprecate/promote execution actually lands.
+                  NOT done.** Fleet-wide `grep -rL '^# Delete-when:' */scripts/ --include='*.py' --include='*.sh'` found 32
+                  remaining unstamped scripts across 12 repos (client-reporting-api, deployment-service, deployment-ui,
+                  e2e-testing, features-service, fund-administration-service, greeks-service, instruments-service,
+                  market-data-processing-service, market-tick-data-service, unified-api-contracts, unified-trading-pm) — every
+                  other repo in the fleet was already fully stamped from the prior rollout. Stamped all 32 using the
+                  already-decided classification embedded in each script (existing `Epic:`/`Lifecycle:` prose where present) or
+                  the nearest sibling-file epic convention (mechanical, no new judgment calls), then shipped per-repo via the
+                  normal QG→quickmerge flow: client-reporting-api@c47835f, deployment-service@1261ce7, deployment-ui@5a4ce5a,
+                  e2e-testing@42be3c1, features-service@3966bfcb, fund-administration-service (pending final quickmerge, commit
+                  c0402e0 already QG-green), greeks-service@aee891d, instruments-service@240d80a7,
+                  market-data-processing-service@0d43a64, market-tick-data-service@fe1c4ca2, unified-api-contracts@a4b1345d
+                  (recovered via reflog after a quickmerge branch-reset bug — see
+                  `plans/archive/issues/quickmerge_agent_regate_resets_branch_loses_local_commit_2026_07_31.md`), unified-trading-pm
+                  (this commit). **The classify/delete/relocate portion of this item's done-when is intentionally NOT attempted
+                  here** — that work requires per-script KEEP/DELETE/DEPRECATE/PROMOTE-TO-CLI judgment calls (campaign-gating
+                  awareness, GCS-orphan-verification before any delete) that are explicitly scoped as
+                  GATED+REVIEWED/human-judgment in `plans/active/repo_scripts_governance_audit_2026_06_18.md` (`assigned_vm: NA`)
+                  — an AO worker attempting a fleet-wide classify+delete sweep unsupervised would risk deleting
+                  campaign-in-flight one-offs (that governance-audit doc's own Finding 1 flags this exact risk for
+                  instruments-service/MTDS). This item stays open; the marker-stamping done-when clause is satisfied, the
+                  delete/relocate clauses are not — do not re-flip this checkbox until the governance-audit plan's Phase-1
+                  delete/deprecate/promote execution actually lands.
 
-- [ ] [CODE] P2. **features-service — fix `odds_features_exporter.py` velocity-accel fallback NaN/math semantics
+- [x] ✅ [CODE] P2. **features-service — fix `odds_features_exporter.py` velocity-accel fallback NaN/math semantics
       (dead-code + a legit-`0.0`-drop bug).** `_compute_velocity_from_pivoted`'s (lines ~509-514) elif/else acceleration
       branches are unreachable dead code today: `np.nan` satisfies `isinstance(x, float)`, so the line-509 guard always
       fires and the elif/else are never taken. Separately, the same function's `v_late = a or b` retrieval drops a
@@ -168,7 +168,17 @@ drift_direction: advance-code
       test asserting (a) the elif/else branches are reachable and produce the expected acceleration value for a non-NaN
       early velocity, and (b) a legitimate `v_late=0.0` is preserved rather than replaced by the fallback;
       `quality-gates.sh` is green in features-service; and the source doc's line ~71-75 checkbox is flipped citing the
-      commit sha.
+      commit sha. — **ALREADY DONE 2026-07-31 (slot 15) — pre-existing, shipped before this todo was even written.**
+      Read the current function: the elif/else fallback no longer exists at all — it was REMOVED (not patched) by
+      `features-service@bf6fc2f4` ("fix(sports): gate T-0 closing-line-derived odds columns out of pre-match horizons",
+      2026-07-16, verified ancestor of `origin/live-defi-rollout`), replaced with a single deterministic
+      `v_mid - v_early` computation gated on `isinstance(v_mid, float) and isinstance(v_early, float)` — this makes the
+      unreachable-elif bug moot (dead code deleted, not made reachable) and there is no `a or b` pattern anywhere in the
+      function anymore (`row.get(...)` used directly), so the `0.0`-drop bug is independently gone too. Test coverage
+      already exists and passes (`tests/sports/unit/test_odds_features_exporter.py`, 16/16 velocity/ acceleration tests
+      green, incl. `test_acceleration_never_uses_the_closing_leg` and `test_acceleration_nan_when_v_early_is_nan` which
+      directly cover this todo's two done-when criteria). No new code needed — both source docs' line numbers were stale
+      (509-514 pre-dates the 2026-07-16 rewrite; actual function is now at line 636).
 - [x] ✅ [CODE] P2. **features-service — make `_make_session`'s aiohttp resolver construction lazy/loop-safe (latent
       out-of-loop-construction crash).** `features_service/onchain/app/core/data_loader.py:224`'s `_make_session`
       constructs `aiohttp.resolver.ThreadedResolver()` eagerly, which calls `asyncio.get_running_loop()` at construction
