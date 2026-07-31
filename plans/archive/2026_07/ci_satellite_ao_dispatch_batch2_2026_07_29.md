@@ -48,7 +48,7 @@ related:
   [
     /plans/active/ci_satellite_ao_dispatch_batch1_2026_07_26.md,
     /plans/active/ci_satellite_ao_dispatch_batch1_finalize_2026_07_26.md,
-    /plans/active/ci_satellite_ao_dispatch_batch2_finalize_2026_07_29.md,
+    /plans/archive/2026_07/ci_satellite_ao_dispatch_batch2_finalize_2026_07_29.md,
     /plans/archive/2026_07/ci_consolidated_closeout_2026_07_25.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
     /codex/08-workflows/ci-cd-flow.md,
@@ -189,10 +189,10 @@ concurrent workers do not collide on this file.
       (`qg_sentinel_environment_blind_2026_07_23.md`), where it is quoted as the historical BUG DESCRIPTION being fixed,
       not instructional copy misleading a reader. The 3 canonical SSOT docs that DO describe the recovery flow were
       already updated as part of todo 1's landing (`unified-trading-pm@4545df4c6`, 2026-07-30) to describe the post-fix,
-      genuinely-safe behavior: `codex/08-workflows/ci-cd-flow.md` (lines ~384-405, sentinel now appends
+      genuinely-safe behavior: `/codex/08-workflows/ci-cd-flow.md` (lines ~384-405, sentinel now appends
       `ENVIRONMENT=`/`DEPLOYMENT_ENV=` + `_qm_check_agent_sentinel()`-equivalent config-mismatch check),
-      `codex/06-coding-standards/quality-gates.md` § "Do-less-work levers" (content-hash now folds resolved
-      `ENVIRONMENT`/`DEPLOYMENT_ENV`), `codex/05-infrastructure/quickmerge-architecture.md` § "Environment Awareness" /
+      `/codex/06-coding-standards/quality-gates.md` § "Do-less-work levers" (content-hash now folds resolved
+      `ENVIRONMENT`/`DEPLOYMENT_ENV`), `/codex/05-infrastructure/quickmerge-architecture.md` § "Environment Awareness" /
       "Sentinel integration" (shared `qg_resolve_environment()` single source of truth). `scripts/quickmerge.sh`'s
       `_qm_check_agent_sentinel()` (lines ~1484-1527) already emits the correct, safe framing on a config mismatch
       (`❌ Pass 1 sentinel config mismatch` + `Re-run: bash scripts/quality-gates.sh`), and its own regression test
@@ -271,7 +271,7 @@ concurrent workers do not collide on this file.
       `plans/active/issues/plan_commit_sha_evidence_regression_7e0aab35f_2026_07_31.md`; a first correction attempt
       split the work across two PM commits and cited a second non-existent SHA, `0b17f0747`, for a "design/initial
       extend" half — `git cat-file -e 0b17f0747` fails and `git log -- scripts/cicd/detect_breaking_change.py` shows no
-      such commit; the single real commit `5607023a2`'s diff (`codex/08-workflows/ci-cd-flow.md` +
+      such commit; the single real commit `5607023a2`'s diff (`/codex/08-workflows/ci-cd-flow.md` +
       `scripts/cicd/detect_breaking_change.py` + `tests/unit/test_detect_breaking_change.py`) already carries the
       design, implementation, tests, AND docs update together — there never was a separate design-only commit). (a)
       design: `# @contract-surface` marker convention (docstring + inline comments in `detect_breaking_change.py`),

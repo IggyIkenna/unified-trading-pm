@@ -20,8 +20,8 @@ tags:
   - data-correctness
   - source-priority
 related:
-  - plans/active/ci_satellite_ao_dispatch_batch2_2026_07_29.md
-  - plans/archive/issues/mtds_ungated_test_families_2026_07_17.md
+  - /plans/archive/2026_07/ci_satellite_ao_dispatch_batch2_2026_07_29.md
+  - /plans/archive/issues/mtds_ungated_test_families_2026_07_17.md
 created: 2026-07-30
 parent_epic: infrastructure_master
 assigned_vm: planning

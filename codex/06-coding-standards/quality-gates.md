@@ -3285,7 +3285,7 @@ it matters most there). `base-ui.sh` (TS repos) is out of scope (no pytest fan-o
   codex/production checks still run. **Safe by construction:** no sentinel / malformed hash / any content change →
   normal full run; only an exact 64-char match skips. `.qg_content_sentinel` is separate from quickmerge's
   `.qg_last_passed_sha` (that one ALSO now binds `ENVIRONMENT`/`DEPLOYMENT_ENV`, as appended lines after the SHA — see
-  `codex/08-workflows/ci-cd-flow.md` § "Two-Pass Workflow Model"). Both paths resolve `ENVIRONMENT` via the shared
+  `/codex/08-workflows/ci-cd-flow.md` § "Two-Pass Workflow Model"). Both paths resolve `ENVIRONMENT` via the shared
   `qg_resolve_environment()` (`scripts/quality-gates-base/qg-environment.sh`), sourced from `qg-common.sh` (every
   base-*.sh tier) and from `quickmerge.sh` — the single source of truth that keeps a standalone `quality-gates.sh` run
   and a quickmerge run from silently resolving different configs for the same branch. Escape:

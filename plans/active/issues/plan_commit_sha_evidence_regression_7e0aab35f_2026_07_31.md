@@ -27,7 +27,7 @@ tags: [plan-hygiene, fabricated-citation, quality-gates, repo-blocker]
 related:
   [
     /plans/active/issues/mtds_plan_flip_fabricated_commit_sha_evidence_2026_07_30.md,
-    /plans/active/ci_satellite_ao_dispatch_batch2_2026_07_29.md,
+    /plans/archive/2026_07/ci_satellite_ao_dispatch_batch2_2026_07_29.md,
     /plans/active/issues/breaking_change_differ_blind_to_registry_data_dicts_2026_07_09.md,
   ]
 created: 2026-07-31
@@ -79,7 +79,7 @@ unaddressed, either the fleet silently works around it (defeating the gate) or g
       the ratchet) is a typo'd/truncated form of a REAL commit and correct the citation. — that SHA is genuinely
       fabricated (confirmed absent via `git cat-file -e` and `git log --all`); the real work landed as the single commit
       `unified-trading-pm@5607023a2` ("fix(cicd): teach detect_breaking_change.py to track registry data-dict contract
-      surface"), whose diff (`codex/08-workflows/ci-cd-flow.md` + `scripts/cicd/detect_breaking_change.py` +
+      surface"), whose diff (`/codex/08-workflows/ci-cd-flow.md` + `scripts/cicd/detect_breaking_change.py` +
       `tests/unit/test_detect_breaking_change.py`) covers design + implementation + tests + docs together — confirmed
       via `git log -- scripts/cicd/detect_breaking_change.py`. NOTE: an earlier fix attempt (commit `88126c5e1`, by the
       slot that also filed this doc) had already partially addressed this by re-citing `5607023a2` for 3 of the 5

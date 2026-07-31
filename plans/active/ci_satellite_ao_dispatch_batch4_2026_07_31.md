@@ -28,8 +28,8 @@ related:
   [
     /plans/active/ci_satellite_ao_dispatch_batch1_2026_07_26.md,
     /plans/active/ci_satellite_ao_dispatch_batch1_finalize_2026_07_26.md,
-    /plans/active/ci_satellite_ao_dispatch_batch2_2026_07_29.md,
-    /plans/active/ci_satellite_ao_dispatch_batch2_finalize_2026_07_29.md,
+    /plans/archive/2026_07/ci_satellite_ao_dispatch_batch2_2026_07_29.md,
+    /plans/archive/2026_07/ci_satellite_ao_dispatch_batch2_finalize_2026_07_29.md,
     /plans/active/ci_satellite_ao_dispatch_batch4_finalize_2026_07_31.md,
     /plans/archive/2026_07/ci_satellite_ao_dispatch_batch3_2026_07_30.md,
     /plans/archive/2026_07/ci_consolidated_closeout_2026_07_25.md,

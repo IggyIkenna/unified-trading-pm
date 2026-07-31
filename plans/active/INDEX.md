@@ -17,7 +17,7 @@
 
 <!-- AUTO-INDEX-START -->
 
-_Auto-generated via `scripts/plans/regenerate_active_plan_index.py`. 243 plans across 10 domains. A plan tagged with
+_Auto-generated via `scripts/plans/regenerate_active_plan_index.py`. 242 plans across 10 domains. A plan tagged with
 multiple `asset_group:` values appears under each. Grep this block for a domain keyword before scanning `plans/active/`
 by hand._
 
@@ -866,7 +866,7 @@ by hand._
   monitoring_control_plane_master_2026_06_10.md as a file-disjoint scope-creep section (agent-orchestrator internals,
   not the…
 
-### ci (10)
+### ci (8)
 
 - [`capability_wizard_client_lite_and_ci_regen_followup_2026_07_24`](./capability_wizard_client_lite_and_ci_regen_followup_2026_07_24.md)
   — Small follow-up plan forking the 2 residual items left open when `capability_wizard_and_manifest_2026_06_11.md`
@@ -879,12 +879,6 @@ by hand._
   Gated closeout for ci_satellite_ao_dispatch_batch1_2026_07_26.md — machine-held via depends_on + gate_on_depends: true
   until all 29 of that plan's todos are done. Carries the ONE piece of work the batch deliberately could not contain:
   the…
-- [`ci_satellite_ao_dispatch_batch2_2026_07_29`](./ci_satellite_ao_dispatch_batch2_2026_07_29.md) — Second AO-dispatch
-  batch for the `ci` topic tranche, produced by `/ag-closeout-audit ci` (autonomous mode, 2026-07-29) re-running against
-  `ci_satellite_ao_dispatch_batch1_2026_07_26.md` (still `status: active`, 14/30 todos done at audit…
-- [`ci_satellite_ao_dispatch_batch2_finalize_2026_07_29`](./ci_satellite_ao_dispatch_batch2_finalize_2026_07_29.md) —
-  Gated closeout for ci_satellite_ao_dispatch_batch2_2026_07_29.md — machine-held via depends_on + gate_on_depends: true
-  until all 14 of that plan's todos are done. Reconciles each distinct source doc's checkboxes/prose independently,…
 - [`ci_satellite_ao_dispatch_batch4_2026_07_31`](./ci_satellite_ao_dispatch_batch4_2026_07_31.md) **[draft]** — Fourth
   AO-dispatch batch for the `ci` topic tranche, produced by `/ag-closeout-audit ci` (autonomous mode, 2026-07-31,
   ag_closeout_auditor scheduled worker, slot 12). Phase 0 re-checked batch1's still-open conflict-gated Deferred items…
@@ -900,7 +894,7 @@ by hand._
 - [`ui_build_warm_cache_2026_06_17`](./ui_build_warm_cache_2026_06_17.md) — Keep the UI quality-gate build cache warm so
   incremental rebuilds only recompile changed code, not the full app.
 
-### infrastructure (12)
+### infrastructure (13)
 
 - [`codex_violations_ratchet_to_five_2026_06_10`](./codex_violations_ratchet_to_five_2026_06_10.md) — Ratchet all repo
   codex-violation budgets to ≤5 fleet-wide and split egregious oversized source files (registry.py 18k, orchestrator.py
@@ -932,6 +926,10 @@ by hand._
   — Gated closeout for infra_satellite_ao_dispatch_batch3_2026_07_30.md, per the finalize-plan-coverage gate
   (task_template.md §4, operator ruling 2026-07-24; machine-enforced by
   scripts/quality_gates/check_finalize_plan_coverage.py, which is…
+- [`infra_satellite_ao_dispatch_batch4_2026_07_31`](./infra_satellite_ao_dispatch_batch4_2026_07_31.md) **[draft]** —
+  Fourth AO-dispatch batch for the `infra` topic tranche, produced by `/ag-closeout-audit infra` (autonomous mode,
+  2026-07-31). Batch3's own 2026-07-30 audit recommended treating the tranche as having reached its stop-iterating
+  condition;…
 - [`na_docs_validity_and_ao_eligibility_audit_2026_07_26`](./na_docs_validity_and_ao_eligibility_audit_2026_07_26.md) —
   Scoped 2026-07-26 per operator directive, for a FUTURE session (not this one). The 2026-07-25/26 `/ag-closeout-audit`
   9-tranche run + this session's mass-flip only ever acted on ORPHANED docs (no active plan covering them) — it never…
