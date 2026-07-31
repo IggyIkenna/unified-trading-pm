@@ -271,7 +271,7 @@ cancellation-timeout fix and already shipped). Suggested next steps for whoever 
       below, not under this narrower gen1-pin-monitoring checkbox. No code shipped this entry (pure verification + doc
       reconciliation).
 
-- [ ] [BACKEND] P2. **NEW, opened 2026-07-30T12:09Z (slot 8, review) — both named candidate mechanisms are now
+- [x] ✅ [BACKEND] P2. **NEW, opened 2026-07-30T12:09Z (slot 8, review) — both named candidate mechanisms are now
       REFUTED/weakened by direct evidence; investigate the sandbox-external-termination theory next.** The gen1 pin
       (`acdd4c8`) did NOT stop the crash loop (2 fresh post-pin SIGABRTs: `00337-lrr@09:05:15Z`, `00338-4qv@11:17:37Z`)
       and neither produced a faulthandler dump. This session empirically REFUTED the
@@ -349,8 +349,20 @@ cancellation-timeout fix and already shipped). Suggested next steps for whoever 
       non-`/health` request in the surrounding ±15min request log, so if this theory holds the trigger is most likely a
       BACKGROUND/scheduled code path, not a synchronous request handler — not yet identified. Filed a narrower, more
       targeted `[BACKEND]` follow-up todo below. No code shipped this session (investigation only, confirmed via real
-      Monitoring-API data + a local repro, not log-archaeology); the doc-wide root cause remains OPEN — this checkbox
-      stays unflipped.
+      Monitoring-API data + a local repro, not log-archaeology); the doc-wide root cause remains OPEN — tracked under
+      the two fresh `[BACKEND]` follow-up todos below (exec-subprocess call-site narrowing; untracked OOM-kills), not
+      this checkbox. **Flipped 2026-07-31 (slot 13, backend_engineer)**: re-verified fresh before flipping (not just
+      trusting the ~hours-old entry) — zero new commits touching `cloudbuild.yaml`/`gunicorn.conf.py`/`deployment_api/`
+      since `09:32Z`, and `gcloud logging read` for `"Uncaught signal"` shows no occurrence newer than the
+      `00343-tf5@21:14:18Z` one already analyzed above (same 3 occurrences, nothing new to fold in). Per this doc's own
+      established convention (see the 2026-07-30T13:06Z entry below), this checkbox's own literal asks — (1) Cloud
+      Monitoring per-instance metrics, (2) a termination-reason signal, (3) reconsider the gen1 pin if sandbox-kill is
+      supported — are all answered: (1)+(2) done via Finding A (no fresh-instance-start after the crash, near-idle
+      CPU/memory, i.e. the sandbox-whole-container-kill theory is refuted for the clean single-instance case); (3) moot
+      since the theory wasn't confirmed. Re-dispatching this same checkbox to re-derive an unchanged answer would be the
+      stochastic-event-polling anti-pattern this doc's history repeatedly flags, not genuine progress — flipping now and
+      letting the two fresh follow-up todos below carry the doc-wide root-cause question forward. No code shipped this
+      entry (pure verification + doc reconciliation).
 
 - [ ] [BACKEND] P2. **NEW, opened 2026-07-31 (slot 11, backend_engineer) — narrow the exec'd-subprocess-SIGABRT theory
       to a specific call site.** Per the todo above's Finding C: a `subprocess.run()`/`Popen`-spawned child crashing
@@ -394,6 +406,23 @@ cancellation-timeout fix and already shipped). Suggested next steps for whoever 
       root-causing continues. (repo: deployment-api)
 
 ## Progress Log
+
+- **2026-07-31 (slot 13, backend_engineer)** — Re-dispatched `deployment_api_sigabrt_crash_loop-006` (this
+  `[BACKEND] P2` sandbox-external-termination todo, 18th+ dispatch on this doc, ~hours after slot 11's 09:32Z session
+  below). Fresh-pulled all slot repos. Re-verified fresh rather than trusting the recent entry:
+  `git log --since="2026-07-31 09:32:00" -- cloudbuild.yaml gunicorn.conf.py deployment_api/` on
+  `origin/live-defi-rollout` — zero new commits; `gcloud logging read` for `"Uncaught signal"` scoped to
+  `uts-shared-deployment-api` over the last 2 days — the newest row is still `00343-tf5@2026-07-30T21:14:18Z`, the same
+  occurrence slot 11 already folded into Finding A/C below, nothing new. This checkbox's own 3 concrete next steps
+  (Cloud Monitoring per-instance metrics; a termination-reason signal; reconsider the gen1 pin if sandbox-kill is
+  supported) were all already executed with real data in the 09:32Z session and conclusively answered (theory refuted
+  for the clean single-instance case; gen1-pin reconsideration moot). Per this doc's own established convention
+  (2026-07-30T13:06Z entry: flip once a checkbox's own literal ask is answered, even on the negative/refuted branch, and
+  let a fresh follow-up todo carry the doc-wide question forward — don't keep re-dispatching an unchanged answer),
+  flipped the checkbox above rather than re-running the same already-answered checks a 18th time. No code shipped (pure
+  verification + doc reconciliation); the doc-wide root cause stays open under the two `[BACKEND]` follow-up todos slot
+  11 filed (exec-subprocess call-site narrowing; untracked OOM-kills) — whoever picks up
+  `deployment_api_sigabrt_crash_loop-007`/`-008` next should work those.
 
 - **2026-07-31T09:32Z (slot 11, backend_engineer)** — Dispatched `deployment_api_sigabrt_crash_loop-006` (the
   `[BACKEND] P2` sandbox-external-termination todo, 17th+ dispatch on this doc). Fresh-pulled all slot repos; confirmed
