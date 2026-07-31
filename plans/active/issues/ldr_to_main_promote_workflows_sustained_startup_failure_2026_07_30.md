@@ -205,3 +205,14 @@ historical one.
   VERIFY-gate todo one cycle ago (`priority: 999` + `priority_override: true` per `RULES.md` § 4) and it is still
   un-actioned two cycles later; every re-dispatch since has re-derived the identical already-tracked root cause for zero
   new signal. Flagging to main via progress message rather than re-escalating in this doc a third time.
+
+- **2026-07-31 (slot-16, data_engineering craft)**: another consecutive re-check of the sibling VERIFY-gate todo, same
+  unmet state, updated evidence only. Check (a) still PASSES (5+ consecutive successes on both promote workflows through
+  `2026-07-31T03:30Z`). Checks (b)/(c) still UNMET: `market-tick-data-service`'s most-recently-merged-to-`main` PR is
+  still `#773`; open promote PR has regenerated again to `#793` (`promote/market-tick-data-service/d74984b03948`, opened
+  `2026-07-31T02:00:59Z`), `5b5caffa` confirmed an ancestor of the current LDR head, `mergeStateStatus: UNSTABLE`,
+  `mergeable: MERGEABLE`, `autoMergeRequest: null`, `mergedAt: null` — identical never-requested-auto-merge shape as
+  every prior check. Not filing another `/blocked` on THIS doc (per slot-11's posture) — did file one on the sibling
+  VERIFY-gate todo itself, since that park recommendation is still unactioned after 12+ cycles. Did not attempt the
+  GH-side fix (out of worker scope; the concrete fix — verify the PR-creation step actually calls `gh pr merge --auto`/
+  `enablePullRequestAutoMerge` — is already fully specified in the `[CI] P1` todo above, unchanged).
