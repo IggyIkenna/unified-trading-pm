@@ -582,85 +582,21 @@ cancellation-timeout fix and already shipped). Suggested next steps for whoever 
       `faulthandler` is only armed worker-side). If it matches a logged WORKER pid instead: the low-pid/high-pid split
       found this session was NOT a MASTER/WORKER distinction — re-open that question with a fresh evidence-backed todo
       rather than re-guessing. If no SIGABRT has occurred yet since the deploy, this todo stays open — don't force a
-      conclusion from zero data. (repo: deployment-api) — **2026-07-31 (slot 3, review): gate genuinely NOT met yet —
-      zero SIGABRTs on the new-logging deploy so far, correctly staying open.** Content-verified (not just
-      ancestry-inferred) that `deployment-api@785405d` is actually live: pulled the exact image
-      (`asia-northeast1-docker.pkg.dev/.../deployment-api@sha256:2d69d3a6...489d7`) backing the current Cloud Run
-      revision `uts-shared-deployment-api-00361-qqp` (created 2026-07-31T11:54:18Z, ~26min after the commit's 11:28:37Z
-      timestamp — plausible normal CI-deploy SLA) and grepped the extracted `gunicorn.conf.py`: both new log lines
-      (`"gunicorn MASTER (arbiter) started, pid=%s"` in `on_starting`, `"gunicorn WORKER forked, pid=%s     age=%s"` in
-      `post_fork`) are genuinely present in the deployed bytes. Then searched Cloud Logging
-      (`resource.type=cloud_run_revision`, `service_name=uts-shared-deployment-api`,
-      `textPayload:"Uncaught signal:     6"`, 2-day window) for any SIGABRT since that deploy: the most recent
-      occurrence is on revision `uts-shared-deployment-api-00355-z2c` at `2026-07-31T10:37:56Z` — **before** `00361-qqp`
-      (11:54:18Z), i.e. on a pre-logging revision. Zero SIGABRTs have landed on `00361-qqp` (or any later revision) as
-      of this check. Per this todo's own done-when clause, correctly leaving it open rather than forcing a conclusion
-      from zero data. No code shipped (pure verification). Re-check next time a fresh dispatch of this task fires, or
-      whenever a new `Uncaught signal: 6` log line appears for `uts-shared-deployment-api` on a revision at/after
-      `00361-qqp`. — **2026-07-31T13:29Z (slot 9, review): re-checked, still gate NOT met — still correctly open, no new
-      data to force a conclusion from.** A newer revision has since gone live (`uts-shared-deployment-api-00363-nwx`,
-      created `13:23:29Z`, now 100% traffic — supersedes the `00361-qqp`/`00362-xzb` pair both prior checks inspected).
-      Content-verified (direct image pull + extraction, not ancestry) that `785405d`'s pid-role logging is genuinely
-      present in `00363-nwx`'s deployed `gunicorn.conf.py` (both `"gunicorn MASTER (arbiter) started, pid=%s"` and
-      `"gunicorn WORKER forked, pid=%s age=%s"` lines confirmed in the extracted file). Re-ran the same
-      `gcloud logging read` for `"Uncaught signal: 6"` scoped to `timestamp>="2026-07-31T11:54:00Z"` (covering
-      `00361-qqp`→`00362-xzb`→`00363-nwx`, ~1h36m elapsed since the pid-role-logging deploy first went live): **zero
-      rows** — query syntax cross-checked against the known `00355-z2c@10:37:56Z` occurrence in the same run to confirm
-      it isn't a false-negative empty result. No code shipped (pure verification). Leaving the checkbox unchecked per
-      this todo's own instruction; re-check on the next dispatch or the next `Uncaught signal: 6` occurrence on a
-      revision at/after `00361-qqp`. — **2026-07-31T14:26Z (slot 4, review): re-checked, still gate NOT met — still
-      correctly open.** Traffic has since moved through 4 more revisions (`00364-xlc`→`00365-pps`→`00366-v7t`→
-      `00367-kh7`, the last now serving 100%, created `14:10:36Z`). `docker pull`/`create` of `00367-kh7`'s image timed
-      out (2min) so could not directly extract `gunicorn.conf.py` this check — fell back to
-      `git log -- gunicorn.conf.py` in the deployment-api worktree, which confirms `785405d` (the pid-role-logging
-      commit) is still the latest commit touching that file with nothing reverting it, so the code is present at current
-      HEAD; not as strong as the direct image-extraction method the prior two checks used, flagging honestly. Re-ran
-      `gcloud logging read` for `"Uncaught signal: 6"` scoped to `timestamp>="2026-07-31T11:54:00Z"` (now ~2h32m elapsed
-      since the pid-role-logging deploy first went live, spanning 7 revisions `00361-qqp`..`00367-kh7`): **zero rows** —
-      re-confirmed the query isn't a false negative by re-running it against `timestamp>="2026-07-31T10:00:00Z"`, which
-      correctly surfaces the known `00355-z2c@10:37:56Z` occurrence. No code shipped (pure verification). Leaving the
-      checkbox unchecked; re-check on the next dispatch or the next `Uncaught signal: 6` occurrence on a revision
-      at/after `00361-qqp`. — **2026-07-31T14:48Z (slot 15, review): re-checked, still gate NOT met — still correctly
-      open.** A newer revision has since gone live (`uts-shared-deployment-api-00368-lc2`, created `14:24:41Z`, now
-      confirmed 100% traffic via `gcloud run services describe`). Content-verified via direct image extraction
-      (`docker     create` + `docker cp /app/gunicorn.conf.py` off the exact digest `sha256:ba374f8f...489d7f6` backing
-      `00368-lc2` — same strong method as the `00361-qqp`/`00363-nwx` checks, not the git-log fallback the
-      immediately-prior `00367-kh7` check had to use) that both pid-role log lines
-      (`"gunicorn MASTER (arbiter) started, pid=%s"` in `on_starting`, `"gunicorn WORKER forked, pid=%s age=%s"` in
-      `post_fork`) are genuinely present in the deployed bytes. Re-ran `gcloud logging read` for `"Uncaught signal: 6"`
-      scoped to `timestamp>="2026-07-31T11:54:00Z"` (now ~2h54m elapsed since the pid-role-logging deploy first went
-      live, spanning 8 revisions `00361-qqp`..`00368-lc2`): **zero rows** — re-confirmed the query isn't a false
-      negative by re-running it against `timestamp>="2026-07-31T10:00:00Z"`, which correctly surfaces the known
-      `00355-z2c@10:37:56Z` occurrence. No code shipped (pure verification). Leaving the checkbox unchecked; re-check on
-      the next dispatch or the next `Uncaught signal: 6` occurrence on a revision at/after `00361-qqp`. —
-      **2026-07-31T15:03Z (slot 14, review): re-checked, still gate NOT met — still correctly open.** Two more revisions
-      have since gone live (`00369-xkn` created `14:40:36Z`, then `00370-k95` created `14:52:23Z`, confirmed 100%
-      traffic via `gcloud run services describe`). Content-verified via direct image extraction (`docker create` +
-      `docker cp /app/gunicorn.conf.py` off the exact digest `sha256:cec7837f...e7e4ecd` backing `00370-k95`) that both
-      pid-role log lines (`"gunicorn MASTER (arbiter) started, pid=%s"` in `on_starting`,
-      `"gunicorn WORKER     forked, pid=%s age=%s"` in `post_fork`) are genuinely present in the deployed bytes. Re-ran
-      `gcloud logging read` for `"Uncaught signal: 6"` scoped to `timestamp>="2026-07-31T11:54:00Z"` (now ~3h09m elapsed
-      since the pid-role-logging deploy first went live, spanning 10 revisions `00361-qqp`..`00370-k95`): **zero rows**
-      — re-confirmed the query isn't a false negative by re-running it against `timestamp>="2026-07-31T10:00:00Z"`,
-      which correctly surfaces the known `00355-z2c@10:37:56Z` occurrence. No code shipped (pure verification). Leaving
-      the checkbox unchecked; re-check on the next dispatch or the next `Uncaught signal: 6` occurrence on a revision
-      at/after `00361-qqp`. — **2026-07-31T15:15Z (slot 8, review): re-checked, still gate NOT met — still correctly
-      open.** Traffic moved twice more during this check: first to `00370-k95` (created `14:52:23Z`), then to
-      `00371-xxq` (created `15:09:26Z`, confirmed 100% traffic via `gcloud run services describe` at check time).
-      Content-verified via direct image extraction (`docker create` + `docker cp /app/gunicorn.conf.py` off the exact
-      digest `sha256:901e6c40...ddedcf3` backing `00371-xxq`) that both pid-role log lines
-      (`"gunicorn MASTER (arbiter) started, pid=%s"` in `on_starting`, `"gunicorn WORKER forked, pid=%s age=%s"` in
-      `post_fork`) are genuinely present in the deployed bytes. Re-ran `gcloud logging read` for `"Uncaught signal: 6"`
-      scoped to `timestamp>="2026-07-31T11:54:00Z"` (now ~3h21m elapsed since the pid-role-logging deploy first went
-      live, spanning 11 revisions `00361-qqp`..`00371-xxq`): **zero rows** — re-confirmed the query isn't a false
-      negative by re-running it against `timestamp>="2026-07-31T10:00:00Z"`, which correctly surfaces the known
-      `00355-z2c@10:37:56Z` occurrence. No code shipped (pure verification). Leaving the checkbox unchecked; re-check on
-      the next dispatch or the next `Uncaught signal: 6` occurrence on a revision at/after `00361-qqp`. —
-      **2026-07-31T15:57Z (slot-6, data_engineering craft dispatched as review) — GATE FINALLY MET (a SIGABRT occurred),
-      but the correlation is UNRESOLVABLE — this exposes a deeper, previously-undiscovered root cause: the container's
-      own stdout/stderr has stopped reaching Cloud Logging entirely, well before the pid-role-logging fix even
-      shipped.** Confirmed `00373-7wt` (created `15:39:42Z`, 100% traffic) genuinely carries both pid-role log lines
-      (direct `docker create`/`docker cp` extraction of `gunicorn.conf.py` off digest `sha256:b6d33f50...fbbbf5`). A NEW
+      conclusion from zero data. (repo: deployment-api) — **2026-07-31 12:04Z-15:15Z, 6 successive re-checks (slots
+      3/9/4/15/14/8, review): gate genuinely NOT met across the whole window, correctly staying open each time —
+      condensed here (line-cap hygiene) from 6 near-duplicate entries; methodology + evidence preserved.** Each check
+      content-verified (direct `docker create`+`docker cp` image extraction, not ancestry — one check fell back to
+      `git log` when a `docker pull` timed out, flagged honestly at the time) that `785405d`'s two pid-role log lines
+      (`on_starting`/`post_fork`) were genuinely present in the then-current deployed revision, spanning 11 revisions
+      total (`00361-qqp`→`00371-xxq`, ~11:54Z→15:15Z, 100% traffic confirmed each time), and re-ran
+      `gcloud logging read` for `"Uncaught signal: 6"` scoped to `timestamp>="2026-07-31T11:54:00Z"` — **zero rows every
+      time**, each cross-checked against the known `00355-z2c@10:37:56Z` occurrence (via a widened query) to rule out a
+      false-negative empty result. No code shipped across all 6 (pure verification). — **2026-07-31T15:57Z (slot-6,
+      data_engineering craft dispatched as review) — GATE FINALLY MET (a SIGABRT occurred), but the correlation is
+      UNRESOLVABLE — this exposes a deeper, previously-undiscovered root cause: the container's own stdout/stderr has
+      stopped reaching Cloud Logging entirely, well before the pid-role-logging fix even shipped.** Confirmed
+      `00373-7wt` (created `15:39:42Z`, 100% traffic) genuinely carries both pid-role log lines (direct
+      `docker create`/`docker cp` extraction of `gunicorn.conf.py` off digest `sha256:b6d33f50...fbbbf5`). A NEW
       `Uncaught signal: 6, pid=29, tid=29, fault_addr=0` landed on this exact revision at `15:53:34Z` (instance
       `001548f7...1031`). But searching for `"gunicorn MASTER"` / `"gunicorn WORKER"` anywhere in the last 4h (any
       revision) returns **zero rows** — the pid-role log lines this whole investigation chain built have NEVER once
@@ -785,7 +721,71 @@ cancellation-timeout fix and already shipped). Suggested next steps for whoever 
       occasional pre-existing traceback fragments DID appear historically); if it still doesn't, that's a DIFFERENT,
       narrower follow-up (get faulthandler's dump to emit via `setup_cloud_logging`'s JSON path instead of raw stderr),
       not a re-open of this fix. Also delete the stray `00382-cat` canary revision once superseded. (repo:
-      deployment-api)
+      deployment-api) — **2026-07-31 (slot 7, backend_engineer)**: attempted the deploy this todo needs — **the
+      precondition itself ("reaches a live Cloud Run deploy") is NOT met, and cannot be met yet: `e8ce86a` FAILS to go
+      live.** Ran the canonical `deployment-service/scripts/cloud-run/deploy-shared.sh` end to end: Cloud Build
+      succeeded (`d33c5498`, `SUCCESS`) and pushed a fresh image; `gcloud run deploy` created a new revision
+      (`uts-shared-deployment-api-00388-9mt`, confirmed via `spec.containers[0].image` digest to be built from this
+      exact commit) — but `gcloud run services update-traffic --to-revisions=00388-9mt=100` **FAILED twice** (not a
+      one-off race — the 2nd attempt, run after the first had settled, returned the SAME error and Cloud Run had by then
+      permanently marked the revision `not ready and cannot serve traffic`): _"The user-provided container failed to
+      start and listen on the port defined provided by the PORT=8080 environment variable within the allocated
+      timeout."_ `gcloud logging read` on `varlog/system` for `00388-9mt` shows a clean, repeating cycle every ~30-32s:
+      `Starting new instance` → (~30s later) `Container called exit(0)` +
+      `Default STARTUP TCP probe failed... The     instance was not started` — i.e. the container itself voluntarily
+      exits cleanly (not a crash/OOM/SIGKILL) before ever binding port 8080, and Cloud Run just keeps retrying with
+      fresh instances. **Ruled out as an artifact of my own test method**: the revision's `startupProbe`
+      (`timeoutSeconds=240`) is IDENTICAL to the known-good `00374-4pd`'s, so this isn't a probe-config regression, and
+      the ~30-32s failure window is far short of that 240s budget — something in THIS image's own startup path is giving
+      up on its own well before Cloud Run's timeout would even fire. **Confirmed harmless to prod**: `status.traffic`
+      stayed at 100% on `00374-4pd` throughout both attempts (Cloud Run's own health gate correctly refused to route to
+      the bad revision — this is the gate working as designed, same as the reasoning in this doc's earlier `--to-latest`
+      discussions); `curl .../api/health` → 200 confirmed after. **A local `docker run` of the SAME image (same digest)
+      does start and DOES emit the expected structured JSON stdout**
+      (`{"severity": "INFO", "message": "Serving UI static files from /app/ui/dist", ...}` — direct proof `e8ce86a`'s
+      formatter itself works) before hitting an UNRELATED local-only crash 2s into the FastAPI lifespan
+      (`google.auth.exceptions.DefaultCredentialsError` inside `fastapi_uei_lifespan`'s `log_event("STARTED",     ...)`
+      → `PubSubEventSink.write_event` → `pubsub_v1.PublisherClient()` — this call has zero local ADC available in this
+      sandbox, whereas real Cloud Run supplies SA credentials via the metadata server; confirmed this exact
+      `fastapi_uei_lifespan` wiring predates `e8ce86a` by months (`git log -S`, commit `0cd1c78`) and works fine in prod
+      today on `00374-4pd`, so this specific local exception is NOT the Cloud Run failure — it only proves the local
+      repro diverges from prod at a DIFFERENT point than the real bug, not what the real bug is). **Net: the real Cloud
+      Run startup failure mechanism is NOT YET IDENTIFIED** — filed as its own blocking `[BACKEND]` P1 follow-up below
+      rather than guessing further. This REVIEW todo stays open: its own literal ask (confirm stdout resumes under real
+      traffic) cannot be attempted until that blocker ships. Stray revision `uts-shared-deployment-api-     00388-9mt`
+      left in place (never received traffic, Cloud Run already refuses to route to it — same cannot-delete-cleanly
+      situation this todo already flags for `00382-cat`; not a safety issue, just build cruft). No code shipped this
+      entry (investigation only — the fix ships under the new todo below).
+
+- [ ] [BACKEND] P1. **NEW, opened 2026-07-31 (slot 7, backend_engineer) — `deployment-api@e8ce86a` (the confirmed
+      stdout/stderr-blackout root-cause fix) BLOCKS its own rollout: the resulting Cloud Run revision consistently fails
+      the STARTUP TCP probe and never binds port 8080, so the fix cannot reach production yet.** Evidence (todo above):
+      2 independent `gcloud run services update-traffic` attempts to revision `uts-shared-deployment-api-00388-9mt`
+      (built from `e8ce86a` via the canonical `deploy-shared.sh`, confirmed via image digest) both failed with
+      `"container failed to start and listen on the port ... within the allocated timeout"`; `varlog/system` shows a
+      clean `Starting new instance` → `Container called exit(0)` cycle every ~30-32s with **zero** stdout/stderr entries
+      even for THIS pre-bind window — the container gives up on its own well inside the 240s `startupProbe` budget (same
+      budget as the known-good `00374-4pd`), so this isn't a probe-timeout misconfiguration. Production was never
+      affected (Cloud Run's health gate kept 100% traffic on `00374-4pd` throughout both attempts — confirmed via
+      `status.traffic` + a live `/api/health` 200 check after). A local `docker run` of the identical image DOES start
+      and DOES emit `e8ce86a`'s structured JSON correctly, then hits an unrelated local-ADC-only crash — so the local
+      repro does NOT reproduce the real Cloud Run failure and cannot be used to root-cause it further; a live canary is
+      required. Candidate angles for whoever picks this up (none confirmed — do not re-guess without evidence): (1)
+      `setup_cloud_logging()`'s `UnbufferedStreamHandler.emit()` calls `self.flush()` after EVERY log record — with
+      `preload_app=True` + `WORKERS=4`, startup now emits many more (previously-silently-dropped) INFO lines across 4
+      concurrently-booting workers than before `e8ce86a`; test whether a per-emit synchronous flush under Cloud Run's
+      gVisor sandbox syscall overhead is slow enough at high line-count to matter (time a canary boot with `WORKERS=1`
+      vs `WORKERS=4`, and/or with logging temporarily set to `WARNING` to cut line volume, to isolate this variable);
+      (2) re-run the SAME zero-traffic `--command=python3 -c "print(...)"`-style bypass canary this doc's `e8ce86a` todo
+      already used, but this time via a REAL `--to-revisions=...=100` traffic-routing attempt (not just a 0%-traffic
+      canary URL hit) to see if a trivial container also fails the STARTUP TCP probe under current conditions — if it
+      does too, the regression is unrelated to `e8ce86a`'s app-level change and is instead something environmental
+      (image/base/quota) that changed since the last successful `00374-4pd` deploy; (3) diff `00374-4pd` (known-good) vs
+      `00388-9mt` (failing) full revision specs (`gcloud run revisions describe ... --format=json`) for any non-image
+      difference the deploy picked up (resource limits, concurrency, env vars, service account). Done-when: a revision
+      built from `e8ce86a` (or a fix on top of it) successfully receives traffic and serves `/api/health` 200, OR the
+      mechanism is refuted/identified with evidence and a fix ships. Until this ships, do NOT force traffic onto a
+      failing revision — leave `00374-4pd` serving (current safe state). (repo: deployment-api)
 
 - [ ] [BACKEND] P3. **NEW, opened 2026-07-31 (slot 13, backend_engineer) — dead-code cleanup: `workers/auto_sync.py`'s
       entire background-sync implementation is unreachable in production.** Found while tracing the call graph for the
