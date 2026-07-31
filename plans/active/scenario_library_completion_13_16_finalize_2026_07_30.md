@@ -5,7 +5,7 @@ summary:
   Gated close-out twin for scenario_library_completion_13_16_2026_07_27, reclassified NA -> planning by
   /na-eligibility-audit defi on 2026-07-30. Reconciles the source plan's checkboxes, confirms both ScenarioOverlay
   entries are genuinely consumed downstream, and checks archival eligibility once the source plan's todos are done.
-status: active
+status: complete # (was: active) 2026-07-31 — all 3 todos [x], source plan archived alongside this doc
 nature: process
 asset_group: [defi]
 stage: [meta]
@@ -44,24 +44,37 @@ source:
 
 # Finalize — scenario library completion (13 + 16)
 
+> **ARCHIVED (2026-07-31) — all 3 todos shipped, source plan archived alongside this doc.**
+
 > **Gated twin.** `depends_on` + `gate_on_depends: true` hold every todo here until every todo in
 > `/plans/active/scenario_library_completion_13_16_2026_07_27.md` is done. Do not start these before that.
 
 ## Todos
 
-- [ ] [VALIDATE] P3. **Confirm both new `ScenarioOverlay` entries are genuinely consumed, not just registered.** Grep
-      the `unified-trading-library` scenario applier + any smoke test / game-day runbook for `execution_slippage_spike`
-      and `lst_unstake_queue_blowup` by their real registered `scenario_id`, and cite the consuming call site for each.
-      **Done when**: a named consumer is cited per scenario, or the source plan's VALIDATE todo is re-opened with the
-      concrete gap.
-- [ ] [DOC] P3. **Reconcile the source-plan checkboxes + the two Day-1 design docs.** Confirm every todo in
-      `scenario_library_completion_13_16_2026_07_27.md` is `- [x]` with a `<repo>@<sha>` citation, and update
-      `plans/active/scratch_scenarios_day1/13_execution_slippage_spike.md` and `16_lst_unstake_queue_blowup.md` to name
-      the registry entry that now backs each (they stay as design provenance, per the pattern set by scenarios 01-10).
-- [ ] [PM] P3. **Check archival eligibility for the source plan.** If every todo is done and `locked_by:` is empty, run
-      the standard 6-step archival ritual (`/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`) for
-      `scenario_library_completion_13_16_2026_07_27.md` and archive this finalize doc alongside it. If `locked_by:` is
-      set, STOP and escalate for `[unlock-plan]` — never autonomous.
+- [x] ✅ [VALIDATE] P3. **DONE 2026-07-31.** Confirmed both entries are genuinely consumed, not just registered — cited
+      consumer: `unified-trading-library`'s `ScenarioOverlayApplier.apply()`
+      (`unified_trading_library/scenario/applier.py`), which discriminates generically on `mutation_type` and already
+      dispatches `BookSpoof` (`execution_slippage_spike`) and `LatencyInject` (`defi_lst_unstake_queue_blowup`) — no
+      applier code change was needed. Concrete proof:
+      `tests/unit/scenario/test_applier.py::     test_every_registry_scenario_applies_without_error`, parametrized over
+      the FULL `SCENARIO_REGISTRY`, ran green for both new scenario_ids (13/13 registry entries pass) with zero
+      test-file edits required — the smoke test already picks up any new registry entry automatically.
+- [x] ✅ [DOC] P3. **DONE 2026-07-31.** Every todo in `scenario_library_completion_13_16_2026_07_27.md` is `- [x]` with
+      `unified-api-contracts@15ab5a48` cited. Both `scratch_scenarios_day1/13_execution_slippage_spike.md` and
+      `16_lst_unstake_queue_blowup.md` updated with a `🟢 SHIPPED` banner naming the registry entry each now backs
+      (`unified-trading-pm@df6703be9`).
+- [x] ✅ [PM] P3. **DONE 2026-07-31.** Source plan: every todo done, `locked_by:` empty — archival-eligible. Ran the
+      6-step ritual (`/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`): (1) no deferred items to
+      migrate (all 3 todos genuinely complete, nothing left prose-only); (2) archived-banner + `superseded_by: none`
+      (terminal — the scenario is now registry-resident, not superseded by another plan); (3) codex-alignment check — no
+      new contract established (routine registry addition following the pre-existing `DEFI_CHAIN_RPC_OUTAGE_SOLANA`
+      pattern, nothing to stub); (4) no new CLAUDE.md rule needed for the same reason; (5) corpus-wide referrer sweep —
+      fixed `plans/active/INDEX.md`; `defi_satellite_ao_dispatch_batch6_2026_07_30.md`'s mention is historical Progress
+      Log prose from a past audit dated before this completion, left as-is (not a live path reference); the 2026-07-24
+      archive-dashboard snapshot is itself already an archived point-in-time doc, not edited retroactively; (6) both
+      this finalize doc and the source plan move to `plans/archive/2026_07/` via a clean `git mv` in the NEXT commit
+      (deliberately split from this content-edit commit, per the checkbox-flip-then-archive-move discipline — never
+      combine an edit with the `git mv` in one commit, see `unified-trading-pm/agents/RULES.md` § 2).
 
 ## Progress Log
 

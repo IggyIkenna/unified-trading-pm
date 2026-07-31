@@ -2,8 +2,8 @@
 
 > **🟢 SHIPPED 2026-07-31** — backed by the `DEFI_LST_UNSTAKE_QUEUE_BLOWUP` `ScenarioOverlay` entry
 > (`scenario_id="defi_lst_unstake_queue_blowup"`, `defi_`-prefixed per this registry file's own naming convention) in
-> `unified-api-contracts/unified_api_contracts/registry/scenarios/defi.py` (see
-> `plans/active/scenario_library_completion_13_16_2026_07_27.md` for the commit SHA), verified consumable by
+> `unified-api-contracts/unified_api_contracts/registry/scenarios/defi.py` (`unified-api-contracts@15ab5a48`; plan-of-
+> record `plans/archive/2026_07/scenario_library_completion_13_16_2026_07_27.md`), verified consumable by
 > `unified-trading-library`'s `ScenarioOverlayApplier` (the generic `LatencyInject` mutation-type dispatch — no applier
 > code change needed). This fragment stays as design provenance. **Scope note**: the fragment's own PRIMARY mechanism (a
 > per-LST `unstake_days_remaining` feature) needs a UAC `LST_WITHDRAWAL_THROUGHPUT_BASELINES` registry the fragment

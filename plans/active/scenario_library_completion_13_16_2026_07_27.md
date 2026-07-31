@@ -6,7 +6,7 @@ summary:
   ScenarioOverlay registry + UTL applier, per operator decision (2026-07-27 pre-June-1 stale-plans audit) — the other 16
   of 18 Day-1 scenarios were all consumed one way or another; these 2 were designed 2026-05-12 and never picked up
   anywhere.
-status: active
+status: complete # (was: active) 2026-07-31 — all 3 todos [x] w/ verified commit evidence (unified-api-contracts@15ab5a48), archived
 nature: process
 asset_group:
   [defi] # corrected 2026-07-29 (/ag-closeout-audit defi, Phase 0.3 Orthogonality HARD CHECK) -- was
@@ -43,6 +43,10 @@ drift_direction: none
 ---
 
 # Scenario library completion — execution_slippage_spike + lst_unstake_queue_blowup
+
+> **ARCHIVED (2026-07-31) — all 3 todos shipped.** Both `ScenarioOverlay` entries landed
+> (`unified-api-contracts@15ab5a48`) and are verified consumable by the UTL applier with zero applier-code changes.
+> Gated finalize twin `scenario_library_completion_13_16_finalize_2026_07_30.md` archived alongside this doc.
 
 ## Context
 
