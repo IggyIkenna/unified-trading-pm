@@ -418,8 +418,27 @@ either already-satisfied or stale. This session (Phase-2 worker) executed the **
       **alerting-service@5d96dd2**: TESTING → QG entrypoint; DELETE `docs/specs/{PLANS_ALIGNMENT,README}.md` (dead
       dumps, all 5 cited plans archived). KEEP-class docs untouched. Each shipped Pass-1 QG-green →
       `quickmerge --agent`, verified on origin; all changed `.md` prettier-clean.
-- [ ] [DOCS] P2. **trading-agent-service** (7) / **ibkr-gateway-infra** (4) / **batch-live-reconciliation-service** (1)
-      / **system-integration-tests** (1).
+- [x] ✅ [DOCS] P2. **trading-agent-service** (7) / **ibkr-gateway-infra** (4) / **batch-live-reconciliation-service**
+      (1) / **system-integration-tests** (1). — **DONE 2026-07-31 (slot-6, opus).** Ground-truthed each repo vs current
+      code/docs before applying (registries drift). **trading-agent-service@a84fccc**: `docs/CONFIGURATION.md` 3 stale
+      defaults fixed vs `config.py` (`data_refresh_seconds` 60→300, `fill_verify_seconds` 30→60 [registry missed this
+      one — caught by full-table ground-truth], `min_signal_strength` 0.20→0.25; the doc was the outlier vs
+      `SCHEMA_VALIDATION.md`+tests); `README.md` Key Dependencies replaced 3 NONEXISTENT packages
+      (`unified-trade-execution-interface`/`unified-ml-interface`/`unified-domain-client` — not in pyproject/imports; a
+      reader would import phantoms) with the 4 real path deps (`unified-api-contracts`/`unified-config-interface`/
+      `unified-trading-library`/`unified-cloud-interface`, matching
+      `DEPENDENCIES.md`+`ARCHITECTURE.md`+`pyproject.toml`) + linked `DEPENDENCIES.md`; archived-mirror refs already 0
+      (b481cf9). **batch-live-reconciliation-service@529bee8**: `docs/GCS_PATHS.md` References gained the canonical
+      recon SSOT (`/codex/09-strategy/operational/paper-batch-live-reconciliation.md`) — the determinism spine this
+      service reconciles (KEEP content; archived-mirror already live-form). **system-integration-tests@dd34439**: README
+      already fully remediated (verified 0 stale: manifest v9 not v5, `per-asset-group-bucket-layouts.md` not the
+      missing per-category, live `operational-modes-matrix.md` path); `docs/portable-backtest-criteria.md` References
+      gained the recon SSOT cross-link for its §3 Batch-Live Symmetry. **ibkr-gateway-infra**: NO worker-determinable
+      FIX-STALE remains — archived-mirror ARCHITECTURE ref already fixed (2496fcb); the two remaining contradictions
+      (`QUALITY_GATE_BYPASS_AUDIT.md` "Repo is archived" vs live README/coverage-floor; 2FA manual-vs-IBGA+TOTP) are
+      exactly the `[OPERATOR-DECISION]` items already tracked below (Phase-1 findings, the ibkr internal-contradictions
+      todo) — a strategy/owner call, not a worker guess; NOT re-filed. Each changed repo shipped Pass-1 QG-green →
+      `quickmerge --agent`, verified on origin; changed `.md` prettier-clean.
 - [x] ✅ [DOCS] P2. **deployment-ui** (3) (`user-management-ui` dropped — ARCHIVED 2026-04-20, corrected 2026-07-15,
       plan-reconcile). — deployment-ui@b7ccd3b (2026-07-31): DELETE `src/README.md` (stock Vite+React boilerplate);
       FIX-STALE `README.md` (env var `VITE_API_URL`→`VITE_DEPLOYMENT_API_URL` + `VITE_OAUTH_CLIENT_ID`→
