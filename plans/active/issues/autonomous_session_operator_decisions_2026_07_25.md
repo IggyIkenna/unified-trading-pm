@@ -18,7 +18,7 @@ tags: [autonomous, operator-decision, ag-closeout-audit]
 related:
   - /plans/active/ag_closeout_audit_rollout_2026_07_25.md
 created: "2026-07-25"
-last_updated: "2026-07-26"
+last_updated: "2026-07-31"
 parent_epic: agent_operating_framework_master
 assigned_vm: planning
 priority: P1
@@ -910,11 +910,15 @@ Track close-out criteria to `infra_consolidated_closeout_2026_07_25.md` as verif
       mandatory, an enforcement gap, not a policy choice — shipped the mechanism fix (commit-msg-stage
       `check-locked-plan-deletion.sh`), and its own retro-clean todo is done: the archived copy's
       `locked_by:`/`locked_since:` are empty, independently re-verified here. See entry 11 above for the full citation.
-- [ ] [DOC] P3. Confirm whether the 2026-07-25 `/autonomous` closeout-audit rollout
-      (`ag_closeout_audit_rollout_2026_07_25.md`) is still active/generating new operator-decision-caliber questions. If
-      concluded: flip this doc's frontmatter `status:` from `open` to `resolved` (all 38 logged entries + the item above
-      are currently resolved with citations) before running the archival ritual. If still ongoing: leave this doc
-      `status: open` in `plans/active/issues/` as the standing decision-queue home per its own stated purpose.
+- [x] [DOC] P3. **CONFIRMED 2026-07-31 — still ongoing, `status:` left `open`.** Checked
+      `ag_closeout_audit_rollout_2026_07_25.md` at current HEAD: `status: active` with 1 open todo (line 105, "Finish
+      applying the 70-item batch + the remaining mass-flip" — cefi/defi/prediction/sports batch/finalize pairs "not
+      re-verified" per Round 8's own Deferred table), and its own most recent entry (2026-07-30 na-eligibility-audit
+      pass) independently re-verified `KEEP-NA, valid` with the note "remaining item is a human-supervised
+      re-verification, not a bounded fact" — i.e. the rollout is not concluded, it is still the standing home for this
+      class of question. All 38 logged entries above ARE resolved (verified via grep — 0 remaining `**Status**: open`
+      outside the closing template block), but the parent rollout plan itself is not, so this doc correctly stays
+      `status: open` per its own stated purpose rather than moving to the archival ritual. No frontmatter change needed.
 
 This doc will accumulate entries as genuine judgment calls surface during the cefi/defi/tradfi/prediction/sports
 closeout-audit rollout. Format for each entry:
