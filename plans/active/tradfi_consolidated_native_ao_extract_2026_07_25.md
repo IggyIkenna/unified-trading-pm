@@ -67,11 +67,12 @@ drift_direction: advance-code
 
 # TradFi consolidated closeout — native AO extract
 
-> **Status: draft.** Per CLAUDE.md's plan-destination rule, flip `status` to `active` only after operator review. All 10
-> todos below are same-priority-independent and touch DISTINCT files/targets (verified per-todo below — none of them
-> writes back to `tradfi_consolidated_closeout_2026_07_18.md` itself except todo 10, whose entire purpose is exactly
-> that; every other todo records its evidence in its own cited source/target so no two todos in this batch collide on
-> the same file), so they are safe to dispatch concurrently once activated.
+> **Status: active — approved + dispatched.** (Banner corrected 2026-07-31, slot-6: frontmatter already read `active`
+> and this session's task was dispatched from it; the "draft" text below was stale.) All 10 todos below are
+> same-priority-independent and touch DISTINCT files/targets (verified per-todo below — none of them writes back to
+> `tradfi_consolidated_closeout_2026_07_18.md` itself except todo 10, whose entire purpose is exactly that; every other
+> todo records its evidence in its own cited source/target so no two todos in this batch collide on the same file), so
+> they are safe to dispatch concurrently once activated.
 
 ## Why 3 of the 13 native todos are NOT here (see also the closing classification table)
 
@@ -269,9 +270,9 @@ drift_direction: advance-code
       (`ESM0`/`ESM0_MIGRATED_*` as tradfi chains, `YAHOO_FINANCE` as an unregistered venue) — read-only scope, not fixed
       inline.
 
-- [ ] [BACKEND] P2. **Re-verify 3 named denominator/catalogue-completeness findings against live tradfi state.** Source
-      native todo (lines 342-346), unmodified: (1) 875 tradfi atoms with narrowed historical objects + 153 duplicate KRX
-      row_keys — re-measure against the (now-archived, `status: resolved`)
+- [x] ✅ [BACKEND] P2. **Re-verify 3 named denominator/catalogue-completeness findings against live tradfi state.**
+      Source native todo (lines 342-346), unmodified: (1) 875 tradfi atoms with narrowed historical objects + 153
+      duplicate KRX row_keys — re-measure against the (now-archived, `status: resolved`)
       `tradfi_instrument_type_migration_read_stale_legacy_object_2026_07_17.md`'s claimed repair, cite don't edit the
       archived doc; (2) phantom captures — re-measure the ICE/FX 309-phantom and blank-`data_type` 1,083-row counts in
       `phantom_captures_tradfi_2026_06_28.md` against live state, update that doc's own open `[CODE] P2` diagnosis item
@@ -286,7 +287,34 @@ drift_direction: advance-code
       Repos: instruments-service, market-tick-data-service. **Done when**: counts re-measured or explained as stale for
       all 3 findings, recorded in each finding's own doc (phantom_captures_tradfi_2026_06_28.md gets a live update; the
       2 archived docs are cited with fresh evidence, not edited). Source: `tradfi_consolidated_closeout_2026_07_18.md`
-      (native, lines 342-346).
+      (native, lines 342-346). — **DONE 2026-07-31 (slot-6, backend_engineer)**. Re-measured via
+      `read_availability_index()` (single consolidated-parquet read, no GCS walk — the phantom-detection GCS listing
+      itself stayed deferred per this todo's own conflict-precedence note). **(1)**: 153 KRX duplicate row_keys —
+      RE-VERIFIED **0** on the canonical `_ROW_KEY_COLUMNS` composite, matching the archived doc's own post-repair
+      finding (no regression). The 875 narrowed-object atoms require checking GCS object _content_ against manifest
+      counts — that's the deferred listing, not independently re-verified this session; citing the archived doc's
+      finding as-is. **(2)** phantom captures: blank-`data_type` rows are now **0** in the live manifest (baseline was
+      1,083 on 2026-06-28) — a real, substantial improvement, but `phantom_captures_tradfi_2026_06_28.md` is now
+      ARCHIVED + `status: resolved` with both its own todos already `[x]` (no open `[CODE] P2` item exists to update,
+      contrary to this todo's assumption at authoring time) — per archival discipline, cited here rather than edited.
+      The ICE/FX 309-phantom cohort (captured-with-no-backing-parquet) can't be re-verified without the same deferred
+      GCS listing; current captured-row populations are much smaller than the pre-2026-06-28 baseline (ICE 359, FX
+      4,346), consistent with cleanup having occurred, but not conclusive. Investigating ICE's now-dominant
+      `attempted_failed` population (390,815 rows, `REMOVED_ENTITY_TOMBSTONE`) turned out to be a red herring — this is
+      the already-tracked, intentional tombstone marker for ICE's deliberate removal as a tradfi venue/source (per the
+      databento subscription-universe lockdown), not a new bug; confirmed via cross-reference before considering an
+      issue doc, none filed. **(3)** expected_reason misclassification: **0** current `attempted_failed` rows carry an
+      `EXPECTED_*`-prefixed `error_reason` — the 2026-07-15 `record_failed()` writer guard has held for 16 days with
+      zero recurrence, satisfying the archived doc's own INVESTIGATE item's "if it does NOT recur, not worth further
+      archaeology" resolution path. Re-grepped for the original writer's identity (found no new committed call site
+      producing the pattern — consistent with the archived doc's own exhaustive search) but surfaced a genuine
+      reframing: the sibling `tradfi_ohlcv_attempted_failed_cluster_2026_07_23.md` doc independently found that a
+      near-identical tight `attempted_at` clustering for a DIFFERENT row population was an artifact of a later CF-11
+      bulk-rebuild run re-stamping `attempted_at` on already-existing rows, not the original write time — the same
+      mechanism plausibly explains the original doc's "single ~50min batch" timestamp evidence, meaning the true
+      original write time (and writer) may be earlier/different than that window suggests. Writer identity: still NOT
+      FOUND, reported honestly with this caveat rather than guessed. DESIGN taxonomy item correctly left to a human, not
+      touched. No code shipped (pure re-measurement + citation, per this todo's own scope).
 
 - [ ] [BACKEND] P2. **KRX name-column "STILL OPEN" tracking (added 2026-07-25) — confirm or execute the 2 named
       remaining pieces.** Source native todo (lines 392-400), unmodified: (a) the availability-manifest `name` column —
