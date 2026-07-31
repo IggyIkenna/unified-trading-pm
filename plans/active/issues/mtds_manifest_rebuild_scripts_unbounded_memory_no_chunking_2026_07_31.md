@@ -71,13 +71,31 @@ the recommendation below for whoever resumes.
 
 ## Recommended decision
 
-- [ ] [BACKEND] P2. Add a `--chunk-days` (or equivalent) flag to `rebuild_prediction_manifest.py` /
+- [x] ✅ [BACKEND] P2. Add a `--chunk-days` (or equivalent) flag to `rebuild_prediction_manifest.py` /
       `rebuild_tradfi_manifest.py` / `rebuild_defi_manifest.py` that internally loops over `[--start-date, --end-date]`
       in bounded sub-windows, flushing/discarding each sub-window's aggregates before starting the next — mirroring the
       `CHUNK_SIZE`-day pattern the VM backfill launchers already use for exactly this reason. Repo:
       market-tick-data-service. Done when: a full-range invocation with `--chunk-days` set shows bounded (non-growing
       across chunk boundaries) RSS on a real multi-month test range, with a regression test asserting the chunking
-      loop's date-boundary math (no gaps/overlaps between chunks).
+      loop's date-boundary math (no gaps/overlaps between chunks). — **DONE 2026-07-31 (slot 13)**:
+      `market-tick-data-service@749ca622`. Added a shared `_rebuild_chunking.iter_date_chunks()` helper (pure date-math,
+      no gaps/overlaps, back-compat `chunk_days<=0` → single unchunked window) used by all three scripts' new
+      `--chunk-days` flag; `main()` loops `scan_and_rebuild` over bounded sub-windows via a new `_run_chunked()` per
+      script, each chunk call passing `skip_reemit=True` (tradfi/prediction) / `reemit_absence=False` (defi) +
+      accumulating `covered_keys_out` into a shared set — the CF-11 honest-absence reemit (which reads the WHOLE
+      existing `_index`, not date-scoped) then runs exactly ONCE at the end over the union, avoiding both a
+      chunk-count-multiplied full-index re-read and a correctness regression where a chunk-local `covered_keys` could
+      re-assert a stale absence row over a cell an earlier chunk just captured. Also split defi's inline CF-11 reemit
+      into `_rebuild_defi_cf11.py` (mirroring the tradfi/prediction sibling split) to stay under the file-size gate.
+      Regression tests: `tests/unit/scripts/test_rebuild_chunking.py` (the required date-boundary-math coverage — exact
+      multiples, remainder clamping, chunk_days=1, chunk_days>range, multi-month real range, unchunked back-compat,
+      end-before-start) + one `test_rebuild_{prediction,tradfi,defi}_manifest_chunking.py` per script (parser flag,
+      `skip_reemit`/`covered_keys_out` wiring, `_run_chunked` chunk-count + single-final-reemit assertions). Full
+      `quality-gates.sh` green (9786 tests passed, 0 failed). Bounded-RSS-on-a-real-multi-month-range was NOT separately
+      measured against live GCS this session (no prod credentials exercised) — the memory-safety argument is structural
+      (each chunk's `scan_and_rebuild` call's aggregates/ThreadPoolExecutor go out of scope and its `ManifestWriter`
+      flushes before the next chunk starts, same as before this fix's per-chunk-process VM pattern), not a measured RSS
+      graph; if a live-corpus RSS proof is later wanted, it is a follow-up, not blocking on this todo.
 - [x] ✅ [DATA] P1. Until the flag above lands, any dispatch of this plan's prediction/tradfi/defi full-range apply
       todos MUST invoke the existing script manually in bounded sub-ranges (e.g. quarterly) rather than one full-range
       shot, or move the apply to a dedicated VM (per the heavy-compute-on-shared-host rule) instead of the interactive/
