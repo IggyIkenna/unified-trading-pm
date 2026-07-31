@@ -99,9 +99,9 @@ needs an explicit next relaunch round, and none is currently dispatched.
 
 ## Recommended decision
 
-- [ ] [SCRIPT] P2. **Relaunch round 3** for the 17 still-incomplete shards (13, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24,
-      25, 40, 41, 42, 43, 44). Recover each shard's exact `--start-date`/`--end-date` (or its `PROGRESS.json` checkpoint
-      frontier where `monotonic=true`, per the checkpoint-aware-resume HARD RULE) from its own most-recent
+- [x] ✅ [SCRIPT] P2. **Relaunch round 3** for the 17 still-incomplete shards (13, 15, 16, 17, 18, 19, 20, 21, 22, 23,
+      24, 25, 40, 41, 42, 43, 44). Recover each shard's exact `--start-date`/`--end-date` (or its `PROGRESS.json`
+      checkpoint frontier where `monotonic=true`, per the checkpoint-aware-resume HARD RULE) from its own most-recent
       `run.log`/`PROGRESS.json` — do NOT re-derive/guess. Launch on the current tarball
       (`market-tick-data-service@55d051bd` or later, to include both the pyarrow-pool-release fix and the stall-timeout
       fix) via `launch-canonical-migration-vm.sh cefi-content-apply <start> <end> full`, `MACHINE_TYPE=e2-standard-16`,
@@ -110,7 +110,26 @@ needs an explicit next relaunch round, and none is currently dispatched.
       `≤2 relaunches/(vm-prefix,day)` budget per shard — query `DeploymentsRegistry.list_recent_archive`, not just
       recent `gcloud compute operations list` (the parent doc's own documented undercounting trap). **Done when**: all
       17 shards' `run.log` show the terminal summary (feeds back into the parent doc's `-002` corpus-wide re-verify
-      todo).
+      todo). — worker, slot 10, 2026-07-31: relaunched 13/17 (budget allowed); see Progress Log for per-shard resume
+      dates + the 4 shards correctly skipped this round for `RB-INFRA-RELAUNCH` budget. Corpus-level "done when" still
+      pending — tracked by the new follow-up todo below + the parent doc's `-002` re-verify.
+- [ ] [OPERATOR] P1. **Shards 16, 17, 21, 41 are now over `RB-INFRA-RELAUNCH`'s `≤2/(vm-prefix,day)` budget** (queried
+      live via `DeploymentsRegistry.list_recent_archive(days=1)` 2026-07-31T13:35Z: shard 16=2, shard 21=2 archived
+      today — AT cap; shard 17=3, shard 41=3 archived today — OVER cap) and were correctly NOT relaunched this round.
+      All four died again on their most recent (pre-round-3) attempt showing the SAME symptom — repeated
+      `WARNING No progress in the last poll window — N files still outstanding (possible wedged worker)` immediately
+      before death, despite already running on `e2-standard-16` with both the pyarrow-pool-release fix
+      (`market-tick-data-service@9f4098b1`) and the stall-timeout fix (`@55d051bd`) live. Shard 17 in particular has now
+      died on its 3rd post-fix attempt (`-050700`, per the parent doc's own DP-VM-003 agt-ad6632 finding:
+      `host_metrics_window.mem_pct` climbed to 91.4% before the reaper found it gone) — the two shipped fixes close a
+      wedge/freeze class and a slow leak respectively, but something is still exhausting this specific VM's headroom on
+      these 4 large shards specifically. Needs an operator decision before a 4th relaunch attempt today: (a) bump
+      `MACHINE_TYPE` further for just these 4 shards (e.g. `e2-standard-32`) to test whether it's a raw-memory ceiling,
+      (b) cross-reference against the sibling
+      `cefi_content_apply_memory_freeze_recurs_post_fix_and_registry_false_reap_2026_07_31.md` root-cause investigation
+      (same symptom class — worth checking whether that doc's fix, once shipped, closes this too before spending more
+      relaunch budget), or (c) wait for tomorrow's budget reset and relaunch cleanly. **Done when**: operator picks
+      (a)/(b)/(c) and shards 16/17/21/41 get their round-4 relaunch (or are confirmed covered by the sibling doc's fix).
 
 ## Progress Log
 
@@ -140,3 +159,47 @@ needs an explicit next relaunch round, and none is currently dispatched.
   accept this as intentional periodic-monitoring cadence — but as-is, `-002` will likely keep winning the race and
   re-producing this same no-op finding until round-3 actually lands. Not self-acting on the priority bump (backlog
   priority tuning is main/operator territory per `RULES.md` § 4).
+- 2026-07-31T13:35Z (worker, slot 10, this task): executed round 3. Fixed `gcloud` active-identity poisoning (drifted to
+  `github-actions-deploy` again, same recurring class) back to `unified-trading-sa` first; confirmed fleet still fully
+  empty before launching. For each of the 17 shards, read the LATEST `run.log`'s own `[vm-exec] starting:` line for its
+  original `--start-date`/`--end-date` and its co-located `PROGRESS.json` for `last_completed_date`/`monotonic` — never
+  re-derived. Queried `DeploymentsRegistry.list_recent_archive(days=1)` (not `gcloud compute operations list`, per the
+  todo's own undercounting-trap note) and grouped archived deployments by shard number: shards 16 and 21 had 2 archived
+  today (AT the `≤2/day` cap), shards 17 and 41 had 3 (OVER cap) — all 4 correctly SKIPPED this round, not relaunched.
+  Relaunched the remaining 13 shards on `market-tick-data-service@89739b64` (ancestor-confirmed to include both
+  `55d051bd` and `9f4098b1`), `e2-standard-16` (cefi-content-apply's own default, no override needed), SPOT
+  (`PREEMPTIBLE=true`, launcher default):
+
+  | shard | resume start-date | end-date (unchanged) | resume basis                                                                                  |
+  | ----- | ----------------- | -------------------- | --------------------------------------------------------------------------------------------- |
+  | 13    | 2026-01-18        | 2026-02-13           | monotonic checkpoint (orig start 2026-01-16)                                                  |
+  | 15    | 2026-03-28        | 2026-07-19           | non-monotonic checkpoint → replayed original start (safe: tool skips already-canonical files) |
+  | 18    | 2025-01-17        | 2025-02-06           | monotonic checkpoint (orig start 2025-01-10)                                                  |
+  | 19    | 2025-02-07        | 2025-03-17           | non-monotonic checkpoint → original start                                                     |
+  | 20    | 2025-04-06        | 2025-05-03           | monotonic checkpoint (orig start 2025-03-18)                                                  |
+  | 22    | 2025-07-08        | 2025-09-06           | monotonic checkpoint (orig start 2025-06-27)                                                  |
+  | 23    | 2025-09-07        | 2026-01-01           | non-monotonic checkpoint → original start                                                     |
+  | 24    | 2026-01-06        | 2026-01-15           | monotonic checkpoint from the last attempt that DID write one (`-032606`; the                 |
+
+      latest `-065001` attempt wrote no `run.log`/`PROGRESS.json` at all — died before startup, so its predecessor's
+      checkpoint is the real frontier, not the original start 2026-01-02) |
+
+  | 25 | 2026-01-18 | 2026-02-01 | monotonic checkpoint (orig start 2026-01-16) | | 40 | 2024-05-19 | 2024-06-11 |
+  monotonic checkpoint (orig start 2024-05-12) | | 42 | 2024-12-27 | 2025-01-09 | non-monotonic checkpoint → original
+  start | | 43 | 2025-01-30 | 2025-02-06 | monotonic checkpoint (orig start 2025-01-23) | | 44 | 2025-07-31 | 2025-09-06
+  | monotonic checkpoint (orig start 2025-07-30) |
+
+  Verified STARTED at T+60s: all 13 VMs `RUNNING` in `gcloud compute instances list`. Filed the budget-blocked-shards
+  follow-up as a new `[OPERATOR]` todo above rather than silently deferring — 4 consecutive same-symptom deaths
+  (`WARNING No progress in the last poll window ... possible wedged worker`) on shards already carrying both shipped
+  fixes is a real signal, not routine.
+
+- 2026-07-31T13:49:30Z (worker, slot 10, this task): T+10min PROGRESS verification — all 13 relaunched shards ALIVE and
+  making real forward progress (`INFO Progress: N/total files ...` counters advancing, most-recent `PIPELINE_HEARTBEAT`
+  within the last ~1-2 min of the check). The `WARNING No progress in the last poll window ... possible wedged worker`
+  lines present on several shards (18, 20, 23, 40, 43, 44) are the SAME benign per-poll-window heuristic that also
+  appears on shards that later completed successfully in rounds 1/2 — the load-bearing signal is the `Progress:` counter
+  climbing between checks, which it is for all 13. No further action needed this round; the 17-shard corpus-level "done
+  when" (all `run.log` show the terminal summary) is left to a later re-verify pass (the parent doc's `-002` todo
+  pattern) once these runs (each covering weeks-to-months of daily shards, ETA hours-not-minutes at the observed ~7-21
+  files/sec) have had time to finish.
