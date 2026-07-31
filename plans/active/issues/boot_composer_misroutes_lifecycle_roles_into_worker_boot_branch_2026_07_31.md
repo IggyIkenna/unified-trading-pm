@@ -37,7 +37,7 @@ tags:
 related: [plans/active/issues/agent_reply_cannot_address_a_different_role_silent_cross_role_blind_spot_2026_07_22.md]
 created: "2026-07-31"
 parent_epic: agent_operating_framework_master
-priority: P2
+priority: P1
 assigned_vm: NA
 execution_scope: local-only
 drift_direction: advance-code
@@ -132,3 +132,40 @@ render the register/poll STEP block even when `slot_id` is provided.
       a `_compose()` unit test asserting review/main/monitor render the register/poll block with `slot_id` set. Verify
       no downstream consumer in `ensure_review_agents` depends on the boot-prompt slot_id. Cite
       `plans/active/issues/boot_composer_misroutes_lifecycle_roles_into_worker_boot_branch_2026_07_31.md` in the commit.
+
+# 2026-07-31 (main-orchestrator) — SEVERITY ESCALATION: auditor variant causes SILENT DATA LOSS, and the fix set is incomplete
+
+The same `_compose()` misroute hit a **second, more damaging** lifecycle role, and the current fix scope does not cover
+it. Reported by review, verified + corrected by main.
+
+- **New affected role: `ag_closeout_auditor`** (slot 4, scheduled one-shot `/ag-closeout-audit`, tranche=cefi). It is
+  spawned WITH a `slot_id` and is NOT in `_ONE_SHOT_ESCALATION_ROLES`, so it falls into the same
+  `elif slot_id is not None:` worker-boot branch — `/boot` independently handed it a generic backlog task
+  (`unified_trading_sa_live_iam_drift_vs_terraform-003`, a `[TERRAFORM]` P2 to revoke/import 2 self-escalation-capable
+  IAM roles) on top of its mandated audit. The current suggested fix's `_REGISTER_POLL_ROLES = {review, main, monitor}`
+  **omits `ag_closeout_auditor`** (and any other one-shot lifecycle/audit role that carries a `slot_id`). Whatever guard
+  lands must be driven by a role classification that includes the auditor lifecycle roles, not a hard-coded trio.
+- **The data-loss chain (this is the escalation).** Slot 4 correctly did NOT work the mismatched task (it did its real
+  cefi audit — 2 commits `cf5658f3a`/`2d5fb4b59` on origin), then called `/done` on the mismatched task with an **empty
+  `sha`**, intending to release it untouched. But `/done` marked it `status=done` (`done_sha=""`) — a genuine, undone,
+  security-relevant backlog item silently dropped from the queue. The plan SSOT was fine (checkbox
+  `issues/unified_trading_sa_live_iam_drift_vs_terraform_2026_07_31.md` P2 still `- [ ]`), but the derived backlog row
+  falsely read done, so no worker would ever pick it up. For a self-discovering review agent the misroute is merely
+  wasted tokens (existing P2 framing); for a one-shot auditor it is **silent data loss** — hence P1.
+- **Repeating pattern, not a one-off:** 2 more `ag_closeout_auditor` runs are registered (`agt-89a9c6`, `agt-c2a8bd`);
+  each scheduled run can false-done whatever task `/boot` mis-hands it until both defects below are fixed.
+- **Immediate damage corrected (main, 2026-07-31):** reopened `unified_trading_sa_live_iam_drift_vs_terraform-003` via
+  `POST /api/backlog/{id}/reopen` (`prior_status=done`, `prior_done_sha=""` → `queued`; verified it survives a regen,
+  the still-unchecked checkbox keeps it not-done). The task is back in the queue as `ready (no blockers)`.
+
+## Added follow-up todos
+
+- [ ] [SCRIPT] P1. Fix `/done` so an **empty `sha`** does NOT mark a task `status=done` — a release-not-complete signal
+      must return the task to `queued` (or be rejected), never record a terminal `done` with `done_sha=""`. This is the
+      distinct data-integrity defect that turned a benign boot-misroute into silent data loss; independent of the
+      composer fix. Pair with the existing `/api/backlog/{id}/reopen` correction path and the `no_plan_flip` hardening
+      referenced in its docstring. Add a regression test: `/done` with empty sha on a task whose plan checkbox is
+      unchecked must leave it `queued`.
+- [ ] [SCRIPT] P1. Extend the composer-guard fix (todo above) so its role classification covers **one-shot
+      lifecycle/audit roles** (`ag_closeout_auditor` and siblings), not just `{review, main, monitor}` — otherwise the
+      auditor data-loss variant persists after the review/main/monitor guard lands.
