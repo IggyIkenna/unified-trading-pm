@@ -6,7 +6,12 @@ summary:
   residuals.
 status: active
 nature: process
-asset_group: [cefi, defi]
+asset_group:
+  [cefi] # corrected 2026-07-31 (ag-closeout-audit defi, Phase 0.3 orthogonality check) -- was [cefi, defi],
+  # a mistag: 198-line body is 100% CeFi (DERIBIT options/futures + BINANCE-FUTURES perp, parent_epic:cefi_master),
+  # zero DeFi content anywhere. The dual tag made this doc invisible to BOTH cefi's and defi's own tranche audits
+  # (each excludes docs carrying a peer-AG marker per SKILL.md's Orthogonality HARD CHECK) -- the exact
+  # falls-through-both-audits failure class that check exists to catch.
 stage: [meta]
 repos: [deployment-service, instruments-service, market-data-processing-service, market-tick-data-service]
 scope: [engineer, admin]
