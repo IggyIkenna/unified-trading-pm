@@ -194,7 +194,7 @@ drift_direction: none
   level, both logged `TIER A PASS`/`CONTENT GATE PASS`/`SIT GATE PASS`/`LABEL-CHECK PASS` for `deployment-api` then went
   silent (no `frozen-head:`/`PR:`/`WARN` line, no new ref created, repo counted in NEITHER `Promoted`/`Blocked`/
   `Conflicted`) - the exact same symptom independently found by slot-11 on `deployment-service`#576 in the same window;
-  see `/plans/active/issues/ldr_to_main_promote_fleet_silently_skips_repo_after_promote_pr_close_2026_07_28.md` for the
+  see `/plans/archive/issues/ldr_to_main_promote_fleet_silently_skips_repo_after_promote_pr_close_2026_07_28.md` for the
   full analysis + the `[OPERATOR]`/`[SCRIPT]` follow-up todos (not duplicating here). Applied their precedented
   workaround: closed the stale PR #413 by hand (`gh pr close 413`, comment references that doc) so the next tick's
   `gh pr create` (which only fires when no existing open PR is found) has a clear path - did not touch the ref, the
@@ -231,7 +231,7 @@ drift_direction: none
   predates the fix) stayed red because the automated `ldr-to-main-promote-fleet.yml` (`*/15` schedule) was not advancing
   `market-data-processing-service` — two consecutive ticks (`30339657932` at 07:46, `30340884923` at 08:04) show the
   SAME symptom already tracked in
-  `/plans/active/issues/ldr_to_main_promote_fleet_silently_skips_repo_after_promote_pr_close_2026_07_28.md`: the 07:46
+  `/plans/archive/issues/ldr_to_main_promote_fleet_silently_skips_repo_after_promote_pr_close_2026_07_28.md`: the 07:46
   tick printed an explicit `GATE BLOCK ... ci_status=FAILING (cached='FAILING', live='FEATURE_GREEN')` (the
   hourly-consolidator manifest cache lagging the real green LDR), and the 08:04 tick — by which point the PM-main
   manifest's cached `ci_status` had already caught up to `SIT_VALIDATED` — produced **no** `TIER A PASS` / `GATE BLOCK`

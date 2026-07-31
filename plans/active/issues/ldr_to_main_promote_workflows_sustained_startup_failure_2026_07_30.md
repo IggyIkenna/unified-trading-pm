@@ -5,7 +5,7 @@ title:
   2026-07-29T18:30:03Z (~10h+, ongoing) — entire ldr_main promote fleet blocked, not just one repo"
 summary: >-
   While confirming the narrower [CI] P2 todo in
-  `plans/active/issues/ldr_to_main_promote_fleet_silently_skips_repo_after_promote_pr_close_2026_07_28.md` (did
+  `plans/archive/issues/ldr_to_main_promote_fleet_silently_skips_repo_after_promote_pr_close_2026_07_28.md` (did
   deployment-service's promote genuinely no-op, or self-resolve?), found the answer to that question is YES it
   self-resolved (deployment-service merged PRs #594-#603 cleanly through 2026-07-29T16:20:03Z, no further manual
   intervention needed) — but discovered a much bigger, CURRENTLY ACTIVE, separate incident in the process: BOTH
@@ -70,7 +70,7 @@ repos: [unified-trading-pm, deployment-service]
 scope: [engineer, admin]
 tags: [ci-cd, ldr-to-main, promote-fleet, github-actions, startup-failure, automation-throttle, P0]
 related:
-  - /plans/active/issues/ldr_to_main_promote_fleet_silently_skips_repo_after_promote_pr_close_2026_07_28.md
+  - /plans/archive/issues/ldr_to_main_promote_fleet_silently_skips_repo_after_promote_pr_close_2026_07_28.md
   - /plans/archive/2026_07/cicd_mvp_ldr_to_main_pipeline_2026_06_30.md
   - /codex/08-workflows/ci-cd-flow.md
 created: 2026-07-30
