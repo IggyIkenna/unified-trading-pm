@@ -179,9 +179,24 @@ file-by-file.
       file's `patch()` targets (all facade-qualified or original-library-qualified, none `_live_coverage`- internal).
       Verified: 112 targeted endpoint tests green, full `quality-gates.sh` green (5052 tests, 0 regressions, native
       `✅ File size OK` / `✅ Function/class/method size OK` with the `FUNCTION_SIZE_EXTRA_EXCLUDES` entry removed).
-- [ ] [SCRIPT] P2. Extract helpers from the 8 oversized methods in
-      `deployment_api/services/data_status/breakdowns_core.py` + `breakdowns_domain.py` (both are pure-decomposition
-      candidates — mostly independent `_build_*_breakdown()` methods). Remove both exclude entries once compliant.
+- [ ] [SCRIPT] P2. **PARTIAL — `breakdowns_core.py` DONE 2026-07-31 (slot-2, infra craft), `breakdowns_domain.py`
+      remains.** Extract helpers from the 6 oversized methods in `breakdowns_core.py` (`_build_single_venue_entry` 127L,
+      `_build_feature_group_breakdown_uac` 95L, `_build_instrument_type_breakdown` 110L, `_build_underlying_breakdown`
+      70L, `_build_data_type_breakdown` 112L, `_classify_data_type_for_venue` 100L — the last was 65 lines of docstring
+      over 34 lines of real logic; trimmed the docstring instead of splitting logic). `deployment-api@2efb2a0`: 8 new
+      helper methods (mechanical, pure code motion — every extracted line moved verbatim, no logic changes), each named
+      for what it builds (`_build_base_venue_entry`, `_apply_type_dimension_breakdown`,
+      `_apply_optional_venue_dimensions`, `_expected_feature_group_entries`, `_unexpected_feature_group_entries`,
+      `_build_single_instrument_type_entry`, `_nest_underlying_or_data_type`, `_apply_child_weighted_aggregation`,
+      `_build_single_underlying_entry`, `_build_single_data_type_entry`, `_resolve_data_type_expected_dates`,
+      `_split_actionable_vs_blocked`). Also de-duplicated `capture_status_counts`/`counts` (two identical dict literals)
+      into one shared dict under two keys. `breakdowns_core.py`'s `FUNCTION_SIZE_EXTRA_EXCLUDES` entry removed — both
+      file-size (899L) AND function-size gates now pass natively; `breakdowns_domain.py`'s entry stays until its own 8
+      methods are done. Verified: 331 targeted tests green, basedpyright shows only the 2 pre-existing errors (confirmed
+      byte-identical against baseline), full `quality-gates.sh` green (5052 tests, 0 regressions).
+      `deployment_api/services/data_status/breakdowns_domain.py` (8 oversized methods, same
+      `_build_*_breakdown()`-family shape) remains open for follow-up dispatch — remove its exclude entry once
+      compliant.
 - [ ] [SCRIPT] P2. Decompose the remaining function-size-only violation in `deployment_api/routes/deployment_state.py`
       (`refresh_deployment_status_sync()`, 234L). Remove its `FUNCTION_SIZE_EXTRA_EXCLUDES` entry once compliant; re-run
       `quality-gates.sh` to confirm no regression.
