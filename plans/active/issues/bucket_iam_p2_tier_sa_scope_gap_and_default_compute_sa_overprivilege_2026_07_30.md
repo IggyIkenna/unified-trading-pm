@@ -44,7 +44,7 @@ related:
     /codex/02-data/data-pipeline-correctness-hard-rule.md,
   ]
 created: "2026-07-30"
-last_updated: "2026-07-30"
+last_updated: "2026-07-31"
 parent_epic: infrastructure_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -228,17 +228,27 @@ default-compute-SA hardening effort) also waits behind P0-P2 under strict sequen
 depend on the SA-strategy outcome — a full plan split would avoid that, but wasn't done here to keep this fix in-scope
 for the dispatched task.
 
+**Update 2026-07-31 (slot-14)**: P0 resolved (operator ruling "C: hybrid" on BLK-0c84ceac) and P1 shipped the same
+session (`deployment-service@e8684fe`) — see the flipped checkboxes below. `sequential: true` remains correct for the
+still-open P2 (depends on P1, now met) and P3.2 (depends on P0, now met); no change needed to the frontmatter.
+
 ## Todos
 
-- [ ] [OPERATOR] P0. Rule on the competing bucket-write-protection SA strategies: per-tier (`uts-{prd,test}-sa`,
-      `bucket_iam_write_protection_per_tier_2026_06_09.md`) vs per-service
-      (`deployment-service/configs/gcp_service_accounts.yaml`, `features-prod`/`instruments-prod`/etc., already
-      partially live) vs the undocumented ad-hoc family (`uts-{dev,staging,prod}-batch-sa`, `t1-batch-sa`, etc.).
-      Unblocks P2.2a below. (repo: unified-trading-pm)
-- [ ] [TERRAFORM] P1. Once P0 resolves, grant the winning per-tier/per-service SA(s) the non-storage roles real runtimes
-      need (`secretmanager.secretAccessor`, `pubsub.editor` or `.publisher`/`.subscriber`, `bigquery.dataEditor`,
-      `run.invoker`, `iam.serviceAccountUser` + `compute.instanceAdmin.v1` for self-impersonating VM launches) — mirror
-      `unified-trading-sa`'s current grant set (`main.tf:598-663`), scoped per tier/service. (repo: deployment-service)
+- [x] ✅ [OPERATOR] P0. **RESOLVED 2026-07-31** — operator ruling on BLK-0c84ceac: **"C: hybrid"**, ratifying this doc's
+      own "Hybrid (C) boundary proposal" section above (bucket→scheme table + ad-hoc-family disposition) as
+      authoritative — per-tier SAs own Group A/B raw-data buckets already covered by
+      `bucket_iam_write_protection_per_tier_2026_06_09.md`; per-service SAs own already-migrated domain services; the
+      ad-hoc family reconciles per that table's per-SA dispositions. Unblocks P1-P3.2 below +
+      `bucket_iam_write_protection_per_tier_2026_06_09.md` P2.2a (flipped there too, same edit). — slot-14, 2026-07-31.
+- [x] ✅ [TERRAFORM] P1. **DONE 2026-07-31 (slot-14) — `deployment-service@e8684fe`.** Granted `uts-prd-sa`/
+      `uts-test-sa`/`uts-migration-sa` the 7 non-storage roles `unified-trading-sa` holds
+      (`secretmanager.secretAccessor`, `pubsub.editor`, `bigquery.dataEditor`, `run.invoker`, `iam.serviceAccountUser`,
+      `compute.instanceAdmin.v1`, `artifactregistry.reader` — mirrors `main.tf:598-663`), project-wide. Applied via
+      `tofu apply` against `terraform/state/prod` (21 adds, 0 changes/destroys); live-verified via
+      `gcloud projects get-iam-policy`; a follow-up `tofu plan` shows 0 changes. Per-service SAs (the other half of the
+      hybrid split) are NOT touched by this todo — their own role/bucket scoping is `gcp_service_accounts.yaml`'s
+      existing, separate mechanism (Finding 3's `last_executed: NEVER` staleness on that YAML's drift-verifier is still
+      open — not this todo's scope). (repo: deployment-service)
 - [ ] [CODE] P2. Wire `scripts/cloud-run/deploy-shared.sh` (deployment-api's Cloud Run identity) to the winning SA from
       P0, gated on P1's role grants being live-verified first; live-verify via a real deploy that Secret Manager /
       Pub/Sub / BigQuery access still works. (repo: deployment-service)

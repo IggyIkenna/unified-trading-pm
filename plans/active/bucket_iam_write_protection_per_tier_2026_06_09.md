@@ -29,7 +29,7 @@ priority: P1
 estimate_class: infra
 estimate_baseline_ai_days: 3.0
 estimate_calibrated_ai_days: 2.4
-last_updated: 2026-06-27
+last_updated: 2026-07-31
 locked_by: live-defi-rollout
 locked_since: 2026-06-09
 supersedes:
@@ -301,6 +301,13 @@ Two independent gates because Group A and Group B are at different stages:
       confirmed running as its tier SA, not `unified-trading-sa` or the default compute SA) — do not leave this tag
       stale per CLAUDE.md's retag-on-resolve rule.
 
+      > **🟥 Note (2026-07-31, slot-14)**: even once this todo removes `unified-trading-sa`'s `storage.objectAdmin`,
+          > that SA still live-holds `roles/resourcemanager.projectIamAdmin` + `roles/iam.serviceAccountAdmin` (undeclared
+          > in any terraform in this repo) — both self-escalation-capable, i.e. it could re-grant itself storage access
+          > (or any other role) without going through terraform at all. See
+          > `issues/unified_trading_sa_live_iam_drift_vs_terraform_2026_07_31.md` — a full de-privilege of this SA is not
+          > actually complete until that doc's P1/P2 also land.
+
 > **🟥 P2.2 SCOPE GAP found 2026-07-30 (slot-12) — "wire each runtime to its tier SA" is not mechanically executable
 > today.** Investigation (live GCP IAM queries + static analysis, no state mutated) found 3 independently-blocking
 > findings: (1) `uts-prd-sa`/`uts-test-sa`/`uts-migration-sa` hold ONLY storage roles (live-verified via
@@ -315,34 +322,30 @@ Two independent gates because Group A and Group B are at different stages:
 > `issues/bucket_iam_p2_tier_sa_scope_gap_and_default_compute_sa_overprivilege_2026_07_30.md`. Split below mirrors this
 > plan's own P1.2→P1.2a/P1.2b precedent.
 
-- [ ] [OPERATOR] P2.2a. Rule on the competing bucket-write-protection SA strategies (per-tier vs per-service vs the
-      undocumented ad-hoc SA family) — see the linked issue doc's Todos P0. Unblocks P2.2b-P2.2d.
-- [ ] [TERRAFORM][OPERATOR] P2.2b. **`[OPERATOR]`-tagged 2026-07-31 (slot-10)** — mirrors the P2.1b precedent above:
-      this todo has no structured `depends_on`/`gate_on_depends` link to P2.2a (same-plan todos can't express a per-todo
-      prereq — CLAUDE.md), so it is dispatchable to workers despite being prose-gated on P2.2a, which is itself still
-      open/unresolved (`issues/bucket_iam_p2_tier_sa_scope_gap_and_default_compute_sa_overprivilege_2026_07_30.md` P0
-      unchecked as of this edit). `[OPERATOR]` routes this to the operator's blocked-queue instead of re-offering it to
-      workers who can only re-derive the same "not yet" verdict. Once P2.2a resolves, **retag back to plain
-      `[TERRAFORM]`** — do not leave this tag stale per CLAUDE.md's retag-on-resolve rule. Once P2.2a resolves, grant
-      the winning SA(s) the non-storage roles real runtimes need (secretmanager/pubsub/bigquery/run.invoker/
-      serviceAccountUser+computeInstanceAdmin for self-impersonating VM launches) — mirror `unified-trading-sa`'s
-      current grant set, scoped. Gated on P2.2a.
-- [ ] [CODE][OPERATOR] P2.2c. **`[OPERATOR]`-tagged 2026-07-31 (slot-10, dispatched task
-      `bucket_iam_write_protection_per_tier-011`)** — same reasoning as P2.2b immediately above: this todo is
-      prose-gated on P2.2b (itself now also `[OPERATOR]`-tagged, chained back to the still-unresolved P2.2a), but had no
-      tag/structural link preventing dispatch — it was dispatched to this slot despite the chain being unresolved.
-      Investigated live: `issues/bucket_iam_p2_tier_sa_scope_gap_and_default_compute_sa_overprivilege_2026_07_30.md`'s
-      "Explicit operator ask" (hybrid-C boundary proposal) is still `operator_pending` per that doc's own "Dispatch-
-      gating note" section — wiring Cloud Run identities today would mean guessing the SA strategy, which is exactly
-      what that doc says must not happen before the ruling lands. No terraform/IAM/code change made this pass (pure
-      re-diagnosis + gating fix, no state mutated). Once P2.2b resolves, **retag back to plain `[CODE]`** — do not leave
-      this tag stale. Wire Cloud Run service identities (start with `scripts/cloud-run/deploy-shared.sh` /
-      deployment-api), live-verifying Secret Manager/Pub/Sub/BigQuery access after each. Gated on P2.2b.
-- [ ] [CODE][OPERATOR] P2.2d. **`[OPERATOR]`-tagged 2026-07-31 (slot-10)** — same reasoning as P2.2b/P2.2c above:
-      prose-gated on P2.2a (unresolved), no tag preventing dispatch. Once P2.2a resolves, **retag back to plain
-      `[CODE]`** — do not leave this tag stale. Wire VM launchers (165 `scripts/vm/launch-*.sh`, only 4 via the shared
-      `lc_gcloud_create()` helper) — its own large effort needing a per-launcher tier classification pass, not a bulk
-      mechanical edit. Gated on P2.2a.
+- [x] ✅ [OPERATOR] P2.2a. **RESOLVED 2026-07-31** — operator ruling on BLK-0c84ceac: **"C: hybrid" — per-tier SAs
+      (`uts-prd-sa`/`uts-test-sa`/`uts-migration-sa`) stay the write-owner for the Group A/B raw-data buckets this plan
+      already covers; per-service SAs (`deployment-service/configs/gcp_service_accounts.yaml`) own already-migrated
+      domain services (`features-prod` etc.); reconcile the undocumented ad-hoc SA family (`uts-*-batch-sa`,
+      `t1-batch-sa`, ...) into whichever bucket it structurally belongs.** Full boundary table (bucket→scheme mapping +
+      ad-hoc-family disposition) already drafted in the linked issue doc's "Hybrid (C) boundary proposal" section — that
+      table is the ratified answer, not just a proposal, as of this ruling. Unblocks P2.2b-P2.2d. — slot-14, 2026-07-31.
+- [x] ✅ [TERRAFORM] P2.2b. **DONE 2026-07-31 (slot-14) — `deployment-service@e8684fe`.** Retagged back to plain
+      `[TERRAFORM]` (P2.2a resolved above). Granted the 7 non-storage roles `unified-trading-sa` currently holds
+      (`bigquery.dataEditor`, `secretmanager.secretAccessor`, `run.invoker`, `pubsub.editor`,
+      `compute.instanceAdmin.v1`, `iam.serviceAccountUser`, `artifactregistry.reader` — `main.tf`'s `unified_trading_*`
+      project members) to `uts-prd-sa`/`uts-test-sa`/`uts-migration-sa`, project-wide, mirroring `unified-trading-sa`'s
+      own (unconditioned) grant scope. Applied via `tofu apply` against the real `terraform/state/prod` backend (21
+      adds, 0 changes/destroys); live-verified via `gcloud projects get-iam-policy` — all 3 SAs now hold all 7 roles; a
+      follow-up `tofu plan` shows 0 changes (config/state/live in sync). INERT until P2.2c/P2.2d actually wire a runtime
+      to one of these SAs — no live runtime identity changed as a result.
+- [ ] [CODE] P2.2c. **Retagged back to plain `[CODE]` 2026-07-31 (slot-14)** — its gate (P2.2b) is now resolved above,
+      so the prior `[OPERATOR]` tag (which existed only to keep this un-guessable while P2.2a/P2.2b were open) no longer
+      applies; the hybrid-C SA strategy is ratified and P2.2b's non-storage roles are live. Wire Cloud Run service
+      identities (start with `scripts/cloud-run/deploy-shared.sh` / deployment-api), live-verifying Secret
+      Manager/Pub/Sub/BigQuery access after each. Gated on P2.2b (met).
+- [ ] [CODE] P2.2d. **Retagged back to plain `[CODE]` 2026-07-31 (slot-14)** — its gate (P2.2a) is now resolved above.
+      Wire VM launchers (165 `scripts/vm/launch-*.sh`, only 4 via the shared `lc_gcloud_create()` helper) — its own
+      large effort needing a per-launcher tier classification pass, not a bulk mechanical edit. Gated on P2.2a (met).
 - [ ] [TEST] P2.3. Negative tests: `ENVIRONMENT=staging` write to a `*-prod-*` bucket → `403` at IAM; migration SA →
       allowed. Add as a deployment-service QG check.
 
