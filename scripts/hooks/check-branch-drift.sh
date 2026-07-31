@@ -17,6 +17,14 @@ set -euo pipefail
 [[ -n "${GITHUB_ACTIONS:-}" || -n "${CI:-}" ]] && exit 0
 [[ "${SKIP_BRANCH_DRIFT:-0}" = "1" ]] && exit 0
 
+# An in-progress merge commit can only ever REDUCE drift (it reconciles HEAD with the
+# branch the hook would otherwise flag as ahead), so exempting it here cannot let an
+# agent commit on top of an un-reconciled branch — the plain-commit path below, which is
+# the case this hook exists for, is untouched. Without this, `git merge origin/$BRANCH`
+# fires the hook BEFORE the merge commit exists (HEAD is still pre-merge), so it always
+# reads the full drift and hard-blocks the exact operation that resolves it.
+git rev-parse -q --verify MERGE_HEAD >/dev/null && exit 0
+
 BRANCH=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || exit 0)
 [[ -z "$BRANCH" || "$BRANCH" = "HEAD" ]] && exit 0
 

@@ -147,16 +147,19 @@ resolved_by:
       open — the collision-safety fix is real, necessary groundwork (any future attempt to reuse this mechanism for a
       non-qg_red kind needed it regardless), but the actual declare-on-3-failures wiring + resolution mechanism is
       genuine design work, not a bounded mirror-the-pattern task.
-- [ ] [INFRA] P2. **Exempt an in-progress merge from `check-branch-drift.sh`** (finding #4). Add a `MERGE_HEAD` guard so
-      the hook does not block the exact operation that resolves the drift it is reporting: after the existing
-      `SKIP_BRANCH_DRIFT` / CI early-exits, `git rev-parse -q --verify MERGE_HEAD >/dev/null && exit 0`. Scope the
-      exemption honestly in a comment — it is safe precisely because a merge commit can only ever REDUCE drift, so
-      exempting it cannot let an agent commit on top of an un-reconciled branch (the non-merge path, which is the case
-      the hook exists for, is untouched). Repo: unified-trading-pm (`scripts/hooks/check-branch-drift.sh`; the hook is
-      wired as a `local` hook in `.pre-commit-config.yaml:53-61` and is symlink-shared fleet-wide, so verify no per-repo
-      copy needs the same edit). **Done when**: on a branch deliberately put N commits behind origin,
-      `git merge origin/<branch>` completes and creates the merge commit with hooks ENABLED (no `SKIP_BRANCH_DRIFT`, no
-      `--no-verify`), while a plain `git commit` on that same N-behind branch still fails the hook as it does today.
+- [x] ✅ [INFRA] P2. **DONE 2026-07-31 (slot-2, infra).** **Exempt an in-progress merge from `check-branch-drift.sh`**
+      (finding #4). Added a `MERGE_HEAD` guard right after the existing `SKIP_BRANCH_DRIFT` / CI early-exits:
+      `git rev-parse -q --verify MERGE_HEAD >/dev/null && exit 0`, with a comment scoping why it's safe (a merge commit
+      can only ever REDUCE drift, so exempting it cannot let an agent commit on top of an un-reconciled branch — the
+      plain-commit path the hook exists for is untouched). Confirmed via corpus-wide grep that every per-repo
+      `.pre-commit-config.yaml` resolves this hook dynamically via `WORKSPACE_ROOT`-relative path to this ONE file
+      (`unified-trading-pm/scripts/hooks/check-branch-drift.sh`) — no per-repo static copy exists, so a single edit
+      covers the whole fleet. Repo: unified-trading-pm (`scripts/hooks/check-branch-drift.sh`). **Verified against the
+      exact "Done when" criterion** in a scratch git sandbox (bare origin + two diverged clones, hook installed as
+      `.git/hooks/pre-commit`): with a branch genuinely 1-ahead/1-behind origin, a plain `git commit` still hard-fails
+      with the branch-drift message (unchanged behavior); `git merge origin/<branch>` with hooks fully enabled (no
+      `SKIP_BRANCH_DRIFT`, no `--no-verify`) completed and created the real merge commit (`ort` strategy, non-fast-
+      -forward) with zero hook interference.
 
 ## Progress Log
 
@@ -191,3 +194,6 @@ resolved_by:
   which reconciled cleanly AND preserved both `--no-ff` merge commits (plain `--rebase` would have flattened them).
   Worth noting for whoever takes the todo: `--rebase=merges` is the merge-preserving escape hatch and is currently
   undocumented in the workspace's behind-remote recipe, which says only `git pull --rebase --autostash`.
+- 2026-07-31 (slot-2, `infra`): Shipped todo 4 (`MERGE_HEAD` guard on `check-branch-drift.sh`). Todo 3 (the `push_race`
+  repo-blocker feature) remains genuinely open — real design work, not a bounded mirror-the-pattern task per its own
+  note above — so this doc stays `status: open`, not archival-eligible yet.
