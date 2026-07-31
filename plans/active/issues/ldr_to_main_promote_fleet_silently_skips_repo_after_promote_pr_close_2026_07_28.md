@@ -32,7 +32,7 @@ summary: >-
   `sit-gate/fleet-green` + `semver-agent/label-check` statuses ARE posted correctly against
   `ed2691fa93e2a146b3219762c16b5263576ee0cd` each tick (confirmed in both ticks' logs) — so the Tier-A/SIT stage runs
   fine; it is specifically the `process_repo` PR-create/arm stage that appears to silently drop deployment-service.
-status: open
+status: resolved
 nature: issue
 asset_group:
   [ci] # corrected 2026-07-30 (/ag-closeout-audit ci) -- was [meta]; content is ldr-to-main-promote-fleet.yml
@@ -59,8 +59,15 @@ depends_on: []
 locked_by:
 locked_since:
 source: "cicd agent, slot-11, escalation agt-7ea8ad (deployment-service ldr_qg_failure, PR #576), 2026-07-28"
-resolved_by:
+resolved_by: "cicd agent, slot-3, 2026-07-31"
 ---
+
+> **🟢 RESOLVED 2026-07-31** — both open todos closed. Todo 1 self-resolved (confirmed via merged-PR history,
+> 2026-07-30). Todo 2 shipped as discretionary hardening (`unified-trading-pm@9ff98b12a`) — the exact silent-drop
+> mechanism this doc's narrative describes (`process_repo`'s PR-arm fallthrough dropping a repo from every tally with no
+> `_done` call) is fixed. Zero open follow-up todos — this doc is a closed-out record, not a dispatch. The SEPARATE,
+> still-ACTIVE fleet-wide `startup_failure` outage discovered while confirming this is tracked in its own doc, not here:
+> `/plans/active/issues/ldr_to_main_promote_workflows_sustained_startup_failure_2026_07_30.md`.
 
 ## What I fixed (the actual escalation)
 
@@ -80,10 +87,15 @@ resolved_by:
       `2026-07-28T12:31:43Z`–`2026-07-29T16:20:03Z` (10 consecutive successful promotes after the 2 no-op ticks this doc
       originally observed, incl. `#594`/`#595` shortly after the stale-PR-close). The 2-tick no-op was a
       timing/eventual-consistency artifact, not a code defect — no fix needed in `process_repo`.
-- [ ] [SCRIPT] P3. **Condition not triggered — optional/discretionary only.** The bug this todo was conditioned on ("if
-      confirmed a real bug") was NOT confirmed (see todo 1) — general hardening of the `2>/dev/null || true` swallows in
-      `process_repo`'s PR-arm section remains a reasonable low-priority robustness improvement on its own merits, but is
-      no longer blocking or urgent.
+- [x] ✅ [SCRIPT] P3. **Shipped as discretionary hardening, 2026-07-31 (slot-3).** Its trigger condition ("if confirmed
+      a real bug") was never met (see todo 1), but the exact silent-drop mechanism this doc reproduced twice against
+      deployment-service was still live in `process_repo`'s PR-arm section: the `gh pr create` fallthrough at the bottom
+      of the PR-open block returned `0` WITHOUT ever calling `_done`, so `$RESULT_DIR/$REPO` was never written and the
+      repo dropped out of every Promoted/Blocked/Conflicted tally with zero trace — plus the `gh pr create` stderr that
+      would explain WHY it failed was discarded via `2>/dev/null`. Fixed both: captured the previously-swallowed stderr
+      and now log it on failure, and the fallthrough calls `_done BLOCKED` instead of a bare `return 0`, so the repo
+      surfaces in the tally (and next tick's retry) instead of vanishing silently. `unified-trading-pm@9ff98b12a`
+      (`scripts/cicd/ldr_to_main_fleet_promote.sh`).
 - Resolved: `deployment-service` LDR→main promotion proceeded normally on the standing cadence with no further manual
   intervention, through 2026-07-29T16:20:03Z.
 - **Separate, currently-ACTIVE incident found while confirming the above** (NOT the same bug — a distinct, much larger
@@ -113,3 +125,11 @@ resolved_by:
   trigger condition was never met, downgraded to discretionary. Filed a SEPARATE issue doc for a much bigger, currently
   active fleet-wide `startup_failure` outage discovered while confirming this — see the note above the Evidence section.
   Escalated to main via chat.
+- **2026-07-31 (slot-3)**: shipped todo 2 as discretionary hardening. Re-read `process_repo` in
+  `scripts/cicd/ldr_to_main_fleet_promote.sh` and located the exact silent-drop mechanism this doc's own narrative
+  describes: the `gh pr create` fallthrough (PR creation failed AND no existing open PR found) returned `0` without
+  calling `_done`, so the repo never gets a `$RESULT_DIR/$REPO` entry and is silently absent from every tick's
+  Promoted/Blocked/Conflicted tally — reproducing the exact deployment-service symptom this doc reported. Hardened two
+  swallows: captured `gh pr create`'s previously-`2>/dev/null`-discarded stderr and log it on failure, and the
+  fallthrough now calls `_done BLOCKED` instead of a bare `return 0`. `bash -n` + `shellcheck` clean (no new findings vs
+  pre-existing warnings), full `quality-gates.sh --no-fix` green. Shipped `unified-trading-pm@9ff98b12a`.
