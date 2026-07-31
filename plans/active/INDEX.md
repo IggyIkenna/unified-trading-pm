@@ -17,7 +17,7 @@
 
 <!-- AUTO-INDEX-START -->
 
-_Auto-generated via `scripts/plans/regenerate_active_plan_index.py`. 243 plans across 10 domains. A plan tagged with
+_Auto-generated via `scripts/plans/regenerate_active_plan_index.py`. 241 plans across 10 domains. A plan tagged with
 multiple `asset_group:` values appears under each. Grep this block for a domain keyword before scanning `plans/active/`
 by hand._
 
@@ -146,7 +146,7 @@ by hand._
   — Gated closeout for vol_dvol_backtestable_engines_2026_07_13.md, reclassified `assigned_vm: NA -> planning` by the
   na-eligibility-audit cefi-tranche run 2026-07-30 (retroactive-reclassification shape, codex…
 
-### defi (39)
+### defi (37)
 
 - [`ag_closeout_audit_rollout_2026_07_25`](./ag_closeout_audit_rollout_2026_07_25.md) — Autonomous session (/autonomous,
   operator away, 2026-07-25) driving the /ag-closeout-audit skill across the 4 asset groups that haven't had it yet —
@@ -264,14 +264,6 @@ by hand._
 - [`lst_rate_honest_coverage_2026_07_21`](./lst_rate_honest_coverage_2026_07_21.md) — Operator-directed (2026-07-21)
   build to bring the four LST exchange-rate surfaces to HONEST COVERAGE end-to-end so the DeFi interest PnL can sit on
   real data. #1 CEX spot = a Tardis backfill (denominator already complete — adding pairs is…
-- [`market_tick_data_service_lending_instrument_type_historical_restamp_2026_07_24`](./market_tick_data_service_lending_instrument_type_historical_restamp_2026_07_24.md)
-  — MTDS `liquidations_handler.py`'s lending `instrument_type` writer bug is already fixed going forward
-  (`mtds@fec20de2` — manifest stamp + disk write both derive from the same `resolve_lending_instrument_type()` call),
-  but existing…
-- [`market_tick_data_service_lending_instrument_type_historical_restamp_finalize_2026_07_30`](./market_tick_data_service_lending_instrument_type_historical_restamp_finalize_2026_07_30.md)
-  — Gated close-out twin for market_tick_data_service_lending_instrument_type_historical_restamp_2026_07_24,
-  reclassified NA -> planning by /na-eligibility-audit defi on 2026-07-30. Verifies the re-stamp landed honestly
-  (row-count parity, no…
 - [`mtds_available_at_cross_asset_backfill_2026_07_13`](./mtds_available_at_cross_asset_backfill_2026_07_13.md) —
   Backfill the historical available_at="" backlog on CAPTURED market-data-tick manifest rows, now that
   unified-trading-library@9c9cdc50 fixed record_captured()/record_captured_from_counts() to actually persist the value.
