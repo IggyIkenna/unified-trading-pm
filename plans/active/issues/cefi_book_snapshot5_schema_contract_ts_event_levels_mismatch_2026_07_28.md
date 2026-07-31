@@ -95,10 +95,11 @@ source:
   data_pipeline_failure worker (slot-16), fired 2026-07-28, asset_group=cefi data_type=book_snapshot_5, 299,467
   attempted_failed of 1,037,001 attempted (28.9%), flagged Fresh (0d old)."
 last_updated:
-  2026-07-31 (12th+ dispatch, agt-0bf4a3 -- confirmed all 5 fix commits still hold; numerator (300,457) byte-identical
-  to the immediately-prior verified reading, live re-read skipped per established precedent.
-  deployment-service@a564cca's materiality fix continues correctly labeling this cell STATIC BACKLOG (110 rows/24h,
-  below the 500-row floor) instead of Fresh.)
+  2026-07-31 (13th+ dispatch, agt-0bf4a3 re-dispatched to a second slot -- confirmed all 5 fix commits still hold;
+  numerator (300,457) byte-identical to the same-escalation_id prior reading (slot 8), live re-read skipped per
+  established precedent. deployment-service@a564cca's materiality fix continues correctly labeling this cell STATIC
+  BACKLOG (110 rows/24h, below the 500-row floor) instead of Fresh. This is the 2nd confirmed exact-duplicate-
+  escalation_id dispatch (after agt-ccb54c, 2026-07-30).)
 ---
 
 # CeFi `book_snapshot_5` schema-contract mismatch -- root cause + fix (2026-07-28)
@@ -597,3 +598,21 @@ against the reproduction script.
   static condition, not a new regression. Session cost: two file reads + one `git merge-base --is-ancestor` batch check
   (5 commits) + a Progress Log append, no GCS read, no code change. No GCS/manifest write, no VM launch. Pinged
   `dp-fleet-monitor` (authoring slot) with this outcome.
+- **2026-07-31 (`data_pipeline_failure` escalation worker, task `agt-0bf4a3`, slot 4) — SAME escalation_id as the entry
+  directly above, a genuine duplicate worker dispatch of one escalation event to two slots, not a re-evaluated
+  condition.** Received a dispatch carrying escalation_id `agt-0bf4a3` with alert numbers byte-identical to the
+  immediately-prior entry (also `agt-0bf4a3`, slot 8): `300,457/1,085,862 = 27.7%`, "STATIC BACKLOG — only 110
+  attempted_failed row(s) in the last 1d (below the 500-row materiality floor); a decaying trickle on already-tracked
+  backlog, not a fresh regression." Read this doc first per the pre-task plan/issue conflict-check rule. Re-verified all
+  five fix commits are still ancestors of `origin/live-defi-rollout` (`git merge-base --is-ancestor`, fresh `git fetch`
+  in each of the three repos): MTDS `339ca767`/`6bf568ee`, UAC `8db188fe`/`1c4d8864`, deployment-service `a564cca` — all
+  OK. Per the entry directly above's own "numerator byte-identical → skip the live manifest re-read" precedent —
+  reinforced here since the prior entry's manifest read is only seconds/minutes old, not stale — did not pull a fresh
+  GCS read this session. **Conclusion: no code fix needed** — all three root-cause fixes (contract shape, ts_event
+  derivation, nullable levels) plus the alerting-materiality fix continue to hold; this is a duplicate dispatch of the
+  exact same already-fully-investigated escalation, not a new regression or a fresh detector tick. Session cost: doc
+  read + one `git merge-base --is-ancestor` batch check (5 commits) + this Progress Log append, no GCS read, no code
+  change. No GCS/manifest write, no VM launch. Pinged `dp-fleet-monitor` (authoring slot) with this outcome; this is now
+  the 13th+ dispatch for this condition and the 2nd exact-duplicate-escalation_id case (`agt-ccb54c` on 2026-07-30 was
+  the first), further corroborating `dp_escalation_worker_dispatch_no_open_issue_check_2026_07_29.md`'s still-open
+  Option A recommendation for dedup at the orchestrator dispatch layer.

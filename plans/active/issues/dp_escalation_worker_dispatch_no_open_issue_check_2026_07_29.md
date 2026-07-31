@@ -227,3 +227,14 @@ regression) is worse.**
   manifest re-read was skipped per established precedent; session cost was two file reads + a git-ancestor batch check
   (5 commits) + a Progress Log append, no GCS read, no code change. Adds no new argument — another data point on the
   climbing count, still awaiting the operator/design decision on Option A/B/C.
+- **2026-07-31 (data_pipeline_failure escalation worker, agt-0bf4a3, slot 4) — 13th+ dispatch, and this time the SAME
+  escalation_id (`agt-0bf4a3`) as the entry directly above, not just the same condition.** This is a sharper data point
+  than the prior 12: it is not merely the same static condition re-detected on a later sweep, it is the literal same
+  escalation event dispatched to two different slots (slot 8, then slot 4) with byte-identical alert numbers
+  (300,457/1,085,862). Only the second confirmed exact-duplicate-escalation_id case observed so far (the first was
+  `agt-ccb54c` on 2026-07-30, also for this exact `(cefi, book_snapshot_5)` cell). This shape is NOT addressed by the
+  materiality fix at all (that fix changes classification/paging severity for a condition, it cannot deduplicate two
+  dispatches of the identical event) — it is squarely Option A/B/C's territory (dedup at the escalation-dispatch layer
+  itself, e.g. by escalation_id or by "does an OPEN issue doc already exist for this alert signature"). Session cost:
+  doc read + git-ancestor batch check (5 commits) + a Progress Log append in the book_snapshot_5 doc, no GCS read, no
+  code change. Still awaiting the operator/design decision on Option A/B/C.
