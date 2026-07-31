@@ -55,6 +55,16 @@ depends_on: []
 last_updated: 2026-07-31
 ---
 
+> **🗄️ ARCHIVED 2026-07-31** — `status: resolved`. Both todos done: the maintenance window was registered live
+> 2026-07-31T18:25-18:26Z (TTL 4320min), and the pause-action retrofit shipped — market-tick-data-service@99b3c953
+> (`scripts/mtds_available_at_backfill_pause_{tradfi,prediction}_2026_07_31.py`). The plan's own 1000-line hard-cap
+> breach (finding "Recommended decision" § 2) that blocked authoring this todo directly inside
+> `mtds_available_at_cross_asset_backfill_2026_07_13.md` is tracked forward at
+> `/plans/active/issues/mtds_available_at_cross_asset_backfill_line_cap_remediation_2026_07_31.md`. The underlying
+> tradfi-cron pause itself remains open, tracked separately in
+> `/plans/active/mtds_available_at_cross_asset_backfill_2026_07_13.md` (not this doc's scope). No further open work in
+> this doc.
+
 # DP_CONSOLIDATOR_SCHEDULER_PAUSED recurrence — tradfi cron (2026-07-31)
 
 ## What I found
