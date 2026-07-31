@@ -364,11 +364,11 @@ cancellation-timeout fix and already shipped). Suggested next steps for whoever 
       letting the two fresh follow-up todos below carry the doc-wide root-cause question forward. No code shipped this
       entry (pure verification + doc reconciliation).
 
-- [ ] [BACKEND] P2. **NEW, opened 2026-07-31 (slot 11, backend_engineer) — narrow the exec'd-subprocess-SIGABRT theory
-      to a specific call site.** Per the todo above's Finding C: a `subprocess.run()`/`Popen`-spawned child crashing
-      with `SIGABRT` reproduces every observed signature (pid==tid, zero faulthandler dump, container survives) — unlike
-      a `ProcessPoolExecutor` fork child (already proven, 2026-07-30, to correctly dump). None of the 3 freshest
-      occurrences (`00341-6vh@14:46:15Z`/`14:54:25Z`, `00343-tf5@21:14:18Z`, all 2026-07-30) correlate with a
+- [x] ✅ [BACKEND] P2. **NEW, opened 2026-07-31 (slot 11, backend_engineer) — narrow the exec'd-subprocess-SIGABRT
+      theory to a specific call site.** Per the todo above's Finding C: a `subprocess.run()`/`Popen`-spawned child
+      crashing with `SIGABRT` reproduces every observed signature (pid==tid, zero faulthandler dump, container survives)
+      — unlike a `ProcessPoolExecutor` fork child (already proven, 2026-07-30, to correctly dump). None of the 3
+      freshest occurrences (`00341-6vh@14:46:15Z`/`14:54:25Z`, `00343-tf5@21:14:18Z`, all 2026-07-30) correlate with a
       non-`/health` request in the surrounding request log, so the trigger — if this theory holds — is likely a
       BACKGROUND/scheduled path, not a request handler. Next steps: (1) audit `deployment_api/`'s 15+
       `subprocess.run()`/`Popen` call sites for which are reachable WITHOUT a corresponding inbound HTTP request (a
@@ -383,7 +383,37 @@ cancellation-timeout fix and already shipped). Suggested next steps for whoever 
       application logs alone, without needing a gVisor-cooperative faulthandler dump; (3) if no background call site is
       found, re-open the sandbox-external-termination theory specifically for the HIGHER-traffic/multi-instance
       revisions (where Finding A's clean single-instance evidence doesn't directly apply) using the same
-      instance_count-based restart-detection method demonstrated this session. (repo: deployment-api)
+      instance_count-based restart-detection method demonstrated this session. (repo: deployment-api) — **2026-07-31
+      (slot 13, backend_engineer)**: step (1) executed EXHAUSTIVELY (full call graph, not another grep). First confirmed
+      which of the TWO competing `auto_sync_running_deployments` implementations is actually live:
+      `deployment_api/main.py:140` wires `lifespan=lifespan` from `deployment_api/lifespan.py`, which imports
+      `auto_sync_running_deployments` from **`background_sync.py`** (`lifespan.py:19-21`) — NOT
+      `workers/auto_sync.py`'s. `app_config.py` defines its OWN parallel `lifespan()`/`create_app()` pair that instead
+      wires `workers/auto_sync.py`'s (larger, quota-broker/orphan-VM-cleanup) implementation, but
+      `app_config.create_app` is never called by `main.py` — only individual helper functions from `app_config.py` are
+      imported elsewhere (`routes/deployments/_crud.py`, `routes/deployments/__init__.py`,
+      `services/data_status_service.py`), so `workers/auto_sync.py`'s entire background loop is **dead code in the
+      actually-running service** (filed as a separate small cleanup todo below — tangential to this SIGABRT hunt but
+      adjacent, found while tracing this exact call graph). Traced the REAL live loop
+      (`background_sync.auto_sync_running_deployments` → `SyncService.sync_deployments` /
+      `_run_ttl_cleanup`→`cleanup_state_ttl` / `_run_deployment_reaper`→`reap_stale_deployments`) end to end:
+      `sync_service.py` imports only `vm_utils.list_running_vm_names` (confirmed uses `google.cloud.compute_v1`
+      directly, zero subprocess), `DeploymentsRegistry.reap_stale` (`unified_trading_library/deployment_registry.py`,
+      zero subprocess hits), and `StateManager.cleanup_state_ttl` (GCS `StorageClient` list/delete calls only, zero
+      subprocess). The one path that COULD reach a launcher (`SyncService._acquire_and_launch` → `orch.submit_shard`) is
+      itself dead: it dynamically imports `deployment_service.deployment.orchestrator.DeploymentOrchestrator` and calls
+      `getattr(orch, "submit_shard", None)` — that class (checked directly in the sibling `deployment-service` repo,
+      `deployment_service/deployment/orchestrator.py`) has NO `submit_shard` method at all, so the `getattr` always
+      returns `None`, `callable()` is `False`, and `job_id` is always `None` — this code path silently no-ops on every
+      call, it can never reach a subprocess. **Conclusion: the background/scheduled exec-subprocess theory is REFUTED by
+      exhaustive call-graph evidence** — there is no subprocess call site reachable from the one loop that's actually
+      running in production, so it cannot be the SIGABRT source. Step (2) doesn't apply (no plausible site found to
+      instrument). Per step (3), re-opening the sandbox-external-termination theory for higher-traffic/multi-instance
+      revisions — filed as a fresh, narrower `[BACKEND]` todo below rather than re-running Finding A's clean-case query
+      again. Flipping this checkbox: its own literal ask (audit the call sites, find or rule out a site) is answered —
+      the answer is a confirmed negative, not an unresolved gap. No code shipped this entry (pure investigation,
+      verified via direct source reads across 3 repos — deployment-api, unified-trading-library, deployment-service —
+      not grep-and-guess).
 
 - [ ] [BACKEND] P2. **NEW, opened 2026-07-31 (slot 11, backend_engineer) — real OOM-kills (`SIGKILL`, distinct from this
       doc's `SIGABRT` mystery) recur on this service and are currently untracked.** While reading `00331-wzz`'s full
@@ -405,7 +435,69 @@ cancellation-timeout fix and already shipped). Suggested next steps for whoever 
       limit further, or capping `containerConcurrency`/max concurrent cold-starts, is the pragmatic mitigation while
       root-causing continues. (repo: deployment-api)
 
+- [ ] [BACKEND] P2. **NEW, opened 2026-07-31 (slot 13, backend_engineer) — re-open the sandbox-external-termination
+      theory specifically for HIGHER-traffic/multi-instance revisions.** This session exhaustively ruled out the
+      exec'd-subprocess-in-background-loop theory (see the todo above) via a full call-graph audit — the one background
+      loop actually wired into production (`background_sync.auto_sync_running_deployments`, confirmed via
+      `main.py:140`'s `lifespan=lifespan` import chain) has zero reachable `subprocess`/`Popen` call sites anywhere in
+      its call graph (`SyncService`, `vm_utils.list_running_vm_names`, `DeploymentsRegistry.reap_stale`,
+      `StateManager.cleanup_state_ttl` — none call subprocess; the one path that could,
+      `SyncService._acquire_and_launch` → `orch.submit_shard`, is dead code since `DeploymentOrchestrator` has no
+      `submit_shard` method). With the background-exec-subprocess theory now refuted (not just the arbiter and
+      pyarrow-signal-handler theories from earlier in this doc) and Finding A (2026-07-31, slot 11) having only checked
+      the CLEAN single-instance case for the sandbox-external-termination theory, the natural next step is re-running
+      Finding A's exact method (per-instance `container/{cpu,memory}/utilizations` + `instance_count` Cloud Monitoring
+      queries, `"Starting new instance"` presence/absence in the system log) against a SIGABRT that landed on a revision
+      actively running MULTIPLE concurrent instances — Finding A's own caveat is that its clean evidence doesn't
+      directly apply there. Concrete next steps: (1) `gcloud logging read` for
+      `run.googleapis.com/container/instance_count` (or the Monitoring API equivalent) around each of the 9 cataloged
+      post-fix SIGABRT timestamps in this doc to find one where `instance_count` > 1 at the time of the crash; (2) for
+      that occurrence, apply Finding A's exact method — check for a `"Starting new instance"` line immediately after
+      (would support sandbox-external-kill) vs. its absence (would support genuinely in-process, still-unexplained); (3)
+      if no multi-instance occurrence exists yet in the historical catalogue, this todo stays open until the next
+      SIGABRT lands on a multi-instance revision — don't force a conclusion from single-instance data. (repo:
+      deployment-api)
+
+- [ ] [BACKEND] P3. **NEW, opened 2026-07-31 (slot 13, backend_engineer) — dead-code cleanup: `workers/auto_sync.py`'s
+      entire background-sync implementation is unreachable in production.** Found while tracing the call graph for the
+      todo above. `deployment_api/main.py:140` wires `lifespan=lifespan` from `deployment_api/lifespan.py`, which is
+      what actually runs (`lifespan.py` imports `auto_sync_running_deployments` from `background_sync.py`).
+      `deployment_api/app_config.py` independently defines its OWN `lifespan()` (line 139) and `create_app()` (line 179)
+      that instead wire `workers/auto_sync.py`'s auto-sync loop (a larger, more elaborate implementation with
+      quota-broker/orphan-VM-cleanup logic not present in `background_sync.py`) — but `app_config.create_app` is never
+      called from `main.py`; only individual helper functions from `app_config.py` are imported elsewhere
+      (`routes/deployments/_crud.py`, `routes/deployments/__init__.py`, `services/data_status_service.py`). This means
+      `workers/auto_sync.py`'s entire background loop (695+ lines) is dead code in the live service — a real
+      maintenance/confusion risk (two divergent implementations of the same job, only one of which anyone should be
+      editing) independent of the SIGABRT investigation. Not itself a SIGABRT candidate (confirmed unreachable, so it
+      cannot be the crash source) — filed as its own small P3 rather than folded into the SIGABRT todos above. Next
+      step: confirm with a repo owner whether `workers/auto_sync.py` (and `app_config.py`'s unused `lifespan`/
+      `create_app`) should be deleted outright, or whether it's an in-progress migration target that
+      `background_sync.py` is meant to be replaced by (in which case the migration itself is the real follow-up, not a
+      deletion). (repo: deployment-api)
+
 ## Progress Log
+
+- **2026-07-31 (slot 13, backend_engineer)** — Dispatched `deployment_api_sigabrt_crash_loop-007` (the `[BACKEND] P2`
+  "narrow the exec'd-subprocess-SIGABRT theory" todo). Fresh-pulled all slot repos. Executed step (1) exhaustively
+  rather than another grep pass: first confirmed which of the two competing `auto_sync_running_deployments`
+  implementations is actually live — `main.py:140`'s `lifespan=lifespan` wires `lifespan.py`, which imports the loop
+  from `background_sync.py`, NOT `workers/auto_sync.py` (whose loop is wired only by `app_config.py`'s own parallel,
+  never-called `create_app()`/`lifespan()` — dead code, filed as its own P3 cleanup todo below). Traced the real live
+  loop's full call graph end to end (`SyncService.sync_deployments`/ `_run_ttl_cleanup`/`reap_stale_deployments` →
+  `vm_utils.list_running_vm_names` (google.cloud compute_v1, no subprocess) → `DeploymentsRegistry.reap_stale`
+  (unified-trading-library, no subprocess) → `StateManager. cleanup_state_ttl` (GCS StorageClient, no subprocess); the
+  one path that could reach a launcher, `_acquire_and_launch` → `orch.submit_shard`, is dead — `DeploymentOrchestrator`
+  (checked directly in the sibling deployment-service repo) has no `submit_shard` method, so the `getattr` always
+  resolves to `None` and the call silently no-ops). **Conclusion: zero subprocess call sites are reachable from the loop
+  that's actually running in production — the background-exec-subprocess theory is REFUTED by exhaustive call-graph
+  evidence**, not a grep-depth limitation. Flipped the checkbox (its own ask — audit and find-or-rule-out a call site —
+  is answered, on the negative branch, same convention as this doc's other closed checkboxes). Filed two fresh todos: a
+  `[BACKEND] P2` re-opening the sandbox-external-termination theory specifically for higher-traffic/multi-instance
+  revisions (Finding A only checked the clean single-instance case), and a `[BACKEND] P3` for the `workers/auto_sync.py`
+  dead-code discovery (tangential to the SIGABRT hunt, adjacent finding, doesn't warrant its own issue doc). No code
+  shipped this entry (pure investigation via direct source reads across deployment-api, unified-trading-library, and
+  deployment-service — not log-archaeology or re-guessing).
 
 - **2026-07-31 (slot 13, backend_engineer)** — Re-dispatched `deployment_api_sigabrt_crash_loop-006` (this
   `[BACKEND] P2` sandbox-external-termination todo, 18th+ dispatch on this doc, ~hours after slot 11's 09:32Z session
