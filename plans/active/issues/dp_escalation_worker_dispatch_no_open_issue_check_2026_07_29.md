@@ -221,3 +221,9 @@ regression) is worse.**
     to fix beyond re-confirming an already-materiality-suppressed decaying trickle. Full writeup in the book_snapshot_5
     doc's own Progress Log. Still awaiting the operator/design decision on Option A/B/C — this entry adds no new
     argument, just another data point on the climbing count.
+- **2026-07-31 (data_pipeline_failure escalation worker, agt-0bf4a3, slot 8) — `(cefi, book_snapshot_5)`'s 12th+
+  dispatch, same story again.** Dispatch context again carried the STATIC BACKLOG materiality annotation (110 rows/24h)
+  and a full worker session still spawned. Numerator (300,457) byte-identical to the last verified reading, so the live
+  manifest re-read was skipped per established precedent; session cost was two file reads + a git-ancestor batch check
+  (5 commits) + a Progress Log append, no GCS read, no code change. Adds no new argument — another data point on the
+  climbing count, still awaiting the operator/design decision on Option A/B/C.

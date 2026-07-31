@@ -95,10 +95,10 @@ source:
   data_pipeline_failure worker (slot-16), fired 2026-07-28, asset_group=cefi data_type=book_snapshot_5, 299,467
   attempted_failed of 1,037,001 attempted (28.9%), flagged Fresh (0d old)."
 last_updated:
-  2026-07-31 (11th+ dispatch, agt-05ca7f -- confirmed all 5 fix commits still hold; a tiny 16-row KRAKEN-SPOT/OKX-SWAP
-  tail (04:18-06:05Z) matches the same self-resolving in-flight-stale-code shape documented 6 times prior on this doc,
-  not re-polled given the established pattern. deployment-service@a564cca's materiality fix continues correctly labeling
-  this cell STATIC BACKLOG (110 rows/24h, below the 500-row floor) instead of Fresh.)
+  2026-07-31 (12th+ dispatch, agt-0bf4a3 -- confirmed all 5 fix commits still hold; numerator (300,457) byte-identical
+  to the immediately-prior verified reading, live re-read skipped per established precedent.
+  deployment-service@a564cca's materiality fix continues correctly labeling this cell STATIC BACKLOG (110 rows/24h,
+  below the 500-row floor) instead of Fresh.)
 ---
 
 # CeFi `book_snapshot_5` schema-contract mismatch -- root cause + fix (2026-07-28)
@@ -580,3 +580,20 @@ against the reproduction script.
   change (PM plan-doc edit only). Pinged `dp-fleet-monitor` (authoring slot) with this outcome; also appended a
   corroborating entry to `dp_escalation_worker_dispatch_no_open_issue_check_2026_07_29.md` (this is now the 11th+
   dispatch for this exact condition, further reinforcing that doc's still-open Option A recommendation).
+- **2026-07-31 (`data_pipeline_failure` escalation worker, task `agt-0bf4a3`, slot 8) — 12th+ dispatch, all fixes still
+  holding, numerator byte-identical to last verified reading.** Received another `DP_RUN_MOSTLY_EMPTY` (DP-FETCH-009)
+  page for `(cefi, book_snapshot_5)`: 300,457/1,085,862 = 27.7%, alert context already carrying the materiality
+  annotation "STATIC BACKLOG — only 110 attempted_failed row(s) in the last 1d (below the 500-row materiality floor); a
+  decaying trickle on already-tracked backlog, not a fresh regression." No issue doc pre-linked
+  (`Filed issue: (none — alert carries the details)`); found this doc via the standard pre-task plan/issue
+  conflict-check grep. Re-verified all five fix commits are still ancestors of `origin/live-defi-rollout`
+  (`git merge-base --is-ancestor`, fresh `git fetch`): MTDS `339ca767`/`6bf568ee`, UAC `8db188fe`/`1c4d8864`,
+  deployment-service `a564cca` — all OK. The numerator (300,457) is byte-identical to `agt-05ca7f`'s immediately-prior
+  verified reading (only the `attempted` denominator grew, 1,085,336→1,085,862, +526) — per that session's own
+  established "numerator byte-identical → skip the live manifest re-read" precedent (and the async-wait-discipline
+  principle against re-confirming an already-well-proven self-resolving pattern for the 7th time), did not pull a fresh
+  GCS read this session. **Conclusion: no code fix needed** — all three root-cause fixes (contract shape, ts_event
+  derivation, nullable levels) plus the alerting materiality fix continue to hold; this is a duplicate/re-evaluated
+  static condition, not a new regression. Session cost: two file reads + one `git merge-base --is-ancestor` batch check
+  (5 commits) + a Progress Log append, no GCS read, no code change. No GCS/manifest write, no VM launch. Pinged
+  `dp-fleet-monitor` (authoring slot) with this outcome.
