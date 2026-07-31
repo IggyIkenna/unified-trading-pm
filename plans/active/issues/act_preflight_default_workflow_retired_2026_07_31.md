@@ -55,12 +55,12 @@ WORKFLOW="quality-gates.yml"
 
 Measured workspace reality on 2026-07-31:
 
-| Workflow filename            | Repos containing it |
-| ---------------------------- | ------------------- |
-| `quality-gates.yml`          | **0**               |
-| `quality-gates-v2.yml`       | 26                  |
-| `python-quality-gates.yml`   | 0                   |
-| `python-quality-gates-v2.yml`| 1 (PM)              |
+| Workflow filename             | Repos containing it |
+| ----------------------------- | ------------------- |
+| `quality-gates.yml`           | **0**               |
+| `quality-gates-v2.yml`        | 26                  |
+| `python-quality-gates.yml`    | 0                   |
+| `python-quality-gates-v2.yml` | 1 (PM)              |
 
 The v2 rename is the shipped state (`quality-gates-v2` is the required check on every repo per
 `/codex/08-workflows/ci-cd-flow.md`); the script was simply never updated alongside it.
@@ -78,16 +78,17 @@ The v2 rename is the shipped state (`quality-gates-v2` is the required check on 
 
    Verified 2026-07-31 by replaying the script's own discovery loop + empty-array expansion verbatim under
    `set -euo pipefail` against the live workspace: `TARGET_REPOS count = 0`, loop body never entered, `ACTUAL EXIT: 0`.
-   Two preconditions bound the claim: (a) the `command -v act` / `docker info` preflight runs *before* repo resolution,
+   Two preconditions bound the claim: (a) the `command -v act` / `docker info` preflight runs _before_ repo resolution,
    so on a host without act or a running docker daemon the script exits 2 there and never reaches this path; (b) the
    empty-array expansion `"${TARGET_REPOS[@]}"` is only safe-under-`set -u` on bash 4.4+ — measured on bash 5.3.9. On
    macOS's system bash 3.2 the same line would instead abort with `unbound variable`.
 
 ## Suggested fix
 
-- [ ] [SCRIPT] P3. Change the `act-preflight.sh` default to `WORKFLOW="quality-gates-v2.yml"`, and make the `--repo all`
-      path fail loudly (exit 2) when `TARGET_REPOS` resolves empty rather than exiting 0 over an empty set. Ship via
-      `unified-trading-pm` quality gates + quickmerge. Provenance: codex freshness re-review shard-B, 2026-07-31.
+- [x] ✅ [SCRIPT] P3. Change the `act-preflight.sh` default to `WORKFLOW="quality-gates-v2.yml"`, and make the
+      `--repo all` path fail loudly (exit 2) when `TARGET_REPOS` resolves empty rather than exiting 0 over an empty set.
+      Ship via `unified-trading-pm` quality gates + quickmerge. Provenance: codex freshness re-review shard-B,
+      2026-07-31. — unified-trading-pm@075e4e11b
 - [ ] [DOC] P3. Once shipped, drop the ⚠️ caveat + this issue reference from
       `/codex/05-infrastructure/act-preflight-coverage.md` § Operational guidance and restore the no-flag invocation in
       its `verifier:` frontmatter field.
