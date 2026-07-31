@@ -278,9 +278,21 @@ file-by-file.
       `test_v4_sub_dimensions_chain_gated_on_defi.py`, `test_chain_breakdown_shards_vs_dates.py`); basedpyright's 5
       remaining errors confirmed pre-existing (byte-identical against origin, same 5 lines before this change); ruff
       clean; full `quality-gates.sh` green (153s). Repo: deployment-api.
-- [ ] [SCRIPT] P2. Decompose the remaining function-size-only violation in
-      `deployment_api/services/data_status/instrument_coverage.py` (`per_instrument_coverage()`, 364L). Remove its
-      exclude entry once compliant; re-run `quality-gates.sh` to confirm no regression.
+- [x] ✅ [SCRIPT] P2. **DONE 2026-07-31 (slot-2, infra craft).** Decomposed
+      `deployment_api/services/data_status/instrument_coverage.py` (`per_instrument_coverage()`, was 364L — the single
+      largest offender listed in this doc's own header). `deployment-api@92f2d41`: extracted
+      `_scoped_expected_instruments`, `_split_legacy_and_current_rows`, `_legacy_fallback_entry`,
+      `_compute_found_shards`, `_per_instrument_expected_and_count`, `_count_found_shards`,
+      `_missing_instruments_and_counts`, `_per_instrument_breakdown` — each extracted block kept fully intact (no code
+      split mid-mask-computation) specifically to preserve the review-confirmed pandas index-alignment invariants this
+      function's own comments document (bug #2/#3/#4, "2 of 3 reviews independently" caught an index-misalignment bug
+      from a prior refactor attempt). Pure code motion + docstring condensing (was 109 lines), no logic changes.
+      `FUNCTION_SIZE_EXTRA_EXCLUDES` entry removed — gate passes natively. Verified: 204 targeted tests green, including
+      `test_mdps_timeframe_aware_honest_coverage.py` (the exact suite for the documented index-alignment-bug class) and
+      `test_per_instrument_cefi_is_provider.py` (the CEFI live-catalog path) — both pass unchanged, positive evidence
+      the extraction preserved the subtle invariants; basedpyright's 12 remaining errors confirmed identical message-set
+      against origin (diff empty when line numbers stripped); ruff clean; full `quality-gates.sh` green (113s). Repo:
+      deployment-api.
 - [ ] [SCRIPT] P2. Decompose the remaining function-size-only violation in
       `deployment_api/services/data_status/sports.py`. Remove its exclude entry once compliant; re-run
       `quality-gates.sh` to confirm no regression.
