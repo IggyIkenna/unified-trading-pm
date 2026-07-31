@@ -96,20 +96,25 @@ source: >-
       shipped, been superseded, or otherwise resolved; if it has, the conflict is CLEAR and the item becomes a batch-2
       candidate with zero new investigation (this is the cheap path the `/ag-closeout-audit` methodology depends on).
       The 10 and their named competing claims: (1) `PYTEST_UNIT_DIR` vs
-      `issues/mtds_ungated_test_families_2026_07_17.md`'s two `[BACKEND] P1` test-fix gates — check whether those 22
-      failures are fixed and which approach won; (2)+(3) the 4 `base-service.sh`/`base-library.sh` items vs
-      `cross_cutting_satellite_ao_dispatch_batch1b_2026_07_26.md` item (3) and
-      `tradfi_satellite_ao_dispatch_batch4_2026_07_26.md` — check whether both have landed; (4) `DATA_PIPELINE_SERVICES`
-      vs `cross_cutting_satellite_ao_dispatch_batch1_2026_07_26.md` item (B)'s `DataStatusTab` change; (5) `managed-by`
-      label vs the wave-launcher terraform item in cross-cutting batch1b; (6) repo_scripts DEPRECATE remediation vs
-      cross-cutting batch1 item (k)'s ~60-script cloud-agnostic sweep; (7) the fastapi/starlette + pyarrow/twisted/mako/
-      ujson dep work vs whoever last touched `workspace-constraints.toml` / `canonical-dependency-manifest.json`; (8)
-      MTDS >900 tail vs cefi batch1 + defi batches 2/3/4's `market_interface/` edits; (9) the corpus-wide sweeps vs the
-      concurrent per-tranche reconcile/audit runs; (10) the two sports-doc line-cap splits vs sports batches 3 and 5.
-      For each cleared conflict write an explicit batch-2 candidate line (source doc + the specific todo + the evidence
-      the conflict cleared); for each still-conflicting one, restate the live competing claim so batch 2 does not have
-      to re-derive it. **Done when**: all 10 carry a dated CLEARED-or-STILL-CONFLICTING verdict with evidence, and the
-      cleared set is written up as the batch-2 candidate list. Repo: unified-trading-pm.
+      `/plans/archive/issues/mtds_ungated_test_families_2026_07_17.md`'s two `[BACKEND] P1` test-fix gates — **ANSWERED
+      (na-eligibility-audit ci tranche, 2026-07-31): fixed, cefi's narrower approach won.** Doc archived, all 5 todos
+      done (`market-tick-data-service@4849d4f6` + `unified-trading-pm@5e1d7786a`/`bf583ea3b`); the competing
+      `codex_violations_ratchet_to_five_2026_06_10.md` todo was rewritten as a pointer back in 2026-07-26
+      (`unified-trading-pm@36c5433eb`) and its own checkbox flipped `[x]` same date as this archival. No batch-2
+      candidate needed — already fully resolved, not just conflict-cleared; (2)+(3) the 4
+      `base-service.sh`/`base-library.sh` items vs `cross_cutting_satellite_ao_dispatch_batch1b_2026_07_26.md` item (3)
+      and `tradfi_satellite_ao_dispatch_batch4_2026_07_26.md` — check whether both have landed; (4)
+      `DATA_PIPELINE_SERVICES` vs `cross_cutting_satellite_ao_dispatch_batch1_2026_07_26.md` item (B)'s `DataStatusTab`
+      change; (5) `managed-by` label vs the wave-launcher terraform item in cross-cutting batch1b; (6) repo_scripts
+      DEPRECATE remediation vs cross-cutting batch1 item (k)'s ~60-script cloud-agnostic sweep; (7) the
+      fastapi/starlette + pyarrow/twisted/mako/ ujson dep work vs whoever last touched `workspace-constraints.toml` /
+      `canonical-dependency-manifest.json`; (8) MTDS >900 tail vs cefi batch1 + defi batches 2/3/4's `market_interface/`
+      edits; (9) the corpus-wide sweeps vs the concurrent per-tranche reconcile/audit runs; (10) the two sports-doc
+      line-cap splits vs sports batches 3 and 5. For each cleared conflict write an explicit batch-2 candidate line
+      (source doc + the specific todo + the evidence the conflict cleared); for each still-conflicting one, restate the
+      live competing claim so batch 2 does not have to re-derive it. **Done when**: all 10 carry a dated
+      CLEARED-or-STILL-CONFLICTING verdict with evidence, and the cleared set is written up as the batch-2 candidate
+      list. Repo: unified-trading-pm.
 
 - [ ] [REVIEW] P1. **Re-measure the infra tranche's orphan count and close the coverage-gap that made batch 1
       necessary.** Two parts. (a) Re-run the `/ag-closeout-audit infra` classification over the tranche's now-updated

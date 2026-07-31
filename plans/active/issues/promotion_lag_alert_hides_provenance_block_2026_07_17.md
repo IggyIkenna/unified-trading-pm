@@ -245,3 +245,8 @@ verified already shipped in `promotion_lag_monitor.py`, #2's live provenance blo
 `_backmerge` carve-out confirmed in `check_strict_quickmerge.py`. Archival is NOT taken autonomously:
 `locked_by: live-defi-rollout` requires an explicit `[unlock-plan]`. **Operator ask: `[unlock-plan]` and this archives
 on the standard 6-step ritual.**
+
+**na-eligibility-audit 2026-07-31** (tranche `ci`, autonomous): **CONFIRMS the verdict above, unchanged.** The only edit
+since the prior marker was the "rulings-closeout pass" Addendum (test-coverage follow-up,
+`unified-trading-pm@51b93ec0a`) — doesn't touch the Todos section. Still 0 open / 3 done todos, still
+`locked_by: live-defi-rollout`. **Operator ask stands: `[unlock-plan]` to archive.**

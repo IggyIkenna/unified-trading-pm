@@ -146,3 +146,13 @@ below.
 NOT bounded as currently framed: five independent investigation sessions have failed to pin the leak mechanism, and this
 doc plus `/plans/active/issues/mtds_deployment_env_monkeypatch_leak_blocks_quickmerge_2026_07_23.md` are to be "read
 together, do not duplicate investigation". Stays parked on that single shared blocker.
+
+**na-eligibility-audit 2026-07-31** (tranche `ci`, autonomous): **CONFIRMS the verdict above, unchanged.** The "Update
+(2026-07-30)" section added since documents a LOOK-ALIKE failure (`test_bucket_resolution_uses_category_tradfi`, a
+`CLOUD_PROVIDER=local` test-suite-default assertion bug) that was root-caused as NOT the same leak and fixed separately
+(not tracked as a checkbox here) — the section explicitly states it "does not touch or explain this doc's actual
+DEPLOYMENT_ENV race — left exactly as still open below". Cross- verified against the live
+`ci_satellite_ao_dispatch_batch2_2026_07_29.md`: todo 11 (`[x]` done) cites this doc to avoid confusion with "that
+still-open, unrelated leak"; Deferred **E7** remains open/parked, unchanged. Independently corroborated by the sibling
+`/ag-closeout-audit ci` skill's same-day draft `ci_satellite_ao_dispatch_batch4_2026_07_31.md` (row D4-12):
+"genuinely-unbounded investigation... same as batch1 D3(3) / batch2 E7." No reclassification.

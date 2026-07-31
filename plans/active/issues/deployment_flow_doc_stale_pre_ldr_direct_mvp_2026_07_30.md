@@ -89,3 +89,15 @@ CLAUDE.md's current § "Git discipline"), so it's AO-dispatchable once picked up
       shipped rewrite, `unified-trading-pm@b9d0b9209`, for the target shape). Done when: the two sibling docs (engineer
       view / operator view) describe the SAME pipeline shape, and every staging-mediated-as-default claim in
       `deployment-flow.md` is corrected or explicitly marked as the non-default toggle path.
+
+## na-eligibility-audit verdict
+
+**na-eligibility-audit 2026-07-31** (tranche `ci`, autonomous): **KEEP-NA-STALE (already-duplicated).** Taken in
+isolation this todo reads as a clean RECLASSIFY candidate (small, bounded, calibrated 0.24 AI-days, explicit done-when,
+mirrors an already-shipped precedent). But the sibling `/ag-closeout-audit ci` skill's same-day draft
+`/plans/active/ci_satellite_ao_dispatch_batch4_2026_07_31.md` has **already extracted this exact todo verbatim** (its
+own `[DOC] P2` item, citing `Source: issues/deployment_flow_doc_stale_pre_ldr_direct_mvp_2026_07_30.md`). Reclassifying
+this doc's own `assigned_vm` now would open a second, independent dispatch path to the identical file edit once batch4
+activates. Staying NA until batch4 either ships this todo or is archived without shipping it — if the latter, re-open
+this doc as a RECLASSIFY candidate on the next audit pass. (Also flags a cross-skill population overlap worth a standing
+fix — see `/plans/active/issues/na_and_ag_closeout_audit_population_overlap_2026_07_31.md`.)

@@ -6,7 +6,7 @@ summary:
   tests/market_interface/ family (49 unit modules + 28 others) and tests/integration/ have never run in the gate or in
   CI. Measured 2026-07-17 while shipping FIX D3, a whole-tree run is 40 failed / 8414 passed, so the fix is gated on
   fixing those 40 first.
-status: open
+status: resolved
 nature: issue
 asset_group: [ci]
 stage: [meta]
@@ -39,6 +39,10 @@ depends_on: []
 ---
 
 # MTDS — 77 test files silently ungated
+
+> **ARCHIVED (2026-07-31) — complete.** All 5 todos done: todos 1-4 shipped `market-tick-data-service@4849d4f6`
+> (2026-07-30); todo 5 (fleet `PYTEST_UNIT_DIR` coverage sweep) shipped `unified-trading-pm@5e1d7786a`+`bf583ea3b` via
+> `ci_satellite_ao_dispatch_batch2_2026_07_29.md` todo 12. See `## na-eligibility-audit verdict` below.
 
 ## The finding (measured, 2026-07-17, slot-3)
 
@@ -151,9 +155,13 @@ PYTEST_UNIT_DIR="tests/unit/ tests/market_interface/unit/test_canonical_parquet_
       the 9 credentialed ones with no real vendor keys in CI — a separate, larger "wire a credentialled CI lane" change,
       out of scope here). Rationale recorded inline in `scripts/quality-gates.sh`'s `PYTEST_UNIT_DIR` comment block.
       (repo: market-tick-data-service)
-- [ ] [QG] P2. **Fleet sweep: assert no repo has an ungated test family** — a PM quality-gate check comparing each
+- [x] ✅ [QG] P2. **Fleet sweep: assert no repo has an ungated test family** — a PM quality-gate check comparing each
       repo's `tests/*/unit/` dirs against its `PYTEST_UNIT_DIR`. MTDS was the only outlier today, but nothing prevents
-      the next one. (repo: unified-trading-pm)
+      the next one. **Shipped via `ci_satellite_ao_dispatch_batch2_2026_07_29.md` todo 12 —
+      `unified-trading-pm@5e1d7786a` (new `scripts/quality_gates/check_pytest_unit_dir_coverage.py` checker, wired as a
+      blocking post-gate) + `unified-trading-pm@bf583ea3b` (fixed a doubled-path bug in the same wiring).** Checkbox
+      never flipped here when that landed 2026-07-31 — closing now, na-eligibility-audit 2026-07-31. (repo:
+      unified-trading-pm)
 
 ## Progress Log
 
@@ -192,3 +200,9 @@ PYTEST_UNIT_DIR="tests/unit/ tests/market_interface/unit/test_canonical_parquet_
 extracted verbatim into `/plans/active/ci_satellite_ao_dispatch_batch2_2026_07_29.md` todo 11 (as its
 internally-sequential (a)-(d), citing this doc as Source) and todo 5 into that batch's todo 12 (the fleet
 `PYTEST_UNIT_DIR` sweep). Citation recorded; `assigned_vm` deliberately NOT flipped — that would dispatch a duplicate.
+
+**na-eligibility-audit 2026-07-31** (tranche `ci`, autonomous): **ARCHIVE** — supersedes the verdict above. Batch2 todo
+11 landed `market-tick-data-service@4849d4f6` (2026-07-30 20:51), which the same commit also used to flip this doc's own
+todos 1-4 `[x]` directly. Batch2 todo 12 landed `unified-trading-pm@5e1d7786a`+`bf583ea3b`, but never touched this doc's
+todo 5 checkbox — closed above with citation. All 5 todos now done, `locked_by` empty. Archiving per the 6-step ritual
+(`/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`).

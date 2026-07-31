@@ -187,3 +187,15 @@ on the pre-canonical `buildspec.yml` look like **live** is the side that drifted
       `locals.region`). Decide v5-align vs deliberate v6 adoption, then commit a multi-platform `.terraform.lock.hcl`
       (the repo commits 10 others; this session's local lock was deleted rather than committing darwin-only hashes that
       would break a linux `init`).
+
+## na-eligibility-audit verdict
+
+**na-eligibility-audit 2026-07-31** (tranche `ci`, autonomous): **KEEP-NA, valid.** The 2026-07-30 banner earlier in
+this doc already documents a dated, cited operator reclassification (`assigned_vm: planning → NA`, citing
+`/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md` § "Dispatch-scope eligibility") — KEEP-NA on
+that citation alone. All 3 open todos are consistent with the gate: the `[OPERATOR]` ruling todo blocks the other two
+mechanically (`terraform import` explicitly must not run before D1-D4; the provider-pin todo is its own v5-vs-v6
+judgment call). Independently corroborated by the sibling `/ag-closeout-audit ci` skill's same-day draft
+`ci_satellite_ao_dispatch_batch4_2026_07_31.md` (row D4-6): deferred on the identical D1-D4 rulings table, also noting
+batch1's earlier "blocked on AWS credits" framing is now stale (the S3 backend is up; the real blocker is the rulings
+table). No reclassification, no stale items to close.

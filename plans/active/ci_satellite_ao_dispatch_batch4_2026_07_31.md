@@ -298,9 +298,10 @@ future batch's re-triage; the rest need direct operator/human action, elapsed ti
 
 ### Already covered (re-confirmed this round, no action needed)
 
-- `mtds_ungated_test_families_2026_07_17.md` — `archivable_now`; both its Todos are fully done (evidenced), only its own
-  stale todo-5 checkbox was never flipped. Not this batch's scope to edit another doc's checkbox; noted for whoever next
-  touches that doc.
+- `/plans/archive/issues/mtds_ungated_test_families_2026_07_17.md` — was `archivable_now`; both its Todos were fully
+  done (evidenced), only its own stale todo-5 checkbox was never flipped. **Archived 2026-07-31** by
+  `/na-eligibility-audit ci` (todo 5 flipped with citation, then the standard 6-step ritual) — no longer active-corpus
+  work, confirming this batch's own prediction.
 - `promotion_lag_alert_hides_provenance_block_2026_07_17.md` — `archivable_now`; fully resolved 2026-07-30, awaiting
   only an operator `[unlock-plan]` on `locked_by: live-defi-rollout` to actually archive.
 - `cicd_mvp_ldr_to_main_pipeline_2026_06_30.md` — `archivable_now`; 29/29 todos done, own 2026-07-30

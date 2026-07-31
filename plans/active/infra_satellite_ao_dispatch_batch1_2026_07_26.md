@@ -666,7 +666,8 @@ side ships or is superseded; this is the ONLY category a batch2 can convert):
    approach to the same file — widen it to the specific `market_interface` unit/adapters/clients/schema_validation/cli
    dirs — and GATES it behind two `[BACKEND] P1` todos fixing 8 + 14 currently-FAILING tests first. Drafting the
    whole-tree version would immediately red MTDS's QG on 22 known failures. **Parked as an operator question, not
-   guessed at.**
+   guessed at.** **RESOLVED 2026-07-26** (operator decision #34, cefi's narrower approach won) **and shipped
+   2026-07-31** — see `/plans/archive/issues/mtds_ungated_test_families_2026_07_17.md` (archived, all 5 todos done).
 2. **PM `base-service.sh` / `base-library.sh` items (4 of them).** The domain-client base-gate retarget
    (`unified_domain_client` → `unified_trading_library.domain`), the pip floor bump (CVE-2026-3219/-6357/PYSEC-2026-196
    ignore drops), the cryptography/idna/CVE-2026-4539 re-check, and the uv drift-guard all edit

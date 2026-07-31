@@ -824,17 +824,19 @@ todo for ci's batch 2. `unified-trading-pm@36c5433eb`.
 ## 34. MTDS `PYTEST_UNIT_DIR` — two competing widenings (2026-07-26, infra/cefi)
 
 infra's `codex_violations_ratchet_to_five_2026_06_10.md` wants the whole `tests/` tree collected, absorbing 22
-newly-collected failures in the same unit; cefi's `mtds_ungated_test_families_2026_07_17.md` wants a narrower subdir
-list, and only after fixing those same 22 failures first (opposite order).
+newly-collected failures in the same unit; cefi's `/plans/archive/issues/mtds_ungated_test_families_2026_07_17.md` wants
+a narrower subdir list, and only after fixing those same 22 failures first (opposite order).
 
 A: cefi's doc wins on both counts — narrower target, fix-first ordering; rewrite the infra todo as a pointer. [WORKER
 REC] — turning on 70 uncollected files with 22 known failures unfixed would red every unrelated MTDS commit. B: infra's
 doc wins — stricter, permanent, but reds MTDS until all 22 land. C: Land cefi's fixes first, then apply infra's
 whole-tree value, plus promote a fleet-wide PM check for this class. Other: operator can type a custom answer.
 
-**Status**: resolved — option A. cefi's `mtds_ungated_test_families_2026_07_17.md` wins (narrower target +
-fix-the-40-known-failures-first ordering); rewrote the infra todo in `codex_violations_ratchet_to_five_2026_06_10.md` as
-a pointer to it. `unified-trading-pm@36c5433eb`.
+**Status**: resolved — option A. cefi's `/plans/archive/issues/mtds_ungated_test_families_2026_07_17.md` wins (narrower
+target + fix-the-40-known-failures-first ordering); rewrote the infra todo in
+`codex_violations_ratchet_to_five_2026_06_10.md` as a pointer to it. `unified-trading-pm@36c5433eb`. **Both docs' work
+is now done** — cefi's doc archived 2026-07-31 (all 5 todos), infra's pointer todo flipped `[x]` same date
+(na-eligibility-audit ci tranche).
 
 ## 35. `DataStatusTab.tsx` claimed by two tranches for two different changes (2026-07-26, infra/cross-cutting)
 

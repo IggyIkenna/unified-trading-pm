@@ -146,10 +146,14 @@ guessed/placeholder environment values, cost is not a blocker (this is code + CI
       2026-07-28" under § "Which side is actually wrong?" above for the full reasoning. Confirmed: the sentinel
       hardening below proceeds independently regardless. Retagged away from `[OPERATOR]` — the two concrete pieces of
       follow-on work are items 3 and 5 below.
-- [ ] [INFRA] P1. **Bind configuration into the sentinel** (`scripts/base-service.sh` / `scripts/quickmerge.sh`): mix
+- [x] ✅ [INFRA] P1. **Bind configuration into the sentinel** (`scripts/base-service.sh` / `scripts/quickmerge.sh`): mix
       `ENVIRONMENT` (and any other gate-affecting env var) into the sentinel hash so a sentinel produced under one
       configuration cannot satisfy a run under another. Add a regression test that a dev-written sentinel does NOT
-      satisfy a prod-context quickmerge.
+      satisfy a prod-context quickmerge. **Shipped `unified-trading-pm@4545df4c6` via
+      `ci_satellite_ao_dispatch_batch2_2026_07_29.md` todo 1(a)** — new `qg-environment.sh`/`qg_resolve_environment()`,
+      `_qg_content_hash()` now folds `ENVIRONMENT`/`DEPLOYMENT_ENV` into the sentinel hash, 2 regression test files
+      (5/5 + 6/6 assertions), verified live against real `quickmerge.sh`. Checkbox never flipped here when that landed —
+      closing now, na-eligibility-audit 2026-07-31.
 - [ ] [INFRA] P2. Fix the env-coupled tests in `unified-trading-library`
       (`tests/cloud_interface/unit/test_constants.py`), `deployment-api`, `strategy-service`, and the two
       `market-tick-data-service` cases — set the environment explicitly per-test instead of relying on the ambient
@@ -189,7 +193,7 @@ guessed/placeholder environment values, cost is not a blocker (this is code + CI
       reflect the post-fix, genuinely-safe behavior (sentinel binds `ENVIRONMENT`/`DEPLOYMENT_ENV`; a config mismatch is
       refused with `Re-run: bash scripts/quality-gates.sh`, not silently laundered). Full write-up:
       `/plans/active/ci_satellite_ao_dispatch_batch2_2026_07_29.md` todo (same item).
-- [ ] [INFRA] P2. **The "fix the gate" half of the 2026-07-28 BOTH ruling — make quickmerge's and a standalone
+- [x] ✅ [INFRA] P2. **The "fix the gate" half of the 2026-07-28 BOTH ruling — make quickmerge's and a standalone
       `quality-gates.sh --no-fix` run resolve the SAME explicit `ENVIRONMENT` for the same branch context**, so the two
       invocation paths can never again silently diverge (today: quickmerge always exports `development` for any
       non-`main` branch per `scripts/quickmerge.sh:1216-1222`; a standalone run leaves `ENVIRONMENT` unset and the
@@ -205,7 +209,11 @@ guessed/placeholder environment values, cost is not a blocker (this is code + CI
       known offenders. Add a regression test asserting standalone and quickmerge-invoked runs resolve identical
       `ENVIRONMENT` for the same branch. **Done when**: `scripts/base-service.sh` (or the equivalent shared entrypoint)
       derives `ENVIRONMENT` from the same branch-conditional logic quickmerge uses regardless of invocation path, the
-      regression test passes, and `quality-gates.sh` is green in every repo touched.
+      regression test passes, and `quality-gates.sh` is green in every repo touched. **Shipped
+      `unified-trading-pm@4545df4c6` via `ci_satellite_ao_dispatch_batch2_2026_07_29.md` todo 1(b)** —
+      `qg_resolve_environment()` sourced from BOTH `qg-common.sh` and `quickmerge.sh`'s AUTO-DETECT block; regression
+      test `test-qg-environment-resolution-parity.sh` (6/6 assertions); verified live in 2 separate consumer repos.
+      Checkbox never flipped here when that landed — closing now, na-eligibility-audit 2026-07-31.
 
 ## na-eligibility-audit verdict
 
@@ -215,3 +223,12 @@ items are extracted into `/plans/active/ci_satellite_ao_dispatch_batch2_2026_07_
 (recovery-guidance correction), and item 3's non-MTDS half into its todo 3 (`deployment-api` + `strategy-service`). Item
 3's MTDS half stays deliberately sequenced behind that batch's Deferred **E7**. Citation recorded; `assigned_vm`
 deliberately NOT flipped — that would dispatch a duplicate.
+
+**na-eligibility-audit 2026-07-31** (tranche `ci`, autonomous): **KEEP-NA-STALE bucket confirmed, checkbox gap closed.**
+Items 2, 4, and 5 (all confirmed shipped via `ci_satellite_ao_dispatch_batch2_2026_07_29.md` todo 1 parts (a)/(b),
+`unified-trading-pm@4545df4c6`) are now flipped `[x]` directly in this doc with citations — the citation-gap this bucket
+exists for is now closed for those three. Item 3's non-MTDS half (`deployment-api` + `strategy-service`) is CONFIRMED
+CLEAN 2026-07-31 (no fix needed, inline-documented) but the box stays open, correctly — the MTDS half remains genuinely
+unresolved, still sequenced behind Deferred **E7** (unchanged: "NOT bounded as currently framed" after 5 independent
+investigation sessions). 1 open item remains, verdict on it is **KEEP-NA, valid** (genuine unbounded investigation, not
+duplicated/stale) — not an archive candidate.

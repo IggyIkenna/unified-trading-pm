@@ -21,7 +21,7 @@ tags:
   - source-priority
 related:
   - plans/active/ci_satellite_ao_dispatch_batch2_2026_07_29.md
-  - plans/active/issues/mtds_ungated_test_families_2026_07_17.md
+  - plans/archive/issues/mtds_ungated_test_families_2026_07_17.md
 created: 2026-07-30
 parent_epic: infrastructure_master
 assigned_vm: NA

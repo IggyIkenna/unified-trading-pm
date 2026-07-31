@@ -50,7 +50,7 @@ locked_by:
 execution_scope: local-only
 drift_direction: advance-code
 depends_on: []
-last_updated: 2026-07-09
+last_updated: 2026-07-31
 ---
 
 # Breaking-change differ is blind to UAC registry data-dicts — cross-repo break promotes with no gate
@@ -211,3 +211,11 @@ this doc as its Source and carries the allowlist spec, the differ change, the `2
 `build_expected` invariant, the xfail resolution and the codex update as its own (a)-(f)). Todo 5 (the [DESIGN] P2
 consumer-QG fan-out question) is parked there as Deferred **E8** and escalated as that batch's operator question 1.
 Citation recorded; `assigned_vm` deliberately NOT flipped — that would dispatch a duplicate.
+
+**na-eligibility-audit 2026-07-31** (tranche `ci`, autonomous): **KEEP-NA, valid — refines the category label, bottom
+line unchanged.** Todos 1-4/6-7 are now `[x]` **directly in this doc** (flipped 2026-07-31, citing
+`unified-trading-pm@5607023a2`, `unified-api-contracts@e34afc1d`, `system-integration-tests@67db4da` — verified these
+SHAs are real and touch `scripts/cicd/detect_breaking_change.py`), so the "duplicated-but-unflipped" condition no longer
+applies; this is category 1 (genuine operator-gated judgment) now, not category 3. The one remaining open item (todo 5,
+`[DESIGN] P2`) is still parked as `ci_satellite_ao_dispatch_batch2_2026_07_29.md` Deferred E8, unruled — correctly NA,
+no reclassification. No stale items, not an archive candidate (1 substantive open item remains).

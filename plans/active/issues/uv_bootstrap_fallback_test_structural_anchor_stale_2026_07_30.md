@@ -77,3 +77,15 @@ exact quoting/flags), so a genuine future rewording of this line doesn't require
       `case` pattern (line 50) to match `setup.sh`'s current pip-fallback wording (unquoted `uv==0.10.8`, `--quiet`,
       `$PYTHON_CMD -m` prefix) instead of the stale quoted-literal expectation. Done when:
       `bash     scripts/quality-gates-base/tests/test-setup-sh-uv-bootstrap-fallback.sh` reports 5/5 passed.
+
+## na-eligibility-audit verdict
+
+**na-eligibility-audit 2026-07-31** (tranche `ci`, autonomous): **KEEP-NA-STALE (already-duplicated).** This is a
+textbook bounded/deterministic fix on its own merits (live-reverified: still 4/5 passed, same root cause). But the
+sibling `/ag-closeout-audit ci` skill's same-day draft `/plans/active/ci_satellite_ao_dispatch_batch4_2026_07_31.md` has
+**already extracted this exact sole todo verbatim**, citing
+`Source: issues/uv_bootstrap_fallback_test_structural_ anchor_stale_2026_07_30.md (sole todo) — never cited by any covering doc; a clean, small, previously-untriaged orphan.`
+Reclassifying this doc's own `assigned_vm` now would open a second, independent dispatch path to the identical one-line
+fix once batch4 activates. Staying NA until batch4 ships it or is archived unshipped (then re-open as RECLASSIFY on the
+next pass). Same cross-skill population-overlap finding as `deployment_flow_doc_stale_pre_ldr_direct_mvp_2026_07_30.md`
+— tracked in `/plans/active/issues/na_and_ag_closeout_audit_population_overlap_2026_07_31.md`.

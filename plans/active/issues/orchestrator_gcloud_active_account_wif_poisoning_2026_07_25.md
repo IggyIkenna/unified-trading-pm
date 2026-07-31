@@ -36,7 +36,7 @@ related:
     /codex/07-security/gha-wif-migration.md,
   ]
 created: 2026-07-25
-last_updated: 2026-07-25
+last_updated: 2026-07-31
 parent_epic: orchestrator_master
 assigned_vm: NA
 execution_scope: local-only
@@ -181,3 +181,13 @@ workflow job step runs `google-github-actions/auth` on this host, which happens 
 `[OPERATOR-DECISION]` tag and enumerates four unadopted candidate directions (a)-(d) for a shared-infrastructure auth
 design affecting every CI job on the host; the doc's own Notes confirm none was attempted for exactly that reason. Todo
 2 is stated blocked on that decision, and todo 3 is a partial mitigation of the same surface.
+
+**na-eligibility-audit 2026-07-31** (tranche `ci`, autonomous): **CONFIRMS the verdict above, unchanged — new evidence
+reinforces rather than weakens it.** Two purely-additive Notes landed since: a THIRD occurrence (2026-07-30 13:41)
+naming a second poisoning SA variant not previously identified, and a FOURTH occurrence (2026-07-30 16:12) that is
+qualitatively worse — cross-slot poisoning where a foreign job flipped another slot's active config AND mutated its
+stored `account` property, directly disproving the working hypothesis that per-slot config isolation alone mitigates
+this. Neither commit touched the Todos section; the commit message itself states this "raises priority of options
+(a)/(d)" in the still-open `[OPERATOR-DECISION]` todo. This is new information feeding the same unresolved decision, not
+progress toward a mechanical fix — correctly stays NA, no reclassification. (Doc-hygiene: `last_updated:` frontmatter
+corrected below, was stale at `2026-07-25` despite the two 2026-07-30 body edits.)

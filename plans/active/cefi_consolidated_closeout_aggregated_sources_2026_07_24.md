@@ -659,7 +659,8 @@ drift_direction: advance-code
     - **[VERIFY] P1.** Root-cause the 273 mistagged DERIBIT/COMBO rows (open question #1) — not attempted, out of
       dispatched scope.
     - **[CODE] P2.** Update both drilldown mockups — not attempted, out of dispatched scope.
-  - [`plans/active/issues/mtds_ungated_test_families_2026_07_17.md`](/plans/active/issues/mtds_ungated_test_families_2026_07_17.md)
+  - [`plans/archive/issues/mtds_ungated_test_families_2026_07_17.md`](/plans/archive/issues/mtds_ungated_test_families_2026_07_17.md)
+    (archived 2026-07-31, all 5 todos done)
     - **[BACKEND] P1.** Fix the 8 non-integration `tests/market_interface/unit/` failures (defi handlers/adapters,
       barchart/yahoo).
     - **[BACKEND] P1.** Fix the remaining 14 `tests/market_interface/adapters/**` canonical-output/write failures.

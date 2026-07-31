@@ -216,3 +216,17 @@ historical one.
   VERIFY-gate todo itself, since that park recommendation is still unactioned after 12+ cycles. Did not attempt the
   GH-side fix (out of worker scope; the concrete fix — verify the PR-creation step actually calls `gh pr merge --auto`/
   `enablePullRequestAutoMerge` — is already fully specified in the `[CI] P1` todo above, unchanged).
+
+## na-eligibility-audit verdict
+
+**na-eligibility-audit 2026-07-31** (tranche `ci`, autonomous): **KEEP-NA-STALE (already-duplicated) — mixed doc, 5 open
+todos split cleanly.** The two `[OPERATOR] P0` items (web-UI rate-limit check; heartbeat-frequency decision) and their
+gated `[CI] P1` follow-up ("once the operator confirms root cause") are genuinely **KEEP-NA valid** — human-only
+diagnostics a worker cannot perform (checks/billing API both 403 for the available PAT scope), still unanswered. The
+remaining two — `[SCRIPT] P2` (3+-consecutive-`startup_failure` monitor) and `[CI] P1` (root-cause + fix the missing
+`gh pr merge --auto` arm on MTDS promote PRs) — are **already verbatim-extracted into**
+`/plans/active/ci_satellite_ao_dispatch_batch4_2026_07_31.md` (same-day sibling `/ag-closeout-audit ci` draft, each
+citing this doc as Source, explicitly noting the auto-merge fix is "not gated on this doc's own operator-only items").
+Not reclassifying either — would duplicate batch4's already-drafted fix once it activates. Follow-up once batch4 ships
+or archives unshipped: cite/close lines 128 and 132-144 here. Cross-skill population-overlap tracked in
+`/plans/active/issues/na_and_ag_closeout_audit_population_overlap_2026_07_31.md`.

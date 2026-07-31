@@ -497,14 +497,16 @@ unchanged:
       schema-provenance remains — Phase 3). Cleared: deep-imports (registry sites flipped to one-level facade),
       os.getenv, asyncio.run-in-loop, imports-in-fn, run_lifecycle pairing (live_mode_handler), preflight
       emit_preflight_skip (process_handler + orchestration_service). 31 files, full QG green.
-- [ ] [TEST] P2. **MTDS `tests/market_interface/` (70 test files) is NOT collected by the QG** (2026-06-11 finding,
+- [x] ✅ [TEST] P2. **MTDS `tests/market_interface/` (70 test files) is NOT collected by the QG** (2026-06-11 finding,
       eb33603 unit) — the gate runs the default `PYTEST_UNIT_DIR` (`tests/unit/` [+integration]), so the adapter
       canonical-output suites never run in QG/CI. **Pointer, not the SSOT for this fix** (resolved
       `autonomous_session_operator_decisions_2026_07_25.md` entry #34, 2026-07-26): a competing widening exists in
-      `issues/mtds_ungated_test_families_2026_07_17.md`, which measured the real cost as 40 pre-existing failures (not
-      absorbable in the same unit as this todo assumes) and prescribes a narrower target list + fix-the-40-first
-      ordering — turning on the whole tree with 40 known failures unfixed would red every unrelated MTDS commit. That
-      doc's scoping wins; this todo is satisfied once its fix lands. Repo: market-tick-data-service.
+      `/plans/archive/issues/mtds_ungated_test_families_2026_07_17.md`, which measured the real cost as 40 pre-existing
+      failures (not absorbable in the same unit as this todo assumes) and prescribed a narrower target list +
+      fix-the-40-first ordering — turning on the whole tree with 40 known failures unfixed would red every unrelated
+      MTDS commit. **That doc's fix landed and it is now archived (2026-07-31, na-eligibility-audit ci tranche) — all 70
+      files gated, `PYTEST_UNIT_DIR` widened `market-tick-data-service@4849d4f6`, this todo's own stated satisfaction
+      condition is met.** Repo: market-tick-data-service.
 - [x] ✅ [CODE] P2c. **none-budget repos pinned at 0 (census-honest) 2026-06-11** — alerting-service@c41baf1,
       client-reporting-api@c8a32ff, fund-administration-service@3d32a3e, greeks-service@9efb1e7,
       trading-agent-service@09d8dae (each double-QG-green at budget 0 before ship); system-integration-tests pinned 0 +

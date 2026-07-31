@@ -355,8 +355,9 @@ pairs stay honest-unresolved (reported, never guessed).
     `scripts/quality-gates.sh` `PYTEST_UNIT_DIR`. **Evidence**: full `bash scripts/quality-gates.sh` GREEN (exit 0, ZERO
     ❌, **6162 passed** — up from the 6046 baseline that never moved despite 17 new D3 tests, which WAS the bug;
     `.qg_last_passed_sha` == HEAD). Shipped via **quickmerge** (deps clean; carries the `Quickmerge:` trailer →
-    promotable, unlike the earlier carve-out ships). See `mtds_ungated_test_families_2026_07_17.md` for the residual 38
-    whole-tree failures still tracked.
+    promotable, unlike the earlier carve-out ships). See
+    `/plans/archive/issues/mtds_ungated_test_families_2026_07_17.md` for the residual 38 whole-tree failures — since
+    fixed and the doc archived 2026-07-31 (all 5 todos done).
 - [x] ✅ [BACKEND] P0. **FIX D-features — cefi reads (REQUIRED before cutover, not optional).** features
       `raw_data_loader.py`: inherit the D3 bridge (if it reads via MTDS `reader.py`) or add its own
       `get_cefi_wire_map()` bridge; reconcile the `instrument_id`↔`instrument_key` column-name mismatch. (repo:

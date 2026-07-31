@@ -358,7 +358,8 @@ concurrent workers do not collide on this file.
       `test_bucket_resolution_uses_category_tradfi` (root-caused live: this repo's own `CLOUD_PROVIDER=local` test-suite
       default, not the tracked DEPLOYMENT_ENV race) — noted in
       `issues/mtds_deployment_env_race_survives_single_worker_2026_07_23.md` to avoid future confusion with that
-      still-open, unrelated leak. Source: `issues/mtds_ungated_test_families_2026_07_17.md` (todos 1-4, all closed).
+      still-open, unrelated leak. Source: `/plans/archive/issues/mtds_ungated_test_families_2026_07_17.md` (todos 1-4,
+      all closed; doc archived 2026-07-31, all 5 todos done).
 - [x] ✅ [QG] P2. **Fleet sweep: a PM quality-gate check comparing every repo's `tests/*/unit/` dirs against its
       `PYTEST_UNIT_DIR`.** — `unified-trading-pm@bf583ea3b`. New standalone checker
       `scripts/quality_gates/check_pytest_unit_dir_coverage.py` (+ 18-case unit test suite, incl. a synthetic fixture
@@ -370,7 +371,7 @@ concurrent workers do not collide on this file.
       adjacent pre-existing bug in the same file: `ARCH_RATCHETS_CHECKER`'s path had a doubled `unified-trading-pm/`
       segment (PM's own `REPO_ROOT` is already the PM repo root, not the workspace root), so the Architectural-ratchets
       (ST-19/PB-19/UI-18) gate had been silently a no-op; fixed + verified it now runs clean (0 violations, baseline 0).
-      Source: `issues/mtds_ungated_test_families_2026_07_17.md` (todo 5).
+      Source: `/plans/archive/issues/mtds_ungated_test_families_2026_07_17.md` (todo 5; doc archived 2026-07-31).
 - [ ] [INFRA] P2. **Port the `${TMPDIR:-/tmp}` hardcoded-path fix to `scripts/quality-gates-base/base-library.sh`.**
       Mirrors the already-shipped `base-service.sh` fix in the same source doc — grep for the ~10+ named hardcoded
       `/tmp/` checker-capture sites in `base-library.sh`, apply the identical substitution pattern, verify `bash -n`,

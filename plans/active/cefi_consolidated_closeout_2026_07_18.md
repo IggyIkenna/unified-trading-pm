@@ -292,9 +292,10 @@ Real but non-blocking, each in its own doc; listed for completeness so nothing i
   venues → read from `VENUE_DATA_TYPE_CAPABILITIES`.
 - `issues/cefi_hl_aster_batch_data_gaps_2026_06_22.md` — `DATA_TYPE_CAPABILITY_REGISTRY` missing entries; consolidator
   incremental no-op root cause never fixed (worked around); Tardis HTTP-400 from IS-catalog missing `available_to`.
-- `issues/mtds_ungated_test_families_2026_07_17.md` — reader-surface test
-  (`test_canonical_parquet_reader_integration.py`) sits in the ungated `tests/integration/**` (`RUN_INTEGRATION=false`),
-  so the D3 reader-bridge half of Track 1 has **no CI enforcement** yet.
+- `/plans/archive/issues/mtds_ungated_test_families_2026_07_17.md` — reader-surface test
+  (`test_canonical_parquet_reader_integration.py`) sat in the ungated `tests/integration/**` (`RUN_INTEGRATION=false`).
+  **Resolved and archived 2026-07-31**: that doc's own todo 4 folded this file (credential-free, 74/74 passing) directly
+  into `PYTEST_UNIT_DIR` — the D3 reader-bridge half of Track 1 now HAS CI enforcement.
 - `issues/cefi_batch_manifest_blank_instrument_type_on_failure_2026_07_12.md` — blank-itype `attempted_failed` re-tag,
   gated on `cefi-recapture-sweep-complete` (still false).
 - `issues/cefi_onchain_perp_batch_venue_allowlist_gap_2026_07_12.md` — `lighter` Tardis entitlement
