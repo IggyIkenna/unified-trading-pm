@@ -31,7 +31,7 @@ related:
     /plans/active/issues/orchestrator_vm_disk_io_contention_runner_burst_2026_07_28.md,
   ]
 created: 2026-07-29
-last_updated: 2026-07-30
+last_updated: 2026-07-31
 parent_epic: orchestrator_master
 assigned_vm: NA
 execution_scope: local-only
@@ -213,6 +213,12 @@ investigated further here, out of scope for this doc.
   graceful restart, since nothing runs `snapshot_session()`'s shutdown hook on a hard kill. `/ws/vm-resources` now reads
   the sampler's on-disk JSONL tail instead of sampling `/proc` itself. Live-downloaded + inspected the S3-mirrored log
   mid-session: 1,344 real samples, iowait averaged 27%, peaked 65.7%.
+- **2026-07-31**: re-attempted both remaining todos. Both re-confirmed genuinely blocked on operator/root access this
+  session's identity doesn't have (no SSM, no SSH key for this host) — re-verified rather than assumed stale. Made
+  partial progress on the P2 EBS-spike investigation via the one avenue that doesn't need root: pulled CloudWatch
+  CPU/network correlation for the window, which reframes the spike as part of a wider 09:30-14:30 UTC bursty-load
+  stretch (not isolated to 10:45-13:41) consistent with the already-diagnosed runner-capacity-crisis pattern —
+  circumstantial, not a full diagnosis. See both todos' inline re-check notes for detail.
 
 ## Todos
 
@@ -225,7 +231,12 @@ investigated further here, out of scope for this doc.
       `systemctl is-active resource-history-sampler.service` and `resource-history-backup.timer` both report `active`,
       and a fresh object appears at
       `s3://uts-orchestrator-state-427895769566/snapshots/planning/<today>/resource_history.jsonl` within 15 min of
-      starting.
+      starting. **Re-checked 2026-07-31: still blocked, no path found around it.** Re-verified this session's only AWS
+      identity (`ikenna-worker`) still gets `AccessDeniedException` on
+      `ssm:DescribeInstanceInformation`/`ssm:SendCommand` for this instance, and confirmed no SSH keypair for
+      `13.113.200.22` exists in `~/.ssh` (only unrelated `github_ed25519`/`google_compute_engine` keys present) —
+      genuinely needs someone with root/SSM access to this specific instance, not something a code-level fix or retry
+      can route around.
 - [ ] [REVIEW] P2. **Unexplained EBS queue-depth spike, 2026-07-30 ~10:45-13:41 UTC** (`vol-0b4f0237fa0f5cd0f`,
       CloudWatch `VolumeQueueLength` oscillating 8-17, comparable to the worst 2026-07-28 sustained-contention window,
       but bursty/oscillating rather than pegged) — found live mid-session, never diagnosed against real OS-level
@@ -235,7 +246,22 @@ investigated further here, out of scope for this doc.
       JSONL history either — a real, still-open gap in explaining that specific window. Whoever has SSM/root access:
       check `journalctl`/`vmstat`/`free -h` for that window, or pull `CWAgent` swap metrics if a CloudWatch agent gets
       installed later (none was running at check time — confirmed via `aws cloudwatch list-metrics --namespace CWAgent`
-      returning empty).
+      returning empty). **Re-checked 2026-07-31: still blocked on the same access gap** (re-verified
+      `ssm:DescribeInstanceInformation` still returns `AccessDeniedException` for `ikenna-worker` on this instance; no
+      SSH keypair for `13.113.200.22`/`i-0c9b283b31d6b5ca7` exists in this session's `~/.ssh` either — only
+      `github_ed25519` and `google_compute_engine` keys are present, neither valid for this host). **Pulled the wider
+      CloudWatch picture instead** (the one avenue that doesn't need SSM/root), which reframes rather than resolves
+      this: `VolumeQueueLength` is bursty across the ENTIRE 09:30-14:30 UTC window (not isolated to 10:45-13:41 — that
+      was an undercount of the actual span), and it correlates with sustained heavy `CPUUtilization` over the same
+      stretch (avg 45-86%, repeatedly spiking 90-99%) and bursty `NetworkIn`/`NetworkOut` (5-min-window peaks up to ~8GB
+      `NetworkOut`, ~8GB `NetworkIn`) — a pattern consistent with concurrent CI-runner + AO-worker churn (the same
+      structural mechanism as the standing runner-capacity-crisis doc), not an isolated anomalous event. This narrows
+      the hypothesis but does NOT confirm it — CPU/network correlation is circumstantial without the OS-level
+      swap/iowait breakdown this todo actually asks for, which still requires SSM or SSH access nobody in this session's
+      identity chain has. No `DiskReadOps`/`DiskWriteOps`/`DiskReadBytes`/`DiskWriteBytes` datapoints exist under
+      `AWS/EC2` for this instance (expected — those live under `AWS/EBS`, not surfaced per-instance without the volume
+      already known, which `VolumeQueueLength` above already covers). Genuinely stuck on operator/root access — not
+      re-attempting further without it.
 - [x] [REVIEW] P3. Post-resize, 52 queued AO tasks were observed all blocked on one upstream task,
       `sports_satellite_ao_dispatch_batch2-0*` — real work, not a resource issue, so out of scope for this doc, but not
       yet investigated by anyone. Whoever picks this up: check
