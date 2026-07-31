@@ -104,3 +104,24 @@ scope for a tradfi manifest-shard todo).
   for that group — but it did NOT reproduce in the full quality-gates.sh run, so it isn't currently gate-blocking
   either. Leaving both P2 todos open as-is (real backlog, not currently blocking); not chasing the root cause further
   here — out of scope for a one-shot gate-unblock escalation.
+
+- **2026-07-31 (slot 3, data_engineering) — SELF-CORRECTION: my original "2 fail consistently, isolated or not" claim
+  above was itself an artifact of my own shell, not a genuine repo-wide QG red.** After the repo-blocker resolved, I
+  re-ran `quality-gates.sh` on the rebased tree (HEAD `41391cba`, my test commit on top of the fix) and reproduced the
+  SAME 5 failures TWICE in a row — contradicting slot 4's clean re-run. Root-caused the discrepancy: my Pass-1
+  invocations had explicitly prefixed `GCP_PROJECT_ID=central-element-323112 CLOUD_PROVIDER=gcp` (carried over from an
+  earlier scratch investigation script in this same session that needed live GCS access for the tradfi manifest
+  re-measurement). Re-ran `quality-gates.sh` with a genuinely clean environment (no manual env prefix) —
+  **`All checks passed!`, sentinel written matching HEAD, 0 pytest failures** — confirming these explicit env vars (not
+  ambient shell leakage; each Bash invocation in this harness is a fresh process) change enough runtime behavior
+  (config-reloader / cloud-provider detection defaults, plausibly touching exactly the bucket/manifest-source-selection
+  code the failing `pipeline_e2e_sampler`/`defi_manifest_chunking`/`lst_rates_handler` tests exercise) to flip these 5
+  tests from passing to failing. **Correcting the record**: the "2 fail consistently" finding earlier in this doc was
+  reproduced under this same contaminated environment and should be read as UNCONFIRMED against a clean shell — slot 4's
+  clean re-run (0 failures) and my own clean re-run (0 failures) are the two data points that actually reflect real
+  CI/gate behavior. Not deleting the 2 P2 todos above (a kernel of genuine order/timing flake was independently
+  reproduced by slot 4 in one specific multi-file combo, `ManifestConsolidatorStaleError`) but downgrading confidence
+  that either represents a standing, always-reproducible gate blocker. Shipped `market-tick-data-service@41391cba` (the
+  tradfi manifest-shard regression tests this doc's parent todo needed) immediately after the clean confirmation —
+  verified on origin. `status` stays `open` for the 2 real (if intermittent) flaky-test todos; this entry exists so a
+  future reader doesn't re-chase a false "always fails" signal caused by an explicit env-var override, not the repo.

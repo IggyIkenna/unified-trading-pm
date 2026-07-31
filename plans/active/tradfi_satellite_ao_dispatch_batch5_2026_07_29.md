@@ -169,20 +169,28 @@ ground to open up, and it did:
       per the script's own docstring gate (destructive ~81K-row live-manifest CAS mutation); the issue doc's own todo 1
       stays open tracking that follow-up so it isn't lost.
 
-- [ ] [DATA] P1. **Root-cause + fix 3 populations of NULL/bare `instrument_id` manifest writes, plus one doc-hygiene fix
-      — combined into ONE todo because all 4 edit the same issue doc.** (1) Root-cause + fix the live-path
-      NULL-`instrument_id` write for tradfi equity/ETF (NASDAQ/NYSE, `ohlcv_1m`+`trades`, 3,612 rows, confirmed NOT the
-      already-drained backfill fleet). (2) Investigate the CBOE `ohlcv_15m` INDEX/OPTION NULL-`instrument_id` writes
-      (103 rows, all written 2026-07-27). (3) Root-cause why FX `SPOT_PAIR` manifest-row `instrument_id` is still bare
-      (no colon) for post-2026-07-25 `FX`-venue captures and NULL for `YAHOO_FINANCE`-venue captures — **coordinate with
-      todo 8 below (`tradfi_yahoo_venue_vendor_conflation_2026_07_27.md`'s Phase-0 investigation) and todo 7's
-      YAHOO_FINANCE venue-registration question before starting; if the same file is the target, do this investigation
-      once and cite it from all three docs rather than duplicating**. (4) Update this doc's own stale "static,
-      2,023-row" `future`/`FUTURE` characterization to the current measured 9,126-row (and still growing) count. Repo:
-      market-tick-data-service. **Done when**: items 1-2 have a shipped fix + regression test with `quality-gates.sh`
-      green, item 3's root cause is recorded (fixed if the same-session coordination with todos 7/8 lands a fix,
-      otherwise handed to a fresh follow-up with the coordinated finding cited), and item 4's checkbox is updated with
-      the current count. Source: `issues/tradfi_manifest_writer_legacy_id_regression_2026_07_21.md`.
+- [x] ✅ [DATA] P1. **DONE 2026-07-31 (slot 3, data_engineering) — all 4 items resolved; items 1/2 RE-CHARACTERIZED with
+      evidence rather than force-fitted to the todo's original "live writer bug" premise.** Live re-measurement
+      (single-object manifest read) showed all 4 populations byte-identical to the 2026-07-27 counts (zero growth in 4
+      days) — first sign this wasn't an active bleed. Directly exercised `_resolve_tradfi_manifest_shard` with the real
+      (venue, itype, symbol) shapes for every population: the CURRENT code resolves every genuinely-fixable case
+      correctly today (NASDAQ/equity, NYSE/etf, CBOE/index, FX/spot_pair all canonical; CBOE/option correctly id-less by
+      design). Checking the `date` (content-day) distribution for items 1/2/3b showed each spans DOZENS of scattered
+      historical dates across 2024-2026 sharing one narrow `written_at=2026-07-27T16:46:40-48Z` burst — the signature of
+      a one-time historical registration/recovery script, not a live/scheduled capture bug. **Item 3's leading
+      hypothesis was WRONG**: `unified-api-contracts` confirms `YAHOO_FINANCE` was deliberately REMOVED as a venue
+      2026-07-15 (source-as-venue modeling error) — do NOT re-register it, `TRADFI_VENUE_ACCEPTED_NONCANONICAL_ALIASES`
+      already absorbs this exact residual. Item 3a (FX bare-id) confirmed fixed for new captures (0 growth since
+      2026-07-25). **Items 1/2's actual remaining work** (historical-row repair, not a live-writer fix) split into its
+      own properly-scoped follow-up todo rather than rushed/force-fitted here. Item 4 count reconfirmed (9,126 rows,
+      static). Shipped 6 regression tests locking in the resolver's current-correct behavior:
+      `market-tick-data-service@41391cba` (verified on origin). Hit + resolved an unrelated pre-existing QG red along
+      the way (repo-blocker RB-6f0ca058,
+      `issues/mtds_qg_pytest_red_pipeline_e2e_sampler_and_flaky_defi_lst_2026_07_31.md` — later self-corrected: my own
+      explicit `GCP_PROJECT_ID`/`CLOUD_PROVIDER` env-var override, not the repo, caused the consistent failures; a
+      clean-env run is green). Full findings + evidence:
+      `issues/tradfi_manifest_writer_legacy_id_regression_2026_07_21.md` (`unified-trading-pm@061741184`). Repo:
+      market-tick-data-service.
 
 - [ ] [DATA] P2. **Trace/fix 3 distinct-value mis-stamp clusters — combined into ONE todo because all 3 edit the same
       issue doc.** (1) Trace the `ESM0`/`ESM0_MIGRATED_20260418T131054Z` chain-axis writer in the tradfi manifest and
