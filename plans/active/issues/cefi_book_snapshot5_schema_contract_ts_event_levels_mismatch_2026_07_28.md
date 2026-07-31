@@ -93,8 +93,8 @@ source:
   data_pipeline_failure worker (slot-16), fired 2026-07-28, asset_group=cefi data_type=book_snapshot_5, 299,467
   attempted_failed of 1,037,001 attempted (28.9%), flagged Fresh (0d old)."
 last_updated:
-  2026-07-31 (7th dispatch, agt-716d56 -- found + fixed a genuinely DIFFERENT live bug hiding behind the same truncated
-  error_reason bucket the prior 5 dispatches all inspected)
+  2026-07-31 (8th+ dispatch, agt-cfaab9 -- confirmed the nullable=True fix (agt-716d56) holds, zero post-fix
+  attempted_failed activity, duplicate/stale-snapshot re-page of the identical pre-fix condition)
 ---
 
 # CeFi `book_snapshot_5` schema-contract mismatch -- root cause + fix (2026-07-28)
@@ -459,4 +459,22 @@ against the reproduction script.
   **Historical backlog note**: like every prior fix on this doc, this code change does NOT retroactively clear the
   accumulated `attempted_failed` rows (300k+ total across all 3 now-fixed bugs) — those clear via a normal idempotent
   backfill re-attempt, same as this doc's existing recommendation. No GCS/manifest write, no VM launch. Pinged
+  `dp-fleet-monitor` (authoring slot) with this outcome.
+- **2026-07-31 (`data_pipeline_failure` escalation worker, task `agt-cfaab9`, slot 2) — 8th+ dispatch, numbers
+  byte-identical to `agt-716d56`'s pre-fix reading.** Received another `DP_RUN_MOSTLY_EMPTY` (DP-FETCH-009) CRITICAL
+  page for `(cefi, book_snapshot_5)`: 300,457/1,080,446 = 27.8%, flagged Fresh (0d old) — exactly the same numerator and
+  denominator `agt-716d56` reported in the entry directly above (the reading that led to the `nullable=True` fix,
+  `unified-api-contracts@1c4d8864`), i.e. this dispatch's alert was generated from the SAME pre-fix manifest snapshot,
+  not a new detector tick after the fix landed. Read this doc first per the pre-task plan/issue conflict-check rule.
+  Re-verified all four fix commits are still ancestors of `origin/live-defi-rollout`
+  (`market-tick-data-service@339ca767`, `@6bf568ee`; `unified-api-contracts@8db188fe`, `@1c4d8864`) via
+  `git merge-base --is-ancestor`. Went further than a bare ancestor-check given this doc's own P2 todo about the
+  `_classify_tardis_error` truncation hiding new bugs behind stale-looking buckets: pulled a fresh, bounded,
+  column-projected read of `gs://market-data-tick-cefi-prd-central-element-323112/_index/availability_index.parquet`
+  filtered to `(asset_group=cefi, data_type=book_snapshot_5, capture_status=attempted_failed)` — confirmed the live
+  total (300,457) matches the alert exactly, and that **zero rows carry `attempted_at` after the `1c4d8864` fix landed
+  (2026-07-31T03:53:04Z)** — the cell-wide max `attempted_at` is `2026-07-31T02:31:40Z`, i.e. strictly before the fix
+  shipped. Conclusion: the `nullable=True` fix is holding with no post-fix regression, this is a
+  duplicate/stale-snapshot re-page of the identical pre-fix condition `agt-716d56` already root-caused and fixed, not a
+  new failure mode. No code fix needed, no GCS/manifest write, no VM launch this session (PM plan-doc edit only). Pinged
   `dp-fleet-monitor` (authoring slot) with this outcome.
