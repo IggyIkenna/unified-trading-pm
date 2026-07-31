@@ -724,7 +724,7 @@ cancellation-timeout fix and already shipped). Suggested next steps for whoever 
       match. Not yet confirmed causal (single sample; exact call site not pinned). Narrower follow-up filed below. Root
       cause + fix now shipped (`deployment-api@e8ce86a`, see todo below); this todo's own done-when (stdout resuming)
       awaits that fix reaching a live deploy — tracked by the `[REVIEW]` todo below, not re-guessed here.
-      DEFERRED-BY-DESIGN:e8ce86a-live-deploy-pending — no fix shipped BY THIS todo directly, leaving unchecked.
+      DEFERRED-BY-DESIGN — no fix shipped BY THIS todo directly (e8ce86a live-deploy pending), leaving unchecked.
 
 - [x] ✅ [BACKEND] P1. **NEW, opened 2026-07-31 (slot 4, backend_engineer) — pin the exact call site for the
       truncated-sync-HTTPS-traceback-then-permanent-silence pattern found in the todo above and confirm/refute it as the
