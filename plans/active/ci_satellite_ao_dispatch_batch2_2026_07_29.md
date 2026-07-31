@@ -216,23 +216,36 @@ concurrent workers do not collide on this file.
       `plans/archive/issues/check_strict_quickmerge_blind_to_dirty_deps_carveout_2026_07_23.md` is itself already
       `status: resolved` + archived 2026-07-30 with this exact evidence — this batch2 todo's own citation was drafted
       2026-07-29, one day before that archival, and had simply gone stale.
-- [ ] [FIX] P1. **Close the `detect_breaking_change.py` registry-data-dict blind spot end to end.** One combined todo
-      (internally sequential, single source doc): (a) spec the contract-surface allowlist extension — which
-      registry-dict mutations count as breaking vs additive-OK, citing the manifest `schema_version` precedent as the
-      design pattern; (b) implement the extension in `scripts/cicd/detect_breaking_change.py` and tag the 3 registry
-      constants (`INSTRUMENT_TYPES_BY_VENUE`, `VENUES_BY_ASSET_GROUP`, `VENUE_DATA_TYPE_CAPABILITIES` in
-      `unified-api-contracts`) as contract surface; (c) add regression cases to `test_detect_breaking_change.py`
-      including the exact `23fa3a99` (OKX, SPOT_PAIR) removal fixture; (d) close the SIT coverage gap — add the
-      live-registry `build_expected('cefi')` + capability/fold cross-repo invariant to `system-integration-tests`,
-      resolve the `strict=False` xfail on `test_venue_to_tardis_matches_inverted_venue_mapping`; (e) reproduce
-      end-to-end: confirm the post-fix differ on `23fa3a99` returns `is_breaking:true` and the new SIT invariant goes
-      RED on the (OKX, SPOT_PAIR) removal; (f) once (a)-(e) land, update the breaking-differ section of
-      `/codex/08-workflows/ci-cd-flow.md`. **Explicitly excludes** the doc's [DESIGN] P2 item (whether a registry-change
-      promote should additionally fan out and run consumer QG, e.g. instruments-service) — that is a genuine
-      blast-radius design fork, parked as an operator question (see `## Escalated to the operator`), not required for
-      this todo's own done-when. **Done when**: (b)-(e) are all individually verified per their stated proof, and (f)
-      lands. Source: `issues/breaking_change_differ_blind_to_registry_data_dicts_2026_07_09.md` (all 7 todos, still
-      fully unchecked since creation 2026-07-09 — genuinely never touched by any active plan).
+- [x] ✅ [FIX] P1. **Close the `detect_breaking_change.py` registry-data-dict blind spot end to end.** — shipped
+      `unified-trading-pm@7e0aab35f` + `unified-api-contracts@e34afc1d` + `system-integration-tests@67db4da`. (a)
+      design: `# @contract-surface` marker convention (docstring + inline comments in `detect_breaking_change.py`),
+      citing the manifest `schema_version` precedent explicitly. (b) implemented: tagged constant → literal snapshot
+      (bare-`Name` keys/members resolved against earlier same-file string constants; unresolvable per-key values
+      dropped, not fatal) → structural diff (removed top-level key / removed set-or-list member / removed inner dict-key
+      = breaking; additive = not). Tagged all 3 constants in `unified-api-contracts` (`INSTRUMENT_TYPES_BY_VENUE`,
+      `VENUES_BY_ASSET_GROUP`, `VENUE_DATA_TYPE_CAPABILITIES`). (c) 9 new regression tests in
+      `test_detect_breaking_change.py`, including the exact `23fa3a99` (OKX, SPOT_PAIR)-shape fixture — all pass
+      (`.venv/bin/python -m pytest tests/unit/test_detect_breaking_change.py -q` → 20 passed). (d) SIT gap closed:
+      `unified-api-contracts/tests/test_cefi_registry_expected_universe_invariant.py` (3 tests, loads
+      instruments-service's `build_expected('cefi')` by file path — not part of the installable package — runs it
+      against the live registry, asserts `VENUE_DATA_TYPE_CAPABILITIES`⊆`VENUES_BY_ASSET_GROUP` and every
+      `CEFI_VENUE_FOLD` target has expected tuples; wired into `run_cross_repo_invariants.sh` as invariant #22); the
+      `strict=False` xfail on `test_venue_to_tardis_matches_inverted_venue_mapping` is RESOLVED for real (not just
+      relaxed) — it surfaced 2 genuine pre-existing bugs (`_VENUE_TO_TARDIS['OKX']` pointed at the spot feed 'okex'
+      instead of the perp aggregate's real feed 'okex-swap'; a stale bare-"COINBASE" expected-venue predating the
+      2026-07-06 COINBASE-SPOT migration), both fixed. Also removed a stale `VENUE_DATA_TYPE_CAPABILITIES["POLYGON"]`
+      entry (Polygon.io, retired as a tradfi source 2026-07-19, never cleaned up — caught live by the new (d)
+      invariant). (e) reproduced end-to-end: in an isolated worktree, committed the marker on top of UAC's real
+      pre-23fa3a99 base, then re-applied the exact SPOT_PAIR-removal shape on top — differ now returns
+      `is_breaking:true` with export count unchanged 1204→1204 (matching the original false-negative signature); the new
+      SIT invariant independently verified to go RED on a fold-target venue silently disappearing from the registry
+      (proved via an in-memory monkeypatch — deleting bare `BYBIT` from `INSTRUMENT_TYPES_BY_VENUE` makes
+      `test_cefi_venue_fold_targets_are_expected` fail as expected). (f) `ci-cd-flow.md`'s breaking-differ section
+      updated (new bullet + closed-gap rewrite of the prior "residual coverage gap, still open" note). **Excluded per
+      scope**: the source doc's [DESIGN] P2 consumer-QG-fanout item stays parked as Deferred **E8** /operator question 1
+      in this plan — not required for this todo's done-when. Source:
+      `issues/breaking_change_differ_blind_to_registry_data_dicts_2026_07_09.md` (todos 1-4, 6-7 closed by this; todo 5
+      = the parked E8 design fork).
 - [ ] [SCRIPT] P2. **Fix real `sleep()`-based test waste — the non-MTDS fleet.** Mocking the clock instead of sleeping
       real wall-time, zero behavior risk, across 3 repos (excludes `market-tick-data-service`'s
       `test_sports_catalog_reader_timeout.py` — that file is ALREADY self-dispatched under

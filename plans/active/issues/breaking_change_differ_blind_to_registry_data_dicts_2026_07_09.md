@@ -159,27 +159,34 @@ Close Layer 1 (make the gate fire) AND Layer 2 (give it teeth when it does):
 
 ## Todos
 
-- [ ] [DESIGN] P1. Specify the contract-surface extension to `detect_breaking_change.py`: the allowlist mechanism
+- [x] ✅ [DESIGN] P1. Specify the contract-surface extension to `detect_breaking_change.py`: the allowlist mechanism
       (marker vs. registry), which mutations are breaking (key removal, set/list member removal, capability-inner-key
       removal) vs. additive-OK, and how it composes with the existing export/enum/route surface. Cite the manifest
-      `schema_version` precedent. (repo: unified-trading-pm)
-- [ ] [FIX] P1. Implement the extension in `scripts/cicd/detect_breaking_change.py` + tag the three registry constants
-      as contract surface in `unified-api-contracts`. Additive stays non-breaking. (repos: unified-trading-pm,
-      unified-api-contracts)
-- [ ] [TEST] P1. Add cases to `unified-trading-pm/.../tests/unit/test_detect_breaking_change.py`: (a) removing a
+      `schema_version` precedent. (repo: unified-trading-pm) — shipped `unified-trading-pm@7e0aab35f` (marker convention
+      documented inline; see `ci_satellite_ao_dispatch_batch2_2026_07_29.md` todo for the full write-up).
+- [x] ✅ [FIX] P1. Implement the extension in `scripts/cicd/detect_breaking_change.py` + tag the three registry
+      constants as contract surface in `unified-api-contracts`. Additive stays non-breaking. (repos: unified-trading-pm,
+      unified-api-contracts) — shipped `unified-trading-pm@7e0aab35f` + `unified-api-contracts@e34afc1d`.
+- [x] ✅ [TEST] P1. Add cases to `unified-trading-pm/.../tests/unit/test_detect_breaking_change.py`: (a) removing a
       set-member from a tagged dict → breaking; (b) adding one → non-breaking; (c) regression fixture = the exact
-      `23fa3a99` shape (`(OKX, SPOT_PAIR)` removal) → must now report `is_breaking: true`. (repo: unified-trading-pm)
-- [ ] [FIX] P1. Close the SIT coverage gap: add the `build_expected('cefi')` + capability/fold cross-repo invariant to
-      `system-integration-tests` and resolve the `strict=False` xfail on
-      `test_venue_to_tardis_matches_inverted_venue_mapping`. (repo: system-integration-tests)
+      `23fa3a99` shape (`(OKX, SPOT_PAIR)` removal) → must now report `is_breaking: true`. (repo: unified-trading-pm) —
+      shipped `unified-trading-pm@7e0aab35f`, 9 new tests, all pass.
+- [x] ✅ [FIX] P1. Close the SIT coverage gap: add the `build_expected('cefi')` + capability/fold cross-repo invariant
+      to `system-integration-tests` and resolve the `strict=False` xfail on
+      `test_venue_to_tardis_matches_inverted_venue_mapping`. (repo: system-integration-tests) — shipped
+      `unified-api-contracts@e34afc1d` (invariant test) + `system-integration-tests@67db4da` (wiring + xfail fix).
 - [ ] [DESIGN] P2. Decide whether provider (UAC) registry-change promotes should fan out consumer QG (≥ IS) as a gate;
-      spec it or explicitly defer with rationale. (repo: unified-trading-pm)
-- [ ] [DOCS] P2. Once landed, update the breaking-differ section of `/codex/08-workflows/ci-cd-flow.md` to document
+      spec it or explicitly defer with rationale. (repo: unified-trading-pm) — OUT OF SCOPE for this closure; parked as
+      Deferred **E8** / operator question 1 in `ci_satellite_ao_dispatch_batch2_2026_07_29.md`.
+- [x] ✅ [DOCS] P2. Once landed, update the breaking-differ section of `/codex/08-workflows/ci-cd-flow.md` to document
       registry-data-constant tracking (remove the implicit "only exports/enums/routes/annotations" mental model). (repo:
-      unified-trading-pm)
-- [ ] [VERIFY] P1. Reproduce end-to-end: differ on `23fa3a99` returns `is_breaking: true` post-fix; the new SIT
+      unified-trading-pm) — shipped `unified-trading-pm@7e0aab35f`.
+- [x] ✅ [VERIFY] P1. Reproduce end-to-end: differ on `23fa3a99` returns `is_breaking: true` post-fix; the new SIT
       invariant goes RED when `(OKX, SPOT_PAIR)` is removed. "Run it, don't read it." (repos: unified-trading-pm,
-      system-integration-tests)
+      system-integration-tests) — verified live: differ re-run in an isolated worktree against the real 23fa3a99 shape
+      (marker applied, SPOT_PAIR re-removed on top) returns `is_breaking:true`, export count unchanged 1204→1204; the
+      SIT invariant verified to go RED via an in-memory monkeypatch removing a fold-target venue (`BYBIT`) from
+      `INSTRUMENT_TYPES_BY_VENUE`.
 
 ## Cross-reference
 
