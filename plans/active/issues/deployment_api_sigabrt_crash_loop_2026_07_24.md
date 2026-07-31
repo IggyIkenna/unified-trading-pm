@@ -558,7 +558,22 @@ cancellation-timeout fix and already shipped). Suggested next steps for whoever 
       `faulthandler` is only armed worker-side). If it matches a logged WORKER pid instead: the low-pid/high-pid split
       found this session was NOT a MASTER/WORKER distinction — re-open that question with a fresh evidence-backed todo
       rather than re-guessing. If no SIGABRT has occurred yet since the deploy, this todo stays open — don't force a
-      conclusion from zero data. (repo: deployment-api)
+      conclusion from zero data. (repo: deployment-api) — **2026-07-31 (slot 3, review): gate genuinely NOT met yet —
+      zero SIGABRTs on the new-logging deploy so far, correctly staying open.** Content-verified (not just
+      ancestry-inferred) that `deployment-api@785405d` is actually live: pulled the exact image
+      (`asia-northeast1-docker.pkg.dev/.../deployment-api@sha256:2d69d3a6...489d7`) backing the current Cloud Run
+      revision `uts-shared-deployment-api-00361-qqp` (created 2026-07-31T11:54:18Z, ~26min after the commit's 11:28:37Z
+      timestamp — plausible normal CI-deploy SLA) and grepped the extracted `gunicorn.conf.py`: both new log lines
+      (`"gunicorn MASTER (arbiter) started, pid=%s"` in `on_starting`, `"gunicorn WORKER forked, pid=%s     age=%s"` in
+      `post_fork`) are genuinely present in the deployed bytes. Then searched Cloud Logging
+      (`resource.type=cloud_run_revision`, `service_name=uts-shared-deployment-api`,
+      `textPayload:"Uncaught signal:     6"`, 2-day window) for any SIGABRT since that deploy: the most recent
+      occurrence is on revision `uts-shared-deployment-api-00355-z2c` at `2026-07-31T10:37:56Z` — **before** `00361-qqp`
+      (11:54:18Z), i.e. on a pre-logging revision. Zero SIGABRTs have landed on `00361-qqp` (or any later revision) as
+      of this check. Per this todo's own done-when clause, correctly leaving it open rather than forcing a conclusion
+      from zero data. No code shipped (pure verification). Re-check next time a fresh dispatch of this task fires, or
+      whenever a new `Uncaught signal: 6` log line appears for `uts-shared-deployment-api` on a revision at/after
+      `00361-qqp`.
 
 - [ ] [BACKEND] P3. **NEW, opened 2026-07-31 (slot 13, backend_engineer) — dead-code cleanup: `workers/auto_sync.py`'s
       entire background-sync implementation is unreachable in production.** Found while tracing the call graph for the
