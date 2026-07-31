@@ -516,3 +516,14 @@ mitigation ladder (bigger machine → smaller chunks) is exhausted; only the cod
   script (`market-tick-data-service/scripts/profile_odds_api_backfill_memory_2026_07_31.py`) is exactly what a follow-up
   worker should re-run before/after any such fix to prove it actually closes the RSS-growth gap. **This todo stays `[ ]`
   open** — a strong, evidence-backed lead is not the same as a shipped, verified fix.
+- **2026-07-31 (slot 3, same session) — profiling run finished all 3 dates; confirms the finding above, doesn't change
+  it.** Full 3-point comparison, same single process throughout: `2026-04-16` (0 rows) → 111.17 MB traced; `2026-04-17`
+  (22,713 rows) → 112.00 MB traced; `2026-04-18` (141,798 rows, the densest of the three, 628s elapsed) → **112.05 MB
+  traced**. Traced Python heap is FLAT (111.17→112.05 MB, <1MB total drift) across a 0→141,798-row range — conclusive,
+  not just suggestive. `tracemalloc.compare_to`'s top-15 growth entries are all trivial import-machinery noise
+  (`importlib._bootstrap`/`_bootstrap_external` caches, `abc` registry, `urllib.parse`) — nothing resembling a real
+  per-date accumulator anywhere in this codebase's own tracked allocations. This closes off "maybe it's a slow
+  Python-level leak that just needs more dates to show up" as a competing explanation — 3 dates spanning a 0→141K-row
+  range already show zero signal. The `ThreadedResolver`/native-memory hypothesis above is the only lead standing; next
+  step is still the `memray` run (or the thread-count/RSS-per-`_make_session()`-call correlation check), not more
+  tracemalloc dates.
