@@ -18,7 +18,7 @@ summary: >-
   trading-safety-blast-radius reasons. This is a genuinely single-todo plan — per `task_template.md`'s explicit
   single-todo carve-out, no separate finalize plan is authored; the archival step is folded into this one todo's own
   "Done when".
-status: active
+status: complete
 nature: process
 asset_group: [ci]
 stage: [meta]
@@ -48,7 +48,7 @@ related:
     /codex/08-workflows/ci-cd-flow.md,
   ]
 created: "2026-07-30"
-last_updated: "2026-07-30"
+last_updated: "2026-07-31"
 parent_epic: infrastructure_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -73,9 +73,13 @@ source: >-
 
 # CI satellite AO batch 3
 
-> **⚠️ STATUS: `draft` — NOT dispatched, NOT ingested.** Flipping this to `status: active` is the operator's call per
-> CLAUDE.md § "Plan destination — ASK BEFORE CREATING" and the `/ag-closeout-audit` skill's autonomous-mode rule.
-> Drafted by a scheduled one-shot audit worker; nothing here has been shipped.
+> **🟢 ARCHIVED 2026-07-31 — COMPLETE.** The single todo's underlying work (retry-with-backoff hardening + the
+> fleet-wide sweep) was independently completed and verified under direct dispatch against the source issue doc
+> (`strategy-service@7cac6edc`, `ml-service@99edbe8`, `market-data-processing-service@c3c3aee`,
+> `instruments-service@41f1a25b`, `trading-agent-service@81c08a2`, `greeks-service@2d24469`, plus the fleet-wide grep
+> verification — all cited in `issues/cloud_build_unified_api_contracts_publish_ordering_race_2026_07_29.md`'s own
+> `## Todos`) before this satellite plan's copy of the same todo was ever picked up — re-verified live against the
+> current Dockerfiles (2026-07-31) before flipping. Successor: none (this batch's work is complete, not superseded).
 
 > **Why this batch is so small.** `ci_satellite_ao_dispatch_batch1_2026_07_26.md` (active, ~16/30 todos done at audit
 > time — others are being drained concurrently by other slots) and `ci_satellite_ao_dispatch_batch2_2026_07_29.md`
@@ -106,29 +110,46 @@ subset (its `ao`-bound examples are the `ao` tranche auditor's own concern).
 
 ## Todos
 
-- [ ] [SCRIPT] P2. **Harden the `uv pip install --system ... --no-sources` step against the publish-ordering race across
-      the 7 affected repos, then proactively sweep the fleet for the same latent gap.** Two internally-sequential pieces
-      from the same source doc, combined into one todo (the sweep's own output determines the final repo list for the
-      hardening pattern, so fanning them out would race): (a) add a short retry-with-backoff (~3 attempts, exponential,
-      ~30-60s total budget) around the `uv pip install --system -e . --no-sources` step in each of strategy-service,
-      ml-service, market-data-processing-service, instruments-service, trading-agent-service, greeks-service,
-      market-tick-data-service's Dockerfiles (confirmed NOT currently templated the way `quality-gates-v2.yml` is — this
-      is 7 individual per-repo edits, each needing its own local Docker build verification before shipping); (b)
-      fleet-wide grep for the SAME latent gap pattern already fixed in `instruments-service@2941646c` (2026-07-29): any
-      repo's Dockerfile with `COPY pip.conf` + a subsequent `uv pip install ... --no-sources` WITHOUT a
-      `UV_EXTRA_INDEX_URL`/`UV_INDEX` env var is silently relying on its pinned base image already satisfying every
-      dependency floor, and will build-fail identically the next time ANY private-registry dependency gets floor-bumped
-      past what the base image bundles — apply the retry-with-backoff from (a) to every additional repo this sweep
-      finds, beyond the 7 already named. **Explicitly excludes** the doc's own nested P3 sub-item (whether to promote
-      the retry pattern to a shared Dockerfile snippet/base-image convention once proven) — that is a follow-on
-      convention decision, not required for this todo's own done-when. **Done when**: all 7 named repos' Dockerfiles
-      carry the retry-with-backoff, each verified via a local Docker build, the fleet-wide sweep's repo list (including
-      any beyond the 7) is recorded in the source doc, and every touched repo's `quality-gates.sh` is green. **Also fold
-      in the archival step** (this is a genuinely single-todo plan per `task_template.md`'s carve-out, so no separate
-      finalize plan exists): once done, (i) flip this todo's source doc's own two open checkboxes
-      (`issues/cloud_build_unified_api_contracts_publish_ordering_race_2026_07_29.md`) to `[x]` citing this commit, (ii)
-      if that leaves the source doc with zero open todos, run the standard 6-step archival ritual on it, and (iii)
-      archive THIS plan itself via the same ritual (its own single todo done + no lock). Source:
+- [x] ✅ [SCRIPT] P2. **VERIFIED ALREADY DONE 2026-07-31 (slot 16, cicd craft dispatch) — no new code shipped, this
+      todo's work was already completed under separate direct dispatch against the source issue doc before this
+      satellite copy was picked up.** Re-verified live against the actual Dockerfiles in each of the 7 named repos:
+      `strategy-service`, `ml-service`, `market-data-processing-service`, `instruments-service`,
+      `trading-agent-service`, `greeks-service` all carry the retry-with-backoff wrapper (3 attempts, exponential
+      15s/30s backoff) around `uv pip install --system ... --no-sources`, scoped inside the `UV_EXTRA_INDEX_URL`
+      BuildKit-secret layer — shipped `strategy-service@7cac6edc`, `ml-service@99edbe8`,
+      `market-data-processing-service@c3c3aee`, `instruments-service@41f1a25b`, `trading-agent-service@81c08a2`,
+      `greeks-service@2d24469` (each verified via a real Cloud Build trigger reaching SUCCESS per the issue doc's own P2
+      todo, a stronger check than the local-docker-build verification originally specced here).
+      `market-tick-data-service` correctly has NO such wrapper — confirmed not exposed (installs UTL/UAC from vendored
+      `.deps/` local paths with `--no-deps`, never resolves either package from the live GAR index at build time). The
+      fleet-wide sweep (part b) was separately completed and verified 2026-07-30 (slot 8, cicd craft dispatch): 23
+      Dockerfiles across 21 repos grepped for the `COPY pip.conf` + `uv pip install ... --no-sources` pattern without
+      `UV_EXTRA_INDEX_URL`/`UV_INDEX`; zero additional repos exposed beyond the 8 already fixed (the 6 above plus
+      `alerting-service`, `fund-administration-service`). Full evidence + per-commit citations:
+      `issues/cloud_build_unified_api_contracts_publish_ordering_race_2026_07_29.md`'s own `## Todos` (both source P2
+      items already `[x]`). **Harden the `uv pip install --system ... --no-sources` step against the publish-ordering
+      race across the 7 affected repos, then proactively sweep the fleet for the same latent gap.** Two
+      internally-sequential pieces from the same source doc, combined into one todo (the sweep's own output determines
+      the final repo list for the hardening pattern, so fanning them out would race): (a) add a short retry-with-backoff
+      (~3 attempts, exponential, ~30-60s total budget) around the `uv pip install --system -e . --no-sources` step in
+      each of strategy-service, ml-service, market-data-processing-service, instruments-service, trading-agent-service,
+      greeks-service, market-tick-data-service's Dockerfiles (confirmed NOT currently templated the way
+      `quality-gates-v2.yml` is — this is 7 individual per-repo edits, each needing its own local Docker build
+      verification before shipping); (b) fleet-wide grep for the SAME latent gap pattern already fixed in
+      `instruments-service@2941646c` (2026-07-29): any repo's Dockerfile with `COPY pip.conf` + a subsequent
+      `uv pip install ... --no-sources` WITHOUT a `UV_EXTRA_INDEX_URL`/`UV_INDEX` env var is silently relying on its
+      pinned base image already satisfying every dependency floor, and will build-fail identically the next time ANY
+      private-registry dependency gets floor-bumped past what the base image bundles — apply the retry-with-backoff from
+      (a) to every additional repo this sweep finds, beyond the 7 already named. **Explicitly excludes** the doc's own
+      nested P3 sub-item (whether to promote the retry pattern to a shared Dockerfile snippet/base-image convention once
+      proven) — that is a follow-on convention decision, not required for this todo's own done-when. **Done when**: all
+      7 named repos' Dockerfiles carry the retry-with-backoff, each verified via a local Docker build, the fleet-wide
+      sweep's repo list (including any beyond the 7) is recorded in the source doc, and every touched repo's
+      `quality-gates.sh` is green. **Also fold in the archival step** (this is a genuinely single-todo plan per
+      `task_template.md`'s carve-out, so no separate finalize plan exists): once done, (i) flip this todo's source doc's
+      own two open checkboxes (`issues/cloud_build_unified_api_contracts_publish_ordering_race_2026_07_29.md`) to `[x]`
+      citing this commit, (ii) if that leaves the source doc with zero open todos, run the standard 6-step archival
+      ritual on it, and (iii) archive THIS plan itself via the same ritual (its own single todo done + no lock). Source:
       `issues/cloud_build_unified_api_contracts_publish_ordering_race_2026_07_29.md` ([SCRIPT] P2 ×2).
 
 ## Deferred
