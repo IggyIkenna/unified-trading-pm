@@ -237,9 +237,17 @@ file-by-file.
       (`test_data_analytics_service.py`, `test_route_data_status_live.py`), basedpyright clean, ruff clean, full
       `quality-gates.sh` green (145s; one earlier run was SIGTERM'd by the shared-host RAM-pressure watchdog, unrelated
       to this change — clean retry confirmed it). Repo: deployment-api.
-- [ ] [SCRIPT] P2. Decompose the remaining function-size-only violation in
-      `deployment_api/services/data_query_service.py`. Remove its exclude entry once compliant; re-run
-      `quality-gates.sh` to confirm no regression.
+- [x] ✅ [SCRIPT] P2. **DONE 2026-07-31 (slot-2, infra craft).** Decomposed 6 oversized methods in
+      `deployment_api/services/data_query_service.py`. `deployment-api@8b2b8ee`: extracted `_partition_gcs_objects` from
+      `list_files_in_path` (was 78L), `_venue_filters_for_asset_group` from `get_venue_filters` (was 67L),
+      `_filter_instrument_corpus` from `get_instruments_list` (was 74L), `_dedupe_and_sort_matches` from
+      `search_instruments` (was 86L), `_date_range_strs` + `_availability_rows` from `_check_daily_availability` (was
+      60L), `_resolve_effective_window` + `_build_availability_response` from `get_instrument_availability` (was 74L) —
+      pure code motion + docstring condensing, no logic changes. `FUNCTION_SIZE_EXTRA_EXCLUDES` entry removed — gate
+      passes natively. Verified: 127 targeted tests green (`test_data_query_service_helpers.py`,
+      `test_data_query_service.py`, `test_route_data_status_live.py`); basedpyright's 2 remaining errors confirmed
+      pre-existing (byte-identical against origin, same 2 lines before this change); ruff clean; full `quality-gates.sh`
+      green (187s). Repo: deployment-api.
 - [ ] [SCRIPT] P2. Decompose the remaining function-size-only violation in `deployment_api/services/data_status/cli.py`.
       Remove its exclude entry once compliant; re-run `quality-gates.sh` to confirm no regression.
 - [ ] [SCRIPT] P2. Decompose the remaining function-size-only violation in
