@@ -632,7 +632,19 @@ cancellation-timeout fix and already shipped). Suggested next steps for whoever 
       live, spanning 8 revisions `00361-qqp`..`00368-lc2`): **zero rows** — re-confirmed the query isn't a false
       negative by re-running it against `timestamp>="2026-07-31T10:00:00Z"`, which correctly surfaces the known
       `00355-z2c@10:37:56Z` occurrence. No code shipped (pure verification). Leaving the checkbox unchecked; re-check on
-      the next dispatch or the next `Uncaught signal: 6` occurrence on a revision at/after `00361-qqp`.
+      the next dispatch or the next `Uncaught signal: 6` occurrence on a revision at/after `00361-qqp`. —
+      **2026-07-31T15:03Z (slot 14, review): re-checked, still gate NOT met — still correctly open.** Two more revisions
+      have since gone live (`00369-xkn` created `14:40:36Z`, then `00370-k95` created `14:52:23Z`, confirmed 100%
+      traffic via `gcloud run services describe`). Content-verified via direct image extraction (`docker create` +
+      `docker cp /app/gunicorn.conf.py` off the exact digest `sha256:cec7837f...e7e4ecd` backing `00370-k95`) that both
+      pid-role log lines (`"gunicorn MASTER (arbiter) started, pid=%s"` in `on_starting`,
+      `"gunicorn WORKER     forked, pid=%s age=%s"` in `post_fork`) are genuinely present in the deployed bytes. Re-ran
+      `gcloud logging read` for `"Uncaught signal: 6"` scoped to `timestamp>="2026-07-31T11:54:00Z"` (now ~3h09m elapsed
+      since the pid-role-logging deploy first went live, spanning 10 revisions `00361-qqp`..`00370-k95`): **zero rows**
+      — re-confirmed the query isn't a false negative by re-running it against `timestamp>="2026-07-31T10:00:00Z"`,
+      which correctly surfaces the known `00355-z2c@10:37:56Z` occurrence. No code shipped (pure verification). Leaving
+      the checkbox unchecked; re-check on the next dispatch or the next `Uncaught signal: 6` occurrence on a revision
+      at/after `00361-qqp`.
 
 - [ ] [BACKEND] P3. **NEW, opened 2026-07-31 (slot 13, backend_engineer) — dead-code cleanup: `workers/auto_sync.py`'s
       entire background-sync implementation is unreachable in production.** Found while tracing the call graph for the
