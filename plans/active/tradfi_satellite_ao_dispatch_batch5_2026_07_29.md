@@ -582,6 +582,16 @@ mirroring the batch1/batch2/batch3/batch4 finalize pattern.
     `build-continuous --root ES` and the 1d/24h hit-rate re-measure against the ~19% (454/2398) baseline in
     `issues/tradfi_mdps_build_continuous_mismatches_2_and_4_still_open_2026_07_26.md`.
 
+- **2026-07-31 (slot-8, data_engineering craft, task `tradfi_satellite_ao_dispatch_batch5-001`)** — Resumed todo 2 a
+  sixth time. Reconfirmed slot-6's gate still holds, nothing new: `_maintenance_window.json`
+  (`gs://market-data-tick-tradfi-prd-central-element-323112/_index/`) unchanged
+  (`locked_by: mtds_available_at_cross_asset_backfill_2026_07_13`, `expires_at: 2026-08-03T18:26:16Z`, current time
+  `2026-07-31T22:03Z` — ~2 days remaining), and that sibling plan's gating apply+resume P1 todos are still open (both
+  prediction and tradfi rows, lines ~164/169/288/297). Declining/skipping again rather than force through the
+  maintenance window or re-run the same fleet-completion checks slot-6 already did minutes-to-hours ago. **Next
+  dispatch**: same check as slot-6's note above — re-check the maintenance window / sibling plan's apply+resume todos
+  first; only proceed to the VM `EXIT_STATUS` checks once that gate has actually lifted.
+
 ## Codex SSOTs
 
 No new durable contract is created by this plan — every todo executes an already-decided spec from its source doc, or
