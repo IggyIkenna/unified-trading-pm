@@ -133,8 +133,28 @@ file-by-file.
       target in `tests/unit/test_data_status_seeded_4state_denominator.py` keeps intercepting it).
       `FUNCTION_SIZE_EXTRA_EXCLUDES` entry for `mtds.py` removed. Full `quality-gates.sh` green (5052 tests pass, 0
       regressions).
-- [ ] [SCRIPT] P1. Decompose `deployment_api/services/cost_observability/service.py` (1055L, 6 oversized methods).
-      Remove its exclude entry once compliant.
+- [x] ✅ [SCRIPT] P1. **DONE 2026-07-31 (slot-2, infra craft)** — `deployment-api@fc093fd`. Decomposed
+      `deployment_api/services/cost_observability/service.py` (1055L, 6 oversized methods) into 5 sibling modules:
+      `row_builders.py` (DuckDB-cell coercion + generic `BreakdownRow` builders: `_agg_row`/`_grouped`/`_by_sku`/
+      `_by_day`/`_finalize_rows`, all stateless), `resource_rows.py` (the resource/bucket/waste dimension's SQL fetch +
+      storage-class/cost-component aggregation + row assembly — the pure-data half of `_by_resource`),
+      `stopped_vm_disk.py` (the `stopped_vm_disk` waste kind's query + row builder), `summary_rows.py` (`summarize()`'s
+      per-cloud aggregation + `CloudSummary` row assembly), `breakdown_dimensions.py` (`breakdown()`'s per-dimension
+      dispatch — the 148L method, the largest offender). Every extracted function is a pure function of its explicit
+      arguments (no `self`); the 4 live-GCP waste cross-ref methods (`_unattached_disk_names` et al) +
+      `_waste_cross_refs()` stayed instance methods on `CostObservabilityService` (need `self._cfg` + a
+      `ThreadPoolExecutor` fan-out) and are passed into the extracted dispatch functions as bound callables. Kept every
+      previously-private method NAME as a thin delegating wrapper on the class (`_by_resource`,
+      `_stopped_vm_disk_waste_rows`, `breakdown`, `summarize`, `per_resource_daily`) so `waste.py`'s
+      `cost_observability.service._stopped_vm_disk_waste_rows` cross-reference and every `unittest.mock.patch`/
+      `svc.<name>` test target (`_cost_component`, `_AVG_DAYS_PER_MONTH`, `_BREAKDOWN_LIMIT`, `gcp_facts`/`aws_facts`/
+      `github_facts`/`list_unattached_disk_names` et al) kept working unchanged — re-exported the two svc-attribute-
+      tested private names (`_cost_component`, `_AVG_DAYS_PER_MONTH`) via `__all__` per the `mtds.py` facade convention.
+      Cross-module private-name imports (`_f`/`_s`/`_agg_row`/etc.) needed `# pyright: ignore     [reportPrivateUsage]`
+      per import, same as the `deployments_inventory` precedent. `FUNCTION_SIZE_EXTRA_EXCLUDES` entry removed. Verified:
+      full `quality-gates.sh` green both before AND after the exclude removal (`✅ File size     OK`,
+      `✅ Function/class/method size OK`, 5052 tests pass — 0 regressions, incl. every `test_cost_observability.py`
+      case; basedpyright warn-only errors unchanged from pre-existing baseline, confirmed not a regression).
 - [x] ✅ [SCRIPT] P1. **DONE 2026-07-31 (slot-5, infra craft)** — `deployment-api@c11f56f`. Decomposed
       `deployment_api/routes/health_consolidator.py` (1082L) into a 6-module facade package
       (`health_consolidator/{__init__,_models,_classify,_catalog,_reads,_mock}.py`, every module ≤523L), mirroring the
@@ -258,3 +278,9 @@ file-by-file.
   entirely. See the flipped checkbox above for the full evidence chain (mock.patch call-site constraints, the
   mixin-ordering invariant, the dataclass-bundling technique used to keep every extracted method under 50L).
   `deployment-api@a42a57e`. 6 P1/P2 decomposition todos remain open for follow-up dispatch.
+- 2026-07-31 (slot-2, infra craft): Flipped todo 4 — decomposed `deployment_api/services/cost_observability/service.py`
+  (1055L, 6 oversized methods incl. the 148L `breakdown()`) into 5 sibling modules (`row_builders.py`/
+  `resource_rows.py`/`stopped_vm_disk.py`/`summary_rows.py`/`breakdown_dimensions.py`); see the flipped checkbox above
+  for the full evidence chain. Rebased onto 2 peer decompositions (`health_consolidator.py`@c11f56f,
+  `manifest.py`@a42a57e) mid-task with no conflicts. `deployment-api@fc093fd`. 21 P2 decomposition todos remain open for
+  follow-up dispatch.
