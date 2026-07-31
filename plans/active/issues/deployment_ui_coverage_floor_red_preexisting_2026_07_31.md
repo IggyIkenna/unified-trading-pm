@@ -88,12 +88,20 @@ the integration-branch/CI level, only local pre-commit QG reproduction in stale 
 
 ## Follow-up (prevent recurrence — NOT done in this escalation, filed as real todos)
 
-- [ ] [BACKEND] P2. `unified-trading-pm/scripts/quality-gates-base/base-ui.sh`: harden the `node_modules` freshness
-      check (currently only checks `node_modules/.bin/vitest` exists, ~line 230) to detect a stale/incomplete install
-      after a lockfile change — e.g. `pnpm install --frozen-lockfile` (fast no-op when already in sync) as an early
-      guard step, or at minimum compare `pnpm-lock.yaml` mtime/hash against an install marker and `log_fail` with the
-      correct remedy command (currently says "run npm install", wrong for pnpm-migrated repos). Roll out via
-      `rollout-quality-gates-unified.py` to all UI repos, not just deployment-ui. Repo: unified-trading-pm.
+- [x] ✅ [BACKEND] P2. `unified-trading-pm/scripts/quality-gates-base/base-ui.sh`: harden the `node_modules` freshness
+      check — unified-trading-pm@01ff2a3f5. Added an early [0/6] ENVIRONMENT guard that detects the package manager from
+      its lockfile (pnpm > yarn > npm, matching `scripts/setup.sh`'s precedence) and verifies node_modules actually
+      matches it: self-healing via `<pkg> install --frozen-lockfile` for pnpm/yarn (measured ~1-2s no-op once already in
+      sync — matches what CI's own install step already runs on every push), content-comparison against npm's own
+      `node_modules/.package-lock.json` install marker for npm (no fast frozen mode exists there). Also fixed the
+      fallback vitest-missing message to name the detected package manager instead of always saying "npm install".
+      Verified live: simulated the exact incident (removed `happy-dom` from an already-migrated deployment-ui clone; the
+      old vitest-binary check alone still passed) — the new guard caught it, self-healed via pnpm, and the full test run
+      went from the false ~24% floor-breach to a clean 74% coverage pass. No separate `rollout-quality-gates-unified.py`
+      run needed/performed: both active UI repos' `scripts/quality-gates.sh` stubs already `source` `base-ui.sh` by
+      absolute path at runtime (never copied per-repo per the rollout script's own `copy_quality_gates()`), so the fix
+      is immediately live workspace-wide; running the rollout for real would in fact overwrite each repo's hand-tuned
+      per-repo config blocks (STEP_TIMEOUT overrides, CODEX_*_EXCLUDE_GLOBS) — not something to do incidentally here.
 - [ ] [SCRIPT] P3. `unified-trading-pm/scripts/dev/slot-cron-ff-pull.sh`: consider a lightweight post-pull check per
       repo (e.g. lockfile hash changed since last install → warn or auto `pnpm install`) so a package-manager / lockfile
       migration doesn't silently desync every long-lived slot clone. Repo: unified-trading-pm.
