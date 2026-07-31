@@ -140,8 +140,9 @@ format before choosing the normalization strategy.
       `test_symbol_filter_matches_real_slash_vs_underscore_shape`). The full "verify against a real DEFI `returns` run
       over the verified-clean window" acceptance criterion is carried forward into the P2 todo below (the
       `data_engineering` craft resuming the `returns` leg is the actual real-run verification).
-- [ ] [DATA] P2. Once the above lands, resume `defi_satellite_ao_dispatch_batch3_2026_07_26.md`'s D1 todo's `returns`
-      leg over the full captured window. Repo: features-service.
+- [ ] [DATA] P2. **ATTEMPTED 2026-07-31 (slot-5) — BLOCKED on a newly-found, distinct downstream bug, not unattempted.**
+      Once the above lands, resume `defi_satellite_ao_dispatch_batch3_2026_07_26.md`'s D1 todo's `returns` leg over the
+      full captured window. Repo: features-service.
 
 # Progress Log
 
@@ -156,3 +157,12 @@ format before choosing the normalization strategy.
   redundant local commit (never pushed) and flipping this checkbox against the already-shipped upstream fix instead of
   shipping a duplicate — verified `7e10172c` genuinely covers the same `ETH_USD`/`ETH/USD` real-data shape via direct
   diff inspection before flipping.
+- 2026-07-31 (slot-5, data_engineering craft): attempted the P2 todo — relaunched the `returns` verification run
+  (`features-delta-one-defi-20260731-025149`) against the shipped `7e10172c` fix (SSH-confirmed the VM had it). The fix
+  genuinely works: range-load went from the pre-fix `27/51` to `51/51` real instruments matched. But the run still
+  produced `Completed 0/51 instruments for returns` — a distinct, downstream bug in the per-date lookback sufficiency
+  window (`BufferManager.calculate_buffer_days()` computes only ~1-2 calendar days of buffer from
+  `FEATURE_GROUP_LOOKBACK["returns"]=100`, far too narrow for DEFI's sparse pass-through event ticks — confirmed via
+  direct repro that 945 real rows exist across the full window, but the per-date window only admits ~4-12 of them).
+  Filed `delta_one_passthrough_lookback_buffer_too_short_for_sparse_ticks_2026_07_31.md` with full evidence + 3
+  candidate fix directions. P2 stays unflipped — it now depends on that new issue's P1 fix landing first.
