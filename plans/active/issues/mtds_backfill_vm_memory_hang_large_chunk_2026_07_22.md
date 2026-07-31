@@ -486,3 +486,33 @@ mitigation ladder (bigger machine → smaller chunks) is exhausted; only the cod
   credential path from `GOOGLE_APPLICATION_CREDENTIALS`/ADC (what the Python client actually uses), so a CLI-level
   failure does not necessarily mean the real fetch path is broken; check `gcloud config get-value account` before
   concluding the key itself needs re-verification.
+- **2026-07-31 (slot 3, data_engineering) — the profiling run FINISHED enough of itself to yield the actual answer;
+  strong new lead, not yet a confirmed+shipped fix.** `2026-04-16` (0 real rows) → 111.17 MB traced Python heap.
+  `2026-04-17` (a real-fetch-dense day: 22,713 real rows across ~25 leagues, hundreds of real HTTP calls) → **112.00 MB
+  traced heap — under 1MB of growth despite processing thousands of real rows.** Meanwhile the OS-level RSS of the SAME
+  process (`ps aux`, sampled 3 times across the run) climbed **930MB → 1.25GB → 1.92GB** over the same span. **This is
+  the smoking gun**: `tracemalloc` (Python-object-tracked heap) stays essentially FLAT while OS RSS grows substantially
+  — the leak is NOT retained Python objects (rules out dict/list/DataFrame accumulation definitively, on top of already
+  ruling out `FixtureIdResolver._cache` above) — it's native/C-extension memory tracemalloc structurally cannot see.
+  **Strong candidate, not yet proven**: `odds_api_adapter.py::_make_session()` —
+  `aiohttp.TCPConnector(resolver=aiohttp.resolver.ThreadedResolver())` — is called FRESH for EVERY SINGLE HTTP request
+  (5 call sites in this file, each wrapped `async with _make_session() as session, session.get(...) as resp:` — never
+  one session reused across a league's or a date's many calls). A single real-fetch-dense date issues hundreds of these
+  (the log shows leagues needing 8-30 API calls each, dozens of leagues per date). `ThreadedResolver` backs onto a real
+  OS thread pool for DNS lookups; if the thread pool's native stack/buffer memory isn't promptly released back to the
+  allocator on high-churn create/destroy cycles (a known aiohttp/thread-pool pattern, distinct from a pure-Python object
+  leak), that would explain RSS-only, tracemalloc- invisible growth scaling with REQUEST COUNT (matching the doc's own
+  observation that dense real-fetch dates are worse than skip-dense ones) rather than date-range span. **Not yet
+  confirmed** — this needs either (a) a `memray` run (tracks native allocations tracemalloc misses — exactly the tool
+  this todo originally called for as the alternative if tracemalloc came back flat) attributing the growth specifically
+  to `ThreadedResolver`/`TCPConnector` construction, or (b) a quicker correlation check: log
+  `len(threading.enumerate())` or RSS immediately before/after each `_make_session()` call across a dense date and see
+  if it step-changes per call. **Recommended fix IF confirmed**: hoist one shared `aiohttp.ClientSession`/`TCPConnector`
+  per `OddsApiAdapter` instance (or per `download_batch()` call) instead of constructing a fresh one per HTTP request —
+  standard aiohttp guidance is one session per logical unit of work, not one per request, for exactly this class of
+  resource-churn reason. **Did not apply this fix in this session** — it is a real code change to a hot path (5 call
+  sites, all fetch/discovery methods) that needs its own verification (a session-reuse bug could silently break
+  concurrent request isolation or auth-header handling) rather than a rushed edit at session-end; the promoted profiling
+  script (`market-tick-data-service/scripts/profile_odds_api_backfill_memory_2026_07_31.py`) is exactly what a follow-up
+  worker should re-run before/after any such fix to prove it actually closes the RSS-growth gap. **This todo stays `[ ]`
+  open** — a strong, evidence-backed lead is not the same as a shipped, verified fix.
