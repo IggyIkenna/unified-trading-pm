@@ -747,18 +747,19 @@ cancellation-timeout fix and already shipped). Suggested next steps for whoever 
       deploy via direct image extraction (not ancestry), then `gcloud logging read` for `stdout`/`stderr` scoped to
       `timestamp>=<deploy-time>`. Resume → this fix was the trigger, update this doc's framing. Persists → re-open with
       a fresh evidence-backed todo (why does one request's failure affect ALL subsequent instances, not just the one it
-      happened on) rather than re-guessing. (repo: deployment-api) — **ANSWERED (slot-6)**: PERSISTS, even on unrelated
-      instances (canary evidence below) — `6e7bf27` worthwhile but unlikely the full explanation.
+      happened on) rather than re-guessing. (repo: deployment-api) — **ANSWERED (slot-6)**: PERSISTS on unrelated
+      instances too — `6e7bf27` worthwhile but not the full explanation.
 
-- [ ] [BACKEND] P1. **NEW, opened 2026-07-31 (slot-6) — blackout survives a fresh gen2 canary unrelated to the `6e7bf27`
-      crash, and `deployment-api` is the ONLY gen1 service in the region (cited rollup precedent is actually gen2);
-      audit logging bootstrap + container fd wiring instead.** Zero-traffic gen2 canary: zero stdout, even gunicorn's
-      own startup hooks — rules out per-instance corruption AND gen1/gen2 sandbox capture. Two candidates: (a)
-      `preload_app`'s pre-fork import touches `logging.basicConfig`/fd 1-2 before `errorlog = "-"` is wired; (b)
-      container/image-level (tini fd inheritance, `uv`-built stdio). Next: grep `unified_trading_library` for
-      import-time stdio/logging touches; test a bare `CMD ["python","-c",...]` override on a fresh canary (zero → (b),
-      prints → (a)). Done-when: fix + stdout confirmed live, or candidates refuted. (repo: deployment-api; stray canary
-      `...-00375-yic` still `latest` — delete once superseded by a real deploy.)
+- [x] ✅ [BACKEND] P1. **NEW, opened 2026-07-31 (slot-6) — test whether `--execution-environment gen1` (suspected twice
+      already) is the blackout's mechanism; refute/confirm via live experiment.** — **DONE, REFUTED**: `deployment-api`
+      is the ONLY gen1 service in the region (cited rollup precedent is actually gen2 live); a zero-traffic gen2 canary
+      (same image) still produced zero stdout. (repo: deployment-api; stray canary `...-00375-yic` still `latest` —
+      delete once superseded.)
+
+- [ ] [BACKEND] P1. **NEW, opened 2026-07-31 (slot-6) — with gen1 refuted + the crash fixed, audit the logging
+      bootstrap + fd wiring next.** (a) `preload_app` pre-fork import vs `logging.basicConfig`/fd 1-2 before
+      `errorlog = "-"` is wired; (b) container/image (tini, `uv`-built stdio). Test a bare `CMD` override on a fresh
+      canary (zero → b, prints → a). Done-when: fix + stdout live, or candidates refuted. (repo: deployment-api)
 
 - [ ] [BACKEND] P3. **NEW, opened 2026-07-31 (slot 13, backend_engineer) — dead-code cleanup: `workers/auto_sync.py`'s
       entire background-sync implementation is unreachable in production.** Found while tracing the call graph for the
