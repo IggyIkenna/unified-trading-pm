@@ -17,7 +17,7 @@ summary: >-
   DataLoader.get_available_instruments() (delta_one/app/core/data_loader.py) on every batch run where the caller does
   not pass an explicit --instruments list -- i.e. every normal production backfill/live call, not just the
   --skip-dependency-check edge case that surfaced the sibling bug.
-status: open
+status: resolved
 nature: issue
 asset_group: [cross-cutting]
 stage: [data]
@@ -43,7 +43,7 @@ assigned_role: backend_engineer
 drift_direction: advance-code
 depends_on: []
 locked_by:
-resolved_by:
+resolved_by: unified-trading-library@6c0ca59b
 ---
 
 # What I found
@@ -101,15 +101,15 @@ scope-creep fix bundled into the features-service todo.
 
 # Recommended decision
 
-- [ ] [BACKEND] P2. Thread `date` (and, where meaningfully narrowing, `data_type`) into a `filters=` row-group pushdown
-      in `get_captured_instruments()` (`unified_trading_library/feature_service_base/manifest_discovery.py:79-138`),
-      mirroring the exact pattern just shipped in `features-service@f8e21361`
-      (`dependency_checker.py::_build_captured_index`) and the already-correct pattern in
-      `_discover_instruments_from_manifest`. First grep every caller of `get_captured_instruments()` across the
-      workspace to confirm none of them rely on the current "read ALL dates" behavior when `date=None` isn't actually
-      intended as "give me everything" (the function's own docstring says `None` = all dates, which is a legitimate use
-      case that must keep working unfiltered -- only the `date is not None` branch should route through `filters=`). Add
-      a regression test pinning the call signature (mirroring
+- [x] ✅ [BACKEND] P2. Thread `date` (and, where meaningfully narrowing, `data_type`) into a `filters=` row-group
+      pushdown in `get_captured_instruments()`
+      (`unified_trading_library/feature_service_base/manifest_discovery.py:79-138`), mirroring the exact pattern just
+      shipped in `features-service@f8e21361` (`dependency_checker.py::_build_captured_index`) and the already-correct
+      pattern in `_discover_instruments_from_manifest`. First grep every caller of `get_captured_instruments()` across
+      the workspace to confirm none of them rely on the current "read ALL dates" behavior when `date=None` isn't
+      actually intended as "give me everything" (the function's own docstring says `None` = all dates, which is a
+      legitimate use case that must keep working unfiltered -- only the `date is not None` branch should route through
+      `filters=`). Add a regression test pinning the call signature (mirroring
       `TestBuildCapturedIndexColumnProjection::test_read_availability_index_is_column_projected_and_date_filtered` in
       `features-service/tests/delta_one/unit/test_lookback_validation.py`) and, if feasible, a tracemalloc/memray
       before-after measurement on a realistic-sized synthetic index. Repo: unified-trading-library. Done when:
@@ -123,3 +123,20 @@ scope-creep fix bundled into the features-service todo.
   while root-causing the sibling features-service bug -- fixed that one directly (in scope), verified this UTL-side
   sibling by direct code read (not inference), filed as its own cross-repo follow-up rather than scope-creeping into the
   features-service fix.
+- 2026-07-31 (slot 14, backend_engineer, dispatch `utl_get_captured_instruments_unfiltered_manifest_read-001`): fixed.
+  Grepped every caller of `get_captured_instruments()` across the workspace first (`features-service`'s
+  `volatility/core/data_loader.py` and `delta_one/app/core/data_loader.py`, both of which already pass explicit
+  `date=`/`data_type=` on every real call, plus this repo's own unit tests) -- confirmed none rely on the unfiltered
+  "read ALL dates" behavior when `date=None` isn't intentional; that legitimate `None` = all-dates case is preserved
+  unfiltered. Threaded `date` and (independently) `data_type` into `filters=` with `==` ops, mirroring the
+  already-correct in-file precedent `check_dependency_via_manifest()` (not the "=" op used by the two features-service
+  call sites cited in the recommendation -- `==` is what the fallback legacy-schema pandas re-filter path in
+  `_read_index.py::_read_parquet_columns_safe`/`_read_availability_index_slim` actually matches on op string, so `==` is
+  the safer, already-proven-correct choice in this exact file; not a functional difference on the primary pyarrow path,
+  which accepts both). Added 3 new regression tests pinning the exact call signature for date-only/data_type-only/
+  neither (mirroring `TestBuildCapturedIndexColumnProjection` in features-service) plus updated the existing column-
+  projection test to also assert the filters= it now passes. Skipped the optional tracemalloc/memray before-after
+  measurement (not feasible without live GCS access to the real 27.4M-row DEFI index in this sandboxed session; the
+  identical `filters=` mechanism's memory-reduction is already measured and cited in `read_availability_index`'s own
+  docstring and the sibling features-service fix's regression test). `bash scripts/quality-gates.sh` green. Shipped:
+  `unified-trading-library@6c0ca59b`.
