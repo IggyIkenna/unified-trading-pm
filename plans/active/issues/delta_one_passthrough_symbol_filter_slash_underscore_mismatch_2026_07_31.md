@@ -152,3 +152,24 @@ format before choosing the normalization strategy.
   produces zero writes — root-caused via direct comparison of manifest instrument_id vs raw parquet column values (not
   guessed), confirmed with concrete evidence from the exact same file/instrument used throughout this session's
   investigation.
+- 2026-07-31 (slot-5, data_engineering craft, D1 todo resume): shipped the recommended fix —
+  `features-service@7e10172c` strips all non-alphanumeric separators from both sides of the `_load_passthrough_range()`
+  symbol comparison (`_SYMBOL_SEPARATOR_PATTERN = "[^A-Z0-9]"`, applied via one shared pattern to both the Python-side
+  `raw_symbol` and the polars column expr). Verified against real raw data for BOTH DEFI oracle_prices venues before
+  shipping (not just CHAINLINK, per this doc's own caution): downloaded real CHAINLINK (`ETH_USD` day=2023-06-01) and
+  PYTH (`BTC_USD` day=2025-01-01) parquet directly — both write slash-separated `symbol`/`feed` columns (`ETH/USD`,
+  `BTC/USD`), confirming one normalization rule covers both venues. `funding_oi`/`perp_funding` is unaffected by this
+  bug (its `raw_symbol` is blank for HYPERLIQUID's per-venue bundle rows, so the filter block never runs for it). Added
+  6 regression tests incl. the exact real-data shape from this issue (`ETH_USD` manifest id vs `ETH/USD` raw symbol) —
+  120/120 green. Full `quality-gates.sh` green, pushed to LDR. Relaunched the verification run
+  (`features-delta-one-defi-20260731-025149`, `FEATURE_GROUP=returns FORCE=1`, same window `2023-05-12..2023-10-31` —
+  `FORCE=1` is required because the pre-fix runs already wrote `empty_confirmed(SOURCE_RETURNED_ZERO)` manifest rows
+  across this window, so a non-force run would skip-as-already-captured and give a false signal either way).
+  **Caution for the next reader**: the first launch attempt fetched a STALE features-service tarball (pinned to the
+  prior commit `f34d2c1a`, not this fix) — caught via the launcher's own freshness warning before it burned real VM
+  time, deleted immediately (seconds-old, no work lost), republished via `create-code-tarballs.sh --include
+  features-service` (required an incidental `deployment-service` venv bootstrap — `uv sync` — since
+  `gcs_upload_via_adc.py` needs `deployment_service` importable; that also touched `deployment-service/uv.lock`,
+  reverted before relaunch as unrelated drift), then relaunched clean. **Not yet confirmed end-to-end** — VM still
+  running as this entry is written; do not flip the P1 checkbox below until the run's actual output confirms
+  `Completed N/51` with N>0 and real GCS writes, per the stated done-when.
