@@ -428,14 +428,15 @@ hand-named lists.
 
 ### F40 — AO server persists runtime usage state into tracked accounts.json → perpetual dirty churn
 
-**Status**: OPEN — recommended owner agent-orchestrator (orchestrator_master). 2026-06-12, operator-directed dirty-repo
-cleanup: agent-orchestrator's only dirt was `data/config/accounts.json` rewritten by the SERVER itself — it persists
-live usage fields (weekly_msgs_used, five_hour_msgs_used, rate_limited_until, last_used_at) into the operator-edited
-tracked config, with ensure_ascii serialization (unicode → — escapes). Consequences: the repo re-dirties on every usage
-tick (jams ff-pull cron per the stale-clone rule), and a `git checkout` of the file is safe ONLY because the server
-re-persists from memory (verified via GET /api/accounts — live state intact). Remedy: split runtime usage state into an
-untracked data/state/ file (or gitignore a dedicated state sidecar); keep accounts.json operator-edited-only; preserve
-unicode on any rewrite. Same antipattern class as the generated-artifacts HARD RULE.
+**Status**: FIXED agent-orchestrator@6385056 (2026-06-22) — `data/config/accounts.json` gitignored + untracked.
+2026-06-12, operator-directed dirty-repo cleanup: agent-orchestrator's only dirt was `data/config/accounts.json`
+rewritten by the SERVER itself — it persists live usage fields (weekly_msgs_used, five_hour_msgs_used,
+rate_limited_until, last_used_at) into the operator-edited tracked config, with ensure_ascii serialization (unicode → —
+escapes). Consequences: the repo re-dirties on every usage tick (jams ff-pull cron per the stale-clone rule), and a
+`git checkout` of the file is safe ONLY because the server re-persists from memory (verified via GET /api/accounts —
+live state intact). Remedy: split runtime usage state into an untracked data/state/ file (or gitignore a dedicated state
+sidecar); keep accounts.json operator-edited-only; preserve unicode on any rewrite. Same antipattern class as the
+generated-artifacts HARD RULE.
 
 ## Phase 6A findings (2026-06-12 registry/exporter wave)
 
@@ -642,7 +643,7 @@ F49–F53 are FIXED as of 2026-06-14); trust this table. Status taxonomy: **FIXE
 | Trader ledger                  | `transfer_purpose` + COLLATERAL_POSTED/MARGIN_RELEASED                                                                                                        | UAC surface FIXED; **no emitter** (LOGIC-FREEZE)    | symbols only in UAC `crosscutting/transfer_events.py` + `ledger/_enums.py`, zero consumers                                          |
 | PnL / attribution              | **F45 (exposure netting — primitives exist, no service owns the pipeline)**, multi-leg inter-leg delta = no owner                                             | FIXED (2026-06-15)                                  | canonical netting in UTL `risk/net_delta.py`; `engine_findings_remediation_2026_06_15.md`                                           |
 | Balances                       | margin: `margin_event_emitter.py:98` hardcodes `venue_type="defi"`; `venue_balance_tracker.py` is sports-only; `margin_health.py:32` Phase-1 stub `return []` | LOGIC-FREEZE                                        | strategy-service (3 files)                                                                                                          |
-| Balances                       | F40 (AO writes runtime state into tracked `accounts.json`)                                                                                                    | OPEN                                                | agent-orchestrator                                                                                                                  |
+| Balances                       | F40 (AO writes runtime state into tracked `accounts.json`)                                                                                                    | FIXED agent-orchestrator@6385056                    | agent-orchestrator                                                                                                                  |
 | Reconciliation                 | F1/F2/F3 (service-set truths; coverage warns-not-fails; v2 enums invisible)                                                                                   | FIXED (Phase-0)                                     | —                                                                                                                                   |
 | Reconciliation                 | F12 (config-registry regen empties destructively on non-workspace-venv host)                                                                                  | OPEN (environmental)                                | —                                                                                                                                   |
 | Circuit breakers / kill-switch | F17 (predicates runtime-fired, not engine-introspectable), F16 (`log_event(service_name=)` TypeError on GCS-config path)                                      | LOGIC-FREEZE                                        | strategy-service                                                                                                                    |
@@ -695,8 +696,12 @@ F49–F53 are FIXED as of 2026-06-14); trust this table. Status taxonomy: **FIXE
       origin/live-defi-rollout; NASDAQ/NYSE now referenced by leg seeds — `archetype_leg_spec_seeds.py:947`
       `ibkr-aapl-msft (NASDAQ)`, `ibkr-xom-cvx`/`ibkr-jpm-bac` (NYSE)). Flipped 2026-07-15, plan-reconcile §10: the F43
       section at ~L459 already read RESOLVED while this todo and the L411/L607 rollups still said OPEN.
-- [ ] [SCRIPT] P3. **F40 — gitignore AO runtime `accounts.json`** (server persists usage state into a tracked file →
-      perpetual dirty churn). Target: agent-orchestrator.
+- [x] ✅ [SCRIPT] P3. **F40 — gitignore AO runtime `accounts.json`** (server persists usage state into a tracked file →
+      perpetual dirty churn). Target: agent-orchestrator. — **Already shipped** agent-orchestrator@6385056
+      ("chore(orchestrator): gitignore + untrack data/config/accounts.json (fleet_git_health P3)", 2026-06-22) —
+      `data/config/accounts.json` is gitignored (`.gitignore:46`) and untracked (`git ls-files` empty), already an
+      ancestor of current `live-defi-rollout` HEAD. This todo predated that fix landing; flipping to close the stale
+      duplicate.
 
 **Tracked, gated (engine — strategy-service LOGIC FREEZE / credentials / operator decision):**
 
