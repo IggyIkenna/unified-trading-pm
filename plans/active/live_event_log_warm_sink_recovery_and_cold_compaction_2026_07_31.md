@@ -115,10 +115,18 @@ determinism needs.
       (`-m deployment_service.jobs.live_event_log_compactor`), added the job to the shared cloudbuild.yaml's
       redeploy-jobs list, applied via `terraform apply` (0 added, 1 changed, 0 destroyed). Verified live:
       `gcloud run jobs describe live-event-log-compactor` → `Ready: True`.
-- [ ] [INFRA] P1. Manually trigger the `live-event-log-compactor` Cloud Run Job once and verify a full, successful
+- [x] ✅ [INFRA] P1. Manually trigger the `live-event-log-compactor` Cloud Run Job once and verify a full, successful
       execution. DoD: `gcloud run jobs executions list` shows a SUCCEEDED execution, and
       `live-events/cold/<asset_group>/<data_type>/date=.../` contains real, non-empty parquet for at least the 2
-      previously-working prediction shards.
+      previously-working prediction shards. — deployment-service@b6eaef2 (env-var fix) + deployment-service@f53973a
+      (envelope-parsing fix, the real root cause — see Progress Log). Two prior executions (from before this session)
+      both failed. Fixed both blockers, rebuilt the maintenance-jobs image twice (Cloud Build 490485d5, ca5ef1f5), and
+      triggered `live-event-log-compactor-tx9p2`. Live-verified:
+      `gcloud run jobs     executions describe live-event-log-compactor-tx9p2` → `Completed: True, succeededCount: 1`
+      ("Execution completed successfully in 8m40.15s"). Cold output verified real and non-empty for both
+      previously-working prediction shards: `live-events/cold/prediction/book_snapshot_5/date=2026-07-30/data.parquet`
+      (117418 bytes, PAR1 magic at header+footer, read back with pandas: **6119 rows** of real KALSHI order-book data)
+      and `live-events/cold/prediction/trades/date=2026-07-30/data.parquet` (14860 bytes, **318 rows** of real trades).
 - [ ] [INFRA] P2. Confirm the existing Cloud Scheduler trigger (`live-event-log-compactor-daily`, 2 AM UTC) fires the
       job going forward. DoD: `gcloud scheduler jobs describe live-event-log-compactor-daily` shows `state: ENABLED`,
       and the next scheduled firing produces a new entry in `executions list` after it fires.
@@ -165,3 +173,28 @@ determinism needs.
   diff-clean). Result: 52 declared, 52 live, **0 mismatches** — no cross-shard write risk. (Active gcloud identity on
   this shared host kept reverting to `github-actions-deploy`, which lacks `pubsub.subscriptions.list` on this project;
   switched to the ambient `unified-trading-sa` identity per RULES.md § 5 self-service rule, re-verified live.)
+- **2026-07-31**: Todo 5 (manually trigger + verify) — found two prior executions from before this session
+  (`live-event-log-compactor-h55rg`, `-gpvsk`) both failed on `BucketNamingError: Unknown asset_group 'warm'`
+  (`_warm_bucket()` was passing `asset_group="warm"` to `resolve_bucket_name`, which only accepts
+  cefi/defi/prediction/sports/tradfi). That fix was already committed in code (`18e1ec0`, landed on origin before this
+  session) but the deployed Cloud Run Job image predated the fix (built 14:20:02, fix landed 14:30:08) — the
+  `deployment-service-jobs-image.cloudbuild.yaml` build is manual (`gcloud builds submit`), not trigger-wired on push,
+  so a landed code fix never reaches the running job without an explicit rebuild. Rebuilt (Cloud Build `490485d5`),
+  which surfaced bug #2: the job's terraform (`compaction_job.tf`) set env var `GCP_PROJECT` but `resolve_bucket_name`'s
+  template substitution requires `GCP_PROJECT_ID` (confirmed via the two sibling maintenance jobs' terraform, both
+  correct) — fixed + applied (deployment-service@b6eaef2, terraform 0 add/1 change/0 destroy). Re-triggered (`-bmmzn`)
+  and hit bug #3, the real root cause: `pyarrow.lib.ArrowInvalid: Parquet magic bytes not found in footer` while
+  compacting `prediction/book_snapshot_5`'s 835 warm files. **Not file corruption** — inspected the raw bytes directly
+  (`gcloud storage cat -r 0-300`) and every warm-sink object is actually a raw JSON `CanonicalPersistEnvelope` Pub/Sub
+  message (`{"schema_version":"1","asset_group":"prediction",...,"payload_inline": "[{...}]"}`), never Parquet, despite
+  the `.parquet` filename suffix. Root cause: none of the 52 `google_pubsub_subscription.cloud_storage_config` blocks in
+  `warm_sink.tf` set `parquet_config`/`avro_config`, so Pub/Sub's Cloud Storage subscription writes the message bytes
+  verbatim — this affects **all 52 shards**, not just this one; the warm tier has never actually contained Parquet since
+  the subscriptions were created 2026-06-29. Fixed by making the compactor the actual JSON→Parquet conversion boundary:
+  `compact_shard` now parses each warm object via `CanonicalPersistEnvelope.model_validate_json`, extracts
+  `payload_inline` (a JSON row or list of rows), and builds the cold Parquet file from the concatenated rows
+  (deployment-service@f53973a, `_extract_rows()` + unit tests in `tests/unit/test_live_event_log_compactor.py`; a
+  malformed envelope or unsupported `payload_pointer` is logged and skipped, never crashes the whole shard). Rebuilt the
+  image again (Cloud Build `ca5ef1f5`), re-triggered (`-tx9p2`) — **SUCCEEDED**, real parquet verified in cold storage
+  (see todo 5 evidence above). No new issue doc filed — root-caused and fixed within this same plan/file/session, not
+  deferred.
