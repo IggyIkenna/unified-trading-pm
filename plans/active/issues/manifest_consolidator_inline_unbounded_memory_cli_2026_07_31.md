@@ -81,17 +81,45 @@ had concurrent `quality-gates.sh` runs in flight at the time). I killed the proc
 didn't respond — my own process, exact PID, per the runaway-process-endangering-the-host rule); host memory recovered
 fully within seconds both times.
 
-**Root cause (partially pinned)**: `unified_trading_library/manifest_consolidator.py`'s `consolidate()` docstring states
-it is "memory-bounded so the 16 GiB Cloud Run job survives a 75M+-row cefi manifest" — its DuckDB merge is sized and
-capped for the DEDICATED Cloud Run consolidator's platform-enforced 16GB ceiling. `_is_lock_fresh()` (same file,
-~line 1074) detects a stale lock (>300s TTL), clears it, and returns `False`, which lets `consolidate()`'s caller
-proceed past the "skip cycle, lock is fresh" check into the full merge-per-VM-shards + DuckDB-dedup + write-back cycle
-(steps 2-4 of its own docstring) — the expensive part. This is CORRECT behavior for a legitimate Cloud Run consolidator
-cycle recovering from a crashed sibling. **What's not yet confirmed**: the exact call site in the
-market-tick-data-service CLI's manifest-write path that led to `consolidate()` running at all — `_writer_io.py`'s
-`_wait_for_consolidator_lock_clear()` and `_state.py`'s `assert_consolidator_healthy` (~line 397-400) are candidates
-(both reference consolidator-lock-awareness), but I did not trace the exact call chain this session (time-boxed; this
-finding's evidence is strong enough to act on without it, and pinning it precisely is separately tracked below).
+**Root cause (CONFIRMED 2026-07-31, slot 4 — corrects the original hypothesis below)**: it is NOT
+`manifest_consolidator.consolidate()` running inline. `consolidate()` (and its DuckDB merge) has exactly ONE production
+call site in the whole workspace: its own CLI `__main__` entrypoint
+(`unified_trading_library/manifest_consolidator.py:3344`, the dedicated Cloud Run job). Every other reference is a
+docstring/comment or a one-off `--force` remediation script run by a human. Nothing in the market-tick-data-service
+write path imports or calls `consolidate()`.
+
+The "clearing stale lock" log line IS real and DOES fire from inside this CLI process, but it comes from
+`_is_lock_fresh()` (`manifest_consolidator.py:1074`) being called directly — not via `consolidate()`, but via
+`ManifestWriterIoMixin._wait_for_consolidator_lock_clear()`
+(`unified_trading_library/manifest_writer/_writer_io.py:982`, deferred-imports `_is_lock_fresh` at line 998-999
+specifically to dodge the circular import with `manifest_consolidator`). `_is_lock_fresh()` itself is cheap (one
+lock-blob read + best-effort delete, `manifest_consolidator.py:1074-1127`) — it does NOT run DuckDB and cannot explain
+44GB RSS on its own. The actual unbounded operation is what `_wait_for_consolidator_lock_clear()` falls through into
+once its bounded poll ends (never blocks indefinitely, per its own docstring):
+
+**The real chain** — `ManifestWriterIoMixin._write_to_gcs()` (`_writer_io.py:600`) branches on `self._per_vm_enabled`.
+That flag resolves via `_resolve_per_vm_shards()` (`unified_trading_library/manifest_writer/_state.py:204-224`):
+explicit arg → `UnifiedCloudConfig.manifest_per_vm_shards` (env `MANIFEST_PER_VM_SHARDS`) → **`False` (legacy CAS path)
+as the default**. Per this repo's own VM-launcher convention (`per-VM shards VM_NAME=<tag>` +
+`MANIFEST_PER_VM_SHARDS=true` — CLAUDE.md § "Launching VMs / infra"), that env var is set by fleet/backfill launchers,
+NOT by an ad-hoc interactive CLI capture like this one — so this session's `DefiManifestRecorder`'s `ManifestWriter`
+(constructed with no explicit `per_vm_shards=` arg,
+`market-tick-data-service/market_tick_data_service/cli/handlers/_defi_manifest.py:131-135`) defaulted to
+`_per_vm_enabled=False`. `_write_to_gcs()`'s own docstring names this exact path: **"Legacy mode (default): single
+canonical `_index/availability_index.parquet` blob updated via GCS generation-match CAS with retry. Sound when there's
+at most one writer per bucket; melts under fleet load."** (`_writer_io.py:619-623`). That routes to
+`_write_with_generation_match()` (`_writer_io.py:924`) → `_wait_for_consolidator_lock_clear()` (explains the log line) →
+falls through to `_try_conditional_write()` (`_writer_io.py:897`) → `_read_with_generation()` (`_writer_io.py:1010`, a
+full unbounded `pd.read_parquet()` of the ENTIRE canonical `_index/availability_index.parquet` blob — every venue, every
+asset_group sharing that bucket's manifest, not scoped to this capture's single day/venue) → `_merge_dataframes()`
+(`_writer_io.py:1228-1299`, an unbounded `pd.concat([existing_df, new_df])` + multi-column `.drop_duplicates()` across
+every row of that full frame). This is plain pandas with NO memory cap of any kind (unlike `consolidate()`'s DuckDB
+path, which at least targets the Cloud Run job's 16GB ceiling) — a perfect match for the observed CPU-heavy (451.9%,
+string-column dedup) RSS ramp (639MiB→44.4GB in ~90s). **Ruled out as candidates**: `_state.py`'s
+`assert_consolidator_healthy` (~line 368-403) is called ONLY from the READ preflight path (`_read_index.py:173`, "that
+preflight now wraps assert_consolidator_healthy"), never from any write path — confirmed via a full-repo grep of every
+call site (`grep -rn assert_consolidator_healthy unified_trading_library/`), so it cannot be involved in a
+manifest-WRITE capture's OOM.
 
 **Confirmed safe**: the 18 real capture rows this session's RPC-fallback fix produced (see the parent doc,
 `market-tick-data-service@9d6fc8cc` and 2 prior commits, already shipped + QG-green) were durably written to GCS BEFORE
@@ -119,17 +147,29 @@ many agents' work, not an isolated container).
 
 ## Recommended next steps
 
-- [ ] [INFRA] P1. Pin the exact call site in market-tick-data-service / unified-trading-library's manifest-write path
-      that leads to `manifest_consolidator.consolidate()` running inline from a CLI capture (candidates:
-      `manifest_writer/_writer_io.py::_wait_for_consolidator_lock_clear`, `manifest_writer/_state.py`'s
-      `assert_consolidator_healthy` ~line 397-400). Confirm whether this is intentional resilience (client self-heals a
-      dead consolidator) or an unintended fallthrough. (repo: unified-trading-library)
-- [ ] [INFRA] P1. Once the call site is confirmed, either (a) gate inline `consolidate()` invocation from non-Cloud-Run
-      contexts behind an explicit memory cap (e.g. `CONSOLIDATOR_DUCKDB_MEMORY_LIMIT` env, or route through
-      `scripts/dev/run-bounded-analysis.sh`'s mem-cap wrapper per `/codex/05-infrastructure/vm-launcher-runbook.md` §
-      heavy-compute-on-shared-host), or (b) have the CLI-side caller skip inline consolidation entirely on a stale lock
-      and instead defer/retry (the dedicated Cloud Run cron will eventually pick it up) — whichever preserves
-      correctness without the unbounded-memory risk. (repo: unified-trading-library)
+- [x] [INFRA] P1. ✅ Pin the exact call site in market-tick-data-service / unified-trading-library's manifest-write path
+      that leads to the unbounded inline merge from a CLI capture — unified-trading-library@(this commit), 2026-07-31.
+      **Not `manifest_consolidator.consolidate()`** (it has exactly one production call site, its own Cloud Run
+      `__main__`, confirmed via full-repo grep). The real chain: `ManifestWriterIoMixin._write_to_gcs()` defaults to
+      `_per_vm_enabled=False` (legacy CAS mode — `MANIFEST_PER_VM_SHARDS` unset for this ad-hoc interactive capture,
+      `manifest_writer/_state.py:204-224`) → `_write_with_generation_match()` (`_writer_io.py:924`) →
+      `_wait_for_consolidator_lock_clear()` (explains the "clearing stale lock" log via `_is_lock_fresh`) → falls
+      through to `_try_conditional_write()` → `_read_with_generation()` (`_writer_io.py:1010`, unbounded full-index
+      `pd.read_parquet()`) → `_merge_dataframes()` (`_writer_io.py:1228`, unbounded `pd.concat`+`.drop_duplicates()`
+      across the ENTIRE canonical index). `_write_to_gcs()`'s own docstring already names this "Legacy mode (default)
+      ... melts under fleet load." This IS an unintended fallthrough for a shared-host ad-hoc CLI invocation (not
+      resilience) — a routine single-day/single-venue capture should never default to a full-bucket-manifest
+      read-merge-write. `assert_consolidator_healthy` ruled out (read-preflight-only, no write-path caller). See "Root
+      cause (CONFIRMED 2026-07-31)" above for the full evidence chain. (repo: unified-trading-library)
+- [ ] [INFRA] P1. Now that the call site is `_write_with_generation_match`'s legacy-CAS full-index read-merge-write (NOT
+      `manifest_consolidator.consolidate()` — retitled from the original DuckDB-focused framing), fix the
+      unbounded-memory risk: either (a) make `DefiManifestRecorder` (and any other CLI-facing `ManifestWriter`
+      construction site) default to per-VM shard mode (`per_vm_shards=True`) for ad-hoc/interactive captures instead of
+      silently falling back to the fleet-only legacy CAS path, or (b) bound `_read_with_generation` /
+      `_merge_dataframes` (row/byte budget, mirroring the existing `_resolve_per_vm_merge_max_bytes()` guard already
+      used by the READ side's `_read_slow_path`) so a legacy-mode write on a large bucket can't runaway even when per-VM
+      mode isn't enabled — whichever preserves correctness without the unbounded-memory risk. (repo:
+      unified-trading-library)
 - [ ] [DATA] P2. Once (a)/(b) ships, re-run the AAVE-PLASMA manifest registration for `2026-07-30` (the GCS data already
       exists — this is a re-register, not a re-capture) and confirm rows land via the same targeted `pyarrow`
       filtered-read method documented above (never a bucket-wide walk or whole-table `astype(str)` scan). Then flip
