@@ -242,6 +242,26 @@ canonicalised by this fleet. The migration's own `# Delete-when:` marker on
       `pyarrow.lib.ArrowInvalid`/thrift-deserialize errors, logs the specific file path, and SKIPS it (flagged for
       separate manual repair) rather than letting it propagate into whatever retry/buffer-growth path is causing the
       OOM. Repo: market-tick-data-service.
+- [x] [SCRIPT] P1. ✅ **Fixed the wedge-detection defect behind failure mode (3) (the pre-fix silent-freeze pattern
+      recurring despite `9f4098b1`)** — `market-tick-data-service@55d051bd` (`data_pipeline_failure` escalation
+      `agt-3e0b8d`, slot 3, 2026-07-31, dispatched on the SAME shard-17/`-032349` freeze slot-15 flagged monitoring-only
+      at 05:03Z above). Root cause: `run()`'s wedged-worker force-exit `hard_deadline` was `5s * total_files_discovered`
+      — for shard 17's 157,497 files that evaluates to **~9.1 days**, so the safety valve meant to force-exit a stuck
+      `ThreadPoolExecutor` pool never actually fires for any realistically-sized shard. This is orthogonal to the
+      pyarrow-pool-release fix (which targets memory GROWTH) — it explains why a genuinely wedged thread (network hang,
+      GIL contention, or an infinite retry loop against a corrupt file) still can't self-heal even with that fix
+      applied: the deadline itself was defeated. Replaced it with a fixed 15-min time-since-last-progress STALL timeout
+      (`_STALL_TIMEOUT_SEC = 900.0`), independent of corpus size. Verified shard 17 was still genuinely frozen (26+ min
+      silent, incl. the always-on `PIPELINE_HEARTBEAT` line, which fires "regardless of whether the real workload is
+      alive") before acting; deleted the wedged VM, republished the `mtds-code` tarball (was stale at `d74984b0`, now
+      `55d051bd`), relaunched as `canonical-migration-cefi-content-17-relaunch20260731-050700` on the fixed tarball,
+      confirmed `RUNNING` + heartbeat at T+40s. Registry-verified relaunch budget for this vm-prefix today (2026-07-31):
+      the frozen `-032349` VM was itself the day's 1st relaunch (per the earlier 03:23Z/03:30Z batch entries) — this
+      makes 2/2, within `RB-INFRA-RELAUNCH`'s bound but now exhausted for today; a 3rd death today should page rather
+      than relaunch again. **Does NOT address failure modes (1) corrupt-file spike-OOM or (2) zero-allocation
+      slow-timing-OOM** (both still open per the P2 todo above and the 04:18Z Progress Log entry) — this fix only
+      shortens recovery time for a genuine wedge/freeze, it doesn't change what causes one. Repo:
+      market-tick-data-service. Full diagnosis + PROGRESS/T+10min verification in the Progress Log below.
 - [ ] [OPERATOR] P0. **Break the `-006`/`-002` dispatch deadlock.** Live-reverified 2026-07-30T16:35Z (backlog API +
       `/api/state`, not relayed): `-002` (this doc's P2 corpus-wide re-verify+delete todo, monitoring-only) has held
       slot 15 continuously since `2026-07-30T12:16:10Z` — **4h20m and counting**, `status=working` the whole time, no
@@ -911,3 +931,25 @@ accordingly.
   issue). A fresh relaunch (`canonical-migration-cefi-content-apply-20260731- 051007`, no shard-number in the name — a
   different launcher naming convention, not mine) is already `RUNNING` (someone else's action). No action taken
   (monitoring-only).
+- **2026-07-31T05:13Z (`data_pipeline_failure` escalation `agt-3e0b8d`, slot 3, DP-VM-003 `DP_VM_STALL`)**: dispatched
+  by the fleet monitor for `canonical-migration-cefi-content-17-relaunch20260731-032349` (heartbeat 22min stale at
+  dispatch) — the SAME failure-mode-(3) freeze slot-15 already flagged monitoring-only at 05:03Z above. Confirmed
+  genuinely wedged before acting (26+ min fully silent, incl. `PIPELINE_HEARTBEAT`, at 19,400/157,497 files/12.3%,
+  `run.log` object mtime frozen `04:18:20Z`; VM still `RUNNING`, not preempted). Root-caused it rather than just
+  relaunching: `run()`'s `hard_deadline = 5s * total_files_discovered` evaluates to ~9.1 days for this shard's 157,497
+  files, so the wedged-worker force-exit safety valve is defeated for any realistically-sized shard — independent of,
+  and complementary to, the `9f4098b1` pyarrow-pool-release fix (that targets memory GROWTH; this is why a genuine wedge
+  can still hang indefinitely even with that fix applied). **Fixed and shipped `market-tick-data-service@55d051bd`**:
+  replaced the corpus-size-proportional deadline with a fixed 15-min time-since-last-progress `_STALL_TIMEOUT_SEC` —
+  full diagnosis + todo checkbox above. Registry/day-budget check: the frozen `-032349` VM was itself today's 1st
+  relaunch (03:23Z/03:30Z batch) — this action is the 2nd, exhausting today's `RB-INFRA-RELAUNCH` `≤2/(vm-prefix,day)`
+  budget; a 3rd death today should page, not relaunch. Deleted the wedged VM, republished the `mtds-code` tarball (was
+  stale at `d74984b0`, now pins `55d051bd`) — a first relaunch attempt without republishing would have deployed pre-fix
+  code, silently defeating the whole point — then relaunched as
+  `canonical-migration-cefi-content-17-relaunch20260731-050700` (same
+  `RESUME_ASSET_GROUP=cefi-content-apply --start-date 2024-11-14 --end-date 2025-01-09 full`, SPOT default). **Verified,
+  not fire-and-forget**: `RUNNING` + fresh heartbeat at T+40s; discovery phase scoped 89,904+ files within the first
+  minute; first per-file `Progress: 200/157497 files` line confirmed at T+~4min via an armed background monitor, with
+  the periodic pyarrow pool-release diagnostic firing normally (`bytes_allocated=61,239,168` at the next 200-file
+  checkpoint) — both STARTED and PROGRESS checks per `rb_infra_relaunch.md` satisfied. Pinged the authoring
+  fleet-monitor slot with this outcome.
