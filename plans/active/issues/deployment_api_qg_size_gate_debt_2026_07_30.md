@@ -375,8 +375,16 @@ file-by-file.
       `test_deployment_worker.py` 13, `test_local_state_manager.py` 27, `test_deployment_processor.py` 60), full
       `quality-gates.sh --no-fix` green (106s, sentinel `1db91b064cac0fcd9dee415fd78e8243aa584c90`). Repo:
       deployment-api@b68758a.
-- [ ] [SCRIPT] P2. Decompose the remaining function-size-only violation in `deployment_api/services/sync_service.py`.
-      Remove its exclude entry once compliant; re-run `quality-gates.sh` to confirm no regression.
+- [x] ✅ [SCRIPT] P2. **DONE 2026-07-31 (slot-2, infra craft).** Decomposed `deployment_api/services/sync_service.py`.
+      Extracted `_try_acquire_quota_batch`/`_build_shard_orchestrator`/`_launch_acquired_shards` from
+      `_acquire_and_launch` (was 76L); extracted `_finalize_and_save_deployment` from `_process_deployment_locked` (was
+      56L); extracted `_process_active_states_parallel` from `sync_deployments` (was 55L). Pure code motion, no logic
+      changes (the `now` timestamp computation was kept at its original call site, before dispatch/scheduling, to
+      preserve exact original semantics rather than recomputing it later). `FUNCTION_SIZE_EXTRA_EXCLUDES` entry removed
+      — gate passes natively. Verified: AST size check clean, basedpyright 0 errors, ruff clean, 107 targeted tests
+      green (`test_lifespan.py` 10, `test_sync_service.py` 77, `test_background_sync.py` 20), full
+      `quality-gates.sh --no-fix` green (107s, sentinel `b68758a4ed87104f2fd33dbd31e4a2e27080b160`). Repo:
+      deployment-api@aba3150.
 - [ ] [SCRIPT] P2. Decompose the remaining function-size-only violation in
       `deployment_api/services/tarball_staleness.py`. Remove its exclude entry once compliant; re-run `quality-gates.sh`
       to confirm no regression.
