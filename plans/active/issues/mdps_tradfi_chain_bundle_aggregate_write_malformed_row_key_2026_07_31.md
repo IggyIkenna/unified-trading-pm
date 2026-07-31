@@ -118,11 +118,19 @@ rather than absorbing unplanned scope mid-relaunch-verification.
 
 # Recommended decision
 
-- [ ] [BACKEND] P2. Decide + fix the aggregate-write row_key shape (`underlying=<root>` bundle writes for
+- [x] ✅ [BACKEND] P2. Decide + fix the aggregate-write row_key shape (`underlying=<root>` bundle writes for
       `trades`/`ohlcv_1m`, tradfi COMBO/FUTURE): either drop `instrument_id` from the row_key for this write path (if
       it's genuinely not a per-instrument shard-atom) or populate it with a sentinel/aggregate id. Repo:
       market-data-processing-service. Done when: the `MalformedRowKeyError` warnings stop appearing for this write path
-      and the manifest correctly reflects the real on-disk `underlying=*/ticks.parquet` files.
+      and the manifest correctly reflects the real on-disk `underlying=*/ticks.parquet` files. —
+      market-data-processing-service@c78285b: dropped `instrument_id` from the row_key (mirrors the existing
+      `write_candle_parquet` fix) in both `open_candle_streaming_writer`/`close_candle_streaming_writer`
+      (`canonical_writer_streaming.py`, the chain-bundle write path) and the shared `_emit_status_for_shard` helper
+      (`canonical_writer_manifest.py`, used by `record_empty_for_shard`/`record_failed_for_shard`) — passing
+      `instrument_id=""` explicitly was tripping UTL's `MalformedRowKeyError` shard-atom guard; omitting the key is the
+      contract for a non-per-instrument shard. 4 regression tests added (2 in `test_streaming_write_per_tf.py`, 2 in
+      `test_canonical_writer_record_helpers.py`) asserting `instrument_id` is absent from the row_key for an empty
+      instrument_id + `underlying=SP500`. Full quality-gates.sh green (2293 passed, 2 skipped).
 - [ ] [BACKEND] P3. Register a `SchemaContract` for
       `asset_group=tradfi instrument_type=COMBO|FUTURE     data_type=ohlcv_1s` in
       `unified_api_contracts.internal.schemas.contracts.CONTRACT_REGISTRY` (confirm `ohlcv_1s` is actually wanted for
