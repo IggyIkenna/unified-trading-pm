@@ -18,7 +18,7 @@ summary: >-
   a bare `START_DATE` env key, but 5 launchers (`launch-canonical-migration-vm.sh` among them) resolve their positional
   start-date arg as `"${2:-${RESUME_START_DATE:-}}"` and never read bare `START_DATE` — so the checkpoint-aware resume
   added 2026-07-27 was silently inert for this launcher family the whole time. Fixed (set both env keys) + regression
-  tests reproducing this exact scenario, shipped `deployment-service@46136b6`.
+  tests reproducing this exact scenario, shipped `deployment-service@b34e85a`.
 status: open
 nature: issue
 asset_group: [cefi, meta]
@@ -104,7 +104,7 @@ never consult a bare `START_DATE` env var — so for these 5 launchers, the chec
 frontier. Confirmed this would have affected the PREEMPTION path too (`RelaunchPreemptedVm` targets the same 5 launchers
 via `VM_NAME_OVERRIDE` self-relaunch, same bug shape). **Fixed**: set both `START_DATE` AND `RESUME_START_DATE` in the
 checkpoint-override block of both actuators (harmless no-op for the ~23 launchers that read bare `START_DATE`), added
-regression tests reproducing this exact scenario for both actuators, shipped `deployment-service@46136b6` (QG green,
+regression tests reproducing this exact scenario for both actuators, shipped `deployment-service@b34e85a` (QG green,
 2988+ tests passing).
 
 ## Why it matters
