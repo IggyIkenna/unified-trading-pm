@@ -119,13 +119,18 @@ locked_since:
       `py-spy dump` or `threading.enumerate()` on a live repro), and a note is added to this doc (or a fix upstream in
       the shared dependency if the thread itself is avoidable, not just work-aroundable via `os._exit()`). (repo:
       instruments-service, unified-trading-library)
-- [ ] [INFRA] P2. Wrap this script's execution under `scripts/dev/run-bounded-analysis.sh` (or an explicit `ulimit -v` /
-      equivalent mem-cap) for its remaining runs against the other 11 default DEX protocols (todo 1 of
+- [x] [INFRA] P2. ✅ Wrapped this script's execution under `scripts/dev/run-bounded-analysis.sh` (or an explicit
+      `ulimit -v` / equivalent mem-cap) for its remaining runs against the other 11 default DEX protocols (todo 1 of
       `defi_dex_pools_catalogue_undercoverage_vs_historical_capture_2026_07_28.md` is still open) — the column-pruning
       fix bounds this run's OBSERVED peak, but does not ENFORCE a ceiling; per
       `/codex/05-infrastructure/vm-launcher-runbook.md` § heavy-compute-on-shared-host, a materialization this size on
-      the shared planning-VM should be bounded-by-construction, not just bounded-by-measurement. (repo:
-      instruments-service)
+      the shared planning-VM should be bounded-by-construction, not just bounded-by-measurement. —
+      instruments-service@aadd856c: new `scripts/run_expand_defi_pool_catalogue_bounded.sh` wraps the script under the
+      sibling PM repo's `run-bounded-analysis.sh` at a `--mem-cap 12G` (headroom above the documented ~9.5GiB observed
+      peak, overridable via `ANALYSIS_MEM_CAP`); the target script's docstring now points at this wrapper as the
+      required invocation. Verified: `bash -x` dry-run confirms the wrapper resolves the sibling `unified-trading-pm`
+      path, invokes `run-bounded-analysis.sh --mem-cap 12G`, and the host's `ulimit -v` fallback engages at `12582912K`
+      (~12G). (repo: instruments-service)
 - [ ] [DATA] P2. Cross-cutting: with FOUR incidents against the same availability manifest in ~36 hours (this doc + the
       3 related docs above), evaluate whether a shared, safe-by-default read helper (a thin wrapper around
       `read_availability_index()` that requires an explicit `columns=`/`filters=` argument, or logs a loud warning on an
@@ -151,3 +156,9 @@ locked_since:
   complete cleanly in ~2 min at ~9.5GiB peak with no OOM trace — fix confirmed working. Cross-linked the 3 sibling
   same-day/adjacent incidents. Did not edit any code (review does not commit code) — the fix itself is slot 16's to
   commit; this doc tracks the residual diagnostic + hardening + cross-cutting follow-ups.
+- **2026-07-31 (infra, slot 12)**: shipped todo 2 — instruments-service@aadd856c adds
+  `scripts/run_expand_defi_pool_catalogue_bounded.sh` (wraps the target script under the sibling PM repo's
+  `run-bounded-analysis.sh` at `--mem-cap 12G`, headroom over the ~9.5GiB observed peak, overridable via
+  `ANALYSIS_MEM_CAP`) and points the target script's own docstring at this wrapper as the required invocation for its
+  remaining runs. `quality-gates.sh` green on the shipping SHA; quickmerge landed on `live-defi-rollout` and verified
+  present on origin. Todos 1 and 3 remain open (thread-source diagnosis; shared safe-by-default read-helper decision).
