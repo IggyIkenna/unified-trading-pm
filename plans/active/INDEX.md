@@ -693,7 +693,7 @@ by hand._
   2026-07-24 (line-cap remediation) from carry_staked_basis_funding_scan_experiment_2026_06_16.md: a genuinely distinct
   strategy that only got journaled inside the carry-scan harness plan — cross-sectional / cross-venue funding-rank…
 - [`daily_trading_analyst_llm_job_design_2026_07_29`](./daily_trading_analyst_llm_job_design_2026_07_29.md) — Design for
-  a new daily-scheduled LLM job (operator ruling on /plans/active/issues/blrs_g3_g10_rescope_2026_07_28.md's G3) that
+  a new daily-scheduled LLM job (operator ruling on /plans/archive/issues/blrs_g3_g10_rescope_2026_07_28.md's G3) that
   diagnoses WHY trades, PnL, ML signals, strategy decisions, and data-quality gaps happened the way they did…
 - [`data_completion_to_100_all_ag_2026_06_21`](./data_completion_to_100_all_ag_2026_06_21.md) — Drives MTDS
   market-data + IS reference-data to 100% honest-coverage across every asset group (cefi/defi/ tradfi/sports/pred),

@@ -180,7 +180,7 @@ audit) — 3 genuinely orphaned BLRS gaps, no successor plan previously tracked 
       full QG green. Repo: batch-live-reconciliation-service.
 - [x] ✅ [CODE] P2.BLRS2 (was G3, P2) — RESCOPED, then DONE at its own scope. **stage4 agent dispatch to
       trading-agent-service** turned out to need a real design decision, not a mechanical wire-up — resolved via
-      `/plans/active/issues/blrs_g3_g10_rescope_2026_07_28.md`'s 2 todos: operator-ruled 2026-07-29 (a daily-scheduled
+      `/plans/archive/issues/blrs_g3_g10_rescope_2026_07_28.md`'s 2 todos: operator-ruled 2026-07-29 (a daily-scheduled
       LLM analysis job on the planning VM, not a trading-agent-service endpoint or PubSub consumer) + the scoped design
       plan authored per that ruling — `plans/active/daily_trading_analyst_llm_job_design_2026_07_29.md`
       (unified-trading-pm@b30848f1c). That design plan's own §5 carries the 6 build-phase follow-up todos (not
@@ -193,7 +193,7 @@ audit) — 3 genuinely orphaned BLRS gaps, no successor plan previously tracked 
       state-only, no backend call). Also fixed a discovered `/api/reporting/:path*` gateway-rewrite bug in
       `next.config.mjs` (pointed at client-reporting-api, which has no matching routes, instead of unified-trading-api's
       own `/reporting` router) that was silently breaking this and the other 7 `use-reports.ts` reporting hooks in real
-      (non-mock) deployments. See `/plans/active/issues/blrs_g3_g10_rescope_2026_07_28.md` for the full evidence.
+      (non-mock) deployments. See `/plans/archive/issues/blrs_g3_g10_rescope_2026_07_28.md` for the full evidence.
 
 ---
 

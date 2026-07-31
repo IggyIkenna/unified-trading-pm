@@ -586,11 +586,11 @@ defect, just confirming the coupling is daily, not real-time.
     ever produced a summary. 6 new unit tests, QG green.
   - G3 — RESCOPED, still open. "Wire the real dispatch call" undersold it: `trading-agent-service` has zero inbound
     consumption surface for a recon-analysis task (health/readiness endpoints only). Needs an `[OPERATOR]` design
-    decision first — see `/plans/active/issues/blrs_g3_g10_rescope_2026_07_28.md`.
+    decision first — see `/plans/archive/issues/blrs_g3_g10_rescope_2026_07_28.md`.
   - G10 — VERIFIED, still open. Confirmed broken on both ends: 9 `use-reports.ts` reconciliation hooks in
     `unified-trading-system-ui` call gateway routes that don't exist in `unified-trading-api` — but zero UI pages
     consume those hooks, so nothing is live-broken. Concrete per-repo build todos in the same rescope doc.
 
   All three rehomed as `P1.BLRS1`/`P2.BLRS2`/`P3.BLRS3` in
   `plans/active/citadel_paper_batch_live_reconciliation_2026_06_19.md` (P1.BLRS1 now flipped done there); G3/G10's
-  corrected scope + build todos live in `/plans/active/issues/blrs_g3_g10_rescope_2026_07_28.md`.
+  corrected scope + build todos live in `/plans/archive/issues/blrs_g3_g10_rescope_2026_07_28.md`.

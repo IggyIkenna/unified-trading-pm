@@ -2,7 +2,7 @@
 doc_type: plan
 title: Daily cross-cutting LLM "trading analyst" job — design
 summary:
-  Design for a new daily-scheduled LLM job (operator ruling on /plans/active/issues/blrs_g3_g10_rescope_2026_07_28.md's
+  Design for a new daily-scheduled LLM job (operator ruling on /plans/archive/issues/blrs_g3_g10_rescope_2026_07_28.md's
   G3) that diagnoses WHY trades, PnL, ML signals, strategy decisions, and data-quality gaps happened the way they did
   across batch, live, and paper — and files issue docs when it finds real problems. Scopes it as the mechanism that
   completes BLRS Stage 4's never-built LLM-dispatch leg, verifies (and REJECTS) the operator's "pipeline_mode is the
@@ -27,7 +27,7 @@ scope: [engineer, admin]
 tags: [llm, trading-analyst, design, blrs, scheduled-job, cross-cutting, pipeline-mode]
 related:
   [
-    /plans/active/issues/blrs_g3_g10_rescope_2026_07_28.md,
+    /plans/archive/issues/blrs_g3_g10_rescope_2026_07_28.md,
     /plans/active/citadel_paper_batch_live_reconciliation_2026_06_19.md,
     /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
     /codex/09-strategy/operational/paper-batch-live-reconciliation.md,
