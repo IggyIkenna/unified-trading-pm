@@ -23,7 +23,7 @@ summary:
   fixture data capture is unaffected (a separate bespoke code path successfully wrote 1329/1119 real canonical fixtures
   per date in this same run) — only the zero-fixture-league bookkeeping in process_zero_records.py is mis-stamped."
 status: open
-priority: P2
+priority: P1
 nature: notes
 asset_group: [sports]
 stage: [data]
@@ -101,9 +101,32 @@ zero-fixture leagues for the affected dates are stamped with the wrong `capture_
 `empty_confirmed`), which pollutes attempted-failed counts/dashboards and could mask genuinely failed leagues among the
 noise.
 
-**Reproduced identically on 4/4 dates** processed so far in this session's recapture run (2021-11-20 through
-2021-11-23), each logging the exact same `"wrote attempted_failed markers for 383 leagues"` count alongside the
-`"No URDI adapter"` warning for `api_football`.
+**Reproduced identically on 7/7 dates** processed in the (killed) first attempt of this session's recapture run
+(2021-11-20 through 2021-11-26), each logging the exact same `"wrote attempted_failed markers for 383 leagues"` count
+alongside the `"No URDI adapter"` warning for `api_football`.
+
+**UPGRADED 2026-07-31 (P2 → P1) — this also silently no-ops `instrument_availability` writes + the junk-symbol guard
+itself, not just manifest bookkeeping.** Re-reading the full flow: when the generic URDI fetch classifies `api_football`
+(lowercase) as `unsupported`, `fetch_instruments_for_all_venues` returns **zero records** for that venue — meaning
+`process_fetch.py::_filter_and_enrich_records` (the ONLY call site of `reject_junk_instruments`, i.e. the junk-symbol
+guard this session's own AO task, `sports_satellite_ao_dispatch_batch8-006`, exists to validate) receives an EMPTY list
+and the guard never runs at all on real data. This is DISTINCT from the separate bespoke
+`sports_reference_fixtures.py::_ensure_canonical_fixtures` path (the
+`"Canonical fixtures fetched from API and written to entity=fixtures/"` line) — that path writes directly to
+`sports_reference/by_date/day={date}/.../entity=fixtures/` via `_write_fixtures_per_league`, completely bypassing
+`reject_junk_instruments`; it was never gated by the guard in the first place, on ANY casing. So a
+`--venues api_football` (lowercase) invocation of `--operation instruments` for sports:
+
+1. Never writes (or refreshes) `instrument_availability/by_date/day={date}/venue=API_FOOTBALL/instruments.parquet` for
+   that date (the URDI-fetch stage that feeds this write gets 0 records for the venue).
+2. Never exercises the junk-symbol guard (`reject_junk_instruments`) against real sports data at all, on any casing of
+   the venue name being what production actually calls with — only an `API_FOOTBALL`-cased (or no `--venues` override,
+   since the default venue list in `venue_core.py::get_venues_for_asset_groups` is hardcoded uppercase) invocation
+   exercises it.
+3. Mis-stamps the 383 zero-fixture leagues that date as `attempted_failed` (the original finding).
+
+This session had to kill and restart its own recapture (`--venues api_football` → `--venues API_FOOTBALL`) after
+discovering 0 junk-guard-rejection log lines were a false negative caused by this bug, not evidence the fix works.
 
 ## Why it matters
 
@@ -115,6 +138,12 @@ noise.
 - This corrupts `capture_status` accuracy for the sports `FIXTURES_SCHEDULE` data_type specifically — coverage/failure
   dashboards, the `/data-freshness` skill, and any downstream consumer reading `attempted_failed` counts for sports will
   over-report failures for dates run with a lowercase venue override.
+- **Bigger than manifest bookkeeping (2026-07-31 upgrade)**: a lowercase `--venues api_football` invocation also
+  silently no-ops the `instrument_availability/by_date/day={date}/venue=API_FOOTBALL/instruments.parquet` write for that
+  date/venue AND never exercises the junk-symbol guard (`reject_junk_instruments`) against real data — the guard is the
+  ONE thing `sports_satellite_ao_dispatch_batch8-006` (this issue's own source task) exists to validate. Any attempt to
+  measure or trust that guard's behavior via a lowercase-venue CLI run produces a false "0 rejected" negative, not a
+  real result.
 - **Production-impact uncertainty (flagging honestly, not fixing myself)**: I did NOT verify whether the live/cron/
   scheduled sports pipelines pass `--venues API_FOOTBALL` (uppercase, unaffected) or `api_football` (lowercase,
   affected) — this matters for priority. If production automation always uses canonical uppercase venue names, the
@@ -140,11 +169,12 @@ fetch succeeded regardless of the CLI venue-arg casing. Also worth a quick grep 
 UAC-keyed registry lookups without normalization (the `sports_provider_arg.upper()` precedent suggests this was known to
 matter for at least one field but missed for `venues`).
 
-- [ ] [CODE] P2. First check whether any live/cron/scheduled sports pipeline invocation passes `--venues` in lowercase
+- [ ] [CODE] P1. First check whether any live/cron/scheduled sports pipeline invocation passes `--venues` in lowercase
       (grep launcher scripts + `agent-orchestrator`/cron configs for `--venues api_football` or similar lowercase forms)
       to establish real production blast radius, then fix
       `instruments_service/cli/instruments_handler.py::_wire_cli_filters_from_args` to uppercase `venues_arg` before
       storing it in `self._venue_override` (mirror the existing `sports_provider_arg.upper()` pattern two lines below),
       add a regression test per the "Recommended decision" section above, and re-run a small `--force` recapture over a
-      day or two known to have zero-fixture leagues to confirm the `attempted_failed` markers correctly flip to
-      `empty_confirmed`. (repo: instruments-service)
+      day or two known to have zero-fixture leagues to confirm (a)
+      `instrument_availability/.../venue=API_FOOTBALL/     instruments.parquet` is actually written/refreshed and (b)
+      the `attempted_failed` markers correctly flip to `empty_confirmed`. (repo: instruments-service)
