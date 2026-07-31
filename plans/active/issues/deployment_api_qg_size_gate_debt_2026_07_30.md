@@ -228,9 +228,15 @@ file-by-file.
       conditions list — pure code motion, no logic changes. `FUNCTION_SIZE_EXTRA_EXCLUDES` entry removed — gate passes
       natively. Verified: 46 targeted tests green (`tests/unit/api/test_artifact_pipeline.py`), basedpyright clean, ruff
       clean, full `quality-gates.sh` green (121s). Repo: deployment-api.
-- [ ] [SCRIPT] P2. Decompose the remaining function-size-only violation in
-      `deployment_api/services/data_analytics_service.py`. Remove its exclude entry once compliant; re-run
-      `quality-gates.sh` to confirm no regression.
+- [x] ✅ [SCRIPT] P2. **DONE 2026-07-31 (slot-2, infra craft).** Decomposed 3 oversized methods in
+      `deployment_api/services/data_analytics_service.py`. `deployment-api@1653b36`: extracted
+      `_completion_rate_stats`/`_build_recommendations` from `analyze_data_patterns()` (was 57L) and
+      `_aggregate_one_service` from `aggregate_multi_service_status()` (was 80L); trimmed `get_data_status_turbo()`'s
+      docstring (was 53L, all size from the docstring). Pure code motion, no logic changes.
+      `FUNCTION_SIZE_EXTRA_EXCLUDES` entry removed — gate passes natively. Verified: 106 targeted tests green
+      (`test_data_analytics_service.py`, `test_route_data_status_live.py`), basedpyright clean, ruff clean, full
+      `quality-gates.sh` green (145s; one earlier run was SIGTERM'd by the shared-host RAM-pressure watchdog, unrelated
+      to this change — clean retry confirmed it). Repo: deployment-api.
 - [ ] [SCRIPT] P2. Decompose the remaining function-size-only violation in
       `deployment_api/services/data_query_service.py`. Remove its exclude entry once compliant; re-run
       `quality-gates.sh` to confirm no regression.
