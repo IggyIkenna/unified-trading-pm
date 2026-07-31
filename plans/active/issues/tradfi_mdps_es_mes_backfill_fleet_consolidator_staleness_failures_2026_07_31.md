@@ -150,13 +150,30 @@ ops/follow-up:
       "who else might already be fixing this" from the registry by hand. If it was another `data_pipeline_failure`
       escalation worker, no action needed — just confirms the multi-escalation dispatch model is working as intended for
       a fleet-wide failure.
-- [ ] [OPS] P0. Relaunch the whole `es`+`es3` fleet (14 shards, 2020-2026) with the market-data-processing-service code
-      AFTER `43b043b` (deploys via the floating tarball — confirm the new tarball manifest pins an ancestor of `43b043b`
-      before relaunching, same check pattern used for the `75b5735` staleness fix above). Every shard in this fleet is
-      launched with `MDPS_INSTRUMENT_IDS='CME:FUTURE:ES CME:FUTURE:MES'` (confirmed identical across the original
-      launch, the `011358` wave, and the `014643` `es3` relaunch) — see "Update 2026-07-31" for why this instrument-id
-      filter could never match on-disk data pre-fix, independent of the staleness-budget bug this doc was originally
-      about.
+- [x] ✅ [OPS] P0. Relaunch the whole `es`+`es3` fleet (14 shards, 2020-2026) with the market-data-processing-service
+      code AFTER `43b043b` (deploys via the floating tarball — confirm the new tarball manifest pins an ancestor of
+      `43b043b` before relaunching, same check pattern used for the `75b5735` staleness fix above). Every shard in this
+      fleet is launched with `MDPS_INSTRUMENT_IDS='CME:FUTURE:ES CME:FUTURE:MES'` (confirmed identical across the
+      original launch, the `011358` wave, and the `014643` `es3` relaunch) — see "Update 2026-07-31" for why this
+      instrument-id filter could never match on-disk data pre-fix, independent of the staleness-budget bug this doc was
+      originally about. — **2026-07-31 (slot-2, backend_engineer craft)**: confirmed the floating
+      `market-data-processing-service` tarball was STALE (pinned `1b3f18f4`, predates `43b043b`); republished
+      (`bash     deployment-service/scripts/vm/create-code-tarballs.sh --include market-data-processing-service`, now
+      pins `4b84d5c11ede`, confirmed ancestor-including `43b043b`). Checked `DeploymentsRegistry`/live GCE state first:
+      the 7 `es3` shards from the `014643` wave were STILL RUNNING on the pre-fix tarball (launched 01:47-01:49Z,
+      `43b043b` landed 02:10:11Z — strictly before the fix, so guaranteed the same structural zero-candle bug regardless
+      of runtime); the 7 `es` shards had all already self-terminated. Recovered every shard's exact original
+      `RESUME_START_DATE`/`RESUME_END_DATE` from its dead/running VM's `LAUNCH_PARAMS.json` (not guessed — `y2020es3` is
+      the partial `2020-05-01..2020-12-31`, `y2026es`/`y2026es3` are partial-year `2026-01-01..2026-07-25`/`24`, every
+      other shard is full-year). Stopped the 6 still-running pre-fix `es3` VMs (guaranteed-broken code, confirmed via
+      commit timestamp, not a guess), then relaunched all 14 shards fresh (`RUN_TS=20260731-023743`) on the fixed
+      tarball, all confirmed GCE-`RUNNING`. **Verified real output, not just liveness** (per this doc's own P2 lesson):
+      spot-checked `y2020es`'s early log + real GCS output — `CME:FUTURE:ES-20200320.parquet` /
+      `CME:FUTURE:MES-20200320.parquet` now write successfully across multiple timeframes (15s/15m/1h/1d) for
+      `day=2020-01-01`, which never happened before `43b043b`. Two narrower, non-blocking gaps surfaced in the same log
+      (an aggregate-level write's empty-`instrument_id` `MalformedRowKeyError`, and a missing `ohlcv_1s` SchemaContract
+      for tradfi) — filed separately, do not block the per-instrument candle output this fleet exists to produce:
+      `/plans/active/issues/mdps_tradfi_chain_bundle_aggregate_write_malformed_row_key_2026_07_31.md`.
 
 ## Update 2026-07-31 (DP-VM-002 escalation agt-1b9670, slot 3) — a SECOND, unrelated silent-zero in the same fleet
 
