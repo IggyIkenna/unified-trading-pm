@@ -114,21 +114,41 @@ drift_direction: advance-code
       2026-07-23 manifest rebuild... **Remaining**: run the 9-cell ORCA retry + re-run the verify script"),
       `status: active`, unchanged scope, same file/line. **Confirmed still covered.** **Net**: zero net-new orphans from
       this re-check; one genuine stale-duplicate defect found and fixed in batch3 along the way.
-- [ ] [REVIEW] P3. **Record an explicit stop-or-continue verdict for the defi tranche.** Batch4's assessment is STOP:
+- [x] ✅ [REVIEW] P3. **Record an explicit stop-or-continue verdict for the defi tranche.** Batch4's assessment is STOP:
       after batch3 is counted as covering, 21 defi-primary docs remain orphaned and every one of their remaining items
       is from the non-batchable taxonomy (13 operator-gated, 3 time-gated, 1 too-large-or-risky, 3 human-only, 1
       conflict-gated whose only batchable half batch4 already shipped). Re-test that after todo 2: if no gate cleared
       and no new orphan appeared, write the stop verdict into this doc with the current residual count so a future
       scheduled invocation does not spin a batch5 that cannot extract anything. If a gate DID clear, name the
       candidate(s) instead. **Done when**: an explicit stop-or-continue verdict with the current residual orphan count
-      is written into this doc, dated.
-- [ ] [DOC] P3. **Archive `/plans/archive/2026_07/defi_satellite_ao_dispatch_batch4_2026_07_26.md`** via the standard
+      is written into this doc, dated. — **VERDICT: STOP, 2026-07-31 (slot 15, review).** Re-tested the gate per todo
+      2's own already-completed re-check: batch3 (`plans/active/defi_satellite_ao_dispatch_batch3_2026_07_26.md`) is
+      still `status: active`, `locked_by:` empty, 8 open todos, unchanged since todo 2 ran — no gate cleared and todo 2
+      explicitly confirmed "zero net-new orphans from this re-check" (one stale-duplicate M3 todo was found and FIXED in
+      batch3 along the way, not a new orphan). **Residual count stands at 21 defi-primary orphaned docs**, taxonomy
+      unchanged (13 operator-gated, 3 time-gated, 1 too-large-or-risky, 3 human-only, 1 conflict-gated whose batchable
+      half already shipped). No candidate cleared for a batch5. Proceeding to todo 4 (archival) — this plan's own
+      `sequential: true` gate is satisfied.
+- [x] ✅ [DOC] P3. **Archive `/plans/archive/2026_07/defi_satellite_ao_dispatch_batch4_2026_07_26.md`** via the standard
       6-step ritual: migrate any still-live Deferred item to a tracked todo elsewhere (todos 2 and 3 above should have
       resolved or re-confirmed each — verify none silently vanish) → add the archive banner → run the codex-alignment
       check (batch4 introduces no new durable contract; confirm that is still true) → grep the corpus for every referrer
       of `defi_satellite_ao_dispatch_batch4_2026_07_26` and repoint each path per the leading-slash convention → confirm
       `locked_by` is empty. **Done when**: the plan is in `plans/archive/2026_07/`, every corpus referrer resolves to
-      the new path, and this finalize doc is archived alongside it in the same commit.
+      the new path, and this finalize doc is archived alongside it in the same commit. — **DONE 2026-07-31 (slot 15).**
+      Batch4's own source plan was already archived 2026-07-28 (`status: complete`, banner present, `locked_by:` empty)
+      — pre-existing, not this session's work. This finalize doc: no live "Deferred work" section to migrate (only a
+      mention inside this todo's own instructions); no new durable contract (process/closeout doc, only cites existing
+      codex SSOTs); `locked_by:` confirmed empty. 3 live corpus referrers found + repointed to the new archive path
+      (leading-slash convention): `defi_satellite_ao_dispatch_batch5_2026_07_27.md`,
+      `defi_satellite_ao_dispatch_batch5_2026_07_27_finalize.md`, `defi_satellite_ao_dispatch_batch6_2026_07_30.md`.
+      `plans/active/INDEX.md` is auto-generated (never hand-edited) — regenerated via
+      `scripts/plans/regenerate_active_plan_index.py` in the same pass instead of manual repointing.
+      `plans/archive/2026_07/active_plan_inventory_dashboard_2026_07_24.md` is itself a frozen historical snapshot
+      (archived 2026-07-24) — deliberately left untouched, not a live referrer. Per RULES.md's 2026-07-30 hard rule
+      ("never combine the checkbox flip with a `git mv` archival in one commit" — breaks the M3
+      `cross_repo_pm_flip_verified` path-scoped diff check), this flip ships as its own commit; the `git mv` + referrer
+      repoints + banner follow immediately as a separate commit in this same session.
 
 ## Codex SSOTs
 
