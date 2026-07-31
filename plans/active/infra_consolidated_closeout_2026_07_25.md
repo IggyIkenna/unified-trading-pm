@@ -281,8 +281,10 @@ not data-pipeline).
   unified-trading-system-ui@ff811a8c, now at
   `/plans/archive/issues/ui_repos_eslint_base_config_never_wired_no_explicit_any_unenforced_2026_07_21.md`),
   `/plans/archive/issues/claude_code_settings_symlink_chain_broken_2026_07_23.md`,
-  `issues/deployment_ui_l2_smoke_gate_red_2026_07_17.md`. None were tracked in any Track above; all are now
-  `assigned_vm: planning` and live in the AO backlog.
+  `issues/deployment_ui_l2_smoke_gate_red_2026_07_17.md` (archived — resolved 2026-07-31, root cause was
+  playwright.config.ts host-contention false positives, now at
+  `/plans/archive/issues/deployment_ui_l2_smoke_gate_red_2026_07_17.md`). None were tracked in any Track above; all are
+  now `assigned_vm: planning` and live in the AO backlog.
 - **na-eligibility-audit 2026-07-30** (infra tranche, incremental run): **KEEP-NA, valid — stale-item clause fixed on
   todo 2.** This hub was the one infra-tranche doc carrying no verdict marker from the earlier same-day pass
   (`unified-trading-pm@4c6587543`/`ddf6a8adf`/`f3b018596`), so it was in scope here. All 4 open `[REVIEW]` todos read

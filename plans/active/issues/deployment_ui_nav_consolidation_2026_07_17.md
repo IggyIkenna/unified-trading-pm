@@ -23,7 +23,7 @@ scope: [engineer]
 tags: [ui, navigation, routing, duplication, dead-code, orphan-audit]
 related:
   [
-    /plans/active/issues/deployment_ui_l2_smoke_gate_red_2026_07_17.md,
+    /plans/archive/issues/deployment_ui_l2_smoke_gate_red_2026_07_17.md,
     /codex/04-architecture/orphan-audit.md,
     /codex/06-coding-standards/ui-testing-layers.md,
   ]
@@ -124,21 +124,21 @@ screens lost.
 
 ## Deferred work after 2026-07-17
 
-| Item                                     | State                   | Why deferred / blocked on                                                                                                  |
-| ---------------------------------------- | ----------------------- | -------------------------------------------------------------------------------------------------------------------------- |
-| Dropdown vs bar — keep one               | ✅ **RULED 2026-07-28** | Keep the bar, delete the dropdown — functional edge (survives every route), not a taste call. See the retagged todo above. |
-| Delete the 7 duplicate standalone routes | **Operator-owned**      | Operator wants to compare chromes first. Mechanical once decided.                                                          |
-| Delete the 3 dead pages                  | **Not done**            | Blocked on nobody. Small + clear.                                                                                          |
-| Real 404 instead of `*` → Overview       | **Not done**            | Blocked on nobody.                                                                                                         |
-| Per-service shell → real routes          | **Not done**            | Blocked on nobody, but it is the biggest chunk; do it AFTER the dropdown/bar call so the nav is settled.                   |
-| Diagnose the 5 mock/page row mismatches  | **Not done**            | See `deployment_ui_l2_smoke_gate_red_2026_07_17.md` — **the recommended NEXT item** (see below).                           |
-| `/ops/vms/:vmName` orphan route          | **Not done**            | Pre-existing, unchanged by this session; the orphan audit reports it every run.                                            |
+| Item                                     | State                                                   | Why deferred / blocked on                                                                                                                                                                                                |
+| ---------------------------------------- | ------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Dropdown vs bar — keep one               | ✅ **RULED 2026-07-28**                                 | Keep the bar, delete the dropdown — functional edge (survives every route), not a taste call. See the retagged todo above.                                                                                               |
+| Delete the 7 duplicate standalone routes | **Operator-owned**                                      | Operator wants to compare chromes first. Mechanical once decided.                                                                                                                                                        |
+| Delete the 3 dead pages                  | **Not done**                                            | Blocked on nobody. Small + clear.                                                                                                                                                                                        |
+| Real 404 instead of `*` → Overview       | **Not done**                                            | Blocked on nobody.                                                                                                                                                                                                       |
+| Per-service shell → real routes          | **Not done**                                            | Blocked on nobody, but it is the biggest chunk; do it AFTER the dropdown/bar call so the nav is settled.                                                                                                                 |
+| Diagnose the 5 mock/page row mismatches  | ✅ **Resolved 2026-07-28, gate fully green 2026-07-31** | Was NOT REPRODUCIBLE (2026-07-28) and the whole L2 gate is now 424/0 green (host-contention root cause, not app drift) — see `/plans/archive/issues/deployment_ui_l2_smoke_gate_red_2026_07_17.md` (archived, resolved). |
+| `/ops/vms/:vmName` orphan route          | **Not done**                                            | Pre-existing, unchanged by this session; the orphan audit reports it every run.                                                                                                                                          |
 
-**Recommended NEXT: diagnose the 5 mock/page row mismatches** (`deployment_ui_l2_smoke_gate_red_2026_07_17.md`). It is
-the only open item that might be a live product bug rather than cleanup — the mock defines rows `/deployments` never
-renders, and an agent fixed that exact shadowing class on the frontend mock the same day (deployment-ui@0c817d2). It
-also unblocks the `pw:L2 ✓` gate that every future UI tick depends on. Everything else here is cleanup or an already-
-ruled decision (see below).
+**Note (2026-07-31, corrected — the "recommended NEXT" below is stale):** the 5 mock/page row mismatches this section
+used to recommend chasing were already found NOT REPRODUCIBLE on 2026-07-28, and the referenced
+`deployment_ui_l2_smoke_gate_red_2026_07_17.md` is now archived (resolved) — see
+`/plans/archive/issues/deployment_ui_l2_smoke_gate_red_2026_07_17.md`. Remaining open items in the table above
+(duplicate routes, dead pages, real 404, per-service shell, orphan route) are unaffected by this and still open.
 
 ## Progress Log
 

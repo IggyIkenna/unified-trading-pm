@@ -129,8 +129,9 @@ followups triaged; the alerts N+1 read pattern fixed at the root, not just the t
 **Sources**:
 [issues/deployment_ui_nav_consolidation_2026_07_17.md](/plans/active/issues/deployment_ui_nav_consolidation_2026_07_17.md)
 (4 nav surfaces → 2, shipped; 7 duplicate routes + a dropdown-vs-bar call remain operator-owned) ·
-[issues/deployment_ui_l2_smoke_gate_red_2026_07_17.md](/plans/active/issues/deployment_ui_l2_smoke_gate_red_2026_07_17.md)
-(the `pw:L2 ✓` gate was RED on LDR — 12 failures, 1 real a11y violation) ·
+[issues/deployment_ui_l2_smoke_gate_red_2026_07_17.md](/plans/archive/issues/deployment_ui_l2_smoke_gate_red_2026_07_17.md)
+(RESOLVED 2026-07-31 — the `pw:L2 ✓` gate was RED on LDR from host-contention false positives, not real app drift; fixed
+via `playwright.config.ts` `workers: 1`, gate now 424/0 green, archived) ·
 [issues/deployment_ui_smoke_failures_daily_costs_nav_mobile_2026_07_21.md](/plans/active/issues/deployment_ui_smoke_failures_daily_costs_nav_mobile_2026_07_21.md)
 (8 pre-existing smoke failures — Daily Costs page, mobile nav hamburger, nav-menu-dedup; **retagged here from
 `infrastructure` 2026-07-30 — was previously cited in `infra_consolidated_closeout_2026_07_25.md` Track 4, now this
