@@ -132,14 +132,14 @@ needs an explicit next relaunch round, and none is currently dispatched.
       (a)/(b)/(c) and shards 16/17/21/41 get their round-4 relaunch (or are confirmed covered by the sibling doc's fix).
 
       **Corroborating signal 2026-07-31 13:56Z (review agt-8ce066, gcloud-verified — a DIFFERENT shape than the
-          same-shard-memory-death pattern above):** shards 43 + 44, freshly relaunched this round at 13:39:58Z / 13:40:22Z,
-          were BOTH preempted at 13:51:37Z / 13:51:38Z — ~12 min after launch and only ~2 min after their own T+10 alive-check
-          (13:49:30Z), confirmed via `gcloud compute operations list` `compute.instances.preempted` (ops
-          `systemevent-1785505897347-…` / `systemevent-1785505907671-…`), not inference; 11/13 relaunched shards remain
-          running. A FRESH launch dying fast points to SPOT-capacity pressure in `asia-northeast1-c` today (fleet-wide), NOT a
-          shard-specific memory/data issue — so the operator decision should ALSO weigh (d) a zone/capacity check or a
-          one-shot `--on-demand` fallback (env `ON_DEMAND=true`) for the next relaunch, not only the memory-ceiling options
-          (a)/(b). Non-blocking: 43/44 are idempotent SPOT shards and should re-run cleanly on round-4.
+              same-shard-memory-death pattern above):** shards 43 + 44, freshly relaunched this round at 13:39:58Z / 13:40:22Z,
+              were BOTH preempted at 13:51:37Z / 13:51:38Z — ~12 min after launch and only ~2 min after their own T+10 alive-check
+              (13:49:30Z), confirmed via `gcloud compute operations list` `compute.instances.preempted` (ops
+              `systemevent-1785505897347-…` / `systemevent-1785505907671-…`), not inference; 11/13 relaunched shards remain
+              running. A FRESH launch dying fast points to SPOT-capacity pressure in `asia-northeast1-c` today (fleet-wide), NOT a
+              shard-specific memory/data issue — so the operator decision should ALSO weigh (d) a zone/capacity check or a
+              one-shot `--on-demand` fallback (env `ON_DEMAND=true`) for the next relaunch, not only the memory-ceiling options
+              (a)/(b). Non-blocking: 43/44 are idempotent SPOT shards and should re-run cleanly on round-4.
 
 ## Progress Log
 
@@ -217,3 +217,26 @@ needs an explicit next relaunch round, and none is currently dispatched.
   when" (all `run.log` show the terminal summary) is left to a later re-verify pass (the parent doc's `-002` todo
   pattern) once these runs (each covering weeks-to-months of daily shards, ETA hours-not-minutes at the observed ~7-21
   files/sec) have had time to finish.
+- **2026-07-31T~14:0xZ (worker, slot 4, `cefi_content_migration_fleet_half_incomplete-011`, the parent doc's BLOCKED-ON
+  todo)**: fixed the recurring `gcloud` active-identity poisoning (drifted to `github-actions-deploy` again) back to
+  `unified-trading-sa` first. Re-checked round 3's 13 relaunched shards via `gcloud compute instances list` + per-shard
+  `run.log`/`EXIT_STATUS` reads (bounded, not a full corpus-wide 392-object re-grep, since 4 shards were never
+  relaunched this round pending the `[OPERATOR]` decision above — the fleet cannot be 44/44 regardless of round-3's
+  outcome, so a full re-verify grep is not yet informative). **9/13 still `RUNNING`** (13, 15, 18, 20, 22, 23, 24,
+  25, 42) — no terminal instance state, in-progress. **4/13 already died again**: shard 19 (`-133613`, `rc=137`, died
+  `13:57:54Z` after `WARNING No progress in the last poll window` — the same wedge/freeze signature already tracked for
+  shards 16/17/21/41 in the `[OPERATOR] P1` todo above) and shard 40 (`-133900`, `rc=137`, died `14:01:29Z`, identical
+  signature) are GENUINELY NEW instances of that same unresolved failure class — this is worth folding into the
+  `[OPERATOR] P1` todo's shard list (currently 16/17/21/41) rather than treating as isolated, since it's now 6 shards
+  hitting the same symptom post both shipped fixes, not 4. Shards 43 (`-133950`) and 44 (`-134014`) have no instance
+  running and no `EXIT_STATUS` written, but their `run.log` tails go silent at `13:51:1x`/`13:49:4x` respectively —
+  consistent with (not independently re-verified via `gcloud compute operations list`, so not asserting confirmation)
+  the review agent's already-logged `compute.instances.preempted` finding for these exact two shards at
+  `13:51:37Z`/`13:51:38Z` in the `[OPERATOR] P1` todo above; not re-deriving that evidence, just noting it's consistent.
+  **This todo's own done_definition (44/44 terminal summaries, then delete the script) remains unmet** — the fleet is
+  not empty, 9 shards are still mid-run (ETA hours per this doc's own observed throughput), and 8 shards (16, 17, 19,
+  21, 40, 41, 43, 44) are confirmed incomplete right now regardless. **Not relaunching 19/40/43/44 myself** — out of
+  this todo's own scope (verify + delete only, per its text), and the `RB-INFRA-RELAUNCH` per-shard budget check for a
+  possible round-4 belongs with whoever owns that follow-up, same as the existing `[OPERATOR]` item's posture for
+  16/17/21/41. Leaving the parent doc's BLOCKED-ON checkbox unflipped — genuinely still blocked, not a redundant
+  re-check.
