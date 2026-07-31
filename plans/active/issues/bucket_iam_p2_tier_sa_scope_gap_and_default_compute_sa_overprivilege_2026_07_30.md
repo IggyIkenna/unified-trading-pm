@@ -249,9 +249,22 @@ still-open P2 (depends on P1, now met) and P3.2 (depends on P0, now met); no cha
       hybrid split) are NOT touched by this todo — their own role/bucket scoping is `gcp_service_accounts.yaml`'s
       existing, separate mechanism (Finding 3's `last_executed: NEVER` staleness on that YAML's drift-verifier is still
       open — not this todo's scope). (repo: deployment-service)
-- [ ] [CODE] P2. Wire `scripts/cloud-run/deploy-shared.sh` (deployment-api's Cloud Run identity) to the winning SA from
-      P0, gated on P1's role grants being live-verified first; live-verify via a real deploy that Secret Manager /
-      Pub/Sub / BigQuery access still works. (repo: deployment-service)
+- [x] ✅ [CODE] P2. **DONE 2026-07-31 (slot-7) — `deployment-service@118ad9e`.** Wired `deploy-shared.sh`'s `SA=` to
+      `uts-prd-sa@central-element-323112.iam.gserviceaccount.com` (per-tier prod, the hybrid-C-ratified winner for this
+      cross-cutting service). P1's grant list turned out incomplete for deployment-api's real code paths — live
+      investigation surfaced 2 more gaps, both fixed here via targeted `tofu apply` (5 adds, 0 changes/destroys,
+      `-target`-scoped to avoid unrelated pre-existing drift in the same state): `roles/bigquery.jobUser`
+      (deployment-api's `execute_query()` creates a BQ query job — `bigquery.dataEditor` alone doesn't authorize
+      `bigquery.jobs.create`) + bucket-level `storage.objectAdmin` on `unified-deployment-state-{project}` and
+      `deployment-scripts-{project}` (2 non-tier-conforming buckets deployment-api's runtime writes to — deployment
+      lock/state + VM heartbeat/signal — outside uts-prd-sa's Group A/B `-prd-` conditional write scope). Also corrected
+      `gcp_service_accounts.yaml`'s now-stale "confirmed live runtime SA = unified-trading-sa" comment for
+      `deployment-api` + the `unified-trading-sa` entry. **Note**: the live Cloud Run revision
+      (`uts-shared-deployment-api-00390-wqh`) was already running as `uts-prd-sa` when this session resumed
+      (`already_in_progress`/`resume` dispatch) — consistent with this same slot having deployed it in an earlier,
+      since-compacted turn of this session, before the IAM gaps above were found/fixed or the code was committed.
+      Live-verified post-fix: `/api/costs/summary` (BQ query-job path) and `/api/sync/status` (GCS state-bucket path)
+      both 200 with real data; no `PermissionDenied` in Cloud Run logs for the revision. (repo: deployment-service)
 - [ ] [INFRA] P3.1. Security hardening, independent of the P0/P1/P2 SA-strategy question: the GCP default compute SA
       (`{project_number}-compute@developer.gserviceaccount.com`, the identity 155/165 VM launchers actually run as)
       holds 28 unconditional project-wide roles incl. `roles/storage.admin` and `roles/iam.serviceAccountTokenCreator` —
