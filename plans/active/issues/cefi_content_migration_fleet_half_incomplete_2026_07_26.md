@@ -861,3 +861,22 @@ accordingly.
   OOMs at the original ~45-50min mark. **Flagging as a genuinely open question for the fix owner**: is there a second,
   non-pyarrow-pool leak source, or is this an unrelated one-off? Worth checking if this shard recurs at the same
   elapsed-time on a future attempt. No action taken (monitoring-only).
+- **2026-07-31T04:18Z (`data_pipeline_failure` escalation `agt-c926ab`, slot 4, DP-VM-003 `DP_VM_STALL`)**: dispatched
+  by the fleet monitor for `canonical-migration-cefi-content-41-relaunch20260731-032606` (heartbeat stale at dispatch).
+  Confirmed genuine wedge, not just a stale heartbeat sample: `run.log` last progress line at `03:57:50Z` (13,000/77,941
+  files, 16.7%, `bytes_allocated=415,329,600` — ~415MB — right before going silent, the same actively-rising-allocation
+  signature as shards 44/19's fast-OOM deaths above, not a slow creep); `gcloud compute operations list` showed only the
+  original `insert` op (no `compute.instances.preempted`), ruling out SPOT reclaim; GCE still reported `RUNNING`
+  ~20.5min past last activity — neither the external zombie-watchdog nor the in-VM `STALL_PROGRESS_REGEX` self-kill
+  (30min timeout, not yet due) had reaped it. **Registry-verified relaunch budget for this vm-prefix TODAY
+  (2026-07-31)**: zero archived attempts (`DeploymentsRegistry.list_recent_archive` — the 4 archived `content-41`
+  entries are all 2026-07-30) — this stalled VM was itself shard 41's only attempt today, so relaunching is squarely
+  within `RB-INFRA-RELAUNCH`'s `≤2/(vm-prefix,day)` bound (this makes it the 1st genuine failure-triggered relaunch of
+  the day for this shard). Read its `PROGRESS.json` checkpoint (`last_completed_date=2024-10-03, monotonic=true`) and,
+  per the checkpoint-aware-resume HARD RULE, relaunched from `2024-10-04` (not a blind replay of the original
+  `2024-09-30` start) — `MACHINE_TYPE=e2-standard-16` (matching the rest of this batch), SPOT default, same
+  `cefi-content-apply` category, as `canonical-migration-cefi-content-41-relaunch20260731-042031`. **Verified, not
+  fire-and-forget**: confirmed `RUNNING` at T+65s and polled until the first real progress line appeared — discovery
+  completed in 40.4s (69,630 in-scope files across the narrowed 41-day window) and per-file migration progress
+  (`Progress: 200/69630 files...`) is now emitting normally. Pinged the authoring fleet-monitor slot with this outcome;
+  no `market-tick-data-service` code changed this session (relaunch + issue-doc update only).
