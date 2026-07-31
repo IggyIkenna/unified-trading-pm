@@ -190,8 +190,8 @@ not just noting.
       starve `plan_health`'s (or vice versa) dispatch attempts. Done when: either a deliberate "leave as-is, here's why"
       ruling is recorded, or a scaled/partitioned retry budget ships + is verified to cut tail dispatch latency on the
       next comparable burst.
-- [ ] [SCRIPT] P2. **New, opened by the `main-backmerge-to-ldr` pipefail+`-e` root-cause fix below.** The template SSOT
-      (`unified-trading-pm@598aefd8`) and 2 repos' live copies (`features-service@ccd01cb8`,
+- [x] ✅ [SCRIPT] P2. **New, opened by the `main-backmerge-to-ldr` pipefail+`-e` root-cause fix below.** The template
+      SSOT (`unified-trading-pm@598aefd8`) and 2 repos' live copies (`features-service@ccd01cb8`,
       `agent-orchestrator@d43bbde`) are fixed, but `detect_template_drift.py --workflows` shows this template has 28
       baselined/grandfathered-drift + more not-yet-diverged copies across the ~25-repo fleet — every repo still on the
       OLD copy carries the SAME latent bug (silently dies, zero output, whenever the oldest commit in a
@@ -201,7 +201,27 @@ not just noting.
       `--repo` filter) + a quickmerge per touched repo, once host capacity allows (this session deliberately scoped to
       only the 2 repos actively observed broken, to avoid piling more QG load onto the same contended box this doc
       tracks). Done when: `detect_template_drift.py --workflows` shows 0 copies still carrying the pre-fix content for
-      this template.
+      this template. **DONE 2026-07-31 (slot 4, cicd)** — a dry-run against the actual auto-rollout target set (not the
+      todo's assumed ~25) found only 5 repos genuinely still on pre-fix content (`system-integration-tests@2d35879`,
+      `trading-agent-service@6de84ab`, `unified-trading-system-ui@4a298786`, `deployment-ui@6f9961c`,
+      `e2e-testing@5ef69c5` — the other 19 baselined/tracked repos already matched the current SSOT, apparently from an
+      earlier unrelated full-template sync). PM itself is excluded from the automated rollout by design
+      (`rollout-workflow-templates.sh`: "PM owns the templates -- skip self") and its own hand-maintained live copy had
+      independently drifted too — surgically patched just the `|| true` line (`unified-trading-pm@39abe46b8`),
+      deliberately preserving its pre-existing, unrelated `runs-on: ubuntu-latest` customization (vs. the template's
+      `[self-hosted, glue]`) rather than blanket-overwriting it, since that wasn't part of this bug. All 6 touched repos
+      shipped via the standard Pass-1 `quality-gates.sh` → Pass-2 `quickmerge --agent` flow and SHA-verified as
+      ancestors of `origin/live-defi-rollout` post-push (not just trusting quickmerge's own "Landed" message, per this
+      doc's own established discipline). Verified done-criterion: a fleet-wide grep for the fix line across every repo's
+      live `main-backmerge-to-ldr.yml` confirms 0 repos still carry the pre-fix content;
+      `detect_template_drift.py --workflows` `current_drift` for this template now shows only
+      `unified-trading-pm/main-backmerge-to-ldr.yml` — confirmed via direct diff that residual entry is exclusively the
+      pre-existing `runs-on` line, not the bug. Session survived a mid-task session death (uncommitted local edits for 3
+      of the 5 auto-rollout repos plus PM's manual patch were lost — only the 2 already-committed repos survived);
+      recovered by re-running the (idempotent) rollout script and re-applying the PM patch before re-committing, see
+      `worker.md`'s resume contract. Host load fluctuated 9-28 (16 vCPU) throughout, consistent with this doc's standing
+      "fluctuating-but-still-elevated, not resolved" characterization — no QG failures attributable to contention this
+      pass.
 
 ## Evidence
 
