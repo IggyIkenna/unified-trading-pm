@@ -592,6 +592,23 @@ mirroring the batch1/batch2/batch3/batch4 finalize pattern.
   dispatch**: same check as slot-6's note above — re-check the maintenance window / sibling plan's apply+resume todos
   first; only proceed to the VM `EXIT_STATUS` checks once that gate has actually lifted.
 
+- **2026-07-31 (slot-15, data_engineering craft, task `tradfi_satellite_ao_dispatch_batch5-001`)** — Resumed todo 2 a
+  seventh time. Gate unchanged: `_maintenance_window.json` still reads identically
+  (`locked_by: mtds_available_at_cross_asset_backfill_2026_07_13`, `expires_at: 2026-08-03T18:26:16.060331+00:00`) and
+  this session's own earlier work on the sibling plan's
+  `dp_consolidator_scheduler_paused_tradfi_recurrence_2026_07_31.md` (now archived, `unified-trading-pm@5696ef3bc`)
+  confirms its tradfi apply+resume P1 todos (lines 288/297) are still `- [ ]` open — no operator/worker action has
+  landed on that apply step yet. **New since slot-8's check**: `gcloud compute instances list` shows ZERO
+  `mdps-backfill-tradfi-*`/`*es*-resume*` VMs running anywhere — the entire 14-shard fleet (including slot-6's 4
+  relaunches) has wound down (self-deleted SPOT, completed or preempted) since slot-8's 22:03Z check. Did not do a full
+  per-shard `EXIT_STATUS` re-audit (slot-6 already ran the exhaustive version a few hours ago and nothing about the gate
+  itself has changed — that audit is only useful the moment `build-continuous` can actually run). Declining/skipping
+  again — same posture as every prior dispatch. **Next dispatch**: once the maintenance window is gone/expired or the
+  sibling plan's tradfi apply+resume todos flip done, the fleet is now fully idle (nothing to wait on VM-side) — go
+  straight to a full `EXIT_STATUS`/`PROGRESS.json` re-audit of all 14 shards (2020-2026 × es/es3, including the 4 that
+  were mid-flight as of slot-6's relaunch) before running `build-continuous --root ES` + the 1d/24h hit-rate re-measure
+  against the ~19% (454/2398) baseline.
+
 ## Codex SSOTs
 
 No new durable contract is created by this plan — every todo executes an already-decided spec from its source doc, or
