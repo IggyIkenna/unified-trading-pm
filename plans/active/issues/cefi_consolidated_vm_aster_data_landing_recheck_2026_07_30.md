@@ -61,6 +61,20 @@ Launched `mtds-live-cefi-consolidated-20260730-010147` (`asia-northeast1-c`, `e2
 
 ## Todos
 
+> **✅ OWNERSHIP RESOLVED 2026-07-31 (corpus-wide ownership-conflict sweep, operator ruling keep-one-cite-the-other).**
+> The near-verbatim "verify `live_aster` rows land" claim appeared in both this doc and
+> `/plans/active/infra_capture_and_devops_leftovers_2026_07_06.md`'s `[DATA] P1`. **Split by phase, not deleted from
+> either**: the infra plan OWNS _register + launch_ the ASTER live connector (its actual scope, and it holds all the
+> prereq history); **THIS doc OWNS the post-launch data-landing verification** — it is newer (2026-07-30 vs 2026-07-06),
+> carries the concrete dated command, and already declares itself the thing that flips the infra plan's checkbox. The
+> infra plan's todo now cites this doc for the verification half instead of restating it.
+>
+> **Not verified this session, and deliberately not claimed either way**: the 2026-07-30T13:30Z re-check could not be
+> run — `gcloud storage ls` failed reauth in this non-interactive slot for all three credentialed identities
+> (`unified-trading-sa` has no valid credentials here; the operator account needs an interactive `gcloud auth login`).
+> The todo stays `- [ ]`. Whoever picks it up runs the command below first; a fabricated "rows landed" is worse than an
+> unrun check.
+
 - [ ] [DATA] P2. **After 2026-07-30T13:30Z UTC**, re-check whether real rows are landing:
       `gcloud storage ls "gs://market-data-tick-cefi-prd-central-element-323112/raw_tick_data/by_date/day=2026-07-30/pipeline_mode=live_aster/**"`.
       If populated: flip `infra_capture_and_devops_leftovers_2026_07_06.md`'s ASTER-connector todo's remaining checkbox

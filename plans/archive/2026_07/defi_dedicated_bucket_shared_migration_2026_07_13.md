@@ -290,6 +290,15 @@ readers still point at the dedicated buckets.
       resolves via `resolve_bucket_name(cloud=cloud, kind="tick-data", asset_group="defi")` (`:180`), the template
       constant is gone, and `:106-107` carries the dated in-code note that the old flat forms "were deleted
       2026-07-10/07-13; the perp-funding data now lives in the shared canonical DeFi" bucket.
+
+> **✅ OWNERSHIP RESOLVED 2026-07-31 (corpus-wide ownership-conflict sweep).** This plan is the **authoritative record**
+> for the three dedicated DeFi buckets (`dex-pools-prd` / `lst-rates-prd` / `perp-funding-prd`) — migration, reader
+> repoint, Terraform removal, and deletion, all `[x]` with evidence (16/17 done).
+> `cross_cutting_satellite_ao_dispatch_ batch1_2026_07_26.md`'s open `[DOCS] P2` sub-item (a) looked like a duplicate
+> claim on the same deletions; it has been scope-fenced to **transcribe this plan's checkboxes** into
+> `/plans/active/bucket_estate_consolidation_closeout_2026_07_24.md`'s stale checkpoint rather than re-derive them. No
+> independent bucket re-audit, and nothing here re-opens. The one open item below is unrelated dead-name housekeeping.
+
 - [x] ✅ [CHORE] P3. (Found by the final verification sweep) Housekeeping cluster, all low-risk/low-value — 3 of 4
       sub-items now resolved, sub-item (3) remains genuinely open (out of batch1's scope): (1)
       `market_tick_data_service/scripts/migrate_lst_perp_shared_bucket_gap_2026_07_13.py` — its own documented

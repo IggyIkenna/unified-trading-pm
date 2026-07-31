@@ -48,6 +48,17 @@ drift_direction: advance-code
 > destination — ASK BEFORE CREATING" hard rule; the operator is away and did not specify AO-dispatch. To hand this to
 > the fleet later, flip `assigned_vm: planning` + `execution_scope: orchestrator-agent` (todos below already honour the
 > AO 10–20 cap and `[TAG]` format).
+>
+> **✅ THAT HAND-OFF HAS HAPPENED — ownership resolved 2026-07-31** (corpus-wide ownership-conflict sweep, operator
+> ruling newer/more-complete-wins). `/plans/active/cross_cutting_satellite_ao_dispatch_batch1b_2026_07_26.md`
+> (`assigned_vm: planning`) carries a single `[BACKEND] P3` todo that enumerates **all five** of this plan's todos
+> verbatim and in order, names both repos, and states a Done-when of "all 5 original todos in that doc are checked with
+> evidence". **batch1b is the execution vehicle; do NOT execute the three open todos below independently** — running
+> them here would double-dispatch the same MTDS/codex edits. This plan stays `active` + `assigned_vm: NA` on purpose:
+> its `- [ ]` boxes are the flip targets batch1b's Done-when points at, and keeping them open is what keeps the work
+> visible to `count_open_tasks.py` (which deliberately excludes satellite/batch aggregators from the deduped total, so
+> closing them here would make the work vanish from the count entirely). They were **not** marked `[x]` — the work is
+> genuinely not done, and a false `[x]` is the exact anti-pattern this sweep exists to remove.
 
 ## Context — what already shipped (do NOT redo)
 

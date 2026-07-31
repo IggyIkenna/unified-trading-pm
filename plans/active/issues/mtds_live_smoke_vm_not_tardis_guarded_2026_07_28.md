@@ -72,17 +72,43 @@ pattern) and burn real backfill throughput, exactly during the highest-value win
 
 ## Recommended decision
 
+> **✅ SAME-FILE COLLISION RESOLVED 2026-07-31 (corpus-wide ownership-conflict sweep, operator ruling: only one doc's
+> todo claims the edit, the other cites it).** The doc this collided with —
+> `/plans/active/issues/mtds_backfill_launcher_guard_overapplies_to_nontardis_venues_2026_07_28.md`
+> (`assigned_vm: planning`) — has **already SHIPPED its half** (`deployment-service@2d6b01a`): the shared exemption
+> logic now lives in `tardis-concurrency-guard.sh` itself as `TARDIS_CAP_EXEMPT_VENUES` +
+> `tardis_venue_list_needs_guard()` (verified in live code today). So the two docs are no longer racing on the same
+> logic — they own **disjoint** files:
+>
+> | File                                           | Owner                                                            |
+> | ---------------------------------------------- | ---------------------------------------------------------------- |
+> | `tardis-concurrency-guard.sh` (exempt logic)   | overapplies doc — **DONE**, `deployment-service@2d6b01a`         |
+> | `launch-mtds-backfill-vm.sh`                   | overapplies doc — **DONE**                                       |
+> | `launch-mtds-live.sh` + sibling live launchers | **THIS doc** (P1/P2 below) — no other active doc claims the edit |
+> | skill `SKILL.md` § 3 (Tardis cap)              | overapplies doc — **DONE**                                       |
+> | skill `SKILL.md` Phase 2 (live leg)            | **THIS doc** (P3 below) — a different section, no overlap        |
+
 - [ ] [DATA] P1. Source `tardis-concurrency-guard.sh` in `deployment-service/scripts/vm/launch-mtds-live.sh` — call
       `tardis_concurrency_guard` pre-flight + `tardis_guard_reserve_slot` immediately before VM creation, gated on the
-      shard's venue being Tardis-sourced (mirror the CAP-EXEMPT venue list already used elsewhere: HYPERLIQUID / ASTER /
-      LIGHTER-ZKSYNC / EXTENDED-STARKNET / PACIFICA-SOLANA skip the guard call; every other cefi venue does not). (repo:
+      shard's venue being Tardis-sourced. **REUSE, do not re-implement (updated 2026-07-31)**: call the now-shipped
+      `tardis_venue_list_needs_guard "<venues>"` helper in `tardis-concurrency-guard.sh` rather than open-coding a venue
+      list. ⚠️ **Note the live exempt list differs from this doc's original text** — it is
+      `TARDIS_CAP_EXEMPT_VENUES=(HYPERLIQUID ASTER EXTENDED-STARKNET COINBASE-CDE)`, i.e. it does **not** contain
+      `LIGHTER-ZKSYNC` or `PACIFICA-SOLANA` (which this doc named) and it **does** contain `COINBASE-CDE`. Do not
+      "correct" the shipped list from this doc's prose — if the divergence is real it is its own finding; confirm
+      against `VENUE_TO_ADAPTER_KEY` first. Verified today: `launch-mtds-live.sh` still sources no guard at all (its
+      only Tardis touchpoints are the `--live-source tardis-machine` flag and a `TARDIS_CONCURRENCY_LEASE` metadata
+      passthrough at ~line 217, neither of which caps concurrency) — **the gap is still live**. (repo:
       deployment-service)
 - [ ] [DATA] P2. Audit sibling live launchers for the same gap (`launch-mtds-live-cefi-consolidated.sh`,
       `launch-mtds-live-prediction-consolidated.sh`, any other `launch-*-live*.sh` under `scripts/vm/`) — grep each for
       the same guard-sourcing markers used above; wire in whichever are missing it. (repo: deployment-service)
-- [ ] [DATA] P3. Update `data-pipeline-check-mtds` skill's Phase-2 (live leg) section to note the guard-gap risk and
+- [ ] [DATA] P3. Update `data-pipeline-check-mtds` skill's **Phase-2 (live leg)** section to note the guard-gap risk and
       recommend deferring live-leg checks for Tardis-sourced venues while a real Tardis backfill/sharded VM is confirmed
       running, until P1 above ships. (repo: unified-trading-pm, `.claude/skills/data-pipeline-check-mtds/`)
+      **Scope-fenced 2026-07-31**: **Phase-2 ONLY.** The same file's **§ 3 (Tardis cap)** section is owned by
+      `/plans/active/issues/mtds_backfill_launcher_guard_overapplies_to_nontardis_venues_2026_07_28.md`'s `[DATA] P3`,
+      which is already **done** — read what it wrote and cross-link it rather than restating or editing it.
 
 No corruption confirmed this run (0 403s observed in the concurrent window) — this is a structural gap finding, not a
 live-incident report. Not escalating to the operator as a page; tracked here per the findings-closure rule.

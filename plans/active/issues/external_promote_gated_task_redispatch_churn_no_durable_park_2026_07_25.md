@@ -81,17 +81,34 @@ condition fires.
 
 ## Todos
 
-- [ ] [BACKEND] P3. Give a worker that hits an EXTERNAL gate (a commit/promote not yet on a target branch) a way to park
-      the task DURABLY — either (a) let it set a named `auto_unpark__<task-id>` prereq keyed on the gate condition
-      (mirroring batch2-011), which the dispatcher already honors and which survives re-derivation, or (b) support an
-      explicit "gated on external ref reaching branch X" marker the dispatcher treats as a real blocker. **Done when**:
-      a promote-gated verification task parks after the FIRST worker detects the gate and does NOT re-dispatch to a
-      fresh worker every tick, resuming only when the gate clears — with a test simulating "ref not yet on main".
-- [ ] [BACKEND] P3. Confirm why a `priority_override` (priority 999) park does not survive backlog re-derivation while a
-      named `auto_unpark__` prereq does — document the difference so workers pick the durable mechanism for external
-      gates (cross-ref RULES.md sec4 and the batch2-011 park). If `priority_override` parks are meant to be durable,
-      that is a separate bug; if not, workers should stop using them for anything that must outlast a re-derivation
-      tick.
+> **✅ CONFLICT RESOLVED 2026-07-31 — OPERATOR RULED OPTION A** (corpus-wide ownership-conflict sweep; this is the
+> decision the "Deferred — HELD" section below was waiting on, and it recommended exactly this). The file-collision was
+> with `/plans/active/ao_satellite_ao_dispatch_batch1_2026_07_26.md`'s `[BACKEND] P3` "Audit every `/skip-current-task`
+> `reason_code` for a silent, unpaged durable park", which is **explicitly AUDIT-ONLY** ("do not change `auto_park.py`
+> in this todo"). **Sequence: batch1's read-only audit lands FIRST, then this doc's implementation dispatches against
+> its findings.** Nobody edits `auto_park.py` until the audit exists — that is what stops the two from racing on the
+> same file.
+>
+> The operator also allowed folding "if that's cleaner once you read current state". It is: the two former todos were a
+> mechanism-design item and a diagnostic question whose answer (why does a `priority_override` park evaporate but a
+> named `auto_unpark__` prereq survive?) **is the input that decides the mechanism**. Sequencing them as separate
+> dispatches would have re-read the same dispatcher code twice. **Folded into one gated item below**; neither half was
+> dropped — both done-whens are preserved verbatim.
+
+- [ ] [BACKEND] P3. **GATED: do not start until `ao_satellite_ao_dispatch_batch1_2026_07_26.md`'s `/skip-current-task`
+      `reason_code` audit is done and its per-`reason_code` table exists.** Then, in one change: **(1) [was todo 2 — do
+      this first, it decides (2)]** Confirm why a `priority_override` (priority 999) park does not survive backlog
+      re-derivation while a named `auto_unpark__` prereq does — document the difference so workers pick the durable
+      mechanism for external gates (cross-ref RULES.md sec4 and the batch2-011 park). If `priority_override` parks are
+      meant to be durable, that is a separate bug and gets its own todo; if not, workers should stop using them for
+      anything that must outlast a re-derivation tick. **(2) [was todo 1]** Give a worker that hits an EXTERNAL gate (a
+      commit/promote not yet on a target branch) a way to park the task DURABLY — either (a) let it set a named
+      `auto_unpark__<task-id>` prereq keyed on the gate condition (mirroring batch2-011), which the dispatcher already
+      honors and which survives re-derivation, or (b) support an explicit "gated on external ref reaching branch X"
+      marker the dispatcher treats as a real blocker; pick between them using (1)'s finding and the audit's table rather
+      than guessing. **Done when**: BOTH halves land — the priority_override-vs-prereq difference is documented, AND a
+      promote-gated verification task parks after the FIRST worker detects the gate and does NOT re-dispatch to a fresh
+      worker every tick, resuming only when the gate clears, with a test simulating "ref not yet on main".
 
 ## Deferred — HELD by the `/na-eligibility-audit ao` conflict-check (2026-07-30)
 

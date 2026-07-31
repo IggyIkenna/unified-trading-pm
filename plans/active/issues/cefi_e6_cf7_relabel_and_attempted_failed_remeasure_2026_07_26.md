@@ -157,3 +157,17 @@ rows) is real but small and not urgent.
   blank-`data_type` remediation and `manifest_reprocessing_generic_utility_2026_07_07.md` already registers a
   blank-data_type backfill script. Needs an operator call on which doc owns which bucket's population before dispatch.
   Filed as BLOCKED-OPERATOR-DECISION in this run's Deferred list; `assigned_vm` unchanged.
+- **✅ OWNERSHIP RESOLVED 2026-07-31** (corpus-wide ownership-conflict sweep; the operator call the entry above was
+  waiting on). All three docs read; the split is by **BUCKET**, and it is clean — the two active docs were never
+  measuring the same rows:
+
+  | Doc                                                                                  | Bucket / population it OWNS                                                                                                                                                                                                            |
+  | ------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+  | **THIS doc**                                                                         | `market-data-tick-cefi-prd-central-element-323112` (MTDS tick manifest) — the **9,750**-row blank-`data_type` population: 9,743 BACKFILL + 7 bare-`OKX` RECLASSIFY                                                                     |
+  | `/plans/active/issues/cefi_instruments_store_blank_data_type_residual_2026_07_29.md` | `instruments-store-cefi-prd-central-element-323112` (IS instruments manifest) — the **1** `captured`+blank row (BITFINEX-SPOT, 2023-12-16); its 5,806 non-captured blanks are already closed by evidence as correct universal behavior |
+  | `/plans/archive/issues/manifest_reprocessing_generic_utility_2026_07_07.md`          | **Not an owner — shared TOOLING**, and already resolved/archived (4/4 done). It shipped the instruments-service `--operation reprocess-shards` CLI; reuse it, do not re-register a competing one-off script.                           |
+
+  Neither active doc's population overlaps the other's, so both stay open and independently dispatchable — the only
+  thing that was ever wrong here was the missing cross-reference, now added in both directions. The genuinely-unresolved
+  cross-doc question is unchanged and stays in this doc's todo: the cross-cutting doc's older COINBASE(7)+OKX(7) figure
+  is a **different 2026-06-18 measurement** and must be independently re-verified, not assumed satisfied by this one.

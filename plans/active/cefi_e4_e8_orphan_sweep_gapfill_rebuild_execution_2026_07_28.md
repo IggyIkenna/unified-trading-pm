@@ -106,6 +106,21 @@ these ships a prod-touching run** — both are tooling only, proven in unit test
 production. This plan is where that invocation actually happens, phase by phase, with an operator at each irreversible
 step.
 
+## Co-claim structure — RESOLVED 2026-07-31 (corpus-wide ownership-conflict sweep)
+
+> Four other cefi docs point at this plan, which read as a co-claim. It is not — **this plan is the single EXECUTION
+> SSOT** and the others are gates or citations. The `[OPERATOR]` hard-stop on **Phase B was deliberately left exactly as
+> it is** (permanent human-only, delete-safety-protocol hard-stop #2); only the surrounding ownership was clarified.
+>
+> | Doc                                                                                      | Relationship to this plan                                                                                                                                                                                         |
+> | ---------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+> | `/plans/active/data_completion_cefi_2026_07_15.md`                                       | **CITES.** Its E4 + "NEXT SESSION — execute the migration" todos are already `SUPERSEDED-BY` this plan (verified 2026-07-31); they execute nothing themselves.                                                    |
+> | `/plans/active/issues/cefi_legacy_bucket_deleted_before_l3_gate_2026_07_28.md`           | **GATES Phase C.** Owns the normalization-aware snapshot-vs-`-prd` comparison that decides whether Phase C is done-by-fait-accompli or needs a from-snapshot re-scope. Nothing here should pre-empt that verdict. |
+> | `/plans/active/issues/cefi_hardstop2_carveout_codex_vs_plan_contradiction_2026_07_29.md` | **GATES Phase B's framing** (the hard-stop carve-out question) — not the execution.                                                                                                                               |
+> | `/plans/active/cefi_track7_candle_namespace_residual_2026_07_25.md`                      | **CITES** for sequencing only.                                                                                                                                                                                    |
+>
+> Net: **only this plan's own todos execute.** Every other doc either gates a phase or cites it.
+
 ## Phase A — E4a(i): PRE-DELETE GUARANTEE copy pass (additive, reversible, VM-launched)
 
 - [x] ✅ [DATA] P0. **DONE 2026-07-30 (autonomous session).** Retagged from `[OPERATOR]` (2026-07-28 gate-cleanup pass)

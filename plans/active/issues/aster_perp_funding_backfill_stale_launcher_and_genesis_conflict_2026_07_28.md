@@ -44,6 +44,29 @@ drift_direction: advance-code
 
 ## What I found
 
+> **⚠️ PREMISE CORRECTION 2026-07-31 (corpus-wide ownership-conflict sweep) — READ BEFORE FINDING 1 BELOW.** Finding 1
+> quotes the 2026-07-08 retirement docstring's claim that HL/ASTER funding "is byte-identical to the `funding_rate`
+> field already carried on `derivative_ticker`". **That claim is FALSE and was already measured false and ruled on
+> before this doc was written.**
+> `/plans/active/issues/defi_hyperliquid_perp_funding_derivative_ticker_divergence_2026_07_28.md` compared 2,640 rows
+> across the full 2023-05..2025-01 historical overlap and found only **60.7% matched** within a 2e-5 absolute tolerance
+> — p90 divergence 5.6e-5, **worst case 1.2e-3, roughly 10× typical funding-rate magnitude** (worst offenders cluster on
+> BANANA/CRV/BCH, i.e. genuinely different values, not float noise). **The operator RULED on 2026-07-28 to REVERSE the
+> 2026-07-08 retirement and resume dedicated `perp_funding` capture for HYPERLIQUID/ASTER/LIGHTER-ZKSYNC** (that doc's
+> `[DATA] P1`, already `[x]`, retagged from `[OPERATOR]`).
+>
+> **This is not a fresh decision anyone needs to re-take** — it is settled. What it means for this doc: the mechanical
+> facts in Finding 1 are still accurate _as a description of the code as it stood on 2026-07-28_ (the handler docstring
+> says what it says, `DEFAULT_PROTOCOLS` lists only kalshi_perp/polymarket_perp, and dispatching
+> `--perp-protocols aster` at it would still write false `attempted_failed` rows today) — so the "don't run the
+> plan-literal command" warning stands until the reversal lands. But the **justification** is "the retired path is not
+> yet restored", NOT "derivative_ticker is an equivalent substitute". Once the reversal ships, re-read Finding 1 before
+> acting on it: the standalone `perp_funding` shard becomes the canonical source again and the `derivative_ticker`-only
+> routing below becomes the stale advice.
+>
+> This doc's own **open todo is unaffected** — the Aster genesis-date window (2023-07-22→2023-11-01) is a separate,
+> genuinely operator-gated recall question and stays `[OPERATOR]`.
+
 **1. The plan's named launcher targets a retired code path.**
 `market_tick_data_service/cli/handlers/ perp_funding_handler.py`'s own module docstring: "RETIRED (2026-07-08,
 operator-approved): HYPERLIQUID, ASTER, and LIGHTER-ZKSYNC no longer capture a standalone `perp_funding` shard — their

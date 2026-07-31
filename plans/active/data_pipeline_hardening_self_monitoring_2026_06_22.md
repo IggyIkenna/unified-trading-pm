@@ -542,6 +542,15 @@ This plan **wires existing parts**. Net-new is only the keystone gate (Phase 1) 
     session — 403). **Still open, needs a follow-up with either broader VM-name search + GCS manifest freshness check
     (`measure_honest_coverage.py --asset-group cefi` / `--asset-group tradfi`) or an operator-side confirmation** — NOT
     flipping this todo to done on this partial evidence.
+  - ✅ **OWNERSHIP RESOLVED 2026-07-31 (corpus-wide ownership-conflict sweep)**:
+    `cross_cutting_satellite_ao_dispatch_ batch2_2026_07_26.md` deliberately DECLINED to batch this and routed it to
+    `/vm-preemption-billing-waste-audit`. That routing is correct and stands — but routed-away ≠ unowned, which is what
+    made this a conflict. **This doc RETAINS the todo**; batch2 cites it and does not own it.
+    `/vm-preemption-billing-waste-audit` is the execution mechanism, not a new owner. **Done-when** (so the next runner
+    isn't left re-deriving it): run that skill scoped to the cefi + tradfi live-capture families, then either (a) name
+    the current live VMs and cite a fresh manifest/GCS recency figure proving capture is flowing → flip this `[x]`, or
+    (b) confirm live capture for these families is genuinely stopped → that is a NEW P0 finding and gets its own issue
+    doc, not a flip here.
 
 ---
 

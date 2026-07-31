@@ -220,10 +220,27 @@ snapshot file, since it's the only surviving copy of legacy's manifest state.
       or accepts it as such — do not skip straight to "accept the loss" without that investigation completing first.
       Retagged away from `[OPERATOR]`/BLOCKED since the intent question itself is now answered; the remaining work is
       normal `[DATA]` investigation, already tracked below, not a second operator-only gate.
-- [ ] [DATA] P1. Once the operator's call above lands: reconcile `data_completion_cefi_2026_07_15.md`'s E4 orphan-
-      sweep/gap-fill todo (line ~307) and the "NEXT SESSION — execute the migration" P0 todo (line ~227) — both
-      currently describe reading/sweeping the legacy bucket, which no longer exists; mark them superseded or re-scope to
-      "canonical-form fix only, no legacy read" as appropriate. (repo: unified-trading-pm)
+
+> **✅ OWNERSHIP MAP — RESOLVED 2026-07-31 (corpus-wide ownership-conflict sweep).** Three cefi docs touch this same
+> legacy-bucket/orphan-sweep ground. They are NOT competing; the split is by ROLE and is now stated in one place:
+>
+> | Doc                                                                             | Role                                                                                                                                                           |
+> | ------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+> | `/plans/active/cefi_e4_e8_orphan_sweep_gapfill_rebuild_execution_2026_07_28.md` | **EXECUTION** (Phases A-F). Every delete/write action lives there. Phase B stays a permanent human-only `[OPERATOR]` hard-stop — untouched here.               |
+> | **THIS doc**                                                                    | **INVESTIGATION that GATES Phase C** — owns the normalization-aware snapshot-vs-`-prd` comparison (`[DATA] P1` below) and the corpus doc-reconciliation edits. |
+> | `/plans/active/data_completion_cefi_2026_07_15.md`                              | **CITES only.** Its E4 + "NEXT SESSION" todos are already `SUPERSEDED-BY` the execution plan (verified today) — nothing further is owed from it.               |
+
+- [x] ✅ [DATA] P1. **ALREADY DONE — verified 2026-07-31** (corpus-wide ownership-conflict sweep). Was: reconcile
+      `data_completion_cefi_2026_07_15.md`'s E4 orphan-sweep/gap-fill todo and its "NEXT SESSION — execute the
+      migration" P0 todo, both of which described reading/sweeping the now-deleted legacy bucket. **Both are already
+      reconciled in that file** and needed no further edit: the E4 `[DECISION] P0` carries "**SUPERSEDED-BY
+      `cefi_e4_e8_orphan_sweep_gapfill_rebuild_execution_2026_07_28.md`** (2026-07-28, slot-4, main ruling BLK-650261be)
+      — checkbox left UNCHECKED, the sweep has not run against prod", and the "NEXT SESSION — execute the migration" P0
+      is likewise retagged resolved-by-reference with its `--apply` execution explicitly re-homed to that plan's Phase
+      D. The file also carries a 2026-07-28 hard-stop review banner routing every `[OPERATOR]` phase there. Nothing was
+      marked done that isn't — the underlying sweep genuinely has NOT run; only this reconcile-the-wording task is
+      complete. The sibling `legacy_bucket_dual_write_decommission_2026_07_24.md` edit is a **separate** todo below and
+      is still genuinely open. (repo: unified-trading-pm)
 - [ ] [DATA] P2. Update `legacy_bucket_dual_write_decommission_2026_07_24.md` lines 123-154 (the "L6 decommission" and
       "version-aware + orphan-aware delete" rows) to reflect cefi's legacy bucket is ALREADY deleted (2026-07-14), not
       "stays open" — the current text contradicts live GCP state. (repo: unified-trading-pm)

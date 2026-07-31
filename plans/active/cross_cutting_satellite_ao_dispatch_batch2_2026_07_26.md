@@ -523,10 +523,15 @@ drift_direction: advance-code
   (`/codex/02-data/availability-manifest-and-data-status.md`) forbids scheduling a dedicated walk just for this, so it
   lands when the owning L3 canonicalisation plans walk, not on a batch cadence. The doc also carries an unresolved
   `[⚠️ NEEDS VERIFICATION 2026-07-21]` marker on its cefi/tradfi/prediction owner rows.
-- **`data_pipeline_hardening_self_monitoring_2026_06_22.md`** (1 open `[INFRA] P0`, "9 live data VMs frozen 5.5-32h,
-  silently RUNNING, zero capture"). Dated 2026-06-22 — a specific month-old incident, not a standing defect. It needs a
-  fresh live-fleet re-measure before anyone acts (the named VMs are long gone); re-measuring is cheap but belongs with
-  `/vm-preemption-billing-waste-audit`, not a batch todo that would re-diagnose a stale snapshot.
+- **`/plans/active/data_pipeline_hardening_self_monitoring_2026_06_22.md`** (1 open `[INFRA] P0`, "9 live data VMs
+  frozen 5.5-32h, silently RUNNING, zero capture"). Dated 2026-06-22 — a specific month-old incident, not a standing
+  defect. It needs a fresh live-fleet re-measure before anyone acts (the named VMs are long gone); re-measuring is cheap
+  but belongs with `/vm-preemption-billing-waste-audit`, not a batch todo that would re-diagnose a stale snapshot.
+  **OWNERSHIP RESOLVED 2026-07-31** (corpus-wide ownership-conflict sweep): this routing stands and reflects current
+  reality (the source doc's own 2026-07-25 re-verification found **zero** matching instances in either cloud, so there
+  is nothing left to batch-diagnose) — but "routed away" is not "unowned". **The source doc RETAINS the todo**; batch2
+  cites it and does not own it. The `/vm-preemption-billing-waste-audit` skill is the execution mechanism, not a new
+  owner.
 - **`data_feed_sla_registry_and_active_self_healing_2026_06_19.md`** (2 open). Both are fleet dependency/CVE ops, not
   data-pipeline work: the msgpack `>=1.2.1` bump is 21/23 repos done and blocked on alerting-service's
   version/internal-dep-alignment gate plus agent-orchestrator's foreign UI test infra, and the vcrpy
