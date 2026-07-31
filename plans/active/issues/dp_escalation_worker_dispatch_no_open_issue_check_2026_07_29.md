@@ -174,3 +174,11 @@ regression) is worse.**
   place) + a Progress Log append, no GCS read, no code change. Further corroborates Option A — this single condition has
   now consumed 7+ full orchestrator-agent dispatches since 2026-07-28 for a backlog whose root-cause-relevant state has
   not changed since the second dispatch fixed it.
+- **2026-07-31 (data_pipeline_failure escalation worker, agt-bd4088, slot 2) — `(cefi, derivative_ticker)` now at its
+  8th+ dispatch.** Same condition re-fired again with a byte-identical `attempted_failed` numerator (158,475) to
+  agt-794496's immediately-prior verified reading; only `attempted` (denominator) moved. Session cost: two file reads +
+  one `git merge-base --is-ancestor` check (both fix commits still in place) + two Progress Log appends, no GCS read, no
+  code change. This single condition has now consumed 8+ full orchestrator-agent dispatches since 2026-07-28 for a
+  backlog whose root-cause-relevant state has not changed since the second dispatch fixed it — the per-dispatch cost is
+  small but the count keeps climbing with no sign of the underlying dedup gap closing; still awaiting the
+  operator/design decision on Option A/B/C.

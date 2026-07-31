@@ -64,7 +64,7 @@ resolved_by:
 source:
   "POST /api/escalate wall_type=data_pipeline_failure, escalation agt-7a4d1d, DP_RUN_MOSTLY_EMPTY (DP-FETCH-009)
   CRITICAL, asset_group=cefi data_type=derivative_ticker, 158085/1410602 attempted_failed (11.2%), Fresh 0d"
-last_updated: 2026-07-30
+last_updated: 2026-07-31
 ---
 
 # CeFi derivative_ticker DP-FETCH-009 -- Tardis clients hard-fail without aiodns (fixed) + open HYPERLIQUID 429 question
@@ -420,3 +420,14 @@ and the residual-KeyError defense-in-depth path.
   this slot's `market-tick-data-service` clone. **No code change, no new todo** — same redundant-dispatch waste
   `dp_escalation_worker_dispatch_no_open_issue_check_2026_07_29.md` already tracks (still `status: open`, P2, awaiting
   an operator/design decision).
+- **2026-07-31 (data_pipeline_failure escalation worker, agt-bd4088, slot 2) — 8th+ dispatch, numerator still
+  byte-identical.** Re-fired again: 158,475/1,508,151 attempted_failed (10.5%), labeled "STATIC BACKLOG — no new
+  attempted_failed activity in 1d". Numerator (158,475) is byte-identical to agt-794496's immediately-prior verified
+  reading — only `attempted` (denominator) grew (1,506,427 → 1,508,151, +1,724), consistent with ordinary
+  forward-progress elsewhere, not this backlog moving. Per the established skip rule, did not re-run the live bounded
+  manifest read — did only a `git merge-base --is-ancestor` check on both shipped fix commits
+  (`market-tick-data-service@6a067cf1` aiodns, `@6c6fab03` HYPERLIQUID 429/K\*-symbol), both still ancestors of
+  `origin/live-defi-rollout`; working tree clean, no uncommitted changes in this slot's `market-tick-data-service`
+  clone. **No code change, no new todo** — same redundant-dispatch waste
+  `dp_escalation_worker_dispatch_no_open_issue_check_2026_07_29.md` already tracks (still `status: open`, P2, awaiting
+  an operator/design decision that this 8th+ redundant dispatch further corroborates the need for).
