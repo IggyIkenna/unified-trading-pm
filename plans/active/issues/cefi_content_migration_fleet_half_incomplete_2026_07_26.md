@@ -743,3 +743,12 @@ accordingly.
   — confirmed `RUNNING` on `e2-standard-16`/`preemptible: true`. This todo's own scope (relaunch the 18 shards on the
   fixed tarball) is complete; ongoing health monitoring + the eventual corpus-wide re-verify grep are the separate P1
   (shard-14 fix-verification) and P2 (corpus-wide re-verify+delete) todos already tracked above, not duplicated here.
+- **2026-07-31T03:41Z (slot-15) — notable exception to the fix's otherwise-good track record**: shard 16 (`-032349`,
+  relaunched on the fixed tarball, `e2-standard-16`) OOM-killed (`rc=137`) very early — only 706s elapsed (~12min),
+  5,400/157,328 files (3.4%). `run.log` confirms the fix's `pyarrow pool release` diagnostic WAS firing
+  (`bytes_allocated` staying low, e.g. `172992` at the last release before death) — so this is NOT the same slow-creep
+  mechanism the fix targets; it died far too fast and far too early for that pattern. Possible distinct cause: an
+  anomalously large/malformed file early in this shard's date range (2024-08-20..2024-11-13) causing a one-time spike,
+  unrelated to the periodic-leak fix. Contrast with the concurrent shard-14 verify run (same fix, same machine type, now
+  past 4.7h/46% with zero issues) — the fix is clearly working in general, this looks like a shard-specific anomaly
+  worth a closer look if it recurs on retry. No action taken (monitoring-only).
