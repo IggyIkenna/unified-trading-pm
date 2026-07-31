@@ -179,7 +179,7 @@ sports-tranche-owned).
       `plans/active/issues/prediction_lifecycle_prefetch_gate_and_resolution_day_catalogue_2026_07_14.md`.
 
 - [x] ✅ [DIAG] P1. **Confirm the 4-shard prediction re-backfill (launched above, 2026-07-30) reaches terminal
-      completion and re-run the VERIFY.** — `unified-trading-pm@<pending>`. All 4 original shards terminal (`...161607`/
+      completion and re-run the VERIFY.** — `unified-trading-pm@4011c6246`. All 4 original shards terminal (`...161607`/
       `...161641`/`...161832` self-deleted `EXIT_STATUS=0`; `...161707` PREEMPTED, relaunched by slot-3 as `...220658`
       for the missing `2026-04-02→2026-04-27` tail, confirmed terminal `EXIT_STATUS=0` this dispatch — no
       `attempted_failed` pileup anywhere). Full-corpus VERIFY re-run (`read_capture_status_counts`, bucket
