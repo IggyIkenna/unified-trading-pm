@@ -93,7 +93,7 @@ ordering hazard).
 - [ ] [BACKEND] P3. Run the post-phase codex audit on any codex doc describing `mdps_mvp_universe()`'s contract/shape
       (grep `codex/` for `mdps_mvp_universe` / `_mvp_scope_mdps`) since its signature changed — update or
       SUPERSEDED-banner anything now stale.
-- [ ] [BACKEND] P2. **NEW 2026-07-31 (slot-8, discovered via `market-data-processing-service`'s `quality-gates.sh` §
+- [x] ✅ [BACKEND] P2. **NEW 2026-07-31 (slot-8, discovered via `market-data-processing-service`'s `quality-gates.sh` §
       "PIPELINE-E2E-CHECK DRIVER SMOKE" step — non-blocking on QG's own exit code, but a real enumeration break).**
       `market-data-processing-service/scripts/pipeline_e2e_check.py::_candle_data_types_for_market_ag` (line ~436) was
       missed by todo 1's caller-update sweep (that sweep covered only `unified-api-contracts`-internal callers —
@@ -108,7 +108,16 @@ ordering hazard).
       function's whole purpose is producing `(venue, data_type)` pairs — the now-redundant separate
       `_mvp_data_types_for_cell`/`get_mvp_data_types_for_cefi_venue_itype` derivation downstream may be collapsible into
       this one read, but verify against the real UAC universe before removing it). Repo:
-      `market-data-processing-service`.
+      `market-data-processing-service`. Evidence: `market-data-processing-service@4a5985b` —
+      `_candle_data_types_for_market_ag` now unpacks the 3-tuple directly
+      (`for venue, _instrument_type, dt in     mdps_mvp_universe(ag_lower)`) and `_mvp_data_types_for_cell` was removed
+      (verified collapsible: cefi's data_type axis in `mdps_mvp_universe` IS `get_mvp_data_types_for_cefi_venue_itype`,
+      defi's IS the flat `DATA_TYPES_BY_ASSET_GROUP["defi"]` set per `_mvp_scope_rules.py`'s `_mvp_defi_data_types()`
+      docstring, and tradfi's flat `{ohlcv_1m, ohlcv_1s}` set is the correct MVP scope — narrower than but a
+      superset-consistent replacement for the old base_ccy-ungated is_mvp-probe fallback). Now-unused
+      `get_mvp_data_types_for_cefi_venue_itype` / `is_mvp` imports dropped. Repro re-run clean post-fix:
+      `--dry-enumerate` produces 819/91/1974 shard-cells for cefi/tradfi/defi respectively with no unpack error;
+      `bash scripts/quality-gates.sh` PIPELINE-E2E-CHECK DRIVER SMOKE step passes.
 
 ## Progress Log
 
@@ -120,3 +129,11 @@ ordering hazard).
   done (a Commit+Push+Flip gap on whoever shipped it). Verified via source read + the `TestMdpsMvpUniverse` regression
   suite + the GitHub commit-status API, then flipped both checkboxes here to match shipped reality. Todo 3 (codex audit)
   is untouched — genuinely not yet done, left for its own dispatch (`uac_mdps_mvp_universe_data_type_axis-003`).
+- **2026-07-31 (slot-6)**: Fixed todo 4's `market-data-processing-service` cross-repo consumer break —
+  `pipeline_e2e_check.py@4a5985b`. Confirmed via source read that `mdps_mvp_universe`'s data_type axis is already the
+  SSOT resolution the old `_mvp_data_types_for_cell` helper duplicated (cefi: same
+  `get_mvp_data_types_for_cefi_venue_itype` call; defi: same flat `DATA_TYPES_BY_ASSET_GROUP["defi"]` set; tradfi: the
+  precise `{ohlcv_1m, ohlcv_1s}` MVP set, replacing a base_ccy-ungated `is_mvp` probe that used to fall back to the full
+  candidate set), so collapsed the redundant derivation per the todo's suggestion instead of just widening the unpack.
+  quality-gates.sh green + PIPELINE-E2E-CHECK DRIVER SMOKE passing is the regression proof (no unit test previously
+  covered this enumeration path).
