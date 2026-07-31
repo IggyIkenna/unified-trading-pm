@@ -120,10 +120,11 @@ canonicalised by this fleet. The migration's own `# Delete-when:` marker on
       directly into the P2 todo below).
 - [ ] [SCRIPT] P2. Once relaunched shards complete, re-run this same corpus-wide `run.log` grep to confirm all 44/44
       show the terminal summary, THEN delete `migrate_cefi_content_instrument_id_catalogue_2026_07_17.py` per its own
-      `# Delete-when:` marker. Repo: market-tick-data-service. **2026-07-30T22:06Z update**: re-ran this exact grep now
-      that the fleet is fully empty (0 VMs). Result: 26/44 confirmed (was 23/44) — still NOT 44/44, 18 shards remain
-      (13, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 29, 40, 41, 42, 43, 44). See Progress Log entry above for the
-      full method/evidence. This todo stays open; do NOT delete the script yet.
+      `# Delete-when:` marker. Repo: market-tick-data-service. **2026-07-31T08:05Z update (slot-15)**: re-ran this exact
+      grep again (fleet fully empty, 392 log objects checked). Result: 27/44 confirmed (was 26 at 22:06Z, then 23
+      originally) — still NOT 44/44, 17 shards remain: 13, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 40, 41, 42, 43,
+      44 (shard 29 completed since the last check, on top of shard 14's now-VERIFIED fix-confirmation run). This todo
+      stays open; do NOT delete the script yet — the remaining 17 need another relaunch round.
 - [x] [SCRIPT] P2. ✅ **Relaunch the 18 shards still incomplete after this session's wave** (13, 15, 16, 17, 18, 19, 20,
       21, 22, 23, 24, 25, 29, 40, 41, 42, 43, 44), now using the fixed tarball (`market-tick-data-service@9f4098b1`,
       merged 2026-07-30T18:04:44Z) which should clear the memory-leak freeze class that killed most of them. Recover
