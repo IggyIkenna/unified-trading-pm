@@ -256,18 +256,22 @@ concurrent workers do not collide on this file.
       `status: resolved` + archived 2026-07-30 with this exact evidence — this batch2 todo's own citation was drafted
       2026-07-29, one day before that archival, and had simply gone stale.
 - [x] ✅ [FIX] P1. **Close the `detect_breaking_change.py` registry-data-dict blind spot end to end.** — shipped
-      `unified-trading-pm@0b17f0747` + `unified-trading-pm@5607023a2` + `unified-api-contracts@e34afc1d` +
-      `system-integration-tests@67db4da` (**citation corrected 2026-07-31** — the original citation, SHA prefix
-      `7e0aab35f` in this repo, did not resolve to any commit in this repo's history, see
-      `plans/active/issues/plan_commit_sha_evidence_regression_7e0aab35f_2026_07_31.md`; re-derived from the actual
-      shipped diff, split across the two real unified-trading-pm commits: `0b17f0747` (initial extend) + `5607023a2`
-      (the fix + tests + docs)). (a) design: `# @contract-surface` marker convention (docstring + inline comments in
-      `detect_breaking_change.py`), citing the manifest `schema_version` precedent explicitly. (b) implemented: tagged
-      constant → literal snapshot (bare-`Name` keys/members resolved against earlier same-file string constants;
-      unresolvable per-key values dropped, not fatal) → structural diff (removed top-level key / removed set-or-list
-      member / removed inner dict-key = breaking; additive = not). Tagged all 3 constants in `unified-api-contracts`
-      (`INSTRUMENT_TYPES_BY_VENUE`, `VENUES_BY_ASSET_GROUP`, `VENUE_DATA_TYPE_CAPABILITIES`). (c) 9 new regression tests
-      in `test_detect_breaking_change.py`, including the exact `23fa3a99` (OKX, SPOT_PAIR)-shape fixture — all pass
+      `unified-trading-pm@5607023a2` + `unified-api-contracts@e34afc1d` + `system-integration-tests@67db4da` (**citation
+      corrected 2026-07-31, then re-corrected same day** — the original citation, SHA prefix `7e0aab35f` in this repo,
+      did not resolve to any commit in this repo's history, see
+      `plans/active/issues/plan_commit_sha_evidence_regression_7e0aab35f_2026_07_31.md`; a first correction attempt
+      split the work across two PM commits and cited a second non-existent SHA, `0b17f0747`, for a "design/initial
+      extend" half — `git cat-file -e 0b17f0747` fails and `git log -- scripts/cicd/detect_breaking_change.py` shows no
+      such commit; the single real commit `5607023a2`'s diff (`codex/08-workflows/ci-cd-flow.md` +
+      `scripts/cicd/detect_breaking_change.py` + `tests/unit/test_detect_breaking_change.py`) already carries the
+      design, implementation, tests, AND docs update together — there never was a separate design-only commit). (a)
+      design: `# @contract-surface` marker convention (docstring + inline comments in `detect_breaking_change.py`),
+      citing the manifest `schema_version` precedent explicitly. (b) implemented: tagged constant → literal snapshot
+      (bare-`Name` keys/members resolved against earlier same-file string constants; unresolvable per-key values
+      dropped, not fatal) → structural diff (removed top-level key / removed set-or-list member / removed inner dict-key
+      = breaking; additive = not). Tagged all 3 constants in `unified-api-contracts` (`INSTRUMENT_TYPES_BY_VENUE`,
+      `VENUES_BY_ASSET_GROUP`, `VENUE_DATA_TYPE_CAPABILITIES`). (c) 9 new regression tests in
+      `test_detect_breaking_change.py`, including the exact `23fa3a99` (OKX, SPOT_PAIR)-shape fixture — all pass
       (`.venv/bin/python -m pytest tests/unit/test_detect_breaking_change.py -q` → 20 passed). (d) SIT gap closed:
       `unified-api-contracts/tests/test_cefi_registry_expected_universe_invariant.py` (3 tests, loads
       instruments-service's `build_expected('cefi')` by file path — not part of the installable package — runs it

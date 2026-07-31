@@ -17,7 +17,7 @@ summary: >-
   exists to catch (source doc: `mtds_plan_flip_fabricated_commit_sha_evidence_2026_07_30.md`), just not yet
   caught/corrected. This is currently BLOCKING every `unified-trading-pm` commit fleet-wide under the green-tree HARD
   RULE — filed + repo-blocker declared per worker.md §4b rather than absorbing the fix into my unrelated tradfi task.
-status: open
+status: resolved
 nature: issue
 asset_group: [meta]
 stage: [meta]
@@ -35,7 +35,7 @@ parent_epic: agent_operating_framework_master
 priority: P1
 source: [tradfi_satellite_ao_dispatch_batch5-001, worker slot 9]
 assigned_vm: planning
-resolved_by:
+resolved_by: slot-14
 locked_by:
 execution_scope: orchestrator-agent
 drift_direction: correct-codex
@@ -74,19 +74,37 @@ unaddressed, either the fleet silently works around it (defeating the gate) or g
 
 ## Recommended decision
 
-- [ ] [AGENT] P1. Investigate whether `unified-trading-pm@7e0aab35f` is a typo'd/truncated form of a REAL commit (check
-      `git log --all --grep` for the described work — "detect_breaking_change.py registry-data-dict blind-spot",
-      `unified-api-contracts@e34afc1d`, `system-integration-tests@67db4da` as correlated evidence) and correct the
-      citation to the real SHA if found, OR mark it `[UNVERIFIED]` per this repo's own evidence-citation convention if
-      no real commit can be found. Fix all 5 occurrences (they're the same fabricated citation repeated). Repo:
-      unified-trading-pm. Done when: `plan-commit-sha-evidence` passes at/below the 18 baseline again (verify via
-      `.venv/bin/python scripts/quality_gates/check_plan_commit_sha_evidence.py`).
-- [ ] [OPERATOR] P2. If a real commit truly cannot be located (the work was claimed done but never actually landed),
-      flag the 3 checkboxes this citation backs (`ci_satellite_ao_dispatch_batch2_2026_07_29.md`'s `[FIX] P1` + 4 items
-      in `breaking_change_differ_blind_to_registry_data_dicts_2026_07_09.md`) for re-verification — a false `[x]`
-      claiming shipped work that never shipped is a correctness issue independent of the ratchet itself.
+- [x] ✅ [AGENT] P1. Investigate whether the originally-cited fabricated SHA (prefix `7e0aab35f`, this repo —
+      deliberately NOT written in `repo@sha` citation shape here, so this explanatory sentence itself doesn't re-trip
+      the ratchet) is a typo'd/truncated form of a REAL commit and correct the citation. — that SHA is genuinely
+      fabricated (confirmed absent via `git cat-file -e` and `git log --all`); the real work landed as the single commit
+      `unified-trading-pm@5607023a2` ("fix(cicd): teach detect_breaking_change.py to track registry data-dict contract
+      surface"), whose diff (`codex/08-workflows/ci-cd-flow.md` + `scripts/cicd/detect_breaking_change.py` +
+      `tests/unit/test_detect_breaking_change.py`) covers design + implementation + tests + docs together — confirmed
+      via `git log -- scripts/cicd/detect_breaking_change.py`. NOTE: an earlier fix attempt (commit `88126c5e1`, by the
+      slot that also filed this doc) had already partially addressed this by re-citing `5607023a2` for 3 of the 5
+      occurrences, but for the remaining 2 (the `[DESIGN]`-flavored citations in
+      `ci_satellite_ao_dispatch_batch2_2026_07_29.md:258` and
+      `breaking_change_differ_blind_to_registry_data_dicts_2026_07_09.md:162`) it invented a SECOND non-existent SHA
+      (prefix `0b17f0747`, again this repo — same deliberate non-citation-shape note applies), claiming a separate
+      "initial extend" commit that never existed — the exact same fabrication class this ratchet exists to catch.
+      Corrected both remaining occurrences to cite `5607023a2` alone. `plan-commit-sha-evidence` now reports "all
+      checkable citations resolve; at/below baseline" (18, matching the pre-regression baseline exactly).
+- [x] ✅ [OPERATOR] P2. Moot — a real commit (`unified-trading-pm@5607023a2`) WAS located covering all the claimed work
+      (design, implementation, tests, docs), so none of the 3 backing checkboxes
+      (`ci_satellite_ao_dispatch_batch2_2026_07_29.md`'s `[FIX] P1` + the `[DESIGN]`/`[FIX]`/`[TEST]` items in
+      `breaking_change_differ_blind_to_registry_data_dicts_2026_07_09.md`) need re-verification as "claimed but never
+      shipped" — the work genuinely shipped, only the citation was wrong (twice). No operator decision needed.
 
 ## Progress Log
+
+- 2026-07-31 (slot 14): Verified `unified-trading-pm@5607023a2` is the single real commit covering the entire claimed
+  PM-side scope (design/implementation/tests/docs in one diff). Found that the prior partial-fix commit `88126c5e1` had
+  itself fabricated a second SHA (`0b17f0747`) for 2 of the 5 occurrences instead of citing `5607023a2` alone. Corrected
+  both remaining occurrences in `ci_satellite_ao_dispatch_batch2_2026_07_29.md` and
+  `breaking_change_differ_blind_to_registry_data_dicts_2026_07_09.md`. `plan-commit-sha-evidence` now passes at/below
+  the 18 baseline (verified via `.venv/bin/python scripts/quality_gates/check_plan_commit_sha_evidence.py`). Both todos
+  resolved; no re-verification needed since a real backing commit was found.
 
 - 2026-07-31 (slot 9): Found while shipping an unrelated tradfi finding. Verified pre-existing (reproduced with my own
   diff removed + after a fresh `git pull --ff-only`), isolated the exact new violations via a diff against the baseline
