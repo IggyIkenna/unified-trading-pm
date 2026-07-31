@@ -380,6 +380,55 @@ Given `--chunk-size 5` was previously 0/3 successful on the dense tail (2026-07-
 mitigation attempt, not a confirmed fix — if it also fails, that's further evidence the P1 root-cause below needs to
 land before this launcher can be trusted for any full-range run.
 
+## 2026-07-31 fifth recurrence — `--chunk-size 5` mitigation now confirmed exhausted (data_pipeline_failure escalation, DP_VM_STALL)
+
+**Dispatched via `POST /api/escalate wall_type=data_pipeline_failure` on a fleet-monitor `DP_VM_STALL` finding
+(heartbeat 13m stale) against `mtds-backfill-odds-smallchunk2-20260731`** (the manual retry from the section above,
+after its sibling `smallchunk-20260731` was preempted at ~55s with zero progress). Per
+`/codex/15-runbooks/incidents/rb_infra_relaunch.md`, verified state before deciding relaunch-vs-stop:
+
+- `gcloud compute instances describe` → `status=RUNNING` (NOT preempted — ruled out per the companion doc's own
+  instruction to check `compute.instances.preempted` first).
+- Dedicated GCS heartbeat blob (`vm-heartbeat/mtds-backfill-odds-smallchunk2-20260731.txt`) last updated
+  `2026-07-31T09:28:52Z`; deployment-registry row (`deployments/active/536fc001-....json`) `last_heartbeat_at` same
+  timestamp, `mem_pct: 68.3` with a positive, ACCELERATING `mem_slope` (2.08→3.23→6.11→...→6.87 %/min across the last 5
+  samples) — i.e. still climbing toward the ceiling at the moment it went silent, not plateaued.
+- `run.log` frozen at the same timestamp; re-checked twice ~18min apart, zero new bytes both times.
+- Serial console (`get-serial-port-output`) shows **4 confirmed kernel OOM-kills on this single VM instance**, all
+  `task=python`, all landing at `anon-rss≈31.7-31.8GB` (right at the `e2-highmem-4` 32GB ceiling): chunks 18, 26, 32, 74
+  (`CHUNK_FAILED: ... exit=137 reason=OOM_KILLED` for each, confirmed via `run.log` grep). Chunk 74's OOM self-recovered
+  (loop advanced to chunk 75 normally — the `mtds_chunk_loop.sh` fail-loud fix from the 2026-07-26 addendum is working
+  as designed for THAT part). Chunk 75 then started fresh (RSS baseline ~518MiB), processed `2021-06-11` cleanly, hit
+  three `SKIP` days, and went completely silent mid-chunk — **the fifth failure, and this one produced NO serial-console
+  OOM line at all** (0 new serial bytes past the last-checked offset), matching this doc's original CEFI "silent freeze"
+  signature (§ "Note on why the whole VM... went silent") rather than a clean OOM-kill: the dedicated 60s heartbeat
+  sidecar (a trivial `while true; sleep 60` loop, immune to the python subprocess's own OOM) also stopped — consistent
+  with prolonged kernel direct-reclaim/thrashing stalling the entire box, not just the worker process.
+- Real progress made before the freeze: chunks 1-73 clean (skip-dense, already-covered history) + chunk 74 recovered +
+  chunk 75 partial (`2021-06-11` processed) — last durable checkpoint ≈ `2021-06-11`, all via the standard
+  `ManifestWriter` per-VM-shard path
+  (`instruments-store-sports-prd-.../_index/per_vm/mtds-backfill-odds-smallchunk2-20260731-c75.parquet`), so nothing is
+  lost — a future relaunch's skip-if-fresh logic will resume cleanly from here.
+
+**Verdict: `--chunk-size 5` is CONFIRMED insufficient, not just unconfirmed.** This is the second full attempt at this
+mitigation today (after `smallchunk-20260731`'s SPOT preemption denied it a real test) and it OOM'd 4 times in 75 chunks
+(~5.3% chunk-failure rate) before a full unrecovered freeze — squarely inside "genuinely failing (not just preempting)
+even at `--chunk-size 5`" that `sports_odds_api_scattered_multiyear_gaps_2026_07_27.md`'s own Progress Log already
+flagged as the trigger to stop relaunching with the same parameters and escalate here instead.
+
+**Action taken (per `rb_infra_relaunch.md`'s "if it re-fails the SAME way twice... STOP relaunching, file an issue"
+bound — NOT relaunched)**: `gcloud compute instances delete mtds-backfill-odds-smallchunk2-20260731` — ended the SPOT
+billing waste on a VM making zero further progress; no data lost (per the checkpoint evidence above). Did not attempt a
+sixth launch with a smaller chunk size — CEFI's own experience (chunk-size 1 still OOM'd unpredictably, see "CONFIRMED:
+real kernel OOM-kill, recurring UNPREDICTABLY" above) argues against assuming a further reduction reliably fixes this,
+and repeatedly guessing at smaller chunk sizes without addressing the retained-memory root cause is exactly the pattern
+the companion doc's Progress Log asked future resumers to stop doing.
+
+**This raises the priority of the P1 root-cause todo below** — the sports odds_api backfill has now burned real SPOT
+compute across 5 attempts today alone (`sentinel-fix` at `--chunk-size 250`: 6/6 completed chunks OOM'd; `smallchunk`:
+preempted; `smallchunk2`: 4 OOMs + a final freeze) with the corpus still ~590/2247 days short — the operational
+mitigation ladder (bigger machine → smaller chunks) is exhausted; only the code-level fix remains.
+
 ## Progress Log
 
 - **na-eligibility-audit 2026-07-30**: KEEP-NA, valid (infra tranche, dispatch agt-30721a) — All 4 items are genuine
@@ -393,3 +442,10 @@ land before this launcher can be trusted for any full-range run.
   attempted this session (out of scope for the dispatched task); relaunched the odds_api backfill with the
   `--chunk-size 5` mitigation as a workaround. The P1 root-cause todo below remains the durable fix and is still `[ ]`
   open.
+- 2026-07-31 (slot 7, data_pipeline_failure escalation, DP_VM_STALL on `mtds-backfill-odds-smallchunk2-20260731`):
+  Documented a fifth recurrence (see new section above) — the `--chunk-size 5` mitigation OOM'd 4 more times then froze
+  unrecovered. Stopped the wedged VM (billing-waste avoidance, no data lost) rather than relaunching a sixth time with
+  the same/smaller parameters, per this doc's own "silent freeze" precedent and the companion doc's explicit
+  stop-and-escalate instruction. No code fix attempted (out of scope for a one-shot relaunch-escalation worker). The P1
+  root-cause todo below is now the only remaining path to a reliable full-range run and should be treated as blocking
+  further sports odds_api backfill attempts, not just a nice-to-have follow-up.
