@@ -701,7 +701,7 @@ cancellation-timeout fix and already shipped). Suggested next steps for whoever 
       dominant mechanism)." Filed a fresh `[BACKEND] P2` todo below carrying the two next-ranked candidates this todo
       already named forward. No code shipped (review role; pure investigation + doc reconciliation).
 
-- [ ] [BACKEND] P2. **NEW, opened 2026-07-31T14:44Z (slot 8, review) — `deployment-api@ec1f635`'s catalogue-lifecycle
+- [x] ✅ [BACKEND] P2. **NEW, opened 2026-07-31T14:44Z (slot 8, review) — `deployment-api@ec1f635`'s catalogue-lifecycle
       concurrency guard did NOT stop the `"Container terminated on signal 9"` (SIGKILL/OOM) recurrence; investigate the
       two next-ranked candidates the guard's own follow-up todo already named.** Confirmed (direct image extraction, not
       ancestry) that BOTH SIGKILL events since the fix's live deploy —
@@ -720,7 +720,60 @@ cancellation-timeout fix and already shipped). Suggested next steps for whoever 
       surrounding request logs correlate with a `/prediction-catalogue` or `/data-status/manifest` call, rather than
       guessing which candidate is live; (c) if neither correlates, re-examine whether the memory ceiling itself (16384
       MiB) is simply too tight for this service's current combined workload independent of any single call site, per
-      this doc's own 2026-07-17 precedent of a prior bump. (repo: deployment-api)
+      this doc's own 2026-07-17 precedent of a prior bump. (repo: deployment-api) — **2026-07-31T15:01Z (slot 15,
+      backend_engineer): BOTH named candidates REFUTED by direct request-log evidence, not guessed.** Read
+      `deployment_api/services/prediction_catalogue.py` and `manifest.py`/`manifest_status_helpers.py`'s
+      `_dispatch_via_process_pool` directly first (not just re-reading this todo's own description): confirmed neither
+      has a request-level concurrency guard (only `catalogue_lifecycle.py` got `ec1f635`'s semaphore), so both remained
+      plausible in principle. Then ran the todo's own named step — `gcloud logging read` on the request log
+      (`run.googleapis.com%2Frequests`) scoped to each exact crashing revision, both a tight window around the SIGKILL
+      AND a wide 35-70min pre-crash window (in case memory accumulated from an earlier uncached call): **zero
+      `/prediction-catalogue` or `/data-status/manifest` requests in either window, for either occurrence** — both
+      candidates are refuted for these 2 specific crashes, not merely unconfirmed. **New evidence-backed finding
+      instead**: both occurrences are preceded by the SAME distinct pattern — a burst of 5-7 concurrent, slow (0.8-83s)
+      requests, all carrying `referer: https://.../cockpit` (confirming a human/browser loading the operator's dashboard
+      "cockpit" page, not a background job), landing 60-120s before each SIGKILL:
+      `/api/deployments/umbrella/{LIVE,BATCH,PAPER}/summary`, `/api/vm-deployments`, `/api/deployments/inventory`,
+      `/api/health/overview`, `/api/repo-ci/overview` — a classic cold multi-panel dashboard-load burst, not either
+      named candidate. Traced the shared bottleneck (`build_umbrella_summary` → `_load_inventory` →
+      `_compute_inventory`, `deployments_inventory/_aggregation.py`): it already has a real guard (a 1-worker
+      `ThreadPoolExecutor` + in-flight dedup per cache key, `_inventory_refresh_pool`), so the 3 near-simultaneous
+      `umbrella/*/summary` calls (52.7s/46.0s/0.77s) look like 2 requests correctly bound-waiting on the SAME in-flight
+      compute rather than 3 independent ones — that seam is not obviously the culprit. Checked `RateLimitMiddleware`
+      (`deployment_api/middleware.py`): it caps requests/minute only, not concurrent in-flight requests, so a
+      same-second burst of 5-7 slow calls (well under 60/min) sails through untouched — no aggregate concurrency guard
+      exists across this endpoint cluster. One data point double-checked before over-reading it: the first occurrence's
+      `/api/health/overview` call returned `500` at `76.24s` latency — pulled the full log entry (not just the
+      request-log summary): `receiveTimestamp=11:32:13.05Z`, ~0.9s before the SIGKILL at `11:32:13.97Z`, with zero
+      accompanying error/stack-trace log — most consistent with this in-flight request's connection being severed BY the
+      OOM-kill (a casualty), not a caused-it exception; `health_overview.py`'s own docstring's "never a 5xx"
+      per-tile-isolation design is NOT contradicted by this reading, flagging the ambiguity honestly rather than
+      overclaiming either way. **Not attempting a fix this turn**: I have NOT pinpointed which specific handler(s) in
+      the burst cluster dominate memory (unlike `catalogue_lifecycle.py`, none of `health_overview.py`/`repo_ci`
+      overview/`vm_deployments.py` were profiled this session) — shipping a coarse cross-file concurrency guard without
+      that would be exactly the kind of re-guess this doc's history repeatedly flags as the anti-pattern to avoid, on
+      dashboard-serving production code. Filed a fresh, narrower `[BACKEND] P2` todo below carrying this concrete
+      finding forward instead of guessing a fix. No code shipped (pure investigation, evidence-based).
+
+- [ ] [BACKEND] P2. **NEW, opened 2026-07-31T15:01Z (slot 15, backend_engineer) — both SIGKILL/OOM occurrences trace to
+      a cold multi-panel "cockpit" dashboard-load burst, not either previously-named candidate; profile the burst
+      cluster's memory footprint and, if warranted, add a concurrency guard.** Per the todo above's finding: both
+      confirmed post-guard SIGKILLs (`00358-vj6@2026-07-31T11:32:13Z`, `00363-nwx@2026-07-31T13:41:06Z`) are preceded
+      60-120s earlier by a same-second burst of `referer: .../cockpit` requests —
+      `/api/deployments/umbrella/{LIVE,BATCH,PAPER}/summary`, `/api/vm-deployments`, `/api/deployments/inventory`,
+      `/api/health/overview`, `/api/repo-ci/overview` — several taking 20-83s each. `RateLimitMiddleware`
+      (`deployment_api/middleware.py`) caps requests/minute only, so this burst (well under 60/min) sails through with
+      zero concurrency shedding. Next steps: (1) determine which handler(s) in the burst actually dominate memory —
+      `health_overview.py`, `repo_ci` overview, and `vm_deployments.py` were NOT profiled this session (unlike
+      `_load_inventory`/`_compute_inventory`, which already has a 1-worker pool + in-flight dedup and looks unlikely to
+      be the dominant driver); add cheap instrumentation (log RSS delta or peak memory per request, or use
+      `tracemalloc`/`resource.getrusage` around each handler) rather than guessing which one is heaviest; (2) once a
+      dominant handler (or handlers) is identified, add a concurrency guard mirroring `catalogue_lifecycle.py`'s
+      `ec1f635` semaphore pattern (`threading.Semaphore` + a 503+`Retry-After` shed) scoped to the actual offender(s) —
+      do NOT blanket-guard the whole cluster speculatively; (3) if instrumentation shows the burst's COMBINED memory (no
+      single dominant handler, several moderate ones summing past the ceiling) rather than one big offender, the right
+      fix is a single shared semaphore across the whole "cockpit page load" cluster instead of a per-handler one —
+      decide from the instrumentation data, not a guess. (repo: deployment-api)
 
 ## Progress Log
 
@@ -800,3 +853,21 @@ cancellation-timeout fix and already shipped). Suggested next steps for whoever 
   `"Uncaught signal: 6"` scoped to `timestamp>="2026-07-31T11:54:00Z"` (~2h54m elapsed, 8 revisions
   `00361-qqp`..`00368-lc2`) is still zero rows; cross-checked against the known `00355-z2c@10:37:56Z` occurrence to rule
   out a false negative. Gate still not met — left the checkbox open, no code shipped (pure verification).
+
+- **2026-07-31T15:01Z (slot 15, backend_engineer)** — Dispatched `deployment_api_sigabrt_crash_loop-018` (audit
+  `prediction_catalogue.py` + `manifest.py`'s ProcessPoolExecutor path as the next-ranked SIGKILL/OOM candidates). Read
+  both modules directly, then ran the todo's own named request-log-correlation step against each exact crashing revision
+  (`00358-vj6`, `00363-nwx`), both a tight post-crash window and a wide 35-70min pre-crash window — zero requests to
+  either `/prediction-catalogue` or `/data-status/manifest` in any window checked, genuinely refuting both candidates
+  for these 2 occurrences (not just "unconfirmed"). Instead found both crashes preceded 60-120s earlier by the SAME
+  pattern: a `referer: .../cockpit` browser burst hitting 5-7 concurrent slow (0.8-83s) dashboard-panel endpoints
+  (`/api/deployments/umbrella/*/summary`, `/api/vm-deployments`, `/api/deployments/inventory`, `/api/health/overview`,
+  `/api/repo-ci/overview`) — none guarded against concurrent execution (`RateLimitMiddleware` is requests/minute only).
+  Traced the shared `_load_inventory`/`_compute_inventory` seam and found it already has a 1-worker-pool + in-flight
+  dedup guard, so it looks unlikely to be the dominant driver on its own. Double-checked (not over-read) a suspicious
+  `/api/health/overview` 500-at-76s data point — full log entry shows it completed ~0.9s before the SIGKILL with no
+  accompanying error trace, most consistent with a severed-connection casualty of the OOM-kill rather than its cause.
+  Flipped the checkbox (its own literal ask — audit + correlate — is answered) and filed a fresh, narrower
+  `[BACKEND] P2` todo carrying the concrete finding forward: profile which burst-cluster handler(s) actually dominate
+  memory before adding any concurrency guard, rather than guessing scope on dashboard-serving production code. No code
+  shipped (pure investigation, evidence-based via direct GCP log queries).
