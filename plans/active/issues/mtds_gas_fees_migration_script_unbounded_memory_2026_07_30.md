@@ -32,6 +32,7 @@ related:
   [
     /plans/archive/issues/defi_gas_fees_historical_venue_path_migration_2026_07_28.md,
     /plans/active/issues/orchestrator_api_full_outage_stale_cgroup_memory_cap_2026_07_30.md,
+    /plans/active/issues/expand_defi_pool_catalogue_script_unbounded_memory_2026_07_31.md,
     /codex/02-data/availability-manifest-and-data-status.md,
   ]
 created: "2026-07-30"
@@ -180,3 +181,10 @@ process is worth keeping so a future similar incident doesn't re-walk the same d
   under a 3GB `ulimit -v` cap with a real throwaway probe write (cleaned up immediately after). Ruled out all 3 of
   main's leading theories. Added two standing follow-up todos (ManifestWriter safety warning, audit sibling scripts).
   Resuming the actual gas_fees migration next, in small monitored chunks.
+- **2026-07-31 (review)**: cross-linked a same-class READ-side sibling incident — instruments-service's
+  `expand_defi_pool_catalogue_from_manifest_2026_07_31.py` hit an unbounded manifest read + a lingering-process issue
+  the same day (PID 2108132, killed by review; fix in-flight on slot 16, independently verified working). See
+  `/plans/active/issues/expand_defi_pool_catalogue_script_unbounded_memory_2026_07_31.md` for full detail — that doc
+  also notes this is now the fourth incident against the same availability manifest in ~36h (2 read-side, this
+  write-side one, plus delta_one's and UTL's siblings), which is the basis for todo 4's "shared safe-read helper"
+  question there.
