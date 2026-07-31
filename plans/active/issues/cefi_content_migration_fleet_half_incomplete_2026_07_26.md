@@ -124,7 +124,7 @@ canonicalised by this fleet. The migration's own `# Delete-when:` marker on
       that the fleet is fully empty (0 VMs). Result: 26/44 confirmed (was 23/44) — still NOT 44/44, 18 shards remain
       (13, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 29, 40, 41, 42, 43, 44). See Progress Log entry above for the
       full method/evidence. This todo stays open; do NOT delete the script yet.
-- [ ] [SCRIPT] P2. **Relaunch the 18 shards still incomplete after this session's wave** (13, 15, 16, 17, 18, 19, 20,
+- [x] [SCRIPT] P2. ✅ **Relaunch the 18 shards still incomplete after this session's wave** (13, 15, 16, 17, 18, 19, 20,
       21, 22, 23, 24, 25, 29, 40, 41, 42, 43, 44), now using the fixed tarball (`market-tick-data-service@9f4098b1`,
       merged 2026-07-30T18:04:44Z) which should clear the memory-leak freeze class that killed most of them. Recover
       each shard's exact `--start-date`/`--end-date` window from its own most-recent `run.log`'s `[vm-exec] starting:`
@@ -133,7 +133,7 @@ canonicalised by this fleet. The migration's own `# Delete-when:` marker on
       RULE. Note shard 29's specific "1 file remaining" freeze signature (Progress Log, 17:53Z entry) may need separate
       investigation if it recurs — flag rather than silently re-relaunching it a 3rd+ time if so. **No `[OPERATOR]` gate
       needed** for the same reason as the original P1 todo above (VM launches are AO-dispatchable by default). Repo:
-      deployment-service (launch) + market-tick-data-service (verify).
+      deployment-service (launch) + market-tick-data-service (verify). Done — see 2026-07-31T03:30Z Progress Log entry.
 - [ ] [BACKEND] P2. Cross-reference with `cefi_content_migration_vm_wedged_worker_2026_07_23.md`'s Recommendation item 1
       (give `classify_no_capture_reason()` a "task never writes the manifest" exemption for this script family) — these
       21 dead VMs are a second, larger, concrete instance of exactly the alerting gap that doc already diagnosed from
@@ -720,4 +720,26 @@ accordingly.
   (`canonical-migration-cefi-content-{13,15,16,17}-relaunch20260731-032349`), all `RUNNING`, using the shared `-032349`
   launch-batch suffix (someone else's dispatch, not mine). These are 4 of the 18 shards this doc's corpus-wide re-verify
   (22:06Z entry) found still incomplete. Fleet now at 6 total (the 4 new + the ongoing shard-14 verify run).
-  Monitoring-only — not launching the remaining 14, not touching these VMs.
+  Monitoring-only — not launching the remaining 14, not touching these VMs. **Attribution note (added by slot-13 below):
+  this WAS slot-13's own dispatch, mid-flight** — the first foreground launch batch (7/18 shards) hit the harness's
+  2-min command timeout right as it finished shard 20, so at 03:23Z only 4-7 of the 18 had appeared yet; the remaining
+  11 launched via a background batch immediately after, see the next entry for the full picture.
+- **2026-07-31T03:30Z (slot-13, `cefi_content_migration_fleet_half_incomplete-009`)**: dispatched this todo (the
+  18-shard relaunch on the fixed tarball). Pre-flight: `gcloud compute instances list` confirmed none of the 18 target
+  shards had a live VM (only the pre-existing `canonical-migration-cefi-content-14-verify20260730-221322`
+  fix-verification run was up), and `gcloud config get-value account` confirmed the active identity was the correct
+  `unified-trading-sa@…` (no poisoning this time). Recovered each shard's exact `--start-date`/`--end-date` window from
+  its own most-recent `run.log`'s `[vm-exec] starting:` line (18 separate `gcloud storage cat` reads, not re-derived) —
+  all 18 windows matched this doc's own original 2026-07-30 table exactly, confirming no drift. Launched all 18 via
+  `MACHINE_TYPE=e2-standard-16 VM_NAME_OVERRIDE=<name> bash launch-canonical-migration-vm.sh cefi-content-apply <start> <end> full`
+  (SPOT default, no `ON_DEMAND`) — `e2-standard-16` chosen deliberately over the category's still-`e2-standard-8`
+  default: this doc's own evidence already confirmed 3 independent `e2-standard-8` OOM deaths from the (separate,
+  unrelated) catalogue-load-size growth issue, which the pyarrow-pool-release fix does NOT address, so launching on
+  `e2-standard-8` would reintroduce an already-diagnosed failure class the fix was never meant to fix. Two launch
+  batches (foreground hit the harness's 2-min timeout after 7/18; re-ran the remaining 11 in the background) — both
+  batches' `gcloud compute instances create` calls returned exit=0 for all 18. **Verified via
+  `gcloud compute instances list` (not fire-and-forget)**: all 18 —
+  `canonical-migration-cefi-content-{13,15,16,17,18,19,20,21,22,23,24,25,29,40,41,42,43,44}-relaunch20260731- {032349|032606}`
+  — confirmed `RUNNING` on `e2-standard-16`/`preemptible: true`. This todo's own scope (relaunch the 18 shards on the
+  fixed tarball) is complete; ongoing health monitoring + the eventual corpus-wide re-verify grep are the separate P1
+  (shard-14 fix-verification) and P2 (corpus-wide re-verify+delete) todos already tracked above, not duplicated here.
