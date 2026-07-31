@@ -79,15 +79,41 @@ drift_direction: advance-code
       (`git log --follow --name-status` shows an `R083` rename `plans/active/issues/... → plans/archive/issues/...` in
       that commit), with a small referrer-path follow-up in `PM@090ce516b` ("archive onchain manifest backfill issue
       doc"). **Done**: both source docs' states confirmed by reading, one-line note each above.
-- [ ] [REVIEW] P3. **Re-check batch4's three dropped-by-conflict-check items against batch3's live state.** Batch4
-      dropped them because batch3 claimed the same ground. Re-read batch3's corresponding todos: if any has since been
-      cancelled, superseded, or re-scoped away from that ground, the dropped item becomes uncovered again and must be
-      re-tracked (name it here; do NOT draft it in this finalize plan). Pay particular attention to the MORPHO-ARBITRUM/
-      OPTIMISM/POLYGON `SUBGRAPH_IDS` scoping re-verification, which batch3 dispositioned as `skip_covered` by routing
-      it to `/plans/active/defi_expected_unattempted_seeder_design_2026_07_26.md`'s `[OPERATOR] P0` — if that
-      `[OPERATOR] P0` is resolved in a way that does not actually answer the scoping question, the bounded read-only
-      re-verification is genuinely orphaned and needs a home. **Done when**: each of the three has either a confirmation
-      batch3 still covers it, or a named re-track recommendation.
+- [x] ✅ [REVIEW] P3. **DONE 2026-07-31.** Re-checked all three of batch4's dropped-by-conflict-check items against
+      batch3's live state (`plans/active/defi_satellite_ao_dispatch_batch3_2026_07_26.md`, still `status: active`,
+      `locked_by:` empty). Verdict: **all three are covered — one required an in-place correction, one confirmed
+      cleanly, one needed a deeper trace than the disposition-as-written suggested.** 1. **Three read-only audits
+      (`defi_manifest_no_expected_unattempted_seeder_2026_07_26.md`)** — sub-items (a) `_DEFAULT_PROTOCOLS` cross-list
+      reconciliation and (b) FRAX-ETHEREUM `vault_share_price` scheduling check are both still live, unchanged, in
+      batch3's `[DATA] P3` "Two read-only reconciliation checks" todo (still `[ ]` open, same file/line targets).
+      **Confirmed still covered.** Sub-item (c) — the MORPHO-ARBITRUM/OPTIMISM/POLYGON `SUBGRAPH_IDS` scoping
+      re-verification, which batch4 recorded as `skip_covered` and routed to
+      `defi_expected_unattempted_seeder_design_2026_07_26.md`'s `[OPERATOR] P0` — **that routing was already stale the
+      day it was written and is now confirmed answered through a different path entirely.** The seeder-design plan's P0
+      (RULED 2026-07-28) resolved a _different_ capability-reconciliation question (FLUID-ETHEREUM lending_indices
+      wiring disposition), not the MORPHO one. The actual MORPHO scoping question was independently closed the SAME day
+      batch3/batch4 were drafted (2026-07-26, slot-2 then slot-4) directly inside the source issue doc itself (now
+      archived + `status:        resolved` at
+      `plans/archive/issues/defi_manifest_no_expected_unattempted_seeder_2026_07_26.md`): live-queried
+      `blue-api.morpho.org` and found the "0 major-asset markets" premise stale — ARBITRUM carries
+      ~$3.0B real
+         liquidity (wired: `market-tick-data-service@7d90c119`, `unified-api-contracts@2ceae9e9`, both verified
+         ancestors of `origin/live-defi-rollout`), while OPTIMISM (~$117k
+      max) and POLYGON (idle-only liquidity) were deliberately left unwired pending a future liquidity re-check — a
+      stated judgment-call deferral, not an orphan. **Confirmed answered** — no re-track needed, though the citation
+      mechanism in batch3/batch4 (routing through the P0) was never actually how it got resolved. 2. **The
+      agent-orchestrator M3 done-gate exception** — batch3 still carried this as its own open `[CROSS-AG][INFRA] P3`
+      todo, but it turned out to be a **stale duplicate of already-shipped work**: the identical fix was built the same
+      day via `defi_manifest_no_expected_unattempted_seeder_2026_07_26.md`'s own `[INFRA] P3` (slot-4) —
+      `agent-orchestrator@c9f805c`, verified live this pass as an ancestor of `origin/live-defi-rollout` with
+      `_diff_cancels_checkbox` + `"todo_cancelled_superseded"` confirmed present in `server/verify.py`. **Fixed in
+      batch3 as part of this re-check** (adjacent, small, verified — see the `unified-trading-pm` commit for this todo):
+      flipped batch3's todo to `[x]` closed-as-duplicate with the shipped-SHA citation, so it will not be re-dispatched
+      to redo already-live code. 3. **The targeted single-day glued-instrument-id manifest re-verify** — confirmed still
+      exactly covered by `defi_consolidated_closeout_2026_07_18.md`'s open `[DATA] P2` ("21 glued-id rows found in the
+      2026-07-23 manifest rebuild... **Remaining**: run the 9-cell ORCA retry + re-run the verify script"),
+      `status: active`, unchanged scope, same file/line. **Confirmed still covered.** **Net**: zero net-new orphans from
+      this re-check; one genuine stale-duplicate defect found and fixed in batch3 along the way.
 - [ ] [REVIEW] P3. **Record an explicit stop-or-continue verdict for the defi tranche.** Batch4's assessment is STOP:
       after batch3 is counted as covering, 21 defi-primary docs remain orphaned and every one of their remaining items
       is from the non-batchable taxonomy (13 operator-gated, 3 time-gated, 1 too-large-or-risky, 3 human-only, 1
