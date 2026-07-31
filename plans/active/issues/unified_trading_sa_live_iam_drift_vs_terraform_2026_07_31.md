@@ -145,11 +145,69 @@ roles as drift-to-be-removed (terraform only manages resources it declares), so 
    `gcloud projects set-iam-policy` on the whole policy risks dropping unrelated bindings; use per-role
    `gcloud projects remove-iam-policy-binding` or the terraform-managed equivalent instead).
 
+## Audit findings (2026-07-31, slot 7, infra) — P0 todo
+
+**Method**: `gcloud logging read` against
+`protoPayload.methodName="SetIamPolicy" AND protoPayload.serviceName="cloudresourcemanager.googleapis.com"`, filtered
+precisely on the structured field
+`protoPayload.serviceData.policyDelta.bindingDeltas.member="serviceAccount:unified-trading-sa@central-element-323112.iam.gserviceaccount.com"`
+(a bare full-text substring filter was tried first and returned an identical result set, confirming the field-level
+filter isn't under-matching). Read as the `unified-trading-sa` identity itself (has `logging.viewer`); ran via
+`--account=` per-invocation rather than `gcloud config set account`, since `/home/ubuntu/.config/gcloud` is a
+**host-shared config dir** across all slots (confirmed via `gcloud config configurations list` — named configs
+`slot11-work`/`slot14-work`/`slot15-work`/`slot16-work` coexist) — mutating the shared `default` config's active account
+would have raced other slots' concurrent `gcloud` calls; the one accidental `gcloud config set account` mutation made
+mid-investigation was immediately reverted back to `github-deploy` (its original value) before the flag-based approach
+was adopted.
+
+**Retention-window ceiling (hard constraint, verified)**: `gcloud logging buckets list --project=central-element-323112`
+shows the `_Required` bucket at `global` location, `retentionDays=400`, `locked=True` (Google's immutable Admin-Activity
+floor — SetIamPolicy is always logged here, cannot be shortened or disabled).
+`gcloud projects describe central-element-323112` shows `createTime=2021-08-16T12:52:47Z` — the project is ~4.4 years
+old, so **any IAM grant made before ~2025-06-27 (400 days before this audit) has no retrievable Cloud Audit Log entry,
+full stop** — not a misconfiguration, a hard Google-side retention floor.
+
+**Result — only 3 of the 24 undeclared roles have ANY audit-log trail in the retrievable window**, and all three are
+recent, self-granted, non-terraform events:
+
+| timestamp (UTC)          | action | role                        | actor (= granter)             |
+| ------------------------ | ------ | --------------------------- | ----------------------------- |
+| 2026-07-31T01:00:41.332Z | ADD    | `roles/secretmanager.admin` | `unified-trading-sa` (itself) |
+| 2026-07-31T13:07:44.180Z | ADD    | `roles/pubsub.publisher`    | `unified-trading-sa` (itself) |
+| 2026-07-31T19:32:14.596Z | ADD    | `roles/logging.logWriter`   | `unified-trading-sa` (itself) |
+
+All three: (a) are in the undeclared-24 set (none of `secretmanager.admin`/`pubsub.publisher`/`logging.logWriter` match
+the 9 terraform-declared roles — the closest declared cousins are `secretmanager.secretAccessor` and `pubsub.editor`,
+which are DIFFERENT roles), (b) happened TODAY, all within the ~19 hours immediately preceding this audit, (c) were
+granted by `unified-trading-sa` acting AS ITSELF (not by a human, not by `github-actions-deploy`, not via `tofu apply`)
+— i.e., some agent session today used the SA's own ambient credential (per RULES.md's ambient-identity guidance) to
+self-grant itself three NEW project-level roles outside terraform entirely, live evidence of exactly the
+self-escalation-adjacent pattern this doc's "Why it matters" section warns about (though these three specific roles are
+not the two flagged self-escalation-capable ones — `projectIamAdmin`/`serviceAccountAdmin` — those two show ZERO
+bindingDelta ADD events for `unified-trading-sa` anywhere in the 400-day window, meaning they predate 2025-06-27 too).
+
+**The remaining 21 undeclared roles (including both `roles/resourcemanager.projectIamAdmin` and
+`roles/iam.serviceAccountAdmin`) have NO retrievable grant event** — they were added before the 400-day audit-log floor
+and cannot be traced to a specific actor/process via Cloud Audit Logs by any query. No REMOVE deltas for
+`unified-trading-sa` appear in the window either (nothing was revoked and re-granted).
+
+**Consequence for P1's operator ruling**: provenance for 21/24 roles (incl. both self-escalation-capable ones) is
+unrecoverable — the ruling in P1 must be made on CURRENT NEED, not historical justification (no "who granted this and
+why" answer exists to consult). The 3 traceable roles are a separate, actionable finding on their own: they show the
+ambient-SA-credential pattern is ACTIVELY producing new undeclared project-level grants as of today, so P2's
+terraform-import-or-revoke pass should treat this as a live, still-open leak, not a one-time historical drift snapshot —
+whatever P1/P2 decide, a recheck of `unified-trading-sa`'s live policy vs. terraform after P2 lands is warranted to
+confirm no further self-grants happened in the interim.
+
 ## Todos
 
-- [ ] [INFRA] P0. Audit `unified-trading-sa`'s IAM policy history (Cloud Audit Logs `SetIamPolicy` for this member, or
-      `gcloud logging read` on `protoPayload.serviceName="cloudresourcemanager.googleapis.com"`) to identify how each of
-      the 24 undeclared roles was granted and by what identity/process. (repo: deployment-service)
+- [x] [INFRA] P0. ✅ Audit `unified-trading-sa`'s IAM policy history (Cloud Audit Logs `SetIamPolicy` for this member,
+      or `gcloud logging read` on `protoPayload.serviceName="cloudresourcemanager.googleapis.com"`) to identify how each
+      of the 24 undeclared roles was granted and by what identity/process. (repo: deployment-service) —
+      unified-trading-pm@PENDING_SHA. See "Audit findings" section above: 3/24 traceable (all self-granted by the SA
+      itself, today, outside terraform); 21/24 (incl. both self-escalation-capable roles) predate the 400-day Cloud
+      Audit Log retention floor and are permanently untraceable via this mechanism. No further audit-log query will
+      recover more — investigation exhausted the available evidence.
 - [ ] [OPERATOR] P1. Rule on `roles/resourcemanager.projectIamAdmin` + `roles/iam.serviceAccountAdmin` specifically:
       genuinely needed (name the workflow) vs. revoke. These two are self-escalation-capable and should not sit
       undecided long. (repo: unified-trading-pm)
