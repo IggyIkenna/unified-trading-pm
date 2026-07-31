@@ -265,3 +265,49 @@ the RPC path above — only useful as a coarse cross-check if capture ever needs
 None directly on point — this is a UAC-registry-internal chain-onboarding gap, not a cross-cutting data pipeline
 contract. `/codex/02-data/defi-canonical-naming-ssot.md` may be relevant once capture wiring actually starts (venue
 naming conventions).
+
+## 2026-07-31 progress checkpoint (slot 15) — real code bug found + fixed, manifest-write leg still in flight
+
+Picked up sub-item (4) (the manifest-write leg slot-3 left open). **Found and fixed a genuine wiring bug the doc's own
+todo 3 guidance got wrong**: `_collect_protocol_chain` (`lending_indices_handler.py`) short-circuits to "No subgraph ID
+for protocol=%s chain=%s, skipping" and returns `{}` the moment `get_subgraph_id(protocol, chain)` is falsy — PLASMA has
+NO subgraph_id entry at all, so it never reached `_query_and_parse`'s cascade, and the 3rd-tier RPC fallback
+(`_fetch_aave_v3_via_rpc`) lives ONLY inside that cascade (triggers when a REGISTERED subgraph_id returns 0 rows, not
+when no subgraph_id exists). This doc's own todo 3 text ("leaving `SUBGRAPH_IDS[...]` absent is what routes
+`_fetch_aave_v3_via_rpc` down the RPC-fallback path, same shape as OPTIMISM") is factually wrong for this dispatch path
+— OPTIMISM has a real (broken/empty) subgraph_id registered, which is why it reaches the cascade at all; PLASMA has
+none. Confirmed via two live dry-runs against the real CLI (not just slot-3's in-process call, which bypassed this exact
+gating logic): before the fix, `--lending-chains PLASMA` produced 0 rows with the skip warning; after,
+`Aave V3 RPC fallback: 18 rows for PLASMA (18 reserves x 1 blocks)` — same 18 rows slot-3 validated in-process.
+
+**Fix**: extracted a `_rpc_only_fallback()` helper (also needed to keep `_collect_protocol_chain` under the QG
+function-size gate) that routes any `aave_v3` protocol/chain pair with a registered pool address but no subgraph_id
+straight to `_fetch_aave_v3_via_rpc`, before falling back to the original skip-and-log behavior for every other case
+(unchanged). Two local commits on `market-tick-data-service`, **NOT yet pushed** (quality-gates.sh in flight at
+checkpoint time, ~47% through the unit suite on a loaded shared host):
+
+- `19d432fe` — `fix(lending-indices): route no-subgraph aave_v3 chains to direct RPC fallback`
+- `daf90798` — `refactor(lending-indices): extract _rpc_only_fallback to fix function-size QG gate` (the first commit
+  alone pushed `_collect_protocol_chain` to 68L, over the size ceiling; this is the fix, no behavior change)
+
+**Exact resume steps for whoever picks this up** (including a future me, if this session ends before shipping):
+
+1. `cd market-tick-data-service && bash scripts/quality-gates.sh` — if still running/was killed, re-run. If GREEN, ship
+   both commits via `quickmerge --agent --files market_tick_data_service/cli/handlers/lending_indices_handler.py`
+   (single quickmerge call covers both, they're already committed locally in sequence). If RED, read the failure — it
+   was ONLY the function-size gate before (now fixed); a different failure needs its own diagnosis, don't assume it's
+   the same issue.
+2. Once shipped, run the REAL (non-`--dry-run`) capture:
+   `GCP_PROJECT_ID=central-element-323112 .venv/bin/python -m market_tick_data_service --operation collect-lending-indices --mode batch --asset-group defi --lending-protocols aave_v3 --lending-chains PLASMA --start-date 2026-07-30 --end-date 2026-07-30 --log-level INFO`
+   (drop `--dry-run`; **use `--lending-chains`, NOT `--venues`** — the latter is not consumed by this handler and
+   silently sweeps every default chain instead, a real trap this session hit once already).
+3. Confirm rows landed in the manifest for `venue=AAVE-PLASMA`/`chain=PLASMA` (read the availability index or query the
+   manifest directly for that date/venue — don't just trust the CLI's own log output).
+4. Flip `unified-api-contracts/unified_api_contracts/registry/defi_venues.py`'s `"AAVE-PLASMA": "pipeline"` →
+   `"AAVE-PLASMA": "live"` (line ~588; leave `"FLUID-PLASMA": "pipeline"` unchanged — its `PROTOCOL_LAUNCH_DATES` entry
+   is still unconfirmed per the P1 todo above, a separate prerequisite).
+5. Ship the UAC phase flip, then flip this doc's P3 todo checkbox with both SHAs cited, `/done`.
+
+**Lesson for whoever re-derives a "should route to RPC fallback" claim in this codebase**: verify against the ACTUAL
+call path used by the real CLI entrypoint, not just a direct in-process function call — `_fetch_aave_v3_via_rpc` being
+correctly wired and reachable are two different claims, and this doc's own todo 3 conflated them.
