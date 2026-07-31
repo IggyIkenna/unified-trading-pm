@@ -151,20 +151,23 @@ awareness given the blast radius).
       `uGp0rg==`, size 235,278,458, source generation stable across the copy, via UTL `gcs_copy_object`) → RESUMED
       10:53Z, verified `ENABLED` + a real merge at 10:44:51Z, `pruned_shards=0` throughout, no `CONSOLIDATOR_DOWN`. No
       code fix shipped because **no consolidator defect exists**.
-- [ ] [OPERATOR] P1. **Close the odds_api gaps — needs a fix-approach RULING, not more investigation.** Root cause is
-      now known and proven (§ "Root cause (2026-07-30)"): `check_shard_freshness` marks 572 of the 595 missing days
-      "fresh" off an unrelated `venue='ODDS_API'` sentinel row, so the gapfill SKIPS them and can never fill them —
-      re-running the launcher unchanged will keep producing exactly the observed no-op. Census after this session is
-      **still 595 missing days** in `2020-06-06..2026-04-15`; this remains the blocking prerequisite for
-      `/plans/active/issues/sports_odds_api_scattered_multiyear_gaps_2026_07_27.md`'s P1. Options: **A [WORKER REC]** —
-      make the skip source/data_type-aware for the odds path only (narrow: thread the target `data_type`/`source`
-      through `_apply_freshness_skip`, leave the shared UTL primitive's default behaviour untouched), then re-run the
-      gapfill normally; **B** — no code change, re-run the gapfill with `--force` scoped to the 595 dates (bypasses the
-      skip entirely, but costs a full Odds-API re-fetch AND arms the documented `--force` + SPOT preemption trap where
-      `RelaunchPreemptedVm` replays `START_DATE` forever, `/codex/05-infrastructure/spot-vms-for-backfill.md`); **C** —
-      change `check_shard_freshness` itself to stop matching a `data_type` value against an `expected_venues` entry
-      (correct in principle, fleet-wide blast radius: would trigger mass re-fetch across every asset_group); **Other**.
-      Repos: market-tick-data-service, unified-trading-library.
+- [x] ✅ [OPERATOR] P1. **RESOLVED 2026-07-31 (slot 16, retagging a stale marker — the fix itself shipped 2026-07-30 by
+      slot 3) — Option A (the WORKER REC) was implemented and is live on `live-defi-rollout`.** Verified via `git log`:
+      `market-tick-data-service@362e64e34c10af14a9cd46bec438156c90a4932b` ("fix(sports): scope smart-skip freshness
+      evidence to odds_api's declared source (572-day permanent-skip fix)") adds
+      `_SOURCE_SCOPED_FRESHNESS_VENUES = frozenset({"ODDS_API"})` + `_freshness_source_scope()` in
+      `tick_data_handler.py`, threading `expected_sources` through to UTL's
+      `check_shard_freshness(..., expected_sources=...)` (`unified_trading_library/manifest_writer/_queries.py:163`,
+      `_venue_evidence_rows` now requires the row's own `source` column to match when a token is source-scoped — see
+      that function's docstring for the exact mechanism). This is narrowly scoped to `ODDS_API` only, per the option's
+      own design (no fleet-wide blast radius; matches the P1 blast-radius audit below which confirms the collision class
+      is sports-only). **This retag was found stale for a day** (fix landed 2026-07-30T14:39Z, this checkbox wasn't
+      flipped until now) — no corpus-wide re-scan performed, just this one file caught while working the dependent
+      VERIFY task. **What is NOT yet done**: no backfill VM has been launched with the fixed code (checked
+      `gs://deployment-scripts-central-element-323112/vm-logs/` — no `mtds-backfill-odds-*` entry postdates 2026-07-29),
+      so the 595-day gap in the canonical is still open. That re-run is
+      `/plans/active/issues/sports_odds_api_scattered_multiyear_gaps_2026_07_27.md`'s own P1 todo, now unblocked by this
+      retag. Repos: market-tick-data-service, unified-trading-library (no new code — already shipped).
 - [x] ✅ [DATA] P1. **DONE 2026-07-30 (slot 7) — blast radius is SPORTS-ONLY; no other asset_group reproduces the
       sentinel collision.** Full per-asset_group table + methodology in § "Blast-radius audit results (2026-07-30, slot
       7)" below. Repo: unified-trading-library (no code change — audit found nothing else to fix).

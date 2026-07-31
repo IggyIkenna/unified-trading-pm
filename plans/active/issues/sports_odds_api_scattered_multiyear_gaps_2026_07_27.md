@@ -151,34 +151,35 @@ access (likely expired for the older ranges) or VM run-log archaeology, out of s
       diagnosable) or accepting the gaps as permanently unexplained. Did not attempt the backfill itself — the
       credential blocker below is unrelated to and independent of this investigation. (repo: market-tick-data-service,
       deployment-service, read-only investigation, no code changed)
-- [ ] [OPERATOR] P1. **RE-TRIAGED 2026-07-30 (slot 3) — the consolidator blocker cited below is DISPROVEN; the real
-      blocker is now known, proven, and needs a fix-approach ruling.** The consolidator absorbs correctly (static
-      `rows_out` is an in-place UPDATE of colliding dedup keys; `dedup_dropped` is merely `rows_in - rows_out`, so it
-      corroborates nothing). What actually blocks this backfill: **`check_shard_freshness` marks 572 of the 595 missing
-      days "fresh" off an unrelated `venue='ODDS_API'` sentinel row written by the MDPS odds-horizon-bucket pipeline**,
-      so the launcher SKIPS them — both 2026-07-29 VMs logged 2,139 `SKIP date=…` lines and exactly ONE
-      `Processed date=`. **Re-running `launch-mtds-sports-odds-backfill-vm.sh` unchanged will no-op again.** Pick a fix
-      approach first — options A/B/C are enumerated on the P1 todo of
-      `/plans/active/issues/sports_manifest_consolidator_zero_growth_stall_2026_07_29.md` (§ "Root cause (2026-07-30)"
-      carries the 2×2 proof). Concrete deliverables actually shipped in the 07-29 session: two real launcher bugs
-      found + fixed (stale pre-floor `START_DATE` default; `e2-standard-4` OOM on the odds backfill launcher, bumped to
-      `e2-highmem-4` — see `mtds_backfill_vm_memory_hang_large_chunk_2026_07_22.md`'s 2026-07-29 addenda for the full
-      OOM investigation, including that the machine-type bump alone was insufficient and per-day memory variance is
-      fundamentally unpredictable for this venue too). Original credential-unblock context (superseded as the active
-      blocker, kept for history): the-odds-api.com key was `DEACTIVATED_KEY` through 2026-07-28; the operator has since
-      rotated `odds-api-key` (Secret Manager, project `central-element-323112`) to a new key on a
-      5,000,000-credits/month subscription, live-verified via direct curl (HTTP 200, `x-requests-remaining: 5000000`) —
-      see `sports_odds_api_key_deactivated_2026_07_26.md`. Backfill launcher:
-      `deployment-service/scripts/vm/launch-mtds-sports-odds-backfill-vm.sh --start <range-start> --end <range-end>`
-      (idempotent/manifest-skip by default). (repo: deployment-service)
+- [ ] [DATA] P1. **UNBLOCKED 2026-07-31 (slot 16) — the fix-approach ruling this todo was waiting on is RESOLVED; the
+      code fix shipped 2026-07-30 and this retag was just stale for a day.** `market-tick-data-service@362e64e34c1`
+      ("fix(sports): scope smart-skip freshness evidence to odds_api's declared source") implements Option A from
+      `/plans/active/issues/sports_manifest_consolidator_zero_growth_stall_2026_07_29.md`'s P1 (now flipped there too):
+      `check_shard_freshness` is now called with `expected_sources={"ODDS_API": "odds_api"}` for the sports path, so the
+      foreign `venue='ODDS_API', source='mdps_odds_horizon_bucket'` sentinel row no longer counts as evidence — the
+      572-day permanent-skip is fixed at the source. Retagged `[OPERATOR]` → `[DATA]` since no further design ruling is
+      needed; this is now a plain re-run. **What's left, concretely**: launch
+      `deployment-service/scripts/vm/launch-mtds-sports-odds-backfill-vm.sh --start 2020-06-06 --end <today>` (no
+      `--force` needed — the fix makes the freshness check correctly identify the 595 genuinely-missing days without
+      re-touching the 1,545 already-covered ones, so this should be a much narrower/cheaper run than prior full-range
+      attempts). Verified via `gcloud storage ls gs://deployment-scripts-central-element-323112/vm-logs/` that no
+      `mtds-backfill-odds-*` VM has run since 2026-07-29 — i.e. nobody has exercised the fix yet, the 595-day gap is
+      still open in the canonical. Original credential-unblock context (superseded as the active blocker, kept for
+      history): the-odds-api.com key was `DEACTIVATED_KEY` through 2026-07-28; the operator has since rotated
+      `odds-api-key` (Secret Manager, project `central-element-323112`) to a new key on a 5,000,000-credits/month
+      subscription, live-verified via direct curl (HTTP 200, `x-requests-remaining: 5000000`) — see
+      `sports_odds_api_key_deactivated_2026_07_26.md`. (repo: deployment-service)
 - [ ] [VERIFY] P2. Depends on the P1 backfill above. **Census re-run 2026-07-30 (slot 3) against a snapshotted canonical
       (11,789,693 rows): STILL 595 missing days** across `2020-06-06..2026-04-15` (1,545 of 2,140 days present) —
       unchanged, because P1 never actually fetched anything (see the re-triage above). The consolidator is NOT the
-      reason and no longer gates this todo. Once P1's backfill genuinely lands, re-run this same census (single manifest
-      read, filter `source == "odds_api"`, `date >= 2020-06-06`, diff against the full calendar range) to confirm 0
-      missing days, then close this doc. Note for whoever runs it: the current 595 decompose into 168 contiguous ranges
-      (not the 27 previously quoted — 27 was the count of multi-day ranges only), and 23 of the 595 are NOT explained by
-      the sentinel skip, so a clean sweep needs those diagnosed separately.
+      reason and no longer gates this todo. **2026-07-31 update (slot 16): P1's design blocker cleared 2026-07-30 (the
+      source-scoping fix shipped), but P1 STILL has not actually run yet** — no backfill VM has launched with the fix,
+      so this VERIFY todo remains genuinely blocked on P1 execution, not on any ruling anymore. Once P1's backfill
+      genuinely lands, re-run this same census (single manifest read, filter `source == "odds_api"`,
+      `date >=     2020-06-06`, diff against the full calendar range) to confirm 0 missing days, then close this doc.
+      Note for whoever runs it: the current 595 decompose into 168 contiguous ranges (not the 27 previously quoted — 27
+      was the count of multi-day ranges only), and 23 of the 595 are NOT explained by the sentinel skip, so a clean
+      sweep needs those diagnosed separately.
 
 ## Progress Log
 
@@ -290,6 +291,24 @@ access (likely expired for the older ranges) or VM run-log archaeology, out of s
   `sports_manifest_consolidator_zero_growth_stall_2026_07_29.md` remains `[ ]` unresolved. Skipping this task
   (`reason_code=BLOCKED`) rather than re-running the census — a re-run now would just reproduce the already-documented
   595-missing-day result with zero new information, since nothing has been fetched since the last census.
+- 2026-07-31 (slot 16): Dispatched `sports_odds_api_scattered_multiyear_gaps-002` (this doc's P2 VERIFY todo) again.
+  Before doing a bare re-check, went one step further than the last few dispatches: checked `git log` not just for a fix
+  to the consolidator (none expected — it was already exonerated) but specifically for the freshness-skip fix the
+  `[OPERATOR]` P1 ruling was waiting on. **Found it had already shipped**:
+  `market-tick-data-service@362e64e34c10af14a9cd46bec438156c90a4932b` (2026-07-30T14:39Z, slot 3) implements Option A
+  (source-scope the `ODDS_API` sentinel check) exactly as the ruling doc's `[WORKER REC]` proposed, with UTL support
+  (`check_shard_freshness(expected_sources=...)`) and a dedicated test file — but neither this doc's P1 checkbox nor
+  `sports_manifest_consolidator_zero_growth_stall_2026_07_29.md`'s P1 `[OPERATOR]` checkbox had been retagged to reflect
+  it; both had gone stale for a day, the exact anti-pattern `CLAUDE.md` § "the moment an `[OPERATOR]` tag resolves,
+  retag in the SAME edit" warns about (found here because nobody had re-checked for the SPECIFIC fix, only for "any new
+  commit"). Retagged both: `sports_manifest_consolidator_...`'s P1 → `[x]` (fix confirmed shipped, cites the commit +
+  mechanism); this doc's P1 → `[ ] [DATA]` (was `[OPERATOR]`) with the concrete next launcher command. Confirmed via
+  `gcloud storage ls .../vm-logs/` that no backfill VM has run since 2026-07-29 — the fix is live but UNEXERCISED, so
+  the 595-day gap is still open and this P2 VERIFY todo still cannot pass (re-running the census now would reproduce the
+  unchanged 595-day result, same reasoning as every prior skip on this todo). Did not launch the backfill VM myself —
+  that is P1's scope (a multi-hour, real-vendor-API-cost operation), not this VERIFY todo's, and it's now correctly
+  unblocked for the backlog to dispatch as its own task. Skipping this task (`reason_code=BLOCKED`) — genuinely new
+  information this time (the retag), but the VERIFY itself still can't complete until P1 executes.
 
 ## Codex SSOTs
 
