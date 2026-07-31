@@ -275,7 +275,15 @@ drift_direction: advance-code
 - [ ] [REVIEW] P2. BLOCKED-PREREQUISITES — **Sports P2d — final e2e gate stamp, deliberately deferred, blocked on the
       P2a/P2b/P2c items above.** R3-daily/R4/R5 sub-items already shipped/verified; R1/R2/R3-history remain blocked
       pending P2a+P2b+P2c — re-run this gate once those land, don't mark it DONE early. (repo: unified-trading-pm).
-      **Done when**: P2a/P2b/P2c are all confirmed done AND the gate re-run passes.
+      **Done when**: P2a/P2b/P2c are all confirmed done AND the gate re-run passes. — **2026-07-31T15:15Z (slot 14,
+      review): re-dispatched, still genuinely blocked — P2c (features history backfill, todo above) is still `[ ]`, so
+      the done-when clause is not met.** Same root cause as the P0 VERIFY todo below
+      (`blocked_prerequisites_     marker_not_in_non_dispatchable_regex_2026_07_28.md`): `regen_backlog_from_plan.py`'s
+      `_NON_DISPATCHABLE_RE` doesn't recognize the `BLOCKED-PREREQUISITES` token, so this same-plan-dependency todo
+      keeps re-dispatching despite the plan's own banner intent. Not re-tagging to an operator/credential marker
+      (inaccurate — this is a genuine same-corpus todo dependency, not an external gate). No code shipped, no gate
+      re-run attempted (P2c isn't done yet — forcing one now would be exactly the "don't mark it DONE early" this todo
+      warns against). Logged as a disposition entry rather than silently re-bouncing.
 - [x] ✅ [DATA] P2. **RETAGGED 2026-07-28 (stale-tag audit — already ruled 2026-07-26, `[OPERATOR]` never removed).**
       Unresolved cefi-before-sports gate TENSION, never ruled (flagged 2026-07-14, still open).
       `instruments_foundation_completeness_2026_06_24.md` states sports does NOT start its G1→G5 until cefi is DONE, but
