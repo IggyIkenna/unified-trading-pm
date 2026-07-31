@@ -15,7 +15,7 @@ summary: >-
   always carries date/venue/instrument_type/league_id/underlying/instrument_id (set unconditionally at open time)" —
   that comment is now STALE for aggregate bundles. A KeyError here means the shard neither uploads nor records
   `attempted_failed`, leaving its capture_status unrecorded (an honest-coverage gap).
-status: open
+status: resolved
 nature: issue
 asset_group: [tradfi]
 stage: [data]
@@ -45,7 +45,7 @@ source:
     chat-only ping that never became a tracked backlog todo, so it fell through. Re-verified live by main-agent
     (agt-9f21bc) 2026-07-31 05:05Z: both lines still present + unfixed; c78285b confirmed as the removing commit.",
   ]
-resolved_by:
+resolved_by: market-data-processing-service@001ae56
 locked_by:
 locked_since:
 supersedes:
@@ -53,6 +53,12 @@ superseded_by:
 ---
 
 # MDPS canonical_writer_streaming: KeyError on aggregate-bundle failure paths
+
+> **🟢 ARCHIVED 2026-07-31** (slot-14) — status=resolved, sole todo done + unlocked. Fix shipped
+> market-data-processing-service@001ae56: both `rk["instrument_id"]` accesses now use `rk.get("instrument_id", "")`, the
+> stale comment corrected, regression tests added. No referrers to this doc found corpus-wide; no codex contract changed
+> (this restores compliance with the already-documented shard-level-failure-isolation + honest-coverage-model contracts,
+> it doesn't establish a new one).
 
 ## What I found (verified live 2026-07-31 05:05Z, main-agent agt-9f21bc)
 
