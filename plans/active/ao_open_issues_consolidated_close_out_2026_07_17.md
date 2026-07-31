@@ -135,17 +135,12 @@ whose child is archived were flipped `- [x]` on 2026-07-20** with a per-item `DO
 
 ## Satellite AO-dispatch layer (2026-07-26 → 2026-07-31) — this plan's related: never linked to it until now
 
-The AO-eligible extraction/dispatch layer: `batch1_2026_07_26` (active) + `_finalize`, `batch2_2026_07_30` (active) +
-`_finalize`, `batch3_2026_07_31` (draft) + `_finalize` (active) — **all reclassified `assigned_vm: NA`/`local-only`
-2026-07-31** (finish AO's backlog here, not on the busy fleet), so none dispatch to AO workers now. **2 more self-owned
-plans linked for the first time**: `deepseek_claude_blended_provider_routing_2026_07_28.md`,
-`omniroute_llm_gateway_pilot_design_2026_07_30.md` (both `parent_epic: orchestrator_master`, found via a 2026-07-31
-corpus audit). **NOT linked**: `infra_satellite_ao_dispatch_batch3_2026_07_30.md` — infra-tranche-owned despite `repos:`
-incidentally including agent-orchestrator (Orthogonality HARD CHECK, `ag-closeout-audit` SKILL.md).
+`batch1`/`batch2`/`batch3` + finalizes (now `assigned_vm: NA`/`local-only`),
+`deepseek_claude_blended_provider_routing_2026_07_28.md`, `omniroute_llm_gateway_pilot_design_2026_07_30.md` — all newly
+linked 2026-07-31. NOT linked: `infra_satellite_ao_dispatch_batch3_2026_07_30.md` (infra-tranche-owned).
 
-**`/ag-closeout-audit ao` sweep (2026-07-30)** classified every AO-tagged plan/issue doc against this plan + the 4
-above. Full per-doc reasoning lives in the audit's own workflow journal (not duplicated here — plans reference, they
-don't duplicate); grouped by bucket (30 of 41 are genuinely open with no live dispatch):
+**`/ag-closeout-audit ao` sweep (2026-07-30)** classified every AO-tagged doc against this plan's covering family
+(reasoning in the audit's own workflow journal) — 30 of 41 genuinely open, no dispatch:
 
 | Bucket                                             | #   | Docs (`plans/active/issues/<name>.md` unless noted)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
 | -------------------------------------------------- | --- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
