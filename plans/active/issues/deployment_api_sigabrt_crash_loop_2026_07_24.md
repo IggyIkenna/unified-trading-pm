@@ -707,7 +707,33 @@ cancellation-timeout fix and already shipped). Suggested next steps for whoever 
       redirect/replace in app startup code, or a Cloud Logging exclusion-filter/sink change scoped to this specific
       service around the same window. Done-when: `stdout`/`stderr` entries resume appearing for this service in Cloud
       Logging, confirmed via a fresh `gcloud logging read     logName:"stdout"` after the fix deploys. (repo:
-      deployment-api)
+      deployment-api) — **2026-07-31 (slot 4, backend_engineer)**: step (1) done with live data — **gen1 pin is NOT a
+      day-one trigger.** `acdd4c8` first went live on `00333-p62` (`2026-07-30T06:26:01Z`); stderr kept working for
+      **~26h** after that (confirmed real entries on 5 gen1-pinned revisions spanning that window, last one
+      `00353-dng@08:40:27Z` itself). A day-one sandbox-capture break would show zero output from `00333-p62` onward — it
+      didn't, so **not reverting to gen2** on this evidence (would fight the data + risk reopening the pyarrow-crash
+      issue gen1 fixed); flagging as a judgment call, not guessing. New lead instead: the 4 stderr lines immediately
+      before permanent silence (`08:40:27.833501-833861Z`) are FRAGMENTS of one never-completing traceback —
+      `uvicorn httptools_impl.py:422 run_asgi` → `requests/adapters.py:696 send` →
+      `urllib3 connectionpool.py:788/464/1106` → `connection.py:796 connect` → `_ssl_wrap_socket_and_match_hostname` —
+      i.e. a SYNCHRONOUS HTTPS/TLS handshake invoked inside an async ASGI handler, cut off mid-connect, no exception
+      message ever captured. `deployment_api/` has zero direct `requests` imports but 6 files make a sync
+      `google.auth.transport.requests`/`AuthorizedSession` HTTPS call from a route handler (`firebase_auth.py`,
+      `routes/_reap_scheduler.py`, `routes/_cloud_scheduler.py`, `routes/service_status.py`,
+      `routes/_code_builds_aws.py`, `services/cost_observability/aws_wif.py`, `utils/artifact_registry.py`) — any could
+      match. Not yet confirmed causal (single sample; exact call site not pinned). Narrower follow-up filed below. No
+      fix shipped — done-when not met, leaving unchecked.
+
+- [ ] [BACKEND] P1. **NEW, opened 2026-07-31 (slot 4, backend_engineer) — pin the exact call site for the
+      truncated-sync-HTTPS-traceback-then-permanent-silence pattern found in the todo above and confirm/refute it as the
+      blackout trigger.** (1) cross-reference `run.googleapis.com/requests` for instance `001548f729ad...` (`00353-dng`)
+      in a ±5s window around `08:40:27Z` to find the exact route/URL, pinning which of the 6 sync-HTTPS call sites
+      fired; (2) check whether that call site's `requests`/`AuthorizedSession`/`fetch_id_token()` call has no explicit
+      socket `timeout=` (an indefinite hang matches "never completes, never logs the rest"); (3) check whether this same
+      4-fragment-then-silence signature recurs at other points in this service's history (independent of the gen1 pin) —
+      recurrence strengthens this theory, a one-off weakens it. Done-when: call site identified AND either a fix ships
+      (add `timeout=`, or move the call off the event loop via `run_in_threadpool`) with stdout/stderr confirmed
+      resuming, or the theory is refuted with evidence (not re-guessed). (repo: deployment-api)
 
 - [ ] [BACKEND] P3. **NEW, opened 2026-07-31 (slot 13, backend_engineer) — dead-code cleanup: `workers/auto_sync.py`'s
       entire background-sync implementation is unreachable in production.** Found while tracing the call graph for the
