@@ -152,6 +152,17 @@ back to the most recent fully-covered one (preferring a window not anchored on a
 > the candle backfill runs. That is an **honest gap**, not a failure — and it is exactly why `/data-pipeline-check-mdps`
 > must be green and its backfill run first.
 
+> ⚠️ **Sports `empty_confirmed` does not prove the compute logic works (found 2026-08-01,
+> `features_sports_env_staging_reads_empty_staging_reference_data_2026_08_01.md`)**: under `--env staging`, sports
+> reference-data reads (`gcs_paths.py::resolve_instruments_bucket()`/`resolve_tick_data_bucket()`) route through the
+> SAME env-tiered bucket the VM writes to — unlike `delta_one`'s downstream families, sports has no
+> `--source-bucket`-style override to read real `-prd-` data while writing to `-test-`.
+> `instruments-store-sports-stg- {pid}` has never been seeded with real reference data, so **every** sports checkpoint
+> reports `17/17 entities missing` → `empty_confirmed`, even on a `SPORTS_SMOKE_DATES` "busy" day with abundant real
+> `-prd-` fixtures. A clean `empty_confirmed` sports result only proves the VM/IAM/honest-absence plumbing works — it
+> does NOT prove the feature-computation logic ran against real inputs. Don't treat a sports `empty_confirmed` as a
+> compute-logic PASS until the source-bucket override (or an equivalent fix) lands.
+
 Per shard the driver sequences, via the shared engine:
 
 1. **force-leg**: launches

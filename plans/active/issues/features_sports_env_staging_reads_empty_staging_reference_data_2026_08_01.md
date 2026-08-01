@@ -118,9 +118,11 @@ it reads isn't real data at all.
       `-test-`-sink e2e-check run can read real `-prd-` reference data. Verify with a fresh force leg against a
       `SPORTS_SMOKE_DATES` busy day and confirm it reports a REAL (non-empty) write, not `empty_confirmed`. (repo:
       features-service)
-- [ ] [DOC] P2. Note this limitation in the `data-pipeline-check-features` skill doc's sports section (or wherever the
-      family/asset_group matrix is documented) so a future run doesn't mistake a clean `empty_confirmed` sports result
-      for genuine proof the compute logic works. (repo: unified-trading-pm)
+- [x] ✅ [DOC] P2. Noted this limitation in the `data-pipeline-check-features` skill doc
+      (`cursor-configs/skills/data-pipeline-check-features/SKILL.md`), as a ⚠️ callout right after the existing
+      "Required INPUT per family" table's Reality-check callout (same pattern/style) — so a future run doesn't mistake a
+      clean `empty_confirmed` sports result for genuine proof the compute logic works. (repo: unified-trading-pm, same
+      commit as this checkbox flip)
 
 ## Codex SSOTs
 
