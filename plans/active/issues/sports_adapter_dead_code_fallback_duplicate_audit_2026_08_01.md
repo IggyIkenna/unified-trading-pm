@@ -229,12 +229,19 @@ named) rather than left as prose, per the findings-closure hard rule.
       (zero callers, not part of the abstract interface) or add an explicit "registered but intentionally unreached"
       note matching this codebase's own precedent (`adapters/tradfi/ibkr.py`'s unreached-note style). (repo:
       instruments-service)
-- [ ] [BACKEND] P2. Delete `betfair_adapter.py::BetfairAdapter` and `matchbook_adapter.py::MatchbookAdapter`
+- [x] ✅ [BACKEND] P2. Delete `betfair_adapter.py::BetfairAdapter` and `matchbook_adapter.py::MatchbookAdapter`
       (market-tick-data-service `market_interface/adapters/sports/`) — both are dead code superseded by the live-routed
       `execution_service.sports_execution.adapters.exchanges.{betfair,matchbook}` classes per `sports/registry.py`'s own
       docstring; remove their imports from `market_interface/__init__.py` and their exports from
       `adapters/sports/__init__.py`, and update/delete `tests/market_interface/unit/test_sports_adapters.py`'s
-      references accordingly. (repo: market-tick-data-service)
+      references accordingly. (repo: market-tick-data-service) — market-tick-data-service@6bc85e13. Deleted both files +
+      their imports/exports from `market_interface/__init__.py` and `adapters/sports/__init__.py`; deleted the two dead
+      test classes (`TestBetfairAdapter`, `TestMatchbookAdapter`, `TestBetfairAdapterAsync`,
+      `TestMatchbookAdapterMethods`) + 2 stale assertions in `test_prediction_adapters.py`. Scoped-removed the stale
+      `betfair_adapter.py` entry from `unified-trading-pm/scripts/quality_gates/adapter_contract_baseline.yaml` (QG STEP
+      5.83 ratchet — the file no longer exists) rather than a full `--regenerate-baseline`, which touched ~330 unrelated
+      files workspace-wide and was reverted. Full QG green (9811 passed); adapter-contract-regression check clean (330
+      baselined files).
 - [x] ✅ [BACKEND] P2. Decide + document the fate of `market_interface/sports/registry.py`'s `_ADAPTER_PATHS` dispatch
       table (market-tick-data-service) — it has zero production callers, making `metabet_adapter.py::MetaBetAdapter`,
       `odds_engine_adapter.py::OddsEngineAdapter`, and `opticodds_adapter.py::OpticOddsAdapter` unreachable dead code.
