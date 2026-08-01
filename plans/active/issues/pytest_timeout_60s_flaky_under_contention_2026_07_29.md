@@ -22,7 +22,7 @@ status: open
 nature: issue
 asset_group: [meta]
 stage: [meta]
-repos: [unified-trading-pm, unified-api-contracts]
+repos: [unified-trading-pm, unified-api-contracts, instruments-service, features-service]
 scope: [engineer, admin]
 tags: [quality-gates, flaky-gate, timeout, pytest-timeout, ci, shared-host-contention, xdist]
 related: [/plans/active/issues/adapter_contract_regression_ratchet_60s_timeout_flaky_under_contention_2026_07_27.md]
@@ -264,6 +264,38 @@ those commits landed). The escalation's own repo-blocker list (`GET /api/repo-bl
       and a capacity fix applied/ruled out, or (b) the failure pattern shifts to a DIFFERENT self-hosted runner once
       evidence accumulates, which would point back at the test suite's xdist fan-out width rather than this one runner
       specifically.
+- [ ] 7. [INFRA] P3. **NEW 2026-08-01.** First occurrence of this bug class on a **synchronous, non-async, purely
+      CPU-bound test** (every prior entry in this doc involves an awaited real/mocked timer — todo 4/5/6's core argument
+      was that CPU-bound work "can only slow down proportionally to contention, not get woken 100x late").
+      features-service `ldr_qg_failure` escalation `agt-8ac0d7` (slot 2, no PR — direct `live-defi-rollout` push gate,
+      not a promotion PR), run `30668432435` (`QG slice (tests)` job, head SHA `8aa3796b`, and 3 repeat failures on the
+      prior SHA `97351fef` across runs `30663077898`/`30659440157`/`30655029889`): pytest-timeout fired on
+      `tests/delta_one/unit/test_cross_timeframe_sanity.py::test_output_index_matches_input` after ~8 min wall-clock
+      (well past this repo's already-raised 150s `PYTEST_TIMEOUT` budget), stack-dumped inside
+      `FeatureCalculator._add_lagged_features`'s `pandas` boolean-column-mask indexing. Isolated local re-run: the
+      ENTIRE test file (119 parametrized cases across all 4 test functions in the file) completed in **8.98s**, no test
+      over 0.63s (`--durations=20`), with a deliberately tighter `--timeout=20` override — zero slowness reproduced at
+      any contention level achievable locally. The same run's `QG slice (checks)` job also failed (`exit code 1`) with
+      NO attributable failing gate — every individual check (`ADAPTER CONTRACT-CALL REGRESSION`, `FORMULA-HASH DRIFT`,
+      `NO-LOOK-AHEAD PATTERN`, `ASSET-GROUP PARITY`, main `features_service` basedpyright typecheck) printed PASS/✅
+      immediately before the exit; the only warning-level anomaly was a pre-existing, explicitly non-blocking peripheral
+      `e2e-testing/scripts/features/` basedpyright WARN (`|| log_warn`, `reportAny` on `argparse.Namespace` attributes —
+      a real but cosmetic e2e-testing typing gap, unrelated to this wall and out of scope here). Confirmed HEAD
+      (`d8d6b63d`, a dep-only commit, is a descendant of both failing SHAs with zero code/test diff since) had a fresh
+      `quality-gates-v2` run queued for **30+ minutes with no self-hosted runner pickup** at investigation time —
+      corroborated by a live snapshot of THIS shared host at the same moment: `load average: 30.43` (on the same class
+      of 16-vCPU box these docs already track), `16Gi/47Gi` swap in active use, and **13 concurrent `quality-gates.sh`
+      processes** running across other slots (`pgrep -af`) — matching
+      `fleet_wide_qg_capacity_crisis_continues_day2_2026_07_29.md`'s still-open `[BACKEND] P1` shared-host QG
+      concurrency-gate gap, not proof of the GH-hosted `glue` runner pool specifically (separate host), but consistent
+      first-hand corroboration that the whole workspace is currently oversubscribed. **No code or test action taken** —
+      both sides are provably correct (clean, fast local repro); this is the capacity crisis, not a regression. Widens
+      the doc's own scope: the flake class is NOT confined to awaited-timer tests — sufficiently severe host contention
+      can also starve a plain synchronous pandas operation for minutes. **Done when**: (a) the currently-queued run
+      completes (green confirms pure noise, consistent with local repro; red on a clean tree would need fresh
+      investigation) — not blocked on here, out of this one-shot wall-clearer's scope — or (b) a THIRD non-async
+      recurrence surfaces, which would justify promoting "CPU-bound tests are also exposed" from a hypothesis to a
+      confirmed mechanism.
 
 ## Progress Log
 
@@ -590,3 +622,17 @@ those commits landed). The escalation's own repo-blocker list (`GET /api/repo-bl
   prior entry in this doc — no live-defi-rollout code or test change made or needed. Slot left clean
   (instruments-service + unified-trading-pm both already on `live-defi-rollout`, 0 commits ahead of `origin`, nothing to
   commit).
+- **2026-08-01 (cicd escalation `agt-8ac0d7`, slot 2)**: features-service `ldr_qg_failure` (no PR — direct push gate), 4
+  consecutive `QG slice (tests)` failures across 2 SHAs on `tests/delta_one/unit/test_cross_timeframe_sanity.py`, ~8 min
+  wall-clock timeout inside synchronous `pandas` code (no awaited timer — see todo 7 for the full mechanism + evidence,
+  including live host contention corroboration: `load average 30.43`, 13 concurrent `quality-gates.sh` processes, 16Gi
+  swap in use). Isolated local re-run of the entire failing test file: 8.98s, nothing over 0.63s. No code/test defect —
+  both sides read clean. features-service's own `live-defi-rollout` HEAD (`d8d6b63d`) already has zero diff vs the
+  failing SHAs and a fresh `quality-gates-v2` run already queued (30+ min, no self-hosted-runner pickup at investigation
+  time — the runner-capacity crisis itself, not something this escalation can push a fix for). Did not force a
+  speculative timeout bump beyond the already-raised 150s budget (todo 3 showed that game is whack-a-mole, not a fix)
+  and did not touch features-service's tree (nothing to commit — QG is genuinely green on the merits). Filed as new todo
+  7 (first non-async-timer instance) rather than reusing an existing todo, per this doc's own "each root-cause gets its
+  own todo" convention. No further action from this escalation; pinged the authoring slot with the outcome and exited
+  per the one-shot `cicd` role's bounded scope (fleet-wide runner capacity is
+  `fleet_wide_qg_self_hosted_runner_capacity_crisis_2026_07_27.md`'s P0, not this wall-clearer's).
