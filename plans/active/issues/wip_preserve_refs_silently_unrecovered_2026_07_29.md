@@ -28,7 +28,7 @@ related:
     /codex/05-infrastructure/per-tab-worktrees.md,
   ]
 created: 2026-07-29
-last_updated: 2026-07-30
+last_updated: 2026-08-01
 priority: P2
 parent_epic: orchestrator_master
 source:
@@ -106,7 +106,7 @@ closing the "then what" gap:
       `origin/live-defi-rollout:.github/workflows/staging-lock-check.yml` (same blob sha), i.e. the self-hosted-runner
       migration WAS independently re-applied by a later rollout. Original ask: check whether the migration was
       superseded; if not, recover + re-ship it the way `unified-trading-library`'s was. Repo: strategy-service.
-- [ ] [DATA] P3. **The fleet carries 25 `refs/wip-preserve/**` refs, not 1** — found by the 2026-07-30 sweep's
+- [x] [DATA] P3. **The fleet carries 25 `refs/wip-preserve/**` refs, not 1** — found by the 2026-07-30 sweep's
       fleet-wide `for-each-ref` (dated 2026-07-26..07-29, across slots 2/3/4/6/9/10/11/12/15). This doc named only the
       `strategy-service` one. Triage the other 24 to a recorded SUPERSEDED / RECOVER / DELETE verdict; first-pass
       blob-compare says ~16 are already content-identical to origin and most of the rest would REGRESS origin if
@@ -124,7 +124,14 @@ closing the "then what" gap:
       across all 375 git repos in those reachable slots found ZERO local wip-preserve refs anywhere (confirmed this is a
       genuinely separate per-host population, not something this laptop's own slots 2/3/4 happen to also carry).
       Checkbox left unresolved — needs a session with reach into `ip-172-31-5-118` (or dispatched to run directly on it)
-      to actually execute the now-ready verifier against these refs.
+      to actually execute the now-ready verifier against these refs. **Completed 2026-08-01**: a later session had SSM
+      reach into `ip-172-31-5-118` (untried by the prior session — it only checked local filesystem access) and ran the
+      verifier against all 9 named slots (29 refs now, not 25 — 4 new cascade branches accumulated over the 2
+      intervening days). Result: 16 SUPERSEDED, 10 STILL-ORPHANED, 3 WOULD-REGRESS, 0 GONE — full per-ref table in
+      `/plans/active/ao_satellite_ao_dispatch_batch3_2026_07_31.md`'s Progress Log and cross-referenced in
+      `/plans/active/issues/orphaned_commit_recovery_has_no_dispatch_path_2026_07_30.md`'s own matching todo. This doc's
+      slot-15 `strategy-service` ref (`a77eb6d170ca`) — already answered above as SUPERSEDED by the 2026-07-30
+      hand-triage — got the identical SUPERSEDED verdict from the automated verifier, cross-validating it.
 - [ ] [SCRIPT] P3. Add a fleet-wide `refs/wip-preserve/**` sweep (age-thresholded alert or a documented runbook check)
       so a preserved-but-unrecovered commit surfaces instead of sitting forgotten. Repo: agent-orchestrator.
 - [ ] [SCRIPT] P3. Consider a post-push content-verification step in quickmerge's success path (or worker RULES.md's
@@ -140,3 +147,6 @@ closing the "then what" gap:
   another slot's clone. **Flagged**: that ref has now sat unrecovered since 2026-07-28 — folded into
   `/plans/active/issues/orphaned_commit_recovery_has_no_dispatch_path_2026_07_30.md`, filed by this run.
 - **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).
+- **2026-08-01 (batch3 todo 3 completion)**: `[DATA] P3` flipped `[x]` — the verifier (shipped 2026-08-01,
+  `agent-orchestrator@623009e3`) was run against all 29 fleet-wide wip-preserve refs via SSM reach into
+  `ip-172-31-5-118`. Full table in `/plans/active/ao_satellite_ao_dispatch_batch3_2026_07_31.md`'s Progress Log.

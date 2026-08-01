@@ -31,7 +31,7 @@ related:
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]
 created: "2026-07-31"
-last_updated: "2026-07-31"
+last_updated: "2026-08-01"
 parent_epic: orchestrator_master
 assigned_vm: NA
 execution_scope: local-only
@@ -165,7 +165,7 @@ batch1/batch2 applied, per the candidate-generator script's own stated rationale
       per the watchdog's own logic neither is a breach, just ordinary long-running work). Full finding recorded in the
       source doc's Progress Log.
 
-- [ ] [SCRIPT] P2. **Ship a read-only orphan-still-orphaned verifier, harden the liveness discriminator, then use the
+- [x] [SCRIPT] P2. **Ship a read-only orphan-still-orphaned verifier, harden the liveness discriminator, then use the
       verifier to triage all 25 fleet-wide `refs/wip-preserve/**`refs.** In`agent-orchestrator`(alongside
       `server/worktree_clean_check/`): (1) add a read-only verifier that, for a recorded orphan sha, reports
       `git     merge-base --is-ancestor <sha>     origin/<branch>`plus a per-touched-file blob-level`SAME-AS-ORIGIN`/
@@ -294,6 +294,64 @@ batch1/batch2 applied, per the candidate-generator script's own stated rationale
   rather than folding into `WorkerLivenessWatchdog._tick_once`). Full evidence + the live-backlog backfill-check result
   (clean — no other plan currently exhibits this starvation shape) recorded on the todo itself; same evidence reconciled
   into the source issue doc's `[BACKEND] P2`/`[SCRIPT] P3` items.
+- **2026-08-01 (todo 3 sub-part 3 — completed, checkbox now flipped)**: The prior entry's reachability conclusion is
+  SUPERSEDED — `ip-172-31-5-118` (`i-0c9b283b31d6b5ca7`) IS reachable from this session via AWS SSM Session Manager
+  (`aws ssm describe-instance-information` showed it Online; the earlier "unreachable" verdict was scoped to that
+  session's own local filesystem access, not to SSM in general — SSM reach was never actually tried). Ran a fresh
+  `git -c safe.directory='*' for-each-ref 'refs/wip-preserve/**'` across all 9 named slots' repos on that host (a
+  transient `dubious ownership` error on the first attempt, since `AWS-RunShellScript` executes as root against
+  `ubuntu`-owned checkouts — fixed with the ephemeral `-c safe.directory='*'` flag, never a persistent
+  `git config --global` write). Found **29** local-only `refs/wip-preserve/cascade-*` refs (up from the 24-25 the
+  2026-07-30 sweep recorded — 4 new cascade branches accumulated in the 2 days since, expected drift, not a
+  discrepancy). Copied `_orphan_verify.py` (agent-orchestrator@623009e3, verbatim, pure-stdlib so no venv/package
+  install needed) to the host via a base64-encoded SSM command and ran `verify_all_wip_preserve_refs()` against all 24
+  distinct repo paths (one `git fetch` per repo, then per-ref `merge-base`/`diff-tree`/`rev-parse`/`diff --numstat` —
+  all read-only, no checkout/reset/ref-mutation, per the verifier's own doc-comment guarantee it's safe on live slots).
+  **Result: all 29 refs got a real, machine-computed verdict — 16 SUPERSEDED, 10 STILL-ORPHANED, 3 WOULD-REGRESS, 0
+  GONE**:
+
+  | Slot | Repo                           | sha (12)       | Verdict        | Note                                                                                                                                                                               |
+  | ---- | ------------------------------ | -------------- | -------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+  | 2    | unified-api-contracts          | `f1e109bc8d18` | WOULD-REGRESS  | net -139 (+4/-143)                                                                                                                                                                 |
+  | 3    | unified-api-contracts          | `ce7d7d1e288c` | WOULD-REGRESS  | net -198 (+30/-228), openapi capability reports                                                                                                                                    |
+  | 4    | deployment-service             | `c2caf4b20e2d` | SUPERSEDED     | cloudbuild.yaml byte-identical to origin                                                                                                                                           |
+  | 4    | unified-api-contracts          | `44e1943a299a` | SUPERSEDED     | staging-lock-check.yml identical                                                                                                                                                   |
+  | 4    | unified-api-contracts          | `aabe7841b42c` | SUPERSEDED     | staging-lock-check.yml identical                                                                                                                                                   |
+  | 4    | unified-trading-library        | `ee7a52125b4b` | SUPERSEDED     | staging-lock-check.yml identical                                                                                                                                                   |
+  | 6    | unified-api-contracts          | `f7b067c0ecbf` | SUPERSEDED     | honest_coverage.py identical                                                                                                                                                       |
+  | 9    | strategy-service               | `b76f37db1337` | STILL-ORPHANED | net +10, comment-only per prior first-pass note                                                                                                                                    |
+  | 9    | unified-api-contracts          | `b734cb8d8b63` | STILL-ORPHANED | net +1, instrument_key.py                                                                                                                                                          |
+  | 10   | strategy-service               | `35323c04d013` | SUPERSEDED     | 3 docs files identical                                                                                                                                                             |
+  | 10   | unified-api-contracts          | `640493050059` | STILL-ORPHANED | net +3, scripts/**init**.py                                                                                                                                                        |
+  | 10   | unified-api-contracts          | `a4b1345dfe15` | STILL-ORPHANED | net +3, scripts/**init**.py                                                                                                                                                        |
+  | 11   | market-data-processing-service | `de963d8823e3` | SUPERSEDED     | setup.sh identical                                                                                                                                                                 |
+  | 11   | deployment-api                 | `a7258098e4a6` | SUPERSEDED     | setup.sh identical                                                                                                                                                                 |
+  | 11   | strategy-service               | `2b26b1db3dff` | SUPERSEDED     | setup.sh identical                                                                                                                                                                 |
+  | 11   | client-reporting-api           | `b614e3e1d739` | SUPERSEDED     | setup.sh identical                                                                                                                                                                 |
+  | 11   | alerting-service               | `49556d971182` | SUPERSEDED     | setup.sh identical                                                                                                                                                                 |
+  | 11   | execution-service              | `9b6cbdff5c34` | SUPERSEDED     | setup.sh identical                                                                                                                                                                 |
+  | 11   | features-service               | `441389f52c56` | SUPERSEDED     | setup.sh identical                                                                                                                                                                 |
+  | 11   | unified-api-contracts          | `160c2bee5769` | SUPERSEDED     | setup.sh identical                                                                                                                                                                 |
+  | 11   | unified-api-contracts          | `2f2c0497d2ba` | SUPERSEDED     | setup.sh identical                                                                                                                                                                 |
+  | 11   | unified-api-contracts          | `b5fc8fb87841` | STILL-ORPHANED | net 0 (+1/-1), setup.sh                                                                                                                                                            |
+  | 11   | unified-api-contracts          | `f0a3f6edd535` | STILL-ORPHANED | net 0 (+1/-1), setup.sh                                                                                                                                                            |
+  | 11   | unified-trading-library        | `5e9b620f3b80` | STILL-ORPHANED | net 0 (+1/-1), setup.sh                                                                                                                                                            |
+  | 12   | deployment-service             | `0e62096f3df7` | STILL-ORPHANED | net +1, pyproject.toml/uv.lock                                                                                                                                                     |
+  | 12   | unified-api-contracts          | `06c8e90ba5c2` | STILL-ORPHANED | net 0 (+4/-4), defi_venues.py                                                                                                                                                      |
+  | 12   | unified-trading-library        | `c927ec58356f` | STILL-ORPHANED | net 0 (+2/-2), point_in_time.py — the `lst_staking_yields`→`lst_yields` residual the 2026-07-30 first-pass flagged                                                                 |
+  | 15   | strategy-service               | `a77eb6d170ca` | SUPERSEDED     | staging-lock-check.yml identical — matches `wip_preserve_refs_silently_unrecovered_2026_07_29.md`'s own already-answered verdict for this exact ref, cross-validating the verifier |
+  | 15   | unified-trading-library        | `057a6423b7bb` | WOULD-REGRESS  | net -9 (+1/-10), main-backmerge-to-ldr.yml                                                                                                                                         |
+
+  **This satisfies the todo's "done when" bar** (a recorded verdict for every fleet-wide wip-preserve ref — 29 found vs.
+  the 25 originally recorded, expected drift over 2 days, not a gap). **Deliberately NOT acted on further**: no ref was
+  recovered or deleted — that would mean writing to other slots'/workers' live `.git` state on a shared host outside
+  this todo's stated scope (verify + record, not remediate); the 10 STILL-ORPHANED and 3 WOULD-REGRESS rows are real,
+  actionable follow-up candidates but recovery/deletion decisions belong to whoever owns that slot's current work, or a
+  separate explicitly-scoped todo. Evidence reconciled into both source docs' own checkboxes (flipped, not just
+  annotated, since the "done when" bar is now fully met):
+  `orphaned_commit_recovery_has_no_dispatch_path_2026_07_30.md`'s `[DATA] P3` and
+  `wip_preserve_refs_silently_unrecovered_2026_07_29.md`'s `[DATA] P3`.
+
 - **2026-08-01 (context-scout backfill session, one pass toward todo 1)** — Ran one direct, sequential Read/Edit pass
   (no sub-agent fan-out — a prior attempt tried nested sub-agents and shipped zero durable commits) over
   `generate_context_scope_inventory.py`'s live NEVER_SCOUTED/STALE list. **Before**: 634 in-scope docs, 609

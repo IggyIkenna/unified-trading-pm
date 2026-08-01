@@ -45,7 +45,7 @@ related:
     /codex/05-infrastructure/per-tab-worktrees.md,
   ]
 created: 2026-07-30
-last_updated: 2026-07-30
+last_updated: 2026-08-01
 priority: P1
 parent_epic: orchestrator_master
 assigned_vm: NA
@@ -272,7 +272,7 @@ authority is the expensive answer to a question that a verifier answers for free
       `proc_cwd_fn` forced True → `"live"`), both in `tests/test_dirty_state_resolution.py`, plus a dead-stays-dead
       control (slots 9/10 shape), a `replacing_session`-set control, and a zero-behavior-change-when-no-slot_id control.
       Quality gate green (2212 tests) before shipping.
-- [ ] [DATA] P3. **Triage the 24 previously-uninventoried `refs/wip-preserve/**` refs this sweep found fleet-wide.**
+- [x] [DATA] P3. **Triage the 24 previously-uninventoried `refs/wip-preserve/**` refs this sweep found fleet-wide.**
       This doc tracked exactly ONE (`cascade-strategy-service-a77eb6d170ca`, now verified SUPERSEDED); a fleet-wide
       `for-each-ref`found **25**, dated 2026-07-26..2026-07-29. First-pass blob-compare says ~16 are content-identical
       to origin (superseded) and the rest are near-misses:`slot-2     unified-api-contracts f1e109bc`and
@@ -298,7 +298,17 @@ authority is the expensive answer to a question that a verifier answers for free
       `_orphan.py`/`_ahead_push.py`/`_branch_state.py`'s own routine mechanisms — IS visible via `git ls-remote origin`
       from any clone; that is a different, much bigger, continuously-growing population and is NOT this doc's 25.) This
       todo needs a session dispatched with reach into `ip-172-31-5-118` (or run directly from it) to actually execute —
-      the verifier itself is ready and tested.
+      the verifier itself is ready and tested. **Completed 2026-08-01**: a later session DID have SSM reach into
+      `ip-172-31-5-118` (the prior attempt only checked local filesystem access, never tried SSM) — ran the verifier
+      against all 24 distinct repo paths across the 9 named slots (29 refs now, up from 25, 4 new cascade branches
+      accumulated in the 2 intervening days). Result: **16 SUPERSEDED, 10 STILL-ORPHANED, 3 WOULD-REGRESS, 0 GONE** —
+      full per-ref table in `/plans/active/ao_satellite_ao_dispatch_batch3_2026_07_31.md`'s Progress Log (2026-08-01,
+      "todo 3 sub-part 3 — completed" entry). Confirms this doc's own first-pass predictions: slot-2/3's near-misses are
+      genuinely WOULD-REGRESS (net -139/-198), slot-12's `unified-trading-library c927ec58` residual is real
+      (STILL-ORPHANED, net 0, the `lst_staking_yields`→`lst_yields` docstring question is still open), and the ~16
+      SUPERSEDED estimate was accurate. Deliberately NOT recovered/deleted — verify+record was this todo's scope; acting
+      on the 10 STILL-ORPHANED/3 WOULD-REGRESS rows is separate follow-up work, not required by this todo's own "done
+      when" bar.
 
 ## Follow-ups that are NOT this doc's scope
 
