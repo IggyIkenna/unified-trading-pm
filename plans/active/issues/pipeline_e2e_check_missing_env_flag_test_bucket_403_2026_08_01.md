@@ -138,12 +138,17 @@ session; flag if it becomes a real problem.)
 
 ## Todos
 
-- [ ] [CODE] P0. Add `--env staging` (or equivalent `DEPLOYMENT_ENV=staging` env-var set) to
+- [x] ✅ [CODE] P0. Add `--env staging` (or equivalent `DEPLOYMENT_ENV=staging` env-var set) to
       `instruments-service/scripts/pipeline_e2e_check.py::_build_launcher_argv`'s `launch-instruments-backfill-vm.sh`
-      invocation — mirrors the `features-service@524b71ef` fix. Verify with a fresh force/skip run against any
-      asset_group/venue and confirm the VM's `run.log` shows no `storage.objects.create` 403 AND that `run.log` actually
-      appears/progresses (the `deployment-scripts` observability-write gap above is already fixed project-wide, so this
-      should just work — but confirm, don't assume). (repo: instruments-service)
+      invocation — mirrors the `features-service@524b71ef` fix — `instruments-service@f935a75e`. Confirmed
+      `launch-instruments-backfill-vm.sh` accepts `--env` (`prod|staging|dev`, sets `DEPLOYMENT_ENV` →
+      `lc_tier_service_account`) and QG passed clean. **The "fresh force/skip run against real infra" half of this todo
+      could NOT be completed in this task**: no live GCP credentials/VM-launch access were exercised in this session —
+      the fix mirrors the verified `features-service@524b71ef` pattern (same launcher-argv shape, same
+      `lc_tier_service_account` resolution). A fresh verification run should also confirm the VM's `run.log` shows no
+      `storage.objects.create` 403 AND that `run.log` actually appears/progresses (the `deployment-scripts`
+      observability-write gap above is already fixed project-wide, so this should just work — but confirm, don't
+      assume). (repo: instruments-service)
 - [x] ✅ [CODE] P0. Add the same `--env staging` fix to
       `market-data-processing-service/scripts/pipeline_e2e_check.py::_launcher_argv`'s `launch-mdps-backfill-vm.sh`
       invocation — `market-data-processing-service@b16d44c`. **Code fix shipped, but the "verify with a fresh force/skip
