@@ -207,26 +207,39 @@ data-pipeline-correctness-hard-rule).
       suggestive) -- see "Root cause of the memory blowup -- IDENTIFIED AND CONFIRMED" section above for the full
       code-level mechanism (unscoped 30-league fetch per single-fixture trigger, exposed by `410d7569`, compounded by a
       crash-before-freshness-write loop). (repo: market-tick-data-service)
-- [ ] [DATA] P0. **Fix the identified root cause**: scope the fixture-proximate `market-tick-data-service` dispatch to
-      the ONE triggering league instead of all 30 Prediction-tier leagues. In
-      `deployment-service/deployment_service/sports_trigger_scheduler.py`'s `fire_trigger` (line 273), before calling
-      `_dispatch_services`, inject `args["--league"] = event["league_id"]` into each `market-tick-data-service` entry in
-      `event["services"]` (mirror the existing `_scope_to_leagues` pattern already used for periodic-tier dispatch in
-      `sports_trigger_periodic.py:339`, or import/reuse it directly). **MANDATORY pre-flight verification before
-      shipping** (this is why it wasn't done in the same pass as the root-cause todo above): confirm
-      `event["league_id"]`'s actual runtime format matches one of the two forms
-      `OddsApiAdapter._candidate_leagues`/`_fetch_all_leagues` accepts (canonical slug via `_canonical_league_id()`, or
-      raw symbolic name via `_raw_league_name()`) -- trace it from `sports_trigger_state.py:158`'s
-      `_path_league_id or row.get("league_id") or row.get("af_league_id") or ""` fallback chain through to whatever
-      instruments-service's FIXTURES writer actually stamps in the GCS parquet `league=` path segment / `league_id`
-      column (the odds_api_adapter.py git log shows explicit prior canonicalisation fixes at this write path --
-      `accd8aa4`, `ad4f1872` -- suggesting canonical form is likely, but NOT yet independently confirmed this session).
-      If the raw `af_league_id` numeric fallback is ever what actually reaches `TriggerEvent.league_id` in practice,
-      matching would silently fail and produce a WORSE failure mode than today's OOM: a "successful" 0-row run that
-      marks the shard fresh (banned under honest-absence rules) instead of a loud, retriable failure. Done when: the
-      format is verified, `--league` is threaded through, and a live fixture-proximate trigger is confirmed writing
-      non-empty `raw_tick_data` for its own league without a memory spike. (repo: deployment-service,
-      market-tick-data-service for the live-verification leg)
+- [x] ✅ [DATA] P0. **DONE 2026-08-01 (slot 16, code-shipped leg).** Fixed the identified root cause: scope the
+      fixture-proximate `market-tick-data-service` dispatch to the ONE triggering league instead of all 30
+      Prediction-tier leagues. `SportsTriggerScheduler.fire_trigger` (`sports_trigger_scheduler.py`) now builds
+      `scoped_services` via a (promoted-public) `scope_to_leagues(svc, [event["league_id"]])` before calling
+      `_dispatch_services`, injecting `args["--league"] = event["league_id"]` into every `market-tick-data-service`
+      entry (every other service entry, e.g. instruments-service, is left untouched). Reused the existing
+      `sports_trigger_periodic.py` helper (renamed `_scope_to_leagues` → public `scope_to_leagues` + added to `__all__`,
+      since importing the private name across modules tripped basedpyright's `reportPrivateUsage` ratchet) rather than
+      duplicating the logic. **Pre-flight league-id-format verification (MANDATORY, done)**: traced
+      instruments-service's FIXTURES writer (`instruments_service/engine/orchestrator/sports_fixtures.py` +
+      `sports.py::_canonical_league_id`) — every fixture parquet path is written under `league={canonical_league_id}`
+      where `canonical_league_id` is ALWAYS resolved via the UAC canonical registry (numeric →
+      `get_league_by_api_football_id`, provider-suffix strip via `canonicalize_league_id`) before the write, so
+      `sports_trigger_state.py`'s `_path_league_id` extraction never falls through to the raw numeric `af_league_id`
+      fallback in practice. `OddsApiAdapter._fetch_all_leagues` (odds_api_adapter.py:568) already accepts BOTH the
+      canonical slug and the raw symbolic name
+      (`league_canonical in leagues or     _raw_league_name(league_cls) in leagues`), so the canonical-slug format the
+      writer emits matches on the first arm — no format-mismatch / silent-zero-row risk. Added 3 unit tests
+      (`tests/unit/test_sports_trigger_league_scoping.py`) covering: `--league` injected for market-tick-data-service,
+      instruments-service's own `--sports-entity` args left untouched, and multiple market-tick-data-service entries in
+      one event all scoped. quality-gates.sh green (211s, `4e0e03d`); verified on origin. (repo:
+      deployment-service@418ea8f,3e42536,4e0e03d — shipped via quickmerge, landed on live-defi-rollout)
+      **Live-verification leg split into the new P0 todo directly below** — this fix still needs the
+      LDR→staging→main→deploy pipeline to actually roll the new image before a live fixture-proximate trigger can be
+      observed running it.
+- [ ] [DATA] P0. Live-verify the `--league` scoping fix (deployment-service@4e0e03d, previous todo) once it has rolled
+      out to the production sports-trigger-scheduler deployment (post LDR→staging→main→deploy): confirm a real
+      fixture-proximate trigger (`odds_t24h`/`odds_t6h`/`odds_t1h`) dispatches `market-tick-data-service` WITH a
+      `--league=<id>` flag (check the Cloud Run Job execution's container args, or the scheduler's own dispatch log line
+      `TRIGGER [...] fixture=... league=...`), that the resulting execution writes non-empty `raw_tick_data` for its own
+      league under `market-data-tick-sports-prd-central-element-323112`, and that the execution completes WITHOUT an OOM
+      (no "configured memory limit was reached" log entry for that execution). Done when: at least one live post-deploy
+      execution is confirmed on all three counts. (repo: deployment-service, market-tick-data-service)
 - [ ] [DATA] P1. Once fixed, backfill/re-fetch the resulting gap (2026-07-27, 2026-07-28, 2026-07-30, 2026-07-31, plus
       whatever additional days elapse before the fix ships) via the Odds-API historical endpoint, same pattern as the
       prior month-long-gap backfill in `sports_batch_odds_api_capture_outage_recurrence_check_2026_07_26.md` item 1 --
@@ -278,3 +291,19 @@ objects (sample: `venue=PINNACLE/league_id=ALLSVENSKAN/fixture_id=1494231/...tic
 Terraform (`audit03_cron_provisioning.tf`) still declared `cpu=2`/`memory=8Gi`, drifted from the live 4/16Gi -- aligned
 it and shipped `deployment-service@d969f27` (QG green, verified on origin). Flipped this checkbox. The `--league`
 scoping root-cause fix (next todo) remains open and unstarted by this turn.
+
+**2026-08-01 (slot 16)** -- Picked up the `--league` scoping root-cause fix todo. Did the mandatory league-id-format
+pre-flight verification first (code-read, no live repro needed): traced instruments-service's FIXTURES writer
+(`sports_fixtures.py` + `sports.py::_canonical_league_id`) and confirmed every fixture parquet path is always written
+under a canonical `league={canonical_league_id}` segment (UAC-resolved), and separately confirmed
+`OddsApiAdapter._fetch_all_leagues` already accepts both the canonical slug and the raw symbolic name -- no
+format-mismatch risk, safe to ship. Implemented the fix in `fire_trigger`: scoped `market-tick-data-service` service
+entries via a `scope_to_leagues(svc, [event["league_id"]])` call before `_dispatch_services`, reusing (not duplicating)
+the periodic-tier helper -- had to promote it from module-private `_scope_to_leagues` to public `scope_to_leagues` (+
+`__all__`) after the first `quality-gates.sh` run failed on basedpyright's `reportPrivateUsage` ratchet (1293 -> 1294)
+for the cross-module private import; second QG run passed clean (211s). Added 3 new unit tests. Shipped via quickmerge
+(`deployment-service@418ea8f,3e42536,4e0e03d`, verified `merge-base --is-ancestor` on origin/live-defi-rollout). Session
+died mid-task once between the first commit and the QG run (orchestrator resumed it cleanly -- local commits + rebase
+were intact, no work lost). Flipped the fix checkbox; split the live-verification leg (needs the
+LDR->staging->main->deploy pipeline to actually roll the new image first) into a new standalone `- [ ]` [DATA] P0 todo
+rather than leaving it un-flippable prose in this same checkbox.
