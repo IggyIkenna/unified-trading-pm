@@ -706,7 +706,7 @@ criterion; it also carries the `v2_engine_venue_buildout` over-count caveat this
   mistags — real content is genuinely ao ×3, ui-or-infra ×1, infrastructure ×1, tradfi ×1; 4 of the 6 independently
   corroborated by other tranches' own recent audits reaching the same conclusion) — reported, NOT retagged, per the
   2026-07-30 concurrent-sharded-worker owning-tranche rule; full evidence in
-  [`issues/ag_closeout_audit_cross-cutting_parked_2026_08_01.md`](/plans/active/issues/ag_closeout_audit_cross-cutting_parked_2026_08_01.md).
+  [`issues/ag_closeout_audit_cross_cutting_parked_2026_08_01.md`](/plans/active/issues/ag_closeout_audit_cross_cutting_parked_2026_08_01.md).
   **6 verdicted `orphaned_never_touched`** (genuinely cross-cutting, zero coverage in any of the 6 covering docs) —
   drafted
   [`cross_cutting_satellite_ao_dispatch_batch3_2026_08_01.md`](/plans/active/cross_cutting_satellite_ao_dispatch_batch3_2026_08_01.md)

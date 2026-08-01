@@ -88,11 +88,11 @@ source: >-
       settled post-ship day (2026-07-31) should already be queryable. Re-run the doc's own §5 BigQuery billing-export
       recipe for `purpose=manifest-consolidator` against 2026-07-31, confirm the ~$109/day (~$3,270/mo) addressable
       savings materialized, and grep `#data-pipeline-alerts` history + the
-      `uts-prod-consolidator-liveness-watchdog-     {fast,slow}` Cloud Run execution logs for the 24h+ post-ship window
-      for any `CONSOLIDATOR_DOWN`/ `ManifestConsolidatorStaleError` events attributable to the change. **Done when**:
-      the billing comparison and the zero-regression check are both recorded with cited evidence, and the doc's checkbox
-      is flipped (or, if the numbers don't match, the discrepancy is recorded and a fresh todo filed rather than
-      silently closed).
+      `uts-prod-consolidator-liveness-watchdog-{fast,slow}` Cloud Run execution logs for the 24h+ post-ship window for
+      any `CONSOLIDATOR_DOWN`/ `ManifestConsolidatorStaleError` events attributable to the change. **Done when**: the
+      billing comparison and the zero-regression check are both recorded with cited evidence, and the doc's checkbox is
+      flipped (or, if the numbers don't match, the discrepancy is recorded and a fresh todo filed rather than silently
+      closed).
 - [ ] [BACKEND] P3. **Reproduce + root-cause the prettier proseWrap inline-code-span mangling bug.** Source:
       `issues/prettier_prosewrap_mangles_long_inline_code_spans_2026_07_31.md`. Build a minimal `.md` fixture with a
       long backtick inline-code span near `printWidth=120` to reproduce the mangling (confirmed live in 2 real docs this
@@ -102,7 +102,7 @@ source: >-
       pattern the source doc documents. **Done when**: the fixture reproduces the bug pre-fix and no longer reproduces
       it post-fix, the root cause is recorded, and the source doc's todo 1 checkbox is flipped.
 - [ ] [BACKEND] P3. **Hand-fix the live prettier-mangled span in
-      `sports_stats_delayed_live_capture_still_dead_post_     fix_2026_07_29.md`.** Source:
+      `sports_stats_delayed_live_capture_still_dead_post_fix_2026_07_29.md`.** Source:
       `issues/prettier_prosewrap_mangles_long_inline_code_spans_2026_07_31.md` todo 2. Confirmed still live as of
       2026-08-01 at lines 403/412/422 (`printWidth=120        PERMANENT errors`, `batch_understat        filter`,
       `entity_wanted("XG")` padding). Re-run prettier (if the paired todo above has already landed a fix) or hand-fix
@@ -129,7 +129,7 @@ source: >-
       before committing** (verified clear as of this batch's authoring — 2026-08-01, zero commits in the preceding 6h,
       no `locked_by`). **Done when**: the framing correction is committed, the suppression/reclassify decision is
       implemented or explicitly recorded as already-correct-as-is, and
-      `data_pipeline_alerts_batch_     remediation_2026_07_15.md`'s second open item checkbox is flipped.
+      `data_pipeline_alerts_batch_remediation_2026_07_15.md`'s second open item checkbox is flipped.
 
 ## Deferred — operator decision needed (BLOCKED-OPERATOR-DECISION)
 
@@ -142,7 +142,7 @@ source: >-
   in the corpus's active plans.
 - **`issues/strategy_config_hot_reload_doc_vs_shipped_2026_07_31.md`** follow-up 1 (1 open; follow-up 2 is batched
   above). `[OPERATOR] P2` — rule between A (implement the safe-field allow-list + `UnsafeConfigChangeError` guard) / B
-  (retire the guard claim from the design doc) / C (split: gate archetype-family changes only, keep instrument- universe
+  (retire the guard claim from the design doc) / C (split: gate archetype-family changes only, keep instrument-universe
   hot-swap) — specifically requires an operator judgment call on whether a live instrument-universe swap is
   position-state-safe. Not batchable until ruled.
 
