@@ -57,6 +57,12 @@ source: >-
   boundaries"). Content moved verbatim, not summarized. `depends_on` + `gate_on_depends: true` added 2026-07-24 (plan
   audit finding) to encode this doc's own header text ("gated on Phase B") as a real dispatch gate, matching the Phase E
   sibling's already-correct pattern — Phase B is now carried by `prediction_phase_ab_residuals_2026_07_24.md`.
+context_scope:
+  [
+    /plans/active/prediction_consolidated_closeout_2026_07_18.md,
+    /plans/active/prediction_phase_d_formal_smoke_and_backfill_2026_07_24.md,
+    /plans/epics/predictions_master.md,
+  ]
 ---
 
 # Prediction Phase C — data-status + honest-coverage UI
@@ -115,3 +121,4 @@ source: >-
   forward the Phase C section verbatim (0 done / 4 open todos at split time). See the parent's Progress Log (ticks 1-31)
   for the full session-by-session history of the prediction close-out overall; none of those ticks closed a Phase C
   item, so there is no Phase-C-specific history to carry forward yet. Future work on this plan logs new entries below.
+- **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).

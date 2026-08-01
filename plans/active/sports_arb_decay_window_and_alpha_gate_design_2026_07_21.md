@@ -45,6 +45,13 @@ source:
   ]
 assigned_role: quant_dev
 drift_direction: advance-code
+context_scope:
+  [
+    /codex/09-strategy/operational/batch-live-reconciliation-threshold-calibration.md,
+    /codex/09-strategy/operational/paper-batch-live-reconciliation.md,
+    /codex/04-architecture/promote-workflow-architecture.md,
+    /plans/epics/sports_master.md,
+  ]
 ---
 
 # Sports arb-decay-window analysis + paper-trade alpha gate — design spec
@@ -166,3 +173,4 @@ must map into, not invent a parallel "other" bucket for), `/codex/04-architectur
   undefined feature work needs operator/spec sign-off on acceptance criteria + thresholds BEFORE any implementation
   dispatches'. All 8 todos are `[DESIGN]` spec-writing, plus an unanswered operator sign-off section (p25-vs-mean risk
   appetite, provisional threshold). Citation confirmed by grep; not re-litigated
+- **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).

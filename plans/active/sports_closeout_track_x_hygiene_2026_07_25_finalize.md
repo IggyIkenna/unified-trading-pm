@@ -40,6 +40,12 @@ source: >-
 assigned_role: data_engineering
 sequential: true
 drift_direction: advance-code
+context_scope:
+  [
+    /plans/active/sports_closeout_track_x_hygiene_2026_07_25.md,
+    /plans/active/sports_consolidated_closeout_2026_07_19.md,
+    /plans/epics/sports_master.md,
+  ]
 ---
 
 # Sports closeout Track X hygiene — finalize
@@ -67,3 +73,7 @@ drift_direction: advance-code
       archived location → clear `locked_by` (already empty, confirm) → archive this finalize doc alongside it in the
       same commit. **Done when**: the plan is moved to `plans/archive/2026_07/`, every corpus referrer resolves to the
       new path, and this finalize doc is archived in the same commit.
+
+## Progress Log
+
+- **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).

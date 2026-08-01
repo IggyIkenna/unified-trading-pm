@@ -106,6 +106,12 @@ gate_on_depends:
 source:
 assigned_role: data_engineering
 drift_direction: advance-code
+context_scope:
+  [
+    /plans/epics/sports_master.md,
+    /codex/02-data/sports-2020-06-data-floor.md,
+    /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
+  ]
 ---
 
 # Sports consolidated close-out — one pass to canonical, honestly-covered, leakage-free, ML-ready
@@ -936,3 +942,4 @@ section above, which conflated answered and open items):
   `/plans/archive/2026_07/sports_derived_features_postfloor_residue_purge_2026_07_27.md` (2400/2400 days, 26,891
   objects, `total_delete=0`). Its sibling `[DATA] P0` census-re-verify checkbox is satisfied by the same artifact but
   was left open and filed as a P3 follow-up rather than closed on an unnamed inference
+- **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).

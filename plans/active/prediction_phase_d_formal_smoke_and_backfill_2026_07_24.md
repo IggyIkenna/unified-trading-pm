@@ -59,6 +59,12 @@ source: >-
   audit finding) to encode this doc's own header text ("post-migration completion gate") as a real dispatch gate,
   matching the Phase E sibling's already-correct pattern — the migration is carried by
   `prediction_phase_ab_residuals_2026_07_24.md`.
+context_scope:
+  [
+    /plans/active/prediction_consolidated_closeout_2026_07_18.md,
+    /plans/active/prediction_phase_c_data_status_ui_2026_07_24.md,
+    /plans/epics/predictions_master.md,
+  ]
 ---
 
 # Prediction Phase D — formal smoke-test green + MVP backfill
@@ -184,3 +190,4 @@ source: >-
   adversarial AO-dispatch-readiness pass. All 3 placed before the MVP-backfill-readiness-gate todo (their natural
   position — checkpoints feed the gate). Net: open-todo count 3 → 6. No engineering work executed in this pass — pure
   relocation + reconciliation of pre-existing tracked items.
+- **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).

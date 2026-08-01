@@ -43,6 +43,12 @@ source: >-
   cross-venue arb+coverage). This file carries the live CLOB-depth capture infra third verbatim.
 assigned_role: data_engineering
 drift_direction: advance-code
+context_scope:
+  [
+    /plans/epics/predictions_master.md,
+    /plans/active/prediction_cross_venue_arb_and_coverage_2026_07_24.md,
+    /plans/archive/2026_07/prediction_venue_perps_and_live_clob_depth_2026_06_20.md,
+  ]
 ---
 
 # Prediction live + batch CLOB depth & trades capture infrastructure
@@ -718,6 +724,7 @@ to fcd6549 (foreign tradfi-lane deployment-service WIP forced `--allow-dirty-tar
 - **na-eligibility-audit 2026-07-30** (tranche=cefi, autonomous): KEEP-NA, valid - the depth-retention todo surfaces an
   architecture question about the live sink's rolling-window overwrite model (not a bounded verification), and the other
   is a cross-repo deferred cross-dependency.
+- **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).
 
 ## Deferred work — migrated to:
 

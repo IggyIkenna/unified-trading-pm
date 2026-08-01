@@ -73,6 +73,13 @@ source: >-
   boundaries — one depends_on-gated: Phase E gated on B+D"). Content moved verbatim, not summarized. The `depends_on` +
   `gate_on_depends: true` on the Phase A-B residuals and Phase D sibling plans encodes the parent plan's own Phase-E
   header text ("gated on B+D") as a real dispatch gate.
+context_scope:
+  [
+    /plans/active/prediction_consolidated_closeout_2026_07_18.md,
+    /codex/04-architecture/cross-venue-prediction-arb-detection.md,
+    /codex/16-strategy-playbooks/strategy/cme-polymarket-arb.md,
+    /plans/epics/predictions_master.md,
+  ]
 ---
 
 # Prediction Phase E — football (soccer) cross-venue arb enablement, live path
@@ -163,3 +170,4 @@ source: >-
   net-of-fees entry gate + paper proofs) for the full session-by-session history of what is already shipped here,
   including the live-execution-bridge P1 issue (`issues/prediction_arb_live_execution_bridge_2026_07_20.md`) opened
   along the way. Future work on this plan logs new entries below.
+- **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).

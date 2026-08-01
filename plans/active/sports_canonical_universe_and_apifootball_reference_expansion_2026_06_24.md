@@ -29,6 +29,13 @@ depends_on:
 source:
 assigned_role: data_engineering
 drift_direction: correct-codex
+context_scope:
+  [
+    /plans/active/sports_consolidated_closeout_2026_07_19.md,
+    /codex/02-data/sports-data-source-coverage-matrix.md,
+    /codex/02-data/availability-manifest-and-data-status.md,
+    /plans/epics/sports_master.md,
+  ]
 ---
 
 # Sports canonical universe + API-Football reference expansion
@@ -515,6 +522,7 @@ materialized.
   `uts-prod-sports-scheduler-cron` (`*/5` live poller) + `uts-prod-sports-fixtures-noon-t1-schedule` (12:00 UTC). These
   wrote out-of-universe/numeric rows (the over-capture) + burned the 6M API-Football budget on the full ~2,400-league
   provider universe. They stay paused until the write-gate ships (see Temporary states).
+- **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).
 
 ## Temporary states + their canonical follow-up
 

@@ -62,6 +62,13 @@ source: >-
 assigned_role: data_engineering
 sequential: false
 drift_direction: advance-code
+context_scope:
+  [
+    /plans/active/prediction_consolidated_closeout_2026_07_18.md,
+    /cursor-configs/skills/ag-closeout-audit/SKILL.md,
+    /plans/epics/predictions_master.md,
+    /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
+  ]
 ---
 
 # Prediction satellite AO batch 4 — un-triaged sibling-doc gap extraction
@@ -605,3 +612,4 @@ Phase B itself is a large multi-repo migration that warrants its own dedicated p
   — if the cron is `ENABLED`, resume with `--report <checkpoint>` from day 300/348 (49 days remaining); if still
   `PAUSED`, the real unblock is `-001` actually landing (either the dispatch-order bug getting fixed for real, or a
   data_engineering worker being dispatched `-001` directly per that plan's own backlog entry).
+- **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).

@@ -34,6 +34,7 @@ depends_on:
 source:
 assigned_role: ui_developer
 drift_direction: advance-code
+context_scope: [/plans/epics/predictions_master.md]
 ---
 
 > **Provenance**: extracted 2026-06-20 from the inline `predictions_master` epic body during the asset-group-umbrella
@@ -170,3 +171,4 @@ in the deployment-ui panel; the sentinel fan-out is verified to emit honest 0% r
   `[BLOCKED-PLAYWRIGHT]` pending a UI-capable slot with a running dev server (a real environment prerequisite, not a
   judgment call); the `[SCRIPT] P1` Phase-5 canonical-groups backfill is CONFLICT — claimed by
   `prediction_satellite_ao_dispatch_batch6_2026_07_29.md` todo 11. Doc is also `locked_by: live-defi-rollout`.
+- **context-scout 2026-08-01**: populated/refreshed context_scope (1 entries).

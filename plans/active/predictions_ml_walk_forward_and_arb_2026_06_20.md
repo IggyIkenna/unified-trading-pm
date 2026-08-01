@@ -29,6 +29,7 @@ depends_on:
 source:
 assigned_role: data_engineering
 drift_direction: advance-code
+context_scope: [/plans/epics/predictions_master.md, /codex/02-data/availability-manifest-and-data-status.md]
 ---
 
 > **Provenance**: extracted 2026-06-20 from the inline `predictions_master` epic body during the asset-group-umbrella
@@ -175,3 +176,4 @@ recorded; the Group-F gate decision is made from the real AUC/calibration number
 - **na-eligibility-audit 2026-07-30**: KEEP-NA, valid (sports tranche) — carries a 🔴 GATED ON `sports_master:Group E`
   banner (walk-forward BLOCKED until FSS produces >=95% non-NULL features) and `locked_by: live-defi-rollout`; 3 of the
   5 open todos are explicitly BLOCKED-ON that gate or on each other, and one is itself an ACTIVE `[GATE]`
+- **context-scout 2026-08-01**: populated/refreshed context_scope (2 entries).

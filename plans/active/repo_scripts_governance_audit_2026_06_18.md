@@ -41,6 +41,12 @@ source:
   ]
 assigned_role: infra
 drift_direction: correct-codex
+context_scope:
+  [
+    /plans/epics/infrastructure_master.md,
+    /codex/06-coding-standards/script-homes.md,
+    /codex/06-coding-standards/quality-gates.md,
+  ]
 ---
 
 # Repo scripts/ governance — lint + audit + the strict-quickmerge carve scope
@@ -254,6 +260,7 @@ a verdict). Heaviest:
   flipped; delete + deprecate + promote execution todos scoped with the gating rule. **Next:** Phase 0 marker
   codification, then the immediately-safe ~40 deletes (UI splitters + done bucket migrations + dead checkers), then the
   campaign-gated cohort as each plan archives.
+- **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).
 
 ## Folded-in scope 2026-07-15 (plan-reconcile §6)
 

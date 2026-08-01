@@ -39,6 +39,12 @@ superseded_by:
 depends_on: []
 source:
   [plans/active/issues/qg_host_governor_severe_contention_2026_07_13.md, scripts/quality-gates-base/qg-host-governor.sh]
+context_scope:
+  [
+    /codex/06-coding-standards/quality-gates.md,
+    /plans/epics/infrastructure_master.md,
+    /plans/archive/issues/shared_host_ram_exhaustion_kills_background_qg_2026_07_27.md,
+  ]
 ---
 
 # Host-adaptive RAM+CPU QG admission governor
@@ -572,6 +578,7 @@ runaway backstop). QG is never run below 16 GB, so no host ever needs the oversi
   ONCE at process start (`get_config()` is a cached singleton, no hot-reload), so it applies on the next orchestrator
   restart — NOT force-restarted (9 worker-agents active, no OOM urgency). This is the primary lever for todo 307; the
   runtime abort-monitor (258) remains the QG-side complement.
+- **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).
 
 ## Deferred / open decisions
 

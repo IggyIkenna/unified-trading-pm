@@ -40,6 +40,12 @@ source: >-
 assigned_role: data_engineering
 sequential: true
 drift_direction: advance-code
+context_scope:
+  [
+    /plans/active/prediction_satellite_ao_dispatch_batch6_2026_07_29.md,
+    /plans/active/prediction_consolidated_closeout_2026_07_18.md,
+    /plans/epics/predictions_master.md,
+  ]
 ---
 
 # Prediction satellite AO batch 6 — finalize
@@ -113,3 +119,4 @@ drift_direction: advance-code
   yet, so "all 9 verified present" is false today. Skipped the task back to the queue (slot 7) rather than ship a
   false-progress flip. Whoever picks this up next: re-check batch6's own todo statuses first — do not repeat this
   reconciliation until it reads 14/14 `done` (or re-verify the gate_on_depends fix has landed and genuinely holds).
+- **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).

@@ -43,6 +43,13 @@ source: >-
 assigned_role: data_engineering
 sequential: true
 drift_direction: advance-code
+context_scope:
+  [
+    /plans/active/sports_consolidated_native_ao_extract_2026_07_25.md,
+    /plans/active/sports_consolidated_closeout_2026_07_19.md,
+    /plans/active/issues/autonomous_session_operator_decisions_2026_07_25.md,
+    /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
+  ]
 ---
 
 # Sports consolidated native AO extract — finalize
@@ -115,3 +122,7 @@ drift_direction: advance-code
       own filename) and fix each path to point at the archived location → clear `locked_by` (already empty here,
       confirm). **Done when**: the plan is moved to `plans/archive/2026_07/`, every corpus referrer resolves to the new
       path, and this finalize doc itself gets archived alongside it in the same commit.
+
+## Progress Log
+
+- **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).

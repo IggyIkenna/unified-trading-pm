@@ -49,6 +49,12 @@ locked_since:
 supersedes:
 superseded_by:
 source: SUB_AGENT_MANDATORY_RULES dispatch (slot-3 this session) — "reference catalog is bare" investigation task
+context_scope:
+  [
+    /codex/02-data/availability-manifest-and-data-status.md,
+    /codex/02-data/honest-coverage-model.md,
+    /plans/active/sports_consolidated_closeout_2026_07_19.md,
+  ]
 ---
 
 > **🟡 SCOPE OVERLAP — reconcile against `sports_consolidated_closeout_2026_07_19.md`, do not resolve unilaterally here
@@ -188,3 +194,4 @@ honest-coverage denominator math, not a same-file fix.
   routing gate — '2026-07-14 (operator ruling): scheduling/dispatch of the fixture-grain build is a separate decision —
   this plan remains assigned_vm: NA (not auto-dispatched) until the operator explicitly routes it' — plus a 🟡 SCOPE
   OVERLAP banner telling readers not to resolve the closeout collision unilaterally
+- **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).

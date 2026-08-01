@@ -65,6 +65,13 @@ source: >-
 assigned_role: data_engineering
 sequential: false
 drift_direction: advance-code
+context_scope:
+  [
+    /plans/active/sports_consolidated_closeout_2026_07_19.md,
+    /plans/active/sports_closeout_track_s2_foldin_2026_07_25_finalize.md,
+    /codex/02-data/availability-manifest-and-data-status.md,
+    /codex/02-data/honest-absence-downstream-handling.md,
+  ]
 ---
 
 # Sports closeout Track S2 — fold-in absorption
@@ -398,3 +405,4 @@ drift_direction: advance-code
   blocker + dependency chain so the 8th dispatch (if the regex bug isn't fixed first) doesn't have to re-derive this
   diagnosis from scratch. Logged a disposition entry on the tracking issue doc's Progress Log (see that doc) rather than
   silently re-bouncing. No code shipped — nothing to fix within this worker's reach; checkbox correctly stays open.
+- **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).
