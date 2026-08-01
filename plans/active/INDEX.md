@@ -17,11 +17,11 @@
 
 <!-- AUTO-INDEX-START -->
 
-_Auto-generated via `scripts/plans/regenerate_active_plan_index.py`. 241 plans across 10 domains. A plan tagged with
+_Auto-generated via `scripts/plans/regenerate_active_plan_index.py`. 240 plans across 10 domains. A plan tagged with
 multiple `asset_group:` values appears under each. Grep this block for a domain keyword before scanning `plans/active/`
 by hand._
 
-### cefi (34)
+### cefi (33)
 
 - [`ag_closeout_audit_rollout_2026_07_25`](./ag_closeout_audit_rollout_2026_07_25.md) — Autonomous session (/autonomous,
   operator away, 2026-07-25) driving the /ag-closeout-audit skill across the 4 asset groups that haven't had it yet —
@@ -62,10 +62,6 @@ by hand._
   — Consolidates THREE overlapping, previously-separately-dispatched todos in data_completion_cefi_2026_07_15.md (the
   "E4 remaining work = ORPHAN SWEEP + gap-fill" todo / data_completion_cefi-015, its "Orphan sweep + bucket-state
   evidence"…
-- [`cefi_misc_audits_and_hygiene_finalize_2026_07_25`](./cefi_misc_audits_and_hygiene_finalize_2026_07_25.md)
-  **[complete]** — Gated closeout for cefi_misc_audits_and_hygiene_2026_07_25.md — machine-held via depends_on +
-  gate_on_depends: true until all 3 of that plan's todos are done. Reconciles the parent
-  (cefi_consolidated_closeout_2026_07_18.md) checkboxes for…
 - [`cefi_ml_directional_continuous_live_2026_06_20`](./cefi_ml_directional_continuous_live_2026_06_20.md) — "Ship the
   live CeFi ML_DIRECTIONAL_CONTINUOUS archetype across OKX, Binance, and Bybit: live tick to live ML inference to live
   strategy to live execution."
