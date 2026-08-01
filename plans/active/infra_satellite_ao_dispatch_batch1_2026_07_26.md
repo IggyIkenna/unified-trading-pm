@@ -314,25 +314,24 @@ orphaned?" resolves to "everything," because nothing in the covering set does an
       script replicating the real watchdog's poll loop, verbatim regex, against a real log file — no VM launched): 5/5
       runs dropped the marker without the delay, 5/5 captured it with the delay. (repo: deployment-service)
 
-- [ ] [BACKEND] P3. **Close the two fleet-monitor blind spots on checkpoint reading and preemption alert severity
-      (combined — both live in the actuator/monitor pair and would race if split).** (a) Verify whether
-      `exit_code_fleet_monitor.py`'s `read_progress_checkpoint()` recognizes `canonical-migration-cefi-cdlap`'s
-      non-standard checkpoint filename `MIGRATION_PROGRESS-shard{N}.json` (that launcher writes a real,
-      functionally-conformant, line-indexed monotonic checkpoint —
-      `{"last_processed_line_index":70247,"processed_count":70248,"shard_index":2,"shard_of":10,…}` — but if the generic
-      actuator only globs for a literal `PROGRESS.json`, the checkpoint exists on disk and is never consulted on
-      relaunch: silent, not loud). Either generalize the reader's filename pattern or document it as an accepted
-      per-launcher naming exception in `/codex/05-infrastructure/spot-vms-for-backfill.md`. (b) Harden the
-      preemption-relaunch alert so it can distinguish "resumed correctly" from "wastefully replayed":
-      `relaunch_backfill_vm.py` today emits the same quiet `DP_VM_PREEMPTED` (INFO, no page) for both, because from the
-      actuator's point of view a non-erroring launcher subprocess exit looks identical either way. Candidate approaches
-      named in the source doc: compare the relaunched VM's per-VM manifest shard row-count growth against its wall-clock
-      runtime / expected shard size, or downgrade `DP_VM_PREEMPTED` to WARN-and-flag whenever `launch_env` had no usable
-      checkpoint AND the run was not `--force` (the exact silent-gap condition). **Done when**: (a) the reader either
-      resolves that filename (with a test proving it) or the exception is documented, and (b) a no-checkpoint non-force
-      relaunch produces a distinguishable signal from a checkpoint-resumed one, with a regression test for the
-      classification. Repo: deployment-service. Source:
-      `issues/vm_billing_waste_first_audit_and_preflight_gate_design_2026_07_24.md`.
+- [x] ✅ [BACKEND] P3. **Close the two fleet-monitor blind spots on checkpoint reading and preemption alert severity** —
+      `deployment-service@b501a5e`. (a) Confirmed `read_progress_checkpoint()` globs only the literal `PROGRESS.json`
+      and does NOT recognize `canonical-migration-*-cdlap`'s `MIGRATION_PROGRESS-shard{N}.json`. Documented it as an
+      **accepted per-launcher naming exception** (not generalized) — the two checkpoint schemas are structurally
+      incompatible (line-index vs. calendar date; there is no date to extract from a line-index checkpoint), and the
+      resume already works WITHOUT this reader's help: `RelaunchPreemptedVm` relaunches the SAME `vm_name` (via
+      `VM_NAME_OVERRIDE`, captured in `LAUNCH_PARAMS.json`), and `migrate_candle_canonical_2026_07.py` reads its OWN
+      checkpoint keyed on that same `vm_name` internally — so this reader's blind spot is purely cosmetic (no
+      `progress_checkpoint` detail on the alert), never a resume-safety gap. Documented in
+      `_gcs.py::read_progress_checkpoint`'s docstring + a new row in `spot-vms-for-backfill.md`'s per-launcher
+      conformance table; regression test proves the intentional `None` return
+      (`test_read_progress_checkpoint_ignores_cdlap_non_standard_checkpoint_filename`). (b) Hardened
+      `DP_VM_PREEMPTED_RECOVERED`: it now emits INFO + `checkpoint_resumed=true` when the relaunch resumed from a
+      monotonic checkpoint, vs. WARN + `checkpoint_resumed=false` when it had no usable checkpoint and replayed
+      `launch_env` verbatim (the non-force silent-gap condition — force+no-checkpoint already PAGEs earlier in the same
+      function). Existing tests updated (`test_preempted_relaunch_replays_captured_launch_env`) + new regression tests
+      added for both the resumed and non-resumed classification. QG: 3016 passed, 0 failures. Codex SSOTs updated:
+      `/codex/05-infrastructure/spot-vms-for-backfill.md`.
 
 - [x] ✅ [BACKEND] P2. **DONE 2026-07-31 (slot 8) — `deployment-service@b4503ef`** (rebased onto a concurrent slot-2 fix
       to the same file's stale comment, `deployment-service@daf3ad5` — no conflict, cleanly rebased). Make the
