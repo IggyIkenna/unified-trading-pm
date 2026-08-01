@@ -258,3 +258,27 @@ commit above, which only bumped the baseline to 10 rather than fixing the false-
 400d with the byte-identical message this doc already documents:
 `"one_shot_complete on slot 11 but no active agent owns its session 'orch-slot-11' — a Class-A worker must /done with a task_id."`
 Not retrying `/done` further per the precedent set above; ending this turn here.
+
+## Recurrence corroboration (slot 4, escalation agt-0cadd0, 2026-08-01)
+
+A seventh instance, different `wall_type` this time (`main_ci_red` — every prior recurrence in this doc was
+`plan_health`): escalation `agt-0cadd0` (`repo=features-service`, `#0`), assigned mandate fully complete and
+independently verified (main's HEAD confirmed a literal ancestor of `live-defi-rollout` — no code fix existed or was
+needed; the wall is the tracked fleet-wide QG capacity crisis, corroborated in
+`/plans/active/issues/fleet_wide_qg_capacity_crisis_continues_day2_2026_07_29.md`). This session's own investigation
+spanned ~5h (multiple bounded `ScheduleWakeup` cycles polling a genuinely slow CI queue — not idle drift), which is
+plausibly exactly the kind of long-elapsed, session-spanning gap the `TmuxPruner`/`reap_orphan_agents` heuristics (P2
+fix `agent-orchestrator@81f54a8` above) are prone to false-negative on. `POST /api/slots/4/done` with both `task_id: ""`
+and a retry with `task_id: "agt-0cadd0"` 400d with the byte-identical message. Tried two recovery steps not previously
+logged in this doc, neither helped: (1) re-sent `/heartbeat` first, hoping a fresh ping would reactivate the row the way
+`touch_main_agent_heartbeat`/`reactivate_review_agent` do for their roles — it succeeded (200, slot went
+`status=working`) but `/done` still 400d identically, confirming heartbeat only touches `SlotRow`, not the archived
+`AgentRow`, for this role; (2) the successful heartbeat's own response carried an unrelated `new_task` (a
+`defi_satellite_ao_dispatch_batch2` backlog item) — the dispatcher treating the slot as idle-and-claimable despite the
+escalation still being mid-session, consistent with the AgentRow already reading `archived` from its side. Skipped that
+erroneous dispatch via `/skip-current-task` before the (still-400) final `/done` retry, so it doesn't strand a task. Not
+retrying further per the precedent set above; ending this turn here. Adds one new data point for the open P3 todo above
+(idempotent-success-on-already-archived-own-row): this occurrence's own `tmux_session`/escalation pairing would have
+been a clean, safe match for that proposed fix (single occupant, no slot-reuse ambiguity in this session's own
+timeline), i.e. a real instance where that declined-for-now fix would have let a fully-correct wall resolution sign off
+cleanly instead of ending on an issue-doc corroboration.
