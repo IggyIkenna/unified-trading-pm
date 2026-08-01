@@ -16,7 +16,7 @@ summary: >-
   is not the likely explanation. Most likely explanation not yet confirmed: the specific benchmark DAY used by the
   2026-07-27 dependency check falls in a real per-day coverage gap for these data_types (a freshness-lag false negative
   for THAT DAY, not "never ingested" at all), but this was not verified before this session ended.
-status: open
+status: resolved
 nature: issue
 asset_group: [defi]
 stage: [data, features]
@@ -39,11 +39,19 @@ source:
     DEFI:onchain gate had cleared",
   ]
 resolved_by:
+  market-tick-data-service (investigation only, no code change) +
+  issues/defi_onchain_perp_funding_permanently_unsatisfiable_dependency_2026_07_31.md
 locked_by:
 locked_since:
 ---
 
 # DEFI onchain "MTDS never ingested" claim vs data_completion_defi's captured counts — reconcile
+
+> **🟢 RESOLVED 2026-07-31.** Both todos done: the original contradiction was reconciled (4 of 5 data_types were a
+> freshness-lag false negative, `perp_funding` was the sole genuine gap) and `perp_funding`'s root cause is now fully
+> evidenced (not a scheduler/handler bug — a permanently-unsatisfiable DEFI dependency check post-reclassification).
+> Successor for the actual fix:
+> `/plans/active/issues/defi_onchain_perp_funding_permanently_unsatisfiable_dependency_2026_07_31.md`.
 
 ## What I found
 
@@ -117,7 +125,7 @@ trap" note below) and was killed before reaching a conclusion, to avoid burning 
       DEFI — but the "MTDS has never ingested vault_share_price/lst_rates/lending_indices/ oracle_prices/perp_funding"
       framing is now corrected to name `perp_funding` specifically as the sole live blocker (see that plan's updated
       line, same commit). Repo: features-service.
-- [ ] [DATA] P2. **NEW 2026-07-29 (slot-6), follow-up split off the finding above.** Root-cause why the live daily
+- [x] [DATA] P2. ✅ **NEW 2026-07-29 (slot-6), follow-up split off the finding above.** Root-cause why the live daily
       `collect-perp-funding` Cloud Scheduler job (`market-tick-data-service`, `defi_collection_scheduler.tf:112`, 01:15
       UTC) produces zero MTDS manifest rows for `perp_funding` across every one of 12 tested days spanning 2026-05-01 to
       2026-07-28, despite `perp_funding_handler.py:225` resolving to the same canonical bucket
@@ -127,7 +135,21 @@ trap" note below) and was killed before reaching a conclusion, to avoid burning 
       window); (b) the handler writes real objects but something downstream (manifest consolidator / `record_captured`
       call) never registers them for the `perp_funding` data_type key specifically; (c) the historical 12,500-row count
       predates a since-broken code path and nothing has captured successfully since. Repo: market-tick-data-service
-      (scheduler config + handler), possibly unified-trading-library (manifest consolidator) depending on root cause.
+      (scheduler config + handler), possibly unified-trading-library (manifest consolidator) depending on root cause. —
+      **2026-07-31 (slot-15)**: **(a) ruled out** — scheduler `state: ENABLED`, last 5 executions (07-27..07-31) all
+      `Completed` successfully. **(b) confirmed, refined**: the handler writes real data AND registers real manifest
+      rows every day (today: 5568 Hyperliquid + 39 kalshi_perp rows, `ManifestWriter: per-VM shard updated`) — but 100%
+      of it targets `gs://market-data-tick-cefi-prd-central-element-323112` (CEFI bucket), never the DEFI bucket the
+      dependency check reads. Direct source read of `perp_funding_handler.py`'s docstring: every live venue
+      (HYPERLIQUID, KALSHI_PERP, POLYMARKET_PERP) is CEFI-classified per UAC's `VENUE_TO_ASSET_GROUP` registry and 3
+      operator rulings (HYPERLIQUID DeFi->CeFi 2026-07-06; KALSHI/POLYMARKET fixed to cefi path 2026-07-26; GMX — the
+      one venue with a real on-chain angle — removed entirely 2026-07-25). **(c) reconciled, not confirmed as stated**:
+      the 12,500-row count is real historical DEFI-bucket data from BEFORE the 2026-07-06 reclassification, not a broken
+      code path — it correctly stopped growing the moment classification was corrected; nothing is broken, the
+      `UPSTREAM_DEPS_DEFI` check was simply never updated. Filed
+      `issues/defi_onchain_perp_funding_permanently_unsatisfiable_dependency_2026_07_31.md` with full evidence + the
+      scoped fix todo (this DEFI dependency is now permanently unsatisfiable under current, correct venue classification
+      — an operator/main scoping call, not a mechanical bug, per that doc's "Why it matters").
 
 ## Measurement trap (for whoever picks up P2 above, or anyone else needing to call into `unified_trading_library`
 

@@ -759,7 +759,15 @@ transient. Both handled gracefully (`recovery=skip`, `SCHEMA VIOLATION` logged b
       historical `perp_funding=12,500 captured` count (`data_completion_defi_2026_07_15.md`). Root-cause tracked as its
       own new follow-up todo in that issue doc (scheduler/handler/manifest-registration investigation, out of scope
       here). Net: `DEFI:onchain`'s dependency check (requires ALL 5, `required: True`) still fails on every tested day —
-      blocks `DEFI:onchain` entirely until `perp_funding` ingestion resumes / is diagnosed.
+      blocks `DEFI:onchain` entirely until `perp_funding` ingestion resumes / is diagnosed. — **2026-07-31 (slot-15)**:
+      root cause is NOT a broken scheduler/handler — both run correctly daily and write real data + manifest rows. The
+      dependency check itself is stale: every live `perp_funding` venue (HYPERLIQUID/KALSHI_PERP/POLYMARKET_PERP) was
+      reclassified DeFi->CeFi by 3 independent operator rulings (2026-07-06/07-25/07-26), so 100% of writes now target
+      the CEFI bucket, never the DEFI bucket this check reads — a permanently-unsatisfiable required dependency, not a
+      freshness gap. `perp_funding` will not "resume" — the check needs fixing. Filed
+      `issues/defi_onchain_perp_funding_permanently_unsatisfiable_dependency_2026_07_31.md` with full evidence + the
+      scoped fix (remove/relax the `perp_funding` requirement in `UPSTREAM_DEPS_DEFI`, operator/main call on which
+      option). This todo stays open — `DEFI:onchain` remains genuinely blocked until that fix lands.
 - [x] [DATA] P1. Remaining todo-10 scope: CEFI/TRADFI/DEFI/PREDICTION `delta_one`, `volatility`, `multi_timeframe`,
       `cross_instrument`, `commodity` — PARTIALLY DONE 2026-07-28 (slot-2): checked here ONLY because this todo's own
       AO-derived `brief` was truncated mid-sentence by plan-regen (ends at this exact point, no closing punctuation),
