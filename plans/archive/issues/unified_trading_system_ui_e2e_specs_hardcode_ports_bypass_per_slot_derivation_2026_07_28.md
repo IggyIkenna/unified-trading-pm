@@ -15,7 +15,7 @@ summary: >-
   will still attempt to reach the OLD fixed ports (3100/8030) instead of this slot's real dev server (3100+N/8030+N) —
   either connecting to nothing (ERR_CONNECTION_REFUSED) or, worse, silently reusing whichever OTHER slot's server
   happens to be running on the fixed port, which is exactly the false-result hazard the parent fix exists to close.
-status: open
+status: resolved
 nature: issue
 asset_group: [ao]
 stage: [meta]
@@ -37,6 +37,8 @@ depends_on: []
 locked_by:
 assigned_vm: planning
 resolved_by:
+  "unified-trading-system-ui@db918e1c (batch 1), unified-trading-system-ui@bb8f0b84 (batch 2),
+  unified-trading-system-ui@741d0a6b (batch 3)"
 context_scope:
   [
     /plans/archive/issues/playwright_reuse_existing_server_cross_slot_false_results_2026_07_20.md,
@@ -44,6 +46,10 @@ context_scope:
     /plans/epics/agent_operating_framework_master.md,
   ]
 ---
+
+> **🟢 ARCHIVED 2026-08-01** — status=resolved, 0 open todos (all 3 batches shipped: unified-trading-system-ui@db918e1c,
+> @bb8f0b84, @741d0a6b). Archived per `/codex/11-project-management/issue-doc-lifecycle.md`'s ACKED-INTO-CODE
+> archive-on-resolve rule.
 
 # unified-trading-system-ui e2e specs hardcode ports, bypassing per-slot derivation
 

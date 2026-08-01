@@ -72,13 +72,15 @@ source:
       `reaper_kills_inflight_detached_quickmerge_false_done_2026_07_24`,
       `slot_recurring_wedge_at_context_pct_75_compact_confirmation_2026_07_25`. **Done when**: each is re-classified
       cleared/still-gated with evidence.
-- [ ] [REVIEW] P2. **Read + properly bucket the 8 "unclear" docs** the Phase-1 audit agent couldn't cleanly classify:
+- [ ] [REVIEW] P2. **Read + properly bucket the remaining 7 "unclear" docs** the Phase-1 audit agent couldn't cleanly
+      classify (was 8 — `unified_trading_system_ui_e2e_specs_hardcode_ports_bypass_per_slot_derivation_2026_07_28`
+      bucketed **archivable/ACKED-INTO-CODE 2026-08-01**: its last open todo shipped unified-trading-system-ui@741d0a6b,
+      all 3 batches done, no `locked_by` — archived per `/codex/11-project-management/issue-doc-lifecycle.md`):
       `ao_context_pct_0_for_monitor_heavy_workers_2026_07_29`,
       `ao_done_gate_no_carveout_for_red_gate_evidence_only_closure_2026_07_28`,
       `orchestrator_db_pool_exhaustion_state_poll_stall_2026_07_25`,
       `na_eligibility_auditor_timer_not_yet_installed_2026_07_27`,
       `mtds_backfill_sequential_true_dispatch_order_violated_2026_07_29`,
       `plan_health_tests_leak_real_slack_alerts_2026_07_24`,
-      `unified_trading_system_ui_e2e_specs_hardcode_ports_bypass_per_slot_derivation_2026_07_28`,
       `watchdog_unpushed_sweep_defeats_operator_merge_gate_2026_07_26`. **Done when**: each lands in one of the standard
       verdict buckets (conflict-gated / operator-gated / archivable / covered) with reasoning.
