@@ -113,11 +113,19 @@ it reads isn't real data at all.
 
 ## Todos
 
-- [ ] [CODE] P1. Design + implement a source-bucket override for sports reference-data reads
+- [x] ✅ [CODE] P1. Design + implement a source-bucket override for sports reference-data reads
       (`features_service/sports/data/gcs_paths.py`), threaded through `pipeline_e2e_check.py`'s sports shard build, so a
       `-test-`-sink e2e-check run can read real `-prd-` reference data. Verify with a fresh force leg against a
       `SPORTS_SMOKE_DATES` busy day and confirm it reports a REAL (non-empty) write, not `empty_confirmed`. (repo:
-      features-service)
+      features-service) — features-service@72393fbf. **Real-VM verification caught a bug in the first implementation
+      (247ecdaa)**: `get_data_source()`'s provider silently defaulted to "local" (no launcher sets
+      `PROTOCOL_DATA_SOURCE_BACKEND` for sports), so the override no-opped and reads still hit the never-seeded `-stg-`
+      tier despite a unit test that hand-set the backend var passing. Fixed by switching
+      `resolve_instruments_bucket()`/`resolve_tick_data_bucket()` to the same direct pydantic-field pattern
+      `FeaturesCrossInstrumentConfig.get_input_bucket()` already uses successfully (features-service@8ea48a33, test-data
+      fixup @72393fbf). Final force-leg (day=2025-12-20, VM `features-e2e-sports-20260801-124529-281e78`) confirms REAL
+      reads — `GCS read leagues: 1228 rows`/`standings: 574 rows`/etc. from `instruments-store-sports-prd-...` — and the
+      checkpoint report shows `parquet=6, manifest=captured` (not `empty_confirmed`).
 - [x] ✅ [DOC] P2. Noted this limitation in the `data-pipeline-check-features` skill doc
       (`cursor-configs/skills/data-pipeline-check-features/SKILL.md`), as a ⚠️ callout right after the existing
       "Required INPUT per family" table's Reality-check callout (same pattern/style) — so a future run doesn't mistake a
