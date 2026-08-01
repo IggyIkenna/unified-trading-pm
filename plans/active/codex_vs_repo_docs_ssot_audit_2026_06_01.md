@@ -488,23 +488,47 @@ unified-trading-library@`168e649`+`c88278b`; market-tick-data-service@`d97ca3c`.
       where every row carries the same BIG-FINDING error class (archived-mirror + 3 nonexistent dep repos), and one
       row's correct target (L119 sports) is not trivially determinable — so the whole table + broader README rewrite is
       tracked as the follow-up todo below rather than left inconsistent.
-- [ ] [DOCS] P2. **instruments-service README/docs holistic BIG-FINDING FIX-STALE (beyond URDI — findings-closure from
-      -013, slot-6 2026-07-31)**: the instruments-service refreshed registry below (line ~802) classified the full repo
-      but only the URDI slice shipped; the rest is a determinable, NOT-operator-gated reconciliation that was never a
-      standalone dispatchable todo. Reconcile `README.md` against `SETUP_GUIDE.md`@2026-07-24 +
-      `ADAPTER_ARCHITECTURE.md` @2026-07-19 as ground truth: the Concern/Location table (L116-119) cites the ARCHIVED
-      mirror `unified-trading-codex/02-data/` (→ live PM `/codex/02-data/`) + 3 NONEXISTENT dep repos
-      (`unified-internal-contracts`/UIC, `unified-reference-data-interface`/URDI [→ internal
-      `reference_data/adapters/`], `unified-sports-reference-interface`) — actual editable siblings = UTL + UAC only;
-      `InstrumentRecord`/ `InstrumentGenerator`/`INSTRUMENTS_SCHEMA` live in UAC `.../internal/reference/`, not UIC;
-      stale CLI `--CEFI/--TRADFI/--DEFI/--SPORTS`+`--redo-all` → real `--asset-group CEFI`+`--force`. Plus
-      `CONTRIBUTING.md` + `.github/BRANCH_PROTECTION.md` FIX-STALE (retired
-      `git checkout main`/`python -m pytest`/`quality-gates` check → `quality-gates-v2`, LDR flow),
-      `docs/SETUP_GUIDE.md` `--mode instruments` → `--operation instruments --mode batch`, `docs/SPORTS_INSTRUMENTS.md`
-      `gs://features-sports-{project}/` env-tier verify; + 2 DELETEs (`scripts/README.md` documenting only a
-      non-existent `run_quality_gates.py`; `.github/BRANCH_PROTECTION_SETUP.md` dead manual how-to). All cited codex/UAC
-      targets VERIFIED-EXIST (registry Verification notes, line ~792). Opus-gated editorial rewrite. (repo:
-      instruments-service)
+- [x] ✅ [DOCS] P2. **instruments-service README/docs holistic BIG-FINDING FIX-STALE (beyond URDI — findings-closure
+      from -013, slot-6 2026-07-31)** — **DONE 2026-08-01 (slot-5), instruments-service@c5ece372.** Reconciled all 7
+      docs against `SETUP_GUIDE.md`/`ADAPTER_ARCHITECTURE.md`/live `pyproject.toml`+CLI as ground truth: README dep-repo
+      list fixed to the real editable siblings **UTL+UAC only** (3 nonexistent repos removed);
+      `InstrumentRecord`/`InstrumentGenerator`/`MockScenario` repointed to UAC `internal/{reference,testing,modes}`;
+      stale CLI (`--CEFI`…/`--redo-all`) → `--operation instruments --mode batch --asset-group …`/`--force`; 4 archived
+      `unified-trading-codex/` mirror refs → live `codex/` paths; corrected the stale header claims (the service DOES
+      make external calls + manages creds + canonicalises) and the removed service-local mock seed script (now
+      UAC-owned). `CONTRIBUTING.md` → LDR + `quickmerge --agent` + `quality-gates.sh` flow (dead `.cursorrules`/
+      `unified-trading-deployment-v2` refs dropped). `.github/BRANCH_PROTECTION.md` → `quality-gates-v2` + ratcheted
+      `MIN_COVERAGE` (was 35/65). `docs/SETUP_GUIDE.md` `--mode instruments`/`instruments-query` →
+      `--operation instruments     --mode batch` / `--operation status`. `docs/SPORTS_INSTRUMENTS.md`
+      `features-sports-{project}` → canonical `features-sports-{env}-{project}` (VERIFIED stale vs codex
+      bucket-isolation-model L178, not env-agnostic). DELETED `scripts/README.md` (documented only the nonexistent
+      `run_quality_gates.py`) + `.github/BRANCH_PROTECTION_SETUP.md` (dead manual how-to). **Grep-then-READ
+      correction**: the plan's "nonexistent `make ci-local`" note is WRONG — the `Makefile` + `make ci-local` target DO
+      exist, but the Makefile is ITSELF stale (see follow-up P3 below), so BRANCH_PROTECTION.md now points at the
+      canonical `scripts/quality-gates.sh` entrypoint instead. Original scope preserved below: the instruments-service
+      refreshed registry below (line ~802) classified the full repo but only the URDI slice shipped; the rest is a
+      determinable, NOT-operator-gated reconciliation that was never a standalone dispatchable todo. Reconcile
+      `README.md` against `SETUP_GUIDE.md`@2026-07-24 + `ADAPTER_ARCHITECTURE.md` @2026-07-19 as ground truth: the
+      Concern/Location table (L116-119) cites the ARCHIVED mirror `unified-trading-codex/02-data/` (→ live PM
+      `/codex/02-data/`) + 3 NONEXISTENT dep repos (`unified-internal-contracts`/UIC,
+      `unified-reference-data-interface`/URDI [→ internal `reference_data/adapters/`],
+      `unified-sports-reference-interface`) — actual editable siblings = UTL + UAC only; `InstrumentRecord`/
+      `InstrumentGenerator`/`INSTRUMENTS_SCHEMA` live in UAC `.../internal/reference/`, not UIC; stale CLI
+      `--CEFI/--TRADFI/--DEFI/--SPORTS`+`--redo-all` → real `--asset-group CEFI`+`--force`. Plus `CONTRIBUTING.md` +
+      `.github/BRANCH_PROTECTION.md` FIX-STALE (retired `git checkout main`/`python -m pytest`/`quality-gates` check →
+      `quality-gates-v2`, LDR flow), `docs/SETUP_GUIDE.md` `--mode instruments` →
+      `--operation instruments --mode batch`, `docs/SPORTS_INSTRUMENTS.md` `gs://features-sports-{project}/` env-tier
+      verify; + 2 DELETEs (`scripts/README.md` documenting only a non-existent `run_quality_gates.py`;
+      `.github/BRANCH_PROTECTION_SETUP.md` dead manual how-to). All cited codex/UAC targets VERIFIED-EXIST (registry
+      Verification notes, line ~792). Opus-gated editorial rewrite. (repo: instruments-service)
+- [ ] [CODE] P3. **instruments-service `Makefile` FIX-STALE** (follow-up finding, slot-5 2026-08-01): the `Makefile`'s
+      `ci-local`/`test`/`type-check`/`lint` targets are stale — `make test` runs `pytest --cov-fail-under=35` (real
+      floor is the ratcheted `MIN_COVERAGE=88` in `scripts/quality-gates.sh`), and `install`/`test`/`lint`/`type-check`
+      invoke `pip install`/`pytest`/`ruff`/`basedpyright` STANDALONE, which violates the workspace "never run
+      `pytest`/ruff/ basedpyright directly — `scripts/quality-gates.sh` is the entrypoint" rule. Either repoint
+      `make ci-local` to shell out to `bash scripts/quality-gates.sh` (single canonical gate) or delete the Makefile and
+      drop the last `make` references. Surfaced while fixing `.github/BRANCH_PROTECTION.md` (which no longer cites
+      `make ci-local`). (repo: instruments-service)
 - [x] ✅ [DOCS] P2. **AUDIT-03 F-45 codex update** — VERIFIED already-correct 2026-07-27 (Phase-2), no codex change
       needed. `rg` across `codex/` finds NO doc claiming `correlation_id` keys/partitions the events GCS path; every
       `correlation_id` reference is a column / PubSub attribute / function param (matches the code). Original finding
