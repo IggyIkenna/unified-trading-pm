@@ -27,7 +27,7 @@ scope: [engineer, admin]
 tags: [quality-gates, flaky-gate, timeout, pytest-timeout, ci, shared-host-contention, xdist]
 related: [/plans/active/issues/adapter_contract_regression_ratchet_60s_timeout_flaky_under_contention_2026_07_27.md]
 created: 2026-07-29
-last_updated: 2026-07-31
+last_updated: 2026-08-01
 parent_epic: infrastructure_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -588,5 +588,22 @@ those commits landed). The escalation's own repo-blocker list (`GET /api/repo-bl
   any intervention. Zero open PRs (`gh pr list --state open` empty) and zero open `/api/repo-blockers` entries for
   instruments-service at investigation time. Same "orphaned noise against an already-resolved wall" conclusion as every
   prior entry in this doc — no live-defi-rollout code or test change made or needed. Slot left clean
+  (instruments-service + unified-trading-pm both already on `live-defi-rollout`, 0 commits ahead of `origin`, nothing to
+  commit).
+- **2026-08-01 ~00:00Z (cicd escalation `agt-d404d8` redispatched to slot 8)**: redispatch of the same escalation id the
+  entry two above already investigated (`test_event_logging.py::test_required_lifecycle_events_importable`, run
+  `30659447161`, head SHA `df9b6daa`). Re-verified from scratch rather than trusting the existing entry blind, per this
+  doc's own established practice. Local isolated re-run of the specific failing test still measures ~8s (5/5 passed in
+  the whole file) — confirms the prior entry's read. Current `live-defi-rollout` HEAD has advanced well past the failing
+  SHA: `8f16345b` (`2026-07-31T23:54:56Z`), several commits ahead of both `df9b6daa` and the `51f85d9c` the prior entry
+  checked (`git merge-base --is-ancestor` true for both). The `51f85d9c` `quality-gates-v2` run (`30669732609`) the
+  prior entry left "queued" was STILL queued at re-check time (~1h44m elapsed) — confirmed this is queue depth, not a
+  dead runner: sibling repos on the same self-hosted fleet (market-tick-data-service `in_progress`, features-service
+  actively completing/queuing runs in the same window) are actively grinding, consistent with
+  `fleet_wide_qg_capacity_crisis_continues_day2_2026_07_29.md`'s standing diagnosis. Zero open `/api/repo-blockers`
+  entries and zero open PRs for instruments-service at investigation time. Did not add a retrigger (one is already in
+  flight for a SHA that is itself already superseded by current HEAD — a retrigger would only add to the same queue
+  depth without producing more actionable signal). Same "orphaned noise against an already-resolved wall" conclusion as
+  every prior entry in this doc — no live-defi-rollout code or test change made or needed. Slot left clean
   (instruments-service + unified-trading-pm both already on `live-defi-rollout`, 0 commits ahead of `origin`, nothing to
   commit).
