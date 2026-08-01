@@ -76,14 +76,17 @@ running `/na-eligibility-audit defi`; every todo below cleared the shared confli
       addendum re-verifying the new files (all KEPT, clean) + spot-checking no regression on the still-open findings —
       see that doc's § 7 for the incremental evidence. `unified-trading-pm@<see quickmerge sha below>`.
 
-- [ ] [CONFIG] P2. **Wire `curve_adapter.py`'s RPC path to the correct per-chain Alchemy URL for ARB/POLY** — it
-      currently hardcodes `eth-mainnet.g.alchemy.com` in `_ensure_web3`; UAC's `SUBGRAPH_IDS["curve"]` already lacks an
-      ARB/POLY entry ("ARB/POLY only on hosted service (deprecated)") and Alchemy already supports both chains
-      (`_defi_chain_data.py` chain configs) — this is code-only, not credential-blocked (verified 2026-07-29, corpus
-      hygiene pass; `alchemy-api-key` is already provisioned). Repo: market-tick-data-service. Done when: ARB and POLY
-      both resolve via `_ensure_web3` to their own per-chain Alchemy endpoint (not the ETH-mainnet default), covered by
-      a regression test, shipped via scoped `quickmerge.sh --agent --files`. Source:
-      `defi_consolidated_closeout_2026_07_18.md:554-561`.
+- [x] ✅ [CONFIG] P2. **DONE 2026-08-01 (slot-8).** Wired `curve_adapter.py`'s `_ensure_web3` to resolve the RPC URL
+      per-chain via `AlchemyBaseClient(chain=self.chain, project_id=self.project_id).get_rpc_url()` (already imported
+      for `_ensure_alchemy_client`) instead of hardcoding `https://eth-mainnet.g.alchemy.com` regardless of `self.chain`
+      — that client resolves ETHEREUM/ARBITRUM/POLYGON/etc via UAC `CHAIN_CONFIGS` (`arb-mainnet`/`polygon-mainnet`
+      templates confirmed present in `_defi_chain_data.py`), falling back to `CHAIN_TO_ALCHEMY_NETWORK`. Added 3
+      regression tests to `test_defi_adapters_boost.py::TestCurveAdapter`
+      (`test_ensure_web3_resolves_per_chain_rpc_url_for_arbitrum`, `..._for_polygon`,
+      `test_ensure_web3_unsupported_chain_leaves_web3_none`) — the arb/polygon tests assert the resolved URL contains
+      the per-chain Alchemy network name and NOT `eth-mainnet`, and would fail against the old hardcoded code (it never
+      called `AlchemyBaseClient` at all). Full `quality-gates.sh` green (sentinel-verified on the shipped SHA); shipped
+      `market-tick-data-service@1f58a127`. Source: `defi_consolidated_closeout_2026_07_18.md:554-561`.
 
 - [ ] [DATA] P2. **Re-verify the 21 glued-id `dex_pool_state` rows are now 0** — the writer fix already shipped
       (`market-tick-data-service@f2e3ad41`/`70b9a81a`); 9 ORCA/SOLANA cells (2025-12-23..12-31) still need the
@@ -134,3 +137,8 @@ running `/na-eligibility-audit defi`; every todo below cleared the shared confli
   incrementally re-verifying the 7 instruments-service adapter files added since 2026-07-24 (all clean/KEPT) and
   spot-checking no regression on the still-open findings. Flipped this todo + the parent closeout checkbox by citation —
   no new code fix needed (nothing new was found broken).
+- 2026-08-01 (slot-8, todo 2): Fixed `curve_adapter.py::_ensure_web3`'s hardcoded ETH-mainnet Alchemy URL — replaced
+  with `AlchemyBaseClient(chain=self.chain, ...).get_rpc_url()` (already imported in the file for
+  `_ensure_alchemy_client`), which resolves per-chain via UAC `CHAIN_CONFIGS` (verified `arb-mainnet`/`polygon-mainnet`
+  templates present in `_defi_chain_data.py`). Added 3 regression tests. Full QG green, shipped
+  `market-tick-data-service@1f58a127`.
