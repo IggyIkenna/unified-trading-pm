@@ -98,11 +98,11 @@ running against it) — check the plan's own status before starting.
 
 ## Todos
 
-- [ ] [PLAN] P3. Split `plans/active/mtds_available_at_cross_asset_backfill_2026_07_13.md`: extract fully-closed lanes'
-      Progress Log entries into an archived history doc (standard split pattern, `superseded_by`/pointer back from the
-      trimmed plan), leaving the still-open apply+resume todos (and any other still-open lane) in the active plan,
-      landing it back under the 1000-line hard cap. Verify no todo is currently `locked_by`/mid-dispatch before
-      splitting. (repo: unified-trading-pm)
+- [x] ✅ [PLAN] P3. Split `plans/active/mtds_available_at_cross_asset_backfill_2026_07_13.md`: extract fully-closed
+      lanes' Progress Log entries into an archived history doc (standard split pattern, `superseded_by`/pointer back
+      from the trimmed plan), leaving the still-open apply+resume todos (and any other still-open lane) in the active
+      plan, landing it back under the 1000-line hard cap. Verify no todo is currently `locked_by`/mid-dispatch before
+      splitting. (repo: unified-trading-pm) — ✅ 2026-08-01 (slot-11, cicd): see Progress Log for full evidence.
 - [ ] [PLAN] P2. While splitting (todo above), add explicit per-todo sequencing between each asset group's "Apply
       `rebuild_{prediction,tradfi}_manifest.py`" and "Resume the {prediction,tradfi} consolidator cron" todos via the
       **cross-plan `depends_on` + `gate_on_depends: true` split** (see 2026-07-31 Progress Log entry below — the
@@ -112,6 +112,50 @@ running against it) — check the plan's own status before starting.
       `queued`/dispatchable while its apply counterpart is open. (repo: unified-trading-pm)
 
 ## Progress Log
+
+**2026-08-01 (slot-11, cicd)**: dispatched to the `[PLAN] P3` split todo (`-001`). Before touching the target plan,
+re-checked `GET /api/backlog` per the sibling `-002` entries' recommendation:
+`mtds_available_at_cross_asset_backfill-006` ("Resume the prediction consolidator cron") was still `status: dispatched`
+(`dispatched_to: 3`, `dispatched_at: 2026-07-31T23:33:21Z`, ~82 min stale by my check). Rather than decline a third time
+on that alone, checked the actual liveness of slot 3 via `GET /api/activity?limit=300`: slot 3 had been repeatedly
+`worker_kicked` (`kind: idle`) every ~2 minutes continuously since 00:36:17Z — a stuck/idle session, not a live worker
+about to append a Progress Log entry to the target file. Independently confirmed via
+`git log -1 --format=%cI -- <plan path>` that the plan's last real commit was `2026-07-31T04:37:15+00:00` (`ccfec294c`)
+— well before both slot 4's and slot 13's declined touches, confirming neither of those (nor `-006`'s stale dispatch)
+has actually written to the file since. Concluded the collision risk both prior slots correctly flagged was no longer
+live and proceeded.
+
+Read the full 1004-line plan end to end and confirmed slot 13's shape finding still held: 15 todos total (6 open — lines
+164/169/288/297/311/323 — prediction apply/resume, tradfi apply/resume, defi go/no-go + implement-and-apply; 9 closed),
+`## Progress Log` (lines 336-1004, ~668 lines) entirely historical narrative for closed lanes, each closed todo already
+carrying its own inline evidence summary (same shape the `deployment_api_sigabrt_crash_loop_2026_07_24.md` line-cap
+precedent used, followed here as the established split pattern).
+
+**Executed the split**: extracted lines 338-922 (every Progress Log entry from the 2026-07-13 plan authoring through the
+2026-07-14 DeFi handler audit dispatch, data_engineering slot-8) verbatim to a new archive doc,
+`/plans/archive/2026_08/mtds_available_at_cross_asset_backfill_progress_log_history_2026_08_01.md` (`doc_type: plan`,
+`status: complete`, `nature: record`, mirroring `defi_master_history_2026_07_24.md`'s frontmatter shape for a
+plan-sourced history extraction). Kept the two most recent Progress Log entries (2026-07-28 gate-cleanup pass,
+2026-07-29 crons-paused/fresh-snapshots) inline in the live plan — deliberately, since they describe the CURRENT infra
+state (both consolidator crons paused, fresh 2026-07-29 snapshots taken) that any future apply/resume dispatch needs
+without opening the archive. Added a pointer note at the top of the live plan's `## Progress Log` section (same
+"line-cap remediation... new entries append below" convention as the sigabrt precedent). Added the new archive doc to
+the live plan's `related:` frontmatter list and bumped `last_updated`. Touched NOTHING in the Todos section itself — all
+15 checkboxes (open and closed) preserved verbatim, byte-for-byte, only the Progress Log section was restructured.
+
+**Verified**: live plan now 425 lines (was 1004) —
+`bash scripts/plan-hygiene/check_line_caps.sh plans/active/mtds_available_at_cross_asset_backfill_2026_07_13.md` →
+`✅ within cap`. Both files' YAML frontmatter parse cleanly (`yaml.safe_load`); `check_frontmatter_schema.py` on the
+live plan → zero violations (the archive doc is out-of-scope for that check by design — `plans/archive/**` is excluded,
+confirmed by reading the script). `diff`-verified the archive doc's body + the live plan's trimmed tail together
+reconstruct the original file's Progress Log content exactly (no line dropped, no line duplicated). No code/production
+changes — plan-doc-only split, shipped via the `docs(plans):` carve-out.
+
+**What I did NOT do**: did not touch the second todo below (`-002`, the cross-plan `depends_on`+`gate_on_depends`
+apply→resume ordering restructure) — that is a separate, larger structural change (an actual plan fork into an
+apply-plan + a gated resume-plan) outside this task's own scope (`-001` only); leaving it for the dispatcher's normal
+next-task assignment rather than fanning out to a second todo in this same session, per the one-task-at-a-time worker
+rule. Did not touch any cron, snapshot, or manifest — pure doc restructuring.
 
 **2026-07-31 (slot 4, data_engineering)**: dispatched to the `[PLAN] P2` todo above. Did NOT execute the split — two
 blocking findings, neither of which is a normal "wait for the prerequisite" situation the dispatcher would otherwise
