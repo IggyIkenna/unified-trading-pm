@@ -130,6 +130,30 @@ against actual write output (see "Why not fixed here" below for why).
   per-VM shards exist"). This suggests the manifest consolidator job has never run against this specific `-test-` bucket
   — plausible if consolidator scheduling is keyed off a PROD-bucket registry that doesn't include the `-test-` siblings.
 
+### 5. delta_one CEFI/technical_indicators: `perp_collapse` retains 0/215 instruments, and the resulting empty-write is REJECTED as unproven honest-absence
+
+A real `features_service.delta_one --asset-group CEFI --feature-group technical_indicators --date 2026-07-28` run
+(173/173 lookback-valid instruments, 215 post-universe-filter) logged:
+
+```
+INFO perp_collapse: retained 0/215 (bases=178; dropped non-rep-venue=1, no-rep=214, unparseable=0)
+WARNING No instruments remain after MVP universe filter for group=technical_indicators asset_group=CEFI (started with 219)
+WARNING empty_confirmed manifest write failed for technical_indicators date=2026-07-28: record_empty(reason=SOURCE_RETURNED_ZERO)
+  requires FetchEvidence proving a clean 200+empty fetch ... This is most likely an auth/rate-limit/5xx/timeout/exception/
+  missing-credential path masquerading as honest absence — call record_failed instead.
+INFO Recorded record_failed manifest row for CEFI/technical_indicators on 2026-07-28 (error=orchestrator_returned_false)
+```
+
+`perp_collapse` (representative-venue-per-base selection) drops 214/215 instruments as "no-rep" — i.e. it found zero
+instruments with a qualifying representative venue for CEFI on this date, which emptied the entire universe. The
+service's own honest-absence guard correctly REFUSED to record this as `empty_confirmed` (no `FetchEvidence` proves this
+is a genuine clean-zero rather than a masked failure), so it fell through to `record_failed` instead — the correct
+conservative behavior per `/codex/02-data/honest-absence-downstream-handling.md`, but it means CEFI technical_indicators
+is currently unable to produce EITHER a real feature write OR a confirmed-empty manifest row for at least this date. Not
+root-caused this session (is `perp_collapse`'s representative-venue selection logic broken, or is CEFI's
+representative-venue MTDS input genuinely missing/stale for 2026-07-28 specifically?) — that determination needs its own
+investigation into `perp_collapse`'s upstream inputs before a fix is attempted.
+
 ## Why it matters
 
 - **multi_timeframe (finding 1)** is the most severe: the family's CLI is unusable in ANY mode (batch, live, compute) —
@@ -198,10 +222,21 @@ not duplicated here.
       either a consolidated index exists for this bucket, or a decision is documented that `-test-` buckets are
       intentionally out of consolidator scope (in which case smoke-harness reads against them should set
       `MANIFEST_ALLOW_STALE_FALLBACK=true` or read per-VM shards directly, not fail-closed).
+- [ ] [DATA] P1. **features-service** — investigate why `perp_collapse` retained 0/215 CEFI instruments for
+      `technical_indicators` on 2026-07-28 (`dropped ... no-rep=214` — no qualifying representative venue found for
+      214/215 bases). Determine whether this is a `perp_collapse` logic regression or a genuine upstream
+      representative-venue data gap for that date, then either fix the logic or confirm the date is a legitimate thin
+      day. **Done when**: a real CEFI/technical_indicators run for a date with known-good representative-venue data
+      either produces real feature rows or a genuinely `FetchEvidence`-backed `empty_confirmed` — not a `record_failed`
+      from an unproven absence.
 
 ## Progress Log
 
 - 2026-08-01 (slot-12, data_engineering): Filed as the FINDINGS CLOSURE follow-up for
   `features_e2e_smoke_matrix_writes_to_prod_bucket_2026_08_01.md`'s P0 (this session's primary task, shipped
-  `e2e-testing@04d261d`). None of these 4 findings fixed inline — each requires independent per-family/per-bucket
+  `e2e-testing@04d261d`). None of these findings fixed inline — each requires independent per-family/per-bucket
   investigation properly scoped as its own todo, per the task's own narrow `_invoke_cli()` scope.
+- 2026-08-01 (slot-12, data_engineering, pre-compact audit): added finding 5 (delta_one CEFI `perp_collapse`
+  0/215-retained + rejected empty-write) — this was cited in the parent plan's checkbox evidence and this session's ship
+  commit message but had not actually been captured as a tracked todo here; caught during the pre-compact "every
+  deferral must already exist as a `- [ ]`" check. 5 findings total, all still open.
