@@ -238,6 +238,34 @@ session; flag if it becomes a real problem.)
       `deployment-scripts` grant already made in this doc, then verify a fresh `-test-` run's event-log objects actually
       land. (repo: deployment-service or infra config, wherever the events-bucket IAM lives)
 
+## Update 2026-08-01 (data_pipeline_failure escalation agt-eb76ad, slot 5) — a THIRD, distinct `-stg-`/`-test-` bucket-tier bug in the same MTDS SPORTS pipelinecheck path
+
+DP-VM-002 fired for VM `mtds-backfill-sports-pipelinecheck-20260801-131738-2da87c` (manifest `captured` did not climb).
+`run.log` showed the VM's real venue failure was correctly shard-isolated (a 401 Unauthorized from the ODDS_API
+historical endpoint — unrelated, pre-existing, not chased further), but ALSO a silently-swallowed
+`Manifest write failed (non-blocking): 404 ... bucket does not exist` against
+`instruments-store-sports-stg-central-element-323112` — confirmed via `gsutil ls -b` that bucket does not exist, and
+that **zero `-stg-` tier buckets exist anywhere in the project** (only `-prd-`/`-test-` are ever provisioned).
+
+Root cause, same bug family as this doc's MTDS `--env staging` fix (`05a1e735`) and the OOM-preflight `-stg-` suffix fix
+(`deployment-service@4a7b466`) — a THIRD site never made test-aware: `market-tick-data-service`'s
+`_resolve_manifest_bucket()` (`engine/orchestrator/_manifest_bucket.py`) has a SPORTS-only carve-out that resolves the
+manifest/catalogue bucket via `resolve_bucket_name(kind="instruments-store", asset_group="sports")` with NO
+`deployment_env` override — so it always fell through to the ambient `DEPLOYMENT_ENV`. Under a `--test-run` leg the
+launcher sets `DEPLOYMENT_ENV=staging` (required for the `uts-test-sa` IAM identity, per this doc's own fix), so the
+SPORTS manifest write resolved the never-provisioned `-stg-` bucket instead of the real `-test-` one — unlike every
+other asset_group, whose manifest bucket == data bucket and already goes through
+`get_tick_data_bucket(..., test_aware=True)`.
+
+**Fixed + shipped**: threaded a `test_aware: bool = False` param through `_resolve_manifest_bucket()` (honours
+`IS_TEST_RUN`, mirroring `get_tick_data_bucket`'s existing contract exactly) and passed `test_aware=True` at both call
+sites that already resolve their data bucket test-aware (`state.manifest_bucket` in `engine/orchestrator/__init__.py`,
+and `_manifest_bucket_for_asset_group` used by `_ManifestWriterPool`). The PROD-only freshness-preflight read site is
+untouched (deliberately always reads PROD). Live-verified both directions post-fix:
+`IS_TEST_RUN=true`+`DEPLOYMENT_ENV=staging` → resolves `instruments-store-sports-test-central-element-323112` (exists);
+`IS_TEST_RUN` unset+`DEPLOYMENT_ENV=prod` → unchanged `instruments-store-sports-prd-central-element-323112`
+(byte-identical to pre-fix). New regression test added. `market-tick-data-service@5aba68be`.
+
 ## Codex SSOTs
 
 `/codex/05-infrastructure/vm-launcher-runbook.md`,
