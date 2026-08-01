@@ -310,9 +310,10 @@ future batch's re-triage; the rest need direct operator/human action, elapsed ti
   batch2 todo 13 landed (resolved as moot 2026-07-31). **Archived 2026-07-31** during the batch2 finalize
   (`ci_satellite_ao_dispatch_batch2_finalize_2026_07_29.md` todo 1) — no longer active-corpus work.
 - `ldr_to_main_promote_fleet_silently_skips_repo_after_promote_pr_close_2026_07_28.md`,
-  `qg_mem_wrap_systemd_bus_unavailable_2026_07_26.md`, `fleet_wide_qg_capacity_crisis_continues_day2_2026_07_29.md` —
-  all `archivable_after_planned_work`: either batch2's own active todo or genuinely self-dispatched
-  (`assigned_vm: planning`), confirmed still live/being worked through 2026-07-31. No new coverage needed.
+  `fleet_wide_qg_capacity_crisis_continues_day2_2026_07_29.md` — `archivable_after_planned_work`: either batch2's own
+  active todo or genuinely self-dispatched (`assigned_vm: planning`), confirmed still live/being worked through
+  2026-07-31. No new coverage needed. `qg_mem_wrap_systemd_bus_unavailable_2026_07_26.md` — both todos closed 2026-08-01
+  (P2 shipped 2026-07-30, P3 analysis-closed no code change); **resolved + archived**, no longer live.
 - `monitoring_control_plane_master_2026_06_10.md` — G3 (manifest-consolidator-health) is already batch2's own active
   todo; its 3 other open items (Rollout-ratchet panels, Runtime-deploy-signal-v2, G4) are correctly parked in batch2's
   own Deferred (E13 role-mismatch, E14 too-large/escalated) — re-confirmed unchanged, not re-listed here.

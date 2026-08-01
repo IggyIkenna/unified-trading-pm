@@ -41,14 +41,21 @@ parent_epic: infrastructure_master
 priority: P2
 source: [worker, slot 4, hit live shipping market-data-processing-service@22b926c]
 assigned_vm: planning
-resolved_by:
+status: resolved
+resolved_by: "unified-trading-pm@d59230eaa (P2, 2026-07-30) + analysis-closed P3 (2026-08-01, slot 12, no code change)"
 locked_by:
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
-last_updated: 2026-07-26
+last_updated: 2026-08-01
 locked_since:
 ---
+
+> **✅ RESOLVED 2026-08-01.** Both todos closed. P2 (the actual observed failure mode): shipped
+> `unified-trading-pm@d59230eaa` (2026-07-30) — `_qg_run_basedpyright_attempt()` retries once unwrapped on the
+> MEM_WRAP-TOCTOU signature, with hermetic bats coverage. P3 (this session, slot 12): analysis-closed, no code change —
+> see the todo's resolution note + Progress log for why a preflight re-validation adds no coverage the P2 retry doesn't
+> already provide. Archived.
 
 # QG MEM_WRAP TOCTOU-races a transient D-Bus outage under host contention
 
@@ -85,13 +92,43 @@ FAILED/timeout" output hints that MEM_WRAP/D-Bus is the actual cause.
       `systemd-run` shim (in `PATH` for the test) that fails on its FIRST invocation and succeeds on a second, asserting
       the retry-unwrapped path recovers and reports basedpyright's real result. (repo: unified-trading-pm) —
       unified-trading-pm@d59230eaa
-- [ ] [AGENT] P3. Consider whether the preflight probe should re-run (or the wrapper should be re-validated) when the
+- [x] ✅ [AGENT] P3. Consider whether the preflight probe should re-run (or the wrapper should be re-validated) when the
       real invocation is markedly longer than the probe (a 100ms `true` vs. an 80s+ `basedpyright` run) rather than
       trusting a single point-in-time check — lower priority than the todo above since the retry-on-failure fix covers
       the actual observed failure mode without needing to predict WHEN the race might occur. (repo: unified-trading-pm)
+      **Resolved by analysis, no code change**: re-read `base-service.sh`'s MEM_WRAP block (~L159-166) and the
+      `_qg_run_basedpyright_attempt` call-site (~L1087-1111) plus the P2 fix's own bats fixture
+      (`tests/test_qg_mem_wrap_typecheck_retry.bats`'s fake `systemd-run`, which fails BEFORE ever exec'ing the wrapped
+      command). This confirms the actual failure mechanism: `systemd-run`'s D-Bus connection attempt is the thing that
+      races, and that attempt happens at the START of each invocation (probe's, and separately the real call's) — never
+      mid-flight after basedpyright has already been exec'd inside the scope (a live cgroup scope isn't torn down by a
+      later D-Bus hiccup; only the initial `systemd-run → dbus` handshake can fail). So the "80s+ real run vs 100ms
+      probe" framing in this todo's premise doesn't describe the actual race window — what elapses between the ONE-TIME
+      preflight probe and the real call's OWN systemd-run attempt is what matters, and the real call's own attempt is
+      exactly the thing the P2 retry already observes and reacts to, unconditionally, regardless of how much time has
+      passed since the probe. Re-running the preflight probe (or re-validating the wrapper) immediately before the real
+      call would face the identical TOCTOU window the real call's own systemd-run invocation already faces — it adds a
+      second point-in-time check with the same race exposure, not a fix for it, and duplicates protection the reactive
+      retry already provides deterministically. Conclusion: no additional preflight re-validation is warranted; P2's
+      retry-on-failure is the correct fix and fully covers this failure mode independent of timing. No code shipped for
+      this todo (analysis-only closure).
 
 ## Progress log
 
+- 2026-08-01 (slot 12): Closed P3 (todo 2) by analysis, no code change. Read `base-service.sh`'s MEM_WRAP setup
+  (~L159-166) and the `_qg_run_basedpyright_attempt` retry call-site shipped for P2 (~L1087-1111), plus
+  `tests/test_qg_mem_wrap_typecheck_retry.bats`'s fake `systemd-run` fixture (models the D-Bus failure as occurring
+  BEFORE the wrapped command ever execs). This establishes that the race is confined to `systemd-run`'s own D-Bus
+  handshake at each invocation's start — never a mid-run failure inside an already-launched cgroup scope — so the "real
+  invocation is markedly longer than the probe" framing in the todo's premise isn't the operative variable. The P2 retry
+  reacts to the REAL call's own launch failure directly (not a stale proxy from an earlier probe), so it already covers
+  this regardless of elapsed time since the preflight check; a re-validated preflight immediately before the real call
+  would face the identical race window the real call's own systemd-run attempt already faces — redundant exposure, not a
+  fix. Both todos now closed; archiving this issue doc per `codex/11-project-management/issue-doc-lifecycle.md` (trigger
+  2: commit SHA fixes the issue — P2's SHA plus this analysis-closure for P3). Fixed the two live corpus referrers so
+  archival doesn't leave a broken path/stale status: `plans/active/qg_host_adaptive_resource_governor_2026_07_14.md`
+  (path updated to `/plans/archive/issues/...`) and `plans/active/ci_satellite_ao_dispatch_batch4_2026_07_31.md` (status
+  note updated from "still live" to resolved).
 - 2026-07-30 (slot 14): Shipped P2 todo 1 — `unified-trading-pm@d59230eaa`. Factored the [4] TYPE CHECK basedpyright
   invocation into `_qg_run_basedpyright_attempt()` (wrap-prefix param), called once with `"${MEM_WRAP[@]}"`; on the
   MEM_WRAP-TOCTOU signature (exit≠0, 0 errors, 0 warnings, MEM_WRAP non-empty, output empty or containing "Failed to

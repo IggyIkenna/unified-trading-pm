@@ -642,8 +642,9 @@ there: the governor gates **RAM/CPU admission, not disk**, so it must not be cit
 - **Bonus finding, relevant to prioritization**: `systemd-run` is unavailable on the slot-5 host (live warning during
   this session's own QG run: `QG_MEM_CAP=2048M set but systemd-run unavailable`), so the OTHER hard backstop (the
   per-repo cgroup cap) is inactive there too — same failure class as
-  `/plans/active/issues/qg_mem_wrap_systemd_bus_unavailable_2026_07_26.md`. On hosts in that state, this watchdog is now
-  the ONLY live post-admission RAM defense — raises this fix's value above "hardening, not flip-blocker."
+  `/plans/archive/issues/qg_mem_wrap_systemd_bus_unavailable_2026_07_26.md` (resolved 2026-08-01). On hosts in that
+  state, this watchdog is now the ONLY live post-admission RAM defense — raises this fix's value above "hardening, not
+  flip-blocker."
 - **Remaining** (documented, not done here): Slack alerting on abort (existing Phase-4 todo), single-offender
   arbitration via the ledger's currently-unused per-row timestamp, and a real multi-slot fleet soak under measured
   contention (this session's verification is unit-test + manual-repro level, not a live fleet soak).
