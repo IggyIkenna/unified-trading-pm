@@ -50,6 +50,13 @@ source: >-
   running the Phase 0.3 Orthogonality HARD CHECK, whose prescribed "re-run check_ag_closeout_linkage.py after every
   retag" safety step turned out to be a no-op for this tranche.
 depends_on: []
+context_scope:
+  [
+    /scripts/plan-hygiene/check_ag_closeout_linkage.py,
+    /codex/11-project-management/doc-frontmatter-schema.md,
+    /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
+    /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
+  ]
 ---
 
 # `check_ag_closeout_linkage.py` is blind to 4 of the 9 tranches (2026-07-30)
@@ -300,3 +307,5 @@ not a bounded worker todo). No new batch drafted; concurs with the conclusion ab
 
 KEEP-NA, valid — carries an explicit `[OPERATOR]` todo (SKILL.md edits need an operator ruling) plus a
 BLOCKED-OPERATOR-DECISION section with A/B/C options on the cross-cutting/ci/ao retag.
+
+- **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).

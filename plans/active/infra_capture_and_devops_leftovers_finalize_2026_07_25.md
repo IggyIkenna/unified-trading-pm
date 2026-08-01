@@ -38,6 +38,13 @@ depends_on: [infra_capture_and_devops_leftovers_2026_07_06]
 gate_on_depends: true
 locked_by:
 locked_since:
+context_scope:
+  [
+    /plans/active/infra_capture_and_devops_leftovers_2026_07_06.md,
+    /plans/active/task_template.md,
+    /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
+    /plans/archive/issues/finalize_plan_coverage_regression_2_plans_2026_07_25.md,
+  ]
 supersedes:
 superseded_by:
 source: >-
@@ -167,3 +174,7 @@ source: >-
       sanction) — or once an operator decision changes how `check_finalize_plan_coverage.py` should be satisfied for a
       permanently-blocked parent. Only then run the standard 6-step archival ritual on both this finalize plan and its
       parent together. (Per this doc's own 2026-07-26 banner: do not re-attempt archival until then.)
+
+## Progress Log
+
+- **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).

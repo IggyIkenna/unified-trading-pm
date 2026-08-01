@@ -51,6 +51,12 @@ source:
     extraction 2026-07-24)",
   ]
 drift_direction: advance-code
+context_scope:
+  [
+    /plans/active/master_data_canonicalisation_migration_catalogue_2026_06_07.md,
+    /codex/02-data/availability-manifest-and-data-status.md,
+    /codex/02-data/honest-coverage-model.md,
+  ]
 ---
 
 # IS catalogue G1-root audit log
@@ -407,3 +413,4 @@ that AG's G1 (IS catalogue + UAC) is GREEN** — the audit's ⑧ enforces this.
 - **na-eligibility-audit 2026-07-30**: KEEP-NA, valid — self-described historical/audit record; every open todo is gated
   (G1.run on the IS backfill + UAC accuracy + v9; G1.run-prediction on another plan's loader wiring; G1.run-full-history
   explicitly DEFERRED pending operator review of a 190M index blow-up).
+- **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).

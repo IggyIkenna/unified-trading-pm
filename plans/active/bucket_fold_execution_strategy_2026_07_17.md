@@ -59,6 +59,14 @@ source:
   "Successor execution plan of bucket_estate_fold_design_2026_07_13 §3 todo 1. Operator ruling 2026-07-17: all 5 folds
   as HUMAN plans. This bundles Folds C (execution-store) + D (strategy-store) — same services, one cutover window
   (design §3 groups them)."
+context_scope:
+  [
+    /codex/05-infrastructure/bucket-isolation-model.md,
+    /codex/05-infrastructure/manifest-consolidator-ssot.md,
+    /codex/02-data/pipeline-mode-partition.md,
+    /plans/archive/2026_07/bucket_estate_fold_design_2026_07_13.md,
+    /plans/archive/issues/strategy_store_split_brain_2026_07_13.md,
+  ]
 ---
 
 # Bucket fold — execution-store 4+pred → 1 & strategy-store flat → tiered
@@ -228,3 +236,4 @@ UAC facade `canonical/gcs_paths.py::strategy_store_bucket` (must return the flat
   strategy_store gate 'SATISFIED (verified)', parity-migrate 'MIGRATE DONE + PARITY ✓', and the duplicated '(orig)
   Atomic cutover' whose `[x]` twin sits directly above it) — flagged, not flipped, to keep the fold's audit trail
   operator-owned.
+- **context-scout 2026-08-01**: populated/refreshed context_scope (5 entries).

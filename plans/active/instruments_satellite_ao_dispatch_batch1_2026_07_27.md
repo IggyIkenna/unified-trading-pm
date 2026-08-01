@@ -51,6 +51,13 @@ source: >-
   Phase 2 conflict-checked this candidate against all 4 active parent_epic:instruments_master planning docs
   (canonical_id_builder_retrofit_checklist_2026_07_08.md, infra_capture_and_devops_leftovers_2026_07_06.md + finalize,
   is_daily_enum_capture_heal_2026_07_07.md) — zero overlap found.
+context_scope:
+  [
+    /plans/active/issues/honest_coverage_shard_dimension_model_definitional_data_2026_07_07.md,
+    /codex/02-data/honest-coverage-model.md,
+    deployment-api/deployment_api/services/data_status/breakdowns_core.py,
+    instruments-service/instruments_service/engine/orchestrator/writers.py,
+  ]
 ---
 
 # Instruments satellite docs — AO dispatch batch 1 (na-eligibility-audit extraction)
@@ -233,3 +240,7 @@ carry it as a non-ingestable bold digest citation (`- **[CODE] P1.** ...`, no `-
 finding H, a digest is not a dispatch claim), and `instruments_completion_tracker_2026_07_06.md`'s own Progress Log
 narrates the same finding but explicitly defers to this doc as the one place it's actually tracked. No competing
 checkbox found anywhere.
+
+## Progress Log
+
+- **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).

@@ -36,6 +36,13 @@ source:
   ]
 assigned_role: backend_engineer
 drift_direction: advance-code
+context_scope:
+  [
+    /codex/06-coding-standards/quality-gates.md,
+    /codex/06-coding-standards/README.md,
+    /plans/active/infra_satellite_ao_dispatch_batch1_2026_07_26.md,
+    /plans/active/infra_satellite_ao_dispatch_batch2_2026_07_27.md,
+  ]
 ---
 
 # Codex-violation ratchet to ≤5 fleet-wide
@@ -608,3 +615,4 @@ for a `batch2` on the next pass and rehome then.
   `delta_proxy_repricer.py` wire-in items this doc flags as waiting for exactly such a batch: confirmed zero hits, still
   genuinely uncovered — flagging these 3 items as a future RECLASSIFY candidate for a dedicated follow-up pass, not
   actioned this run.
+- **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).

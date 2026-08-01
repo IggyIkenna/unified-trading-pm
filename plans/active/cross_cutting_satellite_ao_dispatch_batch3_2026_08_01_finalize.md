@@ -38,6 +38,14 @@ supersedes:
 superseded_by:
 depends_on: [cross_cutting_satellite_ao_dispatch_batch3_2026_08_01]
 gate_on_depends: true
+context_scope:
+  [
+    /plans/active/cross_cutting_satellite_ao_dispatch_batch3_2026_08_01.md,
+    /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
+    /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
+    /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
+    /cursor-configs/skills/ag-closeout-audit/SKILL.md,
+  ]
 source: >-
   /ag-closeout-audit cross-cutting re-invocation 2026-08-01, per task_template.md § 4's finalize-plan-coverage rule —
   every AO-dispatched plan needs a companion gated finalize plan.
@@ -99,3 +107,10 @@ source: >-
 - **2026-08-01** — Drafted alongside batch3 (`/ag-closeout-audit cross-cutting`, autonomous, dispatch `agt-a5c7d6`, slot
   13). `status: active` from creation (no-double-gate finding); `gate_on_depends: true` holds every todo until batch3's
   8 todos are done.
+- **context-scout 2026-08-01**: populated/refreshed context_scope (5 entries). NOTE: this doc's own "Codex SSOTs"
+  section above cites `/codex/12-agent-workflow/ao-dispatch-batch-naming-and-conflict-check.md` and
+  `/codex/11-project-management/plan-completion-and-archival-discipline.md` — both paths are STALE (the two docs' actual
+  directories are swapped: the naming/conflict-check doc lives at `/codex/11-project-management/`, the
+  archival-discipline doc at `/codex/12-agent-workflow/`). `context_scope` above uses the CORRECTED, disk-verified
+  paths; the body line is left unedited per this pass's scope (frontmatter + Progress Log only) — flagging for a future
+  doc-body fix.

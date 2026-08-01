@@ -40,6 +40,11 @@ depends_on: [infra_satellite_ao_dispatch_batch3_2026_07_30]
 gate_on_depends: true
 locked_by:
 locked_since:
+context_scope:
+  [
+    /plans/active/infra_satellite_ao_dispatch_batch3_2026_07_30.md,
+    /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
+  ]
 supersedes:
 superseded_by:
 source: >-
@@ -83,3 +88,7 @@ source: >-
       when**: the Deferred re-check is recorded with measured evidence (not assumption), the stop-iterating verdict is
       either re-confirmed or explicitly retracted, and both plans of the pair are archived with every corpus-wide
       referrer path fixed.
+
+## Progress Log
+
+- **context-scout 2026-08-01**: populated/refreshed context_scope (2 entries).

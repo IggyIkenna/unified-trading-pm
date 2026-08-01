@@ -42,6 +42,13 @@ source: >-
   instruments_service_e2e_live_mock_observability_2026_07_27.md (Phase-2 conflict-check CLEAR: the only citation is the
   cross-cutting consolidated closeout's digest, which the shared conflict-check SSOT § 3 explicitly defines as a digest,
   not a dispatch claim).
+context_scope:
+  [
+    /plans/active/instruments_service_e2e_live_mock_observability_2026_07_27.md,
+    /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
+    /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
+    /codex/04-architecture/shard-level-failure-isolation.md,
+  ]
 ---
 
 # Finalize — instruments-service E2E live/mock/observability close-out
@@ -163,3 +170,4 @@ hyperliquid, catalogue, pydantic, cfe/cboe) before concluding — 0 duplicate op
   no-longer-applicable (Aster/Hyperliquid reclassified out of DEFI, catalogue validation mechanism removed, Pydantic
   warning path unreachable). 0 still-real, 0 new todos filed — grepped `plans/active/issues/` per bug topic first, 0
   duplicates found. Full table added above. Todo 3 (archival) is a separate backlog item.
+- **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).

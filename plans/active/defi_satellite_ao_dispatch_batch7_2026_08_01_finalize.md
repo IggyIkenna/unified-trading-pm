@@ -33,6 +33,14 @@ locked_by:
 locked_since:
 supersedes:
 superseded_by:
+context_scope:
+  [
+    /plans/active/defi_satellite_ao_dispatch_batch7_2026_08_01.md,
+    /plans/active/defi_consolidated_closeout_2026_07_18.md,
+    /plans/active/issues/mtds_gas_fees_migration_script_unbounded_memory_2026_07_30.md,
+    /cursor-configs/skills/na-eligibility-audit/SKILL.md,
+    /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
+  ]
 depends_on: [defi_satellite_ao_dispatch_batch7_2026_08_01]
 gate_on_depends: true
 source: >-
@@ -73,3 +81,4 @@ these until batch7 is fully done.**
 
 - 2026-08-01 (slot-7, scheduled `na_eligibility_auditor`): Drafted alongside batch7, both `status: active`, gated on
   batch7's 4 todos via `depends_on` + `gate_on_depends: true`. No work started — waiting on batch7's todos to land.
+- **context-scout 2026-08-01**: populated/refreshed context_scope (5 entries).

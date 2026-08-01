@@ -47,6 +47,13 @@ sequential: false
 drift_direction: advance-code
 locked_by:
 locked_since:
+context_scope:
+  [
+    /plans/active/infra_satellite_ao_dispatch_batch3_finalize_2026_07_30.md,
+    /cursor-configs/skills/ag-closeout-audit/SKILL.md,
+    /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
+    /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
+  ]
 supersedes:
 superseded_by:
 depends_on: []
@@ -239,3 +246,4 @@ Measured 2026-07-30 against the live corpus, not carried forward on trust:
 - **2026-07-30** — Recorded the stop-iterating verdict above: this is expected to be the infra tranche's **last**
   satellite batch. A batch4 has no material to extract unless a new orphan appears or one of the standing operator
   questions (G1/G3/G4, plus the `s5_7` scoping call) is answered.
+- **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).

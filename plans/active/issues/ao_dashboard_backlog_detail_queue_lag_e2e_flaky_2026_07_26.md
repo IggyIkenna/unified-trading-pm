@@ -24,6 +24,12 @@ resolved_by:
 locked_by:
 drift_direction: advance-code
 depends_on: []
+context_scope:
+  [
+    /plans/archive/2026_07/ao_backlog_collision_alert_and_remediation_ui_2026_07_26.md,
+    agent-orchestrator/dashboard/tests/e2e/backlog-detail.spec.ts,
+    agent-orchestrator/dashboard/tests/e2e/fixtures/seed_e2e_state.py,
+  ]
 ---
 
 # backlog-detail.spec.ts Queue-lag/sort tests fail reproducibly
@@ -84,3 +90,7 @@ is just wrong to assume it won't fire.
 ## Codex SSOTs
 
 - None specific — this is dashboard e2e test infra, not a documented pattern.
+
+## Progress Log
+
+- **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).

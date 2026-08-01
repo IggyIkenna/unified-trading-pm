@@ -66,6 +66,12 @@ depends_on:
 assigned_role: data_engineering
 drift_direction: advance-code
 locked_since:
+context_scope:
+  [
+    /codex/02-data/honest-coverage-model.md,
+    /plans/active/issues/mtds_is_full_adapter_smoketest_findings_2026_07_07.md,
+    /plans/active/issues/instrument_id_format_canonicalization_2026_07_08.md,
+  ]
 ---
 
 > **Verification-gap finding, not a confirmed bug — the whole point is we don't yet know.** Every finding in the two
@@ -326,3 +332,4 @@ to pursue actual ID canonicalization — not something to fix inside this doc.
   reconciliation-cadence call — a genuine portfolio-cost tradeoff across 58 findings, not a determinable fact.
   `cefi_consolidated_native_ao_extract_2026_07_25.md` (active/planning) already reviewed and explicitly excluded this
   exact item as an undecided policy question. No reclassification.
+- **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).

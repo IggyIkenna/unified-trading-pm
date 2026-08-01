@@ -60,6 +60,12 @@ assigned_role: monitor
 last_updated: "2026-07-24" # was: 2026-07-13 — updated 2026-07-24, plan-line-cap remediation 4-way split (plans/active/issues/plan_line_cap_remediation_2026_07_23.md row #14): Phase-0/cefi/tradfi gate-execution content + the 945-line historical Progress Log extracted to 3 new child plans; this file slimmed to a process SSOT + rolling-status index; locked_by/locked_since cleared per operator-approved unlock.
 locked_by:
 locked_since:
+context_scope:
+  [
+    /codex/02-data/instruments-foundation-and-catalogue-completeness.md,
+    /plans/active/instruments_foundation_phase0_cross_cutting_2026_07_24.md,
+    /plans/active/instruments_cefi_g1_g5_gate_execution_2026_07_24.md,
+  ]
 supersedes:
 superseded_by:
 depends_on:
@@ -351,3 +357,4 @@ autonomous-run narrative and the Phase-0 child's "Autonomous run results" sectio
 - **na-eligibility-audit 2026-07-30**: KEEP-NA, valid — gated umbrella whose entire premise is per-gate operator
   sign-off ('ask every time'); GATE 0 is NOT RECORDED SIGNED OFF and the remaining todos are per-AG G-gate work
   delegated to child plans.
+- **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).

@@ -43,6 +43,13 @@ drift_direction: advance-code
 resolved_by:
 locked_by:
 depends_on: []
+context_scope:
+  [
+    /codex/04-architecture/agent-orchestrator-worker-liveness.md,
+    agent-orchestrator/server/worktree_clean_check/_ahead_push.py,
+    agent-orchestrator/tests/test_watchdog_unpushed_sweep.py,
+    /plans/active/issues/watchdog_unpushed_sweep_defeats_operator_merge_gate_2026_07_26.md,
+  ]
 ---
 
 # `_ahead_push.py` — rejected-push leaves a verified commit permanently stranded
@@ -108,3 +115,4 @@ behind — rather than a guessed one-line patch to the riskiest file in the code
   conflict). This doc's own design-decision gap is UNCHANGED and still open — this todo still needs its own
   retry/backoff-vs-alert design call — but it is no longer blocked on anything else landing first; it's ready to be
   worked directly whenever picked up.
+- **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).

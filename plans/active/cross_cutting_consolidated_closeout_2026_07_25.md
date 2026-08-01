@@ -85,6 +85,15 @@ locked_by:
 locked_since:
 supersedes:
 superseded_by:
+context_scope:
+  [
+    /cursor-configs/skills/ag-closeout-audit/SKILL.md,
+    /plans/active/data_pipeline_reconciliation_skill_2026_07_20.md,
+    /codex/02-data/availability-manifest-and-data-status.md,
+    /codex/02-data/pipeline-mode-partition.md,
+    /codex/05-infrastructure/bucket-isolation-model.md,
+    /codex/02-data/honest-coverage-model.md,
+  ]
 depends_on: []
 source: >-
   5-agent parallel triage of the epic-filtered cross-cutting candidate corpus (unified-trading-pm, 2026-07-25) at
@@ -696,6 +705,7 @@ criterion; it also carries the `v2_engine_venue_buildout` over-count caveat this
 
 <!-- Append newest entries at the top: `- **YYYY-MM-DD** — <what landed> (<repo>@<sha> / evidence).` -->
 
+- **context-scout 2026-08-01**: populated/refreshed context_scope (6 entries).
 - **2026-08-01** — `/ag-closeout-audit cross-cutting` **re-invocation** (autonomous, scheduled `ag_closeout_auditor`
   dispatch `agt-a5c7d6`, slot 13). Phase 0 used `generate_ag_closeout_audit_candidates.py --tranche cross-cutting` (90
   tranche members, 6 covering docs, 11 never-cited) plus a manual `asset_group: meta`-sweep gap check that found 1 more

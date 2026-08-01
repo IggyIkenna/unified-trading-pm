@@ -33,6 +33,11 @@ gate_on_depends: true
 sequential: true
 locked_by:
 locked_since:
+context_scope:
+  [
+    /plans/active/defi_venue_pipeline_to_live_ao_build_2026_07_30.md,
+    /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
+  ]
 supersedes:
 superseded_by:
 source: >-
@@ -94,3 +99,4 @@ Machine-held (`gate_on_depends: true`) until every todo in
   same registry-inconsistency class `/codex/02-data/defi-venue-protocol-catalogue.md` already tracks for other venues)
   folded into that codex doc rather than left implicit. Todo 3 (archive this build plan + this finalize plan itself) is
   next — `sequential: true` gates it on this todo, which is now clear to dispatch.
+- **context-scout 2026-08-01**: populated/refreshed context_scope (2 entries).

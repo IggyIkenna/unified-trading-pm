@@ -33,6 +33,12 @@ source:
   2026-07-18: schema-completeness, not minimal-remove)"
 locked_by:
 locked_since:
+context_scope:
+  [
+    /codex/02-data/honest-absence-downstream-handling.md,
+    /codex/02-data/availability-manifest-and-data-status.md,
+    unified-api-contracts/unified_api_contracts/internal/reference/instrument.py,
+  ]
 supersedes:
 superseded_by:
 ---
@@ -144,3 +150,4 @@ authoritative list comes from the full-suite `extra='forbid'` run (todo 1).
 
 - **na-eligibility-audit 2026-07-30**: KEEP-NA, valid — the per-field disposition todo carries an explicit OPERATOR
   JUDGMENT field (`min_order_size`: ADD only if execution needs the order-minimum) that gates the ADD/REMOVE pass.
+- **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).

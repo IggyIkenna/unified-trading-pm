@@ -40,6 +40,13 @@ resolved_by:
 locked_by:
 locked_since:
 depends_on: []
+context_scope:
+  [
+    /codex/04-architecture/agent-orchestrator-overview.md,
+    /codex/04-architecture/agent-orchestrator-alerting.md,
+    agent-orchestrator/server/routes/agents.py,
+    /agents/review.md,
+  ]
 ---
 
 # What was reported
@@ -180,3 +187,4 @@ too large.
 - **na-eligibility-audit 2026-07-30**: KEEP-NA, valid (infra tranche, dispatch agt-30721a) — Doc explicitly states its
   NA rationale: modifies the orchestrator's own agent-messaging routing where a careless change could break
   at-least-once delivery; one todo is an explicit operator-review gate.
+- **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).

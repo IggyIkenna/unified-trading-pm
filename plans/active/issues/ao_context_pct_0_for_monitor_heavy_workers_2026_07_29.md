@@ -53,6 +53,13 @@ assigned_vm: NA
 resolved_by:
 locked_by:
 locked_since:
+context_scope:
+  [
+    /codex/06-coding-standards/ui-testing-layers.md,
+    /plans/active/issues/slot_recurring_wedge_at_context_pct_75_compact_confirmation_2026_07_25.md,
+    agent-orchestrator/server/worker_liveness/__init__.py,
+    agent-orchestrator/server/orm.py,
+  ]
 ---
 
 # AO context-% shows 0% for Monitor-heavy one-shot/scheduled workers — a sampling gap, not idleness
@@ -120,3 +127,4 @@ operator glancing at the dashboard into suspecting stuck/idle workers that are n
   independent same-priority todos run CONCURRENTLY by default, so flipping would dispatch the dependant and its
   prerequisite in parallel — partial-parallelism is not expressible in one doc (CLAUDE.md § Plans). The `[BACKEND] P3`
   is additionally declared 'not actionable today' pending an upstream Claude Code CLI change.
+- **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).

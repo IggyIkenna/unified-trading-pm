@@ -56,6 +56,14 @@ locked_by:
 locked_since:
 supersedes:
 superseded_by:
+context_scope:
+  [
+    /plans/active/defi_consolidated_closeout_2026_07_18.md,
+    /plans/active/defi_satellite_ao_dispatch_batch3_2026_07_26.md,
+    /plans/active/defi_satellite_ao_dispatch_batch5_2026_07_27_finalize.md,
+    /cursor-configs/skills/ag-closeout-audit/SKILL.md,
+    /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
+  ]
 depends_on: []
 source: >-
   `/ag-closeout-audit defi` run 2026-07-27 (autonomous, scheduled ag_closeout_auditor, tranche=defi) — Phase 1
@@ -297,3 +305,5 @@ dedicated standalone plan) — re-running this skill will keep re-surfacing them
   blocked question `BLK-d355f03a`. Moved the todo out of `## Todos` into `### Conflict-gated` item 3, tagged
   BLOCKED-OPERATOR-DECISION, citing both blocked-question ids. No dated runs were attempted. Returns to `## Todos` once
   the operator names the baseline/mid/final day(s).
+
+- **context-scout 2026-08-01**: populated/refreshed context_scope (5 entries).

@@ -71,6 +71,14 @@ locked_by:
 locked_since:
 supersedes:
 superseded_by:
+context_scope:
+  [
+    /codex/02-data/availability-manifest-and-data-status.md,
+    /codex/02-data/honest-coverage-model.md,
+    /codex/05-infrastructure/vm-launcher-runbook.md,
+    /cursor-configs/skills/data-pipeline-check-mtds/SKILL.md,
+    unified-trading-library/unified_trading_library/pipeline_e2e_check/,
+  ]
 source: >
   operator autonomous dispatch 2026-07-20 — build /data-pipeline-check-mdps + /data-pipeline-check-features mirroring
   MTDS with all the tricks; benchmark per-shard + full 2019-2026 time/compute cost + parallelization/optimization
@@ -918,3 +926,5 @@ doc edits above) by extracting the fully-historical "Deferred work after 2026-07
 sections (already superseded by later work, nothing still-open) to
 `/plans/archive/2026_07/data_pipeline_check_mdps_features_history_2026_07_24.md`, and removing a stale duplicate copy of
 the already-archived "Option-A candle canonical-path migration" section.
+
+- **context-scout 2026-08-01**: populated/refreshed context_scope (5 entries).

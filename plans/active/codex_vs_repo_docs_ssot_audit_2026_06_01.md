@@ -45,6 +45,14 @@ drift_direction: correct-codex
 model_tier: opus-required
 execution_model: opus-1m
 thinking: high
+context_scope:
+  [
+    /codex/06-coding-standards/documentation-standards.md,
+    /codex/00-SSOT-INDEX.md,
+    /codex/06-coding-standards/model-tier-selection.md,
+    /plans/archive/issues/repo_docs_codex_ssot_consolidation_2026_06_01.md,
+    /plans/archive/issues/codex_ssot_audit_phase3_hold_vs_reclassify_contradiction_2026_07_27.md,
+  ]
 ---
 
 # Codex-vs-repo-docs SSOT audit + consolidation
@@ -939,3 +947,7 @@ ground-truth WRONG (`demo`/`demo` login + `patrick@bankelysium.com` = the Elysiu
 provider; it is a genuine 846-line DeFi UI UAT walkthrough). KEEP (unchanged): the rest (`*/progress`, `*/issues`,
 `coverage-matrix`, `*/per-strategy-acceptance`, `*/smoke-test-baseline`, `LIVE_ODDS_PROVIDERS`, scripts READMEs). No
 MIGRATE-TO-CODEX; no codex target needs creating.
+
+## Progress Log
+
+- **context-scout 2026-08-01**: populated/refreshed context_scope (5 entries).

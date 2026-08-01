@@ -57,6 +57,13 @@ source: >-
   covering set via `generate_ag_closeout_audit_candidates.py --tranche infra` (39 members, 1 never-cited) and ran the
   skill's iterative-drain step 1 (re-check batch1/batch3's tracked Deferred gates + the prior parked-findings doc)
   before fresh triage.
+context_scope:
+  [
+    /plans/active/issues/ag_closeout_audit_infra_parked_2026_07_31.md,
+    /scripts/plan-hygiene/generate_ag_closeout_audit_candidates.py,
+    /cursor-configs/skills/ag-closeout-audit/SKILL.md,
+    /cursor-configs/skills/plan-reconcile/SKILL.md,
+  ]
 ---
 
 # Parked findings — 2026-08-01 `/ag-closeout-audit infra` run
@@ -215,3 +222,4 @@ no drift:
   delete-safety-adjacent apply), but its own existing `[INFRA] P3` todo already fully captures the ask; there is nothing
   new for this run to add beyond confirming the classification, so it is reported in the Phase 2 summary, not duplicated
   into a Todos entry here.
+- **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).

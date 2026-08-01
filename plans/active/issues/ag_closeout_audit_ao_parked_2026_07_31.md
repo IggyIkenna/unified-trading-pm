@@ -130,3 +130,5 @@ by whoever picks this up next).
   competing claim on the same fix, and this reclassification is what lets that checkpoint actually resolve.
   `assigned_role` left unset (no clean match in the live `agents/*.md` registry for a single prose-fix todo; per-task
   `[DOCS]` tag routing applies instead per RULES.md).
+- **context-scout 2026-08-01**: verified pre-existing context_scope (3 entries) — all 3 paths confirmed resolving on
+  disk, left unchanged.

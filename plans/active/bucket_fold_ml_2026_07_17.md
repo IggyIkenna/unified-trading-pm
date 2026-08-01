@@ -48,6 +48,14 @@ source:
   "Successor execution plan of bucket_estate_fold_design_2026_07_13 §3 todo 1 (split-plan authoring). Operator ruling
   2026-07-17: author all 5 folds as HUMAN plans. This is Fold B (ml — lowest risk, migrated FIRST per the design's risk
   order)."
+context_scope:
+  [
+    /codex/05-infrastructure/bucket-isolation-model.md,
+    /codex/05-infrastructure/manifest-consolidator-ssot.md,
+    /codex/02-data/pipeline-mode-partition.md,
+    /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
+    /plans/archive/2026_07/bucket_estate_fold_design_2026_07_13.md,
+  ]
 ---
 
 # Bucket fold — ml 5 kind-buckets → 1 (`ml-store-{env}-{pid}`)
@@ -448,3 +456,4 @@ two `dependency_checker.py` per-AG guard maps; UTL `ml/model_registry.py` + `dom
 - **na-eligibility-audit 2026-07-30**: KEEP-NA, valid — operator ruling 2026-07-17 (HUMAN plans) + the P0 open todo is a
   5-source prod-bucket delete = human-only hard stop. NOTE the P1 SECURITY pickle-gate todo reads STALE — Fold-A's own
   Progress Log lists `UTL@bccc4ca4` (ml Fold-B deserialize gate) in its shipped set.
+- **context-scout 2026-08-01**: populated/refreshed context_scope (5 entries).

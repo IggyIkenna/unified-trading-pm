@@ -49,6 +49,14 @@ locked_since:
 supersedes:
 superseded_by:
 depends_on:
+context_scope:
+  [
+    /cursor-configs/skills/data-pipeline-reconciliation/SKILL.md,
+    /codex/02-data/four-surface-reconciliation-procedure.md,
+    /codex/02-data/reconciliation-finding-taxonomy.md,
+    /codex/02-data/cross-asset-canonical-target-ssot.md,
+    /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
+  ]
 source: operator request 2026-07-20 — "per-AG skill /data-pipeline-reconciliation, audit first then plan then execute"
 ---
 
@@ -949,3 +957,4 @@ blocked AGs first so the whole-estate orphan picture is complete before back-fil
 - **na-eligibility-audit 2026-07-30**: KEEP-NA, valid — same dated operator ruling as the milestones gate (entry #10,
   option A) — standing reference surface; the single residual todo is a prod sports orphan back-fill + legacy-dup
   triage.
+- **context-scout 2026-08-01**: populated/refreshed context_scope (5 entries).

@@ -45,6 +45,12 @@ assigned_role: data_engineering
 drift_direction: advance-code
 locked_by:
 locked_since:
+context_scope:
+  [
+    /plans/active/instruments_foundation_phase0_cross_cutting_2026_07_24.md,
+    /plans/active/instruments_foundation_completeness_2026_06_24.md,
+    /codex/02-data/instruments-foundation-and-catalogue-completeness.md,
+  ]
 supersedes:
 superseded_by:
 depends_on: [instruments_foundation_phase0_cross_cutting_2026_07_24]
@@ -729,3 +735,4 @@ Coverage is the verification lens — every number flows through `compute_honest
 - **na-eligibility-audit 2026-07-30** (tranche=cefi, autonomous): KEEP-NA, valid - G1 is an umbrella gate; the EXTENDED
   honest-absence item is an explicit raise-vs-fallback decision; and the `MANIFEST_ALLOW_STALE_FALLBACK` revert is gated
   on the (still-paused) cefi consolidator being healthy.
+- **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).

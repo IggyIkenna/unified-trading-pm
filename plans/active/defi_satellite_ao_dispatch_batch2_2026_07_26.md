@@ -58,6 +58,13 @@ locked_by:
 locked_since:
 supersedes:
 superseded_by:
+context_scope:
+  [
+    /plans/active/defi_consolidated_closeout_2026_07_18.md,
+    /plans/active/defi_satellite_ao_dispatch_batch2_2026_07_26_finalize.md,
+    /cursor-configs/skills/ag-closeout-audit/SKILL.md,
+    /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
+  ]
 depends_on: []
 source: >-
   /ag-closeout-audit skill run 2026-07-26 (interactive, operator-approved scope) — Phase 1 classified all 56 defi
@@ -786,3 +793,5 @@ source issue doc directly as the successor reference.
   regression on the already-correct path. New parametrized tests added to
   `tests/unit/scripts/test_migrate_instruments_store_v9.py`. `quality-gates.sh` green on instruments-service (twice —
   once per change). Done-criteria (a)/(b)/(c) all satisfied; (c) is the QG-green run itself.
+
+- **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).

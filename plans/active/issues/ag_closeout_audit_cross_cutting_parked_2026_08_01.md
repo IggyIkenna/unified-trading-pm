@@ -57,6 +57,13 @@ source: >-
   13). Phase 0 via `generate_ag_closeout_audit_candidates.py --tranche cross-cutting` (90 members, 11 never-cited) + a
   manual asset_group:meta-sweep gap check (1 more member found). Phase 1 Workflow (12 agents) classified all 12; these 6
   verdicted exclude_cross_cutting with step-5 scope evidence.
+context_scope:
+  [
+    /cursor-configs/skills/ag-closeout-audit/SKILL.md,
+    /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
+    /plans/active/cross_cutting_satellite_ao_dispatch_batch3_2026_08_01.md,
+    /plans/active/issues/ag_closeout_linkage_gate_blind_to_four_tranches_2026_07_30.md,
+  ]
 ---
 
 # Parked findings — 2026-08-01 `/ag-closeout-audit cross-cutting` run
@@ -216,3 +223,4 @@ member, not just a retag.
   12 agents, one per candidate): 6 verdicted `exclude_cross_cutting` (this doc), 6 verdicted `orphaned_never_touched`
   (batched in `cross_cutting_satellite_ao_dispatch_batch3_2026_08_01.md`, `status: draft`). **Ledger**: 6 new parked
   findings this run, 6 entries written above (1-6) — balanced.
+- **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).

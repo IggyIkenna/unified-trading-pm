@@ -30,6 +30,12 @@ depends_on:
 source: [plans/archive/2026_07/e2e_testing_001_instruments_service_2026_03_22.md]
 assigned_role: backend_engineer
 drift_direction: none
+context_scope:
+  [
+    /plans/archive/2026_07/e2e_testing_001_instruments_service_2026_03_22.md,
+    /plans/active/instruments_service_e2e_live_mock_observability_2026_07_27_finalize_2026_07_30.md,
+    /codex/04-architecture/shard-level-failure-isolation.md,
+  ]
 ---
 
 # instruments-service E2E — live mode, mock scenarios, observability
@@ -57,38 +63,38 @@ before assuming any of the below is still accurate — 4+ months have passed.
       alignment): N/A, architecture doesn't implement it** — not a regression, this was never built for this service.
 
       **5.3/5.4 — actually run + verified** via `main_service_cli()` with `--operation instruments --mode live
-                                  --asset-group cefi` under `CLOUD_MOCK_MODE=true`: confirmed `ServiceRuntime` STARTED log line, per-venue fetch
-                                  logging (URDI[...] fetched N instruments across BYBIT-SPOT/COINBASE-SPOT/KRAKEN-SPOT/KRAKEN-FUTURES/
-                                  LIGHTER-ZKSYNC/KALSHI-PERP/POLYMARKET-PERP/EXTENDED-STARKNET/ASTER), and defaults to today's UTC date as
-                                  documented. **Real bug found + fixed**: a SIGTERM/Ctrl-C mid-run did NOT exit cleanly — `cleanup()`'s
-                                  `publish_coordination_event("DATA_READY", ...)` call (instruments_handler.py:399, and the sibling
-                                  `SPORTS_LIVE_STATS` call at :419) is guarded with `contextlib.suppress(RuntimeError, ValueError)` (intended to
-                                  swallow the batch-mode `ValueError` `publish_coordination_event` raises when `_mode != "live"`), but in
-                                  **live+`CLOUD_MOCK_MODE=true`**, UTL's `service_framework/_sink_factory.py::build_event_sink()` hands the process
-                                  a plain `LocalFsEventSink` (write_event-only, no `publish_coordination_event`/`subscribe_coordination_events`) for
-                                  ANY `runtime.is_mock` case regardless of batch/live mode — so the call raises `AttributeError`, which the
-                                  suppress tuple didn't catch, crashing the whole shutdown with `SystemExit code=1` ("Service failed"). **Fixed**:
-                                  broadened both suppress tuples to `(RuntimeError, ValueError, AttributeError)`. **Correction 2026-07-30
-                                  (slot-11): the `<pending>` SHA above was never actually shipped — the suppress tuple was still
-                                  `(RuntimeError, ValueError)` in the live tree when Phase 6 started, and the crash reproduced exactly
-                                  as described (confirmed live: `--mode live --asset-group cefi` under `CLOUD_MOCK_MODE=true` crashed
-                                  cleanup with the uncaught `AttributeError`).** Actually fixed + verified now: instruments-service@
-                                  `518cc7a7` (shipped) broadens both suppress
-                                  tuples; re-verified live against BYBIT-SPOT (clean cleanup, no traceback) and again via a mid-run
-                                  SIGTERM against HYPERLIQUID (`SystemExit code=0`, no traceback). **Cross-cutting root
-                                  cause flagged, not fixed here** (out of this plan's `repos: [instruments-service]` scope, and the shared UTL
-                                  `events`/`events_interface` module pair looks like an in-progress migration — too risky to touch blind): the real
-                                  fix belongs in `unified-trading-library/unified_trading_library/service_framework/_sink_factory.py` (or
-                                  `event_sink.py`'s `LocalFsEventSink`) so mock+live mode gets a sink that implements the coordination-event
-                                  protocol (the existing `MockEventSink` in `events/sink.py` already does, but nothing wires it into
-                                  `build_event_sink()`) — every OTHER service following this same `cleanup()`+`contextlib.suppress` pattern is
-                                  exposed to the identical crash. Filed:
-                                  `plans/active/issues/utl_mock_mode_event_sink_missing_coordination_protocol_2026_07_30.md`.
+                                                          --asset-group cefi` under `CLOUD_MOCK_MODE=true`: confirmed `ServiceRuntime` STARTED log line, per-venue fetch
+                                                          logging (URDI[...] fetched N instruments across BYBIT-SPOT/COINBASE-SPOT/KRAKEN-SPOT/KRAKEN-FUTURES/
+                                                          LIGHTER-ZKSYNC/KALSHI-PERP/POLYMARKET-PERP/EXTENDED-STARKNET/ASTER), and defaults to today's UTC date as
+                                                          documented. **Real bug found + fixed**: a SIGTERM/Ctrl-C mid-run did NOT exit cleanly — `cleanup()`'s
+                                                          `publish_coordination_event("DATA_READY", ...)` call (instruments_handler.py:399, and the sibling
+                                                          `SPORTS_LIVE_STATS` call at :419) is guarded with `contextlib.suppress(RuntimeError, ValueError)` (intended to
+                                                          swallow the batch-mode `ValueError` `publish_coordination_event` raises when `_mode != "live"`), but in
+                                                          **live+`CLOUD_MOCK_MODE=true`**, UTL's `service_framework/_sink_factory.py::build_event_sink()` hands the process
+                                                          a plain `LocalFsEventSink` (write_event-only, no `publish_coordination_event`/`subscribe_coordination_events`) for
+                                                          ANY `runtime.is_mock` case regardless of batch/live mode — so the call raises `AttributeError`, which the
+                                                          suppress tuple didn't catch, crashing the whole shutdown with `SystemExit code=1` ("Service failed"). **Fixed**:
+                                                          broadened both suppress tuples to `(RuntimeError, ValueError, AttributeError)`. **Correction 2026-07-30
+                                                          (slot-11): the `<pending>` SHA above was never actually shipped — the suppress tuple was still
+                                                          `(RuntimeError, ValueError)` in the live tree when Phase 6 started, and the crash reproduced exactly
+                                                          as described (confirmed live: `--mode live --asset-group cefi` under `CLOUD_MOCK_MODE=true` crashed
+                                                          cleanup with the uncaught `AttributeError`).** Actually fixed + verified now: instruments-service@
+                                                          `518cc7a7` (shipped) broadens both suppress
+                                                          tuples; re-verified live against BYBIT-SPOT (clean cleanup, no traceback) and again via a mid-run
+                                                          SIGTERM against HYPERLIQUID (`SystemExit code=0`, no traceback). **Cross-cutting root
+                                                          cause flagged, not fixed here** (out of this plan's `repos: [instruments-service]` scope, and the shared UTL
+                                                          `events`/`events_interface` module pair looks like an in-progress migration — too risky to touch blind): the real
+                                                          fix belongs in `unified-trading-library/unified_trading_library/service_framework/_sink_factory.py` (or
+                                                          `event_sink.py`'s `LocalFsEventSink`) so mock+live mode gets a sink that implements the coordination-event
+                                                          protocol (the existing `MockEventSink` in `events/sink.py` already does, but nothing wires it into
+                                                          `build_event_sink()`) — every OTHER service following this same `cleanup()`+`contextlib.suppress` pattern is
+                                                          exposed to the identical crash. Filed:
+                                                          `plans/active/issues/utl_mock_mode_event_sink_missing_coordination_protocol_2026_07_30.md`.
 
-                                  One additional, smaller finding: no per-venue `COMPLETED` UEI event exists in code (only `WRITE_FAILED`,
-                                  `writers.py:429-436`) — success is implicit via a `processed`/`failed` counter dict, not a discrete event. 5.3's
-                                  expectation of "per-venue COMPLETED" doesn't match the shipped event taxonomy; noted, not treated as a bug (a
-                                  counter-based success signal is a legitimate design, just not what this todo assumed).
+                                                          One additional, smaller finding: no per-venue `COMPLETED` UEI event exists in code (only `WRITE_FAILED`,
+                                                          `writers.py:429-436`) — success is implicit via a `processed`/`failed` counter dict, not a discrete event. 5.3's
+                                                          expectation of "per-venue COMPLETED" doesn't match the shipped event taxonomy; noted, not treated as a bug (a
+                                                          counter-based success signal is a legitimate design, just not what this todo assumed).
 
 - [x] ✅ [SCRIPT] P2. **Phase 6 — Mock-mode failure scenarios. DONE 2026-07-30 (slot-11) — premise corrected (same
       pattern as Phase 5) + real bug fixed + shipped.** The literal `--scenario default/stress/missing_data` flag does
@@ -309,3 +315,5 @@ before assuming any of the below is still accurate — 4+ months have passed.
     architecture change since 2026-03-23 that removed the code path the bug lived in (2, 3, 4, 5) — consistent with the
     "4 months have passed, some may already be fixed incidentally" framing this todo was written under. No code changes
     shipped this todo (evidence-only, same pattern as Phase 7 above).
+
+- **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).

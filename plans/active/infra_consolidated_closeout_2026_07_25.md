@@ -40,6 +40,12 @@ assigned_role: infra
 drift_direction: none
 locked_by:
 locked_since:
+context_scope:
+  [
+    /cursor-configs/skills/ag-closeout-audit/SKILL.md,
+    /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
+    /plans/active/infra_satellite_ao_dispatch_batch5_2026_08_01.md,
+  ]
 supersedes:
 superseded_by:
 depends_on: []
@@ -381,3 +387,4 @@ not data-pipeline).
   non-batchable table, blast-radius-judgment-gated, unchanged). Re-ran the linkage check after adding these mentions:
   71/78 (7 infra orphans resolved; the residual 71 are other tranches', outside this run's remit — flagged in this run's
   `evidence` for visibility, not fixed here).
+- **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).

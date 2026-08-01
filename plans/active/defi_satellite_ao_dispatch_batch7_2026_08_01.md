@@ -44,6 +44,14 @@ locked_by:
 locked_since:
 supersedes:
 superseded_by:
+context_scope:
+  [
+    /plans/active/defi_consolidated_closeout_2026_07_18.md,
+    /plans/active/defi_consolidated_native_ao_extract_2026_07_25.md,
+    /plans/active/defi_satellite_ao_dispatch_batch7_2026_08_01_finalize.md,
+    /cursor-configs/skills/na-eligibility-audit/SKILL.md,
+    /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
+  ]
 depends_on: []
 source: >-
   `/na-eligibility-audit defi` run 2026-08-01 (autonomous, scheduled na_eligibility_auditor, tranche=defi) — Phase 1
@@ -171,3 +179,5 @@ running `/na-eligibility-audit defi`; every todo below cleared the shared confli
   `defi_consolidated_closeout_2026_07_18.md:644`) so a future agent doesn't re-attempt the same no-op. Literal "0" not
   reached — genuinely requires the closeout plan's `:401` P0 phantom-row purge (VM-scale, ~1.79M dup + ~219.5K phantom
   rows), out of this task's scope. `delete_migrated_defi_markers --apply` stays correctly gated/blocked.
+
+- **context-scout 2026-08-01**: populated/refreshed context_scope (5 entries).

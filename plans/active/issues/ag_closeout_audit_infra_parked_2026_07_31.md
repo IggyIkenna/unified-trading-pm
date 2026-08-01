@@ -55,6 +55,13 @@ source: >-
   `generate_ag_closeout_audit_candidates.py --tranche infra` (grown 32→37 members over ~7h) and direct-read every
   net-new/still-never-cited candidate rather than re-running the full Phase 1 Workflow, per the skill's own
   iterative-drain guidance (re-check before fresh triage).
+context_scope:
+  [
+    /cursor-configs/skills/ag-closeout-audit/SKILL.md,
+    /cursor-configs/skills/plan-reconcile/SKILL.md,
+    /plans/active/codex_violations_ratchet_to_five_2026_06_10.md,
+    /plans/active/issues/ao_self_pull_wedged_by_main_inbox_untracked_file_2026_07_30.md,
+  ]
 ---
 
 # Parked findings — 2026-07-31 `/ag-closeout-audit infra` run
@@ -174,3 +181,5 @@ so the retag is a corpus-hygiene fix, not an unlock of new dispatchable work.
   fresh pass over whatever's left"), a same-day re-dispatch with a near-static corpus warrants a targeted delta read,
   not a from-scratch re-classification of docs read hours earlier with no intervening change; mirrors the sibling
   `prediction` tranche's own same-day precedent (`unified-trading-pm@e89cdd5eb`, "verified unchanged, 0 new orphans").
+
+- **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).

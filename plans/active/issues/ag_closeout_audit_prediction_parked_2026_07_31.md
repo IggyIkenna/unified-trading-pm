@@ -56,6 +56,13 @@ locked_by:
 locked_since:
 supersedes:
 superseded_by:
+context_scope:
+  [
+    /cursor-configs/skills/ag-closeout-audit/SKILL.md,
+    /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
+    /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
+    /scripts/plan-hygiene/generate_ag_closeout_audit_candidates.py,
+  ]
 ---
 
 # Prediction closeout-audit findings, 2026-07-31
@@ -232,3 +239,5 @@ paired `_finalize` sibling will show the same gap; prediction is a confirmed liv
   state confirmed unchanged for the third consecutive dispatch today — 0 new orphans, no new batch warranted.** Did not
   re-run a full Phase-1 Workflow fan-out for the same token-cost-for-zero-new-information reason as the prior entry.
   parked_findings ledger: 0 new findings this run (re-verification record only, nothing else appended).
+
+- **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).

@@ -54,6 +54,13 @@ source:
     "plan-hygiene split of instruments_foundation_completeness_2026_06_24.md, 2026-07-24 (operator-approved, see
     plans/active/issues/plan_line_cap_remediation_2026_07_23.md row #14)",
   ]
+context_scope:
+  [
+    /codex/02-data/instruments-foundation-and-catalogue-completeness.md,
+    /codex/02-data/tradfi-databento-sourcing-ssot.md,
+    /plans/active/instruments_foundation_phase0_cross_cutting_2026_07_24.md,
+    /plans/active/instruments_foundation_completeness_2026_06_24.md,
+  ]
 ---
 
 # Instruments Foundation — tradfi G1→G5 gate execution
@@ -599,3 +606,5 @@ status index across all 4 children (this one, Phase-0, cefi, and the defi/sports
   manifest-count check; launch the ES_OPT backfill via `launch-tradfi-backfill-vm.sh --root-symbol ES_OPT`) — real
   AO-eligible content a whole-doc flip cannot reach in isolation. Flagged for a future `/ag-closeout- audit` carve-out
   rather than reclassified.
+
+- **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).

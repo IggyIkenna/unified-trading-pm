@@ -55,6 +55,13 @@ depends_on: []
 source: >-
   `/ag-closeout-audit cefi` run 2026-07-30 (autonomous benchmark stand-in for the `ag_closeout_auditor` scheduled
   per-tranche dispatch, tranche=cefi) — Phase 0.2/0.3 covering-set discovery + Phase 1 classification.
+context_scope:
+  [
+    /cursor-configs/skills/ag-closeout-audit/SKILL.md,
+    /scripts/plan-hygiene/generate_ag_closeout_audit_candidates.py,
+    /plans/active/issues/ag_closeout_audit_scope_widening_triage_2026_07_26.md,
+    /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
+  ]
 ---
 
 # `/ag-closeout-audit` orphan count is not reproducible — two coverage-definition defects
@@ -209,3 +216,4 @@ Other: operator can type a custom answer
   correctly `[OPERATOR]`-tagged (stays non-dispatchable). Conflict-check clear
   (`ag_closeout_audit_scope_widening_triage` cites a different, already-archived defect). Shared conflict-check
   protocol: `/codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md` sect.3 - CLEARED.
+- **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).
