@@ -206,11 +206,16 @@ Per the source todo's own done-when ("a written per-repo finding list... exists"
 changes were made. Each finding below is filed as its own scoped, worker-determinable fix todo (repo named, symbol
 named) rather than left as prose, per the findings-closure hard rule.
 
-- [ ] [BACKEND] P1. Fix `open_meteo.py::OpenMeteoAdapter.get_weather_match_window` (instruments-service) so every
+- [x] ✅ [BACKEND] P1. Fix `open_meteo.py::OpenMeteoAdapter.get_weather_match_window` (instruments-service) so every
       exception layer that currently only logs (lines 207-214, 235-273) either re-raises or is folded into the existing
       outer `_emit_fetch_failed` catch-all (lines 284-286), and make the outer catch-all itself `raise` after logging
       instead of falling through to return a partial result — matching the `raise`-after-`_emit_fetch_failed` pattern
-      already used by every sibling method in `api_football.py`. (repo: instruments-service)
+      already used by every sibling method in `api_football.py`. (repo: instruments-service) —
+      instruments-service@08e74647. Made all three nested exception handlers (Previous Runs API, actual-weather fetch,
+      its 400-retry fallback) `raise` after logging instead of swallowing, and the outer catch-all `raise` after
+      `_emit_fetch_failed` instead of falling through to return a partial result. Updated the 3 unit tests in
+      `test_sports_open_meteo_boost.py` that asserted the old swallow-and-continue behavior to assert
+      `pytest.raises(...)` + `_emit_fetch_failed` called instead. Full QG green (5133 passed).
 - [x] ✅ [BACKEND] P1. Fix `api_football.py::ApiFootballAdapter.get_standings` (lines 714-728) to `raise` after
       `_emit_fetch_failed` instead of `return []`, matching every sibling per-entity fetch method in the same file
       (`get_fixtures`, `get_leagues`, `get_teams`, `get_injuries`, `get_fixture_statistics`, `get_fixture_events`,
