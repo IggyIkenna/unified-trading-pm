@@ -43,6 +43,24 @@ flagged in `## Filed` below.
 
 _(filled in as hunters complete — see below)_
 
+**Liveness observation (relevant to gate R1/R2 in the proof-of-run todo above):** at ~08:00Z, mid-STEP-3 (11 wave-A
+hunter sub-agents running in background), a `POST /api/slots/11/heartbeat` call (issued with no `task_id`, prompted by
+an operator "send a heartbeat" nudge) returned `"status":"idle"` and `"dispatch_reason":"cancelled"` — the `cancel_task`
+field named the stray generic backlog task (`basedpyright_extrapaths_pyproject_migration_findings-015`) that an earlier
+`/boot` call (made per the generic AGENT-BOOT harness wrapper, before I'd read this role's "no `/boot`" instruction) had
+picked up and which the server had apparently been tracking as this slot's "working" anchor. Cancelling that stray task
+appears to have flipped the slot's status column to `idle` **even though the real plan_reconciler dispatch
+(`agt-385318`) was actively in-flight** (background sub-agents running). I immediately re-asserted via
+`POST /api/slots/11/progress` with explicit `task_id: agt-385318` + `phase: working`, which returned `ok` cleanly. No
+reap occurred (this doc is being written, so the session survived) — but the underlying pattern (slot status column
+reading `idle` while a reconciler is genuinely mid-run) is exactly the historical failure signature. If you are a future
+reconciler run or an operator investigating a repeat death: the trigger this time was plausibly **cancellation of an
+unrelated stray task clobbering the slot's status column**, not the originally-suspected
+`WorkerLivenessWatchdog._reclaim_idle_lingering_sessions` idle-reclaim path directly — a DIFFERENT code path
+(task-cancellation status side-effect) landing on the same observable symptom (`status=idle` on a live reconciler).
+Worth a dedicated look at whatever endpoint handles task cancellation / stray-task cleanup to see if it unconditionally
+sets slot status without checking for a concurrent typed-agent one-shot dispatch. Filed below.
+
 ## Flips verified
 
 ## Contradictions
