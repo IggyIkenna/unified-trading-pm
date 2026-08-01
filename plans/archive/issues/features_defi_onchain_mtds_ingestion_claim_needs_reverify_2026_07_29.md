@@ -40,7 +40,7 @@ source:
   ]
 resolved_by:
   market-tick-data-service (investigation only, no code change) +
-  issues/defi_onchain_perp_funding_permanently_unsatisfiable_dependency_2026_07_31.md
+  /plans/archive/issues/defi_onchain_perp_funding_permanently_unsatisfiable_dependency_2026_07_31.md (now archived)
 locked_by:
 locked_since:
 ---
@@ -50,8 +50,8 @@ locked_since:
 > **🟢 RESOLVED 2026-07-31.** Both todos done: the original contradiction was reconciled (4 of 5 data_types were a
 > freshness-lag false negative, `perp_funding` was the sole genuine gap) and `perp_funding`'s root cause is now fully
 > evidenced (not a scheduler/handler bug — a permanently-unsatisfiable DEFI dependency check post-reclassification).
-> Successor for the actual fix:
-> `/plans/active/issues/defi_onchain_perp_funding_permanently_unsatisfiable_dependency_2026_07_31.md`.
+> Successor for the actual fix (now itself archived, all 3 todos shipped):
+> `/plans/archive/issues/defi_onchain_perp_funding_permanently_unsatisfiable_dependency_2026_07_31.md`.
 
 ## What I found
 

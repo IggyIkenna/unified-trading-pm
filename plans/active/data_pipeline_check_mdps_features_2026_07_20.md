@@ -765,14 +765,15 @@ transient. Both handled gracefully (`recovery=skip`, `SCHEMA VIOLATION` logged b
       reclassified DeFi->CeFi by 3 independent operator rulings (2026-07-06/07-25/07-26), so 100% of writes now target
       the CEFI bucket, never the DEFI bucket this check reads — a permanently-unsatisfiable required dependency, not a
       freshness gap. `perp_funding` will not "resume" — the check needs fixing. Filed
-      `issues/defi_onchain_perp_funding_permanently_unsatisfiable_dependency_2026_07_31.md` with full evidence + the
-      scoped fix (remove/relax the `perp_funding` requirement in `UPSTREAM_DEPS_DEFI`, operator/main call on which
-      option). — **2026-08-01 (slot-12)**: bucket-resolution fix SHIPPED (Option B — `UPSTREAM_DEPS_DEFI`'s
-      `market-tick-data-service-perp` now points at the CEFI bucket, matching a real wired DEFI:onchain consumer of this
-      exact signal; see the issue doc's flipped P2 todo for full evidence). Live-verified: the check now finds REAL
-      manifest rows on every day MTDS actually wrote (previously: permanently "not run" on 100% of days). Gate still
-      cannot pass on any tested day, but for a DIFFERENT, newly-surfaced reason unrelated to the bucket bug:
-      POLYMARKET_PERP's deliberate, already-tracked DNS outage
+      `issues/defi_onchain_perp_funding_permanently_unsatisfiable_dependency_2026_07_31.md` (now archived to
+      `/plans/archive/issues/defi_onchain_perp_funding_permanently_unsatisfiable_dependency_2026_07_31.md`, all 3 todos
+      shipped) with full evidence + the scoped fix (remove/relax the `perp_funding` requirement in `UPSTREAM_DEPS_DEFI`,
+      operator/main call on which option). — **2026-08-01 (slot-12)**: bucket-resolution fix SHIPPED (Option B —
+      `UPSTREAM_DEPS_DEFI`'s `market-tick-data-service-perp` now points at the CEFI bucket, matching a real wired
+      DEFI:onchain consumer of this exact signal; see the issue doc's flipped P2 todo for full evidence). Live-verified:
+      the check now finds REAL manifest rows on every day MTDS actually wrote (previously: permanently "not run" on 100%
+      of days). Gate still cannot pass on any tested day, but for a DIFFERENT, newly-surfaced reason unrelated to the
+      bucket bug: POLYMARKET_PERP's deliberate, already-tracked DNS outage
       (`issues/cefi_perp_funding_kalshi_polymarket_residual_     and_capture_gap_2026_07_30.md`) trips
       `_check_mtds_manifest`'s any-attempted_failed-fails-whole-dependency rule even on days HYPERLIQUID/KALSHI_PERP
       both captured. Filed as its own new P2 todo in the issue doc (3 options, needs operator/main call). This todo

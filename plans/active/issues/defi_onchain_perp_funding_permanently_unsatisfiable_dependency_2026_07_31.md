@@ -16,7 +16,7 @@ summary: >-
   removed entirely 2026-07-25). Every byte the job writes lands in `market-data-tick-cefi-prd-{project}` instead. This
   DEFI dependency can never be satisfied again under current (correct) venue classification — it is not a freshness gap,
   it is a stale check that predates the reclassifications.
-status: open
+status: resolved
 nature: issue
 asset_group: [defi, cefi]
 stage: [data, features]
@@ -45,9 +45,14 @@ source:
     issues/features_defi_onchain_mtds_ingestion_claim_needs_reverify_2026_07_29.md)",
   ]
 resolved_by:
+  features-service@eaaa935f, features-service@a0d4e6e4, unified-trading-library@b6714ed3, deployment-service@b301c41
 locked_by:
 locked_since:
 ---
+
+> **✅ ARCHIVED 2026-08-01** — all 3 todos shipped (Option B bucket-fix + venue-scoped known-outage tolerance in
+> `dependency_checker.py`, both live-verified against production; the stale terraform `"perp-funding"` op description
+> corrected). 0 open todos, unlocked. Moved to `plans/archive/issues/`.
 
 # DEFI:onchain `perp_funding` dependency is permanently unsatisfiable — stale post-reclassification check
 
@@ -194,11 +199,12 @@ Two non-exclusive options, either of which unblocks the gate:
       done_definition's demonstrable-real-day-pass bar is met. The 07-27/07-28 non-Polymarket failures are a separate,
       unscoped finding — not folded into this fix; worth a follow-up root-cause if it recurs, but out of scope here
       since this todo's job was the outage-tolerance mechanism, not auditing every historical failure day.
-- [ ] [DOCS] P3. Fix `deployment-service/terraform/gcp/defi_collection_scheduler.tf`'s `"perp-funding"` operation
-      description (still says "Hyperliquid + dYdX + GMX perpetual funding rates" — dYdX was never implemented in
-      `perp_funding_handler.py` and GMX was removed 2026-07-25). Repo: deployment-service. (The matching stale
-      `dependency_checker.py` comment block this todo originally also named was updated as part of the P2 fix above —
-      only the terraform half remains.)
+- [x] [DOCS] P3. ✅ Fixed `deployment-service/terraform/gcp/defi_collection_scheduler.tf`'s `"perp-funding"` operation
+      description — deployment-service@`b301c41`. Corrected both the header stagger-table comment (line ~59) and the
+      per-op `description` field (line ~150) from the stale "Hyperliquid + dYdX + GMX perpetual funding rates" to the
+      real live venue set (Hyperliquid + Kalshi-Perp + Polymarket-Perp), noting dYdX was never implemented in
+      `perp_funding_handler.py` and GMX was removed 2026-07-25. `terraform fmt -check` clean; QG green
+      (`.qg_last_passed_sha=b301c41`). This closes the last open todo in this issue doc.
 
 ## Progress Log
 
@@ -224,3 +230,16 @@ Two non-exclusive options, either of which unblocks the gate:
   extracted via a module-level `_evaluate_manifest_rows`/`_exclude_known_outage_rows` pair to stay under the 50-line
   class-method cap; 4 new unit tests). Both QG-green, both verified on `origin/live-defi-rollout`. This closes every
   open todo in this issue doc except the P3 terraform-description fix.
+- **2026-08-01 (slot-4)**: Closed the last open todo — fixed
+  `deployment-service/terraform/gcp/defi_collection_scheduler.tf`'s stale `"perp-funding"` operation description (both
+  the header stagger-table comment and the per-op `description` field still said "Hyperliquid + dYdX + GMX"; corrected
+  to the real live venue set Hyperliquid + Kalshi-Perp + Polymarket-Perp, noting dYdX was never implemented and GMX was
+  removed 2026-07-25) — `deployment-service@b301c41`, `terraform fmt -check` clean, QG green, verified on
+  `origin/live-defi-rollout`. All 3 todos now `[x]`, unlocked — archiving per the
+  plan-completion-and-archival-discipline HARD RULE (6-step ritual: no deferred prose to migrate; archived-banner +
+  `status: resolved` + `resolved_by` added above; no codex contract changed by this doc's closure — the
+  dependency-checker fix's contract already lives in `features_service/onchain/app/core/dependency_checker.py` itself,
+  not a codex doc; referrers in `defi_satellite_ao_dispatch_batch6_2026_07_30.md`,
+  `data_pipeline_check_mdps_features_2026_07_20.md`, and the already-archived
+  `features_defi_onchain_mtds_ingestion_claim_needs_reverify_2026_07_29.md` all cite this doc's PATH only — no
+  standalone fact/number needing pre-archive migration — repointed to the new archive path in the same commit).
