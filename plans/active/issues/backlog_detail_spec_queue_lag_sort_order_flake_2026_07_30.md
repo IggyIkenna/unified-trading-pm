@@ -29,6 +29,12 @@ execution_scope: local-only
 assigned_role: infra
 drift_direction: advance-code
 depends_on: []
+context_scope:
+  [
+    /plans/active/issues/ao_dashboard_backlog_detail_queue_lag_e2e_flaky_2026_07_26.md,
+    agent-orchestrator/dashboard/tests/e2e/backlog-detail.spec.ts,
+    agent-orchestrator/dashboard/tests/e2e/fixtures/seed_e2e_state.py,
+  ]
 ---
 
 # agent-orchestrator backlog-detail.spec.ts queue_lag sort-order flake
@@ -84,3 +90,4 @@ first:
   broadening the search to any status surfaced the duplicate). Not reclassifying — flipping `assigned_vm` here would
   dispatch a second worker onto already-claimed work. Fixed the checkbox citation to point at the authoritative doc per
   the KEEP-NA-STALE rule; `assigned_vm: NA` left as-is (zero backlog impact, pure hygiene).
+- **context-scout 2026-08-01**: populated context_scope (3 entries).

@@ -53,6 +53,13 @@ resolved_by:
 source: >-
   measured 2026-07-20 by direct `gsutil ls` against market-data-tick-{cefi,tradfi,sports}-prd-central-element-323112
   while building the two data-pipeline-check skills; writer-side claims re-read from the actual writer code.
+context_scope:
+  [
+    /codex/02-data/per-asset-group-bucket-layouts.md,
+    /codex/02-data/pipeline-mode-partition.md,
+    /plans/archive/2026_07/candle_canonical_path_migration_execution_2026_07_24.md,
+    /plans/active/issues/mdps_candle_manifest_near_total_coverage_gap_2026_07_27.md,
+  ]
 ---
 
 # Candle + feature object paths diverge from their declared canonical templates
@@ -557,3 +564,4 @@ remain genuinely open content-level work, distinct from the path-migration infra
   explicit operator ruling to accept the loss' — an unanswered authority call on the largest open item in the doc. Also
   a 5-tranche `infrastructure_master` doc whose remaining content is cefi/tradfi/defi candle-migration work, not sports
   (sports has no `processed_candles/` tree at all, per the doc's own measurement)
+- **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).

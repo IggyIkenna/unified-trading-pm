@@ -46,6 +46,12 @@ locked_since:
 depends_on: []
 supersedes:
 superseded_by:
+context_scope:
+  [
+    agent-orchestrator/server/regen_backlog_from_plan.py,
+    /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
+    agents/RULES.md,
+  ]
 ---
 
 # `BLOCKED-PREREQUISITES` — not a recognized non-dispatchable token
@@ -186,3 +192,5 @@ same-corpus dependencies). Instead:
   `prereqs.prerequisites` tuning, or (b) a small `agent-orchestrator` enhancement letting a plan declare per-todo (not
   just whole-plan) same-file ordering — a real design gap this doc's existing recommended-decision text doesn't yet
   cover, worth a follow-up note when that audit todo is worked.
+
+- **context-scout 2026-08-01**: populated context_scope (3 entries).

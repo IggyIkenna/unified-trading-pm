@@ -36,6 +36,13 @@ drift_direction: advance-code
 resolved_by:
 locked_by:
 depends_on: []
+context_scope:
+  [
+    /plans/epics/escalation_and_disaster_recovery_master.md,
+    /plans/archive/issues/operator_gated_blocked_answer_is_a_no_op_2026_07_30.md,
+    agent-orchestrator/server/orm.py,
+    agent-orchestrator/server/transcript_log.py,
+  ]
 ---
 
 ## The pain, in the operator's own framing
@@ -117,6 +124,7 @@ exists" section together before scoping the workstream.
   pain points 2-4 are also considered covered or no-longer-wanted, this doc should archive pointing at the resolving
   doc; if they're still real, worth splitting into a narrower follow-up scoped to just those three. Deferring the
   archive-or-split call to the operator rather than guessing.
+- **context-scout 2026-08-01**: populated context_scope (4 entries).
 
 ## Todos
 

@@ -36,6 +36,13 @@ drift_direction: advance-code
 depends_on: []
 locked_by:
 resolved_by:
+context_scope:
+  [
+    /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
+    /cursor-configs/skills/ag-closeout-audit/SKILL.md,
+    /plans/active/issues/ao_dashboard_backlog_detail_queue_lag_e2e_flaky_2026_07_26.md,
+    /plans/active/issues/backlog_detail_spec_queue_lag_sort_order_flake_2026_07_30.md,
+  ]
 source:
   [
     "operator session 2026-07-31 — 'check and see which are tracked and which are not tracked and update the tracker doc
@@ -145,3 +152,6 @@ tracker's Phase sections and flipping them `[x]` with a `DONE via ao_fleet_obser
   mechanical, but 3 of 4 todos are human-judgment-gated so the doc as a whole correctly stays NA.
 - 2026-07-31: filed during `/pre-compact` — these 4 findings existed only in chat during the live audit session and
   would have been lost at compaction; the tracker doc itself has zero line-cap headroom to hold them (999/1000 lines).
+- **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries). Skipped one candidate entry —
+  `/plans/active/ao_open_issues_consolidated_close_out_2026_07_17.md` (already in `related:`) — per this run's explicit
+  instruction not to read or touch that file (under active concurrent edit by a different session).

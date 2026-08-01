@@ -48,6 +48,13 @@ superseded_by:
 depends_on:
 assigned_role: backend_engineer
 drift_direction: advance-code
+context_scope:
+  [
+    /codex/04-architecture/recovery-defence-in-depth-layers.md,
+    /codex/04-architecture/agent-orchestrator-overview.md,
+    alerting-service/alerting_service/api/routes/safety_ops.py,
+    unified-trading-library/unified_trading_library/recovery/agent_action.py,
+  ]
 ---
 
 > **🟢 EXECUTION CONSOLIDATED 2026-07-17** — this doc's open items are now tracked and executed via
@@ -160,6 +167,7 @@ function.
   it but we will do it at last, not right now'), and a `🟢 EXECUTION CONSOLIDATED 2026-07-17` banner routing execution
   through `/plans/active/ao_open_issues_consolidated_close_out_2026_07_17.md` ('Do NOT start work from this doc alone').
   Not re-litigated.
+- **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).
 
 ## Todos
 

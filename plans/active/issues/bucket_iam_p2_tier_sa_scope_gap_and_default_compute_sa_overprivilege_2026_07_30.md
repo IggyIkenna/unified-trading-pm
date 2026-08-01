@@ -62,6 +62,13 @@ resolved_by:
 locked_by:
 locked_since:
 depends_on: []
+context_scope:
+  [
+    deployment-service/terraform/gcp/main.tf,
+    deployment-service/configs/gcp_service_accounts.yaml,
+    deployment-service/scripts/vm/lib/launcher_common.sh,
+    /codex/05-infrastructure/bucket-isolation-model.md,
+  ]
 ---
 
 # P2.2's literal "wire every runtime to its tier SA" is blocked on 3 separate, live-verified findings
@@ -274,3 +281,7 @@ still-open P2 (depends on P1, now met) and P3.2 (depends on P0, now met); no cha
       `lc_gcloud_create()` helper) — its own large, separately-scoped effort requiring a per-launcher tier
       classification pass (which write `-prd-` vs `-test-`, which are migration scripts). Do not attempt as a single
       mechanical bulk edit. Gated on P0. (repo: deployment-service)
+
+## Progress Log
+
+- **context-scout 2026-08-01**: populated context_scope (4 entries).

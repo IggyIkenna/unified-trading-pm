@@ -46,6 +46,13 @@ locked_by: live-defi-rollout
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
+context_scope:
+  [
+    /plans/active/citadel_paper_batch_live_reconciliation_2026_06_19.md,
+    /plans/archive/issues/blrs_g3_g10_rescope_2026_07_28.md,
+    /plans/archive/issues/recon_freeze_armed_never_published_2026_05_27.md,
+    /codex/04-architecture/reconciliation-resolution.md,
+  ]
 ---
 
 # Batch-Live Reconciliation Service (BLRS) — Audit
@@ -594,3 +601,7 @@ defect, just confirming the coupling is daily, not real-time.
   All three rehomed as `P1.BLRS1`/`P2.BLRS2`/`P3.BLRS3` in
   `plans/active/citadel_paper_batch_live_reconciliation_2026_06_19.md` (P1.BLRS1 now flipped done there); G3/G10's
   corrected scope + build todos live in `/plans/archive/issues/blrs_g3_g10_rescope_2026_07_28.md`.
+
+## Progress Log
+
+- **context-scout 2026-08-01**: populated context_scope (4 entries).

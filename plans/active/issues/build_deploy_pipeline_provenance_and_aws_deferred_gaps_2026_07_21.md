@@ -50,6 +50,13 @@ source:
 locked_by:
 locked_since:
 resolved_by:
+context_scope:
+  [
+    /plans/active/artifact_pipeline_observability_2026_07_17.md,
+    .github/workflows/freeze-deferred-build-replay.yml,
+    .github/workflows/cloud-build-router-aws.yml,
+    deployment-service/scripts/vm/lib/aws_ec2_launch_lib.sh,
+  ]
 ---
 
 # Build/deploy pipeline provenance + AWS-deferred gaps
@@ -138,6 +145,7 @@ acting. (The artifact-pipeline page does not depend on this — it reads the Clo
   `unified-trading-deployment-scripts-427895769566` is 404 and `uts-prod-deployment-state/code/` is populated. No
   existing issue doc covered these; the adjacent `change_freeze_…` doc (resolved) is about the freeze calendar, not the
   replay-filter naming. Loop Ikenna in before any fix — every open item lives in a file in his active CI area.
+- **context-scout 2026-08-01**: populated context_scope (4 entries).
 
 ## na-eligibility-audit verdict
 

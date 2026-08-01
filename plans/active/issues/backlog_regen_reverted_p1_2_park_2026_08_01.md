@@ -48,6 +48,13 @@ source: >-
   /api/backlog` (priority=20) and the live `data/config/backlog.yaml` entry (read-only, root `agent-orchestrator` clone)
   directly (`prereqs.prerequisites: []`), and independently re-verified the time-gate precondition is still unmet
   (~3h45m of the required 24h elapsed).
+context_scope:
+  [
+    /plans/active/live_event_log_warm_sink_recovery_and_cold_compaction_2026_07_31.md,
+    /plans/archive/issues/backlog_regen_drops_handtuned_prereqs_2026_07_12.md,
+    agent-orchestrator/server/regen_backlog_from_plan.py,
+    agents/RULES.md,
+  ]
 ---
 
 # Backlog regen reverted the manual park on P1.2 — recurrence of a previously-fixed bug class
@@ -116,3 +123,5 @@ re-applied by hand again.
 **na-eligibility-audit 2026-08-01**: KEEP-NA, valid -- Full audit rationale: All 3 remaining open items are genuinely
 judgment/operator-gated or touch live dispatch-critical-path machinery whose fix scope is not yet fully determined; none
 are stale, duplicated elsewhere, or moot, so NA remains the correct home for the whole doc.
+
+- **context-scout 2026-08-01**: populated context_scope (4 entries).

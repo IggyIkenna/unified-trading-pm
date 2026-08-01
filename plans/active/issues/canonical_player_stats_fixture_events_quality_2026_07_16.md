@@ -45,6 +45,13 @@ supersedes:
 superseded_by:
 resolved_by:
 source: [sports cutover T2.4 measurement 2026-07-16]
+context_scope:
+  [
+    /plans/archive/2026_07/sports_legacy_bucket_cutover_2026_07_16.md,
+    /plans/epics/sports_master.md,
+    /codex/02-data/honest-absence-downstream-handling.md,
+    /codex/02-data/availability-manifest-and-data-status.md,
+  ]
 ---
 
 # Canonical sports player_stats / fixture_events data-quality defects (cutover-surfaced)
@@ -212,3 +219,4 @@ its own touched subset piecemeal.
   era match); 88 (7%) are a 2025 anomaly NOT explained by that theory, filed as its own follow-up todo above rather than
   guessed at. No manifest reconciliation action taken this pass (ruled non-actionable-in-this-todo, see the follow-up
   todos).
+- **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).

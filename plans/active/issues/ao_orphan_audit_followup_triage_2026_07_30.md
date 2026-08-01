@@ -30,6 +30,12 @@ assigned_vm: NA
 execution_scope: local-only
 drift_direction: none
 depends_on: []
+context_scope:
+  [
+    /plans/active/ao_satellite_ao_dispatch_batch2_2026_07_30.md,
+    /plans/archive/2026_07/ao_satellite_ao_dispatch_batch1_2026_07_26.md,
+    /cursor-configs/skills/ag-closeout-audit/SKILL.md,
+  ]
 source:
   "interactive session, 2026-07-30 — operator ran the ao-tranche orphan audit, had the tracker's related: links +
   archival gap fixed, then said: archive what can be archived now, then work the resolution bucket next. This issue
@@ -92,3 +98,4 @@ source:
   batch2, rule on 12 operator-gated docs each a genuine design/judgment fork with no evidence-based tiebreaker), the
   other 2 `[REVIEW]`-tagged items require open-ended audit judgment (classify 8 conflict-gated docs, bucket 7 unclear
   docs) — the same shape as this skill's own work, not a deterministic check. No stale/superseded items found.
+- **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).

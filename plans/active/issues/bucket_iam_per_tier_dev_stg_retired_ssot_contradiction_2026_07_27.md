@@ -51,6 +51,12 @@ resolved_by:
 locked_by:
 locked_since:
 depends_on: []
+context_scope:
+  [
+    deployment-service/terraform/gcp/bucket_iam_per_tier_sa.tf,
+    /codex/05-infrastructure/bucket-isolation-model.md,
+    /plans/active/bucket_iam_write_protection_per_tier_2026_06_09.md,
+  ]
 ---
 
 # The IAM-per-tier plan's dev/stg SA design predates and contradicts the dev/stg tier retirement
@@ -153,9 +159,9 @@ that is mid-execution against a **live production GCP project**. Two consequence
       per-env condition doesn't rediscover this the hard way.
 
       **DONE 2026-07-30** — added new § 8.1 "GCP IAM Condition CEL — real function support" to
-                                                                                                                                                                                                                                                                                                                                                      `/codex/05-infrastructure/bucket-isolation-model.md` (§ 8, "Prod Bucket IAM Write-Protection"), documenting the
-                                                                                                                                                                                                                                                                                                                                                      `startsWith`/`endsWith`-only constraint + the safe single-`startsWith` pattern for a per-tier/per-suffix bucket
-                                                                                                                                                                                                                                                                                                                                                      match, citing this doc + `deployment-service@44002342` as the live-confirmed source.
+                                                                                                                                                                                                                                                                                                                                                                              `/codex/05-infrastructure/bucket-isolation-model.md` (§ 8, "Prod Bucket IAM Write-Protection"), documenting the
+                                                                                                                                                                                                                                                                                                                                                                              `startsWith`/`endsWith`-only constraint + the safe single-`startsWith` pattern for a per-tier/per-suffix bucket
+                                                                                                                                                                                                                                                                                                                                                                              match, citing this doc + `deployment-service@44002342` as the live-confirmed source.
 
 - [x] ✅ [DOCS] P2. **DONE 2026-07-28** — Cross-referenced `bucket_iam_write_protection_per_tier_2026_06_09.md` and the
       (now-archived) `bucket_estate_consolidation_to_sub100_2026_07_13.md`: this issue doc's own `related:` already
@@ -192,3 +198,7 @@ that is mid-execution against a **live production GCP project**. Two consequence
       for it (it already exists; a new resource would either error on import-collision or create a stray duplicate
       identity). No current consumer is blocked on this — CI's `tofu apply`/`plan` steps use project-level IAM-policy
       permissions (P1.2b's gap), not bucket object access.
+
+## Progress Log
+
+- **context-scout 2026-08-01**: populated context_scope (3 entries).

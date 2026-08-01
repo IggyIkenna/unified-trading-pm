@@ -43,6 +43,12 @@ model_tier: sonnet-doable
 thinking_tier: high
 drift_direction: advance-code
 depends_on: []
+context_scope:
+  [
+    /plans/archive/issues/tardis_concurrent_ip_lockout_2026_07_12.md,
+    /codex/02-data/honest-coverage-model.md,
+    market-tick-data-service/market_tick_data_service/market_interface/adapters/tradfi/tardis_batch_download.py,
+  ]
 ---
 
 ## What I found
@@ -386,3 +392,7 @@ audit; no code shipped. This should end the thrash on this task — next dispatc
 `cefi-recapture-sweep-complete` true (the same evidence-verified pattern used for the sibling elo/travel gap-fill
 conditions), at which point the actual audit + conditional reconciler work (this doc's P3 todo) becomes real in-craft
 work.
+
+## Progress Log
+
+- **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).

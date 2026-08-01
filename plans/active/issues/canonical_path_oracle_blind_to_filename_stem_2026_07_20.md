@@ -58,6 +58,14 @@ resolved_by:
   2026-07-27 (§ 7 P1, unified-trading-pm slot-15) — 1,697 colon_wire live population confirmed gone, new batch-side
   bare-wire-symbol finding tracked as § 7 P2; residual followups tracked in § 7 (quarantine disposition) and the
   batch=live divergence issue"
+context_scope:
+  [
+    /codex/02-data/four-surface-reconciliation-procedure.md,
+    /codex/02-data/reconciliation-finding-taxonomy.md,
+    /plans/archive/issues/batch_live_filename_divergence_sanitize_symbol_2026_07_20.md,
+    /plans/active/issues/fail_hard_canonical_enforcement_design_2026_07_20.md,
+    market-tick-data-service/market_tick_data_service/market_interface/adapters/cefi/tardis_shared.py,
+  ]
 ---
 
 # The canonical-path machine oracle was blind to the filename stem
@@ -341,3 +349,7 @@ Full write-path treatment (the verbatim-write + no-guard + `validate=False` fami
 
 The UAC diff (`partition_paths.py`, `__init__.py`, `tests/unit/test_partition_path_is_canonical.py`) is complete and its
 own tests pass (178 passed across the four canonical-path test modules).
+
+## Progress Log
+
+- **context-scout 2026-08-01**: populated/refreshed context_scope (5 entries).

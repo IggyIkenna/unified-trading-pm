@@ -57,6 +57,14 @@ locked_since:
 supersedes:
 superseded_by:
 resolved_by:
+context_scope:
+  [
+    /codex/02-data/non-canonical-path-inventory.md,
+    /codex/02-data/pipeline-mode-partition.md,
+    /plans/active/data_pipeline_reconciliation_skill_2026_07_20.md,
+    /plans/active/infra_satellite_ao_dispatch_batch2_2026_07_27.md,
+    instruments-service/instruments_service/engine/orchestrator/writers.py,
+  ]
 source: >-
   STATIC code read 2026-07-20 for TODO P1-15 of data_pipeline_reconciliation_skill_2026_07_20.md (skill § 4c). No
   backfill was run, no VM was launched, no GCS object was written or read. Every claim below cites a file:line that was
@@ -304,3 +312,5 @@ The same trap already bit `market_lifecycle` (row 10): `partition={"group","day"
   doc/skill fixes, but todo 6 is a scope DECISION ('decide whether `market_lifecycle` and `futures_contracts` are in the
   canonical shard grammar's scope'). 5-tranche `infrastructure_master` doc whose content is cross-AG rather than
   sports-primary, so extraction of the 3 bounded items belongs to the cross-cutting/infra tranche
+
+- **context-scout 2026-08-01**: populated context_scope (5 entries).

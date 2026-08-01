@@ -42,6 +42,13 @@ sequential: false
 resolved_by:
 locked_by:
 locked_since:
+context_scope:
+  [
+    /codex/04-architecture/agent-orchestrator-alerting.md,
+    /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
+    agent-orchestrator/scripts/ao-self-pull.sh,
+    /agents/main.md,
+  ]
 ---
 
 # What I found
@@ -194,3 +201,7 @@ host/root-clone access (main agent's own session, or the operator).
 `/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md`,
 `/codex/04-architecture/agent-orchestrator-alerting.md` (the actionable-only / dedup convention the wedge-alert already
 follows correctly — only the webhook config is missing).
+
+## Progress Log
+
+- **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).

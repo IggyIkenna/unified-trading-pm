@@ -51,6 +51,12 @@ execution_scope: local-only
 drift_direction: advance-code
 depends_on: []
 last_updated: 2026-07-31
+context_scope:
+  [
+    /plans/archive/2026_07/ci_satellite_ao_dispatch_batch2_2026_07_29.md,
+    scripts/cicd/detect_breaking_change.py,
+    /codex/08-workflows/ci-cd-flow.md,
+  ]
 ---
 
 # Breaking-change differ is blind to UAC registry data-dicts — cross-repo break promotes with no gate
@@ -219,3 +225,7 @@ SHAs are real and touch `scripts/cicd/detect_breaking_change.py`), so the "dupli
 applies; this is category 1 (genuine operator-gated judgment) now, not category 3. The one remaining open item (todo 5,
 `[DESIGN] P2`) is still parked as `ci_satellite_ao_dispatch_batch2_2026_07_29.md` Deferred E8, unruled — correctly NA,
 no reclassification. No stale items, not an archive candidate (1 substantive open item remains).
+
+## Progress Log
+
+- **context-scout 2026-08-01**: populated context_scope (3 entries).

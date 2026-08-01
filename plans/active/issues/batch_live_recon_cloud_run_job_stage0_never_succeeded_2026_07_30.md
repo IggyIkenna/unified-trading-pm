@@ -49,6 +49,12 @@ source: >-
   / `launch-disaster-drill-cron-vm.sh` are wired to a live Cloud Scheduler job, per
   `setup_data_pipeline_vm_dispatch_gap_batch_live_recon_chaos_drill_2026_07_30.md`'s own todo 3. `gcloud run jobs
   executions list/describe` + `gcloud logging read` + `gsutil ls`, all read-only.
+context_scope:
+  [
+    /plans/active/issues/recon_bucket_missing_nightly_recon_failing_2026_07_13.md,
+    /codex/09-strategy/operational/paper-batch-live-reconciliation.md,
+    deployment-service/scripts/vm/launch-batch-live-recon-cron-vm.sh,
+  ]
 ---
 
 # batch-live-reconciliation Cloud Run job — Stage 0 has never once succeeded
@@ -152,3 +158,4 @@ this session's available repo set) to find where (if anywhere) those exact GCS p
   branching fix-action) are already answered/tracked, with hard dated evidence, in a sibling NA doc
   (recon_bucket_missing_nightly_recon_failing_2026_07_13.md, updated 2026-07-14) that this doc apparently never
   cross-referenced. That older doc traces th...
+- **context-scout 2026-08-01**: populated context_scope (3 entries).

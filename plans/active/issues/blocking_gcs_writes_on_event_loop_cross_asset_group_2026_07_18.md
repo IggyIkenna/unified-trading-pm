@@ -35,6 +35,13 @@ depends_on: []
 source: ["three parallel read-only writer audits run after the 2026-07-18 CeFi disk/throughput investigation"]
 resolved_by:
 locked_by:
+context_scope:
+  [
+    /plans/active/defi_satellite_ao_dispatch_batch2_2026_07_26.md,
+    market-tick-data-service/market_tick_data_service/cli/handlers/dex_swaps_handler.py,
+    market-tick-data-service/market_tick_data_service/cli/handlers/solana_defi_handler.py,
+    unified-trading-library/unified_trading_library/service_framework/_adapter.py,
+  ]
 ---
 
 # Blocking GCS writes on the event loop — cross-asset-group audit
@@ -145,3 +152,4 @@ the call is still awaited (ordering preserved), and check the file's line/functi
   asyncio.gather+Semaphore concurrency, via the established ParallelPerSymbolRunner pattern, to 8 remaining DeFi CLI
   handlers: dex_swaps_handler.py, evm_defi_collectors.py, gas_fee_handler.py, lst_rates_handler.py,
   liquidations_handler.py, liquidation_events_hand...
+- **context-scout 2026-08-01**: populated context_scope (4 entries).

@@ -45,6 +45,15 @@ superseded_by:
 depends_on:
 assigned_role: backend_engineer
 drift_direction: advance-code
+context_scope:
+  [
+    /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
+    /plans/epics/orchestrator_master.md,
+    /plans/epics/agent_operating_framework_master.md,
+    /codex/12-agent-workflow/local-slot-host-symmetric-worker-model.md,
+    /plans/active/codex_vs_repo_docs_ssot_audit_2026_06_01.md,
+    /plans/archive/issues/ao_repo_docs_deleted_against_instructions_dead_code_refs_2026_07_23.md,
+  ]
 ---
 
 > **🟢 EXECUTION CONSOLIDATED 2026-07-17** — this doc's open items are now tracked and executed via
@@ -497,3 +506,4 @@ post-pivot re-sweep.
   bounded/deterministic-outcome work, no operator gate or live judgment call found; flipped
   `assigned_vm: NA -> planning`. Conflict-check run against all active `assigned_vm: planning` docs in this doc's
   `parent_epic` + the infra tranche's consolidated-closeout digest: zero/milestone-only overlap, clear to proceed.
+- **context-scout 2026-08-01**: populated/refreshed context_scope (6 entries).

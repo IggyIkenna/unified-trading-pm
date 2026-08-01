@@ -42,6 +42,13 @@ supersedes:
 superseded_by:
 drift_direction: advance-code
 depends_on: []
+context_scope:
+  [
+    /codex/05-infrastructure/agent-orchestrator-deploy.md,
+    /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
+    /plans/archive/issues/ao_review_agent_spawn_db_lock_under_load_2026_07_26.md,
+    agent-orchestrator/server/tmux_pruner.py,
+  ]
 ---
 
 # DB-lock storm + stuck-shutdown outage — 2026-07-26 18:50–18:54 UTC
@@ -345,3 +352,4 @@ stops), not systemd `Restart=` auto-restarts, consistent with the backend-owned 
   verified to survive a fresh `POST /api/backlog/regen`; deleted the stray `-006` row. Lesson for future parks: annotate
   in the Progress Log or a note OUTSIDE the checkbox's own text, never inside the todo's own bold lead-in — editing that
   text is indistinguishable from editing the todo itself.
+- **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).

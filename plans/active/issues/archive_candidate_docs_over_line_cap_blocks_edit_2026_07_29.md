@@ -38,6 +38,12 @@ drift_direction: worsening-slowly
 depends_on: []
 locked_by:
 resolved_by:
+context_scope:
+  [
+    /plans/archive/issues/tradfi_mdps_build_continuous_mismatches_2_and_4_still_open_2026_07_26.md,
+    /plans/active/issues/mtds_backfill_vm_startup_oom_rc137_2026_07_14.md,
+    /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
+  ]
 ---
 
 # Two archive-candidate docs need a split before their prose-trap can be fixed
@@ -103,3 +109,4 @@ content:
 
 - **na-eligibility-audit 2026-07-30**: KEEP-NA, valid - doc's own text declares the index/history split an open-ended
   judgment call about what goes where
+- **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).

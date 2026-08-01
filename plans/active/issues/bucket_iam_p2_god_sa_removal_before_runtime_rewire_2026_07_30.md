@@ -55,6 +55,12 @@ resolved_by:
 locked_by:
 locked_since:
 depends_on: [bucket_iam_p2_tier_sa_scope_gap_and_default_compute_sa_overprivilege_2026_07_30]
+context_scope:
+  [
+    /plans/active/bucket_iam_write_protection_per_tier_2026_06_09.md,
+    /plans/active/issues/bucket_iam_p2_tier_sa_scope_gap_and_default_compute_sa_overprivilege_2026_07_30.md,
+    deployment-service/terraform/gcp/main.tf,
+  ]
 ---
 
 # P2.1's literal "remove the god-SA objectAdmin" step would break every live/batch prod GCS write, fleet-wide
@@ -158,3 +164,7 @@ same fix this doc's own prior Addendum used for the identical problem shape: ret
 `[OPERATOR]` (routes it off worker dispatch into the operator's blocked-queue) and added a `depends_on` cross-reference
 to the sibling doc (documentation/archival-gating only, per `PLAN_FORMAT.md` — does not itself gate dispatch, hence the
 retag doing the real work here).
+
+## Progress Log
+
+- **context-scout 2026-08-01**: populated context_scope (3 entries).

@@ -47,6 +47,12 @@ source:
 resolved_by:
 locked_by: live-defi-rollout
 locked_since: 2026-05-21
+context_scope:
+  [
+    /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
+    /codex/04-architecture/agent-orchestrator-overview.md,
+    agent-orchestrator/server/auto_park.py,
+  ]
 ---
 
 # AO: partial-disposition "park it" blocked-answers have no automatic follow-through
@@ -82,6 +88,7 @@ locked_since: 2026-05-21
   'Pick one: (a) ... and/or (b) ...' between two design approaches for closing a disposition-to-action follow-through
   gap in agent-orchestrator's core dispatch/backlog mechanism (adding a POST /api/backlog/{id}/park endpoint, and/or a
   backend-surfaced operator a...
+- **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).
 
 ## Codex SSOTs
 

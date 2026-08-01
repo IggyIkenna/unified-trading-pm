@@ -44,6 +44,13 @@ locked_by:
 locked_since:
 resolved_by:
 depends_on: []
+context_scope:
+  [
+    market-tick-data-service/market_tick_data_service/cli/handlers/onchain_perp_batch_handler.py,
+    unified-trading-library/unified_trading_library/manifest_writer/_writer.py,
+    /plans/archive/2026_07/cefi_satellite_ao_dispatch_batch1_2026_07_25.md,
+    /plans/archive/issues/defi_fold_manifest_registration_pending_2026_07_21.md,
+  ]
 ---
 
 # ASTER raw-trade capture — manifest registration gap
@@ -155,6 +162,10 @@ depends_on: []
 - Closed todo 2 (P1). See the todo's own evidence line for the full mechanism + verification. Shipped
   `market-tick-data-service@9415ef7a`. P2 (re-scope `cefi_satellite_ao_dispatch_batch1-001`'s ASTER leg) remains — not
   started this session.
+
+## Progress Log (2026-08-01)
+
+- **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).
 
 ## Not yet checked (deliberately out of scope for this discovery pass)
 

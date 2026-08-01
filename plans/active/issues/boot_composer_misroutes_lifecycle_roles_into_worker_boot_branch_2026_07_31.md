@@ -46,6 +46,13 @@ resolved_by:
 locked_by:
 locked_since:
 depends_on: []
+context_scope:
+  [
+    agent-orchestrator/server/prompts.py,
+    agent-orchestrator/server/autospawn.py,
+    agent-orchestrator/server/routes/slots_worker.py,
+    agents/review.md,
+  ]
 ---
 
 # What was reported
@@ -199,3 +206,7 @@ cefi-specific** — same defect now reproduced on a second tranche.
   `slot_role` field explicitly in the STEP 2 curl example, so a scheduled one-shot agent doesn't have to rediscover this
   by code-reading every time. Not filing as a separate todo — folds naturally into the composer-guard fix already
   tracked above.
+
+## Progress Log
+
+- **context-scout 2026-08-01**: populated context_scope (4 entries).

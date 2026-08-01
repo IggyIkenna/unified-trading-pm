@@ -47,6 +47,12 @@ supersedes:
 superseded_by:
 resolved_by:
 depends_on:
+context_scope:
+  [
+    /plans/epics/escalation_and_disaster_recovery_master.md,
+    /plans/active/issues/regen_positional_task_ids_not_content_stable_2026_07_17.md,
+    agent-orchestrator/server/dispatch.py,
+  ]
 source:
   - "ao_dispatch_hardening_2026_07_16 Deferred tables (2026-07-16 + 2026-07-17), at its archival. Only the items with NO
     other home are carried here; the rest cite their existing owner and are deliberately not duplicated."
@@ -166,3 +172,4 @@ source:
 - **na-eligibility-audit 2026-07-30**: KEEP-NA, valid (infra tranche, dispatch agt-30721a) — All 3 open todos cite an
   explicit current blocking condition (a paused epic, an unresolved upstream design call, a void-pending-retest
   measurement) — genuine external/design gates, not defaulted work.
+- **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).

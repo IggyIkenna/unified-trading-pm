@@ -34,6 +34,12 @@ execution_scope: local-only
 drift_direction: advance-code
 depends_on: []
 last_updated: 2026-07-30
+context_scope:
+  [
+    /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
+    /plans/active/ci_satellite_ao_dispatch_batch4_2026_07_31.md,
+    deployment-service/terraform/cloud-build/aws/main.tf,
+  ]
 ---
 
 > **🟡 STATE 2026-07-30 — backend LIVE, import DELIBERATELY NOT DONE.** The S3 state backend is stood up and
@@ -199,3 +205,7 @@ judgment call). Independently corroborated by the sibling `/ag-closeout-audit ci
 `ci_satellite_ao_dispatch_batch4_2026_07_31.md` (row D4-6): deferred on the identical D1-D4 rulings table, also noting
 batch1's earlier "blocked on AWS credits" framing is now stale (the S3 backend is up; the real blocker is the rulings
 table). No reclassification, no stale items to close.
+
+## Progress Log
+
+- **context-scout 2026-08-01**: populated context_scope (3 entries).

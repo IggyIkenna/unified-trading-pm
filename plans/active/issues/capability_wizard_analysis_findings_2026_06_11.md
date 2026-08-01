@@ -27,6 +27,12 @@ execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
 last_updated: 2026-07-31
+context_scope:
+  [
+    /plans/active/issues/capability_wizard_gap_discovery_2026_06_11.md,
+    /plans/archive/2026_07/capability_wizard_and_manifest_2026_06_11.md,
+    /codex/04-architecture/execution-algorithm-selection.md,
+  ]
 ---
 
 # Capability wizard — analysis findings (bugs / conflicting truths / dual implementations)
@@ -828,3 +834,7 @@ F49–F53 are FIXED as of 2026-06-14); trust this table. Status taxonomy: **FIXE
       transient PM version-alignment flap (local trailing main while the 5-day backlog drained fleet-wide); a watcher
       landed it the moment alignment held stably green. Root cause was already fixed + deployed: `semver-agent.yml.tmpl`
       apply step commits the bump with NO `[skip ci]` (2026-06-09) and was rolled out to all 24 repos 2026-06-15.
+
+## Progress Log
+
+- **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).

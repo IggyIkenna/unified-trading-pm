@@ -38,6 +38,13 @@ superseded_by:
 resolved_by:
 source: ["cross_cutting_satellite_ao_dispatch_batch1b-006, slot 14, 2026-07-28"]
 drift_direction: advance-code
+context_scope:
+  [
+    /plans/active/issues/defi_hyperliquid_perp_funding_derivative_ticker_divergence_2026_07_28.md,
+    /plans/active/issues/perp_funding_data_semantics_and_cadence_2026_06_16.md,
+    deployment-service/scripts/vm/launch-cefi-hl-aster-historical-backfill.sh,
+    market-tick-data-service/market_tick_data_service/cli/handlers/perp_funding_handler.py,
+  ]
 ---
 
 # Aster perp-funding backfill — stale launcher + genesis conflict (2026-07-28)
@@ -182,3 +189,4 @@ is confirmed. Also update the parent plan's leg (c) text to stop citing the reti
   `mtds_available_at_cross_asset_backfill_2026_07_13-002`) rather than continuing to re-dispatch it fleet-wide for the
   same unanswered blocker. Released via `/skip-current-task {"reason_code": "BLOCKED"}` on the parent todo; posting a
   `/blocked` recommending the park.
+- **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).

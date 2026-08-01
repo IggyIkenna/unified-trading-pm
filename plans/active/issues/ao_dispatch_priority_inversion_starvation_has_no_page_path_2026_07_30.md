@@ -69,6 +69,13 @@ drift_direction: advance-code
 depends_on: []
 resolved_by:
 locked_by:
+context_scope:
+  [
+    /codex/04-architecture/agent-orchestrator-alerting.md,
+    /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
+    /plans/active/issues/cefi_content_migration_fleet_half_incomplete_2026_07_26.md,
+    agent-orchestrator/server/dispatch_priority_inversion_watchdog.py,
+  ]
 ---
 
 # AO dispatch priority-inversion / plan-slot starvation has no page path
@@ -162,3 +169,4 @@ this, each time invisible until someone reads the backlog by hand.
   `[REVIEW] P0` todo explicitly naming this doc for the standard 6-step archival ritual once its extraction is
   reconciled back. Archiving it here would duplicate that already-queued AO work. `assigned_vm` left as-is (`NA` —
   archival-pending status, not a dispatch-eligibility question).
+- **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).

@@ -55,6 +55,13 @@ source:
   Drift orphan-cleanup task, 2026-07-16 — discovered via `rg -n -i 'drift|pacifica'
   unified_api_contracts/internal/architecture_v2/` while tracing why UI's `venue_set_variants` still lists Drift.
 resolved_by:
+context_scope:
+  [
+    unified-api-contracts/scripts/generate_ui_reference_data.py,
+    unified-trading-system-ui/lib/registry/ui-reference-data.json,
+    unified-trading-system-ui/lib/architecture-v2/lifecycle.ts,
+    /plans/active/defi_consolidated_closeout_2026_07_18.md,
+  ]
 ---
 
 # architecture_v2 strategy-archetype subsystem still has live DRIFT venue references
@@ -225,3 +232,4 @@ and the generator/UI structural-skew investigation — see "Recommended next ste
 
 - **na-eligibility-audit 2026-07-30**: KEEP-NA, valid - bundles a strategy-domain delete-vs-re-leg decision with a
   generator/UI structural-skew investigation the doc says likely needs its own plan
+- **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).

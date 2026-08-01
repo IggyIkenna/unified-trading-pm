@@ -37,6 +37,11 @@ depends_on: []
 locked_by: live-defi-rollout
 locked_since: 2026-05-21
 resolved_by:
+context_scope:
+  [
+    /plans/archive/2026_07/bybit_futures_chain_write_shape_migration_2026_07_13.md,
+    /codex/02-data/data-pipeline-correctness-hard-rule.md,
+  ]
 ---
 
 # BYBIT futures_chain write-shape inconsistency (3 shapes across history)
@@ -139,3 +144,4 @@ workspace).
   as this todo is open, superseding the prior entry's ARCHIVE-worthy note above. Kept `assigned_vm: NA` here (no
   operator ruling taken on re-promoting it to AO-dispatched) — a future `/na-eligibility-audit` or operator call can
   reclassify it.
+- **context-scout 2026-08-01**: populated context_scope (3 entries).

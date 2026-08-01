@@ -34,6 +34,12 @@ drift_direction: advance-code
 depends_on: []
 resolved_by:
 locked_by:
+context_scope:
+  [
+    /plans/active/issues/ao_db_lock_storm_and_stuck_shutdown_outage_2026_07_26.md,
+    /plans/archive/issues/backlog_regen_drops_handtuned_prereqs_2026_07_12.md,
+    agent-orchestrator/server/regen_backlog_from_plan.py,
+  ]
 ---
 
 # Backlog park lost across a sibling-todo plan edit — 2026-07-30
@@ -132,3 +138,5 @@ not the dispatch-tooling gap). Suggested next steps:
   last-writer-lose the hand-tune independent of any content/position logic. Not chased further here (would be new
   scope); worth a follow-up only if the loss recurs. Shipped: `agent-orchestrator@727dab3` (test only; full local
   `quality-gates.sh` green — 2037 passed, 1 skipped; ruff/basedpyright clean).
+
+- **context-scout 2026-08-01**: populated context_scope (3 entries).

@@ -45,6 +45,7 @@ depends_on: []
 last_updated: 2026-07-17
 locked_by:
 locked_since:
+context_scope: [/codex/05-infrastructure/per-tab-worktrees.md, scripts/quickmerge.sh]
 ---
 
 # `--autostash` restores foreign WIP into the index → by-name `git add` does not scope your commit
@@ -153,3 +154,4 @@ owning agent carry on (their tree simply shows those files as already-committed 
   finalize drafts — no competing claim found. Also corrected `assigned_role: devops` -> `infra` (`devops` does not match
   any entry in the live `agents/*.md` registry; `infra` is the closest real role for this per-tab-worktrees/CLAUDE.md
   git-mechanics fix).
+- **context-scout 2026-08-01**: populated context_scope (2 entries).

@@ -64,6 +64,12 @@ resolved_by:
 locked_by:
 locked_since:
 depends_on: []
+context_scope:
+  [
+    deployment-service/terraform/gcp/bucket_iam_per_tier_sa.tf,
+    /plans/active/issues/bucket_iam_p2_tier_sa_scope_gap_and_default_compute_sa_overprivilege_2026_07_30.md,
+    /plans/active/issues/pipeline_e2e_check_missing_env_flag_test_bucket_403_2026_08_01.md,
+  ]
 ---
 
 # Group A `market-data-tick-` IAM condition is missing its per-asset-group segment
@@ -284,3 +290,7 @@ single flat un-enumerated prefix as before. The recommended fix's `group_a_flat_
 - [x] ✅ [DATA] P2. **DONE 2026-08-01 (slot 15)** — see the CORRECTION section above. Track K (IS) hits the identical
       identity-level block, on `instruments-store-` specifically. MTDS/features not independently re-checked this pass
       (features already confirmed fixed per the sibling `--env staging` doc; MTDS unconfirmed).
+
+## Progress Log
+
+- **context-scout 2026-08-01**: populated context_scope (3 entries).

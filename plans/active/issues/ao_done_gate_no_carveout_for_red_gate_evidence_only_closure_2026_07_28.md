@@ -42,6 +42,13 @@ drift_direction: advance-code
 depends_on: []
 resolved_by:
 locked_by:
+context_scope:
+  [
+    /codex/02-data/data-pipeline-correctness-hard-rule.md,
+    /plans/active/data_completion_cefi_2026_07_15.md,
+    /plans/active/task_template.md,
+    agent-orchestrator/server/verify.py,
+  ]
 ---
 
 # /done checkbox-flip verification has no carve-out for RED-gate evidence-only closure
@@ -264,3 +271,4 @@ forces an operator/main manual DB patch outside the normal flow.
   which could mislead a future reader into thinking the 2026-07-30 RECLASSIFY is still the live state. The one open item
   (`[DOC] P3`, BLOCKED-marker convention for `task_template.md`) is small and unblocked, but the doc as a whole is
   correctly NA per the revert.
+- **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).

@@ -42,6 +42,13 @@ source: ["2026-07-30 AO scheduled-skills benchmark + ruled-decisions execution s
 resolved_by:
 locked_by:
 depends_on: []
+context_scope:
+  [
+    /cursor-configs/skills/plan-reconcile/SKILL.md,
+    /cursor-configs/skills/na-eligibility-audit/SKILL.md,
+    /plans/active/issues/plan_reconcile_autonomous_sweep_2026_07_30.md,
+    /plans/active/issues/docs_reconcile_autonomous_sweep_2026_07_30.md,
+  ]
 ---
 
 # 2026-07-30 mega-session status ledger
@@ -257,3 +264,4 @@ and shipped — do NOT re-run those two if resuming from the script (their branc
   written at a compaction boundary, deliberately self-described as a resume-point for a fresh session. Two days later
   (today 2026-08-01), direct verification shows the great majority of its 12 open items are already resolved via other
   docs/commits that po...
+- **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).

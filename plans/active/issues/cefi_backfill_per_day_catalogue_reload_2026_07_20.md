@@ -44,6 +44,13 @@ source:
     "discovered 2026-07-20 while accelerating the HL trades full-universe backfill (operator: 'surely you don't need to
     reload same catalogue each day you can cache it load once no?')",
   ]
+context_scope:
+  [
+    /plans/archive/issues/vm_startup_scripts_no_auto_rollout_to_gcs_2026_07_19.md,
+    market-tick-data-service/market_tick_data_service/cli/handlers/_onchain_perp_batch_symbols.py,
+    deployment-service/scripts/vm/setup-data-pipeline-vm.sh,
+    deployment-service/scripts/vm/launch-cefi-hl-aster-historical-backfill.sh,
+  ]
 ---
 
 # cefi backfill re-loads the catalogue + re-resolves the universe every day
@@ -108,3 +115,4 @@ parallelism (fleet still does ~565 catalogue reloads total). The proper fix abov
 - **na-eligibility-audit 2026-07-30** (tranche=cefi, autonomous): KEEP-NA, valid - the sole todo is an unresolved choice
   between two architectures (range-loop in one process vs a cross-process catalogue cache), one of which changes the
   shared VM startup script fleet-wide.
+- **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).

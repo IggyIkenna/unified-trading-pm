@@ -48,6 +48,12 @@ execution_scope: local-only
 assigned_role: backend_engineer
 drift_direction: advance-code
 depends_on: []
+context_scope:
+  [
+    agent-orchestrator/server/regen_backlog_from_plan.py,
+    /cursor-configs/CLAUDE.md,
+    /plans/active/infra_capture_and_devops_leftovers_2026_07_06.md,
+  ]
 ---
 
 # `_NON_DISPATCHABLE_RE` swallows already-ruled todos that restate the old `BLOCKED-*` marker in past tense
@@ -198,3 +204,4 @@ past tense rather than deleting it outright.
     needed a correction (1 credential-marker restoration done previously, 1 numeric-fact correction done this session)
     and 1 file got a minor doc-hygiene checkbox flip; the remaining 21 mentions across 13 files are genuinely
     dispatchable as rephrased. Shipped: `unified-trading-pm` (this commit, files listed above).
+- **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).

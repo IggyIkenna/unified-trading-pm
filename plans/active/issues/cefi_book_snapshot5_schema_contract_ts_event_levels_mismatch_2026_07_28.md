@@ -99,6 +99,13 @@ last_updated:
   worker-spawn of one event to two slots, not a re-evaluated condition; confirmed all 5 fix commits still hold, live
   re-read skipped per established precedent. deployment-service@a564cca's materiality fix continues correctly labeling
   this cell STATIC BACKLOG (71 rows/24h, below the 500-row floor) instead of Fresh.)
+context_scope:
+  [
+    /codex/05-infrastructure/data-pipeline-alerts.md,
+    /plans/archive/issues/cefi_tardis_write_schema_contract_column_mismatch_2026_07_27.md,
+    /plans/active/issues/cefi_high_attempted_failed_batch_cluster_2026_07_23.md,
+    market-tick-data-service/market_tick_data_service/market_interface/adapters/tradfi/tardis_adapter.py,
+  ]
 ---
 
 # CeFi `book_snapshot_5` schema-contract mismatch -- root cause + fix (2026-07-28)
@@ -683,3 +690,4 @@ against the reproduction script.
   is now the 17th+ dispatch for this condition, further corroborating
   `dp_escalation_worker_dispatch_no_open_issue_check_2026_07_29.md`'s still-open Option A recommendation for dedup at
   the orchestrator dispatch layer.
+- **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).
