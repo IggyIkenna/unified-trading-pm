@@ -89,20 +89,54 @@ embedding `20260730`/`20260731`/`20260801`, ~1050 total launches in that date ra
   HISTORICAL-file backfill path (walking backward through history from 2026-02-01), a DIFFERENT code path than the
   live-WebSocket wire-shape parsing the `4f244845`/`8a6bbc97` fixes target. **This VM is likely NOT exposed to those
   specific fixes** — recording this as a negative finding so a follow-up doesn't re-spend time chasing it.
-- I could not locate a genuine PRODUCTION continuous live-capture VM launch (as opposed to `mtds-live-smoke-*` VMs,
-  which all predate the outage window, `2026-07-26`–`2026-07-28`) inside the `2026-07-30T13:02Z`–`2026-08-01T12:42Z`
-  window via VM-name grep. Two possibilities, unresolved: (a) live cefi capture runs via a long-lived process/deployment
-  that was NOT relaunched during this window (in which case it's running whatever code it booted with, likely pre-dating
-  2026-07-30 entirely — an orthogonal risk, not caused by this specific tarball-refresh outage), or (b) the actual
-  live-capture launcher uses a VM-naming convention my grep patterns (`cefi`+`live`, `okx`, `binance`, `aster`,
-  `hyperliquid`, `lighter`, `extended`) missed.
+- **UPDATE (2026-08-01, todo #1 follow-up) — the production continuous live-capture VM IS located, and it DID restart
+  inside the window.** The naming-convention gap in the original pass (b) is resolved: the launcher is
+  `deployment-service/scripts/vm/launch-mtds-live-cefi-consolidated.sh` (startup: `setup-cefi-live-consolidated-vm.sh`),
+  VM name prefix `mtds-live-cefi-consolidated-` — a SINGLE consolidated GCE VM (Pattern A tarball boot,
+  `lifecycle_class=LONG_LIVED_LIVE`, `VM_SHUTDOWN_ON_COMPLETION=false`) that runs all 17 MVP CeFi websocket-streaming
+  shards
+  (`python -m market_tick_data_service --operation websocket-streaming --mode live --asset-group CEFI --shard-spec cefi:<VENUE>:<data_type> --mvp-mode`,
+  one per venue×data_type) as background processes supervised by an in-VM bash loop that restarts individual DEAD SHARD
+  PROCESSES every 60s. **That shard-level restart re-execs the SAME already-installed venv/tarball — it does NOT
+  re-fetch code.** The MVP shard list (`setup-cefi-live-consolidated-vm.sh` §6) includes exactly the venues/data_types
+  the stale-window fixes target: `BINANCE-FUTURES:trades`, `BINANCE-FUTURES:book_snapshot_5`,
+  `OKX-FUTURES:trades/book_snapshot_5/derivative_ticker`, `ASTER:book_snapshot_5`/`liquidations`.
+  (KALSHI_PERP/POLYMARKET_PERP/HYPERLIQUID `perp_funding` — the `fb32fb65` revert's venues — are NOT in this VM's shard
+  list at all; that data_type is captured via a different mechanism, out of this VM's scope — narrows todo #2's manifest
+  check to a separate capture path for those three.)
+
+  **VM-level restart cadence: NONE automatic.** `lifecycle_class=LONG_LIVED_LIVE` (`vm_prefix_registry.py:1021`) is
+  documented + code-enforced as "run until operator tears them down" (`heartbeat_stall_watcher.py:97,396`: "a
+  live-capture producer must never be auto-killed"); the launcher is also singleton-locked (refuses a second concurrent
+  launch). So the ONLY way this VM gets a fresh tarball pull is a **manual** operator delete+relaunch, or an unplanned
+  crash/preemption forcing a manual relaunch — never an automated cadence.
+
+  **Confirmed: a relaunch DID land inside the stale window.** `gcloud compute instances list` shows exactly one
+  currently-RUNNING instance: `mtds-live-cefi-consolidated-20260731-211041`, `creationTimestamp 2026-07-31T21:10:49Z` —
+  squarely inside `2026-07-30T13:02Z`–`2026-08-01T12:42Z`. GCS heartbeat-blob history
+  (`vm-heartbeat/mtds-live-cefi-consolidated-*.txt`) shows an EARLIER incarnation,
+  `mtds-live-cefi-consolidated-20260730-010147` (created `2026-07-30T01:01:47Z`, BEFORE the window opened) — so the VM
+  was torn down and relaunched at some point between `07-30T01:01` and `07-31T21:10`, and that relaunch landed inside
+  the window. The current instance's metadata carries no `*_TARBALL_SHA` pin and GCS has no
+  `vm-logs/mtds-live-cefi-consolidated-20260731-211041/TARBALL_PINS.json` — fully floating, confirming it fetched
+  whatever `mtds-code.tar.gz` was live in GCS at its `2026-07-31T21:10:49Z` boot. Per this doc's own tarball-manifest
+  table, the floating tarball was NOT rebuilt between `2026-07-30T13:02Z` and `2026-08-01T12:42:24Z` — so this exact
+  boot fell inside the dead zone and would have pulled the PRE-FIX tarball, missing both `4f244845`
+  (BINANCE-FUTURES/ASTER, landed `2026-07-30T17:07:09Z` — before this boot) and `8a6bbc97` (OKX-FUTURES, landed
+  `2026-07-30T22:55:39Z` — also before this boot). **This resolves the original "could not locate" uncertainty: the
+  production live-capture host DID restart inside the window, unpinned, on exactly the affected venues** — todo #2's
+  manifest check is now the confirming step, not a speculative one, and should be treated as high-urgency.
 
 ## Why it matters
 
 - Two of the unpicked-up fixes are explicitly self-described by their own commit message as "fixes 100% empty live
-  capture" for BINANCE-FUTURES/ASTER and OKX-FUTURES — if a live-capture host DID restart/relaunch and pull the floating
-  `mtds-code` tarball inside the 47.5h window, it would have captured ZERO rows for those venues the entire time it ran
-  on the stale tarball, silently (this is the exact same failure class root-caused in
+  capture" for BINANCE-FUTURES/ASTER and OKX-FUTURES — **confirmed** (see updated finding above): the production
+  `mtds-live-cefi-consolidated-*` VM DID restart/relaunch and pull the floating `mtds-code` tarball inside the 47.5h
+  window (boot `2026-07-31T21:10:49Z`, unpinned), and its MVP shard list runs exactly these venues/data_types. Unless
+  todo #2's manifest check shows otherwise, this VM would have captured ZERO rows for BINANCE-FUTURES
+  trades/book_snapshot_5, OKX-FUTURES trades/book_snapshot_5/derivative_ticker, and ASTER book_snapshot_5/liquidations
+  from its boot until the tarball was finally rebuilt (`2026-08-01T12:42:24Z`) or until an operator manually relaunched
+  it again — silently (this is the exact same failure class root-caused in
   `defi_morpho_lending_indices_never_wired_2026_07_12.md`, the incident `lc_verify_tarball_freshness` itself was built
   to catch — but `warn` mode never blocks).
 - The `fb32fb65` revert describes ACTUAL, CONFIRMED data loss ("silently dropped every kalshi_perp/polymarket_perp/
@@ -114,9 +148,14 @@ embedding `20260730`/`20260731`/`20260801`, ~1050 total launches in that date ra
 
 ## Todos
 
-- [ ] [DATA] P1. Identify the actual deployment mechanism for continuous live CEFI tick capture (VM vs. long-lived
+- [x] ✅ [DATA] P1. Identify the actual deployment mechanism for continuous live CEFI tick capture (VM vs. long-lived
       service/Pub/Sub-fed process) — confirm whether it restarts/relaunches on any cadence, and if so, whether that
-      cadence intersected `2026-07-30T13:02Z`–`2026-08-01T12:42Z`. (repo: market-tick-data-service)
+      cadence intersected `2026-07-30T13:02Z`–`2026-08-01T12:42Z`. (repo: market-tick-data-service) — **pure
+      investigation, no code change needed. Confirmed via live GCE/GCS evidence, see updated "What I found" above:
+      single consolidated GCE VM (`mtds-live-cefi-consolidated-*`, `LONG_LIVED_LIVE`, Pattern A tarball boot), NO
+      automated restart cadence (operator-manual relaunch only, singleton-locked, never auto-killed), and the
+      currently-running instance (`-20260731-211041`) booted `2026-07-31T21:10:49Z` — inside the stale window,
+      unpinned.**
 - [ ] [DATA] P1. Check manifest `capture_status`/row-counts for `BINANCE-FUTURES`, `ASTER` (`book_snapshot_5`),
       `OKX-FUTURES` (`derivative_ticker`), and `KALSHI_PERP`/`POLYMARKET_PERP`/`HYPERLIQUID` `perp_funding` for
       `2026-07-30` through `2026-08-01`. A confirmed zero/empty-row stretch for any of these during the relevant
