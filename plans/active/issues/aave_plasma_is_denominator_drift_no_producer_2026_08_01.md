@@ -9,7 +9,7 @@ summary: >-
   via factory.py's ADAPTER_DATA_SOURCE mapping ("aave_v3": "thegraph"), and Plasma has no subgraph — RPC-only fallback
   per the same doc's P2 scoping). This breaks the denominator drift-guard invariant fleet-wide in instruments-service's
   quality-gates.sh, blocking every unrelated commit from shipping via quickmerge --agent.
-status: open
+status: resolved
 nature: issue
 asset_group: [defi]
 stage: [data]
@@ -30,7 +30,7 @@ priority: P1
 estimate_class: refactor
 assigned_role: data_engineering
 drift_direction: advance-code
-resolved_by:
+resolved_by: instruments-service@a340e34c
 locked_by:
 source: >-
   Discovered 2026-08-01 (slot-10, data_engineering craft) while shipping an unrelated instruments-service change (real
@@ -108,14 +108,28 @@ Two possible resolutions — needs a real investigation/judgment call, not a bli
    `test_defi_set_equals_uac_denominator_drift_guard` (same class as the sports exemption) plus a matching fix to
    `test_rule11_per_ag_dedup_target_counts_byte_unchanged`'s hardcoded count.
 
-- [ ] [DATA] P1. Investigate which of the two resolutions above is correct for AAVE-PLASMA (read
+- [x] ✅ [DATA] P1. Investigate which of the two resolutions above is correct for AAVE-PLASMA (read
       `adapters/defi/aave_v3.py` + `lending_indices_rpc.py` closely; consult the Aave Plasma market's actual on-chain
       shape — is there a per-market instrument concept distinct from the lending-rate time series MTDS already
       captures?), then implement it: either the genuine RPC producer (option 1) or the documented test exemption (option
       2). Repo: instruments-service (+ unified-api-contracts if option 1 needs a `venue_adapter_keys.py` correction).
       **Done when**: `quality-gates.sh` green in instruments-service with both
       `test_defi_set_equals_uac_denominator_drift_guard` and `test_rule11_per_ag_dedup_target_counts_byte_unchanged`
-      passing (fixed forward, not skipped), and `RB-151dfbac` resolves.
+      passing (fixed forward, not skipped), and `RB-151dfbac` resolves. — **instruments-service@a340e34c**: resolved
+      **Option 1** (genuine RPC producer) — read `aave_v3.py`'s existing OPTIMISM static-fallback +
+      `lending_indices_rpc.py` closely and confirmed AAVE-PLASMA DOES have a real per-market instrument concept
+      (aToken/debtToken per reserve, same as every other AAVE_V3-* venue) discoverable via the SAME
+      `AaveProtocolDataProvider.getAllReservesTokens()` RPC call MTDS already uses against this exact contract (proven
+      working, 18 rows captured); Option 2's exemption premise ("no IS instrument-discovery concept applies") was
+      verified FALSE, so building the exemption would have been dishonest. Added
+      `AaveV3ReferenceDataAdapter._get_plasma_reserves_via_rpc()` (routes `chain=="PLASMA"` before the subgraph path) +
+      a new `aave_v3_plasma_rpc.py` module (web3.py Contract walk against `getAllReservesTokens` +
+      `getReserveTokensAddresses` + `getReserveConfigurationData`, isolated into its own file so its inherently dynamic
+      typing doesn't loosen the rest of `aave_v3.py`'s basedpyright baseline — same split MTDS itself used). Total-fetch
+      failure raises (honest `attempted_failed`, not `empty_confirmed`); a single reserve's detail-call failure is
+      shard-isolated (log + skip). 9 new unit tests (mocked `web3.Web3`, no live network) all green. Full
+      `quality-gates.sh`: PASSED (155s) — both cited tests pass; `RB-151dfbac` should already read resolved via
+      slot-11's earlier fix (2de31f0d) which is what actually turned the fleet-wide QG green.
 
 ## Progress Log
 
@@ -125,3 +139,12 @@ Two possible resolutions — needs a real investigation/judgment call, not a bli
   waiting; confirmed a naive `_STATIC_DEFI_VENUES` one-liner would be WRONG (subgraph-only adapter, Plasma has no
   subgraph) so did not attempt the fix myself — out of craft/task scope, genuine judgment call. Repo-blocker
   `RB-151dfbac` stays open as the passive wait mechanism.
+- 2026-08-01 (slot-14, data_engineering craft): Dispatched the P1 todo above. Found slot-11 had already landed
+  `instruments-service@2de31f0d` in the interim (fleet-wide QG-red fix: added `AAVE-PLASMA` to `_STATIC_DEFI_VENUES`
+  - bumped the DEFI dedup count 100→101 — this is what actually resolved `RB-151dfbac`'s fleet-blocking urgency). That
+    fix satisfied the denominator-SET equality test but left the deeper gap this issue's own "Why it matters" section
+    called out: `aave_v3.py`'s `get_instruments()` has no chain routing for `PLASMA` (only `OPTIMISM`), so it fell
+    through to the subgraph path, which returns `[]` for Plasma (no subgraph_id) — a genuine expected-but-always-empty
+    producer, silently returning 0 instruments forever. Investigated + resolved per the todo above (Option 1, genuine
+    RPC producer) — see the todo's own resolution note for the full technical detail. Shipped
+    `instruments-service@a340e34c` (verified on origin), full `quality-gates.sh` green. Status → resolved.
