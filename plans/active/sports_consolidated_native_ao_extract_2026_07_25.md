@@ -444,11 +444,39 @@ context_scope:
       Report (hand-completed from VM `run.log` ground truth after both local driver polls hit their own wrapper timeout
       — VMs ran to genuine completion independently): `plans/audit/results/data_pipeline_e2e_check_mdps_2025_12_24.md`.
       **Checkpoint 3/3 (final, day=2025-12-18) remains** for next dispatch.
-- [ ] [DATA] P1. **Track K (features) — run + cite 3 dated checkpoints (baseline/mid/final) for
+- [x] ✅ [DATA] P1. **Track K (features) — run + cite 3 dated checkpoints (baseline/mid/final) for
       `data-pipeline-check-features` against sports.** Split 2026-08-01, see Track K (IS) above for the split rationale.
       Use `SPORTS_SMOKE_DATES` as the reference dates. (repo: features-service, skill-driven). **Done when**: 3 dated
       runs cited by report path/dispatch_id, baseline through final. Source:
-      `sports_consolidated_closeout_2026_07_19.md:665-669`.
+      `sports_consolidated_closeout_2026_07_19.md:665-669`. **DONE 2026-08-01 (slot 13) — all 3 genuine passes, no
+      `empty_confirmed`.** An earlier same-session baseline attempt hit `empty_confirmed` (17/17 sports reference
+      entities missing) because sports reference-data reads were routing to the never-seeded `-stg-` tier —
+      root-caused + fixed same-session (`features-service@72393fbf`/`@8ea48a33`, issue doc
+      `plans/active/issues/features_sports_env_staging_reads_empty_staging_reference_data_2026_08_01.md`), then ALL
+      THREE checkpoints re-run fresh against the fix: - **Checkpoint 1/3 (baseline, day=2025-12-20)**: total=2 passed=2
+      failed=0. Force leg wrote 6 real parquet files (`manifest=captured`); skip leg genuine (byte-unchanged). Report:
+      `plans/audit/results/data_pipeline_e2e_check_features_2025_12_20.md`. - **Checkpoint 2/3 (mid, day=2025-12-24)**:
+      total=2 passed=2 failed=0. Force leg wrote 4 real parquet files (`manifest=captured`); skip leg genuine. Report:
+      `plans/audit/results/data_pipeline_e2e_check_features_2025_12_24.md`. - **Checkpoint 3/3 (final,
+      day=2025-12-18)**: total=2 passed=2 failed=0. Force leg wrote 6 real parquet files (`manifest=captured`); skip leg
+      genuine. Report: `plans/audit/results/data_pipeline_e2e_check_features_2025_12_18.md`.
+
+      Cross-day diagnostic (VM `run.log` ground truth, all 3 dates): 11-12/17 sports reference entities read real rows
+          from PROD via the now-working source-bucket override; `entity=fixtures`/`fixtures_schedule` specifically still
+          404s on the never-provisioned `-stg-` bucket via `gcs_read_reference_fixtures` (a narrower, entity-scoped residue
+          of the same gap — noted for whoever next touches the issue doc above), so `derived_features`/`fixture_features`
+          correctly record `EMPTY ... confirmed empty` for that one input while the rest of the family's feature groups
+          compute for real — this is why every checkpoint's shard-level verdict is a genuine `captured` pass (real parquet
+          count > 0) rather than a blanket `empty_confirmed`.
+
+          **Session note**: this task's worker session crashed mid-flight after the first (sequential) round of runs;
+          the resumed session found the repo tree hard-reset to origin (losing 2 already-completed report files that were
+          never committed) — re-ran all 3 checkpoints a second time in parallel to recover, this time committing each
+          report immediately on completion. That parallel re-run also reproduced + explains a separate, real tooling
+          defect (two same-cell/different-day launches racing to an identical VM name within the same UTC second — this
+          instance's result was independently verified correct, not corrupted by it): filed
+          `plans/active/issues/features_pipeline_e2e_check_vm_name_collision_same_second_2026_08_01.md`.
+
 - [x] ✅ [DATA] P1. **Track K (reconciliation) — run + cite 3 dated checkpoints (baseline/mid/final) for
       `/data-pipeline-reconciliation` against sports.** DONE 2026-08-01 (slot 8, dispatched sub-agent) — 3 dated reports
       now exist: baseline `plans/audit/results/data_pipeline_reconciliation_sports_2026_07_20.md`, mid
