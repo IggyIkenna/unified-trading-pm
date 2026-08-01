@@ -113,10 +113,17 @@ screens lost.
       longer exists as a route (folded into `/deployments`, per `deployment-ui@50a6947` "merge live/batch/paper into one
       Deployments tab"); the other 6 routes still exist in `src/App.tsx` today, but as the ONE canonical route for their
       screen, not a duplicate. Nothing left to decide here.
-- [ ] [UI] P3. **Delete the 3 dead pages** — `pages/DeploymentsList.tsx`, `pages/DeployTrigger.tsx`,
-      `pages/DeploymentHistory.tsx`. Verified imported by nothing (they are an earlier generation of the UI); the
-      workspace rule is "delete deprecated code, no shims". Check `api/deploymentApi.ts` / `types/deploymentTypes.ts`
-      for consumers that die with them.
+- [x] ✅ [UI] P3. **Delete the 3 dead pages** — `pages/DeploymentsList.tsx`, `pages/DeployTrigger.tsx`,
+      `pages/DeploymentHistory.tsx`. `DeploymentsList.tsx` was already removed by an unrelated 2026-07-17 refactor
+      (`079b29e`). Deleted the remaining two (verified imported by nothing — `App.tsx` only wires the distinct,
+      actively-routed `components/DeploymentHistory.tsx`); their unique consumers in `api/deploymentApi.ts`
+      (`fetchServices`, `triggerDeploy`, `fetchDeploymentHistory`, `rollbackDeployment`) and the now fully-unreferenced
+      `types/deploymentTypes.ts` died with them, plus the matching dead vitest block. Regenerated the orphan-audit
+      baseline: `DeployTrigger.tsx`'s dead `navigate("/")` cancel-button call was the only recorded incoming edge to `/`
+      — removing it flagged `/` as a new orphan, same class as the 6 already-baselined bookmark-compat redirects
+      (`/repos`, `/ops/*`), not a whitelist candidate. Regression:
+      `tests/smoke/{routes,nav_and_header,top-nav-bar,app}.spec.ts` (87 tests) green. QG green
+      (typecheck/lint/orphan-audit/unit/build). `deployment-ui@98e2c7a`.
 - [ ] [UI] P3. **Add a real 404 route** so `*` stops silently rendering Overview for unknown URLs. This is what let
       `/infra` "work" while showing the wrong screen for weeks — the bug was invisible precisely because the catch-all
       always renders _something_.
@@ -131,7 +138,7 @@ screens lost.
 | ---------------------------------------- | ------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | Dropdown vs bar — keep one               | ✅ **RULED 2026-07-28, SHIPPED 2026-08-01**             | Kept the bar, deleted the dropdown — functional edge (survives every route), not a taste call. deployment-ui@32c0999. See the todo above.                                                                                |
 | Delete the 7 duplicate standalone routes | **Operator-owned**                                      | Operator wants to compare chromes first. Mechanical once decided.                                                                                                                                                        |
-| Delete the 3 dead pages                  | **Not done**                                            | Blocked on nobody. Small + clear.                                                                                                                                                                                        |
+| Delete the 3 dead pages                  | ✅ **SHIPPED 2026-08-01**                               | `deployment-ui@98e2c7a`. See the todo above.                                                                                                                                                                             |
 | Real 404 instead of `*` → Overview       | **Not done**                                            | Blocked on nobody.                                                                                                                                                                                                       |
 | Per-service shell → real routes          | **Not done**                                            | Blocked on nobody, but it is the biggest chunk; do it AFTER the dropdown/bar call so the nav is settled.                                                                                                                 |
 | Diagnose the 5 mock/page row mismatches  | ✅ **Resolved 2026-07-28, gate fully green 2026-07-31** | Was NOT REPRODUCIBLE (2026-07-28) and the whole L2 gate is now 424/0 green (host-contention root cause, not app drift) — see `/plans/archive/issues/deployment_ui_l2_smoke_gate_red_2026_07_17.md` (archived, resolved). |
