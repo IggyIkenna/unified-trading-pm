@@ -208,5 +208,11 @@ script isn't invoked by `quality-gates.sh`), so none of this is actively blockin
       `unified-config-interface` (confirmed dead: no manifest dep, no source import); re-ran
       `check-pyrightconfig-extrapaths.py` — zero remaining warnings for trading-agent-service; `quality-gates.sh` green,
       shipped via quickmerge, landed + verified on `live-defi-rollout`.
-- [ ] [SCRIPT] P3. unified-trading-library: remove the 3 dead extraPaths, add the missing `unified-api-contracts`
-      extraPath in `pyproject.toml`. (repo: unified-trading-library)
+- [x] ✅ [SCRIPT] P3. unified-trading-library: remove the 3 dead extraPaths, add the missing `unified-api-contracts`
+      extraPath in `pyproject.toml`. (repo: unified-trading-library) — unified-trading-library@15ed0470. Removed
+      `unified-cloud-interface`/`unified-config-interface`/`unified-internal-contracts` (confirmed dead: no
+      `workspace-manifest.json` dep — only `unified-api-contracts` is declared —, no genuine source import (the only
+      grep hit was a docstring mention, not a real import), sibling dirs don't exist), added `unified-api-contracts`
+      (confirmed real manifest dep); re-ran `check-pyrightconfig-extrapaths.py` — zero remaining warnings for
+      unified-trading-library; `quality-gates.sh` green (179s, sentinel-verified, HEAD=15ed0470), shipped via
+      quickmerge, landed + verified on `live-defi-rollout`.
