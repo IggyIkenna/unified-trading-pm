@@ -127,8 +127,17 @@ premature).
 
 ## Todos
 
-- [ ] [OPERATOR] P1. Decide between option (A) (revert the `workspace-manifest.json` execution-service/
-      market-tick-data-service dependency entry) and option (B) (build a `check-dependency-alignment.py`
-      internal-dependency exception allowlist mirroring `PER_REPO_EXTERNAL_EXCEPTIONS`) — or confirm (A) per the
-      recommendation above and let it ship as a follow-up commit. This blocks EVERY code-carrying `unified-trading-pm`
-      quickmerge until resolved. (repo: unified-trading-pm, execution-service)
+- [x] ✅ [OPERATOR] P1. **RESOLVED-BY-MAIN 2026-08-01 (BLK-79fa7e88) — option A executed.** Removed the stale
+      `market-tick-data-service` entry from `workspace-manifest.json`'s `repositories.execution-service.dependencies`
+      (revert-to-known-good: the entry was added TODAY by `execution-service@050ed797` 08:28Z; PM code-pushes worked
+      fine before it, so no unverified build-ordering/SIT/Cloud-Build consumer risk). Added a one-line `notes` pointer
+      to the real sanctioned-exception SSOT (UAC `service_contract_map.py forbidden_exceptions` id
+      `execution_service_mtds_reader_dep` + `deprecation_ledger.yaml`) so the intent isn't lost. Verified
+      `check-dependency-alignment.py --json` now returns `"aligned": true, "issues": []`. Main's ruling: do NOT build
+      the generalized internal-exception allowlist now (premature machinery for N=1, and it would enshrine an
+      incorrect entry) — see the P3 follow-up below instead. (repo: unified-trading-pm)
+- [ ] [SCRIPT] P3. If a SECOND `internal_in_manifest_not_pyproject`-class mismatch shows up for a different
+      UAC-tracked `forbidden_exceptions` tech-debt import (i.e. this recurs), build the
+      `check-dependency-alignment.py` internal-dependency exception allowlist (option B above — mirrors the existing
+      `PER_REPO_EXTERNAL_EXCEPTIONS` / `dependency-exceptions.yaml` pattern) instead of hand-reverting the manifest
+      entry again. Guarded on recurrence — do not build pre-emptively for N=1. (repo: unified-trading-pm)

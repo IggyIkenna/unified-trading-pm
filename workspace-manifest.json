@@ -423,11 +423,6 @@
           "name": "unified-api-contracts",
           "version": ">=0.1.20,<1.0.0",
           "required": true
-        },
-        {
-          "name": "market-tick-data-service",
-          "version": ">=0.1.0,<1.0.0",
-          "required": true
         }
       ],
       "ci_status": "MAIN_GREEN",
@@ -435,7 +430,7 @@
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "integration",
       "skipped_gates": [],
-      "notes": "Now includes sports execution functionality (merged from sports-execution-service 2026-03-01). Supports bet placement via USEI adapters.",
+      "notes": "Now includes sports execution functionality (merged from sports-execution-service 2026-03-01). Supports bet placement via USEI adapters. market-tick-data-service is NOT a declared pyproject dependency (lazy runtime import via mtds_book_provider.py, basedpyright extraPaths only) -- tracked as a sanctioned tech-debt exception in UAC service_contract_map.py forbidden_exceptions (id execution_service_mtds_reader_dep) + deprecation_ledger.yaml, not here.",
       "status": "active",
       "service_declaration": {
         "mode": "live",
