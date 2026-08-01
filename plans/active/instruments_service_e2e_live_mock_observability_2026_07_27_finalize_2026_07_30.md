@@ -70,13 +70,15 @@ that turns those findings into tracked work and closes the plan properly.
       (`/plans/archive/2026_07/e2e_testing_001_instruments_service_2026_03_22.md` lines 88-116) vs. what the source
       plan's Phase 5/6/7 todos + Progress Log actually recorded. Verdict: **17/17 have a recorded verdict + evidence, 0
       silently dropped.** Full reconciliation table below.
-- [ ] [REVIEW] P2. **Triage the [VALIDATE] P3 six-bug re-verify outcome.** The source plan's last todo re-checks the 6
-      bugs from the 2026-03-23 DEFI E2E audit (Balancer 400, Aster lowercase-category, Hyperliquid 0-instruments,
+- [x] ✅ [REVIEW] P2. **Triage the [VALIDATE] P3 six-bug re-verify outcome.** The source plan's last todo re-checks the
+      6 bugs from the 2026-03-23 DEFI E2E audit (Balancer 400, Aster lowercase-category, Hyperliquid 0-instruments,
       missing data-catalogue entries, a Pydantic warning, CFE-not-in-UAC). Per the findings-triage HARD RULE, each bug
       that is STILL real becomes a tracked `- [ ]` todo (in the source plan if in-scope, else
       `plans/active/issues/<slug>_<date>.md`) — never prose, never a re-filed duplicate of an already-open issue doc
       (grep `plans/active/issues/` first). **Done when**: each of the 6 is recorded as fixed-incidentally /
-      still-real-and-now-tracked / no-longer-applicable, with the tracking location named. Repo: unified-trading-pm.
+      still-real-and-now-tracked / no-longer-applicable, with the tracking location named. Repo: unified-trading-pm. —
+      **DONE 2026-08-01.** Triage table below; grepped `plans/active/issues/` for a duplicate on each bug's topic — 0
+      hits on any of the 6. **Net: 0 of 6 are still-real; 0 new todos filed.**
 - [ ] [PLANNING] P3. **Archive the source plan per the 6-step ritual.** Once both reviews above are done and the source
       plan has zero open todos and no `locked_by:`, run the standard archival ritual from
       [`/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`](/codex/12-agent-workflow/plan-completion-and-archival-discipline.md)
@@ -118,6 +120,25 @@ pass found), 5 honest-absence/N/A (5.1, 5.2, 6.2, 6.3, 6.4 — each with a state
 not be run as literally specified). No further action needed for this todo; nothing here requires a new tracked fix
 (5.4's fix already shipped and is captured in the source plan's own todo).
 
+## Six-bug re-verify triage (2026-03-23 DEFI E2E audit, todo 2)
+
+Source of the 6 bugs: `/plans/archive/2026_07/e2e_testing_001_instruments_service_2026_03_22.md` lines 158-163 (the real
+2026-03-23 DEFI-category audit run). Verdicts + evidence per the source plan's `[VALIDATE]` P3 todo and Progress Log
+entry (`slot-6 2026-08-01`).
+
+| Bug | Original finding                                        | Triage disposition       | Tracking location                                                                                                                                                                                                                                                                                                                                                                                                                                               |
+| --- | ------------------------------------------------------- | ------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | Balancer 400 Bad Request (P1)                           | **fixed-incidentally**   | None needed — `_BALANCER_API` already carries `/graphql` (confirmed via `git log -S` present since the earliest surviving commit `7fa77592`), plus live curl replay + a live CLI run both succeeded. Evidence in source plan Progress Log.                                                                                                                                                                                                                      |
+| 2   | Aster lowercase `defi/ASTER` category (P2)              | **no-longer-applicable** | None needed — Aster is no longer a DeFi venue at all (UAC `VENUE_CATEGORY_MAP: ASTER → "cefi"`; adapter lives under `adapters/cefi/`); the casing convention itself is now derived architecture-wide via `asset_group_key()`, so the described inconsistency class cannot recur. Evidence in source plan Progress Log.                                                                                                                                          |
+| 3   | Hyperliquid 0 instruments in DEFI (P2)                  | **no-longer-applicable** | None needed — same reclassification as Bug 2: `VENUE_CATEGORY_MAP: HYPERLIQUID → "cefi"`, no `adapters/defi/hyperliquid.py`, confirmed deliberate via UAC's `_defi.py` capability-declaration comment. Evidence in source plan Progress Log.                                                                                                                                                                                                                    |
+| 4   | Missing `dataset_id` catalogue entries (P3)             | **no-longer-applicable** | None needed — the `dataset_id`-keyed catalogue schema this bug referenced no longer exists (replaced by `shard_status:` keying); the validation/warning mechanism itself has 0 grep hits fleet-wide. Confirmed via 3 live mock-mode runs, zero catalogue warnings. Evidence in source plan Progress Log.                                                                                                                                                        |
+| 5   | Pydantic `model_copy()` UserWarning (P3)                | **no-longer-applicable** | None needed — confirmed unreachable: `project_id`/`gcp_project_id` alias to the identical env var, so the guard that would trigger the warning-causing branch can never pass (0 warnings across 3 live runs + a direct instantiation under `warnings.catch_warnings`). The dead `model_copy()` branch itself is a pre-existing minor style nit, not a live bug — not filed as a new todo (no observable behavior to fix). Evidence in source plan Progress Log. |
+| 6   | `CFE` venue not in UAC `INSTRUMENT_TYPES_BY_VENUE` (P3) | **fixed-incidentally**   | None needed — venue renamed to `CBOE` fleet-wide, fully registered in every UAC venue table; confirmed live (`--venues CBOE --dry-run` clean, zero "not in UAC" warnings). Evidence in source plan Progress Log.                                                                                                                                                                                                                                                |
+
+**Net: 0 of 6 still-real, 0 new todos filed** — consistent with the source plan's own "4 months have passed, some may
+already be fixed incidentally" framing. Grepped `plans/active/issues/` for each bug's topic (balancer, aster,
+hyperliquid, catalogue, pydantic, cfe/cboe) before concluding — 0 duplicate open issue docs found for any of the 6.
+
 ## Codex SSOTs
 
 - [`/codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md`](/codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md)
@@ -137,3 +158,8 @@ not be run as literally specified). No further action needed for this todo; noth
   plan's recorded outcomes — 17/17 have a verdict + evidence, 0 silently dropped (11 PASS incl. 5 premise-corrected, 1
   FAIL→FIXED→PASS, 5 honest-absence/N/A). Full table added above. Todos 2 (six-bug triage) and 3 (archival) are separate
   backlog items, not touched by this task.
+- **slot 3 (review-role worker) 2026-08-01 — todo 2 DONE.** Triaged all 6 bugs from the source plan's `[VALIDATE]`
+  re-verify against the findings-triage HARD RULE: 2 fixed-incidentally (Balancer 400, CFE→CBOE rename), 4
+  no-longer-applicable (Aster/Hyperliquid reclassified out of DEFI, catalogue validation mechanism removed, Pydantic
+  warning path unreachable). 0 still-real, 0 new todos filed — grepped `plans/active/issues/` per bug topic first, 0
+  duplicates found. Full table added above. Todo 3 (archival) is a separate backlog item.
