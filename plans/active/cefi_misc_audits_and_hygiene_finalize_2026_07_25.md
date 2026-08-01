@@ -46,11 +46,15 @@ drift_direction: advance-code
 
 ## Todos
 
-- [ ] [REVIEW] P1. **Reconcile `cefi_consolidated_closeout_2026_07_18.md`'s 3 corresponding checkboxes.** Flip the
-      UAC-fallback-removal `[OPERATOR]` decision item (record the ruling, whatever it was), the reconciliation-gap-doc
-      `[VERIFY]` spot-check item, and the consolidate+archive `[PM]` item, citing this plan's evidence — verify each
-      cited commit/record actually exists before citing it. Repo: unified-trading-pm. **Done when**: all 3 named
-      checkboxes/sections in the parent doc are flipped with verified evidence.
+- [x] ✅ [REVIEW] P1. **Reconcile `cefi_consolidated_closeout_2026_07_18.md`'s 3 corresponding checkboxes.** DONE —
+      unified-trading-pm@5282adf79. Flipped the UAC-fallback-removal ruling item (KEEP, do not remove — deferred not
+      declined; evidence `issues/uac_per_venue_seed_fallback_removal_deferred_2026_07_26.md`,
+      unified-trading-pm@2a6a7db62), the reconciliation-gap-doc `[VERIFY]` spot-check item (3 findings spot-checked;
+      evidence `issues/adapter_findings_gcs_manifest_deployment_api_reconciliation_gap_2026_07_08.md` Progress Log,
+      unified-trading-pm@ab28a0f39), and the consolidate+archive `[PM]` item (moved to `plans/archive/issues/`,
+      unified-trading-pm@ff8312609). All 3 cited commits/records verified to exist before citing. Repo:
+      unified-trading-pm. **Done when**: all 3 named checkboxes/sections in the parent doc are flipped with verified
+      evidence — met.
 - [ ] [DOC] P2. **Archive `cefi_misc_audits_and_hygiene_2026_07_25.md`** via the standard 6-step ritual (per CLAUDE.md's
       plan-archival rule): confirm no Deferred items remain untracked → add the archive banner → run the codex-alignment
       check → grep the corpus for every referrer of `cefi_misc_audits_and_hygiene_2026_07_25` and fix each path to point
