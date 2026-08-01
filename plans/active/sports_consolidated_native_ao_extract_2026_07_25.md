@@ -418,17 +418,19 @@ context_scope:
       `known_buggy_fixtures` `2024-03-09`). (repo: market-tick-data-service, skill-driven). **Done when**: 3 dated runs
       cited by report path/dispatch_id, baseline through final. Source:
       `sports_consolidated_closeout_2026_07_19.md:665-669`.
-- [ ] [DATA] P1. **Track K (MDPS) — run + cite 3 dated checkpoints (baseline/mid/final) for `data-pipeline-check-mdps`
-      against sports.** Split 2026-08-01, see Track K (IS) above for the split rationale. Use `SPORTS_SMOKE_DATES` as
-      the reference dates. (repo: market-data-processing-service, skill-driven). **Done when**: 3 dated runs cited by
-      report path/dispatch_id, baseline through final. Source: `sports_consolidated_closeout_2026_07_19.md:665-669`.
-      **Checkpoint 1/3 (baseline, day=2025-12-20) DONE 2026-08-01 (slot 13)** — genuine, IAM-unblocked verdict:
-      `total=30 passed=0 failed=7 skipped=23`. Report: `plans/audit/results/data_pipeline_e2e_check_mdps_2025_12_20.md`.
-      Root-caused + fixed the force-leg failures same-session: `sports:trades`/`trades_inplay` have no registered MDPS
-      candle adapter (declared `needs_candle_processing=True` globally but MDPS's own runtime bypasses them —
-      `pipeline_e2e_check.py`'s enumeration didn't consult `CandleAdapterRegistry.has_adapter()`) —
-      `market-data-processing-service@4eb53db`. `odds_horizon_bucket` correctly de-duped against a concurrent slot-7
-      session on the same shard — needs a follow-up run once free. Full details:
+- [x] ✅ [DATA] P1. **Track K (MDPS) — run + cite 3 dated checkpoints (baseline/mid/final) for
+      `data-pipeline-check-mdps` against sports.** Split 2026-08-01, see Track K (IS) above for the split rationale. Use
+      `SPORTS_SMOKE_DATES` as the reference dates. (repo: market-data-processing-service, skill-driven). **Done when**:
+      3 dated runs cited by report path/dispatch_id, baseline through final. Source:
+      `sports_consolidated_closeout_2026_07_19.md:665-669`. **DONE 2026-08-01 (slots 13 + 6) — all 3 checkpoints
+      complete.** **Checkpoint 1/3 (baseline, day=2025-12-20) DONE 2026-08-01 (slot 13)** — genuine, IAM-unblocked
+      verdict: `total=30 passed=0 failed=7 skipped=23`. Report:
+      `plans/audit/results/data_pipeline_e2e_check_mdps_2025_12_20.md`. Root-caused + fixed the force-leg failures
+      same-session: `sports:trades`/`trades_inplay` have no registered MDPS candle adapter (declared
+      `needs_candle_processing=True` globally but MDPS's own runtime bypasses them — `pipeline_e2e_check.py`'s
+      enumeration didn't consult `CandleAdapterRegistry.has_adapter()`) — `market-data-processing-service@4eb53db`.
+      `odds_horizon_bucket` correctly de-duped against a concurrent slot-7 session on the same shard — needs a follow-up
+      run once free. Full details:
       `plans/active/issues/bucket_iam_group_a_market_data_tick_prefix_missing_asset_group_2026_08_01.md` todo 3.
       **Checkpoint 2/3 (mid, day=2025-12-24) DONE 2026-08-01 (slot 6)** — of the 4 SPORTS MVP shard cells,
       `odds_horizon_bucket` is the only one with genuinely-captured raw-tick input on this day (confirmed even with
@@ -443,19 +445,19 @@ context_scope:
       from an independent DP-VM-001 escalation, auto-linked to this exact VM as a related crash), not a new regression.
       Report (hand-completed from VM `run.log` ground truth after both local driver polls hit their own wrapper timeout
       — VMs ran to genuine completion independently): `plans/audit/results/data_pipeline_e2e_check_mdps_2025_12_24.md`.
-      **Checkpoint 3/3 (final, day=2025-12-18) IN PROGRESS 2026-08-01 (slot 6)** — same pattern as checkpoint 2/3: other
-      3 data_types confirmed `no_captured_input_for_cell` again; `odds_horizon_bucket` force-leg DONE (VM
-      `mdps-backfill-sports-pipelinecheck-20260801-134301-2bf067`, 31.8m, 588/638 correctly `empty_confirmed`, 50/638
-      hit the same already-tracked FetchEvidence-gate bug). **Skip-leg IN-FLIGHT** at compact time: VM
-      `mdps-backfill-sports-pcskip-20260801-141836-2bf067`, launched ~14:18 UTC, still RUNNING with a healthily
-      advancing `run.log` as of last check (~33min elapsed — matches the mid-checkpoint's 26.2m skip duration plus
-      overhead). **Cannot be completed synchronously — needs elapsed VM time, not more work**; next session:
-      `gsutil cat gs://deployment-scripts-central-element-323112/vm-logs/mdps-backfill-sports-pcskip-20260801-141836-2bf067/EXIT_STATUS`
-      (or the `run.log` `PROCESSING SUMMARY` if EXIT_STATUS is already written), hand-complete
-      `plans/audit/results/data_pipeline_e2e_check_mdps_2025_12_18.md` mirroring the 2025-12-24 report's structure
-      (currently holds a STALE false-failure from the driver's own too-short `--timeout-sec` default — see corroborating
-      todo added to `plans/active/issues/features_e2e_check_delta_one_timeout_orphans_duplicate_vms_2026_07_27.md`),
-      then flip this todo's checkbox to `[x]` (all 3 checkpoints done).
+      **Checkpoint 3/3 (final, day=2025-12-18) DONE 2026-08-01 (slot 6)** — same pattern as checkpoint 2/3: other 3
+      data_types confirmed `no_captured_input_for_cell` again; `odds_horizon_bucket` force-leg (VM
+      `mdps-backfill-sports-pipelinecheck-20260801-134301-2bf067`, 31.8m) and skip-leg (VM
+      `mdps-backfill-sports-pcskip-20260801-141836-2bf067`, 30.5m, launched with no `--force` in argv and genuinely
+      re-walked all 638 cells rather than short-circuiting) both ran to completion: 588/638 instrument-timeframe cells
+      correctly wrote `empty_confirmed` honest-absence (0 candles is the correct outcome — every row fell outside its
+      pre-match horizon or had no recognized market_key), 50/638 hit the same already-tracked FetchEvidence-gate bug as
+      checkpoint 2/3. Both driver invocations' own `--timeout-sec` default expired before the VMs' real ~30-35min
+      runtime and wrote false-failure reports — corroborating finding filed in
+      `plans/active/issues/features_e2e_check_delta_one_timeout_orphans_duplicate_vms_2026_07_27.md` (existing P1 issue,
+      same shared-engine bug class, previously only confirmed in features-service). Report (hand-completed from VM
+      `run.log` ground truth): `plans/audit/results/data_pipeline_e2e_check_mdps_2025_12_18.md`. **All 3 checkpoints
+      (baseline/mid/final) now done.**
 - [x] ✅ [DATA] P1. **Track K (features) — run + cite 3 dated checkpoints (baseline/mid/final) for
       `data-pipeline-check-features` against sports.** Split 2026-08-01, see Track K (IS) above for the split rationale.
       Use `SPORTS_SMOKE_DATES` as the reference dates. (repo: features-service, skill-driven). **Done when**: 3 dated
@@ -474,20 +476,20 @@ context_scope:
       genuine. Report: `plans/audit/results/data_pipeline_e2e_check_features_2025_12_18.md`.
 
       Cross-day diagnostic (VM `run.log` ground truth, all 3 dates): 11-12/17 sports reference entities read real rows
-              from PROD via the now-working source-bucket override; `entity=fixtures`/`fixtures_schedule` specifically still
-              404s on the never-provisioned `-stg-` bucket via `gcs_read_reference_fixtures` (a narrower, entity-scoped residue
-              of the same gap — noted for whoever next touches the issue doc above), so `derived_features`/`fixture_features`
-              correctly record `EMPTY ... confirmed empty` for that one input while the rest of the family's feature groups
-              compute for real — this is why every checkpoint's shard-level verdict is a genuine `captured` pass (real parquet
-              count > 0) rather than a blanket `empty_confirmed`.
+                  from PROD via the now-working source-bucket override; `entity=fixtures`/`fixtures_schedule` specifically still
+                  404s on the never-provisioned `-stg-` bucket via `gcs_read_reference_fixtures` (a narrower, entity-scoped residue
+                  of the same gap — noted for whoever next touches the issue doc above), so `derived_features`/`fixture_features`
+                  correctly record `EMPTY ... confirmed empty` for that one input while the rest of the family's feature groups
+                  compute for real — this is why every checkpoint's shard-level verdict is a genuine `captured` pass (real parquet
+                  count > 0) rather than a blanket `empty_confirmed`.
 
-              **Session note**: this task's worker session crashed mid-flight after the first (sequential) round of runs;
-              the resumed session found the repo tree hard-reset to origin (losing 2 already-completed report files that were
-              never committed) — re-ran all 3 checkpoints a second time in parallel to recover, this time committing each
-              report immediately on completion. That parallel re-run also reproduced + explains a separate, real tooling
-              defect (two same-cell/different-day launches racing to an identical VM name within the same UTC second — this
-              instance's result was independently verified correct, not corrupted by it): filed
-              `plans/active/issues/features_pipeline_e2e_check_vm_name_collision_same_second_2026_08_01.md`.
+                  **Session note**: this task's worker session crashed mid-flight after the first (sequential) round of runs;
+                  the resumed session found the repo tree hard-reset to origin (losing 2 already-completed report files that were
+                  never committed) — re-ran all 3 checkpoints a second time in parallel to recover, this time committing each
+                  report immediately on completion. That parallel re-run also reproduced + explains a separate, real tooling
+                  defect (two same-cell/different-day launches racing to an identical VM name within the same UTC second — this
+                  instance's result was independently verified correct, not corrupted by it): filed
+                  `plans/active/issues/features_pipeline_e2e_check_vm_name_collision_same_second_2026_08_01.md`.
 
 - [x] ✅ [DATA] P1. **Track K (reconciliation) — run + cite 3 dated checkpoints (baseline/mid/final) for
       `/data-pipeline-reconciliation` against sports.** DONE 2026-08-01 (slot 8, dispatched sub-agent) — 3 dated reports
