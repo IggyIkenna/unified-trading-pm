@@ -76,10 +76,18 @@ source: >-
       `tests/test_worker_liveness_watchdog.py` also re-run clean (96 passed, 0 failed — no regression in the touched
       file). `basedpyright server/worker_liveness_watchdog.py` — 0 errors, 0 warnings, 0 notes. No discrepancy found;
       nothing re-opened.
-- [ ] [REVIEW] P0. **Reconcile the verified todo's evidence back into its TRUE source doc's own checkbox** — batch 4 was
+- [x] [REVIEW] P0. **Reconcile the verified todo's evidence back into its TRUE source doc's own checkbox** — batch 4 was
       an extraction, so `orchestrator_failover_double_dispatch_duplicate_work_2026_07_25.md`'s `[BACKEND] P2` item is
       the one that goes stale, not the batch's. Flip it with the real commit sha. **Done when**: the flip is committed
-      with the `docs(plans):` prefix and cites the real commit sha.
+      with the `docs(plans):` prefix and cites the real commit sha. — **Already done, independently re-verified.** The
+      reconciliation landed in `unified-trading-pm@04a11439d` ("docs(plans): flip ao_satellite_ao_dispatch_batch4 sole
+      todo — failover double-dispatch fix shipped"), which flipped the source doc's `[BACKEND] P2` item to `[x]` citing
+      `agent-orchestrator@7911083` with full root-cause + test evidence, and added a matching Progress Log entry. Both
+      commits independently re-verified this pass: `04a11439d` is on `origin/live-defi-rollout` and touches exactly the
+      source issue doc (+ the batch4 plan); `agent-orchestrator@7911083`
+      (`fix(dispatch): require positive liveness     re-check before releasing an un-ACKed task`) is also on
+      `origin/live-defi-rollout`, touching `server/worker_liveness_watchdog.py` (+42/-4) and
+      `tests/test_worker_liveness_watchdog.py` (+138) — matches the cited diff exactly. No further flip needed.
 - [ ] [INFRA] P0. **Confirm the file-adjacency caution against `batch3_2026_07_31.md`'s todo 2 was actually respected**
       — check whether batch 4's todo landed before or after batch3's todo 2, and whether the two diffs conflicted in
       `agent-orchestrator/server/worker_liveness_watchdog.py` (or wherever they actually landed). If a real collision
