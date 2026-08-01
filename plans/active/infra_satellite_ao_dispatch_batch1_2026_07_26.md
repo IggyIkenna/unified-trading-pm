@@ -295,16 +295,24 @@ orphaned?" resolves to "everything," because nothing in the covering set does an
       requirement) is documented in `1e8af34a`'s own commit message (stubbed-tool full run incl. a mid-loop chunk
       failure, dry-mode leak check). No code change needed from this dispatch — closing the plan-bookkeeping gap only.
 
-- [ ] [BACKEND] P3. **Close the `mtds-dex-swaps-backfill`/`af-backfill` PROGRESS.json gap.** Both route through the
-      GENERIC single-shot `elif [ -n "$VM_TASK" ]` fallback in `setup-data-pipeline-vm.sh` (ONE `_launch_with_tee` call
-      over the whole `--start-date`/`--end-date` range — no shell chunk loop exists there at all today, and it is shared
-      by every `VM_TASK` value with no dedicated dispatch branch, so restructuring it has a wide blast radius). Evaluate
-      scoping a NEW chunk loop specifically for these two `VM_TASK`s (`defi-backfill`,
-      `sports-backfill`/`instruments-backfill` when reached via `launch-api-football-backfill-vm.sh`) rather than
-      touching the shared fallback for every caller, or a minimal end-of-run-only marker (fires once, keyed off
-      `VM_END_DATE`, only on a successful whole-range run — weaker than per-chunk but closes the "replays from genesis"
-      case for a run that fully completed before a later preemption on relaunch). VERIFY BY SIMULATION, no VM launch.
-      Repo: deployment-service. Source: this todo (`infra_satellite_ao_dispatch_batch1_2026_07_26.md`).
+- [x] ✅ [BACKEND] P3. **Close the `mtds-dex-swaps-backfill`/`af-backfill` PROGRESS.json gap** —
+      `deployment-service@0c5fa5b`. Chose the minimal end-of-run-marker option over a new chunk loop: `VM_TASK` is a
+      copy-paste constant shared by ~10 DeFi and ~8 sports launchers each, so a chunk loop keyed on it alone would
+      change behavior for every unrelated launcher sharing the label, not just these two. The non-fanout dispatch in the
+      generic `elif [ -n "$VM_TASK" ]` fallback now emits ONE
+      `[[VM_PROGRESS]] last_completed_date=$VM_END_DATE     monotonic=true` marker on a successful (rc=0) whole-range
+      run — additive-only, no-op for any launcher that never sets `VM_END_DATE` (e.g. live/websocket tasks). Neither
+      launcher ever fans out (mtds-dex-swaps-backfill sets `VM_OPERATION=collect-dex-swaps` not `download`; af-backfill
+      sets `VM_SERVICE=instruments_service`), so the fanout supervisor script is untouched — a regression test asserts
+      this. **Found while implementing**: `vm-exec-with-gcs-tee.sh`'s PROGRESS.json watchdog only scans for the marker
+      on a poll where `kill -0 "$CMD_PID"` still finds the process alive AFTER its 60s `STALL_POLL_SEC` sleep — a
+      process that writes the marker and exits within that same window dies mid-sleep, so the post-sleep check finds it
+      dead and `break`s WITHOUT scanning, silently dropping the marker. The existing chunked loops (mtds-backfill etc.)
+      are mostly insulated (an earlier chunk's marker already landed even if the final chunk's is lost to this exact
+      race), but a single end-of-run marker has no earlier marker to fall back on. Fix: sleep 75s (60s default + margin)
+      after the marker echo, before the wrapped process actually exits. **VERIFIED BY SIMULATION** (a standalone bash
+      script replicating the real watchdog's poll loop, verbatim regex, against a real log file — no VM launched): 5/5
+      runs dropped the marker without the delay, 5/5 captured it with the delay. (repo: deployment-service)
 
 - [ ] [BACKEND] P3. **Close the two fleet-monitor blind spots on checkpoint reading and preemption alert severity
       (combined — both live in the actuator/monitor pair and would race if split).** (a) Verify whether
