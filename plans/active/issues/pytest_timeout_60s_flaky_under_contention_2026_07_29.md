@@ -705,3 +705,30 @@ those commits landed). The escalation's own repo-blocker list (`GET /api/repo-bl
   mechanical ones). No live-defi-rollout code or test change made or needed. Slot left clean (instruments-service +
   unified-trading-pm both on `live-defi-rollout`, 0 commits ahead of `origin` besides this doc edit). Pinged the
   authoring slot with the outcome and exiting per the one-shot `cicd` role's bounded scope.
+- **2026-08-01 ~02:15Z (cicd redispatch of the SAME escalation id `agt-6fd2a1`, slot 5, re-triaging PR #921)**: the
+  `agt-6fd2a1`/slot-10 entry above (2026-08-01 ~00:15Z) already root-caused this exact wall (features-service PR #921,
+  run `30668552631`, head SHA `8aa3796b`); this redispatch independently re-verified from scratch rather than trusting
+  it blind (the prior run evidently didn't reach `/done` either). Confirmed unchanged: PR #921 `state=MERGED`,
+  `mergedAt=2026-07-31T22:01:08Z` — over an hour BEFORE the failing `pull_request`-triggered run even started
+  (`23:30:17Z`), i.e. the run was investigating an already-superseded state from the moment it began. Zero open PRs,
+  zero open `/api/repo-blockers` entries for features-service. Went further than the prior entry on the diagnostic side:
+  rather than relying on the prior pass's full-`quality-gates.sh` repro (which itself got caught mid-run by the same
+  host contention this doc tracks, per its own account), ran two independent SCOPED diagnostics at an even newer HEAD
+  (`a0d4e6e4`, 8 commits ahead of the failing SHA — 2 real onchain/defi fixes + 6 mechanical dep/promote/backmerge
+  commits, zero touching `delta_one`/`features_service` core code or tests): (1)
+  `pytest tests/delta_one/unit/test_cross_timeframe_sanity.py --timeout=20 --durations=20` — **102 passed, 17 skipped in
+  8.76s**, slowest single case 0.56s, matching the prior pass's 8.98s finding almost exactly at a materially newer HEAD;
+  (2) `basedpyright features_service` — **42.1s wall-clock** (964 pre-existing, already-tolerated `reportAny`/
+  `reportUnknown*` warnings via the QG's own Any/Unknown-baseline mechanism, not new errors), comfortably under the 120s
+  `PYRIGHT_TIMEOUT` that the CI run's `checks` leg hit at exit=124. Also started a full backgrounded
+  `quality-gates.sh --no-fix` run for a third data point; stopped it myself (exact-PID `kill`, my own spawned PGID, no
+  name-pattern pkill) at 16% progress with zero failures observed once the two scoped diagnostics already answered the
+  only question that mattered (is there a code defect — no) and continuing would only have added a single-threaded
+  (`-n 0`, no xdist) full suite's worth of load to an already-elevated host (`load average: 21.88/22.15/22.72` on 16
+  vCPUs, 16Gi/47Gi swap in use, 1 sibling `quality-gates.sh` already running) for strictly less marginal signal than the
+  targeted checks already gave — the same judgment call several entries above this one made explicitly. Same "orphaned
+  noise against an already-resolved wall" conclusion, now corroborated a second time for this exact escalation with
+  fresher evidence (newer HEAD, both failing components independently re-timed). No live-defi-rollout code or test
+  change made or needed. Slot left clean (features-service already on `live-defi-rollout`, 0 commits ahead of `origin`
+  besides this doc edit). Pinged the authoring slot with the outcome and exiting per the one-shot `cicd` role's bounded
+  scope.
