@@ -104,7 +104,7 @@ this, each time invisible until someone reads the backlog by hand.
 
 ## Recommended decision
 
-- [ ] [BACKEND] P2. Add a periodic dispatcher-side check (the natural home is alongside the existing
+- [x] [BACKEND] P2. Add a periodic dispatcher-side check (the natural home is alongside the existing
       `dispatch.py`/`regen_backlog_from_plan.py` tick logic, or a new lightweight watchdog pass) that detects: a task
       `T_low` is `dispatched`/`working` and has held its plan's single in-flight slot for longer than a threshold (e.g.
       2h, tunable), AND a sibling task `T_high` in the SAME `plan_ref` has strictly higher priority (lower number),
@@ -117,10 +117,30 @@ this, each time invisible until someone reads the backlog by hand.
       replaying this exact incident's recorded state (`-002` dispatched to slot 15 since `12:16:10Z`, `-006`
       queued/priority-20/zero-blockers the whole time) against the new check produces a fired page, verified via a
       unit/integration test that constructs the equivalent backlog state and asserts the alert fires — not just a manual
-      demonstration.
-- [ ] [SCRIPT] P3. Once the above ships, backfill a check against TODAY's live backlog for any OTHER plan currently
+      demonstration. **Evidence (2026-08-01)**: shipped `agent-orchestrator@af98fcd` — chose the direct-Slack route
+      (this doc's own analysis above already showed `escalation.py`'s `wall_type` mechanism can't represent a pure
+      backlog-dispatch- state condition; no `repo`/`pr_number` to hang a wall on). New standalone
+      `DispatchPriorityInversionWatchdog` (`agent-orchestrator/server/dispatch_priority_inversion_watchdog.py`, wired
+      into `server.py` startup/shutdown), two Slack notify functions (`notify_dispatch_priority_inversion`/`_resolved`),
+      keyed `(plan_ref, T_high.id)` seen-set dedup (`dedup_state.dispatch_priority_inversion_alerted_path()`), two
+      tunable knobs (`tuning.dispatch_priority_inversion_{interval,threshold}_seconds`, defaults 300s/7200s). Full
+      `quality-gates.sh` green. Test
+      `tests/test_dispatch_priority_inversion_watchdog.py::test_tick_once_fires_a_page_replaying_the_recorded_incident`
+      replays this doc's exact recorded incident (`-002`-equivalent dispatched since `12:16:10Z`, `-006`-equivalent
+      queued/priority-20/zero-blockers, `now` = dispatch+4h20m) through `tick_once()` end-to-end and asserts
+      `notify_dispatch_priority_inversion` fires exactly once — not a manual demonstration — plus 16 further unit tests
+      on the pure detection logic and the dedup/resolve transitions.
+- [x] [SCRIPT] P3. Once the above ships, backfill a check against TODAY's live backlog for any OTHER plan currently
       exhibiting this same shape (a same-plan higher-priority queued/ready task behind a long-dispatched lower-priority
-      one) — this incident may not be the only live instance, just the one a human happened to notice.
+      one) — this incident may not be the only live instance, just the one a human happened to notice. **Evidence
+      (2026-08-01)**: ran the backfill-check via `check-ao-backlog-status.sh`'s read-only SSM path plus a one-off
+      read-only `/api/backlog` query (fleet-wide, 1188 total tasks). At check time (~08:2x UTC) exactly 6 tasks were
+      `dispatched`/`working`; for EACH, no sibling task in the SAME `plan_ref` was `queued` with a strictly lower
+      `priority` number — **no other plan is currently exhibiting the priority-inversion/starvation shape**. Two of the
+      six had held their slot >2h (`mtds_available_at_cross_asset_backfill-006` at 8.53h,
+      `cefi_content_migration_fleet_half_incomplete-010` at 5.15h — the latter is this doc's OWN motivating plan, now on
+      a different, already-resolved todo) but neither has a ready higher-priority sibling, so correctly not a breach —
+      just ordinary long-running work.
 
 ## Progress Log
 
@@ -132,3 +152,7 @@ this, each time invisible until someone reads the backlog by hand.
   (`escalation_backlog_repo_collision_blind_spot_2026_07_25.md`, another AO-dispatch-mechanism structural gap) — a
   change to the orchestrator's own paging logic is a design call worth a human decision on approach, even though the
   eventual code change is bounded.
+- 2026-08-01: both recommended-decision todos shipped as todo 2 of
+  `/plans/active/ao_satellite_ao_dispatch_batch3_2026_07_31.md` (`agent-orchestrator@af98fcd`) — see that todo's
+  evidence line and this doc's own updated checkboxes above for the full detail (watchdog design, test proving the
+  replayed incident pages, and the clean live-backlog backfill-check result). Both items now `[x]`.

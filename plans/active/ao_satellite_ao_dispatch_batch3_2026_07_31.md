@@ -51,6 +51,7 @@ context_scope:
     /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
     /codex/04-architecture/agent-orchestrator-alerting.md,
     /cursor-configs/skills/context-scout/SKILL.md,
+    /plans/active/ao_satellite_ao_dispatch_batch3_finalize_2026_07_31.md,
   ]
 source: >-
   /ag-closeout-audit ao skill run 2026-07-31 (autonomous, scheduled dispatch agt-23935a, role ag_closeout_auditor, slot
@@ -123,7 +124,7 @@ batch1/batch2 applied, per the candidate-generator script's own stated rationale
       currently asserts the backfill is already done and the field is already required — both false as of this
       measurement).
 
-- [ ] [BACKEND] P2. **Add a dispatcher-side watchdog that pages on same-plan priority-inversion/starvation, then
+- [x] [BACKEND] P2. **Add a dispatcher-side watchdog that pages on same-plan priority-inversion/starvation, then
       backfill-check the live backlog for other instances.** In `agent-orchestrator/server/` (natural home alongside
       `dispatch.py`/`regen_backlog_from_plan.py`'s tick logic, or a new lightweight watchdog pass): detect a task
       `T_low` that is `dispatched`/`working` and has held its plan's single in-flight slot longer than a threshold (e.g.
@@ -140,7 +141,29 @@ batch1/batch2 applied, per the candidate-generator script's own stated rationale
       the live-backlog backfill-check result is recorded in the source doc. Source:
       `/plans/active/issues/ao_dispatch_priority_inversion_starvation_has_no_page_path_2026_07_30.md` (both its
       `[BACKEND] P2` and dependent `[SCRIPT] P3` items — combined into one todo since the second is a direct, sequential
-      consequence of the first landing, not independent work).
+      consequence of the first landing, not independent work). **Evidence (2026-08-01)**: shipped
+      `agent-orchestrator@af98fcd` — new standalone `server/dispatch_priority_inversion_watchdog.py`
+      (`DispatchPriorityInversionWatchdog`, wired into `server.py` startup/shutdown alongside the other canaries;
+      deliberately NOT folded into `WorkerLivenessWatchdog._tick_once` to sidestep the file-adjacency note above
+      entirely rather than merely landing first), two new
+      `tuning.dispatch_priority_inversion_{interval,threshold}_seconds` knobs (`server/config.py`, defaults 300s/7200s),
+      a keyed seen-set dedup path (`dedup_state.dispatch_priority_inversion_alerted_path()`), and two Slack notify
+      functions (`notify_dispatch_priority_inversion`/`_resolved` in `server/notifications/slack.py`) routed directly to
+      the `agent-orchestrator-alerts` channel per the actionable-only convention. Full `quality-gates.sh` green (ruff,
+      basedpyright, 2187 pytest passed, pip-audit, dashboard tsc+vitest). Test:
+      `tests/test_dispatch_priority_inversion_watchdog.py::test_tick_once_fires_a_page_replaying_the_recorded_incident`
+      constructs an in-memory DB + fixed backlog reproducing the EXACT recorded incident shape (`-002`-equivalent
+      dispatched since `12:16:10Z`, `-006`-equivalent queued/priority-20/zero-blockers, `now` = dispatch+4h20m) and
+      asserts `notify_dispatch_priority_inversion` fires exactly once (plus 16 further unit tests on the pure
+      `find_inversions` branches and the keyed dedup/resolve transitions in `_maybe_alert` — all passing). Live-backlog
+      backfill-check (2026-08-01T08:2x UTC, via `check-ao-backlog-status.sh`'s read-only SSM path + a one-off read-only
+      `/api/backlog` query): fleet-wide `TOTAL_TASKS=1188`, exactly 6 tasks in `dispatched`/`working` state at check
+      time; for EACH of the 6, no sibling task in the SAME `plan_ref` is `queued` with a strictly lower `priority`
+      number — i.e. **no other plan is currently exhibiting the priority-inversion/starvation shape** (two of the six
+      had held their slot >2h — `mtds_available_at_cross_asset_backfill-006` at 8.53h and
+      `cefi_content_migration_fleet_half_incomplete-010` at 5.15h — but neither has a ready higher-priority sibling, so
+      per the watchdog's own logic neither is a breach, just ordinary long-running work). Full finding recorded in the
+      source doc's Progress Log.
 
 - [ ] [SCRIPT] P2. **Ship a read-only orphan-still-orphaned verifier, harden the liveness discriminator, then use the
       verifier to triage all 25 fleet-wide `refs/wip-preserve/**`refs.** In`agent-orchestrator`(alongside
@@ -232,3 +255,10 @@ batch1/batch2 applied, per the candidate-generator script's own stated rationale
   the "Rules for every worker" section: todo 2 (priority-inversion watchdog) and the sibling
   `ao_satellite_ao_dispatch_batch4_2026_08_01.md`'s sole todo (failover release-signal) both plausibly land in
   `agent-orchestrator/server/worker_liveness_watchdog.py`'s `_tick_once()` — land todo 2 first.
+- **context-scout 2026-08-01**: verified the 3 pre-existing context_scope entries still resolve and are relevant (kept
+  in place), added the paired finalize plan as a 4th entry — refreshed (4 entries).
+- **2026-08-01** — Todo 2 shipped (`agent-orchestrator@af98fcd`, landed on `live-defi-rollout` ahead of batch4's sibling
+  todo per the file-adjacency rule above — sidestepped it entirely by keeping the new watchdog a standalone module
+  rather than folding into `WorkerLivenessWatchdog._tick_once`). Full evidence + the live-backlog backfill-check result
+  (clean — no other plan currently exhibits this starvation shape) recorded on the todo itself; same evidence reconciled
+  into the source issue doc's `[BACKEND] P2`/`[SCRIPT] P3` items.
