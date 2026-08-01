@@ -140,10 +140,20 @@ script isn't invoked by `quality-gates.sh`), so none of this is actively blockin
       `check-pyrightconfig-extrapaths.py` — zero remaining warnings for deployment-service; `quality-gates.sh` green
       (256s, `IGNORE_TIMEOUT=true` used once for a transient host-contention timing-gate-only failure per codex
       quality-gates.md sanctioned override — all substantive gates were green on that run too).
-- [ ] [SCRIPT] P3. execution-service: remove the 8 dead extraPaths in `pyproject.toml`; separately investigate the 4
+- [x] ✅ [SCRIPT] P3. execution-service: remove the 8 dead extraPaths in `pyproject.toml`; separately investigate the 4
       import-vs-manifest errors (`unified-cloud-services`, `market-tick-data-service`, `execution-algo-library`,
       `matching-engine-library`) — confirm each is a genuine live import (not a stale/commented reference) before adding
-      it to `workspace-manifest.json` deps. (repo: execution-service)
+      it to `workspace-manifest.json` deps. (repo: execution-service) — execution-service@050ed797. Removed the 8
+      confirmed-dead extraPaths (zero manifest dep, zero source import each). Investigated the 4 errors: 3 were
+      grep-pattern false positives (`unified-cloud-services` — legacy pre-UTL package name, not a workspace repo, only
+      referenced by an orphaned `verify_ucs_installation.py` script pytest never collects; `execution-algo-library` —
+      the only hit is inside a docstring `Example:` block, not a real import; `matching-engine-library` — every
+      reference is commented out) — their extraPaths removed too. `market-tick-data-service` is genuine (real import in
+      `mtds_book_provider.py`, a sanctioned + tracked cross-service exception per UAC `service_contract_map.py`
+      `forbidden_exceptions` / `deprecation_ledger.yaml` id `execution_service_mtds_reader_dep`) — extraPath kept, added
+      to `workspace-manifest.json` `execution-service` dependencies (this commit). Re-ran
+      `check-pyrightconfig-extrapaths.py` — zero remaining warnings for execution-service; `quality-gates.sh` green
+      (192s, incl. `workspace-manifest.json valid (schema + topological)`).
 - [ ] [SCRIPT] P3. features-service: remove the 2 dead extraPaths in `pyproject.toml`. (repo: features-service)
 - [ ] [SCRIPT] P3. greeks-service: remove the 3 dead extraPaths in `pyproject.toml`. (repo: greeks-service)
 - [ ] [SCRIPT] P3. instruments-service: remove the 2 dead extraPaths; separately investigate the
