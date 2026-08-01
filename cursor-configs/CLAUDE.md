@@ -95,8 +95,7 @@ UAC-internal.
   branch.**
 - SSOTs: `/codex/08-workflows/ci-cd-flow.md` (gate set / quickmerge / strict-quickmerge / LDR-is-SSOT /
   branch-protection / semver + wheel release / deployment flow) + `/codex/05-infrastructure/per-tab-worktrees.md`
-  (commit attribution). The MVP-pipeline refactor that established this model **COMPLETED + ARCHIVED 2026-07-31** —
-  every contract above now lives in the codex SSOT; there is no in-flight plan-of-record.
+  (commit attribution) — codex holds every contract now; no in-flight plan-of-record.
 
 ## CI verification after every push
 
@@ -264,13 +263,14 @@ architecture (L0–L4)".
   "Pre-existing" is NOT a triage criterion. **Priority**: CI/audit > tier (cross-cutting>cefi>defi>sports>tradfi +
   carve-out) > pipeline stage. SSOT: `/codex/11-project-management/plan-priority-tier-and-dispatch-ordering.md`.
 - **Version graduation**: `feat!` on 0.x = MINOR; NEVER bump manually (semver-agent); graduate via
-  `request-major-bump.yml`. **No summary docs** (`*_SUMMARY.md` etc.) — finish with text. **Prettier**
-  `.md/.json/.yaml/.ts*` before commit. **Delete deprecated code** (no shims). **Never**
-  `git reset --hard`/`clean -fd`/`restore` uncommitted work. **Runtime verification** — never "done" without running the
-  code; a `- [x]` Cloud Build / deploy / promote-green claim MUST cite `Evidence: cloudbuild=<id>` that resolves SUCCESS
-  via `gcloud builds describe` (QG `check_evidence_backed_completion.py` fails on a non-SUCCESS build; SSOT
-  `plans/PLAN_FORMAT.md` § 8b). **Citadel planning standards** (pre-audit / phased DAG / no tech debt / SSOT in UAC /
-  foundation-gate / issue-doc-lifecycle) → `codex/11-project-management/`.
+  `request-major-bump.yml`. **No summary docs** (`*_SUMMARY.md` etc.) — finish with text. **Prettier** via
+  `prettier-autostage.sh` only, never bare `npx prettier` (unpinned <3.9.5 mangles `_`→`*`; SSOT quality-gates.md).
+  **Delete deprecated code** (no shims). **Never** `git reset --hard`/`clean -fd`/`restore` uncommitted work. **Runtime
+  verification** — never "done" without running the code; a `- [x]` Cloud Build / deploy / promote-green claim MUST cite
+  `Evidence: cloudbuild=<id>` that resolves SUCCESS via `gcloud builds describe` (QG
+  `check_evidence_backed_completion.py` fails on a non-SUCCESS build; SSOT `plans/PLAN_FORMAT.md` § 8b). **Citadel
+  planning standards** (pre-audit / phased DAG / no tech debt / SSOT in UAC / foundation-gate / issue-doc-lifecycle) →
+  `codex/11-project-management/`.
 
 ---
 

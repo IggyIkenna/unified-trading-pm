@@ -1239,9 +1239,20 @@ other unstaged files, hooks modify the staged file, then prek tries to restore a
 
 **Solution — Formatter Conflict Resolution Protocol:**
 
+> **Never invoke a bare `npx prettier`/`prettier` command on this corpus.** An unpinned `npx prettier` resolves whatever
+> the local npm cache/registry gives it — proven to silently resolve to versions `<3.9.5`, which deterministically
+> corrupt markdown under this workspace's `proseWrap: always` (underscore identifiers rewritten as asterisks, e.g.
+> `asset_group` → `asset*group`). This has bitten the corpus twice: 2026-07-14
+> (`plans/archive/issues/prettier_emphasis_mangling_corpus_corruption_2026_07_14.md`) and 2026-08-01
+> (`plans/archive/issues/raw_npx_prettier_bypasses_version_guard_recurs_mangling_2026_08_01.md`). Always go through
+> `scripts/hooks/prettier-autostage.sh <file>` (version-guarded — prefers a local `>=3.9.5` binary, else a pinned
+> `npx -y prettier@3.9.5` fetch, else skips with a warning rather than risk corruption). If a manual pass is genuinely
+> needed outside that wrapper, pin explicitly (`npx -y prettier@3.9.5 --write <file>`) and run
+> `bash scripts/plan-hygiene/check_prettier_mangling.sh <file>` before staging.
+
 1. **Pre-format ALL formatters before `git add`:**
    ```bash
-   npx prettier --write <file>          # JSON, YAML, MD, etc.
+   bash scripts/hooks/prettier-autostage.sh <file>   # JSON, YAML, MD, etc. — version-guarded, never bare `npx prettier`
    .venv/bin/ruff format <file>         # Python only
    .venv/bin/ruff check <file> --fix    # Python only
    ```
@@ -1251,10 +1262,10 @@ other unstaged files, hooks modify the staged file, then prek tries to restore a
    git add <file>
    git commit -m "..."
    ```
-4. **For `.basedpyright-baseline.json`** — always run `npx prettier --write` AFTER `--writebaseline`, BEFORE `git add`:
+4. **For `.basedpyright-baseline.json`** — always run the prettier wrapper AFTER `--writebaseline`, BEFORE `git add`:
    ```bash
    .venv/bin/basedpyright <src>/ --baselinefile .basedpyright-baseline.json --writebaseline
-   npx prettier --write .basedpyright-baseline.json
+   bash scripts/hooks/prettier-autostage.sh .basedpyright-baseline.json
    git add .basedpyright-baseline.json
    git commit -m "..."
    ```
@@ -1894,11 +1905,11 @@ contains only an empty object), count = 0 and the gate passes.
 
 ### Pre-commit formatter note
 
-When writing a new baseline (during initial migration only), always run prettier immediately after:
+When writing a new baseline (during initial migration only), always run the prettier wrapper immediately after:
 
 ```bash
 .venv-workspace/bin/basedpyright <src>/ --baselinefile .basedpyright-baseline.json --writebaseline
-npx prettier --write .basedpyright-baseline.json
+bash scripts/hooks/prettier-autostage.sh .basedpyright-baseline.json
 git add .basedpyright-baseline.json
 ```
 

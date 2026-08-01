@@ -17,7 +17,7 @@ summary: >-
   so an agent (or human) who reaches for prettier directly, rather than via the hook or `quality-gates.sh`, gets zero
   warning until the pre-commit gate (if reached at all — this incident's corruption was all in the pre-stage working
   tree, one step before that gate would even run).
-status: open
+status: resolved
 nature: process
 asset_group: [ao]
 stage: [meta]
@@ -45,7 +45,7 @@ estimate_class: refactor
 estimate_baseline_ai_days: 0.3
 estimate_calibrated_ai_days: 0.12
 drift_direction: advance-code
-resolved_by:
+resolved_by: "2026-08-01"
 locked_by:
 locked_since:
 depends_on: []
@@ -87,13 +87,13 @@ context_scope:
 
 ## Recommended fix
 
-- [ ] [DOCS] P2. Add an explicit line to CLAUDE.md's git-discipline section (and/or
+- [x] [DOCS] P2. Add an explicit line to CLAUDE.md's git-discipline section (and/or
       `/codex/06-coding-standards/quality-gates.md`): **never run a bare `npx prettier`/`prettier` command on this
       corpus** — always go through `scripts/hooks/prettier-autostage.sh` (or accept the pre-commit hook's own pass), or
       if a manual format pass is genuinely needed, pin explicitly (`npx -y prettier@3.9.5`) and immediately follow it
       with `bash scripts/plan-hygiene/check_prettier_mangling.sh <files>` before staging. Cite this doc + the 2026-07-14
       incident doc as the reason.
-- [ ] [SCRIPT] P3. Consider whether `check_prettier_mangling.sh`'s curated pattern list should be widened (or a second,
+- [x] [SCRIPT] P3. Consider whether `check_prettier_mangling.sh`'s curated pattern list should be widened (or a second,
       broader-but-noisier mode added) — this incident's manual broader heuristic (`[a-zA-Z0-9]\*[a-zA-Z_]+`) caught real
       corruption the curated list missed (`defi*delta_one_funding_oi_...`). Weigh against the script's own stated design
       goal (low false-positive rate); a wider mode could be opt-in (`--strict`) rather than replacing the default.
@@ -104,3 +104,16 @@ context_scope:
   clean docs from the same backfill effort landed as `unified-trading-pm@9bf4fd50a`). Not fixed here — the doc-only
   hardening (todo 1) and the checker-widening question (todo 2) are both quick but distinct follow-ups, left as open
   todos rather than actioned inline.
+- **2026-08-01 (both todos closed)**: Todo 1 — added the warning to `cursor-configs/CLAUDE.md`'s git-discipline bullet
+  (condensed an unrelated historical sentence elsewhere in the same file to stay under the 40KB hard cap — was
+  40,958/40,960 B, 2 B of headroom, before this edit) and fixed THREE bare `npx prettier --write` call sites inside
+  `/codex/06-coding-standards/quality-gates.md` itself (lines ~1244/1257/1901 — the codex SSOT was recommending the
+  exact dangerous pattern this doc is about) to use `scripts/hooks/prettier-autostage.sh`, plus a explicit callout
+  citing both incident docs. Todo 2 — added an opt-in `--strict` flag to `check_prettier_mangling.sh`
+  (`STRICT_PAT='[a-zA-Z0-9]\*[a-zA-Z_]+'`), never wired into the default precommit gate. Verified: (a) full-corpus
+  default-mode run stays clean (`✅ no prettier emphasis-mangling in 1783 file(s)`, no regression), (b) a synthetic test
+  file containing a `defi*delta_one_funding_oi_something`-shaped span plus deliberate legit constructs (bold `**text**`,
+  a backtick-wrapped glob, `8*3600` arithmetic, a backtick-wrapped wildcard filename) — default mode stays clean (as
+  expected, matches this incident's real miss), `--strict` catches exactly the mangled span and flags none of the legit
+  constructs. All three edited files (`CLAUDE.md`, `quality-gates.md`, this doc) formatted with the PINNED
+  `npx -y prettier@3.9.5` and re-verified clean via the checker itself.
