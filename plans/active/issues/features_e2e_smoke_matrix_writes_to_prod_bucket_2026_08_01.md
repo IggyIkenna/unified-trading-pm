@@ -183,7 +183,14 @@ identical `_invoke_cli()` shape so are near-certain but not individually re-veri
       confirmed test-artifact deletion.
 - [ ] [DATA] P2. Once P0 lands, re-run every family's `smoke_matrix.py` for real and confirm PASS against the
       GENUINELY-test-isolated bucket (not the accidental prod success some cells currently show) — this is the actual
-      proof the "institutional smoke matrix" contract now holds.
+      proof the "institutional smoke matrix" contract now holds. **⚠️ BLOCKED — do NOT run this cold.** Re-running
+      `smoke_matrix.py` (the cross_instrument family especially) re-triggers the unbounded-memory runaway that caused
+      the 2026-08-01 **second AO outage** (38.8GB RSS over 4.5h; its `timeout 150` wrapper AND a direct SIGTERM both
+      ignored; SIGKILL required) — see
+      `/plans/active/issues/features_cross_instrument_smoke_verify_unbounded_memory_second_ao_outage_2026_08_01.md`.
+      This todo's backlog task (`features_e2e_smoke_matrix_writes_to_prod_bucket-003`) is PARKED behind prereq
+      `features_smoke_verify_timeout_hardening_landed` (set by main-orchestrator 2026-08-01) and will not dispatch until
+      that incident doc's `[INFRA]` timeout/memory-bounding fix lands. Do NOT flip this checkbox or unpark before then.
 
 ## Progress Log
 
