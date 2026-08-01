@@ -269,12 +269,14 @@ named) rather than left as prose, per the findings-closure hard rule.
       `_BOOKMAKER_VENUES` default and no `.execute()` method). Either wire `OneXBetAdapter` into a real live dispatch
       path so the advertised venue support is real, or remove `"ONEXBET"` from `sports_handler.py`'s supported-venue
       sets until it is. P1 because this is a supported-venue claim that is currently false. (repo: execution-service)
-- [ ] [BACKEND] P1. Fix the `except Exception: pass` capability-preflight swallow at the 7 call sites listed in Finding
-      12 above (`exchanges/betfair.py:493-498`, `exchanges/betfair_order_mapping.py:128-133,212-217`,
+- [x] ✅ [BACKEND] P1. Fix the `except Exception: pass` capability-preflight swallow at the 7 call sites listed in
+      Finding 12 above (`exchanges/betfair.py:493-498`, `exchanges/betfair_order_mapping.py:128-133,212-217`,
       `exchanges/kalshi.py:223-228,305-310,415-420`, `exchanges/polymarket_clob.py:226-237`, all execution-service) —
       add a `logger.warning`/`log_event` call naming the swallowed exception type before proceeding, so a
       `CapabilityResolutionError`/`UnsupportedModeError`/`UnsupportedEnvironmentError` firing in production is at least
-      observable instead of silent, ahead of a real order placement/cancellation. (repo: execution-service)
+      observable instead of silent, ahead of a real order placement/cancellation. (repo: execution-service) —
+      execution-service@7bba972a. Added `logger.warning` naming `type(exc).__name__` + the exception message at all 7
+      sites; control flow (graceful degradation, still not re-raising) unchanged. Full QG green.
 - [ ] [OPERATOR] P3. Decide whether the `except Exception: pass  # Graceful degradation` capability-preflight pattern
       found at the 7 sports_execution sites (Finding 12) should be treated as a workspace-wide anti-pattern — the same
       textual pattern was also seen outside the audited directory (`instruction_router.py`,
