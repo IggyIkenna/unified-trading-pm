@@ -560,16 +560,24 @@ orphaned?" resolves to "everything," because nothing in the covering set does an
       banner already claimed existed. Repo: unified-trading-pm. Source:
       `/plans/archive/issues/plan_hygiene_precommit_and_agentic_resolution_2026_06_10.md`.
 
-- [ ] [BACKEND] P2. **Serve the generated L0 doc-graph from the AO dashboard for central human visibility.**
-      `scripts/docs/gen_doc_graph.py` already produces `DOC_GRAPH.generated.html` (self-contained, gitignored, per-host:
-      1,119 nodes / 3,113 `related`+`referenced_by` edges, 3D force layout, facet filters + search + neighborhood
-      isolate + doc panel, shipped `pm@d03703d0e`). The one remaining piece of the source todo is serving that file as a
-      static route from the agent-orchestrator dashboard so a human can open it without a local checkout. Keep it
-      READ-ONLY and regenerate-on-demand or serve-latest-on-disk — do NOT commit the artifact (it is deliberately
-      gitignored + per-host so there is no fleet-shared multi-writer hotspot). **Scope guard**: serve it from the **AO
-      dashboard**, not deployment-ui — a sibling todo in this batch owns deployment-ui's test surface. **Done when**: a
-      documented dashboard URL renders the current graph, the route is auth-gated the same way the rest of the dashboard
-      is, and nothing gitignored got committed. Repo: agent-orchestrator. Source:
+- [x] ✅ [BACKEND] P2. **DONE 2026-08-01 (slot-4) — Serve the generated L0 doc-graph from the AO dashboard for central
+      human visibility.** — agent-orchestrator@517a0bc. `GET /api/docs/doc-graph` (`server/routes/docs.py`, auth-gated
+      via the same `AUTHED_DEPS` every other dashboard API route uses) serves the current on-disk
+      `DOC_GRAPH.generated.html` from the sibling PM checkout — read-only, serve-latest-on-disk, never regenerates or
+      commits the gitignored artifact. New `/doc-graph` dashboard page (`dashboard/src/DocGraph.tsx`, wired into
+      `App.tsx`'s Router + a "Doc Graph →" button on `Landing.tsx`) fetches it with the existing Bearer-token auth flow
+      and renders via `<iframe srcDoc>` (a bare `<iframe src>` can't carry the auth header on direct navigation, so the
+      client-side-fetch-then-srcDoc pattern is required — same reasoning as `FleetGit`/`FleetKpis`'s authenticated-fetch
+      pages). Dashboard `tsc --noEmit` + vitest (171 tests) and backend `basedpyright`/`pytest`/`ruff` all green under
+      `quality-gates.sh`. `scripts/docs/gen_doc_graph.py` already produces `DOC_GRAPH.generated.html` (self-contained,
+      gitignored, per-host: 1,119 nodes / 3,113 `related`+`referenced_by` edges, 3D force layout, facet filters +
+      search + neighborhood isolate + doc panel, shipped `pm@d03703d0e`). The one remaining piece of the source todo is
+      serving that file as a static route from the agent-orchestrator dashboard so a human can open it without a local
+      checkout. Keep it READ-ONLY and regenerate-on-demand or serve-latest-on-disk — do NOT commit the artifact (it is
+      deliberately gitignored + per-host so there is no fleet-shared multi-writer hotspot). **Scope guard**: serve it
+      from the **AO dashboard**, not deployment-ui — a sibling todo in this batch owns deployment-ui's test surface.
+      **Done when**: a documented dashboard URL renders the current graph, the route is auth-gated the same way the rest
+      of the dashboard is, and nothing gitignored got committed. Repo: agent-orchestrator. Source:
       `l0_doc_index_generator_2026_06_24.md`.
 
 - [ ] [SCRIPT] P3. **Add the on-demand L0-index stale-check wrapper an agent calls before grepping.** The FF-pull cron
