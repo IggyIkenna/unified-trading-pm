@@ -120,8 +120,9 @@ This twin holds that verification plus the archival ritual.
       `_vm_sse_generator`/`_live_cluster_sse_generator` have zero direct test coverage of the honest-empty-stream
       behavior (verified true by code trace + my live curl, but not by an executable backend test) — out of scope for
       this UI-scoped todo (different repo, different craft; `deployment-api` isn't in this plan's `repos:`), filed as
-      [`/plans/active/issues/deployment_api_log_stream_sse_generator_no_test_coverage_2026_07_30.md`](/plans/active/issues/deployment_api_log_stream_sse_generator_no_test_coverage_2026_07_30.md)
-      (2 concrete `[BACKEND]` todos) rather than silently crossing craft lines.
+      [`/plans/archive/issues/deployment_api_log_stream_sse_generator_no_test_coverage_2026_07_30.md`](/plans/archive/issues/deployment_api_log_stream_sse_generator_no_test_coverage_2026_07_30.md)
+      (2 concrete `[BACKEND]` todos, both closed + doc archived 2026-08-01 — `deployment-api@e277f4c`) rather than
+      silently crossing craft lines.
 - [x] ✅ [PLANNING] P3. **DONE 2026-07-30 (plans-corpus-reduction-marathon wave 4).** Both verifications above were done
       (todo 1 by this wave, todo 2 by a concurrent slot-6 session, `deployment-ui@228ccb0`) and the source plan had zero
       open todos + no `locked_by:`. Ran the 6-step archival ritual: both docs moved to `plans/archive/2026_07/`,
