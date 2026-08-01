@@ -191,3 +191,59 @@ failed **5x today** (`110123`, `110907`, `114120`, `122555`, `130846`), well pas
 STOP relaunching, file an issue") a 6th relaunch would almost certainly reproduce the identical 52/594 crash. This
 finding stays `status: open` pending a follow-up read of `_maybe_dispatch_chain_streaming`'s fallback + the two
 unguarded per-slice helper calls.
+
+## Finding 4 (NEW, open) — reproduces on a DIFFERENT date too; "falling back to eager" hypothesis disconfirmed; new lead
+
+A FOURTH DP-VM-001 escalation (`agt-b6e124`, VM `mdps-backfill-sports-pipelinecheck-20260801-134301-2bf067`,
+`deployment_id=dc5c436b-e1fd-4977-bef5-d1f9dbb97294`, `exit_code=1`, `started_at=13:45:50Z`, well after both the
+`8358b9f` fix (12:31:14Z) and finding 3's `130846` repro (finished 13:37:32Z)) hit the **identical crash signature on a
+DIFFERENT date** — `2025-12-18` (all three prior finding-3 repros were `2025-12-24`): `50/638` `odds_horizon_bucket`
+instruments logged `"Unknown error"` (breakdown: BOVADA 2/50, CORAL 2/38, FANDUEL 8/38, LADBROKES_UK 2/76, PINNACLE
+10/73, SKYBET 6/37, UNIBET_UK 16/48, WILLIAMHILL 4/33 — the same bookmaker set finding 3 already implicated), then
+`Handler returned non-zero exit code: 1` and self-deleted. This proves the bug is not date-specific — it is a structural
+property of this data shape (H2H/spreads/totals odds_horizon_bucket markets for these 8 bookmakers), not a
+`2025-12-24`-only artifact.
+
+**"Falling back to eager" hypothesis (finding 3's leading hypothesis) — DISCONFIRMED for this run**: grepped this VM's
+full `run.log` for `"falling back to eager"` (the exact string `_maybe_dispatch_chain_streaming` logs on its broad
+except) — zero hits. The log DOES show 1176 `"Chain-bundle streaming produced 0 candles"` lines (streaming path ran
+normally for many shards) and traced one specific failing instrument
+(`FOOTBALL:bovada:h2h:soccer_argentina_primera_division:2025/2026:Racing Club-Estudiantes::AWAY`, one of the 50) start
+in the EAGER path (`_write_or_record_empty_timeframe`, `live_workers_chain.py`) at `tf=15m`/`tf=1h` — its own
+FetchEvidence-gate WARNING fires (finding 2's bug) but that path returns `(0, None, None)` for both timeframes, adding
+nothing to `errors`, so `_run_adapter_and_write`'s `success = len(errors) == 0` (the `8358b9f` fix) should read
+`success=True` for this instrument on its own accounting. Also re-verified BOTH honest-absence branches post-`8358b9f`:
+`_write_or_record_empty_timeframe` (eager) and `_streaming_write_per_tf`'s zero-candle `continue` branch →
+`_record_streaming_empty_timeframe` (streaming) neither one appends to `errors` — both are correctly excluded from the
+failure tally. **Neither of the two known "success formula" call sites (`live_workers.py:444`,
+`live_workers_streaming.py:856`) can produce this instrument's empty-`error_message` outcome from what I traced.**
+
+**New concrete lead (not yet confirmed — the next cheap, bounded step)**: `batch_workers.py::_collect_future_result`
+(lines 507-521, 493-537) wraps `future.result()` in
+`except (OSError, ValueError, RuntimeError, KeyError, TypeError) as e: ... error_message=str(e)` (and a second, broader
+`except Exception` branch, same shape). If the underlying exception was raised with NO message (e.g. `raise SomeError()`
+with empty parens, or a custom `__str__`/`__repr__` override that can return `""`), `str(e)` is `""` —
+`error_message=""` — which is exactly what reproduces `result.error_message or "Unknown error"` at
+`process_handler.py:468` (the only other site that ever prints the literal string `"Unknown error"`; confirmed via
+`grep -rn "Unknown error"` — no other candidate). This is a DIFFERENT code layer than either "success formula" (it fires
+when the WHOLE per-file future raises, not when a per-timeframe/per-symbol accounting produces a non-zero-but-empty
+error list) — consistent with `_collect_future_result`'s fallback `ProcessingResult(instrument_id= blob_path, ...)`,
+i.e. `_process_instrument_file` itself is the thing raising, not a normal internal error-accumulation path. **Not yet
+done**: (1) grep this VM's `run.log` for a bare `ERROR`/traceback line coinciding with each of the 50 timestamps (the
+file-level exception, if this hypothesis is right, should log SOMETHING via `logger.error` at `_collect_future_result`
+line 513 BEFORE the summary — re-check with `grep -n "❌ Exception processing"` specifically, not the generic
+`Traceback|Exception` search finding 3 already ran and I re-ran with the same null result); (2) if that grep also comes
+up empty, the exception is being raised+caught+message-lost somewhere BEFORE `_collect_future_result`'s own try (i.e.
+inside `_process_instrument_file` itself, in a frame this analysis hasn't reached yet) — read
+`_process_instrument_file`'s full body + `_submit_instrument_file_tasks` next; (3) a local repro against one of the 50
+known-bad instrument_ids for `2025-12-18` would settle this definitively without more log archaeology.
+
+**No relaunch performed for this VM's failure either.** The `mdps-backfill-sports-` prefix has now failed **6x today**
+across two different target dates (`110123`, `110907`, `114120`, `122555`, `130846` for `2025-12-24`; this VM for
+`2025-12-18`) — `rb_infra_relaunch.md`'s `≤2/(vm-prefix,day)` bound is read here as scoped to the VM-name prefix within
+the CALENDAR day the relaunch decision is being made (not per-target-date), since the runbook's own bound-check language
+is "≥2 relaunches of this prefix today"; even read narrowly per-target-date, `2025-12-18` has itself now failed once and
+would need a second failure before the bound even engaged, but relaunching a CONFIRMED deterministic code bug (proven
+above, now on a second independent date) would not surface new information — it would only reproduce the identical
+`~50/N "Unknown error"` crash and burn compute. Escalation ping sent to the authoring slot per the
+`data_pipeline_failure` role contract; this doc remains the tracking surface. Status stays `open`.
