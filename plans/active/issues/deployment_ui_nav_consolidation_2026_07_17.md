@@ -82,19 +82,22 @@ screens lost.
 
 ## Todos
 
-- [ ] [UI] P3. **RULED 2026-07-28 (was `[OPERATOR]`) — KEEP the always-visible top bar; DELETE the dropdown.** Reasoning
-      applied from the operator's standing general ruling: none of the 8 explicit theme bullets
-      (backfill/migration/cost/Databento/manifest-version/pause-unpause/auto-recovery/live-probing/adaptor-completion)
-      names UI taste directly, but "Opt for full completions, no shortcuts, full functionality" does apply here on its
-      own technical merits, not as a style preference — the two options are NOT functionally equivalent: the bar lives
-      in the page Header, so it is reachable on EVERY route, while the dropdown (in its earlier cockpit location)
-      demonstrably vanished on exactly the routes that navigate away from it — a real functional regression, not a taste
-      difference. Keeping the option with full functionality on every route over the one with a known route-dependent
-      gap is the "no shortcuts, full functionality" ruling applied concretely. Both currently render the same
-      `NAV_ITEMS_CANONICAL` list, so this is a pure deletion, not a rebuild — delete the dropdown component + its
-      now-redundant tests/mocks, keep the bar as the sole nav surface. `pw:L2 ✓` + cited regression spec covering the
-      removal (confirm no orphaned route becomes unreachable once the dropdown is gone — the orphan-route audit this
-      doc's own "Lessons" section flags as the real gate here).
+- [x] ✅ [UI] P3. **RULED 2026-07-28 (was `[OPERATOR]`) — KEEP the always-visible top bar; DELETE the dropdown.** —
+      deployment-ui@32c0999. Reasoning applied from the operator's standing general ruling: none of the 8 explicit theme
+      bullets (backfill/migration/cost/Databento/manifest-version/pause-unpause/auto-recovery/live-probing/
+      adaptor-completion) names UI taste directly, but "Opt for full completions, no shortcuts, full functionality" does
+      apply here on its own technical merits, not as a style preference — the two options are NOT functionally
+      equivalent: the bar lives in the page Header, so it is reachable on EVERY route, while the dropdown (in its
+      earlier cockpit location) demonstrably vanished on exactly the routes that navigate away from it — a real
+      functional regression, not a taste difference. Keeping the option with full functionality on every route over the
+      one with a known route-dependent gap is the "no shortcuts, full functionality" ruling applied concretely. Both
+      rendered the same `NAV_ITEMS_CANONICAL` list, so this was a pure deletion, not a rebuild: deleted the `NavMenu`
+      dropdown component + its Header trigger wiring, kept the shared nav data (still consumed by TopNavBar + the mobile
+      hamburger), deleted the now-redundant dropdown-mechanic tests, and ported the
+      canonical-entries-navigate-to-a-real-screen regression coverage onto TopNavBar (`tests/smoke/top-nav-bar.spec.ts`,
+      renamed from `nav-menu-dedup.spec.ts`). `pw:L2 ✓` (85/85 targeted nav specs + full smoke suite 423/423 green) +
+      `orphan-audit --blocking` confirms no new orphaned routes vs baseline — the real gate this doc's own "Lessons"
+      section flags.
 - [x] [DOCS] P3. **RESOLVED same day, 2026-07-17 (confirmed via code, workspace stale-gate audit 2026-07-28).** Original
       ask: decide whether to delete the 7 remaining duplicate standalone routes (`/deployments`,
       `/ops/live-deployments`, `/chaos`, `/safety-ops`, `/research/ml-experiments`, `/research/strategy-backtests`,
@@ -126,7 +129,7 @@ screens lost.
 
 | Item                                     | State                                                   | Why deferred / blocked on                                                                                                                                                                                                |
 | ---------------------------------------- | ------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Dropdown vs bar — keep one               | ✅ **RULED 2026-07-28**                                 | Keep the bar, delete the dropdown — functional edge (survives every route), not a taste call. See the retagged todo above.                                                                                               |
+| Dropdown vs bar — keep one               | ✅ **RULED 2026-07-28, SHIPPED 2026-08-01**             | Kept the bar, deleted the dropdown — functional edge (survives every route), not a taste call. deployment-ui@32c0999. See the todo above.                                                                                |
 | Delete the 7 duplicate standalone routes | **Operator-owned**                                      | Operator wants to compare chromes first. Mechanical once decided.                                                                                                                                                        |
 | Delete the 3 dead pages                  | **Not done**                                            | Blocked on nobody. Small + clear.                                                                                                                                                                                        |
 | Real 404 instead of `*` → Overview       | **Not done**                                            | Blocked on nobody.                                                                                                                                                                                                       |
@@ -148,6 +151,18 @@ used to recommend chasing were already found NOT REPRODUCIBLE on 2026-07-28, and
   functionality difference, so the "full functionality, no shortcuts" ruling determines the answer rather than leaving
   it as an open taste call. Retagged the todo from `[OPERATOR]` to `[UI]` with the ruling + reasoning written in, and
   updated the "Deferred work" table row to match. Docs-only, no code changed.
+
+- **2026-08-01 (shipped)** — Executed the 2026-07-28 ruling: deleted the `NavMenu` dropdown component
+  (`src/components/NavMenu.tsx`) and its Header trigger wiring (top-left "UTS" brand is now a static logo, no
+  `aria-haspopup`/`onClick`), keeping the shared `NAV_GROUPS`/`NAV_ITEMS_CANONICAL`/`cockpitTabIdFor`/
+  `navItemIsActive`/`NAV_LINKS_FLAT` exports in place (still consumed by TopNavBar and the mobile hamburger). Deleted
+  the dropdown-only mechanic tests (open/close, backdrop, Escape — no bar equivalent, the bar has no open/closed state)
+  from `Header.test.tsx` and `tests/smoke/cockpit.spec.ts`. Ported the "every canonical entry navigates to a real,
+  error-free screen" + "no duplicate hrefs" regression coverage from the dropdown onto TopNavBar, renaming
+  `tests/smoke/nav-menu-dedup.spec.ts` → `tests/smoke/top-nav-bar.spec.ts`. Verified via `orphan-audit --blocking` (no
+  new orphans vs baseline — the dropdown's route data lived in the same file and is still referenced by TopNavBar, so
+  nothing became unreachable), `tsc`/ESLint clean, vitest 1102/1102, targeted nav Playwright specs 85/85, full smoke
+  suite 423/423. Shipped deployment-ui@32c0999.
 
 ## Lessons
 
