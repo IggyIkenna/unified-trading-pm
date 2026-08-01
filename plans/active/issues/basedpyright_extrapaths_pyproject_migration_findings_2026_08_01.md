@@ -128,8 +128,11 @@ script isn't invoked by `quality-gates.sh`), so none of this is actively blockin
       `workspace-manifest.json` dep, no source import), added `unified-api-contracts` (confirmed real manifest dep);
       re-ran `check-pyrightconfig-extrapaths.py` — zero remaining warnings for client-reporting-api; `quality-gates.sh`
       green (103s).
-- [ ] [SCRIPT] P3. deployment-api: remove the 2 dead extraPaths, add the missing `deployment-service` and
-      `unified-api-contracts` extraPaths in `pyproject.toml`. (repo: deployment-api)
+- [x] ✅ [SCRIPT] P3. deployment-api: remove the 2 dead extraPaths, add the missing `deployment-service` and
+      `unified-api-contracts` extraPaths in `pyproject.toml`. (repo: deployment-api) — deployment-api@7cdc1c9. Removed
+      `unified-cloud-interface`/`unified-config-interface` (confirmed dead: no `workspace-manifest.json` dep, no source
+      import), added `deployment-service`/`unified-api-contracts` (confirmed real manifest deps); re-ran
+      `check-pyrightconfig-extrapaths.py` — zero remaining warnings for deployment-api; `quality-gates.sh` green (172s).
 - [ ] [SCRIPT] P3. deployment-service: remove the 2 dead extraPaths, add the missing `unified-api-contracts` extraPath
       in `pyproject.toml`. (repo: deployment-service)
 - [ ] [SCRIPT] P3. execution-service: remove the 8 dead extraPaths in `pyproject.toml`; separately investigate the 4
