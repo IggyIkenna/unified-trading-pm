@@ -239,20 +239,39 @@ compare against `origin/live-defi-rollout`. That is seconds of work per item, ne
 and no operator authority — and it would have auto-closed 8 of these 10 rows without a human ever being asked. Recovery
 authority is the expensive answer to a question that a verifier answers for free.
 
-- [ ] [SCRIPT] P2. **Add a read-only "is this orphan still orphaned?" verifier + wire it into the orphan-recording
-      path.** For every recorded orphan sha: report `merge-base --is-ancestor <sha> origin/<branch>`, and for each file
-      the commit touches a blob-level `SAME-AS-ORIGIN` / `DIFFERS` verdict plus the `git diff origin <sha>` line-delta
-      SIGN (a net-negative delta means recovering it would REGRESS origin — the trap 4 of the 10 rows above hit). Emit
-      `SUPERSEDED` / `STILL-ORPHANED` / `WOULD-REGRESS` per item. Read-only, no worktree write, no liveness gate needed,
-      safe to run on live slots. Repo: agent-orchestrator (alongside `server/worktree_clean_check/`). **Done when**: the
-      verifier reproduces this sweep's 10 verdicts from the recorded shas alone, and the orphan-recording path calls it
-      so a stale orphan row self-closes instead of ageing into a false P1.
-- [ ] [SCRIPT] P2. **Make the liveness discriminator triangulate instead of trusting `.agent-claim`.** This sweep
-      measured a 32-day-expired claim on a demonstrably LIVE slot 5, and slot 15 flipping dead→live inside a 9-minute
-      window. Any sweep that gates on claim age alone will act on live worktrees. Require tmux-session existence AND
-      `/api/state.worker_alive` AND a `/proc/<pid>/cwd` check, and re-assert liveness immediately before any write, not
-      once at sweep start. Repo: agent-orchestrator (`server/worktree_clean_check/_liveness.py`). **Done when**: the
-      discriminator returns LIVE for both the slot-5 and slot-15 shapes recorded above.
+- [x] ✅ **SHIPPED 2026-08-01 — agent-orchestrator@623009e3.** Added a read-only `verify_orphan()` in
+      `server/worktree_clean_check/_orphan_verify.py`: reports `git merge-base --is-ancestor <sha>     origin/<branch>`,
+      a per-touched-file blob-level `SAME-AS-ORIGIN`/`DIFFERS`/`ABSENT-ON-ORIGIN`/`ABSENT-IN-COMMIT` verdict, and the
+      `git diff <remote>/<branch> <sha>` line-delta SIGN, emitting exactly `SUPERSEDED`/`STILL-ORPHANED`/`WOULD-REGRESS`
+      (plus a 4th `GONE` state for a sha with no resolvable commit object at all — the slot-3 shape below).
+      `discover_wip_preserve_refs`/`verify_wip_preserve_ref`/ `verify_all_wip_preserve_refs` cover both known ref
+      namespaces (`refs/wip-preserve/**` local-only, `refs/heads/wip-preserve/**` pushed). Wired into the
+      orphan-recording path via a new standalone `server/orphan_ref_verify_watchdog.py` (hourly, tunable
+      `tuning.orphan_ref_verify_interval_seconds`; deliberately NOT folded into `WorkerLivenessWatchdog._tick_once`, a
+      documented file-adjacency hot spot for two sibling batch-3 todos) — every tick logs `orphan_ref_verified` per ref
+      plus a distinct `orphan_ref_self_closed` for a SUPERSEDED/GONE verdict, never mutating/deleting any ref.
+      **Reproduction of this sweep's 10 verdicts**: the real 10 shas live in OTHER slots' (6/9/10/11/12/13/15/16) local
+      git object stores on `ip-172-31-5-118`, not reachable from the session that built this verifier (neither
+      filesystem nor an authorized SSM path for THIS task) — so the verifier is instead proven against synthetic repos
+      reproducing each of the 4 distinct FACT PATTERNS this sweep's 10 rows actually exhibited (ancestor-supersede /
+      byte-identical-supersede / net-negative-regress / gone), one test per pattern plus batch-discovery coverage, in
+      `tests/test_orphan_still_orphaned_verifier.py` (11 tests, all green). This is the honest substitute for
+      sha-literal reproduction, not a claim of having re-run against the real 10 shas.
+- [x] ✅ **SHIPPED 2026-08-01 — agent-orchestrator@623009e3.** `classify_maker_liveness()`
+      (`server/worktree_clean_check/_liveness.py`) now triangulates: when `slot_id` is supplied and this is NOT an
+      active respawn (`replacing_session is None`), an otherwise dead/absent claim-based verdict is cross-checked
+      against `/api/state.worker_alive` (DB `last_ping`, same formula `routes/state.py`/`stale_dispatch.py` already use)
+      and a live `/proc/<pid>/cwd` under the slot (via `pgrep -f <path>` + a cwd readlink, the same pattern
+      `worker_liveness/_git_alerts.py`'s git-staleness alert already uses) — either signal overrides to `"live"`. Gated
+      off whenever `replacing_session` is set, so `_preserve_wip_before_kill`'s one caller (whose own slot IS alive at
+      that exact instant, by design) keeps its untriangulated verdict. `_orphan.py`'s FM8 guard now re-asserts this
+      immediately before EACH repo's write inside the commit loop (not once for the whole batch) — the exact "re-assert
+      before any write" requirement. **Verified against both recorded shapes**:
+      `test_liveness_triangulates_worker_alive_over_expired_claim` (slot-5: 32-day-expired claim, `worker_alive_fn`
+      forced True → `"live"`) and `test_liveness_triangulates_proc_cwd_over_absent_claim` (slot-15: no claim/tmux,
+      `proc_cwd_fn` forced True → `"live"`), both in `tests/test_dirty_state_resolution.py`, plus a dead-stays-dead
+      control (slots 9/10 shape), a `replacing_session`-set control, and a zero-behavior-change-when-no-slot_id control.
+      Quality gate green (2212 tests) before shipping.
 - [ ] [DATA] P3. **Triage the 24 previously-uninventoried `refs/wip-preserve/**` refs this sweep found fleet-wide.**
       This doc tracked exactly ONE (`cascade-strategy-service-a77eb6d170ca`, now verified SUPERSEDED); a fleet-wide
       `for-each-ref`found **25**, dated 2026-07-26..2026-07-29. First-pass blob-compare says ~16 are content-identical
@@ -264,7 +283,22 @@ authority is the expensive answer to a question that a verifier answers for free
       substantive residual found is`slot-12     unified-trading-library c927ec58`(docstring`lst_staking_yields`→
       `lst_yields`, 2 lines) — needs a check of which feature_group name is actually correct before shipping either way.
       **Done when**: each of the 25 refs has a recorded SUPERSEDED / RECOVER / DELETE verdict. Depends on the verifier
-      above — do not hand-triage these one by one.
+      above — do not hand-triage these one by one. **Attempted 2026-08-01 (batch3 todo 3), using the now-shipped
+      verifier — 0/25 reachable from that session, checkbox deliberately left unresolved.** These refs are
+      `refs/wip-preserve/cascade-*`/`refs/wip-preserve/quickmerge-*` (`quickmerge.sh`'s
+      `cascade_dep_branch()`/STAGE-5-regate guard) — created via a LOCAL-ONLY `git update-ref`, never pushed, so they
+      exist ONLY in the specific slot's OWN `.git` on the host that created them. The session that built the verifier
+      ran on a laptop host with local filesystem access to slots 1-5 and 21-30 only (not 6/9/10/11/12/13/15/16 — those
+      live on `ip-172-31-5-118`, a different physical host, not reachable from that session's filesystem or an
+      authorized network path for that task). An exhaustive `git for-each-ref     'refs/wip-preserve/**'` across all 375
+      git repos in every one of that session's reachable slots (1-5, 21-30) found ZERO local wip-preserve refs anywhere
+      — confirming this specific 25-ref population genuinely has no presence outside the original sweep's host. (A much
+      larger, UNRELATED, ongoing population of `refs/heads/wip-preserve/orchestrator-slot-<N>-<sha>` and
+      `refs/heads/wip-preserve/slot-<N>-<repo>-<status>-<ts>` refs — pushed by
+      `_orphan.py`/`_ahead_push.py`/`_branch_state.py`'s own routine mechanisms — IS visible via `git ls-remote origin`
+      from any clone; that is a different, much bigger, continuously-growing population and is NOT this doc's 25.) This
+      todo needs a session dispatched with reach into `ip-172-31-5-118` (or run directly from it) to actually execute —
+      the verifier itself is ready and tested.
 
 ## Follow-ups that are NOT this doc's scope
 
