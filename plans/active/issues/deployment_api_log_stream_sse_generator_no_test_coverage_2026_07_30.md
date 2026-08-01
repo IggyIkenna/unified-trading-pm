@@ -10,7 +10,7 @@ summary: >-
   but no test in the repo drains either generator and asserts this. The two existing tests for this route only check
   that stream_logs() RETURNS an EventSourceResponse object without ever iterating it, so they exercise zero GCS I/O.
   Backend/Python — out of scope for the UI-scoped todo that found it (different repo, different craft).
-status: open
+status: resolved
 nature: issue
 asset_group: [cross-cutting]
 stage: [meta]
@@ -23,7 +23,7 @@ related:
     /codex/06-coding-standards/integration-testing-layers.md,
   ]
 created: "2026-07-30"
-last_updated: "2026-07-30"
+last_updated: "2026-08-01"
 parent_epic: observability_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -33,7 +33,7 @@ estimate_baseline_ai_days: 0.2
 estimate_calibrated_ai_days: 0.08
 assigned_role: backend_engineer
 drift_direction: advance-code
-resolved_by:
+resolved_by: deployment-api@e277f4c
 depends_on: []
 locked_by:
 locked_since:
@@ -92,9 +92,13 @@ since both generators are literal `while True` loops with no natural termination
 
 ## Todos
 
-- [ ] [BACKEND] P3. Add `tests/unit/test_route_log_stream.py` coverage that actually drains `_vm_sse_generator` (fake
+- [x] ✅ [BACKEND] P3. Add `tests/unit/test_route_log_stream.py` coverage that actually drains `_vm_sse_generator` (fake
       storage client, zero blobs) and asserts heartbeat-only / zero-vm_event / no-fabricated-row, mirroring
       `test_vm_events.py::test_empty_bucket_returns_zero_events`'s `_FakeStorageClient` pattern. (repo: deployment-api)
-- [ ] [BACKEND] P3. Add a second case in the same test file: a fake storage client returning 1-2 real-shaped blobs,
+      — deployment-api@e277f4c,
+      `TestVmSseGeneratorRealMode::test_empty_bucket_yields_heartbeats_only_no_fabricated_vm_event`, quality-gates.sh
+      green.
+- [x] ✅ [BACKEND] P3. Add a second case in the same test file: a fake storage client returning 1-2 real-shaped blobs,
       asserting the drained generator yields the matching `vm_event` frames with correct `VmLogLine` field mapping
-      (timestamp/event/severity/message). (repo: deployment-api)
+      (timestamp/event/severity/message). (repo: deployment-api) — deployment-api@e277f4c,
+      `TestVmSseGeneratorRealMode::test_real_blobs_yield_matching_vm_event_frames`, quality-gates.sh green.
