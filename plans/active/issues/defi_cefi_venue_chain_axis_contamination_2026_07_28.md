@@ -65,6 +65,14 @@ supersedes:
 superseded_by:
 resolved_by:
 depends_on: []
+context_scope:
+  [
+    /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
+    /plans/archive/issues/cross_ag_prediction_rows_bleed_into_sports_instruments_index_2026_07_20.md,
+    /plans/active/cross_cutting_satellite_ao_dispatch_batch1_2026_07_26.md,
+    instruments-service/scripts/migration_orphan_sweep.py,
+    features-service/features_service/cefi/calculators/perp_funding_corpus.py,
+  ]
 ---
 
 # DeFi/CeFi venue+chain axis cross-contamination (2026-07-28)
@@ -301,3 +309,4 @@ in this read-only audit pass (time-bounded scope).
   an earlier note in this doc that guessed MTDS-side). Parts (b) (physical GCS duplicate-object cleanup) and (c)
   (gas_fees accepted-exception design decision) remain, both correctly gated (operator sign-off / design call) — doc
   stays active/open, not archivable yet. The separate `[OPERATOR] P2` contested-architecture todo also remains open.
+- **context-scout 2026-08-01**: populated context_scope (5 entries).

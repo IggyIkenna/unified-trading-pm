@@ -34,6 +34,12 @@ estimate_calibrated_ai_days: 0.24
 locked_by:
 resolved_by:
 depends_on: []
+context_scope:
+  [
+    /codex/08-workflows/deployment-flow.md,
+    /codex/08-workflows/ci-cd-flow.md,
+    /plans/active/ci_satellite_ao_dispatch_batch4_2026_07_31.md,
+  ]
 source:
   - "surfaced while updating deployment-flow.md's sentinel-format claims for qg_sentinel_environment_blind_2026_07_23.md
     (ci_satellite_ao_dispatch_batch2 todo 1) — the local sentinel-format fix was applied inline (small+clear), but the
@@ -101,3 +107,7 @@ this doc's own `assigned_vm` now would open a second, independent dispatch path 
 activates. Staying NA until batch4 either ships this todo or is archived without shipping it — if the latter, re-open
 this doc as a RECLASSIFY candidate on the next audit pass. (Also flags a cross-skill population overlap worth a standing
 fix — see `/plans/active/issues/na_and_ag_closeout_audit_population_overlap_2026_07_31.md`.)
+
+## Progress Log
+
+- **context-scout 2026-08-01**: populated context_scope (3 entries).

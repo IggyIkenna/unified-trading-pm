@@ -40,6 +40,14 @@ priority: P2
 assigned_role: data_engineering
 drift_direction: advance-code
 depends_on: []
+context_scope:
+  [
+    /codex/02-data/honest-absence-downstream-handling.md,
+    /plans/active/task_template.md,
+    /plans/active/defi_consolidated_closeout_2026_07_18.md,
+    market-tick-data-service/market_tick_data_service/cli/handlers/_defi_manifest.py,
+    unified-api-contracts/unified_api_contracts/canonical/crosscutting/honest_coverage.py,
+  ]
 ---
 
 # DeFi clean-path fetch-evidence fidelity — scoping correction
@@ -155,3 +163,4 @@ below is explicitly gated on a human design call) — a future triage pass shoul
 
 - **na-eligibility-audit 2026-07-30**: KEEP-NA, valid - doc explicitly self-declares NA at its own frontmatter level and
   carries a [LOCAL] todo citing dispatch-scope eligibility as a human design call
+- **context-scout 2026-08-01**: populated context_scope (5 entries).

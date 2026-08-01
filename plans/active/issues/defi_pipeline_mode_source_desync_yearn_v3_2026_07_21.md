@@ -48,6 +48,13 @@ source:
   per the audit's own §9 follow-up flag (not yet its own issue at audit time); code-verified against the current
   market-tick-data-service vault_share_price_handler.py + _defi_manifest.py"
 resolved_by:
+context_scope:
+  [
+    /plans/audit/results/data_pipeline_reconciliation_defi_2026_07_20.md,
+    /codex/02-data/pipeline-mode-partition.md,
+    unified-api-contracts/unified_api_contracts/canonical/crosscutting/_source_priority_data.py,
+    market-tick-data-service/market_tick_data_service/cli/handlers/vault_share_price_handler.py,
+  ]
 ---
 
 # DeFi manifest pipeline_mode<->source desync on YEARN_V3 vault_share_price
@@ -162,3 +169,4 @@ vault-share-price collector) end-to-end:
 
 - **na-eligibility-audit 2026-07-30**: KEEP-NA, valid - todo 4 is an explicit [DECISION] on adding a second
   SOURCE_PRIORITY source (multi-source cell + backfill call); todo 5 targets codex
+- **context-scout 2026-08-01**: populated context_scope (4 entries).

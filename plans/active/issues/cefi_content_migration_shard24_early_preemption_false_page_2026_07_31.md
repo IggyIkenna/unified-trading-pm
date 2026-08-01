@@ -54,6 +54,12 @@ drift_direction: none
 depends_on: []
 resolved_by:
 locked_by:
+context_scope:
+  [
+    /codex/05-infrastructure/vm-launcher-runbook.md,
+    /plans/active/cefi_satellite_ao_dispatch_batch4_2026_07_31.md,
+    deployment-service/deployment_service/data_pipeline_monitors/exit_code_fleet_monitor.py,
+  ]
 ---
 
 # Shard 24's early-SPOT-preemption false page — corroborates the already-shipped 09a2374 fix; flags deploy lag
@@ -175,3 +181,4 @@ someone checks.
   (confirm/trigger a deployment-api redeploy — a live production-redeploy decision, not worker-determinable); item 2
   gated on item 1. Independently corroborated by `cefi_satellite_ao_dispatch_batch4_2026_07_31.md`'s own
   Deferred/operator-gated list (same conclusion, same reasoning). No reclassification.
+- **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).

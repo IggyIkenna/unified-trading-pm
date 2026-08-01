@@ -67,7 +67,12 @@ source:
 execution_scope: orchestrator-agent
 assigned_role: cicd
 drift_direction: advance-code
-context_scope: [/codex/08-workflows/ci-cd-flow.md]
+context_scope:
+  [
+    /codex/08-workflows/ci-cd-flow.md,
+    /plans/active/issues/github_actions_billing_wall_recurrence_2026_07_29.md,
+    /plans/active/issues/fleet_wide_qg_capacity_crisis_continues_day2_2026_07_29.md,
+  ]
 depends_on: []
 assigned_vm: planning
 resolved_by:
@@ -351,3 +356,4 @@ Session status at checkpoint (a fresh session picking this up should verify curr
 - **na-eligibility-audit 2026-07-30**: RECLASSIFY NA → planning — remaining todos are a bounded per-repo Dockerfile
   retry-with-backoff hardening plus a fleet-wide grep-and-fix for the same latent `uv pip install` + pip.conf-only gap;
   the P1 root fix already shipped and is cited. Other docs reference it as context, none claim its todos.
+- **context-scout 2026-08-01**: refreshed context_scope (3 entries).

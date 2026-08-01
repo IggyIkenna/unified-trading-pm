@@ -32,6 +32,13 @@ drift_direction: advance-code
 depends_on: []
 locked_by:
 locked_since:
+context_scope:
+  [
+    /plans/active/data_completion_defi_2026_07_15.md,
+    /plans/active/issues/defi_expected_unattempted_backlog_1m_2026_07_03.md,
+    /plans/active/mvp_backfill_defi_onchain_v10_2026_06_27.md,
+    market-tick-data-service/market_tick_data_service/cli/handlers/lending_indices_handler.py,
+  ]
 ---
 
 > **Footnote (2026-07-13, superseded counts — does not affect this doc's open topic):** the "465 catalog instruments" /
@@ -900,3 +907,4 @@ should flip `defi_onchain_v10_universe_v2_seed_or_backfill_progressed→true` on
   (`defi_onchain_v10_universe_v2_seed_or_backfill_progressed`, confirmed `false` via `GET /api/state`), doc's own text
   states the re-run "becomes useful again" only once that condition flips. No stale/duplicate/reclassify-eligible
   content found. Doc stays `assigned_vm: NA`.
+- **context-scout 2026-08-01**: populated context_scope (4 entries).

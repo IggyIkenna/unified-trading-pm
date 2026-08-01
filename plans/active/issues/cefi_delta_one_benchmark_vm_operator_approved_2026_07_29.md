@@ -35,6 +35,12 @@ superseded_by:
 resolved_by:
 source: ["BLK-ddb925b1 operator answer A, 2026-07-29; slot-6 correctly skipped bundled -056"]
 drift_direction: advance-code
+context_scope:
+  [
+    /codex/05-infrastructure/vm-launcher-runbook.md,
+    /plans/active/issues/features_e2e_check_delta_one_timeout_orphans_duplicate_vms_2026_07_27.md,
+    /plans/active/data_pipeline_check_mdps_features_2026_07_20.md,
+  ]
 ---
 
 # CEFI delta_one benchmark VM — operator-approved, unbundled (2026-07-29)
@@ -62,3 +68,7 @@ CEFI-only and records the go-ahead explicitly.
       CEFI features-e2e VM ran to completion, produced a real measured CEFI:delta_one number (cited), and left no
       orphaned or duplicate VMs. Repo: features-service + deployment-service. (TRADFI/DEFI per-family numbers stay
       tracked separately in `-056` — they are genuinely blocked and out of scope here.)
+
+## Progress Log
+
+- **context-scout 2026-08-01**: populated context_scope (3 entries).

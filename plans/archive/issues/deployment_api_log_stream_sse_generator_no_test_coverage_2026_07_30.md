@@ -42,6 +42,13 @@ source: >-
   data_pipeline_alert_substrate_residual_2026_07_24_finalize_2026_07_30.md todo 2 — traced by an Explore sub-agent
   (deployment_api/routes/log_stream.py + vm_events.py) then confirmed empirically via a direct curl against the real
   (CLOUD_MOCK_MODE=false) backend, both for a genuinely-running VM and a never-existed VM ref.
+context_scope:
+  [
+    deployment-api/deployment_api/routes/log_stream.py,
+    deployment-api/deployment_api/routes/vm_events.py,
+    deployment-api/tests/unit/test_route_log_stream.py,
+    /codex/06-coding-standards/integration-testing-layers.md,
+  ]
 ---
 
 # deployment-api `log_stream.py` SSE generators have no executable test coverage of the honest-empty-stream behavior
@@ -102,3 +109,7 @@ since both generators are literal `while True` loops with no natural termination
       asserting the drained generator yields the matching `vm_event` frames with correct `VmLogLine` field mapping
       (timestamp/event/severity/message). (repo: deployment-api) — deployment-api@e277f4c,
       `TestVmSseGeneratorRealMode::test_real_blobs_yield_matching_vm_event_frames`, quality-gates.sh green.
+
+## Progress Log
+
+- **context-scout 2026-08-01**: populated context_scope (4 entries).

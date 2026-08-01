@@ -47,6 +47,14 @@ source: >-
   Operator question 2026-07-24, mid-session, prompted by a specific GCS path they encountered directly and asked whether
   it was really canonical / how downstream code reads it.
 resolved_by:
+context_scope:
+  [
+    /plans/archive/issues/defi_dex_pools_delete_order_stale_2026_07_20.md,
+    /plans/archive/issues/defi_fold_manifest_registration_pending_2026_07_21.md,
+    /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
+    market-tick-data-service/market_tick_data_service/scripts/rebuild_defi_manifest.py,
+    /codex/02-data/orphan-object-detection.md,
+  ]
 ---
 
 ## What was found (measured, not inferred)
@@ -214,3 +222,4 @@ manifest — both prerequisite facts (scale + distribution) are now in hand for 
 
 - **na-eligibility-audit 2026-07-30**: KEEP-NA, valid - the [PM] todo is 'file a proper migration plan'
   (plan-destination operator ask) and the doc's own text calls itself the scoping step, not the execution surface
+- **context-scout 2026-08-01**: populated context_scope (5 entries).

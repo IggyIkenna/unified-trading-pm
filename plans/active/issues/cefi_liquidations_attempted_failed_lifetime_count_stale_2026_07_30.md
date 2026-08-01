@@ -49,6 +49,13 @@ drift_direction: advance-code
 depends_on: []
 last_updated: 2026-07-30
 locked_since:
+context_scope:
+  [
+    /codex/05-infrastructure/data-pipeline-alerts.md,
+    /plans/active/issues/dp_escalation_worker_dispatch_no_open_issue_check_2026_07_29.md,
+    deployment-service/deployment_service/data_pipeline_monitors/meta_watchers.py,
+    deployment-service/deployment_service/data_pipeline_monitors/known_dead_cells_registry.py,
+  ]
 ---
 
 # DP-FETCH-009 (cefi/liquidations) pages on a stale lifetime count, not a live regression
@@ -189,3 +196,4 @@ not lost if the bound expires unanswered.
 - **na-eligibility-audit 2026-07-31** (tranche=cefi, autonomous): KEEP-NA, valid — both open todos are explicitly
   `[OPERATOR]`/operator-conditional (decide among options A/B/C; the DIAG follow-up is gated on that decision). Not
   worker-determinable.
+- **context-scout 2026-08-01**: populated context_scope (4 entries).

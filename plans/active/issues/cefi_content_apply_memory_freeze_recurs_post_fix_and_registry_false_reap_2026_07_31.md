@@ -56,6 +56,13 @@ drift_direction: advance-code
 depends_on: []
 resolved_by:
 locked_by:
+context_scope:
+  [
+    /plans/active/issues/cefi_content_migration_fleet_half_incomplete_2026_07_26.md,
+    /plans/active/issues/cefi_content_migration_corpus_still_incomplete_relaunch_round3_needed_2026_07_31.md,
+    /codex/15-runbooks/incidents/rb_infra_relaunch.md,
+    unified-trading-library/unified_trading_library/deployment_registry.py,
+  ]
 ---
 
 # cefi-content-apply memory-freeze recurs post-fix + a registry false-reap
@@ -207,3 +214,4 @@ depend on.
   active, so NOT independently reclassified here (would risk duplicate dispatch on `deployment_registry.py` once batch4
   activates). Items 3-5 are corroborating data points feeding a different still-open investigation (shard-16), genuinely
   open. No reclassification; revisit if batch4 stalls without activating.
+- **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).

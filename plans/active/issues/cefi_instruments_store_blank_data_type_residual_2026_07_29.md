@@ -30,6 +30,13 @@ depends_on:
 assigned_role: data_engineering
 source: [data_completion_cefi_2026_07_15.md, cf_manifest_audit live re-run 2026-07-29]
 drift_direction: advance-code
+context_scope:
+  [
+    /plans/active/data_completion_cefi_2026_07_15.md,
+    /plans/active/issues/cefi_e6_cf7_relabel_and_attempted_failed_remeasure_2026_07_26.md,
+    /plans/archive/issues/manifest_reprocessing_generic_utility_2026_07_07.md,
+    unified-trading-library/unified_trading_library/manifest_writer/_rows.py,
+  ]
 ---
 
 ## What I found
@@ -138,3 +145,7 @@ venues), not because of venue-specific writer behavior; LIGHTER-ZKSYNC/PACIFICA-
 per-venue gap — `data_type` blank-on-non-captured is the correct, universal, cross-cutting manifest behavior; the
 `error_reason` column is the "why" signal for non-captured cells, `data_type` is reserved for what was actually typed.**
 No code change, no waiver doc needed — this todo is closed by evidence.
+
+## Progress Log
+
+- **context-scout 2026-08-01**: populated context_scope (4 entries).

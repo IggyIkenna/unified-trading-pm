@@ -48,6 +48,12 @@ drift_direction: advance-code
 depends_on: []
 resolved_by:
 locked_by:
+context_scope:
+  [
+    /plans/active/issues/cefi_content_migration_fleet_half_incomplete_2026_07_26.md,
+    /plans/active/cefi_satellite_ao_dispatch_batch4_2026_07_31.md,
+    unified-trading-library/unified_trading_library/cloud_interface/providers/gcp.py,
+  ]
 ---
 
 # GCSStorageClient retry predicate gap + a checkpoint-resume actuator bug (fixed)
@@ -143,3 +149,4 @@ real progress, until this fix.
   4 (Source-cited); batch4 is `status: draft`, not active — NOT independently reclassified here to avoid duplicate
   dispatch on `gcp.py` once activated. Bug confirmed still live in code
   (`unified_trading_library/cloud_interface/providers/gcp.py:66-75`).
+- **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).

@@ -72,6 +72,13 @@ source:
   found while triaging estate_orphan_assessment_2026_07_21.md todo 3's defi backfill (operator flagged the risk from a
   25-row log sample; this doc measures the true, full-population scope)
 depends_on: []
+context_scope:
+  [
+    instruments-service/scripts/backfill_orphan_class_e.py,
+    instruments-service/scripts/migration_orphan_sweep.py,
+    /plans/archive/2026_07/canonical_id_p0_kraken_futures_collision_2026_07_08.md,
+    /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
+  ]
 ---
 
 # defi orphan-sweep test-artifact prod-bucket leak (2026-07-24)
@@ -198,3 +205,7 @@ green, shipped via quickmerge.
       accurate. `split_unknown_prefix_rows` (this doc's fix, `instruments-service@9a491b23`) prevents this exact class
       from recurring on any FUTURE backfill run (defi/tradfi/prediction all still pending, and any cefi re-run) — it is
       retroactive protection only, it does not correct the 4 cells already recorded before it shipped.
+
+## Progress Log
+
+- **context-scout 2026-08-01**: populated context_scope (4 entries).

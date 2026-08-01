@@ -36,6 +36,13 @@ drift_direction: advance-code
 depends_on: []
 locked_by:
 locked_since:
+context_scope:
+  [
+    /plans/active/issues/instrument_availability_hive_canonicalisation_2026_07_21.md,
+    /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
+    instruments-service/instruments_service/engine/orchestrator/writers.py,
+    market-tick-data-service/market_tick_data_service/instrument_availability_paths.py,
+  ]
 ---
 
 ## What I found
@@ -344,3 +351,7 @@ FLAT shape, tracked under the other doc).
 - [ ] [DATA] P3. **NEW — once `instrument_availability_hive_canonicalisation_2026_07_21.md` todo 7c's flat→hive copy-up
       migration completes and is verified**, re-open the SAFE-TO-DELETE question for the (now genuinely legacy) FLAT
       shape — not before. (repo: instruments-service, tracked under that doc, not duplicated here)
+
+## Progress Log
+
+- **context-scout 2026-08-01**: populated context_scope (4 entries).

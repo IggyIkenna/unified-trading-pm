@@ -29,6 +29,12 @@ source: ["surfaced 2026-07-27 while closing data_completion_cefi_2026_07_15.md i
 resolved_by:
 locked_by:
 locked_since:
+context_scope:
+  [
+    /plans/active/issues/cefi_batch_manifest_blank_instrument_type_on_failure_2026_07_12.md,
+    market-tick-data-service/market_tick_data_service/market_interface/adapters/coinbase.py,
+    market-tick-data-service/market_tick_data_service/live/connectors/coinbase_book_ws.py,
+  ]
 ---
 
 # COINBASE-FUTURES 2026-07-25 blank instrument_type — 354 rows
@@ -67,3 +73,7 @@ reference-universe cache on that date) it could recur on future dates/venues.
       COINBASE-FUTURES instrument-type resolution path 5xx'd or timed out around that write, or whether it's a one-off
       partial-write artifact. Repo: market-tick-data-service. If a real resolver gap, backfill/patch just these 354 rows
       (small, targeted — not a corpus walk).
+
+## Progress Log
+
+- **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).

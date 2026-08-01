@@ -31,6 +31,13 @@ resolved_by:
 locked_by: live-defi-rollout
 locked_since: 2026-05-21
 assigned_role: data_engineering
+context_scope:
+  [
+    /plans/active/defi_consolidated_closeout_2026_07_18.md,
+    market-tick-data-service/market_tick_data_service/scripts/rebuild_defi_manifest.py,
+    market-tick-data-service/market_tick_data_service/scripts/_rebuild_defi_n5.py,
+    market-tick-data-service/market_tick_data_service/market_interface/adapters/defi/canonical_write.py,
+  ]
 ---
 
 # lst_rates + oracle_prices write timestamp-glued instrument_ids
@@ -383,3 +390,4 @@ not a new whole-corpus walk) once this fix ships, to reclassify them via the now
 - **2026-08-01 (slot-11)**: The single-day rebuild premise above was disproven — see the Todos entry. This doc's scope
   is now fully resolved (either shipped/verified, in the case of the forward write-path fix, or folded into the closeout
   plan's P0 phantom-row purge, in the case of the historical residual rows); no standalone action remains here.
+- **context-scout 2026-08-01**: populated context_scope (4 entries).

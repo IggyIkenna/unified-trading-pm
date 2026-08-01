@@ -56,6 +56,14 @@ source: >-
 resolved_by:
 locked_by:
 locked_since:
+context_scope:
+  [
+    /codex/02-data/honest-coverage-model.md,
+    /plans/active/defi_venue_pipeline_to_live_ao_build_2026_07_30.md,
+    unified-api-contracts/unified_api_contracts/registry/capability_declarations/_defi.py,
+    instruments-service/scripts/expected_universe.py,
+    market-tick-data-service/market_tick_data_service/cli/handlers/lst_rates_handler.py,
+  ]
 ---
 
 # 6 newly-live LST/vault venues missing PROTOCOL_CAPABILITIES
@@ -114,3 +122,4 @@ guessed):
 - **2026-07-31 (slot-16, data_engineering craft)**: filed after diagnosing the zero-delta completeness_pct measurement
   required by `defi_venue_pipeline_to_live_ao_build_2026_07_30.md` todo 5. Not fixed inline — see `source:` above for
   why.
+- **context-scout 2026-08-01**: populated context_scope (5 entries).

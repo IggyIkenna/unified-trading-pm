@@ -51,6 +51,14 @@ estimate_calibrated_ai_days: 0.7
 assigned_role: backend_engineer
 drift_direction: advance-code
 depends_on: []
+context_scope:
+  [
+    /plans/active/issues/delta_one_lookback_instrument_discovery_wrong_universe_for_passthrough_defi_2026_07_30.md,
+    /plans/active/defi_satellite_ao_dispatch_batch3_2026_07_26.md,
+    features-service/features_service/delta_one/app/core/data_loader.py,
+    features-service/features_service/delta_one/app/core/_passthrough_loader.py,
+    features-service/features_service/delta_one/cli/handlers/_tf_cluster_helper.py,
+  ]
 locked_by:
 resolved_by:
 ---
@@ -379,3 +387,4 @@ coverage asserting a DEFI `funding_oi`/`returns` run actually loads non-empty da
   - **Not yet done**: the real (non-dry) `returns` verification-window run has not been re-relaunched against `94fd3c8b`
     as this note is written (session ending on context pressure — see the D1 todo's Progress Log for the exact resume
     command). `features-service@94fd3c8b` itself is shipped and green.
+- **context-scout 2026-08-01**: populated context_scope (5 entries).

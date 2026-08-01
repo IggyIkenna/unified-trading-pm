@@ -44,6 +44,12 @@ source:
     unified-api-contracts/pyproject.toml,
     unified-trading-library/pyproject.toml,
   ]
+context_scope:
+  [
+    /plans/archive/issues/hatch_vcs_main_tag_ancestry_gap_breaks_cross_repo_pip_install_2026_07_26.md,
+    /plans/active/issues/fleet_wide_qg_capacity_crisis_continues_day2_2026_07_29.md,
+    /plans/archive/issues/defi_wizard_batch2_018_residual_findings_2026_07_26.md,
+  ]
 ---
 
 ## What I found
@@ -422,3 +428,7 @@ than resolving it. `gh api .../actions/runners` → single `glue-ip-172-31-5-118
 in-progress runs for this repo → **0** (same signature — runner busy on a different repo's job). No code or config work
 available on this doc's own scope. Self-skipping (`reason_code: GATED`) per the now-confirmed auto-park mechanism —
 leaving todo 3 and todo 4 unchecked.
+
+## Progress Log
+
+- **context-scout 2026-08-01**: populated context_scope (3 entries).

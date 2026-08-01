@@ -54,6 +54,14 @@ locked_since:
 supersedes:
 superseded_by:
 resolved_by:
+context_scope:
+  [
+    market-tick-data-service/market_tick_data_service/cli/handlers/dex_swaps_handler.py,
+    /codex/05-infrastructure/vm-launcher-runbook.md,
+    /plans/archive/2026_07/defi_satellite_ao_dispatch_batch1_2026_07_25.md,
+    /plans/archive/issues/defi_curve_optimism_subgraph_no_allocations_2026_07_15.md,
+    /codex/02-data/honest-absence-downstream-handling.md,
+  ]
 ---
 
 ## What I found
@@ -511,3 +519,4 @@ escalation `agt-35d769`, slot 8, 2026-08-01.
 - **na-eligibility-audit 2026-07-30**: RECLASSIFY -> assigned_vm: planning (conflict-check CLEAR against 231 active
   planning docs; no open todo elsewhere duplicates this claim) - all 4 todos are bounded re-probes / per-venue
   diagnostics / a VM restart onto current code; no design or authority call left
+- **context-scout 2026-08-01**: populated context_scope (5 entries).

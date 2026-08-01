@@ -43,6 +43,13 @@ drift_direction: advance-code
 depends_on: []
 locked_by:
 resolved_by:
+context_scope:
+  [
+    /plans/active/issues/delta_one_candle_loader_no_pass_through_path_defi_2026_07_30.md,
+    /plans/active/defi_satellite_ao_dispatch_batch3_2026_07_26.md,
+    features-service/features_service/delta_one/app/calculators/funding_oi.py,
+    market-tick-data-service/market_tick_data_service/cli/handlers/perp_funding_handler.py,
+  ]
 ---
 
 # What I found
@@ -140,3 +147,4 @@ fixes above.
   (a5a5bf7d) works but funding_oi still fails deterministically on a structural OI-absence gap, via direct raw-parquet
   inspection across two capture eras (not simulated/guessed). Did not relaunch `funding_oi` further -- deterministic,
   fix-direction is genuinely operator/repo-owner scoped.
+- **context-scout 2026-08-01**: populated context_scope (4 entries).

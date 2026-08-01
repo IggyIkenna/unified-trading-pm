@@ -44,6 +44,13 @@ code_refs:
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
+context_scope:
+  [
+    /plans/active/cefi_consolidated_closeout_2026_07_18.md,
+    /plans/active/cefi_4surface_migration_execution_log_2026_07_24.md,
+    /codex/05-infrastructure/vm-launcher-runbook.md,
+    /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
+  ]
 ---
 
 # CeFi Surface-C chain-drop root cause + dry-run blind-spot fix + heavy-I/O-on-VM hard rule
@@ -527,3 +534,4 @@ verifier (2 consecutive clean passes, confirming colon_wire's actual status alon
 - **na-eligibility-audit 2026-07-30** (tranche=cefi, autonomous): KEEP-NA, valid - the sole todo resumes a migration
   explicitly PAUSED 2026-07-25 on operator request (host contention) and involves cron pause/resume around prod GCS
   renames.
+- **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).

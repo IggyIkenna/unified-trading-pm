@@ -64,6 +64,13 @@ supersedes:
 superseded_by:
 resolved_by:
 depends_on: []
+context_scope:
+  [
+    /plans/active/defi_satellite_ao_dispatch_batch6_2026_07_30.md,
+    /plans/archive/issues/defi_perp_funding_canonicalisation_derivative_ticker_all_perps_2026_07_15.md,
+    strategy-service/strategy_service/engine/core/canonical_perp_funding_provider.py,
+    unified-api-contracts/unified_api_contracts/registry/market_data_categories.py,
+  ]
 ---
 
 # perp_daily_ctx/perp_funding manifest-invisibility — derivative_ticker migration DECLINED, safe alternative identified
@@ -250,6 +257,7 @@ above.
   item remains genuinely open/unresolved. Doc not archive-eligible until both resolve.
 - **na-eligibility-audit 2026-07-30**: KEEP-NA, valid - carries an explicit [OPERATOR-DECISION] P3 todo; the [CODE] P2
   half is AO-ready but the doc cannot flip as a unit
+- **context-scout 2026-08-01**: populated context_scope (4 entries).
 
 ### 2026-07-28 — data_engineering (slot-6): data_type-axis denominator trace
 

@@ -34,6 +34,13 @@ source:
 resolved_by:
 locked_by:
 locked_since:
+context_scope:
+  [
+    /plans/active/defi_dex_pool_symbol_fix_backfill_purge_2026_07_25.md,
+    /plans/active/defi_dex_pool_symbol_fix_backfill_purge_finalize_2026_07_25.md,
+    /plans/active/issues/defi_dex_pools_subgraph_query_missing_input_tokens_2026_07_25.md,
+    market-tick-data-service/scripts/one_offs/delete_migrated_defi_markers_2026_07_23.py,
+  ]
 ---
 
 # FLAGGED `_migrated_*` markers are 3+ distinct unresolved root-cause clusters
@@ -193,3 +200,4 @@ re-checked once that plan completes.
 - **na-eligibility-audit 2026-07-30**: KEEP-NA-STALE: its sole todo's content is wholly owned by the active
   assigned_vm:planning plan defi_dex_pool_symbol_fix_backfill_purge_2026_07_25.md, whose finalize twin carries an open
   todo to reconcile status back into this doc. Citation fixed, not reclassified (flipping would dispatch a duplicate)
+- **context-scout 2026-08-01**: populated context_scope (4 entries).

@@ -47,6 +47,13 @@ depends_on:
 assigned_role: data_engineering
 drift_direction: advance-code
 locked_since:
+context_scope:
+  [
+    /plans/active/issues/honest_coverage_shard_dimension_model_definitional_data_2026_07_07.md,
+    /plans/active/instruments_completion_tracker_2026_07_06.md,
+    deployment-api/deployment_api/services/data_status/defi.py,
+    unified-api-contracts/unified_api_contracts/registry/defi_venues.py,
+  ]
 ---
 
 > **NOTIFY-OPERATOR class finding — a live, current data-correctness bug, not a design question.** Filed P0 because the
@@ -361,3 +368,4 @@ the whole orphan list; most `0/0` readings ARE honest, a specific minority are n
   chasing an operator hypothesis about naming mismatches. The hypothesis wasn't quite right — no naming mismatch exists
   — but the underlying instinct ("the dashboard's 0/0 might not be honest") was correct for 3 of the 6 venues checked.
   No files edited; the GCS read was read-only (download + pandas, no writes).
+- **context-scout 2026-08-01**: populated context_scope (4 entries).

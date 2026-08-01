@@ -40,6 +40,13 @@ assigned_role: data_engineering
 drift_direction: advance-code
 resolved_by:
 locked_by:
+context_scope:
+  [
+    /plans/archive/2026_08/defi_expected_unattempted_seeder_design_2026_07_26.md,
+    /codex/02-data/honest-absence-downstream-handling.md,
+    instruments-service/scripts/enumerate_expected_universe.py,
+    deployment-service/terraform/gcp/defi_collection_scheduler.tf,
+  ]
 source: >-
   Discovered 2026-08-01 (slot-16, data_engineering craft) while investigating
   /plans/archive/2026_08/defi_expected_unattempted_seeder_design_2026_07_26.md's Todo 6 ("investigate whether the v2
@@ -283,3 +290,5 @@ correctly scoped and already covers these 5 data_types in code; it just needs to
   SAME helper this issue's own opening evidence used successfully — does NOT actually bound memory at DeFi's current
   ~33.4M-row scale despite column projection; it OOM'd directly on this host on a 2-column request. Worth a dedicated
   issue doc for UTL if this helper is relied on elsewhere at DeFi scale; out of scope here.
+
+- **context-scout 2026-08-01**: populated context_scope (4 entries).

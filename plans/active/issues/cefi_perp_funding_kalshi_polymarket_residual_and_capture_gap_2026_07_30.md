@@ -77,6 +77,12 @@ source: >-
   from the manifest/GCS (they had not); investigating exactly which rows needed migrating surfaced these 4 findings
 resolved_by:
 depends_on: []
+context_scope:
+  [
+    /plans/archive/issues/cefi_sports_prediction_first_census_small_drift_2026_07_30.md,
+    /codex/05-infrastructure/vm-launcher-runbook.md,
+    /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
+  ]
 ---
 
 # CeFi perp_funding (KALSHI-PERP/POLYMARKET-PERP): residual manifest rows + a live capture failure + an unverified gap
@@ -295,3 +301,4 @@ workspace has already been burned by once.
     the hook's own instruction not to route around it, this is left for a future hygiene pass or an operator with a
     permissive session to remove. **P1 todo item is CONFIRMED fully done** — no reopen needed, this is a verification +
     cleanup note, not a correction to the shipped result.
+- **context-scout 2026-08-01**: populated context_scope (3 entries).

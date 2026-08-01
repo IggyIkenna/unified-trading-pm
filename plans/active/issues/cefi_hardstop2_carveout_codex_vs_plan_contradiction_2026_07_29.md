@@ -44,6 +44,12 @@ assigned_vm: NA
 execution_scope: local-only
 drift_direction: advance-docs
 depends_on: []
+context_scope:
+  [
+    /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
+    /plans/active/cefi_e4_e8_orphan_sweep_gapfill_rebuild_execution_2026_07_28.md,
+    /plans/active/cefi_track7_candle_namespace_residual_2026_07_25.md,
+  ]
 ---
 
 # Hard-stop #2's §3a-carveout status contradicts itself: codex says qualifiable, the CeFi plan says categorically not
@@ -114,3 +120,4 @@ conservatively in the plan itself (human-execution-only kept) pending an explici
   session's pre-fix Phase 0 population (see
   na_doc_tranche_inventory_stale_citation_membership_cross_contamination_2026_07_29.md); classified here for
   completeness, no state changed, cefi tranche's own future audit owns this doc.
+- **context-scout 2026-08-01**: populated context_scope (3 entries).

@@ -49,6 +49,13 @@ estimate_calibrated_ai_days: 0.6
 assigned_role: backend_engineer
 drift_direction: advance-code
 depends_on: []
+context_scope:
+  [
+    /plans/active/issues/delta_one_candle_loader_no_pass_through_path_defi_2026_07_30.md,
+    /plans/active/issues/delta_one_passthrough_lookback_buffer_too_short_for_sparse_ticks_2026_07_31.md,
+    /plans/active/issues/defi_delta_one_funding_oi_hyperliquid_missing_open_interest_2026_07_31.md,
+    features-service/features_service/delta_one/app/core/_passthrough_loader.py,
+  ]
 locked_by:
 resolved_by:
 ---
@@ -165,3 +172,4 @@ format before choosing the normalization strategy.
   direct repro that 945 real rows exist across the full window, but the per-date window only admits ~4-12 of them).
   Filed `delta_one_passthrough_lookback_buffer_too_short_for_sparse_ticks_2026_07_31.md` with full evidence + 3
   candidate fix directions. P2 stays unflipped — it now depends on that new issue's P1 fix landing first.
+- **context-scout 2026-08-01**: populated context_scope (4 entries).

@@ -52,6 +52,12 @@ source: >-
   defi_dedicated_bucket_shared_migration_2026_07_13.md's P3 housekeeping todo; filed per the findings-triage HARD RULE
   ("outside every plan → plans/active/issues/<slug>_<date>.md") rather than chased to full resolution, since resolving
   it requires a live-GCS orphan sweep this audit's scope doesn't cover.
+context_scope:
+  [
+    /plans/archive/2026_07/defi_manifest_canonicalisation_2026_06_01.md,
+    /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
+    /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
+  ]
 ---
 
 # C0-RD5/C0-RD5b legacy-orphan-sweep todos stranded in an archived plan
@@ -90,3 +96,7 @@ checked, not assumed.
       corpus's existing precedent of retroactively correcting archived-doc checkboxes when evidence surfaces, do not
       re-open/unarchive it). If any are found, draft a proper scoped todo in an active plan (this doc, upgraded, or a
       fresh one) — do not leave them stranded a second time.
+
+## Progress Log
+
+- **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).

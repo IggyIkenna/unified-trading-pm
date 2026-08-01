@@ -44,6 +44,13 @@ source:
 locked_by:
 locked_since:
 resolved_by:
+context_scope:
+  [
+    /codex/08-workflows/ci-cd-flow.md,
+    /plans/active/ci_satellite_ao_dispatch_batch1_2026_07_26.md,
+    scripts/propagation/rollout-cloudbuild.py,
+    scripts/quality_gates/check_cloudbuild_template_drift.py,
+  ]
 ---
 
 # The rollout tool would have regressed the fleet
@@ -144,6 +151,8 @@ silently regresses the fleet again.
   fixed here, intentionally baselined per the todo's own instruction). The checker fails the moment a repo's drift count
   grows PAST its seeded baseline (a template falling further behind), verified against a synthetic template-lags-repo
   case in the unit tests. Standalone only — wiring into `quality-gates.sh` stays in the finalize plan per this doc's P1.
+
+- **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).
 
 ## na-eligibility-audit verdict
 

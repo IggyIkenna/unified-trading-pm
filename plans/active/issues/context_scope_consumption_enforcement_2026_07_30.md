@@ -37,6 +37,7 @@ context_scope:
     /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
     /codex/11-project-management/doc-frontmatter-schema.md,
     /cursor-configs/skills/context-scout/SKILL.md,
+    /cursor-configs/AUTONOMOUS_AGENT_RULES.md,
   ]
 execution_scope: orchestrator-agent
 drift_direction: advance-code
@@ -134,3 +135,4 @@ pressure. The operator explicitly named this as "the rest of the work" for a lat
   `generate_context_scope_inventory.py` run reports 647 in-scope docs / 410 `NEVER_SCOUTED` / 15 `STALE` / 222
   `UP_TO_DATE` (up from 626/616/10/0 on 2026-07-31 — real progress, still majority-uncovered). This is a prose
   correction only; none of this doc's own open todos (design + rollout, both operator-gated) change.
+- **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).

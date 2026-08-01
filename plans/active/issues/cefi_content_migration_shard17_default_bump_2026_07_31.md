@@ -45,6 +45,11 @@ drift_direction: advance-code
 depends_on: []
 resolved_by:
 locked_by:
+context_scope:
+  [
+    /plans/active/issues/cefi_content_migration_fleet_half_incomplete_2026_07_26.md,
+    /codex/15-runbooks/incidents/rb_infra_relaunch.md,
+  ]
 ---
 
 # Shard 17's re-death confirms + ships the already-tracked MACHINE_TYPE default bump
@@ -144,3 +149,4 @@ instead of starting with adequate headroom.
   day-bound, so a future agent doesn't have to make this same judgment call ad hoc. Pinged the authoring fleet-monitor
   slot (`dp-fleet-monitor`) with this outcome, including the process deviation. No further relaunch of this shard needed
   unless `-063040` itself dies.
+- **context-scout 2026-08-01**: populated/refreshed context_scope (2 entries).

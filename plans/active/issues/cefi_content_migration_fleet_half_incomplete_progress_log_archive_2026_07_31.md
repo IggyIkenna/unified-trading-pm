@@ -37,6 +37,11 @@ drift_direction: advance-code
 depends_on: []
 resolved_by:
 locked_by:
+context_scope:
+  [
+    /plans/active/issues/cefi_content_migration_fleet_half_incomplete_2026_07_26.md,
+    /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
+  ]
 ---
 
 # Archived Progress Log detail: cefi content-migration fleet, 2026-07-26 → 2026-07-30T17:53Z
@@ -425,3 +430,4 @@ cause + fix shipped" section, and the continued Progress Log (2026-07-30T19:15Z 
   archival ritual (`codex/12-agent-workflow/plan-completion-and-archival-discipline.md`); one required referrer fix
   already identified — the parent doc's Progress Log cites this doc as where 2026-07-26 to 07-30T17:53Z detail "moved
   to," that citation needs updating to the new `plans/archive/...` path post-move.
+- **context-scout 2026-08-01**: populated/refreshed context_scope (2 entries).

@@ -43,6 +43,13 @@ locked_by:
 locked_since:
 supersedes:
 superseded_by:
+context_scope:
+  [
+    /plans/active/cefi_satellite_ao_dispatch_batch3_2026_07_26.md,
+    /plans/active/issues/cefi_instruments_store_blank_data_type_residual_2026_07_29.md,
+    /plans/active/issues/cefi_high_attempted_failed_batch_cluster_2026_07_23.md,
+    /plans/archive/issues/tardis_concurrent_ip_lockout_2026_07_12.md,
+  ]
 ---
 
 # CeFi E6 CF-7 relabel candidates + attempted_failed re-measure
@@ -183,3 +190,4 @@ rows) is real but small and not urgent.
   is execution-duplication, not a mis-defaulted NA. Citation: whoever next touches this doc's P3 checkbox should flip it
   citing `cefi_satellite_ao_dispatch_batch3_2026_07_26.md` line 144 as the executing doc, mirroring this doc's own
   already-`[x]`'d `[DOCS] P3` sibling todo's pattern ("already covered by ...batch3..., see that doc for execution").
+- **context-scout 2026-08-01**: populated context_scope (4 entries).

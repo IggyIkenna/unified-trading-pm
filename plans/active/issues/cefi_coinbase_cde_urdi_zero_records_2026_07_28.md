@@ -34,6 +34,12 @@ source: >-
   confirmed a real Traceback distinct from the run's other 25 venues' known checker false-positive/expected-absence
   patterns.
 resolved_by:
+context_scope:
+  [
+    /codex/02-data/four-surface-reconciliation-procedure.md,
+    cursor-configs/skills/data-pipeline-check-is/SKILL.md,
+    instruments-service/instruments_service/reference_data/adapters/cefi/coinbase_cde.py,
+  ]
 ---
 
 # CEFI COINBASE-CDE — URDI returns zero records, real crash on all 3 legs
@@ -156,3 +162,4 @@ by this doc, just applying the documented method to a genuinely-real finding).
   crash-harden + a checkable date-registry reconciliation with a stated done-when. Conflict-check clear (both sibling
   planning plans REFERENCE this doc as the owner). Shared conflict-check protocol:
   `/codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md` sect.3 - CLEARED.
+- **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).

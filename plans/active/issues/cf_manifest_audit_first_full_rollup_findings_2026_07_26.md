@@ -45,6 +45,12 @@ estimate_calibrated_ai_days: 1.2
 assigned_role: data_engineering
 drift_direction: advance-code
 depends_on: []
+context_scope:
+  [
+    /plans/active/issues/cross_cutting_manifest_canonicalisation_findings_2026_07_11.md,
+    /plans/active/cross_cutting_satellite_ao_dispatch_batch1_2026_07_26.md,
+    unified-trading-library/unified_trading_library/cf_manifest_audit.py,
+  ]
 ---
 
 # First complete CF-audit rollup — a fixed checker bug + genuine cross-AG data-quality reds
@@ -106,3 +112,7 @@ Full per-bucket rollup (excluding the Finding-1 false positives above):
       this fresh evidence. Repo: market-tick-data-service.
 - [ ] [DATA] P2. Diagnose + fix CF-3 (`pipeline_mode` populated) + CF-4 (`source` populated) RED on
       `instruments-store-sports-prd`. Repo: instruments-service, unified-trading-library.
+
+## Progress Log
+
+- **context-scout 2026-08-01**: populated context_scope (3 entries).

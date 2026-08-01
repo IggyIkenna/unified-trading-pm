@@ -65,6 +65,14 @@ source:
   "POST /api/escalate wall_type=data_pipeline_failure, escalation agt-7a4d1d, DP_RUN_MOSTLY_EMPTY (DP-FETCH-009)
   CRITICAL, asset_group=cefi data_type=derivative_ticker, 158085/1410602 attempted_failed (11.2%), Fresh 0d"
 last_updated: 2026-08-01
+context_scope:
+  [
+    /codex/05-infrastructure/data-pipeline-alerts.md,
+    /plans/active/issues/cefi_high_attempted_failed_batch_cluster_2026_07_23.md,
+    /plans/archive/issues/tardis_concurrent_ip_lockout_2026_07_12.md,
+    /plans/active/issues/dp_escalation_worker_dispatch_no_open_issue_check_2026_07_29.md,
+    market-tick-data-service/market_tick_data_service/_http_resolver.py,
+  ]
 ---
 
 # CeFi derivative_ticker DP-FETCH-009 -- Tardis clients hard-fail without aiodns (fixed) + open HYPERLIQUID 429 question
@@ -351,6 +359,7 @@ and the residual-KeyError defense-in-depth path.
   `git merge-base --is-ancestor`). Also flagged (not fixed, out of `derivative_ticker` scope) a hypothesis that the same
   uppercased-`coin` bug may silently affect `book_snapshot_5`'s `fetch_l2_book` S3-key construction for the same 6
   symbols -- see Open Questions.
+- **context-scout 2026-08-01**: populated context_scope (5 entries).
 - **2026-07-29 (data_pipeline_failure escalation worker, escalation agt-0df274):** Same alert re-fired a THIRD time
   (asset_group=cefi, data_type=derivative_ticker, 158,085/1,450,501 attempted_failed, 10.9%). Confirmed via this doc's
   own numbers that the `attempted_failed` NUMERATOR is byte-identical to the 2026-07-28 reading (158,085 == 158,085) --

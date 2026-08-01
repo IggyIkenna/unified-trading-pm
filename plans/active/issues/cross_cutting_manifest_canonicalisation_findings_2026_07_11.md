@@ -54,6 +54,13 @@ locked_since: 2026-07-11
 source:
   ["/autonomous 2026-07-11 prediction canonicalisation drive — surfaced 2 cross-cutting bugs + per-AG CF-audit state"]
 resolved_by:
+context_scope:
+  [
+    /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
+    /plans/active/master_data_canonicalisation_migration_catalogue_2026_06_07.md,
+    plans/audit/results/cf_manifest_audit_2026_06_01.py,
+    market-tick-data-service/market_tick_data_service/scripts/populate_v9_index_columns_inplace.py,
+  ]
 ---
 
 # Cross-cutting manifest-canonicalisation findings (2026-07-11 /autonomous)
@@ -221,3 +228,4 @@ defi source/schema-int) are code+rebuild work still homed in each AG's tracking 
 
 - **na-eligibility-audit 2026-07-30**: KEEP-NA, valid — `locked_by: live-defi-rollout`; the sole todo's legacy-bucket
   delete is documented as 'hard-stop, never-autonomous' operator sign-off for all four AGs.
+- **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).

@@ -63,6 +63,13 @@ model_tier: sonnet-doable
 drift_direction: advance-code
 assigned_vm: planning
 depends_on: []
+context_scope:
+  [
+    /plans/active/issues/coverage_floor_new_backfill_gaps_found_2026_07_27.md,
+    unified-api-contracts/unified_api_contracts/canonical/coverage_starts.py,
+    unified-api-contracts/unified_api_contracts/registry/venue_mapping.py,
+    unified-api-contracts/scripts/check_coverage_floor_registry_drift.py,
+  ]
 ---
 
 ## What I found
@@ -260,3 +267,7 @@ which value is measured-reality is needed per venue, not a mechanical merge.
       `{BINANCE-SPOT, BINANCE-FUTURES,     BINANCE-DELIVERY}`, `CURVE` →
       `{CURVE-ETHEREUM, CURVE-AVALANCHE, CURVE-OPTIMISM}`) — a prerequisite for the P1 falsifier todo above to compare
       the two registries key-by-key instead of by coincidental name match. (repo: unified-api-contracts)
+
+## Progress Log
+
+- **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).

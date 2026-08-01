@@ -48,6 +48,13 @@ resolved_by: >-
   — cost/list-latency concern only, no operator decision to pursue exists, CAS design constraints preserved in the
   todo's closure note for future revival.
 locked_by:
+context_scope:
+  [
+    /codex/04-architecture/ci-alerting.md,
+    deployment-api/deployment_api/routes/_repo_ci_alerts.py,
+    /plans/archive/2026_07/deployment_alerts_ingestion_completeness_2026_07_20.md,
+    /plans/archive/issues/persist_cicd_event_ledger_read_modify_write_race_2026_07_17.md,
+  ]
 source:
   [
     "operator conversation 2026-07-22/23 — page reported stuck on 'Loading...', traced end-to-end through OOM, deploy
@@ -233,3 +240,4 @@ become its own plan — this issue doc is the durable record of the finding and 
   (BLK-1cce4df8) rather than building unwanted speculative code. Main answered **B: close/mark-resolved as superseded**,
   same ruling as BLK-ac45347a. Flipped the checkbox to WONT-DO/superseded above with the CAS design constraints
   preserved for future revival.
+- **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).

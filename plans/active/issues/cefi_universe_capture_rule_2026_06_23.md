@@ -25,6 +25,12 @@ execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
 last_updated: 2026-07-26
+context_scope:
+  [
+    /plans/active/issues/cefi_hl_aster_batch_data_gaps_2026_06_22.md,
+    unified-api-contracts/unified_api_contracts/canonical/crosscutting/mvp_scope.py,
+    market-tick-data-service/market_tick_data_service/engine/cefi_catalog_reader.py,
+  ]
 ---
 
 ## What this is
@@ -498,3 +504,5 @@ rotating baskets).
   `6e8f8297`→content-identical after lifecycle-marker FF to `14466d86`). The TradFi-perp allow-list constant the P0
   asked for already exists as `CEFI_EQUITY_PERP_BASE_UNIVERSE` (OKX 17 US-equity perps + Binance/Bybit + KRX). IS/MTDS
   P0 items left for their owning workers (out of scope — do-not-touch IS/deployment).
+
+- **context-scout 2026-08-01**: populated context_scope (3 entries).

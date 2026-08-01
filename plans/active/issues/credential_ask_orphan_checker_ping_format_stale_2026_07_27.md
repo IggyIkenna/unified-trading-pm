@@ -36,6 +36,12 @@ resolved_by:
 locked_by:
 locked_since:
 depends_on: []
+context_scope:
+  [
+    scripts/quality_gates/check_credential_ask_orphans.py,
+    /codex/02-data/external-data-always-available-rule.md,
+    agents/RULES.md,
+  ]
 ---
 
 # credential-ask orphan checker: stale ping-format + BLOCKED-CREDENTIALS meaning overload
@@ -85,3 +91,7 @@ resolved — the baseline creeps toward meaninglessness instead of catching real
       command, no secret needed) should be tagged `BLOCKED-PERMISSIONS` instead of `BLOCKED-CREDENTIALS` going forward —
       a naming split, not a behavior change, so the vendor-credential ratchet stays meaningful. If adopted, migrate the
       two lines found here as part of the same change.
+
+## Progress Log
+
+- **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).

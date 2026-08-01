@@ -50,6 +50,13 @@ estimate_calibrated_ai_days: 0.6
 assigned_role: backend_engineer
 drift_direction: advance-code
 depends_on: []
+context_scope:
+  [
+    /plans/active/defi_satellite_ao_dispatch_batch3_2026_07_26.md,
+    /plans/active/issues/features_service_defi_backfill_vm_oom_unexplained_2026_07_26.md,
+    features-service/features_service/delta_one/app/core/dependency_checker.py,
+    unified-api-contracts/unified_api_contracts/registry/market_data_categories.py,
+  ]
 locked_by:
 resolved_by:
 ---
@@ -186,3 +193,4 @@ and (need a similar clean-window check) `oracle_prices` to backfill against.
   (`TestDiscoverInstrumentsPassThroughManifest`); 4 existing `_discover_instruments` call sites updated for the new
   required `candle_data_types` param. `bash scripts/quality-gates.sh` ALL PASSED (17996 tests, 0 failures; sentinel
   written at HEAD 8e62dc30). Todo 2 (P2, DATA-tagged) is next — unblocked, not part of this task's scope.
+- **context-scout 2026-08-01**: populated context_scope (4 entries).

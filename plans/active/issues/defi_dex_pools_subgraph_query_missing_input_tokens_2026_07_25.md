@@ -39,6 +39,13 @@ source:
 resolved_by:
 locked_by:
 locked_since:
+context_scope:
+  [
+    /plans/active/defi_dex_pool_symbol_fix_backfill_purge_2026_07_25.md,
+    /plans/active/defi_dex_pool_symbol_fix_backfill_purge_finalize_2026_07_25.md,
+    /plans/active/issues/defi_migrated_marker_flagged_root_cause_clusters_2026_07_25.md,
+    market-tick-data-service/market_tick_data_service/cli/handlers/_dex_pools_subgraph.py,
+  ]
 ---
 
 # dex_pools_handler messari_basic subgraph query never requests inputTokens symbols
@@ -145,3 +152,4 @@ address-keyed (`0x00836fe5....parquet`) -- direct evidence the bug is live, not 
 
 - **na-eligibility-audit 2026-07-30**: KEEP-NA, valid - sole open todo is explicitly [OPERATOR]-tagged and gated on
   defi_dex_pool_symbol_fix_backfill_purge_finalize running first
+- **context-scout 2026-08-01**: populated context_scope (4 entries).

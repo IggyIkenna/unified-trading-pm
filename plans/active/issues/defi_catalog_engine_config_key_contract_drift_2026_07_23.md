@@ -39,6 +39,12 @@ resolved_by:
 locked_by:
 source: agent-discovered (orphaned-archetype build, mechanical pre-flight sweep, 2026-07-23)
 depends_on: []
+context_scope:
+  [
+    strategy-service/tests/unit/engine/strategies/v2/test_all_catalogued_archetypes_construct_and_fire.py,
+    strategy-service/strategy_service/engine/strategies/v2/target_universe/catalog.py,
+    /plans/active/issues/defi_archetype_universe_no_curtailment_mechanism_2026_07_23.md,
+  ]
 ---
 
 # strategy-service catalog/engine config-key contract has no validation — systemic, cross-archetype
@@ -734,3 +740,7 @@ auto-generated section's own owner script, rather than hand-editing the table) �
       doc's own earlier Recommendation §3 update: "✅ DONE 2026-07-24 ... CARRY_FUNDING_DISPERSION (78 rows) ...
       DEFI_LP_CONCENTRATED/_POOL/_VAULT (3 rows each) all confirmed firing cleanly, zero silent-degradation found." This
       checkbox predated that confirmation and was never flipped.
+
+## Progress Log
+
+- **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).

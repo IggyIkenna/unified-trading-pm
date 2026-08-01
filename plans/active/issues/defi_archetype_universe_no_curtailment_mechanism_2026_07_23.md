@@ -35,6 +35,15 @@ resolved_by:
 locked_by:
 source: agent-discovered (per-archetype DeFi universe mapping audit, 2026-07-23)
 depends_on: []
+context_scope:
+  [
+    strategy-service/strategy_service/engine/strategies/v2/target_universe/catalog.py,
+    strategy-service/strategy_service/engine/strategies/v2/factory.py,
+    strategy-service/strategy_service/engine/strategies/v2/carry_and_yield/recursive_staked.py,
+    strategy-service/strategy_service/engine/strategies/v2/carry_and_yield/basis_perp.py,
+    unified-api-contracts/unified_api_contracts/canonical/crosscutting/_mvp_scope_predicate.py,
+    /plans/archive/issues/mvp_scope_resolver_code_read_2026_07_24.md,
+  ]
 ---
 
 # DeFi strategy archetype universe — no curtailment mechanism, two unreconciled registries, one dead field
@@ -832,3 +841,4 @@ roll-boundary + determinism proofs, and a real-catalog-spec construction/`on_tic
   MVP_SCOPE catalog-identity precondition) are explicitly operator-design-gated per their own text ("Verdict: still
   correctly NOT AO-dispatchable ... Remains parked pending an operator design/scoping session"; "Scope/sequencing
   decision needed before dispatch"). No stale/duplicate/reclassify-eligible items found. Doc stays `assigned_vm: NA`.
+- **context-scout 2026-08-01**: populated/refreshed context_scope (6 entries).

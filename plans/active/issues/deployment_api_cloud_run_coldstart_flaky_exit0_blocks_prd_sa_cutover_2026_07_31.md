@@ -52,6 +52,12 @@ resolved_by:
 locked_by:
 locked_since:
 depends_on: []
+context_scope:
+  [
+    /plans/active/issues/deployment_api_sigabrt_crash_loop_2026_07_24.md,
+    /plans/active/bucket_iam_write_protection_per_tier_2026_06_09.md,
+    deployment-service/scripts/cloud-run/deploy-shared.sh,
+  ]
 ---
 
 # deploy-shared.sh resource drift (fixed) + a separate cold-start reliability gap (still open, likely == the SIGABRT doc)
@@ -151,3 +157,7 @@ this service relative to its documented, measured requirement.
       retry the live-traffic cutover for `uts-shared-deployment-api` to a fresh `uts-prd-sa` revision — tag-verify 3-5
       fresh cold starts first, then cut over; update `bucket_iam_write_protection_per_tier_2026_06_09.md` P2.2c to
       reflect completion. (repo: deployment-service)
+
+## Progress Log
+
+- **context-scout 2026-08-01**: populated context_scope (3 entries).

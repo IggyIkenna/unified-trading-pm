@@ -44,6 +44,12 @@ locked_since:
 supersedes:
 superseded_by:
 depends_on: []
+context_scope:
+  [
+    /codex/05-infrastructure/billing-cost-observability.md,
+    deployment-api/deployment_api/services/cost_observability,
+    deployment-ui/src/pages/CostObservability.tsx,
+  ]
 ---
 
 # Cost Observability — deferred follow-up enhancements
@@ -95,3 +101,4 @@ depends_on: []
   operator-gated items (awaiting operator's own evaluation / awaiting Ikenna) plus 4 unscheduled P3 items the doc itself
   frames as a deliberately-parked backlog, not a defaulted bucket — stays NA as a whole; the 4 P3 items are individually
   plausible future RECLASSIFY candidates for a dedicated split, not actioned this run.
+- **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).

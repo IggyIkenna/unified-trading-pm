@@ -41,6 +41,12 @@ source: >-
 resolved_by:
 locked_by:
 depends_on: []
+context_scope:
+  [
+    deployment-api/deployment_api/services/artifact_pipeline/service.py,
+    deployment-api/tests/unit/api/test_artifact_pipeline.py,
+    /plans/archive/issues/ci_test_content_and_tooling_speed_findings_2026_07_28.md,
+  ]
 ---
 
 ## Problem
@@ -86,3 +92,4 @@ mid-dispatch.
 - **na-eligibility-audit 2026-07-30**: KEEP-NA, valid — 0 open `- [ ]` todos. FINDING for the zero-checkbox sweep
   (`issue_docs_zero_checkbox_sweep_2026_07_24.md`): its 'Fix direction (not yet done)' is prose, never converted to a
   tracked checkbox.
+- **context-scout 2026-08-01**: populated context_scope (3 entries).

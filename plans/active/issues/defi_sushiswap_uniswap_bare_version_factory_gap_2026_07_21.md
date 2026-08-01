@@ -38,6 +38,14 @@ estimate_calibrated_ai_days: 0.4
 assigned_role: data_engineering
 drift_direction: advance-code
 depends_on: []
+context_scope:
+  [
+    /plans/active/defi_consolidated_closeout_2026_07_18.md,
+    /plans/archive/issues/canonical_closeout_open_questions_2026_07_18.md,
+    instruments-service/instruments_service/reference_data/adapters/defi/_dex_factory_registry.py,
+    instruments-service/scripts/canonicalize_defi_manifest_venue_2026_06_14.py,
+    unified-api-contracts/unified_api_contracts/registry/defi_venues.py,
+  ]
 locked_by:
 locked_since:
 supersedes:
@@ -167,3 +175,4 @@ original audit and this measurement, not a discrepancy in method; both counts de
 
 - **na-eligibility-audit 2026-07-30**: KEEP-NA, valid - Option A (subgraph augmentation) vs Option B (on-chain RPC) is
   an explicitly undecided design fork; A needs a live-schema probe per fork before landing
+- **context-scout 2026-08-01**: populated context_scope (5 entries).

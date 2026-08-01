@@ -45,6 +45,13 @@ superseded_by:
 resolved_by:
 source: "data_pipeline_failure escalation worker, slot 10, escalation_id agt-79063c"
 last_updated: 2026-07-29
+context_scope:
+  [
+    /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
+    agent-orchestrator/server/escalation.py,
+    agent-orchestrator/server/routes/slots_worker.py,
+    agent-orchestrator/server/state_store/agents.py,
+  ]
 ---
 
 # `data_pipeline_failure` one-shot worker's `/done {one_shot_complete: true}` 400s despite a registration path that should cover it
@@ -188,3 +195,4 @@ still in flight.
   (`ded844253`/`c4a8dc394`/`96797d327`/`f667a4dc9`/`5411ba307`). Ending session without a clean `/done` per the
   established precedent; relying on the idle-lingering-reclaim reaper path. from this worker slot, same constraint every
   prior reporter hit).
+- **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).

@@ -42,6 +42,12 @@ depends_on: []
 locked_by: live-defi-rollout
 locked_since: 2026-05-21
 resolved_by:
+context_scope:
+  [
+    /codex/02-data/pipeline-mode-partition.md,
+    market-tick-data-service/market_tick_data_service/cli/handlers/bridge_events_handler.py,
+    market-tick-data-service/market_tick_data_service/cli/handlers/_defi_catalog_freshness.py,
+  ]
 ---
 
 # DeFi bridge_events historical backfill — corrected finding
@@ -138,3 +144,4 @@ to _also_ unblock the bridge_events historical backfill, and so nobody re-invest
 
 - **na-eligibility-audit 2026-07-30**: KEEP-NA, valid - locked_by set; residual is a genesis-to-present multi-year
   production capture backfill with no VM-launch gating stated on the todo
+- **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).

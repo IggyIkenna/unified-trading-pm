@@ -47,6 +47,13 @@ source:
     deployment-api/deployment_api/routes/health_overview.py#L131,
   ]
 depends_on: []
+context_scope:
+  [
+    deployment-api/scripts/compare_live_mock_parity.py,
+    deployment-api/Dockerfile,
+    deployment-api/deployment_api/routes/_gcp_cloud_functions.py,
+    /codex/05-infrastructure/deployment-observability.md,
+  ]
 ---
 
 # deployment-api mock mode has drifted from live
@@ -169,3 +176,4 @@ mock parity — the drift is historical, not systemic.
   bounded/deterministic-outcome work, no operator gate or live judgment call found; flipped
   `assigned_vm: NA -> planning`. Conflict-check run against all active `assigned_vm: planning` docs in this doc's
   `parent_epic` + the infra tranche's consolidated-closeout digest: zero/milestone-only overlap, clear to proceed.
+- **context-scout 2026-08-01**: populated context_scope (4 entries).

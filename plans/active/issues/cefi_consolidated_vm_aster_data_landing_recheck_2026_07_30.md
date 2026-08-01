@@ -37,6 +37,11 @@ superseded_by:
 source: "autonomous session 2026-07-30, VM launch + monitoring for infra_capture_and_devops_leftovers_2026_07_06.md"
 resolved_by:
 drift_direction: advance-code
+context_scope:
+  [
+    /plans/active/infra_capture_and_devops_leftovers_2026_07_06.md,
+    /plans/active/cefi_satellite_ao_dispatch_batch4_2026_07_31.md,
+  ]
 ---
 
 # CeFi consolidated VM — ASTER data-landing re-check after 13:30 UTC
@@ -105,3 +110,4 @@ Launched `mtds-live-cefi-consolidated-20260730-010147` (`asia-northeast1-c`, `e2
   batch4 is `status: draft`, not active. Reclassifying independently now risks the same `gcloud storage ls` check being
   dispatched twice via two mechanisms once batch4 activates. Recommend: prefer batch4's operator-review/activation path
   over an independent flip here.
+- **context-scout 2026-08-01**: populated/refreshed context_scope (2 entries).

@@ -51,6 +51,13 @@ locked_since:
 supersedes:
 superseded_by:
 resolved_by:
+context_scope:
+  [
+    /plans/active/issues/lst_yields_writegate_permanently_blocked_2026_07_28.md,
+    /plans/active/issues/pnl_interest_accrual_wrong_engine_and_banned_formula_2026_07_21.md,
+    features-service/features_service/onchain/cli/main.py,
+    features-service/features_service/onchain/app/core/data_loader.py,
+  ]
 ---
 
 # `lst_yields` coverage-extension follow-up — GCS-verified date ranges + proposed backfill scope
@@ -201,3 +208,4 @@ structural limitation.
   same monthly chunk list is safe because each completed chunk's `start_date` becomes fresh in the manifest
   (skip-if-fresh now works correctly since the underlying write bug is fixed) — only genuinely-incomplete chunks would
   re-run.
+- **context-scout 2026-08-01**: populated context_scope (4 entries).

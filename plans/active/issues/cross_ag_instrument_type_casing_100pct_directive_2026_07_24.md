@@ -67,6 +67,13 @@ locked_by:
 resolved_by:
 drift_direction: advance-code
 depends_on: []
+context_scope:
+  [
+    /codex/02-data/reconciliation-finding-taxonomy.md,
+    /plans/archive/issues/plan_line_cap_remediation_2026_07_23.md,
+    /codex/02-data/canonical-cutover-register.md,
+    /codex/02-data/cross-asset-canonical-target-ssot.md,
+  ]
 ---
 
 # Cross-AG instrument_type manifest casing — 100% target for 4 AGs, per-value least-resistance for DeFi
@@ -172,3 +179,10 @@ is the durable record; the 5 per-AG plans' execution-item pointers above are how
       `plan_line_cap_remediation_2026_07_23.md`, fold this doc's cefi/defi/tradfi-specific "target = 100%" /
       "DeFi-specific refinement" language into the relevant child plan directly (verbatim, per the split convention used
       elsewhere this session) rather than leaving it only cross-referenced here.
+
+## Progress Log
+
+- **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries). Note:
+  `plan_line_cap_remediation_2026_07_23.md` (cited above and in this doc's own P2 todo) has since moved to
+  `/plans/archive/issues/` — the todo's gating condition may need re-verification against the archived doc's resolution
+  state.

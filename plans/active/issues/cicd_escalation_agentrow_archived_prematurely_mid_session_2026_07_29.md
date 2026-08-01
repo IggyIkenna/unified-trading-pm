@@ -67,6 +67,13 @@ superseded_by:
 resolved_by:
 drift_direction: advance-code
 source: "slot 3, cicd escalation agt-a14109 (wall_type=plan_health, repo=unified-trading-pm#1780), 2026-07-29"
+context_scope:
+  [
+    /plans/archive/issues/cicd_escalation_heartbeat_steals_slot_before_done_no_agentrow_2026_07_28.md,
+    /plans/archive/issues/ag_closeout_auditor_one_shot_complete_no_agentrow_recurrence_2026_07_29.md,
+    /plans/active/issues/data_pipeline_failure_one_shot_done_no_agentrow_2026_07_29.md,
+    agent-orchestrator/server/routes/slots_worker.py,
+  ]
 ---
 
 # `one_shot_complete` — AgentRow archived ~40 min before the session ever called `/done`, a third distinct trigger
@@ -282,3 +289,7 @@ retrying further per the precedent set above; ending this turn here. Adds one ne
 been a clean, safe match for that proposed fix (single occupant, no slot-reuse ambiguity in this session's own
 timeline), i.e. a real instance where that declined-for-now fix would have let a fully-correct wall resolution sign off
 cleanly instead of ending on an issue-doc corroboration.
+
+## Progress Log
+
+- **context-scout 2026-08-01**: populated context_scope (4 entries).

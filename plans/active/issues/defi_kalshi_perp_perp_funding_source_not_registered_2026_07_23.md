@@ -33,6 +33,13 @@ depends_on: []
 resolved_by:
 locked_by:
 source: ["discovered live during defi_consolidated_closeout_2026_07_18.md's manifest rebuild work, 2026-07-23"]
+context_scope:
+  [
+    /codex/02-data/defi-canonical-naming-ssot.md,
+    unified-api-contracts/unified_api_contracts/canonical/crosscutting/source_priority.py,
+    /plans/archive/2026_07/distinct_values_noncanonical_audit_2026_07_20.md,
+    market-tick-data-service/market_tick_data_service/cli/handlers/_perp_funding_kalshi_polymarket.py,
+  ]
 ---
 
 # KALSHI_PERP perp_funding manifest emits fail — source not registered
@@ -125,3 +132,4 @@ concrete, currently-failing symptom; the classification question is the census a
 - **na-eligibility-audit 2026-07-30**: KEEP-NA, valid - the doc's central open item is a prose-only (a)/(b)/(c)
   operator-design decision on 567 already-written manifest-absent objects; the 2 checkbox DIAGs are bounded but
   secondary
+- **context-scout 2026-08-01**: populated context_scope (4 entries).

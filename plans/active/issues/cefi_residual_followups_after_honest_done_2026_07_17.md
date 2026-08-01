@@ -64,6 +64,15 @@ superseded_by:
 depends_on:
 source: CeFi completion program /autonomous close-out (slot-3, 2026-07-17) — archival ritual step 1 (migrate DEFERRED)
 resolved_by:
+context_scope:
+  [
+    /codex/02-data/defi-canonical-naming-ssot.md,
+    /codex/02-data/availability-manifest-and-data-status.md,
+    /codex/02-data/chart-candle-delivery-flow.md,
+    /codex/06-coding-standards/read-time-filter-pushdown.md,
+    /codex/05-infrastructure/vm-launcher-runbook.md,
+    /codex/05-infrastructure/gcs-object-operations.md,
+  ]
 ---
 
 # CeFi residual follow-ups after honest-done close-out
@@ -718,3 +727,4 @@ pairs stay honest-unresolved (reported, never guessed).
   the item is tied to the still-incomplete Script-1 migration, so flipping it now would be a premature completion claim.
   Both stay open until Script 1 finishes. **No reconciliation gap found** — this doc's Phase-1/2 state already
   accurately reflects shipped work.
+- **context-scout 2026-08-01**: populated context_scope (6 entries).

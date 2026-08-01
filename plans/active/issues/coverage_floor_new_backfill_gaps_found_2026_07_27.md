@@ -35,6 +35,12 @@ resolved_by:
 locked_by:
 locked_since:
 depends_on: []
+context_scope:
+  [
+    /plans/active/issues/coverage_floor_registries_no_cross_propagation_2026_07_17.md,
+    unified-api-contracts/unified_api_contracts/registry/venue_mapping.py,
+    market-tick-data-service/market_tick_data_service/adapters/hyperliquid_s3.py,
+  ]
 ---
 
 # 3 new backfill/data-completeness findings
@@ -84,3 +90,7 @@ depends_on: []
       floor is unverifiable against measured reality because no real data exists yet. Investigate whether Binance COIN-M
       delivery contracts are actually being fetched at all, or whether this is a dead/never-implemented shard. (repo:
       market-tick-data-service)
+
+## Progress Log
+
+- **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).

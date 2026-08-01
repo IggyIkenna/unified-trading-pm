@@ -39,6 +39,13 @@ drift_direction: advance-code
 depends_on: []
 resolved_by:
 locked_by:
+context_scope:
+  [
+    /plans/active/issues/cefi_content_migration_corpus_still_incomplete_relaunch_round3_needed_2026_07_31.md,
+    /plans/active/issues/cefi_content_apply_memory_freeze_recurs_post_fix_and_registry_false_reap_2026_07_31.md,
+    /plans/active/issues/cefi_content_migration_fleet_half_incomplete_progress_log_archive_2026_07_31.md,
+    /codex/15-runbooks/incidents/rb_infra_relaunch.md,
+  ]
 ---
 
 # CeFi content-canonicalisation fleet: 21/44 shards never finished
@@ -657,3 +664,4 @@ accordingly.
   silent-freeze wedge; checkpoint `monotonic=false` so resumed from its own original `2024-10-04` (not past the unsafe
   frontier) — 2nd relaunch today, within budget. 1st retry (`-054648`) preempted at 98s (unrelated); `-055259` verified
   STARTED+PROGRESS. gcloud active-identity poisoning recurred 2x this session — reset both times, no code changed.
+- **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).

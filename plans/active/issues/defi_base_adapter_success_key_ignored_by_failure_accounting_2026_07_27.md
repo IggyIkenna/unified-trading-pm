@@ -47,6 +47,12 @@ assigned_vm: planning
 resolved_by:
 last_reviewed:
 assigned_role: data_engineering
+context_scope:
+  [
+    /codex/02-data/honest-absence-downstream-handling.md,
+    market-tick-data-service/market_tick_data_service/market_interface/adapters/defi/base_defi_adapter.py,
+    /plans/active/issues/defi_adapter_dead_code_audit_2026_07_24.md,
+  ]
 ---
 
 # `base_defi_adapter.py`'s failure accounting never reads the `success` key it already receives
@@ -154,3 +160,4 @@ adapters' venues.
 - **na-eligibility-audit 2026-07-30**: RECLASSIFY -> assigned_vm: planning (conflict-check CLEAR against 231 active
   planning docs; no open todo elsewhere duplicates this claim) - primary fix shipped mtds@df3d55dd; residual is a
   bounded production blast-radius audit over 12 named adapters
+- **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).

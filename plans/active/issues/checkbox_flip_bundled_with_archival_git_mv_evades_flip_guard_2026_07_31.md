@@ -50,6 +50,12 @@ locked_by:
 locked_since:
 supersedes:
 superseded_by:
+context_scope:
+  [
+    /codex/12-agent-workflow/commit-push-flip-rule.md,
+    /plans/archive/issues/ao_m3_verify_plan_flip_blind_to_archival_rename_2026_07_26.md,
+    agent-orchestrator/server/verify.py,
+  ]
 ---
 
 # checkbox-flip bundled with archival git-mv evades the no-flip guard
@@ -123,3 +129,4 @@ repeated per-incident coaching.
   a prior human/operator decision among three named design options (A/B/C — mechanical QG/prek rule vs. tightened
   rename-similarity threshold vs. accept-and-document) before any implementation step is determinable. The doc's own
   Progress Log states the decision...
+- **context-scout 2026-08-01**: populated context_scope (3 entries).
