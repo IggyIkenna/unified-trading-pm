@@ -20,9 +20,17 @@ related:
     /codex/05-infrastructure/launcher-script-ssot.md,
     /codex/05-infrastructure/vm-preemption-and-billing-waste-monitoring.md,
     /codex/06-coding-standards/quality-gates-memory-governance.md,
+    /plans/archive/issues/orchestrator_deploy_currency_gap_stale_reload_unit_and_tmp_exhaustion_2026_07_31.md,
+    /plans/active/issues/features_cross_instrument_smoke_verify_unbounded_memory_second_ao_outage_2026_08_01.md,
   ]
 created: 2026-05-15
-authoritative_for: [VM launcher per-script usage runbook, heavy-compute-on-shared-host ad-hoc-script rule]
+authoritative_for:
+  [
+    VM launcher per-script usage runbook,
+    heavy-compute-on-shared-host ad-hoc-script rule,
+    heavy-compute-on-shared-host rule scope (production code,
+    not just ad-hoc scripts),
+  ]
 referenced_by:
   [
     /codex/05-infrastructure/spot-vms-for-backfill.md,
@@ -31,7 +39,7 @@ referenced_by:
     /codex/05-infrastructure/vm-tarball-deployment.md,
   ]
 owner:
-last_reviewed: 2026-07-27
+last_reviewed: 2026-08-01
 code_refs:
 type: infrastructure
 execution:
@@ -115,6 +123,16 @@ SAME name if it genuinely does not exist (an `already exists` retry error is its
 — no action needed beyond verifying the existing instance is healthy).
 
 ## Heavy COMPUTE/MEMORY on the shared planning-vm (HARD RULE, added 2026-07-27)
+
+> **Scope correction (2026-08-01): this is NOT limited to throwaway "ad-hoc scratchpad" scripts.** The original wording
+> below (and its own incident) made it read that way, and that reading is exactly why the rule didn't stop the next two
+> occurrences: `instruments-service/scripts/expand_defi_pool_catalogue_from_manifest_2026_07_31.py` (43.6GB RSS, real
+> tracked catalogue-backfill code, not a scratchpad file) caused a full agent-orchestrator outage on 2026-07-31, and
+> `features_service.cross_instrument`'s batch compute (38.8GB RSS, also real service code, additionally outliving its
+> own `timeout 150` wrapper entirely) caused a SECOND full outage on 2026-08-01. **The rule below applies to ANY
+> subprocess run directly on this VM that could plausibly load a nontrivial dataset into memory — production module code
+> and one-off scratchpad files alike.** Full incident + agent-facing restatement: `unified-trading-pm/agents/RULES.md`
+> § 1.
 
 **The Heavy I/O exemption above is I/O-only — it is NOT a blanket pass for heavy COMPUTE/MEMORY.** The rule above
 governs GCS _bandwidth_ from the operator's own laptop and explicitly exempts the human-planning/AO-orchestrator VMs

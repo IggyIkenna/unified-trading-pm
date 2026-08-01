@@ -550,6 +550,17 @@ directly to the Bash tool with `run_in_background: true` and **no** `nohup`/`&` 
 backgrounding keeps the process correctly parented, and its exit is the tracked wake. Full detail:
 `/codex/12-agent-workflow/async-wait-and-poll-discipline.md` § "Watcher coverage".
 
+**Never trust `timeout <n>` alone to bound a subprocess you run directly on this host (HARD RULE, 2026-08-01,
+`features_cross_instrument_smoke_verify_unbounded_memory_second_ao_outage_2026_08_01.md`).** Plain `timeout <n> <cmd>`
+sends `SIGTERM` at the deadline and does nothing further if the child ignores or delays it — confirmed live: a process
+wrapped in `timeout 150` ran ~100x past that bound, still growing RSS, and when an operator then sent it a direct
+`SIGTERM` it took 12+ seconds to even react (had to escalate to `SIGKILL`). A hung or runaway subprocess you spawn is
+exactly as capable of taking down the shared orchestrator host as one you background with `nohup` — see RULES.md § 1's
+memory-bounding rule for the full incident lineage and the `run-bounded-analysis.sh` fix. If you need a hard wall-clock
+cutoff, use `timeout --kill-after=<n> <deadline> <cmd>` (forces `SIGKILL` if `SIGTERM` doesn't land) — and bound its
+memory too (RULES.md § 1); a wall-clock timeout and a memory cap are two independent protections, neither substitutes
+for the other.
+
 ## Chat-turn narration — give a human skimming the dashboard enough to follow along
 
 The `/progress` **message field** above stays a short one-liner — that's a frequent API payload, keep it cheap. Your

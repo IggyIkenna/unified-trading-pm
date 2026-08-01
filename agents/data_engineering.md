@@ -95,6 +95,19 @@ watchdog's per-prefix threshold), (2) a `run.log` tail (active writes in the las
 task's own actively-progressing fleet member or a sibling's. If genuinely stale, delete; if uncertain, `/blocked` rather
 than guess. Deleting a live backfill VM destroys hours of in-progress, idempotent-but-costly work.
 
+STEP 0.56 — memory-bounding guardrail (HARD RULE, codified 2026-08-01 after 2 incidents in as many days shaped exactly
+like this craft's typical work: `instruments-service/scripts/expand_defi_pool_catalogue_from_manifest_2026_07_31.py`
+grew to 43.6GB RSS reading an unfiltered wide manifest; `features_service.cross_instrument`'s batch compute grew to
+38.8GB RSS and outlived its own `timeout 150` wrapper entirely — both caused a full agent-orchestrator outage on the
+SAME shared host your own session runs on). Manifests/backfills/multi-day batch computes ARE this craft's job — which is
+exactly the shape that keeps blowing up. Before running ANY such subprocess directly on this VM (not via a dedicated
+backfill VM): confirm it reads via a column-pruned/filtered/streamed path — never a full unfiltered manifest load, which
+is STEP 0.6's EFFICIENCY north-star below, restated here as an enforced gate, not just a preference — or wrap it under
+`scripts/dev/run-bounded-analysis.sh` (mechanics + full incident lineage:
+`/codex/05-infrastructure/vm-launcher-runbook.md` § "Heavy COMPUTE/MEMORY on the shared planning-vm",
+`unified-trading-pm/agents/RULES.md` § 1). If you're not certain the code is bounded, treat that uncertainty itself as
+the signal to wrap it — don't find out by watching RSS climb.
+
 STEP 0.6 — DOMAIN comes from the plan, not from you. Before implementing, read the ONE codex data doc the plan
 references — the DOMAIN MAP (paths workspace-relative to unified-trading-pm/):
 

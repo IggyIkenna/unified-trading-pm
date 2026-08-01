@@ -1,13 +1,19 @@
-fabricated_sha_citation_baseline: 19
+fabricated_sha_citation_baseline: 20
 rule: plan-commit-sha-evidence (ratchet)
 source: plans/active/issues/mtds_plan_flip_fabricated_commit_sha_evidence_2026_07_30.md
 baseline_citations:
+  - path: /home/ubuntu/unified-trading-system-repos/unified-trading-pm/plans/active/bucket_iam_write_protection_per_tier_2026_06_09.md
+    line: 344
+    cited: deployment-service@8a8125e
   - path: /home/ubuntu/unified-trading-system-repos/unified-trading-pm/plans/active/ci_satellite_ao_dispatch_batch1_2026_07_26.md
     line: 264
     cited: unified-trading-pm@cbd511a
   - path: /home/ubuntu/unified-trading-system-repos/unified-trading-pm/plans/active/ci_satellite_ao_dispatch_batch1_2026_07_26.md
     line: 312
     cited: unified-trading-pm@2f9646585
+  - path: /home/ubuntu/unified-trading-system-repos/unified-trading-pm/plans/active/cross_cutting_satellite_ao_dispatch_batch1b_2026_07_26.md
+    line: 71
+    cited: deployment-api@56f2060e
   - path: /home/ubuntu/unified-trading-system-repos/unified-trading-pm/plans/active/data_completion_cefi_2026_07_15.md
     line: 577
     cited: instruments-service@1a31edc7
@@ -50,9 +56,6 @@ baseline_citations:
   - path: /home/ubuntu/unified-trading-system-repos/unified-trading-pm/plans/active/issues/defi_code_codex_drift_2026_05_27.md
     line: 114
     cited: unified-api-contracts@5626079e
-  - path: /home/ubuntu/unified-trading-system-repos/unified-trading-pm/plans/active/issues/deployment_api_sigabrt_crash_loop_2026_07_24.md
-    line: 156
-    cited: agent-orchestrator@7ba17e2
   - path: /home/ubuntu/unified-trading-system-repos/unified-trading-pm/plans/active/issues/features_gas_fees_calculator_stale_legacy_venue_read_2026_07_30.md
     line: 103
     cited: features-service@7f800b45

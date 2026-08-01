@@ -55,6 +55,24 @@ STALE — report or fix it, do not act on it. SSOT: `codex/05-infrastructure/per
   where `scripts/dev/install-pkill-guard-shell-env.sh` has run: a `pkill`/`pgrep` shell function REFUSES a bare
   name-only pattern instead of executing it host-wide — see `/codex/05-infrastructure/per-tab-worktrees.md` §
   "pkill/pgrep cross-slot-kill guard".
+- **Bound memory BEFORE running any heavy script directly on this shared host (HARD RULE, RECURRING incident class — 3
+  same-shape outages: 2026-07-27 `candle_coverage_gap.py` 15.8GB degraded AO's poll loop; 2026-07-31
+  `expand_defi_pool_catalogue_from_manifest.py` 43.6GB caused a full AO outage; 2026-08-01
+  `features_service.cross_instrument` 38.8GB caused a SECOND full AO outage the same day — the SSOT rule below already
+  existed after incident 1 and still didn't stop 2 or 3).** The SSOT's own wording ("ad-hoc scratchpad script") is
+  misleadingly narrow — incidents 2 and 3 were REAL, tracked service/CLI code (`instruments-service/scripts/...`,
+  `features_service.cross_instrument`), not throwaway files, run directly as part of ordinary task work. Read it as:
+  **any subprocess you invoke directly on this VM that could plausibly load a nontrivial dataset into memory** (a
+  manifest, a multi-day/multi-instrument batch compute, a corpus scan) — scratchpad or production code, doesn't matter.
+  Before running one: (1) confirm it already reads via a streamed/chunked/column-pruned path rather than materializing
+  the whole working set, (2) if unsure or it can't be bounded easily, wrap it —
+  `bash scripts/dev/run-bounded-analysis.sh <cmd>` (cgroup-enforced memory cap, exit 137 on breach) — or (3) if it's
+  genuinely corpus-scale, dispatch it to a dedicated VM instead of running it here. **Do not trust `timeout <n>` alone
+  as a substitute for a memory bound** — a process that ignores/delays `SIGTERM` runs past its stated wall-clock bound
+  regardless (confirmed 2026-08-01: a `timeout 150`-wrapped process ran ~100x past its bound, then also ignored a direct
+  `SIGTERM` for 12+ seconds, needing `SIGKILL`); use `timeout --kill-after=<n>` if you need a hard wall-clock cutoff,
+  and bound memory separately regardless. Full SSOT: `/codex/05-infrastructure/vm-launcher-runbook.md` § "Heavy
+  COMPUTE/MEMORY on the shared planning-vm".
 
 ---
 
