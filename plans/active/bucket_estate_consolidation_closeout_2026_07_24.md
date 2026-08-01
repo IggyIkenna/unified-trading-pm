@@ -87,21 +87,51 @@ Codex SSOTs: `/codex/05-infrastructure/bucket-isolation-model.md`, `/codex/05-in
       this session, still open. Original todo: operator decides kind vs prefix; provision; repoint
       `batch_live_reconciliation_service/config.py` to the resolver; fix launcher doc; end-to-end T1 chain run; next
       scheduled run green; wire Cloud Run failure alerting (55 silent failures).
-- [ ] [DATA] P0. Track to completion the deletions OWNED BY OTHER PLANS (checkpoint; UPDATED 2026-07-25 — was:
-      "dex-pools-prd purge-lifecycle armed (24h async; disarm window if concerns)", stale vs. the sibling plan's more
-      final status, corrected per `defi_dedicated_bucket_shared_migration_2026_07_13.md`:221-224: DeFi trio — parity
-      re-verified by agent incl. closing a 6,941-object gap, all 3 of lst-rates-prd/perp-funding-prd/dex-pools-prd
-      CONFIRMED DELETED (`gcloud storage buckets list`, zero matches in any form, 2026-07-14) — dex-pools-prd was
-      deleted directly by the operator on 2026-07-14T11:03:47Z, BEFORE that todo's own snapshot-before-delete step ran
-      (not via the planned 24h purge-lifecycle path; no independent pre-delete object-diff of the ~209k-object legacy
-      tree exists — risk assessed low, not zero, per the sibling plan's own writeup), kinds removed from all 5 yaml
-      copies (34), TF state clean; L6 twins — cefi/defi/tradfi tick+instruments purge-lifecycle armed (sports pair HELD
-      for sports-plan E1/E8; bucket deletes = follow-up one-liner once purged); lending pair still HELD — Morpho VM
-      completed but write-target verification inconclusive): `dex-pools-prd`/`lst-rates-prd`/`perp-funding-prd` (−3,
-      [[defi_dedicated_bucket_shared_migration_2026_07_13]] todos 6-9 incl. the TF-resource removal added 2026-07-13);
-      `lending-indices`+`-prd` (−2, same plan / estate cleanup §5i, gated on VM `mtds-lending-indices-20260712-112557`
-      completion); legacy flat tick+instruments twins (−8, M-1 `data_completion_to_100_all_ag_2026_06_21` L6,
-      operator-gated version-aware deletes — millions of noncurrent versions).
+- [x] ✅ [DATA] P0. Track to completion the deletions OWNED BY OTHER PLANS (checkpoint). **DONE 2026-07-31 —
+      unified-trading-pm@\<see plan-flip commit\>.** Freshly re-verified all 3 sub-items (transcription-only for the
+      DeFi trio per the 2026-07-31 corpus-wide ownership-conflict sweep's scope-fence; live citation re-derivation for
+      the other two) — **all 13 buckets across the 3 sub-items are now confirmed deleted, zero residual.** - **DeFi
+      trio** (`dex-pools-prd`/`lst-rates-prd`/`perp-funding-prd`) — TRANSCRIBED from
+      [[defi_dedicated_bucket_shared_migration_2026_07_13]] (now archived, 16/17 todos `[x]`, the doc's own 2026-07-31
+      banner reads "✅ OWNERSHIP RESOLVED... this plan is the authoritative record... all `[x]` with evidence"): all 3
+      CONFIRMED DELETED (`gcloud storage buckets list`, zero matches in any form, 2026-07-14) — `dex-pools-prd` deleted
+      directly by the operator 2026-07-14T11:03:47Z, before that todo's own snapshot-before-delete step ran (no
+      independent pre-delete object-diff of the ~209k-object legacy tree exists — risk assessed low, not zero, per the
+      sibling plan's own writeup); kinds removed from all 5 `cloud-providers.yaml` copies (34 kinds); Terraform state
+      clean (`tofu state list` zero matching `google_storage_bucket` entries). No independent re-audit run here, per the
+      scope-fence. - **`lending-indices` + `lending-indices-prd`** — **CONFIRMED DELETED, not "still HELD" as this
+      checkpoint previously (2026-07-25) read.** Per `gcs_bucket_estate_cleanup_2026_07_10.md` §5l (2026-07-21
+      reconciliation, citing `bucket_estate_consolidation_to_sub100_2026_07_13.md` Item C, line ~533): purge-lifecycle
+      armed 2026-07-14T14:00Z (flat unversioned; `-prd` `versioning_enabled=true`/`soft_delete_policy=604800s`),
+      **"STATUS: COMPLETE 2026-07-15"** — `gcloud storage buckets delete --quiet` on BOTH
+      `lending-indices-central-element-323112` and `lending-indices-prd-central-element-323112` succeeded (no "not
+      empty" error), both confirmed 404 via `buckets describe`. The Morpho VM (`mtds-lending-indices-20260712-112557`)
+      referenced in the prior checkpoint text wrote to the unrelated canonical shared bucket, not either of these two —
+      its completion/SIGKILL status was never actually a gate on this deletion; the prior "write-target verification
+      inconclusive" phrasing was itself the stale artifact, superseded by the same-doc's own later Item C closure
+      note. - **Legacy flat tick+instruments twins (−8)** — **ALL 8 CONFIRMED DELETED**, not "purge-lifecycle armed
+      (cefi/defi/tradfi) + sports pair HELD" as this checkpoint previously read. 6 of 8
+      (`market-data-tick-{cefi,defi,tradfi}`, `instruments-store-{cefi,defi,tradfi}`) per
+      `bucket_estate_consolidation_to_sub100_2026_07_13.md` (archived) — the 6-sibling purge-lifecycle drain completed
+      with zero force-purge needed (armed 2026-07-13, all 404 via `buckets describe` by 2026-07-14T10:57Z), plus
+      `instruments-store-cefi` (that doc's own "Item A", the 7th/8th of this set, closed separately after a shape-aware
+      re-diff found only 4 true legacy-only keys, all superseded-by-venue-rename — not a real gap — Purge RE-ARMED
+      2026-07-14T13:31:43Z UTC, **"STATUS: COMPLETE 2026-07-15"**, `buckets describe` → 404, "Item A CLOSED"). The
+      remaining 2 (sports pair, `market-data-tick-sports`/`instruments-store-sports` flat) were the genuinely still-HELD
+      residual as of this checkpoint's 2026-07-25 text (gated on `sports_manifest_canonicalisation_2026_06_01` E1/E8's
+      CF-8 gate) — **since resolved by a dedicated cutover plan not previously cross-referenced here**:
+      `sports_legacy_bucket_cutover_2026_07_16.md` (status: complete, archived 2026-07-27) ran its own Phase 0-6
+      freeze/move/purge/delete/restore runbook independently of the CF-8 `available_at` gate (a data-quality gate on the
+      CANONICAL `-prd-` bucket, orthogonal to whether the LEGACY flat twin is safe to delete) —
+      `instruments-store-sports-central-element-323112` **DELETED 2026-07-16T19:52Z** (T5.4; 968,927 objects + 34,596
+      versions purged, 0 errors, `describe` → 404, no-resurrection proved via a clean `tofu plan`);
+      `market-data-tick-sports-central-element-323112` **DELETED 2026-07-17T~16:50Z** (T5.4 MDT half; OR-5b resolved,
+      32-day/549,392-key recovery landed into canonical first, `legacy_only==0` verified on every gap day, zero loss;
+      342,629 objects/versions purged, 0 errors, `describe` → 404). Phase 6 RESTORE completed 2026-07-17 (every
+      writer/consolidator/scheduler un-paused, first run GREEN on canonical). Original text (for provenance):
+      "dex-pools-prd purge-lifecycle armed (24h async; disarm window if concerns)" was stale vs. the sibling plans' more
+      final status — corrected 2026-07-25, then re-corrected again here 2026-07-31 for the lending-indices and
+      legacy-twin sub-items, which the 2026-07-25 pass had not yet re-derived from current sibling-plan state.
 - [ ] [DATA] P1. **ml legacy variants**: `ml-models-store` flat (data already migrated §5e, resolver fixed §5h — verify
       no new writes since, then delete) + `ml-models-store-{dev,prod,staging}`,
       `ml-configs-store`/`ml-predictions-store` flat twins (empty). Verify
@@ -239,9 +269,30 @@ Codex SSOTs: `/codex/05-infrastructure/bucket-isolation-model.md`, `/codex/05-in
       a live inventory (do not "fix" the names in place); left the actual delete-vs-keep decision against the
       Delete-when condition (orphan-sweep=0) for a dedicated sweep, since I didn't run one this session. Evidence:
       `deployment-service@b47a66f` ((a)+(c)), `unified-trading-pm@b7bef5c7f` ((b)).
-- [ ] [DOCS] P3. **Close (or re-confirm still-open) the three bucket-SSOT audit issue docs** referenced by the
-      codex-audit todo above — assessed during that audit and deliberately left open rather than closed by the fold;
-      re-verify their current status before closing.
+- [x] ✅ [DOCS] P3. **Close (or re-confirm still-open) the three bucket-SSOT audit issue docs** referenced by the
+      codex-audit todo above. **DONE 2026-07-31 — unified-trading-pm@\<see plan-flip commit\>.** The 3 docs were never
+      named by filename anywhere in the corpus (grep-confirmed) — identified via
+      `bucket_estate_fold_design_2026_07_13.md`'s own citation trail: its `related:` frontmatter cites
+      `terraform_bucket_estate_drift_resurrection_2026_07_13.md` and `strategy_store_split_brain_2026_07_13.md`
+      directly, and its body's "hardcoded-name sweeps in the three audit issue docs" line (§1) matches
+      `legacy_bucket_template_literals_2026_07_16.md`'s own subtitle ("the QG blind-spot class T1.2 closed") almost
+      verbatim — all 3 dated inside the 2026-07-13→07-16 fold window. Re-verified each: 1.
+      **`terraform_bucket_estate_drift_resurrection_2026_07_13.md`** — already `status: resolved`
+      (`resolved_by: "2026-07-19 bucket_fold_closeout tail-item sweep — all GCP directions (a/b/c/d) + tail items        done"`).
+      No change needed. 2. **`strategy_store_split_brain_2026_07_13.md`** — already `status: resolved`. No change
+      needed. 3. **`legacy_bucket_template_literals_2026_07_16.md`** — **re-confirmed still-open, with a reason, not
+      closed.** Its sole todo (pay down 15 baselined legacy no-env bucket-name TEMPLATE literals across
+      features-onchain/calendar/store/sports + instruments-store-tradfi) is genuinely unfinished — none of the 5
+      asset-group buckets has reached its own legacy-bucket decommission yet (matches the 2026-07-30
+      na-eligibility-audit's independent KEEP-NA verdict). Fresh live check this session
+      (`gcloud storage buckets        describe`, all 5 flat legacy names): **all 5 already 404**
+      (`features-onchain`/`features-calendar`/
+      `features-store`/`features-sports`/`instruments-store-tradfi`-central-element-323112) — so the baselined literals
+      are dead code paths (would hard-fail loud on invocation, not silently misdirect to a live bucket); this lowers the
+      risk class but does not close the todo, since the code itself still carries the wrong hardcoded template strings
+      pending the `resolve_bucket_name(...)` repoint the doc's own Disposition section specifies. Left `status: open`.
+      All 3 accounted for (2 pre-existing resolutions confirmed still valid, 1 re-confirmed open with fresh evidence) —
+      this todo's own DONE criterion ("re-verify... before closing", not "force all 3 closed") is satisfied.
 
 > **Note on the "(item above)" / "the fold" cross-references above**: these two todos were extracted verbatim from the
 > archived parent, where "item above" referred to the dev/stg-tier retirement (Wave 1, DONE) and "the fold" referred to
@@ -294,3 +345,25 @@ Codex SSOTs: `/codex/05-infrastructure/bucket-isolation-model.md`, `/codex/05-in
 - **na-eligibility-audit 2026-07-30**: KEEP-NA, valid — 3 of 4 open todos are human-only hard stops or cross-plan
   checkpoints (prod-bucket delete of `ml-models-store` per delete-safety §3, deletions owned by other plans, the
   recon-bucket multi-repo chain explicitly out of scope).
+
+- **2026-07-31 (data_engineering, `cross_cutting_satellite_ao_dispatch_batch1-001`) — 2 of the 4 remaining todos closed
+  out (the cross-plan deletion checkpoint + the 3 bucket-SSOT audit issue docs; the recon-bucket E2E chain and the
+  `ml-models-store` prod-bucket delete remain untouched, both correctly out of this dispatch's scope).**
+  - **Cross-plan deletion checkpoint — flipped `[x]`.** Per the corpus-wide ownership-conflict sweep's scope-fence, the
+    DeFi trio sub-item was TRANSCRIBED (not re-audited) from `defi_dedicated_bucket_shared_migration_2026_07_13.md` (now
+    the confirmed authoritative record, archived, 16/17 done). The other 2 sub-items (`lending-indices` pair + the
+    8-bucket legacy flat tick/instruments twin set) genuinely needed fresh citation re-derivation, since the 2026-07-25
+    checkpoint text was stale on both: `lending-indices`+`-prd` were actually CONFIRMED DELETED 2026-07-15 (per
+    `gcs_bucket_estate_cleanup_2026_07_10.md` §5l, citing the sibling plan's Item C), and the sports pair (the only 2 of
+    the 8 legacy twins still HELD as of 2026-07-25) were resolved by a dedicated cutover plan
+    (`sports_legacy_bucket_cutover_2026_07_16.md`, archived complete 2026-07-27) that ran independently of the CF-8 gate
+    the 2026-07-25 text assumed was still blocking — both buckets deleted 2026-07-16/17. **All 13 buckets across the
+    checkpoint's 3 sub-items are now confirmed deleted, zero residual.**
+  - **3 bucket-SSOT audit issue docs — flipped `[x]`.** None was named by filename anywhere in the corpus; identified
+    via `bucket_estate_fold_design_2026_07_13.md`'s own `related:` frontmatter + body citation trail:
+    `terraform_bucket_estate_drift_resurrection_2026_07_13.md` (already resolved 2026-07-19),
+    `strategy_store_split_brain_2026_07_13.md` (already resolved), and `legacy_bucket_template_literals_2026_07_16.md`
+    (re-confirmed genuinely still open — its pay-down todo is unfinished, though a fresh live bucket-existence check
+    this session confirmed all 5 referenced legacy bucket names are already 404, lowering the risk class from
+    silent-misdirect to loud-fail-if-invoked).
+  - Full evidence trail inline on both todos above.
