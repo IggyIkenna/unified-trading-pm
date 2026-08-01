@@ -428,3 +428,15 @@ not a live regression), but real enough to need their own scoped root-cause-and-
   2 re-characterized with a properly-scoped new follow-up filed (1, 2) rather than force-fitting a "fix" to a symptom
   that turned out not to be a live code defect.
 - **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).
+- **na-eligibility-audit 2026-08-01** (tradfi tranche): **KEEP-NA, valid — resolving the 2026-07-31 entry's open flag.**
+  Re-read the sole open todo (the 2026-07-31 historical-manifest-repair item) end-to-end; count matches
+  tranche-inventory tool (1). Verdict: KEEP-NA, not RECLASSIFY — two reasons, either sufficient: (1) the todo's own
+  first step ("identify the exact registration/recovery script that ran... none of the ones read this session matched by
+  content, so the exact script is still unidentified") is open-ended investigation, not yet a checkable fact; (2) the
+  remediation is a live-manifest CAS-write over 3,712 rows carrying neither a stated safe-idempotent justification nor
+  an `[OPERATOR]` tag per CLAUDE.md's AO-todo GCS-mutation HARD RULE — this tranche's own sibling doc
+  (`tradfi_within_bounds_source_zero_shard_atom_mismatch_2026_07_28.md`) treats an analogous manifest mutation as
+  needing a recorded operator go-ahead, and the same bar applies here rather than this audit unilaterally adding a
+  justification clause to someone else's todo. Not a batch6 candidate as currently scoped; would become AO-eligible if a
+  future author splits the investigation half into its own bounded todo and adds a stated safe-idempotent justification
+  (CAS pattern + row-count bound) for the write half.

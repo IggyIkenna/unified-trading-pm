@@ -147,3 +147,7 @@ classes (EQUITY looks like the clearest win, since a real exchange is normally r
   already extracts it verbatim citing this doc as its `Source:`, and explicitly sequences it FIRST among three entangled
   Yahoo/venue todos so the investigation runs once and is cited by the other two.
 - **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).
+- **na-eligibility-audit 2026-08-01** (tradfi tranche): **KEEP-NA-STALE, re-verified — citation still accurate.** Sole
+  open todo re-read; count matches tranche-inventory tool (1). No content change since the 2026-07-30 verdict — only a
+  context-scout `context_scope` backfill touched the file since. Conflict-check basis unchanged: batch5 still extracts
+  this todo verbatim and still sequences it first among the three entangled Yahoo/venue todos.

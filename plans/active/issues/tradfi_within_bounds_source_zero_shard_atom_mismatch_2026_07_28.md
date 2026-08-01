@@ -319,3 +319,9 @@ population — the "elsewhere" gap that doc pointed at is this manifest bookkeep
 ## Progress Log
 
 - **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).
+- **na-eligibility-audit 2026-08-01** (tradfi tranche): **KEEP-NA, valid — re-verified, unchanged.** All 3 open todos
+  re-read end-to-end; count matches tranche-inventory tool (3). No content change since the 2026-07-31 verdict — only a
+  context-scout `context_scope` backfill touched the file since. Todo 1 stays operator-gated per the 2026-07-30/07-31
+  entries above (still awaiting the `--apply` go-ahead on the measured 81,454-row drop); todo 4 is explicitly sequenced
+  after todo 1 so it cannot start independently; todo 3 is conditionally-scoped ("if it is found to cause..."), not a
+  hard bounded task. Nothing to reclassify.

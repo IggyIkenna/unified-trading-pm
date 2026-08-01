@@ -311,3 +311,7 @@ every day narrows or closes it permanently.
   `/plans/active/tradfi_satellite_ao_dispatch_batch5_2026_07_29.md`, which is `assigned_vm: planning` but still
   `status: draft`, so none of that work is dispatched. Answering item 5 (extended to batch5) unblocks all four at once.
 - **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).
+- **na-eligibility-audit 2026-08-01** (tradfi tranche): **KEEP-NA, valid — re-verified, unchanged.** Both open todos
+  re-read end-to-end; count matches tranche-inventory tool (2). No content change since the 2026-07-30 verdict — only a
+  context-scout `context_scope` backfill touched the file since. Still operator-gated by construction; nothing to
+  reclassify.

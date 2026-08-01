@@ -286,3 +286,7 @@ once confirmed with Databento") while `tradfi_instrument_universe.py` already ca
   2026-07-26 — 96 vs 61 keys, union 107), and the map is non-injective (`6A`+`M6A` both map to `AUD`), so the reverse
   translation cannot be derived mechanically. Which registry wins is a genuine operator call.
 - **context-scout 2026-08-01**: populated/refreshed context_scope (2 entries).
+- **na-eligibility-audit 2026-08-01** (tradfi tranche): **KEEP-NA, valid — re-verified, unchanged.** Sole open todo
+  re-read end-to-end; count matches tranche-inventory tool (1). No content change since the 2026-07-30 verdict — only a
+  context-scout `context_scope` backfill touched the file since. Still self-tagged `P1-OPERATOR-DECISION`, not
+  worker-determinable; nothing to reclassify.

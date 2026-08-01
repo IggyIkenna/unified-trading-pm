@@ -335,6 +335,12 @@ Everything below is scoped so these cells are canonical, honestly-covered, and s
   both "Operator-ruled 2026-07-29") are pointers to concrete `[DATA] P0` todos tracked in
   `instruments_tradfi_g1_g5_gate_execution_2026_07_24.md` (confirmed still genuinely open there, not this file's own
   checkbox to flip, and out of this pass's assigned-file scope) — left as-is, already accurate.
+- **na-eligibility-audit 2026-08-01** (tradfi tranche): **KEEP-NA-STALE, re-verified — citation still accurate.** Sole
+  native open checkbox (MVP-cell-wiring-proof, line ~262) re-read; count matches tranche-inventory tool (1).
+  Independently re-confirmed the extracting doc (`tradfi_consolidated_native_ao_extract_2026_07_25.md`) is still
+  `status: active` with its own near-verbatim copy still unchecked. The only touches since the 2026-07-31 marker were
+  the 2026-08-01 `/ag-closeout-audit tradfi` pass (batch6 drafting + a `depends_on:` fix, neither affecting this todo)
+  and a context-scout backfill — nothing material changed. `assigned_vm` stays unchanged.
 
 ---
 
