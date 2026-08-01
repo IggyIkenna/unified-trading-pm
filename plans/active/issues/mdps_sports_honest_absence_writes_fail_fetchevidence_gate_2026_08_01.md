@@ -114,3 +114,17 @@ This needs an operator/architecture call, not a guess — two plausible paths, n
 ## Status
 
 Open — not yet triaged into an AO-dispatchable todo (bounded outcome unclear until the operator picks A vs B).
+
+## Related escalations (crash root cause — finding 1, RESOLVED)
+
+A second DP-VM-001 escalation (`agt-ccceda`, VM `mdps-backfill-sports-pipelinecheck-20260801-122555-2bf067`,
+`deployment_id=d30a4ea2-5599-4c02-860c-53c82423af2f`, `exit_code=1`, date `2025-12-24`) hit the identical crash
+signature (52/594 `odds_horizon_bucket` instruments logged "Unknown error") — a duplicate of the exact bug this doc's
+finding 1 already root-caused and fixed (`market-data-processing-service@8358b9f`, confirmed on
+`origin/live-defi-rollout`). This VM started at `12:25:55Z`, before the fix landed at `12:31:14Z`, so it ran pre-fix
+code. **No relaunch performed**: the `mdps-backfill-sports-` prefix for date `2025-12-24` had already failed 4x today
+(`110123`, `110907`, `114120`, `122555`), exceeding `rb_infra_relaunch.md`'s `≤2/(vm-prefix,day)` bound, and a recovery
+run was already in flight for the same date (`mdps-backfill-sports-pcskip-20260801-130846-2bf067`,
+`deployment_id=276fe963-2060-4a41-934e-d954f39c2409`, started `13:08:46Z` — after the fix — heartbeating fresh at
+`13:19:28Z`). Finding 2 (the honest-absence `FetchEvidence` gate, this doc's main subject) is unaffected — it degrades
+to a `WARNING` and does not crash the VM — and remains open pending the operator's A vs B call.
