@@ -642,7 +642,7 @@ drift_direction: advance-code
       `archive/issues/defi_maker_vault_share_price_29day_gap_2026_07_26.md` (RESOLVED, archived 2026-07-28, both
       follow-up todos done — 29-day gap backfilled for all 5 protocols) with the exact evidence + 2 follow-up todos
       (root-cause + backfill, gated on each other). Zero manifest/GCS writes performed — pure verification. Source:
-      `issues/defi_venue_phase_live_definition_contradiction_2026_07_22.md`,
+      `/plans/archive/2026_07/defi_venue_phase_live_definition_contradiction_2026_07_22.md`,
       `issues/defi_five_never_captured_venues_fix_2026_07_22.md`. **Done when**: either (a) the 90-day backfill is
       complete and manifest-verified for all 6 venues with cited cron-health evidence, or (b) a new issue doc exists
       citing the crash-loop evidence and explicitly defers the backfill.

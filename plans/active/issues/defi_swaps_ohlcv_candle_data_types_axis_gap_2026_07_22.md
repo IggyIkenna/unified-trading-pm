@@ -42,7 +42,7 @@ related:
   [
     plans/archive/2026_07/distinct_values_noncanonical_audit_2026_07_20.md,
     plans/active/issues/defi_perp_daily_ctx_manifest_gap_reader_risk_2026_07_22.md,
-    plans/active/issues/defi_venue_phase_live_definition_contradiction_2026_07_22.md,
+    plans/archive/2026_07/defi_venue_phase_live_definition_contradiction_2026_07_22.md,
     plans/active/master_data_canonicalisation_migration_catalogue_2026_06_07.md,
   ]
 created: "2026-07-22"
@@ -327,8 +327,9 @@ mode `_TRADFI_MTDS_TICK_MANIFEST_EXCLUDED_DATA_TYPES` was built to prevent for t
 denominator `enumerate_expected_universe.py::enumerate_v2` materialises (the mechanism this doc's finding 6 traced).
 This is a **different** completeness_pct computation from `check_enumeration_completeness.py`'s Layer-1
 venue/instrument_type metric (used elsewhere, e.g.
-`issues/defi_venue_phase_live_definition_contradiction_2026_07_22.md`'s cited `n_expected=109`/`completeness_pct=2.75`
-figure) — the two share a name but different denominators/producers; flagging explicitly to avoid conflating them.
+`/plans/archive/2026_07/defi_venue_phase_live_definition_contradiction_2026_07_22.md`'s cited
+`n_expected=109`/`completeness_pct=2.75` figure) — the two share a name but different denominators/producers; flagging
+explicitly to avoid conflating them.
 
 **Answer to the gating question** (for `defi_satellite_ao_dispatch_batch5_2026_07_27.md`'s gated `[CODE]` todo): **the
 exclusion-guard IS required** — do not execute Path A's registry addition without first landing the

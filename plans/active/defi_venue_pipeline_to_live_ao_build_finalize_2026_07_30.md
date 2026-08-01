@@ -15,7 +15,7 @@ tags: [defi, finalize, archival, ao-build]
 related:
   [
     /plans/active/defi_venue_pipeline_to_live_ao_build_2026_07_30.md,
-    /plans/active/issues/defi_venue_phase_live_definition_contradiction_2026_07_22.md,
+    /plans/archive/2026_07/defi_venue_phase_live_definition_contradiction_2026_07_22.md,
   ]
 created: "2026-07-30"
 last_updated: 2026-07-30
@@ -60,13 +60,24 @@ Machine-held (`gate_on_depends: true`) until every todo in
       doc's digest pointer to resolved, citing `completeness_pct` before/after (44.1% → 44.1%, delta=0, root-caused to
       the `PROTOCOL_CAPABILITIES` gating gap, tracked separately). Evidence: unified-trading-pm (this repo) — issue
       doc + build plan both updated, see their own Progress Log entries.
-- [ ] [DATA] P2. Run the standard 6-step plan-completion-and-archival-discipline ritual (per
+- [x] ✅ [DATA] P2. Run the standard 6-step plan-completion-and-archival-discipline ritual (per
       `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`) on
       `plans/active/issues/defi_venue_phase_live_definition_contradiction_2026_07_22.md` — archive to
       `plans/archive/2026_07/`, add an exact-successor banner pointing at
       `defi_venue_pipeline_to_live_ao_build_2026_07_30.md`, and fix every corpus referrer path (grep the repo for the
       old path and update each hit). Done-when: `regenerate_active_plan_inventory.py` shows zero orphan referrers to the
-      archived path.
+      archived path. — **2026-08-01 (slot-7, data_engineering craft) — DONE.** All 6 steps run: (1) checked for
+      un-migrated deferrals — none found, both follow-ups already real tracked docs; (2) `status: open` → `resolved`,
+      `resolved_by:` filled with 3 verified real commit SHAs
+      (`unified-api-contracts@4f215b4c`/`instruments-service@5cbf4d3e`/`market-tick-data-service@9ae23495`), added an
+      exact-successor banner pointing at this build plan + its own finalize companion; (3)-(4) codex-alignment check
+      found `/codex/02-data/defi-venue-protocol-catalogue.md`'s existing "registry inconsistencies" table already
+      documents this exact bug class for other venues — added a new row for these 6, citing the `PROTOCOL_CAPABILITIES`
+      follow-up issue doc; (5) fixed all 11 active-corpus referrers still citing the pre-archive path (grepped the whole
+      repo; archived-doc referrers deliberately left untouched, matching this corpus's existing practice); (6) `git mv`
+      to `plans/archive/2026_07/defi_venue_phase_live_definition_contradiction_2026_07_22.md`, confirmed via
+      `git status`. Evidence: unified-trading-pm (this repo) — see the archived doc's own 2026-08-01 Progress Log entry
+      for the full step-by-step.
 - [ ] [DATA] P2. Run the same 6-step archival ritual on `defi_venue_pipeline_to_live_ao_build_2026_07_30.md` itself (now
       fully done) and on this finalize plan. Done-when: both are archived, `run_hygiene_sweep.sh` is clean, and no
       active-corpus doc references either by its old `plans/active/` path.
@@ -77,3 +88,9 @@ Machine-held (`gate_on_depends: true`) until every todo in
 - **2026-08-01 (slot-4, data_engineering craft)** — todo 1 done (see checkbox above for full evidence). Todos 2-3 (the
   6-step archival ritual, ×2) are unstarted — not part of this task's dispatch; `sequential: true` gates them on todo 1,
   which is now clear to dispatch next.
+- **2026-08-01 (slot-7, data_engineering craft)** — todo 2 done (see checkbox above for full evidence): the source issue
+  doc is archived to `plans/archive/2026_07/defi_venue_phase_live_definition_contradiction_2026_07_22.md`, all 11
+  active-corpus referrers fixed, and a genuinely new codex-alignment finding (the `PROTOCOL_CAPABILITIES` gap is the
+  same registry-inconsistency class `/codex/02-data/defi-venue-protocol-catalogue.md` already tracks for other venues)
+  folded into that codex doc rather than left implicit. Todo 3 (archive this build plan + this finalize plan itself) is
+  next — `sequential: true` gates it on this todo, which is now clear to dispatch.

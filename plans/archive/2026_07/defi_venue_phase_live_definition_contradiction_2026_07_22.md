@@ -10,7 +10,7 @@ summary: >-
   "pipeline" and are therefore structurally excluded from both sides of the DeFi completeness_pct ratio
   (instruments-service/scripts/check_enumeration_completeness.py line 512) -- not a UI-cosmetic issue, a real
   honest-coverage undercount. This is a DATA-CORRECTNESS bug, not just a documentation/SSOT-contradiction question.
-status: open
+status: resolved
 nature: issue
 asset_group: [defi]
 stage: [data]
@@ -35,13 +35,28 @@ estimate_calibrated_ai_days: 0.6
 assigned_role: data_engineering
 drift_direction: advance-code
 depends_on: []
-resolved_by:
+resolved_by: [unified-api-contracts@4f215b4c, instruments-service@5cbf4d3e, market-tick-data-service@9ae23495]
 locked_by:
 source:
   sub-agent, distinct_values_noncanonical_audit_2026_07_20.md DeFi-venue-adapter-test-and-add workflow (wxmjyre65);
   root-caused by a dedicated verify+adversarial-verify workflow (wf_7a8796e2-7a6) 2026-07-22 after the operator asked
   "did we update the honest coverage manifest denominator?"
 ---
+
+> **🟢 ARCHIVED 2026-08-01 — RESOLVED by [[defi_venue_pipeline_to_live_ao_build_2026_07_30]]** (the exact successor —
+> the dedicated build plan this doc's own 2026-07-30 scope assessment recommended splitting into). This doc's core
+> question (does `phase=="pipeline"` real-capture-having venues count toward `defi`'s `completeness_pct` denominator?)
+> is answered: operator ruled 2026-07-29 to count them AND build the real IS universe; the build plan's 5 sequential
+> todos (genuine `instruments-service` adapters, cron health fix, 90-day backfill, catalogue registration,
+> `DEFI_VENUE_PHASE` flip) all shipped and were independently re-verified (all 7 cited commit SHAs confirmed real
+> ancestors of `origin/live-defi-rollout` via `git log`/`git show`, not trusted from the build plan's own evidence
+> lines) by this doc's gated finalize companion, [[defi_venue_pipeline_to_live_ao_build_finalize_2026_07_30]].
+> `resolved_by:` above cites the 3 primary cross-repo shipping commits. `completeness_pct` for `defi` measured
+> before/after the flip: 44.1% → 44.1%, delta=0 — root-caused (not silently accepted) to a THIRD,
+> previously-undocumented gate (`PROTOCOL_CAPABILITIES`) that the phase flip alone doesn't satisfy; tracked as its own
+> follow-up, not folded into this resolution:
+> `/plans/active/issues/defi_six_lst_vault_venues_missing_protocol_capabilities_2026_07_31.md`. Archived per
+> `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`'s 6-step ritual.
 
 ## Upgrade note (2026-07-22, same day)
 
@@ -480,3 +495,19 @@ doesn't re-diagnose from scratch. Recommend this become its own dedicated multi-
   delta=0, root-caused (not silently accepted) to a `PROTOCOL_CAPABILITIES` gating gap this doc's original investigation
   didn't know about, tracked separately. Did not run the remaining 2-todo archival ritual (out of this todo's scope) —
   `status` stays `open` for the next todo to flip on archival.
+- **2026-08-01 (slot-7, data_engineering craft) — archived per the 6-step ritual (finalize plan's todo 2).** `status`
+  open -> resolved; `resolved_by:` filled with the 3 primary cross-repo shipping commits (verified real via
+  `git cat-file -t` in each sibling clone: `unified-api-contracts@4f215b4c`, `instruments-service@5cbf4d3e`,
+  `market-tick-data-service@9ae23495`); added the exact-successor banner above pointing at the build plan + its finalize
+  companion. Checked for un-migrated deferred items first — none found: the `PROTOCOL_CAPABILITIES` gap and the original
+  "5 broken venues" follow-up are both already real tracked docs
+  (`defi_six_lst_vault_venues_missing_protocol_capabilities_2026_07_31.md`,
+  `five_broken_defi_capture_paths_shipped_2026_07_22.md`), nothing to migrate. Codex-alignment check: found
+  `/codex/02-data/defi-venue-protocol-catalogue.md`'s "Registry inconsistencies + pending venues" table already
+  documents this exact class of gap (phase=="live" + in `MTDS_DEFI_VENUES` but no `PROTOCOL_CAPABILITIES` entry) for
+  other venues (EULER_V2/VENUS/BENQI/RADIANT-ETH/MARGINFI/SOLEND) — added a new row for these 6 venues so the codex SSOT
+  reflects the newly-created (post-flip) instance of the same registry inconsistency (see that doc's own edit). Fixed
+  all 11 active-corpus referrers still citing this doc's pre-archive `plans/active/issues/` path (grepped the whole
+  corpus first — archived-doc referrers were deliberately left untouched, matching this corpus's existing practice of
+  not rewriting other already-archived docs' historical citations). `git mv` to
+  `plans/archive/2026_07/defi_venue_phase_live_definition_contradiction_2026_07_22.md`.

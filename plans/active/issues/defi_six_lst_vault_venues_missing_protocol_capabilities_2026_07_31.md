@@ -29,7 +29,7 @@ tags: [defi, honest-coverage, layer1, protocol-capabilities, expected-universe, 
 related:
   [
     /plans/active/defi_venue_pipeline_to_live_ao_build_2026_07_30.md,
-    /plans/active/issues/defi_venue_phase_live_definition_contradiction_2026_07_22.md,
+    /plans/archive/2026_07/defi_venue_phase_live_definition_contradiction_2026_07_22.md,
   ]
 created: "2026-07-31"
 last_updated: "2026-07-31"

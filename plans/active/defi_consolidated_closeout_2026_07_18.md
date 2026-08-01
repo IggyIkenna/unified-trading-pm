@@ -82,7 +82,7 @@ related:
     issues/defi_pipeline_mode_source_desync_yearn_v3_2026_07_21.md,
     issues/defi_pool_chain_collision_curve_balancer_gap_2026_07_21.md,
     issues/defi_swaps_ohlcv_candle_data_types_axis_gap_2026_07_22.md,
-    issues/defi_venue_phase_live_definition_contradiction_2026_07_22.md,
+    /plans/archive/2026_07/defi_venue_phase_live_definition_contradiction_2026_07_22.md,
     issues/e2e_testing_collateral_validation_dead_import_2026_07_23.md,
     issues/defi_archetype_universe_no_curtailment_mechanism_2026_07_23.md,
     /plans/active/lst_rate_honest_coverage_2026_07_21.md,

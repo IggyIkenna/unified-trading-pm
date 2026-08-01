@@ -241,9 +241,9 @@ by hand._
   from defi_consolidated_closeout_2026_07_18.md's "Track 5 — COVERAGE" section (2026-07-24, per task_template.md's
   "partial parallelism is NOT expressible inside one plan — SPLIT" rule and an operator ruling during the 5-AG…
 - [`defi_venue_pipeline_to_live_ao_build_2026_07_30`](./defi_venue_pipeline_to_live_ao_build_2026_07_30.md) — Executes
-  the operator's 2026-07-29 ruling on issues/defi_venue_phase_live_definition_contradiction_2026_07_22.md — count
-  ANKR/STADER/STAKEWISE/SWELL/MANTLE/MAKER toward the `defi` completeness_pct denominator, but only after they
-  genuinely…
+  the operator's 2026-07-29 ruling on
+  /plans/archive/2026_07/defi_venue_phase_live_definition_contradiction_2026_07_22.md — count
+  ANKR/STADER/STAKEWISE/SWELL/MANTLE/MAKER toward the `defi` completeness_pct denominator, but only…
 - [`defi_venue_pipeline_to_live_ao_build_finalize_2026_07_30`](./defi_venue_pipeline_to_live_ao_build_finalize_2026_07_30.md)
   — Gated finalize companion for defi_venue_pipeline_to_live_ao_build_2026_07_30.md — reconciles the completed build's
   evidence back into its source issue doc, then archives both docs per plan-completion-and-archival-discipline once

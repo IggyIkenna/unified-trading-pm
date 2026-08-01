@@ -43,7 +43,7 @@ related:
     /plans/archive/2026_07/distinct_values_noncanonical_audit_2026_07_20.md,
     /plans/active/cross_cutting_satellite_ao_dispatch_batch1_2026_07_26.md,
     /plans/archive/issues/cross_ag_prediction_rows_bleed_into_sports_instruments_index_2026_07_20.md,
-    /plans/active/issues/defi_venue_phase_live_definition_contradiction_2026_07_22.md,
+    /plans/archive/2026_07/defi_venue_phase_live_definition_contradiction_2026_07_22.md,
   ]
 created: "2026-07-28"
 last_updated: "2026-07-28"

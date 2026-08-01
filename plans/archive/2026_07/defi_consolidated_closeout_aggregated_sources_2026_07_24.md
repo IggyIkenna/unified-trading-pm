@@ -486,7 +486,7 @@ picture.
     - **[SCRIPT] P1.** Knobs + async fan-out + executor-offload, together — the 3 concurrency knobs are inert alone;
       bundle with `ParallelPerSymbolRunner` fan-out + dedicated ThreadPoolExecutor. CANARY at 2 VMs before any wide
       wave.
-  - [`plans/active/issues/defi_venue_phase_live_definition_contradiction_2026_07_22.md`](/plans/active/issues/defi_venue_phase_live_definition_contradiction_2026_07_22.md)
+  - [`plans/archive/2026_07/defi_venue_phase_live_definition_contradiction_2026_07_22.md`](/plans/archive/2026_07/defi_venue_phase_live_definition_contradiction_2026_07_22.md)
     — 0 open todos (closed/archived/record-only).
   - [`plans/active/issues/defi_archetype_universe_no_curtailment_mechanism_2026_07_23.md`](/plans/active/issues/defi_archetype_universe_no_curtailment_mechanism_2026_07_23.md)
     (3 open)
