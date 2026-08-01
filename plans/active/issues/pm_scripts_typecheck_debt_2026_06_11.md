@@ -51,17 +51,23 @@ should be retired so the ceiling can ratchet back toward zero.
 
 ## Recommended decision
 
-- [ ] [SCRIPT] P3. Type-annotate the new
-      `scripts/openapi/{_capability_extract,_capability_gaps,_capability_orphan,generate_capability_manifest}.py`
-      capability files in `unified-trading-pm` so they are strict-clean (resolve the +6 `reportAny`/`reportUnknown*`
-      errors), then ratchet `BASEDPYRIGHT_MAX_ERRORS` in `scripts/quality-gates.sh` back down to 1511 (or lower). The
-      1517 ceiling is the interim clear. Verify with `cd unified-trading-pm && .venv/bin/basedpyright scripts/` (count
-      must be at-or-below the new ceiling). Related:
-      `plans/archive/2026_07/capability_wizard_and_manifest_2026_06_11.md`.
-- [ ] [SCRIPT] P3. **NICE-TO-HAVE** Opportunistically annotate the other long-standing untyped PM scripts
-      (`check-repo-readiness.py`, `cicd/check_ci_status_bot_only.py`, `generate-cicd-diagram.py`,
-      `feature_parity_diff.py`) to drive the ceiling materially below 1511 over time, one PR per file (provenance: same
-      run 27355114310).
+- [x] ✅ [SCRIPT] P3. **SUPERSEDED 2026-08-01 (slot 12) — moot, no code change.** The premise (annotate the 4 capability
+      files, then ratchet `BASEDPYRIGHT_MAX_ERRORS` back down to 1511) no longer applies: the 2026-06-24 warn-only fix
+      removed `BASEDPYRIGHT_MAX_ERRORS` from `scripts/quality-gates.sh` entirely (there is nothing left to ratchet), and
+      the later 2026-07-27 fix (`unified-trading-pm@0db8ec5f2`, the `[CICD] P1` todo below) added `"scripts"` to
+      `[tool.basedpyright] exclude` in `pyproject.toml`, so basedpyright analyzes ZERO files under `scripts/` regardless
+      of CLI args. Re-verified live: `uv run basedpyright scripts/` → **0 errors, 0 warnings, 0 notes**.
+      `scripts/quality-gates.sh:34-41` carries an explicit
+      `DO NOT re-add BASEDPYRIGHT_MAX_ERRORS or narrow the pyproject.toml exclude` note — annotating the 4 files for a
+      scan that structurally never runs would be pure busywork with no verifiable effect and no gate to check it
+      against, and narrowing the exclude to make the scan "count" again is the exact regression that note forbids. No
+      code shipped; this todo is closed as superseded by the broader fix, not executed as literally written.
+- [x] ✅ [SCRIPT] P3. **NICE-TO-HAVE — SUPERSEDED 2026-08-01 (slot 12), same reasoning as above.** "Drive the ceiling
+      materially below 1511" is moot: there is no ceiling (removed) and no scan (excluded) for any PM `scripts/` file,
+      so annotating `check-repo-readiness.py` / `cicd/check_ci_status_bot_only.py` / `generate-cicd-diagram.py` /
+      `feature_parity_diff.py` would not move any enforced number. Real type-safety work on these files is still welcome
+      as ordinary code quality, but it is no longer this issue doc's QG-debt story — closing rather than leaving it to
+      be re-discovered as apparently-still-live debt.
 
 ## New inputs (2026-06-24) — recurring-trap diagnosis + the design fork (from orchestrator_self_healing_hardening incident review)
 
