@@ -305,11 +305,11 @@ Two independent gates because Group A and Group B are at different stages:
       compute SA) — do not leave this tag stale per CLAUDE.md's retag-on-resolve rule.
 
       > **🟥 Note (2026-07-31, slot-14)**: even once this todo removes `unified-trading-sa`'s `storage.objectAdmin`,
-                          > that SA still live-holds `roles/resourcemanager.projectIamAdmin` + `roles/iam.serviceAccountAdmin` (undeclared
-                          > in any terraform in this repo) — both self-escalation-capable, i.e. it could re-grant itself storage access
-                          > (or any other role) without going through terraform at all. See
-                          > `issues/unified_trading_sa_live_iam_drift_vs_terraform_2026_07_31.md` — a full de-privilege of this SA is not
-                          > actually complete until that doc's P1/P2 also land.
+                                  > that SA still live-holds `roles/resourcemanager.projectIamAdmin` + `roles/iam.serviceAccountAdmin` (undeclared
+                                  > in any terraform in this repo) — both self-escalation-capable, i.e. it could re-grant itself storage access
+                                  > (or any other role) without going through terraform at all. See
+                                  > `issues/unified_trading_sa_live_iam_drift_vs_terraform_2026_07_31.md` — a full de-privilege of this SA is not
+                                  > actually complete until that doc's P1/P2 also land.
 
 > **🟥 P2.2 SCOPE GAP found 2026-07-30 (slot-12) — "wire each runtime to its tier SA" is not mechanically executable
 > today.** Investigation (live GCP IAM queries + static analysis, no state mutated) found 3 independently-blocking
@@ -385,46 +385,65 @@ Two independent gates because Group A and Group B are at different stages:
       flags, no-backslash-continuation — 3 of those also needed `lib/launcher_common.sh` sourced in for the first time).
       Full per-file list + rationale in the 3 commits above. `launch-cefi-week-test.sh` needed no edit (pure delegator
       to the now-wired `launch-cefi-forward-poll.sh`, fixed transitively).
-- [ ] [CODE] P2.2d2b. **Remaining VM-launcher tier-SA wiring** (~66 launchers P2.2d2a did not touch, classified but not
-      wired — NOT a re-guess, the per-launcher disposition is already known from P2.2d2a's pass): - **12
-      `features-service` launchers** (`launch-canonical-migration-vm.sh`, `launch-features-backfill-vm.sh`,
-      `launch-features-cross-cutting.sh`, `launch-features-sharded-backfill.sh`,
-      `launch-features-sports-backfill-vm.sh`, `launch-features-vm.sh`, `launch-mdps-features-live.sh`,
-      `launch-mtds-live.sh`, `launch-prediction-arb-detector.sh`, `launch-prediction-live.sh`,
-      `launch-sfi-progressive-features-backfill-vm.sh`, `launch-sports-derived-features-census-vm.sh`) each need a
-      PER-SCRIPT bucket-name verify before wiring — confirmed trap: `launch-prediction-features-vm.sh` (a 13th, already
-      excluded here) writes the LEGACY `features-cross-instrument-prediction-*` bucket, which does NOT match
-      `group_b_bucket_prefixes` (`features-{cefi,tradfi,defi,pred,sports}-`) in `bucket_iam_per_tier_sa.tf` — wiring it
-      to `uts-prd-sa` would 403 its own writes. Verify each of the 12 resolves to the canonical `features-{ag}-` shape
-      (not a legacy per-feature-family name) before adding the flag. - **2 migration-purpose launchers**
-      (`launch-legacy-bucket-migration-sharded.sh`, `launch-gcs-migration-bundle-vm.sh`) — this plan's own SA design (§
-      Open design decisions) reserves `uts-migration-sa` as "the sanctioned cross-tier writer" for migration scripts,
-      but `lc_tier_service_account` only resolves `prod|staging|dev` → `uts-prd-sa`/`uts-test-sa`, no migration mode.
-      Needs either a `lc_tier_service_account` migration-mode extension or confirmation the specific migration stays
-      within one tier's Group A scope before defaulting it to the tier SA. - **17 execution/strategy/ml-service +
-      per-service launchers** (`launch-aave-lending-rate-validation-vm.sh`,
-      `launch-amm-golden-fixture-validation-vm.sh`, `launch-batch-live-recon-cron-vm.sh`,
-      `launch-client-reporting-cutover-vm.sh`, `launch-defi-backtest-vm.sh`, `launch-defi-paper-trading-vm.sh`,
-      `launch-defi-recursive-borrow-vm.sh`, `launch-execution-alpha-vm.sh`, `launch-funding-ensemble-paper-cron-vm.sh`,
-      `launch-ml-training-vm.sh`, `launch-ml-vm.sh`, `launch-scenario-runner-vm.sh`,
-      `launch-strategy-backtest-grid-vm.sh`, `launch-strategy-live-vm.sh`, `launch-strategy-paper-vm.sh`,
-      `launch-strategy-test-vm.sh`, `launch-wallet-treasury-cutover-vm.sh`) — write `execution-store`/`strategy-store`/
-      `ml-store`, the "other 4 Group B folds" the ratified table assigns to **per-service SA, NOT this helper**. Out of
-      P2.2d2's scope entirely (belongs to whatever plan finishes the per-service SA rollout). - **9 AWS launchers**
-      (`launch-cefi-sharded-backfill-aws.sh`, `launch-central-brain-aws.sh`, `launch-defi-backfill-vm-aws.sh`,
-      `launch-ec2-vm.sh`, `launch-features-backfill-vm-aws.sh`, `launch-features-onchain-backfill-vm-aws.sh`,
-      `launch-instruments-backfill-vm-aws.sh`, `launch-mdps-backfill-vm-aws.sh`, `launch-mtds-backfill-vm-aws.sh`) —
-      different cloud, different IAM mechanism (AWS IAM instance profiles, not GCP service accounts) — out of scope for
-      this GCP-terraform-based plan; would need its own AWS-side plan. - **~11 ambiguous/control-plane launchers**
-      needing individual judgment, not yet made: `launch-bucket-rsync-vm.sh` (arbitrary source/dest per invocation —
-      spans buckets outside any single scheme), `launch-dashboard-vm.sh` (writes `deployment-orchestration-*`, not Group
-      A/B), `launch-disaster-drill-cron-vm.sh` / `launch-dr-drill-cutover-vm.sh` (DeFi archetype chaos/DR tooling —
-      likely execution/strategy-adjacent, unverified), `launch-sports-scheduler-vm.sh` (control-plane trigger for other
-      launchers, may not itself write Group A/B), `launch-vm-zombie-watchdog.sh` (reads the events bucket + heartbeats,
-      not a data writer), plus `launch-features-onchain-backfill-vm.sh` (thin wrapper delegating to the still-unverified
-      `launch-features-backfill-vm.sh` — resolves once that one does). `lc_tier_service_account`/`lc_gcloud_create`'s SA
-      arg (P2.2d1) remain the reusable building blocks for whichever of the above end up per-tier. Gated on P2.2a
-      (met) + P2.2d1 (met) + P2.2d2a (met, this split).
+- [x] ✅ [CODE] P2.2d2b. **DONE 2026-08-01 (slot-7) — `deployment-service@3dc37d6`.** Per-script bucket-name verify (as
+      required) + wire for the 12 features-service launchers P2.2d2a deliberately skipped. **10 wired** via
+      `--service-account="$(lc_tier_service_account "${DEPLOYMENT_ENV}" "$PROJECT")"`: `launch-features-backfill-vm.sh`,
+      `launch-features-sharded-backfill.sh`, `launch-features-sports-backfill-vm.sh`, `launch-features-vm.sh` (all
+      confirmed via `features_service/common/__init__.py`'s shared `resolve_bucket(kind="features", asset_group=...)`
+      wrapper → canonical `features-{ag}-`), `launch-mdps-features-live.sh` + `launch-mtds-live.sh` (per-asset_group
+      `market-data`/`features` kinds, Group A/B), `launch-prediction-arb-detector.sh` (confirmed via
+      `features_service/cross_instrument/config.py:142` — resolves to canonical `features-pred-`, NOT the legacy
+      `features-cross-instrument-prediction-*` bucket the plan warned about for its sibling
+      `launch-prediction-features-vm.sh`), `launch-prediction-live.sh` (`VM_SERVICE=market_tick_data_service` →
+      `market-data-tick-pred-`, Group A), `launch-sports-derived-features-census-vm.sh` (env-aware via VM metadata; the
+      shell `$SPORTS_BUCKET` var is echo-only, not the real write path).
+      `launch-sfi-progressive-features-backfill-vm.sh` wired with a HARDCODED `"prod"` tier (not `${DEPLOYMENT_ENV}`)
+      because its `--bucket` arg is hardcoded `features-sports-prd-*` regardless of `--env` — a dynamic lookup would
+      carry `uts-test-sa` into a run that still writes the prd bucket and 403. `launch-features-onchain-backfill-vm.sh`
+      needed no edit — it `exec`s into the now-wired `launch-features-vm.sh` (pure delegator, resolves transitively,
+      same pattern as P2.2d2a's `launch-cefi-week-test.sh`). **2 deliberately left unwired** (split out below, not
+      silently dropped): `launch-canonical-migration-vm.sh` (multi-category dispatcher writing BOTH Group A/B raw-data
+      AND the `deployment-scripts` control-plane bucket in the same run — the tier SA's IAM condition is prefix-scoped
+      to Group A/B only, wiring would break its staging-output writes) and `launch-features-cross-cutting.sh` (genuinely
+      cross-asset_group; no `resolve_bucket_name` call found anywhere in its live runner code —
+      `features_service/cross_instrument/live/` + `features_service/calendar/live/`; its own header comments describe
+      bucket names — `features-cross-instrument-{env}-{pid}` / `features-multi-timeframe-{env}-{pid}` — that don't exist
+      anywhere in the current `cloud-providers.yaml`, i.e. stale documentation of a pre-Fold-A shape). The **~11
+      ambiguous/control-plane launchers are now fully dispositioned**: `launch-bucket-rsync-vm.sh` (explicitly
+      cross-bucket, flat→tiered — same migration-SA-blocked class as the 2 migration launchers, folded into P2.2d2c
+      below) + 6 confirmed OUT OF SCOPE via the authoritative registry (`deployment_service/vm_prefix_registry.py`
+      `VM_PREFIX_TO_BUCKET`, all map to `bucket=None`): `launch-dashboard-vm.sh`, `launch-disaster-drill-cron-vm.sh`,
+      `launch-dr-drill-cutover-vm.sh`, `launch-sports-scheduler-vm.sh`, `launch-vm-zombie-watchdog.sh` (control-plane /
+      heartbeat-only, confirms the plan's own "not a data writer" suspicion for each) +
+      `launch-features-onchain-backfill-vm.sh` (resolved above, pure delegator). The 17 execution/strategy/ml-service +
+      9 AWS launchers remain correctly out of scope (unchanged from P2.2d2a's disposition — per-service SA /
+      different-cloud, not this helper). Evidence: `bash -n` + shellcheck clean on all 10 touched files;
+      `quality-gates.sh` green; CI verified.
+- [ ] [TERRAFORM][OPERATOR] P2.2f. **NEW finding, opened 2026-08-01 (slot-7) during P2.2d2b.** `uts-migration-sa` — this
+      plan's own § Open design decisions designates it "the sanctioned cross-tier writer" for migration scripts —
+      currently holds ONLY `roles/storage.objectViewer` project-wide (`bucket_iam_per_tier_sa.tf`'s
+      `uts_migration_objectviewer` resource); it has ZERO write grant (no `objectAdmin`, conditioned or otherwise).
+      Confirmed by reading the terraform source (not yet re-confirmed against live GCP — do that before granting). It
+      cannot actually write anything, contradicting its stated purpose and blocking every launcher that needs it
+      (`launch-legacy-bucket-migration-sharded.sh`, `launch-gcs-migration-bundle-vm.sh`, `launch-bucket-rsync-vm.sh` —
+      see P2.2d2c below). **`[OPERATOR]`**: the exact grant scope is a judgment call, not mechanically determinable —
+      options are (a) an unconditioned project-wide `storage.objectAdmin` (simplest, but re-creates a mini god-SA for
+      exactly these 3 migration-purpose launchers), (b) a CEL condition scoped to the specific legacy bucket name
+      patterns these 3 launchers actually touch (`market-data-tick-{ag}-{project}` flat legacy shape confirmed for
+      `launch-gcs-migration-bundle-vm.sh`; the other 2 need their own enumeration), or (c) extend
+      `lc_tier_service_account` with a migration mode AND scope the grant narrowly to match. Recommend (b) — mirrors
+      this plan's own least-privilege design intent for the tier SAs. Once ruled + granted, live-verify via a real write
+      (not just `get-iam-policy`) before unblocking P2.2d2c.
+- [ ] [CODE] P2.2d2c. **NEW, split from P2.2d2b 2026-08-01 (slot-7).** Wire the 3 launchers blocked on the migration-SA
+      write-grant gap (P2.2f above): `launch-legacy-bucket-migration-sharded.sh`, `launch-gcs-migration-bundle-vm.sh`,
+      `launch-bucket-rsync-vm.sh` — all three read/write a LEGACY (non-env-tiered, flat) bucket name that no tier SA's
+      `startsWith` IAM condition matches. Separately (does NOT depend on P2.2f): scope + wire
+      `launch-canonical-migration-vm.sh` (needs either a second `--service-account` for its `deployment-scripts` writes,
+      or confirmation those writes are already covered by an existing non-tier-conditioned grant) and
+      `launch-features-cross-cutting.sh` (needs a read of `CrossCuttingFeaturesRunner`'s actual live write path — event-
+      only via `EventTransport`, or does it write GCS features directly under some sentinel asset_group? — before any
+      wiring decision). Gated on P2.2f for the first 3; the other 2 are independently investigable now. Gated on P2.2a
+      (met) + P2.2d1 (met) + P2.2d2a (met) + P2.2d2b (met, this split).
 - [ ] [INFRA] P2.2e. **NEW, opened 2026-07-31 (slot-5).** Cut `uts-shared-deployment-api`'s live traffic
       (`spec.traffic`) over to a `uts-prd-sa` revision (P2.2c wired the identity + resource sizing; this is the separate
       step of actually promoting it). **Currently BLOCKED**: every fresh cold-start of a new/tagged revision fails
