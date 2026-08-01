@@ -364,10 +364,42 @@ context_scope:
       citing VM log/dispatch record; if serial, a follow-up todo is filed requiring the parallel launcher for every
       future sports features backfill (that follow-up todo, not this one, would be the actual VM-launch-relevant
       action). Source: `sports_consolidated_closeout_2026_07_19.md:635-638`.
-- [ ] [BACKEND] P2. **Track K — confirm whether any primary sports entrypoint (not a one-off script) exposes a genuine
-      fixture-level targeting flag for shard-splitting a backfill run.** (repo: features-service / market-data-
-      processing-service, read-only CLI audit). **Done when**: either a cited flag+file is named, or the add-flag todo
-      exists with a named target CLI. Source: `sports_consolidated_closeout_2026_07_19.md:661-664`.
+- [x] ✅ [BACKEND] P2. **Track K — confirm whether any primary sports entrypoint (not a one-off script) exposes a
+      genuine fixture-level targeting flag for shard-splitting a backfill run.** **DONE — audited both named primary
+      entrypoints (not one-off scripts), NEITHER exposes a genuine fixture-level flag; add-flag todo filed below per the
+      done-when's second branch.** **features-service** — the real dispatched sports entrypoint is
+      `features_service/sports/cli/main.py::main()` (confirmed live: `features_service/sports/__init__.py::run()`
+      forwards to `features_service.sports.cli.main.main`, the Phase-4.2 dispatcher's actual target for
+      `--feature-family sports`); its `_extra_args()` (registered into the UTL `ServiceCLI` framework parser at
+      `main.py:181` `extra_args_fn=_extra_args`) declares `--date` (single day), `--league` (`main.py:114-119`,
+      "Comma-separated league IDs for league-level sharding (batch only, default: all)"), `--tables`, and
+      `--worker-count` (parallel DATE-shard workers) — sharding granularity bottoms out at league, not fixture.
+      `features_service/sports/cli/parser.py::create_parser()` (same repo, same package) declares an almost-identical
+      flag set (`--date`/`--providers`/`--tables`/`--worker-count`, no `--league`) but is DEAD — grepped the whole
+      `sports/` package for callers of `create_parser`; the only definition is its own, zero call sites — so it isn't
+      even a live secondary entrypoint. **market-data-processing-service** — the primary `process` subcommand
+      (`market_data_processing_service/cli/parser.py:103-338`) declares `--instrument-ids` (`parser.py:174-179`,
+      "Specific instrument IDs to process") and `--venues`, but sports canonical instrument IDs are per
+      (market,selection) — e.g. `FOOTBALL:BETFAIR:MATCH_ODDS:ENG-PREMIER_LEAGUE:2024-2025:LIVERPOOL-C_PALACE::DRAW`
+      (`codex/01-domain/sports-instruments.md:104-119`) — so targeting one fixture via `--instrument-ids` means
+      enumerating every venue/market/selection combination for that fixture by hand, not passing one fixture identifier;
+      that is NOT a genuine fixture-level flag. Grepped both repos' `add_argument(...)` call sites corpus-wide for
+      `fixture`/`event.id`/`match.id`/`competition` — zero hits anywhere outside docstrings/type annotations in non-CLI
+      modules (confirmed those are unrelated runtime code, e.g. `features_service/sports/live/feature_cache.py`'s
+      `fixture_id`-keyed cache, not a CLI flag). Source: `sports_consolidated_closeout_2026_07_19.md:661-664`.
+- [ ] [CODE] P3. **Track K follow-up — add a genuine `--fixture-ids` targeting flag to the features-service sports CLI
+      for finer-grained backfill shard-splitting.** Per the audit above, `--league` (comma-separated league IDs,
+      `features-service/features_service/sports/cli/main.py:114-119` `_extra_args()`) is currently the FINEST
+      shard-splitting grain the real primary sports entrypoint exposes; a busy league/date combination can still be one
+      large unsplit unit of work. Add `--fixture-ids` (comma-separated API-Football canonical fixture IDs, the canonical
+      ID per `codex/01-domain/sports-instruments.md`'s "Solution: Canonical Fixture Mapping" section) beside `--league`
+      in the same `_extra_args()` function, threaded through to the batch handler
+      (`features_service/sports/cli/handlers/batch_handler.py`) as an optional filter narrowing the date+league scope to
+      specific fixtures before dispatch. `market-data-processing-service`'s `--instrument-ids` is a secondary target
+      only if the features-service flag alone proves insufficient for a real backfill's needs — do not implement both
+      speculatively. (repo: features-service). **Done when**: `--fixture-ids` is a declared CLI flag on the sports
+      family's real dispatched entrypoint, unit-tested, and threaded through to actually narrow which fixtures a batch
+      run processes.
 - [ ] [DATA] P1. **Track K — run + cite 3 dated checkpoints (pre-backfill baseline, mid-backfill spot-check,
       post-backfill final gate) for EACH of the 5 required mechanisms** (`data-pipeline-check-is`/`-mtds`/`-mdps`/
       `-features` + `/data-pipeline-reconciliation`) against sports — currently ZERO real run-todos exist for any of the
