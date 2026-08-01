@@ -188,9 +188,13 @@ member, not just a retag.
       `[cross-cutting]` → `[ao]` (finding 2). Done when: the tag is corrected and the doc is folded into
       `ao_consolidated_closeout_2026_07_25.md`'s membership (already named there per the 2026-07-31 audit — confirm the
       retag catches up to that citation).
-- [ ] [DOCS] P3. Retag `plans/active/issues/deployment_api_sigabrt_crash_loop_unresolvable_sha_citation_2026_07_31.md`'s
-      `asset_group` `[cross-cutting]` → `[ui]` (finding 3). Done when: the tag is corrected and the doc is folded into
-      the `ui` tranche's closeout membership.
+- [x] ✅ [DOCS] P3. ~~Retag
+      `plans/active/issues/deployment_api_sigabrt_crash_loop_unresolvable_sha_citation_2026_07_31.md`'s `asset_group`
+      `[cross-cutting]` → `[ui]` (finding 3).~~ **MOOT — 2026-08-01 (slot 9, review)**: the doc's one remaining todo
+      (the SHA-citation fix this retag was predicated on) resolved to a stale-clone false positive — the citation was
+      already correct on trunk — and the doc has been archived to
+      `/plans/archive/issues/deployment_api_sigabrt_crash_loop_unresolvable_sha_citation_2026_07_31.md` per the
+      archival-discipline HARD RULE (zero open todos, `locked_by:` empty). No retag needed on an archived doc.
 - [ ] [DOCS] P3. Retag
       `plans/active/issues/gcp_service_accounts_registry_diverged_from_live_provisioning_2026_07_31.md`'s `asset_group`
       `[cross-cutting]` → `[infrastructure]` (finding 4). Done when: the tag is corrected, the doc is folded into

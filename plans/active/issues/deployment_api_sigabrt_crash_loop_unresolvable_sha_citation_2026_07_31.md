@@ -12,7 +12,7 @@ summary: >-
   Re-baselined the ratchet (18->19) to unblock this session's unrelated push, since this is 6-day-old pre-existing debt,
   not something authored this session — but the underlying claim ("confirmed via content-diff that the fix is live") is
   now unverifiable as cited and should be re-checked, not silently carried forward as accepted evidence.
-status: open
+status: resolved # (was: open) 2026-08-01 -- citation was already corrected in a prior commit; verified + archived
 nature: issue
 asset_group: [cross-cutting]
 stage: [meta]
@@ -35,7 +35,9 @@ estimate_calibrated_ai_days: 0.2
 assigned_role: backend_engineer
 drift_direction: advance-code
 depends_on: []
-resolved_by:
+resolved_by: >-
+  unified-trading-pm@1c8815bd5 (2026-07-31, corrected the mislabeled citation before this doc was even filed —
+  docs-only, no new code sha); re-verified 2026-08-01 (slot 9, review)
 locked_by:
 locked_since:
 supersedes:
@@ -47,6 +49,11 @@ source: >-
 ---
 
 # Unresolvable commit-SHA citation in deployment_api_sigabrt_crash_loop_2026_07_24.md
+
+> **🗄️ ARCHIVED 2026-08-01** — the one todo is `[x]`, `locked_by:` empty. Per
+> `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`, a doc with every todo done archives
+> immediately. Resolution: the citation was a stale-clone false positive — already fixed on trunk before this doc was
+> even filed (see the Todos + Progress Log entries below).
 
 ## What was found
 
@@ -85,11 +92,28 @@ follow-up on whatever the original SIGABRT crash-loop symptom was.
 
 ## Todos
 
-- [ ] [REVIEW] P3. Find the real commit the 2026-07-25T06:23Z slot-2 check-in meant to cite (search agent-orchestrator
-      history for the `post_worker_init`/`faulthandler.enable()` change described in
+- [x] ✅ [REVIEW] P3. Find the real commit the 2026-07-25T06:23Z slot-2 check-in meant to cite (search
+      agent-orchestrator history for the `post_worker_init`/`faulthandler.enable()` change described in
       `deployment_api_sigabrt_crash_loop_2026_07_24.md`'s surrounding context), then either correct the citation in that
       doc or, if unfindable, flag the "fix IS live" claim as unverified and check whether the original SIGABRT symptom
-      needs re-investigation.
+      needs re-investigation. — **2026-08-01 (slot 9, review)**: the citation was ALREADY CORRECT — it was fixed before
+      this issue doc was even filed.
+      `git log -S"agent-orchestrator@7ba17e2" --all -- plans/active/issues/deployment_api_sigabrt_crash_loop_2026_07_24.md`
+      shows the string was introduced by `35ec7a29f` (2026-07-25, the original check-in — a one-word repo mislabel, not
+      a fabrication) and REMOVED (corrected to `deployment-api@7ba17e2`) by `unified-trading-pm@1c8815bd5`
+      (2026-07-31T13:58:14Z, an unrelated session's "fix mislabeled repo in an unrelated commit-sha citation" cleanup).
+      That correction commit landed **before** this issue doc's own filing commit (`unified-trading-pm@ead13ecea`,
+      2026-08-01T08:19:20Z) — the filing session was working from a stale slot clone that hadn't pulled `1c8815bd5` yet,
+      so it (correctly, at the time it read its own clone) reported the bad citation as still live. Re-verified against
+      current `origin/live-defi-rollout` HEAD: the doc's live-content
+      (`/plans/archive/2026_07/deployment_api_sigabrt_crash_loop_progress_log_history_2026_07_31.md:821`, where this
+      entry now lives post-line-cap-extraction) already reads `` `deployment-api@7ba17e2`'s fix IS live ``.
+      Independently re-confirmed the underlying fix claim itself (not just the citation string):
+      `deployment-api@7ba17e2a4e9339019c2487db63dc5f3d179b7fa5` exists (`git cat-file -t` + `git show --stat`), authored
+      2026-07-25T05:47:06Z, message
+      `fix(gunicorn): move faulthandler.enable() to post_worker_init — post_fork call was silently uninstalled by     UvicornWorker's SIGABRT SIG_DFL reset`
+      — matches this doc's own fix description verbatim. No code change needed; the citation and the underlying claim
+      are both already correct on trunk.
 
 ## Progress Log
 
@@ -104,3 +128,9 @@ follow-up on whatever the original SIGABRT crash-loop symptom was.
   unrelated Cloud Run cold-start issue, not this citation-fix todo itself — zero genuine claim overlap, cleared.
   `doc_type: issue` — exempt from the finalize-plan-coverage rule (`check_finalize_plan_coverage.py` only globs
   `plans/active/*.md`, not `plans/active/issues/*.md`), no companion finalize doc authored.
+- **review 2026-08-01 (slot 9)**: todo closed above — the citation was already fixed pre-filing (stale-clone false
+  positive), re-verified live on trunk. All todos now `[x]`, `locked_by:` empty → archiving per
+  `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`. No codex SSOT update needed (this is a one-off
+  citation-verification finding, not a new contract). Referrer `ag_closeout_audit_cross_cutting_parked_2026_08_01.md`
+  todo 3 (a retag directive predicated on this doc staying active with an open todo) updated to reflect the doc is now
+  resolved+archived rather than merely retaggable.
