@@ -186,15 +186,20 @@ data-pipeline-correctness-hard-rule).
 
 ## Recommended next steps
 
-- [ ] [DEVOPS] P0. OPERATOR DECISION 2026-08-01 (msg 3112, relayed by main agt-26fe12): APPROVED option A — raise the
-      limit as the immediate stop-gap to restore live SPORTS capture NOW. EXECUTE: raise the fast-t1-recon Cloud Run
-      Job's memory limit (`spec.template.spec.containers[0].resources.limits.memory`, currently `8Gi` — bump to e.g.
-      `16Gi`), apply it, then confirm a fresh execution writes real raw_tick_data objects for the current day.
-      **CRITICAL pairing (slot 12 root-cause, ✅ below):** the memory bump ALONE only MASKS the real defect — the
-      CONFIRMED cause is an unscoped 30-league fetch per single-fixture trigger (~30x overfetch, exposed by `410d7569`),
-      not a genuine leak. Ship the `--league` scoping fix (the [DATA] P0 immediately below) alongside/right after this
-      bump; do NOT treat memory-bump-only as the resolution or close root-cause on it. Done when: the limit is applied
-      AND a fresh SPORTS fast-t1-recon execution is confirmed writing real raw_tick_data objects for the current day.
+- [x] ✅ [DEVOPS] P0. **DONE 2026-08-01 (slot 14).** OPERATOR DECISION 2026-08-01 (msg 3112, relayed by main
+      agt-26fe12): APPROVED option A — raised the fast-t1-recon Cloud Run Job's memory limit
+      (`spec.template.spec.containers[0].resources.limits.memory`) from `8Gi` to `16Gi` (cpu 2→4, matching the sibling
+      CEFI/PREDICTION t1-recon OOM-fix precedent). Applied live via `gcloud run jobs update` (already in effect on
+      resume — job generation 8, `lastModifier: github-actions-deploy`); verified via direct GCS listing that a fresh
+      execution wrote **560 real `ticks.parquet` objects** for `day=2026-08-01` under
+      `market-data-tick-sports-prd-central-element-323112/raw_tick_data/by_date/day=2026-08-01/pipeline_mode=batch_odds_api/`,
+      mtimes (`2026-08-01T12:07:45Z`) matching the job's own successful-execution completion times
+      (`12:07:53Z`/`12:07:57Z` per `gcloud run jobs executions list`). Terraform state aligned to match live
+      (`deployment-service@d969f27`, drift closed, comment cites this issue doc). **CRITICAL pairing (slot 12
+      root-cause, ✅ below) still applies**: the memory bump ALONE only MASKS the real defect — the CONFIRMED cause is
+      an unscoped 30-league fetch per single-fixture trigger (~30x overfetch, exposed by `410d7569`), not a genuine
+      leak. The `--league` scoping fix (the [DATA] P0 immediately below) is still open and is the actual root-cause fix
+      — do NOT treat this memory-bump-only step as resolving root cause. (repo: deployment-service@d969f27)
 - [x] ✅ [DATA] P0. **DONE 2026-08-01 (slot 12).** Root-cause the SPORTS-specific memory blowup in the fast-t1-recon
       dispatch path -- profile or code-read `market_tick_data_service`'s CLI handler + `odds_api_adapter.py`'s
       per-fixture fetch loop for the current `--asset-group SPORTS --start-date <today> --end-date <today>` invocation
@@ -263,3 +268,13 @@ deliberate architecture, not a bug). While confirming F1's resolution held, foun
 gap (07-27 onward) that F1's own resolution didn't cover. Traced it to a live Cloud Run Job OOM via direct
 `gcloud logging read` + `gcloud run jobs executions list` (not inferred) -- see evidence above. Filed this issue doc;
 full detail also cross-referenced in the dispatching reconciliation report.
+
+**2026-08-01 (slot 14)** -- Picked up the DEVOPS P0 stop-gap todo. The live `gcloud run jobs update` bump to 16Gi/4cpu
+had already been applied before this turn started (task showed `already_in_progress: true` on boot, job generation 8 /
+`lastModifier: github-actions-deploy`) -- verified it is genuinely working rather than re-applying blind: direct GCS
+listing of `market-data-tick-sports-prd-central-element-323112` for `day=2026-08-01` shows 560 real `ticks.parquet`
+objects (sample: `venue=PINNACLE/league_id=ALLSVENSKAN/fixture_id=1494231/...ticks.parquet`, 16706 bytes, mtime
+`2026-08-01T12:07:45Z`), matching the job's own successful-execution completion timestamps. Closed the remaining gap:
+Terraform (`audit03_cron_provisioning.tf`) still declared `cpu=2`/`memory=8Gi`, drifted from the live 4/16Gi -- aligned
+it and shipped `deployment-service@d969f27` (QG green, verified on origin). Flipped this checkbox. The `--league`
+scoping root-cause fix (next todo) remains open and unstarted by this turn.
