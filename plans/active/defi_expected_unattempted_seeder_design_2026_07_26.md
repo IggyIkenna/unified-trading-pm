@@ -173,7 +173,7 @@ write a dishonest zero-rows manifest stamp (the exact FLUID failure mode in re-d
       `quality-gates.sh` green (337s, pyright-suppression ratchet held at frozen baseline via narrow per-line
       `# pyright: ignore[reportPrivateUsage]` instead of a new blanket header). 8 new unit tests in
       `tests/unit/test_lending_indices_fluid.py`.
-- [ ] [DATA] P2. **New (2026-08-01, slot 8) — Todo 6, investigation/design task, may need a follow-up plan, no human
+- [x] ✅ [DATA] P2. **New (2026-08-01, slot 8) — Todo 6, investigation/design task, may need a follow-up plan, no human
       judgment needed to START it.** `risk_params`/`liquidation_events`/`dex_pools`/`dex_swaps`/`oracle_prices` have NO
       venue/chain-level seeder coverage (P2 deliberately excludes them — see the design correction) and their
       per-instrument honest-coverage story is asserted by code comments (`risk_params_handler.py`'s docstring: "~193k
@@ -181,7 +181,27 @@ write a dishonest zero-rows manifest stamp (the exact FLUID failure mode in re-d
       (instruments-service/scripts/enumerate_expected_universe.py)") but was NOT verified in this session. Investigate
       whether that enumerator actually covers these 5 DeFi data_types today; if it doesn't, design + implement the
       per-instrument analog of this plan's seeder for them (a distinct, larger task — the denominator needs a
-      per-instrument catalogue, not just `get_defi_declared_venues_for_data_type`'s venue/chain pairs).
+      per-instrument catalogue, not just `get_defi_declared_venues_for_data_type`'s venue/chain pairs). — ✅ **Done
+      (2026-08-01, slot 16)**: investigated. **Code-level answer: YES**, the v2 enumerator (`_enumerate_v2_defi`)
+      already covers all 5 data_types via UAC `PROTOCOL_CAPABILITIES` (`_LENDING_DATA`/`_DEX_DATA`/`_YIELD_DATA` +
+      explicit per-protocol `liquidation_events` entries) — no new per-instrument seeder is needed, the mechanism
+      already exists. **But it is NOT running**: `gcloud run jobs executions list` for `expected-universe-v2-defi` shows
+      every daily execution has OOM'd ("configured memory limit was reached", 8Gi) for 19 consecutive days
+      (2026-07-14→2026-08-01) — DeFi is the only asset_group failing among cefi/tradfi/sports/prediction's identical
+      jobs. A live, bounded, column-pruned manifest census
+      (`read_availability_index(bucket, columns=["data_type","capture_status"])`, single-walk discipline respected)
+      confirms the practical effect: 0 `expected_unattempted` rows exist anywhere in the 30M-row DeFi index for any of
+      the 5 data_types (the only 14 EU rows fleet-wide are `lending_indices`/`lst_rates`, from this plan's own P2
+      seeder, not this mechanism). Root cause identified by reading `main()`'s apply-write path
+      (`enumerate_expected_universe.py:4309-4334`): it drains the ENTIRE per-instrument enumeration generator into one
+      in-memory `list[ExpectedRow]` before writing anything — fine for the other 4 asset_groups, not for DeFi's much
+      larger catalogue. Filed as its own issue doc (the "distinct, larger task" this todo anticipated, though the actual
+      shape is a memory-bounding bug fix, not new seeder code):
+      `/plans/active/issues/defi_v2_expected_universe_enumerator_oom_2026_08_01.md` (P0, `assigned_vm: planning`, 3
+      todos: fix the streaming/OOM, verify real EU rows materialise post-fix, investigate the adjacent
+      `liquidation_events`/`risk_params` missing-scheduler gap). No code changes made in this session — this todo's "no
+      human judgment needed to START it" scope was the investigation itself; the fix is correctly scoped as a separate
+      task per the plan-authoring rule against absorbing unplanned scope.
 
 ## Design — the DeFi `expected_unattempted` seeder
 
@@ -491,3 +511,20 @@ handlers that build a `DefiManifestRecorder`:
   evidently interrupted before Pass 2): `deployment-service@1e8af34` (defi-pi-range PROGRESS.json checkpoint gap) and
   `market-tick-data-service@a283970` (VM_PROGRESS checkpoint per `--chunk-days` window in `rebuild_defi_manifest`) —
   both QG-green, both SHA-verified ancestor-of `origin/live-defi-rollout`.
+- 2026-08-01 (slot 16, data_engineering): Todo 6 done — investigation only, no code changes. Read
+  `enumerate_expected_universe.py`'s v2 DeFi enumerator (`_enumerate_v2_defi`) and UAC's `PROTOCOL_CAPABILITIES`
+  directly: confirmed the mechanism ALREADY covers `risk_params`/`liquidation_events`/`dex_pool_state`/
+  `dex_pool_swaps`/`oracle_prices` at the code level (no gap to design/implement). Then verified whether it's actually
+  working in prod via `gcloud run jobs executions list --job=expected-universe-v2-defi` (19 consecutive daily OOM
+  failures, 2026-07-14→2026-08-01, DeFi-only — the sibling cefi/tradfi/sports/prediction jobs are all green) and a
+  bounded column-pruned manifest census (`read_availability_index(bucket, columns=["data_type","capture_status"])` — no
+  whole-corpus walk): 0 `expected_unattempted` rows exist anywhere in the live 30M-row DeFi index for any of the 5
+  data_types; the only 14 EU rows fleet-wide are this plan's own P2 `lending_indices`/`lst_rates` seeder output. Root
+  cause read directly in `main()` (`enumerate_expected_universe.py:4309-4334`): the whole per-instrument generator is
+  drained into one in-memory `list[ExpectedRow]` before any write, which fits in 8Gi for the other 4 asset_groups but
+  not DeFi's much larger catalogue. Filed `/plans/active/issues/defi_v2_expected_universe_enumerator_oom_2026_08_01.md`
+  (P0, `assigned_vm: planning`) with the fix scoped as its own todo (stream/batch the write path) rather than absorbing
+  it into this session — a genuine "distinct, larger task" per this todo's own framing, just a different shape
+  (memory-bounding bug fix to existing code) than the todo anticipated (new seeder code). **Flag for the operator**:
+  this is a real, currently-active data-correctness regression — the entire DeFi per-instrument honest-coverage
+  denominator has been silently ~0 for 19 days, not scoped to just these 5 data_types.
