@@ -112,19 +112,36 @@ context_scope:
       todo's own done-when needs an actual VM launch + comparison run, which is infra craft (this task's
       `assigned_role: data_engineering` scopes VM launches out — `does_not: infra/VM launches`). Tracked as its own
       follow-up todo immediately below rather than left unverified in prose.
-- [ ] [INFRA] P2. **Empirically verify the `measure_honest_coverage.py` streaming refactor (above) actually bounds
-      memory enough to run on `e2-standard-4` (16GB)**, then downsize the live launcher. Launch a control run on the
-      current `e2-highmem-4` (32GB) VM and a test run on a fresh `e2-standard-4` (16GB) VM, both against
-      `instruments-service@12825e81` (or later), `--asset-group all`; diff the two `coverage.json` outputs' per-
-      `(venue, instrument_id, data_type)` row counts (byte-identical, or a documented pyarrow-ordering tolerance) and
-      confirm the 16GB run does not OOM. If it holds, flip `vm/launch-measure-honest-coverage-vm.sh`'s `--machine-type`
-      back to `e2-standard-4` and re-upload to the cron's GCS path
-      (`gs://deployment-scripts-central-element-323112/vm/launch-measure-honest-coverage-vm.sh` — see
-      `issues/honest_coverage_nightly_cron_undersized_and_launcher_ssot_drift_2026_07_16.md` for why the GCS path, not
-      the repo copy, is the one the live cron actually fetches). If it does NOT hold, leave the machine type at 32GB and
-      record the measured peak RSS here so a future attempt has a real number to design against. Repo:
-      deployment-service. **Done when**: the before/after coverage.json comparison + peak-RSS numbers are recorded in
-      this todo's evidence, and the live cron's GCS launcher matches whatever machine type the verification supports.
+- [x] ✅ [INFRA] P2. **DONE 2026-08-01 (slot-12, infra) — holds; downsized.** Added `--machine-type`/`--oom-monitor`
+      flags to `launch-measure-honest-coverage-vm.sh` (non-behavior-changing, `deployment-service@fec7946`), then ran a
+      control (`e2-highmem-4`) and test (`e2-standard-4`) launch, both against `instruments-service@147550ab` (past
+      `12825e81`), `--asset-group all`. **Hit + fixed a real blocker first**: the control run's initial attempt 403'd —
+      `uts-prd-sa` had zero IAM grant on the `central-element-323112-honest-coverage` bucket (a pre-existing gap, not
+      caused by this todo; the visible "fresh" `coverage.json` before this run was the 00:30 UTC nightly cron's last
+      SUCCESSFUL write from an earlier working state, not evidence this path was currently healthy). Self-granted
+      `roles/storage.objectAdmin` bucket-scoped to `uts-prd-sa` per
+      `/codex/05-infrastructure/orchestrator-cloud-identity-self-service.md` (not an `[OPERATOR]` gap per that SSOT),
+      live-verified via impersonation write+read before re-running. **Results**: control run (32GB) — exit 0, peak RSS
+      7.53GB. Test run (16GB) — exit 0, peak RSS 8.20GB, zero OOM/dmesg-kill signals. Diffed both `coverage.json`
+      outputs at full `(venue, instrument_type, data_type)` leaf-shard granularity (the finest grain the output actually
+      carries — `instrument_id` is an internal dedup key, not an output dimension): cefi (81 shards), tradfi (243),
+      sports (528), prediction (15) were **byte-identical** between runs; defi (193 shards) had 4 differing leaf shards,
+      **all monotonic growth** (test≥control, zero regressions, zero shard-set drift), summing to the same +168 captured
+      delta visible at the `by_asset_group` level — consistent with genuine live DeFi capture activity in the ~8min gap
+      between the two runs (defi has the highest write throughput of any AG here), not a machine-type artifact. Verdict:
+      **holds**. Flipped `MACHINE_TYPE` default to `e2-standard-4`, rewrote the stale "reverting to the PROVEN 32 GiB"
+      rationale comment with this verification's evidence (`deployment-service@d880de3`). **Re-upload note**:
+      `create-code-tarballs.sh`'s general publish does NOT sync arbitrary launchers (incl. this one) to the real `vm/`
+      cron-read path — it only auto-publishes
+      `setup-data-pipeline-vm.sh`/`vm-exec-with-gcs-tee.sh`/`heartbeat_daemon.py` there; everything else lands under
+      `code/deployment-service/scripts/vm/` instead (this IS the drift the sibling P3 "launcher SSOT cleanup" todo below
+      already tracks — not re-filing). Published this one file directly to
+      `gs://deployment-scripts-central-element-323112/vm/launch-measure-honest-coverage-vm.sh` via the same sanctioned
+      `gcs_upload_via_adc.py` ADC-backed uploader the publish script itself uses (never bare gcloud/gsutil), verified
+      live: object updateTime 2026-08-01T10:42:45Z, content confirms `MACHINE_TYPE="e2-standard-4"`. Evidence preserved
+      in GCS: pre-run nightly-cron output backed up to `2026-08-01/_pre_rightsizing_verification_nightly_cron.json`;
+      control run preserved to `2026-08-01/_verification_control_e2-highmem-4.json` before the test run overwrote the
+      shared date-keyed output path. `quality-gates.sh` green both commits (sentinel-verified), shipped via quickmerge.
 - [ ] [INFRA] P3. **Combined honest-coverage launcher SSOT cleanup (2 sub-steps, same underlying drift, different
       files):** (a) delete/merge the redundant honest-coverage launcher artifacts —
       `scripts/vm/launch-honest-coverage-vm.sh` (not the live cron path; the GCS
