@@ -4,7 +4,7 @@ title: launch-instruments-backfill-vm.sh has no --sports-provider passthrough �
 summary:
   launch-instruments-backfill-vm.sh never gained a --sports-provider passthrough, so every provider-routed sports shard
   (6/7) fails data-pipeline-check-is at the CLI-arg step, not on real adapter health.
-status: open
+status: resolved
 nature: issue
 asset_group: [sports]
 stage: [data]
@@ -18,7 +18,7 @@ assigned_vm: planning
 parent_epic: infrastructure_master
 source: [instruments-service/scripts/pipeline_e2e_check.py, sports_consolidated_native_ao_extract_2026_07_25.md]
 priority: P2
-resolved_by:
+resolved_by: deployment-service@b1f0a22
 locked_by:
 ---
 
@@ -60,8 +60,15 @@ gap).
 
 ## Todos
 
-- [ ] [BACKEND] P2. Add `--sports-provider <PROVIDER>` arg to `launch-instruments-backfill-vm.sh`'s parser, threaded
-      through to `VM_SPORTS_PROVIDER` metadata (mirror the existing `--venues` -> `VM_VENUES` passthrough pattern in the
-      same script). (repo: deployment-service). **Done when**:
-      `bash     deployment-service/scripts/vm/launch-instruments-backfill-vm.sh --asset-group SPORTS --sports-provider     API_FOOTBALL --test-run --force ...`
-      no longer errors `Unknown arg: --sports-provider`, and a real VM launches.
+- [x] ✅ [BACKEND] P2. **DONE 2026-08-01 (slot 15), `deployment-service@b1f0a22`.** Added `--sports-provider <PROVIDER>`
+      to `launch-instruments-backfill-vm.sh`'s arg parser (mirrors the existing `--venues`/`VM_VENUE` passthrough
+      exactly: CLI case, `ASSET_GROUP_FILTER` require-check, dry-run echo, `METADATA` string) — threads to the
+      `VM_SPORTS_PROVIDER` metadata key `setup-data-pipeline-vm.sh` already read (lines 267/1928/2346 there, confirmed
+      pre-existing). Verified live via `--dry-run`: `--asset-group SPORTS --sports-provider API_FOOTBALL ...` no longer
+      errors `Unknown arg`, correctly emits `VM_SPORTS_PROVIDER=API_FOOTBALL` in the metadata preview. Full
+      `quality-gates.sh` green, shipped via quickmerge, verified on origin
+      (`git merge-base --is-ancestor b1f0a22 origin/live-defi-rollout`). Discovered independently while working
+      `sports_consolidated_native_ao_extract-029` (Track K IS baseline checkpoint) before reading this doc — same root
+      cause, same fix; re-running the SPORTS IS baseline check now that the fix is live to confirm the 6 provider-routed
+      shards reach a real VM launch (BETFAIR stays `BLOCKED-CREDENTIALS`/zero-rows per this doc's own note — expected,
+      not a regression).
