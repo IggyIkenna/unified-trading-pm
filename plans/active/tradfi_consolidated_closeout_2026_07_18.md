@@ -57,6 +57,10 @@ related:
     /plans/archive/2026_07/tradfi_consolidated_closeout_history_2026_07_25.md,
     /plans/archive/2026_07/tradfi_satellite_ao_dispatch_batch1_2026_07_25.md,
     /plans/active/tradfi_satellite_ao_dispatch_batch2_2026_07_25.md,
+    /plans/active/tradfi_satellite_ao_dispatch_batch5_2026_07_29.md,
+    /plans/active/tradfi_satellite_ao_dispatch_batch5_2026_07_29_finalize.md,
+    /plans/active/tradfi_satellite_ao_dispatch_batch6_2026_08_01.md,
+    /plans/active/tradfi_satellite_ao_dispatch_batch6_2026_08_01_finalize.md,
     /plans/active/tradfi_consolidated_native_ao_extract_2026_07_25.md,
     /plans/active/tradfi_consolidated_native_ao_extract_2026_07_25_finalize.md,
     /plans/active/cefi_consolidated_closeout_2026_07_18.md,
@@ -76,7 +80,7 @@ related:
     /plans/active/data_pipeline_e2e_milestones_gate_2026_07_24.md,
   ]
 created: 2026-07-18
-last_updated: "2026-07-25"
+last_updated: "2026-08-01"
 parent_epic: tradfi_master
 assigned_vm: NA
 execution_scope: local-only
@@ -269,6 +273,21 @@ Everything below is scoped so these cells are canonical, honestly-covered, and s
 
 ## Progress Log
 
+- **`/ag-closeout-audit tradfi` 2026-08-01 (slot 2, dispatch agt-d7b683, scheduled `ag_closeout_auditor` worker,
+  operator away)**: fresh full pass. Phase 0 fixed a same-session tooling gap
+  (`generate_ag_closeout_audit_candidates.py` wasn't resolving this doc's own `depends_on:` for finalize-less forks —
+  see this doc's own `depends_on:` fix above) that corrected the covering-plan count 11→13 and the real candidate count
+  67→65. Phase 1 ran a 65-agent Workflow classifying every tradfi-primary candidate against the 13-doc covering set: 31
+  excluded (genuinely multi-AG, confirmed by content not just tag), 3 archivable now, 19 archivable-after-planned-work,
+  12 orphaned (5 partial, 7 never-touched). Phase 3 conflict-check cleared 4 of the 12 for a fresh batch —
+  `tradfi_satellite_ao_dispatch_batch6_2026_08_01.md` (+ gated finalize), `status: draft` pending operator review. The
+  other 8 orphans stay deferred (3 too-large-or-risky unchanged + 1 newly-scoped, 3 operator-gated unchanged, 1 whose
+  precondition changed since batch5 and needs fresh investigation before any todo —
+  `tradfi_legacy_twin_bucket_deletes_signoff_2026_07_24.md`'s delete gate now measures 0% twin-coverage, not the 100% it
+  needs). One further genuine orphan (`mtds_is_full_adapter_smoketest_findings_2026_07_07.md`, 4 TradFi bugs never
+  promoted to checkboxes) is flagged but not batched — that doc is genuinely 5-AG-shared
+  (`parent_epic: instruments_master`), so per the primary-owner rule its write belongs to whichever tranche actually
+  owns it. See `tradfi_satellite_ao_dispatch_batch6_2026_08_01.md`'s own summary + Deferred sections for full detail.
 - **AO-dispatch-readiness sweep 2026-07-31 (slot 14, via `tradfi_consolidated_native_ao_extract_2026_07_25.md` todo 10 —
   the 2 remaining categories: stale checkboxes, missing definition-of-done)**: `sports_consolidated_closeout`'s Track Y
   method applied to the 2 categories this file's own todo (below, `[x]` closed 2026-07-25) left owed after closing for
