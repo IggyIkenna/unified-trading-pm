@@ -128,14 +128,37 @@ source:
       return empty on canonical-form type filters" finding
       (`canonical_id_p0_defi_adapter_type_filter_bug_2026_07_08.md`), same mechanism/different tokens — separate work
       from the builder-routing done here.
-- [ ] [DATA] P2. **VERIFY `morpho.py:195`'s real current code against finding 6** — the canonicalization issue doc's
-      finding 6 describes a real 3rd-colon-inside-symbol bug (`MORPHO-BASE:LENDING_MARKET:USDC-EURC:0x305dd1`), but the
-      CURRENT adapter code at `morpho.py:195` reads
-      `instrument_key = f"{venue_tag}:LENDING_MARKET:{symbol}-{market_key[:8]}"` — already dash-separated, not
-      colon-separated. This matches the pattern already confirmed for finding 2 (Uniswap V3 pool): the code may already
-      be fixed and the divergence is a **catalog-regeneration gap** (stale `prod/catalog.parquet` predating this adapter
-      code), not a code gap. Confirm via a live re-fetch or a fresh backfill sample before assuming finding 6 needs a
-      code change here.
+- [x] [DATA] P2. **VERIFY `morpho.py:195`'s real current code against finding 6 — DONE 2026-08-01 (slot-15,
+      `data_engineering`), `instruments-service@<pending quickmerge sha>`.** This todo's own premise was stale: the
+      quoted snippet (`instrument_key = f"{venue_tag}:LENDING_MARKET:{symbol}-{market_key[:8]}"`) doesn't exist in
+      current code at all — it was the shape right after `af05ece3` (2026-07-08, the original dash-fix) and was fully
+      superseded by `b5a3f6c9`'s A_TOKEN/DEBT_TOKEN split (confirmed via `git log`/`git show` on both commits). Current
+      code (`_market_to_records`, ~line 207) builds `pair_key = f"{collateral_symbol}-{loan_symbol}-{market_key[:8]}"`,
+      dash-only, then routes through
+      `build_canonical_instrument_id(..., InstrumentType.A_TOKEN/DEBT_TOKEN, ...,     passthrough=True)` — matching
+      finding 6's SUPERSEDED banner. **But two real, live findings surfaced by actually doing the verification (a live
+      re-fetch + a real catalog query), not just re-reading the code:** 1. **A real, live, severity-escalating code gap
+      — FIXED this pass.** Live re-fetch against `blue-api.morpho.org` across all 5 supported chains (2,792 valid
+      markets checked) found exactly one real raw collateral-asset symbol embedding a colon: GMX's GM-vault token
+      `GM:ETH/USD[WETH-USDC]` (Morpho-Arbitrum market `0x1a926ab8…`). `collateral_symbol`/`loan_symbol` were never
+      sanitized before entering `pair_key`, and `canonical_id_builder.py`'s `build_instrument_id` **hard-rejects**
+      (raises `ValueError`) any non-sports/prediction symbol containing `:` (the 2026-07-20 fail-loud double-wrapped-id
+      guard) — `get_instruments()`'s per-market loop has no try/except, so this ONE market would have aborted
+      Morpho-ARBITRUM discovery **entirely** (losing all ~221 valid markets on that chain), not just corrupted its own
+      id. Fixed: added `_sanitize_symbol()` (strips `:`/`/`/`[`/`]`) applied to both symbols before building `pair_key`;
+      byte-identical for the ~99.96% of markets with clean symbols (verified: normal-market test asserts the exact prior
+      string). New regression test: `tests/unit/reference_data/adapters/defi/test_morpho_symbol_sanitization.py` (real
+      GM-vault market fixture + a normal-market no-op-sanitization check). 2. **A real, separate, NOT-yet-fixed
+      catalog-regeneration-gap finding — new todo below, out of scope for this code-level fix.** Direct query of real
+      `prod/catalog.parquet` (2,753 MORPHO rows) found 1,330 (48%) still carry an embedded colon before the market-key
+      hex suffix, e.g. `MORPHO-BASE:A_TOKEN:ACBBTC-USDC:0x125081` — traced to
+      `scripts/canonicalize_defi_lending_atoken_debttoken_catalog_2026_07_13.py:106`
+      (`row["instrument_id"].split(":", 2)`), which parsed stale pre-`af05ece3` `LENDING_MARKET`-shaped rows and
+      forwarded whatever colon-containing suffix it found straight into the new `A_TOKEN`/`DEBT_TOKEN` shape, instead of
+      re-deriving a clean dash-only `pair_key`. This is the SAME class of defect as finding 2's DEX-pool catalog-regen
+      gap — durable code fix does not equal durable historical data. Confirmed:
+      `MORPHO-BASE:A_TOKEN:AUSDC-EURC-0x305dd1` (finding 6's ORIGINAL cited example) IS already clean in the real
+      catalog — the embedded-colon defect is real but only in a subset of rows, not universal.
 - [x] [DATA] P1. **Retrofit the 5 on-chain-perp adapters** — DONE 2026-07-09, `instruments-service@ca2f44e5`. Pure DRY,
       byte-identical output confirmed against the existing test suite, no behavior change.
 - [x] [DATA] P1. **Fix the real `:TYPE:` segment bug in Deribit's combo-leg builder** — DONE 2026-07-09,
@@ -192,6 +215,17 @@ source:
 - [ ] [SCRIPT] P2. **Ship each retrofit batch via quickmerge**, quality-gates green per repo, citing before/after
       `instrument_key` evidence per adapter touched (same evidence pattern as the CCXT plan's per-venue table). Batch by
       asset-group-cluster (todo 1+2 together, todo 4 alone, todo 6 alone, etc.) rather than one giant commit.
+- [ ] [SCRIPT] P2. **Migrate the 1,330 stale-colon MORPHO catalog rows found during the finding-6 verify pass
+      (2026-08-01)** — `prod/catalog.parquet`'s MORPHO A_TOKEN/DEBT_TOKEN rows still carry an embedded colon before the
+      market-key hex suffix for 1,330 of 2,753 real rows (e.g. `MORPHO-BASE:A_TOKEN:ACBBTC-USDC:0x125081`, should read
+      `...:ACBBTC-USDC-0x125081`), because `canonicalize_defi_lending_atoken_debttoken_catalog_2026_07_13.py:106`
+      forwarded the stale pre-`af05ece3` `pair_key` string verbatim (via `instrument_id.split(":", 2)`) instead of
+      re-deriving it from source columns. Fix: a dedicated migration script (same backup/`--dry-run`/`--apply` pattern
+      as the 2026-07-13 script) that re-derives each affected row's `pair_key` from its own already-persisted
+      `base_asset`/`quote_asset`/`pool_address` columns (all present per-row — no resynthesis from an external source)
+      rather than string-splitting the stale id. Scope check first: confirm whether the same defect recurs for the 6
+      FLUID rows the 2026-07-13 script also split (same `split(":", 2)` code path, same `_SPLIT_PREFIXES` list) — not
+      verified in this pass, FLUID wasn't queried.
 
 ## Folded-in scope 2026-07-15 (plan-reconcile §6)
 
@@ -213,3 +247,13 @@ source:
   `unified-api-contracts`; one real live retrofit (`deribit_options_adapter.py`) and one compatibility-test proof
   (CCXT/Tardis table) landed alongside it. This plan captures the full remaining retrofit surface with real file:line
   evidence gathered via direct grep + read, not guessed.
+- **2026-08-01 (slot-15, `data_engineering`)** — Closed the `morpho.py:195` VERIFY todo. Confirmed via
+  `git log`/`git show` that the todo's own quoted "current code" snippet was stale (superseded by `b5a3f6c9`'s
+  A_TOKEN/DEBT_TOKEN split, matching finding 6's SUPERSEDED banner). Did the verification the todo actually asked for —
+  a live re-fetch against Morpho's real GraphQL API (all 5 chains, 2,792 valid markets) plus a direct query of real
+  `prod/catalog.parquet` (2,753 MORPHO rows) — rather than treating the code read alone as sufficient, and found two
+  real things the code-only read would have missed: (1) a live severity-escalating bug (one real GMX GM-vault collateral
+  symbol embeds a colon, which would abort an entire chain's Morpho discovery via `canonical_id_builder.py`'s fail-loud
+  guard + no per-market try/except) — fixed this pass, `instruments-service`; (2) a real, separate, NOT-fixed
+  catalog-regeneration gap (1,330/2,753 real rows still stale) — added as a new todo above, correctly scoped out of this
+  pass (needs its own migration script, not a code change).

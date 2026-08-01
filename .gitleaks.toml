@@ -111,6 +111,12 @@ regexes = [
 ]
 
 [[allowlists]]
+description = "MORPHO/FLUID A_TOKEN/DEBT_TOKEN pair_key symbol segments (collateral-loan-marketkeyhex, e.g. AUSDC-EURC-0x305dd1 / ACBBTC-USDC-0x125081) quoted verbatim in plan/issue-doc instrument_id evidence — a canonical DeFi lending instrument_id fragment, not a credential; confirmed via `gitleaks protect --staged` on canonical_id_builder_retrofit_checklist_2026_07_08.md, 2026-08-01"
+regexes = [
+  '''\b(A|DEBT)[A-Za-z0-9]+-[A-Za-z0-9]+-0x[0-9a-fA-F]{6,8}\b''',
+]
+
+[[allowlists]]
 description = "GCP project-specific patterns already revoked and in history-rewrite scope"
 # These are documented in plans/active/issues/gcp_sa_private_key_in_git_history_*
 # Remove this allowlist after history rewrite (git filter-repo) completes.
