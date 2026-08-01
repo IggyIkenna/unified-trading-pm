@@ -127,8 +127,24 @@ premature).
 
 ## Todos
 
-- [ ] [OPERATOR] P1. Decide between option (A) (revert the `workspace-manifest.json` execution-service/
+- [x] ✅ [OPERATOR] P1. Decide between option (A) (revert the `workspace-manifest.json` execution-service/
       market-tick-data-service dependency entry) and option (B) (build a `check-dependency-alignment.py`
       internal-dependency exception allowlist mirroring `PER_REPO_EXTERNAL_EXCEPTIONS`) — or confirm (A) per the
       recommendation above and let it ship as a follow-up commit. This blocks EVERY code-carrying `unified-trading-pm`
-      quickmerge until resolved. (repo: unified-trading-pm, execution-service)
+      quickmerge until resolved. (repo: unified-trading-pm, execution-service) — **DONE 2026-08-01, operator confirmed
+      option (A) live (slot 16, while shipping an unrelated task blocked by this gate).** Verified before applying: the
+      real dep-order/publish consumers (`assert_deps_published_to_ar.py`, `check-import-deps.py`) derive from each
+      repo's own `pyproject.toml`, not this manifest field, so removing the entry has no build/promotion-order effect.
+      Shipped `unified-trading-pm@4871d79fe`; `check-dependency-alignment.py --json` now returns `"aligned": true`.
+      Repo-blocker RB-be17edbd resolved.
+
+## Progress Log
+
+- **2026-08-01, slot 16**: Resolved the `[OPERATOR]` decision live — operator authorized proceeding with option (A)
+  while this gate was blocking an unrelated shippable task (`autostash_pop_restores_foreign_wip_into_the_index-001`).
+  Removed the `market-tick-data-service` entry from `workspace-manifest.json`'s
+  `repositories.execution-service.dependencies` (`unified-trading-pm@4871d79fe`). Confirmed
+  `check-dependency-alignment.py --json` returns `"aligned": true` post-fix. `status` left `open` pending an operator or
+  `execution-service@050ed797`-author sanity check that nothing else silently relied on that manifest entry (the
+  recommendation's own stated risk) — flip to `resolved` once that's confirmed, or if a downstream break surfaces,
+  reopen with the specifics.

@@ -102,11 +102,15 @@ right up until the pull, and the post-pull index is never re-inspected.
 > with zero file overlap, since FF-eligibility is a commit-graph property, not a content one. So the fix is two
 > different mechanisms for two different moments, not one blanket replacement.
 
-- [ ] [DEVOPS] P2. **Pre-commit case (haven't committed your own work yet): skip forced rebase.** Before the mandated
-      reconcile step, check `git rev-list --count origin/<branch>..HEAD` — if `0` (no local commits ahead of origin
-      yet), use a plain `git pull origin <branch>` (merge, no `--rebase`) instead of `--rebase --autostash`. This is a
-      genuine no-cost fast-forward in this case; your dirty working-tree files ride along untouched if they don't
-      overlap, and git's own merge machinery already refuses cleanly if they do — no new tooling needed for this half.
+- [x] ✅ [DEVOPS] P2. **Pre-commit case (haven't committed your own work yet): skip forced rebase.** — **DONE
+      2026-08-01, `unified-trading-pm@72bdb200e`.** `scripts/quickmerge.sh` STAGE 0.4 (`_qm_stage_0_4_not_behind_gate`):
+      when `git pull --ff-only` fails AND `_QM_AHEAD` is `0`, the gate no longer falls through to
+      `git pull --rebase --autostash` — since there is no local commit for rebase to replay, an ff-only failure at
+      ahead=0 can only be a working-tree content overlap, so it now reports `PRECOMMIT_WORKING_TREE_CONFLICT` and blocks
+      cleanly instead (no stash ever created). The `ahead>0` branch is unchanged (that's the next todo below). Verified
+      in a sandboxed clone: ahead=0 + non-overlapping dirty file still fast-forwards cleanly (unaffected); ahead=0 +
+      genuine overlapping dirty file now blocks with zero stash activity, vs. the prior code which would have swept the
+      whole dirty tree. shellcheck-clean, quality-gates.sh green.
 - [ ] [DEVOPS] P2. **Post-commit case (already have a local commit ahead of origin): keep `--rebase --autostash`** (this
       case is genuine commit-graph divergence, not FF-eligible, and rebase is what keeps `live-defi-rollout` linear
       instead of littering it with merge commits) **— but make the autostash-pop safe.** Immediately after
@@ -155,3 +159,10 @@ owning agent carry on (their tree simply shows those files as already-committed 
   any entry in the live `agents/*.md` registry; `infra` is the closest real role for this per-tab-worktrees/CLAUDE.md
   git-mechanics fix).
 - **context-scout 2026-08-01**: populated context_scope (2 entries).
+- **infra worker 2026-08-01** (slot 16, task `autostash_pop_restores_foreign_wip_into_the_index-001`): shipped the
+  pre-commit-case `[DEVOPS] P2` todo — `unified-trading-pm@72bdb200e`. Blocked mid-ship by an unrelated pre-existing
+  gate (PM STAGE 1.5 dependency-alignment red, tracked in
+  `pm_dependency_alignment_gate_blocks_all_code_pushes_execution_service_mtds_2026_08_01.md`, `[OPERATOR]`-gated);
+  declared repo-blocker RB-be17edbd, operator authorized proceeding with that doc's recommended option (A), shipped as a
+  separate commit `unified-trading-pm@4871d79fe`. Two remaining todos (post-commit `--restore --staged` safety + the
+  docs fold) are untouched — out of scope for this task.
