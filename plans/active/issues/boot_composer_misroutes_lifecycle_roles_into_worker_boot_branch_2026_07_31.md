@@ -169,3 +169,33 @@ it. Reported by review, verified + corrected by main.
 - [ ] [SCRIPT] P1. Extend the composer-guard fix (todo above) so its role classification covers **one-shot
       lifecycle/audit roles** (`ag_closeout_auditor` and siblings), not just `{review, main, monitor}` — otherwise the
       auditor data-loss variant persists after the review/main/monitor guard lands.
+
+# 2026-08-01 (ag_closeout_auditor, slot 12, dispatch agt-dd7b76, tranche=defi) — third occurrence, still unfixed, data-loss avoided this time
+
+Confirms the composer misroute is **still live** as of 2026-08-01T11:35Z (one day after this doc was filed) and **not
+cefi-specific** — same defect now reproduced on a second tranche.
+
+- Slot 12's generic `AGENT BOOT` boot-stub text (STEP 2: `POST /api/slots/12/boot` … "the response carries your task")
+  gave no hint to declare `slot_role`. A `/boot` call without it landed in the `elif slot_id is not None:` worker branch
+  and bound an unrelated stray task (`sports_fast_t1_recon_oom_live_capture_outage-002`, `[DATA] P0`,
+  `assigned_role: data_engineering` — a different stray task than the cefi run's IAM P2, underscoring this is "whatever
+  `pick_next_task` finds," not a specific-task bug).
+- **Data loss avoided**: caught the mismatch via code-read (`server/prompts.py` + `server/routes/slots_worker.py`)
+  before calling `/done`, so the empty-sha trap (this doc's first P1 todo) never triggered. Re-`/boot`ed with
+  `"slot_role": "ag_closeout_auditor"` explicitly set; the existing server-side self-heal
+  (`ag_closeout_auditor_one_shot_complete_no_agentrow_recurrence_2026_07_29`) fired as designed —
+  `plan_health_stray_task_binding_released` (confirmed via `GET /api/activity`) cleanly released the stray task back to
+  the general queue (`target_slot=None`, so any data_engineering worker can still pick it up) instead of leaving it
+  silently bound-but-unworked. No backlog corruption this run.
+- **New wrinkle for the eventual fix/workaround to account for**: declaring `slot_role` on the first `/boot` call is
+  necessary but not sufficient — the read-confirmation gate (`slots_worker.py::boot_slot`) computes its expected file
+  set from the slot's _persisted_ `spawn_base_role`, which is still unset on that first call, so it falls back to
+  `expected_read_files("worker", req.slot_role)` and 428s demanding `worker.md` too, even though
+  `ag_closeout_auditor.md` never tells the agent to read it. Recovery needs BOTH: `slot_role` set on every `/boot` call,
+  AND `worker.md` included in `read_files` alongside RULES.md + the role file — undocumented anywhere today, only
+  discoverable by reading server source.
+- Given this is the third confirmed occurrence and the real fix (follow-up todos above) is still open, worth considering
+  a cheap interim mitigation alongside it: have `_compose()` (or each `PLAN_HEALTH_FAMILY_ROLES` role doc) emit the
+  `slot_role` field explicitly in the STEP 2 curl example, so a scheduled one-shot agent doesn't have to rediscover this
+  by code-reading every time. Not filing as a separate todo — folds naturally into the composer-guard fix already
+  tracked above.
