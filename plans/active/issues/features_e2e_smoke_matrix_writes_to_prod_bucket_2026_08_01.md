@@ -175,12 +175,56 @@ identical `_invoke_cli()` shape so are near-certain but not individually re-veri
       prefix mismatches; 2 stale manifest consolidators) filed as
       `/plans/active/issues/features_smoke_matrix_verification_findings_2026_08_01.md` per the FINDINGS CLOSURE rule —
       none block this todo's own P0 scope, which is proven correct independent of them.
-- [ ] [DATA] P1. **features-service / operator** — once (P0 above) lands, audit each family's PROD features bucket for
-      any historical test-shaped pollution left over from the pre-fix era (mirroring the audit already done for calendar
-      in `features_calendar_is_test_run_ignored_writes_prod_2026_07_27.md`'s P1 todo) — scope to objects/rows whose
-      `day=`/date matches a known smoke-test invocation window, not a blind full-bucket sweep. Follow the
-      reversibility-qualified delete protocol (`/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` §3a) for any
-      confirmed test-artifact deletion.
+- [x] ✅ [DATA] P1. **DONE 2026-08-01 (slot-13).** Audited all 8 families' PROD features buckets for the caller-bug
+      window: 2026-07-31 (e2e-testing relocation, confirmed via `git log --diff-filter=A` on all 8
+      `scripts/<family>/smoke_matrix.py`) → 2026-08-01T07:46Z (fix landing, `e2e-testing@04d261d`) — widened to
+      2026-07-27 onward for calendar specifically, since its own config-side fix landed that day
+      (`features_calendar_is_test_run_ignored_writes_prod_2026_07_27.md`) but this doc's caller-side gap meant any
+      calendar smoke invocation between 07-27 and 08-01 still fell through to PROD regardless. Method: UTL
+      `get_storage_client().list_blobs()` scoped per-family PROD bucket (never a cross-family/whole-corpus walk),
+      candidate objects filtered by `day=`/date-segment match against known smoke-invocation dates, then
+      CONTENT-verified (row count + schema via `pyarrow.parquet` read of the actual bytes, not just presence — delete
+      safety Part 2) before any delete decision. **Result — only `features-calendar-prd-central-element-323112` had
+      confirmed pollution; the other 7 families are CLEAN:** commodity (`commodity-signals-batch-...`, 5 objects total,
+      none in any invocation window — the Baker Hughes fail-closed guard, see
+      `features_service_catalogue_completeness_smoke_masking_findings_2026_08_01.md`, rejected the `day=2026-08-01`
+      write entirely, so the masking-test's real commodity run produced no GCS object despite resolving to PROD);
+      cefi/tradfi PROD buckets shared by delta_one/cross_instrument/multi_timeframe/volatility (full listing reviewed,
+      321 + 8 objects, all genuine historical backfill `day=2020-02-xx`..`day=2024-06-17`, zero near any invocation
+      timestamp); defi/sports PROD buckets (too large for full listing — 287k/191k objects — scoped by `day=` match
+      against `{2024-01-22, 2026-07-29, 2026-07-30, 2026-07-31, 2026-08-01}`; every match traced to a genuine
+      large-scale scheduled job: defi = hundreds of `delta_one/.../CHAINLINK:*` objects from a systematic
+      multi-instrument historical sweep that independently reached `day=2024-01-22` in its own chronological backfill;
+      sports = `sports_features/.../league=*` objects following a consistent T-7-day-ahead fixture-pregeneration cadence
+      across dozens of leagues, real 17KB-350KB sizes — neither test-shaped); `features-prediction-prd-...` does not
+      exist (never provisioned) — no pollution possible there. **`features-calendar-prd-central-element-323112`: 8
+      confirmed test-invocation artifacts found + deleted** — this was the bucket's ENTIRE `calendar/`-prefix history
+      since the 07-27 cleanup (8 objects total, none left over): `economic_events`/`economic_results`/`yield_curve` at
+      `day=2024-01-22` (an arbitrary historical smoke-test date — no production job targets a random 2.5-year-old date),
+      `day=2026-07-29` (`economic_events`, `yield_curve`), and `day=2026-08-01` (`economic_events`, `economic_results`,
+      `yield_curve` — the exact cells this doc's own "What I found" masking-test run produced). Content-verified: sizes
+      ranged 2397-8162 bytes, row counts 0-6 — NOT all schema-only empties this time (`economic_results` carried 5-6
+      real computed rows, `yield_curve`/`economic_events` carried 0-1) — these are genuine, correctly-computed feature
+      values (calendar's compute always hits real external APIs regardless of `IS_TEST_RUN`; only the write DESTINATION
+      is bucket-routed), just misrouted to PROD by three separate ad-hoc smoke/verification invocations (`written_at`
+      clusters at 2026-07-30T20:58, 2026-07-30T21:10, and 2026-08-01T02:08 — three distinct sessions, not a cron
+      cadence) rather than any legitimate scheduled batch run (confirmed via the calendar manifest: zero rows for these
+      dates carry the pattern of a real recurring schedule, and the 07-27 audit already established this bucket had NO
+      real scheduled traffic as of that date). Deleted per §3a: FRESH same-run
+      `gcs_bucket_soft_delete_retention_seconds("features-calendar-prd-central-element-323112")` returned `604800`
+      (meets the ≥604800s bar); each of the 8 objects individually `gcs_describe_object`-verified PRE-delete (exists,
+      size/generation recorded) → `gcs_delete_object` → `gcs_describe_object`-verified POST-delete (`None`) — all 8
+      confirmed removed, zero failures. Final check: `calendar/` prefix listing on the bucket now returns 0 objects.
+      **Adjacent finding, NOT fixed here** (new P3 todo below, out of this audit's GCS-object scope, same split the
+      07-27 precedent used): deleting these 8 objects makes 4 EXISTING manifest rows in this bucket's
+      `_index/availability_index.parquet` phantom (`capture_status=captured` pointing at now-deleted objects):
+      `yield_curve`/`day=2024-01-22` (row_count=1), `economic_results`/`day=2024-01-22` (row_count=5),
+      `economic_events`/`day=2026-07-29` (row_count=1), `economic_results`/`day=2026-08-01` (row_count=6). Separately
+      (pre-existing, not caused by this delete), 4 of the now-deleted objects had NO manifest row at all before deletion
+      (`economic_events` `day=2024-01-22`/`day=2026-08-01`, `yield_curve` `day=2026-07-29`/`day=2026-08-01`) — a
+      manifest-completeness gap distinct from the already-tracked write-gate-rejection root cause
+      (`features_calendar_is_test_run_ignored_writes_prod_2026_07_27.md`'s P2, fixed 2026-07-30,
+      `features-service@23d03fef`) since these objects DID get written, just never recorded.
 - [ ] [DATA] P2. Once P0 lands, re-run every family's `smoke_matrix.py` for real and confirm PASS against the
       GENUINELY-test-isolated bucket (not the accidental prod success some cells currently show) — this is the actual
       proof the "institutional smoke matrix" contract now holds. **⚠️ BLOCKED — do NOT run this cold.** Re-running
@@ -191,6 +235,19 @@ identical `_invoke_cli()` shape so are near-certain but not individually re-veri
       This todo's backlog task (`features_e2e_smoke_matrix_writes_to_prod_bucket-003`) is PARKED behind prereq
       `features_smoke_verify_timeout_hardening_landed` (set by main-orchestrator 2026-08-01) and will not dispatch until
       that incident doc's `[INFRA]` timeout/memory-bounding fix lands. Do NOT flip this checkbox or unpark before then.
+- [ ] [DATA] P3. **features-service / operator** — correct `features-calendar-prd-central-element-323112`'s
+      `_index/availability_index.parquet`: (a) purge or correct to `capture_status=empty_confirmed`/remove the 4 rows
+      now phantom after the P1 audit's deletes (`yield_curve`/`day=2024-01-22`, `economic_results`/`day=2024-01-22`,
+      `economic_events`/`day=2026-07-29`, `economic_results`/`day=2026-08-01` — all `capture_status=captured` pointing
+      at objects that no longer exist); (b) separately investigate why 4 OTHER now-deleted objects
+      (`economic_events`/`day=2024-01-22`, `economic_events`/`day=2026-08-01`, `yield_curve`/`day=2026-07-29`,
+      `yield_curve`/`day=2026-08-01`) had NO manifest row at all despite a real GCS write having happened — a
+      write-succeeded-but-manifest-never-recorded gap, distinct from the already-fixed write-gate-rejection root cause
+      (`features_calendar_is_test_run_ignored_writes_prod_2026_07_27.md`'s P2). Mirrors that same doc's own still-open
+      P3 (2 older phantom `time_features` rows from the original 07-27 incident) — consider resolving both in the same
+      pass since they're the identical manifest-correction mechanism. No GCS object exists for any of these rows
+      (confirmed above), so this is a manifest-row-only correction — find or use the appropriate
+      `ManifestWriter`/consolidator correction path rather than hand-editing the parquet.
 
 ## Progress Log
 
@@ -206,3 +263,8 @@ identical `_invoke_cli()` shape so are near-certain but not individually re-veri
   wrapper, causing a second same-day AO outage) happened mid-verification — the runaway PID was killed immediately on
   the operator's notification; that incident is tracked in its own doc by the agent who filed it, not duplicated here.
   P1/P2 todos below are unstarted.
+- 2026-08-01 (slot-13, data_engineering): P1 DONE — audited all 8 families' PROD buckets; only calendar had confirmed
+  pollution (8 objects, 3 separate ad-hoc invocation sessions), deleted per §3a with fresh retention check + pre/post
+  verification. See the checkbox above for full per-family evidence. Filed a new P3 for the resulting manifest
+  phantom-row correction (not fixed inline, mirrors the 07-27 doc's own still-open manifest-correction P3). P2 remains
+  BLOCKED per its own note (parked on the cross_instrument memory-hardening prereq).
