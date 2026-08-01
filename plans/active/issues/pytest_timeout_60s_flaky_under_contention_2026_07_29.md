@@ -27,7 +27,7 @@ scope: [engineer, admin]
 tags: [quality-gates, flaky-gate, timeout, pytest-timeout, ci, shared-host-contention, xdist]
 related: [/plans/active/issues/adapter_contract_regression_ratchet_60s_timeout_flaky_under_contention_2026_07_27.md]
 created: 2026-07-29
-last_updated: 2026-07-31
+last_updated: 2026-08-01
 parent_epic: infrastructure_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -659,3 +659,31 @@ those commits landed). The escalation's own repo-blocker list (`GET /api/repo-bl
   instead of the direct-LDR-push path). Slot left clean (features-service 0 commits ahead of `origin/live-defi-rollout`,
   nothing to commit). Pinged the authoring slot with the outcome and exiting per the one-shot `cicd` role's bounded
   scope.
+- **2026-08-01 ~00:42Z (cicd escalation `agt-e5401f`, slot 13)**: 1st confirmed instance in a NEW repo
+  (client-reporting-api). `ldr_qg_failure` (no PR — direct `live-defi-rollout` push gate), failing run `30669712681`
+  (`workflow_dispatch`, started `22:22:01Z`, head SHA `e02d2f520900fb3d75625a2af6f7e3756f9eb778` — a
+  `chore(deps): refresh base-image digest pin` bot commit, zero application/test code touched). `QG slice (tests)` job:
+  `FAILED tests/unit/test_attribution_routes.py::TestGetNav::test_internal_admin_can_read_any_client - Failed: Timeout (>150.0s) from pytest-timeout.`
+  — `1 failed, 664 passed, 4 skipped` in `1107.73s` (0:18:27). Read the test (hits `GET /nav` as an internal-admin
+  caller) and its route handler (`client_reporting_api/api/routes/attribution.py::get_client_nav`) — the real-I/O branch
+  (`read_attribution_rows` → real GCS `list_blobs`/`download_bytes`) is gated behind `_cloud_cfg.is_mock_mode()`, which
+  QG's `base-service.sh` forces true workspace-wide (`export CLOUD_MOCK_MODE="true"`) before pytest starts — no
+  plausible real-network path for this specific test; matches this doc's established "legitimately fast, blown out by
+  scheduling" profile. Did not attempt an isolated local re-run (unlike most prior entries) — this slot's own host
+  measured `load average: 30.82` (16-32 vCPU class box), `21Gi/47Gi` swap in active use, and 13 concurrent
+  `quality-gates.sh --no-fix` processes (`pgrep -af`) at investigation time, i.e. the identical fleet-wide capacity
+  crisis snapshot this doc's todo 7 and several other entries already captured — spinning up even a single-file venv
+  repro would add to, not diagnose past, that same contention, and the log evidence alone (isolated single failure among
+  664 passes, zero real-I/O path, unrelated triggering commit) already meets this doc's evidentiary bar. Confirmed root
+  facts: `git merge-base --is-ancestor e02d2f52 origin/live-defi-rollout` true, current LDR HEAD (`12702a2`) is 5
+  commits ahead with zero code/test diff (2 promote/backmerge commits + 1 further digest-pin refresh);
+  `GET /api/repo-blockers` → `{"open": []}` for client-reporting-api. The self-hosted runner (`glue-ip-172-31-5-118-1` —
+  same runner name confirmed in this doc's market-tick-data-service and unified-api-contracts entries above, i.e. the
+  same shared box) was `busy=true` (`gh api .../actions/runners`) with a fresh `workflow_dispatch` run at current HEAD
+  (`30672687292`) already queued 1h16m+ with no pickup (`content sentinel` job succeeded — no matching green marker, so
+  slices must actually run) at investigation time — left alone per this doc's established precedent (a queued run on an
+  already-saturated single-runner pool resolves once the backlog clears; canceling/retriggering adds load, not signal).
+  No code/test change made or needed — same "orphaned noise / known flake class, tree not actually broken" conclusion as
+  every prior entry in this doc. Slot left clean (client-reporting-api already on `live-defi-rollout`, 0 commits ahead
+  of `origin`, nothing to commit there). Pinged the authoring slot with the outcome and exiting per the one-shot `cicd`
+  role's bounded scope.
