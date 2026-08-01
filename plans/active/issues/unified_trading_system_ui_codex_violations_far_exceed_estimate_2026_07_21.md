@@ -232,7 +232,7 @@ This needs an operator/main call on sequencing + approach, not a unilateral pick
       `codex_ui_violation_baseline.json` colour 96 → 14 (config-only change, no component/page code touched, so no pw:L2
       needed — same class as todo 3's INFRA-tagged triage). Verified via full `quality-gates.sh`: `[3.5/6]` colour = 14
       (at baseline, no new violations), sentinel `3dc827dff975f9de297620ee568ed54d6ce89c3f` → shipped at `44c66309`.
-- [ ] [UI] P3. Resolve `lib/design-tokens.ts`'s 14 remaining hardcoded-colour hits (identified + deliberately left
+- [x] ✅ [UI] P3. Resolve `lib/design-tokens.ts`'s 14 remaining hardcoded-colour hits (identified + deliberately left
       un-excluded by the todo above, 2026-07-30): the file defines a real design-token shape (`COLORS`/`RADIUS`/
       `FONTS`/`SHADOWS`/`CARD`/`SPACING`) but has **zero current importers**, while its own palette values (e.g.
       `#4ade80`, `#fbbf24`, `#f87171`, `#22d3ee`) are independently hardcoded 9-104 times elsewhere in the tree. Make
@@ -243,7 +243,24 @@ This needs an operator/main call on sequencing + approach, not a unilateral pick
       genuinely dead code with no realistic consumer, delete it instead of exempting a file nothing uses. Do not add it
       to `CODEX_COLOUR_EXCLUDE_GLOBS` without doing (a) or (b) first — an unwired file doesn't meet this repo's own
       exemption bar (see the excluded-vs-not rationale in `scripts/quality-gates.sh`'s `CODEX_COLOUR_EXCLUDE_GLOBS`
-      comment block). (repo: unified-trading-system-ui)
+      comment block). (repo: unified-trading-system-ui) — `unified-trading-system-ui@030d2575`. Made the (b) call:
+      re-confirmed zero importers anywhere in the tree (`grep -rn "design-tokens"` across `app/`/`components/`/`lib/`, 0
+      hits outside the file itself; no named-symbol usage of `COLORS.`/`RADIUS.`/`FONTS.`/`SHADOWS.`/`CARD.`/ `SPACING.`
+      anywhere either) and found the reason it never got wired: this repo's real design-token SSOT is already the CSS
+      custom properties in `app/globals.css` — `--radius-sm/md/lg/xl` (6px/8px/12px/16px) match `design-tokens.ts`'s
+      `RADIUS` scale exactly, and `--color-chart-1..6` is the real chart palette `lib/chart-theme.ts` wires against via
+      `var(...)` (the established pattern for a genuinely-wired token file, per todo 1). Wiring `design-tokens.ts`'s
+      hardcoded hex would have meant either rewriting it to just re-export the same CSS vars (pointless duplication) or
+      leaving it as a second, drift-prone hardcoded source parallel to the vars already in use everywhere — so deleted
+      it (`git rm lib/design-tokens.ts`) rather than exempting or wiring a stale duplicate. Also updated the now-stale
+      `scripts/quality-gates.sh` `CODEX_COLOUR_EXCLUDE_GLOBS` comment block (previously said the file was "DELIBERATELY
+      NOT excluded... left as real residual") to reflect the deletion, and ratcheted `codex_ui_violation_baseline.json`
+      colour 14→0 via `--update-baseline`. No rendered component/page code touched (pure deletion of an unimported
+      file + config/comment updates) — same class as todo 3/4's INFRA-tagged triage-only changes, so no pw:L2 needed.
+      Verified via two fresh full `quality-gates.sh` runs (first confirming `tsc --noEmit`/`eslint`/288 unit tests/build
+      all green with colour at 0 below baseline; second, after committing, re-confirming green with the sentinel
+      correctly keyed to the committed HEAD) — `✅ ALL UI QUALITY GATES PASSED`, sentinel
+      `030d2575dc284e0ecfd1642a73bda46933cced90` → shipped at `030d2575`.
 - [x] ✅ [INFRA] P1. Decide interim shippability: temporary audited `CODEX_*_EXCLUDE_GLOBS` bypass (documented in
       `QUALITY_GATE_BYPASS_AUDIT.md`, citing this issue doc) vs. hard-block `quality-gates.sh` on this repo until the
       above 3 todos land — operator/main decision, not unilateral. (repo: unified-trading-pm) — Decision already made by
