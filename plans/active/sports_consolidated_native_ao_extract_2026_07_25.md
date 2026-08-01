@@ -871,3 +871,15 @@ neither is a todo in THIS plan) land, rather than continuing to burn a fresh wor
 re-check every cycle.
 
 - **context-scout 2026-08-01**: populated/refreshed context_scope (5 entries).
+- **2026-08-01 (slot-14, `data_engineering`)**: split the bundled 15-run Track K checkpoint todo into 5 per-mechanism
+  todos (see split rationale on each) — `unified-trading-pm@e4df6330a`. Ran Track K (IS) checkpoint 1 (baseline,
+  `day=2025-12-20`) for real before the split-off IS todo was reassigned to another dispatch: total=21 passed=0
+  failed=21 — report `plans/audit/results/data_pipeline_e2e_check_is_2025_12_20.md`. Root cause for 6/7 shards
+  (API_FOOTBALL/FOOTYSTATS/OPEN_METEO/SOCCER_FOOTBALL_INFO/TRANSFERMARKT/UNDERSTAT): `launch-instruments-backfill-vm.sh`
+  has no `--sports-provider` passthrough (pre-existing gap, previously only documented inline in
+  `pipeline_e2e_check.py`'s own docstring, now tracked in
+  `issues/instruments_backfill_launcher_missing_sports_provider_passthrough_2026_08_01.md` with a fix todo). BETFAIR
+  (the 7th, venue-routed shard) failed separately on `manifest_status_invalid:manifest_empty` — consistent with its
+  known `BLOCKED-CREDENTIALS`/zero-PROD-rows state. **Whoever picks up Track K (IS) next: checkpoint 1/3 is already done
+  and cited above — don't re-run it; the launcher fix must land before a genuine pass is possible for the 6
+  provider-routed shards.**
