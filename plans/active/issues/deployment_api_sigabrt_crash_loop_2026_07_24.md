@@ -711,7 +711,26 @@ cancellation-timeout fix and already shipped). Suggested next steps for whoever 
       semaphore pattern (`threading.Semaphore` + 503+`Retry-After`). If several handlers show moderate, summing deltas
       with no single dominant offender: add ONE shared semaphore across the whole cockpit-load cluster instead (this
       todo's own step (3)). If no SIGKILL has recurred yet, this stays open — don't force a conclusion from zero data.
-      (repo: deployment-api)
+      (repo: deployment-api) — **2026-08-01T14:23Z (slot 9, review): precondition NOT met — staying open (a stricter
+      negative than "zero SIGKILLs yet"; 130c3a2 has never actually gone live).** Content-verified (direct
+      `docker create`+`docker cp` image extraction, not ancestry) that revision `00408-xd2` (created `09:25:08Z`, 16 min
+      post-commit) genuinely carries `130c3a2`'s `log_rss_delta`/`memory-profile` instrumentation, wired into
+      `health_overview.py:363` — the fix IS built and deployable. But `gcloud run services describe` shows 100% of
+      PRODUCTION TRAFFIC is still on `00374-4pd` (image digest `71a09bfb...`, created `2026-07-31T18:39:05Z` — over 14h
+      BEFORE `130c3a2`'s `09:09:02Z` commit, so it structurally cannot carry the profiling code) — every revision built
+      from `130c3a2` (`00408-xd2` through `00412-rqj`, all `Ready=True`) has 0% traffic. This is not an oversight: the
+      companion tracker
+      `/plans/active/issues/deployment_api_cloud_run_coldstart_flaky_exit0_blocks_prd_sa_cutover_2026_07_31.md` (status:
+      open) is the reason — the operator/main deliberately held 100% traffic on the warm `00374-4pd` instance pending
+      that doc's durable-close bar, so no fresh revision (130c3a2-carrying or not) is meant to take real traffic yet.
+      Confirmed via two independent Cloud Logging queries: (1) exactly ONE `"Container terminated on signal 9"` in the
+      last 2 days, at `2026-08-01T07:47:39Z` on `00374-4pd` — this PREDATES the `130c3a2` commit by ~1h21m, so it's a
+      pre-fix-era SIGKILL, not evidence about the new instrumentation; (2) a targeted `textPayload:"memory-profile"` /
+      `jsonPayload.message:"memory-profile"` sweep of the last 2 days returns **zero rows** — the instrumentation has
+      never fired in production because its code has never received a real request. This todo's own literal ask (read
+      the next SIGKILL's memory-profile lines) has no data to read, and won't until the coldstart doc's cutover clears —
+      not a new/separate blocker, just this todo's dependency made explicit so the next investigator doesn't re-derive
+      it. No code shipped (pure verification). Leaving unchecked. (repo: deployment-api)
 
 ## Progress Log
 
@@ -784,3 +803,14 @@ cancellation-timeout fix and already shipped). Suggested next steps for whoever 
   `bucket_iam_write_protection_per_tier-018` P2.2e) MUST NOT proceed on a "resolved" reading of this doc — the
   cold-start path is demonstrably still flaky; hold 100% traffic on the warm instance until finding-6's durable-close
   bar is met. Review pinged slot 11 (mid-cutover) to hold; main concurs. No code shipped — doc reconciliation only.
+
+- **2026-08-01T14:23Z (slot 9, review)** — Dispatched `deployment_api_sigabrt_crash_loop-029` (the `[REVIEW] P2`
+  `130c3a2` memory-profile-attribution todo). Verified `130c3a2` is genuinely built + deployable (direct
+  `docker create`/`cp` extraction of `00408-xd2`'s image confirms `log_rss_delta`/`memory-profile` instrumentation
+  present and wired into `health_overview.py`) but has never received real traffic: `gcloud run services describe` shows
+  100% traffic still on the pre-fix `00374-4pd` (warm since `2026-07-31T18:39:05Z`, 14h before the commit) per this
+  doc's own `2026-08-01T00:06Z` decision to hold cutover pending the companion coldstart doc's durable-close bar. The
+  one SIGKILL in the last 2 days (`07:47:39Z` on `00374-4pd`) predates the commit; zero `"memory-profile"` log lines
+  exist anywhere. Left the checkbox unflipped — this is a stricter negative than the todo's own "no SIGKILL yet"
+  fallback (the precondition itself isn't met), documented so the next investigator doesn't re-derive it. No code
+  shipped — pure verification, cites the companion doc as the actual blocker to watch.
