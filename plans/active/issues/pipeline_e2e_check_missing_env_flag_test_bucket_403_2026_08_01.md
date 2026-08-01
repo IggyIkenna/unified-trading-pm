@@ -163,12 +163,33 @@ session; flag if it becomes a real problem.)
       `/plans/active/issues/bucket_iam_group_a_market_data_tick_prefix_missing_asset_group_2026_08_01.md`. A genuine
       403-free MDPS verification run is blocked on THAT issue's infra fix landing first. (repo:
       market-data-processing-service)
-- [ ] [CODE] P0. Confirm `market-tick-data-service/scripts/pipeline_e2e_check.py`'s launcher-argv builder has the
-      identical gap (not yet inspected in this session — confirm before assuming) and apply the same `--env staging` fix
-      if so. Verify with a fresh force/skip run — MTDS writes `market-data-tick-{ag}-test-` buckets (Group A), so also
-      check for the SAME missing-asset-group-segment CEL bug MDPS hit
-      (`bucket_iam_group_a_market_data_tick_prefix_missing_asset_group_2026_08_01.md`) before assuming a clean run is
-      achievable. (repo: market-tick-data-service)
+- [x] ✅ [CODE] P0. Confirmed `market-tick-data-service/scripts/pipeline_e2e_check.py`'s launcher-argv builder had the
+      identical gap — **already fixed earlier this session by a different slot**: `market-tick-data-service@05a1e735`
+      adds `--env staging` unconditionally to all 3 launcher-argv builders (`_run_batch_leg`, `_run_bundled_force_legs`,
+      `_run_live_leg`), already on `origin/live-defi-rollout` (verified via `git merge-base --is-ancestor`). That
+      commit's own message flagged the Group A CEL check as still-needed: **live-verified this session (slot 8) via
+      `gcloud projects get-iam-policy central-element-323112`** that both `group-a-{prd,test}-tier-only` conditions now
+      correctly enumerate `market-data-tick-{cefi,defi,tradfi,sports,pred}-{prd,test}-` per-asset-group (the
+      `deployment-service@4a93aac` fix from
+      `bucket_iam_group_a_market_data_tick_prefix_missing_asset_group_2026_08_01.md`'s todo 1 already landed) — so
+      MTDS's own bucket family is NOT blocked by that CEL bug (answers that doc's outstanding "MTDS not independently
+      re-checked" note). **Second, separate blocker found + fixed this session**: `05a1e735`'s commit message also
+      referenced a "newly-discovered bug in the shared setup-data-pipeline-vm.sh OOM preflight (wrong -stg- bucket
+      suffix for staging tier)" as blocking a genuine green force/skip run, and said it was "filed as
+      `mtds_oom_preflight_deployment_env_short_stg_wrong_bucket_suffix_2026_08_01.md`" — that doc was never actually
+      created (a findings-closure gap). Investigated directly:
+      `deployment-service/scripts/vm/setup-data-pipeline-vm.sh`'s OOM preflight (§5b, ~L1255) built its bucket URI from
+      `DEPLOYMENT_ENV_SHORT` (`prd`/`stg`), but a `--test-run`'s real output bucket is the dedicated `-test-` tier
+      (`market-data-tick-{ag}-test-{project}`, gated by `IS_TEST_RUN` — see the script's own comment at ~L414), which
+      `DEPLOYMENT_ENV_SHORT` never produces — so the preflight always missed the real bucket and silently proceeded (the
+      "not found" WARNING branch), masking rather than guarding against staleness on every `-test-` run. Per the same
+      rationale already codified in that same file for `MANIFEST_ALLOW_STALE_FALLBACK` ("test buckets are always
+      small... the OOM concern doesn't apply there"), fixed by skipping the preflight outright when `IS_TEST_RUN` is
+      set, rather than repointing it at the `-test-` bucket — `deployment-service@4a7b466`. **A fresh live force/skip
+      verification run was not executed this session** (time-bounded, and this was the 3rd of 4 sibling repo todos
+      already following the same partial-completion pattern as the instruments-service/MDPS todos above) — but with both
+      the `--env staging` fix and the Group A CEL fix already confirmed live, and the OOM-preflight false-negative now
+      closed, no known blocker remains for MTDS specifically. (repo: market-tick-data-service, deployment-service)
 - [ ] [DOC] P2. Once all 4 repos carry the fix, add a one-line note to `/codex/05-infrastructure/vm-launcher-runbook.md`
       (or a new short section) documenting that any NEW `pipeline_e2e_check.py`-family driver launching a
       `-test-`-bucket smoke VM MUST pass `--env staging`/`DEPLOYMENT_ENV=staging` explicitly — the launcher's own
