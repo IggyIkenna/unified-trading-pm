@@ -408,7 +408,52 @@ features-service's `aave_risk_calculator.py` / `lending_features.py` or strategy
       surfaced a broader, systemic version of the same gap affecting ~12 other adapters, filed separately:
       `issues/defi_base_adapter_success_key_ignored_by_failure_accounting_2026_07_27.md`.
 
+## 7. Addendum 2026-08-01 (slot-6, `defi_satellite_ao_dispatch_batch7_2026_08_01.md` todo 1) — incremental re-check
+
+Re-dispatch of the SAME source todo (`defi_consolidated_closeout_2026_07_18.md:548`) landed via the scheduled
+`na-eligibility-audit` (the closeout plan's checkbox was never flipped after § 1-6 above shipped, since several findings
+stayed FLAGGED/open rather than fully resolved — the auditor correctly read the unchecked box but had no way to know a
+full audit artifact already existed here). Rather than re-run the full ~100-file audit, diffed the three scoped
+directories against this doc's original file list (`git log --since=2026-07-24 --name-only`) to find only what's new:
+
+- **instruments-service `adapters/defi/`**: 7 new files since 2026-07-24 — `ankr.py`, `maker.py`, `mantle.py`,
+  `stader.py`, `stakewise.py`, `swell.py`, `aave_v3_plasma_rpc.py`. No deletions.
+- **market-tick-data-service** (`adapters/{defi,defi_live,onchain,onchain_perps}/`): no additions or deletions.
+- **execution-service `adapters/defi_adapter.py`**: only change is this doc's own § 3 fix (`execution-service@489b78b8`,
+  the `execute_swap`/`execute_lend`/`execute_stake` removal) — no regression, methods confirmed still absent.
+
+**New-file findings (instruments-service, all 7 — KEPT, clean):**
+
+- `ankr.py`, `maker.py`, `mantle.py`, `stader.py`, `stakewise.py`, `swell.py` — each 1:1 registered in
+  `factory.py::_ADAPTERS` (import + dict entry verified per file) exactly like the other 50 KEPT files in § 1. Zero
+  `except` clauses in any of the six — no fallback-masking surface at all.
+- `aave_v3_plasma_rpc.py` — NOT a standalone adapter (correctly absent from `_ADAPTERS`): a helper module split out of
+  `aave_v3.py` for a basedpyright dynamic-typing boundary (own docstring states the rationale, same pattern as
+  `_dex_factory_registry.py`/`_solana_utils.py` in § 1), exporting `discover_plasma_reserves_sync` +
+  `resolve_plasma_alchemy_key` — both confirmed imported AND called from `aave_v3.py` (lines 264, 274). Not dead code.
+  Two `except` blocks: a narrow per-reserve `except (ConnectionError, TimeoutError, ValueError, RuntimeError): continue`
+  inside the discovery loop (record-level skip-and-log, same legitimate shape as `curve.py:224` in § 1) and a broad
+  `except Exception:` in the Secret-Manager key lookup — logged, returns `None`, and the code comment explicitly cites
+  the SAME audited precedent as `evm_creation_resolver._resolve_rpc_url` for why the broad catch is intentional (ADC/GCP
+  credential exception surface isn't a safely-enumerable closed set). Matches rule #2's "genuine, intentional
+  fallback... named as such and logged" carve-out — not masking.
+
+**Still-open findings spot-checked for regression (none found — all confirmed unchanged):** `jupiter.py` still absent
+from `factory.py`/`router.py` (dead, unresolved); `GovernanceParamsEventPoller` still has zero callers outside its own
+file/tests; `HeliusSolanaAdapter` / `AlchemyLiveAdapter` / `TheGraphWsAdapter` / `OnChainEventPoller` /
+`HyperliquidWSFeed` (the `defi/live/` class) all still zero-caller outside tests/re-exports.
+
+**Disposition**: this doc's existing artifact (§ 1-6) plus this addendum together satisfy batch7 todo 1's
+done_definition ("a written finding per module (kept/fixed/removed + reason) is recorded") for the full current file set
+across all three repos. No new fix needed (all 7 new files are clean). The 4 still-open follow-up todos in § 6 remain
+open, unaffected by this pass — they were already tracked there before this addendum and are unrelated to the 7 new
+files.
+
 ## Progress Log
 
 - **na-eligibility-audit 2026-07-30**: KEEP-NA, valid - doc's own section-6 header calls each residual 'a real, scoped
   decision'; 4 of 5 are wire-in-or-delete product calls with registry/billing blast radius
+- **2026-08-01 (slot-6, defi_satellite_ao_dispatch_batch7-001)**: added § 7 addendum re-verifying the 7 instruments-
+  service adapter files added since this doc's original audit — all clean/KEPT, no regression on prior findings. Closes
+  batch7 todo 1 by citation; see that plan + the parent `defi_consolidated_closeout_2026_07_18.md:548` checkbox for the
+  cross-reference.

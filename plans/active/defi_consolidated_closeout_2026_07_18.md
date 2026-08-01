@@ -549,14 +549,15 @@ file, not here.
 - [ ] [SCRIPT] P3. **Root-cause `quickmerge.sh` silently resetting an unpushed commit** (observed 2026-07-22, 2
       hypotheses ruled out, cause not confirmed, non-reproducible on retry). Needs a `bash -x`/`set -x` trace the next
       time it recurs. (repo: unified-trading-pm)
-- [ ] [BACKEND] P2. **Audit defi adapters for dead code, runtime-fallback masking, and duplicate implementations**
+- [x] ✅ [BACKEND] P2. **Audit defi adapters for dead code, runtime-fallback masking, and duplicate implementations**
       (gate-audit §1, 2026-07-24) across instruments-service `.../adapters/defi/`, MTDS
       `market_interface/adapters/{defi,defi_live,onchain,onchain_perps}/`, and execution-service
       `adapters/defi_adapter.py`, per `/codex/06-coding-standards/adapter-dead-code-and-fallback-ban.md`. Definition of
       done: a written finding per module (kept/fixed/removed + reason). (repos: instruments-service,
-      market-tick-data-service, execution-service) **na-eligibility-audit 2026-08-01: extracted to
-      `defi_satellite_ao_dispatch_batch7_2026_08_01.md` (conflict-check cleared) — track completion there, close this
-      checkbox by citation once its batch-7 todo lands.**
+      market-tick-data-service, execution-service) — DONE 2026-08-01, closed by citation via
+      `defi_satellite_ao_dispatch_batch7_2026_08_01.md` todo 1: the full per-module audit already existed at
+      `issues/defi_adapter_dead_code_audit_2026_07_24.md`, incrementally re-verified (§ 7 addendum) for the files added
+      since.
 - [ ] [CONFIG] P2. **Retagged 2026-07-29 (corpus hygiene pass): reframed as a code-only extension task, not
       credential-blocked — verified `curve_adapter.py` already has a fully-wired `_query_curve_pool_at_block`
       (~line 617) / `_ensure_alchemy_client` (~line 217-228) RPC-fallback path using the same already-provisioned

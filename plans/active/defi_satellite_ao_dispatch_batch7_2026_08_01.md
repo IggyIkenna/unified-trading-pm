@@ -62,12 +62,19 @@ running `/na-eligibility-audit defi`; every todo below cleared the shared confli
 
 ## Todos
 
-- [ ] [BACKEND] P2. **Audit defi adapters for dead code, runtime-fallback masking, and duplicate implementations**
+- [x] ✅ [BACKEND] P2. **Audit defi adapters for dead code, runtime-fallback masking, and duplicate implementations**
       (gate-audit §1, 2026-07-24) across instruments-service `.../adapters/defi/`, MTDS
       `market_interface/adapters/{defi,defi_live,onchain,onchain_perps}/`, and execution-service
       `adapters/defi_adapter.py`, per `/codex/06-coding-standards/adapter-dead-code-and-fallback-ban.md`. Repos:
       instruments-service, market-tick-data-service, execution-service. Done when: a written finding per module
-      (kept/fixed/removed + reason) is recorded. Source: `defi_consolidated_closeout_2026_07_18.md:548`.
+      (kept/fixed/removed + reason) is recorded. Source: `defi_consolidated_closeout_2026_07_18.md:548`. — DONE
+      2026-08-01 (slot-6): this exact audit already existed at
+      `plans/active/issues/defi_adapter_dead_code_audit_2026_07_24.md` (per-module findings for all ~100 files across
+      the 3 repos, 2026-07-24), the source closeout todo's checkbox just hadn't been flipped since several findings
+      stayed FLAGGED/open rather than fully resolved. Diffed the 3 scoped dirs for drift since that audit (7 new
+      instruments-service files, no MTDS/execution-service changes besides the audit's own prior fix) and added a § 7
+      addendum re-verifying the new files (all KEPT, clean) + spot-checking no regression on the still-open findings —
+      see that doc's § 7 for the incremental evidence. `unified-trading-pm@<see quickmerge sha below>`.
 
 - [ ] [CONFIG] P2. **Wire `curve_adapter.py`'s RPC path to the correct per-chain Alchemy URL for ARB/POLY** — it
       currently hardcodes `eth-mainnet.g.alchemy.com` in `_ensure_web3`; UAC's `SUBGRAPH_IDS["curve"]` already lacks an
@@ -120,3 +127,10 @@ running `/na-eligibility-audit defi`; every todo below cleared the shared confli
   park). Source docs (`defi_consolidated_closeout_2026_07_18.md`,
   `issues/mtds_gas_fees_migration_script_unbounded_memory_2026_07_30.md`) stay `assigned_vm: NA` — only these 4 items
   were extracted; each source doc's own checkbox gets annotated to cite this batch in the same commit.
+- 2026-08-01 (slot-6, todo 1): Dispatched task defi_satellite_ao_dispatch_batch7-001 found this exact audit already done
+  at `issues/defi_adapter_dead_code_audit_2026_07_24.md` (the source closeout todo's checkbox was simply never flipped
+  after that audit shipped, since several findings there stayed FLAGGED rather than fully resolved — that's why the
+  na-eligibility-audit's diff-based scan re-surfaced it as apparently-open). Added a § 7 addendum to that doc
+  incrementally re-verifying the 7 instruments-service adapter files added since 2026-07-24 (all clean/KEPT) and
+  spot-checking no regression on the still-open findings. Flipped this todo + the parent closeout checkbox by citation —
+  no new code fix needed (nothing new was found broken).
