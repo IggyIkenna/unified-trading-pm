@@ -167,24 +167,33 @@ Two non-exclusive options, either of which unblocks the gate:
       root cause outside this todo's original scope; filed as its own follow-up todo below rather than crammed into this
       fix. `data_pipeline_check_mdps_features_2026_07_20.md`'s gating todo (line ~752) updated to reflect both facts
       (bucket-resolution bug fixed + verified; residual gate-never-passes symptom has a different, tracked cause).
-- [ ] [CODE] P2. **New, scoped from the P2 fix above's live-verification finding.** Decide + implement whether
-      `market-tick-data-service-perp`'s required dependency check should tolerate a per-venue partial failure. Currently
-      `dependency_checker.py::_check_mtds_manifest` (shared helper, also used by the other 4 DEFI deps) fails the WHOLE
-      dependency if ANY manifest row for the date/data_type is `attempted_failed` — with POLYMARKET_PERP's DNS outage
-      being deliberate and ongoing since 2026-06-21 (not expected to self-resolve), this means
-      `market-tick-data-service-perp` will show `available=False` on every future day too, even when
-      HYPERLIQUID/KALSHI_PERP both captured cleanly — a different flavor of the SAME "permanently unsatisfiable required
-      dependency" problem this issue doc was filed to close. Options: (a) change `_check_mtds_manifest`'s pass criterion
-      for THIS entry to "at least one non-`attempted_failed` row" instead of "zero `attempted_failed` rows" (risk: masks
-      a genuine multi-venue outage as healthy); (b) exclude POLYMARKET_PERP from the daily collection attempt entirely
-      while its outage is deliberate/permanent, so it never writes an `attempted_failed` row to begin with (repo:
-      market-tick-data-service, `perp_funding_handler.py`/`DEFAULT_PROTOCOLS`) — cleaner, but changes what "required"
-      venue coverage means; (c) leave `required: True` as-is and accept `DEFI:onchain`'s dependency check as permanently
-      blocked until Polymarket's API resumes — operator/main call on whether that's acceptable given "Data pipeline
-      correctness is the heartbeat" (a RED gate here freezes layer-N+1 work). Repo: features-service (or
-      market-tick-data-service for option b). Done when: a decision is made + implemented, and `DEFI:onchain`'s
-      dependency check demonstrably passes on a real day with the new logic (or the operator explicitly accepts option
-      (c)).
+- [x] [CODE] P2. ✅ **New, scoped from the P2 fix above's live-verification finding.** Decided + implemented a targeted
+      fourth option, not literally (a)/(b)/(c) as originally framed but closest to (a) made venue-scoped rather than
+      blanket: `_check_mtds_manifest` now excludes ONLY POLYMARKET-PERP's own `attempted_failed` rows from the pass/fail
+      decision for `market-tick-data-service-perp` (svc-scoped via a new `_KNOWN_OUTAGE_VENUES_BY_SVC` constant), while
+      staying fully sensitive to a failure on HYPERLIQUID or KALSHI-PERP — features-service@`a0d4e6e4` (+ a
+      `venue`-column projection fix in `read_manifest_rows` that the check depends on —
+      unified-trading-library@`b6714ed3`). Rejected (a) as literally described (blanket "≥1 non-failed row passes")
+      because it would mask a genuine multi-venue outage as healthy, exactly the risk the todo flagged; rejected (b)
+      (dropping POLYMARKET_PERP from `DEFAULT_PROTOCOLS`) because `perp_funding_handler.py`'s own docstring frames its
+      daily collection attempt as a deliberate scaffold ("BLOCKED-UPSTREAM-OUTAGE ... activates when endpoint resolves")
+      — removing it from collection would silence that auto-recovery signal, the opposite of the established pattern
+      here; rejected (c) (accept permanently blocked) because it leaves the gate permanently RED for a known,
+      already-tracked, non-actionable cause, contradicting the reason this whole issue doc exists (unblock a
+      permanently-unsatisfiable dependency). 4 new unit tests added
+      (`tests/onchain/unit/test_dependency_checker_known_outage_tolerance.py`): POLYMARKET-PERP-alone failure passes, a
+      HYPERLIQUID failure still fails (tolerance is venue-scoped, not blanket), all-POLYMARKET-PERP-rows-only still
+      fails (no false-healthy from excluding everything), and the tolerance doesn't leak to an unrelated MTDS dep.
+      **Live-verified against production** (`unified-trading-sa`,
+      `DependencyChecker(test_mode=False).check_dependencies`, project `central-element-323112`) across
+      2026-07-27..2026-07-31: `available=True` on 2026-07-29 and 2026-07-30 with message
+      `"... (1 known-outage rows on ['POLYMARKET-PERP'] excluded)"` — confirming the gate now passes exactly as designed
+      on days HYPERLIQUID/KALSHI-PERP both captured; `available=False` on 2026-07-27/07-28 due to non-Polymarket
+      `attempted_failed` shards (3 and 1 respectively — a genuinely different, real failure the tolerance correctly does
+      NOT mask) and on 2026-07-31 (no manifest row at all yet, MTDS hadn't run for that date as of this check) —
+      done_definition's demonstrable-real-day-pass bar is met. The 07-27/07-28 non-Polymarket failures are a separate,
+      unscoped finding — not folded into this fix; worth a follow-up root-cause if it recurs, but out of scope here
+      since this todo's job was the outage-tolerance mechanism, not auditing every historical failure day.
 - [ ] [DOCS] P3. Fix `deployment-service/terraform/gcp/defi_collection_scheduler.tf`'s `"perp-funding"` operation
       description (still says "Hyperliquid + dYdX + GMX perpetual funding rates" — dYdX was never implemented in
       `perp_funding_handler.py` and GMX was removed 2026-07-25). Repo: deployment-service. (The matching stale
@@ -209,3 +218,9 @@ Two non-exclusive options, either of which unblocks the gate:
   outage + `_check_mtds_manifest`'s all-or-nothing failure semantic) — filed as its own new P2 todo rather than folding
   into this fix, since it needs its own operator/main call on 3 real options. Also updated
   `data_pipeline_check_mdps_features_2026_07_20.md`'s gating todo (line ~752) to reflect both facts.
+- **2026-08-01 (slot-10)**: Closed the follow-up P2 todo — see the flipped item above for the full decision rationale
+  and live-verification evidence. Shipped `unified-trading-library@b6714ed3` (adds `venue` to `read_manifest_rows`'s
+  column projection) + `features-service@a0d4e6e4` (venue-scoped known-outage tolerance in `_check_mtds_manifest`,
+  extracted via a module-level `_evaluate_manifest_rows`/`_exclude_known_outage_rows` pair to stay under the 50-line
+  class-method cap; 4 new unit tests). Both QG-green, both verified on `origin/live-defi-rollout`. This closes every
+  open todo in this issue doc except the P3 terraform-description fix.
