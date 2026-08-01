@@ -270,3 +270,11 @@ regression) is worse.**
   in place) + a Progress Log append in the derivative_ticker doc, no GCS read, no code change. Combined across both
   tracked conditions, this backlog has now consumed 26+ full orchestrator-agent dispatches — still awaiting the
   operator/design decision on Option A/B/C.
+- **2026-08-01 (data_pipeline_failure escalation worker, agt-5aff6b, slot 6) — `(cefi, book_snapshot_5)` now at its
+  16th+ dispatch.** Same condition (300,457/1,094,600 = 27.4%, materiality-annotated STATIC BACKLOG per
+  `deployment-service@a564cca`) re-fired again with a byte-identical `attempted_failed` numerator to every verified
+  reading since 2026-07-31; only `attempted` (denominator) moved. Session cost: two file reads + one
+  `git merge-base --is-ancestor` batch check (5 commits, all still in place) + a Progress Log append in the
+  book_snapshot_5 doc, no GCS read, no code change. Combined across both tracked conditions ((cefi, derivative_ticker)
+  at 11th+, (cefi, book_snapshot_5) at 16th+), this backlog has now consumed 27+ full orchestrator-agent dispatches —
+  still awaiting the operator/design decision on Option A/B/C.
