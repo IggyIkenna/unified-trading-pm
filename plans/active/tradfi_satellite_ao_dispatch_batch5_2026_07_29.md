@@ -609,6 +609,37 @@ mirroring the batch1/batch2/batch3/batch4 finalize pattern.
   were mid-flight as of slot-6's relaunch) before running `build-continuous --root ES` + the 1d/24h hit-rate re-measure
   against the ~19% (454/2398) baseline.
 
+- **2026-08-01 (slot-4, data_engineering craft, task `tradfi_satellite_ao_dispatch_batch5-001`)** — Resumed todo 2 for
+  the 9th time (8 prior declines per `GET /api/activity?type=slot_task_skipped`; only 7 are chronicled above — slot-3's
+  2026-07-31T08:49:05Z decline used an empty reason and never wrote a Progress Log entry). **Gate reconfirmed
+  unchanged**: `_maintenance_window.json` still reads `locked_by: mtds_available_at_cross_asset_backfill_2026_07_13`,
+  `expires_at: 2026-08-03T18:26:16.060331Z` (current time `2026-08-01T01:48:56Z`); that sibling plan's tradfi
+  apply+resume P1 todos (lines 289/298) are still `- [ ]` open; `gcloud compute instances list` confirms zero
+  `mdps-backfill-tradfi-*` VMs anywhere (fleet fully wound down, matching slot-15's finding — nothing new to audit
+  VM-side until the gate clears). **Root-caused why 8 declines never durably parked this task**, from the actual call
+  history rather than guessing: 6 of 8 (slot-2/3/9/12/6/8) used `reason_code: "OTHER"`, which
+  `agent-orchestrator/server/auto_park.py`'s `_ESCALATING_REASON_CODES={BLOCKED,PARKED,GATED}` deliberately excludes
+  from the fleet-cooldown/auto-park counter; only slot-16 (07-31T03:50:27Z) and slot-15 (07-31T22:31:41Z) used an
+  escalating code (`BLOCKED`), landing `skip_count=2` — one short of the `dispatch_cooldown_auto_park_skip_threshold`
+  (3). This exact gap-class (a decline defaulting to `OTHER` so `auto_park` never engages) is already fleet-tracked on
+  two OTHER tasks with a confirmed fix and zero code gaps —
+  `issues/p1_2_backlog_hand_park_did_not_persist_2026_07_31.md`,
+  `issues/external_promote_gated_task_redispatch_churn_no_durable_park_2026_07_25.md` (2026-08-01 update citing the
+  now-complete `gated_skip_park_no_slack_page_2026_07_25.md` reason_code-coverage audit) — so no new issue doc needed;
+  the fix is simply to decline with the right code. **Action taken + CONFIRMED**: declined via
+  `POST /api/slots/4/skip-current-task {"reason_code": "GATED"}`. slot-16's window
+  (`window_started_at 2026-07-31T03:50:27Z`) was still open (<24h), so this was the 3rd escalating-coded decline
+  in-window and crossed the threshold on this call — response confirmed
+  `"auto_parked_condition": "auto_unpark__tradfi_satellite_ao_dispatch_batch5-001"`, and `GET /api/backlog/parked`
+  independently confirms the task now carries that condition with `skip_count: 3`. **The task is now durably parked** —
+  it will not re-dispatch to any slot until that condition is cleared (Slack-paged per `notify_task_auto_parked`; this
+  finally stops the 9-cycle churn). **To resume this todo**: once `mtds_available_at_cross_asset_backfill_2026_07_13.md`
+  lines 289/298 flip done (or the maintenance window naturally expires 2026-08-03T18:26:16Z),
+  `POST /api/prerequisites/auto_unpark__tradfi_satellite_ao_dispatch_batch5-001 {"value": true}` to release the park,
+  THEN run the full `EXIT_STATUS`/`PROGRESS.json` re-audit of all 14 ES/MES shards, `build-continuous --root ES`, and
+  the 1d/24h hit-rate re-measure against the ~19% (454/2398) baseline — no VM-side work is needed before that (fleet is
+  fully idle).
+
 ## Codex SSOTs
 
 No new durable contract is created by this plan — every todo executes an already-decided spec from its source doc, or
