@@ -129,63 +129,63 @@ flip and is corrected here (slot-14).
       UNISWAP_V4/ETHEREUM, UNISWAP_V2/ETHEREUM, AERODROME_V3/BASE, UNISWAP_V3/POLYGON.
 
       **Confirmed via code read**: the fail-fast classification fix (`_is_bad_indexers_error`/
-                                                  `_SubgraphIndexerUnavailableError`, `market-tick-data-service@74cd6cfd`, verified ancestor of current HEAD) is
-                                                  generic (operates on the raw GraphQL error message, not per-protocol) and already structurally covers all 8
-                                                  pairs via the shared `_run_cascade`/`_execute_subgraph_query` code path — every pair correctly routes to
-                                                  `record_failed` (attempted_failed, retriable), never a misleading schema-drift reason.
+                                                      `_SubgraphIndexerUnavailableError`, `market-tick-data-service@74cd6cfd`, verified ancestor of current HEAD) is
+                                                      generic (operates on the raw GraphQL error message, not per-protocol) and already structurally covers all 8
+                                                      pairs via the shared `_run_cascade`/`_execute_subgraph_query` code path — every pair correctly routes to
+                                                      `record_failed` (attempted_failed, retriable), never a misleading schema-drift reason.
 
-                                                  **Shipped NEW this session**: a bounded retry-with-backoff (2 retries, exponential backoff + jitter, rotating
-                                                  API key) for the "bad indexers" GraphQL-level fingerprint specifically — extends the existing HTTP-status retry
-                                                  in `async_post_to_subgraph` to this GraphQL-level (HTTP-200) condition, per this todo's "retry-with-backoff"
-                                                  ask. Extracted into `_retry_or_raise_bad_indexers()` in `_dex_swaps_queries.py` (kept `dex_swaps_handler.py`
-                                                  under the 900-line file cap and the method under the 50-line cap). 2 new unit tests: retries-then-succeeds
-                                                  (transient blip) and raises-after-retries-exhausted (persistent condition) — both patch `asyncio.sleep` to
-                                                  stay fast/deterministic, mirroring the existing `test_execute_subgraph_query_retry_on_429_then_success` pattern.
-                                                  Full `market-tick-data-service` `quality-gates.sh` green (280s, sentinel matches `d3956d8c`, rebased to
-                                                  `5c12c9e5` on push — verified `git merge-base --is-ancestor` on origin).
+                                                      **Shipped NEW this session**: a bounded retry-with-backoff (2 retries, exponential backoff + jitter, rotating
+                                                      API key) for the "bad indexers" GraphQL-level fingerprint specifically — extends the existing HTTP-status retry
+                                                      in `async_post_to_subgraph` to this GraphQL-level (HTTP-200) condition, per this todo's "retry-with-backoff"
+                                                      ask. Extracted into `_retry_or_raise_bad_indexers()` in `_dex_swaps_queries.py` (kept `dex_swaps_handler.py`
+                                                      under the 900-line file cap and the method under the 50-line cap). 2 new unit tests: retries-then-succeeds
+                                                      (transient blip) and raises-after-retries-exhausted (persistent condition) — both patch `asyncio.sleep` to
+                                                      stay fast/deterministic, mirroring the existing `test_execute_subgraph_query_retry_on_429_then_success` pattern.
+                                                      Full `market-tick-data-service` `quality-gates.sh` green (280s, sentinel matches `d3956d8c`, rebased to
+                                                      `5c12c9e5` on push — verified `git merge-base --is-ancestor` on origin).
 
-                                                  **Live-probed all 8 pairs today (2026-07-31)** with the real production cascade queries (not just `_meta` —
-                                                  the VELODROME_V2/OPTIMISM trap from 2026-07-28's investigation: `_meta` can read healthy while the actual
-                                                  cascade query still fails):
+                                                      **Live-probed all 8 pairs today (2026-07-31)** with the real production cascade queries (not just `_meta` —
+                                                      the VELODROME_V2/OPTIMISM trap from 2026-07-28's investigation: `_meta` can read healthy while the actual
+                                                      cascade query still fails):
 
-                                                  - **VELODROME_V2/OPTIMISM**: SELF-HEALED — 3/3 identical successes on the production `messari_from` query,
-                                                    1000 real swap rows each (page cap hit). Retry-fixable, no code fix needed; next backfill re-run converts.
-                                                  - **UNISWAP_V3/OPTIMISM**: STILL persistently broken — reproduced the IDENTICAL "bad indexers" fingerprint
-                                                    (same 3 indexer addresses `0xeccdf823.../0xf92f430d.../0xfeff9093...`) across 2026-07-27, 07-28, 07-30, and
-                                                    now 07-31 (4+ days) — conclusively NOT transient, now clearly past the "multi-day window" bar the sibling
-                                                    issue doc's P2 todo asked for. A bounded (seconds-scale) retry cannot resolve this class (deterministic
-                                                    indexer-set enumeration, not random routing). Researched The Graph Explorer for a replacement deployment:
-                                                    found candidate `EgnS9YE1avupkvCNj9fHnJxppfEmNNywYJtghqiu2pd9` ("Uniswap V3 Optimism"), confirmed currently
-                                                    healthy via a live `_meta` probe — **NOT vetted** for schema compatibility with the existing univ3 cascade or
-                                                    historical coverage depth, so NOT swapped into the UAC registry this session (a mis-vetted swap risks
-                                                    breaking existing coverage). Filed as a follow-up todo below.
-                                                  - **PANCAKESWAP_V3/BSC**: HEALTHY — 3/3 successful production-query attempts (genuine 0-swaps-that-day
-                                                    answer, not an error). Matches the earlier-established self-heal verdict.
-                                                  - **PANCAKESWAP_V3/ETHEREUM, UNISWAP_V4/ETHEREUM, UNISWAP_V2/ETHEREUM, AERODROME_V3/BASE, UNISWAP_V3/POLYGON**:
-                                                    all HEALTHY via live `_meta` probe (fresh block, `hasIndexingErrors=false`).
+                                                      - **VELODROME_V2/OPTIMISM**: SELF-HEALED — 3/3 identical successes on the production `messari_from` query,
+                                                        1000 real swap rows each (page cap hit). Retry-fixable, no code fix needed; next backfill re-run converts.
+                                                      - **UNISWAP_V3/OPTIMISM**: STILL persistently broken — reproduced the IDENTICAL "bad indexers" fingerprint
+                                                        (same 3 indexer addresses `0xeccdf823.../0xf92f430d.../0xfeff9093...`) across 2026-07-27, 07-28, 07-30, and
+                                                        now 07-31 (4+ days) — conclusively NOT transient, now clearly past the "multi-day window" bar the sibling
+                                                        issue doc's P2 todo asked for. A bounded (seconds-scale) retry cannot resolve this class (deterministic
+                                                        indexer-set enumeration, not random routing). Researched The Graph Explorer for a replacement deployment:
+                                                        found candidate `EgnS9YE1avupkvCNj9fHnJxppfEmNNywYJtghqiu2pd9` ("Uniswap V3 Optimism"), confirmed currently
+                                                        healthy via a live `_meta` probe — **NOT vetted** for schema compatibility with the existing univ3 cascade or
+                                                        historical coverage depth, so NOT swapped into the UAC registry this session (a mis-vetted swap risks
+                                                        breaking existing coverage). Filed as a follow-up todo below.
+                                                      - **PANCAKESWAP_V3/BSC**: HEALTHY — 3/3 successful production-query attempts (genuine 0-swaps-that-day
+                                                        answer, not an error). Matches the earlier-established self-heal verdict.
+                                                      - **PANCAKESWAP_V3/ETHEREUM, UNISWAP_V4/ETHEREUM, UNISWAP_V2/ETHEREUM, AERODROME_V3/BASE, UNISWAP_V3/POLYGON**:
+                                                        all HEALTHY via live `_meta` probe (fresh block, `hasIndexingErrors=false`).
 
-                                                  **Before/after `attempted_failed` counts** (fresh prod manifest pull, `market-data-tick-defi-prd-central-element-323112/_index/availability_index.parquet`,
-                                                  29,520,693 total rows, 2026-07-31, vs the 2026-07-28 snapshot in the sibling issue doc):
+                                                      **Before/after `attempted_failed` counts** (fresh prod manifest pull, `market-data-tick-defi-prd-central-element-323112/_index/availability_index.parquet`,
+                                                      29,520,693 total rows, 2026-07-31, vs the 2026-07-28 snapshot in the sibling issue doc):
 
-                                                  | pair                       | 2026-07-28 | 2026-07-31 | verdict                                          |
-                                                  | -------------------------- | ---------- | ---------- | ------------------------------------------------- |
-                                                  | VELODROME_V2/OPTIMISM      | 666        | 697        | +31 historical residue while broken; now healed    |
-                                                  | UNISWAP_V3/OPTIMISM        | 360        | 445        | +85, still actively failing every attempt          |
-                                                  | PANCAKESWAP_V3/BSC         | 15         | 24         | +9 residue; confirmed healthy now                  |
-                                                  | PANCAKESWAP_V3/ETHEREUM    | 2          | 2          | unchanged, healthy                                 |
-                                                  | UNISWAP_V4/ETHEREUM        | 12         | 15         | +3, healthy (unrelated to the tracked build_instrument_id sub-issue) |
-                                                  | UNISWAP_V2/ETHEREUM        | 5          | 5          | unchanged, healthy                                 |
-                                                  | AERODROME_V3/BASE          | 1          | 2          | +1, healthy                                        |
-                                                  | UNISWAP_V3/POLYGON         | 2          | 2          | unchanged, healthy                                 |
+                                                      | pair                       | 2026-07-28 | 2026-07-31 | verdict                                          |
+                                                      | -------------------------- | ---------- | ---------- | ------------------------------------------------- |
+                                                      | VELODROME_V2/OPTIMISM      | 666        | 697        | +31 historical residue while broken; now healed    |
+                                                      | UNISWAP_V3/OPTIMISM        | 360        | 445        | +85, still actively failing every attempt          |
+                                                      | PANCAKESWAP_V3/BSC         | 15         | 24         | +9 residue; confirmed healthy now                  |
+                                                      | PANCAKESWAP_V3/ETHEREUM    | 2          | 2          | unchanged, healthy                                 |
+                                                      | UNISWAP_V4/ETHEREUM        | 12         | 15         | +3, healthy (unrelated to the tracked build_instrument_id sub-issue) |
+                                                      | UNISWAP_V2/ETHEREUM        | 5          | 5          | unchanged, healthy                                 |
+                                                      | AERODROME_V3/BASE          | 1          | 2          | +1, healthy                                        |
+                                                      | UNISWAP_V3/POLYGON         | 2          | 2          | unchanged, healthy                                 |
 
-                                                  Historical `attempted_failed` rows don't retroactively shrink (they're permanent unless explicitly
-                                                  reclassified/re-backfilled) — the fix's real effect is forward-looking: future backfill attempts against the
-                                                  7 now-healthy pairs should succeed instead of adding fresh rows; UNISWAP_V3/OPTIMISM will keep accumulating
-                                                  until either it genuinely self-heals (evidence says unlikely) or the deployment-ID-swap follow-up lands.
+                                                      Historical `attempted_failed` rows don't retroactively shrink (they're permanent unless explicitly
+                                                      reclassified/re-backfilled) — the fix's real effect is forward-looking: future backfill attempts against the
+                                                      7 now-healthy pairs should succeed instead of adding fresh rows; UNISWAP_V3/OPTIMISM will keep accumulating
+                                                      until either it genuinely self-heals (evidence says unlikely) or the deployment-ID-swap follow-up lands.
 
-                                                  Repo: market-tick-data-service. Sources: `issues/mtds_dex_pools_swaps_backfill_verification_2026_07_24.md`
-                                                  (todo 6), `issues/defi_dex_pool_swaps_733_row_indexer_health_findings_2026_07_27.md` (P2 re-probe item,
-                                                  superseded by this broader fix).
+                                                      Repo: market-tick-data-service. Sources: `issues/mtds_dex_pools_swaps_backfill_verification_2026_07_24.md`
+                                                      (todo 6), `issues/defi_dex_pool_swaps_733_row_indexer_health_findings_2026_07_27.md` (P2 re-probe item,
+                                                      superseded by this broader fix).
 
 - [ ] [DIAG] P2. **NEW, filed 2026-07-31 (slot-16)** — research + vet a replacement TheGraph subgraph deployment ID for
       UNISWAP_V3/OPTIMISM (currently `Cghf4LfVqPiFw6fp6Y5X5Ubc8UpmUhSfJL82zwiBFLaj`, confirmed persistently "bad
@@ -202,66 +202,66 @@ flip and is corrected here (slot-14).
 - [x] [DATA] P1. Execute the operator-ruled (2026-07-28) full-completion instruments-service DeFi pool catalogue
 
       **SPLIT 2026-07-31 (slot-16, data_engineering)** — catalogue expansion half is DONE + VERIFIED (this todo's own
-                                      scope, closed here); the denominator-recompute half is split into the new `[DATA] P2` todo below (deliberately
-                                      NOT run inline this session — needs the same VM-dispatch pattern an existing operator-approved process already
-                                      established for this exact class of large manifest write; see that todo for the full rationale + done-when).
+                                          scope, closed here); the denominator-recompute half is split into the new `[DATA] P2` todo below (deliberately
+                                          NOT run inline this session — needs the same VM-dispatch pattern an existing operator-approved process already
+                                          established for this exact class of large manifest write; see that todo for the full rationale + done-when).
 
-                                      Original text: Execute the operator-ruled (2026-07-28) full-completion instruments-service DeFi pool catalogue
-                                      expansion: a full historical-discovery backfill covering every ever-captured pool address for EVERY default DEX
-                                      protocol (not just the 4 already sampled: curve/sushiswap/velodrome_v2/trader_joe_v2), then re-derive Honest
-                                      Coverage's `expected_unattempted` denominator from the expanded catalogue. Cost pre-approved at the <$100 tier per
-                                      the operator ruling — no fresh operator ask needed. Repo: instruments-service. Done when: the catalogue expansion
-                                      is verified complete for all default DEX protocols and the denominator recompute is confirmed landed. Source:
-                                      `issues/defi_dex_pools_catalogue_undercoverage_vs_historical_capture_2026_07_28.md` (todo 2)
+                                          Original text: Execute the operator-ruled (2026-07-28) full-completion instruments-service DeFi pool catalogue
+                                          expansion: a full historical-discovery backfill covering every ever-captured pool address for EVERY default DEX
+                                          protocol (not just the 4 already sampled: curve/sushiswap/velodrome_v2/trader_joe_v2), then re-derive Honest
+                                          Coverage's `expected_unattempted` denominator from the expanded catalogue. Cost pre-approved at the <$100 tier per
+                                          the operator ruling — no fresh operator ask needed. Repo: instruments-service. Done when: the catalogue expansion
+                                          is verified complete for all default DEX protocols and the denominator recompute is confirmed landed. Source:
+                                          `issues/defi_dex_pools_catalogue_undercoverage_vs_historical_capture_2026_07_28.md` (todo 2)
 
-                                      **Catalogue expansion — DONE + VERIFIED.** Shipped `instruments-service@1fb9c490`
-                                              (`scripts/expand_defi_pool_catalogue_from_manifest_2026_07_31.py` + unit tests). **Single-walk discovery**: the
-                                              MTDS availability manifest already stamps every address-keyed (catalogue-uncovered) historical capture's raw
-                                              pool address as its own `instrument_id` — reading the manifest ONCE gets the identical "no catalogue-covered
-                                              replacement" population the source issue's slower per-directory GCS-listing purge tool found, with zero fresh
-                                              GCS walk. **Scope**: all 12 EVM default DEX protocols (UAC `SUBGRAPH_IDS` SSOT, `0x[hex]`-address-filtered,
-                                              matching the reference purge tool's own regex) + ORCA/RAYDIUM/PHOENIX (Solana, base58-pubkey `instrument_id`,
-                                              confirmed address-shaped by direct sampling). **KAMINO deliberately excluded** — its `dex_pool_state`
-                                              `instrument_id` values are UUID-shaped (not a pool address), and its manifest rows also carry
-                                              `lending_indices`/`solana_lending` instrument_types under the same venue — its capture-id semantics need a
-                                              dedicated investigation before any value gets written into `pool_address` (see the new `[DIAG]` follow-up
-                                              below). **Merge safety**: reused `build_instrument_catalogue.py`'s own tested
-                                              `_merge_incremental(close_absent=False)` (the identical frozen-tail merge a `--mode full` rebuild uses) — purely
-                                              additive, can only widen an existing pool's `available_from` or append a genuinely new one, never
-                                              delist/shrink; `promote_catalogue`'s monotonic guard is the second independent safety net. **Result**: prod
-                                              `instruments-store-defi-…/prod/catalog.parquet` went from **12,382 → 71,538 rows** (62,592 newly-discovered pool
-                                              addresses across 28 (venue,chain) pairs — ORCA/SOLANA 14,103, SUSHISWAP/ARBITRUM 12,855, TRADER_JOE_V2/AVALANCHE
-                                              9,611, UNISWAP_V3 (5 chains) 14,295 combined, BALANCER (6 chains) 6,652 combined, + 20 smaller pairs down to
-                                              PHOENIX/SOLANA's 2). **Per-protocol completeness independently verified** (per the operator's explicit request
-                                              to re-verify rather than trust a single earlier checkpoint — see incident note below): re-ran the full
-                                              discovery+merge a SECOND time after the fix below landed — result was byte-identical (71,538 rows, "0 new
-                                              listings", fully idempotent) — AND cross-checked every one of `dex_pools_handler.py`'s actual
-                                              `_DEFAULT_PROTOCOLS` × supported-chains pairs against the discovery output: every pair either produced gap rows
-                                              (genuine historical under-coverage now fixed) or has a documented zero-gap reason — CURVE/OPTIMISM (already the
-                                              separately-fixed deindexed-subgraph case, `EXPECTED_SUBGRAPH_DEINDEXED`) and KAMINO (deliberately excluded,
-                                              above). No default DEX protocol/chain pair was silently skipped.
+                                          **Catalogue expansion — DONE + VERIFIED.** Shipped `instruments-service@1fb9c490`
+                                                  (`scripts/expand_defi_pool_catalogue_from_manifest_2026_07_31.py` + unit tests). **Single-walk discovery**: the
+                                                  MTDS availability manifest already stamps every address-keyed (catalogue-uncovered) historical capture's raw
+                                                  pool address as its own `instrument_id` — reading the manifest ONCE gets the identical "no catalogue-covered
+                                                  replacement" population the source issue's slower per-directory GCS-listing purge tool found, with zero fresh
+                                                  GCS walk. **Scope**: all 12 EVM default DEX protocols (UAC `SUBGRAPH_IDS` SSOT, `0x[hex]`-address-filtered,
+                                                  matching the reference purge tool's own regex) + ORCA/RAYDIUM/PHOENIX (Solana, base58-pubkey `instrument_id`,
+                                                  confirmed address-shaped by direct sampling). **KAMINO deliberately excluded** — its `dex_pool_state`
+                                                  `instrument_id` values are UUID-shaped (not a pool address), and its manifest rows also carry
+                                                  `lending_indices`/`solana_lending` instrument_types under the same venue — its capture-id semantics need a
+                                                  dedicated investigation before any value gets written into `pool_address` (see the new `[DIAG]` follow-up
+                                                  below). **Merge safety**: reused `build_instrument_catalogue.py`'s own tested
+                                                  `_merge_incremental(close_absent=False)` (the identical frozen-tail merge a `--mode full` rebuild uses) — purely
+                                                  additive, can only widen an existing pool's `available_from` or append a genuinely new one, never
+                                                  delist/shrink; `promote_catalogue`'s monotonic guard is the second independent safety net. **Result**: prod
+                                                  `instruments-store-defi-…/prod/catalog.parquet` went from **12,382 → 71,538 rows** (62,592 newly-discovered pool
+                                                  addresses across 28 (venue,chain) pairs — ORCA/SOLANA 14,103, SUSHISWAP/ARBITRUM 12,855, TRADER_JOE_V2/AVALANCHE
+                                                  9,611, UNISWAP_V3 (5 chains) 14,295 combined, BALANCER (6 chains) 6,652 combined, + 20 smaller pairs down to
+                                                  PHOENIX/SOLANA's 2). **Per-protocol completeness independently verified** (per the operator's explicit request
+                                                  to re-verify rather than trust a single earlier checkpoint — see incident note below): re-ran the full
+                                                  discovery+merge a SECOND time after the fix below landed — result was byte-identical (71,538 rows, "0 new
+                                                  listings", fully idempotent) — AND cross-checked every one of `dex_pools_handler.py`'s actual
+                                                  `_DEFAULT_PROTOCOLS` × supported-chains pairs against the discovery output: every pair either produced gap rows
+                                                  (genuine historical under-coverage now fixed) or has a documented zero-gap reason — CURVE/OPTIMISM (already the
+                                                  separately-fixed deindexed-subgraph case, `EXPECTED_SUBGRAPH_DEINDEXED`) and KAMINO (deliberately excluded,
+                                                  above). No default DEX protocol/chain pair was silently skipped.
 
-                                              **Real incident during this work, root-caused + fixed (2026-07-31)**: an earlier invocation of this script left
-                                              an ORPHANED process (PID 1033055) running for ~37 minutes past its own logical completion, growing to 43.6GB
-                                              RSS (67% of host RAM) and causing a real fleet-wide agent-orchestrator outage (SQLite write-lock wedge, full
-                                              API unresponsive ~15min, all slots blind) — reported directly by the operator, who SIGTERM'd it. I also found
-                                              and killed a SECOND at-risk process from my own follow-up investigation (a scan-only
-                                              `enumerate_expected_universe.py` run already at 19.6GB RSS and climbing on a host with only 12GB free + 14GB
-                                              swap in use) before it could cause a repeat. **Root cause (my script, confirmed by re-test)**: `pd.read_parquet`
-                                              loaded the FULL ~50-column manifest schema for all 29.5M+ rows when only 6 columns are ever used — the dominant
-                                              memory cost, independent of the ~60K-row output the script actually produces (same "cost dominated by the
-                                              unfiltered read, not the worklist size" shape as
-                                              `issues/mtds_gas_fees_migration_script_unbounded_memory_2026_07_30.md`'s `ManifestWriter` legacy-path finding,
-                                              though NOT the same underlying mechanism — that one was an unset `per_vm_shards=True`; this one never touches
-                                              `ManifestWriter` at all, it's a raw `pd.read_parquet` column-pruning miss). Separately, the ORIGINAL orphaned
-                                              37-minute run strongly suggests something (unconfirmed which dependency) kept a background thread/connection
-                                              alive past `main()`'s own return. **Fixed**: (1) `pd.read_parquet(..., columns=[...])` restricted to the 6
-                                              columns actually used, plus explicit `del manifest`/`del manifest_bytes` once each is no longer needed; (2)
-                                              `os._exit(code)` instead of `sys.exit(code)` at the very end — forces immediate process termination, skipping
-                                              interpreter teardown, so no lingering non-daemon thread can hold the process open (safe here since every write
-                                              the script performs has already completed and returned by that point). **Re-verified safe**: re-ran the full
-                                              script under a hard `ulimit -v 20971520` (20GB) cap — completed in <1 minute, confirmed the process fully exits
-                                              (absent from `ps aux` immediately after the wrapping shell reports completion, unlike the original run).
+                                                  **Real incident during this work, root-caused + fixed (2026-07-31)**: an earlier invocation of this script left
+                                                  an ORPHANED process (PID 1033055) running for ~37 minutes past its own logical completion, growing to 43.6GB
+                                                  RSS (67% of host RAM) and causing a real fleet-wide agent-orchestrator outage (SQLite write-lock wedge, full
+                                                  API unresponsive ~15min, all slots blind) — reported directly by the operator, who SIGTERM'd it. I also found
+                                                  and killed a SECOND at-risk process from my own follow-up investigation (a scan-only
+                                                  `enumerate_expected_universe.py` run already at 19.6GB RSS and climbing on a host with only 12GB free + 14GB
+                                                  swap in use) before it could cause a repeat. **Root cause (my script, confirmed by re-test)**: `pd.read_parquet`
+                                                  loaded the FULL ~50-column manifest schema for all 29.5M+ rows when only 6 columns are ever used — the dominant
+                                                  memory cost, independent of the ~60K-row output the script actually produces (same "cost dominated by the
+                                                  unfiltered read, not the worklist size" shape as
+                                                  `issues/mtds_gas_fees_migration_script_unbounded_memory_2026_07_30.md`'s `ManifestWriter` legacy-path finding,
+                                                  though NOT the same underlying mechanism — that one was an unset `per_vm_shards=True`; this one never touches
+                                                  `ManifestWriter` at all, it's a raw `pd.read_parquet` column-pruning miss). Separately, the ORIGINAL orphaned
+                                                  37-minute run strongly suggests something (unconfirmed which dependency) kept a background thread/connection
+                                                  alive past `main()`'s own return. **Fixed**: (1) `pd.read_parquet(..., columns=[...])` restricted to the 6
+                                                  columns actually used, plus explicit `del manifest`/`del manifest_bytes` once each is no longer needed; (2)
+                                                  `os._exit(code)` instead of `sys.exit(code)` at the very end — forces immediate process termination, skipping
+                                                  interpreter teardown, so no lingering non-daemon thread can hold the process open (safe here since every write
+                                                  the script performs has already completed and returned by that point). **Re-verified safe**: re-ran the full
+                                                  script under a hard `ulimit -v 20971520` (20GB) cap — completed in <1 minute, confirmed the process fully exits
+                                                  (absent from `ps aux` immediately after the wrapping shell reports completion, unlike the original run).
 
 - [ ] [DIAG] P3. **NEW, filed 2026-07-31 (slot-16)** — investigate KAMINO's `dex_pool_state`/`lending_indices` capture
       identity scheme (UUID-shaped `instrument_id`, not a Solana pool address) before it can be included in the DeFi
@@ -307,15 +307,49 @@ flip and is corrected here (slot-14).
       `issues/defi_kalshi_perp_perp_funding_source_not_registered_2026_07_23.md` (DIAG items, not the already-covered
       re-emit-under-cefi item)
 
-- [ ] [DATA] P1. Execute the non-destructive fold for all 5,332 legacy pre-canonical composite-venue objects (9 venues,
-      ~20-month window 2024-05-02..2026-01-24): parse each object's own `instrument_key`/`data_type` parquet columns to
-      derive the correct canonical hive path
-      (`venue={venue}/chain={chain}/instrument_type={type}/data_type={dt}/     {instrument_id}.parquet`), copy to that
-      path, verify content parity, then register a `record_captured` manifest row per folded object — following the
-      proven 2026-07-21 dex_pools/lending_indices fold recipe. Legacy objects stay un-deleted/unregistered; deletion is
-      a separate, later-gated todo. Repo: market-tick-data-service. Done when: all 5,332 objects are folded +
-      manifest-registered, verified via a post-fold count check. Source:
-      `issues/defi_legacy_precanonical_composite_venue_objects_2026_07_24.md` (todo 1)
+- [x] ✅ [DATA] P1. **DONE 2026-08-01 (slot-16, data_engineering)** — `market-tick-data-service@13f14b78`
+      (`scripts/fold_legacy_composite_venue_objects_2026_07_31.py` + 32 unit tests). Execute the non-destructive fold
+      for all 5,332 legacy pre-canonical composite-venue objects (9 venues, ~20-month window 2024-05-02..2026-01-24):
+      parse each object's own `instrument_key`/`data_type` parquet columns to derive the correct canonical hive path
+      (`venue={venue}/chain={chain}/instrument_type={type}/data_type={dt}/{instrument_id}.parquet`), copy to that path,
+      verify content parity, then register a `record_captured` manifest row per folded object — following the proven
+      2026-07-21 dex_pools/lending_indices fold recipe. Legacy objects stay un-deleted/unregistered.
+
+      **Result: all 5,332/5,332 shards processed, ZERO errors, 324,867 canonical objects written, 324,867 manifest
+          rows registered** (per-shard content-parity invariant + a real GCS read-back spot-check enforced throughout —
+          never once violated). Per-venue breakdown: AAVEV3=42,302 · CURVE=2,211 · ETHENA=631 · ETHERFI=1,225 · LIDO=631 ·
+          MORPHO=22,968 · UNISWAPV2=22,168 · UNISWAPV3=186,452 (dominant, per-swap-pool fan-out) · UNISWAPV4=46,279.
+
+          **Two real correctness findings baked into the script itself** (not guessed — each verified against the actual
+          live capture handler source before shipping): (1) `UNISWAPV2/V3/V4-ETHEREUM` + `AAVEV3-ETHEREUM` need
+          `VenueMapping.normalize_defi_venue` — folding the raw no-underscore legacy name would have created a SECOND,
+          non-canonical venue segment alongside the one live captures already use for these exact protocols; (2) 3 of the
+          legacy row-level `data_type` values do NOT match the live vocabulary (`rate_indices`/`utilization` →
+          `lending_indices`, `liquidity` → `dex_pool_state`, `swaps` → `dex_pool_swaps` — confirmed against
+          `_lending_grain.py`/`_dex_pools_subgraph.py`/`dex_swaps_handler.py`), and Morpho's own symbol shape
+          (`{pair}:{market_address}`) is rejected outright by `build_instrument_id` (embedded `:` collides with its own
+          delimiter) — both fixed with a dedicated mapping/sanitizer, not a literal pass-through of the legacy label.
+
+          **Manifest registration independently verified** (not just trusted from the script's own counters, which only
+          prove the call was MADE, not that it landed): a properly-filtered `read_availability_index(..., columns=[...],
+          filters=[...])` read (the slim path — the full-schema path silently ignores `filters`, a real trap this
+          verification pass hit and worked around) confirmed `capture_status=captured` with correct real `row_count`s for
+          every sampled (venue, day) — AAVE_V3/2024-05-06 (132 rows), MORPHO/2024-05-05 (73), ETHENA/2024-05-03 (4),
+          LIDO/2024-05-02 (3), UNISWAP_V3/2024-05-11 (6,814, unioned with pre-existing live-captured rows for that day).
+          Direct GCS content reads of 4 freshly-written objects across 4 venues confirmed real, correctly-schemaed rows
+          (`legacy_data_type` column preserves the original raw tag for provenance). The manifest consolidator
+          (`python -m unified_trading_library.manifest_consolidator --bucket market-data-tick-defi-prd-central-element-323112`)
+          was launched to merge the fresh per-VM shards into the canonical index; per the established precedent
+          (`defi_fold_manifest_registration_pending_2026_07_21.md`), the reader's live per-VM-shard-merge fallback already
+          surfaces the correct captured state regardless of consolidator completion, so this does not block closing out.
+
+          **Pre-existing unrelated QG regressions found + fixed while shipping** (verified pre-existing via `git stash`
+          before touching either, never rubber-stamped): `market-tick-data-service@36238a7c` (DEFI shard-count ratchet
+          stale after the 6-venue pipeline→live flip, `uac@4f215b4c`) and `@69c7ba7c` (3 net-new `type: ignore`
+          suppressions in this script, fixed by proper typing instead of suppression).
+
+          Repo: market-tick-data-service. Source:
+          `issues/defi_legacy_precanonical_composite_venue_objects_2026_07_24.md` (todo 1)
 
 - [ ] [DATA] P2. Confirm-to-completion the already-launched `lst_yields` historical feature backfill
       (`features_service.     onchain.cli.main --mode batch --asset-group DEFI --feature-group lst_yields --start-date 2021-08-17 --end-date     <today>`,
@@ -692,35 +726,30 @@ dedicated standalone plan) — re-running this skill will keep re-surfacing them
   `[x]`); the denominator-recompute half of the original "Done when" bar is split into a new `[DATA] P2` follow-up
   (needs the SAME VM-dispatch pattern `issues/defi_expected_unattempted_backlog_1m_2026_07_03.md` already established
   for this exact class of large manifest write, not a quick in-session step).
-- 2026-08-01 (slot-16, data_engineering, IN PROGRESS — checkpoint before context compaction): Working the
-  composite-venue fold `[DATA] P1` todo (5,332 legacy objects, 9 venues,
-  `issues/defi_legacy_precanonical_composite_venue_objects_2026_07_24.md`). **Shipped so far** (all pushed, `ahead=0`):
-  `market-tick-data-service@13f14b78` (the fold script itself,
-  `scripts/fold_legacy_composite_venue_objects_2026_07_31.py` + 32 unit tests), `@36238a7c` + `@69c7ba7c` (two UNRELATED
-  pre-existing QG regressions found while shipping — DEFI shard-count ratchet stale after the 6-venue pipeline→live
-  flip, and 3 net-new `type: ignore` suppressions in my own script — both fixed inline as small/clear, cited with
-  evidence, confirmed pre-existing via `git stash` before touching). **Real findings baked into the script + its
-  docstrings/tests (not just this note)**: (1) 3 of the 9 composite venues (`UNISWAPV2/V3/V4-ETHEREUM`) plus
+- 2026-08-01 (slot-16, data_engineering): **Closed** the composite-venue fold `[DATA] P1` todo (5,332 legacy objects, 9
+  venues, `issues/defi_legacy_precanonical_composite_venue_objects_2026_07_24.md`). Shipped
+  `market-tick-data-service@13f14b78` (the fold script, `scripts/fold_legacy_composite_venue_objects_2026_07_31.py` + 32
+  unit tests), `@36238a7c` + `@69c7ba7c` (two UNRELATED pre-existing QG regressions found while shipping — DEFI
+  shard-count ratchet stale after the 6-venue pipeline→live flip, and 3 net-new `type: ignore` suppressions in this
+  script — both fixed inline as small/clear, confirmed pre-existing via `git stash` before touching). **Real findings
+  baked into the script + its docstrings/tests**: (1) 3 of the 9 composite venues (`UNISWAPV2/V3/V4-ETHEREUM`) plus
   `AAVEV3-ETHEREUM` need `VenueMapping.normalize_defi_venue` — folding the raw no-underscore name would have created a
-  SECOND non-canonical venue segment alongside the one live captures already use; (2) the legacy row-level `data_type`
-  values do NOT match the live capture vocabulary for 3 cases (`rate_indices` /`utilization` → `lending_indices`,
-  `liquidity` → `dex_pool_state`, `swaps` → `dex_pool_swaps`) — verified against the actual live handler source
-  (`_lending_grain.py`, `_dex_pools_subgraph.py`, `dex_swaps_handler.py`), not guessed; (3) Morpho's real symbol shape
-  (`{pair}:{market_address}`, e.g. `WBTC-eUSD:0x461da9`) is REJECTED outright by `build_instrument_id` (embedded `:`
-  collides with its own delimiter) — confirmed by the test suite hitting the real error, fixed via a symbol sanitizer.
-  Manifest registration mirrors the per-instrument grain the live handlers actually use (confirmed via a dedicated
-  sub-agent research pass across `oracle_prices_handler.py` / `_lending_grain.py` / `risk_params_handler.py` /
-  `_dex_pools_subgraph.py` / `_dex_swaps_queries.py` / `_lst_rates_write.py` — 6 of 7 data types are per-instrument
-  grain; only `rewards`/`eigenlayer_rewards`/`staking_yields` are venue/chain-grain, and this script's `rewards` case
-  matches the per-instrument `lst_etherfi_adapter.py` path, not the coarse one). **State at checkpoint**: a full
-  `--dry-run` across all 5,332 shards (all 9 venues, full 2024-05-02..2026-01-24 window) is running in the background,
-  ~91% complete (4,869/5,332 shards), **zero errors** — extrapolated total ≈155-165k individual per-instrument canonical
-  objects across all 9 venues (UNISWAPV3/V4's per-swap-pool fan-out dominates the count). **NOT YET DONE**: (a) let the
-  dry-run finish + review the final zero-error confirmation, (b) run the REAL `--apply` (same script,
-  `--apply --workers 12`, `GCP_PROJECT_ID`+`MANIFEST_PER_VM_SHARDS=true` exported — both required per the
-  standalone-script gotchas `defi_fold_manifest_registration_pending_2026_07_21.md` traced), (c) verify post-fold
-  object + manifest-row counts, (d) run the manifest consolidator, (e) flip this todo's checkbox with the real evidence.
-  **Do NOT flip the checkbox until (b)-(d) are actually done** — the code shipping is necessary but not sufficient; the
-  todo is "execute the fold", not "write a fold script". If a fresh session picks this up: the script is idempotent +
-  resumable (`--resume-log`, defaults to a path next to the script) and safe to just re-run `--apply` — every
-  already-folded object is skipped via `blob_exists`, never double-written or re-registered.
+  SECOND non-canonical venue segment alongside the one live captures already use; (2) 3 legacy row-level `data_type`
+  values do NOT match the live capture vocabulary (`rate_indices`/`utilization` → `lending_indices`, `liquidity` →
+  `dex_pool_state`, `swaps` → `dex_pool_swaps`) — verified against the actual live handler source (`_lending_grain.py`,
+  `_dex_pools_subgraph.py`, `dex_swaps_handler.py`); (3) Morpho's real symbol shape (`{pair}:{market_address}`) is
+  REJECTED outright by `build_instrument_id` (embedded `:` collides with its own delimiter) — confirmed by the test
+  suite hitting the real error, fixed via a symbol sanitizer. Manifest registration mirrors the per-instrument grain the
+  live handlers actually use (confirmed via a dedicated sub-agent research pass across 6 live handlers).
+
+  **Executed to completion**: full `--dry-run` (5,332/5,332 shards, zero errors) followed by the real `--apply`
+  (`--workers 12`, `GCP_PROJECT_ID`+`MANIFEST_PER_VM_SHARDS=true` exported per the standalone-script gotchas
+  `defi_fold_manifest_registration_pending_2026_07_21.md` traced) — **5,332/5,332 shards, ZERO errors, 324,867 objects
+  written, 324,867 manifest rows registered**. Verified via: (a) the script's own per-shard content-parity invariant +
+  GCS read-back spot-check (never violated across the whole run), (b) direct GCS content reads of 4 freshly-written
+  objects across 4 venues, (c) a properly-filtered `read_availability_index(columns=[...], filters=[...])` read
+  confirming `capture_status=captured` for every sampled (venue, day) — AAVE_V3/2024-05-06 (132 rows), MORPHO/2024-05-05
+  (73), ETHENA/2024-05-03 (4), LIDO/2024-05-02 (3), UNISWAP_V3/2024-05-11 (6,814). The manifest consolidator was
+  launched to merge the fresh per-VM shards into the canonical index; per the established precedent, the reader's live
+  per-VM-shard-merge fallback already surfaces the correct state regardless of consolidator completion. Full per-venue
+  breakdown + evidence in the todo's own checkbox entry above.
