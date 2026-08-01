@@ -305,11 +305,11 @@ Two independent gates because Group A and Group B are at different stages:
       compute SA) — do not leave this tag stale per CLAUDE.md's retag-on-resolve rule.
 
       > **🟥 Note (2026-07-31, slot-14)**: even once this todo removes `unified-trading-sa`'s `storage.objectAdmin`,
-                      > that SA still live-holds `roles/resourcemanager.projectIamAdmin` + `roles/iam.serviceAccountAdmin` (undeclared
-                      > in any terraform in this repo) — both self-escalation-capable, i.e. it could re-grant itself storage access
-                      > (or any other role) without going through terraform at all. See
-                      > `issues/unified_trading_sa_live_iam_drift_vs_terraform_2026_07_31.md` — a full de-privilege of this SA is not
-                      > actually complete until that doc's P1/P2 also land.
+                          > that SA still live-holds `roles/resourcemanager.projectIamAdmin` + `roles/iam.serviceAccountAdmin` (undeclared
+                          > in any terraform in this repo) — both self-escalation-capable, i.e. it could re-grant itself storage access
+                          > (or any other role) without going through terraform at all. See
+                          > `issues/unified_trading_sa_live_iam_drift_vs_terraform_2026_07_31.md` — a full de-privilege of this SA is not
+                          > actually complete until that doc's P1/P2 also land.
 
 > **🟥 P2.2 SCOPE GAP found 2026-07-30 (slot-12) — "wire each runtime to its tier SA" is not mechanically executable
 > today.** Investigation (live GCP IAM queries + static analysis, no state mutated) found 3 independently-blocking
@@ -385,7 +385,14 @@ Two independent gates because Group A and Group B are at different stages:
       confidence, then cut `spec.traffic` over (or ramp via the existing tagged-canary pattern — see
       `e8ce86a-verify`/`00389-d9d`). Full writeup:
       `issues/deployment_api_cloud_run_coldstart_flaky_exit0_blocks_prd_sa_cutover_2026_07_31.md`. Gated on P2.2c
-      (met) + the cold-start blocker resolving.
+      (met) + the cold-start blocker resolving. **STILL BLOCKED — re-verified 2026-08-01T00:00-00:02Z (slot-11).** The
+      linked SIGABRT doc's investigation had marked the cold-start blocker resolved at `2026-07-31T22:57Z` (4
+      consecutive fresh-start successes observed); re-attempting this todo's own prescribed tag-verify step against the
+      newest `uts-prd-sa` revision (`00402-zsg`, created AFTER that resolution point) found the blocker had recurred —
+      3/3 fresh cold-start attempts failed with the identical signature. Did NOT force the cutover; live traffic remains
+      100% on the warm, healthy `unified-trading-sa` revision throughout. This is now the SECOND "resolved, then
+      recurred within hours" cycle in this investigation's history — full evidence in the coldstart issue doc's P3 todo.
+      Still gated on the same two conditions; genuinely not met.
 - [ ] [TEST] P2.3. Negative tests: `ENVIRONMENT=staging` write to a `*-prod-*` bucket → `403` at IAM; migration SA →
       allowed. Add as a deployment-service QG check.
 

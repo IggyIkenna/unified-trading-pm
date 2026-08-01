@@ -150,4 +150,29 @@ this service relative to its documented, measured requirement.
 - [ ] [INFRA] P3. Once the SIGABRT doc's investigation resolves (or this specific angle is separately confirmed fixed),
       retry the live-traffic cutover for `uts-shared-deployment-api` to a fresh `uts-prd-sa` revision — tag-verify 3-5
       fresh cold starts first, then cut over; update `bucket_iam_write_protection_per_tier_2026_06_09.md` P2.2c to
-      reflect completion. (repo: deployment-service)
+      reflect completion. (repo: deployment-service) — **RE-ATTEMPTED 2026-08-01T00:00-00:02Z (slot-11, infra), STILL
+      BLOCKED — this directly contradicts `deployment_api_sigabrt_crash_loop_2026_07_24.md`'s P0 todo's "done-when now
+      MET... flipping" entry from ~1h earlier (2026-07-31T22:57Z, slot-7).** Per this plan's own instruction, tagged the
+      newest Ready=True `uts-prd-sa` revision (`00402-zsg`, `cpu=4/memory=16Gi`, created `23:07:45Z`, image digest
+      `6b8f97fe...`) for a fresh cold-start verification. **3/3 consecutive fresh cold-start attempts failed** with the
+      exact same signature this doc's whole history documents (`Starting new     instance` → zero output →
+      `Container called exit(0)` at ~31-32s → `Default STARTUP TCP probe failed`): (1) the
+      `gcloud run services update-traffic --set-tags=prd-sa-cutover-verify=...` call itself failed outright with this
+      error; (2) a second tag assignment (`verify2`) API-succeeded but a `curl` against the tagged URL then triggered a
+      genuine cold start (confirmed via `gcloud logging read`: `Starting new instance. Reason: DEPLOYMENT_ROLLOUT` →
+      `exit(0)` at `00:00:33Z`) that also failed; (3) an immediate `AUTOSCALING`-triggered retry (`00:01:48Z`) also
+      failed identically (`exit(0)` at `00:02:20Z`); a follow-up direct `curl` confirmed `HTTP 503` in `31.6s`.
+      **Conclusion: the SIGABRT doc's "resolved" verdict was NOT durable** — most consistent with that doc's own
+      standing theory (deploy-volume/capacity contention during the investigation's own churn window, which then
+      recurred once ANOTHER burst of activity — this session's own re-verification attempts — hit the same contended
+      resource). **Did NOT force the traffic cutover** — production stayed 100% on the warm `00374-4pd` throughout
+      (confirmed healthy, `200` in `0.04s`, both before and after these attempts), per this task's own craft north-star
+      (never launch blind) and `bucket_iam_write_protection_per_tier_2026_06_09.md` P2.1b's explicit hard-gate on this
+      exact cutover completing safely first. Left the 2 new diagnostic tags (`prd-sa-cutover-verify`, `verify2`, both 0%
+      traffic on `00402-zsg`) live for the next investigator, per this doc's established convention. This P3 todo stays
+      open — done-when genuinely not met. Cross-posted a correction entry to the SIGABRT doc's Progress Log (its own
+      checkbox is left checked, since the 2026-07-31T22:57Z observation was itself accurate at the time — this is new,
+      later-arriving evidence, not a retraction). **Recommendation for whoever next works this**: the doc's own
+      next-ranked candidate (a genuine Google Cloud Support case) looks increasingly warranted given TWO independent
+      "resolved, then recurred within ~1h" cycles now — resolution has never once held for more than a few hours across
+      this investigation's entire multi-day history. (repo: deployment-service, deployment-api)

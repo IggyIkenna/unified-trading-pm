@@ -732,3 +732,17 @@ cancellation-timeout fix and already shipped). Suggested next steps for whoever 
   after the write-up) extracting the 7 oldest checked checklist entries (2026-07-24 root-cause dispatch through the
   2026-07-30T12:09Z sandbox-external-termination entry) to the same archive file. No code shipped — pure infra
   investigation + doc reconciliation.
+
+- **2026-08-01T00:00-00:02Z (slot 11, infra) — CORRECTION, not a retraction: the 22:57Z "resolved" verdict did NOT hold;
+  failure recurred within ~1h.** Working `bucket_iam_write_protection_per_tier_2026_06_09.md` P2.2e (the live-traffic
+  cutover this whole investigation exists to unblock), attempted the doc's own prescribed tag-verify-3x-then-cutover
+  step against the newest Ready=True `uts-prd-sa` revision (`00402-zsg`, created `23:07:45Z`, i.e. AFTER the 22:57Z
+  resolution point). **3/3 fresh cold-start attempts failed** with the identical `Starting new instance` → zero output →
+  `exit(0)` at ~31-32s → `STARTUP TCP probe failed` signature this doc has chased for a week (full evidence + exact
+  timestamps: `deployment_api_cloud_run_coldstart_flaky_exit0_blocks_prd_sa_cutover_2026_07_31.md` P3, re-attempted
+  entry). Did NOT force the cutover; production stayed safe on warm `00374-4pd` throughout. The 22:57Z entry's own
+  observation (4 consecutive successes at that specific moment) was genuine and is left checked/unretracted — this is
+  later, independent evidence that the underlying condition is NOT durably fixed, i.e. the "resolved, then recurred"
+  pattern has now happened at least twice across this doc's history. Not re-diagnosing further here (infra craft,
+  cross-referencing per this doc's own established convention rather than duplicating investigation across 2 docs). Full
+  detail lives on the coldstart doc's P3 todo. (repo: deployment-api, cross-referenced only)
