@@ -122,14 +122,14 @@ callers that only need counts/distinct-values rather than a full DataFrame.
 
 ## Todos
 
-- [ ] [DATA] P1. Root-cause `read_availability_index`'s `columns=` slim path
+- [x] ✅ [DATA] P1. Root-cause `read_availability_index`'s `columns=` slim path
       (`unified_trading_library/manifest_writer/_read_index.py::_read_availability_index_slim` /
       `_read_parquet_columns_safe`) — confirm which step accounts for the 1.67GB→15.5GB spike at DeFi's ~33.4M-row scale
       (bare `pd.read_parquet` vs. base-col augmentation vs. per-VM shard merge) and fix it to stream/bound memory
       independent of asset_group row count, mirroring the `iter_batches`-based streaming pattern
       `instruments-service@66adbc1d` already applied for the same class of problem in `enumerate_expected_universe.py`.
       Re-verify against the live DeFi bucket with an RSS-monitored run (not a whole corpus walk — one real read). (repo:
-      unified-trading-library)
+      unified-trading-library) — unified-trading-library@65ae1e89
 - [ ] [DATA] P2. Fix `scripts/dev/run-bounded-analysis.sh`'s RLIMIT_AS fallback path (used whenever `systemd-run` is
       unavailable) to not spuriously fail on pyarrow/grpc-heavy workloads — either document the incompatibility
       prominently (so agents route pyarrow-heavy ad-hoc scripts to a manual RSS-monitor pattern instead, as done in this
@@ -161,3 +161,31 @@ callers that only need counts/distinct-values rather than a full DataFrame.
   own P3 follow-up (further reduction toward the ~4-8Gi aspirational target) at
   `/plans/active/cross_cutting_satellite_ao_dispatch_batch2_2026_07_26.md`. Shipped: `e2e-testing@5d7f53a`,
   `e2e-testing@edd12c6`.
+- 2026-08-01 (slot-15, data_engineering): Todo 1 root-caused + shipped — `unified-trading-library@65ae1e89`. **Root
+  cause confirmed via code read**: `_read_availability_index_slim` unconditionally widens `columns=` to
+  `_SLIM_MERGE_BASE_COLS | set(columns)` — 4 hard-required merge cols (date/venue/data_type/service_name) UNION
+  `_OPTIONAL_DEDUP_COLS` (12 more, incl. high-cardinality `instrument_id`) UNION `_MERGE_TIEBREAK_COLS`
+  (capture_status/attempted_at/written_at) = **19 columns total**, applied to the CONSOLIDATED-blob read regardless of
+  whether a per-VM self-shard actually exists to merge. A caller's 2-column request (e.g.
+  `["data_type","capture_status"]`) therefore silently decoded 19 columns across the FULL ~33.4M-row DeFi index — nearly
+  a full-width read in all but name, explaining the 15.5GB spike (the `_read_parquet_columns_safe` docstring's own
+  pre-existing note that an UNFILTERED read is ~14.86GiB on a comparable 27.4M-row DeFi index corroborates that even the
+  widened-but-still-partial column set is the dominant cost, on top of the inherent full-corpus-no-filters decode cost
+  `filters=` exists to solve). **Fix**: `_read_self_shard` is now called FIRST, with the caller's NARROW `columns`
+  (cheap — self-shards are small, single-VM, short-lived writes), to learn whether a merge will actually happen BEFORE
+  deciding how wide to read the consolidated blob — widening only applies when a self-shard genuinely exists (re-fetched
+  once more, widened, negligible extra cost given shard size). The dedup-safety guarantee `_SLIM_MERGE_BASE_COLS` exists
+  for (regression `api_football_enrichment_stale_ns_fixture_status_and_gate_ reader_inconsistency_2026_07_19`, covered
+  by `test_slim_read_column_selection_does_not_change_dedup_result`) is UNCHANGED — that test exercises the SEPARATE
+  `_read_slow_path` per-VM-shard-recovery branch (multiple shards, no consolidated blob), which this fix does not touch
+  and which still always widens (correctly — any of N shards could carry a dedup-relevant column). Also corrected both
+  this function's and the public `read_availability_index`'s own docstrings, which overstated `columns=`'s protective
+  power without warning that a full-corpus UNFILTERED read on a large index remains several-to-tens-of-GB regardless —
+  `filters=` is the mechanism that actually bounds memory there, and a genuinely streaming/DuckDB-style approach is
+  recommended for full-corpus census/aggregate use cases (`filters=` can't bound those — no date window to prune to).
+  Added 2 new regression tests (`test_slim_read_no_self_shard_uses_narrow_columns_for_consolidated_read`,
+  `test_slim_read_with_self_shard_widens_consolidated_read_and_merges_correctly` — the latter also proves the merge
+  still correctly reconciles a self-shard's fresher write against a stale consolidated row post-fix). Full
+  `quality-gates.sh` green (6900+ pre-existing tests pass, no regressions; 87.17% coverage). Todo 2
+  (`run-bounded-analysis.sh`'s RLIMIT_AS fallback) is now independently corroborated by slot-2's finding above but not
+  attempted in this session — scoped as its own follow-up.
