@@ -274,12 +274,14 @@ named) rather than left as prose, per the findings-closure hard rule.
       market-tick-data-service) — market-tick-data-service@1957e89b. Added `logger.warning` naming
       `type(exc).__name__` + message at all 3 sites (FootystatsLeague/FTMatchRaw/FTTeamRaw validation); fallback
       behavior (raw dict substitution) unchanged. Full QG green (9821 passed).
-- [ ] [BACKEND] P2. Decide + document the fate of `aggregator/odds_api.py::OddsApiAdapter` and
+- [x] ✅ [BACKEND] P2. Decide + document the fate of `aggregator/odds_api.py::OddsApiAdapter` and
       `bookmaker_api/api_football.py::ApiFootballAdapter` (execution-service `sports_execution/adapters/`) — both
       registered/exported but never constructed by any live path (`sports_factory.py::_LIVE_VENUE_CONFIGS` never sets
       `data_source="odds_api_aggregator"`; `ApiFootballAdapter` has no construction site outside its own docstring
       example). Either wire each into a live venue config with a stated activation path, or add an explicit unreached
-      note (matching `unity/__init__.py`'s existing precedent in the same repo). (repo: execution-service)
+      note (matching `unity/__init__.py`'s existing precedent in the same repo). (repo: execution-service) —
+      execution-service@8058e450. Added STATUS notes to both module docstrings naming the unreached path (routing.py
+      dispatch entry vs sports_factory.py's `_LIVE_VENUE_CONFIGS`) and the activation path for each. Full QG green.
 - [x] ✅ [BACKEND] P1. **DONE 2026-08-01 (slot 9), `execution-service@63f099b2`.**
       `bookmaker_api/onexbet.py::OneXBetAdapter` is a read-only odds adapter (module/class docstrings say so explicitly,
       no place-bet method exists) and nothing wires it into a live dispatch path (`config["sports_router"]` is never
