@@ -513,3 +513,45 @@ fill-rate/guardrail/row-count re-verification, cron resume. **Both `-001` and `-
 duplicate-row cleanup (issue-doc todo 2) is explicitly OUT of this plan's scope (operator-gated, separate doc) and does
 not block `-001`/`-006`, which only need the corrected backfill to actually fill history's `available_at`. Cron
 confirmed still `PAUSED`; snapshot from 07-29 still the valid rollback point (untouched).
+
+**Checkpoint, same session (2026-08-01, ~14:27 UTC), context-usage-triggered — apply IN PROGRESS, not done.**
+
+**Second bug caught before it wasted a full run**: the first corrected-script launch
+(`--start-date 2021-06-30 --end-date 2026-07-31 --chunk-days 30`, no env prefix) completed all 22 chunks it reached with
+`ManifestWriter write failed: ... GCP_PROJECT_ID or AWS_ACCOUNT_ID must be set in environment` on EVERY chunk — the
+scan/classify counters (`captured_bundles`, etc.) log "success" independent of whether the actual GCS write landed, so
+the run LOOKED healthy in the `chunk N complete` lines while writing NOTHING. Root cause: `ManifestWriter`'s own
+storage-client resolution reads `GCP_PROJECT_ID` from the **environment**, separate from the script's `--project-id` CLI
+arg (which only parameterises the plain `storage.Client(project=...)` used for the read/scan side) — the two are NOT
+wired together. Caught via `grep -c "ManifestWriter write failed" <log>` across the WHOLE log, not the tail (the warning
+is sparse relative to routine `Connection pool is full` noise, so a tail-only spot-check missed it for several chunks).
+**Lesson for any future rebuild/backfill launch of this script (or others sharing this write path): always export
+`GCP_PROJECT_ID=central-element-323112` in the launch command's own environment — the `--project-id` flag alone is NOT
+sufficient** — and verify the FIRST chunk's write lands (a fresh `_index/per_vm/local-<pid>-*.parquet` object, or a
+`per-VM shard updated` INFO line) before trusting a longer run. Killed the broken run (no partial writes to lose —
+confirmed zero net rows changed) and relaunched with `GCP_PROJECT_ID=central-element-323112` prefixed; verified a fresh
+per-VM shard landed within seconds.
+
+**Live state as of this checkpoint** (verify freshly before resuming, don't trust these numbers as still-current):
+launch command
+`cd market-tick-data-service && GCP_PROJECT_ID=central-element-323112 .venv/bin/python -u -m market_tick_data_service.scripts.rebuild_prediction_manifest --start-date 2021-06-30 --end-date 2026-07-31 --chunk-days 30`,
+log at `<session scratchpad>/logs/prediction_backfill_corrected_v2_2026_08_01.log` (scratch — regenerable by re-running;
+the durable output is the GCS per-VM shard writes themselves, not this log). PID `2843482`
+(`ps aux | grep rebuild_prediction_manifest` to check liveness — if gone and no `all N chunk(s) scanned` terminal line
+in the log, it died and needs relaunching from scratch, NOT resumed by date, since re-running is idempotent and this
+covers the FULL range every time by design). At checkpoint time: chunk 42 of ~62 (this launch's own range is the FULL
+5-year span, not the narrower 2024-06-14+ "recovery" range earlier sessions used, so the total chunk count differs from
+those — don't reuse "26" as the expected total), zero `ManifestWriter write failed` occurrences since the relaunch, RSS
+~900MB and rising gently with denser recent-date chunks (still well-bounded, no memory-safety concern).
+
+**Still required after the apply finishes** (do not flip `-001`/`-006` before ALL of these): (1) confirm the log's
+terminal `Elapsed ... Summary` line with zero unexpected failures; (2) force-consolidate
+(`GCP_PROJECT_ID=central-element-323112 .venv/bin/python -m unified_trading_library.manifest_consolidator --bucket market-data-tick-pred-prd-central-element-323112 --force`,
+run IMMEDIATELY before the fill-rate read since the freshness budget for this bucket is 120s while the cron stays
+paused); (3) verify `available_at` fill rate on `capture_status=captured` rows is now near 100% (not the 20.08% this
+session's first, buggy apply produced) AND that total row count did NOT balloon the way it did last time (this run's
+rows share the historical rows' dedup key, so count should stay flat, not grow by thousands) AND no
+`COLUMN FILL REGRESSION`/`CAPTURED-ROW COLUMN FILL REGRESSION` critical log line appeared in the consolidate output; (4)
+resume the cron via `scripts/mtds_available_at_backfill_resume_prediction_2026_07_30.py` (not raw `gcloud`); (5) record
+the final before/after fill-rate evidence here and flip both checkboxes citing the apply's actual completion + the
+consolidate run + the resume run.
