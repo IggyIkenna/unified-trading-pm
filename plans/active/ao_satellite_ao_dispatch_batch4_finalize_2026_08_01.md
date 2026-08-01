@@ -105,12 +105,21 @@ source: >-
       `tests/test_worker_liveness_watchdog.py`. `comm -12` on the two commits' changed-file lists returns empty — zero
       file overlap. So batch3 satisfied the caution by sidestepping the shared file entirely (not merely by sequencing),
       and batch4's todo landed into an otherwise-untouched `worker_liveness_watchdog.py`. No follow-up cleanup needed.
-- [ ] [REVIEW] P0. **Archive the source doc if it has reached zero open todos, and repoint any referrer.** Check
+- [x] [REVIEW] P0. **Archive the source doc if it has reached zero open todos, and repoint any referrer.** Check
       `orchestrator_failover_double_dispatch_duplicate_work_2026_07_25.md` — its P3 `/done`-idempotency sibling is
       separately file-collision-held (not part of this batch), so do NOT archive if that item is still open there. Run
       the standard 6-step archival ritual (banner → codex-alignment check → fix every referrer's path corpus-wide →
       clear the lock) only if the doc is genuinely fully done. **Done when**: `grep -rl <slug> plans/ codex/` returns
-      only the archived copy's own path if archived, or a stated reason it wasn't.
+      only the archived copy's own path if archived, or a stated reason it wasn't. — **Not archived; genuinely NOT fully
+      done.** Read the source doc's Todos section directly (not a checkbox count): only the `[BACKEND] P2`
+      release-signal/liveness item is `[x]` — TWO `[BACKEND] P3` items are still `[ ]` open: (1) "clear/curl-invalidate
+      the prior owner's slot-side `current_task` on re-dispatch" and (2) the `/done`-idempotency item named in this
+      todo's own caution (still separately file-collision-held against `server/routes/slots_worker.py`, per the source
+      doc's own 2026-08-01 Progress Log entry). Since 2 of 3 todos remain open, the doc fails the "zero open todos"
+      archival bar regardless of the P3-idempotency caution alone. No archival ritual run; no referrer repointing needed
+      since nothing moved. Verified via
+      `grep -rl orchestrator_failover_double_dispatch_duplicate_work_2026_07_25 plans/ codex/` — 13 referrer hits, all
+      still pointing at the live `plans/active/issues/` path (no archived copy exists to repoint to).
 - [ ] [INFRA] P0. **Run the 6-step archival ritual on the batch plan itself, then regenerate the inventory** — banner
       `/plans/active/ao_satellite_ao_dispatch_batch4_2026_08_01.md`, move the file to `plans/archive/2026_08/`, fix
       every corpus-wide referrer including this finalize plan's own `related:`/`depends_on:`, then run
@@ -142,3 +151,8 @@ source: >-
   first, as the file-adjacency rule required. `af98fcd` deliberately never touched `server/worker_liveness_watchdog.py`
   (kept the priority-inversion watchdog a standalone module instead), so `comm -12` on the two commits' changed-file
   lists is empty — zero overlap, no collision. No follow-up cleanup needed.
+- **2026-08-01 (todo 4)** — Source doc `orchestrator_failover_double_dispatch_duplicate_work_2026_07_25.md` NOT
+  archived: it still carries 2 open `[BACKEND] P3` todos (the current_task-clearing observability item, and the
+  `/done`-idempotency item file-collision-held against `server/routes/slots_worker.py`), not just the one P3 caution
+  named in this todo's own text. Only the `[BACKEND] P2` item is done. No archival ritual run; referrer grep (13 hits,
+  all still on the live path) confirms nothing needed repointing.
