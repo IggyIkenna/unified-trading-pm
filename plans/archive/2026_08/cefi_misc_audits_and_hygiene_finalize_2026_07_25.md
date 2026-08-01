@@ -68,7 +68,7 @@ drift_direction: advance-code
       CLAUDE.md's plan-archival rule): confirm no Deferred items remain untracked → add the archive banner → run the
       codex-alignment check → grep the corpus for every referrer of `cefi_misc_audits_and_hygiene_2026_07_25` and fix
       each path to point at the archived location → clear `locked_by` (already empty, confirm). DONE —
-      unified-trading-pm@(this commit). Confirmed 0 untracked deferred items (no `## Deferred` section; the one separate
+      unified-trading-pm@889215e0b. Confirmed 0 untracked deferred items (no `## Deferred` section; the one separate
       finding surfaced mid-plan, `bybit_spot_manifest_stray_captures_2026_07_07.md`, was already independently closed
       2026-07-26 per the plan's own text). Codex-alignment check: nothing to update — the plan's own "Codex SSOTs"
       section already states no new durable contract. Moved to `plans/archive/2026_08/` (archival-date folder, per
