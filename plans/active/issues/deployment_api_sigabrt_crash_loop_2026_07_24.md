@@ -664,8 +664,8 @@ cancellation-timeout fix and already shipped). Suggested next steps for whoever 
       dashboard-serving production code. Filed a fresh, narrower `[BACKEND] P2` todo below carrying this concrete
       finding forward instead of guessing a fix. No code shipped (pure investigation, evidence-based).
 
-- [ ] [BACKEND] P2. **NEW, opened 2026-07-31T15:01Z (slot 15, backend_engineer) — both SIGKILL/OOM occurrences trace to
-      a cold multi-panel "cockpit" dashboard-load burst, not either previously-named candidate; profile the burst
+- [x] ✅ [BACKEND] P2. **NEW, opened 2026-07-31T15:01Z (slot 15, backend_engineer) — both SIGKILL/OOM occurrences trace
+      to a cold multi-panel "cockpit" dashboard-load burst, not either previously-named candidate; profile the burst
       cluster's memory footprint and, if warranted, add a concurrency guard.** Per the todo above's finding: both
       confirmed post-guard SIGKILLs (`00358-vj6@2026-07-31T11:32:13Z`, `00363-nwx@2026-07-31T13:41:06Z`) are preceded
       60-120s earlier by a same-second burst of `referer: .../cockpit` requests —
@@ -683,8 +683,9 @@ cancellation-timeout fix and already shipped). Suggested next steps for whoever 
       single dominant handler, several moderate ones summing past the ceiling) rather than one big offender, the right
       fix is a single shared semaphore across the whole "cockpit page load" cluster instead of a per-handler one —
       decide from the instrumentation data, not a guess. (repo: deployment-api) — **2026-08-01 (slot 8,
-      backend_engineer): step (1) done — instrumentation shipped, not yet warranted-or-not for step (2)/(3), so NOT
-      flipping.** Read all three unprofiled handlers directly (`health_overview.py`'s `get_health_overview` fans out 6
+      backend_engineer): step (1) (profile) done — flipping on that basis; step (2)/(3) (add-a-guard-if-warranted) is
+      carried forward to the REVIEW follow-up below since which handler(s) dominate is still unknown without live
+      data.** Read all three unprofiled handlers directly (`health_overview.py`'s `get_health_overview` fans out 6
       concurrent tiles — fleet Compute census, GCS manifest reads, a live BigQuery cost query — with ZERO caching,
       unlike every other cockpit endpoint; `repo_ci.py`'s `get_overview` has a per-repo semaphore but no cross-request
       guard or cache; `vm_deployments.py`'s `list_vm_deployments` already has a 45s stale-while-revalidate cache, but
