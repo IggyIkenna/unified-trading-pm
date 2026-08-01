@@ -10,7 +10,7 @@ summary: >-
   other candidate originally considered for this plan (the ccxt/native adapter audit, the non-Tardis VM sweep, the
   UAC-fallback blast-radius audit, the data-status axis-value-census quickmerge, the UPBIT wiring check) is already
   drafted in cefi_consolidated_native_ao_extract_2026_07_25.md — deliberately NOT duplicated here.
-status: active
+status: complete
 nature: process
 asset_group: [cefi]
 stage: [data]
@@ -23,7 +23,7 @@ related:
     /plans/active/cefi_consolidated_native_ao_extract_2026_07_25.md,
     /plans/active/issues/adapter_findings_gcs_manifest_deployment_api_reconciliation_gap_2026_07_08.md,
     /plans/archive/issues/cefi_layer1_denominator_gaps_2026_07_03.md,
-    /plans/active/cefi_misc_audits_and_hygiene_finalize_2026_07_25.md,
+    /plans/archive/2026_08/cefi_misc_audits_and_hygiene_finalize_2026_07_25.md,
     /plans/active/issues/uac_per_venue_seed_fallback_removal_deferred_2026_07_26.md,
   ]
 created: "2026-07-25"
@@ -52,6 +52,14 @@ drift_direction: advance-code
 ---
 
 # CeFi misc audits + hygiene
+
+> **🟢 ARCHIVED 2026-08-01.** All 3 todos resolved (UAC per-venue seed fallback ruling: KEEP, deferred not declined;
+> reconciliation-gap spot-check: 3 findings PASS/FAIL-verdicted; `issues/cefi_layer1_denominator_gaps_2026_07_03.md`
+> archived). Closed out via the companion `cefi_misc_audits_and_hygiene_finalize_2026_07_25.md`, which reconciled the 3
+> corresponding checkboxes in `cefi_consolidated_closeout_2026_07_18.md` and archives alongside this doc in the same
+> commit. Moved to `/plans/archive/2026_08/cefi_misc_audits_and_hygiene_2026_07_25.md`; corpus referrers updated. No new
+> durable contract from this plan — codex-alignment check: nothing to update (every todo executed an already-decided
+> spec or fed a still-open human decision, per this plan's own "Codex SSOTs" section below).
 
 > **Ungated, independent todos on different files/repos** — the default per `task_template.md` §4, safe to dispatch
 > concurrently. **Why only 3 todos (deliberate, not an oversight).** The original design pass estimated ~8 todos for

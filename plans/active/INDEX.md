@@ -17,11 +17,11 @@
 
 <!-- AUTO-INDEX-START -->
 
-_Auto-generated via `scripts/plans/regenerate_active_plan_index.py`. 240 plans across 10 domains. A plan tagged with
+_Auto-generated via `scripts/plans/regenerate_active_plan_index.py`. 241 plans across 10 domains. A plan tagged with
 multiple `asset_group:` values appears under each. Grep this block for a domain keyword before scanning `plans/active/`
 by hand._
 
-### cefi (35)
+### cefi (34)
 
 - [`ag_closeout_audit_rollout_2026_07_25`](./ag_closeout_audit_rollout_2026_07_25.md) — Autonomous session (/autonomous,
   operator away, 2026-07-25) driving the /ag-closeout-audit skill across the 4 asset groups that haven't had it yet —
@@ -62,12 +62,10 @@ by hand._
   — Consolidates THREE overlapping, previously-separately-dispatched todos in data_completion_cefi_2026_07_15.md (the
   "E4 remaining work = ORPHAN SWEEP + gap-fill" todo / data_completion_cefi-015, its "Orphan sweep + bucket-state
   evidence"…
-- [`cefi_misc_audits_and_hygiene_2026_07_25`](./cefi_misc_audits_and_hygiene_2026_07_25.md) — 3 independent, ungated
-  todos on different files/repos forked from cefi_consolidated_closeout_2026_07_18.md's "Operator dispositions" section
-  (2026-07-25 split): the `[OPERATOR]`-gated UAC per-venue seed fallback removal decision, a bounded…
-- [`cefi_misc_audits_and_hygiene_finalize_2026_07_25`](./cefi_misc_audits_and_hygiene_finalize_2026_07_25.md) — Gated
-  closeout for cefi_misc_audits_and_hygiene_2026_07_25.md — machine-held via depends_on + gate_on_depends: true until
-  all 3 of that plan's todos are done. Reconciles the parent (cefi_consolidated_closeout_2026_07_18.md) checkboxes for…
+- [`cefi_misc_audits_and_hygiene_finalize_2026_07_25`](./cefi_misc_audits_and_hygiene_finalize_2026_07_25.md)
+  **[complete]** — Gated closeout for cefi_misc_audits_and_hygiene_2026_07_25.md — machine-held via depends_on +
+  gate_on_depends: true until all 3 of that plan's todos are done. Reconciles the parent
+  (cefi_consolidated_closeout_2026_07_18.md) checkboxes for…
 - [`cefi_ml_directional_continuous_live_2026_06_20`](./cefi_ml_directional_continuous_live_2026_06_20.md) — "Ship the
   live CeFi ML_DIRECTIONAL_CONTINUOUS archetype across OKX, Binance, and Bybit: live tick to live ML inference to live
   strategy to live execution."
@@ -277,7 +275,7 @@ by hand._
   true until all of that plan's todos are done. Reconciles the source doc's own checkboxes/prose once its AO-dispatched
   todo…
 
-### tradfi (25)
+### tradfi (27)
 
 - [`ag_closeout_audit_rollout_2026_07_25`](./ag_closeout_audit_rollout_2026_07_25.md) — Autonomous session (/autonomous,
   operator away, 2026-07-25) driving the /ag-closeout-audit skill across the 4 asset groups that haven't had it yet —
@@ -363,6 +361,13 @@ by hand._
   — Gated closeout for tradfi_satellite_ao_dispatch_batch5_2026_07_29.md — machine-held via depends_on plus
   gate_on_depends: true until all 15 of that plan's todos are done. Mirrors the batch1/batch2/batch3/batch4-finalize
   pattern: reconcile…
+- [`tradfi_satellite_ao_dispatch_batch6_2026_08_01`](./tradfi_satellite_ao_dispatch_batch6_2026_08_01.md) **[draft]** —
+  Sixth AO-dispatch batch for tradfi, produced by a fresh `/ag-closeout-audit tradfi` pass on 2026-08-01 (autonomous
+  mode, scheduled daily worker). Phase 0 rediscovered the covering set as 13 docs (up from the 11 a stale…
+- [`tradfi_satellite_ao_dispatch_batch6_2026_08_01_finalize`](./tradfi_satellite_ao_dispatch_batch6_2026_08_01_finalize.md)
+  — Gated closeout for tradfi_satellite_ao_dispatch_batch6_2026_08_01.md — machine-held via depends_on plus
+  gate_on_depends: true until all 4 of that plan's todos are done. Mirrors the batch1-5-finalize pattern: reconcile each
+  distinct source…
 - [`tradfi_sp500_ml_and_arb_backtest_readiness_2026_06_20`](./tradfi_sp500_ml_and_arb_backtest_readiness_2026_06_20.md)
   — Run ES feature calculations and ML training smoke test, and complete the full S&P 500 backtest for price-arb and
   prediction strategies.
