@@ -45,6 +45,12 @@ source: ["2026-07-30 operator instruction to delete the stale scratch clone (inf
 resolved_by:
 locked_by:
 depends_on: []
+context_scope:
+  [
+    /codex/05-infrastructure/per-tab-worktrees.md,
+    /cursor-configs/SUB_AGENT_MANDATORY_RULES.md,
+    /plans/epics/infrastructure_master.md,
+  ]
 ---
 
 # Stale agentwork scratch clone — deletion blocked on unproven stash WIP
@@ -115,3 +121,4 @@ so nothing is blocked on this decision; the only remaining cost is 1.2 GB of dis
 - **na-eligibility-audit 2026-07-31**: KEEP-NA, valid (infra tranche, dispatch agt-676f1e) — sole remaining open todo is
   explicitly `[OPERATOR]`-tagged and its own text states the guardrail (`block_destructive_commands.py`) unconditionally
   blocks any agent from running it, no override. Unambiguous human-only action. No other action.
+- **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).

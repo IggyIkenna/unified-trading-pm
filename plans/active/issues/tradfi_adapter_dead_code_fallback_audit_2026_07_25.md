@@ -55,6 +55,12 @@ locked_by:
 locked_since:
 assigned_vm: planning
 resolved_by:
+context_scope:
+  [
+    /codex/06-coding-standards/adapter-dead-code-and-fallback-ban.md,
+    /codex/02-data/tradfi-databento-sourcing-ssot.md,
+    /plans/active/tradfi_consolidated_closeout_2026_07_18.md,
+  ]
 ---
 
 # TradFi adapter audit — dead code, silent fallbacks, duplicate-implementation check
@@ -354,3 +360,7 @@ stale/degraded trading data) — worth tightening but far lower severity than E-
 Once this doc lands, `tradfi_consolidated_native_ao_extract_2026_07_25.md`'s own todo 4 checkbox is flipped by its
 companion finalize plan (`tradfi_consolidated_native_ao_extract_2026_07_25_finalize.md`), not by this doc directly — per
 that plan's own stated reconciliation pattern.
+
+## Progress Log
+
+- **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).

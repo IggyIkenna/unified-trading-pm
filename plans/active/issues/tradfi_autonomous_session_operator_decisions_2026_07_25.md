@@ -36,6 +36,12 @@ locked_by:
 resolved_by:
 drift_direction: none
 depends_on: []
+context_scope:
+  [
+    /plans/epics/tradfi_master.md,
+    /plans/active/tradfi_consolidated_closeout_2026_07_18.md,
+    /plans/active/tradfi_satellite_ao_dispatch_batch2_2026_07_25.md,
+  ]
 ---
 
 # TradFi /autonomous session (2026-07-25) — queued operator decisions
@@ -304,3 +310,4 @@ every day narrows or closes it permanently.
   `tradfi_within_bounds_source_zero_shard_atom_mismatch_2026_07_28` are all extracted verbatim into
   `/plans/active/tradfi_satellite_ao_dispatch_batch5_2026_07_29.md`, which is `assigned_vm: planning` but still
   `status: draft`, so none of that work is dispatched. Answering item 5 (extended to batch5) unblocks all four at once.
+- **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).

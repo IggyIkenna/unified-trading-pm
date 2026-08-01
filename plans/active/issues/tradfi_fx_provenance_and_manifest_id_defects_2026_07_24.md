@@ -54,6 +54,12 @@ locked_by:
 locked_since:
 assigned_vm: planning
 resolved_by:
+context_scope:
+  [
+    /codex/02-data/tradfi-databento-sourcing-ssot.md,
+    /codex/02-data/four-surface-reconciliation-procedure.md,
+    /plans/active/tradfi_consolidated_closeout_2026_07_18.md,
+  ]
 ---
 
 # TradFi — live source-mislabeling + FX manifest instrument_id defects
@@ -332,6 +338,8 @@ fresh `gcs_bucket_soft_delete_retention_seconds()` check, (2) snapshot the manif
 re-stamp script, (4) CAS-apply, (5) verify rows-in==rows-out/0 duplicate row_keys/100% `FX:SPOT_PAIR:` prefix, (6)
 resume the consolidator cron. The todo is already fully dispatchable in its current form — nothing further needs to be
 broken out of it.
+
+- **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).
 
 ## Todos
 

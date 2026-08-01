@@ -34,6 +34,12 @@ source: [sports_predictions_live_mode_and_backtest_execution_orphaned-003]
 resolved_by:
 locked_by:
 depends_on: []
+context_scope:
+  [
+    /plans/active/sports_arb_decay_window_and_alpha_gate_design_2026_07_21.md,
+    /plans/active/sports_odds_feature_naming_canonicalization_2026_07_21.md,
+    /plans/epics/sports_master.md,
+  ]
 ---
 
 # Four incompatible odds-feature naming conventions, zero cross-service enforcement
@@ -151,3 +157,4 @@ should be tracked via the (still all-open) canonicalization plan.
   2026-07-25) already ruled 'STILL OPEN, ACCURATE — no status flip', and the sole remaining checkbox is a status pointer
   at `sports_odds_feature_naming_canonicalization_2026_07_21.md`'s unstarted 3-repo migration rather than independent
   work. Established ruling, not re-derived
+- **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).

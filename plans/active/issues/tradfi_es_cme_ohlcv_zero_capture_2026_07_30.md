@@ -49,6 +49,12 @@ source:
     instruments_tradfi_g1_g5_gate_execution_2026_07_24.md (the P0 'Run the manifest-count check for ES CME ohlcv_1s/1m'
     todo)",
   ]
+context_scope:
+  [
+    /plans/active/instruments_tradfi_g1_g5_gate_execution_2026_07_24.md,
+    /plans/active/tradfi_consolidated_closeout_2026_07_18.md,
+    /codex/02-data/tradfi-databento-sourcing-ssot.md,
+  ]
 ---
 
 # tradfi CME ES futures ohlcv — manifest-verify shows total capture failure, not a proven backfill
@@ -317,3 +323,7 @@ root-cause fix.
 - [ ] [DATA] P3. Now that the fix is proven for ES, determine whether the other "in flight" CME roots
       (CL/GC/HG/NG/NQ/SI) hit the same two infra bugs (both now fixed fleet-wide) or the same blank-instrument_id
       tagging gap (still open) — check before assuming any of them need further work. Repo: instruments-service.
+
+## Progress Log
+
+- **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).

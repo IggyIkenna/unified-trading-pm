@@ -38,6 +38,12 @@ depends_on: []
 # parallel work — sequential=true wires prereqs.completed_tasks in plan_order
 # so the backlog dispatcher cannot fan them out onto the unshipped UTL seam.
 sequential: true
+context_scope:
+  [
+    /plans/active/tradfi_manifest_content_recovery_completion_2026_07_24.md,
+    /codex/02-data/availability-manifest-and-data-status.md,
+    /plans/epics/tradfi_master.md,
+  ]
 ---
 
 ## What I found
@@ -238,3 +244,7 @@ compare case-insensitively in the interim (`migration_pending`).
       time qualifies this CAS re-stamp as reversibility-verified, no `[OPERATOR]` sign-off required. Add
       `continuous_future → FUTURE` to the restamp's canonical map first so its self-verify does not refuse. (repo:
       market-tick-data-service)
+
+## Progress Log
+
+- **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).

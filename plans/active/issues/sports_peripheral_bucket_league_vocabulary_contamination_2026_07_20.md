@@ -33,6 +33,7 @@ priority: P2
 assigned_role: data_engineering
 drift_direction: advance-code
 depends_on: []
+context_scope: [/plans/active/issues/sports_league_id_namespace_migration_2026_07_20.md, /plans/epics/sports_master.md]
 ---
 
 # Sports peripheral buckets — a second, different non-canonical league vocabulary
@@ -89,3 +90,4 @@ Evidence: relocation workflow `subagents/workflows/wf_664f7ed4-df6/journal.jsonl
   untraced, and the single todo bundles the trace with a write-path fix AND a migration of 9,733 historical
   `instruments-store-sports-prd` objects — a GCS data migration is the dispatch atom here, so it needs an
   `[OPERATOR]`/delete-safety gate rather than a bare flip
+- **context-scout 2026-08-01**: populated/refreshed context_scope (2 entries).

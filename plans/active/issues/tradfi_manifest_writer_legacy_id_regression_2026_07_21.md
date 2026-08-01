@@ -32,6 +32,12 @@ source:
   root-cause investigation agent
 locked_by:
 resolved_by:
+context_scope:
+  [
+    /plans/epics/tradfi_master.md,
+    /codex/02-data/availability-manifest-and-data-status.md,
+    /plans/active/tradfi_satellite_ao_dispatch_batch5_2026_07_29.md,
+  ]
 ---
 
 # TradFi manifest writer — live legacy-id regression (not historical debt)
@@ -421,3 +427,4 @@ not a live regression), but real enough to need their own scoped root-cause-and-
   4 (doc-hygiene count refresh) done: confirmed still 9,126 rows, zero growth. Net: 2 of 4 items fully resolved (3, 4),
   2 re-characterized with a properly-scoped new follow-up filed (1, 2) rather than force-fitting a "fix" to a symptom
   that turned out not to be a live code defect.
+- **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).

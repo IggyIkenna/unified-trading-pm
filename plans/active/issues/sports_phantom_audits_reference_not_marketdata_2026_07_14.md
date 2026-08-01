@@ -60,6 +60,12 @@ execution_scope: orchestrator-agent
 assigned_role: infra
 drift_direction: advance-code
 depends_on: []
+context_scope:
+  [
+    /codex/05-infrastructure/manifest-consolidator-ssot.md,
+    /codex/04-architecture/instruments-service-as-ssot-for-mtds.md,
+    /plans/active/sports_consolidated_closeout_2026_07_19.md,
+  ]
 ---
 
 # Sports phantom audit targets the reference manifest, not market-data
@@ -315,3 +321,4 @@ unverified" down to a fully-explained 99.8% (two confirmed tool-limitation class
   this doc was authored: merge into decision 16, don't dispatch as a separate pass. See the amended todo above — do not
   treat the `assigned_vm: planning` reclassification as license to dispatch this checkbox independently of batch7's
   decision-16 investigation.
+- **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).

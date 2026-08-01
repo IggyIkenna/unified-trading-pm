@@ -35,6 +35,12 @@ resolved_by:
 locked_by:
 drift_direction: advance-code
 depends_on: []
+context_scope:
+  [
+    /plans/active/sports_consolidated_closeout_2026_07_19.md,
+    /codex/02-data/external-data-always-available-rule.md,
+    /plans/epics/sports_master.md,
+  ]
 ---
 
 # Sports odds markets/outcomes/settlements/arbitrage_opportunity — live expected-vs-captured gap
@@ -311,3 +317,7 @@ path exists for any of the 12 tuples** — this settles root cause 1 (stale/neve
 honest-coverage denominator, which changes what "100% coverage" reports for sports going forward — an operator-visible
 metric change, not a pure implementation detail. Posted as a `/blocked` question (slot 5, 2026-07-24) requesting
 confirmation to proceed with retirement; todo 3 (CODE) is gated on that answer.
+
+## Progress Log
+
+- **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).

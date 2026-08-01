@@ -46,6 +46,12 @@ source:
 resolved_by:
 locked_by:
 locked_since:
+context_scope:
+  [
+    /plans/archive/issues/ml_service_sports_feature_frame_non_numeric_columns_break_feature_selection_2026_07_26.md,
+    /plans/active/sports_satellite_ao_dispatch_batch5_2026_07_26.md,
+    /plans/epics/sports_master.md,
+  ]
 ---
 
 # 21 of 28 declared multisource-xG columns are dead placeholder schema
@@ -140,3 +146,4 @@ contract.
   `[OPERATOR/DESIGN]` and the doc itself cites the dispatch-scope rule for why: 'how should each of these 21 features
   actually be computed' is a design/domain decision, and it deliberately stops at diagnosis rather than improvising 21
   formulas
+- **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).

@@ -46,6 +46,12 @@ locked_since:
 assigned_vm: planning
 assigned_role: data_engineering
 resolved_by:
+context_scope:
+  [
+    /plans/active/sports_consolidated_native_ao_extract_2026_07_25.md,
+    /plans/active/sports_consolidated_closeout_2026_07_19.md,
+    /plans/epics/sports_master.md,
+  ]
 ---
 
 # sports venue re-stamp — derived-candle shape gap (LADBROKES_UK/SPORT888)
@@ -109,3 +115,7 @@ is needed, which is why this is filed `assigned_vm: planning` rather than a huma
       ADD/REMOVE plan directly from the live index, gated on the GCS-rewrite todo above completing with 0 failures
       first). (repo: market-tick-data-service, `_index/availability_index.parquet`). **Done when**: a fresh census shows
       0 stale rows for the 4 data_types at the old venue names, matching the GCS-side verification above.
+
+## Progress Log
+
+- **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).

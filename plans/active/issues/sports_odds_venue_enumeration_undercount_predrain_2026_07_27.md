@@ -55,6 +55,12 @@ locked_by:
 locked_since:
 assigned_vm: NA
 resolved_by:
+context_scope:
+  [
+    /plans/active/sports_closeout_exchange_fixed_odds_fork_2026_07_25.md,
+    /plans/active/sports_consolidated_closeout_2026_07_19.md,
+    /plans/epics/sports_master.md,
+  ]
 ---
 
 # sports odds venue-enumeration undercount, discovered at pre-drain
@@ -223,26 +229,26 @@ now has a concrete, checkable hypothesis to confirm rather than an open judgment
       `data_type.str.lower()=="trades"`:
 
       ```
-                              rows matching (19 venues, instrument_type in {odds,ODDS}, data_type=trades): 292,117
-                              summed row_count: 51,291,778
-                              capture_status: 100% captured (0 empty_confirmed)
-                              data_type on-disk casing: 100% lowercase "trades" (0 "TRADES")
-                              per-venue breakdown (rows): PADDYPOWER 21879, UNIBET 21722, DRAFTKINGS 20286, SKYBET 19917, SPORT888 18882,
-                                FANDUEL 18025, BETONLINEAG 17806, BETRIVERS 17477, CORAL 17134, WILLIAMHILL 16962, BETVICTOR 16937,
-                                VIRGINBET 15358, LIVESCOREBET 14607, CASUMO 14222, BETSSON 14160, UNIBET_UK 12685, LADBROKES_UK 12164,
-                                BOVADA 1006, BETWAY 864, UNIBET_EU 24
-                              ```
+                                  rows matching (19 venues, instrument_type in {odds,ODDS}, data_type=trades): 292,117
+                                  summed row_count: 51,291,778
+                                  capture_status: 100% captured (0 empty_confirmed)
+                                  data_type on-disk casing: 100% lowercase "trades" (0 "TRADES")
+                                  per-venue breakdown (rows): PADDYPOWER 21879, UNIBET 21722, DRAFTKINGS 20286, SKYBET 19917, SPORT888 18882,
+                                    FANDUEL 18025, BETONLINEAG 17806, BETRIVERS 17477, CORAL 17134, WILLIAMHILL 16962, BETVICTOR 16937,
+                                    VIRGINBET 15358, LIVESCOREBET 14607, CASUMO 14222, BETSSON 14160, UNIBET_UK 12685, LADBROKES_UK 12164,
+                                    BOVADA 1006, BETWAY 864, UNIBET_EU 24
+                                  ```
 
-                              This directly contradicts the 2026-07-28 corpus-only investigation's hypothesis (that the 19 venues' `odds`
-                              footprint is exclusively the MDPS-derived 15m-product family) — every one of the 19 venues has real, substantial,
-                              100%-captured raw sportsbook `data_type=trades` rows under `instrument_type=odds` TODAY, not zero. **Per this
-                              todo's own disposition-B branch: escalating, not closing.** All 19 venues (not a subset) genuinely need a
-                              venue→class mapping added to `sports_closeout_exchange_fixed_odds_fork_2026_07_25.md` before that plan's legacy
-                              `odds` UAC contract retirement can safely proceed — retiring the contract with these 51.3M rows still unmapped
-                              would silently orphan them. **BIG FINDING — operator-notify per the data-correctness hard rule** (this reverses a
-                              prior investigation's conclusion and blocks a legacy-contract retirement in an active plan); flagged in this
-                              session's final report. Follow-up tracked as a fresh todo below (never left as prose per the
-                              todos-not-prose rule). Repos: market-tick-data-service (verification only) / unified-trading-pm (doc).
+                                  This directly contradicts the 2026-07-28 corpus-only investigation's hypothesis (that the 19 venues' `odds`
+                                  footprint is exclusively the MDPS-derived 15m-product family) — every one of the 19 venues has real, substantial,
+                                  100%-captured raw sportsbook `data_type=trades` rows under `instrument_type=odds` TODAY, not zero. **Per this
+                                  todo's own disposition-B branch: escalating, not closing.** All 19 venues (not a subset) genuinely need a
+                                  venue→class mapping added to `sports_closeout_exchange_fixed_odds_fork_2026_07_25.md` before that plan's legacy
+                                  `odds` UAC contract retirement can safely proceed — retiring the contract with these 51.3M rows still unmapped
+                                  would silently orphan them. **BIG FINDING — operator-notify per the data-correctness hard rule** (this reverses a
+                                  prior investigation's conclusion and blocks a legacy-contract retirement in an active plan); flagged in this
+                                  session's final report. Follow-up tracked as a fresh todo below (never left as prose per the
+                                  todos-not-prose rule). Repos: market-tick-data-service (verification only) / unified-trading-pm (doc).
 
 - [ ] [DATA] P0. **Extend `sports_closeout_exchange_fixed_odds_fork_2026_07_25.md`'s venue→class mapping to cover all 19
       previously-"unmapped" venues** (BETONLINEAG, UNIBET, BETRIVERS, WILLIAMHILL, CASUMO, SPORT888, CORAL, PADDYPOWER,
@@ -272,3 +278,4 @@ on this bucket.
   this run's report: 19 venues / 292,117 shards / 51,291,778 rows would be silently orphaned if
   `sports_closeout_exchange_fixed_odds_fork_2026_07_25.md`'s legacy-contract retirement proceeds before this mapping
   lands
+- **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).
