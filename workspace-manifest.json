@@ -247,7 +247,7 @@
           "required": true
         }
       ],
-      "ci_status": "FAILING",
+      "ci_status": "SIT_VALIDATED",
       "coverage_pct": 18,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "unit",
@@ -456,9 +456,9 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "warn_file_count": 22,
-        "coverage_pct": 84.22,
         "qg_red_reason": null,
+        "coverage_pct": null,
+        "warn_file_count": 22,
         "large_file_count": 0
       },
       "cascade_invalidated_by": "unified-trading-library=0.66.0"
@@ -487,7 +487,7 @@
           "required": true
         }
       ],
-      "ci_status": "SIT_VALIDATED",
+      "ci_status": "MAIN_GREEN",
       "coverage_pct": 70,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "integration",
@@ -735,7 +735,7 @@
           "required": true
         }
       ],
-      "ci_status": "MAIN_GREEN",
+      "ci_status": "FAILING",
       "coverage_pct": 53,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "integration",
@@ -765,9 +765,9 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
+        "qg_red_reason": "qg",
+        "coverage_pct": null,
         "warn_file_count": 11,
-        "coverage_pct": 91.15,
-        "qg_red_reason": null,
         "large_file_count": 8
       }
     },
@@ -826,9 +826,9 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "warn_file_count": 7,
-        "coverage_pct": 89.57,
         "qg_red_reason": null,
+        "coverage_pct": null,
+        "warn_file_count": 7,
         "large_file_count": 5
       },
       "cascade_invalidated_by": "unified-trading-library=0.66.0"
@@ -887,9 +887,9 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "warn_file_count": 47,
-        "coverage_pct": 83.74,
         "qg_red_reason": null,
+        "coverage_pct": null,
+        "warn_file_count": 47,
         "large_file_count": 0
       },
       "cascade_invalidated_by": "unified-trading-library=0.66.0"
@@ -1112,8 +1112,8 @@
       "ldr_ci_status": "GREEN",
       "cascade_invalidated_by": "unified-trading-library=0.66.0",
       "codebase_health": {
-        "coverage_pct": 9.54,
         "qg_red_reason": null,
+        "coverage_pct": null,
         "warn_file_count": 0,
         "large_file_count": 0
       }
@@ -1198,7 +1198,7 @@
       "artifact_registry": "asia-northeast1-python.pkg.dev/central-element-323112/unified-libraries/unified-api-contracts",
       "cloud_build_trigger": "unified-api-contracts-build",
       "status": "active",
-      "ci_status": "SIT_VALIDATED",
+      "ci_status": "MAIN_GREEN",
       "coverage_pct": 85,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "unit",
@@ -1222,10 +1222,10 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "large_file_count": 27,
-        "warn_file_count": 34,
         "qg_red_reason": null,
-        "coverage_pct": 96.47
+        "coverage_pct": null,
+        "warn_file_count": 34,
+        "large_file_count": 27
       }
     },
     "unified-trading-library": {
@@ -1411,7 +1411,7 @@
       "arch_tier": "T3",
       "version": "0.1.0",
       "dependencies": [],
-      "ci_status": "FEATURE_GREEN",
+      "ci_status": "SIT_VALIDATED",
       "testing_level": "unit",
       "status": "active",
       "tier": 3,
@@ -1485,9 +1485,9 @@
       "cascade_invalidated_by": "unified-trading-library=0.66.0",
       "codebase_health": {
         "qg_red_reason": null,
-        "large_file_count": 0,
+        "coverage_pct": null,
         "warn_file_count": 0,
-        "coverage_pct": 99.28
+        "large_file_count": 0
       },
       "ldr_ci_status": "GREEN",
       "breaking_scan_dir": "tests"
