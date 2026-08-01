@@ -279,13 +279,26 @@ not duplicated here.
       either a consolidated index exists for this bucket, or a decision is documented that `-test-` buckets are
       intentionally out of consolidator scope (in which case smoke-harness reads against them should set
       `MANIFEST_ALLOW_STALE_FALLBACK=true` or read per-VM shards directly, not fail-closed).
-- [ ] [DATA] P1. **features-service** — investigate why `perp_collapse` retained 0/215 CEFI instruments for
+- [x] ✅ [DATA] P1. **features-service** — investigate why `perp_collapse` retained 0/215 CEFI instruments for
       `technical_indicators` on 2026-07-28 (`dropped ... no-rep=214` — no qualifying representative venue found for
       214/215 bases). Determine whether this is a `perp_collapse` logic regression or a genuine upstream
       representative-venue data gap for that date, then either fix the logic or confirm the date is a legitimate thin
       day. **Done when**: a real CEFI/technical_indicators run for a date with known-good representative-venue data
       either produces real feature rows or a genuinely `FetchEvidence`-backed `empty_confirmed` — not a `record_failed`
-      from an unproven absence.
+      from an unproven absence. — Root-caused to a `unified-trading-library` bug, not a genuine thin day or a
+      `features-service`/`perp_collapse` regression: `unified-trading-library@d120aa54`.
+      `aggregate_cefi_manifest_volume`'s `_base_asset_from_symbol` only trusted the manifest's own `quote_asset` column
+      to strip the quote suffix, but that column is blank for ~100% of captured CEFI PERPETUAL rows across EVERY venue
+      (HYPERLIQUID 42492/42492 blank, ASTER 26757/26757, LIGHTER-ZKSYNC 5176/5176, COINBASE-FUTURES 3222/3222,
+      EXTENDED-STARKNET 2892/2899, BITFINEX-FUTURES 1566/1573, DERIBIT 471/471 — confirmed via a real column-pruned read
+      of the prod cefi manifest, 30-day window ending 2026-07-28), so `venue_volumes` came back as effectively 1
+      observation instead of hundreds, starving `feature_perp_representative` and collapsing `perp_collapse` to
+      near-zero retention for almost every base. Fixed by falling back to parsing BASE-QUOTE directly off the canonical
+      `VENUE:TYPE:SYMBOL@LIN|INV` grammar via `accepted_quotes_for_venue` when `quote_asset` is blank (mirrors
+      `features_service...mvp_universe_filter._extract_base_asset`, which never depended on that column). Verified live
+      (not just unit tests): `venue_volumes` count 1 → 1162 for the 2026-07-28 window, and re-running
+      `filter_instruments_for_family` against the real 2026-07-28 CEFI PERPETUAL instrument universe now retains 86/207
+      with `no-rep=0` (was 0/215 with `no-rep=214`). 2 new regression tests added + full `quality-gates.sh` green.
 - [x] ✅ [SCRIPT] P0. **features-service** — update the 13 stale `_test_bucket()` expected-value literals across
       `tests/{cross_instrument,delta_one,multi_timeframe,onchain,volatility}/unit/test_smoke_matrix.py` to the folded
       `features-{asset_group_lower}-test-{project_id}` shape `e2e-testing@04d261d` shipped. **Done when**:
@@ -339,3 +352,30 @@ not duplicated here.
   `quality-gates.sh` green (`18072 passed, 209 skipped, 0 failed`, sentinel
   `.qg_last_passed_sha=39cc865347b60273ec05bc38c4144526750ee499`). 6 findings total; 2 closed (this one + finding 6), 4
   still open.
+- 2026-08-01 (slot-15, data_engineering, backlog task `features_smoke_matrix_verification_findings-007`): closed finding
+  5 (delta_one CEFI `perp_collapse` 0/215-retained). Root-caused via a real, column-pruned read of the prod
+  `market-data-tick-cefi-prd-central-element-323112` manifest (30-day window ending 2026-07-28): `captured` PERPETUAL
+  rows are 90%+ parseable and mostly `instrument_type=PERPETUAL` as expected, but the manifest's `quote_asset` column —
+  which `unified_trading_library.manifest_writer._volume_aggregation._base_asset_from_symbol` exclusively relied on to
+  strip the quote suffix — is blank for essentially every venue (HYPERLIQUID/ASTER/LIGHTER-ZKSYNC/COINBASE-FUTURES 100%
+  blank; EXTENDED-STARKNET/BITFINEX-FUTURES/DERIBIT 99.6-100% blank), so `aggregate_cefi_manifest_volume` returned only
+  1 `VenueVolumeObservation` instead of hundreds, starving `feature_perp_representative` and collapsing `perp_collapse`
+  for nearly every base — not a `perp_collapse` logic bug and not a genuine thin day; the bug lives entirely upstream in
+  the shared UTL aggregator both `features-service` (this collapse) and MTDS's `cefi_catalog_reader.py` (margin-leg
+  gate) depend on. Fixed `_base_asset_from_symbol` to fall back to parsing BASE-QUOTE directly off the symbol's own
+  canonical grammar (mirroring `mvp_universe_filter._extract_base_asset`, which never needed the column) when
+  `quote_asset` is blank or doesn't match. Verified live before/after: `venue_volumes` 1 → 1162 for the 2026-07-28
+  window; re-running `filter_instruments_for_family` against the real 2026-07-28 CEFI PERPETUAL universe: 0/215
+  (`no-rep=214`) → 86/207 (`no-rep=0`). Added 2 regression tests (`test_blank_quote_asset_falls_back_to_symbol_grammar`,
+  `test_venue_specific_quote_extension_used_in_grammar_fallback`)
+  - updated the existing "skipped not guessed" test's framing to the still-genuine unparseable-symbol case; all 9 tests
+    pass. `unified-trading-library@d120aa54`, full `quality-gates.sh` green (172s), sentinel
+    `.qg_last_passed_sha=d120aa54a7fecd925f04373fcf4863bb8fae6741`, verified landed on `live-defi-rollout` via
+    `git merge-base --is-ancestor`. Did not re-run the real
+    `features_service.delta_one --asset-group CEFI --feature-group technical_indicators --date 2026-07-28` CLI
+    end-to-end (that would additionally write real prod manifest/GCS rows for that historical date) — the fix is
+    verified at the exact layer that was broken (`aggregate_cefi_manifest_volume` →
+    `filter_instruments_for_family`/`perp_collapse`), which is what actually starved the CLI run; a follow-up full-CLI
+    re-run to produce the real feature/manifest row for 2026-07-28 is worth doing but is a separate, larger action
+    (writes to prod) than this todo's own root-cause-and-fix scope. 6 findings total; 3 closed (this one + findings 1,
+    6), 3 still open (2, 3, and the sports-`-test-` consolidator gap).
