@@ -142,12 +142,21 @@ Migrate these ~40 files to import `BASE_URL`/`API` from `E2E_CONFIG` (`tests/e2e
       measured host load 17.71 on a 16-core host (the same pre-existing environment-blocker class Batch 1 and
       `ui_hardcoded_colour_and_localhost_debt_2026_07_21.md` documented), not ECONNREFUSED or wrong-port/cross-slot
       hits. tsc/ESLint/full quality-gates.sh all green (sentinel `bb8f0b84`); quickmerge shipped to `live-defi-rollout`.
-- [ ] [UI] P3. Batch 3 — migrate the 6 "env-var with hardcoded fallback" specs (`permission-catalogue.spec.ts`,
+- [x] ✅ [UI] P3. Batch 3 — migrate the 6 "env-var with hardcoded fallback" specs (`permission-catalogue.spec.ts`,
       `user-management.spec.ts`, `admin-strategy-assignments.spec.ts`, `warmup.setup.ts`,
       `full-site-link-crawler.spec.ts`, `regulatory-onboarding.spec.ts`) so their fallback reads `E2E_CONFIG.baseURL`
       instead of the literal `"http://localhost:3100"` — keep the `process.env.PLAYWRIGHT_BASE_URL`/`BASE_URL` override
       path (a real operator override should still win), just fix what happens when neither is set. (repo:
-      unified-trading-system-ui)
+      unified-trading-system-ui) — unified-trading-system-ui@741d0a6b. All 6 files now
+      `import { E2E_CONFIG } from "./_shared/config"` (`"../_shared/config"` for
+      `tests/e2e/runbooks/regulatory-onboarding.spec.ts`); each fallback changed from the literal
+      `"http://localhost:3100"` to `E2E_CONFIG.baseURL`, with the `process.env.PLAYWRIGHT_BASE_URL`/`BASE_URL` override
+      check kept unchanged (operator override still wins). Manual run
+      (`npx playwright test --project=chromium tests/e2e/permission-catalogue.spec.ts`) on slot 9 confirmed navigation
+      to `http://localhost:3109` (3109 = 3100+9, not the old fixed 3100); the 7 failures were `waitForURL` timeouts
+      under measured host load 11.34 on a 16-core host — the same pre-existing environment-blocker class Batches 1/2
+      documented, not ECONNREFUSED or wrong-port/cross-slot hits. tsc/ESLint/full quality-gates.sh all green (sentinel
+      `741d0a6b`); quickmerge shipped to `live-defi-rollout`.
 
 ## Codex SSOTs
 
