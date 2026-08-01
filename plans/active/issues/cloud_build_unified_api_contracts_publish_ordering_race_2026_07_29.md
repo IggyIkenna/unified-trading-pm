@@ -255,17 +255,23 @@ applied to every repo this grep surfaces, not just instruments-service.
         automation** (propagation script + fleet drift-checker + QG step mirroring the digest-pin precedent) — that is a
         multi-hour build, not a 1-hour P3 doc-decision task, so it's split into its own properly-scoped follow-up below
         rather than crammed into this todo.
-  - [ ] [SCRIPT] P3. Build the retry-wrapper drift-checker automation now that the canonical pattern is documented
-        (`codex/06-coding-standards/dockerfile-standards.md` § "uv pip install Retry Wrapper"): mirror the
-        `BASE_IMAGE_DIGEST` precedent exactly — (a) a PM-level fleet checker script under `scripts/quality_gates/` (e.g.
-        `check_uv_install_retry_wrapper_drift.py`, warn-only post-gate, modeled on `check_base_image_digest_drift.py`)
-        that scans every repo's production Dockerfile(s) for a `RUN --mount=type=secret,id=gar_token` layer whose
-        `uv pip install ... --no-sources` call is NOT wrapped in the documented 3-attempt retry loop, and flags it; (b)
-        a propagation script under `scripts/propagation/` (e.g. `apply-uv-install-retry-wrapper.py`, modeled on
-        `add-dockerfile-digest-arg.py`, idempotent + `--dry-run` + `--repo`) that can auto-apply the wrapper to a repo
-        missing it. Scope explicitly EXCLUDES `market-tick-data-     service` (vendored-local installs) and
-        `unified-trading-system-ui` (no Cloud Build trigger) — same exclusions as documented in the SSOT section. (repo:
-        unified-trading-pm)
+  - [x] ✅ [SCRIPT] P3. **BUILT 2026-08-01 (slot 8, cicd craft dispatch).** Mirrored the `BASE_IMAGE_DIGEST` precedent
+        exactly: (a) `scripts/quality_gates/check_uv_install_retry_wrapper_drift.py` — warn-only fleet checker (modeled
+        on `check_base_image_digest_drift.py`), scans every repo's top-level `Dockerfile` for a
+        `RUN --mount=type=secret,id=gar_token` layer whose `uv pip install ... --no-sources` call is NOT wrapped in the
+        documented retry loop, joining backslash-continuation lines to parse the full `RUN` instruction; wired into
+        `scripts/quality-gates.sh` as a post-gate right after the digest-drift checker, always exit 0. (b)
+        `scripts/propagation/apply-uv-install-retry-wrapper.py` — idempotent propagation script (modeled on
+        `add-dockerfile-digest-arg.py`, `--dry-run` + `--repo`) that surgically wraps ONLY the bare `uv pip install`
+        line in place (preserving every other line — `UV_EXTRA_INDEX_URL`, indentation, per-repo flag order — verbatim),
+        re-run-safe. Scope excludes `market-tick-data-service` (vendored-local installs) and `unified-trading-system-ui`
+        (no Cloud Build trigger), matching the SSOT. **Verified against the REAL fleet**: ran the checker against all 19
+        live sibling-repo Dockerfiles — zero drift (every repo already carries the wrapper from the prior fleet-wide
+        rollout todo above) — then proved detect→fix→re-scan-clean end-to-end against a synthetic un-wrapped fixture. 8
+        unit tests per script (`tests/unit/test_check_uv_install_retry_wrapper_drift.py`,
+        `tests/unit/test_apply_uv_install_retry_wrapper.py`) cover positive/negative detection, idempotency, indent/flag
+        preservation, exempt-repo skipping, and `main()`'s dry-run/write/`--repo` paths. Shipped via the normal
+        QG→quickmerge flow. (repo: unified-trading-pm)
 - [x] ✅ [SCRIPT] P3. **FIXED 2026-07-30 (slot 1, `/autonomous` dispatch)** —
       `unified-trading-pm@<pending-sha, see     Progress Log>`. Added `active_trigger_repos()` to
       `stale_build_monitor.py` (one `gcloud builds triggers list` call, cached across the run) and wired it into

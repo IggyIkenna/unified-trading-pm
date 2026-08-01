@@ -1031,3 +1031,16 @@ if [ -f "$DIGEST_DRIFT_CHECKER" ] && [ -n "${WORKSPACE_ROOT:-}" ]; then
     python3 "$DIGEST_DRIFT_CHECKER" --workspace-root "$WORKSPACE_ROOT" \
         || { echo "⚠ Digest drift checker errored (non-blocking)" >&2; }
 fi
+
+# ── Post-gates: uv pip install retry-wrapper drift detector (warn-only — non-blocking) ──
+# Scans every service Dockerfile's RUN --mount=type=secret,id=gar_token layer for the
+# documented 3-attempt retry loop around `uv pip install ... --no-sources` and warns if a
+# repo has silently dropped it (re-exposing the transient GAR publish-ordering race the
+# wrapper exists to absorb). Mirrors the base-image digest-drift detector above.
+# SSOT: codex/06-coding-standards/dockerfile-standards.md § "uv pip install Retry Wrapper"
+UV_RETRY_DRIFT_CHECKER="${REPO_ROOT}/scripts/quality_gates/check_uv_install_retry_wrapper_drift.py"
+if [ -f "$UV_RETRY_DRIFT_CHECKER" ] && [ -n "${WORKSPACE_ROOT:-}" ]; then
+    echo "Running uv pip install retry-wrapper drift detector (warn-only)..."
+    python3 "$UV_RETRY_DRIFT_CHECKER" --workspace-root "$WORKSPACE_ROOT" \
+        || { echo "⚠ uv install retry-wrapper drift checker errored (non-blocking)" >&2; }
+fi
