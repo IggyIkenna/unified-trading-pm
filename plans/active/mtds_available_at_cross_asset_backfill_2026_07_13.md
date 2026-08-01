@@ -471,4 +471,45 @@ chunks (a handful of transient per-object `ConnectionResetError`/timeout warning
 as failures). **Not yet done**: apply not finished, force-consolidate not run, fill-rate/guardrail/row-count not
 re-verified, cron not resumed. **Both `-001` and `-006` checkboxes stay unflipped until all of that completes** — do not
 mistake this entry for completion. Cron confirmed still `PAUSED` as of dispatch time; snapshot from 07-29 still the
-valid rollback point (untouched).
+
+### 2026-08-01 — #9 (slot-4, data_engineering) — apply from #8 actually COMPLETED but was WRONG: instrument_type bug found + fixed; re-running corrected
+
+Fresh session, dispatched `-006` again (`already_in_progress: true`, `dispatch_reason: resume`). The #8 apply process
+(chunked, background) was no longer running (`ps aux` clean) — but GCS evidence (`_index/per_vm/` fragment listing: 18
+fragments from the first invocation's PID + 26 chunk fragments + 1 final CF-11 reemit fragment from the recovery
+invocation's PID, spanning the full range, last write 11:48 UTC) showed it had actually run to completion before the
+session ended, not died mid-chunk as #8's checkpoint feared.
+
+**Force-consolidated** (`manifest_consolidator --bucket market-data-tick-pred-prd-central-element-323112 --force`):
+`success=True`, `rows_out=1,952,699` (canon was `1,949,995` pre-merge — no row loss), no `COLUMN FILL REGRESSION`
+critical log line (guardrail clean). **But the fill-rate audit revealed the apply did NOT actually work**: overall
+`available_at` fill rate on captured rows was only **20.08%** (not the ~100% expected), and diagnosis showed **every one
+of 62 historical months read EXACTLY 50.0% filled** — the signature of a systematic 1-old-unfilled + 1-new-filled row
+DUPLICATE per real cell, not a partial backfill.
+
+**Root cause**: `market_tick_data_service/scripts/_rebuild_prediction_emit.py:43` hardcoded
+`BUNDLED_INSTRUMENT_TYPE = "prediction"` (stale, lowercase), while the live writer
+(`engine/orchestrator/manifest_finalize.py`'s `_finalize_prediction_bundles`) stamps the UAC canonical
+`InstrumentType.PREDICTION_MARKET.value` (`"PREDICTION_MARKET"`) on the SAME shard atom — fixed there at
+`market-tick-data-service@1ec415f8` (2026-07-19) for this EXACT failure mode ("a --force rebuild ... resurrected the
+migration's removed stragglers"), but the rebuild script was never updated to match. Since `instrument_type` is a
+manifest-consolidator dedup-key column, every backfilled row landed on a NEW dedup key instead of updating the existing
+captured row — duplicating (~2,704 net-new rows after one consolidation) rather than backfilling, and leaving the real
+historical rows still blank. Full evidence + row-level diagnosis in
+`plans/active/issues/mtds_prediction_rebuild_instrument_type_mismatch_2026_08_01.md`.
+
+**Fixed**: `market-tick-data-service@b8a8fa7a` — threads `InstrumentType.PREDICTION_MARKET.value` instead of the local
+literal, + a regression test pinning the value. `quality-gates.sh` run before shipping.
+
+**Also found**: an EXISTING, already-built sanctioned tool for cleaning up duplicate/stale-key rows,
+`scripts/canonicalize_prediction_manifest_2026_07_18.py` (`--remove-stragglers`, in-place CAS REPLACE, snapshot-first,
+STOP-ON-SURPRISE captured-cell guard) — its own docstring documented this SAME writer-root gap as "FINDING 2" back on
+2026-07-18, one day before the live-writer half was fixed. Its `--apply` path is explicitly HELD pending operator
+authorization ("do NOT self-execute") — did NOT run it. Filed as todo 2 in the issue doc above for operator review now
+that the writer-root fix (its own checklist step 0) is fully landed at both points.
+
+**Not yet done**: the corrected script's apply re-run (full range `2021-06-30..2026-07-31`), force-consolidate,
+fill-rate/guardrail/row-count re-verification, cron resume. **Both `-001` and `-006` stay unflipped** — the
+duplicate-row cleanup (issue-doc todo 2) is explicitly OUT of this plan's scope (operator-gated, separate doc) and does
+not block `-001`/`-006`, which only need the corrected backfill to actually fill history's `available_at`. Cron
+confirmed still `PAUSED`; snapshot from 07-29 still the valid rollback point (untouched).
