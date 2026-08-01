@@ -218,10 +218,19 @@ not duplicated here.
 
 ## Recommended decision
 
-- [ ] [SCRIPT] P0. **features-service** — root-cause + fix the `multi_timeframe` CLI's `argparse` duplicate
+- [x] ✅ [SCRIPT] P0. **features-service** — root-cause + fix the `multi_timeframe` CLI's `argparse` duplicate
       `--start-date` registration (confirmed: crashes even `--help`, not just a specific flag combination). Add a
       regression test that imports the CLI's `build_parser()` (or equivalent) and asserts it constructs without raising.
-      **Done when**: `python -m features_service.multi_timeframe --help` exits 0 and prints usage.
+      **Done when**: `python -m features_service.multi_timeframe --help` exits 0 and prints usage. — Root cause:
+      `ServiceBootstrap` defaults `add_date_args=True`, registering `--start-date`/`--end-date` via
+      `ServiceCLI._add_date_window_args()` inside `build_parser()` BEFORE it invokes `extra_args_fn`; multi_timeframe's
+      own `_extra_args` re-registered both flags, so `argparse.ArgumentError` fired during parser construction itself.
+      Removed the duplicate registrations (kept the family's unique `--date`); added `test_build_parser_does_not_raise`
+      (builds the exact `ServiceCLI` `ServiceBootstrap` constructs and asserts parser construction succeeds — the
+      pre-existing `test_main_help_exits` didn't catch this because `ServiceBootstrap`'s generic exception handler also
+      raises `SystemExit(1)` on any uncaught exception, which a bare `pytest.raises(SystemExit)` can't distinguish from
+      a genuine `--help` exit). Verified live: `python -m features_service.multi_timeframe --help` exits 0.
+      `features-service@39cc8653` — full `quality-gates.sh` green (`18072 passed, 209 skipped, 0 failed`).
 - [ ] [SCRIPT] P2. **e2e-testing** — fix calendar's `smoke_matrix.py` verifier: change `SMOKE_FEATURE_GROUP` to a real
       calendar feature group (e.g. `economic_events`) and correct `_verify_gcs_parquet`'s prefix to
       `calendar/{feature_group}/by_date/day={date}/` (no `features/` root, no `feature_group=` directory segment).
@@ -316,3 +325,17 @@ not duplicated here.
   (P2, features-sports-test bucket, no consolidated index) untouched — separate root cause (consolidator scheduler never
   wired to `-test-` buckets by design, per `codex/05-infrastructure/manifest-consolidator-ssot.md` § "Coverage
   exemptions"), out of this todo's scope.
+- 2026-08-01 (slot-12, data_engineering, backlog task `features_smoke_matrix_verification_findings-001`): closed finding
+  1 (multi_timeframe CLI argparse duplicate). Root cause: `ServiceBootstrap` defaults `add_date_args=True`, which
+  registers `--start-date`/`--end-date` inside `build_parser()` BEFORE `extra_args_fn` runs; multi_timeframe's own
+  `_extra_args` re-registered both flags, causing `argparse.ArgumentError` at parser-construction time (crashes even
+  `--help`). Fix: removed the duplicate registrations from `_extra_args` (kept the family's unique `--date`). Added
+  `test_build_parser_does_not_raise`, which builds the exact `ServiceCLI` `ServiceBootstrap` constructs and asserts
+  parser construction succeeds — confirmed the pre-existing `test_main_help_exits` did NOT catch this bug (verified
+  pre-fix: `ArgumentError` gets caught by `ServiceBootstrap`'s generic exception handler and re-raised as `sys.exit(1)`,
+  still a `SystemExit`, indistinguishable from a genuine `--help` exit under a bare `pytest.raises(SystemExit)`).
+  Verified live pre/post-fix via direct CLI invocation (`python -m features_service.multi_timeframe --help`: pre-fix
+  `ArgumentError` traceback + exit 1; post-fix usage printed + exit 0). `features-service@39cc8653`, full
+  `quality-gates.sh` green (`18072 passed, 209 skipped, 0 failed`, sentinel
+  `.qg_last_passed_sha=39cc865347b60273ec05bc38c4144526750ee499`). 6 findings total; 2 closed (this one + finding 6), 4
+  still open.
