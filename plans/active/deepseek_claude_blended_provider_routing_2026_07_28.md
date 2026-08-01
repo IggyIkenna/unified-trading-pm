@@ -483,6 +483,8 @@ this plan. `/autonomous` dispatch from earlier this session complete: all 4 loca
 orchestrator-VM access, elapsed real-world time, or genuine Claude-account headroom respectively — none are buildable or
 verifiable from a dev checkout. See each todo's own "Done when" below for what unblocks it.
 
+- **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).
+
 ## Recommended rollout sequence (2026-07-29)
 
 - **2026-07-29 — rollout sequence steps 1-5 executed, code SHIPPED**:

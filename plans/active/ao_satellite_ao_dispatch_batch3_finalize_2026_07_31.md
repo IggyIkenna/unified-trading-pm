@@ -41,6 +41,7 @@ gate_on_depends: true
 sequential: true
 context_scope:
   [
+    /plans/active/ao_satellite_ao_dispatch_batch3_2026_07_31.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
     /codex/11-project-management/cross-reference-path-convention.md,
     /codex/12-agent-workflow/commit-push-flip-rule.md,
@@ -120,3 +121,5 @@ source: >-
   dispatch agt-23935a). `sequential: true` is deliberate here: the five todos are a genuine chain (verify → reconcile →
   re-check gates → archive sources → archive self) and several touch the same files. Ships `status: active` per the
   skill's 2026-07-30 finding (`gate_on_depends` already holds every task; no separate draft-gate needed).
+- **context-scout 2026-08-01**: verified the 3 pre-existing context_scope entries still resolve and are relevant (kept
+  in place), added the gated parent batch plan as a 4th entry — refreshed (4 entries).

@@ -44,6 +44,13 @@ source: >-
   finalize doc closes the finalize-plan-coverage gate the reclassification itself triggered.
 assigned_role: data_engineering
 drift_direction: advance-code
+context_scope:
+  [
+    /plans/active/cefi_deribit_binance_futures_bundle_verification_2026_06_20.md,
+    /plans/active/issues/deribit_options_chain_af_g4_blocker_2026_07_03.md,
+    /plans/active/cefi_track2_coverage_backfill_checkpoints_finalize_2026_07_25.md,
+    /plans/active/issues/cefi_track2_backfill_vm_preempted_no_recovery_2026_07_30.md,
+  ]
 ---
 
 # cefi_deribit_binance_futures_bundle_verification_2026_06_20 — finalize
@@ -78,3 +85,7 @@ drift_direction: advance-code
       residual closes. **Re-check trigger tracked as a real todo** (not left as prose): added todo 4 to
       `cefi_track2_coverage_backfill_checkpoints_finalize_2026_07_25.md` (machine-gated on Track-2's own 5 todos being
       `done`) to re-verify the DERIBIT gap and complete this deferred close-out once Track-2 genuinely finishes.
+
+## Progress Log
+
+- **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).

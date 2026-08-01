@@ -51,6 +51,11 @@ source: >-
   (`plans/active/issues/plan_line_cap_remediation_2026_07_23.md`, row 18 / bucket (d)). The parent plan's durable
   protocol (CF-15…CF-21) had already migrated to codex; these were the last genuinely-open items in its defi-venue
   thread and are tracked here going forward.
+context_scope:
+  [
+    /plans/archive/migration_verification_orphan_safety_2026_06_10.md,
+    /plans/active/defi_satellite_ao_dispatch_batch2_2026_07_26.md,
+  ]
 ---
 
 # DeFi venue hygiene + lst-rates aggregation residual
@@ -116,3 +121,4 @@ source: >-
   further work done yet beyond what the parent's archived Progress Log already recorded.
 - 2026-07-26 (slot-2) — both todos closed per the per-todo detail above. `deployment-api@f919c87` (venue-prefix-
   exclusion fix). `SUSHISWAP` classic-vs-V3 remains the one genuinely open item in this doc.
+- **context-scout 2026-08-01**: populated/refreshed context_scope (2 entries).

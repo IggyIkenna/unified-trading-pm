@@ -42,6 +42,13 @@ source: >-
   line-cap remediation in `plans/active/issues/plan_line_cap_remediation_2026_07_23.md` — that plan was 65/67 todos done
   (97%) and locked (`locked_by: live-defi-rollout`); the operator approved archiving it outright once its 2
   genuinely-open residual items were forked into a small successor plan rather than attempting a real split.
+context_scope:
+  [
+    /codex/09-strategy/architecture-v2/capability-wizard.md,
+    /plans/archive/2026_07/capability_wizard_and_manifest_2026_06_11.md,
+    /plans/active/issues/capability_wizard_gap_discovery_2026_06_11.md,
+    /plans/active/issues/capability_wizard_analysis_findings_2026_06_11.md,
+  ]
 ---
 
 # Capability wizard — client-lite successor + CI-runner regen follow-up
@@ -130,6 +137,7 @@ precondition named by the parent plan.
   parent plan archived to `plans/archive/2026_07/capability_wizard_and_manifest_2026_06_11.md` in the same action
   (`superseded_by: capability_wizard_client_lite_and_ci_regen_followup_2026_07_24`). No new work done yet — both items
   carried forward verbatim, unchanged in status (open/blocked, open/deferred).
+- **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).
 
 ## na-eligibility-audit verdict
 

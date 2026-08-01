@@ -43,6 +43,14 @@ source: >-
 assigned_role: data_engineering
 sequential: true
 drift_direction: advance-code
+context_scope:
+  [
+    /plans/active/cross_cutting_satellite_ao_dispatch_batch1_2026_07_26.md,
+    /plans/active/cross_cutting_satellite_ao_dispatch_batch1b_2026_07_26.md,
+    /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
+    /cursor-configs/skills/ag-closeout-audit/SKILL.md,
+    /plans/active/issues/gate_on_depends_wiring_gap_defi_dex_pool_finalize_2026_07_25.md,
+  ]
 ---
 
 # Cross-cutting satellite AO batch 1 — finalize
@@ -149,3 +157,4 @@ drift_direction: advance-code
     done). This todo's own checkbox stays `[ ]` — flipping it now would be a false-completion claim (workspace HARD
     RULE: plans run to actual completion). **Re-dispatch this todo once batch1 + batch1b actually reach 0 open todos**
     to catch the remaining ~22 source-doc reconciliations in one pass.
+- **context-scout 2026-08-01**: populated/refreshed context_scope (5 entries).

@@ -31,6 +31,14 @@ superseded_by:
 depends_on:
 source: [data_completion_to_100_all_ag_2026_06_21 (M-1) — split 2026-07-15, plan-reconcile §8 operator ruling A]
 drift_direction: advance-code
+context_scope:
+  [
+    /plans/active/data_completion_to_100_all_ag_2026_06_21.md,
+    /codex/02-data/availability-manifest-and-data-status.md,
+    /codex/02-data/per-asset-group-bucket-layouts.md,
+    /codex/02-data/pipeline-mode-partition.md,
+    market-tick-data-service/market_tick_data_service/scripts/rebuild_prediction_manifest.py,
+  ]
 ---
 
 # Data completion to 100% — Prediction
@@ -411,3 +419,4 @@ range never overlaps a still-in-flight per-market-only day).
   batch6 2026-07-29). Not re-litigated. Two exact-duplicate checkboxes introduced by the 2026-07-13 MTDS-consolidation
   migration were closed with evidence (the second `grain_for_instrument_type` copy and the second `FLAG 3`
   deployment-api copy) — 23 open todos -> 21, no tracked work dropped.
+- **context-scout 2026-08-01**: populated/refreshed context_scope (5 entries).

@@ -43,6 +43,14 @@ source: >-
 assigned_role: cicd
 sequential: true
 drift_direction: advance-code
+context_scope:
+  [
+    /plans/active/ci_satellite_ao_dispatch_batch1_2026_07_26.md,
+    /codex/06-coding-standards/quality-gates.md,
+    /codex/08-workflows/ci-cd-flow.md,
+    /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
+    /plans/active/task_template.md,
+  ]
 ---
 
 # CI satellite AO batch 1 — finalize
@@ -114,3 +122,4 @@ drift_direction: advance-code
   found PM `scripts/quality-gates.sh` claimed by three separate new checkers — the documented remedy for
   partial-parallelism (parallel work in plan A, the shared gated step in plan B via `depends_on` +
   `gate_on_depends: true`).
+- **context-scout 2026-08-01**: populated/refreshed context_scope (5 entries).

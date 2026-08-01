@@ -43,6 +43,13 @@ source: >-
 assigned_role: data_engineering
 sequential: true
 drift_direction: advance-code
+context_scope:
+  [
+    /plans/active/cefi_satellite_ao_dispatch_batch4_2026_07_31.md,
+    /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
+    /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
+    /cursor-configs/skills/ag-closeout-audit/SKILL.md,
+  ]
 ---
 
 # CeFi satellite AO batch 4 — finalize
@@ -102,3 +109,7 @@ drift_direction: advance-code
   executes.
 - `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` § 3a — the reversibility bar todo 2(c) checks for before
   any `onchain_venues_mislabeled_batch_tardis_lane` re-partition candidate can move to a future batch.
+
+## Progress Log
+
+- **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).

@@ -39,6 +39,7 @@ gate_on_depends: true
 sequential: true
 context_scope:
   [
+    /plans/active/ao_satellite_ao_dispatch_batch4_2026_08_01.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
     /codex/11-project-management/cross-reference-path-convention.md,
     /codex/12-agent-workflow/commit-push-flip-rule.md,
@@ -102,3 +103,5 @@ source: >-
   no separate "re-check Deferred gates" todo is needed since this batch's own Deferred-derivation chain ends here
   (batch4 was itself already a Deferred-gate re-check of batch1; it named no further Deferred items of its own to
   re-check).
+- **context-scout 2026-08-01**: verified the 3 pre-existing context_scope entries still resolve and are relevant (kept
+  in place), added the gated parent batch plan as a 4th entry — refreshed (4 entries).

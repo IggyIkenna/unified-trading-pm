@@ -45,6 +45,13 @@ source: >-
   same action.
 assigned_role: backend_engineer
 drift_direction: advance-code
+context_scope:
+  [
+    /plans/active/citadel_paper_batch_live_reconciliation_2026_06_19.md,
+    /plans/archive/issues/plan_line_cap_remediation_2026_07_23.md,
+    /plans/epics/strategy_master.md,
+    e2e-testing/scripts/paper_trading/,
+  ]
 ---
 
 # Crypto Alpha Research — Book Construction, Signal Research & Paper-Trading POC
@@ -588,3 +595,4 @@ Operator gave indicative Binance RFQ widths vs screen costs (BTC/ETH ~0.5-2bp, S
 - **na-eligibility-audit 2026-07-30** (tranche=cefi, autonomous): KEEP-NA, valid - 24 open items are almost entirely
   `[RESEARCH]` strategy work (execution sweeps, allocator design, leg re-specs, universe construction); the archetypal
   judgment corpus NA exists for.
+- **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).

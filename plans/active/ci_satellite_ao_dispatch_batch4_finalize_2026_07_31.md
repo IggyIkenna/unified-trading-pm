@@ -47,6 +47,15 @@ source: >-
 assigned_role: cicd
 sequential: true
 drift_direction: advance-code
+context_scope:
+  [
+    /plans/active/ci_satellite_ao_dispatch_batch4_2026_07_31.md,
+    /codex/06-coding-standards/quality-gates.md,
+    /codex/08-workflows/ci-cd-flow.md,
+    /codex/08-workflows/deployment-flow.md,
+    /codex/04-architecture/ci-alerting.md,
+    /plans/active/task_template.md,
+  ]
 ---
 
 # CI satellite AO batch 4 — finalize
@@ -117,3 +126,4 @@ drift_direction: advance-code
   (autonomous mode, `ag_closeout_auditor` scheduled worker, slot 12). Authored `status: active` per the skill's
   2026-07-30 no-double-gate finding — `gate_on_depends: true` alone correctly holds every todo above until batch4's own
   todos are done; batch4 itself remains `status: draft` pending operator approval.
+- **context-scout 2026-08-01**: populated/refreshed context_scope (6 entries).

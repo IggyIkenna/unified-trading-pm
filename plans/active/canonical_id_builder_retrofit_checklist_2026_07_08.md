@@ -51,6 +51,14 @@ source:
   instrument_id_format_canonicalization_2026_07_08.md. Filed per that task's instruction to track the FULL remaining
   retrofit as its own plan rather than attempt it all in one pass — the core builder + a couple of proof retrofits +
   this checklist was the scoped deliverable for that round."
+context_scope:
+  [
+    /plans/active/issues/instrument_id_format_canonicalization_2026_07_08.md,
+    /codex/02-data/cross-asset-canonical-target-ssot.md,
+    /plans/active/canonical_id_p1_tradfi_combo_leg_canonicalization_2026_07_08.md,
+    /plans/audit/results/canonical_instrument_id_audit_2026_07_08.md,
+    unified-api-contracts/unified_api_contracts/internal/reference/canonical_id_builder.py,
+  ]
 ---
 
 > **What already shipped (2026-07-08, this session)** — read before starting any todo below, it's the infrastructure
@@ -257,3 +265,4 @@ source:
   guard + no per-market try/except) — fixed this pass, `instruments-service`; (2) a real, separate, NOT-fixed
   catalog-regeneration gap (1,330/2,753 real rows still stale) — added as a new todo above, correctly scoped out of this
   pass (needs its own migration script, not a code change).
+- **context-scout 2026-08-01**: populated/refreshed context_scope (5 entries).

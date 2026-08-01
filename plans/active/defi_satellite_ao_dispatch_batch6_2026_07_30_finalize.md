@@ -43,6 +43,13 @@ source: >-
 assigned_role: data_engineering
 sequential: true
 drift_direction: advance-code
+context_scope:
+  [
+    /plans/active/defi_satellite_ao_dispatch_batch6_2026_07_30.md,
+    /plans/active/defi_consolidated_closeout_2026_07_18.md,
+    /plans/active/defi_satellite_ao_dispatch_batch5_2026_07_27_finalize.md,
+    /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
+  ]
 ---
 
 # DeFi satellite AO batch 6 — finalize
@@ -81,3 +88,4 @@ drift_direction: advance-code
 - 2026-07-30 (slot-2, scheduled `ag_closeout_auditor`): Drafted alongside batch6, both `status: draft`, gated on
   batch6's 20 todos via `depends_on` + `gate_on_depends: true`. No work started — waiting on operator approval of batch6
   first.
+- **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).

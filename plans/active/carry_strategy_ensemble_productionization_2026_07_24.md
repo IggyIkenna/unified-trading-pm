@@ -39,6 +39,14 @@ source: >-
   Forked from carry_staked_basis_funding_scan_experiment_2026_06_16.md per the line-cap remediation triage
   (plans/active/issues/plan_line_cap_remediation_2026_07_23.md), operator-approved 3-way split of the locked plan.
 drift_direction: advance-code
+context_scope:
+  [
+    /plans/active/carry_staked_basis_funding_scan_experiment_2026_06_16.md,
+    /plans/active/cross_venue_funding_reversion_research_2026_07_24.md,
+    /plans/epics/strategy_master.md,
+    strategy-service/strategy_service/engine/strategies/v2/carry_and_yield,
+    e2e-testing/scripts/defi/funding_ensemble_engine.py,
+  ]
 ---
 
 # carry_staked_basis — ensemble orchestrator engine + strategy-service productionization
@@ -309,3 +317,4 @@ vm_zombie_watchdog ruff cleanup. No DEFERRED-without-successor; no broken state.
 - **na-eligibility-audit 2026-07-30**: KEEP-NA, valid — remaining todos are strategy/UI design judgment (rank-allocator
   increment, archetype surfacing, asset-class filter). NOTE the `[HISTORICAL] P3` todo is self-labelled 'SUPERSEDED —
   DONE above' (UAC@487b9a9 + strategy-service@6b285fad) and is a stale open checkbox.
+- **context-scout 2026-08-01**: populated/refreshed context_scope (5 entries).

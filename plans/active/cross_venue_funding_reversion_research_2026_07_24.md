@@ -39,6 +39,13 @@ source: >-
   Forked from carry_staked_basis_funding_scan_experiment_2026_06_16.md per the line-cap remediation triage
   (plans/active/issues/plan_line_cap_remediation_2026_07_23.md), operator-approved 3-way split of the locked plan.
 drift_direction: advance-code
+context_scope:
+  [
+    /plans/active/carry_staked_basis_funding_scan_experiment_2026_06_16.md,
+    /plans/active/carry_strategy_ensemble_productionization_2026_07_24.md,
+    /codex/04-architecture/custody-providers.md,
+    e2e-testing/scripts/defi/,
+  ]
 ---
 
 # carry_staked_basis — cross-venue funding-reversion research (Pass-B reconciliation + deployable book)
@@ -503,3 +510,4 @@ overlays), `_multivenue_capital.py` (capital/leverage/treasury), `_paper_trade.p
 
 - **na-eligibility-audit 2026-07-30**: KEEP-NA, valid — every open todo is strategy/ML research judgment (GBM squeeze
   models, archetype shelving decisions, structure-5 candidacy, prime-broker research).
+- **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).

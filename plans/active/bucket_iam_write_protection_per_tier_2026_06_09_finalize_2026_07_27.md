@@ -44,6 +44,12 @@ source: >-
   closes the finalize-plan-coverage gate the reclassification itself triggered.
 assigned_role: infra
 drift_direction: advance-code
+context_scope:
+  [
+    /plans/active/bucket_iam_write_protection_per_tier_2026_06_09.md,
+    /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
+    /cursor-configs/skills/ag-closeout-audit/SKILL.md,
+  ]
 ---
 
 # bucket_iam_write_protection_per_tier_2026_06_09 — finalize
@@ -60,3 +66,7 @@ drift_direction: advance-code
       fully closed. If real work remains after the AO-dispatched todos land, leave
       `bucket_iam_write_protection_per_tier_2026_06_09.md` active (do not force-archive) and note what's still open here
       instead.
+
+## Progress Log
+
+- **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).

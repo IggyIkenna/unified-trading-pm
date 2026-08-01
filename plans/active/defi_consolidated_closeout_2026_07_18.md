@@ -133,6 +133,15 @@ source:
   canonical target (paths, instrument uids) from buckets+UAC+code+plans, defines the empty_confirmed vs out-of-scope
   basis, and reconciles SPOT_ASSET vs SPOT_PAIR vs POOL — reconciled in code AND backfilled data AND forward data.
   Authored + ground-truth-verified from a 6-agent audit (slot-4, 2026-07-18) with live GCS reads + operator rulings.
+context_scope:
+  [
+    /codex/02-data/defi-canonical-naming-ssot.md,
+    /codex/02-data/cross-asset-canonical-target-ssot.md,
+    /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
+    /plans/active/defi_track01_per_instrument_and_canon_id_2026_07_24.md,
+    /plans/active/defi_track5_coverage_mvp_backfill_2026_07_24.md,
+    /plans/archive/2026_07/defi_consolidated_closeout_aggregated_sources_2026_07_24.md,
+  ]
 ---
 
 # DeFi consolidated close-out — one pass to canonical, honestly-covered, forward-clean
@@ -822,3 +831,5 @@ live 2026-07-26 by `/plan-reconcile defi`: the real figure is **2** — `…aggr
   18)"_. Whoever wrote this most likely intended it for this Progress Log and it landed in the frontmatter by accident
   during an editing session; if any of it describes work not otherwise reflected above, re-verify and fold it into the
   relevant Track section.
+
+- **context-scout 2026-08-01**: populated/refreshed context_scope (6 entries).

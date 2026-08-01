@@ -49,6 +49,14 @@ source: >-
   Track as its own child first, being the most thematically separable." Resolved as
   autonomous_session_operator_decisions_2026_07_25.md entry #19, option A.
 drift_direction: advance-code
+context_scope:
+  [
+    /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
+    /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
+    /plans/active/citadel_paper_batch_live_reconciliation_2026_06_19.md,
+    /plans/active/v2_engine_venue_buildout_2026_06_15.md,
+    /plans/active/carry_staked_basis_funding_scan_experiment_2026_06_16.md,
+  ]
 ---
 
 # Cross-cutting strategy/execution determinism + capability-registry — Track 24 extraction
@@ -97,3 +105,4 @@ across the full taxonomy; v2_engine_venue_buildout's per-venue items close.
 - **na-eligibility-audit 2026-07-30**: KEEP-NA, valid — the sole todo's second half is authoring a new AO dispatch batch
   — the ask-before-creating HARD RULE makes plan destination an operator call; the doc itself frames its content as
   'design/research judgment, not a checkable fact'.
+- **context-scout 2026-08-01**: populated/refreshed context_scope (5 entries).

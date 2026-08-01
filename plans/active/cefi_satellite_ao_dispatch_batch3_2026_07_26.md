@@ -50,6 +50,15 @@ source: >-
 assigned_role: data_engineering
 sequential: false
 drift_direction: advance-code
+context_scope:
+  [
+    /plans/active/cefi_consolidated_closeout_2026_07_18.md,
+    /plans/active/cefi_consolidated_closeout_aggregated_sources_2026_07_24.md,
+    /plans/archive/2026_07/cefi_satellite_ao_dispatch_batch2_2026_07_26.md,
+    /plans/archive/2026_07/cefi_satellite_ao_dispatch_batch2_2026_07_26_finalize.md,
+    /plans/archive/2026_07/cefi_satellite_ao_dispatch_batch1_2026_07_25.md,
+    /cursor-configs/skills/ag-closeout-audit/SKILL.md,
+  ]
 ---
 
 # CeFi satellite AO batch 3 — iterative-drain extraction
@@ -275,3 +284,7 @@ batch1/batch2 finalize pattern.
   work is a feature-definition decision, not a loader tweak.
 - No new durable contract is created by this plan; every other todo executes an already-decided spec from its source
   doc.
+
+## Progress Log
+
+- **context-scout 2026-08-01**: populated/refreshed context_scope (6 entries).

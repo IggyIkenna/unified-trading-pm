@@ -38,6 +38,14 @@ locked_by:
 locked_since:
 supersedes:
 superseded_by:
+context_scope:
+  [
+    /codex/05-infrastructure/deployment-observability.md,
+    /codex/02-data/availability-manifest-and-data-status.md,
+    /codex/02-data/honest-coverage-model.md,
+    /codex/05-infrastructure/manifest-consolidator-ssot.md,
+    /plans/active/data_status_page_ux_and_canonicalisation_2026_07_16.md,
+  ]
 ---
 
 # Data-status manifest cell-grid re-architecture
@@ -119,3 +127,4 @@ real fix is to never load the whole manifest per request.
 
 - **na-eligibility-audit 2026-07-30**: KEEP-NA, valid — todo 2 is an explicit DESIGN GATE (pick bound vs stream vs
   precompute) and every later todo depends on that unmade choice.
+- **context-scout 2026-08-01**: populated/refreshed context_scope (5 entries).

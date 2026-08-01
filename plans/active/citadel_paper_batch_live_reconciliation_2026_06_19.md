@@ -55,6 +55,15 @@ Codex SSOTs:
     /codex/02-data/pipeline-mode-and-batch-live-reconciliation.md,
     /codex/09-strategy/operational/batch-live-reconciliation-threshold-calibration.md,
   ]
+context_scope:
+  [
+    /codex/09-strategy/operational/paper-batch-live-reconciliation.md,
+    /codex/04-architecture/global-ledger-architecture.md,
+    /codex/02-data/pipeline-mode-and-batch-live-reconciliation.md,
+    /codex/09-strategy/operational/batch-live-reconciliation-threshold-calibration.md,
+    /plans/epics/batch_live_symmetry_master.md,
+    /plans/epics/global_ledger_pnl_attribution_master.md,
+  ]
 ---
 
 # Citadel-grade Paper ⟷ Batch ⟷ Live Reconciliation
@@ -804,3 +813,4 @@ audit) — 3 genuinely orphaned BLRS gaps, no successor plan previously tracked 
   `BLOCKED-OPERATOR-DECISION`, re-confirmed 2026-07-28 as a PERMANENT human-only hard stop. NOTE a literal duplicated
   `- [ ] [CODE] P2.11.18` line (the first is a truncated fragment of the second) inflates this doc's open-todo count
   by 1.
+- **context-scout 2026-08-01**: populated/refreshed context_scope (6 entries).

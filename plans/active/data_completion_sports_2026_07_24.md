@@ -45,6 +45,15 @@ source: >-
   (plans/active/issues/plan_line_cap_remediation_2026_07_23.md), operator-approved (sports parity-sibling creation -- 4
   of 5 asset groups already got a 2026-07-15 split, sports did not).
 drift_direction: advance-code
+context_scope:
+  [
+    /plans/active/data_completion_to_100_all_ag_2026_06_21.md,
+    /plans/archive/issues/plan_line_cap_remediation_2026_07_23.md,
+    /codex/02-data/sports-2020-06-data-floor.md,
+    /codex/02-data/honest-coverage-model.md,
+    /codex/05-infrastructure/vm-launcher-runbook.md,
+    unified-api-contracts/unified_api_contracts/canonical/crosscutting/honest_coverage.py,
+  ]
 ---
 
 # Data completion to 100% — Sports
@@ -833,6 +842,8 @@ watches the relaunched 3 for repeat-137. Codified lesson candidate: backfill mon
 > rate-limit fix, odds-API credential/credits saga, Live==Batch enum + connector bugs, enrichment OOM fix,
 > disparate-source fleet launch, skip-fresh verification, golden-window FIXTURE_LINEUPS diagnosis. All
 > shipped/`[x]`/narrative, zero open todos. See that file for the full early-campaign narrative.
+
+- **context-scout 2026-08-01**: populated/refreshed context_scope (6 entries).
 
 ## Deferred work — migrated to:
 

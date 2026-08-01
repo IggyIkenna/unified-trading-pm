@@ -49,6 +49,14 @@ source: >-
 assigned_role: backend_engineer
 sequential: true
 drift_direction: advance-code
+context_scope:
+  [
+    /plans/active/defi_dex_pool_symbol_fix_backfill_purge_2026_07_25.md,
+    /plans/active/defi_consolidated_closeout_2026_07_18.md,
+    /plans/active/issues/defi_dex_pools_subgraph_query_missing_input_tokens_2026_07_25.md,
+    /plans/active/issues/defi_migrated_marker_flagged_root_cause_clusters_2026_07_25.md,
+    /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
+  ]
 ---
 
 # Dex-pool symbol fix/backfill/purge — finalize
@@ -93,3 +101,7 @@ drift_direction: advance-code
 
 - `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` — referenced by both purge todos in the parent plan;
   confirm no update needed here during the codex-alignment check.
+
+## Progress Log
+
+- **context-scout 2026-08-01**: populated/refreshed context_scope (5 entries).

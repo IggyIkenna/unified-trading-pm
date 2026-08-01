@@ -29,6 +29,14 @@ depends_on:
 source:
 assigned_role: data_engineering
 drift_direction: advance-code
+context_scope:
+  [
+    /codex/02-data/cefi-capture-universe.md,
+    /codex/02-data/tradfi-databento-sourcing-ssot.md,
+    /plans/archive/2026_07/prediction_venue_perps_and_live_clob_depth_2026_06_20.md,
+    unified-api-contracts/unified_api_contracts/canonical/crosscutting/crypto_equity_link.py,
+    instruments-service/instruments_service/reference_data/adapters/cefi/tardis/parsing.py,
+  ]
 ---
 
 # Crypto-venue equity perps + tokenized stocks
@@ -521,6 +529,7 @@ dropped. The CME-b tradfi close-out is the linchpin that unlocks the DBEQ 3-data
 
 - **na-eligibility-audit 2026-07-30** (tranche=cefi, autonomous): KEEP-NA, valid - dominated by `[DESIGN]`/`[RESEARCH]`
   archetype + hedge-venue + universe-construction calls, plus a BLOCKED-DATA Korea-equity vendor ask.
+- **context-scout 2026-08-01**: populated/refreshed context_scope (5 entries).
 
 ## Temporary states + their canonical follow-up plans
 

@@ -45,6 +45,14 @@ source: >-
 assigned_role: data_engineering
 sequential: true
 drift_direction: advance-code
+context_scope:
+  [
+    /plans/active/cefi_consolidated_native_ao_extract_2026_07_25.md,
+    /plans/active/cefi_consolidated_closeout_2026_07_18.md,
+    /plans/active/cefi_4surface_migration_execution_log_2026_07_24.md,
+    /plans/active/issues/cefi_chain_drop_root_cause_and_heavy_io_vm_rule_2026_07_24.md,
+    /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
+  ]
 ---
 
 # CeFi native AO extract — finalize
@@ -82,3 +90,7 @@ drift_direction: advance-code
       `locked_by` (already empty here, confirm). **Done when**: the plan is moved to `plans/archive/2026_07/`, every
       corpus referrer resolves to the new path, and this finalize doc itself gets archived alongside it in the same
       commit.
+
+## Progress Log
+
+- **context-scout 2026-08-01**: populated/refreshed context_scope (5 entries).

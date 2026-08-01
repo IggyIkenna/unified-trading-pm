@@ -48,6 +48,14 @@ source:
   human-readable canonical format, right? ... The whole point of canonical mapping is not just to get the thing from the
   source where it's called. It's to map it into something human-readable'). Investigation found real, proven prior art
   (InstrumentLeg/COMBO + the tradfi_symbology human-name registry) rather than a from-scratch design question."
+context_scope:
+  [
+    /plans/active/issues/instrument_id_format_canonicalization_2026_07_08.md,
+    /codex/02-data/cross-asset-canonical-target-ssot.md,
+    /plans/active/issues/tradfi_canonical_path_migration_design_2026_07_19.md,
+    /plans/audit/results/canonical_instrument_id_audit_2026_07_08.md,
+    instruments-service/instruments_service/reference_data/adapters/tradfi/databento/symbology.py,
+  ]
 ---
 
 > **Real code gap, not a naming decision** — the structured leg representation and the human-name translation registry
@@ -221,3 +229,4 @@ Read in full before touching any todo — this is the concrete acceptance spec, 
   filed as its own follow-up). `quality-gates.sh --no-fix` green (exit 0). Landed instruments-service@<pending — see
   commit list in the parent task's final report> together with 3 pre-existing, already-verified, unrelated commits that
   were blocked from landing only by this WIP's test regression contaminating the shared tree.
+- **context-scout 2026-08-01**: populated/refreshed context_scope (5 entries).

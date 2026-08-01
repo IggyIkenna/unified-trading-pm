@@ -74,6 +74,15 @@ source:
   3-agent cefi plan/issue audit + direct verification (slot-3, 2026-07-18) at operator request ("consolidate all
   remaining cefi issues/plans into one plan referencing the others so we can close them off once and for all");
   restructured 2026-07-25 into a 4-child split (read-only design pass + operator-resolved ambiguities cefi.1-4).
+context_scope:
+  [
+    /codex/02-data/availability-manifest-and-data-status.md,
+    /codex/02-data/pipeline-mode-partition.md,
+    /codex/04-architecture/instruments-service-as-ssot-for-mtds.md,
+    /codex/05-infrastructure/vm-launcher-runbook.md,
+    /codex/06-coding-standards/read-time-filter-pushdown.md,
+    /plans/active/cefi_consolidated_closeout_aggregated_sources_2026_07_24.md,
+  ]
 ---
 
 # CeFi consolidated close-out
@@ -272,7 +281,7 @@ POST-BACKFILL pair does NOT (the backfill VM was preempted mid-run, see below) a
 ## Track 5 — Adapter canonical-ID-builder retrofit (RE-DRIFT prevention, post-migration) · P2
 
 - **Sources**: `issues/instruments_docs_audit_outstanding_items_2026_07_08.md` (B1 — only ~4/63 adapters route through
-  the shared canonical-id builder); `canonical_id_builder_retrofit_checklist_2026_07_08.md` (FI_/FF_ Kraken-Futures
+  the shared canonical-id builder); `canonical_id_builder_retrofit_checklist_2026_07_08.md` (FI*/FF* Kraken-Futures
   13-instrument collision, unresolved).
 - **Why separate**: Track 1's scripts are one-time DATA migrations; they do NOT change the ~59/63 adapters that stamp
   ids ad hoc, so new writes can re-drift unless retrofitted. This is the durability half of "canonical everywhere."
@@ -549,3 +558,4 @@ UPBIT · LIGHTER-ZKSYNC · EXTENDED-STARKNET.
 
 - **na-eligibility-audit 2026-07-30** (tranche=cefi, autonomous): KEEP-NA, valid - carries a BLOCKED-DATA Korea-equity
   vendor ask (operator) plus 3 `[DESIGN]` archetype/hedge-venue calls that are not worker-determinable.
+- **context-scout 2026-08-01**: populated/refreshed context_scope (6 entries).

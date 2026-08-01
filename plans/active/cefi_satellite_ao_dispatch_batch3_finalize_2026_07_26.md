@@ -44,6 +44,14 @@ source: >-
 assigned_role: data_engineering
 sequential: true
 drift_direction: advance-code
+context_scope:
+  [
+    /plans/active/cefi_satellite_ao_dispatch_batch3_2026_07_26.md,
+    /plans/active/cefi_consolidated_closeout_2026_07_18.md,
+    /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
+    /codex/05-infrastructure/deployment-observability.md,
+    /cursor-configs/skills/ag-closeout-audit/SKILL.md,
+  ]
 ---
 
 # CeFi satellite AO batch 3 — finalize
@@ -111,3 +119,7 @@ drift_direction: advance-code
 - `/codex/11-project-management/` — the 6-step archival ritual this plan's todo 4 executes.
 - `/codex/05-infrastructure/deployment-observability.md` — verify batch3 todo 3's correct-codex edit landed (or was
   declined with a finding) during the codex-alignment step.
+
+## Progress Log
+
+- **context-scout 2026-08-01**: populated/refreshed context_scope (5 entries).

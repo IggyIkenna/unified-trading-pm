@@ -41,6 +41,13 @@ source: >-
 assigned_role: data_engineering
 sequential: true
 drift_direction: advance-code
+context_scope:
+  [
+    /plans/active/cefi_track7_candle_namespace_residual_2026_07_25.md,
+    /plans/active/cefi_consolidated_closeout_2026_07_18.md,
+    /plans/active/issues/candle_feature_canonical_path_divergence_2026_07_20.md,
+    /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
+  ]
 ---
 
 # CeFi Track-7 candle-namespace residual — finalize
@@ -62,3 +69,7 @@ drift_direction: advance-code
       and fix each path to point at the archived location → clear `locked_by` (already empty, confirm). **Done when**:
       the plan is moved to `plans/archive/2026_07/`, every corpus referrer resolves to the new path, and this finalize
       doc itself gets archived alongside it in the same commit.
+
+## Progress Log
+
+- **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).

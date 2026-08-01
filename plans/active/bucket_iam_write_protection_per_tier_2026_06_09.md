@@ -40,6 +40,15 @@ source:
 Codex SSOTs:
   [/codex/05-infrastructure/bucket-isolation-model.md, /codex/16-strategy-playbooks/infra-spec/stage-3e-g2-env-split.md]
 drift_direction: advance-code
+context_scope:
+  [
+    /codex/05-infrastructure/bucket-isolation-model.md,
+    /plans/active/issues/bucket_iam_per_tier_dev_stg_retired_ssot_contradiction_2026_07_27.md,
+    /plans/active/issues/bucket_iam_p2_god_sa_removal_before_runtime_rewire_2026_07_30.md,
+    /plans/active/issues/bucket_iam_p2_tier_sa_scope_gap_and_default_compute_sa_overprivilege_2026_07_30.md,
+    /plans/active/issues/deployment_api_cloud_run_coldstart_flaky_exit0_blocks_prd_sa_cutover_2026_07_31.md,
+    /plans/active/issues/unified_trading_sa_live_iam_drift_vs_terraform_2026_07_31.md,
+  ]
 ---
 
 # Bucket IAM write-protection — per-tier/per-domain SAs (§8 implementation)
@@ -145,7 +154,7 @@ Two independent gates because Group A and Group B are at different stages:
   > packs), R8-prediction `[ ]` (dry-run regen pending), 5 R5 smoke-test bugs (cefi tardis datetime64 P0, tradfi FX
   > yahoo writer P1, footystats ODDS source label P1, kalshi IS 400 P1, manifest consolidator restore P1). G4 applies
   > are operator-fired (HARD-STOP); no whole-corpus walk has completed and several are still scheduled. P0.1 checkbox
-  > remains unchecked → Group A IAM (Phase 1/2) remains blocked. Re-verify after G4 applies complete. **[2026-07-14
+  > remains unchecked → Group A IAM (Phase 1/2) remains blocked. Re-verify after G4 applies complete. **[2026-07-14 >
   > update, verify-rerun-2 finding 205]**: the G4-whole-corpus-walk blocking premise above is now STALE —
   > `master_data_canonicalisation_migration_catalogue_2026_06_07.md`'s own status grid confirms **"G4 🟢 all 5 AGs
   > (updated 2026-07-12)"**: defi/cefi/sports/prediction `--apply` complete 2026-06-29, and TradFi `--apply` DONE
@@ -305,11 +314,11 @@ Two independent gates because Group A and Group B are at different stages:
       compute SA) — do not leave this tag stale per CLAUDE.md's retag-on-resolve rule.
 
       > **🟥 Note (2026-07-31, slot-14)**: even once this todo removes `unified-trading-sa`'s `storage.objectAdmin`,
-                                  > that SA still live-holds `roles/resourcemanager.projectIamAdmin` + `roles/iam.serviceAccountAdmin` (undeclared
-                                  > in any terraform in this repo) — both self-escalation-capable, i.e. it could re-grant itself storage access
-                                  > (or any other role) without going through terraform at all. See
-                                  > `issues/unified_trading_sa_live_iam_drift_vs_terraform_2026_07_31.md` — a full de-privilege of this SA is not
-                                  > actually complete until that doc's P1/P2 also land.
+                                                  > that SA still live-holds `roles/resourcemanager.projectIamAdmin` + `roles/iam.serviceAccountAdmin` (undeclared
+                                                  > in any terraform in this repo) — both self-escalation-capable, i.e. it could re-grant itself storage access
+                                                  > (or any other role) without going through terraform at all. See
+                                                  > `issues/unified_trading_sa_live_iam_drift_vs_terraform_2026_07_31.md` — a full de-privilege of this SA is not
+                                                  > actually complete until that doc's P1/P2 also land.
 
 > **🟥 P2.2 SCOPE GAP found 2026-07-30 (slot-12) — "wire each runtime to its tier SA" is not mechanically executable
 > today.** Investigation (live GCP IAM queries + static analysis, no state mutated) found 3 independently-blocking
@@ -469,3 +478,7 @@ Two independent gates because Group A and Group B are at different stages:
 - Live/batch prod + dev workloads unaffected (read-anything preserved; tier writes preserved).
 - Migration SA is the single sanctioned cross-tier writer; no remaining project-wide `objectAdmin`.
 - Codex §8 reflects enforced reality.
+
+## Progress Log
+
+- **context-scout 2026-08-01**: populated/refreshed context_scope (6 entries).

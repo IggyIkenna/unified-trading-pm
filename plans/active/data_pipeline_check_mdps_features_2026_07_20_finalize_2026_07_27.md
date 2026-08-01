@@ -44,6 +44,11 @@ source: >-
   closes the finalize-plan-coverage gate the reclassification itself triggered.
 assigned_role: infra
 drift_direction: advance-code
+context_scope:
+  [
+    /plans/active/data_pipeline_check_mdps_features_2026_07_20.md,
+    /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
+  ]
 ---
 
 # data_pipeline_check_mdps_features_2026_07_20 — finalize
@@ -59,3 +64,7 @@ drift_direction: advance-code
       pointer on a new contract, update every referrer's path corpus-wide, clear lock) if the plan is fully closed. If
       real work remains after the AO-dispatched todos land, leave `data_pipeline_check_mdps_features_2026_07_20.md`
       active (do not force-archive) and note what's still open here instead.
+
+## Progress Log
+
+- **context-scout 2026-08-01**: populated/refreshed context_scope (2 entries).

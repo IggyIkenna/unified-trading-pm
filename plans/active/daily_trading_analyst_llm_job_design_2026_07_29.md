@@ -50,6 +50,15 @@ locked_by:
 locked_since:
 supersedes:
 superseded_by:
+context_scope:
+  [
+    /plans/archive/issues/blrs_g3_g10_rescope_2026_07_28.md,
+    /plans/active/citadel_paper_batch_live_reconciliation_2026_06_19.md,
+    /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
+    /codex/09-strategy/operational/paper-batch-live-reconciliation.md,
+    /codex/02-data/availability-manifest-and-data-status.md,
+    batch-live-reconciliation-service/batch_live_reconciliation_service/stages/stage4_agent_analysis.py,
+  ]
 ---
 
 # Daily cross-cutting LLM "trading analyst" job — design
@@ -324,3 +333,4 @@ job's per-category input adapters for the reconciliation-derived categories, per
 - **na-eligibility-audit 2026-07-30**: KEEP-NA, valid — design doc, 0 open `- [ ]` todos. FINDING for /plan-reconcile:
   its §5 'Follow-up todos' are prose bullets, not tracked checkboxes — violates the 'every follow-up is a `- [ ]` todo,
   never prose' HARD RULE, and one of them is an explicit [OPERATOR] policy call.
+- **context-scout 2026-08-01**: populated/refreshed context_scope (6 entries).

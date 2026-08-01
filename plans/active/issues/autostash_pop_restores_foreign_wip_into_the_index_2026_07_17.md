@@ -89,20 +89,41 @@ right up until the pull, and the post-pull index is never re-inspected.
 - **Silent.** Nothing fails. The only tell is reading `git show --stat` AFTER the push.
 - The blast radius scales with how dirty the shared checkout is — and PM is routinely dirty across many agents.
 
-## Candidate fixes (not yet decided)
+## Decided fix (2026-08-01, operator decision — was "Candidate fixes (not yet decided)")
 
-- [ ] [DEVOPS] P2. Make the MANDATORY pre-commit inspection catch it: the rule already says run
-      `git diff --cached --stat` (NO path arg) — but it must be run **AFTER** the pull/autostash, not before, and the
-      agent must diff the staged list against the files they intend. Codify the ordering explicitly; today the recipe
-      reads pull → add → commit with the inspection floating.
-- [ ] [DEVOPS] P2. Prefer `git stash push -- <my paths>` + `git pull --ff-only` + `git stash pop` over `--autostash`
-      when the tree contains files you do not own, OR `git restore --staged .` immediately after the pull and re-add by
-      name (cheap, deterministic, no reliance on stash index semantics).
-- [ ] [DEVOPS] P3. Consider a pre-commit hook that FAILS when the staged set contains paths the invoking agent did not
-      explicitly name (e.g. compare against a `QM_FILES`-style env the wrapper sets) — the machine guard equivalent of
-      the `Quickmerge:` trailer check. Would have blocked 1a59516af.
-- [ ] [DOCS] P2. Fold the non-conflict autostash hazard into `/codex/05-infrastructure/per-tab-worktrees.md` +
-      CLAUDE.md's Multi-agent safety block — currently both only warn about the conflict path, which is the rarer case.
+> **The fix splits on whether you've already committed your own work at the moment you reconcile — that's the variable
+> that decides fast-forward eligibility, not file-content overlap.** Verified empirically 2026-08-01: a plain `git pull`
+> (merge, no rebase) with a dirty non-overlapping file and ZERO local commits ahead of origin is a true fast-forward (no
+> new commit object at all); `git pull --rebase` with that same dirty file REFUSES outright regardless of overlap
+> (rebase requires an unconditionally clean tree — that's why `--autostash` exists, and why its restage-on-pop behavior
+> is the actual hazard). But the instant a local commit already exists ahead of origin (the real "behind-remote" case
+> CLAUDE.md's drift recipe targets), a merge-pull is NOT free anymore — it produces a real 2-parent merge commit even
+> with zero file overlap, since FF-eligibility is a commit-graph property, not a content one. So the fix is two
+> different mechanisms for two different moments, not one blanket replacement.
+
+- [ ] [DEVOPS] P2. **Pre-commit case (haven't committed your own work yet): skip forced rebase.** Before the mandated
+      reconcile step, check `git rev-list --count origin/<branch>..HEAD` — if `0` (no local commits ahead of origin
+      yet), use a plain `git pull origin <branch>` (merge, no `--rebase`) instead of `--rebase --autostash`. This is a
+      genuine no-cost fast-forward in this case; your dirty working-tree files ride along untouched if they don't
+      overlap, and git's own merge machinery already refuses cleanly if they do — no new tooling needed for this half.
+- [ ] [DEVOPS] P2. **Post-commit case (already have a local commit ahead of origin): keep `--rebase --autostash`** (this
+      case is genuine commit-graph divergence, not FF-eligible, and rebase is what keeps `live-defi-rollout` linear
+      instead of littering it with merge commits) **— but make the autostash-pop safe.** Immediately after
+      `git pull --rebase --autostash`, BEFORE your own `git add <files>`, run `git restore --staged .` unconditionally —
+      it only unstages (never touches working-tree content, so it can't destroy anything), guaranteeing the index holds
+      only what you explicitly add this round regardless of what the pop restaged. Simpler than the previously- floated
+      `git stash push -- <my paths>` alternative (which needs knowing your own dirty paths up front) — drop that
+      alternative.
+- [ ] [DOCS] P2. Fold both halves into `/codex/05-infrastructure/per-tab-worktrees.md` + CLAUDE.md's Multi-agent safety
+      block, replacing the current conflict-only guidance ("autostash conflict → rebase --abort + stash by name") with:
+      (a) the pre-commit-case FF shortcut, and (b) the post-commit-case `git restore --staged .` step. Both docs are
+      currently silent on this non-conflict happy-path hazard entirely.
+
+**Not adopted** (considered, explicitly declined — recorded so neither is re-proposed without new cause): reordering the
+existing pre-commit inspection alone (too weak solo — that exact rule already existed and the incident happened anyway);
+a hard pre-commit guard hook diffing staged paths against an agent-supplied file list (real hardening, but its own build
+with narrower coverage than the two mechanisms above — could be revisited later as its own P3, not required to close
+this decision).
 
 ## Do NOT "fix" a sweep by reverting
 
@@ -117,3 +138,10 @@ owning agent carry on (their tree simply shows those files as already-committed 
   `Candidate fixes (not yet decided)`, and one (`[DOCS] P2`) is a `/codex/05-infrastructure/per-tab-worktrees.md` +
   CLAUDE.md edit, which is never autonomous. Already ruled the same way in
   `ao_satellite_ao_dispatch_batch1_2026_07_26.md`'s operator-decision Deferred list.
+- **2026-08-01 (operator decision session)**: Ruled on the "Candidate fixes" question after re-deriving root cause and
+  verifying empirically (see the decided-fix banner above) that rebase's clean-tree requirement — not file overlap — is
+  what forces `--autostash` into existence, and that a merge-pull is only cost-free pre-commit (zero local commits ahead
+  of origin), not post-commit (where it would create real merge commits on `live-defi-rollout`). Decision: split by case
+  — plain merge-pull pre-commit, `git restore --staged .` post-autostash-pop for the rebase/post-commit case, document
+  both. Explicitly declined the reorder-only-inspection and hard-guard-hook candidates for now (see "Not adopted"
+  above). Still `status: open` — the decision is made, the code/docs changes are not yet shipped.

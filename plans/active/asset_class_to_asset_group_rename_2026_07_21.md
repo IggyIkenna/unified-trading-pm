@@ -47,6 +47,13 @@ locked_since:
 supersedes:
 superseded_by:
 source: plans/archive/issues/asset_class_to_asset_group_rename_scope_underestimated_2026_07_21.md
+context_scope:
+  [
+    /codex/04-architecture/tier-and-import-architecture.md,
+    /codex/02-data/availability-manifest-and-data-status.md,
+    /plans/archive/issues/asset_class_to_asset_group_rename_scope_underestimated_2026_07_21.md,
+    /plans/archive/issues/dart_ui_capability_manifest_and_catalogue_formatting_gaps_2026_07_21.md,
+  ]
 ---
 
 # AssetClass → AssetGroup rename (domain enum only)
@@ -139,3 +146,4 @@ trusting that).
 - **na-eligibility-audit 2026-07-30**: KEEP-NA, valid — explicit dated destination ruling (BLK-87fc93e4, 2026-07-21):
   LOCAL/human by deliberate operator-protective default for a 9+-repo atomic breaking rename — 'do not do that
   unilaterally'.
+- **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).

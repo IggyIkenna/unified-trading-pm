@@ -49,6 +49,11 @@ source: >-
   ruling 2026-07-24 removed the umbrella:true exemption entirely (flat 1000L hard cap, no exceptions).
 assigned_role: data_engineering
 drift_direction: advance-code
+context_scope:
+  [
+    /plans/active/cefi_consolidated_closeout_2026_07_18.md,
+    /plans/archive/issues/plan_line_cap_remediation_2026_07_23.md,
+  ]
 ---
 
 # CeFi consolidated close-out — aggregated source docs (discoverability index)
@@ -779,3 +784,4 @@ Orthogonality mistags found scoping the new cross-cutting AG layer — see
 - **na-eligibility-audit 2026-07-31** (tranche=cefi, autonomous): KEEP-NA, valid — re-verified after the file's last
   commit (5fb83f4ea) touched only a corpus-referrer link (archived-doc path fix from an unrelated ag-closeout-audit
   run), not this doc's own todo/scope. Verdict unchanged from 2026-07-30.
+- **context-scout 2026-08-01**: populated/refreshed context_scope (2 entries).

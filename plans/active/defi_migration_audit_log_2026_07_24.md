@@ -54,6 +54,11 @@ source:
     extraction 2026-07-24)",
   ]
 drift_direction: advance-code
+context_scope:
+  [
+    /plans/active/master_data_canonicalisation_migration_catalogue_2026_06_07.md,
+    /plans/active/is_catalogue_g1_root_audit_log_2026_07_24.md,
+  ]
 ---
 
 # DeFi migration audit log
@@ -732,3 +737,7 @@ speed-note (both deferred optimisations, non-blocking).
   and its derivation deps (`source_string_for`/`default_transport_for_source`/`derive_pipeline_mode_for_row`) were
   untouched by the recent batch → dry-run output is provably identical to the green run above. **No new code owed; HOLD
   stands.\*\* Remaining gates remain purely operational (drain + the gated v9 instruments-store walk + IS backfill).
+
+## Progress Log
+
+- **context-scout 2026-08-01**: populated/refreshed context_scope (2 entries).

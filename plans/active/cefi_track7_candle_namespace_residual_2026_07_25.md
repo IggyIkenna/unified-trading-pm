@@ -48,6 +48,14 @@ source: >-
 assigned_role: data_engineering
 sequential: true
 drift_direction: advance-code
+context_scope:
+  [
+    /plans/active/cefi_consolidated_native_ao_extract_2026_07_25.md,
+    /plans/active/issues/candle_feature_canonical_path_divergence_2026_07_20.md,
+    /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
+    /codex/02-data/availability-manifest-and-data-status.md,
+    /plans/active/issues/cefi_hardstop2_carveout_codex_vs_plan_contradiction_2026_07_29.md,
+  ]
 ---
 
 # CeFi Track-7 candle-namespace residual — gated delete
@@ -132,3 +140,5 @@ No new durable contract is created by this plan.
   `cefi_consolidated_native_ao_extract_2026_07_25.md`'s candidate-7 verify+backfill todo, is still literally `- [ ]`
   unchecked (line 157 of that doc, re-grepped directly). Neither gate cleared, so the delete was NOT executed. No action
   taken; no changes needed.
+
+- **context-scout 2026-08-01**: populated/refreshed context_scope (5 entries).

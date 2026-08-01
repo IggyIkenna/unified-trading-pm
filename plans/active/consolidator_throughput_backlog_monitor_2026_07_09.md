@@ -42,6 +42,14 @@ depends_on:
 source:
 assigned_role: ui_developer
 drift_direction: advance-code
+context_scope:
+  [
+    /codex/05-infrastructure/manifest-consolidator-ssot.md,
+    /codex/02-data/availability-manifest-and-data-status.md,
+    /codex/06-coding-standards/ui-testing-layers.md,
+    /plans/archive/2026_07/deployment_full_estate_cost_provenance_2026_07_09.md,
+    deployment-api/deployment_api/routes/health_consolidator/,
+  ]
 ---
 
 # Consolidators tab — per-AG backlog + consolidation throughput monitor
@@ -520,3 +528,4 @@ drift_direction: advance-code
 
 - **na-eligibility-audit 2026-07-30**: KEEP-NA, valid — LOCAL plan built interactively; both [REVIEW] gates are
   explicitly deferred by a dated operator decision (2026-07-10, local-dev-only until all cockpit plans complete).
+- **context-scout 2026-08-01**: populated/refreshed context_scope (5 entries).

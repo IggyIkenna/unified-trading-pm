@@ -54,6 +54,14 @@ supersedes:
 superseded_by:
 depends_on:
 source: operator request 2026-07-16 (data-status page review) + multi-agent audit workflow wf_872e8051-00a
+context_scope:
+  [
+    /codex/02-data/honest-coverage-model.md,
+    /codex/02-data/availability-manifest-and-data-status.md,
+    /codex/06-coding-standards/ui-testing-layers.md,
+    unified-api-contracts/unified_api_contracts/internal/reference/instrument.py,
+    /plans/active/data_status_tab_and_downloads_remediation_2026_06_16.md,
+  ]
 ---
 
 # Data-status page — honest-coverage fix + UX & canonicalisation follow-ups
@@ -173,6 +181,8 @@ proving the lookup is generic/registry-driven across asset groups. Fix holds.
 
 Verified against `deployment-api@c19edcc` (fresh-pulled to `origin/live-defi-rollout` before checking); read-only
 verification, no code changed. Source: `tradfi_consolidated_native_ao_extract_2026_07_25.md` todo 6.
+
+- **context-scout 2026-08-01**: populated/refreshed context_scope (5 entries).
 
 ## P1 — Honest Coverage: remaining hardening
 

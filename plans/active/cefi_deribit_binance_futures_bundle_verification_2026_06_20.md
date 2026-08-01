@@ -34,6 +34,14 @@ depends_on:
 assigned_role: data_engineering
 source:
 drift_direction: advance-code
+context_scope:
+  [
+    /plans/active/issues/deribit_options_chain_af_g4_blocker_2026_07_03.md,
+    /plans/active/cefi_track2_coverage_backfill_checkpoints_2026_07_25.md,
+    /plans/active/cefi_deribit_binance_futures_bundle_verification_2026_06_20_finalize_2026_07_27.md,
+    /plans/active/issues/cefi_track2_backfill_vm_preempted_no_recovery_2026_07_30.md,
+    /plans/archive/2026_07/cefi_manifest_canonicalisation_2026_06_01.md,
+  ]
 ---
 
 > **Provenance**: extracted 2026-06-20 from the inline `cefi_master` epic body during the asset-group-umbrella
@@ -201,3 +209,7 @@ perpetual-code normalization ~400). These need per-cluster real-vs-false-positiv
 **Full-execution criterion** (per "Plans Run To Actual Completion" HARD RULE): the verification queries + any gap
 backfill run on real GCS manifest data; the phantom-audit re-run executes on a same-region VM and reports the post-fix
 rate.
+
+## Progress Log
+
+- **context-scout 2026-08-01**: populated/refreshed context_scope (5 entries).

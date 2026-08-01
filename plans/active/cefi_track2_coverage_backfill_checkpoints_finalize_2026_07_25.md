@@ -41,6 +41,14 @@ source: >-
 assigned_role: data_engineering
 sequential: true
 drift_direction: advance-code
+context_scope:
+  [
+    /plans/active/cefi_track2_coverage_backfill_checkpoints_2026_07_25.md,
+    /plans/active/cefi_consolidated_native_ao_extract_2026_07_25.md,
+    /plans/active/cefi_deribit_binance_futures_bundle_verification_2026_06_20_finalize_2026_07_27.md,
+    /plans/active/issues/deribit_options_chain_af_g4_blocker_2026_07_03.md,
+    /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
+  ]
 ---
 
 # CeFi Track-2 coverage backfill checkpoints — finalize
@@ -86,3 +94,7 @@ drift_direction: advance-code
       2026-07-31 finding note with the fresh numbers. Repo: unified-trading-pm. **Done when**: a PASS/FAIL verdict on
       the DERIBIT gap is recorded, and either both deribit-bundle docs are archived (PASS) or the finding note is
       refreshed with current evidence (FAIL).
+
+## Progress Log
+
+- **context-scout 2026-08-01**: populated/refreshed context_scope (5 entries).

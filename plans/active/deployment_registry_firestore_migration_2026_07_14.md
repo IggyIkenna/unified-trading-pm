@@ -44,6 +44,13 @@ locked_since:
 supersedes:
 superseded_by:
 source: interactive session 2026-07-14 (operator + agent diagnosis of empty-inventory prod bug)
+context_scope:
+  [
+    /codex/05-infrastructure/deployment-observability.md,
+    /codex/05-infrastructure/gcs-object-operations.md,
+    /plans/active/deployment_registry_firestore_p3_cutover_2026_07_14.md,
+    /plans/active/issues/deployment_registry_dualwrite_flag_not_propagated_to_vm_launchers_2026_07_30.md,
+  ]
 ---
 
 # Deployment registry → Firestore migration (OVERVIEW + phase index)
@@ -215,3 +222,4 @@ heartbeat
   "the codex/CLAUDE.md doc updates + master archival ... stay BLOCKED on P3 ... completing"), which is still correctly
   blocked. The finalize plan itself archived (its own todo done, no lock); this overview stays `active` until P3
   unblocks and P5 runs.
+- **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).

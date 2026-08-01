@@ -44,6 +44,13 @@ source: >-
   reclassification itself triggered.
 assigned_role: data_engineering
 drift_direction: advance-code
+context_scope:
+  [
+    /plans/active/data_completion_cefi_2026_07_15.md,
+    /plans/active/na_docs_validity_and_ao_eligibility_audit_2026_07_26.md,
+    /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
+    /cursor-configs/skills/ag-closeout-audit/SKILL.md,
+  ]
 ---
 
 # data_completion_cefi_2026_07_15 — finalize
@@ -59,3 +66,7 @@ drift_direction: advance-code
       new contract, update every referrer's path corpus-wide, clear lock) if the plan is fully closed. If real work
       remains after the AO-dispatched todos land, leave `data_completion_cefi_2026_07_15.md` active (do not
       force-archive) and note what's still open here instead.
+
+## Progress Log
+
+- **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).

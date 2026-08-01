@@ -54,6 +54,13 @@ source:
   hard-fail cap with only 6/21 todos still open; this plan carries those 6 forward verbatim while the parent archives
   with its Progress Log intact as history."
 last_updated: 2026-07-25
+context_scope:
+  [
+    /codex/05-infrastructure/bucket-isolation-model.md,
+    /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
+    /plans/archive/2026_07/bucket_estate_consolidation_to_sub100_2026_07_13.md,
+    /plans/active/issues/recon_bucket_missing_nightly_recon_failing_2026_07_13.md,
+  ]
 ---
 
 # Bucket estate consolidation — closeout residuals
@@ -367,3 +374,5 @@ Codex SSOTs: `/codex/05-infrastructure/bucket-isolation-model.md`, `/codex/05-in
     this session confirmed all 5 referenced legacy bucket names are already 404, lowering the risk class from
     silent-misdirect to loud-fail-if-invoked).
   - Full evidence trail inline on both todos above.
+
+- **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).

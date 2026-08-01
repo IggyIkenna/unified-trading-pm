@@ -58,6 +58,12 @@ source:
     diagnosing ASTER funding-rate realism for the 1000-multiplier coins (1000SHIB/1000SATS showing flat funding +
     near-zero live volume)",
   ]
+context_scope:
+  [
+    /codex/02-data/data-lineage-MTDS-features-ml.md,
+    /plans/archive/issues/aster_capture_broken_coverage_and_completeness_2026_07_20.md,
+    /codex/09-strategy/architecture-v2/cross-cutting/pnl-attribution.md,
+  ]
 ---
 
 # Rolling ADV feature for CeFi instruments
@@ -127,6 +133,7 @@ MDPS candle coverage to the 4 venues) is explicitly NOT started.
 
 - **na-eligibility-audit 2026-07-30** (tranche=cefi, autonomous): KEEP-NA, valid - Phase 2 is an explicit operator
   "consumer-first, producer later" deferral and Phase 3 needs a design conversation on cap placement and the % ceiling.
+- **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).
 
 ## Phase 1 — ADV consumer (scaffold against MDPS's existing schema)
 

@@ -39,6 +39,7 @@ source: >-
   standing, per the workspace's "reconcile blocking issues" authority.
 assigned_role: infra
 drift_direction: advance-code
+context_scope: [/plans/active/defi_expected_unattempted_seeder_design_2026_07_26.md]
 ---
 
 # defi_expected_unattempted_seeder_design_2026_07_26 — finalize
@@ -54,3 +55,7 @@ drift_direction: advance-code
       CLAUDE.md/codex pointer on a new contract, update every referrer's path corpus-wide, clear lock) if the plan is
       fully closed. If real work remains after the AO-dispatched todos land, leave the source plan active and re-derive
       this finalize plan's own gate accordingly rather than force-archiving early.
+
+## Progress Log
+
+- **context-scout 2026-08-01**: populated/refreshed context_scope (1 entry).

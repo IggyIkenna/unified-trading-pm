@@ -77,6 +77,13 @@ source: >-
   against codex + the 5 consolidated closeout plans + live code state where feasible.
 assigned_role: data_engineering
 drift_direction: correct-codex
+context_scope:
+  [
+    /plans/active/issues/vm_billing_waste_first_audit_and_preflight_gate_design_2026_07_24.md,
+    /codex/02-data/honest-coverage-model.md,
+    /codex/02-data/four-surface-reconciliation-procedure.md,
+    /plans/active/task_template.md,
+  ]
 ---
 
 # Data-pipeline E2E milestones gate — 14 cross-AG correctness criteria
@@ -492,3 +499,4 @@ is the single place to scan them all in one pass.
 - **na-eligibility-audit 2026-07-30**: KEEP-NA, valid — dated operator ruling
   (autonomous_session_operator_decisions_2026_07_25 entry #10, resolved 2026-07-26 option A): standing reference
   surface, not an archival candidate; 0 open todos is expected here.
+- **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).

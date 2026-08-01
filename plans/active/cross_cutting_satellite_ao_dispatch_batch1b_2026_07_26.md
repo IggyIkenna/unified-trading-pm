@@ -55,6 +55,13 @@ source: >-
 assigned_role: data_engineering
 sequential: false
 drift_direction: advance-code
+context_scope:
+  [
+    /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
+    /plans/active/cross_cutting_satellite_ao_dispatch_batch1_2026_07_26.md,
+    /plans/active/cross_cutting_satellite_ao_dispatch_batch1_2026_07_26_finalize.md,
+    /cursor-configs/skills/ag-closeout-audit/SKILL.md,
+  ]
 ---
 
 # Cross-cutting satellite AO batch 1 (part 2 of 2) — fresh triage extraction
@@ -137,34 +144,34 @@ drift_direction: advance-code
       (classify → relocate/fold-into-CLI/delete-dead, GCS-orphan-verify before any migration-script delete) across every
       repo's `scripts/` EXCLUDING features-service's smoke/e2e harnesses already handled in (2). Source:
       `plans/active/issues/features_service_coverage_and_script_canon_2026_06_10.md`. Done when: per-module coverage
-      runs green on Python 3.13 locally; the 8 smoke_matrix.py + e2e/* files exist under `e2e-testing/scripts/<domain>/`
-      and no longer under features-service, wired to that repo's QG; every repo's `scripts/` directory has been
-      classified per the script-homes canon with dead scripts deleted and relocatable scripts moved, each carrying the
-      required lifecycle marker.
+      runs green on Python 3.13 locally; the 8 smoke_matrix.py + e2e/\* files exist under
+      `e2e-testing/scripts/<domain>/` and no longer under features-service, wired to that repo's QG; every repo's
+      `scripts/` directory has been classified per the script-homes canon with dead scripts deleted and relocatable
+      scripts moved, each carrying the required lifecycle marker.
 
       **PARTIAL PROGRESS 2026-07-31 (slot 10) — lifecycle-marker stamping sub-piece DONE, classify/delete/relocate
-                          NOT done.** Fleet-wide `grep -rL '^# Delete-when:' */scripts/ --include='*.py' --include='*.sh'` found 32
-                          remaining unstamped scripts across 12 repos (client-reporting-api, deployment-service, deployment-ui,
-                          e2e-testing, features-service, fund-administration-service, greeks-service, instruments-service,
-                          market-data-processing-service, market-tick-data-service, unified-api-contracts, unified-trading-pm) — every
-                          other repo in the fleet was already fully stamped from the prior rollout. Stamped all 32 using the
-                          already-decided classification embedded in each script (existing `Epic:`/`Lifecycle:` prose where present) or
-                          the nearest sibling-file epic convention (mechanical, no new judgment calls), then shipped per-repo via the
-                          normal QG→quickmerge flow: client-reporting-api@c47835f, deployment-service@1261ce7, deployment-ui@5a4ce5a,
-                          e2e-testing@42be3c1, features-service@3966bfcb, fund-administration-service (pending final quickmerge, commit
-                          c0402e0 already QG-green), greeks-service@aee891d, instruments-service@240d80a7,
-                          market-data-processing-service@0d43a64, market-tick-data-service@fe1c4ca2, unified-api-contracts@a4b1345d
-                          (recovered via reflog after a quickmerge branch-reset bug — see
-                          `plans/archive/issues/quickmerge_agent_regate_resets_branch_loses_local_commit_2026_07_31.md`), unified-trading-pm
-                          (this commit). **The classify/delete/relocate portion of this item's done-when is intentionally NOT attempted
-                          here** — that work requires per-script KEEP/DELETE/DEPRECATE/PROMOTE-TO-CLI judgment calls (campaign-gating
-                          awareness, GCS-orphan-verification before any delete) that are explicitly scoped as
-                          GATED+REVIEWED/human-judgment in `plans/active/repo_scripts_governance_audit_2026_06_18.md` (`assigned_vm: NA`)
-                          — an AO worker attempting a fleet-wide classify+delete sweep unsupervised would risk deleting
-                          campaign-in-flight one-offs (that governance-audit doc's own Finding 1 flags this exact risk for
-                          instruments-service/MTDS). This item stays open; the marker-stamping done-when clause is satisfied, the
-                          delete/relocate clauses are not — do not re-flip this checkbox until the governance-audit plan's Phase-1
-                          delete/deprecate/promote execution actually lands.
+                                          NOT done.** Fleet-wide `grep -rL '^# Delete-when:' */scripts/ --include='*.py' --include='*.sh'` found 32
+                                          remaining unstamped scripts across 12 repos (client-reporting-api, deployment-service, deployment-ui,
+                                          e2e-testing, features-service, fund-administration-service, greeks-service, instruments-service,
+                                          market-data-processing-service, market-tick-data-service, unified-api-contracts, unified-trading-pm) — every
+                                          other repo in the fleet was already fully stamped from the prior rollout. Stamped all 32 using the
+                                          already-decided classification embedded in each script (existing `Epic:`/`Lifecycle:` prose where present) or
+                                          the nearest sibling-file epic convention (mechanical, no new judgment calls), then shipped per-repo via the
+                                          normal QG→quickmerge flow: client-reporting-api@c47835f, deployment-service@1261ce7, deployment-ui@5a4ce5a,
+                                          e2e-testing@42be3c1, features-service@3966bfcb, fund-administration-service (pending final quickmerge, commit
+                                          c0402e0 already QG-green), greeks-service@aee891d, instruments-service@240d80a7,
+                                          market-data-processing-service@0d43a64, market-tick-data-service@fe1c4ca2, unified-api-contracts@a4b1345d
+                                          (recovered via reflog after a quickmerge branch-reset bug — see
+                                          `plans/archive/issues/quickmerge_agent_regate_resets_branch_loses_local_commit_2026_07_31.md`), unified-trading-pm
+                                          (this commit). **The classify/delete/relocate portion of this item's done-when is intentionally NOT attempted
+                                          here** — that work requires per-script KEEP/DELETE/DEPRECATE/PROMOTE-TO-CLI judgment calls (campaign-gating
+                                          awareness, GCS-orphan-verification before any delete) that are explicitly scoped as
+                                          GATED+REVIEWED/human-judgment in `plans/active/repo_scripts_governance_audit_2026_06_18.md` (`assigned_vm: NA`)
+                                          — an AO worker attempting a fleet-wide classify+delete sweep unsupervised would risk deleting
+                                          campaign-in-flight one-offs (that governance-audit doc's own Finding 1 flags this exact risk for
+                                          instruments-service/MTDS). This item stays open; the marker-stamping done-when clause is satisfied, the
+                                          delete/relocate clauses are not — do not re-flip this checkbox until the governance-audit plan's Phase-1
+                                          delete/deprecate/promote execution actually lands.
 
 - [x] ✅ [CODE] P2. **features-service — fix `odds_features_exporter.py` velocity-accel fallback NaN/math semantics
       (dead-code + a legit-`0.0`-drop bug).** `_compute_velocity_from_pivoted`'s (lines ~509-514) elif/else acceleration
@@ -604,3 +611,7 @@ drift_direction: advance-code
       dispatch path, not both. Source: `plans/active/issues/macro_micro_econ_data_capture_audit_2026_06_05.md`. Done
       when: `CALENDAR_FEATURE_GROUPS` includes both groups, a batch `--operation compute` run produces non-zero
       `yield_curve`/`economic_results` shards for at least one recent day, and `quality-gates.sh` is green.
+
+## Progress Log
+
+- **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).

@@ -47,6 +47,14 @@ source: >-
   Fresh AO-eligibility triage 2026-07-25, dispatched specifically to check defi_consolidated_closeout_2026_07_18.md's
   own native open todos (previously untouched by this session's satellite-doc extraction pass) against task_template.md
   §4's dispatch-scope-eligibility bar.
+context_scope:
+  [
+    /plans/active/defi_consolidated_closeout_2026_07_18.md,
+    /plans/archive/2026_07/defi_satellite_ao_dispatch_batch1_2026_07_25.md,
+    /plans/active/defi_track01_per_instrument_and_canon_id_2026_07_24.md,
+    /plans/active/issues/honest_coverage_nightly_cron_undersized_and_launcher_ssot_drift_2026_07_16.md,
+    /plans/active/issues/defi_adapter_dead_code_audit_2026_07_24.md,
+  ]
 ---
 
 # DeFi consolidated closeout — native-todo AO extraction
@@ -278,6 +286,8 @@ session's final report; condensed here for anyone re-auditing this doc later:
   CURVE/OPTIMISM `dex_pool_swaps` `attempted_failed` rows matching the dead-subgraph cascade error) is now met — left in
   place as this todo's scope was fix+apply, not cleanup; a future pass can delete the one-off script + its launcher
   category.
+
+- **context-scout 2026-08-01**: populated/refreshed context_scope (5 entries).
 
 ## Codex SSOTs
 

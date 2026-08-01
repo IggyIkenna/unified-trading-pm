@@ -46,9 +46,10 @@ locked_since:
 context_scope:
   [
     /codex/11-project-management/doc-frontmatter-schema.md,
+    /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
     cursor-configs/skills/context-scout/SKILL.md,
     agents/context_scout_auditor.md,
-    plans/active/task_template.md,
+    /plans/active/task_template.md,
   ]
 ---
 
@@ -166,6 +167,7 @@ the doc now carries build-grade implementation detail — but stays `assigned_vm
   future: an uncommitted `plans/active/*.md` file has NO protection from `git checkout`-based conflict recovery (unlike
   git-tracked content, which at least shows up in `git status`/stash) — write it, then commit it fast, don't let a plan
   doc itself become the uncommitted artifact a later cleanup pass can't see.
+- **context-scout 2026-08-01**: populated/refreshed context_scope (5 entries).
 
 ## Codex SSOTs
 

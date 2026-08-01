@@ -59,6 +59,15 @@ source: >-
 assigned_role: cicd
 sequential: false
 drift_direction: advance-code
+context_scope:
+  [
+    /codex/08-workflows/ci-cd-flow.md,
+    /codex/06-coding-standards/quality-gates.md,
+    /codex/04-architecture/ci-alerting.md,
+    /codex/02-data/honest-absence-downstream-handling.md,
+    /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
+    /plans/active/task_template.md,
+  ]
 ---
 
 # CI satellite AO batch 1
@@ -638,3 +647,4 @@ tag; (7) the tranche-membership rule misses every `asset_group: [meta]`/`[infras
   finalize plan already carries `gate_on_depends: true` (task_template.md's draft-gated pattern), so it self-activates
   once this batch's todos land — flipping it now, ahead of that, would be premature (nothing to reconcile yet). Same
   reasoning applied consistently to entries #22 (ao) and #38 (infra).
+- **context-scout 2026-08-01**: populated/refreshed context_scope (6 entries).

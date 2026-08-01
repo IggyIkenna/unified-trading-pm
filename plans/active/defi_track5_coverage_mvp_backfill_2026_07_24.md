@@ -46,6 +46,13 @@ source: >-
   dependency as prose-only with no machine backing.
 assigned_role: data_engineering
 drift_direction: advance-code
+context_scope:
+  [
+    /plans/active/defi_consolidated_closeout_2026_07_18.md,
+    /plans/active/mvp_backfill_defi_onchain_v10_2026_06_27.md,
+    /plans/archive/2026_07/candle_canonical_path_migration_execution_2026_07_24.md,
+    /plans/archive/issues/defi_mvp_backfill_optimization_ready_2026_07_20.md,
+  ]
 ---
 
 # DeFi Track 5 — COVERAGE: backfill → MVP-100%
@@ -147,3 +154,4 @@ the parent plan's Track 7 culled-venue ruling.
   cleared but its own launcher-determination task isn't done.
 - **na-eligibility-audit 2026-07-30**: KEEP-NA, valid - depends_on + gate_on_depends:true on
   defi_consolidated_closeout_2026_07_18 which still carries 19 open todos — KEEP-NA on the gate citation alone
+- **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).

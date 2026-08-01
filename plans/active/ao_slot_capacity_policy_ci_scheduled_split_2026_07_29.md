@@ -264,3 +264,5 @@ From `/plans/active/issues/fleet_wide_qg_capacity_crisis_continues_day2_2026_07_
   incident's `run_duration_ms:1000`/`jobs:[]` signature). Flipped the sole remaining todo (§6) to done. **All 8/8 todos
   now done — plan is complete, left `status: active`/not archived per operator instruction** (not yet run through the
   archival ritual).
+- **context-scout 2026-08-01**: verified the 2 pre-existing context_scope entries still resolve and are relevant (both
+  mirror the doc's own Codex SSOTs section) — kept unchanged, refreshed (2 entries).

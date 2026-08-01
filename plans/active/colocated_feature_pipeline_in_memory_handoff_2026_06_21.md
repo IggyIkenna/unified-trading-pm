@@ -35,6 +35,13 @@ depends_on:
 source:
 assigned_role: data_engineering
 drift_direction: advance-code
+context_scope:
+  [
+    /plans/epics/features_and_ml_master.md,
+    /plans/archive/2026_06/features_calc_efficiency_and_correctness_2026_05_27.md,
+    /plans/active/cross_cutting_satellite_ao_dispatch_batch1_2026_07_26.md,
+    /plans/active/features_service_e2e_pipeline_test_2026_05_26.md,
+  ]
 ---
 
 # Colocated feature pipeline — in-memory handoff + I/O efficiency + basedpyright strictness restore
@@ -106,3 +113,4 @@ severities were weakened to `"none"`, masking 574 errors).
 - **na-eligibility-audit 2026-07-30**: KEEP-NA, valid — `locked_by: live-defi-rollout`; 3 of 4 todos already carry
   correct SUPERSEDED-BY-BATCH1 citations (the KEEP-NA-STALE fix is already applied) and are deliberately held open as
   the bookkeeping record; the 4th is genuinely gated.
+- **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).

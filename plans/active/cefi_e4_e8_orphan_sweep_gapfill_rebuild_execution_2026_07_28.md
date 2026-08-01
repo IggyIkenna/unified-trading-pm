@@ -39,6 +39,14 @@ supersedes:
 superseded_by:
 depends_on:
 source: [data_completion_cefi_2026_07_15.md — consolidated 2026-07-28 per main-agent ruling BLK-650261be (slot-4)]
+context_scope:
+  [
+    /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
+    /plans/active/data_completion_cefi_2026_07_15.md,
+    /plans/active/issues/cefi_hardstop2_carveout_codex_vs_plan_contradiction_2026_07_29.md,
+    /plans/active/issues/cefi_legacy_bucket_deleted_before_l3_gate_2026_07_28.md,
+    /codex/05-infrastructure/vm-launcher-runbook.md,
+  ]
 ---
 
 # CeFi E4→E8 orphan-sweep + legacy gap-fill + manifest rebuild — VM execution chain
@@ -280,3 +288,4 @@ todo's isolated wording. No reclassification.
   (Phases B/C/D/E) still gated per the doc's own "all steps human-executed, never AO-dispatched" banner; Phase B still
   blocked on `cefi_hardstop2_carveout_codex_vs_plan_contradiction_2026_07_29.md` (status: open, unchanged); Phase C
   still blocked on the CF-11 investigation. No change since the 2026-07-31 marker above.
+- **context-scout 2026-08-01**: populated/refreshed context_scope (5 entries).

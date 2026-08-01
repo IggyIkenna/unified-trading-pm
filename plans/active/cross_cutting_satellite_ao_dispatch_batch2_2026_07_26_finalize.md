@@ -43,6 +43,14 @@ source: >-
 assigned_role: data_engineering
 sequential: true
 drift_direction: advance-code
+context_scope:
+  [
+    /plans/active/cross_cutting_satellite_ao_dispatch_batch2_2026_07_26.md,
+    /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
+    /codex/02-data/availability-manifest-and-data-status.md,
+    /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
+    /cursor-configs/skills/ag-closeout-audit/SKILL.md,
+  ]
 ---
 
 # Cross-cutting satellite AO batch 2 — finalize
@@ -144,3 +152,4 @@ drift_direction: advance-code
   own "Done when" (a dated re-verification verdict for every Deferred entry) is a genuine, non-trivial audit that the
   plan's authors explicitly intended to run only after the full batch lands, and re-checks (a)/(b) in its own text
   reference OTHER tranches' finalizes whose state I have not verified either. Skipped back to the queue.
+- **context-scout 2026-08-01**: populated/refreshed context_scope (5 entries).

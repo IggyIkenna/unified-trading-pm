@@ -44,6 +44,12 @@ source: >-
   finalize-plan-coverage gate the reclassification itself triggered.
 assigned_role: review
 drift_direction: advance-code
+context_scope:
+  [
+    /plans/active/codex_vs_repo_docs_ssot_audit_2026_06_01.md,
+    /plans/active/na_docs_validity_and_ao_eligibility_audit_2026_07_26.md,
+    /cursor-configs/skills/ag-closeout-audit/SKILL.md,
+  ]
 ---
 
 # codex_vs_repo_docs_ssot_audit_2026_06_01 — finalize
@@ -59,3 +65,7 @@ drift_direction: advance-code
       pointer on a new contract, update every referrer's path corpus-wide, clear lock) if the plan is fully closed. If
       real work remains after the AO-dispatched todos land, leave `codex_vs_repo_docs_ssot_audit_2026_06_01.md` active
       (do not force-archive) and note what's still open here instead.
+
+## Progress Log
+
+- **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).

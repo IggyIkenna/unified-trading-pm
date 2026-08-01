@@ -47,6 +47,13 @@ depends_on:
 source:
 assigned_role: data_engineering
 drift_direction: advance-code
+context_scope:
+  [
+    /codex/05-infrastructure/data-pipeline-alerts.md,
+    /codex/05-infrastructure/vm-preemption-and-billing-waste-monitoring.md,
+    /plans/active/data_pipeline_self_healing_completion_residual_2026_07_24.md,
+    /plans/active/data_pipeline_ag_residual_backfill_decisions_2026_07_24.md,
+  ]
 ---
 
 > **🟢 2026-07-24 line-cap remediation split (plan line-cap remediation triage, row 9)**: unlocked (was
@@ -566,3 +573,4 @@ This plan **wires existing parts**. Net-new is only the keystone gate (Phase 1) 
   deliberately DECLINED to batch it and routed it to `/vm-preemption-billing-waste-audit` instead ('re-measuring is
   cheap but belongs with … not a batch todo that would re-diagnose a stale snapshot'). Respecting that prior routing
   rather than overriding it.
+- **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).

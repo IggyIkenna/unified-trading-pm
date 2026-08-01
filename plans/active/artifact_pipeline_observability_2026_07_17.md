@@ -56,6 +56,13 @@ depends_on:
 source: operator request 2026-07-17 (interactive, tab-2)
 assigned_role: infra
 drift_direction: advance-code
+context_scope:
+  [
+    /codex/05-infrastructure/dual-cloud-image-builds.md,
+    /codex/05-infrastructure/vm-tarball-deployment.md,
+    /codex/06-coding-standards/ui-testing-layers.md,
+    /plans/archive/deployment_api_cache_oom_and_ui_latency_remediation_2026_07_13.md,
+  ]
 ---
 
 # Artifact pipeline observability — build → artifact → deploy lineage
@@ -937,3 +944,4 @@ issue-doc-correction todo (Phase 3c section), and AWS resume (operator/credits-g
 - **na-eligibility-audit 2026-07-30**: KEEP-NA, valid (infra tranche, dispatch agt-30721a) — Explicit human/local-plan
   banner, dense ongoing operator sign-off history; remaining 12 items are either operator-paused, explicitly-optional
   stretch items, or follow-on cleanup tied to the same operator-reviewed design track.
+- **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).

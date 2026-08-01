@@ -49,6 +49,13 @@ source: >-
   report + draft next batch) via AskUserQuestion. Genuine operator-decision-caliber questions are QUEUED in the linked
   issue doc per that instruction, NOT silently auto-decided (this overrides AUTONOMOUS_AGENT_RULES.md rule 2's default
   "decide yourself, don't ask" for THIS session only — the operator explicitly asked for queued questions instead).
+context_scope:
+  [
+    /cursor-configs/skills/ag-closeout-audit/SKILL.md,
+    /plans/active/issues/autonomous_session_operator_decisions_2026_07_25.md,
+    /plans/active/sports_consolidated_closeout_2026_07_19.md,
+    /codex/08-workflows/ci-cd-flow.md,
+  ]
 ---
 
 # AG closeout-audit rollout — cefi/defi/tradfi/prediction
@@ -964,3 +971,4 @@ real, active, AO-dispatchable work — the batched-decisions gate that held it b
 - **na-eligibility-audit 2026-07-30**: KEEP-NA, valid (infra tranche, dispatch agt-30721a) — 962-line mega-Progress-Log
   for the ag-closeout-audit rollout; repeatedly gated by dated operator rulings on mass-flip safety after real
   half-landed-rename incidents; remaining item is a human-supervised re-verification, not a bounded fact.
+- **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).

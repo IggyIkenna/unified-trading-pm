@@ -64,6 +64,14 @@ source:
   "Successor execution plan of bucket_estate_fold_design_2026_07_13 §3 todo 1. Operator ruling 2026-07-17: all 5 folds
   as HUMAN plans. This is Fold E (portfolio-state — LAST per the design's risk order, live-trading-adjacent,
   operator-gated reader-cutover + delete)."
+context_scope:
+  [
+    /plans/archive/2026_07/bucket_estate_fold_design_2026_07_13.md,
+    /codex/05-infrastructure/bucket-isolation-model.md,
+    /codex/09-strategy/architecture-v2/cross-cutting/pnl-attribution.md,
+    /codex/02-data/pipeline-mode-partition.md,
+    /plans/active/bucket_iam_write_protection_per_tier_2026_06_09.md,
+  ]
 ---
 
 # Bucket fold — portfolio-state 6 stores → 1 (`portfolio-state-{env}-{pid}`) — LAST
@@ -117,7 +125,7 @@ per-domain path prefixes:
 - [x] ✅ [CODE] P2. **Cutover** — **DONE 2026-07-19 (operator full-send, test data).** Driven via IMPLEMENT→adversarial-
       verify workflow (woq29kqa8, GO all 5 repos). LANDED: PM yaml mirrors@a1c500097 (folded FIRST — the C+D
       PM-yaml-in-CI lesson), UAC yaml, UTL@(registry positions/pnl_attribution/risk_metrics → portfolio-state-prd +
-      literal domain prefix + _KIND_ALIASES 6 retired kinds), strategy-service (pnl/config resolved_output_bucket + 4
+      literal domain prefix + \_KIND_ALIASES 6 retired kinds), strategy-service (pnl/config resolved_output_bucket + 4
       pnl writers + venue_balance_tracker position-sports/ prefix), deployment-service yaml. UTL CI GREEN. X-repo loose
       end: execution-service `tenderly_budget.py` writes archetype-state at bucket root (internally symmetric, empty
       bucket → no data loss) — **CLOSEOUT PREFIX FIX DONE 2026-07-19: execution-service@9a1f4f1d** (added
@@ -164,5 +172,6 @@ per-domain path prefixes:
 
 - **na-eligibility-audit 2026-07-30**: KEEP-NA, valid — operator ruling 2026-07-17 (HUMAN plans); the IAM+lifecycle todo
   explicitly needs operator confirmation on live-trading retention before COLDLINE. NOTE the 'Provision + yaml/registry
-  scaffold' todo reads STALE against the 2026-07-18/19 Progress Log (targets provisioned; yaml/registry/_KIND_ALIASES
+  scaffold' todo reads STALE against the 2026-07-18/19 Progress Log (targets provisioned; yaml/registry/\_KIND_ALIASES
   landed with the `[x]` cutover).
+- **context-scout 2026-08-01**: populated/refreshed context_scope (5 entries).

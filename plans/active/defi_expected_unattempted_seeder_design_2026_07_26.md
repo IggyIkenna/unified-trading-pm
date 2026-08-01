@@ -41,6 +41,14 @@ depends_on: [defi_manifest_no_expected_unattempted_seeder_2026_07_26]
 source: [defi_satellite_ao_dispatch_batch2-001 (task C8), BLK-7c950d06, BLK-3221d4b3]
 assigned_role: data_engineering
 drift_direction: advance-code
+context_scope:
+  [
+    /plans/archive/issues/defi_manifest_no_expected_unattempted_seeder_2026_07_26.md,
+    /codex/02-data/honest-absence-downstream-handling.md,
+    /codex/02-data/availability-manifest-and-data-status.md,
+    /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
+    market-tick-data-service/market_tick_data_service/cli/handlers/_defi_manifest.py,
+  ]
 ---
 
 # DeFi expected_unattempted seeder — design
@@ -293,7 +301,7 @@ recorder.close()
 The SAME pattern applies to every other DeFi `collect-*` handler that already builds a `DefiManifestRecorder`
 (`risk_params_handler.py`, `liquidations_handler.py`, and any of dex_pools/dex_swaps/lst_rates/oracle_prices/
 perp_funding still to be confirmed at P2) — each stamps its own `data_type`'s denominator against its own
-`self._attempted_keys`. No global post-pass is needed or possible: DeFi collect-* jobs are independent CLI
+`self._attempted_keys`. No global post-pass is needed or possible: DeFi collect-\* jobs are independent CLI
 invocations/VM launches with no cross-handler run-ordering guarantee, so a single global "did every data_type run today"
 enumerator would have no reliable trigger point. Per-handler, self-contained enumeration avoids needing one.
 
@@ -400,3 +408,4 @@ handlers that build a `DefiManifestRecorder`:
   P2-above blocker since `expected_unattempted` is the correct honest state for it either way, but the disposition
   itself is still unexecuted), and Todo 6 (investigate + design the per-instrument analog of this seeder for the 5
   excluded data_types, if their existing per-instrument mechanism turns out incomplete).
+- **context-scout 2026-08-01**: populated/refreshed context_scope (5 entries).

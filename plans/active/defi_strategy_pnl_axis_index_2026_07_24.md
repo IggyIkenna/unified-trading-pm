@@ -57,6 +57,14 @@ source: >-
   plans/active/issues/plan_line_cap_remediation_2026_07_23.md (bucket-(c) split #11: "Extract Strategy/PnL index +
   1800-line historical log"). Content moved verbatim, no rewrite — see the parent's Progress Log / this remediation
   job's evidence for the split rationale.
+context_scope:
+  [
+    /plans/active/defi_consolidated_closeout_2026_07_18.md,
+    /plans/active/lst_rate_honest_coverage_2026_07_21.md,
+    /plans/active/issues/pnl_interest_accrual_wrong_engine_and_banned_formula_2026_07_21.md,
+    /plans/active/issues/defi_catalog_engine_config_key_contract_drift_2026_07_23.md,
+    /plans/active/issues/defi_archetype_universe_no_curtailment_mechanism_2026_07_23.md,
+  ]
 ---
 
 # DeFi strategy/PnL/backtest axis index — entry point for the strategy-service track
@@ -137,3 +145,4 @@ independently-startable item any session can pick up without waiting on the phas
 - **na-eligibility-audit 2026-07-30**: KEEP-NA-STALE: its todo says the e2e_testing_collateral_validation
   rewrite-vs-delete choice 'still needs an operator ruling' — that ruling landed 2026-07-29 (Option A). Citation
   corrected; doc stays NA (index/entry-point doc, nature: process, drift_direction: none)
+- **context-scout 2026-08-01**: populated/refreshed context_scope (5 entries).
