@@ -111,11 +111,29 @@ deployed image lacking (or losing) its own venv at `/tmp/ds`.
       resolution robust to a missing venv (e.g. fall back to a `PYTHONPATH`-aware invocation instead of silently falling
       back to a bare interpreter that can't import the package). Verify by triggering a manual job execution and
       confirming `Refresh COMPLETE` / `N/N updated` in the logs, not `PARTIAL`. (repo: deployment-service)
-- [ ] [INFRA] P0. Make a genuine upload failure inside `refresh_code_tarballs.sh` propagate as a Cloud Run Job execution
-      FAILURE, not a silently-successful exit — the job currently reports `succeededCount=1` for a run that logs
-      `Container called exit(1).` and `Refresh PARTIAL`. Confirm the fix by checking
-      `gcloud run jobs executions     list` reports `failedCount=1` (not `succeededCount=1`) on an intentionally-broken
-      reproduction. (repo: deployment-service)
+- [x] ✅ [INFRA] P0. Make a genuine upload failure inside `refresh_code_tarballs.sh` propagate as a Cloud Run Job
+      execution FAILURE, not a silently-successful exit — VERIFIED ALREADY CORRECT, no code change needed. This todo's
+      own premise (`succeededCount=1, failedCount=0`) does not hold:
+      `gcloud run jobs executions list --job=code-tarball-refresh     --project=central-element-323112 --region=asia-northeast1 --format=json`
+      over 30 consecutive real executions spanning `2026-07-31T23:30Z`→`2026-08-01T14:00Z` (~15h, the same
+      ongoing-broken window this doc documents) shows **30/30 with `failedCount=1`, 0/30 with `succeededCount≥1`**.
+      `gcloud run jobs executions describe     code-tarball-refresh-66w77` confirms the `Completed` condition
+      `status=False, reason="NonZeroExitCode",     message="Task ... failed with exit code: 1..."`. The default
+      (non-JSON) CLI table also renders this unambiguously — a leading `X` failure glyph + `COMPLETE: 0 / 1`. Root cause
+      of the correct behavior: `refresh_code_tarballs.sh` already `exit 1`s on any non-empty `failed_repos` (line ~174,
+      shipped 2026-06-17 commit `bba8096`), the `code_tarball_refresh_scheduler.tf` bootstrap `exec`s straight into it
+      (so the container's own exit code IS the script's), and the deployed job has `max_retries=0` (confirmed live via
+      `gcloud run jobs describe` matches terraform) — so a genuine failure is never masked by a retry. **Correction to
+      this doc's original claim**: the `succeededCount=1, failedCount=0` reading was very likely a misread of the CLI
+      table (a `None`/blank `succeededCount` column next to a populated `failedCount=1` column is easy to misalign when
+      eyeballing — confirmed by directly reproducing that exact misreading before catching it with `--format=json`).
+      **The real false-green surface, if any, is Cloud Scheduler's OWN job status, not the Cloud Run Job's**:
+      `gcloud scheduler     jobs describe uts-prod-code-tarball-refresh-cron` shows `status: {}` (no error) because
+      Cloud Scheduler only checks the synchronous HTTP 200 from the `:run` trigger API (job-accepted), not the
+      downstream execution outcome — that's GCP's own async-trigger design for Cloud Run Job schedulers, not a bug in
+      this repo's exit-code handling, and out of scope for this todo (which is specifically about the Cloud Run Job's
+      own execution status). Evidence: verified 2026-08-01 via live `gcloud` queries against `central-element-323112`,
+      no commit — the existing shipped code already satisfies the acceptance criterion. (repo: deployment-service)
 - [ ] [INFRA] P1. Audit whether any VM launched since 2026-07-30T13:02Z under `LC_TARBALL_FRESHNESS=warn` (the default)
       ran on materially stale code for a repo with a real bugfix shipped in that window — cross-reference
       `vm-logs/*/TARBALL_PINS.json` / launch timestamps against each repo's `live-defi-rollout` history for that window.
