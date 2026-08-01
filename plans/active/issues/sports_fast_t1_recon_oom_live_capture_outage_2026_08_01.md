@@ -186,15 +186,15 @@ data-pipeline-correctness-hard-rule).
 
 ## Recommended next steps
 
-- [ ] [OPERATOR] P0. Decide on an immediate mitigation while root-cause is investigated: raise the fast-t1-recon Cloud
-      Run Job's memory limit (`spec.template.spec.containers[0].resources.limits.memory`, currently `8Gi`) as a stop-gap
-      to unblock live capture, vs. leaving it OOM-failing until the underlying leak/blowup is found and fixed (a config
-      bump risks masking a real leak that will recur at a higher ceiling; a operator call on risk/urgency tradeoff, not
-      a worker one -- live capture has been down 3+ days as of this check). Done when: operator states a direction and
-      (if raising the limit) it is applied + a fresh execution is confirmed writing real raw_tick_data objects for the
-      current day. **UPDATE 2026-08-01 (slot 12)**: the root-cause todo below identifies the ACTUAL fix (scope
-      `--league` per-trigger, cutting the per-dispatch fetch ~30x) -- raising the memory limit alone would mask this
-      without fixing the redundant 30x-overfetch-per-trigger waste; consider both together, not memory-bump-only.
+- [ ] [DEVOPS] P0. OPERATOR DECISION 2026-08-01 (msg 3112, relayed by main agt-26fe12): APPROVED option A — raise the
+      limit as the immediate stop-gap to restore live SPORTS capture NOW. EXECUTE: raise the fast-t1-recon Cloud Run
+      Job's memory limit (`spec.template.spec.containers[0].resources.limits.memory`, currently `8Gi` — bump to e.g.
+      `16Gi`), apply it, then confirm a fresh execution writes real raw_tick_data objects for the current day.
+      **CRITICAL pairing (slot 12 root-cause, ✅ below):** the memory bump ALONE only MASKS the real defect — the
+      CONFIRMED cause is an unscoped 30-league fetch per single-fixture trigger (~30x overfetch, exposed by `410d7569`),
+      not a genuine leak. Ship the `--league` scoping fix (the [DATA] P0 immediately below) alongside/right after this
+      bump; do NOT treat memory-bump-only as the resolution or close root-cause on it. Done when: the limit is applied
+      AND a fresh SPORTS fast-t1-recon execution is confirmed writing real raw_tick_data objects for the current day.
 - [x] ✅ [DATA] P0. **DONE 2026-08-01 (slot 12).** Root-cause the SPORTS-specific memory blowup in the fast-t1-recon
       dispatch path -- profile or code-read `market_tick_data_service`'s CLI handler + `odds_api_adapter.py`'s
       per-fixture fetch loop for the current `--asset-group SPORTS --start-date <today> --end-date <today>` invocation
