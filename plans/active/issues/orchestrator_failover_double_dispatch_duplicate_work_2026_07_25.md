@@ -103,12 +103,21 @@ task is already in-flight on another live slot.
 
 ## Todos
 
-- [ ] [BACKEND] P2. Before re-dispatching a `failover_allowed` task off an apparently-silent owner, require a positive
+- [x] [BACKEND] P2. Before re-dispatching a `failover_allowed` task off an apparently-silent owner, require a positive
       release signal (lease expiry with a liveness re-check, e.g. `kill -0` the owner's worker PID, or an explicit
       owner-side release) rather than ping-staleness alone — a long `quality-gates.sh` run must not look like death.
       **Done when**: a worker that goes silent for a full QG run (>~4min) but is provably alive (PID up, forward
       progress in its pane/log) does NOT have its in-flight task re-dispatched, with a test simulating a
-      silent-but-alive owner.
+      silent-but-alive owner. — **Shipped `agent-orchestrator@7911083`** (dispatched + executed via
+      `/plans/active/ao_satellite_ao_dispatch_batch4_2026_08_01.md`, full evidence there). Confirmed root cause:
+      `WorkerLivenessWatchdog._reconcile_unacked_dispatches` (`server/worker_liveness_watchdog.py:963`) released a
+      `dispatched` task past the 1800s ACK timeout back to `queued` on a SINGLE non-"working" pane-classify snapshot
+      alone, with no real liveness check — then `dispatch.py`'s R5 `_target_slot_is_dead()` (600s ping-silence
+      threshold, shorter than the 1800s that had just fired) let a DIFFERENT slot's `pick_next_task` claim the
+      freshly-queued task moments later, while the true owner's pane was still alive. Fix requires `_pane_is_dead`
+      (reusing the exact discriminator `_sweep_dirty_slots` already uses) before releasing. Proven by 3 new tests in
+      `tests/test_worker_liveness_watchdog.py` replaying incident 1 and incident 2's slot shapes; the silent-but-alive
+      test confirmed to FAIL pre-fix with the exact `"...requeued (pinned)"` warning. Full `quality-gates.sh` green.
 - [ ] [BACKEND] P3. On re-dispatch, clear/curl-invalidate the prior owner's slot-side `current_task` (and surface a loud
       log naming both slot ids + the task) so `/api/state` never shows one task `working` in two slots — makes the
       condition observable instead of something main has to catch by pane inspection.
@@ -219,3 +228,13 @@ Doc-only this time (no code collision), but a clean example of the SAME task_id 
   against `server/routes/slots_worker.py` (2 other active docs' open todos on the same file:
   `cicd_escalation_agentrow_archived_prematurely_mid_session_2026_07_29.md`,
   `data_pipeline_failure_one_shot_done_no_agentrow_2026_07_29.md`).
+
+- **2026-08-01 (`[BACKEND] P2` shipped)**: confirmed the true call path is the two-stage chain the 2026-07-31 entries
+  above were converging on — `_reconcile_unacked_dispatches` (release trigger, single pane-classify snapshot, no
+  liveness check) followed by `dispatch.py`'s R5 `_target_slot_is_dead()` (the actual "different slot claims it"
+  mechanism, via a shorter 600s ping-silence threshold than the 1800s ACK timeout that had just released the task).
+  Fixed by requiring `_pane_is_dead` (reused, no new liveness logic) before release — `agent-orchestrator@7911083`.
+  Proven by 3 tests replaying incident 1 (slots 2&8) and incident 2 (slots 4&11)'s shapes; the silent-but-alive test
+  confirmed to fail against the pre-fix code with the exact recorded `"...requeued (pinned)"` warning. Full evidence +
+  test names in `/plans/active/ao_satellite_ao_dispatch_batch4_2026_08_01.md`'s own todo + Progress Log. `[BACKEND] P3`
+  (`/done` idempotency) is untouched, still file-collision-held as recorded above.

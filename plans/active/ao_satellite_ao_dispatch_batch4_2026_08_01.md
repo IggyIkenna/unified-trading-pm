@@ -50,6 +50,15 @@ source: >-
   of all 9 named Deferred items + 2 bonus finds recorded in that finalize plan's own evidence; this is the one item that
   cleared both its stated gate and a fresh file-collision check (a sibling item was drafted alongside it but turned out
   moot — see summary).
+context_scope:
+  [
+    /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
+    /codex/04-architecture/agent-orchestrator-alerting.md,
+    /codex/05-infrastructure/per-tab-worktrees.md,
+    /plans/active/ao_satellite_ao_dispatch_batch4_finalize_2026_08_01.md,
+    /plans/active/issues/orchestrator_failover_double_dispatch_duplicate_work_2026_07_25.md,
+    /plans/active/ao_satellite_ao_dispatch_batch3_2026_07_31.md,
+  ]
 ---
 
 # AO satellite AO batch 4
@@ -92,7 +101,7 @@ batch — nothing to dispatch for it. Full disposition for all 9 original Deferr
 
 ## Todos
 
-- [ ] [BACKEND] P2. **Before re-dispatching a `failover_allowed` task off an apparently-silent owner, require a positive
+- [x] [BACKEND] P2. **Before re-dispatching a `failover_allowed` task off an apparently-silent owner, require a positive
       release signal** (lease expiry with a liveness re-check, e.g. `kill -0` the owner's worker PID, or an explicit
       owner-side release) rather than ping-staleness alone — a long `quality-gates.sh` run must not look like death. The
       doc's own investigation did not conclusively pin down the single call site (checked
@@ -105,7 +114,24 @@ batch — nothing to dispatch for it. Full disposition for all 9 original Deferr
       test simulating a silent-but-alive owner. Source:
       `/plans/active/issues/orchestrator_failover_double_dispatch_duplicate_work_2026_07_25.md` (BACKEND P2 — its P3
       sibling, the `/done` idempotency item, is NOT in scope here; still file-collision-held, see this batch's source
-      finalize plan).
+      finalize plan). — **Shipped `agent-orchestrator@7911083`.** Confirmed root cause by direct code read (not the
+      dispatch.py R5 path alone — that's the SECOND stage): `WorkerLivenessWatchdog._reconcile_unacked_dispatches`
+      (`server/worker_liveness_watchdog.py:963`) released a `dispatched` task past `dispatch_ack_timeout_seconds`
+      (1800s) back to `queued` (clearing the owning slot's `current_task`) whenever a SINGLE pane-classify snapshot
+      didn't read `"working"` — never checking real process liveness. Once `queued` + pinned
+      (`target_slot`+`affinity=high`), `dispatch.py`'s R5 `_target_slot_is_dead()` (`high_affinity_spill_after_seconds`
+      = 600s, a SHORTER ping-silence threshold than the 1800s that just fired) immediately read the same slot as "dead"
+      and let ANY other slot's `pick_next_task` claim the task — while the true owner's tmux pane was still alive,
+      unaware. This is the exact two-stage mechanism behind both recorded incidents. Fix:
+      `_reconcile_unacked_dispatches` now requires `_pane_is_dead(sess)` (the SAME discriminator `_sweep_dirty_slots`
+      already uses, no new liveness logic) before releasing — a session that exists and isn't pane-dead keeps its lease
+      regardless of the pane-classify read. Proven by 3 new tests against the REAL call path in
+      `tests/test_worker_liveness_watchdog.py`: `test_reconcile_unacked_silent_but_alive_owner_keeps_lease` (replays
+      incident 1's shape, deployment_api_sigabrt_crash_loop-001 slots 2&8 — confirmed to FAIL pre-fix with the exact
+      `"...requeued (pinned)"` warning, PASS post-fix), `test_reconcile_unacked_dead_owner_still_released` (regression
+      guard on incident 2's shape, sports_satellite_ao_dispatch_batch2-001 slots 4&11 — a genuinely-dead pane still
+      releases), `test_reconcile_unacked_no_session_still_released` (the pre-existing no-session branch is untouched).
+      All 3 pass; full repo `quality-gates.sh` green (2215 passed, 2 skipped, basedpyright 0 errors).
 
 ## Dropped — found moot before dispatch
 
@@ -133,3 +159,11 @@ batch — nothing to dispatch for it. Full disposition for all 9 original Deferr
   shares a file-adjacency risk with `batch3_2026_07_31.md`'s todo 2 — documented as a sequencing rule above rather than
   a hard `depends_on` (cross-plan per-todo gates aren't expressible in this corpus's frontmatter; sequencing is enforced
   by execution order, not the schema). Operator approved starting work — flipped `status: draft` → `active`.
+- **context-scout 2026-08-01**: populated/refreshed context_scope (6 entries).
+- **2026-08-01 (sole todo shipped)** — Confirmed the true release call path (`_reconcile_unacked_dispatches` →
+  `dispatch.py` R5 spill, both ping/pane-snapshot based, no real liveness check) and fixed it to require `_pane_is_dead`
+  (existing discriminator, reused) before releasing a task off an apparently-silent owner. `agent-orchestrator@7911083`.
+  3 new tests added, all pass; full evidence + root-cause detail on the todo line above and reconciled into the source
+  issue doc's own `[BACKEND] P2` item. Every todo in this plan is now done — this plan is ready for archival per the
+  plan-completion-and-archival-discipline SSOT (deferred to the paired `batch4_finalize` plan / operator's archival
+  pass, per this batch's own convention).
