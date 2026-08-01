@@ -163,13 +163,14 @@ correctly scoped and already covers these 5 data_types in code; it just needs to
 
 ## Todos
 
-- [ ] [DATA] P0. Fix `instruments-service/scripts/enumerate_expected_universe.py`'s v2 `--apply-write` path (`main()`,
-      ~lines 4309-4334) to stream/batch-write `ExpectedRow`s instead of draining the full generator into one
+- [x] ✅ [DATA] P0. Fix `instruments-service/scripts/enumerate_expected_universe.py`'s v2 `--apply-write` path
+      (`main()`, ~lines 4309-4334) to stream/batch-write `ExpectedRow`s instead of draining the full generator into one
       `v2_absent: list[ExpectedRow]` before any write happens — e.g. flush to `_write_absent_rows` in bounded chunks
       (mirrors the existing `max_writes_per_run` halt-safety, but checked/flushed incrementally instead of only after
       full accumulation). Verify DeFi's `expected-universe-v2-defi` Cloud Run Job (8Gi) can then complete within its
       memory budget on a real run — or bump memory as a documented stopgap ONLY if streaming alone doesn't close the
-      gap, per this craft's EFFICIENCY north-star (stream first, scale hardware second). (repo: instruments-service)
+      gap, per this craft's EFFICIENCY north-star (stream first, scale hardware second). (repo: instruments-service) —
+      instruments-service@37f7e36e
 - [ ] [DATA] P1. **Sequentially gated on Todo 1.** Once the OOM is fixed, manually trigger `expected-universe-v2-defi`
       (or wait for the next 01:30 UTC scheduled run) and re-run this issue's manifest census
       (`read_availability_index(bucket, columns=["data_type","capture_status"])`) to confirm real `expected_unattempted`
@@ -187,3 +188,20 @@ correctly scoped and already covers these 5 data_types in code; it just needs to
   `defi_expected_unattempted_seeder_design_2026_07_26.md`'s Todo 6. Full evidence above (Cloud Run execution history,
   `gcloud run jobs executions describe` OOM message, live manifest census, code-read root cause). No fix attempted in
   this session — scoped as its own follow-up per that plan's own Todo 6 framing ("a distinct, larger task").
+- 2026-08-01 (slot-11, data_engineering): Todo 1 shipped — `instruments-service@37f7e36e`. Replaced `main()`'s v2
+  apply-write path's drain-whole-generator-into-one-list pattern with `_stream_write_v2_absent_rows()` +
+  `_write_v2_per_vm_shard_chunk()`: the bounded-window (non-`--full-history`) path now streams `enumerate_v2()`'s
+  candidates through bounded 250k-row chunks, flushing the CSV report + a per-VM shard PART file
+  (`_index/per_vm/{VM_NAME}-part{N:05d}.parquet`) every chunk instead of materialising the full candidate set first;
+  `max_writes_per_run` halt-safety is now checked incrementally instead of only after a full drain. Confirmed safe
+  against the manifest consolidator's shard discovery (globs every `_index/per_vm/*.parquet`, not one file per `VM_NAME`
+  — `unified_trading_library.manifest_consolidator._list_per_vm_shards_with_mtime`). `full_history` mode
+  (range-encoding, not used by the daily cron) is untouched — it still needs the full per-day set materialised for
+  contiguous-span compaction. Added 7 new unit tests
+  (`tests/unit/scripts/test_enumerate_v2_stream_write_oom_fix_2026_08_01.py`) covering multi-chunk streaming, mid-stream
+  halt-safety (documents the trade-off: chunks already flushed before the cap trips stay written), apply_write shard
+  PART-file writes (mocked GCS, no network), missing-env-guard fast-fail, and the zero-candidates path. Full
+  `quality-gates.sh` green (321 pre-existing + 7 new tests pass, no regressions); shipped via quickmerge. Todo 2 (verify
+  a real `expected-universe-v2-defi` Cloud Run run completes + re-run the manifest census) is sequentially gated on this
+  and NOT attempted in this session — it requires triggering/waiting on the live 01:30 UTC Cloud Run Job (or a manual
+  trigger) and is scoped as its own follow-up.
