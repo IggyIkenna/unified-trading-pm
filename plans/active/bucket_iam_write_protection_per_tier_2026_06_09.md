@@ -305,11 +305,11 @@ Two independent gates because Group A and Group B are at different stages:
       compute SA) — do not leave this tag stale per CLAUDE.md's retag-on-resolve rule.
 
       > **🟥 Note (2026-07-31, slot-14)**: even once this todo removes `unified-trading-sa`'s `storage.objectAdmin`,
-                      > that SA still live-holds `roles/resourcemanager.projectIamAdmin` + `roles/iam.serviceAccountAdmin` (undeclared
-                      > in any terraform in this repo) — both self-escalation-capable, i.e. it could re-grant itself storage access
-                      > (or any other role) without going through terraform at all. See
-                      > `issues/unified_trading_sa_live_iam_drift_vs_terraform_2026_07_31.md` — a full de-privilege of this SA is not
-                      > actually complete until that doc's P1/P2 also land.
+                          > that SA still live-holds `roles/resourcemanager.projectIamAdmin` + `roles/iam.serviceAccountAdmin` (undeclared
+                          > in any terraform in this repo) — both self-escalation-capable, i.e. it could re-grant itself storage access
+                          > (or any other role) without going through terraform at all. See
+                          > `issues/unified_trading_sa_live_iam_drift_vs_terraform_2026_07_31.md` — a full de-privilege of this SA is not
+                          > actually complete until that doc's P1/P2 also land.
 
 > **🟥 P2.2 SCOPE GAP found 2026-07-30 (slot-12) — "wire each runtime to its tier SA" is not mechanically executable
 > today.** Investigation (live GCP IAM queries + static analysis, no state mutated) found 3 independently-blocking
@@ -367,14 +367,64 @@ Two independent gates because Group A and Group B are at different stages:
       `--env prod/staging/dev` each resolve to the correct tier SA email. `launch-qg-snapshot-vm.sh` (the 4th
       `lc_gcloud_create()` caller) deliberately left UNWIRED — its write target (`${PROJECT}-deployment-events`) doesn't
       match the ratified table's Group A/B raw-data definition; folded into P2.2d2 below rather than guessed.
-- [ ] [CODE] P2.2d2. **Remaining VM-launcher tier-SA wiring** (161 of 165 `scripts/vm/launch-*.sh`: 141 direct-`gcloud`
-      callers that bypass `lc_gcloud_create()` entirely, plus `launch-qg-snapshot-vm.sh`) — its own large effort needing
-      a per-launcher tier classification pass against the ratified bucket→scheme table (Group A/B raw-data → per-tier SA
-      via `lc_tier_service_account`; the other 4 Group B folds + 19 named domain services → per-service SA, NOT this
-      helper), not a bulk mechanical edit. `lc_tier_service_account`/`lc_gcloud_create`'s SA arg (P2.2d1) are the
-      reusable building blocks — direct-`gcloud`-caller launchers will additionally need per-script conversion to route
-      through `lc_gcloud_create()` (or gain their own `--service-account=$(lc_tier_service_account ...)` flag) before
-      they can adopt it. Gated on P2.2a (met) + P2.2d1 (met, provides the helper).
+- [x] ✅ [CODE] P2.2d2a. **DONE 2026-08-01 (slot-7) — `deployment-service@7538587`/`01edfe8`/`ef891c1`.** Split out of
+      P2.2d2 (single checkbox covering both a genuinely-classifiable-and-safe slice and a large still-ambiguous one —
+      mirrors this plan's own P1.2a/P1.2b, P2.1a/P2.1b, P2.2a-e, P2.2d1 precedent). Ran the per-launcher tier
+      classification pass P2.2d2 called for: of 134 direct-`gcloud`-calling launchers (133 found via
+      `grep -L 'lc_gcloud_create\|--service-account='`, +1 `launch-api-football-backfill-vm.sh` recovered after its own
+      comment — "rather than the `lc_gcloud_create` wrapper" — produced a grep false-positive that had excluded it),
+      cross-referenced each against the target service tarball it pulls (`lc_verify_tarball_freshness`/tarball-name
+      grep) and, for `market-data-processing-service`, against its actual `resolve_bucket_name(kind=...)` call sites
+      (confirmed MDPS candles land in `kind="market-data"` — the SAME `market-data-tick-*` family as raw MTDS ticks, not
+      a separate bucket kind). **95 launchers** write EXCLUSIVELY into Group A raw-data
+      (`market-data-tick-*`/`instruments-store-*`) with no `features-service` co-dependency — unambiguously covered by
+      `uts-prd-sa`/`uts-test-sa`'s IAM condition, so wired via
+      `--service-account="$(lc_tier_service_account "$DEPLOYMENT_ENV" "$PROJECT")"` on their real
+      `gcloud compute instances create` invocation (87 via a scripted transform targeting the `--project=` line +
+      dry-run/shellcheck/`bash -n` verified across all 95; 8 hand-edited for non-standard formatting — arrays, same-line
+      flags, no-backslash-continuation — 3 of those also needed `lib/launcher_common.sh` sourced in for the first time).
+      Full per-file list + rationale in the 3 commits above. `launch-cefi-week-test.sh` needed no edit (pure delegator
+      to the now-wired `launch-cefi-forward-poll.sh`, fixed transitively).
+- [ ] [CODE] P2.2d2b. **Remaining VM-launcher tier-SA wiring** (~66 launchers P2.2d2a did not touch, classified but not
+      wired — NOT a re-guess, the per-launcher disposition is already known from P2.2d2a's pass): - **12
+      `features-service` launchers** (`launch-canonical-migration-vm.sh`, `launch-features-backfill-vm.sh`,
+      `launch-features-cross-cutting.sh`, `launch-features-sharded-backfill.sh`,
+      `launch-features-sports-backfill-vm.sh`, `launch-features-vm.sh`, `launch-mdps-features-live.sh`,
+      `launch-mtds-live.sh`, `launch-prediction-arb-detector.sh`, `launch-prediction-live.sh`,
+      `launch-sfi-progressive-features-backfill-vm.sh`, `launch-sports-derived-features-census-vm.sh`) each need a
+      PER-SCRIPT bucket-name verify before wiring — confirmed trap: `launch-prediction-features-vm.sh` (a 13th, already
+      excluded here) writes the LEGACY `features-cross-instrument-prediction-*` bucket, which does NOT match
+      `group_b_bucket_prefixes` (`features-{cefi,tradfi,defi,pred,sports}-`) in `bucket_iam_per_tier_sa.tf` — wiring it
+      to `uts-prd-sa` would 403 its own writes. Verify each of the 12 resolves to the canonical `features-{ag}-` shape
+      (not a legacy per-feature-family name) before adding the flag. - **2 migration-purpose launchers**
+      (`launch-legacy-bucket-migration-sharded.sh`, `launch-gcs-migration-bundle-vm.sh`) — this plan's own SA design (§
+      Open design decisions) reserves `uts-migration-sa` as "the sanctioned cross-tier writer" for migration scripts,
+      but `lc_tier_service_account` only resolves `prod|staging|dev` → `uts-prd-sa`/`uts-test-sa`, no migration mode.
+      Needs either a `lc_tier_service_account` migration-mode extension or confirmation the specific migration stays
+      within one tier's Group A scope before defaulting it to the tier SA. - **17 execution/strategy/ml-service +
+      per-service launchers** (`launch-aave-lending-rate-validation-vm.sh`,
+      `launch-amm-golden-fixture-validation-vm.sh`, `launch-batch-live-recon-cron-vm.sh`,
+      `launch-client-reporting-cutover-vm.sh`, `launch-defi-backtest-vm.sh`, `launch-defi-paper-trading-vm.sh`,
+      `launch-defi-recursive-borrow-vm.sh`, `launch-execution-alpha-vm.sh`, `launch-funding-ensemble-paper-cron-vm.sh`,
+      `launch-ml-training-vm.sh`, `launch-ml-vm.sh`, `launch-scenario-runner-vm.sh`,
+      `launch-strategy-backtest-grid-vm.sh`, `launch-strategy-live-vm.sh`, `launch-strategy-paper-vm.sh`,
+      `launch-strategy-test-vm.sh`, `launch-wallet-treasury-cutover-vm.sh`) — write `execution-store`/`strategy-store`/
+      `ml-store`, the "other 4 Group B folds" the ratified table assigns to **per-service SA, NOT this helper**. Out of
+      P2.2d2's scope entirely (belongs to whatever plan finishes the per-service SA rollout). - **9 AWS launchers**
+      (`launch-cefi-sharded-backfill-aws.sh`, `launch-central-brain-aws.sh`, `launch-defi-backfill-vm-aws.sh`,
+      `launch-ec2-vm.sh`, `launch-features-backfill-vm-aws.sh`, `launch-features-onchain-backfill-vm-aws.sh`,
+      `launch-instruments-backfill-vm-aws.sh`, `launch-mdps-backfill-vm-aws.sh`, `launch-mtds-backfill-vm-aws.sh`) —
+      different cloud, different IAM mechanism (AWS IAM instance profiles, not GCP service accounts) — out of scope for
+      this GCP-terraform-based plan; would need its own AWS-side plan. - **~11 ambiguous/control-plane launchers**
+      needing individual judgment, not yet made: `launch-bucket-rsync-vm.sh` (arbitrary source/dest per invocation —
+      spans buckets outside any single scheme), `launch-dashboard-vm.sh` (writes `deployment-orchestration-*`, not Group
+      A/B), `launch-disaster-drill-cron-vm.sh` / `launch-dr-drill-cutover-vm.sh` (DeFi archetype chaos/DR tooling —
+      likely execution/strategy-adjacent, unverified), `launch-sports-scheduler-vm.sh` (control-plane trigger for other
+      launchers, may not itself write Group A/B), `launch-vm-zombie-watchdog.sh` (reads the events bucket + heartbeats,
+      not a data writer), plus `launch-features-onchain-backfill-vm.sh` (thin wrapper delegating to the still-unverified
+      `launch-features-backfill-vm.sh` — resolves once that one does). `lc_tier_service_account`/`lc_gcloud_create`'s SA
+      arg (P2.2d1) remain the reusable building blocks for whichever of the above end up per-tier. Gated on P2.2a
+      (met) + P2.2d1 (met) + P2.2d2a (met, this split).
 - [ ] [INFRA] P2.2e. **NEW, opened 2026-07-31 (slot-5).** Cut `uts-shared-deployment-api`'s live traffic
       (`spec.traffic`) over to a `uts-prd-sa` revision (P2.2c wired the identity + resource sizing; this is the separate
       step of actually promoting it). **Currently BLOCKED**: every fresh cold-start of a new/tagged revision fails
