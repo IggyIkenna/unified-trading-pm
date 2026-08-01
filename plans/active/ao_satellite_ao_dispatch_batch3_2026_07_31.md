@@ -374,4 +374,10 @@ batch1/batch2 applied, per the candidate-generator script's own stated rationale
   `docspec.py` `FieldSpec` `Req.E`→`Req.R` hardening flip is correctly NOT attempted this pass (by design, per this
   todo's own instructions) since the inventory isn't at zero. A future session should re-run the inventory fresh (the
   count above will already be stale given how actively this corpus is being edited), continue from
-  `NEVER_SCOUTED`/`STALE`, and only flip the `FieldSpec` once genuinely at zero corpus-wide.
+- **na-eligibility-audit 2026-08-01** (autonomous, tranche `ao`, dispatch agt-8e95ca, slot 2): KEEP-NA, valid — same
+  NA/local-only satellite-batch convention as batch2/batch4 (see batch2's marker for the cross-tranche note). The sole
+  open item (corpus-wide `context_scope` backfill) is corpus-scale, incrementally-progressing work with substantial real
+  progress recorded above (135 docs scouted 2026-08-01 alone) — correctly not bounded to a single-worker AO dispatch.
+  This is also the live tracking home for `context_scout_completion_and_plan_brainstorm_skill_2026_07_30.md`'s duplicate
+  checkbox (fixed via citation this run, not reclassified). `NEVER_SCOUTED`/`STALE`, and only flip the `FieldSpec` once
+  genuinely at zero corpus-wide.

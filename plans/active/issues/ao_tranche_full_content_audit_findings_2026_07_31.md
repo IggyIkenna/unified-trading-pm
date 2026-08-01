@@ -138,5 +138,10 @@ tracker's Phase sections and flipping them `[x]` with a `DONE via ao_fleet_obser
 
 ## Progress Log
 
+- **na-eligibility-audit 2026-08-01** (autonomous, tranche `ao`, dispatch agt-8e95ca, slot 2): KEEP-NA, valid — §1 and
+  §2 are literally titled "Operator ask"/"Operator decision needed" (explicit go/no-go on an exclusion list and a
+  retagging pass). §3 states in its own body it "needs a human read of both... before deciding which one is the
+  survivor" despite the `[SCRIPT]` tag. Only §4 (flip 6 already-archived `MOVED` items + fix a stale count) is purely
+  mechanical, but 3 of 4 todos are human-judgment-gated so the doc as a whole correctly stays NA.
 - 2026-07-31: filed during `/pre-compact` — these 4 findings existed only in chat during the live audit session and
   would have been lost at compaction; the tracker doc itself has zero line-cap headroom to hold them (999/1000 lines).

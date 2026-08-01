@@ -147,3 +147,11 @@ whether that stalenesss is an accepted characteristic of an interactive-only VM.
       `ikenna-worker`) could not reach it: `ssm:SendCommand` and `sts:AssumeRole` onto `uts-orchestrator-epic-role` were
       both denied — this is a genuinely different identity than the ambient orchestrator role, so it doesn't qualify for
       the IAM self-service rule (repo: `/codex/05-infrastructure/orchestrator-cloud-identity-self-service.md`).
+
+## Progress Log
+
+- **na-eligibility-audit 2026-08-01** (autonomous, tranche `ao`, dispatch agt-8e95ca, slot 2): KEEP-NA, valid — the sole
+  open `[OPERATOR] P3` item requires access to the human-planning VM (`i-0dd9812a96cdda5dc`); the doc records a
+  concrete, verified denial (`ssm:SendCommand`/`sts:AssumeRole` onto `uts-orchestrator-epic-role` both denied for the
+  worker's IAM identity), explicitly a genuinely different identity than the ambient orchestrator role — a real access
+  barrier, correctly NA.

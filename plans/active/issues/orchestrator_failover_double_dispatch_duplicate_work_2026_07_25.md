@@ -238,3 +238,14 @@ Doc-only this time (no code collision), but a clean example of the SAME task_id 
   confirmed to fail against the pre-fix code with the exact recorded `"...requeued (pinned)"` warning. Full evidence +
   test names in `/plans/active/ao_satellite_ao_dispatch_batch4_2026_08_01.md`'s own todo + Progress Log. `[BACKEND] P3`
   (`/done` idempotency) is untouched, still file-collision-held as recorded above.
+- **na-eligibility-audit 2026-08-01** (autonomous, tranche `ao`, dispatch agt-8e95ca, slot 2): KEEP-NA, valid — of the 2
+  remaining open items: the `/done`-idempotency item is genuinely still file-collision-held against
+  `server/routes/slots_worker.py` (shared with 2 other active docs), a real current gate. The
+  current_task-clearing-on-redispatch item's original conflict basis has since cleared (the watchdog-cluster ordering it
+  was gated on is now ruled+shipped), and it now reads as bounded/deterministic on its own — but it still touches the
+  same dispatch-critical-path territory (`dispatch.py`/`worker_liveness_watchdog.py`) the just-landed P2 fix and sibling
+  batch3/batch4 plans deliberately sequenced around to avoid file collision. Since this corpus has no per-todo prereq
+  syntax, flipping the whole doc's `assigned_vm` would expose the still-gated `/done` item to premature dispatch
+  alongside it — correctly left NA as a doc, with the current_task-clearing item flagged as a candidate for its own
+  future scoped AO-dispatch batch (a decision for `/ag-closeout-audit` or a future satellite-batch draft, not this run's
+  verdict rubric, which only flips `assigned_vm` in place — never splits a doc).

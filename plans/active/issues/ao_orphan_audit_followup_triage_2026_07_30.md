@@ -84,3 +84,11 @@ source:
       `plan_health_tests_leak_real_slack_alerts_2026_07_24`,
       `watchdog_unpushed_sweep_defeats_operator_merge_gate_2026_07_26`. **Done when**: each lands in one of the standard
       verdict buckets (conflict-gated / operator-gated / archivable / covered) with reasoning.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-08-01** (autonomous, tranche `ao`, dispatch agt-8e95ca, slot 2): KEEP-NA, valid — all 4
+  todos are judgment-heavy, not worker-determinable alone: 2 are explicitly `[OPERATOR]`-tagged (approve/dispatch
+  batch2, rule on 12 operator-gated docs each a genuine design/judgment fork with no evidence-based tiebreaker), the
+  other 2 `[REVIEW]`-tagged items require open-ended audit judgment (classify 8 conflict-gated docs, bucket 7 unclear
+  docs) — the same shape as this skill's own work, not a deterministic check. No stale/superseded items found.

@@ -254,3 +254,13 @@ forces an operator/main manual DB patch outside the normal flow.
   single-repo mode-1 fallback (BLOCKED-ON via an earlier commit + a later unrelated cited sha), and a negative test
   proving the ambiguous-match fail-closed behavior. Full `quality-gates.sh` green (2041 passed, 1 skipped; ruff +
   basedpyright clean); shipped via `quickmerge --agent`. `sequential: true` holds for todos 3-4 (same file).
+- **na-eligibility-audit 2026-08-01** (autonomous, tranche `ao`, dispatch agt-8e95ca, slot 2): KEEP-NA, valid — verified
+  the 2026-07-30 RECLASSIFY verdict recorded elsewhere in this doc's own Progress Log was subsequently REVERTED: commit
+  `unified-trading-pm@14478ca26` ("docs(plans): reclassify 25 AO-related plans/issues to local-only execution",
+  2026-07-31, operator directive to work these interactively rather than queue behind AO's busy backlog) flipped
+  `assigned_vm: planning -> NA` and `execution_scope` back to `local-only` — this is the standing, dated revert ruling
+  per the corpus's established citation rule, so current frontmatter is correct and current. Flagging as a hygiene note
+  (not fixed this run, out of scope for a KEEP-NA marker pass): this doc's own Progress Log is silent about the revert,
+  which could mislead a future reader into thinking the 2026-07-30 RECLASSIFY is still the live state. The one open item
+  (`[DOC] P3`, BLOCKED-marker convention for `task_template.md`) is small and unblocked, but the doc as a whole is
+  correctly NA per the revert.

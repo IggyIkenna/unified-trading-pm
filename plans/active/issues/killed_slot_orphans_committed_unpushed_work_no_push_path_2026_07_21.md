@@ -175,3 +175,8 @@ review(slot1)'s behalf per the async-wait/stuck-recovery watchdog guidance.
   `2a48eda`), and that plan is now archived, but its finalize never reconciled evidence back into THIS doc. See the
   flipped todo above for the full evidence trail. The second `[INFRA] P2` (reclaim-and-push automation) remains
   genuinely open, independent work — not gated by anything, just unbuilt.
+- **na-eligibility-audit 2026-08-01** (autonomous, tranche `ao`, dispatch agt-8e95ca, slot 2): KEEP-NA, valid — the
+  single remaining open item offers two unresolved competing designs (AutoSpawn re-prioritization vs. a dedicated reaper
+  component) touching live-dispatch-critical-path machinery — a genuine architectural fork, not a mechanically bounded
+  fix. No change since the 2026-07-31 verdict above. genuinely open, independent work — not gated by anything, just
+  unbuilt.

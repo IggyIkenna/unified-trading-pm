@@ -149,3 +149,8 @@ have told "claimed and alive" apart from "claimed and abandoned weeks ago."
   times in ~15 minutes. `safe-doc-push.sh` built, tested, shipped, and proven live same-session. Root-cause fix
   (candidates 1/2/3 above) deliberately left undecided — touches session-start behavior fleet-wide, needs operator input
   on warn-vs-refuse and on whether (1)+(2) are worth building now vs (3) alone as an interim mitigation.
+- **na-eligibility-audit 2026-08-01** (autonomous, tranche `ao`, dispatch agt-8e95ca, slot 2): KEEP-NA, valid — the
+  dominant gate is the explicit `[OPERATOR] P1` decision (make `safe-doc-push.sh` the CLAUDE.md-mandated default)
+  blocking the whole downstream cluster: candidate fixes 1/2 are explicitly framed in the doc's own text as "not yet
+  decided — for operator review," and the `[DOCS] P2` doc-fold item documents that still-undecided set. No change since
+  filing.

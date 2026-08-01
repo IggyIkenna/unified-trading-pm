@@ -168,3 +168,11 @@ guardrail above, that would need its own fresh model-tier-risk review, not an in
   guardrail protects, and where this plan's cross-reference note lands
 - `/codex/12-agent-workflow/claude-cli-multi-account-headless-auth.md` — the existing multi-account /
   `ANTHROPIC_BASE_URL` mechanism this pilot deliberately does NOT reuse (see guardrail)
+
+## Progress Log
+
+- **na-eligibility-audit 2026-08-01** (autonomous, tranche `ao`, dispatch agt-8e95ca, slot 2): KEEP-NA, valid — the
+  doc's own opening section states an explicit, dated operator ruling (2026-07-30) waiving the trust-boundary objection
+  and directing the model-tier-SSOT-conflict objection be resolved by a structural guardrail, explicitly keeping this
+  doc `assigned_vm: NA`/`execution_scope: local-only` by operator choice even though the individual todos read as
+  AO-dispatch grade. Citation confirmed present verbatim in the doc body — never re-litigating an established ruling.

@@ -206,3 +206,7 @@ is known-wrong is actively dangerous.
   other doc — it's genuinely open, standalone, large-blast-radius infra work that needs its own scoped implementation
   pass (touches `base-service.sh`/the QG entry point every repo invokes). Mis-filed into the conflict-gated bucket by
   association with its sibling item, not by an actual dependency.
+- **na-eligibility-audit 2026-08-01** (autonomous, tranche `ao`, dispatch agt-8e95ca, slot 2): KEEP-NA, valid — the
+  single open item is the fleet-wide QG-admission semaphore (`[DEVOPS] P1`), assessed and correctly left open by two
+  prior audit passes (2026-07-30, 2026-07-31) as genuinely out-of-bounded-scope, large-blast-radius infra work touching
+  the shared `base-service.sh`/QG entry point every repo invokes. Re-confirmed on independent re-read — no change.

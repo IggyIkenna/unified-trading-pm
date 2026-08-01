@@ -455,3 +455,7 @@ bans. Fleet VMs (setup-token env files) are unaffected.
   agents; and a `harsh-worker` IAM grant with no self-service path) plus one `[DESIGN]` dirty-worktree policy whose step
   4 is an operator-sanctioned hard reset.
 - **context-scout 2026-08-01**: populated/refreshed context_scope (2 entries).
+- **na-eligibility-audit 2026-08-01** (autonomous, tranche `ao`, dispatch agt-8e95ca, slot 2): KEEP-NA, valid —
+  re-verified all 3 remaining open items against live doc text: a permission-blocked-by-design SM secret write, an
+  operator-sanctioned dirty-worktree reset policy, and a `BLOCKED-CREDENTIALS`-tagged IAM grant with a filed approval
+  request. All three remain genuinely operator-gated, no change since the 2026-07-30 verdict.

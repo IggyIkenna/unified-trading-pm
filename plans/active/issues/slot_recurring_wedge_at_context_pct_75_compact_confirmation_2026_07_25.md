@@ -148,3 +148,8 @@ recurrence-prone and episode 1 needed manual intervention.
   `/compact`) and 3 (context-plateau detection) were never actually blocked by the ordering question — independently
   actionable now (item 1 in particular would make this whole escalation race moot by preventing the wedge in the first
   place).
+- **na-eligibility-audit 2026-08-01** (autonomous, tranche `ao`, dispatch agt-8e95ca, slot 2): KEEP-NA, valid —
+  re-verified the 2026-07-31 re-triage's item-2 finding against live code
+  (`server/worker_liveness/_respawn.py::maybe_auto_respawn_stuck_slot`); still unresolved pending a live trace/test as
+  that entry states. Items 1 and 3 are independently actionable but neither prior pass reclassified them — concur with
+  that caution, this stays a judgment-gated live-dispatch-critical-path change, not a clean AO todo.

@@ -152,3 +152,6 @@ again) never triggers it. Nothing currently reminds an operator/agent to re-run 
   backend (a new cgroup-v2 memory-stat reader in `host_resources.py`, extending the `/ws/vm-resources` push contract)
   and deployment-ui's frontend (a new dashboard tile, which per this workspace's `[UI]` gate needs a `pw:L2 ✓`
   regression spec) — real feature-sized, cross-repo work, not a 20-minute follow-up. Correctly skipped.
+- **na-eligibility-audit 2026-08-01** (autonomous, tranche `ao`, dispatch agt-8e95ca, slot 2): KEEP-NA, valid — the sole
+  open `[REVIEW] P3` remains an open design/judgment call (new cgroup-v2 memory-stat reader + a new deployment-ui
+  dashboard tile), correctly left NA/unbuilt per the 2026-07-30 self-assessment. No change.

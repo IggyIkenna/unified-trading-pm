@@ -153,3 +153,6 @@ confirmed, recurrence-prone, and points at a real one-shot-lifecycle exit-signal
   only if this scenario is ever observed live"), unrelated to whether the kick-vs-escalation ordering question is
   resolved. Mis-filed into the conflict-gated bucket by association (same general subsystem), not by an actual
   dependency. No action needed; correctly stays open and low-priority.
+- **na-eligibility-audit 2026-08-01** (autonomous, tranche `ao`, dispatch agt-8e95ca, slot 2): KEEP-NA, valid — the sole
+  open `[REVIEW] P3` remains explicitly observation-gated ("act only if this scenario is ever observed live"). No change
+  since the 2026-07-31 re-triage above.
