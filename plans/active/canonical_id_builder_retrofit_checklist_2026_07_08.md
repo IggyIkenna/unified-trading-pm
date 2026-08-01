@@ -104,32 +104,30 @@ source:
       shape found (checked execution-service, market-tick-data-service, deployment-api's legacy display-map, and grep
       for every literal PENDLE/KAMINO instrument_key reference). **No new `InstrumentType` enum members are needed for
       todo 1** — every real value already has a canonical home.
-- [ ] [DATA] P2. **Retrofit the ~20 DeFi adapters whose `instrument_key` ad hoc f-string already uses a CORRECT enum
-      name (DRY-only, no behavior change)** — todo 2's re-investigation (2026-07-27) found the ORIGINAL todo 1 list is
-      now stale: of its representative examples, `aave_v3.py:422,436` / `compound_v3.py:267,281` (A_TOKEN/ DEBT_TOKEN),
-      `benqi.py`/`euler_v2.py`/`fluid.py`/`morpho.py` (now A_TOKEN/DEBT_TOKEN, not LENDING_MARKET),
-      `convex.py`/`beefy.py`/`idle.py`/`karak.py`/`jito_restaking.py` (YIELD_BEARING, not VAULT),
-      `eigenlayer.py`/`ethfi.py` (SPOT_ASSET, not GOVERNANCE_TOKEN), `jupiter.py` (SPOT_PAIR, not SPOT) are ALL already
-      emitting a real, correct `InstrumentType` name as their key's middle segment — they just don't route through the
-      shared `build_canonical_instrument_id`/`build_instrument_id` builder function yet (pure DRY gap, same class as
-      todo 8/9's "not urgent, pick up opportunistically" MTDS/ccxt_adapter.py items, NOT a correctness bug). Fresh full
-      grep (2026-07-27) of the CURRENT remaining ad hoc-`instrument_key`-f-string sites in
-      `instruments_service/reference_data/adapters/defi/*.py` (superseding the stale 48-file estimate above):
-      `compound_v3.py:267,281` (A_TOKEN/DEBT_TOKEN), `cbeth.py:106` / `lido.py:98` / `renzo.py:128` / `wbeth.py:121` /
-      `puffer.py:98` / `rocket_pool.py:87` (LST), `aave_v3.py:422,436` (A_TOKEN/DEBT_TOKEN), `kamino.py:196`
-      (SOLANA_VAULT, fixed this round), `pendle.py:267` (YIELD_BEARING, fixed this round),
-      `solana_native_staking.py:104` (STAKING), `uniswap_v2.py:222` / `uniswap_v3.py:609` / `uniswap_v4.py:253` (POOL),
-      `raydium.py:315` (POOL), `spark.py:315,329` (A_TOKEN/DEBT_TOKEN), `yearn.py:152` / `symbiotic.py:115`
-      (YIELD_BEARING). **Do NOT re-run the todo-2 investigation** — this list is already re-verified current as of
-      2026-07-27; re-grep only to catch NEW adapters added after this date. Batch by TYPE-cluster (A_TOKEN/DEBT_TOKEN
-      files together, LST files together, POOL files together, etc.) per the existing todo below on shipping in batches,
-      not one giant commit. Not urgent — cosmetic consistency only, same priority class as todo 8/9. already-fixed P0
-      "23 DeFi adapters silently return empty on canonical-form type filters" finding
-      (`canonical_id_p0_defi_adapter_type_filter_bug_2026_07_08.md`) — confirm whether these 7 additional tokens are
-      ALSO silently dropped by any canonical-form type filter downstream (same mechanism, different tokens), or whether
-      they're intentionally distinct sub-types that need new `InstrumentType` enum members before
-      `build_canonical_instrument_id` can represent them at all. Do not blindly map them onto an existing enum value
-      without checking whether the distinction (e.g. SUPPLY vs BORROW within Compound V3) is load-bearing downstream.
+- [x] [DATA] P2. **Retrofit the ~20 DeFi adapters whose `instrument_key` ad hoc f-string already uses a CORRECT enum
+      name (DRY-only, no behavior change)** — DONE 2026-08-01 (slot-6, `data_engineering`),
+      `instruments-service@d2c73500`. All 16 named sites retrofitted to route through
+      `unified_api_contracts.internal.reference.canonical_id_builder.build_instrument_id(venue_tag, InstrumentType.X,     symbol, passthrough=True)`,
+      matching the `deribit_options_adapter.py` proof pattern: `compound_v3.py` (A_TOKEN/DEBT_TOKEN), `aave_v3.py`
+      (A_TOKEN/DEBT_TOKEN), `spark.py` (A_TOKEN/DEBT_TOKEN), `cbeth.py`, `lido.py`, `renzo.py`, `wbeth.py`, `puffer.py`,
+      `rocket_pool.py` (LST), `solana_native_staking.py` (STAKING), `uniswap_v2.py`, `uniswap_v3.py`, `uniswap_v4.py`,
+      `raydium.py` (POOL — only the historical-fallback f-string site at the old line 315; the separate
+      `build_pool_identity(...)` call for live pools was already routing through a different UAC builder and was left
+      untouched), `yearn.py`, `symbiotic.py` (YIELD_BEARING). Byte-identical output verified:
+      `_venue_token(venue, chain=None)` uppercases its input and every `venue_tag` in these call sites is already the
+      fully-composed, already-uppercase `VENUE-CHAIN` string, so passing it as `venue` with no `chain=` kwarg reproduces
+      the exact prior string; DeFi symbols keep their on-chain case under `passthrough=True` (`_build_defi` never
+      `.upper()`s the symbol), matching the prior ad hoc f-strings exactly. `quality-gates.sh` green
+      (instruments-service). **Follow-up found, not in scope for this todo** — a fresh grep during this pass found 8
+      MORE un-migrated ad hoc `instrument_key` f-string sites the 2026-07-27 investigation's list did not name:
+      `ankr.py:86`, `mantle.py:86`, `maker.py:101`, `stakewise.py:90`, `swell.py:86`, `stader.py:85` (all `:LST:`), plus
+      `kamino.py:199` and `pendle.py:274` (already TYPE-correct per todo 1, still not builder-routed). Tracked as a new
+      todo below rather than silently absorbed into this one's scope. **Outstanding from the original investigation, NOT
+      addressed by this DRY-only pass** — confirm whether the 7 A_TOKEN/DEBT_TOKEN/YIELD_BEARING/STAKING/SPOT_ASSET/POOL
+      tokens named in todo 1's resolution are ALSO silently dropped by the already-fixed P0 "23 DeFi adapters silently
+      return empty on canonical-form type filters" finding
+      (`canonical_id_p0_defi_adapter_type_filter_bug_2026_07_08.md`), same mechanism/different tokens — separate work
+      from the builder-routing done here.
 - [ ] [DATA] P2. **VERIFY `morpho.py:195`'s real current code against finding 6** — the canonicalization issue doc's
       finding 6 describes a real 3rd-colon-inside-symbol bug (`MORPHO-BASE:LENDING_MARKET:USDC-EURC:0x305dd1`), but the
       CURRENT adapter code at `morpho.py:195` reads
