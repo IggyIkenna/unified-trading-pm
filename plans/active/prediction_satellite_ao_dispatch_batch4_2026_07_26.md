@@ -613,3 +613,20 @@ Phase B itself is a large multi-repo migration that warrants its own dedicated p
   `PAUSED`, the real unblock is `-001` actually landing (either the dispatch-order bug getting fixed for real, or a
   data_engineering worker being dispatched `-001` directly per that plan's own backlog entry).
 - **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).
+- **2026-08-01T09:2xZ (slot 7, `data_engineering`, backlog task `prediction_satellite_ao_dispatch_batch4-023`, resumed
+  after `already_in_progress: true`)**: re-verified both blocker legs fresh, no change. Cron
+  `uts-prod-manifest-consolidator-market-data-prediction-cron` still `PAUSED` (`userUpdateTime: 2026-07-31T13:45:51Z`,
+  pinned `--account=unified-trading-sa@...`). `mtds_available_at_cross_asset_backfill-001` still `status: queued`
+  (`GET /api/backlog`); sibling `-006` still `dispatched` to slot 3, now ~34h in (`dispatched_at: 2026-07-31T23:33:21Z`,
+  `done_at: null`). **New finding this touch**: confirmed slot 3 is NOT wedged/dead — `tmux capture-pane` shows it alive
+  and genuinely mid-work on `-006` ("Apply rebuild_prediction_manifest.py full-range", waiting on "chunk 21" of its own
+  chunked apply, actively heartbeating). This rules out the "stalled dispatch" concern implicit in prior entries' ">24h
+  no completion" framing — the long duration is real chunked-apply work in progress, not a dead session masking as
+  `dispatched`. No change to this todo's own action: per the established precedent (slot-14/15 2026-07-29,
+  slot-15/slot-6 2026-07-31, slot-6 2026-08-01), not touching the sibling plan's cron/Apply/Resume todos, not arming
+  another watcher on an unchanged external stall. Released via `/skip-current-task {"reason_code": "GATED"}`. **For the
+  next resumer**: same as the prior entry — pull the checkpoint from
+  `gs://market-data-tick-pred-prd-central-element-323112/_ops/prediction_trades_migration_checkpoint_2026_07_31.jsonl`
+  (299/348 days, 0 anomalies), re-verify the cron + `-001` status fresh; if `-006`'s chunked apply (slot 3) has finished
+  and `-001`/`-006` both show `done`, the cron should resume shortly after per that plan's own protocol — check
+  `-001`/`-006` status before assuming the block persists.
