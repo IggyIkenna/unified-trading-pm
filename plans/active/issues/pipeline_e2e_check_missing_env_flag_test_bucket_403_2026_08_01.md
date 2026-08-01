@@ -118,11 +118,16 @@ checkpoint after the fix; see the Track K (features) plan todo for the fresh gre
       invocation — mirrors the `features-service@524b71ef` fix. Verify with a fresh force/skip run against any
       asset_group/venue and confirm the VM's `run.log` shows no `storage.objects.create` 403. (repo:
       instruments-service)
-- [ ] [CODE] P0. Add the same `--env staging` fix to
+- [x] ✅ [CODE] P0. Add the same `--env staging` fix to
       `market-data-processing-service/scripts/pipeline_e2e_check.py::_launcher_argv`'s `launch-mdps-backfill-vm.sh`
-      invocation (currently relies entirely on the caller's shell `DEPLOYMENT_ENV` being pre-set, which
-      `pipeline_e2e_check.py`'s own `main()` never does — `_deployment_env_fail_fast()` only validates an already-set
-      value, it doesn't set one). Verify with a fresh force/skip run. (repo: market-data-processing-service)
+      invocation — `market-data-processing-service@b16d44c`. **Code fix shipped, but the "verify with a fresh force/skip
+      run, confirm no 403" half of this todo could NOT be completed**: MDPS specifically hits a SECOND, deeper,
+      independent bug even with `--env staging` in place — `uts-test-sa`'s Group A `market-data-tick-test-` IAM
+      condition also lacks the per-asset-group segment (same shape as `uts-prd-sa`'s), so `market-data-tick-{ag}-test-`
+      buckets still 403 regardless of which tier SA is used. Full details + terraform fix recommendation:
+      `/plans/active/issues/bucket_iam_group_a_market_data_tick_prefix_missing_asset_group_2026_08_01.md`. A genuine
+      403-free MDPS verification run is blocked on THAT issue's infra fix landing first. (repo:
+      market-data-processing-service)
 - [ ] [CODE] P0. Confirm `market-tick-data-service/scripts/pipeline_e2e_check.py`'s launcher-argv builder has the
       identical gap (not yet inspected in this session — confirm before assuming) and apply the same `--env staging` fix
       if so. Verify with a fresh force/skip run. (repo: market-tick-data-service)
