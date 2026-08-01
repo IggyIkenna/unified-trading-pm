@@ -54,7 +54,7 @@ resolved_by:
 source:
   "data_pipeline_failure escalation worker (agt-0df274), found while working
   cefi_derivative_ticker_tardis_resolver_aiodns_hardfail_2026_07_28.md's third re-fire"
-last_updated: 2026-07-31
+last_updated: 2026-08-01
 ---
 
 # Escalation-worker dispatch has no "already an open issue doc" dedup check
@@ -259,3 +259,14 @@ regression) is worse.**
   read, no code change. Combined across both tracked conditions in this doc ((cefi, derivative_ticker) at 10th+, (cefi,
   book_snapshot_5) at 15th+), this backlog has now consumed 25+ full orchestrator-agent dispatches with no sign of the
   underlying dedup gap closing — still awaiting the operator/design decision on Option A/B/C.
+- **2026-08-01 (data_pipeline_failure escalation worker, agt-7f0c1a, slot 8) — `(cefi, derivative_ticker)`'s 11th+
+  dispatch, and this time the SAME escalation_id (`agt-7f0c1a`) as the entry directly above, not just the same
+  condition.** Fourth confirmed exact-duplicate-escalation_id case overall (after `agt-ccb54c` 2026-07-30, `agt-0bf4a3`
+  2026-07-31, and `agt-406c1f` 2026-07-31 — all three prior ones were `(cefi, book_snapshot_5)`) and the first one for
+  `(cefi, derivative_ticker)` — the literal same escalation event dispatched to two different slots (slot 9, then
+  slot 8) with byte-identical alert numbers (158,475/1,518,154 attempted_failed). Not addressed by the materiality fix
+  (that changes classification/paging severity for a condition, it cannot deduplicate two dispatches of the identical
+  event) — squarely Option A/B/C's territory. Session cost: two file reads + a git-ancestor check (2 commits, both still
+  in place) + a Progress Log append in the derivative_ticker doc, no GCS read, no code change. Combined across both
+  tracked conditions, this backlog has now consumed 26+ full orchestrator-agent dispatches — still awaiting the
+  operator/design decision on Option A/B/C.

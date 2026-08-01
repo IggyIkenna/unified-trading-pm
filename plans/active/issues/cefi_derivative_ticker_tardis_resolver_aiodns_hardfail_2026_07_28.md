@@ -64,7 +64,7 @@ resolved_by:
 source:
   "POST /api/escalate wall_type=data_pipeline_failure, escalation agt-7a4d1d, DP_RUN_MOSTLY_EMPTY (DP-FETCH-009)
   CRITICAL, asset_group=cefi data_type=derivative_ticker, 158085/1410602 attempted_failed (11.2%), Fresh 0d"
-last_updated: 2026-07-31
+last_updated: 2026-08-01
 ---
 
 # CeFi derivative_ticker DP-FETCH-009 -- Tardis clients hard-fail without aiodns (fixed) + open HYPERLIQUID 429 question
@@ -453,3 +453,15 @@ and the residual-KeyError defense-in-depth path.
   clone. **No code change, no new todo** — same redundant-dispatch waste
   `dp_escalation_worker_dispatch_no_open_issue_check_2026_07_29.md` already tracks (still `status: open`, P2, awaiting
   an operator/design decision that this 10th+ redundant dispatch further corroborates the need for).
+- **2026-08-01 (data_pipeline_failure escalation worker, agt-7f0c1a, slot 8) — 11th+ dispatch, and this time the SAME
+  escalation_id (`agt-7f0c1a`) as the entry directly above, not just the same condition.** This is the literal same
+  escalation event dispatched to two different slots (slot 9, then slot 8) with byte-identical alert numbers
+  (158,475/1,518,154 attempted_failed, "STATIC BACKLOG — no new attempted_failed activity in 2d"). This is the first
+  confirmed exact-duplicate-escalation_id case for `(cefi, derivative_ticker)` specifically — the same shape already
+  seen 3 times for `(cefi, book_snapshot_5)` (`agt-ccb54c` 2026-07-30, `agt-0bf4a3` and `agt-406c1f` both 2026-07-31,
+  per `dp_escalation_worker_dispatch_no_open_issue_check_2026_07_29.md`'s Progress Log). Not addressed by any
+  materiality fix (that changes classification/paging severity for a condition, it cannot deduplicate two dispatches of
+  the identical event) — squarely Option A/B/C's territory in the meta-issue. Working tree clean; both fix commits
+  (`market-tick-data-service@6a067cf1` aiodns, `@6c6fab03` HYPERLIQUID 429/K\*-symbol) confirmed still ancestors of
+  `origin/live-defi-rollout` via `git merge-base --is-ancestor`. **No code change, no new todo** — cross-referenced into
+  `dp_escalation_worker_dispatch_no_open_issue_check_2026_07_29.md`'s Progress Log as well.
