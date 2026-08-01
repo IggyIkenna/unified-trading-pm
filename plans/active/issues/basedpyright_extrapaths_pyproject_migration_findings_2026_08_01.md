@@ -112,9 +112,11 @@ script isn't invoked by `quality-gates.sh`), so none of this is actively blockin
 
 ## Recommended decision
 
-- [ ] [SCRIPT] P3. alerting-service: remove the 4 dead extraPaths, add the missing `unified-api-contracts` extraPath to
-      `[[tool.basedpyright.executionEnvironments]]` in `alerting-service/pyproject.toml`. Re-run the checker for this
-      repo to confirm clean. (repo: alerting-service)
+- [x] ✅ [SCRIPT] P3. alerting-service: remove the 4 dead extraPaths, add the missing `unified-api-contracts` extraPath
+      to `[[tool.basedpyright.executionEnvironments]]` in `alerting-service/pyproject.toml`. Re-run the checker for this
+      repo to confirm clean. (repo: alerting-service) — alerting-service@3054a8a. Verified via
+      `uv run python3 scripts/manifest/check-pyrightconfig-extrapaths.py` — zero remaining warnings for
+      alerting-service.
 - [ ] [SCRIPT] P3. batch-live-reconciliation-service: remove the 3 dead extraPaths in `pyproject.toml`. (repo:
       batch-live-reconciliation-service)
 - [ ] [SCRIPT] P3. client-reporting-api: remove the 3 dead extraPaths, add the missing `unified-api-contracts` extraPath
