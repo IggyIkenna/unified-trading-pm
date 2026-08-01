@@ -381,11 +381,13 @@ CLAUDE.md § async-discipline already warns about, here in a skip predicate rath
   `VIRTUAL_ENV=… uv pip install 'fastapi>=0.137.0,<1.0.0'` in `unified-trading-library/.venv` only. Prod images are
   unaffected (they honour the pin); this is local venv drift. Tracked as a todo below.
 
-- [ ] [SCRIPT] P3. **Re-sync the slot local venvs to UTL's declared `fastapi>=0.137.0` pin** —
-      `unified-trading-library`, `market-tick-data-service`, `instruments-service` and `deployment-service` `.venv`s all
-      shipped 0.135.1, making `import unified_trading_library` raise
-      `ImportError: cannot import name 'iter_route_contexts'`. Only slot 3's UTL venv was fixed in-session. Done-when:
-      `python -c "import unified_trading_library"` succeeds in each repo's `.venv`. Repos: all Python service repos.
+- [x] ✅ [SCRIPT] P3. **Re-sync the slot local venvs to UTL's declared `fastapi>=0.137.0` pin** — slot-11 2026-08-01.
+      `uv sync` run in `unified-trading-library`, `market-tick-data-service`, `instruments-service` (already green,
+      0.140.7) and `deployment-service`; all four now resolve `fastapi==0.140.7` and
+      `python -c "import unified_trading_library"` succeeds in every `.venv`. `.venv` is gitignored (no diff); the only
+      trackable side effect was a stale `uv.lock` `prek` pin in `deployment-service` (`>=0.3.0` → `>=0.4.4`, matching
+      the pin already declared upstream in `unified-trading-library`/`unified-api-contracts`) —
+      deployment-service@442e7b2.
 
 ## Blast-radius audit results (2026-07-30, slot 7, data_engineering) — P1 todo
 
