@@ -27,6 +27,7 @@ related:
     /plans/active/defi_expected_unattempted_seeder_design_2026_07_26.md,
     /codex/02-data/honest-absence-downstream-handling.md,
     /codex/02-data/availability-manifest-and-data-status.md,
+    /codex/02-data/defi-data-types-catalog.md,
   ]
 created: 2026-08-01
 last_updated: 2026-08-01
@@ -41,7 +42,7 @@ resolved_by:
 locked_by:
 source: >-
   Discovered 2026-08-01 (slot-16, data_engineering craft) while investigating
-  /plans/active/defi_expected_unattempted_seeder_design_2026_07_26.md's Todo 6 ("investigate whether the v2
+  /plans/archive/2026_08/defi_expected_unattempted_seeder_design_2026_07_26.md's Todo 6 ("investigate whether the v2
   expected-universe enumerator actually covers risk_params/liquidation_events/dex_pool_state/dex_pool_swaps/
   oracle_prices"). Code-level answer is YES (UAC `PROTOCOL_CAPABILITIES` declares all 5 via `_LENDING_DATA`/
   `_DEX_DATA`/`_YIELD_DATA` + explicit per-protocol `liquidation_events` entries), but a live `gcloud run jobs
@@ -60,9 +61,9 @@ superseded_by:
 **1. The mechanism is code-complete.** `instruments-service/scripts/enumerate_expected_universe.py`'s v2 per-instrument
 enumerator (`_enumerate_v2_defi`) already covers `risk_params` / `liquidation_events` / `dex_pool_state` /
 `dex_pool_swaps` / `oracle_prices` — the 5 data_types
-`/plans/active/defi_expected_unattempted_seeder_design_2026_07_26.md`'s P2 implementation deliberately left unwired
-(correctly — they are per-instrument grain, wiring this plan's venue/chain-grain seeder into them would write incorrect
-coarse rows). Validity comes from UAC's `PROTOCOL_CAPABILITIES`
+`/plans/archive/2026_08/defi_expected_unattempted_seeder_design_2026_07_26.md`'s P2 implementation deliberately left
+unwired (correctly — they are per-instrument grain, wiring this plan's venue/chain-grain seeder into them would write
+incorrect coarse rows). Validity comes from UAC's `PROTOCOL_CAPABILITIES`
 (`unified_api_contracts/registry/capability_declarations/_defi.py`):
 `_LENDING_DATA = ["lending_indices", "liquidations", "risk_params"]` (lines 363, 484-510 etc.),
 `_DEX_DATA = ["dex_pool_state", "dex_pool_swaps"]` (line 364, wired on every `_POOL`-instrument_type protocol),
@@ -148,10 +149,11 @@ row for DeFi. Per-data_type breakdown (no date filter — full history):
 The scheduler's own terraform comment documents the ORIGINAL bug this job was built to close (2026-06-19 audit): "0
 `expected_unattempted` rows materialised in EVERY IS + MTDS `_index` fleet-wide" because the apply-write hop was never
 cron-wired. That bug is now back, DeFi-only, for 19 days — the per-instrument honest-coverage denominator for the ENTIRE
-DeFi asset_group (not just the 5 data_types `defi_expected_unattempted_seeder_design_2026_07_26.md`'s Todo 6 asked
-about) has silently regressed to under-counting: any downstream consumer of the DeFi coverage % (data-status UI,
-`_axis_census`, honest-coverage reports) currently sees `captured / (captured + empty_confirmed + attempted_failed)`
-with the `expected_unattempted` term always ~0 for per-instrument DeFi cells — overstating coverage completeness for any
+DeFi asset_group (not just the 5 data_types
+`/plans/archive/2026_08/defi_expected_unattempted_seeder_design_2026_07_26.md`'s Todo 6 asked about) has silently
+regressed to under-counting: any downstream consumer of the DeFi coverage % (data-status UI, `_axis_census`,
+honest-coverage reports) currently sees `captured / (captured + empty_confirmed + attempted_failed)` with the
+`expected_unattempted` term always ~0 for per-instrument DeFi cells — overstating coverage completeness for any
 not-yet-attempted instrument the catalogue already knows about. Per
 `/codex/02-data/data-pipeline-correctness-hard-rule.md`, this is a correctness-heartbeat issue, not a
 deadline-deferrable one.
@@ -185,9 +187,10 @@ correctly scoped and already covers these 5 data_types in code; it just needs to
 ## Progress Log
 
 - 2026-08-01 (slot-16, data_engineering): Issue filed during investigation of
-  `defi_expected_unattempted_seeder_design_2026_07_26.md`'s Todo 6. Full evidence above (Cloud Run execution history,
-  `gcloud run jobs executions describe` OOM message, live manifest census, code-read root cause). No fix attempted in
-  this session — scoped as its own follow-up per that plan's own Todo 6 framing ("a distinct, larger task").
+  `/plans/archive/2026_08/defi_expected_unattempted_seeder_design_2026_07_26.md`'s Todo 6. Full evidence above (Cloud
+  Run execution history, `gcloud run jobs executions describe` OOM message, live manifest census, code-read root cause).
+  No fix attempted in this session — scoped as its own follow-up per that plan's own Todo 6 framing ("a distinct, larger
+  task").
 - 2026-08-01 (slot-11, data_engineering): Todo 1 shipped — `instruments-service@37f7e36e`. Replaced `main()`'s v2
   apply-write path's drain-whole-generator-into-one-list pattern with `_stream_write_v2_absent_rows()` +
   `_write_v2_per_vm_shard_chunk()`: the bounded-window (non-`--full-history`) path now streams `enumerate_v2()`'s

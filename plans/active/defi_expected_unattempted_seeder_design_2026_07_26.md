@@ -10,7 +10,7 @@ summary: >-
   per-handler protocol lists — was an open-ended per-venue judgment call, not a worker-determinable fact. **RULED
   2026-07-28**: wire the existing FLUID-ETHEREUM adapter into the collection loop (disposition (a) — see Background).
   With that reconciliation resolved, the plan is converted to assigned_vm: planning (AO-dispatched) end-to-end.
-status: active
+status: complete
 nature: design
 asset_group: [defi]
 stage: [data]
@@ -52,6 +52,13 @@ context_scope:
 ---
 
 # DeFi expected_unattempted seeder — design
+
+> **🗄️ ARCHIVED 2026-08-01.** All 7 todos (P0-P3, Todo 4, Todo 5, Todo 6) `[x]` — the seeder is live, verified against
+> real prod DeFi data (zero gap across `lending_indices`/`liquidations`/`lst_rates`), and FLUID-ETHEREUM is wired. Todo
+> 6's follow-up (v2 per-instrument enumerator OOM-failing for DeFi) is tracked separately:
+> `/plans/active/issues/defi_v2_expected_universe_enumerator_oom_2026_08_01.md`. Closed out by
+> `/plans/archive/2026_08/defi_expected_unattempted_seeder_design_2026_07_26_finalize_2026_07_28.md`. Per
+> `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`.
 
 ## Background
 

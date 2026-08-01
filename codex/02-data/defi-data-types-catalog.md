@@ -502,6 +502,21 @@ All handlers use `DefiManifestRecorder` to write honest-coverage entries:
 - `record_captured(venue, chain, data_type, row_count, instrument_type, attempted_at)` — rows written
 - `record_empty(venue, chain, data_type, attempted_at)` — zero rows, no exception (legitimate empty)
 - `record_failed(venue, chain, data_type, error, attempted_at)` — exception caught
+- `emit_expected_unattempted_for_remaining(data_type, declared_venues_chains, pipeline_mode)` — called once per handler
+  run, immediately before `recorder.close()`; stamps `expected_unattempted` for every UAC-declared `(venue, chain)` this
+  run never attempted for `data_type` (dedup via the recorder's own in-memory `_attempted_keys`, populated by the three
+  methods above — no second manifest read). Denominator comes from UAC
+  `get_defi_declared_venues_for_data_type(data_type, as_of)`
+  (`unified-api-contracts/unified_api_contracts/registry/defi_venue_capabilities.py`), which excludes any
+  `(venue, chain)` listed in `DEFI_VENUE_COLLECTIBILITY_EXCEPTIONS[data_type]` — the one place a disposed-exclude venue
+  (data proven genuinely unobtainable) is kept out of the denominator, so no handler needs its own per-venue skip check.
+  **Venue/chain-grain only** — wired into `lending_indices_handler.py`, `liquidations_handler.py`,
+  `lst_rates_handler.py`. NOT wired into the 5 per-instrument-grain handlers (`risk_params_handler.py`,
+  `liquidation_events_handler.py`, `dex_pools_handler.py`, `dex_swaps_handler.py`, `oracle_prices_handler.py`) — calling
+  it there would write an incorrect coarse-grain row; those data_types' honest-coverage instead comes from the v2
+  `enumerate_expected_universe.py` enumerator's per-instrument denominator (currently OOM-failing daily for DeFi
+  specifically — see `/plans/active/issues/defi_v2_expected_universe_enumerator_oom_2026_08_01.md`). Full design +
+  rationale: `/plans/archive/2026_08/defi_expected_unattempted_seeder_design_2026_07_26.md`.
 
 ---
 
