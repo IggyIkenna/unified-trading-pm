@@ -222,17 +222,17 @@ T-24h/T-1h):
       this doc; see that doc for execution).
 
       **Update (2026-07-30, finalize-001 reconciliation, slot-13/review) — sizing HALF done, purge HALF still open.**
-              Batch4's DIAG item shipped `market-tick-data-service@76ca401f` (verified ancestor of live-defi-rollout): a
-              read-only, manifest-driven sweep of the 17 sparse leagues (<=30 distinct captured days) — the 26 actively-fetched
-              leagues were explicitly NOT swept (a full-corpus sweep is ~118k GCS reads, HEAVY I/O, belongs on a dedicated VM).
-              **Findings**: `RUSSIA_PREMIER_LEAGUE` zombie CONFIRMED STILL LIVE — 18 distinct `day=` partitions (wider than the
-              5 originally documented here), 3 bookmakers (bovada/williamhill/pinnacle) × 18 days = 54 contaminated rows / 20
-              contaminated shards, `staleness_seconds` ≈1349.8 days. `AUSTRALIA_ALEAGUE`'s zombie instance is NO LONGER PRESENT
-              (resolved by intervening work). `CHINA_SUPER_LEAGUE`'s 2025-10-23 genuine-fixture control correctly EXCLUDED (0
-              contamination). **This todo's own "purge/re-derive the contaminated shards" clause is NOT yet done** — batch4's
-              DIAG scope was deliberately read-only (0 GCS objects/manifest rows deleted/overwritten/re-derived this pass). See
-              the new todo below for the tracked follow-up (per the HARD RULE that every follow-up is a `- [ ]` todo, never
-              left as prose).
+                      Batch4's DIAG item shipped `market-tick-data-service@76ca401f` (verified ancestor of live-defi-rollout): a
+                      read-only, manifest-driven sweep of the 17 sparse leagues (<=30 distinct captured days) — the 26 actively-fetched
+                      leagues were explicitly NOT swept (a full-corpus sweep is ~118k GCS reads, HEAVY I/O, belongs on a dedicated VM).
+                      **Findings**: `RUSSIA_PREMIER_LEAGUE` zombie CONFIRMED STILL LIVE — 18 distinct `day=` partitions (wider than the
+                      5 originally documented here), 3 bookmakers (bovada/williamhill/pinnacle) × 18 days = 54 contaminated rows / 20
+                      contaminated shards, `staleness_seconds` ≈1349.8 days. `AUSTRALIA_ALEAGUE`'s zombie instance is NO LONGER PRESENT
+                      (resolved by intervening work). `CHINA_SUPER_LEAGUE`'s 2025-10-23 genuine-fixture control correctly EXCLUDED (0
+                      contamination). **This todo's own "purge/re-derive the contaminated shards" clause is NOT yet done** — batch4's
+                      DIAG scope was deliberately read-only (0 GCS objects/manifest rows deleted/overwritten/re-derived this pass). See
+                      the new todo below for the tracked follow-up (per the HARD RULE that every follow-up is a `- [ ]` todo, never
+                      left as prose).
 
 - [ ] [DATA] P2. **Purge/re-derive the confirmed `RUSSIA_PREMIER_LEAGUE` zombie contamination** (20 contaminated
       `odds_horizon_bucket` shards / 54 rows across 18 `day=` partitions, sized by the read-only sweep above,
@@ -290,3 +290,12 @@ casing), the pre-floor registry fix, or the shard-enumeration/honest-coverage wo
   the aggregate >=95% bar is still the right pass criterion for near-empty international-break days') plus a two-part
   gate redesign — the reassessment is the dispatch blocker, not the re-run
 - **context-scout 2026-08-01**: populated/refreshed context_scope (2 entries).
+- **na-eligibility-audit 2026-08-01**: KEEP-NA, valid (sports tranche) — CORRECTION to the 2026-07-30 marker, which
+  addressed only the `[DATA] P3` todo and missed that this doc carries 2 open todos (confirmed via `grep -cE '^- \[ \]'`
+  = 2, matching this doc's own 2026-07-30 slot-13 Progress Log note "this doc now has 2 genuinely open todos ... not
+  0"). Both independently justify KEEP-NA: the `[DATA] P2` Russia-Premier-League purge is bounded/scoped with a stated
+  done-when, but is a GCS delete/re-derive operation tagged `[DATA]` not `[OPERATOR]` and carries no delete-safety-cite
+  or stated safe-idempotent justification, so it does not meet the GCS-delete AO-dispatch gating bar as currently
+  written; the `[DATA] P3` gate-reassessment bundles a bounded re-run with an open judgment call (whether the strict
+  per-day gate is still the right pass criterion for near-empty international-break days). Neither is a bare-flip
+  RECLASSIFY candidate as currently written.

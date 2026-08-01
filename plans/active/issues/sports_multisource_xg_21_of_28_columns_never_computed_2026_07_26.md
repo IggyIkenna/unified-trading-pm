@@ -147,3 +147,6 @@ contract.
   actually be computed' is a design/domain decision, and it deliberately stops at diagnosis rather than improvising 21
   formulas
 - **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).
+- **na-eligibility-audit 2026-08-01**: KEEP-NA, valid (sports tranche) — re-verified, unchanged since the 2026-07-30
+  verdict (only a context-scout frontmatter backfill touched this doc since); sole open todo remains
+  `[OPERATOR/DESIGN] P3`, a genuine design decision the doc itself defers.

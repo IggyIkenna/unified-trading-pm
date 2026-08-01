@@ -91,3 +91,6 @@ Evidence: relocation workflow `subagents/workflows/wf_664f7ed4-df6/journal.jsonl
   `instruments-store-sports-prd` objects — a GCS data migration is the dispatch atom here, so it needs an
   `[OPERATOR]`/delete-safety gate rather than a bare flip
 - **context-scout 2026-08-01**: populated/refreshed context_scope (2 entries).
+- **na-eligibility-audit 2026-08-01**: KEEP-NA, valid (sports tranche) — re-verified, unchanged since 2026-07-30 (only a
+  context-scout frontmatter backfill since); sole open todo bundles an unbounded root-cause trace with a 9,733-object
+  GCS migration carrying no `[OPERATOR]` tag or delete-safety citation.
