@@ -196,9 +196,13 @@ script isn't invoked by `quality-gates.sh`), so none of this is actively blockin
       zero remaining warnings for strategy-service; `quality-gates.sh` green (one
       `tests/per_client_isolation/test_shared_marks_reader.py` xdist shared-memory-name race on the first run, confirmed
       pre-existing/unrelated via isolated re-run on a clean tree, cleared on retry).
-- [ ] [SCRIPT] P3. system-integration-tests: remove the 2 dead extraPaths, add the 7 missing extraPaths
+- [x] ✅ [SCRIPT] P3. system-integration-tests: remove the 2 dead extraPaths, add the 7 missing extraPaths
       (`alerting-service`, `client-reporting-api`, `execution-service`, `features-service`, `instruments-service`,
-      `market-data-processing-service`, `strategy-service`) in `pyproject.toml`. (repo: system-integration-tests)
+      `market-data-processing-service`, `strategy-service`) in `pyproject.toml`. (repo: system-integration-tests) —
+      system-integration-tests@f132224. Removed `unified-internal-contracts`/`unified-cloud-interface` (confirmed dead:
+      no manifest dep, no source import), added the 7 missing extraPaths (confirmed real manifest deps). Re-ran
+      `check-pyrightconfig-extrapaths.py` — zero remaining warnings for system-integration-tests; `quality-gates.sh`
+      green, shipped via quickmerge, landed + verified on `live-defi-rollout`.
 - [ ] [SCRIPT] P3. trading-agent-service: remove the 2 dead extraPaths in `pyproject.toml`. (repo:
       trading-agent-service)
 - [ ] [SCRIPT] P3. unified-trading-library: remove the 3 dead extraPaths, add the missing `unified-api-contracts`
