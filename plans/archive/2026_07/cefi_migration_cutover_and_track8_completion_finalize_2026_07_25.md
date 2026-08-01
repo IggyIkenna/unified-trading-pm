@@ -8,7 +8,7 @@ summary: >-
   (cefi_residual_followups_after_honest_done_2026_07_17.md,
   cefi_shard_enumeration_blindspots_and_canonical_fetch_dependency_2026_07_18.md), then archives the now-fully-done
   cutover plan.
-status: active
+status: complete # (was: active) 2026-07-31 — all 3 todos done, target plan verified fully archived + reconciled
 nature: process
 asset_group: [cefi]
 stage: [data]
@@ -46,8 +46,19 @@ sequential: true
 drift_direction: advance-code
 ---
 
+## Deferred work — migrated to:
+
+**None** — all 3 todos done, zero open items, no prose-only remaining work found.
+
 # CeFi migration cutover + Track 8 completion — finalize
 
+> **🟢 ARCHIVED 2026-07-31.** All 3 todos done: Track-1/Track-8 checkbox reconciliation (todo 1), the 2 true-source-doc
+> reconciliations (todo 2), and this archival (todo 3). Todo 3 verified the target plan
+> (`/plans/archive/2026_07/cefi_migration_cutover_and_track8_completion_2026_07_25.md`) was already fully archived +
+> corpus-referrer-fixed in a prior commit (`9f12b267d`) — no new durable contract from this finalize plan itself
+> (codex-alignment check: zero `codex/` hits for either plan's slug). One stale referrer fixed as part of this archival:
+> the target plan's own `related:` frontmatter, which still pointed at this doc's pre-archival `/plans/active/...` path.
+>
 > **Machine-gated on `/plans/archive/2026_07/cefi_migration_cutover_and_track8_completion_2026_07_25.md`**
 > (`depends_on` + `gate_on_depends: true`) — the dispatcher will not queue any todo below until all 5 tasks in that plan
 > are `done`. `sequential: true` because todo 2 needs todo 1's reconciliation done first, and todo 3 (archival) must run

@@ -28,7 +28,7 @@ related:
     /plans/archive/issues/cefi_shard_enumeration_blindspots_and_canonical_fetch_dependency_2026_07_18.md,
     /plans/active/cefi_4surface_migration_execution_log_2026_07_24.md,
     /plans/active/cefi_consolidated_native_ao_extract_2026_07_25.md,
-    /plans/active/cefi_migration_cutover_and_track8_completion_finalize_2026_07_25.md,
+    /plans/archive/2026_07/cefi_migration_cutover_and_track8_completion_finalize_2026_07_25.md,
   ]
 created: "2026-07-25"
 last_updated: "2026-07-25"

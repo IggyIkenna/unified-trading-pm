@@ -17,11 +17,11 @@
 
 <!-- AUTO-INDEX-START -->
 
-_Auto-generated via `scripts/plans/regenerate_active_plan_index.py`. 241 plans across 10 domains. A plan tagged with
+_Auto-generated via `scripts/plans/regenerate_active_plan_index.py`. 240 plans across 10 domains. A plan tagged with
 multiple `asset_group:` values appears under each. Grep this block for a domain keyword before scanning `plans/active/`
 by hand._
 
-### cefi (36)
+### cefi (35)
 
 - [`ag_closeout_audit_rollout_2026_07_25`](./ag_closeout_audit_rollout_2026_07_25.md) — Autonomous session (/autonomous,
   operator away, 2026-07-25) driving the /ag-closeout-audit skill across the 4 asset groups that haven't had it yet —
@@ -62,9 +62,6 @@ by hand._
   — Consolidates THREE overlapping, previously-separately-dispatched todos in data_completion_cefi_2026_07_15.md (the
   "E4 remaining work = ORPHAN SWEEP + gap-fill" todo / data_completion_cefi-015, its "Orphan sweep + bucket-state
   evidence"…
-- [`cefi_migration_cutover_and_track8_completion_finalize_2026_07_25`](./cefi_migration_cutover_and_track8_completion_finalize_2026_07_25.md)
-  — Gated closeout for /plans/archive/2026_07/cefi_migration_cutover_and_track8_completion_2026_07_25.md — machine-held
-  via depends_on + gate_on_depends: true until all 5 of that plan's sequential todos are done. Reconciles the parent…
 - [`cefi_misc_audits_and_hygiene_2026_07_25`](./cefi_misc_audits_and_hygiene_2026_07_25.md) — 3 independent, ungated
   todos on different files/repos forked from cefi_consolidated_closeout_2026_07_18.md's "Operator dispositions" section
   (2026-07-25 split): the `[OPERATOR]`-gated UAC per-venue seed fallback removal decision, a bounded…
