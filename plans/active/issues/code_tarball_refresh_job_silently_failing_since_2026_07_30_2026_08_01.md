@@ -111,12 +111,50 @@ deployed image lacking (or losing) its own venv at `/tmp/ds`.
 
 ## Todos
 
-- [ ] [INFRA] P0. Fix the Cloud Run Job's `code-tarball-refresh` container image so `gcs_upload_via_adc.py` can import
-      `deployment_service` — either bake a working `.venv` at the `DS_ROOT` the container resolves (`/tmp/ds`), install
-      `deployment_service` into the container's system/base Python, or make `create-code-tarballs.sh`'s `GCS_UPLOAD_PY`
-      resolution robust to a missing venv (e.g. fall back to a `PYTHONPATH`-aware invocation instead of silently falling
-      back to a bare interpreter that can't import the package). Verify by triggering a manual job execution and
-      confirming `Refresh COMPLETE` / `N/N updated` in the logs, not `PARTIAL`. (repo: deployment-service)
+- [ ] [INFRA] P0. **Attempt 1 shipped + verified NOT sufficient — real fix still needed.** Fix the Cloud Run Job's
+      `code-tarball-refresh` container image so `gcs_upload_via_adc.py` can import `deployment_service` — either bake a
+      working `.venv` at the `DS_ROOT` the container resolves (`/tmp/ds`), install `deployment_service` into the
+      container's system/base Python, or make `create-code-tarballs.sh`'s `GCS_UPLOAD_PY` resolution robust to a missing
+      venv (e.g. fall back to a `PYTHONPATH`-aware invocation instead of silently falling back to a bare interpreter
+      that can't import the package). Verify by triggering a manual job execution and confirming `Refresh COMPLETE` /
+      `N/N updated` in the logs, not `PARTIAL`. (repo: deployment-service)
+
+      **Attempt 1 (2026-08-01, na_eligibility_auditor slot 2, `agent-orchestrator` dispatch agt-8e95ca, shipped
+          `deployment-service@dbd9e72`)**: added `ensure_deployment_service_importable()` to `refresh_code_tarballs.sh` —
+          gated on `CHANGED` non-empty, installs `deployment-service` via `python3 -m pip install --target=/tmp/ds-pydeps`
+          from the internal AR wheel index (`asia-northeast1-python.pkg.dev/central-element-323112/unified-libraries`,
+          same index every service `Dockerfile` already uses) authenticated via the job's own ambient
+          `gcloud auth print-access-token`, then exports `PYTHONPATH` before the upload subshell runs. **Manually triggered
+          a real job execution to verify** (`gcloud run jobs execute code-tarball-refresh`, execution
+          `code-tarball-refresh-8j8ql`, 2026-08-01T14:36Z) — **FAILED**, exit code 1, in ~25s (before even reaching the
+          upload step): `pip install deployment-service` returned `ERROR: Could not find a version that satisfies the
+          requirement deployment-service (from versions: none)` / `No matching distribution found`. The request DID reach
+          the AR index successfully (a real "no versions" answer, not an auth/404 error) — **`deployment-service` is very
+          likely never published as an installable wheel to that index at all**: `deployment-service`'s own
+          `.github/workflows/semver-agent.yml` has zero references to `publish-package`/`workflow_call` (grepped directly),
+          unlike `unified-trading-library`/`unified-api-contracts`, which the release pipeline DOES publish (they're
+          consumed as dependencies by every service; `deployment-service` is itself a deployable
+          orchestration-engine/service, not a library other repos `pip install`). **My attempt-1 approach's core assumption
+          was wrong** — confirmed the mechanism (gate on CHANGED, PYTHONPATH-inject) is sound, but the wheel-index source
+          doesn't have this specific package. Left the code shipped (harmless — it correctly fails fast+loud now instead of
+          silently, an improvement over the original silent crash even though the underlying job is still broken) rather
+          than reverting, since reverting would restore the WORSE silent-`ModuleNotFoundError` behavior.
+
+          **Next step for whoever picks this up** (NOT yet attempted — genuinely blocked on a design choice, not a
+          mechanical retry): pick one of (a) publish `deployment-service` as a wheel too (extends the release pipeline —
+          bigger, cross-cutting CI change, touches every future `deployment-service` release); (b) bake a custom Cloud Run
+          container image for this job with a pre-built `.venv` (the terraform's own comments show this job deliberately
+          avoids a custom image today, using the stock `google-cloud-cli` image — a real design reversal, needs sign-off);
+          or (c) broaden `refresh_code_tarballs.sh`'s existing sparse-checkout of `deployment-service@LDR` (currently
+          `scripts/vm` only) to also pull `deployment_service/` + `pyproject.toml`/`uv.lock`, then `uv pip install -e .` or
+          `pip install .` from that fresh clone directly (no AR index needed at all — trades a slightly bigger
+          sparse-checkout for zero publish-pipeline dependency). (c) is probably the least invasive given (a) and (b) both
+          touch shared release/image infrastructure. Re-verify the SAME way this attempt did: `gcloud run jobs execute
+          code-tarball-refresh --project=central-element-323112 --region=asia-northeast1`, then
+          `gcloud logging read 'resource.type="cloud_run_job" AND resource.labels.job_name="code-tarball-refresh" AND
+          labels."run.googleapis.com/execution_name"="<new-execution-id>"' --project=central-element-323112` for
+          `Refresh COMPLETE` / `N/N updated`, not a fast exit-1 or `PARTIAL`.
+
 - [x] ✅ [INFRA] P0. Make a genuine upload failure inside `refresh_code_tarballs.sh` propagate as a Cloud Run Job
       execution FAILURE, not a silently-successful exit — VERIFIED ALREADY CORRECT, no code change needed. This todo's
       own premise (`succeededCount=1, failedCount=0`) does not hold:
