@@ -431,11 +431,48 @@ context_scope:
       session on the same shard — needs a follow-up run once free. Full details:
       `plans/active/issues/bucket_iam_group_a_market_data_tick_prefix_missing_asset_group_2026_08_01.md` todo 3.
       **Checkpoints 2/3 (mid, day=2025-12-24) and 3/3 (final, day=2025-12-18) remain** for next dispatch.
-- [ ] [DATA] P1. **Track K (features) — run + cite 3 dated checkpoints (baseline/mid/final) for
+- [x] ✅ [DATA] P1. **Track K (features) — run + cite 3 dated checkpoints (baseline/mid/final) for
       `data-pipeline-check-features` against sports.** Split 2026-08-01, see Track K (IS) above for the split rationale.
       Use `SPORTS_SMOKE_DATES` as the reference dates. (repo: features-service, skill-driven). **Done when**: 3 dated
       runs cited by report path/dispatch_id, baseline through final. Source:
       `sports_consolidated_closeout_2026_07_19.md:665-669`.
+      **Checkpoint 1/3 (baseline, day=2025-12-20) DONE 2026-08-01 (slot 13)** — total=2 passed=1 failed=0 skipped=1.
+      SPORTS:sports force=passed (`empty_confirmed`, honest-absence — source legitimately had no data for this window),
+      skip=skipped (`no_force_fingerprint_to_compare`). Report:
+      `plans/audit/results/data_pipeline_e2e_check_features_2025_12_20.md`. Diagnosed the empty result rather than
+      taking it at face value: sports reference-data reads route through the SAME env-tiered bucket the VM writes to
+      (no `--source-bucket`-style override for sports like `delta_one`'s downstream families get), so `--env staging`
+      reads the never-seeded `-stg-` tier — **every** sports checkpoint will mechanically report `empty_confirmed`
+      regardless of real `-prd-` data availability. This proves the VM/IAM/honest-absence plumbing works but does NOT
+      prove the compute logic ran against real inputs. Filed as its own design-scope issue, not a same-session fix:
+      `plans/active/issues/features_sports_env_staging_reads_empty_staging_reference_data_2026_08_01.md`; the skill doc
+      (`cursor-configs/skills/data-pipeline-check-features/SKILL.md`) was updated with this caveat so future checkpoints
+      (incl. 2/3 and 3/3 below) aren't mis-read as a compute-logic PASS.
+      **Checkpoint 2/3 (mid, day=2025-12-24) DONE 2026-08-01 (slot 13)** — total=2 passed=2 failed=0 skipped=0, a
+      **genuine PASS** (not just honest-absence): force leg wrote 4 real parquet files with `manifest=captured`; skip
+      leg confirmed a genuine byte-unchanged skip. Report:
+      `plans/audit/results/data_pipeline_e2e_check_features_2025_12_24.md`. Notable vs. checkpoint 1: this run DID
+      exercise the real compute-logic path (unlike the baseline's `empty_confirmed`) — **mechanism confirmed by
+      checkpoint 3's VM `run.log` (see below)**: the env-tiered `-stg-` bucket gap is real but entity-scoped, not
+      family-blanket — most of the 17 sports reference entities read fine from PROD via a working per-league fallback,
+      only `entity=fixtures`/`fixtures_schedule` (via `gcs_read_reference_fixtures`) actually 404s on the
+      never-provisioned `-stg-` bucket. Checkpoint 1's blanket `17/17 missing` was this specific date's own data
+      state, not proof every date fails identically.
+      **Checkpoint 3/3 (final, day=2025-12-18) DONE 2026-08-01 (slot 13)** — total=2 passed=2 failed=0 skipped=0,
+      another **genuine PASS**: force leg wrote 6 real parquet files with `manifest=captured`; skip leg confirmed a
+      genuine byte-unchanged skip. Report: `plans/audit/results/data_pipeline_e2e_check_features_2025_12_18.md`. The
+      VM's own `run.log` gave the precise mechanism for the reference-data gap directly (11/17 entities — leagues,
+      teams, standings, fixture_stats, fixture_events, fixture_lineups, player_stats, player_values, footystats_matches,
+      footystats_predictions, progressive_stats — read real rows from PROD; 6/17 genuinely missing for this date:
+      injuries, fixtures, transfer_records, understat_xg, understat_xg_shots, ht_stats):
+      `[CRITICAL] unknown error in features-service.gcs_read_reference_fixtures: 404 GET
+      .../b/instruments-store-sports-stg-central-element-323112/o?...prefix=sports_reference/by_date/day=2025-12-18/
+      pipeline_mode=batch_api_football/entity=fixtures_schedule/league=...: The specified bucket does not exist.` —
+      since `fixtures` is a REQUIRED input for `derived_features`/`fixture_features`, those 2 specific outputs recorded
+      `EMPTY ... confirmed empty` for this date, while the shard overall still captured real data from the other,
+      correctly-resolving feature groups (hence 6 real parquet objects, not 0). Corroborating detail added to the
+      already-filed issue doc (see below) rather than left only here. **All 3 checkpoints (baseline/mid/final) complete
+      — todo done.**
 - [x] ✅ [DATA] P1. **Track K (reconciliation) — run + cite 3 dated checkpoints (baseline/mid/final) for
       `/data-pipeline-reconciliation` against sports.** DONE 2026-08-01 (slot 8, dispatched sub-agent) — 3 dated reports
       now exist: baseline `plans/audit/results/data_pipeline_reconciliation_sports_2026_07_20.md`, mid

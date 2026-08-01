@@ -1,0 +1,63 @@
+{
+  "service": "data_pipeline_e2e_check_features",
+  "run_date": "2025-12-18",
+  "legs": [
+    "force",
+    "skip"
+  ],
+  "started_at": "2026-08-01T13:24:49.831017+00:00",
+  "finished_at": "2026-08-01T13:32:18.405837+00:00",
+  "total": 2,
+  "passed": 2,
+  "failed": 0,
+  "ambiguous": 0,
+  "skipped": 0,
+  "results": [
+    {
+      "shard_label": "SPORTS:sports",
+      "leg": "force",
+      "status": "passed",
+      "reason": "ok (data: parquet + manifest captured)",
+      "vm_name": "features-e2e-sports-20260801-132455-281e78",
+      "exit_status": 0,
+      "write_verified": true,
+      "parquet_count": 6,
+      "manifest_ok": true,
+      "manifest_status": "captured",
+      "skip_signal_found": false,
+      "skip_proof": "not_applicable",
+      "fingerprint_before": null,
+      "fingerprint_after": "CIqJ1arE/5UDEAE=:eSm+3g==:2026-08-01T13:27:46.859000+00:00:6750",
+      "attempt_ts": "2026-08-01T13:24:49.840366+00:00",
+      "duration_sec": 219.628839,
+      "parquet_bucket": "features-sports-test-central-element-323112",
+      "manifest_bucket": "features-sports-test-central-element-323112",
+      "parquet_uri": "gs://features-sports-test-central-element-323112/sports_features/by_date/day=2025-12-18/feature_group=fixture_events/features.parquet",
+      "content_check": "not_applicable",
+      "content_check_nan_ratio": null
+    },
+    {
+      "shard_label": "SPORTS:sports",
+      "leg": "skip",
+      "status": "passed",
+      "reason": "ok (object byte-unchanged -> genuine skip; skip log DEBUG-level (absent, expected))",
+      "vm_name": "features-e2e-sports-20260801-132837-281e78",
+      "exit_status": 0,
+      "write_verified": false,
+      "parquet_count": 0,
+      "manifest_ok": false,
+      "manifest_status": "",
+      "skip_signal_found": false,
+      "skip_proof": "genuine",
+      "fingerprint_before": "CIqJ1arE/5UDEAE=:eSm+3g==:2026-08-01T13:27:46.859000+00:00:6750",
+      "fingerprint_after": "CIqJ1arE/5UDEAE=:eSm+3g==:2026-08-01T13:27:46.859000+00:00:6750",
+      "attempt_ts": "2026-08-01T13:28:36.704085+00:00",
+      "duration_sec": 220.713918,
+      "parquet_bucket": "features-sports-test-central-element-323112",
+      "manifest_bucket": "features-sports-test-central-element-323112",
+      "parquet_uri": "gs://features-sports-test-central-element-323112/sports_features/by_date/day=2025-12-18/feature_group=fixture_events/features.parquet",
+      "content_check": "not_checked",
+      "content_check_nan_ratio": null
+    }
+  ]
+}
