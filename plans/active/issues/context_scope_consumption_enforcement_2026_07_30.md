@@ -43,12 +43,25 @@ drift_direction: advance-code
 depends_on: []
 ---
 
-## What's true today (2026-07-30)
+## What's true today (corrected 2026-08-01 — see Progress Log)
 
-Every `plans/active/*.md` + `plans/active/issues/*.md` doc carries a `context_scope` frontmatter field: the minimal,
-verified list of codex SSOTs (+ occasional script paths) that doc's remaining work depends on. The field is now REQUIRED
-(`docspec.py`, `plan`/`issue` doc_types) and `check_frontmatter_schema.py` fails PM QG on a missing one — so the corpus
-stays covered going forward, and the `context-scout` skill keeps it fresh as docs are authored/edited.
+`context_scope` is a `plans/active/*.md` + `plans/active/issues/*.md` frontmatter field: the minimal, verified list of
+codex SSOTs (+ occasional script paths) that doc's remaining work depends on. **It is ELECTIVE, not required, and the
+corpus backfill is still in progress** — the two sentences below correct the two false "done" claims this section
+previously made (2026-07-30 version), per the data-correctness contradiction filed in
+`/plans/active/issues/ag_closeout_audit_ao_parked_2026_07_31.md` Finding 1.
+
+1. **Field requirement — ELECTIVE (`Req.E`), not required.** Direct read of `scripts/docs/docspec.py` (2026-08-01,
+   post-`uv sync`): `FieldSpec("context_scope", Req.E, "free_list")` at line 139 (doc_type `plan`) and line 163
+   (doc_type `issue`, both in the same `.tabs/5/unified-trading-pm` clone at HEAD). `check_frontmatter_schema.py` does
+   NOT fail PM QG on a missing `context_scope` — only `Req.R`/`Req.C` fields do.
+2. **Corpus backfill — in progress, not complete.** A fresh run of
+   `.venv/bin/python scripts/plan-hygiene/generate_context_scope_inventory.py` (2026-08-01, this session) reports: **647
+   in-scope docs total — 410 `NEVER_SCOUTED`, 15 `STALE`, 222 `UP_TO_DATE`.** That's ~34% covered (`UP_TO_DATE`), not
+   "backfilled" — real, ongoing progress (up from the 2026-07-31 measurement of 626 total / 616 `NEVER_SCOUTED` / 10
+   `STALE` / 0 `UP_TO_DATE` cited in the parked-findings doc above), driven by the `/context-scout` skill's incremental
+   sweeps, but still a majority-uncovered corpus. Re-run the same command at any later date for the current count — do
+   not copy either snapshot forward as if it were current.
 
 **What's NOT built**: nothing in the AO dispatch/worker-boot path reads `context_scope` and does anything with it. A
 worker picking up a plan's todo today still gets whatever context its boot prompt/role file already gives it —
@@ -114,3 +127,10 @@ pressure. The operator explicitly named this as "the rest of the work" for a lat
   an operator pick among 3 named design options (where the consumption read happens) plus a LOCAL-vs-AO-dispatched track
   decision per the ask-before-creating HARD RULE; todo 2 is gated behind todo 1 shipping. Genuine judgment call, not a
   mis-defaulted mechanical task. No other action.
+- **2026-08-01** (slot 5, task `ag_closeout_audit_ao_parked-001`): corrected the "What's true today" section per
+  `/plans/active/issues/ag_closeout_audit_ao_parked_2026_07_31.md` Finding 1 — the "now REQUIRED" and "backfilled the
+  corpus" claims were false as of 2026-07-31 and remain false today. Verified fresh: `docspec.py` still specs
+  `context_scope` as `Req.E` (elective) for both `plan` (line 139) and `issue` (line 163) doc_types; a fresh
+  `generate_context_scope_inventory.py` run reports 647 in-scope docs / 410 `NEVER_SCOUTED` / 15 `STALE` / 222
+  `UP_TO_DATE` (up from 626/616/10/0 on 2026-07-31 — real progress, still majority-uncovered). This is a prose
+  correction only; none of this doc's own open todos (design + rollout, both operator-gated) change.

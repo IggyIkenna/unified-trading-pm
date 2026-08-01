@@ -89,7 +89,7 @@ it just hadn't reached this doc yet.
 not correct prose-level factual drift in a sibling doc; that is `/plan-reconcile`'s job, or a small bounded direct edit
 by whoever picks this up next).
 
-- [ ] [DOCS] P1. **Correct `context_scope_consumption_enforcement_2026_07_30.md`'s "What's true today" section to match
+- [x] [DOCS] P1. **Correct `context_scope_consumption_enforcement_2026_07_30.md`'s "What's true today" section to match
       measured reality** — replace the false "REQUIRED"/"backfilled" claims with the actual state (`Req.E`, 616/626
       `NEVER_SCOUTED`), citing this doc + the live inventory command output as evidence. Re-run
       `generate_context_scope_inventory.py --json` fresh at fix time (the count will have moved once
@@ -97,7 +97,9 @@ by whoever picks this up next).
       verbatim. **Done when**: the corrected section cites a freshly-run inventory count + the direct `docspec.py` line
       read, and no longer claims the backfill/hardening is done. This is a small, bounded, single-doc prose correction —
       AO-eligible in isolation, but held here rather than folded into batch3 because it touches a DIFFERENT doc than any
-      of batch3's 3 todos and doesn't need to block on them landing first.
+      of batch3's 3 todos and doesn't need to block on them landing first. ✅ 2026-08-01 — corrected in
+      `context_scope_consumption_enforcement_2026_07_30.md` (fresh docspec.py read: `Req.E` at lines 139/163; fresh
+      inventory run: 647 total / 410 `NEVER_SCOUTED` / 15 `STALE` / 222 `UP_TO_DATE`) — unified-trading-pm@pending.
 
 ## Finding 2 — orphaned, genuinely not AO-eligible (restated per the standalone-doc requirement; full reasoning lives in `ao_satellite_ao_dispatch_batch3_2026_07_31.md`'s Deferred section)
 
