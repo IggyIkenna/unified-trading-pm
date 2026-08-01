@@ -687,3 +687,21 @@ those commits landed). The escalation's own repo-blocker list (`GET /api/repo-bl
   every prior entry in this doc. Slot left clean (client-reporting-api already on `live-defi-rollout`, 0 commits ahead
   of `origin`, nothing to commit there). Pinged the authoring slot with the outcome and exiting per the one-shot `cicd`
   role's bounded scope.
+- **2026-08-01 ~00:49Z (cicd redispatch of the SAME escalation id `agt-719421`, slot 7, re-triaging PR #1049)**: the
+  `agt-719421`/slot-7 entry above (2026-07-31 ~23:05Z) already root-caused this exact wall; this redispatch
+  independently re-verified from scratch rather than trusting it blind (the prior run evidently didn't reach `/done`).
+  Confirmed unchanged: PR #1049 `state=MERGED`, `mergedAt=2026-07-31T22:16:09Z`;
+  `git merge-base --is-ancestor 111692134aa3 origin/live-defi-rollout` true. Went further than the prior entry: current
+  LDR HEAD (`d2c73500`) is now **15 commits** ahead of the failing SHA, all real feature/fix work (DeFi adapter routing,
+  prediction Kalshi category fixes, catalogue retry hardening, LST/vault venue registration, etc.) — the pipeline has
+  kept advancing substantially, not just ticked forward by promote/backmerge noise. Zero open PRs
+  (`gh pr list --state open` empty), zero open `/api/repo-blockers` entries. Latest LDR `quality-gates-v2` run
+  (`30675771282`, `workflow_dispatch`) was still queued 17+min with no runner pickup at investigation time; did not
+  force a repro or retrigger — this slot's own host measured `load average: 31.20/30.94/30.75`, `22Gi/47Gi` swap in
+  active use, and 17 concurrent `quality-gates.sh` processes (`pgrep -af`), the identical fleet-wide capacity-crisis
+  snapshot this doc's todo 7 and several entries above already captured — a local repro would only add to that
+  contention for no new signal given the log + merge evidence already meets this doc's evidentiary bar. Same "orphaned
+  noise against an already-resolved wall" conclusion, now with stronger evidence (15 substantive commits, not 2
+  mechanical ones). No live-defi-rollout code or test change made or needed. Slot left clean (instruments-service +
+  unified-trading-pm both on `live-defi-rollout`, 0 commits ahead of `origin` besides this doc edit). Pinged the
+  authoring slot with the outcome and exiting per the one-shot `cicd` role's bounded scope.
