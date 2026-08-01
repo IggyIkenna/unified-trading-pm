@@ -78,7 +78,7 @@ source: >-
       post-run manifest spot-check shows the ~144 previously-`attempted_failed` CURVE/OPTIMISM rows now carry
       `EXPECTED_SUBGRAPH_DEINDEXED`; `quality-gates.sh` green in deployment-service. Source:
       `defi_consolidated_closeout_2026_07_18.md` Track 3 (native, line ~440 + its Track 3 nested `--apply` item).
-- [ ] [DATA] P2. **Real column-prune refactor of `measure_honest_coverage.py`** so the nightly honest-coverage VM no
+- [x] ✅ [DATA] P2. **Real column-prune refactor of `measure_honest_coverage.py`** so the nightly honest-coverage VM no
       longer needs 32GB (`e2-highmem-4`) and can run on the originally-intended 16GB (`e2-standard-4`). A naive drop of
       `instrument_id` from `_READ_COLUMNS` is UNSAFE — `_merge_manifests` dedups the prd+oracle merge on
       `(date, venue, instrument_id, data_type)`; dropping the column falls back to `(date, venue, data_type)` and
@@ -90,7 +90,33 @@ source: >-
       32GB machine (or a documented tolerance if pyarrow ordering differs), no OOM; ~6 selection tests updated and
       passing; `quality-gates.sh` green. Source:
       `issues/honest_coverage_nightly_cron_undersized_and_launcher_ssot_drift_2026_07_16.md` (cited by
-      `defi_consolidated_closeout_2026_07_18.md` Track 8 as part of "fix the honest-coverage-nightly right-size").
+      `defi_consolidated_closeout_2026_07_18.md` Track 8 as part of "fix the honest-coverage-nightly right-size"). —
+      **2026-08-01 (slot-10, data_engineering craft) — instruments-service@12825e81.** `main()` now reads/computes/
+      releases ONE asset_group's primary manifest at a time (new `_init_coverage_accumulator`/`_accumulate_coverage`
+      pair) instead of holding all 5 asset_groups' DataFrames simultaneously in a `dfs` dict for the whole run —
+      `_compute_coverage`'s per-ag loop body has no cross-ag state, so this bounds peak memory to the single largest
+      asset_group's read instead of the sum of all 5, without touching `_READ_COLUMNS` or the
+      `(date, venue, instrument_id, data_type)` merge key at all. Added 4 tests incl. a byte-identical equivalence proof
+      between the old batched and new streaming paths (`TestPerAssetGroupStreaming`); all 47 tests in
+      `test_measure_honest_coverage.py` pass; full `quality-gates.sh` green, verified on origin via
+      `git merge-base --is-ancestor`. **Honest gap**: this ships the code-level memory-bounding fix only — the empirical
+      "fresh run on a reduced 16GB machine, no OOM, byte-identical row counts vs. the 32GB control run" half of this
+      todo's own done-when needs an actual VM launch + comparison run, which is infra craft (this task's
+      `assigned_role: data_engineering` scopes VM launches out — `does_not: infra/VM launches`). Tracked as its own
+      follow-up todo immediately below rather than left unverified in prose.
+- [ ] [INFRA] P2. **Empirically verify the `measure_honest_coverage.py` streaming refactor (above) actually bounds
+      memory enough to run on `e2-standard-4` (16GB)**, then downsize the live launcher. Launch a control run on the
+      current `e2-highmem-4` (32GB) VM and a test run on a fresh `e2-standard-4` (16GB) VM, both against
+      `instruments-service@12825e81` (or later), `--asset-group all`; diff the two `coverage.json` outputs' per-
+      `(venue, instrument_id, data_type)` row counts (byte-identical, or a documented pyarrow-ordering tolerance) and
+      confirm the 16GB run does not OOM. If it holds, flip `vm/launch-measure-honest-coverage-vm.sh`'s `--machine-type`
+      back to `e2-standard-4` and re-upload to the cron's GCS path
+      (`gs://deployment-scripts-central-element-323112/vm/launch-measure-honest-coverage-vm.sh` — see
+      `issues/honest_coverage_nightly_cron_undersized_and_launcher_ssot_drift_2026_07_16.md` for why the GCS path, not
+      the repo copy, is the one the live cron actually fetches). If it does NOT hold, leave the machine type at 32GB and
+      record the measured peak RSS here so a future attempt has a real number to design against. Repo:
+      deployment-service. **Done when**: the before/after coverage.json comparison + peak-RSS numbers are recorded in
+      this todo's evidence, and the live cron's GCS launcher matches whatever machine type the verification supports.
 - [ ] [INFRA] P3. **Combined honest-coverage launcher SSOT cleanup (2 sub-steps, same underlying drift, different
       files):** (a) delete/merge the redundant honest-coverage launcher artifacts —
       `scripts/vm/launch-honest-coverage-vm.sh` (not the live cron path; the GCS
