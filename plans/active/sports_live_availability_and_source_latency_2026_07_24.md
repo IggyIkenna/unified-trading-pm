@@ -54,6 +54,12 @@ source: >-
   against the 1000-line cap; this sports-specific 249-line block was moved to its own active companion file rather than
   data_completion_sports_2026_07_24.md, which had no headroom left under its own cap).
 drift_direction: advance-code
+context_scope:
+  [
+    /plans/active/data_completion_sports_2026_07_24.md,
+    /plans/active/sports_live_availability_and_source_latency_2026_07_24_finalize_2026_07_30.md,
+    /plans/epics/manifest_master.md,
+  ]
 ---
 
 # Data completion to 100% — Sports live/forward availability + source-latency validation
@@ -379,3 +385,4 @@ The forward-path instrumentation is now LIVE in code (deployment-service@9a5387b
   provisioned and live-verified. What is left is bounded wiring (api_football `/odds` in-play as a second source) plus a
   stated production verification. Conflict-check CLEAR against `sports_satellite_ao_dispatch_batch5_2026_07_26.md` and
   `sports_consolidated_closeout_2026_07_19.md`.
+- **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).

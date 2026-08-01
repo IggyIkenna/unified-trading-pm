@@ -62,6 +62,14 @@ source:
   ]
 assigned_role: infra
 drift_direction: advance-code
+context_scope:
+  [
+    /codex/04-architecture/batch-live-architecture.md,
+    /codex/04-architecture/sports-batch-live.md,
+    /codex/04-architecture/promote-workflow-architecture.md,
+    /plans/active/sports_consolidated_closeout_2026_07_19.md,
+    /plans/epics/sports_master.md,
+  ]
 ---
 
 # Sports/predictions live-mode activation readiness — scoped chain + gates
@@ -309,3 +317,4 @@ Per the SSOT-direction rule, these stay owned by their existing docs — this pl
   `source:` — 'human plan, assigned_vm: NA, NOT AO-dispatched — a plan whose terminal action is a human go/no-go on live
   trading activation is the human-plan class by construction' — reinforced by a 2026-07-29 operator banner (continue to
   hold the live go-ahead) and a permanent `[OPERATOR]` hard-stop todo reviewed + reaffirmed 2026-07-28
+- **context-scout 2026-08-01**: populated/refreshed context_scope (5 entries).

@@ -50,6 +50,14 @@ source: >-
 assigned_role: data_engineering
 sequential: false
 drift_direction: advance-code
+context_scope:
+  [
+    /plans/active/sports_consolidated_closeout_2026_07_19.md,
+    /plans/active/sports_consolidated_native_ao_extract_2026_07_25.md,
+    /codex/02-data/sports-2020-06-data-floor.md,
+    /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
+    /cursor-configs/skills/ag-closeout-audit/SKILL.md,
+  ]
 ---
 
 # Sports satellite AO batch 6 — post-batch5 orphans
@@ -481,3 +489,7 @@ otherwise-independent P3 todos over one soft file-overlap risk).
 `/codex/05-infrastructure/spot-vms-for-backfill.md`, `/codex/12-agent-workflow/async-wait-and-poll-discipline.md` (rule
 1a — todo 3's monitoring hazard), `/codex/11-project-management/issue-doc-lifecycle.md` (todo 7). Plan↔codex drift is
 review-blocking.
+
+## Progress Log
+
+- **context-scout 2026-08-01**: populated/refreshed context_scope (5 entries).

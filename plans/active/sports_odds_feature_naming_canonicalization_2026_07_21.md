@@ -38,6 +38,12 @@ locked_by:
 locked_since:
 supersedes:
 superseded_by:
+context_scope:
+  [
+    /plans/active/issues/sports_odds_feature_naming_four_way_mismatch_2026_07_21.md,
+    /plans/active/sports_consolidated_closeout_2026_07_19.md,
+    /plans/epics/sports_master.md,
+  ]
 ---
 
 > **🟡 Scope overlap with `sports_consolidated_closeout_2026_07_19.md` (flagged 2026-07-23, orphan-plan reconciliation
@@ -261,3 +267,4 @@ work doesn't reintroduce a 5th convention.
   remaining bounded todos on this plan are sanctioned to land via the satellite AO-dispatch-batch pattern'. The
   mechanism for landing its work is already chosen and is NOT a flip of this doc; re-litigating it would contradict a
   ruling 1 day old
+- **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).

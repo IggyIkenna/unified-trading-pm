@@ -59,6 +59,13 @@ source: >-
   per task_template.md's stated default (not asked to make this AO-dispatched).
 assigned_role: data_engineering
 drift_direction: advance-code
+context_scope:
+  [
+    /plans/active/sports_consolidated_closeout_2026_07_19.md,
+    /codex/02-data/sports-2020-06-data-floor.md,
+    /codex/02-data/sports-gcs-path-ssot.md,
+    /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
+  ]
 ---
 
 # Sports legacy fixtures-path migration
@@ -164,3 +171,4 @@ Cross-verified with direct `gcloud storage ls` spot-checks of the true bare `ent
   own re-check once those land, but the CENSUS specifically (todo 101) is no longer conflict-gated — its only current
   blocker is the na-eligibility-audit's separate AO-dispatch-authority parking noted directly above, not the
   Track-S/E/C1 conflict.
+- **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).

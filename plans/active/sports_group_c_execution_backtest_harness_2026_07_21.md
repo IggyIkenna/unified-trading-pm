@@ -40,6 +40,7 @@ source:
   ]
 assigned_role: backend_engineer
 drift_direction: advance-code
+context_scope: [/codex/04-architecture/backtest-groups.md, /plans/epics/sports_master.md]
 ---
 
 # Sports/predictions Group-C execution-alpha backtest harness — scope note
@@ -102,3 +103,4 @@ CLI wiring, same shape as the 3 domains that already have it.
   'sits for operator review; flip to assigned_vm: planning if/when approved for dispatch', plus an 'Open questions for
   operator sign-off before implementation dispatches' section (craft split + priority) — an established,
   still-unanswered gate; not re-litigated
+- **context-scout 2026-08-01**: populated/refreshed context_scope (2 entries).

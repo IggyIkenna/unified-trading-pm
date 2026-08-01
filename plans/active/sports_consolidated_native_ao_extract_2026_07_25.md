@@ -63,6 +63,14 @@ source: >-
 assigned_role: data_engineering
 sequential: false
 drift_direction: advance-code
+context_scope:
+  [
+    /plans/active/sports_consolidated_closeout_2026_07_19.md,
+    /plans/active/sports_consolidated_native_ao_extract_2026_07_25_finalize.md,
+    /codex/02-data/sports-2020-06-data-floor.md,
+    /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
+    /plans/epics/sports_master.md,
+  ]
 ---
 
 # Sports consolidated closeout — native AO extract
@@ -806,3 +814,5 @@ recommend the backlog task be PARKED (per `agents/RULES.md` § "Park a task") un
 (`odds_horizon_bucket` MDPS reprocess + `batch_footystats` copy+swap, both tracked in the league_id-migration issue doc,
 neither is a todo in THIS plan) land, rather than continuing to burn a fresh worker-dispatch on the same unproductive
 re-check every cycle.
+
+- **context-scout 2026-08-01**: populated/refreshed context_scope (5 entries).

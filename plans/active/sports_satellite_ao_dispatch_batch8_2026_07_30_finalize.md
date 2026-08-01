@@ -40,6 +40,13 @@ source: >-
 assigned_role: data_engineering
 sequential: true
 drift_direction: advance-code
+context_scope:
+  [
+    /plans/active/sports_satellite_ao_dispatch_batch8_2026_07_30.md,
+    /plans/active/sports_consolidated_closeout_2026_07_19.md,
+    /cursor-configs/skills/ag-closeout-audit/SKILL.md,
+    /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
+  ]
 ---
 
 # Sports satellite AO batch 8 — finalize
@@ -73,3 +80,7 @@ drift_direction: advance-code
 ## Codex SSOTs
 
 None new — see the parent batch's own Codex SSOTs section.
+
+## Progress Log
+
+- **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).

@@ -84,6 +84,12 @@ source: >-
   per-todo (via a 22-agent verification workflow) for real AO-eligibility, distinguishing concrete worker-executable
   todos from open operator/design judgment calls. This plan is the extraction of the AO-eligible subset, mirroring the
   sports_closeout_batch1_ao_ready_2026_07_24.md pattern for the master closeout plan.
+context_scope:
+  [
+    /plans/active/sports_consolidated_closeout_2026_07_19.md,
+    /plans/active/data_completion_sports_2026_07_24.md,
+    /plans/epics/sports_master.md,
+  ]
 ---
 
 # Sports satellite docs — AO dispatch batch 2
@@ -967,6 +973,7 @@ source: >-
   as a small separate follow-up if it recurs elsewhere. Full root-cause history (MVP-league-scope leak → OOM take-1
   insufficient chunking → OOM take-2 real per-chunk-shard fix, now verified complete):
   `/plans/archive/issues/per_vm_shard_growth_oom_long_running_backfills_2026_07_27.md`.
+- **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).
 
 ## Reconciliation
 

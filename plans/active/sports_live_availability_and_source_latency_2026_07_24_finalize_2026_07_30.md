@@ -47,6 +47,13 @@ source: >-
   `parent_epic: manifest_master` (nor `sports_satellite_ao_dispatch_batch5_2026_07_26.md`, nor
   `sports_consolidated_closeout_2026_07_19.md`) carries an open todo claiming the api_football `/odds` in-play
   second-source wiring or the live-connector resume confirmation.
+context_scope:
+  [
+    /plans/active/sports_live_availability_and_source_latency_2026_07_24.md,
+    /cursor-configs/skills/na-eligibility-audit/SKILL.md,
+    /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
+    /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
+  ]
 ---
 
 # Sports live availability + source-latency — finalize
@@ -90,3 +97,4 @@ engineering with an explicit stated "Done when", which is the `/na-eligibility-a
 - **2026-07-30** — Authored by the `/na-eligibility-audit` sports-tranche run as the paired finalize twin for the
   parent's `NA -> planning` reclassification. No work done on the parent's own todo in this pass; this doc exists so the
   reclassified plan has the finalize coverage `plans/active/task_template.md` requires for a `doc_type: plan`.
+- **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).

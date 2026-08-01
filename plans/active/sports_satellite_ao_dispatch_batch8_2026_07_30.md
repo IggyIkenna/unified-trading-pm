@@ -67,6 +67,14 @@ source: >-
 assigned_role: data_engineering
 sequential: false
 drift_direction: advance-code
+context_scope:
+  [
+    /plans/active/sports_consolidated_closeout_2026_07_19.md,
+    /plans/active/sports_canonical_universe_and_apifootball_reference_expansion_2026_06_24.md,
+    /plans/active/issues/sports_features_layer_findings_sweep_2026_07_18.md,
+    /cursor-configs/skills/ag-closeout-audit/SKILL.md,
+    /plans/epics/sports_master.md,
+  ]
 ---
 
 # Sports satellite AO batch 8 — dedicated triage/design pass
@@ -284,3 +292,7 @@ evidence — same pattern as batch2-7. This plan's own reconciliation-then-archi
 No new durable contract is created by this plan — every todo executes an already-decided spec from its source doc. The
 `/ag-closeout-audit` skill's "batchN methodology" section (`cursor-configs/skills/ag-closeout-audit/SKILL.md`) is the
 SSOT for the dedicated-triage-pass procedure this plan followed.
+
+## Progress Log
+
+- **context-scout 2026-08-01**: populated/refreshed context_scope (5 entries).

@@ -44,6 +44,13 @@ source: >-
 assigned_role: data_engineering
 sequential: false
 drift_direction: advance-code
+context_scope:
+  [
+    /plans/active/sports_track_h_denominator_gated_2026_07_28.md,
+    /plans/active/sports_consolidated_native_ao_extract_2026_07_25.md,
+    /plans/active/issues/sports_league_id_namespace_migration_2026_07_20.md,
+    /plans/epics/sports_master.md,
+  ]
 ---
 
 # Sports Track H denominator prerequisites
@@ -190,3 +197,5 @@ empty-string-fallback ratchet, 91 sites > baseline 89, both flagged sites in `sc
 (repo-blocker, condition `repo-market-tick-data-service-qg-green`) rather than fixing the unrelated baseline myself;
 will commit+push+flip this checkbox the moment the repo clears. The PROD data-correctness work above is already complete
 and verified independent of the code-ship — this is a shipping-mechanics gap only, not a data-correctness one.
+
+- **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).

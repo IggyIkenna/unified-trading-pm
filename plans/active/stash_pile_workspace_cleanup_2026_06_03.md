@@ -33,6 +33,7 @@ source:
   ]
 assigned_role: infra
 drift_direction: advance-code
+context_scope: [/plans/epics/infrastructure_master.md, /codex/05-infrastructure/per-tab-worktrees.md]
 ---
 
 # Workspace-wide git stash pile — audit + cleanup (per-host runbook)
@@ -193,3 +194,5 @@ surface — do not auto-drop — genuine WIP.
 2026-06-08 purge window — it proceeds independently. This plan generalises its proven archive-first pattern to all repos
 × all hosts and supersedes it as the canonical recurring runbook once the script lands. Do not duplicate the PM-specific
 purge here.
+
+- **context-scout 2026-08-01**: populated/refreshed context_scope (2 entries).

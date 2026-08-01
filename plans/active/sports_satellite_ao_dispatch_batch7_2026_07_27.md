@@ -51,6 +51,13 @@ source: >-
 assigned_role: data_engineering
 sequential: false
 drift_direction: advance-code
+context_scope:
+  [
+    /plans/active/sports_consolidated_closeout_2026_07_19.md,
+    /plans/active/sports_consolidated_native_ao_extract_2026_07_25.md,
+    /cursor-configs/skills/ag-closeout-audit/SKILL.md,
+    /codex/02-data/sports-2020-06-data-floor.md,
+  ]
 ---
 
 # Sports satellite AO batch 7 — consolidated-closeout orphans
@@ -225,3 +232,7 @@ tick objects vs. features/fixtures rows) — verified no path overlap.
 - **Track V — prune the 7,295 phantom `league_id=soccer_*` lowercase twin-delete manifest rows.** The parent doc's own
   text says this is "subsumed by the relocation manifest-swap... one pass, not two" with the still-pending league_id
   migration (an operator-scheduling gate per the "Operator decisions needed" section) — not independently dispatchable.
+
+## Progress Log
+
+- **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).

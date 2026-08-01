@@ -41,6 +41,13 @@ source: >-
 assigned_role: data_engineering
 sequential: true
 drift_direction: advance-code
+context_scope:
+  [
+    /plans/active/sports_satellite_ao_dispatch_batch7_2026_07_27.md,
+    /plans/active/sports_consolidated_closeout_2026_07_19.md,
+    /cursor-configs/skills/ag-closeout-audit/SKILL.md,
+    /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
+  ]
 ---
 
 # Sports satellite AO batch 7 — finalize
@@ -89,3 +96,7 @@ drift_direction: advance-code
       `sports_satellite_ao_dispatch_batch7_2026_07_27` and fix each path to the archived location → clear `locked_by`
       (already empty; confirm). **Done when**: both docs are in `plans/archive/2026_07/`, every corpus referrer resolves
       to the new path, and `bash scripts/plan-hygiene/run_hygiene_sweep.sh --ci` is 0-hard-failures afterwards.
+
+## Progress Log
+
+- **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).

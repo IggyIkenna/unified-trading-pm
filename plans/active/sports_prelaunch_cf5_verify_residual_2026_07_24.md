@@ -50,6 +50,7 @@ source: >-
   (`plans/active/issues/plan_line_cap_remediation_2026_07_23.md`, row 18 / bucket (d)). The parent plan's durable
   protocol (CF-15…CF-21) had already migrated to codex; these were the last genuinely-open items in its sports thread
   and are tracked here going forward.
+context_scope: [/plans/archive/migration_verification_orphan_safety_2026_06_10.md, /plans/epics/manifest_master.md]
 ---
 
 # Sports pre-launch-window + CF-5 relabel residual
@@ -106,3 +107,4 @@ source: >-
   'operator-gated' (extend the UAC `SOURCE_COVERAGE_START` windows and re-backfill 10,345 objects, OR ratify the corpus
   permanently outside-window) — flipping the doc dispatches both, so it stays NA. Extraction of todo 1 into a batch doc
   is the right next move and is a plan-authoring call, parked
+- **context-scout 2026-08-01**: populated/refreshed context_scope (2 entries).
