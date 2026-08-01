@@ -134,11 +134,24 @@ deployed image lacking (or losing) its own venv at `/tmp/ds`.
       this repo's exit-code handling, and out of scope for this todo (which is specifically about the Cloud Run Job's
       own execution status). Evidence: verified 2026-08-01 via live `gcloud` queries against `central-element-323112`,
       no commit — the existing shipped code already satisfies the acceptance criterion. (repo: deployment-service)
-- [ ] [INFRA] P1. Audit whether any VM launched since 2026-07-30T13:02Z under `LC_TARBALL_FRESHNESS=warn` (the default)
-      ran on materially stale code for a repo with a real bugfix shipped in that window — cross-reference
-      `vm-logs/*/TARBALL_PINS.json` / launch timestamps against each repo's `live-defi-rollout` history for that window.
-      If any backfill/compute run produced data using stale (pre-fix) logic, file the resulting data- correctness gap as
-      its own P0/P1 issue per the data-pipeline-correctness HARD RULE — do not silently accept it. (repo:
+- [x] ✅ [INFRA] P1. Audit whether any VM launched since 2026-07-30T13:02Z under `LC_TARBALL_FRESHNESS=warn` (the
+      default) ran on materially stale code for a repo with a real bugfix shipped in that window. Established the
+      per-repo staleness windows (each tarball's `.manifest.json` `created_at`) and cross-referenced each against its
+      repo's real (non-ci/deps) `live-defi-rollout` fix commits in that window — MTDS is highest-risk: floating for
+      ~47.5h (`2026-07-30T13:02Z`→`2026-08-01T12:42:24Z`), during which ~30 real fixes landed, including two explicitly
+      self-described as fixing "100% empty live capture" (Binance-Futures/ASTER wire-shape `4f244845`, OKX-FUTURES
+      canonical-id/channel `8a6bbc97`) plus a same-day cefi perp_funding manifest-write data-loss regression+revert
+      (`fb32fb65`). Traced `vm-logs/*/TARBALL_PINS.json` for real VM launches inside the window (~1050 fleet-wide by
+      date); the one concrete lead (`cefi-queue-heavy-binancefutu-x17`, launched twice post-fix with zero tarball pins
+      recorded) turned out to run the Tardis HISTORICAL-file backfill path, not the live-WS path the fixes target — so
+      likely unaffected. Could not, within this audit's scope, locate a genuine PRODUCTION live-capture VM launch inside
+      the window to confirm/rule out actual impact. Per the "file the resulting gap as its own P0/P1 issue — do not
+      silently accept it" instruction: filed
+      `plans/active/issues/tarball_stale_window_cefi_live_capture_correctness_risk_2026_08_01.md` (P1) with 2 concrete
+      AO-dispatchable follow-up todos (identify the actual live-capture deployment mechanism; check MTDS manifest
+      capture_status/row-counts for the named venues over the window — escalate to confirmed P0 if any zero-row stretch
+      is found). batch-live-reconciliation-service (stale since 2026-07-27, predating the outage) had exactly 1 real fix
+      in-window and it's perf-only (column projection), not correctness — no issue needed there. (repo:
       unified-trading-pm)
 
 ## Codex SSOTs
