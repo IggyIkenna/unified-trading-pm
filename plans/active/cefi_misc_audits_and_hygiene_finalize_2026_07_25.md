@@ -46,11 +46,17 @@ drift_direction: advance-code
 
 ## Todos
 
-- [ ] [REVIEW] P1. **Reconcile `cefi_consolidated_closeout_2026_07_18.md`'s 3 corresponding checkboxes.** Flip the
+- [x] ✅ [REVIEW] P1. **Reconcile `cefi_consolidated_closeout_2026_07_18.md`'s 3 corresponding checkboxes.** Flip the
       UAC-fallback-removal `[OPERATOR]` decision item (record the ruling, whatever it was), the reconciliation-gap-doc
       `[VERIFY]` spot-check item, and the consolidate+archive `[PM]` item, citing this plan's evidence — verify each
       cited commit/record actually exists before citing it. Repo: unified-trading-pm. **Done when**: all 3 named
-      checkboxes/sections in the parent doc are flipped with verified evidence.
+      checkboxes/sections in the parent doc are flipped with verified evidence. ✅ **DONE 2026-08-01.** All 3 items
+      flipped in `cefi_consolidated_closeout_2026_07_18.md`'s Operator dispositions section: UAC-fallback-removal ruling
+      (KEEP, deferred not declined — cites `unified-trading-pm@2a6a7db62` + `f00f514cc`), reconciliation-gap `[VERIFY]`
+      spot-check (Findings A/B/C, all failing ≥1 of 3 layers — cites `unified-trading-pm@ab28a0f39`), and the
+      `cefi_layer1_denominator_gaps_2026_07_03.md` consolidate+archive (cites `unified-trading-pm@ff8312609`). Every
+      cited commit independently verified reachable via `git log`, and every cited issue doc independently opened +
+      confirmed to contain the claimed content, before citing. Evidence: unified-trading-pm@(this commit).
 - [ ] [DOC] P2. **Archive `cefi_misc_audits_and_hygiene_2026_07_25.md`** via the standard 6-step ritual (per CLAUDE.md's
       plan-archival rule): confirm no Deferred items remain untracked → add the archive banner → run the codex-alignment
       check → grep the corpus for every referrer of `cefi_misc_audits_and_hygiene_2026_07_25` and fix each path to point

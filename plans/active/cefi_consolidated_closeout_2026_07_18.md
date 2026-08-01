@@ -48,7 +48,7 @@ related:
     /plans/active/cefi_consolidated_native_ao_extract_2026_07_25_finalize.md,
   ]
 created: 2026-07-18
-last_updated: "2026-07-25" # 2026-07-25: 4-child split (migration-cutover, coverage-backfill, candle-namespace, misc-hygiene) + Track 0 cryptovenue-phases embed (cefi.1) + 11 AO-readiness fixes; was 2026-07-24
+last_updated: "2026-08-01" # 2026-08-01: reconciled the 3 misc-hygiene checkboxes (UAC-fallback ruling, reconciliation-gap spot-check, denominator-gaps archival); was 2026-07-25 (4-child split + Track 0 embed + 11 AO-readiness fixes)
 parent_epic: cefi_master
 assigned_vm: NA
 execution_scope: local-only
@@ -350,8 +350,19 @@ Real but non-blocking, each in its own doc; listed for completeness so nothing i
       FILL on the Track-2 coverage backfill, not a reclass.
 - **AUDIT the UAC per-venue seed fallback's blast radius** → dispatched as candidate 9 of
   `cefi_consolidated_native_ao_extract_2026_07_25.md`.
-- **[OPERATOR] Decide whether to remove the UAC per-venue seed fallback** → forked to
-  `cefi_misc_audits_and_hygiene_2026_07_25.md` (non-dispatchable, feeds off the audit above).
+- [x] ✅ [PM] P1. **Decide whether to remove the UAC per-venue seed fallback — RULED 2026-07-26: KEEP, deferred (not
+      declined).** Forked to `cefi_misc_audits_and_hygiene_2026_07_25.md` todo 1 (retagged `[OPERATOR]`→`[PM]`
+      2026-07-28 once the ruling landed). That todo ran the blast-radius audit directly — candidate 9 of
+      `cefi_consolidated_native_ao_extract_2026_07_25.md` had never actually run — and found all 3 real production
+      callers depend on the fallback firing today, 2 by explicit design: MTDS `_resolve_instrument_provider` case 5
+      (`market-tick-data-service/.../orchestrator/sentinels.py:461-506`), and deployment-api's `venue_resolution.py`,
+      which builds a live catalogue provider for CEFI only — DEFI/TRADFI/PREDICTION still pass
+      `instruments_provider=None` unconditionally, making this fallback their sole Tier-3 honest-coverage denominator
+      source today. Removing it now would reproduce, for those 3 asset groups, the exact silent-coverage-loss regression
+      `mtds@3253cae3` eliminated for CEFI. Revisit trigger (live catalogue-provider wiring for DEFI/TRADFI/PREDICTION +
+      CEFI/TRADFI G1-G5 gates closing) recorded in `issues/uac_per_venue_seed_fallback_removal_deferred_2026_07_26.md`.
+      Evidence: unified-trading-pm@2a6a7db62 (ruling recorded + issue doc filed), unified-trading-pm@f00f514cc
+      (stale-tag retag).
 - [x] ✅ [DOCS] P1. **Upgrade the `data-pipeline-check-mtds` skill** — DONE `unified-trading-pm@ca3aebfc7` (DERIBIT
       futures_chain negative check, DERIBIT/BINANCE-FUTURES content spot-checks).
 - [x] ✅ [INFRA] P1. **`issues/solana_perp_dex_cull_drift_pacifica_2026_07_16.md`** — DONE (`deployment-service@9b13679`
@@ -361,11 +372,27 @@ Real but non-blocking, each in its own doc; listed for completeness so nothing i
       in the issue doc (DeFi, not cefi — outside this close-out).
 - **Track 0 above**: `cryptovenue_equity_perps_and_tokenized_stocks_2026_06_20.md` Phases 1/1b/1c/2/5 (operator ruling
   2026-07-25 — see Track 0, embedded natively in this doc, sequenced ahead of/alongside the migration).
-- **Reconciliation-gap spot-check** → dispatched (bounded slice) as part of
-  `cefi_misc_audits_and_hygiene_2026_07_25.md`.
-- **Consolidate + archive** `issues/cefi_layer1_denominator_gaps_2026_07_03.md` (+
-  `issues/betfair_instrument_id_delimiter_cross_repo_2026_07_08.md`, already archived) → dispatched (re-scoped to the 2
-  named docs) as part of `cefi_misc_audits_and_hygiene_2026_07_25.md`.
+- [x] ✅ [VERIFY] P2. **Reconciliation-gap spot-check — DONE.** `cefi_misc_audits_and_hygiene_2026_07_25.md` todo 2
+      spot-checked the next 3 unverified findings from `mtds_is_full_adapter_smoketest_findings_2026_07_07.md` across
+      all 3 layers (GCS/manifest/deployment-api-UI), reusing the AAVE_V3 pilot's methodology. **Finding A** (DERIBIT
+      live-vs-batch FUTURE misclassification): manifest + UI layers structurally BLIND — zero `live_deribit`+`trades`
+      rows exist at any layer, a worse gap than a visible wrong value. **Finding B**
+      (HUOBI-SPOT/HUOBI-FUTURES/BITSTAMP-SPOT missing from venue universe): FAIL, corroborating absence at all 3 layers
+      — the UI's venue list derives from the same broken `VENUES_BY_ASSET_GROUP` registry, so the venues don't even
+      appear as a 0%-row, they're invisible. **Finding C** (OKX margin_type inversion): GCS layer populated both ways
+      (real bug), manifest blank/unstamped for all 7,718 OKX rows, deployment-api/UI have zero `margin_type` references
+      — real bug, zero UI blast radius today. Full verdicts + evidence in
+      `issues/adapter_findings_gcs_manifest_deployment_api_reconciliation_gap_2026_07_08.md`'s Progress Log. That issue
+      doc's `[DECISION]` P2 reconciliation-cadence todo stays open/human, unaffected by this item. Evidence:
+      unified-trading-pm@ab28a0f39.
+- [x] ✅ [PM] P1. **Consolidate + archive `issues/cefi_layer1_denominator_gaps_2026_07_03.md` — DONE.**
+      `cefi_misc_audits_and_hygiene_2026_07_25.md` todo 3: confirmed 0 checkbox-syntax open todos of its own (a
+      1000-line narrative/findings doc whose actionable items were already forked elsewhere); a deeper cross-doc
+      investigation traced every residual prose-described gap to a sibling doc (OKX-SPOT Option-A/B decision →
+      `instruments_service_cefi_qg_red_on_ldr_head_2026_07_08.md`; DERIBIT-COMBO real-row capture →
+      `tardis_concurrent_ip_lockout_2026_07_12.md`); `status` flipped to `resolved`, moved to `plans/archive/issues/`,
+      20 corpus referrers fixed. Sibling `issues/betfair_instrument_id_delimiter_cross_repo_2026_07_08.md` confirmed
+      already archived — no action needed there. Evidence: unified-trading-pm@ff8312609.
 - [x] ✅ [REVIEW] P0. **Track-2 coverage decision — RULED** (same decision as the Track-2 ruling above; not a second
       decision). Re-open the completion program + reverse the inferred 50.79% acceptance. Autonomous ruling within
       documented intent (/autonomous 2026-07-18); operator can reverse.
@@ -538,3 +565,12 @@ UPBIT · LIGHTER-ZKSYNC · EXTENDED-STARKNET.
 
 - **na-eligibility-audit 2026-07-30** (tranche=cefi, autonomous): KEEP-NA, valid - carries a BLOCKED-DATA Korea-equity
   vendor ask (operator) plus 3 `[DESIGN]` archetype/hedge-venue calls that are not worker-determinable.
+
+- **2026-08-01** (`cefi_misc_audits_and_hygiene_finalize-001`, slot-5) — Reconciled the 3 checkboxes gated on
+  `cefi_misc_audits_and_hygiene_2026_07_25.md` finishing (all 3 of its todos confirmed done): the UAC-fallback-removal
+  decision (RULED KEEP/deferred, `unified-trading-pm@2a6a7db62`), the reconciliation-gap `[VERIFY]` spot-check (DONE, 3
+  findings all failing at ≥1 of 3 layers, `unified-trading-pm@ab28a0f39`), and the
+  `cefi_layer1_denominator_gaps_2026_07_03.md` consolidate+archive (DONE, `unified-trading-pm@ff8312609`). Every cited
+  commit/record independently re-verified to exist before citing (git log + file-existence checks on this slot's clone).
+  Next: `cefi_misc_audits_and_hygiene_finalize_2026_07_25.md` todo 2 (archive that plan itself, sequential after this
+  todo).
