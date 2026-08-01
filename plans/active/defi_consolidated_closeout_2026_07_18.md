@@ -607,12 +607,15 @@ file, not here.
       `issues/mtds_deployment_env_monkeypatch_leak_blocks_quickmerge_2026_07_23.md`, reopened 2026-07-24). Exact
       command:
       `cd market-tick-data-service && .venv/bin/python scripts/one_offs/delete_migrated_defi_markers_2026_07_23.py --apply`.
-      **Gated on the "21 glued-id rows" todo below** — re-verify 0 glued ids before running (a content-correctness
-      prerequisite, independent of the reversibility check below). **Reversibility-verified, no `[OPERATOR]` gate
-      needed** (finding T, `task_template.md`): object-level delete only (per-marker, never the bucket), target
-      `market-data-tick-defi-prd-central-element-323112` — `gcs_bucket_soft_delete_retention_seconds(...)` returned
-      `604800` (7 days) fresh-checked 2026-07-26 per `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` §3a.
-      Re-query fresh before running, not from this citation.
+      **Gated on the "glued-id rows" todo below (19 as of 2026-08-01, was 21)** — re-verify 0 glued ids before running
+      (a content-correctness prerequisite, independent of the reversibility check below). **Still blocked**: that todo's
+      2026-08-01 update confirmed all 19 remaining rows are phantom (fixable only by the `:401` P0 purge, not by this
+      delete-markers script — markers and manifest rows are different surfaces). **Reversibility-verified, no
+      `[OPERATOR]` gate needed** (finding T, `task_template.md`): object-level delete only (per-marker, never the
+      bucket), target `market-data-tick-defi-prd-central-element-323112` —
+      `gcs_bucket_soft_delete_retention_seconds(...)` returned `604800` (7 days) fresh-checked 2026-07-26 per
+      `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` §3a. Re-query fresh before running, not from this
+      citation.
 - [x] 1. ✅ [DATA] P1. **Remediate FLAGGED `_migrated_*` markers — ROOT-CAUSED + DECIDED 2026-07-25.** Full analysis in
       `issues/defi_migrated_marker_flagged_root_cause_clusters_2026_07_25.md` (live parquet inspection, not guessed).
       Operator decided all three clusters same day; execution now tracked in two dedicated plans (not here, to keep this
@@ -641,16 +644,20 @@ file, not here.
       (refined root-cause), `@184387872` (GMX removal plan), `@781b98eea` (fix+backfill+purge plan). The underlying
       dry-run (banner above) continues independently — once it completes, re-run it to confirm these clusters clear per
       the two plans' own done-when criteria, before any `--apply`.
-- [ ] [DATA] P2. **21 glued-id rows found in the 2026-07-23 manifest rebuild — writer fix SHIPPED, re-verify pending.**
-      9 ORCA/SOLANA `dex_pool_state` cells (2025-12-23..12-31) still need the higher-timeout/parallel-write migration
-      retry (tracked in `issues/mtds_defi_migration_cell_stall_untimed_gcs_read_2026_07_22.md`'s addendum — root-caused
-      as a genuine large fan-out, not a bug; safe to retry, source bundles left intact). The 12 `liquidations` bundles
-      question is ANSWERED: root-caused + fixed 2026-07-24 (`market-tick-data-service@f2e3ad41` — a daily cron was
-      writing timestamp-glued empty markers across 6 handlers; `70b9a81a` promoted the verify tool to
-      `scripts/one_offs/verify_defi_glued_ids_2026_07_24.py`). **Remaining**: run the 9-cell ORCA retry + re-run the
-      verify script for a fresh 0-glued-ids reading before the marker-delete `--apply` todo above proceeds.
-      **na-eligibility-audit 2026-08-01: extracted to `defi_satellite_ao_dispatch_batch7_2026_08_01.md` (conflict-check
-      cleared) — track completion there, close this checkbox by citation once its batch-7 todo lands.**
+- [x] ✅ [DATA] P2. **19 glued-id rows (was 21) — ALL CONFIRMED PHANTOM 2026-08-01, folds into the `:401` P0 purge, NOT
+      fixable by retry/rebuild.** Writer fix SHIPPED (`market-tick-data-service@f2e3ad41`/`70b9a81a`). The 9 ORCA/SOLANA
+      `dex_pool_state` cells' migration retry completed 2026-07-24 (0 residual errors) but the manifest still shows the
+      OLD glued rows — confirmed root cause: `rebuild_defi_manifest.py`'s append/upsert-only `ManifestWriter.add()`
+      never retracts a row whose source object was renamed away (skipped by the R3 defect-A `_`-prefix guard). The 10
+      `liquidations` rows (was 12; 2 cleared on their own) are the SAME class, NOT a separately-fixable "rerun the
+      single-day rebuild" case as previously believed — direct GCS check
+      (`defi_satellite_ao_dispatch_batch7_2026_08_01.md`, slot-11, 2026-08-01) confirms all 10 source markers are
+      ALREADY retired to `_migrated_*` with no per-instrument twins (genuine 0-row empty markers), so a rebuild pass can
+      never rediscover them. **Both sub-populations now require the `:401` P0 phantom-row purge — this verification is
+      that todo's own "sequence AFTER the glued-id manifest rebuild" precondition, now satisfied, so `:401` is
+      unblocked.** Literal 0 not reached; `delete_migrated_defi_markers --apply` stays gated/blocked until the P0 purge
+      lands and a fresh verify reports 0. Closed by citation — `defi_satellite_ao_dispatch_batch7_2026_08_01.md`'s
+      batch-7 todo 3 carries the full evidence.
 - [x] ⛔ [DATA] P1. **WON'T-DO (session-3, 2026-07-26, operator present) — closed, not deferred.** Was: the ~16.7M-row
       LENDING→A_TOKEN/DEBT_TOKEN migration, gated on lending-writer-retire todos 7/8/10/11.
       `defi_lending_writer_retire_prerequisite_2026_07_20.md`'s own investigation found the flip needs 4 tightly-coupled

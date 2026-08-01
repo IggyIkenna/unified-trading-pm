@@ -88,15 +88,33 @@ running `/na-eligibility-audit defi`; every todo below cleared the shared confli
       called `AlchemyBaseClient` at all). Full `quality-gates.sh` green (sentinel-verified on the shipped SHA); shipped
       `market-tick-data-service@1f58a127`. Source: `defi_consolidated_closeout_2026_07_18.md:554-561`.
 
-- [ ] [DATA] P2. **Re-verify the 21 glued-id `dex_pool_state` rows are now 0** — the writer fix already shipped
-      (`market-tick-data-service@f2e3ad41`/`70b9a81a`); 9 ORCA/SOLANA cells (2025-12-23..12-31) still need the
-      higher-timeout/parallel-write migration retry tracked in
-      `issues/mtds_defi_migration_cell_stall_untimed_gcs_read_2026_07_22.md`'s addendum (root-caused as a genuine large
-      fan-out, not a bug — safe to retry, source bundles left intact). Repo: market-tick-data-service. Done when: the 9
-      ORCA/SOLANA cells' retry completes and a fresh run of `scripts/one_offs/verify_defi_glued_ids_2026_07_24.py`
-      reports 0 glued-ids corpus-wide. **Do not run the `delete_migrated_defi_markers --apply` todo in
-      `defi_consolidated_closeout_2026_07_18.md` until this todo's 0 reading is confirmed — that todo depends on this
-      one's outcome, not the other way round.** Source: `defi_consolidated_closeout_2026_07_18.md:626-632`.
+- [x] ✅ [DATA] P2. **Re-verify the 21 glued-id `dex_pool_state` rows are now 0 — VERIFIED 2026-08-01 (slot-11): stale
+      premise corrected, NOT achievable via the retry this todo named; re-routed to the already-tracked P0 purge.** The
+      todo's own premise ("9 ORCA cells still need the migration retry") was already stale — that retry completed
+      2026-07-24 with 0 residual errors (`issues/mtds_defi_migration_cell_stall_untimed_gcs_read_2026_07_22.md` tick-3
+      addendum, confirmed by reading the archived doc). Ran a fresh
+      `scripts/one_offs/verify_defi_glued_ids_2026_07_24.py` (memory-bounded, `ANALYSIS_MEM_CAP=16G` — `ulimit -v` needs
+      headroom beyond RSS for pyarrow's scan allocator, a 6G cap OOM'd on the parse step): **19 glued rows found** (down
+      from 21 on 2026-07-24 — 2 cleared on their own), 9 `ORCA/SOLANA dex_pool_state` + 10 `liquidations` (AAVE_V3 4,
+      COMPOUND_V3 4, FLUID 1, SPARK 1, all `date=2026-07-22`, `_20260723_013349`-suffixed — the same cron batch
+      `f2e3ad41` already root-caused). **New finding this pass**: dry-ran the single-day (2026-07-22) targeted rebuild
+      the sibling issue doc's own open todo recommended for the 10 liquidations rows — it is a NO-OP. Direct GCS check
+      confirms all 10 source markers are ALREADY retired to `_migrated_aave_v3_ARBITRUM_20260723_013349.parquet` etc.
+      (no per-instrument twins — genuine 0-row empty markers, nothing to reshard), so `rebuild_defi_manifest.py`'s
+      R3-defect-A `_`-prefix guard will never rediscover them; the manifest's append/upsert-only index (confirmed by
+      reading `rebuild_defi_manifest.py`: `ManifestWriter.add()` per object found, never a delete) simply cannot retract
+      a row whose source object is gone. **All 19 remaining rows are now confirmed the SAME phantom-row class as the
+      closeout plan's `:401` P0 purge todo** — not fixable by any retry/rebuild, only by that purge. Corrected the two
+      source docs' now-proven-wrong "just retry/rebuild" framing:
+      `issues/defi_lst_oracle_timestamp_glued_instrument_id_2026_07_20.md` (its own open todo) and
+      `defi_consolidated_closeout_2026_07_18.md:644` (updated count 21→19 + phantom-row diagnosis), so no future agent
+      re-attempts the same no-op fix. **The literal "0 glued-ids" outcome is NOT reached — this genuinely requires the
+      P0 phantom-row purge (`defi_consolidated_closeout_2026_07_18.md:401`, VM-scale, ~1.79M dup + ~219.5K phantom rows,
+      sequenced/gated separately) — out of this task's scope to build.** The `delete_migrated_defi_markers --apply` gate
+      below therefore STAYS BLOCKED (0 not confirmed) — do not run it until the P0 purge lands and a fresh verify
+      reports 0. Repo: market-tick-data-service (read-only this pass; no code change — the writer-side fix was already
+      correct, the remaining gap is a manifest-row retraction the writer can't produce). Source:
+      `defi_consolidated_closeout_2026_07_18.md:644-653`.
 
 - [ ] [DATA] P2. **Audit `market-tick-data-service/scripts/` (and sibling repos' `scripts/`) one-offs for any OTHER
       direct `ManifestWriter(...)` construction missing `per_vm_shards=True`** against a populous bucket
@@ -142,3 +160,14 @@ running `/na-eligibility-audit defi`; every todo below cleared the shared confli
   `_ensure_alchemy_client`), which resolves per-chain via UAC `CHAIN_CONFIGS` (verified `arb-mainnet`/`polygon-mainnet`
   templates present in `_defi_chain_data.py`). Added 3 regression tests. Full QG green, shipped
   `market-tick-data-service@1f58a127`.
+- 2026-08-01 (slot-11, todo 3): Re-verified the glued-id count (memory-bounded, `ANALYSIS_MEM_CAP=16G` — a 6G
+  `ulimit -v` cap OOM'd pyarrow's parquet scan; the manifest is now 1.14GB, up from 982MB on 2026-07-24). Result: 19
+  rows (down from 21), 9 ORCA + 10 liquidations. Dry-ran the single-day rebuild the sibling issue doc recommended for
+  the 10 liquidations rows — confirmed via direct GCS listing it is a no-op (all 10 already retired to `_migrated_*`
+  with no per-instrument twins), so both sub-populations are now the SAME phantom-row class as the 9 ORCA rows —
+  `rebuild_defi_manifest.py`'s append/upsert-only `ManifestWriter.add()` (read the source; confirmed no delete path
+  exists) cannot retract a row whose source object is gone. Corrected the two source docs' now-disproven "retry/rebuild
+  fixes it" framing (`issues/defi_lst_oracle_timestamp_glued_instrument_id_2026_07_20.md`,
+  `defi_consolidated_closeout_2026_07_18.md:644`) so a future agent doesn't re-attempt the same no-op. Literal "0" not
+  reached — genuinely requires the closeout plan's `:401` P0 phantom-row purge (VM-scale, ~1.79M dup + ~219.5K phantom
+  rows), out of this task's scope. `delete_migrated_defi_markers --apply` stays correctly gated/blocked.

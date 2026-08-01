@@ -360,12 +360,26 @@ not a new whole-corpus walk) once this fix ships, to reclassify them via the now
 
 ## Todos
 
-- [ ] [DATA] P2. **Run the single-day (2026-07-22) targeted rebuild pass for the 12 remaining glued liquidations
-      objects** — reclassify via the now-fixed N5 path, then re-verify 0 glued ids in the fresh index (excluding the 9
-      separately-owned ORCA `dex_pool_state` rows).
+- [x] ✅ [DATA] P2. **DISPROVEN 2026-08-01 (slot-11) — the single-day rebuild is a NO-OP; folds into the closeout plan's
+      `:401` P0 phantom-row purge instead.** Dry-ran
+      `rebuild_defi_manifest.py --start-date 2026-07-22     --end-date 2026-07-22 --dry-run`, then confirmed via direct
+      GCS listing: all 10 remaining glued liquidations markers (AAVE_V3 ×4, COMPOUND_V3 ×4, FLUID ×1, SPARK ×1 — 2 of
+      the original 12 already cleared on their own) are ALREADY retired to
+      `_migrated_aave_v3_ARBITRUM_20260723_013349.parquet` etc., with NO per-instrument twins (genuine 0-row empty
+      markers, nothing to reshard). `rebuild_defi_manifest.py`'s R3 defect-A `_`-prefix guard explicitly skips retired
+      markers, so a rebuild pass can never rediscover and reclassify them via the N5 path — the N5 fix is correct for
+      objects that still exist under their glued name, but these no longer do. This makes the 10 liquidations rows the
+      SAME phantom-row class as the 9 ORCA `dex_pool_state` rows (append/upsert-only manifest, source object renamed
+      away, nothing left to re-scan) — both now require the closeout plan's
+      `defi_consolidated_closeout_2026_07_18.md:401` P0 phantom-row purge (~1.79M dup + ~219.5K phantom rows, VM-scale),
+      not a standalone fix here. Full evidence: `defi_satellite_ao_dispatch_batch7_2026_08_01.md`'s batch-7 todo 3
+      (2026-08-01).
 
 ## Progress Log
 
 - **na-eligibility-audit 2026-07-30**: RECLASSIFY -> assigned_vm: planning (conflict-check CLEAR against 231 active
   planning docs; no open todo elsewhere duplicates this claim) - single residual is a bounded single-day (2026-07-22)
   targeted rebuild pass + a re-verify; the N5 fix it depends on has shipped
+- **2026-08-01 (slot-11)**: The single-day rebuild premise above was disproven — see the Todos entry. This doc's scope
+  is now fully resolved (either shipped/verified, in the case of the forward write-path fix, or folded into the closeout
+  plan's P0 phantom-row purge, in the case of the historical residual rows); no standalone action remains here.
