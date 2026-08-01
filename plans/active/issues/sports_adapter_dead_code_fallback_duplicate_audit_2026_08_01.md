@@ -211,12 +211,15 @@ named) rather than left as prose, per the findings-closure hard rule.
       outer `_emit_fetch_failed` catch-all (lines 284-286), and make the outer catch-all itself `raise` after logging
       instead of falling through to return a partial result — matching the `raise`-after-`_emit_fetch_failed` pattern
       already used by every sibling method in `api_football.py`. (repo: instruments-service)
-- [ ] [BACKEND] P1. Fix `api_football.py::ApiFootballAdapter.get_standings` (lines 714-728) to `raise` after
+- [x] ✅ [BACKEND] P1. Fix `api_football.py::ApiFootballAdapter.get_standings` (lines 714-728) to `raise` after
       `_emit_fetch_failed` instead of `return []`, matching every sibling per-entity fetch method in the same file
       (`get_fixtures`, `get_leagues`, `get_teams`, `get_injuries`, `get_fixture_statistics`, `get_fixture_events`,
       `get_fixture_lineups`, `get_fixture_player_stats`). Verify `_fetch_and_cache_standings`'s existing
       `except Exception` (`sports_reference_core.py:592-604`) then correctly routes to `hooks.note_failed`. (repo:
-      instruments-service)
+      instruments-service) — instruments-service@d182b503 (fix) + @64148070 (updated `test_get_standings_empty_on_error`
+      → `test_get_standings_error_propagates`, the old test asserted the swallowed behavior). Verified
+      `_fetch_and_cache_standings` (sports_reference_core.py:592-604) already catches `Exception` and calls
+      `hooks.note_failed` — no caller change needed. Full QG green (5133 passed).
 - [ ] [BACKEND] P3. `open_meteo.py::OpenMeteoAdapter.get_weather` (lines 71-122, instruments-service) — either delete
       (zero callers, not part of the abstract interface) or add an explicit "registered but intentionally unreached"
       note matching this codebase's own precedent (`adapters/tradfi/ibkr.py`'s unreached-note style). (repo:
