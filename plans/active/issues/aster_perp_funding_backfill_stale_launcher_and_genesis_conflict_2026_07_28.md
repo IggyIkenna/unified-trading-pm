@@ -158,3 +158,27 @@ is confirmed. Also update the parent plan's leg (c) text to stop citing the reti
   is already fully captured (226,008 rows through 2026-07-27), so the ONLY remaining scope is the disputed
   2023-07-22→2023-11-01 window this blocker gates. Nothing to do until the operator answers. Released via
   `/skip-current-task {"reason_code": "BLOCKED"}` on the parent todo.
+- 2026-08-01 (slot 6, data_engineering): re-verified — `BLK-a94f446d` still has no answer (fresh pull, corpus grep,
+  `/api/blocked/stats` shows no resolution, `/api/backlog/.../blockers` confirms no formal dispatcher-level gate; the
+  gate lives on this issue doc's own todo, unchanged). **New cross-reference for whoever answers next**: the source doc
+  `perp_funding_data_semantics_and_cadence_2026_06_16.md` GAP 2 already contains the raw 2026-06-17 operator-confirmed
+  decision text this blocker's "reconstruct vs out-of-scope" question is asking about — it is not a lost/undiscoverable
+  conversation, it is written down: "Operator confirmed 2026-06-17: genesis = `2023-07-22`" plus an explicit instruction
+  to treat the 2023-07-22→~2024 window as real (Binance-proxied) data to be labeled honestly, not excluded — and GAP 4
+  separately states "2023-07-22 should win for any coverage %, missing-days, or **backfill-target** calculation." Slot
+  15's 2026-07-29 research read this same passage but treated it as insufficient because it isn't a raw conversation
+  transcript; I don't think that's the right bar — a written, dated, operator-attributed decision in an issue doc IS the
+  standard form a plan decision-record takes here (per `plans/active/issues/*` being the durable record), and main's own
+  gate summary already quotes this exact fact ("2023-07-22 was the operator-confirmed Binance-proxied (synthetic)
+  start") without disputing it. **What's still a genuine judgment call, not something I'm resolving myself**: whether
+  that documented genesis/coverage-start decision also constitutes authorization to spend compute physically running the
+  backfill VM over the disputed window, vs. being a config/labeling-only decision that a human still needs to extend
+  into "yes, backfill it" — main already looked at the same facts and chose to gate rather than assume the former, so I
+  am not overriding that call as a worker. Flagging this connection explicitly (via `/blocked`) so main/ operator can
+  resolve `BLK-a94f446d` with it in hand, rather than re-researching from scratch a 3rd time. **This is also the 6th
+  dispatch of this exact task to hit the identical "sole leg fully gated, no unblocked action" conclusion across 5
+  calendar days (slots 14, 9, 15, 4, 13, now 6)** — recommending this task be PARKED (mirroring the 3 same-class parks
+  main executed tonight for `live_event_log_warm_sink_recovery_and_cold_compaction-011`, `ibkr-...-015`, and
+  `mtds_available_at_cross_asset_backfill_2026_07_13-002`) rather than continuing to re-dispatch it fleet-wide for the
+  same unanswered blocker. Released via `/skip-current-task {"reason_code": "BLOCKED"}` on the parent todo; posting a
+  `/blocked` recommending the park.
