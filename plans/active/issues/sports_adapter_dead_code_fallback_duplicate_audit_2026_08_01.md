@@ -263,12 +263,17 @@ named) rather than left as prose, per the findings-closure hard rule.
       `data_source="odds_api_aggregator"`; `ApiFootballAdapter` has no construction site outside its own docstring
       example). Either wire each into a live venue config with a stated activation path, or add an explicit unreached
       note (matching `unity/__init__.py`'s existing precedent in the same repo). (repo: execution-service)
-- [ ] [BACKEND] P1. `bookmaker_api/onexbet.py::OneXBetAdapter` (execution-service) — `sports_handler.py` lists
-      `"ONEXBET"` as a supported venue (`BOOKMAKER_VENUES`/`SUPPORTED_VENUES`/`DEFAULT_FEES`) but nothing in the
-      codebase can actually construct/execute it (`adapters/sports_router.py::SportsRouter` has an empty
-      `_BOOKMAKER_VENUES` default and no `.execute()` method). Either wire `OneXBetAdapter` into a real live dispatch
-      path so the advertised venue support is real, or remove `"ONEXBET"` from `sports_handler.py`'s supported-venue
-      sets until it is. P1 because this is a supported-venue claim that is currently false. (repo: execution-service)
+- [x] ✅ [BACKEND] P1. **DONE 2026-08-01 (slot 9), `execution-service@63f099b2`.**
+      `bookmaker_api/onexbet.py::OneXBetAdapter` is a read-only odds adapter (module/class docstrings say so explicitly,
+      no place-bet method exists) and nothing wires it into a live dispatch path (`config["sports_router"]` is never
+      populated in production, so `SportsHandler._try_live_router` always returns `None` and falls through to simulation
+      for every sports venue — not ONEXBET-specific). Chose the removal option: dropped `"ONEXBET"` from
+      `SportsHandler.BOOKMAKER_VENUES` (now an empty set, same pattern already used by `adapters/sports_router.py`'s
+      `_BOOKMAKER_VENUES`) and from `SUPPORTED_VENUES`/`DEFAULT_FEES`; updated the class docstring's Supported-Venues
+      line. Updated the one test that depended on the false-positive path
+      (`tests/unit/test_instruction_handlers.py::test_sports_bet_execute_success` → renamed
+      `test_sports_bet_rejects_unwired_bookmaker_venue`, now asserts the correct validation-rejection).
+      `quality-gates.sh` green, verified on origin. (repo: execution-service)
 - [x] ✅ [BACKEND] P1. Fix the `except Exception: pass` capability-preflight swallow at the 7 call sites listed in
       Finding 12 above (`exchanges/betfair.py:493-498`, `exchanges/betfair_order_mapping.py:128-133,212-217`,
       `exchanges/kalshi.py:223-228,305-310,415-420`, `exchanges/polymarket_clob.py:226-237`, all execution-service) —
