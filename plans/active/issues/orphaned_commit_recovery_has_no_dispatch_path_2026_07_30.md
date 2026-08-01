@@ -350,3 +350,10 @@ not a declined recovery.
   classification was left unchanged (all four verdicted KEEP-NA, correctly); this doc exists because the shared blocker
   — no dispatch path — is invisible from any one of them and had no owner. No commits were touched, no worktree was
   inspected, and no recovery was attempted by this run: every route requires the authority ruling above.
+- **na-eligibility-audit 2026-08-01** (autonomous, tranche `ao`, dispatch agt-8e95ca, slot 2): ARCHIVE-eligible (0 open
+  todos; re-read the whole doc for prose-only remaining work per the corpus trap warning — none found, the "Live worker
+  commits observed but deliberately NOT touched (PROTECT)" table is a record, not a todo; the stale `status: open`
+  inline comment predates the 2026-08-01 completions). **Not archived independently** —
+  `ao_satellite_ao_dispatch_batch3_finalize_2026_07_31.md` (active `assigned_vm: planning`) carries its own
+  `[REVIEW] P0` todo explicitly naming this doc (with the caveat "likely still has open non-batched items — check before
+  archiving") for the standard 6-step archival ritual. Archiving it here would duplicate that already-queued AO work.

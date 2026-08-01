@@ -156,3 +156,9 @@ this, each time invisible until someone reads the backlog by hand.
   `/plans/active/ao_satellite_ao_dispatch_batch3_2026_07_31.md` (`agent-orchestrator@af98fcd`) — see that todo's
   evidence line and this doc's own updated checkboxes above for the full detail (watchdog design, test proving the
   replayed incident pages, and the clean live-backlog backfill-check result). Both items now `[x]`.
+- **na-eligibility-audit 2026-08-01** (autonomous, tranche `ao`, dispatch agt-8e95ca, slot 2): ARCHIVE-eligible (0 open
+  todos, no prose-only remaining work) — **not archived independently.**
+  `ao_satellite_ao_dispatch_batch3_finalize_2026_07_31.md` (active `assigned_vm: planning`) carries its own
+  `[REVIEW] P0` todo explicitly naming this doc for the standard 6-step archival ritual once its extraction is
+  reconciled back. Archiving it here would duplicate that already-queued AO work. `assigned_vm` left as-is (`NA` —
+  archival-pending status, not a dispatch-eligibility question).

@@ -167,3 +167,11 @@ batch — nothing to dispatch for it. Full disposition for all 9 original Deferr
   issue doc's own `[BACKEND] P2` item. Every todo in this plan is now done — this plan is ready for archival per the
   plan-completion-and-archival-discipline SSOT (deferred to the paired `batch4_finalize` plan / operator's archival
   pass, per this batch's own convention).
+- **na-eligibility-audit 2026-08-01** (autonomous, tranche `ao`, dispatch agt-8e95ca, slot 2): confirmed
+  ARCHIVE-eligible (0 open todos, no prose-only remaining work). **Not archived independently** —
+  `ao_satellite_ao_dispatch_batch4_finalize_2026_08_01.md` (active `assigned_vm: planning`) carries its own `[INFRA] P0`
+  todo owning "run the 6-step archival ritual on the batch plan itself," exactly matching this batch's own stated
+  convention above. Archiving here would duplicate that already-queued AO work. `assigned_vm` unaffected — this is a
+  `plan` doc's own archival-pending state, not a reclassification question (it was NA/local-only by this tranche's
+  established convention from inception, per the frontmatter note the 2026-08-01 batch-1 classification pass already
+  recorded).
