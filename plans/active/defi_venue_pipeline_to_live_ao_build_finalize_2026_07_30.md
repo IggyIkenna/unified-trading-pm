@@ -83,9 +83,35 @@ Machine-held (`gate_on_depends: true`) until every todo in
       to `plans/archive/2026_07/defi_venue_phase_live_definition_contradiction_2026_07_22.md`, confirmed via
       `git status`. Evidence: unified-trading-pm (this repo) — see the archived doc's own 2026-08-01 Progress Log entry
       for the full step-by-step.
-- [ ] [DATA] P2. Run the same 6-step archival ritual on `defi_venue_pipeline_to_live_ao_build_2026_07_30.md` itself (now
-      fully done) and on this finalize plan. Done-when: both are archived, `run_hygiene_sweep.sh` is clean, and no
-      active-corpus doc references either by its old `plans/active/` path.
+- [x] ✅ [DATA] P2. Run the same 6-step archival ritual on `defi_venue_pipeline_to_live_ao_build_2026_07_30.md` itself
+      (now fully done) and on this finalize plan. Done-when: both are archived, `run_hygiene_sweep.sh` is clean, and no
+      active-corpus doc references either by its old `plans/active/` path. — **2026-08-01 (slot-15, data_engineering
+      craft) — DONE.** Confirmed both docs are genuinely done first: the build plan's 6 todos are all `[x]` with no
+      `locked_by`, and the finalize plan's own todo 1 already independently re-verified all 7 cited commit SHAs. Ran the
+      6-step ritual: (1) no untracked deferrals found — every follow-up mid-build already has its own tracked issue doc
+      (`defi_six_lst_vault_venues_missing_protocol_capabilities_2026_07_31.md`,
+      `vault_share_price_handler_manifest_missing_instrument_id_2026_07_31.md`); (2) added `🟢 ARCHIVED` banners +
+      `status: complete` to both docs; (3)-(4) codex-alignment check: no new codex update needed — the one genuinely new
+      pattern this build surfaced (`DefiManifestRecorder` missing `per_vm_shards=True`) is already the subject of its
+      own open codex-update todo in `issues/expand_defi_pool_catalogue_script_unbounded_memory_2026_07_31.md` (the
+      cross-cutting 5-incident tracker), so adding a duplicate note here would fork the SSOT rather than serve it; (5)
+      fixed the 6 active-corpus referrers still citing either doc's pre-archive `/plans/active/` path
+      (`issues/instruments_service_sports_footystats_uac_overlap_qg_red_2026_07_30.md`,
+      `issues/aave_plasma_is_denominator_drift_no_producer_2026_08_01.md`,
+      `issues/defi_six_lst_vault_venues_missing_protocol_capabilities_2026_07_31.md`,
+      `issues/ao_park_disposition_blocked_answer_no_follow_through_2026_07_31.md`,
+      `issues/expand_defi_pool_catalogue_script_unbounded_memory_2026_07_31.md`,
+      `issues/vault_share_price_handler_manifest_missing_instrument_id_2026_07_31.md`) — bare filename mentions with no
+      path prefix (prose narrative, e.g. "discovered while completing X's todo 5") left untouched as historical record,
+      matching this corpus's established convention for archived-doc citations; referrers that are themselves already
+      `plans/archive/` docs left untouched per the same convention; `plans/active/INDEX.md` regenerated via its own
+      generator script rather than hand-edited (per its own header instruction); (6) `git mv` both docs to
+      `plans/archive/2026_08/` (archival-date folder — confirmed via today's actual git history, not the docs' own
+      2026-07 creation-date, matching the explicit convention correction already recorded in
+      `plans/archive/2026_08/cefi_misc_audits_and_hygiene_finalize_2026_07_25.md`'s own todo-2 evidence). Per `RULES.md`
+      § 2's never-combine-checkbox-flip-with-git-mv rule, this checkbox flip lands in its own commit at this doc's
+      still-active path; the actual `git mv` of both docs follows in a separate commit. `run_hygiene_sweep.sh` confirmed
+      clean post-move (see that commit's evidence).
 
 ## Progress Log
 
@@ -100,3 +126,6 @@ Machine-held (`gate_on_depends: true`) until every todo in
   folded into that codex doc rather than left implicit. Todo 3 (archive this build plan + this finalize plan itself) is
   next — `sequential: true` gates it on this todo, which is now clear to dispatch.
 - **context-scout 2026-08-01**: populated/refreshed context_scope (2 entries).
+- **2026-08-01 (slot-15, data_engineering craft)** — todo 3 done (see checkbox above for full evidence): all 3 todos in
+  this plan are now complete. This plan and its parent build plan both move to `plans/archive/2026_08/` in the
+  immediately following commit (checkbox-flip and git-mv kept in separate commits per RULES.md § 2).
