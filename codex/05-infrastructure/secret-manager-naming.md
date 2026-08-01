@@ -39,15 +39,15 @@ referenced_by:
     /codex/15-runbooks/per-source-credential-rotation-runbook.md,
   ]
 owner:
-last_reviewed: 2026-07-23
+last_reviewed: 2026-08-01
 code_refs:
   [
     unified-trading-library/unified_trading_library/cloud_interface/credentials_registry.py,
     execution-service/execution_service/data/tranche_router.py,
     execution-service/execution_service/cli/handlers/live_execution_handler.py,
     execution-service/execution_service/service_config.py,
-    execution-service/execution_service/sports_execution/prediction_markets/kalshi.py,
     execution-service/execution_service/sports_execution/prediction_markets/polymarket.py,
+    execution-service/execution_service/sports_execution/adapters/exchanges/kalshi.py,
     market-tick-data-service/market_tick_data_service/market_interface/clients/thegraph_base_client.py,
   ]
 ---
@@ -222,17 +222,27 @@ polymarket-private-key
 polymarket-secret
 ```
 
-Both `KalshiAdapterConfig`/`PolymarketAdapterConfig` in
-`execution-service/execution_service/sports_execution/prediction_markets/{kalshi,polymarket}.py` are documented-but-
-not-yet-wired NautilusTrader adapter config STUBS (no code anywhere calls `get_secret_client().get_secret(...)` on their
-`secret_name*` fields yet) — both had wrong defaults, fixed 2026-07-23 after actually querying GCP rather than trusting
-the stub's own comments: `KalshiAdapterConfig` split into two fields (`kalshi-api-key` + `kalshi-api-secret`, neither
-exists) when the real secret is the ONE blob above — collapsed to a single `secret_name = "kalshi-api-credentials"`
-field. `PolymarketAdapterConfig.secret_name_api_secret` / `secret_name_api_passphrase` defaulted to
-`polymarket-api-secret` / `polymarket-api-passphrase` (neither exists, the "-api-" infix doesn't apply to these two
-fields even though it does for `secret_name_api_key`) — fixed to `polymarket-secret` / `polymarket-passphrase`.
-`secret_name_funder` (`polymarket-funder-address`) is NOT a naming bug — it is a real field for a secret that is simply
-not yet provisioned in GCP.
+**`KalshiAdapterConfig` DELETED 2026-08-01** (was
+`execution-service/execution_service/sports_execution/prediction_markets/kalshi.py`) — this section previously called it
+a "documented-but-not-yet-wired NautilusTrader adapter config STUB," matching `PolymarketAdapterConfig`'s framing below.
+That framing was itself stale, inherited from the stub's own comments rather than independently verified: unlike
+Polymarket (a real, still-pending NautilusTrader integration — see `PolymarketAdapterConfig`'s own docstring), NOTHING
+ever referenced a NautilusTrader-Kalshi integration path anywhere in the workspace, and the stub wasn't even re-exported
+from its own package's `__all__`. Kalshi's LIVE execution adapter
+(`execution-service/execution_service/sports_execution/adapters/exchanges/kalshi.py::KalshiAdapter`, wired via
+`adapters/sports_factory.py:39-44`'s `_LIVE_VENUE_CONFIGS`) was fully built and live well before this stub was deleted,
+and authenticates via RSA request signing against **two** separate secrets — `kalshi-api-key-id` +
+`kalshi-private-key-pem` — NOT the single `kalshi-api-credentials` blob the deleted stub referenced. Found + deleted per
+`unified-trading-pm/plans/active/issues/sports_adapter_dead_code_fallback_duplicate_audit_2026_08_01.md` Finding 13.
+`kalshi-api-credentials` (verified live in GCP 2026-07-23, see § 1 above) is now referenced by NO code in the workspace
+— an orphaned secret, not a naming bug; deleting it from GCP is a separate, not-yet-decided cleanup, out of this doc's
+scope.
+
+`PolymarketAdapterConfig.secret_name_api_secret` / `secret_name_api_passphrase` defaulted to `polymarket-api-secret` /
+`polymarket-api-passphrase` (neither exists, the "-api-" infix doesn't apply to these two fields even though it does for
+`secret_name_api_key`) — fixed to `polymarket-secret` / `polymarket-passphrase`. `secret_name_funder`
+(`polymarket-funder-address`) is NOT a naming bug — it is a real field for a secret that is simply not yet provisioned
+in GCP.
 
 ### 2.4 Cloud KMS CMKs
 

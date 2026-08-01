@@ -317,13 +317,24 @@ named) rather than left as prose, per the findings-closure hard rule.
       `defi_execution/protocols/base.py`, MTDS `factory.py`) during this audit but auditing those call sites was out of
       this task's scope. If confirmed workspace-wide, file a follow-up cross-cutting audit todo. (repo: cross-cutting —
       scoping decision only)
-- [ ] [BACKEND] P2. Fix `prediction_markets/kalshi.py::KalshiAdapterConfig`'s stale/incorrect docstring
+- [x] ✅ [BACKEND] P2. Fix `prediction_markets/kalshi.py::KalshiAdapterConfig`'s stale/incorrect docstring
       (execution-service, lines 1-9, 19-24) — it claims Kalshi uses one combined secret (`kalshi-api-credentials`) and
       is "pending provisioning", which is now false: the live `exchanges/kalshi.py::KalshiAdapter` is fully wired via
       TWO separate secrets (`kalshi-api-key-id`, `kalshi-private-key-pem`, see `sports_factory.py:39-44`). Either delete
       the stub (if fully superseded by the live adapter) or correct its docstring to state the real live/stub
       relationship, matching the sibling `prediction_markets/polymarket.py` stub's correct precedent. (repo:
-      execution-service)
+      execution-service) — execution-service@892af537. Chose DELETE over correct: unlike `polymarket.py`'s stub (a real,
+      documented, not-yet-integrated NautilusTrader path, re-exported from the package's own `__all__`),
+      `KalshiAdapterConfig` had zero references to any NautilusTrader-Kalshi integration anywhere in the workspace and
+      was never re-exported from `prediction_markets/__init__.py`'s `__all__` either — genuinely dead code, not a stale
+      comment on live-but-unwired code. Deleted the stub file + its 4-test dedicated block in
+      `tests/sports_execution/unit/test_prediction_markets.py`. Also corrected
+      `codex/05-infrastructure/secret-manager-naming.md` §2.3, which had independently inherited the same stale
+      "documented-but-not-yet-wired NautilusTrader adapter config STUB" framing for Kalshi (that codex doc's own
+      2026-07-23 pass took the stub's self-description at face value rather than verifying it) — now states the live
+      two-secret model, notes `kalshi-api-credentials` is an orphaned GCP secret (separate cleanup, not resolved here),
+      and drops the deleted file from `code_refs`. Full `quality-gates.sh` green; verified on origin
+      (`git merge-base --is-ancestor 892af537 origin/live-defi-rollout`).
 
 ## Progress Log
 
