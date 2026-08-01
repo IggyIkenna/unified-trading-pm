@@ -117,8 +117,11 @@ script isn't invoked by `quality-gates.sh`), so none of this is actively blockin
       repo to confirm clean. (repo: alerting-service) — alerting-service@3054a8a. Verified via
       `uv run python3 scripts/manifest/check-pyrightconfig-extrapaths.py` — zero remaining warnings for
       alerting-service.
-- [ ] [SCRIPT] P3. batch-live-reconciliation-service: remove the 3 dead extraPaths in `pyproject.toml`. (repo:
-      batch-live-reconciliation-service)
+- [x] ✅ [SCRIPT] P3. batch-live-reconciliation-service: remove the 3 dead extraPaths in `pyproject.toml`. (repo:
+      batch-live-reconciliation-service) — batch-live-reconciliation-service@c1a0cac. Removed
+      `unified-config-interface`/`unified-internal-contracts`/`unified-cloud-interface` (confirmed dead: no
+      `workspace-manifest.json` dep, no source import); re-ran `check-pyrightconfig-extrapaths.py` — zero remaining
+      warnings for batch-live-reconciliation-service; `quality-gates.sh` green (268 passed, 1 skipped, 84.97% coverage).
 - [ ] [SCRIPT] P3. client-reporting-api: remove the 3 dead extraPaths, add the missing `unified-api-contracts` extraPath
       in `pyproject.toml`. (repo: client-reporting-api)
 - [ ] [SCRIPT] P3. deployment-api: remove the 2 dead extraPaths, add the missing `deployment-service` and
