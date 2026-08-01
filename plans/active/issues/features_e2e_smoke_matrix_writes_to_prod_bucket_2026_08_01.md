@@ -143,16 +143,38 @@ identical `_invoke_cli()` shape so are near-certain but not individually re-veri
 
 ## Recommended decision
 
-- [ ] [SCRIPT] P0. **e2e-testing** — for each of the 8 `scripts/<family>/smoke_matrix.py` files, extend `_invoke_cli()`
-      to derive and set the correct `PROTOCOL_DATA_SINK_BUCKET*` override alongside `IS_TEST_RUN=true`, matching that
-      family's own `routing_key` convention (`"global"` for calendar per the archived fix; `"commodity"` for commodity;
-      `asset_group.lower()` for delta_one/cross_instrument/multi_timeframe/onchain/volatility; whatever sports's config
-      actually reads — verify per-family, do not assume one shape fits all). Test-bucket NAME should derive from each
-      family's existing `_test_bucket()` helper (already computes the correct `-test-` bucket name per family) — set the
-      env var to that SAME value so the subprocess and the verifier agree on which bucket to check. **Done when**: a
-      real (non-dry-run) run of EACH of the 8 `smoke_matrix.py` files, for at least one viable cell, demonstrably writes
-      to (and the harness verifies against) the `-test-` bucket — cite the actual `gs://...-test-...` path in each
-      family's run output, not just "PASS" from the summary table.
+- [x] ✅ [SCRIPT] P0. **e2e-testing** — for each of the 8 `scripts/<family>/smoke_matrix.py` files, extend
+      `_invoke_cli()` to derive and set the correct `PROTOCOL_DATA_SINK_BUCKET*` override alongside `IS_TEST_RUN=true`,
+      matching that family's own `routing_key` convention (`"global"` for calendar per the archived fix; `"commodity"`
+      for commodity; `asset_group.lower()` for delta_one/cross_instrument/multi_timeframe/onchain/volatility; whatever
+      sports's config actually reads — verify per-family, do not assume one shape fits all). Test-bucket NAME should
+      derive from each family's existing `_test_bucket()` helper (already computes the correct `-test-` bucket name per
+      family) — set the env var to that SAME value so the subprocess and the verifier agree on which bucket to check. —
+      **e2e-testing@04d261d**. Per-family routing_key verified against each config's actual
+      `get_data_sink(routing_key=...)` call (code read, not assumed): `"global"` calendar, `"commodity"` commodity,
+      `"defi"` onchain (matches `_ONCHAIN_ASSET_GROUP`), `"sports"` sports, `asset_group.lower()`
+      delta_one/cross_instrument/multi_timeframe/volatility. **Also fixed**: 5 families'
+      `_test_bucket()`/`TEST_BUCKET_TEMPLATE` were stale, referencing PRE-Fold-A per-kind bucket names
+      (`features-delta-one-*` etc.) that Fold A (2026-07-18/19) retired — `resolve_bucket()` now RAISES
+      `BucketNamingError` on those kinds. Corrected to the folded `features-{ag}-test-{pid}` shape (already-provisioned,
+      confirmed via `client.bucket(...).exists()` against live GCS — `gsutil` itself had expired/invalid creds and
+      falsely reported all as missing, a red herring caught and worked around). **Done-when evidence** (real,
+      non-dry-run runs against live GCS, `central-element-323112`): calendar — FULL E2E:
+      `0 rows written to gs://features-calendar-test-central-element-323112/calendar/{time_features,economic_events,yield_curve,economic_results}/by_date/day=2026-08-01/features.parquet`,
+      exit 0. onchain — FULL E2E:
+      `ManifestWriter: updated availability index (1 total entries, 1 new) in features-defi-test-central-element-323112`,
+      "Processing completed successfully", exit 0. delta_one (CEFI) — real manifest write confirmed landing at
+      `gs://features-cefi-test-central-element-323112` (feature compute itself hit an unrelated pre-existing
+      universe-filter issue, tracked below). commodity, cross_instrument, multi_timeframe, sports, volatility — full
+      end-to-end runs blocked by separate pre-existing issues (Baker Hughes adapter regression already tracked;
+      multi_timeframe CLI fully broken; stale manifest consolidators; missing upstream options/futures data) — bucket
+      **resolution** independently confirmed correct for all 5 via direct `get_output_bucket()`/equivalent calls using
+      the exact env vars this fix sets (each resolved to its `-test-` bucket, not PROD). Full `quality-gates.sh` green
+      (108s, sentinel-verified); shipped via quickmerge, landed + verified on `live-defi-rollout`. **New findings from
+      this verification exercise** (multi_timeframe CLI entirely broken; calendar/delta_one smoke-harness verifier
+      prefix mismatches; 2 stale manifest consolidators) filed as
+      `/plans/active/issues/features_smoke_matrix_verification_findings_2026_08_01.md` per the FINDINGS CLOSURE rule —
+      none block this todo's own P0 scope, which is proven correct independent of them.
 - [ ] [DATA] P1. **features-service / operator** — once (P0 above) lands, audit each family's PROD features bucket for
       any historical test-shaped pollution left over from the pre-fix era (mirroring the audit already done for calendar
       in `features_calendar_is_test_run_ignored_writes_prod_2026_07_27.md`'s P1 todo) — scope to objects/rows whose
@@ -169,3 +191,11 @@ identical `_invoke_cli()` shape so are near-certain but not individually re-veri
   empirical smoke-check-masking test (task scope: catalogue completeness + masking, NOT this bug) — filed immediately
   per the "big finding" / data-pipeline-correctness escalation rule rather than absorbing the multi-file cross-family
   fix into that task's scope. NOT fixed this session.
+- 2026-08-01 (slot-12, data_engineering): P0 DONE — `e2e-testing@04d261d`. See the checkbox above for full evidence.
+  Verifying the fix live surfaced a stale-bucket-naming gap (5 families' `_test_bucket()` used bucket names Fold A
+  retired) that was fixed inline (same file, blocking), plus 4 unrelated pre-existing bugs filed separately as
+  `/plans/active/issues/features_smoke_matrix_verification_findings_2026_08_01.md`. A separate incident
+  (`features_service.cross_instrument`'s real compute run growing to ~38.8GB RSS over hours, ignoring its `timeout`
+  wrapper, causing a second same-day AO outage) happened mid-verification — the runaway PID was killed immediately on
+  the operator's notification; that incident is tracked in its own doc by the agent who filed it, not duplicated here.
+  P1/P2 todos below are unstarted.
