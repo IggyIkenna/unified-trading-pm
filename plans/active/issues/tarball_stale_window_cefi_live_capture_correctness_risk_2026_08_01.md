@@ -4,10 +4,10 @@ title: >-
   code-tarball-refresh outage window (2026-07-30T13:02Z→2026-08-01T12:42Z) left MTDS's floating tarball missing several
   "100% empty live capture" bugfixes — credible data-correctness risk, needs manifest-level confirmation
 summary: >-
-  Todo #3 of `code_tarball_refresh_job_silently_failing_since_2026_07_30_2026_08_01.md` asked to audit whether any VM
-  launched under `LC_TARBALL_FRESHNESS=warn` (default) during the code-tarball-refresh outage ran on materially stale
-  code. Confirmed: `mtds-code.tar.gz`'s floating manifest was not successfully rebuilt between (at latest)
-  `2026-07-30T13:02Z` and `2026-08-01T12:42:24Z` (~47.5h) — during that window,
+  Todo #3 of `/plans/archive/issues/code_tarball_refresh_job_silently_failing_since_2026_07_30_2026_08_01.md` (archived
+  2026-08-01, resolved) asked to audit whether any VM launched under `LC_TARBALL_FRESHNESS=warn` (default) during the
+  code-tarball-refresh outage ran on materially stale code. Confirmed: `mtds-code.tar.gz`'s floating manifest was not
+  successfully rebuilt between (at latest) `2026-07-30T13:02Z` and `2026-08-01T12:42:24Z` (~47.5h) — during that window,
   `market-tick-data-service@live-defi-rollout` received several commits explicitly described as fixing "100% empty live
   capture" (Binance-Futures/ASTER wire-shape, OKX-FUTURES canonical-id/channel) plus a same-day cefi perp_funding
   manifest-write data-loss regression+revert. Any VM that pulled the floating `mtds-code` tarball in that window (and
@@ -28,7 +28,7 @@ scope: [engineer, admin]
 tags: [vm-tarball-deployment, data-correctness, cefi, live-capture, audit-followup]
 related:
   [
-    plans/active/issues/code_tarball_refresh_job_silently_failing_since_2026_07_30_2026_08_01.md,
+    /plans/archive/issues/code_tarball_refresh_job_silently_failing_since_2026_07_30_2026_08_01.md,
     /codex/05-infrastructure/vm-tarball-deployment.md,
     /codex/02-data/data-pipeline-correctness-hard-rule.md,
   ]
@@ -49,9 +49,9 @@ depends_on: []
 
 ## What I found
 
-Working todo #3 of `code_tarball_refresh_job_silently_failing_since_2026_07_30_2026_08_01.md`: "Audit whether any VM
-launched since 2026-07-30T13:02Z under `LC_TARBALL_FRESHNESS=warn` ran on materially stale code for a repo with a real
-bugfix shipped in that window."
+Working todo #3 of `/plans/archive/issues/code_tarball_refresh_job_silently_failing_since_2026_07_30_2026_08_01.md`
+(archived 2026-08-01, resolved): "Audit whether any VM launched since 2026-07-30T13:02Z under
+`LC_TARBALL_FRESHNESS=warn` ran on materially stale code for a repo with a real bugfix shipped in that window."
 
 **Staleness windows established** (each tarball's `.manifest.json` `commit_sha`/`created_at`, checked 2026-08-01):
 

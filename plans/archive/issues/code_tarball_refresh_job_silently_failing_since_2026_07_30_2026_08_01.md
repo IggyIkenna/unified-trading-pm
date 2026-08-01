@@ -124,104 +124,104 @@ deployed image lacking (or losing) its own venv at `/tmp/ds`.
       `N/N updated` in the logs, not `PARTIAL`. (repo: deployment-service)
 
       **Attempt 1 (2026-08-01, na_eligibility_auditor slot 2, `agent-orchestrator` dispatch agt-8e95ca, shipped
-                  `deployment-service@dbd9e72`)**: added `ensure_deployment_service_importable()` to `refresh_code_tarballs.sh` —
-                  gated on `CHANGED` non-empty, installs `deployment-service` via `python3 -m pip install --target=/tmp/ds-pydeps`
-                  from the internal AR wheel index (`asia-northeast1-python.pkg.dev/central-element-323112/unified-libraries`,
-                  same index every service `Dockerfile` already uses) authenticated via the job's own ambient
-                  `gcloud auth print-access-token`, then exports `PYTHONPATH` before the upload subshell runs. **Manually triggered
-                  a real job execution to verify** (`gcloud run jobs execute code-tarball-refresh`, execution
-                  `code-tarball-refresh-8j8ql`, 2026-08-01T14:36Z) — **FAILED**, exit code 1, in ~25s (before even reaching the
-                  upload step): `pip install deployment-service` returned `ERROR: Could not find a version that satisfies the
-                  requirement deployment-service (from versions: none)` / `No matching distribution found`. The request DID reach
-                  the AR index successfully (a real "no versions" answer, not an auth/404 error) — **`deployment-service` is very
-                  likely never published as an installable wheel to that index at all**: `deployment-service`'s own
-                  `.github/workflows/semver-agent.yml` has zero references to `publish-package`/`workflow_call` (grepped directly),
-                  unlike `unified-trading-library`/`unified-api-contracts`, which the release pipeline DOES publish (they're
-                  consumed as dependencies by every service; `deployment-service` is itself a deployable
-                  orchestration-engine/service, not a library other repos `pip install`). **My attempt-1 approach's core assumption
-                  was wrong** — confirmed the mechanism (gate on CHANGED, PYTHONPATH-inject) is sound, but the wheel-index source
-                  doesn't have this specific package. Left the code shipped (harmless — it correctly fails fast+loud now instead of
-                  silently, an improvement over the original silent crash even though the underlying job is still broken) rather
-                  than reverting, since reverting would restore the WORSE silent-`ModuleNotFoundError` behavior.
+                      `deployment-service@dbd9e72`)**: added `ensure_deployment_service_importable()` to `refresh_code_tarballs.sh` —
+                      gated on `CHANGED` non-empty, installs `deployment-service` via `python3 -m pip install --target=/tmp/ds-pydeps`
+                      from the internal AR wheel index (`asia-northeast1-python.pkg.dev/central-element-323112/unified-libraries`,
+                      same index every service `Dockerfile` already uses) authenticated via the job's own ambient
+                      `gcloud auth print-access-token`, then exports `PYTHONPATH` before the upload subshell runs. **Manually triggered
+                      a real job execution to verify** (`gcloud run jobs execute code-tarball-refresh`, execution
+                      `code-tarball-refresh-8j8ql`, 2026-08-01T14:36Z) — **FAILED**, exit code 1, in ~25s (before even reaching the
+                      upload step): `pip install deployment-service` returned `ERROR: Could not find a version that satisfies the
+                      requirement deployment-service (from versions: none)` / `No matching distribution found`. The request DID reach
+                      the AR index successfully (a real "no versions" answer, not an auth/404 error) — **`deployment-service` is very
+                      likely never published as an installable wheel to that index at all**: `deployment-service`'s own
+                      `.github/workflows/semver-agent.yml` has zero references to `publish-package`/`workflow_call` (grepped directly),
+                      unlike `unified-trading-library`/`unified-api-contracts`, which the release pipeline DOES publish (they're
+                      consumed as dependencies by every service; `deployment-service` is itself a deployable
+                      orchestration-engine/service, not a library other repos `pip install`). **My attempt-1 approach's core assumption
+                      was wrong** — confirmed the mechanism (gate on CHANGED, PYTHONPATH-inject) is sound, but the wheel-index source
+                      doesn't have this specific package. Left the code shipped (harmless — it correctly fails fast+loud now instead of
+                      silently, an improvement over the original silent crash even though the underlying job is still broken) rather
+                      than reverting, since reverting would restore the WORSE silent-`ModuleNotFoundError` behavior.
 
-                  **Attempt 2 (2026-08-01, same session, NOT deployed to the live job — validated locally only)**: rather than
-                  re-deploy blind, tried a candidate fix (c) in a throwaway local clone first — broaden
-                  `refresh_code_tarballs.sh`'s sparse-checkout of `deployment-service@LDR` (currently `scripts/vm` only) to
-                  also pull `deployment_service/` + `pyproject.toml`, then `pip install` from that local clone directly instead
-                  of by name from AR (no publish-pipeline dependency at all). Validated the sparse-checkout expansion itself
-                  works cleanly (`git sparse-checkout set --no-cone 'scripts/vm/*' 'deployment_service/*' 'pyproject.toml'`),
-                  but the subsequent `pip install .` from that clone ALSO fails, for two separate structural reasons — both
-                  worth knowing before anyone else tries this path again:
-                  1. **Python version mismatch**: `deployment-service`'s own `pyproject.toml` declares
-                     `requires-python = ">=3.13,<3.14"`. The shared host's `python3` (and near-certainly the Cloud Run Job's
-                     `google-cloud-cli:latest` image's bundled `python3`, a Debian-stable build) is `3.12.3` — every recent
-                     `unified-trading-library` version on the AR index explicitly gates on `>=3.13,<3.14`, so pip refuses ALL of
-                     them ("Ignored the following versions that require a different python version"). This blocks option (c)
-                     even for the AR-hosted transitive deps, independent of the `deployment-service` publish gap above.
-                  2. ~~**`unified-api-contracts` is stale on this same AR index**: only `0.2.38` is published there~~ —
-                     **CORRECTION, same session, minutes later: this claim was WRONG, self-caught before it misled anyone.**
-                     `pip`'s own error text (`ERROR: Ignored the following versions that require a different python
-                     version: ... 0.86.0 Requires-Python <3.14,>=3.13 ...`) already showed `0.86.0` right there in the
-                     ignored-versions list — I misread "ignored because of the Python-version filter" as "doesn't exist at
-                     all" instead of reading the message's own stated reason. Direct verification via
-                     `gcloud artifacts versions list --package=unified-api-contracts --repository=unified-libraries
-                     --location=asia-northeast1 --project=central-element-323112` shows the AR index is fully current —
-                     `0.86.1.dev1+gdcfe9ce5d` published `2026-08-01T10:54:10`, `0.86.0` at `2026-08-01T02:55:22`, matching
-                     the repo's own `git describe` tag exactly — and `gh run list --workflow=publish-package.yml` on
-                     `unified-api-contracts` shows the publish pipeline running successfully multiple times a day, as
-                     recently as hours before this correction. **There is only ONE real blocker, not two**: the Python
-                     3.12-vs-3.13 mismatch from point 1 above. Once that's satisfied, both `unified-trading-library` AND
-                     `unified-api-contracts` resolve fine from this exact AR index — no separate publish-pipeline problem
-                     exists, and no further audit of it is needed.
+                      **Attempt 2 (2026-08-01, same session, NOT deployed to the live job — validated locally only)**: rather than
+                      re-deploy blind, tried a candidate fix (c) in a throwaway local clone first — broaden
+                      `refresh_code_tarballs.sh`'s sparse-checkout of `deployment-service@LDR` (currently `scripts/vm` only) to
+                      also pull `deployment_service/` + `pyproject.toml`, then `pip install` from that local clone directly instead
+                      of by name from AR (no publish-pipeline dependency at all). Validated the sparse-checkout expansion itself
+                      works cleanly (`git sparse-checkout set --no-cone 'scripts/vm/*' 'deployment_service/*' 'pyproject.toml'`),
+                      but the subsequent `pip install .` from that clone ALSO fails, for two separate structural reasons — both
+                      worth knowing before anyone else tries this path again:
+                      1. **Python version mismatch**: `deployment-service`'s own `pyproject.toml` declares
+                         `requires-python = ">=3.13,<3.14"`. The shared host's `python3` (and near-certainly the Cloud Run Job's
+                         `google-cloud-cli:latest` image's bundled `python3`, a Debian-stable build) is `3.12.3` — every recent
+                         `unified-trading-library` version on the AR index explicitly gates on `>=3.13,<3.14`, so pip refuses ALL of
+                         them ("Ignored the following versions that require a different python version"). This blocks option (c)
+                         even for the AR-hosted transitive deps, independent of the `deployment-service` publish gap above.
+                      2. ~~**`unified-api-contracts` is stale on this same AR index**: only `0.2.38` is published there~~ —
+                         **CORRECTION, same session, minutes later: this claim was WRONG, self-caught before it misled anyone.**
+                         `pip`'s own error text (`ERROR: Ignored the following versions that require a different python
+                         version: ... 0.86.0 Requires-Python <3.14,>=3.13 ...`) already showed `0.86.0` right there in the
+                         ignored-versions list — I misread "ignored because of the Python-version filter" as "doesn't exist at
+                         all" instead of reading the message's own stated reason. Direct verification via
+                         `gcloud artifacts versions list --package=unified-api-contracts --repository=unified-libraries
+                         --location=asia-northeast1 --project=central-element-323112` shows the AR index is fully current —
+                         `0.86.1.dev1+gdcfe9ce5d` published `2026-08-01T10:54:10`, `0.86.0` at `2026-08-01T02:55:22`, matching
+                         the repo's own `git describe` tag exactly — and `gh run list --workflow=publish-package.yml` on
+                         `unified-api-contracts` shows the publish pipeline running successfully multiple times a day, as
+                         recently as hours before this correction. **There is only ONE real blocker, not two**: the Python
+                         3.12-vs-3.13 mismatch from point 1 above. Once that's satisfied, both `unified-trading-library` AND
+                         `unified-api-contracts` resolve fine from this exact AR index — no separate publish-pipeline problem
+                         exists, and no further audit of it is needed.
 
-                  **Resolution shipped (2026-08-01, same session) — deployment-service@aa146bc**: rather than build a NEW
-                  custom image (which the mid-session revised recommendation below originally called for), found an
-                  EXISTING one that already solves the single real blocker: `deployment-service:latest` (the
-                  `maintenance-jobs` Docker stage, built off the `unified-trading-library` base image) already has Python
-                  3.13.14 + `deployment_service` + git/bash/tar/gcloud all verified present — the same image
-                  `tarball_cleanup_scheduler.tf` and `vm_log_archival_scheduler.tf` already run their own maintenance jobs
-                  from. Switched `code_tarball_refresh_scheduler.tf`'s job to that image, dropped the old sparse-checkout
-                  bootstrap entirely (the script + package are baked in), and ran `scripts/vm/refresh_code_tarballs.sh`
-                  directly — mirroring `tarball_cleanup_scheduler.tf`'s exact `command`/`args` pattern. Also added
-                  `code-tarball-refresh` to `deployment-service-jobs-image.cloudbuild.yaml`'s `redeploy-jobs` list so future
-                  image rebuilds keep it in sync like the other 3 maintenance jobs. Deployed imperatively via
-                  `gcloud run jobs update` (this job's terraform file has carried a "Created imperatively... this file is
-                  the IaC SSOT" note since 2026-06-17; a stale/incompatible terraform backend on this shared host — `Error:
-                  Failed to decode current backend config... unsupported attribute "universe_domain"` — made `terraform
-                  apply` unsafe to attempt, matching the file's own established deployment path). **This ended up
-                  MATCHING the original `est_hours: 1.0` after all** — the "genuinely bigger unit of work" framing below
-                  was written before finding that a suitable image already existed; left uncorrected below as an honest
-                  record of the mid-investigation reasoning, not deleted.
+                      **Resolution shipped (2026-08-01, same session) — deployment-service@aa146bc**: rather than build a NEW
+                      custom image (which the mid-session revised recommendation below originally called for), found an
+                      EXISTING one that already solves the single real blocker: `deployment-service:latest` (the
+                      `maintenance-jobs` Docker stage, built off the `unified-trading-library` base image) already has Python
+                      3.13.14 + `deployment_service` + git/bash/tar/gcloud all verified present — the same image
+                      `tarball_cleanup_scheduler.tf` and `vm_log_archival_scheduler.tf` already run their own maintenance jobs
+                      from. Switched `code_tarball_refresh_scheduler.tf`'s job to that image, dropped the old sparse-checkout
+                      bootstrap entirely (the script + package are baked in), and ran `scripts/vm/refresh_code_tarballs.sh`
+                      directly — mirroring `tarball_cleanup_scheduler.tf`'s exact `command`/`args` pattern. Also added
+                      `code-tarball-refresh` to `deployment-service-jobs-image.cloudbuild.yaml`'s `redeploy-jobs` list so future
+                      image rebuilds keep it in sync like the other 3 maintenance jobs. Deployed imperatively via
+                      `gcloud run jobs update` (this job's terraform file has carried a "Created imperatively... this file is
+                      the IaC SSOT" note since 2026-06-17; a stale/incompatible terraform backend on this shared host — `Error:
+                      Failed to decode current backend config... unsupported attribute "universe_domain"` — made `terraform
+                      apply` unsafe to attempt, matching the file's own established deployment path). **This ended up
+                      MATCHING the original `est_hours: 1.0` after all** — the "genuinely bigger unit of work" framing below
+                      was written before finding that a suitable image already existed; left uncorrected below as an honest
+                      record of the mid-investigation reasoning, not deleted.
 
-                  ~~**Revised recommendation**: publishing `deployment-service` as a wheel (option a) and this local-clone
-                  install (option c) are BOTH now proven blocked by real infra gaps (missing publish + stale publish +
-                  python-version mismatch), not just untried. **Option (b) — a custom Cloud Run
-                  container image with a properly-built `.venv` (matching `deployment-service`'s actual Python 3.13 +
-                  real dependency versions, built via a normal `uv sync` in a Dockerfile build step, same pattern every OTHER
-                  service in this repo already uses) — is now the only validated-viable path**, not just the least-invasive
-                  guess. This is a genuinely bigger unit of work than the original `est_hours: 1.0` assumed (new Dockerfile +
-                  Cloud Build trigger + terraform image reference, mirroring an existing service's `Dockerfile` pattern) —
-                  scope it as such rather than another quick-fix attempt. Do NOT re-attempt (a) or (c) without first fixing
-                  their respective blockers (publish `deployment-service`+bump `unified-api-contracts` on the AR index, and
-                  resolve the Python 3.12-vs-3.13 mismatch) — both are real, separate, and non-trivial.
+                      ~~**Revised recommendation**: publishing `deployment-service` as a wheel (option a) and this local-clone
+                      install (option c) are BOTH now proven blocked by real infra gaps (missing publish + stale publish +
+                      python-version mismatch), not just untried. **Option (b) — a custom Cloud Run
+                      container image with a properly-built `.venv` (matching `deployment-service`'s actual Python 3.13 +
+                      real dependency versions, built via a normal `uv sync` in a Dockerfile build step, same pattern every OTHER
+                      service in this repo already uses) — is now the only validated-viable path**, not just the least-invasive
+                      guess. This is a genuinely bigger unit of work than the original `est_hours: 1.0` assumed (new Dockerfile +
+                      Cloud Build trigger + terraform image reference, mirroring an existing service's `Dockerfile` pattern) —
+                      scope it as such rather than another quick-fix attempt. Do NOT re-attempt (a) or (c) without first fixing
+                      their respective blockers (publish `deployment-service`+bump `unified-api-contracts` on the AR index, and
+                      resolve the Python 3.12-vs-3.13 mismatch) — both are real, separate, and non-trivial.
 
-                  Re-verify any future fix the SAME way both these attempts did: `gcloud run jobs execute
-                  code-tarball-refresh --project=central-element-323112 --region=asia-northeast1`, then
-                  `gcloud logging read 'resource.type="cloud_run_job" AND resource.labels.job_name="code-tarball-refresh" AND
-                  labels."run.googleapis.com/execution_name"="<new-execution-id>"' --project=central-element-323112` for
-                  `Refresh COMPLETE` / `N/N updated`, not a fast exit-1 or `PARTIAL`.
+                      Re-verify any future fix the SAME way both these attempts did: `gcloud run jobs execute
+                      code-tarball-refresh --project=central-element-323112 --region=asia-northeast1`, then
+                      `gcloud logging read 'resource.type="cloud_run_job" AND resource.labels.job_name="code-tarball-refresh" AND
+                      labels."run.googleapis.com/execution_name"="<new-execution-id>"' --project=central-element-323112` for
+                      `Refresh COMPLETE` / `N/N updated`, not a fast exit-1 or `PARTIAL`.
 
-                  **VERIFIED LIVE (2026-08-01T15:04-15:10Z, execution `code-tarball-refresh-9zfmf`)**: fresh manual
-                  execution against the redeployed job — `succeededCount: 1`, `Completed True`, "Execution completed
-                  successfully in 6m28.58s." Logs confirm the FULL real pipeline ran correctly: SHA-skip scanned all 11
-                  repos, correctly identified 6 CHANGED (deployment-service, market-data-processing-service,
-                  features-service, ml-service, execution-service, batch-live-reconciliation-service) vs 5 already
-                  up-to-date, rebuilt + uploaded all 6 (including real tarball + manifest + launcher-script uploads to
-                  `gs://deployment-scripts-central-element-323112/code/...`, individually confirmed in the logs), and
-                  closed with **`Refresh complete — 6/6 tarball(s) updated to live-defi-rollout tip.`** — the exact
-                  done-when criterion this todo asked for. The scheduled cron will now keep tarballs current going
-                  forward without operator intervention. `gcs_upload_via_adc.py`'s `ModuleNotFoundError` class is fully
-                  closed for this job.
+                      **VERIFIED LIVE (2026-08-01T15:04-15:10Z, execution `code-tarball-refresh-9zfmf`)**: fresh manual
+                      execution against the redeployed job — `succeededCount: 1`, `Completed True`, "Execution completed
+                      successfully in 6m28.58s." Logs confirm the FULL real pipeline ran correctly: SHA-skip scanned all 11
+                      repos, correctly identified 6 CHANGED (deployment-service, market-data-processing-service,
+                      features-service, ml-service, execution-service, batch-live-reconciliation-service) vs 5 already
+                      up-to-date, rebuilt + uploaded all 6 (including real tarball + manifest + launcher-script uploads to
+                      `gs://deployment-scripts-central-element-323112/code/...`, individually confirmed in the logs), and
+                      closed with **`Refresh complete — 6/6 tarball(s) updated to live-defi-rollout tip.`** — the exact
+                      done-when criterion this todo asked for. The scheduled cron will now keep tarballs current going
+                      forward without operator intervention. `gcs_upload_via_adc.py`'s `ModuleNotFoundError` class is fully
+                      closed for this job.
 
 - [x] ✅ [INFRA] P0. Make a genuine upload failure inside `refresh_code_tarballs.sh` propagate as a Cloud Run Job
       execution FAILURE, not a silently-successful exit — VERIFIED ALREADY CORRECT, no code change needed. This todo's
