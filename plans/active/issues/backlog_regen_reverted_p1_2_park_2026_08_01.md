@@ -110,3 +110,9 @@ re-applied by hand again.
       entry whose plan-todo text starts with "**⏸ PARKED" but whose live `priority` != 999 or `priority_override` !=
       true — this exact drift is otherwise silent until a worker happens to notice and file a doc like this one (repo:
       agent-orchestrator or unified-trading-pm, whichever owns the hygiene-sweep surface for this check).
+
+## Progress Log
+
+**na-eligibility-audit 2026-08-01**: KEEP-NA, valid -- Full audit rationale: All 3 remaining open items are genuinely
+judgment/operator-gated or touch live dispatch-critical-path machinery whose fix scope is not yet fully determined; none
+are stale, duplicated elsewhere, or moot, so NA remains the correct home for the whole doc.

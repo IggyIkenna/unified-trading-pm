@@ -224,6 +224,10 @@ investigated further here, out of scope for this doc.
   caught a live recurrence of the same pattern happening in real time while working (~12:15-12:30 UTC) and verified (via
   repeated same-PID sampling, not a single snapshot) that some processes were genuinely stalled, not just momentarily
   busy. Shipped `agent-orchestrator@d9a23da`.
+- **na-eligibility-audit 2026-08-01**: KEEP-NA, valid -- Full audit rationale: The single remaining open item is a
+  low-priority (P3) 'consider whether X is worth a one-line correction' note explicitly framed by the doc's own author
+  as NOT worth a standalone dispatch ('not worth a dedicated edit on its own given the line cap, but cheap to fold in
+  opportunistically'). The target...
 
 ## Todos
 

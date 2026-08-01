@@ -121,3 +121,7 @@ guarantee this doesn't recur if the Phase-7 rollout is still in flight when anot
 ## Progress Log
 
 - **context-scout 2026-08-01**: populated/refreshed context_scope (2 entries).
+- **na-eligibility-audit 2026-08-01**: KEEP-NA, valid -- Full audit rationale: Both remaining open items are genuinely
+  judgment-gated, not bounded-outcome work a worker could execute unilaterally. Item 1 ("Consider whether
+  rollout-workflow-templates.sh ... could roll out to EVERY repo in one atomic pass") is an open-ended design question
+  -- whether to build a new atomic fleet-...

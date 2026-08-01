@@ -93,9 +93,18 @@ stating that the allow-list and error type do not exist and that the instrument 
 
 - [ ] [OPERATOR] P2. Rule between A / B / C — specifically, confirm whether a live instrument-universe swap is
       position-state-safe. Provenance: codex freshness re-review shard-B, 2026-07-31.
-- [ ] [DOC] P3. Document `VersionGovernanceReloader` + `StrategyDirectiveReloader` in
+- [x] [DOC] P3. Document `VersionGovernanceReloader` + `StrategyDirectiveReloader` in
       `/codex/04-architecture/live-strategy-config-hot-reload.md` — both are shipped and currently absent from the SSOT.
+      -- CLOSED (na-eligibility-audit 2026-08-01): already done —
+      `/codex/04-architecture/live-strategy-config-hot-reload.md` lines 62-63 (the "Pattern — as shipped" entry-points
+      table) already list both `start_version_governance_reloader()` (`VersionGovernanceReloader`) and
+      `start_directive_reloader(poll_interval_seconds=60)` (`StrategyDirectiveReloader`) with their roles.
 
 ## Progress Log
 
 - **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).
+- **na-eligibility-audit 2026-08-01**: KEEP-NA, stale items closed -- 1 item(s) closed as stale/duplicated (see
+  checkboxes above), doc stays assigned_vm: NA. Full audit rationale: One item (the operator A/B/C ruling on whether
+  live instrument-universe hot-swap is position-state-safe) is a genuine unresolved design/judgment call requiring an
+  operator decision — stays KEEP_JUDGMENT. The other item (document VersionGovernanceReloader +
+  StrategyDirectiveReloader in the codex SSOT...

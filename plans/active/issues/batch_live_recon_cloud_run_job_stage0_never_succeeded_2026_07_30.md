@@ -109,17 +109,28 @@ this session's available repo set) to find where (if anywhere) those exact GCS p
 
 ## Todos
 
-- [ ] [DIAG] P2. Determine whether `gs://recon-prd-*/t1-recon/{ml,strategy}/<date>/_SUCCESS` and
+- [x] [DIAG] P2. Determine whether `gs://recon-prd-*/t1-recon/{ml,strategy}/<date>/_SUCCESS` and
       `gs://execution-store-prd-*/configs/snapshots/<date>/config.json` are outputs of a live-trading-gated stage (in
       which case this Cloud Run job's failure is expected/benign pending the wallet-approval hard-stop, and this issue
       should be downgraded/closed with that citation) or of the daily paper-trading pipeline (in which case something
       upstream is failing to write them and this is a real, currently-silent gap). Read the writer side in
       strategy-service/ml-service/execution-service for these exact paths. Repo: strategy-service / ml-service /
-      execution-service.
-- [ ] [SCRIPT] P3. Whichever the diagnosis lands on: either (a) suppress/downgrade this Cloud Run job's daily failure
+      execution-service. -- CLOSED (na-eligibility-audit 2026-08-01): already answered in
+      `plans/active/issues/recon_bucket_missing_nightly_recon_failing_2026_07_13.md`'s 2026-07-14 update, which
+      live-checked Cloud Scheduler/Cloud Run Job state and found execution-service's config-snapshot job and
+      ml-service's t1-recon job were never provisioned (with `--run-tag` completely unwired and no `_SUCCESS`-marker
+      writer anywhere), and strategy-service's job was OCI-broken until 2026-07-14 (fixed, deployment-service@ea42a699)
+      and likewise has no `_SUCCESS`-marker writer -- confirming this is a real, currently-unimplemented multi-repo
+      feature gap, not a live-trading-gated no-op.
+- [x] [SCRIPT] P3. Whichever the diagnosis lands on: either (a) suppress/downgrade this Cloud Run job's daily failure
       alerting until the live-trading gate lifts (if genuinely expected-and-gated), or (b) fix the upstream writer gap
       (if paper-trading should already be producing these outputs). Repo: batch-live-reconciliation-service /
-      deployment-service (scheduler/alerting config) depending on (a) vs (b).
+      deployment-service (scheduler/alerting config) depending on (a) vs (b). -- CLOSED (na-eligibility-audit
+      2026-08-01): resolves to option (b) per the DIAG item above, and is already tracked as
+      `plans/active/issues/recon_bucket_missing_nightly_recon_failing_2026_07_13.md`'s own open P0 todo to stand up the
+      real green 06:00Z batch-live recon run (provision the missing execution-service/ml-service Cloud Run Jobs,
+      implement `_SUCCESS`-marker writers, un-pause the feature schedulers) -- superseded by that more detailed todo
+      rather than being a distinct action.
 - [ ] [SCRIPT] P3. Confirm whether `launch-batch-live-recon-cron-vm.sh` (the VM launcher) and the live Cloud Run job
       (`uts-prod-batch-live-reconciliation-service`) are meant to be the SAME reconciliation running via two different
       deployment mechanisms (in which case the VM launcher is dead/redundant code, since the Cloud Run job already
@@ -136,3 +147,8 @@ this session's available repo set) to find where (if anywhere) those exact GCS p
   live-wallet-gate hypothesis makes P0/P1 unlikely, but not attempting the strategy/ml/execution-service source read
   needed to confirm, since none of those repos are in this session's available set and the diagnosis is a genuine
   judgment call, not a mechanical fix.
+- **na-eligibility-audit 2026-08-01**: KEEP-NA, stale items closed -- 2 item(s) closed as stale/duplicated (see
+  checkboxes above), doc stays assigned_vm: NA. Full audit rationale: 2 of the 3 open items (the DIAG diagnosis and its
+  branching fix-action) are already answered/tracked, with hard dated evidence, in a sibling NA doc
+  (recon_bucket_missing_nightly_recon_failing_2026_07_13.md, updated 2026-07-14) that this doc apparently never
+  cross-referenced. That older doc traces th...

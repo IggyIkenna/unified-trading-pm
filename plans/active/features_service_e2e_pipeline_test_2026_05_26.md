@@ -735,3 +735,10 @@ Two bare `DEFERRED` mentions, re-audited 2026-07-21:
   named successor in this doc's own "Temporary states + their canonical follow-up plans" table:
   **`features_and_ml_master`** Phase 3 (honest-absence recording for mtf) owns emitting
   `empty_confirmed(NO_INPUT_AVAILABLE)` when `_load_and_join` returns `None`.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-08-01**: KEEP-NA, valid -- Full audit rationale: Read the full 738-line doc top to bottom,
+  including the 2026-07-27 "Track-1 todo reconciliation" banner (lines 55-84) that overrides the original
+  2026-05-26/06-03 todo list, and the "Open Track-1 todos" section (lines 677-707) which is itself the surviving,
+  already-re-triaged remainder (3 of the ori...

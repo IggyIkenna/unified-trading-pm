@@ -78,6 +78,11 @@ locked_since: 2026-05-21
   mechanically applies it). No new action taken beyond this evidence note; skipped the task per the established
   precedent (don't re-ask the already-answered question, don't force the compute step past its real infra blocker).
 
+- **na-eligibility-audit 2026-08-01**: KEEP-NA, valid -- Full audit rationale: The single open todo asks the worker to
+  'Pick one: (a) ... and/or (b) ...' between two design approaches for closing a disposition-to-action follow-through
+  gap in agent-orchestrator's core dispatch/backlog mechanism (adding a POST /api/backlog/{id}/park endpoint, and/or a
+  backend-surfaced operator a...
+
 ## Codex SSOTs
 
 - `/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md` — dispatch / blocked-queue /

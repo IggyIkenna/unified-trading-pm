@@ -119,3 +119,7 @@ repeated per-incident coaching.
   ping about the first (bfd1194dc) — i.e. a same-session repeat survived verbal mitigation. This strengthens the case
   for option (A) mechanical guard over verbal-only coaching. Priority held at P3 / NA (operator's dispatch call);
   operator NOT re-paged (already noted once). Escalation bar recorded: a THIRD in-session recurrence → bump priority.
+- **na-eligibility-audit 2026-08-01**: KEEP-NA, valid -- Full audit rationale: The single open todo explicitly requires
+  a prior human/operator decision among three named design options (A/B/C — mechanical QG/prek rule vs. tightened
+  rename-similarity threshold vs. accept-and-document) before any implementation step is determinable. The doc's own
+  Progress Log states the decision...

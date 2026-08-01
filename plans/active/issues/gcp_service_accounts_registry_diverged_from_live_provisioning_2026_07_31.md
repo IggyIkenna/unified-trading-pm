@@ -122,3 +122,7 @@ Two directions are both plausible and this is an architecture decision, not a bo
 - **2026-07-31**: Filed during ci_satellite_ao_dispatch_batch1-016 (sync gcp_service_accounts.yaml against live IAM).
   Full read-only audit performed; unified-trading-sa entry added to the registry; this doc captures the larger
   systemic-divergence finding that's out of scope for that bounded todo.
+- **na-eligibility-audit 2026-08-01**: KEEP-NA, valid -- Full audit rationale: This is a security-posture finding whose
+  own body explicitly frames the core decision as an architecture/operator judgment call ('needs operator/main judgment
+  — not a worker call'), and item 1 (the [OPERATOR] decision between migrate-to-per-service-SAs vs
+  rewrite-registry-to-match-reality) is stated...

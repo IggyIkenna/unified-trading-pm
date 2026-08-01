@@ -141,3 +141,7 @@ the call is still awaited (ordering preserved), and check the file's line/functi
 - **na-eligibility-audit 2026-07-30**: RECLASSIFY candidate PARKED (conflict) — stays KEEP-NA —
   `cross_cutting_satellite_ao_dispatch_batch1_2026_07_26.md` explicitly records 'GENUINE overlap found' against this
   doc. Not flipped.
+- **na-eligibility-audit 2026-08-01**: KEEP-NA, valid -- Full audit rationale: The single remaining open todo (adding
+  asyncio.gather+Semaphore concurrency, via the established ParallelPerSymbolRunner pattern, to 8 remaining DeFi CLI
+  handlers: dex_swaps_handler.py, evm_defi_collectors.py, gas_fee_handler.py, lst_rates_handler.py,
+  liquidations_handler.py, liquidation_events_hand...

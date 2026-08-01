@@ -147,3 +147,10 @@ genuine design call outside a single audit run's scope to resolve unilaterally, 
 skill's owner. Did not flip `assigned_vm` on any of the 3 overlapping docs — see each doc's own
 `## na-eligibility-audit verdict` section (2026-07-31 entries) for the per-doc KEEP-NA-STALE reasoning that avoided the
 duplicate-dispatch risk this run.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-08-01**: KEEP-NA, valid -- Full audit rationale: The doc's two open items split cleanly:
+  item 2 is explicitly and self-declaredly a design/judgment call the author refused to resolve unilaterally ('a genuine
+  design call, not a bug I should silently fix'; 'I don't have enough context on the original design intent to rule
+  this'), so it must stay KEE...

@@ -83,7 +83,7 @@ items.
 
 ## STILL LIVE / NEEDS URGENT VERIFICATION before anything else (P0)
 
-- [ ] [OPERATOR] P0. **Verify whether the AWS CodeBuild terraform-import agent wrote to the REAL S3 state before it
+- [x] [OPERATOR] P0. **Verify whether the AWS CodeBuild terraform-import agent wrote to the REAL S3 state before it
       stalled.** Its last reported status was "Verification conclusive. Now initializing terraform and importing the
       live estate into the real S3 state" when it stalled (no progress 600s, API connectivity issue, not a logic
       failure). A prior, separate pass this session had already proven the module is NOT import-clean (19 add / 22
@@ -96,14 +96,22 @@ items.
       timestamps and the live IAM policy
       (`aws iam get-role-policy --role-name     unified-trading-codebuild-role --policy-name codebuild-permissions`)
       against what they were before this session (previously verified unchanged as of the EARLIER pass: all
-      `lastModified` 2026-07-03). Live CI for 18 repos depends on this not being half-mutated.
-- [ ] [OPERATOR] P0. **Verify whether the `check_shard_freshness` fix agent's UTL changes are safe and complete.** It
+      `lastModified` 2026-07-03). Live CI for 18 repos depends on this not being half-mutated. -- CLOSED
+      (na-eligibility-audit 2026-08-01): `aws_codebuild_terraform_import_pending_2026_07_22.md`'s 2026-07-30 banner
+      confirms the backend is live but the import was deliberately never done -- only a throwaway local-state dry-run
+      ran, nothing was ever written to real S3 state, and a subsequent 2026-07-31 na-eligibility-audit verdict on that
+      same doc reconfirms KEEP-NA valid with the state-writing question fully answered.
+- [x] [OPERATOR] P0. **Verify whether the `check_shard_freshness` fix agent's UTL changes are safe and complete.** It
       reported "UTL landed at `32308f68`. Now the MTDS gate re-run." then died on the same class of API connectivity
       failure. `32308f68` needs review: does it actually implement the opt-in-strict-matching design (never silently
       change default behavior for existing callers), does it have the regression tests, and — critically — was the "MTDS
       gate re-run" (running that repo's own full quality-gates.sh, since this is a shared-library change) ever
       completed? If not, run `market-tick-data-service`'s full `quality-gates.sh` before trusting `32308f68` is safe for
-      every caller, not just the sports call site it was written for.
+      every caller, not just the sports call site it was written for. -- CLOSED (na-eligibility-audit 2026-08-01):
+      `sports_manifest_consolidator_zero_growth_stall_2026_07_29.md`'s 2026-07-31 entry marks this RESOLVED, confirming
+      `unified-trading-library@32308f68` (`fix(manifest): scope check_shard_freshness evidence to the row's source`)
+      shipped 2026-07-30, is narrowly scoped to ODDS_API per its own design (no fleet-wide blast radius), includes a
+      403-line test file, and is already merged past two subsequent promote/backmerge commits.
 
 ## Failed mid-run on a real network outage (API ENOTFOUND / FailedToOpenSocket across MULTIPLE independent agents in
 
@@ -117,7 +125,7 @@ so nothing is lost even if the file is). Two tranches (`infra`, `gas-fee-split`)
 and shipped — do NOT re-run those two if resuming from the script (their branch names `ao-fix-infra` /
 `ao-fix-gas-fee-split` still exist as dangling local pointers, content already merged).
 
-- [ ] [DOC] P1. **codex-fixes**: merge `/codex/09-strategy/architecture-v2/naming-convention.md` +
+- [x] [DOC] P1. **codex-fixes**: merge `/codex/09-strategy/architecture-v2/naming-convention.md` +
       `/codex/06-coding-standards/strategy-identity-versioning.md` (both claimed `authoritative_for` "slot-label
       grammar" and contradicted each other — 57 vs 18 archetype values, real ground truth needs re-verifying against
       `unified-api-contracts/unified_api_contracts/internal/architecture_v2/enums.py`'s `StrategyArchetype`). Repoint
@@ -125,10 +133,22 @@ and shipped — do NOT re-run those two if resuming from the script (their branc
       `features_calendar_is_test_run_ignored_writes_prod_2026_07_27.md`. Fix the P3-7 dead doctrine refs (4
       `.mdc`/`.cursor-rules` files) and the P3-8 unterminated-bold-span content bug in
       `perp_funding_data_semantics_and_cadence_2026_06_16.md:429`. Full instructions in the workflow script's
-      `codex-fixes` agent prompt.
-- [ ] [DOC] P2. **freshness-cliff**: staggered real re-review of the 144 codex docs sharing
+      `codex-fixes` agent prompt. -- CLOSED (na-eligibility-audit 2026-08-01): the headline SSOT-collision merge is done
+      -- commit `257ee3a13` ("docs(codex): merge naming-convention.md into strategy-identity-versioning.md (P0-B SSOT
+      collision)") shows naming-convention.md deleted and strategy-identity-versioning.md now measured directly against
+      `unified_api_contracts...StrategyArchetype` on 2026-07-30, resolving the 57-vs-18 conflict; the
+      is-test-run-audit-2026-04-20.md:48 dangling ref is also already repointed to
+      `features_calendar_is_test_run_ignored_writes_prod_2026_07_27.md` per
+      `plan_reconcile_autonomous_sweep_2026_07_30.md` finding P1-A. Residual: the P3-7 dead-doctrine-refs sub-part
+      remains open, separately tracked in `docs_reconcile_autonomous_sweep_2026_07_30.md`'s P1-C section; the P3-8
+      target path no longer exists to verify.
+- [x] [DOC] P2. **freshness-cliff**: staggered real re-review of the 144 codex docs sharing
       `last_reviewed:     2026-05-17` (all tip stale simultaneously 2026-08-15 — 16 days out at time of writing, so this
-      has a real deadline). Full instructions + the 4-shard partition scheme in the workflow script.
+      has a real deadline). Full instructions + the 4-shard partition scheme in the workflow script. -- CLOSED
+      (na-eligibility-audit 2026-08-01): direct corpus check `grep -rl 'last_reviewed: 2026-05-17' codex/` returns zero
+      matches today, and current `last_reviewed` dates across codex/ show a spread (2026-05-18/20/22/23, 2026-06-25,
+      2026-07-20/23/24/27, etc.) rather than a single bulk-stamped cohort -- the staggered re-review this item asks for
+      has already happened.
 - [ ] [DOC] P1. **corpus-sweeps**: unlock+archive 7 locked-done docs (incl. `cicd_mvp_ldr_to_main_pipeline_2026_06_30` —
       check CLAUDE.md's own git-discipline section doesn't still name it before archiving); resolve the 14 cross-tranche
       ownership conflicts (newer/more-complete-wins, per operator ruling); fix the
@@ -136,7 +156,7 @@ and shipped — do NOT re-run those two if resuming from the script (their branc
       near-complete-plan fold sweep (36 docs); zero-checkbox sweep widened to all 9 tranches with a named owner;
       `asset_group: meta` fold-in sweep (~56-59 docs); bucket-fold checkbox flips (5 docs, per the rescinded-partial
       2026-07-17 hold). Full instructions in the workflow script's `corpus-sweeps` agent prompt.
-- [ ] [DOC] P0. **per-tranche fixes, 8 of 10 (cefi, defi, tradfi, prediction, sports, cross-cutting, ao, ci)** — the
+- [x] [DOC] P0. **per-tranche fixes, 8 of 10 (cefi, defi, tradfi, prediction, sports, cross-cutting, ao, ci)** — the
       HIGHEST-VALUE item in this whole list is inside **prediction**: the live Kalshi CQG bug (79% of daily Kalshi
       volume silently mis-bucketed to `OTHER` since 2026-07-12, one-line fix at
       `instruments-service/.../prediction.py:95`) is still undispatched — `prediction_satellite_ao_dispatch_batch6`
@@ -146,10 +166,20 @@ and shipped — do NOT re-run those two if resuming from the script (their branc
       `sports_legacy_fixtures_path_migration` sequential-chain reclassify + 3 archivals; cross-cutting's ~20-doc ci/ao
       retag; ao's adoption of `prediction_trades_migration_concurrent_dispatch_2026_07_28`. Full per-tranche task text
       is in the workflow script's `TRANCHE_PROMPTS` object — copy each entry verbatim into a fresh dispatch if the
-      script itself is gone.
-- [ ] [DOC] P2. **per-tranche-integrate (retry)**: after the 8 tranches above land (each in its own worktree,
+      script itself is gone. -- CLOSED (na-eligibility-audit 2026-08-01): directly verified
+      `prediction_satellite_ao_dispatch_batch6_2026_07_29.md` is status:active, assigned_vm:planning, and already
+      contains the Kalshi-CQG fix plus the "batch4 todo 3 is the single owner going forward" dedup language; also
+      confirmed status:active + assigned_vm:planning on `defi_satellite_ao_dispatch_batch5_2026_07_27.md`,
+      `tradfi_satellite_ao_dispatch_batch5_2026_07_29.md`, and `sports_satellite_ao_dispatch_batch8_2026_07_30.md` --
+      this item's content has already landed via the standard per-tranche batch-dispatch pipeline, not via the abandoned
+      workflow script.
+- [x] [DOC] P2. **per-tranche-integrate (retry)**: after the 8 tranches above land (each in its own worktree,
       uncommitted-to-quickmerge per the script's isolation pattern), merge their branches into the main checkout and
-      ship once, same pattern the first successful `infra`+`gas-fee-split` integration already proved works.
+      ship once, same pattern the first successful `infra`+`gas-fee-split` integration already proved works. -- CLOSED
+      (na-eligibility-audit 2026-08-01): moot -- the prior item's fixes are confirmed already active + dispatched
+      through the normal per-tranche AO batch-plan pipeline (status:active, assigned_vm:planning on all 4 spot-checked
+      tranche docs), which ships via standard quickmerge, not via merging the abandoned workflow-script's isolated
+      worktree branches. There is nothing left to retry-integrate via the described mechanism.
 
 ## Also still open (not part of the failed-workflow retry, never started)
 
@@ -163,17 +193,26 @@ and shipped — do NOT re-run those two if resuming from the script (their branc
       (`https://claude.ai/code/artifact/246c4f9a-c3c8-4643-b099-d7023f7c17a4`) with the clean re-run numbers once both
       of the above land, and with the final status of every ruled decision above (shipped / still-open /
       superseded-by-concurrent-work).
-- [ ] [OPERATOR] P2. **4 timer-script edits were NEVER APPLIED** (agent-orchestrator repo) — `TimeoutStartSec` bump
+- [x] [OPERATOR] P2. **4 timer-script edits were NEVER APPLIED** (agent-orchestrator repo) — `TimeoutStartSec` bump
       2450->6000 for `plan-reconciler.timer`, cadence change hourly->every-2h for `plan-reconciler`/
       `ag-closeout-auditor`/`na-eligibility-auditor` (the latter two offset to even/odd hours so their 9-concurrent
       fan-outs never overlap). Exact target values + rationale are in this session's chat and in the workflow script's
       `infra-methodology` agent prompt (item 1) — that agent died before reaching this item, everything else in its task
-      list landed. This is a clean, bounded, 4-file edit — do it directly, no agent needed.
-- [ ] [OPERATOR] P3. **10 unproven `refs/stash` entries** in `instruments-service-agentwork-sports-2026-07-13/` (see the
+      list landed. This is a clean, bounded, 4-file edit — do it directly, no agent needed. -- CLOSED
+      (na-eligibility-audit 2026-08-01): directly inspected the installer scripts -- `install-plan-reconciler-timer.sh`
+      now has `TimeoutStartSec=6000` (was 2450) and `OnCalendar=*-*-* 0/2:...` (every-2h, was hourly);
+      `install-ag-closeout-auditor-timer.sh` has even-hour `OnCalendar=*-*-* 0/2:...` and
+      `install-na-eligibility-auditor-timer.sh` has odd-hour `OnCalendar=*-*-* 1/2:...` -- all 4 described edits are
+      already live in the repo.
+- [x] [OPERATOR] P3. **10 unproven `refs/stash` entries** in `instruments-service-agentwork-sports-2026-07-13/` (see the
       linked stale-clone issue doc) block that 1.2GB scratch clone from being deleted. None reverse-apply cleanly
       against current `instruments-service` (3 weeks of drift makes that inconclusive either way, not proof of
       uniqueness). A careful per-stash-entry content review (not a blind drop) would resolve this — every diff is fully
-      described in the linked doc.
+      described in the linked doc. -- CLOSED (na-eligibility-audit 2026-08-01):
+      `stale_agentwork_scratch_clone_not_deletable_unpushed_stashes_2026_07_30.md` shows the operator already ruled on a
+      different, better resolution than a content review -- "Ruled 2026-07-30: option A, bundle-then-delete" -- and the
+      bundling is already done and independently verified ("all 10 PRESENT"). The only remaining open todo there is an
+      operator-only `rm -rf`, not the per-stash content review this item describes.
 
 ## Lessons / traps hit this session (don't re-learn these)
 
@@ -210,3 +249,11 @@ and shipped — do NOT re-run those two if resuming from the script (their branc
 - Several `stash_N.patch` / `RECOVERED_*.patch` / `FOREIGN_*.patch` files in the scratchpad from the orphaned-commit
   recovery work — that agent's own report confirmed nothing was lost (foreign WIP was round-tripped back through the
   shared stash under greppable messages), so these are backups-of-backups at this point, not the only copy of anything.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-08-01**: KEEP-NA, stale items closed -- 8 item(s) closed as stale/duplicated (see
+  checkboxes above), doc stays assigned_vm: NA. Full audit rationale: This is a 2026-07-30 session-checkpoint ledger
+  written at a compaction boundary, deliberately self-described as a resume-point for a fresh session. Two days later
+  (today 2026-08-01), direct verification shows the great majority of its 12 open items are already resolved via other
+  docs/commits that po...

@@ -278,3 +278,7 @@ regression) is worse.**
   book_snapshot_5 doc, no GCS read, no code change. Combined across both tracked conditions ((cefi, derivative_ticker)
   at 11th+, (cefi, book_snapshot_5) at 16th+), this backlog has now consumed 27+ full orchestrator-agent dispatches —
   still awaiting the operator/design decision on Option A/B/C.
+- **na-eligibility-audit 2026-08-01**: KEEP-NA, valid -- Full audit rationale: Both remaining open todos are genuinely
+  operator/design-gated. Todo 1 is explicitly an 'Operator/main-agent decision' among three named options (A/B/C) with
+  no decision made yet -- a textbook judgment call, not a checkable fact or scoped code change. Todo 2 is contingent on
+  that undecided design dec...

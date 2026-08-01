@@ -153,10 +153,14 @@ source: >-
       the live consolidator (`*/1` re-derives the consolidated index) or live writers → also needs the quiet window. Run
       order when resumed: drain → consolidate+snapshot → mtds `--apply` (captured cells) + manifest-only re-stamp (empty
       cells) → re-consolidate → re-verify the distribution is uniform v9.
-- [ ] [SCRIPT] P1. MVP Phase 2-3 — already in `mvp_scope_catalogue_tagging_2026_06_08.md` (deployment-api
+- [x] [SCRIPT] P1. MVP Phase 2-3 — already in `mvp_scope_catalogue_tagging_2026_06_08.md` (deployment-api
       `scope=mvp|could_exist|all` + UI tick + features/strategy/model sections). Schedule, do not re-file. **(Pointer
       item — the actual work lives in `mvp_scope_catalogue_tagging_2026_06_08.md`; carried here unmodified from the
-      parent rather than dropped, per lossless-relocation.)**
+      parent rather than dropped, per lossless-relocation.)** -- CLOSED (na-eligibility-audit 2026-08-01): duplicate of
+      the actively-progressing owner `plans/active/mvp_scope_catalogue_tagging_2026_06_08.md` (most recent update
+      2026-07-28, `unified-api-contracts@0fb9821b`, ModelsMvpRule P2b, with an open P2b-2 follow-on already tracked
+      there) — this was a lossless-relocation pointer, not primary work for this plan, so closing here is a
+      citation-fix, not a scope drop.
 - [ ] [DESIGN] P1. **Execution-config compatibility pre-flight** (audit-and-enhance, NOT a new catalogue) — composite
       `assert_execution_config_compatible(archetype × venue × instrument × required-matching-fidelity)` joining the
       existing `archetype_capability` (SUPPORTED/BLOCKED — "staked_basis can't bet") + `archetype_capability_matrix`
@@ -199,3 +203,14 @@ source: >-
 - **na-eligibility-audit 2026-07-30**: KEEP-NA, valid — the RESUME runbook needs operator OK between each AG, the
   schema_version re-stamp needs operator sign-off on an irreversible `--apply`, and 2 of the 9 todos are pointer-only
   items the doc itself says belong elsewhere.
+
+- **na-eligibility-audit 2026-08-01**: KEEP-NA-STALE (duplicated elsewhere) -- 1 item(s) closed as stale/duplicated (see
+  checkboxes above), doc stays assigned_vm: NA. Full audit rationale: 4 of 5 remaining open items are genuine judgment/
+  operator-gated work (broad multi-plan audit requiring a "confirm" judgment call; a production scheduler/rule un-pause
+  explicitly requiring "operator OK between each" AG; an irreversible-`--apply` schema re-stamp explicitly deferred
+  pending operator sign-off + a quiet backfill-fleet window; a pointer-only composite-function design task not yet even
+  filed under its named owning epic). The 5th (MVP Phase 2-3) is a verbatim pointer whose own text says "already in
+  `mvp_scope_catalogue_tagging_2026_06_08.md` ... Schedule, do not re-file" — that target doc is the real,
+  actively-progressing owner of this scope (most recent update 2026-07-28, `unified-api-contracts@0fb9821b`), so this
+  item is a citation-fix duplicate, not new dispatchable content. Since it is a genuine mix (4 KEEP_JUDGMENT + 1
+  duplicate), this is NOT a RECLASSIFY case.
