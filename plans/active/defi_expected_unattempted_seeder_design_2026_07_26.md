@@ -146,11 +146,12 @@ write a dishonest zero-rows manifest stamp (the exact FLUID failure mode in re-d
       checkbox") predates that permanent-supersession decision and is now stale; there is no checkbox to flip. Satisfied
       instead by adding a short prose evidence note to the C8 entry pointing at this plan's P2 completion (same session,
       same turn) — the C8 entry itself stays non-checkbox prose, unchanged in kind.
-- [ ] [DATA] P2. **New (2026-08-01, slot 8) — Todo 4, an ordinary verification task, no human judgment needed.** Run the
-      P2-above acceptance's live manifest census (deployment-api `_axis_census.py` or equivalent) against a real prod
-      `lending_indices`/`liquidations`/`lst_rates` DeFi collect-* run, confirming every `(venue, chain)` returned by
-      `get_defi_declared_venues_for_data_type(data_type, as_of=<day>)` carries ≥1 manifest row that day. Done when: the
-      census is run + its result (pass/fail + any gap) is recorded in this plan's Progress Log.
+- [x] ✅ [DATA] P2. **New (2026-08-01, slot 8) — Todo 4, an ordinary verification task, no human judgment needed.** Run
+      the P2-above acceptance's live manifest census (deployment-api `_axis_census.py` or equivalent) against a real
+      prod `lending_indices`/`liquidations`/`lst_rates` DeFi collect-* run, confirming every `(venue, chain)` returned
+      by `get_defi_declared_venues_for_data_type(data_type, as_of=<day>)` carries ≥1 manifest row that day. Done when:
+      the census is run + its result (pass/fail + any gap) is recorded in this plan's Progress Log. — ✅ **Done
+      (2026-08-01, slot 11)**: PASS. See Progress Log entry below.
 - [x] ✅ [DATA] P1. **New (2026-08-01, slot 8) — Todo 5, a bounded implementation task once wired, no human judgment
       needed.** P0's own "Execution task" (wire `fluid_adapter.py` into `lending_indices_handler.py`'s
       CLI/manifest-write loop) was never actually landed —
@@ -457,3 +458,36 @@ handlers that build a `DefiManifestRecorder`:
   empty-markets short-circuit, per-vault exception isolation, and the FluidAdapter early-return-empty-dict contract —
   - edits to `lending_indices_handler.py`/`lending_indices_morpho.py`). `quality-gates.sh` green (337s, Pass-1 sentinel
     == committed HEAD). SHA verified ancestor-of `origin/live-defi-rollout`.
+- 2026-08-01 (slot 11, data_engineering): Todo 4 done — **PASS**. No prod DeFi collect-* run had exercised the new
+  seeder wiring yet: `market-tick-data-service` image tag `a5a93dc` (the P2 wiring commit) was pushed to Artifact
+  Registry at 08:17 UTC today, but the daily Cloud Scheduler cron for `lending-indices`/`liquidations`/`lst-rates` had
+  already run at 00:45/01:30/01:00 UTC on the OLD pre-wiring image — confirmed via `gcloud run jobs executions list` +
+  reading the consolidated manifest directly (latest date present for these 3 data_types was 2026-07-31, not today).
+  Manually triggered all 3 prod Cloud Run Jobs (`uts-prod-mtds-collect-{lending-indices,liquidations, lst-rates}`,
+  region `asia-northeast1`, project `central-element-323112`) against current `:latest` to get a real run on the new
+  code — all 3 completed successfully (exit 0). Note: passing `--args` with an explicit `--day 2026-08-01` override had
+  no effect — `--mode batch` reads `--start-date`/`--end-date`, not `--day` (that flag is for a separate single-day
+  surgical mode), so the runs defaulted to T-1=2026-07-31 same as the cron would have; this is fine since
+  last-writer-wins (design §6) means the fresh run's rows supersede the old pre-wiring rows for that same day. Read the
+  per-VM manifest shard (`_index/per_vm/local-1-d9fb.parquet`) directly to confirm the seeder fired correctly at the
+  source: exactly the 11 UAC-declared-but-never-attempted `lending_indices` venue/chain pairs (BENQI/AVALANCHE,
+  EULER_V2/ETHEREUM, FLUID/ETHEREUM, KAMINO/SOLANA, MARGINFI/SOLANA, RADIANT×3, SOLEND/SOLANA, VENUS×2 — FLUID/ETHEREUM
+  correctly stamped `expected_unattempted` here since this run predates Todo 5's FLUID wiring above) were stamped
+  `capture_status=expected_unattempted`. The CONSOLIDATED index (what the P2 acceptance and `read_availability_index`
+  actually read) lagged behind the per-VM write for ~20 minutes — not a bug: this ~30M-row DeFi bucket's
+  manifest-consolidator (`uts-prod-manifest-consolidator-market-data-defi`, Cloud Run Job on a ~1-min cron) takes ~12-15
+  min per real consolidation pass, so most of its per-minute cron triggers just log `error=locked` and back off while a
+  real pass is in flight — confirmed via `gcloud logging read` showing real passes
+  (`shards=N rows_in=~31.7M rows_out=~29.95M`) completing at 09:45, 09:57, and 10:13 UTC, each ~12-15 min apart. Waited
+  for the 10:13:11 UTC pass (started well after my 09:51 per-VM write) before the final readback. **Final census**
+  (`get_defi_declared_venues_for_data_type(dt, as_of=date(2026,7,31))` vs the consolidated index, day=2026-07-31):
+  `lending_indices` declared=26 present=26 gap=0 (`{captured: 250, expected_unattempted: 11}`); `liquidations`
+  declared=0 present=16 gap=0 (UAC declares zero live `liquidations` venues today — a harmless no-op per the design's
+  own P2-acceptance note, not a defect); `lst_rates` declared=14 present=25 gap=0
+  (`{captured: 34, expected_unattempted: 3}`, gap venues ANKR/JITO/LIDO/etc. minus ETHENA/MAKER/SOLBLAZE which were the
+  3 genuinely unattempted ones). Zero gap across all 3 data_types — the P2 acceptance holds against real prod data on
+  real prod code. No code changes needed for this todo. While shipping, also found + shipped 2 pre-existing unpushed
+  local commits in this slot from earlier unrelated work (both already carried the `Quickmerge: agent` trailer,
+  evidently interrupted before Pass 2): `deployment-service@1e8af34` (defi-pi-range PROGRESS.json checkpoint gap) and
+  `market-tick-data-service@a283970` (VM_PROGRESS checkpoint per `--chunk-days` window in `rebuild_defi_manifest`) —
+  both QG-green, both SHA-verified ancestor-of `origin/live-defi-rollout`.
