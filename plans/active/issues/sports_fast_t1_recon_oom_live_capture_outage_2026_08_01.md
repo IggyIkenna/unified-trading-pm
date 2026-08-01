@@ -233,6 +233,20 @@ data-pipeline-correctness-hard-rule).
       `sports_batch_odds_api_capture_outage_recurrence_check_2026_07_26.md`'s DeFi/Prediction check) rather than an
       assumption that SPORTS-only observed means SPORTS-only affected. (repo: market-tick-data-service)
 
+## 2026-08-01 premature-dispatch note (slot 12) -- backfill todo genuinely gated behind the still-open fix todo
+
+After completing the root-cause todo above, the dispatcher handed this session the P1 backfill todo
+(`Once fixed, backfill/re-fetch the resulting gap...`) next. Its own wording explicitly gates it behind the fix ("Once
+fixed") -- and the fix todo directly above it is still `- [ ]` unchecked (root cause identified, but the actual
+`--league`-scoping code change has NOT shipped, pending the league-id-format verification step it calls out). Running
+the backfill now would either re-hit the identical OOM (same unscoped code path, same crash) or produce data that goes
+stale again the moment the next live capture cycle re-attempts and OOMs. Per RULES.md § 5, this is a genuine
+prerequisite situation (not a judgment call) -- self-skipping (`reason_code: GATED`) rather than executing prematurely,
+same posture as the analogous cross-todo gating documented in the sibling `ci_registry_drift_...` issue doc. Not adding
+formal `depends_on`/`sequential` frontmatter for this single in-doc ordering (no per-todo prereq syntax exists short of
+splitting into a separate gated doc, which is more surgery than one redispatch instance warrants) -- the auto-park
+mechanism (`auto_park.py`) will park this task after repeated GATED skips if it keeps re-dispatching prematurely.
+
 ## Verdict
 
 **Root cause of the SYMPTOM found and confirmed live (Cloud Run Job memory-limit OOM, SPORTS-scoped, since ~2026-07-27,
