@@ -687,3 +687,9 @@ that basis as `/plans/archive/2026_07/ci_satellite_ao_dispatch_batch2_2026_07_29
 panels + G4) and **E14** (runtime-level deploy signal v2, escalated there as operator question 2 for a scoping pass). G3
 additionally carries an explicit "IN PROGRESS — slot 3 (operator 2026-06-12). NOT for other slots to pick up" marker and
 needs operator reconciliation against what the deployment-health cockpit already shipped.
+
+**na-eligibility-audit 2026-08-01** (tranche `ci`, autonomous): KEEP-NA, valid — down to 3 open items (G3 resolved since
+the last pass). Re-confirmed E13/E14 citations are real; independently re-verified a third time via
+`ci_satellite_ao_dispatch_batch4_2026_07_31.md` (D4 area), which reaches the same [UI]-role-mismatch /
+needs-a-scoping-pass conclusion. No RECLASSIFY candidates — all 3 remaining items need either a `[UI]`-capable role or
+an unresolved scoping/design call.

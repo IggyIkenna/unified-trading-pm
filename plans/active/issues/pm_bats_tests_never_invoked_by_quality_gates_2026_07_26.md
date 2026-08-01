@@ -116,3 +116,10 @@ todo.
 `scripts/quality-gates-base/base-service.sh` this round). Independently, this doc's own "Recommended decision" states
 the change needs "its own properly-scoped plan with the operator's plan-destination call" because `base-service.sh` is
 the shared fleet framework — an authority call this audit cannot make.
+
+**na-eligibility-audit 2026-08-01** (tranche `ci`, autonomous): KEEP-NA, valid — re-confirmed, citation updated. The E1
+conflict-gate is now stale (batch2 archived 2026-07-31, file contention cleared), but the underlying verdict is
+independently re-derived: `ci_satellite_ao_dispatch_batch4_2026_07_31.md` (still `status: draft`) re-examined this doc
+as D4-10 and escalated the TRUE blocker to the operator as an authority/scope question ("should adding a BATS phase to
+the shared, fleet-wide `base-service.sh` be its own AO-dispatched or human plan?") — still unanswered anywhere in the
+corpus. Both todos stay KEEP-NA on that unresolved escalation, not the stale E1 citation.

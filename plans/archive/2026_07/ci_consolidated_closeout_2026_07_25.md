@@ -81,8 +81,9 @@ does not close any tranche work; see that batch plan for the live picture.
 (quickmerge silently no-ops on new-file-only ships) ·
 [issues/provenance_gate_override_and_unenforced_quickmerge_hook_2026_07_17.md](/plans/active/issues/provenance_gate_override_and_unenforced_quickmerge_hook_2026_07_17.md)
 (provenance gate hand-overridden + the strict-quickmerge hook installed in zero clones) ·
-[issues/stale_staging_versions_manifest_2026_07_23.md](/plans/active/issues/stale_staging_versions_manifest_2026_07_23.md)
-(`workspace-manifest.json` `staging_versions` frozen, breaks the quickmerge dependency gate) ·
+[issues/stale_staging_versions_manifest_2026_07_23.md](/plans/archive/issues/stale_staging_versions_manifest_2026_07_23.md)
+(`workspace-manifest.json` `staging_versions` frozen, breaks the quickmerge dependency gate — resolved + archived
+2026-08-01) ·
 [issues/quickmerge_environment_autodetect_forces_dev_off_main_2026_07_25.md](/plans/active/issues/quickmerge_environment_autodetect_forces_dev_off_main_2026_07_25.md)
 (`quickmerge.sh` `ENVIRONMENT` auto-detect bug on `live-defi-rollout`) ·
 [issues/orchestrator_gcloud_active_account_wif_poisoning_2026_07_25.md](/plans/active/issues/orchestrator_gcloud_active_account_wif_poisoning_2026_07_25.md)

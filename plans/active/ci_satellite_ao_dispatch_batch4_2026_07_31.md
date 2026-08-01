@@ -101,9 +101,21 @@ Same-priority todos in one plan run **concurrently**, so they must touch disjoin
       referrers.** Two small, independent, already-fully-decided `quickmerge.sh`-touching fixes, combined into one todo
       per the same-file-contention note above (do them sequentially within one session, do not split into two concurrent
       todos):
-  1. **STAGE 1.6 dormancy gate.** `scripts/quickmerge.sh:998`'s dependency-version gate reads `staging_versions` before
-     falling back to `versions`, which is wrong now that staging is dormant (`staging_dormant_mode: true`) —
-     `staging_versions`'s only writer is frozen since 2026-06-27. Implement option 1 (operator-confirmed,
+  1. **STAGE 1.6 dormancy gate — na-eligibility-audit 2026-08-01: VERIFIED ALREADY DONE, drop this sub-item.** Performed
+     exactly the live-code verification this todo itself demands: `scripts/quickmerge.sh`'s current working tree
+     (`_dep_versions_behind`) already reads `dormant = bool(rm.get('staging_dormant_mode', False))` /
+     `r = ('' if dormant else rstag.get(dep, '')) or rmain.get(dep, '')` — exactly the option-1 fix this sub-item asks
+     for. Shipped `unified-trading-pm@b3abf1bd5` (2026-07-30, the day before this batch4 doc was drafted), confirmed a
+     genuine ancestor of current HEAD via `git merge-base --is-ancestor` and never reverted
+     (`git log -S"dormant = bool"` shows exactly one touching commit). Source doc closed + archived at
+     `/plans/archive/issues/stale_staging_versions_manifest_2026_07_23.md`. When this todo is actually dispatched, only
+     sub-item 2 (delete the redundant hook) remains real work — re-verify sub-item 1 is still unnecessary at that time
+     in case of an intervening revert, but do not re-implement it from scratch.
+     <details><summary>Original sub-item text (superseded by the above, kept for history)</summary>
+
+     `scripts/quickmerge.sh:998`'s dependency-version gate reads `staging_versions` before falling back to `versions`,
+     which is wrong now that staging is dormant (`staging_dormant_mode: true`) — `staging_versions`'s only writer is
+     frozen since 2026-06-27. Implement option 1 (operator-confirmed,
      `autonomous_session_operator_decisions_2026_07_25.md` entry #33): in `_dep_versions_behind`, ignore
      `staging_versions` when the manifest says `staging_dormant_mode: true` —
      `r = ('' if dormant else rstag.get(dep,'')) or rmain.get(dep,'')`. Verify by running a quickmerge in a repo that
@@ -112,6 +124,8 @@ Same-priority todos in one plan run **concurrently**, so they must touch disjoin
      `[x]` but is a FALSE-CHECKED pointer**: its trailing text admits the fix was never implemented, only "queued for
      ci's next batch" — do not trust the checkmark, verify the live code (`_dep_versions_behind`/STAGE 1.6) directly
      before concluding this is already done.
+     </details>
+
   2. **Delete the redundant hook.** `scripts/dev/hooks/pre-push-strict-quickmerge.sh` is dead weight — all three
      installers (`scripts/hooks/pre-push` chaining, `setup-tab-worktrees.sh`, the 5-min self-heal) now point at
      `scripts/hooks/pre-push` instead. Delete it and repoint its 4 known referrers: `migrate-slots-to-pathb.sh`,

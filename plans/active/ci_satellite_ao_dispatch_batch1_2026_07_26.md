@@ -549,8 +549,11 @@ future batch's re-triage; the rest need direct operator/human action or elapsed 
 **D3 detail** — the five held `scripts/quickmerge.sh` claims, in the order this audit would re-extract them: (1) bind
 `ENVIRONMENT`/gate-affecting config INTO the QG sentinel hash so a dev-verified sentinel cannot satisfy a prod-context
 run (`qg_sentinel_environment_blind_2026_07_23.md` [INFRA] P1 — the doc's own "fix this regardless" item); (2) STAGE 1.6
-dormancy-aware dep gate (`stale_staging_versions_manifest_2026_07_23.md`, gated on the operator's option 1/2/3 pick —
-parked); (3) instrument STAGE 0's cascade step for the MTDS `DEPLOYMENT_ENV` leak
+dormancy-aware dep gate — **na-eligibility-audit 2026-08-01: this item is DONE, not parked** — the operator picked
+option 1 (`autonomous_session_operator_decisions_2026_07_25.md` entry #33) and the fix shipped
+`unified-trading-pm@b3abf1bd5` (2026-07-30); source doc closed + archived at
+`/plans/archive/issues/stale_staging_versions_manifest_2026_07_23.md`. Remove this from any future re-extraction list.
+(3) instrument STAGE 0's cascade step for the MTDS `DEPLOYMENT_ENV` leak
 (`mtds_deployment_env_race_survives_single_worker_2026_07_23.md` — also parked, see the reproducer question); (4)
 broaden the branch check to recognise `live-defi-rollout` (`quickmerge_environment_autodetect_…` step 3, itself gated on
 its step 2); (5) the content-hash green-tree fast-path (`quickmerge_sentinel_race_retry_storm_…` fix 1 — explicitly "do

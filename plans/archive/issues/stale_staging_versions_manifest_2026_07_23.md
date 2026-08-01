@@ -14,8 +14,8 @@ summary: >-
   (reconcile-staging-versions.yml) reads frozen staging pyprojects. For a NORMAL landing this is a WARN (noise + a
   wasted workflow dispatch per occurrence); under `--hotfix` it is a hard BLOCK. Found while auditing what still runs
   against the retired staging branch.
-status: open
-nature: issue
+status: resolved
+nature: notes
 asset_group: [ci]
 stage: [meta]
 repos: [unified-trading-pm]
@@ -26,6 +26,7 @@ related:
   - /plans/archive/2026_07/cicd_mvp_ldr_to_main_pipeline_2026_06_30.md
   - /plans/active/issues/post_cutover_silent_assumption_sweep_2026_07_23.md
 created: 2026-07-23
+last_updated: 2026-08-01
 priority: P2
 parent_epic: infrastructure_master
 assigned_vm: NA
@@ -36,12 +37,21 @@ estimate_class: refactor
 estimate_baseline_ai_days: 0.5
 estimate_calibrated_ai_days: 0.2
 locked_by:
-resolved_by:
+resolved_by: unified-trading-pm@b3abf1bd5 (STAGE 1.6 dormancy-aware gate) — na-eligibility-audit 2026-08-01 closeout
 depends_on: []
 source:
   - "fleet staging-machinery audit 2026-07-23 (operator ask: what still runs for staging, can we stop it)"
   - "verified live: workspace-manifest.json staging_versions vs versions; scripts/quickmerge.sh:985-1060"
 ---
+
+> **🗄️ ARCHIVED 2026-08-01** — all 3 resolution-checklist items are `[x]`, zero remaining, `locked_by:` empty. Per
+> `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`, a doc with every todo done archives
+> immediately. Closed by `/na-eligibility-audit ci`: the operator picked option 1 (dormancy-aware gate,
+> `autonomous_session_operator_decisions_2026_07_25.md` entry #33), it shipped `unified-trading-pm@b3abf1bd5`
+> (2026-07-30), and the residual auto-heal-dispatch verification item closed via direct code read this pass. Referrers
+> fixed: `post_cutover_silent_assumption_sweep_2026_07_23.md` frontmatter, `/codex/08-workflows/ci-cd-flow.md`,
+> `ci_satellite_ao_dispatch_batch1_2026_07_26.md` D3(2), `ci_satellite_ao_dispatch_batch4_2026_07_31.md` todo 1 sub-item
+> 1 (all four previously pointed at this doc as still-open/gating work).
 
 # `staging_versions` is a frozen mirror that still outranks `versions` in the quickmerge dep gate
 
@@ -215,8 +225,19 @@ it.
       repo that depends on `unified-api-contracts` and confirming the spurious "local=0.71.0 < staging/main=0.72.0" line
       is gone. — already covered by plans/active/ci_satellite_ao_dispatch_batch1_2026_07_26.md's Deferred D3/D8 (queued
       for ci's next batch) (see that doc for execution).
-- [ ] [INFRA] P3. Confirm the wasted auto-heal dispatch (`gh workflow run main-backmerge-to-ldr.yml` at
-      `scripts/quickmerge.sh:1046`) no longer fires for this cause — it is a real, if small, CI cost line.
+- [x] ✅ [INFRA] P3. Confirm the wasted auto-heal dispatch (`gh workflow run main-backmerge-to-ldr.yml` at
+      `scripts/quickmerge.sh:1046`) no longer fires for this cause — it is a real, if small, CI cost line. — **DONE
+      2026-08-01 (na-eligibility-audit ci), closed via direct code read (no live workflow run needed — the fix
+      structurally forecloses the cause)**: `scripts/quickmerge.sh:1131-1140` (current working tree,
+      `unified-trading-pm@b3abf1bd5`, 2026-07-30, verified ancestor of current HEAD, never reverted —
+      `git log -S"dormant = bool"` shows exactly one touching commit) shows
+      `dormant = bool(rm.get('staging_dormant_mode', False))` and
+      `r = ('' if dormant else rstag.get(dep, '')) or rmain.get(dep, '')` — `staging_versions` is now excluded from
+      `_dep_versions_behind` entirely whenever `staging_dormant_mode: true`. The auto-heal dispatch (`:1183-1187`) only
+      fires inside the `else` branch reached when `DEP_BEHIND` is non-empty; since the frozen-`staging_versions`
+      false-positive this issue describes can no longer produce a non-empty `DEP_BEHIND`, the wasted dispatch
+      structurally cannot fire "for this cause" anymore (it may still legitimately fire for genuine `versions`-based
+      staleness, a different, non-wasted case).
 
 ## na-eligibility-audit verdict
 

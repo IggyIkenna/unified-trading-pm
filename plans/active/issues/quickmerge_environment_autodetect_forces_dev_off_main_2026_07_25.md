@@ -174,3 +174,14 @@ change needs a caller audit across the repo before touching it — out of scope 
 `scripts/quickmerge.sh`, which that batch's todo 1 owns this round, and E5 further notes the item's own internal step-2
 precondition (the `UnifiedCloudServicesConfig` caller audit) was not re-verified. Step 3 is explicitly gated on step 2
 by this doc's own text.
+
+**na-eligibility-audit 2026-08-01** (tranche `ci`, autonomous): KEEP-NA, valid — re-confirmed, not re-litigated (E5
+citation verified real). **`locked_by` ANOMALY flagged, no action taken**: this doc's frontmatter carries
+`locked_by: live-defi-rollout` / `locked_since: 2026-05-21` — a branch name, not a slot/agent claim token, and
+`locked_since` predates this doc's own `created: 2026-07-25` by two months. A sibling corpus doc
+(`ag_closeout_audit_orphan_definition_and_digest_citation_defects_2026_07_30.md`) documents this exact value elsewhere
+as "the known stale branch-name artifact," cleared there per a cited precedent
+(`/plans/archive/issues/tradfi_eu_not_draining_source_axis_drift_2026_06_24.md`) — but that precedent was applied to a
+DIFFERENT doc; per the HARD RULE that archival/reclassification never proceeds on a non-empty `locked_by` without
+`[unlock-plan]` operator confirmation, this pass took no action on the lock field itself. Recommend the operator either
+confirm this is the same stale artifact (and clear it per the cited precedent) or clarify what it actually locks here.

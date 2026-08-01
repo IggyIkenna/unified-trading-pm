@@ -313,3 +313,9 @@ assertion — otherwise we keep a third detector nobody reads.
 run by `/plans/archive/2026_07/ci_satellite_ao_dispatch_batch2_2026_07_29.md` Deferred **E9**, which re-verified it
 still open and concluded the root cause "is still unparked/unresolved, so no bounded fix exists to dispatch yet".
 Recommendations 2b/2c/3 already shipped via ci batch1 todo 3.
+
+**na-eligibility-audit 2026-08-01** (tranche `ci`, autonomous): KEEP-NA, valid — re-confirmed. The sole open todo is
+still an unresolved root-cause investigation with no bounded fix identified; grepped `plans/active/*.md` for
+"dormant"+"cascade" — the only hit (`ci_satellite_ao_dispatch_batch1_2026_07_26.md:142`) explicitly states this
+investigation "remains open and out of this todo's scope," corroborating it is un-owned, not duplicated. Not
+RECLASSIFY-eligible (open-ended diagnosis, not a checkable fact or scoped change).

@@ -684,8 +684,10 @@ Internal-dep version churn must NOT cascade rebuilds fleet-wide. The model (oper
 **Only `versions{}` ↔ source-derived version must agree.** Seeing `repositories{}.version` stale, an in-range dep-floor,
 or a frozen `staging_versions` is NOT a bug — do NOT "sync" them. `assert_version_coherence.py` checks these and runs
 `--warn-only` in PM QG post-gates (`VERSION_SPLIT` = real alert; `VESTIGIAL_SCALAR_DRIFT` / in-range floors =
-warn-only). Anything that still PREFERS `staging_versions` over `versions` while staging is dormant is reading the stale
-side — tracked in `plans/active/issues/stale_staging_versions_manifest_2026_07_23.md`.
+warn-only). `scripts/quickmerge.sh`'s STAGE 1.6 dep-gate is dormancy-aware (`unified-trading-pm@b3abf1bd5`, 2026-07-30):
+it ignores `staging_versions` entirely whenever `staging_dormant_mode: true`, so a frozen `staging_versions` can no
+longer produce a spurious dep-behind/auto-heal false-positive — resolved, archived at
+`/plans/archive/issues/stale_staging_versions_manifest_2026_07_23.md`.
 
 **Semver-agent bump-rate circuit breaker (codified 2026-06-10):** the agent refuses + raises a CRITICAL page when it
 detects a runaway re-bump signature on main (adjacent re-bump pairs ≥2, or ≥3 consecutive at tip, or rate ≥6/hr). For

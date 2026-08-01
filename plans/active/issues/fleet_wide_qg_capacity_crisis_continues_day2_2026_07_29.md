@@ -174,7 +174,12 @@ not just noting.
       $ cost attributable to the retry-storm's share of CPU/wall-clock vs. steady-state baseline
       usage. Done when: a real $
       figure (not assumed) is added alongside this doc's existing GH-Actions-dollar figure, so the two cost buckets can
-      be compared side-by-side.
+      be compared side-by-side. **na-eligibility-audit 2026-08-01**: bounded, worker-determinable, conflict-check clear
+      (no active/draft `assigned_vm: planning` doc in `parent_epic: infrastructure_master` already claims AWS Cost
+      Explorer / EC2 instance-hours for this host) — a clean RECLASSIFY-eligible candidate, mirroring the sibling P1
+      todo above it that was already done exactly this way. Flagging as extraction-ready for the next ci satellite-batch
+      carve-out rather than spinning up a standalone one-item batch doc this pass (same proportionality call this run
+      made for `post_cutover_silent_assumption_sweep_2026_07_23.md`'s F3 item) — doc stays NA in the meantime.
 - [ ] [OPERATOR] P3. Confirm the OOM-killer mechanism for the 2026-07-30 14:54-15:01Z mass `tmux_session_lost` cluster
       (slots 1, 4, 5, 9, 10, 11 killed across 3 waves in ~7 min, see Progress Log below) via `dmesg`/`journalctl -k` on
       `i-0c9b283b31d6b5ca7` (needs root — no agent session has it). Currently UNCONFIRMED: swap (14-16Gi used) + load
@@ -222,7 +227,7 @@ not just noting.
       `worker.md`'s resume contract. Host load fluctuated 9-28 (16 vCPU) throughout, consistent with this doc's standing
       "fluctuating-but-still-elevated, not resolved" characterization — no QG failures attributable to contention this
       pass.
-- [ ] [BACKEND] P1. **New, opened by the 2026-07-31 ~15:17-15:26Z synchronized-multi-slot-kill corroboration below —
+- [x] ✅ [BACKEND] P1. **New, opened by the 2026-07-31 ~15:17-15:26Z synchronized-multi-slot-kill corroboration below —
       main-agent-corroborated CPU-oversubscription, a distinct signature from the IO/disk-full and RAM-exhaustion
       variants already tracked.** Build a MACHINE-ENFORCED shared-host QG concurrency gate: a host-level
       `flock`/semaphore in `quality-gates.sh` (or `base-service.sh`) that blocks any run past `max(2, floor(cores/4))`
@@ -232,17 +237,34 @@ not just noting.
       review-agent session and main agent `agt-40d0ed` on-host). Self-discipline (the shared-host QG-sweep-batching rule
       in CLAUDE.md) is clearly not holding under load; this needs a structural block, not another documented violation.
       Done when: a concurrent QG run past the cap is measurably refused/queued (not just logged) on this host, verified
-      by deliberately launching cap+1 QG passes and observing the (cap+1)th block until a slot frees.
-- [ ] [DOCS] P3. **New, opened by the same corroboration — a `boot_read_unconfirmed` gap hit firsthand this session.**
-      `review.md`'s own "Boot — read the canonical files first" section names only `RULES.md` as the required pre-poll
-      read; it never explicitly lists `worker.md`, yet the live `/api/slots/<N>/boot` endpoint's required-file check
-      DOES enforce `worker.md` for the review role — confirmed directly: this session's own first `/boot` call was
+      by deliberately launching cap+1 QG passes and observing the (cap+1)th block until a slot frees. — **CLOSED
+      2026-08-01 (na-eligibility-audit ci), tracking-vehicle redirect, not built standalone**: grepped
+      `plans/active/*.md` for `flock`/`semaphore` and found
+      `plans/active/qg_host_adaptive_resource_governor_2026_07_14.md` (status: active, assigned_vm: NA) already
+      implements this exact mechanism more thoroughly — a flock-protected reservation-ledger admission governor (RAM
+      two-clause gate + CPU gate + per-repo cgroup cap + FIFO fairness/aging), largely shipped, with only the
+      live-admission cutover remaining (explicitly flagged there as "the safety-critical part... an operator-aware step,
+      not an autonomous flip"). Building a second, independent flock/semaphore mechanism in the SAME scripts
+      (`quality-gates.sh`/`base-service.sh`) risks a competing concurrency-control implementation. Redirecting this ask
+      to that doc's tracking rather than re-implementing — see `qg_host_adaptive_resource_governor_2026_07_14.md` for
+      the live cutover status.
+- [x] ✅ [DOCS] P3. **New, opened by the same corroboration — a `boot_read_unconfirmed` gap hit firsthand this
+      session.** `review.md`'s own "Boot — read the canonical files first" section names only `RULES.md` as the required
+      pre-poll read; it never explicitly lists `worker.md`, yet the live `/api/slots/<N>/boot` endpoint's required-file
+      check DOES enforce `worker.md` for the review role — confirmed directly: this session's own first `/boot` call was
       rejected 428 (`"missing": ["...agents/worker.md"]`) even after declaring `RULES.md` + `review.md` read
       (`GET /api/activity?slot=1` event `boot_read_unconfirmed` at 2026-07-31T18:04:34Z is this exact rejection). Add
       `worker.md` to the explicit required-pre-read list in both `review.md`'s boot section and `RULES.md` (wherever it
       enumerates per-role required reads), so a fresh review session's own docs tell it the true required set instead of
       discovering it via a 428 round-trip. Done when: `review.md` explicitly names `worker.md` as a required STEP-0/1
-      read, and the documented set matches the server's actually-enforced set for role=review.
+      read, and the documented set matches the server's actually-enforced set for role=review. — **DONE 2026-08-01
+      (na-eligibility-audit ci)**: independently re-verified via a live `GET /api/activity?slot=1` query (225
+      `boot_read_unconfirmed` events, 2026-07-27→2026-08-01, not just this doc's self-report) and by reading
+      `server/prompts.py:expected_read_files` + `server/routes/slots_worker.py` directly (RULES.md has no per-role
+      read-list to update — only `review.md` needed the fix). `agents/review.md`'s STEP 0 now explicitly lists
+      `worker.md`. Filed `issues/review_role_boot_read_unconfirmed_stuck_loop_2026_08_01.md` for the residual
+      live-incident follow-up (whether slot 1's CURRENT session self-recovers from a docs-only fix — an operator
+      judgment call, not a worker-alone fix) — that doc, not this checkbox, tracks what's still open.
 
 ## Evidence
 
@@ -961,3 +983,13 @@ not just noting.
   to finish per the standing protected-6 posture. Attempted `AUTHORING_SLOT=ci-reconcile` ping — confirmed `422`
   (non-integer `slot_id`), same dead end prior entries hit (one prior entry logged this as "400s"; actual code is 422 —
   minor correction). No repo state changed; slot-2 worktrees left clean on `live-defi-rollout` (only this doc touched).
+
+- **na-eligibility-audit 2026-08-01** (tranche `ci`, autonomous): KEEP-NA, stale-items — re-read all 5 then-open
+  checkboxes end-to-end. 2 genuinely operator-gated/judgment (OOM-killer root-access confirmation; RETRY_PER_TICK
+  scheduling-policy tuning, explicitly self-flagged by its own author as a deliberate-ruling call). Closed 2 as
+  stale-superseded: the flock/semaphore concurrency-gate item (redirected to
+  `qg_host_adaptive_resource_governor_2026_07_14.md`, which already builds this more thoroughly) and the
+  `boot_read_unconfirmed` docs item (fixed `agents/review.md` directly this pass; live-incident follow-up filed
+  separately at `issues/review_role_boot_read_unconfirmed_stuck_loop_2026_08_01.md`). The 1 remaining open item (AWS
+  Cost Explorer / EC2-cost quantification) is bounded and conflict-check-clear — flagged extraction-ready for a future
+  ci satellite-batch carve-out rather than a standalone one-item batch doc this pass. Doc stays NA overall.

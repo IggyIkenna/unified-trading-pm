@@ -108,3 +108,8 @@ confirmation before removing quickmerge.sh's PM-specific Option-B direct-PR-open
 explicit confirmation before shipping" section: it changes the fleet's core shipping gatekeeper's observable behaviour
 for PM). Parked as `/plans/archive/2026_07/ci_satellite_ao_dispatch_batch2_2026_07_29.md` Deferred **E6** and escalated
 there as operator question 3. Todo 2 (the before/after churn re-measurement) is gated on todo 1 landing.
+
+**na-eligibility-audit 2026-08-01** (tranche `ci`, autonomous): KEEP-NA, valid — re-confirmed. Independently re-verified
+the E6 citation is real (grepped the archived batch2 doc directly) and found a further independent re-confirmation at
+`ci_satellite_ao_dispatch_batch4_2026_07_31.md` D4-11, still unruled as of today. Both open todos remain genuinely
+operator-gated; no RECLASSIFY candidate here.

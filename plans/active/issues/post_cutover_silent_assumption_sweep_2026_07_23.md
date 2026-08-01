@@ -34,7 +34,7 @@ scope: [engineer, admin]
 tags: [ci-cd, audit, silent-failure, kill-switch, release-tags, repository-dispatch, post-cutover, safety]
 related:
   - /plans/archive/issues/staging_workflow_shutdown_2026_07_23.md
-  - /plans/active/issues/stale_staging_versions_manifest_2026_07_23.md
+  - /plans/archive/issues/stale_staging_versions_manifest_2026_07_23.md
   - /plans/active/issues/qg_sentinel_environment_blind_2026_07_23.md
   - /plans/archive/2026_07/github_actions_ci_cost_reduction_2026_07_15.md
 created: 2026-07-23
@@ -460,7 +460,9 @@ codex, or a future staging re-entry gets a dead pipeline.
       two new checked items below) — these were the two actively blocking real production Cloud Build failures
       (`instruments-service` and others could not resolve `unified-trading-library>=0.56.0`, a floor no published
       version satisfied since 2026-06-27). The other ~20 stalled repos in the table above are still open; this todo item
-      itself stays unchecked.
+      itself stays unchecked. **na-eligibility-audit 2026-08-01: already tracked (not yet done) as an open todo in
+      `ci_satellite_ao_dispatch_batch1_2026_07_26.md` ("Fleet version/tag-state census (read-only, NO tag minting)"),
+      which cites this exact checkbox as its Source — track completion there.**
 - [x] ✅ [INFRA] P1. **`publish-package.yml`'s per-repo DISPATCHER was never actually installed on the two frozen
       library repos (2026-07-25 finding, sharpens the "dead listener" framing above)** — not merely un-rolled-out in the
       abstract: `unified-trading-library/.github/workflows/publish-package.yml` was still the **pre-refactor "Publish to
@@ -487,12 +489,20 @@ codex, or a future staging re-entry gets a dead pipeline.
       UTL base image is rebuilt daily and re-tagged `0.55.0`/`latest`, so `0.55.0` names a different tree every day and
       rollback-by-version is undefined. Once tagging is fixed, each rebuild must get its own immutable version tag;
       consider pinning service `FROM` lines by digest only. Verify by confirming two builds never share a version tag.
+      **na-eligibility-audit 2026-08-01: already tracked (not yet done) as an open todo in
+      `ci_satellite_ao_dispatch_batch1_2026_07_26.md` ("Verify the released Docker version tag is no longer re-pointed
+      at new content"), which cites this exact checkbox as its Source — track completion there.**
 - [ ] [INFRA] P2. **Fix `instruments-service`'s `0.0.0.dev0` publish** (2026-07-03, AR `unified-libraries`) —
       hatch-vcs's no-git-history fallback, meaning that wheel carries neither a version nor a commit sha. Ensure the
       publish build checks out with tags/history (`fetch-depth: 0`), and fail the build when the computed version is
-      `0.0.0.dev0` rather than publishing it.
-- [ ] [INFRA] P1. **Re-assess `stale_staging_versions_manifest_2026_07_23.md` in light of F2 before implementing its
-      fix** — its premise is inverted (see the ⚠ box above). Do not action the two independently.
+      `0.0.0.dev0` rather than publishing it. **na-eligibility-audit 2026-08-01: already tracked (not yet done) as an
+      open todo in `ci_satellite_ao_dispatch_batch1_2026_07_26.md` ("Confirm instruments-service's publish path can no
+      longer emit 0.0.0.dev0"), which cites this exact checkbox as its Source — track completion there.**
+- [x] ✅ [INFRA] P1. **Re-assess `stale_staging_versions_manifest_2026_07_23.md` in light of F2 before implementing its
+      fix** — its premise is inverted (see the ⚠ box above). Do not action the two independently. — **DONE, closed via
+      `autonomous_session_operator_decisions_2026_07_25.md` entry #33** (operator ruled option 1, the dormancy-aware
+      gate), independently confirmed live in `scripts/quickmerge.sh` as of the `na-eligibility-audit 2026-08-01`
+      re-assessment of that sibling doc (commit `b3abf1bd5`, 2026-07-30, verified ancestor of current HEAD).
 - [x] ✅ [INFRA] P1. **DONE 2026-07-26 (slot-5, `infra`, `ci_satellite_ao_dispatch_batch1-002`) — the static checker
       itself.** Delivered `scripts/quality_gates/check_dispatch_listeners.py` (+ regression tests
       `tests/unit/test_check_dispatch_listeners.py`, 9 cases). Walks every repo for DISPATCH SITES
@@ -541,14 +551,24 @@ codex, or a future staging re-entry gets a dead pipeline.
 - [ ] [INFRA] P2. Disable or fix the F4 vacuous crons (`sit-debounce-trigger`, `freeze-deferred-build-replay`,
       `fix-approval-timeout`, `supersede-stale-dep-update-prs`); diagnose `digest-drift-sweep`'s non-convergence (it
       costs real money via `ubuntu-latest` fan-out); make `workspace-quickmerge-validation` fail when it logs a failure.
-- [ ] [INFRA] P2. Fix the F5 readers so an empty input renders as **"unknown"/"not applicable", never GREEN** — starting
-      with the `deployed_versions` shape mismatch and the `stuck_in_sit` / promotion-blocked panels. Correct the false
-      comment at `ldr-to-main-promote-fleet.yml:422-434`.
+- [x] ✅ [INFRA] P2. Fix the F5 readers so an empty input renders as **"unknown"/"not applicable", never GREEN** —
+      starting with the `deployed_versions` shape mismatch and the `stuck_in_sit` / promotion-blocked panels. Correct
+      the false comment at `ldr-to-main-promote-fleet.yml:422-434`. — **3/4 sub-items DONE 2026-07-29 via
+      `ci_satellite_ao_dispatch_batch1_2026_07_26.md` (INFRA P2, citing this doc's § F5 as Source)**: the
+      `deployed_versions` shape mismatch fixed, the `repo_ci.py` promotion-blocked panel confirmed already-fixed, the
+      false `ldr-to-main-promote-fleet.yml` comment corrected. The 4th sub-item (`stuck_in_sit` tri-state) was
+      deliberately forked into its own larger, properly-scoped doc: `issues/repo_ci_stuck_in_sit_tristate_2026_07_29.md`
+      — track that item there, not here.
 - [ ] [INFRA] P2. Close the `sit_validated_workspace_digest` written-but-unread gap, or document why it is safe to drop.
-- [ ] [DOC] P2. Update `/codex/08-workflows/ci-cd-flow.md` (L75-109, L763, L777-786, L1183) to the current LDR→main
-      model, and add the staging re-entry procedure INCLUDING "uncomment the disabled triggers" to codex.
-- [ ] [REVIEW] P3. Guard the latent repeat: `agent-runner.yml:91` / `sit-gate.yml:357` self-dispatch is safe only by
-      file placement. Either hardcode the PM target or add a rollout guard.
+- [x] ✅ [DOC] P2. Update `/codex/08-workflows/ci-cd-flow.md` (L75-109, L763, L777-786, L1183) to the current LDR→main
+      model, and add the staging re-entry procedure INCLUDING "uncomment the disabled triggers" to codex. — **DONE
+      2026-07-26 (slot-5, `cicd`) — `unified-trading-pm@97970974e`**, via
+      `ci_satellite_ao_dispatch_batch1_2026_07_26.md` (citing this doc's `[DOC] P2` + § Docs as Source): fixed all four
+      narrative sites, added the Staging re-entry procedure section, corrected the WARN-default line.
+- [x] ✅ [REVIEW] P3. Guard the latent repeat: `agent-runner.yml:91` / `sit-gate.yml:357` self-dispatch is safe only by
+      file placement. Either hardcode the PM target or add a rollout guard. — **DONE 2026-07-28 (slot-11, `infra`) —
+      `unified-trading-pm@cb5e944f0`**, via `ci_satellite_ao_dispatch_batch1_2026_07_26.md` (citing this doc's
+      `[REVIEW] P3` as Source): hardcoded the PM target in both files.
 
 ## na-eligibility-audit verdict
 
@@ -561,3 +581,15 @@ flow per a dated 2026-07-28 ruling. The F4 vacuous-cron item is parked as ci bat
 (Docker version-tag repointing, the `0.0.0.dev0` publish, F3 success-reporting, F5 readers, the codex LDR→main narrative
 update, the self-dispatch guard) are real carve-out candidates for a future `/ag-closeout-audit` ci batch — extraction,
 not an in-place flip.**
+
+**na-eligibility-audit 2026-08-01** (tranche `ci`, autonomous): KEEP-NA, stale-items — re-read all 18 open items
+end-to-end. The superseded/time-gated/operator-gated set (8 items) is unchanged and correctly stays NA. Of the remaining
+~10, found several were ALREADY closed elsewhere but never flipped here: closed 3 as KEEP-NA-STALE (reconcile-tags,
+Docker re-pointing, `0.0.0.dev0` — each annotated with a citation to the still-open tracking todo in
+`ci_satellite_ao_dispatch_batch1_2026_07_26.md`, not independently re-actioned), closed 1 as resolved-elsewhere
+(`stale_staging_versions_manifest` re-assessment, via `autonomous_session_operator_decisions_2026_07_25.md` entry #33),
+and flipped 3 to `[x]` DONE with commit citations that a prior audit pass missed (F5 readers 3/4 done + 1/4 forked to
+`repo_ci_stuck_in_sit_tristate_2026_07_29.md`; the ci-cd-flow.md docs update; the agent-runner/sit-gate self-dispatch
+guard — all three shipped via `ci_satellite_ao_dispatch_batch1_2026_07_26.md`, `unified-trading-pm@97970974e` /
+`@cb5e944f0`). F3 success-reporting remains the one genuinely-uncovered bounded gap, still not yet extracted into any
+active batch — flagged again as the standing carve-out candidate. Doc stays NA overall.
