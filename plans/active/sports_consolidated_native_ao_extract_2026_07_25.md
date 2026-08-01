@@ -427,11 +427,20 @@ context_scope:
       Use `SPORTS_SMOKE_DATES` as the reference dates. (repo: features-service, skill-driven). **Done when**: 3 dated
       runs cited by report path/dispatch_id, baseline through final. Source:
       `sports_consolidated_closeout_2026_07_19.md:665-669`.
-- [ ] [DATA] P1. **Track K (reconciliation) — run + cite 3 dated checkpoints (baseline/mid/final) for
-      `/data-pipeline-reconciliation` against sports.** Split 2026-08-01, see Track K (IS) above for the split
-      rationale. Use `SPORTS_SMOKE_DATES` as the reference dates. Read-only, PROD-only per the skill's own contract.
-      (repo: cross-repo, skill-driven). **Done when**: 3 dated runs cited by report path/dispatch_id, baseline through
-      final. Source: `sports_consolidated_closeout_2026_07_19.md:665-669`.
+- [x] ✅ [DATA] P1. **Track K (reconciliation) — run + cite 3 dated checkpoints (baseline/mid/final) for
+      `/data-pipeline-reconciliation` against sports.** DONE 2026-08-01 (slot 8, dispatched sub-agent) — 3 dated reports
+      now exist: baseline `plans/audit/results/data_pipeline_reconciliation_sports_2026_07_20.md`, mid
+      `plans/audit/results/data_pipeline_reconciliation_sports_2026_07_22.md`, final
+      `plans/audit/results/data_pipeline_reconciliation_sports_2026_08_01.md` (+ sibling `.json`,
+      `unified-trading-pm@<see commit below>`). The final run confirmed the 07-24 report's own F1 headline (manifest
+      staleness) is genuinely RESOLVED (deliberate 2026-06-07 architecture, closed 2026-07-26 via an addendum to
+      `sports_odds_capture_pipeline_scheduling_status_unknown_2026_07_23.md`) and found a NEW, currently-active big
+      finding while re-verifying it: F5, a live Cloud Run Job OOM outage
+      (`uts-prod-market-tick-data-service-fast-t1-recon`, SPORTS-scoped, since ~2026-07-27) zeroing out real raw-tick
+      capture for 3+ consecutive days as of check time — new issue doc
+      `plans/active/issues/sports_fast_t1_recon_oom_live_capture_outage_2026_08_01.md` filed, operator notified per the
+      big-finding trigger. (repo: cross-repo, skill-driven). Source:
+      `sports_consolidated_closeout_2026_07_19.md:665-669`.
 - [ ] [DOC] P2. **Track X — update the sports issue-doc index**: it lists
       `sports_odds_feature_naming_four_way_mismatch_2026_07_21.md` as merely open/P2, but
       `sports_odds_feature_naming_canonicalization_2026_07_21.md` already has a DECIDED (2026-07-23) naming scheme +
