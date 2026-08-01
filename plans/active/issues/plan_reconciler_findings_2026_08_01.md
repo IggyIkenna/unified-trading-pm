@@ -65,6 +65,29 @@ sets slot status without checking for a concurrent typed-agent one-shot dispatch
 
 ## Contradictions
 
+- **CONFIRMED (verified inline, no sub-agent needed — direct git-log + content diff)**: two INDEPENDENT gated finalize
+  plans exist for the same parent doc
+  `plans/active/live_event_log_warm_sink_recovery_and_cold_compaction_2026_07_31.md`:
+  `plans/active/live_event_log_warm_sink_recovery_and_cold_compaction_2026_07_31_finalize.md` (authored first,
+  `fb60c5103` @ 2026-07-31T12:51:54Z, commit msg "author gated finalize plan for ...") and `..._finalize_2026_07_31.md`
+  (authored 39min later, `8eaf24163` @ 2026-07-31T13:30:47Z, commit msg "land two untracked docs stranded in root PM
+  checkout" — i.e. a second, independent session/agent created its own finalize plan for the same parent, apparently
+  unaware the first already existed, and it got swept in via an untracked-docs landing operation). Both carry
+  `depends_on: [live_event_log_warm_sink_recovery_and_cold_compaction_2026_07_31]` + `gate_on_depends: true` and
+  `status: active` — currently DORMANT (parent has 4 open / 7 done todos, so neither has fired yet), but once the
+  parent's last todo flips, **both will become dispatch-eligible simultaneously** — genuine duplicate-work /
+  conflicting-archival risk (two workers could independently run the 6-step archival ritual on the same parent). Content
+  differs: the second doc is more thorough (explicit evidence-re-verification language, correctly notes task_template.md
+  §4's self-archival rule, links an extra related issue doc, `sequential: true`), but the FIRST doc's filename follows
+  the corpus's dominant naming convention for this case (base name already embeds `_2026_07_31`, so `_finalize.md` with
+  no redundant trailing date matches sibling examples like
+  `defi_consolidated_native_ao_extract_2026_07_25_finalize.md`), while the second doc's trailing `_2026_07_31` is
+  redundant. **Severity P1** (not live-mis-routing yet, but will duplicate-dispatch once the parent completes — could
+  happen any time). **Genuinely undecidable which to keep canonical** (naming convention favors doc 1, content
+  thoroughness favors doc 2) → routed to STEP 6 (alert + file), not resolved here — merging the best of both into ONE
+  canonical doc + bannering/superseding the other + fixing the `depends_on` graph is an editorial judgment call, not a
+  reader-verifiable mechanical fix.
+
 ## Doc-drift
 
 ## Hygiene fixes
