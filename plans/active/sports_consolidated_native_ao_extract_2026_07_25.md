@@ -400,17 +400,38 @@ context_scope:
       speculatively. (repo: features-service). **Done when**: `--fixture-ids` is a declared CLI flag on the sports
       family's real dispatched entrypoint, unit-tested, and threaded through to actually narrow which fixtures a batch
       run processes.
-- [ ] [DATA] P1. **Track K — run + cite 3 dated checkpoints (pre-backfill baseline, mid-backfill spot-check,
-      post-backfill final gate) for EACH of the 5 required mechanisms** (`data-pipeline-check-is`/`-mtds`/`-mdps`/
-      `-features` + `/data-pipeline-reconciliation`) against sports — currently ZERO real run-todos exist for any of the
-      5 despite all 5 already supporting sports's shard atoms (task_template.md §3 finding K). **Use the already-pinned
-      `SPORTS_SMOKE_DATES` constants as the reference dates** (busy `2025-12-20` / thin `2025-12-24` /
-      `known_buggy_odds` `2025-12-18` / `known_buggy_fixtures` `2024-03-09` — shipped
-      `features-service@84cb4613`/`@0ae9f460`) rather than inventing a day, since several of these skills explicitly
-      require the day to come from the operator, not be invented — these are the doc's own already-established canonical
-      smoke dates, resolving that constraint. (repo: cross-repo, skill-driven). **Done when**: each of the 5 mechanisms
-      has 3 dated runs cited by report path/dispatch_id, baseline through final. Source:
+- [ ] [DATA] P1. **Track K (IS) — run + cite 3 dated checkpoints (baseline/mid/final) for `data-pipeline-check-is`
+      against sports.** Split 2026-08-01 from the original single bundled Track K todo (5 mechanisms × 3 checkpoints =
+      15 independent, VM-launching, multi-minute-plus runs bundled into one 1-hour-estimated todo — violates the
+      plan-authoring "independent parallelizable work → split" rule; each mechanism is now its own todo so it can
+      dispatch/run independently). **Use the already-pinned `SPORTS_SMOKE_DATES` constants as the reference dates**
+      (busy `2025-12-20` / thin `2025-12-24` / `known_buggy_odds` `2025-12-18` / `known_buggy_fixtures` `2024-03-09` —
+      shipped `features-service@84cb4613`/`@0ae9f460`) rather than inventing a day.
+      `instruments-service/scripts/     pipeline_e2e_check.py --asset-group SPORTS --day <D> --legs force,skip,live` (7
+      shard-target venues: API_FOOTBALL, BETFAIR, FOOTYSTATS, OPEN_METEO, SOCCER_FOOTBALL_INFO, TRANSFERMARKT,
+      UNDERSTAT). (repo: instruments-service, skill-driven). **Done when**: 3 dated runs (baseline/mid/final) cited by
+      report path (`plans/audit/results/data_pipeline_e2e_check_is_<date>.md`). Source:
       `sports_consolidated_closeout_2026_07_19.md:665-669`.
+- [ ] [DATA] P1. **Track K (MTDS) — run + cite 3 dated checkpoints (baseline/mid/final) for `data-pipeline-check-mtds`
+      against sports.** Split 2026-08-01, see Track K (IS) above for the split rationale. Use `SPORTS_SMOKE_DATES` as
+      the reference dates (busy `2025-12-20` / thin `2025-12-24` / `known_buggy_odds` `2025-12-18` /
+      `known_buggy_fixtures` `2024-03-09`). (repo: market-tick-data-service, skill-driven). **Done when**: 3 dated runs
+      cited by report path/dispatch_id, baseline through final. Source:
+      `sports_consolidated_closeout_2026_07_19.md:665-669`.
+- [ ] [DATA] P1. **Track K (MDPS) — run + cite 3 dated checkpoints (baseline/mid/final) for `data-pipeline-check-mdps`
+      against sports.** Split 2026-08-01, see Track K (IS) above for the split rationale. Use `SPORTS_SMOKE_DATES` as
+      the reference dates. (repo: market-data-processing-service, skill-driven). **Done when**: 3 dated runs cited by
+      report path/dispatch_id, baseline through final. Source: `sports_consolidated_closeout_2026_07_19.md:665-669`.
+- [ ] [DATA] P1. **Track K (features) — run + cite 3 dated checkpoints (baseline/mid/final) for
+      `data-pipeline-check-features` against sports.** Split 2026-08-01, see Track K (IS) above for the split rationale.
+      Use `SPORTS_SMOKE_DATES` as the reference dates. (repo: features-service, skill-driven). **Done when**: 3 dated
+      runs cited by report path/dispatch_id, baseline through final. Source:
+      `sports_consolidated_closeout_2026_07_19.md:665-669`.
+- [ ] [DATA] P1. **Track K (reconciliation) — run + cite 3 dated checkpoints (baseline/mid/final) for
+      `/data-pipeline-reconciliation` against sports.** Split 2026-08-01, see Track K (IS) above for the split
+      rationale. Use `SPORTS_SMOKE_DATES` as the reference dates. Read-only, PROD-only per the skill's own contract.
+      (repo: cross-repo, skill-driven). **Done when**: 3 dated runs cited by report path/dispatch_id, baseline through
+      final. Source: `sports_consolidated_closeout_2026_07_19.md:665-669`.
 - [ ] [DOC] P2. **Track X — update the sports issue-doc index**: it lists
       `sports_odds_feature_naming_four_way_mismatch_2026_07_21.md` as merely open/P2, but
       `sports_odds_feature_naming_canonicalization_2026_07_21.md` already has a DECIDED (2026-07-23) naming scheme +
