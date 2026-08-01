@@ -23,9 +23,11 @@ related:
     /plans/active/tradfi_phase_d_terminal_gate_2026_07_24.md,
     /plans/archive/issues/plan_line_cap_remediation_2026_07_23.md,
     /plans/active/consolidator_throughput_backlog_monitor_2026_07_09.md,
+    /plans/active/tradfi_pyarrow_writer_fanout_remediation_2026_08_01.md,
+    /plans/active/tradfi_pyarrow_writer_fanout_remediation_2026_08_01_finalize.md,
   ]
 created: "2026-07-24"
-last_updated: "2026-07-24"
+last_updated: "2026-08-01"
 parent_epic: tradfi_master
 assigned_vm: NA
 execution_scope: local-only
@@ -73,7 +75,17 @@ source:
 - [ ] [INFRA] P1. **Backfill-VM startup OOM rc137** (`mtds_backfill_vm_startup_oom_rc137_2026_07_14.md`, open) + **OOM
       remediation baked default** (`tradfi_backfill_oom_remediation_2026_06_24.md`, e2-highmem-4, verify) +
       **consolidator throughput/backlog monitor** (`consolidator_throughput_backlog_monitor_2026_07_09.md`). (repos:
-      deployment-service, market-tick-data-service)
+      deployment-service, market-tick-data-service) **🟡 NOTE (2026-08-01, slot 11)**: the
+      `tradfi_backfill_oom_remediation_2026_06_24.md` sub-item's own residual `[TRADFI] P3` (the pyarrow
+      per-symbol-writer fan-out fix) is re-scoped into a dedicated phased plan —
+      [`tradfi_pyarrow_writer_fanout_remediation_2026_08_01.md`](/plans/active/tradfi_pyarrow_writer_fanout_remediation_2026_08_01.md)
+      (+ gated [`_finalize`](/plans/active/tradfi_pyarrow_writer_fanout_remediation_2026_08_01_finalize.md)) — per a
+      main-agent BLOCKED-question ruling: the source todo's own "either/or" framing was an undecided structural design
+      call unsafe to dispatch as a single 1h-class task, so the new plan splits it into a bounded, contract-preserving
+      tuning todo (dispatchable now) and an explicitly-deferred structural-options design pass. The OTHER two bundled
+      sub-items above (`mtds_backfill_vm_startup_oom_rc137_2026_07_14.md`,
+      `consolidator_throughput_backlog_monitor_2026_07_09.md`) are UNCHANGED by this — this bundled todo line stays open
+      until all three sub-items close.
 - [x] ✅ [INFRA] P1. **TradFi has NO working T+1 forward-fill job** (`tradfi_t1_no_working_mtds_job_2026_07_17.md`) —
       add source-scoped `…-tradfi-databento-t1-recon` Cloud Run job; live coverage erodes daily without it. (repos:
       deployment-service, market-tick-data-service) **INFRA SHIPPED + APPLIED 2026-07-20 — deployment-service@11bed3c;
