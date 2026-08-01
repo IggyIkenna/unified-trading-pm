@@ -140,15 +140,19 @@ session; flag if it becomes a real problem.)
 
 - [x] ✅ [CODE] P0. Add `--env staging` (or equivalent `DEPLOYMENT_ENV=staging` env-var set) to
       `instruments-service/scripts/pipeline_e2e_check.py::_build_launcher_argv`'s `launch-instruments-backfill-vm.sh`
-      invocation — mirrors the `features-service@524b71ef` fix — `instruments-service@f935a75e`. Confirmed
-      `launch-instruments-backfill-vm.sh` accepts `--env` (`prod|staging|dev`, sets `DEPLOYMENT_ENV` →
-      `lc_tier_service_account`) and QG passed clean. **The "fresh force/skip run against real infra" half of this todo
-      could NOT be completed in this task**: no live GCP credentials/VM-launch access were exercised in this session —
-      the fix mirrors the verified `features-service@524b71ef` pattern (same launcher-argv shape, same
-      `lc_tier_service_account` resolution). A fresh verification run should also confirm the VM's `run.log` shows no
-      `storage.objects.create` 403 AND that `run.log` actually appears/progresses (the `deployment-scripts`
-      observability-write gap above is already fixed project-wide, so this should just work — but confirm, don't
-      assume). (repo: instruments-service)
+      invocation — mirrors the `features-service@524b71ef` fix — `instruments-service@f935a75e`. **Live-verified
+      (slot-9, 2026-08-01)**: ran a real force+skip leg (`--asset-group CEFI --venue HYPERLIQUID --day 2025-12-20`) —
+      the launch argv correctly carried `--env staging`, and `run.log` confirms the identity actually used was
+      `uts-test-sa` (not `uts-prd-sa`) — the fix works exactly as intended. The leg still failed, but NOT on this fix:
+      `run.log` shows `uts-test-sa does not have storage.objects.create access` on
+      `instruments-store-cefi-test-central-element-323112` — this is the ALREADY-TRACKED, ALREADY-OPEN
+      `instruments-store-` Group A IAM gap (slot-15 independently hit the identical block on
+      `instruments-store-sports-test-...` for SPORTS/API_FOOTBALL; my CEFI/HYPERLIQUID run is a second corroborating
+      data point for a different asset_group). Full details + the open INFRA fix todo:
+      `/plans/active/issues/bucket_iam_group_a_market_data_tick_prefix_missing_asset_group_2026_08_01.md` (the
+      `market-data-tick-` half of that issue is already fixed & live-verified per that doc; `instruments-store-` is the
+      one open todo left in it). A genuine 403-free instruments-service verification run is blocked on THAT specific
+      todo landing — same pattern as the already-closed MDPS todo below. (repo: instruments-service)
 - [x] ✅ [CODE] P0. Add the same `--env staging` fix to
       `market-data-processing-service/scripts/pipeline_e2e_check.py::_launcher_argv`'s `launch-mdps-backfill-vm.sh`
       invocation — `market-data-processing-service@b16d44c`. **Code fix shipped, but the "verify with a fresh force/skip
