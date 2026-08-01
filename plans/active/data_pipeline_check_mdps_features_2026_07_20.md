@@ -388,13 +388,19 @@ tooling, historical floors, the cross-repo lineage, and dead-code — findings j
       cefi_hl_aster_batch_data_gaps_2026_06_22.md). **Next check-in should verify**: per-shard
       `DEPLOYMENT_COMPLETED exit_code=0` + real candle-object counts under `processed_candles/by_date/` for DEFI, not
       just RUNNING/heartbeat status.
-- [ ] 10-followup-a. [SCRIPT] P2. **NEW 2026-07-28 (slot-13, from todo 10's benchmark).** features-service `delta_one`
-      compute independently re-runs the per-(instrument,date) MDPS-candle-availability dependency check ONCE PER
-      SUB-FAMILY (technical_indicators/moving_averages/oscillators/volatility_realized — 4x total), directly observed
-      via the benchmark VM's `run.log` restarting its per-instrument alphabetical iteration order at the start of each
-      family pass. Cache the check result per `(instrument, date)` once per run and share it across all 4 sub-families —
-      a ~4x cut of the dominant pre-check phase (observed ~73.9 log-lines/s, this phase ran for minutes before any real
-      feature compute began on the large 1807-instrument CEFI universe). Repo: features-service.
+- [x] ✅ 10-followup-a. [SCRIPT] P2. **DONE 2026-08-01 (slot-3).** **NEW 2026-07-28 (slot-13, from todo 10's
+      benchmark).** features-service `delta_one` compute independently re-runs the per-(instrument,date)
+      MDPS-candle-availability dependency check ONCE PER SUB-FAMILY
+      (technical_indicators/moving_averages/oscillators/volatility_realized — 4x total), directly observed via the
+      benchmark VM's `run.log` restarting its per-instrument alphabetical iteration order at the start of each family
+      pass. Cache the check result per `(instrument, date)` once per run and share it across all 4 sub-families — a ~4x
+      cut of the dominant pre-check phase (observed ~73.9 log-lines/s, this phase ran for minutes before any real
+      feature compute began on the large 1807-instrument CEFI universe). Repo: features-service. Fixed via
+      `features-service@05bb2b43` (+`5849ecfc`): added an instance-level `DataLoader._candle_day_cache` keyed by
+      (instrument_id, data_type, date_str, timeframe, pipeline_mode) in `data_loader.py`'s `_probe_one_day`, shared
+      across every sub-family pass via the one `DataLoader` instance reused per run (see `batch_handler.py`). Added
+      `TestCollectDailyFrames.test_second_call_for_same_instrument_date_range_reuses_cache` asserting a second identical
+      `_collect_daily_frames` call hits `blob_exists` zero additional times.
 - [ ] 10-followup-b. [SCRIPT] P2. **NEW 2026-07-28 (slot-13, from todo 10's benchmark).** MDPS's per-date backfill
       subprocess loop pays a flat ~14.0s spawn+GCS-list-and-bail tax for EVERY calendar day attempted, even when that
       day has zero raw-tick input (measured: 13/15 empty days in the CEFI:BINANCE-FUTURES:trades benchmark window, i.e.
