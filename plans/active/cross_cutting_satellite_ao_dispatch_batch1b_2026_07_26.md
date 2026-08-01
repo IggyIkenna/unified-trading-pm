@@ -68,9 +68,9 @@ drift_direction: advance-code
 
 ## Todos
 
-- [ ] [MONITOR] P2. **Bake `deployment-service:latest`'s terraform default forward so it matches the live wave-launcher
-      runtime pin** (target repo: `deployment-service`). The `uts-prod-tradfi-wave-launcher` Cloud Run job was
-      runtime-re-pinned to `deployment-api@56f2060e` (carries `_write_last_run_sentinel`), but its terraform default
+- [x] ✅ [MONITOR] P2. **Bake `deployment-service:latest`'s terraform default forward so it matches the live
+      wave-launcher runtime pin** (target repo: `deployment-service`). The `uts-prod-tradfi-wave-launcher` Cloud Run job
+      was runtime-re-pinned to `deployment-api@56f2060e` (carries `_write_last_run_sentinel`), but its terraform default
       (`deployment-service:latest`) is still a SEPARATE, older image — a future `tofu apply` would silently revert the
       pin and stop the wave-launcher's host-cron sentinel write, producing a false `DP_CRON_DID_NOT_FIRE` page once the
       6h seed budget lapses. Trigger the `deployment-service-jobs-image-build` Cloud Build trigger from LDR (or confirm
@@ -80,7 +80,22 @@ drift_direction: advance-code
       the runtime pin can safely revert without regressing. **Done when**: `deployment-service:latest`'s pushed digest
       is confirmed to contain `_write_last_run_sentinel`, and the checkbox for this item in
       `dp_alert_flood_triage_and_monitor_fixes_2026_06_23.md` is flipped `[x]` citing the build id / commit sha
-      verified. Source: `dp_alert_flood_triage_and_monitor_fixes_2026_06_23.md`.
+      verified. Source: `dp_alert_flood_triage_and_monitor_fixes_2026_06_23.md`. — **Already resolved upstream
+      2026-07-28** (source doc's own copy of this checkbox, `dp_alert_flood_triage_and_monitor_fixes_2026_06_23.md`
+      lines 151-163, archived `[x]` "no code change needed — closed by 5 weeks of normal CI activity" — this todo was
+      drafted 2026-07-26, 2 days before that upstream resolution, so this copy went stale unflipped). **Fresh
+      re-verification 2026-08-01 (slot 11, data_engineering), no code/terraform change needed:** (1)
+      `gcloud builds list --filter="substitutions.TRIGGER_NAME=deployment-service-jobs-image-build"` shows the trigger
+      continuing to fire + SUCCEED on every push (5 consecutive successes 2026-07-31→2026-08-01, most recent
+      `802ac483-c08a-4b29-b820-72014dec9f6b` @ 2026-08-01T01:31:17Z, commit `248b715e` — the LDR→main promote commit);
+      (2) `gcloud artifacts docker images list … deployment-service --filter="tags:latest"` shows the current
+      `deployment-service:latest` digest `sha256:b48cfdc…` created 2026-08-01T01:35:00, i.e. built from that exact
+      commit; `git show 248b715e:scripts/wave_launcher.py` confirms `_write_last_run_sentinel` present (def line 185,
+      call line 425); (3) `gcloud run jobs describe     uts-prod-tradfi-wave-launcher` shows the job's
+      `spec.template.spec.template.spec.containers[0].image` already resolves to `…/deployment-service:latest` directly
+      (the tag, not a separately-pinned digest) — the runtime-pin-vs-terraform-default split this todo warns about no
+      longer exists today, so a `tofu apply` is harmless. Matches the source doc's 2026-07-28 finding exactly,
+      re-confirmed live 3 days later.
 - [ ] [SCRIPT] P2. **features-service coverage/script-canon cleanup** — three bounded follow-ups from the 2026-06-10
       coverage session: (1) ~~fix the per-module `pytest --cov=features_service.<module>` scipy/numpy/pytest-cov
       double-import crash on Python 3.13~~ **DONE 2026-07-31 — features-service@60992d3e** (see
@@ -128,28 +143,28 @@ drift_direction: advance-code
       required lifecycle marker.
 
       **PARTIAL PROGRESS 2026-07-31 (slot 10) — lifecycle-marker stamping sub-piece DONE, classify/delete/relocate
-                      NOT done.** Fleet-wide `grep -rL '^# Delete-when:' */scripts/ --include='*.py' --include='*.sh'` found 32
-                      remaining unstamped scripts across 12 repos (client-reporting-api, deployment-service, deployment-ui,
-                      e2e-testing, features-service, fund-administration-service, greeks-service, instruments-service,
-                      market-data-processing-service, market-tick-data-service, unified-api-contracts, unified-trading-pm) — every
-                      other repo in the fleet was already fully stamped from the prior rollout. Stamped all 32 using the
-                      already-decided classification embedded in each script (existing `Epic:`/`Lifecycle:` prose where present) or
-                      the nearest sibling-file epic convention (mechanical, no new judgment calls), then shipped per-repo via the
-                      normal QG→quickmerge flow: client-reporting-api@c47835f, deployment-service@1261ce7, deployment-ui@5a4ce5a,
-                      e2e-testing@42be3c1, features-service@3966bfcb, fund-administration-service (pending final quickmerge, commit
-                      c0402e0 already QG-green), greeks-service@aee891d, instruments-service@240d80a7,
-                      market-data-processing-service@0d43a64, market-tick-data-service@fe1c4ca2, unified-api-contracts@a4b1345d
-                      (recovered via reflog after a quickmerge branch-reset bug — see
-                      `plans/archive/issues/quickmerge_agent_regate_resets_branch_loses_local_commit_2026_07_31.md`), unified-trading-pm
-                      (this commit). **The classify/delete/relocate portion of this item's done-when is intentionally NOT attempted
-                      here** — that work requires per-script KEEP/DELETE/DEPRECATE/PROMOTE-TO-CLI judgment calls (campaign-gating
-                      awareness, GCS-orphan-verification before any delete) that are explicitly scoped as
-                      GATED+REVIEWED/human-judgment in `plans/active/repo_scripts_governance_audit_2026_06_18.md` (`assigned_vm: NA`)
-                      — an AO worker attempting a fleet-wide classify+delete sweep unsupervised would risk deleting
-                      campaign-in-flight one-offs (that governance-audit doc's own Finding 1 flags this exact risk for
-                      instruments-service/MTDS). This item stays open; the marker-stamping done-when clause is satisfied, the
-                      delete/relocate clauses are not — do not re-flip this checkbox until the governance-audit plan's Phase-1
-                      delete/deprecate/promote execution actually lands.
+                          NOT done.** Fleet-wide `grep -rL '^# Delete-when:' */scripts/ --include='*.py' --include='*.sh'` found 32
+                          remaining unstamped scripts across 12 repos (client-reporting-api, deployment-service, deployment-ui,
+                          e2e-testing, features-service, fund-administration-service, greeks-service, instruments-service,
+                          market-data-processing-service, market-tick-data-service, unified-api-contracts, unified-trading-pm) — every
+                          other repo in the fleet was already fully stamped from the prior rollout. Stamped all 32 using the
+                          already-decided classification embedded in each script (existing `Epic:`/`Lifecycle:` prose where present) or
+                          the nearest sibling-file epic convention (mechanical, no new judgment calls), then shipped per-repo via the
+                          normal QG→quickmerge flow: client-reporting-api@c47835f, deployment-service@1261ce7, deployment-ui@5a4ce5a,
+                          e2e-testing@42be3c1, features-service@3966bfcb, fund-administration-service (pending final quickmerge, commit
+                          c0402e0 already QG-green), greeks-service@aee891d, instruments-service@240d80a7,
+                          market-data-processing-service@0d43a64, market-tick-data-service@fe1c4ca2, unified-api-contracts@a4b1345d
+                          (recovered via reflog after a quickmerge branch-reset bug — see
+                          `plans/archive/issues/quickmerge_agent_regate_resets_branch_loses_local_commit_2026_07_31.md`), unified-trading-pm
+                          (this commit). **The classify/delete/relocate portion of this item's done-when is intentionally NOT attempted
+                          here** — that work requires per-script KEEP/DELETE/DEPRECATE/PROMOTE-TO-CLI judgment calls (campaign-gating
+                          awareness, GCS-orphan-verification before any delete) that are explicitly scoped as
+                          GATED+REVIEWED/human-judgment in `plans/active/repo_scripts_governance_audit_2026_06_18.md` (`assigned_vm: NA`)
+                          — an AO worker attempting a fleet-wide classify+delete sweep unsupervised would risk deleting
+                          campaign-in-flight one-offs (that governance-audit doc's own Finding 1 flags this exact risk for
+                          instruments-service/MTDS). This item stays open; the marker-stamping done-when clause is satisfied, the
+                          delete/relocate clauses are not — do not re-flip this checkbox until the governance-audit plan's Phase-1
+                          delete/deprecate/promote execution actually lands.
 
 - [x] ✅ [CODE] P2. **features-service — fix `odds_features_exporter.py` velocity-accel fallback NaN/math semantics
       (dead-code + a legit-`0.0`-drop bug).** `_compute_velocity_from_pivoted`'s (lines ~509-514) elif/else acceleration
