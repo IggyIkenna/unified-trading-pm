@@ -156,5 +156,5 @@ shipping):
       instead of silently no-op'ing. Re-run live against the real fleet: the script now exits 1 and surfaces real drift
       across 15 repos (dead extraPaths, missing extraPaths, 5 import-vs-manifest gaps) — captured as tracked todos per
       the findings-closure rule:
-      `plans/active/issues/basedpyright_extrapaths_pyproject_migration_findings_2026_08_01.md`. Evidence:
-      `unified-trading-pm@<sha>` (this commit). (repo: unified-trading-pm).
+      `plans/archive/issues/basedpyright_extrapaths_pyproject_migration_findings_2026_08_01.md` (all 14 todos done,
+      archived). Evidence: `unified-trading-pm@<sha>` (this commit). (repo: unified-trading-pm).

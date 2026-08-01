@@ -8,7 +8,7 @@ summary: >-
   extraPath entry), plus 5 genuine import-vs-manifest gaps. All previously invisible because the tool unconditionally
   printed "OK" (it only ever read a pyrightconfig.json file, and zero of the 24 workspace-manifest.json repos still have
   one).
-status: open
+status: resolved
 nature: notes
 asset_group: [infrastructure]
 stage: [meta]
@@ -43,6 +43,10 @@ source:
   ]
 assigned_vm: planning
 resolved_by:
+  "2026-08-01 — all 14 per-repo todos fixed + shipped, each verified via a clean re-run of
+  `check-pyrightconfig-extrapaths.py` (zero remaining warnings) plus a green `quality-gates.sh` for that repo. Final
+  item (unified-trading-library@15ed0470) closed the doc — zero open todos, unlocked, archived same-session per the
+  archive-immediately rule."
 locked_by:
 execution_scope: orchestrator-agent
 drift_direction: advance-code
