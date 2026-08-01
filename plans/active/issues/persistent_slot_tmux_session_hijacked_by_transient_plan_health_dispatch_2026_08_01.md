@@ -159,10 +159,12 @@ boot-loop doc's citation of `server/prompts.py` and `server/routes/slots_worker.
       collision-aware: skip a tmux session that already has a live `AgentRow` for a persistent role (`review`, `main`,
       `monitor`), and pick a different / dedicated session for the transient dispatch instead. (repo:
       agent-orchestrator)
-- [ ] [BACKEND] P1. Audit whether `main` and `monitor` (the fleet's other persistent, single-instance roles) are
+- [x] ✅ [BACKEND] P1. Audit whether `main` and `monitor` (the fleet's other persistent, single-instance roles) are
       reachable as targets by the same transient-dispatch selection logic, per main agent's own concern in chat
       (2026-08-01T13:06:55Z). If they are, this is materially higher severity than the review-role case documented here
-      — file a follow-up or fold into the fix above. (repo: agent-orchestrator)
+      — file a follow-up or fold into the fix above. (repo: agent-orchestrator) — audited against
+      agent-orchestrator@85590a6 (code-read only, no fix needed for this todo — verdict + evidence in the Progress Log
+      below)
 - [ ] [BACKEND] P2. Make `stale_spawn_base_role_cleared` (or a sibling event) fire a distinct, higher-visibility signal
       when the role it's clearing belongs to a KNOWN transient-dispatch mode colliding with a KNOWN persistent role —
       today it reads as routine cleanup; it should be diagnosable as "a collision just happened" without needing to
@@ -194,3 +196,45 @@ boot-loop doc's citation of `server/prompts.py` and `server/routes/slots_worker.
   role file's explicit instructions (ignoring the mismatched generic task) rather than working the wrong task — worth
   checking whether slot 2 also shows a `stale_spawn_base_role_cleared`/similar event around this dispatch's start time
   when the assigned `backend_engineer` worker investigates.
+
+- **backend_engineer audit 2026-08-01 (slot 6, todo 2 — main/monitor exposure)**: Read `agent-orchestrator@85590a6`
+  `server/plan_health.py::_pick_free_slot`, `server/escalation.py::_pick_free_slot`,
+  `server/tmux_spawn.py::session_name`/`agent_session_name`, `server/main_agent_keeper.py`, `server/orm.py::SlotRow`,
+  `server/autospawn.py::ensure_review_agents`, and `agents/monitor.md`. **Verdict: `main` and `monitor` are NOT
+  reachable by this exact collision vector — structurally different from `review`, which IS confirmed reachable.**
+
+  - **`review` IS reachable (confirms this doc's root cause)**: review agents run inside the ordinary numbered-slot pool
+    — `ORCHESTRATOR_REVIEW_SLOTS` (`config.review_slot_ids()`) designates specific `slot_id`s to boot the `review`
+    prompt, but they still occupy the canonical `orch-slot-{slot_id}` tmux session (`tmux_spawn.py:60-62`) and a plain
+    `SlotRow` (`orm.py:73-84`, no role column). Both `plan_health.py::_pick_free_slot` (~line 160-210) and
+    `escalation.py::_pick_free_slot` (~line 205-230) iterate `list_slots(session)` — every configured `SlotRow` — and
+    the only liveness gate is `tmux_spawn.has_session(tmux_spawn.session_name(slot.slot_id))`. Neither function excludes
+    `review_slot_ids()` from selection (`plan_health.py` computes `review_ids` only to derive `ci_reserved_ids`, never
+    to skip them; `escalation.py`'s picker doesn't reference `review_slot_ids()` at all). So any numbered slot --
+    including a review slot -- reads "free" and becomes pickable the instant its tmux session is momentarily absent,
+    e.g. the gap between a `tmux_session_lost` kill and `AgentKeeper`'s next respawn tick. That gap is exactly what the
+    confirmed `12:48:12-32Z` collision on slot 1 exploited.
+  - **`main` is NOT reachable**: the main agent runs in a hardcoded SINGLETON tmux session,
+    `MAIN_SESSION_NAME = "orch-agent-main"` (`main_agent_keeper.py:81`) -- a fixed name, never `orch-slot-N` and never
+    tied to a `slot_id`/`SlotRow` at all. `_pick_free_slot` in both `plan_health.py` and `escalation.py` only ever
+    enumerates `list_slots(session)` (the `SlotRow` table, ids 1..N) and only ever tests
+    `tmux_spawn.session_name(slot_id)` = `f"orch-slot-{slot_id}"` for liveness. `"orch-agent-main"` is never in that
+    enumeration and never matches that name pattern, so no code path in either picker can select or address main's
+    session. This is a structural (session-namespace) separation, not a behavioral one that could regress under load.
+  - **`monitor` is NOT reachable**: per `agents/monitor.md`, monitor is manual-spawn-only, registers via
+    `POST /api/agents/register` with `role: "custom"` -- an `AgentRow`, not a `SlotRow` -- and is explicitly NOT wired
+    into `list_slots()`, autospawn, or any scheduler ("Do NOT wire it to autospawn or the plan-backlog loop -- that is
+    by design", monitor.md line 54-55). It is never assigned a numbered `slot_id` and its tmux session name is
+    operator-chosen (there is no canonical `orch-agent-monitor-*`/`orch-slot-N` convention forcing it into the slot
+    pool). Since both `_pick_free_slot` implementations select FROM `list_slots()`'s `SlotRow` rows (not by scanning
+    arbitrary live tmux sessions), a monitor session is invisible to the picker regardless of what tmux name it happens
+    to run under, UNLESS an operator manually launches a monitor session on a genuinely slot-numbered tmux name
+    (`orch-slot-N`) -- which would be a misuse of the documented pattern, not a code-reachable path.
+  - **Net**: main agent's own flagged concern (chat 2026-08-01T13:06:55Z) does not hold for this specific
+    `_pick_free_slot`-driven vector -- both roles sit in a disjoint session/table namespace from the numbered-slot pool
+    the pickers draw from. No code fix is needed for `main`/`monitor` under this todo. The confirmed, reachable exposure
+    remains `review` only (in BOTH `plan_health.py` and `escalation.py`'s `_pick_free_slot` -- todo 1's hypothesis named
+    only `plan_health_dispatch`, but `escalation.py` has the identical gap, not even referencing `review_slot_ids()` at
+    all), which is squarely todo 1's scope ("make the selection collision-aware: skip a tmux session that already has a
+    live `AgentRow` for a persistent role") -- todo 1's fix should cover both `_pick_free_slot` implementations, not
+    only the one this doc's title names.
