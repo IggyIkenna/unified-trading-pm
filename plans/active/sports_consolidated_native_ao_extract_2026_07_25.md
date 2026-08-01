@@ -430,7 +430,20 @@ context_scope:
       `market-data-processing-service@4eb53db`. `odds_horizon_bucket` correctly de-duped against a concurrent slot-7
       session on the same shard — needs a follow-up run once free. Full details:
       `plans/active/issues/bucket_iam_group_a_market_data_tick_prefix_missing_asset_group_2026_08_01.md` todo 3.
-      **Checkpoints 2/3 (mid, day=2025-12-24) and 3/3 (final, day=2025-12-18) remain** for next dispatch.
+      **Checkpoint 2/3 (mid, day=2025-12-24) DONE 2026-08-01 (slot 6)** — of the 4 SPORTS MVP shard cells,
+      `odds_horizon_bucket` is the only one with genuinely-captured raw-tick input on this day (confirmed even with
+      `--auto-day`; `arbitrage_opportunity`/`odds_movement`/`odds_snapshot` have no captured input for SPORTS at all —
+      honest `no_captured_input_for_cell` skip, not a bug). `odds_horizon_bucket` force+skip both ran to genuine
+      completion on real VMs (`mdps-backfill-sports-pipelinecheck-20260801-122555-2bf067` force, 36.8m;
+      `mdps-backfill-sports-pcskip-20260801-130846-2bf067` skip, 26.2m — skip confirmed genuine via VM launch argv
+      lacking `--force`): 542/594 instrument-timeframe cells wrote `empty_confirmed` honest-absence correctly (0 candles
+      is the correct outcome — every row fell outside its pre-match horizon or had no recognized market_key); 52/594 hit
+      a pre-existing, already-tracked bug
+      (`plans/active/issues/mdps_sports_honest_absence_writes_fail_fetchevidence_gate_2026_08_01.md`, opened same-day
+      from an independent DP-VM-001 escalation, auto-linked to this exact VM as a related crash), not a new regression.
+      Report (hand-completed from VM `run.log` ground truth after both local driver polls hit their own wrapper timeout
+      — VMs ran to genuine completion independently): `plans/audit/results/data_pipeline_e2e_check_mdps_2025_12_24.md`.
+      **Checkpoint 3/3 (final, day=2025-12-18) remains** for next dispatch.
 - [ ] [DATA] P1. **Track K (features) — run + cite 3 dated checkpoints (baseline/mid/final) for
       `data-pipeline-check-features` against sports.** Split 2026-08-01, see Track K (IS) above for the split rationale.
       Use `SPORTS_SMOKE_DATES` as the reference dates. (repo: features-service, skill-driven). **Done when**: 3 dated
