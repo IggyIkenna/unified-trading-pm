@@ -636,3 +636,26 @@ those commits landed). The escalation's own repo-blocker list (`GET /api/repo-bl
   own todo" convention. No further action from this escalation; pinged the authoring slot with the outcome and exited
   per the one-shot `cicd` role's bounded scope (fleet-wide runner capacity is
   `fleet_wide_qg_self_hosted_runner_capacity_crisis_2026_07_27.md`'s P0, not this wall-clearer's).
+- **2026-08-01 ~00:15Z (cicd escalation `agt-6fd2a1`, slot 10)**: same underlying wall as the entry directly above, the
+  promotion-PR variant — features-service PR #921 (LDR→main, "Option-B direct"), failing run `30668552631` (head SHA
+  `8aa3796b`, same commit family). `QG slice (tests)` failed on the identical
+  `tests/delta_one/unit/test_cross_timeframe_sanity.py::test_output_index_matches_input` pytest-timeout thread-dump,
+  hung inside `_add_lagged_features`'s pandas boolean-column-mask indexing (`take_nd` → `return out`);
+  `QG slice (checks)` separately failed on `Type check FAILED/timeout (exit=124)` (basedpyright hit the full 120s
+  `PYRIGHT_TIMEOUT` — same signature class as the #918 entry earlier in this doc). Reproduced locally end-to-end on
+  current LDR HEAD (`d8d6b63d`, contains PR #921's head as an ancestor): ran the full `bash scripts/quality-gates.sh`
+  backgrounded — `test_cross_timeframe_sanity.py` passed all 35 cases cleanly (dots + skips, no hang) well before the
+  run later got caught by the SAME host contention this doc documents (the tee'd log truncated mid-stream around 99%
+  with no final summary, consistent with a `qg-governor-watchdog` RAM-pressure SIGTERM or OOM-kill — `free -h` showed
+  18Gi/47Gi swap in active use at the time, and `ps aux` showed 5+ other slots' `quality-gates.sh` running concurrently
+  on this same shared host). Confirmed root facts: PR #921 `state=MERGED`, `mergedAt=2026-07-31T22:01:08Z` (2s after the
+  failing run's own trigger, self-merged via an independent already-green check on the same head SHA — identical race to
+  every prior entry in this doc); `live-defi-rollout` HEAD (`d8d6b63d`) has zero diff vs the failing SHA.
+  `GET /api/repo-blockers` → `{"open": []}`. LDR's own latest `quality-gates-v2` run (`30673928757`,
+  `workflow_dispatch`) was still `queued` 48+ minutes at investigation time with no runner pickup — left alone per this
+  doc's established "resolves once host contention clears" precedent (canceling a queued run on an already-saturated
+  single-runner pool doesn't help and risks adding load). No code/test change made or needed; no repo push required —
+  nothing to add to todo 7 beyond this corroboration (same mechanism, same commit family, now via the promotion-PR path
+  instead of the direct-LDR-push path). Slot left clean (features-service 0 commits ahead of `origin/live-defi-rollout`,
+  nothing to commit). Pinged the authoring slot with the outcome and exiting per the one-shot `cicd` role's bounded
+  scope.
