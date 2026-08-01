@@ -26,7 +26,7 @@ tags: [defi, cefi, onchain, mtds, dependency-checker, manifest, perp_funding, ga
 related:
   [
     /plans/active/data_pipeline_check_mdps_features_2026_07_20.md,
-    /plans/active/issues/features_defi_onchain_mtds_ingestion_claim_needs_reverify_2026_07_29.md,
+    /plans/archive/issues/features_defi_onchain_mtds_ingestion_claim_needs_reverify_2026_07_29.md,
     /plans/active/issues/cefi_perp_funding_kalshi_polymarket_residual_and_capture_gap_2026_07_30.md,
     /plans/active/issues/defi_hyperliquid_perp_funding_derivative_ticker_divergence_2026_07_28.md,
   ]
