@@ -14,10 +14,11 @@ summary: >-
   did not separately pin `MTDS_TARBALL_SHA`) ran without these fixes. Confirmed real backfill-fleet VM activity occurred
   inside the window, but the one concrete VM I traced (`cefi-queue-heavy-binancefutu-x17`) turned out to run the Tardis
   HISTORICAL-file backfill path, not the live-WS path the fixes target — so it is likely unaffected by these SPECIFIC
-  fixes. I could not, within this audit's scope, locate a production continuous LIVE-capture VM launch inside the window
-  to confirm or rule out actual impact — this needs a focused follow-up (manifest capture_status / row-count check for
-  the named venues over the window) before it can be closed as either "no impact" or escalated to a confirmed P0
-  data-correctness incident.
+  fixes. **UPDATE 2026-08-01 (todo #2 closed): CONFIRMED P0.** The manifest-level check found `ASTER book_snapshot_5` on
+  the live consolidated VM (`mtds-live-cefi-consolidated-*`) 100% empty (zero `captured` rows) continuously from
+  `2026-07-30` through the present moment (`2026-08-01T14:00Z`, ~1h20m after the tarball was finally rebuilt) — the fix
+  never reached production because the `LONG_LIVED_LIVE` VM was never relaunched. See "## CONFIRMED — 2026-08-01
+  manifest check" below for the full breakdown + the new `[INFRA] P0` relaunch todo.
 status: open
 nature: issue
 asset_group: [cefi]
@@ -33,7 +34,7 @@ related:
   ]
 created: "2026-08-01"
 parent_epic: infrastructure_master
-priority: P1
+priority: P0
 assigned_vm: planning
 execution_scope: orchestrator-agent
 drift_direction: advance-code
@@ -146,6 +147,51 @@ embedding `20260730`/`20260731`/`20260801`, ~1050 total launches in that date ra
 - Per the data-pipeline-correctness HARD RULE, a credible risk like this cannot be silently closed — it needs a
   manifest-level check, not just code-archaeology, before anyone can say "no impact."
 
+## CONFIRMED — 2026-08-01 manifest check (todo #2)
+
+Read the single `market-data-tick-cefi-prd-{project}/_index/availability_index.parquet` object, filtered (row-group
+pushdown, `columns=`+`filters=` — no whole-corpus walk) to `date` in `[2026-07-30, 2026-08-01]`, then
+per-`(venue, data_type)` breakdown by `pipeline_mode`/`capture_status`/`attempted_at`. One-off script (delete-when this
+doc closes): `market-tick-data-service/scripts/check_cefi_tarball_stale_window_capture_status_2026_08_01.py`.
+
+**Venue-name trap avoided**: the manifest carries `KALSHI-PERP` (hyphen) + `KALSHI_PERP` (underscore, near-empty) +
+`POLYMARKET-PERP` (hyphen — NOT `POLYMARKET_PERP` as this doc's todo originally spelled it). Confirmed the vocabulary
+the writer actually emits before concluding "no rows" for the wrong spelling (the exact failure class
+`/codex/05-infrastructure/vm-tarball-deployment.md`'s sibling docs warn about).
+
+**CONFIRMED P0 — `ASTER book_snapshot_5` (`pipeline_mode=live_aster`, the `mtds-live-cefi-consolidated-*` VM):** **100%
+`empty_confirmed`, ZERO `captured` rows**, every single day `2026-07-30` → `2026-07-31` → `2026-08-01` (513/513/513
+rows, `instrument_count` sum = 0 on all three days) — an exact, unbroken match for commit `4f244845`'s own description
+("fixes 100% empty live capture" for BINANCE-FUTURES + ASTER book_snapshot_5). **Still ongoing at check time**: the most
+recent `attempted_at` on `2026-08-01` is `14:00:01Z` (~1h20m AFTER the `mtds-code` tarball was finally rebuilt at
+`12:42:24Z`) and is STILL 100% `empty_confirmed` — because `lifecycle_class=LONG_LIVED_LIVE` means the running VM
+(`mtds-live-cefi-consolidated-20260731-211041`, booted `2026-07-31T21:10:49Z`, unpinned) never re-fetches code on its
+own; only a manual relaunch pulls the now-fixed tarball. **This is the confirmed incident this todo was written to catch
+— see new todo below.**
+
+**Partially recovered (NOT currently a confirmed zero stretch, but WAS broken during part of the window):**
+
+- `BINANCE-FUTURES book_snapshot_5` (`live_binance`): 100% empty on `2026-07-30` (717/717 `empty_confirmed`), then
+  recovered starting `2026-07-31T~22:00Z` (716/718 `captured` that day) and fully healthy on `2026-08-01` (717/717
+  `captured`, `84,474` total instrument-rows as of `14:00Z`). Recovery timing does not cleanly line up with the
+  tarball-freshness timeline (the tarball was still stale when captures resumed) — root cause of why BINANCE self-healed
+  while ASTER did not is NOT determined by this manifest-only check (would need code-path comparison, out of this todo's
+  scope); flagging the discrepancy rather than guessing.
+- `OKX-FUTURES book_snapshot_5` / `derivative_ticker` (`live_okx`): 100% empty on `2026-07-30`, then PARTIAL recovery
+  (only ~24% captured, 34/139 rows) on both `2026-07-31` and `2026-08-01` — still substantially degraded, not fully
+  healthy, but not a clean 100%-zero stretch either.
+
+**Separate, PRE-EXISTING findings (NOT caused by this tarball-staleness incident — both predate `2026-07-30`, filed here
+for visibility per the data-pipeline-correctness HARD RULE, not to be conflated with the confirmed P0 above):**
+
+- `OKX-FUTURES trades` (`live_okx`): 100% `empty_confirmed`/`expected_unattempted` (zero `captured`) on EVERY day
+  `2026-07-30` through `2026-08-01` (still zero as of `13:52Z` today) — but also zero-or-near-zero on most days back to
+  `2026-07-20` (intermittent chronic issue, not a new regression from this incident).
+- `POLYMARKET-PERP perp_funding` (`batch_polymarket_perp` — a BATCH path, NOT the live-capture VM/tarball this doc is
+  about): `attempted_failed` every day `2026-07-28` through `2026-07-31` (zero `captured` ever in this window). Chronic,
+  predates the window, unrelated to tarball staleness.
+- `KALSHI-PERP`/`HYPERLIQUID` `perp_funding`: healthy (captured daily, both batch paths) — no issue.
+
 ## Todos
 
 - [x] ✅ [DATA] P1. Identify the actual deployment mechanism for continuous live CEFI tick capture (VM vs. long-lived
@@ -156,12 +202,26 @@ embedding `20260730`/`20260731`/`20260801`, ~1050 total launches in that date ra
       automated restart cadence (operator-manual relaunch only, singleton-locked, never auto-killed), and the
       currently-running instance (`-20260731-211041`) booted `2026-07-31T21:10:49Z` — inside the stale window,
       unpinned.**
-- [ ] [DATA] P1. Check manifest `capture_status`/row-counts for `BINANCE-FUTURES`, `ASTER` (`book_snapshot_5`),
+- [x] ✅ [DATA] P1. Check manifest `capture_status`/row-counts for `BINANCE-FUTURES`, `ASTER` (`book_snapshot_5`),
       `OKX-FUTURES` (`derivative_ticker`), and `KALSHI_PERP`/`POLYMARKET_PERP`/`HYPERLIQUID` `perp_funding` for
-      `2026-07-30` through `2026-08-01`. A confirmed zero/empty-row stretch for any of these during the relevant
-      sub-window is a **confirmed P0 data-correctness incident** — escalate immediately per the HARD RULE (do not
-      defer). If no such stretch is found (e.g. the live host never restarted in the window, or was already pinned
-      separately), downgrade/close this doc with that evidence cited. (repo: market-tick-data-service)
+      `2026-07-30` through `2026-08-01`. **CONFIRMED P0**: see "## CONFIRMED — 2026-08-01 manifest check" above —
+      `ASTER book_snapshot_5` is a currently-ongoing, unbroken 100%-empty stretch across the whole window on the live
+      consolidated VM. (repo: market-tick-data-service)
+- [ ] [INFRA] P0. **Manually relaunch `mtds-live-cefi-consolidated-*`** (launcher
+      `deployment-service/scripts/vm/launch-mtds-live-cefi-consolidated.sh`) so it re-pulls the now-rebuilt `mtds-code`
+      tarball (`b2a450e87a30`, rebuilt `2026-08-01T12:42:24Z`, contains `4f244845` + `8a6bbc97`) and resumes real
+      `ASTER book_snapshot_5` capture (currently 100% empty since at least `2026-07-30`). Before relaunching: confirm
+      this is genuinely the stale-tarball case (current instance `-20260731-211041` booted `2026-07-31T21:10:49Z`,
+      unpinned, no `TARBALL_PINS.json` — matches) per the VM-delete guardrail
+      (`unified-trading-pm/agents/data_engineering.md` § "VM-delete guardrail") — this VM is a healthy, actively-writing
+      `LONG_LIVED_LIVE` instance for its OTHER 16 shards, so a relaunch briefly interrupts ALL of them, not just ASTER;
+      weigh a low-traffic relaunch window vs. the ongoing correctness cost of leaving ASTER book_snapshot_5 broken.
+      After relaunch: re-run `check_cefi_tarball_stale_window_capture_status_2026_08_01.py` (or its successor) against
+      the new day's data to confirm `ASTER book_snapshot_5` resumes `captured` rows. (repo: deployment-service)
+- [ ] [DATA] P3. File a SEPARATE issue doc for the two pre-existing, unrelated chronic findings surfaced incidentally by
+      this check: `OKX-FUTURES trades` intermittent zero-capture (going back to at least `2026-07-20`, live pipeline)
+      and `POLYMARKET-PERP perp_funding` permanently `attempted_failed` since at least `2026-07-28` (batch pipeline).
+      Neither is caused by the tarball-staleness incident this doc tracks. (repo: market-tick-data-service)
 
 ## Codex SSOTs
 
