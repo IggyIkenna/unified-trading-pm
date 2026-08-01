@@ -465,3 +465,15 @@ and the residual-KeyError defense-in-depth path.
   (`market-tick-data-service@6a067cf1` aiodns, `@6c6fab03` HYPERLIQUID 429/K\*-symbol) confirmed still ancestors of
   `origin/live-defi-rollout` via `git merge-base --is-ancestor`. **No code change, no new todo** — cross-referenced into
   `dp_escalation_worker_dispatch_no_open_issue_check_2026_07_29.md`'s Progress Log as well.
+- **2026-08-01 (data_pipeline_failure escalation worker, agt-066ced, slot 7) — `(cefi, derivative_ticker)`'s 12th+
+  dispatch, a fresh (non-duplicate) escalation_id, still zero new work.** Re-fired again: 158,475/1,522,499
+  attempted_failed (10.4%), labeled "STATIC BACKLOG — no new attempted_failed activity in 3d". Numerator (158,475) is
+  byte-identical to every verified reading since agt-40f31f's 2026-07-30 confirmation — only `attempted` (denominator)
+  grew (1,518,154 → 1,522,499, +4,345), consistent with ordinary forward-progress elsewhere, not this backlog moving.
+  Per the established skip rule (no new `written_at` activity since the last verified reading), did not re-run the live
+  bounded manifest read — did only a `git merge-base --is-ancestor` check on both shipped fix commits
+  (`market-tick-data-service@6a067cf1` aiodns, `@6c6fab03` HYPERLIQUID 429/K\*-symbol), both still ancestors of
+  `origin/live-defi-rollout`; working tree clean, no uncommitted changes in this slot's `market-tick-data-service`
+  clone. **No code change, no new todo** — same redundant-dispatch waste
+  `dp_escalation_worker_dispatch_no_open_issue_check_2026_07_29.md` already tracks (still `status: open`, P2, awaiting
+  an operator/design decision on Option A/B/C that this 12th+ dispatch further corroborates the need for).

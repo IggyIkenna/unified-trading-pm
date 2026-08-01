@@ -278,6 +278,15 @@ regression) is worse.**
   book_snapshot_5 doc, no GCS read, no code change. Combined across both tracked conditions ((cefi, derivative_ticker)
   at 11th+, (cefi, book_snapshot_5) at 16th+), this backlog has now consumed 27+ full orchestrator-agent dispatches —
   still awaiting the operator/design decision on Option A/B/C.
+- **2026-08-01 (data_pipeline_failure escalation worker, agt-066ced, slot 7) — `(cefi, derivative_ticker)` now at its
+  12th+ dispatch.** Fresh (non-duplicate) escalation_id, re-fired: 158,475/1,522,499 attempted_failed (10.4%), labeled
+  "STATIC BACKLOG — no new attempted_failed activity in 3d". Numerator byte-identical to every verified reading since
+  2026-07-30; only `attempted` (denominator) grew +4,345. Skipped the live manifest read per the established rule (no
+  new `written_at` activity since the last verified reading); did only a `git merge-base --is-ancestor` check on both
+  shipped fix commits (`market-tick-data-service@6a067cf1`, `@6c6fab03`), both still in place. Session cost: two file
+  reads + a git-ancestor check + a Progress Log append in the derivative_ticker doc, no GCS read, no code change.
+  Combined across both tracked conditions, this backlog has now consumed 28+ full orchestrator-agent dispatches — still
+  awaiting the operator/design decision on Option A/B/C.
 - **na-eligibility-audit 2026-08-01**: KEEP-NA, valid -- Full audit rationale: Both remaining open todos are genuinely
   operator/design-gated. Todo 1 is explicitly an 'Operator/main-agent decision' among three named options (A/B/C) with
   no decision made yet -- a textbook judgment call, not a checkable fact or scoped code change. Todo 2 is contingent on
