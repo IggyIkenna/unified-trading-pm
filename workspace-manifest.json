@@ -208,10 +208,10 @@
       "ldr_ci_status": "GREEN",
       "cascade_invalidated_by": "unified-trading-library=0.66.0",
       "codebase_health": {
-        "large_file_count": 0,
+        "coverage_pct": null,
         "qg_red_reason": null,
-        "coverage_pct": 87.6,
-        "warn_file_count": 0
+        "warn_file_count": 0,
+        "large_file_count": 0
       }
     },
     "client-reporting-api": {
@@ -342,9 +342,9 @@
       "ldr_ci_status": "GREEN",
       "cascade_invalidated_by": "unified-trading-library=0.66.0",
       "codebase_health": {
+        "coverage_pct": null,
         "qg_red_reason": null,
         "warn_file_count": 18,
-        "coverage_pct": 83.15,
         "large_file_count": 0
       }
     },
