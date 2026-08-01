@@ -28,7 +28,7 @@ related:
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]
 created: 2026-07-25
-last_updated: "2026-07-31"
+last_updated: "2026-08-01"
 parent_epic: infrastructure_master
 assigned_vm: NA
 execution_scope: local-only
@@ -339,3 +339,43 @@ not data-pipeline).
   retagged directly (owning-tranche-writes-only rule, concurrent sharded workers). Findings 1-2 from the 14:06 run
   re-checked live: both still open/unreconciled, no drift. Batch4 re-checked: still `status: draft`, untouched. Deferred
   gates G1/G3 re-checked against live checkbox state: both unchanged, nothing newly cleared.
+- **2026-08-01** — `/ag-closeout-audit infra` re-run (autonomous mode, scheduled daily run, slot 5). Re-derived the
+  candidate set (`generate_ag_closeout_audit_candidates.py --tranche infra`: 39 members, 10 covering docs, 1 never-cited
+  — `issues/deployment_scripts_bucket_soft_delete_retention_drift_2026_07_31.md`, a genuine but operator-gated
+  terraform-drift judgment call, correctly non-batchable). Per the iterative-drain methodology, re-checked
+  batch1/batch3's tracked Deferred gates (G1-G6) live before any fresh Phase-1 triage. **G3 cleared**: the
+  `DataStatusTab.tsx` `DATA_PIPELINE_SERVICES` sequencing gate (held since 2026-07-26, entry #35) was waiting on
+  `cross_cutting_satellite_ao_dispatch_batch1_2026_07_26.md` item (B) — confirmed shipped today
+  (`deployment-ui@727298b`, 2026-08-01 01:42 UTC) and the file confirmed genuinely quiet corpus-wide (no other active
+  plan holds an unshipped claim on it). Drafted
+  [infra_satellite_ao_dispatch_batch5_2026_08_01.md](/plans/active/infra_satellite_ao_dispatch_batch5_2026_08_01.md)
+  (single todo, no finalize twin per the single-todo carve-out, `status: draft` — operator flip required). G1/G2
+  (`base-service.sh`/`base-library.sh` serialization) remain gated, unchanged. G4 (`PYTEST_UNIT_DIR`) reconfirmed
+  already resolved elsewhere (shipped 2026-07-31). G5's MTDS >900-line-tail sub-item reconfirmed already resolved
+  elsewhere too (verified 2026-07-27, stale tracking note only, not new material). G6 stays owned by tradfi, unchanged.
+  The 3 carried-forward findings from the 2026-07-31 parked-findings doc were re-verified live: all still open, no
+  drift. 3 NEW findings surfaced this run (a stale `draft` banner in batch3's body text contradicting its own
+  already-`active` frontmatter; a self-referential citation blind spot in `generate_ag_closeout_audit_candidates.py`'s
+  never-cited pre-filter, discovered because it silently dropped the still-live
+  `ao_self_pull_wedged_by_main_inbox_untracked_file_2026_07_30.md` mistag from this run's never-cited list purely
+  because a prior Progress Log entry named the file in prose; and a second likely `asset_group: [meta]` mistag whose
+  real owner is probably `ao`, not `infra`) — all recorded in
+  [issues/ag_closeout_audit_infra_parked_2026_08_01.md](/plans/active/issues/ag_closeout_audit_infra_parked_2026_08_01.md)
+  per the parked-findings hard rule. **Linkage discoverability fix**: `check_ag_closeout_linkage.py` showed the
+  shrinking-ratchet count risen to 78 (baseline 69) — corpus-wide, mostly other tranches' concurrent activity (not this
+  run's doing; this run's own 2 new docs are both correctly linked, verified). Of the 78, exactly 7 carry
+  `asset_group: [infrastructure]` and are this tranche's own responsibility to link. Adding them here per the
+  established discoverability-mention remedy (SKILL.md's own prescribed fix: name the doc in the hub so the graph/
+  mention check finds it) — none of these were tracked in any Track above:
+  `basedpyright_extrapaths_pyproject_migration_findings_2026_08_01.md` (self-dispatched),
+  `ci_registry_drift_uac_utl_stale_tag_version_conflict_2026_07_26.md` (self-dispatched),
+  `deployment_registry_dualwrite_flag_not_propagated_to_vm_launchers_2026_07_30.md` (self-dispatched),
+  `quickmerge_stage5_push_loses_fast_forward_race_under_high_churn_2026_07_27.md` (self-dispatched),
+  `issues/legacy_bucket_template_literals_2026_07_16.md` (`assigned_vm: NA` — this is G5 item 5 from batch1's own
+  Deferred tracking, event-timing-gated, non-batchable, unchanged),
+  `issues/shared_host_home_filesystem_full_2026_07_26.md` (`assigned_vm: NA` — not previously read by this skill;
+  flagging for a future Phase-1 pass to classify, not classified this run), and
+  `issues/vm_launcher_class_b_no_stall_kill_gap_2026_07_27.md` (`assigned_vm: NA` — this is G5 item from batch3's own
+  non-batchable table, blast-radius-judgment-gated, unchanged). Re-ran the linkage check after adding these mentions:
+  71/78 (7 infra orphans resolved; the residual 71 are other tranches', outside this run's remit — flagged in this run's
+  `evidence` for visibility, not fixed here).
