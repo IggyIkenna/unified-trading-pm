@@ -490,8 +490,6 @@ baseline:
     count: 7
   market-tick-data-service/market_tick_data_service/market_interface/adapters/sports/odds_api_adapter.py:
     count: 9
-  market-tick-data-service/market_tick_data_service/market_interface/adapters/sports/polymarket_adapter.py:
-    count: 7
   market-tick-data-service/market_tick_data_service/market_interface/adapters/sports/sportradar_adapter.py:
     count: 7
   market-tick-data-service/market_tick_data_service/market_interface/adapters/tradfi/baker_hughes_adapter.py:

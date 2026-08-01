@@ -261,12 +261,22 @@ named) rather than left as prose, per the findings-closure hard rule.
       path, clarified the MTDS FootystatsAdapter is a distinct implementation from the live instruments-service
       FootyStats source, and replaced the stale `ikenna_orchestrator/pings/slot_9.md` credential-approval reference
       (retired file-ping system) with a note that it no longer tracks live state. Full QG green.
-- [ ] [BACKEND] P2. Resolve the undocumented duplicate `PolymarketAdapter` classes —
+- [x] ✅ [BACKEND] P2. Resolve the undocumented duplicate `PolymarketAdapter` classes —
       `market_interface/adapters/sports/     polymarket_adapter.py::PolymarketAdapter(BaseSportsAdapter)` vs the
       live-routed `market_interface/adapters/prediction/polymarket_adapter.py::PolymarketAdapter(BasePredictionAdapter)`
       (market-tick-data-service). Add an explicit comment in the sports-package version stating it is NOT live-routed
       (the prediction-package version is), or delete it if it's fully superseded — per rule 3, silence on which is live
-      is itself the violation. (repo: market-tick-data-service)
+      is itself the violation. (repo: market-tick-data-service) — market-tick-data-service@5cebdc71. Deleted the
+      sports-package `PolymarketAdapter` (fully superseded — the prediction-package version's implementation is a strict
+      superset: retry/CF-11, lifecycle gating, GCS batch integration, and `market_interface/__init__.py` never exported
+      the sports one anyway). Fixed two stale `mock.patch` targets in `test_sports_adapters.py`'s
+      `TestSportsPolymarketAdapter` (they named the now-deleted sports module path but were already exercising the
+      prediction adapter, since `market_interface.PolymarketAdapter` already resolved there) and corrected the
+      misleading docstrings in both `test_sports_adapters.py` and `test_sports_polymarket_adapter.py` that claimed to
+      test "the sports PolymarketAdapter" — both files have always exercised the prediction-package implementation.
+      Scoped-removed the stale baseline entry from `adapter_contract_baseline.yaml` (same pattern as the
+      Betfair/Matchbook item above). Full QG green (9821 passed); adapter-contract-regression clean (329 baselined
+      files).
 - [x] ✅ [BACKEND] P2. Add logging to `footystats_adapter.py::FootystatsAdapter`'s schema-validation-failure fallback
       (market-tick-data-service, `get_leagues:137-138`, `get_matches:172-173`, `get_teams:196-197`) — each currently
       silently substitutes the raw unvalidated dict with no log call; add a `logger.warning`/`log_event` naming the
