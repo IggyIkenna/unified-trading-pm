@@ -27,6 +27,8 @@ related:
     /codex/05-infrastructure/vm-launcher-runbook.md,
     /codex/05-infrastructure/orchestrator-cloud-identity-self-service.md,
     /plans/active/sports_consolidated_native_ao_extract_2026_07_25.md,
+    /plans/active/issues/bucket_iam_group_a_market_data_tick_prefix_missing_asset_group_2026_08_01.md,
+    /plans/active/issues/mtds_oom_preflight_deployment_env_short_stg_wrong_bucket_suffix_2026_08_01.md,
   ]
 created: "2026-08-01"
 parent_epic: infrastructure_master
@@ -79,7 +81,7 @@ confirmed by reading each driver's launcher-argv builder:
 | `features-service`               | `pipeline_e2e_check.py::_build_launch_argv`                                      | **NO (fixed this session, see below)**                                                                          |
 | `instruments-service`            | `pipeline_e2e_check.py::_build_launcher_argv`                                    | NO                                                                                                              |
 | `market-data-processing-service` | `pipeline_e2e_check.py::_launcher_argv`                                          | NO (only fail-fast-validates `DEPLOYMENT_ENV` if the CALLER'S shell env already set one — never sets it itself) |
-| `market-tick-data-service`       | not yet inspected — same driver family, presumed same gap; confirm before fixing | UNCONFIRMED                                                                                                     |
+| `market-tick-data-service`       | `pipeline_e2e_check.py::_run_batch_leg`, `_run_bundled_force_legs`, `_run_live_leg` | **NO — confirmed + fixed this session, see below (all THREE argv builders, not just one)** |
 
 So EVERY force/skip leg any of these 4 skills has ever run against a real `-test-` bucket has launched under
 `uts-prd-sa` — which the tier-isolation IAM lockdown (2026-06-09 / 2026-07-17) now blocks from writing there. This is
@@ -111,6 +113,15 @@ Fixed `features-service`'s `_build_launch_argv` to append `--env staging` uncond
 test-bucket-only by contract, so this is never conditional) — `features-service@524b71ef`. Re-ran the baseline
 checkpoint after the fix; see the Track K (features) plan todo for the fresh green result.
 
+**`market-tick-data-service` (this session)**: confirmed the identical gap, but found it in **three** argv builders, not
+one — `_run_batch_leg` (per-shard force/skip runner, `launch-mtds-backfill-vm.sh --test-run`),
+`_run_bundled_force_legs` (the multi-shard-per-VM bundled force runner, same launcher), and `_run_live_leg` (the bounded
+live-smoke leg, `launch-mtds-live.sh --test-run`, verifies against `_test_bucket()`). All three write to a `-test-`
+bucket by contract and none passed `--env`/set `DEPLOYMENT_ENV`. Added `--env staging` to all three (verified both
+`launch-mtds-backfill-vm.sh` and `launch-mtds-live.sh` accept `--env` identically via
+`lc_tier_service_account`). `_run_live_leg_prod_unbounded` (the `--allow-live-prod-writes` escape hatch, never used by
+the default sweep) was intentionally left alone — it targets real PROD by design.
+
 ## Todos
 
 - [ ] [CODE] P0. Add `--env staging` (or equivalent `DEPLOYMENT_ENV=staging` env-var set) to
@@ -128,9 +139,18 @@ checkpoint after the fix; see the Track K (features) plan todo for the fresh gre
       `/plans/active/issues/bucket_iam_group_a_market_data_tick_prefix_missing_asset_group_2026_08_01.md`. A genuine
       403-free MDPS verification run is blocked on THAT issue's infra fix landing first. (repo:
       market-data-processing-service)
-- [ ] [CODE] P0. Confirm `market-tick-data-service/scripts/pipeline_e2e_check.py`'s launcher-argv builder has the
-      identical gap (not yet inspected in this session — confirm before assuming) and apply the same `--env staging` fix
-      if so. Verify with a fresh force/skip run. (repo: market-tick-data-service)
+- [x] ✅ [CODE] P0. Confirm `market-tick-data-service/scripts/pipeline_e2e_check.py`'s launcher-argv builder has the
+      identical gap and apply the same `--env staging` fix if so — `market-tick-data-service@05a1e735`. **Confirmed the
+      gap in THREE argv builders (`_run_batch_leg`, `_run_bundled_force_legs`, `_run_live_leg`), fixed all three. Code
+      fix shipped + confirmed reaching the VM (metadata shows `DEPLOYMENT_ENV=staging`), but the "verify with a fresh
+      force/skip run, confirm no 403" half could NOT be completed**: a real force/skip run against
+      `CEFI:HYPERLIQUID:liquidations` day `2025-12-20` still failed both legs (`vm_exit_nonzero=1`) — NOT the original
+      403, but a SECOND, independent, newly-discovered bug: `setup-data-pipeline-vm.sh`'s OOM preflight resolves
+      `DEPLOYMENT_ENV=staging` to a `-stg-` bucket suffix that doesn't exist (real suffix is `-test-`), crashing VM
+      setup before the Python task ever runs. Full details + fix recommendation:
+      `/plans/active/issues/mtds_oom_preflight_deployment_env_short_stg_wrong_bucket_suffix_2026_08_01.md`. A genuine
+      403-free MTDS force/skip verification is blocked on THAT issue's fix landing first — same shape as the MDPS todo
+      above. (repo: market-tick-data-service)
 - [ ] [DOC] P2. Once all 4 repos carry the fix, add a one-line note to `/codex/05-infrastructure/vm-launcher-runbook.md`
       (or a new short section) documenting that any NEW `pipeline_e2e_check.py`-family driver launching a
       `-test-`-bucket smoke VM MUST pass `--env staging`/`DEPLOYMENT_ENV=staging` explicitly — the launcher's own
