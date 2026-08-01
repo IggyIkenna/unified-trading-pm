@@ -696,6 +696,34 @@ criterion; it also carries the `v2_engine_venue_buildout` over-count caveat this
 
 <!-- Append newest entries at the top: `- **YYYY-MM-DD** — <what landed> (<repo>@<sha> / evidence).` -->
 
+- **2026-08-01** — `/ag-closeout-audit cross-cutting` **re-invocation** (autonomous, scheduled `ag_closeout_auditor`
+  dispatch `agt-a5c7d6`, slot 13). Phase 0 used `generate_ag_closeout_audit_candidates.py --tranche cross-cutting` (90
+  tranche members, 6 covering docs, 11 never-cited) plus a manual `asset_group: meta`-sweep gap check that found 1 more
+  genuine member the generator's DATA_EPICS filter misses (`data_pipeline_alerts_batch_remediation_2026_07_15.md` —
+  `parent_epic: observability_master`, admitted only via this doc's own Track-adjacent content, not the epic filter).
+  Orthogonality HARD CHECK re-run: clean (0 genuine dual-tag mistags — 4 hits were all legitimate multi-AG coordination
+  docs). Phase 1 (`Workflow`, 12 agents, one per candidate): **6 verdicted `exclude_cross_cutting`** (asset_group
+  mistags — real content is genuinely ao ×3, ui-or-infra ×1, infrastructure ×1, tradfi ×1; 4 of the 6 independently
+  corroborated by other tranches' own recent audits reaching the same conclusion) — reported, NOT retagged, per the
+  2026-07-30 concurrent-sharded-worker owning-tranche rule; full evidence in
+  [`issues/ag_closeout_audit_cross-cutting_parked_2026_08_01.md`](/plans/active/issues/ag_closeout_audit_cross-cutting_parked_2026_08_01.md).
+  **6 verdicted `orphaned_never_touched`** (genuinely cross-cutting, zero coverage in any of the 6 covering docs) —
+  drafted
+  [`cross_cutting_satellite_ao_dispatch_batch3_2026_08_01.md`](/plans/active/cross_cutting_satellite_ao_dispatch_batch3_2026_08_01.md)
+  (8 conflict-cleared todos across 5 of the 6 docs) +
+  [its finalize](/plans/active/cross_cutting_satellite_ao_dispatch_batch3_2026_08_01_finalize.md), **both `status`
+  correctly split per the 2026-07-30 no-double-gate finding — batch3 stays `draft` pending operator approval, the
+  finalize ships `active` immediately** (`gate_on_depends` alone already holds it). The 6th orphaned doc,
+  `issues/order_state_machine_ssot_vs_uac_orderstatus_2026_07_31.md`, is 100% operator-gated (a 3-way OrderStatus
+  enum-contract decision) — parked in batch3's own Deferred section, not drafted. **Side note for future runs**:
+  `check_ag_closeout_linkage.py`'s `closeout_family_for("cross-cutting")` only resolves the ONE main
+  `cross_cutting_consolidated_*` doc's own body/related-graph as this tranche's "family" — it does NOT include satellite
+  batch/finalize docs the way `generate_ag_closeout_audit_candidates.py`'s `covering_paths` correctly does, so citing a
+  doc only from within batch3 (as this run did for 5 of its 8 todos' source docs) does not clear that checker's orphan
+  flag for them — verified the checker's baseline count (69) is unchanged by this run either way, not a regression, just
+  a narrower-scoped sibling tool; not chased further as a fix here (out of this skill's own `does_not` scope, mirrors
+  the same call other tranches' recent parked-findings docs made about this exact script family).
+
 - **2026-07-30** — `/ag-closeout-audit cross-cutting` **re-invocation** (autonomous, scheduled `ag_closeout_auditor`
   dispatch `agt-06bfb0`, slot 10). **A sibling dispatch (slot-7) had already run this exact tranche ~31 min earlier**
   (`unified-trading-pm@19a014e29`, 04:10 UTC vs this run's 04:41 UTC boot — flagging the apparent double-dispatch for
