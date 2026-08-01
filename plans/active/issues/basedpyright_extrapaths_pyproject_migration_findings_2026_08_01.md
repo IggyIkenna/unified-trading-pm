@@ -167,9 +167,18 @@ script isn't invoked by `quality-gates.sh`), so none of this is actively blockin
       `unified-api-contracts` — and no source import); re-ran `check-pyrightconfig-extrapaths.py` — zero remaining
       warnings for greeks-service; `quality-gates.sh` green (68s), shipped via quickmerge, landed + verified on
       `live-defi-rollout`.
-- [ ] [SCRIPT] P3. instruments-service: remove the 2 dead extraPaths; separately investigate the
+- [x] ✅ [SCRIPT] P3. instruments-service: remove the 2 dead extraPaths; separately investigate the
       `unified-config-interface` import-vs-manifest error (confirm genuine import before adding to manifest deps).
-      (repo: instruments-service)
+      (repo: instruments-service) — instruments-service@02a61199. Removed `unified-market-interface` /
+      `unified-internal-contracts` (confirmed dead: no manifest dep, no source import). Investigated
+      `unified-config-interface`: the only reference was `tests/conftest.py`'s local `get_config(key, default)` helper —
+      confirmed genuinely dead (never called anywhere; every real caller uses `instruments_service.config.get_config()`
+      with no args) and its lazy `from unified_config_interface import     UnifiedCloudConfig` pointed at a package that
+      no longer exists (folded fleet-wide into `unified_trading_library`, already imported correctly everywhere else in
+      this repo). Deleted the dead helper per the no-shims rule rather than add a manifest dep for a nonexistent
+      package; removed the now-unneeded `unified-config-interface` extraPath too. Re-ran
+      `check-pyrightconfig-extrapaths.py` — zero remaining warnings for instruments-service; `quality-gates.sh` green
+      (111s, sentinel-verified, HEAD=02a61199), shipped via quickmerge, landed + verified on `live-defi-rollout`.
 - [ ] [SCRIPT] P3. market-data-processing-service: remove the 4 dead extraPaths in `pyproject.toml`. (repo:
       market-data-processing-service)
 - [ ] [SCRIPT] P3. strategy-service: remove the 4 dead extraPaths in `pyproject.toml`. (repo: strategy-service)
