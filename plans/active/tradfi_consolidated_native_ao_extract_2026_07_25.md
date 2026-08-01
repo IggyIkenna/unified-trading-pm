@@ -348,8 +348,8 @@ drift_direction: advance-code
       (both bare and `.KS-USD` id variants); the 4 KRX index rows correctly have no name (indices, not equities). Row
       count unchanged at 10 (no new KRX listings since 2026-07-20 — expected). Side finding (not blocking this todo,
       filed separately): the weekly `lifecycle-catalogue-full-tradfi` self-heal job has failed its last 3 consecutive
-      runs (2026-07-11/18/25) — tracked as a new issue doc,
-      `plans/active/issues/tradfi_catalogue_full_regen_job_failing_2026_07_31.md`.
+      runs (2026-07-11/18/25) — tracked + RESOLVED 2026-08-01 (per-blob GCS retry fix + manual re-trigger green), see
+      `plans/archive/issues/tradfi_catalogue_full_regen_job_failing_2026_07_31.md`.
 
 - [x] ✅ [REVIEW] P2. **Run the adversarial AO-dispatch-readiness pass against
       `tradfi_consolidated_closeout_2026_07_18.md` itself, for the 3 categories the doc's own 2026-07-24 spot-check left

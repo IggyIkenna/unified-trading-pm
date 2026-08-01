@@ -9,7 +9,7 @@ summary: >-
   the 2026-07-04 run succeeded. The daily incremental job is unaffected and tradfi catalogue reads are currently
   correct, so this is not user-visible yet, but the weekly full-mode self-heal (the mechanism that would catch/repair
   drift the incremental mode can't) has been silently broken for 3 weeks.
-status: open
+status: resolved
 nature: issue
 asset_group: [tradfi]
 stage: [data]
@@ -32,6 +32,11 @@ estimate_calibrated_ai_days: 0.3
 assigned_role: backend_engineer
 depends_on: []
 resolved_by:
+  "slot 14, 2026-08-01 — root-caused to a single transient GCS ConnectionResetError on 1-of-27175 by_date blobs killing
+  the whole multi-hour --mode full walk; fixed via a per-blob retry wrapper (instruments-service@cdf41538/@0a14b313,
+  QG-green, quickmerge-shipped) + a producer image rebuild (Cloud Build 9314b1bb, :latest->8f16345b); manually
+  re-triggered lifecycle-catalogue-full-tradfi-89jlj, which completed clean (Completed=True, 967675 rows, monotonic
+  guard ACCEPT, promoted to catalog.parquet) in 2h25m."
 locked_by:
 locked_since:
 supersedes:
@@ -41,7 +46,13 @@ source: >-
   2026-07-31) — a side finding from `gcloud run jobs executions list --job=lifecycle-catalogue-regen-tradfi` /
   `--job=lifecycle-catalogue-full-tradfi`, tangential to that todo's own scope.
 drift_direction: advance-code
+last_updated: 2026-08-01
 ---
+
+> **🟢 ARCHIVED 2026-08-01** — status=resolved, archived per /codex/11-project-management/issue-doc-lifecycle.md's
+> archive-on-resolve rule. The fix (per-blob GCS download retry) lives in
+> instruments-service/scripts/build_instrument_catalogue.py; no new durable codex contract was established (existing UTL
+> with_retry primitive reused, no new pattern to document).
 
 # lifecycle-catalogue-full-tradfi weekly job failing — daily incremental unaffected
 
@@ -105,6 +116,24 @@ mechanism designed to catch that class of bug has itself been broken for 3 weeks
       real time (catches output a post-hoc `read` might still be missing) or a scoped diagnostic sink (mirroring the
       pattern used in `deployment_api_sigabrt_crash_loop_2026_07_24.md`'s cold-container investigation) — NOT another
       blind re-trigger without first arming a way to observe it.
-- [ ] [BACKEND] P2. Fix the identified root cause and manually re-trigger
+- [x] ✅ [BACKEND] P2. Fix the identified root cause and manually re-trigger
       `gcloud run jobs execute lifecycle-catalogue-full-tradfi` to confirm green before the next scheduled Saturday
-      05:00 UTC run. (repo: instruments-service, deployment-service)
+      05:00 UTC run. (repo: instruments-service, deployment-service) — **2026-08-01 (slot 14, backend_engineer)**: Root
+      cause was a single transient `requests.exceptions.ConnectionError` ("Connection reset by peer") on any ONE of the
+      27,175 `by_date` blob downloads propagating through `_bounded_parallel_load` and killing the entire multi-hour run
+      — at this blob count, hitting at least one transient network blip over a run's lifetime is the expected case, not
+      the exception (confirmed via the newly-armed `[BISECT-C-PROGRESS]` heartbeat from todo 1's fix: the prior `-mczhg`
+      retry attempt this session produced a full application-level traceback for the FIRST time, pinning the exact
+      exception + call site). Fix: added `_download_by_date_blob()` (UTL `with_retry`, 5 attempts, exp. backoff)
+      wrapping the GCS download in all 4 `by_date` `_load` closures (tradfi/cefi/defi/ prediction, sports leagues,
+      sports FTP) — `instruments-service@cdf41538` (+ import-path correction `@0a14b313`, QG-green, quickmerge-shipped,
+      verified on origin). Deployed image `:latest` predated the fix (built 23:03:34Z, before these commits), so
+      rebuilt+pushed via `gcloud builds submit --config=cloudbuild.yaml     --substitutions=_RUN_INIMAGE_QG=false`
+      (in-image QG step needs the PM harness not present in the built image — documented producer-rebuild toggle in the
+      file's own header comment; QG was already enforced at quickmerge) — build `9314b1bb-1ed0-4ece-83bb-3345ab12ee46`,
+      SUCCESS, `:latest`→`8f16345b`. Manually re-triggered: `lifecycle-catalogue-full-tradfi-89jlj` (started
+      2026-08-01T00:13:39Z) ran the full 27,175-blob walk to completion with ZERO further failures — `Completed=True`,
+      `succeededCount=1`, "Execution completed successfully in 2h25m4.94s", 967,675 rows, monotonic guard `ACCEPT`
+      (`new=967675 current=967675`), promoted cleanly to
+      `gs://instruments-store-tradfi-prd-central-element-323112/prod/catalog.parquet`. Job is GREEN and will run clean
+      at the next scheduled Saturday 05:00 UTC self-heal.
