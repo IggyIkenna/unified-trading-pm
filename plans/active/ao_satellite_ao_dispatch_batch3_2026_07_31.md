@@ -262,3 +262,26 @@ batch1/batch2 applied, per the candidate-generator script's own stated rationale
   rather than folding into `WorkerLivenessWatchdog._tick_once`). Full evidence + the live-backlog backfill-check result
   (clean — no other plan currently exhibits this starvation shape) recorded on the todo itself; same evidence reconciled
   into the source issue doc's `[BACKEND] P2`/`[SCRIPT] P3` items.
+- **2026-08-01 (context-scout backfill session, one pass toward todo 1)** — Ran one direct, sequential Read/Edit pass
+  (no sub-agent fan-out — a prior attempt tried nested sub-agents and shipped zero durable commits) over
+  `generate_context_scope_inventory.py`'s live NEVER_SCOUTED/STALE list. **Before**: 634 in-scope docs, 609
+  `NEVER_SCOUTED`, 12 `STALE`, 13 `UP_TO_DATE`. **After**: 640 in-scope docs (corpus grew during the session — new docs
+  authored concurrently), 386 `NEVER_SCOUTED`, 7 `STALE`, 247 `UP_TO_DATE` (the after-count reflects this session's ~135
+  docs PLUS at least one other concurrent session found live-editing the same corpus toward the same field, confirmed
+  via real-time `git status`/staged-index checks and one genuine same-file merge conflict resolved mid-session, see
+  below). This session alone applied `context_scope` to **135 docs** (curated 2-6 entry reading-lists, every path
+  verified to resolve before writing) across 7 incremental commits, each staged/committed by explicit pathspec (never a
+  bare `git commit` against the shared index, since a concurrent session's much larger batch was staged alongside mine
+  at several points): `58166b074`, `b0fe07fca`, `8c3930642`, `196cbf049`, `0ad749948`, `a5d0702de`, `cd4b6bc9e`.
+  Deliberately skipped 3 docs already at/over the 1000-line hard cap
+  (`tradfi_manifest_content_recovery_completion_2026_07_24.md` at 1000→1013 if touched,
+  `master_data_canonicalisation_migration_catalogue_2026_06_07.md` at 999, `lst_rate_honest_coverage_2026_07_21.md`
+  already at 1001) rather than trip `check_line_caps.sh` — these need a line-cap split before they can carry
+  `context_scope`. Hit one genuine same-file merge conflict (`monitoring_control_plane_master_2026_06_10.md`, a
+  concurrent na-eligibility-audit append landing at the same tail-of-file position as my new `## Progress Log` section)
+  — resolved via the sanctioned `rebase --abort` + retry + manual merge recipe (kept both edits, never blind-overwrote),
+  not skipped. **Not done**: the corpus is not yet fully scouted (386 `NEVER_SCOUTED` + 7 `STALE` remain) — the final
+  `docspec.py` `FieldSpec` `Req.E`→`Req.R` hardening flip is correctly NOT attempted this pass (by design, per this
+  todo's own instructions) since the inventory isn't at zero. A future session should re-run the inventory fresh (the
+  count above will already be stale given how actively this corpus is being edited), continue from
+  `NEVER_SCOUTED`/`STALE`, and only flip the `FieldSpec` once genuinely at zero corpus-wide.
