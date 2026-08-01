@@ -24,7 +24,7 @@ tags:
   [honest-coverage, expected-unattempted, defi, oom, memory-bounding, instruments-service, enumerate-expected-universe]
 related:
   [
-    /plans/active/defi_expected_unattempted_seeder_design_2026_07_26.md,
+    /plans/archive/2026_08/defi_expected_unattempted_seeder_design_2026_07_26.md,
     /codex/02-data/honest-absence-downstream-handling.md,
     /codex/02-data/availability-manifest-and-data-status.md,
     /codex/02-data/defi-data-types-catalog.md,

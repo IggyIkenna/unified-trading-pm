@@ -17,7 +17,7 @@
 
 <!-- AUTO-INDEX-START -->
 
-_Auto-generated via `scripts/plans/regenerate_active_plan_index.py`. 242 plans across 10 domains. A plan tagged with
+_Auto-generated via `scripts/plans/regenerate_active_plan_index.py`. 244 plans across 10 domains. A plan tagged with
 multiple `asset_group:` values appears under each. Grep this block for a domain keyword before scanning `plans/active/`
 by hand._
 
@@ -186,13 +186,6 @@ by hand._
   — Gated closeout for defi_dex_pool_symbol_fix_backfill_purge_2026_07_25.md — machine-held via depends_on +
   gate_on_depends: true until all 5 of that plan's todos are done, so this never dispatches early. Reconciles the
   originating bug report…
-- [`defi_expected_unattempted_seeder_design_2026_07_26`](./defi_expected_unattempted_seeder_design_2026_07_26.md) —
-  Design track for the real DeFi expected_unattempted seeder ruled for on BLK-7c950d06 (Option A) — DeFi currently has
-  NO expected_unattempted signal at all (MTDS orchestrator excludes every defi venue from the sentinel fan-out;…
-- [`defi_expected_unattempted_seeder_design_2026_07_26_finalize_2026_07_28`](./defi_expected_unattempted_seeder_design_2026_07_26_finalize_2026_07_28.md)
-  — Gated closeout for defi_expected_unattempted_seeder_design_2026_07_26.md — machine-held via depends_on +
-  gate_on_depends: true until all of that plan's todos are done. Reconciles the source doc's own checkboxes/prose once
-  its AO-dispatched…
 - [`defi_pipeline_e2e_and_coverage_validation_2026_06_20`](./defi_pipeline_e2e_and_coverage_validation_2026_06_20.md) —
   End-to-end validation of the DeFi pipeline (features-onchain → strategy → execution) before the live cutover gate: run
   the full batch, verify each of the 11 registered DEFI handlers produces real (non-NaN) GCS coverage, confirm the
@@ -230,6 +223,13 @@ by hand._
   — Gated closeout for defi_satellite_ao_dispatch_batch6_2026_07_30.md — machine-held via depends_on + gate_on_depends:
   true until all 20 of that plan's todos are done. Mirrors batch1-5-finalize's pattern (reconcile each distinct source
   doc's…
+- [`defi_satellite_ao_dispatch_batch7_2026_08_01`](./defi_satellite_ao_dispatch_batch7_2026_08_01.md) — Seventh
+  AO-dispatch batch for defi, produced by the scheduled `na_eligibility_auditor` role running the
+  `/na-eligibility-audit defi` skill (2026-08-01). Phase 0 found 34 defi-owned `assigned_vm: NA` docs, 13 in-scope after
+  the…
+- [`defi_satellite_ao_dispatch_batch7_2026_08_01_finalize`](./defi_satellite_ao_dispatch_batch7_2026_08_01_finalize.md)
+  — Gated closeout for defi_satellite_ao_dispatch_batch7_2026_08_01.md — machine-held via depends_on + gate_on_depends:
+  true until all 4 of that plan's todos are done. Mirrors batch1-6-finalize's pattern: reconcile each of the 2 distinct…
 - [`defi_strategy_pnl_axis_index_2026_07_24`](./defi_strategy_pnl_axis_index_2026_07_24.md) — Entry-point index for the
   DeFi strategy/PnL/backtest-engine axis (`strategy-service`), extracted from defi_consolidated_closeout_2026_07_18.md's
   "Strategy/PnL/backtest-side DeFi tracking" section (folded in there 2026-07-23, "no orphans")…
@@ -311,7 +311,7 @@ by hand._
   retirement)…
 - [`tradfi_consolidated_closeout_2026_07_18`](./tradfi_consolidated_closeout_2026_07_18.md) — Coordination index
   (umbrella) that AGGREGATES (references, does not duplicate) every open tradfi + tradfi-touching IS/MTDS plan/issue
-  into ONE ordered pass, mirroring cefi_consolidated_closeout_2026_07_18.md. \*\*2026-07-24 line-cap…
+  into ONE ordered pass, mirroring cefi_consolidated_closeout_2026_07_18.md. **2026-07-24 line-cap…
 - [`tradfi_consolidated_native_ao_extract_2026_07_25`](./tradfi_consolidated_native_ao_extract_2026_07_25.md) — Fresh
   AO-eligibility triage of `tradfi_consolidated_closeout_2026_07_18.md`'s own 13 open native `- [ ]` todos (deliberately
   excluded from this session's earlier `tradfi_satellite_ao_dispatch_batch1/2_2026_07_25.md` extractions, which…
@@ -602,7 +602,7 @@ by hand._
   asset_group=prediction so a plan is READY, not to activate live trading now — both asset groups are deliberately
   backtest-only today per…
 
-### cross-cutting (64)
+### cross-cutting (66)
 
 - [`ag_closeout_audit_rollout_2026_07_25`](./ag_closeout_audit_rollout_2026_07_25.md) — Autonomous session (/autonomous,
   operator away, 2026-07-25) driving the /ag-closeout-audit skill across the 4 asset groups that haven't had it yet —
@@ -678,6 +678,14 @@ by hand._
   — Gated closeout for cross_cutting_satellite_ao_dispatch_batch2_2026_07_26.md — machine-held via depends_on +
   gate_on_depends: true until all 14 todos are done. Reconciles each named source doc's checkboxes independently, then
   re-checks…
+- [`cross_cutting_satellite_ao_dispatch_batch3_2026_08_01`](./cross_cutting_satellite_ao_dispatch_batch3_2026_08_01.md)
+  **[draft]** — Third AO-dispatch batch for the cross-cutting tranche, produced by re-invoking
+  `/ag-closeout-audit cross-cutting` (autonomous, scheduled `ag_closeout_auditor` dispatch `agt-a5c7d6`, slot 13). Phase
+  0 used…
+- [`cross_cutting_satellite_ao_dispatch_batch3_2026_08_01_finalize`](./cross_cutting_satellite_ao_dispatch_batch3_2026_08_01_finalize.md)
+  — Gated closeout for cross_cutting_satellite_ao_dispatch_batch3_2026_08_01.md — machine-held via depends_on +
+  gate_on_depends: true until all 8 todos are done. Reconciles each named source doc's checkboxes independently, then
+  re-checks batch…
 - [`cross_cutting_strategy_execution_determinism_2026_07_26`](./cross_cutting_strategy_execution_determinism_2026_07_26.md)
   — Extracted 2026-07-26 from `cross_cutting_consolidated_closeout_2026_07_25.md` Track 24 (resolved
   `autonomous_session_operator_decisions_2026_07_25.md` entry #19) — a genuinely different angle from that doc's other
@@ -775,7 +783,7 @@ by hand._
   (plans/active/issues/plan_line_cap_remediation_2026_07_23.md, bucket-(d) split, operator-approved). This is the
   still-inline…
 - [`live_event_log_warm_sink_recovery_and_cold_compaction_2026_07_31`](./live_event_log_warm_sink_recovery_and_cold_compaction_2026_07_31.md)
-  — All 52 warm-sink-persist-\* Cloud Storage subscriptions were genuinely created 2026-06-29, but 50 of them were
+  — All 52 warm-sink-persist-* Cloud Storage subscriptions were genuinely created 2026-06-29, but 50 of them were
   silently auto-deleted by Pub/Sub's native 31-day no-message inactivity expiry — warm_sink.tf never sets
   expiration_policy.ttl="",…
 - [`live_event_log_warm_sink_recovery_and_cold_compaction_2026_07_31_finalize`](./live_event_log_warm_sink_recovery_and_cold_compaction_2026_07_31_finalize.md)

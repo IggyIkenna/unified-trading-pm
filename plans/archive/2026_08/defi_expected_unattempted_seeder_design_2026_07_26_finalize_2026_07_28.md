@@ -17,7 +17,7 @@ stage: [meta]
 repos: [unified-trading-pm]
 scope: [engineer, admin]
 tags: [defi, close-out, finalize-plan-coverage, manifest, expected-unattempted]
-related: [/plans/active/defi_expected_unattempted_seeder_design_2026_07_26.md]
+related: [/plans/archive/2026_08/defi_expected_unattempted_seeder_design_2026_07_26.md]
 created: "2026-07-28"
 last_updated: "2026-08-01"
 parent_epic: defi_master
@@ -39,7 +39,7 @@ source: >-
   standing, per the workspace's "reconcile blocking issues" authority.
 assigned_role: infra
 drift_direction: advance-code
-context_scope: [/plans/active/defi_expected_unattempted_seeder_design_2026_07_26.md]
+context_scope: [/plans/archive/2026_08/defi_expected_unattempted_seeder_design_2026_07_26.md]
 ---
 
 # defi_expected_unattempted_seeder_design_2026_07_26 — finalize
