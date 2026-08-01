@@ -122,11 +122,36 @@ shipping):
       ever scanned, so they were vestigial dead config, not kept as a shim). Full `bash scripts/quality-gates.sh` green,
       sentinel verified matching HEAD.
 
-- [ ] [SCRIPT] P3. **New side-effect of the exclude-the-scan fix above**:
-      `scripts/manifest/check-pyrightconfig-extrapaths.py` (a standalone, NOT CI-wired, manually-invoked audit tool —
-      confirmed via grep, no `.github/workflows/` or other script calls it) will now flag PM's own repo entry as a
-      "MISSING extraPath" (its Rule 3) the next time someone runs it, since PM's `[tool.basedpyright]` no longer carries
-      `extraPaths` at all (removed as dead config — nothing is ever scanned). Not a QG blocker (tool isn't wired into
-      any gate), but a real false-positive the next manual run will hit. Fix: either add PM to an exemption list in that
-      script (repos whose basedpyright config excludes their own `SOURCE_DIR` have nothing to resolve imports for) or
-      skip repos where `exclude` covers `include`. (repo: unified-trading-pm).
+- [x] ✅ [SCRIPT] P3. **SUPERSEDED 2026-08-01 (slot 11) — moot, no code change.** The predicted "PM flagged as MISSING
+      extraPath" false positive does NOT reproduce. Re-verified live:
+      `uv run python3 scripts/manifest/check-pyrightconfig-extrapaths.py` → `extraPaths alignment OK`, exit 0 — **zero**
+      warnings/errors for ALL 24 `workspace-manifest.json` repos, not just PM. Root cause: the script's per-repo loop
+      only ever reads `<repo>/pyrightconfig.json` (`pyright_path = repo_root / "pyrightconfig.json"`); it has never been
+      updated to read `pyproject.toml`'s `[tool.basedpyright]` table. Grep-confirmed ZERO of the 24 repos still carry a
+      `pyrightconfig.json` file — the fleet's own pyproject.toml comments ("ported from deleted pyrightconfig.json",
+      `execution-service`/`system-integration-tests`) show the migration off `pyrightconfig.json` to
+      `pyproject.toml`-native basedpyright config is ALREADY COMPLETE fleet-wide, and
+      `codex/06-coding-standards/quality-gates.md` § "pyrightconfig.json silently overrides pyproject.toml" itself
+      sanctions deleting `pyrightconfig.json` as the resolution when both coexist. So
+      `if not pyright_path.exists():     continue` fires for EVERY repo before Rule 3 (or any rule) ever runs — PM
+      included, so its predicted false positive can't fire because nothing runs for anyone. Independently, even a
+      hypothetical pyproject.toml-aware rewrite would still exempt PM via the script's own pre-existing
+      `if not raw_paths: continue` gate: PM's `[tool.basedpyright]` carries zero `extraPaths` anywhere (top-level or
+      nested), so its whole Rule 1/2/3 block would never execute regardless — the proposed exemption-list /
+      exclude-covers-include fix targets a scenario that structurally cannot occur, on a config format no repo uses.
+      Writing that fix now would be speculative code with no live case to verify it against; closing as superseded
+      rather than executed as literally written. The broader, real finding — the tool is fully dormant fleet-wide, not
+      just for PM — is captured as its own follow-up todo below rather than left as a chat-only observation. (repo:
+      unified-trading-pm).
+- [ ] [SCRIPT] P3. **New finding (2026-08-01, slot 11) — the whole tool is fleet-wide dead, not just a PM
+      false-positive.** `check-pyrightconfig-extrapaths.py` only reads `<repo>/pyrightconfig.json`; zero of the 24
+      `workspace-manifest.json` repos still have that file (all migrated to `pyproject.toml`'s `[tool.basedpyright]` —
+      see `codex/06-coding-standards/quality-gates.md` § "pyrightconfig.json silently overrides pyproject.toml").
+      Running it today prints `extraPaths alignment OK` unconditionally for every repo — the audit no longer checks
+      anything real. Fix: either (a) migrate the script to read `[tool.basedpyright]` from `pyproject.toml` (via stdlib
+      `tomllib`; top-level `extraPaths` + `[[tool.basedpyright.executionEnvironments]]` `extraPaths` — the same dict
+      shape the script's existing helpers (`extrapaths_from_config`, `get_source_dir`) already expect, so a thin
+      TOML→dict adapter is likely sufficient) so it re-validates real config again, implementing the
+      exclude-covers-include skip for repos like PM whose entire source is excluded from the scan; or (b) delete the
+      script if the manual-audit workflow it served is no longer wanted. Not CI-wired either way, so both options are
+      safe to defer. (repo: unified-trading-pm).
