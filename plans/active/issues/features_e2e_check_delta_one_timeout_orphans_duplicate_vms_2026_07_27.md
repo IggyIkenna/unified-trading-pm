@@ -154,6 +154,27 @@ within this doc — TRADFI:delta_one's fast exit was a different bug, not eviden
 - [ ] [DATA] P2. Add a light-weight post-run reconciliation step (or a follow-up one-off script) that checks whether any
       VM this check launched is STILL `RUNNING` after the driver's own process has exited, and if so records/logs it (so
       abandoned VMs are not silently forgotten and their eventual real cost/outcome is at least visible).
+- [ ] [SCRIPT] P2. **New corroborating instance, different service**:
+      `market-data-processing-service/scripts/pipeline_e2e_check.py` (MDPS's own driver, same shared-engine class as
+      this doc, not features-service) hit the identical `vm_not_success:timeout_no_exit_status` false-failure pattern
+      twice running `/data-pipeline-check-mdps` against SPORTS `odds_horizon_bucket` (594-638 instrument-timeframe cells
+      per shard): default `--timeout-sec` (~1800s/30min) expired while the VM was still healthily processing — confirmed
+      via independent `gcloud`/`gsutil` polling that the VM was RUNNING and its `run.log` actively advancing, not
+      stalled. Real completion times: force-leg 36.8m and 31.8m, skip-leg 26.2m, across two separate checkpoint runs
+      (day=2025-12-24, day=2025-12-18) — all comfortably over the default. Unlike the CEFI/TRADFI:delta_one case, the
+      duplicate-launch-prevention fix (`features-service@dcf8a3d0`, presumably landed in the shared UTL engine) DID
+      correctly prevent a second concurrent VM in one of the two incidents here (`duplicate_in_flight` skip observed) —
+      so that part of the fix generalized; only the per-cell-timeout-override piece
+      (`_FAMILY_TIMEOUT_OVERRIDES`-equivalent) was never added to MDPS's own driver. (repo:
+      market-data-processing-service). **Done when**: MDPS's `pipeline_e2e_check.py` gets an equivalent
+      per-(asset_group, data_type) timeout override (or a similarly-reasoned higher default) for SPORTS
+      `odds_horizon_bucket`, and a from-scratch force-leg + skip-leg run each observe `EXIT_STATUS` locally (not
+      abandoned) within the configured timeout. Evidence:
+      `plans/audit/results/data_pipeline_e2e_check_mdps_2025_12_24.md`,
+      `plans/audit/results/data_pipeline_e2e_check_mdps_2025_12_18.md`, VMs
+      `mdps-backfill-sports-pipelinecheck-20260801-134301-2bf067` (force, 31.8m),
+      `mdps-backfill-sports-pcskip-20260801-130846-2bf067` (skip, 26.2m). Source: slot 6, data_engineering, discovered
+      2026-08-01 running `sports_consolidated_native_ao_extract_2026_07_25.md`'s Track K (MDPS) checkpoints 2/3 and 3/3.
 - [x] [DOC] P2. ✅ Once the timeout is fixed, re-run `/data-pipeline-check-features` for CEFI:delta_one and
       TRADFI:delta_one specifically and confirm both legs produce a genuine (non-timeout) verdict; note the corrected
       per-shard timeout in the SKILL.md's benchmark/projection section if the measured completion time differs
