@@ -29,7 +29,7 @@ scope: [engineer, admin]
 tags: [infrastructure, manifest-consolidator, oom, duckdb, shared-host, memory-safety, cli]
 related:
   [
-    /plans/active/issues/defi_plasma_chain_onboarding_gap_2026_07_26.md,
+    /plans/archive/issues/defi_plasma_chain_onboarding_gap_2026_07_26.md,
     /plans/archive/issues/sports_manifest_consolidator_duckdb_crash_and_silent_empty_read_2026_07_12.md,
     /plans/archive/issues/instruments_sports_manifest_consolidator_lock_livelock_2026_07_15.md,
     /codex/05-infrastructure/manifest-consolidator-ssot.md,
