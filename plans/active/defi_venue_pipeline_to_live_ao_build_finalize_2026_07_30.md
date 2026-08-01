@@ -47,12 +47,19 @@ Machine-held (`gate_on_depends: true`) until every todo in
 
 ## Todos
 
-- [ ] [DATA] P2. Reconcile the completed build's evidence back into
+- [x] ✅ [DATA] P2. Reconcile the completed build's evidence back into
       `plans/active/issues/defi_venue_phase_live_definition_contradiction_2026_07_22.md` — re-verify each of the build
       plan's 5 todos' cited commits/evidence actually exist (`git log`/`git show`, don't trust the build plan's own
       evidence lines uncritically), then flip the issue doc's digest pointer line to a resolved state citing the build
       plan + the before/after `completeness_pct` delta from the build plan's last todo. Done-when: the issue doc
-      reflects the true, verified final state.
+      reflects the true, verified final state. — **2026-08-01 (slot-4, data_engineering craft) — DONE.** Re-verified all
+      7 cited commit SHAs via `git log`/`git show` against fresh-pulled `origin/live-defi-rollout`: all real ancestors,
+      content-checked. Found + fixed 2 SHA-attribution errors in the build plan (todo 4 and todo 5 each cited a
+      companion/follow-up commit instead of the primary one; substance verified true both times) — corrected inline in
+      `defi_venue_pipeline_to_live_ao_build_2026_07_30.md` + its own 2026-08-01 Progress Log entry. Flipped the issue
+      doc's digest pointer to resolved, citing `completeness_pct` before/after (44.1% → 44.1%, delta=0, root-caused to
+      the `PROTOCOL_CAPABILITIES` gating gap, tracked separately). Evidence: unified-trading-pm (this repo) — issue
+      doc + build plan both updated, see their own Progress Log entries.
 - [ ] [DATA] P2. Run the standard 6-step plan-completion-and-archival-discipline ritual (per
       `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`) on
       `plans/active/issues/defi_venue_phase_live_definition_contradiction_2026_07_22.md` — archive to
@@ -67,3 +74,6 @@ Machine-held (`gate_on_depends: true`) until every todo in
 ## Progress Log
 
 - **2026-07-30** — plan authored alongside its parent build plan (operator-ruled finalize-companion requirement).
+- **2026-08-01 (slot-4, data_engineering craft)** — todo 1 done (see checkbox above for full evidence). Todos 2-3 (the
+  6-step archival ritual, ×2) are unstarted — not part of this task's dispatch; `sequential: true` gates them on todo 1,
+  which is now clear to dispatch next.

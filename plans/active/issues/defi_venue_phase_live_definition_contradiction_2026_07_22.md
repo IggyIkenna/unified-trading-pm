@@ -399,16 +399,41 @@ unresolved operator decision.
 
 - [x] [DATA] P1. **RULED 2026-07-29 (operator direct answer) — both: count them AND build out the real IS universe.**
 
-  ✅ RESOLVED BY REDIRECTION 2026-07-30, not by shipping the build — unified-trading-pm@30d2c633d. This todo, as
-  originally written, asked for a single-worker-scoped outcome that is actually a 4-sub-step, 3-repo, multi-day build —
-  not determinable by one dispatched worker per the AO dispatch-scope-eligibility rule, and this doc's own 2026-07-30
-  scope assessment + the independent `defi_satellite_ao_dispatch_batch6_2026_07_30.md` audit both already recommended
-  splitting it out rather than forcing it through in one pass. The real, still-OPEN engineering work (genuine IS
-  adapters, cron health fix, 90-day backfill, catalogue registration, `DEFI_VENUE_PHASE` flip + `completeness_pct`
-  re-measurement — 5 sequential todos) now lives at `/plans/active/defi_venue_pipeline_to_live_ao_build_2026_07_30.md`,
-  with a gated finalize companion at `/plans/active/defi_venue_pipeline_to_live_ao_build_finalize_2026_07_30.md` that
-  will reconcile evidence back here and archive this doc once the build plan is fully done. Doc `status` stays `open`
-  until then.
+  ✅ RESOLVED 2026-08-01 — the redirected build plan has now FULLY SHIPPED, independently re-verified, not just
+  redirected. `/plans/active/defi_venue_pipeline_to_live_ao_build_2026_07_30.md`'s 5 sequential todos (genuine IS
+  adapters, cron health fix, 90-day backfill, catalogue registration, `DEFI_VENUE_PHASE` flip) are all `[x]` done. The
+  gated finalize plan's reconciliation todo
+  (`/plans/active/defi_venue_pipeline_to_live_ao_build_finalize_2026_07_30.md`) independently re-verified all 7 cited
+  commit SHAs via `git log`/`git show` against fresh-pulled `origin/live-defi-rollout` (not trusting the build plan's
+  own evidence lines uncritically) — all 7 confirmed real ancestors with content matching each claim:
+  `instruments-service@{6c193a19,149076bc,5cbf4d3e,1831bff0}`, `market-tick-data-service@{5b5caffa,9ae23495,77738598}`,
+  `unified-api-contracts@4f215b4c`. Found + corrected 2 same-day SHA-attribution errors in the build plan (a
+  companion/follow-up commit cited instead of the actual primary commit; substance was true in both cases) — see that
+  plan's 2026-08-01 Progress Log entry for detail. All 6 venues (ANKR/STADER/STAKEWISE/SWELL/MANTLE/MAKER-ETHEREUM)
+  independently re-diffed confirmed `"pipeline"` -> `"live"` in
+  `unified-api-contracts/unified_api_contracts/registry/defi_venues.py` (`4f215b4c`).
+
+  **`completeness_pct` for `defi`, before/after the flip: 44.1% -> 44.1%, delta=0.** (Cited from the build plan's last
+  todo, not re-measured in this pass.) Root-caused, not silently accepted: `expected_universe.py`'s EXPECTED-tuple
+  builder gates every `(venue, instrument_type)` pair through `PROTOCOL_CAPABILITIES` — a THIRD input this doc's own
+  original investigation (above) didn't know about, beyond `DEFI_VENUE_PHASE`/`VENUES_BY_ASSET_GROUP`. None of the 6
+  protocols have an entry there yet, so the phase flip alone contributes zero EXPECTED tuples — tracked as its own
+  followup, not fixed inline:
+  `/plans/active/issues/defi_six_lst_vault_venues_missing_protocol_capabilities_2026_07_31.md`. This means **this doc's
+  own core question is answered (definition #1, data-availability, was chosen and fully shipped for these 6 venues) but
+  the honest-coverage number these venues were originally investigated to move has not yet visibly moved** — the
+  `PROTOCOL_CAPABILITIES` follow-up is what will actually move it.
+
+  Both original blockers are closed: the 2026-07-22 "NOT-SAFE, checkably-false data claim" adversarial-verify finding
+  (months-long capture that turned out to be a single synthetic sample) no longer applies — the shipped state is a
+  genuine, cron-verified, 90/90-day backfilled, content-verified capture stream, not a synthetic sample. The
+  `test_defi_set_equals_uac_denominator_drift_guard` invariant this doc flagged as a likely casualty was independently
+  re-confirmed still green post-flip (both `unified-api-contracts@4f215b4c` and `instruments-service@5cbf4d3e`'s own
+  commit messages record the live `set(_build_defi_venues()) == VENUES_BY_ASSET_GROUP["defi"]` check, 100==100).
+
+  This doc is now fully resolved pending only the finalize plan's remaining 2 archival todos (6-step
+  plan-completion-and-archival-discipline ritual on this doc, then on the build + finalize plans themselves) — not run
+  as part of this reconciliation todo. `status` stays `open` until that archival lands.
 
 ## 2026-07-30 — scope assessment (operator-ruling close-out pass): NOT executed this pass, todo left open
 
@@ -446,3 +471,12 @@ doesn't re-diagnose from scratch. Recommend this become its own dedicated multi-
   `/plans/active/defi_venue_pipeline_to_live_ao_build_2026_07_30.md` (5 sequential todos) +
   `/plans/active/defi_venue_pipeline_to_live_ao_build_finalize_2026_07_30.md` (gated finalize, will archive this doc
   once the build plan lands). `status` stays `open` — no code shipped yet, only re-scoping.
+- **2026-08-01 (slot-4, data_engineering craft) — finalize plan's reconciliation todo: build plan verified fully
+  shipped, digest pointer above flipped to resolved.** Independently re-verified all 7 commit SHAs the build plan cites
+  across its 5 todos via `git log`/`git show` against fresh-pulled `origin/live-defi-rollout` — all real ancestors,
+  content-checked not just message-matched. Found + fixed 2 SHA-attribution errors in the build plan itself (both
+  same-day companion/follow-up commits cited instead of the actual primary commit; substance verified true either way) —
+  see that plan's own 2026-08-01 Progress Log entry. `completeness_pct` before/after cited above: 44.1% -> 44.1%,
+  delta=0, root-caused (not silently accepted) to a `PROTOCOL_CAPABILITIES` gating gap this doc's original investigation
+  didn't know about, tracked separately. Did not run the remaining 2-todo archival ritual (out of this todo's scope) —
+  `status` stays `open` for the next todo to flip on archival.
