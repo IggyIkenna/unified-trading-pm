@@ -152,7 +152,9 @@ the doc now carries build-grade implementation detail — but stays `assigned_vm
       todo's creation: ~30-file batch staged locally (docspec.py + a mix of plans/issues), repeatedly blocked shipping
       by unrelated transient conditions (see Progress Log) — continue in small clean batches until the corpus is fully
       scouted, then flip `docspec.py`'s `context_scope` FieldSpec from `Req.E` to `Req.R` for `plan`+`issue` as the
-      final hardening commit.
+      final hardening commit. **This is the same item actively tracked and worked as todo 1 of
+      `/plans/active/ao_satellite_ao_dispatch_batch3_2026_07_31.md`** (that doc is the live tracking home — see this
+      doc's own Progress Log entry below).
 
 ## Progress Log
 
@@ -168,6 +170,13 @@ the doc now carries build-grade implementation detail — but stays `assigned_vm
   git-tracked content, which at least shows up in `git status`/stash) — write it, then commit it fast, don't let a plan
   doc itself become the uncommitted artifact a later cleanup pass can't see.
 - **context-scout 2026-08-01**: populated/refreshed context_scope (5 entries).
+- **na-eligibility-audit 2026-08-01** (autonomous, tranche `ao`, dispatch agt-8e95ca, slot 2): KEEP-NA-STALE
+  (already-duplicated) — citation fix only, not a reclassification. This doc's sole remaining checkbox (`[SCRIPT] P0`,
+  backfill `context_scope` corpus-wide) is the SAME work item actively extracted and tracked as todo 1 of
+  `/plans/active/ao_satellite_ao_dispatch_batch3_2026_07_31.md` (already `assigned_vm: planning`, with real incremental
+  progress recorded there as of 2026-08-01: `NEVER_SCOUTED` reduced 609→386). This doc's own checkbox simply never got a
+  pointer back to that extraction. Added the citation inline above; `assigned_vm` correctly stays `NA` here — flipping
+  it would dispatch a duplicate of already-active work.
 
 ## Codex SSOTs
 
