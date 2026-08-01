@@ -228,7 +228,9 @@ list?) before executing autonomously — flagging for operator awareness rather 
       Progress Log) as its own canonical data_type + SchemaContract (mirror `DEFI_PERPETUAL_PERP_FUNDING`); add manifest
       writes to both ad-hoc writers, unchanged schema; backfill manifest rows for the existing historical shard tuples.
       Repos: unified-api-contracts, market-tick-data-service, features-service, unified-trading-pm (manifest backfill
-      script).
+      script). **na-eligibility-audit 2026-08-01: KEEP-NA-STALE-DUPLICATE — already extracted verbatim into
+      `defi_satellite_ao_dispatch_batch6_2026_07_30.md:363-371` (status: active, `assigned_vm: planning`, cites this doc
+      as source). Not reclassified — track completion there; close this checkbox by citation once batch6's todo lands.**
 - [ ] [OPERATOR-DECISION] P3. Whether/when to execute the ALREADY-GATED `[DESIGN] P1` todo in
       `defi_perp_funding_canonicalisation_derivative_ticker_all_perps_2026_07_15.md` (demote `perp_funding` to a derived
       view) — and, if so, whether `perp_daily_ctx`/mark-price should be folded into that same decision. This issue doc
@@ -242,6 +244,10 @@ above.
 
 ## Progress Log
 
+- **na-eligibility-audit 2026-08-01**: KEEP-NA-STALE-DUPLICATE — re-verified: the [CODE] P2 half's AO-readiness (flagged
+  2026-07-30) has since been realized via `defi_satellite_ao_dispatch_batch6_2026_07_30.md`'s verbatim extraction (same
+  date, 2026-07-30) — see inline note above. Not reclassified (already dispatched elsewhere). The [OPERATOR-DECISION] P3
+  item remains genuinely open/unresolved. Doc not archive-eligible until both resolve.
 - **na-eligibility-audit 2026-07-30**: KEEP-NA, valid - carries an explicit [OPERATOR-DECISION] P3 todo; the [CODE] P2
   half is AO-ready but the doc cannot flip as a unit
 

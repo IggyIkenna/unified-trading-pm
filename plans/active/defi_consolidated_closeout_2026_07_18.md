@@ -421,7 +421,11 @@ Discriminator = **does a manifest row exist**.
         `issues/defi_curve_optimism_subgraph_no_allocations_2026_07_15.md`.
 - [ ] [INFRA] P2. **NEW 2026-07-24 — fix the `canonical-migration` `VM_TASK` mtds-hardcoded `cd` bug** found above (the
       canonical-migration `VM_TASK` case branch's hardcoded `cd` path in `setup-data-pipeline-vm.sh`) — mirror the
-      `VM_SERVICE`-keyed instruments branch other cases already use. (repo: deployment-service)
+      `VM_SERVICE`-keyed instruments branch other cases already use. (repo: deployment-service) **na-eligibility-audit
+      2026-08-01: already claimed elsewhere — this exact fix is IN PROGRESS in
+      `defi_consolidated_native_ao_extract_2026_07_25.md`'s Track-1 Progress Log (2026-07-26/27, slot-4): code-complete,
+      blocked on shipping by a shared-host `pytest` I/O stall, not abandoned. Not re-drafted; stays here pending that
+      plan's own completion — check there first before starting fresh work on this item.**
   - [x] `spot_asset`/`spot_pair` reconciliation investigated + resolved via live re-measurement (see the P0 item's
         footnote above) — both were stale/non-issues, not a coding task.
 
@@ -550,7 +554,9 @@ file, not here.
       `market_interface/adapters/{defi,defi_live,onchain,onchain_perps}/`, and execution-service
       `adapters/defi_adapter.py`, per `/codex/06-coding-standards/adapter-dead-code-and-fallback-ban.md`. Definition of
       done: a written finding per module (kept/fixed/removed + reason). (repos: instruments-service,
-      market-tick-data-service, execution-service)
+      market-tick-data-service, execution-service) **na-eligibility-audit 2026-08-01: extracted to
+      `defi_satellite_ao_dispatch_batch7_2026_08_01.md` (conflict-check cleared) — track completion there, close this
+      checkbox by citation once its batch-7 todo lands.**
 - [ ] [CONFIG] P2. **Retagged 2026-07-29 (corpus hygiene pass): reframed as a code-only extension task, not
       credential-blocked — verified `curve_adapter.py` already has a fully-wired `_query_curve_pool_at_block`
       (~line 617) / `_ensure_alchemy_client` (~line 217-228) RPC-fallback path using the same already-provisioned
@@ -567,6 +573,8 @@ file, not here.
       (The Graph gateway API key) or an RPC key (`_query_curve_pool_at_block`, Alchemy) for historical block-level
       state~~ — the RPC-fallback path is already built and keyed; extend it to ARB/POLY (code-only), or accept
       honest-absence for Curve pools on those 2 chains until wired. (repo: market-tick-data-service)
+      **na-eligibility-audit 2026-08-01: extracted to `defi_satellite_ao_dispatch_batch7_2026_08_01.md` (conflict-check
+      cleared) — track completion there, close this checkbox by citation once its batch-7 todo lands.**
 - [ ] [DATA] P3. **F6 (rehomed from `/plans/archive/issues/vm_backfill_data_correctness_findings_2026_06_29.md`, same
       correction) — DeFi lending-indices: heavy instruments-store fallback, ~39% zero-row writes.**
       `mtds-lending-indices-20260628` VM: instruments-store-defi parquet missing for
@@ -631,6 +639,8 @@ file, not here.
       writing timestamp-glued empty markers across 6 handlers; `70b9a81a` promoted the verify tool to
       `scripts/one_offs/verify_defi_glued_ids_2026_07_24.py`). **Remaining**: run the 9-cell ORCA retry + re-run the
       verify script for a fresh 0-glued-ids reading before the marker-delete `--apply` todo above proceeds.
+      **na-eligibility-audit 2026-08-01: extracted to `defi_satellite_ao_dispatch_batch7_2026_08_01.md` (conflict-check
+      cleared) — track completion there, close this checkbox by citation once its batch-7 todo lands.**
 - [x] ⛔ [DATA] P1. **WON'T-DO (session-3, 2026-07-26, operator present) — closed, not deferred.** Was: the ~16.7M-row
       LENDING→A_TOKEN/DEBT_TOKEN migration, gated on lending-writer-retire todos 7/8/10/11.
       `defi_lending_writer_retire_prerequisite_2026_07_20.md`'s own investigation found the flip needs 4 tightly-coupled
@@ -712,6 +722,12 @@ file, not here.
 
 ## Progress Log — condensed (2026-07-24, replaces the pre-split ~2145-line tick-by-tick log)
 
+- **na-eligibility-audit 2026-08-01**: MIXED — re-read end to end (18 open items). 4 items extracted to
+  `defi_satellite_ao_dispatch_batch7_2026_08_01.md` after conflict-check clear (adapter dead-code audit, Alchemy
+  ARB/POLY RPC wiring, glued-id ORCA re-verify, — plus a 4th from a sibling doc). 1 item (`VM_TASK` `cd` bug) found
+  already in-progress on `defi_consolidated_native_ao_extract_2026_07_25.md` — not extracted, cited in place. Doc stays
+  `assigned_vm: NA` overall — the remaining ~13 items are genuine `gate_on_depends`-cited (Track1 still 13-open),
+  operator/judgment-gated, or same-doc-prose-gated work. No stale-done items found this pass.
 - **2026-07-24 (session 3, `/autonomous`, orchestration pass)** — triaged ~50 open todos across 3 docs, flipped 4
   stale-done checkboxes, fanned out 9 parallel background agents; found the 15.87M-row defi orphan-sweep completed
   (largest of any AG, likely-test-artifact-leak caveat); session interrupted mid-flight by an infra migration. Full

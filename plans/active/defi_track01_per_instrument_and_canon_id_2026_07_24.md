@@ -49,6 +49,11 @@ source: >-
 > every line below is a verbatim move from the parent. See the parent for the Canonical target spec, the Operator
 > decisions, and Tracks 2-8 (which depend on this work landing).
 
+> **na-eligibility-audit 2026-08-01**: KEEP-NA-STALE-ITEMS — re-read end to end (10 open items). 8 stay KEEP-NA valid
+> (design/judgment calls on live-production canonicalization machinery, consistent with this doc's own history of
+> reversed attempts). 2 items closed as stale (LENDING retire — decided WON'T-DO 2026-07-26; Combo cross-AG hand-off —
+> shipped elsewhere), see inline notes below. No RECLASSIFY-eligible items found. Doc stays `assigned_vm: NA`.
+
 ## Per-instrument re-architecture (operator 2026-07-18 — SUPERSEDES the batch-model tracks; DeFi capture STOPPED)
 
 > **🟡 In-flight refactor + capture halted (re-armed 2026-07-18).** All DeFi capture is STOPPED — GCP forward-poll VMs
@@ -298,16 +303,25 @@ instruments in one `instruments.parquet` with `available_from/to`).
 > (ruff/basedpyright clean, full MTDS suite green apart from 2 unrelated pre-existing cross-repo test-baseline
 > regressions — see that plan's Progress Log) but NOT YET COMMITTED (blocked on those unrelated regressions clearing the
 > shared tree's `quality-gates.sh`); todos 8/10/11 (the actual UAC+MTDS+UTL atomic retire + its runtime proof) are NOT
-> started. The gate remains BLOCKED. Do not start this migration until that plan says CLEARED.
+> started. The gate remains BLOCKED. Do not start this migration until that plan says CLEARED. **[na-eligibility-audit
+> 2026-08-01: superseded — the gated migration below was ruled WON'T-DO permanently, 2026-07-26 (see the closed
+> checkbox), not cleared to proceed. This banner is historical context only.]**
 
-- [ ] [DATA] P0. **Retire legacy `LENDING` → A_TOKEN/DEBT_TOKEN.** **Builder-bake DONE `instruments-service@1af1be34`**
-      (FIX 2, runtime-proven): the split is now INTRINSIC to `build_instrument_catalogue.py` row-construction — the
-      canonical_id's `VENUE:TYPE:SYMBOL` segment is AUTHORITATIVE over a stale `LENDING` column for the
-      A_TOKEN/DEBT_TOKEN/SPOT_ASSET family, so a `--mode full` rebuild can't re-stamp LENDING (kills the 2026-07-14
-      durability landmine). Verify caveat (non-blocking): a dataless-tail row mis-stamped by a PRE-fix rebuild survives
-      verbatim through `_merge_incremental(close_absent=False)` until it reappears in by_date — **fully closed by the
-      remaining half below.** **REMAINING (Wave D, [DATA]): migrate the ~16.7M legacy `lending` rows** to the split
-      (code done for 9 EVM protocols) on real infra. (repos: instruments-service)
+- [x] ⛔ [DATA] P0. **WON'T-DO (session-3, 2026-07-26, operator present) — closed, not deferred.** Was: **Retire legacy
+      `LENDING` → A_TOKEN/DEBT_TOKEN.** **Builder-bake DONE `instruments-service@1af1be34`** (FIX 2, runtime-proven):
+      the split is now INTRINSIC to `build_instrument_catalogue.py` row-construction — the canonical_id's
+      `VENUE:TYPE:SYMBOL` segment is AUTHORITATIVE over a stale `LENDING` column for the A_TOKEN/DEBT_TOKEN/SPOT_ASSET
+      family, so a `--mode full` rebuild can't re-stamp LENDING (kills the 2026-07-14 durability landmine). Verify
+      caveat (non-blocking): a dataless-tail row mis-stamped by a PRE-fix rebuild survives verbatim through
+      `_merge_incremental(close_absent=False)` until it reappears in by_date — **fully closed by the remaining half
+      below.** Was REMAINING (Wave D, [DATA]): migrate the ~16.7M legacy `lending` rows to the split (code done for 9
+      EVM protocols) on real infra. (repos: instruments-service) **na-eligibility-audit 2026-08-01: CLOSED — not
+      gated-and-pending, actually decided against.**
+      `plans/archive/2026_07/defi_lending_writer_retire_prerequisite_2026_07_20.md` (status: complete): "Session-3
+      (2026-07-26, operator present) decision: the physical A_TOKEN/DEBT_TOKEN retire (todos 8/10/11/14) is WON'T-DO,
+      permanently — after two reversals, a read-side resolver function (todo 15) delivers the same canonical-instrument-
+      id → rate lookup without the GCS rewrite / manifest re-key / IS re-seed the flip required." Todo 15 shipped
+      `unified-api-contracts@1d01a911` (confirmed ancestor of `origin/live-defi-rollout`).
 - [ ] [DATA] P0. **Residual canon walk C2–C12** (single-walk discipline — reuse the existing worklist, no NEW
       whole-corpus walk): C2 data_type alias dedup (`dex_swaps`→`dex_pool_swaps`, `dex_pools`→`dex_pool_state`,
       `lending-indices`→`lending_indices`, `staking_yields`→`lst_rates`); C3 `VENUE-CHAIN`→flat venue + `chain`; C4
@@ -430,10 +444,15 @@ instruments in one `instruments.parquet` with `available_from/to`).
       (26,540,325 → 26,540,317), zero remaining KALSHI_PERP/POLYMARKET_PERP rows confirmed post-write.
       `market-tick-data-service@2aa23de5` (writer fix), `market-tick-data-service@6998ea4c` (cleanup script's final
       streaming-rewrite).
-- [ ] [BACKEND] P2. **Combo cross-AG hand-off (leg-aware signed-weight spec).** Extend the 1–4-leg cap + shared
+- [x] ✅ [BACKEND] P2. **Combo cross-AG hand-off (leg-aware signed-weight spec).** Extend the 1–4-leg cap + shared
       `build_leg()` path to the DERIBIT-COMBO builders (`cefi/deribit_combo_adapter.py`, `tardis/combos.py`) —
       `canonical_id_p1_tradfi_combo_leg_canonicalization_2026_07_08.md` open P2. DeFi has no combos; this rides here
       only because the DERIBIT-COMBO fix is cefi-side and passed to `cefi_consolidated_closeout_2026_07_18.md`.
+      **na-eligibility-audit 2026-08-01: CLOSED — done elsewhere.**
+      `canonical_id_p1_tradfi_combo_leg_canonicalization_2026_07_08.md` line ~167: "DONE 2026-07-27 (slot-8,
+      data_engineering)... Extend the 1-4 leg hard cap + logged-drop behavior to Deribit's existing combo builders
+      (cefi/deribit_combo_adapter.py, cefi/tardis/combos.py)... Evidence: instruments-service@9416be7d." Confirmed
+      ancestor of `origin/live-defi-rollout`.
 - [ ] [BACKEND] P0. **NEW 2026-07-21 (operator ruling) — eliminate the address/UUID fallback in
       `canonical_instrument_id` for POOL + LENDING; resolve token symbols for real, don't fall back.** Operator: "it
       needs to be fully canonical no fallback and migrated." Does NOT touch the two-id model or the machine
@@ -730,17 +749,17 @@ instruments in one `instruments.parquet` with `available_from/to`).
       market-tick-data-service)
 
       **RE-VERIFIED 2026-07-24 (this pass) — the `--apply` handoff is still NOT unblocked; NOT 0 glued ids.** The 9
-                                                                                                                                                                                                                      ORCA `dex_pool_state` cells (2025-12-23..12-31) finished migrating clean this session (all 9 confirmed
-                                                                                                                                                                                                                      `errors=0` across a retry chain: `leafparallel`+`lpar5`+`lpar7` VMs, cumulative `cells=1+3+5=9`) and a scoped
-                                                                                                                                                                                                                      manifest rebuild ran after — but a fresh `verify_defi_glued_ids_2026_07_24.py` run still shows **21 glued-id
-                                                                                                                                                                                                                      rows** (unchanged: the same 9 ORCA + the same 12 liquidations). Root cause (code-read, not inferred): neither
-                                                                                                                                                                                                                      the migration, the scoped rebuild, nor this delete-marker script (GCS-objects-only, confirmed via its own
-                                                                                                                                                                                                                      docstring) ever **retracts** a pre-existing manifest row once its source object is renamed to `_migrated_*` —
-                                                                                                                                                                                                                      the old glued-id row and the new per-instrument rows have different `instrument_id`s, so upsert never
-                                                                                                                                                                                                                      supersedes the old one. Full findings + recommended next step (a manifest-row-level purge, not yet built):
-                                                                                                                                                                                                                      `plans/archive/issues/mtds_defi_migration_cell_stall_untimed_gcs_read_2026_07_22.md` addendum "tick 3"
-                                                                                                                                                                                                                      (2026-07-24). **The `--apply` operator handoff at the parent plan (line 708) stays gated — do not consider it
-                                                                                                                                                                                                                      unblocked by the 9 ORCA cells finishing; a separate manifest-side fix is still required first.**
+                                                                                                                                                                                                                          ORCA `dex_pool_state` cells (2025-12-23..12-31) finished migrating clean this session (all 9 confirmed
+                                                                                                                                                                                                                          `errors=0` across a retry chain: `leafparallel`+`lpar5`+`lpar7` VMs, cumulative `cells=1+3+5=9`) and a scoped
+                                                                                                                                                                                                                          manifest rebuild ran after — but a fresh `verify_defi_glued_ids_2026_07_24.py` run still shows **21 glued-id
+                                                                                                                                                                                                                          rows** (unchanged: the same 9 ORCA + the same 12 liquidations). Root cause (code-read, not inferred): neither
+                                                                                                                                                                                                                          the migration, the scoped rebuild, nor this delete-marker script (GCS-objects-only, confirmed via its own
+                                                                                                                                                                                                                          docstring) ever **retracts** a pre-existing manifest row once its source object is renamed to `_migrated_*` —
+                                                                                                                                                                                                                          the old glued-id row and the new per-instrument rows have different `instrument_id`s, so upsert never
+                                                                                                                                                                                                                          supersedes the old one. Full findings + recommended next step (a manifest-row-level purge, not yet built):
+                                                                                                                                                                                                                          `plans/archive/issues/mtds_defi_migration_cell_stall_untimed_gcs_read_2026_07_22.md` addendum "tick 3"
+                                                                                                                                                                                                                          (2026-07-24). **The `--apply` operator handoff at the parent plan (line 708) stays gated — do not consider it
+                                                                                                                                                                                                                          unblocked by the 9 ORCA cells finishing; a separate manifest-side fix is still required first.**
 
 - [x] ✅ [DATA] P1. **Verify the fake-history relabel-forward migration to actual completion** (todo 3,
       `/plans/archive/issues/defi_solana_dex_pools_fake_history_recurrence_prd_bucket_2026_07_23.md`) — **VERIFIED

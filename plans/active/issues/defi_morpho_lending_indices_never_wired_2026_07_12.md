@@ -892,3 +892,11 @@ this todo (the fix is entirely in `data_completion_defi_2026_07_15.md`'s expecte
 explicitly infra/operator-scoped per that plan's own text). Whoever next has visibility into that seed chain's progress
 should flip `defi_onchain_v10_universe_v2_seed_or_backfill_progressed→true` once a chunk materially closes the DeFi
 `expected_unattempted` mass — at that point (and only then) does re-running this todo's G2 gate become useful again.
+
+## Progress Log addendum
+
+- **na-eligibility-audit 2026-08-01**: KEEP-NA valid — the sole remaining open checkbox (G2 gate re-run) is a live
+  `gate_on_depends`-style citation on a still-open external prerequisite
+  (`defi_onchain_v10_universe_v2_seed_or_backfill_progressed`, confirmed `false` via `GET /api/state`), doc's own text
+  states the re-run "becomes useful again" only once that condition flips. No stale/duplicate/reclassify-eligible
+  content found. Doc stays `assigned_vm: NA`.

@@ -825,3 +825,10 @@ favor of `dated_expiry`+`roll_on_dte`. The paper-replay TICK-LOADER build itself
 half of the Phase 1 checkbox above, now unblocked for a follow-on dispatch. Full test evidence:
 `tests/unit/engine/strategies/v2/test_carry_staked_basis_dated_contract_resolution.py` (golden dated-future values,
 roll-boundary + determinism proofs, and a real-catalog-spec construction/`on_tick` proof).
+
+## Progress Log addendum
+
+- **na-eligibility-audit 2026-08-01**: KEEP-NA valid — both remaining open checkboxes (RecursiveLoopOrchestrator gap,
+  MVP_SCOPE catalog-identity precondition) are explicitly operator-design-gated per their own text ("Verdict: still
+  correctly NOT AO-dispatchable ... Remains parked pending an operator design/scoping session"; "Scope/sequencing
+  decision needed before dispatch"). No stale/duplicate/reclassify-eligible items found. Doc stays `assigned_vm: NA`.

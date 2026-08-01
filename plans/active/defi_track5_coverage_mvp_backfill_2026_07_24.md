@@ -94,12 +94,13 @@ drift_direction: advance-code
       `defi_onchain_v10_universe_v2_seed_or_backfill_progressed` true per the unpark note above — that is what releases
       the parked `mvp_backfill_defi_onchain_v10-001` backlog task back to the fleet. (repos: deployment-service,
       market-tick-data-service, features-service)
-- [ ] [BACKEND] P2. **Async fan-out + executor-offload for the MTDS DeFi collectors** (recovered from the pre-2026-07-24
-      historical Progress Log's deferred-work table — genuinely correctness-sensitive, deliberately not squeezed into a
-      sub-agent turn). The sequential loops needing fan-out are `solana_defi_handler.py::_run_solana_protocol_loop` +
-      `dex_pools_handler.py::_run_process`, with the actual blocking `_upload_parquet`/`storage.upload_bytes` calls two
-      files deeper in `_dex_pools_subgraph.py::_collect_protocol_chain`/`::_collect_solana_dex`. Design sketch: fan out
-      fetch+upload via UTL `ParallelPerSymbolRunner` with `manifest_writer=None`, then apply
+- [x] ✅ [BACKEND] P2. **Async fan-out + executor-offload for the MTDS DeFi collectors** (recovered from the
+      pre-2026-07-24 historical Progress Log's deferred-work table — genuinely correctness-sensitive, deliberately not
+      squeezed into a sub-agent turn). The sequential loops needing fan-out are
+      `solana_defi_handler.py::_run_solana_protocol_loop` + `dex_pools_handler.py::_run_process`, with the actual
+      blocking `_upload_parquet`/`storage.upload_bytes` calls two files deeper in
+      `_dex_pools_subgraph.py::_collect_protocol_chain`/`::_collect_solana_dex`. Design sketch: fan out fetch+upload via
+      UTL `ParallelPerSymbolRunner` with `manifest_writer=None`, then apply
       `record_captured`/`record_zero_rows`/`record_failed` + the heartbeat SEQUENTIALLY over the gathered results in
       original iteration order (preserves today's manifest-write/heartbeat semantics exactly while parallelizing the
       slow I/O). ~~The 3 `service_config.py` knobs are a trivial, un-risky first step~~ — **CORRECTED 2026-07-24
@@ -109,7 +110,12 @@ drift_direction: advance-code
       or not at all." `plans/archive/issues/defi_mvp_backfill_optimization_ready_2026_07_20.md` (open, locked_by:
       live-defi-rollout) already carries the correctly-bundled todo; nothing shipped standalone. **Separately**: the
       2-VM TheGraph canary is operator-owned ("ship code + I run the canary") — do not launch VMs for it. (repo:
-      market-tick-data-service)
+      market-tick-data-service) **na-eligibility-audit 2026-08-01: CLOSED — done elsewhere.**
+      `plans/archive/issues/defi_mvp_backfill_optimization_ready_2026_07_20.md` (status: resolved, archived 2026-07-31,
+      0 open/5 done): its bundled fan-out+executor-offload todo checked `[x]` "DONE 2026-07-27 (slot-6)" citing
+      `mtds@ff1b5d51` ("feat(defi): MTDS DeFi perf bundle -- concurrency knobs + async fan-out + executor-offload") and
+      `mtds@4cf0ea3d` (`defi_max_concurrent_fetches` semaphore fix), both confirmed ancestors of
+      `origin/live-defi-rollout`.
 - [ ] [DATA] P1. **Confirm the launcher + parallelization plan for the DeFi-MVP full-history MDPS candle backfill**
       (gate-audit §6, 2026-07-24 — gated on `candle_canonical_path_migration_execution_2026_07_24.md` reaching P8).
       Determine which launcher runs it (single-VM vs. cross-VM sharded) and whether `max_workers` lets concurrent writes
@@ -134,5 +140,10 @@ the parent plan's Track 7 culled-venue ruling.
 
 ## Progress Log
 
+- **na-eligibility-audit 2026-08-01**: KEEP-NA-STALE-ITEMS — re-verified live: parent
+  `defi_consolidated_closeout_2026_07_18.md` still `depends_on` + `gate_on_depends: true`, still active/unlocked, still
+  18 open todos — gate citation still holds, doc stays KEEP-NA overall. Closed 1 stale item this pass (async fan-out —
+  shipped elsewhere, see inline note above). Items 3-5 show no evidence of completion; item 3's inner sub-gate has
+  cleared but its own launcher-determination task isn't done.
 - **na-eligibility-audit 2026-07-30**: KEEP-NA, valid - depends_on + gate_on_depends:true on
   defi_consolidated_closeout_2026_07_18 which still carries 19 open todos — KEEP-NA on the gate citation alone

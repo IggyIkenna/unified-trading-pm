@@ -159,7 +159,10 @@ process is worth keeping so a future similar incident doesn't re-walk the same d
 - [ ] [DATA] P2. Audit `market-tick-data-service/scripts/` (and sibling repos' `scripts/`) one-offs for any OTHER direct
       `ManifestWriter(...)` construction missing `per_vm_shards=True` against a populous bucket (defi/cefi/sports) —
       same failure mode is latent wherever found. (repo: market-tick-data-service, instruments-service,
-      market-data-processing-service)
+      market-data-processing-service) **na-eligibility-audit 2026-08-01: extracted to
+      `defi_satellite_ao_dispatch_batch7_2026_08_01.md` (conflict-check cleared — the failure mode has since recurred a
+      3rd time via `DefiManifestRecorder@77738598`, strengthening the case for the sweep, no one has yet run it) — track
+      completion there, close this checkbox by citation once its batch-7 todo lands.**
 - [ ] [REVIEW] P2. This is the SECOND fleet-wide memory incident within the same session (the first, a stale cgroup cap,
       is fixed + self-healing per `orchestrator_api_full_outage_stale_cgroup_memory_cap_2026_07_30.md`) — consider
       whether a per-slot subprocess RSS ceiling (e.g. a `cgroup`/`ulimit` scoped to each slot's OWN spawned children,
@@ -188,3 +191,7 @@ process is worth keeping so a future similar incident doesn't re-walk the same d
   also notes this is now the fourth incident against the same availability manifest in ~36h (2 read-side, this
   write-side one, plus delta_one's and UTL's siblings), which is the basis for todo 4's "shared safe-read helper"
   question there.
+- **na-eligibility-audit 2026-08-01**: MIXED — 3 open items. The construction-time safety-check item (line 154) and the
+  per-slot RSS-ceiling item (line 163) stay KEEP-NA valid (design calls, the latter explicitly self-flagged out of scope
+  here). The sibling-scripts audit item (line 159) extracted to `defi_satellite_ao_dispatch_batch7_2026_08_01.md` after
+  conflict-check clear. Doc stays `assigned_vm: NA` overall.

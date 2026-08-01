@@ -68,6 +68,11 @@ drift_direction: advance-code
 > gate-board + dependency DAG this content feeds into (this doc is a historical/audit record, not itself gating
 > anything).
 
+> **na-eligibility-audit 2026-08-01**: MIXED — re-read end to end (15 open items). 14 stay KEEP-NA valid (dated operator
+> rulings, still-open cross-plan gates, operator-sign-off-gated GCS deletes, design/scope judgment calls). 1 item (the
+> QG-harness rootdir finding) was assessed and NOT extracted — see its inline note below (already declined by
+> `defi_satellite_ao_dispatch_batch6_2026_07_30.md` as under-evidenced). Doc stays `assigned_vm: NA`.
+
 ## vm-defi (slot-2) status + findings — 2026-06-07
 
 > Progress on the **G0 C-PATH WRITE** (defi migrator/rebuild source-aware) + **G1-defi IS-catalogue** rows of the gate
@@ -581,7 +586,10 @@ the related ship-hygiene item.)
       root-cause the rootdir/cwd resolution (likely `quality-gates-base/base-service.sh` `cd "$PROJECT_ROOT"` vs the
       governed subprocess) so per-repo QGs collect their own suite. Repos: unified-trading-pm
       (`scripts/quality-gates-base/base-service.sh`) + per-repo `quality-gates.sh`. parent_epic: manifest_master.
-      Provenance: slot-7 cross-cutting sweep 2026-06-08.
+      Provenance: slot-7 cross-cutting sweep 2026-06-08. **na-eligibility-audit 2026-08-01: not extracted — already
+      assessed by `defi_satellite_ao_dispatch_batch6_2026_07_30.md`'s Operator-gated/Deferred section: "bounded-sounding
+      but under-evidenced (zero coverage found anywhere) — needs a scoping read before it's draftable." Stays KEEP-NA
+      pending that scoping read; not re-litigated here.**
 - [ ] [DATA] P1. **DeFi instruments-store `by_date` has a DOUBLED `day={D}/day={D}/` prefix on the recent tail**
       (~2026-05-05 onward — `day=2026-05-05/07` confirmed doubled; `day=2026-05-03` and ALL earlier days are single,
       canonical `day={D}/venue={V}/instruments.parquet`). Surfaced by the G2 verify dry-run 2026-06-07 (slot-2). **TWO

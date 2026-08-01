@@ -776,3 +776,11 @@ code.
       `internal.ShareClass` are now all the identical class object (`is` comparison), all 9 members present,
       `SHARE_CLASS_BASE_ASSETS` keys match. Confirmed exactly one `class ShareClass(StrEnum)` definition remains
       repo-wide (`grep`). Full completion — no partial migration, duplicate deleted. (repo: unified-api-contracts)
+
+## Progress Log addendum
+
+- **na-eligibility-audit 2026-08-01**: KEEP-NA valid — the sole remaining open checkbox (Option B true-native-staking-
+  return metric) is a money-path change to client-facing NAV/PnL numbers in the determinism-critical spine
+  (`paper_run_passive.py`/`paper_run_attribution.py`), explicitly under this doc's own OPERATOR GATE — inherently
+  judgment/correctness-sensitive engineering, not a bare bounded/deterministic worker task, consistent with every prior
+  accrual-formula change on this doc requiring a 3-lens money-path review. Doc stays `assigned_vm: NA`.
