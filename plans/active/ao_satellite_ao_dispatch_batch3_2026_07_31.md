@@ -257,6 +257,38 @@ batch1/batch2 applied, per the candidate-generator script's own stated rationale
   `agent-orchestrator/server/worker_liveness_watchdog.py`'s `_tick_once()` — land todo 2 first.
 - **context-scout 2026-08-01**: verified the 3 pre-existing context_scope entries still resolve and are relevant (kept
   in place), added the paired finalize plan as a 4th entry — refreshed (4 entries).
+- **2026-08-01 (todo 3 — partial, checkbox deliberately NOT flipped)**: Sub-parts (1) and (2) SHIPPED
+  (agent-orchestrator@623009e3): a read-only `verify_orphan()` (+ `discover_wip_preserve_refs`/
+  `verify_all_wip_preserve_refs`) in `server/worktree_clean_check/_orphan_verify.py`, emitting exactly
+  `SUPERSEDED`/`STILL-ORPHANED`/`WOULD-REGRESS` (plus `GONE` for an unresolvable sha) from `merge-base --is-ancestor` +
+  a per-file blob compare + the origin→sha line-delta sign; wired into a new periodic
+  `server/orphan_ref_verify_watchdog.py` (hourly sweep, `orphan_ref_verified` + a distinct `orphan_ref_self_closed`
+  activity event per ref, never mutating/deleting anything — deliberately a standalone daemon, not folded into
+  `WorkerLivenessWatchdog._tick_once`, to respect this plan's own file-adjacency caution). `_liveness.py`'s
+  `classify_maker_liveness()` now triangulates an otherwise dead/absent claim-based verdict against
+  `/api/state.worker_alive` + a live `/proc/<pid>/cwd`, gated to skip whenever `replacing_session` is set (so
+  `_preserve_wip_before_kill`'s one caller keeps working); `_orphan.py`'s FM8 guard re-asserts this immediately before
+  EACH repo's write inside the commit loop. Verified against both recorded shapes
+  (`test_liveness_triangulates_worker_alive_over_expired_claim` for slot-5,
+  `test_liveness_triangulates_proc_cwd_over_absent_claim` for slot-15, plus dead-stays-dead/replacing-session/
+  backward-compat controls) in `tests/test_dirty_state_resolution.py`, and the verifier's four canonical verdicts
+  reproduced against synthetic repos (the real 10 sweep shas are unreachable, see below) in
+  `tests/test_orphan_still_orphaned_verifier.py` — 2212 tests green, full quality gate passed before shipping. Evidence
+  appended to both source docs' own Todos (`orphaned_commit_recovery_has_no_dispatch_path_2026_07_30.md`'s two
+  `[SCRIPT] P2` items flipped `[x]`; `wip_preserve_refs_silently_unrecovered_2026_07_29.md`'s `[DATA] P3` item
+  annotated). **Sub-part (3) — the 25-ref wip-preserve triage — is NOT complete, and this checkbox is deliberately left
+  `[ ]` per this plan's own instruction ("if you cannot fully complete all 3 sub-parts, do NOT flip the checkbox").**
+  Reachability check: the dispatched session had local filesystem access to `.tabs/{1,2,3,4,5,21..30}` only (15 slots,
+  375 git repos total) — an exhaustive `git for-each-ref 'refs/wip-preserve/**'` across every one of those repos found
+  **zero** local wip-preserve refs anywhere. The 25 refs the 2026-07-30 sweep found are `refs/wip-preserve/cascade-*`
+  (from `quickmerge.sh::cascade_dep_branch()`'s local-only `git update-ref` — never pushed to origin) living on slots
+  2/3/4/6/9/10/11/12/15 of host `ip-172-31-5-118` specifically — a DIFFERENT physical host from the one this session ran
+  on, so numeric slot overlap (this session also has local slots 2/3/4) does not imply the same refs: a local-only ref
+  never leaves the host that created it. **What remains for the next session**: dispatch (or run directly on)
+  `ip-172-31-5-118` and run `verify_all_wip_preserve_refs()` (or the CLI-equivalent `discover_wip_preserve_refs()` +
+  `verify_wip_preserve_ref()`) against each of the 9 named slots' repos — the verifier itself needs no further work,
+  only reach. Do NOT re-attempt this from a session without `ip-172-31-5-118` filesystem/SSM access — it will reproduce
+  this same 0/25 result.
 - **2026-08-01** — Todo 2 shipped (`agent-orchestrator@af98fcd`, landed on `live-defi-rollout` ahead of batch4's sibling
   todo per the file-adjacency rule above — sidestepped it entirely by keeping the new watchdog a standalone module
   rather than folding into `WorkerLivenessWatchdog._tick_once`). Full evidence + the live-backlog backfill-check result
