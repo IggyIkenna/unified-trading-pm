@@ -190,10 +190,12 @@ session; flag if it becomes a real problem.)
       already following the same partial-completion pattern as the instruments-service/MDPS todos above) — but with both
       the `--env staging` fix and the Group A CEL fix already confirmed live, and the OOM-preflight false-negative now
       closed, no known blocker remains for MTDS specifically. (repo: market-tick-data-service, deployment-service)
-- [ ] [DOC] P2. Once all 4 repos carry the fix, add a one-line note to `/codex/05-infrastructure/vm-launcher-runbook.md`
-      (or a new short section) documenting that any NEW `pipeline_e2e_check.py`-family driver launching a
-      `-test-`-bucket smoke VM MUST pass `--env staging`/`DEPLOYMENT_ENV=staging` explicitly — the launcher's own
-      `prod`-default is correct for real launchers, but silently wrong for every e2e-check-style test-bucket run. (repo:
+- [x] ✅ [DOC] P2. Once all 4 repos carry the fix, add a one-line note to
+      `/codex/05-infrastructure/vm-launcher-runbook.md` (or a new short section) documenting that any NEW
+      `pipeline_e2e_check.py`-family driver launching a `-test-`-bucket smoke VM MUST pass
+      `--env staging`/`DEPLOYMENT_ENV=staging` explicitly — the launcher's own `prod`-default is correct for real
+      launchers, but silently wrong for every e2e-check-style test-bucket run. Added a HARD RULE bullet in "How To Use
+      This Runbook" citing all 4 fixed drivers + this issue doc — `unified-trading-pm@<pending>`. (repo:
       unified-trading-pm)
 - [x] ✅ [CODE] P2. Investigate a possibly-separate reporting anomaly observed once while verifying the features fix
       (before the `deployment-scripts` grant landed): a force-leg VM (`features-e2e-sports-20260801-104801-281e78`)
@@ -229,6 +231,12 @@ session; flag if it becomes a real problem.)
       trace: `unified_trading_library/pipeline_e2e_check/launcher.py:169-206,209-261,264-382`,
       `unified_trading_library/pipeline_e2e_check/report.py:95-132,187-282`,
       `features-service/scripts/pipeline_e2e_check.py:1160-1166,1990-2014`.
+- [ ] [INFRA] P3. The residual non-fatal 403 on `central-element-323112-events` (event-log uploads from a `-test-`-tier
+      VM under `uts-test-sa`, best-effort/dropped on failure — see "What I actually shipped" above) is still unfixed.
+      Doesn't block correctness, just silently loses observability telemetry for `-test-` runs. Grant `uts-test-sa`
+      `storage.objectAdmin` (or the minimal write role the event-log writer needs) on the events bucket, mirroring the
+      `deployment-scripts` grant already made in this doc, then verify a fresh `-test-` run's event-log objects actually
+      land. (repo: deployment-service or infra config, wherever the events-bucket IAM lives)
 
 ## Codex SSOTs
 

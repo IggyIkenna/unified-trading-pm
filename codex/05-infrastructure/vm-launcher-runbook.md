@@ -122,6 +122,15 @@ name the launcher was about to use — a `RUNNING` result means it succeeded des
 SAME name if it genuinely does not exist (an `already exists` retry error is itself the confirmation, not a new problem
 — no action needed beyond verifying the existing instance is healthy).
 
+**HARD RULE — a `pipeline_e2e_check.py`-family driver launching a `-test-`-bucket smoke VM MUST pass `--env staging` (or
+set `DEPLOYMENT_ENV=staging`) explicitly.** Every `launch-*.sh` defaults `DEPLOYMENT_ENV` to `prod`, which resolves
+`uts-prd-sa` — correct for a real launcher, but wrong for an e2e-check-style test-bucket run: since the tier-isolation
+IAM lockdown, `uts-prd-sa`'s `storage.objectAdmin` grant is IAM-Condition-scoped to `-prd-` buckets only, so an
+unmodified driver 403s on every force/skip leg against a `-test-` bucket. Fixed 2026-08-01 in all 4 existing drivers
+(`features-service`, `instruments-service`, `market-data-processing-service`, `market-tick-data-service`); any NEW
+`pipeline_e2e_check.py`-family driver must carry the same `--env staging` fix from the start. Full incident + fix
+details: `/plans/active/issues/pipeline_e2e_check_missing_env_flag_test_bucket_403_2026_08_01.md`.
+
 ## Heavy COMPUTE/MEMORY on the shared planning-vm (HARD RULE, added 2026-07-27)
 
 > **Scope correction (2026-08-01): this is NOT limited to throwaway "ad-hoc scratchpad" scripts.** The original wording
