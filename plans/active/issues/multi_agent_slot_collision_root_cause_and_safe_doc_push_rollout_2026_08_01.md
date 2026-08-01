@@ -85,9 +85,9 @@ slot choice.
   this per the "commit attribution = slot + host" rule, but that rule's own premise ("each slot clone has its own
   `.git/config`, set at clone time") is violated the moment two operators share one slot.
 - **Documented recurrence, not a one-off**: `two_agents_slot3_collision_and_yahoo_finance_red_tree_2026_07_15.md`
-  recorded the identical failure shape 3 times in 3 days (07-15/16/17) over two years^H^H^H weeks ago, and its own
-  Progress Log already named the fix this doc is now re-proposing ("each slot = ONE agent... not something either
-  concurrent session can enforce on its own"). The gap between "documented" and "fixed" is exactly this doc's subject.
+  recorded the identical failure shape 3 times in 3 days (07-15/16/17) two and a half weeks ago, and its own Progress
+  Log already named the fix this doc is now re-proposing ("each slot = ONE agent... not something either concurrent
+  session can enforce on its own"). The gap between "documented" and "fixed" is exactly this doc's subject.
 
 ## Root cause
 
