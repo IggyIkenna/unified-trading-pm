@@ -12,11 +12,18 @@ summary: >-
   `unified_trading_library/pipeline_e2e_check/launcher.py::_run_launcher_script` retry/fallback treats this as
   "launched" and polls the FIRST run's VM instead of its own — reproduced live 2026-08-01 running 3 concurrent
   same-second checkpoint dates for Track K (features)/sports.
-status: open
+status: resolved
 nature: issue
 asset_group: [sports]
 stage: [data]
-repos: [features-service, unified-trading-library]
+repos:
+  [
+    features-service,
+    unified-trading-library,
+    market-tick-data-service,
+    market-data-processing-service,
+    instruments-service,
+  ]
 scope: [engineer]
 tags: [pipeline-e2e-check, vm-launcher, race-condition, tooling]
 related:
@@ -32,6 +39,14 @@ execution_scope: orchestrator-agent
 drift_direction: advance-code
 source: [sports_consolidated_native_ao_extract-032]
 resolved_by:
+  '2026-08-01 — both todos done. Todo 1: VM-name hash widened to include the target day across all 4 sibling drivers
+  (features-service@4d7fc825, market-tick-data-service@ad169495, market-data-processing-service@c9caf54a,
+  instruments-service@82cc429a). Todo 2: re-audited `_find_inflight_duplicate_vm()` — confirmed it cannot itself cause a
+  cross-window misattribution (a dedup-skip is honestly reported as `status="skipped"`, excluded from the pass/proven
+  tally, and the all-skipped exit-code guard fails loudly), but its coverage claim was false for non-overlapping
+  windows, so narrowed the dedup filter to the same day via the day-aware VM-name hash slug in both features-service and
+  its MDPS sibling (features-service@4455210, market-data-processing-service@2405b16). Zero open todos, unlocked,
+  archived same-session per the archive-immediately rule.'
 locked_by:
 context_scope: []
 depends_on: []
@@ -124,10 +139,21 @@ the trigger for a different scenario.
       market-tick-data-service@ad169495, market-data-processing-service@c9caf54a, instruments-service@82cc429a.
       Regression tests added/extended in each repo asserting two VM-name calls for the same cell/shard but different
       days (frozen run_ts) produce different names.
-- [ ] [CODE] P3. Re-audit `_find_inflight_duplicate_vm()`'s day-window-agnostic dedup assumption
+- [x] ✅ [CODE] P3. Re-audit `_find_inflight_duplicate_vm()`'s day-window-agnostic dedup assumption
       (`features-service/scripts/pipeline_e2e_check.py` ~line 1206) once the above lands — confirm it cannot itself
       cause a cross-window misattribution for non-overlapping launch windows of the same cell, or narrow its filter to
-      include the window. (repo: features-service)
+      include the window. (repo: features-service) — **confirmed no misattribution risk**: a dedup-skip hit is honestly
+      reported as `status="skipped"` (never a spurious `passed`), excluded from `report.proven`/the pass tally, and the
+      "PROVED NOTHING" exit-code guard fails loudly if every cell in a run skips — so unlike the confirmed
+      name-collision mechanism, a coarse dedup hit can never itself misattribute a wrong verdict to the wrong day.
+      HOWEVER the docstring's coverage claim ("a same-cell VM already in flight will itself produce this cell's result")
+      was FALSE for non-overlapping windows, so a genuine same-cell/different-day in-flight VM would silently cause a
+      real coverage gap (the day gets skipped, not verified, though never mis-reported as passed). Fixed by narrowing
+      the filter to the window: `_vm_name()`'s day-aware hash slug (from todo 1) is reused as a name-suffix filter on
+      the label-filtered RUNNING-instance candidates, so only a genuine SAME-day duplicate now triggers a skip. Found +
+      fixed the identical pattern in MDPS's `_find_inflight_duplicate_vm()` sibling too (IS/MTDS don't have this
+      function). Regression tests added asserting a different-day in-flight VM is ignored and a same-day one still
+      matches: features-service@4455210, market-data-processing-service@2405b16.
 
 ## Codex SSOTs
 
