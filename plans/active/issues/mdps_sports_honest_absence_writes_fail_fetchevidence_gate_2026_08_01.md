@@ -23,7 +23,7 @@ assigned_vm: NA
 parent_epic: infrastructure_master
 resolved_by:
 locked_by:
-source: [DP-VM-001 escalation agt-f5ddd4]
+source: [DP-VM-001 escalation agt-f5ddd4, agt-ccceda, agt-14585b]
 related:
   [
     /codex/05-infrastructure/data-pipeline-alerts.md,
@@ -128,3 +128,66 @@ run was already in flight for the same date (`mdps-backfill-sports-pcskip-202608
 `deployment_id=276fe963-2060-4a41-934e-d954f39c2409`, started `13:08:46Z` — after the fix — heartbeating fresh at
 `13:19:28Z`). Finding 2 (the honest-absence `FetchEvidence` gate, this doc's main subject) is unaffected — it degrades
 to a `WARNING` and does not crash the VM — and remains open pending the operator's A vs B call.
+
+## Finding 3 (NEW, open) — the streaming chain-bundle path has its OWN "Unknown error" crash, unfixed by 8358b9f
+
+A THIRD DP-VM-001 escalation (`agt-14585b`) landed on VM `mdps-backfill-sports-pcskip-20260801-130846-2bf067`
+(`deployment_id=276fe963-2060-4a41-934e-d954f39c2409`, `exit_code=1`, date `2025-12-24`) — the exact "recovery run
+already in flight" VM finding 2's writeup expected to succeed (started `13:08:46Z`, well after the `8358b9f` fix at
+`12:31:14Z`, and `origin/live-defi-rollout` HEAD at completion time — `0fc0448` — carries no further
+`live_workers_streaming.py` changes past that fix). It did NOT succeed: it finished at `13:37:32Z` with the IDENTICAL
+`52/594 odds_horizon_bucket` "Unknown error" signature as findings 1's pre-fix crashes, then
+`Handler returned non-zero exit code: 1` and self-deleted.
+
+**This proves `8358b9f` does not cover this crash path.** `8358b9f` fixed the `success` formula in the **non-streaming**
+`_process_all_timeframes` path (`live_workers_chain.py` / `live_workers.py`, called for a file that either isn't chain
+data or whose streaming dispatch declined/fell back). This VM's `run.log` shows every processed file going through
+`"Chain-bundle streaming produced 0 candles for instrument_id=..."` — i.e. the **streaming**
+`_process_chain_bundle_streaming` path (`live_workers_streaming.py`), which already computed `success=error_count==0` /
+`error_message="; ".join(errors) if errors else None` since `1cdf3ecf` (2026-06-11) — long before today's fix and
+unrelated to it. Confirmed no misclassification bug there: its honest-absence branch (`_streaming_write_per_tf`,
+zero-candle timeframe) does `continue` without ever touching `errors`, so it cannot by itself flip `success` to `False`.
+
+Yet 52/594 files DID end up `success=False` with `error_message` falsy enough that `process_handler.py:468`'s
+`result.error_message or "Unknown error"` fell back to the literal string "Unknown error" (confirmed: the log's summary
+block literally reads `[odds_horizon_bucket] <instrument_id>: Unknown error` for all 10 it prints in full,
+`... and 42 more errors`). Every per-slice/per-write error-string constructor I traced in the streaming path
+(`_streaming_process_slice_timeframes`'s `f"{group_value}@{tf}: {e}"`, `_streaming_write_one_group`'s
+`f"write@{tf}: {write_error}"`) always produces a non-empty string even when `str(exception)` itself is empty (Python:
+`str(SomeError())` with no args → `''`, but the f-string still carries the `group_value@tf: ` prefix) — so NONE of those
+sites can produce a fully-empty `error_message` on their own.
+
+**Leading hypothesis (not yet confirmed — needs a follow-up read + a repro, not a guessed fix):**
+`_maybe_dispatch_chain_streaming` (`live_workers_streaming.py:196-250`) wraps the ENTIRE
+`_process_chain_bundle_streaming` call in
+`except (OSError, ValueError, RuntimeError, KeyError, TypeError) as exc: logger.error(...); return None` — a "defensive
+fall-through to the eager path" documented in its own docstring. Two calls inside `_process_chain_bundle_streaming`'s
+per-symbol `for` loop (`live_workers_streaming.py:777-823`) — `_streaming_filter_slice` and
+`_streaming_resolve_inst_info` — are NOT individually try/excepted (unlike `_streaming_process_slice_timeframes`, which
+is). If either raises for a specific match's slice, the exception propagates out of `_process_chain_bundle_streaming`
+entirely, is swallowed by `_maybe_dispatch_chain_streaming`'s broad except (logged as a plain ERROR line — none of which
+I could find in this VM's `run.log`, worth re-checking with `grep -i "falling back to eager"` on a fresh repro run since
+I searched for `Traceback`/`Exception` generically, not this exact string), and the file falls through to
+`live_workers.py`'s EAGER (non-streaming) path (`_read_tick_data` → `_process_all_timeframes`). That eager path does NOT
+carry the `no_real_chain_root` / `_group_batches_by_own_type` per-instrument-type split that was added ONLY to the
+streaming path (`mdps_t1_recon_job_oom_failing_7_days_2026_07_26.md` Update 5's third bug) — so a sports `ticks.parquet`
+bundle re-processed there may hit a DIFFERENT failure mode (or a bare exception whose `str()` really is empty) that
+`_collect_future_result` (`batch_workers.py:507-521`) then surfaces as `error_message=str(e)` — empty when `e` itself
+has no args — explaining the "Unknown error" fallback.
+
+**Not yet done** (bounding this escalation's own effort — see below): grepping `run.log` for `"falling back to eager"`
+to confirm the fallback actually fired for these 52 files (would prove the hypothesis directly); reading
+`_streaming_filter_slice`/`_streaming_resolve_inst_info` line-by-line for a raise that could stringify to `""`; a local
+repro against the 52 known-bad instrument_ids (listed in this VM's `run.log`, e.g.
+`FOOTBALL:bovada:h2h:soccer_argentina_primera_division:2025/2026:Racing Club-Estudiantes::AWAY`) for date `2025-12-24`.
+
+**Confirmed deterministic, not transient**: the exact `52/594` count and the exact same match/bookmaker set recur
+identically across at least 3 separate VM runs today (`114120`, `122555`, `130846`) — this is a reproducible code
+condition, not network flakiness, so relaunching will fail identically every time.
+
+**No relaunch performed for `130846`'s failure.** The `mdps-backfill-sports-` prefix for date `2025-12-24` has now
+failed **5x today** (`110123`, `110907`, `114120`, `122555`, `130846`), well past `rb_infra_relaunch.md`'s
+`≤2/(vm-prefix,day)` bound, and per that runbook's own rule ("if it re-fails the SAME way twice, the shard is wedged...
+STOP relaunching, file an issue") a 6th relaunch would almost certainly reproduce the identical 52/594 crash. This
+finding stays `status: open` pending a follow-up read of `_maybe_dispatch_chain_streaming`'s fallback + the two
+unguarded per-slice helper calls.
