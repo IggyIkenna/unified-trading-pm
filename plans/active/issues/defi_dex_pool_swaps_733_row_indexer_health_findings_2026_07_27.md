@@ -48,7 +48,7 @@ estimate_calibrated_ai_days: 0.2
 assigned_role: data_engineering
 drift_direction: unknown
 depends_on: []
-last_updated: 2026-07-28
+last_updated: 2026-08-01
 locked_by:
 locked_since:
 supersedes:
@@ -276,17 +276,25 @@ positive.
       multi-day window, this crosses from "transient dip" into "file an upstream/Graph-Protocol-side report and consider
       whether our indexer-preference/allowlist options (if any exist at the gateway API level) can steer routing away
       from it" — out of scope to research further in this one-shot escalation. Repo: market-tick-data-service.
-- [ ] [DATA] P3. **Separate, small (4 rows), already-anticipated in this doc's Takeaway 3.** CURVE/OPTIMISM is STILL
-      generating fresh `attempted_failed` rows with the pre-fix error signature as of 2026-07-28T09:16Z, a full day
-      after the `EXPECTED_SUBGRAPH_DEINDEXED` runtime-detection fix (`market-tick-data-service@dddd1b21`) landed on
-      live-defi-rollout — confirmed via `git merge-base --is-ancestor dddd1b21 HEAD` on `live-defi-rollout` today.
-      `mtds-dex-swaps-backfill-1`/`mtds-dex-swaps-backfill-2` (GCP, `asia-northeast1-c`) have been RUNNING continuously
-      since 2026-07-23T07:03Z per `TARBALL_PINS.json` (floating `MTDS_TARBALL_SHA`/`UTL_TARBALL_SHA`, baked at VM launch
-      — VMs don't live-reload) — i.e. 4 days before the fix shipped, so they are still writing pre-fix rows. Low
-      priority (4 rows/day) but the fix is a VM restart onto current code once these backfills are confirmed either
-      complete or safely restartable without losing checkpointed progress — not investigated further here (out of this
-      one-shot escalation's scope; flagging so the next person who touches these VMs isn't surprised the CURVE/OPTIMISM
-      count doesn't drop to zero). Repo: deployment-service (VM restart), market-tick-data-service (already fixed).
+- [ ] [DATA] P3. **Now 122 rows (was 4, 2026-07-28; confirmed still live 2026-08-01, see "Verified live (2026-08-01"
+      below) — growth rate ~24/day/VM, still well under the 500-row materiality floor.** CURVE/OPTIMISM is STILL
+      generating fresh `attempted_failed` rows with the pre-fix error signature, a full week after the
+      `EXPECTED_SUBGRAPH_DEINDEXED` runtime-detection fix (`market-tick-data-service@dddd1b21`) landed on
+      live-defi-rollout. `mtds-dex-swaps-backfill-1`/`mtds-dex-swaps-backfill-2` (GCP, `asia-northeast1-c`) have been
+      RUNNING continuously since 2026-07-23T07:03Z per `TARBALL_PINS.json` (floating
+      `MTDS_TARBALL_SHA`/`UTL_TARBALL_SHA`, baked at VM launch — VMs don't live-reload) — i.e. before the fix shipped,
+      so they are still writing pre-fix rows; directly confirmed live in `run.log` 2026-08-01 (still logging the exact
+      old error string). **BLOCKING PRECONDITION found 2026-08-01, do not skip**: neither VM has a `PROGRESS.json`
+      checkpoint (`gs://deployment-scripts-{project}/     vm-logs/<vm>/` has only `run.log` + `TARBALL_PINS.json`) and
+      `dex_swaps_handler.py`'s per-`target_day` cycle pattern (sharply varying record counts every ~45-90min cycle)
+      indicates these VMs are still walking the launcher's default `START_DATE=2023-01-01` historical range day-by-day,
+      9+ days in — a naive delete+relaunch replays from 2023-01-01 and discards that progress (no checkpoint to resume
+      from). Before restarting: either (a) add a monotonic `record_vm_progress`/`PROGRESS.json` checkpoint to this
+      launcher/handler so a relaunch can resume from the last-completed date (mirrors the SPOT-preemption +
+      stall-relaunch contract other launchers already have), or (b) determine the current date-frontier from the per-VM
+      manifest shard (`_index/per_vm/mtds-dex-swaps-backfill-{1,2}.parquet`, most-recent `date` column value) and pass
+      it explicitly as `--start` on the relaunch. Repo: deployment-service (VM restart + checkpoint wiring),
+      market-tick-data-service (schema-detection fix already shipped).
 
 Source: `DP_RUN_MOSTLY_EMPTY` (DP-FETCH-009) CRITICAL page, `data_pipeline_failure` escalation `agt-38b3d6`, slot 7,
 2026-07-28.
@@ -445,6 +453,58 @@ raised and left `[OPERATOR]`-gated for cefi's `DP_RUN_MOSTLY_EMPTY` cluster
 
 Source: `DP_RUN_MOSTLY_EMPTY` (DP-FETCH-009) CRITICAL page, `data_pipeline_failure` escalation `agt-0afc1b`, slot 3,
 2026-07-28.
+
+## Verified live (2026-08-01, DP-FETCH-009 escalation — agt-35d769, slot 8) — same condition, plus a new checkpoint-safety finding on the P3 VM-restart todo
+
+Dispatched off a `DP_RUN_MOSTLY_EMPTY` (DP-FETCH-009) page framed differently this time — "STATIC BACKLOG: only 89
+attempted_failed row(s) in the last 1d (below the 500-row materiality floor); a decaying trickle on already-tracked
+backlog, not a fresh regression" — i.e. the monitor itself now distinguishes this from a fresh spike. Re-read the live
+prod manifest (bounded `read_availability_index(..., columns=[...], filters=[...])` slim-path read, not a full-index
+load): `dex_pool_swaps` `attempted_failed` = 1407 total. Breakdown matches every prior pass — VELODROME_V2/OPTIMISM=700,
+UNISWAP_V3/OPTIMISM=477, CURVE/OPTIMISM=122, TRADER_JOE_V2/AVALANCHE=28 (frozen), PANCAKESWAP_V3/BSC=17+13
+(`build_instrument_id`), UNISWAP_V4/ETHEREUM=17+8, UNISWAP_V2/ETHEREUM=5+1, PANCAKESWAP_V3/BASE=5 (new small bucket, all
+`build_instrument_id`-shaped), AERODROME_V3/BASE=2, PANCAKESWAP_V3/ETHEREUM=2, UNISWAP_V3/POLYGON=2. **No new
+venue/chain root cause** — the top-2 buckets (VELODROME_V2 + UNISWAP_V3, both OPTIMISM) are still 84% of the total and
+still the confirmed external Graph-Protocol "bad indexers" condition this doc already root-caused as
+`BLOCKED-UPSTREAM-OUTAGE` four passes running; no code fix applies to them.
+
+**New this pass — directly observed the P3 CURVE/OPTIMISM stale-VM finding live, not just inferred from row-count
+deltas.** `gcloud compute instances list` confirms `mtds-dex-swaps-backfill-1`/`-2` are still RUNNING, both launched
+2026-07-23T07:0x — a full day before the `EXPECTED_SUBGRAPH_DEINDEXED` fix (`market-tick-data-service@dddd1b21`) shipped
+2026-07-24, and (per `market_tick_data_service.cli.handlers.dex_swaps_handler`'s VM-boot-time floating-tarball contract
+— VMs don't live-reload) still running that pre-fix binary. Tailed `mtds-dex-swaps-backfill-1`'s live `run.log`
+directly: at `2026-08-01T09:44:06Z`, mid-cycle, it logged
+`curve/OPTIMISM: messari schema failed... sushi_custom schema failed... WARNING Failed to collect swaps curve/OPTIMISM: All 5 cascade schemas returned GraphQL errors for curve/OPTIMISM`
+— the exact OLD pre-fix message/`attempted_failed` classification, reproduced in real time about an hour after the
+previous identical occurrence (`08:47:57Z`). Confirms CURVE/OPTIMISM's continued growth (8 rows 2026-07-28 → 122 rows
+today) is exactly this stale-VM artifact, still live, not a new condition.
+
+**Why the P3 todo's VM restart is NOT a quick fix (new safety finding, explains the repeated "out of scope" deferrals
+above rather than just restating them)**: `dex_swaps_handler.process()` takes one `target_day` per invocation and the
+VM's own `run.log` shows "DEX swaps collection complete" cycles ~45-90min apart with sharply different total record
+counts each time (809022 / 716927 / 580236) — consistent with the VM walking a **calendar-day-by-day historical
+backfill** from the launcher's default `START_DATE=2023-01-01`, not a "re-poll today" loop. Checked
+`gs://deployment-scripts-central-element-323112/vm-logs/mtds-dex-swaps-backfill-1/` directly: **no `PROGRESS.json`
+exists** for this VM (only `run.log` + `TARBALL_PINS.json`, the latter carrying no pinned SHA — `"pins": {}`,
+`"floating": ["MTDS_TARBALL_SHA", "UTL_TARBALL_SHA"]`). Per the workspace's own PROGRESS-checkpoint contract
+(`/codex/05-infrastructure/vm-launcher-runbook.md`), a relaunch with no monotonic checkpoint present replays
+`START_DATE` from scratch — i.e. simply deleting + relaunching these two VMs today would silently discard **9 days of
+real 2023-01-01-forward historical backfill progress**, not just pick up the CURVE/OPTIMISM fix. That is a materially
+worse outcome than the current 122-row/~24-per-day-per-VM trickle, so **not attempting the restart this pass either** —
+same conclusion as every prior escalation, but now with the concrete mechanism (`dex_swaps_handler.py` / the
+`launch-mtds-dex-swaps-backfill-vm.sh` launcher have no `record_vm_progress`/`PROGRESS.json` wiring) rather than a
+restated "out of scope" note. **Updated the P3 todo below** with this precondition so whoever next picks it up doesn't
+attempt a naive delete+relaunch.
+
+No code fix ships this pass — every fixable class already has its fix on `live-defi-rollout` (`dddd1b21`); the remaining
+volume is either external-upstream (84%) or blocked on the VM-checkpoint gap above (9%) or noise-level new buckets (<1%,
+`build_instrument_id`/PANCAKESWAP_V3/BASE, `"has allocated indexers but"` on
+UNISWAP_V3/OPTIMISM+UNISWAP_V3/BASE+UNISWAP_V4/ETHEREUM x4 rows, a `521` gateway error on PANCAKESWAP_V3/BSC x2 rows —
+all single-digit counts, not chased further, consistent with this doc's established bar for what's worth a dedicated
+follow-up).
+
+Source: `DP_RUN_MOSTLY_EMPTY` (DP-FETCH-009) CRITICAL page ("STATIC BACKLOG" framing), `data_pipeline_failure`
+escalation `agt-35d769`, slot 8, 2026-08-01.
 
 ## Progress Log
 
