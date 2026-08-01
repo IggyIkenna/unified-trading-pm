@@ -579,3 +579,29 @@ Phase B itself is a large multi-repo migration that warrants its own dedicated p
   `/skip-current-task {"reason_code": "GATED"}`. **For the next resumer**: pull the checkpoint from the GCS path above
   (or any scratchpad copy — content-identical), re-verify the cron state fresh, and if `ENABLED`, resume with
   `--report <checkpoint>` from day 300/348 (49 days remaining).
+- **2026-08-01T02:2xZ (slot 6, `data_engineering`, backlog task `prediction_satellite_ao_dispatch_batch4-023`, resumed
+  after `already_in_progress: true`)**: an orchestrator restart at ~20:45Z had SIGKILLed a prior in-flight `--apply` run
+  on this slot mid-session (cgroup-child kill, per the boot-time heads-up message) — confirmed no live
+  `migrate_prediction_trades`/watchdog process on this host (`ps aux` clean) and no local scratchpad checkpoint newer
+  than the 298/348-day file already superseded by slot-15's 2026-07-31 merge. **Checkpoint is not lost**: the durable
+  GCS copy from the prior entry
+  (`gs://market-data-tick-pred-prd-central-element-323112/_ops/prediction_trades_migration_checkpoint_2026_07_31.jsonl`)
+  still reads 299 lines/days, 0 anomalies — confirms nothing progressed past 299/348 before the restart killed whatever
+  resume attempt was running, and nothing regressed either. **Blocker re-verified, unchanged**:
+  `uts-prod-manifest-consolidator-market-data-prediction-cron` still `PAUSED` (`userUpdateTime: 2026-07-31T13:45:51Z`,
+  pinned `--account=unified-trading-sa@...` per the documented gotcha); `mtds_available_at_cross_asset_backfill-001`
+  (the Apply predecessor that must land before this cron can safely resume) still `status: queued` via
+  `GET /api/backlog`, its sibling `-006` (Resume cron) still shows `status: dispatched` (`dispatched_to: 3`,
+  `dispatched_at: 2026-07-31T23:33:21Z`, `done_at: null` — over 24h with no completion). The dispatch-order fix this
+  doc's own history references (`agent-orchestrator@77769ab`) has NOT resolved this specific pair even ~5 days
+  post-landing — logged fresh corroborating evidence on
+  `issues/mtds_backfill_sequential_true_dispatch_order_violated_2026_07_29.md` (this commit) rather than re-deriving it
+  here. **Not resuming the enrichment run this touch** — the blocker is identical to the last 3 dispatches (2026-07-29
+  ×2, 2026-07-31) and nothing about it has changed; per this doc's own established precedent (slot-14/15 2026-07-29,
+  slot-15 2026-07-31), camping another watcher on a static ~3-day external stall adds no value the durable checkpoint
+  doesn't already preserve. Released via `/skip-current-task {"reason_code": "GATED"}`. **For the next resumer**: pull
+  the checkpoint from the GCS path above, re-verify BOTH the cron state AND
+  `mtds_available_at_cross_asset_backfill-001`'s live backlog status fresh (don't trust this entry once time has passed)
+  — if the cron is `ENABLED`, resume with `--report <checkpoint>` from day 300/348 (49 days remaining); if still
+  `PAUSED`, the real unblock is `-001` actually landing (either the dispatch-order bug getting fixed for real, or a
+  data_engineering worker being dispatched `-001` directly per that plan's own backlog entry).

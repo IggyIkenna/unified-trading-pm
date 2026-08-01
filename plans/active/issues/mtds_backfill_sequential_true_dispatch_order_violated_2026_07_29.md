@@ -132,20 +132,20 @@ which of the 3 hypotheses above (or another) is the actual cause — then fix + 
       agent-orchestrator)
 
       **2026-07-30 (slot-3, data_engineering craft) — STILL VIOLATED live, ~2h+ after the fix commit.** Dispatched
-                  `mtds_available_at_cross_asset_backfill-006` ("Resume the prediction consolidator cron") directly via `/boot`.
-                  Confirmed via `git merge-base --is-ancestor 77769ab HEAD` in this session's `agent-orchestrator` worktree —
-                  `77769ab` IS an ancestor of current `live-defi-rollout` HEAD (`41f69878e`), so the fix is present in the repo. But
-                  a fresh `GET /api/backlog` query against the LIVE orchestrator server (the same one that dispatched `-006` to me)
-                  shows `mtds_available_at_cross_asset_backfill-001` (Apply `rebuild_prediction_manifest.py`, the true predecessor)
-                  still `status: queued`, `dispatched_to: null` — never assigned to anyone — while `-006` (its downstream "resume
-                  cron" sibling) was `dispatched` to this slot. The exact violation this VERIFY todo asks to check for is still
-                  reproducing in production. Did not dig further into whether this is (a) the fix genuinely present in code but the
-                  running orchestrator SERVER PROCESS not yet restarted/redeployed to pick it up (repo-merge ≠ live-deploy for a
-                  long-running server), or (b) a residual gap in the fix itself — that root-cause split needs `backend_engineer`
-                  craft + the server's own deploy/restart history, out of scope for a `data_engineering` task. Declined `-006`
-                  itself (nothing to resume — the backfill still hasn't been applied) per the established precedent in the
-                  source plan's Progress Log (dispatch-order findings #2–#5). Leaving this checkbox unflipped — the fix is not yet
-                  confirmed live-effective.
+                      `mtds_available_at_cross_asset_backfill-006` ("Resume the prediction consolidator cron") directly via `/boot`.
+                      Confirmed via `git merge-base --is-ancestor 77769ab HEAD` in this session's `agent-orchestrator` worktree —
+                      `77769ab` IS an ancestor of current `live-defi-rollout` HEAD (`41f69878e`), so the fix is present in the repo. But
+                      a fresh `GET /api/backlog` query against the LIVE orchestrator server (the same one that dispatched `-006` to me)
+                      shows `mtds_available_at_cross_asset_backfill-001` (Apply `rebuild_prediction_manifest.py`, the true predecessor)
+                      still `status: queued`, `dispatched_to: null` — never assigned to anyone — while `-006` (its downstream "resume
+                      cron" sibling) was `dispatched` to this slot. The exact violation this VERIFY todo asks to check for is still
+                      reproducing in production. Did not dig further into whether this is (a) the fix genuinely present in code but the
+                      running orchestrator SERVER PROCESS not yet restarted/redeployed to pick it up (repo-merge ≠ live-deploy for a
+                      long-running server), or (b) a residual gap in the fix itself — that root-cause split needs `backend_engineer`
+                      craft + the server's own deploy/restart history, out of scope for a `data_engineering` task. Declined `-006`
+                      itself (nothing to resume — the backfill still hasn't been applied) per the established precedent in the
+                      source plan's Progress Log (dispatch-order findings #2–#5). Leaving this checkbox unflipped — the fix is not yet
+                      confirmed live-effective.
 
 ## Deferred — HELD by the `/na-eligibility-audit ao` conflict-check (2026-07-30)
 
@@ -250,3 +250,15 @@ stall blocking a SECOND in-flight plan (`prediction_satellite_ao_dispatch_batch4
   with priority: neither of these two docs' `-001`/predecessor-style todos were mid-flight reworded recently (unlike the
   mtds `-001`/`-006` pair `77769ab` fixed), so hypothesis "orphaned-reword corrupts the chain" does NOT explain these
   two — a genuinely distinct mechanism may be in play.
+- **2026-08-01T02:21Z (slot 6, data_engineering, resuming `prediction_satellite_ao_dispatch_batch4-023`)**: re-checked
+  the original mtds pair live via `GET /api/backlog` — **still reproducing today**, over 24h after the entries above.
+  `mtds_available_at_cross_asset_backfill-001` (the Apply predecessor) is still `status: queued`, never dispatched;
+  `-006` (Resume cron) shows `status: dispatched`, `dispatched_to: 3`, `dispatched_at: 2026-07-31T23:33:21Z`,
+  `done_at: null` — over 24h dispatched with no completion, i.e. either wedged on slot 3 or still actively (and
+  incorrectly) held ahead of its predecessor. `uts-prod-manifest-consolidator-market-data-prediction-cron` is
+  correspondingly still `PAUSED` (`userUpdateTime: 2026-07-31T13:45:51Z`), which is this issue's confirmed knock-on
+  block on the 4b-i migration todo referenced above — still stuck on the same root cause, now 3+ days after the first
+  recurrence. Did not touch `-001`/`-006`/the cron myself (out of scope for both this issue-doc-only touch and my actual
+  assigned task). Adding as a further corroborating data point for the `backend_engineer` re-open recommended above —
+  the `77769ab` fix has not resolved this specific pair even ~5 days after landing, so treat the VERIFY todo's premise
+  ("Apply lands before Resume dispatches") as still unconfirmed live.
