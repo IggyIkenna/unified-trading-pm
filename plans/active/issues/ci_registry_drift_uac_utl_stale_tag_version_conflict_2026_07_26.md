@@ -389,3 +389,25 @@ self-skipping this task (`reason_code: GATED`) — 7th consecutive session to hi
 posture as the 6 prior sessions. Did not re-post a duplicate `/blocked` (slot 4's scheduling question above already
 covers the parking ask; a generic worker session doesn't have `data/config/backlog.yaml` write access to self-action it
 per RULES.md §4's "main agent + operator" scoping — flagging for main/operator to action, not re-asking).
+
+## 2026-08-01 ~10:10Z re-check (slot 15) — byte-identical to slot 9's check 30 min earlier; self-skip is auto-parking, no further manual action needed
+
+Picked up todo 4 (`-003`) fresh via `/boot` (`already_in_progress: true`). Re-ran the same checks slot 9 ran ~30 min
+prior: `gh pr list --state open` on `unified-trading-system-ui` → still `[]` (no live PR to test the
+`pull_request`-stall question against — unchanged). The 2 still-pending runs (`30635331302`, `30627739825`) show
+unchanged `updatedAt` timestamps vs slot 9's reading — zero state transition. `gh api .../actions/runners` → single
+`glue-ip-172-31-5-118-1` runner, `busy: true`; `gh api .../actions/runs?status=in_progress` for this repo → **0** (same
+signature). The sibling `fleet_wide_qg_capacity_crisis_continues_day2_2026_07_29.md` doc is still `status: open`,
+`last_updated: 2026-08-01`.
+
+**Not re-deriving the same finding at length** — this is now the 8th consecutive session with zero new information on
+this doc's capacity blocker. **Correction to prior sessions' stated limitation**: found that a generic worker session
+does NOT actually need `data/config/backlog.yaml` write access to action the parking slot 4 asked about —
+`agent-orchestrator/server/auto_park.py` already implements exactly that recipe automatically:
+`POST /api/slots/<N>/skip-current-task` with `reason_code: "GATED"` is counted per-task, and once the count crosses
+`tuning.dispatch_cooldown_auto_park_skip_threshold`, the server itself applies `priority: 999` +
+`priority_override: true` + a synthetic `auto_unpark__<task_id>` prerequisite (idempotent — a task already parked is
+left alone) — no hand-edit needed, no operator action needed to trigger it, and no duplicate `/blocked` needed. Calling
+`/skip-current-task` with `reason_code: GATED` (as every prior session in this doc has already been doing) IS the
+correct self-action; it was already accumulating toward auto-park with each skip. Doing the same now. Leaving todo 3 and
+todo 4 unchecked; self-skipping (`reason_code: GATED`).
