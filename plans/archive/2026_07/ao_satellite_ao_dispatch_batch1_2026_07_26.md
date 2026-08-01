@@ -51,9 +51,9 @@ source: >-
 > **🟢 ARCHIVED 2026-08-01** — all 11 todos `[x]`, `locked_by:` empty. Finalized by
 > `/plans/archive/2026_07/ao_satellite_ao_dispatch_batch1_finalize_2026_07_26.md`: every done-claim re-verified against
 > reality, evidence reconciled into all 11 TRUE source docs, every Deferred item's gate re-checked (2 cleared into
-> `/plans/active/ao_satellite_ao_dispatch_batch2_2026_08_01.md`, the rest still genuinely gated or already resolved
-> elsewhere), and the one net-new fully-resolved doc found during that re-check
-> (`escalation_backlog_repo_collision_blind_spot_2026_07_25.md`) archived alongside it.
+> `/plans/active/ao_satellite_ao_dispatch_batch4_2026_08_01.md` (renamed from a mistakenly-numbered "batch 2"), the rest
+> still genuinely gated or already resolved elsewhere), and the one net-new fully-resolved doc found during that
+> re-check (`escalation_backlog_repo_collision_blind_spot_2026_07_25.md`) archived alongside it.
 
 ## Why this plan exists (the coverage gap, measured)
 
@@ -250,18 +250,18 @@ the 35 satellite docs. This plan extracts the conflict-clear, bounded-outcome su
       that also names `bootstrap.py`/regen ids — do not touch task-id derivation here.
 
       **2026-07-28 update — the actual root cause was found and fixed at the application level** (an UPDATE status
-                                  regression in `release_task_to_queue()`, not a bare DELETE — see the resolved issue doc), which left this
-                                  todo's original DELETE-trigger idea a narrower, discretionary defense-in-depth item rather than the primary
-                                  mitigation. **2026-08-01 — built as that defense-in-depth backstop.** Added
-                                  `bootstrap.py::_migrate_done_task_delete_trace()` — an idempotent migration creating `deleted_done_tasks_trace` +
-                                  an `AFTER DELETE ON tasks WHEN OLD.status = 'done'` SQLite trigger, which fires regardless of call site
-                                  (including a raw out-of-band SQL delete the application-level guard cannot see, since that guard only catches an
-                                  illegal transition made through the ORM). The trigger only INSERTs, never raises. 4 new tests in
-                                  `tests/test_done_task_delete_trace.py`: a raw SQL delete of a done row leaves a trace; the sanctioned
-                                  `DELETE /api/backlog/{task_id}` path still succeeds unconditionally AND is traced; deleting a non-done task
-                                  leaves no trace (the `WHEN` clause is status-specific); the migration is idempotent across repeated
-                                  `create_all_tables()` calls. Full detail + evidence in
-                                  `/plans/archive/issues/ao_backlog_done_row_disappearance_2026_07_25.md`'s Progress Log.
+                                              regression in `release_task_to_queue()`, not a bare DELETE — see the resolved issue doc), which left this
+                                              todo's original DELETE-trigger idea a narrower, discretionary defense-in-depth item rather than the primary
+                                              mitigation. **2026-08-01 — built as that defense-in-depth backstop.** Added
+                                              `bootstrap.py::_migrate_done_task_delete_trace()` — an idempotent migration creating `deleted_done_tasks_trace` +
+                                              an `AFTER DELETE ON tasks WHEN OLD.status = 'done'` SQLite trigger, which fires regardless of call site
+                                              (including a raw out-of-band SQL delete the application-level guard cannot see, since that guard only catches an
+                                              illegal transition made through the ORM). The trigger only INSERTs, never raises. 4 new tests in
+                                              `tests/test_done_task_delete_trace.py`: a raw SQL delete of a done row leaves a trace; the sanctioned
+                                              `DELETE /api/backlog/{task_id}` path still succeeds unconditionally AND is traced; deleting a non-done task
+                                              leaves no trace (the `WHEN` clause is status-specific); the migration is idempotent across repeated
+                                              `create_all_tables()` calls. Full detail + evidence in
+                                              `/plans/archive/issues/ao_backlog_done_row_disappearance_2026_07_25.md`'s Progress Log.
 
 - [x] ✅ [REVIEW] P3. **DONE-IN-SUBSTANCE 2026-08-01 — via a more rigorous successor pass than this todo originally
       specified, not by literally editing the named doc.** `ao_consolidated_closeout_2026_07_25.md` (the doc this todo's

@@ -5,7 +5,7 @@ summary:
   Slot 14 paged `agent-orchestrator-alerts` "STILL RED" for 40+ hours (dirty uv.lock) with NO live tmux session at all —
   nothing was ever going to trigger the existing FM8 orphan-WIP inherit mechanism, because that mechanism only runs at
   pre-spawn, and nothing was trying to spawn into slot 14.
-status: open
+status: resolved
 nature: process
 asset_group: [ao]
 stage: [meta]
@@ -22,17 +22,23 @@ created: 2026-07-20
 parent_epic: orchestrator_master
 priority: P2
 resolved_by:
+  agent-orchestrator@de44b255f + agent-orchestrator@8aaf928a0 (ao_remediation_b_code_chain_2026_07_23 items 7+9, shipped
+  2026-07-24 — predates this doc's own re-batching)
 source: ao_fleet_infra_hardening_2026_07_20.md todo-6 alert follow-up (2026-07-20)
 assigned_vm: NA
 execution_scope: local-only
 drift_direction: advance-code
 depends_on: []
-last_updated: 2026-07-30
+last_updated: "2026-08-01"
 locked_by:
 locked_since:
 ---
 
 # Idle-slot dirty WIP never auto-resolves
+
+> **🟢 ARCHIVED 2026-08-01** — all todos `[x]`, both remaining `[BACKEND] P2` items found MOOT (already shipped
+> 2026-07-24 by `ao_remediation_b_code_chain_2026_07_23`, before this doc was even re-batched). See the two todo entries
+> below for full evidence.
 
 ## What I found
 
@@ -92,12 +98,21 @@ relying solely on the next spawn attempt:
 > touches this: `agent-orchestrator@529b0dc` fixed the git-status DETECTOR's `(host, slot_id)` keying, and the
 > deployment-ui Fleet tab adds VISIBILITY — neither adds a resolution-side sweep.
 
-- [ ] [BACKEND] P2. **Add a periodic dirty-resolution sweep that does not depend on a spawn attempt.** Reuse the
-      existing `resolve_dirty_state` / `commit_and_push_dirty_repos` plus the FM8 liveness discriminator (dead or
-      expired `.agent-claim` → inherit + commit; live claim or mtime <120s → PROTECT), driven from a periodic tick
-      against slots that are dirty AND provably dead (no live tmux session). **Gate**: a deliberately-idle dirty slot
-      with no tmux and an expired claim is inherited within one sweep interval, evidenced by a
-      `slot_dirty_state_resolved`-class activity row with **no adjacent spawn/autospawn event**.
+- [x] ✅ **MOOT — already shipped 2026-07-24, a full week before this todo was re-surfaced for batching (found
+      2026-08-01 by direct code read, before dispatching what would have been a duplicate reimplementation).**
+      `agent-orchestrator@de44b255f` (`ao_remediation_b_code_chain_2026_07_23` item 7) added
+      `WorkerLivenessWatchdog._sweep_dirty_slots()`, wired unconditionally into `_tick_once()`: enumerates every
+      `SlotRow`, skips any with a live (non-dead-pane) tmux session, and calls
+      `resolve_dirty_state(...,     replacing_session=None, ...)` on the rest — reusing the FM2/FM3/FM8 coordinator +
+      liveness discriminator verbatim, exactly as this todo specified. `tests/test_watchdog_dirty_sweep.py` (6 cases)
+      covers the exact gate this todo names (idle+expired-claim inherits within one tick, evidenced by
+      `slot_dirty_state_resolved` tagged `trigger: "watchdog_sweep"` with no adjacent spawn event). **Three separate
+      later passes (na-eligibility-audit 2026-07-30, plan-reduction-marathon wave-4 2026-07-30, and this doc's own
+      finalize-batch triage 2026-08-01) all re-confirmed this as still-open "conflict-gated" work without checking
+      whether the code already existed** — each correctly tracked the STATED blocker (the operator-merge-gate bypass,
+      resolved 2026-08-01 by `agent-orchestrator@49c919d`) but none re-verified the underlying feature against current
+      `server/`. Caught here by reading `server/worker_liveness_watchdog.py` directly before dispatching it as new batch
+      work.
 - [x] [DIAG] P3. **RETAGGED 2026-07-28 (workspace stale-gate audit) — this was audit/spot-check work, not a genuine
       operator-decision gate; already executed and recorded.** Spot-check the live fleet for a current instance before
       prioritising the above — query `/api/fleet/git-health` for any slot dirty >24h with no live session. If none
@@ -178,10 +193,17 @@ recovery (cannot push code or edit another slot's git).
       "`git branch     preserve-gmx-cleanup 11ed7f09` (un-orphans both — `44de0cf0` is its parent)". Measured parentage
       is the reverse — `44de0cf0`'s parent is `11ed7f09` (→ `18d53d63` → origin). Branching at `11ed7f09` as written
       would have preserved only `11ed7f09` and silently let `44de0cf0` GC. Branch at the TIP (`44de0cf0`) to reach both.
-- [ ] [BACKEND] P2. **Extend the dirty-resolution sweep (P2 above) to also catch committed-but-unpushed commits orphaned
-      by realignment**, not just dirty-tree WIP — before realigning a dead slot's worktree to origin, detect local
-      commits not on origin and preserve them to a `wip-preserve/` ref. **Gate**: a dead slot with a local commit ahead
-      of origin gets that commit preserved to a ref (not orphaned) when its worktree is realigned.
+- [x] ✅ **MOOT — already shipped 2026-07-24, same session as the todo above.** `agent-orchestrator@8aaf928a0`
+      (`ao_remediation_b_code_chain_2026_07_23` item 9) added `push_or_preserve_ahead_commits`
+      (`server/worktree_clean_check/_ahead_push.py`) and wired it as `WorkerLivenessWatchdog._sweep_unpushed_slots()`,
+      sibling to `_sweep_dirty_slots()` above, called every tick from `_tick_once()`. For a clean-but-ahead-of-origin
+      repo it verifies the `.qg_last_passed_sha` sentinel and pushes if it matches; no sentinel → falls back to a
+      content-addressed `wip-preserve/` ref rather than orphaning the commit on realignment — exactly this todo's gate.
+      `tests/test_watchdog_unpushed_sweep.py` (7 cases) confirms the sentinel-push and no-sentinel-preserve paths both
+      fail pre-fix / pass post-fix. Also already gate-aware for the operator-merge-gate bypass this doc's own Progress
+      Log tracked as the blocker (`watchdog_unpushed_sweep_defeats_operator_merge_gate_2026_07_26.md`,
+      `agent-orchestrator@49c919d`) — held on a `wip-preserve/` ref instead of pushed when the owning task has an open
+      blocked-question. Same three-pass staleness as the todo above.
 
 ## Concrete recurrence 2026-07-25 (3) — dead slots 10 + 11 orphaned unpushed commits (review sweep 12:20Z)
 
@@ -290,3 +312,14 @@ Review (agt-c83ba7, msg 2013, 13:08Z) flagged and main (agt-52bb99) verified rea
   `watchdog_unpushed_sweep_defeats_operator_merge_gate_2026_07_26.md`). Both `[BACKEND] P2` todos re-checked for
   file-collision against the whole `plans/active` corpus — zero hits — and drafted into
   `/plans/active/ao_satellite_ao_dispatch_batch2_2026_08_01.md` (`status: draft`, awaiting operator approval).
+- **2026-08-01 (corrected, same day, before that draft was dispatched)**: before starting the drafted batch work, read
+  `agent-orchestrator/server/worker_liveness_watchdog.py` directly and found BOTH `[BACKEND] P2` todos already fully
+  shipped — `_sweep_dirty_slots()` (`agent-orchestrator@de44b255f`) and `_sweep_unpushed_slots()`
+  (`agent-orchestrator@8aaf928a0`), both from `ao_remediation_b_code_chain_2026_07_23` items 7+9, landed 2026-07-24.
+  That is a full week before the 2026-07-30 audits above re-confirmed this doc as open, and a week before the entry
+  directly above re-drafted it as new batch work — three separate passes propagated the staleness without checking the
+  code. Flipped both todos to `[x]` MOOT with full evidence, archived this doc (0 open todos remain), and dropped the
+  corresponding todo from the batch it had just been drafted into (renamed to
+  `ao_satellite_ao_dispatch_batch4_2026_08_01.md`, since batches 2 and 3 already existed under those numbers). Lesson: a
+  "gate cleared" verdict on an issue doc's STATED blocker is not the same as verifying the underlying feature doesn't
+  already exist — check the code, not just the doc's own narrative, before dispatching what it asks for as new work.

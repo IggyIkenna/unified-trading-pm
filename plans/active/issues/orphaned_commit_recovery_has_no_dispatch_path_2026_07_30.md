@@ -39,7 +39,7 @@ related:
   [
     /plans/archive/issues/branch_reset_to_origin_orphans_unpushed_worker_commits_2026_07_27.md,
     /plans/active/issues/wip_preserve_refs_silently_unrecovered_2026_07_29.md,
-    /plans/active/issues/idle_slot_dirty_wip_never_auto_resolves_2026_07_20.md,
+    /plans/archive/issues/idle_slot_dirty_wip_never_auto_resolves_2026_07_20.md,
     /plans/active/issues/killed_slot_orphans_committed_unpushed_work_no_push_path_2026_07_21.md,
     /plans/active/issues/utl_shared_clone_commits_repeatedly_reset_2026_07_22.md,
     /codex/05-infrastructure/per-tab-worktrees.md,
@@ -255,13 +255,13 @@ authority is the expensive answer to a question that a verifier answers for free
       discriminator returns LIVE for both the slot-5 and slot-15 shapes recorded above.
 - [ ] [DATA] P3. **Triage the 24 previously-uninventoried `refs/wip-preserve/**` refs this sweep found fleet-wide.**
       This doc tracked exactly ONE (`cascade-strategy-service-a77eb6d170ca`, now verified SUPERSEDED); a fleet-wide
-      `for-each-ref` found **25**, dated 2026-07-26..2026-07-29. First-pass blob-compare says ~16 are content-identical
-      to origin (superseded) and the rest are near-misses: `slot-2 unified-api-contracts f1e109bc` and
-      `slot-3 unified-api-contracts ce7d7d1e` are net-NEGATIVE vs origin (origin already ahead — would regress);
-      `slot-12 deployment-service 0e62096` is fully upstream; `slot-9 strategy-service b76f37db` adds **comment-only**
-      lines (the functional `runs-on: [self-hosted, glue]` migration is already on origin); the three
-      `slot-11 scripts/setup.sh` refs are a cosmetic `uv==0.10.8` → `"uv==0.10.8"` shell-quoting nit. The only
-      substantive residual found is `slot-12 unified-trading-library c927ec58` (docstring `lst_staking_yields` →
+      `for-each-ref`found **25**, dated 2026-07-26..2026-07-29. First-pass blob-compare says ~16 are content-identical
+      to origin (superseded) and the rest are near-misses:`slot-2     unified-api-contracts f1e109bc`and
+      `slot-3 unified-api-contracts     ce7d7d1e`are net-NEGATIVE vs origin (origin already ahead — would regress);
+      `slot-12 deployment-service     0e62096`is fully upstream;`slot-9 strategy-service     b76f37db`adds
+      **comment-only** lines (the functional`runs-on: [self-hosted,     glue]`migration is already on origin); the three
+      `slot-11     scripts/setup.sh`refs are a cosmetic`uv==0.10.8`→`"uv==0.10.8"`shell-quoting nit. The only
+      substantive residual found is`slot-12     unified-trading-library c927ec58`(docstring`lst_staking_yields`→
       `lst_yields`, 2 lines) — needs a check of which feature_group name is actually correct before shipping either way.
       **Done when**: each of the 25 refs has a recorded SUPERSEDED / RECOVER / DELETE verdict. Depends on the verifier
       above — do not hand-triage these one by one.

@@ -213,8 +213,9 @@ Doc-only this time (no code collision), but a clean example of the SAME task_id 
 - **2026-08-01** (`ao_satellite_ao_dispatch_batch1_finalize_2026_07_26.md` todo 3): the watchdog-cluster ordering
   decision this `[BACKEND] P2` release-signal item was sequenced behind is ruled + shipped
   (`agent-orchestrator@64b5310`/`@77fc60a`). Re-checked for file-collision against the whole `plans/active` corpus —
-  zero hits on `server/failover.py` — and drafted into `/plans/active/ao_satellite_ao_dispatch_batch2_2026_08_01.md`
-  (`status: draft`, awaiting operator approval). The `[BACKEND] P3` `/done`-idempotency sibling is NOT included — it
-  remains file-collision-held against `server/routes/slots_worker.py` (2 other active docs' open todos on the same file:
+  zero hits on `server/failover.py` — and drafted into `/plans/active/ao_satellite_ao_dispatch_batch4_2026_08_01.md`
+  (renamed from a mistakenly-numbered "batch 2" 2026-08-01 — batches 2 and 3 already existed; `status: active`,
+  operator-approved). The `[BACKEND] P3` `/done`-idempotency sibling is NOT included — it remains file-collision-held
+  against `server/routes/slots_worker.py` (2 other active docs' open todos on the same file:
   `cicd_escalation_agentrow_archived_prematurely_mid_session_2026_07_29.md`,
   `data_pipeline_failure_one_shot_done_no_agentrow_2026_07_29.md`).

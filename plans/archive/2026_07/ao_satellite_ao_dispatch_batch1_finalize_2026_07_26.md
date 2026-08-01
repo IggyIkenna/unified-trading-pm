@@ -46,9 +46,9 @@ source: >-
 # AO satellite AO batch 1 — finalize
 
 > **🟢 ARCHIVED 2026-08-01** — all 5 todos `[x]`, `locked_by:` empty. Batch 1 re-verified + evidence reconciled,
-> Deferred items re-checked (2 spun into `/plans/active/ao_satellite_ao_dispatch_batch2_2026_08_01.md`), 1 net-new
-> resolved doc found + archived (`escalation_backlog_repo_collision_blind_spot_2026_07_25.md`), and batch 1 itself
-> archived alongside this plan.
+> Deferred items re-checked (2 spun into `/plans/active/ao_satellite_ao_dispatch_batch4_2026_08_01.md`, renamed from a
+> mistakenly-numbered "batch 2"), 1 net-new resolved doc found + archived
+> (`escalation_backlog_repo_collision_blind_spot_2026_07_25.md`), and batch 1 itself archived alongside this plan.
 
 ## Todos
 
@@ -146,8 +146,10 @@ source: >-
       gate cleared now too, but were NOT individually file-collision-checked in this pass (out of this todo's
       explicitly-named scope) — recommend a fresh `/ag-closeout-audit ao` or manual conflict-check pass before drafting
       them into a plan, rather than rushing under-checked work in. **2 items spun into batch 2** (see
-      `ao_satellite_ao_dispatch_batch2_2026_08_01.md`); the rest recorded above with their current, specific reason.
-- [x] ✅ [REVIEW] P0. **DONE 2026-08-01.** The 3 originally-named docs
+      `ao_satellite_ao_dispatch_batch4_2026_08_01.md`, renamed from a mistakenly-numbered "batch 2"); the rest recorded
+      above with their current, specific reason.
+- [x] ✅ [REVIEW] P0. **DONE 2026-08-01** (batch spun off was renamed `ao_satellite_ao_dispatch_batch4_2026_08_01.md`,
+      see the banner above). The 3 originally-named docs
       (`ao_repo_docs_deleted_against_instructions_dead_code_refs_2026_07_23.md`,
       `orchestrator_slots_context_directive_issued_missing_migration_2026_07_25.md`,
       `slot_double_reset_dataloss_race_2026_07_25.md`) were ALREADY archived + repointed in

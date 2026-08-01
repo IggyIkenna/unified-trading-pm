@@ -13,7 +13,7 @@ summary: >-
   bounded work — this batch extracts those 3, each conflict-checked against the whole `plans/active` corpus before
   drafting (one genuine duplicate found and folded into a combined todo rather than drafted twice). Every todo below
   targets files disjoint from every sibling todo, so the plan needs no `sequential` gate.
-status: draft
+status: active
 nature: process
 asset_group: [ao]
 stage: [meta]
@@ -64,9 +64,8 @@ source: >-
 
 # AO satellite AO batch 3
 
-> **`status: draft` — NOT ingested, NOT dispatched.** Flipping this to `active` is the operator's call
-> (`/plans/PLAN_FORMAT.md`; CLAUDE.md § "Plan destination — ASK BEFORE CREATING"). Authored autonomously (scheduled
-> dispatch); deliberately stops at draft per the skill's Autonomous-mode contract.
+> **Operator-approved 2026-08-01** — flipped `status: draft` → `active`. Authored autonomously (scheduled dispatch);
+> deliberately stopped at draft per the skill's Autonomous-mode contract until this approval.
 
 ## Why this plan exists
 
@@ -91,6 +90,12 @@ batch1/batch2 applied, per the candidate-generator script's own stated rationale
 
 ## Rules for every worker on this plan
 
+- **File-adjacency caution (not a hard collision, but real)**: todo 2 below (dispatcher-side priority-inversion
+  watchdog) and `ao_satellite_ao_dispatch_batch4_2026_08_01.md`'s sole todo (failover release-signal) both plausibly
+  land in `agent-orchestrator/server/worker_liveness_watchdog.py` / its `_tick_once()` orchestration method (that file
+  already houses every periodic watchdog sub-sweep — the natural home for both a new watchdog pass and a fix to the
+  existing reclaim path). **Land this plan's todo 2 BEFORE batch 4's todo is started** — whoever picks up batch 4's todo
+  should re-check this todo has landed first.
 - **Put each todo's new test cases in a test module named for that todo's own concern** — never add to a test module
   another todo on this plan also touches. The todos below are file-disjoint by construction; keep them that way.
 - **Do not edit the source issue doc's checkboxes** beyond appending your evidence line to the todo you executed. The
@@ -138,16 +143,16 @@ batch1/batch2 applied, per the candidate-generator script's own stated rationale
       consequence of the first landing, not independent work).
 
 - [ ] [SCRIPT] P2. **Ship a read-only orphan-still-orphaned verifier, harden the liveness discriminator, then use the
-      verifier to triage all 25 fleet-wide `refs/wip-preserve/**` refs.** In `agent-orchestrator` (alongside
+      verifier to triage all 25 fleet-wide `refs/wip-preserve/**`refs.** In`agent-orchestrator`(alongside
       `server/worktree_clean_check/`): (1) add a read-only verifier that, for a recorded orphan sha, reports
-      `git merge-base --is-ancestor <sha> origin/<branch>` plus a per-touched-file blob-level `SAME-AS-ORIGIN`/
-      `DIFFERS` verdict and the `git diff origin <sha>` line-delta SIGN (net-negative means recovering would REGRESS
-      origin), emitting `SUPERSEDED`/`STILL-ORPHANED`/`WOULD-REGRESS` per item, and wire it into the orphan-recording
-      path so a stale orphan row self-closes; (2) make `server/worktree_clean_check/_liveness.py`'s discriminator
-      triangulate tmux-session existence AND `/api/state.worker_alive` AND a `/proc/<pid>/cwd` check instead of trusting
-      `.agent-claim` mtime alone, re-asserting immediately before any write rather than once at sweep start; (3) using
-      the verifier from (1), triage all 25 fleet-wide `refs/wip-preserve/**` refs (dated 2026-07-26..07-29, across slots
-      2/3/4/6/9/10/11/12/15) to a recorded SUPERSEDED/RECOVER/DELETE verdict — do not hand-triage. **Done when**: the
+      `git     merge-base --is-ancestor <sha>     origin/<branch>`plus a per-touched-file blob-level`SAME-AS-ORIGIN`/
+      `DIFFERS`verdict and the`git diff origin     <sha>`line-delta SIGN (net-negative means recovering would REGRESS
+      origin), emitting`SUPERSEDED`/`STILL-ORPHANED`/`WOULD-REGRESS`per item, and wire it into the orphan-recording path
+      so a stale orphan row self-closes; (2) make`server/worktree_clean_check/\_liveness.py`'s discriminator triangulate
+      tmux-session existence AND `/api/state.worker_alive`AND a`/proc/<pid>/cwd`check instead of trusting
+      `.agent-claim`mtime alone, re-asserting immediately before any write rather than once at sweep start; (3) using
+      the verifier from (1), triage all 25 fleet-wide`refs/wip-preserve/**` refs (dated 2026-07-26..07-29, across slots
+      2/3/4/6/9/10/11/12/15) to a recorded SUPERSEDED/RECOVER/DELETE verdict — do not hand-triage. **Done when\*\*: the
       verifier reproduces the prior sweep's 10 recorded verdicts from their shas alone; the discriminator returns LIVE
       for both the slot-5 (32-day-expired claim, demonstrably live) and slot-15 (dead→live inside a 9-minute window)
       shapes on record; and each of the 25 wip-preserve refs has a recorded verdict in both source docs below. Source:
@@ -223,3 +228,7 @@ batch1/batch2 applied, per the candidate-generator script's own stated rationale
   different doc's false "backfill already done" claim, contradicted by this run's own live measurement) — parked as its
   own issue doc rather than fixed here (out of this skill's scope). Left `status: draft` deliberately — flipping to
   `active` is the operator's call.
+- **2026-08-01** — Operator approved starting work; flipped `status: draft` → `active`. Added a file-adjacency rule to
+  the "Rules for every worker" section: todo 2 (priority-inversion watchdog) and the sibling
+  `ao_satellite_ao_dispatch_batch4_2026_08_01.md`'s sole todo (failover release-signal) both plausibly land in
+  `agent-orchestrator/server/worker_liveness_watchdog.py`'s `_tick_once()` — land todo 2 first.

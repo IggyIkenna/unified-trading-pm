@@ -44,6 +44,7 @@ related_plans:
   - ../active/ao_satellite_ao_dispatch_batch2_2026_07_30.md
   - ../active/ao_satellite_ao_dispatch_batch2_finalize_2026_07_30.md
   - ../active/ao_satellite_ao_dispatch_batch3_finalize_2026_07_31.md
+  - ../active/ao_satellite_ao_dispatch_batch4_finalize_2026_08_01.md
   - ../active/deepseek_claude_blended_provider_routing_2026_07_28.md
   - ../active/omniroute_llm_gateway_pilot_design_2026_07_30.md
 last_updated: 2026-07-16
