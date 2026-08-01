@@ -205,3 +205,30 @@ correctly scoped and already covers these 5 data_types in code; it just needs to
   a real `expected-universe-v2-defi` Cloud Run run completes + re-run the manifest census) is sequentially gated on this
   and NOT attempted in this session — it requires triggering/waiting on the live 01:30 UTC Cloud Run Job (or a manual
   trigger) and is scoped as its own follow-up.
+- 2026-08-01 (slot-15, data_engineering): Started Todo 2. Confirmed `instruments-service@37f7e36e` (Todo 1) reached
+  `:latest` (image built 11:33:56Z, content-verified to carry `_stream_write_v2_absent_rows`) and manually triggered
+  `expected-universe-v2-defi` via `gcloud run jobs execute --wait`. **It OOM'd again** — execution
+  `expected-universe-v2-defi-6s6sx`, same `The configured memory limit was reached.` condition, but this time the crash
+  (signal 9) happened DURING `_download_manifest`'s `Loading manifest from gs://.../_index/availability_index.parquet`
+  step — BEFORE a single candidate row is even generated, let alone written. Todo 1's write-path fix was real and
+  necessary but not sufficient: it never got a chance to run. **Second, distinct root cause**: `_download_manifest`
+  already column-projects the read (the 2026-07-14 sports-OOM fix, `_needed_manifest_columns` /
+  `_read_manifest_parquet_projected`), but that only bounds the on-disk/decompressed bytes — it still materialises the
+  FULL 29.9M-row DeFi consolidated index as ONE pandas DataFrame with 7-8 present-set string columns
+  (`_DEFAULT_PRESENT_COLS` + `capture_status`). Sports' fix worked because sports is 5.75M rows (~0.5GB projected); DeFi
+  at 29.9M rows blows past 8Gi purely on pandas' per-cell Python-object overhead for string columns, independent of the
+  compressed file size (1.07GiB on GCS). Fixed via `instruments-service@66adbc1d`: replaced `_download_manifest`
+  (bulk-load into one DataFrame) with `_download_manifest_sets()` + `_stream_present_and_captured_sets_from_parquet()` —
+  streams the manifest (main index + per-VM shards) through
+  `pyarrow.parquet.ParquetFile.iter_batches(columns=..., batch_size=1_000_000)`, calling the existing, unmodified,
+  tested `_build_present_set`/`_build_captured_set` PER BATCH and unioning the results (mathematically identical to
+  building from one combined DataFrame — the only per-batch cross-row step, the bundle-grain rollup, is a pure
+  per-asset_group lookup with no cross-batch dependency). Peak memory now O(1 batch) instead of O(full manifest); each
+  local temp file (main index + every per-VM shard) is deleted immediately after it's streamed instead of held for the
+  whole run. Removed the now-dead `_read_manifest_parquet_projected` (no remaining callers) and its 2 direct tests,
+  replacing them with equivalent streaming-builder tests plus a new multi-batch-vs-whole-DataFrame equivalence test
+  (`test_stream_present_and_captured_sets_multi_batch_equals_whole_dataframe`, batch_size=1 forcing 8 batches over the
+  fixture) — the actual regression pin for this fix. Full `quality-gates.sh` green (56/56 in
+  `test_enumerate_manifest_memory_frugal.py`, no regressions). Shipped + verified on origin:
+  `instruments-service@66adbc1d`. **Re-verification against a live re-run (post image-rebuild) is in progress** — see
+  the next entry for the outcome + before/after census counts.
