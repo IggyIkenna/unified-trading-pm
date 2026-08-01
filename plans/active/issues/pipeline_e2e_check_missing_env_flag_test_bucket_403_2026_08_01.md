@@ -165,6 +165,20 @@ session; flag if it becomes a real problem.)
       `-test-`-bucket smoke VM MUST pass `--env staging`/`DEPLOYMENT_ENV=staging` explicitly — the launcher's own
       `prod`-default is correct for real launchers, but silently wrong for every e2e-check-style test-bucket run. (repo:
       unified-trading-pm)
+- [ ] [CODE] P2. Investigate a possibly-separate reporting anomaly observed once while verifying the features fix
+      (before the `deployment-scripts` grant landed): a force-leg VM (`features-e2e-sports-20260801-104801-281e78`)
+      self-deleted with no `run.log` ever appearing (expected — this was pre-grant), and the driver then launched a
+      SECOND VM with a fresh name (`...-105553-...`) which went on to complete successfully (`EXIT_STATUS=0`, `run.log`
+      fully populated). The final written report still showed the FIRST VM's `vm_self_deleted_no_exit_status` failure,
+      not the second VM's success — i.e. the driver's retry (wherever it lives — not found in
+      `unified_trading_library/pipeline_e2e_check/launcher.py`'s `launch_vm_and_wait`/ `_run_launcher_script`, nor in
+      `features-service`'s own leg-runner; not fully traced this session) appears to not thread its result back into the
+      `ShardCheckResult` the report is built from. **Caveat: only observed ONCE, under the exact pre-grant failure
+      condition this issue's fix already eliminates** — may not reproduce now that the `deployment-scripts` write gap is
+      fixed (a VM that can write `run.log` normally shouldn't hit the self-delete-with-no-log path this retry seems to
+      trigger on). Re-check after the current baseline re-run completes cleanly; only chase the retry-logic bug itself
+      if it recurs. (repo: unified-trading-library or features-service, wherever the retry actually lives — locate it
+      first)
 
 ## Codex SSOTs
 
