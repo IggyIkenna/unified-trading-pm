@@ -169,3 +169,22 @@ still in flight.
   QG-green on `live-defi-rollout`. Ending session without a clean `/done` per the established precedent; relying on the
   idle-lingering-reclaim reaper path. Not attempting the diagnostic todos below (no orchestrator-DB/dashboard access
   from this worker slot, same constraint every prior reporter hit).
+
+- **2026-08-01 (na_eligibility_auditor, slot 2, `agt-8e95ca`, mode=`na_eligibility`, tranche=`ao`):** fifth
+  corroboration, a NEW variant of the same root cause. This session's `/boot` call never registered a
+  `na_eligibility_auditor` AgentRow at all — the server instead returned a stale/unrelated Class-A backlog task
+  (`code_tarball_refresh_job_silently_failing_since_2026_07_30-001`, `assigned_role: infra`) already bound to slot 2. A
+  subsequent `/done {task_id: "", one_shot_complete: true}` 400'd with the same message this doc already tracks ("no
+  active agent owns its session 'orch-slot-2' ... a Class-A worker must /done with a task_id"), and a follow-up
+  heartbeat confirmed the server still sees slot 2 as the Class-A `code_tarball_refresh` worker
+  (`dispatch_reason: "resume"`), not as this session's actual na_eligibility_auditor dispatch. Unlike the four prior
+  reports (which hit the gap AFTER real work but WITH a correctly-registered AgentRow), this occurrence never had a
+  matching AgentRow to begin with — suggesting the registration gap can also manifest as a `plan_health_dispatch` spawn
+  landing on a slot whose tmux session already carries a DIFFERENT role's live claim, i.e. the same collision class as
+  `persistent_slot_tmux_session_hijacked_by_transient_plan_health_dispatch_2026_08_01.md` (also reclassified to
+  `planning` this same audit run) rather than a pure post-hoc AgentRow-status change. This session's actual assigned
+  work (the `/na-eligibility-audit ao` run) is independently git-verified complete regardless — 4 doc-edit commits + 1
+  ratchet-baseline commit, all confirmed ancestors of `origin/live-defi-rollout`
+  (`ded844253`/`c4a8dc394`/`96797d327`/`f667a4dc9`/`5411ba307`). Ending session without a clean `/done` per the
+  established precedent; relying on the idle-lingering-reclaim reaper path. from this worker slot, same constraint every
+  prior reporter hit).
