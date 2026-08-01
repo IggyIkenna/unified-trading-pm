@@ -137,17 +137,59 @@ Two non-exclusive options, either of which unblocks the gate:
 
 ## Todos
 
-- [ ] [CODE] P2. Apply option (A) or (B) above to
-      `features_service/onchain/app/core/dependency_checker.py::UPSTREAM_DEPS_DEFI`'s `market-tick-data-service-perp`
-      entry — operator/main call on which, per "Why it matters" above. Repo: features-service. Done when:
-      `DEFI:onchain`'s dependency check can pass on a real day (re-run the 12-day-style sweep from
-      `issues/features_defi_onchain_mtds_ingestion_claim_needs_reverify_2026_07_29.md` to confirm), and
-      `data_pipeline_check_mdps_features_2026_07_20.md`'s gating todo (line ~752) is updated to reflect the fix.
+- [x] [CODE] P2. ✅ Applied Option B (cross-asset-group intent CONFIRMED, not just presumed) —
+      features-service@`eaaa935f`. `dependency_checker.py::UPSTREAM_DEPS_DEFI["market-tick-data-service-perp"]`'s
+      `bucket_template` is now hardcoded to `market-data-tick-cefi-prd-{project_id}` (was templated off
+      `{asset_group_lower}`, which resolved to the DEFI bucket no live perp_funding writer has touched since
+      2026-07-06). Resolved the operator/main framing by finding a decisive fact rather than guessing: DEFI:onchain
+      already has a REAL, wired consumer for this exact signal —
+      `features_service/onchain/calculators/perp_funding_rates_defi.py::compute_defi_funding_rates` (the
+      `perp_funding_rates` feature-group calculator, called from `orchestrator.py:772`) reads Hyperliquid ETH funding
+      specifically — so DEFI:onchain genuinely IS supposed to consume perp_funding cross-asset-group from CEFI; Option B
+      matches existing intent, Option A would have been the wrong call. That calculator's own bucket resolution
+      (`_resolve_mtds_defi_perp_bucket()`) and its needle filter (`asset_group=defi/` → `asset_group=cefi/`, matching
+      `perp_funding_handler.py`'s actual write path) had the SAME stale-bucket bug and are fixed in the same commit —
+      fixing only `dependency_checker.py` would have made the gate pass while the actual feature stayed permanently
+      empty, which is exactly the kind of gate-says-healthy-but-nothing-computes gap CLAUDE.md's data-pipeline-
+      correctness rule exists to prevent. Test fixtures in `tests/onchain/unit/test_perp_funding_rates_defi.py` updated
+      to match (`asset_group=defi/` → `asset_group=cefi/` in the 3 fixture blob paths). **Live-verified against
+      production** (`unified-trading-sa`, `DependencyChecker(test_mode=False).check_dependencies`) across 2026-06-10,
+      2026-06-15, 2026-07-25, 2026-07-27, 2026-07-28, 2026-07-29, 2026-07-30, 2026-07-31: the check now correctly finds
+      REAL manifest rows on every day MTDS actually wrote (2026-07-27 through 2026-07-30 all show real row counts, e.g.
+      "MTDS perp_funding: 3 manifest rows... 1 attempted_failed" on 2026-07-30) — before this fix it reported
+      `no MTDS manifest ... has not run` on 100% of days, unconditionally, because it was checking a bucket that
+      permanently receives zero perp_funding writes. **`DEFI:onchain`'s dependency check still cannot show
+      `available=True` on any of the 8 tested days** — NOT because the bucket fix is wrong, but because
+      `_check_mtds_manifest`'s "any attempted_failed shard fails the whole dependency" semantic combines with
+      POLYMARKET_PERP's separate, DELIBERATE, already-tracked DNS outage
+      (`issues/cefi_perp_funding_kalshi_polymarket_residual_and_capture_gap_2026_07_30.md`, ongoing since 2026-06-21) —
+      even on days HYPERLIQUID + KALSHI_PERP both captured successfully. This is a genuinely different, newly-surfaced
+      root cause outside this todo's original scope; filed as its own follow-up todo below rather than crammed into this
+      fix. `data_pipeline_check_mdps_features_2026_07_20.md`'s gating todo (line ~752) updated to reflect both facts
+      (bucket-resolution bug fixed + verified; residual gate-never-passes symptom has a different, tracked cause).
+- [ ] [CODE] P2. **New, scoped from the P2 fix above's live-verification finding.** Decide + implement whether
+      `market-tick-data-service-perp`'s required dependency check should tolerate a per-venue partial failure. Currently
+      `dependency_checker.py::_check_mtds_manifest` (shared helper, also used by the other 4 DEFI deps) fails the WHOLE
+      dependency if ANY manifest row for the date/data_type is `attempted_failed` — with POLYMARKET_PERP's DNS outage
+      being deliberate and ongoing since 2026-06-21 (not expected to self-resolve), this means
+      `market-tick-data-service-perp` will show `available=False` on every future day too, even when
+      HYPERLIQUID/KALSHI_PERP both captured cleanly — a different flavor of the SAME "permanently unsatisfiable required
+      dependency" problem this issue doc was filed to close. Options: (a) change `_check_mtds_manifest`'s pass criterion
+      for THIS entry to "at least one non-`attempted_failed` row" instead of "zero `attempted_failed` rows" (risk: masks
+      a genuine multi-venue outage as healthy); (b) exclude POLYMARKET_PERP from the daily collection attempt entirely
+      while its outage is deliberate/permanent, so it never writes an `attempted_failed` row to begin with (repo:
+      market-tick-data-service, `perp_funding_handler.py`/`DEFAULT_PROTOCOLS`) — cleaner, but changes what "required"
+      venue coverage means; (c) leave `required: True` as-is and accept `DEFI:onchain`'s dependency check as permanently
+      blocked until Polymarket's API resumes — operator/main call on whether that's acceptable given "Data pipeline
+      correctness is the heartbeat" (a RED gate here freezes layer-N+1 work). Repo: features-service (or
+      market-tick-data-service for option b). Done when: a decision is made + implemented, and `DEFI:onchain`'s
+      dependency check demonstrably passes on a real day with the new logic (or the operator explicitly accepts option
+      (c)).
 - [ ] [DOCS] P3. Fix `deployment-service/terraform/gcp/defi_collection_scheduler.tf`'s `"perp-funding"` operation
       description (still says "Hyperliquid + dYdX + GMX perpetual funding rates" — dYdX was never implemented in
-      `perp_funding_handler.py` and GMX was removed 2026-07-25) and the stale "every MTDS DeFi handler... writes via
-      `get_write_bucket_name(..., "defi")`" comment block in `dependency_checker.py` (no longer true for `perp_funding`
-      since the 2026-07-06/07-25/07-26 reclassifications). Repo: deployment-service, features-service.
+      `perp_funding_handler.py` and GMX was removed 2026-07-25). Repo: deployment-service. (The matching stale
+      `dependency_checker.py` comment block this todo originally also named was updated as part of the P2 fix above —
+      only the terraform half remains.)
 
 ## Progress Log
 
@@ -160,3 +202,10 @@ Two non-exclusive options, either of which unblocks the gate:
   `onchain_perp_batch_handler.py`, and `dependency_checker.py`. Root cause is fully evidenced: the scheduler/handler are
   healthy and correct; the DEFI:onchain dependency check itself is stale post-reclassification. Filed as a scoped
   follow-up per this task's own done_definition rather than unilaterally editing a cross-plan gating dependency.
+- **2026-08-01 (slot-12)**: Applied Option B — see the flipped P2 todo above for the full evidence chain (cross-
+  asset-group intent confirmed via `perp_funding_rates_defi.py`'s real wired consumer, not guessed; both the dependency
+  check AND the calculator's stale DEFI-bucket resolution fixed in the same commit; live-verified against production
+  across 8 days). Discovered a second, genuinely separate blocker while live-verifying (POLYMARKET_PERP's deliberate DNS
+  outage + `_check_mtds_manifest`'s all-or-nothing failure semantic) — filed as its own new P2 todo rather than folding
+  into this fix, since it needs its own operator/main call on 3 real options. Also updated
+  `data_pipeline_check_mdps_features_2026_07_20.md`'s gating todo (line ~752) to reflect both facts.
