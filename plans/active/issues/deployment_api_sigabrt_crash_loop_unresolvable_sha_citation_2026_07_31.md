@@ -26,8 +26,8 @@ related:
   ]
 created: 2026-07-31
 parent_epic: infrastructure_master
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 priority: P3
 estimate_class: research
 estimate_baseline_ai_days: 0.2
@@ -90,3 +90,17 @@ follow-up on whatever the original SIGABRT crash-loop symptom was.
       `deployment_api_sigabrt_crash_loop_2026_07_24.md`'s surrounding context), then either correct the citation in that
       doc or, if unfindable, flag the "fix IS live" claim as unverified and check whether the original SIGABRT symptom
       needs re-investigation.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-08-01**: RECLASSIFY, `assigned_vm: NA` → `planning` — the todo is fully bounded: the cited
+  SHA (`agent-orchestrator@7ba17e2`) was independently verified to actually exist as `deployment-api@7ba17e2a4e9` (a
+  one-word repo mislabel, not a fabrication — `git cat-file -t 7ba17e2` in the deployment-api clone resolves cleanly and
+  the commit message matches this doc's own fix description word-for-word). The remaining action (correct the citation
+  string in the archived progress-log entry) is a determinable, worker-executable fact, not a judgment call.
+  Conflict-check (`ao-dispatch-batch-naming-and-conflict-check.md` § 3) run against infrastructure_master's active
+  `assigned_vm: planning` docs and the cross-cutting consolidated closeout — one incidental mention in
+  `bucket_iam_write_protection_per_tier_2026_06_09.md` cross-references the same underlying SIGABRT investigation for an
+  unrelated Cloud Run cold-start issue, not this citation-fix todo itself — zero genuine claim overlap, cleared.
+  `doc_type: issue` — exempt from the finalize-plan-coverage rule (`check_finalize_plan_coverage.py` only globs
+  `plans/active/*.md`, not `plans/active/issues/*.md`), no companion finalize doc authored.

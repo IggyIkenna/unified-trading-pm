@@ -22,10 +22,11 @@ created: "2026-08-01"
 source: >-
   Discovered mid-task while implementing the in-memory DAG handoff fix for cross_instrument's
   composite_sr/flow_interaction (cross_cutting_satellite_ao_dispatch_batch1-003).
-assigned_vm: NA
+assigned_vm: planning
 execution_scope: orchestrator-agent
 parent_epic: features_and_ml_master
 priority: P2
+assigned_role: backend_engineer
 drift_direction: advance-code
 depends_on: []
 last_updated: "2026-08-01"
@@ -91,3 +92,15 @@ deleted, not left as misleading documentation.
       features-service. Done when: every declared dep in
       `features_service/volatility/schemas/feature_builder_registry.py` is classified real-bug-fixed/
       confirmed-harmless/deleted-dead-code, with evidence per entry.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-08-01**: RECLASSIFY, `assigned_vm: NA` → `planning` — all 3 remaining todos are
+  structurally identical, mechanical grep-and-read audits (inspect a dependent calculator's `__init__` for an injectable
+  upstream DataFrame param) with a stated per-entry done-when, and the exact method was already demonstrated twice in
+  this same doc by a single agent in one session (cross_instrument: real bug found + fixed; delta_one: confirmed
+  harmless) — no design call, no redirect banner, no `depends_on` gate, doc created today so no prior-revert history.
+  Conflict-check run against features_and_ml_master (zero currently-active `assigned_vm: planning` docs in this epic)
+  and the cross-cutting consolidated closeout (zero mentions of feature_builder_registry) — cleared. Added
+  `assigned_role: backend_engineer` (was missing). `doc_type: issue` — exempt from the finalize-plan-coverage rule, no
+  companion finalize doc authored.

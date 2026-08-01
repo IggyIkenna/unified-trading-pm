@@ -23,10 +23,11 @@ tags: [prettier, prosewrap, tooling, plan-hygiene, cosmetic, lint]
 related: [/codex/06-coding-standards/quality-gates.md]
 created: 2026-07-31
 parent_epic: infrastructure_master
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 priority: P3
 estimate_class: infra
+assigned_role: infra
 drift_direction: advance-code
 depends_on: []
 source:
@@ -98,3 +99,10 @@ being rediscovered + hand-fixed one commit at a time rather than root-caused onc
   fd1b02c2c and the `.prettierrc` config. Set `assigned_vm: NA` per the ASK-BEFORE-CREATING hard rule; cosmetic /
   non-blocking, so P3. Operator can flip `assigned_vm: planning` + `execution_scope` to auto-dispatch the two
   precisely-scoped todos if desired.
+- **na-eligibility-audit 2026-08-01**: RECLASSIFY, `assigned_vm: NA` → `planning` — both todos are precisely scoped with
+  stated done-whens (reproduce the mangling with a minimal fixture, diagnose config-vs-version, apply whichever fix the
+  diagnosis supports, confirm against the known fd1b02c2c pattern; separately, re-run prettier/hand-fix one named file
+  and verify content-only via `git diff -w`), low-risk cosmetic tooling work, not live-dispatch-critical-path machinery
+  — exactly the reclassification this doc's own filing note invited. Conflict-check: zero mentions of prettier/proseWrap
+  in any other active plan/issue doc or the cross-cutting consolidated closeout — cleared. Added `assigned_role: infra`
+  (was missing). `doc_type: issue` — exempt from the finalize-plan-coverage rule, no companion finalize doc authored.
