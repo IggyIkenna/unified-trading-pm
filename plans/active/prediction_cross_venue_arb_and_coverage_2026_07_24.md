@@ -45,6 +45,12 @@ source: >-
   cross-venue arb+coverage). This file carries the cross-venue arb + honest-coverage third verbatim.
 assigned_role: data_engineering
 drift_direction: advance-code
+context_scope:
+  [
+    /plans/epics/predictions_master.md,
+    /codex/04-architecture/cross-venue-prediction-arb-detection.md,
+    /plans/active/prediction_live_clob_depth_capture_2026_07_24.md,
+  ]
 ---
 
 # Prediction cross-venue arb detection + honest-coverage correctness
@@ -327,32 +333,32 @@ Confirmed feasible — Kalshi GAME-series EVENT tickers encode the fixture clean
         `kalshi_event_ticker`/`polymarket_condition_id`/`api_football_fixture_id` join row).
 
         (3c) the arb-layer consumer (features/strategy) groups the two venues' instruments by
-                                        `SportsFixtureKey.pairing_key()` WITHIN the shared `SPORTS_{LEAGUE}_{BETTYPE}` cqg → the same-game arb pair.
-                                        Needs a cross-venue team-name canonicaliser (Kalshi "Seattle" ↔ Polymarket "Seattle Mariners"/"Mariners") —
-                                        extend the existing `get_canonical_team_for_polymarket` maps with Kalshi city/abbrev aliases, validated vs
-                                        REAL paired samples (no false pairs — operator). Repos:
-                                        unified-api-contracts (mapping populate + team canon) + instruments-service (sports-event link on prediction
-                                        enum) + features-service/strategy-service (arb grouping). Provenance: operator "parse fixture ids" 2026-06-23
+                                                    `SportsFixtureKey.pairing_key()` WITHIN the shared `SPORTS_{LEAGUE}_{BETTYPE}` cqg → the same-game arb pair.
+                                                    Needs a cross-venue team-name canonicaliser (Kalshi "Seattle" ↔ Polymarket "Seattle Mariners"/"Mariners") —
+                                                    extend the existing `get_canonical_team_for_polymarket` maps with Kalshi city/abbrev aliases, validated vs
+                                                    REAL paired samples (no false pairs — operator). Repos:
+                                                    unified-api-contracts (mapping populate + team canon) + instruments-service (sports-event link on prediction
+                                                    enum) + features-service/strategy-service (arb grouping). Provenance: operator "parse fixture ids" 2026-06-23
 
-            **Partial progress 2026-07-31 (`prediction_satellite_ao_dispatch_batch6-008`, slot 14)** — real, tested code
-            shipped for MLB across 3 repos (`unified-api-contracts@1dddc680`, `instruments-service@62a8b1d8`,
-            `strategy-service@d71c8aa4`; full evidence in batch6's own Progress trail): (3a)/(3b) `_build_mapping()` now
-            stamps `PredictionMarketCrossVenueMapping.api_football_fixture_id` (was computed then silently discarded);
-            Kalshi's `_parse_market` now stamps `canonical_instrument_id` via `build_fixture_id`/`build_team_id` for
-            every sports league (was Polymarket-only); (3c) `strategy-service`'s arb-layer consumer needed NO new
-            grouping logic (`_on_tick_cross_venue_prediction` was already fully venue/league-agnostic) — only a live
-            `PREDICTION_ARB_MLB` catalogue slot to route MLB ticks into it. `mapped_sport_event_id`
-            (`CanonicalPredictionMarket`, the field this item's (3b) originally named) was investigated and found to be
-            DEAD/unwired in production — a separate `PredictionMarketMapper.map_market()` pipeline, never called by
-            `build_cross_venue_mapping` or any of its consumers, only ever populated by test code — so populating it
-            would not have advanced the real arb-pairing mechanism; `api_football_fixture_id` on
-            `PredictionMarketCrossVenueMapping` is the field this pairing pipeline actually reads/writes, and that one is
-            now populated. **Still open**: the team-name canonicaliser this sub-item explicitly calls for was NOT built —
-            confirmed via direct code reads that NO alias registry exists for MLB/NFL/NBA/tennis anywhere in this
-            codebase (only soccer has one); building it unvalidated would risk exactly the false-pair outcome this
-            item's own text warns against. Tracked as its own new todo:
-            `prediction_satellite_ao_dispatch_batch6_2026_07_29.md`'s `[DATA] P2` "team-name alias tables" item.
-                                        (residual after parser UAC@3effe2fc).
+                        **Partial progress 2026-07-31 (`prediction_satellite_ao_dispatch_batch6-008`, slot 14)** — real, tested code
+                        shipped for MLB across 3 repos (`unified-api-contracts@1dddc680`, `instruments-service@62a8b1d8`,
+                        `strategy-service@d71c8aa4`; full evidence in batch6's own Progress trail): (3a)/(3b) `_build_mapping()` now
+                        stamps `PredictionMarketCrossVenueMapping.api_football_fixture_id` (was computed then silently discarded);
+                        Kalshi's `_parse_market` now stamps `canonical_instrument_id` via `build_fixture_id`/`build_team_id` for
+                        every sports league (was Polymarket-only); (3c) `strategy-service`'s arb-layer consumer needed NO new
+                        grouping logic (`_on_tick_cross_venue_prediction` was already fully venue/league-agnostic) — only a live
+                        `PREDICTION_ARB_MLB` catalogue slot to route MLB ticks into it. `mapped_sport_event_id`
+                        (`CanonicalPredictionMarket`, the field this item's (3b) originally named) was investigated and found to be
+                        DEAD/unwired in production — a separate `PredictionMarketMapper.map_market()` pipeline, never called by
+                        `build_cross_venue_mapping` or any of its consumers, only ever populated by test code — so populating it
+                        would not have advanced the real arb-pairing mechanism; `api_football_fixture_id` on
+                        `PredictionMarketCrossVenueMapping` is the field this pairing pipeline actually reads/writes, and that one is
+                        now populated. **Still open**: the team-name canonicaliser this sub-item explicitly calls for was NOT built —
+                        confirmed via direct code reads that NO alias registry exists for MLB/NFL/NBA/tennis anywhere in this
+                        codebase (only soccer has one); building it unvalidated would risk exactly the false-pair outcome this
+                        item's own text warns against. Tracked as its own new todo:
+                        `prediction_satellite_ao_dispatch_batch6_2026_07_29.md`'s `[DATA] P2` "team-name alias tables" item.
+                                                    (residual after parser UAC@3effe2fc).
 
 ### 2026-06-23 (autonomous) — P0 DATA-CORRECTNESS: 142k POLYMARKET empty_confirmed inflated by NULL instrument lifecycle (operator drill-down — CONFIRMED)
 
@@ -889,3 +895,4 @@ themselves required manual VM backfill triggers.
 - **na-eligibility-audit 2026-07-30** (tranche=cefi, autonomous): KEEP-NA, valid - dominated by `[DESIGN]`/`[UAC]`
   cross-venue arb-pairing and politics/geo canonicalization calls the doc says would create FALSE arb pairs if
   blanket-mapped.
+- **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).

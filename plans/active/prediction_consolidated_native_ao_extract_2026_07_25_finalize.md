@@ -46,6 +46,12 @@ source: >-
 assigned_role: data_engineering
 sequential: true
 drift_direction: advance-code
+context_scope:
+  [
+    /plans/active/prediction_consolidated_native_ao_extract_2026_07_25.md,
+    /plans/active/prediction_phase_ab_residuals_2026_07_24.md,
+    /plans/epics/predictions_master.md,
+  ]
 ---
 
 # Prediction consolidated closeout — native-todo AO extract finalize
@@ -109,3 +115,7 @@ drift_direction: advance-code
 
 `/codex/11-project-management/` (plan archival ritual),
 `/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md`.
+
+## Progress Log
+
+- **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).

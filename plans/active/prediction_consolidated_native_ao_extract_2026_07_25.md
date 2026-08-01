@@ -54,6 +54,13 @@ source: >-
 assigned_role: data_engineering
 sequential: true
 drift_direction: advance-code
+context_scope:
+  [
+    /plans/active/prediction_consolidated_closeout_2026_07_18.md,
+    /plans/active/prediction_phase_ab_residuals_2026_07_24.md,
+    /codex/06-coding-standards/adapter-dead-code-and-fallback-ban.md,
+    /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
+  ]
 ---
 
 # Prediction consolidated closeout — native-todo AO extract
@@ -220,3 +227,4 @@ to every classification in this doc + the Deferred section above).
   (`is_polymarket_dead_fixture_cross_reference_2026_07_31.md`,
   `mtds_prediction_adapters_dead_rest_polling_interface_2026_07_31.md`), 0 silent-fallback or duplicate-implementation
   violations found.
+- **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).

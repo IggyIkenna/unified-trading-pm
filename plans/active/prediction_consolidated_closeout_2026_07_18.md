@@ -106,6 +106,13 @@ source:
   tradfi are, using -test- buckets via data-pipeline-check-is / data-pipeline-check-mtds scoped to prediction shards for
   IS and MTDS. Authored slot-2 from a 6-agent read-only research pass; tab-2 unified-trading-pm was first synced from a
   stale June-12 HEAD up to origin/live-defi-rollout 6c4787972 so this is authored against the current corpus.
+context_scope:
+  [
+    /plans/epics/predictions_master.md,
+    /codex/02-data/availability-manifest-and-data-status.md,
+    /codex/04-architecture/prediction-batch-live.md,
+    /codex/02-data/prediction-data-types-catalog.md,
+  ]
 ---
 
 # Prediction consolidated close-out — one pass to MVP-backfill-ready (+ football arb)
@@ -736,3 +743,7 @@ drain window, or an operator decision. They are ordered, not abandoned — each 
   explicitly-SUPERSEDED history-only sections, so this doc's "functionally SUPERSEDED" wording agrees with the epic's
   own banners — an earlier read of this as a live contradiction between two active docs was refuted by counting the
   todos per section.
+
+## Progress Log
+
+- **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).

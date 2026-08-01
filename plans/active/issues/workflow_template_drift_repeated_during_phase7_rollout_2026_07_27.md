@@ -36,6 +36,7 @@ assigned_vm: NA
 resolved_by:
 locked_by:
 locked_since:
+context_scope: [/codex/08-workflows/ci-cd-flow.md, /plans/epics/infrastructure_master.md]
 ---
 
 # workflow-template-parity drifted + blocked all PM commits 3x in ~1hr during Phase-7 rollout
@@ -116,3 +117,7 @@ guarantee this doesn't recur if the Phase-7 rollout is still in flight when anot
       future rollout, check `git log --oneline -15 -- .github/workflows/<file>.yml` in the affected repo FIRST to
       distinguish "stale SSOT drift" (one clean fix suffices) from "an active multi-actor migration is still landing
       direct commits" (a fix will not hold; escalate per this doc rather than blind-retrying).
+
+## Progress Log
+
+- **context-scout 2026-08-01**: populated/refreshed context_scope (2 entries).

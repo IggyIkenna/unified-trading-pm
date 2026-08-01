@@ -44,6 +44,12 @@ locked_by:
 locked_since:
 supersedes:
 superseded_by:
+context_scope:
+  [
+    /plans/archive/2026_07/gha_fleet_wide_missed_ubuntu_latest_workflows_wave2_2026_07_28.md,
+    /plans/active/github_actions_operator_gated_followups_2026_07_17.md,
+    /codex/08-workflows/ci-cd-flow.md,
+  ]
 ---
 
 # unified-trading-pm's own 39 MOVE-classified workflows — self-hosted-runner migration scoping
@@ -195,3 +201,4 @@ the review doesn't silently drop them into either bucket without a look):**
 - **na-eligibility-audit 2026-07-30**: KEEP-NA, valid — explicit operator routing note: 'whether Tier A should later be
   re-tiered to `assigned_vm: planning` … is explicitly left OPEN as a genuine operator routing call — do not
   self-promote it'.
+- **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).

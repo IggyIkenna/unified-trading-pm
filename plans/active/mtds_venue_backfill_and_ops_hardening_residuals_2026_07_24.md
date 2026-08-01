@@ -64,6 +64,13 @@ source:
     "plans/active/issues/plan_line_cap_remediation_2026_07_23.md",
   ]
 drift_direction: advance-code
+context_scope:
+  [
+    /plans/epics/instruments_master.md,
+    /codex/05-infrastructure/vm-launcher-runbook.md,
+    /codex/05-infrastructure/manifest-consolidator-ssot.md,
+    /codex/02-data/mvp-scope-canonical.md,
+  ]
 ---
 
 # MTDS venue onboarding + ops-hardening residuals
@@ -565,3 +572,7 @@ Two genuine hits in this plan:
 
 - **na-eligibility-audit 2026-07-30**: KEEP-NA, valid — open set spans credential-gated venue onboarding, a cross-plan
   B0→B1→B2 dependency chain the operator sequenced 2026-06-18, and cost-gated backfill scope.
+
+## Progress Log
+
+- **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).

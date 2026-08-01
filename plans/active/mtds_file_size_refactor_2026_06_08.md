@@ -40,6 +40,7 @@ source:
     "market-tick-data-service quality-gates.sh file-size gate (MAX_FILE_LINES=900, hard-fail, no baseline)",
   ]
 drift_direction: advance-code
+context_scope: [/plans/epics/mtds_mdps_master.md]
 ---
 
 # MTDS file-size refactor — split the 15 pre-existing >900-line source files
@@ -185,6 +186,7 @@ byte-identical output before/after).
   (all above the audited 3×/5×/7.8× targets). Shas: market-data-processing-service@c7e0437/85060ff/eee8433/2dd13db,
   unified-trading-pm@68bf2c85c/be1f7633c. The remaining M-2 scope (file-size splits, adapter-protocol pandas→polars,
   coverage/QG residuals) stays parked/⏸️ DEFERRED — unaffected by this fold.
+- **context-scout 2026-08-01**: populated/refreshed context_scope (1 entries).
 
 ## Deferred work — migrated to:
 

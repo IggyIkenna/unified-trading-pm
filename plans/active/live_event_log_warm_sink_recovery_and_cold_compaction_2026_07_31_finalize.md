@@ -37,6 +37,11 @@ source: >-
   check_finalize_plan_coverage.py regression (1 > baseline 0) surfaced while shipping unrelated doc updates for
   sports_odds_api_scattered_multiyear_gaps-004 (2026-07-31) — the parent plan is `assigned_vm: planning` with 10 total
   todos and no companion gated finalize plan.
+context_scope:
+  [
+    /plans/active/live_event_log_warm_sink_recovery_and_cold_compaction_2026_07_31.md,
+    /plans/epics/batch_live_symmetry_master.md,
+  ]
 ---
 
 # Live event-log warm-sink recovery + cold-compaction — finalize
@@ -56,3 +61,7 @@ source: >-
       codex-alignment check → update any referrer paths corpus-wide → clear lock). **Done when**: the parent doc's
       checkbox state matches reality and it is either archived (if fully resolved) or left `active` with an explicit
       dated note that the remaining items are still genuinely blocked.
+
+## Progress Log
+
+- **context-scout 2026-08-01**: populated/refreshed context_scope (2 entries).

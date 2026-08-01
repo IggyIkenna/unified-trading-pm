@@ -34,6 +34,13 @@ supersedes:
 superseded_by:
 source: [v2_engine_venue_buildout_2026_06_15.md follow-up, Phase E1 finding 2026-06-15]
 sequential: true
+context_scope:
+  [
+    /plans/active/v2_engine_venue_buildout_2026_06_15.md,
+    /plans/active/cefi_consolidated_closeout_2026_07_18.md,
+    /codex/02-data/pipeline-mode-partition.md,
+    /plans/epics/strategy_master.md,
+  ]
 ---
 
 # Deeper-Than-L5 Order Book Capture
@@ -419,3 +426,4 @@ Docs-only update, ships via the `docs(plans):` carve-out (no code in this commit
 - **na-eligibility-audit 2026-07-30** (tranche=cefi, autonomous): KEEP-NA, valid - both todos are tagged
   BLOCKED-DATA-CORRECTNESS on the dormant CeFi live-WS capture pipeline; no worker can discharge them until that data
   lands.
+- **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).

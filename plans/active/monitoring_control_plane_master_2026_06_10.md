@@ -41,6 +41,13 @@ source:
     crumbs — dirty local worktrees vs LDR remote from every machine — belong on the orchestrator site")',
   ]
 drift_direction: advance-code
+context_scope:
+  [
+    /plans/active/orchestrator_vm_e2e_hardening_2026_07_24.md,
+    /codex/03-observability/monitoring-control-plane.md,
+    /codex/04-architecture/agent-orchestrator-overview.md,
+    /plans/epics/observability_master.md,
+  ]
 ---
 
 ## Deferred work — migrated to:
@@ -693,3 +700,7 @@ the last pass). Re-confirmed E13/E14 citations are real; independently re-verifi
 `ci_satellite_ao_dispatch_batch4_2026_07_31.md` (D4 area), which reaches the same [UI]-role-mismatch /
 needs-a-scoping-pass conclusion. No RECLASSIFY candidates — all 3 remaining items need either a `[UI]`-capable role or
 an unresolved scoping/design call.
+
+## Progress Log
+
+- **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).

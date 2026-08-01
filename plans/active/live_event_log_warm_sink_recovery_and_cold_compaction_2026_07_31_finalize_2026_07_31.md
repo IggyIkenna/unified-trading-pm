@@ -44,6 +44,12 @@ source: >-
   Filed to close the finalize-plan-coverage QG regression (scripts/quality_gates/check_finalize_plan_coverage.py)
   flagged against live_event_log_warm_sink_recovery_and_cold_compaction_2026_07_31.md, which shipped assigned_vm:
   planning without a companion gated finalize plan (task_template.md §4, operator ruling 2026-07-24).
+context_scope:
+  [
+    /plans/active/live_event_log_warm_sink_recovery_and_cold_compaction_2026_07_31.md,
+    /plans/active/issues/live_pipeline_persistence_hot_path_decoupling_2026_06_24.md,
+    /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
+  ]
 ---
 
 # live_event_log_warm_sink_recovery_and_cold_compaction_2026_07_31 — finalize
@@ -69,3 +75,7 @@ source: >-
 
 - `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md` — the 6-step archival ritual this plan's second
   todo runs.
+
+## Progress Log
+
+- **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).

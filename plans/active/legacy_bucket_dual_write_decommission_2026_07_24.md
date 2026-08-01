@@ -37,6 +37,12 @@ source: >-
   data_completion_to_100_all_ag_2026_06_21 (M-1) -- extracted 2026-07-24, plan line-cap remediation
   (plans/active/issues/plan_line_cap_remediation_2026_07_23.md) bucket-(d) split, operator-approved.
 drift_direction: advance-code
+context_scope:
+  [
+    /plans/active/data_completion_to_100_all_ag_2026_06_21.md,
+    /codex/05-infrastructure/bucket-isolation-model.md,
+    /plans/epics/mtds_mdps_master.md,
+  ]
 ---
 
 # Legacy tick-bucket dual-write remediation — decommission
@@ -234,3 +240,4 @@ HashiCorp-registry version — the local `tofu` runs swap it to the opentofu mir
 - **na-eligibility-audit 2026-07-30**: KEEP-NA, valid — the L6 decommission and version-aware delete todos are
   prod-bucket deletes = human-only hard stop; a [BLOCKED-INFRA] P0 carries a 3-option operator decision on tarball
   persistence.
+- **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).

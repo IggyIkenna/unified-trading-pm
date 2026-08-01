@@ -37,6 +37,8 @@ source:
     composes with CF-14 (IS-catalogue could-exist root) + proper_instrument_catalogue_lifecycle_rollup_2026_06_04.md,
   ]
 drift_direction: advance-code
+context_scope:
+  [/plans/epics/instruments_master.md, /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md]
 ---
 
 # MVP scope tagging — the third denominator (all ⊇ could-exist ⊇ MVP)
@@ -288,3 +290,4 @@ which has no MVP wiring today, and precomputes the sports/prediction catalogue `
 - **na-eligibility-audit 2026-07-30**: KEEP-NA, valid — `locked_by: live-defi-rollout`; features MVP membership is an
   explicit operator policy call and the P2b-2 todo self-documents its own AO-ineligibility ('an open design call is not
   an AO-dispatchable todo').
+- **context-scout 2026-08-01**: populated/refreshed context_scope (2 entries).

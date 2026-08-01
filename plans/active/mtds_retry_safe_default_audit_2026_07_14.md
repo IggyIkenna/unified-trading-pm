@@ -39,6 +39,12 @@ source:
   shipped concurrently (mtds@f82f29c1 + mtds@b8218f8a) while this plan was being authored — scope reduced to the
   unshipped remainder (QG lint + residual-site decision + codex SSOT). See Progress Log."
 drift_direction: advance-code
+context_scope:
+  [
+    /plans/epics/infrastructure_master.md,
+    /codex/04-architecture/shard-level-failure-isolation.md,
+    /codex/06-coding-standards/quality-gates.md,
+  ]
 ---
 
 # MTDS retry_safe convention — QG lint + codex SSOT (post-audit remainder)
@@ -144,3 +150,4 @@ but these 2 sites are exactly what an idiom-lint would flag — they need an exp
   `cross_cutting_satellite_ao_dispatch_batch1b_2026_07_26.md` carries a todo whose stated Done-when claims ALL 5 of this
   doc's original todos (Source cites this file by path). Verbatim duplicate claim — parked for an operator ruling on
   which side owns it.
+- **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).

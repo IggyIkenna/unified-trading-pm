@@ -44,6 +44,12 @@ source: >-
   closes the finalize-plan-coverage gate the reclassification itself triggered.
 assigned_role: data_engineering
 drift_direction: advance-code
+context_scope:
+  [
+    /plans/active/mtds_available_at_cross_asset_backfill_2026_07_13.md,
+    /plans/active/na_docs_validity_and_ao_eligibility_audit_2026_07_26.md,
+    /cursor-configs/skills/ag-closeout-audit/SKILL.md,
+  ]
 ---
 
 # mtds_available_at_cross_asset_backfill_2026_07_13 — finalize
@@ -60,3 +66,7 @@ drift_direction: advance-code
       fully closed. If real work remains after the AO-dispatched todos land, leave
       `mtds_available_at_cross_asset_backfill_2026_07_13.md` active (do not force-archive) and note what's still open
       here instead.
+
+## Progress Log
+
+- **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).

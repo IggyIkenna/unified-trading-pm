@@ -36,6 +36,12 @@ source:
   ]
 assigned_role: project_management
 drift_direction: none
+context_scope:
+  [
+    /plans/epics/plan_hygiene_master.md,
+    /codex/11-project-management/doc-frontmatter-schema.md,
+    /codex/12-agent-workflow/plan-hygiene.md,
+  ]
 ---
 
 # June-2026 vintage audit findings
@@ -913,3 +919,4 @@ during §2-§4 execution should be treated the same way, not re-parked on a huma
 - **na-eligibility-audit 2026-07-30**: KEEP-NA, valid (infra tranche, dispatch agt-30721a) — Large actively-maintained
   P1 audit-tracking doc; all 7 remaining items are genuinely gated on external, not-yet-resolved state (live SPOT VMs,
   unresolved merge conflicts, pending batch runs), not defaulted/never-assessed work.
+- **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).

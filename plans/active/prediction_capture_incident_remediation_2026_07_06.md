@@ -63,6 +63,13 @@ source:
   ]
 assigned_role: data_engineering
 drift_direction: advance-code
+context_scope:
+  [
+    /plans/epics/instruments_master.md,
+    /codex/05-infrastructure/manifest-consolidator-ssot.md,
+    /codex/04-architecture/instruments-service-as-ssot-for-mtds.md,
+    /codex/02-data/data-pipeline-correctness-hard-rule.md,
+  ]
 ---
 
 # Prediction-capture incident remediation
@@ -474,3 +481,7 @@ orchestrator-dispatched).
 - **na-eligibility-audit 2026-07-30** (tranche=cefi, autonomous): KEEP-NA, valid - carries a DESCOPED-NOT-MVP item
   explicitly "parked behind the access ruling", demo-credential provisioning, and research against a beta-gated
   Polymarket perps API.
+
+## Progress Log
+
+- **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).

@@ -53,6 +53,13 @@ source: >-
   explicitly scoped this as NEXT-session work, and explicitly chose the LOCAL/human track over AO-dispatched when asked
   (2026-07-26).
 drift_direction: advance-code
+context_scope:
+  [
+    /plans/active/ag_closeout_audit_rollout_2026_07_25.md,
+    /cursor-configs/skills/ag-closeout-audit/SKILL.md,
+    /plans/active/task_template.md,
+    /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
+  ]
 ---
 
 # Audit the ~444 `assigned_vm: NA` docs for validity + AO-eligibility
@@ -602,6 +609,8 @@ inline in the doc itself (Progress Log entry) or in a per-tranche audit-results 
   **5 archivable_now candidates found, not archived this pass** (own follow-up todo above) — genuinely resolved/moot per
   the classifying agent's read, but archival is its own 6-step-ritual action deserving independent re-verification
   before executing, not a rider on this already-large tick.
+
+- **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).
 
 ## Progress Log (na-eligibility-audit incremental marker)
 

@@ -39,6 +39,7 @@ source: >-
   This content was a scope-creep section covering agent-orchestrator bootstrap/watchdog/memory-guardrail hardening,
   file-disjoint from the parent's CI-dashboard/fleet-git-health mission — moved verbatim, nothing summarized or dropped.
 last_updated: 2026-06-27
+context_scope: [/plans/active/monitoring_control_plane_master_2026_06_10.md, /plans/epics/observability_master.md]
 ---
 
 # Orchestrator e2e control-plane validation + VM-from-scratch hardening
@@ -453,3 +454,4 @@ bans. Fleet VMs (setup-token env files) are unaffected.
   writes (`ORCHESTRATOR_JWT_SECRET` SM alignment, which the doc itself states is 'permission-blocked by design' for
   agents; and a `harsh-worker` IAM grant with no self-service path) plus one `[DESIGN]` dirty-worktree policy whose step
   4 is an operator-sanctioned hard reset.
+- **context-scout 2026-08-01**: populated/refreshed context_scope (2 entries).

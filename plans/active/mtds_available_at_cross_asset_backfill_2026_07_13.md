@@ -45,6 +45,13 @@ locked_by:
 locked_since:
 supersedes:
 superseded_by:
+context_scope:
+  [
+    /codex/02-data/availability-manifest-and-data-status.md,
+    /codex/05-infrastructure/manifest-consolidator-ssot.md,
+    /plans/epics/manifest_master.md,
+    /plans/active/issues/mtds_manifest_rebuild_scripts_unbounded_memory_no_chunking_2026_07_31.md,
+  ]
 ---
 
 # Cross-asset-group available_at manifest backfill (market-data-tick)
@@ -423,3 +430,5 @@ did not resume either cron (that is explicitly the scope of the separate downstr
 below), did not touch defi (its own `[OPERATOR] P2` design gate is unaffected by this touch). No code shipped this touch
 — pure infra action (`gcloud scheduler jobs pause` ×2) + re-running an existing, already-shipped one-off script ×2 (no
 new commits to `market-tick-data-service`) + this plan-doc update (`docs(plans):` carve-out).
+
+- **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).
