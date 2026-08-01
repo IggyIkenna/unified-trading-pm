@@ -252,11 +252,15 @@ named) rather than left as prose, per the findings-closure hard rule.
       gated on unprovisioned API credentials, not abandoned code; added a STATUS note (matching
       `instruments-service/adapters/tradfi/ibkr.py`'s precedent) to the registry module + all 3 adapters naming the
       unreached path and the activation condition. Full QG green.
-- [ ] [BACKEND] P2. Decide + document the fate of `footystats_adapter.py::FootystatsAdapter` and
+- [x] ✅ [BACKEND] P2. Decide + document the fate of `footystats_adapter.py::FootystatsAdapter` and
       `sportradar_adapter.py::SportradarAdapter` (market-tick-data-service) — both marked
       `ENDPOINT_STATUS =     "IMPLEMENTED"` but registered nowhere (absent from `VENUE_REGISTRY`, `sports/registry.py`,
       and both `__init__.py` export lists). Either wire them into `factory.VENUE_REGISTRY` with a stated venue key, or
-      add an explicit unreached-and-why note. (repo: market-tick-data-service)
+      add an explicit unreached-and-why note. (repo: market-tick-data-service) — market-tick-data-service@61113726.
+      Chose the document option; added a STATUS note to both adapters naming the unregistered surfaces + activation
+      path, clarified the MTDS FootystatsAdapter is a distinct implementation from the live instruments-service
+      FootyStats source, and replaced the stale `ikenna_orchestrator/pings/slot_9.md` credential-approval reference
+      (retired file-ping system) with a note that it no longer tracks live state. Full QG green.
 - [ ] [BACKEND] P2. Resolve the undocumented duplicate `PolymarketAdapter` classes —
       `market_interface/adapters/sports/     polymarket_adapter.py::PolymarketAdapter(BaseSportsAdapter)` vs the
       live-routed `market_interface/adapters/prediction/polymarket_adapter.py::PolymarketAdapter(BasePredictionAdapter)`
