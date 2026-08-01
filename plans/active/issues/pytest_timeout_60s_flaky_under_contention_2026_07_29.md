@@ -732,3 +732,30 @@ those commits landed). The escalation's own repo-blocker list (`GET /api/repo-bl
   change made or needed. Slot left clean (features-service already on `live-defi-rollout`, 0 commits ahead of `origin`
   besides this doc edit). Pinged the authoring slot with the outcome and exiting per the one-shot `cicd` role's bounded
   scope.
+- **2026-08-01 ~02:25Z (cicd escalation `agt-2f35f6`, slot 9, re-triaging PR #922)**: 3rd independent redispatch of the
+  SAME underlying wall the two entries directly above already root-caused (features-service,
+  `test_cross_timeframe_sanity.py` family) — this time for promotion PR #922 (also `mergedAt=2026-07-31T23:28:20Z`, same
+  self-merge race), failing run `30672970501` at head SHA `2532428d`. `QG slice (checks)`:
+  `Type check FAILED/timeout (exit=124)` — identical signature to the `agt-6fd2a1` entry above. `QG slice (tests)`: same
+  test/mechanism. Confirmed `live-defi-rollout` HEAD (`a0d4e6e4`) is the EXACT SAME HEAD the `agt-6fd2a1`/slot-5 entry
+  above already scoped-diagnosed clean (8.76s test-file re-run, 42.1s basedpyright, both well under budget) — did not
+  repeat that repro, no new HEAD to re-verify. New information this pass: (1) pulled `GET /repos/{repo}/actions/runners`
+  directly — confirms exactly ONE registered runner for this repo (`glue-ip-172-31-5-118-1`, `busy` toggles true/false,
+  never a 2nd registration), and per-job `started_at`/`completed_at` timestamps for both this run and the next LDR retry
+  (`30673928757`) show the `checks`/ `tests` jobs running strictly SEQUENTIALLY on it (never overlapping) — ruling out
+  same-run job-vs-job contention on one box as the direct mechanism; the slowdown is either queue-depth (one run's jobs
+  waiting on a DIFFERENT run's jobs to finish) or in-job resource pressure from something outside GH Actions' own job
+  scheduling (leaked child/zombie processes from a prior SIGALRM/SIGKILL-interrupted xdist run — `base-service.sh`
+  already carries defensive "kill zombie basedpyright" logic, consistent with this having been anticipated). (2) The 5
+  consecutive `workflow_dispatch` LDR failures since 13:36Z yesterday show job durations climbing monotonically across
+  the day — `30m58s → 57m12s → 1h11m58s → 1h41m36s → 1h54m28s` — and the `30673928757` run specifically had a **1h21m
+  gap** between `content sentinel` finishing (`23:50:01Z`) and `QG slice (tests)` actually starting (`01:11:51Z`), i.e.
+  pure queue wait, not test execution time. Both observations are new, concrete evidence for a _worsening-over-the-day_
+  backlog on this repo's one dedicated runner, not independent random flakes — worth the fleet-capacity doc's attention
+  if it isn't already tracking per-runner queue depth. Zero open `/api/repo-blockers` for features-service. Retriggered
+  a fresh `workflow_dispatch` (`30680074425`, picked up immediately — runner was idle at trigger time) rather than wait
+  synchronously on a run that has historically taken 30min-2h; not holding the slot for it per this doc's own
+  established precedent (queued/running CI is left to resolve on its own, monitored asynchronously, not babysat inline).
+  No live-defi-rollout code or test change made or needed. Slot left clean (features-service already on
+  `live-defi-rollout`, 0 commits ahead of `origin` besides this doc edit). Pinging the authoring slot with the outcome
+  and exiting per the one-shot `cicd` role's bounded scope.
