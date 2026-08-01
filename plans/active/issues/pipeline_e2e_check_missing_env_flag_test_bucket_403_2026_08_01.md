@@ -174,7 +174,7 @@ session; flag if it becomes a real problem.)
       `-test-`-bucket smoke VM MUST pass `--env staging`/`DEPLOYMENT_ENV=staging` explicitly — the launcher's own
       `prod`-default is correct for real launchers, but silently wrong for every e2e-check-style test-bucket run. (repo:
       unified-trading-pm)
-- [ ] [CODE] P2. Investigate a possibly-separate reporting anomaly observed once while verifying the features fix
+- [x] ✅ [CODE] P2. Investigate a possibly-separate reporting anomaly observed once while verifying the features fix
       (before the `deployment-scripts` grant landed): a force-leg VM (`features-e2e-sports-20260801-104801-281e78`)
       self-deleted with no `run.log` ever appearing (expected — this was pre-grant), and the driver then launched a
       SECOND VM with a fresh name (`...-105553-...`) which went on to complete successfully (`EXIT_STATUS=0`, `run.log`
@@ -187,7 +187,27 @@ session; flag if it becomes a real problem.)
       fixed (a VM that can write `run.log` normally shouldn't hit the self-delete-with-no-log path this retry seems to
       trigger on). Re-check after the current baseline re-run completes cleanly; only chase the retry-logic bug itself
       if it recurs. (repo: unified-trading-library or features-service, wherever the retry actually lives — locate it
-      first)
+      first) — **RESOLVED, not a bug (slot-11, 2026-08-01)**: no automated retry exists anywhere in the stack.
+      `unified_trading_library/pipeline_e2e_check/launcher.py::launch_vm_and_wait`/`_poll_until_terminal` return a
+      single terminal verdict on self-delete (`reason="vm_self_deleted_no_exit_status"`) with no relaunch loop back to a
+      fresh VM name; `_run_launcher_script`'s only retry (`_LAUNCHER_SCRIPT_MAX_ATTEMPTS=3`) fires on a nonzero exit of
+      the launcher SCRIPT itself before any VM exists, never after a VM has launched. The "two VMs" are the FORCE and
+      SKIP legs of the SAME shard-check invocation: `features-service/scripts/pipeline_e2e_check.py::_vm_name()` derives
+      the 6-char name suffix from `sha256(f"{family}:{asset_group}")[:6]` only — verified
+      `sha256("sports:SPORTS")[:6] == "281e78"`, matching BOTH cited VM names exactly — so identical suffixes across two
+      VMs is expected whenever the same shard runs two legs, not evidence of a retry. `run_pipeline_check()` (same file,
+      lines ~1990-2014) runs `_run_force_leg()` and unconditionally records its result via `report.record()`, then
+      immediately runs `_run_skip_leg()` regardless of the force leg's outcome and records THAT result too — no
+      `if force succeeded` gate. `PipelineCheckReport.record()`
+      (`unified_trading_library/pipeline_e2e_check/report.py:95-111`) just appends to a plain list with no dedup/merge
+      keyed on `shard_label` — both the force row (`self_deleted` failure) and the skip row (success) legitimately
+      coexist as two SEPARATE rows in the report; `render_markdown()` correctly reflects both (the main Results table
+      shows every row; the "## Failed cells" section additionally re-lists only the failed ones). Nothing overwrites or
+      drops either leg's result — the "anomaly" was reading only the Failed-cells section without registering that the
+      skip leg's separate passed row was also present. No code change needed; closing as a documented non-bug. Full
+      trace: `unified_trading_library/pipeline_e2e_check/launcher.py:169-206,209-261,264-382`,
+      `unified_trading_library/pipeline_e2e_check/report.py:95-132,187-282`,
+      `features-service/scripts/pipeline_e2e_check.py:1160-1166,1990-2014`.
 
 ## Codex SSOTs
 
