@@ -27,6 +27,7 @@ related:
     /plans/active/issues/read_availability_index_bare_defi_callers_2026_07_27.md,
     /plans/active/issues/read_availability_index_slim_path_silent_empty_return_2026_07_27.md,
     /plans/active/issues/defi_v2_expected_universe_enumerator_oom_2026_08_01.md,
+    /plans/active/cross_cutting_satellite_ao_dispatch_batch2_2026_07_26.md,
     /codex/02-data/availability-manifest-and-data-status.md,
   ]
 created: 2026-08-01
@@ -143,3 +144,20 @@ callers that only need counts/distinct-values rather than a full DataFrame.
   traceback, DuckDB workaround that unblocked the parent task). Not fixed in this session — root-causing the UTL
   helper's own memory behaviour is out of scope for the enumerator OOM task; scoped as its own follow-up per the
   findings-closure rule.
+- 2026-08-01 (slot-2, data_engineering): Independent corroboration from a DIFFERENT task
+  (`cross_cutting_satellite_ao_dispatch_batch2-006`, the dp-audit daily digest OOM fix,
+  `e2e-testing/scripts/audit/_dp_common.py` + `data_pipeline_daily_digest.py` — a separate, independently-implemented
+  download+read helper, not this doc's `unified_trading_library.read_availability_index`). Same defi-scale row count
+  (~33.4M) produced two further memory blowups beyond a simple `columns=` restriction: (a) `.astype(str).str.lower()` on
+  the `capture_status` column speculatively allocated a stray 510MiB `complex128` array via pandas' `map_infer_mask` →
+  `maybe_convert_objects` type-sniffing (fixed by switching to the pyarrow-backed `"string"` dtype, whose `.str.lower()`
+  calls `pyarrow.compute.utf8_lower` directly); (b) a defensive `df.copy()` forced block consolidation via `np.vstack`,
+  an extra ~1.24GiB single allocation (fixed by removing the unneeded copy). Also **independently reproduced the P2
+  `run-bounded-analysis.sh` RLIMIT_AS finding**: an 8G `ulimit -v` cap spuriously MemoryError'd on this session's own
+  column-restricted digest read too (before either of the two fixes above); raising the cap to 16-24G let the SAME code
+  complete cleanly at a genuine peak RSS of ~11.8GiB (`VmHWM`-measured) — confirming this is a real, cap-independent
+  virtual-vs-physical-memory accounting gap in the wrapper's fallback path, not specific to `read_availability_index`.
+  After all three of this session's fixes, the digest completes a real 5-AG production run end-to-end; tracked as its
+  own P3 follow-up (further reduction toward the ~4-8Gi aspirational target) at
+  `/plans/active/cross_cutting_satellite_ao_dispatch_batch2_2026_07_26.md`. Shipped: `e2e-testing@5d7f53a`,
+  `e2e-testing@edd12c6`.

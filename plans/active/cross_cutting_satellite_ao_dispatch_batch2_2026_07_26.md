@@ -121,73 +121,73 @@ drift_direction: advance-code
       2026-08-01, slot-13. Source: `issues/features_service_catalogue_completeness_inventory_2026_07_24.md`.
 
       **(a) Per-module table** — **CORRECTS the baseline's module count**: the real total is **11** feature-family
-                  modules under `features_service/` (excluding shared infra dirs `api/`/`cli`/`common`), not 9 — the baseline's own
-                  breakdown (1 full + 6 partial + 3 absent) already only summed to 10, and a grep for `BuilderEntry`/registry
-                  patterns across the whole repo surfaced an 11th, previously-unlisted module (`cefi`) that is ALSO absent-entirely
-                  (added 2026-05-19..07-28 per `git log`, predates the 2026-05-28 baseline, so it should have been caught):
+                      modules under `features_service/` (excluding shared infra dirs `api/`/`cli`/`common`), not 9 — the baseline's own
+                      breakdown (1 full + 6 partial + 3 absent) already only summed to 10, and a grep for `BuilderEntry`/registry
+                      patterns across the whole repo surfaced an 11th, previously-unlisted module (`cefi`) that is ALSO absent-entirely
+                      (added 2026-05-19..07-28 per `git log`, predates the 2026-05-28 baseline, so it should have been caught):
 
-                  | Module | Registry exists? | Shape | `status`/`formula_version`? | Verdict |
-                  |---|---|---|---|---|
-                  | `delta_one` | Y | `FeatureSpec` (`app/features/registry.py` + `registry_specs.yaml`, 1389 specs) — plus a separate `BuilderEntry` DAG registry (`schemas/feature_builder_registry.py`) | Y (on `FeatureSpec` only) | **FULL** |
-                  | `calendar` | Y | `BuilderEntry` (`schemas/feature_builder_registry.py`) | N | PARTIAL |
-                  | `cross_instrument` | Y | `BuilderEntry` | N | PARTIAL |
-                  | `multi_timeframe` | Y | `BuilderEntry` | N | PARTIAL |
-                  | `volatility` | Y | `BuilderEntry` | N | PARTIAL |
-                  | `onchain` | Y | `BuilderEntry` | N | PARTIAL |
-                  | `sports` | Y | local `BuilderEntry` (function-callable-based, `tracking/feature_builder_registry.py`) | N | PARTIAL |
-                  | `commodity` | N | `FACTOR_REGISTRY` maps factor_group→class only, not a per-feature entry | N/A | ABSENT |
-                  | `performance_features` | N | none (just `cli_handler.py`/`passthrough_compute.py`) | N/A | ABSENT |
-                  | `strategy_pnl_archetype` | N | none (just `rolling_compute.py`) | N/A | ABSENT |
-                  | `cefi` | N | none (bare calculator files, no registry) | N/A | **ABSENT — not in original baseline (correction)** |
+                      | Module | Registry exists? | Shape | `status`/`formula_version`? | Verdict |
+                      |---|---|---|---|---|
+                      | `delta_one` | Y | `FeatureSpec` (`app/features/registry.py` + `registry_specs.yaml`, 1389 specs) — plus a separate `BuilderEntry` DAG registry (`schemas/feature_builder_registry.py`) | Y (on `FeatureSpec` only) | **FULL** |
+                      | `calendar` | Y | `BuilderEntry` (`schemas/feature_builder_registry.py`) | N | PARTIAL |
+                      | `cross_instrument` | Y | `BuilderEntry` | N | PARTIAL |
+                      | `multi_timeframe` | Y | `BuilderEntry` | N | PARTIAL |
+                      | `volatility` | Y | `BuilderEntry` | N | PARTIAL |
+                      | `onchain` | Y | `BuilderEntry` | N | PARTIAL |
+                      | `sports` | Y | local `BuilderEntry` (function-callable-based, `tracking/feature_builder_registry.py`) | N | PARTIAL |
+                      | `commodity` | N | `FACTOR_REGISTRY` maps factor_group→class only, not a per-feature entry | N/A | ABSENT |
+                      | `performance_features` | N | none (just `cli_handler.py`/`passthrough_compute.py`) | N/A | ABSENT |
+                      | `strategy_pnl_archetype` | N | none (just `rolling_compute.py`) | N/A | ABSENT |
+                      | `cefi` | N | none (bare calculator files, no registry) | N/A | **ABSENT — not in original baseline (correction)** |
 
-                  1 full + 6 partial + 4 absent = 11 (all 7 `BuilderEntry`-shaped registries confirmed to lack `status`/
-                  `formula_version` — UTL's canonical `BuilderEntry` dataclass, `unified_trading_library/feature_service_base/
-                  builder_registry.py`, has no such fields). The "6 partial" and "delta_one full" parts of the baseline are
-                  CONFIRMED correct; the "commodity/performance_features/strategy_pnl_archetype absent" part is confirmed correct
-                  but incomplete (missed `cefi`). The 98%-un-audited delta_one figure is CONFIRMED and measured exactly:
-                  `registry_specs.yaml` has 1389 specs, `status: listed`=1329, `verified`=28, `tested`=26, `need_data`=6 — non-
-                  `verified` = 1361/1389 = **97.98% ≈ 98%**.
+                      1 full + 6 partial + 4 absent = 11 (all 7 `BuilderEntry`-shaped registries confirmed to lack `status`/
+                      `formula_version` — UTL's canonical `BuilderEntry` dataclass, `unified_trading_library/feature_service_base/
+                      builder_registry.py`, has no such fields). The "6 partial" and "delta_one full" parts of the baseline are
+                      CONFIRMED correct; the "commodity/performance_features/strategy_pnl_archetype absent" part is confirmed correct
+                      but incomplete (missed `cefi`). The 98%-un-audited delta_one figure is CONFIRMED and measured exactly:
+                      `registry_specs.yaml` has 1389 specs, `status: listed`=1329, `verified`=28, `tested`=26, `need_data`=6 — non-
+                      `verified` = 1361/1389 = **97.98% ≈ 98%**.
 
-                  **(b) Empirical smoke-check-masking test** — real runs (not code-read inference), against
-                  `e2e-testing/scripts/{commodity,calendar}/smoke_matrix.py` (batch1b's relocation already landed; confirmed the
-                  pre-relocation `features-service/scripts/<family>/` copies no longer contain `smoke_matrix.py`). **Mixed
-                  verdict, richer than a single yes/no**:
-                  - **REFUTED** for the 6 vendor adapters actually wired into the batch code path (commodity: cftc/eia_crude/
-                    eia_ng/open_meteo/yahoo_finance/baker_hughes; calendar: mtds_fred_reader/yahoo_finance_adapter). Both
-                    families implement an explicit, deliberate fail-closed guard: commodity's `_has_full_factor_coverage()`
-                    fails the whole day if ANY enabled factor is missing (`BatchHandler.run()` returns
-                    `success_count == total`, so ONE bad day fails the entire CLI exit code); calendar's `_log_batch_summary()`
-                    `sys.exit(1)`s if `total_failed > 0` across any (day, feature_group). Proved with a REAL run, not a
-                    synthetic break: Baker Hughes' rig-count adapter is CURRENTLY broken in prod ("unexpected file format") and
-                    this correctly cascaded to `smoke_matrix.py` reporting `FAIL` (`CLI rc=1`) for commodity — confirming the
-                    check does NOT mask it. Follow-up fix filed (adapter regression is a NEW symptom, distinct from the
-                    already-fixed URL-scraping issue).
-                  - **CONFIRMED (masking)** for calendar's other 4 declared vendor adapters (cryptopanic_adapter,
-                    lunarcrush_adapter, yfinance_earnings_adapter, polygon_corporate_actions_adapter) — verified via code-read
-                    that `SentimentCalculator` (wraps the first 2) and `corporate_actions_handler.py` (wraps the last 2) are
-                    DEAD CODE, never imported by `calendar_orchestrator.py`'s batch path nor wired into `cli/main.py`'s
-                    `_OPERATIONS` map. Since `smoke_matrix.py` only ever invokes `--operation compute --mode batch`, these 4
-                    adapters can NEVER cause the family-level check to fail, regardless of how broken they are — a stronger,
-                    unconditional masking mechanism (coverage gap) distinct from the refuted partial-tolerance hypothesis.
-                  - Total real vendor adapters actually inventoried: commodity 6 + calendar 6 (2 wired, 4 dead) = 12, not quite
-                    the estimated ~16 — the estimate was in the right order of magnitude; no additional vendor adapters found in
-                    either family beyond the 12 enumerated.
+                      **(b) Empirical smoke-check-masking test** — real runs (not code-read inference), against
+                      `e2e-testing/scripts/{commodity,calendar}/smoke_matrix.py` (batch1b's relocation already landed; confirmed the
+                      pre-relocation `features-service/scripts/<family>/` copies no longer contain `smoke_matrix.py`). **Mixed
+                      verdict, richer than a single yes/no**:
+                      - **REFUTED** for the 6 vendor adapters actually wired into the batch code path (commodity: cftc/eia_crude/
+                        eia_ng/open_meteo/yahoo_finance/baker_hughes; calendar: mtds_fred_reader/yahoo_finance_adapter). Both
+                        families implement an explicit, deliberate fail-closed guard: commodity's `_has_full_factor_coverage()`
+                        fails the whole day if ANY enabled factor is missing (`BatchHandler.run()` returns
+                        `success_count == total`, so ONE bad day fails the entire CLI exit code); calendar's `_log_batch_summary()`
+                        `sys.exit(1)`s if `total_failed > 0` across any (day, feature_group). Proved with a REAL run, not a
+                        synthetic break: Baker Hughes' rig-count adapter is CURRENTLY broken in prod ("unexpected file format") and
+                        this correctly cascaded to `smoke_matrix.py` reporting `FAIL` (`CLI rc=1`) for commodity — confirming the
+                        check does NOT mask it. Follow-up fix filed (adapter regression is a NEW symptom, distinct from the
+                        already-fixed URL-scraping issue).
+                      - **CONFIRMED (masking)** for calendar's other 4 declared vendor adapters (cryptopanic_adapter,
+                        lunarcrush_adapter, yfinance_earnings_adapter, polygon_corporate_actions_adapter) — verified via code-read
+                        that `SentimentCalculator` (wraps the first 2) and `corporate_actions_handler.py` (wraps the last 2) are
+                        DEAD CODE, never imported by `calendar_orchestrator.py`'s batch path nor wired into `cli/main.py`'s
+                        `_OPERATIONS` map. Since `smoke_matrix.py` only ever invokes `--operation compute --mode batch`, these 4
+                        adapters can NEVER cause the family-level check to fail, regardless of how broken they are — a stronger,
+                        unconditional masking mechanism (coverage gap) distinct from the refuted partial-tolerance hypothesis.
+                      - Total real vendor adapters actually inventoried: commodity 6 + calendar 6 (2 wired, 4 dead) = 12, not quite
+                        the estimated ~16 — the estimate was in the right order of magnitude; no additional vendor adapters found in
+                        either family beyond the 12 enumerated.
 
-                  **Coordination note honoured**: ran against the POST-relocation `e2e-testing/scripts/<domain>/` location as
-                  instructed (features-service's own `scripts/<family>/` dirs confirmed to no longer carry `smoke_matrix.py`).
+                      **Coordination note honoured**: ran against the POST-relocation `e2e-testing/scripts/<domain>/` location as
+                      instructed (features-service's own `scripts/<family>/` dirs confirmed to no longer carry `smoke_matrix.py`).
 
-                  **2 follow-up findings filed, not fixed inline** (outside this audit todo's own done-when):
-                  `issues/features_service_catalogue_completeness_smoke_masking_findings_2026_08_01.md` (Baker Hughes
-                  regression P2; calendar dead-code wire-vs-delete decision P2).
+                      **2 follow-up findings filed, not fixed inline** (outside this audit todo's own done-when):
+                      `issues/features_service_catalogue_completeness_smoke_masking_findings_2026_08_01.md` (Baker Hughes
+                      regression P2; calendar dead-code wire-vs-delete decision P2).
 
-                  **1 big finding escalated separately** (discovered incidentally while running the required empirical test, out
-                  of this todo's scope, filed immediately per the data-correctness "big finding" rule rather than absorbed):
-                  `issues/features_e2e_smoke_matrix_writes_to_prod_bucket_2026_08_01.md` (P0) — ALL 8
-                  `e2e-testing/scripts/<family>/smoke_matrix.py` harnesses set only `IS_TEST_RUN=true` in their subprocess env,
-                  never the `PROTOCOL_DATA_SINK_BUCKET*` override each family's config actually requires to route away from
-                  PROD — live-verified for commodity, calendar, AND delta_one (all 3 resolved to their PROD bucket name under
-                  bare `IS_TEST_RUN=true`). Every real (non-dry-run) smoke_matrix.py invocation across every family has likely
-                  been reading/writing PROD buckets, not the `-test-` buckets each file's own docstring claims.
+                      **1 big finding escalated separately** (discovered incidentally while running the required empirical test, out
+                      of this todo's scope, filed immediately per the data-correctness "big finding" rule rather than absorbed):
+                      `issues/features_e2e_smoke_matrix_writes_to_prod_bucket_2026_08_01.md` (P0) — ALL 8
+                      `e2e-testing/scripts/<family>/smoke_matrix.py` harnesses set only `IS_TEST_RUN=true` in their subprocess env,
+                      never the `PROTOCOL_DATA_SINK_BUCKET*` override each family's config actually requires to route away from
+                      PROD — live-verified for commodity, calendar, AND delta_one (all 3 resolved to their PROD bucket name under
+                      bare `IS_TEST_RUN=true`). Every real (non-dry-run) smoke_matrix.py invocation across every family has likely
+                      been reading/writing PROD buckets, not the `-test-` buckets each file's own docstring claims.
 
 - [x] ✅ [CODE] P0. **UTL writer-side invariant bundle — three verbatim residuals in one repo pass** (Source:
       `data_pipeline_alert_substrate_residual_2026_07_24.md` Phase-4 + Phase-6-B items). (a) Make
@@ -316,9 +316,27 @@ drift_direction: advance-code
       improvement over the pre-fix baseline (OOM-killing at 4Gi) and fits comfortably under the currently-provisioned
       16Gi ceiling, but is **above** this todo's own aspirational "~4-8Gi" prose estimate — flagging that honestly
       rather than rounding it down; further reduction (e.g. a DuckDB/streamed aggregation instead of pandas) would be
-      new scope, not part of this fix. 71/71 unit tests green (`tests/unit/test_dp_audit.py`, 3 new: column restriction,
-      missing-column graceful drop, digest requests the restricted set), `quality-gates.sh` green on both commits
-      (sentinel-verified).
+      new scope, not part of this fix — tracked as the new todo directly below. 71/71 unit tests green
+      (`tests/unit/test_dp_audit.py`, 3 new: column restriction, missing-column graceful drop, digest requests the
+      restricted set), `quality-gates.sh` green on both commits (sentinel-verified).
+- [ ] [PERF] P3. **Further reduce dp-audit digest memory below the ~4-8Gi aspirational target (currently ~11.8GiB
+      measured).** Deferred from the item above: after the column-restriction + pyarrow-string-lower + no-copy fixes,
+      `e2e-testing`'s `data_pipeline_daily_digest.py` completes a real 5-AG run at peak RSS ≈ 11.8GiB (defi alone ≈
+      11.2GiB standalone, ~33.4M rows) — safely under the current 16Gi Cloud Run ceiling but above the original prose
+      estimate. The remaining cost is fundamentally `pandas.groupby` materialising a full-frame `object`-dtype DataFrame
+      for defi's row count; a genuine further reduction needs a different execution engine (e.g. DuckDB SQL aggregation
+      directly over the parquet bytes — see `manifest-consolidator-ssot.md`'s DuckDB-over-pandas precedent — or a
+      chunked/streamed groupby) rather than another pandas-level micro-fix. Low priority: not correctness-blocking, jobs
+      run green today. **Related**: `issues/read_availability_index_slim_read_oom_at_defi_scale_2026_08_01.md` (filed
+      same-day by a different worker) found the SAME class of problem in a DIFFERENT helper —
+      `unified_trading_library`'s `read_availability_index(columns=[...])` also OOMs at DeFi's current ~33.4M-row scale
+      despite its own column-projection contract — and independently confirms the `run-bounded-analysis.sh`
+      RLIMIT_AS-fallback false-positive this session also hit (an 8G `ulimit -v` cap failed well before real RSS
+      pressure; raising to 16-24G let the same code complete cleanly). That doc's DuckDB-workaround precedent is the
+      same direction noted above. **Done when**: the digest's peak RSS for the full 5-AG run is re-measured at ≤8Gi with
+      the same real-prod-data methodology (VmHWM via `/usr/bin/time -v`, not a mock), or a documented decision that
+      11.8GiB is an acceptable steady state and the Cloud Run job's memory allocation stays at 16Gi (in which case
+      downgrade/close this todo instead of chasing the estimate further).
 - [x] ✅ [SCRIPT] P0. **Close the two remaining `audit_criteria_automation` honest-SKIPs and add the v9-readiness
       gate.** — `unified-trading-library@fb63477a` + `e2e-testing@98d499a`. CF-10 (phantom) now runs a real GREEN/RED
       via `--mode full` (reuses `reconcile_phantom_manifest_rows_all.py --dry-run`, cached per asset_group), staying an
