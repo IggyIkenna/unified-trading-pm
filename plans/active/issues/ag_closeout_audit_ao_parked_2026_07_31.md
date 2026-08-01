@@ -32,8 +32,8 @@ priority: P1
 source: >-
   /ag-closeout-audit ao skill run 2026-07-31 (autonomous, scheduled dispatch agt-23935a, role ag_closeout_auditor, slot
   5) — Phase 0-3, per the skill's "Parked findings ALWAYS get a durable issue doc" rule (2026-07-30 addition).
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 estimate_class: research
 estimate_baseline_ai_days: 0.3
 estimate_calibrated_ai_days: 0.36
@@ -120,3 +120,13 @@ by whoever picks this up next).
   skill's "Parked findings ALWAYS get a durable issue doc" rule, since this run reached Phase 3 (batch3 drafted) but
   Finding 1 doesn't belong inside the batch's own Deferred section (it's not AO-batch material touching batch3's files,
   it's a standalone factual correction to a different doc).
+- **na-eligibility-audit 2026-08-01** (autonomous, tranche `ao`, dispatch agt-8e95ca, slot 2): RECLASSIFY
+  `NA -> planning`. The sole open item (line 92, single-file prose correction to
+  `context_scope_consumption_enforcement_2026_07_30.md`'s "What's true today" section) is fully worker-determinable —
+  grep/read two facts, rewrite one paragraph, cite evidence; no design/judgment fork, no `[OPERATOR]` tag, no
+  live-VM/host/credential access needed. Phase 2 conflict-check clear:
+  `ao_satellite_ao_dispatch_batch3_finalize_2026_07_31.md` (active `assigned_vm: planning`) references this doc's
+  finding only as a "confirm whether it has been corrected, escalate again if not" verification checkpoint — not a
+  competing claim on the same fix, and this reclassification is what lets that checkpoint actually resolve.
+  `assigned_role` left unset (no clean match in the live `agents/*.md` registry for a single prose-fix todo; per-task
+  `[DOCS]` tag routing applies instead per RULES.md).

@@ -47,8 +47,8 @@ related:
 created: 2026-08-01
 last_updated: 2026-08-01
 parent_epic: orchestrator_master
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 priority: P1
 estimate_class: infra
 estimate_baseline_ai_days: 0.3
@@ -152,3 +152,13 @@ locked_since:
   live (`POST /api/slots/12/message`) before it resumed its remaining verification legs. Did not root-cause
   `cross_instrument`'s own read path this session (out of scope for a live-incident response) — filed as `[DATA] P2`
   above.
+- **na-eligibility-audit 2026-08-01** (autonomous, tranche `ao`, dispatch agt-8e95ca, slot 2): RECLASSIFY
+  `NA -> planning`. Fresh (same-day) doc, `assigned_vm: NA` was the unassessed default, not a deliberate call — no
+  operator ruling, `depends_on` gate, or "do not dispatch" banner anywhere in the doc. All 3 todos are
+  bounded/deterministic (checkable- fact confirmation + a concrete kill-within-seconds repro criterion),
+  `assigned_role: data_engineering` already correctly set. Phase 2 conflict-check:
+  `plans/active/issues/features_e2e_smoke_matrix_writes_to_prod_bucket_2026_08_01.md` (active `assigned_vm: planning`)
+  explicitly parks its own P2 re-verification todo on THIS doc's `[INFRA] P2` fix landing ("Do NOT flip this checkbox or
+  unpark before then") — not a duplicate claim, but a genuine blocking prerequisite for already-dispatched AO work,
+  which argues FOR reclassifying promptly rather than against it. No competing claim found on the
+  `[DATA] P2`/`[INFRA] P2`/`[DATA] P3` todos themselves.

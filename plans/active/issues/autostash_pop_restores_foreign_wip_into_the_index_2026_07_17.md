@@ -32,15 +32,15 @@ source:
     it"). Found by actually reading `git show --stat` on the pushed commit rather than trusting that `git add
     <one-file>` had scoped it - the pre-commit status check had shown the foreign files as "not staged", which is what
     made the sweep invisible until after the push.
-assigned_vm: NA
-assigned_role: devops
+assigned_vm: planning
+assigned_role: infra
 priority: P2
 estimate_class: refactor
 estimate_baseline_ai_days: 0.5
 estimate_calibrated_ai_days: 0.2
 drift_direction: advance-code
 parent_epic: agent_operating_framework_master
-execution_scope: local-only
+execution_scope: orchestrator-agent
 depends_on: []
 last_updated: 2026-07-17
 locked_by:
@@ -145,3 +145,11 @@ owning agent carry on (their tree simply shows those files as already-committed 
   — plain merge-pull pre-commit, `git restore --staged .` post-autostash-pop for the rebase/post-commit case, document
   both. Explicitly declined the reorder-only-inspection and hard-guard-hook candidates for now (see "Not adopted"
   above). Still `status: open` — the decision is made, the code/docs changes are not yet shipped.
+- **na-eligibility-audit 2026-08-01** (autonomous, tranche `ao`, dispatch agt-8e95ca, slot 2): RECLASSIFY
+  `NA -> planning`. The 2026-08-01 operator decision session above resolved the design fork the prior 2026-07-30 KEEP-NA
+  verdict was based on — all 3 remaining todos are now bounded implementations of an already-decided fix (case-split
+  criteria explicitly stated, doc-fold content pre-specified). Phase 2 conflict-check: grepped
+  `restore --staged`/`autostash` and this doc's topic across every active `assigned_vm: planning` doc and this run's own
+  finalize drafts — no competing claim found. Also corrected `assigned_role: devops` -> `infra` (`devops` does not match
+  any entry in the live `agents/*.md` registry; `infra` is the closest real role for this per-tab-worktrees/CLAUDE.md
+  git-mechanics fix).

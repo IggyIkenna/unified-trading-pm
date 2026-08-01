@@ -27,8 +27,9 @@ parent_epic: orchestrator_master
 source:
   "worker, slot 7, hit live on sports_satellite_ao_dispatch_batch5-026 after inheriting the reclaimed session; filed as
   BLK-eccd3383 (main-agent answered partial: operator-reserved, escalated)"
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
+assigned_role: infra
 estimate_class: refactor
 drift_direction: advance-code
 depends_on: []
@@ -123,3 +124,15 @@ defeated by automation, not by any agent or operator decision. This is a governa
   were "interacting with" now has a shipped answer — gate on the open blocked-queue entry, not on session liveness). Doc
   stays `status: open`: the `[DOC] P2` SSOT-documentation sibling is still unbuilt.
 - **context-scout 2026-08-01**: populated/refreshed context_scope (2 entries).
+- **na-eligibility-audit 2026-08-01** (autonomous, tranche `ao`, dispatch agt-8e95ca, slot 2): RECLASSIFY
+  `NA -> planning`. The 2026-07-30 KEEP-NA verdict was correct at the time (design-decision-pending), but its own
+  prerequisite — the `[BACKEND] P1` governance decision — shipped 2026-07-31 (`agent-orchestrator@49c919d`, full test
+  evidence above). The sole remaining item, `[DOC] P2`, is now a scoped, deterministic codex-SSOT documentation edit
+  describing an already-implemented, already-tested mechanism (`push_or_preserve_ahead_commits`'s `gated:` param,
+  `unpushed_held_behind_open_gate` event) — no open design question, no operator-only act, checkable done-when (the doc
+  section exists and cites the shipped contract). Phase 2 conflict-check:
+  `plans/active/ao_satellite_ao_dispatch_batch2_2026_07_30.md` and this doc's own sibling
+  `ahead_push_sentinel_stale_after_amend_no_rejected_push_retry_2026_07_24.md` (still `assigned_vm: NA`, unchanged this
+  run) both reference the shipped `[BACKEND] P1` fix but neither claims the `[DOC] P2` SSOT-write itself — clear. Set
+  `assigned_role: infra` (no prior value; closest real match in the live `agents/*.md` registry for a
+  `codex/05-infrastructure/` watchdog-SSOT edit).

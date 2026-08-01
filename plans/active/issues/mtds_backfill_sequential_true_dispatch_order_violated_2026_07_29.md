@@ -31,8 +31,9 @@ created: 2026-07-29
 priority: P1
 parent_epic: orchestrator_master
 source: ["mtds_available_at_cross_asset_backfill-006, slot 14, 2026-07-29"]
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
+assigned_role: backend_engineer
 estimate_class: research
 drift_direction: advance-code
 depends_on: []
@@ -132,20 +133,20 @@ which of the 3 hypotheses above (or another) is the actual cause — then fix + 
       agent-orchestrator)
 
       **2026-07-30 (slot-3, data_engineering craft) — STILL VIOLATED live, ~2h+ after the fix commit.** Dispatched
-                      `mtds_available_at_cross_asset_backfill-006` ("Resume the prediction consolidator cron") directly via `/boot`.
-                      Confirmed via `git merge-base --is-ancestor 77769ab HEAD` in this session's `agent-orchestrator` worktree —
-                      `77769ab` IS an ancestor of current `live-defi-rollout` HEAD (`41f69878e`), so the fix is present in the repo. But
-                      a fresh `GET /api/backlog` query against the LIVE orchestrator server (the same one that dispatched `-006` to me)
-                      shows `mtds_available_at_cross_asset_backfill-001` (Apply `rebuild_prediction_manifest.py`, the true predecessor)
-                      still `status: queued`, `dispatched_to: null` — never assigned to anyone — while `-006` (its downstream "resume
-                      cron" sibling) was `dispatched` to this slot. The exact violation this VERIFY todo asks to check for is still
-                      reproducing in production. Did not dig further into whether this is (a) the fix genuinely present in code but the
-                      running orchestrator SERVER PROCESS not yet restarted/redeployed to pick it up (repo-merge ≠ live-deploy for a
-                      long-running server), or (b) a residual gap in the fix itself — that root-cause split needs `backend_engineer`
-                      craft + the server's own deploy/restart history, out of scope for a `data_engineering` task. Declined `-006`
-                      itself (nothing to resume — the backfill still hasn't been applied) per the established precedent in the
-                      source plan's Progress Log (dispatch-order findings #2–#5). Leaving this checkbox unflipped — the fix is not yet
-                      confirmed live-effective.
+                              `mtds_available_at_cross_asset_backfill-006` ("Resume the prediction consolidator cron") directly via `/boot`.
+                              Confirmed via `git merge-base --is-ancestor 77769ab HEAD` in this session's `agent-orchestrator` worktree —
+                              `77769ab` IS an ancestor of current `live-defi-rollout` HEAD (`41f69878e`), so the fix is present in the repo. But
+                              a fresh `GET /api/backlog` query against the LIVE orchestrator server (the same one that dispatched `-006` to me)
+                              shows `mtds_available_at_cross_asset_backfill-001` (Apply `rebuild_prediction_manifest.py`, the true predecessor)
+                              still `status: queued`, `dispatched_to: null` — never assigned to anyone — while `-006` (its downstream "resume
+                              cron" sibling) was `dispatched` to this slot. The exact violation this VERIFY todo asks to check for is still
+                              reproducing in production. Did not dig further into whether this is (a) the fix genuinely present in code but the
+                              running orchestrator SERVER PROCESS not yet restarted/redeployed to pick it up (repo-merge ≠ live-deploy for a
+                              long-running server), or (b) a residual gap in the fix itself — that root-cause split needs `backend_engineer`
+                              craft + the server's own deploy/restart history, out of scope for a `data_engineering` task. Declined `-006`
+                              itself (nothing to resume — the backfill still hasn't been applied) per the established precedent in the
+                              source plan's Progress Log (dispatch-order findings #2–#5). Leaving this checkbox unflipped — the fix is not yet
+                              confirmed live-effective.
 
 ## Deferred — HELD by the `/na-eligibility-audit ao` conflict-check (2026-07-30)
 
@@ -262,3 +263,15 @@ stall blocking a SECOND in-flight plan (`prediction_satellite_ao_dispatch_batch4
   assigned task). Adding as a further corroborating data point for the `backend_engineer` re-open recommended above —
   the `77769ab` fix has not resolved this specific pair even ~5 days after landing, so treat the VERIFY todo's premise
   ("Apply lands before Resume dispatches") as still unconfirmed live.
+- **na-eligibility-audit 2026-08-01** (autonomous, tranche `ao`, dispatch agt-8e95ca, slot 2): RECLASSIFY
+  `NA -> planning` — **flagging as urgent, not a routine reclassification.** The 2026-07-30 Phase-2 HOLD applied only to
+  the (now-shipped, confirmed-orthogonal, no-collision) `[BACKEND] P1` fix; it never gated the remaining `[VERIFY] P2`
+  item, which touches no files (a read-only `GET /api/backlog` + log check) and so was never itself in conflict with
+  `regen_positional_task_ids_not_content_stable_2026_07_17.md`'s active `[BACKEND] P2` work. Phase 2 re-confirmed clear
+  on that basis. Assigned `backend_engineer` (matches the doc's own repeated recommendation across 4 Progress Log
+  entries). **Severity has materially escalated since the original HOLD**: the Progress Log above now shows FOUR
+  independent plans hitting the same dispatch-order violation post-`77769ab`, the original mtds `-001`/`-006` pair still
+  reproducing 5+ days later, and a production cron (`uts-prod-manifest-consolidator-market-data-prediction-cron`) still
+  paused as a result. Reclassifying unblocks dispatch of the re-open the doc's own evidence has been requesting since
+  2026-07-31 — this is not a "confirm the fix worked" formality anymore, it's an active, multi-plan-blocking P1 that
+  should get a `backend_engineer` worker promptly.

@@ -29,12 +29,12 @@ source: >-
   Session 2026-07-27, building /na-eligibility-audit as a sibling to /ag-closeout-audit/plan-reconcile/docs-reconcile.
   The three sibling timers (plan-reconciler, docs-reconciler, ag-closeout-auditor) were already live on the central VM
   when this session started; this fourth one only reaches parity once actually installed there too.
-assigned_vm: NA
+assigned_vm: planning
 assigned_role: infra
 sequential: true # both todos touch the same timer/install-script + the same first-fire verification surface
 resolved_by:
 locked_by:
-execution_scope: local-only
+execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
 ---
@@ -119,3 +119,11 @@ which is why it's tracked here instead of folded into the code commits above.
   `cicd_escalation_agentrow_archived_prematurely_mid_session_2026_07_29.md` and `blrs_g3_g10_rescope_2026_07_28.md` —
   neither claims the timer budget or the install script. CLEAR. Set `assigned_role: infra`, `sequential: true` (both
   todos touch the same timer/install-script + first-fire verification surface).
+- **na-eligibility-audit 2026-08-01** (autonomous, tranche `ao`, dispatch agt-8e95ca, slot 2): **apply-gap fix, not a
+  fresh reclassification decision.** Re-verified: `assigned_vm` in this doc's frontmatter still read `NA` despite the
+  2026-07-30 entry above recording a conflict-cleared RECLASSIFY verdict with `assigned_role`/`sequential` already set —
+  the flip itself was reasoned through but never actually applied to the doc. Fixed now: `assigned_vm: NA -> planning`,
+  `execution_scope: local-only -> orchestrator-agent`. No new conflict-check needed (the 2026-07-30 one already covered
+  this exact surface and nothing material has changed since). Flagging as a process note for whoever next touches this
+  skill's own Phase 3: a "RECLASSIFY, conflict-cleared" Progress Log entry is not sufficient proof of an applied flip —
+  always diff the entry's stated verdict against the doc's ACTUAL current frontmatter before trusting it.

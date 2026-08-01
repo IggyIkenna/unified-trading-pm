@@ -42,8 +42,8 @@ related:
 created: 2026-08-01
 priority: P1
 parent_epic: orchestrator_master
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 drift_direction: advance-code
 assigned_role: infra
 estimate_class: refactor
@@ -174,3 +174,23 @@ boot-loop doc's citation of `server/prompts.py` and `server/routes/slots_worker.
 ## Codex SSOTs
 
 `/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md`.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-08-01** (autonomous, tranche `ao`, dispatch agt-8e95ca, slot 2): RECLASSIFY
+  `NA -> planning`. Fresh (same-day) doc, `assigned_vm: NA` was the unassessed default — no operator ruling,
+  `depends_on` gate, or "do not dispatch" banner in the doc. All 4 `[BACKEND]` todos are bounded, deterministic-outcome
+  technical work with stated done-whens (locate the dispatch code path, audit main/monitor exposure, make the cleanup
+  event higher-visibility, add a regression test) — each independently checkable by a `backend_engineer` worker. Phase 2
+  conflict-check: no active `assigned_vm: planning` doc references
+  `plan_health_dispatch`/`stale_spawn_base_role_cleared`/this collision class; clear. **Possible fresh corroborating
+  data point from this very session** (not confirmed, flagging for the assigned worker to check): this audit run's own
+  `/boot` call to slot 2 (dispatch `agt-8e95ca`, `mode: "na_eligibility"`, `tranche: "ao"`) returned a generic backlog
+  task (`code_tarball_refresh_job_silently_failing_since_2026_07_30-001`, `assigned_role: infra`) completely unrelated
+  to the na_eligibility_auditor role — consistent with slot 2 having a pre-existing generic-worker
+  identity/backlog-claim that the transient `plan_health_dispatch` spawn landed on top of, same root-cause shape as this
+  doc's `orch-slot-1` finding (a persistent/pre-existing claim vs. an unaware transient dispatch), just a different
+  collision surface (task-assignment confusion rather than a `tmux_session_lost` kill). This session proceeded per its
+  role file's explicit instructions (ignoring the mismatched generic task) rather than working the wrong task — worth
+  checking whether slot 2 also shows a `stale_spawn_base_role_cleared`/similar event around this dispatch's start time
+  when the assigned `backend_engineer` worker investigates.
