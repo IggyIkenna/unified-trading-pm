@@ -143,15 +143,18 @@ shipping):
       rather than executed as literally written. The broader, real finding — the tool is fully dormant fleet-wide, not
       just for PM — is captured as its own follow-up todo below rather than left as a chat-only observation. (repo:
       unified-trading-pm).
-- [ ] [SCRIPT] P3. **New finding (2026-08-01, slot 11) — the whole tool is fleet-wide dead, not just a PM
+- [x] ✅ [SCRIPT] P3. **New finding (2026-08-01, slot 11) — the whole tool is fleet-wide dead, not just a PM
       false-positive.** `check-pyrightconfig-extrapaths.py` only reads `<repo>/pyrightconfig.json`; zero of the 24
       `workspace-manifest.json` repos still have that file (all migrated to `pyproject.toml`'s `[tool.basedpyright]` —
       see `codex/06-coding-standards/quality-gates.md` § "pyrightconfig.json silently overrides pyproject.toml").
       Running it today prints `extraPaths alignment OK` unconditionally for every repo — the audit no longer checks
-      anything real. Fix: either (a) migrate the script to read `[tool.basedpyright]` from `pyproject.toml` (via stdlib
-      `tomllib`; top-level `extraPaths` + `[[tool.basedpyright.executionEnvironments]]` `extraPaths` — the same dict
-      shape the script's existing helpers (`extrapaths_from_config`, `get_source_dir`) already expect, so a thin
-      TOML→dict adapter is likely sufficient) so it re-validates real config again, implementing the
-      exclude-covers-include skip for repos like PM whose entire source is excluded from the scan; or (b) delete the
-      script if the manual-audit workflow it served is no longer wanted. Not CI-wired either way, so both options are
-      safe to defer. (repo: unified-trading-pm).
+      anything real. **FIXED 2026-08-01 (slot 9)** — chose option (a): added `load_basedpyright_config()`, which prefers
+      `pyrightconfig.json` (back-compat) and falls back to parsing `[tool.basedpyright]` out of `pyproject.toml` via
+      stdlib `tomllib`; the parsed table is a drop-in for the existing `extrapaths_from_config()` / `get_source_dir()`
+      helpers (same key shapes), so no rewrite of the rule logic was needed. `--apply` auto-fix stays JSON-only (gated
+      on `config_path.suffix == ".json"`) — a `pyproject.toml` finding now reports as a warning directing a manual edit
+      instead of silently no-op'ing. Re-run live against the real fleet: the script now exits 1 and surfaces real drift
+      across 15 repos (dead extraPaths, missing extraPaths, 5 import-vs-manifest gaps) — captured as tracked todos per
+      the findings-closure rule:
+      `plans/active/issues/basedpyright_extrapaths_pyproject_migration_findings_2026_08_01.md`. Evidence:
+      `unified-trading-pm@<sha>` (this commit). (repo: unified-trading-pm).
