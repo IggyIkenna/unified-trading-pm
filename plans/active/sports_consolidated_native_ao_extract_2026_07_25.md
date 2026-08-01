@@ -892,3 +892,31 @@ re-check every cycle.
   known `BLOCKED-CREDENTIALS`/zero-PROD-rows state. **Whoever picks up Track K (IS) next: checkpoint 1/3 is already done
   and cited above — don't re-run it; the launcher fix must land before a genuine pass is possible for the 6
   provider-routed shards.**
+- **2026-08-01 (slot-15, `data_engineering`)** — picked up Track K (IS) fresh (`-029`). Shipped the launcher fix slot-14
+  flagged: `--sports-provider` arg added to `launch-instruments-backfill-vm.sh` (`deployment-service@b1f0a22`, verified
+  live via `--dry-run`), resolving
+  `issues/instruments_backfill_launcher_missing_sports_provider_passthrough_2026_08_01.md`. Re-ran the baseline — hit a
+  SECOND, independent blocker mid-run: `uts-prd-sa`'s IAM condition doesn't cover `-test-` buckets by design (tier
+  isolation), and every cell 403'd. This was DP-VM-002, already independently diagnosed + fixed by another agent while
+  my run was in flight (`deployment-service@dd5f235`, landed 10:36:50Z — my early cells predate it and cascaded into
+  dependency failures on later venues; killed that contaminated run and restarted clean). **A THIRD, still-open blocker
+  surfaced on the clean restart**: even with the correct `uts-test-sa` identity, writes to
+  `instruments-store-sports-test-central-element-323112` still 403 — the underlying Terraform IAM condition's
+  `instruments-store-` prefix is missing its per-asset-group segment (real buckets are
+  `instruments-store-{ag}-{tier}-{project}`, the condition only matches a literal `instruments-store-{tier}-` that no
+  real bucket has). This is the SAME bug class already tracked + partially fixed for `market-data-tick-` in
+  `issues/bucket_iam_group_a_market_data_tick_prefix_missing_asset_group_2026_08_01.md` — I corrected that doc (it had
+  incorrectly assumed `instruments-store-` was flat/unaffected) and added the matching P0 INFRA todo + evidence
+  (`unified-trading-pm@093c62146`). Confirmed clean via API_FOOTBALL's full 3-leg run (force/skip/live all
+  `no_parquet_at`/`manifest_status_invalid:manifest_empty` — the SAME single root cause on every leg, and the fetch
+  itself succeeded — `Fetched 724 fixtures for date=2025-12-20` — proving this is purely a storage-write-layer block,
+  not a data/adapter regression); stopped the run there rather than burning VM spend re-proving the identical blocker
+  across the remaining 6 venues (evidence:
+  `gs://deployment-scripts-central-element-323112/vm-logs/instr-backfill-sports-pchk-0801110449-{f,s,l}-api-football/run.log`).
+  **Net for this session: 2 real bugs fixed (launcher arg + confirmed/documented the IAM condition gap), 1 more bug
+  found and P0-tracked (not fixed — `[INFRA]`-scoped Terraform work, outside `data_engineering` craft). A genuine
+  PASS-capable Track K (IS) baseline is still not achievable until
+  `bucket_iam_group_a_market_data_tick_prefix_missing_asset_group_2026_08_01.md`'s `instruments-store-` todo lands.
+  Leaving this todo unchecked — not self-skipping (real, valuable diagnostic + code work shipped this session, unlike
+  the externally-gated CI-capacity pattern elsewhere in this plan family) — next picker-upper should check that issue
+  doc's INFRA todo status before re-running.**
