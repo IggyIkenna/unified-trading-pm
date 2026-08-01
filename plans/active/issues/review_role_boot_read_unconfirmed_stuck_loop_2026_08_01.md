@@ -73,17 +73,45 @@ source: >-
 
 ## Not fixed / needs attention (NOT resolved by the docs fix alone)
 
-- [ ] [OPERATOR] P2. **Confirm whether slot 1's current occupant is still hitting this rejection after the docs fix, or
-      whether it self-recovered.** A doc fix only helps a FRESH review boot that reads the corrected file; if slot 1's
-      current tmux session is running from an already-loaded system prompt / already-declared `read_files` list that
-      predates this fix, it will keep failing until that session is respawned. Check `GET /api/activity?slot=1` for any
-      `boot_read_unconfirmed` event with a timestamp AFTER this doc's `created` date — if one exists, the session needs
-      an operator-directed respawn/kill+restart (per CLAUDE.md's "never manually kill tmux" absent a confirmed
-      dead/stuck claim — this is exactly that judgment call, not a mechanical worker-alone fix).
-- [ ] [BACKEND] P3. Consider whether `server/prompts.py:expected_read_files`'s dependency on `spawn_base_role` (rather
-      than always deriving straight from `slot_role`) is the right long-term contract for a persistent, non-typed role
-      like `review` — this incident is a symptom of the docs (hand-maintained) and the code (`expected_read_files`)
-      being two independent sources of truth for the same required-reads set, with no automated check that they agree. A
-      regression test asserting `agents/review.md`'s own declared STEP-0 read list is a superset of
-      `expected_read_files("worker", "review")`'s basenames would catch a future re-drift mechanically instead of via a
-      live 225-event incident.
+- [x] ✅ [OPERATOR] P2. **Confirmed clean for slot 1 — reviewed by slot-1's own review-agent session (agt-fed62c),
+      2026-08-01 ~13:10.** `GET /api/activity?type=boot_read_unconfirmed` shows exactly ONE more slot-1 rejection after
+      this doc's fix commit (`unified-trading-pm@bd604958`, landed 2026-08-01T08:20:43Z): a single straggler at
+      `2026-08-01T08:23:22Z`, 3 minutes after the fix — consistent with a session that had already loaded its system
+      prompt/`read_files` declaration before the fix landed (exactly the self-resolving case this todo anticipated, not
+      a fix failure). Zero slot-1 `boot_read_unconfirmed` events since 08:23:22Z through current time (~5h clean); my
+      own fresh `/boot` at 12:56:13Z declared `[RULES.md, worker.md, review.md]` per the corrected STEP 0 and cleared on
+      the first attempt. No operator action needed for slot 1 specifically — see the new todo below for a broader,
+      NOT-yet-fixed recurrence of the same bug class in other role files.
+- [x] ✅ [BACKEND] P3→**upgraded to P1, see new todo below** — the speculative "future re-drift" this todo worried about
+      is not hypothetical: it is LIVE, in at least 2 other role files, as of this same review pass.
+- [ ] [DOCS] P1. **The docs fix only patched `agents/review.md` — the identical STEP-0 gap (missing `worker.md` in the
+      role file's own declared pre-boot reads) independently reproduces in at least 2 other craft-role files, with LIVE
+      `boot_read_unconfirmed` events, one as recent as 90 minutes before this update:** -
+      `agents/na_eligibility_auditor.md` — STEP 0 (around line 104) says only "read
+      `unified-trading-pm/agents/       RULES.md` before any action", no `worker.md` mention. Live hits: slot 7 @
+      `2026-08-01T08:11:52Z` and slot 9 @ `2026-08-01T08:49:07Z`, both
+      `provided: ["RULES.md", "na_eligibility_auditor.md"]`, `missing:       [".../agents/worker.md"]`. -
+      `agents/ag_closeout_auditor.md` — STEP 0 (around line 96) has the identical gap. Live hit: slot 12 @
+      `2026-08-01T11:35:12Z`, `provided: ["RULES.md", "ag_closeout_auditor.md"]`, same `missing`. Fix: audit EVERY file
+      in `unified-trading-pm/agents/*.md` whose `slot_role` is not literally `"worker"` (i.e. every craft/audit role:
+      `backend_engineer`, `quant_dev`, `ui_developer`, `infra`, `data_engineering`, `cicd`, `conflict_resolver`,
+      `context_scout_auditor`, `data_pipeline_failure`, `docs_reconciler`, `plan_health`, `plan_reconciler`, `monitor`,
+      plus the two named above) against `server/prompts.py:expected_read_files` — for each whose expected set includes
+      `worker.md`, confirm the file's own STEP-0/boot section explicitly instructs reading it (mirroring `review.md`'s
+      current corrected wording), not just `RULES.md`. Patch every file missing it in one pass so this doesn't surface a
+      third time per-file. (repo: unified-trading-pm)
+- [ ] [BACKEND] P2. Build the regression test the original P3 todo proposed — assert, for every role file, that its own
+      declared STEP-0 read list (basenames) is a superset of `expected_read_files("worker", <that role's slot_role>)`'s
+      basenames — now with concrete proof (3 live incidents across 3 different role files in one week) that hand-sync
+      alone does not hold. (repo: agent-orchestrator)
+
+## Progress Log
+
+- **2026-08-01 (review agent, slot 1, agt-fed62c)**: Booted clean on the corrected `review.md` (first attempt,
+  `[RULES.md, worker.md, review.md]`), confirming the fix works for a fresh session. Closed the `[OPERATOR] P2` todo
+  with live evidence (zero slot-1 rejections since the one expected post-fix straggler at 08:23:22Z). Found the same gap
+  live in 2 more role files while investigating a separate, unrelated slot-1 tmux-collision incident from the same
+  session window (see
+  `/plans/active/issues/persistent_slot_tmux_session_hijacked_by_transient_plan_health_dispatch_2026_08_01.md` — a
+  different bug, not a duplicate of this one) — added the 2 todos above and bumped this doc's priority P1→P1 (unchanged
+  numeric value, but re-affirmed active given the live multi-file recurrence rather than letting it read as closed).
