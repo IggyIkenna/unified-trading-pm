@@ -60,11 +60,22 @@ source: >-
 
 ## Todos
 
-- [ ] [REVIEW] P0. **Re-verify batch-4's done-claim against reality, not against its checkbox** — for the sole todo in
+- [x] [REVIEW] P0. **Re-verify batch-4's done-claim against reality, not against its checkbox** — for the sole todo in
       `/plans/active/ao_satellite_ao_dispatch_batch4_2026_08_01.md`, re-run `git show --stat <sha>` for the cited commit
       and re-run the specific named test(s) directly rather than trusting the claim, and re-run the todo's own stated
       done-when check (the silent-but-alive-owner simulation test). **Done when**: verified, and if the evidence does
-      not hold up, re-opened as a new tracked todo in this doc's Progress Log with the discrepancy stated.
+      not hold up, re-opened as a new tracked todo in this doc's Progress Log with the discrepancy stated. — **Verified,
+      holds up.** `agent-orchestrator@7911083` — `git show --stat` confirms the cited commit exists on
+      `live-defi-rollout` HEAD (`3c93cf7`) touching exactly `server/worker_liveness_watchdog.py` (+42/-4) and
+      `tests/test_worker_liveness_watchdog.py` (+138); diff-read confirms `_reconcile_unacked_dispatches` now requires
+      `_pane_is_dead(sess)` (fail-closed on exception) before releasing, matching the commit message's claim. Re-ran the
+      3 named tests directly
+      (`.venv/bin/python -m pytest tests/test_worker_liveness_watchdog.py -k     "test_reconcile_unacked_silent_but_alive_owner_keeps_lease or test_reconcile_unacked_dead_owner_still_released or     test_reconcile_unacked_no_session_still_released"`)
+      — 3 passed, including the todo's own stated done-when check
+      (`test_reconcile_unacked_silent_but_alive_owner_keeps_lease`, the silent-but-alive-owner simulation). Full
+      `tests/test_worker_liveness_watchdog.py` also re-run clean (96 passed, 0 failed — no regression in the touched
+      file). `basedpyright server/worker_liveness_watchdog.py` — 0 errors, 0 warnings, 0 notes. No discrepancy found;
+      nothing re-opened.
 - [ ] [REVIEW] P0. **Reconcile the verified todo's evidence back into its TRUE source doc's own checkbox** — batch 4 was
       an extraction, so `orchestrator_failover_double_dispatch_duplicate_work_2026_07_25.md`'s `[BACKEND] P2` item is
       the one that goes stale, not the batch's. Flip it with the real commit sha. **Done when**: the flip is committed
