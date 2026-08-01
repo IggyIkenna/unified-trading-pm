@@ -124,9 +124,20 @@ screens lost.
       (`/repos`, `/ops/*`), not a whitelist candidate. Regression:
       `tests/smoke/{routes,nav_and_header,top-nav-bar,app}.spec.ts` (87 tests) green. QG green
       (typecheck/lint/orphan-audit/unit/build). `deployment-ui@98e2c7a`.
-- [ ] [UI] P3. **Add a real 404 route** so `*` stops silently rendering Overview for unknown URLs. This is what let
+- [x] ✅ [UI] P3. **Add a real 404 route** so `*` stops silently rendering Overview for unknown URLs. This is what let
       `/infra` "work" while showing the wrong screen for weeks — the bug was invisible precisely because the catch-all
-      always renders _something_.
+      always renders _something_. — deployment-ui@3d4a8d6. The `*` catch-all is legitimately shared with the home
+      shell's own surfaces (`/home`, `/service/:name(/:tab)`, regex-sniffed by `ServiceUrlSync`), so a blanket 404 would
+      have broken those — added a shared `isHomeShellPath()` helper (exported from `ServiceUrlSync.tsx`, the same match
+      logic that already drove its own state↔URL sync) and a `HomeShellRoute` wrapper (`App.tsx`) that gates the
+      catch-all: recognized home-shell paths still render the shell, everything else renders a new `NotFoundPage`
+      (`src/pages/NotFound.tsx`) with a link back to `/cockpit`. `pw:L2 ✓`: `tests/smoke/not-found-route.spec.ts` (new,
+      5/5 — unknown URL → 404; `/infra`-shaped dead link → 404; 404's back-link → real screen; `/home` and
+      `/service/:name/:tab` still render the shell, not 404) +
+      `top-nav-bar.spec.ts`/`url-sync.spec.ts`/`mobile_responsive.spec.ts` unaffected (38/38 combined, including
+      `/data-status` and `/kill-switch` — themselves dead/never-real URLs that now correctly 404 instead of silently
+      rendering the shell). `orphan-audit --blocking` clean (no new orphans — no new `<Route>` was added, only what the
+      existing catch-all renders). tsc/ESLint/build clean, vitest 1096/1096 (full suite) / 101/101 (QG-scoped).
 - [ ] [UI] P3. **Move the per-service shell onto real routes** — ~215 `/service/:name/:tab` URLs are regex-sniffed off
       the catch-all by `ServiceUrlSync`, which needs a 100-line bidirectional state↔URL sync with loop guards and
       "change attribution" only because `selectedService`/`activeTab` are component state instead of route params.
@@ -139,7 +150,7 @@ screens lost.
 | Dropdown vs bar — keep one               | ✅ **RULED 2026-07-28, SHIPPED 2026-08-01**             | Kept the bar, deleted the dropdown — functional edge (survives every route), not a taste call. deployment-ui@32c0999. See the todo above.                                                                                |
 | Delete the 7 duplicate standalone routes | **Operator-owned**                                      | Operator wants to compare chromes first. Mechanical once decided.                                                                                                                                                        |
 | Delete the 3 dead pages                  | ✅ **SHIPPED 2026-08-01**                               | `deployment-ui@98e2c7a`. See the todo above.                                                                                                                                                                             |
-| Real 404 instead of `*` → Overview       | **Not done**                                            | Blocked on nobody.                                                                                                                                                                                                       |
+| Real 404 instead of `*` → Overview       | ✅ **SHIPPED 2026-08-01**                               | `deployment-ui@3d4a8d6`. See the todo above.                                                                                                                                                                             |
 | Per-service shell → real routes          | **Not done**                                            | Blocked on nobody, but it is the biggest chunk; do it AFTER the dropdown/bar call so the nav is settled.                                                                                                                 |
 | Diagnose the 5 mock/page row mismatches  | ✅ **Resolved 2026-07-28, gate fully green 2026-07-31** | Was NOT REPRODUCIBLE (2026-07-28) and the whole L2 gate is now 424/0 green (host-contention root cause, not app drift) — see `/plans/archive/issues/deployment_ui_l2_smoke_gate_red_2026_07_17.md` (archived, resolved). |
 | `/ops/vms/:vmName` orphan route          | **Not done**                                            | Pre-existing, unchanged by this session; the orphan audit reports it every run.                                                                                                                                          |
@@ -170,6 +181,18 @@ used to recommend chasing were already found NOT REPRODUCIBLE on 2026-07-28, and
   new orphans vs baseline — the dropdown's route data lived in the same file and is still referenced by TopNavBar, so
   nothing became unreachable), `tsc`/ESLint clean, vitest 1102/1102, targeted nav Playwright specs 85/85, full smoke
   suite 423/423. Shipped deployment-ui@32c0999.
+
+- **2026-08-01 (shipped)** — Added the real 404 route. The `*` catch-all is shared by the home shell's own surfaces
+  (`/home`, `/service/:name(/:tab)`, regex-sniffed by `ServiceUrlSync`) and every genuinely unknown URL — a blanket 404
+  on `*` would have broken the shell, so gated it instead: exported `isHomeShellPath()` from `ServiceUrlSync.tsx` (the
+  same match logic already driving its own state↔URL sync) and wrapped the catch-all's element in a new `HomeShellRoute`
+  (`App.tsx`) that renders the shell only for recognized home-shell paths and a new `NotFoundPage`
+  (`src/pages/NotFound.tsx`, links back to `/cockpit`) for everything else. New regression:
+  `tests/smoke/not-found-route.spec.ts` (5/5) plus the full pre-existing `top-nav-bar.spec.ts`/`url-sync.spec.ts`/
+  `mobile_responsive.spec.ts` suites (38/38 combined) — the latter incidentally proved `/data-status` and `/kill-switch`
+  were themselves dead/never-real URLs riding the old silent fallback; they now correctly 404 too.
+  `orphan-audit --blocking` clean, `tsc`/ESLint/build clean, vitest 1096/1096 (full) / 101/101 (QG-scoped). Shipped
+  deployment-ui@3d4a8d6.
 
 ## Lessons
 
