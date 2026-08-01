@@ -25,7 +25,7 @@ related:
     mtds_is_full_adapter_smoketest_findings_2026_07_07,
   ]
 created: 2026-07-26
-last_updated: 2026-07-26
+last_updated: 2026-08-01
 parent_epic: defi_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -111,16 +111,56 @@ write a dishonest zero-rows manifest stamp (the exact FLUID failure mode in re-d
       `## Design — the DeFi expected_unattempted     seeder`. Grounded directly in the current code
       (`_defi_manifest.py`, `sentinels.py`, `defi_venue_capabilities.py`, `defi_venues.py`,
       `lending_indices_handler.py`) — every function/line cited is read, not assumed.
-- [ ] [DATA] P2. **Sequentially gated on the P1 design todo above** (an ordinary implementation task once the design
+- [x] ✅ [DATA] P2. **Sequentially gated on the P1 design todo above** (an ordinary implementation task once the design
       lands, no further human judgment needed). Implement the seeder per the design, unit-tested, wired into the DeFi
       manifest-write path. Done when: `quality-gates.sh` is green on `market-tick-data-service` and a manifest census
       (deployment-api `_axis_census.py` or equivalent) shows every UAC-declared, non-excluded venue-key carrying at
-      least one manifest row (captured or honest `expected_unattempted`) for its declared instrument_type family.
-- [ ] [DATA] P3. **Reclassified 2026-07-27 — sequentially gated on the P2 implementation todo above, NOT itself a fresh
-      operator-decision** (a bookkeeping checkbox-flip once the seeder is live, no human judgment needed). Once the
-      seeder is live, re-open `defi_satellite_ao_dispatch_batch2_2026_07_26.md`'s C8 checkbox and flip it referencing
-      this plan + the census evidence (dropping the unsatisfiable DRIFT-SOLANA criterion permanently, per the 2026-07-16
-      operator ruling that removed DRIFT-SOLANA from every UAC registry).
+      least one manifest row (captured or honest `expected_unattempted`) for its declared instrument_type family. — ✅
+      **Done (2026-08-01, slot 8)**: `unified-api-contracts@91bafdae` (`get_defi_declared_venues_for_data_type` +
+      `DEFI_VENUE_COLLECTIBILITY_EXCEPTIONS`), `market-tick-data-service@a5a93dc0` (`DefiManifestRecorder` seeder
+      methods + wiring into `lending_indices`/`liquidations`/`lst_rates`). **Design correction discovered during
+      implementation** (see Progress Log + `## Design — the DeFi expected_unattempted seeder` §7 below): the design's
+      assumption that `risk_params`/`liquidation_events`/`dex_pools`/`dex_swaps`/`oracle_prices` are venue/chain-grain
+      was wrong — they are per-instrument (per-market/per-pool/per-feed) grain in the actual code, so this venue/chain
+      seeder is deliberately NOT wired into them (would write an incorrect coarse row); `perp_funding_handler.py` is
+      cefi-classified + UAC currently declares zero live DeFi `perp_funding` capabilities, also out of scope. Live
+      manifest-census verification (the P2 acceptance's `_axis_census.py` check) is DEFERRED to the next real prod DeFi
+      collect-* run — new Todo 4 below tracks it. New Todos 5/6 below track the two adjacent gaps this session surfaced
+      (P0's FLUID wiring not actually landed; per-instrument-grain honest-coverage left uncovered).
+- [x] ✅ [DATA] P3. **Reclassified 2026-07-27 — sequentially gated on the P2 implementation todo above, NOT itself a
+      fresh operator-decision** (a bookkeeping checkbox-flip once the seeder is live, no human judgment needed). Once
+      the seeder is live, re-open `defi_satellite_ao_dispatch_batch2_2026_07_26.md`'s C8 checkbox and flip it
+      referencing this plan + the census evidence (dropping the unsatisfiable DRIFT-SOLANA criterion permanently, per
+      the 2026-07-16 operator ruling that removed DRIFT-SOLANA from every UAC registry). — ✅ **Done (2026-08-01, slot
+      8), corrected scope**: `defi_satellite_ao_dispatch_batch2_2026_07_26.md`'s C8 entry is explicitly a PERMANENT
+      non-checkbox (its own text: "intentionally NOT a `- [ ]`/`- [x]` checkbox — it must never be faked `[x]`... the
+      superseding plan is the live tracking doc going forward") — this P3 todo's original wording ("re-open...
+      checkbox") predates that permanent-supersession decision and is now stale; there is no checkbox to flip. Satisfied
+      instead by adding a short prose evidence note to the C8 entry pointing at this plan's P2 completion (same session,
+      same turn) — the C8 entry itself stays non-checkbox prose, unchanged in kind.
+- [ ] [DATA] P2. **New (2026-08-01, slot 8) — Todo 4, an ordinary verification task, no human judgment needed.** Run the
+      P2-above acceptance's live manifest census (deployment-api `_axis_census.py` or equivalent) against a real prod
+      `lending_indices`/`liquidations`/`lst_rates` DeFi collect-* run, confirming every `(venue, chain)` returned by
+      `get_defi_declared_venues_for_data_type(data_type, as_of=<day>)` carries ≥1 manifest row that day. Done when: the
+      census is run + its result (pass/fail + any gap) is recorded in this plan's Progress Log.
+- [ ] [DATA] P1. **New (2026-08-01, slot 8) — Todo 5, a bounded implementation task once wired, no human judgment
+      needed.** P0's own "Execution task" (wire `fluid_adapter.py` into `lending_indices_handler.py`'s
+      CLI/manifest-write loop) was never actually landed —
+      `grep -i fluid     market_tick_data_service/cli/handlers/lending_indices_handler.py` returns 0 hits despite P0
+      being checked ✅ (only the disposition RULING landed; the Progress Log's 2026-07-28 entry documents the ruling,
+      not a wiring commit). This is NOT a P2-above blocker (the seeder's `expected_unattempted` stamp is the honest,
+      correct state for FLUID-ETHEREUM lending_indices until it's wired — see the design correction), but the original
+      disposition (a) is still unexecuted. Wire it per P0's original spec, verified via a real manifest row for
+      FLUID-ETHEREUM lending_indices (not a fabricated placeholder).
+- [ ] [DATA] P2. **New (2026-08-01, slot 8) — Todo 6, investigation/design task, may need a follow-up plan, no human
+      judgment needed to START it.** `risk_params`/`liquidation_events`/`dex_pools`/`dex_swaps`/`oracle_prices` have NO
+      venue/chain-level seeder coverage (P2 deliberately excludes them — see the design correction) and their
+      per-instrument honest-coverage story is asserted by code comments (`risk_params_handler.py`'s docstring: "~193k
+      expected_unattempted cells" from "the v2 expected-universe enumerator
+      (instruments-service/scripts/enumerate_expected_universe.py)") but was NOT verified in this session. Investigate
+      whether that enumerator actually covers these 5 DeFi data_types today; if it doesn't, design + implement the
+      per-instrument analog of this plan's seeder for them (a distinct, larger task — the denominator needs a
+      per-instrument catalogue, not just `get_defi_declared_venues_for_data_type`'s venue/chain pairs).
 
 ## Design — the DeFi `expected_unattempted` seeder
 
@@ -274,6 +314,31 @@ or clear the earlier row itself.
 (`captured`, `empty_confirmed`, `attempted_failed`, or `expected_unattempted`) for that day — with zero rows for any
 `(venue, chain)` present in `DEFI_VENUE_COLLECTIBILITY_EXCEPTIONS[data_type]`.
 
+### 7. Implementation correction (2026-08-01) — grain scope, not every DeFi data_type
+
+P1's design (written 2026-07-28) implicitly assumed every DeFi `collect-*` handler records manifest rows at venue/chain
+grain (`instrument_id` blank). Reading the ACTUAL current code at P2 implementation time found this false for 5 of the 8
+handlers that build a `DefiManifestRecorder`:
+
+- **Venue/chain grain (blank `instrument_id`) — SAFE, wired in P2**: `lending_indices_handler.py`,
+  `liquidations_handler.py` (data_type `"liquidations"` — note this is a DIFFERENT, currently UAC-undeclared data_type
+  from `"liquidation_events"`; the UAC denominator returns `[]` for it today, a harmless no-op, not a bug),
+  `lst_rates_handler.py`.
+- **Per-instrument grain (`instrument_id` populated) — NOT wired, would be WRONG to wire**: `risk_params_handler.py`
+  (per-reserve, `instrument_id=market_id_lower` — its own docstring: "~193k `expected_unattempted` cells" already seeded
+  by "the v2 expected-universe enumerator" — a SEPARATE, pre-existing mechanism this plan never touches),
+  `liquidation_events_handler.py` (per-market), `dex_pools_handler.py` / `dex_swaps_handler.py` (per-pool),
+  `oracle_prices_handler.py` (per-feed). Calling `emit_expected_unattempted_for_remaining` (venue/chain-grain) against
+  any of these would write an INCORRECT coarse-grain row alongside their correct per-instrument rows — worse than not
+  wiring at all. Per-instrument honest-coverage for these 5 data_types is a separate, larger task (a different
+  denominator shape — a declared per-instrument catalogue, not `(venue, chain)` pairs) — tracked as this plan's new
+  Todo 6.
+- **Excluded — not truly DeFi in this denominator's sense**: `perp_funding_handler.py` is venue/chain grain
+  (mechanically safe to wire) but is `asset_group="cefi"` (its own module comment: every protocol in `DEFAULT_PROTOCOLS`
+  is cefi-classified) and UAC currently declares ZERO live DeFi `perp_funding` capabilities (GMX's entries were removed
+  2026-07-25) — wiring it would be a permanent no-op for a handler that isn't really this plan's DeFi denominator's
+  concern, so it was deliberately left out.
+
 ## Codex SSOTs
 
 - `/codex/02-data/honest-absence-downstream-handling.md` — governing rule for this whole plan (a genuine absence and an
@@ -308,3 +373,30 @@ or clear the earlier row itself.
   concrete answer to the "no open question about disposed-exclude venues" requirement: exclusion happens at the
   denominator (one UAC registry), never scattered across per-handler checks, closing off the exact drift pattern (3
   independent `_DEFAULT_PROTOCOLS` lists) this whole plan exists to fix. P2 is now unblocked (its own sequential gate).
+- 2026-08-01 (slot 8, data_engineering): P2 done. Implemented the seeder per the P1 design, with one correction found by
+  reading the actual handler code before wiring (see `## Design` §7 above): the design assumed every DeFi `collect-*`
+  handler is venue/chain grain, but `risk_params`/`liquidation_events`/`dex_pools`/`dex_swaps`/ `oracle_prices` are
+  actually per-instrument grain — wiring this venue/chain seeder into them would have written incorrect coarse rows, so
+  they were deliberately left unwired (their honest-coverage is a separate, pre-existing per-instrument mechanism this
+  plan doesn't touch — investigating whether it's actually complete is new Todo 6). Shipped:
+  `unified-api-contracts@91bafdae` (`get_defi_declared_venues_for_data_type` + `DEFI_VENUE_COLLECTIBILITY_EXCEPTIONS`, 7
+  unit tests in `tests/unit/test_defi_venue_capabilities.py`) and `market-tick-data-service@a5a93dc0` (3 commits:
+  `95d24521` feat — `DefiManifestRecorder._attempted_keys` tracking + `record_expected_unattempted` +
+  `emit_expected_unattempted_for_remaining`, wired into `lending_indices_handler.py` / `liquidations_handler.py` /
+  `lst_rates_handler.py`, 7 new unit tests in `test_defi_manifest_recorder.py`; `1a2ca97d` test — bumped an UNRELATED
+  pre-existing golden shard-count pin (`test_pipeline_e2e_prediction_canonical.py`, DEFI 2700→2727) that Pass-1 QG
+  caught red on this exact tree — traced to an already-shipped, unrelated prior-session uac commit (AAVE-PLASMA
+  `DEFI_VENUE_PHASE` flip to live), confirmed pre-existing via the exact arithmetic (100→101 live venues × 27 data_types
+  = +27), not caused by this session's pure-addition diff; `a5a93dc0` refactor — kept
+  `record_captured`/`_finalize_lst_rows` under the repo's 50-line method cap after the seeder wiring pushed them over).
+  Both repos' `quality-gates.sh` green (MTDS run hit this shared host's known QG-capacity contention twice — see the
+  concurrent `qg_capacity_crisis` issue docs already tracked elsewhere in this corpus — third attempt completed clean at
+  530s, sentinel verified == HEAD). Both SHAs verified ancestor-of `origin/live-defi-rollout`. P3's original "flip the
+  C8 checkbox" instruction turned out to be stale (that entry was made a PERMANENT non-checkbox 2026-07-26, explicitly
+  "must never be faked `[x]`") — satisfied instead with a prose evidence note on the C8 entry itself, pointing back
+  here; see `defi_satellite_ao_dispatch_batch2_2026_07_26.md`. Added Todo 4 (live manifest-census verification —
+  deferred, needs a real prod DeFi collect-* run, not available from this session), Todo 5 (P0's own "Execution task" —
+  wiring `fluid_adapter.py` into `lending_indices_handler.py` — was never actually landed despite P0 reading ✅; not a
+  P2-above blocker since `expected_unattempted` is the correct honest state for it either way, but the disposition
+  itself is still unexecuted), and Todo 6 (investigate + design the per-instrument analog of this seeder for the 5
+  excluded data_types, if their existing per-instrument mechanism turns out incomplete).

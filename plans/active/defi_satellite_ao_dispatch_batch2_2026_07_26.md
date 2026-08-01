@@ -92,6 +92,10 @@ drift_direction: advance-code
   capability-reconciliation decision). This entry is intentionally NOT a `- [ ]`/`- [x]` checkbox — it must never be
   faked `[x]` (no seeder exists to complete against) and must never re-enter the dispatchable queue; the superseding
   plan is the live tracking doc going forward. Source: /plans/active/data_completion_defi_2026_07_15.md (item C8).
+  **Seeder shipped 2026-08-01 (slot 8)**: the superseding plan's P2 landed (`unified-api-contracts@91bafdae`,
+  `market-tick-data-service@a5a93dc0`) — see that plan's Progress Log for the full accounting (scope, design
+  corrections, deferred live-census verification). This C8 entry stays non-checkbox prose per the instruction above; the
+  superseding plan remains the tracking doc.
 - [x] ✅ [CHORE] P3. **DONE 2026-07-26 (worker, slot 6).** (1) Deleted, `market-tick-data-service@5dadaae7` — all 3
       gating buckets re-verified live still deleted. (2) Audited all 10 campaign scripts: 9 reference now-confirmed-dead
       buckets AND have their governing plan(s) archived, but did NOT delete them — the "GCS orphan sweep = 0" half of
