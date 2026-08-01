@@ -666,3 +666,20 @@ against the reproduction script.
     this outcome; this is now the 16th+ dispatch for this condition, further corroborating
     `dp_escalation_worker_dispatch_no_open_issue_check_2026_07_29.md`'s still-open Option A recommendation for dedup at
     the orchestrator dispatch layer.
+- **2026-08-01 (data_pipeline_failure escalation worker, agt-bc3222, slot 6) — 17th+ dispatch, same story again.**
+  Received another `DP_RUN_MOSTLY_EMPTY` (DP-FETCH-009) CRITICAL page for `(cefi, book_snapshot_5)`: 300,457/1,097,870 =
+  27.4%, alert context labeled "STATIC BACKLOG — no new attempted_failed activity in 1d; already-tracked, not a fresh
+  regression." No issue doc pre-linked (`Filed issue: (none — alert carries the details)`); found this doc via the
+  standard pre-task plan/issue conflict-check grep (`rg book_snapshot_5` / `DP-FETCH-009` in
+  `unified-trading-pm/plans/active/issues/`). Re-verified all five fix commits are still ancestors of
+  `origin/live-defi-rollout` (`git merge-base --is-ancestor`, fresh `git fetch` in each of the three repos): MTDS
+  `339ca767`/`6bf568ee`, UAC `8db188fe`/`1c4d8864`, deployment-service `a564cca` — all OK. The numerator (300,457) is
+  byte-identical to every verified reading back to `agt-716d56`/`agt-cfaab9` (2026-07-31) — per the established
+  "numerator byte-identical → skip the live manifest re-read" precedent, did not pull a fresh GCS read this session.
+  **Conclusion: no code fix needed** — all three root-cause fixes (contract shape, ts_event derivation, nullable levels)
+  plus the alerting-materiality fix continue to hold; this is a duplicate/re-evaluated static condition, not a new
+  regression. Session cost: doc read + one `git merge-base --is-ancestor` batch check (5 commits) + this Progress Log
+  append, no GCS read, no code change, no VM launch. Pinged `dp-fleet-monitor` (authoring slot) with this outcome; this
+  is now the 17th+ dispatch for this condition, further corroborating
+  `dp_escalation_worker_dispatch_no_open_issue_check_2026_07_29.md`'s still-open Option A recommendation for dedup at
+  the orchestrator dispatch layer.
