@@ -90,7 +90,16 @@ locked_by:
 locked_since:
 supersedes:
 superseded_by:
-depends_on: [tradfi_manifest_content_recovery_completion_2026_07_24, tradfi_backfill_throughput_followups_2026_07_24]
+depends_on:
+  [
+    tradfi_manifest_content_recovery_completion_2026_07_24,
+    tradfi_backfill_throughput_followups_2026_07_24,
+    tradfi_phase_d_terminal_gate_2026_07_24,
+  ]
+# 2026-08-01 (ag-closeout-audit, tradfi tranche): added the 3rd forked child (tradfi_phase_d_terminal_gate_2026_07_24)
+# to depends_on -- it was named in the Split notice table above from day one but never actually listed here, which
+# left generate_ag_closeout_audit_candidates.py's covering-plan discovery blind to it (that script only resolves
+# depends_on for *_finalize* docs, so a closeout's own depends_on needs to be complete for docs with no finalize pair).
 # gate_on_depends removed 2026-07-25 (second-tier trim, fix #6): the 2 items it protected -- Phase C's
 # honest-coverage-gated-on-Phase-B residue, and the BLOCKED-INFRA Layer-1-cert item -- both forked to
 # tradfi_registry_coverage_and_ao_readiness_2026_07_25.md, which now carries the real depends_on+gate_on_depends:true.
