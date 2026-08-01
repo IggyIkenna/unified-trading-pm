@@ -173,12 +173,12 @@ correctly scoped and already covers these 5 data_types in code; it just needs to
       memory budget on a real run — or bump memory as a documented stopgap ONLY if streaming alone doesn't close the
       gap, per this craft's EFFICIENCY north-star (stream first, scale hardware second). (repo: instruments-service) —
       instruments-service@37f7e36e
-- [ ] [DATA] P1. **Sequentially gated on Todo 1.** Once the OOM is fixed, manually trigger `expected-universe-v2-defi`
-      (or wait for the next 01:30 UTC scheduled run) and re-run this issue's manifest census
+- [x] ✅ [DATA] P1. **Sequentially gated on Todo 1.** Once the OOM is fixed, manually trigger
+      `expected-universe-v2-defi` (or wait for the next 01:30 UTC scheduled run) and re-run this issue's manifest census
       (`read_availability_index(bucket, columns=["data_type","capture_status"])`) to confirm real `expected_unattempted`
       rows now materialise for `risk_params`/`dex_pool_state`/`dex_pool_swaps`/ `oracle_prices` (and any other
       previously-empty DeFi data_type). Record before/after counts in this doc's Progress Log. (repo:
-      instruments-service)
+      instruments-service) — instruments-service@66adbc1d, deployment-service@46e0eda
 - [ ] [DATA] P2. Investigate whether `liquidation_events`/`risk_params` having no recurring collector in
       `deployment-service/terraform/gcp/defi_collection_scheduler.tf`'s `defi_collect_operations` map is intentional
       (one-off backfill only, by design) or a genuine scheduling gap — if a gap, wire a scheduler entry mirroring the
@@ -235,3 +235,51 @@ correctly scoped and already covers these 5 data_types in code; it just needs to
   `test_enumerate_manifest_memory_frugal.py`, no regressions). Shipped + verified on origin:
   `instruments-service@66adbc1d`. **Re-verification against a live re-run (post image-rebuild) is in progress** — see
   the next entry for the outcome + before/after census counts.
+- 2026-08-01 (slot-15, data_engineering): Re-verified `instruments-service@66adbc1d` after the LDR→main promotion +
+  image rebuild (`:latest` digest `sha256:b218d358...`, built from commit `15d3e82b`, confirmed content-carries the
+  streaming fix) and re-triggered `expected-universe-v2-defi` (`expected-universe-v2-defi-k8w8g`). **It OOM'd a THIRD
+  time** — same `The configured memory limit was reached.` condition, but this time it got PAST the "Loading manifest"
+  step (ran ~2 min vs. the prior ~29s) and died mid-stream. **Third, distinct root cause**: streaming the READ bounds
+  the transient per-batch pandas DataFrame, but the ACCUMULATED OUTPUT — `present_set`/`captured_set`, plain Python
+  `set[tuple[str, ...]]` — is NOT bounded by batching: DeFi's manifest is ~29.96M "present" rows (captured +
+  empty_confirmed + attempted_failed) at a 7-8-column present-set grain, and ~30M Python tuple-of-strings set entries
+  carry the same order-of-magnitude per-cell object overhead as the pandas DataFrame Todo 1/this-Todo's read-fix already
+  eliminated — streaming the read alone cannot bound the final accumulated set size. Per this issue's own Todo 1
+  acceptance criteria ("bump memory as a documented stopgap ONLY if streaming alone doesn't close the gap"), applied the
+  stopgap: `deployment-service@46e0eda` makes `expected_universe_v2_scheduler.tf`'s `cpu`/`memory` per-asset_group
+  overridable (module default stays the working 2 vCPU / 8Gi for cefi/tradfi/sports/prediction) and bumps DeFi
+  specifically to `cpu=8`/`memory=32Gi` — a scoped, DeFi-only change, not a blanket fleet bump. Applied via the
+  sanctioned `terraform/gcp/tofu.sh ENV=prod` wrapper (`tofu plan -target='module.expected_universe_v2_job["defi"]'` →
+  reviewed the plan, exactly `0 add / 1 change / 0 destroy`, cpu `2→8` + memory `8Gi→32Gi`, nothing else touched →
+  `tofu apply` the saved plan) before committing the terraform source, confirmed live via `gcloud run jobs describe`.
+  Re-triggered (`expected-universe-v2-defi-hcs9g`, async): **SUCCEEDED** —
+  `Execution completed successfully in 13m46.61s`, the first successful `expected-universe-v2-defi` run since 2026-07-13
+  (20 consecutive prior days OOM'd). **Before/after manifest census** (same
+  `read_availability_index(bucket, columns=["data_type","capture_status"])` query the issue's own evidence used — note:
+  this bounded/column-pruned read helper ITSELF then OOM'd when re-run directly on this shared host post-fix, spiking to
+  15.5GB RSS in ~5s despite only projecting 2 columns; an RSS-monitored kill switch caught it safely before host impact
+  — logged as a follow-up finding below, NOT re-opening this issue's scope). Switched to a DuckDB (`duckdb==1.5.3`,
+  already vendored) streaming aggregate against a local copy of the manifest parquet instead (per
+  `run-bounded-analysis.sh`'s own documented DuckDB-over-pandas precedent) — computes the same GROUP BY in DuckDB's
+  native columnar engine without ever materialising a 30M-row Python/pandas object, memory_limit=2GB, peak well within
+  bounds:
+
+  | capture_status           | before (2026-08-01, this issue's opening evidence)                       | after (this run) |
+  | ------------------------ | ------------------------------------------------------------------------ | ---------------- |
+  | captured                 | 26,238,857                                                               | 26,241,053       |
+  | empty_confirmed          | 3,716,101                                                                | 6,556,301        |
+  | attempted_failed         | 1,765                                                                    | 1,773            |
+  | **expected_unattempted** | **14** (all `lending_indices`/`lst_rates`, from the P2 MTDS seeder only) | **607,685**      |
+
+  Per-data_type `expected_unattempted` breakdown now (previously 0 for every one of these): `dex_pool_state`=96,992,
+  `governance_events`=87,694, `lending_indices`=84,886, `liquidations`=82,315, `risk_params`=81,441,
+  `dex_pool_swaps`=63,398, `position_data`=61,893, `oracle_prices`=15,485, `perp_funding`=6,846, `staking_yields`=5,053,
+  `lst_rates`=2,448, `rewards`=2,119, plus 15 more data_types (incl. `liquidation_events`) each at ~1,141 — confirming
+  the enumerator correctly seeds the denominator for `liquidation_events`/`risk_params` even with no recurring collector
+  wired yet (Todo 3's open question), because "could exist" is independent of "has a collector". Todo 2's acceptance
+  criteria (`risk_params`/`dex_pool_state`/`dex_pool_swaps`/`oracle_prices` all now materialise real
+  `expected_unattempted` rows) is fully met. **Follow-up finding (not re-opening this issue, informs the craft's own
+  tooling)**: `unified_trading_library.manifest_writer._read_index.read_availability_index(bucket, columns=[...])` — the
+  SAME helper this issue's own opening evidence used successfully — does NOT actually bound memory at DeFi's current
+  ~33.4M-row scale despite column projection; it OOM'd directly on this host on a 2-column request. Worth a dedicated
+  issue doc for UTL if this helper is relied on elsewhere at DeFi scale; out of scope here.
