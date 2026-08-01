@@ -270,3 +270,12 @@ snapshot file, since it's the only surviving copy of legacy's manifest state.
   its 4 todos edit `data_completion_cefi_2026_07_15.md` (active, planning, 7 open) whose own `--also-legacy` gap-fill
   todo is the text being reconciled - same-file collision risk with a live dispatch target. Filed as
   BLOCKED-OPERATOR-DECISION in this run's Deferred list; `assigned_vm` unchanged.
+
+- **na-eligibility-audit 2026-08-01** (tranche=cefi, autonomous): KEEP-NA-STALE-duplicated, PENDING activation. All 3
+  remaining open todos (update `legacy_bucket_dual_write_decommission_2026_07_24.md`; check for additional backup; run
+  the CF-11 comparison) already extracted verbatim into `cefi_satellite_ao_dispatch_batch4_2026_07_31.md` todo (lines
+  122-129, Source-cited, bundled as one item). batch4 is `status: draft`, its finalize twin is gated on batch4's own 7
+  todos — nothing in that pair is live yet, so NOT reclassified here (would risk double-dispatch once batch4 activates).
+  Original 2026-07-30 park reason (same-file collision with `data_completion_cefi_2026_07_15.md`) is independently
+  CONFIRMED RESOLVED per that doc's own 2026-07-31 ownership-map commit. Revisit RECLASSIFY only if batch4 stalls
+  without activating — content is otherwise bounded/deterministic.

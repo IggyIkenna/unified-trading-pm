@@ -137,3 +137,9 @@ real progress, until this fix.
   Unconfirmed: whether memory pressure also contributed to shard 13's socket failures (the sub-agent flagged this as
   worth checking `host_metrics_window.mem_pct` for, but out of this doc's filing scope) — the retry-predicate gap is
   real and worth fixing regardless of that outcome.
+
+- **na-eligibility-audit 2026-08-01** (tranche=cefi, autonomous): KEEP-NA, valid. Sole open todo (`_GCS_RETRY` predicate
+  widen + `list_blobs()` timeout) already extracted verbatim into `cefi_satellite_ao_dispatch_batch4_2026_07_31.md` todo
+  4 (Source-cited); batch4 is `status: draft`, not active — NOT independently reclassified here to avoid duplicate
+  dispatch on `gcp.py` once activated. Bug confirmed still live in code
+  (`unified_trading_library/cloud_interface/providers/gcp.py:66-75`).

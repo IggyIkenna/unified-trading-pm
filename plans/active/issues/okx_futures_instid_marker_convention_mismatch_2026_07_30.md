@@ -124,3 +124,25 @@ reasoning above.
 - [ ] [RESEARCH] P2. Live-verify whether AAPL-USD (and any other equity-underlying) OKX-FUTURES dated-future universe
       entries correspond to real, currently-listed OKX contracts (option C above) -- confirm via
       /api/v5/public/instruments?instType=FUTURES, not ccxt's cached market list.
+
+## Progress Log (na-eligibility-audit)
+
+- **na-eligibility-audit 2026-08-01** (tranche=cefi, autonomous): KEEP-NA, stale-items — **and flagging a real
+  production-safety finding, not just a checkbox nit.** This doc's body frames `[OPERATOR] P1` as gating ALL code
+  changes ("both need an operator call before code changes") and claims OKX-FUTURES capture "stays at 0 rows" pending
+  that decision. **Both claims are now stale**: `market-tick-data-service@8a6bbc97` (2026-07-30 22:55 UTC — landed
+  BEFORE this doc was even committed) already implemented this doc's Option A in `okx_futures_ws.py` (the
+  `@LIN`/`@INV`-marked canonical id) WITHOUT the operator sign-off this doc says is required, and OKX-FUTURES
+  `book_snapshot_5` is independently live-verified producing real, non-empty rows in production as of 2026-07-31T21:14Z
+  (`live_event_log_warm_sink_recovery_and_cold_compaction_2026_07_31.md` P1.1). The shipped code's own docstring also
+  narrates the OKX-FUTURES exemption's history DIFFERENTLY than this doc's body does — two conflicting accounts written
+  hours apart, never reconciled. **`[SCRIPT] P1` should be understood as already-code-complete for the Option-A half**
+  (not "whichever side loses, implement" — A already shipped, reverting is still possible but is the harder path now);
+  `[OPERATOR] P1` needs re-framing from "decide before any code changes" to "ratify or override a fait-accompli change
+  already live on a production data-capture path, made without first resolving Option C's data-integrity prerequisite as
+  this doc's own Options section says it should have." `[SCRIPT] P2` (parity test) and `[RESEARCH] P2`
+  (AAPL-USD@LIN-20310613 real-contract check) stay open and unaffected — `[RESEARCH] P2` is now MORE urgent since A
+  shipped without it. Doc stays `assigned_vm: NA` — the remaining question is squarely an operator ratification call,
+  now higher-stakes. **Surfacing prominently**: a worker bypassed a documented required-sign-off gate on live
+  data-capture code; operator should see this doc's `[OPERATOR] P1` item with the above context, not the original
+  "nothing shipped yet" framing.

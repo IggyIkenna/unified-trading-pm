@@ -170,3 +170,8 @@ someone checks.
   (`deployment-service@09a2374`, landed ~1h15m after this VM died, off an unrelated tradfi VM repro). No code shipped
   (would duplicate). Did not relaunch shard 24 a 3rd time today (`RB-INFRA-RELAUNCH` budget 2/2 exhausted for this
   vm-prefix). Pinged the authoring slot (`dp-fleet-monitor`) with this outcome.
+
+- **na-eligibility-audit 2026-08-01** (tranche=cefi, autonomous): KEEP-NA, valid. Item 1 is `[OPERATOR]`-tagged
+  (confirm/trigger a deployment-api redeploy — a live production-redeploy decision, not worker-determinable); item 2
+  gated on item 1. Independently corroborated by `cefi_satellite_ao_dispatch_batch4_2026_07_31.md`'s own
+  Deferred/operator-gated list (same conclusion, same reasoning). No reclassification.

@@ -200,3 +200,10 @@ depend on.
   the reintroduced memory-freeze risk (Finding 1) over an indefinite wait for `e2-standard-16` zone capacity; if this
   instance also freezes/dies, per `RB-INFRA-RELAUNCH`'s bound this vm identity should NOT be relaunched a 4th time today
   — page the operator / leave to the in-VM stall-kill instead.
+
+- **na-eligibility-audit 2026-08-01** (tranche=cefi, autonomous): KEEP-NA, valid (all 5 open items). Items 1-2
+  (`DeploymentsRegistry.get()` except-clause widen + false-reap investigation) are already extracted verbatim into
+  `cefi_satellite_ao_dispatch_batch4_2026_07_31.md` todo 3 (Source-cited) — but that batch is `status: draft`, not yet
+  active, so NOT independently reclassified here (would risk duplicate dispatch on `deployment_registry.py` once batch4
+  activates). Items 3-5 are corroborating data points feeding a different still-open investigation (shard-16), genuinely
+  open. No reclassification; revisit if batch4 stalls without activating.

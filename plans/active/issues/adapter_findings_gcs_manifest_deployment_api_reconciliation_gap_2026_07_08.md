@@ -319,3 +319,10 @@ to pursue actual ID canonicalization — not something to fix inside this doc.
   being "manifest doesn't even track this" rather than "manifest shows a fixable wrong value") should inform that
   cadence call: a full trace won't help findings where the gap is structural non-instrumentation, those need a
   manifest/schema fix before any per-finding trace would be meaningful.
+
+## Progress Log (na-eligibility-audit)
+
+- **na-eligibility-audit 2026-08-01** (tranche=cefi, autonomous): KEEP-NA, valid. Sole open todo is the `[DECISION] P2`
+  reconciliation-cadence call — a genuine portfolio-cost tradeoff across 58 findings, not a determinable fact.
+  `cefi_consolidated_native_ao_extract_2026_07_25.md` (active/planning) already reviewed and explicitly excluded this
+  exact item as an undecided policy question. No reclassification.

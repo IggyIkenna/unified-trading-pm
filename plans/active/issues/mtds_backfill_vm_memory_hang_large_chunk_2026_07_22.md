@@ -547,3 +547,10 @@ mitigation ladder (bigger machine → smaller chunks) is exhausted; only the cod
   native allocations at all — if `memray` also shows no native-heap signal correlated with request count, the
   `ThreadedResolver` hypothesis should be considered refuted and the search should widen to `pandas`/`pyarrow` (both do
   their own native buffer management) or the OS-level page-cache/malloc-arena fragmentation class of causes instead.
+
+- **na-eligibility-audit 2026-08-01** (cefi tranche): KEEP-NA, valid — reaffirms + closes out the 2026-07-30
+  infra-tranche deferral. All 4 items remain genuine investigation/design work; P1 (sports odds_api native-memory leak)
+  substantially advanced 2026-07-31 (session-reuse fix shipped, RSS reduction NOT confirmed; 5th OOM recurrence
+  escalated via DP_VM_STALL, VM stopped safely) but correctly stays open. Cross-confirmed via
+  `sports_odds_api_scattered_multiyear_gaps_2026_07_27.md` (active planning doc) whose own P1 is explicitly blocked on
+  this doc's P1 landing.

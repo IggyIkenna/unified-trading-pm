@@ -275,3 +275,8 @@ individually as "dispatchable" in their own todo text — are real-production-wr
 with the still-open hard-stop-2 contradiction (`cefi_hardstop2_carveout_codex_vs_plan_contradiction_2026_07_29.md`). Per
 the skill's "stay skeptical of a todo's own self-framing" caveat, the doc-level banner governs over any individual
 todo's isolated wording. No reclassification.
+
+- **na-eligibility-audit 2026-08-01** (tranche=cefi, autonomous): KEEP-NA, valid — re-confirmed. All 4 open todos
+  (Phases B/C/D/E) still gated per the doc's own "all steps human-executed, never AO-dispatched" banner; Phase B still
+  blocked on `cefi_hardstop2_carveout_codex_vs_plan_contradiction_2026_07_29.md` (status: open, unchanged); Phase C
+  still blocked on the CF-11 investigation. No change since the 2026-07-31 marker above.

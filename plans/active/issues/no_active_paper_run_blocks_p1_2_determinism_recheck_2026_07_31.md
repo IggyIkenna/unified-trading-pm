@@ -103,3 +103,12 @@ run already covers them under different instrument routing), not a mechanical da
   (`gcloud compute instances list`, no writes). Reconfirms slot-14's same-day finding from that plan's own Progress Log;
   escalated to its own issue doc per that todo's explicit instruction ("confirm a paper run trading these venues exists
   (or escalate that gap as its own finding if not)").
+
+## Progress Log (na-eligibility-audit)
+
+- **na-eligibility-audit 2026-08-01** (tranche=cefi, autonomous): KEEP-NA, valid. `[DECISION]` item is a genuine
+  strategy-desk judgment call per the doc's own reasoning (two independent worker confirmations, zero active deployments
+  touching these 3 venues). `[DIAG]` item could be split into its own AO-dispatchable audit in principle (flagged for a
+  future authoring pass), but its answer only serves the gated DECISION — not splitting it this run. Cross-checked
+  parent plan `live_event_log_warm_sink_recovery_and_cold_compaction_2026_07_31.md` (lines 170-188): independently and
+  currently parks P1.2 citing this exact doc. No reclassification.
