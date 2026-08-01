@@ -36,7 +36,7 @@ related:
     /codex/07-security/gha-wif-migration.md,
   ]
 created: 2026-07-25
-last_updated: 2026-07-31
+last_updated: 2026-08-01
 parent_epic: orchestrator_master
 assigned_vm: NA
 execution_scope: local-only
@@ -174,6 +174,25 @@ workflow job step runs `google-github-actions/auth` on this host, which happens 
   scoped to the invoking job's own config file. Fixed via `gcloud config configurations activate slot15-work` +
   `gcloud config set account unified-trading-sa@…`. This raises the priority of option (a)/(d) in the head todo —
   per-slot config isolation (already deployed) is NOT a sufficient mitigation on its own.
+
+- **2026-08-01 corroborating evidence (slot-2, infra role)**: hit this exact mechanism (active account poisoned to
+  `github-actions-deploy@central-element-323112.iam.gserviceaccount.com`) mid-session while doing live-verification work
+  for `bucket_iam_group_a_market_data_tick_prefix_missing_asset_group_2026_08_01.md`'s P0 IAM-condition fix — a
+  `gcloud config get-value account` check earlier in the same session confirmed `unified-trading-sa` was active (used
+  successfully for a `tofu apply` and two IAM grants), then a later
+  `gcloud iam service-accounts remove-iam-policy-binding` call failed with `PERMISSION_DENIED` under
+  `github-actions-deploy`'s identity — the flip happened with zero action from this session, consistent with a
+  concurrent glue-workflow job step (or another slot) overwriting the shared `~/.config/gcloud` state, as this doc's
+  root cause describes. Fixed via explicit `--account=` on the two blocked `gcloud` calls (pinning the identity
+  per-invocation rather than correcting the shared active pointer) — both reverts then succeeded first try. This is a
+  lighter-weight variant of the todo-3 stopgap already proven for `gcloud storage`/`gcloud compute instances create`
+  (`CLOUDSDK_AUTH_ACCESS_TOKEN=...`): a bare `--account=` flag sufficed here because the underlying credential for
+  `unified-trading-sa` was never invalidated, only the ambient active-account pointer was overwritten (same shape as the
+  2026-07-30 slot-15 finding that a bare `gcloud config set account` was enough when the key itself stayed valid). No
+  data-correctness or fix-quality impact — the actual terraform apply + IAM-policy reads that mattered for that task ran
+  while the correct identity was still active, confirmed at the time via an explicit account check. 5th documented
+  occurrence; still consistent with the open `[OPERATOR-DECISION]` gate, no new candidate direction — logged as further
+  frequency evidence only.
 
 ## na-eligibility-audit verdict
 

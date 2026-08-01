@@ -242,7 +242,12 @@ single flat un-enumerated prefix as before. The recommended fix's `group_a_flat_
       `market-data-tick-{cefi,defi,tradfi,     sports,pred}-` per-AG (mirroring `group_b_bucket_prefixes`) —
       live-verified via `gcloud projects get-iam-policy` 2026-08-01 (slot 15): both `group-a-{prd,test}-tier-only`
       conditions now correctly enumerate all 5 asset groups for `market-data-tick-`. **`instruments-store-` was left as
-      a flat entry and is STILL BROKEN** — see the correction above. (repo: deployment-service)
+      a flat entry and is STILL BROKEN** — see the correction above. (repo: deployment-service) — Shipped:
+      `deployment-service@4a93aac` (slot 2, infra role). Verification beyond the policy read-back cited above: a real
+      impersonated `storage.objects.create` write to `market-data-tick-sports-test-...` under `uts-test-sa` succeeded
+      (cleaned up after); the `-prd-` side was confirmed read-only via `gcloud asset     analyze-iam-policy` against
+      `market-data-tick-sports-prd-...` under `uts-prd-sa` (no real write attempted on prod, per this todo's own
+      instruction). `tofu plan` scoped to the two touched IAM-condition resources showed 0 drift post-apply.
 - [ ] [INFRA] P0. Extend the same per-AG fix to `instruments-store-`:
       `group_a_instruments_store_ag_prefixes =     ["instruments-store-cefi-", "instruments-store-defi-", "instruments-store-tradfi-", "instruments-store-sports-",     "instruments-store-pred-"]`
       (mirror the market-data-tick pattern exactly; confirm the 5-AG set against
