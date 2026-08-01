@@ -44,6 +44,13 @@ source:
   under the 2000L umbrella cap. Split type is clean-partition per the triage doc (no depends_on/sequential needed) — the
   gate's real-world prerequisite (migration must land before a re-smoke-test is meaningful) is documented in prose in
   the Phase D todos themselves (unchanged from the parent), not encoded as a dispatch gate.
+context_scope:
+  [
+    /plans/active/tradfi_consolidated_closeout_2026_07_18.md,
+    /plans/active/tradfi_manifest_content_recovery_completion_2026_07_24.md,
+    /codex/02-data/tradfi-databento-sourcing-ssot.md,
+    /codex/02-data/honest-coverage-model.md,
+  ]
 ---
 
 # TradFi Phase-D terminal gate
@@ -513,3 +520,5 @@ tracked elsewhere in this doc, which remains genuinely open.
 **End of forked content.** For MVP universe / ground-truth-verdict context, Phase A2/C (adapter correctness,
 data-status, honest-coverage) still tracked on the parent, and the full aggregated source-doc list, see
 `tradfi_consolidated_closeout_2026_07_18.md`.
+
+- **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).

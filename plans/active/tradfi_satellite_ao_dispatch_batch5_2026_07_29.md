@@ -73,6 +73,14 @@ source: >-
 assigned_role: data_engineering
 sequential: false
 drift_direction: advance-code
+context_scope:
+  [
+    /plans/active/tradfi_consolidated_closeout_2026_07_18.md,
+    /cursor-configs/skills/ag-closeout-audit/SKILL.md,
+    /plans/epics/tradfi_master.md,
+    /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
+    /codex/05-infrastructure/spot-vms-for-backfill.md,
+  ]
 ---
 
 # TradFi satellite AO batch 5 — fresh audit extraction
@@ -639,6 +647,7 @@ mirroring the batch1/batch2/batch3/batch4 finalize pattern.
   THEN run the full `EXIT_STATUS`/`PROGRESS.json` re-audit of all 14 ES/MES shards, `build-continuous --root ES`, and
   the 1d/24h hit-rate re-measure against the ~19% (454/2398) baseline — no VM-side work is needed before that (fleet is
   fully idle).
+- **context-scout 2026-08-01**: populated/refreshed context_scope (5 entries).
 
 ## Codex SSOTs
 

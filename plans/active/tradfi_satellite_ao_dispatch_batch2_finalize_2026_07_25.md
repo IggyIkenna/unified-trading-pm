@@ -45,6 +45,13 @@ source: >-
 assigned_role: data_engineering
 sequential: true
 drift_direction: advance-code
+context_scope:
+  [
+    /plans/active/tradfi_satellite_ao_dispatch_batch2_2026_07_25.md,
+    /plans/active/tradfi_consolidated_closeout_2026_07_18.md,
+    /cursor-configs/skills/ag-closeout-audit/SKILL.md,
+    /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
+  ]
 ---
 
 # TradFi satellite AO batch 2 — finalize
@@ -122,3 +129,4 @@ drift_direction: advance-code
   is not yet all-done; this finalize plan's `depends_on`/`gate_on_depends: true` hold is correct and unchanged. No todos
   executed in this doc — leaving as-is for the agent actively working batch2 to resolve (a) and (c), or for this gate to
   naturally clear once they do.**
+- **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).

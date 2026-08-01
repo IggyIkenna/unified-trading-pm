@@ -49,6 +49,13 @@ source: >-
 assigned_role: data_engineering
 sequential: true
 drift_direction: advance-code
+context_scope:
+  [
+    /plans/active/tradfi_satellite_ao_dispatch_batch6_2026_08_01.md,
+    /plans/active/tradfi_consolidated_closeout_2026_07_18.md,
+    /cursor-configs/skills/ag-closeout-audit/SKILL.md,
+    /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
+  ]
 ---
 
 # TradFi satellite AO batch 6 — finalize
@@ -96,3 +103,7 @@ drift_direction: advance-code
 
 No new durable contract is created by this plan. `/codex/11-project-management/` carries the archival ritual;
 `plans/PLAN_FORMAT.md` carries the `status: draft` and `gate_on_depends` semantics this plan relies on.
+
+## Progress Log
+
+- **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).

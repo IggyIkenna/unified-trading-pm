@@ -35,6 +35,13 @@ depends_on:
 source:
 assigned_role: data_engineering
 drift_direction: advance-code
+context_scope:
+  [
+    /plans/epics/tradfi_master.md,
+    /plans/active/data_completion_tradfi_2026_07_15.md,
+    /plans/archive/2026_07/tradfi_v9_stage1_finish_2026_07_06.md,
+    /plans/archive/issues/features_delta_one_tradfi_mdps_dependency_gap_2026_06_24.md,
+  ]
 ---
 
 > **Provenance**: extracted 2026-06-20 from the inline `tradfi_master` epic body during the asset-group-umbrella
@@ -236,3 +243,4 @@ here.
   (4) re-confirmed unfixed by direct code read 2026-07-26/29, and the `features-tradfi-prd` bucket has no availability
   index at all), and the 3 P3 backtest items are gated on the master Group-F harness owned by
   `master_to_live_defi_2026_05_23`, not by this plan. Genuinely blocked upstream, not mis-defaulted.
+- **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).
