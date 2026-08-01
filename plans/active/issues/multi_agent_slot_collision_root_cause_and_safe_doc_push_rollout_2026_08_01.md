@@ -154,3 +154,24 @@ have told "claimed and alive" apart from "claimed and abandoned weeks ago."
   blocking the whole downstream cluster: candidate fixes 1/2 are explicitly framed in the doc's own text as "not yet
   decided — for operator review," and the `[DOCS] P2` doc-fold item documents that still-undecided set. No change since
   filing.
+- **Corroborating evidence, 2026-08-01 (session `ad5ea160-...` — the "second live session" this doc's own `source:`
+  names)**: independently hit the identical contention shape from the OTHER side, without knowing this doc existed until
+  a pre-compact conflict-check surfaced it. While committing a ~195-doc `context_scope` backfill batch, `git commit`
+  repeatedly failed on `fatal: Unable to create '.git/index.lock': File exists` — initially misdiagnosed as the
+  `prettier-autostage` hook racing against its OWN internal parallelism (plausible-looking: the failures always surfaced
+  as `prettier-autostage` errors). **That diagnosis was wrong.** `ps aux` at the time of writing this entry shows this
+  exact session (PID 645540, `--resume=ad5ea160-...`) plus 3 OTHER live `claude` processes (PIDs 645376/663148/663261,
+  one `--resume=c31ab739-...`) all pointed at this same `.tabs/1/unified-trading-pm` checkout simultaneously — i.e. the
+  lock contention was this doc's exact root cause, not a hook-internal bug. Also independently hit
+  `git pull --rebase --autostash` conflicts against this doc's own referenced
+  `autostash_pop_restores_foreign_wip_into_the_index_2026_07_17.md` shape 4 separate times in one session (each resolved
+  via the sanctioned recipe: keep-both, never blind-overwrite). Workaround used (not a fix — did not know
+  `safe-doc-push.sh` existed at the time): split the commit into 4 smaller batches, then isolated 5 stubbornly-flaky
+  files (genuine prettier non-determinism on long continuation-line wraps, separately confirmed cosmetic-only) into
+  their own single-file commits, retrying each 2-6 times until the lock cleared. All landed correctly on
+  `origin/live-defi-rollout` (`unified-trading-pm@3ca9d476a`..`@1958e61c0`, 5 commits), but at a real cost — dozens of
+  retries and tool calls across ~40 minutes for what should have been 1-2 commits. This is independent, same-day,
+  same-checkout corroboration that the collision frequency is high enough to hit a second unrelated task within hours,
+  strengthening the case for the `[OPERATOR] P1` decision above. Recommend future sessions reach for
+  `scripts/dev/safe-doc-push.sh` directly for doc-only batches rather than raw `git commit`/quickmerge, pending that
+  operator decision.
