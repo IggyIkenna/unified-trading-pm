@@ -412,3 +412,16 @@ cause + fix shipped" section, and the continued Progress Log (2026-07-30T19:15Z 
   `gcloud config set account` immediately before the next gsutil call in the same turn. No relaunch/kill action taken on
   shard 29 (monitoring-only). Fleet still at 4 shards (this is a freeze, not yet a confirmed death — still `STOPPING` at
   check time).
+
+## Progress Log (na-eligibility-audit)
+
+- **na-eligibility-audit 2026-08-01** (tranche=cefi, autonomous): ARCHIVE verdict reached, ritual NOT YET EXECUTED
+  (deferred — a 6-step archival ritual with corpus-referrer fixups should not be rushed inside a context-checkpoint
+  window). Doc has 0 checkboxes and 0 prose-described remaining work (confirmed full end-to-end read) — it is a pure
+  archival relocation appendix, its own summary says content was "moved here VERBATIM to keep the parent under its
+  1000-line hard cap." Parent doc `cefi_content_migration_fleet_half_incomplete_2026_07_26.md` independently confirmed
+  active/open and NOT itself archival-eligible (currently 645 lines, under cap, has its own open work) — archiving THIS
+  child doc does not require the parent to also be done. **Next action for whoever picks this up**: standard 6-step
+  archival ritual (`codex/12-agent-workflow/plan-completion-and-archival-discipline.md`); one required referrer fix
+  already identified — the parent doc's Progress Log cites this doc as where 2026-07-26 to 07-30T17:53Z detail "moved
+  to," that citation needs updating to the new `plans/archive/...` path post-move.

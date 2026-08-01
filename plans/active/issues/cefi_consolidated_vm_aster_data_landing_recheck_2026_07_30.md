@@ -93,3 +93,15 @@ Launched `mtds-live-cefi-consolidated-20260730-010147` (`asia-northeast1-c`, `e2
   `infra_capture_and_devops_leftovers_2026_07_06.md` (active, assigned_vm:planning) already carries the near-verbatim
   "verify `live_aster` rows land" claim, and this doc's own todo says to flip THAT plan's checkbox. Duplicate dispatch
   risk. Filed as BLOCKED-OPERATOR-DECISION in this run's Deferred list; `assigned_vm` unchanged.
+
+## Progress Log (na-eligibility-audit)
+
+- **na-eligibility-audit 2026-08-01** (tranche=cefi, autonomous): KEEP-NA, pending. Both open todos (ASTER recheck +
+  2-venue spot-check) clear the bounded-outcome bar on their own merits (one `gcloud storage ls` command per venue,
+  fully-specified branches) and the 2026-07-30 park reason (conflict with
+  `infra_capture_and_devops_leftovers_2026_07_06.md`) is independently confirmed RESOLVED (that doc's verification-half
+  checkbox now explicitly re-homes to this doc, 2026-07-31 banner). NOT reclassified this run because
+  `cefi_satellite_ao_dispatch_batch4_2026_07_31.md` todo 2 already drafted this exact scope verbatim (Source-cited) —
+  batch4 is `status: draft`, not active. Reclassifying independently now risks the same `gcloud storage ls` check being
+  dispatched twice via two mechanisms once batch4 activates. Recommend: prefer batch4's operator-review/activation path
+  over an independent flip here.

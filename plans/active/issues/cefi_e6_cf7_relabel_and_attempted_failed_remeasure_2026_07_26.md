@@ -171,3 +171,15 @@ rows) is real but small and not urgent.
   thing that was ever wrong here was the missing cross-reference, now added in both directions. The genuinely-unresolved
   cross-doc question is unchanged and stays in this doc's todo: the cross-cutting doc's older COINBASE(7)+OKX(7) figure
   is a **different 2026-06-18 measurement** and must be independently re-verified, not assumed satisfied by this one.
+
+- **na-eligibility-audit 2026-08-01** (tranche=cefi, autonomous): KEEP-NA-STALE-duplicated — supersedes the 2026-07-30
+  park above (that conflict is independently confirmed RESOLVED via
+  `cefi_instruments_store_blank_data_type_residual_2026_07_29.md`'s 2026-07-31 ownership-map commit: that doc owns a
+  disjoint population, instruments-store manifest not MTDS-tick manifest). Going further: the sole open `[DATA] P3` todo
+  above (9,743-row backfill + 7-row bare-OKX reclassify) is already a VERBATIM duplicate of
+  `cefi_satellite_ao_dispatch_batch3_2026_07_26.md` line 144 (`[DATA] P2`, status: active, assigned_vm: planning — same
+  row split, same framing, same Done-when clause covering both docs' checkboxes). Batch3's copy predates this doc's
+  2026-07-30 marker (2026-07-30 03:12 commit already cross-referenced both docs together). **Do not reclassify** — this
+  is execution-duplication, not a mis-defaulted NA. Citation: whoever next touches this doc's P3 checkbox should flip it
+  citing `cefi_satellite_ao_dispatch_batch3_2026_07_26.md` line 144 as the executing doc, mirroring this doc's own
+  already-`[x]`'d `[DOCS] P3` sibling todo's pattern ("already covered by ...batch3..., see that doc for execution").
