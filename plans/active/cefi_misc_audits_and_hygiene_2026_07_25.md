@@ -27,7 +27,7 @@ related:
     /plans/active/issues/uac_per_venue_seed_fallback_removal_deferred_2026_07_26.md,
   ]
 created: "2026-07-25"
-last_updated: "2026-07-25"
+last_updated: "2026-08-01"
 parent_epic: cefi_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -88,13 +88,19 @@ drift_direction: advance-code
       audit + revisit trigger recorded in `issues/uac_per_venue_seed_fallback_removal_deferred_2026_07_26.md` (new doc)
       — re-open once (a) deployment-api gets live DEFI/TRADFI/PREDICTION catalogue-provider wiring, and (b) CEFI +
       TRADFI G1-G5 gates close.
-- [ ] [VERIFY] P2. **Spot-check the next 3 unverified findings in
-      `issues/adapter_findings_gcs_manifest_deployment_api_reconciliation_gap_2026_07_08.md` across GCS/manifest/UI**
-      (the bounded half only — re-scoped from the source todo's open-ended "decide the reconciliation cadence" half,
-      which stays a human/policy decision recorded in that issue doc, not dispatched here). Reuse the doc's own
-      established spot-check methodology. Repo: instruments-service. **Done when**: each of the 3 findings has a
-      recorded PASS/FAIL consistency verdict (GCS vs manifest vs UI) cited in the issue doc's Progress Log, and the doc
-      explicitly still flags the cadence-decision half as open/human.
+- [x] ✅ [VERIFY] P2. **DONE — spot-checked the next 3 unverified findings across GCS/manifest/UI.** Reused the AAVE_V3
+      pilot's methodology (direct GCS/manifest parquet reads via `get_storage_client()`/`resolve_bucket_name()`, plus a
+      deployment-api/deployment-ui code grep for how each field is actually surfaced), all live-production read-only.
+      **Finding A (DERIBIT live-vs-batch FUTURE misclassification)**: FAIL to surface at manifest + UI layers —
+      structurally blind, not corroborating/refuting (zero `live_deribit`+`trades`-data_type rows exist for ANY
+      instrument_type in the 9.66M-row MTDS manifest). **Finding B (HUOBI-SPOT/HUOBI-FUTURES/BITSTAMP-SPOT missing from
+      venue universe)**: FAIL, confirmed absent + corroborating at all 3 layers — and the UI's venue list derives from
+      the same broken `VENUES_BY_ASSET_GROUP` registry, so the gap is invisible (no zero-row), not just wrong. **Finding
+      C (OKX margin_type inversion)**: GCS layer has the field populated both ways; manifest layer blank/ unstamped for
+      all 7,718 OKX rows; deployment-api/UI have zero `margin_type` references anywhere — real bug, zero UI blast radius
+      today. Full PASS/FAIL verdicts + evidence recorded in the issue doc's Progress Log (`unified-trading-pm@` this
+      commit). The `[DECISION]` P2 reconciliation-cadence todo in that issue doc remains open/human, confirmed
+      untouched. Repo: instruments-service (read-only investigation, no code changed).
 - [x] ✅ [PM] P1. **Archive `issues/cefi_layer1_denominator_gaps_2026_07_03.md`** (confirmed during this split: 0
       checkbox-syntax open todos of its own — a 1000-line narrative/findings doc whose actionable items were already
       forked into other docs, still carrying `status: open`) via the standard 6-step archival ritual. **Scope note**:
