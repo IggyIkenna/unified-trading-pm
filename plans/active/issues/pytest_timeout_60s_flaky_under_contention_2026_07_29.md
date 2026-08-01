@@ -296,6 +296,21 @@ those commits landed). The escalation's own repo-blocker list (`GET /api/repo-bl
       investigation) — not blocked on here, out of this one-shot wall-clearer's scope — or (b) a THIRD non-async
       recurrence surfaces, which would justify promoting "CPU-bound tests are also exposed" from a hypothesis to a
       confirmed mechanism.
+- [ ] 8. [INFRA] P2. **NEW 2026-08-01, `cicd` escalation `WALL_TYPE=main_ci_red`.** First confirmed instance of this
+      doc's flake class escalating past "slow-but-completing" into a genuine multi-hour WEDGE — a `quality-gates-v2` run
+      stuck `queued`/`in_progress` producing zero step progress for 3+ hours (vs. every prior entry's
+      tens-of-minutes-to- ~2.5h "slow but terminal" profile), on BOTH the LDR `workflow_dispatch` run (`30685179092`,
+      queued 3h+) and the `main` push-triggered run (`30684455584`, in_progress 3h+, same
+      `promote/features-service/b457ee437f2c` head) simultaneously. **Cancelling and re-triggering worked** — this
+      directly REFUTES the assumption several entries above made explicitly (e.g. the 2026-08-01 ~00:15Z/00:49Z entries:
+      "canceling a queued run on an already-saturated single-runner pool doesn't help and risks adding load"):
+      `gh run cancel` on both wedged runs, then a fresh `gh workflow run quality-gates-v2.yml --ref live-defi-rollout`,
+      produced a run whose `content sentinel` + `QG slice     (tests)` jobs completed normally (9m37s to a real
+      pytest-timeout verdict — same `test_cross_timeframe_sanity.py` test todo 7 already tracks) instead of wedging
+      again. **Done when**: (a) confirm this holds on a second wedge instance (not yet a proven general fix, N=1), and
+      (b) decide whether a wedge past some threshold (e.g. 60-90min with zero step progress) should be auto-detected +
+      auto-cancelled+retriggered (candidate home: the same watchdog class as `ci-failure-watcher --auto-recover`) rather
+      than requiring a human/agent to notice and intervene per occurrence.
 
 ## Progress Log
 
@@ -759,3 +774,42 @@ those commits landed). The escalation's own repo-blocker list (`GET /api/repo-bl
   No live-defi-rollout code or test change made or needed. Slot left clean (features-service already on
   `live-defi-rollout`, 0 commits ahead of `origin` besides this doc edit). Pinging the authoring slot with the outcome
   and exiting per the one-shot `cicd` role's bounded scope.
+- **2026-08-01 ~08:07-08:35Z (`cicd` escalation, `WALL_TYPE=main_ci_red`, slot 14, `AUTHORING_SLOT=ci-reconcile`)**:
+  dispatched off a wall brief assuming a binary "(A) promotion stuck" / "(B) main-only stale workflow" split with
+  `live-defi-rollout` already green — **that premise was false**. Found LDR itself has failed EVERY `quality-gates-v2`
+  run since the last real success (`30647714046`, 2026-07-31T16:35:09Z) — 6 straight failures climbing
+  30m→57m→1h11m→1h41m→1h54m→2h20m (the same monotonic-climb pattern the `agt-2f35f6`/slot-9 entry above already
+  flagged), then a 7th run (`30685179092`) that didn't even fail — it sat `queued` for 3h+ with zero step progress,
+  while the `main` push-triggered run from the last successful promotion (`30684455584`, PR #923, merged 04:41:59Z) sat
+  `in_progress` for 3h+ identically. Confirmed via `ldr_to_main_fleet_promote.sh:475-479`'s Tier-A gate
+  (`if [ "$CI_STATUS" = "FAILING" ]... GATE BLOCK`) that this is why no new promote PR had opened in 3h+ despite LDR
+  being **387 commits ahead of `main`** — the fleet-promote workflow itself ran cleanly every ~15min the whole time
+  (`ldr-to-main-promote-fleet` runs all `success`) and silently skipped features-service each tick, exactly as designed;
+  not a broken promotion mechanism, a correctly-refusing gate reacting to a genuinely-red LDR. Root cause: same flake
+  class this doc already tracks — `test_cross_timeframe_sanity.py`'s pytest-timeout hit repeatedly across the failing
+  runs (confirmed via `gh api .../jobs/<id>/logs` on run `30680074425`), consistent with host contention
+  (`load average 16-50` on the shared 16-vCPU box this session runs on, `13-17Gi/47Gi` swap in active use, 6-13
+  concurrent `quality-gates.sh` processes from other slots observed throughout). What was NEW and worth the todo 8
+  entry: the two wedged runs weren't just slow-and-eventually-failing like every prior entry — they were producing
+  literally zero progress for 3h+, a qualitatively worse failure mode. Cancelled both (`gh run cancel`) and re-triggered
+  fresh (`gh workflow run quality-gates-v2.yml --ref live-defi-rollout` → run `30691249715`) rather than leave them
+  wedged indefinitely (GH's own default 6h job timeout was the only thing that would eventually have cleared them). The
+  fresh run did NOT wedge — `content sentinel` passed in 8s, `QG slice (tests)` reached a real verdict in 9m37s (failed
+  again, same test, same mechanism — the underlying contention hadn't cleared, but the run itself behaved normally
+  instead of hanging), refuting the "canceling doesn't help" assumption two entries above made. Did not hold the slot
+  for the `checks` leg / full run conclusion (still `in_progress` at ~24min, consistent with this doc's own established
+  precedent of not babysitting a queued/running CI pass synchronously) — the wedge is cleared and the Tier-A gate will
+  re-evaluate `ci_status` live on the next `ldr-to-main-promote-fleet` tick (~15min cadence) once any run does go green;
+  no further action needed from this escalation. No `live-defi-rollout` code or test change made or needed (the code is
+  clean — same conclusion every prior entry in this doc reached for this and other tests). Filed as new todo 8 (the
+  wedge-and-cancel finding is a distinct, actionable observation from the underlying flake class itself). Pinged the
+  authoring slot with the outcome. **Note on dispatch chain**: this escalation (`agt-0cadd0`) was already worked twice
+  before reaching this slot — slot 4 (02:35-07:38Z) diagnosed the identical run and explicitly chose NOT to
+  cancel/retrigger ("a queued run doesn't benefit from retriggering"), then hit the known `/done` 400
+  AgentRow-archived-mid-session bug (see `cicd_escalation_agentrow_archived_prematurely_mid_session_2026_07_29.md`),
+  causing this redispatch; a further immediate redispatch (`agt-45c03c`, slot 2, ~07:52Z) observed the same run finally
+  flip `queued`→`in_progress` and also chose not to intervene. This entry is the first to actually test the
+  cancel-and-retrigger action, which is why the conclusion differs (unwedged it) — see both sessions' own corroboration
+  entries in `fleet_wide_qg_capacity_crisis_continues_day2_2026_07_29.md` (lines ~914-963) for the full prior chain.
+  Also per `agt-45c03c`'s finding, did NOT attempt an `AUTHORING_SLOT=ci-reconcile` ping — confirmed `422` (non-integer
+  `slot_id`) in that entry, a known dead end.
