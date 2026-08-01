@@ -248,13 +248,20 @@ single flat un-enumerated prefix as before. The recommended fix's `group_a_flat_
       (cleaned up after); the `-prd-` side was confirmed read-only via `gcloud asset     analyze-iam-policy` against
       `market-data-tick-sports-prd-...` under `uts-prd-sa` (no real write attempted on prod, per this todo's own
       instruction). `tofu plan` scoped to the two touched IAM-condition resources showed 0 drift post-apply.
-- [ ] [INFRA] P0. Extend the same per-AG fix to `instruments-store-`:
-      `group_a_instruments_store_ag_prefixes =     ["instruments-store-cefi-", "instruments-store-defi-", "instruments-store-tradfi-", "instruments-store-sports-",     "instruments-store-pred-"]`
-      (mirror the market-data-tick pattern exactly; confirm the 5-AG set against
-      `gsutil ls -p central-element-323112 | grep instruments-store`, already confirmed present above), added to
-      `group_a_bucket_prefixes` alongside the market-data-tick per-AG list, leaving only `features-calendar-` flat.
-      Apply via `tofu apply`, live-verify with `gcloud projects get-iam-policy` + a real IS `--test-run` write (rerun
-      `sports_consolidated_native_ao_extract-029`'s baseline checkpoint once landed). (repo: deployment-service)
+- [x] ✅ [INFRA] P0. **DONE 2026-08-01 (slot 15).** Extended the per-AG fix to `instruments-store-`:
+      `group_a_instruments_store_ag_prefixes = ["instruments-store-cefi-", "instruments-store-defi-",     "instruments-store-tradfi-", "instruments-store-sports-", "instruments-store-pred-"]`,
+      added to `group_a_bucket_prefixes` alongside the market-data-tick per-AG list, leaving only `features-calendar-`
+      flat. Applied LIVE first via a surgical `gcloud projects get-iam-policy`→edit-two-conditions→`set-iam-policy` diff
+      (not a full `tofu apply`, to avoid touching unrelated drifted resources on this shared project — live-verified
+      read-back confirmed `instruments-store-sports-test-` present in both `group-a-{prd,test}-tier-only` conditions),
+      then shipped the matching `.tf` source change: `deployment-service@e0ee10d` (rebased onto slot 2's concurrent
+      `market-data-tick-`-only commit `4a93aac` — merged cleanly, both fixes coexist, `tofu fmt`-clean, full
+      `quality-gates.sh` green). **Real end-to-end verification, not just a policy read-back**: re-ran
+      `sports_consolidated_native_ao_extract-029`'s Track K (IS) baseline (single-cell scope,
+      `--asset-group SPORTS --venue API_FOOTBALL --day 2025-12-20 --legs force`) — **PASSED**: 669 rows written,
+      manifest `captured`, parquet+manifest both landed in `instruments-store-sports-test-central-element-323112`.
+      Report: `plans/audit/results/data_pipeline_e2e_check_is_2025_12_20.md` (`unified-trading-pm@462cb9587`). (repo:
+      deployment-service)
 - [ ] [DATA] P1. Once the IAM fix lands, re-run Track K (MDPS)'s 3 SPORTS checkpoints
       (`sports_consolidated_native_ao_extract-031`) for a genuine force/skip PASS/FAIL verdict — my baseline checkpoint
       only proved the infra was broken, not the candle-derivation logic itself. (repo: market-data-processing-service)
