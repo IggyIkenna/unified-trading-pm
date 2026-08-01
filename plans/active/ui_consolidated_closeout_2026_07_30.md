@@ -119,7 +119,7 @@ gets an independent polling schedule, not just dashboard-open-triggered.
 [issues/cost_observability_deferred_followups_2026_07_10.md](/plans/active/issues/cost_observability_deferred_followups_2026_07_10.md)
 (the `/costs` page's own deferred P3 backlog, migrated at plan archival) · **Also see (already resolved, historical —
 not live Sources)**:
-[issues/alerts_endpoint_per_object_gcs_read_performance_2026_07_23.md](/plans/active/issues/alerts_endpoint_per_object_gcs_read_performance_2026_07_23.md)
+[issues/alerts_endpoint_per_object_gcs_read_performance_2026_07_23.md](/plans/archive/issues/alerts_endpoint_per_object_gcs_read_performance_2026_07_23.md)
 (`/api/alerts` N+1 GCS-read performance bug — reader-side fix shipped live `deployment-api@79a1d36`, remaining
 writer-side batching WONT-DO'd 2026-08-01 as cost/list-latency not correctness) · the
 [deployment-ui observability & UX tracker](/plans/archive/2026_07/deployment_ui_observability_ux_tracker_2026_07_17.md)

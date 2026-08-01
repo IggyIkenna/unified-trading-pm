@@ -82,7 +82,7 @@ source: operator dictation 2026-07-17 (interactive session — six deployment-ui
 > resolved by this archival): the N+1 GCS-read performance issue in the alerts ledger at scale, now itself resolved +
 > archived (root-cause reader-side fix shipped live `deployment-api@79a1d36`; remaining writer-side batching WONT-DO'd
 > as a cost/list-latency concern, not correctness) —
-> [`alerts_endpoint_per_object_gcs_read_performance_2026_07_23.md`](/plans/active/issues/alerts_endpoint_per_object_gcs_read_performance_2026_07_23.md)
+> [`alerts_endpoint_per_object_gcs_read_performance_2026_07_23.md`](/plans/archive/issues/alerts_endpoint_per_object_gcs_read_performance_2026_07_23.md)
 > (`status: resolved`).
 >
 > Per `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`. Original tracker banners kept below for
