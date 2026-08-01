@@ -345,3 +345,47 @@ worker dispatch every cycle for identical zero-new-information reads) with `can_
 queued work rather than holding this slot on a 7th identical poll. Leaving todo 3 unchecked; self-skipping
 (`reason_code: GATED`) — same posture as the 5 prior sessions, but flagging the churn itself as the actionable finding
 here.
+
+## 2026-08-01 ~09:36-09:45Z re-check (slot 9) — todo 4's own ask (pull_request-stall recurrence), new queue-depth record, no code regression found
+
+Dispatched todo 4 (this doc's own `[CICD] P3` addendum item — id `-003`), not todo 3. Its concrete ask is narrower than
+todo 3's: "whoever picks up the P3 re-verify todo above should check whether [the `pull_request`-event stall] recurs."
+Checked that directly rather than repeating todo 3's exhausted 3-run poll:
+
+- **No open PRs currently exist on `unified-trading-system-ui`** (`gh pr list --state open` → `[]`), so there is no live
+  case to reproduce the original 20+-minute `pull_request`-event-delivery stall against. The most recent
+  `pull_request`-triggered runs are all from 2026-07-31T13:32Z (the `dfbfff68` promote PR) and fired normally — no gap
+  observed between repo activity and run dispatch in the available data. **Inconclusive, not clean**: absence of a
+  currently-open PR means this check cannot positively confirm the symptom is gone, only that it isn't observable right
+  now. Whoever next has a live PR in flight on this repo should re-check
+  `gh api repos/IggyIkenna/unified-trading-system-ui/actions/runs?event=pull_request` against that PR's actual open
+  time.
+- **Confirmed the tracked capacity incident (`fleet_wide_qg_capacity_crisis_continues_day2_2026_07_29.md`) is still open
+  and was updated as recently as ~07:52Z today (2026-08-01)** — i.e., ~1h45m before this check, not a stale reference.
+- **New queue-depth record**: run `30635331302` (the actual post-fix verification run per the 2026-07-31 "blocker 1
+  fixed" entry — `dfbfff68` landed before this run was dispatched) has now been sitting `queued` since
+  `2026-07-31T13:39:22Z` — **~20h as of this check**, its `registry-drift` job still `status: queued`, never started.
+  This exceeds every previously-logged queue-depth figure in either doc (prior worst: ~3h+). `30627739825` similarly
+  unchanged (`e2e`=`in_progress`, `registry-drift`=`queued`).
+- **One of the 3 originally-tracked runs, `30625075106`, finally completed** (`conclusion: cancelled`, its
+  `registry-drift` job `conclusion: failure`) — but this is **not a regression**: `30625075106` was created
+  `2026-07-31T10:53:00Z`, which is BEFORE the `dfbfff68` registry-content-regen fix landed (the doc's own 07-31 entry
+  identifies `30635331302`, created 13:39:22Z, as the FIRST run to test the fix). Pulled the actual job log
+  (`gh run view --job 91235842697 --log`): the job ran end-to-end (checkout → pip install → regen → diff), reaching the
+  `Fail on stale registry` step with `archetype_count: 23` (committed, stale pre-fix content) vs `53` (fresh regen) —
+  the exact drift signature the doc's 07-31 entry already diagnosed and fixed. This confirms the diff mechanism works
+  correctly and that no new drift/regression exists on the actual fix commit; it's simply a stale-queued pre-fix run
+  finally getting a turn on the runner and correctly failing against content that was superseded 20+ hours ago.
+  `e2e`=`cancelled` (superseded), consistent with GitHub's own supersede-check behavior on an outdated run.
+- `gh api .../actions/runners` → single `glue-ip-172-31-5-118-1` runner, still `busy: true`;
+  `gh api .../actions/runs?status=in_progress` for this repo → **0** (same signature as every prior entry — the runner
+  is busy on a different repo's job).
+
+**Verdict**: todo 4's own ask is inconclusive-by-absence (no open PR to test against) rather than resolved — recommend
+whoever next opens a PR on this repo do the check with a live case. Todo 3's blocker is unchanged in kind (same tracked
+external capacity incident) but WORSE in degree (new 20h queue-depth record) — still zero code work available on this
+doc's own scope. No repo state changed by this check; no code or config touched. Leaving todo 3 and todo 4 unchecked;
+self-skipping this task (`reason_code: GATED`) — 7th consecutive session to hit this doc's capacity blocker, same
+posture as the 6 prior sessions. Did not re-post a duplicate `/blocked` (slot 4's scheduling question above already
+covers the parking ask; a generic worker session doesn't have `data/config/backlog.yaml` write access to self-action it
+per RULES.md §4's "main agent + operator" scoping — flagging for main/operator to action, not re-asking).
