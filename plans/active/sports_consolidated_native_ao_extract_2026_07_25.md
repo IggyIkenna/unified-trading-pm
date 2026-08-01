@@ -422,6 +422,15 @@ context_scope:
       against sports.** Split 2026-08-01, see Track K (IS) above for the split rationale. Use `SPORTS_SMOKE_DATES` as
       the reference dates. (repo: market-data-processing-service, skill-driven). **Done when**: 3 dated runs cited by
       report path/dispatch_id, baseline through final. Source: `sports_consolidated_closeout_2026_07_19.md:665-669`.
+      **Checkpoint 1/3 (baseline, day=2025-12-20) DONE 2026-08-01 (slot 13)** — genuine, IAM-unblocked verdict:
+      `total=30 passed=0 failed=7 skipped=23`. Report: `plans/audit/results/data_pipeline_e2e_check_mdps_2025_12_20.md`.
+      Root-caused + fixed the force-leg failures same-session: `sports:trades`/`trades_inplay` have no registered MDPS
+      candle adapter (declared `needs_candle_processing=True` globally but MDPS's own runtime bypasses them —
+      `pipeline_e2e_check.py`'s enumeration didn't consult `CandleAdapterRegistry.has_adapter()`) —
+      `market-data-processing-service@4eb53db`. `odds_horizon_bucket` correctly de-duped against a concurrent slot-7
+      session on the same shard — needs a follow-up run once free. Full details:
+      `plans/active/issues/bucket_iam_group_a_market_data_tick_prefix_missing_asset_group_2026_08_01.md` todo 3.
+      **Checkpoints 2/3 (mid, day=2025-12-24) and 3/3 (final, day=2025-12-18) remain** for next dispatch.
 - [ ] [DATA] P1. **Track K (features) — run + cite 3 dated checkpoints (baseline/mid/final) for
       `data-pipeline-check-features` against sports.** Split 2026-08-01, see Track K (IS) above for the split rationale.
       Use `SPORTS_SMOKE_DATES` as the reference dates. (repo: features-service, skill-driven). **Done when**: 3 dated

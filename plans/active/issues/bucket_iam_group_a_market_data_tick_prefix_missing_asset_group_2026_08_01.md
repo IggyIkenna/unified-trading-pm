@@ -262,9 +262,25 @@ single flat un-enumerated prefix as before. The recommended fix's `group_a_flat_
       manifest `captured`, parquet+manifest both landed in `instruments-store-sports-test-central-element-323112`.
       Report: `plans/audit/results/data_pipeline_e2e_check_is_2025_12_20.md` (`unified-trading-pm@462cb9587`). (repo:
       deployment-service)
-- [ ] [DATA] P1. Once the IAM fix lands, re-run Track K (MDPS)'s 3 SPORTS checkpoints
-      (`sports_consolidated_native_ao_extract-031`) for a genuine force/skip PASS/FAIL verdict — my baseline checkpoint
-      only proved the infra was broken, not the candle-derivation logic itself. (repo: market-data-processing-service)
+- [x] ✅ [DATA] P1. **DONE 2026-08-01 (slot 13) — genuine baseline verdict obtained, IAM fix confirmed working.** Re-ran
+      Track K (MDPS)'s SPORTS baseline checkpoint
+      (`--day 2025-12-20 --legs force,skip --require-captured     --auto-day`): zero 403/PERMISSION_DENIED anywhere in
+      the run (both the `market-data-tick-` and `instruments-store-` per-AG IAM fixes above are confirmed live-working
+      from the MDPS write path too) — `total=30 passed=0 failed=7 skipped=23`, every verdict now a genuine, non-infra
+      finding. Report: `plans/audit/results/data_pipeline_e2e_check_mdps_2025_12_20.md`. Root-caused + fixed the
+      force-leg failures in the SAME session (not deferred): `sports:trades`/`sports:trades_inplay` are globally
+      declared `needs_candle_processing=True` but have no registered MDPS candle adapter for SPORTS (MDPS's own runtime
+      correctly bypasses them — raw ticks consumed directly by features-onchain), while
+      `pipeline_e2e_check.py::enumerate_mdps_shards()` only checked `needs_candle_processing()`, never
+      `CandleAdapterRegistry.has_adapter()` — enumerating a shard MDPS was always going to bypass, producing a
+      deterministic false `no_candle_under` failure on every run. Fixed to mirror the runtime's own 3-stage filter:
+      `market-data-processing-service@4eb53db`. The remaining `odds_horizon_bucket` shard (4 timeframes) was correctly
+      de-duped against a concurrent slot-7 session already running that exact shard (dedup guard per
+      `issues/worker_session_teardown_kills_long_running_pipeline_check_2026_07_27.md`) — needs its own follow-up run
+      once no concurrent session holds it. **Mid + final checkpoints (days 2025-12-24 / 2025-12-18) remain** — tracked
+      as the still-open Track K (MDPS) todo in `sports_consolidated_native_ao_extract_2026_07_25.md` (this todo's own
+      scope — "once the IAM fix lands, get a genuine verdict" — is satisfied; the parent plan's 3-checkpoint cadence
+      continues there). (repo: market-data-processing-service)
 - [x] ✅ [DATA] P2. **DONE 2026-08-01 (slot 15)** — see the CORRECTION section above. Track K (IS) hits the identical
       identity-level block, on `instruments-store-` specifically. MTDS/features not independently re-checked this pass
       (features already confirmed fixed per the sibling `--env staging` doc; MTDS unconfirmed).
