@@ -111,13 +111,39 @@ Fixed `features-service`'s `_build_launch_argv` to append `--env staging` uncond
 test-bucket-only by contract, so this is never conditional) — `features-service@524b71ef`. Re-ran the baseline
 checkpoint after the fix; see the Track K (features) plan todo for the fresh green result.
 
+**Second, deeper finding (same session, discovered while verifying the fix above)**: the `--env staging` fix alone still
+wasn't sufficient. Switching the VM's runtime identity to `uts-test-sa` correctly fixed the DATA write
+(`features-sports-test-...`), but broke the VM's own OBSERVABILITY writes — `run.log`, `EXIT_STATUS`,
+`vm-heartbeat/<vm>.txt`, and the deployment-archive record all live under the SHARED `gs://deployment-scripts-{project}`
+bucket, which only granted `storage.objectAdmin` to `uts-prd-sa`/ `uts-prod-batch-sa` — `uts-test-sa` had NO binding
+there at all. The symptom: the VM's compute actually completed successfully (confirmed via the VM's serial console +
+`EXIT_STATUS=0` once it eventually appeared), but `pipeline_e2e_check.py`'s `launch_vm_and_wait` polling loop saw no
+`run.log` progress for its whole stall window and the VM self-deleted before ever managing to write a terminal signal —
+reported as `vm_not_success:vm_self_deleted_no_exit_status`, which reads exactly like a genuine failure, not an IAM gap
+two layers deep. **Fixed via a live, verified self-service IAM grant** (`unified-trading-sa` holds project-level
+`iam.serviceAccountAdmin`/`resourcemanager.projectIamAdmin` per
+`/codex/05-infrastructure/orchestrator-cloud-identity-self-service.md`):
+`gcloud storage buckets add-iam-policy-binding gs://deployment-scripts-central-element-323112 --member="serviceAccount:uts-test-sa@central-element-323112.iam.gserviceaccount.com" --role="roles/storage.objectAdmin"`
+— unconditional (the bucket lacks Uniform Bucket-Level Access, so IAM Conditions aren't available on it; an attempted
+conditional grant scoped to `vm-logs/`/`vm-heartbeat/`/`deployments/` object prefixes failed with a 412 for exactly that
+reason), mirroring the trust level `uts-prd-sa` already holds on this SAME bucket rather than creating a new risk class.
+Re-ran after the grant: the VM's compute + observability writes both succeeded (`EXIT_STATUS=0`, `run.log` fully
+populated). **Any repo fixing its own `--env staging` gap below should expect to ALSO need this `deployment-scripts`
+grant** — it's now in place project-wide (one bucket, not per-repo), so IS/MTDS should NOT hit it, but note it in your
+verification if a fresh force/skip run stalls with no `run.log` progress despite `--env staging` being correctly passed.
+
+(The residual non-fatal 403 on `central-element-323112-events` — event-log uploads, best-effort/dropped on failure — is
+UNFIXED. Doesn't block correctness, just loses observability telemetry for `-test-` runs. Not chased further this
+session; flag if it becomes a real problem.)
+
 ## Todos
 
 - [ ] [CODE] P0. Add `--env staging` (or equivalent `DEPLOYMENT_ENV=staging` env-var set) to
       `instruments-service/scripts/pipeline_e2e_check.py::_build_launcher_argv`'s `launch-instruments-backfill-vm.sh`
       invocation — mirrors the `features-service@524b71ef` fix. Verify with a fresh force/skip run against any
-      asset_group/venue and confirm the VM's `run.log` shows no `storage.objects.create` 403. (repo:
-      instruments-service)
+      asset_group/venue and confirm the VM's `run.log` shows no `storage.objects.create` 403 AND that `run.log` actually
+      appears/progresses (the `deployment-scripts` observability-write gap above is already fixed project-wide, so this
+      should just work — but confirm, don't assume). (repo: instruments-service)
 - [x] ✅ [CODE] P0. Add the same `--env staging` fix to
       `market-data-processing-service/scripts/pipeline_e2e_check.py::_launcher_argv`'s `launch-mdps-backfill-vm.sh`
       invocation — `market-data-processing-service@b16d44c`. **Code fix shipped, but the "verify with a fresh force/skip
@@ -130,7 +156,10 @@ checkpoint after the fix; see the Track K (features) plan todo for the fresh gre
       market-data-processing-service)
 - [ ] [CODE] P0. Confirm `market-tick-data-service/scripts/pipeline_e2e_check.py`'s launcher-argv builder has the
       identical gap (not yet inspected in this session — confirm before assuming) and apply the same `--env staging` fix
-      if so. Verify with a fresh force/skip run. (repo: market-tick-data-service)
+      if so. Verify with a fresh force/skip run — MTDS writes `market-data-tick-{ag}-test-` buckets (Group A), so also
+      check for the SAME missing-asset-group-segment CEL bug MDPS hit
+      (`bucket_iam_group_a_market_data_tick_prefix_missing_asset_group_2026_08_01.md`) before assuming a clean run is
+      achievable. (repo: market-tick-data-service)
 - [ ] [DOC] P2. Once all 4 repos carry the fix, add a one-line note to `/codex/05-infrastructure/vm-launcher-runbook.md`
       (or a new short section) documenting that any NEW `pipeline_e2e_check.py`-family driver launching a
       `-test-`-bucket smoke VM MUST pass `--env staging`/`DEPLOYMENT_ENV=staging` explicitly — the launcher's own
