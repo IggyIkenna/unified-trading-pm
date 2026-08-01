@@ -271,7 +271,7 @@ orphaned?" resolves to "everything," because nothing in the covering set does an
       table. Repos: deployment-service. Source:
       `issues/vm_billing_waste_first_audit_and_preflight_gate_design_2026_07_24.md`.
 
-- [ ] [BACKEND] P3. **Close the `defi-pi-range`/`defi-rebuild` PROGRESS.json gap** — these two
+- [x] ✅ [BACKEND] P3. **Close the `defi-pi-range`/`defi-rebuild` PROGRESS.json gap** — these two
       `launch-canonical-migration-vm.sh` categories are single Python-module invocations with no shell chunk boundary
       (unlike `defi-per-instrument`'s per-year loop, fixed above), so a SPOT preemption mid-run still replays
       `RESUME_START_DATE` verbatim with no partial-progress resume. Lower severity than the chunked families (one VM per
@@ -281,7 +281,19 @@ orphaned?" resolves to "everything," because nothing in the covering set does an
       themselves (Python-side, mirrors `migrate_candle_canonical_2026_07.py`'s existing
       `MIGRATION_PROGRESS-shard{N}.json` precedent). VERIFY BY SIMULATION per the same discipline as the parent todo —
       no VM launch required. Repo: deployment-service, or market-tick-data-service if (b). Source: this todo
-      (`infra_satellite_ao_dispatch_batch1_2026_07_26.md`).
+      (`infra_satellite_ao_dispatch_batch1_2026_07_26.md`). **Checkbox-flip closeout 2026-08-01 (slot-6) — code was
+      already shipped ~2h before this dispatch, verified not re-implemented**: both options were taken, one per repo,
+      exactly matching the todo's own "Repo: deployment-service, or market-tick-data-service if (b)" framing. (a)
+      `defi-pi-range` — `deployment-service@1e8af34a` precomputes N-day sub-windows (`MIGRATION_PI_RANGE_CHUNK_DAYS`,
+      default 30) as a launch-time bash for-loop mirroring `defi-per-instrument`'s per-year pattern, emitting
+      `[[VM_PROGRESS]] last_completed_date=${w_end} monotonic=true` after each successful window (full-mode only). (b)
+      `defi-rebuild` — the SAME `deployment-service@1e8af34a` commit passes `--chunk-days ${REBUILD_CHUNK_DAYS:-90}` to
+      `rebuild_defi_manifest.py`, whose paired `market-tick-data-service@a2839705` adds the Python-side `_run_chunked()`
+      loop that prints the identical `[[VM_PROGRESS]]` marker after each chunk's writer flush (verified: grepped
+      `_run_chunked`/`--chunk-days` in the actual file, not just the launcher's comment claim). Both commits confirmed
+      on origin via `git log     origin/live-defi-rollout -- <file>`. Verification-by-simulation (the todo's own
+      requirement) is documented in `1e8af34a`'s own commit message (stubbed-tool full run incl. a mid-loop chunk
+      failure, dry-mode leak check). No code change needed from this dispatch — closing the plan-bookkeeping gap only.
 
 - [ ] [BACKEND] P3. **Close the `mtds-dex-swaps-backfill`/`af-backfill` PROGRESS.json gap.** Both route through the
       GENERIC single-shot `elif [ -n "$VM_TASK" ]` fallback in `setup-data-pipeline-vm.sh` (ONE `_launch_with_tee` call
