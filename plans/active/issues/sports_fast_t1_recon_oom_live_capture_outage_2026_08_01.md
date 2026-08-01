@@ -131,6 +131,59 @@ reads the manifest max-date or GCS directly, exactly the async-wait-discipline t
 entity-agnostic Cloud Run "job ran" signal passes while the target entity, SPORTS raw-tick capture, writes zero real
 rows).
 
+## Root cause of the memory blowup -- IDENTIFIED AND CONFIRMED (2026-08-01, this session, slot 12)
+
+Code-read (not profiling -- the mechanism is unambiguous from the call chain, no live repro needed) across
+`market-tick-data-service` + `deployment-service`. **Confirms the future-date-guard-fix-exposure hypothesis as CAUSAL,
+not just suggestive**, and identifies the exact missing scoping that turns "guard now lets same-day dispatches run" into
+"OOM."
+
+**The chain:**
+
+1. `deployment-service/configs/sports-trigger-tiers.yaml`'s `pre_match.triggers` (`odds_t24h`/`odds_t6h`/`odds_t1h`) --
+   the fixture-proximate triggers that dispatch `market-tick-data-service` -- carry **no `args:`** for their
+   `market-tick-data-service` service entries (unlike the sibling `instruments-service` entries in the same file, which
+   DO pass e.g. `--sports-entity`). `SportsTriggerScheduler.fire_trigger` (`sports_trigger_scheduler.py:273`) calls
+   `_dispatch_services(services=list(event["services"]), start_date=fixture_date, end_date=fixture_date, ...)` --
+   `_build_cli_cmd` (line 347) only emits `extra_args` from each service's own (empty, here) `args` dict. **No
+   `--league` flag is ever passed** for these triggers, even though `TriggerEvent.league_id` (line 285) has the single
+   relevant league sitting right there.
+2. `TickDataHandler._resolve_filter_args` (`tick_data_handler.py:378`) therefore resolves `leagues=None` for every one
+   of these dispatches.
+3. `OddsApiAdapter._candidate_leagues` (`odds_api_adapter.py:105`) with `leagues=None` calls
+   `registry.get_prediction_leagues()` -- **confirmed via a direct read of `LEAGUE_CLASSIFICATION_DATA` in UAC: 30
+   leagues** (tier<=2, classification=Prediction, out of 96 total registered leagues), not the 1 league the triggering
+   fixture actually belongs to.
+4. `_fetch_all_leagues` (`odds_api_adapter.py:543`) iterates all 30 candidate leagues, and for each runs
+   `_run_league_fetch_loop` (line 815) -- discovering that league's OWN fixtures for the date (not just the triggering
+   fixture) and fetching `TIER_1_OFFSETS` (8 T-minus snapshots, deduped to 5-min buckets) x up to 21
+   `REQUESTED_ODDS_API_BOOKMAKERS` x ~3 markets x ~3 outcomes per fixture, **accumulating every resulting row dict into
+   one Python list (`all_rows`) held in memory across ALL 30 leagues and the WHOLE day**, with zero streaming/chunked
+   write at this layer (unlike the `writer=`-based streaming path other, non-sports venues use in `_process_venue`).
+   `download_batch()` (line 501) then materialises this into a single `pd.DataFrame(all_rows)` -- still fully in memory
+   -- before `_process_sports_venue_with_leagues` (`venue_fetch.py:696`) ever `.groupby()`s it into per-shard writes.
+5. **Why onset is bound to ~2026-07-27, ~11-24h after `410d7569` (2026-07-26)**: before that fix, `_check_early_exit`'s
+   future-date guard unconditionally blocked EVERY same-day SPORTS dispatch (any `--start-date=--end-date=today`, which
+   is exactly what every fixture-proximate trigger passes for a today-kickoff fixture) before
+   `process_ticks()`/`OddsApiAdapter` was ever reached -- so this unscoped 30-league full-day fetch shape existed in the
+   code but was NEVER ACTUALLY EXECUTED in production. The fix removed that blanket block for SPORTS, and the
+   pre-existing unscoped-fetch shape started running for real, at the actual per-fixture dispatch volume (3 triggers × N
+   same-day fixtures, easily 100+/day on a busy slate) -- each one independently re-fetching the SAME whole day across
+   the SAME 30 leagues instead of the 1 relevant one.
+6. **Crash-loop compounding, explaining the near-continuous failure rate (7-255 errors/hour)**: because the process OOMs
+   (SIGKILLed by the 8Gi Cloud Run limit) before `_write_date_manifest`/any venue write completes, the shard is never
+   marked fresh in the manifest -- so `_apply_freshness_skip` never short-circuits, and EVERY subsequent
+   5-minute-cadence per-fixture trigger for that date independently repeats the identical unscoped 30-league fetch and
+   OOMs again.
+
+**Confidence**: high, code-level-confirmed (exact line-level call chain traced end-to-end, league count independently
+verified against the raw UAC classification data, onset timing matches the fix commit precisely). Not fixed in THIS
+todo's own repo scope (`market-tick-data-service`) -- see the new fix todo below for why the correct, minimal-risk fix
+is a `deployment-service`-side dispatch change plus one open verification step, and why shipping it unverified in this
+same pass was judged too risky for a live P0 (a wrong league-id-format assumption would convert today's loud,
+correctly-honest-absence-preserving OOM failure into a silent zero-row false-success, which is strictly worse under the
+data-pipeline-correctness-hard-rule).
+
 ## Recommended next steps
 
 - [ ] [OPERATOR] P0. Decide on an immediate mitigation while root-cause is investigated: raise the fast-t1-recon Cloud
@@ -139,14 +192,36 @@ rows).
       bump risks masking a real leak that will recur at a higher ceiling; a operator call on risk/urgency tradeoff, not
       a worker one -- live capture has been down 3+ days as of this check). Done when: operator states a direction and
       (if raising the limit) it is applied + a fresh execution is confirmed writing real raw_tick_data objects for the
-      current day.
-- [ ] [DATA] P0. Root-cause the SPORTS-specific memory blowup in the fast-t1-recon dispatch path -- profile or code-read
-      `market_tick_data_service`'s CLI handler + `odds_api_adapter.py`'s per-fixture fetch loop for the current
-      `--asset-group SPORTS --start-date <today> --end-date <today>` invocation shape; test the
-      future-date-guard-fix-exposure hypothesis above directly (e.g. diff memory behavior of a same-day SPORTS dispatch
-      before vs after `410d7569` in a sandboxed run, or profile a live execution). Done when: a specific code-level
-      cause is identified and either fixed or explicitly ruled out as the future-date-guard interaction. (repo:
-      market-tick-data-service)
+      current day. **UPDATE 2026-08-01 (slot 12)**: the root-cause todo below identifies the ACTUAL fix (scope
+      `--league` per-trigger, cutting the per-dispatch fetch ~30x) -- raising the memory limit alone would mask this
+      without fixing the redundant 30x-overfetch-per-trigger waste; consider both together, not memory-bump-only.
+- [x] ✅ [DATA] P0. **DONE 2026-08-01 (slot 12).** Root-cause the SPORTS-specific memory blowup in the fast-t1-recon
+      dispatch path -- profile or code-read `market_tick_data_service`'s CLI handler + `odds_api_adapter.py`'s
+      per-fixture fetch loop for the current `--asset-group SPORTS --start-date <today> --end-date <today>` invocation
+      shape; test the future-date-guard-fix-exposure hypothesis above directly. **Result: CONFIRMED CAUSAL** (not just
+      suggestive) -- see "Root cause of the memory blowup -- IDENTIFIED AND CONFIRMED" section above for the full
+      code-level mechanism (unscoped 30-league fetch per single-fixture trigger, exposed by `410d7569`, compounded by a
+      crash-before-freshness-write loop). (repo: market-tick-data-service)
+- [ ] [DATA] P0. **Fix the identified root cause**: scope the fixture-proximate `market-tick-data-service` dispatch to
+      the ONE triggering league instead of all 30 Prediction-tier leagues. In
+      `deployment-service/deployment_service/sports_trigger_scheduler.py`'s `fire_trigger` (line 273), before calling
+      `_dispatch_services`, inject `args["--league"] = event["league_id"]` into each `market-tick-data-service` entry in
+      `event["services"]` (mirror the existing `_scope_to_leagues` pattern already used for periodic-tier dispatch in
+      `sports_trigger_periodic.py:339`, or import/reuse it directly). **MANDATORY pre-flight verification before
+      shipping** (this is why it wasn't done in the same pass as the root-cause todo above): confirm
+      `event["league_id"]`'s actual runtime format matches one of the two forms
+      `OddsApiAdapter._candidate_leagues`/`_fetch_all_leagues` accepts (canonical slug via `_canonical_league_id()`, or
+      raw symbolic name via `_raw_league_name()`) -- trace it from `sports_trigger_state.py:158`'s
+      `_path_league_id or row.get("league_id") or row.get("af_league_id") or ""` fallback chain through to whatever
+      instruments-service's FIXTURES writer actually stamps in the GCS parquet `league=` path segment / `league_id`
+      column (the odds_api_adapter.py git log shows explicit prior canonicalisation fixes at this write path --
+      `accd8aa4`, `ad4f1872` -- suggesting canonical form is likely, but NOT yet independently confirmed this session).
+      If the raw `af_league_id` numeric fallback is ever what actually reaches `TriggerEvent.league_id` in practice,
+      matching would silently fail and produce a WORSE failure mode than today's OOM: a "successful" 0-row run that
+      marks the shard fresh (banned under honest-absence rules) instead of a loud, retriable failure. Done when: the
+      format is verified, `--league` is threaded through, and a live fixture-proximate trigger is confirmed writing
+      non-empty `raw_tick_data` for its own league without a memory spike. (repo: deployment-service,
+      market-tick-data-service for the live-verification leg)
 - [ ] [DATA] P1. Once fixed, backfill/re-fetch the resulting gap (2026-07-27, 2026-07-28, 2026-07-30, 2026-07-31, plus
       whatever additional days elapse before the fix ships) via the Odds-API historical endpoint, same pattern as the
       prior month-long-gap backfill in `sports_batch_odds_api_capture_outage_recurrence_check_2026_07_26.md` item 1 --
