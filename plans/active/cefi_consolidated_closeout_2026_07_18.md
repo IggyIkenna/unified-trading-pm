@@ -350,8 +350,12 @@ Real but non-blocking, each in its own doc; listed for completeness so nothing i
       FILL on the Track-2 coverage backfill, not a reclass.
 - **AUDIT the UAC per-venue seed fallback's blast radius** → dispatched as candidate 9 of
   `cefi_consolidated_native_ao_extract_2026_07_25.md`.
-- **[OPERATOR] Decide whether to remove the UAC per-venue seed fallback** → forked to
-  `cefi_misc_audits_and_hygiene_2026_07_25.md` (non-dispatchable, feeds off the audit above).
+- [x] ✅ [PM] P1. **Decide whether to remove the UAC per-venue seed fallback — RULING: KEEP, do not remove** (deferred,
+      not declined). Forked to `cefi_misc_audits_and_hygiene_2026_07_25.md`, ruled 2026-07-26 (retagged
+      `[OPERATOR]`→`[PM]` 2026-07-28): all 3 real production callers currently depend on the fallback firing (2 by
+      explicit design), removing it now would reproduce the silent-coverage-loss regression the 2026-07-18
+      `mtds@3253cae3` ruling eliminated for CEFI. Full audit + revisit trigger:
+      `issues/uac_per_venue_seed_fallback_removal_deferred_2026_07_26.md` (unified-trading-pm@2a6a7db62).
 - [x] ✅ [DOCS] P1. **Upgrade the `data-pipeline-check-mtds` skill** — DONE `unified-trading-pm@ca3aebfc7` (DERIBIT
       futures_chain negative check, DERIBIT/BINANCE-FUTURES content spot-checks).
 - [x] ✅ [INFRA] P1. **`issues/solana_perp_dex_cull_drift_pacifica_2026_07_16.md`** — DONE (`deployment-service@9b13679`
@@ -361,11 +365,18 @@ Real but non-blocking, each in its own doc; listed for completeness so nothing i
       in the issue doc (DeFi, not cefi — outside this close-out).
 - **Track 0 above**: `cryptovenue_equity_perps_and_tokenized_stocks_2026_06_20.md` Phases 1/1b/1c/2/5 (operator ruling
   2026-07-25 — see Track 0, embedded natively in this doc, sequenced ahead of/alongside the migration).
-- **Reconciliation-gap spot-check** → dispatched (bounded slice) as part of
-  `cefi_misc_audits_and_hygiene_2026_07_25.md`.
-- **Consolidate + archive** `issues/cefi_layer1_denominator_gaps_2026_07_03.md` (+
-  `issues/betfair_instrument_id_delimiter_cross_repo_2026_07_08.md`, already archived) → dispatched (re-scoped to the 2
-  named docs) as part of `cefi_misc_audits_and_hygiene_2026_07_25.md`.
+- [x] ✅ [VERIFY] P2. **Reconciliation-gap spot-check — DONE.** Spot-checked the next 3 unverified findings (DERIBIT
+      live-vs-batch FUTURE misclassification, HUOBI/BITSTAMP venue-universe gaps, OKX `margin_type` inversion) across
+      GCS/manifest/deployment-api/UI layers, dispatched as part of `cefi_misc_audits_and_hygiene_2026_07_25.md`. Full
+      PASS/FAIL verdicts + evidence:
+      `issues/adapter_findings_gcs_manifest_deployment_api_reconciliation_gap_2026_07_08.md` Progress Log
+      (unified-trading-pm@ab28a0f39). That doc's `[DECISION]` P2 reconciliation-cadence todo remains separately
+      open/human.
+- [x] ✅ [PM] P1. **Consolidate + archive `issues/cefi_layer1_denominator_gaps_2026_07_03.md` — DONE.** Confirmed 0 open
+      checkbox-syntax todos of its own, `status` flipped to `resolved`, moved to `plans/archive/issues/`
+      (unified-trading-pm@ff8312609), dispatched (re-scoped to the 2 named docs) as part of
+      `cefi_misc_audits_and_hygiene_2026_07_25.md`. Sibling
+      `issues/betfair_instrument_id_delimiter_cross_repo_2026_07_08.md` already archived — no action needed there.
 - [x] ✅ [REVIEW] P0. **Track-2 coverage decision — RULED** (same decision as the Track-2 ruling above; not a second
       decision). Re-open the completion program + reverse the inferred 50.79% acceptance. Autonomous ruling within
       documented intent (/autonomous 2026-07-18); operator can reverse.
