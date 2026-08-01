@@ -723,6 +723,26 @@ else
       echo "[$REPO_NAME] behind $_QM_REMOTE_REF by $_QM_BEHIND (ahead=$_QM_AHEAD) — pulling latest first..."
       if git pull --ff-only "$_QM_REMOTE_NAME" "$_QM_REMOTE_BRANCH" --quiet 2>/dev/null; then
         echo "[$REPO_NAME] ✅ fast-forwarded to latest — now current"
+      elif [ "${_QM_AHEAD:-0}" = "0" ]; then
+        # Pre-commit case (autostash_pop_restores_foreign_wip_into_the_index_2026_07_17.md,
+        # decided fix 2026-08-01): ahead=0 means there is no local commit for `--rebase` to
+        # replay, so ff-only's failure here can ONLY be a working-tree content OVERLAP (a
+        # locally-dirty tracked file the incoming diff also touches) — not commit-graph
+        # divergence. Skip the forced `--rebase --autostash` fallback for this case: it would
+        # stash-and-repop that overlapping file (and any OTHER dirty foreign file in this shared
+        # checkout) back into the working tree/index for zero reconciliation benefit — the exact
+        # non-conflict happy-path hazard this doc measured. Report + block; git's own refusal
+        # already named the overlapping file(s).
+        _QM_CODE="PRECOMMIT_WORKING_TREE_CONFLICT"
+        if [ "${QUICKMERGE_ALLOW_BEHIND:-}" = "1" ]; then
+          echo "[$REPO_NAME] ⚠️  still $_QM_BEHIND behind (${_QM_CODE}) — QUICKMERGE_ALLOW_BEHIND=1, continuing"
+        else
+          echo "QUICKMERGE_BLOCKED code=${_QM_CODE} repo=${REPO_NAME} branch=${_QM_REMOTE_BRANCH} behind=${_QM_BEHIND} ahead=0"
+          echo "RECOVERY: a dirty file in your working tree overlaps the incoming upstream diff (ahead=0 — not commit-graph divergence, so --rebase --autostash is not attempted here). Commit or 'git stash push -- <your-file>' YOUR file BY NAME, re-run the pull, then restore your stash. See autostash_pop_restores_foreign_wip_into_the_index_2026_07_17.md."
+          echo "[$REPO_NAME] ❌ BLOCKED: $_QM_BEHIND behind $_QM_REMOTE_REF, ff-only refused (working-tree overlap, ahead=0)."
+          echo "   Emergency override: QUICKMERGE_ALLOW_BEHIND=1 bash scripts/quickmerge.sh ..."
+          exit 1
+        fi
       elif git pull --rebase --autostash "$_QM_REMOTE_NAME" "$_QM_REMOTE_BRANCH" --quiet 2>/dev/null; then
         echo "[$REPO_NAME] ✅ rebased local commits onto latest — now current"
       else
