@@ -950,3 +950,14 @@ not just noting.
   corroboration, not a new root cause. No code/workflow change made or needed; not re-filing `/blocked` (same standing
   condition). Pinged `AUTHORING_SLOT=ci-reconcile` with the outcome. No repo state changed; `instruments-service` and
   `unified-trading-pm` slot-6 worktrees left clean on `live-defi-rollout` (only this doc touched).
+
+- **2026-08-01 ~07:52Z (cicd escalation `agt-45c03c`, slot 2, `main_ci_red`, `features-service`, no PR)** — immediate
+  re-dispatch of the identical wall `agt-0cadd0` (entry above) closed minutes earlier; converged on the same run
+  (`30684455584`, main HEAD `0799c4e7` = PR#923 merge, confirmed no newer promotion PR pending). Confirms that entry's
+  conclusion: no promotion-stuck, no code/workflow defect, pure queue depth on the sole runner
+  (`glue-ip-172-31-5-118-1`, `online`/`busy`). New this pass: watched it move — `QG slice (tests)` flipped
+  `queued`→`in_progress` at ~07:52Z (queued since 04:43:30Z, ~3h09m) — confirms the queue drains, not wedged. Did not
+  add a redundant retrigger (would only compete with the job now running); `GET /api/repo-blockers` → zero open. Left it
+  to finish per the standing protected-6 posture. Attempted `AUTHORING_SLOT=ci-reconcile` ping — confirmed `422`
+  (non-integer `slot_id`), same dead end prior entries hit (one prior entry logged this as "400s"; actual code is 422 —
+  minor correction). No repo state changed; slot-2 worktrees left clean on `live-defi-rollout` (only this doc touched).
