@@ -99,9 +99,13 @@ defeated by automation, not by any agent or operator decision. This is a governa
       `answered_at` stays unset), `test_sweep_pushes_when_blocked_entry_already_answered` (a FINAL-answered historical
       row does NOT false-positive gate) — plus all 9 pre-existing tests in that module still pass (12/12). Full
       `quality-gates.sh` green (2145 passed, basedpyright 0/0/0, ruff clean).
-- [ ] [DOC] P2. Document the "hold a merge behind a `/blocked` gate" pattern's failure mode + the gate-aware sweep
-      contract in the orchestrator watchdog SSOT, so future gated-merge workflows rely on the enforced skip rather than
-      on the holding session staying alive.
+- [x] ✅ [DOC] P2. **DONE — `unified-trading-pm` (this commit).** Documented the "hold a merge behind a `/blocked` gate"
+      pattern's failure mode + the gate-aware sweep contract in
+      `/codex/04-architecture/agent-orchestrator-worker-liveness.md` § "Held-behind-a-`/blocked`-gate merge pattern —
+      failure mode + the gate-aware unpushed sweep (2026-07-26/31)" — covers the legitimate hold pattern, the 2026-07-26
+      defeat sequence, the `gated: bool` mechanism (`_sweep_unpushed_slots` + `push_or_preserve_ahead_commits` + the
+      distinct `unpushed_held_behind_open_gate` event), and the forward contract (route future holds through a
+      task-linked unanswered `/blocked` entry — any other hold mechanism is invisible to this sweep).
 
 ## Progress Log
 
@@ -124,6 +128,8 @@ defeated by automation, not by any agent or operator decision. This is a governa
   were "interacting with" now has a shipped answer — gate on the open blocked-queue entry, not on session liveness). Doc
   stays `status: open`: the `[DOC] P2` SSOT-documentation sibling is still unbuilt.
 - **context-scout 2026-08-01**: populated/refreshed context_scope (2 entries).
+- **2026-08-01** (slot 6, backend_engineer): shipped the `[DOC] P2` SSOT write — see the flipped todo above. Doc is now
+  the only remaining open item resolved; both todos in this issue are done.
 - **na-eligibility-audit 2026-08-01** (autonomous, tranche `ao`, dispatch agt-8e95ca, slot 2): RECLASSIFY
   `NA -> planning`. The 2026-07-30 KEEP-NA verdict was correct at the time (design-decision-pending), but its own
   prerequisite — the `[BACKEND] P1` governance decision — shipped 2026-07-31 (`agent-orchestrator@49c919d`, full test
