@@ -114,12 +114,16 @@ the trigger for a different scenario.
 
 ## Todos
 
-- [ ] [CODE] P2. Add the target day/window to `_vm_name()`'s hash input in
+- [x] ✅ [CODE] P2. Add the target day/window to `_vm_name()`'s hash input in
       `features-service/scripts/pipeline_e2e_check.py` (and any sibling driver with the same pattern in
       instruments-service/market-tick-data-service/market-data-processing-service), so concurrent different-window
       launches of the same `(family, asset_group)` cell cannot collide on VM name. Add a regression test asserting two
       `_vm_name()` calls for the same cell but different days produce different names even with a stubbed/frozen
-      `run_ts`. (repo: features-service, + sibling repos if the pattern is shared)
+      `run_ts`. (repo: features-service, + sibling repos if the pattern is shared) — confirmed all 3 sibling drivers
+      shared the same date-independent-hash pattern and fixed all four: features-service@4d7fc825,
+      market-tick-data-service@ad169495, market-data-processing-service@c9caf54a, instruments-service@82cc429a.
+      Regression tests added/extended in each repo asserting two VM-name calls for the same cell/shard but different
+      days (frozen run_ts) produce different names.
 - [ ] [CODE] P3. Re-audit `_find_inflight_duplicate_vm()`'s day-window-agnostic dedup assumption
       (`features-service/scripts/pipeline_e2e_check.py` ~line 1206) once the above lands — confirm it cannot itself
       cause a cross-window misattribution for non-overlapping launch windows of the same cell, or narrow its filter to
