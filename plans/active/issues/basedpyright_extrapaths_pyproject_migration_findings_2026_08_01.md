@@ -188,7 +188,14 @@ script isn't invoked by `quality-gates.sh`), so none of this is actively blockin
       that actually imports from `unified_trading_library`); re-ran `check-pyrightconfig-extrapaths.py` — zero remaining
       warnings for market-data-processing-service; `quality-gates.sh` green (90s, sentinel-verified, HEAD=28e0d90),
       shipped via quickmerge, landed + verified on `live-defi-rollout`.
-- [ ] [SCRIPT] P3. strategy-service: remove the 4 dead extraPaths in `pyproject.toml`. (repo: strategy-service)
+- [x] ✅ [SCRIPT] P3. strategy-service: remove the 4 dead extraPaths in `pyproject.toml`. (repo: strategy-service) —
+      strategy-service@307868bc. Removed `unified-cloud-interface`/`unified-config-interface`/`unified-domain-client`/
+      `unified-internal-contracts` (confirmed dead: no `workspace-manifest.json` dep, no source import — the
+      `test_unified_domain_client_import` hit was a misleadingly-named test that actually imports from
+      `unified_trading_library`, not the `unified_domain_client` package); re-ran `check-pyrightconfig-extrapaths.py` —
+      zero remaining warnings for strategy-service; `quality-gates.sh` green (one
+      `tests/per_client_isolation/test_shared_marks_reader.py` xdist shared-memory-name race on the first run, confirmed
+      pre-existing/unrelated via isolated re-run on a clean tree, cleared on retry).
 - [ ] [SCRIPT] P3. system-integration-tests: remove the 2 dead extraPaths, add the 7 missing extraPaths
       (`alerting-service`, `client-reporting-api`, `execution-service`, `features-service`, `instruments-service`,
       `market-data-processing-service`, `strategy-service`) in `pyproject.toml`. (repo: system-integration-tests)
