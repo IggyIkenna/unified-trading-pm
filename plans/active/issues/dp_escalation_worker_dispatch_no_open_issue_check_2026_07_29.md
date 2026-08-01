@@ -291,3 +291,10 @@ regression) is worse.**
   operator/design-gated. Todo 1 is explicitly an 'Operator/main-agent decision' among three named options (A/B/C) with
   no decision made yet -- a textbook judgment call, not a checkable fact or scoped code change. Todo 2 is contingent on
   that undecided design dec...
+- **2026-08-01 (data_pipeline_failure escalation worker, agt-6b4fdd, slot 4) — `(cefi, book_snapshot_5)` now at its
+  18th+ dispatch.** Byte-adjacent numerator (300,458, +1 vs the last verified reading) confirmed via a fresh bounded
+  manifest read to be genuine decaying noise (day-bucketed: 75/07-30 → 35/07-31 → 1/08-01), not a resurgence — pipeline
+  is healthy (13,775 captured book_snapshot_5 rows in the last 24h). All 5 fix commits still ancestors of
+  `origin/live-defi-rollout`. Combined across both tracked conditions, this backlog has now consumed 29+ full
+  orchestrator-agent dispatches — still awaiting the operator/design decision on Option A/B/C. Full writeup in the
+  book_snapshot_5 doc's own Progress Log.

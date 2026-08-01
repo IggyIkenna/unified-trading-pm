@@ -95,10 +95,10 @@ source:
   data_pipeline_failure worker (slot-16), fired 2026-07-28, asset_group=cefi data_type=book_snapshot_5, 299,467
   attempted_failed of 1,037,001 attempted (28.9%), flagged Fresh (0d old)."
 last_updated:
-  2026-07-31 (15th+ dispatch, agt-406c1f, slot 2 -- SAME escalation_id as the 14th dispatch (slot 3), a duplicate
-  worker-spawn of one event to two slots, not a re-evaluated condition; confirmed all 5 fix commits still hold, live
-  re-read skipped per established precedent. deployment-service@a564cca's materiality fix continues correctly labeling
-  this cell STATIC BACKLOG (71 rows/24h, below the 500-row floor) instead of Fresh.)
+  2026-08-01 (18th+ dispatch, agt-6b4fdd, slot 4 -- numerator 300,458/1,099,255 (27.3%), STATIC BACKLOG (1 row/24h,
+  below the 500-row floor); confirmed all 5 fix commits still hold + a fresh bounded live read showing continued decay
+  (75->35->1 rows/day over the last 3 days) and healthy capture (13,775 captured rows/24h vs. 1 attempted_failed) -- see
+  Progress Log for detail.)
 context_scope:
   [
     /codex/05-infrastructure/data-pipeline-alerts.md,
@@ -691,3 +691,29 @@ against the reproduction script.
   `dp_escalation_worker_dispatch_no_open_issue_check_2026_07_29.md`'s still-open Option A recommendation for dedup at
   the orchestrator dispatch layer.
 - **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).
+- **2026-08-01 (data_pipeline_failure escalation worker, agt-6b4fdd, slot 4) — 18th+ dispatch, deeper live check
+  confirms continued decay + pipeline health, no code fix needed.** Received another `DP_RUN_MOSTLY_EMPTY`
+  (DP-FETCH-009) CRITICAL page for `(cefi, book_snapshot_5)`: 300,458/1,099,255 = 27.3%, alert context labeled "STATIC
+  BACKLOG — only 1 attempted_failed row(s) in the last 1d (below the 500-row materiality floor); a decaying trickle on
+  already-tracked backlog, not a fresh regression." No issue doc pre-linked
+  (`Filed issue: (none — alert carries the details)`); found this doc via the standard pre-task plan/issue
+  conflict-check grep. Re-verified all five fix commits are still ancestors of `origin/live-defi-rollout` (fresh
+  `git fetch` in each of the three repos): MTDS `339ca767`/`6bf568ee`, UAC `8db188fe`/`1c4d8864`, deployment-service
+  `a564cca` — all OK.
+
+  Unlike the last several dispatches (which skipped the live read given a byte-identical numerator), pulled a fresh
+  bounded column-projected manifest read this session anyway (total matched the alert exactly: 300,458/1,099,255) and
+  went further: broke down the last-72h `attempted_failed` rows by day — 75 (07-30), 35 (07-31), 1 (08-01) — a clean,
+  continuing decay, no resurgence. 21 of the 07-31 rows postdate the `1c4d8864` fix landing (03:53:04Z) but are the same
+  self-resolving tail shape already documented 6+ times in this doc (venues OKX-SWAP/BINANCE-FUTURES/OKX-SPOT/
+  KRAKEN-SPOT/BITFINEX-SPOT/BITFINEX-FUTURES — all previously-seen in this exact pattern; no new venue or error
+  signature). Also checked pipeline health (not done by the last few dispatches): 13,775 `captured` book_snapshot_5 rows
+  written in the last 24h vs. just 1 `attempted_failed` in the same window — the pipeline is actively, successfully
+  capturing this data_type at high volume; the trickle is noise, not a stall or a resurgence.
+
+  **Conclusion: no code fix needed** — all three root-cause fixes (contract shape, ts_event derivation, nullable levels)
+  plus the alerting-materiality fix continue to hold. Session cost: doc reads + git-ancestor batch check (5 commits) +
+  one bounded GCS read (error_reason/venue/day-bucket/health breakdown) + this Progress Log append, no code change, no
+  VM launch. Pinged `dp-fleet-monitor` (authoring slot) with this outcome; this is now the 18th+ dispatch for this
+  condition, further corroborating `dp_escalation_worker_dispatch_no_open_issue_check_2026_07_29.md`'s still-open Option
+  A recommendation for dedup at the orchestrator dispatch layer.
