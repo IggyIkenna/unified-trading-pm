@@ -911,3 +911,21 @@ not just noting.
   recurring reds, resolve via retrigger" posture to clear on its own once host load eases. No repo state changed;
   `features-service` and `unified-trading-pm` slot-2 worktrees left clean on `live-defi-rollout` (only this doc
   touched).
+
+- **2026-08-01 ~02:35-07:38Z (cicd escalation `agt-0cadd0`, slot 4, `main_ci_red`, `features-service`, no PR)** — worst
+  queue-depth reading yet logged in either doc. Dispatched because `quality-gates-v2` was RED on `main` (push-promote
+  run `30672974751`: `checks` slice `❌ Type check FAILED/timeout (exit=124)`, `lint-codex` selector independently
+  `ALL QUALITY GATES PASSED` — the familiar isolated-typecheck signature). Verified `main`'s HEAD (`7190b810`) is a
+  literal ancestor of `origin/live-defi-rollout` (`git merge-base --is-ancestor`) — byte-identical content, no code
+  regression possible. Manually re-triggered (`workflow_dispatch` on `main`, run `30680326277`): queued **24min** before
+  the sole runner (`glue-ip-172-31-5-118-1`, confirmed `online`/`busy` throughout) even started it (busy on an unrelated
+  LDR health-check dispatch), ran another **1h43m**, then was `cancelled` — superseded by a genuine new automatic
+  LDR→main promotion push (`0799c4e7`) per the workflow's own `supersede check` job. That new push-triggered run
+  (`30684455584`) then sat `queued` for **3h+** without a single job starting, as of this entry — beyond every prior
+  queue-depth figure in both docs (previous worst: the 2026-07-28 entry's 3.5h). Did not force another manual retrigger
+  (this doc's own precedent: a queued run doesn't benefit from retriggering, and stacking dispatches on one runner only
+  adds contention). Disposition: no code fix exists or is needed (identical content to the LDR system-of-record); left
+  the queued promotion run to clear on its own per the standing protected-6 posture; ties directly to the still-open
+  `[BACKEND] P1` machine-enforced concurrency-gate todo above, which this entry corroborates as still unresolved and
+  worsening. Pinged `AUTHORING_SLOT=ci-reconcile` with the outcome. No repo state changed; `features-service` and
+  `unified-trading-pm` slot-4 worktrees left clean on `live-defi-rollout` (only this doc touched).
