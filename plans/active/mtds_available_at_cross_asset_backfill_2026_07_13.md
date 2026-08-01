@@ -432,3 +432,43 @@ below), did not touch defi (its own `[OPERATOR] P2` design gate is unaffected by
 new commits to `market-tick-data-service`) + this plan-doc update (`docs(plans):` carve-out).
 
 - **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).
+
+**#8 — 2026-08-01 (slot-3, data_engineering) — IN PROGRESS, apply running, checkpoint before compaction.** Dispatched
+`-006` ("Resume the prediction cron") again — same recurring premature-dispatch pattern as #2-#7: `-001` ("Apply
+rebuild_prediction_manifest.py") was still `[ ]`/`queued`/unassigned live in `GET /api/backlog` at dispatch time. Per
+the established precedent (slot-15's pragmatic-unblock recommendation) and since `-001`'s own prerequisites (dry-run,
+snapshot, cron-pause) are all already `[x]` and the memory-safety `--chunk-days` flag has now shipped
+(`market-tick-data-service@749ca622`), executed `-001`'s real work directly instead of re-filing another no-op decline.
+
+**Baseline (before), read from the 2026-07-29 pre-backfill snapshot** (not a live read — index is intentionally stale
+while the cron is paused): 1,268,286 total rows, 82,495 `capture_status=captured`, 51,826 filled (`available_at != ""`,
+fill_rate=62.8%), 30,669 unfilled. **Correction to #7's claim**: #7 stated "real capture bounds
+(2025-03-13..2026-07-28)" — a direct read of the snapshot's captured rows shows the true range is
+**2021-06-30..2026-07-28** (confirmed real GCS objects exist as early as 2021-06-30, sparse but present, both venues).
+Used the wider bound for the apply so no historical backlog is silently excluded.
+
+**Apply in progress**: `rebuild_prediction_manifest.py --start-date 2021-06-30 --end-date 2026-07-31 --chunk-days 60`
+(no `--dry-run` — live write). Two incidents en route, both diagnosed and recovered, neither touched production data
+incorrectly:
+
+1. The first invocation (chunks 1-18, covering 2021-06-30..2024-06-13, all flushed + verified clean) was **killed**
+   partway through chunk 19 — not OOM (host had 35GB+ free, no dmesg OOM entries), not a reboot (`uptime` showed no
+   recent boot). Suspected cause: a `ScheduleWakeup`-triggered re-invocation tore down the harness's tracked
+   `run_in_background` bash process at the turn boundary — worth a dedicated issue doc if reproduced again (not yet
+   filed; flagging here since this session couldn't fully root-cause it before needing to move on). **Recovery**:
+   resumed the REMAINING range (2024-06-14..2026-07-31, `--chunk-days 30`) via the `Monitor` tool instead of
+   `ScheduleWakeup` for the wait — no further kills since switching.
+2. Severe, unrelated **shared-host contention**: `uptime` load average spiked to 131-160 (from a baseline ~14-34) during
+   chunk 18, causing per-object throughput to collapse ~100x (56K→117K objects over 4.5h) while GCS connectivity itself
+   was fine (`curl` to `storage.googleapis.com` returned in 36ms throughout) — genuine CPU/scheduling contention from
+   other concurrent slot work, not a stall. Eased back to load avg 14-16 by chunk 22. Also hit a ~9-minute AO server
+   (port 8765) outage (`connection refused`, uvicorn PID alive but not listening) around 08:39-08:48 — self-recovered,
+   did not block the apply (which runs independently of the AO server).
+
+**As of this checkpoint**: apply job (PID varies per relaunch, tracked via Monitor task) at chunk 22-23 of 26
+(2026-03..2026-04 window), zero unparseable objects, zero failed_envelope/unclassified/zero_row across all completed
+chunks (a handful of transient per-object `ConnectionResetError`/timeout warnings self-recovered via retry, not counted
+as failures). **Not yet done**: apply not finished, force-consolidate not run, fill-rate/guardrail/row-count not
+re-verified, cron not resumed. **Both `-001` and `-006` checkboxes stay unflipped until all of that completes** — do not
+mistake this entry for completion. Cron confirmed still `PAUSED` as of dispatch time; snapshot from 07-29 still the
+valid rollback point (untouched).
