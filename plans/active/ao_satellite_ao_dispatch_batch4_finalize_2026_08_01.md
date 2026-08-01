@@ -88,11 +88,23 @@ source: >-
       (`fix(dispatch): require positive liveness     re-check before releasing an un-ACKed task`) is also on
       `origin/live-defi-rollout`, touching `server/worker_liveness_watchdog.py` (+42/-4) and
       `tests/test_worker_liveness_watchdog.py` (+138) — matches the cited diff exactly. No further flip needed.
-- [ ] [INFRA] P0. **Confirm the file-adjacency caution against `batch3_2026_07_31.md`'s todo 2 was actually respected**
+- [x] [INFRA] P0. **Confirm the file-adjacency caution against `batch3_2026_07_31.md`'s todo 2 was actually respected**
       — check whether batch 4's todo landed before or after batch3's todo 2, and whether the two diffs conflicted in
       `agent-orchestrator/server/worker_liveness_watchdog.py` (or wherever they actually landed). If a real collision
       occurred despite the sequencing note, record what happened and whether a follow-up cleanup is needed. **Done
-      when**: the actual landing order and any conflict outcome is recorded here.
+      when**: the actual landing order and any conflict outcome is recorded here. — **Respected; verified via
+      `git show --stat` + `git log --reverse` against `origin/live-defi-rollout`.** Landing order: batch3's todo 2
+      (`agent-orchestrator@af98fcd`, 2026-08-01 13:31:26+05:30) landed **before** batch4's sole todo
+      (`agent-orchestrator@7911083`, 2026-08-01 14:09:29+05:30) — confirmed both by commit timestamp and by position in
+      `git log origin/live-defi-rollout --oneline --reverse` (af98fcd precedes 7911083). No conflict occurred: `af98fcd`
+      touched exactly `server/config.py`, `server/dedup_state.py`, `server/dispatch_priority_inversion_watchdog.py` (new
+      file), `server/notifications/slack.py`, `server/server.py`, `tests/test_dispatch_priority_inversion_watchdog.py`
+      (new file) — it never touched `server/worker_liveness_watchdog.py` at all, per its own commit message's stated
+      intent ("Deliberately a standalone module ... to avoid the file-adjacency collision flagged for the sibling batch4
+      ... todo"). `7911083` touched only `server/worker_liveness_watchdog.py` and
+      `tests/test_worker_liveness_watchdog.py`. `comm -12` on the two commits' changed-file lists returns empty — zero
+      file overlap. So batch3 satisfied the caution by sidestepping the shared file entirely (not merely by sequencing),
+      and batch4's todo landed into an otherwise-untouched `worker_liveness_watchdog.py`. No follow-up cleanup needed.
 - [ ] [REVIEW] P0. **Archive the source doc if it has reached zero open todos, and repoint any referrer.** Check
       `orchestrator_failover_double_dispatch_duplicate_work_2026_07_25.md` — its P3 `/done`-idempotency sibling is
       separately file-collision-held (not part of this batch), so do NOT archive if that item is still open there. Run
@@ -124,3 +136,9 @@ source: >-
   re-check).
 - **context-scout 2026-08-01**: verified the 3 pre-existing context_scope entries still resolve and are relevant (kept
   in place), added the gated parent batch plan as a 4th entry — refreshed (4 entries).
+- **2026-08-01 (todo 3)** — Verified via `git show --stat` on both commits +
+  `git log origin/live-defi-rollout --oneline --reverse` position: batch3 todo 2 (`agent-orchestrator@af98fcd`) landed
+  2026-08-01 13:31:26+05:30, batch4's sole todo (`agent-orchestrator@7911083`) landed 2026-08-01 14:09:29+05:30 — batch3
+  first, as the file-adjacency rule required. `af98fcd` deliberately never touched `server/worker_liveness_watchdog.py`
+  (kept the priority-inversion watchdog a standalone module instead), so `comm -12` on the two commits' changed-file
+  lists is empty — zero overlap, no collision. No follow-up cleanup needed.
