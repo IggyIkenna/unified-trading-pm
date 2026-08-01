@@ -111,13 +111,52 @@ it reads isn't real data at all.
 3. This needs an operator/main call on which approach — not a unilateral pick, since it touches the sports
    bucket-routing SSOT (`gcs_paths.py`'s own docstring explicitly protects the env-tiered behavior as intentional).
 
+## CORRECTION (2026-08-01, slot 12) — override was implemented; live evidence is MIXED (looks intermittent, not consistently broken)
+
+Since this doc was written, `features-service` shipped exactly the recommended fix: `247ecdaa` (feat: add
+source-bucket override for reference-data reads) + `8ea48a33` (fix: source-bucket override silently no-oped via
+`get_data_source()`) + `72393fbf` (fix: drop hardcoded prod project ID from the new source-bucket test) — see
+`features_service/sports/config.py::FeaturesSportsServiceConfig.get_instruments_bucket()`, which now reads
+`PROTOCOL_DATA_SOURCE_BUCKET_SPORTS`/`PROTOCOL_DATA_SOURCE_BUCKET` directly via a pydantic field (bypassing the
+`get_data_source()` factory's `PROTOCOL_DATA_SOURCE_BACKEND` gate that caused the original no-op).
+
+**Two back-to-back live runs, same day/flags, opposite outcomes** (Track K features final checkpoint, day=2024-03-09,
+`sports_consolidated_native_ao_extract-032`, ~15 min apart, identical `pipeline_e2e_check.py` invocation):
+
+- **12:39-12:45 run** (`features-e2e-sports-20260801-123939-281e78`): launch argv + VM command-line both correctly
+  carried `PROTOCOL_DATA_SOURCE_BUCKET=instruments-store-sports-prd-central-element-323112` (verified via
+  `gcloud compute instances describe --format='value(metadata.items[].value)'` while it was still running), yet
+  `run.log` shows EVERY reference entity read hitting `instruments-store-sports-stg-...` (`17/17 entities missing`) —
+  the pre-fix symptom, reproduced.
+- **12:57-13:01 run** (`features-e2e-sports-20260801-125420-281e78`), same shard/day/flags, launched ~15 min later:
+  `run.log` shows real reads succeeding against `instruments-store-sports-prd-...` (`GCS read leagues: 1228 rows`,
+  `GCS read teams: 606 rows`, `GCS read standings: 732 rows`, etc.) — the override worked correctly, producing a
+  genuine non-`empty_confirmed` force-leg pass (7 parquet files, `manifest=captured`) and a genuine skip-leg proof
+  (byte-unchanged fingerprint).
+
+So the override is NOT categorically broken (todo 1's original framing) — it is **intermittent**, which is arguably
+worse to leave untriaged since a future checkpoint could silently land on either outcome depending on timing. Not
+investigated further this session (out of `data_engineering` craft scope for a Track K checkpoint-running todo).
+Candidates worth checking for the race: (1) a cold-start pydantic-settings read racing against env-var visibility at
+process spawn, (2) `bash -c`'s env-var prefix occasionally getting lost across
+`setup-data-pipeline-vm.sh`'s `python ` → `$VENV/bin/python ` substitution, (3) GCS/IAM eventual-consistency on a
+freshly-impersonated read token. Re-run a few more times to establish a failure rate before assuming any single fix
+resolves it.
+
+Evidence: `gs://deployment-scripts-central-element-323112/vm-logs/features-e2e-sports-20260801-123939-281e78/run.log`
+(failed run), `gs://deployment-scripts-central-element-323112/vm-logs/features-e2e-sports-20260801-125420-281e78/run.log`
+(succeeded run).
+
 ## Todos
 
-- [ ] [CODE] P1. Design + implement a source-bucket override for sports reference-data reads
-      (`features_service/sports/data/gcs_paths.py`), threaded through `pipeline_e2e_check.py`'s sports shard build, so a
-      `-test-`-sink e2e-check run can read real `-prd-` reference data. Verify with a fresh force leg against a
-      `SPORTS_SMOKE_DATES` busy day and confirm it reports a REAL (non-empty) write, not `empty_confirmed`. (repo:
-      features-service)
+- [ ] [CODE] P1. **STILL OPEN — see CORRECTION above.** The source-bucket override
+      (`features_service/sports/data/gcs_paths.py` / `features_service/sports/config.py`) is implemented and wired
+      through `pipeline_e2e_check.py`'s sports shard build + the launcher's env-prefix, and DOES work (real `-prd-`
+      reads confirmed live 2026-08-01) — but is INTERMITTENT: a back-to-back run with identical flags 15 min earlier
+      still read the empty `-stg-` tier. Establish a failure rate (re-run the same shard/day several times) and trace
+      the race — candidates in the CORRECTION section above (env-var visibility at process spawn, the `bash -c`
+      substitution, GCS/IAM token eventual-consistency). Not safe to treat a single clean run as proof the gap is
+      closed. (repo: features-service)
 - [x] ✅ [DOC] P2. Noted this limitation in the `data-pipeline-check-features` skill doc
       (`cursor-configs/skills/data-pipeline-check-features/SKILL.md`), as a ⚠️ callout right after the existing
       "Required INPUT per family" table's Reality-check callout (same pattern/style) — so a future run doesn't mistake a

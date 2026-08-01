@@ -1,0 +1,63 @@
+{
+  "service": "data_pipeline_e2e_check_features",
+  "run_date": "2025-12-24",
+  "legs": [
+    "force",
+    "skip"
+  ],
+  "started_at": "2026-08-01T12:14:21.280139+00:00",
+  "finished_at": "2026-08-01T12:23:19.281967+00:00",
+  "total": 2,
+  "passed": 1,
+  "failed": 0,
+  "ambiguous": 0,
+  "skipped": 1,
+  "results": [
+    {
+      "shard_label": "SPORTS:sports",
+      "leg": "force",
+      "status": "passed",
+      "reason": "ok (empty_confirmed: source legitimately had no data for this window)",
+      "vm_name": "features-e2e-sports-20260801-121426-281e78",
+      "exit_status": 0,
+      "write_verified": false,
+      "parquet_count": 0,
+      "manifest_ok": true,
+      "manifest_status": "empty_confirmed",
+      "skip_signal_found": false,
+      "skip_proof": "not_applicable",
+      "fingerprint_before": null,
+      "fingerprint_after": null,
+      "attempt_ts": "2026-08-01T12:14:21.290097+00:00",
+      "duration_sec": 356.388254,
+      "parquet_bucket": "features-sports-test-central-element-323112",
+      "manifest_bucket": "features-sports-test-central-element-323112",
+      "parquet_uri": "",
+      "content_check": "not_checked",
+      "content_check_nan_ratio": null
+    },
+    {
+      "shard_label": "SPORTS:sports",
+      "leg": "skip",
+      "status": "skipped",
+      "reason": "no_force_fingerprint_to_compare (no_skip_signal)",
+      "vm_name": "features-e2e-sports-20260801-122025-281e78",
+      "exit_status": 0,
+      "write_verified": false,
+      "parquet_count": 0,
+      "manifest_ok": false,
+      "manifest_status": "",
+      "skip_signal_found": false,
+      "skip_proof": "not_applicable",
+      "fingerprint_before": null,
+      "fingerprint_after": null,
+      "attempt_ts": "2026-08-01T12:20:24.108692+00:00",
+      "duration_sec": 173.763773,
+      "parquet_bucket": "features-sports-test-central-element-323112",
+      "manifest_bucket": "features-sports-test-central-element-323112",
+      "parquet_uri": "",
+      "content_check": "not_checked",
+      "content_check_nan_ratio": null
+    }
+  ]
+}
