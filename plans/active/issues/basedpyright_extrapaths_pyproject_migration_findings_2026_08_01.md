@@ -161,7 +161,12 @@ script isn't invoked by `quality-gates.sh`), so none of this is actively blockin
       to this todo — see `features_smoke_matrix_verification_findings_2026_08_01.md` finding 6, fixed inline as
       features-service@b9cf1e1c same session); full `quality-gates.sh` green after that fix (sentinel-verified,
       HEAD=b9cf1e1c), shipped via quickmerge, landed + verified on `live-defi-rollout`.
-- [ ] [SCRIPT] P3. greeks-service: remove the 3 dead extraPaths in `pyproject.toml`. (repo: greeks-service)
+- [x] ✅ [SCRIPT] P3. greeks-service: remove the 3 dead extraPaths in `pyproject.toml`. (repo: greeks-service) —
+      greeks-service@8268f71. Removed `unified-cloud-interface`/`market-tick-data-service`/`instruments-service`
+      (confirmed dead: no `workspace-manifest.json` dep — greeks-service only declares `unified-trading-library` +
+      `unified-api-contracts` — and no source import); re-ran `check-pyrightconfig-extrapaths.py` — zero remaining
+      warnings for greeks-service; `quality-gates.sh` green (68s), shipped via quickmerge, landed + verified on
+      `live-defi-rollout`.
 - [ ] [SCRIPT] P3. instruments-service: remove the 2 dead extraPaths; separately investigate the
       `unified-config-interface` import-vs-manifest error (confirm genuine import before adding to manifest deps).
       (repo: instruments-service)
