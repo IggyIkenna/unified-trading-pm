@@ -39,6 +39,12 @@ assigned_vm: planning
 resolved_by: ""
 locked_by: live-defi-rollout
 locked_since: 2026-05-21
+context_scope:
+  [
+    /plans/active/tradfi_satellite_ao_dispatch_batch2_2026_07_25.md,
+    /plans/archive/issues/cme_combo_underlying_extraction_garbage_2026_07_19.md,
+    /plans/epics/tradfi_master.md,
+  ]
 ---
 
 # TradFi garbage-underlying recovery: 428 recovered rows unregistered + stale quarantine ground truth
@@ -137,3 +143,7 @@ wound), but should be tracked rather than silently absorbed.
       quarantine passes. Repo: market-tick-data-service (or infra, if traced to a shared migration/cleanup script).
       **Done when**: root cause identified (which script/run touched `_quarantine/raw_tick_data/` and when) or
       documented as unable-to-determine with the evidence gathered.
+
+## Progress Log
+
+- **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).

@@ -58,6 +58,12 @@ resolved_by:
 locked_by:
 locked_since:
 depends_on: []
+context_scope:
+  [
+    /plans/active/bucket_iam_write_protection_per_tier_2026_06_09.md,
+    /codex/05-infrastructure/bucket-isolation-model.md,
+    /codex/05-infrastructure/orchestrator-cloud-identity-self-service.md,
+  ]
 ---
 
 # unified-trading-sa's live IAM policy has 24+ undeclared project-level roles, including two self-escalation-capable ones
@@ -220,3 +226,7 @@ confirm no further self-grants happened in the interim.
 - [ ] [DOCS] P3. Cross-reference this doc from `bucket_iam_write_protection_per_tier_2026_06_09.md`'s Phase 2 (P2.1b
       already scopes "remove the god-SA objectAdmin" — note there that even a completed P2.1b leaves
       `projectIamAdmin`/`serviceAccountAdmin` live unless this doc's P1/P2 also land). (repo: unified-trading-pm)
+
+## Progress Log
+
+- **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).

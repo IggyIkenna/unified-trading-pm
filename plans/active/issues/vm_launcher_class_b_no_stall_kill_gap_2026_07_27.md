@@ -54,6 +54,12 @@ depends_on: []
 locked_by:
 locked_since:
 resolved_by:
+context_scope:
+  [
+    /plans/active/issues/migration_vm_hung_detection_monitoring_gap_2026_07_27.md,
+    /codex/05-infrastructure/spot-vms-for-backfill.md,
+    /codex/05-infrastructure/vm-launcher-runbook.md,
+  ]
 ---
 
 # 8 Class-B launcher VMs have zero in-VM stall-kill; 6 of them also fail the fleet naming heuristic
@@ -180,3 +186,4 @@ for n in ['aave-lending-rate-val-20260727', 'amm-golden-shape-20260727', 'cefi-f
 - **na-eligibility-audit 2026-07-30**: KEEP-NA, valid (infra tranche, dispatch agt-30721a) — All 3 todos require a
   fleet-wide blast-radius verification/judgment call (avoiding false positives against legitimately-continuous
   live/paper VM names) that the doc itself says was explicitly rejected as out-of-scope for a prior, narrower fix.
+- **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).

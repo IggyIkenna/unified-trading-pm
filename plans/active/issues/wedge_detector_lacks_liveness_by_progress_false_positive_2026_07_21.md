@@ -47,6 +47,7 @@ source: [main-orchestrator-observation]
 resolved_by:
 locked_by:
 depends_on: []
+context_scope: [/plans/epics/agent_operating_framework_master.md]
 ---
 
 # What I found
@@ -145,3 +146,4 @@ progress-signal half.
 - **na-eligibility-audit 2026-07-30**: KEEP-NA, valid (infra tranche, dispatch agt-30721a) — Doc explicitly
   self-declares NA status: modifies the orchestrator's own worker-safety automation where a careless fix could suppress
   genuine wedge detection; one todo is an explicit operator-sign-off gate.
+- **context-scout 2026-08-01**: populated/refreshed context_scope (1 entries).

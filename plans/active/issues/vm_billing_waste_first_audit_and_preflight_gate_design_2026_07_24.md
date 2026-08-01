@@ -42,6 +42,12 @@ superseded_by:
 resolved_by:
 source: /plans/active/data_pipeline_e2e_milestones_gate_2026_07_24.md §4
 depends_on: []
+context_scope:
+  [
+    /codex/05-infrastructure/vm-preemption-and-billing-waste-monitoring.md,
+    /codex/04-architecture/shard-level-failure-isolation.md,
+    /plans/epics/agent_operating_framework_master.md,
+  ]
 ---
 
 # First live run of the VM billing-waste audit + pre-flight gate design
@@ -391,6 +397,7 @@ depends_on: []
   not sufficient evidence of waste on its own — always grep the actual `total_records=`/`complete=` values for the
   specific chunk before calling a re-fetch confirmed, since a genuinely-empty predecessor attempt looks identical to a
   genuinely-wasted one at the chunk-marker level alone.
+- **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).
 
 ## Progress Log (na-eligibility-audit incremental marker)
 

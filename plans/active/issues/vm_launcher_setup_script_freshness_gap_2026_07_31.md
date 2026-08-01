@@ -51,6 +51,13 @@ locked_since:
 depends_on: []
 supersedes:
 superseded_by:
+context_scope:
+  [
+    /plans/active/infra_satellite_ao_dispatch_batch1_2026_07_26.md,
+    /plans/active/issues/vm_billing_waste_first_audit_and_preflight_gate_design_2026_07_24.md,
+    /plans/active/issues/session_bound_vm_monitoring_reliability_gap_2026_07_26.md,
+    /plans/epics/infrastructure_master.md,
+  ]
 ---
 
 # 139 VM launchers bypass the setup-script freshness guard
@@ -139,3 +146,7 @@ sweep here.
       decision. **Done when**: the operator names the chosen shape, then the follow-up remediation todo(s) can be scoped
       and drafted (likely its own dedicated plan, per the "too-large-for-a-batch-todo" precedent this same corpus
       already uses for other 100+-file sweeps).
+
+## Progress Log
+
+- **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).

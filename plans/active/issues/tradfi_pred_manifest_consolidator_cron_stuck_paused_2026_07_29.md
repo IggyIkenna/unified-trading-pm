@@ -39,6 +39,8 @@ execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
 last_updated: 2026-07-29
+context_scope:
+  [/plans/epics/infrastructure_master.md, /plans/active/mtds_available_at_cross_asset_backfill_2026_07_13.md]
 ---
 
 # TradFi + prediction manifest-consolidator crons stuck PAUSED (2026-07-29)
@@ -149,3 +151,7 @@ codebase).
       `AUTONOMOUS_AGENT_RULES.md` rule 11) outside a same-session mechanical port; also outside this dispatch's assigned
       repo scope (market-tick-data-service / deployment-service / deployment-api only). Recommend as its own follow-up
       AO todo targeting `unified-trading-library`, now unblocked by the maintenance-window primitive above.
+
+## Progress Log
+
+- **context-scout 2026-08-01**: populated/refreshed context_scope (2 entries).

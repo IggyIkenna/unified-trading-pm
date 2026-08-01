@@ -49,6 +49,12 @@ source: >-
 resolved_by:
 locked_by:
 locked_since:
+context_scope:
+  [
+    /plans/active/defi_venue_pipeline_to_live_ao_build_2026_07_30.md,
+    /plans/active/issues/defi_lst_oracle_timestamp_glued_instrument_id_2026_07_20.md,
+    /plans/epics/infrastructure_master.md,
+  ]
 ---
 
 # vault_share_price_handler.py manifest instrument_id gap
@@ -93,3 +99,4 @@ for this exact multi-instrument-per-group shape.
 
 - **2026-07-31 (slot-16, data_engineering craft)**: filed after discovering the gap while verifying/registering todo 3/4
   of `defi_venue_pipeline_to_live_ao_build_2026_07_30.md`. Not fixed inline (see `source:` above for why).
+- **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).

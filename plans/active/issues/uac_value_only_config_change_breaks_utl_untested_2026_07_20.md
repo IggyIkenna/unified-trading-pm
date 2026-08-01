@@ -43,6 +43,8 @@ source:
 locked_by: live-defi-rollout
 locked_since: 2026-05-21
 resolved_by:
+context_scope:
+  [/plans/active/issues/tradfi_canonical_path_migration_design_2026_07_19.md, /plans/epics/infrastructure_master.md]
 ---
 
 # UAC value-only config changes break UTL with no gate able to see it
@@ -233,6 +235,7 @@ nothing: it is architecturally cached against exactly the input that changed.
   gate cache (highest blast radius) → needs operator direction before implementation. The adversarial verification
   earned its cost: it prevented shipping a fleet-wedging (false-break) or actively-worse (unmasked false-green) change
   under autonomous momentum.
+- **context-scout 2026-08-01**: populated/refreshed context_scope (2 entries).
 
 ## na-eligibility-audit verdict
 

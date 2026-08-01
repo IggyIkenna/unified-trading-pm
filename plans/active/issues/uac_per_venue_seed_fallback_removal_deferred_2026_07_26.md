@@ -47,6 +47,12 @@ depends_on: []
 locked_by:
 locked_since:
 assigned_role: backend_engineer
+context_scope:
+  [
+    /plans/active/cefi_consolidated_native_ao_extract_2026_07_25.md,
+    /codex/02-data/instruments-foundation-and-catalogue-completeness.md,
+    /plans/epics/cefi_master.md,
+  ]
 ---
 
 # UAC per-venue seed fallback — removal deferred
@@ -127,3 +133,4 @@ dangling inside a closed plan todo.
   status-quo `assigned_vm: NA`** — a contested reclassification would make this doc AO-dispatchable and workers would
   start executing it, whereas leaving it NA has no active consequence. **Operator/next-toucher: rule on the scope of the
   2026-07-26 DEFERRED ruling, then flip deliberately.**
+- **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).

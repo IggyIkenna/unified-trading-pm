@@ -31,6 +31,12 @@ supersedes:
 superseded_by:
 resolved_by:
 drift_direction: NA
+context_scope:
+  [
+    /codex/05-infrastructure/per-tab-worktrees.md,
+    /plans/epics/infrastructure_master.md,
+    /codex/06-coding-standards/quality-gates-memory-governance.md,
+  ]
 ---
 
 # 26 accumulated stash entries in unified-trading-pm (slot 3) — uninvestigated
@@ -170,3 +176,4 @@ accidental `git stash clear` (a real, if unlikely, destructive action).
   inbox when a pile regrows past a measured threshold (count>15 or oldest>14d), so a future pile like this one surfaces
   automatically instead of needing another manual sweep. Tracked + evidence-cited separately in that Phase 5 todo's own
   extraction doc (`infra_satellite_ao_dispatch_batch1_2026_07_26.md`), not duplicated here.
+- **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).

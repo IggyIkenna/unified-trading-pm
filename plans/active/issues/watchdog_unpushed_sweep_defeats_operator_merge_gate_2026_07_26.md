@@ -34,6 +34,11 @@ drift_direction: advance-code
 depends_on: []
 resolved_by:
 locked_by:
+context_scope:
+  [
+    /plans/active/issues/sports_clv_target_pit_gated_out_of_odds_features_export_2026_07_26.md,
+    /plans/epics/orchestrator_master.md,
+  ]
 ---
 
 # Watchdog unpushed-sweep defeats an open operator merge gate
@@ -117,3 +122,4 @@ defeated by automation, not by any agent or operator decision. This is a governa
   `orchestrator_failover_double_dispatch_duplicate_work_2026_07_25.md` (the governance question those items said they
   were "interacting with" now has a shipped answer — gate on the open blocked-queue entry, not on session liveness). Doc
   stays `status: open`: the `[DOC] P2` SSOT-documentation sibling is still unbuilt.
+- **context-scout 2026-08-01**: populated/refreshed context_scope (2 entries).

@@ -84,6 +84,7 @@ assigned_role: data_engineering
 drift_direction: unknown
 depends_on: []
 last_updated: 2026-07-16
+context_scope: [/codex/02-data/tradfi-databento-sourcing-ssot.md, /codex/02-data/honest-coverage-model.md]
 ---
 
 # TRADFI mbp_10 / ohlcv_15m / ohlcv_24h / corporate_action_confirmed / earnings_result — unreachable fetch paths
@@ -990,3 +991,4 @@ UAC) — no separate deploy needed here.
   (`DatabentoLookbackExceededError`) past each level's free window (`trades`/`tbbo`→L1, `mbp-10`→L2) — live-tested in
   `tests/unit/test_databento_subscription_allowlist.py`. No path declares these unrestricted for CME. No code shipped
   (repo: unified-api-contracts, read-only).
+- **context-scout 2026-08-01**: populated/refreshed context_scope (2 entries).

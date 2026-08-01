@@ -33,6 +33,7 @@ superseded_by:
 depends_on:
 source: CeFi completion program /autonomous session (slot-3, 2026-07-15T14:36Z) + this session's 2026-07-16 recurrence
 resolved_by:
+context_scope: [/plans/archive/2026_07/cefi_completion_program_2026_07_15.md, /plans/epics/cefi_master.md]
 ---
 
 # Slot-3 collision + YAHOO_FINANCE fleet-blocking red IS tree
@@ -159,3 +160,4 @@ is not complete until the counterpart's files build again, not just until your o
   session can enforce on its own'). Same too-high-blast-radius class as
   `utl_shared_clone_commits_repeatedly_reset_2026_07_22.md` item 5, which batch1 already deferred for needing 'its own
   scoped plan with operator sign-off'.
+- **context-scout 2026-08-01**: populated/refreshed context_scope (2 entries).

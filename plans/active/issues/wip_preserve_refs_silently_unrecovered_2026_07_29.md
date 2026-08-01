@@ -41,6 +41,13 @@ drift_direction: advance-code
 depends_on: []
 resolved_by:
 locked_by:
+context_scope:
+  [
+    /plans/archive/issues/ldr_main_backmerge_silently_resurrects_reverted_commit_2026_07_29.md,
+    /codex/05-infrastructure/per-tab-worktrees.md,
+    /plans/active/issues/orphaned_commit_recovery_has_no_dispatch_path_2026_07_30.md,
+    /plans/epics/orchestrator_master.md,
+  ]
 ---
 
 # wip-preserve refs can silently sit unrecovered after a branch-state quarantine
@@ -105,7 +112,19 @@ closing the "then what" gap:
       blob-compare says ~16 are already content-identical to origin and most of the rest would REGRESS origin if
       applied. Full first-pass breakdown + the one substantive residual (`slot-12 unified-trading-library c927ec58`, a
       2-line docstring) are in `/plans/active/issues/orphaned_commit_recovery_has_no_dispatch_path_2026_07_30.md`. Do
-      this with the verifier that doc's `[SCRIPT] P2` specifies, not by hand. Repo: agent-orchestrator.
+      this with the verifier that doc's `[SCRIPT] P2` specifies, not by hand. Repo: agent-orchestrator. **Attempted
+      2026-08-01 (batch3 todo 3) — the verifier this item depends on is now SHIPPED (agent-orchestrator@623009e3,
+      `server/worktree_clean_check/_orphan_verify.py` + a periodic `server/orphan_ref_verify_watchdog.py` sweep — see
+      the full evidence in `/plans/active/issues/orphaned_commit_recovery_has_no_dispatch_path_2026_07_30.md`'s own
+      matching todo), but triaging these 25 specific refs was NOT possible from that session: 0/25 reachable. They are
+      `refs/wip-preserve/cascade-*`-namespace refs created via a LOCAL-ONLY `git update-ref` by
+      `quickmerge.sh::cascade_dep_branch()` (never pushed to origin), on slots 2/3/4/6/9/10/11/12/15 — but on host
+      `ip-172-31-5-118` specifically, a different physical host from the one that session ran on. That session's
+      filesystem access covered slots 1-5 and 21-30 only, and an exhaustive `git for-each-ref 'refs/wip-preserve/**'`
+      across all 375 git repos in those reachable slots found ZERO local wip-preserve refs anywhere (confirmed this is a
+      genuinely separate per-host population, not something this laptop's own slots 2/3/4 happen to also carry).
+      Checkbox left unresolved — needs a session with reach into `ip-172-31-5-118` (or dispatched to run directly on it)
+      to actually execute the now-ready verifier against these refs.
 - [ ] [SCRIPT] P3. Add a fleet-wide `refs/wip-preserve/**` sweep (age-thresholded alert or a documented runbook check)
       so a preserved-but-unrecovered commit surfaces instead of sitting forgotten. Repo: agent-orchestrator.
 - [ ] [SCRIPT] P3. Consider a post-push content-verification step in quickmerge's success path (or worker RULES.md's
@@ -120,3 +139,4 @@ closing the "then what" gap:
   `[DATA] P2` is bounded but needs cross-slot access to `refs/wip-preserve/cascade-strategy-service-a77eb6d170ca` in
   another slot's clone. **Flagged**: that ref has now sat unrecovered since 2026-07-28 — folded into
   `/plans/active/issues/orphaned_commit_recovery_has_no_dispatch_path_2026_07_30.md`, filed by this run.
+- **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).

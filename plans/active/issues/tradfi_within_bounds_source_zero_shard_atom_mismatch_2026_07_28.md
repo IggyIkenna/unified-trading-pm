@@ -80,6 +80,12 @@ source: >-
   WithinBoundsTradfiSourceZero trigger), worked 2026-07-28 (slot 6): live VM run.log + GCS-events grep (0 hits) + direct
   availability_index.parquet cross-reference (59.3-100% false-positive match rate) + code trace
   (instruments-service@f6d479f8, market_tick_data_service/scripts/_rebuild_tradfi_cf11.py).
+context_scope:
+  [
+    /plans/archive/issues/tradfi_ohlcv_attempted_failed_cluster_2026_07_23.md,
+    /plans/active/tradfi_satellite_ao_dispatch_batch2_2026_07_25.md,
+    /codex/02-data/availability-manifest-and-data-status.md,
+  ]
 ---
 
 # WithinBoundsTradfiSourceZero — root-caused as a stale bundle-grain shard-atom mismatch, not a Databento bug
@@ -309,3 +315,7 @@ population — the "elsewhere" gap that doc pointed at is this manifest bookkeep
   genuinely open follow-on work with no new blocking condition. No stale items, no duplicate claim by any other active
   doc, no archival trigger. Nothing changed since the last verdict beyond the doc being git-touched for unrelated
   reasons.
+
+## Progress Log
+
+- **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).

@@ -37,6 +37,7 @@ source:
     scripts/quality-gates-base/base-service.sh/quickmerge.sh changes for ci_satellite_ao_dispatch_batch2 todo 1
     (2026-07-30) — confirmed identical failure on the unmodified tree, root-caused, not fixed inline (unrelated to that
     todo's scope)"
+context_scope: [/plans/active/ci_satellite_ao_dispatch_batch4_2026_07_31.md, /plans/epics/infrastructure_master.md]
 ---
 
 # uv-bootstrap-fallback test's structural anchor drifted from setup.sh's current text
@@ -89,3 +90,7 @@ Reclassifying this doc's own `assigned_vm` now would open a second, independent 
 fix once batch4 activates. Staying NA until batch4 ships it or is archived unshipped (then re-open as RECLASSIFY on the
 next pass). Same cross-skill population-overlap finding as `deployment_flow_doc_stale_pre_ldr_direct_mvp_2026_07_30.md`
 — tracked in `/plans/active/issues/na_and_ag_closeout_audit_population_overlap_2026_07_31.md`.
+
+## Progress Log
+
+- **context-scout 2026-08-01**: populated/refreshed context_scope (2 entries).

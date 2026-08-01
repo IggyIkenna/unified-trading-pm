@@ -50,6 +50,12 @@ depends_on:
 assigned_role: data_engineering
 drift_direction: correct-codex
 locked_since:
+context_scope:
+  [
+    /plans/active/issues/honest_coverage_shard_dimension_model_definitional_data_2026_07_07.md,
+    /codex/02-data/defi-canonical-naming-ssot.md,
+    /codex/02-data/partitioning.md,
+  ]
 ---
 
 > **Scope note (operator-confirmed 2026-07-07):** this combinator applies to **CEFI, DEFI, TRADFI only**. Sports has no
@@ -164,8 +170,8 @@ just belongs on a different layer than instrument_type does, and conflating the 
       added 2026-07-31). `unified-api-contracts/unified_api_contracts/internal/schemas/_defi_v2_contracts.py:470-471`
       still registers `("defi", "pool", "dex_pools")` and `("defi", "pool", "dex_swaps")`, but those data_type names
       were RETIRED and collapsed to `dex_pool_state` / `dex_pool_swaps` at every layer (operator 2026-06-01, SSOT
-      [`/codex/02-data/defi-canonical-naming-ssot.md`](/codex/02-data/defi-canonical-naming-ssot.md)). The canonical
-      key `("defi", "pool", "dex_pool_state")` DOES exist in `internal/schemas/contracts.py:1046`, so this is dead
+      [`/codex/02-data/defi-canonical-naming-ssot.md`](/codex/02-data/defi-canonical-naming-ssot.md)). The canonical key
+      `("defi", "pool", "dex_pool_state")` DOES exist in `internal/schemas/contracts.py:1046`, so this is dead
       dual-registration rather than a live lookup break — but it is exactly the declared-vs-real registry drift this
       issue is about. Done-when: the two retired keys are gone (or explicitly commented as legacy-only) and no consumer
       resolves a defi pool contract by the retired name.
@@ -315,3 +321,4 @@ just belongs on a different layer than instrument_type does, and conflating the 
   following the ASTER/CEFI shard-dimension work. Operator confirmed the scope exclusion for Sports/Prediction before
   this doc was written — the combinator redesign targets CEFI/DEFI/TRADFI only; Prediction's separate
   venue-map-completeness gap (finding 5) is tracked as its own smaller, independent todo. No files edited.
+- **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).

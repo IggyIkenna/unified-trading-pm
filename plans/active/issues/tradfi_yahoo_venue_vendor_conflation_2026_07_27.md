@@ -48,6 +48,12 @@ resolved_by:
 locked_by:
 drift_direction: advance-code
 depends_on: []
+context_scope:
+  [
+    /codex/02-data/tradfi-databento-sourcing-ssot.md,
+    /codex/02-data/venue-availability.md,
+    /plans/active/tradfi_consolidated_closeout_2026_07_18.md,
+  ]
 ---
 
 # TradFi YahooFinanceAdapter stamps venue="YAHOO" (vendor) instead of a real per-instrument venue
@@ -140,3 +146,4 @@ classes (EQUITY looks like the clearest win, since a real exchange is normally r
   RECLASSIFY. Conflict-check returned CONFLICT: `/plans/active/tradfi_satellite_ao_dispatch_batch5_2026_07_29.md`
   already extracts it verbatim citing this doc as its `Source:`, and explicitly sequences it FIRST among three entangled
   Yahoo/venue todos so the investigation runs once and is cited by the other two.
+- **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).

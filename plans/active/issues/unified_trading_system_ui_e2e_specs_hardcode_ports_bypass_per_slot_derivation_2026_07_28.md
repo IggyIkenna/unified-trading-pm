@@ -37,6 +37,12 @@ depends_on: []
 locked_by:
 assigned_vm: planning
 resolved_by:
+context_scope:
+  [
+    /plans/archive/issues/playwright_reuse_existing_server_cross_slot_false_results_2026_07_20.md,
+    /codex/06-coding-standards/ui-testing-layers.md,
+    /plans/epics/agent_operating_framework_master.md,
+  ]
 ---
 
 # unified-trading-system-ui e2e specs hardcode ports, bypassing per-slot derivation
@@ -146,3 +152,7 @@ Migrate these ~40 files to import `BASE_URL`/`API` from `E2E_CONFIG` (`tests/e2e
 ## Codex SSOTs
 
 `/codex/06-coding-standards/ui-testing-layers.md`.
+
+## Progress Log
+
+- **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).

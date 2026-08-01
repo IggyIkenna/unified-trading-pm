@@ -44,6 +44,12 @@ source: >-
   mdps_features_live_launcher_exec_dispatch_never_wired_2026_07_27.md's 2026-07-30 investigation note on the
   never-decided shard-discovery mechanism.
 resolved_by:
+context_scope:
+  [
+    /plans/active/issues/mdps_features_live_launcher_exec_dispatch_never_wired_2026_07_27.md,
+    /codex/02-data/live-data-persistence-and-event-log.md,
+    /plans/epics/infrastructure_master.md,
+  ]
 ---
 
 # Extend UAC `mdps_mvp_universe()` with a `data_type` axis
@@ -137,3 +143,4 @@ ordering hazard).
   candidate set), so collapsed the redundant derivation per the todo's suggestion instead of just widening the unpack.
   quality-gates.sh green + PIPELINE-E2E-CHECK DRIVER SMOKE passing is the regression proof (no unit test previously
   covered this enumeration path).
+- **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).

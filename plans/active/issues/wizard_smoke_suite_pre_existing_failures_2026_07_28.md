@@ -28,6 +28,8 @@ execution_scope: orchestrator-agent
 assigned_role: ui_developer
 drift_direction: advance-code
 depends_on: []
+context_scope:
+  [/plans/active/issues/capability_wizard_gap_discovery_2026_06_11.md, /plans/epics/agent_operating_framework_master.md]
 ---
 
 # unified-trading-system-ui wizard smoke-suite pre-existing failures
@@ -83,3 +85,4 @@ instead of rediscovering it from scratch.
   bounded/deterministic-outcome work, no operator gate or live judgment call found; flipped
   `assigned_vm: NA -> planning`. Conflict-check run against all active `assigned_vm: planning` docs in this doc's
   `parent_epic` + the infra tranche's consolidated-closeout digest: zero/milestone-only overlap, clear to proceed.
+- **context-scout 2026-08-01**: populated/refreshed context_scope (2 entries).
