@@ -419,13 +419,15 @@ context_scope:
       to find every referencing doc — the exact index location isn't self-evident from the source todo alone). (repo:
       unified-trading-pm, doc edit). **Done when**: every located index entry is corrected, citing the decided doc.
       Source: `sports_consolidated_closeout_2026_07_19.md:727-731`.
-- [ ] [BACKEND] P2. **Track X — audit adapters under instruments-service's `.../adapters/sports/adapters/`,
+- [x] ✅ [BACKEND] P2. **Track X — audit adapters under instruments-service's `.../adapters/sports/adapters/`,
       market-tick-data-service's `.../adapters/sports/`, and execution-service's `.../sports_execution/adapters/` for
       dead code, silent fallbacks, and duplicated logic** — cite
       `/codex/06-coding-standards/adapter-dead-code-and-fallback-ban.md`. (repo: instruments-service /
       market-tick-data-service / execution-service, read-only). **Done when**: a written per-repo finding list (or an
       explicit "none found") exists, each finding citing a symbol. Source:
-      `sports_consolidated_closeout_2026_07_19.md:770-773`.
+      `sports_consolidated_closeout_2026_07_19.md:770-773`. **DONE 2026-08-01** — 14 findings (3 instruments-service / 6
+      market-tick-data-service / 5 execution-service), each citing file+symbol, filed with 13 scoped fix todos at
+      `plans/active/issues/sports_adapter_dead_code_fallback_duplicate_audit_2026_08_01.md`.
 - [ ] [DOC] P3. **Track X — add `data_completion_sports_history_2026_07_24.md` (0 open todos) as a bulleted entry to
       `sports_consolidated_closeout_aggregated_sources_2026_07_24.md`'s Aggregated-source-docs index** — it is not
       currently listed there. (repo: unified-trading-pm, doc edit). **Done when**: the entry appears in that file's
