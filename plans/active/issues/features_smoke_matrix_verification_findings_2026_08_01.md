@@ -154,8 +154,36 @@ root-caused this session (is `perp_collapse`'s representative-venue selection lo
 representative-venue MTDS input genuinely missing/stale for 2026-07-28 specifically?) — that determination needs its own
 investigation into `perp_collapse`'s upstream inputs before a fix is attempted.
 
+### 6. `e2e-testing@04d261d`'s `TEST_BUCKET_TEMPLATE` fold broke 13 of features-service's OWN unit tests — CI-red for the whole repo (FIXED)
+
+Discovered + fixed by slot-7 (2026-08-01) while shipping an unrelated task
+(`basedpyright_extrapaths_pyproject_migration_findings_2026_08_01.md`'s features-service todo) —
+`bash scripts/quality-gates.sh` failed with 13 pre-existing test failures, all `AssertionError`s in
+`tests/<family>/unit/test_smoke_matrix.py::test_test_bucket_per_category`/`test_test_bucket_single` across
+cross_instrument (3), delta_one (4), multi_timeframe (3), onchain (1), volatility (2). Each test dynamically loads its
+family's `e2e-testing/scripts/<family>/smoke_matrix.py` and asserts `mod._test_bucket(pid, cat)`'s return value against
+a hardcoded expected string — but those test files still hardcoded the PRE-Fold-A per-family bucket name (e.g.
+`features-cross-instrument-cefi-test-p`) that finding P0's `e2e-testing@04d261d` correctly retired in favor of the
+folded `features-{asset_group_lower}-test-{project_id}` shape (confirmed live-correct via `client.bucket(...).exists()`
+per that todo's evidence). The e2e-testing SIDE of the fix (the template + `_test_bucket()` itself) was correct; only
+features-service's own test-assertion literals were never updated to match, so `quality-gates.sh`/CI has been RED for
+the entire repo since `04d261d` landed — confirmed pre-existing (not this session's other change) via CI run
+`30691249715` failing identically at SHA `0e95a756683d81b92ab0b97c5871d637d71d1db0` (this session's own clean starting
+HEAD, before any of this session's edits).
+
+**Fixed inline** (small + clear + directly blocking, per findings-triage's `≤30 min` carve-out — not deferred): updated
+all 13 hardcoded `expected` literals in the 5 affected files to the folded shape, matching exactly what `_test_bucket()`
+now returns and what finding P0 already live-verified against real GCS. `features-service@b9cf1e1c`. Full
+`quality-gates.sh` re-run green after this fix (see checkbox evidence below).
+
 ## Why it matters
 
+- **Finding 6** was the most URGENT in practice (even though now resolved): it broke `quality-gates.sh`/CI for the
+  entire features-service repo, blocking every task — not just this doc's own scope — from shipping anything under the
+  green-tree HARD RULE, for however long `04d261d` sat unreconciled (multiple CI runs failed identically across
+  2026-07-31 21:59 through 2026-08-01 08:10). Caught opportunistically by an unrelated task rather than by this doc's
+  own follow-through, which is itself a gap worth noting: a same-session "does the fix's own repo still pass CI" check
+  after `04d261d` shipped would have caught this immediately instead of leaving the repo red for ~10+ hours.
 - **multi_timeframe (finding 1)** is the most severe: the family's CLI is unusable in ANY mode (batch, live, compute) —
   not a data-quality issue but a total service outage for anyone trying to run it, including any automated pipeline
   check that shells out to it. This should be triaged with urgency independent of the smoke harness context it was
@@ -229,6 +257,13 @@ not duplicated here.
       day. **Done when**: a real CEFI/technical_indicators run for a date with known-good representative-venue data
       either produces real feature rows or a genuinely `FetchEvidence`-backed `empty_confirmed` — not a `record_failed`
       from an unproven absence.
+- [x] ✅ [SCRIPT] P0. **features-service** — update the 13 stale `_test_bucket()` expected-value literals across
+      `tests/{cross_instrument,delta_one,multi_timeframe,onchain,volatility}/unit/test_smoke_matrix.py` to the folded
+      `features-{asset_group_lower}-test-{project_id}` shape `e2e-testing@04d261d` shipped. **Done when**:
+      `bash     scripts/quality-gates.sh` is green for features-service. — `features-service@b9cf1e1c` (test fix) +
+      `features-service@217eb3a2` (unrelated extraPaths todo shipped same session). Full `quality-gates.sh` green (see
+      Progress Log for run evidence); confirmed the 13 failures were pre-existing via CI run `30691249715` at SHA
+      `0e95a756683d81b92ab0b97c5871d637d71d1db0` before fixing.
 
 ## Progress Log
 
@@ -240,3 +275,11 @@ not duplicated here.
   0/215-retained + rejected empty-write) — this was cited in the parent plan's checkbox evidence and this session's ship
   commit message but had not actually been captured as a tracked todo here; caught during the pre-compact "every
   deferral must already exist as a `- [ ]`" check. 5 findings total, all still open.
+- 2026-08-01 (slot-7, ui_developer craft slot working a [SCRIPT] todo — see
+  `basedpyright_extrapaths_pyproject_migration_findings_2026_08_01.md`): added + immediately closed finding 6 —
+  `e2e-testing@04d261d`'s bucket-naming fold broke 13 of features-service's own unit test assertions, confirmed CI-red
+  for the whole repo since `04d261d` landed (~10+ hours across 4 CI runs). Fixed inline (small+clear+directly-blocking
+  carve-out): `features-service@b9cf1e1c`. Full `quality-gates.sh` re-run green — `18071 passed, 209 skipped, 0 failed`
+  (up from `18058 passed, 13 failed` pre-fix), sentinel-verified at HEAD=b9cf1e1c, shipped via quickmerge + verified
+  landed on `live-defi-rollout` (`git merge-base --is-ancestor` against origin). 6 findings total; 1 (this one) now
+  closed, 5 still open.

@@ -154,7 +154,13 @@ script isn't invoked by `quality-gates.sh`), so none of this is actively blockin
       to `workspace-manifest.json` `execution-service` dependencies (this commit). Re-ran
       `check-pyrightconfig-extrapaths.py` — zero remaining warnings for execution-service; `quality-gates.sh` green
       (192s, incl. `workspace-manifest.json valid (schema + topological)`).
-- [ ] [SCRIPT] P3. features-service: remove the 2 dead extraPaths in `pyproject.toml`. (repo: features-service)
+- [x] ✅ [SCRIPT] P3. features-service: remove the 2 dead extraPaths in `pyproject.toml`. (repo: features-service) —
+      features-service@217eb3a2. Removed `unified-config-interface`/`unified-cloud-interface` (confirmed dead: no source
+      import, sibling dirs don't exist in this checkout); re-ran `check-pyrightconfig-extrapaths.py` — zero remaining
+      warnings for features-service. `quality-gates.sh` was RED on the clean tree (13 pre-existing failures, unrelated
+      to this todo — see `features_smoke_matrix_verification_findings_2026_08_01.md` finding 6, fixed inline as
+      features-service@b9cf1e1c same session); full `quality-gates.sh` green after that fix (sentinel-verified,
+      HEAD=b9cf1e1c), shipped via quickmerge, landed + verified on `live-defi-rollout`.
 - [ ] [SCRIPT] P3. greeks-service: remove the 3 dead extraPaths in `pyproject.toml`. (repo: greeks-service)
 - [ ] [SCRIPT] P3. instruments-service: remove the 2 dead extraPaths; separately investigate the
       `unified-config-interface` import-vs-manifest error (confirm genuine import before adding to manifest deps).
