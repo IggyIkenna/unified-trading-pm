@@ -46,6 +46,13 @@ source: >-
   2026_07_26.md and cefi_consolidated_closeout_aggregated_sources_2026_07_24.md both name THIS doc as the live owner of
   VOL_CARRY / VOL_ARB_RV_IV rather than claiming the work themselves, and the operator gate the plan was parked behind
   was RULED 2026-07-28 ("no longer operator-gated, now AO-dispatchable").
+context_scope:
+  [
+    /plans/active/vol_dvol_backtestable_engines_2026_07_13.md,
+    /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
+    /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
+    /cursor-configs/skills/na-eligibility-audit/SKILL.md,
+  ]
 ---
 
 # VOL/DVOL backtestable engines — finalize
@@ -91,3 +98,4 @@ verify-from-scratch cycle.
   parent's `NA → planning` reclassification, per `plans/active/task_template.md`'s finalize-plan-coverage rule
   (`check_finalize_plan_coverage.py` globs `plans/active/*.md`, so a `doc_type: plan` reclassification needs the twin;
   issue docs are structurally exempt). No parent content duplicated here — this twin only verifies.
+- **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).

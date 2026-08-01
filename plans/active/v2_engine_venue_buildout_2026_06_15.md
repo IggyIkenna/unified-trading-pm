@@ -29,6 +29,12 @@ depends_on:
 source:
 assigned_role: backend_engineer
 drift_direction: advance-code
+context_scope:
+  [
+    /plans/epics/strategy_master.md,
+    /codex/09-strategy/architecture-v2/archetypes,
+    /unified-api-contracts/openapi/capability-verdict-matrix.json,
+  ]
 ---
 
 # v2 Engine + Venue Build-Out
@@ -625,6 +631,8 @@ on absence). **NONE registered in `ARCHETYPE_ENGINE_REGISTRY`; verdict matrix UN
 backtests need historical L5 book replay; no backfill authorised → registering would make the matrix LIE; pinned by
 `test_market_making_engines_are_not_registered`). Did NOT run `generate_config_registry.py` or the full
 `generate-unified-openapi.sh`. 2 follow-up todos filed below (MM ML model variant P3; deeper-than-L5 book capture P2).
+
+- **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).
 
 ## Follow-ups discovered during Phase D / template wave (2026-06-15)
 

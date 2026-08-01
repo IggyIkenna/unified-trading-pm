@@ -52,6 +52,14 @@ source: >-
   confirmed the `deployment_and_user_management_master` epic (though real and current, refreshed same session) is
   invisible to `/ag-closeout-audit`/`/plan-reconcile`'s tranche mechanism by construction; operator ruled full parity
   (new `asset_group: ui` enum value + skill wiring), not the cheaper `infrastructure`-tag route.
+context_scope:
+  [
+    /plans/epics/deployment_and_user_management_master.md,
+    /codex/05-infrastructure/deployment-observability.md,
+    /codex/03-deployment/data-status-ui-surface.md,
+    /codex/06-coding-standards/ui-testing-layers.md,
+    /cursor-configs/skills/ag-closeout-audit/SKILL.md,
+  ]
 ---
 
 # UI consolidated close-out
@@ -205,3 +213,4 @@ endpoints; the SIGABRT crash-loop root-caused and fixed.
   (`deployment_ui_smoke_failures_daily_costs_nav_mobile_2026_07_21.md`, `artifact_pipeline_observability_2026_07_17.md`)
   — left as-is, a legitimate cross-tranche mention (same pattern every other tranche's Sources list uses for docs it
   doesn't primarily own), not a dangling reference.
+- **context-scout 2026-08-01**: populated/refreshed context_scope (5 entries).

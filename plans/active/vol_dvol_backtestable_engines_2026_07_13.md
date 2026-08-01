@@ -34,6 +34,13 @@ supersedes:
 superseded_by:
 source: [v2_engine_venue_buildout_2026_06_15.md follow-up, operator decision 2026-07-13]
 sequential: true
+context_scope:
+  [
+    /plans/active/v2_engine_venue_buildout_2026_06_15.md,
+    /plans/epics/strategy_master.md,
+    /codex/02-data/pipeline-mode-partition.md,
+    /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
+  ]
 ---
 
 # DVOL-Backtestable VOL Engines
@@ -310,3 +317,4 @@ what's missing.
   `BLOCKED-INSUFFICIENT-EDGE` todo (new, P3) directly above citing the exact slot-7 metrics, scoped as a decision record
   (not a code task) so it doesn't silently vanish from the plan. Next: the VOL_ARB_RV_IV todo below runs the same
   backtest-then-conditionally-register sequence independently (separate engine, separate verdict expected).
+- **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).

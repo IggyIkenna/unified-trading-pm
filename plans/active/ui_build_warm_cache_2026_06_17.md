@@ -32,6 +32,12 @@ source:
   ]
 assigned_role: ui_developer
 drift_direction: advance-code
+context_scope:
+  [
+    /plans/archive/2026_06/quality_gates_speed_and_config_ssot_2026_06_09.md,
+    /plans/epics/infrastructure_master.md,
+    /plans/active/ci_satellite_ao_dispatch_batch1_2026_07_26.md,
+  ]
 ---
 
 # UI build warm-cache
@@ -116,3 +122,7 @@ they were deliberately kept OUT of the ci dispatch batch:
 `/plans/active/ci_satellite_ao_dispatch_batch1_2026_07_26.md`'s `assigned_role` is `cicd`, not `ui_developer` (D20/D28,
 2026-07-26/27). The pnpm migration is operator-APPROVED as scope but the role/gate blocker is unchanged. Established
 ruling confirmed present, not re-litigated.
+
+## Progress Log
+
+- **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).
