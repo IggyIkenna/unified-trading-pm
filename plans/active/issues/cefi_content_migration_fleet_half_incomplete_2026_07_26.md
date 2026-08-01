@@ -229,8 +229,8 @@ canonicalised by this fleet. The migration's own `# Delete-when:` marker on
       `vm_zombie_watchdog.py`'s other code paths (`_reap_terminated_vms`/`should_reap()`) and any other automated
       process running under the GCE default compute SA that could issue `compute.instances.delete` against a
       `canonical-migration-cefi-` VM. Repo: deployment-service.
-- [ ] [BACKEND] P2. **Investigate shard 16's fast-OOM anomaly in its date range (2024-08-20..2024-11-13)** — this is now
-      its 2nd distinct OOM on `e2-standard-16` itself (03:41Z entry: 706s/3.4% before death; 2026-07-31 03:27-03:41Z
+- [x] [BACKEND] P2. ✅ **Investigate shard 16's fast-OOM anomaly in its date range (2024-08-20..2024-11-13)** — this is
+      now its 2nd distinct OOM on `e2-standard-16` itself (03:41Z entry: 706s/3.4% before death; 2026-07-31 03:27-03:41Z
       entry below: also fast, ~14min, `mem_pct` jumping 20.0%→51.7% in a single ~1min sample). Both are far too fast for
       the slow pyarrow-pool-creep the shipped fix (`market-tick-data-service@9f4098b1`) targets — the diagnostic line
       confirms the fix IS firing on this shard, so this is a DIFFERENT, unaddressed failure mode, most likely a single
@@ -248,7 +248,21 @@ canonicalised by this fleet. The migration's own `# Delete-when:` marker on
       **Recommended fix approach**: wrap the per-file `pd.read_parquet`/pyarrow open call in a try/except that catches
       `pyarrow.lib.ArrowInvalid`/thrift-deserialize errors, logs the specific file path, and SKIPS it (flagged for
       separate manual repair) rather than letting it propagate into whatever retry/buffer-growth path is causing the
-      OOM. Repo: market-tick-data-service.
+      OOM. Repo: market-tick-data-service. **2026-08-01T08:15Z (slot-16)**: found the read-catch already existed
+      (`except Exception` around `read_parquet_bytes`, confirmed firing live in shard 23's log) — the missing piece was
+      that pyarrow's native memory pool never released the buffer allocated during the failed read attempt, so it
+      accumulated toward the next 200-file checkpoint (or the OOM-killer, whichever came first) — matches shard 44's
+      confirmed ~7x `bytes_allocated` spike immediately preceding its kill. **Shipped
+      `market-tick-data-service@031a2b81`**: immediate `pa.default_memory_pool().release_unused()` at every per-file
+      failure site (read failure, corrupt-file failure, and `run()`'s outer per-future exception handler) instead of
+      waiting for the periodic checkpoint; also classifies thrift/`ArrowInvalid` size-limit errors as a distinct
+      `corrupt_file_skipped` outcome (vs generic `read_error`) so poison-pill files are identifiable in the log for
+      separate manual repair, surfaced in the STOP-ON-SURPRISE summary line. Verified: standalone unit-level smoke test
+      (mocked `read_parquet_bytes` raising the exact confirmed thrift error) returns `corrupt_file_skipped` and fires
+      the pool-release path; full `quality-gates.sh` green on this exact SHA (sentinel-verified). Live full-shard
+      verification (does a relaunch on this fix clear shard 16's specific date range without recurring) is a separate
+      follow-up, not blocking this todo's own scope (identify the mechanism + ship a fix, same completion bar this doc's
+      `-006` root-cause todo used for the slow-creep mechanism above).
 - [x] [SCRIPT] P1. ✅ **Fixed the wedge-detection defect behind failure mode (3) (the pre-fix silent-freeze pattern
       recurring despite `9f4098b1`)** — `market-tick-data-service@55d051bd` (`data_pipeline_failure` escalation
       `agt-3e0b8d`, slot 3, 2026-07-31, dispatched on the SAME shard-17/`-032349` freeze slot-15 flagged monitoring-only
