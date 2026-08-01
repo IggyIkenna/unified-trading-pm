@@ -135,8 +135,9 @@ followups triaged; the alerts N+1 read pattern fixed at the root, not just the t
 ## Track 4 — Nav / smoke-test / mock-parity hygiene · P1
 
 **Sources**:
-[issues/deployment_ui_nav_consolidation_2026_07_17.md](/plans/active/issues/deployment_ui_nav_consolidation_2026_07_17.md)
-(4 nav surfaces → 2, shipped; 7 duplicate routes + a dropdown-vs-bar call remain operator-owned) ·
+[issues/deployment_ui_nav_consolidation_2026_07_17.md](/plans/archive/issues/deployment_ui_nav_consolidation_2026_07_17.md)
+(RESOLVED + ARCHIVED 2026-08-01 — all 5 todos shipped: 4 nav surfaces → 2, dropdown-vs-bar ruled, 7 duplicate routes
+resolved via retiring `?tab=`, 3 dead pages deleted, real 404 added, per-service shell moved onto real routes) ·
 [issues/deployment_ui_l2_smoke_gate_red_2026_07_17.md](/plans/archive/issues/deployment_ui_l2_smoke_gate_red_2026_07_17.md)
 (RESOLVED 2026-07-31 — the `pw:L2 ✓` gate was RED on LDR from host-contention false positives, not real app drift; fixed
 via `playwright.config.ts` `workers: 1`, gate now 424/0 green, archived) ·
