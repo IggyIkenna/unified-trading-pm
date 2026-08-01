@@ -431,13 +431,18 @@ verified complete**.
 - [ ] [CODE] P3. execution-service: reconcile `service_name` drift — `results/save_operations.py` writes
       `"execution-service"` but `cli/backtest.py` writes `"execution-services"` (plural); one producer must use one
       canonical `service_name`. Source: e2e-pipeline-manifest-wiring (smaller findings).
-- [ ] [BUILD] P2. system-integration-tests: full `scripts/quality-gates.sh` exits 1 on a PRE-EXISTING
-      `Manifest import     alignment` violation — `pyproject.toml` declares `alerting-service` + `client-reporting-api`
-      but neither is imported anywhere in the repo. Either import them in a smoke test or drop the two declarations
-      (coordinate with the already-dirty foreign `uv.lock` in this worktree — do not stomp). Also a standing non-fatal
-      coverage-floor ❌ (`MIN_COVERAGE=2<70`, no `.coverage-floor-exception.md`) needs a human-approved exception file.
-      Surfaced 2026-06-02 while landing `tests/unit/test_pipeline_manifest_wiring.py` (that file itself is fully
-      gate-clean). Source: e2e-pipeline-manifest-wiring (SIT QG repo-state).
+- [x] ✅ [BUILD] P2. **RESOLVED — closed via `infra_satellite_ao_dispatch_batch1_2026_07_26.md` todo #10 (2026-08-01,
+      slot-5).** Both fixes predate this todo's own dispatch: `MANIFEST_ALIGNMENT_SKIP=true`
+      (`system-integration-tests@19fea221`, 2026-06-10) and `.coverage-floor-exception.md`
+      (`system-integration-tests@28b2efc9`, 2026-06-07). Fresh full `bash scripts/quality-gates.sh` on
+      system-integration-tests confirmed green (`✅ ALL QUALITY GATES PASSED`, sentinel `66ea65dc`). Full evidence +
+      rationale in the batch-1 plan's flip. system-integration-tests: full `scripts/quality-gates.sh` exits 1 on a
+      PRE-EXISTING `Manifest import     alignment` violation — `pyproject.toml` declares `alerting-service` +
+      `client-reporting-api` but neither is imported anywhere in the repo. Either import them in a smoke test or drop
+      the two declarations (coordinate with the already-dirty foreign `uv.lock` in this worktree — do not stomp). Also a
+      standing non-fatal coverage-floor ❌ (`MIN_COVERAGE=2<70`, no `.coverage-floor-exception.md`) needs a
+      human-approved exception file. Surfaced 2026-06-02 while landing `tests/unit/test_pipeline_manifest_wiring.py`
+      (that file itself is fully gate-clean). Source: e2e-pipeline-manifest-wiring (SIT QG repo-state).
 
 ## Operator-gated infra (NOT credentials — ADC admin perms exist; runs after code lands)
 

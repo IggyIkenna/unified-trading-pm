@@ -411,16 +411,25 @@ orphaned?" resolves to "everything," because nothing in the covering set does an
       form are either noted for a follow-up backfill or confirmed absent. Repo: execution-service. Source:
       `issues/issue_docs_remediation_sweep_2026_06_02.md`.
 
-- [ ] [BUILD] P2. **Clear system-integration-tests' two standing QG failures.** (a) `Manifest import alignment`
-      violation — `pyproject.toml` declares `alerting-service` + `client-reporting-api` but neither is imported anywhere
-      in the repo; either import them in a smoke test (if the coverage is genuinely wanted) or drop the two declarations
-      and re-lock. (b) The standing non-fatal coverage-floor failure (`MIN_COVERAGE=2 < 70`, no
-      `.coverage-floor-exception.md` on origin) needs a real exception file stating why SIT's floor is 2, or the floor
-      raised to a defensible number. **Note**: the 2026-06-02 caution about "an already-dirty foreign `uv.lock` in this
-      worktree — do not stomp" is a stale, session-specific warning; re-check `git status` yourself rather than assuming
-      either way. **Done when**: `cd system-integration-tests && bash scripts/quality-gates.sh` exits 0, with the
-      coverage-floor exception file present and human-readable if the floor stays at 2. Repo: system-integration-tests.
-      Source: `issues/issue_docs_remediation_sweep_2026_06_02.md`.
+- [x] ✅ [BUILD] P2. **CHECKBOX-FLIP CLOSEOUT 2026-08-01 (slot-5, infra) — both sub-fixes already shipped BEFORE this
+      dispatch, no code change needed.** (a) `MANIFEST_ALIGNMENT_SKIP=true` was added to
+      `system-integration-tests/scripts/quality-gates.sh` at `system-integration-tests@19fea221` (2026-06-10,
+      "test-harness repo, imports live under tests/ (excluded by the 2026-06-10 alignment-scanner parity change)") —
+      this is the correct fix, not the "import them or drop the declaration" framing this todo's own text proposed:
+      SIT's manifest-alignment scanner categorically excludes `tests/` (by design, to avoid false build-DAG edges from
+      test-only sibling imports — see `check_manifest_import_alignment.py`'s own docstring), and SIT is a pure
+      test-harness repo whose entire body is `tests/` (`SOURCE_DIR="tests"`), so EVERY declared dep would always read as
+      "not imported" regardless of which two are named — confirmed by re-running the raw checker
+      (`check_manifest_import_alignment.py --repo     ../system-integration-tests`), which flags all 10 declared deps,
+      not just the two this todo names. (b) `.coverage-floor-exception.md` already exists on origin, added at
+      `system-integration-tests@28b2efc9` (2026-06-07), content matches this todo's own ask verbatim (states
+      `MIN_COVERAGE=2` is intentional because SIT is a cross-repo integration harness whose "source" is `tests/` itself
+      — a self-referential coverage floor would be circular). **Verified against the actual done-when**: fresh
+      `cd system-integration-tests && bash scripts/quality-gates.sh` (full run, no skip flags) →
+      `✅ ALL QUALITY GATES PASSED (120s)`, sentinel written at `system-integration-tests@66ea65dc`. Both named
+      sub-failures are gone; this todo's premise (that they are "standing") was stale as of dispatch — both fixes
+      predate the 2026-07-26 batch-1 draft by 6+ weeks. Repo: system-integration-tests. Source:
+      `issues/issue_docs_remediation_sweep_2026_06_02.md`.
 
 - [ ] [CODE] P3. **Reconcile UAC's stale `defi_position.py` liquidation threshold to the registry-driven form.** UAC
       `internal/domain/execution_service/defi_position.py` hardcodes a liquidation threshold of `1.1`, while the live
