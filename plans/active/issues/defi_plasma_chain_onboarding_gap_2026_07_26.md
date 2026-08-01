@@ -16,7 +16,7 @@ summary: >-
   (correcting the wrong "Polygon Plasma bridge" comment, cited with the real-world evidence) is out of scope here —
   already shipped (`unified-api-contracts@<see defi_turbo_api_hides_real_captured_data_2026_07_07.md's todo>`) — this
   doc is specifically the follow-up for the much larger "we're not tracking this market at all" gap.
-status: open
+status: resolved
 nature: issue
 asset_group: [defi]
 stage: [data]
@@ -41,11 +41,27 @@ source:
   defi_turbo_api_hides_real_captured_data_2026_07_07.md — real-world web-search verification of Aave's and Fluid's
   actual Plasma deployments, not asserted from code alone."
 resolved_by:
+  "unified-api-contracts@2483e157 (P1 chain registration) + unified-api-contracts@fb792b7a (CHAIN_CONFIGS/chain-map fix)
+  + market-tick-data-service@6bcc5154 (FluidAdapter venue-hardcode fix) + market-tick-data-service@9d6fc8cc
+  (RPC-fallback routing fix) + unified-api-contracts@06c54fee (AAVE-PLASMA phase flip) + unified-api-contracts@18ed167f
+  (adapter-key registration), 2026-08-01, slot-8 (final leg)"
 locked_by:
 locked_since:
 ---
 
 # Plasma L1 is a real, large, live DeFi market with zero chain onboarding here
+
+> **✅ RESOLVED 2026-08-01.** All 3 todos done. P1 (UAC chain registration) + P2 (capture-adapter scoping) shipped by
+> earlier sessions (slot-11/slot-3/slot-15). P3 (wire real capture) verified end-to-end for AAVE-PLASMA: 18 real
+> `venue=AAVE_V3/chain=PLASMA` rows registered in the manifest (`capture_status=captured`, `date=2026-07-30`), phase
+> flipped `pipeline`→`live` (`unified-api-contracts@06c54fee`), plus an adjacent `VENUE_TO_ADAPTER_KEY` registration gap
+> QG caught and fixed in the same session (`unified-api-contracts@18ed167f`). FLUID-PLASMA stays `pipeline` — its
+> `PROTOCOL_LAUNCH_DATES` entry is still unconfirmed; that remaining work is now its own tracked todo in
+> `plans/active/defi_satellite_ao_dispatch_batch6_2026_07_30.md` (not left as an evaporated deferral). The blocking
+> manifest-consolidator OOM issue (`manifest_consolidator_inline_unbounded_memory_cli_2026_07_31.md`) is also resolved
+> and archived alongside this doc. Codex-alignment: the new legacy-CAS oversized-write guard is now documented in
+> `/codex/05-infrastructure/manifest-consolidator-ssot.md`. Moved to
+> `/plans/archive/issues/defi_plasma_chain_onboarding_gap_2026_07_26.md`; corpus referrers updated.
 
 ## What I found
 
@@ -108,7 +124,7 @@ attempting the full build here:
       `fluid_adapter.py`/`fluid_liquidity_resolver.py` for Fluid) already implement exactly this pattern for other
       chains (OPTIMISM precedent for Aave) — Plasma is a parameter addition to existing code, not new architecture. P3
       below is now re-scoped with the concrete addresses/files found.
-- [ ] [CODE] P3. Wire real capture for `AAVE-PLASMA` and `FLUID-PLASMA` per the P2 scoping below: (1) add
+- [x] ✅ [CODE] P3. Wire real capture for `AAVE-PLASMA` and `FLUID-PLASMA` per the P2 scoping below: (1) add
       `9745: ChainConfig(rpc_url_template="https://plasma-mainnet.g.alchemy.com/v2/{api_key}", ...)` to `CHAIN_CONFIGS`
       in `unified-api-contracts/unified_api_contracts/registry/capability_declarations/_defi_chain_data.py` (repo:
       unified-api-contracts); (2) add a `"PLASMA"` entry to `_AAVE_V3_POOL_ADDRESSES` +
@@ -119,7 +135,25 @@ attempting the full build here:
       real rows land in the manifest and update `defi_venues.py`'s phase from `"pipeline"` to `"live"` for whichever
       venues have working, verified capture. `FLUID-PLASMA`'s launch date must still be confirmed (per the P1 todo
       above) before its `PROTOCOL_LAUNCH_DATES` entry can land — that's a prerequisite for `FLUID-PLASMA` specifically,
-      not for `AAVE-PLASMA`. Repos: unified-api-contracts, market-tick-data-service.
+      not for `AAVE-PLASMA`. Repos: unified-api-contracts, market-tick-data-service. — **DONE 2026-08-01 (slot-8)**:
+      (1)-(3) were already shipped by slot-3/slot-15 (see progress log above). Picked up sub-item (4), the last open
+      leg. The manifest_consolidator OOM blocker (`manifest_consolidator_inline_unbounded_memory_cli_2026_07_31.md`) was
+      already resolved by then (size-guard fix `unified-trading-library@74fdeeca`, QG green) — AND, independently,
+      `_defi_manifest.py`'s `DefiManifestRecorder` already hardcodes `per_vm_shards=True` (a separate, earlier fix,
+      `defi_venue_pipeline_to_live_ao_build_2026_07_30.md`), so this recorder never touches the OOM-prone legacy CAS
+      path at all. Verified via a targeted `pyarrow` filtered read (not a bucket walk) of
+      `gs://market-data-tick-defi-prd-central-element-323112/_index/availability_index.parquet`:
+      `venue=AAVE_V3,     chain=PLASMA` has **18 rows**, `capture_status=captured`, `available=True`, `date=2026-07-30`,
+      `written_at=2026-07-31T23:09:46Z` — the manifest registration had already completed since the blocking doc's last
+      update, just not yet reflected in either plan. Flipped `defi_venues.py`'s `"AAVE-PLASMA"` phase `"pipeline"` →
+      `"live"` (`FLUID-PLASMA` stays `"pipeline"` — its `PROTOCOL_LAUNCH_DATES` entry is still unconfirmed, per the P1
+      todo above). That flip surfaced a real, separate registry gap QG caught: `VENUE_TO_ADAPTER_KEY` had NO entry for
+      `AAVE-PLASMA` at all — it can never be picked up by the `AAVE_V3-<CHAIN>` auto-gen loop (its venue constant is the
+      bare `"AAVE"` form, not `"AAVE_V3"`, and Plasma has no `subgraph_id` either way) — fixed with an explicit
+      `"AAVE-PLASMA": "aave_v3"` entry (reuses the existing real `aave_v3` adapter key, same class of gap as the
+      pre-existing `RADIANT-BSC` entry). Shipped: `unified-api-contracts@06c54fee` (phase flip) +
+      `unified-api-contracts@18ed167f` (adapter-key fix), both verified ancestors of `origin/live-defi-rollout`, full
+      `quality-gates.sh` green (302s, 12350 passed).
 
 ## 2026-07-31 partial progress (slot-3) — wiring done ((1)-(3)), live verification + phase flip still open ((4))
 

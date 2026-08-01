@@ -20,7 +20,7 @@ summary: >-
   to GCS before this occurred (data is safe); the manifest registration for that write did NOT complete (confirmed: 0
   rows for venue=AAVE_V3/chain=PLASMA in the current availability index, cross-validated against AAVE_V3/ETHEREUM's
   70,069 existing rows using the identical query).
-status: open
+status: resolved
 nature: issue
 asset_group: [infrastructure]
 stage: [data]
@@ -46,6 +46,9 @@ estimate_calibrated_ai_days: 0.4
 assigned_role: infra
 depends_on: []
 resolved_by:
+  "unified-trading-library@74fdeeca (legacy-CAS oversized-write guard) + the pre-existing _defi_manifest.py
+  per_vm_shards=True hardcode (routes DefiManifestRecorder around the legacy path entirely) + manual manifest
+  re-verification, 2026-08-01, slot-8"
 locked_by:
 locked_since:
 supersedes:
@@ -58,6 +61,17 @@ drift_direction: advance-code
 ---
 
 # CLI-triggered inline manifest consolidation has no memory cap, unlike the dedicated Cloud Run job
+
+> **✅ RESOLVED 2026-08-01.** Both P1 todos (pin the call site, bound the legacy-CAS read-merge-write) were already
+> shipped (`unified-trading-library@74fdeeca`, QG green). The P2 todo (re-register AAVE-PLASMA, flip the phase, close
+> the parent doc) is now also done: the manifest registration had already completed independently by the time this
+> session picked it up (18 captured rows found, `written_at=2026-07-31T23:09:46Z`) — most likely because
+> `market-tick-data-service`'s `_defi_manifest.py` already hardcodes `per_vm_shards=True` for `DefiManifestRecorder` (a
+> separate, earlier fix), so this recorder never touches the legacy CAS path this doc's guard protects at all.
+> `defi_venues.py`'s `AAVE-PLASMA` phase flipped `pipeline`→`live` (`unified-api-contracts@06c54fee`). Codex-alignment:
+> the new size guard is now documented in `/codex/05-infrastructure/manifest-consolidator-ssot.md` § "Writers: per-VM
+> shard mode is the ONLY sanctioned standing write path". Moved to
+> `/plans/archive/issues/manifest_consolidator_inline_unbounded_memory_cli_2026_07_31.md`; corpus referrers updated.
 
 ## What I found
 
@@ -182,12 +196,21 @@ many agents' work, not an isolated container).
       script. 6 new unit tests (`tests/unit/test_manifest_writer_legacy_read_size_guard.py`) cover: refusal before any
       read, normal write within budget, the force flag, the env opt-out, the fresh-index no-op case, and the unset-env
       default budget. `quality-gates.sh` green (182s, sentinel=74fdeeca).
-- [ ] [DATA] P2. Once (a)/(b) ships, re-run the AAVE-PLASMA manifest registration for `2026-07-30` (the GCS data already
-      exists — this is a re-register, not a re-capture) and confirm rows land via the same targeted `pyarrow`
+- [x] ✅ [DATA] P2. Once (a)/(b) ships, re-run the AAVE-PLASMA manifest registration for `2026-07-30` (the GCS data
+      already exists — this is a re-register, not a re-capture) and confirm rows land via the same targeted `pyarrow`
       filtered-read method documented above (never a bucket-wide walk or whole-table `astype(str)` scan). Then flip
       `defi_venues.py`'s `AAVE-PLASMA` phase from `pipeline` to `live` and close
       `defi_plasma_chain_onboarding_gap_2026_07_26.md`'s P3 todo. (repo: market-tick-data-service,
-      unified-api-contracts, unified-trading-pm)
+      unified-api-contracts, unified-trading-pm) — **DONE 2026-08-01 (slot-8)**: the re-registration had already
+      completed independently (18 captured rows found already registered, `written_at=2026-07-31T23:09:46Z` — likely via
+      `_defi_manifest.py`'s pre-existing `per_vm_shards=True` hardcode, a separate earlier fix that routes this recorder
+      around the legacy CAS path entirely, so it never needed this doc's size-guard escape hatches at all). Verified via
+      targeted `pyarrow` filtered read (not a bucket walk). Flipped `defi_venues.py`'s `AAVE-PLASMA` phase
+      `pipeline`→`live`: `unified-api-contracts@06c54fee` + `unified-api-contracts@18ed167f` (the second commit fixes an
+      adjacent `VENUE_TO_ADAPTER_KEY` registration gap the phase flip surfaced via QG), both verified ancestors of
+      `origin/live-defi-rollout`, QG green. Closed
+      `plans/archive/2026_08/defi_plasma_chain_onboarding_gap_2026_07_26.md`'s P3 todo (doc now archived — all its todos
+      done).
 
 ## Lesson for whoever picks this up
 

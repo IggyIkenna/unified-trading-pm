@@ -789,7 +789,7 @@ live 2026-07-26 by `/plan-reconcile defi`: the real figure is **2** — `…aggr
   "orphan invisible to sweep" bug class fixed twice before. Added here for future tranche-sweep discoverability:
   `issues/defi_instrument_availability_duplicate_instrument_key_rows_2026_07_26.md`,
   `archive/issues/defi_maker_vault_share_price_29day_gap_2026_07_26.md` (RESOLVED, archived 2026-07-28),
-  `issues/defi_plasma_chain_onboarding_gap_2026_07_26.md`,
+  `archive/issues/defi_plasma_chain_onboarding_gap_2026_07_26.md` (RESOLVED, archived 2026-08-01),
   `issues/defi_orphan_sweep_test_artifact_prod_leak_2026_07_24.md` (defi/cefi dual-tagged),
   `issues/mdps_t1_recon_job_oom_failing_7_days_2026_07_26.md` (multi-AG tagged, defi among them). None were tracked in
   any Track above; all are now `assigned_vm: planning` and live in the AO backlog.

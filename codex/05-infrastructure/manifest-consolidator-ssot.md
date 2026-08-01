@@ -563,6 +563,22 @@ sports IS canonical, reopening the L6/E8 data-loss gate
   one-off maintenance rewrites opt out via `ManifestWriter(allow_index_shrink=True)` — never a standing service. The
   consolidator's own `_ROW_COUNT_REGRESSION_ALERT_THRESHOLD` (0.1%, observability-only) is the sibling check on the
   merge side.
+- **Defense-in-depth against ad-hoc-CLI OOM (UTL `unified-trading-library@74fdeeca`, 2026-07-31)**: a `ManifestWriter`
+  that DOES land on the legacy CAS path (per_vm_shards not set — an interactive/ad-hoc CLI invocation, not a standing
+  service) can still trigger the SAME class of unbounded-memory failure the Cloud Run job's own DuckDB path guards
+  against (see "Why the OOM is unavoidable at 1 GB" below), because the legacy path's `pd.read_parquet` +
+  `pd.concat`/`.drop_duplicates()` merge has NO memory cap at all. Confirmed incident: a routine single-day/single-venue
+  `market-tick-data-service` capture (`AAVE-PLASMA`, 18 rows) ballooned to 44.4GB RSS on a 61GB shared host before being
+  killed — root-caused to `_write_with_generation_match()`'s legacy-mode fallthrough, NOT `consolidate()` (which has
+  exactly one production call site, its own Cloud Run entrypoint). Fix: `_refuse_if_legacy_read_oversized()`
+  cheap-checks the canonical blob's compressed size via a metadata-only `blob.reload()` (no download) BEFORE any
+  read/merge is attempted; oversized (default >200 MiB, `MANIFEST_LEGACY_READ_MAX_BYTES`) raises
+  `ManifestLegacyWriteRefusedError` instead of proceeding — a REFUSE, not a truncated read (the canonical blob is fully
+  overwritten on every legacy write, so a partial read would silently drop untouched rows). Escape hatches:
+  `MANIFEST_LEGACY_READ_MAX_BYTES=0` (env opt-out) or `ManifestWriter(allow_oversized_legacy_write=True)` (per-writer
+  force flag) for a deliberate one-off correction script — both reintroduce the original unbounded-memory risk, so
+  prefer converting the writer to per-VM shard mode instead (this section's own HARD RULE) wherever the caller can. Full
+  incident + fix detail: `plans/archive/issues/manifest_consolidator_inline_unbounded_memory_cli_2026_07_31.md`.
 - **The per-VM shard flush is ALREADY debounced — do not re-derive an "O(n²) flush" hypothesis.**
   `unified-trading-library@6b6d53bd` (2026-06-21, "serialize per-VM shard write + coalesce per-call final into the
   debounce") added a count+time write-debounce specifically for the per-VM shard path: `_state.py`'s
