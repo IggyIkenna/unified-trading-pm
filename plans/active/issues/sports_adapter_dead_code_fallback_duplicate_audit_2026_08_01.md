@@ -267,11 +267,13 @@ named) rather than left as prose, per the findings-closure hard rule.
       (market-tick-data-service). Add an explicit comment in the sports-package version stating it is NOT live-routed
       (the prediction-package version is), or delete it if it's fully superseded — per rule 3, silence on which is live
       is itself the violation. (repo: market-tick-data-service)
-- [ ] [BACKEND] P2. Add logging to `footystats_adapter.py::FootystatsAdapter`'s schema-validation-failure fallback
+- [x] ✅ [BACKEND] P2. Add logging to `footystats_adapter.py::FootystatsAdapter`'s schema-validation-failure fallback
       (market-tick-data-service, `get_leagues:137-138`, `get_matches:172-173`, `get_teams:196-197`) — each currently
       silently substitutes the raw unvalidated dict with no log call; add a `logger.warning`/`log_event` naming the
       validation failure before falling back, matching the rest of this file's discipline. (repo:
-      market-tick-data-service)
+      market-tick-data-service) — market-tick-data-service@1957e89b. Added `logger.warning` naming
+      `type(exc).__name__` + message at all 3 sites (FootystatsLeague/FTMatchRaw/FTTeamRaw validation); fallback
+      behavior (raw dict substitution) unchanged. Full QG green (9821 passed).
 - [ ] [BACKEND] P2. Decide + document the fate of `aggregator/odds_api.py::OddsApiAdapter` and
       `bookmaker_api/api_football.py::ApiFootballAdapter` (execution-service `sports_execution/adapters/`) — both
       registered/exported but never constructed by any live path (`sports_factory.py::_LIVE_VENUE_CONFIGS` never sets
