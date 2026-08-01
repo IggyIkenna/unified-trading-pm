@@ -235,12 +235,16 @@ named) rather than left as prose, per the findings-closure hard rule.
       docstring; remove their imports from `market_interface/__init__.py` and their exports from
       `adapters/sports/__init__.py`, and update/delete `tests/market_interface/unit/test_sports_adapters.py`'s
       references accordingly. (repo: market-tick-data-service)
-- [ ] [BACKEND] P2. Decide + document the fate of `market_interface/sports/registry.py`'s `_ADAPTER_PATHS` dispatch
+- [x] ✅ [BACKEND] P2. Decide + document the fate of `market_interface/sports/registry.py`'s `_ADAPTER_PATHS` dispatch
       table (market-tick-data-service) — it has zero production callers, making `metabet_adapter.py::MetaBetAdapter`,
       `odds_engine_adapter.py::OddsEngineAdapter`, and `opticodds_adapter.py::OpticOddsAdapter` unreachable dead code.
       Either wire the registry into a real live dispatch path with a stated activation plan, or delete the registry +
       its three orphaned adapter classes (or add an explicit "kept behind an unreached registry, activation path is X"
-      note to each). (repo: market-tick-data-service)
+      note to each). (repo: market-tick-data-service) — market-tick-data-service@a900ecb4. Chose the document-in-place
+      option (not delete/not wire) since `ENDPOINT_STATUS=PENDING_CASSETTE_AWAITING_AUTH` shows genuine WIP scaffolding
+      gated on unprovisioned API credentials, not abandoned code; added a STATUS note (matching
+      `instruments-service/adapters/tradfi/ibkr.py`'s precedent) to the registry module + all 3 adapters naming the
+      unreached path and the activation condition. Full QG green.
 - [ ] [BACKEND] P2. Decide + document the fate of `footystats_adapter.py::FootystatsAdapter` and
       `sportradar_adapter.py::SportradarAdapter` (market-tick-data-service) — both marked
       `ENDPOINT_STATUS =     "IMPLEMENTED"` but registered nowhere (absent from `VENUE_REGISTRY`, `sports/registry.py`,
