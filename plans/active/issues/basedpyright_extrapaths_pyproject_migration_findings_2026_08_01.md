@@ -133,8 +133,13 @@ script isn't invoked by `quality-gates.sh`), so none of this is actively blockin
       `unified-cloud-interface`/`unified-config-interface` (confirmed dead: no `workspace-manifest.json` dep, no source
       import), added `deployment-service`/`unified-api-contracts` (confirmed real manifest deps); re-ran
       `check-pyrightconfig-extrapaths.py` — zero remaining warnings for deployment-api; `quality-gates.sh` green (172s).
-- [ ] [SCRIPT] P3. deployment-service: remove the 2 dead extraPaths, add the missing `unified-api-contracts` extraPath
-      in `pyproject.toml`. (repo: deployment-service)
+- [x] ✅ [SCRIPT] P3. deployment-service: remove the 2 dead extraPaths, add the missing `unified-api-contracts`
+      extraPath in `pyproject.toml`. (repo: deployment-service) — deployment-service@9e4eea9. Removed
+      `unified-cloud-interface`/`unified-config-interface` (confirmed dead: no `workspace-manifest.json` dep, no source
+      import, sibling dirs don't even exist), added `unified-api-contracts` (confirmed real manifest dep); re-ran
+      `check-pyrightconfig-extrapaths.py` — zero remaining warnings for deployment-service; `quality-gates.sh` green
+      (256s, `IGNORE_TIMEOUT=true` used once for a transient host-contention timing-gate-only failure per codex
+      quality-gates.md sanctioned override — all substantive gates were green on that run too).
 - [ ] [SCRIPT] P3. execution-service: remove the 8 dead extraPaths in `pyproject.toml`; separately investigate the 4
       import-vs-manifest errors (`unified-cloud-services`, `market-tick-data-service`, `execution-algo-library`,
       `matching-engine-library`) — confirm each is a genuine live import (not a stale/commented reference) before adding
