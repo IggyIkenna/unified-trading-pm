@@ -268,7 +268,7 @@ gate on ANY hit.
 **Why:** `ui_codex_gate_blind_to_app_router_layout_2026_07_21.md` todo 1 fixed a real App-Router blind spot in `[3.5/6]`
 (it wasn't scanning `app/` at all). Once fixed, the gate correctly started scanning the real tree — and found the actual
 violation surface was far larger than the original manual audit estimated (documented in
-`plans/active/issues/unified_trading_system_ui_codex_violations_far_exceed_estimate_2026_07_21.md`): 84 `console.*`
+`plans/archive/issues/unified_trading_system_ui_codex_violations_far_exceed_estimate_2026_07_21.md`): 84 `console.*`
 calls across 49 files, 1082 hardcoded-colour hits across 100 files, 30 hardcoded-localhost hits. Because `[3.5/6]` scans
 the whole tree (not diff-scoped), this made `quality-gates.sh` fail for EVERY future commit to this repo, regardless of
 what it touches, until the full backlog clears — a structural, repo-wide blocker, not a per-PR one. Hand-fixing 1082+30
@@ -290,7 +290,7 @@ through this exact ratchet end-to-end — `quality-gates.sh` green, sentinel `46
 via the normal `quickmerge --agent` flow — proving the gate no longer blocks unrelated ships.
 
 **Paydown plan (tracked, not open-ended):**
-`plans/active/issues/unified_trading_system_ui_codex_violations_far_exceed_estimate_2026_07_21.md` todos 2 (~80
+`plans/archive/issues/unified_trading_system_ui_codex_violations_far_exceed_estimate_2026_07_21.md` todos 2 (~80
 `console.*` sweep) and 3 (colour/localhost triage + real-violation sweep) — each re-ratchets the baseline DOWN via
 `--update-baseline` as it lands, until it reaches 0 and this exception can be removed.
 

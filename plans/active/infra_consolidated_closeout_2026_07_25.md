@@ -268,7 +268,9 @@ not data-pipeline).
   `issues/deployment_service_ungated_revision_delete_no_rollback_target_2026_07_26.md` (archived — resolved,
   deployment-service@5690ad3, now at
   `/plans/archive/issues/deployment_service_ungated_revision_delete_no_rollback_target_2026_07_26.md`),
-  `issues/unified_trading_system_ui_codex_violations_far_exceed_estimate_2026_07_21.md`,
+  `issues/unified_trading_system_ui_codex_violations_far_exceed_estimate_2026_07_21.md` (archived — resolved,
+  unified-trading-system-ui@030d2575, now at
+  `/plans/archive/issues/unified_trading_system_ui_codex_violations_far_exceed_estimate_2026_07_21.md`),
   `archive/issues/quickmerge_agent_files_pure_deletion_gap_2026_07_26.md`,
   `issues/ui_hardcoded_colour_and_localhost_debt_2026_07_21.md` (archived — resolved,
   unified-trading-system-ui@145bf5dd, now at

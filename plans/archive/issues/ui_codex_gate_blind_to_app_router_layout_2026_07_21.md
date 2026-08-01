@@ -118,7 +118,7 @@ at whichever root is actually present, then clean up the violations the gate wou
       raw `console.error`, same rationale as `deployment-ui`'s own `ErrorBoundary.tsx` exclusion), and
       `bash scripts/quality-gates.sh --lint` passes clean. Colour (1076 remaining, down from 1082) + localhost (30)
       counts are a SEPARATE, not-yet-done backlog — tracked in
-      `plans/active/issues/unified_trading_system_ui_codex_violations_far_exceed_estimate_2026_07_21.md` todo 3, not
+      `plans/archive/issues/unified_trading_system_ui_codex_violations_far_exceed_estimate_2026_07_21.md` todo 3, not
       this todo's original scope.
 
 ## Codex SSOTs
