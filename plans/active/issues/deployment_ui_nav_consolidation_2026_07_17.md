@@ -1,18 +1,20 @@
 ---
 doc_type: issue
 title:
-  deployment-ui nav consolidation — 4 nav surfaces reduced to 2 (shipped); 7 duplicate routes + a dropdown-vs-bar call
-  remain operator-owned
+  deployment-ui nav consolidation — 4 nav surfaces reduced to 2, dropdown deleted, dead pages removed, real 404 added,
+  per-service shell moved onto real routes (ALL TODOS SHIPPED)
 summary: |
   Operator-driven nav audit + rebuild (2026-07-17). **Found**: the UI had **4 nav surfaces** (top-left dropdown,
   LandingTabs bar, cockpit tab bar, per-service tab bar) and **43 addressable page types of which only 31 are unique** —
   12 were the same component under a second chrome, because a 2026-06/07 refactor folded every surface into the cockpit
   and deleted nothing. **Shipped**: one deduplicated 15-entry list (`NAV_ITEMS_CANONICAL`) now drives BOTH remaining
   surfaces so they cannot drift; the LandingTabs bar is deleted and its 4 duplicate routes redirect into their cockpit
-  tab; the top bar carries the page nav on every route; utilities collapsed behind a status chip. **Remains**: an
-  operator call on dropdown-vs-bar, deletion of the 7 still-standalone duplicates, and three genuinely dead pages the
-  audit found. Also documents why the `*` catch-all silently renders Overview for any unknown URL.
-status: open
+  tab; the top bar carries the page nav on every route; utilities collapsed behind a status chip; the dropdown-vs-bar
+  call is RULED (bar kept, dropdown deleted); the 7 duplicate standalone routes were resolved via the other side
+  (retired the cockpit `?tab=` variant instead of deleting them); the 3 dead pages are deleted; a real 404 route
+  replaced the silent `*` → Overview fallback; and the per-service shell (`/service/:name(/:tab)`) is now real routes,
+  retiring the `ServiceUrlSync` bidirectional sync hack entirely. All 5 checkbox todos done — RESOLVED 2026-08-01.
+status: resolved
 nature: process
 asset_group:
   [ui] # corrected 2026-07-30 (ui-tranche launch) -- was [meta]; repos:[deployment-ui] only, a
@@ -28,7 +30,7 @@ related:
     /codex/06-coding-standards/ui-testing-layers.md,
   ]
 created: 2026-07-17
-last_updated: 2026-07-17
+last_updated: 2026-08-01
 parent_epic: observability_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -38,6 +40,8 @@ estimate_baseline_ai_days: 1
 estimate_calibrated_ai_days: 0.4
 assigned_role: ui_developer
 resolved_by:
+  "slot-5, ui_developer, 2026-08-01 — last remaining todo (per-service shell onto real routes) shipped
+  deployment-ui@039474d; all 5 checkbox todos done, no lock, archiving per plan-completion-and-archival-discipline.md"
 locked_by:
 drift_direction: advance-code
 source:
@@ -138,28 +142,40 @@ screens lost.
       `/data-status` and `/kill-switch` — themselves dead/never-real URLs that now correctly 404 instead of silently
       rendering the shell). `orphan-audit --blocking` clean (no new orphans — no new `<Route>` was added, only what the
       existing catch-all renders). tsc/ESLint/build clean, vitest 1096/1096 (full suite) / 101/101 (QG-scoped).
-- [ ] [UI] P3. **Move the per-service shell onto real routes** — ~215 `/service/:name/:tab` URLs are regex-sniffed off
-      the catch-all by `ServiceUrlSync`, which needs a 100-line bidirectional state↔URL sync with loop guards and
-      "change attribution" only because `selectedService`/`activeTab` are component state instead of route params.
-      Largest remaining source of routing complexity.
+- [x] ✅ [UI] P3. **Move the per-service shell onto real routes** — deployment-ui@039474d. `/service/:serviceName` and
+      `/service/:serviceName/:tab` are now explicit `<Route>` entries (App.tsx) instead of being regex-sniffed off the
+      `*` catch-all by `ServiceUrlSync`'s ~100-line bidirectional state↔URL sync (loop guards + "change attribution").
+      Extracted the shell into `src/pages/HomeShell.tsx`, which derives `selectedService`/`activeTab` directly from
+      `useParams()` and drives every service/tab switch via `useNavigate()` — no component state duplicating the URL, so
+      no sync effect pair is needed at all. `ServiceUrlSync.tsx` deleted outright (its `isHomeShellPath()` gate on the
+      catch-all is replaced by the three real routes matching before `*` ever fires). The bare `/service/:name` shape
+      (no tab, defaults to Deploy) is preserved as a genuinely reachable route — wired to `ServicesOverviewTab`'s row
+      click (fresh entry into a service) — rather than deleted or faked into the orphan-audit's whitelist;
+      `ServiceList`'s sidebar switch still carries an explicit tab (it preserves whichever tab is currently active).
+      Also extended `scripts/orphan-audit.ts` to detect
+      `navigate(\`template\`)`calls (it     previously only matched string-literal`navigate("...")`and`to={\`...\`}`JSX templates), since this shell's     dynamic service-name navigation would otherwise read as unreachable — a real tool gap this change exposed, fixed     at the root rather than gamed.`pw:L2
+      ✓`: full smoke+e2e suite 469/484 green (the 15 failures are PRE-EXISTING —     independently reproduced byte-identical on a clean `git
+      stash`-restored tree before this change: 2 in     `safety-ops-deployment-ui.spec.ts`, 6 in `hierarchical-drilldown-walk.spec.ts`, plus 2 in     `deploy-missing-preview.spec.ts`, 2 in `per-leaf-csv-download.spec.ts`, 3 in `regression-2026-05-07.spec.ts`—     unrelated to this refactor).`url-sync.spec.ts`/`not-found-route.spec.ts`/`top-nav-bar.spec.ts`/     `prediction_v9_breakdown.spec.ts`(the specs most directly exercising this surface) all green.`orphan-audit
+      --blocking` clean (no new orphans vs baseline). tsc/ESLint clean, vitest 1096/1096 (full) / 101/101 (QG-scoped).
 
 ## Deferred work after 2026-07-17
 
-| Item                                     | State                                                   | Why deferred / blocked on                                                                                                                                                                                                |
-| ---------------------------------------- | ------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Dropdown vs bar — keep one               | ✅ **RULED 2026-07-28, SHIPPED 2026-08-01**             | Kept the bar, deleted the dropdown — functional edge (survives every route), not a taste call. deployment-ui@32c0999. See the todo above.                                                                                |
-| Delete the 7 duplicate standalone routes | **Operator-owned**                                      | Operator wants to compare chromes first. Mechanical once decided.                                                                                                                                                        |
-| Delete the 3 dead pages                  | ✅ **SHIPPED 2026-08-01**                               | `deployment-ui@98e2c7a`. See the todo above.                                                                                                                                                                             |
-| Real 404 instead of `*` → Overview       | ✅ **SHIPPED 2026-08-01**                               | `deployment-ui@3d4a8d6`. See the todo above.                                                                                                                                                                             |
-| Per-service shell → real routes          | **Not done**                                            | Blocked on nobody, but it is the biggest chunk; do it AFTER the dropdown/bar call so the nav is settled.                                                                                                                 |
-| Diagnose the 5 mock/page row mismatches  | ✅ **Resolved 2026-07-28, gate fully green 2026-07-31** | Was NOT REPRODUCIBLE (2026-07-28) and the whole L2 gate is now 424/0 green (host-contention root cause, not app drift) — see `/plans/archive/issues/deployment_ui_l2_smoke_gate_red_2026_07_17.md` (archived, resolved). |
-| `/ops/vms/:vmName` orphan route          | **Not done**                                            | Pre-existing, unchanged by this session; the orphan audit reports it every run.                                                                                                                                          |
+| Item                                     | State                                                                            | Why deferred / blocked on                                                                                                                                                                                                                                                                                             |
+| ---------------------------------------- | -------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Dropdown vs bar — keep one               | ✅ **RULED 2026-07-28, SHIPPED 2026-08-01**                                      | Kept the bar, deleted the dropdown — functional edge (survives every route), not a taste call. deployment-ui@32c0999. See the todo above.                                                                                                                                                                             |
+| Delete the 7 duplicate standalone routes | ✅ **RESOLVED 2026-07-17 (stale row — was contradicting the doc's own todo #2)** | This row said "operator-owned, compare chromes first," but todo #2 above already documents the operator resolved this the SAME DAY via the other side: retired the cockpit `?tab=` variant instead, making each of the 7 routes the sole canonical URL for its screen — nothing left to delete. Corrected 2026-08-01. |
+| Delete the 3 dead pages                  | ✅ **SHIPPED 2026-08-01**                                                        | `deployment-ui@98e2c7a`. See the todo above.                                                                                                                                                                                                                                                                          |
+| Real 404 instead of `*` → Overview       | ✅ **SHIPPED 2026-08-01**                                                        | `deployment-ui@3d4a8d6`. See the todo above.                                                                                                                                                                                                                                                                          |
+| Per-service shell → real routes          | ✅ **SHIPPED 2026-08-01**                                                        | `deployment-ui@039474d`. See the todo above.                                                                                                                                                                                                                                                                          |
+| Diagnose the 5 mock/page row mismatches  | ✅ **Resolved 2026-07-28, gate fully green 2026-07-31**                          | Was NOT REPRODUCIBLE (2026-07-28) and the whole L2 gate is now 424/0 green (host-contention root cause, not app drift) — see `/plans/archive/issues/deployment_ui_l2_smoke_gate_red_2026_07_17.md` (archived, resolved).                                                                                              |
+| `/ops/vms/:vmName` orphan route          | **Accepted — not this doc's scope**                                              | A structural compat-redirect orphan (same class as the accepted `/ops/costs`, `/ops/artifacts`, `/ops/vm-resources`, `/repos`), tracked passively via `scripts/.orphan-audit-baseline.json` — not a pending action per this doc's own Lessons ("a compat redirect is structurally an orphan").                        |
 
 **Note (2026-07-31, corrected — the "recommended NEXT" below is stale):** the 5 mock/page row mismatches this section
 used to recommend chasing were already found NOT REPRODUCIBLE on 2026-07-28, and the referenced
 `deployment_ui_l2_smoke_gate_red_2026_07_17.md` is now archived (resolved) — see
 `/plans/archive/issues/deployment_ui_l2_smoke_gate_red_2026_07_17.md`. Remaining open items in the table above
-(duplicate routes, dead pages, real 404, per-service shell, orphan route) are unaffected by this and still open.
+(duplicate routes, orphan route) are unaffected by this and still open; per-service-shell and dead-pages/404 are now
+shipped (see rows above).
 
 ## Progress Log
 
@@ -193,6 +209,23 @@ used to recommend chasing were already found NOT REPRODUCIBLE on 2026-07-28, and
   were themselves dead/never-real URLs riding the old silent fallback; they now correctly 404 too.
   `orphan-audit --blocking` clean, `tsc`/ESLint/build clean, vitest 1096/1096 (full) / 101/101 (QG-scoped). Shipped
   deployment-ui@3d4a8d6.
+
+- **2026-08-01 (shipped — LAST TODO, doc now RESOLVED)** — Moved the per-service shell onto real routes.
+  `/service/:serviceName` and `/service/:serviceName/:tab` are now explicit `<Route>` entries in `App.tsx` instead of
+  being regex-sniffed off the `*` catch-all by `ServiceUrlSync`'s ~100-line bidirectional state↔URL sync (loop guards +
+  "change attribution"). Extracted the shell into `src/pages/HomeShell.tsx`: `selectedService`/`activeTab` are derived
+  directly from `useParams()` every render (not component state), and every service/tab switch is a plain `navigate()`
+  call — no sync effect pair needed at all, so the whole class of bug that pair existed to prevent (state and URL
+  disagreeing) is now structurally impossible. `ServiceUrlSync.tsx` deleted outright. The bare `/service/:name` shape
+  (no tab, defaults to Deploy) is preserved as a genuinely reachable route — wired to `ServicesOverviewTab`'s row click
+  (fresh entry into a service) — rather than deleted or faked into the orphan-audit whitelist; `ServiceList`'s sidebar
+  switch still carries an explicit tab (it preserves whichever tab is currently active), which is why both route shapes
+  are real. Also extended `scripts/orphan-audit.ts` to detect
+  `navigate(\`template\`)`calls (it previously only matched string-literal`navigate("...")`and`to={\`...\`}`JSX templates) — a real tool gap this change exposed (every dynamic service-name navigation would otherwise read as unreachable), fixed at the root rather than gamed with a fake literal or a whitelist entry. While auditing the doc for this closure, found and fixed a stale "Deferred work" table row ("Delete the 7 duplicate standalone routes — Operator-owned") that directly contradicted todo #2 above (already`[x]`, documenting the operator resolved this the SAME DAY, 2026-07-17, via the other side — retiring `?tab=`instead of deleting the routes); corrected in this session per`check_no_contradiction`-class hygiene, not new work. `pw:L2
+  ✓`: full smoke+e2e suite 469/484 green — the 15 failures are PRE-EXISTING, independently reproduced byte-identical on a clean `git
+  stash`-restored tree before this change (2 in `safety-ops-deployment-ui.spec.ts`, 6 in `hierarchical-drilldown-walk.spec.ts`, 2 in `deploy-missing-preview.spec.ts`, 2 in `per-leaf-csv-download.spec.ts`, 3 in `regression-2026-05-07.spec.ts`— unrelated to this refactor).`url-sync.spec.ts`/`not-found-route.spec.ts`/`top-nav-bar.spec.ts`/`prediction_v9_breakdown.spec.ts`(the specs most directly exercising this surface) all green.`orphan-audit
+  --blocking`clean,`tsc`/ESLint clean, vitest 1096/1096 (full) / 101/101 (QG-scoped). Shipped deployment-ui@039474d. **All 5 checkbox todos are now `[x]`, `locked_by`is empty — archiving this doc in the same turn per`/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`** (§1 archive-immediately rule); no new codex contract established by this change (the routing convention is self-documented in `HomeShell.tsx`'s
+  own header comment, not codex-SSOT-worthy at this workspace's scale) so no codex doc update accompanies this archival.
 
 ## Lessons
 
