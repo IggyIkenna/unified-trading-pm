@@ -239,11 +239,31 @@ not duplicated here.
       REAL write-path code (writer/orchestrator, not assumptions) — this session only confirmed the bucket NAME is now
       correct for these 4 (via `TEST_BUCKET_TEMPLATE` fixes already shipped), not the object-key PREFIX shape within
       that bucket. Fix any mismatches found, mirroring the calendar/delta_one pattern above.
-- [ ] [DATA] P1. **operator/infra** — investigate why `market-data-tick-tradfi-prd-central-element-323112`'s manifest
+- [x] ✅ [DATA] P1. **operator/infra** — investigate why `market-data-tick-tradfi-prd-central-element-323112`'s manifest
       consolidator is ~13h+ behind (age 47,309s vs 7,200s threshold at time of check) — check the Cloud Run Job +
       Scheduler health for this specific bucket per the error's own remediation pointer. **Done when**: consolidated
       `availability_index` age is back under the 7,200s threshold, or a root cause + ETA is documented if the job is
-      genuinely down.
+      genuinely down. — **Root cause + ETA documented 2026-08-01 (slot 7)**, satisfying the doc-when-genuinely-down
+      branch: NOT a broken/stuck consolidator — `uts-prod-manifest-consolidator-market-data-tradfi-cron` is
+      **deliberately** `PAUSED` (verified `state=PAUSED`, `userUpdateTime=2026-07-31T18:25:11Z`; index
+      `update_time=2026-07-31T18:29:55Z`, now ~53,900s stale — grown since this doc's original 47,309s reading, not
+      shrunk) as the tracked pause-half of `/plans/active/mtds_available_at_cross_asset_backfill_2026_07_13.md`'s own
+      Apply→force-consolidate→Resume backfill sequence (its own todos at that plan's lines 296-308: Apply
+      `rebuild_tradfi_manifest.py` full-range, then Resume the cron). This exact root cause (deliberate, plan-owned
+      pause, not a stuck/broken automation) is already fully diagnosed in the sibling issue
+      `/plans/active/issues/tradfi_pred_manifest_consolidator_cron_stuck_paused_2026_07_29.md` — not re-derived here,
+      cross-referenced. **ETA / current status**: the tradfi Apply step has NOT started — no worker/tmux session is
+      currently running `rebuild_tradfi_manifest.py` for tradfi (confirmed via a live pane sweep), and its Resume-cron
+      backlog task (`mtds_available_at_cross_asset_backfill-003`) is `queued`/undispatched. This lags its sibling
+      PREDICTION lane, which IS actively running (backlog task `-006`, dispatched to slot 3, mid chunked-apply as of
+      this check) — i.e. tradfi's resume has no live ETA yet because its own Apply hasn't even been picked up,
+      consistent with the already-tracked dispatcher issue
+      `/plans/active/issues/mtds_backfill_sequential_true_dispatch_order_violated_2026_07_29.md`. **Not fixed here**:
+      running the tradfi Apply/Resume belongs to `mtds_available_at_cross_asset_backfill_2026_07_13.md`'s own todos
+      (lines 296-308) — doing it from this doc's scope would duplicate ownership of a plan that already tracks it and
+      risk the exact concurrent-dispatch collision the prediction lane's own Progress Log documents happening 3x.
+      Recommend: once tradfi's own Apply/Resume todos are dispatched (directly, or once the dispatch-order bug is
+      fixed), this bucket self-heals — no separate action item needed in this doc.
 - [ ] [DATA] P2. **operator/infra** — determine why `features-sports-test-central-element-323112` has never had a
       consolidated `availability_index` written (while per-VM shards exist) — confirm whether the manifest
       consolidator's bucket registry includes `-test-` siblings at all, and if not, whether it should. **Done when**:
@@ -283,3 +303,16 @@ not duplicated here.
   (up from `18058 passed, 13 failed` pre-fix), sentinel-verified at HEAD=b9cf1e1c, shipped via quickmerge + verified
   landed on `live-defi-rollout` (`git merge-base --is-ancestor` against origin). 6 findings total; 1 (this one) now
   closed, 5 still open.
+- 2026-08-01 (slot-7, data_engineering, backlog task `features_smoke_matrix_verification_findings-005`): closed the
+  finding-4a (TRADFI) todo via investigation, not a fix — root cause is a DELIBERATE cron pause owned by a different
+  in-flight plan (`mtds_available_at_cross_asset_backfill_2026_07_13.md`), already independently diagnosed in
+  `/plans/active/issues/tradfi_pred_manifest_consolidator_cron_stuck_paused_2026_07_29.md`; cross-referenced rather than
+  re-derived. Confirmed via live checks: cron still `PAUSED`, index still stale (now ~53,900s, up from the original
+  47,309s reading — actively worsening, not recovering on its own). Confirmed tradfi's own Apply step
+  (`rebuild_tradfi_manifest.py`) has not even started (no live process, Resume-cron task `-003` still queued) — behind
+  its sibling prediction lane, which IS actively running. Did not run the Apply/Resume myself: that work is already
+  tracked under the OTHER plan's own todos (lines 296-308), and duplicating it here risks the same concurrent-dispatch
+  collision that plan's own Progress Log already documents 3x for the prediction lane. Left the sports-`-test-` finding
+  (P2, features-sports-test bucket, no consolidated index) untouched — separate root cause (consolidator scheduler never
+  wired to `-test-` buckets by design, per `codex/05-infrastructure/manifest-consolidator-ssot.md` § "Coverage
+  exemptions"), out of this todo's scope.
