@@ -2,7 +2,7 @@
 doc_type: issue
 title: >-
   /api/alerts is structurally slow (~240s/day) because _read_alerting_service_sync lists+downloads one GCS object per
-  alert event, synchronously, one at a time — two stopgaps shipped 2026-07-22/23, root cause still open
+  alert event, synchronously, one at a time — reader-side concurrency fix shipped live, writer-side batching WONT-DO'd
 summary: >-
   2026-07-22: the /alerts page was hanging indefinitely / OOM-killing the Cloud Run container (measured 16.6-16.8GB
   against a 16GB limit). Root cause: the alerting-service bucket writes ONE OBJECT PER ALERT EVENT (~9,600-24,000
@@ -19,7 +19,7 @@ summary: >-
   bad UX and the true story is still: any day with unusually high alert volume could push wall-clock time up until it
   re-triggers the wall clock ceiling and/or backend OOM, and the 30-day date-range widen the UI already ships (_MAX_DAYS
   still 30) would reproduce the original crash if a user actually uses it.
-status: open
+status: resolved
 nature: issue
 asset_group:
   [ui] # corrected 2026-07-30 (ui-tranche launch) -- was [meta]; the deployment-ui /alerts page's
@@ -42,7 +42,11 @@ estimate_calibrated_ai_days: 0.9
 assigned_role: backend_engineer
 drift_direction: advance-code
 depends_on: []
-resolved_by:
+resolved_by: >-
+  reader-side concurrent/batched GCS fetch (deployment-api@79a1d36, live+verified) fixed the user-facing OOM/504
+  symptom; writer-side batching closed WONT-DO 2026-08-01 (BLK-1cce4df8, same ruling as sibling BLK-ac45347a 2026-07-30)
+  — cost/list-latency concern only, no operator decision to pursue exists, CAS design constraints preserved in the
+  todo's closure note for future revival.
 locked_by:
 source:
   [
@@ -169,11 +173,19 @@ become its own plan — this issue doc is the durable record of the finding and 
       Full evidence: Progress Log below (`unified-trading-pm@ec23016ab`). Escalation carve-out: if per-event object
       volume is later shown to cause a genuine correctness/availability problem (not just cost/list-latency), reopen as
       its own plan — do not silently proceed.
-- [ ] [CODE] P3. **If/when alerting-service object-count reduction is pursued, re-scope it as its own reviewed plan**
-      (not a snap-built todo) using a GCS generation-precondition CAS design: read current generation, append in-memory,
-      write with `ifGenerationMatch`, retry-on-412 with backoff, plus concurrency-safety tests proving zero dropped rows
-      under concurrent writers (model the tests on the two cicd-events race-incident docs cited above). MUST NOT use the
-      abandoned cp-down/append/cp-up shape. (repo: alerting-service)
+- [x] 🚫 WONT-DO / superseded [CODE] P3. ~~If/when alerting-service object-count reduction is pursued, re-scope it as
+      its own reviewed plan~~ (not a snap-built todo) using a GCS generation-precondition CAS design: read current
+      generation, append in-memory, write with `ifGenerationMatch`, retry-on-412 with backoff, plus concurrency-safety
+      tests proving zero dropped rows under concurrent writers (model the tests on the two cicd-events race-incident
+      docs cited above). MUST NOT use the abandoned cp-down/append/cp-up shape. (repo: alerting-service) — **closed
+      2026-08-01 per main ruling (BLK-1cce4df8), same disposition as the identical P2 sibling (BLK-ac45347a,
+      2026-07-30)**: the driving OOM/504 symptom is already fixed live by the reader-side concurrency fix
+      (`deployment-api@79a1d36`) — remaining per-event object volume is a cost/list-latency concern, not correctness,
+      and no operator decision to pursue writer-side batching exists. Treating this P3 differently from its
+      identical-change P2 sibling would be incoherent, and this todo's own text prescribes re-scoping as its OWN
+      reviewed plan when/if pursued — a perpetually-open checkbox is the wrong home (recurring re-dispatch churn on
+      every backlog regen, blocks plan archival). The CAS design constraints above stay captured in this closure record
+      and are revivable as a new plan on an actual future operator decision to pursue.
 
 ## Codex SSOTs
 
@@ -215,3 +227,9 @@ become its own plan — this issue doc is the durable record of the finding and 
   remaining per-event volume is a cost/list-latency concern not a correctness one; (C) in-memory buffer +
   periodic/shutdown flush per alerting-service process, trading the read-modify-write race for a crash-before-flush loss
   risk instead — recommended B). NOT implementing pending the operator's re-decision; not silently skipping either.
+- **slot 3 (review-role worker) 2026-08-01**: dispatched the standing P3 todo ("if/when pursued, re-scope as its own
+  plan"). Recognized it as conditional forward-guidance, not actionable code — no operator decision to pursue
+  writer-side batching exists, and its content duplicates the already-WONT-DO'd P2 sibling. Filed `/blocked`
+  (BLK-1cce4df8) rather than building unwanted speculative code. Main answered **B: close/mark-resolved as superseded**,
+  same ruling as BLK-ac45347a. Flipped the checkbox to WONT-DO/superseded above with the CAS design constraints
+  preserved for future revival.
