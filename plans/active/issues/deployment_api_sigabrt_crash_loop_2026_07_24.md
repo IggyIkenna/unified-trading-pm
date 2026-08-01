@@ -682,7 +682,35 @@ cancellation-timeout fix and already shipped). Suggested next steps for whoever 
       do NOT blanket-guard the whole cluster speculatively; (3) if instrumentation shows the burst's COMBINED memory (no
       single dominant handler, several moderate ones summing past the ceiling) rather than one big offender, the right
       fix is a single shared semaphore across the whole "cockpit page load" cluster instead of a per-handler one —
-      decide from the instrumentation data, not a guess. (repo: deployment-api)
+      decide from the instrumentation data, not a guess. (repo: deployment-api) — **2026-08-01 (slot 8,
+      backend_engineer): step (1) done — instrumentation shipped, not yet warranted-or-not for step (2)/(3), so NOT
+      flipping.** Read all three unprofiled handlers directly (`health_overview.py`'s `get_health_overview` fans out 6
+      concurrent tiles — fleet Compute census, GCS manifest reads, a live BigQuery cost query — with ZERO caching,
+      unlike every other cockpit endpoint; `repo_ci.py`'s `get_overview` has a per-repo semaphore but no cross-request
+      guard or cache; `vm_deployments.py`'s `list_vm_deployments` already has a 45s stale-while-revalidate cache, but
+      its COLD path — `_compute_vm_deployments`, measured avg 93.75s/max 99.27s in prod — is exactly what a
+      freshly-autoscaled instance hits first, matching this todo's own "cold multi-panel burst" framing). Shipped
+      `deployment-api@130c3a2`: a `log_rss_delta` context manager (`deployment_api/utils/request_memory_profiling.py`,
+      `resource.getrusage(RUSAGE_SELF).ru_maxrss` before/after, WARNING above a 20MiB delta) wrapping
+      `health_overview.get_health_overview`, `repo_ci.get_overview`, and `vm_deployments._compute_vm_deployments` (the
+      real cold-path compute, not the cache-hit route) — 3 new unit tests, `quality-gates.sh` PASSED (152s, sentinel
+      matches HEAD), verified on origin via `merge-base --is-ancestor`. Did NOT add a guard this entry: per this todo's
+      own decision tree, which handler(s) dominate is still unknown without live data — adding one now would be exactly
+      the "blanket-guard speculatively" anti-pattern this todo explicitly warns against. Filed a `[REVIEW]` follow-up
+      below to read the next occurrence's `peak_rss_delta_kib` lines and decide steps (2)/(3) from real data. (repo:
+      deployment-api)
+
+- [ ] [REVIEW] P2. **NEW, opened 2026-08-01 (slot 8, backend_engineer) — once `deployment-api@130c3a2` (todo above)
+      reaches a live Cloud Run deploy of `uts-shared-deployment-api`, read the next `Container terminated on signal 9`
+      occurrence's preceding logs for the new
+      `memory-profile <handler>: peak_rss_delta_kib=... elapsed_s=... peak_rss_kib=...` lines (WARNING-level above a
+      20MiB delta, DEBUG below) and attribute the spike to a specific handler.** Verify the deploy via direct image
+      extraction (not ancestry, per this doc's own 2026-07-25 methodology correction). If ONE handler's delta clearly
+      dominates: add a concurrency guard scoped to that handler only, mirroring `catalogue_lifecycle.py`'s `ec1f635`
+      semaphore pattern (`threading.Semaphore` + 503+`Retry-After`). If several handlers show moderate, summing deltas
+      with no single dominant offender: add ONE shared semaphore across the whole cockpit-load cluster instead (this
+      todo's own step (3)). If no SIGKILL has recurred yet, this stays open — don't force a conclusion from zero data.
+      (repo: deployment-api)
 
 ## Progress Log
 
