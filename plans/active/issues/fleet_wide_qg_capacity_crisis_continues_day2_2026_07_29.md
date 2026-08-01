@@ -41,7 +41,7 @@ related:
     /codex/08-workflows/ci-cd-flow.md,
   ]
 created: 2026-07-29
-last_updated: 2026-07-31
+last_updated: 2026-08-01
 priority: P1
 parent_epic: infrastructure_master
 source:
@@ -929,3 +929,24 @@ not just noting.
   `[BACKEND] P1` machine-enforced concurrency-gate todo above, which this entry corroborates as still unresolved and
   worsening. Pinged `AUTHORING_SLOT=ci-reconcile` with the outcome. No repo state changed; `features-service` and
   `unified-trading-pm` slot-4 worktrees left clean on `live-defi-rollout` (only this doc touched).
+
+- **2026-08-01 ~03:00-07:45Z (cicd escalation `agt-d659b3`, slot 6, `main_ci_red`, `instruments-service`, no PR)** —
+  concurrent corroboration alongside `agt-0cadd0` above (same window, same `AUTHORING_SLOT=ci-reconcile`, different
+  repo). `main`'s last completed `quality-gates-v2` (`30671648487`, headSha `a156c0f6`) genuinely failed 3 tests
+  (`test_defi_set_equals_uac_denominator_drift_guard`, `test_rule11_..._dedup_target_counts` 100≠94, plus
+  `test_handles_leagues_fetch_error` pytest-timeout — the latter matching this doc's own tracked
+  `pytest_timeout_60s_flaky_under_contention_2026_07_29.md` pattern, not investigated further). The first two were
+  ALREADY fixed on `live-defi-rollout`
+  (`2de31f0d fix(defi): wire AAVE-PLASMA into IS static venue list + dedup target count`, landed after the prior
+  promotion PR#1052/`3e107947`) — classified as (A) PROMOTION STUCK, not a code defect on main. Root cause of the stuck
+  promotion: the fleet gate's Tier-A `ci_status` read `FAILING` for `instruments- service` because the last COMPLETED
+  LDR-dispatch check (`30678244194`) tested the older pre-fix commit `44486f8a`; no completed check yet existed for the
+  actual fix commit (`12825e81`). While a fresh LDR dispatch for `12825e81` was in flight, the fleet promote mechanism
+  self-resolved with no manual action: PR #1053 (`promote/instruments-service/12825e812a92`) opened AND merged
+  2026-08-01T04:50:02-23Z once Tier-A cleared; `main` HEAD is now `2b525abd`, confirmed content-identical to
+  `live-defi-rollout` (`git diff origin/main origin/live-defi- rollout` empty) — the fix is live on `main`. Residual:
+  `main`'s fresh `quality-gates-v2` for `2b525abd` (`30684700726`, queued since 04:50:26Z) sat queued 3h+ as of this
+  entry behind the same single runner (`glue-ip-172-31-5-118-1`, confirmed `online`/`busy`) this doc already tracks —
+  corroboration, not a new root cause. No code/workflow change made or needed; not re-filing `/blocked` (same standing
+  condition). Pinged `AUTHORING_SLOT=ci-reconcile` with the outcome. No repo state changed; `instruments-service` and
+  `unified-trading-pm` slot-6 worktrees left clean on `live-defi-rollout` (only this doc touched).
