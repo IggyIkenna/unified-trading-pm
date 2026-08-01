@@ -204,16 +204,55 @@ arbitrary-length list. Apply via `tofu plan`/`tofu apply` on the `deployment-ser
 with a fresh `gcloud projects get-iam-policy` read-back + a real MDPS backfill VM write, per this plan's own P1.2/P2.1
 precedent for verifying grants live rather than trusting `tofu apply`'s exit code alone.
 
+## CORRECTION (2026-08-01, slot 15) — `instruments-store-` is NOT flat/correct either; todo 3 answered
+
+This doc's "What I found" section claims `instruments-store-` and `features-calendar-` "are genuinely flat/non-AG-scoped
+buckets, so those two ARE correctly matched." **That is wrong for `instruments-store-`** — live-verified while executing
+`sports_consolidated_native_ao_extract-029` (Track K IS baseline checkpoint): real buckets ARE asset-group-scoped
+(`gsutil ls -p central-element-323112` shows `instruments-store-cefi-prd-...`, `instruments-store-sports-test-...`,
+`-defi-`, `-pred-`, `-tradfi-` for both tiers — the exact same `{family}-{ag}-{tier}-{project}` shape as
+`market-data-tick-`), and a real VM write against `instruments-store-sports-test-central-element-323112` under
+`uts-test-sa` (post-DP-VM-002 fix, so the CORRECT tier SA was already in use) still 403s:
+
+```
+uts-test-sa@central-element-323112.iam.gserviceaccount.com does not have storage.objects.create access ...
+Permission 'storage.objects.create' denied on resource '.../buckets/instruments-store-sports-test-central-element-323112
+/objects/instrument_availability/by_date/day=2025-12-20/league=ALBANIA_SUPERLIGA/venue=API_FOOTBALL/instruments.parquet'
+```
+
+(evidence:
+`gs://deployment-scripts-central-element-323112/vm-logs/instr-backfill-sports-pchk-0801110449-f-api-football/run.log`,
+run at 11:07-11:08Z, `pipeline_e2e_check.py`'s "Fetched 724 fixtures" confirms this is a genuine adapter-level success
+blocked purely at the storage-write layer — not a data-fetch problem.) `features-calendar-` I have not independently
+re-verified — flagging as unconfirmed rather than assuming it's fine by the same pattern.
+
+**Answers todo 3 below**: YES, the sibling Track K (IS) checkpoint hits this identical identity-level block, on the
+`instruments-store-` prefix specifically (not `market-data-tick-`, which IS already fixed per the live IAM state I
+re-checked this session — `group-a-test-tier-only`/`group-a-prd-tier-only` now correctly enumerate
+`market-data-tick-{cefi,defi,tradfi,sports,pred}-test-`/`-prd-` individually). `instruments-store-` remains the SAME
+single flat un-enumerated prefix as before. The recommended fix's `group_a_flat_bucket_prefixes` list (treating
+`instruments-store-` as flat) needs revising — it should move to per-AG enumeration exactly like
+`group_a_market_data_tick_ag_prefixes`, leaving only `features-calendar-` (genuinely no per-AG variant exists per
+`gsutil ls`) as flat.
+
 ## Todos
 
-- [ ] [INFRA] P0. Fix `group_a_bucket_prefixes` in `deployment-service/terraform/gcp/bucket_iam_per_tier_sa.tf` to
-      enumerate `market-data-tick-{cefi,defi,tradfi,sports,pred}-` per-AG (mirroring `group_b_bucket_prefixes`), keeping
-      `instruments-store-`/`features-calendar-` as flat entries. Apply via `tofu apply`, live-verify with
-      `gcloud projects get-iam-policy` + a real MDPS backfill VM write against both a `-test-` and (read-only
-      dry-run/plan, not a real write) a `-prd-` bucket. (repo: deployment-service)
+- [x] ✅ [INFRA] P0. **PARTIALLY DONE — `market-data-tick-` half only.** Fixed `group_a_bucket_prefixes` in
+      `deployment-service/terraform/gcp/bucket_iam_per_tier_sa.tf` to enumerate
+      `market-data-tick-{cefi,defi,tradfi,     sports,pred}-` per-AG (mirroring `group_b_bucket_prefixes`) —
+      live-verified via `gcloud projects get-iam-policy` 2026-08-01 (slot 15): both `group-a-{prd,test}-tier-only`
+      conditions now correctly enumerate all 5 asset groups for `market-data-tick-`. **`instruments-store-` was left as
+      a flat entry and is STILL BROKEN** — see the correction above. (repo: deployment-service)
+- [ ] [INFRA] P0. Extend the same per-AG fix to `instruments-store-`:
+      `group_a_instruments_store_ag_prefixes =     ["instruments-store-cefi-", "instruments-store-defi-", "instruments-store-tradfi-", "instruments-store-sports-",     "instruments-store-pred-"]`
+      (mirror the market-data-tick pattern exactly; confirm the 5-AG set against
+      `gsutil ls -p central-element-323112 | grep instruments-store`, already confirmed present above), added to
+      `group_a_bucket_prefixes` alongside the market-data-tick per-AG list, leaving only `features-calendar-` flat.
+      Apply via `tofu apply`, live-verify with `gcloud projects get-iam-policy` + a real IS `--test-run` write (rerun
+      `sports_consolidated_native_ao_extract-029`'s baseline checkpoint once landed). (repo: deployment-service)
 - [ ] [DATA] P1. Once the IAM fix lands, re-run Track K (MDPS)'s 3 SPORTS checkpoints
       (`sports_consolidated_native_ao_extract-031`) for a genuine force/skip PASS/FAIL verdict — my baseline checkpoint
       only proved the infra was broken, not the candle-derivation logic itself. (repo: market-data-processing-service)
-- [ ] [DATA] P2. Check whether the sibling Track K (IS/MTDS/features) checkpoint todos in the same plan hit this same
-      identity-level block (they may write different bucket families not affected by this specific `market-data-tick-`
-      bug) — cross-reference their checkpoint reports once filed. (repo: unified-trading-pm, read-only cross-check)
+- [x] ✅ [DATA] P2. **DONE 2026-08-01 (slot 15)** — see the CORRECTION section above. Track K (IS) hits the identical
+      identity-level block, on `instruments-store-` specifically. MTDS/features not independently re-checked this pass
+      (features already confirmed fixed per the sibling `--env staging` doc; MTDS unconfirmed).
