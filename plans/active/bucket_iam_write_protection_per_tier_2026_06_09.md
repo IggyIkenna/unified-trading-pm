@@ -314,11 +314,11 @@ Two independent gates because Group A and Group B are at different stages:
       compute SA) — do not leave this tag stale per CLAUDE.md's retag-on-resolve rule.
 
       > **🟥 Note (2026-07-31, slot-14)**: even once this todo removes `unified-trading-sa`'s `storage.objectAdmin`,
-                                                                      > that SA still live-holds `roles/resourcemanager.projectIamAdmin` + `roles/iam.serviceAccountAdmin` (undeclared
-                                                                      > in any terraform in this repo) — both self-escalation-capable, i.e. it could re-grant itself storage access
-                                                                      > (or any other role) without going through terraform at all. See
-                                                                      > `issues/unified_trading_sa_live_iam_drift_vs_terraform_2026_07_31.md` — a full de-privilege of this SA is not
-                                                                      > actually complete until that doc's P1/P2 also land.
+                                                                          > that SA still live-holds `roles/resourcemanager.projectIamAdmin` + `roles/iam.serviceAccountAdmin` (undeclared
+                                                                          > in any terraform in this repo) — both self-escalation-capable, i.e. it could re-grant itself storage access
+                                                                          > (or any other role) without going through terraform at all. See
+                                                                          > `issues/unified_trading_sa_live_iam_drift_vs_terraform_2026_07_31.md` — a full de-privilege of this SA is not
+                                                                          > actually complete until that doc's P1/P2 also land.
 
 > **🟥 P2.2 SCOPE GAP found 2026-07-30 (slot-12) — "wire each runtime to its tier SA" is not mechanically executable
 > today.** Investigation (live GCP IAM queries + static analysis, no state mutated) found 3 independently-blocking
@@ -531,3 +531,18 @@ Two independent gates because Group A and Group B are at different stages:
   bucket names). Retagged P2.2d2c2 `[OPERATOR]` (mirrors this plan's own P2.1b precedent — same-plan todos can't express
   a structured prereq, so the backlog regenerator will keep re-offering this to workers otherwise). No code changed;
   releasing via `/skip-current-task`.
+- **slot-7 2026-08-02T18:55Z**: dispatched task `bucket_iam_write_protection_per_tier-018` (P2.2e, the
+  `uts-shared-deployment-api` live-traffic cutover) — the same task slot-6 declined earlier today. Between slot-6's
+  decline and this dispatch, slot-5 actually PERFORMED the gate test the companion tracker's own P3 recommends (tag
+  - curl-verify a fresh `uts-prd-sa`+`16Gi/4cpu` cold start) at **2026-08-02T18:12Z** — only 43 minutes before this
+    dispatch — and it **failed on the first attempt** (`update-traffic --set-tags` on `00417-7fh`, identical
+    `Container called exit(0)`/STARTUP-TCP-probe-failed signature), despite `revisions list` + a log sweep showing an
+    apparent 38.5h clean streak beforehand — full detail in
+    `deployment_api_cloud_run_coldstart_flaky_exit0_blocks_prd_sa_cutover_2026_07_31.md`'s own Progress Log. That is the
+    most recent, most rigorous (an actual live cold-start attempt, not just a log-sweep) evidence available, and it
+    directly re-confirms the durable-close bar (N-consecutive fresh cold-starts over a multi-hour window, zero `exit(0)`
+    failures) is still unmet — main-orchestrator's standing hold-until-durable-close directive
+    (`deployment_api_sigabrt_crash_loop_2026_07_24.md`, `2026-08-01T00:06Z`) still applies verbatim. Re-attempting the
+    same cold-start test myself 43 minutes later would not add information and risks compounding the investigation-churn
+    hypothesis multiple sessions have flagged as a possible contributor. Not proceeding; no code shipped; releasing via
+    `/skip-current-task`.
