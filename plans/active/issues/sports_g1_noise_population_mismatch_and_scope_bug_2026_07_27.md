@@ -157,6 +157,15 @@ materially larger, separate operation, not something to do inside this 1-hour-sc
       citation to this doc. The plan's own text ("§U... already-approved... the scale differs by ~10x, so this must not
       be assumed") anticipated exactly this outcome. Ordering: do this LAST — it records the other two's results. (repo:
       `unified-trading-pm`)
+  > **⏸ PARKED (2026-08-02, main-directive agt-cb1851).** This item-3 records items 1+2's results, so it must run LAST;
+  > the ordering was prose-only / machine-invisible, so the dispatcher kept re-offering it. Backlog task
+  > `sports_g1_noise_population_mismatch_and_scope_bug-003` is durably parked (`priority: 999` +
+  > `priority_override: true`
+  >
+  > - `prereqs.prerequisites: [sports-g1-rebaseline-decided]`, condition seeded `false`) per RULES.md § 4. **Un-park** —
+  >   flip `POST /api/prerequisites/sports-g1-rebaseline-decided {value: true}` + lower priority + clear
+  >   `priority_override` — only once BOTH item-1 `[OPERATOR]` and item-2 `[DIAG]` above have landed. `sequential: true`
+  >   was rejected (it would wrongly also block the independent, dispatchable-now item-2).
 
 ## Census script (read-only, no writes)
 
@@ -164,3 +173,19 @@ Ran from `instruments-service/` venv, `GCP_PROJECT_ID=central-element-323112`, s
 `gs://instruments-store-sports-prd-central-element-323112/_index/availability_index.parquet` via `gcsfs`, canonical sets
 loaded via `unified_api_contracts.sports.get_expected_leagues_for_source("api_football")`. No `--apply` of any delete
 script was run; no snapshots, no writes, no GCS deletes.
+
+## Progress Log
+
+- 2026-08-02 (slot 11, at main agt-cb1851's direction): **item-3 (`-003`) parked, not flipped.** Main's BLOCKED-Q answer
+  (decision A) ruled item-3 must run LAST because it records items 1+2's results — flipping it now would falsely assert
+  those results are recorded when no final re-baseline exists (false-progress). The item-1/item-2 ordering was
+  prose-only, so the dispatcher kept re-offering item-3 as guaranteed-waste work. Enacted the durable park per RULES.md
+  § 4 directly on the live backlog (the orchestrator server reads `agent-orchestrator/data/config/backlog.yaml`;
+  verified its cwd): set `priority: 999` + `priority_override: true` +
+  `prereqs.prerequisites: [sports-g1-rebaseline-decided]`, created the gate condition `false` via
+  `POST /api/prerequisites/…`, and confirmed the park survived a full `POST /api/backlog/regen` tick (priority still
+  999, override still true, prereq still attached, task still `queued`/undispatched). Note for the record: a plan-todo
+  edit alone does NOT park — `regen_backlog_from_plan.py` derives per-todo priority only from the `P<n>` tag and
+  preserves parking state on the backlog.yaml entry, it does not read park directives from plan text; the git-tracked
+  annotation above is the durable RECORD, the backlog.yaml tune is the MECHANISM. Un-park when BOTH item-1 and item-2
+  land.
