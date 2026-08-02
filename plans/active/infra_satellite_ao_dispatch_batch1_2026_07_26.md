@@ -594,17 +594,17 @@ orphaned?" resolves to "everything," because nothing in the covering set does an
       job, scheduler, terraform, and entrypoint files named above are all deleted; see the DONE entry at the top of this
       todo for the actual execution record.)
 
-- [ ] [CI] P2. **Fold the `run_hygiene_sweep.sh --precommit`/`--staged` sweep into PM `quality-gates-v2` as a
-      content-sentinel-gated step (server backstop on PM PRs), THEN retire the standalone `plan-health-gate` GHA job.**
-      RULE-11 prove-then-retire: prove the prek + v2-step combo catches the same hard failures on PM before deleting the
-      job (don't open a gap). This is DISTINCT from the RULE-11 item above (which retires the daily
-      Haiku/schedule-triggered contradiction-detection job + the Cloud Run hygiene-sweep job) — this one retires the
-      separate `pull_request`-triggered `plan-health-gate` job in `.github/workflows/plan-health-agent.yml` (the item
-      above explicitly KEEPS that job; this todo is what eventually lets it go, once its server-side successor step is
-      proven). **Correction 2026-07-28**: a prior migration pass's banner in the source doc claimed this todo was "filed
-      as a new todo in `infra_satellite_ao_dispatch_batch1_2026_07_26.md` next to RULE-11" — it was NOT actually present
-      (verified via grep, zero hits for the fold/content-sentinel language); this is the real fix, landing the todo the
-      banner already claimed existed. Repo: unified-trading-pm. Source:
+- [x] ✅ [CI] P2. **DONE 2026-08-02 (slot-5, infra) — unified-trading-pm@e77809213.** Added a PM-only, content-sentinel-
+      gated "Plan hygiene hard gate" step (`run_hygiene_sweep.sh --ci --no-regen`) to the `checks` leg of
+      `python-quality-gates-v2.yml`, gated on repo==PM + the leg's existing skip_slice/QG_CONTENT_HIT fast-paths.
+      **Prove-then-retire evidence**: full sweep locally = 0 hard failures; a scratch no-frontmatter file reproduced the
+      exact hard-failure exit 1 the old job caught (discarded, never committed). Then retired the standalone job:
+      deleted `plan-health-agent.yml` + its hosted-baseline twin, pruned `MANIFEST.tsv` + the catalog script's entry,
+      regenerated `CICD-WORKFLOW-CATALOG.md`. Real upgrade not lateral: the old job was advisory-only (not a required
+      check); the fold makes hygiene an ACTUAL blocking PR gate. Auto-fix-and-escalate isn't carried over (this step
+      only detects) but isn't a gap — `ldr-docs-gate.yml` (hourly) + the daily `plan-reconciler` already independently
+      cover that. Updated both plan-hygiene codex SSOTs + the one dangling `AGENTS.md` mention. `actionlint` clean.
+      Repo: unified-trading-pm. Source:
       `/plans/archive/issues/plan_hygiene_precommit_and_agentic_resolution_2026_06_10.md`.
 
 - [x] ✅ [BACKEND] P2. **DONE 2026-08-01 (slot-4) — Serve the generated L0 doc-graph from the AO dashboard for central
