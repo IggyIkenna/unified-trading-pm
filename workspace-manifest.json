@@ -277,7 +277,7 @@
         "qg_red_reason": "qg",
         "large_file_count": 0,
         "warn_file_count": 4,
-        "coverage_pct": null
+        "coverage_pct": 74.71
       }
     },
     "deployment-api": {
@@ -887,10 +887,10 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "coverage_pct": null,
-        "qg_red_reason": "basedpyright",
         "large_file_count": 0,
-        "warn_file_count": 47
+        "coverage_pct": null,
+        "warn_file_count": 47,
+        "qg_red_reason": "qg"
       },
       "cascade_invalidated_by": "unified-trading-library=0.66.0"
     },
@@ -918,7 +918,7 @@
           "required": true
         }
       ],
-      "ci_status": "FAILING",
+      "ci_status": "FEATURE_GREEN",
       "coverage_pct": 0,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "integration",
@@ -954,9 +954,9 @@
       "consolidation_plan": "plans/active/ml_repo_consolidation_2026_05_19.md",
       "created": "2026-05-19",
       "codebase_health": {
-        "warn_file_count": 6,
-        "qg_red_reason": "pytest",
+        "qg_red_reason": null,
         "large_file_count": 0,
+        "warn_file_count": 6,
         "coverage_pct": 82.62
       },
       "ldr_ci_status": "RED",
@@ -1222,10 +1222,10 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
+        "large_file_count": 27,
+        "coverage_pct": 96.47,
         "warn_file_count": 34,
-        "qg_red_reason": "qg",
-        "coverage_pct": null,
-        "large_file_count": 27
+        "qg_red_reason": "pytest"
       }
     },
     "unified-trading-library": {
@@ -1310,10 +1310,10 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "warn_file_count": 0,
         "qg_red_reason": "qg",
-        "large_file_count": 0,
-        "coverage_pct": null
+        "coverage_pct": 73.25,
+        "warn_file_count": 0,
+        "large_file_count": 0
       }
     },
     "unified-trading-api": {
