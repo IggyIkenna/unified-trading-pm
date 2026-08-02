@@ -136,75 +136,82 @@ which of the 3 hypotheses above (or another) is the actual cause — then fix + 
       direct re-run of the live parse code.
 
       **2026-07-30 (slot-3, data_engineering craft) — STILL VIOLATED live, ~2h+ after the fix commit.** Dispatched
-                                  `mtds_available_at_cross_asset_backfill-006` ("Resume the prediction consolidator cron") directly via `/boot`.
-                                  Confirmed via `git merge-base --is-ancestor 77769ab HEAD` in this session's `agent-orchestrator` worktree —
-                                  `77769ab` IS an ancestor of current `live-defi-rollout` HEAD (`41f69878e`), so the fix is present in the repo. But
-                                  a fresh `GET /api/backlog` query against the LIVE orchestrator server (the same one that dispatched `-006` to me)
-                                  shows `mtds_available_at_cross_asset_backfill-001` (Apply `rebuild_prediction_manifest.py`, the true predecessor)
-                                  still `status: queued`, `dispatched_to: null` — never assigned to anyone — while `-006` (its downstream "resume
-                                  cron" sibling) was `dispatched` to this slot. The exact violation this VERIFY todo asks to check for is still
-                                  reproducing in production. Did not dig further into whether this is (a) the fix genuinely present in code but the
-                                  running orchestrator SERVER PROCESS not yet restarted/redeployed to pick it up (repo-merge ≠ live-deploy for a
-                                  long-running server), or (b) a residual gap in the fix itself — that root-cause split needs `backend_engineer`
-                                  craft + the server's own deploy/restart history, out of scope for a `data_engineering` task. Declined `-006`
-                                  itself (nothing to resume — the backfill still hasn't been applied) per the established precedent in the
-                                  source plan's Progress Log (dispatch-order findings #2–#5). Leaving this checkbox unflipped — the fix is not yet
-                                  confirmed live-effective.
+                                      `mtds_available_at_cross_asset_backfill-006` ("Resume the prediction consolidator cron") directly via `/boot`.
+                                      Confirmed via `git merge-base --is-ancestor 77769ab HEAD` in this session's `agent-orchestrator` worktree —
+                                      `77769ab` IS an ancestor of current `live-defi-rollout` HEAD (`41f69878e`), so the fix is present in the repo. But
+                                      a fresh `GET /api/backlog` query against the LIVE orchestrator server (the same one that dispatched `-006` to me)
+                                      shows `mtds_available_at_cross_asset_backfill-001` (Apply `rebuild_prediction_manifest.py`, the true predecessor)
+                                      still `status: queued`, `dispatched_to: null` — never assigned to anyone — while `-006` (its downstream "resume
+                                      cron" sibling) was `dispatched` to this slot. The exact violation this VERIFY todo asks to check for is still
+                                      reproducing in production. Did not dig further into whether this is (a) the fix genuinely present in code but the
+                                      running orchestrator SERVER PROCESS not yet restarted/redeployed to pick it up (repo-merge ≠ live-deploy for a
+                                      long-running server), or (b) a residual gap in the fix itself — that root-cause split needs `backend_engineer`
+                                      craft + the server's own deploy/restart history, out of scope for a `data_engineering` task. Declined `-006`
+                                      itself (nothing to resume — the backfill still hasn't been applied) per the established precedent in the
+                                      source plan's Progress Log (dispatch-order findings #2–#5). Leaving this checkbox unflipped — the fix is not yet
+                                      confirmed live-effective.
 
-          **2026-08-02 (slot 9, backend_engineer) — ROOT-CAUSED for real this time; NOT the `77769ab` mechanism, a
-          DIFFERENT bug in the same function.** Confirmed live via `GET /api/backlog/mtds_available_at_cross_asset_backfill-006/blockers`
-          → `"ready (no blockers)"` (empty `completed_tasks`) while `-001` was still `queued` — same violation, but this
-          time I read the actual on-disk `data/config/backlog.yaml` on the orchestrator VM (not just the API) and found
-          `-001`'s `plan_order=2` while `-006`'s `plan_order=1` — INVERTED from document order (line 181 vs 186), which
-          flips `_wire_sequential_prereqs`' predecessor direction (it correctly chains lower-plan_order → higher, so `-001`
-          wrongly became `-006`'s successor). Confirmed the running server process (PID 3757132, started 2026-08-02T12:15Z)
-          already has `77769ab` (an ancestor of its checked-out HEAD) — this rules out deploy-lag as the explanation raised
-          by every prior entry below. Reproduced the actual bug by running the LIVE `_parse_open_todos()` +
-          `plan_tasks_by_brief` matching code (agent-orchestrator `server/regen_backlog_from_plan.py`) directly against the
-          real plan file and the real `backlog.yaml`: this plan has TWO todos — "Apply `rebuild_prediction_manifest.py`"
-          (line 181) and "Apply `rebuild_tradfi_manifest.py`" (line 305) — whose **first physical line** (all `brief`/
-          `description` matching is first-physical-line-only, per this same file's own docstrings) is BYTE-IDENTICAL:
-          `"[DATA] P1. **No longer gated on an operator decision (retagged 2026-07-28, same ruling)** — Apply"` — the
-          distinguishing script filename falls on the wrapped CONTINUATION line, which `description` deliberately excludes.
-          `plan_tasks_by_brief = {t.brief: t for t in backlog.tasks ...}` is a dict keyed by that identical string, so BOTH
-          todos resolve to the SAME existing task (`-001`) on every regen tick; each occurrence calls
-          `_reconcile_task_fields(-001, plan_order=<that occurrence's index>, ...)` and the LATER occurrence (the tradfi
-          one, index 2) always wins, permanently overwriting `-001.plan_order` to 2 — corrupting the chain and (as a
-          second-order effect) silently swallowing the tradfi "Apply" todo entirely: it never gets its OWN backlog task, so
-          that genuinely-still-open tradfi-apply work has been invisible to the dispatcher this whole time. Verified this
-          diagnosis is exact by re-running the same parse function in a `.venv` python shell against the live files —
-          confirmed the collision, confirmed my fix below removes it.
-          **Applied a same-turn LOW-RISK fix**: reworded both colliding todos in the plan text (moved the script filename
-          onto the checkbox's own physical line — no wording/meaning change, purely a hard-wrap fix) so their first
-          physical lines are no longer identical; verified via a direct re-run of `_parse_open_todos()` against the edited
-          file that all 6 open todos in this plan now parse to 6 DISTINCT descriptions (unified-trading-pm commit follows).
-          This is a plan-doc-only change — it does not touch agent-orchestrator code, so it's safe to land immediately and
-          takes effect on the plan's next regen tick (≤600s, `ORCHESTRATOR_PLAN_REGEN_INTERVAL_SECONDS` default).
-          **Did not touch `-006`** (already `dispatched` to slot 13 since 2026-08-02T12:45Z, an in-flight worker) — per the
-          established precedent in this doc (4 prior slots all independently declined to execute a wrongly-ordered
-          "Resume cron" dispatch), expect that worker to decline it the same way; not intervening in another slot's live
-          task. Added a new `[BACKEND]` todo below for the GENERAL code-level fix (this collision class can recur on any
-          plan with two similarly-templated todos that hard-wrap identically) — leaving THIS checkbox flipped since the
-          concrete violation this todo was written to catch (`-001`/`-006`) now has both an identified root cause AND a
-          shipped, verified fix; the general-fix follow-up is tracked separately so it doesn't block closing this specific
-          re-check. (repo: unified-trading-pm)
+              **2026-08-02 (slot 9, backend_engineer) — ROOT-CAUSED for real this time; NOT the `77769ab` mechanism, a
+              DIFFERENT bug in the same function.** Confirmed live via `GET /api/backlog/mtds_available_at_cross_asset_backfill-006/blockers`
+              → `"ready (no blockers)"` (empty `completed_tasks`) while `-001` was still `queued` — same violation, but this
+              time I read the actual on-disk `data/config/backlog.yaml` on the orchestrator VM (not just the API) and found
+              `-001`'s `plan_order=2` while `-006`'s `plan_order=1` — INVERTED from document order (line 181 vs 186), which
+              flips `_wire_sequential_prereqs`' predecessor direction (it correctly chains lower-plan_order → higher, so `-001`
+              wrongly became `-006`'s successor). Confirmed the running server process (PID 3757132, started 2026-08-02T12:15Z)
+              already has `77769ab` (an ancestor of its checked-out HEAD) — this rules out deploy-lag as the explanation raised
+              by every prior entry below. Reproduced the actual bug by running the LIVE `_parse_open_todos()` +
+              `plan_tasks_by_brief` matching code (agent-orchestrator `server/regen_backlog_from_plan.py`) directly against the
+              real plan file and the real `backlog.yaml`: this plan has TWO todos — "Apply `rebuild_prediction_manifest.py`"
+              (line 181) and "Apply `rebuild_tradfi_manifest.py`" (line 305) — whose **first physical line** (all `brief`/
+              `description` matching is first-physical-line-only, per this same file's own docstrings) is BYTE-IDENTICAL:
+              `"[DATA] P1. **No longer gated on an operator decision (retagged 2026-07-28, same ruling)** — Apply"` — the
+              distinguishing script filename falls on the wrapped CONTINUATION line, which `description` deliberately excludes.
+              `plan_tasks_by_brief = {t.brief: t for t in backlog.tasks ...}` is a dict keyed by that identical string, so BOTH
+              todos resolve to the SAME existing task (`-001`) on every regen tick; each occurrence calls
+              `_reconcile_task_fields(-001, plan_order=<that occurrence's index>, ...)` and the LATER occurrence (the tradfi
+              one, index 2) always wins, permanently overwriting `-001.plan_order` to 2 — corrupting the chain and (as a
+              second-order effect) silently swallowing the tradfi "Apply" todo entirely: it never gets its OWN backlog task, so
+              that genuinely-still-open tradfi-apply work has been invisible to the dispatcher this whole time. Verified this
+              diagnosis is exact by re-running the same parse function in a `.venv` python shell against the live files —
+              confirmed the collision, confirmed my fix below removes it.
+              **Applied a same-turn LOW-RISK fix**: reworded both colliding todos in the plan text (moved the script filename
+              onto the checkbox's own physical line — no wording/meaning change, purely a hard-wrap fix) so their first
+              physical lines are no longer identical; verified via a direct re-run of `_parse_open_todos()` against the edited
+              file that all 6 open todos in this plan now parse to 6 DISTINCT descriptions (unified-trading-pm commit follows).
+              This is a plan-doc-only change — it does not touch agent-orchestrator code, so it's safe to land immediately and
+              takes effect on the plan's next regen tick (≤600s, `ORCHESTRATOR_PLAN_REGEN_INTERVAL_SECONDS` default).
+              **Did not touch `-006`** (already `dispatched` to slot 13 since 2026-08-02T12:45Z, an in-flight worker) — per the
+              established precedent in this doc (4 prior slots all independently declined to execute a wrongly-ordered
+              "Resume cron" dispatch), expect that worker to decline it the same way; not intervening in another slot's live
+              task. Added a new `[BACKEND]` todo below for the GENERAL code-level fix (this collision class can recur on any
+              plan with two similarly-templated todos that hard-wrap identically) — leaving THIS checkbox flipped since the
+              concrete violation this todo was written to catch (`-001`/`-006`) now has both an identified root cause AND a
+              shipped, verified fix; the general-fix follow-up is tracked separately so it doesn't block closing this specific
+              re-check. (repo: unified-trading-pm)
 
-- [ ] [BACKEND] P1. **NEW, 2026-08-02 (slot 9)** — `agent-orchestrator/server/regen_backlog_from_plan.py`'s
-      `plan_tasks_by_brief = {t.brief: t for t in backlog.tasks ...}` (in `regen()`) silently conflates two DIFFERENT
+- [x] ✅ [BACKEND] P1. **DONE 2026-08-02 (slot 3) — `agent-orchestrator@3474b95`.**
+      `agent-orchestrator/server/regen_backlog_from_plan.py`'s
+      `plan_tasks_by_brief = {t.brief: t for t in backlog.tasks ...}` (in `regen()`) silently conflated two DIFFERENT
       todos in the same plan whose checkbox's first-physical-line text happens to be byte-identical (common when a plan
       clones a todo template across asset-group lanes and the distinguishing detail falls on a wrapped continuation
-      line) — the dict collapses both onto ONE existing task, corrupting that task's `plan_order` (last occurrence wins)
-      and silently preventing the SECOND todo from ever getting its own backlog task at all. Root-cause + repro in the
-      Progress Log entry directly above this todo (2026-08-02, slot 9) — do not re-derive, read that entry first. Fix:
-      when building `plan_tasks_by_brief`, detect same-plan brief collisions among the CURRENT tick's `todos` list
-      itself (not just against existing tasks) and either (a) key matching by
-      `(description, occurrence     index within duplicates)` so each occurrence pairs with a stable, distinct existing
-      task, or (b) log + skip auto-creating a SECOND task for a colliding brief but leave the correctly-matched FIRST
-      one's `plan_order` alone (no last-write-wins overwrite) and surface a dashboard-visible warning so a human reworks
-      the colliding plan text (matches this doc's own workaround pattern). Add a regression test
-      (`tests/test_regen_reconcile.py`) that authors two same-plan todos with identical first-physical-line text but
-      different continuation text, asserts today's bug (`plan_order` corruption / one todo swallowed) reproduces
-      pre-fix, and passes post-fix. Full repo `quality-gates.sh` green before shipping. (repo: agent-orchestrator)
+      line) — the dict collapsed both onto ONE existing task, corrupting that task's `plan_order` (last occurrence wins)
+      and silently preventing the SECOND todo from ever getting its own backlog task at all. Implemented option (a):
+      `_group_plan_tasks_by_brief` now groups existing same-plan tasks by brief into a LIST (sorted by id — original
+      creation order), and a per-tick `brief_occurrence_index` matches the Nth doc occurrence of a brief to the Nth
+      candidate positionally instead of a plain dict `.get()`. Also fixed a second gap found while implementing: the
+      cross-plan idempotency skip (`description in existing_briefs`) would ALSO wrongly swallow a same-plan overflow
+      occurrence (more doc occurrences than existing tasks, e.g. the very first tick a colliding plan is authored) —
+      scoped it to exclude briefs already present in `plan_tasks_by_brief`, and newly-created tasks are now appended
+      into that dict immediately so later same-tick occurrences see them. `_warn_on_brief_collisions` logs once per plan
+      when a collision is detected (visibility for a human to reword the plan text — option (b)'s dashboard-warning
+      intent, kept alongside option (a)'s durable fix rather than instead of it). Two new regression tests in
+      `tests/test_regen_reconcile.py` — `test_colliding_brief_first_tick_creates_two_distinct_tasks` (the swallowed-
+      second-occurrence gap, isolated) and `test_colliding_brief_reconcile_does_not_overwrite_predecessor_plan_order`
+      (the multi-task overwrite-on-reconcile mechanism, isolated via directly-seeded pre-existing colliding tasks) —
+      both independently verified to FAIL against the pre-fix code and PASS against the fix. Full repo
+      `quality-gates.sh` green (2233 passed, 2 skipped; extracted the new logic into 2 helper functions,
+      `_group_plan_tasks_by_brief` + `_warn_on_brief_collisions`, to keep `regen()`'s own cyclomatic complexity under
+      the C901 ruff gate). (repo: agent-orchestrator)
 
 ## Deferred — HELD by the `/na-eligibility-audit ao` conflict-check (2026-07-30)
 
@@ -340,3 +347,11 @@ stall blocking a SECOND in-flight plan (`prediction_satellite_ao_dispatch_batch4
   paused as a result. Reclassifying unblocks dispatch of the re-open the doc's own evidence has been requesting since
   2026-07-31 — this is not a "confirm the fix worked" formality anymore, it's an active, multi-plan-blocking P1 that
   should get a `backend_engineer` worker promptly.
+- **2026-08-02 (slot 3, backend_engineer)**: shipped the general `[BACKEND] P1` fix above (`agent-orchestrator@3474b95`)
+  — `_group_plan_tasks_by_brief` (occurrence-indexed, list-valued dict) + `_warn_on_brief_collisions`, plus the
+  cross-plan-idempotency-skip scoping gap found while implementing (a same-plan overflow occurrence was ALSO wrongly
+  swallowed by the old `description in existing_briefs` check, not just the reconcile-overwrite mechanism the todo
+  named). Both new regression tests independently confirmed to fail pre-fix / pass post-fix via a `git stash` bisect.
+  Full `quality-gates.sh` green. Did not touch the mtds `-001`/`-006` pair itself or the `[VERIFY] P2` re-check todo
+  above (out of scope for this general code-level fix) — whoever next re-runs that VERIFY todo should note this fix
+  reaches the live orchestrator server only after its normal deploy/promote pipeline completes.
