@@ -132,11 +132,11 @@ any such instruction is STALE); stay current `git pull --ff-only origin live-def
 ancestor-or-equal of `origin/live-defi-rollout` (`slot_drift_check.py`). **Never** edit
 unfamiliar/untracked/recently-pushed files, `git checkout origin/<b> -- .` / `… HEAD -- <file>` a dirty file you don't
 own, verify against `FETCH_HEAD` (use `git merge-base --is-ancestor`), or force-push a shared branch. LDR push rejected
-→ rebase + keep the MERGED combination; autostash conflict → `rebase --abort` + stash by name (never `git stash drop`
-foreign WIP). Inherited-dirty-WIP is **LIVENESS-gated** (dead claim → inherit + commit; live claim / mtime <120s →
-PROTECT). An interactive session IS slot N (long uncommitted WIP = stale-worker anti-pattern; `slot-cron-ff-pull.sh` +
-`slot-git-status-report.sh` every 5 min). SSOT: `/codex/05-infrastructure/per-tab-worktrees.md` (`Troubleshooting`:
-stale sibling `.venv`s → `uv sync`).
+→ ahead=0 ff-only-only; ahead>0 `--rebase --autostash`+`restore --staged .` pre-add; conflict `rebase --abort` + stash
+by name (never `git stash drop` foreign WIP). Inherited-dirty-WIP is **LIVENESS-gated** (dead claim → inherit + commit;
+live claim / mtime <120s → PROTECT). An interactive session IS slot N (long uncommitted WIP = stale-worker anti-pattern;
+`slot-cron-ff-pull.sh` + `slot-git-status-report.sh` every 5 min). SSOT: `/codex/05-infrastructure/per-tab-worktrees.md`
+(`Troubleshooting`: stale sibling `.venv`s → `uv sync`).
 
 ## Agent behavior
 

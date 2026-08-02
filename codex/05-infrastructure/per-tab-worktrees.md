@@ -546,8 +546,22 @@ the slot clone's index. Master agent mitigations:
 A slot clone commits ON `live-defi-rollout` and pushes straight to it. If the push is **rejected as behind** (a peer
 landed first), aligning is a **content merge, not a pointer overwrite**:
 
-1. `git pull --rebase --autostash` (quickmerge STAGE 0.4 does this for you) — replays YOUR commits onto current LDR,
-   dropping patch-id duplicates.
+1. **Case-split by whether you already have a local commit ahead of origin (`ahead`-count) — that is the variable that
+   decides fast-forward eligibility, not file-content overlap** (decided fix 2026-08-01,
+   `autostash_pop_restores_foreign_wip_into_the_index_2026_07_17.md` — see the non-conflict hazard subsection below for
+   the incident this closes):
+   - **`ahead=0` (pre-commit — no local commit yet)**: `git pull --ff-only` only. quickmerge STAGE 0.4
+     (`_qm_stage_0_4_not_behind_gate`) does this for you and, on ff-only failure at `ahead=0`, reports
+     `PRECOMMIT_WORKING_TREE_CONFLICT` and **blocks instead of falling back to `--rebase --autostash`** — with no local
+     commit for rebase to replay, an ff-only failure here can only be a working-tree content overlap (a dirty tracked
+     file the incoming diff also touches), and autostashing anyway would stash-and-repop the WHOLE dirty tree — every
+     OTHER foreign file in this shared checkout, not just the overlapping one — for zero reconciliation benefit.
+   - **`ahead>0` (post-commit — you already have a local commit ahead of origin)**: this IS genuine commit-graph
+     divergence — `git pull --rebase --autostash` (quickmerge STAGE 0.4 does this for you) replays YOUR commits onto
+     current LDR, dropping patch-id duplicates. **Immediately after the pop, BEFORE your own `git add <files>`, run
+     `git restore --staged .` unconditionally** — it only unstages (never touches working-tree content, so it can't
+     destroy anything), guaranteeing your index holds only what you explicitly `git add` this round regardless of what
+     the autostash pop restaged.
 2. **Resolve each conflict keeping BOTH sides' genuine work.** Additive plan/doc/code from both agents survives. Where
    two agents independently wrote the **same** rule/fix (a "two-similar" conflict), MERGE into the single best version
    (fold the weaker subset into the stronger superset — don't keep redundant duplicates). Incident 2026-06-03: a slot
@@ -590,6 +604,36 @@ git cat-file -e origin/live-defi-rollout:<path> && echo "exists" || echo "absent
 
 These commands read the locally-cached `origin/live-defi-rollout` ref, which is updated by any `git fetch` and is not
 overwritten by concurrent session fetches (unlike `FETCH_HEAD`, which is a single file updated on every fetch).
+
+### Non-conflict autostash-pop hazard — foreign WIP silently lands in your index (2026-07-17)
+
+Distinct from the CONFLICT case in the next subsection. The stage-by-name rule ("`git add <your files>`, never
+`git add .`/`-A`") assumes naming your own files is sufficient to keep a concurrent agent's uncommitted work out of your
+commit. In a shared per-slot checkout it is NOT, on the happy (non-conflict) path.
+
+`--autostash` = `git stash` + restore. The restore re-applies the stashed changes **and their index state** — foreign
+files that were merely dirty in the working tree (not staged by you) come back **staged**. A subsequent `git commit`
+commits the whole index, so it sweeps up every foreign file regardless of what you passed to `git add`. It is invisible
+pre-commit: `git status` correctly reports the foreign files as "Changes not staged for commit" right up until the pull,
+and the post-pull index is never re-inspected. **Measured 2026-07-17**: `unified-trading-pm@1a59516af` was meant to add
+ONE new issue doc; it landed with 3 files — a foreign agent's 157-insertion/125-deletion in-progress plan edit and a
+brand-new issue doc they had not yet committed, published under this slot's authorship. Not data loss (the content was
+intact on origin), but mis-attribution and premature publication of WIP the owning agent hadn't chosen to ship yet.
+
+**The fix splits on `ahead`-count, not content overlap** (decided 2026-08-01, full derivation in
+`autostash_pop_restores_foreign_wip_into_the_index_2026_07_17.md`) — see step 1 of the Reconciliation list above:
+
+- **Pre-commit (`ahead=0`)**: skip the autostash path entirely — ff-only-or-block (`PRECOMMIT_WORKING_TREE_CONFLICT`).
+  Shipped 2026-08-01, `unified-trading-pm@72bdb200e`.
+- **Post-commit (`ahead>0`)**: keep `--rebase --autostash` (genuine commit-graph divergence — rebase is what keeps
+  `live-defi-rollout` linear instead of littering it with merge commits), but immediately after the pop, BEFORE your own
+  `git add <files>`, run `git restore --staged .` unconditionally.
+
+**Do NOT "fix" a sweep after the fact by reverting.** Once pushed, the foreign content is the other agent's only
+committed copy of that work — a revert or force-push to "clean up" the attribution deletes their uncommitted work,
+turning a cosmetic problem into real data loss (force-pushing a shared branch is independently banned regardless). The
+correct response to a sweep that already happened: leave it, tell the operator, and let the owning agent carry on (their
+tree simply shows those files as already-committed after their next pull).
 
 ### Autostash conflict recovery on rebase
 

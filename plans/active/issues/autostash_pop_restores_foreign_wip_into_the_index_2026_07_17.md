@@ -123,10 +123,17 @@ right up until the pull, and the post-pull index is never re-inspected.
       leaves foreign state (staged or merely working-tree-dirty on this git version) and never touches foreign file
       content. Simpler than the previously-floated `git stash push -- <my paths>` alternative (which needs knowing your
       own dirty paths up front) — dropped that alternative.
-- [ ] [DOCS] P2. Fold both halves into `/codex/05-infrastructure/per-tab-worktrees.md` + CLAUDE.md's Multi-agent safety
-      block, replacing the current conflict-only guidance ("autostash conflict → rebase --abort + stash by name") with:
-      (a) the pre-commit-case FF shortcut, and (b) the post-commit-case `git restore --staged .` step. Both docs are
-      currently silent on this non-conflict happy-path hazard entirely.
+- [x] ✅ [DOCS] P2. Fold both halves into `/codex/05-infrastructure/per-tab-worktrees.md` + CLAUDE.md's Multi-agent
+      safety block, replacing the current conflict-only guidance ("autostash conflict → rebase --abort + stash by name")
+      with: (a) the pre-commit-case FF shortcut, and (b) the post-commit-case `git restore --staged .` step. Both docs
+      are currently silent on this non-conflict happy-path hazard entirely. — **DONE 2026-08-02,
+      `unified-trading-pm@<SHA>`.** `per-tab-worktrees.md`'s Reconciliation step 1 now case-splits by `ahead`-count
+      (mirrors the shipped `_qm_stage_0_4_not_behind_gate` code: ahead=0 ff-only-or-`PRECOMMIT_WORKING_TREE_CONFLICT`,
+      ahead>0 `--rebase --autostash` then `git restore --staged .` pre-add); a new "Non-conflict autostash-pop hazard"
+      subsection (measured incident + both fix halves) is inserted right before the pre-existing conflict-only recovery
+      subsection. CLAUDE.md's Multi-agent safety line updated to the same ahead=0/ahead>0 split, kept terse (landed at
+      40,953 B, 7 B under the 40,960 B hard cap — `check_agent_rules_size_cap.py` verified green); full detail lives in
+      the codex doc per the SSOT pointer already at the end of that paragraph.
 
 **Not adopted** (considered, explicitly declined — recorded so neither is re-proposed without new cause): reordering the
 existing pre-commit inspection alone (too weak solo — that exact rule already existed and the incident happened anyway);
@@ -179,3 +186,8 @@ owning agent carry on (their tree simply shows those files as already-committed 
   file both survive intact — and is a safe no-op when the pop leaves nothing staged. `bash -n` + `shellcheck -x` clean
   (no new findings near the change; only pre-existing unrelated warnings elsewhere in the file). Remaining todo:
   `[DOCS] P2` fold into `/codex/05-infrastructure/per-tab-worktrees.md` + CLAUDE.md — out of scope for this task.
+- **infra worker 2026-08-02** (slot 8, task `autostash_pop_restores_foreign_wip_into_the_index-003`): shipped the
+  `[DOCS] P2` fold — the last remaining todo, closing this issue's decided fix end-to-end (both code halves were already
+  shipped by the prior two workers above). All 3 todos now `[x]`; no `locked_by` — this doc is archival-eligible as a
+  follow-up (left for the next plan-hygiene sweep, per the HARD RULE against bundling a checkbox flip with a `git mv`
+  archival in the same commit).
