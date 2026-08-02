@@ -314,11 +314,11 @@ Two independent gates because Group A and Group B are at different stages:
       compute SA) — do not leave this tag stale per CLAUDE.md's retag-on-resolve rule.
 
       > **🟥 Note (2026-07-31, slot-14)**: even once this todo removes `unified-trading-sa`'s `storage.objectAdmin`,
-                                                              > that SA still live-holds `roles/resourcemanager.projectIamAdmin` + `roles/iam.serviceAccountAdmin` (undeclared
-                                                              > in any terraform in this repo) — both self-escalation-capable, i.e. it could re-grant itself storage access
-                                                              > (or any other role) without going through terraform at all. See
-                                                              > `issues/unified_trading_sa_live_iam_drift_vs_terraform_2026_07_31.md` — a full de-privilege of this SA is not
-                                                              > actually complete until that doc's P1/P2 also land.
+                                                                  > that SA still live-holds `roles/resourcemanager.projectIamAdmin` + `roles/iam.serviceAccountAdmin` (undeclared
+                                                                  > in any terraform in this repo) — both self-escalation-capable, i.e. it could re-grant itself storage access
+                                                                  > (or any other role) without going through terraform at all. See
+                                                                  > `issues/unified_trading_sa_live_iam_drift_vs_terraform_2026_07_31.md` — a full de-privilege of this SA is not
+                                                                  > actually complete until that doc's P1/P2 also land.
 
 > **🟥 P2.2 SCOPE GAP found 2026-07-30 (slot-12) — "wire each runtime to its tier SA" is not mechanically executable
 > today.** Investigation (live GCP IAM queries + static analysis, no state mutated) found 3 independently-blocking
@@ -419,7 +419,7 @@ Two independent gates because Group A and Group B are at different stages:
       bucket names — `features-cross-instrument-{env}-{pid}` / `features-multi-timeframe-{env}-{pid}` — that don't exist
       anywhere in the current `cloud-providers.yaml`, i.e. stale documentation of a pre-Fold-A shape). The **~11
       ambiguous/control-plane launchers are now fully dispositioned**: `launch-bucket-rsync-vm.sh` (explicitly
-      cross-bucket, flat→tiered — same migration-SA-blocked class as the 2 migration launchers, folded into P2.2d2c
+      cross-bucket, flat→tiered — same migration-SA-blocked class as the 2 migration launchers, folded into P2.2d2c2
       below) + 6 confirmed OUT OF SCOPE via the authoritative registry (`deployment_service/vm_prefix_registry.py`
       `VM_PREFIX_TO_BUCKET`, all map to `bucket=None`): `launch-dashboard-vm.sh`, `launch-disaster-drill-cron-vm.sh`,
       `launch-dr-drill-cutover-vm.sh`, `launch-sports-scheduler-vm.sh`, `launch-vm-zombie-watchdog.sh` (control-plane /
@@ -435,23 +435,20 @@ Two independent gates because Group A and Group B are at different stages:
       Confirmed by reading the terraform source (not yet re-confirmed against live GCP — do that before granting). It
       cannot actually write anything, contradicting its stated purpose and blocking every launcher that needs it
       (`launch-legacy-bucket-migration-sharded.sh`, `launch-gcs-migration-bundle-vm.sh`, `launch-bucket-rsync-vm.sh` —
-      see P2.2d2c below). **`[OPERATOR]`**: the exact grant scope is a judgment call, not mechanically determinable —
+      see P2.2d2c2 below). **`[OPERATOR]`**: the exact grant scope is a judgment call, not mechanically determinable —
       options are (a) an unconditioned project-wide `storage.objectAdmin` (simplest, but re-creates a mini god-SA for
       exactly these 3 migration-purpose launchers), (b) a CEL condition scoped to the specific legacy bucket name
       patterns these 3 launchers actually touch (`market-data-tick-{ag}-{project}` flat legacy shape confirmed for
       `launch-gcs-migration-bundle-vm.sh`; the other 2 need their own enumeration), or (c) extend
       `lc_tier_service_account` with a migration mode AND scope the grant narrowly to match. Recommend (b) — mirrors
       this plan's own least-privilege design intent for the tier SAs. Once ruled + granted, live-verify via a real write
-      (not just `get-iam-policy`) before unblocking P2.2d2c.
-- [ ] [CODE] P2.2d2c. **NEW, split from P2.2d2b 2026-08-01 (slot-7).** Wire the 3 launchers blocked on the migration-SA
-      write-grant gap (P2.2f above): `launch-legacy-bucket-migration-sharded.sh`, `launch-gcs-migration-bundle-vm.sh`,
-      `launch-bucket-rsync-vm.sh` — all three read/write a LEGACY (non-env-tiered, flat) bucket name that no tier SA's
-      `startsWith` IAM condition matches. Gated on P2.2f (still open — `[OPERATOR]` grant not yet made); **remaining
-      scope is now JUST these 3** — the other 2 launchers this todo originally also covered are done, see P2.2d2c1
-      below. Gated on P2.2a (met) + P2.2d1 (met) + P2.2d2a (met) + P2.2d2b (met, this split).
-- [x] ✅ [CODE] P2.2d2c1. **NEW, split from P2.2d2c 2026-08-02 (slot-13) — the 2 launchers P2.2d2c flagged as
-      independently investigable (not gated on P2.2f).** `deployment-service@24e0878`.
-      `launch-canonical-migration-vm.sh` — confirmed via `terraform/gcp/bucket_iam_per_tier_sa.tf` +
+      (not just `get-iam-policy`) before unblocking P2.2d2c2.
+- [x] ✅ [CODE] P2.2d2c. **NEW, split from P2.2d2b 2026-08-01 (slot-7).** Wire the 3 launchers blocked on the
+      migration-SA write-grant gap (P2.2f above): `launch-legacy-bucket-migration-sharded.sh`,
+      `launch-gcs-migration-bundle-vm.sh`, `launch-bucket-rsync-vm.sh` — all three read/write a LEGACY (non-env-tiered,
+      flat) bucket name that no tier SA's `startsWith` IAM condition matches. **DONE 2026-08-02 (slot-13) —
+      `deployment-service@24e0878`, the 2 launchers this todo flagged as independently investigable (not gated on
+      P2.2f)**: `launch-canonical-migration-vm.sh` — confirmed via `terraform/gcp/bucket_iam_per_tier_sa.tf` +
       `issues/pipeline_e2e_check_missing_env_flag_test_bucket_403_2026_08_01.md` that BOTH `uts-prd-sa` (already
       terraform-declared) and `uts-test-sa` (live-granted 2026-08-01, was terraform-UNdeclared — now added in this same
       commit, closing that drift) already hold a non-tier-conditioned `storage.objectAdmin` grant on
@@ -465,7 +462,12 @@ Two independent gates because Group A and Group B are at different stages:
       `features-cross-instrument-{env}-{pid}`/`features-multi-timeframe-{env}-{pid}` bucket names are stale (corrected
       in this commit, matching P2.2d2b's own suspicion). So this launcher needs only the standard tier SA for its
       observability writes, same as every other launcher — wired via `lc_tier_service_account`. Both `bash -n` +
-      shellcheck clean; `quality-gates.sh` green; CI verified.
+      shellcheck clean; `quality-gates.sh` green; CI verified. **The 3 migration-SA-blocked launchers remain undone,
+      split out below as P2.2d2c2** (not silently dropped — mirrors P2.2d2b's own split precedent).
+- [ ] [CODE] P2.2d2c2. **NEW, split from P2.2d2c 2026-08-02 (slot-13).** Wire the 3 launchers still blocked on the
+      migration-SA write-grant gap: `launch-legacy-bucket-migration-sharded.sh`, `launch-gcs-migration-bundle-vm.sh`,
+      `launch-bucket-rsync-vm.sh` — all three read/write a LEGACY (non-env-tiered, flat) bucket name that no tier SA's
+      `startsWith` IAM condition matches. Gated on P2.2f (still open — `[OPERATOR]` grant not yet made).
 - [ ] [INFRA] P2.2e. **NEW, opened 2026-07-31 (slot-5).** Cut `uts-shared-deployment-api`'s live traffic
       (`spec.traffic`) over to a `uts-prd-sa` revision (P2.2c wired the identity + resource sizing; this is the separate
       step of actually promoting it). **Currently BLOCKED**: every fresh cold-start of a new/tagged revision fails
