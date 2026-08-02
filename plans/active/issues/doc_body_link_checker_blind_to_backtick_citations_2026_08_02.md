@@ -74,10 +74,10 @@ sweep's scratch notes, reproducible via `grep -rEo` for both patterns across
 ## Why this matters
 
 The whole point of `check_doc_body_links.py` (per its own origin, `docs_retrieval_layer_reconcile_2026_07_23.md`) was
-closing the gap where "a dead `[the SSOT](../foo.md)` inside a doc's prose was invisible to every existing gate." It
-closed that gap for ONE citation style and left the other, more common style exactly as invisible as before. A "zero NEW
-broken" clean pass from this checker is not evidence the corpus's backtick-citations are healthy — it never looked at
-them.
+closing the gap where a dead markdown link (link text, then the target path in parens) inside a doc's prose was
+invisible to every existing gate. It closed that gap for ONE citation style and left the other, more common style
+exactly as invisible as before. A "zero NEW broken" clean pass from this checker is not evidence the corpus's
+backtick-citations are healthy — it never looked at them.
 
 ## What this is NOT
 
