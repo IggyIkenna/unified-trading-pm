@@ -77,9 +77,11 @@ drift_direction: advance-code
 
 # DeFi satellite AO batch 5 — 2026-07-27
 
-**status: draft — NOT dispatched.** Flipping to `active` is an operator decision (per CLAUDE.md "Plan destination — ASK
-BEFORE CREATING" HARD RULE); this batch was drafted autonomously by the scheduled `ag_closeout_auditor` and awaits
-operator approval.
+**status: active — operator-approved + dispatched 2026-07-30** (`unified-trading-pm@5a6bbefc3`, "activate 9 fresh
+ag-closeout-audit dispatch batches (operator go-ahead)"). Drafted autonomously by the scheduled `ag_closeout_auditor` on
+2026-07-27 and held at `draft` per CLAUDE.md's "Plan destination — ASK BEFORE CREATING" HARD RULE until that approval
+landed. Its gated twin `defi_satellite_ao_dispatch_batch5_2026_07_27_finalize.md` is likewise `active`, held by
+`depends_on` + `gate_on_depends: true` rather than by a `draft` status.
 
 ## Todos
 
@@ -91,15 +93,29 @@ operator approval.
       for the full detail; the substantive todo returns to this list once the operator names the baseline/mid/final
       day(s).
 
-- [ ] [DATA] P3. For a representative sample of shards from the 5 affected pool-heavy DEX venues (PANCAKESWAP_V3-BSC,
+- [x] ✅ [DATA] P3. **ALREADY DONE — verified stale 2026-08-02 against the (now archived) source doc; no new work
+      needed.** Both halves this todo asks for were completed and shipped BEFORE the batch was activated, so leaving it
+      open would re-dispatch already-shipped work. (a) The harmless-vs-real verdict: **REAL bug** —
+      `0 of 28 sampled duplicate groups across 3 samples were byte-identical` (`UNISWAP_V3-OPTIMISM`/`2023-11-22`
+      16/16 differing; `PANCAKESWAP_V3-BSC`/`2023-08-19` 3/3; `PANCAKESWAP_V3-BSC`/`2023-12-15` 9/9), recorded
+      2026-07-29. (b) The root-cause + follow-up fix: the `instrument_key` grammar (`VENUE:TYPE:BASE-QUOTE:FEE_TIER`)
+      omits `pool_address`, so distinct on-chain pools legitimately collide — a **structural** cause identical across
+      all 5 pool-heavy venues, not a per-venue one, which is why re-sampling the remaining 3 venues would yield no new
+      information or action. The filed follow-up was then resolved per operator ruling **Option B** (2026-07-30,
+      `BLK-b3379171`): consumer-side fix, no grammar change — `build_instrument_catalogue.py::_aggregate_key()`
+      confirmed already safe (keys POOL rows on `pool::<chain>::<pool_address>`), the one naive consumer was a vanished
+      scratchpad script, plus a shipped regression test proving same-symbol/different-address pools keep distinct
+      lifecycles — `instruments-service@30fe4511`. **Honest scope note**: 2 of the 5 named venues were actually sampled
+      (3 shards); the other 3 were not, and are covered by the structural root-cause + shipped fix rather than by direct
+      measurement. Source (archived 2026-07-30, `status: resolved`, 0 open todos):
+      `/plans/archive/issues/defi_instrument_availability_duplicate_instrument_key_rows_2026_07_26.md`. Was: "For a
+      representative sample of shards from the 5 affected pool-heavy DEX venues (PANCAKESWAP_V3-BSC,
       UNISWAP_V3-OPTIMISM, UNISWAP_V3-POLYGON, UNISWAP_V4-ETHEREUM, PANCAKESWAP_V3-BASE), load each flat-shape
       instrument_availability `instruments.parquet` and, for every set of rows sharing a duplicate `instrument_key`
       within that (day, venue) shard, compare all non-key columns to classify the duplicates as byte-identical (harmless
       re-write) or field-divergent (real dedup/write-time bug); if any venue shows divergence, root-cause why the
       instruments-service writer emits the same `instrument_key` more than once per day-shard and file a follow-up
-      root-cause/fix todo against the writer. Repo: instruments-service. Done when: a recorded harmless-vs-real verdict
-      exists for each sampled venue, with a fix todo filed if any venue shows real divergence. Source:
-      `plans/archive/issues/defi_instrument_availability_duplicate_instrument_key_rows_2026_07_26.md`
+      root-cause/fix todo against the writer. Repo: instruments-service."
 
 - [x] ✅ [DATA] P2. **ALREADY DONE — discovered stale/duplicate 2026-07-30 while archiving the source issue doc.** Both
       sites this todo describes were already fixed/confirmed in the source issue doc BEFORE this todo was dispatched:
@@ -307,3 +323,15 @@ dedicated standalone plan) — re-running this skill will keep re-surfacing them
   the operator names the baseline/mid/final day(s).
 
 - **context-scout 2026-08-01**: populated/refreshed context_scope (5 entries).
+
+- 2026-08-02 (worker, slot-3): Post-activation reconciliation. (1) The frontmatter `status: draft` → `active` flip had
+  already landed 2026-07-30 (`unified-trading-pm@5a6bbefc3`, operator go-ahead across 9 batches), and the finalize twin
+  is `active` too (its redundant `draft` double-gate removed in `unified-trading-pm@233ebd614`) — but the BODY banners
+  in both docs still read "status: draft — NOT dispatched", contradicting their own frontmatter. Rewrote both banners (+
+  the finalize `summary:`) to state the real dispatched state; the `depends_on`/`gate_on_depends` machine gate is
+  unchanged. (2) Re-verified all 7 todos against current corpus state: 4 open todos still map to genuinely-open todos in
+  their `status: open` source issue docs (staking-yields leaf names, swaps_ohlcv registry fix, dex_pools/swaps coverage
+  re-check, `_instruments_metadata` reader verification) — left as-is; 1 open todo (duplicate `instrument_key`) was
+  found fully superseded — its source doc was archived `status: resolved` on 2026-07-30 with the verdict recorded and
+  the resolving fix shipped (`instruments-service@30fe4511`) — flipped `[x]` with the evidence and an honest
+  2-of-5-venues-sampled scope note, so AO does not re-dispatch shipped work. Open todos: 5 → 4.

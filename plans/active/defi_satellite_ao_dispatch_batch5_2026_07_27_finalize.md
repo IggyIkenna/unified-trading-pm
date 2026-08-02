@@ -6,7 +6,8 @@ summary: >-
   true until all 7 of that plan's todos are done. Mirrors batch1-4-finalize's pattern (reconcile each distinct source
   doc's checkboxes independently once its batch-5 todo lands, then re-check the Deferred conflict-gated/
   operator-gated/time-gated/too-large/human-only items for any that have since cleared), then archives batch5 via the
-  standard 6-step ritual. status: draft until the operator approves batch5 itself.
+  standard 6-step ritual. Activated 2026-07-30 alongside its parent batch5 (operator go-ahead); execution stays
+  machine-gated on batch5's todos via depends_on + gate_on_depends, not via a draft status.
 status: active
 nature: process
 asset_group: [defi]
@@ -54,7 +55,10 @@ context_scope:
 
 # DeFi satellite AO batch 5 — finalize
 
-**status: draft — activated only after its parent batch5 is operator-approved and dispatched.**
+**status: active — parent batch5 was operator-approved + dispatched 2026-07-30** (`unified-trading-pm@5a6bbefc3`).
+Execution remains machine-held until every batch5 todo is `[x]`, via
+`depends_on: [defi_satellite_ao_dispatch_batch5_2026_07_27]` + `gate_on_depends: true` — the redundant `status: draft`
+double-gate that finalize plans used to carry was removed corpus-wide in `unified-trading-pm@233ebd614`.
 
 ## Todos
 
@@ -92,3 +96,7 @@ context_scope:
   batch5's 7 todos via `depends_on` + `gate_on_depends: true`. No work started — waiting on operator approval of batch5
   first.
 - **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).
+- 2026-08-02 (worker, slot-3): De-staled the body banner + `summary:` — both still said `status: draft` while the
+  frontmatter had been `active` since 2026-07-30. No todo/gating change: this plan stays machine-held on batch5 via
+  `depends_on` + `gate_on_depends: true`. Note for whoever runs todo 1: batch5 now has 3 of 7 todos closed (one more was
+  verified-stale + flipped 2026-08-02), so only 4 source docs remain to reconcile, not 7.
