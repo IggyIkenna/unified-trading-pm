@@ -367,3 +367,16 @@ own tests pass (178 passed across the four canonical-path test modules).
   design-judgment work. Raised BLK-fd7b206d; operator answered A (retag, don't force-flip). Retagged the todo
   `BLOCKED-UPSTREAM-DESIGN` so backlog-regen stops re-dispatching it until the upstream design closes. Checkbox stays
   `[ ]` — the disposition genuinely is not wired; this is a doc-hygiene fix, not the substantive work.
+- **slot-6 2026-08-02**: dispatched task `canonical_path_oracle_blind_to_filename_stem-003` — the SAME §7 todo,
+  redispatched under a fresh id despite slot-12's retag. Root cause:
+  `agent-orchestrator/server/regen_backlog_from_plan.py`'s `_BLOCKED_TOKEN_RE` (the regen's non-dispatchable-marker
+  allowlist) never included `UPSTREAM-DESIGN` — only `UPSTREAM-OUTAGE` — so the retag didn't actually stop ingestion;
+  the todo re-entered the backlog on the very next regen tick. Verified `BLOCKED-UPSTREAM-DESIGN` is an established
+  corpus convention, not a one-off (`ao_residuals_after_dispatch_hardening_2026_07_17.md`,
+  `ao_open_issues_consolidated_close_out_2026_07_17.md`, the archived
+  `ao_satellite_ao_dispatch_batch1_2026_07_26.md`/`ao_issue_docs_consolidated_remediation_2026_07_23.md`). **Fixed at
+  root**: added `UPSTREAM-DESIGN` to `_BLOCKED_TOKEN_RE`'s alternation + a regression test case, shipped
+  `agent-orchestrator@2b0b9e9` (verified on origin/live-defi-rollout). This closes the churn for every
+  `BLOCKED-UPSTREAM-DESIGN`-tagged todo corpus-wide, not just this one. Checkbox stays `[ ]` — same as slot-12's
+  determination, the quarantine disposition itself is still not wired and still gated on
+  `fail_hard_canonical_enforcement_design_2026_07_20.md`'s open `[DESIGN] P1` todo.
