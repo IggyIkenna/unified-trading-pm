@@ -69,7 +69,7 @@ context_scope:
 
 ## Todos
 
-- [x] ✅ [REVIEW] P2. **DONE 2026-08-02 (slot-13, review craft) — `unified-trading-pm@<see commit below>`.** Reconciled
+- [x] ✅ [REVIEW] P2. **DONE 2026-08-02 (slot-13, review craft) — `unified-trading-pm@b44aeeb6e`.** Reconciled
       fix/backfill/purge status into all 3 referencing docs. (1)
       `issues/defi_dex_pools_subgraph_query_missing_input_tokens_2026_07_25.md` — verified all 5 parent-plan todos `[x]`
       with real evidence (`git log`/`git merge-base --is-ancestor` confirmed `market-tick-data-service@63199601` +
