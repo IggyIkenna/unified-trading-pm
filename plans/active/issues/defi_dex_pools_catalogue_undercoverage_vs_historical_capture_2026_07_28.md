@@ -5,9 +5,9 @@ summary:
   A content-verified dry-run of the new address-keyed-leaf purge tool found ~74% of historically-captured dex_pool_state
   data for curve/sushiswap/velodrome_v2/trader_joe_v2 has no catalogue-covered symbol-named replacement and never will
   under the current catalogue population -- the instruments-service DeFi pool catalogue is a narrow "currently-active"
-  snapshot, not a full historical discovery mechanism. Makes defi_dex_pool_symbol_fix_backfill_purge_2026_07_25.md todo
-  5's literal "zero unattributed leaves remain" done-when unsafe to pursue (would require deleting content with no
-  verified replacement).
+  snapshot, not a full historical discovery mechanism. Makes
+  /plans/archive/2026_08/defi_dex_pool_symbol_fix_backfill_purge_2026_07_25.md todo 5's literal "zero unattributed
+  leaves remain" done-when unsafe to pursue (would require deleting content with no verified replacement).
 status: open
 nature: issue
 asset_group: [defi]
@@ -28,7 +28,7 @@ execution_scope: orchestrator-agent
 priority: P2
 estimate_class: research
 drift_direction: worsening-slowly
-source: [plans/active/defi_dex_pool_symbol_fix_backfill_purge_2026_07_25.md]
+source: [/plans/active/defi_dex_pool_symbol_fix_backfill_purge_2026_07_25.md]
 resolved_by:
 locked_by:
 depends_on: []
@@ -47,12 +47,12 @@ context_scope:
 
 ## What I found
 
-While executing `defi_dex_pool_symbol_fix_backfill_purge_2026_07_25.md` todo 5 (purge superseded address-keyed
-`dex_pool_state` leaves for curve/sushiswap/velodrome_v2/trader_joe_v2), I built a content-verified purge tool
-(`market-tick-data-service@249dc019`, `scripts/one_offs/purge_superseded_dex_pool_address_keyed_leaves_2026_07_28.py`)
-that only deletes an old address-keyed leaf when a symbol-named sibling in the SAME (day, venue, chain) directory has a
-matching `pool_address` — i.e., a real, content-verified replacement written by the 2026-07-27 symbol-resolution fix's
-backfill.
+While executing `/plans/archive/2026_08/defi_dex_pool_symbol_fix_backfill_purge_2026_07_25.md` todo 5 (purge superseded
+address-keyed `dex_pool_state` leaves for curve/sushiswap/velodrome_v2/trader_joe_v2), I built a content-verified purge
+tool (`market-tick-data-service@249dc019`,
+`scripts/one_offs/purge_superseded_dex_pool_address_keyed_leaves_2026_07_28.py`) that only deletes an old address-keyed
+leaf when a symbol-named sibling in the SAME (day, venue, chain) directory has a matching `pool_address` — i.e., a real,
+content-verified replacement written by the 2026-07-27 symbol-resolution fix's backfill.
 
 A full dry-run across the confirmed-recoverable range (2020-01-01..2026-07-28, curve ETHEREUM+AVALANCHE / sushiswap
 ARBITRUM / velodrome_v2 OPTIMISM / trader_joe_v2 AVALANCHE) found:
@@ -73,12 +73,13 @@ protocols) shows well over 100 distinct pool addresses captured historically for
 ## Why it matters
 
 1. **This todo's own done-when is unsatisfiable as originally written.**
-   `defi_dex_pool_symbol_fix_backfill_purge_2026_07_25.md` todo 5 states "Done-when: zero unattributed (address-keyed)
-   `dex_pool_state` leaves remain for these venues within the confirmed-recoverable range" — but purging the 541,890
-   no-replacement leaves would be a permanent, uncompensated DATA LOSS for pools the catalogue never tracked, violating
-   the exact delete-safety principle (`/codex/02-data/gcs-and-manifest-delete-safety-protocol.md`) this whole plan is
-   built on. I am completing todo 5 with the SAFETY-CORRECT interpretation instead (purge only the 190,955
-   content-verified-superseded leaves), not the literal "zero remain" text — full rationale in that plan's Progress Log.
+   `/plans/archive/2026_08/defi_dex_pool_symbol_fix_backfill_purge_2026_07_25.md` todo 5 states "Done-when: zero
+   unattributed (address-keyed) `dex_pool_state` leaves remain for these venues within the confirmed-recoverable range"
+   — but purging the 541,890 no-replacement leaves would be a permanent, uncompensated DATA LOSS for pools the catalogue
+   never tracked, violating the exact delete-safety principle
+   (`/codex/02-data/gcs-and-manifest-delete-safety-protocol.md`) this whole plan is built on. I am completing todo 5
+   with the SAFETY-CORRECT interpretation instead (purge only the 190,955 content-verified-superseded leaves), not the
+   literal "zero remain" text — full rationale in that plan's Progress Log.
 2. **The gap is structural, not specific to this plan.** ANY future catalogue-scoped backfill for these (or other) DEX
    protocols will hit the identical ceiling — ~3/4 of real historical trading activity for these 4 protocols alone is
    simply invisible to catalogue-filtered capture. This likely also affects Honest Coverage denominators

@@ -3,15 +3,15 @@ doc_type: plan
 title:
   Dex-pool symbol fix/backfill/purge — finalize (reconcile source issue + parent + resolve shared cluster doc + archive)
 summary: >-
-  Gated closeout for defi_dex_pool_symbol_fix_backfill_purge_2026_07_25.md — machine-held via depends_on +
-  gate_on_depends: true until all 5 of that plan's todos are done, so this never dispatches early. Reconciles the
-  originating bug report (issues/defi_dex_pools_subgraph_query_missing_input_tokens_2026_07_25.md, which this whole plan
-  is a direct extraction of — flip it to resolved once the query fix + backfill + purge all land),
+  Gated closeout for /plans/archive/2026_08/defi_dex_pool_symbol_fix_backfill_purge_2026_07_25.md — machine-held via
+  depends_on + gate_on_depends: true until all 5 of that plan's todos are done, so this never dispatches early.
+  Reconciles the originating bug report (issues/defi_dex_pools_subgraph_query_missing_input_tokens_2026_07_25.md, which
+  this whole plan is a direct extraction of — flip it to resolved once the query fix + backfill + purge all land),
   defi_consolidated_closeout_2026_07_18.md's progress log, and the TRADER_JOE_V2/VELODROME_V2/CURVE cluster row in
   issues/defi_migrated_marker_flagged_root_cause_clusters_2026_07_25.md (that doc also covers the sibling GMX cluster
   owned by /plans/archive/2026_07/defi_gmx_venue_removal_2026_07_25.md — do NOT flip the issue doc's own status to
   resolved unless BOTH clusters are independently confirmed closed), then runs the standard 6-step archival ritual.
-status: active
+status: complete
 nature: process
 asset_group: [defi]
 stage: [data]
@@ -59,12 +59,17 @@ context_scope:
   ]
 ---
 
+> **🟢 COMPLETE 2026-08-02 — ARCHIVED.** Both todos landed: reconciliation (todo 1) verified all 5 fix/backfill/purge
+> commits and reconciled all 3 referencing docs; archival (todo 2) moved the parent plan to
+> `/plans/archive/2026_08/defi_dex_pool_symbol_fix_backfill_purge_2026_07_25.md`, repointed every corpus referrer, and
+> archived this finalize plan alongside it in the same commit.
+
 # Dex-pool symbol fix/backfill/purge — finalize
 
-> **Machine-gated on `defi_dex_pool_symbol_fix_backfill_purge_2026_07_25.md`** (`depends_on` + `gate_on_depends: true`)
-> — the dispatcher will not queue either todo below until all 5 tasks in that plan are `done`, INCLUDING both
-> `[OPERATOR]`-tagged prod-bucket purge todos (lst_rates markers + the now-superseded old dex_pool_state data).
-> `sequential: true` because todo 2 (archival) must not run before todo 1 (reconciliation) — the archive ritual's
+> **Machine-gated on `/plans/archive/2026_08/defi_dex_pool_symbol_fix_backfill_purge_2026_07_25.md`** (`depends_on` +
+> `gate_on_depends: true`) — the dispatcher will not queue either todo below until all 5 tasks in that plan are `done`,
+> INCLUDING both `[OPERATOR]`-tagged prod-bucket purge todos (lst_rates markers + the now-superseded old dex_pool_state
+> data). `sequential: true` because todo 2 (archival) must not run before todo 1 (reconciliation) — the archive ritual's
 > codex-alignment check needs the final, reconciled state.
 
 ## Todos
@@ -84,16 +89,32 @@ context_scope:
       ALL 3 clusters this doc tracks are now closed, flipped its top-level `status: open` → `status: resolved` too (a
       stronger outcome than the todo's own minimum bar of "add a dated note without changing status", justified because
       the GMX check came back closed rather than still-open).
-- [ ] [DOC] P3. **Archive `defi_dex_pool_symbol_fix_backfill_purge_2026_07_25.md`** via the standard 6-step ritual (per
-      CLAUDE.md's plan-archival rule): confirm zero `DEFERRED` markers remain → add the archive banner + flip
-      `status: active` → `status: complete` → run the codex-alignment check (does any codex doc describing dex-pool
-      subgraph coverage or symbol resolution need a status update — e.g. `/codex/02-data/defi-canonical-naming-ssot.md`)
-      → confirm no new durable contract resulted requiring a CLAUDE.md/codex change → grep the corpus for every referrer
-      of `defi_dex_pool_symbol_fix_backfill_purge_2026_07_25` (including this doc's own `depends_on` self-reference,
-      this doc's `related:` list, and the docs touched in todo 1) and repoint each to the archived path → confirm
-      `locked_by` is empty. **Done when**: the plan is moved to `plans/archive/2026_07/`, every corpus referrer resolves
-      to the new path, and this finalize plan is archived alongside it in the same commit (nothing left to gate once
-      both are done).
+- [x] ✅ [DOC] P3. **DONE 2026-08-02 (slot-12, backend_engineer) — Archived
+      `defi_dex_pool_symbol_fix_backfill_purge_2026_07_25.md`** via the standard 6-step ritual (per CLAUDE.md's
+      plan-archival rule). Confirmed zero `DEFERRED` markers + `locked_by` empty on both the parent plan and this
+      finalize plan. Added the archive banner + flipped `status: active` → `status: complete` on both. Ran the
+      codex-alignment check: grepped `codex/` for `messari_basic`/`inputTokens`/`_parse_curve` (the specific
+      symbol-resolution bug this plan fixed) — zero hits, no codex doc described that bug's prior-broken behavior, so
+      nothing needed correcting. Checked `/codex/02-data/defi-canonical-naming-ssot.md` and the other docs that mention
+      TRADER_JOE_V2/VELODROME_V2/CURVE (`instruments-foundation-and-catalogue-completeness.md`,
+      `availability-manifest-and-data-status.md`) — all describe unrelated concerns (data_type collapse, G1
+      source-coverage gaps, cross-chain pool-address collisions), none reference dex-pool symbol resolution — no update
+      needed. No new durable contract resulted requiring a CLAUDE.md change (the two follow-on findings this plan
+      surfaced — manifest per-VM-shard flush scaling, catalogue undercoverage vs. historical capture — are already
+      tracked in their own separate issue docs with their own todos, not lost). Grepped the corpus for every referrer of
+      `defi_dex_pool_symbol_fix_backfill_purge_2026_07_25` (18 files) and
+      `defi_dex_pool_symbol_fix_backfill_purge_finalize_2026_07_25` (9 files, 15 unique total across both slugs)
+      spanning `plans/active/`, `plans/active/issues/`, `plans/archive/`, and `plans/archive/issues/` — repointed every
+      path-formatted/prose `.md` citation to
+      `/plans/archive/2026_08/defi_dex_pool_symbol_fix_backfill_purge_2026_07_25.md` (or the `_finalize` twin);
+      bare-slug machine fields (`depends_on`/`related`/`source` without `.md`, and task-id references like
+      `defi_dex_pool_symbol_fix_backfill_purge-001`) intentionally left untouched per the cross-reference-path
+      convention. `plans/active/INDEX.md` needs no manual edit (self-corrects on next `regenerate_active_plan_index.py`
+      run); the archived `active_plan_inventory_dashboard_2026_07_24.md` snapshot is a frozen historical record, not
+      live-regenerated, left as-is. **Archive folder is `plans/archive/2026_08/`** (keyed on archival date 2026-08-02,
+      not the docs' 2026-07-25 creation date — confirmed via existing 2026_08/ entries' commit dates). Both
+      `defi_dex_pool_symbol_fix_backfill_purge_2026_07_25.md` and this finalize plan moved to `plans/archive/2026_08/`
+      in the same commit.
 
 ## Codex SSOTs
 

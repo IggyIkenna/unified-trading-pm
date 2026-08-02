@@ -123,13 +123,13 @@ inconsistent state.
       but the harness's own tracked background-task mechanism is. (repo: unified-trading-pm)
 
       **Shipped 2026-07-31** — added item 6 to `/codex/12-agent-workflow/async-wait-and-poll-discipline.md` (the doc
-                              already owned a closely-related item 5 on `run_in_background` limits, so this landed as a direct continuation
-                              rather than `per-tab-worktrees.md`). Captures both confirmed kill mechanisms from this doc's full incident
-                              history (fixed ~1-3 min nohup/disown session-boundary reap, independent of load; a separate genuine
-                              resource-exhaustion kill that can still catch `run_in_background` at severe host contention, ~10x more durable
-                              but not immune), the self-restarting-supervisor-on-`run_in_background` mitigation, the `/tmp` tmpfs-corruption
-                              distinct-failure-mode warning (§ "Disk-full tmpfs corruption" above), and the swap-recovers-faster-than-load
-                              guidance for when to safely retry.
+                                      already owned a closely-related item 5 on `run_in_background` limits, so this landed as a direct continuation
+                                      rather than `per-tab-worktrees.md`). Captures both confirmed kill mechanisms from this doc's full incident
+                                      history (fixed ~1-3 min nohup/disown session-boundary reap, independent of load; a separate genuine
+                                      resource-exhaustion kill that can still catch `run_in_background` at severe host contention, ~10x more durable
+                                      but not immune), the self-restarting-supervisor-on-`run_in_background` mitigation, the `/tmp` tmpfs-corruption
+                                      distinct-failure-mode warning (§ "Disk-full tmpfs corruption" above), and the swap-recovers-faster-than-load
+                                      guidance for when to safely retry.
 
 ## Update 2026-07-28 (later, slot-14) — CORRECTION: harness `run_in_background` is NOT immune either; strong new
 
@@ -168,9 +168,10 @@ than anything a single worker can do differently.
 ## priority bumped P2->P0
 
 **Severity has escalated materially since the entries above.** While running a LIGHTWEIGHT (GCS-listing/verification,
-not CPU-heavy) marker-purge dry-run for an unrelated task (`defi_dex_pool_symbol_fix_backfill_purge_2026_07_25.md` todo
-5), this agent's entire session died mid-task — not just the one background process (which was also killed,
-`exit code 144`, no `EXIT_CODE=` sentinel written), but the session itself required a full resume
+not CPU-heavy) marker-purge dry-run for an unrelated task
+(`/plans/archive/2026_08/defi_dex_pool_symbol_fix_backfill_purge_2026_07_25.md` todo 5), this agent's entire session
+died mid-task — not just the one background process (which was also killed, `exit code 144`, no `EXIT_CODE=` sentinel
+written), but the session itself required a full resume
 (`"You are worker slot 14, RESUMED after your session died mid-task"`). `cat /proc/loadavg` immediately after resume
 showed **185.17 259.50 252.63** — roughly **16x oversubscribed** on this 16-core host, an order of magnitude worse than
 the already-severe 62-75 recorded ~30 min earlier in this same session. This is no longer "elevated contention" — it is
@@ -191,10 +192,11 @@ already favors is doing its job even under this failure mode.
 ## Update 2026-07-28 (later still, slot-14) — load partially receded (185-259 → 66-95) but STILL killed a 4/4-worker resume after only 130 markers; crisis is ongoing, not a one-off spike
 
 Waited for load to decline before retrying (per the P0 escalation's own recommendation), then resumed the SAME
-category-1 marker-purge dry-run (`defi_dex_pool_symbol_fix_backfill_purge_2026_07_25.md` todo 5) from its 8,903-entry
-resume-log with workers reduced further (`--discover-workers 4 --verify-workers 4`, down from the already-reduced 8/8).
-Pre-launch check: load `69.30 85.48 139.79`, `free -h` showed 4.6Gi free / 19Gi available, swap 7.8Gi/15Gi (52%) —
-meaningfully better than the 185-259/87%-swap crisis point, so this was a considered retry, not a blind one.
+category-1 marker-purge dry-run (`/plans/archive/2026_08/defi_dex_pool_symbol_fix_backfill_purge_2026_07_25.md` todo 5)
+from its 8,903-entry resume-log with workers reduced further (`--discover-workers 4 --verify-workers 4`, down from the
+already-reduced 8/8). Pre-launch check: load `69.30 85.48 139.79`, `free -h` showed 4.6Gi free / 19Gi available, swap
+7.8Gi/15Gi (52%) — meaningfully better than the 185-259/87%-swap crisis point, so this was a considered retry, not a
+blind one.
 
 **Result: killed again.** Discovery completed cleanly (54.2s, 328,994 markers scanned, 23,588 in the
 CURVE/SUSHISWAP/TRADER_JOE_V2/VELODROME_V2 × dex_pool_state scope, 14,685 remaining to process) — discovery itself is
@@ -320,12 +322,13 @@ same wall again.
 
 ## demonstrably HEALTHY host (low load, ample free swap): the resource-exhaustion theory does not explain every kill
 
-Resumed the SAME category-1 marker-purge dry-run (`defi_dex_pool_symbol_fix_backfill_purge_2026_07_25.md` todo 5) from
-its resume-log (5,819/23,588 at start of this session), via the harness's own tracked `run_in_background` mechanism, no
-`nohup` — `--discover-workers 16 --verify-workers 16`. Progress was confirmed healthy across 4 separate check-ins over
-~11 minutes (5,819 → 6,220 → 6,599 → 6,956 → 7,208, process alive, CPU climbing normally each time). Then the harness's
-own task-notification reported `status: "failed"`, **exit code 144** — the exact same code cited in this doc's earlier
-🔴 ESCALATION section — with no traceback, no error, no `SUMMARY` block in the script's own log (identical clean-kill
+Resumed the SAME category-1 marker-purge dry-run
+(`/plans/archive/2026_08/defi_dex_pool_symbol_fix_backfill_purge_2026_07_25.md` todo 5) from its resume-log
+(5,819/23,588 at start of this session), via the harness's own tracked `run_in_background` mechanism, no `nohup` —
+`--discover-workers 16 --verify-workers 16`. Progress was confirmed healthy across 4 separate check-ins over ~11 minutes
+(5,819 → 6,220 → 6,599 → 6,956 → 7,208, process alive, CPU climbing normally each time). Then the harness's own
+task-notification reported `status: "failed"`, **exit code 144** — the exact same code cited in this doc's earlier 🔴
+ESCALATION section — with no traceback, no error, no `SUMMARY` block in the script's own log (identical clean-kill
 signature to every prior incident here).
 
 **New data point, not just a repeat**: checked host state immediately after discovering the kill — `cat /proc/loadavg` →
@@ -351,13 +354,13 @@ and relaunch).
 
 ## worth recording the distinction since they looked similar at first glance but have different root causes and fixes.
 
-Continued `defi_dex_pool_symbol_fix_backfill_purge_2026_07_25.md` todo 5: after the dry-run finished cleanly
-(23,588/23,588, 21,324 SAFE-disposition markers, 2,264 correctly-retained FLAGGED per the already-documented
-catalogue-undercoverage finding), moved to the real `--apply` pass with a fresh resume-log (required — the script's
-`todo = markers not in already_done` filter means reusing the dry-run's fully-populated resume-log would silently no-op
-the apply pass; this project's own leaf-purge launcher hit the identical class of bug earlier in this same plan, see the
-finalize plan's Progress Log). Two DISTINCT failure modes hit during the apply run, easy to conflate but genuinely
-different:
+Continued `/plans/archive/2026_08/defi_dex_pool_symbol_fix_backfill_purge_2026_07_25.md` todo 5: after the dry-run
+finished cleanly (23,588/23,588, 21,324 SAFE-disposition markers, 2,264 correctly-retained FLAGGED per the
+already-documented catalogue-undercoverage finding), moved to the real `--apply` pass with a fresh resume-log (required
+— the script's `todo = markers not in already_done` filter means reusing the dry-run's fully-populated resume-log would
+silently no-op the apply pass; this project's own leaf-purge launcher hit the identical class of bug earlier in this
+same plan, see the finalize plan's Progress Log). Two DISTINCT failure modes hit during the apply run, easy to conflate
+but genuinely different:
 
 1. **Disk-full tmpfs corruption (root-caused, fixed, NOT this doc's incident class)**: `/tmp` on this host is a small
    2GB `tmpfs` SHARED across every slot — another slot's `pytest-of-ubuntu` temp dir alone was measured at 862M at one
@@ -396,8 +399,8 @@ script refuse to proceed (or warn loudly) if `--apply` is passed a resume-log wh
 show `action: "would_delete"` (dry-run dispositions) rather than `action: "deleted"`/`"none"` (apply dispositions) —
 would catch this exact silent-no-op class before it ships a false "nothing to delete" report. Logged here rather than as
 a separate plan todo since it is a small, generalizable script-robustness gap discovered in passing, not blocking
-`defi_dex_pool_symbol_fix_backfill_purge_2026_07_25.md`'s todo 5 (which used the separate-paths workaround
-successfully).
+`/plans/archive/2026_08/defi_dex_pool_symbol_fix_backfill_purge_2026_07_25.md`'s todo 5 (which used the separate-paths
+workaround successfully).
 
 ## Todos
 

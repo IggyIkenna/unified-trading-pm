@@ -39,14 +39,15 @@ source:
   ]
 resolved_by:
   "market-tick-data-service@63199601 (query/parser fix, verified ancestor of origin/live-defi-rollout, live-tested
-  against all 4 real subgraphs); backfill + purge via defi_dex_pool_symbol_fix_backfill_purge_2026_07_25.md's 5 todos,
-  all shipped/independently re-verified 2026-08-02"
+  against all 4 real subgraphs); backfill + purge via
+  /plans/archive/2026_08/defi_dex_pool_symbol_fix_backfill_purge_2026_07_25.md's 5 todos, all shipped/independently
+  re-verified 2026-08-02"
 locked_by:
 locked_since:
 context_scope:
   [
-    /plans/active/defi_dex_pool_symbol_fix_backfill_purge_2026_07_25.md,
-    /plans/active/defi_dex_pool_symbol_fix_backfill_purge_finalize_2026_07_25.md,
+    /plans/archive/2026_08/defi_dex_pool_symbol_fix_backfill_purge_2026_07_25.md,
+    /plans/archive/2026_08/defi_dex_pool_symbol_fix_backfill_purge_finalize_2026_07_25.md,
     /plans/archive/issues/defi_migrated_marker_flagged_root_cause_clusters_2026_07_25.md,
     market-tick-data-service/market_tick_data_service/cli/handlers/_dex_pools_subgraph.py,
   ]
@@ -56,7 +57,8 @@ context_scope:
 
 > **🟢 RESOLVED 2026-08-02** — query/parser fix shipped `market-tick-data-service@63199601` (verified ancestor of
 > `origin/live-defi-rollout`, live-tested against all 4 real subgraphs); backfill + purge landed via
-> `defi_dex_pool_symbol_fix_backfill_purge_2026_07_25.md`'s 5 todos, all shipped/independently re-verified 2026-08-02.
+> `/plans/archive/2026_08/defi_dex_pool_symbol_fix_backfill_purge_2026_07_25.md`'s 5 todos, all shipped/independently
+> re-verified 2026-08-02.
 
 > **NOTE (2026-07-25): GMX venue removed platform-wide** — see
 > `/plans/archive/2026_07/defi_gmx_venue_removal_2026_07_25.md`. This doc's `gmx` mentions describe the shared
@@ -146,19 +148,20 @@ address-keyed (`0x00836fe5....parquet`) -- direct evidence the bug is live, not 
 ## Todos
 
 - [x] ✅ [DECISION] P1. **Retagged 2026-07-29 (corpus hygiene pass): resolved-by-reference — see
-      `plans/active/defi_dex_pool_symbol_fix_backfill_purge_2026_07_25.md`.** Decide + fix the `messari_basic` subgraph
-      query missing `inputTokens { symbol }` -- curve/sushiswap/gmx/velodrome_v2/trader_joe_v2 all starve tier-2 symbol
-      resolution; needs an operator call on whether to fix the query (add `inputTokens`, switch to `_parse_messari_dex`)
-      before DeFi live capture resumes, or deprioritize.
+      `/plans/archive/2026_08/defi_dex_pool_symbol_fix_backfill_purge_2026_07_25.md`.** Decide + fix the `messari_basic`
+      subgraph query missing `inputTokens { symbol }` -- curve/sushiswap/gmx/velodrome_v2/trader_joe_v2 all starve
+      tier-2 symbol resolution; needs an operator call on whether to fix the query (add `inputTokens`, switch to
+      `_parse_messari_dex`) before DeFi live capture resumes, or deprioritize.
 - [x] ✅ [OPERATOR] P1. **DONE 2026-08-02 (finalize task
-      `defi_dex_pool_symbol_fix_backfill_purge_finalize_2026_07_25.md` todo 1, slot-13 review craft).** Confirmed
-      `plans/active/defi_dex_pool_symbol_fix_backfill_purge_2026_07_25.md`'s all 5 todos (not just todo 5) landed —
-      independently verified via `git log`/`git merge-base --is-ancestor` that the query-fix commit
-      (`market-tick-data-service@63199601`) and its supporting live-test commit (`market-tick-data-service@0f40a69f`)
-      are real, shipped, and ancestors of `origin/live-defi-rollout`; the backfill (VM completion + manifest
-      spot-checks) and both purge categories (lst_rates markers + old dex_pool_state leaves) are independently
-      re-verified in that plan's own Progress Log (zero SAFE markers remain, only the irreducible FLAGGED floor).
-      Flipped `status: open` → `status: resolved` with the `resolved_by` citation above in this same commit.
+      `/plans/archive/2026_08/defi_dex_pool_symbol_fix_backfill_purge_finalize_2026_07_25.md` todo 1, slot-13 review
+      craft).** Confirmed `/plans/archive/2026_08/defi_dex_pool_symbol_fix_backfill_purge_2026_07_25.md`'s all 5 todos
+      (not just todo 5) landed — independently verified via `git log`/`git merge-base --is-ancestor` that the query-fix
+      commit (`market-tick-data-service@63199601`) and its supporting live-test commit
+      (`market-tick-data-service@0f40a69f`) are real, shipped, and ancestors of `origin/live-defi-rollout`; the backfill
+      (VM completion + manifest spot-checks) and both purge categories (lst_rates markers + old dex_pool_state leaves)
+      are independently re-verified in that plan's own Progress Log (zero SAFE markers remain, only the irreducible
+      FLAGGED floor). Flipped `status: open` → `status: resolved` with the `resolved_by` citation above in this same
+      commit.
 
 ## Progress Log
 
@@ -167,10 +170,12 @@ address-keyed (`0x00836fe5....parquet`) -- direct evidence the bug is live, not 
 - **context-scout 2026-08-01**: populated context_scope (4 entries).
 - **na-eligibility-audit 2026-08-02** (tranche=defi, autonomous, scheduled): KEEP-NA valid (2026-07-30 verdict re-
   affirmed) — re-read end to end; content unchanged since that verdict (context-scout backfill only). The sole open item
-  is explicitly `[OPERATOR] P1` AND gated: it asks to confirm `defi_dex_pool_symbol_fix_backfill_purge_2026_07_25.md`'s
-  todo 5 landed and then let that plan's gated finalize twin flip this doc's `status` with a verified `resolved_by` — an
-  explicit "do not archive before that finalize plan runs" instruction. KEEP-NA on that citation alone.
-- **2026-08-02 (slot-13, review craft, dispatched on `defi_dex_pool_symbol_fix_backfill_purge_finalize_2026_07_25.md`
-  todo 1)**: gate satisfied — the parent plan's all 5 todos confirmed `[x]` with real, verified evidence. Flipped this
-  doc's status to `resolved` per the todo above. See the sibling finalize plan +
-  `defi_consolidated_closeout_2026_07_18.md` for the other 2 legs of this same reconciliation.
+  is explicitly `[OPERATOR] P1` AND gated: it asks to confirm
+  `/plans/archive/2026_08/defi_dex_pool_symbol_fix_backfill_purge_2026_07_25.md`'s todo 5 landed and then let that
+  plan's gated finalize twin flip this doc's `status` with a verified `resolved_by` — an explicit "do not archive before
+  that finalize plan runs" instruction. KEEP-NA on that citation alone.
+- **2026-08-02 (slot-13, review craft, dispatched on
+  `/plans/archive/2026_08/defi_dex_pool_symbol_fix_backfill_purge_finalize_2026_07_25.md` todo 1)**: gate satisfied —
+  the parent plan's all 5 todos confirmed `[x]` with real, verified evidence. Flipped this doc's status to `resolved`
+  per the todo above. See the sibling finalize plan + `defi_consolidated_closeout_2026_07_18.md` for the other 2 legs of
+  this same reconciliation.

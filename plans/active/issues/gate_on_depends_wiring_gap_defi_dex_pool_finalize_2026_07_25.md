@@ -4,7 +4,7 @@ title:
   "gate_on_depends dispatched defi_dex_pool_symbol_fix_backfill_purge_finalize-001 despite its upstream plan having 0/5
   todos done — /api/backlog/<id>/blockers reports 'ready (no blockers)'"
 summary: >-
-  defi_dex_pool_symbol_fix_backfill_purge_finalize_2026_07_25.md declares `depends_on:
+  /plans/archive/2026_08/defi_dex_pool_symbol_fix_backfill_purge_finalize_2026_07_25.md declares `depends_on:
   [defi_dex_pool_symbol_fix_backfill_purge_2026_07_25]` + `gate_on_depends: true`, with the doc's own prose stating this
   should never dispatch until all 5 of the upstream plan's todos are done. Slot 5 was dispatched its first todo
   (`defi_dex_pool_symbol_fix_backfill_purge_finalize-001`, a reconciliation todo whose done_definition assumes the
@@ -56,10 +56,10 @@ depends_on: []
 # What I found
 
 Dispatched task `defi_dex_pool_symbol_fix_backfill_purge_finalize-001` (plan_ref
-`plans/active/defi_dex_pool_symbol_fix_backfill_purge_finalize_2026_07_25.md`) asks to reconcile 3 docs on the premise
-that the parent plan's fix/backfill/purge work has landed. The parent plan
-(`plans/active/defi_dex_pool_symbol_fix_backfill_purge_2026_07_25.md`) is `sequential: true` with 5 todos, ALL still
-`- [ ]`:
+`/plans/archive/2026_08/defi_dex_pool_symbol_fix_backfill_purge_finalize_2026_07_25.md`) asks to reconcile 3 docs on the
+premise that the parent plan's fix/backfill/purge work has landed. The parent plan
+(`/plans/archive/2026_08/defi_dex_pool_symbol_fix_backfill_purge_2026_07_25.md`) is `sequential: true` with 5 todos, ALL
+still `- [ ]`:
 
 ```
 - [ ] [OPERATOR] P2. Purge orphaned lst_rates _migrated_* markers ...
@@ -135,17 +135,17 @@ unrelated one-off bugs.
 
 Bounced from slot 5 to slot 4 within ~2 heartbeat ticks — `/skip-current-task` does NOT prevent immediate re-dispatch to
 another idle slot (only removes the offending slot from consideration for that one task instance). Parent plan
-`defi_dex_pool_symbol_fix_backfill_purge_2026_07_25.md` was still 0/5 todos done at re-dispatch time (verified again: no
-landing commit for the `messari_basic` query fix in `market-tick-data-service`). Skipped again with the same reasoning;
-main (`agt-52bb99`) confirmed the ruling live and directed this note rather than a re-investigation. Root cause (item 1
-above) is still unfixed as of this note.
+`/plans/archive/2026_08/defi_dex_pool_symbol_fix_backfill_purge_2026_07_25.md` was still 0/5 todos done at re-dispatch
+time (verified again: no landing commit for the `messari_basic` query fix in `market-tick-data-service`). Skipped again
+with the same reasoning; main (`agt-52bb99`) confirmed the ruling live and directed this note rather than a
+re-investigation. Root cause (item 1 above) is still unfixed as of this note.
 
 ## 2026-07-25 recurrence note (slot 6, third bounce)
 
 Bounced again — slot 6 was dispatched `defi_dex_pool_symbol_fix_backfill_purge_finalize-001` fresh (no prior task
 history in this session). Independently re-verified before finding this doc: read the parent plan
-(`defi_dex_pool_symbol_fix_backfill_purge_2026_07_25.md`), confirmed all 5 todos still `- [ ]`; read
-`market-tick-data-service/market_tick_data_service/cli/handlers/dex_pools_handler.py` directly and confirmed
+(`/plans/archive/2026_08/defi_dex_pool_symbol_fix_backfill_purge_2026_07_25.md`), confirmed all 5 todos still `- [ ]`;
+read `market-tick-data-service/market_tick_data_service/cli/handlers/dex_pools_handler.py` directly and confirmed
 `_CURVE_QUERY`/`_CURVE_QUERY_FILTERED` (the query used by `curve`/`sushiswap`/`velodrome_v2`/`trader_joe_v2` via the
 `messari_basic` protocol-table entry) still have no `inputTokens` field, and the protocol table still maps all four to
 `_parse_curve`, not `_parse_messari_dex` — the BACKEND query-fix todo has not shipped, confirming the checkbox state is
@@ -539,8 +539,8 @@ Traced further: `_wire_gate_on_depends_prereqs` itself is sound (confirmed by sl
 unit-level reproduction here), but it never receives a `gated_plans` entry for these plans at all, because
 `_parse_frontmatter_gate_on_depends(plan_path)` — the single-field frontmatter parser that decides whether a plan is
 even a `gate_on_depends` candidate — returns `False` for
-`defi_dex_pool_symbol_fix_backfill_purge_finalize_2026_07_25.md` despite its real `gate_on_depends: true` frontmatter
-field.
+`/plans/archive/2026_08/defi_dex_pool_symbol_fix_backfill_purge_finalize_2026_07_25.md` despite its real
+`gate_on_depends: true` frontmatter field.
 
 Root cause: every single-field frontmatter parser in `regen_backlog_from_plan.py` (13 of them —
 `_parse_frontmatter_gate_on_depends`, `_parse_frontmatter_depends_on`, `_parse_frontmatter_sequential`,
@@ -554,8 +554,9 @@ essentially every gated finalize plan in the corpus:
 
 ```yaml
 summary: >-
-  Gated closeout for defi_dex_pool_symbol_fix_backfill_purge_2026_07_25.md — machine-held via depends_on +
-  gate_on_depends: true until all 5 of that plan's todos are done, so this never dispatches early. Reconciles the ...
+  Gated closeout for /plans/archive/2026_08/defi_dex_pool_symbol_fix_backfill_purge_2026_07_25.md — machine-held via
+  depends_on + gate_on_depends: true until all 5 of that plan's todos are done, so this never dispatches early.
+  Reconciles the ...
 depends_on: [defi_dex_pool_symbol_fix_backfill_purge_2026_07_25]
 gate_on_depends: true
 ```
