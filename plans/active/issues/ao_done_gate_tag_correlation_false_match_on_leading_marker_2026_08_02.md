@@ -31,7 +31,6 @@ scope: [engineer]
 tags: [ao-server, m3-verification, done-gate, tag-correlation, false-positive, regen-churn]
 related: [canonical_path_oracle_blind_to_filename_stem_2026_07_20]
 created: 2026-08-02
-author: slot-6
 assigned_vm: planning
 execution_scope: ao-dispatched
 priority: P2
@@ -44,6 +43,7 @@ drift_direction: none
 source: [worker-session]
 resolved_by:
 locked_by:
+depends_on: []
 ---
 
 # AO `/done` M3 tag-correlation fallback: false-match + leading-marker blind spot
