@@ -148,6 +148,62 @@ remaining work gating the parent plan's `-029` checkbox -- 2 of 3 checkpoints (4
 attempted at all.~~ **SUPERSEDED, see correction above -- both are now genuinely in flight, just not complete yet (no
 report file exists YET because neither driver has finished its full 21-leg matrix).**
 
+## Final (2025-12-18) checkpoint -- NEW checker false-negative class found (2026-08-02T20:05Z, slot 12, data_engineering)
+
+Driver PID 474834 launched `2026-08-02T19:46:51Z`
+(`GCP_PROJECT_ID=central-element-323112 .venv/bin/python -u scripts/pipeline_e2e_check.py --asset-group SPORTS --day 2025-12-18 --legs force,skip,live --report-dir ../unified-trading-pm/plans/audit/results`),
+harness-tracked `run_in_background` (not `nohup`), from this slot's `instruments-service/` worktree. No collision
+(mid/baseline owned by slots 7/11 respectively, confirmed via `ps aux` before launch).
+
+**Shard 1/7 (API_FOOTBALL) `force` leg: FAILED** (`reason=manifest_status_invalid:no_matching_row`, 550.4s) --
+**ROOT-CAUSED, and this is a DIFFERENT checker false-negative class than the already-documented `skip_signal_not_found`
+one** (that one is a log-pattern-grep gap; this one is a manifest-consolidation-lag gap). Evidence chain:
+
+1. Fetched the force-leg VM's `run.log` directly
+   (`gs://deployment-scripts-central-element-323112/vm-logs/instr-backfill-sports-pchk-0802194651-f-1571-api-football/run.log`,
+   via `unified_trading_library.download_from_storage`, `GCP_PROJECT_ID` set ambient) -- confirms the writer DID
+   correctly capture real data (`Fetched 97 fixtures for date=2025-12-18`, 95 instruments after junk-filter,
+   `ManifestWriter: per-VM shard updated (1539 total entries, 1160 new`)) but 4 entity writers (FIXTURE_STATS,
+   FIXTURE_EVENTS, FIXTURE_LINEUPS, PLAYER_STATS) hit
+   `"... bare-path fallback triggered for date=2025-12-18 -- data shape regression: no fixture-id column or empty af_fid->league map ... Skipping bare write + manifest row to keep manifest honest"`
+   (`sports_reference_fixtures_write.py:232-239` -- an intentional, correct honest-absence guard, NOT a bug in itself:
+   it suppresses a phantom-captured row when the af_fid->league map can't be built).
+2. Directly read the per-VM shard parquet
+   (`gs://instruments-store-sports-test-central-element-323112/_index/per_vm/instr-backfill-sports-pchk-0802194651-f-1571-api-football-c1.parquet`)
+   -- it DOES contain real `capture_status=captured` rows for `asset_group=sports date=2025-12-18` (FIXTURES_SCHEDULE,
+   INJURIES, STANDINGS, TEAMS) that WOULD satisfy the checker's `_manifest_match()` for a provider-routed SPORTS cell
+   (`{"asset_group": "SPORTS"}`, case-insensitive match) -- so the underlying data capture genuinely succeeded.
+3. But `pipeline_e2e_check.py`'s force-leg verify calls the GENERIC `verify_manifest_row(bucket, match, day)` ->
+   `read_availability_index(bucket)` -- NOT the per-VM-shard-aware `verify_manifest_row_in_frame` with an explicit frame
+   that `shard_verify.py`'s own docstring says MDPS's force-leg passes for exactly this reason ("the merged
+   `read_availability_index` can carry a STALE row... so the force leg passes its OWN concurrency-immune per-VM shard
+   here rather than the merged index"). IS's driver does not do this.
+4. `read_availability_index`'s "self-shard merge" (`_read_self_shard` in
+   `unified_trading_library/manifest_writer/_read_index.py`) is SCOPED TO THE CALLING PROCESS'S OWN VM identity ("a VM
+   that just wrote a row to its own shard sees its own write on the next read") -- it does NOT pick up an unrelated VM's
+   shard. The `pipeline_e2e_check.py` DRIVER (running on this orchestrator host, not on the launched backfill VM) is a
+   third party to the backfill VM's shard, so this self-merge mechanism never helps it.
+5. Confirmed empirically: queried `read_availability_index('instruments-store-sports-test-central-element-323112')`
+   directly from an ad-hoc script ~8 min after the VM exited -- **0 matching rows for asset_group=SPORTS
+   date=2025-12-18**, total row count unchanged at 5399 (the exact count from the run's own Phase-0 consolidation at
+   19:47:14, BEFORE this VM ran) -- the just-written per-VM shard genuinely never got folded into the read.
+6. Per `codex/05-infrastructure/manifest-consolidator-ssot.md`: **`-test-` buckets are deliberately NOT wired to the
+   periodic manifest-consolidator cron on either cloud.** `pipeline_e2e_check.py` only consolidates ONCE, at Phase-0,
+   before any VM launches (confirmed: exactly one `Phase-0 consolidation` log line at the start of this run). So for
+   this bucket, nothing re-consolidates the manifest between a force-leg VM's write and the driver's own verify-read --
+   for the REST of this run either.
+
+**Conclusion: any (venue, day) combination being force-tested for the FIRST TIME EVER in a `-test-` bucket will get a
+false `manifest_status_invalid:no_matching_row` on its force leg**, regardless of whether the underlying capture
+actually worked. This explains why baseline (2025-12-20)'s force leg PASSED (that date had already been force-tested in
+prior sessions, so a stale-but-real consolidated row already existed from an earlier Phase-0 run, well before THIS run's
+own consolidation snapshot) while final (2025-12-18) -- being tested for the first time ever in this bucket -- fails.
+**Expect this SAME false-negative on the force leg for all remaining 6 venues in THIS checkpoint** (2025-12-18 is new to
+the bucket regardless of venue); per this doc's own established practice for the skip-leg false-negative, not
+re-investigating per-venue -- citing this root-cause and letting the run continue. The underlying data capture
+correctness should be spot-verified from each venue's per-VM shard parquet directly (as done above for API_FOOTBALL)
+rather than trusted from the checker's force-leg PASS/FAIL verdict, until the checker fix below lands.
+
 ## Resume instructions
 
 1. **STOP -- before launching ANY VM for this todo, check for an existing report, for already-running VMs, AND for a
@@ -226,36 +282,48 @@ report file exists YET because neither driver has finished its full 21-leg matri
       so, to stop further SPOT VM billing waste. (repo: instruments-service, operator/infra -- VM lifecycle)
 
       **⚠️ SAFETY CORRECTION 2026-08-02T20:01Z (slot 8) -- do NOT terminate the second VM named above without
-              re-checking its run.log first.** Read both VMs' `run.log` chunk headers directly (per this doc's own "Baseline
-              checkpoint -- CORRECTED status" section correction above): `instr-backfill-sports-pchk-0802193055-*-a2a5-...`
-              IS genuinely processing `2025-12-20` (baseline) -- consistent with this todo's redundancy concern, safe to
-              investigate/terminate once confirmed. **But `instr-backfill-sports-pchk-0802193411-*-cab3-...` is NOT a baseline
-              duplicate -- it is slot-7's legitimate, actively-running MID checkpoint (`2025-12-24`) driver's own VM** (the
-              SAME VM this doc's "Mid/final checkpoints" section above documents as healthy, in-progress work). Terminating it
-              would kill genuinely-needed live work, not billing waste. The leg-letter in a VM's name (`-f-`/`-s-`/`-l-`) has
-              been observed to NOT reliably match reality either (this exact VM read back with a `-s-` in its live name at one
-              check) -- always confirm BOTH the day and the leg from `run.log`'s own `--- Chunk N/M: <date> → <date> ---`
-              header before touching any VM this todo names, not from the name alone.
+                  re-checking its run.log first.** Read both VMs' `run.log` chunk headers directly (per this doc's own "Baseline
+                  checkpoint -- CORRECTED status" section correction above): `instr-backfill-sports-pchk-0802193055-*-a2a5-...`
+                  IS genuinely processing `2025-12-20` (baseline) -- consistent with this todo's redundancy concern, safe to
+                  investigate/terminate once confirmed. **But `instr-backfill-sports-pchk-0802193411-*-cab3-...` is NOT a baseline
+                  duplicate -- it is slot-7's legitimate, actively-running MID checkpoint (`2025-12-24`) driver's own VM** (the
+                  SAME VM this doc's "Mid/final checkpoints" section above documents as healthy, in-progress work). Terminating it
+                  would kill genuinely-needed live work, not billing waste. The leg-letter in a VM's name (`-f-`/`-s-`/`-l-`) has
+                  been observed to NOT reliably match reality either (this exact VM read back with a `-s-` in its live name at one
+                  check) -- always confirm BOTH the day and the leg from `run.log`'s own `--- Chunk N/M: <date> → <date> ---`
+                  header before touching any VM this todo names, not from the name alone.
 
-          **✅ RESOLVED 2026-08-02T~20:10Z (slot 11)**, confirming + closing out slot-8's warning above:
-          `-0802193055-f-a2a5-` was slot-11's OWN redundant force leg (see the
-          confession entry in the Progress Log below) -- it had already self-deleted on completion
-          (`VM_SHUTDOWN_ON_COMPLETION=true`) by the time this was checked, no action needed there. `-0802193411-f-cab3-`
-          was a FALSE ALARM, not a duplicate at all: its run_ts+hash (`0802193411-cab3`) is slot-7's legitimate mid
-          (2025-12-24) driver, confirmed via its VM's `run.log` chunk header (`--- Chunk 1/1: 2025-12-24 → 2025-12-24
-          ---`) -- it has since progressed through OPEN_METEO and other venues under the same driver, exactly as
-          expected for a healthy in-flight checkpoint. The venue/leg letters in a VM's name genuinely do not reliably
-          indicate which checkpoint-day driver launched it, confirming this doc's own earlier caution in the Resume
-          Instructions. **The real duplicate was slot-11's own live-leg VM** (`instr-backfill-sports-pchk-0802193055-l-a2a5-api-football`,
-          launched 20:01:56Z) -- confirmed via exact argv/run_ts match to slot-11's own driver log, terminated via
-          `gcloud compute instances delete` at 2026-08-02T~20:10Z. Post-cleanup `gcloud compute instances list
-          --filter="name~instr-backfill-sports-pchk"` shows exactly 2 VMs running, both confirmed (via run.log chunk
-          header) to belong to the legitimate mid/final drivers -- no orphans remain.
+              **✅ RESOLVED 2026-08-02T~20:10Z (slot 11)**, confirming + closing out slot-8's warning above:
+              `-0802193055-f-a2a5-` was slot-11's OWN redundant force leg (see the
+              confession entry in the Progress Log below) -- it had already self-deleted on completion
+              (`VM_SHUTDOWN_ON_COMPLETION=true`) by the time this was checked, no action needed there. `-0802193411-f-cab3-`
+              was a FALSE ALARM, not a duplicate at all: its run_ts+hash (`0802193411-cab3`) is slot-7's legitimate mid
+              (2025-12-24) driver, confirmed via its VM's `run.log` chunk header (`--- Chunk 1/1: 2025-12-24 → 2025-12-24
+              ---`) -- it has since progressed through OPEN_METEO and other venues under the same driver, exactly as
+              expected for a healthy in-flight checkpoint. The venue/leg letters in a VM's name genuinely do not reliably
+              indicate which checkpoint-day driver launched it, confirming this doc's own earlier caution in the Resume
+              Instructions. **The real duplicate was slot-11's own live-leg VM** (`instr-backfill-sports-pchk-0802193055-l-a2a5-api-football`,
+              launched 20:01:56Z) -- confirmed via exact argv/run_ts match to slot-11's own driver log, terminated via
+              `gcloud compute instances delete` at 2026-08-02T~20:10Z. Post-cleanup `gcloud compute instances list
+              --filter="name~instr-backfill-sports-pchk"` shows exactly 2 VMs running, both confirmed (via run.log chunk
+              header) to belong to the legitimate mid/final drivers -- no orphans remain.
 
 - [ ] [DATA] P1. Run the mid (2025-12-24) checkpoint, same 7-venue force/skip/live matrix -- confirmed NOT STARTED
       (verified 2026-08-02, slot 13: no report file exists). (repo: instruments-service, skill-driven)
-- [ ] [DATA] P1. Run the final (2025-12-18) checkpoint, same 7-venue force/skip/live matrix -- confirmed NOT STARTED
-      (verified 2026-08-02, slot 13: no report file exists). (repo: instruments-service, skill-driven)
+- [ ] [DATA] P1. Run the final (2025-12-18) checkpoint, same 7-venue force/skip/live matrix -- **IN PROGRESS as of
+      2026-08-02T20:05Z (slot 12), driver PID 474834**. See "Final (2025-12-18) checkpoint -- NEW checker false-negative
+      class found" section above: API_FOOTBALL's force leg failed (`manifest_status_invalid:no_matching_row`),
+      root-caused as a checker consolidation-lag false-negative expected on all 7 venues' force legs for this specific
+      checkpoint (2025-12-18 tested for the first time in the `-test-` bucket). (repo: instruments-service,
+      skill-driven)
+- [ ] [DATA] P2. Fix `pipeline_e2e_check.py`'s IS force-leg verification to not false-fail on a `-test-` bucket's
+      FIRST-EVER write for a given (venue, day): either (a) re-consolidate the manifest between each shard's VM launch
+      and its force-leg verify (not just once at Phase-0), or (b) pass the force-leg VM's own per-VM shard directly to
+      `verify_manifest_row_in_frame` instead of the generic bucket-wide `verify_manifest_row` ->
+      `read_availability_index` path, mirroring the pattern `shard_verify.py`'s own docstring says MDPS's force-leg
+      already uses for the same reason. Root-caused in the "Final (2025-12-18) checkpoint" section above -- root-causing
+      != safely fixing (out of scope for this checkpoint-running task; a rushed fix risks masking a genuine future
+      capture gap as a stale-read false pass). (repo: instruments-service)
 - [ ] [REVIEW] P2. Once all 3 checkpoints are done, flip `sports_consolidated_native_ao_extract-029` in
       `/plans/active/sports_consolidated_native_ao_extract_2026_07_25.md` citing all 3 report paths, and mark this doc
       `status: resolved`. **NOT YET ELIGIBLE (verified 2026-08-02, slot 13): mid + final checkpoints have not been
@@ -263,6 +331,18 @@ report file exists YET because neither driver has finished its full 21-leg matri
 
 ## Progress Log
 
+- 2026-08-02T20:05Z (slot 12, data_engineering, task `sports_track_k_is_pipeline_check_progress-004`, dispatched to run
+  the final (2025-12-18) checkpoint): per Resume instructions step 1, checked for an existing report (none), running
+  VMs, and driver processes before launching -- confirmed no collision (baseline owned by slot 11, mid by slot 7).
+  Launched the final-checkpoint driver (PID 474834, `--day 2025-12-18 --legs force,skip,live`). API_FOOTBALL's force leg
+  (shard 1/7) failed with `manifest_status_invalid:no_matching_row` -- root-caused via `run.log` + direct per-VM-shard
+  parquet inspection + a direct `read_availability_index` reproduction: a NEW checker false-negative class (manifest
+  consolidation-lag on `-test-` buckets, which are deliberately not wired to the periodic consolidator cron), distinct
+  from the already-documented `skip_signal_not_found` log-pattern gap. See the new "Final (2025-12-18) checkpoint"
+  section above for full evidence chain; filed the corresponding P2 checker-fix todo. Expect the same false-negative on
+  the remaining 6 venues' force legs (not re-investigating per-venue, per this doc's established practice). Driver
+  continues running in the background; will finalize this checkpoint's report + todo once the full 21-leg matrix
+  completes.
 - 2026-08-02T19:45Z (slot 13, [REVIEW] task `sports_track_k_is_pipeline_check_progress-005`, dispatched to flip the
   parent `-029` checkbox): verified ground truth before flipping anything, per this task's own craft (evidence-backed
   completion, never trust a self-report). Findings: (1) the 19:20Z checkpoint's "6 venues remaining" claim was ALREADY
