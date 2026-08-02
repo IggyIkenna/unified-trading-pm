@@ -150,6 +150,6 @@ labels), and tests, plus SIT coverage.
 ## References
 
 - `unified-trading-pm/codex/11-project-management/decisions/adr-2026-04-25-category-and-asset-group-field-naming.md`
-- `unified-trading-pm/plans/active/venue_axis_asset_group_vocabulary_2026_04_25.plan.md`
+- `unified-trading-pm/plans/archive/venue_axis_asset_group_vocabulary_2026_04_25.plan.md`
 - `unified-trading-pm/codex/13-codex-governance/SSOT-BOUNDARY.md` — do not duplicate SSOT; push shard naming to one
   owner PR chain.

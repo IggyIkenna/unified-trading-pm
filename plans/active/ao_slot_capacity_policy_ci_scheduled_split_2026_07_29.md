@@ -22,7 +22,7 @@ related:
     /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
     /plans/archive/issues/ao_escalation_and_scheduled_dispatch_slot_starvation_2026_07_27.md,
     /plans/active/issues/fleet_wide_qg_capacity_crisis_continues_day2_2026_07_29.md,
-    /plans/active/issues/cloud_build_unified_api_contracts_publish_ordering_race_2026_07_29.md,
+    /plans/archive/issues/cloud_build_unified_api_contracts_publish_ordering_race_2026_07_29.md,
   ]
 created: 2026-07-29
 last_updated: 2026-07-30
@@ -81,7 +81,7 @@ between "3 for CI" and "2 for scheduled" — a scheduled-task burst (a 9-tranche
       id — do not trust step-status alone. **Verified via a real Cloud Build** (`bf19495c-def6-45fe-99c4-3a61211990a7`,
       SUCCESS end-to-end, `:latest` genuinely re-pointed). Shipped `instruments-service@76eba912` +
       `instruments-service@4c05f2d3`. Full writeup:
-      `/plans/active/issues/cloud_build_unified_api_contracts_publish_ordering_race_2026_07_29.md`.
+      `/plans/archive/issues/cloud_build_unified_api_contracts_publish_ordering_race_2026_07_29.md`.
 - [x] ✅ **DONE 2026-07-30 — fleet-wide rollout of the same fix to 4 of 5 flagged repos**, same verification discipline
       as instruments-service (adapted per-repo, not blind-copied — field names/step ordering differ across Dockerfiles;
       shipped first, THEN triggered a real Cloud Build — an earlier attempt caught its own mistake of "verifying"
@@ -95,7 +95,7 @@ between "3 for CI" and "2 for scheduled" — a scheduled-task burst (a 9-tranche
       (`uv pip install --no-cache-dir --no-sources -e .deps/unified-trading-library`, same for UAC) _before_ its own
       `uv pip install --system -e . --no-deps` — it never resolves either package from the private GAR index at build
       time, so the publish-ordering/auth gap this doc tracks doesn't apply here. Full writeup + evidence:
-      `/plans/active/issues/cloud_build_unified_api_contracts_publish_ordering_race_2026_07_29.md`. Each ship gated on
+      `/plans/archive/issues/cloud_build_unified_api_contracts_publish_ordering_race_2026_07_29.md`. Each ship gated on
       local `quality-gates.sh` green (GitHub's own CI was down fleet-wide during this window — see the new P0 issue in §
       6 below — so these Cloud Build triggers are the only external verification these 4 commits have; GitHub
       quality-gates-v2 confirmation is still pending that outage clearing).
@@ -223,7 +223,7 @@ From `/plans/active/issues/fleet_wide_qg_capacity_crisis_continues_day2_2026_07_
       `instruments-service` `quality-gates-v2` ran a full 25m28s and the LDR→main promote chain
       (`quality-gates-v2`→`main-backmerge-to-ldr`→`Semver Agent`) completed clean end-to-end — the exact fleet-wide
       promote path the incident had blocked. Full evidence + timeline in
-      `/plans/active/issues/github_actions_billing_wall_recurrence_2026_07_29.md`.
+      `/plans/archive/issues/github_actions_billing_wall_recurrence_2026_07_29.md`.
 
 ## Codex SSOTs
 

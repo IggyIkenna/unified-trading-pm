@@ -25,7 +25,7 @@ summary: >-
   `market-data-tick-` entry should have received the same per-AG enumeration treatment and did not. `instruments-store-`
   and `features-calendar-` (the other two Group A prefixes) are genuinely flat/non-AG-scoped buckets, so those two ARE
   correctly matched — only the `market-data-tick-` entry is broken.
-status: open
+status: resolved
 nature: issue
 asset_group: [cross-cutting]
 stage: [meta]
@@ -60,7 +60,7 @@ source: >-
   read-only investigation; no terraform/IAM state was mutated. I DID stop the doomed VM
   (`mdps-backfill-sports-pipelinecheck-20260801-102347-2bf067`, my own just-launched VM, to save further SPOT compute +
   GCS request spend once the root cause was confirmed identity-level and day/shard-independent).
-resolved_by:
+resolved_by: "deployment-service@4a93aac/@e0ee10d — IAM condition fixed live, IS/MDPS pipeline-check PASS obtained"
 locked_by:
 locked_since:
 depends_on: []
@@ -73,6 +73,10 @@ context_scope:
 ---
 
 # Group A `market-data-tick-` IAM condition is missing its per-asset-group segment
+
+> **🟢 RESOLVED 2026-08-02** — all 4 todos shipped; `market-data-tick-`/`instruments-store-` fixed live + IS/MDPS
+> pipeline-check PASS obtained. `deployment-service@4a93aac`/`@e0ee10d`. Caveat: MTDS/features write paths were not
+> independently re-checked this pass (structurally covered by the same IAM condition fix, not separately smoke-tested).
 
 ## What I found
 

@@ -16,7 +16,7 @@ related:
   [
     ../epics/agent_operating_framework_master.md,
     /plans/archive/2026_07/role_registry_schema_and_broker_mvp_2026_06_25.md,
-    /plans/active/escalation_pipeline_mvp_2026_06_25.md,
+    /plans/archive/2026_07/escalation_pipeline_mvp_2026_06_25.md,
   ]
 created: 2026-06-27
 parent_epic: agent_operating_framework_master

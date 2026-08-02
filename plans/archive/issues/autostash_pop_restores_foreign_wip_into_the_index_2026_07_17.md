@@ -17,8 +17,8 @@ summary:
   --abort + stash by name"); this is the NON-conflict happy path, which is why it is easy to miss. The pre-commit "git
   diff --cached --stat (NO path arg)" inspection step is the one control that would catch it, and it only works if the
   agent actually reads the file list rather than the summary line.
-status: open
-resolved_by:
+status: resolved
+resolved_by: "unified-trading-pm@72bdb200e/@9669098c3/@461a5a0bc — pre-commit case, post-commit case, docs fold"
 nature: issue
 asset_group: [ao]
 stage: [meta]
@@ -49,6 +49,9 @@ context_scope: [/codex/05-infrastructure/per-tab-worktrees.md, scripts/quickmerg
 ---
 
 # `--autostash` restores foreign WIP into the index → by-name `git add` does not scope your commit
+
+> **🟢 RESOLVED 2026-08-02** — all 3 decided fixes shipped (pre-commit case, post-commit case, docs fold):
+> `unified-trading-pm@72bdb200e`/`@9669098c3`/`@461a5a0bc`.
 
 ## The failure, measured
 

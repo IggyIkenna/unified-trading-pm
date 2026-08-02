@@ -56,7 +56,7 @@ resolved_by:
   documented in /codex/05-infrastructure/per-tab-worktrees.md § "What worktree isolation does NOT cover" item 3
   (unified-trading-pm@71c55ed6a); todo flipped unified-trading-pm@50f727f9e. Sibling P3 mitigation (quickmerge.sh
   WARN-on-mismatch) already shipped. Every todo done, unlocked — archived same session per
-  /codex/11-project-management/plan-completion-and-archival-discipline.md.'
+  /codex/12-agent-workflow/plan-completion-and-archival-discipline.md.'
 depends_on: []
 ---
 

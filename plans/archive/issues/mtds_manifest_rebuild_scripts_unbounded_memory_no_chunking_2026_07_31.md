@@ -17,7 +17,7 @@ summary: >-
   (895,900 total rows) is the SMALLEST of the three asset_groups this plan covers; tradfi (1.6M captured rows) and defi
   (3.0M captured rows) would very likely hit the same unbounded-growth wall worse, at exactly the moment those legs'
   `-014`/`-020`-style apply todos in this same plan try to run their own full-range apply.
-status: open
+status: resolved
 nature: issue
 asset_group: [tradfi, defi, prediction]
 stage: [data]
@@ -39,10 +39,13 @@ assigned_role: data_engineering
 drift_direction: advance-code
 depends_on: []
 locked_by:
-resolved_by:
+resolved_by: "market-tick-data-service@749ca622 (slot 13, 2026-07-31), both todos shipped + QG green"
 ---
 
 # MTDS manifest-rebuild scripts have no date-range chunking — unbounded memory on full-corpus apply
+
+> **🟢 RESOLVED 2026-08-02** — both todos shipped. `market-tick-data-service@749ca622`. (Follow-up, non-blocking:
+> bounded-RSS not yet separately measured against live GCS.)
 
 ## What I found
 

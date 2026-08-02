@@ -18,7 +18,7 @@ scope: [engineer]
 tags: [ui, playwright, smoke, ci, host-contention, flake]
 related:
   [
-    /plans/active/issues/wizard_smoke_suite_pre_existing_failures_2026_07_28.md,
+    /plans/archive/issues/wizard_smoke_suite_pre_existing_failures_2026_07_28.md,
     /codex/06-coding-standards/ui-testing-layers.md,
   ]
 created: 2026-08-01
@@ -40,7 +40,7 @@ context_scope:
   [
     unified-trading-system-ui/playwright.config.ts,
     /codex/06-coding-standards/ui-testing-layers.md,
-    /plans/active/issues/deployment_ui_l2_smoke_gate_red_2026_07_17.md,
+    /plans/archive/issues/deployment_ui_l2_smoke_gate_red_2026_07_17.md,
   ]
 ---
 

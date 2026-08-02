@@ -22,8 +22,8 @@ last_updated: 2026-05-10
 deadline: 2026-05-23
 parent: codex_vs_citadel_infrastructure_audit_2026_05_10
 related_plans:
-  - /plans/active/codex_vs_citadel_infrastructure_audit_2026_05_10.md
-  - /plans/active/issues/codex_vs_citadel_blocks_cdef_audit_findings_2026_05_10.md
+  - /plans/archive/2026_05/codex_vs_citadel_infrastructure_audit_2026_05_10.md
+  - /plans/archive/issues/codex_vs_citadel_blocks_cdef_audit_findings_2026_05_10.md
 related_codex:
   - cursor-configs/CLAUDE.md
 locked_by: live-defi-rollout

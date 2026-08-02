@@ -16,7 +16,7 @@ related:
   [
     /codex/02-data/honest-absence-downstream-handling.md,
     /codex/06-coding-standards/service-orchestration-patterns.md,
-    ../../plans/active/issues/mdps_state_adapter_leading_nan_audit_2026_05_29.md,
+    ../../plans/archive/issues/mdps_state_adapter_leading_nan_audit_2026_05_29.md,
   ]
 created: 2026-06-02
 authoritative_for: [MDPS candle adapter finalization contract]

@@ -51,7 +51,7 @@ parameterised by `--feature-family`. Subtree-merged with full per-repo history p
 predecessor repos are archived; new code lands in `features-service` only.
 
 This consolidation is a pre-requisite for
-[`live_pipeline_mtds_mdps_features_2026_05_08`](../../plans/active/live_pipeline_mtds_mdps_features_2026_05_08.md) — the
+[`live_pipeline_mtds_mdps_features_2026_05_08`](../../plans/archive/2026_05/live_pipeline_mtds_mdps_features_2026_05_08.md) — the
 live-pipeline topology assumes a single Docker image deployed in two flavors (asset-scoped colocated with MDPS;
 cross-cutting standalone). Maintaining that topology against 8 separate image build + deploy pipelines is operationally
 infeasible against the 2026-05-23 cutover.
@@ -380,9 +380,9 @@ ManifestWriter). | | New family without `feature_family` UAC enum + registry ent
 - Consolidation plan-of-record (ARCHIVED 2026-05-21):
   [`../../plans/archive/features_repo_consolidation_2026_05_08.plan.md`](../../plans/archive/features_repo_consolidation_2026_05_08.plan.md)
 - Live streaming MVP plan (active, P2 under `features_and_ml_master`):
-  [`../../plans/active/phase5_features_streaming_carry_staked_basis_mvp_2026_05_19.md`](../../plans/active/phase5_features_streaming_carry_staked_basis_mvp_2026_05_19.md)
+  [`../../plans/archive/2026_05/phase5_features_streaming_carry_staked_basis_mvp_2026_05_19.md`](../../plans/archive/2026_05/phase5_features_streaming_carry_staked_basis_mvp_2026_05_19.md)
 - QG cleanup plan (Phase 1 complete, 0 test failures as of 2026-05-18):
-  [`../../plans/active/features_service_qg_cleanup_2026_05_11.md`](../../plans/active/features_service_qg_cleanup_2026_05_11.md)
+  [`../../plans/archive/2026_05/features_service_qg_cleanup_2026_05_11.md`](../../plans/archive/2026_05/features_service_qg_cleanup_2026_05_11.md)
 
 ## Test-suite status (2026-05-18)
 

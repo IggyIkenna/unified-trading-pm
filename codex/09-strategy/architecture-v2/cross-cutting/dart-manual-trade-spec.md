@@ -50,7 +50,7 @@ code_refs:
 >   `plans/active/dart_manual_trade_ux_refactor_2026_05_13.md`.
 
 > **Plan-of-record**:
-> [`plans/active/cross_cutting_may_23_deliverables_2026_05_08.md`](../../../../plans/active/cross_cutting_may_23_deliverables_2026_05_08.md)
+> [`plans/active/cross_cutting_may_23_deliverables_2026_05_08.md`](../../../../plans/archive/2026_05/cross_cutting_may_23_deliverables_2026_05_08.md)
 > deliverable #4. **Parent epic**:
 > [`plans/epics/dart_and_promote_master.md`](../../../../plans/epics/dart_and_promote_master.md) (absorbed from
 > `cross_cutting_may_23_SUPERSEDED_2026_05_21.epic.md` 2026-05-21 — use `dart_and_promote_master` for all new
@@ -299,7 +299,7 @@ them and so the cross-cutting plan body can flip its [DESIGN] checkbox without a
 
 ## 8. Cross-references
 
-- [`plans/active/cross_cutting_may_23_deliverables_2026_05_08.md`](../../../../plans/active/cross_cutting_may_23_deliverables_2026_05_08.md)
+- [`plans/active/cross_cutting_may_23_deliverables_2026_05_08.md`](../../../../plans/archive/2026_05/cross_cutting_may_23_deliverables_2026_05_08.md)
   — plan-of-record (this doc is its deliverable #4).
 - [`plans/epics/dart_and_promote_master.md`](../../../../plans/epics/dart_and_promote_master.md) — current parent epic
   (supersedes `cross_cutting_may_23_SUPERSEDED_2026_05_21.epic.md`; 5 non-negotiable deliverables for May-23 +

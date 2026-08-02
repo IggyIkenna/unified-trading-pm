@@ -40,7 +40,7 @@ related:
   [
     /plans/active/issues/one_shot_worker_completes_but_no_clean_exit_signal_watchdog_rekicks_2026_07_25.md,
     /plans/active/issues/wedge_detector_lacks_liveness_by_progress_false_positive_2026_07_21.md,
-    /plans/active/issues/watchdog_unpushed_sweep_defeats_operator_merge_gate_2026_07_26.md,
+    /plans/archive/issues/watchdog_unpushed_sweep_defeats_operator_merge_gate_2026_07_26.md,
     /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
   ]
 created: 2026-07-26
@@ -112,7 +112,7 @@ is known-wrong is actively dangerous.
 
 - [x] ✅ [BACKEND] P1. **SHIPPED ELSEWHERE — `agent-orchestrator@64b5310` (citation fix by `/na-eligibility-audit ao`
       2026-07-30; the work landed, this checkbox was simply never flipped).** Executed as
-      `/plans/active/ao_consolidated_closeout_2026_07_25.md`'s `[BACKEND] P1` todo, which cites this doc's spec
+      `/plans/archive/2026_07/ao_consolidated_closeout_2026_07_25.md`'s `[BACKEND] P1` todo, which cites this doc's spec
       verbatim. Implementation took the third of the three options this todo offered (progress-marker gating, not
       two-window or adaptive-window): `_progress_marker_shields_kick` + a new `kick_progress_grace_seconds` knob
       (default 90s) in `WorkerLivenessKicker._tick_once` — a worker whose `last_ping` advanced inside the grace window
@@ -185,7 +185,7 @@ is known-wrong is actively dangerous.
   charter-barred from killing/capping QGs, reaping slots, or editing AO runtime state.
 - **na-eligibility-audit 2026-07-30**: KEEP-NA-STALE (citation fixed, no reclassification) — the `[BACKEND] P1`
   two-window/load-aware kick todo was ALREADY SHIPPED as `agent-orchestrator@64b5310` via
-  `/plans/active/ao_consolidated_closeout_2026_07_25.md`'s `[BACKEND] P1`, which cites this doc's spec verbatim; the
+  `/plans/archive/2026_07/ao_consolidated_closeout_2026_07_25.md`'s `[BACKEND] P1`, which cites this doc's spec verbatim; the
   checkbox was simply never flipped. Flipped `[x]` with the commit + the regression-test evidence its own done-when
   asked for. Doc stays `assigned_vm: NA`: its `[DOC] P2` sibling edits
   `/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md` (never autonomous), and the `[DEVOPS] P1`

@@ -153,13 +153,13 @@ Phase 7 ships this as `alerting-service/scripts/replay_threshold.py`.
 
 If a code generates >10 false positives per 24-hour window during Phase 7 quietness baseline, the threshold is
 auto-flagged for review. Threshold-research sub-agent (planned in
-[`alerting_service_live_rules_2026_05_07`](../../../plans/active/alerting_service_live_rules_2026_05_07.md)) proposes a
+[`alerting_service_live_rules_2026_05_07`](../../../plans/archive/2026_05/alerting_service_live_rules_2026_05_07.md)) proposes a
 tightened value with citation; operator approves before merge.
 
 ## Cross-references
 
 - **Plan(s) implementing this:**
-  [`alerting_service_live_rules`](../../../plans/active/alerting_service_live_rules_2026_05_07.md).
+  [`alerting_service_live_rules`](../../../plans/archive/2026_05/alerting_service_live_rules_2026_05_07.md).
 - **Related codex SSOTs:** [`alert-code-taxonomy`](./alert-code-taxonomy.md),
   [`operator-playbook`](./operator-playbook.md), [`rehearsal-procedure`](./rehearsal-procedure.md).
 - **Code:** UAC `unified_api_contracts.ALERT_THRESHOLDS` + `unified_api_contracts.AlertThreshold`

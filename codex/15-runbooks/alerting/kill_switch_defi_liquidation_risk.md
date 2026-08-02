@@ -226,4 +226,4 @@ deploy-state audit, position-size limit review.
 - **Flash-loan-receiver:**
   [`/codex/04-architecture/flash-loan-receiver.md`](../../04-architecture/flash-loan-receiver.md).
 - **Implementing plan:**
-  [`alerting_service_live_rules_2026_05_07`](../../../plans/active/alerting_service_live_rules_2026_05_07.md).
+  [`alerting_service_live_rules_2026_05_07`](../../../plans/archive/2026_05/alerting_service_live_rules_2026_05_07.md).

@@ -42,7 +42,7 @@ related:
     /plans/archive/2026_07/ci_satellite_ao_dispatch_batch2_2026_07_29.md,
     /plans/archive/2026_07/ci_satellite_ao_dispatch_batch2_finalize_2026_07_29.md,
     /plans/archive/2026_07/ci_consolidated_closeout_2026_07_25.md,
-    /plans/active/issues/cloud_build_unified_api_contracts_publish_ordering_race_2026_07_29.md,
+    /plans/archive/issues/cloud_build_unified_api_contracts_publish_ordering_race_2026_07_29.md,
     /plans/active/issues/ag_closeout_linkage_gate_blind_to_four_tranches_2026_07_30.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
     /codex/08-workflows/ci-cd-flow.md,

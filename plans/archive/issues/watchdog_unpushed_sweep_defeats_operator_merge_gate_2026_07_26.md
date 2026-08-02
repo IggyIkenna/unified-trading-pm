@@ -13,7 +13,7 @@ summary: >-
   09:13 UTC; at 09:19:21 the watchdog's unpushed-sweep auto-pushed the held commits (now `uac@5b57f6d2` +
   `features-service@332ea5d5`) to LDR — defeating the operator gate without any agent decision. The commits are on LDR
   but not yet on `origin/main`; the next `*/15` LDR→main promote cycle would carry an unratified change to main.
-status: open
+status: resolved
 nature: issue
 asset_group: [ao]
 stage: [meta]
@@ -34,6 +34,7 @@ estimate_class: refactor
 drift_direction: advance-code
 depends_on: []
 resolved_by:
+  "agent-orchestrator@49c919d (gate-aware _sweep_unpushed_slots) + unified-trading-pm SSOT doc-fold, 2026-08-01"
 locked_by:
 context_scope:
   [
@@ -43,6 +44,9 @@ context_scope:
 ---
 
 # Watchdog unpushed-sweep defeats an open operator merge gate
+
+> **🟢 RESOLVED 2026-08-01** — both todos done: gate-aware sweep shipped `agent-orchestrator@49c919d`; SSOT doc-fold
+> shipped 2026-08-01.
 
 ## What happened
 

@@ -30,7 +30,7 @@ scope: [engineer, admin]
 tags: [ci-cd, ldr-main, promote, backmerge, git, race-condition, silent-data-loss]
 related:
   [
-    /plans/active/issues/cloud_build_unified_api_contracts_publish_ordering_race_2026_07_29.md,
+    /plans/archive/issues/cloud_build_unified_api_contracts_publish_ordering_race_2026_07_29.md,
     /plans/active/issues/ldr_to_main_promote_churn_fix_verification_2026_07_27.md,
     /plans/archive/issues/ldr_to_main_promote_fleet_silently_skips_repo_after_promote_pr_close_2026_07_28.md,
     /codex/08-workflows/ci-cd-flow.md,

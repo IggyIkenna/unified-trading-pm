@@ -21,7 +21,7 @@ related:
   [
     /plans/archive/2026_07/defi_gmx_venue_removal_2026_07_25.md,
     /plans/active/defi_consolidated_closeout_2026_07_18.md,
-    /plans/active/issues/defi_migrated_marker_flagged_root_cause_clusters_2026_07_25.md,
+    /plans/archive/issues/defi_migrated_marker_flagged_root_cause_clusters_2026_07_25.md,
   ]
 created: "2026-07-25"
 last_updated: "2026-07-25"

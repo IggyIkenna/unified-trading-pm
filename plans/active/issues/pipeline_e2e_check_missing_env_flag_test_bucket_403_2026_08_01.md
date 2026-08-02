@@ -149,7 +149,7 @@ session; flag if it becomes a real problem.)
       `instruments-store-` Group A IAM gap (slot-15 independently hit the identical block on
       `instruments-store-sports-test-...` for SPORTS/API_FOOTBALL; my CEFI/HYPERLIQUID run is a second corroborating
       data point for a different asset_group). Full details + the open INFRA fix todo:
-      `/plans/active/issues/bucket_iam_group_a_market_data_tick_prefix_missing_asset_group_2026_08_01.md` (the
+      `/plans/archive/issues/bucket_iam_group_a_market_data_tick_prefix_missing_asset_group_2026_08_01.md` (the
       `market-data-tick-` half of that issue is already fixed & live-verified per that doc; `instruments-store-` is the
       one open todo left in it). A genuine 403-free instruments-service verification run is blocked on THAT specific
       todo landing — same pattern as the already-closed MDPS todo below. (repo: instruments-service)
@@ -160,7 +160,7 @@ session; flag if it becomes a real problem.)
       independent bug even with `--env staging` in place — `uts-test-sa`'s Group A `market-data-tick-test-` IAM
       condition also lacks the per-asset-group segment (same shape as `uts-prd-sa`'s), so `market-data-tick-{ag}-test-`
       buckets still 403 regardless of which tier SA is used. Full details + terraform fix recommendation:
-      `/plans/active/issues/bucket_iam_group_a_market_data_tick_prefix_missing_asset_group_2026_08_01.md`. A genuine
+      `/plans/archive/issues/bucket_iam_group_a_market_data_tick_prefix_missing_asset_group_2026_08_01.md`. A genuine
       403-free MDPS verification run is blocked on THAT issue's infra fix landing first. (repo:
       market-data-processing-service)
 - [x] ✅ [CODE] P0. Confirmed `market-tick-data-service/scripts/pipeline_e2e_check.py`'s launcher-argv builder had the

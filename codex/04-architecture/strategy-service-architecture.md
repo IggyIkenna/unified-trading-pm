@@ -43,7 +43,7 @@ code_refs:
 > `position-balance-monitor-service`, `pnl-attribution-service`) have been subtree-merged into `strategy-service` as
 > sub-packages (`strategy_service/risk/`, `/position/`, `/pnl/`). Phase 6 parity gate: 4059 passed, 316 skipped, 0
 > errors. Phase 8A launcher migration landed at deployment-service@7679dfe + @2ed3fdd. See
-> [`strategy_repo_consolidation_2026_05_19`](../../plans/active/strategy_repo_consolidation_2026_05_19.md) for full
+> [`strategy_repo_consolidation_2026_05_19`](../../plans/archive/2026_05/strategy_repo_consolidation_2026_05_19.md) for full
 > migration history. Mirrors the `features-service-architecture.md` template.
 
 ## TL;DR
@@ -142,7 +142,7 @@ repos' `kill_switch_bus_subscriber.py` modules into a single dispatcher keyed by
 ## Migration history
 
 - 2026-05-19: plan filed
-  ([`strategy_repo_consolidation_2026_05_19`](../../plans/active/strategy_repo_consolidation_2026_05_19.md)) — 10-phase
+  ([`strategy_repo_consolidation_2026_05_19`](../../plans/archive/2026_05/strategy_repo_consolidation_2026_05_19.md)) — 10-phase
   shape per features-service precedent.
 - Pre-cutover race for 2026-05-23 live-DeFi launch; auto-flips to `BLOCKED-CUTOVER` if Phase 6 parity fails.
 - Source repos archived via `gh repo archive` post-Phase 6 parity validation:

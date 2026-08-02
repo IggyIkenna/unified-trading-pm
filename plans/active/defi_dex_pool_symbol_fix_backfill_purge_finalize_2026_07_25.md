@@ -22,8 +22,8 @@ related:
   [
     /plans/active/defi_dex_pool_symbol_fix_backfill_purge_2026_07_25.md,
     /plans/active/defi_consolidated_closeout_2026_07_18.md,
-    /plans/active/issues/defi_dex_pools_subgraph_query_missing_input_tokens_2026_07_25.md,
-    /plans/active/issues/defi_migrated_marker_flagged_root_cause_clusters_2026_07_25.md,
+    /plans/archive/issues/defi_dex_pools_subgraph_query_missing_input_tokens_2026_07_25.md,
+    /plans/archive/issues/defi_migrated_marker_flagged_root_cause_clusters_2026_07_25.md,
   ]
 created: "2026-07-25"
 last_updated: "2026-07-25"
@@ -53,8 +53,8 @@ context_scope:
   [
     /plans/active/defi_dex_pool_symbol_fix_backfill_purge_2026_07_25.md,
     /plans/active/defi_consolidated_closeout_2026_07_18.md,
-    /plans/active/issues/defi_dex_pools_subgraph_query_missing_input_tokens_2026_07_25.md,
-    /plans/active/issues/defi_migrated_marker_flagged_root_cause_clusters_2026_07_25.md,
+    /plans/archive/issues/defi_dex_pools_subgraph_query_missing_input_tokens_2026_07_25.md,
+    /plans/archive/issues/defi_migrated_marker_flagged_root_cause_clusters_2026_07_25.md,
     /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
   ]
 ---

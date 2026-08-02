@@ -26,7 +26,7 @@ stage: [data]
 repos: [unified-trading-library, deployment-api, deployment-service, market-data-processing-service]
 scope: [engineer, admin]
 tags: [manifest, consolidator, staleness, tradfi, data-correctness, false-stale, vm-fleet, dp-vm-001]
-related: [manifest-consolidator-ssot.md, sports_manifest_read_staleness_budget_missing_2026_07_15.md]
+related: [/codex/05-infrastructure/manifest-consolidator-ssot.md, /plans/active/issues/sports_manifest_read_staleness_budget_missing_2026_07_15.md]
 created: 2026-07-31
 parent_epic: infrastructure_master
 source:
@@ -46,7 +46,7 @@ context_scope:
   [
     /plans/epics/infrastructure_master.md,
     /codex/02-data/honest-coverage-model.md,
-    /plans/active/issues/mdps_tradfi_chain_bundle_aggregate_write_malformed_row_key_2026_07_31.md,
+    /plans/archive/issues/mdps_tradfi_chain_bundle_aggregate_write_malformed_row_key_2026_07_31.md,
   ]
 ---
 
@@ -196,7 +196,7 @@ ops/follow-up:
       `day=2020-01-01`, which never happened before `43b043b`. Two narrower, non-blocking gaps surfaced in the same log
       (an aggregate-level write's empty-`instrument_id` `MalformedRowKeyError`, and a missing `ohlcv_1s` SchemaContract
       for tradfi) — filed separately, do not block the per-instrument candle output this fleet exists to produce:
-      `/plans/active/issues/mdps_tradfi_chain_bundle_aggregate_write_malformed_row_key_2026_07_31.md`.
+      `/plans/archive/issues/mdps_tradfi_chain_bundle_aggregate_write_malformed_row_key_2026_07_31.md`.
 
 ## Update 2026-07-31 (DP-VM-002 escalation agt-1b9670, slot 3) — a SECOND, unrelated silent-zero in the same fleet
 
@@ -298,7 +298,7 @@ capture zero rows for its entire assigned range.
   Independently hit the exact same
   `No SchemaContract registered for asset_group='tradfi' instrument_type='COMBO' data_type='ohlcv_1s' venue='CME'` line
   (121× in that VM's log) that slot-2 had already filed as Gap 2 in
-  `/plans/active/issues/mdps_tradfi_chain_bundle_aggregate_write_malformed_row_key_2026_07_31.md` — no new finding, no
+  `/plans/archive/issues/mdps_tradfi_chain_bundle_aggregate_write_malformed_row_key_2026_07_31.md` — no new finding, no
   action taken (already correctly triaged there as a P3 needing a scope decision, not a guess-fix). **No relaunch
   performed** — a 3rd launch of this shard today would have been a pointless duplicate of the already-healthy `023743`
   VM. Pinged the authoring slot (`dp-fleet-monitor`) confirming coverage; no code or ops change needed from this
@@ -311,7 +311,7 @@ capture zero rows for its entire assigned range.
   occurrences) was the exact
   `No SchemaContract registered for asset_group='tradfi' instrument_type='COMBO'/ 'FUTURE' data_type='ohlcv_1s' venue='CME'`
   line already filed as Gap 2/P3 in
-  `/plans/active/issues/mdps_tradfi_chain_bundle_aggregate_write_malformed_row_key_2026_07_31.md` — this VM launched
+  `/plans/archive/issues/mdps_tradfi_chain_bundle_aggregate_write_malformed_row_key_2026_07_31.md` — this VM launched
   02:37:43Z, before the fix (`unified-api-contracts@4eeb495f`, landed 03:30:26Z) existed, so it ran the whole 7-month
   range without it. The remaining ~42 date-failures are genuine Saturday/Sunday CME closures (verified: GCS
   `raw_tick_data/by_date/day=2026-07-25/` and `day=2026-07-26/` both 0 objects, and both dates are a real weekend) —

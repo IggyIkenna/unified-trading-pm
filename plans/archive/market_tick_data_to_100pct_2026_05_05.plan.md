@@ -2399,7 +2399,7 @@ Verification has to cover **both directions** now, not just forward phantoms:
 | deployment-service       | `scripts/vm/vm_zombie_watchdog.py` (`VM_PREFIX_TO_BUCKET` dict)                                 | 0.5           |
 | deployment-api           | `POST /api/data-status/turbo/clear` (drops all 4 cache layers)                                  | 3             |
 | unified-api-contracts    | `unified_api_contracts/canonical/coverage_starts.py`                                            | ref           |
-| unified-trading-pm       | `/codex/14-playbooks/backfill-completion-playbook.md`                                           | ref           |
+| unified-trading-pm       | `/codex/15-runbooks/backfill-completion-playbook.md`                                           | ref           |
 | unified-trading-pm       | `/codex/02-data/availability-manifest-and-data-status.md` § Phantom audit + Per-VM shard layout | 0,0.1,1,1.5,3 |
 | unified-trading-pm       | `/codex/05-infrastructure/vm-tarball-deployment.md`                                             | 0.5,1.5,2     |
 

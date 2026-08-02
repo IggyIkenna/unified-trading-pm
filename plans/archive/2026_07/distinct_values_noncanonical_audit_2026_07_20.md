@@ -28,7 +28,7 @@ related:
     /plans/active/tradfi_consolidated_closeout_2026_07_18.md,
     /plans/active/sports_consolidated_closeout_2026_07_19.md,
     /plans/active/prediction_consolidated_closeout_2026_07_18.md,
-    /plans/active/market_tick_data_service_lending_instrument_type_historical_restamp_2026_07_24.md,
+    /plans/archive/2026_07/market_tick_data_service_lending_instrument_type_historical_restamp_2026_07_24.md,
     /plans/archive/2026_07/distinct_values_noncanonical_audit_history_2026_07_24.md,
     /plans/archive/issues/honest_coverage_rollup_scoped_rerun_masks_distinct_values_2026_07_25.md,
     /plans/active/cross_cutting_satellite_ao_dispatch_batch1_2026_07_26.md,
@@ -196,7 +196,7 @@ market-type suffixes (the composite IS the venue) and cefi matched 22/24.
       remaining writer half-fix (MTDS `liquidations_handler.py`'s lending `instrument_type` writer, disk+manifest stamp
       fixed `mtds@fec20de2`, historical rows still stamped `instrument_type="liquidation"` and not yet re-stamped) is
       now its own dedicated plan,
-      `/plans/active/market_tick_data_service_lending_instrument_type_historical_restamp_2026_07_24.md` (size-cap split
+      `/plans/archive/2026_07/market_tick_data_service_lending_instrument_type_historical_restamp_2026_07_24.md` (size-cap split
       of this doc). No open work remains directly on this todo — see that plan for the re-stamp todos.
 - [x] [DATA] P1. ✅ Reconcile every drift cluster (category 1) to its owning in-flight plan; any cluster owned by NO
       plan → file an issue doc or add a P-todo to the right plan (no orphan drift). **DONE 2026-07-28** — a full re-run
@@ -374,7 +374,7 @@ handler. → tracked as a P1 writer fix mirroring the IS pattern.
 ### 2026-07-30 — forked lending instrument_type re-stamp workstream closed out
 
 The MTDS lending `instrument_type` historical re-stamp forked out of this plan on 2026-07-24
-(`/plans/active/market_tick_data_service_lending_instrument_type_historical_restamp_2026_07_24.md`) is now fully done
+(`/plans/archive/2026_07/market_tick_data_service_lending_instrument_type_historical_restamp_2026_07_24.md`) is now fully done
 and archived. Measured live scope was 0 the entire time it was open (five independent measurements across 2026-07-27 and
 2026-07-30) — the buggy `instrument_type="liquidation"` population had already fully cycled out via post-fix re-capture
 before the fork's todos were even executed. `--apply` was run against prod as a formality (confirmed no-op via direct
@@ -533,7 +533,7 @@ the source plan and its finalize twin are archived as of this entry (see
       `resolve_lending_instrument_type(protocol)` call — no more manifest-vs-disk desync going forward. **FORKED
       2026-07-24**: the deferred historical-row re-stamp (rows still stamped `instrument_type="liquidation"`, the count
       the distinct-values census reads) is now tracked as its own plan,
-      `/plans/active/market_tick_data_service_lending_instrument_type_historical_restamp_2026_07_24.md` (size-cap split
+      `/plans/archive/2026_07/market_tick_data_service_lending_instrument_type_historical_restamp_2026_07_24.md` (size-cap split
       of this doc) — not duplicated here.
 - [x] [BACKEND] P3. ✅ instruments-service `writers.py::_LEGACY_INSTRUMENT_TYPE_ALIASES` — add
       `'options_chain': 'OPTION'` for parity with the existing `'futures_chain': 'FUTURE'`. **SHIPPED —
@@ -725,7 +725,7 @@ reconciliation, the category-1 owning-plan citation re-verification, and the MDP
 
 **Forked out 2026-07-24** (not archived — still open, dispatchable work): the MTDS lending `instrument_type` historical
 manifest re-stamp is now its own plan,
-`/plans/active/market_tick_data_service_lending_instrument_type_historical_restamp_2026_07_24.md`.
+`/plans/archive/2026_07/market_tick_data_service_lending_instrument_type_historical_restamp_2026_07_24.md`.
 
 ### 2026-07-25 — census refresh (the one remaining open todo)
 

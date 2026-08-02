@@ -21,7 +21,7 @@ tags: [defi, aave-oracle, test-drift, cross-repo, lst-rate]
 related:
   [
     /plans/active/lst_rate_honest_coverage_2026_07_21.md,
-    /plans/active/issues/instruments_service_deribit_combo_purge_test_drift_2026_07_21.md,
+    /plans/archive/issues/instruments_service_deribit_combo_purge_test_drift_2026_07_21.md,
   ]
 created: 2026-07-21
 assigned_vm: planning

@@ -38,7 +38,7 @@ locked_by:
 context_scope:
   [
     /codex/05-infrastructure/vm-tarball-deployment.md,
-    /plans/active/issues/features_sports_env_staging_reads_empty_staging_reference_data_2026_08_01.md,
+    /plans/archive/issues/features_sports_env_staging_reads_empty_staging_reference_data_2026_08_01.md,
     deployment-service/scripts/vm/create-code-tarballs.sh,
     deployment-service/scripts/vm/gcs_upload_via_adc.py,
   ]

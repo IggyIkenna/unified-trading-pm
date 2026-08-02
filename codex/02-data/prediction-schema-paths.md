@@ -51,7 +51,7 @@ code_refs:
 SSOT for prediction market data flowing through the unified trading system.
 
 **IS migration complete (2026-05-22)**: The archived Plan A IS half was resumed by
-[`data_status_coverage_gaps_and_prediction_manifest_fix_2026_05_22.md`](../../plans/active/data_status_coverage_gaps_and_prediction_manifest_fix_2026_05_22.md).
+[`data_status_coverage_gaps_and_prediction_manifest_fix_2026_05_22.md`](../../plans/archive/2026_05/data_status_coverage_gaps_and_prediction_manifest_fix_2026_05_22.md).
 All 3,940 legacy IS manifest rows (data_type=BTC/ETH/SOL/etc., blank underlying) were purged. All 4,931 legacy
 `day=<date>/venue=POLYMARKET/market=<asset>/` GCS parquets were deleted. IS now writes canonical
 `data_type=prediction_canonical_question_group` + `canonical_question_group` + `underlying`. The orchestrator fix

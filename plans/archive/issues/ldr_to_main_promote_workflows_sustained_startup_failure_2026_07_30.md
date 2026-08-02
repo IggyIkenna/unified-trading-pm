@@ -93,6 +93,9 @@ resolved_by:
   interactive session, 2026-07-31 — GitHub Actions billing wall (root cause) confirmed cleared via live gh run checks
 ---
 
+> **🟢 RESOLVED 2026-07-31** — root cause (GitHub Actions billing wall) confirmed cleared via live `gh run` checks in
+> an interactive session.
+
 ## What I found
 
 See summary above for the full evidence chain. In short: the two workflows that drive ALL LDR→main promotion for the

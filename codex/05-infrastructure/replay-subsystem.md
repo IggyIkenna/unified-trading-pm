@@ -42,7 +42,7 @@ code_refs:
 > **STATUS** — covers the replay process that fills gap windows when the live pipeline loses data (intraday VM restart,
 > websocket disconnect exceeding reconnect grace, cluster bounce). Designed alongside the live-pipeline activation for
 > 2026-05-23. Full work plan in
-> [`plans/active/live_pipeline_mtds_mdps_features_2026_05_08.md`](../../plans/active/live_pipeline_mtds_mdps_features_2026_05_08.md)
+> [`plans/active/live_pipeline_mtds_mdps_features_2026_05_08.md`](../../plans/archive/2026_05/live_pipeline_mtds_mdps_features_2026_05_08.md)
 > Phase 7. If this doc disagrees with the active plan, the plan wins.
 >
 > **⚠️ PARTIALLY SUPERSEDED on `pipeline_mode` (M1, operator-ratified; annotated 2026-06-11 R6-codex)**: this doc's
@@ -309,7 +309,7 @@ ScenarioReport parquet emitted per cell (archetype × scenario_id)
 
 Post-cutover: additional tap layers (RAW_TICK, FEATURE) compose the same way — replay precedes overlay; watermark KV is
 unaffected. Full post-cutover scope tracked in
-[`simulation_scenarios_post_cutover_2026_06_01.md`](../../plans/active/simulation_scenarios_post_cutover_2026_06_01.md).
+[`simulation_scenarios_post_cutover_2026_06_01.md`](../../plans/archive/2026_05/simulation_scenarios_post_cutover_2026_06_01.md).
 
 ## Anti-patterns
 
@@ -325,7 +325,7 @@ unaffected. Full post-cutover scope tracked in
 ## Cross-references
 
 - Plan:
-  [`live_pipeline_mtds_mdps_features_2026_05_08`](../../plans/active/live_pipeline_mtds_mdps_features_2026_05_08.md)
+  [`live_pipeline_mtds_mdps_features_2026_05_08`](../../plans/archive/2026_05/live_pipeline_mtds_mdps_features_2026_05_08.md)
   Phase 7 (replay subsystem) + Phase 2C (UTL replay-cascade helpers).
 - Sibling: [`live-pipeline-architecture.md`](./live-pipeline-architecture.md).
 - Scenario injection:

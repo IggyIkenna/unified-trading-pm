@@ -56,6 +56,7 @@ estimate_calibrated_ai_days: 0.4
 assigned_role: infra
 drift_direction: advance-code
 resolved_by: # NOT yet archivable — the ORIGINAL escalation (routing) is discharged, but 3 prevention todos remain open
+archive_exempt: true # inline status comment is stale (all 3 prevention todos now closed) -- archival routed through ao_satellite_ao_dispatch_batch3_finalize_2026_07_31.md's [REVIEW] P0 todo, not standalone (see na-eligibility-audit 2026-08-01 entry)
 locked_by:
 locked_since:
 depends_on: []

@@ -51,7 +51,7 @@ source: >-
 
 `live_event_log_warm_sink_recovery_and_cold_compaction_2026_07_31.md`'s `[DATA] P1.2` todo requires re-running the
 `paper(W)==batch-rerun(W)` determinism test (`daily-determinism` CLI / `DailyDeterminismHandler` in
-`batch-live-reconciliation-service`, per `codex/09-strategy/operational/paper-batch-live-reconciliation.md` §5) for
+`batch-live-reconciliation-service`, per `/codex/09-strategy/operational/paper-batch-live-reconciliation.md` §5) for
 BINANCE-FUTURES, ASTER, and OKX-FUTURES now that real warm+cold capture is confirmed flowing for these 3 venues (P1.1,
 redeployed 2026-07-31T21:14-21:16Z).
 

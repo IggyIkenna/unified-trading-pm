@@ -32,7 +32,7 @@ related:
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
     /plans/active/cefi_consolidated_closeout_2026_07_18.md,
     /plans/active/cefi_consolidated_closeout_aggregated_sources_2026_07_24.md,
-    /plans/active/issues/ag_closeout_audit_scope_widening_triage_2026_07_26.md,
+    /plans/archive/issues/ag_closeout_audit_scope_widening_triage_2026_07_26.md,
     /plans/archive/issues/generate_ag_closeout_audit_candidates_ao_ci_infra_membership_stale_after_closeout_archival_2026_07_29.md,
   ]
 created: "2026-07-30"
@@ -59,7 +59,7 @@ context_scope:
   [
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
     /scripts/plan-hygiene/generate_ag_closeout_audit_candidates.py,
-    /plans/active/issues/ag_closeout_audit_scope_widening_triage_2026_07_26.md,
+    /plans/archive/issues/ag_closeout_audit_scope_widening_triage_2026_07_26.md,
     /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
   ]
 ---

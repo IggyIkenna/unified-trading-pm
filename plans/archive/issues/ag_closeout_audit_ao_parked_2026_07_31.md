@@ -9,7 +9,7 @@ summary: >-
   SSOT-adjacent fact contradiction (a doc's own "what's true today" claims proven false by live measurement) plus two
   already-documented non-AO-eligible orphans (cross-referenced from the batch's own Deferred section, restated here for
   the standalone-doc requirement).
-status: open
+status: resolved
 nature: issue
 asset_group: [ao]
 stage: [meta]
@@ -37,7 +37,7 @@ execution_scope: orchestrator-agent
 estimate_class: research
 estimate_baseline_ai_days: 0.3
 estimate_calibrated_ai_days: 0.36
-resolved_by:
+resolved_by: "doc-correction shipped 2026-08-01 (context_scope_consumption_enforcement_2026_07_30.md); Finding 2 items require no action"
 locked_by:
 locked_since:
 supersedes:
@@ -53,6 +53,8 @@ drift_direction: advance-code
 ---
 
 # ag-closeout-audit ao tranche 2026-07-31 — parked findings
+
+> **🟢 RESOLVED 2026-08-02** — Finding 1's doc-correction shipped 2026-08-01 (`context_scope_consumption_enforcement_2026_07_30.md`); Finding 2's items are "no action needed unless the operator lifts the ruling," reconciliation ledger confirms 3/3 findings written and balanced.
 
 ## Finding 1 — data-correctness / SSOT-adjacent contradiction (the operator-notify-worthy one)
 

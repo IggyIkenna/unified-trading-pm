@@ -31,7 +31,7 @@ scope: [engineer, admin]
 tags: [multi-agent-safety, slot-collision, git, contention, throughput, commit-attribution, per-tab-worktrees]
 related:
   [
-    /plans/active/issues/autostash_pop_restores_foreign_wip_into_the_index_2026_07_17.md,
+    /plans/archive/issues/autostash_pop_restores_foreign_wip_into_the_index_2026_07_17.md,
     /plans/active/issues/two_agents_slot3_collision_and_yahoo_finance_red_tree_2026_07_15.md,
     /plans/active/issues/quickmerge_sentinel_race_retry_storm_under_pm_doc_push_contention_2026_07_21.md,
     /codex/05-infrastructure/per-tab-worktrees.md,

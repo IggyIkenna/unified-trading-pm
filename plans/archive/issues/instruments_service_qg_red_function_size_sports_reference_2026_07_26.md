@@ -85,5 +85,5 @@ this issue's author's craft (infra).
                                   verified format-stable post `ruff format`) — `instruments-service@<pending, ships alongside this todo>`. The
                                   SILENT-MISS mechanism (2 real, independently-confirmed violations across 2 different files/check-classes both
                                   surviving multiple full "ALL QUALITY GATES PASSED" runs) is tracked as its own, now-P1, issue:
-                                  `/plans/active/issues/qg_size_gate_sentinel_skip_root_cause_2026_07_25.md` (pre-existing doc, added corroborating
+                                  `/plans/archive/issues/qg_size_gate_sentinel_skip_root_cause_2026_07_25.md` (pre-existing doc, added corroborating
                                   evidence + a new instrumentation todo this session — not duplicated here).

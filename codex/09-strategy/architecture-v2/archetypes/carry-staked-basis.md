@@ -133,7 +133,7 @@ This is what the position would actually earn — not a DefiLlama-modelled or ve
 > source for this archetype. Staking APY is reconstructed from on-chain rate growth via the formula above and audited
 > against the issuer's public endpoint where one exists (cbETH ↔ Coinbase `wrapped-assets/CBETH`, validated 0.00 bps
 > drift on 2026-05-14). Empirical evidence + recommended decisions:
-> [`plans/active/issues/lst_apr_sourcing_method_validated_2026_05_14.md`](../../../../plans/active/issues/lst_apr_sourcing_method_validated_2026_05_14.md).
+> [`plans/active/issues/lst_apr_sourcing_method_validated_2026_05_14.md`](../../../../plans/archive/issues/lst_apr_sourcing_method_validated_2026_05_14.md).
 
 > **jitoSOL backtest window — clipped to 2023-10-01+ (resolved, default: clip).** The `oracle_prices` feed for
 > jitoSOL-involving slots reads Pyth Hermes, whose archive API has no data before `ORACLE_COVERAGE_START["pyth_hermes"]`
@@ -156,7 +156,7 @@ regeneration. No engine code changes, no catalog code changes — just a new mat
 
 Today's matrix (2026-05-20 — re-verified against `accepted_perp_collateral()` in UAC `venue_collateral.py`; original
 2026-05-07 SSOT plan:
-[`defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.md`](../../../../plans/active/defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.md)):
+[`defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.md`](../../../../plans/archive/2026_05/defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.md)):
 
 | perp_venue                                                                                                       | LST acceptance                                                                                                                                                 | catalog rows produced (2026-05-20 actual) |
 | ---------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------- |
@@ -435,7 +435,7 @@ No engine, catalog, or strategy code change needed.
 - **Active umbrella plan**: [`plans/active/defi_master.md`](/plans/epics/defi_master.md) — Fork 1 owns live
   carry_staked_basis deployment
 - **Venue-matrix / canonicalisation plan**:
-  [`plans/active/defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.md`](../../../../plans/active/defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.md)
+  [`plans/active/defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.md`](../../../../plans/archive/2026_05/defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.md)
   (Stream A: venue collateral live probe; Stream D: target_leverage / vol-cap config schema)
 - **Archived origin plan** (provenance of `CarryStakedBasisRankAllocator` Phase 8):
   [`plans/archive/carry_staked_basis_structure_axis_2026_05_04.plan.md`](../../../../plans/archive/carry_staked_basis_structure_axis_2026_05_04.plan.md)

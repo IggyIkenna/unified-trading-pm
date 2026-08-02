@@ -16,7 +16,7 @@ scope: [engineer]
 tags: [ui, wizard, jurisdiction, registry-regen, ci-regen, playwright, smoke]
 related:
   [
-    /plans/active/issues/wizard_smoke_suite_pre_existing_failures_2026_07_28.md,
+    /plans/archive/issues/wizard_smoke_suite_pre_existing_failures_2026_07_28.md,
     /plans/active/issues/capability_wizard_gap_discovery_2026_06_11.md,
     /plans/active/capability_wizard_client_lite_and_ci_regen_followup_2026_07_24.md,
   ]

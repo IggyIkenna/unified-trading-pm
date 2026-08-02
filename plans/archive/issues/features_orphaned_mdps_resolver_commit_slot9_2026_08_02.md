@@ -42,6 +42,8 @@ locked_since:
 
 # features-service volatility PREDICTION-bucket fix is orphaned in slot 9's local reflog
 
+> **🟢 RESOLVED 2026-08-02** — fix landed `features-service@0997fbac`.
+
 ## What I found
 
 Slot 9's local `features-service` clone (`.tabs/9/features-service`) contains a real, fully-formed commit — `272de118`

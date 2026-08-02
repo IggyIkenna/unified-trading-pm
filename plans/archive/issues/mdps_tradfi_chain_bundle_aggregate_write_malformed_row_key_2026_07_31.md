@@ -25,7 +25,7 @@ summary: >-
   outright (`ALL FAILED (5/5)` or `(6/6)` on every date checked). Neither blocks the per-instrument candle output that
   downstream consumers (features-service, strategy) actually need -- shard-level failure isolation means the process
   continues past both and keeps writing the real per-instrument files.
-status: open
+status: resolved
 nature: issue
 asset_group: [tradfi]
 stage: [data]
@@ -47,8 +47,11 @@ assigned_role: backend_engineer
 drift_direction: advance-code
 depends_on: []
 locked_by:
-resolved_by:
+resolved_by: "market-data-processing-service@c78285b, unified-api-contracts@4eeb495f — regression tests + QG green"
 ---
+
+> **🟢 RESOLVED 2026-08-02** — both todos shipped with regression tests and full QG green.
+> `market-data-processing-service@c78285b`, `unified-api-contracts@4eeb495f`.
 
 # What I found
 

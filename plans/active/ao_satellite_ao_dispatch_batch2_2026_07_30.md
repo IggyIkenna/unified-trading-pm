@@ -290,7 +290,7 @@ other orphaned candidate considered and why it was NOT drafted.
 
 ## Deferred — time-gated (re-check after the date passes, not a design question)
 
-- ~~`/plans/active/issues/ao_done_require_origin_not_enforced_2026_07_29.md`~~ — **RESOLVED + archived 2026-07-30, stale
+- ~~`/plans/archive/issues/ao_done_require_origin_not_enforced_2026_07_29.md`~~ — **RESOLVED + archived 2026-07-30, stale
   by the time this plan was drafted**: the operator reviewed the 3-spot-check trend (0/151, 0/52, 0/222 false, all 0.0%)
   directly and explicitly overrode the "wait a few days" gate this note assumed still applied. Flipped + shipped
   `agent-orchestrator@cf7cd35`. Now at `/plans/archive/issues/ao_done_require_origin_not_enforced_2026_07_29.md` —

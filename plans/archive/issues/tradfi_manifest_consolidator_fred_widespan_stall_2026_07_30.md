@@ -163,7 +163,7 @@ stuck in `_wait_for_in_flight_cycle_then_reread`'s bounded consolidator-lock wai
   macro history with CME/ICE/etc.'s ~6-year OHLCV history in ONE bucket makes the consolidator's calendar-span-based
   chunking (`span_days / chunk_days`) balloon regardless of actual row count (only 398 outlier rows out of 5.89M total,
   i.e. 0.007% of rows, forced an ~8x chunk-count increase).
-- Per `codex/02-data/data-pipeline-correctness-hard-rule.md`: a stalled/DOWN manifest consolidator for a whole bucket is
+- Per `/codex/02-data/data-pipeline-correctness-hard-rule.md`: a stalled/DOWN manifest consolidator for a whole bucket is
   a data-pipeline-correctness issue, not routine noise — flagging per the "big finding → NOTIFY OPERATOR" rule.
 
 ## Recommended next steps (not diagnosed to a fix here — this issue is the root-cause finding, not the patch)
@@ -209,7 +209,7 @@ stuck in `_wait_for_in_flight_cycle_then_reread`'s bounded consolidator-lock wai
       that we grab the data or whatever rest of tradfi starts." Implemented as a backfill-SCOPE fix (not a
       bucket-topology change): `deployment-service/scripts/vm/launch-tradfi-bf-fred.sh`'s default `START_FLOOR` changed
       `1962-01-02` → `2020-01-01` (matches CME/FX/ICE's Databento-group floor per
-      `codex/02-data/tradfi-databento-sourcing-ssot.md`) — `coverage_starts.py`'s `1962-01-02` FRED-availability
+      `/codex/02-data/tradfi-databento-sourcing-ssot.md`) — `coverage_starts.py`'s `1962-01-02` FRED-availability
       constant is UNCHANGED (it documents a true fact about FRED's real history, separate from how much of it this
       bucket chooses to hold). 2 new regression tests, `quality-gates.sh` green. Shipped `deployment-service@fee8860b`.
       **Also purged the already-captured orphaned fragment** this same root cause created: an early FRED backfill VM had

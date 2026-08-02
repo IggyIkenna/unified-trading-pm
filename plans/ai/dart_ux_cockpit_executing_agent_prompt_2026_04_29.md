@@ -62,7 +62,7 @@ user, not the repo).
 
 **Canonical plan-of-record (read FULLY before writing any code):**
 
-- `unified-trading-pm/plans/active/dart_ux_cockpit_refactor_2026_04_29.plan.md` (~2,500 lines including
+- `unified-trading-pm/plans/archive/dart_ux_cockpit_refactor_2026_04_29.plan.md` (~2,500 lines including
   §4.8/§4.9/§4.10/§4.11)
 
 **Canonical codex SSOT:**
@@ -331,7 +331,7 @@ Read the plan in FULL first (§0 → §26). Then read the new reference docs (IN
    `.playwright-evidence/phase-1a/`.
 6. Commit + push (per-chunk; do not batch). Use a descriptive message referencing §17 Phase 1A and §4.5 resolver.
 7. Tick the Phase 1A checkbox in the plan-of-record at the top of
-   `unified-trading-pm/plans/active/dart_ux_cockpit_refactor_2026_04_29.plan.md` (use Edit tool; commit + push the plan
+   `unified-trading-pm/plans/archive/dart_ux_cockpit_refactor_2026_04_29.plan.md` (use Edit tool; commit + push the plan
    tick separately to PM repo).
 8. Move to Phase 1B — Configuration Lifecycle primitives (StrategyReleaseBundle, RuntimeOverride,
    ExternalSignalStrategyVersion, treasury config split, AccountConnectivityConfig, Pilot stage). Stubs only — no UI

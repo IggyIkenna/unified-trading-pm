@@ -35,7 +35,7 @@ related:
   [
     /plans/active/issues/cicd_escalation_agentrow_archived_prematurely_mid_session_2026_07_29.md,
     /plans/active/issues/data_pipeline_failure_one_shot_done_no_agentrow_2026_07_29.md,
-    /plans/active/issues/github_actions_billing_wall_recurrence_2026_07_29.md,
+    /plans/archive/issues/github_actions_billing_wall_recurrence_2026_07_29.md,
     /plans/active/issues/fleet_wide_qg_capacity_crisis_continues_day2_2026_07_29.md,
     /codex/08-workflows/ci-cd-flow.md,
   ]

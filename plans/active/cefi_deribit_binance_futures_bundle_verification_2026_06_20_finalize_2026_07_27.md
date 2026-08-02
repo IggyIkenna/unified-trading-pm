@@ -31,6 +31,7 @@ priority: P2
 estimate_class: infra
 estimate_baseline_ai_days: 0.3
 estimate_calibrated_ai_days: 0.2
+archive_exempt: true # gate_on_depends:true finalize doc — stays active by design until the parent's DERIBIT gap closes (see Progress Log)
 locked_by:
 locked_since:
 supersedes:

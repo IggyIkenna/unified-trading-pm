@@ -519,10 +519,10 @@ drift.
       commit).
 
   **Implementation**:
-  - [x] `git rm /codex/05-infrastructure/cloud-agnostic-migration.md`.
+  - [x] `git rm /codex/04-architecture/cloud-agnostic-migration.md`.
   - [x] Update `/codex/05-infrastructure/README.md:171` (and any other incoming refs in 05-infra) to point at
         `04-architecture/cloud-agnostic-migration.md`.
-  - [x] Workspace-wide grep `/codex/05-infrastructure/cloud-agnostic-migration.md` → rewrite all refs (PM-internal refs
+  - [x] Workspace-wide grep `/codex/04-architecture/cloud-agnostic-migration.md` → rewrite all refs (PM-internal refs
         verified; sibling-repo refs in deployment-service/terraform/ point at `unified-trading-codex/...` which is a
         sibling-repo path, out of scope for PM).
 
@@ -1110,7 +1110,7 @@ NEW codex docs explicitly created by this plan:
 
 DELETED codex docs by this plan:
 
-- [x] `/codex/05-infrastructure/cloud-agnostic-migration.md` (Phase C.1, stub SHIPPED 2026-05-08 PM@1e33b423)
+- [x] `/codex/04-architecture/cloud-agnostic-migration.md` (Phase C.1, stub SHIPPED 2026-05-08 PM@1e33b423)
 - [x] `/codex/05-infrastructure/deployment-ui-environment-tiers.md` (Phase C.2 SHIPPED 2026-05-08 PM@2818b6b9)
 - [x] `/codex/05-infrastructure/launcher-script-consolidation-2026-05-07.md` (Phase C.3 SHIPPED 2026-05-08 PM@6a6308b3)
 - [x] `/codex/02-data/data-status-drilldown-hierarchy.md` (Phase D.1 SHIPPED 2026-05-08 — bundled into PM@f58bc8a9)

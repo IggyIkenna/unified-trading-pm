@@ -59,6 +59,8 @@ locked_since:
 
 # GitHub Actions fleet-wide outage — likely spending limit, needs operator's billing UI
 
+> **🟢 RESOLVED 2026-07-31** — confirmed cleared via live `gh run` checks in an interactive session.
+
 ## Evidence
 
 - `instruments-service` run `30500539587`: `gh run view` → `"This run likely failed because of a workflow file issue."`;

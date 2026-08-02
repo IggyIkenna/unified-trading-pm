@@ -676,6 +676,6 @@ flowchart TB
 - [sports_migration_gap_fix.md](unified-trading-pm/plans/cursor-plans/sports_migration_gap_fix.md)
 - [SPORTS_PROVIDERS_REGISTRY.md](unified-trading-pm/docs/SPORTS_PROVIDERS_REGISTRY.md)
 - [sports-schema-paths.md](unified-trading-/codex/02-data/sports-schema-paths.md) — gap fix (COMPLETE per plan)
-- [T1_T2_MIGRATION_PATTERNS.md](unified-trading-pm/plans/active/T1_T2_MIGRATION_PATTERNS.md) — migration patterns
+- [T1_T2_MIGRATION_PATTERNS.md](unified-trading-pm/plans/archive/T1_T2_MIGRATION_PATTERNS.md) — migration patterns
 - archive/sports-betting-services-previous/footballbets/features/docs/core/ — FEATURES_CATALOG, FEATURE_ENGINEERING
 - execution-service: ExecutionMode SCE/HUF in signal_driven_shared.py, strategies.py

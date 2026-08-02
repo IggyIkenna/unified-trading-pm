@@ -639,9 +639,9 @@ documentation todo already shipped at PM@372e23aa. The remaining 4 are carried h
 ## References
 
 - `unified-trading-pm/cursor-configs/CLAUDE.md` § "Per-asset-group shard-key matrix"
-- `unified-trading-pm/plans/active/data_status_multi_axis_shard_propagation_2026_05_06.plan.md` (companion plan —
+- `unified-trading-pm/plans/archive/data_status_multi_axis_shard_propagation_2026_05_06.plan.md` (companion plan —
   display axes + breakdowns, this plan handles drill-down depth)
-- `unified-trading-pm/plans/active/shard_granularity_ssot_propagation_2026_05_06.HANDOVER.md` (writer-side compliance —
+- `unified-trading-pm/plans/archive/shard_granularity_ssot_propagation_2026_05_06.HANDOVER.md` (writer-side compliance —
   drives the ground-truth shard atoms)
 - `unified-trading-pm/codex/02-data/availability-manifest-and-data-status.md`
 - `unified-trading-pm/codex/02-data/per-asset-group-bucket-layouts.md`

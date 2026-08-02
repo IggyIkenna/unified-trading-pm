@@ -15,7 +15,7 @@ summary:
   never get stamped. (C) exactly 1 row is a genuine cross-asset_group contamination: date=2026-06-26
   venue=UNISWAP_V3-BASE asset_group=defi service_name=instruments-service capture_status=attempted_failed but
   source=api_football, sitting in the SPORTS manifest — a DeFi object mislabeled as an api_football sports capture."
-status: open
+status: resolved
 priority: P1
 nature: notes
 asset_group: [sports, defi, meta]
@@ -32,7 +32,7 @@ source:
   (instruments-store-sports-prd-central-element-323112 _index/availability_index.parquet, 5,759,085 rows) via DuckDB
   over ADC; repro scripts scratchpad/apifootball_reverify.py + apifootball_findings_char.py."
 locked_by:
-resolved_by:
+resolved_by: "unified-trading-library@86f3da96/@c47273c1, instruments-service@e1f36eed/@3e08f7d2, 2026-07-27"
 execution_scope: orchestrator-agent
 model_tier: sonnet-doable
 drift_direction: advance-code
@@ -42,9 +42,13 @@ context_scope:
   [
     instruments-service/instruments_service/engine/orchestrator/process_completeness.py,
     instruments-service/instruments_service/engine/orchestrator/process_write.py,
-    /plans/active/sports_data_sources_canonical_completion_2026_07_13.md,
+    /plans/archive/2026_07/sports_data_sources_canonical_completion_2026_07_13.md,
   ]
 ---
+
+> **🟢 RESOLVED 2026-08-02** — all 4 findings closed across the multi-date investigation: re-fetch, consolidator heal,
+> redeploy, and phantom-row cleanup, ending with Finding B "FULLY RESOLVED" and Finding C resolved 2026-07-27.
+> `unified-trading-library@86f3da96`/`@c47273c1`, `instruments-service@e1f36eed`/`@3e08f7d2`.
 
 ## What I found
 
@@ -291,7 +295,7 @@ runs on every merge for all rows, not just new writes). Independently verified v
 non-sports rows are the already-tracked Finding C rows, not a new gap. Held stable across a re-check ~90s later.
 **Finding B is closed. Both todos above (the heal + the redeploy follow-up) are DONE — no manual Cloud Build/redeploy
 action was actually required.** Full evidence:
-`unified-trading-pm/plans/active/sports_data_sources_canonical_completion_2026_07_13.md` Progress Log, 2026-07-15 entry.
+`unified-trading-pm/plans/archive/2026_07/sports_data_sources_canonical_completion_2026_07_13.md` Progress Log, 2026-07-15 entry.
 
 ## Progress Log
 

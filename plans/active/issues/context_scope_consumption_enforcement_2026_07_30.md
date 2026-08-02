@@ -51,7 +51,7 @@ depends_on: []
 codex SSOTs (+ occasional script paths) that doc's remaining work depends on. **It is ELECTIVE, not required, and the
 corpus backfill is still in progress** — the two sentences below correct the two false "done" claims this section
 previously made (2026-07-30 version), per the data-correctness contradiction filed in
-`/plans/active/issues/ag_closeout_audit_ao_parked_2026_07_31.md` Finding 1.
+`/plans/archive/issues/ag_closeout_audit_ao_parked_2026_07_31.md` Finding 1.
 
 1. **Field requirement — ELECTIVE (`Req.E`), not required.** Direct read of `scripts/docs/docspec.py` (2026-08-01,
    post-`uv sync`): `FieldSpec("context_scope", Req.E, "free_list")` at line 139 (doc_type `plan`) and line 163
@@ -130,7 +130,7 @@ pressure. The operator explicitly named this as "the rest of the work" for a lat
   decision per the ask-before-creating HARD RULE; todo 2 is gated behind todo 1 shipping. Genuine judgment call, not a
   mis-defaulted mechanical task. No other action.
 - **2026-08-01** (slot 5, task `ag_closeout_audit_ao_parked-001`): corrected the "What's true today" section per
-  `/plans/active/issues/ag_closeout_audit_ao_parked_2026_07_31.md` Finding 1 — the "now REQUIRED" and "backfilled the
+  `/plans/archive/issues/ag_closeout_audit_ao_parked_2026_07_31.md` Finding 1 — the "now REQUIRED" and "backfilled the
   corpus" claims were false as of 2026-07-31 and remain false today. Verified fresh: `docspec.py` still specs
   `context_scope` as `Req.E` (elective) for both `plan` (line 139) and `issue` (line 163) doc_types; a fresh
   `generate_context_scope_inventory.py` run reports 647 in-scope docs / 410 `NEVER_SCOUTED` / 15 `STALE` / 222

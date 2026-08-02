@@ -25,7 +25,7 @@ scope: [engineer]
 tags: [ao-dispatch, assigned-vm, plan-hygiene, frontmatter, triage, backlog]
 related:
   [
-    /plans/active/issues/ag_closeout_audit_scope_widening_triage_2026_07_26.md,
+    /plans/archive/issues/ag_closeout_audit_scope_widening_triage_2026_07_26.md,
     /plans/active/issues/autonomous_session_operator_decisions_2026_07_25.md,
     /agent-orchestrator/server/regen_backlog_from_plan.py,
     /plans/PLAN_FORMAT.md,

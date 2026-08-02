@@ -136,4 +136,4 @@ Estimated effort: 30-45 minutes for steps 1-3, additional 15 minutes for step 4.
   verification).
 - Work-split parent: [`work_split_2026_05_07_ikenna_5tab_layout`](../work_split_2026_05_07_ikenna_5tab_layout.md) Agent
   1 done-definition item 2 ("KillSwitchBus integration test passes") explicitly flagged.
-- Codex SSOT: [`codex/14-playbooks/alerting/alert-code-taxonomy`](/codex/14-playbooks/alerting/alert-code-taxonomy.md).
+- Codex SSOT: [`codex/14-playbooks/alerting/alert-code-taxonomy`](/codex/15-runbooks/alerting/alert-code-taxonomy.md).

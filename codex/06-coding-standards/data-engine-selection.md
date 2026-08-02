@@ -32,7 +32,7 @@ code_refs:
 # Data Engine Selection — Polars vs Pandas vs PyArrow
 
 Codified 2026-05-28 per the operator-driven MDPS architecture audit (sibling plan:
-[`plans/active/mdps_long_running_multi_shard_architecture_audit_2026_05_28.md`](../../plans/active/mdps_long_running_multi_shard_architecture_audit_2026_05_28.md)
+[`plans/active/mdps_long_running_multi_shard_architecture_audit_2026_05_28.md`](../../plans/archive/2026_06/mdps_long_running_multi_shard_architecture_audit_2026_05_28.md)
 § "Finding D"). Workspace-wide rule for batch services that read/write parquet at non-trivial scale (≥ a few MB per
 file, ≥ tens of files per shard).
 

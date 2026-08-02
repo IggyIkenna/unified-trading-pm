@@ -31,7 +31,7 @@ scope: [engineer, admin]
 tags: [ci-cd, dependency-alignment, quickmerge, tier-dag, execution-service, market-tick-data-service, blocking]
 related:
   [
-    /plans/active/issues/cloud_build_unified_api_contracts_publish_ordering_race_2026_07_29.md,
+    /plans/archive/issues/cloud_build_unified_api_contracts_publish_ordering_race_2026_07_29.md,
     /plans/archive/issues/dependency_alignment_red_multi_repo_ceiling_drift_2026_07_13.md,
   ]
 created: 2026-08-01
@@ -148,3 +148,9 @@ premature).
   `execution-service@050ed797`-author sanity check that nothing else silently relied on that manifest entry (the
   recommendation's own stated risk) — flip to `resolved` once that's confirmed, or if a downstream break surfaces,
   reopen with the specifics.
+
+## Todos (follow-up)
+
+- [ ] [OPERATOR] P2. Confirm (with the operator or the `execution-service@050ed797` author) that nothing silently
+      relied on the removed `workspace-manifest.json` execution-service/market-tick-data-service dependency entry.
+      Flip this doc to `status: resolved` once confirmed, or reopen with specifics if a downstream break surfaces.

@@ -16,7 +16,7 @@ scope: [engineer]
 tags: [tradfi, ao-dispatch, close-out, batch-1, satellite-docs, archival]
 related:
   [
-    /plans/active/tradfi_satellite_ao_dispatch_batch1_2026_07_25.md,
+    /plans/archive/2026_07/tradfi_satellite_ao_dispatch_batch1_2026_07_25.md,
     /plans/active/tradfi_consolidated_closeout_2026_07_18.md,
     /plans/active/issues/autonomous_session_operator_decisions_2026_07_25.md,
   ]
@@ -41,7 +41,7 @@ source: >-
 assigned_role: data_engineering
 context_scope:
   [
-    /plans/active/tradfi_satellite_ao_dispatch_batch1_2026_07_25.md,
+    /plans/archive/2026_07/tradfi_satellite_ao_dispatch_batch1_2026_07_25.md,
     /plans/active/tradfi_consolidated_closeout_2026_07_18.md,
     /plans/active/issues/autonomous_session_operator_decisions_2026_07_25.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,

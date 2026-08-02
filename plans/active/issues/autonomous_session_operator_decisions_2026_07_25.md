@@ -22,6 +22,7 @@ last_updated: "2026-07-31"
 parent_epic: agent_operating_framework_master
 assigned_vm: planning
 priority: P1
+archive_exempt: true # standing running log by design — accumulates entries as genuine judgment calls surface during an ongoing rollout (see its own final todo)
 locked_by:
 resolved_by:
 source: >-

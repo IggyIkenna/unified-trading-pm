@@ -303,7 +303,7 @@ manifest-atom fix (C-track) and the ODDS-LEAK shard cleanup — else the re-run 
 - [x] ✅ [DATA] P0. **DONE — verified 2026-07-30 (satellite corpus-hygiene pass; independently confirmed by a concurrent
       `/na-eligibility-audit` sports-tranche pass the same day, same evidence, same conclusion), previously
       false-unchecked (see
-      `/plans/active/issues/ag_closeout_audit_sports_prefilter_covering_gap_and_false_unchecked_p0_2026_07_30.md`
+      `/plans/archive/issues/ag_closeout_audit_sports_prefilter_covering_gap_and_false_unchecked_p0_2026_07_30.md`
       finding 2).** PURGE the fabricated POST-FLOOR remainder (Jun-Dec 2020 + 2021-2026 only — 2017-2019 + pre-06-06
       2020 are moot, already deleted by the pre-floor wipe), only after the re-run todo above is done for that same
       post-floor scope — overwriting alone is provably insufficient (a re-run never rewrites a day it produces no output
@@ -318,7 +318,7 @@ manifest-atom fix (C-track) and the ODDS-LEAK shard cleanup — else the re-run 
       (the reversibility-verified purge, downgraded from `[OPERATOR]` 2026-07-27 per a fresh
       `gcs_bucket_soft_delete_retention_seconds()` check) resolved as a verified no-op because nothing was left to
       delete — every in-scope object already carries a `last_modified` on/after the 2026-07-19 cutoff. Sibling checkbox
-      in `/plans/active/issues/sports_derived_features_fabricated_corpus_scope_2026_07_20.md` closed on the same
+      in `/plans/archive/issues/sports_derived_features_fabricated_corpus_scope_2026_07_20.md` closed on the same
       evidence (now archived). The reversibility framing below stays accurate and re-usable but was never load-bearing,
       since no delete was needed. **⚠️ Corrected 2026-07-27 — the prior "Not `[OPERATOR]`-gated ...
       reversible-for-a-week" framing here was an UNVERIFIED assertion (the canonical negative example

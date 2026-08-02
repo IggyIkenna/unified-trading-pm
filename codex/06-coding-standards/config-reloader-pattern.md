@@ -182,7 +182,7 @@ detail (e.g. a temporary `_ProcessingState` dataclass that never crosses a servi
 7. `config_reloaders.py` must type `start_domain_config_reloaders(service_config: TypedConfigClass)` — no `object` type,
    no `getattr()` with fallback defaults
 8. **Per-wallet credential reload (added 2026-05-12 per
-   [`api_keys_wallets_accounts_readiness_2026_05_10.md`](../../plans/active/api_keys_wallets_accounts_readiness_2026_05_10.md)
+   [`api_keys_wallets_accounts_readiness_2026_05_10.md`](../../plans/archive/2026_05/api_keys_wallets_accounts_readiness_2026_05_10.md)
    Phase 9.H + 3.C.1)**: `execution-service/custody/cloud_kms.py` lazy-caches the plaintext PK
    per-`CloudKmsCustodyProvider` instance. When operator flips `WalletProvisioningConfig.signing_surface` (e.g.
    `CLOUD_KMS_ENCRYPTED` → `FIREBLOCKS_MPC` June-1), `ApiKeyReloader` detects the change via the wallet-config GCS

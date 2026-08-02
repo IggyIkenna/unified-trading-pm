@@ -193,7 +193,7 @@ with empty state).
 ## Firebase prod vs emulator credential split — added 2026-05-12 (Phase 9.J)
 
 Per
-[`api_keys_wallets_accounts_readiness_2026_05_10.md`](../../../plans/active/api_keys_wallets_accounts_readiness_2026_05_10.md)
+[`api_keys_wallets_accounts_readiness_2026_05_10.md`](../../../plans/archive/2026_05/api_keys_wallets_accounts_readiness_2026_05_10.md)
 Phase 9.J — codifies the production / staging / development Firebase credential boundary now that the workspace ships
 ADC-only + per-environment Cloud Run.
 

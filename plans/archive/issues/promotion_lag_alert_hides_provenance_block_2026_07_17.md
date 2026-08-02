@@ -141,7 +141,7 @@ about the alert that reports the residue.
       `check_strict_quickmerge.py --range origin/main..HEAD` now report `✅ no bypassed code commits`. **Did NOT
       hand-arm auto-merge on either** (per this doc's own explicit warning) — the actual PR merge for both is now
       additionally gated on the separate, unrelated, currently-active GitHub Actions billing wall
-      (`/plans/active/issues/github_actions_billing_wall_recurrence_2026_07_29.md`, `BLK-21d55fb1`) — the provenance
+      (`/plans/archive/issues/github_actions_billing_wall_recurrence_2026_07_29.md`, `BLK-21d55fb1`) — the provenance
       block is cleared, but neither promote PR can complete until that operator-only wall lifts. No workflow/alerting
       code change was needed for this todo (the alert already says what it means); the actual `PROMOTION LAG CLEARED`
       Slack recovery message for these two pairs will fire automatically once (a) the billing wall lifts and (b) the

@@ -111,7 +111,7 @@ defect; it is purely a function of host capacity at any given moment.
       the fix design. **Bonus finding**: on THIS host, `systemd-run` is unavailable
       (`⚠️ QG_MEM_CAP=2048M set but systemd-run     unavailable on this host`, confirmed live during this session's QG
       run) — so the OTHER hard backstop (the per-repo cgroup cap, `1.2× baseline`) is ALSO inactive here, same failure
-      class as `/plans/active/issues/qg_mem_wrap_systemd_bus_unavailable_2026_07_26.md`. On this host, admission-time
+      class as `/plans/archive/issues/qg_mem_wrap_systemd_bus_unavailable_2026_07_26.md`. On this host, admission-time
       estimation is genuinely the ONLY layer of defense until a run completes — raising the value of a live,
       cgroup-independent runtime check. **Shipped (option a — tighten the governor)**: a self-scoped runtime
       abort-monitor in `qg-host-governor.sh` (`_qg_watchdog_start`/`_qg_watchdog_loop`/`_qg_watchdog_signal_tree`,
@@ -250,7 +250,7 @@ defect; it is purely a function of host capacity at any given moment.
   already-running >80% job STILL PENDING"), so this doc's silent-kill pattern is field confirmation of a known,
   already-scoped design gap rather than a new one. Also found `systemd-run` is unavailable on this host (live warning
   during this session's own QG run), meaning the OTHER hard backstop (per-repo cgroup cap) is inactive here too — same
-  failure class as `/plans/active/issues/qg_mem_wrap_systemd_bus_unavailable_2026_07_26.md`. Implemented + shipped the
+  failure class as `/plans/archive/issues/qg_mem_wrap_systemd_bus_unavailable_2026_07_26.md`. Implemented + shipped the
   runtime abort-monitor (`_qg_watchdog_*` in `qg-host-governor.sh`, reservation-mode only, self-scoped — can only ever
   signal its OWN process tree, never another slot's): polls live MemAvailable, and on sustained >80% host-used pressure
   writes a loud marker + SIGTERMs its own process tree (via `pgrep -P`-walked descendants, not a process-group signal —

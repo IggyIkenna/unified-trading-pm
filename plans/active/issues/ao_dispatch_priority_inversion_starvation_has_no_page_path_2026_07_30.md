@@ -68,6 +68,7 @@ estimate_class: design
 drift_direction: advance-code
 depends_on: []
 resolved_by:
+archive_exempt: true # archival routed through ao_satellite_ao_dispatch_batch3_finalize_2026_07_31.md's [REVIEW] P0 todo, not standalone (see na-eligibility-audit 2026-08-01 entry)
 locked_by:
 context_scope:
   [

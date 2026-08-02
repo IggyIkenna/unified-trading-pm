@@ -67,6 +67,7 @@ priority: P1
 estimate_class: research
 estimate_baseline_ai_days: 8
 estimate_calibrated_ai_days: 9.6
+archive_exempt: true # standing reference surface by operator ruling — 0 open todos is expected here, re-confirmed by na-eligibility-audit 2026-08-02
 locked_by:
 locked_since:
 supersedes:

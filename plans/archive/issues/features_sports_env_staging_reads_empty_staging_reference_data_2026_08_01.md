@@ -15,7 +15,7 @@ summary: >-
   reference data — so the compute always finds "17/17 entities missing" and correctly (per the honest-absence model)
   records `empty_confirmed`, even for `SPORTS_SMOKE_DATES`' explicitly-"busy" days that have real fixtures in the
   `-prd-` tier.
-status: open
+status: resolved
 nature: issue
 asset_group: [sports]
 stage: [data]
@@ -35,13 +35,16 @@ assigned_vm: planning
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 source: [sports_consolidated_native_ao_extract-032]
-resolved_by:
+resolved_by: "features-service@72393fbf/@8ea48a33, re-verified end-to-end 2026-08-02"
 locked_by:
 context_scope: [/codex/02-data/honest-absence-downstream-handling.md]
 depends_on: []
 ---
 
 # sports feature e2e-check reads empty staging-tier reference data, not real prod data
+
+> **🟢 RESOLVED 2026-08-02** — both todos shipped and re-verified end-to-end (real GCS reads confirmed, parquet=6,
+> manifest=captured). `features-service@72393fbf`/`@8ea48a33`.
 
 ## What I found
 

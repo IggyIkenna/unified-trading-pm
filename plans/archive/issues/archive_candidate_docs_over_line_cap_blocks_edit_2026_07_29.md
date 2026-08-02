@@ -14,7 +14,7 @@ summary: >-
   must not be over its tier's cap, full stop", no ratchet exemption), so adding the missing todo would itself become
   uncommittable. Left untouched this pass; the archive-candidates gate stays green regardless (2 candidates vs baseline
   11), but the underlying prose-trap defect in both docs is real and not yet fixed.
-status: open
+status: resolved
 nature: issue
 asset_group: [tradfi, defi]
 stage: [meta]
@@ -38,7 +38,7 @@ source: [cicd escalation agt-c3b939 (plan_health gate), archive-candidates deep-
 drift_direction: worsening-slowly
 depends_on: []
 locked_by:
-resolved_by:
+resolved_by: "both target docs archived via the zero-open-todo ritual (2026-08-02); no split needed per the 2026-07-30 ruling"
 context_scope:
   [
     /plans/archive/issues/tradfi_mdps_build_continuous_mismatches_2_and_4_still_open_2026_07_26.md,
@@ -48,6 +48,11 @@ context_scope:
 ---
 
 # Two archive-candidate docs need a split before their prose-trap can be fixed
+
+> **🟢 RESOLVED 2026-08-02** — premise superseded by the 2026-07-30 operator ruling (an over-cap doc archives without a
+> split once it hits 0 open todos). Both halves discharged: `mtds_backfill_vm_startup_oom_rc137_2026_07_14` archived;
+> the sole remaining referrer (`tradfi_backfill_throughput_followups_2026_07_24.md` line ~676) repointed in the same
+> commit.
 
 ## What I found
 

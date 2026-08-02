@@ -173,7 +173,7 @@ source: >-
 ## Codex SSOTs
 
 `/codex/02-data/availability-manifest-and-data-status.md`, `/codex/11-project-management/doc-frontmatter-schema.md`,
-`/codex/12-agent-workflow/ao-dispatch-batch-naming-and-conflict-check.md`.
+`/codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md`.
 
 ## Progress Log
 

@@ -43,12 +43,17 @@ context_scope:
   [
     /plans/active/defi_dex_pool_symbol_fix_backfill_purge_2026_07_25.md,
     /plans/active/defi_dex_pool_symbol_fix_backfill_purge_finalize_2026_07_25.md,
-    /plans/active/issues/defi_dex_pools_subgraph_query_missing_input_tokens_2026_07_25.md,
+    /plans/archive/issues/defi_dex_pools_subgraph_query_missing_input_tokens_2026_07_25.md,
     market-tick-data-service/scripts/one_offs/delete_migrated_defi_markers_2026_07_23.py,
   ]
 ---
 
 # FLAGGED `_migrated_*` markers are 3+ distinct unresolved root-cause clusters
+
+> **🟢 RESOLVED 2026-08-02** — GMX cluster: `/plans/archive/2026_07/defi_gmx_venue_removal_2026_07_25.md` (complete,
+> verified). TRADER_JOE_V2/VELODROME_V2/CURVE dex_pool_state + lst_rates (all 4 venues) clusters:
+> `defi_dex_pool_symbol_fix_backfill_purge_2026_07_25.md`, all 5 todos shipped/independently re-verified 2026-08-02 —
+> both clusters this doc tracks are now independently confirmed closed.
 
 ## Why this exists
 

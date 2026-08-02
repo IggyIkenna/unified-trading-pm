@@ -43,7 +43,7 @@ via git blame).
 
 ## What's still on the original 4-phase handoff
 
-The full original handoff is at `unified-trading-pm/plans/ai/defi_data_to_strategy_4phase_handoff_2026_05_07.md`. Open
+The full original handoff is at `unified-trading-pm/plans/archive/defi_data_to_strategy_4phase_handoff_2026_05_07.md`. Open
 work in dependency order:
 
 ### Phase A — Data foundations (continued)
@@ -141,7 +141,7 @@ D1, D2, D3, D4 — see original handoff.
 
 ### DEX perp onboarding handover items (separate plan)
 
-`unified-trading-pm/plans/active/dex_perp_onboarding_handover_2026_05_07.HANDOVER.md` items A through F (forward-poll
+`unified-trading-pm/plans/archive/2026_05/dex_perp_onboarding_handover_2026_05_07.HANDOVER.md` items A through F (forward-poll
 handlers, Pacifica collateral matrix, EXTENDED-STARKNET historical, Lighter symbol scale-up, per-trade gap doc,
 backfill-VM final state) — none touched this session.
 
@@ -172,9 +172,9 @@ features-cross-instrument-service/
 
 ## Reference paths
 
-- Original 4-phase handoff: `unified-trading-pm/plans/ai/defi_data_to_strategy_4phase_handoff_2026_05_07.md`
+- Original 4-phase handoff: `unified-trading-pm/plans/archive/defi_data_to_strategy_4phase_handoff_2026_05_07.md`
 - Phase 9 archived plan: `unified-trading-pm/plans/archive/carry_tracer_phase_9_catalog_paired_dispersion_2026_05_06.md`
-- DEX perp handover: `unified-trading-pm/plans/active/dex_perp_onboarding_handover_2026_05_07.HANDOVER.md`
+- DEX perp handover: `unified-trading-pm/plans/archive/2026_05/dex_perp_onboarding_handover_2026_05_07.HANDOVER.md`
 - Resolver:
   `features-cross-instrument-service/features_cross_instrument_service/app/calculators/futures_roll_resolver.py`
 - Builder: `features-cross-instrument-service/features_cross_instrument_service/app/calculators/catalog_pair_builder.py`

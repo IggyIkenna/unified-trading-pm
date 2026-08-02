@@ -39,6 +39,7 @@ estimate_calibrated_ai_days: 13
 assigned_role: infra
 drift_direction: advance-code
 depends_on:
+archive_exempt: true # intentionally NOT archived here — reserved for deployment_registry_firestore_p5_verify_2026_07_14.md's own final todo (see Progress Log 2026-07-30)
 locked_by:
 locked_since:
 supersedes:

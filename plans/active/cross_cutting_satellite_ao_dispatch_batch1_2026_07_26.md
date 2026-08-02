@@ -97,7 +97,7 @@ drift_direction: advance-code
       referenced legacy bucket names are already 404). Full evidence inline on both todos + a dated Progress Log entry
       in the target doc. **Original text (for provenance): sub-item (a) is TRANSCRIPTION, not re-derivation.** The 3
       dedicated DeFi buckets (`dex-pools-prd`/`lst-rates-prd`/`perp-funding-prd`) are owned end-to-end by
-      `/plans/active/defi_dedicated_bucket_shared_migration_2026_07_13.md`, which is **16/17 done** — its migration +
+      `/plans/archive/2026_07/defi_dedicated_bucket_shared_migration_2026_07_13.md`, which is **16/17 done** — its migration +
       reader-repoint + Terraform-removal + deletion todos are all already `[x]` with evidence, and its only remaining
       open item is an unrelated `[CHORE] P3` dead-bucket-name housekeeping cluster. **Read that doc's checkboxes and
       copy their status into the checkpoint; do NOT run an independent `gcloud storage buckets list` re-audit of those

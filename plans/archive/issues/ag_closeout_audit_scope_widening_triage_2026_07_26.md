@@ -11,7 +11,7 @@ summary: >-
   the remaining corpus-wide triage of the ~48-doc delta the widened rule now surfaces. 4 of the ~48 (all
   ci-tranche-relevant) were already found and given a live home by the ci-tranche's own 2026-07-26 audit pass — see
   `ci_consolidated_closeout_2026_07_25.md`'s Progress Log for that subset; the remainder is unmeasured.
-status: open
+status: resolved
 nature: issue
 asset_group: [infrastructure]
 stage: [meta]
@@ -31,7 +31,7 @@ parent_epic: agent_operating_framework_master
 assigned_vm: planning
 priority: P2
 locked_by:
-resolved_by:
+resolved_by: "unified-trading-pm@3a5b294ef, 2026-07-31 — check_ag_closeout_linkage.py rewrite, baseline re-seeded 32->69"
 source: >-
   ci tranche audit (2026-07-26), Phase-3 conflict-check — "four tranche members listed in NO consolidated closeout at
   all, found by sweeping beyond asset_group: cross-cutting." Generalized to all 9 tranches, resolved as
@@ -49,6 +49,9 @@ context_scope:
 ---
 
 # /ag-closeout-audit scope widening — triage the ~48-doc delta
+
+> **🟢 RESOLVED 2026-08-02** — all 3 todos shipped, culminating in the 2026-07-31 `check_ag_closeout_linkage.py`
+> rewrite (`unified-trading-pm@3a5b294ef`, baseline re-seeded 32→69, verified green).
 
 ## What's already done
 

@@ -843,7 +843,7 @@ You are slot N (Ikenna side). Do this in order, nothing else until done:
 
 1. Read unified-trading-pm/ikenna_orchestrator/AGENT_ONBOARDING.md (git discipline, LDR-alignment HARD RULE, fetch-first
    HARD RULE, pre-commit check, sub-agent rules, GCS backfill approval gate).
-2. Read unified-trading-pm/plans/active/work_split_2026_05_14_ikenna.md § "Slot N" for your full task stack.
+2. Read unified-trading-pm/plans/archive/2026_05/work_split_2026_05_14_ikenna.md § "Slot N" for your full task stack.
 3. Read your plan-of-record (named in your slot section) — scan open `- [ ]` todos for your phase.
 4. Append boot ack to unified-trading-pm/ikenna_orchestrator/pings/slot_N.md using `date -u` for timestamp, then start
    work.

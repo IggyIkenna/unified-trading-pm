@@ -131,7 +131,7 @@ shipping):
       `pyrightconfig.json` file — the fleet's own pyproject.toml comments ("ported from deleted pyrightconfig.json",
       `execution-service`/`system-integration-tests`) show the migration off `pyrightconfig.json` to
       `pyproject.toml`-native basedpyright config is ALREADY COMPLETE fleet-wide, and
-      `codex/06-coding-standards/quality-gates.md` § "pyrightconfig.json silently overrides pyproject.toml" itself
+      `/codex/06-coding-standards/quality-gates.md` § "pyrightconfig.json silently overrides pyproject.toml" itself
       sanctions deleting `pyrightconfig.json` as the resolution when both coexist. So
       `if not pyright_path.exists():     continue` fires for EVERY repo before Rule 3 (or any rule) ever runs — PM
       included, so its predicted false positive can't fire because nothing runs for anyone. Independently, even a
@@ -146,7 +146,7 @@ shipping):
 - [x] ✅ [SCRIPT] P3. **New finding (2026-08-01, slot 11) — the whole tool is fleet-wide dead, not just a PM
       false-positive.** `check-pyrightconfig-extrapaths.py` only reads `<repo>/pyrightconfig.json`; zero of the 24
       `workspace-manifest.json` repos still have that file (all migrated to `pyproject.toml`'s `[tool.basedpyright]` —
-      see `codex/06-coding-standards/quality-gates.md` § "pyrightconfig.json silently overrides pyproject.toml").
+      see `/codex/06-coding-standards/quality-gates.md` § "pyrightconfig.json silently overrides pyproject.toml").
       Running it today prints `extraPaths alignment OK` unconditionally for every repo — the audit no longer checks
       anything real. **FIXED 2026-08-01 (slot 9)** — chose option (a): added `load_basedpyright_config()`, which prefers
       `pyrightconfig.json` (back-compat) and falls back to parsing `[tool.basedpyright]` out of `pyproject.toml` via

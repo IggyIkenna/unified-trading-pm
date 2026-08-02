@@ -107,5 +107,5 @@ drift_direction: advance-code
       done"), done as a separate commit per that same doc's HARD RULE against combining a checkbox flip with a `git mv`
       in one commit (`RULES.md` § 2, 2026-07-30 incident). One stale referrer found + will be fixed in the archival
       commit: the archived target plan's own `related:` frontmatter still points at
-      `/plans/active/cefi_migration_cutover_and_track8_completion_finalize_2026_07_25.md` (this doc's pre-archival
+      `/plans/archive/2026_07/cefi_migration_cutover_and_track8_completion_finalize_2026_07_25.md` (this doc's pre-archival
       path). Repo: unified-trading-pm.

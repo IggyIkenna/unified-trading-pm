@@ -15,7 +15,7 @@ resolved: 2026-05-10
 author: tab4-aws-migration
 source:
   [
-    "unified-trading-pm/plans/active/aws_migration_defi_first_2026_05_07.md (Phase 1, Phase 1.5.A, Phase 2)",
+    "unified-trading-pm/plans/archive/2026_05/aws_migration_defi_first_2026_05_07.md (Phase 1, Phase 1.5.A, Phase 2)",
     "deployment-service/scripts/aws/setup-defi-buckets.sh:62-72",
     "unified-trading-library/unified_trading_library/cloud_interface/constants.py:191-218",
     "unified-trading-library/unified_trading_library/config_interface/cloud_config.py:394",

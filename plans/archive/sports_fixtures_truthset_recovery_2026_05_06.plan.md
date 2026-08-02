@@ -300,7 +300,7 @@ Pattern mirrors the existing `flip_phantom_*` scripts. ~30 min implementation.
   launches + Manifest concurrency + Sports source coverage windows + Honest absence vs fake placeholders.
 - `unified-trading-pm/plans/active/sports_phantom_fixtures_recovery_2026_05_06.md` — full phantom recovery history (this
   plan supersedes 2 of its phases).
-- `unified-trading-pm/plans/active/shard_granularity_ssot_propagation_2026_05_06.HANDOVER.md` — coordinate with the
+- `unified-trading-pm/plans/archive/shard_granularity_ssot_propagation_2026_05_06.HANDOVER.md` — coordinate with the
   parallel architectural stream; sports per-league shard atom is
   `(asset_group=sports, source, data_type, league_id, fixture_id, day)`.
 - Memory: `project_sports_phantom_fixtures_recovery_2026_05_06.md` — session log of the phantom recovery.

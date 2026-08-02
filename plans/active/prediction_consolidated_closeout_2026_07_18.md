@@ -81,6 +81,7 @@ estimate_baseline_ai_days: 12.0
 estimate_calibrated_ai_days: 9.6
 assigned_role: data_engineering
 drift_direction: none
+archive_exempt: true # gate_on_depends:false coordination hub — 0 native todos by design, 4 child Phase A-E plans still open (see frontmatter comment + Progress Log)
 locked_by:
 locked_since:
 supersedes:

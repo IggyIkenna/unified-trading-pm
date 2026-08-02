@@ -62,7 +62,7 @@ pager closes the residual gap.
 ### Phase 1 — Candidate research (1 cal-day)
 
 - [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P0.1. **Webfetch + assess 4-6 candidates** — write
-      `/codex/05-infrastructure/physical-pager-layer.md` with a comparison matrix. Each candidate covered with: name,
+      `/codex/15-runbooks/physical-pager-layer.md` with a comparison matrix. Each candidate covered with: name,
       vendor, current 2026 price, alert path (webhook URL, email-to-pager, SMS-to-pager, satellite uplink), power
       requirements, network independence, pros/cons, recommended-for-which-scenario.
 
@@ -156,7 +156,7 @@ pager closes the residual gap.
 
 ## Codex SSOT updates
 
-- NEW: `/codex/05-infrastructure/physical-pager-layer.md` — comparison matrix + recommended pick + webhook contract +
+- NEW: `/codex/15-runbooks/physical-pager-layer.md` — comparison matrix + recommended pick + webhook contract +
   Twilio bridge.
 - UPDATE: `/codex/04-architecture/recovery-defence-in-depth-layers.md` — Layer-4 is this layer.
 
@@ -181,7 +181,7 @@ pager closes the residual gap.
 **Items still `- [ ]` for follow-up sessions (per-plan):**
 
 - [x] [BLOCKED-OPERATOR-ACTION] Phase 1 P0.1-P0.3 — comparison matrix in
-      /codex/05-infrastructure/physical-pager-layer.md (already exists); **OPERATOR DEVICE PURCHASE** pending ping doc
+      /codex/15-runbooks/physical-pager-layer.md (already exists); **OPERATOR DEVICE PURCHASE** pending ping doc
       item #2; Nokia + GSM siren combo recommended
 - [x] ✅ Phase 2 P0.4-P0.5 — `alerting_service/notifiers/physical_pager.py` — alerting-service@e5c8084
 - [x] ✅ Phase 3 P0.7-P0.9 — 5 closed-set trigger conditions + router rule — alerting-service@06c48c4

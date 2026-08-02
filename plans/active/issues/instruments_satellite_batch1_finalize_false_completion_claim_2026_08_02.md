@@ -111,7 +111,7 @@ human/agent would conclude from reading it, not to the actual work getting silen
 
 ## Why it matters
 
-This is a confirmed instance of the exact failure class `codex/12-agent-workflow/commit-push-flip-rule.md` and the
+This is a confirmed instance of the exact failure class `/codex/12-agent-workflow/commit-push-flip-rule.md` and the
 Commit+Push+Flip HARD RULE exist to prevent — a "done" claim that outpaced the actual work, then got mechanically
 propagated (an archival motion) by a later session that trusted the claim instead of re-deriving it from ground truth.
 It happened here to a small, non-critical audit item, but the SAME shape (an interrupted session leaves a

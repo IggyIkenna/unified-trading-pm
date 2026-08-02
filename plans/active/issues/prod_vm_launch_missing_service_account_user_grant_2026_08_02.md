@@ -10,7 +10,7 @@ summary: >-
   owner to grant you the iam.serviceAccountUser role". Workaround found + used this session:
   `LC_RUNTIME_SA=<the-launching-identity's-own-email>` (attaching a VM to the SAME identity you already run as needs no
   delegation grant) restores launch success. Durable fix needs an operator or the `unified-trading-sa` self-service
-  identity (codex/05-infrastructure/orchestrator-cloud-identity-self-service.md) to grant `iam.serviceAccountUser` on
+  identity (/codex/05-infrastructure/orchestrator-cloud-identity-self-service.md) to grant `iam.serviceAccountUser` on
   `uts-prd-sa` to the shared compute SA.
 status: open
 nature: issue
@@ -76,7 +76,7 @@ local/interactive session hits this identically. This is a workspace-wide gap in
 closed one bug (`--test-run` writing to prod buckets) and opened another (every ordinary prod launch from a
 non-privileged identity now 403s).
 
-## Self-service check (per codex/05-infrastructure/orchestrator-cloud-identity-self-service.md)
+## Self-service check (per /codex/05-infrastructure/orchestrator-cloud-identity-self-service.md)
 
 That SSOT's self-service identity is `unified-trading-sa@central-element-323112.iam.gserviceaccount.com` — NOT the
 `1060025368044-compute@...` identity used in this session. `unified-trading-sa`'s credentials are ambient only on the AO

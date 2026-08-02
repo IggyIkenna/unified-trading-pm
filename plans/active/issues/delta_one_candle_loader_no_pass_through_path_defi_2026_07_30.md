@@ -67,7 +67,7 @@ resolved_by:
 
 Dispatched as a `data_pipeline_failure` escalation (`wall_type=data_pipeline_failure`, DP-VM-001 `DP_VM_EXIT_NONZERO`)
 to relaunch VM `features-delta-one-defi-20260730-222034` (exited `exit_code=1`) per
-`codex/15-runbooks/incidents/rb_infra_relaunch.md`. Before relaunching, read the VM's durable GCS logs
+`/codex/15-runbooks/incidents/rb_infra_relaunch.md`. Before relaunching, read the VM's durable GCS logs
 (`gs://deployment-scripts-central-element-323112/vm-logs/features-delta-one-defi-20260730-222034/{EXIT_STATUS,run.log,TARBALL_PINS.json}`)
 to understand why it failed, per the runbook's own guidance ("if it re-fails the SAME way twice ... STOP relaunching,
 file an issue"). Command run:
@@ -271,7 +271,7 @@ coverage asserting a DEFI `funding_oi`/`returns` run actually loads non-empty da
     `[OPERATOR]` park recommendation (todo 3, still open below).
 - **2026-07-31 (slot-8, data_pipeline_failure escalation DP-VM-001, `ESCALATION_ID=agt-e52874`, for VM
   `features-delta-one-defi-20260730-234947`, exit_code=1) — found + fixed a THIRD layer, shipped todo 4.** Dispatched
-  per `codex/15-runbooks/incidents/rb_infra_relaunch.md` to relaunch this VM. Read its durable GCS logs first per the
+  per `/codex/15-runbooks/incidents/rb_infra_relaunch.md` to relaunch this VM. Read its durable GCS logs first per the
   runbook's own guidance and found this is a NEW mutation of the same causal chain, not a repeat of an already-tracked
   failure: `EXIT_STATUS=1`, `deployment_id=c788d8f8-665b-4b78-b7ad-e2d3b3d463a7`, `git_commit=d072b0358b...`
   (BoM-recorded commit not resolvable in the repo history — likely a stale/incorrect BoM stamp, not investigated

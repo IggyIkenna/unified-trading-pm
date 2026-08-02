@@ -54,6 +54,8 @@ locked_since:
 
 # GitHub Actions billing wall recurrence (2026-07-29)
 
+> **🟢 RESOLVED 2026-07-31** — confirmed cleared via live `gh run` checks in an interactive session.
+
 ## Why this is a separate doc, not a fold into an existing one
 
 Not the same mechanism as `fleet_wide_qg_capacity_crisis_continues_day2_2026_07_29.md` /

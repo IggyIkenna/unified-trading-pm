@@ -47,12 +47,16 @@ context_scope:
   [
     /plans/active/defi_dex_pool_symbol_fix_backfill_purge_2026_07_25.md,
     /plans/active/defi_dex_pool_symbol_fix_backfill_purge_finalize_2026_07_25.md,
-    /plans/active/issues/defi_migrated_marker_flagged_root_cause_clusters_2026_07_25.md,
+    /plans/archive/issues/defi_migrated_marker_flagged_root_cause_clusters_2026_07_25.md,
     market-tick-data-service/market_tick_data_service/cli/handlers/_dex_pools_subgraph.py,
   ]
 ---
 
 # dex_pools_handler messari_basic subgraph query never requests inputTokens symbols
+
+> **🟢 RESOLVED 2026-08-02** — query/parser fix shipped `market-tick-data-service@63199601` (verified ancestor of
+> `origin/live-defi-rollout`, live-tested against all 4 real subgraphs); backfill + purge landed via
+> `defi_dex_pool_symbol_fix_backfill_purge_2026_07_25.md`'s 5 todos, all shipped/independently re-verified 2026-08-02.
 
 > **NOTE (2026-07-25): GMX venue removed platform-wide** — see
 > `/plans/archive/2026_07/defi_gmx_venue_removal_2026_07_25.md`. This doc's `gmx` mentions describe the shared

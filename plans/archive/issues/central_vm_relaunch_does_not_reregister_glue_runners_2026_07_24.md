@@ -39,7 +39,7 @@ last_updated: 2026-07-30
 ---
 
 > **🗄️ ARCHIVED 2026-07-30** — `status: resolved`, `resolved_by: deployment-service@d49767d`. Both halves shipped: the
-> interim runbook doc (`codex/15-runbooks/central-vm-relaunch-glue-runner-reinstall.md`, `unified-trading-pm@2bc0813`)
+> interim runbook doc (`/codex/15-runbooks/central-vm-relaunch-glue-runner-reinstall.md`, `unified-trading-pm@2bc0813`)
 > and the full-completion fix (`setup-glue-runners.sh install` wired into `launch-central-brain-aws.sh`'s bootstrap,
 > best-effort — a failure only WARNs + falls back to the runbook, never fails the whole VM bootstrap). Full
 > `quality-gates.sh` green. **Residual, not this doc's gate**: a live/simulated central-VM relaunch + glue-workflow
@@ -100,7 +100,7 @@ Two options, not mutually exclusive:
       `agent-orchestrator-failover-re-enable-checklist.md`) with `owner`/`cadence`/`verifier` declared (missing =
       review-blocking per CLAUDE.md runbook convention). **Done when**: the runbook doc exists, is discoverable from the
       failover checklist, and states the exact `setup-glue-runners.sh install` command + expected post-install
-      verification. Shipped: `codex/15-runbooks/central-vm-relaunch-glue-runner-reinstall.md` (new doc, declares
+      verification. Shipped: `/codex/15-runbooks/central-vm-relaunch-glue-runner-reinstall.md` (new doc, declares
       `owner`/`cadence`/`verifier`/`last_executed`, states the exact
       `sudo GH_TOKEN_SECRET=GH_PAT     ./setup-glue-runners.sh install` command + the `./setup-glue-runners.sh status`
       post-install verification step); cross-linked from `agent-orchestrator-failover-re-enable-checklist.md`'s §

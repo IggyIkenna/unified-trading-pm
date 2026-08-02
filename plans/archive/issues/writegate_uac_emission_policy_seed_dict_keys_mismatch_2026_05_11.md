@@ -12,7 +12,7 @@ tags: []
 related: []
 created: 2026-05-11
 author: ikenna-slot8-phase6-2-mdps-wiring
-source: ['unified-api-contracts/unified_api_contracts/canonical/crosscutting/service_emission_policy.py:163-168', 'market-data-processing-service/market_data_processing_service/app/core/canonical_writer.py:479', unified-trading-pm/plans/active/writegate_honest_coverage_endtoend_2026_05_06.md Phase 6.2 (line 3119-3126), unified-trading-pm/plans/active/writegate_honest_coverage_endtoend_2026_05_06.md slice (b) Phase 5.3-5.4]
+source: ['unified-api-contracts/unified_api_contracts/canonical/crosscutting/service_emission_policy.py:163-168', 'market-data-processing-service/market_data_processing_service/app/core/canonical_writer.py:479', unified-trading-pm/plans/archive/2026_05/writegate_honest_coverage_endtoend_2026_05_06.md Phase 6.2 (line 3119-3126), unified-trading-pm/plans/archive/2026_05/writegate_honest_coverage_endtoend_2026_05_06.md slice (b) Phase 5.3-5.4]
 locked_by: live-defi-rollout
 locked_since: 2026-05-11
 ---

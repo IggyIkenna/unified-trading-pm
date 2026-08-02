@@ -338,5 +338,5 @@ Sepolia + Polygon Amoy + Holesky
   ladder.
 - [`cutover_wallet_provisioning_mainnet_template.json`](../../unified-api-contracts/unified_api_contracts/config/cutover_wallet_provisioning_mainnet_template.json)
   — prod template.
-- [`api_keys_wallets_accounts_readiness_2026_05_10.md`](../../plans/active/api_keys_wallets_accounts_readiness_2026_05_10.md)
+- [`api_keys_wallets_accounts_readiness_2026_05_10.md`](../../plans/archive/2026_05/api_keys_wallets_accounts_readiness_2026_05_10.md)
   Phase 4.D.3 + 4.D.6 + 4.D.7.

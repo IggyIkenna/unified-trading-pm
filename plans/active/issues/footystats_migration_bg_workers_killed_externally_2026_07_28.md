@@ -398,3 +398,15 @@ would catch this exact silent-no-op class before it ships a false "nothing to de
 a separate plan todo since it is a small, generalizable script-robustness gap discovered in passing, not blocking
 `defi_dex_pool_symbol_fix_backfill_purge_2026_07_25.md`'s todo 5 (which used the separate-paths workaround
 successfully).
+
+## Todos
+
+- [ ] [SCRIPT] P2. Build the self-restarting supervisor-loop mitigation this doc has recommended since its first
+      sighting (a bash `for`-loop relaunching the same command against the same `--resume-log` path on any non-zero
+      exit, capped retries, run under the harness's tracked `run_in_background`) instead of continuing to hand-relaunch
+      on every future exit-144 sighting.
+- [ ] [SCRIPT] P3. Harden `delete_migrated_defi_markers_2026_07_23.py` (and any sibling resume-log-driven script) to
+      refuse/warn loudly if `--apply` is passed a resume-log where 100% of in-scope markers already show
+      `action: "would_delete"` (dry-run dispositions) rather than `action: "deleted"`/`"none"` (apply dispositions) —
+      catches the silent-no-op class (shared dry-run/apply resume-log) before it ships a false "nothing to delete"
+      report.

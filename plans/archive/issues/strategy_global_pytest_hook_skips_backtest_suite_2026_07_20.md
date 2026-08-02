@@ -27,7 +27,7 @@ tags: [testing, ci-integrity, pytest, silent-skip, backtest, benchmark-fills, fa
 related:
   [
     /plans/active/prediction_consolidated_closeout_2026_07_18.md,
-    /plans/active/issues/prediction_arb_live_execution_bridge_2026_07_20.md,
+    /plans/archive/issues/prediction_arb_live_execution_bridge_2026_07_20.md,
   ]
 created: 2026-07-20
 parent_epic: infrastructure_master

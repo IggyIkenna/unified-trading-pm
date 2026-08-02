@@ -324,7 +324,7 @@ drift_direction: advance-code
     - **[VERIFY] P1.** After backfill: re-evaluate the `understat-vm-xg-complete` gate against real captured shots.
   - [`plans/archive/issues/api_football_backfill_chronological_scan_never_reaches_pending_tail_2026_07_18.md`](/plans/archive/issues/api_football_backfill_chronological_scan_never_reaches_pending_tail_2026_07_18.md)
     — **resolved 2026-07-24** (all 5 todos were already `[x]`; frontmatter `status` was stale, now corrected).
-  - [`plans/active/issues/api_football_reverify_attempted_failed_and_asset_group_2026_07_14.md`](/plans/active/issues/api_football_reverify_attempted_failed_and_asset_group_2026_07_14.md)
+  - [`plans/active/issues/api_football_reverify_attempted_failed_and_asset_group_2026_07_14.md`](/plans/archive/issues/api_football_reverify_attempted_failed_and_asset_group_2026_07_14.md)
     (1 open, corrected 2026-07-24 — the P1 re-fetch-backfill item was a stale checkbox, already done per the doc's own
     "Update 2026-07-15" section, now flipped):
     - **[DATA] P2.** Remove/relabel 1 defi/UNISWAP_V3-BASE row mis-filed in the sports manifest

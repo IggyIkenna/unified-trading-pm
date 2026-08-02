@@ -30,7 +30,7 @@ summary: >-
   364-1033min readings). Confirmed via `gcloud builds triggers list` that this repo has **NO active Cloud Build trigger
   at all** — the alert is a monitor-config artifact (comparing against an ancient one-off/manual image baseline that
   never gets refreshed because there's no continuous build wired up), not a live incident.
-status: open
+status: resolved
 nature: issue
 asset_group:
   [ci] # corrected 2026-07-30 (/ag-closeout-audit ci) -- was [cross-cutting]; content is a Cloud Build
@@ -70,17 +70,20 @@ drift_direction: advance-code
 context_scope:
   [
     /codex/08-workflows/ci-cd-flow.md,
-    /plans/active/issues/github_actions_billing_wall_recurrence_2026_07_29.md,
+    /plans/archive/issues/github_actions_billing_wall_recurrence_2026_07_29.md,
     /plans/active/issues/fleet_wide_qg_capacity_crisis_continues_day2_2026_07_29.md,
   ]
 depends_on: []
 assigned_vm: planning
-resolved_by:
+resolved_by: "instruments-service@76eba912/@4c05f2d3 + fleet-wide rollout, all 8 todos verified per-build"
 locked_by:
 locked_since:
 ---
 
 # Cloud Build failure storm — publish-ordering race, self-healed, not the EC2-VM crisis
+
+> **🟢 RESOLVED 2026-08-02** — all 8 todos shipped with per-build verification across the fleet.
+> `instruments-service@76eba912`/`@4c05f2d3` + fleet-wide rollout commits.
 
 ## Evidence
 
@@ -217,7 +220,7 @@ applied to every repo this grep surfaces, not just instruments-service.
       Build trigger (`gcloud builds triggers list` — zero matches); handled by the separate P3 todo below instead
       (watcher-side fix, shipped). GitHub's own CI was independently unreachable for an UNRELATED reason during this
       exact window (a fleet-wide GitHub Actions account-level billing wall — see
-      `/plans/active/issues/github_actions_billing_wall_recurrence_2026_07_29.md`, `BLK-21d55fb1`, `[OPERATOR] P0`,
+      `/plans/archive/issues/github_actions_billing_wall_recurrence_2026_07_29.md`, `BLK-21d55fb1`, `[OPERATOR] P0`,
       confirmed still live as of 2026-07-30T00:59Z), so every commit above is verified via the real GCP-native Cloud
       Build trigger (unaffected by the GHA wall) rather than GitHub's own `quality-gates-v2` check, which is still
       pending fleet-wide until that separate wall clears.
@@ -255,7 +258,7 @@ applied to every repo this grep surfaces, not just instruments-service.
         all 8 affected repos, and the workspace already has a proven precedent for exactly this problem shape (the
         `BASE_IMAGE_DIGEST` pin: SSOT doc + `scripts/propagation/add-dockerfile-digest-arg.py` +
         `scripts/quality_gates/check_base_image_digest_drift.py` + QG STEP 5.79). Documented the canonical pattern as a
-        new SSOT section in `codex/06-coding-standards/dockerfile-standards.md` § "uv pip install Retry Wrapper
+        new SSOT section in `/codex/06-coding-standards/dockerfile-standards.md` § "uv pip install Retry Wrapper
         (BuildKit-secret GAR auth)" — `unified-trading-pm@<see Progress Log for sha>`. **Scoped down from the full
         automation** (propagation script + fleet drift-checker + QG step mirroring the digest-pin precedent) — that is a
         multi-hour build, not a 1-hour P3 doc-decision task, so it's split into its own properly-scoped follow-up below
@@ -335,7 +338,7 @@ Session status at checkpoint (a fresh session picking this up should verify curr
   terminal status. `greeks-service` — still actively diagnosing/verifying as of this checkpoint; if a fresh session
   finds no completion report, re-check `gcloud builds list`/`gh run list` for this repo directly rather than
   re-diagnosing from scratch (a lot of the pattern-matching for this repo class is already in this doc above).
-- **Known incomplete, NOT mine to finish**: `codex/14-customer-journeys/commercial-model/ODUM_SLA_v4_2026-07-24.md` (an
+- **Known incomplete, NOT mine to finish**: `/codex/14-customer-journeys/commercial-model/ODUM_SLA_v4_2026-07-24.md` (an
   unrelated file from another concurrent session, missing `scope:` frontmatter) was blocking the fleet-wide
   `codex-scope-coverage` QG gate for EVERY commit in this shared checkout. Added the minimal `scope: [admin]` line
   (matching its own sibling files in the same batch, e.g. `elysium-delay-letter-2026-07-20.md`) to unblock the shared
@@ -348,7 +351,7 @@ Session status at checkpoint (a fresh session picking this up should verify curr
   again; whoever owns that document should finish its frontmatter (or the file should move out of `codex/` if it was
   never meant to be a codex SSOT doc) at their earliest convenience.
 - **Not fixable by any agent**: the GitHub Actions account-level billing wall
-  (`/plans/active/issues/github_actions_billing_wall_recurrence_2026_07_29.md`, `BLK-21d55fb1`, `[OPERATOR] P0`) is the
+  (`/plans/archive/issues/github_actions_billing_wall_recurrence_2026_07_29.md`, `BLK-21d55fb1`, `[OPERATOR] P0`) is the
   confirmed root cause of tonight's `unified-api-contracts`/`unified-trading-pm` branch-health promotion-lag lines and
   blocks the actual PR-merge step for the two reprovenanced repos above — re-confirmed live at 2026-07-30T00:55- 00:59Z,
   still active, no self-recovery. Needs `github.com/settings/billing`.

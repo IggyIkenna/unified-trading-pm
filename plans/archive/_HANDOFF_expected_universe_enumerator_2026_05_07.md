@@ -289,5 +289,5 @@ universes) requires the deferred catalog + canonical_question_group SSOT work na
   `gs://deployment-scripts-central-element-323112/vm/setup-data-pipeline-vm.sh`
 - **Codex denominator-divergence section**: `unified-trading-pm/codex/02-data/availability-manifest-and-data-status.md`
   § "Rollup-vs-drilldown denominator divergence (codified 2026-05-07)" — operator-facing explanation
-- **Writegate Phase 3.D.4 todos**: `unified-trading-pm/plans/active/writegate_honest_coverage_endtoend_2026_05_06.md` §
+- **Writegate Phase 3.D.4 todos**: `unified-trading-pm/plans/archive/2026_05/writegate_honest_coverage_endtoend_2026_05_06.md` §
   "Phase 3.D.4 — Expected-universe enumerator v2 (NEW 2026-05-07 — operator directive)"

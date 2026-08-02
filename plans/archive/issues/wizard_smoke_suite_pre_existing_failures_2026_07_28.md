@@ -95,7 +95,7 @@ instead of rediscovering it from scratch.
 - **context-scout 2026-08-01**: populated/refreshed context_scope (2 entries).
 - **triage session 2026-08-01 (slot 9)**: Ran a clean `npx playwright test --project=chromium tests/smoke/ --workers=1`
   full baseline (108 tests, 13.3m) — the correct measurement methodology per
-  `codex/06-coding-standards/ui-testing-layers.md`'s documented shared-host-contention gotcha (unbounded parallel runs
+  `/codex/06-coding-standards/ui-testing-layers.md`'s documented shared-host-contention gotcha (unbounded parallel runs
   on this shared multi-agent-slot host produce spurious, run-to-run-varying failures). Result: **104/108 passed**, only
   4 failures — confirming the vast majority of the original 67 (2026-07-28, full-parallel run) were shared-host
   contention artifacts, not app bugs. Of the 4:

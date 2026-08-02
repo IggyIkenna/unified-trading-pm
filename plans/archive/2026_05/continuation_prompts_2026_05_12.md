@@ -72,9 +72,9 @@ You're freed from manifest scope; pivot to defi_catalogue.
 
 READ (in order):
   1. unified-trading-pm/cursor-configs/SUB_AGENT_MANDATORY_RULES.md (lean 10KB)
-  2. unified-trading-pm/plans/active/work_split_2026_05_12_ikenna.md § Today's slot assignments → row 2
-  3. unified-trading-pm/plans/active/defi_catalogue_chain_primitives_2026_05_10.md Phases 1-3
-  4. unified-trading-pm/plans/active/defi_recursive_borrow_archetypes_2026_05_10.md Phase 0 (dependency-on-you direction)
+  2. unified-trading-pm/plans/archive/2026_05/work_split_2026_05_12_ikenna.md § Today's slot assignments → row 2
+  3. unified-trading-pm/plans/archive/2026_05/defi_catalogue_chain_primitives_2026_05_10.md Phases 1-3
+  4. unified-trading-pm/plans/archive/2026_05/defi_recursive_borrow_archetypes_2026_05_10.md Phase 0 (dependency-on-you direction)
 
 Agent-tag: ikenna-defi-catalogue-tab.
 
@@ -116,9 +116,9 @@ Status-line first per universal preamble.
 
 READ (in order):
   1. unified-trading-pm/cursor-configs/SUB_AGENT_MANDATORY_RULES.md (lean 10KB)
-  2. unified-trading-pm/plans/active/work_split_2026_05_12_ikenna.md § Today's slot assignments → row 3
-  3. unified-trading-pm/plans/active/code_freeze_migrate_backfill_sequencing_2026_05_10.md Phase 1.E + Phase 2 dry-run
-  4. unified-trading-pm/plans/active/manifest_schema_final_gate_2026_05_09.md (the dependency Phase 1 audit checks)
+  2. unified-trading-pm/plans/archive/2026_05/work_split_2026_05_12_ikenna.md § Today's slot assignments → row 3
+  3. unified-trading-pm/plans/archive/2026_05/code_freeze_migrate_backfill_sequencing_2026_05_10.md Phase 1.E + Phase 2 dry-run
+  4. unified-trading-pm/plans/archive/2026_05/manifest_schema_final_gate_2026_05_09.md (the dependency Phase 1 audit checks)
 
 Agent-tag: ikenna-codefreeze-audit-tab.
 
@@ -193,8 +193,8 @@ Status-line first — confirm what closed vs deferred.
 
 READ (in order):
   1. unified-trading-pm/cursor-configs/SUB_AGENT_MANDATORY_RULES.md (lean 10KB)
-  2. unified-trading-pm/plans/active/work_split_2026_05_12_ikenna.md § Today's slot assignments → row 4
-  3. unified-trading-pm/plans/active/api_keys_wallets_accounts_readiness_2026_05_10.md Phases 1-3
+  2. unified-trading-pm/plans/archive/2026_05/work_split_2026_05_12_ikenna.md § Today's slot assignments → row 4
+  3. unified-trading-pm/plans/archive/2026_05/api_keys_wallets_accounts_readiness_2026_05_10.md Phases 1-3
   4. codex/14-customer-journeys/ relevant entries (Copper KYB, Fireblocks)
 
 Agent-tag: ikenna-keys-wallets-tab.
@@ -233,9 +233,9 @@ Stream C C-enum.1+2 ✅ DONE; .3+.4 deferred to backport.
 
 READ (in order):
   1. unified-trading-pm/cursor-configs/SUB_AGENT_MANDATORY_RULES.md (lean 10KB)
-  2. unified-trading-pm/plans/active/work_split_2026_05_12_ikenna.md § Today's slot assignments → row 5
-  3. unified-trading-pm/plans/active/defi_recursive_borrow_archetypes_2026_05_10.md Phases 1-2
-  4. unified-trading-pm/plans/active/defi_catalogue_chain_primitives_2026_05_10.md Phase 3 (slot 2's dep on you for Day 3)
+  2. unified-trading-pm/plans/archive/2026_05/work_split_2026_05_12_ikenna.md § Today's slot assignments → row 5
+  3. unified-trading-pm/plans/archive/2026_05/defi_recursive_borrow_archetypes_2026_05_10.md Phases 1-2
+  4. unified-trading-pm/plans/archive/2026_05/defi_catalogue_chain_primitives_2026_05_10.md Phase 3 (slot 2's dep on you for Day 3)
 
 Agent-tag: ikenna-recursive-borrow-tab.
 
@@ -271,8 +271,8 @@ Status-line first to confirm items 8+9 status.
 
 READ (in order):
   1. unified-trading-pm/cursor-configs/SUB_AGENT_MANDATORY_RULES.md (lean 10KB)
-  2. unified-trading-pm/plans/active/work_split_2026_05_12_ikenna.md § Today's slot assignments → row 6
-  3. unified-trading-pm/plans/active/defi_simulation_realism_2026_05_10.md Phases 1-3
+  2. unified-trading-pm/plans/archive/2026_05/work_split_2026_05_12_ikenna.md § Today's slot assignments → row 6
+  3. unified-trading-pm/plans/archive/defi_simulation_realism_2026_05_10.md Phases 1-3
 
 Agent-tag: ikenna-defi-sim-realism-tab.
 
@@ -311,10 +311,10 @@ mtds@97b2224). Status-line first to confirm Phase 3.5/5/6/15 closure status from
 
 READ (in order):
   1. unified-trading-pm/cursor-configs/SUB_AGENT_MANDATORY_RULES.md (lean 10KB)
-  2. unified-trading-pm/plans/active/work_split_2026_05_12_ikenna.md § Today's slot assignments → row 7
-  3. unified-trading-pm/plans/active/simulation_scenarios_topology_price_shocks_2026_05_09.md Phases 1-2
-  4. unified-trading-pm/plans/active/risk_simulations_limits_alerting_2026_05_10.md (handshake target)
-  5. unified-trading-pm/plans/active/disaster_recovery_circuit_breakers_2026_05_10.md (handshake target)
+  2. unified-trading-pm/plans/archive/2026_05/work_split_2026_05_12_ikenna.md § Today's slot assignments → row 7
+  3. unified-trading-pm/plans/archive/2026_05/simulation_scenarios_topology_price_shocks_2026_05_09.md Phases 1-2
+  4. unified-trading-pm/plans/archive/risk_simulations_limits_alerting_2026_05_10.md (handshake target)
+  5. unified-trading-pm/plans/archive/disaster_recovery_circuit_breakers_2026_05_10.md (handshake target)
 
 Agent-tag: ikenna-scenarios-topology-tab.
 
@@ -364,11 +364,11 @@ DAY-1 VERIFICATION ✅ DONE BY MAIN (slot 1, 2026-05-12 boot):
 
 READ (in order):
   1. unified-trading-pm/cursor-configs/SUB_AGENT_MANDATORY_RULES.md (lean 10KB)
-  2. unified-trading-pm/plans/active/work_split_2026_05_12_ikenna.md § Today's slot assignments → row 8
-  3. unified-trading-pm/plans/active/issues/phase_3d_rescan_cli_dispatcher_gap_2026_05_11.md (✅ RESOLVED — verify-only)
-  4. unified-trading-pm/plans/active/manifest_schema_final_gate_2026_05_09.md Phase 3 (consumer sweep)
-  5. unified-trading-pm/plans/active/cross_cutting_may_23_deliverables_2026_05_08.md deliverable #4 (DART manual surfaces)
-  6. unified-trading-pm/plans/active/bucket_name_ssot_canonicalisation_2026_05_10.md Phase 0f + 0h (your carry-forward)
+  2. unified-trading-pm/plans/archive/2026_05/work_split_2026_05_12_ikenna.md § Today's slot assignments → row 8
+  3. unified-trading-pm/plans/archive/issues/phase_3d_rescan_cli_dispatcher_gap_2026_05_11.md (✅ RESOLVED — verify-only)
+  4. unified-trading-pm/plans/archive/2026_05/manifest_schema_final_gate_2026_05_09.md Phase 3 (consumer sweep)
+  5. unified-trading-pm/plans/archive/2026_05/cross_cutting_may_23_deliverables_2026_05_08.md deliverable #4 (DART manual surfaces)
+  6. unified-trading-pm/plans/archive/2026_05/bucket_name_ssot_canonicalisation_2026_05_10.md Phase 0f + 0h (your carry-forward)
 
 Agent-tag: ikenna-manifest-phase3-tab.
 

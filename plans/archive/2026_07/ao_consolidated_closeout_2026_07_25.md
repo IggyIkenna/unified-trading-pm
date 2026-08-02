@@ -135,13 +135,13 @@ reaper-false-done, clean-exit-signal, auto-park-enforcement).
 **Sources**:
 [issues/killed_slot_orphans_committed_unpushed_work_no_push_path_2026_07_21.md](/plans/active/issues/killed_slot_orphans_committed_unpushed_work_no_push_path_2026_07_21.md)
 (killed slot's watchdog frozen-kick loop leaves orphaned unpushed commits) ·
-[issues/idle_slot_dirty_wip_never_auto_resolves_2026_07_20.md](/plans/active/issues/idle_slot_dirty_wip_never_auto_resolves_2026_07_20.md)
+[issues/idle_slot_dirty_wip_never_auto_resolves_2026_07_20.md](/plans/archive/issues/idle_slot_dirty_wip_never_auto_resolves_2026_07_20.md)
 (idle-slot dirty WIP never triggers orphan-inherit — spawn-only mechanism gap) ·
 [issues/slot_double_reset_dataloss_race_2026_07_25.md](/plans/archive/issues/slot_double_reset_dataloss_race_2026_07_25.md)
 (slot worktree double-reset data-loss race, two realign code paths) ·
 [issues/slot_recurring_wedge_at_context_pct_75_compact_confirmation_2026_07_25.md](/plans/active/issues/slot_recurring_wedge_at_context_pct_75_compact_confirmation_2026_07_25.md)
 (slot recurring wedge at `context_pct=75` needing manual `/compact` confirmation) ·
-[issues/autostash_pop_restores_foreign_wip_into_the_index_2026_07_17.md](/plans/active/issues/autostash_pop_restores_foreign_wip_into_the_index_2026_07_17.md)
+[issues/autostash_pop_restores_foreign_wip_into_the_index_2026_07_17.md](/plans/archive/issues/autostash_pop_restores_foreign_wip_into_the_index_2026_07_17.md)
 (shared-worktree autostash restores foreign WIP into the index) ·
 [issues/ahead_push_sentinel_stale_after_amend_no_rejected_push_retry_2026_07_24.md](/plans/active/issues/ahead_push_sentinel_stale_after_amend_no_rejected_push_retry_2026_07_24.md)
 (ahead-push sentinel stale after amend, no rejected-push retry) ·
@@ -348,7 +348,7 @@ missing from Sources entirely).
   `check_frontmatter_schema.py` clean on all 4. **But that green is vacuous for this tranche and the audit says so** —
   the check's `REAL_AGS` tuple still covers only the 5 original AGs, so no `ao` doc is ever evaluated by it; measured
   blast radius + the separate `ci`-closeout-archived defect are annotated onto the existing owner,
-  `/plans/active/issues/ag_closeout_audit_scope_widening_triage_2026_07_26.md`'s open `[DOC] P3`, rather than forked
+  `/plans/archive/issues/ag_closeout_audit_scope_widening_triage_2026_07_26.md`'s open `[DOC] P3`, rather than forked
   into a competing issue doc. **Not fixed, reported**: ~13 further `[meta]`-tagged docs with `orchestrator_master` /
   `agent_operating_framework_master` parentage read as AO content but were left untouched — that corpus-wide `meta`
   triage is already owned by the doc just cited, and retagging them mid-flight would collide with the 8 sibling tranche
