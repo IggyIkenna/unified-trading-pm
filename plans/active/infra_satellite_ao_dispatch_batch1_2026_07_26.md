@@ -465,19 +465,15 @@ orphaned?" resolves to "everything," because nothing in the covering set does an
       `ruff_rule_ratchet_baseline.yaml` (dtz 11→10, tid251 20→19) — unified-trading-pm@<see PM flip commit>. Repo:
       deployment-api. Source: `codex_violations_ratchet_to_five_2026_06_10.md`.
 
-- [ ] [SCRIPT] P2. **Measure fleet-wide lifecycle-marker coverage so the operator can clear the enforcement gate.** The
-      source doc's `[SCRIPT] P1` "build + wire `check_script_lifecycle_markers.py`" item is explicitly
-      `[OPERATOR]`-gated: "the operator unblocks this ONLY after confirming `grep -rL '^# Delete-when:' */scripts/` is
-      empty fleet-wide" (otherwise the checker instantly reds the whole fleet on still-unstamped repos). That
-      precondition is a MEASURABLE fact nobody has measured. Run the measurement properly: per repo, count `scripts/`
-      files missing each of `# Epic:` / `# Lifecycle:` / `# Delete-when:`, count `Epic:` values not in the epic
-      registry, and count non-`permanent` files carrying `Delete-when: NA` (all three fields are MANDATORY and PRESENT
-      on every script, `NA` only for `permanent` — `/codex/06-coding-standards/script-homes.md:97,100,154-155`). Write
-      the per-repo table into the source doc so the operator can rule on flipping the gate. **Do NOT build or wire the
-      checker** — that stays operator-gated until this measurement says the fleet is clean. **Done when**: the source
-      doc carries a dated per-repo coverage table with the four counts above and an explicit "gate-clearable: yes/no"
-      verdict. Repos: read-only across all repos with `scripts/`; write to unified-trading-pm. Source:
-      `repo_scripts_governance_audit_2026_06_18.md`.
+- [x] ✅ [SCRIPT] P2. **DONE 2026-08-02.** Measured fleet-wide lifecycle-marker coverage across all 25 repos in the
+      standard fleet (~1998 `scripts/` files): 3 files (2 repos) missing a mandatory field, 96 files with an `Epic:`
+      value outside the epic registry, 2 files misusing `Delete-when: NA` on a non-`permanent` lifecycle, plus a
+      supplementary 136 files with an invalid `Lifecycle:` enum value (mostly the `one-off` vs `oneoff` near-miss).
+      Per-repo table + verdict + recommended sequencing written into `repo_scripts_governance_audit_2026_06_18.md` §
+      "Fleet-wide lifecycle-marker coverage measurement (2026-08-02)". **Verdict: gate-clearable — NO** (down from 11+
+      repos at the 2026-07-15 baseline, but not yet clean; the checker would still fail CI fleet-wide on
+      invalid-Epic/invalid-Lifecycle/na-misuse even once the missing-field precondition clears). Did **not** build or
+      wire the checker, per scope. Source: `repo_scripts_governance_audit_2026_06_18.md`.
 
 - [ ] [BUG] P3. **Confirm or rule out the strategy-service → market-tick-data-service tier violation hiding in a
       Dockerfile.** `strategy-service`'s Dockerfile vendors `COPY market-tick-data-service/` into its build context —

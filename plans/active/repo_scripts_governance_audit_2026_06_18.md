@@ -28,7 +28,7 @@ priority: P2
 estimate_class: infra
 estimate_baseline_ai_days: 3.0
 estimate_calibrated_ai_days: 2.4
-last_updated: 2026-06-27
+last_updated: 2026-08-02
 locked_by: live-defi-rollout
 locked_since:
 supersedes:
@@ -261,6 +261,102 @@ a verdict). Heaviest:
   codification, then the immediately-safe ~40 deletes (UI splitters + done bucket migrations + dead checkers), then the
   campaign-gated cohort as each plan archives.
 - **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).
+- **2026-08-02 — fleet-wide lifecycle-marker coverage measured (`infra_satellite_ao_dispatch_batch1-014`).** Ran the
+  measurement the Folded-in-scope `[SCRIPT] P1` item below is gated on. See "## Fleet-wide lifecycle-marker coverage
+  measurement (2026-08-02)" for the per-repo table + verdict. **Verdict: gate-clearable: NO** — down from 11+ repos with
+  unstamped scripts (2026-07-15 baseline) to 2 files in 2 repos missing a field, but the checker-as-specified (`Epic:` ∈
+  registry, closed `Lifecycle` enum, non-`permanent` ≠ `Delete-when: NA`) would still fail CI immediately fleet-wide on
+  96 invalid-`Epic:` + 136 invalid-`Lifecycle`-value + 2 `Delete-when: NA`-misuse files. Did **not** build or wire
+  `check_script_lifecycle_markers.py` — that stays operator-gated per the source todo. The Folded-in-scope `[SCRIPT] P1`
+  item stays BLOCKED; its unblock condition is now precisely measured, not just "not empty" from a prior year-old grep.
+
+## Fleet-wide lifecycle-marker coverage measurement (2026-08-02)
+
+**Purpose**: measure — never enforce — whether the fleet is clean enough for the operator to unblock the Folded-in-scope
+`[SCRIPT] P1` item below (build + wire `check_script_lifecycle_markers.py`). Per
+`/codex/06-coding-standards/script-homes.md:97,100,154-155`, all three of `# Epic:` / `# Lifecycle:` / `# Delete-when:`
+are MANDATORY and PRESENT on every `scripts/` file (`Delete-when: NA` only for `permanent`); `Epic:` must resolve to a
+slug in the epic registry.
+
+**Method**: per repo, over every `scripts/*.py` + `scripts/*.sh` file: (1) missing `# Epic:` / missing `# Lifecycle:` /
+missing `# Delete-when:` — a file with no line anywhere matching the pattern (mirrors the precondition's own
+`grep -rL '^# Delete-when:' */scripts/` check, not a stricter "immediately after shebang" placement check); (2)
+`# Epic:` value not in the **epic registry** — taken as `plans/epics/*.md` basenames (minus `.md`), excluding
+`README.md` and the 3 `*_SUPERSEDED_*` variants (23 valid slugs; mirrors `regen_vm_registry.py`'s own glob), first
+whitespace-delimited token of the value compared verbatim; (3) non-`permanent` files whose `Delete-when:` value is `NA`
+(case-insensitive). **Scope**: the 25 repos cloned in this worker's slot topology (the standard fleet per CLAUDE.md's
+System map) — does not include ad-hoc worktree variants (`-sports-wt`, `-cid-migration`, etc.) if any exist outside this
+slot's clone set.
+
+| Repo                              | scripts files | missing Epic | missing Lifecycle | missing Delete-when | invalid Epic (not in registry) | non-permanent w/ Delete-when:NA |
+| --------------------------------- | ------------: | -----------: | ----------------: | ------------------: | -----------------------------: | ------------------------------: |
+| agent-orchestrator                |            49 |            0 |                 0 |                   0 |                              1 |                               2 |
+| alerting-service                  |             5 |            0 |                 0 |                   0 |                              0 |                               0 |
+| batch-live-reconciliation-service |             4 |            0 |                 0 |                   0 |                              0 |                               0 |
+| client-reporting-api              |             9 |            1 |                 1 |                   1 |                              0 |                               0 |
+| deployment-api                    |             9 |            1 |                 0 |                   0 |                              0 |                               0 |
+| deployment-service                |           320 |            0 |                 0 |                   0 |                             10 |                               0 |
+| deployment-ui                     |             5 |            0 |                 0 |                   0 |                              0 |                               0 |
+| e2e-testing                       |           213 |            0 |                 0 |                   0 |                             23 |                               0 |
+| execution-service                 |            12 |            0 |                 0 |                   0 |                              0 |                               0 |
+| features-service                  |            67 |            0 |                 0 |                   0 |                              3 |                               0 |
+| fund-administration-service       |             2 |            0 |                 0 |                   0 |                              0 |                               0 |
+| greeks-service                    |             2 |            0 |                 0 |                   0 |                              0 |                               0 |
+| ibkr-gateway-infra                |            11 |            0 |                 0 |                   0 |                              0 |                               0 |
+| instruments-service               |           305 |            0 |                 0 |                   0 |                             10 |                               0 |
+| market-data-processing-service    |            20 |            0 |                 0 |                   0 |                              0 |                               0 |
+| market-tick-data-service          |           210 |            0 |                 0 |                   0 |                             41 |                               0 |
+| ml-service                        |            12 |            0 |                 0 |                   0 |                              0 |                               0 |
+| strategy-service                  |            30 |            0 |                 0 |                   0 |                              1 |                               0 |
+| system-integration-tests          |             7 |            0 |                 0 |                   0 |                              0 |                               0 |
+| trading-agent-service             |             4 |            0 |                 0 |                   0 |                              0 |                               0 |
+| unified-api-contracts             |            36 |            1 |                 1 |                   1 |                              1 |                               0 |
+| unified-trading-api               |             5 |            0 |                 0 |                   0 |                              0 |                               0 |
+| unified-trading-library           |            10 |            0 |                 0 |                   0 |                              1 |                               0 |
+| unified-trading-pm                |           634 |            0 |                 0 |                   0 |                              5 |                               0 |
+| unified-trading-system-ui         |            17 |            0 |                 0 |                   0 |                              0 |                               0 |
+| **TOTAL (25 repos)**              |      **1998** |        **3** |             **2** |               **2** |                         **96** |                           **2** |
+
+**Missing-field detail (3 files, 2 repos)**: `client-reporting-api/scripts/__init__.py` (0 bytes, empty package marker —
+missing all 3 fields) and `unified-api-contracts/scripts/__init__.py` (0 bytes, same) each miss all 3 fields;
+`deployment-api/scripts/census_manifest_data_type_2026_07_24.py` misses only `# Epic:` (it carries `Lifecycle`/
+`Delete-when` text embedded in its module docstring, not a standalone comment header — non-conformant placement, but the
+grep-based precondition still finds those two lines since they happen to start the line).
+
+**`na_misuse` detail (2 files, 1 repo)**: `agent-orchestrator/scripts/orchestrator/audit_cron_notify.py` and
+`.../check_null_brief_hash_growth.py` — both carry `Lifecycle: periodic` (itself not a valid enum value — see
+supplementary finding below) with `Delete-when: NA`.
+
+**Supplementary finding (beyond the 3 requested counts, but directly load-bearing for gate-clearability — the checker
+also fails CI on an unknown `Lifecycle` value per `script-homes.md`'s own enforcement description): invalid `Lifecycle:`
+value (not `permanent`/`campaign`/`oneoff`)** — **136 files fleet-wide**, heavily concentrated in
+market-tick-data-service (45) and instruments-service (38), driven almost entirely by one systemic near-miss:
+**`one-off` (hyphenated) instead of the closed `oneoff` token** (the large majority of both repos' count). Other
+observed values: `periodic` (agent-orchestrator, 5), `campaign:<sub-label>` embedding a colon-suffixed sub-campaign name
+instead of the bare `campaign` token (client-reporting-api 4, execution-service 8), `reusable`/`reusable-tooling`/
+`reusable-investigation`/`reusable-narrow`/`re-runnable`/`temporary`/`one-shot`/`recurring`/`bridge` (scattered
+one-offs). Per-repo counts: agent-orchestrator 5, client-reporting-api 4, deployment-api 2, deployment-service 3,
+e2e-testing 11, execution-service 8, features-service 6, instruments-service 38, market-data-processing-service 4,
+market-tick-data-service 45, unified-api-contracts 1, unified-trading-library 1, unified-trading-pm 8 (total 136 across
+13 repos). Not one of the 3 requested counts, but worth surfacing now rather than as a second surprise after the
+missing-field precondition clears — the `one-off`→`oneoff` fix alone would close the bulk of this at low cost (a
+fleet-wide rename, not per-file judgment).
+
+**Verdict: gate-clearable — NO.** The plan's own stated precondition (`grep -rL '^# Delete-when:' */scripts/` empty
+fleet-wide) is **not yet met** (2 files), though very close — down from 11+ repos at the 2026-07-15 baseline to 2
+trivial `__init__.py` files in 2 repos. Even once that clears, the checker as specified in the Folded-in-scope item
+below would **still fail CI fleet-wide** on day one: 96 files carry an `Epic:` value outside the epic registry (mostly
+dated one-off/campaign plan-slugs used in place of the owning everlasting epic — e.g. `sports_manifest_canonicalisation`
+instead of `sports_master`), 2 files misuse `Delete-when: NA` on a non-`permanent` lifecycle, and (supplementary) 136
+files carry a `Lifecycle:` value outside the closed `permanent|campaign|oneoff` enum. **Recommended sequencing for the
+operator**: (1) stamp the 3 missing-field files (trivial — 2 are empty `__init__.py`, add
+`# Epic: <owning-epic> / # Lifecycle: permanent / # Delete-when: NA`; the deployment-api file needs a proper `# Epic:`
+header line, not just docstring text), (2) fleet-wide `one-off`→`oneoff` rename (closes most of the 136), (3) epic-owner
+pass on the 96 invalid `Epic:` values (retarget to the correct everlasting epic slug — or decide some belong in the
+registry, e.g. `on-chain-alpha-track` in e2e-testing, 23 files), (4) fix the 2 `na_misuse` files' `Lifecycle` value
+first (they're `periodic`, itself invalid) then their `Delete-when`. Only after all four clear does
+`grep -rL '^# Delete-when:' */scripts/` being empty actually mean the checker will land green, not just that the
+narrowest literal precondition passed.
 
 ## Folded-in scope 2026-07-15 (plan-reconcile §6)
 
