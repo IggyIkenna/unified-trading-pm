@@ -19,7 +19,7 @@ summary: >-
   dispatch-coordination gap (a transient/one-shot dispatch mechanism spawning onto a tmux session without checking
   whether a different, already-running role already owns it), not something specific to `na_eligibility_auditor` or to
   slot 1.
-status: open
+status: resolved
 nature: issue
 asset_group: [ao]
 stage: [meta]
@@ -49,6 +49,9 @@ assigned_role: infra
 estimate_class: refactor
 locked_by:
 resolved_by:
+  "slot-9 (agent-orchestrator@0c82906, todo 1 tmux-kill fix + todo 4 regression tests) + slot-6 (todo 2 main/monitor
+  audit) + slot-1/review (todo 3 collision-signal via agent-orchestrator@ac7ac28) + slot-12 (todo 5
+  boot-dispatch-assignment fix via agent-orchestrator@8733aaa) — all 5 todos done, verified 2026-08-02"
 depends_on: []
 gate_on_depends: false
 supersedes:
@@ -58,6 +61,12 @@ source: >-
   reporting the pattern as a finding — main confirmed it explains fleet-wide recycle churn tracked separately this
   session and asked the reporting agent to file this doc since it holds the precise event-evidence chain.
 ---
+
+> **🟢 RESOLVED 2026-08-02 — ARCHIVED.** All 5 todos landed across 4 slots: the review-slot tmux-kill vector (todo 1) +
+> its regression tests (todo 4), the main/monitor exposure audit (todo 2, neither reachable), the higher-visibility
+> collision signal (todo 3), and the `/boot` generic-backlog-picker bypass (todo 5, the SEPARATE bug this doc's own
+> Progress Log surfaced mid-session) are all shipped + verified. Moved to
+> `/plans/archive/issues/persistent_slot_tmux_session_hijacked_by_transient_plan_health_dispatch_2026_08_01.md`.
 
 # Persistent-slot tmux session hijacked by a transient plan_health_dispatch spawn
 
@@ -203,21 +212,28 @@ boot-loop doc's citation of `server/prompts.py` and `server/routes/slots_worker.
       Verified via code read (not re-run — this is already-committed, already-`Quickmerge: agent`-gated code from a
       prior session; per `RULES.md` never-run-pytest-directly, no redundant local pytest invocation for a spot-check of
       code this task didn't modify).
-- [ ] [BACKEND] P2. **Make a transient `plan_health` dispatch's first `/boot` call carry its own dispatch assignment
-      (`tranche`/`mode`) instead of falling through to the generic backlog picker.** This is a DIFFERENT bug from todo 1
-      (which fixed the tmux-session-KILL vector only) — three corroborating occurrences already sit in this doc's
-      Progress Log in prose but were never converted into a tracked todo: slot 1 (review persistent-role context), slot
-      2 (tranche `ao`, dispatch `agt-8e95ca`), and slot 5 (tranche `tradfi`, dispatch `agt-3589fe`) each had their first
-      `/boot` after a `plan_health` dispatch return an unrelated generic backlog task (e.g.
-      `assigned_role:     backend_engineer`) instead of carrying the `na_eligibility_auditor`/`ag_closeout` assignment
-      the dispatch itself specified. Each session self-detected the mismatch and worked around it (ignored the wrong
-      task, or `/skip-current-task`'d it) per its role file — no work was lost — but this is a latent dispatch-routing
-      gap every future transient dispatch has to independently notice and route around, not a one-off. Root-cause
-      candidate (per the 2026-08-02 slot-9 Progress Log entry below): the `/boot` → `_pick_free_slot`-or-equivalent
-      generic-task- assignment path has no awareness that the calling session already has a complete, self-contained
-      assignment from its own dispatch payload — confirm against the actual dispatch code and fix so a
-      `plan_health`-dispatched session's first `/boot` always returns its own assignment, never a generic-backlog
-      substitute. (repo: agent-orchestrator)
+- [x] ✅ [BACKEND] P2. **DONE 2026-08-02 (slot-12, backend_engineer) — `agent-orchestrator@8733aaa`.** Root-caused via a
+      background Explore sub-agent's independent code read (confirmed by my own direct read of the same call chain):
+      `server/plan_health.py::dispatch()` → `state_store/slots.py::claim_slot_for_typed_agent()` correctly persists
+      `slot.spawn_base_role = prompt_template` (e.g. `"na_eligibility_auditor"`) to the DB **before** the
+      freshly-spawned tmux session's first `/boot` ever fires — so the server-side truth is already right at spawn time.
+      The bug was entirely on the READ side: `server/routes/slots_worker.py::boot_slot`'s collision-avoidance gate
+      (`picked = None     if req.slot_role in PLAN_HEALTH_FAMILY_ROLES else pick_next_task(...)`, plus the sibling
+      stray-task-release check) trusted only `req.slot_role` — the CALLING session's own self-reported field — never the
+      DB's `spawn_base_role`. `server/autospawn.py::do_spawn`'s `render_vars` never includes a `slot_role` key for a
+      non-`"worker"` `prompt_template` (confirmed: only `prompts.render_worker`'s plain-worker path defaults it), so the
+      boot-prompt text a plan_health-family agent actually reads never surfaces a `SLOT_ROLE` session var at all — the
+      agent has no way to know to self-report it on its first `/boot` call, exactly matching all three corroborating
+      occurrences logged in this doc's Progress Log. **Fix**: `boot_slot` now derives
+      `typed_dispatch_role = slot.spawn_base_role or     req.slot_role` and uses it for both the stray-task-release
+      check and the `picked=None` gate — `req.slot_role` stays as the sole/fallback signal only for the legitimate
+      direct-boot-without-dispatch case (where `spawn_base_role` is never pre-set). New regression test
+      `test_dispatched_slot_first_boot_omitting_slot_role_still_avoids_generic_task` reproduces the exact live shape (a
+      real dispatch-seeded `SlotRow`+`AgentRow`, first `/boot` with `slot_role=None`) and asserts no Class-A task ever
+      gets claimed. Full QG green (2239 passed, 0 basedpyright errors); all 37 existing tests in
+      `test_boot_typed_role_gate.py` + the full `test_plan_health.py`/`test_escalation.py` suites still pass — no
+      regression to the already-shipped todo-1 review-slot-exclusion fix or any other collision path. (repo:
+      agent-orchestrator)
 
 ## Codex SSOTs
 

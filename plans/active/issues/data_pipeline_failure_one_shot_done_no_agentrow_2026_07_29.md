@@ -191,10 +191,10 @@ still in flight.
   reports (which hit the gap AFTER real work but WITH a correctly-registered AgentRow), this occurrence never had a
   matching AgentRow to begin with — suggesting the registration gap can also manifest as a `plan_health_dispatch` spawn
   landing on a slot whose tmux session already carries a DIFFERENT role's live claim, i.e. the same collision class as
-  `persistent_slot_tmux_session_hijacked_by_transient_plan_health_dispatch_2026_08_01.md` (also reclassified to
-  `planning` this same audit run) rather than a pure post-hoc AgentRow-status change. This session's actual assigned
-  work (the `/na-eligibility-audit ao` run) is independently git-verified complete regardless — 4 doc-edit commits + 1
-  ratchet-baseline commit, all confirmed ancestors of `origin/live-defi-rollout`
+  `/plans/archive/issues/persistent_slot_tmux_session_hijacked_by_transient_plan_health_dispatch_2026_08_01.md` (also
+  reclassified to `planning` this same audit run) rather than a pure post-hoc AgentRow-status change. This session's
+  actual assigned work (the `/na-eligibility-audit ao` run) is independently git-verified complete regardless — 4
+  doc-edit commits + 1 ratchet-baseline commit, all confirmed ancestors of `origin/live-defi-rollout`
   (`ded844253`/`c4a8dc394`/`96797d327`/`f667a4dc9`/`5411ba307`). Ending session without a clean `/done` per the
   established precedent; relying on the idle-lingering-reclaim reaper path. from this worker slot, same constraint every
   prior reporter hit).
