@@ -54,19 +54,21 @@ different concern (e.g., deployment infrastructure).
 
 ---
 
-## Archive Criteria by Plan Type
+## Archive Criteria
 
-| Type         | Minimum gate to archive                     | Notes                                                           |
-| ------------ | ------------------------------------------- | --------------------------------------------------------------- |
-| `code`       | C5 for all repos in `repo_gates`            | Archivable during code-completion epic                          |
-| `infra`      | D3 for all repos in `repo_gates`            | Must prove staging integration even during code-completion epic |
-| `deployment` | D3 minimum                                  | Same as infra                                                   |
-| `business`   | B6 (user approved) + B3 KPIs met            | Unit tests alone are insufficient                               |
-| `mixed`      | Highest required gate across declared types | E.g., `code + infra` → D3                                       |
+> **Rewritten 2026-08-02** (operator ruling, `plan_reconcile_parked_operator_decisions_2026_08_02.md` § 2d): the prior
+> per-plan-type `repo_gates`/`completion_gates` table below was unsatisfiable under the current canonical schema — both
+> fields only exist in the **Legacy schema (pre-2026-05-21)** (see that section below); no current-schema plan carries
+> them. No real archival has ever used this table; every real archival instead uses the bar this section now states
+> directly, matching `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`.
 
-**Archive eligibility rule:** A plan is eligible for archive when ALL repos in `repo_gates` have reached the gate level
-in `completion_gates`, AND the plan type's minimum gate is satisfied. A plan is NOT archivable just because the majority
-of todos are done — every repo must reach the required level.
+**Archive eligibility rule:** A plan is eligible for archive when every body-markdown todo is `- [x]` with HARD evidence
+(a reachable commit/artifact per the completion-discipline codex doc's evidence bar — a Progress Log claim or another
+doc's say-so is not sufficient alone), the plan is UNLOCKED (`locked_by:` empty, or `[unlock-plan]` explicitly given),
+and the standard 6-step archival ritual is followed (banner, referrer repoint, inventory regeneration). A plan is NOT
+archivable just because the majority of todos are done — zero open todos is the bar, not "most." (The old table's
+`repo_gates`/`completion_gates`-based per-type distinction — `code`/`infra`/`deployment`/ `business`/`mixed` — is
+retired; it never had a current-schema equivalent to check against.)
 
 ---
 
@@ -303,11 +305,14 @@ priority `None` → dispatcher de-prioritizes → task rots in the queue. Non-ca
 **Full hygiene stack doc** (4 silent-failure modes, severity ladder, cron schedules):
 `/codex/12-agent-workflow/plan-hygiene.md`
 
-**Closed set of canonical tags** (case-sensitive uppercase; PR to PLAN_FORMAT.md to add a new tag):
+**Closed set of canonical tags** (case-sensitive uppercase; PR to PLAN_FORMAT.md to add a new tag). **Synced
+2026-08-02** (operator ruling, `plan_reconcile_parked_operator_decisions_2026_08_02.md` § 2c) to add the live per-task
+role-routing tags `task_template.md` § "[TAG] → craft role" already documents and essentially every todo in the corpus
+actually uses — this list had drifted stale against that reality:
 
 ```
 AGENT | SCRIPT | HUMAN | HUMAN+AGENT | AUDIT | DESIGN | SPEC | VERIFY | CONFIG | IMPLEMENT
-DEFERRED | DELEGATED | UI
+DEFERRED | DELEGATED | UI | INFRA | DATA | BACKEND | REVIEW | CODE | DOCS | PM | DIAG
 BLOCKED-CREDENTIALS | BLOCKED-OPERATOR-DECISION | BLOCKED-UPSTREAM-OUTAGE
 BLOCKED-PLAYWRIGHT | BLOCKED-OPERATOR | BLOCKED-INFRA
 ```

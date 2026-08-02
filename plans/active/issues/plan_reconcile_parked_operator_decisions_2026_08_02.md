@@ -275,17 +275,27 @@ but it is a deliberate, disclosed contribution to a RED ratchet, not an accident
 - [ ] [OPERATOR] P1. **Rule § 2a** — Massive/Polygon.io removal status. RULED 2026-08-02: option A (finish the removal
       in instruments-service). Implementation not yet done — implicates real code + a codex SSOT + CLAUDE.md, tracked as
       its own follow-up. (repo: `instruments-service`, `unified-trading-pm`)
-- [ ] [OPERATOR] P2. **Rule § 2b** — who may hand-edit `backlog.yaml` to park. (repo: `agent-orchestrator`)
-- [ ] [OPERATOR] P2. **Rule § 2c and § 2d** — the two `PLAN_FORMAT.md` normative drifts (tag vocabulary, archive
-      criteria). (repo: `unified-trading-pm`)
-- [ ] [OPERATOR] P3. **Rule § 2e** — the AOF epic's own `assigned_vm`. (repo: `unified-trading-pm`)
+- [x] ✅ [OPERATOR] P2. **Rule § 2b** — RULED 2026-08-02, option B (carve out a park-only exception). Documented in
+      `/codex/04-architecture/agent-orchestrator-backlog-state-alignment.md`: an agent may hand-edit an existing row's
+      `priority`/`prereqs` to park it, provided the task content is untouched AND the same park intent is also authored
+      into the source plan (matching the already-shipped `defi_morpho_lending_indices_never_wired` precedent). A
+      hand-edit with no matching plan-side authoring is still banned. (repo: `agent-orchestrator`)
+- [x] ✅ [OPERATOR] P2. **Rule § 2c and § 2d** — RULED 2026-08-02, "sync all 3 to live practice." `PLAN_FORMAT.md`'s
+      canonical tag list now includes `INFRA`/`DATA`/`BACKEND`/`REVIEW`/`CODE`/`DOCS`/`PM`/`DIAG`; the archive-criteria
+      table (unsatisfiable `repo_gates`/`completion_gates` fields, legacy pre-2026-05-21 schema) is rewritten to the
+      zero-open-todos + hard-evidence bar actually in use. (repo: `unified-trading-pm`)
+- [x] ✅ [OPERATOR] P3. **Rule § 2e** — RULED 2026-08-02, same "sync to live practice" batch. AOF epic's `assigned_vm`
+      flipped `planning` → `NA`, matching its own cited role as the SSOT for "NA is expected on every epic"; the body's
+      stale "reassign per-workstream" sentence corrected to match. (repo: `unified-trading-pm`)
 - [x] ✅ [OPERATOR] P1. **Rule § 3** — RULED 2026-08-02, option A (migrate all 7 into `ci_satellite_ao_dispatch_batch1`,
       per-item source citations). All 7 migrated + the 3 source docs (already archived, found with the todos still
       stranded there) updated to point at the new location. The `orphaned_commit_recovery` opposite-precedent doc's
       stale "stays OPEN" framing corrected to note its 3 prevention todos are already closed and its archival is routed
       through a different plan's todo, not a legitimate open-ended exception. This one gates the
       `check_terminal_status_archived` ratchet reaching its baseline. (repo: `unified-trading-pm`)
-- [ ] [OPERATOR] P2. **Rule § 4** — the `plans/archive/` reference-path population question. (repo:
+- [x] ✅ [OPERATOR] P2. **Rule § 4** — RULED 2026-08-02, option B (exclude `plans/archive/` from the ratchet).
+      `check_reference_paths.py`'s `target_files()` now skips `plans/archive/`; re-baselined from
+      format=158/existence=407 down to format=81/existence=90 (both green, well under the reduced baseline). (repo:
       `unified-trading-pm`)
 - [ ] [DOC] P2. **Name this register in the skill file** — `cursor-configs/skills/plan-reconcile/SKILL.md:301`'s
       zero-checkbox section owns the sweep but never cites

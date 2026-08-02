@@ -34,10 +34,14 @@ related:
     /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
   ]
 created: "2026-07-30"
-last_updated: "2026-07-30"
+last_updated: "2026-08-02"
 parent_epic: infrastructure_master
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm:
+  planning # flipped 2026-08-02 (operator ruling, ag_closeout_audit_infra_parked_2026_08_02.md finding 7)
+  # -- was NA, the wrong combination with status:active for an "AO dispatch batch" doc; sibling batches 1/2 both
+  # correctly use planning. The remaining [BACKEND] P3 todo was silently uncovered by AO dispatch despite the
+  # candidate generator listing this doc as "covering" it.
+execution_scope: orchestrator-agent
 priority: P2
 estimate_class: infra
 estimate_baseline_ai_days: 0.7
@@ -66,9 +70,10 @@ source: >-
 
 # Infra satellite AO batch 3
 
-> **⚠️ STATUS: `draft` — NOT dispatched, NOT ingested.** Flipping this (and its finalize twin) to `status: active` is
-> the operator's call per CLAUDE.md § "Plan destination — ASK BEFORE CREATING" and the `/ag-closeout-audit` skill's
-> autonomous-mode rule. Nothing here has been shipped.
+> **✅ ACTIVE + DISPATCHABLE (2026-08-02).** `status: active` since authoring; `assigned_vm` flipped `NA` → `planning`
+> 2026-08-02 (operator ruling, `ag_closeout_audit_infra_parked_2026_08_02.md` finding 7) to match sibling batches 1/2's
+> convention — this banner was stale (still said `draft`/`NOT dispatched` after the doc had already gone active,
+> compounding the separate `assigned_vm` gap). The remaining `[BACKEND] P3` todo is now genuinely AO-dispatchable.
 
 ## Why this batch is thin — and why it is the last one
 

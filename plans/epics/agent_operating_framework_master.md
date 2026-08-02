@@ -22,7 +22,7 @@ created: 2026-06-24
 name: agent_operating_framework_master
 tier: L5
 priority: P0
-assigned_vm: planning # was: harsh_pc -- corrected 2026-07-14, finding 12: harsh_pc is a pre-2026-06-27 multi-VM host id, retired by the single-VM pivot (this epic's own body-section correction already says so; this field was never updated to match); planning is the current single central-orchestrator VM id, matching the plan_hygiene_master.md epic precedent
+assigned_vm: NA # corrected 2026-08-02 (operator ruling, plan_reconcile_parked_operator_decisions_2026_08_02.md § 2e): was `planning`, contradicting this doc's OWN status as PLAN_FORMAT.md's cited SSOT for "NA is the expected value on every epic" -- epics don't dispatch, plans do; the D2 decision below already drops epic-to-VM delegation. (Prior history: was `harsh_pc` -- corrected 2026-07-14, finding 12: harsh_pc is a pre-2026-06-27 multi-VM host id, retired by the single-VM pivot -- then corrected to `planning`, which was itself still wrong per this rule.)
 parent: master_to_live_defi_2026_05_23
 co_operators: [harsh, ikenna]
 codex_ssots: [/codex/11-project-management/plan-hygiene.md, /codex/12-agent-workflow/canonical-plan-flow.md]
@@ -64,10 +64,12 @@ honest and graduates delegation. The whole design is **grep-native, NOT vector-R
 >   `escalation_pipeline_mvp` + the `escalation_and_disaster_recovery_master` epic). They stay valid; they are not on
 >   the make-AO-usable critical path. Pausing those 4 child plans is the remaining O1 mechanic (operator to confirm).
 
-**Assigned VM**: `planning` (was: `harsh_pc` — corrected 2026-07-14, finding 12: `harsh_pc` was a pre-2026-06-27
-multi-VM host id, retired by the single-VM pivot; see this doc's own W6 role-instance table-row correction, which
-already flagged `harsh_pc` as retired but never fed back into this line). `planning` is the current single
-central-orchestrator VM (reassign per-workstream as work dispatches — D4).
+**Assigned VM**: `NA` (corrected 2026-08-02 — epics don't dispatch, per this doc's own D2 decision dropping epic-to-VM
+delegation, and per `PLAN_FORMAT.md` citing this exact epic as the SSOT for "NA is the expected value on every current
+epic." Prior history: was `harsh_pc` — corrected 2026-07-14, finding 12: `harsh_pc` was a pre-2026-06-27 multi-VM host
+id, retired by the single-VM pivot; briefly corrected to `planning`, which was itself still wrong per this same rule.
+Individual CHILD PLANS under this epic still carry their own `assigned_vm: planning` where dispatched — this field is
+about the epic hub doc itself.)
 
 ## Why this epic exists
 

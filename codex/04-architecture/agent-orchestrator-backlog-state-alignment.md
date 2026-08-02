@@ -45,6 +45,18 @@ The orchestrator maintains two task stores:
 when `backlog.yaml` contains stale tasks whose plan-todo lines have been edited or removed. Without cleanup, zombie rows
 accumulate and inflate queue counts, causing false "work available" signals.
 
+**The park-only hand-edit exception (RULED 2026-08-02, `plan_reconcile_parked_operator_decisions_2026_08_02.md` § 2b).**
+CLAUDE.md's "never hand-edit `backlog.yaml`" rule is about AUTHORING task content — that must always come from a plan's
+own `- [ ]` todos via `regen_backlog_from_plan.py`, never a hand-typed row, or the next regen silently overwrites or
+duplicates it. It is NOT a blanket ban on every field of every row: **an agent MAY hand-edit an EXISTING row's
+`priority`/`prereqs` fields to park it** (e.g. dropping priority to de-prioritize, or adding a prerequisite condition to
+gate it), provided (a) the row's task content itself is untouched, and (b) the SAME park intent is also authored into
+the source plan's frontmatter/body in the same edit (`depends_on` + `gate_on_depends: true` is the plan-authored
+equivalent — see `defi_morpho_lending_indices_never_wired_2026_07_12.md`'s 2026-07-31 correction for the canonical
+pattern), so the next `regen_backlog_from_plan.py` run re-derives the SAME park state from the plan rather than silently
+reverting the hand-edit. A hand-edit with no matching plan-side authoring is still the banned case — it will not survive
+the next regen and hides the real park decision from anyone reading the plan.
+
 ---
 
 ## The `tasks` table is a projection, not a completion ledger
