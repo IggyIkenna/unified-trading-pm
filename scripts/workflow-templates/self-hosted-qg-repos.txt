@@ -53,6 +53,20 @@
 # admitted job's SIGALRM budget being blown by whole-host contention. Reverted to ubuntu-latest per the doc's
 # precedented per-repo fix; e2e-testing is NOT one of the operator's 6 explicitly-protected repos, so no ruling
 # conflict.
+#
+# execution-service REVERTED 2026-08-02 (cicd agent slot-9, escalation agt-917b7b, ldr_qg_failure on promotion PR
+# execution-service#537): `QG slice (checks)` hit the 300s PYRIGHT_TIMEOUT (`Type check FAILED/timeout (exit=124)`,
+# zero progress in 300s) and the sibling `QG slice (tests)` job sat `in_progress` on `[3/6] TESTS` for 2h16m with zero
+# output before being canceled — same run showed a SECOND concurrent quality-gates-v2 run (main push, a124eb7a) also
+# red on the identical `checks` timeout with its own `tests` job still stuck 2h51m+ at investigation time. Verified
+# live from a slot session co-resident on the SAME host (`172.31.5.118` / `i-0c9b283b31d6b5ca7`) backing this repo's
+# lone `glue-ip-172-31-5-118-1` runner: `uptime` showed load average 44/16 cores, with concurrent self-hosted-runner
+# basedpyright/pytest processes for other repos (market-tick-data-service, deployment-api) plus ~10 AO slot-worker
+# `claude` sessions live on the box at the same time — the exact oversubscription signature
+# `fleet_wide_qg_self_hosted_runner_capacity_crisis_2026_07_27.md` tracks. The PR's own content diff was a single
+# 8-line CI-only workflow change (`cancel-in-progress` on `pull_request`), ruling out a code regression. Reverted to
+# ubuntu-latest per the doc's precedented per-repo fix; execution-service is NOT one of the operator's 6
+# explicitly-protected repos, so no ruling conflict.
 agent-orchestrator
 unified-trading-pm
 strategy-service
@@ -66,7 +80,6 @@ greeks-service
 ibkr-gateway-infra
 instruments-service
 market-tick-data-service
-execution-service
 batch-live-reconciliation-service
 alerting-service
 client-reporting-api
