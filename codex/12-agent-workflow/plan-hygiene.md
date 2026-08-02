@@ -6,7 +6,8 @@ summary:
   plan / stale blocker) with their detectors, the HARD-vs-SOFT severity ladder of run_hygiene_sweep.sh, the closed set
   of valid role + blocked-status tags, and the two automated crons (04:00 reaper, 01:00 deep plan-reconciler; the
   4-hourly orphan-ping audit was retired 2026-07-04, the daily Cloud Run hygiene-sweep + GHA Haiku job were retired
-  2026-07-28 per RULE-11 prove-then-retire).
+  2026-07-28, and the standalone plan-health-gate PR job was retired 2026-08-02 — folded into quality-gates-v2 as a hard
+  blocking gate — all per RULE-11 prove-then-retire).
 status: current
 nature: ssot
 asset_group: [meta]
@@ -25,7 +26,7 @@ created: 2026-05-30
 authoritative_for: [plan-hygiene 4 silent-failure modes, hygiene-sweep severity ladder]
 referenced_by: [/codex/12-agent-workflow/canonical-plan-flow.md, /codex/12-agent-workflow/stale-blocker-reaper.md]
 owner:
-last_reviewed:
+last_reviewed: 2026-08-02
 code_refs:
 ---
 
@@ -206,18 +207,25 @@ BLOCKED-INFRA              Infrastructure blocker (e.g. quota, VM unavailable)
 
 Two crons run on a fixed UTC schedule, offset to avoid resource contention on the planning VM:
 
-| Sweep                 | Schedule            | Mechanism                                                                                                                  | Log                                                                         |
-| ---------------------- | -------------------- | ----------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------- |
-| Stale-blocker reaper  | **04:00 UTC daily** | systemd `reap-stale-blockers.timer` on orchestrator VM                                                                     | `/var/log/orchestrator/reap_<date>.log`                                    |
-| Deep plan reconciler  | **01:00 UTC daily** | systemd `plan-reconciler.timer` on central orchestrator VM (`agent-orchestrator/scripts/install-plan-reconciler-timer.sh`) | agent-orchestrator worker log + `docs(plans): daily reconciliation` commit |
+| Sweep                | Schedule            | Mechanism                                                                                                                  | Log                                                                        |
+| -------------------- | ------------------- | -------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------- |
+| Stale-blocker reaper | **04:00 UTC daily** | systemd `reap-stale-blockers.timer` on orchestrator VM                                                                     | `/var/log/orchestrator/reap_<date>.log`                                    |
+| Deep plan reconciler | **01:00 UTC daily** | systemd `plan-reconciler.timer` on central orchestrator VM (`agent-orchestrator/scripts/install-plan-reconciler-timer.sh`) | agent-orchestrator worker log + `docs(plans): daily reconciliation` commit |
 
 > **RULE-11 RETIREMENT (2026-07-28)** — the daily `uts-prod-plan-hygiene-sweep` Cloud Run job + Cloud Scheduler +
 > terraform (`deployment-service/terraform/gcp/hygiene_sweep_scheduler.tf`) are DELETED, and the GHA
 > `plan-health-agent.yml` daily Haiku contradiction/doc-drift job is removed from that workflow file (only the
-> `pull_request`-triggered `plan-health-gate` hard gate remains). Both report-only jobs are superseded by the deep
-> `plan-reconciler` agent above, which DETECTS **and** FIXES rather than just alerting — see
+> `pull_request`-triggered `plan-health-gate` hard gate remained, at that point). Both report-only jobs are superseded
+> by the deep `plan-reconciler` agent above, which DETECTS **and** FIXES rather than just alerting — see
 > `/codex/11-project-management/plan-hygiene.md` § "Daily deep reconciler" for the full retirement record + operator
 > approval citation. `run_hygiene_sweep.sh` itself is unaffected — the reconciler runs it as STEP 1 of its own pass.
+>
+> **RULE-11 RETIREMENT, second leg (2026-08-02)** — `.github/workflows/plan-health-agent.yml` (by then down to just the
+> `plan-health-gate` job above) is now itself DELETED. Its `run_hygiene_sweep.sh --ci` hard gate is folded into
+> `.github/workflows/python-quality-gates-v2.yml` as a PM-only step on the `checks` leg — a real upgrade, since the
+> retired job was advisory-only (not a required check) while the fold makes plan hygiene an actual blocking gate. See
+> `/codex/11-project-management/plan-hygiene.md` § "Plan-health PR gate — folded into quality-gates-v2" for the full
+> record.
 
 > **Orphan-ping audit RETIRED 2026-07-04** — the every-4h `uts-prod-orphan-ping-audit` Cloud Run job + scheduler +
 > terraform were deleted along with the `_agent_pings.md` ping-ledger channel it policed (nobody read the ledgers after
@@ -225,14 +233,14 @@ Two crons run on a fixed UTC schedule, offset to avoid resource contention on th
 
 ### Cron ordering note (updated 2026-07-28 — reconciler now runs BEFORE the reaper)
 
-Historically the reaper (04:00) ran 1h before the retired 05:00 Cloud Run hygiene sweep, so PHANTOM_DONE states
-(blocker marked `done` but dependent still `queued`) were resolved before the sweep scanned prereq chains. The
-reconciler that replaced the sweep runs at **01:00 — 3h BEFORE the reaper**, so that ordering rationale no longer
-applies as originally stated: the reconciler's own STEP 1 deterministic sweep now runs before the reaper's PHANTOM_DONE
-cleanup. This has not caused an observed problem (the reconciler's STEP 3 deep check re-reads live plan state rather
-than trusting a stale scan, so a same-morning PHANTOM_DONE the reaper clears 3h later is caught on the NEXT day's
-reconciler run, not silently missed) — flagged here for accuracy rather than re-timed, since re-sequencing the cadence
-is outside this retirement's scope.
+Historically the reaper (04:00) ran 1h before the retired 05:00 Cloud Run hygiene sweep, so PHANTOM_DONE states (blocker
+marked `done` but dependent still `queued`) were resolved before the sweep scanned prereq chains. The reconciler that
+replaced the sweep runs at **01:00 — 3h BEFORE the reaper**, so that ordering rationale no longer applies as originally
+stated: the reconciler's own STEP 1 deterministic sweep now runs before the reaper's PHANTOM_DONE cleanup. This has not
+caused an observed problem (the reconciler's STEP 3 deep check re-reads live plan state rather than trusting a stale
+scan, so a same-morning PHANTOM_DONE the reaper clears 3h later is caught on the NEXT day's reconciler run, not silently
+missed) — flagged here for accuracy rather than re-timed, since re-sequencing the cadence is outside this retirement's
+scope.
 
 ### Installer commands
 

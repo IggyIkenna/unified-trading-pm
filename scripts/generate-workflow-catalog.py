@@ -74,7 +74,6 @@ STAGE_BY_WORKFLOW: dict[str, str] = {
     "conflict-resolution-agent": "agents",
     "conflict-resolution-merged": "agents",
     "rules-alignment-agent": "agents",
-    "plan-health-agent": "agents",
     "plan-notification": "agents",
     "agent-audit": "agents",
     "overnight-agent-orchestrator": "agents",

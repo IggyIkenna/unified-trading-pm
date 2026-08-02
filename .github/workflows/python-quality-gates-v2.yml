@@ -754,6 +754,44 @@ jobs:
             exit 1
           fi
 
+      - name:
+          Plan hygiene hard gate (PM only — folds run_hygiene_sweep.sh into v2, RULE-11 successor to plan-health-gate)
+        # PM-only: run_hygiene_sweep.sh + plans/codex/ exist only in unified-trading-pm. Lives on
+        # the `checks` leg alongside lint-codex (which validates VALUE-level frontmatter schema
+        # fleet-wide; this validates PM's plan/epic STRUCTURE — todo-format, line-caps,
+        # todo-regression, archive-candidates, conflict markers, etc.). Content-sentinel-gated for
+        # free: this step is inside the `checks` leg, which the content-gate job above already
+        # short-circuits on a tree-hash cache HIT (QG_CONTENT_HIT), and the docs-only/
+        # metadata-only fast-paths above already skip it exactly like every other checks-leg step.
+        #
+        # RULE-11 prove-then-retire (infra_satellite_ao_dispatch_batch1_2026_07_26.md,
+        # /plans/archive/issues/plan_hygiene_precommit_and_agentic_resolution_2026_06_10.md): this
+        # step is the server-side successor to the standalone `plan-health-gate` GHA job
+        # (.github/workflows/plan-health-agent.yml, RETIRED same unit) — folding the deterministic
+        # `run_hygiene_sweep.sh --ci` hard-failure sweep into the REQUIRED quality-gates-v2 check
+        # makes plan hygiene an ACTUAL blocking gate (the retired job was advisory-only — "only
+        # quality-gates-v2 is a required check on main"). The retired job's auto-fix-and-commit-to-
+        # PR-head convenience and its escalate-on-residue dispatch are not reproduced here (this
+        # step only DETECTS); the same wall_type=plan_health escalation still fires independently
+        # and automatically via the hourly `ldr-docs-gate.yml` job on live-defi-rollout, so a
+        # violation is never silently unfixed — it is just caught earlier and harder (blocking, not
+        # advisory) than before.
+        if: |
+          matrix.slice == 'checks' && steps.vcheck.outputs.skip_slice != 'true' &&
+          env.QG_CONTENT_HIT != 'true' && github.repository == 'IggyIkenna/unified-trading-pm'
+        shell: bash
+        run: |
+          export PATH="$(pwd)/.venv/bin:$PATH"
+          # Needed for check_todo_regression.sh's origin-compare (it diffs plans/active/*.md
+          # against origin/live-defi-rollout); this job's own checkout is a shallow fetch-depth:2
+          # of the PR/push ref only, so live-defi-rollout is not otherwise present locally.
+          # Best-effort: a fetch failure degrades check_todo_regression.sh to a silent no-op
+          # (gh_total reads 0 -> no regression flagged), never a crash — same fail-open shape as
+          # every other sentinel probe in this reusable workflow.
+          git fetch --quiet origin live-defi-rollout:refs/remotes/origin/live-defi-rollout 2>&1 || \
+            echo "::warning::could not fetch origin/live-defi-rollout — todo-regression check degrades to no-op this run"
+          bash scripts/plan-hygiene/run_hygiene_sweep.sh --ci --no-regen
+
       - name: Upload coverage.xml for codebase-health (tests slice; best-effort)
         # The aggregation job parses this into the deployment-ui Repo-CI Cov% column. ALWAYS
         # best-effort — never fail/red the slice (continue-on-error + if-no-files-found: ignore).
