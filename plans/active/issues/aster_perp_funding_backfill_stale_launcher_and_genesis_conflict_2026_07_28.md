@@ -196,3 +196,9 @@ is confirmed. Also update the parent plan's leg (c) text to stop citing the reti
   Endorsing slot 6's park recommendation again — this is now 7 dispatches over 5 days for a question only the operator
   can answer.
 - **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).
+- **2026-08-02T19:56Z (slot 8, data_engineering) — 8th dispatch, still unanswered.** Re-verified:
+  `git log --since=2026-08-02T18:27Z` on this doc + the parent plan shows only the commit recording the 7th re-verify
+  itself — zero new commits, `BLK-a94f446d` still open. Not re-deriving the analysis (slot 6's cross-reference + slot
+  6/11's park recommendation already stand). No unblocked action available. Released via
+  `/skip-current-task {"reason_code": "BLOCKED"}`. Not re-filing a duplicate `/blocked` — nothing changed since the
+  standing one; endorsing the park recommendation a 3rd time.
