@@ -520,12 +520,14 @@ codex, or a future staging re-entry gets a dead pipeline.
       across the full post-fix window; verification item CLOSED.** Read-only throughout (list only, no tag/image
       mutation). Evidence: `ci_satellite_ao_dispatch_batch1_2026_07_26.md` ("Verify the released Docker version tag is
       no longer re-pointed at new content") tracked completion here per its own citation.
-- [ ] [INFRA] P2. **Fix `instruments-service`'s `0.0.0.dev0` publish** (2026-07-03, AR `unified-libraries`) —
-      hatch-vcs's no-git-history fallback, meaning that wheel carries neither a version nor a commit sha. Ensure the
-      publish build checks out with tags/history (`fetch-depth: 0`), and fail the build when the computed version is
-      `0.0.0.dev0` rather than publishing it. **na-eligibility-audit 2026-08-01: already tracked (not yet done) as an
-      open todo in `ci_satellite_ao_dispatch_batch1_2026_07_26.md` ("Confirm instruments-service's publish path can no
-      longer emit 0.0.0.dev0"), which cites this exact checkbox as its Source — track completion there.**
+- [x] ✅ [INFRA] P2. **Fix `instruments-service`'s `0.0.0.dev0` publish** (2026-07-03, AR `unified-libraries`) —
+      instruments-service@7d005520. DONE via `ci_satellite_ao_dispatch_batch1_2026_07_26.md`'s "Confirm
+      instruments-service's publish path can no longer emit 0.0.0.dev0" todo (full evidence there): the repo's installed
+      `publish-package.yml` was stale pre-migration legacy content (no `fetch-depth: 0`, not even the AR-dispatch
+      pattern) — replaced with the canonical `scripts/propagation/templates/publish-package.yml` (byte-identical to the
+      working `unified-api-contracts`/`unified-trading-library` copies), which now dispatches to PM's
+      already-fail-closed receiver. Bad wheel disposition recorded (still present, single 2026-07-03 occurrence, left in
+      place per the operator-gated AR-delete rule).
 - [x] ✅ [INFRA] P1. **Re-assess `stale_staging_versions_manifest_2026_07_23.md` in light of F2 before implementing its
       fix** — its premise is inverted (see the ⚠ box above). Do not action the two independently. — **DONE, closed via
       `autonomous_session_operator_decisions_2026_07_25.md` entry #33** (operator ruled option 1, the dormancy-aware

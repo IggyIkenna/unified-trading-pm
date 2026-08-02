@@ -515,14 +515,26 @@ concurrent workers do not collide on this file.
       service Dockerfiles (`FROM …@${BASE_IMAGE_DIGEST}`), no further work needed. Full evidence recorded in the source
       doc. Source: `issues/post_cutover_silent_assumption_sweep_2026_07_23.md` ([INFRA] P1 "Stop re-pointing a released
       Docker tag at new content").
-- [ ] [INFRA] P2. **Confirm `instruments-service`'s publish path can no longer emit `0.0.0.dev0`.** It published
-      `0.0.0.dev0` to AR `unified-libraries` on 2026-07-03 — hatch-vcs's no-git-history fallback, a wheel carrying
-      neither a version nor a sha. The generic fix shipped in PM's `publish-package.yml` (`fetch-depth: 0` + fail-closed
-      on the BUILT wheel's version), and the propagation template `scripts/propagation/templates/publish-package.yml`
-      was corrected — but this repo's INSTALLED copy was never confirmed. Read its live copy; if it lacks
-      `fetch-depth: 0` or the built-wheel assertion, install the corrected template copy. **Done when**:
-      instruments-service's publish workflow has both, evidenced by reading the file on `origin/live-defi-rollout`, and
-      the bad 2026-07-03 wheel's disposition is recorded (do NOT delete it — an AR delete is operator-gated). Source:
+- [x] ✅ [INFRA] P2. **Confirm `instruments-service`'s publish path can no longer emit `0.0.0.dev0`.** —
+      instruments-service@7d005520. **FOUND**: the installed `.github/workflows/publish-package.yml` was NOT the
+      dispatch template at all — it was stale pre-migration legacy content (26 commits, all cosmetic action-version
+      bumps on top of the original "Add automatic publishing on tag push"; triggers on `release`/tag-push/
+      `workflow_dispatch`, uploads a GH Actions artifact via `actions/upload-artifact`, never touches AR; its own
+      `sed`-based version bump is dead code under this repo's current `dynamic = ["version"]` + hatch-vcs pyproject,
+      since there's no static `version = "..."` line left to replace). No `fetch-depth: 0`, no built-wheel assertion —
+      it lacked both because it isn't the same pipeline at all. **Confirmed byte-identical** to
+      `scripts/propagation/templates/publish-package.yml` against the working installed copies in
+      `unified-api-contracts`/`unified-trading-library` before installing the same content into instruments-service
+      (`push:main` → `dispatch-publish` job → `fetch-depth: 0` checkout → dispatches `publish-package` to PM's receiver,
+      which already fails closed on a built wheel version of `0.0.0.dev0`, confirmed read on
+      `origin/live-defi-rollout`). `GH_PAT` secret prerequisite confirmed present
+      (`gh secret list -R IggyIkenna/instruments-service`). **Bad wheel disposition**
+      (`gcloud artifacts versions list     --repository=unified-libraries --location=asia-northeast1 --package=instruments-service`):
+      `0.0.0.dev0` still present, `createTime=updateTime=2026-07-03T15:11:48`, a single isolated occurrence (surrounding
+      AR history shows `0.90.0` on 2026-06-27 then a ~4-week publish gap — the fleet-wide semver-agent dormancy this
+      doc's own source issue documents — then `0.91.0` on 2026-07-25 onward resuming normally; `0.0.0.dev0` sits alone
+      mid-gap, never duplicated). Left in place per the operator-gated AR-delete rule. Quality gates green (168s);
+      shipped via quickmerge, verified ancestor of `origin/live-defi-rollout`. Source:
       `issues/post_cutover_silent_assumption_sweep_2026_07_23.md` ([INFRA] P2).
 - [ ] [VERIFY] P1. **Re-measure the billed notify/glue cost — the 3-5 day window has long passed.** The mover flip
       landed 2026-07-17; the source doc's own table says the earliest useful measurement was ~2026-07-20/22, and it is
