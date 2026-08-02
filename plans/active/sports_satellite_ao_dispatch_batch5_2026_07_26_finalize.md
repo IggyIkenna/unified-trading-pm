@@ -133,8 +133,23 @@ context_scope:
       (bolded multi-clause description immediately after the priority marker, followed by lettered sub-parts spanning
       many lines), strengthening that doc's own parser-shape hypothesis. Releasing again via
       `/skip-current-task {"reason_code": "GATED"}` — nothing this data_engineering task can do until the
-      agent-orchestrator backend fix lands and a fresh task actually derives. **Archive every source doc todo 1 drives
-      to `status: resolved`/`complete` — in the same commit as the flip, never left sitting in `plans/active/`.**
+      agent-orchestrator backend fix lands and a fresh task actually derives. **Reconfirmed 2026-08-02 (slot 9,
+      data_engineering): zero drift, and the shared root cause is now narrower than the parser-shape hypothesis.**
+      Fresh-pulled to latest `live-defi-rollout` first. The zombie-tick todo text (this doc's line 114-138) is still
+      `[ ]`, and `GET /api/backlog` still shows only the same stale orphan (`sports_satellite_ao_dispatch_batch5-024`,
+      `done_at: 2026-07-26T01:27:01Z`) — no fresh task derived. The sibling defi doc's own investigation (todo 1, slot
+      15, `2026-08-02T16:03Z`) has since REFUTED the parser-shape hypothesis for its own case and found a different,
+      narrower cause instead (a word-order bug in `_is_non_dispatchable`'s `BLOCKED-<TOKEN>` stale-marker lookback —
+      only catches keyword-before-marker phrasing). Checked whether that exact mechanism applies here too: this todo's
+      own continuation block (lines 114-138) contains **no `BLOCKED-` token at all** — so this is likely a genuinely
+      DIFFERENT non-derivation cause sharing only the surface symptom, not automatically fixed by that same regex patch
+      once it lands. Flagging for whoever picks up the defi doc's todo 2 fix: re-test THIS todo specifically after the
+      word-order patch, don't assume one fix covers both. Separately: this is dispatch #6 for this exact gated todo
+      (slots 8, 11, 3, 16, 14, now 9) — the todo's own text above cites an auto-park threshold of 3 BLOCKED/GATED
+      declines, which this has exceeded by 2x without auto-parking; noting as a possible second, independent dispatcher
+      gap, not investigating further (outside this task's scope). Releasing again via
+      `/skip-current-task {"reason_code": "GATED"}`. **Archive every source doc todo 1 drives to
+      `status: resolved`/`complete` — in the same commit as the flip, never left sitting in `plans/active/`.**
       `check_terminal_status_archived.py` HARD-fails on any doc whose frontmatter reads a terminal status while it still
       lives under `plans/active/` (including `plans/active/issues/`) — the omission of this exact step across the sports
       finalize-plan family already forced one such HARD-fail: the `plan_health` gate's own remediation
