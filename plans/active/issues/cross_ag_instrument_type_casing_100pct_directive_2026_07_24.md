@@ -186,17 +186,22 @@ is the durable record; the 5 per-AG plans' execution-item pointers above are how
       refinement or its 2026-07-24 resolution (`defi_track01_per_instrument_and_canon_id_2026_07_24.md`,
       already-100%-lowercase census, no migration needed) — corrected that section in place, citing both this directive
       and the resolving todo. No production data touched — pure documentation fold-in, per this todo's own scope.
-- [ ] [DOC] P3. **Archival-eligible, not yet archived.** Both of this doc's own todos are now `[x]` and `locked_by` is
-      blank — per `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`'s archive-immediately rule this
-      doc should move to `plans/archive/<YYYY_MM>/`. Deliberately NOT done in the same turn the todos above completed:
-      16 corpus-wide referrers (`grep -rl cross_ag_instrument_type_casing_100pct_directive_2026_07_24 --include=*.md .`)
-      need their paths fixed per the ritual's step 5, plus a codex-alignment check (3 codex docs already carry
-      correction banners POINTING AT this doc as authoritative — `canonical-cutover-register.md` §3c/§7,
-      `cross-asset-canonical-target-ssot.md` §7, `reconciliation-finding-taxonomy.md` §5.1 — decide whether those
-      pointers just get their path updated post-move or whether this doc's unique content (the D1 measurement snapshot
-      table, the operator directive framing) should be absorbed into codex permanently instead of surviving only at an
-      archive path). This is genuinely more than a fold-in-sized task; flagging as its own todo rather than either
-      silently leaving it prose-only or rushing an under-scoped move. (repo: unified-trading-pm)
+- [x] ✅ [DOC] P3. **DONE 2026-08-02 (slot-8).** Codex-alignment check resolved FIRST (before the move): read all 3
+      correction-banner sections in full (`canonical-cutover-register.md` §3c/§7, `cross-asset-canonical-target-ssot.md`
+      §7, `reconciliation-finding-taxonomy.md` §5.1) — each already restates the full operator-directive framing
+      verbatim (the per-value least-migration-cost rule + the hard cross-AG consistency constraint + the execution
+      pointer), not a bare citation. The D1 measurement snapshot figures are independently already recorded in codex too
+      (tradfi's 3,300,155 re-stamp count and the 99.46%/99.41% cefi/prediction figures both live in
+      `reconciliation-finding-taxonomy.md` §5.1); the table's sports row is a "not measured by D1" absence-note, not a
+      fact needing a codex home, and sports' own content-bug detail already lives in
+      `sports_consolidated_closeout_2026_07_19.md` (execution-appropriate, not a codex-durable contract). Verdict: **no
+      new codex content required** — updated the 3 banners' path pointers only (post-move path), same commit as the
+      other 12 corpus-wide referrer fixes (15 of 16 hits fixed; the 16th,
+      `na_docs_validity_and_ao_eligibility_audit_2026_07_26.md:445`, is a bare-slug mention inside a past-tense
+      retrospective sentence with no path/extension to fix — left as historical narrative). Moved to
+      `plans/archive/2026_08/cross_ag_instrument_type_casing_100pct_directive_2026_07_24.md` with an ARCHIVED banner;
+      `status: resolved`, `resolved_by` filled in. No CLAUDE.md change needed — this closes an existing directive, it
+      doesn't ship a new contract beyond what the 3 codex docs already carry. (repo: unified-trading-pm)
 
 ## Progress Log
 
