@@ -28,7 +28,7 @@ related:
     /codex/05-infrastructure/per-tab-worktrees.md,
   ]
 created: 2026-08-02
-priority: P3
+priority: P2
 parent_epic: infrastructure_master
 source: "review agent (slot 1, agt-e85468) + main agent (agt-cb1851), chat thread 2026-08-02 12:13-12:19Z"
 execution_scope: orchestrator-agent
@@ -95,22 +95,30 @@ marked it done based on this commit, since it never reached origin. No doc corre
   — but the fix is cheap to land now versus re-discovering + re-fixing it under time pressure later.
 - Slot 9's clone is live (per-tab-worktrees liveness rules apply) and must not be touched by another slot or an
   interrupting task — recovery can only happen from inside that clone, and only while slot 9 chooses to run it.
+- **Update (main + review, 2026-08-02 ~12:26Z)**: this session has seen heavy slot-churn (multiple killed-waves of 5-6
+  slots at once). That makes the realistic loss vector NOT git's ~2-week gc window but slot 9's clone itself being reset
+  or reassigned before anyone actions this todo — which takes the reflog with it immediately. That demotes
+  cherry-pick-from-reflog to an opportunistic shortcut rather than the primary plan, and promotes re-implement-from-spec
+  (below) to primary, since it's slot-independent and dispatches to any DATA worker via normal PlanRegenLoop. Bumped P3
+  → P2 on that basis. No backlog `target_slot` affinity is being set for this reason too — pinning to slot 9 buys
+  nothing once the primary path no longer depends on that specific clone, and staying off backlog.yaml keeps this clear
+  of the hand-edit-backlog rule (RULES.md §4).
 
 ## Recommended decision
 
-- [ ] [DATA] P3. At slot 9's own next safe checkpoint (slot 9 picks this up itself when free — do not interrupt its
-      current task) in `.tabs/9/features-service`: recover via `git reflog | grep 272de118` (it will NOT appear in plain
-      `git log` — the branch was reset past it), confirm the clone is otherwise clean and current
-      (`git fetch origin live-defi-rollout && git merge-base --is-ancestor HEAD origin/live-defi-rollout`), then
-      `git cherry-pick 272de118` (or `cherry-pick -n` + re-commit if the tree has moved since). Verify
-      `features_service/volatility/core/{dependency_checker,data_loader}.py` and `features_service/common/__init__.py`
-      apply cleanly, run the repo's test suite, and ship via the normal Pass-1 `bash scripts/quality-gates.sh` → Pass-2
-      `bash scripts/quickmerge.sh "<msg>" --agent --files '<paths>'` flow (repo: features-service). **Fallback** — if
-      slot 9's clone has since been reset/recreated and `272de118` is no longer even in the reflog, re-implement from
-      scratch per the description above: add `features_service.common.resolve_mdps_bucket()` next to the existing
+- [ ] [DATA] P2. **Primary path — re-implement from spec** (slot-independent; dispatches to any DATA worker via normal
+      PlanRegenLoop): in `features-service`, add `features_service.common.resolve_mdps_bucket()` next to the existing
       `resolve_bucket`/`resolve_bucket_uri` helpers, and route both
       `features_service/volatility/core/dependency_checker.py` and `.../data_loader.py`'s direct
       `resolve_bucket_name(kind="market-data", asset_group=...)` calls through it — mirrors the identical,
-      already-shipped `_resolve_mdps_bucket` pattern in `features_service/delta_one/app/core/dependency_checker.py`.
-      This todo should be **affinity-targeted to slot 9** (`target_slot: 9`, e.g. `affinity: high` or `medium`) once
-      derived into the backlog — the primary recovery path (the reflog) only exists in that one clone.
+      already-shipped `_resolve_mdps_bucket` pattern in `features_service/delta_one/app/core/dependency_checker.py` (see
+      "What I found" above for the exact shape — 3 files: `common/__init__.py` +
+      `volatility/core/{dependency_checker,data_loader}.py`, 44 insertions/5 deletions). Add/adapt a regression test
+      mirroring delta_one's `TestResolveMdpsBucketPredictionAbbreviation` coverage. Ship via the normal Pass-1
+      `bash scripts/quality-gates.sh` → Pass-2 `bash scripts/quickmerge.sh "<msg>" --agent --files '<paths>'` flow.
+      **Opportunistic shortcut — cherry-pick from slot 9's reflog, IFF it still applies**: before re-implementing by
+      hand, check `.tabs/9/features-service`'s `git reflog | grep 272de118` — if the commit is still there (i.e. slot
+      9's clone hasn't been reset/reassigned since), `git cherry-pick 272de118` saves rewriting the diff; verify it
+      applies cleanly and tests pass before shipping. This is opportunistic ONLY — do not wait on slot 9 or block on it
+      being available; if the reflog entry is gone, just take the primary path above. No backlog affinity is set for
+      this todo (deliberate, see "Why it matters").
