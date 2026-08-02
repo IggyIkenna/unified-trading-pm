@@ -31,7 +31,7 @@ related:
     /plans/archive/2026_07/ci_consolidated_closeout_2026_07_25.md,
   ]
 created: 2026-07-29
-last_updated: 2026-08-01
+last_updated: 2026-08-02
 parent_epic: infrastructure_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -268,7 +268,7 @@ those commits landed). The escalation's own repo-blocker list (`GET /api/repo-bl
       and a capacity fix applied/ruled out, or (b) the failure pattern shifts to a DIFFERENT self-hosted runner once
       evidence accumulates, which would point back at the test suite's xdist fan-out width rather than this one runner
       specifically.
-- [ ] 7. [INFRA] P3. **NEW 2026-08-01.** First occurrence of this bug class on a **synchronous, non-async, purely
+- [x] ✅ 7. [INFRA] P3. **NEW 2026-08-01.** First occurrence of this bug class on a **synchronous, non-async, purely
       CPU-bound test** (every prior entry in this doc involves an awaited real/mocked timer — todo 4/5/6's core argument
       was that CPU-bound work "can only slow down proportionally to contention, not get woken 100x late").
       features-service `ldr_qg_failure` escalation `agt-8ac0d7` (slot 2, no PR — direct `live-defi-rollout` push gate,
@@ -299,8 +299,13 @@ those commits landed). The escalation's own repo-blocker list (`GET /api/repo-bl
       completes (green confirms pure noise, consistent with local repro; red on a clean tree would need fresh
       investigation) — not blocked on here, out of this one-shot wall-clearer's scope — or (b) a THIRD non-async
       recurrence surfaces, which would justify promoting "CPU-bound tests are also exposed" from a hypothesis to a
-      confirmed mechanism.
-- [ ] 8. [INFRA] P2. **NEW 2026-08-01, `cicd` escalation `WALL_TYPE=main_ci_red`.** First confirmed instance of this
+      confirmed mechanism. — **(b) CONFIRMED 2026-08-02 (`cicd` escalation `agt-f4cc24`,
+      market-data-processing-service)**: a further non-async, purely-CPU-bound recurrence — TWO
+      `pandas`/`pandas.groupby` tests in the same run, no I/O, no awaited timer, real measured durations of
+      1043.94s/701.45s — with the same host independently corroborating severe contention
+      (`load average 48.95/54.83/53.70`, 32 concurrent `quality-gates.sh` processes). "CPU-bound tests are also exposed"
+      is now a confirmed mechanism, not just this doc's original hypothesis. Closing todo 7 on this evidence.
+- [x] ✅ 8. [INFRA] P2. **NEW 2026-08-01, `cicd` escalation `WALL_TYPE=main_ci_red`.** First confirmed instance of this
       doc's flake class escalating past "slow-but-completing" into a genuine multi-hour WEDGE — a `quality-gates-v2` run
       stuck `queued`/`in_progress` producing zero step progress for 3+ hours (vs. every prior entry's
       tens-of-minutes-to- ~2.5h "slow but terminal" profile), on BOTH the LDR `workflow_dispatch` run (`30685179092`,
@@ -314,7 +319,19 @@ those commits landed). The escalation's own repo-blocker list (`GET /api/repo-bl
       again. **Done when**: (a) confirm this holds on a second wedge instance (not yet a proven general fix, N=1), and
       (b) decide whether a wedge past some threshold (e.g. 60-90min with zero step progress) should be auto-detected +
       auto-cancelled+retriggered (candidate home: the same watchdog class as `ci-failure-watcher --auto-recover`) rather
-      than requiring a human/agent to notice and intervene per occurrence.
+      than requiring a human/agent to notice and intervene per occurrence. — **(a) CONFIRMED 2026-08-02 (`cicd`
+      escalation `agt-f4cc24`, market-data-processing-service)**: a 2nd independent wedge instance — `main`
+      push-triggered `quality-gates-v2` run `30749594379` stuck `queued` 3h30m+ with `content sentinel` green but both
+      `QG slice` jobs never leaving `queued` — same zero-progress signature as the features-service case. Same fix
+      applied (`gh run cancel` + `gh workflow run quality-gates-v2.yml --ref main`) and it worked again: the fresh run
+      (`30757463906`) picked up immediately. N is now 2/2 for cancel+retrigger clearing a wedge. (b) Per slot-6's
+      2026-08-02 assessment (still N=1 at the time) recommending AGAINST new automation — that recommendation stands
+      even at N=2: 2 successful manual interventions is still far short of the bar the existing
+      `auto_recover_stuck_prs`-class automation needed before it was built, and auto-cancelling a possibly-legitimate
+      long-running CI job carries real risk a human/agent judgment call doesn't. Closing todo 8 — both "Done when"
+      criteria are now addressed (confirmed generalizes + a considered automation-vs-manual decision on record); reopen
+      with a new todo only if a 3rd wedge needs a materially different disposition (e.g. cancel+retrigger stops working,
+      or wedge frequency alone justifies revisiting (b)).
 
 ## Progress Log
 
@@ -873,3 +890,32 @@ those commits landed). The escalation's own repo-blocker list (`GET /api/repo-bl
   (unified-trading-api already on `live-defi-rollout`, 0 commits ahead of `origin`, nothing to commit). Pinged the
   authoring slot (`AUTHORING_SLOT=ci`) with the outcome — likely a 400/422 given the non-numeric slot id, per this doc's
   own already-documented dead end for non-integer `AUTHORING_SLOT` values, not retried further.
+- **2026-08-02 ~16:35Z (`cicd` escalation `agt-f4cc24`, slot 3) — 8th confirmed repo (market-data-processing-service),
+  and 2nd confirmed multi-hour WEDGE (todo 8)**: promotion PR #567 (LDR→main), failing run
+  [30747993571](https://github.com/IggyIkenna/market-data-processing-service/actions/runs/30747993571)
+  (`QG slice (tests)` job, `pull_request`-triggered, head SHA `ef8b693c7862`, started `12:36Z`). Two purely synchronous,
+  CPU-bound `pandas`/`pandas.groupby` tests (no I/O, no awaited timer at all — the strongest form of todo 7's "CPU-bound
+  tests are also exposed" claim) both hit `Failed: Timeout (>150.0s)` with real measured `call` durations of 1043.94s
+  and 701.45s:
+  `test_writer_schema_preservation.py::TestTradesWriterSchemaPreservation::test_aggregation_15s_to_1m_preserves_ohlcv`
+  and
+  `test_orchestration_scanner_venue_scoped_listing.py::TestCefiVenueScopedListing::test_no_category_falls_back_to_whole_day_scan`
+  — `1 failed` reported (xdist crash cascaded from the first) after `1h42m17s` total job time. Read both call paths
+  (`_calculate_volume_clock_features`→`grouped.apply`→`_calc_interval_volume_clock`; `_list_instrument_files`→a mocked
+  `list_blobs`) — no algorithmic defect, no unbounded loop, nothing plausibly O(n²) at test-fixture scale. This is
+  another confirmed non-async, purely-CPU-bound recurrence of the class todo 7 first flagged (a different repo, a
+  different pandas code path, TWO tests in the same run this time) — strong enough additional evidence to close todo 7's
+  hypothesis-vs-confirmed-mechanism question (see todo 7). Confirmed root fact: PR #567 `state=MERGED`,
+  `mergedAt=2026-08-02T12:31:22Z` — 5 minutes BEFORE the failing run even started (`12:36Z`) — self-merged via an
+  independent already-green check, the same race as every prior entry. Zero open `/api/repo-blockers`. Live host
+  corroboration at investigation time: `load average: 48.95/54.83/53.70` (16-vCPU class box) and 32 concurrent
+  `quality-gates.sh` processes (`pgrep -af`) — worse than the unified-trading-api entry directly above (38→54, 27→33)
+  taken ~20min earlier, confirming the fleet-wide capacity crisis is still actively worsening. Found the actionable
+  part: a `main` push-triggered `quality-gates-v2` run (`30749594379`, "records MAIN_GREEN post-merge", not gating
+  anything since the PR already merged) was stuck `queued` 3h30m+ with `content sentinel` green but both `QG slice` jobs
+  never leaving `queued` — the exact zero-progress WEDGE signature todo 8 tracks, this time on a 2nd repo. Applied todo
+  8's playbook: `gh run cancel 30749594379` then `gh workflow run quality-gates-v2.yml --ref main` — the fresh run
+  (`30757463906`) picked up immediately instead of wedging again, confirming the fix generalizes (see todo 8, now closed
+  on this evidence). No market-data-processing-service code or test change made or needed — same "orphaned noise against
+  an already-resolved wall" conclusion as every prior entry in this doc. Slot left clean (0 commits ahead of
+  `origin/live-defi-rollout` besides this doc edit). Pinged the authoring slot (`ci`) with the outcome.
