@@ -201,25 +201,25 @@ timestamps, so root-causing doesn't need to re-derive the candidate set from a 1
       (reviving #1890 or filing fresh) could get a REAL upstream fix merged rather than us re-deriving one internally.
 
       **What slot-8 actually shipped for piece (2), 2026-07-30**: `worker-host-preflight.sh`'s prek check (STEP 4c) now
-                                              parses `prek --version` and FAILs (not just WARNs) below a `0.4.4` floor — the confirmed j178/prek#2142 fix
-                                              version — with a remediation message (`uv tool install prek --reinstall` / `uv tool upgrade prek`); verified live
-                                              on this host (`prek 0.4.12` → `OK: prek 0.4.12 >= floor 0.4.4`) and unit-tested the version-compare logic
-                                              (`sort -V -C`) against `0.3.1`/`0.4.3`/`0.4.4`/`0.4.8`/`0.4.12`/`1.0.0` fakes — correctly rejects only the two
-                                              below-floor cases, including the `0.4.12 vs 0.4.4` lexical trap a naive string compare would get wrong.
-                                              `bootstrap_vm.sh` STEP 4.6's `uv tool install` pin raised `0.3.0` → `0.4.4` to match, so a freshly-bootstrapped VM
-                                              lands compliant. **Deliberately scoped OUT of this change** (left as new todos below, not silently dropped):
-                                              (a) did NOT touch `workspace-constraints.toml`'s `prek` entry or the ~6 repos' `pyproject.toml` `prek>=0.3.0,...`
-                                              dev-dependency pins — that file is machine-generated from the TIGHTEST pin across repos
-                                              (`resolve-canonical-versions.py`, header says "do not edit by hand") and governs a DIFFERENT thing (the `prek`
-                                              PyPI package as an importable dev-dependency) than the `uv tool install`-managed hook-runner BINARY this todo is
-                                              actually about; bumping it would mean editing 6 repos' pyproject.toml + regenerating + `uv lock` per repo, a much
-                                              larger and only tangentially-related footprint than the floor-enforcement fix itself, so it was left alone rather
-                                              than folded in speculatively. (b) did NOT run `uv tool install --reinstall`/`--upgrade` against the already-running
-                                              orchestrator VM (`prek 0.4.8`, still passes the new `>=0.4.4` floor so it isn't urgent) or the human-planning VM
-                                              (prek absent entirely — separate gap) — mutating an already-running shared host's tool-install state mid-session
-                                              is a materially different, operator-aware action than a scoped repo code change, consistent with slot-1's same
-                                              call earlier in this doc; filed as its own `[OPERATOR]`-tagged todo below instead. (c) did NOT pursue the upstream
-                                              #1889 contribution — a separate, open-ended research effort, also filed as its own todo below.
+                                      parses `prek --version` and FAILs (not just WARNs) below a `0.4.4` floor — the confirmed j178/prek#2142 fix
+                                      version — with a remediation message (`uv tool install prek --reinstall` / `uv tool upgrade prek`); verified live
+                                      on this host (`prek 0.4.12` → `OK: prek 0.4.12 >= floor 0.4.4`) and unit-tested the version-compare logic
+                                      (`sort -V -C`) against `0.3.1`/`0.4.3`/`0.4.4`/`0.4.8`/`0.4.12`/`1.0.0` fakes — correctly rejects only the two
+                                      below-floor cases, including the `0.4.12 vs 0.4.4` lexical trap a naive string compare would get wrong.
+                                      `bootstrap_vm.sh` STEP 4.6's `uv tool install` pin raised `0.3.0` → `0.4.4` to match, so a freshly-bootstrapped VM
+                                      lands compliant. **Deliberately scoped OUT of this change** (left as new todos below, not silently dropped):
+                                      (a) did NOT touch `workspace-constraints.toml`'s `prek` entry or the ~6 repos' `pyproject.toml` `prek>=0.3.0,...`
+                                      dev-dependency pins — that file is machine-generated from the TIGHTEST pin across repos
+                                      (`resolve-canonical-versions.py`, header says "do not edit by hand") and governs a DIFFERENT thing (the `prek`
+                                      PyPI package as an importable dev-dependency) than the `uv tool install`-managed hook-runner BINARY this todo is
+                                      actually about; bumping it would mean editing 6 repos' pyproject.toml + regenerating + `uv lock` per repo, a much
+                                      larger and only tangentially-related footprint than the floor-enforcement fix itself, so it was left alone rather
+                                      than folded in speculatively. (b) did NOT run `uv tool install --reinstall`/`--upgrade` against the already-running
+                                      orchestrator VM (`prek 0.4.8`, still passes the new `>=0.4.4` floor so it isn't urgent) or the human-planning VM
+                                      (prek absent entirely — separate gap) — mutating an already-running shared host's tool-install state mid-session
+                                      is a materially different, operator-aware action than a scoped repo code change, consistent with slot-1's same
+                                      call earlier in this doc; filed as its own `[OPERATOR]`-tagged todo below instead. (c) did NOT pursue the upstream
+                                      #1889 contribution — a separate, open-ended research effort, also filed as its own todo below.
 
 - [x] [OPERATOR] P2. **RESOLVED 2026-07-31 (slot-1, harsh_pc) — this todo's premise (a stock version upgrade is
       sufficient) turned out to be WRONG, so what got shipped is a different and stronger fix than what was asked.**
@@ -274,7 +274,7 @@ timestamps, so root-causing doesn't need to re-derive the candidate set from a 1
       here (kept this change minimal/low-risk): `last_updated` is only a validated field for `doc_type: plan` in the
       current schema, not `issue` — the same corruption on an issue doc's `last_updated` field would still sail through
       undetected.
-- [ ] [SCRIPT] P3. **NEW (2026-07-30, slot-8) — `~/.cache/prek/patches/` has no cleanup path at all, by design; not
+- [x] ✅ [SCRIPT] P3. **DONE 2026-08-02 (slot-12) — `~/.cache/prek/patches/` has no cleanup path at all, by design; not
       urgent (6.7MB / 520 files today) but worth a bounded retention decision.** Found while stress-testing concurrency
       (see Progress Log): `UnstagedChangesRestorer::restore()` in `keeper.rs` never deletes a patch file after
       successfully applying it — every stash a hook run needed is kept forever, on the happy path, not just on
@@ -286,10 +286,29 @@ timestamps, so root-causing doesn't need to re-derive the candidate set from a 1
       losing side leaves behind a patch file that is structurally _guaranteed_ orphaned:
       `UnstagedChangesRestorer::clean()` returns `Err` (propagated via `?`) before constructing the
       `Self { patch: Some(patch_path), .. }` struct when `checkout_working_tree` fails, so that instance's `Drop`-based
-      `restore()` never runs for it. Recommended next step (not done here — a scoped hygiene decision, not a code fix):
-      decide a bounded retention policy for this HOME-level, multi-slot-shared directory (e.g. a low-priority cron
-      deleting `*.patch` files older than N days) and wire it in, since prek itself provides no such mechanism today
-      (repo: `unified-trading-pm`, likely alongside the other host-maintenance cron scripts).
+      `restore()` never runs for it. **Shipped the bounded retention policy this recommended**: new
+      `scripts/dev/prune-prek-patch-cache.sh` (mirrors the existing `prune-uv-cache.sh`/`cleanup-stale-qg-tmp.sh`
+      pattern) sweeps `~/.cache/prek/patches/*.patch` older than a configurable `--min-age-days` (default 7), with a
+      `fuser`-based live-file skip as belt-and-suspenders (a patch is only ever read by the same in-process struct that
+      wrote it, never re-selected from the directory later, so this should never actually fire — kept anyway for
+      consistency with the sibling scripts' safety posture). Paired installer
+      `scripts/dev/install-prune-prek-patch-cache-cron.sh` (daily cadence default, per-host idempotent install,
+      self-pulling cron line, same conventions as `install-prune-uv-cache-cron.sh`). Verified functionally: a scratch
+      dir with a fresh + 2 aged (8d, 10d) synthetic `.patch` files plus one non-`.patch` file — `--dry-run` correctly
+      identified only the 2 aged patches, a real run removed exactly those 2 and left the fresh patch + the non-patch
+      file untouched; also verified against the REAL shared `~/.cache/prek/patches/` in `--dry-run` mode (771 files, 0
+      candidates ≥7 days old on this actively-churning host — confirms no accidental match against live data). **Not yet
+      installed as a running cron** — this ships the tooling; actually registering the cron via the installer on each
+      host is a `[OPERATOR]`-scope action (mutating a shared host's crontab), left as the todo below rather than done
+      unilaterally, consistent with how this doc's other host-mutation steps were split out. Evidence:
+      `unified-trading-pm` — `scripts/dev/prune-prek-patch-cache.sh`,
+      `scripts/dev/install-prune-prek-patch-cache-cron.sh`, this commit.
+- [ ] [OPERATOR] P3. **NEW 2026-08-02 (slot-12) — register the `prune-prek-patch-cache` cron on each host.** The
+      script + installer are shipped (see todo above); running
+      `bash unified-trading-pm/scripts/dev/install-prune-prek-patch-cache-cron.sh` once per host (as that host's
+      operator user, mirrors `install-prune-uv-cache-cron.sh`'s install model) registers the daily sweep. Candidate
+      hosts: this laptop (`harsh_pc`), the orchestrator/planning VM, the human-planning VM (if prek is ever installed
+      there — currently absent per the `[OPERATOR]` todo above), and the other operator's laptop.
 
 ## Progress Log
 
@@ -608,3 +627,11 @@ timestamps, so root-causing doesn't need to re-derive the candidate set from a 1
   net's detection logic expects) or isn't installed/active on this host/session. Not investigated further (out of scope
   for an unrelated archival task) — both files `git restore`'d clean before commit, confirmed via
   `git status --porcelain` empty post-restore.
+
+- **2026-08-02 (slot-12, cicd craft)**: the `[SCRIPT] P3` bounded-retention todo done (see checkbox above for full
+  evidence) — shipped `scripts/dev/prune-prek-patch-cache.sh` + `scripts/dev/install-prune-prek-patch-cache-cron.sh`,
+  functionally tested (synthetic aged/fresh patches + a dry-run against the real 771-file shared cache). Split the
+  actual cron registration into a new `[OPERATOR]` todo (mutating a shared host's crontab is operator-scope, same split
+  pattern already used elsewhere in this doc). Only genuinely open items remaining on this doc: the two pre-existing
+  `[OPERATOR]` todos (human-planning VM prek-install decision, other operator's laptop confirmation) plus this session's
+  new cron-registration `[OPERATOR]` todo — nothing else script-bounded remains open here.
