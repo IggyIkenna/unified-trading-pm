@@ -27,7 +27,10 @@ summary: >-
   rule 11).
 status: resolved
 nature: issue
-asset_group: [cross-cutting]
+asset_group:
+  [ci] # corrected 2026-08-02 (/ag-closeout-audit cross-cutting, operator-ruled) -- was [cross-cutting]; content is a
+  # fleet-wide GitHub Actions `ubuntu-latest` -> self-hosted-runner workflow migration audit, squarely ci-tranche
+  # (CI/CD pipeline mechanics). The long `repos:` fan-out is the migration's blast radius, not a multi-AG subject.
 repos:
   [
     unified-trading-pm,

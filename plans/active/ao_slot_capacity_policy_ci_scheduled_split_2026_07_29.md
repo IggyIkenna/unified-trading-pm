@@ -9,7 +9,10 @@ summary: >-
   discovered entangled in the same files, and scoped the remaining benchmark + live-VM-correction work as tracked todos.
 status: active
 nature: process
-asset_group: [cross-cutting]
+asset_group:
+  [ci] # corrected 2026-08-02 (/ag-closeout-audit cross-cutting, operator-ruled) -- was [cross-cutting]; the subject is
+  # the CI/CD-escalation vs scheduled-task slot reserve (CI pipeline mechanics driving the capacity split), squarely
+  # ci-tranche, not generic cross-AG content.
 stage: [meta]
 repos: [agent-orchestrator, unified-trading-pm, instruments-service]
 scope: [engineer, admin]

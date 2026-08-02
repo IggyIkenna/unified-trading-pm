@@ -19,7 +19,10 @@ summary: >-
   stepped on again before it could settle.
 status: open
 nature: issue
-asset_group: [cross-cutting]
+asset_group:
+  [ci] # corrected 2026-08-02 (/ag-closeout-audit cross-cutting, operator-ruled) -- was [cross-cutting]; content is
+  # workflow-template-parity QG drift during the Phase-7 self-hosted-runner rollout, squarely ci-tranche (CI/CD
+  # pipeline mechanics), not generic cross-AG content.
 stage: [meta]
 repos: [unified-trading-pm, agent-orchestrator]
 scope: [engineer, admin]
