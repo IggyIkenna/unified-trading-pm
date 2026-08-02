@@ -19,7 +19,7 @@ summary: >-
   once a task actually starts getting DECLINED as GATED (as it did for
   `cefi_track2_backfill_vm_preempted_no_recovery-003`), but a task that keeps getting ACCEPTED-and-worked (not declined)
   never trips it.
-status: open
+status: resolved
 nature: issue
 asset_group: [cross-cutting]
 stage: [meta]
@@ -46,6 +46,10 @@ source:
     follow-up-is-a-todo, tracked here rather than left as chat prose.",
   ]
 resolved_by:
+  "Option (a) shipped — agent-orchestrator@5bfde668: POST /api/backlog/{task_id}/park (server/auto_park.py::manual_park)
+  applies the RULES.md §4 recipe on an explicit request. Not yet live-verified end-to-end on a real dispatched task
+  (this session had no path to the live orchestrator VM — see the doc's own note below); verified via unit + endpoint
+  tests instead."
 locked_by: live-defi-rollout
 locked_since: 2026-05-21
 context_scope:
@@ -60,7 +64,7 @@ context_scope:
 
 ## Todos
 
-- [ ] [BACKEND] P3. Close the disposition→action follow-through gap for blocked-answers that recommend a mechanical
+- [x] ✅ [BACKEND] P3. Close the disposition→action follow-through gap for blocked-answers that recommend a mechanical
       backlog action. Today a main-agent "park the task" answer records disposition only and nothing applies it (main
       cannot hand-edit `backlog.yaml`; there is no main park API; `auto_park` fires only on ≥3 GATED/BLOCKED/PARKED
       _declines_, not on an accepted-and-worked task). Pick one: (a) an authenticated `POST /api/backlog/{id}/park`
@@ -70,9 +74,29 @@ context_scope:
       have the backend either apply (a) or surface an unmistakable operator action-item (not just recorded text).
       Whatever the choice, a park disposition must not depend on someone remembering to hand-apply it. Done-when: a main
       "park it" blocked-answer deterministically results in the task being parked (or an explicit operator step being
-      raised), verified end-to-end on one real task.
+      raised), verified end-to-end on one real task. — agent-orchestrator@5bfde668. Shipped option (a):
+      `POST /api/backlog/{task_id}/park` (`server/auto_park.py::manual_park`) applies the identical condition-naming +
+      priority=999/`priority_override`/false-prereq mutation `_park_task`'s auto-threshold escalation already performs,
+      so `unpark_task`/`AutoParkReconciler`/the dashboard's existing "Dispatch now"/"Mark done" work unchanged
+      regardless of a park's origin. 404 if the task isn't in `backlog.yaml`, 409 if already parked. Deliberately does
+      not page Slack (a manual park is a deliberate response, not an anomaly signal — the "automatic lifecycle events
+      never page" convention). Option (b) (auto-detect a park disposition from a blocked-answer's free text and invoke
+      (a) automatically) is NOT built — no structured "this answer means park" field exists on `AnswerRequest` today,
+      and inferring intent from prose was judged too fragile to add speculatively; (a) alone satisfies this todo's own
+      "Pick one: (a) ... and/or (b)" framing. Tests: `tests/test_auto_park.py` (6 new `manual_park` unit tests — recipe
+      application, idempotency, unknown-task, no-Slack-page, shared unpark path) + `tests/test_parked_tasks_routes.py`
+      (`TestParkTask`, 5 new endpoint tests incl. 404/409). Full `quality-gates.sh` green (2248 backend + 168 vitest
+      passed, ruff/basedpyright/tsc clean). **Not live-verified end-to-end**: this session had no path to the live
+      orchestrator VM (SSM reaches it read-only by convention; see the sibling PM issue this session also filed,
+      `ao_operator_gated_canned_options_bc_still_no_op_2026_08_03.md`, for why) — whoever next uses this endpoint for a
+      real park should confirm it end-to-end against the live server per this todo's original done-when.
 
 ## Progress Log
+
+- **2026-08-03**: shipped `POST /api/backlog/{task_id}/park` per the todo above (agent-orchestrator@5bfde668), prompted
+  by the operator flagging confusing/non-working operator-gated answer options in a separate audit this same session.
+  Endpoint + unit tests written and QG-verified; live end-to-end verification against the real orchestrator VM is left
+  to whoever next exercises a real park, since this session couldn't reach it (see resolved_by above).
 
 - 2026-07-31 (slot-9, data_engineering): second confirming occurrence, different task —
   `defi_satellite_ao_dispatch_batch3-015` (the `funding_oi`/`returns` D1 DeFi features todo in

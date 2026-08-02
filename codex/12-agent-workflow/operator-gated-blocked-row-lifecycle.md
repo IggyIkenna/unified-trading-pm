@@ -23,9 +23,13 @@ related:
   ]
 created: 2026-07-30
 authoritative_for: [operator-gated-blocked-row-lifecycle, blk-op-ruling-mechanism, reclassify-instruct-ui]
-referenced_by: [/plans/archive/issues/operator_gated_blocked_answer_is_a_no_op_2026_07_30.md]
+referenced_by:
+  [
+    /plans/archive/issues/operator_gated_blocked_answer_is_a_no_op_2026_07_30.md,
+    /plans/active/issues/ao_operator_gated_canned_options_bc_still_no_op_2026_08_03.md,
+  ]
 owner:
-last_reviewed: 2026-07-30
+last_reviewed: 2026-08-03
 code_refs:
   [
     agent-orchestrator/server/bootstrap.py,
@@ -80,10 +84,18 @@ race self-heals within a few regen ticks instead of staying truncated forever.
    two can never drift apart. Auto-upgrades to `disposition="partial"` (`server/state_store/activity.py`'s
    `partial_answer_blocked`) so `answered_at` stays `NULL` and the row stays in every pending view — matching what the
    option's own text promises.
-2. **Canned options B/C** (already done / not needed) — recorded as an ordinary final answer. These do **not** currently
-   drive any automated plan edit or task removal; the operator (or main, reading the answer) still handles the "already
-   done" / "not needed" disposition manually. This is unchanged legacy behavior, not part of the D3 ruling mechanism
-   below.
+2. **Canned options B/C** (already done / not needed) — as of
+   `ao_operator_gated_canned_options_bc_still_no_op_2026_08_03` (agent-orchestrator@5bfde668), the dashboard submits
+   these as a structured ruling too: `rulingForCannedOption()` (`dashboard/src/layout.tsx`) sends
+   `ruling_action="instruct"` with a canned instruction — "verify it's actually done, then flip the checkbox with
+   evidence" for B, "flip the checkbox with a one-line rationale, don't delete the line" for C — byte-identical in shape
+   to what typing free text already does, so these go through the exact same materialization path as path 3 below.
+   Before that fix, B/C submitted a plain final answer that nothing materialized — the D3 mechanism below only ever
+   covered the reclassify dropdown and the free-text box, never the two canned buttons, despite
+   `operator_gated_blocked_answer_is_a_no_op_2026_07_30`'s own investigation describing this exact failure mode for B/C
+   (it just never got fixed for them specifically). Option A is untouched — it stays a plain canned answer; forcing a
+   ruling onto it would incorrectly make it `disposition="final"` (see path 1 above and the endpoint's own
+   `if req.ruling_action is not None: partial = False`).
 3. **A structured ruling** (`ruling_action: "reclassify" | "instruct"`) — see below. Rejected with `HTTPException(400)`
    if `blocked_id` doesn't start with `BLK-op-` (a live worker's own escalation has a direct message channel already —
    nothing to materialize).
@@ -135,7 +147,8 @@ Two ruling shapes:
 (`authority-operator-gated` CSS class), distinct from the amber `authority-operator` style still used for a live
 worker's own escalation, and from the default style for an ordinary blocked question. It shows:
 
-- The three canned options, unchanged.
+- The three canned options — A submits plain (stays open, per D2); B/C now submit as an `instruct` ruling (see path 2
+  above), not plain answers.
 - A **"Reclassify to role…" dropdown**, populated from `GET /api/roles` (the real role registry —
   `role_registry.load_registry()`, one row per `agents/<role>.md`) filtered client-side to exclude `project_management`
   and `review` (the two persistent supervisors, never valid ad-hoc dispatch targets — keyed by the role's declared
