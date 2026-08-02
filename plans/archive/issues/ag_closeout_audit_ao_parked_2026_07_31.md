@@ -9,7 +9,7 @@ summary: >-
   SSOT-adjacent fact contradiction (a doc's own "what's true today" claims proven false by live measurement) plus two
   already-documented non-AO-eligible orphans (cross-referenced from the batch's own Deferred section, restated here for
   the standalone-doc requirement).
-status: open
+status: resolved
 nature: issue
 asset_group: [ao]
 stage: [meta]
@@ -37,7 +37,11 @@ execution_scope: orchestrator-agent
 estimate_class: research
 estimate_baseline_ai_days: 0.3
 estimate_calibrated_ai_days: 0.36
-resolved_by:
+resolved_by: >-
+  plan_reconciler 2026-08-02 — all 3 parked findings closed (Finding 1's sole todo HARD-verified done via direct read of
+  context_scope_consumption_enforcement_2026_07_30.md's corrected section; Finding 2's 2 orphans are documented
+  non-AO-eligible classifications needing no further action). Reconciliation ledger balances
+  (parked_findings=3==entries_written=3).
 locked_by:
 locked_since:
 supersedes:
@@ -134,3 +138,12 @@ by whoever picks this up next).
   `[DOCS]` tag routing applies instead per RULES.md).
 - **context-scout 2026-08-01**: verified pre-existing context_scope (3 entries) — all 3 paths confirmed resolving on
   disk, left unchanged.
+- **plan_reconciler 2026-08-02** (whole-corpus pass): HARD-verified Finding 1's fix by direct read of
+  `context_scope_consumption_enforcement_2026_07_30.md`'s "What's true today" section — the correction is genuinely
+  present (`Req.E` line refs + fresh inventory counts cited). Reconciliation ledger balances (3==3). Flipped `status`
+  `open` -> `resolved`, archived. Repointed 2 corpus referrers (`ao_satellite_ao_dispatch_batch3_2026_07_31.md`,
+  `ao_satellite_ao_dispatch_batch3_finalize_2026_07_31.md`) to the new path — did NOT flip the finalize plan's own
+  multi-part `[INFRA] P0` re-check todo, since it also covers 2 other unverified sub-items (the cgroup-memory-cap and
+  omniroute re-checks). One referrer (`context_scope_consumption_enforcement_2026_07_30.md`) is inside the 12h grace
+  window and could not be edited this run — its 2 mentions of this doc's old `/plans/active/issues/...` path are now
+  stale, follow-up needed once grace clears.

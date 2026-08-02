@@ -25,7 +25,7 @@ tags: [plan-hygiene, ag-closeout-audit, quality-gates, linkage, orphan-detection
 related:
   [
     /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
-    /plans/active/issues/ag_closeout_audit_scope_widening_triage_2026_07_26.md,
+    /plans/archive/issues/ag_closeout_audit_scope_widening_triage_2026_07_26.md,
     /plans/active/ag_closeout_audit_rollout_2026_07_25.md,
     /plans/active/cross_cutting_satellite_ao_dispatch_batch1_2026_07_26_finalize.md,
   ]
