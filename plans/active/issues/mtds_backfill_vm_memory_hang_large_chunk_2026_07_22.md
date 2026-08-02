@@ -554,3 +554,25 @@ mitigation ladder (bigger machine → smaller chunks) is exhausted; only the cod
   escalated via DP_VM_STALL, VM stopped safely) but correctly stays open. Cross-confirmed via
   `sports_odds_api_scattered_multiyear_gaps_2026_07_27.md` (active planning doc) whose own P1 is explicitly blocked on
   this doc's P1 landing.
+- **2026-08-02 (slot 14, data_engineering, task `sports_odds_api_scattered_multiyear_gaps-004`) — attempted the `memray`
+  native-allocation profile this P1 todo's own "Next step" calls for; aborted on time-cost, then hit an unrelated
+  vendor-credit exhaustion blocker before a cheaper alternative could get real signal.** `memray --native` against the
+  post-session-reuse-fix code (`market-tick-data-service@6ca2d278`), same 3 dates (`2026-04-16/17/18`) the prior
+  tracemalloc run used: killed cleanly by exact PID after ~9 minutes, still mid-way through the FIRST ("quiet", 0-row)
+  date, which took seconds under plain tracemalloc — memray's native-stack-capture instrumentation overhead (CPU pegged
+  ~93%) makes a full 3-date run disproportionately expensive for this task's budget; host memory was never at risk
+  (peaked ~1.3GB of 49GB available). Pivoted to a much cheaper non-memray diagnostic (a background thread sampling
+  `/proc/self/status` VmRSS + `threading.active_count()` once/sec during `download_batch()`, no instrumentation
+  overhead) specifically to test whether RSS growth correlates with thread churn (the `ThreadedResolver` hypothesis)
+  without memray's cost. **Before that sampler could produce a useful signal, the very first real historical-data call
+  401'd** — live-verified via direct curl that the-odds-api.com account has exhausted its entire 5,000,000/month credit
+  quota (`x-requests-used: 5000772`, `error_code=OUT_OF_USAGE_CREDITS` on `/v4/historical/...` specifically; the live
+  `/v4/sports` endpoint still returns 200, ruling out a repeat of the July `DEACTIVATED_KEY` incident — the key itself
+  is valid, the account is just out of credits, plausibly consumed by the sheer number of full-history backfill attempts
+  this investigation has already burned through). **This P1 root-cause todo is now ALSO blocked on the same
+  vendor-credit exhaustion as the sibling doc's P1 backfill todo** — no further real-fetch profiling (memray,
+  tracemalloc, or the lightweight sampler) is possible until the operator either waits for the monthly reset or
+  purchases additional credits. Retagged (see sibling doc) and escalated via `/blocked`. The `ThreadedResolver`
+  hypothesis remains neither confirmed nor refuted — next resumer should re-run either the lightweight sampler
+  (preferred — near-zero overhead) or a `memray --aggregate` (much smaller/faster output mode, untried this session)
+  once credits are available again, rather than assuming the hypothesis from the 2026-07-31 entries above is settled.
