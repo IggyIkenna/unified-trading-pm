@@ -722,7 +722,10 @@ tag; (7) the tranche-membership rule misses every `asset_group: [meta]`/`[infras
   `deployment_alerts_ingestion_completeness_2026_07_20.md`, archived with the gap still open) has an UNFIXED writer not
   enumerated in that doc's list — `agent-orchestrator/server/notifications/slack.py::_persist_to_gcs()`
   (download→append→upload, confirmed live at line 163-167). Not fixed here (audit-only scope); filed as
-  `issues/alerts_ledger_remaining_unfixed_writers_2026_08_02.md` (all 3 known unfixed writers, one bounded todo each).
+  `issues/alerts_ledger_remaining_unfixed_writers_2026_08_02.md` (all 3 known unfixed writers, one bounded todo each) —
+  **resolved 2026-08-02**, all 3 todos done (2 already-fixed stale citations + 1 genuine fix,
+  agent-orchestrator@80cb301); now archived at
+  `/plans/archive/issues/alerts_ledger_remaining_unfixed_writers_2026_08_02.md`.
 - **2026-07-26** — Drafted by `/ag-closeout-audit ci` in autonomous mode, immediately after `/plan-reconcile ci` (whose
   14 auto-fixes shipped as `unified-trading-pm@29dda2bfd`, so frontmatter/checkbox state was trustworthy going in).
   Phase 0: covering-plan set EMPTY — closeout has 0 todos, no batch plan has ever existed, all 30 Sources are
