@@ -24,6 +24,7 @@ related:
   [
     /plans/archive/issues/cloudbuild_silent_failures_no_alerting_no_validation_2026_06_10.md,
     /plans/active/issues/uac_value_only_config_change_breaks_utl_untested_2026_07_20.md,
+    /plans/active/ci_satellite_ao_dispatch_batch5_2026_08_02.md,
   ]
 created: 2026-07-20
 parent_epic: infrastructure_master
@@ -110,9 +111,41 @@ silently regresses the fleet again.
       content contains markers absent from the rendered output; default flipped to `--dry-run`, write requires
       `--apply`. unified-trading-pm@ddf0b89f4. Full details + the drift measurement below in the Progress Log; also
       recorded on `plans/active/ci_satellite_ao_dispatch_batch1_2026_07_26.md` item 5.
-- [ ] [DEVOPS] P2. Roll the empty-tag guard out to the 19 consumer repos once the drift check exists (each needs its own
-      repo QG + quickmerge). Not urgent: the per-repo copies already carry the important fixes, and the guard only
-      changes behaviour for manual `gcloud builds submit`, which is not the normal path.
+- [ ] [DEVOPS] P2. **Roll the empty-tag guard out to the 19 consumer repos — RE-SCOPED 2026-08-02 per operator ruling
+      into two explicit, ordered steps.** The original one-line wording ("roll the guard out once the drift check
+      exists") assumed a clean `rollout-cloudbuild.py --apply` sweep. That mechanism no longer exists: the
+      would-drop-content guard shipped 2026-07-28 (`unified-trading-pm@ddf0b89f4`) now correctly REFUSES 15 of the 19
+      consumers, so an `--apply` sweep would simply decline most of the fleet. Do the steps in order — step 2 is not
+      startable for a repo until step 1 has cleared that repo.
+  1. **Resolve the per-repo drift first.** Ground truth is
+     `scripts/quality_gates/cloudbuild_template_drift_baseline.yaml` (seeded 2026-07-28): **15 of 19 consumers carry
+     content their mapped template does not** — `deployment-api` (26), `strategy-service` (13), `features-service` (12),
+     `alerting-service` (10), `execution-service` (10), `greeks-service` (10), `batch-live-reconciliation-service` (9),
+     `ml-service` (9), `trading-agent-service` (9), `market-tick-data-service` (8), `instruments-service` (7),
+     `fund-administration-service` (6), `market-data-processing-service` (6), `client-reporting-api` (5),
+     `ibkr-gateway-infra` (4). The 4 clean ones are `deployment-ui`, `e2e-testing`, `system-integration-tests`,
+     `unified-trading-system-ui`. **Re-measure before trusting those numbers**
+     (`check_cloudbuild_template_drift.py --show`) — the baseline is a snapshot, not a live read. For each drifted repo,
+     classify every reported marker into exactly one bucket and act on it: (a) **forward-portable** — belongs in
+     `configs/cloudbuild-*-template.yaml`, port it so the render stops dropping it; (b) **intentional permanent per-repo
+     divergence** (deployment-api's `vendor-deps`/`deploy`/`redeploy-monitor-jobs` steps are the archetype the baseline
+     comment already names) — leave it in the repo and record WHY in the baseline comment; (c) **stale repo-local
+     content** — delete it from the repo. Ratchet the baseline DOWN for every marker resolved under (a) or (c); never
+     raise a count.
+  2. **Then apply the guard.** For every repo whose step-1 classification leaves it renderable, land the fail-fast
+     empty-tag guard (`SHORT_SHA` → `VERSION` fallback, hard-failing with a diagnostic only when both are genuinely
+     unresolvable — the guard already lives in `configs/cloudbuild-service-template.yaml`). For a category-(b) repo
+     where a full render is deliberately not wanted, hand-apply just the guard hunk instead of running the rollout tool
+     against it. Each repo needs its own `quality-gates.sh` + its own quickmerge. Prove at least ONE repo end-to-end: a
+     manual `gcloud builds submit` (storageSource, so `SHORT_SHA` is empty) must recover via the `VERSION` fallback
+     instead of dying with `invalid reference format` / exit 125 — cite the build id.
+
+  Still not urgent in the original sense (the per-repo copies already carry the important fixes, and the guard only
+  changes behaviour for manual `gcloud builds submit`), but step 1 is now the real work and it is worth doing on its own
+  merits: 15 repos silently diverging from their template is the exact condition this issue exists to prevent recurring.
+  The AO-dispatchable copy of this todo lives in `/plans/active/ci_satellite_ao_dispatch_batch5_2026_08_02.md` (todo 1)
+  — this doc stays `assigned_vm: NA`; flip this checkbox from there.
+
 - [x] ✅ [DEVOPS] P3. **DONE 2026-07-28 (slot-13, infra)** — the new drift checker covers ALL FIVE templates, not just
       SERVICE (see the per-template measurement in the Progress Log below): `-api-`, `-ui-`, `-infra-`, `-sit-` are now
       all measured, matching the checker's default scope (every consumer `rollout-cloudbuild.py --apply` would touch).
@@ -153,6 +186,17 @@ silently regresses the fleet again.
   case in the unit tests. Standalone only — wiring into `quality-gates.sh` stays in the finalize plan per this doc's P1.
 
 - **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).
+
+- **2026-08-02 (operator ruling executed)** — The sole open `[DEVOPS] P2` todo was RE-SCOPED into two explicit ordered
+  steps (resolve the per-repo drift, then apply the guard), per an operator ruling naming exactly that split. This is
+  the re-scope the 2026-07-30 na-eligibility-audit verdict below asked for ("Re-scope the todo to name the mechanism and
+  it becomes a clean RECLASSIFY") — the mechanism is now named, so the todo is bounded and worker-determinable. **This
+  doc deliberately stays `assigned_vm: NA`**: rather than flipping this issue doc's own dispatch target, the bounded
+  work was extracted into `/plans/active/ci_satellite_ao_dispatch_batch5_2026_08_02.md` todo 1 (the standard
+  `/ag-closeout-audit` extraction pattern — source doc stays NA, the batch plan carries the dispatchable copy). No code
+  shipped in this change; the 15/19 drift figures quoted in the re-scoped todo were re-verified against
+  `scripts/quality_gates/cloudbuild_template_drift_baseline.yaml` at the time of writing (19 consumers listed, 15 with a
+  non-zero count) and the batch-5 todo instructs its worker to re-measure live before acting on them.
 
 ## na-eligibility-audit verdict
 
