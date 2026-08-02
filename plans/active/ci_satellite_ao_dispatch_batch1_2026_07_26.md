@@ -465,13 +465,23 @@ concurrent workers do not collide on this file.
       `issues/reconcile_release_tags_dead_since_d13_git_tag_migration_2026_07_17.md` § "Also fix the silent-failure
       class". **Note**: the separate question of what happens to the three dead `DELETE     reconcile-release-tags` todo
       lines is parked with the operator; this todo stands under every option.
-- [ ] [SCRIPT] P3. **`base-ui.sh`: one automatic retry on the build-timeout class.** A cold-cache UI build trips the 90s
-      QG budget and passes on retry; a genuine hang fails twice. Add exactly one automatic retry on the timeout class in
-      `scripts/quality-gates-base/base-ui.sh` — removes the human re-run without weakening the budget. Exercise it
-      against a real UI repo build before shipping (the source doc requires this). PM shell script only; **no UI source
-      change, so the playwright gate does not apply**. **Done when**: a cold-cache trip self-recovers on the single
-      retry, a deliberately-hung build still fails, and the budget is unchanged. Source:
-      `ui_build_warm_cache_2026_06_17.md` ([SCRIPT] P3).
+- [x] ✅ [SCRIPT] P3. **`base-ui.sh`: one automatic retry on the build-timeout class.** A cold-cache UI build trips the
+      90s QG budget and passes on retry; a genuine hang fails twice. Add exactly one automatic retry on the timeout
+      class in `scripts/quality-gates-base/base-ui.sh` — removes the human re-run without weakening the budget. Exercise
+      it against a real UI repo build before shipping (the source doc requires this). PM shell script only; **no UI
+      source change, so the playwright gate does not apply**. **Done when**: a cold-cache trip self-recovers on the
+      single retry, a deliberately-hung build still fails, and the budget is unchanged. Source:
+      `ui_build_warm_cache_2026_06_17.md` ([SCRIPT] P3). — **DONE 2026-08-02 (slot 15, cicd) —
+      unified-trading-pm@80148edde.** Retries the BUILD step exactly once, gated on `run_timeout`'s timeout exit codes
+      (124/137) only — a genuine (non-timeout) build failure is not retried. Exercised against a real `deployment-ui`
+      build (three scenarios, all observed directly, not mocked): (1) normal path — single attempt passes, no retry
+      fires; (2) cold-cache trips a tightened budget (17s, tsc's `.tsbuildinfo` cache deleted) — attempt 1 times out
+      (rc=124) after tsc completes but before vite finishes, so tsc's incremental cache survives the kill; the retry
+      (same 17s budget) reruns in ~3s and passes — the exact "cold trips, warm recovers" shape this todo targets; (3) a
+      genuinely-too-tight 10s budget (below even a bare cold `tsc` compile) fails both attempts identically, proving the
+      retry does not mask a real hang. `shellcheck` clean (no new warnings vs. the pre-existing 3). Full
+      `quality-gates.sh` green (63s) before shipping via quickmerge; verified `80148edde` on `origin/live-defi-rollout`
+      before flipping this checkbox.
 - [ ] [INFRA] P2. **cassette-drift-check: the negative test its own fix requires is unevidenced.** All three prescribed
       fixes shipped 2026-07-17 (`unified-trading-pm@f339ce5e8`: repointed to
       `-m unified_api_contracts.testing.detect_cassette_drift`, `RUNNER_TEMP` venv install, `0)`/`1)`/`*)` exit-code
