@@ -14,13 +14,15 @@ scope: [engineer]
 tags: [mtds, vm-launcher, pipeline-e2e-check]
 related: []
 created: 2026-08-01
-author: data_engineering (slot-14)
 assigned_vm: planning
 parent_epic: infrastructure_master
 source: [market-tick-data-service/scripts/pipeline_e2e_check.py]
 priority: P3
 resolved_by:
 locked_by:
+execution_scope: orchestrator-agent
+drift_direction: advance-code
+depends_on: []
 ---
 
 # data-pipeline-check-mtds live-leg VM name can exceed GCP's 63-char instance-name limit

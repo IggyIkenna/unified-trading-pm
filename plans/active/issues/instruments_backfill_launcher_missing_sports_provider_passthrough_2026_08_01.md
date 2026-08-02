@@ -13,13 +13,15 @@ scope: [engineer]
 tags: [sports, instruments-service, vm-launcher, pipeline-e2e-check]
 related: []
 created: 2026-08-01
-author: data_engineering (slot-14)
 assigned_vm: planning
 parent_epic: infrastructure_master
 source: [instruments-service/scripts/pipeline_e2e_check.py, sports_consolidated_native_ao_extract_2026_07_25.md]
 priority: P2
 resolved_by: deployment-service@b1f0a22
 locked_by:
+execution_scope: orchestrator-agent
+drift_direction: advance-code
+depends_on: []
 ---
 
 # launch-instruments-backfill-vm.sh has no `--sports-provider` passthrough
