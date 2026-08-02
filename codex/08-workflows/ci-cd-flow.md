@@ -236,26 +236,52 @@ promote does for service repos.
 
 #### PM Option-B standing LDR→main PR (codified 2026-06-09)
 
-PM's ONLY path LDR→`main` is the PR `quickmerge` opens — and because its head is the **branch ref** `live-defi-rollout`
-(not a fixed SHA), that PR is a **standing sweep**: every commit on LDR (a quickmerge unit AND any sanctioned direct
-push — docs(plans) flips, scripts/`.github` carve-out) rides it to `main` while it is open. Consequence (the foot-gun):
-the **moment that PR squash-merges, the standing sweep is gone** — a LATER direct push to LDR has no open PR and **piles
-up on LDR with no path to `main`** until the next quickmerge opens a new one.
+> **🟡 CORRECTED 2026-08-02** (`quality_gates_v2_concurrency_and_bookkeeping_job_cost_2026_08_02.md`) — the "standing
+> sweep, head=`live-defi-rollout` branch ref" description below was accurate as of 2026-06-09 but is now STALE.
+> `ldr-to-main-promote.yml`'s own header comment + `git log -S` both confirm a **frozen-head migration shipped
+> 2026-07-18** (`unified-trading-pm@40386f0274`, "PM LDR-to-main bot — frozen per-SHA head + PAT-authored PR (ports the
+> fleet design)") — PM's promote PR head is now the SAME **immutable per-SHA ref**
+> (`promote/unified-trading-pm/<sha12>`) the fleet bot (`ldr-to-main-promote-fleet.yml`) has used since 2026-06-30, not
+> the live branch tip. The corrected model is described just below; the paragraph after that is kept only for historical
+> context (what the foot-gun was BEFORE this migration).
 
-- **Automated drain: `ldr-to-main-promote.yml`** (PM-only). Every 15 min (+ `workflow_dispatch` +
-  `repository_dispatch: ldr-to-main`) it opens (or reuses) the standing LDR→main PR with v2-gated auto-merge **whenever
-  PM's LDR has real content ahead of main** — gated on the CHANGED-FILE count of `compare/main...live-defi-rollout` (0
-  files → no-op, immune to squash-accounting noise), reusing any open PR (incl. quickmerge's) so it never duplicates,
-  and self-recovering the v2-never-reported deadlock (close+reopen). So direct pushes drain within a ~30-min SLA without
-  waiting on the next quickmerge.
-- **Manual immediate drain:**
-  `gh pr create --base main --head live-defi-rollout --title "chore(promote): LDR→main sweep …" && gh pr merge <n> --auto --squash`
-  (v2-gated, auto-merges when green).
-- **Verify a push actually reached `main` by CONTENT, not commit count** (see the ancestor-check validity map below): a
-  squash-merge lands the changes as ONE new commit that is not an ancestor of the LDR commits, so
-  `gh api repos/IggyIkenna/unified-trading-pm/compare/main...live-defi-rollout` reports LDR perpetually
-  `ahead_by=N / behind_by=0` even when content is identical. Trust a content/path check (`git cat-file -e main:<path>` /
-  inspect the merged PR), not `ahead_by`.
+PM's ONLY path LDR→`main` is the PR `ldr-to-main-promote.yml` opens (`quickmerge` itself stopped opening a competing PR
+the same day, 2026-07-27, `unified-trading-pm@48800b7adb` — see quickmerge's own `PM_OPTION_B` branch for why). Each
+`*/15` tick resolves LDR's current tip to an **immutable per-SHA ref** `promote/unified-trading-pm/<sha12>` (created
+once, never force-updated) and opens/reuses a PAT-authored PR from that frozen ref — a NEW ref (and PR) every time LDR's
+tip advances, not one long-lived branch-headed PR. This closes the OLD foot-gun described below: a squash of a
+branch-headed PR used to leave a gap with no open PR until the next quickmerge; the frozen-head bot now self-opens a
+fresh ref/PR on every tick there is real content drift, so there is no gap to leave. It also won't preempt its own
+in-flight validation: if the currently-open promote PR's `quality-gates-v2` run hasn't reached a terminal state yet, the
+tick skips superseding it (fix shipped 2026-07-27, `unified-trading-pm@48800b7adb` — the SAME commit quickmerge's log
+message credits, but for THIS in-flight-wait behavior, not the frozen-head switch itself, which predates it by 9 days).
+
+**Historical note (pre-2026-07-18 model, kept for context only)**: before the frozen-head migration, PM's promote PR's
+head was the **branch ref** `live-defi-rollout` (not a fixed SHA), making it a **standing sweep** — every commit on LDR
+rode it to `main` while it stayed open, and the moment it squash-merged, a LATER direct push to LDR had no open PR and
+piled up on LDR with no path to `main` until the next quickmerge opened a new one. Two additional live defects proved
+this was more than a foot-gun and forced the port to the fleet's frozen-head design: (1) TOCTOU — the head advanced
+under every push while `quality-gates-v2` ran, so auto-merge could fire on an un-validated tree, and a `--delete-branch`
+arm on a branch-headed PR deleted `live-defi-rollout` itself on merge (hit deployment-ui 2026-06-29); (2) an
+App-authored branch-headed PR landed `quality-gates-v2` in a permanent `action_required` hold (WS-L 2026-06-27
+A/B-proof). The migration also switched PR authorship from the GitHub App to a PAT to avoid defect (2).
+
+- **Automated drain: `ldr-to-main-promote.yml`** (PM-only). Every 15 min (+ `workflow_dispatch`) it opens (or reuses) a
+  frozen-per-SHA-ref promote PR with v2-gated auto-merge **whenever PM's LDR has real content ahead of main** — gated on
+  the CHANGED-FILE count of `compare/main...live-defi-rollout` (0 files → no-op, immune to squash-accounting noise) plus
+  a tree-equality short-circuit, reusing any open PR for the CURRENT ref (never duplicates), closing/replacing a
+  superseded-ref PR when LDR's tip has moved on, and self-recovering the v2-never-reported deadlock (close+reopen). So
+  direct pushes (docs(plans) flips, scripts/`.github` carve-out) drain within a ~15-30min SLA.
+- **Manual immediate drain:** trigger `gh workflow run ldr-to-main-promote.yml` (the frozen-head ref/PR creation is
+  bot-owned logic, not a one-line `gh pr create` recipe anymore — a manually-opened `--head live-defi-rollout` PR would
+  actually be auto-CLOSED by the bot's own "bug#7" stale-head guard on its next tick).
+- **Verify a push actually reached `main`**: unlike the fleet's squash-promote (see the ancestor-check validity map
+  below), PM's own promote arms `gh pr merge --auto --merge` (a real merge commit, not squash — corrected 2026-08-02,
+  was previously mis-documented as squash here) — so `git merge-base --is-ancestor <ldr-sha> origin/main` IS a valid
+  check for PM specifically, since the frozen LDR sha becomes a genuine ancestor of the merge commit. Still prefer a
+  content check when in doubt (`git cat-file -e main:<path>` / inspect the merged PR) — `ahead_by`/`behind_by` from
+  `compare/main...live-defi-rollout` can still read noisy immediately after a merge lands, before the local clone's own
+  view catches up.
 
 ### Which repos squash vs. rebase on promote — the ancestor-check validity map (codified 2026-07-25)
 
@@ -266,19 +292,21 @@ up on LDR with no path to `main`** until the next quickmerge opens a new one.
 > (`plans/archive/issues/deployment_promote_squash_ancestry_false_negative_2026_07_25.md`) before it was traced back to
 > the promote mode. Checked every promote workflow's merge-arm step to answer "which repos are actually at risk":
 
-| Path                                                                                                                | Merge strategy actually armed                                                                                                                                        | Is the ancestor check ever valid?                                              |
-| ------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
-| **`ldr_main` direct** (`ldr-to-main-promote-fleet.yml`) — every current fleet repo                                  | Unconditionally `gh pr merge --auto --squash --delete-branch` — no rebase attempt, ever ("LDR carries merge commits from the backmerge-sink design; not rebaseable") | **Never.** Guaranteed false-negative-prone 100% of the time.                   |
-| **PM's own `main`-direct** (`ldr-to-main-promote.yml`, Option-B, PM has no `staging`)                               | Same — unconditionally `--squash`                                                                                                                                    | **Never.**                                                                     |
-| **staging-routed** (only if a repo's toggle is flipped OFF `ldr_main` — none are today): LDR→staging / staging→main | `--rebase` attempted FIRST (preserves original commit SHAs), `--squash` (and `--merge`) fallback only when rebase can't arm (real conflicts / a merge-laden range)   | **Sometimes** — valid whenever the rebase path actually armed; not guaranteed. |
+| Path                                                                                                                | Merge strategy actually armed                                                                                                                                                                     | Is the ancestor check ever valid?                                                                                                                                                       |
+| ------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **`ldr_main` direct** (`ldr-to-main-promote-fleet.yml`) — every current fleet repo                                  | Unconditionally `gh pr merge --auto --squash --delete-branch` — no rebase attempt, ever ("LDR carries merge commits from the backmerge-sink design; not rebaseable")                              | **Never.** Guaranteed false-negative-prone 100% of the time.                                                                                                                            |
+| **PM's own `main`-direct** (`ldr-to-main-promote.yml`, Option-B, PM has no `staging`)                               | **`--merge`, NOT `--squash`** (corrected 2026-08-02 — every `gh pr merge` call in the workflow's own source uses `--auto --merge --delete-branch`; this row previously, wrongly, said `--squash`) | **Always** — a real merge commit keeps the frozen LDR sha (and its ancestry) as a genuine ancestor of `main`; this is the ONE `ldr_main`-family path where the ancestor check is valid. |
+| **staging-routed** (only if a repo's toggle is flipped OFF `ldr_main` — none are today): LDR→staging / staging→main | `--rebase` attempted FIRST (preserves original commit SHAs), `--squash` (and `--merge`) fallback only when rebase can't arm (real conflicts / a merge-laden range)                                | **Sometimes** — valid whenever the rebase path actually armed; not guaranteed.                                                                                                          |
 
-**Bottom line**: because every repo in the fleet is `promotion_model: ldr_main` today (verified via
-`workspace-manifest.json` — 24 `ldr_main` repos + PM's own dedicated Option-B path), the ancestor check is currently
-invalid for **100% of repos**. The split only becomes operationally relevant if/when the reversible per-repo toggle
-routes a specific repo through `staging` — even then it is merely "sometimes valid" there, not "always valid". **Always
-prefer the content-diff recipe** (`git show <branch>:<path> | grep <marker>`, compared byte-for-byte against LDR's copy,
-cross-referenced against the promote PR's `mergedAt` vs. the deployed artifact's build timestamp) over the ancestor
-check for "is commit X live" — full recipe tracked as a `unified-trading-pm/agents/review.md` doc fix in
+**Bottom line**: because every fleet repo is `promotion_model: ldr_main` today (verified via `workspace-manifest.json` —
+24 `ldr_main` repos), the ancestor check is invalid for **100% of the fleet's own squash-promote path**. PM's own
+dedicated Option-B path is the one documented exception (corrected 2026-08-02 — see the row above): it merges rather
+than squashes, so the ancestor check IS valid there. The staging-routed split only becomes operationally relevant
+if/when the reversible per-repo toggle routes a specific FLEET repo through `staging` — even then it is merely
+"sometimes valid", not "always valid". For every squash path (the entire fleet), **always prefer the content-diff
+recipe** (`git show <branch>:<path> | grep <marker>`, compared byte-for-byte against LDR's copy, cross-referenced
+against the promote PR's `mergedAt` vs. the deployed artifact's build timestamp) over the ancestor check for "is commit
+X live" — full recipe tracked as a `unified-trading-pm/agents/review.md` doc fix in
 `plans/archive/issues/deployment_promote_squash_ancestry_false_negative_2026_07_25.md`.
 
 ### Convergence + conflict-resolution model (the LDR ↔ reconciliation loop)

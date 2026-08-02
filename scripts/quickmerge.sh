@@ -2181,13 +2181,18 @@ fi
 # re-triggers a fresh quality-gates-v2 run on EVERY subsequent commit anyone ships, fleet-wide,
 # for as long as it stays open (measured: 22 runs in ~45min on one such PR). The standing
 # ldr-to-main-promote.yml bot already drains PM→main on its own ~15min tick via an IMMUTABLE
-# per-SHA ref (frozen snapshot, no re-trigger churn — the fix shipped earlier this same day,
-# commit 48800b7ad) — so quickmerge opening a second, unfrozen, competing PR on top of that was
-# pure waste, not an additional safety net. Land on LDR and let the bot own 100% of the
-# promotion, same as every other (staging-first) repo already does above. --hotfix is kept as an
-# escape hatch for a case that genuinely needs the old immediate-PR behavior.
+# per-SHA ref (frozen snapshot, no re-trigger churn — corrected 2026-08-02,
+# quality_gates_v2_concurrency_and_bookkeeping_job_cost_2026_08_02.md: the frozen-head switch
+# actually shipped 9 days earlier, 2026-07-18, commit 40386f0274 ("PM LDR-to-main bot — frozen
+# per-SHA head + PAT-authored PR"); commit 48800b7ad, same day as THIS quickmerge fix, is a
+# separate later refinement — an in-flight-validation-preemption guard on the already-frozen
+# bot, not the frozen-head mechanism itself) — so quickmerge opening a second, unfrozen,
+# competing PR on top of that was pure waste, not an additional safety net. Land on LDR and let
+# the bot own 100% of the promotion, same as every other (staging-first) repo already does
+# above. --hotfix is kept as an escape hatch for a case that genuinely needs the old
+# immediate-PR behavior.
 if [ "$PM_OPTION_B" = true ] && [ "$HOTFIX" != true ]; then
-  echo "[$REPO_NAME] ✅ Landed on $BRANCH (LDR trunk). ldr-to-main-promote.yml drains PM→main (frozen-per-SHA-ref, ~15-30min SLA) — quickmerge no longer opens a direct PR here (churn fix, 2026-07-27)."
+  echo "[$REPO_NAME] ✅ Landed on $BRANCH (LDR trunk). ldr-to-main-promote.yml drains PM→main (frozen-per-SHA-ref since 2026-07-18, ~15-30min SLA) — quickmerge stopped opening a competing direct PR here (churn fix, 2026-07-27)."
   echo "[$REPO_NAME]    Need it on main immediately? re-run with --hotfix (opens a direct PR, old behavior)."
   exit 0
 fi

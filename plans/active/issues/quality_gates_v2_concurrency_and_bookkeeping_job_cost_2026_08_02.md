@@ -94,13 +94,31 @@ PM is now also frozen-per-SHA-ref, its promote-PR gate runs are no more collisio
 main value shrinks to the `ldr-ci-monitor.yml` hourly-dispatch-during-contention case for everyone alike, not a
 PM-specific win).
 
-- [ ] [SCRIPT] P2. Read `unified-trading-pm/.github/workflows/ldr-to-main-promote.yml` directly (not the codex prose) to
-      determine ground truth — does it still open one standing PR per LDR-ahead-of-main window (branch-ref head), or
+- [x] ✅ [SCRIPT] P2. Read `unified-trading-pm/.github/workflows/ldr-to-main-promote.yml` directly (not the codex prose)
+      to determine ground truth — does it still open one standing PR per LDR-ahead-of-main window (branch-ref head), or
       does it now create a `promote/unified-trading-pm/<shortsha>` frozen ref like the fleet promoter? If it changed,
       update `ci-cd-flow.md`'s "PM Option-B standing LDR→main PR" section (and the "Convergence + conflict-resolution
       model" / "Which repos squash vs. rebase on promote" table, which currently lists PM's own path as `--merge` not
       `--squash` — verify that claim too while in the file) to match, with a dated correction banner citing this issue
-      doc, per the post-phase codex audit discipline.
+      doc, per the post-phase codex audit discipline. — **2026-08-02 (slot-15) — DONE.** Ground truth confirmed directly
+      from the workflow's own source (not prose): it DOES now create a `promote/unified-trading-pm/<sha12>` immutable
+      per-SHA ref, same pattern as the fleet bot — `git log -S "FROZEN HEAD"` pins the migration to
+      `unified-trading-pm@40386f0274` (2026-07-18), 9 days BEFORE the "churn fix, 2026-07-27" date quickmerge's own log
+      line credits (that later commit, `48800b7ad`, is a separate in-flight-validation-preemption refinement, not the
+      frozen-head switch itself — both misattributions fixed). **Correction on the todo's own premise**: the
+      squash/rebase table as found did NOT already say `--merge` — it said `--squash` (matching the fleet row, wrongly),
+      directly contradicted by this same codex doc's own later "Scope note" at the silent-revert-loss section, which
+      already correctly said `--merge`. Verified against the workflow's literal source: all 4 `gh pr merge` call sites
+      use `--auto --merge --delete-branch`, never `--squash`. This is more than a wording fix — a real merge commit
+      (unlike squash) keeps the frozen LDR sha as a genuine ancestor of `main`, so the table's "ancestor check is Never
+      valid" verdict for PM's row was also substantively wrong; corrected to "Always valid" with the reasoning inline.
+      Updated `codex/08-workflows/ci-cd-flow.md`: rewrote the "PM Option-B standing LDR→main PR" section (dated 🟡
+      CORRECTED banner + the frozen-head model description + the old branch-ref model kept as explicit historical
+      context, not deleted), fixed the stale "manual immediate drain" recipe (a `--head live-defi-rollout` PR would now
+      be auto-closed by the bot's own bug#7 guard), fixed the CONTENT-verification note, and fixed the squash/rebase
+      table row + its "Bottom line" paragraph. Also fixed the same misattribution in `scripts/quickmerge.sh`'s own
+      comment + user-facing echo line (it credited the wrong commit/date for the frozen-head switch). Evidence:
+      unified-trading-pm (this repo) — `codex/08-workflows/ci-cd-flow.md` + `scripts/quickmerge.sh`, this commit.
 
 ## Bookkeeping-job 1-minute-floor cost (measured, not yet actioned)
 
@@ -125,3 +143,10 @@ PM-specific win).
       textual conflict to catch it. **Deliverable**: a short design noting exactly which jobs/outputs survive under the
       merged name, proven on ONE caller first (`agent-orchestrator` — already self-hosted, so a break is cheap to
       notice/revert) before any fleet rollout, following the same discipline as the concurrency fix above.
+
+## Progress Log
+
+- **2026-08-02 (slot-15, data_engineering craft)**: the "Open question" `[SCRIPT] P2` todo done (see checkbox above for
+  full evidence) — PM's promote mechanism confirmed frozen-per-SHA-ref (matching the fleet), `ci-cd-flow.md` and
+  `quickmerge.sh`'s own comments corrected to match. The `[VERIFY] P3` re-measure todo and the `[INFRA] P2`
+  bookkeeping-job-cost todo remain open, untouched by this session.
