@@ -220,3 +220,20 @@ slow:
   `/blocked` for the same standing decision; the `[OPERATOR] P0` todo and main's "standing escalation #1" remain the
   live, correct tracking. Applied nothing — no scheduler change, no VM relaunch, no `--allow-catalogue-shrink`. Pinging
   `dp-fleet-monitor` with the outcome and completing this one-shot escalation.
+- **slot-8 (data_pipeline_failure escalation agt-4d211b) 2026-08-02, FOURTH dispatch (age now 2324min/38.7h)**: Read
+  this doc in full before touching anything. Did not re-derive the diagnosis. Independently re-verified via fresh
+  `gcloud`/`gsutil` calls (as `unified-trading-sa`, switched to from the default `github-actions-deploy` identity): (1)
+  `gsutil stat` on `catalog.parquet` — unchanged `Creation/Update time: Fri, 31 Jul 2026 22:47:16 GMT`, byte-identical
+  generation `1785538036682790` — zero writes since slot-9's check; (2)
+  `gcloud run jobs executions list --job=lifecycle-catalogue-regen-defi` — 2026-08-01 and 2026-08-02 01:00 UTC
+  executions still `Completed/False` (failed), 2026-07-31 remains the last success, no new/retried execution; (3)
+  `gcloud scheduler jobs describe` on all 6 gated crons
+  (`uts-prod-mtds-collect-{dex-pools,oracle-prices,evm-defi, solana-defi}-cron` +
+  `defi-fwd-{dex-pools,oracle-prices}-prd`) — still all `PAUSED`; (4)
+  `gcloud compute instances list --filter="name~'canonical-migration-defi-per-instrument'"` — still zero results, R3
+  still confirmed dead. Every fact matches slot-9's last snapshot exactly — **nothing has changed**, no operator
+  go-ahead has landed (the `[OPERATOR] P0` todo below is still unchecked, `resolved_by:` still blank). Per main's
+  standing generic guidance in this doc ("hold, apply nothing, await operator go on R3"), did **not** file a fourth
+  duplicate `/blocked` for the same standing decision. Applied nothing — no scheduler change, no VM relaunch, no
+  `--allow-catalogue-shrink`. Pinging `dp-fleet-monitor` (authoring slot) with the outcome and completing this one-shot
+  escalation.
