@@ -71,7 +71,7 @@ related:
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]
 created: 2026-07-25
-last_updated: "2026-07-30"
+last_updated: "2026-08-02"
 parent_epic: infrastructure_master
 assigned_vm: NA
 execution_scope: local-only
@@ -705,6 +705,22 @@ criterion; it also carries the `v2_engine_venue_buildout` over-count caveat this
 
 <!-- Append newest entries at the top: `- **YYYY-MM-DD** — <what landed> (<repo>@<sha> / evidence).` -->
 
+- **2026-08-02** — `/ag-closeout-audit cross-cutting` **re-invocation** (autonomous, scheduled `ag_closeout_auditor`
+  dispatch `agt-f23055`, slot 12). Phase 0 via `generate_ag_closeout_audit_candidates.py --tranche cross-cutting` (94
+  tranche members, 8 covering docs — batch3 now counted — 1 never-cited, down from 90/11 on 2026-08-01 since batch3's
+  own todos now cite most of that day's never-cited set). Orthogonality HARD CHECK re-run: clean (0 new dual-tag mistags
+  — same 4 legitimate multi-AG coordination docs as 2026-08-01). Iterative-drain re-check of batch1's/batch2's
+  conflict-gated Deferred items: no new clearances (both spot-checked batch2 items —
+  `defi_collateral_sizing_and_ wizard_full_parameterization`, `phantom_captures_tradfi` — remain gated on their owning
+  tranche's action, unchanged). Phase 1 (`Workflow`, 1 agent): the sole never-cited candidate,
+  `issues/review_role_boot_read_unconfirmed_stuck_loop_2026_08_01.md`, verdicted `exclude_cross_cutting` (real content
+  is agent-orchestrator boot/spawn read-confirmation-gate mechanics — the `ao` tranche's definition, not cross-cutting
+  data-pipeline work, despite carrying a `[ci, cross-cutting]` tag) — reported, not retagged, per the
+  concurrent-sharded-worker owning-tranche rule; full evidence in
+  [`issues/ag_closeout_audit_cross_cutting_parked_2026_08_02.md`](/plans/active/issues/ag_closeout_audit_cross_cutting_parked_2026_08_02.md).
+  **Zero genuine new orphans found — no Phase 3 batch draft this run.**
+  `cross_cutting_satellite_ao_dispatch_batch3_2026_08_01.md` remains `status: draft`, still awaiting operator approval
+  to dispatch (untouched by this run, per the never-auto-flip HARD RULE).
 - **context-scout 2026-08-01**: populated/refreshed context_scope (6 entries).
 - **2026-08-01** — `/ag-closeout-audit cross-cutting` **re-invocation** (autonomous, scheduled `ag_closeout_auditor`
   dispatch `agt-a5c7d6`, slot 13). Phase 0 used `generate_ag_closeout_audit_candidates.py --tranche cross-cutting` (90
