@@ -996,3 +996,6 @@ duplicate in-flight work and risk a write race on the same per-VM shard prefix. 
 
 Same check as #13-#18: PID `153615` running/healthy (etime 01:10:33, RSS ~4.3GB, 116% CPU), no new info. Declining
 `-001` via `/skip-current-task` for the same reason.
+
+**#20 (slot-13)**: same check, `153615` still live — declining, same reason. Doc at line cap, see line-cap remediation
+doc.
