@@ -118,6 +118,10 @@ context_scope:
 
 ## Progress Log
 
+- **na-eligibility-audit 2026-08-02** (tradfi tranche): **KEEP-NA, valid — reaffirmed.** Both open checkboxes (count
+  matches tranche-inventory: 2) remain gated on the still-open (`status: open`, `resolved_by:` empty)
+  EXCHANGE_CODE_TO_NAME SSOT contradiction in `tradfi_chain_bundle_sampler_root_mismatch_2026_07_23.md` §4, independently
+  re-verified live. Nothing changed since the 2026-07-31/07-30 verdicts below; doc stays NA.
 - **na-eligibility-audit 2026-07-31** (tradfi tranche, dispatch agt-6d6eaf): **KEEP-NA, valid.** Both open checkboxes
   (P0 MVP-backfill-readiness gate; P1 post-full-backfill reconciliation checkpoint) read end-to-end; count matches
   tranche-inventory tool (2). Both remain explicitly gated exactly per the 2026-07-30 entry below — no new evidence has

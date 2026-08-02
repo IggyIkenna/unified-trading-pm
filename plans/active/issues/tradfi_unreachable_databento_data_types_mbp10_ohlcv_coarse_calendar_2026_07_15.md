@@ -992,3 +992,8 @@ UAC) — no separate deploy needed here.
   `tests/unit/test_databento_subscription_allowlist.py`. No path declares these unrestricted for CME. No code shipped
   (repo: unified-api-contracts, read-only).
 - **context-scout 2026-08-01**: populated/refreshed context_scope (2 entries).
+- **na-eligibility-audit 2026-08-02** (tradfi tranche): **KEEP-NA, valid — reaffirmed.** Sole open todo (checkbox count
+  matches tranche-inventory: 1) is still the same `[DESIGN] P2` build-vs-correct product/architecture decision (real
+  aggregated `ohlcv_15m`/`ohlcv_24h` TradFi bars vs. fixing a UAC required-input declaration) — not worker-determinable.
+  No Progress Log entry since 2026-07-30 touches or resolves this question; that pass's KEEP-NA-valid verdict stands
+  unchanged.

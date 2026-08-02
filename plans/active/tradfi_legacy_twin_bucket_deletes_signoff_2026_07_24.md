@@ -173,6 +173,14 @@ restated here.
 
 ## Progress Log
 
+- **na-eligibility-audit 2026-08-02** (tradfi tranche): **KEEP-NA, valid — reaffirmed.** Sole open checkbox (count
+  matches tranche-inventory: 1) still reads as a bounded fresh-check-and-branch task in isolation, but this is a live,
+  actively-supervised judgment call, not a stale mis-default: twin-coverage independently re-verified still 0%
+  (`Part-5 twin-coverage is 0%, not the 100%` the §3a carve-out requires), and two more-recent AO-batch planning passes
+  (`tradfi_satellite_ao_dispatch_batch5_2026_07_29.md` lines 333-340; `tradfi_satellite_ao_dispatch_batch6_2026_08_01.md`
+  lines 206-217, dated the day before this audit) each independently declined to draft this exact todo, recommending a
+  dedicated root-cause investigation into the 0%-measurement and/or a direct operator go/no-go given it gates a real
+  prod-bucket delete. Doc stays NA.
 - **na-eligibility-audit 2026-07-31** (tradfi tranche, dispatch agt-6d6eaf): **KEEP-NA, valid.** Sole open checkbox (the
   legacy-twin bucket DELETE todo) read end-to-end; count matches tranche-inventory tool (1). The delete gate still
   correctly does not clear — no new dry-run has been re-run since 2026-07-30 (twin-coverage still last-measured at 0%,

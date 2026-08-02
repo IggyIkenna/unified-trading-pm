@@ -215,6 +215,14 @@ here.
 
 ## Progress Log
 
+- **na-eligibility-audit 2026-08-02** (tradfi tranche): **KEEP-NA, valid — reaffirmed.** All 7 currently-open todos
+  re-read end-to-end (checkbox count matches tranche-inventory: 7). Live-reverified against today's features-service
+  HEAD (`@8d560b86`): `FEATURE_GROUPS` in `features_service/volatility/cli/parser.py` is still exactly
+  `['options_iv','options_term_structure','futures_basis','futures_term_structure','ALL']` — no `realized_vol` or `vix`
+  entry, 0 hits for either in `feature_group_service.py` — both P2 wiring items' premises still accurate, unstarted.
+  No plan/issue doc records a completed full-historical-range features-delta-one/features-volatility run since the
+  2026-07-31 "Not RECLASSIFY" ruling below — nothing has changed; that ruling and the rest of the 2026-07-31 verdict
+  stand unchanged.
 - **na-eligibility-audit 2026-07-31** (tradfi tranche, dispatch agt-6d6eaf): **KEEP-NA, stale items CORRECTED (1 closed
   - 3 reworded).** All 8 open todos read end-to-end, plus their two cited blocker docs read in full. **Correcting the
     2026-07-30 marker below**: its claim that mismatches (2)+(4) were "re-confirmed unfixed by direct code read

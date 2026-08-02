@@ -608,3 +608,11 @@ status index across all 4 children (this one, Phase-0, cefi, and the defi/sports
   rather than reclassified.
 
 - **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).
+- **na-eligibility-audit 2026-08-02** (tradfi tranche): **KEEP-NA, valid — reaffirmed.** Re-read all 7 currently-open
+  todos end-to-end (down from 8 at the 2026-07-30 pass — one has since closed; checkbox count independently re-grepped
+  and matches tranche-inventory: 7). GATE 0 independently re-verified still "NOT RECORDED SIGNED OFF" in
+  `instruments_foundation_phase0_cross_cutting_2026_07_24.md` (line 224). No change in substance from 2026-07-30: 5 of 7
+  remaining items are genuine operator/judgment gates (GATE-0 dependency, G1-retirement OPERATOR-CONFIRM purge, a
+  declined ICE/OPRA subscription ask, a stale-but-still-redirecting M-1 cross-link, an operator-gated GCS parquet
+  cleanup); the other 2 (ES_OPT launch + its manifest-verify wiring) stay flagged for a future `/ag-closeout-audit`
+  satellite carve-out rather than a whole-doc reclassify.

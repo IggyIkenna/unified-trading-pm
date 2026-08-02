@@ -230,3 +230,8 @@ Read in full before touching any todo — this is the concrete acceptance spec, 
   commit list in the parent task's final report> together with 3 pre-existing, already-verified, unrelated commits that
   were blocked from landing only by this WIP's test regression contaminating the shared tree.
 - **context-scout 2026-08-01**: populated/refreshed context_scope (5 entries).
+- **na-eligibility-audit 2026-08-02** (tradfi tranche): **KEEP-NA, valid — reaffirmed.** 0 open checkboxes (matches
+  tranche-inventory). Same prose-only residual as the 2026-07-31 pass (91-CBOE + 312-DBEQ historical catalog `--apply`
+  reapply), still covered by the 2026-07-09 operator rollout-methodology ruling and the independent 2026-07-29
+  satellite-batch5 re-confirmation. Nothing has changed since (only a 2026-08-01 context-scout metadata touch) —
+  reaffirming, not re-deriving.

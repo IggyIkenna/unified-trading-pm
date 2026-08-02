@@ -208,6 +208,11 @@ allowlist." So ICE genuinely needs an operator credential/subscription ask — N
 
 ## Progress Log
 
+- **na-eligibility-audit 2026-08-02** (tradfi tranche): **ARCHIVE-eligible, still locked — reaffirmed.** 0 open
+  checkboxes confirmed (matches tranche-inventory, unchanged since 2026-07-31). `locked_by: live-defi-rollout` still
+  blocks the actual archival action; still awaiting an explicit `[unlock-plan]` ask per the workspace HARD RULE (not
+  requested by this pass — routine hygiene close, not blocking anything). Flagging again for whoever next has standing
+  to ask for the unlock.
 - **na-eligibility-audit 2026-07-31** (tradfi tranche, dispatch agt-6d6eaf): **KEEP-NA-STALE item CLOSED — now 0 open
   todos.** The remaining `[TEST] P3` NICE-TO-HAVE was stale: its extracting doc's copy
   (`tradfi_satellite_ao_dispatch_batch2_2026_07_25.md`) landed `deployment-service@077a063` on 2026-07-28, two days

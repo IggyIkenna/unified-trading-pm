@@ -389,19 +389,24 @@ context_scope:
                                           per-VM-shard merge) rather than the shared host. No mutation attempted (never got to `--apply`, and this was
                                           `--dry-run` throughout).
 
-- [ ] [DATA] P0. **R1 RUNBOOK — the tradfi `migrate_tradfi_to_v9_canonical --apply` MUST include `--also-legacy`** to
+- [x] ✅ [DATA] P0. **R1 RUNBOOK — the tradfi `migrate_tradfi_to_v9_canonical --apply` MUST include `--also-legacy`** to
       cover the 2,008-day no-env `market-data-tick-tradfi` corpus, then decommission that legacy bucket after the
       canonical copy is G7-verified. Without the flag, 2,008 legacy days orphan. Repo: market-tick-data-service.
       parent_epic: mtds_mdps_master. Provenance: orphan-coverage drill-down, slot-6 2026-06-08. **(MIGRATED FROM:
       `tradfi_manifest_canonicalisation_2026_06_01.md`, 2026-07-13 per MTDS consolidation ruling.)** — **AUDITED
-      2026-07-26, VIOLATION CONFIRMED, DATA-LOSS FINDING FILED — checkbox stays OPEN pending operator decision.**
-      Code-verified (`deployment-service/scripts/vm/launch-canonical-migration-vm.sh`@`77cfcda`, the commit live at
-      apply time) that the 2026-07-06 completing apply's launcher NEVER passes `--also-legacy`. The one attempt that did
-      use the flag (`canonical-migration-tradfi-20260629-053023`) OOM-crashed after copying only ~1% (37k/3.8M
+      2026-07-26, VIOLATION CONFIRMED, DATA-LOSS FINDING FILED.** **CLOSED 2026-08-02 (na-eligibility-audit, tradfi
+      tranche)** — the operator decision this checkbox was waiting on landed the SAME DAY the finding was filed:
+      `issues/tradfi_legacy_bucket_deleted_without_also_legacy_migration_2026_07_26.md` is now `status: resolved`
+      (archived to `plans/archive/issues/`), "Operator decision (2026-07-26): accept the loss ... No further action is
+      pending on this doc." The prior 2026-07-30 na-eligibility-audit pass on this checkbox missed that the decision had
+      already landed and repeated the stale "pending operator decision" framing verbatim; a durable safeguard against
+      recurrence (`verify_legacy_bucket_decommission_precondition.py`) has since shipped separately. Original evidence,
+      preserved: code-verified (`deployment-service/scripts/vm/launch-canonical-migration-vm.sh`@`77cfcda`, the commit
+      live at apply time) that the 2026-07-06 completing apply's launcher NEVER passes `--also-legacy`. The one attempt
+      that did use the flag (`canonical-migration-tradfi-20260629-053023`) OOM-crashed after copying only ~1% (37k/3.8M
       processed_candles) and was never resumed with the flag. The legacy bucket
       (`market-data-tick-tradfi-central-element-323112`) is confirmed permanently deleted (ADC
-      `bucket.exists() ==     False`). Full evidence + recommended decision:
-      `issues/tradfi_legacy_bucket_deleted_without_also_legacy_migration_2026_07_26.md`.
+      `bucket.exists() ==     False`).
 
 - [x] ✅ [DATA] P1. **R2 DELETE-AFTER sweep — after the tradfi v9 `--apply` + G7 byte-verify, run the gated delete of
       the old-format source paths** (every **DELETE-AFTER=YES** row in the drill-down: bare `day=*/asset_group=tradfi/`
@@ -462,11 +467,19 @@ per MTDS consolidation ruling.)**
       (`tests/integration/test_macro_adapters_integration.py::test_eia_live`) + EIA backfill RUN. **(MIGRATED FROM:
       `macro_econ_adapter_scaffolds_2026_06_09.md`, 2026-07-13 per MTDS consolidation ruling.)**
 
-- [ ] [OPERATOR-DECISION] P1. `altdata` home — revive `altdata` as a real `asset_group` vs model macro as a SHARED
-      cross-asset axis. **DEFERRED** — gates the GCS-shard write + manifest `record_captured` + bucket
-      (`resolve_bucket_name`) wiring for all four sources (adapters today return `CanonicalOnChainMetric` lists; they do
-      NOT yet write GCS shards because the asset_group/bucket/data_type is undecided). Provenance: audit Open Question
-      #1. **(MIGRATED FROM: `macro_econ_adapter_scaffolds_2026_06_09.md`, 2026-07-13 per MTDS consolidation ruling.)**
+- [x] ✅ [OPERATOR-DECISION] P1. `altdata` home — revive `altdata` as a real `asset_group` vs model macro as a SHARED
+      cross-asset axis. **CLOSED 2026-08-02 (na-eligibility-audit, tradfi tranche)** — answered by the operator
+      2026-07-27: `june_2026_vintage_audit_findings_2026_07_27.md` finding #38, "Answered anyway: (a) altdata home =
+      shared cross-asset axis, no new asset_group" — 3 days before the prior 2026-07-30 na-eligibility-audit pass on
+      this doc, which still described this item as unresolved (a second staleness miss by that pass). Originally:
+      **DEFERRED** — gates the GCS-shard write + manifest `record_captured` + bucket (`resolve_bucket_name`) wiring for
+      all four sources (adapters today return `CanonicalOnChainMetric` lists; they do NOT yet write GCS shards because
+      the asset_group/bucket/data_type is undecided). Provenance: audit Open Question #1. **(MIGRATED FROM:
+      `macro_econ_adapter_scaffolds_2026_06_09.md`, 2026-07-13 per MTDS consolidation ruling.)** Note: the DEPENDENT
+      items below (Honest-coverage-gate registration, MTDS handler/CLI wiring, codex doc update) stay OPEN — the
+      asset-group decision has cleared, but the concrete technical mechanics (is `expected_coverage.py` /
+      bucket-isolation schema even non-AG-keyed-source-ready?) are not yet decided anywhere found; ripe for a fresh
+      scoping pass, not yet cleanly bounded/reclassifiable.
 
 - [ ] [OPERATOR-DECISION] P2. Honest-coverage-gate registration — add the macro key to `expected_coverage.py` +
       `coverage_start` dates so macro can no longer be silently empty. **DEFERRED** — audit Phase 5. Depends on the
@@ -773,5 +786,23 @@ ohlcv_15m/24h (MDPS-DERIVED not MTDS-fetched), ICE (off-allowlist). Two real man
   `test_schema_version_matrix` QG-RED item; the `--source databento` IS reference-capture re-run), but a whole-doc
   `assigned_vm` flip would dispatch the operator-gated majority alongside it — that content belongs in an
   `/ag-closeout-audit` carve-out, not a reclassification. No content found stale on this pass.
+
+- **na-eligibility-audit 2026-08-02** (tradfi tranche): **KEEP-NA, stale items closed.** Re-read all 14 open todos
+  end-to-end (checkbox count re-verified against `generate_na_doc_tranche_inventory.py`: 14, matches). The 2026-07-30
+  pass above missed two items that had already gone stale by then: (1) **R1 `--also-legacy`** — the "pending operator
+  decision" framing was stale even on 2026-07-30 (the decision landed 2026-07-26, same day the issue was filed);
+  **CLOSED** with citation to the now-archived, `status: resolved` issue doc. (2) **`altdata` home
+  `[OPERATOR-DECISION]`** — answered 2026-07-27 (`june_2026_vintage_audit_findings_2026_07_27.md` finding #38: "shared
+  cross-asset axis, no new asset_group"), 3 days before the 2026-07-30 pass; **CLOSED**. The 3 dependent items
+  (Honest-coverage-gate registration, MTDS handler/CLI wiring, codex doc update) stay OPEN — the asset-group decision
+  cleared, but the concrete engineering mechanics remain undecided, a fresh scoping question. Doc otherwise unchanged
+  from the 2026-07-30 verdict: still a genuine mix, still cannot flip as a whole. The pre-existing UAC
+  `test_schema_version_matrix` QG-RED item (cefi/cross-cutting scope, bounded, not tradfi's to own) remains flagged as
+  `/ag-closeout-audit`-carve-out content, not reclassified here — no active plan found that already owns fixing this
+  specific drift. One nuance surfaced, deliberately NOT auto-edited: the `ohlcv_15m/24h conversion` item's parts 1+2 are
+  done and duplicated in `issues/mdps_tradfi_ohlcv_15m_24h_conversion_still_zero_2026_07_27.md` (open, active), but this
+  doc's own "part 3" (64k old migrated-data `instrument_id` re-keying) is not covered by that issue doc and has no other
+  tracked home found — a future pass should fork part 3 out explicitly rather than closing/re-citing the whole item, so
+  it is left open and unedited here.
 
 - **context-scout 2026-08-01**: populated/refreshed context_scope (5 entries).

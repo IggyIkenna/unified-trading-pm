@@ -94,13 +94,15 @@ scope).
 > **NOTE (na-eligibility-audit 2026-07-30, tradfi tranche) — KEEP-NA-STALE, do NOT reclassify.** All three todos below
 > are already claimed VERBATIM as one combined todo in `/plans/active/tradfi_satellite_ao_dispatch_batch5_2026_07_29.md`
 > ("Trace/fix 3 distinct-value mis-stamp clusters", whose `Source:` cites this doc by name; its items (1)-(3) map 1:1
-> onto the three todos here). That batch doc is `assigned_vm: planning` but **`status: draft`** — NOT ingested, NOT
-> dispatched today. Flipping this doc's `assigned_vm` would dispatch a duplicate, so the shared conflict-check
-> (`/codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md` § 3) verdict is CONFLICT → citation fix
-> only. Note also that the `YAHOO_FINANCE` half (todo 2) is the SAME question batch5's sibling todo sourced from
+> onto the three todos here). **CORRECTION (na-eligibility-audit 2026-08-02, tradfi tranche):** batch5 is no longer
+> `status: draft` — it flipped to `status: active` 2026-07-30 (`5a6bbefc3`, "activate 9 fresh ag-closeout-audit dispatch
+> batches") and remains `assigned_vm: planning` today. The combined todo (batch5 line ~203) is still `- [ ]` open and
+> unworked as of 2026-08-02, so the underlying KEEP-NA-STALE / citation-fix-only verdict is UNCHANGED — flipping this
+> doc's `assigned_vm` would still dispatch a duplicate of an already-queued, not-yet-worked todo. Only the "draft, not
+> dispatched" reason for staying parked is stale; the doc still correctly stays `assigned_vm: NA`. Note also that the
+> `YAHOO_FINANCE` half (todo 2) is the SAME question batch5's sibling todo sourced from
 > `/plans/active/issues/tradfi_yahoo_venue_vendor_conflation_2026_07_27.md` owns; batch5 already encodes the
-> "investigate once, cite from all three" sequencing. Live blocker = batch5's draft status (operator item 5 in
-> `/plans/active/issues/tradfi_autonomous_session_operator_decisions_2026_07_25.md`).
+> "investigate once, cite from all three" sequencing.
 
 - [ ] [DATA] P2. Trace the `ESM0`/`ESM0_MIGRATED_20260418T131054Z` chain-axis writer (tradfi manifest `chain` column)
       and either fix the writer to leave `chain=""` for tradfi (mirrors the cefi `_canonical_manifest_venue_chain`
@@ -120,4 +122,13 @@ scope).
   CONFLICT because `/plans/active/tradfi_satellite_ao_dispatch_batch5_2026_07_29.md` already extracts all three verbatim
   as one combined todo citing this doc as its `Source:`. See the note added above the todos. Live blocker is batch5's
   `status: draft`, not this doc's classification.
+
+- **na-eligibility-audit 2026-08-02** (tradfi tranche): **KEEP-NA-STALE — verdict reaffirmed, one stale detail
+  corrected.** Re-verified all 3 todos live (checkbox count matches tranche-inventory: 3). Batch5 is no longer
+  `status: draft` — it flipped to `status: active` / stayed `assigned_vm: planning` on 2026-07-30 (`5a6bbefc3`), but its
+  combined "Trace/fix 3 distinct-value mis-stamp clusters" todo is still `- [ ]` open and unworked today (no Progress Log
+  entry references it; batch5's Progress Log activity to date all concerns its separate ES/MES backfill todo). The
+  underlying duplicate-claim conflict has not changed — reclassifying this doc would still queue a duplicate of an
+  already-claimed, not-yet-executed todo — so `assigned_vm` stays `NA`; corrected the note above from "draft, not
+  dispatched" to the accurate "active but still unworked" reason for the parked citation-fix-only verdict.
 - **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).
