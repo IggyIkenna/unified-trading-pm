@@ -307,3 +307,32 @@ died mid-task once between the first commit and the QG run (orchestrator resumed
 were intact, no work lost). Flipped the fix checkbox; split the live-verification leg (needs the
 LDR->staging->main->deploy pipeline to actually roll the new image first) into a new standalone `- [ ]` [DATA] P0 todo
 rather than leaving it un-flippable prose in this same checkbox.
+
+**2026-08-02 (slot 4) -- premature-dispatch, same pattern as the 2026-08-01 backfill-todo note above.** Dispatched the
+live-verification P0 todo. Checked its precondition ("once it has rolled out to production... post
+LDR->staging->main->deploy") before attempting the live check, per the sibling backfill-todo's own established self-skip
+precedent -- and found it is NOT yet met:
+
+- `deployment-service@4e0e03d` (the `--league`-scoping fix) is confirmed on `origin/live-defi-rollout` but NOT on
+  `origin/main` (`git merge-base --is-ancestor 4e0e03d origin/main` -> false; `git branch -r --contains 4e0e03d` shows
+  only `origin/live-defi-rollout`). `origin/main` is currently **875 commits behind** `origin/live-defi-rollout`
+  (`git rev-list --count origin/main..origin/live-defi-rollout`), and 4e0e03d sits only 22 commits back from the LDR tip
+  -- i.e. it's near the FRONT of a very long promote backlog, not stalled/stuck specifically, just not drained yet as of
+  this check.
+- No automated deploy-on-main-push pipeline exists for this Cloud Run Job in this repo:
+  `deployment-service/.github/workflows/image-build-gate.yml` triggers on `pull_request: branches: [main]` and only
+  calls the PM's `image-build-validate.yml` (a build-gate check, not a deploy); no `gcloud run jobs deploy/update` step
+  exists in any workflow in `.github/workflows/`, and `gcloud builds triggers list` returns 0 items for this GCP
+  project. The actual redeploy step (like the memory-limit bump above) appears to be a manual/operator-run action, not
+  CI-automated.
+- Directly confirmed the currently-deployed job predates the fix: `gcloud run jobs describe uts-prod-sports-scheduler`
+  shows `image=...sports-scheduler:latest` with `run.googleapis.com/lastUpdatedTime=2026-07-12T10:38:43Z` -- three weeks
+  before `4e0e03d` (2026-08-01) even existed.
+
+Self-skipping this dispatch (`reason_code: GATED`) rather than fabricating a "live-verified" result against code that
+demonstrably isn't running in production yet -- exactly the failure this todo's own done-when guards against (a false
+"OOM fixed" claim would be worse than the honest open state, per the data-pipeline-correctness-hard-rule). Not
+resolving/deploying it myself: no CD trigger exists for the general worker to invoke, and a manual
+`gcloud run jobs update` to force the new image is an infra-craft, arguably-operator-adjacent action (unlike the
+memory-limit bump, which was an explicit approved OPERATOR DECISION) -- flagging for whoever owns unblocking the promote
+backlog / performing the manual redeploy, not doing it ad hoc from this todo.
