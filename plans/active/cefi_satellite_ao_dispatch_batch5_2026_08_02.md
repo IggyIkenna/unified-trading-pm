@@ -90,6 +90,14 @@ context_scope:
 > **Every claim below was re-verified against live code/state on 2026-08-02**, not carried over from the source docs'
 > own prose. Where a source doc's stated detail had drifted, the todo says so and names the corrected fact.
 
+> **Adjacent open work, checked and confirmed NON-colliding (2026-08-02).**
+> `/plans/active/issues/mtds_live_smoke_vm_name_exceeds_gcp_limit_2026_08_01.md` (`assigned_vm: planning`) landed
+> upstream after this batch's candidate set was assembled and concerns the same `mtds-live-smoke` launch path — but its
+> single open todo claims `market-tick-data-service/scripts/pipeline_e2e_check.py` only (bounding the generated VM name
+> to GCP's 63-char limit). It does **not** claim `launch-mtds-live.sh` (it only mentions it in prose) and does not
+> touch the skill's `SKILL.md`, so it collides with neither todo 1 nor todo 2 here. Whoever picks up todo 1 should still
+> read it first — a worker editing this launcher family benefits from knowing the name-length failure exists.
+
 ## Todos
 
 - [ ] [INFRA] P1. **Wire the Tardis N=1 concurrency guard into `launch-mtds-live.sh` and every sibling live launcher.**
