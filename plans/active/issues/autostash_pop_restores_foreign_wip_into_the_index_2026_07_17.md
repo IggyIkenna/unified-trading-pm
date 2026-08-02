@@ -111,14 +111,18 @@ right up until the pull, and the post-pull index is never re-inspected.
       in a sandboxed clone: ahead=0 + non-overlapping dirty file still fast-forwards cleanly (unaffected); ahead=0 +
       genuine overlapping dirty file now blocks with zero stash activity, vs. the prior code which would have swept the
       whole dirty tree. shellcheck-clean, quality-gates.sh green.
-- [ ] [DEVOPS] P2. **Post-commit case (already have a local commit ahead of origin): keep `--rebase --autostash`** (this
-      case is genuine commit-graph divergence, not FF-eligible, and rebase is what keeps `live-defi-rollout` linear
-      instead of littering it with merge commits) **— but make the autostash-pop safe.** Immediately after
-      `git pull --rebase --autostash`, BEFORE your own `git add <files>`, run `git restore --staged .` unconditionally —
-      it only unstages (never touches working-tree content, so it can't destroy anything), guaranteeing the index holds
-      only what you explicitly add this round regardless of what the pop restaged. Simpler than the previously- floated
-      `git stash push -- <my paths>` alternative (which needs knowing your own dirty paths up front) — drop that
-      alternative.
+- [x] ✅ [DEVOPS] P2. **Post-commit case (already have a local commit ahead of origin): keep `--rebase --autostash`**
+      (this case is genuine commit-graph divergence, not FF-eligible, and rebase is what keeps `live-defi-rollout`
+      linear instead of littering it with merge commits) **— but make the autostash-pop safe.** — **DONE 2026-08-02,
+      `unified-trading-pm@<pending-sha>`.** Immediately after `git pull --rebase --autostash`, BEFORE any of this
+      script's own `git add <files>`, `_qm_stage_0_4_not_behind_gate`'s post-commit branch (`scripts/quickmerge.sh`
+      ~L746) now runs `git restore --staged . 2>/dev/null || true` unconditionally — it only unstages (never touches
+      working-tree content, so it can't destroy anything), guaranteeing the index holds only what this run explicitly
+      re-adds regardless of what the pop restaged. Verified in a sandboxed clone (peer commit landed on origin, local
+      ahead=1, foreign tracked-file dirty edit present pre-rebase): the fix runs as a no-op-or-neutralizer either way
+      the pop leaves foreign state (staged or merely working-tree-dirty on this git version) and never touches foreign
+      file content. Simpler than the previously-floated `git stash push -- <my paths>` alternative (which needs knowing
+      your own dirty paths up front) — dropped that alternative.
 - [ ] [DOCS] P2. Fold both halves into `/codex/05-infrastructure/per-tab-worktrees.md` + CLAUDE.md's Multi-agent safety
       block, replacing the current conflict-only guidance ("autostash conflict → rebase --abort + stash by name") with:
       (a) the pre-commit-case FF shortcut, and (b) the post-commit-case `git restore --staged .` step. Both docs are
@@ -166,3 +170,12 @@ owning agent carry on (their tree simply shows those files as already-committed 
   declared repo-blocker RB-be17edbd, operator authorized proceeding with that doc's recommended option (A), shipped as a
   separate commit `unified-trading-pm@4871d79fe`. Two remaining todos (post-commit `--restore --staged` safety + the
   docs fold) are untouched — out of scope for this task.
+- **data_engineering worker 2026-08-02** (slot 6, task `autostash_pop_restores_foreign_wip_into_the_index-002`): shipped
+  the post-commit-case `[DEVOPS] P2` todo — added `git restore --staged . 2>/dev/null || true` immediately after the
+  successful `git pull --rebase --autostash` branch in `_qm_stage_0_4_not_behind_gate` (`scripts/quickmerge.sh` ~L746),
+  before any of the script's own later `git add` calls. Verified in a sandboxed throwaway clone (peer commit landed on
+  origin, local branch ahead=1 with its own committed file, plus a foreign tracked file dirty from another "agent" both
+  staged and unstaged variants) that the restore only touches the index — foreign file content and the local committed
+  file both survive intact — and is a safe no-op when the pop leaves nothing staged. `bash -n` + `shellcheck -x` clean
+  (no new findings near the change; only pre-existing unrelated warnings elsewhere in the file). Remaining todo:
+  `[DOCS] P2` fold into `/codex/05-infrastructure/per-tab-worktrees.md` + CLAUDE.md — out of scope for this task.

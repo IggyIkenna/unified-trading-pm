@@ -745,6 +745,15 @@ else
         fi
       elif git pull --rebase --autostash "$_QM_REMOTE_NAME" "$_QM_REMOTE_BRANCH" --quiet 2>/dev/null; then
         echo "[$REPO_NAME] ✅ rebased local commits onto latest — now current"
+        # Post-commit case (autostash_pop_restores_foreign_wip_into_the_index_2026_07_17.md,
+        # decided fix 2026-08-01): --autostash's pop restores EVERY file it stashed back into the
+        # INDEX (staged) on pop — including foreign files owned by other agents dirty in this
+        # shared checkout, not just this repo's own already-committed work. Unconditionally
+        # unstage right here, BEFORE any of this script's own `git add` below: `git restore
+        # --staged .` only touches the index (never working-tree content, so it cannot destroy
+        # anything) and guarantees the index holds only what this run explicitly re-adds,
+        # regardless of what the pop just restaged.
+        git restore --staged . 2>/dev/null || true
       else
         # Structured error contract (265, 2026-06-17): emit a machine-parseable QUICKMERGE_BLOCKED
         # line so an agent self-serves recovery without an operator paste. Capture the conflicting
