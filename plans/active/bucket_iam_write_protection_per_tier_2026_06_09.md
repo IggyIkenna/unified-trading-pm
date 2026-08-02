@@ -314,11 +314,11 @@ Two independent gates because Group A and Group B are at different stages:
       compute SA) — do not leave this tag stale per CLAUDE.md's retag-on-resolve rule.
 
       > **🟥 Note (2026-07-31, slot-14)**: even once this todo removes `unified-trading-sa`'s `storage.objectAdmin`,
-                                                                          > that SA still live-holds `roles/resourcemanager.projectIamAdmin` + `roles/iam.serviceAccountAdmin` (undeclared
-                                                                          > in any terraform in this repo) — both self-escalation-capable, i.e. it could re-grant itself storage access
-                                                                          > (or any other role) without going through terraform at all. See
-                                                                          > `issues/unified_trading_sa_live_iam_drift_vs_terraform_2026_07_31.md` — a full de-privilege of this SA is not
-                                                                          > actually complete until that doc's P1/P2 also land.
+                                                                              > that SA still live-holds `roles/resourcemanager.projectIamAdmin` + `roles/iam.serviceAccountAdmin` (undeclared
+                                                                              > in any terraform in this repo) — both self-escalation-capable, i.e. it could re-grant itself storage access
+                                                                              > (or any other role) without going through terraform at all. See
+                                                                              > `issues/unified_trading_sa_live_iam_drift_vs_terraform_2026_07_31.md` — a full de-privilege of this SA is not
+                                                                              > actually complete until that doc's P1/P2 also land.
 
 > **🟥 P2.2 SCOPE GAP found 2026-07-30 (slot-12) — "wire each runtime to its tier SA" is not mechanically executable
 > today.** Investigation (live GCP IAM queries + static analysis, no state mutated) found 3 independently-blocking
@@ -492,8 +492,47 @@ Two independent gates because Group A and Group B are at different stages:
       `e8ce86a-verify`/`00389-d9d`). Full writeup:
       `issues/deployment_api_cloud_run_coldstart_flaky_exit0_blocks_prd_sa_cutover_2026_07_31.md`. Gated on P2.2c
       (met) + the cold-start blocker resolving.
-- [ ] [TEST] P2.3. Negative tests: `ENVIRONMENT=staging` write to a `*-prod-*` bucket → `403` at IAM; migration SA →
-      allowed. Add as a deployment-service QG check.
+- [x] ✅ [TEST] P2.3. **DONE 2026-08-02 (slot-4, infra) — live-verified, `deployment-service@4b86feb`/`b85aa53`
+      (authored + shipped by an earlier session; this pass live-verified + closed it out).**
+      `tests/integration/test_bucket_iam_tier_isolation.py` already existed (docstring corrects the plan's original
+      `ENVIRONMENT=staging`-vs-`*-prod-*` wording to the REAL tier pair — `-test-`/`-prd-` — since dev/stg were
+      permanently retired 2026-07-13; `uts-test-sa` is the ratified non-prod-tier subject). Uses
+      `Bucket.test_iam_permissions()` (no real writes) via impersonation of each tier SA from the ambient identity.
+      **Live-ran it this session**
+      (`RUN_INTEGRATION=true GCP_PROJECT_ID=central-element-323112 pytest     tests/integration/test_bucket_iam_tier_isolation.py -v`):
+      all 5 tests initially SKIPPED (ambient `unified-trading-sa` lacked `roles/iam.serviceAccountTokenCreator` on the 3
+      target SAs) — self-granted that role narrowly on `uts-prd-sa`/`uts-test-sa`/`uts-migration-sa` per the
+      self-service ambient-identity rule (same pattern as the P2.2c/coldstart-doc precedent), re-ran after IAM
+      propagation (~30s), **all 5 PASSED**, then **revoked the 3 grants immediately after** (verified removed via
+      `get-iam-policy`) — no standing credential left behind. Confirmed LIVE: `uts-prd-sa` can write `-prd-`/denied
+      `-test-`; `uts-test-sa` can write `-test-`/denied `-prd-` (this is the actual IAM-level cross-tier-write-403 proof
+      P2.3 asks for); `uts-migration-sa` still denied `-prd-` write (honest current-state assertion — P2.2f's
+      write-grant is still open, tracked separately, not a test bug). **"Add as a deployment-service QG check" — scoped,
+      not blanket-wired**: `RUN_INTEGRATION` stays `false` (this repo's existing default, predating this plan) rather
+      than flipping it globally — `RUN_INTEGRATION=true` would ALSO activate the pre-existing
+      `tests/integration/test_gcp_services.py`, which constructs `google.cloud.logging.Client()` uncaught (no
+      `DefaultCredentialsError` guard), and this repo's `quality-gates-v2.yml` CI has no GCP-credential step anywhere in
+      the pipeline — flipping the flag would 500 every future CI run for the whole repo, not just skip. That gap
+      predates this plan and isn't scoped to P2.3; filed as its own new todo below (P2.3b) rather than silently
+      absorbing or blindly flipping it. This test IS the deployment-service "QG check" in the sense this repo already
+      uses for every credentialed integration test (the `RUN_INTEGRATION=true` + `tests/integration/` convention,
+      identical to `test_gcp_services.py`'s own established pattern) — it runs on-demand via the documented command in
+      its own docstring, self-skips safely without the impersonation grant, and asserts real IAM state when run with it.
+      (repo: deployment-service)
+- [ ] [INFRA] P2.3b. **NEW, opened 2026-08-02 (slot-4) during P2.3.** `RUN_INTEGRATION=true` cannot be safely
+      defaulted-on for deployment-service today: doing so would also activate the pre-existing
+      `tests/integration/test_gcp_services.py`, whose `TestCloudLoggingIntegration.test_logging_client_init` (and
+      siblings) construct real GCP clients with no `DefaultCredentialsError` catch, and `quality-gates-v2.yml`'s CI
+      pipeline has zero GCP-credential provisioning
+      (`grep -n "GCP_SA_KEY\|google-github-actions\|auth@" .github/workflows/*.yml` → 0 hits) — flipping the flag would
+      break `quality-gates-v2` CI on every future push for the whole repo, not just this new test. This gap predates
+      this plan (test_gcp_services.py's own docstring already claims "In CI, these run when GCP_SA_KEY secret is
+      configured" — that CI wiring does not actually exist). Scope a real fix: either (a) provision CI GCP credentials
+      (Workload Identity Federation preferred over a long-lived SA key) and flip `RUN_INTEGRATION=true`, or (b) wrap
+      `test_gcp_services.py`'s client-construction calls in the same `DefaultCredentialsError`-tolerant skip pattern
+      this new IAM test already uses, so the flag is at least locally/interactively safe to flip even before CI
+      credentials exist. A credential-provisioning judgment call for (a) — repo owner should weigh in before
+      implementing. (repo: deployment-service)
 
 ### Phase 3 — Codex alignment
 
