@@ -29,7 +29,8 @@ source: [mvp_backfill_defi_onchain_v10_2026_06_27.md G2 verification run, slot-3
 priority: P1
 execution_scope: orchestrator-agent
 drift_direction: advance-code
-depends_on: []
+depends_on: [data_completion_defi_2026_07_15]
+gate_on_depends: true
 locked_by:
 locked_since:
 context_scope:
@@ -40,6 +41,22 @@ context_scope:
     market-tick-data-service/market_tick_data_service/cli/handlers/lending_indices_handler.py,
   ]
 ---
+
+> **Dispatch gate is now AUTHORED HERE, not hand-edited into `backlog.yaml` (2026-07-31, corpus-sweep):** re-check #14
+> below parked this doc's one remaining todo by directly editing `agent-orchestrator/data/config/backlog.yaml`
+> (`priority: 50→999`, `priority_override: true`,
+> `prereqs.prerequisites += defi_onchain_v10_universe_v2_seed_or_backfill_progressed`) — a breach of the workspace HARD
+> RULE "never hand-edit `backlog.yaml` — author plans, the backend derives it"
+> (`/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md`). The gate's **intent is accepted and kept**;
+> it is now expressed through the only plan-authored channel that regen honours
+> (`agent-orchestrator/server/regen_backlog_from_plan.py:_wire_gate_on_depends_prereqs`): `depends_on` +
+> `gate_on_depends: true` on `data_completion_defi_2026_07_15` — the plan that actually owns the expected-universe-v2
+> seed chain the hand-added condition was standing in for. The remaining todo is also authored down to **P3** (regen
+> maps P3→priority 80, the lowest a plan can express; 999 is not reachable from a plan file — the dispatch hold comes
+> from the gate, not the number). With `assigned_vm: NA` this doc contributes no briefs at all today
+> (`_plan_contributes_briefs` → False, so `_prune_stale` garbage-collects the old task); the gate above is what keeps
+> the hold durable if `assigned_vm` is ever returned to `planning`. **No further `backlog.yaml` hand-edit is needed or
+> permitted for this doc.**
 
 > **Footnote (2026-07-13, superseded counts — does not affect this doc's open topic):** the "465 catalog instruments" /
 > `LENDING_MARKET` figures below reflect the catalogue as of 2026-07-12; MORPHO's real catalogue is now 2,666 rows, 100%
@@ -121,8 +138,12 @@ venue is exactly the class of gap the plan's "Definition of 100%" section calls 
       it and its first replacement both produced zero real Morpho rows. Checkbox left `[x]` (the wiring deliverable
       itself is real and done) but a reader should follow the "UPDATE 2026-07-12 (slot-12)" and "CORRECTION" sections
       below rather than treat "Verified post-launch: status=RUNNING" as proof of a working Morpho-scoped backfill.
-- [ ] [SCRIPT] P2. Re-run this plan's (`mvp_backfill_defi_onchain_v10_2026_06_27.md`) G2 gate for `lending_indices`
-      after the backfill completes. (repo: `instruments-service`)
+- [ ] [SCRIPT] P3. Re-run this plan's (`mvp_backfill_defi_onchain_v10_2026_06_27.md`) G2 gate for `lending_indices`
+      after the backfill completes. (repo: `instruments-service`) — **Authored-down from P2 to P3 on 2026-07-31** as the
+      plan-channel replacement for the `priority: 999` `backlog.yaml` hand-edit (see the frontmatter banner). The real
+      hold is the `gate_on_depends` gate on `data_completion_defi_2026_07_15`, not the number: this doc's own Morpho
+      scope is complete (re-check #14), and the gate's remaining `expected_unattempted` mass is entirely that plan's
+      expected-universe-v2 seed chain.
 - [x] ✅ [SCRIPT] P1. Relaunch the Morpho continuation window `--lending-protocols morpho 2026-03-26 2026-07-15` — see
       "Third-relaunch VM ran to near-completion, OOM-killed 111 days short" finding below for the exact command + why
       gcloud-unavailable sandboxes can't execute it directly. (repo: `deployment-service`) — **Done 2026-07-15T11:34Z
@@ -892,6 +913,11 @@ to idle `data_engineering` slots until the seed-chain/backfill work that conditi
 > claim about worker write-access was evidently either slot-specific or itself inaccurate — some workers clearly CAN
 > reach `agent-orchestrator/data/config/backlog.yaml` outside the git worktree. Not reverted here (backlog.yaml lives
 > outside this repo's scope); flagged for operator awareness that the hand-edit ban was bypassed in practice.
+>
+> **RESOLVED 2026-07-31 (operator ruling, corpus-sweep):** intent accepted, channel corrected at the source — the gate
+> now lives in this doc's own frontmatter (`depends_on: [data_completion_defi_2026_07_15]` + `gate_on_depends: true`,
+> todo authored down to P3). See the banner directly under the frontmatter for the full rationale. The `backlog.yaml`
+> hand-edit is now redundant: whatever the next regen writes, the gate is derived from this file.
 
 **Checkbox NOT flipped** — the G2 gate genuinely does not pass; flipping would be false progress (same discipline every
 prior re-check in this doc applied). **`/skip-current-task`'d** — no further `data_engineering`-craft lever exists on
