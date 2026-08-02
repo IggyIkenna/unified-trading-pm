@@ -111,12 +111,18 @@ changing it, in case something already compensates for or intentionally relies o
 
 ## Recommended decision
 
-- [ ] [BACKEND] P1. Fix `_check_cf8_available_at` (`unified_trading_library/cf_manifest_audit.py:374-382`) to filter to
-      `capture_status=='captured'` rows before computing `n`/`nn`, mirroring the existing `_cells()` pattern (line 284).
-      Add a regression test with a mixed-capture-status dataframe (some captured+filled, some captured+blank, some
+- [x] ✅ [BACKEND] P1. Fix `_check_cf8_available_at` (`unified_trading_library/cf_manifest_audit.py:374-382`) to filter
+      to `capture_status=='captured'` rows before computing `n`/`nn`, mirroring the existing `_cells()` pattern (line
+      284). Add a regression test with a mixed-capture-status dataframe (some captured+filled, some captured+blank, some
       non-captured+blank) asserting CF-8 keys only off the captured subset. Grep for any caller of `audit()`/`run_all()`
       that reads the CF-8 result and might depend on the current full-manifest semantics before shipping (data-status
-      UI, alerting, gates) — update or confirm unaffected. Repo: unified-trading-library.
+      UI, alerting, gates) — update or confirm unaffected. Repo: unified-trading-library. —
+      unified-trading-library@6af7c4b7. Grepped for `results["CF-8"]`/`audit()`/`run_all()` callers outside
+      `cf_manifest_audit.py`: none found — `run_all()`'s only consumers are the JSON rollup file and the process exit
+      code (any-RED -> exit 1); no UI/alerting/gate reads the per-key CF-8 result directly. Added 2 regression tests
+      (`test_check_cf8_available_at_keys_off_captured_rows_only`,
+      `test_check_cf8_available_at_green_when_all_captured_rows_filled`) proving the captured-only denominator and that
+      the fix makes a previously-unreachable GREEN reachable. QG green, shipped via quickmerge.
 - [ ] [DATA] P2. Once the fix above ships, re-run `cf_manifest_audit.py --all-ags` (or the scheduled job's next run) and
       diff against the 2026-07-26 rollup's 10-bucket CF-8 verdicts — some currently-RED buckets may already be GREEN
       under the corrected denominator (particularly tradfi, sports, prediction — the 3 non-cefi asset_groups this
