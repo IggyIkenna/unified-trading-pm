@@ -135,11 +135,15 @@ mock parity — the drift is historical, not systemic.
       instead of 500ing, meaning the Cloud Functions census has likely been silently empty in production rather than
       crashing. Tracked as a new P3 todo below. `google-cloud-scheduler` (deployment-service's third GCP dep missing
       from the list) was checked and is NOT actually imported anywhere in `deployment_api` — no fix needed there.
-- [ ] [SERVICE] P3. **Add `google-cloud-functions>=1.16.0,<2.0.0` to the `deployment-api` Dockerfile's explicit
+- [x] ✅ [SERVICE] P3. **Add `google-cloud-functions>=1.16.0,<2.0.0` to the `deployment-api` Dockerfile's explicit
       `uv pip install` list** (same list `google-cloud-artifact-registry` was just added to) — closes the silent
       `{}`-degradation gap in `deployment_api/routes/_gcp_cloud_functions.py`'s `list_cloud_functions()` (wired into
       `/api/deployments/inventory`), which has been silently returning an empty Cloud Functions census in the Cloud Run
-      image since deployment-service is vendored `--no-deps` there too. (repo: deployment-api)
+      image since deployment-service is vendored `--no-deps` there too. (repo: deployment-api) — **DONE 2026-08-02
+      (slot-13, backend_engineer), `deployment-api@d1d2a21`.** Added the pin next to `google-cloud-artifact-registry` in
+      the Dockerfile's explicit `uv pip install` block; version constraint matches `deployment-service/pyproject.toml`'s
+      own declared `google-cloud-functions>=1.16.0,<2.0.0`. `quality-gates.sh` green, shipped via `quickmerge --agent`,
+      verified on origin.
 - [ ] [SERVICE] P3. **Bring `/api/repo-ci/overview` mock up to the staging-dormant contract** (`promotion_model`,
       `staging_dormant_mode`, `image_gcp`/`image_aws`, `image.deploy_host`/`deploy_model`).
 - [ ] [SERVICE] P3. **Reconcile the `/api/deployments` pagination contract** — live `has_more`+`total_count` vs mock
@@ -177,3 +181,5 @@ mock parity — the drift is historical, not systemic.
   `assigned_vm: NA -> planning`. Conflict-check run against all active `assigned_vm: planning` docs in this doc's
   `parent_epic` + the infra tranche's consolidated-closeout digest: zero/milestone-only overlap, clear to proceed.
 - **context-scout 2026-08-01**: populated context_scope (4 entries).
+- **slot-13 2026-08-02**: Added `google-cloud-functions>=1.16.0,<2.0.0` to the Dockerfile's explicit `uv pip install`
+  list — `deployment-api@d1d2a21`, `quality-gates.sh` green, shipped via `quickmerge --agent`, verified on origin.
