@@ -450,3 +450,30 @@ not just noting.
   disposition, a duplicate dispatch onto an already-contended runner pool doesn't help and the queue/gate will
   self-clear once contention eases. Slot left clean on `live-defi-rollout` (nothing to commit in `unified-trading-api`;
   only this doc touched).
+
+- **2026-08-02 ~23:20-23:32Z (cicd escalation `agt-ca1c32`, slot 5, `strategy-service`, `wall_type=ldr_qg_failure`,
+  `pr_number=0` — direct LDR push, no PR)** — third same-day `strategy-service` corroboration of the identical
+  `Type check FAILED/timeout (exit=124)` signature (prior two: the ~15:40Z entry in the parent doc and the ~21:40-21:50Z
+  entry above, escalation `agt-e3d260`), same HEAD `a6689ca0` throughout. Reproduced locally (backgrounded, heartbeated
+  per the mandatory pattern): `bash scripts/quality-gates.sh` → **`✅ ALL QUALITY GATES PASSED (226s)`** — tests slice
+  5660 passed/248 skipped/22 xfailed/0 failed, coverage 83.24%≥74% floor (identical figures to the ~21:40-21:50Z entry —
+  same clean HEAD, no drift), basedpyright surfaced only its 7 pre-existing tolerated warnings, no timeout. Confirmed
+  via `git diff --stat` that `a45069a9` (last CI-green SHA) → `a6689ca0` (current HEAD) contains only a CI-workflow-only
+  change (`.github/workflows/quality-gates-v2.yml`, cancel-in-progress config) — no source touched — ruling out a
+  genuine typecheck regression. Live CI cross-check: `gh run list` showed a THIRD run on this exact HEAD already
+  `in_progress` at investigation start (`30772057438`, `workflow_dispatch`, not triggered by me); by the time I checked
+  its `checks` leg had already failed the identical `basedpyright ... Type check FAILED/timeout (exit=124)` (its `tests`
+  leg still running). Host corroboration: `uptime` load average **30.58/31.89/33.34**, swap **24Gi/47Gi** in use — same
+  whole-host-thrashing signature as every other entry in this doc-pair. `gh pr list --state open` → `[]`,
+  `GET /api/repo-blockers` → `open: []` — nothing currently blocked to fast-path. **Disposition: no code/test/workflow
+  change made or needed.** Did not add a fourth redundant retrigger — a `workflow_dispatch` run was already
+  `in_progress` on this exact HEAD at investigation start (its `checks` leg had already failed by the time I looked, but
+  its `tests` leg was still making progress, and per this doc's established posture a duplicate dispatch onto an
+  already-contended runner pool doesn't help); `strategy-service` is one of the protected-6 repos the 2026-07-28
+  operator ruling says to leave on self-hosted / accept recurring reds / resolve via retrigger — not applicable here
+  since a retrigger was already in flight. Did not force-resolve, lower a coverage floor, or pragma-skip anything — per
+  the cicd role's hard rule, a wall this well-corroborated as pure infra contention (not a code/test defect) is not one
+  a code change can fix. `POST /api/slots/ci-reconcile/message` expected to 422 (non-numeric `slot_id`) per this doc's
+  `ci`/`ci-reconcile` precedents. Slot left clean on `live-defi-rollout` (only this doc touched; `strategy-service`
+  working tree already clean, no commit needed there). Eleventh repo-specific corroboration of the
+  `Type check FAILED/timeout (exit=124)` signature class in this doc-pair, third specific to `strategy-service`.
