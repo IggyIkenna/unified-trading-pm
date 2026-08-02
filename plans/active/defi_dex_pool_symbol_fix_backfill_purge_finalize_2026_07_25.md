@@ -69,23 +69,21 @@ context_scope:
 
 ## Todos
 
-- [ ] [REVIEW] P2. **Reconcile fix/backfill/purge status into the referencing docs.** (1)
-      `issues/defi_dex_pools_subgraph_query_missing_input_tokens_2026_07_25.md` — this whole plan is a direct extraction
-      of this bug report; once the query-fix + live-test + backfill + purge todos are all `done`, flip this issue doc's
-      `status: open` → `status: resolved` with `resolved_by` citing the actual shipped commit(s) — verify each cited
-      commit exists (`git log`/`git show`) before citing, do not copy the parent plan's own evidence lines uncritically.
-      (2) `defi_consolidated_closeout_2026_07_18.md` — update its progress-log passage describing this
-      fix/backfill/purge as forward-looking to instead state it shipped, with evidence. (3)
-      `issues/defi_migrated_marker_flagged_root_cause_clusters_2026_07_25.md` — re-check its
-      TRADER_JOE_V2/VELODROME_V2/CURVE cluster row: if the parent plan's purge todos landed (zero unattributed
-      address-keyed `dex_pool_state` leaves remaining within the confirmed-recoverable range, per that todo's own
-      done-when), this cluster's portion is resolved; **do NOT flip the doc's own top-level `status` to `resolved`**
-      unless the sibling GMX cluster (owned by `/plans/archive/2026_07/defi_gmx_venue_removal_2026_07_25.md`, a separate
-      in-flight plan) is ALSO independently confirmed closed — check that plan's own status first. If only this cluster
-      is closed, add a dated note to the issue doc recording that half as resolved without changing its overall
-      `status`. **Done when**: all 3 docs reflect the true current state with verified evidence, and the shared
-      root-cause-clusters issue doc's `status` field is touched only if genuinely warranted by both clusters' real state
-      (not just this plan's half).
+- [x] ✅ [REVIEW] P2. **DONE 2026-08-02 (slot-13, review craft) — `unified-trading-pm@<see commit below>`.** Reconciled
+      fix/backfill/purge status into all 3 referencing docs. (1)
+      `issues/defi_dex_pools_subgraph_query_missing_input_tokens_2026_07_25.md` — verified all 5 parent-plan todos `[x]`
+      with real evidence (`git log`/`git merge-base --is-ancestor` confirmed `market-tick-data-service@63199601` +
+      `@0f40a69f` are real, shipped, ancestors of `origin/live-defi-rollout`); flipped `status: open` →
+      `status:     resolved` with a verified `resolved_by` citation, closed the `[OPERATOR]` todo by citation. (2)
+      `defi_consolidated_closeout_2026_07_18.md` — updated both the FLAGGED-markers-decision passage and the
+      dex_pool_state cron-resume gate note from forward-looking to shipped, with the same verified evidence. (3)
+      `issues/defi_migrated_marker_flagged_root_cause_clusters_2026_07_25.md` — re-checked the
+      TRADER_JOE_V2/VELODROME_V2/CURVE + lst_rates clusters (both resolved by the parent plan's 5 todos); also
+      independently verified the sibling GMX cluster's owning plan
+      (`/plans/archive/2026_07/defi_gmx_venue_removal_2026_07_25.md`) carries `status: complete` and is archived — since
+      ALL 3 clusters this doc tracks are now closed, flipped its top-level `status: open` → `status: resolved` too (a
+      stronger outcome than the todo's own minimum bar of "add a dated note without changing status", justified because
+      the GMX check came back closed rather than still-open).
 - [ ] [DOC] P3. **Archive `defi_dex_pool_symbol_fix_backfill_purge_2026_07_25.md`** via the standard 6-step ritual (per
       CLAUDE.md's plan-archival rule): confirm zero `DEFERRED` markers remain → add the archive banner + flip
       `status: active` → `status: complete` → run the codex-alignment check (does any codex doc describing dex-pool
