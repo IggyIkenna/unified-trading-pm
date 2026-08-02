@@ -21,7 +21,7 @@ related:
     archetypes/ml-directional-event-settled.md,
   ]
 created: 2026-04-21
-authoritative_for: [value-betting archetype decision (VALUE_PROB_VS_IMPLIED edge-method, not a separate archetype)]
+authoritative_for: ["value-betting archetype decision (VALUE_PROB_VS_IMPLIED edge-method, not a separate archetype)"]
 referenced_by:
 owner:
 last_reviewed:

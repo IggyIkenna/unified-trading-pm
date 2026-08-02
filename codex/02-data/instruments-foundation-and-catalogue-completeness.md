@@ -26,8 +26,7 @@ related:
 created: 2026-06-24
 authoritative_for:
   [
-    instruments-foundation completeness standard (G1–G5 gated process,
-    all asset_groups),
+    "instruments-foundation completeness standard (G1–G5 gated process, all asset_groups)",
     day_coverage/depth_coverage two-layer coverage + expected-universe oracle,
   ]
 referenced_by:

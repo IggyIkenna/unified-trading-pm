@@ -21,7 +21,7 @@ related:
     /codex/02-data/honest-absence-downstream-handling.md,
   ]
 created: 2026-05-10
-authoritative_for: [DeFi per-(venue, data_type) capture matrix, DeFi bundled cluster-validation registry map]
+authoritative_for: ["DeFi per-(venue, data_type) capture matrix", DeFi bundled cluster-validation registry map]
 referenced_by:
   [
     /codex/02-data/README.md,

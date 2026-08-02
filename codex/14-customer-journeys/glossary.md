@@ -15,7 +15,7 @@ tags: [glossary, customer-journey, dart, sales, prospect, catalogue]
 related:
   [/codex/14-customer-journeys/audiences-and-journeys.md, /codex/14-customer-journeys/information-architecture.md]
 created: 2026-04-19
-authoritative_for: [customer-journeys glossary terms (org/fund/client, four catalogues, playbook families)]
+authoritative_for: ["customer-journeys glossary terms (org/fund/client, four catalogues, playbook families)"]
 referenced_by:
   [
     /codex/14-customer-journeys/README.md,

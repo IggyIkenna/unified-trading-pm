@@ -28,8 +28,7 @@ related:
 created: 2026-04-17
 authoritative_for:
   [
-    strategy identity + versioning (5-layer identity,
-    archetype-ID rules),
+    "strategy identity + versioning (5-layer identity, archetype-ID rules)",
     canonical strategy-id naming grammar (slot-label / fully-qualified / bare-slot),
   ]
 referenced_by:

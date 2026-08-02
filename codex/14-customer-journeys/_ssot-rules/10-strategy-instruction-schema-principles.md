@@ -20,7 +20,7 @@ related:
     /codex/14-customer-journeys/_ssot-rules/06-show-dont-show-discipline.md,
   ]
 created: 2026-04-20
-authoritative_for: [signals-only instruction-schema principles ((Client, downstream) fit-check)]
+authoritative_for: ["signals-only instruction-schema principles ((Client, downstream) fit-check)"]
 referenced_by:
   [
     /codex/14-customer-journeys/_ssot-rules/04-dart-commercial-axes.md,

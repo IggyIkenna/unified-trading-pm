@@ -22,7 +22,7 @@ related:
   ]
 created: 2026-04-20
 authoritative_for:
-  [Stage 3E post-Stage-3 refactor backlog (G1/G2/G3 items + dependency graph, supersedes roadmap/next-waves.md)]
+  ["Stage 3E post-Stage-3 refactor backlog (G1/G2/G3 items + dependency graph, supersedes roadmap/next-waves.md)"]
 referenced_by:
   [
     /codex/14-customer-journeys/_ssot-rules/11-codex-scope-registry.md,

@@ -21,7 +21,7 @@ related:
     /codex/14-customer-journeys/shared-core/client-reporting-demo-walkthrough.md,
   ]
 created: 2026-04-20
-authoritative_for: [shared client-reporting core surface (one component tree, entitlement-filtered)]
+authoritative_for: ["shared client-reporting core surface (one component tree, entitlement-filtered)"]
 referenced_by:
   [
     /codex/14-customer-journeys/README.md,

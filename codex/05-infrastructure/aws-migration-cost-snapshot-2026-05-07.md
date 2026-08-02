@@ -29,8 +29,8 @@ related:
 created: 2026-05-08
 authoritative_for:
   [
-    AWS-vs-GCP per-resource cost snapshot (compute/storage/BigQuery/Pub-Sub run-rate + one-time migration + 12-month TCO,
-    2026-Q1 list pricing),
+    "AWS-vs-GCP per-resource cost snapshot (compute/storage/BigQuery/Pub-Sub run-rate + one-time migration + 12-month
+    TCO, 2026-Q1 list pricing)",
   ]
 referenced_by:
   [
@@ -48,8 +48,8 @@ code_refs:
 > per-resource cost tables from
 > [`aws_migration_cost_analysis_2026_05_07.md`](../../plans/archive/audits/aws_migration_cost_analysis_2026_05_07.plan.md)
 > for ongoing reference; the "defer AWS to Q3 2026" recommendation is replaced by the dual-cloud decision in
-> [`plans/archive/2026_05/aws_migration_defi_first_2026_05_07.md`](../../plans/archive/2026_05/aws_migration_defi_first_2026_05_07.md) §
-> "Operator answers" + Phase 0. The cost numbers below remain valid as a research artefact (list pricing 2026-Q1).
+> [`plans/archive/2026_05/aws_migration_defi_first_2026_05_07.md`](../../plans/archive/2026_05/aws_migration_defi_first_2026_05_07.md)
+> § "Operator answers" + Phase 0. The cost numbers below remain valid as a research artefact (list pricing 2026-Q1).
 >
 > **Pricing flag**: list pricing as of 2026-Q1, sourced from public pricing pages and workspace invoice snapshots.
 > Verify against actuals (GCP billing console + AWS Cost Explorer pricing API) before any commitment.

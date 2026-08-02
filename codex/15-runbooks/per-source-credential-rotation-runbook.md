@@ -19,7 +19,7 @@ related:
     /codex/05-infrastructure/secret-manager-naming.md,
   ]
 created: 2026-05-15
-authoritative_for: [per-data-source credential rotation (sports, prediction, DeFi-data)]
+authoritative_for: ["per-data-source credential rotation (sports, prediction, DeFi-data)"]
 referenced_by:
 owner: operator (ikenna) — per-source credential rotation
 last_reviewed: 2026-10-19

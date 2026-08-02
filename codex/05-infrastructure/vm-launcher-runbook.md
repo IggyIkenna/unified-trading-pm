@@ -28,8 +28,7 @@ authoritative_for:
   [
     VM launcher per-script usage runbook,
     heavy-compute-on-shared-host ad-hoc-script rule,
-    heavy-compute-on-shared-host rule scope (production code,
-    not just ad-hoc scripts),
+    "heavy-compute-on-shared-host rule scope (production code, not just ad-hoc scripts)",
   ]
 referenced_by:
   [

@@ -19,7 +19,7 @@ related:
     /codex/09-strategy/architecture-v2/strategy-catalogue-3tier.md,
   ]
 created: 2026-04-24
-authoritative_for: [commercial service families (DART Full vs Signals-In feature matrix, IM, Reg Umbrella)]
+authoritative_for: ["commercial service families (DART Full vs Signals-In feature matrix, IM, Reg Umbrella)"]
 referenced_by:
   [
     /codex/02-data/questionnaire-axes.md,
@@ -38,11 +38,11 @@ code_refs:
 
 # Commercial Service Families — DART Full vs Signals-In (+ IM, Reg Umbrella)
 
-> **Created 2026-05-08** (Phase E.1 of `codex_refactor_2026_05_08.md` — that plan no longer exists in `plans/`,
-> neither active nor archived; kept here as provenance only) — renamed from
-> `service-family-scope.md`. The rename clarifies scope: this doc is the **commercial / UX** service-family SSOT (which
-> commercial shape is sold to whom, what feature matrix each tier unlocks, locked-section UI design, demo plan toggle).
-> It is NOT an architecture-tier doc — for the import-tier model + protocol-injection contract see
+> **Created 2026-05-08** (Phase E.1 of `codex_refactor_2026_05_08.md` — that plan no longer exists in `plans/`, neither
+> active nor archived; kept here as provenance only) — renamed from `service-family-scope.md`. The rename clarifies
+> scope: this doc is the **commercial / UX** service-family SSOT (which commercial shape is sold to whom, what feature
+> matrix each tier unlocks, locked-section UI design, demo plan toggle). It is NOT an architecture-tier doc — for the
+> import-tier model + protocol-injection contract see
 > [`tier-and-import-architecture.md`](tier-and-import-architecture.md); for runtime / deployment topology see
 > [`runtime-deployment-topology.md`](runtime-deployment-topology.md).
 
