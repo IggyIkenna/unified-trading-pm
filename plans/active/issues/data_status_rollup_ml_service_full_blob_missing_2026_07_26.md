@@ -115,7 +115,7 @@ worth closing the same way (isolate + surface the real error) rather than leavin
 
 ## Todos
 
-- [ ] [DIAG] P2. Re-check `gs://central-element-323112-data-status-rollups/ml-service/full.json.gz` existence/freshness
+- [x] [DIAG] P2. Re-check `gs://central-element-323112-data-status-rollups/ml-service/full.json.gz` existence/freshness
       across 2-3 more `uts-prod-data-status-rollup-cron` cycles (~20 min apart) to confirm the gap is reproducible, not
       transient. Repo: deployment-api. Done when: a Progress Log entry records either "confirmed reproducible across N
       cycles" or "resolved itself — false alarm" with timestamps.
@@ -126,8 +126,68 @@ worth closing the same way (isolate + surface the real error) rather than leavin
       document that explicitly next to the MTDS/MDPS comment in `data_status_rollup_worker.py` rather than leaving it
       unexplained). Repo: deployment-api. Done when: `ml-service/full.json.gz` is confirmed refreshing on a live cycle,
       or the doc explicitly states why it structurally cannot (mirroring the MTDS/MDPS precedent) with a regression test
-      guarding the honest-failure path either way.
+      guarding the honest-failure path either way. **UPDATED LEAD (2026-08-02)**: the "silent skip" framing is now the
+      stronger hypothesis than "code-path-specific bug" — see Progress Log below. `run_rollup`'s per-service loop
+      unconditionally `logger.error()`s every failure mode it can observe, including the "child exited without reporting
+      (likely OOM/crashed)" fallback — yet zero Cloud Logging entries mention ml-service at all across ~24 cycles / 30h,
+      unlike every OTHER currently-failing service in the list, which logs reliably every cycle. Worth checking FIRST:
+      (1) does the deployed Cloud Run revision's image actually match current `_DEFAULT_SERVICES` (a stale/older
+      deployed image predating the 2026-05-21 ml-training/ml-inference→ml-service consolidation comment would silently
+      never attempt it), (2) does ml-service's specific compute shape trigger a native/C-level crash that takes down the
+      PARENT gen1 process (not just the isolated child) — the `_rollup.py` docstring already documents this exact crash
+      class for the gen2 Job; confirm it's truly gen1-safe for ml-service specifically, not just generically. A direct
+      single-service test (`POST /api/data-status/rollup-run?services=ml-service`, authenticated) would settle (1) vs
+      (2) vs a genuine fast-fail directly, faster than more passive cycle-watching.
+- [ ] [CODE] P2. NEW regression found while diagnosing the above (not present in the 2026-07-26 baseline table, where
+      instruments-service + market-data-processing-service both succeeded same-cycle): `instruments-service`'s manifest
+      rollup step now fails every cycle with
+      `Unable to allocate 2.55 GiB for an array with shape (29, ~11.8M) and data     type object` (its coverage step
+      still succeeds — a genuine per-service partial failure, correctly isolated, not silent);
+      `market-data-processing-service`'s manifest AND coverage BOTH now hit the 420s child-process timeout every cycle
+      (previously only `market-tick-data-service` was the known/accepted MTDS gap — MDPS timing out is new). Both read
+      as data-volume growth outpacing the `_CHILD_RLIMIT_AS_BYTES`/`_CHILD_JOIN_TIMEOUT_S` ceilings set in
+      `data_status_rollup_worker.py` (same mechanism/precedent as the MTDS gap, just now also hitting MDPS + a NEW
+      memory ceiling on instruments-service). Repo: deployment-api. Done when: either the per-service ceilings are
+      raised/the compute is optimized to fit within them again, or (mirroring the MTDS precedent) the doc explicitly
+      records these two as now-structural gaps next to the MTDS comment, with a regression test guarding the
+      honest-failure (not silent-placeholder) path for both.
+- [ ] [INFRA] P3. The `data-status-rollup-worker` `GcsEventSink` (the `log_event(SERVICE_PROCESSED/SERVICE_FAILED, ...)`
+      calls in `run_rollup`) has not written a new dated prefix under
+      `gs://central-element-323112-events/events/data-status-rollup-worker/` since `2026-06-17` — 6+ weeks stale — even
+      though the worker is demonstrably still running every ~20 min today (confirmed via Cloud Logging). The per-service
+      SUCCESS signal for this worker has therefore been invisible to anything reading the events bucket (not Cloud
+      Logging) since 2026-06-17; only failures surface at all right now, via the separate `logger.error()` calls. Repo:
+      deployment-api. Done when: either the event-sink write path is fixed and confirmed producing a fresh dated prefix
+      on a live cycle, or (if intentionally retired in favor of Cloud Logging alone) that's documented explicitly rather
+      than left silently dead.
 
 ## Progress Log
 
 - **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).
+- **data_engineering (slot-15) 2026-08-02T19:22Z**: **CONFIRMED REPRODUCIBLE — not transient.**
+  `gs://central-element-323112-data-status-rollups/ml-service/full.json.gz` is still fully absent (only
+  `coverage.json.gz` exists, and it is now itself stale — `Update Time: 2026-08-01T18:13:16Z`, ~25h old at check time).
+  Rather than passively watching 2-3 more live cycles, cross-checked Cloud Logging for
+  `resource.labels.service_name="uts-prod-data-status-rollup-svc"` over the last 30h (`--freshness=30h`,
+  ~2026-08-01T13:20Z → 2026-08-02T19:14Z) — a much stronger sample than the ask: the `*/20 * * * *` cron
+  (`uts-prod-data-status-rollup-cron`, confirmed `state: ENABLED`, `lastAttemptTime: 2026-08-02T19:00:00Z`, no
+  services-list override in its HTTP target — always dispatches the full `DEFAULT_SERVICES`) fired ~24 times in that
+  window (`INFO "data-status rollup (LIVE): 14 service(s)"` every ~20 min, no drift/backlog). **Zero** log entries in
+  that entire 30h window mention `ml-service` in any form — no
+  `SERVICE_FAILED`/`manifest rollup failed`/`coverage rollup failed` line, nothing. By contrast every OTHER
+  currently-struggling service in `_DEFAULT_SERVICES` logs reliably, every single cycle: `instruments-service`
+  (`Unable to allocate 2.55 GiB for an array...` — NEW, see the fresh todo above), `market-tick-data-service` +
+  `market-data-processing-service` (`timed out after 420s`, both — MDPS timing out is also NEW vs the 2026-07-26
+  baseline), `features-delta-one-service` / `features-volatility-service`
+  (`'<' not supported between instances of 'str' and 'NoneType'`). `run_rollup`'s per-service loop logs via
+  `logger.error()` on every failure mode it can observe — including the "child exited without reporting a result (likely
+  OOM-killed)" fallback for a crashed/timed-out isolated child — so this isn't merely "no error was caught", it's "the
+  per-service loop appears to never even reach, or never returns any observable signal for, ml-service specifically."
+  Also checked the `GcsEventSink` success-event channel as a second source (`log_event(SERVICE_PROCESSED, ...)` on
+  success) — separately found DEAD since 2026-06-17 (its own new todo above), so it can't be used to positively confirm
+  a silent ml-service success either; between the two channels there is no evidence anywhere of ml-service being
+  processed at all, successfully or not. Verdict: **confirmed reproducible across ~24 cycles / 30h** (well past the
+  requested 2-3), and the shape of the evidence (total silence, not a caught-and-logged error) shifts todo 2's most
+  promising lead from "ml-service's compute has a code-path bug" toward "ml-service is either never reached in the
+  per-cycle loop, or crashes in a way that takes the parent down before it can log" — both hypotheses, and the fastest
+  way to distinguish them, are recorded in the updated todo 2 above.
