@@ -28,8 +28,8 @@ repos:
     dtz: 4
     tid251: 1
   deployment-api:
-    dtz: 11
-    tid251: 20
+    dtz: 10
+    tid251: 19
   deployment-service:
     dtz: 7
     tid251: 13

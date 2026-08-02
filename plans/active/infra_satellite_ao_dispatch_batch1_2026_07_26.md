@@ -449,20 +449,21 @@ orphaned?" resolves to "everything," because nothing in the covering set does an
       note (no key or lookup), every consumer resolves the new key, and UAC + any consumer repo touched are QG-green.
       Repo: unified-api-contracts. Source: `issues/issue_docs_remediation_sweep_2026_06_02.md`.
 
-- [ ] [INFRA] P2. **Drive deployment-api's codex violations from 5 to 0.** The four remaining classes, all
-      pre-existing/foreign (surfaced when the version-alignment lag unblocked its QG): (1) **imports-inside-functions**
-      (`firebase_auth.py`, `health_routes.py`, `workers/deployment_processor.py` — some are deliberate
-      lazy/circular-avoidance; triage each and either hoist it or add a per-line `# noqa: imports-inside-functions` with
-      a stated reason); (2) **direct cloud-SDK imports** (`from google.cloud import …` in `firebase_auth.py` /
-      `health_routes.py` → route through `unified_trading_library.cloud_interface`'s
-      `get_storage_client()`/`get_secret_client()`); (3) **files > 900 lines**; (4) **function/method size** (~24 over
-      the limit, e.g. `deployment_manager.run_deployment_background` 155L,
-      `services/deploy_missing_launch.launch_deploy_missing_vm` 236L). Ratchet `CODEX_MAX_VIOLATIONS` DOWN in the same
-      commit as each class clears — never leave a fixed violation with a stale higher ceiling, and never bump it up.
-      **Scope guard**: do NOT touch `deployment_api/scripts/data_status_rollup_worker.py` or `DataStatusTab` — a
-      cross-cutting batch claims both. **Done when**: `deployment-api`'s `CODEX_MAX_VIOLATIONS` reads 0,
-      `QG_SLICE=lint-codex bash scripts/quality-gates.sh --no-fix` is green at that ceiling, and the full QG passes.
-      Repo: deployment-api. Source: `codex_violations_ratchet_to_five_2026_06_10.md`.
+- [x] ✅ [INFRA] P2. **Drive deployment-api's codex violations from 5 to 0.** — deployment-api@4c4b007. Premise was
+      stale at dispatch: file-size/function-size were already cleared (moved to a separate zero-tolerance gate, already
+      passing); honest `QG_SLICE=lint-codex` measurement at pickup was `V=3` across 3 classes (imports-inside-functions,
+      direct-cloud-SDK, broad-except), not 5 across 4. All 3 cleared to `V=0`: imports-inside-functions (~104 sites —
+      genuine lazy-import sites got a per-line `# noqa: imports-inside-functions` with a stated reason; trivial stdlib
+      imports hoisted to module top-level); direct-cloud-SDK (2 comment-only false positives reworded off the literal
+      grep match; genuine sites got the sanctioned `# noqa: cloud-sdk-direct` marker, ordered so ruff's own TID251 rule
+      still parses it — a self-caused regression from that reordering was caught and fixed in the same pass, plus a
+      missing RUF100 per-file-ignore); broad-except (4 sites with a bounded stdlib exception surface narrowed in place —
+      one narrowing missed a `TypeError` from a FastAPI `Query` object and was caught + fixed by the full test run; 7
+      files wrapping a genuinely unbounded vendor-SDK/pandas-manifest exception surface documented + excluded via a new
+      `BE_EXCLUDE_GLOBS`, per `QUALITY_GATE_BYPASS_AUDIT.md` § "Broad except Exception exceptions").
+      `CODEX_MAX_VIOLATIONS` ratcheted 3→0. Full `quality-gates.sh` green (5077 passed). Also ratcheted the DTZ/TID251
+      `ruff_rule_ratchet_baseline.yaml` (dtz 11→10, tid251 20→19) — unified-trading-pm@<see PM flip commit>. Repo:
+      deployment-api. Source: `codex_violations_ratchet_to_five_2026_06_10.md`.
 
 - [ ] [SCRIPT] P2. **Measure fleet-wide lifecycle-marker coverage so the operator can clear the enforcement gate.** The
       source doc's `[SCRIPT] P1` "build + wire `check_script_lifecycle_markers.py`" item is explicitly
