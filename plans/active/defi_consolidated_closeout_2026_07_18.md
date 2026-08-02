@@ -588,10 +588,10 @@ file, not here.
       `adapters/defi_adapter.py`, per `/codex/06-coding-standards/adapter-dead-code-and-fallback-ban.md`. Definition of
       done: a written finding per module (kept/fixed/removed + reason). (repos: instruments-service,
       market-tick-data-service, execution-service) — DONE 2026-08-01, closed by citation via
-      `defi_satellite_ao_dispatch_batch7_2026_08_01.md` todo 1: the full per-module audit already existed at
-      `issues/defi_adapter_dead_code_audit_2026_07_24.md`, incrementally re-verified (§ 7 addendum) for the files added
-      since.
-- [ ] [CONFIG] P2. **Retagged 2026-07-29 (corpus hygiene pass): reframed as a code-only extension task, not
+      `plans/archive/2026_08/defi_satellite_ao_dispatch_batch7_2026_08_01.md` todo 1: the full per-module audit already
+      existed at `issues/defi_adapter_dead_code_audit_2026_07_24.md`, incrementally re-verified (§ 7 addendum) for the
+      files added since.
+- [x] ✅ [CONFIG] P2. **Retagged 2026-07-29 (corpus hygiene pass): reframed as a code-only extension task, not
       credential-blocked — verified `curve_adapter.py` already has a fully-wired `_query_curve_pool_at_block`
       (~line 617) / `_ensure_alchemy_client` (~line 217-228) RPC-fallback path using the same already-provisioned
       `alchemy-api-key`; UAC (`_defi.py` `SUBGRAPH_IDS["curve"]`) already carries live Curve subgraph IDs for
@@ -607,11 +607,17 @@ file, not here.
       (The Graph gateway API key) or an RPC key (`_query_curve_pool_at_block`, Alchemy) for historical block-level
       state~~ — the RPC-fallback path is already built and keyed; extend it to ARB/POLY (code-only), or accept
       honest-absence for Curve pools on those 2 chains until wired. (repo: market-tick-data-service)
-      **na-eligibility-audit 2026-08-01: extracted to `defi_satellite_ao_dispatch_batch7_2026_08_01.md` (conflict-check
-      cleared) — track completion there, close this checkbox by citation once its batch-7 todo lands.**
-- [ ] [DATA] P3. **F6 (rehomed from `/plans/archive/issues/vm_backfill_data_correctness_findings_2026_06_29.md`, same
-      correction) — DeFi lending-indices: heavy instruments-store fallback, ~39% zero-row writes.**
-      `mtds-lending-indices-20260628` VM: instruments-store-defi parquet missing for
+      **na-eligibility-audit 2026-08-01: extracted to
+      `plans/archive/2026_08/defi_satellite_ao_dispatch_batch7_2026_08_01.md` (conflict-check cleared) — track
+      completion there, close this checkbox by citation once its batch-7 todo lands.** **DONE 2026-08-01 (slot-8),
+      closed by citation — `plans/archive/2026_08/defi_satellite_ao_dispatch_batch7_2026_08_01.md`'s batch-7 todo 2**:
+      `curve_adapter.py`'s `_ensure_web3` now resolves the RPC URL per-chain via
+      `AlchemyBaseClient(chain=self.chain, project_id=self.project_id).get_rpc_url()` instead of hardcoding
+      `eth-mainnet.g.alchemy.com`, wiring ARB/POLY through UAC `CHAIN_CONFIGS`/`CHAIN_TO_ALCHEMY_NETWORK` as this todo
+      specified. 3 regression tests added (`TestCurveAdapter::test_ensure_web3_resolves_per_chain_rpc_url_for_arbitrum`,
+      `..._for_polygon`, `test_ensure_web3_unsupported_chain_leaves_web3_none`); full `quality-gates.sh` green. Shipped
+      `market-tick-data-service@1f58a127`. correction) — DeFi lending-indices: heavy instruments-store fallback, ~39%
+      zero-row writes.** `mtds-lending-indices-20260628` VM: instruments-store-defi parquet missing for
       `{aave_v3,compound_v3}`/`<chain>`/`<date>` combos → falls back to subgraph discovery, yields little (aave
       OPTIMISM/LINEA, compound mostly empty). Confirm whether this is an instruments-service backfill gap (if so,
       backfill it) or legit venue-not-deployed-in-period absence — not a quick MTDS code fix either way. (repos:
@@ -675,13 +681,14 @@ file, not here.
       never retracts a row whose source object was renamed away (skipped by the R3 defect-A `_`-prefix guard). The 10
       `liquidations` rows (was 12; 2 cleared on their own) are the SAME class, NOT a separately-fixable "rerun the
       single-day rebuild" case as previously believed — direct GCS check
-      (`defi_satellite_ao_dispatch_batch7_2026_08_01.md`, slot-11, 2026-08-01) confirms all 10 source markers are
-      ALREADY retired to `_migrated_*` with no per-instrument twins (genuine 0-row empty markers), so a rebuild pass can
-      never rediscover them. **Both sub-populations now require the `:401` P0 phantom-row purge — this verification is
-      that todo's own "sequence AFTER the glued-id manifest rebuild" precondition, now satisfied, so `:401` is
-      unblocked.** Literal 0 not reached; `delete_migrated_defi_markers --apply` stays gated/blocked until the P0 purge
-      lands and a fresh verify reports 0. Closed by citation — `defi_satellite_ao_dispatch_batch7_2026_08_01.md`'s
-      batch-7 todo 3 carries the full evidence.
+      (`plans/archive/2026_08/defi_satellite_ao_dispatch_batch7_2026_08_01.md`, slot-11, 2026-08-01) confirms all 10
+      source markers are ALREADY retired to `_migrated_*` with no per-instrument twins (genuine 0-row empty markers), so
+      a rebuild pass can never rediscover them. **Both sub-populations now require the `:401` P0 phantom-row purge —
+      this verification is that todo's own "sequence AFTER the glued-id manifest rebuild" precondition, now satisfied,
+      so `:401` is unblocked.** Literal 0 not reached; `delete_migrated_defi_markers --apply` stays gated/blocked until
+      the P0 purge lands and a fresh verify reports 0. Closed by citation —
+      `plans/archive/2026_08/defi_satellite_ao_dispatch_batch7_2026_08_01.md`'s batch-7 todo 3 carries the full
+      evidence.
 - [x] ⛔ [DATA] P1. **WON'T-DO (session-3, 2026-07-26, operator present) — closed, not deferred.** Was: the ~16.7M-row
       LENDING→A_TOKEN/DEBT_TOKEN migration, gated on lending-writer-retire todos 7/8/10/11.
       `defi_lending_writer_retire_prerequisite_2026_07_20.md`'s own investigation found the flip needs 4 tightly-coupled
@@ -764,11 +771,11 @@ file, not here.
 ## Progress Log — condensed (2026-07-24, replaces the pre-split ~2145-line tick-by-tick log)
 
 - **na-eligibility-audit 2026-08-01**: MIXED — re-read end to end (18 open items). 4 items extracted to
-  `defi_satellite_ao_dispatch_batch7_2026_08_01.md` after conflict-check clear (adapter dead-code audit, Alchemy
-  ARB/POLY RPC wiring, glued-id ORCA re-verify, — plus a 4th from a sibling doc). 1 item (`VM_TASK` `cd` bug) found
-  already in-progress on `defi_consolidated_native_ao_extract_2026_07_25.md` — not extracted, cited in place. Doc stays
-  `assigned_vm: NA` overall — the remaining ~13 items are genuine `gate_on_depends`-cited (Track1 still 13-open),
-  operator/judgment-gated, or same-doc-prose-gated work. No stale-done items found this pass.
+  `plans/archive/2026_08/defi_satellite_ao_dispatch_batch7_2026_08_01.md` after conflict-check clear (adapter dead-code
+  audit, Alchemy ARB/POLY RPC wiring, glued-id ORCA re-verify, — plus a 4th from a sibling doc). 1 item (`VM_TASK` `cd`
+  bug) found already in-progress on `defi_consolidated_native_ao_extract_2026_07_25.md` — not extracted, cited in place.
+  Doc stays `assigned_vm: NA` overall — the remaining ~13 items are genuine `gate_on_depends`-cited (Track1 still
+  13-open), operator/judgment-gated, or same-doc-prose-gated work. No stale-done items found this pass.
 - **2026-07-24 (session 3, `/autonomous`, orchestration pass)** — triaged ~50 open todos across 3 docs, flipped 4
   stale-done checkboxes, fanned out 9 parallel background agents; found the 15.87M-row defi orphan-sweep completed
   (largest of any AG, likely-test-artifact-leak caveat); session interrupted mid-flight by an infra migration. Full

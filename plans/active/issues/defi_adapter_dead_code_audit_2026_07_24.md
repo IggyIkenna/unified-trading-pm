@@ -416,7 +416,7 @@ features-service's `aave_risk_calculator.py` / `lending_features.py` or strategy
       surfaced a broader, systemic version of the same gap affecting ~12 other adapters, filed separately:
       `issues/defi_base_adapter_success_key_ignored_by_failure_accounting_2026_07_27.md`.
 
-## 7. Addendum 2026-08-01 (slot-6, `defi_satellite_ao_dispatch_batch7_2026_08_01.md` todo 1) — incremental re-check
+## 7. Addendum 2026-08-01 (slot-6, `plans/archive/2026_08/defi_satellite_ao_dispatch_batch7_2026_08_01.md` todo 1) — incremental re-check
 
 Re-dispatch of the SAME source todo (`defi_consolidated_closeout_2026_07_18.md:548`) landed via the scheduled
 `na-eligibility-audit` (the closeout plan's checkbox was never flipped after § 1-6 above shipped, since several findings

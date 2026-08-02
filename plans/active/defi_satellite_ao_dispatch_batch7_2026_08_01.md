@@ -15,7 +15,7 @@ summary: >-
   genuine judgment/operator-gated work not eligible for a whole-doc flip) — shape (a) fresh-carve-out per
   `/codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md` § 1, mirroring the existing batch1-6
   precedent for exactly this MIXED-verdict-source-doc situation.
-status: active
+status: complete # (was: active) 2026-08-02 archival sweep: all 4 todos [x], no locked_by
 nature: process
 asset_group: [defi]
 stage: [data]
@@ -63,6 +63,12 @@ drift_direction: advance-code
 ---
 
 # DeFi satellite AO batch 7 — 2026-08-01
+
+> **🟢 ARCHIVED 2026-08-02.** All 4 todos done; finalize twin
+> (`plans/archive/2026_08/ defi_satellite_ao_dispatch_batch7_2026_08_01_finalize.md`) reconciled both source docs,
+> re-checked + resolved both Deferred conflict-found items, and archived this doc alongside itself. Superseded by
+> nothing — its 4 extracted items are now permanent record in their respective source docs
+> (`defi_consolidated_closeout_2026_07_18.md`, `issues/mtds_gas_fees_migration_script_unbounded_memory_2026_07_30.md`).
 
 **status: active — conflict-cleared, dispatching.** Drafted autonomously by the scheduled `na_eligibility_auditor`
 running `/na-eligibility-audit defi`; every todo below cleared the shared conflict-check
@@ -167,7 +173,10 @@ running `/na-eligibility-audit defi`; every todo below cleared the shared confli
   (2026-07-26/27, slot-4): the fix is code-complete (`scripts/vm/setup-data-pipeline-vm.sh` + a new
   `TestCanonicalMigrationServiceKeyedWorkspaceDir` regression test) but blocked on shipping by a shared-host `pytest`
   I/O stall, not abandoned. Verbatim/near-verbatim duplicate claim on an active `assigned_vm: planning` doc in the same
-  `parent_epic` — per the conflict-check protocol this stays with its current owner, not re-drafted here.
+  `parent_epic` — per the conflict-check protocol this stays with its current owner, not re-drafted here. **Re-checked
+  2026-08-02 (`…_finalize.md` todo 2, slot-13): SHIPPED.** Both sub-steps of that native-extract todo are now
+  `[x] ✅ DONE 2026-07-28 (slot-13, infra)` — the `cd` bug fix landed at `deployment-service@0ed2ca6` and the gated
+  `--apply` sub-step completed; this Deferred item no longer blocks on anything.
 - **`defi_migration_audit_log_2026_07_24.md:567`** ("LOCAL QG HARNESS collects the WRONG test suite") — already
   evaluated by `defi_satellite_ao_dispatch_batch6_2026_07_30.md`'s own Operator-gated/Deferred section:
   "bounded-sounding but under-evidenced (zero coverage found anywhere) — needs a scoping read before it's draftable." An

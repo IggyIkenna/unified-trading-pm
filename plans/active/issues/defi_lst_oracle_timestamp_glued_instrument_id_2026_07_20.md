@@ -379,8 +379,8 @@ not a new whole-corpus walk) once this fix ships, to reclassify them via the now
       SAME phantom-row class as the 9 ORCA `dex_pool_state` rows (append/upsert-only manifest, source object renamed
       away, nothing left to re-scan) — both now require the closeout plan's
       `defi_consolidated_closeout_2026_07_18.md:401` P0 phantom-row purge (~1.79M dup + ~219.5K phantom rows, VM-scale),
-      not a standalone fix here. Full evidence: `defi_satellite_ao_dispatch_batch7_2026_08_01.md`'s batch-7 todo 3
-      (2026-08-01).
+      not a standalone fix here. Full evidence:
+      `plans/archive/2026_08/defi_satellite_ao_dispatch_batch7_2026_08_01.md`'s batch-7 todo 3 (2026-08-01).
 
 ## Progress Log
 
