@@ -266,10 +266,12 @@ in a registry/exception addition without addressing the discrepancy.
       REQUIRED** — without it, adding the 7 keys permanently drags `completeness_pct` down by ~20.6% (relative), zero
       recoverable via any amount of MTDS backfill; with the guard, the addition is provably (not just expected) inert —
       zero denominator delta.
-- [ ] [CODE] P2. (Gated on the verify above.) Execute Path A: add the defi-scoped exclusion guard to
+- [x] [CODE] P2. (Gated on the verify above.) Execute Path A: add the defi-scoped exclusion guard to
       `enumerate_expected_universe.py`, THEN add the 7 `swaps_ohlcv_*` keys to `DATA_TYPES_BY_ASSET_GROUP['defi']`,
       measuring + citing the before/after `completeness_pct` delta (expected: zero, if the guard is correctly scoped).
-      Repos: instruments-service, unified-api-contracts.
+      Repos: instruments-service, unified-api-contracts. — **EXECUTED 2026-08-02 (slot-6)**, see "## Progress Log"
+      below. Delta measured: **zero** (byte-identical row set vs. pre-addition baseline). Evidence:
+      `instruments-service@942e0808`, `unified-api-contracts@28c7102d`.
 - [ ] [CODE] P3. Alternatively/interim, execute Path B (accepted-exception stopgap) if Path A is not prioritized soon —
       lower engineering cost, zero denominator risk, but flag the semantic tradeoff (these are not a "permanent,
       never-fixed" case the way tradfi's bundle-grain values are) to whoever approves it.
@@ -348,7 +350,60 @@ is fully reproducible from this description alone (live `DATA_TYPES_BY_ASSET_GRO
 
 - **context-scout 2026-08-01**: populated context_scope (5 entries).
 
+### 2026-08-02 (slot-6) — Path A executed: guard + registry addition, delta measured zero
+
+Executed the gated `[CODE] P2` todo (Path A). Two commits:
+
+1. **`instruments-service`** — `scripts/enumerate_expected_universe.py`: added
+   `_DEFI_MTDS_TICK_MANIFEST_EXCLUDED_DATA_TYPES` (frozenset of the 7 `swaps_ohlcv_*` keys) +
+   `_defi_mtds_tick_manifest_data_types()`, mirroring `_TRADFI_MTDS_TICK_MANIFEST_EXCLUDED_DATA_TYPES` /
+   `_tradfi_mtds_tick_manifest_data_types()` exactly. Wired into BOTH `enumerate_v2` call sites (the bounded-window
+   caller and the full-history caller) via a new `elif asset_group == "defi":` branch, landed BEFORE the registry
+   addition per Path A's own ordering requirement.
+2. **`unified-api-contracts`** — `unified_api_contracts/registry/market_data_categories.py`: added
+   `swaps_ohlcv_{15s,1m,5m,15m,1h,4h,1d}` to `DATA_TYPES_BY_ASSET_GROUP["defi"]` (27 → 34 entries).
+
+**Measurement (real code path, not a re-implementation).** `uv sync` in the `instruments-service` slot clone picks up
+BOTH repos as editable installs (`../unified-api-contracts`, `../unified-trading-library`), so this venv resolves the
+actual shipped changes. Unlike the 2026-07-28 measurement (which had to re-implement `enumerate_v2`'s contract because
+of a then-blocking `fastapi` `ImportError`), this venv imports `enumerate_expected_universe.py` directly — that import
+issue does not reproduce here, so the measurement calls the REAL shipped `enumerate_v2()` end-to-end, not a
+reproduction:
+
+- Bounded synthetic catalog (12 `dex_pool_swaps` defi instruments, all alive for the whole window) × a 30-day date axis,
+  empty `present_set` (mirrors reality — the MTDS-tick manifest present_set never has a row for these MDPS-produced
+  keys).
+- `resolved_with_guard = _defi_mtds_tick_manifest_data_types()` (the REAL function, called directly) → **27**
+  data_types, `enumerate_v2(..., data_types=resolved_with_guard)` → **9,720** rows.
+- `baseline_27` = the live `DATA_TYPES_BY_ASSET_GROUP["defi"]` (34 entries) minus the 7 excluded keys, i.e. the
+  pre-addition list reconstructed → `enumerate_v2(..., data_types=baseline_27)` → **9,720** rows.
+- **Row-set byte-identity, not just count**:
+  `{(instrument_id, date, data_type, capture_status, reason) for r in rows_with_guard} == {... for r in rows_baseline}`
+  → **True**, symmetric difference = **0**. The guard is provably inert against the shipped code, matching the
+  2026-07-28 prediction exactly.
+- `resolved_without_guard` (the live 34-entry list passed with NO exclusion) → `enumerate_v2(...)` → **12,240** rows —
+  **2,520 more** than the guarded/baseline count (= 12 × 30 × 7, sanity-checked), all with `data_type` in the 7
+  `swaps_ohlcv_*` keys and `capture_status="expected_unattempted"` — i.e. exactly the permanently-unsatisfiable-by-MTDS-
+  backfill cells the guard exists to prevent. Confirms the 2026-07-28 simulation's ~20.6% relative `completeness_pct`
+  drop figure would have materialized without the guard.
+
+**Answer to the todo's gating question**: **delta = zero**, confirmed via byte-identical row sets from the actual
+shipped `enumerate_v2()` call (stronger evidence than the 2026-07-28 bounded re-implementation, which could only prove
+`resolved_data_types` set-equality, not full row-level identity).
+
+Path B (the accepted-exception stopgap, `[CODE] P3` below) is now superseded/moot — Path A shipped directly. Left its
+checkbox as-is (not part of this task's dispatched scope) rather than unilaterally closing it.
+
+**QG regression caught + fixed in the same session**: the first `unified-api-contracts` QG run failed 7 tests
+(`test_defi_data_type_has_explicit_candle_classification[swaps_ohlcv_*]`) — every defi `data_type` requires an explicit
+`NEEDS_CANDLE_PROCESSING` entry (the unset default is `True`, which would route these already-final MDPS candle outputs
+to a non-existent candle adapter). Fixed by declaring all 7 keys `False` (mirrors `dex_pool_state`'s existing
+pass-through `False`) — second QG run green (12,367 passed, 0 failed).
+
+Evidence: `instruments-service@942e0808`, `unified-api-contracts@28c7102d` (2 commits: `d140dd37` registry addition +
+`28c7102d` NEEDS_CANDLE_PROCESSING fix). Both verified on `origin/live-defi-rollout` via `git merge-base --is-ancestor`.
+
 ## Not fixed here, why
 
-This is a stop-and-document outcome per this task's explicit AUTONOMOUS_AGENT_RULES precedent (mirroring the sibling
-`perp_daily_ctx` todo), not a completed registry addition. See "Verdict" above.
+Historical — see "Verdict" above for the original 2026-07-22 stop-and-document session. Path A was executed 2026-08-02
+(slot-6, see Progress Log above) once the gating VERIFY (2026-07-28) resolved with a decisive measured verdict.
