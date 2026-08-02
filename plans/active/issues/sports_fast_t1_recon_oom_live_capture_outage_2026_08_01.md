@@ -240,12 +240,57 @@ data-pipeline-correctness-hard-rule).
       league under `market-data-tick-sports-prd-central-element-323112`, and that the execution completes WITHOUT an OOM
       (no "configured memory limit was reached" log entry for that execution). Done when: at least one live post-deploy
       execution is confirmed on all three counts. (repo: deployment-service, market-tick-data-service)
+
+      **2026-08-02T16:07Z (slot 10) — 2 of 3 criteria now confirmed live; 3rd criterion FAILS, new blocker found. NOT
+          flipping done.** The deploy-gap slot 9 found (promote stuck behind the runner-capacity crisis) has since cleared
+          for this specific fix: `deployment-service@4e0e03d`'s content (`scope_to_leagues` call in
+          `sports_trigger_scheduler.py::fire_trigger`) is confirmed present on `origin/main` as of promote PR #673
+          (`7fb58f1a`, squash-merged `2026-08-02T14:47:16Z`) — **correcting slot 4's ancestry-based "NOT on main" check**,
+          which was a false negative from squash-merge non-ancestry (exactly the trap `review.md` § "Is commit `<sha>` live"
+          warns about — content-diff, not `git merge-base --is-ancestor`, is the valid check here). Further: the
+          `uts-prod-sports-scheduler` / `uts-prod-market-tick-data-service-fast-t1-recon` Cloud Run Jobs reference their
+          image by the **mutable `:latest` tag**, and Cloud Run *Jobs* (unlike Services) re-resolve that tag fresh per
+          execution — confirmed via `gcloud run jobs executions describe`: the most recent execution's *resolved* image
+          digest (`sha256:6709207951...`) exactly matches the `sports-scheduler` image tagged both `latest` and
+          `7fb58f1ae6f54c67...` (built `2026-08-02T14:51:05Z`, 4 min after the PR #673 merge). **So no manual
+          `gcloud run jobs update` was actually needed for this job** — slot 4's conclusion there doesn't hold for a
+          `:latest`-tag job spec. Criteria (1) and (2) are live-confirmed: `gcloud run jobs executions describe
+          uts-prod-market-tick-data-service-fast-t1-recon-bllc8` (started `16:01:35Z`) shows
+          `args: [..., '--league', 'SLOVAKIA_SUPER_LIGA']` and `condition: Completed True ... in 1m28.22s` with zero
+          `"memory limit"` log hits anywhere in the trailing 2h window. **Criterion (3) FAILS — new, distinct blocker**:
+          every sampled execution for `date=2026-08-02` across a full 24h log window (`Processed date=2026-08-02: 0 venues
+          ok, 0 failed, 0 skipped, 0 total records` — checked 8+ executions, zero exceptions) shows genuinely zero rows
+          captured; direct GCS listing confirms `raw_tick_data/by_date/day=2026-08-02/` has **zero objects at all** (vs.
+          `day=2026-08-01` which has real per-venue data from slot 14's earlier verification). The pre-flight log line
+          itself is suspicious: `Pre-flight: venue=ODDS_API date=2026-08-02 — fully covered, skipping
+          data_types=['odds_horizon_bucket']` implies prior success for that data_type, but GCS shows nothing — a possible
+          stale/false-positive freshness-skip signal. The OTHER attempted data_types report `Odds API batch complete:
+          date=2026-08-02 rows=0 credits_used=0` — **0 credits used** suggests no HTTP call was even attempted, not merely
+          an empty API response. Ruled out as a today-only fixture-availability fluke (checked across many different
+          fixtures/leagues, same pattern every time, not isolated to one league). **This is NOT the OOM bug recurring** (no
+          OOM, no crash-loop signature) — it is a separate, new capture-path defect. Filed as a new todo below; not
+          root-causing inline (would need a code-level read of the `odds_horizon_bucket`/data_type dispatch path in
+          `odds_api_adapter.py`, out of scope for this live-verification pass). **Net**: 2/3 done-when criteria met, 1 new
+          blocker found — NOT flipping this checkbox; the actual restoration of live capture (what my own gated `-003`
+          backfill todo needs) has not happened.
+
+- [ ] [DATA] P0. Root-cause why live SPORTS odds captures for `date=2026-08-02` write ZERO rows despite the `--league`
+      scoping fix being confirmed live (no OOM, correct `--league` flag) — see the finding directly above. Check (a)
+      whether the `Pre-flight: ... fully covered, skipping data_types=['odds_horizon_bucket']` line is a false-positive
+      freshness-skip (no matching GCS/manifest evidence for that claim), and (b) why the other attempted data_types
+      report `rows=0 credits_used=0` (0 API credits implies the call itself never fired, not an empty response) — likely
+      in `odds_api_adapter.py`'s per-league fetch loop or the freshness-check it consults before dispatching a fetch.
+      Done when: the specific code path causing the zero-row/zero-credit result is identified with a file:line citation,
+      distinguishing genuine honest-absence (no odds available yet for these leagues) from a real bug. Repo:
+      market-tick-data-service.
 - [ ] [DATA] P1. Once fixed, backfill/re-fetch the resulting gap (2026-07-27, 2026-07-28, 2026-07-30, 2026-07-31, plus
-      whatever additional days elapse before the fix ships) via the Odds-API historical endpoint, same pattern as the
-      prior month-long-gap backfill in `sports_batch_odds_api_capture_outage_recurrence_check_2026_07_26.md` item 1 --
-      coordinate so this doesn't duplicate that backfill's own in-flight/approved scope if it hasn't run yet. Done when:
-      the manifest (`instruments-store-sports-prd`, manifest-only read, no GCS walk) shows full coverage for the
-      affected date range at the intended granularity. (repo: market-tick-data-service)
+      whatever additional days elapse before the fix ships — **as of 2026-08-02T16:07Z this now also includes 2026-08-02
+      itself, since live capture is still confirmed at zero rows for today despite the OOM fix being live — see the new
+      root-cause todo directly above**) via the Odds-API historical endpoint, same pattern as the prior month-long-gap
+      backfill in `sports_batch_odds_api_capture_outage_recurrence_check_2026_07_26.md` item 1 -- coordinate so this
+      doesn't duplicate that backfill's own in-flight/approved scope if it hasn't run yet. Done when: the manifest
+      (`instruments-store-sports-prd`, manifest-only read, no GCS walk) shows full coverage for the affected date range
+      at the intended granularity. (repo: market-tick-data-service)
 - [ ] [DATA] P2. Check whether PREDICTION and DEFI's fast-t1-recon dispatches are at risk of the same OOM class even
       though 0/846 sampled errors this pass were non-SPORTS -- a scoped blast-radius check (same method as
       `sports_batch_odds_api_capture_outage_recurrence_check_2026_07_26.md`'s DeFi/Prediction check) rather than an
@@ -368,3 +413,22 @@ enough for `deployment-service`'s LDR CI to go green (unblocking the fleet promo
 redeployed (per slot 4's finding, no CD-on-main-push exists for this job). Self-skipping again (`reason_code: GATED`)
 rather than re-checking on a tight loop -- the blocking condition is fleet-wide and external to this todo, not something
 that resolves on a per-dispatch retry cadence.
+
+## 2026-08-02T16:07Z (slot 10, data_engineering) -- dispatched on the `-003` backfill todo, still correctly gated but for a NEW reason
+
+Dispatched `sports_fast_t1_recon_oom_live_capture_outage-003` (the "once fixed, backfill" P1 todo). Its own wording
+gates it behind the fix being live -- checked that precondition directly rather than trusting the last check's verdict,
+since several hours had passed since slot 9's. Found the promote-backlog blocker slot 9 identified **has since cleared**
+for this specific fix (see the detailed live-verify annotation added to the `-008` todo above) --
+`deployment-service@4e0e03d`'s `--league` scoping fix is confirmed genuinely live in production right now (correct
+`--league` flag on real dispatches, zero OOM). **However, a NEW blocker was discovered in the same pass**: live SPORTS
+odds capture for `date=2026-08-02` is still writing zero rows across every sampled execution in a full 24h window, and
+GCS confirms zero objects under `day=2026-08-02` entirely -- a different failure mode from the OOM bug (no crash, clean
+completion, but no data). Added a new `[DATA] P0` root-cause todo above for this. **My own `-003` backfill todo remains
+correctly gated** -- running the historical backfill now, while live capture is still confirmed broken (just via a
+different mechanism), would risk the same "processed with zero real rows" outcome the original OOM bug caused, and the
+backfill's own date range has grown by one more day (`2026-08-02` itself) while this was being investigated.
+Self-skipping (`reason_code: GATED`) rather than running the backfill against an unverified-healthy capture path.
+Notified the operator via a chat-to-main message given this is a live, ongoing data-pipeline-correctness big finding
+(capture still fully down for the current day), separate from and more current than the original OOM incident this whole
+doc tracks.
