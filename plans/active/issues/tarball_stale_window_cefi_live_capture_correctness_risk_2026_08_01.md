@@ -301,27 +301,40 @@ for visibility per the data-pipeline-correctness HARD RULE, not to be conflated 
       (`mtds-live-cefi-consolidated-20260801-151833`, still running pre-fix code) once the new one was confirmed
       healthy. **`ASTER book_snapshot_5`/`liquidations` did NOT recover on the new VM either** — see the new P0 finding
       below; this is now a SEPARATE, deeper problem than "code hadn't been deployed yet." (repo: deployment-service)
-- [ ] [DATA] P0. **NEW 2026-08-02T13:20Z — the `593bd425` chunking fix does NOT resolve ASTER book_snapshot_5 in
-      production, despite passing its own isolated reproduction test; needs re-investigation, not a re-close.** Read the
-      new VM's (`mtds-live-cefi-consolidated-20260802-130832`) per-VM manifest shard directly via
-      `unified_trading_library.cloud_interface.download_from_storage` (bypasses manifest-consolidator lag) ~9 minutes
-      post-boot: `ASTER book_snapshot_5` — 155/155 rows `empty_confirmed`, `instrument_count=0`, spanning
-      `13:12:01Z`→`13:20:23Z` (7+ flush windows, zero recovery trend). `ASTER liquidations` — ZERO rows at all (not even
-      `empty_confirmed`) after the same 9 minutes, vs. 11 OTHER shards on the SAME VM showing real, healthy
-      non-zero-instrument captures in the same window (2188 rows) — this is ASTER-specific, not a VM-wide problem.
-      Confirmed the fix code IS actually deployed and running (SSH'd in, `grep`'d
-      `/home/ikennaigboaka/workspace/mtds/market_tick_data_service/live/connectors/aster_book_liq_ws.py` on the live VM:
-      `_ASTER_MAX_STREAMS_PER_SUBSCRIBE = 100` and the chunked `_open_and_subscribe` are present — NOT a stale-deploy
-      repeat of this doc's original bug). The shard's own log (`live-aster-book-snapshot-5.log`) shows NO
-      errors/exceptions/disconnects at all — just periodic `RESOURCE_SAMPLE`/`ManifestWriter` lines — meaning either the
-      WS truly never received data post-subscribe (a DIFFERENT silent-failure mode than the diagnosed one) or the
-      isolated reproduction test that "confirmed" the fix (164-stream boundary + ack round-trip) didn't actually
-      validate end-to-end DATA receipt, only the SUBSCRIBE ack. Needs: a live wire capture of the ACTUAL production
-      subscribe frames + any post-subscribe traffic (not a synthetic reproduction), and confirmation of whether
-      `liquidations` (ZERO rows, not just empty — a different symptom shape) shares a root cause with `book_snapshot_5`
-      or is a second, independent break. Escalating per data-pipeline-correctness HARD RULE (credible risk, manifest-
-      confirmed, previously-reported-fixed) — do not silently re-close without a genuine end-to-end verification. (repo:
-      market-tick-data-service)
+- [x] ✅ [DATA] P0. **ROOT-CAUSED + FIXED 2026-08-02 — a SEPARATE, deeper gateway limit explains why the `593bd425`
+      chunking fix alone did not resolve production.** Per this todo's own request, captured the ACTUAL production
+      subscribe behavior via a live wire probe against the real `wss://fstream.asterdex.com/stream` gateway (not a
+      synthetic reproduction): a single ≤200-stream subscribe on one connection works cleanly (real depth5 data flows
+      immediately); replaying the connector's EXACT chunked-subscribe sequence against ASTER's real 523-symbol
+      production perpetual universe (from `fapi.asterdex.com/fapi/v1/exchangeInfo`) reproduces the incident exactly —
+      4/6 SUBSCRIBE acks, ZERO data frames in 15s. Binary-searched the boundary live: **200 subscribed streams on one
+      connection is fine; 205 gets the connection closed with WS close code `3003` / reason
+      `"subscribed channels     exceeds limit"`** — an independent, PER-CONNECTION cumulative cap (matches Binance's own
+      documented combined-stream "200 streams per connection" limit, which ASTER inherits byte-for-byte as a
+      Binance-API-compatible venue) — separate from the ~4.1KB per-FRAME size cap `593bd425` fixed. The connector's
+      chunked SUBSCRIBE frames all land on the SAME one connection, so the connection hits this 200-stream cap and gets
+      closed by the gateway within moments of the ~5th/~6th frame, before any depth data can flow; the reconnect loop
+      then reopens + immediately resubscribes the full universe again, re-hitting the same cap in a tight loop — a
+      perfectly healthy-looking connection (no parse errors, no read exceptions, matches the reported shard-log symptom
+      exactly) that never survives long enough to receive a single frame. Fix: `AsterBookWSConnector` is now a
+      coordinator that shards the instrument universe across multiple `_AsterBookShard` connections (each ≤190 streams,
+      headroom below the hard 200 cap), fanning their tick streams into one — `_ASTER_MAX_STREAMS_PER_SUBSCRIBE`
+      (per-frame chunking) is UNCHANGED and still needed within each shard. Unit tests updated (17/17 green) + 2 new
+      regression tests (per-shard frame chunking, cross-shard universe partitioning); `quality-gates.sh` full green.
+      **`ASTER liquidations`'** "ZERO rows in the first 9 minutes" observation in this same todo is NOT a new finding —
+      it's consistent with the sibling resolution above (a single all-market stream, genuinely ~1-9 events/day
+      historically; a 9-minute window is far too short to expect one) — no separate liquidations fix needed. (repo:
+      market-tick-data-service) — **Shipped: market-tick-data-service@28049156.**
+- [ ] [INFRA] P0. **Verify the ASTER multi-connection sharding fix (market-tick-data-service@28049156) end-to-end in
+      production** — code alone is not done-when per the data-pipeline-correctness HARD RULE. Mirrors the earlier
+      `[INFRA] P0` relaunch todo above: confirm the running `mtds-live-cefi-consolidated-*` VM's heartbeat is genuinely
+      stale/superseded (per the VM-delete guardrail — heartbeat age, `run.log` tail, manifest shard mtime) before
+      relaunch, `--force` relaunch (never deletes-first) once the new tarball carrying `28049156` is confirmed built,
+      then re-read the per-VM manifest shard directly (bypasses manifest-consolidator lag) for `ASTER book_snapshot_5`
+      over a window long enough to observe multiple flush cycles — confirm real, non-zero-`instrument_count` `captured`
+      rows (not just `empty_confirmed`) across MULTIPLE symbols, not just the one BTC probe this fix's root-cause
+      investigation used. Retire the confirmed-stale old instance once the new one is verified healthy. (repo:
+      deployment-service)
 - [ ] [DATA] P3. File a SEPARATE issue doc for the two pre-existing, unrelated chronic findings surfaced incidentally by
       this check: `OKX-FUTURES trades` intermittent zero-capture (going back to at least `2026-07-20`, live pipeline)
       and `POLYMARKET-PERP perp_funding` permanently `attempted_failed` since at least `2026-07-28` (batch pipeline).
