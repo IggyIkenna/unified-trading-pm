@@ -209,14 +209,24 @@ BEFORE any provider, OmniRoute or otherwise, is even considered. Nothing about t
       "sonnet-tier-equivalent good enough" for AO worker spawns. A quality/business judgment call, not a technical one;
       tagged `[OPERATOR]` per the business-judgment carve-out (mirrors the self-hosted-models todo on the DeepSeek
       plan). Done-when: a named, dated list of acceptable models exists in this plan's Progress Log.
-- [ ] [INFRA] P3. Once the above 3 are resolved, design + implement the actual `agent-orchestrator` integration:
-      register `"omniroute"` as a new `AccountProvider` value (the Literal is already open per
+- [x] [INFRA] P3. ✅ **Partially done — the type-level registration, split from the credential-gated remainder below.**
+      Registered `"omniroute"` as a new `AccountProvider` value (the Literal was already open per
       `deepseek_claude_blended_provider_routing_2026_07_28`'s Phase 2 generalization — `agent-orchestrator@24bd611` — so
-      this is additive, not a re-generalization), an account entry pointing `ANTHROPIC_BASE_URL` at the OmniRoute
-      gateway with whatever the confirmed allowlist mechanism requires, and a real isolated local pilot dispatch proving
-      a sonnet-tier spawn routes through it correctly (same bar as the DeepSeek and generalized-provider work).
-      Done-when: same proof standard as `[INFRA] P2` on the DeepSeek plan — a real, isolated local pilot dispatch, not
-      just unit tests.
+      this was additive, not a re-generalization). Done-when (this slice): the value exists, is documented as a
+      BOUNDED-relay-only registration (guardrail comment updated), and needs zero special-casing in
+      `select_account_for_spawn()` — proven via a dedicated test, not just asserted. — `agent-orchestrator@161e5b1`:
+      Literal broadened + guard comment updated +
+      `test_omniroute_registered_provider_routes_via_the_same_generalized_mechanism` (proves a registered omniroute
+      account routes identically to any other free provider, and the opus/fable hard pin holds regardless of its
+      presence) + `docs/omniroute_cli_setup_guide.md` (registration scaffolding with explicit `TBC` markers on what
+      still needs real dashboard access). Full QG green (2238 passed, up from 2224).
+- [ ] [INFRA] P3 (remaining). Once the 3 research prerequisites above are resolved: a real `accounts.json` entry
+      pointing `ANTHROPIC_BASE_URL` at a real, curated-allowlist-configured OmniRoute gateway reachable from the
+      orchestrator VM (not just the operator's laptop — see the setup guide's "How this differs from DeepSeek" note),
+      and a real isolated local pilot dispatch proving a sonnet-tier spawn routes through it correctly and returns a
+      genuine-reasoning response from a curated-allowlist model. Done-when: same proof standard as `[INFRA] P2` on the
+      DeepSeek plan — a real, isolated local pilot dispatch, not just unit tests. Credential-gated (no OmniRoute account
+      exists), same shape as every other `[INFRA] P2`/`[INFRA] P0` "real pilot dispatch" item across both plans.
 
 This section supersedes the earlier "not pre-approved by a good pilot result" framing below for the SPECIFIC bounded-
 relay design — the previous framing (extending to `AccountProvider` needs a fresh review) is satisfied by this section
@@ -274,3 +284,15 @@ under active consideration, and only once its 3 prerequisite research todos reso
   access, decide the curated model allowlist) or explicitly gated behind one of those three (`[REVIEW]`/`[INFRA]`
   follow-ons). Doc still stays `assigned_vm: NA`/`execution_scope: local-only` by explicit operator choice per its own
   opening section. No re-litigation needed — citation still present verbatim.
+- **2026-08-02 (later) — `[INFRA] P3` split: the type-level `omniroute` registration SHIPPED, the credentialed remainder
+  stays open.** Operator: "ok build it all." Built everything genuinely buildable without a real OmniRoute account —
+  registering `"omniroute"` as an `AccountProvider` value (guardrail comment updated to document this AS the fresh
+  review), a dedicated test proving it needs zero special-casing in `select_account_for_spawn()` (routes identically to
+  any other free provider; opus/fable hard pin unaffected by its presence), and `docs/omniroute_cli_setup_guide.md` —
+  full registration scaffolding for once an operator signs up, with explicit `TBC` markers on the genuinely unconfirmed
+  parts (the allowlist/combo mechanism, auth token shape) rather than guessing at an unverified API surface. Evidence:
+  `agent-orchestrator@161e5b1`, 3 files +136/-2, full QG green (2238 passed, up from 2224, dashboard 168 passed).
+  **What's still blocked, no way around it**: the actual credentialed account, the confirmed allowlist mechanism, and
+  the curated model list all require a human to sign up for a third-party service — "build it all" can't conjure an
+  account into existence. Those 3 `[OPERATOR]`/`[REVIEW]` todos plus the remaining half of `[INFRA] P3` (the real pilot
+  dispatch) are the only work left on this plan.
