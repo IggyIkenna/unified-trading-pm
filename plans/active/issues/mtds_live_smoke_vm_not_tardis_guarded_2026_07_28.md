@@ -88,21 +88,24 @@ pattern) and burn real backfill throughput, exactly during the highest-value win
 > | skill `SKILL.md` § 3 (Tardis cap)              | overapplies doc — **DONE**                                       |
 > | skill `SKILL.md` Phase 2 (live leg)            | **THIS doc** (P3 below) — a different section, no overlap        |
 
-- [ ] [DATA] P1. Source `tardis-concurrency-guard.sh` in `deployment-service/scripts/vm/launch-mtds-live.sh` — call
-      `tardis_concurrency_guard` pre-flight + `tardis_guard_reserve_slot` immediately before VM creation, gated on the
-      shard's venue being Tardis-sourced. **REUSE, do not re-implement (updated 2026-07-31)**: call the now-shipped
-      `tardis_venue_list_needs_guard "<venues>"` helper in `tardis-concurrency-guard.sh` rather than open-coding a venue
-      list. ⚠️ **Note the live exempt list differs from this doc's original text** — it is
-      `TARDIS_CAP_EXEMPT_VENUES=(HYPERLIQUID ASTER EXTENDED-STARKNET COINBASE-CDE)`, i.e. it does **not** contain
-      `LIGHTER-ZKSYNC` or `PACIFICA-SOLANA` (which this doc named) and it **does** contain `COINBASE-CDE`. Do not
-      "correct" the shipped list from this doc's prose — if the divergence is real it is its own finding; confirm
-      against `VENUE_TO_ADAPTER_KEY` first. Verified today: `launch-mtds-live.sh` still sources no guard at all (its
-      only Tardis touchpoints are the `--live-source tardis-machine` flag and a `TARDIS_CONCURRENCY_LEASE` metadata
-      passthrough at ~line 217, neither of which caps concurrency) — **the gap is still live**. (repo:
-      deployment-service)
-- [ ] [DATA] P2. Audit sibling live launchers for the same gap (`launch-mtds-live-cefi-consolidated.sh`,
-      `launch-mtds-live-prediction-consolidated.sh`, any other `launch-*-live*.sh` under `scripts/vm/`) — grep each for
-      the same guard-sourcing markers used above; wire in whichever are missing it. (repo: deployment-service)
+- [x] ✅ **NOT-A-BUG (2026-08-02).** [DATA] P1. ~~Source `tardis-concurrency-guard.sh` in
+      `deployment-service/scripts/vm/launch-mtds-live.sh`~~ — **verified via code trace that the premise does not
+      hold**: MTDS's live-mode capture (both `--live-source native` and `--live-source tardis-machine`) never opens the
+      authenticated `datasets.tardis.dev` connection this guard protects. The `TARDIS_CONCURRENCY_LEASE` passthrough
+      this doc originally cited as evidence of live contention is inert boilerplate for the live path (only consumed by
+      the batch-side `tardis_concurrency_lease.py`, never called from the live WS handler). Full evidence:
+      `/plans/active/issues/mtds_live_mode_never_touches_authenticated_tardis_datasets_endpoint_2026_08_02.md`
+      (unified-trading-pm@c34bfd176). Operator-ruled Option A (BLK-5aa3ce78, 2026-08-02): do not gate a 24/7 live
+      producer behind a hard refusal cap that protects against contention that cannot occur — that would be a new outage
+      class (refusing a legitimate live-producer relaunch during an unrelated concurrent cefi backfill), not a
+      protection. (repo: deployment-service)
+- [x] ✅ **NOT-A-BUG (2026-08-02).** [DATA] P2. ~~Audit sibling live launchers for the same gap~~ — audited all 8
+      `launch-*live*.sh` scripts under `scripts/vm/`; only 2 (`launch-mtds-live.sh`,
+      `launch-mtds-live-cefi-consolidated.sh`) even create cefi WS-capture VMs, and per P1's finding neither actually
+      contends for the authenticated Tardis slot. The other 6 are structurally non-Tardis regardless (prediction/perp
+      venues, or no market-data ingestion at all — see the finding doc's "What I found" for the per-launcher verdict).
+      Same resolution as P1:
+      `/plans/active/issues/mtds_live_mode_never_touches_authenticated_tardis_datasets_endpoint_2026_08_02.md`.
 - [ ] [DATA] P3. Update `data-pipeline-check-mtds` skill's **Phase-2 (live leg)** section to note the guard-gap risk and
       recommend deferring live-leg checks for Tardis-sourced venues while a real Tardis backfill/sharded VM is confirmed
       running, until P1 above ships. (repo: unified-trading-pm, `.claude/skills/data-pipeline-check-mtds/`)
@@ -120,3 +123,11 @@ live-incident report. Not escalating to the operator as a page; tracked here per
   editing the SAME `tardis-concurrency-guard.sh` venue-exemption logic this doc's P3 todo would tighten, and
   `cefi_track2_coverage_backfill_checkpoints_2026_07_25.md` already records the same launcher-gap finding. Filed as
   BLOCKED-OPERATOR-DECISION in this run's Deferred list; `assigned_vm` unchanged.
+- **2026-08-02, slot 15** (`cefi_satellite_ao_dispatch_batch5_2026_08_02.md` todo 1): P1 + P2 closed NOT-A-BUG.
+  Code-trace evidence showed MTDS live-mode capture never opens the authenticated `datasets.tardis.dev` connection —
+  this doc's original contention claim (inferred from `VENUE_TO_ADAPTER_KEY == 'tardis'`) conflated the BATCH-mode
+  adapter classification with the structurally-different LIVE path. Operator-ruled Option A (BLK-5aa3ce78): do not wire
+  the guard into the live launchers. Full evidence + follow-up todo:
+  `/plans/active/issues/mtds_live_mode_never_touches_authenticated_tardis_datasets_endpoint_2026_08_02.md`. **P3 (the
+  skill Phase-2 doc note) is untouched — out of scope for this todo, tracked separately as this batch's todo 2** (its
+  premise may also need revisiting given this finding, but that is not this todo's call to make).

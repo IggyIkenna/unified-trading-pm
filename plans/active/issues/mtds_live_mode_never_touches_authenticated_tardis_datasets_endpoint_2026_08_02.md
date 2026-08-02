@@ -132,6 +132,31 @@ I recommend **A** — the evidence that live mode never touches the guarded reso
 (the connector code, the docstrings, and the guard's own embedded reasoning), and gating a 24/7 live producer on a cap
 that cannot actually be threatened is a correctness/availability regression, not a safety improvement.
 
+## Resolution (2026-08-02, operator ruling on BLK-5aa3ce78)
+
+**Option A adopted.** Do NOT gate live-launcher VM creation behind `tardis_concurrency_guard`/
+`tardis_guard_reserve_slot`. Operator's stated reasoning: a hard-refusal gate (cap=1) on a 24/7 live producer closes no
+real gap (this doc's evidence stands) AND introduces a new failure mode — refusing a legitimate live-producer relaunch
+whenever an unrelated cefi backfill runs concurrently, i.e. live data loss, which is exactly what CLAUDE.md's
+live/forward-VM on-demand rule protects against. Defense-in-depth that can take down a live producer is a new outage
+class, not a protection.
+
+Both `mtds_live_smoke_vm_not_tardis_guarded_2026_07_28.md` (P1 + P2) and
+`cefi_satellite_ao_dispatch_batch5_2026_08_02.md` (todo 1) have been flipped closed, citing this doc, in the same commit
+as this update.
+
+**Follow-up (filed as its own todo below, per operator instruction — NOT folded into the close above):**
+
+- [ ] [OBSERVABILITY] P3. IF a future MTDS live connector change ever routes live capture through the authenticated
+      `datasets.tardis.dev` endpoint (i.e. `TardisAdapter`/`tardis_stream_client.py` becomes reachable from
+      `cli/handlers/websocket_streaming_handler.py` or any `live/connectors/*.py`, not just the current pure
+      symbol-utility imports), add a NON-REFUSING, log-only observability check to the affected live launcher(s)
+      (`deployment-service/scripts/vm/launch-mtds-live.sh` and/or `launch-mtds-live-cefi-consolidated.sh`) that flags
+      co-occurrence with a running Tardis batch/backfill VM — informational only, never a hard
+      `tardis_concurrency_guard`/`tardis_guard_reserve_slot` refusal gate on a live producer. This todo has no current
+      trigger condition (the premise it guards against does not exist today) — it is a standing tripwire for future
+      connector changes, not presently actionable. Repos: deployment-service, market-tick-data-service.
+
 ## Progress Log
 
 - **2026-08-02, slot 15 (infra craft, `cefi_satellite_ao_dispatch_batch5_2026_08_02.md` todo 1):** Filed this finding
@@ -139,3 +164,7 @@ that cannot actually be threatened is a correctness/availability regression, not
   wiring (or not wiring) the guard into `launch-mtds-live.sh` / `launch-mtds-live-cefi-consolidated.sh`. Continuing
   meanwhile with the non-controversial half of the todo: triaging the other 6 sibling launchers (all confirmed
   structurally Tardis-exempt, see "What I found" above).
+- **2026-08-02, slot 15:** Operator answered BLK-5aa3ce78 with Option A. Flipped both the source issue doc's P1/P2 and
+  this batch's todo 1 closed as not-a-bug, citing this doc. Added the follow-up observability todo above per the
+  operator's explicit instruction to file it as its own separate, trackable item rather than folding it into the close.
+  This doc stays `status: open` (one todo remains open, contingent on a future connector change) — no archival due yet.
