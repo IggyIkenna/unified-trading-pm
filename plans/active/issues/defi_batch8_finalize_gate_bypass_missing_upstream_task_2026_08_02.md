@@ -223,3 +223,12 @@ No design call needed — every fact here is independently checkable:
   at a fix ahead of the confirmed root cause, or redoing slot 8's diagnosis. **Next dispatch**: check
   `git log -- agent-orchestrator/server/regen_backlog_from_plan.py` for slot 8's root-cause commit (or this doc's todo 1
   checkbox/Progress Log for the identified cause) before starting todo 2's fix.
+
+- **2026-08-02T16:01Z (slot 10, data_engineering craft) — 4th corroborating recurrence, still unfixed.**
+  `defi_satellite_ao_dispatch_batch8_2026_08_02_finalize-001` re-dispatched to this slot. Re-verified both facts
+  independently unchanged: `plans/active/defi_satellite_ao_dispatch_batch8_2026_08_02.md`'s own todo is still `- [ ]`
+  unchecked (fresh-pulled to latest `live-defi-rollout` before checking). `agent-orchestrator` HEAD is still `2b0b9e9`
+  (`git log -5 -- server/regen_backlog_from_plan.py`) — identical to slot 4's last check, so neither todo 1 (root-cause)
+  nor todo 2 (fix) has landed yet, despite todo 1 having shown `dispatched` (slot 8) as of the last entry. Not
+  re-investigating or duplicating that work. Declining `finalize-001` again per this doc's own Recommended-decision item
+  4; skipping rather than holding the slot.
