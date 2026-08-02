@@ -264,25 +264,28 @@ for visibility per the data-pipeline-correctness HARD RULE, not to be conflated 
       `market-tick-data-service/scripts/check_aster_liquidations_capture_rate_2026_08_02.py` (also removed the prior
       `check_cefi_tarball_stale_window_capture_status_2026_08_01.py`, whose own `Delete-when: after todo #2 is closed`
       condition had already fired). (repo: market-tick-data-service) — **Shipped: market-tick-data-service@b3c1122.**
-- [ ] [DATA] P1. **`DERIBIT derivative_ticker` — NOT reproduced as broken via connector-level testing; likely a
-      DIFFERENT failure mode than ASTER (split per this doc's own note that they may be unrelated), needs an
-      IS-universe-side investigation.** Live-tested `DeribitTickerWSConnector` end-to-end (real
-      `wss://www.deribit.com/ws/api/v2`, real `BTC-PERPETUAL` canonical id from `build_deribit_canonical_id`) and it
-      correctly subscribed, received, parsed, and yielded a `ASTER`-analogous `derivative_ticker` tick with real
-      `funding_rate`/`mark_price` values — the connector's WS subscribe, wire-shape assumptions
-      (`current_funding`/`funding_8h`/`mark_price` keys all confirmed present on the real wire), and parsing path are
-      all correct for at least one real instrument. DERIBIT's MVP shard here is `derivative_ticker` ONLY (no
-      book_snapshot_5/trades on this VM), and DERIBIT's real instrument count (~5 perpetuals + a handful of dated
-      futures per currency) is far below the ~163-stream cliff that broke ASTER, so the same batch-size bug is unlikely
-      to apply. Most likely remaining explanation (NOT verified — next step for whoever picks this up): the canonical
-      instrument_ids IS actually publishes for DERIBIT in the day's `instruments.parquet` don't round-trip cleanly
-      through `deribit_ws.py`'s `build_deribit_canonical_id`/`deribit_name_from_canonical` pair (e.g. dated-future or
-      `@INV` marker construction mismatch), so `record_tick`'s `self._buffers.get(received.instrument_id)` silently
-      drops every real tick even though the WS layer is healthy — the SAME symptom shape as the ASTER bug but a
-      DIFFERENT mechanism (IS/connector id-format drift, not a subscribe-batch limit). Needs a direct read of the
-      production day's DERIBIT `instruments.parquet` `instrument_key` values compared against what
-      `_instrument_to_deribit_name`/`build_deribit_canonical_id` expect — not done in this pass (time-boxed; the
-      confirmed, fixed ASTER book_snapshot_5 bug was this todo's primary deliverable). (repo: market-tick-data-service)
+- [x] ✅ [DATA] P1. **ROOT-CAUSED + FIXED 2026-08-02 — `DERIBIT derivative_ticker` (FUTURE/OPTION, 89% of DERIBIT's
+      universe).** Confirmed the IS-universe-side mechanism this todo predicted, via a direct read of the real
+      production `DERIBIT` `instruments.parquet` (2026-08-02, single bounded object read — not a corpus walk):
+      instruments-service's live-mode DERIBIT universe writer (`ccxt_adapter.py`'s CCXT adapter, routed via
+      `_build_canonical_future_key`/`_build_canonical_option_key` in `tardis/parsing.py`, per the 2026-07-18 operator
+      ruling that "the quote is ALWAYS present — DERIBIT included") publishes FUTURE/OPTION `instrument_key` values WITH
+      an explicit quote segment (e.g. `DERIBIT:FUTURE:BTC-USD@INV-20260814`,
+      `DERIBIT:OPTION:BTC-USD@INV-20260814-50000-C` — confirmed on 2,581 of 2,906 real rows: 73 FUTURE + 2,508 OPTION),
+      but `deribit_ws.py`'s `_build_deribit_canonical_id`/`_instrument_to_deribit_name` pair dropped the quote and
+      required a bare `BASE@MARKER` shape in the reverse regexes — every real FUTURE/OPTION canonical id IS actually
+      publishes therefore failed to match, silently falling through to an invalid passthrough subscribe channel
+      Deribit's WS never recognizes (same "healthy WS, zero data" symptom as the ASTER bug, confirmed different
+      mechanism: id-format drift, not a subscribe-batch limit). PERPETUAL (the other 21 instruments) was already correct
+      and unaffected — this is why the original connector-level probe on `BTC-PERPETUAL` came back clean. Fix: pass
+      `quote_asset` through to `build_instrument_id` in the FUTURE/OPTION branches of `_build_deribit_canonical_id`, and
+      make the reverse regexes in `_instrument_to_deribit_name` accept (and discard) an optional `-QUOTE` segment before
+      the `@LIN`/`@INV` marker (the quote is always reconstructable from the marker alone — `USDC` for `@LIN`, implicit
+      `USD` for `@INV` — so only the match needed fixing, not the wire-name reconstruction). Verified: all 2,581 real
+      production FUTURE/OPTION instruments now round-trip correctly (canonical → Deribit wire name → canonical), 0
+      failures post-fix vs. 100% failure pre-fix; unit tests updated (both the quote-inclusive real shape and the
+      quote-dropped legacy shape, which the optional regex group keeps backward-compatible); `quality-gates.sh` full
+      green. (repo: market-tick-data-service) — **Shipped: market-tick-data-service@2c73a66c.**
 - [x] ✅ [INFRA] P0. **DONE 2026-08-02T13:08Z, deployment-service (VM relaunch only — see the NEW P0 finding below for
       the unresolved recovery).** Confirmed genuine staleness first (heartbeat 31s-fresh = alive-not-stale; the running
       instance's `book_snapshot_5` was still 100% empty at `attempted_at=11:56:01Z`, before `593bd425` landed at
