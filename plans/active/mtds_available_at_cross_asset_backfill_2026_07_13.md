@@ -991,3 +991,8 @@ same slot, session resumed mid-task). Verified PID `153615` directly per #17's c
 `POST /skip-current-task {reason_code: "OTHER"}` for the same reason as #13-#17 — a second concurrent apply would
 duplicate in-flight work and risk a write race on the same per-VM shard prefix. Whoever checks liveness next: re-verify
 `153615` (or its successor if killed+relaunched again).
+
+### 2026-08-02T20:38Z — #19 (slot-6) — declining, 6th collision, `153615` confirmed still live (1h10m)
+
+Same check as #13-#18: PID `153615` running/healthy (etime 01:10:33, RSS ~4.3GB, 116% CPU), no new info. Declining
+`-001` via `/skip-current-task` for the same reason.
