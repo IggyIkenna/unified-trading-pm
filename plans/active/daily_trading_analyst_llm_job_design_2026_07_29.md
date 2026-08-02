@@ -299,27 +299,35 @@ job's per-category input adapters for the reconciliation-derived categories, per
 
 ## 5. Follow-up todos (build-phase — not yet scoped for AO dispatch; each needs its own sizing pass)
 
-- **[BACKEND] Build the `trading-analyst` skill** implementing §2's per-category data adapters (reusing BLRS's existing
-  stage readers per §2.6) + §3's prompt/dedup contract. Repo: unified-trading-pm (skill) +
-  batch-live-reconciliation-service (if any stage-reader refactor is needed to expose them for reuse).
-- **[INFRA] Wire the scheduling mechanics from §1**: new `agents/trading_analyst.md` role file, new `mode` in
-  `plan_health.py`, new `install-trading-analyst-timer.sh` at the `:05` offset. Repo: agent-orchestrator +
-  unified-trading-pm.
-- **[BACKEND] Remove BLRS Stage 4's `_write_agent_report()` write path** once the new job is confirmed live and its
-  findings are landing — `agent_report_{date}.md` becomes fully redundant (§0, §4). Repo:
-  batch-live-reconciliation-service.
-- **[DATA] Fix the dead-`mode`-kwarg bug** found in §2.1/§2.2/§2.4 (`execution_fills`, `positions`,
-  `strategy_instructions`, `pnl_attribution` all accept a `mode=` parameter their path template silently drops) — this
-  is a real, independently-worth-fixing correctness bug the research for this design surfaced, not something this job's
-  design depends on fixing first (the job's adapters route around it by reusing BLRS's own readers, which use the
-  working events-archive scheme instead). File as its own issue doc rather than folding into this plan's scope — it's
-  unrelated enough to the LLM job itself to warrant separate tracking and triage.
-- **[DATA] Fix the stale scheduled-jobs table** in
-  `/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md` (says opus/01:00-UTC-daily; live reality is
-  sonnet/hourly-retry per 2026-07-28/29 rulings) — do this at the same time as adding this job's row (§1 build recipe
-  step 5), not as a separate pass.
-- **[OPERATOR] Decide the exact escalation-N** (§3, "N days recurring before severity escalates") and the initial
-  `assigned_vm` default for filed issue docs (planning vs NA) — both are policy calls, not code-derivable.
+> **Converted from prose bullets to tracked checkboxes 2026-07-31** (zero-checkbox sweep, all-9-tranches re-run —
+> register: `/plans/active/issues/zero_checkbox_sweep_all_tranches_2026_07_31.md`). This doc's own Progress Log had
+> already flagged the violation: follow-ups here were prose, which the "every follow-up is a `- [ ]` todo, never prose"
+> HARD RULE forbids, and which made every item below invisible to every open-todo count. Content is unchanged — only the
+> checkbox syntax and the per-item repo tag were added. This plan stays `assigned_vm: NA` (design doc, build-phase
+> sizing not yet done), so these are tracked-but-not-dispatched.
+
+- [ ] [BACKEND] P2. **Build the `trading-analyst` skill** implementing §2's per-category data adapters (reusing BLRS's
+      existing stage readers per §2.6) + §3's prompt/dedup contract. (repo: `unified-trading-pm` (skill) +
+      `batch-live-reconciliation-service` if any stage-reader refactor is needed to expose them for reuse)
+- [ ] [INFRA] P2. **Wire the scheduling mechanics from §1**: new `agents/trading_analyst.md` role file, new `mode` in
+      `plan_health.py`, new `install-trading-analyst-timer.sh` at the `:05` offset. (repo: `agent-orchestrator` +
+      `unified-trading-pm`)
+- [ ] [BACKEND] P3. **Remove BLRS Stage 4's `_write_agent_report()` write path** once the new job is confirmed live and
+      its findings are landing — `agent_report_{date}.md` becomes fully redundant (§0, §4). (repo:
+      `batch-live-reconciliation-service`)
+- [ ] [DATA] P2. **File the dead-`mode`-kwarg bug as its own issue doc** found in §2.1/§2.2/§2.4 (`execution_fills`,
+      `positions`, `strategy_instructions`, `pnl_attribution` all accept a `mode=` parameter their path template
+      silently drops, so batch/paper/live write to the SAME object path) — a real, independently-worth-fixing
+      correctness bug this design's research surfaced. Explicitly NOT folded into this plan's scope: file it separately
+      per the findings-triage rule, then this todo is done. (repo: `unified-trading-pm` for the issue doc;
+      `unified-trading-library` for the eventual fix)
+- [ ] [DATA] P2. **Fix the stale scheduled-jobs table** in
+      `/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md` (says opus/01:00-UTC-daily; live reality
+      is sonnet/hourly-retry per the 2026-07-28/29 rulings) — do this at the same time as adding this job's row (§1
+      build recipe step 5), not as a separate pass. (repo: `unified-trading-pm`)
+- [ ] [OPERATOR] P2. **Decide the exact escalation-N** (§3, "N days recurring before severity escalates") and the
+      initial `assigned_vm` default for filed issue docs (planning vs NA) — both are policy calls, not code-derivable,
+      so this stays operator-gated and must NOT be guessed by a worker. (repo: `unified-trading-pm`)
 
 ## Codex SSOTs
 

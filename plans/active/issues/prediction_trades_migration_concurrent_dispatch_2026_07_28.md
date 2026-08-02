@@ -98,6 +98,27 @@ One or both of:
    while the first is still active (a live-heartbeat check against the owning slot, similar to the prerequisite
    mechanism already used for `completed_tasks`/`prerequisites` gating).
 
+## Todos
+
+> Converted from the prose "Recommended fix" above into tracked checkboxes 2026-07-31 (zero-checkbox sweep,
+> all-9-tranches re-run — register: `/plans/active/issues/zero_checkbox_sweep_all_tranches_2026_07_31.md`). Two prior
+> audits (the prediction tranche and the 2026-07-30 na-eligibility-audit) independently identified this doc as
+> prose-only and routed the conversion to a sweep doc that has since archived; doing it here now. Content unchanged —
+> the finding is live and unfixed. `assigned_vm: NA` unchanged, so neither item auto-dispatches.
+
+- [ ] [BACKEND] P2. **Give resumable todos a shared, task-id-keyed checkpoint location.** For any todo whose brief names
+      a `--report`/resumability file, point the convention at a durable per-TASK-ID directory rather than a
+      per-slot-per-session scratchpad, so a second worker picking up the same todo resumes from the last real checkpoint
+      instead of re-deriving it. **Done-when**: the convention is written down in the task/brief template AND at least
+      one resumable todo's brief uses it. Note this doc's own case is still unfixed — the merged checkpoint at
+      `<slot-8-scratchpad>/prediction_trades_migration_report_merged.jsonl` is itself still per-slot-scratchpad. (repo:
+      `agent-orchestrator` + `unified-trading-pm`)
+- [ ] [BACKEND] P2. **Add a dispatcher-side in-flight check.** Before assigning a todo whose current state is
+      `status: working`/`dispatched`, the backlog dispatcher should refuse to re-dispatch the identical todo id to a
+      second slot while the first is still live (a heartbeat check against the owning slot, mirroring the existing
+      `completed_tasks`/`prerequisites` gating mechanism). **Done-when**: a second dispatch of an in-flight todo id is
+      demonstrably skipped. (repo: `agent-orchestrator`)
+
 ## What I did NOT do
 
 Did not attempt to fix the dispatcher itself (out of scope for a `data_engineering` worker on a data-migration todo);

@@ -18,7 +18,7 @@ summary: >-
   authority call the skill forbids auto-resolving in any mode.
 status: open
 nature: issue
-asset_group: [meta]
+asset_group: [infrastructure] # retagged 2026-07-31 (corpus-sweep meta fold-in) -- was [meta]
 stage: [meta]
 repos: [unified-trading-pm]
 scope: [engineer, admin]
@@ -27,7 +27,6 @@ related:
   [
     /cursor-configs/skills/docs-reconcile/SKILL.md,
     /codex/11-project-management/doc-frontmatter-schema.md,
-    /codex/09-strategy/architecture-v2/naming-convention.md,
     /codex/06-coding-standards/strategy-identity-versioning.md,
     /plans/active/issues/plan_reconcile_autonomous_sweep_2026_07_30.md,
     /plans/archive/2026_07/docs_retrieval_layer_reconcile_2026_07_23.md,
@@ -107,6 +106,25 @@ Widening before resolving this cliff would be strictly worse. Distribution by un
 `09-strategy` 185/203, `14-customer-journeys` 123/126, `15-runbooks` 61/72, `06-coding-standards` 54/63.
 
 ### P0-B. `slot-label grammar` has two `status: current` SSOT claimants, and they contradict each other
+
+> **✅ RESOLVED 2026-07-31 — OPTION C (merge) was taken, by another session, in `unified-trading-pm@257ee3a13`**
+> (_"docs(codex): merge naming-convention.md into strategy-identity-versioning.md (P0-B SSOT collision)"_ — note the
+> commit subject cites this very finding id). The old `architecture-v2/naming-convention.md` under `codex/09-strategy/`
+> was DELETED (deliberately named here WITHOUT its full former path — a leading-slash ref to a deleted file would
+> register as a dangling reference) and its content folded into
+> `/codex/06-coding-standards/strategy-identity-versioning.md` (+207 lines), which is now the single
+> `authoritative_for:` claimant for slot-label grammar; `codex/00-SSOT-INDEX.md`, `/codex/09-strategy/README.md`, the
+> strategy-description template and two `.cursor/rules` files were repointed in the same commit. **Found + recorded
+> during the 2026-07-31 corpus-sweep** because this doc's `related:` list still named the deleted path, which failed
+> `check_frontmatter_schema` ("referenced doc … does not exist (NEW — not in doc_reference_baseline.yaml)") and blocked
+> commits repo-wide; that dangling entry has been dropped (the merge target was already listed alongside it). **The
+> archetype-count item at the end of this section is ALSO closed** — re-measured this sweep by AST rather than trusted
+> from the old note: `StrategyArchetype` in
+> `unified-api-contracts/unified_api_contracts/internal/architecture_v2/enums.py` has **60** members today, and the
+> surviving SSOT now states exactly that in both places it counts (`| Archetype | 60 enum |` and "Archetype axis (60
+> values — VERIFIED, code ground truth)"). Both the stale `18-enum` and the stale `57` claims are gone with the deleted
+> doc. So this whole P0-B finding is closed, with nothing left to carry forward. The analysis below is retained verbatim
+> as the record of why the collision existed and how the options were framed.
 
 Both are `doc_type: codex-ssot`, both `status: current`, both name the same topic in `authoritative_for:`:
 
@@ -188,6 +206,41 @@ Prose that names `unified-trading-codex` without a path, so it was out of the me
 `.cursor/rules/testing/test-coverage-targets.mdc:80`, plus the two the run did fix in-place because it was already
 editing those files (`codex-maintenance.mdc:13`, `codex-no-absolute-paths.mdc:16`). The remaining ones are stale
 terminology, not broken links.
+
+## Todos
+
+> **Converted from prose to tracked checkboxes 2026-07-31** (zero-checkbox sweep, all-9-tranches re-run — register:
+> `/plans/active/issues/zero_checkbox_sweep_all_tranches_2026_07_31.md`). This doc is a **parking register**: every
+> finding above was recorded as prose only, so a repo-wide commit blocker with a KNOWN arrival date (P0-A, 2026-08-15)
+> scored `open_todos: 0` and was invisible to every backlog and open-todo count. That is precisely the failure mode this
+> sweep exists to catch, and this doc's own Progress Log named itself as an instance. Findings are unchanged below —
+> these checkboxes only make them countable. `assigned_vm: NA` is unchanged, so nothing here auto-dispatches; the two
+> `[OPERATOR]` items are decisions, not worker tasks.
+
+- [ ] [OPERATOR] P0. **Rule on P0-A before 2026-08-15 — the `check_codex_doc_freshness.py` cliff.** 144 gated codex docs
+      carry an identical `last_reviewed: 2026-05-17`, so they all cross the 90-day limit on the SAME day, taking a HARD
+      PM QG gate from 24 → ~168 violations and turning the gate RED for every commit repo-wide. A shrinking ratchet
+      cannot absorb it. Options A-D are laid out in §P0-A with the worker recommendation (A: staged, deliberately
+      cohort-split re-review). **This is date-bound — it stops being a decision and becomes an outage on 2026-08-15.**
+      (repo: `unified-trading-pm`)
+- [x] ✅ [DOC] P0. **P0-B `slot-label grammar` dual-SSOT collision — RESOLVED 2026-07-31** by another session via OPTION
+      C (merge), `unified-trading-pm@257ee3a13`; see the resolved banner in §P0-B for the full evidence. Flipped here so
+      the register reflects it.
+- [ ] [DOC] P1. **Resolve the 4 dead `unified-trading-codex` doctrine refs with no successor (P1-C)** — each of the 4
+      rows in the §P1-C table needs a human to either repoint the prose at the real current doc or delete the dead
+      reference. **Do NOT blanket-rewrite the `provider-api-version-manifest` row**: it is a body link held in
+      `scripts/quality_gates/doc_body_link_baseline.yaml`, so rewriting the string without a real target converts a
+      baselined broken link into a NEW one and fails `check_doc_body_links.py`. (repo: `unified-trading-pm`)
+- [ ] [DOC] P1. **Fix the unterminated bold span (P1-D)** at
+      `/plans/active/issues/perp_funding_data_semantics_and_cadence_2026_06_16.md:429` — the span never closes before
+      the paragraph ends at :434 and the next line repeats the "and STOPPED (not built) because…" clause, so this is a
+      botched edit, not a formatting slip. Decide whether the duplicated clause is deleted or the bold merely closed (a
+      content call — do not guess). (repo: `unified-trading-pm`)
+- [ ] [DOC] P2. **Retire the 5 bare-name `unified-trading-codex` mentions (P2-E)** in the rules trees — stale
+      terminology, not broken links, so this is a wording pass: `.cursor/rules/ci-cd/act-secrets-setup.mdc:14` and
+      `.cursor/rules/testing/test-coverage-targets.mdc:80` are the two genuinely stale ones (the
+      `pipeline-mode-partition-structure.mdc:79` mention is already correct, and two more were fixed in-place this run).
+      (repo: `unified-trading-pm`)
 
 ## Applied this run (no ruling needed — recorded for the audit trail)
 
