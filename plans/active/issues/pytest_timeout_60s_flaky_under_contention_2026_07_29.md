@@ -42,7 +42,7 @@ related:
     /plans/archive/2026_07/ci_consolidated_closeout_2026_07_25.md,
   ]
 created: 2026-07-29
-last_updated: 2026-08-02T20:30Z
+last_updated: 2026-08-02T22:20Z
 parent_epic: infrastructure_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -973,3 +973,15 @@ those commits landed). The escalation's own repo-blocker list (`GET /api/repo-bl
   asynchronously per this doc's precedent. No `live-defi-rollout` code or test change made or needed. Added
   `deployment-service` to this doc's `repos:` frontmatter. Slot left clean. Pinging authoring slot (`ci`) with the
   outcome.
+- **2026-08-02 ~22:20Z (`cicd` escalation `agt-eb1cc8`, slot 5) — 3rd occurrence, unified-trading-api (direct LDR push
+  gate, `PR_NUMBER=0`)**: run `30761689446` — 10 tests across 9 unrelated files (defi_basis/events/defi_lending/
+  reporting_blrs_proxy/defi_lp/catalogue/routes/routes_extra x2/middleware) hit `Failed: Timeout (>150.0s)`,
+  `10 failed, 431 passed in 5704.25s`. Current LDR HEAD (`990187dd5`) byte-identical to the failing SHA (zero drift).
+  Reproduced locally on this exact HEAD: backgrounded `quality-gates.sh` — **ALL QUALITY GATES PASSED in 85s, 441
+  passed, 0 failures** (441 = CI's 431+10, same total). Host corroboration: `load avg 40.85/43.48/41.50`, `24Gi/47Gi`
+  swap in use, 22 concurrent `quality-gates.sh` processes — worse than every prior snapshot in this doc. Zero open
+  PRs/`/api/repo-blockers`. A 3rd `workflow_dispatch` re-verification (`30767355814`) already in flight (checks green,
+  tests in_progress) — left to resolve asynchronously, not babysat. No code/test change made or needed — same "orphaned
+  noise, fleet-capacity-crisis flake class" conclusion as every prior entry. Doc now near its 1000-line hard cap (~989
+  lines) — future entries should stay terse or a split/archive pass may be warranted. Slot left clean. Pinging authoring
+  slot (`ci-reconcile`) with the outcome.
