@@ -222,6 +222,30 @@ context_scope:
 > that plan for the R1-R8 per-instrument writer re-architecture + the full Track 1 residual canon walk. The Canonical
 > target spec + Operator decisions immediately below are the shared context both this fork and Tracks 2-8 depend on.
 
+### Track 1 roll-up todo — factory-address capture gap (206,107 bare-venue rows)
+
+- [ ] [DATA] P2. **Land factory-address capture (Option A or B) + register the missing UAC SushiSwap-Arbitrum venues** —
+      the bare `SUSHISWAP`/`UNISWAP` venue-version resolver shipped (`_dex_factory_registry.py`) but measured
+      **resolved=0 / residual=206,107 (100%)** against the live prod manifest on 2026-07-21, because **no captured row
+      anywhere carries a factory address**: walking the entire 41-column manifest schema found zero
+      `factory|deployer|creator` column (regex-checked, not eyeballed). Two options, not yet decided between: **(a)**
+      augment the 4 subgraph query cascades in instruments-service's `uniswap_v3.py` to request a `factory` field —
+      needs a live-schema probe per fork (native / Algebra / SushiSwap-pairs / Messari) first, a wrong field name
+      hard-errors the query; **(b)** on-chain RPC `factory()` lookup keyed off the already-captured `pool_address`
+      (needs an RPC provider + enumerating the unique pool_address set from the raw MTDS parquet, not the manifest).
+      Second, independent blocker for the SUSHISWAP-ARBITRUM cohort (192,560 of the 206,107): UAC `ALL_DEFI_VENUES`
+      registers only the bare `SUSHISWAP-ARBITRUM`, so even a correctly-resolved factory address cannot be written back
+      — register `SUSHISWAP_V2-ARBITRUM`/`SUSHISWAP_V3-ARBITRUM` (or whichever the capture work resolves to) and audit
+      for any other bare-venue chain with the same gap. Repos: instruments-service, unified-api-contracts,
+      market-tick-data-service. **The Option A-vs-B fork is an undecided design call — operator-gated, NOT
+      AO-dispatchable until ruled** (`assigned_vm: NA` doc; `/na-eligibility-audit` 2026-07-30 verdict on the source
+      issue: KEEP-NA valid). **Single execution site — do not fork the work here**: this entry is the Track-1 roll-up
+      view; the executable todo lives in the forked Track-1 child at
+      [`/plans/active/defi_track01_per_instrument_and_canon_id_2026_07_24.md`](/plans/active/defi_track01_per_instrument_and_canon_id_2026_07_24.md)
+      (the `[DATA] P2` "NEW 2026-07-21 — actually start capturing factory addresses" todo). Close both together. Source:
+      [`/plans/active/issues/defi_sushiswap_uniswap_bare_version_factory_gap_2026_07_21.md`](/plans/active/issues/defi_sushiswap_uniswap_bare_version_factory_gap_2026_07_21.md)
+      (measured-residual table + full Option A/B writeup).
+
 ## Canonical target (operator-decided 2026-07-18 — the thing we converge all four surfaces on)
 
 The four surfaces that must agree post-migration: **(1) GCS parquet path**, **(2) parquet
