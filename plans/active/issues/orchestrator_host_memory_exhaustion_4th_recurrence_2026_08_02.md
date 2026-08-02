@@ -170,3 +170,34 @@ Not mutually exclusive (e.g. 1+2 together is plausible). This doc does not pick 
   **Not committed by review** — role-boundary (zero commits, ever, not even a sanctioned direct-push carve-out). Handed
   as fully-drafted, ready-to-paste content to main via chat to route to a live non-reviewer worker for the
   `docs(plans):` quickmerge, same pattern as the entry above.
+
+- 2026-08-02 ~18:40Z: **6th recurrence confirmed — NEW partial-casualty signature (not a full service restart), plus a
+  stuck-slot follow-up.** Review (slot1, agt-a3ed9a) picks up after agt-544983 (the 2nd reviewer on this thread) was
+  itself killed by this exact incident mid-investigation, at the same 18:29:26Z event this entry documents.
+
+  Independently confirmed the 18:29:26Z mass `tmux_session_lost` (slots 1/5/9/10/11/12 simultaneously, including this
+  review session's own slot) is this incident continuing, with two refinements to the prior entry:
+  1. **Partial-casualty signature, not a full service bounce**: `orchestrator.service`'s
+     `ActiveEnterTimestamp`/`MainPID` (2971809) were unchanged across the kill (alive continuously since 18:15:26Z,
+     ~14min into that life when 6 slot sessions died simultaneously) — a DIFFERENT failure mode than the 4 full-restart
+     cycles already tabulated above. Post-event cgroup read (~18:37Z): `MemoryCurrent=22.9G` (well under the 46G
+     `MemoryHigh`), `MemorySwapCurrent=1.5G` — consistent with the slot deaths themselves being the pressure-relief
+     valve (memcg-level kills), not a unit-wide restart.
+  2. **MemoryPeak methodological correction**: the prior entry's "49.3G every life" pattern is likely a measurement
+     artifact — `MemoryPeak` read byte-identical (`52936736768` = 49.30GiB) at ~18:37Z (this life) and ~18:08Z (the
+     PRIOR life, pre-restart). cgroup v2 `memory.peak` is a sticky high-water-mark that does not auto-reset across a
+     service restart unless explicitly zeroed, so this metric doesn't independently prove each life re-climbs to the
+     same ceiling — though the functional symptom (recurring mass slot-session kills) remains real, confirmed via
+     `tmux_session_lost` counts directly. dmesg showed no kernel OOM-killer lines, but ring-buffer read permission on
+     this host is unconfirmed — inconclusive, not ruled out (same open gap as the ~18:08Z entry).
+
+  **New finding — slot 12 is a repeat stuck-respawn offender**: killed by this same 18:29:26Z event; unlike slots
+  1/5/9/10/11 (recovered in 1-8 min), slot 12 stayed fully dead (`worker_alive=false`/`tmux_alive=false`, no respawn
+  attempt visible in the orchestrator journal) for 10+ minutes. It already hit `spawn_retry_cap_reached` once earlier
+  the SAME hour (18:17:55Z) before self-recovering — its 2nd stuck episode in <90min, suggesting a slot-12-specific
+  respawn weakness worth investigating separately from the aggregate memory question. Git tree confirmed clean (no WIP
+  at risk). Main (agt-cb1851) independently corroborated and is escalating this as an `esc17`-class respawn-gap to the
+  operator (spawn/kill is backend-AutoSpawn-owned, outside main's own charter to act on directly).
+
+  **Not committed by review** (zero commits, role boundary) — handed to main to route to a worker for the `docs(plans):`
+  quickmerge.
