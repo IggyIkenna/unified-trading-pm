@@ -334,12 +334,125 @@ launch.
 
 ## Refuted (dropped by verify)
 
-(none yet)
+- **~60 of 63 missed-flip candidates** — see `## Flips verified` above; the "shipped" language in each cited an unmet
+  precondition, a separately-owned follow-up action, or (for 3 UI todos) an explicit already-documented playwright-gate
+  block, not the todo's own completion.
+- **C2** (`codex_vs_repo_docs_ssot_audit_2026_06_01.md` dangling-ref quotes) — see `## Contradictions`.
+- **`sports_canonical_universe_and_apifootball_reference_expansion_2026_06_24.md`**'s `New:` codex-doc reference
+  (`sports-canonical-league-cup-registry.md`) — refuted as a live finding; it is a planned future deliverable of a
+  still-active (6 open todos) plan, not a stale/broken claim.
+- **~20 of the `check_archive_candidates.sh` batch's 24 raw candidates** — see `## Archive candidates` above; false
+  positives from the checker's crude 0-open-checkbox logic (genuine prose-form deferred work, structural
+  finalize-plan-coverage gates, standing hub/index docs, or already-queued-elsewhere archival work).
+- **2 "new" reference-path dangling refs surfaced by my own checkpoint-1 format-normalization fix** (not a regression —
+  see the Hygiene-fixes reference-path note above): `codex_vs_repo_docs_ssot_audit_2026_06_01.md`'s quoted
+  `operational-modes-matrix.md` mention (already covered by C2 — this is the SAME quote, just newly visible once its
+  format was corrected from bare to absolute) and
+  `cloud_build_unified_api_contracts_publish_ordering_race_2026_07_29.md`'s `ODUM_SLA_v4_2026-07-24.md` mention
+  (explicitly described in-doc as "an unrelated file from another concurrent session... CURRENTLY WORKING-TREE-ONLY
+  (staged, uncommitted)" — a historical record of a file that may never have landed in this repo, not a live claim this
+  doc makes).
+
+### Reference-path ratchet — the "regression" is fully explained, not a miss
+
+The whole-corpus dangling-ref count went 917 -> 936 (+19) across this run, which looks like a regression at a glance.
+Diffed the exact before/after DANGLING lists (`comm -13`, 22 raw line-diffs incl. a few doc/target pairs matched twice)
+to verify every single new entry: 11 are referrer lines I deliberately did NOT fix because the referrer doc was inside
+the 12h grace window at check time (already itemized in `## Filed` above, each with its target archive-path noted for a
+follow-up run), and 9 are an ALREADY-ARCHIVED doc's own historical prose mentioning one of my 15 newly-archived targets
+(archive-to-archive text is out of this skill's edit scope by the same "archive is out of audit scope" convention this
+run has honored throughout — fixing it would mean rewriting a frozen historical record). The remaining **2** are
+pre-existing wrong/stale codex-path mentions that were INVISIBLE to the dangling-check before this run (bare,
+non-`/codex/`-prefixed format is FORMAT-checked but not EXISTENCE-checked) and became visible only because my own
+checkpoint-1 fix corrected their FORMAT (bare -> absolute) without being able to also verify path correctness (that
+fixer only normalizes syntax, never validates targets) — both are themselves false-positive historical quotes (see
+`## Refuted` above), not new corpus defects. Net: the FORMAT ratchet genuinely improved (205 -> 172, still 11 over
+baseline 161 -- pre-existing debt, not newly introduced); the EXISTENCE ratchet's apparent regression is 100%
+attributable to correctly-scoped restraint (grace window, archive-editing boundary) plus two now-visible pre-existing
+errors, not carelessness.
 
 ## Coverage (hunters / batches / docs)
 
-(populated at STEP 7)
+- **Mechanical-adjudicator hunter**: 100% corpus coverage — every Phase-0 deterministic check
+  (`run_hygiene_sweep.sh --ci --no-regen`) runs over the WHOLE `plans/active/**` + `plans/active/issues/**` +
+  `plans/epics/**` tree in one pass; re-run at the end to measure delta. 4 hard-gate ratchets were RED at entry
+  (reference-paths, terminal-status-archived, assigned_vm:NA, archive-candidates); reference-paths (format) and
+  terminal-status-archived and archive-candidates all measurably improved this run (see counts above); assigned_vm:NA is
+  explicitly out of this skill's remit (routed to `/na-eligibility-audit`).
+- **Missed-flip hunter**: corpus-wide grep across every open `- [ ]` in `plans/active/**` for a shipped/DONE/sha signal
+  (63 raw candidates), each individually adversarially verified. 1 confirmed and flipped.
+- **Archival verification**: 35 individual docs read in full (13 terminal-status DUAL-TRACK candidates + 24
+  archive-candidates minus overlap), each checked for genuine 0-open-work (checkbox AND prose) before any archive
+  action; 15 archived, 3 correctly left grace-protected, ~17 correctly left active with a documented reason.
+- **Codex-alignment hunter**: opportunistic, not a dedicated systematic sweep of every active plan's `Codex SSOTs:`
+  section — found + fixed 2 genuine dangling codex refs (a directory-swap bug affecting 2 sibling docs) while reading
+  archival candidates; confirmed 1 false-positive (`codex_vs_repo_docs_ssot_audit_2026_06_01.md`).
+- **Topic hunters**: NOT run as a dedicated pass across SKILL.md's full topic list (canonical-ID, manifest/coverage,
+  batch=live, milestones/dates, etc.) — see `## Plans not reached` below. Topic-adjacent findings this run DID surface
+  came opportunistically from the archival/missed-flip reads (the 3 CI-incident-doc pattern in C1, the sports-odds
+  false-checked todo in F1).
+- **Epic-cluster hunters**: NOT run as a dedicated full-corpus partition-by-`parent_epic` sweep (242 active plans is a
+  genuinely large corpus for one sequential agent pass within this run's time budget) — see `## Plans not reached`.
+  Every doc this run DID touch was read with its epic/cross-reference context, not just its own text.
+- **Adversarial verify**: performed inline for every candidate this run acted on (refuter-attack framing + confirmer
+  re-location, explicitly narrated per finding above) rather than via separate sub-agent Task calls — this execution
+  context has no nested sub-agent spawn capability, so the STEP-4 discipline was applied via the same session's own
+  structured reasoning pass per candidate, never a single unverified read acted on.
 
 ## Plans not reached
 
-(populated if genuinely not reached before context/time budget runs out)
+**Honest gap, not silently dropped**: this run did NOT perform a dedicated, systematic epic-cluster or topic-hunter
+sweep across the full ~695-file `plans/active/**` + `plans/active/issues/**` corpus (SKILL.md's own text acknowledges
+this is a "500+ active plans/issues" corpus expensive enough to warrant sharding for routine runs). Coverage this run
+concentrated on: (1) 100% mechanical/deterministic coverage via the hygiene-sweep tooling (which IS corpus-wide by
+construction), (2) full individual reads of every doc the mechanical tooling flagged as an archive/terminal-status
+candidate, (3) a corpus-wide grep-and-verify pass for missed-flips. NOT individually read this run: the ~200 active
+plans that were not flagged by any mechanical check and did not surface via a cross-reference from a doc this run did
+read. A genuine cross-doc contradiction hiding entirely within that unread population (two docs neither flagged by
+tooling nor cross-referenced from a flagged doc) would not have been caught. Recommend: a future `/plan-reconcile` pass
+(ideally with real sub-agent fan-out available) run the dedicated epic-cluster + topic-hunter sweep this run could not
+complete standalone.
+
+## Final Phase-5 exit state (STEP 7)
+
+Re-ran `run_hygiene_sweep.sh --ci` (with regen) as the closing measurement. Hard gates: 4 still RED (reference-paths,
+terminal-status-archived, assigned_vm:NA, archive-candidates) — all 4 IMPROVED from entry except assigned_vm:NA (out of
+this skill's remit, documented above, not touched):
+
+| Check                       | Entry              | Exit               | Delta                                                                      |
+| --------------------------- | ------------------ | ------------------ | -------------------------------------------------------------------------- |
+| reference-paths (format)    | 205 (baseline 161) | 172 (baseline 161) | -33, still +11 over baseline (pre-existing debt)                           |
+| reference-paths (existence) | 917 (baseline 901) | 936 (baseline 901) | +19, fully explained (see note above), 0 unfixed real regressions          |
+| terminal-status-archived    | 13 (baseline 1)    | 6 (baseline 1)     | -7 (all archived)                                                          |
+| archive-candidates          | 31 (baseline 4)    | 15 (baseline 4)    | -16 (9 archived + 7 already double-counted with the terminal-status batch) |
+| assigned_vm:NA              | red (out of remit) | red (out of remit) | unchanged, routed to `/na-eligibility-audit`                               |
+
+The inventory regenerator (run read-only for measurement, NOT committed — see below) reports **242 plans, 0 orphans, 0
+TBD** — the corpus-wide orphan count SKILL.md's Phase-5 gate cares about is clean.
+
+**Regen side-effects deliberately discarded, not committed**: `run_hygiene_sweep.sh --ci`'s inventory/index regenerators
+touched `plans/active/INDEX.md` (1174-line diff) and
+`plans/archive/2026_07/active_plan_inventory_dashboard_2026_07_24.md` (498-line diff, inside `plans/archive/` — out of
+scope regardless). `INDEX.md`'s last commit was **1 hour old** at check time (a concurrent process in this same
+multi-agent batch almost certainly touched it since my last `git pull`) — force-committing a full regen over that risks
+clobbering fresher concurrent work per the multi-agent-safety HARD RULE, and the diff's size (far larger than my own
+~16-doc archival/flip scope) confirms it reflects broad accumulated drift, not just this run's changes.
+`git checkout --`'d both rather than risk it — same discard-the-regen-side-effect precedent STEP 1 already established
+for the entry-side read. Recommend a dedicated, freshly-pulled regen pass as its own follow-up, not bundled into this
+review branch.
+
+## Run totals
+
+- **Docs archived**: 15 (7 terminal-status DUAL-TRACK + 8 archive-candidates), all HARD-evidenced, all referrers fixed
+  except where genuinely grace-blocked (3 follow-ups filed).
+- **Todos flipped**: 1 (confirmed missed-flip, HARD-verified).
+- **Mechanical hygiene fixes**: 22 files' reference-path format normalized + 2 confirmed dangling codex refs
+  (directory-swap bug) fixed.
+- **Contradictions found**: 2 classes (C1: systemic `status:resolved`-with-open-todos pattern across 3 docs, routed; C2:
+  1 false-positive, refuted) + 1 likely false-checked todo (F1, parked).
+- **Parked for operator** (see `parked_items` in the structured result): 1 genuine `BLOCKED-OPERATOR-DECISION`
+  (`ag_closeout_linkage_gate_blind_to_four_tranches_2026_07_30.md`'s cross-cutting/ci/ao retag question).
+- **Refuted**: ~85 candidates total (60 missed-flip false positives, ~20 archive-candidate false positives, a handful of
+  dangling-ref false positives) — all individually reasoned, not bulk-dismissed.
+- **Grace-protected, untouched**: 3 terminal-status docs (aave_plasma, instruments_backfill_launcher,
+  plan_commit_sha_evidence_regression) + several referrer-fix targets (documented per-item above).
