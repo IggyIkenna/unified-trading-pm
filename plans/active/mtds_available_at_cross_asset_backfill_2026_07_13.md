@@ -318,13 +318,17 @@ verify the guardrail did not trip + row counts are unchanged before resuming the
       investigation — structurally-blank underlying-bundle rows, not data loss). `available_at` fill on captured rows
       rose (69.97% → ~77-82%, exact number disputed between #11's and #12's independent reads, both far from 100%).
       **Still open (2026-08-02, slot-14, Progress Log #12)**: per-month breakdown shows 2019-01..2023-03 sitting at a
-      stable ~50-60% fill, not near-100% — NOT resolved by this apply/consolidate. Unclear whether that's a genuine
-      structural ceiling (a bundled/no-timestamp shard class `_available_at_from_blob`'s GCS-`time_created` proxy can't
-      populate) or an incomplete-fill signal — chunks 1-52 of THIS todo's own apply ran the FIRST (pre-fix) launch's
-      code, before `9d354cea` shipped, even though they didn't crash there. **Do not flip this checkbox until that
-      question is resolved** — re-read `_available_at_from_blob`'s docstring + investigate, or re-run
-      `--start-date 2019-01-02 --end-date 2023-04-10 --chunk-days 30` now that the fix is live, to see if the ceiling
-      moves. (repo: market-tick-data-service, unified-trading-library)
+      stable ~50-60% fill, not near-100% — NOT resolved by this apply/consolidate. **RESOLVED-ISH (2026-08-02, resumed
+      session)**: re-ran `--start-date 2019-01-02 --end-date 2023-04-10     --chunk-days 30` on the fixed code (0
+      unparseable, 151,696 shards) — byte-identical result, ruling out both the structural-ceiling and
+      incomplete-fill-scan theories. **Actual root cause found + directly verified**: the known migration-pending C2a
+      `instrument_type` casing split (`combo`/`COMBO` etc.) keeps this rebuild's fresh uppercase-canonical rows
+      permanently separate from old lowercase rows in the manifest — case-folding jumps pre-2023-04 `ohlcv` coverage
+      from 56.8% to **84.0%**. Full evidence + an earlier retracted `instrument_id` theory in the doc's own Progress Log
+      (search "CONFIRMED, same session — re-ran the fill-rate check"). **Do not flip this checkbox yet** — 84.0%
+      (folded) is still short of the ~100% bar prior entries set, and a genuine ~16% remains unfilled even after folding
+      (real work, not a measurement artifact); do NOT re-run the rebuild a third time expecting a different result —
+      it's already landing correct data. (repo: market-tick-data-service, unified-trading-library)
 - [x] ✅ [DATA] P1. **No longer gated on an operator decision (retagged 2026-07-28, same ruling)** — Resume the tradfi
       consolidator cron; record evidence in the Progress Log. **Retrofit 2026-07-30** (dp_watcher_003 issue's 2nd todo):
       resume via `scripts/mtds_available_at_backfill_resume_tradfi_2026_07_30.py` (maintenance-window-aware), not raw
