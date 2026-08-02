@@ -430,3 +430,23 @@ not just noting.
   operator's attention if this K=1-deadlock failure mode recurs, since unlike PM's multi-runner pool, every protected-6
   repo with a single dedicated runner is structurally exposed to the same eternal-queue failure mode whenever ITS OWN
   prior job wedges, independent of overall fleet load level.
+
+- **2026-08-02 ~22:20-23:31Z (cicd escalation `agt-42f50b`, slot 6, `unified-trading-api`, `wall_type=ldr_qg_failure`,
+  `pr_number=0`)** — Tenth repo-specific corroboration, the "slow-but-progressing" class (not a deadlock): 4 CONSECUTIVE
+  completed `quality-gates-v2` failures on `live-defi-rollout` HEAD `990187d`, spanning `13:32Z`→`23:27Z` (~10 hours),
+  each run taking 45min-1h48m (`4111.99s`/`5704.25s`/unlogged/`2709.07s`) and each failing on a DIFFERENT random set of
+  9-10 tests with `Failed: Timeout (>150.0s) from pytest-timeout` — near-zero overlap between runs' failing-test sets
+  (checked pairwise), confirming scheduling-induced timeouts rather than a deterministic per-test bug. Local
+  `bash scripts/quality-gates.sh` at the exact same HEAD: clean, fast, green — `441 passed` in `41.24s` (slowest local
+  test 1.64s, nowhere near the 150s budget), `ALL QUALITY GATES PASSED (99s)` overall. This repo's glue runner is `K=1`
+  (`github-glue-runner-unified-trading-api@glue-1`, confirmed via `systemctl`), same structural exposure the
+  `features-service` entry above named, but this was NOT a deadlock (`D`-state/zero-progress) — every run genuinely
+  executed and completed with real pass/fail counts, just severely slow. Corroborated live at investigation time:
+  host-wide `uptime` load-average 29.8-35 (same box, `i-0c9b283b31d6b5ca7`-class), 29-30 concurrent `quality-gates.sh`
+  processes across other slots. **Disposition: no code or test change made** — the code and tests are provably correct
+  (clean local repro at HEAD); this is the tracked capacity crisis, not a regression, matching every prior entry's own
+  established posture. Zero open `/api/repo-blockers` entries for `unified-trading-api` at investigation time. Did not
+  force a 5th `workflow_dispatch` retrigger while the host remains this saturated — per this doc's established
+  disposition, a duplicate dispatch onto an already-contended runner pool doesn't help and the queue/gate will
+  self-clear once contention eases. Slot left clean on `live-defi-rollout` (nothing to commit in `unified-trading-api`;
+  only this doc touched).
