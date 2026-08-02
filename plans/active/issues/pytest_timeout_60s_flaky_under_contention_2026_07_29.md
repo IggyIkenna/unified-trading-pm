@@ -985,3 +985,8 @@ those commits landed). The escalation's own repo-blocker list (`GET /api/repo-bl
   noise, fleet-capacity-crisis flake class" conclusion as every prior entry. Doc now near its 1000-line hard cap (~989
   lines) — future entries should stay terse or a split/archive pass may be warranted. Slot left clean. Pinging authoring
   slot (`ci-reconcile`) with the outcome.
+- **2026-08-02 ~22:30Z (`cicd` `agt-57f191`, slot 5)**: recurrence of this doc's OWN founding case —
+  unified-api-contracts `ldr_qg_failure`, run `30765447372`, `test_vcr_cassette_interactions_is_list[bybit/ticker.yaml]`
+  timeout, commit `7450e744` (self-contained new test file, unrelated). Isolated re-run: 0.01s. Host: `load avg 32-36`,
+  26Gi swap, 20 concurrent QG procs. Zero open PRs/blockers. Retry `30769856300` already in flight (tests running) —
+  left async. No code fix needed/made.
