@@ -312,7 +312,17 @@ context_scope:
       decline in between to accumulate toward the auto-park threshold of 3). Declining via `/skip-current-task` with
       `reason_code: GATED` again, per the established pattern above — this re-arms the fleet cooldown; whoever picks
       this up next should do likewise until P2c lands or 3 GATED declines land close enough together to cross the
-      auto-park threshold.
+      auto-park threshold. — **2026-08-02 (slot 3, review): re-dispatched again minutes after slot 13's decline, still
+      genuinely blocked — P2c (line 278) confirmed still `[ ]`.** The upstream chain has if anything regressed further:
+      `sports_odds_api_scattered_multiyear_gaps_2026_07_27.md`'s P1 backfill (which P2b's own done-when depends on) now
+      carries a NEW `BLOCKED-CREDENTIALS` tag as of today (task `-004`, slot 14) — the-odds-api.com account is OUT OF
+      USAGE CREDITS (`error_code=OUT_OF_USAGE_CREDITS`, a different blocker than July's `DEACTIVATED_KEY` one), operator
+      ruled Option B (purchase additional credits) but the top-up isn't confirmed landed yet. So P2b's backfill is
+      further from done than at slot 13's check, not closer.
+      `GET /api/backlog/sports_closeout_track_s2_foldin-008/blockers` read `"ready (no blockers)"` before this decline.
+      Declining via `/skip-current-task` with `reason_code: GATED` again — this is the second GATED decline in quick
+      succession today (after slot 13's), which should help cross the auto-park threshold of 3 if a third lands before
+      the park window elapses.
 - [x] ✅ [DATA] P2. **RETAGGED 2026-07-28 (stale-tag audit — already ruled 2026-07-26, `[OPERATOR]` never removed).**
       Unresolved cefi-before-sports gate TENSION, never ruled (flagged 2026-07-14, still open).
       `instruments_foundation_completeness_2026_06_24.md` states sports does NOT start its G1→G5 until cefi is DONE, but
