@@ -179,3 +179,10 @@ No design call needed — every fact here is independently checkable:
   task rather than fabricating a reconciliation against work that hasn't happened — see
   `instruments_satellite_batch1_finalize_false_completion_claim_2026_08_02.md` for why that specific mistake is a
   confirmed, named failure class in this corpus.
+- **2026-08-02 (slot 14, data_engineering) — corroborating recurrence, not yet fixed.** Same task
+  (`defi_satellite_ao_dispatch_batch8_2026_08_02_finalize-001`) re-dispatched to this slot; re-verified both facts
+  independently unchanged: batch8's own todo still `- [ ]` unchecked (still only the one creation commit), and
+  `GET /api/backlog` still returns zero tasks with
+  `plan_ref: plans/active/defi_satellite_ao_dispatch_batch8_2026_08_02.md`. This doc's own `[BACKEND] P1` root-cause
+  todo is `dispatched` (slot 5, in progress as of this check) — not re-doing that investigation. Declined `finalize-001`
+  again per this doc's own Recommended-decision item 4; skipping.
