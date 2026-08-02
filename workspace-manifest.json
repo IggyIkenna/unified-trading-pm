@@ -342,9 +342,9 @@
       "ldr_ci_status": "GREEN",
       "cascade_invalidated_by": "unified-trading-library=0.66.0",
       "codebase_health": {
-        "coverage_pct": null,
-        "qg_red_reason": "qg",
         "warn_file_count": 18,
+        "qg_red_reason": "basedpyright",
+        "coverage_pct": null,
         "large_file_count": 0
       }
     },
@@ -765,10 +765,10 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "large_file_count": 8,
-        "qg_red_reason": "qg",
         "warn_file_count": 11,
-        "coverage_pct": 91.15
+        "qg_red_reason": "qg",
+        "coverage_pct": null,
+        "large_file_count": 8
       }
     },
     "market-data-processing-service": {
@@ -887,10 +887,10 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "qg_red_reason": "qg",
+        "qg_red_reason": "basedpyright",
         "warn_file_count": 47,
-        "large_file_count": 0,
-        "coverage_pct": null
+        "coverage_pct": null,
+        "large_file_count": 0
       },
       "cascade_invalidated_by": "unified-trading-library=0.66.0"
     },
@@ -954,10 +954,10 @@
       "consolidation_plan": "plans/active/ml_repo_consolidation_2026_05_19.md",
       "created": "2026-05-19",
       "codebase_health": {
-        "coverage_pct": null,
-        "large_file_count": 0,
-        "qg_red_reason": "qg",
-        "warn_file_count": 6
+        "warn_file_count": 6,
+        "qg_red_reason": "pytest",
+        "coverage_pct": 82.65,
+        "large_file_count": 0
       },
       "ldr_ci_status": "RED",
       "cascade_invalidated_by": "unified-trading-library=0.66.0"
@@ -988,7 +988,7 @@
           "required": true
         }
       ],
-      "ci_status": "MAIN_GREEN",
+      "ci_status": "FAILING",
       "coverage_pct": 72,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "integration",
@@ -1357,9 +1357,9 @@
       "cascade_invalidated_by": "unified-trading-library=0.66.0",
       "codebase_health": {
         "warn_file_count": 5,
-        "qg_red_reason": "qg",
-        "coverage_pct": null,
-        "large_file_count": 0
+        "qg_red_reason": "pytest",
+        "large_file_count": 0,
+        "coverage_pct": 80.84
       },
       "ldr_ci_status": "GREEN"
     },
