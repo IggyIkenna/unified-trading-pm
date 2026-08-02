@@ -154,7 +154,7 @@ within this doc — TRADFI:delta_one's fast exit was a different bug, not eviden
 - [ ] [DATA] P2. Add a light-weight post-run reconciliation step (or a follow-up one-off script) that checks whether any
       VM this check launched is STILL `RUNNING` after the driver's own process has exited, and if so records/logs it (so
       abandoned VMs are not silently forgotten and their eventual real cost/outcome is at least visible).
-- [ ] [SCRIPT] P2. **New corroborating instance, different service**:
+- [x] [SCRIPT] P2. ✅ **New corroborating instance, different service**:
       `market-data-processing-service/scripts/pipeline_e2e_check.py` (MDPS's own driver, same shared-engine class as
       this doc, not features-service) hit the identical `vm_not_success:timeout_no_exit_status` false-failure pattern
       twice running `/data-pipeline-check-mdps` against SPORTS `odds_horizon_bucket` (594-638 instrument-timeframe cells
@@ -175,6 +175,20 @@ within this doc — TRADFI:delta_one's fast exit was a different bug, not eviden
       `mdps-backfill-sports-pipelinecheck-20260801-134301-2bf067` (force, 31.8m),
       `mdps-backfill-sports-pcskip-20260801-130846-2bf067` (skip, 26.2m). Source: slot 6, data_engineering, discovered
       2026-08-01 running `sports_consolidated_native_ao_extract_2026_07_25.md`'s Track K (MDPS) checkpoints 2/3 and 3/3.
+      **DONE 2026-08-02 (slot 2, infra).** Shipped `_FAMILY_TIMEOUT_OVERRIDES`/`_resolve_timeout_sec` for
+      `("SPORTS", "odds_horizon_bucket") = 3600` in `market-data-processing-service/scripts/pipeline_e2e_check.py`,
+      mirroring features-service's mechanism — `market-data-processing-service@dbcba44` (6 new regression tests, QG
+      green, verified on origin). **Real from-scratch verification run**
+      (`--day 2026-08-01 --legs force,skip     --require-captured --auto-day --asset-group SPORTS --data-types odds_horizon_bucket`,
+      auto-day resolved 2026-04-14): both legs terminated genuinely within the 3600s override — force-leg VM
+      `mdps-backfill-sports-pipelinecheck-20260802-161417-d0c755` observed `EXIT_STATUS=1` at ~3.6min (16:14:17→16:18:04
+      UTC), skip-leg VM `mdps-backfill-sports-pcskip-20260802-161855-d0c755` observed `EXIT_STATUS=1` at ~3.7min
+      (16:18:55→16:22:40 UTC) — neither abandoned, both well inside budget. The `exit=1` itself is an UNRELATED,
+      pre-existing bug (candle writes for this shard target the PROD bucket instead of the passed `--output-bucket`,
+      403'd by IAM as designed) — filed separately as
+      `issues/mdps_sports_odds_horizon_bucket_candle_write_targets_prod_bucket_2026_08_02.md` since it's a genuinely
+      new/third defect distinct from this doc's timeout scope and from the two already-tracked IAM docs. Report:
+      `plans/audit/results/data_pipeline_e2e_check_mdps_2026_08_01.md`.
 - [x] [DOC] P2. ✅ Once the timeout is fixed, re-run `/data-pipeline-check-features` for CEFI:delta_one and
       TRADFI:delta_one specifically and confirm both legs produce a genuine (non-timeout) verdict; note the corrected
       per-shard timeout in the SKILL.md's benchmark/projection section if the measured completion time differs
@@ -343,3 +357,18 @@ within this doc — TRADFI:delta_one's fast exit was a different bug, not eviden
   closed (genuine verdict obtained); CEFI:delta_one's timeout-orphan defect fully closed (guard verified working,
   override raised on real evidence, SKILL.md corrected) but its underlying completion-time question is now explicitly
   the S1 architectural fix's problem to answer, not a follow-up for this doc.
+- 2026-08-02 (slot-2, infra): **Closed the MDPS SPORTS:odds_horizon_bucket todo.** Shipped
+  `_FAMILY_TIMEOUT_OVERRIDES`/`_resolve_timeout_sec` (`("SPORTS", "odds_horizon_bucket") = 3600s`) in
+  `market-data-processing-service/scripts/pipeline_e2e_check.py`, mirroring the pattern already proven in
+  features-service — `market-data-processing-service@dbcba44` (6 new unit tests, full `quality-gates.sh` green, verified
+  on origin via `merge-base --is-ancestor`). Ran a genuine from-scratch force+skip verification
+  (`--day 2026-08-01 --legs force,skip --require-captured --auto-day --asset-group SPORTS --data-types odds_horizon_bucket`,
+  auto-day → 2026-04-14): both VMs terminated genuinely within the new 3600s budget (force ~3.6min, skip ~3.7min) — the
+  timeout-abandonment mechanism this doc exists to fix is confirmed NOT triggering, satisfying the todo's own done-when
+  bar. The observed `EXIT_STATUS=1` on both legs is an unrelated, pre-existing bug (candle writes for this shard target
+  the PROD bucket instead of the passed `--output-bucket`, correctly 403'd by IAM) — NOT a timeout defect, so it does
+  not block closing this todo (same precedent as this doc's own TRADFI:delta_one exit=1 acceptance earlier). Filed the
+  new bug separately: `issues/mdps_sports_odds_horizon_bucket_candle_write_targets_prod_bucket_2026_08_02.md` (distinct
+  from both already-tracked IAM docs — the write targets PROD itself, not a bucket-tier IAM-condition mismatch). Report:
+  `plans/audit/results/data_pipeline_e2e_check_mdps_2026_08_01.md`. One todo remains open in this doc (the P2 post-run
+  VM-reconciliation todo) — not in scope for this task.
