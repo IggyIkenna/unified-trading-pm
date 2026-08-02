@@ -283,16 +283,42 @@ for visibility per the data-pipeline-correctness HARD RULE, not to be conflated 
       production day's DERIBIT `instruments.parquet` `instrument_key` values compared against what
       `_instrument_to_deribit_name`/`build_deribit_canonical_id` expect — not done in this pass (time-boxed; the
       confirmed, fixed ASTER book_snapshot_5 bug was this todo's primary deliverable). (repo: market-tick-data-service)
-- [ ] [INFRA] P0. **NEW 2026-08-02 — the `593bd425` ASTER book_snapshot_5 fix has NOT reached production yet; relaunch
-      `mtds-live-cefi-consolidated-*` again.** Discovered while re-checking the manifest for the ASTER liquidations todo
-      above: `book_snapshot_5` is STILL 100% `empty_confirmed` on 2026-08-02 (latest `attempted_at` 11:56:01Z), which is
-      BEFORE `593bd425` landed (12:18:25Z) — the currently-running instance was never relaunched after that fix shipped
-      (same `lifecycle_class=LONG_LIVED_LIVE` never-auto-restarts pattern as the original incident; the relaunch under
-      todo #3 above happened BEFORE `593bd425` existed, so it didn't and couldn't have picked it up). Same procedure as
-      todo #3: confirm genuine staleness via the VM-delete guardrail (heartbeat/run.log/manifest mtime), then `--force`
-      relaunch (bypasses the singleton lock, never deletes-first), verify via the per-VM manifest shard that ASTER
-      book_snapshot_5 starts capturing, then retire the superseded instance. [OPERATOR] — VM relaunch + eventual
-      instance delete once the new one is confirmed healthy. (repo: deployment-service)
+- [x] ✅ [INFRA] P0. **DONE 2026-08-02T13:08Z, deployment-service (VM relaunch only — see the NEW P0 finding below for
+      the unresolved recovery).** Confirmed genuine staleness first (heartbeat 31s-fresh = alive-not-stale; the running
+      instance's `book_snapshot_5` was still 100% empty at `attempted_at=11:56:01Z`, before `593bd425` landed at
+      `12:18:25Z` — confirming it never picked up the fix). Verified all 4 launcher-gated tarballs
+      (`mtds-code`/`unified-api-contracts-code`/`unified-trading-library-code`/`deployment-service-code`) were freshly
+      rebuilt (`mtds-code@b3c1122`, includes `593bd425` as an ancestor — confirmed via `git merge-base --is-ancestor`),
+      then launched the replacement via `--force` (bypasses the singleton lock, never deletes-first):
+      `mtds-live-cefi-consolidated-20260802-130832`. `lc_verify_tarball_freshness` confirmed all 4 tarballs current at
+      launch time. Verified clean boot via SSH: `=== VM SETUP COMPLETE ===`, all 17 MVP shards running (`ps aux` count =
+      17), ManifestWriter actively flushing. 11 of 17 shards showed real non-zero-instrument captures within ~9 min
+      (BINANCE-FUTURES, HYPERLIQUID, KRAKEN-FUTURES, DERIBIT, OKX-FUTURES derivative_ticker, BYBIT-FUTURES
+      derivative_ticker — 2188 real captured rows total). Retired the confirmed-stale old instance
+      (`mtds-live-cefi-consolidated-20260801-151833`, still running pre-fix code) once the new one was confirmed
+      healthy. **`ASTER book_snapshot_5`/`liquidations` did NOT recover on the new VM either** — see the new P0 finding
+      below; this is now a SEPARATE, deeper problem than "code hadn't been deployed yet." (repo: deployment-service)
+- [ ] [DATA] P0. **NEW 2026-08-02T13:20Z — the `593bd425` chunking fix does NOT resolve ASTER book_snapshot_5 in
+      production, despite passing its own isolated reproduction test; needs re-investigation, not a re-close.** Read the
+      new VM's (`mtds-live-cefi-consolidated-20260802-130832`) per-VM manifest shard directly via
+      `unified_trading_library.cloud_interface.download_from_storage` (bypasses manifest-consolidator lag) ~9 minutes
+      post-boot: `ASTER book_snapshot_5` — 155/155 rows `empty_confirmed`, `instrument_count=0`, spanning
+      `13:12:01Z`→`13:20:23Z` (7+ flush windows, zero recovery trend). `ASTER liquidations` — ZERO rows at all (not even
+      `empty_confirmed`) after the same 9 minutes, vs. 11 OTHER shards on the SAME VM showing real, healthy
+      non-zero-instrument captures in the same window (2188 rows) — this is ASTER-specific, not a VM-wide problem.
+      Confirmed the fix code IS actually deployed and running (SSH'd in, `grep`'d
+      `/home/ikennaigboaka/workspace/mtds/market_tick_data_service/live/connectors/aster_book_liq_ws.py` on the live VM:
+      `_ASTER_MAX_STREAMS_PER_SUBSCRIBE = 100` and the chunked `_open_and_subscribe` are present — NOT a stale-deploy
+      repeat of this doc's original bug). The shard's own log (`live-aster-book-snapshot-5.log`) shows NO
+      errors/exceptions/disconnects at all — just periodic `RESOURCE_SAMPLE`/`ManifestWriter` lines — meaning either the
+      WS truly never received data post-subscribe (a DIFFERENT silent-failure mode than the diagnosed one) or the
+      isolated reproduction test that "confirmed" the fix (164-stream boundary + ack round-trip) didn't actually
+      validate end-to-end DATA receipt, only the SUBSCRIBE ack. Needs: a live wire capture of the ACTUAL production
+      subscribe frames + any post-subscribe traffic (not a synthetic reproduction), and confirmation of whether
+      `liquidations` (ZERO rows, not just empty — a different symptom shape) shares a root cause with `book_snapshot_5`
+      or is a second, independent break. Escalating per data-pipeline-correctness HARD RULE (credible risk, manifest-
+      confirmed, previously-reported-fixed) — do not silently re-close without a genuine end-to-end verification. (repo:
+      market-tick-data-service)
 - [ ] [DATA] P3. File a SEPARATE issue doc for the two pre-existing, unrelated chronic findings surfaced incidentally by
       this check: `OKX-FUTURES trades` intermittent zero-capture (going back to at least `2026-07-20`, live pipeline)
       and `POLYMARKET-PERP perp_funding` permanently `attempted_failed` since at least `2026-07-28` (batch pipeline).
