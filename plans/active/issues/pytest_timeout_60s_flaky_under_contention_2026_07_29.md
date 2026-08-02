@@ -22,7 +22,18 @@ status: open
 nature: issue
 asset_group: [ci] # retagged 2026-07-31 (corpus-sweep meta fold-in) -- was [meta]
 stage: [meta]
-repos: [unified-trading-pm, unified-api-contracts, instruments-service, features-service]
+repos:
+  [
+    unified-trading-pm,
+    unified-api-contracts,
+    instruments-service,
+    features-service,
+    market-tick-data-service,
+    client-reporting-api,
+    unified-trading-api,
+    market-data-processing-service,
+    deployment-service,
+  ]
 scope: [engineer, admin]
 tags: [quality-gates, flaky-gate, timeout, pytest-timeout, ci, shared-host-contention, xdist]
 related:
@@ -31,7 +42,7 @@ related:
     /plans/archive/2026_07/ci_consolidated_closeout_2026_07_25.md,
   ]
 created: 2026-07-29
-last_updated: 2026-08-02
+last_updated: 2026-08-02T20:30Z
 parent_epic: infrastructure_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -949,3 +960,16 @@ those commits landed). The escalation's own repo-blocker list (`GET /api/repo-bl
   without adding a new repo to the list (already added by `agt-60a920`). Slot left clean (unified-trading-api on
   `live-defi-rollout`, 0 commits ahead of `origin` besides this doc edit). Pinged the authoring slot (`ci-reconcile`)
   with the outcome.
+- **2026-08-02 ~20:30Z (`cicd` escalation `agt-4385f0`, slot 8) — 9th confirmed repo (deployment-service)**: promotion
+  PR #673 (LDR→main), failing run `30752878298` (`QG slice (tests)`, `pull_request`-triggered, head SHA `24e0878d65e6`).
+  `tests/unit/test_cluster_materialisation.py::TestLoadSubscription::test_missing_raises_file_not_found` (pure tmp_path
+  `FileNotFoundError` check, no I/O) hit `Failed: Timeout (>150.0s)` → xdist `worker_internal_error`/`AssertionError` in
+  `dsession.py` — `1 failed, 597 passed, 10 skipped, 56 errors in 7217.43s (2:00:17)`. Isolated local re-run of the
+  whole file on current LDR HEAD (`e8963ec`, contains `24e0878d65e6` as ancestor): **9 passed in 14.67s** — same
+  "legitimately fast, blown out by scheduling" profile as every prior entry. PR #673 `state=MERGED`
+  (`mergedAt=14:47:16Z`, 3s after `createdAt`) — self-merged via an independent already-green check, same race as every
+  prior entry. Zero open PRs, zero open `/api/repo-blockers` for deployment-service. Current LDR `quality-gates-v2`
+  (`30765433226`) is `in_progress` (not wedged — `tests` job actively running since `20:24:42Z`), left to resolve
+  asynchronously per this doc's precedent. No `live-defi-rollout` code or test change made or needed. Added
+  `deployment-service` to this doc's `repos:` frontmatter. Slot left clean. Pinging authoring slot (`ci`) with the
+  outcome.
