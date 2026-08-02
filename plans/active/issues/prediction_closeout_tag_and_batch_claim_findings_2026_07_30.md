@@ -193,7 +193,7 @@ candidate, not a batch todo.
       specifically for the batch4-todo-3 citation to live in batch6's **Deferred** section, so that section now exists
       (`## Deferred — duplicate extraction, sole owner is batch4 todo 3`) naming batch4 todo 3 as sole owner and
       recording why the deletion half of the ruling was not performed. The deletion remains deliberately NOT done for
-      the same live-plan positional-ID reason — re-verified 2026-08-02 that batch6 is still `status: active` with 10
+      the same live-plan positional-ID reason — re-verified 2026-08-02 that batch6 is still `status: active` with 13
       open todos, and that batch4 todo 3 is still present and `[ ]`.
 - [x] ✅ [DOC] P3. **DONE 2026-07-31** — `unified-trading-pm@(this commit)`. Resolve Finding 3: add the 4 named docs to
       `prediction_consolidated_closeout_2026_07_18.md`'s aggregated-sources index as proper `[text](path)` markdown
@@ -228,7 +228,7 @@ candidate, not a batch todo.
   present and `[ ]` as sole owner; added the explicit `## Deferred — duplicate extraction, sole owner is batch4 todo 3`
   section to batch6 so the citation lives where the ruling specified. **Deliberate non-execution, reported honestly**:
   the ruling's "delete batch6 todo 7" half was NOT performed — batch6 has been live-dispatching since 2026-07-31 with
-  10 open todos and `regen_backlog_from_plan.py` derives task IDs positionally, so deleting the line would renumber
+  13 open todos and `regen_backlog_from_plan.py` derives task IDs positionally, so deleting the line would renumber
   every subsequent open todo on a plan with in-flight work. The outcome the ruling targeted (exactly one owner, no
   duplicate dispatch) is fully achieved without it. **Precondition re-check the ruling asked for** ("verify the bug is
   still live before flipping"): the Kalshi CQG mis-bucketing bug is **NO LONGER LIVE** — read
