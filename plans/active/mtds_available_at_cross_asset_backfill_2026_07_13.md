@@ -782,6 +782,28 @@ re-run — if unparseable stays 0 while fill rate still doesn't move, the gap is
 a different explanation (e.g. dedup losing the fresh row to an older un-touched one on the consolidator side). Did not
 attempt the re-run or the parser investigation this session (time-boxed to the prediction-lane launch).
 
+**2026-08-02, resumed session — re-run DONE, this exact fallback case confirmed. The path-parsing hypothesis is now
+DEFINITIVELY RULED OUT too.** Ran
+`rebuild_tradfi_manifest.py --start-date 2019-01-02 --end-date 2023-04-10 --chunk-days 30` on the `9d354cea`-fixed code:
+all 52 chunks completed clean, **0 unparseable across the entire range**, 151,696 total shards, 111s elapsed.
+Force-consolidate contended briefly with the tradfi cron's own lock (normal — `_LOCK_TTL_SECONDS=300`, not a stuck lock;
+a fresh cron cycle picked it up and the consolidated index genuinely refreshed, `Update Time` moved from `17:39:42Z` to
+`17:46:36Z`, well after this re-run's writes landed at `17:41:52Z`). Re-ran the fill-rate check against the
+confirmed-fresh index: **byte-identical to before the re-run** — `ohlcv_1s` 58.0%, `ohlcv_1m` 55.1%, overall 77.03%
+(1,307,774/1,697,765), down to the exact row counts. **A completely clean re-scan of the whole range, with genuinely
+fresh consolidated data, produced ZERO change.** This rules out both candidate explanations from the prior entry: not a
+bundled/no-timestamp class (already ruled out — 0 bundled rows in this era), and now not a scan/path-parsing coverage
+gap either (0 unparseable, so the scan lists and processes every object it can see). **The only remaining explanation
+from the original recommendation is the third one**: the manifest consolidator's dedup is losing the fresh, filled row
+to an older, unfilled one sharing the same row-key — i.e. this rebuild's writes ARE landing (confirmed via the per-VM
+shard `time_created` bumps + the consolidator picking them up), but something in the merge/dedup ordering
+(`rows_out`/`dedup_dropped` logic, or a `written_at` last-write-wins comparison) is choosing an OLDER pre-fix row over
+this rebuild's fresh one for roughly half of 2019-2023-04's non-bundled OHLCV cells. **Not investigated further this
+session** (would need reading the consolidator's actual dedup/last-write-wins comparator against a sample of the ~45%
+still-unfilled row-keys, checking whether their `written_at` is older or newer than this rebuild's run, and if older,
+whether the comparator is supposed to prefer newer writes but isn't) — flagging as the next concrete step, not
+re-guessing with a third re-run (would just reproduce the same result for the third time).
+
 **Prediction stays unflipped** (`-006`, neither lane complete for it). **Tradfi's cron-resume todo stays flipped**
 (independently verified complete, see #11) but **the Apply todo is reverted to unflipped** per this session's own
 finding above — the aggregate fill number alone hid a real per-month gap, so "applied without crashing" is not the same
