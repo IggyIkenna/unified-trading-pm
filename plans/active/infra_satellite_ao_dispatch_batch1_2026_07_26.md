@@ -676,18 +676,15 @@ orphaned?" resolves to "everything," because nothing in the covering set does an
       full stash-pile audit of every populated slot on this laptop —
       `plans/active/issues/unified_trading_pm_stash_pile_accumulation_2026_07_26.md` has the findings.
 
-- [ ] [REVIEW] P3. **Confirm (or extend) that `/plan-reconcile` catches a doc moving without its referrers being
-      updated.** The archival-ritual gap that caused this class was fixed at the RULE level (CLAUDE.md's archival ritual
-      is now 6 steps, with "update every referrer's path corpus-wide" spelled out), but rule-level fixes depend on
-      operator diligence — the enforcement question is whether the reconciler's own passes would CATCH a violation. Read
-      `cursor-configs/skills/plan-reconcile/SKILL.md`'s Phase 1 hunters and its AO-dispatch-readiness pass and determine
-      whether a moved-doc-with-stale-referrers state is actually detected; if not, extend the hunter list with that
-      class. Evidence that this recurs and is not hypothetical: three separate 2026-07-25 regressions
-      (`codex/14-playbooks/` → `codex/14-customer-journeys/` leaving 78 dangling targets across 104 files; a
-      `plan_line_cap_remediation` archival leaving 66 referrers; a terminal-status sweep leaving 3) all landed because
-      the mover did not update referrers. **Done when**: the SKILL either demonstrably covers the class (cite the
-      specific hunter text) or carries a new hunter for it, and the determination is recorded in the source doc. Repo:
-      unified-trading-pm. Source: `issues/reference_path_convention_2026_07_23.md`.
+- [x] [REVIEW] P3. ✅ **DONE 2026-08-02 (slot-12)** — determination: NOT sufficient as they stood. Verified from the
+      actual code (not the skill's own prose): `check_reference_paths.py` DOES scan body text corpus-wide, but
+      `run_hygiene_sweep.sh` invokes it `--quiet` (suppressing the itemized violation list) and it's a shrinking-ratchet
+      check with substantial slack (baseline 901, live 913 as of 2026-08-02) — a moderate single-move regression (this
+      todo's own cited 78/66/3 incidents) can land inside that slack without ever failing the gate, which is exactly why
+      none of the three cited incidents were caught by a `/plan-reconcile` pass. Extended
+      `cursor-configs/skills/plan-reconcile/SKILL.md` with Phase 1 hunter 8 ("Moved-doc referrer hunter") — a
+      git-log-diff-driven, ratchet-independent per-move referrer check. Full evidence + determination recorded in
+      `issues/reference_path_convention_2026_07_23.md`'s own matching todo (now flipped). `pm@<commit-pending>`.
 
 - [ ] [INFRA] P2. **Add prefix-scoped lifecycle rules to the deployment-scripts bucket + a cross-bucket soft-delete
       bloat audit.** Rehomed 2026-07-27 from `issues/issue_docs_remediation_sweep_2026_06_02.md`'s "Operator-gated

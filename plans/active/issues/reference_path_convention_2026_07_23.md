@@ -126,9 +126,26 @@ depends_on: []
       `check_line_caps.sh` no-exceptions block (a same-length text swap still trips prettier's paragraph reflow into
       1001 lines, per `terminal_status_archival_backlog_sweep_2026_07_25.md`'s slot-2 Progress Log entry). **Done
       when**: split `sports_satellite_ao_dispatch_batch2_2026_07_24.md` under 1000L, then fix the reference.
-- [ ] [REVIEW] P3. Confirm `/plan-reconcile`'s existing contradiction-sweep phases are sufficient to catch a doc that
-      moves without its referrers being updated going forward (the archival-ritual gap above, once fixed, should be
-      enforced by more than operator diligence) — extend the skill's Phase 1/AO-dispatch-readiness hunters if not.
+- [x] [REVIEW] P3. ✅ **DONE 2026-08-02 (slot-12)** — determination: **NOT sufficient as they stood; extended.**
+      Verified by reading the actual code, not the skill's own prose: `check_reference_paths.py`'s existence check DOES
+      scan every `/codex/...`/`/plans/...` reference anywhere in body text (`GOOD_REF_RE.finditer(text)` over the whole
+      doc, not just frontmatter). But two things blunt it in practice — (a) `run_hygiene_sweep.sh` invokes it `--quiet`
+      (`scripts/plan-hygiene/run_hygiene_sweep.sh:181`), which suppresses the itemized per-file violation list, so Phase
+      1 mechanical adjudicators have nothing to adjudicate even when the gate goes red; (b) it's a shrinking-ratchet
+      check with substantial slack (`reference_paths_baseline.yaml`; live-verified 2026-08-02: existence baseline 901,
+      live count 913) — a moderate single-move regression (this doc's own cited incidents: 78/66/3 new dangling
+      referrers each) can land entirely inside that slack without ever pushing the corpus-wide total over the ratchet
+      ceiling. Net effect: for inline body-text references — the dominant referrer shape a doc move actually breaks —
+      the existing mechanism gave no per-move specificity and could silently miss a genuine regression, exactly matching
+      what happened in all three of this doc's 2026-07-25 incidents (none were caught by a `/plan-reconcile` pass; all
+      were found manually after the fact). Frontmatter `related:`/`depends_on`/ `supersedes` referrers ARE reliably
+      caught today (Phase 0's own inventory script computes those directly, ungated) — the gap was specifically inline
+      body-text citations. **Extended**: added Phase 1 hunter 8 ("Moved-doc referrer hunter") to
+      `cursor-configs/skills/plan-reconcile/SKILL.md` — a git-log-diff-driven, ratchet-independent pass that greps the
+      full corpus body text for every recently-moved doc's OLD path and routes any hit straight to the existing Phase 4
+      auto-fix row, plus a note to re-run `check_reference_paths.py` without `--quiet` so its itemized list becomes a
+      real Phase-1 candidate feed. Also corrected Phase 0's own text, which previously assumed the mechanical checker
+      always surfaces the flag (untrue under its default `--quiet` + ratchet invocation). `pm@<commit-pending>`.
 
 ## Codex SSOTs
 

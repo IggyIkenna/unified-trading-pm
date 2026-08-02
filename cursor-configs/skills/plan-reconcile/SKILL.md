@@ -172,7 +172,10 @@ Flags are CANDIDATES, not findings — a "dangling" ref often resolves to `plans
   bare `related:` entry the 2026-07-23 migration left untouched; what the correct reference is when a doc has genuinely
   moved/been renamed/archived (the archival ritual's 6th step — grep every referrer, update each — is this skill's job
   to actually execute, not just check); and whether a dangling reference should be fixed (target existed, got lost) or
-  removed (the claim itself is stale). Backlog: `/plans/active/issues/reference_path_convention_2026_07_23.md`.
+  removed (the claim itself is stale). Backlog: `/plans/active/issues/reference_path_convention_2026_07_23.md`. **Caveat
+  (2026-08-02)**: this framing assumes the mechanical checker at least SURFACES the flag for the skill to adjudicate —
+  verified 2026-08-02 that for `check_reference_paths.py` specifically, its `--quiet`, ratchet-gated invocation here
+  often does not (see Phase 1 hunter 8, "Moved-doc referrer hunter", for the closing mechanism).
 - **Phase 5 (exit, HARD green-gate):** re-run it **with** regen (`--ci`) and require **0 hard failures** + `0 orphans`
   before the run may be called done (see Phase 5).
 
@@ -269,6 +272,37 @@ history; properly-bannered supersession (an UNbannered superseded doc that still
    on the SAME physical line, never across a blank line; (b) **internal self-consistency** — any stated
    rule/invariant/formula, re-derived against an example or formula the same doc shows elsewhere, must not contradict it
    or itself mid-sentence.
+8. **Moved-doc referrer hunter** — added 2026-08-02 (`issues/reference_path_convention_2026_07_23.md`'s "Confirm
+   `/plan-reconcile` catches a doc moving without its referrers being updated" todo, dispatched via
+   `infra_satellite_ao_dispatch_batch1_2026_07_26.md`), after determining the existing mechanism does NOT reliably catch
+   this class for the dominant referrer shape. Verified by reading the actual code, not assuming from this skill's own
+   prose: `check_reference_paths.py`'s existence check DOES scan every `/codex/...`/`/plans/...` reference ANYWHERE in
+   body text, not just frontmatter (`GOOD_REF_RE.finditer(text)` over the whole doc) — but two things blunt it in
+   practice. (a) `run_hygiene_sweep.sh` invokes it `--quiet` (its own line:
+   `run_check ... check_reference_paths.py --quiet`), which suppresses the itemized per-file violation list — only a
+   binary pass/fail per check reaches Phase 0's candidate set, never the actual dangling-ref lines, so Phase 1
+   mechanical adjudicators have nothing to adjudicate even when the gate is red. (b) it is a SHRINKING-RATCHET check
+   against a baseline with substantial slack (`reference_paths_baseline.yaml`; live-verified 2026-08-02: existence
+   baseline 901, live count 913 — already over, unrelated to any specific move) — a moderate single-move regression (the
+   cited incidents: 78/66/3 new dangling referrers each) can land entirely inside that slack without ever pushing the
+   corpus-wide total over the ratchet ceiling, especially if unrelated fixes elsewhere in the same window offset the
+   count. Net effect: for INLINE BODY-TEXT references (the dominant referrer shape — a doc archival/rename breaks
+   citations scattered through OTHER docs' prose, not just their `related:` frontmatter list), the existing mechanism
+   gives no per-move specificity and can silently miss a genuine regression, which is exactly what happened in all three
+   of the cited 2026-07-25 incidents — none were caught by a `/plan-reconcile` pass; all were found by a human/agent
+   noticing a broken link after the fact. (Frontmatter `related:`/`depends_on`/`supersedes` referrers ARE reliably
+   caught today — Phase 0's own throwaway inventory script computes those directly, ungated by any ratchet, as genuine
+   per-doc Phase-1 candidates every run; this hunter closes the remaining body-text gap, it does not duplicate that
+   coverage.) **Fix**: for every doc that moved/archived/renamed since the last reconcile run
+   (`git log --diff-filter=AR --name-status --since=<last-run-timestamp> -- plans/ codex/`), grep the FULL corpus body
+   text (not just frontmatter) for the OLD path/basename; any hit is a hard finding routed straight to the existing
+   Phase 4 auto-fix row ("Dangling ref where the target moved to archive/codex → Repoint the ref") — ungated by the
+   ratchet, since a specific tracked move's referrers are a deterministic, provable check (the old path is gone, the new
+   one exists, a grep hit names exactly which doc + line), not a preference call. Also re-run `check_reference_paths.py`
+   WITHOUT `--quiet` (or capture its stdout directly instead of piping through `run_hygiene_sweep.sh`'s summary) so its
+   itemized existence-violation list becomes a real Phase-1 candidate feed on every run, closing the residual gap for
+   dangling refs the git-log-diff pass structurally can't catch (e.g. a referrer added after its target was already
+   gone, so there's no "move" to diff against).
 
 ## Phase 2 — done-but-unchecked sweep
 
