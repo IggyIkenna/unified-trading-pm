@@ -554,16 +554,11 @@ concurrent workers do not collide on this file.
       slippage (e.g. `03:02→05:07` is a ~2h gap, consistent with known throttling, not a real miss). The
       `push`→`schedule: "0 * * * *"` retarget from 2026-07-22 is genuinely live and healthy; no root-cause investigation
       needed. Source: `github_actions_operator_gated_followups_2026_07_17.md` (Deferred row 14).
-- [ ] [INFRA] P2. **Find the CI/CD event-ledger CONSUMER — the one blocking question behind decision D2.** The
-      `persist-cicd-event` ledger is written with an unlocked read-modify-write on ONE object per repo per day, so
-      overlapping writers silently discard each other's rows while every writer logs success. The operator's
-      fix-vs-accept ruling is explicitly blocked on ONE determinable fact the doc names: **who reads this ledger?** The
-      schema claims `GitHubWorkflowEvent` from `unified_api_contracts.internal`, implying a real consumer. Grep the
-      whole workspace (all repos, incl. UIs and deployment-api) for every reader of the `unified-trading-cicd-events`
-      bucket and of that type, then read each candidate consumer — **grep-then-READ, 0 hits ≠ missing.** Audit only: do
-      NOT change `persist-cicd-event` or the ledger's write path. **Done when**: the consumer set (possibly empty,
-      stated as a measured fact) is recorded in the source doc so the operator's D2 ruling is unblocked. **Do not
-      re-derive the loss analysis** — the doc says it is complete. Source:
+- [x] ✅ [INFRA] P2. **Find the CI/CD event-ledger CONSUMER — the one blocking question behind decision D2.** DONE
+      2026-08-02. Consumer confirmed via workspace-wide grep-then-READ:
+      `deployment-api/_repo_ci_alerts.py::_read_ledgers_sync()` prefix-walks `cicd/events/`, feeding
+      `unified_alerts.py`/`repo_ci.py`/`health_overview.py` → `deployment-ui`'s Alerts page. Recorded in the source doc,
+      unblocking + closing D2 (Option 1 was already shipped — see D2 entry for full evidence). Source:
       `github_actions_operator_gated_followups_2026_07_17.md` ([REVIEW] P0 / D2).
 - [x] ✅ [INFRA] P2. **Is the AWS CodeBuild cosmetic `failure` status still posted at all?** This doc's noise may
       already be moot: all native GitHub webhooks on the 18 CodeBuild projects in `427895769566`/ap-northeast-1 were
@@ -677,6 +672,13 @@ tag; (7) the tranche-membership rule misses every `asset_group: [meta]`/`[infras
 
 ## Progress Log
 
+- **2026-08-02** (slot 7, infra, task `ci_satellite_ao_dispatch_batch1-027`) — Flipped the event-ledger-consumer todo
+  (D2 unblocked in the source doc). **Incidental finding, out of scope for this todo**: the sibling alerts ledger
+  (`cicd/alerts/{date}/alerts.jsonl`, same read-modify-write race, already tracked as partially-open in
+  `deployment_alerts_ingestion_completeness_2026_07_20.md`, archived with the gap still open) has an UNFIXED writer not
+  enumerated in that doc's list — `agent-orchestrator/server/notifications/slack.py::_persist_to_gcs()`
+  (download→append→upload, confirmed live at line 163-167). Not fixed here (audit-only scope); filed as
+  `issues/alerts_ledger_remaining_unfixed_writers_2026_08_02.md` (all 3 known unfixed writers, one bounded todo each).
 - **2026-07-26** — Drafted by `/ag-closeout-audit ci` in autonomous mode, immediately after `/plan-reconcile ci` (whose
   14 auto-fixes shipped as `unified-trading-pm@29dda2bfd`, so frontmatter/checkbox state was trustworthy going in).
   Phase 0: covering-plan set EMPTY — closeout has 0 todos, no batch plan has ever existed, all 30 Sources are
