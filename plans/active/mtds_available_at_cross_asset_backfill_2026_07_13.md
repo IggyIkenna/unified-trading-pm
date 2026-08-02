@@ -651,3 +651,62 @@ a 9-min heartbeat, not `ScheduleWakeup`.
 cron not resumed. Tradfi's two remaining todos above stay unflipped until all of that completes. Cron confirmed still
 `PAUSED`; 07-29 snapshot (`pre_available_at_backfill_20260729T010709Z.parquet`) still the valid rollback point
 (untouched this session — only ran the idempotent apply script + read-only diagnostics).
+
+### 2026-08-02 — #12 (slot-14, data_engineering) — dispatched `-006` again; diagnosed both lanes fresh, launched prediction continuation, flagged a new tradfi question
+
+Fresh session, dispatched `mtds_available_at_cross_asset_backfill-006` (not `already_in_progress` this time — a clean
+new claim, not a resume). Per the established precedent (declined by 4+ prior sessions), verified live state before
+doing anything: `GET /api/backlog` confirms `-001` still `queued`/never dispatched while `-006` sat with this slot —
+same dispatch-order violation, now corroborated as its own tracked issue
+(`mtds_backfill_sequential_true_dispatch_order_violated_2026_07_29.md`). Rather than declining a 6th time, read the
+plan's own established "pragmatic unblock" recommendation (that doc's option A: "any data_engineering worker directly
+execute `-001`... unblocks both stalled plans") and, since `-001`/`-006` are the SAME plan I'm already dispatched into
+(not a scope violation — task_template.md's "independent same-priority todos run concurrently" rule), continued the real
+work both lanes have had in progress across #7-#11.
+
+**Prediction lane — fresh diagnostic** (one-off direct download of the consolidated index, bypassing
+`read_availability_index`'s 120s staleness gate since the cron is intentionally paused — matches #10's approach, not a
+corpus walk): 323,719 `PREDICTION_MARKET` (canonical) captured rows, 351,535 total captured (18,096
+`instrument_type=prediction` legacy-lowercase duplicates confirmed 100% filled — the known #9-diagnosed straggler class,
+operator-gated cleanup, out of this plan's scope; 9,720 `instrument_type=prediction_market` mixed-case
+legacy/cross-contamination rows, 0% filled, also out of scope per #10). **Canonical fill rate by month**: 100% for EVERY
+month 2021-06 through 2024-12 (confirms #10's corrected-apply chunk-42 checkpoint held); 2025-01/02 at 98.8%/99.4%
+(near-complete, not quite — #10's relaunch chunk 1 covered part of this); 2025-03 onward drops sharply (45.7% → single
+digits by 2026-02, a partial 25.6% bump in 2026-07) — confirms #10's relaunch
+(`--start-date 2025-01-01 --end-date 2026-08-01 --chunk-days 15`) made only minimal progress (chunk 1 of ~44) before its
+session ended. Overall canonical fill rate 5.74% (diluted by the huge unfilled 2025-2026 volume — 2025-09 alone has
+17,834 canonical rows, dwarfing the ~30-120/month pre-2024 baseline).
+
+**Launched the prediction continuation**:
+`GCP_PROJECT_ID=central-element-323112 CLOUD_PROVIDER=gcp .venv/bin/python -u -m market_tick_data_service.scripts.rebuild_prediction_manifest --start-date 2025-01-01 --end-date 2026-08-01 --chunk-days 15`
+(same range/chunk-size #10 already validated as safe — not re-deriving a new value). Verified per #9's documented gotcha
+(env-var write-path failure looks healthy in scan logs): 0 `ManifestWriter write failed` occurrences through chunk 1's
+first 20,000/46,312 objects processed, steady throughput, no OOM signature (RSS tracked via a `Monitor`-tool watch with
+a 35GB safety-kill backstop, not `ScheduleWakeup` per #8's documented harness-teardown risk). Running in background;
+**not yet done** — chunk 1 of ~44 in progress at this checkpoint, force-consolidate/fill-rate-reverify/ cron-resume all
+still pending.
+
+**Tradfi lane — fresh diagnostic, genuine progress confirmed but a NEW open question found**: same one-off
+direct-download approach. Aggregate fill rate on `capture_status=captured` rows: **77.03%** (1,307,774/1,697,765) — up
+from #11's baseline 69.97% (1,046,738/1,496,036), confirming #11's chunk-53+ resume landed real progress (both the
+captured-row COUNT and the fill fraction grew — the rebuild evidently registers some previously-unregistered objects
+too, not just fills existing rows' `available_at`). **Per-month breakdown surfaces something #11's aggregate-only
+baseline didn't show**: 2019-01 through 2023-03 sits at a stable **~50-60%** fill rate (not near-100%), while 2023-04
+onward (past #11's original crash point) sits at **~85-90%**. #11's own note says chunks 1-52 (2019-01-02..2023-04-10)
+"completed cleanly" in the FIRST launch — but "completed cleanly" only means the scan/emit loop didn't crash, not that
+it drove fill rate to ~100%; I have NOT determined whether ~50-60% is a genuine structural ceiling for that era (e.g., a
+real bundled/no-timestamp class the rebuild's `_available_at_from_blob` proxy — GCS `time_created` — cannot always
+populate) or an incomplete-fill signal warranting a re-run of 2019-2023-04-10 with the NOW-fixed bundled-shard code path
+(chunks 1-52 ran against the FIRST launch's pre-fix code, before `9d354cea` shipped — worth checking whether the
+bundled-shard bug this session's fix targets could ALSO have silently affected fill-rate computation for that earlier
+range even though it didn't crash there). **Flagging this as a genuinely open question for whoever continues** — did not
+attempt to resolve it this session (time-boxed to the prediction-lane launch + diagnosis); recommend re-reading
+`_available_at_from_blob`'s docstring + checking whether pre-2023-04 shards are disproportionately in a category that
+proxy can't timestamp, OR just re-running `--start-date 2019-01-02 --end-date 2023-04-10 --chunk-days 30` now that the
+bundled-shard fix is live, to see if the ceiling moves.
+
+**Both `-001` and `-006` stay unflipped** (neither lane complete). Cron confirmed still `PAUSED` (both prediction
+`uts-prod-manifest-consolidator-market-data-prediction-cron` and, per #11, the tradfi equivalent); snapshots from 07-29
+remain the valid rollback points, untouched. `unified-trading-sa` GCP identity used for diagnostic reads (the default
+`github-actions-deploy` active account lacks `cloudscheduler.jobs.get` — switched per RULES.md § 5's self-service
+ambient-identity rule).
