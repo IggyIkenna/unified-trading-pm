@@ -26,7 +26,7 @@ scope: [engineer]
 tags: [utl, manifest, availability-index, oom, memory, filters-pushdown, delta-one]
 related:
   - /plans/active/issues/delta_one_skip_dependency_check_oom_pre_2023_05_dates_2026_07_31.md
-  - /plans/active/issues/mtds_backfill_vm_startup_oom_rc137_2026_07_14.md
+  - /plans/archive/issues/mtds_backfill_vm_startup_oom_rc137_2026_07_14.md
 created: "2026-07-31"
 source:
   - Discovered via a dedicated research pass root-causing

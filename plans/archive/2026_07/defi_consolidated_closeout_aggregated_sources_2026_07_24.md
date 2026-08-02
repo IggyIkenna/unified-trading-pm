@@ -653,7 +653,7 @@ picture.
     (1 open)
     - **3. [DATA] P1.** Assess blast radius on existing candle data — any past MDPS run with `max_workers>1` over a
       heterogeneous file list may carry wrong leading-bin seeds.
-  - [`plans/active/issues/mtds_backfill_vm_startup_oom_rc137_2026_07_14.md`](/plans/active/issues/mtds_backfill_vm_startup_oom_rc137_2026_07_14.md)
+  - [`plans/archive/issues/mtds_backfill_vm_startup_oom_rc137_2026_07_14.md`](/plans/archive/issues/mtds_backfill_vm_startup_oom_rc137_2026_07_14.md)
     — 0 open todos (closed/archived/record-only).
   - [`plans/archive/issues/mtds_empty_string_fallback_codex_gate_blocking_pushes_2026_07_08.md`](/plans/archive/issues/mtds_empty_string_fallback_codex_gate_blocking_pushes_2026_07_08.md)
     (4 open)

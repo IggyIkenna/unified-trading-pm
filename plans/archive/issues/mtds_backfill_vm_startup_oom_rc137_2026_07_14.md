@@ -16,7 +16,7 @@ summary:
   what e2-standard-4 (16GB) can hold, EVERY MTDS backfill VM across every asset_group is now at OOM risk, not just DeFi.
   This blocks mvp_backfill_defi_onchain_v10-002's G2 gate and may be silently killing other in-flight backfill VMs
   fleet-wide."
-status: open
+status: complete
 nature: record
 asset_group: [defi, cefi, tradfi, sports]
 stage: [data]
@@ -30,16 +30,47 @@ related:
     plans/active/issues/mtds_defi_dex_backfill_vm_immediate_sigkill_2026_07_14.md,
   ]
 created: 2026-07-14
+last_updated: "2026-08-02"
 assigned_vm: NA
 source: [mvp_backfill_defi_onchain_v10-002]
 parent_epic: defi_master
 priority: P0
-resolved_by:
+resolved_by: unified-trading-library@a5b07ff7 (+ market-tick-data-service@d6846f1c, unified-trading-library@0aa284e8,
+  unified-trading-library@391f8196, market-tick-data-service@e3bbb2a3)
 locked_by:
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
 ---
+
+> **📦 ARCHIVED 2026-08-02 (operator ruling 2026-07-30).** All 21 todos `[x]`, zero open, `locked_by` empty — archived
+> per the 6-step ritual in `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`. **Archived DESPITE
+> being 1509 lines (over the 1000L hard cap)** under that ruling's documented exception: a zero-open-todo doc archives
+> regardless of cap, because the cap exists to stop a LIVE plan growing into an unreadable hub and archiving is the very
+> thing that removes it from the capped corpus. This doc IS the 1509-line case the ruling was written about (see
+> `check_line_caps.sh`'s header comment and the codex section "The line-cap does NOT block archival of an already-done
+> doc"). **This supersedes** the `[DOC] P2` "split this doc into an under-cap pair" todo in
+> `/plans/active/issues/archive_candidate_docs_over_line_cap_blocks_edit_2026_07_29.md` — splitting a finished doc to
+> appease a cap is explicitly what the ruling forbids.
+>
+> **Outcome**: the rc=137 startup-OOM mechanism (unscoped `ManifestFreshnessCache` / full-schema
+> `read_availability_index()` reads blowing the 16GB VM ceiling) is RESOLVED and production-verified — root-caused
+> inside `manifest_freshness.py`, fixed via `_date_range_filters()` + row-group `filters=` pushdown, measured ~14.86 GiB
+> → ~5 MB for an equivalent read, and confirmed on real VMs for `dex_pools_handler.py` and `lending_indices_handler.py`.
+>
+> **Ritual step 1 (deferrals migrated, none evaporated)**: this doc's closing paragraph left one item as PROSE — "the
+> other 7 [of 9 DeFi handlers] remain verified only via the shared-mechanism code fix + unit tests, not per-handler live
+> runs." That is now a real tracked `- [ ]` todo (`[VERIFY] P3`) in
+> `/plans/active/issues/mtds_dex_pools_swaps_backfill_verification_2026_07_24.md`, which already owns post-fix
+> OOM-recurrence verification for MTDS DeFi handlers. Its other forward pointer,
+> `bucket_estate_consolidation_to_sub100_2026_07_13.md` item 13 (the Morpho `lending_indices` backfill), is itself
+> already archived at `/plans/archive/2026_07/bucket_estate_consolidation_to_sub100_2026_07_13.md`.
+>
+> **Ritual steps 3-4 (codex alignment) — checked, no codex edit required.** The durable contract this incident
+> established (never call `read_availability_index()` without a `columns=` projection / date pushdown) is already
+> machine-enforced by `scripts/quality_gates/check_bare_read_availability_index.py` and separately owned by the live
+> issue `/plans/active/issues/read_availability_index_bare_defi_callers_2026_07_27.md`, so archiving this doc orphans
+> no rule.
 
 ## What I found
 

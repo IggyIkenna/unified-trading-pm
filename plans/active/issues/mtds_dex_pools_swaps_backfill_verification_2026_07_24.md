@@ -30,7 +30,7 @@ tags:
 related:
   [
     /plans/active/defi_consolidated_closeout_2026_07_18.md,
-    /plans/active/issues/mtds_backfill_vm_startup_oom_rc137_2026_07_14.md,
+    /plans/archive/issues/mtds_backfill_vm_startup_oom_rc137_2026_07_14.md,
     /plans/archive/issues/defi_solana_dex_pools_fake_history_recurrence_prd_bucket_2026_07_23.md,
   ]
 created: 2026-07-24
@@ -223,6 +223,20 @@ rule (see Progress Log entry below for the observed outcome).
       agent sandbox are no longer measured at ~100 KB/s, to corroborate this issue's GCS-object-existence-based findings
       against the manifest's own `capture_status` distribution. Not blocking — object-level evidence here is already
       ground truth for "did real rows land."
+- [ ] [VERIFY] P3. **Confirm the rc=137 startup-OOM fix chain held across the remaining 7 DeFi MTDS handlers — migrated
+      here 2026-08-02 from `/plans/archive/issues/mtds_backfill_vm_startup_oom_rc137_2026_07_14.md` at its archival
+      (ritual step 1: that doc's closing paragraph left this as PROSE, never a tracked todo).** That doc reached
+      zero-open-todos with the shared-mechanism fix (`unified-trading-library@a5b07ff7`'s row-group pushdown +
+      `_date_range_filters()` in `manifest_freshness.py`) verified by unit tests plus real-VM confirmation on only TWO
+      of 9 DeFi handlers — `dex_pools_handler.py` and `lending_indices_handler.py` (Morpho, 108-day window). Its own
+      words: "the other 7 remain verified only via the shared-mechanism code fix + unit tests, not per-handler live
+      runs." This issue doc already carries independent corroboration for one of those two (the
+      `mtds-dex-pools-backfill` VM ran healthy 3 days / 1.55M+ shard entries at 30-40% mem before an unrelated explicit
+      API delete), so the residual is narrow. **Done when**: for each of the remaining 7 DeFi handlers, either a real
+      post-fix VM run is cited (log evidence showing it survived past the old ~20-90s kill window), or the handler is
+      recorded as not-yet-exercised-since-the-fix — a stated coverage verdict per handler, not a blanket claim.
+      Read-only log/registry inspection; no relaunch required unless a genuine rc=137 recurrence turns up. Repo:
+      market-tick-data-service / deployment-service.
 - [x] ✅ [BACKEND] P1. **DONE 2026-07-30 (slot-14) — root cause was NOT schema drift; fail-fast fix shipped for the
       genuinely-live pair.** Live-reproduced every remaining pair in this todo against the real TheGraph gateway (direct
       `gateway.thegraph.com` POST, same method as the slot-2/slot-11 findings below), running each protocol's full

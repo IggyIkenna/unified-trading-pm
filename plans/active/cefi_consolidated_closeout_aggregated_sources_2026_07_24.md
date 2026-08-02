@@ -195,7 +195,7 @@ context_scope:
     `cefi_e6_cf7_relabel_and_attempted_failed_remeasure_2026_07_26.md` per the archived doc's own todo #2 note.
   - [`plans/active/issues/mtds_backfill_vm_memory_hang_large_chunk_2026_07_22.md`](/plans/active/issues/mtds_backfill_vm_memory_hang_large_chunk_2026_07_22.md)
     — 0 open todos (status: open, narrative finding doc — no checkbox-tracked items, see file for recommended fix).
-  - [`plans/active/issues/mtds_backfill_vm_startup_oom_rc137_2026_07_14.md`](/plans/active/issues/mtds_backfill_vm_startup_oom_rc137_2026_07_14.md)
+  - [`plans/archive/issues/mtds_backfill_vm_startup_oom_rc137_2026_07_14.md`](/plans/archive/issues/mtds_backfill_vm_startup_oom_rc137_2026_07_14.md)
     — 0 open todos (closed/archived/record-only).
   - [`plans/active/issues/cefi_backfill_per_day_catalogue_reload_2026_07_20.md`](/plans/active/issues/cefi_backfill_per_day_catalogue_reload_2026_07_20.md)
     — 0 open todos (status: open, narrative finding doc — no checkbox-tracked items, see file for recommended fix).

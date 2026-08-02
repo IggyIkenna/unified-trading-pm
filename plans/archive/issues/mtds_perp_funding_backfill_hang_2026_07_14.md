@@ -25,7 +25,7 @@ tags: [hang, backfill-vm, mtds, perp-funding, kalshi, defi, timeout]
 related:
   [
     plans/active/mvp_backfill_defi_onchain_v10_2026_06_27.md,
-    plans/active/issues/mtds_backfill_vm_startup_oom_rc137_2026_07_14.md,
+    plans/archive/issues/mtds_backfill_vm_startup_oom_rc137_2026_07_14.md,
     plans/active/mtds_retry_safe_default_audit_2026_07_14.md,
   ]
 created: 2026-07-14

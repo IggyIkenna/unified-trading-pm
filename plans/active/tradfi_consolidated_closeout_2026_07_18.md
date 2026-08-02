@@ -564,7 +564,7 @@ Everything below is scoped so these cells are canonical, honestly-covered, and s
       `tardis_csv_transport._get_parse_executor`)
     - **[AUDIT] P2.** Sweep the repo for other `run_in_executor(None, ...)` call sites doing network-blocking work
     - **[CODE] P2.** Consider an `aiodns`/`AsyncResolver` for aiohttp sessions
-  - [`plans/active/issues/mtds_backfill_vm_startup_oom_rc137_2026_07_14.md`](/plans/active/issues/mtds_backfill_vm_startup_oom_rc137_2026_07_14.md)
+  - [`plans/archive/issues/mtds_backfill_vm_startup_oom_rc137_2026_07_14.md`](/plans/archive/issues/mtds_backfill_vm_startup_oom_rc137_2026_07_14.md)
     — 0 open todos (closed/archived/record-only)
   - [`plans/active/issues/tradfi_backfill_oom_remediation_2026_06_24.md`](/plans/active/issues/tradfi_backfill_oom_remediation_2026_06_24.md)
     - **[INFRA] P2.** After the next deployment-service image rebuild, drop the runtime `TRADFI_OHLCV_MACHINE` env

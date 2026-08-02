@@ -51,7 +51,7 @@ context_scope:
   [
     /plans/active/defi_satellite_ao_dispatch_batch3_2026_07_26.md,
     /plans/active/issues/delta_one_dependency_checker_ignores_passthrough_feature_group_2026_07_31.md,
-    /plans/active/issues/mtds_backfill_vm_startup_oom_rc137_2026_07_14.md,
+    /plans/archive/issues/mtds_backfill_vm_startup_oom_rc137_2026_07_14.md,
     features-service/features_service/delta_one/app/core/dependency_checker.py,
   ]
 locked_by:

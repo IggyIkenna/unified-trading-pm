@@ -388,7 +388,7 @@ drift_direction: advance-code
   `/plans/archive/issues/manifest_completeness_full_corpus_map_build_2026_07_20.md`,
   `/plans/active/issues/mdps_features_deadcode_consolidation_2026_07_20.md`,
   `/plans/archive/issues/mdps_prior_seed_context_thread_unsafe_2026_07_20.md`,
-  `/plans/active/issues/mtds_backfill_vm_startup_oom_rc137_2026_07_14.md`,
+  `/plans/archive/issues/mtds_backfill_vm_startup_oom_rc137_2026_07_14.md`,
   `/plans/active/issues/mtds_is_full_adapter_smoketest_findings_2026_07_07.md`,
   `/plans/active/issues/phantom_audit_estate_coverage_gap_2026_07_10.md`,
   `/plans/archive/issues/pipeline_e2e_check_vm_name_collision_2026_07_12.md`,
