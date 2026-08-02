@@ -110,12 +110,12 @@ content:
       an already-done doc"; this 1509-line doc IS the case the ruling was written about). The doc is now at
       `/plans/archive/issues/mtds_backfill_vm_startup_oom_rc137_2026_07_14.md` — out of the capped globs entirely, which
       is the outcome the split was only ever a workaround for. **Both "real open items" this todo named were discharged
-      at archival, not dropped**: (1) *consolidator cron un-pause decision* — **MOOT, verified**:
+      at archival, not dropped**: (1) _consolidator cron un-pause decision_ — **MOOT, verified**:
       `uts-prod-manifest-consolidator-market-data-defi-cron` is not paused at all; it is ENABLED and running every 1
-      minute per `/plans/active/defi_consolidated_closeout_2026_07_18.md` (2026-07-22 check), and both underlying
-      causes are resolved + archived (`defi_manifest_consolidator_duplicate_race_2026_07_10.md`,
-      `defi_consolidator_scheduler_sigkill_unresolved_2026_07_10.md`); (2) *Morpho `lending_indices` live-verify /
-      rc=137 non-recurrence* — migrated into a real tracked `- [ ]` todo (`[VERIFY] P3`, broadened to all 7
+      minute per `/plans/active/defi_consolidated_closeout_2026_07_18.md` (2026-07-22 check), and both underlying causes
+      are resolved + archived (`defi_manifest_consolidator_duplicate_race_2026_07_10.md`,
+      `defi_consolidator_scheduler_sigkill_unresolved_2026_07_10.md`); (2) _Morpho `lending_indices` live-verify /
+      rc=137 non-recurrence_ — migrated into a real tracked `- [ ]` todo (`[VERIFY] P3`, broadened to all 7
       not-yet-live-verified DeFi handlers) in
       `/plans/active/issues/mtds_dex_pools_swaps_backfill_verification_2026_07_24.md`. The sibling `tradfi_mdps` split
       todo above is untouched and still open.
@@ -128,7 +128,7 @@ content:
 - **2026-08-02**: this doc's premise is now half-obsolete. It was written 2026-07-29 on the assumption that an over-cap
   archive-candidate must be SPLIT before it can be edited/archived; the operator ruled the opposite on 2026-07-30 and
   the exception is now codified in both `scripts/plan-hygiene/check_line_caps.sh` (header comment) and
-  `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`. The `mtds_backfill_vm_startup_oom_rc137`
-  half is closed by archival (see its todo above); the `tradfi_mdps_build_continuous_mismatches_2_and_4_still_open`
-  half is still genuinely open, but note that its own todo may be equally obsolete if that doc also reaches zero open
-  todos — it should be re-checked against the same ruling rather than split reflexively.
+  `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`. The `mtds_backfill_vm_startup_oom_rc137` half
+  is closed by archival (see its todo above); the `tradfi_mdps_build_continuous_mismatches_2_and_4_still_open` half is
+  still genuinely open, but note that its own todo may be equally obsolete if that doc also reaches zero open todos — it
+  should be re-checked against the same ruling rather than split reflexively.

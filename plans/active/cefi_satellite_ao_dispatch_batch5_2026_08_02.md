@@ -7,25 +7,18 @@ summary: >-
   `status: active` + `assigned_vm: planning` directly rather than draft-for-review). Every one of the five docs was
   re-read live before drafting because the corpus moved substantially between the audit and today: the intervening
   2026-07-31 corpus-wide ownership-conflict sweep, the 2026-07-31 autonomous `/ag-closeout-audit` run that produced
-  `cefi_satellite_ao_dispatch_batch4_2026_07_31.md`, and three separate `/na-eligibility-audit` passes (07-30, 08-01) all
-  landed rulings on this exact candidate set. Net result: 5 conflict-clear bounded todos extracted from 3 of the 5 source
-  docs; the other 2 docs' work is deliberately NOT re-drafted here because it is already claimed elsewhere (one verbatim
-  by batch4, one already reclassified `assigned_vm: planning` in place) — re-drafting either would be the duplicate-claim
-  the shared conflict-check protocol forbids. Two further todos are Deferred with their blocking ruling cited rather than
-  guessed. This is fewer than the "~9" the original audit estimated, and the gap is accounted for item-by-item in
-  "What was excluded and why" below rather than silently dropped.
+  `cefi_satellite_ao_dispatch_batch4_2026_07_31.md`, and three separate `/na-eligibility-audit` passes (07-30, 08-01)
+  all landed rulings on this exact candidate set. Net result: 5 conflict-clear bounded todos extracted from 3 of the 5
+  source docs; the other 2 docs' work is deliberately NOT re-drafted here because it is already claimed elsewhere (one
+  verbatim by batch4, one already reclassified `assigned_vm: planning` in place) — re-drafting either would be the
+  duplicate-claim the shared conflict-check protocol forbids. Two further todos are Deferred with their blocking ruling
+  cited rather than guessed. This is fewer than the "~9" the original audit estimated, and the gap is accounted for
+  item-by-item in "What was excluded and why" below rather than silently dropped.
 status: active
 nature: process
 asset_group: [cefi]
 stage: [data]
-repos:
-  [
-    unified-trading-pm,
-    deployment-service,
-    market-tick-data-service,
-    instruments-service,
-    unified-trading-library,
-  ]
+repos: [unified-trading-pm, deployment-service, market-tick-data-service, instruments-service, unified-trading-library]
 scope: [engineer]
 tags: [cefi, ao-dispatch, close-out, batch-5, satellite-docs, iterative-drain]
 related:
@@ -57,8 +50,8 @@ depends_on: []
 source: >-
   Operator interactive Q&A 2026-07-30 — the `/ag-closeout-audit` cefi run's orphan residual was reviewed with the
   operator, who RULED that a batch be authored and dispatched directly (no draft-then-review cycle). Drafted 2026-08-02.
-  Batch number 5 rather than the "batch4" the 2026-07-30 session anticipated, because the 2026-07-31 scheduled autonomous
-  `/ag-closeout-audit` run claimed batch4 first with a different, non-overlapping candidate set;
+  Batch number 5 rather than the "batch4" the 2026-07-30 session anticipated, because the 2026-07-31 scheduled
+  autonomous `/ag-closeout-audit` run claimed batch4 first with a different, non-overlapping candidate set;
   `cefi_satellite_ao_dispatch_batch4_2026_07_31_finalize.md`'s own todo 2 already names "batch5" as the next extraction
   slot, so this follows the corpus's own established sequence rather than colliding on a duplicate batch number.
 assigned_role: data_engineering
@@ -94,27 +87,27 @@ context_scope:
 > `/plans/active/issues/mtds_live_smoke_vm_name_exceeds_gcp_limit_2026_08_01.md` (`assigned_vm: planning`) landed
 > upstream after this batch's candidate set was assembled and concerns the same `mtds-live-smoke` launch path — but its
 > single open todo claims `market-tick-data-service/scripts/pipeline_e2e_check.py` only (bounding the generated VM name
-> to GCP's 63-char limit). It does **not** claim `launch-mtds-live.sh` (it only mentions it in prose) and does not
-> touch the skill's `SKILL.md`, so it collides with neither todo 1 nor todo 2 here. Whoever picks up todo 1 should still
-> read it first — a worker editing this launcher family benefits from knowing the name-length failure exists.
+> to GCP's 63-char limit). It does **not** claim `launch-mtds-live.sh` (it only mentions it in prose) and does not touch
+> the skill's `SKILL.md`, so it collides with neither todo 1 nor todo 2 here. Whoever picks up todo 1 should still read
+> it first — a worker editing this launcher family benefits from knowing the name-length failure exists.
 
 ## Todos
 
 - [ ] [INFRA] P1. **Wire the Tardis N=1 concurrency guard into `launch-mtds-live.sh` and every sibling live launcher.**
       Ordered sub-steps for ONE worker (same launcher family, deliberately not fanned out): (a) in
       `deployment-service/scripts/vm/launch-mtds-live.sh`, source `tardis-concurrency-guard.sh` and call
-      `tardis_concurrency_guard` pre-flight plus `tardis_guard_reserve_slot` immediately before VM creation, gated on the
-      shard's venue needing the guard. **REUSE, do not re-implement** — call the already-shipped
-      `tardis_venue_list_needs_guard` helper (`deployment-service@2d6b01a`) rather than open-coding a venue list.
-      (b) Then apply the same wiring to the sibling launchers that need it. **Verified live 2026-08-02**: the guard
-      helper and `TARDIS_CAP_EXEMPT_VENUES` do exist in `deployment-service/scripts/vm/tardis-concurrency-guard.sh`
-      (note: directly under `scripts/vm/`, not a `lib/` subdir as one might assume), and **all 8** `launch-*live*.sh`
-      scripts under `scripts/vm/` currently have ZERO guard references — `launch-mtds-live.sh`,
+      `tardis_concurrency_guard` pre-flight plus `tardis_guard_reserve_slot` immediately before VM creation, gated on
+      the shard's venue needing the guard. **REUSE, do not re-implement** — call the already-shipped
+      `tardis_venue_list_needs_guard` helper (`deployment-service@2d6b01a`) rather than open-coding a venue list. (b)
+      Then apply the same wiring to the sibling launchers that need it. **Verified live 2026-08-02**: the guard helper
+      and `TARDIS_CAP_EXEMPT_VENUES` do exist in `deployment-service/scripts/vm/tardis-concurrency-guard.sh` (note:
+      directly under `scripts/vm/`, not a `lib/` subdir as one might assume), and **all 8** `launch-*live*.sh` scripts
+      under `scripts/vm/` currently have ZERO guard references — `launch-mtds-live.sh`,
       `launch-mtds-live-cefi-consolidated.sh`, `launch-mtds-live-prediction-consolidated.sh`,
       `launch-mdps-features-live.sh`, `launch-perp-clob-live.sh`, `launch-prediction-live.sh`,
-      `launch-strategy-live-vm.sh`, `launch-batch-live-recon-cron-vm.sh`. That is a WIDER scope than the source doc's
-      P2 text (which named only 2 siblings); triage each of the 8 for whether it can actually create a Tardis-fetching
-      VM and wire only those, recording the per-launcher verdict. **Do NOT "correct" the shipped exempt list from the
+      `launch-strategy-live-vm.sh`, `launch-batch-live-recon-cron-vm.sh`. That is a WIDER scope than the source doc's P2
+      text (which named only 2 siblings); triage each of the 8 for whether it can actually create a Tardis-fetching VM
+      and wire only those, recording the per-launcher verdict. **Do NOT "correct" the shipped exempt list from the
       source doc's prose** — the live list is `(HYPERLIQUID ASTER EXTENDED-STARKNET COINBASE-CDE)`, which differs from
       that doc's older text; if the divergence is real it is its own finding, confirm against `VENUE_TO_ADAPTER_KEY`
       first. **Scope note: this todo is a launcher-script code change only — it requires no new VM launch and performs
@@ -122,15 +115,15 @@ context_scope:
       (unit/shellcheck coverage plus a dry-run of the guard's refusal path is the intended verification). This todo
       covers the source doc's P1 and P2 together. Source:
       `/plans/active/issues/mtds_live_smoke_vm_not_tardis_guarded_2026_07_28.md` (P1 + P2 of 3). **Done when**: every
-      launcher that can create a Tardis-fetching VM sources the guard and reserves a slot before creation, each of the
-      8 carries an explicit wired-or-exempt verdict, `quality-gates.sh` is green, and the source doc's P1 + P2
-      checkboxes are flipped citing the shipping commit. Repo: deployment-service.
+      launcher that can create a Tardis-fetching VM sources the guard and reserves a slot before creation, each of the 8
+      carries an explicit wired-or-exempt verdict, `quality-gates.sh` is green, and the source doc's P1 + P2 checkboxes
+      are flipped citing the shipping commit. Repo: deployment-service.
 
 - [ ] [DOC] P3. **Add the live-leg Tardis guard-gap note to the `data-pipeline-check-mtds` skill's Phase-2 section.**
       Document that a live-leg smoke check against a Tardis-sourced venue can contend with an active Tardis
       backfill/sharded VM for the single shared IP, and recommend deferring live-leg checks for Tardis-sourced venues
-      while a real Tardis-consuming VM is confirmed running, until the launcher-guard todo above ships.
-      **Scope-fenced: Phase 2 ONLY** — the same file's `§ 3 (Tardis cap)` section is owned by
+      while a real Tardis-consuming VM is confirmed running, until the launcher-guard todo above ships. **Scope-fenced:
+      Phase 2 ONLY** — the same file's `§ 3 (Tardis cap)` section is owned by
       `/plans/active/issues/mtds_backfill_launcher_guard_overapplies_to_nontardis_venues_2026_07_28.md`, whose
       equivalent todo is already DONE; read what it wrote and cross-link it rather than restating or editing it.
       **Corrected path (verified 2026-08-02)**: the skill lives at
@@ -142,24 +135,24 @@ context_scope:
 
 - [ ] [SCRIPT] P3. **Run the additive MDPS manifest reconciliation for the cefi trades gap-fill campaign, on a VM.**
       Invoke `merge_manifest_from_canonical_paths` (unified-trading-library, `manifest_writer/_maintenance.py`) with
-      `bucket="market-data-tick-cefi-prd-central-element-323112"`,
-      `service_name="market-data-processing-service"`, `prefix="processed_candles/by_date"`, to register the per-VM
-      manifest shards that never flushed during the 15-VM campaign (notably `r20251225`'s final 7 rows — the underlying
-      parquet data is confirmed present on GCS, only its manifest registration is missing).
-      **Explicit safe-idempotent justification (this is the gating line the 2026-07-30 na-eligibility-audit said was
-      missing — it is why this todo needs no `[OPERATOR]` tag):** the function is ADDITIVE ONLY — it computes
-      `discovered - existing` and uploads `existing + new_only`, so every row outside `prefix`, including the co-located
-      MTDS `raw_tick_data` rows, survives untouched; re-running it is a no-op. Both properties are covered by live
-      regression tests re-verified present 2026-08-02 —
+      `bucket="market-data-tick-cefi-prd-central-element-323112"`, `service_name="market-data-processing-service"`,
+      `prefix="processed_candles/by_date"`, to register the per-VM manifest shards that never flushed during the 15-VM
+      campaign (notably `r20251225`'s final 7 rows — the underlying parquet data is confirmed present on GCS, only its
+      manifest registration is missing). **Explicit safe-idempotent justification (this is the gating line the
+      2026-07-30 na-eligibility-audit said was missing — it is why this todo needs no `[OPERATOR]` tag):** the function
+      is ADDITIVE ONLY — it computes `discovered - existing` and uploads `existing + new_only`, so every row outside
+      `prefix`, including the co-located MTDS `raw_tick_data` rows, survives untouched; re-running it is a no-op. Both
+      properties are covered by live regression tests re-verified present 2026-08-02 —
       `test_merge_from_canonical_paths_preserves_rows_outside_prefix` and
       `test_merge_from_canonical_paths_is_idempotent_no_duplicate_rows` in
       `unified-trading-library/tests/unit/test_manifest_v4_migration.py`. **Do NOT call
       `rebuild_manifest_from_canonical_paths`** — that sibling wholesale-REPLACES the co-located bucket's entire
-      manifest index and would delete essentially the whole CEFI `raw_tick_data` manifest to register 7 candle rows
-      (P0 data-correctness hazard, `/plans/active/issues/rebuild_manifest_from_canonical_paths_prefix_scoped_wipe_2026_07_27.md`).
-      **Must run on an in-region VM, never locally** — it walks every parquet under the entire
-      `processed_candles/by_date` prefix, which is exactly the full-corpus GCS walk the heavy-I/O HARD RULE forbids from
-      a local session; the VM must be a registered launcher name per the runbook. Source:
+      manifest index and would delete essentially the whole CEFI `raw_tick_data` manifest to register 7 candle rows (P0
+      data-correctness hazard,
+      `/plans/active/issues/rebuild_manifest_from_canonical_paths_prefix_scoped_wipe_2026_07_27.md`). **Must run on an
+      in-region VM, never locally** — it walks every parquet under the entire `processed_candles/by_date` prefix, which
+      is exactly the full-corpus GCS walk the heavy-I/O HARD RULE forbids from a local session; the VM must be a
+      registered launcher name per the runbook. Source:
       `/plans/active/issues/mdps_backfill_cefi_trades_gap_fill_completion_2026_07_28.md`. **Done when**: the merge runs
       to completion on a VM with a cited terminal `exit_code=0`, a before/after manifest row count for the
       `processed_candles/by_date` prefix is recorded, `r20251225`'s 7 rows are confirmed registered, and the source
@@ -190,12 +183,11 @@ context_scope:
       Determine why real, captured, correctly-formatted instruments (~60 more distinct manifest ids than the catalogue
       carries for KRAKEN-FUTURES PERPETUAL) are missing from the reference-data catalogue builder's output for these 2
       venues. Candidate mechanisms named by the source doc, to confirm or eliminate: an adapter coverage gap, or an
-      expiry/delisting filter (compare against the known
-      `deribit_options_adapter` `expired=false` precedent, which is the same shape of filter). **Strictly read-only,
-      with no new VM launch**: a catalogue read plus a `read_availability_index` manifest read — no corpus walk, no
-      writes, no deletes. Source:
-      `/plans/active/issues/cefi_enumeration_audit_instrument_type_leakage_and_catalogue_orphans_2026_07_27.md`
-      (its `[DATA] P3` todo only — its `[DATA] P2` prod-`--apply` migration todo is Deferred below). **Done when**: the
+      expiry/delisting filter (compare against the known `deribit_options_adapter` `expired=false` precedent, which is
+      the same shape of filter). **Strictly read-only, with no new VM launch**: a catalogue read plus a
+      `read_availability_index` manifest read — no corpus walk, no writes, no deletes. Source:
+      `/plans/active/issues/cefi_enumeration_audit_instrument_type_leakage_and_catalogue_orphans_2026_07_27.md` (its
+      `[DATA] P3` todo only — its `[DATA] P2` prod-`--apply` migration todo is Deferred below). **Done when**: the
       mechanism is named with cited evidence for each of the 2 venues (adapter gap vs filter vs something else), any
       resulting fix is either shipped or filed as its own properly-scoped follow-up todo, and the source doc's P3
       checkbox is flipped. Repos: instruments-service, market-tick-data-service.
@@ -215,8 +207,8 @@ did not is accounted for here — none was silently dropped.
 - **`/plans/active/issues/execution_service_bitfinex_bitget_native_unreachable_2026_07_28.md` — ALREADY
   `assigned_vm: planning` IN PLACE.** The 2026-07-30 na-eligibility-audit reclassified this doc rather than parking it,
   per the naming SSOT's shape (b) "retroactive reclassification, name unchanged". Its single `[SCRIPT] P3` factory.py
-  wiring todo is therefore already dispatchable on its own; extracting it into this batch would create a second
-  dispatch path for the same change. Re-verified 2026-08-02 that the work is still genuinely open —
+  wiring todo is therefore already dispatchable on its own; extracting it into this batch would create a second dispatch
+  path for the same change. Re-verified 2026-08-02 that the work is still genuinely open —
   `BitfinexCeFiAdapter`/`BitgetCeFiAdapter` still have zero references in `execution-service`'s
   `trade_execution/factory.py`. **One real gap noted, not fixed here**: that doc has no paired `_finalize` sibling,
   which shape (b) calls for and `task_template.md` § 4 requires of every AO-dispatched plan. It is tracked as a todo in

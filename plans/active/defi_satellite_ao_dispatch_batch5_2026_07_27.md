@@ -96,11 +96,11 @@ landed. Its gated twin `defi_satellite_ao_dispatch_batch5_2026_07_27_finalize.md
 - [x] ✅ [DATA] P3. **ALREADY DONE — verified stale 2026-08-02 against the (now archived) source doc; no new work
       needed.** Both halves this todo asks for were completed and shipped BEFORE the batch was activated, so leaving it
       open would re-dispatch already-shipped work. (a) The harmless-vs-real verdict: **REAL bug** —
-      `0 of 28 sampled duplicate groups across 3 samples were byte-identical` (`UNISWAP_V3-OPTIMISM`/`2023-11-22`
-      16/16 differing; `PANCAKESWAP_V3-BSC`/`2023-08-19` 3/3; `PANCAKESWAP_V3-BSC`/`2023-12-15` 9/9), recorded
-      2026-07-29. (b) The root-cause + follow-up fix: the `instrument_key` grammar (`VENUE:TYPE:BASE-QUOTE:FEE_TIER`)
-      omits `pool_address`, so distinct on-chain pools legitimately collide — a **structural** cause identical across
-      all 5 pool-heavy venues, not a per-venue one, which is why re-sampling the remaining 3 venues would yield no new
+      `0 of 28 sampled duplicate groups across 3 samples were byte-identical` (`UNISWAP_V3-OPTIMISM`/`2023-11-22` 16/16
+      differing; `PANCAKESWAP_V3-BSC`/`2023-08-19` 3/3; `PANCAKESWAP_V3-BSC`/`2023-12-15` 9/9), recorded 2026-07-29. (b)
+      The root-cause + follow-up fix: the `instrument_key` grammar (`VENUE:TYPE:BASE-QUOTE:FEE_TIER`) omits
+      `pool_address`, so distinct on-chain pools legitimately collide — a **structural** cause identical across all 5
+      pool-heavy venues, not a per-venue one, which is why re-sampling the remaining 3 venues would yield no new
       information or action. The filed follow-up was then resolved per operator ruling **Option B** (2026-07-30,
       `BLK-b3379171`): consumer-side fix, no grammar change — `build_instrument_catalogue.py::_aggregate_key()`
       confirmed already safe (keys POOL rows on `pool::<chain>::<pool_address>`), the one naive consumer was a vanished

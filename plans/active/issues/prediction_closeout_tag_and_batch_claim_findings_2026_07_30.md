@@ -227,11 +227,11 @@ candidate, not a batch todo.
   done 2026-07-30/31, so nothing to flip), its duplicate cqg todo is already `[x]` in place, and batch4 todo 3 is still
   present and `[ ]` as sole owner; added the explicit `## Deferred — duplicate extraction, sole owner is batch4 todo 3`
   section to batch6 so the citation lives where the ruling specified. **Deliberate non-execution, reported honestly**:
-  the ruling's "delete batch6 todo 7" half was NOT performed — batch6 has been live-dispatching since 2026-07-31 with
-  13 open todos and `regen_backlog_from_plan.py` derives task IDs positionally, so deleting the line would renumber
-  every subsequent open todo on a plan with in-flight work. The outcome the ruling targeted (exactly one owner, no
-  duplicate dispatch) is fully achieved without it. **Precondition re-check the ruling asked for** ("verify the bug is
-  still live before flipping"): the Kalshi CQG mis-bucketing bug is **NO LONGER LIVE** — read
+  the ruling's "delete batch6 todo 7" half was NOT performed — batch6 has been live-dispatching since 2026-07-31 with 13
+  open todos and `regen_backlog_from_plan.py` derives task IDs positionally, so deleting the line would renumber every
+  subsequent open todo on a plan with in-flight work. The outcome the ruling targeted (exactly one owner, no duplicate
+  dispatch) is fully achieved without it. **Precondition re-check the ruling asked for** ("verify the bug is still live
+  before flipping"): the Kalshi CQG mis-bucketing bug is **NO LONGER LIVE** — read
   `instruments-service/instruments_service/engine/orchestrator/prediction.py` at HEAD, the Kalshi branch now does
   `ticker = instrument_key.rsplit(":", 1)[-1]` before calling `classify_kalshi_to_canonical_group`, shipped as
   `instruments-service@e0f7aaad` ("fix(prediction): extract bare Kalshi ticker before CQG classification"). The flip

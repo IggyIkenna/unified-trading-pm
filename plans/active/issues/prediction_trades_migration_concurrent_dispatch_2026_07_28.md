@@ -106,9 +106,9 @@ One or both of:
 > prose-only and routed the conversion to a sweep doc that has since archived; doing it here now. Content unchanged —
 > the finding is live and unfixed. `assigned_vm: NA` unchanged, so neither item auto-dispatches.
 >
-> **Todo 3 added 2026-08-02** on the ao-tranche adoption ruling (see Progress Log) — it is NOT a conversion of the
-> prose above but a newly-scoped gap: todo 2's in-flight check needs a staleness threshold or it stalls abandoned
-> tasks forever. Still `assigned_vm: NA`, so it does not auto-dispatch either.
+> **Todo 3 added 2026-08-02** on the ao-tranche adoption ruling (see Progress Log) — it is NOT a conversion of the prose
+> above but a newly-scoped gap: todo 2's in-flight check needs a staleness threshold or it stalls abandoned tasks
+> forever. Still `assigned_vm: NA`, so it does not auto-dispatch either.
 
 - [ ] [BACKEND] P2. **Give resumable todos a shared, task-id-keyed checkpoint location.** For any todo whose brief names
       a `--report`/resumability file, point the convention at a durable per-TASK-ID directory rather than a
@@ -165,18 +165,18 @@ solution.
   the routing target no longer exists as an active doc — the zero-checkbox class currently has no active owner (see
   `/plans/active/issues/docs_reconcile_autonomous_sweep_2026_07_30.md` Progress Log for the standing follow-up).
 - **ao-tranche ADOPTION 2026-08-02** (operator ruling, interactive Q&A 2026-07-30): the `ao` tranche formally adopts
-  this doc. `asset_group` retagged `[prediction, ao]` → `[ao]`, so the prediction tranche stops carrying it as an
-  orphan and `ao` owns it outright. Membership for `ao` is tested directly against `asset_group`
-  (`scripts/plan-hygiene/generate_na_doc_tranche_inventory.py`, 2026-07-27 schema expansion), and the OWNING tranche
-  was already `ao` via `parent_epic: orchestrator_master` → `EPIC_TO_TRANCHE` — the retag makes membership and
-  ownership agree on both axes instead of only one. The `prediction` entry in `tags:` is deliberately KEPT: it is
-  incident provenance (the trigger really was the `prediction_trades` migration), and tranche membership is derived
-  from `asset_group` only, never from `tags`.
+  this doc. `asset_group` retagged `[prediction, ao]` → `[ao]`, so the prediction tranche stops carrying it as an orphan
+  and `ao` owns it outright. Membership for `ao` is tested directly against `asset_group`
+  (`scripts/plan-hygiene/generate_na_doc_tranche_inventory.py`, 2026-07-27 schema expansion), and the OWNING tranche was
+  already `ao` via `parent_epic: orchestrator_master` → `EPIC_TO_TRANCHE` — the retag makes membership and ownership
+  agree on both axes instead of only one. The `prediction` entry in `tags:` is deliberately KEPT: it is incident
+  provenance (the trigger really was the `prediction_trades` migration), and tranche membership is derived from
+  `asset_group` only, never from `tags`.
 - **Scoping todos 2026-08-02**: the same ruling called for two scoping todos. (b) the heartbeat-staleness threshold was
-  genuinely missing and is added above as todo 3 — it is the gap that makes todo 2 implementable rather than a
-  deadlock. (a) "where the shared migration checkpoint state should live" was ALREADY tracked as todo 1 (added by the
-  2026-07-31 zero-checkbox sweep) and was therefore NOT duplicated; verified it still carries a real done-when and
-  names its repos. `assigned_vm: NA` deliberately unchanged — all three items are design decisions ("decide where the
-  state lives", "pick a threshold"), which the dispatch-scope eligibility rule
+  genuinely missing and is added above as todo 3 — it is the gap that makes todo 2 implementable rather than a deadlock.
+  (a) "where the shared migration checkpoint state should live" was ALREADY tracked as todo 1 (added by the 2026-07-31
+  zero-checkbox sweep) and was therefore NOT duplicated; verified it still carries a real done-when and names its repos.
+  `assigned_vm: NA` deliberately unchanged — all three items are design decisions ("decide where the state lives", "pick
+  a threshold"), which the dispatch-scope eligibility rule
   (`/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md` § "Dispatch-scope eligibility") keeps
   human-resolved before any AO todo is cut against their outcome.

@@ -60,16 +60,16 @@ context_scope:
 > archival todo must run last and depends on the reconciliation todos ahead of it.
 
 > **Distinct `[TAG] P<n>.` prefixes on every todo below** — deliberately, per `task_template.md` § 4's 2026-07-31
-> finding: when the self-archival todo lands in the SAME commit as its own `git mv`, the AO done-gate's
-> tag+priority disambiguator fails CLOSED if two checked lines share a prefix.
+> finding: when the self-archival todo lands in the SAME commit as its own `git mv`, the AO done-gate's tag+priority
+> disambiguator fails CLOSED if two checked lines share a prefix.
 
 ## Todos
 
 - [ ] [REVIEW] P1. **Reconcile all 3 source docs' checkboxes against the landed batch-5 todos.** Batch 5's 5 todos draw
-      from 3 source docs: `/plans/active/issues/mtds_live_smoke_vm_not_tardis_guarded_2026_07_28.md` (all 3 of its
-      todos — P1 and P2 land together via batch5's launcher todo, P3 via the skill-doc todo, so this doc SHOULD reach
-      zero open items); `/plans/active/issues/mdps_backfill_cefi_trades_gap_fill_completion_2026_07_28.md` (its sole
-      open todo, so this doc SHOULD also reach zero);
+      from 3 source docs: `/plans/active/issues/mtds_live_smoke_vm_not_tardis_guarded_2026_07_28.md` (all 3 of its todos
+      — P1 and P2 land together via batch5's launcher todo, P3 via the skill-doc todo, so this doc SHOULD reach zero
+      open items); `/plans/active/issues/mdps_backfill_cefi_trades_gap_fill_completion_2026_07_28.md` (its sole open
+      todo, so this doc SHOULD also reach zero);
       `/plans/active/issues/cefi_consolidated_vm_aster_data_landing_recheck_2026_07_30.md` (its THIRD `[DATA] P3` todo
       only — its first two are batch4's, leave them alone) and
       `/plans/active/issues/cefi_enumeration_audit_instrument_type_leakage_and_catalogue_orphans_2026_07_27.md` (its
@@ -98,14 +98,14 @@ context_scope:
       `assigned_vm: NA` → `planning` in place by the 2026-07-30 na-eligibility-audit, but never received the paired
       `_finalize` sibling that both the naming SSOT's shape (b) and `task_template.md` § 4's finalize-plan-coverage rule
       require of an AO-dispatched doc — batch5 identified this gap and deliberately left it to this plan rather than
-      inventing a doc mid-batch. Author
-      `execution_service_bitfinex_bitget_native_unreachable_finalize_<today>.md` following shape (b): `depends_on:
-      [execution_service_bitfinex_bitget_native_unreachable_2026_07_28]` + `gate_on_depends: true` +
-      `sequential: true`, tagged `[ao-dispatch, close-out, reclassification, na-audit]`, whose todos reconcile that
-      doc's factory.py wiring checkbox and run the 6-step archival ritual on it. **Check first whether another worker
-      has since created it** — this is a known-shared corpus gap, a sibling audit may have closed it. **Done when**:
-      the finalize sibling exists with a correct `depends_on` pair (or is confirmed already created by someone else),
-      and `check_finalize_plan_coverage.py` no longer reports that doc as uncovered. Repo: unified-trading-pm.
+      inventing a doc mid-batch. Author `execution_service_bitfinex_bitget_native_unreachable_finalize_<today>.md`
+      following shape (b): `depends_on:     [execution_service_bitfinex_bitget_native_unreachable_2026_07_28]` +
+      `gate_on_depends: true` + `sequential: true`, tagged `[ao-dispatch, close-out, reclassification, na-audit]`, whose
+      todos reconcile that doc's factory.py wiring checkbox and run the 6-step archival ritual on it. **Check first
+      whether another worker has since created it** — this is a known-shared corpus gap, a sibling audit may have closed
+      it. **Done when**: the finalize sibling exists with a correct `depends_on` pair (or is confirmed already created
+      by someone else), and `check_finalize_plan_coverage.py` no longer reports that doc as uncovered. Repo:
+      unified-trading-pm.
 
 - [ ] [DOC] P1. **Archive `cefi_satellite_ao_dispatch_batch5_2026_08_02.md`** via the standard 6-step ritual: migrate
       every remaining Deferred item to a tracked todo elsewhere (todo 2 above should have resolved or re-confirmed it —

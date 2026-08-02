@@ -90,13 +90,12 @@ reclassification landed 2026-08-02 with `sequential: true` in the same edit.
       the 72,357-row figure is an UPPER BOUND; (2) the `--apply` ran only after a clean dry-run whose diff-preview
       matched the census count exactly; (3) `_read_fixtures_entity_with_schedule_fallback` and all 3 call sites are
       genuinely gone from `sports_fixtures.py` (grep, don't trust the checkbox); (4) **the P2 snapshot-then-delete
-      re-queried `gcs_bucket_soft_delete_retention_seconds()` FRESH in the same run** — the parent's cited `604800`
-      is dated 2026-07-26 and its own todo text says to re-query rather than cite, per
+      re-queried `gcs_bucket_soft_delete_retention_seconds()` FRESH in the same run** — the parent's cited `604800` is
+      dated 2026-07-26 and its own todo text says to re-query rather than cite, per
       `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` §3a; a stale citation does not qualify for the
-      reversibility carve-out. **Done when**: each of the 7 todos is recorded here as verified-with-evidence or
-      named as still-open, and the parent's `[DOC] P2` update to
-      `sports_consolidated_closeout_2026_07_19.md`'s FROZEN-legacy-path declaration is confirmed to match the true
-      post-migration state.
+      reversibility carve-out. **Done when**: each of the 7 todos is recorded here as verified-with-evidence or named as
+      still-open, and the parent's `[DOC] P2` update to `sports_consolidated_closeout_2026_07_19.md`'s
+      FROZEN-legacy-path declaration is confirmed to match the true post-migration state.
 - [ ] [DOC] P1. **Archive the parent (and this twin) once both are terminal**, per the 6-step ritual in
       `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`: migrate any deferred item into a real
       tracked `- [ ]` todo elsewhere → add the archive banner → run the codex-alignment check (the parent names
