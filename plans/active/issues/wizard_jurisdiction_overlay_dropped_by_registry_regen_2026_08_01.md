@@ -108,10 +108,12 @@ since a MISSING key that was never in the generator's schema doesn't drift from 
       into `main()` step 22 (line 895), and imports/executes cleanly, producing 32 policies across 6 jurisdictions in
       the exact shape `jurisdiction-overlay.ts` expects (`known_venue_ids`/`jurisdictions`/`policies`/
       `allowed_venues_by_jurisdiction`) — confirmed `us_cftc` correctly resolves to an empty allowed-venue set.
-- [ ] [SCRIPT] P2. Re-run `generate_ui_reference_data.py`, commit the regenerated
+- [x] ✅ [SCRIPT] P2. Re-run `generate_ui_reference_data.py`, commit the regenerated
       `unified-trading-system-ui/lib/registry/ui-reference-data.json` with the `jurisdiction_overlay` key restored, and
       verify `npx playwright test --project=chromium tests/smoke/wizard-jurisdiction-filter.spec.ts` passes 2/2 again.
-      Repo: unified-trading-system-ui + unified-trading-pm.
+      Repo: unified-trading-system-ui + unified-trading-pm. — unified-trading-system-ui@097e1d64 (2026-08-02). Verified:
+      `jurisdiction_overlay` key present with the expected shape (`known_venue_ids`/`jurisdictions`/`policies`/
+      `allowed_venues_by_jurisdiction`); `wizard-jurisdiction-filter.spec.ts` — 2/2 passed.
 
 ## Progress Log
 
@@ -123,3 +125,8 @@ since a MISSING key that was never in the generator's schema doesn't drift from 
   (`unified-trading-system-ui@19e849c2`, 2026-08-02 16:33 UTC) predates the extractor commit (17:17 UTC), so the JSON
   still lacks the `jurisdiction_overlay` key. That is a separate backlog task
   (`wizard_jurisdiction_overlay_dropped_by_registry_regen-002`, still queued) — not done here.
+- 2026-08-02 (slot 10): Todo 2 done. Regenerated `ui-reference-data.json` via `generate_ui_reference_data.py` (targeted
+  merge — only `jurisdiction_overlay` added, every other key byte-identical to the committed baseline, so unrelated
+  `service_port_registry` drift stayed out of scope); shipped `unified-trading-system-ui@097e1d64`. Verified
+  `wizard-jurisdiction-filter.spec.ts` 2/2 passed against the regenerated registry. Both todos now done, doc unlocked —
+  archival-eligible per the plan-completion-and-archival-discipline HARD RULE.
