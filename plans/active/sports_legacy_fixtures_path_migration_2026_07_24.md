@@ -128,12 +128,39 @@ Cross-verified with direct `gcloud storage ls` spot-checks of the true bare `ent
 
 ## Todos
 
-- [ ] [DIAG] P0. Run the full per-date, per-league diff across all 2,319 dates in the captured/post-floor population:
+- [x] ✅ [DIAG] P0. Run the full per-date, per-league diff across all 2,319 dates in the captured/post-floor population:
       for each (date, league_id), check whether `entity=fixtures_schedule/` has real data; if empty, confirm the bare
       `entity=fixtures/` path has real data for that exact (date, league_id) (not just a manifest row — a real GCS
       object read, since finding 2 above means the manifest label alone isn't proof). **Done when**: a census output
       lists the exact load-bearing (date, league_id) pairs — canonical empty AND legacy has real data — with a total
-      count, separately from the redundant-with-canonical population and the stale-label population.
+      count, separately from the redundant-with-canonical population and the stale-label population. — **DONE
+      2026-08-02, `instruments-service@6336dc35` (`scripts/census_sports_fixtures_legacy_load_bearing_2026_08_02.py`).**
+      Single manifest read (`.dropna` on `league_id`, deduped to distinct (date, league_id) pairs — a more precise unit
+      than the plan's own raw-row-count measurement above) found 42,771 legacy `FIXTURES` captured pairs and 109,823
+      canonical `FIXTURES_SCHEDULE` captured pairs post-floor; 42,688 pairs are `redundant_manifest` (canonical also
+      manifest-captured, no GCS read needed), leaving only **83 genuinely ambiguous candidates** requiring real GCS
+      confirmation (far below the 72,357-row upper bound the original measurement flagged). Real per-object GCS reads
+      (exists + non-zero-row parquet parse, both the exact legacy and exact canonical blob path per candidate) on all 83
+      candidates found: **`load_bearing_count = 0`** — confirming ambiguity 1's hypothesis empirically: every
+      spot-checked date had data at both paths, and the full census now proves this holds for the ENTIRE post-floor
+      population, not just the 4 spot-checked dates — `_read_fixtures_entity_with_schedule_fallback`'s legacy read path
+      is provably never load- bearing for real content anywhere in the captured/post-floor corpus.
+      **`stale_label_count = 83`** (all 83 candidates) — resolves ambiguity 2 in the other direction than hypothesized:
+      none of the 83 turned out to be "already-canonical, stale-label-only" (that would need
+      `redundant_gcs_discovered_count > 0`, which is 0); instead every one is a manifest row whose
+      `capture_status="captured"` label does NOT correspond to a real object at the exact bare `entity=fixtures/` path
+      (confirmed via `blob_exists` + parquet parse, not just a manifest read) — dates cluster in 2021-11-20..26 (50
+      rows) plus scattered small clusters Feb-Jul 2026 (33 rows), not one single migration-window artifact.
+      `redundant_total_count = 42,688`. Zero `read_error`s (no retries needed). Report:
+      `instruments-service/scripts/_sports_fixtures_legacy_census_report_2026_08_02.json` (committed); load-bearing +
+      stale-label (date, league_id) parquets written locally (gitignored `*.parquet`, per repo convention — not
+      committed, reproducible via `--manifest-only`/full re-run against the same manifest). **Implication for todos 2-6
+      below**: since the load-bearing population is empty, todo 2 (schema-mapping confirm) and todos 3-4 (write + apply
+      a migration script) have a VACUOUS done-when (nothing to map or migrate) — the next worker should verify this
+      reading against the plan before marking them trivially done, not silently skip them. Todo 5 (remove the fallback)
+      can proceed on this evidence. Todo 6 (delete) now covers the `redundant` (42,688, real duplicate objects) and
+      `stale_label` (83, phantom manifest rows with no real backing object) populations, not a "migrated" population —
+      re-read finding T's reversibility citation against this shape before `--apply`.
 - [ ] [DIAG] P1. For the load-bearing subset only, confirm each row's content actually maps cleanly onto the
       `entity=fixtures_schedule/` (schedule fields incl. `round`) + `entity=fixtures_outcomes/` (scores/status) split —
       spot-check a sample against the current split-entity writer's schema. **Done when**: a written confirmation states
