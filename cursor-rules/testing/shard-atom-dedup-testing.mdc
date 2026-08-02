@@ -117,6 +117,6 @@ def test_cefi_drilldown_does_not_double_count_shards(self):
 
 ## Reference
 
-- SSOT: `codex/02-data/manifest-honest-absence-downstream-handling.md` § Shard-granularity SSOT
-- Plan: `plans/active/cefi_manifest_canonicalisation_2026_06_01.md` § CF-11 (CeFi parity requirement)
-- Related: `cursor-rules/data/pipeline-mode-partition-structure.mdc` (the partitioning that enables this test)
+- SSOT: `codex/02-data/honest-absence-downstream-handling.md` § Shard-granularity SSOT
+- Plan: `plans/archive/2026_07/cefi_manifest_canonicalisation_2026_06_01.md` § CF-11 (CeFi parity requirement)
+- Related: `cursor-rules/architecture/pipeline-mode-partition-structure.mdc` (the partitioning that enables this test)

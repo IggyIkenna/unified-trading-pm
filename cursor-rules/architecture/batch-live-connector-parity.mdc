@@ -157,7 +157,7 @@ def test_batch_live_orca_schema_parity(self):
 
 ## Reference
 
-- Plan: `plans/active/data_pipeline_acquisition_remediation_2026_06_03.md` § Phase 2 (orca+raydium live connectors, book+ticker for CeFi)
-- Plan: `plans/active/data_pipeline_acquisition_remediation_2026_06_03.md` § Success criteria (batch_live_symmetry audit item k)
+- Plan: `plans/archive/2026_06/data_pipeline_acquisition_remediation_2026_06_03.md` § Phase 2 (orca+raydium live connectors, book+ticker for CeFi)
+- Plan: `plans/archive/2026_06/data_pipeline_acquisition_remediation_2026_06_03.md` § Success criteria (batch_live_symmetry audit item k)
 - SSOT: `codex/02-data/mtds-data-source-coverage-matrix.md` (adapter/live coverage matrix)
 - Related: `cursor-rules/testing/schema-drift-detection-guards.mdc` (downstream schema validation)
