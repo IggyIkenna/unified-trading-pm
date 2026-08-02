@@ -354,6 +354,9 @@ this skill's own periodic run, every run.**
   Genuinely ambiguous → route through Phase 4 like any other judgment call.
 - **Report the count every run** (docs with zero checkboxes found / converted / archived / routed), so a growing
   population is visible instead of silently accumulating between sweeps.
+- **Standing register**: `/plans/active/issues/zero_checkbox_sweep_all_tranches_2026_07_31.md` tracks the sweep's owner,
+  cadence, and running count across runs — read/update it each pass rather than re-deriving population definitions from
+  scratch.
 
 ## Phase 3 — adversarial verification (nothing ships unverified)
 

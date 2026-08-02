@@ -19,7 +19,7 @@ summary: >-
   tmux session, but the sheer repetition count means real wasted cycles every occurrence).
 status: open
 nature: issue
-asset_group: [ci, cross-cutting]
+asset_group: [ao] # retagged 2026-08-02 (/ag-closeout-audit cross-cutting finding 1, corroborated by /na-eligibility-audit cross-cutting) -- was [ci, cross-cutting]; content is 100% agent-orchestrator boot/spawn read-confirmation-gate mechanics, zero cross-cutting/CI vocabulary hits
 stage: [meta]
 repos: [unified-trading-pm, agent-orchestrator]
 scope: [engineer, admin]
