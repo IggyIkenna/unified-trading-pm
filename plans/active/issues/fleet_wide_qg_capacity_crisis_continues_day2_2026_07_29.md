@@ -520,3 +520,30 @@ not just noting.
   touched; `market-data-processing-service` working tree already clean, no commit needed there). Twelfth repo-specific
   corroboration overall, first to show the `tests`-leg `PluggyTeardownRaisedWarning`/`OSError: cannot send` hang shape
   (vs. the more common `checks`-leg basedpyright timeout).
+
+- **2026-08-02 ~23:52-00:05Z (cicd escalation `agt-dbfcd7`, slot 7, `market-data-processing-service`,
+  `wall_type=main_ci_red`, `pr_number=0`)** — near-duplicate dispatch of the `agt-68298f` entry immediately above (same
+  repo, same wall_type, same HEADs — `main`@`0f77552`/`LDR`@`9642cbb`), independently re-derived the identical
+  conclusion before spotting the prior entry: `main` is 326 commits behind LDR since the last successful promotion (PR
+  #568, `13:16:43Z`); the push-triggered `quality-gates-v2` for that PR was `cancelled` (superseded), and every
+  subsequent `workflow_dispatch` retry on both `main` and `live-defi-rollout` hit the same `Coverage floor` → ~14-17min
+  silence → `PluggyTeardownRaisedWarning`/`OSError: cannot send (already closed?)` during `pytest_sessionfinish` →
+  exit=1 shape, no genuine `FAILED tests/...` line anywhere. **Reproduced locally FIRST** (backgrounded, heartbeated):
+  `bash scripts/quality-gates.sh --no-fix` at `live-defi-rollout` HEAD `9642cbb` →
+  **`✅ ALL QUALITY GATES PASSED (98s)`**, sentinel written matching HEAD — decisive confirmation the code is clean,
+  matching the prior entry's own local repro. Confirmed the fleet-promote gate (`ldr-to-main-promote-fleet` run
+  `30773091668`, `23:50:58Z`) is correctly deferring:
+  `GATE BLOCK market-data-processing-service: ci_status=FAILING (cached='FAILING', live='FAILING') — LDR CI is red; fix before LDR→main`.
+  Runner is `K=1` (`glue-ip-172-31-5-118-1`, `busy=true`); the same `workflow_dispatch` retrigger the prior entry
+  observed in flight (`30772053085`, started `23:20:31Z`) was still genuinely progressing FIFO at investigation end
+  (`checks` in_progress, `tests` queued behind it — not a deadlock) — over an hour queued/running, consistent with this
+  doc's severe-contention signature, not a wedge. **Disposition: no code or workflow change made or needed** — did not
+  add a redundant retrigger onto the same contended `K=1` runner; did not force-resolve or push to `main`. Pinged
+  `AUTHORING_SLOT=ci-reconcile` per the standard completion step (expect the same non-numeric-literal 422 this doc's
+  `ci`/`ci-reconcile` precedents already hit). Slot left clean on `live-defi-rollout` (only this doc touched;
+  `market-data-processing-service` working tree already clean). Flagging for the operator/main-agent: this is the SECOND
+  `main_ci_red` escalation dispatched for this exact repo+wall within ~30 minutes of each other (`agt-68298f` then
+  `agt-dbfcd7`) — the escalation dispatcher may be re-firing on the same still-unresolved (but correctly-deferring, not
+  broken) condition faster than a single `K=1` runner can clear its FIFO queue; worth checking whether
+  `main_ci_red`/`ldr_qg_failure` dispatch should dedupe against an already-active escalation for the same repo+wall_type
+  instead of spawning a fresh worker each retrigger cycle.
