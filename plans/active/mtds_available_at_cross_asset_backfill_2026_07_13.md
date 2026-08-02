@@ -923,3 +923,15 @@ when deciding whether to flip it.
 alongside canonical `PREDICTION_MARKET`), but every prediction fill-rate figure in this doc's earlier entries already
 filters to the exact string `PREDICTION_MARKET`, so the casing split is orthogonal to prediction's low numbers (which
 are genuinely explained by the backfill not having reached that date range yet, not a dedup/casing artifact).
+
+### 2026-08-02T18:18Z — #14 (slot-11, data_engineering, dispatched `-001`) — declining, same live process as #13, still running
+
+Dispatched `-001` ("Apply `rebuild_prediction_manifest.py`") again. Same check #13 already ran: live `ps aux` on this
+host shows PID `1860179`
+(`rebuild_prediction_manifest.py --start-date 2025-09-13 --end-date 2026-08-01 --chunk-days 15`, from
+`.tabs/14/market-tick-data-service`) **still RUNNING** — started `17:31Z`, now ~54min uptime, 117% CPU, ~2.6GB RSS,
+healthy. This is the exact continuation #12's handoff recommended and #13 already found live an hour ago. No new
+information to add; launching a second run would duplicate #13's already-diagnosed waste/write-race risk. Declining
+`-001` again, `reason_code: "OTHER"` — whoever picks this up next should re-check `ps aux` for
+`rebuild_prediction_manifest.py` live before doing anything, same as #13 and this entry did, since the process may
+finish (or die) between dispatches.
