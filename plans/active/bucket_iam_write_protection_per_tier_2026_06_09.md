@@ -314,11 +314,11 @@ Two independent gates because Group A and Group B are at different stages:
       compute SA) — do not leave this tag stale per CLAUDE.md's retag-on-resolve rule.
 
       > **🟥 Note (2026-07-31, slot-14)**: even once this todo removes `unified-trading-sa`'s `storage.objectAdmin`,
-                                                                  > that SA still live-holds `roles/resourcemanager.projectIamAdmin` + `roles/iam.serviceAccountAdmin` (undeclared
-                                                                  > in any terraform in this repo) — both self-escalation-capable, i.e. it could re-grant itself storage access
-                                                                  > (or any other role) without going through terraform at all. See
-                                                                  > `issues/unified_trading_sa_live_iam_drift_vs_terraform_2026_07_31.md` — a full de-privilege of this SA is not
-                                                                  > actually complete until that doc's P1/P2 also land.
+                                                                      > that SA still live-holds `roles/resourcemanager.projectIamAdmin` + `roles/iam.serviceAccountAdmin` (undeclared
+                                                                      > in any terraform in this repo) — both self-escalation-capable, i.e. it could re-grant itself storage access
+                                                                      > (or any other role) without going through terraform at all. See
+                                                                      > `issues/unified_trading_sa_live_iam_drift_vs_terraform_2026_07_31.md` — a full de-privilege of this SA is not
+                                                                      > actually complete until that doc's P1/P2 also land.
 
 > **🟥 P2.2 SCOPE GAP found 2026-07-30 (slot-12) — "wire each runtime to its tier SA" is not mechanically executable
 > today.** Investigation (live GCP IAM queries + static analysis, no state mutated) found 3 independently-blocking
@@ -464,10 +464,23 @@ Two independent gates because Group A and Group B are at different stages:
       observability writes, same as every other launcher — wired via `lc_tier_service_account`. Both `bash -n` +
       shellcheck clean; `quality-gates.sh` green; CI verified. **The 3 migration-SA-blocked launchers remain undone,
       split out below as P2.2d2c2** (not silently dropped — mirrors P2.2d2b's own split precedent).
-- [ ] [CODE] P2.2d2c2. **NEW, split from P2.2d2c 2026-08-02 (slot-13).** Wire the 3 launchers still blocked on the
-      migration-SA write-grant gap: `launch-legacy-bucket-migration-sharded.sh`, `launch-gcs-migration-bundle-vm.sh`,
-      `launch-bucket-rsync-vm.sh` — all three read/write a LEGACY (non-env-tiered, flat) bucket name that no tier SA's
-      `startsWith` IAM condition matches. Gated on P2.2f (still open — `[OPERATOR]` grant not yet made).
+- [ ] [CODE][OPERATOR] P2.2d2c2. **NEW, split from P2.2d2c 2026-08-02 (slot-13).** Wire the 3 launchers still blocked on
+      the migration-SA write-grant gap: `launch-legacy-bucket-migration-sharded.sh`,
+      `launch-gcs-migration-bundle-vm.sh`, `launch-bucket-rsync-vm.sh` — all three read/write a LEGACY (non-env-tiered,
+      flat) bucket name that no tier SA's `startsWith` IAM condition matches. Gated on P2.2f (still open — `[OPERATOR]`
+      grant not yet made). **`[OPERATOR]`-tagged 2026-08-02 (slot-12)**: re-verified independently before touching code
+      — live GCP
+      (`gcloud projects get-iam-policy central-element-323112 --filter="bindings.members:uts-migration-sa@..."`)
+      confirms `uts-migration-sa` still holds ONLY `roles/storage.objectViewer` project-wide, zero write grant, matching
+      terraform source (`bucket_iam_per_tier_sa.tf`'s `uts_migration_objectviewer` resource — no `objectAdmin` block for
+      this SA). Wiring any of these 3 launchers to it today would 403 on every write; wiring them to a tier SA instead
+      would be wrong too (P2.2f's own text: none of the 3's legacy flat bucket names match any tier SA's `startsWith`
+      condition). Same structural gap as P2.1b above — this checkbox has no structured `depends_on`/`gate_on_depends`
+      link to P2.2f (same-plan todos can't express a per-todo prereq — CLAUDE.md), so the backlog regenerator will keep
+      re-offering it to workers who can only re-derive the same "not yet" verdict. `[OPERATOR]` routes this to the
+      operator's blocked-queue instead. **Retag back to plain `[CODE]`** once P2.2f is ruled + the grant is live +
+      independently re-verified (not just terraform `plan` clean) — do not leave this tag stale per CLAUDE.md's
+      retag-on-resolve rule.
 - [ ] [INFRA] P2.2e. **NEW, opened 2026-07-31 (slot-5).** Cut `uts-shared-deployment-api`'s live traffic
       (`spec.traffic`) over to a `uts-prd-sa` revision (P2.2c wired the identity + resource sizing; this is the separate
       step of actually promoting it). **Currently BLOCKED**: every fresh cold-start of a new/tagged revision fails
@@ -510,3 +523,11 @@ Two independent gates because Group A and Group B are at different stages:
   `deployment_api_sigabrt_crash_loop-028`) is still unanswered. This is a live-production service traffic cutover
   explicitly gated by main-orchestrator's own instruction — not proceeding without that gate clearing is not optional
   caution, it's compliance with a standing directive. No action taken; releasing via `/skip-current-task`.
+- **slot-12 2026-08-02**: dispatched task `bucket_iam_write_protection_per_tier-023` (P2.2d2c2, the 3
+  migration-SA-blocked launchers). Independently re-verified P2.2f's gate before touching code: live GCP
+  `get-iam-policy` confirms `uts-migration-sa` still holds only `roles/storage.objectViewer` (zero write grant),
+  matching terraform source — the gate is genuinely still unmet, not just stale-looking. Wiring the 3 launchers now
+  would either 403 (migration SA) or silently mismatch (tier SA's `startsWith` condition doesn't cover their legacy flat
+  bucket names). Retagged P2.2d2c2 `[OPERATOR]` (mirrors this plan's own P2.1b precedent — same-plan todos can't express
+  a structured prereq, so the backlog regenerator will keep re-offering this to workers otherwise). No code changed;
+  releasing via `/skip-current-task`.
