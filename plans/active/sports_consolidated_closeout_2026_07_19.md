@@ -523,7 +523,23 @@ manifest-atom fix (C-track) and the ODDS-LEAK shard cleanup — else the re-run 
       any remaining rows are stale residue to purge, not a registry gap; (4) parse-bug residue — FOOTBALL/UNKNOWN clear
       once the venue-parts[0] fix above ships and existing rows are re-stamped. Also still fix the original footystats
       legacy bundle mislabel (`venue=ODDS_API`→`FOOTYSTATS`, 42,476 rows) — unrelated to the parse bug, a separate
-      writer defect.
+      writer defect. <br>⛔ **STOP — DO NOT EXECUTE DISPOSITIONS (1)'s UNIBET CLAUSE OR (3) AS WRITTEN. Both premises
+      were DISPROVEN 2026-07-27**, two days after this todo was authored, by measured evidence in
+      [`/plans/active/sports_consolidated_native_ao_extract_2026_07_25.md:151-166`](/plans/active/sports_consolidated_native_ao_extract_2026_07_25.md).
+      **(a) `UNIBET_UK`/`UNIBET_EU` → `UNIBET` is NOT a casing/alias fold** — a live content comparison proved they are
+      genuinely distinct bookmaker feeds (a shared day/league/fixture/market shows DIFFERENT simultaneous odds), so the
+      fold was ADDED to `SPORTS_VENUE_FOLD` and REMOVED the same day; it now contains ONLY
+      `{"ladbrokes_uk": "LADBROKES", "sport888": "BET888SPORT"}`. Folding would silently conflate two distinct
+      bookmakers' live data on every future capture. **(b) `SMARKETS` is NOT deleted-venue residue** — two independent
+      live manifest census passes measured **1,113,644–1,652,384 rows** through 2026-07-26, and
+      `/codex/01-domain/sports-instruments.md` § "VENUE COUNT CORRECTED 2026-07-24" lists SMARKETS among the 28 live
+      registered ODDS_API bookmaker venues. It was never "removed from all repos"; a purge would destroy over a million
+      rows of genuine live production data. The `LADBROKES_UK`/`SPORT888` re-stamps in (1), and dispositions (2) and
+      (4), are UNAFFECTED and still stand. Banner added 2026-08-02 by the `/plan-reconcile` whole-corpus run, which
+      found this correction had never been back-ported here — leaving the stale destructive instruction as the version a
+      dispatched worker would read. The disposition ruling itself is parked at
+      [`/plans/active/issues/plan_reconcile_parked_operator_decisions_2026_08_02.md`](/plans/active/issues/plan_reconcile_parked_operator_decisions_2026_08_02.md)
+      § 1a; this banner only makes the todo safe to read, it does not decide it.
 - **[CODE] P0/P1.** EXCHANGE_ODDS vs FIXED_ODDS fork — **MOVED 2026-07-25** to its own child,
   `sports_closeout_exchange_fixed_odds_fork_2026_07_25.md` (`sequential: true`, 11 todos — the GCS-move step split into
   an immediately-dispatchable pass for the 5 already-unambiguous venues plus a separate `[OPERATOR]`-gated follow-on for
@@ -549,8 +565,24 @@ manifest-atom fix (C-track) and the ODDS-LEAK shard cleanup — else the re-run 
       2026-07-27 — this checkbox was stale (real work done, never flipped here).
 - [ ] [CODE] P2. Eliminate (or document) the legacy bare `entity=fixtures/` (no `pipeline_mode=`) write path still
       active today alongside the canonical split writer (5-league subset).
-- [ ] [CLEANUP] P2. Snapshot-then-cull the dead `sports_reference_v2/by_date/` dual-layout (frozen 2026-04-20, no
-      entities). Confirm no reader consumes it first.
+- [ ] [OPERATOR] [CLEANUP] P2. Snapshot-then-cull the dead `sports_reference_v2/by_date/` dual-layout (frozen
+      2026-04-20, no entities). Confirm no reader consumes it first. <br>⛔ **STOP — THE READER-CHECK GATE IS NOT
+      SUFFICIENT HERE, and this amendment was already RULED 2026-07-28.**
+      [`/plans/active/sports_satellite_ao_dispatch_batch5_2026_07_26.md:184-197`](/plans/active/sports_satellite_ao_dispatch_batch5_2026_07_26.md)
+      proved **1,492 of these rows are the SOLE surviving copy** of that data (no canonical twin exists) and ruled that
+      they fold explicitly into the pre-floor-wipe scope per
+      [`/codex/02-data/sports-2020-06-data-floor.md`](/codex/02-data/sports-2020-06-data-floor.md) — precisely because
+      this todo's reader-check-only gate "does not actually cover twin-existence". That same ruling directed a follow-up
+      pass to "amend the two colliding cull todos... so neither silently deletes these 1,492 rows via the wrong
+      (reader-check-only) mechanism first"; its own finalize doc
+      (`sports_satellite_ao_dispatch_batch5_2026_07_26_finalize.md:141-145`, 2026-07-28) records the amendment as
+      **STILL UNDONE**, and batches 6/7/8 never picked it up. Retagged `[OPERATOR]` and bannered 2026-08-02 by the
+      `/plan-reconcile` whole-corpus run, executing the already-ratified 2026-07-28 amendment — this is not a new
+      decision. Prod-bucket deletes are human-only unless reversibility-qualified per
+      [`/codex/02-data/gcs-and-manifest-delete-safety-protocol.md`](/codex/02-data/gcs-and-manifest-delete-safety-protocol.md)
+      § 3a. Tracked at
+      [`/plans/active/issues/plan_reconcile_parked_operator_decisions_2026_08_02.md`](/plans/active/issues/plan_reconcile_parked_operator_decisions_2026_08_02.md)
+      § 1b.
 - [ ] [DOC] P2. **Finding C correction (2026-07-23): this was mis-scoped, downgraded from the original P1/HIGH.**
       `sports_canonical_raw_truncated_rederive_destroys_corpus_2026_07_16.md` is `status: resolved` (corpus-destroying
       risk already remediated, byte-exact GCS soft-delete restore verified) — only its 1 remaining open todo needs
