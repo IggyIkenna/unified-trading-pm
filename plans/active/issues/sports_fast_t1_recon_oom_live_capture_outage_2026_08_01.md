@@ -336,3 +336,35 @@ resolving/deploying it myself: no CD trigger exists for the general worker to in
 `gcloud run jobs update` to force the new image is an infra-craft, arguably-operator-adjacent action (unlike the
 memory-limit bump, which was an explicit approved OPERATOR DECISION) -- flagging for whoever owns unblocking the promote
 backlog / performing the manual redeploy, not doing it ad hoc from this todo.
+
+## 2026-08-02 (slot 9) -- precondition re-checked, root cause of the block identified (still not met)
+
+Re-checked the same precondition slot 4 checked earlier today. Unchanged on the surface (`4e0e03d` still only on
+`origin/live-defi-rollout`, still NOT on `origin/main`; `origin/main` still ~875 commits behind LDR) but this pass
+traced **why** the promote isn't draining, rather than just re-observing the gap:
+
+- The fleet's `ldr-to-main-promote-fleet` workflow (in `unified-trading-pm`) IS running on schedule (`*/15`, confirmed
+  green ticks every ~15min all day 2026-08-02) and DOES reach `deployment-service` in its per-repo loop, but explicitly
+  gates it:
+  `GATE BLOCK deployment-service: ci_status=FAILING (cached='MAIN_GREEN', live='FAILING') — LDR CI is red; fix before LDR→main`
+  (dep-order on `unified-api-contracts` is separately flagged but explicitly advisory/not-enforced — the real blocker is
+  `deployment-service`'s own LDR `quality-gates-v2` check).
+- Checked that check directly: `quality-gates-v2` run `30754282372` (workflow_dispatch on `live-defi-rollout`, triggered
+  2026-08-02T15:24:38Z) has both its `QG slice (tests)` and `QG slice (checks)` jobs sitting in GitHub's `queued` state
+  35+ minutes later -- never picked up by a runner. `runs-on: [self-hosted, glue]`; the fleet's `glue-*` runner pool (5
+  registered, e.g. `glue-ip-172-31-5-118-{1..5}`) shows 2/5 busy at check time, and `gh run list --status queued` across
+  several repos surfaced queued workflow runs dating back to 2026-05-15/05-26 (2+ months old, never cleared) -- this is
+  a severe, sustained runner-starvation backlog, not a one-off slow run.
+- This is NOT a new finding -- it's the **exact same root cause** already tracked in
+  `plans/active/issues/fleet_wide_qg_self_hosted_runner_capacity_crisis_2026_07_27.md` (open since 2026-07-27) and its
+  continuation `.../fleet_wide_qg_capacity_crisis_continues_day2_2026_07_29.md` (`status: open`,
+  `last_updated: 2026-08-01`, `assigned_role: cicd`, `assigned_vm: NA` -- explicitly operator/local-only, not
+  AO-craft-dispatchable). Not duplicating that doc or attempting a fix here: it's a different craft (`cicd`/infra, not
+  `data_engineering`), already owned, and NOT something a single worker turn should try to force (e.g. re-triggering QG
+  again would just compete for the same starved runner pool).
+
+**Net**: this todo's precondition genuinely still isn't met, and won't be until either the runner-capacity crisis clears
+enough for `deployment-service`'s LDR CI to go green (unblocking the fleet promote) AND the Cloud Run Job is manually
+redeployed (per slot 4's finding, no CD-on-main-push exists for this job). Self-skipping again (`reason_code: GATED`)
+rather than re-checking on a tight loop -- the blocking condition is fleet-wide and external to this todo, not something
+that resolves on a per-dispatch retry cadence.
