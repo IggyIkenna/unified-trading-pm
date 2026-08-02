@@ -1,0 +1,171 @@
+---
+doc_type: plan
+title:
+  Infra satellite AO batch 6 — 2 conflict-clear extractions from newly-surfaced ex-meta tranche members (bare-name
+  doctrine wording fix + hardlink-dedup investigation)
+summary: >-
+  Sixth AO-dispatch batch for the `infra` topic tranche, produced by `/ag-closeout-audit infra` (autonomous mode,
+  2026-08-02). Batch3's 2026-07-30 audit had concluded the tranche reached its stop-iterating condition (every remaining
+  orphan purely non-batchable); this run's membership sweep grew 39→43 mid-run when a same-day corpus-wide `asset_group:
+  meta`→real-tranche retag sweep (`unified-trading-pm@0409fa053` region) landed 4 new members that had never been
+  evaluated by any infra covering doc. All 4 were read end-to-end: 2 carry conflict-clear, bounded, worker-determinable
+  work (both partial carve-outs — each source doc keeps its own operator/judgment-gated remainder at `assigned_vm: NA`),
+  and 2 are fully non-batchable (both already carry an explicit `/na-eligibility-audit` KEEP-NA verdict from 2026-07-30
+  on their own sole todo). Both extracted todos touch different files and were checked for file-level collision against
+  all 11 existing infra batch/finalize/closeout plans plus a corpus-wide grep — zero found.
+status: draft
+nature: process
+asset_group: [infrastructure]
+stage: [meta]
+repos: [unified-trading-pm]
+scope: [engineer, admin]
+tags: [infra, ao-dispatch, ag-closeout-audit, satellite-docs, batch-6, plan-hygiene, meta-fold-in]
+related:
+  [
+    /plans/active/infra_satellite_ao_dispatch_batch6_finalize_2026_08_02.md,
+    /plans/active/issues/docs_reconcile_autonomous_sweep_2026_07_30.md,
+    /plans/active/issues/host_root_disk_full_transient_2026_07_13.md,
+    /plans/active/infra_consolidated_closeout_2026_07_25.md,
+    /plans/active/issues/ag_closeout_audit_infra_parked_2026_08_02.md,
+    /cursor-configs/skills/ag-closeout-audit/SKILL.md,
+    /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
+  ]
+created: "2026-08-02"
+last_updated: "2026-08-02"
+parent_epic: infrastructure_master
+assigned_vm: planning
+execution_scope: orchestrator-agent
+priority: P2
+estimate_class: infra
+estimate_baseline_ai_days: 0.5
+estimate_calibrated_ai_days: 0.4
+assigned_role: infra
+sequential: false
+drift_direction: advance-code
+locked_by:
+locked_since:
+context_scope:
+  [
+    /plans/active/infra_satellite_ao_dispatch_batch6_finalize_2026_08_02.md,
+    /cursor-configs/skills/ag-closeout-audit/SKILL.md,
+    /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
+    /plans/active/issues/ag_closeout_audit_infra_parked_2026_08_02.md,
+  ]
+supersedes:
+superseded_by:
+depends_on: []
+source: >-
+  `/ag-closeout-audit infra` run 2026-08-02 (ag_closeout_auditor scheduled worker, slot 11). Phase 0 re-derived the
+  covering set (11 covering docs, 39→43 members after a mid-run corpus meta-retag sweep). Phase 1 classified all 4
+  net-new members via direct full-text read; Phase 3 applied the dispatch-scope eligibility test + the HARD conflict
+  check (grepped all 11 existing infra covering docs + a corpus-wide filename/keyword grep) before drafting anything
+  here. See `issues/ag_closeout_audit_infra_parked_2026_08_02.md` finding 9 for the full per-doc classification.
+---
+
+# Infra satellite docs — AO dispatch batch 6
+
+## Why this plan exists
+
+A same-day corpus-wide "meta fold-in" sweep retagged 4 previously-`asset_group: [meta]` docs to their real tranches; 4
+landed in `infra` (this run's `generate_ag_closeout_audit_candidates.py --tranche infra` count moved 39→43, never-cited
+0→4 mid-run). None had ever been evaluated by any infra covering doc before this run. Reading all 4 in full:
+
+- `issues/docs_reconcile_autonomous_sweep_2026_07_30.md` — a prior `/docs-reconcile` run's parking register. Most of its
+  remaining content is operator-gated (a date-bound P0 decision, 2026-08-15) or human-judgment-gated (dead-doctrine- ref
+  repoints, a bold-span fix that routes to `/plan-reconcile`). ONE item is conflict-clear and bounded: its own Todos
+  section already carries `- [ ] [DOC] P2. Retire the 5 bare-name unified-trading-codex mentions (P2-E)` — its own body
+  narrows this to exactly 2 genuinely-stale mentions (`.cursor/rules/ci-cd/act-secrets-setup.mdc:14`,
+  `.cursor/rules/testing/test-coverage-targets.mdc:80`; a third is already correct, two more were fixed in-place by that
+  same run).
+- `issues/host_root_disk_full_transient_2026_07_13.md` — one open `[INFRA] P2` todo bundling an operator-permission-
+  gated cron install (confirmed blocked: no crontab-write for this account on at least one fleet host) with two
+  investigation sub-items that are NOT themselves permission-gated: root-causing why `UV_LINK_MODE=hardlink` isn't
+  deduping `.venv` across the 16 slots, and (only if a fix is found) building a liveness-aware prune. Extracting the
+  investigation half alone (never the cron install, never any prune-tool build/deploy) is conflict-clear and bounded.
+- `issues/plan_reconcile_autonomous_sweep_2026_07_30.md` — its sole todo was already conflict-checked and deliberately
+  held `assigned_vm: NA` by `/na-eligibility-audit` on 2026-07-30 (a genuine judgment call already made by that skill,
+  not re-litigated here). NOT extracted.
+- `issues/production_readiness_checklist_file_missing_2026_07_24.md` — its sole todo is explicitly and correctly
+  human-judgment-gated (which of 5 disagreeing item-counts is authoritative has no mechanical answer);
+  `/na-eligibility-audit` already confirmed KEEP-NA valid 2026-07-30. NOT extracted.
+
+## Conflict check (before drafting)
+
+Grepped all 11 existing infra covering docs (hub + batch1-5 + their finalize twins) and the whole active corpus for both
+target file sets — zero hits outside the two source docs themselves:
+
+- `.cursor/rules/ci-cd/act-secrets-setup.mdc` / `.cursor/rules/testing/test-coverage-targets.mdc` — mentioned only in
+  `issues/docs_reconcile_autonomous_sweep_2026_07_30.md` corpus-wide.
+- `UV_LINK_MODE` / hardlink-dedup / cross-slot `.venv` — mentioned only in
+  `issues/host_root_disk_full_transient_2026_07_13.md` corpus-wide.
+
+No competing claim on either file set. Both todos below touch entirely different files from each other — safe to run
+concurrently (no `sequential: true`).
+
+## Todos
+
+- [ ] [DOCS] P2. **Retire the 2 genuinely-stale bare-name `unified-trading-codex` mentions** in
+      `.cursor/rules/ci-cd/act-secrets-setup.mdc:14` and `.cursor/rules/testing/test-coverage-targets.mdc:80` (per
+      `issues/docs_reconcile_autonomous_sweep_2026_07_30.md`'s P2-E finding + its own `- [ ] [DOC] P2` todo) — replace
+      the bare `unified-trading-codex` name with the current convention already used elsewhere in these same rule trees
+      (pointing at PM's folded `codex/`, matching how `codex-maintenance.mdc`/`codex-no-absolute-paths.mdc` were already
+      fixed in the same source sweep). Wording-only change, no functional rule-logic edit. Done when: neither file
+      bare-names the archived repo, and
+      `grep -rn "unified-trading-codex" .cursor/rules/ cursor-rules/ | grep -v "unified-trading-pm/codex"` returns no
+      new bare-name hits beyond the already-known-correct `pipeline-mode-partition-structure.mdc:79` mention. (repo:
+      unified-trading-pm)
+- [ ] [INFRA] P3. **Root-cause why `UV_LINK_MODE=hardlink` (configured in `base-service.sh:322`) is not actually
+      deduping `.venv` files across slots** on the shared host (per `host_root_disk_full_transient_2026_07_13.md`'s
+      confirmed root driver #2 — identical `numpy.libs/libscipy_openblas64_*.so` content/size across two different
+      slots' `.venv`s, `nlink=1` on both, different inodes). Investigate the two stated candidate causes (each slot's
+      `uv sync` may resolve to a distinct cache entry; hardlink may only apply within a single sync's own cache→venv
+      copy, not across independently-run syncs) by reading `uv`'s cache/link-mode behavior and directly comparing
+      inode/cache-key state across 2-3 live slots (read-only — do not modify any other slot's `.venv`). **Explicitly
+      excludes building or deploying any prune/cleanup tooling** — that remains a separate, more carefully-scoped
+      follow-up given the live/in-use nature of other slots' `.venv` directories (per the source doc's own caution: "a
+      blanket prune risks breaking an active slot's `quality-gates.sh`/`quickmerge.sh` mid-run"). Done when:
+      `issues/host_root_disk_full_transient_2026_07_13.md` is updated with a dated finding stating the root cause and an
+      explicit fixable/not-fixable verdict (with reasoning), not just "investigated." (repo: unified-trading-pm,
+      read-only host investigation)
+
+## Deferred — non-batchable this round
+
+- **`docs_reconcile_autonomous_sweep_2026_07_30.md`'s P0-A (`check_codex_doc_freshness.py` 2026-08-15 cliff)** —
+  OPERATOR-GATED (authority call among 4 stated options, `codex/**` edit). Not re-triageable; needs a ruling, then
+  becomes normal batch material. Time-sensitive (13 days from this run's date) — flagged prominently in this run's
+  parked-findings doc, not silently parked here.
+- **`docs_reconcile_autonomous_sweep_2026_07_30.md`'s 4 dead codex doctrine refs + unterminated bold span** —
+  human-judgment-gated (repoint-vs-delete call) / routes to `/plan-reconcile` per the source doc's own text
+  respectively. Not extracted.
+- **`plan_reconcile_autonomous_sweep_2026_07_30.md`'s sole todo** — already conflict-checked and deliberately held
+  `assigned_vm: NA` by `/na-eligibility-audit` 2026-07-30. GENUINELY-HUMAN-BY-PRIOR-DECISION — not re-litigated by this
+  skill (out of scope per its own "Also NOT `/na-eligibility-audit`" section). If the operator wants to overrule that
+  hold, that is `/na-eligibility-audit`'s or the operator's call directly, not this batch's.
+- **`production_readiness_checklist_file_missing_2026_07_24.md`'s sole todo** — GENUINELY HUMAN-ONLY (no mechanical way
+  to determine the correct checklist item-count from repo state alone, per the source doc's own analysis). Will keep
+  reporting orphaned until a human picks it up — an accurate signal, not a stuck audit.
+- **`host_root_disk_full_transient_2026_07_13.md`'s cron-install sub-item** — OPERATOR-GATED (no crontab-write
+  permission for this account on the affected host(s); the doc's own prior session confirmed `Permission denied`). Not
+  extracted; the todo above extracts only the non-gated investigation portion.
+
+## Operator approval gate
+
+**This plan is `status: draft` — NOT ingested, NOT dispatched.** Flipping it (and its finalize twin, already
+`status: active` per the no-double-gate ruling) to `status: active` is the operator's call. Both todos above are
+read-only/wording-only with no `[OPERATOR]` tag needed on their own merits (finding U: read-only investigation +
+mechanical wording fix never carry `[OPERATOR]`) — the draft gate here is solely the standing "a skill-drafted AO batch
+needs explicit operator sign-off before dispatch" rule, not a signal either todo itself is risky.
+
+## Codex SSOTs (read before touching a todo)
+
+- `/cursor-configs/skills/ag-closeout-audit/SKILL.md` — the procedure this batch was produced by
+- `/codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md` — the conflict-check protocol applied
+  above
+- `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md` — archival ritual the finalize plan runs
+- `/plans/active/task_template.md` §4 — finalize-plan-coverage rule, dispatch-scope eligibility test
+
+## Progress Log
+
+- **2026-08-02** — Drafted by `/ag-closeout-audit infra` (autonomous mode, scheduled daily run, slot 11) after the 4
+  net-new ex-meta tranche members were classified. Paired with
+  `infra_satellite_ao_dispatch_batch6_finalize_2026_08_02.md` in the same run per the finalize-plan-coverage rule.
