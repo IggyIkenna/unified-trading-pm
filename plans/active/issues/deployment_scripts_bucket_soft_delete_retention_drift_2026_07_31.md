@@ -83,6 +83,29 @@ Either way this needs a decision, not a blind `tofu apply` of whichever value co
       `softDeletePolicy.retentionDurationSeconds` now reads `0`, matching terraform. No terraform change needed — it was
       already correct; only the live resource had drifted. (repo: deployment-service)
 
+## Follow-up — residual soft-deleted volume (2026-08-02)
+
+- [ ] [INFRA] P3. **Verify the residual soft-deleted volume actually drains.** A `gcs_bucket_stats.py` cross-bucket
+      bloat audit run 2026-08-02 (as part of `infra_satellite_ao_dispatch_batch1_2026_07_26.md` item 25's "cross-bucket
+      soft-delete bloat audit" requirement — full CSV logged there) shows `deployment-scripts-central-element-323112` at
+      **9,722.6 GiB total / 94.7% bloat_pct / 9,208.7 GiB soft-deleted (484,739 objects)** as of `2026-08-02T23:38:55Z`
+      — i.e. the SAME shape as the original 2026-06-01 incident
+      (`/plans/archive/issues/deployment_scripts_bucket_softdelete_log_churn_2026_06_01.md`), just smaller in magnitude
+      (9.2 TiB vs 57 TiB). Live `retentionDurationSeconds` is confirmed **0** right now
+      (`gcloud storage buckets describe` re-checked same session), matching this doc's just-applied fix above — so this
+      is almost certainly the EXPECTED residual bleed-off from the 604800s (7-day) window that was live before today's
+      fix, not a new active churn source: each already-soft-deleted generation keeps its own already-committed 7-day
+      countdown regardless of the bucket-level policy going forward, so the backlog should drain to near-zero within ~7
+      days of the fix landing (i.e. by ~2026-08-09) with no further action. **Not treated as a new P1/P2 incident**
+      because (a) the fix that stops new accretion is already live, (b) GCS soft-delete purge is automatic and
+      self-resolving once the flow stops, matching the exact drain pattern the archived 2026-06-01 doc already described
+      ("existing 56 TiB ages out by ~2026-06-08"). **Done when**: a fresh `gcs_bucket_stats.py` run on/after 2026-08-09
+      shows `deployment-scripts-central-element-323112` bloat_pct back near its pre-drift baseline (single digits,
+      matching the other correctly-configured canonical buckets in the same audit) — if it has NOT dropped, that means
+      new churn is still occurring live-side despite `retentionDurationSeconds=0`, which would need the writer-side
+      investigation the 2026-06-01 doc already did once (re-upload cadence / `LogUploader` regression). Repo:
+      deployment-service (verification only, no code path).
+
 ## Progress Log (na-eligibility-audit incremental marker)
 
 - **na-eligibility-audit 2026-08-02** (infra tranche, incremental run): **KEEP-NA, valid.** First verdict for this doc
