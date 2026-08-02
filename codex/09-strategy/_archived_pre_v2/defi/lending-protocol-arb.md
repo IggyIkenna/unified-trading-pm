@@ -181,7 +181,7 @@ atomically within a single block.
 
 ## Client Onboarding
 
-See [cross-cutting/client-onboarding.md](../cross-cutting/client-onboarding.md) for the standard flow.
+See [operational/client-onboarding.md](/codex/09-strategy/operational/client-onboarding.md) for the standard flow.
 
 **Strategy-specific:**
 

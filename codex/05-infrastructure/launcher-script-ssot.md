@@ -215,8 +215,8 @@ The pre-2026-05-08 layout had 8 per-family launchers (`launch-features-onchain-v
 `launch-features-calendar-vm.sh`, `launch-features-commodity-vm.sh`, `launch-features-delta-one-vm.sh`,
 `launch-features-multi-timeframe-vm.sh`).
 
-Per [`features_repo_consolidation_2026_05_08`](../../plans/active/features_repo_consolidation_2026_05_08.md) Phase 8A,
-those 8 launchers collapse to a single `deployment-service/scripts/vm/launch-features-vm.sh` parameterised by
+Per [`features_repo_consolidation_2026_05_08`](../../plans/archive/features_repo_consolidation_2026_05_08.plan.md) Phase
+8A, those 8 launchers collapse to a single `deployment-service/scripts/vm/launch-features-vm.sh` parameterised by
 `--feature-family` + `--asset-group`. The consolidated launcher:
 
 1. Reads `--feature-family` from its argv + validates against the UAC `FeatureFamily` StrEnum (8 members).
@@ -266,7 +266,7 @@ Source repo bucket counts (baseline 30):
 | 5   | `e2e-testing/scripts/sports/launch_instruments_reference_v3.sh`        | `launch-sports-instruments-reference-vm.sh`               | shipped — deployment-service@fc9211e + e2e-testing@db7ace3     |
 | 6   | `e2e-testing/scripts/defi/launch_dex_pools_vm.sh`                      | `launch-mtds-dex-pools-backfill-vm.sh`                    | shipped — deployment-service@5778811 + e2e-testing@43d8e49     |
 | 7   | `e2e-testing/scripts/defi/launch_eigenlayer_rewards_vm.sh`             | `launch-mtds-eigenlayer-rewards-backfill-vm.sh`           | shipped — deployment-service@5778811 + e2e-testing@43d8e49     |
-| 8   | `e2e-testing/scripts/defi/launch_solana_drift_vm.sh`                   | ⚠️ see note below — target name not on disk                | shipped — deployment-service@5778811 + e2e-testing@43d8e49     |
+| 8   | `e2e-testing/scripts/defi/launch_solana_drift_vm.sh`                   | ⚠️ see note below — target name not on disk               | shipped — deployment-service@5778811 + e2e-testing@43d8e49     |
 | 9   | `e2e-testing/scripts/common/launch_cefi_migration_vm.sh`               | `launch-cefi-migration-vm.sh`                             | shipped — deployment-service@ce99d43 + e2e-testing@4f1f92b     |
 | 10  | `e2e-testing/scripts/common/launch_defi_backfill_vm.sh`                | `launch-defi-backfill-vm.sh`                              | shipped — deployment-service@ce99d43 + e2e-testing@4f1f92b     |
 
@@ -275,13 +275,14 @@ path, register new prefix in `VM_PREFIX_TO_BUCKET`, smoke-test `--dry-run` (or `
 of watchdog VM at end of cycle. **Watchdog VM** relaunched as `vm-zombie-watchdog-20260508-121344` after all 17 new
 prefix entries landed.
 
-> **⚠️ Row 8 unverifiable (2026-07-31 re-review).** Neither the source `e2e-testing/scripts/defi/launch_solana_drift_vm.sh`
-> nor the claimed destination `launch-mtds-solana-drift-backfill-vm.sh` exists on disk today. The Solana launchers
-> actually present are `launch-mtds-solana-defi-backfill-vm.sh`, `launch-mtds-solana-gas-backfill-vm.sh`,
-> `launch-jito-solana-backfill-vm.sh` and `launch-marinade-solana-backfill-vm.sh`; none of them mentions `drift`. So the
-> row's "shipped" claim cannot be confirmed against the tree — either the destination was renamed/folded after the
-> Tab-11 cycle, or Drift coverage was dropped. **Do not cite this row as evidence that Drift has a canonical launcher.**
-> Resolve before relying on it: `grep -ri drift deployment-service/scripts/vm/` returns nothing today.
+> **⚠️ Row 8 unverifiable (2026-07-31 re-review).** Neither the source
+> `e2e-testing/scripts/defi/launch_solana_drift_vm.sh` nor the claimed destination
+> `launch-mtds-solana-drift-backfill-vm.sh` exists on disk today. The Solana launchers actually present are
+> `launch-mtds-solana-defi-backfill-vm.sh`, `launch-mtds-solana-gas-backfill-vm.sh`, `launch-jito-solana-backfill-vm.sh`
+> and `launch-marinade-solana-backfill-vm.sh`; none of them mentions `drift`. So the row's "shipped" claim cannot be
+> confirmed against the tree — either the destination was renamed/folded after the Tab-11 cycle, or Drift coverage was
+> dropped. **Do not cite this row as evidence that Drift has a canonical launcher.** Resolve before relying on it:
+> `grep -ri drift deployment-service/scripts/vm/` returns nothing today.
 
 ### Deferred (20 launchers — documented reasons)
 
@@ -323,20 +324,20 @@ truth.
 - **Only 6 scripts outside `deployment-service/scripts/vm/` still create a VM** — down from the 20 deferred rows above.
   Measured with `rg -l 'gcloud compute instances create|aws ec2 run-instances' e2e-testing/scripts`:
 
-  | Still-violating script                                       | Deferred reason (unchanged)                       |
-  | ------------------------------------------------------------ | ------------------------------------------------- |
-  | `e2e-testing/scripts/sports/launch_instruments_reference_v3.sh` | superseded-by-canonical, source not yet deleted  |
-  | `e2e-testing/scripts/sports/launch_mdps_phase3_bucketing.sh`   | partially superseded by `launch-mdps-sports-bucket-vm.sh` |
-  | `e2e-testing/scripts/sports/launch_fss_phase3_backfill.sh`     | partially superseded by `launch-features-sports-backfill-vm.sh` |
-  | `e2e-testing/scripts/sports/launch_fss_features_vm.sh`         | partially superseded by `launch-features-sports-backfill-vm.sh` |
-  | `e2e-testing/scripts/sports/launch_fss_features_v3.sh`         | partially superseded by `launch-features-sports-backfill-vm.sh` |
-  | `e2e-testing/scripts/prediction/setup-backfill-vm.sh`          | prediction-surface collision risk                 |
+  | Still-violating script                                          | Deferred reason (unchanged)                                     |
+  | --------------------------------------------------------------- | --------------------------------------------------------------- |
+  | `e2e-testing/scripts/sports/launch_instruments_reference_v3.sh` | superseded-by-canonical, source not yet deleted                 |
+  | `e2e-testing/scripts/sports/launch_mdps_phase3_bucketing.sh`    | partially superseded by `launch-mdps-sports-bucket-vm.sh`       |
+  | `e2e-testing/scripts/sports/launch_fss_phase3_backfill.sh`      | partially superseded by `launch-features-sports-backfill-vm.sh` |
+  | `e2e-testing/scripts/sports/launch_fss_features_vm.sh`          | partially superseded by `launch-features-sports-backfill-vm.sh` |
+  | `e2e-testing/scripts/sports/launch_fss_features_v3.sh`          | partially superseded by `launch-features-sports-backfill-vm.sh` |
+  | `e2e-testing/scripts/prediction/setup-backfill-vm.sh`           | prediction-surface collision risk                               |
 
   Every other deferred row either no longer creates a VM or no longer exists. The remaining six are all sports- or
   prediction-surface, and all are "superseded but source not yet deleted" rather than genuinely-unmigrated work.
 
-- Current `launch*.sh` counts in the source repo: `common/` 4 · `defi/` 9 · `prediction/` 3 · `sports/` 9. (The
-  "Source repo bucket counts (baseline 30)" table above is the **2026-05-07 baseline**, not a current inventory.)
+- Current `launch*.sh` counts in the source repo: `common/` 4 · `defi/` 9 · `prediction/` 3 · `sports/` 9. (The "Source
+  repo bucket counts (baseline 30)" table above is the **2026-05-07 baseline**, not a current inventory.)
 
 **Per-asset-group rename intentions for follow-up cycles** (canonical-shape patterns; not single migrations):
 
@@ -361,8 +362,8 @@ Once a row is migrated:
 
 1. The new launcher under `deployment-service/scripts/vm/` is canonical.
 2. Its VM-name prefix is registered in `VM_PREFIX_TO_BUCKET`
-   ([`vm_zombie_watchdog.py`](../../deployment-service/scripts/vm/vm_zombie_watchdog.py) — underscores, not hyphens;
-   the AWS twin is `vm_zombie_watchdog_aws.py`).
+   ([`vm_zombie_watchdog.py`](../../deployment-service/scripts/vm/vm_zombie_watchdog.py) — underscores, not hyphens; the
+   AWS twin is `vm_zombie_watchdog_aws.py`).
 3. The script is registered in `_SERVICE_LAUNCHER_SCRIPTS` in `deployment-api/deployment_api/services/deploy_missing.py`
    so the UI's Deploy-Missing button surfaces it.
 4. The old path is removed from its home repo.

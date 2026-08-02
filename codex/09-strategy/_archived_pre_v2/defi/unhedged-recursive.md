@@ -423,7 +423,7 @@ strategy = create_unhedged_recursive_strategy(
 
 ## Client Onboarding
 
-See [cross-cutting/client-onboarding.md](../cross-cutting/client-onboarding.md) for the standard flow.
+See [operational/client-onboarding.md](/codex/09-strategy/operational/client-onboarding.md) for the standard flow.
 
 **Strategy-specific:**
 
@@ -570,7 +570,7 @@ Capital flow: Client deposit --> treasury --> hot wallet --> SWAP to WETH + FLAS
 swap to weETH, deposit to Aave, borrow WETH, repay flash). No margin transfer to CeFi venues. Simpler capital flow than
 hedged variant.
 
-See [wallet-hierarchy-and-capital-flow.md](../../04-architecture/wallet-hierarchy-and-capital-flow.md).
+See [wallet-hierarchy-and-capital-flow.md](../../../04-architecture/wallet-hierarchy-and-capital-flow.md).
 
 ## Gas Fee Tracking
 
@@ -582,9 +582,10 @@ or perp trade). Gas hits P&L immediately as a realized transaction cost.
 
 ## Instrument Filtering
 
-Pool and market discovery follows the rules in [instrument-filtering.md](../cross-cutting/instrument-filtering.md). DEX
-pools (swap leg) require BOTH sides to be in `DEFI_MAJOR_ASSET_SYMBOLS`. Both WETH and weETH are in the whitelist.
-Lending markets (Aave V3) require the base asset to be major.
+Pool and market discovery follows the rules in
+[instrument-filtering.md](/codex/09-strategy/operational/instrument-filtering.md). DEX pools (swap leg) require BOTH
+sides to be in `DEFI_MAJOR_ASSET_SYMBOLS`. Both WETH and weETH are in the whitelist. Lending markets (Aave V3) require
+the base asset to be major.
 
 ## Share Class
 

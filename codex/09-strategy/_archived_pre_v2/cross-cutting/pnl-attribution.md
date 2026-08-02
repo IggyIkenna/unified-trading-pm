@@ -433,7 +433,7 @@ equity_in_eth worth of ETH exposure. Zero ETH delta would mean underperforming E
 When drift exceeds threshold, strategy emits a SWAP instruction to buy ETH back toward target.
 
 See [cross-cutting/share-classes.md](../cross-cutting/share-classes.md) for the full share class specification and
-[/codex/04-architecture/defi-risk-monitoring.md](../../04-architecture/defi-risk-monitoring.md) for monitoring
+[/codex/04-architecture/defi-risk-monitoring.md](../../../04-architecture/defi-risk-monitoring.md) for monitoring
 thresholds.
 
 ## Implementation: pnl-attribution-service `compute_pnl_breakdown()`

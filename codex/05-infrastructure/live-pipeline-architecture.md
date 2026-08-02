@@ -44,8 +44,8 @@ code_refs:
 > Full design + phased work plan in
 > [`/plans/archive/2026_05/live_pipeline_mtds_mdps_features_2026_05_08.md`](../..//plans/archive/2026_05/live_pipeline_mtds_mdps_features_2026_05_08.md).
 > Dependent prerequisites:
-> [`features_repo_consolidation_2026_05_08`](../../plans/active/features_repo_consolidation_2026_05_08.md) +
-> [`gcs_migration_bundle_pipeline_mode_2026_05_08`](../../plans/active/gcs_migration_bundle_pipeline_mode_2026_05_08.md).
+> [`features_repo_consolidation_2026_05_08`](../../plans/archive/features_repo_consolidation_2026_05_08.plan.md) +
+> [`gcs_migration_bundle_pipeline_mode_2026_05_08`](../../plans/archive/2026_05/gcs_migration_bundle_pipeline_mode_2026_05_08.md).
 > If this doc disagrees with the active plans, the plans win — flag conflicts to the user.
 
 ## TL;DR
@@ -351,9 +351,10 @@ For the full authoring guide, mutation types, and outcome-assertion categories, 
 
 - Plan:
   [`live_pipeline_mtds_mdps_features_2026_05_08`](../..//plans/archive/2026_05/live_pipeline_mtds_mdps_features_2026_05_08.md)
-- Pre-req plan: [`features_repo_consolidation_2026_05_08`](../../plans/active/features_repo_consolidation_2026_05_08.md)
 - Pre-req plan:
-  [`gcs_migration_bundle_pipeline_mode_2026_05_08`](../../plans/active/gcs_migration_bundle_pipeline_mode_2026_05_08.md)
+  [`features_repo_consolidation_2026_05_08`](../../plans/archive/features_repo_consolidation_2026_05_08.plan.md)
+- Pre-req plan:
+  [`gcs_migration_bundle_pipeline_mode_2026_05_08`](../../plans/archive/2026_05/gcs_migration_bundle_pipeline_mode_2026_05_08.md)
 - Sibling docs: [`replay-subsystem.md`](./replay-subsystem.md),
   [`/codex/02-data/pipeline-mode-partition.md`](/codex/02-data/pipeline-mode-partition.md),
   [`/codex/04-architecture/instrument-lifecycle-cache-delta-hot-reload.md`](/codex/04-architecture/instrument-lifecycle-cache-delta-hot-reload.md)

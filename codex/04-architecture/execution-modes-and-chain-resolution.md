@@ -447,4 +447,5 @@ the execution provider is pluggable.
 - [Wallet Hierarchy](wallet-hierarchy-and-capital-flow.md) — treasury/trading wallet model
 - [Custody Providers](custody-providers.md) — MPC signing integration (Copper + CEFFU + LocalKey + Mock)
 - [Pipeline Layers](runtime-deployment-topology.md) — L1-L7 service architecture
-- [DeFi Execution](../../.claude/CLAUDE.md) — DeFi pipeline flow section
+- [DeFi Execution](defi-execution-overview.md) — DeFi execution SSOT (manifest handoff, operation routing,
+  DefiErrorCode)

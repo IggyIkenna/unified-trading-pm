@@ -25,7 +25,7 @@ referenced_by:
   [
     /codex/04-architecture/autonomous-recovery-matrix.md,
     /codex/04-architecture/incident-gateway-state-machine.md,
-    plans/active/reconciliation_age_tracking_and_escalation_2026_05_23.md,
+    plans/archive/reconciliation_age_tracking_and_escalation_2026_05_23.plan.md,
   ]
 owner:
 last_reviewed: 2026-05-27
@@ -43,7 +43,7 @@ code_refs:
 
 > SSOT for how the system tracks reconciliation staleness, escalates by elapsed time, and freezes new trading when
 > reconciliation risk is live. Codified 2026-05-23 per
-> `plans/active/reconciliation_age_tracking_and_escalation_2026_05_23.md`.
+> `plans/archive/reconciliation_age_tracking_and_escalation_2026_05_23.plan.md`.
 
 ## Principle
 

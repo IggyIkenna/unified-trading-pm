@@ -55,13 +55,13 @@ For a consolidated checklist of template + system expectations and **Codex vs `s
 [STRATEGY_CATALOG_AND_WORKFLOW_ALIGNMENT.md](STRATEGY_CATALOG_AND_WORKFLOW_ALIGNMENT.md).
 
 For **Tier 0 UI mock parity** (fixtures, cross-strategy UX expectations, promotion to T1/T2), see
-[TIER_ZERO_UI_DEMO_AND_PARITY.md](TIER_ZERO_UI_DEMO_AND_PARITY.md) and the UI playbook
+[TIER_ZERO_UI_DEMO_AND_PARITY.md](../TIER_ZERO_UI_DEMO_AND_PARITY.md) and the UI playbook
 `unified-trading-system-ui/docs/END_TO_END_STATIC_TIER_ZERO_TESTING.md`.
 
 ## Instrument Filtering
 
 All DeFi strategies depend on instrument discovery — which pools, lending markets, and derivatives are available to
-trade. See **[cross-cutting/instrument-filtering.md](cross-cutting/instrument-filtering.md)** for the full filtering
+trade. See **[operational/instrument-filtering.md](../operational/instrument-filtering.md)** for the full filtering
 pipeline:
 
 - Major asset whitelist (`DEFI_MAJOR_ASSET_SYMBOLS` — ~65 tokens across EVM + Solana)
@@ -149,14 +149,14 @@ pipeline:
 
 ### Sports (5 strategies + 1 MM)
 
-| Strategy                                 | File                    | Status        | Capital Target |
-| ---------------------------------------- | ----------------------- | ------------- | -------------- |
-| [Arbitrage](sports/arbitrage.md)         | `arbitrage.py`          | Code complete | TBD            |
-| [Value Betting](sports/value-betting.md) | `value_betting.py`      | Code complete | TBD            |
-| [ML Sports](sports/ml-sports.md)         | `ml_sports_strategy.py` | Code complete | TBD            |
-| [Halftime ML](sports/halftime-ml.md)     | `halftime_ml.py`        | Code complete | TBD            |
-| [Kelly Criterion](sports/kelly.md)       | `kelly.py`              | Code complete | TBD            |
-| [Market Making](sports/market-making.md) | `market_making.py`      | Code complete | TBD            |
+| Strategy                                                                    | File                    | Status        | Capital Target |
+| --------------------------------------------------------------------------- | ----------------------- | ------------- | -------------- |
+| [Arbitrage](sports/arbitrage.md)                                            | `arbitrage.py`          | Code complete | TBD            |
+| [Value Betting](sports/value-betting.md)                                    | `value_betting.py`      | Code complete | TBD            |
+| [Halftime ML](sports/halftime-ml.md) / [Pre-Game ML](sports/pre-game-ml.md) | `ml_sports_strategy.py` | Code complete | TBD            |
+| [Halftime ML](sports/halftime-ml.md)                                        | `halftime_ml.py`        | Code complete | TBD            |
+| [Kelly Criterion](sports/kelly.md)                                          | `kelly.py`              | Code complete | TBD            |
+| [Market Making](sports/market-making.md)                                    | `market_making.py`      | Code complete | TBD            |
 
 ### Prediction Markets (1 strategy)
 
@@ -222,21 +222,21 @@ Internal matching engines for paper trading, backtesting, and SIT:
 
 These apply to ALL strategies regardless of asset class:
 
-| Document                                                                      | What It Covers                                                                            |
-| ----------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
-| [PnL Attribution](cross-cutting/pnl-attribution.md)                           | Balance-based SOT, 7 attribution buckets, 2% reconciliation tolerance                     |
-| [Cost Modeling](cross-cutting/cost-modeling.md)                               | Transaction costs, gas, slippage, flash loan fees, opportunity cost                       |
-| [ML Pipeline](cross-cutting/ml-pipeline.md)                                   | Feature ingestion, model lifecycle, signal generation, retraining                         |
-| [Latency Profiles](cross-cutting/latency-profiles.md)                         | p50/p99 targets per segment, co-location decision framework                               |
-| [Strategy Onboarding](cross-cutting/onboarding-checklist.md)                  | Checklist for adding a new strategy to the system                                         |
-| [Client Onboarding](cross-cutting/client-onboarding.md)                       | Adding a new client to an existing strategy                                               |
-| [Config Architecture](cross-cutting/config-architecture.md)                   | Config-driven PnL, live=batch parity, hot-reload vs restart                               |
-| [Operational Modes Matrix](cross-cutting/operational-modes-matrix.md)         | Mock/real, testnet, local cloud, env axes, IBKR paper vs `TESTNET_MODE`, SIT expectations |
-| [Margin & Health](cross-cutting/margin-health.md)                             | LTV, health factor, liquidation across CeFi/DeFi/TradFi                                   |
-| [Prediction Markets](cross-cutting/prediction-markets.md)                     | Polymarket/Kalshi as features, execution, and arb surface                                 |
-| [Share Classes](cross-cutting/share-classes.md)                               | ETH/USDT/BTC base currency denomination, delta targets, FX factor in P&L                  |
-| [Reward Lifecycle](cross-cutting/reward-lifecycle.md)                         | Staking reward accrue/claim/sell/attribute pipeline (EIGEN, ETHFI)                        |
-| [Venue Collateral & Wrapping](cross-cutting/venue-collateral-and-wrapping.md) | Venue collateral matrix, token wrapping (ETH/eETH/stETH), instruction blocking            |
+| Document                                                                                 | What It Covers                                                                            |
+| ---------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
+| [PnL Attribution](cross-cutting/pnl-attribution.md)                                      | Balance-based SOT, 7 attribution buckets, 2% reconciliation tolerance                     |
+| [Cost Modeling](cross-cutting/cost-modeling.md)                                          | Transaction costs, gas, slippage, flash loan fees, opportunity cost                       |
+| [ML Pipeline](cross-cutting/ml-pipeline.md)                                              | Feature ingestion, model lifecycle, signal generation, retraining                         |
+| [Latency Profiles](cross-cutting/latency-profiles.md)                                    | p50/p99 targets per segment, co-location decision framework                               |
+| [Strategy Onboarding](../operational/onboarding-checklist.md)                            | Checklist for adding a new strategy to the system                                         |
+| [Client Onboarding](../operational/client-onboarding.md)                                 | Adding a new client to an existing strategy                                               |
+| [Config Architecture](cross-cutting/config-architecture.md)                              | Config-driven PnL, live=batch parity, hot-reload vs restart                               |
+| [Operational Modes Matrix](../architecture-v2/cross-cutting/operational-modes-matrix.md) | Mock/real, testnet, local cloud, env axes, IBKR paper vs `TESTNET_MODE`, SIT expectations |
+| [Margin & Health](cross-cutting/margin-health.md)                                        | LTV, health factor, liquidation across CeFi/DeFi/TradFi                                   |
+| [Prediction Markets](../architecture-v2/cross-cutting/prediction-markets.md)             | Polymarket/Kalshi as features, execution, and arb surface                                 |
+| [Share Classes](cross-cutting/share-classes.md)                                          | ETH/USDT/BTC base currency denomination, delta targets, FX factor in P&L                  |
+| [Reward Lifecycle](../architecture-v2/cross-cutting/reward-lifecycle.md)                 | Staking reward accrue/claim/sell/attribute pipeline (EIGEN, ETHFI)                        |
+| [Venue Collateral & Wrapping](cross-cutting/venue-collateral-and-wrapping.md)            | Venue collateral matrix, token wrapping (ETH/eETH/stETH), instruction blocking            |
 
 ## Key Principles
 
@@ -285,4 +285,4 @@ These apply to ALL strategies regardless of asset class:
 - **Credentials:** `unified-cloud-interface/credentials_registry.py` + `unified-trading-pm/credentials-registry.yaml`
 - **Venue capabilities:** `unified-api-contracts/registry/capability_declarations/`
 - **Testing stages:** `unified-api-contracts/unified_api_contracts/internal/modes.py` (`TestingStage`,
-  `OperationalMode`) — see [operational-modes-matrix.md](cross-cutting/operational-modes-matrix.md)
+  `OperationalMode`) — see [operational-modes-matrix.md](../architecture-v2/cross-cutting/operational-modes-matrix.md)

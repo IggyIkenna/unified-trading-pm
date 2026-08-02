@@ -181,7 +181,7 @@ identical local `ModeHandler` ABC at `features_service/<family>/cli/handlers/bas
   `**kwargs: object`; volatility 11-arg async; delta_one 16-arg async; onchain 9-arg async). The Wave 3b
   `FeatureBatchHandler` ABC didn't fit (per-shard 1-frame model vs the 16-arg async multi-feature_group orchestration
   families actually run); option α from
-  [`plans/active/issues/feature_batch_handler_abc_zero_consumers_2026_05_08.md`](../../plans/active/issues/feature_batch_handler_abc_zero_consumers_2026_05_08.md)
+  [`plans/archive/issues/feature_batch_handler_abc_zero_consumers_2026_05_08.plan.md`](../../plans/archive/issues/feature_batch_handler_abc_zero_consumers_2026_05_08.plan.md)
   captured the lift target.
 
 **Canonical surface.** The lifted ABC accepts the **most permissive** run signature (`async def run(**kwargs: object)`)
