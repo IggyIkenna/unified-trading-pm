@@ -123,13 +123,13 @@ inconsistent state.
       but the harness's own tracked background-task mechanism is. (repo: unified-trading-pm)
 
       **Shipped 2026-07-31** — added item 6 to `/codex/12-agent-workflow/async-wait-and-poll-discipline.md` (the doc
-                  already owned a closely-related item 5 on `run_in_background` limits, so this landed as a direct continuation
-                  rather than `per-tab-worktrees.md`). Captures both confirmed kill mechanisms from this doc's full incident
-                  history (fixed ~1-3 min nohup/disown session-boundary reap, independent of load; a separate genuine
-                  resource-exhaustion kill that can still catch `run_in_background` at severe host contention, ~10x more durable
-                  but not immune), the self-restarting-supervisor-on-`run_in_background` mitigation, the `/tmp` tmpfs-corruption
-                  distinct-failure-mode warning (§ "Disk-full tmpfs corruption" above), and the swap-recovers-faster-than-load
-                  guidance for when to safely retry.
+                      already owned a closely-related item 5 on `run_in_background` limits, so this landed as a direct continuation
+                      rather than `per-tab-worktrees.md`). Captures both confirmed kill mechanisms from this doc's full incident
+                      history (fixed ~1-3 min nohup/disown session-boundary reap, independent of load; a separate genuine
+                      resource-exhaustion kill that can still catch `run_in_background` at severe host contention, ~10x more durable
+                      but not immune), the self-restarting-supervisor-on-`run_in_background` mitigation, the `/tmp` tmpfs-corruption
+                      distinct-failure-mode warning (§ "Disk-full tmpfs corruption" above), and the swap-recovers-faster-than-load
+                      guidance for when to safely retry.
 
 ## Update 2026-07-28 (later, slot-14) — CORRECTION: harness `run_in_background` is NOT immune either; strong new
 
@@ -401,10 +401,24 @@ successfully).
 
 ## Todos
 
-- [ ] [SCRIPT] P2. Build the self-restarting supervisor-loop mitigation this doc has recommended since its first
+- [x] ✅ [SCRIPT] P2. Build the self-restarting supervisor-loop mitigation this doc has recommended since its first
       sighting (a bash `for`-loop relaunching the same command against the same `--resume-log` path on any non-zero
       exit, capped retries, run under the harness's tracked `run_in_background`) instead of continuing to hand-relaunch
-      on every future exit-144 sighting.
+      on every future exit-144 sighting. — unified-trading-pm@caa33217b. Shipped `scripts/dev/supervised-resume.sh`: a
+      general-purpose wrapper (not tied to this one migration) that relaunches the exact same command line on any
+      non-zero exit, up to `--max-retries` (default 10), with a swap-pressure-aware backoff (adds
+      `--contention-backoff-seconds` on top of the base delay when swap-used% > 80, per this doc's own item-6d guidance
+      that swap recovers faster/more-directly than the lagging load average) and an explicit terminal verdict line on
+      every exit path (`SUPERVISED-RESUME: SUCCESS` / `FAILED-RETRIES-EXHAUSTED`) per the Watcher Coverage HARD RULE.
+      Verified locally: a flaky test command that fails twice then succeeds is recovered by attempt 3 with exit 0; an
+      always-failing command exhausts retries and correctly propagates its real exit code (a real bug — `rc=$?` read
+      immediately after an `if CMD; then ... fi` block is always 0 when CMD fails, since bash's own `if` compound status
+      is 0 whenever no branch's condition matched, not the failed command's own code — fixed by capturing the exit code
+      with `set +e`/`set -e` around a direct invocation instead of an `if` condition). Placed in
+      `unified-trading-pm/scripts/dev/` (not the `market-tick-data-service` repo the issue doc's frontmatter names)
+      since the pattern is explicitly the standard for ANY future multi-hour LOCAL background migration workspace-wide,
+      matching the existing generic-dev-tool precedent (`run-bounded-analysis.sh`) rather than one script's originating
+      repo.
 - [ ] [SCRIPT] P3. Harden `delete_migrated_defi_markers_2026_07_23.py` (and any sibling resume-log-driven script) to
       refuse/warn loudly if `--apply` is passed a resume-log where 100% of in-scope markers already show
       `action: "would_delete"` (dry-run dispositions) rather than `action: "deleted"`/`"none"` (apply dispositions) —
