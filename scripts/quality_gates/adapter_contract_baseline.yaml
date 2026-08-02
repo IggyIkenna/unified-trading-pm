@@ -260,8 +260,6 @@ baseline:
     count: 2
   instruments-service/instruments_service/reference_data/adapters/tradfi/databento/adapter.py:
     count: 8
-  instruments-service/instruments_service/reference_data/adapters/tradfi/massive.py:
-    count: 4
   instruments-service/instruments_service/triggers/__init__.py:
     count: 1
   instruments-service/instruments_service/triggers/sports_fixtures_daily_repoll.py:
