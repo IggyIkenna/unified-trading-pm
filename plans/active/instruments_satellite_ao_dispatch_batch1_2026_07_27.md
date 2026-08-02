@@ -179,13 +179,44 @@ source doc is untouched (beyond one stale-checkbox citation fix, done directly, 
       aggregation override at `breakdowns_core.py:472-495` rewrites `dates_found`/`dates_expected`/`completion_pct` at
       the parent level but not the missing-date lists) — a display nuance downstream of the already-shipped
       missing_dates/dates_found_list todo above, not a new correctness bug, so not separately filed.
-- [ ] [VERIFY] P2. **Audit whether the same MTDS/reference-data conflation risk exists anywhere else** — e.g. the TradFi
-      `POLYGON`/`FRED` reference-data-in-the-wrong-registry smell noted at `market_data_categories.py:1279-1286` (not
-      yet confirmed live). A precisely-scoped "does X match Y" check, not a design call. Repo: instruments-service.
+- [x] ✅ [VERIFY] P2. **Audit whether the same MTDS/reference-data conflation risk exists anywhere else** — e.g. the
+      TradFi `POLYGON`/`FRED` reference-data-in-the-wrong-registry smell noted at `market_data_categories.py:1279-1286`
+      (not yet confirmed live). A precisely-scoped "does X match Y" check, not a design call. Repo: instruments-service.
       Source: `honest_coverage_shard_dimension_model_definitional_data_2026_07_07.md` ("Audit whether the same
       MTDS/reference-data conflation risk exists anywhere else..."). Done when: a definitive yes/no is recorded for
       TradFi POLYGON/FRED with the checked evidence cited; if yes, file a follow-up todo/issue doc rather than fixing
-      inline (this todo is the audit, not the fix).
+      inline (this todo is the audit, not the fix). — read-only, no commit (no code changed to the audited registries;
+      one new issue doc filed for the one gap found). **Verdict: mostly resolved, with one small missed spot found.**
+      The two specific in-flux threads the source doc left open (2026-07-29/30) have both since settled, verified
+      2026-08-02 against current `origin/live-defi-rollout` HEAD: (1) **`market_data_categories.py`'s
+      `VENUE_DATA_TYPE_CAPABILITIES["POLYGON"]`** (the exact site cited) — fixed, `unified-api-contracts@e34afc1d`
+      (2026-07-31, verified reachable on origin) removed it as stale post-2026-07-19-removal dead code; confirmed
+      `VENUES_BY_ASSET_GROUP["tradfi"]` has no bare `POLYGON` venue key. (2) **`FRED`** — confirmed correctly placed,
+      not a conflation instance: registered as a real venue 2026-07-29 with a real adapter
+      (`market-tick-data-service/.../adapters/tradfi/fred_adapter.py`), and its capability entry
+      (`{"yield_curve", "ohlcv_1d"}`) matches exactly what `FredAdapter.write_canonical_shard` emits (verified in the
+      adapter source — never `macro_result`, which was the pre-fix bug). (3) The adjacent real bug this thread traces to
+      — `corporate_action_confirmed`/`earnings_result` orphaned in the MTDS tick manifest (real writer =
+      features-service's calendar module, not MTDS) — is also already fixed via 2 verified-reachable commits
+      (`instruments-service@03f71c81` 2026-07-15 stopped the forward-seed, `market-tick-data-service@c24db4cf`
+      2026-07-28 deleted 428,343 orphaned rows, 0 captured rows lost); `enumerate_expected_universe.py`'s "TRADFI IS
+      DELIBERATELY NOT GATED" comment (line 711) still stands as confirmed operator-ratified design, not an unaddressed
+      bug. **But (4) auditing "anywhere else" turned up one real miss**: `data_availability.py`'s
+      `VENUE_DATA_AVAILABILITY["POLYGON"]` entry (a sibling registry in the same file family, NOT touched by `e34afc1d`)
+      is still present and, unlike the already-cleaned capability dict, is NOT dead code —
+      `unified-trading-pm/scripts/openapi/generate_ui_reference_data.py`'s `extract_venue_data_availability()` iterates
+      it unconditionally into the generated `ui-reference-data.json`, so it currently surfaces "POLYGON" as a live
+      TradFi provider. The established removal pattern
+      (`tradfi_unreachable_databento_data_types_..._2026_07_15.md:270-272`, proven on the
+      `YAHOO_FINANCE`/`unified-api-contracts@fec3f110` cleanup) names this exact file as one of 5 venue-shaped
+      registries that must be swept together; only this one was missed for POLYGON. Filed as a follow-up per this todo's
+      own instruction (audit-only, not fix-inline):
+      `plans/active/issues/uac_venue_data_availability_stale_polygon_entry_2026_08_02.md`. **Also surfaced (not
+      re-filed, already tracked)**: `tradfi_adapter_dead_code_fallback_audit_2026_07_25.md` Finding I-2 (open
+      `[OPERATOR] P1`, filed 2026-07-31) found instruments-service's actual `massive.py` Polygon.io adapter is still
+      live/tested/fully-wired, contradicting the codex/CLAUDE.md "removed 2026-07-19" claim — corroborates that the
+      Polygon.io removal was executed inconsistently across repos/registries, the same root cause as (4). — verified by
+      data_engineering (instruments_satellite_ao_dispatch_batch1-004) 2026-08-02.
 - [x] ✅ [CODE] P1. **Widen the writer-fix scope to Solana DeFi + CURVE-OPTIMISM** — the blank-`instrument_type` bug
       found on DERIBIT (writer emitting one blended row per venue-day instead of splitting by instrument_type) also hits
       `DRIFT-SOLANA`, `KAMINO-SOLANA`, `MARGINFI-SOLANA`, `MARINADE-SOLANA`, `ORCA-SOLANA`, `RAYDIUM-SOLANA`,
@@ -244,3 +275,12 @@ checkbox found anywhere.
 ## Progress Log
 
 - **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).
+- **data_engineering 2026-08-02 (instruments_satellite_ao_dispatch_batch1-004)**: closed todo 4 (TradFi POLYGON/FRED
+  conflation audit). Verdict + full evidence trail on the flipped checkbox above; one gap found and filed as
+  `plans/active/issues/uac_venue_data_availability_stale_polygon_entry_2026_08_02.md`. All 5 todos in this batch are now
+  genuinely `[x]`. **Note — this plan's gated finalize twin
+  (`instruments_satellite_ao_dispatch_batch1_finalize_2026_07_27.md`) already archived itself 2026-07-29/30 claiming all
+  5 were done + this parent was archived — BOTH claims were false at the time (this todo 4 was still open, and this
+  parent plan was never actually moved to archive/, which is why it was still live and dispatchable today). See
+  `plans/active/issues/instruments_satellite_batch1_finalize_false_completion_claim_2026_08_02.md` for the full finding
+  — this plan's real archival + the source doc's real reconciliation are tracked there, not here.
