@@ -245,18 +245,25 @@ for visibility per the data-pipeline-correctness HARD RULE, not to be conflated 
       not the root cause; worth a P3 note, not investigated further here). The transient single Redis restart (`06:26Z`)
       remains a confirmed red herring (unrelated, ran healthy 15h before/after). (repo: market-tick-data-service,
       `market_tick_data_service/live/connectors/aster_book_liq_ws.py`) — **Shipped: market-tick-data-service@593bd425.**
-- [ ] [DATA] P1. **`ASTER liquidations` — NOT reproduced as broken; needs a longer manifest-based observation, not
-      further live-probing.** The `AsterLiquidationsWSConnector` subscribes a SINGLE small all-market `!forceOrder@arr`
-      stream (not per-symbol — the ~4.1KB batch-size bug above cannot apply here). Live-tested: the subscribe ack
-      round-trips normally even when `!forceOrder@arr` is combined with a known-good stream in the same request (i.e.
-      ASTER's gateway accepts the request, doesn't silently poison the batch). Two live observation windows (25s, 70s)
-      captured ZERO force-order events — inconclusive on its own (liquidations are a genuinely low-frequency event on a
-      smaller venue) but the manifest shows a multi-DAY unbroken zero stretch, which is harder to explain by chance
-      alone for a 500+-symbol universe including majors. Left OPEN rather than guessed at: re-check the manifest ~24-48h
-      after the book_snapshot_5 fix ships (isolates whether this was ever genuinely broken, or was masked/conflated with
-      the book_snapshot_5 incident in the original triage). If still 100% empty after a multi-day window post-fix, the
-      next step is a longer (multi-hour) live capture + comparing against ASTER's REST liquidation-adjacent endpoints
-      (if any) to establish a real base rate. (repo: market-tick-data-service)
+- [x] ✅ [DATA] P1. **RESOLVED 2026-08-02 — `ASTER liquidations` is NOT broken; the earlier "multi-day unbroken zero
+      stretch" characterization does not hold up under a direct manifest re-check.** A filtered
+      `read_availability_index` read (venue=ASTER, data_type=liquidations, date≥2026-07-30, `pipeline_mode=live_aster` —
+      the exact live-capture VM this doc is about) shows **15 real, non-zero-`instrument_count` `captured` rows spread
+      across all 4 observed days** (2026-07-30: 2, 2026-07-31: 9, 2026-08-01: 3, 2026-08-02: 1, out of ~535-613
+      attempts/day) — including events well BEFORE the `4f244845`/`8a6bbc97` book_snapshot_5 fixes even landed. This is
+      exactly the shape of a genuinely low-frequency venue event being correctly captured, not a systematic capture
+      failure — consistent with this todo's own reasoning that the sibling book_snapshot_5 SUBSCRIBE-batch-size bug
+      (fixed in market-tick-data-service@593bd425) cannot apply here (liquidations subscribes one small all-market
+      `!forceOrder@arr` stream, well under the ~4.1KB SUBSCRIBE-frame cliff that broke book_snapshot_5's ~500-symbol
+      single-frame subscribe). Did NOT need to wait the planned 24-48h post-fix window — the manifest's own historical
+      rows already answer the question directly (note: as of this check, `book_snapshot_5` was STILL 100% empty even on
+      2026-08-02, latest `attempted_at` 11:56Z — before the `593bd425` fix landed at 12:18:25Z — confirming the live VM
+      has not yet been relaunched with that fix; unrelated to this liquidations finding, which does not depend on that
+      relaunch). No further live-probing or REST base-rate comparison needed. One-off verification script (reproducible;
+      delete-when this doc closes):
+      `market-tick-data-service/scripts/check_aster_liquidations_capture_rate_2026_08_02.py` (also removed the prior
+      `check_cefi_tarball_stale_window_capture_status_2026_08_01.py`, whose own `Delete-when: after todo #2 is closed`
+      condition had already fired). (repo: market-tick-data-service) — **Shipped: market-tick-data-service@b3c1122.**
 - [ ] [DATA] P1. **`DERIBIT derivative_ticker` — NOT reproduced as broken via connector-level testing; likely a
       DIFFERENT failure mode than ASTER (split per this doc's own note that they may be unrelated), needs an
       IS-universe-side investigation.** Live-tested `DeribitTickerWSConnector` end-to-end (real
@@ -276,6 +283,16 @@ for visibility per the data-pipeline-correctness HARD RULE, not to be conflated 
       production day's DERIBIT `instruments.parquet` `instrument_key` values compared against what
       `_instrument_to_deribit_name`/`build_deribit_canonical_id` expect — not done in this pass (time-boxed; the
       confirmed, fixed ASTER book_snapshot_5 bug was this todo's primary deliverable). (repo: market-tick-data-service)
+- [ ] [INFRA] P0. **NEW 2026-08-02 — the `593bd425` ASTER book_snapshot_5 fix has NOT reached production yet; relaunch
+      `mtds-live-cefi-consolidated-*` again.** Discovered while re-checking the manifest for the ASTER liquidations todo
+      above: `book_snapshot_5` is STILL 100% `empty_confirmed` on 2026-08-02 (latest `attempted_at` 11:56:01Z), which is
+      BEFORE `593bd425` landed (12:18:25Z) — the currently-running instance was never relaunched after that fix shipped
+      (same `lifecycle_class=LONG_LIVED_LIVE` never-auto-restarts pattern as the original incident; the relaunch under
+      todo #3 above happened BEFORE `593bd425` existed, so it didn't and couldn't have picked it up). Same procedure as
+      todo #3: confirm genuine staleness via the VM-delete guardrail (heartbeat/run.log/manifest mtime), then `--force`
+      relaunch (bypasses the singleton lock, never deletes-first), verify via the per-VM manifest shard that ASTER
+      book_snapshot_5 starts capturing, then retire the superseded instance. [OPERATOR] — VM relaunch + eventual
+      instance delete once the new one is confirmed healthy. (repo: deployment-service)
 - [ ] [DATA] P3. File a SEPARATE issue doc for the two pre-existing, unrelated chronic findings surfaced incidentally by
       this check: `OKX-FUTURES trades` intermittent zero-capture (going back to at least `2026-07-20`, live pipeline)
       and `POLYMARKET-PERP perp_funding` permanently `attempted_failed` since at least `2026-07-28` (batch pipeline).
