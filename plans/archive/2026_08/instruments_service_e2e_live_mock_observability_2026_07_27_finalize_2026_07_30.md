@@ -7,7 +7,7 @@ summary: >-
   the post-run reconciliation that must happen once that plan's 4 verification todos (Phase 5 live-mode clock alignment,
   Phase 6 mock-mode failure scenarios, Phase 7 observability, and the 2026-03-23 six-bug re-verify) have all run and
   been evidenced. Stays `status: draft` until the source plan's last todo flips.
-status: active
+status: complete
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
@@ -16,12 +16,12 @@ scope: [engineer]
 tags: [ao-dispatch, close-out, reclassification, na-audit, e2e-testing, instruments-service]
 related:
   [
-    /plans/active/instruments_service_e2e_live_mock_observability_2026_07_27.md,
+    /plans/archive/2026_08/instruments_service_e2e_live_mock_observability_2026_07_27.md,
     /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
   ]
 created: 2026-07-30
-last_updated: 2026-07-30
+last_updated: 2026-08-02
 parent_epic: instruments_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -44,7 +44,7 @@ source: >-
   not a dispatch claim).
 context_scope:
   [
-    /plans/active/instruments_service_e2e_live_mock_observability_2026_07_27.md,
+    /plans/archive/2026_08/instruments_service_e2e_live_mock_observability_2026_07_27.md,
     /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
     /codex/04-architecture/shard-level-failure-isolation.md,
@@ -53,9 +53,17 @@ context_scope:
 
 # Finalize — instruments-service E2E live/mock/observability close-out
 
-> **Gated twin** (`gate_on_depends: true`). Do NOT start until every todo in
-> [`/plans/active/instruments_service_e2e_live_mock_observability_2026_07_27.md`](/plans/active/instruments_service_e2e_live_mock_observability_2026_07_27.md)
-> is `- [x]` with cited evidence. Authored by the 2026-07-30 `/na-eligibility-audit` reclassification pass per
+> **🟢 ARCHIVED 2026-08-02.** Both review todos + the archival todo are done. Reconciled all 17 Phase 5/6/7 sub-checks
+> (11 PASS incl. 5 premise-corrected, 1 FAIL→FIXED→PASS, 5 honest-absence/N/A — 0 silently dropped) and triaged all 6
+> re-verified 2026-03-23 DEFI-audit bugs (2 fixed-incidentally, 4 no-longer-applicable — 0 still-real, 0 new todos
+> filed) against the source plan, [[instruments_service_e2e_live_mock_observability_2026_07_27]]
+> (`/plans/archive/2026_08/instruments_service_e2e_live_mock_observability_2026_07_27.md`), then archived both docs
+> together per the 6-step ritual. Codex-alignment check: no new codex update needed — see the source doc's own
+> archived-banner for the full rationale.
+
+> **Gated twin** (`gate_on_depends: true`, now satisfied). Started only once every todo in
+> [`/plans/archive/2026_08/instruments_service_e2e_live_mock_observability_2026_07_27.md`](/plans/archive/2026_08/instruments_service_e2e_live_mock_observability_2026_07_27.md)
+> was `- [x]` with cited evidence. Authored by the 2026-07-30 `/na-eligibility-audit` reclassification pass per
 > [`/codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md`](/codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md)
 > § 1(b) — retroactive reclassification keeps the source doc's name and gains this bolt-on finalize sibling.
 
@@ -102,8 +110,8 @@ that turns those findings into tracked work and closes the plan properly.
 
 Definitions per the archived original (`/plans/archive/2026_07/e2e_testing_001_instruments_service_2026_03_22.md` lines
 88-116); verdicts + evidence per the source plan's Phase 5/6/7 todos and Progress Log
-(`/plans/active/instruments_service_e2e_live_mock_observability_2026_07_27.md` — now fully `[x]`, see that doc for the
-full command transcripts this table summarizes).
+(`/plans/archive/2026_08/instruments_service_e2e_live_mock_observability_2026_07_27.md` — now fully `[x]`, see that doc
+for the full command transcripts this table summarizes).
 
 | #   | Sub-check                                              | Verdict                 | Evidence summary                                                                                                                                                                                                                                                                                                        |
 | --- | ------------------------------------------------------ | ----------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |

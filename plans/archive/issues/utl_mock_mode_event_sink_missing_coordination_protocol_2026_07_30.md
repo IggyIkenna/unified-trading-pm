@@ -17,7 +17,7 @@ scope: [engineer]
 tags: [event-sink, mock-mode, live-mode, coordination-event, cleanup, shutdown, data-correctness]
 related:
   [
-    /plans/active/instruments_service_e2e_live_mock_observability_2026_07_27.md,
+    /plans/archive/2026_08/instruments_service_e2e_live_mock_observability_2026_07_27.md,
     /unified-trading-library/unified_trading_library/service_framework/_sink_factory.py,
     /unified-trading-library/unified_trading_library/event_sink.py,
     /unified-trading-library/unified_trading_library/events/__init__.py,
