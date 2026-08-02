@@ -182,8 +182,9 @@ on. Replaying `START_DATE` then restarts the run at day one — forever. The job
 every cycle.
 
 Measured 2026-07-18 (sports round-FIXTURES, but the defect is asset-group agnostic): a `--force` backfill over
-2019-01-01..2026-07-17 (2,390 days) ran at ~54 days/hour ⇒ ~44h of runtime, while SPOT preempted it after ~10 minutes of
-real work. Replay-from-START_DATE would have re-done 2019-01-01..07 on every cycle indefinitely.
+2019-01-01..2026-07-17 (2,754 days — corrected 2026-08-02, docs-reconcile self-consistency sweep: the range is 2,754
+calendar days, not the previously-stated 2,390) ran at ~54 days/hour ⇒ ~51h of runtime, while SPOT preempted it after
+~10 minutes of real work. Replay-from-START_DATE would have re-done 2019-01-01..07 on every cycle indefinitely.
 
 **Rules:**
 

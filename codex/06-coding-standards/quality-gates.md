@@ -3025,13 +3025,16 @@ pytest tests/ -v  # Fix what fails
 
 ---
 
-## Proposed STEP 5.83+ Additions (PENDING OPERATOR APPROVAL)
+## Proposed STEP 5.86+ Additions (PENDING OPERATOR APPROVAL)
 
 > **Status**: PROPOSAL — doc-only. Each STEP below requires operator approval before being added to `base-service.sh`.
 > None of these are active enforcement today. Authored 2026-05-15 (slot 8). Approval mechanism: operator comments
-> `[approve-step-5.83]` / `[approve-step-5.84]` / etc. in ping file.
+> `[approve-step-5.86]` / `[approve-step-5.87]` / etc. in ping file. **Renumbered 2026-08-02** (docs-reconcile
+> self-consistency sweep): originally drafted as 5.83/5.84/5.85, but two of those numbers were independently claimed by
+> real shipped checks added after this proposal was authored (see the STEP cross-reference table above) — `grep`ing
+> "STEP 5.83" landed on two contradictory definitions. Renumbered into the open 5.86-5.100 range; no content change.
 
-### STEP 5.83: no-bare-noqa — `# noqa` suppressions must specify error code
+### STEP 5.86: no-bare-noqa — `# noqa` suppressions must specify error code
 
 **What it catches**: `# noqa` without an error code suppresses ALL ruff warnings on a line. This creates a permanent
 blind spot: future ruff rules that fire on the same line are silently suppressed. Current workspace has 1,376 `# noqa`
@@ -3062,7 +3065,7 @@ execution-service: 188, UTL: 163, strategy-service: 154). Total workspace effort
 
 ---
 
-### STEP 5.84: no-bare-exit — `sys.exit(1)` must be preceded by `log_event FAILED`
+### STEP 5.87: no-bare-exit — `sys.exit(1)` must be preceded by `log_event FAILED`
 
 **What it catches**: Services that exit with error code without emitting the required FAILED lifecycle event. This
 breaks STARTED/STOPPED/FAILED monitoring — the VM zombie watchdog sees the process die but no FAILED event was emitted,
@@ -3096,7 +3099,7 @@ feed into `sys.exit(run(...))` are excluded (STEP applies to service logic paths
 
 ---
 
-### STEP 5.85: no-print-in-source — `print()` calls banned in service source code
+### STEP 5.88: no-print-in-source — `print()` calls banned in service source code
 
 **What it catches**: `print()` statements in service source code (not tests, not scripts, not CLI) emit to stdout,
 bypassing the structured `log_event` system. These show up in container logs untagged, making correlation impossible and

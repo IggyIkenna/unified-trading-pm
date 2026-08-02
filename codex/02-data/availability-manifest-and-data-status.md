@@ -2181,13 +2181,17 @@ Measured from the consolidated v9 `_index` (production bucket `central-element-3
 gas-fees + monitoring running). Source: `plans/active/data_completion_to_100_all_ag_2026_06_21.md` § "Measured snapshot
 2026-06-21".
 
-| AG     | MTDS rows | MTDS v9% | MTDS honest-cov% | MTDS capture (cap/empty/failed/unattempted) | IS honest-cov%          | LIVE rows |
-| ------ | --------- | -------- | ---------------- | ------------------------------------------- | ----------------------- | --------- |
-| cefi   | 3.87M     | 96.6%    | **33.9%**        | 1.31M / 1.28M / **802k failed** / 482k      | 99.9%                   | **0**     |
-| defi   | 6.17M     | 100%     | **6.0%**         | 369k / 3.48M / 6k / 2.31M                   | 100%                    | **0**     |
-| tradfi | 1.94M     | 99.7%    | **5.3%**         | 103k / 1.01M / 10k / 818k                   | 96% (v9 only **46.6%**) | **0**     |
-| sports | 920k      | 100%     | **37.7%**        | 346k / 574k / 164 / 0                       | **15.9%**               | **0**     |
-| pred   | 42k       | 96.5%    | **40.5%**        | 17k / 24.5k / 50 / 338                      | 100%                    | **0**     |
+**MTDS honest-cov% below is `all_shards_coverage` (empty_confirmed INCLUDED in the denominator) — named here per the
+"MUST name which formula" rule above; it is NOT `reachable_coverage`** (the cefi row's `reachable_coverage` would read
+~50.5%, not 33.9% — verified against the capture-count columns: `1.31M / (1.31M + 802k + 482k)`).
+
+| AG     | MTDS rows | MTDS v9% | MTDS all_shards_coverage% | MTDS capture (cap/empty/failed/unattempted) | IS honest-cov%          | LIVE rows |
+| ------ | --------- | -------- | ------------------------- | ------------------------------------------- | ----------------------- | --------- |
+| cefi   | 3.87M     | 96.6%    | **33.9%**                 | 1.31M / 1.28M / **802k failed** / 482k      | 99.9%                   | **0**     |
+| defi   | 6.17M     | 100%     | **6.0%**                  | 369k / 3.48M / 6k / 2.31M                   | 100%                    | **0**     |
+| tradfi | 1.94M     | 99.7%    | **5.3%**                  | 103k / 1.01M / 10k / 818k                   | 96% (v9 only **46.6%**) | **0**     |
+| sports | 920k      | 100%     | **37.7%**                 | 346k / 574k / 164 / 0                       | **15.9%**               | **0**     |
+| pred   | 42k       | 96.5%    | **40.5%**                 | 17k / 24.5k / 50 / 338                      | 100%                    | **0**     |
 
 **Three structural findings as of 2026-06-21:**
 
