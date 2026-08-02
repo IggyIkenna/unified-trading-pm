@@ -13,7 +13,11 @@ summary: >-
   actually went dirty.
 status: open
 nature: issue
-asset_group: [infrastructure, meta]
+asset_group:
+  [ao, meta] # corrected 2026-08-02 (/ag-closeout-audit cross-cutting, operator-ruled) -- `infrastructure` -> `ao`; the
+  # defect is in agent-orchestrator's own `server/routes/git_health.py` fleet reporter (repos: [agent-orchestrator],
+  # parent_epic: orchestrator_master), i.e. ao-tranche, not generic infrastructure. Left multi-value (`meta` kept as
+  # ruled: substitution only), so it stays exempt from check_ag_closeout_linkage.py by construction.
 stage: [meta]
 repos: [agent-orchestrator]
 scope: [engineer, admin]
