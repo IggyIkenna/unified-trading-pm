@@ -791,21 +791,30 @@ remain the valid rollback points, untouched. `unified-trading-sa` GCP identity u
 `github-actions-deploy` active account lacks `cloudscheduler.jobs.get` — switched per RULES.md § 5's self-service
 ambient-identity rule).
 
-**Session-end handoff (2026-08-02T16:35Z, context-usage-triggered).** The prediction continuation launched above is
-STILL RUNNING (PID 4180822, `--start-date 2025-01-01 --end-date 2026-08-01 --chunk-days 15`) — chunk 11/44 confirmed
-complete as of this checkpoint (0 write failures throughout, RSS ~1.1GB, stable), chunk 12 in progress. This process is
-independent of this chat session and will keep running after compaction/handoff — check
-`ps aux | grep rebuild_prediction_manifest` for liveness, or re-run
-`scripts/mtds_prediction_fillrate_check_2026_08_02.py` (promoted this session, see below) to see how far it's gotten.
+**Session-end handoff (2026-08-02T16:35Z, context-usage-triggered) — CORRECTED below, the "still running independently"
+claim was wrong.** The prediction continuation (PID 4180822,
+`--start-date 2025-01-01 --end-date 2026-08-01 --chunk-days 15`) was assumed to survive past this chat session ending.
+**It did not**: confirmed killed (`ps -p 4180822` empty, no traceback/error in its log — an external termination, not a
+crash) partway through chunk 18 (`2025-09-13..2025-09-27`, ~89,000/164,650 objects scanned when it stopped, no
+completion line for that chunk). **Real, durable progress before the kill**: chunks 1-17 (`2025-01-01..2025-09-12`) all
+show a clean `chunk N complete` line with 0 write failures each — that range's manifest rows are genuinely landed (each
+chunk's `ManifestWriter.flush()` already happened). Chunk 18 itself made ZERO durable progress (killed before its own
+flush). **Lesson for next session**: a `run_in_background` Bash-tool process is not guaranteed to outlive this specific
+kind of session lifecycle event (compaction-adjacent) even without `nohup`/`ScheduleWakeup` — the established "survives
+independently" assumption from earlier entries in this doc (e.g. #9, #10) needs re-verifying with a live `ps` check, not
+just assumed from a chat claim, before trusting a "left it running" handoff. **Efficient resume** (don't re-scan the
+confirmed-clean 2025-01-01..2025-09-12 range):
+`GCP_PROJECT_ID=central-element-323112 CLOUD_PROVIDER=gcp .venv/bin/python -u -m market_tick_data_service.scripts.rebuild_prediction_manifest --start-date 2025-09-13 --end-date 2026-08-01 --chunk-days 15`.
 **Promoted 3 reusable scripts from scratchpad to `market-tick-data-service/scripts/`** (verified with
 `quality-gates.sh`, `market-tick-data-service@3c51b3d0`): `mtds_prediction_fillrate_check_2026_08_02.py` and
 `mtds_tradfi_fillrate_check_2026_08_02.py` (the exact fill-rate/era-split diagnostics this session used — re-run either
 after the next apply chunk lands, no need to hand-roll a new one-off) and `odds_api_rss_sampler_2026_08_02.py` (for the
-sibling OOM doc, once vendor credits are restored). **Next steps for whoever resumes**: (1) let the prediction
-continuation finish (or resume it from 2025-01-01 if it died — the script re-scans the whole range every time by design,
-so it's safe to just re-launch identically, not resume-by-date); (2) once done, force-consolidate + re-run the fill-rate
-check + verify guardrail/row-count per the "Still required" checklist in #9's entry above; (3) separately, re-run
-`--start-date 2019-01-02 --end-date 2023-04-10 --chunk-days 30` for tradfi to test whether the pre-2023-04 fill-rate
-ceiling moves now that the bundled-shard fix is live, checking `unparseable` counts per this session's recommendation;
-(4) the operator has approved purchasing additional odds-api credits (BLK-6728ec9a, option B) for the UNRELATED sports
-odds_api backfill — re-verify live before resuming that separate work, do not assume the purchase is instant.
+sibling OOM doc, once vendor credits are restored). **Next steps for whoever resumes**: (1) relaunch the prediction
+apply scoped to `2025-09-13..2026-08-01` per the efficient-resume command above (verify chunk 1's write actually lands
+per #9's documented env-var gotcha before trusting a longer run), then once done, force-consolidate + re-run the
+fill-rate check + verify guardrail/row-count per the "Still required" checklist in #9's entry above; (2) separately,
+re-run `--start-date 2019-01-02 --end-date 2023-04-10 --chunk-days 30` for tradfi to test whether the pre-2023-04
+fill-rate ceiling moves now that the bundled-shard fix is live, checking `unparseable` counts per this session's
+recommendation; (3) the operator has approved purchasing additional odds-api credits (BLK-6728ec9a, option B) for the
+UNRELATED sports odds_api backfill — re-verify live before resuming that separate work, do not assume the purchase is
+instant.
