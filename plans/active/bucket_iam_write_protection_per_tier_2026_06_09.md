@@ -314,11 +314,11 @@ Two independent gates because Group A and Group B are at different stages:
       compute SA) — do not leave this tag stale per CLAUDE.md's retag-on-resolve rule.
 
       > **🟥 Note (2026-07-31, slot-14)**: even once this todo removes `unified-trading-sa`'s `storage.objectAdmin`,
-                                                                              > that SA still live-holds `roles/resourcemanager.projectIamAdmin` + `roles/iam.serviceAccountAdmin` (undeclared
-                                                                              > in any terraform in this repo) — both self-escalation-capable, i.e. it could re-grant itself storage access
-                                                                              > (or any other role) without going through terraform at all. See
-                                                                              > `issues/unified_trading_sa_live_iam_drift_vs_terraform_2026_07_31.md` — a full de-privilege of this SA is not
-                                                                              > actually complete until that doc's P1/P2 also land.
+                                                                                  > that SA still live-holds `roles/resourcemanager.projectIamAdmin` + `roles/iam.serviceAccountAdmin` (undeclared
+                                                                                  > in any terraform in this repo) — both self-escalation-capable, i.e. it could re-grant itself storage access
+                                                                                  > (or any other role) without going through terraform at all. See
+                                                                                  > `issues/unified_trading_sa_live_iam_drift_vs_terraform_2026_07_31.md` — a full de-privilege of this SA is not
+                                                                                  > actually complete until that doc's P1/P2 also land.
 
 > **🟥 P2.2 SCOPE GAP found 2026-07-30 (slot-12) — "wire each runtime to its tier SA" is not mechanically executable
 > today.** Investigation (live GCP IAM queries + static analysis, no state mutated) found 3 independently-blocking
@@ -481,7 +481,7 @@ Two independent gates because Group A and Group B are at different stages:
       operator's blocked-queue instead. **Retag back to plain `[CODE]`** once P2.2f is ruled + the grant is live +
       independently re-verified (not just terraform `plan` clean) — do not leave this tag stale per CLAUDE.md's
       retag-on-resolve rule.
-- [ ] [INFRA] P2.2e. **NEW, opened 2026-07-31 (slot-5).** Cut `uts-shared-deployment-api`'s live traffic
+- [ ] [INFRA][OPERATOR] P2.2e. **NEW, opened 2026-07-31 (slot-5).** Cut `uts-shared-deployment-api`'s live traffic
       (`spec.traffic`) over to a `uts-prd-sa` revision (P2.2c wired the identity + resource sizing; this is the separate
       step of actually promoting it). **Currently BLOCKED**: every fresh cold-start of a new/tagged revision fails
       reproducibly (`Container called exit(0)` + STARTUP-TCP-probe-failed, ~30-32s in — independent of SA and of the
@@ -491,7 +491,18 @@ Two independent gates because Group A and Group B are at different stages:
       confidence, then cut `spec.traffic` over (or ramp via the existing tagged-canary pattern — see
       `e8ce86a-verify`/`00389-d9d`). Full writeup:
       `issues/deployment_api_cloud_run_coldstart_flaky_exit0_blocks_prd_sa_cutover_2026_07_31.md`. Gated on P2.2c
-      (met) + the cold-start blocker resolving.
+      (met) + the cold-start blocker resolving. **`[OPERATOR]`-tagged 2026-08-02 (slot-11)**: this exact task has now
+      been dispatched 3x in one day (slot-6 declined 2026-08-02, slot-5 live-attempted the cold-start retry and it
+      failed on first try 2026-08-02T18:12Z, slot-7 declined again 2026-08-02T18:55Z citing slot-5's fresh failure) —
+      re-verified both gating docs are still `status: open` and no new evidence has landed since slot-5's 18:12Z
+      attempt. Same structural gap as P2.2d2c2 above: this is a live-production traffic cutover gated by a standing
+      main-orchestrator hold-until-durable-close directive that no worker can clear by re-attempting the identical
+      cold-start test a 4th time (risks compounding the investigation-churn hypothesis slot-7 already flagged) — it has
+      no structured `depends_on`/`gate_on_depends` link to the cold-start investigation (same-plan todos can't express a
+      per-todo prereq), so the backlog regenerator will keep re-offering it otherwise. `[OPERATOR]` routes this to the
+      operator's blocked-queue instead. **Retag back to plain `[INFRA]`** once the cold-start blocker durably resolves
+      (per its own doc's N-consecutive-fresh-cold-starts bar) — do not leave this tag stale per CLAUDE.md's
+      retag-on-resolve rule.
 - [x] ✅ [TEST] P2.3. **DONE 2026-08-02 (slot-4, infra) — live-verified, `deployment-service@4b86feb`/`b85aa53`
       (authored + shipped by an earlier session; this pass live-verified + closed it out).**
       `tests/integration/test_bucket_iam_tier_isolation.py` already existed (docstring corrects the plan's original
@@ -585,3 +596,9 @@ Two independent gates because Group A and Group B are at different stages:
     same cold-start test myself 43 minutes later would not add information and risks compounding the investigation-churn
     hypothesis multiple sessions have flagged as a possible contributor. Not proceeding; no code shipped; releasing via
     `/skip-current-task`.
+- **slot-11 2026-08-02**: dispatched task `bucket_iam_write_protection_per_tier-018` (P2.2e) a 3rd time in one day.
+  Re-verified both gating docs (`deployment_api_sigabrt_crash_loop_2026_07_24.md`,
+  `deployment_api_cloud_run_coldstart_flaky_exit0_blocks_prd_sa_cutover_2026_07_31.md`) are still `status: open`, no new
+  evidence since slot-5's 18:12Z live cold-start failure. Rather than re-attempt the identical test a 4th time, retagged
+  P2.2e `[OPERATOR]` (same fix pattern as P2.2d2c2 above) so the backlog stops re-offering a task no worker can
+  currently clear. No code changed; releasing via `/skip-current-task`.
