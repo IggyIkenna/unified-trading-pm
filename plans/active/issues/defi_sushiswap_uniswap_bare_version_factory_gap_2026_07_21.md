@@ -27,7 +27,7 @@ scope: [engineer, admin]
 tags: [data-correctness, defi, venue-canonicalization, factory-address, sushiswap, uniswap, dex-pool, residual]
 related: [defi_consolidated_closeout_2026_07_18, canonical_closeout_open_questions_2026_07_18]
 created: 2026-07-21
-last_updated: 2026-07-21
+last_updated: "2026-08-02"
 parent_epic: infrastructure_master
 assigned_vm: NA
 execution_scope: local-only
@@ -193,3 +193,10 @@ original audit and this measurement, not a discrepancy in method; both counts de
   SushiSwap-Arbitrum registration). Re-added the roll-up entry to the close-out's Track 1 per operator ruling and
   corrected the pointer above to name both locations. No change to the measured figures (206,107 residual, resolved=0)
   and no change to this doc's `status: open` / KEEP-NA classification — the Option A-vs-B design fork is still unruled.
+- **na-eligibility-audit 2026-08-02** (tranche=defi, autonomous, scheduled): KEEP-NA valid (2026-07-30 verdict re-
+  affirmed after the 2026-08-02 pointer correction) — re-read end to end, 1 open item. The 2026-08-02 edit was a pointer
+  fix only (naming both the executable Track-1 child and the re-added roll-up view) and its own note states there is "no
+  change to this doc's `status: open` / KEEP-NA classification — the Option A-vs-B design fork is still unruled".
+  Confirmed: Option A (subgraph query augmentation, needs a live-schema probe per fork or a wrong field name hard-errors
+  the query) vs Option B (on-chain RPC `factory()` lookup, needs an RPC provider + pool_address enumeration) remains an
+  undecided design call, plus a cross-repo UAC `ALL_DEFI_VENUES` registration prerequisite.

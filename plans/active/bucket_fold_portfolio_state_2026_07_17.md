@@ -184,8 +184,9 @@ per-domain path prefixes:
   risk-and-exposure/pnl-attribution/position-balance-monitor services do NOT exist as repos — redeploy
   strategy-service).
 
-- **na-eligibility-audit 2026-07-30**: KEEP-NA, valid — operator ruling 2026-07-17 (HUMAN plans); the IAM+lifecycle todo
-  explicitly needs operator confirmation on live-trading retention before COLDLINE. NOTE the 'Provision + yaml/registry
-  scaffold' todo reads STALE against the 2026-07-18/19 Progress Log (targets provisioned; yaml/registry/\_KIND_ALIASES
-  landed with the `[x]` cutover).
+- **na-eligibility-audit 2026-08-02** (re-confirms 2026-07-30; re-read after intervening edits, verdict unchanged):
+  KEEP-NA, valid — operator ruling 2026-07-17 (HUMAN plans); the IAM+lifecycle todo explicitly needs operator
+  confirmation on live-trading retention before COLDLINE. NOTE the 'Provision + yaml/registry scaffold' todo reads STALE
+  against the 2026-07-18/19 Progress Log (targets provisioned; yaml/registry/\_KIND_ALIASES landed with the `[x]`
+  cutover).
 - **context-scout 2026-08-01**: populated/refreshed context_scope (5 entries).

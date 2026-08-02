@@ -975,3 +975,14 @@ section above, which conflated answered and open items):
   objects, `total_delete=0`). Its sibling `[DATA] P0` census-re-verify checkbox is satisfied by the same artifact but
   was left open and filed as a P3 follow-up rather than closed on an unnamed inference
 - **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).
+- **na-eligibility-audit 2026-08-02**: re-read (in scope again — `5fb83f4ea` 07-31 and `b710bbd40` 08-02 both landed
+  after the 07-30 marker). **KEEP-NA, valid — verdict UNCHANGED, and now citation-locked twice over.** Not re-litigated:
+  this doc's own `assigned_vm:` field carries the standing ⛔ operator ruling (2026-07-23) against a direct flip, plus
+  `gate_on_depends: true` on 3 forked children — per the skill's "never re-litigate an established ruling" rule that is
+  KEEP-NA on the citation alone (citation grep-verified in the frontmatter, still present). The 08-02 `/plan-reconcile`
+  commit strengthens it: two Track C/S todos were bannered as P0 delete-safety hazards (`UNIBET_UK/EU` is NOT an alias
+  fold — distinct live bookmaker feeds; `SMARKETS` is NOT deleted-venue residue — 1.1-1.65M live rows), and the
+  `sports_reference_v2/by_date/` cull was retagged `[OPERATOR]` because its reader-check-only gate does not cover
+  twin-existence for 1,492 sole-surviving-copy rows. All 28 open todos read this pass; no newly-stale item found beyond
+  what that same-day run already corrected. RECLASSIFY would be actively unsafe here — naive concurrent dispatch is
+  exactly what the ⛔ note and the prose-only sequencing warnings guard against

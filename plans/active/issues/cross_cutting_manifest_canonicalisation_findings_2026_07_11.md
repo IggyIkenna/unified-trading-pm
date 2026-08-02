@@ -226,6 +226,9 @@ defi source/schema-int) are code+rebuild work still homed in each AG's tracking 
 
 ## Progress Log
 
-- **na-eligibility-audit 2026-07-30**: KEEP-NA, valid — `locked_by: live-defi-rollout`; the sole todo's legacy-bucket
-  delete is documented as 'hard-stop, never-autonomous' operator sign-off for all four AGs.
+- **na-eligibility-audit 2026-08-02** (re-confirms 2026-07-30; content unchanged since; NOTE its cefi legacy-bucket
+  claim is a live contradiction parked for operator ruling in
+  /plans/active/issues/plan_reconcile_parked_operator_decisions_2026_08_02.md 1e -- not touched here): KEEP-NA, valid —
+  `locked_by: live-defi-rollout`; the sole todo's legacy-bucket delete is documented as 'hard-stop, never-autonomous'
+  operator sign-off for all four AGs.
 - **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).

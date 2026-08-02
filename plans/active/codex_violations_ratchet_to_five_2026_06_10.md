@@ -377,8 +377,21 @@ unchanged:
       as its own `[CODE] P3` todo in `infra_satellite_ao_dispatch_batch1_2026_07_26.md` ("Reconcile UAC's stale
       `defi_position.py` liquidation threshold to the registry-driven form"). Cross-referencing rather than leaving 2
       live copies of the same work — track it there going forward; not executed yet.
-- [ ] [CODE] P3. **`execution_service/engine/delta_proxy_repricer.py`** — **CORRECTED 2026-07-27**: the "dead-code
-      delete candidate" framing below was WRONG per the operator's 2026-07-27 ruling
+- [x] ✅ [CODE] P3. **DONE — `execution-service@89fbf99d`** ("feat(execution): wire delta-proxy repricer into live MM
+      QUOTE-instruction handling", 2026-07-28). The "separate, concurrent workstream" the 2026-07-27 correction below
+      referred to has landed: `DeltaProxyRepricer` is imported and wired into
+      `execution_service/engine/quote_maintenance.py` (module docstring line 1 states the wiring; import at line 74)
+      plus `execution_service/v2/handlers.py`, with `tests/unit/engine/test_delta_proxy_repricer.py` (+328L),
+      `test_quote_maintenance.py` (+236L) and `test_router_and_handlers.py` (+67L) — 873 insertions across 6 files.
+      **Independently re-verified 2026-08-02** (na-eligibility-audit, infra tranche), not taken on the finding's word:
+      `git show --stat 89fbf99d` in the execution-service checkout,
+      `git merge-base --is-ancestor 89fbf99d     origin/live-defi-rollout` → ancestor confirmed, and the live wiring +
+      test file re-read on disk. This closes finding 1 of
+      `/plans/active/issues/ag_closeout_audit_infra_parked_2026_07_31.md`, carried forward unreconciled by three
+      consecutive `/ag-closeout-audit infra` runs (07-31, 08-01, 08-02) because that skill is scoped out of
+      false-unchecked flips — it is in scope for this skill's KEEP-NA-stale-items verdict, which uses the same HARD
+      evidence bar. Original text preserved below for the record. Was: **CORRECTED 2026-07-27**: the "dead-code delete
+      candidate" framing below was WRONG per the operator's 2026-07-27 ruling
       (`june_2026_vintage_audit_findings_2026_07_27.md` §5-RESOLVED #19): it is **NOT dead code** — its dependency
       `UnderlyingTracker` is tested/used elsewhere, but the repricer class itself has zero tests/callers because it was
       built and never wired in. **Real work needed is the OPPOSITE of deletion: wire it into the live execution
@@ -616,3 +629,15 @@ for a `batch2` on the next pass and rehome then.
   genuinely uncovered — flagging these 3 items as a future RECLASSIFY candidate for a dedicated follow-up pass, not
   actioned this run.
 - **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).
+- **na-eligibility-audit 2026-08-02** (infra tranche, incremental run): **KEEP-NA, stale items — 1 item closed with
+  verified evidence.** In scope this run because the doc was edited since its 2026-07-30 marker (context-scout
+  backfill + a 2026-07-31 ci-tranche flip of the MTDS `PYTEST_UNIT_DIR` item). Read end-to-end; `grep -cE '^- \[ \]'` =
+  **7** at entry, matching this verdict's item count, **now 6**. Closed: the `delta_proxy_repricer.py` `[CODE] P3` item,
+  which `execution-service@89fbf99d` (2026-07-28) already satisfied — evidence re-derived from the execution-service
+  checkout this run (`git show --stat`, ancestor check against `origin/live-defi-rollout`, live re-read of
+  `quote_maintenance.py`'s import + the test file), not accepted from the reporting doc. Doc stays NA on the remaining
+  6: Phase 3's schema-provenance migration is flagged too-large-for-a-batch-todo in batch1's own Deferred section (a
+  genuine design pass, not a bounded todo), 2 items (UAC `defi_position.py`, deployment-api 5→0) are already
+  cross-referenced into `infra_satellite_ao_dispatch_batch1_2026_07_26.md`, and the 3 flagged as awaiting a batch2
+  (pip-audit bumps, domain-client base-gate retarget, `delta_proxy_repricer` — the last now closed above) are re-checked
+  again this run: `infra_satellite_ao_dispatch_batch2_2026_07_27.md` still does not cover the remaining 2.

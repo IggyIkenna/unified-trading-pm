@@ -269,3 +269,17 @@ From `/plans/active/issues/fleet_wide_qg_capacity_crisis_continues_day2_2026_07_
   archival ritual).
 - **context-scout 2026-08-01**: verified the 2 pre-existing context_scope entries still resolve and are relevant (both
   mirror the doc's own Codex SSOTs section) — kept unchanged, refreshed (2 entries).
+- **na-eligibility-audit 2026-08-02** (tranche `ci`, autonomous): **KEEP-NA — archival PARKED as
+  `BLOCKED-OPERATOR-DECISION`, no autonomous action taken.** Mechanically this doc is a textbook ARCHIVE candidate: 0
+  open checkboxes (`grep -cE '^- \[ \]'` = 0), all 8/8 todos done with cited evidence, and CLAUDE.md's HARD RULE says a
+  plan with every todo done + unlocked MUST be archived immediately. It is NOT archivable autonomously for two
+  independent reasons, both verified in-file: (1) `locked_by: live-defi-rollout` / `locked_since: 2026-05-21` — the
+  archival ritual requires `[unlock-plan]`, which the skill states must be asked for, never taken autonomously; and (2)
+  the 2026-07-31 Progress Log entry records a standing instruction to the contrary — "plan is complete, left
+  `status: active`/not archived **per operator instruction**". Per the "never re-litigate an established ruling" rule
+  that citation alone holds the doc as-is; it is surfaced here only because a complete-but-`active` locked plan will
+  otherwise be re-examined by every future audit pass. Options: **A [WORKER REC]** — operator confirms the instruction
+  has served its purpose, issues `[unlock-plan]`, and the doc runs the standard 6-step archival ritual; **B** — keep it
+  `active` deliberately and record the reason + a review date in-file so future passes stop re-flagging it; **C** —
+  clear `locked_by` only (it reads as a stale branch-name lock, not an owner) and leave `status: active` otherwise
+  untouched.

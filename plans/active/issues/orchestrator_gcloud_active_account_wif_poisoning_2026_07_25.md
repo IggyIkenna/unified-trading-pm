@@ -210,3 +210,12 @@ this. Neither commit touched the Todos section; the commit message itself states
 (a)/(d)" in the still-open `[OPERATOR-DECISION]` todo. This is new information feeding the same unresolved decision, not
 progress toward a mechanical fix — correctly stays NA, no reclassification. (Doc-hygiene: `last_updated:` frontmatter
 corrected below, was stale at `2026-07-25` despite the two 2026-07-30 body edits.)
+
+**na-eligibility-audit 2026-08-02** (tranche `ci`, autonomous): **CONFIRMS the verdict above, unchanged — the one new
+edit is additive evidence, not progress.** This doc was in scope this run because `last_updated` advanced to 2026-08-01;
+the change is a single new Notes entry recording a **5th** documented occurrence (slot-2, infra role, mid- session
+poisoning to `github-actions-deploy@…` during unrelated IAM work, worked around with a per-invocation `--account=` pin).
+That entry explicitly self-classifies as "no new candidate direction — logged as further frequency evidence only", and
+the Todos section is untouched. The head todo still carries `[OPERATOR-DECISION]` with four unadopted directions (a)-(d)
+for a shared-infrastructure auth design affecting every CI job on the host; todo 2 is still stated blocked on that
+decision; todo 3 is still a partial mitigation of the same surface. Correctly NA.

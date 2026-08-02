@@ -154,6 +154,14 @@ them as a finding; the population definition is deliberately left unchanged.
 
 ## Progress Log
 
+- **na-eligibility-audit 2026-08-02**: KEEP-NA, valid -- a STANDING register, deliberately not archive-on-complete
+  (archiving is what orphaned this class twice already), whose declared owner is the `/plan-reconcile` scheduled job,
+  not AO dispatch. Todo 2 is a recurring monthly-cadence item; flipping `assigned_vm` would have backlog-regen derive a
+  perpetual re-dispatch of exactly the duplicate-dispatch trap this doc's own § "Genuinely informational" entry 3 warns
+  about. Todo 1's residual (one-line SKILL.md edit naming this register) is bounded but duplicated by
+  `plan_reconcile_parked_operator_decisions_2026_08_02.md`'s `[DOC] P2` -- reported as a cross-doc duplicate claim, not
+  resolved here.
+
 - **2026-08-02 (`/plan-reconcile` whole-corpus autonomous run)** — re-ran the verifier: 8 hits, 6 already-classified + 2
   new (1 converted, 1 recorded — see § "Re-run 2026-08-02"). **Todo 1 checked and deliberately NOT flipped**: its
   done-when has two clauses and only one holds. The predicate DOES now run in the skill's standard pass —

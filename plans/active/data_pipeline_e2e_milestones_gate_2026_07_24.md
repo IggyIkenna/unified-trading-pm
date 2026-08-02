@@ -505,7 +505,7 @@ is the single place to scan them all in one pass.
 
 ## Progress Log
 
-- **na-eligibility-audit 2026-07-30**: KEEP-NA, valid — dated operator ruling
-  (autonomous_session_operator_decisions_2026_07_25 entry #10, resolved 2026-07-26 option A): standing reference
-  surface, not an archival candidate; 0 open todos is expected here.
+- **na-eligibility-audit 2026-08-02** (re-confirms 2026-07-30; re-read after intervening edits, verdict unchanged):
+  KEEP-NA, valid — dated operator ruling (autonomous_session_operator_decisions_2026_07_25 entry #10, resolved
+  2026-07-26 option A): standing reference surface, not an archival candidate; 0 open todos is expected here.
 - **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).

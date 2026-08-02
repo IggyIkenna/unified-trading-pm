@@ -22,6 +22,7 @@ scope: [engineer]
 tags: [defi, subgraph, symbol-resolution, dex-pools, data-correctness, code-bug]
 related: [defi_consolidated_closeout_2026_07_18, defi_migrated_marker_flagged_root_cause_clusters_2026_07_25]
 created: 2026-07-25
+last_updated: "2026-08-02"
 parent_epic: infrastructure_master
 assigned_vm: NA
 execution_scope: local-only
@@ -153,3 +154,8 @@ address-keyed (`0x00836fe5....parquet`) -- direct evidence the bug is live, not 
 - **na-eligibility-audit 2026-07-30**: KEEP-NA, valid - sole open todo is explicitly [OPERATOR]-tagged and gated on
   defi_dex_pool_symbol_fix_backfill_purge_finalize running first
 - **context-scout 2026-08-01**: populated context_scope (4 entries).
+- **na-eligibility-audit 2026-08-02** (tranche=defi, autonomous, scheduled): KEEP-NA valid (2026-07-30 verdict re-
+  affirmed) — re-read end to end; content unchanged since that verdict (context-scout backfill only). The sole open item
+  is explicitly `[OPERATOR] P1` AND gated: it asks to confirm `defi_dex_pool_symbol_fix_backfill_purge_2026_07_25.md`'s
+  todo 5 landed and then let that plan's gated finalize twin flip this doc's `status` with a verified `resolved_by` — an
+  explicit "do not archive before that finalize plan runs" instruction. KEEP-NA on that citation alone.

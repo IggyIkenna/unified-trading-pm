@@ -655,3 +655,18 @@ note above already covers. Independently re-verified before declining:
 - Declining to author the archival (would falsely represent the parent plan as fully complete); not flipping todo 4's
   checkbox. Skipping via `POST /api/slots/12/skip-current-task` (`reason_code: GATED`) per this doc's established
   disposition rather than filing a duplicate `/blocked` or issue doc. 10th documented bounce, same task_id as the 9th.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-08-02** (autonomous, tranche `ao`): KEEP-NA, valid — NOT archivable despite both
+  `## Todos` items being `- [x]` (root cause `agent-orchestrator@13a5dd8` + `@bd522d0`; defense-in-depth `@c34b560`).
+  The 10th-bounce note (slot 12) records a still-unexplained residual measured AFTER a confirmed post-fix server
+  restart: `.../cefi_satellite_ao_dispatch_batch1_finalize-004/blockers` still read `"ready (no blockers)"`, and a live
+  `/api/backlog` query found **zero** rows for the parent plan_ref at all — a plausible third contributing factor (the
+  wiring pass having nothing to attach, so the gate reads satisfied by omission) that neither shipped fix addresses.
+  Also covered by the 2026-07-31 operator directive (`unified-trading-pm@14478ca26`) routing AO-machinery docs to
+  `execution_scope: local-only`.
+- **Counting note (2026-08-02)**: this doc's REAL open-todo count is **0**, not the 5 the NA inventory reports. All 5
+  `- [ ]` lines it matches are the upstream plan's todos quoted inside a fenced code block in the "What I found"
+  section. Tracked as a tooling defect in
+  `/plans/active/issues/na_inventory_counts_fenced_code_block_checkboxes_as_open_todos_2026_08_02.md`.

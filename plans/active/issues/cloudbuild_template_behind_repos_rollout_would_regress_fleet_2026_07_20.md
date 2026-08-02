@@ -208,3 +208,13 @@ now carry content the SERVICE template does not**, and the would-drop-content gu
 `rollout-cloudbuild.py --apply` now correctly REFUSES all 15 — so the rollout mechanism the todo implies no longer
 works, and its replacement (hand-apply per repo vs. resolve the drift first) is undecided. Not determinable by a worker
 alone as currently written. **Re-scope the todo to name the mechanism and it becomes a clean RECLASSIFY.**
+
+**na-eligibility-audit 2026-08-02** (tranche `ci`, autonomous): **KEEP-NA, valid — the 2026-07-30 verdict's own
+condition was met, and it resolved AWAY from a reclassification, not toward one.** The re-scope that verdict asked for
+landed the same day (the operator-ruled two-ordered-step rewrite recorded in this doc's Progress Log), but the bounded
+work was extracted into `/plans/active/ci_satellite_ao_dispatch_batch5_2026_08_02.md` todo 1 rather than by flipping
+this doc's own `assigned_vm`. Verified live: that batch plan exists, carries `assigned_vm: planning`, and its todo 1 is
+the re-scoped guard rollout. This doc's sole open checkbox already cites the extraction in its own text ("The
+AO-dispatchable copy of this todo lives in … — this doc stays `assigned_vm: NA`; flip this checkbox from there"), so the
+citation is correct and no hygiene fix is needed. Flipping `assigned_vm` here now would open a SECOND dispatch path to
+the identical fleet-wide rollout — Phase-1 citation class (a), a body sentence redirecting work to a different doc.

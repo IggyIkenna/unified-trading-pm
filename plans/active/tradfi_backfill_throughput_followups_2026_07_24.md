@@ -70,10 +70,19 @@ source:
       live 2026-07-18 (research: 3 wired sites). Tracking issue
       `databento_default_executor_dns_starvation_risk_2026_07_17.md` is now STALE (fix landed) → doc-hygiene flip
       pending. (repo: market-tick-data-service)
-- [ ] [INFRA] P1. **Backfill-VM startup OOM rc137** (`mtds_backfill_vm_startup_oom_rc137_2026_07_14.md`, open) + **OOM
-      remediation baked default** (`tradfi_backfill_oom_remediation_2026_06_24.md`, e2-highmem-4, verify) +
-      **consolidator throughput/backlog monitor** (`consolidator_throughput_backlog_monitor_2026_07_09.md`). (repos:
-      deployment-service, market-tick-data-service)
+- [ ] [INFRA] P1. ~~**Backfill-VM startup OOM rc137** (`mtds_backfill_vm_startup_oom_rc137_2026_07_14.md`, open)~~ **←
+      this leg is DISCHARGED (see below)** + **OOM remediation baked default**
+      (`tradfi_backfill_oom_remediation_2026_06_24.md`, e2-highmem-4, verify) + **consolidator throughput/backlog
+      monitor** (`consolidator_throughput_backlog_monitor_2026_07_09.md`). (repos: deployment-service,
+      market-tick-data-service) **STALE-CITATION FIX (na-eligibility-audit 2026-08-02, tradfi tranche)**: the rc137
+      leg's "(open)" annotation was stale — that doc reached zero open todos and was ARCHIVED 2026-08-02 (`651bc8b39`)
+      to `/plans/archive/issues/mtds_backfill_vm_startup_oom_rc137_2026_07_14.md`, `status: complete`, under the
+      operator's 2026-07-30 line-cap-does-not-block-archival ruling; both of its own "real open items" were discharged
+      at archival, not dropped (consolidator cron un-pause = MOOT/verified ENABLED; Morpho `lending_indices` live-verify
+      migrated to a tracked todo in `/plans/active/issues/mtds_dex_pools_swaps_backfill_verification_2026_07_24.md`).
+      This checkbox stays `- [ ]` because the OTHER two legs are still genuinely open — verified live this pass:
+      `/plans/active/issues/tradfi_backfill_oom_remediation_2026_06_24.md` is `status: open` with 1 open todo, and
+      `/plans/active/consolidator_throughput_backlog_monitor_2026_07_09.md` is `status: active` with 3 open todos.
 - [x] ✅ [INFRA] P1. **TradFi has NO working T+1 forward-fill job** (`tradfi_t1_no_working_mtds_job_2026_07_17.md`) —
       add source-scoped `…-tradfi-databento-t1-recon` Cloud Run job; live coverage erodes daily without it. (repos:
       deployment-service, market-tick-data-service) **INFRA SHIPPED + APPLIED 2026-07-20 — deployment-service@11bed3c;
@@ -667,3 +676,11 @@ data-status, honest-coverage) still tracked on the parent, and the full aggregat
   and is itself flagged as an over-line-cap prose-trap by
   `/plans/active/issues/archive_candidate_docs_over_line_cap_blocks_edit_2026_07_29.md`, so this umbrella todo's
   citation is drifting.
+- **na-eligibility-audit 2026-08-02** (tradfi tranche): **KEEP-NA, stale items — 1 citation corrected.** In scope this
+  run (not incrementally skipped) because the 2026-07-30 marker was followed by a substantive content edit: the "Bundle
+  CME roots into fewer larger VMs" todo was flipped `- [x]` (`deployment-service@60b9d37`, via
+  `/plans/active/tradfi_satellite_ao_dispatch_batch5_2026_07_29.md`). Re-read the doc's remaining open work end to end;
+  exactly 1 open checkbox remains and the previous pass's own "citation is drifting" observation has now come true —
+  actioned above: the rc137 leg is archived/complete, struck with evidence. Doc **stays NA**: the surviving todo is an
+  umbrella pointer bundling two separately-owned, still-open docs rather than worker-determinable work of its own, so
+  flipping `assigned_vm` would dispatch a tracking pointer, not a bounded task.

@@ -283,6 +283,23 @@ context_scope:
 
 ## Progress Log
 
+- **na-eligibility-audit 2026-08-02 (prediction tranche, autonomous)**: KEEP-NA, **1 stale item cited** — 2 open,
+  unchanged in count. The only commit to this file since the 2026-07-30 marker (`1ab67de59`) dropped the inherited
+  `cefi` tag per the operator's 2026-07-30 option-A ruling; no content moved. New this run, found by the Phase-2
+  conflict-check rather than by a content change: the `[DATA] P2` depth-retention checkbox was already extracted
+  verbatim into `prediction_satellite_ao_dispatch_batch4_2026_07_26.md` (`status: active`, `assigned_vm: planning`),
+  which cites it as its own `Source:` — but this doc's checkbox carried no back-citation, so a future audit would keep
+  re-flagging it as unclaimed. Fixed as a KEEP-NA-STALE citation correction (rubric 3 / conflict-check protocol step 4):
+  citation added, `assigned_vm` untouched, checkbox deliberately left `[ ]` as the tracking anchor. The other open item
+  is the `DEFERRED-CROSS-DEP` batch `book_snapshot_5` row-proof, still gated on an instruments-service re-enumeration of
+  a past date carrying `clob_token_ids` — no active doc claims it. **Frontmatter note re-checked at the code level, not
+  re-reported as a contradiction**: this doc pairs `execution_scope: orchestrator-agent` with `assigned_vm: NA`, which
+  the two prior markers flagged as part of a "7-doc contradiction class". Read
+  `agent-orchestrator/server/regen_backlog_from_plan.py` at HEAD to settle it — `_resolve_plan_vms()` maps the `NA`
+  sentinel to an EMPTY vm set, so the strict per-VM ownership gate in `_plan_contributes_briefs()` blocks ingestion
+  regardless of `execution_scope`. The pairing is cosmetic, NOT a live mis-dispatch hazard; no flip needed and no
+  operator ruling required. Doc stays NA.
+
 - **na-eligibility-audit 2026-07-30 (prediction tranche)**: KEEP-NA, valid — 2 open checkboxes, both P2, one explicitly
   `DEFERRED-CROSS-DEP` on an instruments-service prerequisite. The doc's two PROSE items (BQ external tables, the
   `roles/pubsub.publisher` grant) are CONFLICT — claimed by `prediction_satellite_ao_dispatch_batch6_2026_07_29.md`
@@ -342,7 +359,14 @@ crypto set).
       VERIFY: (1) MDPS prediction live-scan cadence ≤ flush window; (2) the processed prediction book/candle store
       actually accumulates multi-hour history. Repos: market-tick-data-service + market-data-processing-service.
       Provenance: operator "do we have depth for a few hours of history / isn't there a plan for how live data
-      persists?" 2026-06-24.
+      persists?" 2026-06-24. **EXTRACTED — sole executing owner is
+      [`prediction_satellite_ao_dispatch_batch4_2026_07_26.md`](/plans/active/prediction_satellite_ao_dispatch_batch4_2026_07_26.md)'s
+      `[DATA] P2` "Verify END-TO-END MDPS prediction depth-history retention" todo** (`status: active`,
+      `assigned_vm: planning`), which names this checkbox verbatim as its own
+      `Source: prediction_live_clob_depth_capture_2026_07_24.md (P2 "Verify END-TO-END depth-history retention")` and
+      carries the bounded `Done when` (a dated PASS/FAIL verdict with the measured processed-store time span cited).
+      Citation added by `/na-eligibility-audit` 2026-08-02 — this checkbox stays `[ ]` and stays NA (it is the tracking
+      anchor, not a second dispatch claim); it flips when batch4's todo records its verdict here.
 
 - [x] [SCRIPT] P2. **Live book partition is keyed by producer LAUNCH-day, not event-day** (discovered 2026-06-24:
       producers launched 06-23 still write `day=2026-06-23` at 11:37Z 06-24). The detector works around it (trailing

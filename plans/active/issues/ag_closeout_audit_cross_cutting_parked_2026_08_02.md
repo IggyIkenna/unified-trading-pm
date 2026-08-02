@@ -116,8 +116,24 @@ candidate for that tranche's next pass, not just a retag-only finding.
       `[ci, cross-cutting]` → `[ao]` (finding 1) — owning-tranche fix, leave to the `ao` tranche's own audit, not this
       run. Done when: the tag is corrected, the doc is folded into `ao_consolidated_closeout_2026_07_25.md`'s (or its
       current equivalent) membership, and its 2 AO-eligible items are considered for that tranche's next batch.
+      **CORROBORATED 2026-08-02 by the independent `/na-eligibility-audit cross-cutting` run** (a different skill, a
+      different population, reached separately): that doc is currently OWNED by the **`ci`** tranche for marker/write
+      purposes (`generate_na_doc_tranche_inventory.py` resolves `parent_epic: infrastructure_master` → `infra`, which is
+      not in its own `tranches` list, so ownership falls back to `tranches[0]` = `ci`) — so `ci`, not `ao`, is the
+      tranche whose next NA pass will physically hold the write, even though `ao` is the correct topical home. The NA
+      run's own verdict on it is **RECLASSIFY (`NA` → `planning`)**, not merely a retag: both remaining items are
+      bounded and worker-determinable against a named oracle — a `[DOCS] P1` audit-and-patch of every
+      `unified-trading-pm/agents/*.md` STEP-0 read-list against `server/prompts.py:expected_read_files`, and a
+      `[BACKEND] P2` regression test asserting each role file's declared list is a superset of that oracle. Three live
+      `boot_read_unconfirmed` incidents across three role files in one week are the evidence hand-sync does not hold.
+      Cross-cutting wrote nothing to that file (primary-owner rule); whichever tranche actions this should do the retag
+      and the `assigned_vm` flip in the SAME edit rather than leaving a second pass to discover it.
 
 ## Progress Log
+
+- **na-eligibility-audit 2026-08-02**: KEEP-NA, valid -- same parked-findings-register class as its 2026-08-01 sibling;
+  the sole open todo is a `[DOCS] P3` retag of `review_role_boot_read_unconfirmed_stuck_loop_2026_08_01.md`, a doc the
+  `ao`/`ci` side owns. Not cross-cutting's write.
 
 - **2026-08-02** — `/ag-closeout-audit cross-cutting` run (autonomous, scheduled daily run, dispatch `agt-f23055`, slot
   12). Phase 0: `generate_ag_closeout_audit_candidates.py --tranche cross-cutting` (94 members, 8 covering docs, 1

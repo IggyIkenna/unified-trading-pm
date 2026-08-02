@@ -28,6 +28,7 @@ related:
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
   ]
 created: 2026-07-29
+last_updated: "2026-08-02"
 parent_epic: plan_hygiene_master
 assigned_vm: NA
 execution_scope: local-only
@@ -98,9 +99,22 @@ content:
 
 ## Todos
 
-- [ ] [DOC] P2. Split `tradfi_mdps_build_continuous_mismatches_2_and_4_still_open_2026_07_26.md` (1011L, over cap) into
-      an under-cap index/history doc + a small child doc carrying the one real open item (the P2 "re-run backfill a
-      third time" action from the Deferred-work table), per the recommended-next-step above.
+- [x] ✅ [DOC] P2. **OBSOLETE — resolved by ARCHIVAL instead of a split, closed 2026-08-02
+      (`/na-eligibility-audit     defi`).** Do NOT split
+      `tradfi_mdps_build_continuous_mismatches_2_and_4_still_open_2026_07_26.md`. Verified live this pass: that doc is
+      already at `/plans/archive/issues/tradfi_mdps_build_continuous_mismatches_2_and_4_still_open_2026_07_26.md` with
+      `status: resolved`, **0 open todos**, 1100 lines — i.e. it took exactly the path this doc's own 2026-08-02
+      Progress Log entry predicted ("its own todo may be equally obsolete if that doc also reaches zero open todos — it
+      should be re-checked against the same ruling rather than split reflexively"). The governing ruling is the same one
+      that closed the sibling `mtds_backfill` half: **a zero-open-todo doc archives via the normal 6-step ritual
+      regardless of how far over cap it is**, and "never delete content from a done plan just to get it under a cap"
+      (operator 2026-07-30; SSOT
+      [`/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`](/codex/12-agent-workflow/plan-completion-and-archival-discipline.md)
+      § "The line-cap does NOT block archival of an already-done doc", also codified in
+      `scripts/plan-hygiene/check_line_caps.sh`'s header comment). Archival moved it out of the capped globs entirely —
+      the outcome the split was only ever a workaround for. **Both halves of this issue are now discharged; this doc has
+      zero open todos and is ARCHIVE-READY** (see the Progress Log entry below for the one referrer that must be fixed
+      at archival time).
 - [x] ✅ [DOC] P2. **OBSOLETE — resolved by ARCHIVAL instead of a split, 2026-08-02 (operator ruling 2026-07-30).** Do
       NOT split `mtds_backfill_vm_startup_oom_rc137_2026_07_14.md`. That ruling added a documented exception to
       `check_line_caps.sh` for exactly this doc: **a zero-open-todo doc archives via the normal 6-step ritual regardless
@@ -125,6 +139,20 @@ content:
 - **na-eligibility-audit 2026-07-30**: KEEP-NA, valid - doc's own text declares the index/history split an open-ended
   judgment call about what goes where
 - **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).
+- **na-eligibility-audit 2026-08-02** (tranche=defi, autonomous, scheduled): **ARCHIVE (ready, not executed this run)**
+  — re-read end to end (1 open item at entry). That item is MOOT: its target doc
+  `tradfi_mdps_build_continuous_mismatches_2_and_4_still_open_2026_07_26.md` is already archived, `status: resolved`, 0
+  open todos — closed by citation above. **This doc now has zero open todos and both halves discharged, so it qualifies
+  for the standard 6-step archival ritual.** The move was deliberately NOT executed in this run for a concurrency
+  reason, not a correctness one: the ritual requires fixing every corpus referrer, and this doc's only ACTIVE referrer
+  is `/plans/active/tradfi_backfill_throughput_followups_2026_07_24.md` (line ~668) — an `assigned_vm: NA` doc **owned
+  by the `tradfi` tranche**, which a sibling worker is auditing concurrently in this same sharded fire. Editing it would
+  violate the primary-owner rule
+  ([`/cursor-configs/skills/na-eligibility-audit/SKILL.md`](/cursor-configs/skills/na-eligibility-audit/SKILL.md) Phase
+  0, "only the owning tranche writes"), which exists precisely to stop the N-way marker-conflict storm. **Next actor**:
+  whoever archives this fixes that one referrer plus the already-archived
+  `/plans/archive/issues/mtds_backfill_vm_startup_oom_rc137_2026_07_14.md` mention in the same commit. `locked_by:` is
+  blank, so no `[unlock-plan]` is needed.
 - **2026-08-02**: this doc's premise is now half-obsolete. It was written 2026-07-29 on the assumption that an over-cap
   archive-candidate must be SPLIT before it can be edited/archived; the operator ruled the opposite on 2026-07-30 and
   the exception is now codified in both `scripts/plan-hygiene/check_line_caps.sh` (header comment) and

@@ -247,3 +247,16 @@ Measured 2026-07-30 against the live corpus, not carried forward on trust:
   satellite batch. A batch4 has no material to extract unless a new orphan appears or one of the standing operator
   questions (G1/G3/G4, plus the `s5_7` scoping call) is answered.
 - **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).
+- **na-eligibility-audit 2026-08-02** (infra tranche, incremental run): **KEEP-NA, valid — pending an operator ruling
+  that is already parked, not a fresh park.** First verdict for this doc (no prior marker). Read end-to-end;
+  `grep -cE '^- \[ \]'` = **1**, matching this verdict's item count. This doc is the subject of
+  `issues/ag_closeout_audit_infra_parked_2026_08_02.md` finding 7 (`status: active` + `assigned_vm: NA` on an AO
+  dispatch batch means its remaining `[BACKEND] P3` never actually dispatches) and of finding 4 from 2026-08-01 (the
+  stale in-body `draft` banner). Because `/na-eligibility-audit` Phase 3 is the mechanism that would apply that flip,
+  this run assessed it directly rather than deferring, and **concurs with the park**: this doc's own body (line 69)
+  carries a `⚠️ STATUS: draft — NOT dispatched, NOT ingested … the operator's call` banner, and this skill treats a
+  do-not-dispatch/redirect banner as KEEP-NA on the citation alone — reinforced by the 2026-07-31 incident
+  (`regen_positional_task_ids_not_content_stable_2026_07_17.md`, BLK-29884333) in which a prior RECLASSIFY of a
+  banner-guarded doc caused three real mis-dispatches before being reverted. Finding 7's recommendation (flip to
+  `planning` to match batch1/batch2) is the right one and stands; it needs the operator. No duplicate park filed — the
+  decision lives in the 2026-08-02 parked-findings doc.

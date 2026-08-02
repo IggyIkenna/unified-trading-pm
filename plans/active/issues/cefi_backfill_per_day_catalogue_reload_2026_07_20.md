@@ -116,3 +116,9 @@ parallelism (fleet still does ~565 catalogue reloads total). The proper fix abov
   between two architectures (range-loop in one process vs a cross-process catalogue cache), one of which changes the
   shared VM startup script fleet-wide.
 - **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).
+- **na-eligibility-audit 2026-08-02** (tranche=cefi, autonomous): KEEP-NA, valid — re-verdicted only because the
+  2026-08-01 `context-scout` frontmatter backfill moved the doc's git date past the 07-30 marker; the body is
+  byte-identical to the 07-30 reading (verified `git diff eaa6bfd1e..HEAD` = the `context_scope` block only). Verdict
+  unchanged: the sole todo is still an unresolved architecture choice (range-loop in one process vs a cross-process
+  `CeFiCatalogReader` cache), one branch of which rewrites the shared fleet-wide VM startup script. Not
+  worker-determinable.

@@ -424,3 +424,20 @@ LOCAL/non-dispatched; do not start until Phase 1's table is filled in.)_
 short runs, no new tooling), directly closes the "Important nuance" gap in Results table 1, and doesn't need an operator
 decision. Phase 2 (4th row) is the actual point of this whole plan but is genuinely blocked on the operator, not on more
 solo work.
+
+## Progress Log (na-eligibility-audit incremental marker)
+
+- **na-eligibility-audit 2026-08-02** (infra tranche, incremental run): **KEEP-NA, valid.** First verdict for this doc
+  (no prior marker). Read end-to-end; `grep -cE '^- \[ \]'` = **6**, matching this verdict's item count. **KEEP-NA is
+  confirmed on citation, not re-derived**: this doc's own Progress Log records the operator choosing the LOCAL/human
+  track at creation (2026-07-31, "human/local track per operator — this host is the baseline"), and Phase 2's 3 todos
+  are explicitly `BLOCKED-OPERATOR-DECISION` on how to reach the planning-vm interactively — the whole point being to
+  observe real concurrent-agent contention, which no idle-VM run can answer. Independently re-checked against the
+  bounded-outcome bar rather than accepting the doc's own framing: of the 3 Phase-1 follow-ups, one
+  (`check_pm_script_path_refs.py` optimisation, measured at 28% of a from-scratch run) does carry a real measured
+  done-when and would pass on its own, but a whole-doc flip would dispatch the 3 operator-gated Phase-2 items alongside
+  it. Recorded as a targeted-extraction candidate for a future infra batch (`/ag-closeout-audit`'s Phase 3), not an
+  `assigned_vm` flip. **Reported, not fixed**: the `## Deferred work after 2026-07-31` table carries one prose-only
+  follow-up (missing `.venv` on `ibkr-gateway-infra`/`unified-api-contracts`) that its own text deliberately declines to
+  make a todo — left standing as an authorial call rather than overridden, since converting it would also grow the NA
+  corpus.

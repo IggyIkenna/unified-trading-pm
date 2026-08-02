@@ -293,3 +293,20 @@ would need a second failure before the bound even engaged, but relaunching a CON
 above, now on a second independent date) would not surface new information — it would only reproduce the identical
 `~50/N "Unknown error"` crash and burn compute. Escalation ping sent to the authoring slot per the
 `data_pipeline_failure` role contract; this doc remains the tracking surface. Status stays `open`.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-08-02**: KEEP-NA, valid (sports tranche) — first verdict on this doc (created 2026-08-01,
+  todos converted from prose by `/plan-reconcile` 2026-08-02, so it carried no prior marker). MIXED and left NA. All 6
+  open todos accounted for: (1) the `[OPERATOR] P2` A-vs-B ruling is a genuine architecture decision — mirror the
+  CEFI/DEFI/TRADFI `record_failed_for_shard` route vs. thread real `league_id` down to both call sites — whose outcome
+  is NOT determinable by a worker alone (it trades the "legitimate calendar absence" framing against invasiveness), so
+  it fails the dispatch-scope eligibility bar outright; (2) the `[DATA] P2` implementation todo is explicitly BLOCKED on
+  that ruling; (3) the `[SCRIPT] P3` no-relaunch item is gated on the fix landing, and is a standing STOP against a
+  prefix that has already burned 6 failed VMs in one day past `rb_infra_relaunch.md`'s `≤2/(vm-prefix,day)` bound; (4-6)
+  the three `[DIAG]` todos (P1 `_collect_future_result` lead, P2 local repro, P3 `_streaming_filter_slice` read) are
+  live-escalation crash debugging on an in-flight DP-VM-001 chain across 4 escalations — each carries a stated
+  done-when, but they are the open half of an unresolved root-cause hunt, not settled bounded work, and the doc is
+  `execution_scope: local-only` with its own conversion banner stating these do NOT enter the AO backlog. Escalated in
+  this run's report as a parked `BLOCKED-OPERATOR-DECISION` (the A-vs-B call); no in-file retag, since the todo already
+  carries the correct `[OPERATOR]` tag

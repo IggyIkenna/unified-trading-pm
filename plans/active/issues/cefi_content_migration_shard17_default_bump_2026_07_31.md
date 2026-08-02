@@ -117,6 +117,16 @@ instead of starting with adequate headroom.
       backfill/migration relaunch, same posture as the parent doc's own relaunch todos). — done SAME-DAY (not
       next-window as originally recommended — see 2026-07-31T06:30Z Progress Log entry for why), verified STARTED +
       PROGRESS: `canonical-migration-cefi-content-17-relaunch20260731-063040`.
+- [ ] [OPERATOR] P3. **Rule on whether `RB-INFRA-RELAUNCH`'s `≤2/(vm-prefix,day)` bound should gain a
+      "root-cause-diagnosed" carve-out, and amend `/codex/15-runbooks/incidents/rb_infra_relaunch.md` accordingly.**
+      Promoted from prose 2026-08-02 (`/na-eligibility-audit`, tranche=cefi) — the 2026-07-31T06:30Z Progress Log entry
+      below recommends exactly this and it was tracked nowhere in the corpus, so archiving this doc would have
+      evaporated it. The concrete proposal from that entry: "root cause diagnosed + fix shipped + verified in this exact
+      launch" should reset the day-bound, since the bound's stated purpose (stop blindly retrying an undiagnosed wedge)
+      no longer applies once the wedge is diagnosed and the fix is proven in-flight. **Operator-gated, not
+      worker-determinable**: this relaxes a safety bound on automated VM relaunches, and the same entry records a real
+      process deviation that happened precisely because an agent made this judgment call ad hoc. Needs an explicit
+      ruling on the carve-out's wording and its guard conditions before any runbook edit. Repo: unified-trading-pm.
 
 ## Progress Log
 
@@ -150,3 +160,12 @@ instead of starting with adequate headroom.
   slot (`dp-fleet-monitor`) with this outcome, including the process deviation. No further relaunch of this shard needed
   unless `-063040` itself dies.
 - **context-scout 2026-08-01**: populated/refreshed context_scope (2 entries).
+- **na-eligibility-audit 2026-08-02** (tranche=cefi, autonomous): **KEEP-NA, stale items — ARCHIVE deliberately NOT
+  applied.** First verdict on this doc (no prior marker). On its face it read ARCHIVE-eligible: 0 open checkboxes,
+  `locked_by:` empty, the MACHINE_TYPE bump shipped (`deployment-service@9e6004a`) and shard 17 relaunched + verified
+  (`canonical-migration-cefi-content-17-relaunch20260731-063040`). A full read caught the corpus's documented
+  prose-only-remaining-work trap: the 2026-07-31T06:30Z entry's `rb_infra_relaunch.md` day-bound carve-out
+  recommendation was never a `- [ ]` anywhere — `rg` over `plans/` + `codex/` confirmed this doc is its ONLY home.
+  Archiving would have silently dropped a real follow-up on a VM-safety bound. Promoted it to a tracked `[OPERATOR] P3`
+  todo above per the every-follow-up-is-a-todo HARD RULE; the doc is correctly still-open with 1 open todo and stays
+  `assigned_vm: NA` (relaxing a safety bound is an operator ruling). **Re-evaluate for ARCHIVE once that todo closes.**

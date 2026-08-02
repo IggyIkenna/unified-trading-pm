@@ -189,3 +189,8 @@ too large.
   NA rationale: modifies the orchestrator's own agent-messaging routing where a careless change could break
   at-least-once delivery; one todo is an explicit operator-review gate.
 - **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).
+- **na-eligibility-audit 2026-08-02** (autonomous, tranche `ao`): KEEP-NA, valid — 2026-07-30 verdict re-affirmed on a
+  full re-read. Doc's own `# Notes` self-declares the NA rationale (modifies the orchestrator's agent-message routing,
+  where a careless change breaks the reply-ack / redelivery-cap machinery), and one of the 3 open todos is an explicit
+  `[REVIEW] P3` operator sign-off gate that must be recorded BEFORE the P1 routing change ships. In scope only via the
+  2026-08-02 meta-retag sweep (`0409fa053`); content unchanged.

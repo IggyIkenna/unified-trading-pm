@@ -508,6 +508,7 @@ overlays), `_multivenue_capital.py` (capital/leverage/treasury), `_paper_trade.p
 
 ## Progress Log
 
-- **na-eligibility-audit 2026-07-30**: KEEP-NA, valid — every open todo is strategy/ML research judgment (GBM squeeze
+- **na-eligibility-audit 2026-08-02** (re-confirms 2026-07-30; only change since = context-scout `context_scope`
+  frontmatter, body byte-identical): KEEP-NA, valid — every open todo is strategy/ML research judgment (GBM squeeze
   models, archetype shelving decisions, structure-5 candidacy, prime-broker research).
 - **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).

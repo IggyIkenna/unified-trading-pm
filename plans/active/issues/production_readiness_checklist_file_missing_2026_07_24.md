@@ -110,3 +110,10 @@ risks papering over a real broken tool-chain reference with a cosmetically-consi
 - **na-eligibility-audit 2026-07-30**: KEEP-NA, valid (infra tranche, dispatch agt-30721a) — Sole todo requires a human
   decision among stated options with no mechanical way to determine the correct answer from the repo alone; doc's own
   Progress Log states this explicitly.
+- **na-eligibility-audit 2026-08-02** (infra tranche, incremental run): **KEEP-NA, valid — unchanged from the 2026-07-30
+  verdict.** In scope this run because the 2026-08-02 corpus-sweep retagged `asset_group: [meta] → [infrastructure]`; no
+  content change. Read end-to-end; `grep -cE '^- \[ \]'` = **1**, matching this verdict's item count. Unchanged
+  reasoning, and it is structural rather than a preference: five different item-counts (51/52/37/110/26) are in play
+  across six files and the one path every citing doc names does not exist, so there is no mechanical way to derive which
+  is authoritative from the repo alone — the doc's own "Why I did not fix this myself" section says exactly that.
+  Independently corroborated by the 2026-08-02 `/ag-closeout-audit infra` run's classification of the same doc.

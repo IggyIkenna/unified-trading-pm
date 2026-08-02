@@ -354,7 +354,8 @@ autonomous-run narrative and the Phase-0 child's "Autonomous run results" sectio
 
 ## Progress Log
 
-- **na-eligibility-audit 2026-07-30**: KEEP-NA, valid — gated umbrella whose entire premise is per-gate operator
-  sign-off ('ask every time'); GATE 0 is NOT RECORDED SIGNED OFF and the remaining todos are per-AG G-gate work
-  delegated to child plans.
+- **na-eligibility-audit 2026-08-02** (re-confirms 2026-07-30; only change since = context-scout `context_scope`
+  frontmatter, body byte-identical): KEEP-NA, valid — gated umbrella whose entire premise is per-gate operator sign-off
+  ('ask every time'); GATE 0 is NOT RECORDED SIGNED OFF and the remaining todos are per-AG G-gate work delegated to
+  child plans.
 - **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).

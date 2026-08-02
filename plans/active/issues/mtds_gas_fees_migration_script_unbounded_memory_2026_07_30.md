@@ -36,7 +36,7 @@ related:
     /codex/02-data/availability-manifest-and-data-status.md,
   ]
 created: "2026-07-30"
-last_updated: "2026-07-30"
+last_updated: "2026-08-02"
 parent_epic: defi_master
 assigned_vm: NA
 execution_scope: local-only
@@ -200,3 +200,10 @@ process is worth keeping so a future similar incident doesn't re-walk the same d
   here). The sibling-scripts audit item (line 159) extracted to
   `plans/archive/2026_08/defi_satellite_ao_dispatch_batch7_2026_08_01.md` after conflict-check clear. Doc stays
   `assigned_vm: NA` overall.
+- **na-eligibility-audit 2026-08-02** (tranche=defi, autonomous, scheduled): KEEP-NA valid (2026-08-01 verdict re-
+  affirmed) — re-read end to end, 2 open items (down from 3; the sibling-scripts audit closed 2026-08-02 via batch7 todo
+  4, `market-tick-data-service@e4cc07b7` + `instruments-service@d0e4e5a3` + `market-data-processing- service@6593011`).
+  Both remainders stay judgment calls exactly as the 2026-08-01 verdict found: the `ManifestWriter.__init__` safety
+  check is an undecided design fork in its own text ("log a loud one-time warning ... OR refuse construction outside a
+  recognized deployed-service context"), and the per-slot RSS-ceiling item is self- flagged "Out of scope to
+  design/implement here — flagging the pattern". Doc stays `assigned_vm: NA`.

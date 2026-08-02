@@ -123,3 +123,13 @@ repo clones each appears to be the actual driver, per the ~219G `unified-trading
 - **na-eligibility-audit 2026-07-30**: KEEP-NA, valid (infra tranche, dispatch agt-30721a) — Sole todo's first
   sub-action is explicitly operator-gated (cron install blocked on sandboxed-slot permissions, confirmed via a prior
   session's own Permission denied result).
+- **na-eligibility-audit 2026-08-02** (infra tranche, incremental run): **KEEP-NA, valid — unchanged from the 2026-07-30
+  verdict.** In scope this run because the 2026-08-02 corpus-sweep retagged `asset_group: [meta] → [infrastructure]`.
+  Read end-to-end; `grep -cE '^- \[ \]'` = **1**, matching this verdict's item count. Unchanged reasoning: the sole todo
+  BUNDLES an operator-permission-gated sub-item (a) — installing the uv-cache-prune cron, confirmed blocked by a prior
+  session hitting `Permission denied` on `crontab -l`/`-e`, an OS-level permission no cloud identity can self-serve —
+  with two investigation sub-items (b)/(c) that are NOT permission-gated. The 2026-08-02 `/ag-closeout-audit infra` run
+  reached the same split and called the investigation half "conflict-checked clear". The bundling is the whole blocker:
+  flipping the doc exposes (a) to blind dispatch. Splitting one todo into two is editorial authoring, outside this
+  skill's apply set (and would grow the NA todo count against the ratchet) — recorded instead as a targeted-extraction
+  candidate for a future infra batch.

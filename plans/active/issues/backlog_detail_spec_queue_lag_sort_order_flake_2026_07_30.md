@@ -74,15 +74,19 @@ first:
 
 ## Recommended next step
 
-- [ ] [INFRA] P3. **Duplicate — tracked and already AO-dispatchable under
-      `/plans/active/issues/ao_dashboard_backlog_detail_queue_lag_e2e_flaky_2026_07_26.md`** (`assigned_vm: planning`,
-      same two `backlog-detail.spec.ts` test failures, same symptom, filed 4 days earlier with a more complete
-      root-cause hypothesis — a background reconciler resetting a mock-mode-seeded `dispatched` row). Not reclassifying
-      this doc; that doc is the one to dispatch. Root-cause and fix the `backlog-detail.spec.ts` queue_lag
-      ascending-sort order flake — either `seed_e2e_state.py`'s `E2E-QUEUED` timestamp isn't landing where its own
-      comment says, or the queued_at sort comparator is inverted/wrong for a still-queued row. Done when: both
-      currently-failing tests in `tests/e2e/backlog-detail.spec.ts` pass consistently across 3 consecutive local runs
-      (done via the other doc's todos, not this one).
+- [ ] [INFRA] P3. **Duplicate — tracked under
+      `/plans/active/issues/ao_dashboard_backlog_detail_queue_lag_e2e_flaky_2026_07_26.md`** (same two
+      `backlog-detail.spec.ts` test failures, same symptom, filed 4 days earlier with a more complete root-cause
+      hypothesis — a background reconciler resetting a mock-mode-seeded `dispatched` row). **Citation corrected
+      2026-08-02**: that doc is NO LONGER `assigned_vm: planning` / AO-dispatchable — the 2026-07-31 operator directive
+      `unified-trading-pm@14478ca26` flipped it to `assigned_vm: NA` + `execution_scope: local-only` ("work these
+      interactively now rather than queue behind AO's current busy backlog"), so this work is now operator-driven, not
+      queued. The routing is unchanged (that doc is still the one to work, not this one); only the dispatch claim was
+      stale. Not reclassifying this doc. Root-cause and fix the `backlog-detail.spec.ts` queue_lag ascending-sort order
+      flake — either `seed_e2e_state.py`'s `E2E-QUEUED` timestamp isn't landing where its own comment says, or the
+      queued_at sort comparator is inverted/wrong for a still-queued row. Done when: both currently-failing tests in
+      `tests/e2e/backlog-detail.spec.ts` pass consistently across 3 consecutive local runs (done via the other doc's
+      todos, not this one).
 
 ## Progress Log
 
@@ -95,3 +99,10 @@ first:
   dispatch a second worker onto already-claimed work. Fixed the checkbox citation to point at the authoritative doc per
   the KEEP-NA-STALE rule; `assigned_vm: NA` left as-is (zero backlog impact, pure hygiene).
 - **context-scout 2026-08-01**: populated context_scope (3 entries).
+- **na-eligibility-audit 2026-08-02** (autonomous, tranche `ao`): KEEP-NA-STALE re-affirmed, **citation corrected**. The
+  duplicate-routing verdict from 2026-07-31 still stands, but the evidence it cited went stale one day later: the
+  successor doc `/plans/active/issues/ao_dashboard_backlog_detail_queue_lag_e2e_flaky_2026_07_26.md` was described as
+  `assigned_vm: planning` / "already AO-dispatchable", and the 2026-07-31 operator directive
+  `unified-trading-pm@14478ca26` flipped it to `assigned_vm: NA` + `execution_scope: local-only`. Corrected the todo's
+  citation so a future reader is not told the work is queued for AO when it is now operator-driven. `assigned_vm: NA`
+  unchanged here — zero backlog impact, pure hygiene, exactly the KEEP-NA-STALE contract.

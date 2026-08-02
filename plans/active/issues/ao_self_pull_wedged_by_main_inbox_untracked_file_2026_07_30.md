@@ -205,3 +205,13 @@ follows correctly — only the webhook config is missing).
 ## Progress Log
 
 - **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).
+- **na-eligibility-audit 2026-08-02** (infra tranche, incremental run): **KEEP-NA, valid.** First verdict for this doc
+  (no prior marker). Read end-to-end; `grep -cE '^- \[ \]'` = **1**, matching this verdict's item count. The sole
+  remaining todo is `[OPERATOR] P2` — set `AGENT_ORCHESTRATOR_SLACK_WEBHOOK` in the planning VM's `.env.local` —
+  host-level config on a root checkout, explicitly outside any slot worker's authorised scope per `agents/RULES.md` § 1,
+  and not a cloud-IAM grant the self-service rule covers. Unambiguous human-only action. **Also flagged**:
+  `asset_group: [infrastructure]` with `parent_epic: orchestrator_master` — the first-reported instance (2026-07-31
+  finding 3) of the `ao`-mistag deadlock, still unretagged after three audits. Measured this run:
+  `generate_na_doc_tranche_inventory.py --tranche ao` returns 61 docs and does not include this one, so the tranche the
+  retag is reserved for provably cannot see it. Tranche-level BLOCKED-OPERATOR-DECISION with options recorded in
+  `infra_consolidated_closeout_2026_07_25.md`'s 2026-08-02 marker.

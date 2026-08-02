@@ -570,7 +570,8 @@ Two genuine hits in this plan:
    remains this plan's responsibility until shipped; grepping `plans/active/` and `plans/epics/` found no other plan
    that has picked up the "silent-worker watchdog" item.
 
-- **na-eligibility-audit 2026-07-30**: KEEP-NA, valid — open set spans credential-gated venue onboarding, a cross-plan
+- **na-eligibility-audit 2026-08-02** (re-confirms 2026-07-30; only change since = context-scout `context_scope`
+  frontmatter, body byte-identical): KEEP-NA, valid — open set spans credential-gated venue onboarding, a cross-plan
   B0→B1→B2 dependency chain the operator sequenced 2026-06-18, and cost-gated backfill scope.
 
 ## Progress Log

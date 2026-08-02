@@ -94,7 +94,11 @@ CLAUDE.md's current § "Git discipline"), so it's AO-dispatchable once picked up
       1/2/3 walkthrough to reflect the LDR-direct-promote-with-dormant-staging model (mirror `ci-cd-flow.md`'s already-
       shipped rewrite, `unified-trading-pm@b9d0b9209`, for the target shape). Done when: the two sibling docs (engineer
       view / operator view) describe the SAME pipeline shape, and every staging-mediated-as-default claim in
-      `deployment-flow.md` is corrected or explicitly marked as the non-default toggle path.
+      `deployment-flow.md` is corrected or explicitly marked as the non-default toggle path. **Extraction citation
+      (na-eligibility-audit 2026-08-02):** the AO-dispatchable copy of this todo lives in
+      `/plans/active/ci_satellite_ao_dispatch_batch4_2026_07_31.md` (its `[DOC] P2` item, line ~169) — that plan is
+      still `status: draft`, so no commit/sha exists to cite yet. This doc stays `assigned_vm: NA`; flip this checkbox
+      from batch4 when it ships.
 
 ## na-eligibility-audit verdict
 
@@ -107,6 +111,13 @@ this doc's own `assigned_vm` now would open a second, independent dispatch path 
 activates. Staying NA until batch4 either ships this todo or is archived without shipping it — if the latter, re-open
 this doc as a RECLASSIFY candidate on the next audit pass. (Also flags a cross-skill population overlap worth a standing
 fix — see `/plans/active/issues/na_and_ag_closeout_audit_population_overlap_2026_07_31.md`.)
+
+**na-eligibility-audit 2026-08-02** (tranche `ci`, autonomous): **CONFIRMS KEEP-NA-STALE, unchanged.** Re-verified the
+holding condition live rather than trusting the prior verdict: `ci_satellite_ao_dispatch_batch4_2026_07_31.md` still
+exists, still carries this exact todo verbatim as its own `[DOC] P2` item, and is still `status: draft` — i.e. neither
+shipped nor archived-unshipped, so the "re-open as RECLASSIFY" trigger has NOT fired. The only change to this doc since
+the last marker is the 2026-08-01 context-scout `context_scope` backfill (metadata only). Citation fix applied to the
+open checkbox above this run so a future pass does not re-flag the same content as an unaddressed orphan.
 
 ## Progress Log
 

@@ -115,6 +115,15 @@ workspace).
       parity check, the `--apply`, the post-apply verification (0 non-canonical shapes remaining), and the manifest-row
       rewrite. The "not started, no GCS objects modified yet" text above was written before that plan ran and was never
       updated.
+
+> **📤 THE OPEN P1 BELOW IS EXTRACTED — do NOT dispatch it from this doc (`/na-eligibility-audit` 2026-08-02,
+> tranche=cefi).** `/plans/active/cefi_satellite_ao_dispatch_batch4_2026_07_31.md` todo 1 `[SCRIPT] P1`
+> (`assigned_vm: planning`, `unified-trading-pm@2d5fb4b59`) carries it verbatim and Source-cites this doc; its done-when
+> is "the full-scope diff completes, results are recorded in the source doc, and its open P1 todo is flipped citing this
+> run". **Caveat — batch4 is still `status: draft`, so it is NOT ingested and this work has no live dispatch path**
+> until the operator activates it. That is an activation decision, not a reason to reclassify this doc (which would
+> create a second, competing dispatch path for the same read-only diff); see this run's report for the parked item.
+
 - [ ] [DATA] P1. **MIGRATED 2026-07-30 from `cefi_satellite_ao_dispatch_batch1_2026_07_25.md` line 355 (never shipped)**
       — **Extend BYBIT futures_chain shape-2 duplicate verification to the full audited scope.** Extend the archived
       migration plan's 5-day sample to every day the existing Phase-1 scope-audit output
@@ -145,3 +154,15 @@ workspace).
   operator ruling taken on re-promoting it to AO-dispatched) — a future `/na-eligibility-audit` or operator call can
   reclassify it.
 - **context-scout 2026-08-01**: populated context_scope (3 entries).
+- **na-eligibility-audit 2026-08-02** (tranche=cefi, autonomous): **KEEP-NA-STALE (already-duplicated) — citation fixed,
+  NOT reclassified.** Re-entered scope on the 2026-07-30 folded-back P1. That entry explicitly invited this skill to
+  reconsider ("a future `/na-eligibility-audit` or operator call can reclassify it"), and on its own merits the todo
+  does clear the bounded-outcome bar — read-only row-level diff, scope fixed by an existing audit parquet, an explicit
+  **Done when**, no delete/`--apply`/VM launch, and it was already deemed AO-eligible once when batch1 dispatched it.
+  The Phase-2 conflict-check nevertheless found it ALREADY re-extracted verbatim into
+  `cefi_satellite_ao_dispatch_batch4_2026_07_31.md` todo 1 (`unified-trading-pm@2d5fb4b59`, Source-cited), so a flip
+  here would be the near-verbatim duplicate claim conflict-check § 3 forbids. Citation banner added above the todo;
+  `assigned_vm: NA` unchanged. `locked_by: live-defi-rollout` is not the deciding factor (PLAN_FORMAT § locked_by blocks
+  ARCHIVAL, not an `assigned_vm` flip) and no unlock question arises — the doc has genuine open work either way.
+  **Parked for the operator**: batch4 has sat `status: draft` since 2026-07-31, so this todo currently has no live
+  dispatch path via either doc — see this run's report.

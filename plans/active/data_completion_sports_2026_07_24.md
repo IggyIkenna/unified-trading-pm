@@ -855,3 +855,16 @@ watches the relaunched 3 for repeat-137. Codified lesson candidate: backfill mon
   needed to fire it') and is a strong extraction candidate, but the `[DATA] P2` enrichment-ceiling todo is an operator
   spend decision by construction ('to exceed ~34% needs operator bump to 1.5M/day OR multi-day skip-fresh re-runs').
   Flipping the doc dispatches that too
+- **na-eligibility-audit 2026-08-02**: re-read (in scope again — `746ada09c` + `70c50d052` both landed 2026-07-30 AFTER
+  the marker above was written at 07:55Z). **KEEP-NA, valid — verdict UNCHANGED, rationale UPDATED.** The MIXED ground
+  still holds unchanged: the `[DATA] P2` enrichment-ceiling todo is an operator SPEND decision (1.5M/day quota bump),
+  and the `[DATA] P1` entity-coverage relabel needs a consolidator drain + all backfill VMs stopped — flipping
+  `assigned_vm` dispatches both. What CHANGED is the extraction picture: there are now **three** dispatch-cleared
+  candidates, not one. `70c50d052` recorded operator rulings (option A) in
+  [`/plans/active/issues/autonomous_session_operator_decisions_2026_07_25.md`](/plans/active/issues/autonomous_session_operator_decisions_2026_07_25.md)
+  entries #5 and #6 explicitly clearing the two golden-window `[DATA] P2` todos (Transfermarkt PLAYER_VALUES relaunch;
+  ODDS+PREDICTIONS blank-reason re-measure) for dispatch, joining the already-de-gated `[SCRIPT] P1` ramp-to-429 probe.
+  All 6 open todos verified against the file this pass. **Extracting those 3 into a `planning` batch doc is the right
+  next move and is a plan-authoring call, parked** for the operator (same disposition as
+  `sports_prelaunch_cf5_verify_residual_2026_07_24.md`'s marker) — this skill's Phase 3 flips `assigned_vm` in place, it
+  does not author carve-out batches, and an in-place flip here would dispatch the two genuinely-NA todos alongside them

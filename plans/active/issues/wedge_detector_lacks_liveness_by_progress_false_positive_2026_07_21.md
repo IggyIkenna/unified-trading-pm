@@ -151,3 +151,8 @@ progress-signal half.
   self-declares NA status: modifies the orchestrator's own worker-safety automation where a careless fix could suppress
   genuine wedge detection; one todo is an explicit operator-sign-off gate.
 - **context-scout 2026-08-01**: populated/refreshed context_scope (1 entries).
+- **na-eligibility-audit 2026-08-02** (autonomous, tranche `ao`): KEEP-NA, valid — 2026-07-30 verdict re-affirmed on a
+  full re-read. Doc self-declares the NA rationale (modifies the orchestrator's own worker-safety automation, where a
+  careless suppression predicate blinds genuine wedge detection), and one of the 3 open todos is an explicit
+  `[REVIEW] P3` operator sign-off gate. In scope only via the 2026-08-02 meta-retag sweep (`0409fa053`); content
+  unchanged.

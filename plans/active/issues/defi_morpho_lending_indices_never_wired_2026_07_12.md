@@ -22,6 +22,7 @@ related:
     plans/archive/issues/defi_dexpool_second_writer_path_and_zero_capture_2026_07_10.md,
   ]
 created: 2026-07-12
+last_updated: "2026-08-02"
 parent_epic: defi_master
 assigned_vm: NA
 resolved_by:
@@ -934,3 +935,12 @@ should flip `defi_onchain_v10_universe_v2_seed_or_backfill_progressed→true` on
   states the re-run "becomes useful again" only once that condition flips. No stale/duplicate/reclassify-eligible
   content found. Doc stays `assigned_vm: NA`.
 - **context-scout 2026-08-01**: populated context_scope (4 entries).
+
+## Progress Log
+
+- **na-eligibility-audit 2026-08-02** (tranche=defi, autonomous, scheduled): KEEP-NA valid — re-read end to end, 1 open
+  item. It is a `gate_on_depends` gate on a still-open prerequisite, stated in the todo's own text: "The real hold is
+  the `gate_on_depends` gate on `data_completion_defi_2026_07_15`, not the number" — verified live this pass, that plan
+  is still `assigned_vm: NA` with 20 open todos, so the gate has not cleared. The doc's own Morpho scope is complete;
+  the residual `expected_unattempted` mass belongs to that other plan's expected-universe-v2 seed chain. KEEP-NA on the
+  gate citation alone, per this skill's never-re-litigate-an-established-gate rule.

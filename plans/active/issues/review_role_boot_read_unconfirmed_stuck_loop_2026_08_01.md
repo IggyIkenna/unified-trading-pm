@@ -105,6 +105,44 @@ source: >-
       basenames — now with concrete proof (3 live incidents across 3 different role files in one week) that hand-sync
       alone does not hold. (repo: agent-orchestrator)
 
+## na-eligibility-audit verdict
+
+**na-eligibility-audit 2026-08-02** (tranche `ci`, autonomous): **RECLASSIFY-ELIGIBLE on the merits, but HELD — parked
+as `BLOCKED-OPERATOR-DECISION` at the Phase-2 conflict-check. Do NOT flip `assigned_vm` on this verdict alone.** First
+audit of this doc (created 2026-08-01, no prior marker). Completeness check: `grep -cE '^- \[ \]'` = 2 = verdicts
+reported (the `[OPERATOR] P2` and `[BACKEND] P3` line items above are already `[x]`, not open work).
+
+**Merits** — both open items clear the bounded-outcome bar: the `[DOCS] P1` is a grep-driven multi-file audit-and-patch
+against a _named machine oracle_ (`server/prompts.py:expected_read_files`) with an enumerated file set and an explicit
+done-when; the `[BACKEND] P2` is a regression test with a clear pass/fail assertion. No undecided design judgment.
+
+**Why held anyway — two independent conflicts, both verified live this run:**
+
+1. **A same-day sibling audit recommends retagging this doc OUT of the `ci` tranche.** The 2026-08-02
+   `/ag-closeout-audit cross-cutting` run (dispatch `agt-f23055`, slot 12) classified this doc `exclude_cross_cutting`
+   and recorded in `/plans/active/issues/ag_closeout_audit_cross_cutting_parked_2026_08_02.md` that
+   `asset_group: [ci, cross-cutting]` is a **double mistag** — content is 100% agent-orchestrator boot/spawn mechanics,
+   and the `ci` tag traces only to which NA-tranche audit happened to discover the doc (this doc's own `source:` field
+   says so), not to a topical claim. Its recommendation is `[ao]`. `ci` owns this doc today only by the inventory
+   script's fallback rule (`parent_epic: infrastructure_master` maps to `infra`, which is not among this doc's own
+   tranches, so ownership falls back to `tranches[0]` = `ci`). Flipping `assigned_vm` from a tranche that is about to
+   stop owning the doc is precisely the last-writer-wins outcome the primary-owner rule forbids.
+2. **An adjacent NA doc claims overlapping ground and could moot part of the `[DOCS] P1` scope.**
+   `/plans/active/issues/boot_composer_misroutes_lifecycle_roles_into_worker_boot_branch_2026_07_31.md`
+   (`assigned_vm: NA`, `parent_epic: agent_operating_framework_master` → `ao` tranche) carries an open `[SCRIPT] P2` to
+   make `server/prompts.py::_compose()` route lifecycle roles to the slot-less register/poll block, plus a `[SCRIPT] P1`
+   extending that guard to one-shot lifecycle/audit roles (`ag_closeout_auditor` and siblings). If that lands, the
+   affected roles stop being asked for `worker.md` at all — so patching every role file's STEP-0 to _add_ `worker.md`
+   could be partly redundant or actively wrong for exactly the roles this doc cites as live victims
+   (`na_eligibility_auditor.md`, `ag_closeout_auditor.md`). Not a verbatim duplicate claim, but a real ordering
+   dependency that a worker dispatched off this doc alone would not see.
+
+**Options:** **A [WORKER REC]** — retag `asset_group` → `[ao]` per the sibling run's recommendation, let the `ao`
+tranche own the reclassification decision, and sequence it behind (or jointly with) the `boot_composer` composer-guard
+fix so the two do not fight over the same role files. **B** — flip `assigned_vm: planning` here now and accept both the
+pending retag and the ordering risk against `boot_composer`. **C** — keep NA with no retag and revisit once
+`boot_composer`'s composer-guard todos are resolved, at which point the remaining `[DOCS] P1` scope is unambiguous.
+
 ## Progress Log
 
 - **2026-08-01 (review agent, slot 1, agt-fed62c)**: Booted clean on the corrected `review.md` (first attempt,

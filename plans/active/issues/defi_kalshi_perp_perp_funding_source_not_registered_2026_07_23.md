@@ -20,6 +20,7 @@ related:
     /plans/active/defi_consolidated_closeout_2026_07_18.md,
   ]
 created: 2026-07-23
+last_updated: "2026-08-02"
 parent_epic: infrastructure_master
 assigned_vm: NA
 execution_scope: local-only
@@ -133,3 +134,10 @@ concrete, currently-failing symptom; the classification question is the census a
   operator-design decision on 567 already-written manifest-absent objects; the 2 checkbox DIAGs are bounded but
   secondary
 - **context-scout 2026-08-01**: populated context_scope (4 entries).
+- **na-eligibility-audit 2026-08-02** (tranche=defi, autonomous, scheduled): KEEP-NA valid (2026-07-30 verdict re-
+  affirmed) — re-read end to end; content unchanged since that verdict (context-scout backfill only). The doc's central
+  open item is still the prose-only (a)/(b)/(c) operator/design decision on the 567 already-written, manifest- absent
+  2026-05-29..2026-07-25 DEFI objects (backfill into DEFI as-is / re-emit under CEFI to match the shipped `@2aa23de5`
+  reroute / accept as a historical gap). The 2 `[DIAG] P2` checkboxes are bounded but secondary, and the same gap-day +
+  `_migrated_kalshi_perp_*` forensics are already claimed by an active planning plan
+  (`defi_satellite_ao_dispatch_batch6_2026_07_30.md:310`), so flipping this doc would dispatch a duplicate.

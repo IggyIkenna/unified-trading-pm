@@ -286,6 +286,13 @@ but it is a deliberate, disclosed contribution to a RED ratchet, not an accident
 
 ## Progress Log
 
+- **na-eligibility-audit 2026-08-02**: KEEP-NA, valid -- this IS the operator-decision park register (filed today by the
+  sibling `/plan-reconcile` whole-corpus run): 10 of its 11 open todos are `[OPERATOR]` rulings (delete-safety hazards,
+  SSOT-ownership disputes, issue-doc archival routing). NOTE the 11th, `[DOC] P2` "Name this register in the skill
+  file", IS a bounded one-line SKILL.md edit with a grep-checkable done-when -- but it is a near-duplicate of
+  `zero_checkbox_sweep_all_tranches_2026_07_31.md` todo 1's residual (that doc's own 2026-08-02 log says so), so it is
+  reported, not flipped; a doc-level `assigned_vm` flip would dispatch the 10 operator rulings alongside it.
+
 - **2026-08-02** — filed by the autonomous `/plan-reconcile` whole-corpus run (slot-3). 13 read-only hunters over 714
   docs / 18.3 MB, partitioned by `parent_epic`. Every item above carries two line-cited verbatim quotes from its source
   docs and survived independent refutation before being parked. Items the run could prove from code/git/filesystem were

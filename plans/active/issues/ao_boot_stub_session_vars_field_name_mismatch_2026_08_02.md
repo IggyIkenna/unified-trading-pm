@@ -162,3 +162,10 @@ Two independent, complementary fixes — either alone helps, both together close
   `server/prompts.py`/`server/routes/slots_worker.py`/`server/models/worker_api.py`/`server/plan_health.py`; recovery
   path independently verified live (re-boot with corrected `slot_role` released the stray task, lazily created the
   `AgentRow`, and the subsequent `/done one_shot_complete` call then succeeded).
+- **na-eligibility-audit 2026-08-02** (autonomous, tranche `ao`): KEEP-NA, valid — first pass on this doc (filed earlier
+  the same day, no prior marker). All 3 todos modify `server/prompts.py::_compose()` / `_session_vars_block()` /
+  `BootRequest` — the fleet-wide worker-boot path EVERY slot spawn reads as its first message, i.e. the same
+  live-dispatch-critical-path class the 2026-07-31 operator directive (`unified-trading-pm@14478ca26`) deliberately
+  routed to `execution_scope: local-only`. Todo 3 is explicitly a judgment call ("verify no caller depends on that
+  tolerance first" before adding `extra="forbid"` to a shared request model). Bounded-per-todo is not the same test as
+  safe-to-dispatch here.

@@ -146,9 +146,17 @@ so the retag is a corpus-hygiene fix, not an unlock of new dispatchable work.
 
 ## Todos
 
-- [ ] [DOCS] P3. Reconcile `codex_violations_ratchet_to_five_2026_06_10.md`'s `delta_proxy_repricer.py` checkbox per
-      finding 1 above. Done when: the checkbox is `[x]` citing `execution-service@89fbf99d`, re-verified via
-      `git show --stat 89fbf99d`.
+- [x] ✅ [DOCS] P3. **DONE 2026-08-02** (na-eligibility-audit, infra tranche) — reconciled
+      `codex_violations_ratchet_to_five_2026_06_10.md`'s `delta_proxy_repricer.py` checkbox per finding 1 above.
+      Done-when met exactly as written: the checkbox is now `[x]` citing `execution-service@89fbf99d`, and the evidence
+      was re-verified via `git show --stat 89fbf99d` in the execution-service checkout (873 insertions / 6 files:
+      `quote_maintenance.py` +205, `v2/handlers.py` +29, `test_delta_proxy_repricer.py` +328,
+      `test_quote_maintenance.py` +236, `test_router_and_handlers.py` +67) plus
+      `git merge-base --is-ancestor 89fbf99d origin/live-defi-rollout` (ancestor confirmed) and a live re-read of the
+      import at `quote_maintenance.py:74`. This finding sat unreconciled across three consecutive
+      `/ag-closeout-audit     infra` runs (07-31, 08-01, 08-02) because that skill is scoped out of false-unchecked
+      flips; it is in scope for `/na-eligibility-audit`'s KEEP-NA-stale-items verdict, which uses the same HARD evidence
+      bar.
 - [ ] [DOCS] P3. Positively confirm (on the real target host, not just this sandbox) whether
       `.tabs/3/instruments-service-agentwork-sports-2026-07-13/` has genuinely been deleted, then reconcile
       `issues/stale_agentwork_scratch_clone_not_deletable_unpushed_stashes_2026_07_30.md` per finding 2 above. Done
@@ -183,3 +191,12 @@ so the retag is a corpus-hygiene fix, not an unlock of new dispatchable work.
   `prediction` tranche's own same-day precedent (`unified-trading-pm@e89cdd5eb`, "verified unchanged, 0 new orphans").
 
 - **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).
+- **na-eligibility-audit 2026-08-02** (infra tranche, incremental run): **KEEP-NA, stale items — 1 of 3 closed.** First
+  verdict for this doc (no prior marker). Read end-to-end; `grep -cE '^- \[ \]'` = **3** at entry, matching this
+  verdict's item count, **now 2**. Finding 1's todo is closed above with independently re-derived evidence. Doc stays NA
+  on the remaining 2, both correctly non-worker-determinable: todo 2 requires positively confirming a directory's state
+  **on the real target host**, which no slot session can observe (this sandbox's `.tabs/3` absence is explicitly
+  recorded as non-authoritative by the finding itself); todo 3 is an `asset_group` retag reserved for the `ao` tranche
+  by the `/ag-closeout-audit` owning-tranche-writes-only rule — see the tranche-level `BLOCKED-OPERATOR-DECISION` on
+  that rule's deadlock recorded in `infra_consolidated_closeout_2026_07_25.md`'s 2026-08-02 marker. This doc is a
+  parked-findings register by construction, so NA remains the correct home for it as a whole.

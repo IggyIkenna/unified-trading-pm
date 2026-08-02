@@ -500,3 +500,11 @@ tracked here.
   Zero `assigned_vm` or backlog impact from this pass. Not re-verdicting the 3 items flagged as future RECLASSIFY
   candidates (MTDS liquidations/risk_params reconciliation, strategy-service staked-lend additions) — that's a targeted
   future pass, not this incremental check.
+- **na-eligibility-audit 2026-08-02** (infra tranche, incremental run): **KEEP-NA, valid — unchanged from the 2026-07-30
+  verdict.** In scope this run because item #10 (the SIT QG-failure pair) was flipped 2026-08-01 by
+  `infra_satellite_ao_dispatch_batch1_2026_07_26.md` todo #10. Read end-to-end; `grep -cE '^- \[ \]'` = **11** (was 12
+  at the last marker), matching this verdict's item count. The 5 rehomed/duplicated items still carry correct inline
+  cross-references, so no citation change is warranted. Doc stays NA on two independent grounds it already records:
+  `locked_by: live-defi-rollout` with no `[unlock-plan]` grant, and genuinely-open non-infra work outside any infra
+  pass's scope (the UAC DeFi venue-registry `BLOCKED-DISCIPLINE` items, alerting's `NEEDS-LIVE` ML-baseline item, 2
+  `tofu apply` operator-gated infra items, and the BLOCKED backfill-VM cluster).

@@ -196,3 +196,12 @@ surface — do not auto-drop — genuine WIP.
 purge here.
 
 - **context-scout 2026-08-01**: populated/refreshed context_scope (2 entries).
+- **na-eligibility-audit 2026-08-02** (infra tranche, incremental run): **KEEP-NA-STALE — unchanged from the 2026-07-30
+  verdict.** In scope only because a context-scout backfill touched the file; no content change since the last marker.
+  Read end-to-end; `grep -cE '^- \[ \]'` = **17**, matching this verdict's item count. The 3 items already
+  cross-referenced into `infra_satellite_ao_dispatch_batch1_2026_07_26.md` are re-confirmed still correctly cited and
+  still not done there, so no citation change is warranted. Doc stays NA: the 12-item Phase-3 fan-out still targets the
+  RETIRED per-epic-VM topology (`vm-defi`/`vm-cefi`/… are not dispatch targets under the single-VM architecture), which
+  is a re-scoping judgment call tracked as a BLOCKED-OPERATOR-DECISION in
+  `/plans/archive/issues/infra_plan_reconcile_parked_decisions_2026_07_26.md`, and Phase 4's owner-review + purge is
+  downstream-gated on that unresolved re-targeting.

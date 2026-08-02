@@ -289,3 +289,12 @@ a verdict). Heaviest:
   on an unmet fleet-wide precondition (11+ repos still missing a marker). Flipping the whole doc would improperly expose
   the gated items to blind dispatch — stays NA as a whole pending a targeted split of just the 5 bounded items into a
   future batch, not actioned this run.
+- **na-eligibility-audit 2026-08-02** (infra tranche, incremental run): **KEEP-NA, valid — unchanged from the 2026-07-30
+  verdict.** In scope only because a context-scout backfill touched the file; no content change since. Read end-to-end;
+  `grep -cE '^- \[ \]'` = **8**, matching this verdict's item count. The mixed shape is unchanged and still blocks a
+  whole-doc flip: 2 items are operator-gated per a dated citation in
+  `infra_satellite_ao_dispatch_batch1_2026_07_26.md`'s BLOCKED-OPERATOR-DECISION section, and the folded-in
+  `[SCRIPT] P1` is genuinely condition-blocked on an unmet fleet-wide precondition (11+ repos still carry unstamped
+  `scripts/` files, so wiring the lifecycle-marker checker today reds the whole fleet). Flipping the doc would expose
+  the gated items to blind dispatch. The standing recommendation is unchanged and still un-actioned: a targeted split of
+  just the bounded items into a future infra batch — `/ag-closeout-audit`'s Phase-3 job, not an `assigned_vm` flip.

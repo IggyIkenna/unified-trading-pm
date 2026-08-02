@@ -717,3 +717,11 @@ against the reproduction script.
   VM launch. Pinged `dp-fleet-monitor` (authoring slot) with this outcome; this is now the 18th+ dispatch for this
   condition, further corroborating `dp_escalation_worker_dispatch_no_open_issue_check_2026_07_29.md`'s still-open Option
   A recommendation for dedup at the orchestrator dispatch layer.
+
+- **na-eligibility-audit 2026-08-02** (tranche=cefi, autonomous): KEEP-NA, valid — re-verdicted because the 2026-08-01
+  18th-dispatch entry postdates the 07-31 marker, but it records a static-backlog re-confirmation only (decaying trickle
+  75/35/1 over 07-30..08-01, 13,775 `captured` rows in the same 24h, all five fix commits still ancestors of LDR) and
+  adds no new work. Verdict unchanged on both open todos: the `[SERVICE] P3` features-service third-shape gap is
+  self-declared as needing "its own scoping (design decision: build the missing writer, or change the calculators)", and
+  the `[SERVICE] P2` observability gap is self-declared "a design call, not fixed here … needs a maintainer/ operator
+  call on the right shape, not a unilateral change". Both are open design questions, not worker-determinable.

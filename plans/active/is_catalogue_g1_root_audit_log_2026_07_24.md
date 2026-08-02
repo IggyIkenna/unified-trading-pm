@@ -410,7 +410,8 @@ that AG's G1 (IS catalogue + UAC) is GREEN** — the audit's ⑧ enforces this.
   (grep/`git show` alone showed the file as clean, since they don't fold multi-line YAML scalars the way the parser
   does).
 
-- **na-eligibility-audit 2026-07-30**: KEEP-NA, valid — self-described historical/audit record; every open todo is gated
+- **na-eligibility-audit 2026-08-02** (re-confirms 2026-07-30; only change since = context-scout `context_scope`
+  frontmatter, body byte-identical): KEEP-NA, valid — self-described historical/audit record; every open todo is gated
   (G1.run on the IS backfill + UAC accuracy + v9; G1.run-prediction on another plan's loader wiring; G1.run-full-history
   explicitly DEFERRED pending operator review of a 190M index blow-up).
 - **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).

@@ -143,7 +143,8 @@ trusting that).
 
 ## Progress Log
 
-- **na-eligibility-audit 2026-07-30**: KEEP-NA, valid — explicit dated destination ruling (BLK-87fc93e4, 2026-07-21):
+- **na-eligibility-audit 2026-08-02** (re-confirms 2026-07-30; only change since = context-scout `context_scope`
+  frontmatter, body byte-identical): KEEP-NA, valid — explicit dated destination ruling (BLK-87fc93e4, 2026-07-21):
   LOCAL/human by deliberate operator-protective default for a 9+-repo atomic breaking rename — 'do not do that
   unilaterally'.
 - **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).

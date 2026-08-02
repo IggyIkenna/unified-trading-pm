@@ -388,3 +388,50 @@ not data-pipeline).
   71/78 (7 infra orphans resolved; the residual 71 are other tranches', outside this run's remit — flagged in this run's
   `evidence` for visibility, not fixed here).
 - **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).
+- **na-eligibility-audit 2026-08-02** (infra tranche, incremental run): **KEEP-NA, valid — unchanged from the 2026-07-30
+  verdict.** In scope this run because the doc was edited since that marker (2026-08-01 `/ag-closeout-audit`
+  Progress-Log appends, the Track-4 supersession, and a context-scout backfill). Read end-to-end; `grep -cE '^- \[ \]'`
+  = **3** (was 4 at the last marker; Track 4's todo has since been correctly closed as SUPERSEDED into the `ui`
+  tranche), matching this verdict's item count. The 3 remaining `[REVIEW]` todos are unchanged all-of-N Track close-out
+  gates created by an explicit resolved operator decision (`issues/autonomous_session_operator_decisions_2026_07_25.md`
+  entry #38, `unified-trading-pm@2c61a8dc4`); the reasoning recorded on 2026-07-30 (a gating shape belongs in a
+  `depends_on` + `gate_on_depends` companion, not an `NA → planning` flip) still holds and is not re-derived here.
+
+  **BLOCKED-OPERATOR-DECISION (tranche-level, new this run) — the `asset_group` mistag retag is structurally deadlocked,
+  and the deadlock is now measured, not suspected.** Three infra-tranche docs whose real owner is `ao` by `parent_epic`
+  have had a retag recommended-but-never-applied across multiple consecutive audits, each run correctly declining under
+  `/ag-closeout-audit`'s owning-tranche-writes-only rule:
+
+  | doc                                                                                    | `asset_group`      | `parent_epic`                      | retag first recommended |
+  | -------------------------------------------------------------------------------------- | ------------------ | ---------------------------------- | ----------------------- |
+  | `issues/ao_self_pull_wedged_by_main_inbox_untracked_file_2026_07_30.md`                | `[infrastructure]` | `orchestrator_master`              | 2026-07-31 (finding 3)  |
+  | `issues/qg_owner_gate_full_workspace_rglob_walk_hangs_quickmerge_2026_07_31.md`        | `[meta]`           | `agent_operating_framework_master` | 2026-08-01 (finding 6)  |
+  | `issues/boot_composer_misroutes_lifecycle_roles_into_worker_boot_branch_2026_07_31.md` | `[meta]`           | `agent_operating_framework_master` | not previously flagged  |
+
+  **Root cause, verified by direct code read of `scripts/plan-hygiene/generate_na_doc_tranche_inventory.py` this run,
+  not inferred**: tranche membership is derived from `asset_group`, never `parent_epic` — `ao` membership requires a
+  literal `asset_group: ao` (line ~201), a bare `[meta]` doc **default-folds into `infra`** (line ~202), and
+  `owning_tranche()` deliberately refuses to assign ownership to a tranche the doc is not a member of, falling back to
+  `tranches[0]`. So the corrective retag is reserved for a tranche that provably cannot see the docs needing it.
+  **Measured**: `generate_na_doc_tranche_inventory.py --tranche ao --json` returns 61 docs and **none of the three
+  above** — the same result `/ag-closeout-audit ao`'s own `asset_group`-driven pre-filter will produce. Every future
+  `ao` run will keep not-seeing them and every future `infra` run will keep declining to write; the recommendation
+  cannot converge on its own.
+
+  - **A [WORKER REC]: authorise the tranche that CAN see a mistagged doc to apply the `asset_group` retag**, when the
+    correct owner is evidenced by `parent_epic` + content and two independent audits already agree — i.e. treat a
+    provably-unreachable owner as an exception to owning-tranche-writes-only. Cheapest fix, unblocks all three today,
+    and the write is one frontmatter line with no dispatch effect.
+  - **B: run the retags from a corpus-wide (non-sharded) pass** — a `meta`/mistag fold-in sweep like the 2026-07-31 one
+    (`unified-trading-pm@0409fa053` region) that already retagged four docs into `infra`. Preserves the sharding rule
+    intact; costs a separate scheduled pass, and these three were missed by exactly that sweep once already.
+  - **C: make `owning_tranche()` (and `/ag-closeout-audit`'s pre-filter) fall back to the `parent_epic`-mapped tranche
+    even when the doc is not an `asset_group` member of it**, so the real owner sees the doc and can retag it. Fixes the
+    class rather than the three instances; changes shared corpus tooling used by all 9 tranches, so it needs its own
+    conflict-check and is not a same-run action.
+  - Other: operator free-text.
+
+  Not actioned this run either way — the retag is an `asset_group` write, outside this skill's own Phase-3 apply set
+  (which covers `assigned_vm`, checkbox citations, archival and verdict markers), and picking between A/B/C is a process
+  ruling. Recorded here rather than in a new parked doc so it does not add to the very NA corpus this skill's ratchet is
+  meant to shrink.

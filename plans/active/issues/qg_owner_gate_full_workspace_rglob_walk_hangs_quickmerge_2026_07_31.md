@@ -136,3 +136,52 @@ picked up and flagged as a malformed runbook. (This doc is deliberately named `q
       semantics byte-identical; add a test that a `.venv/…/x-runbook.md` fixture is neither flagged nor walked. Evaluate
       scoping the walk to tracked doc roots / `git ls-files` as a further speedup. Cite
       `plans/active/issues/qg_owner_gate_full_workspace_rglob_walk_hangs_quickmerge_2026_07_31.md` in the commit.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-08-02** (infra tranche, incremental run): **KEEP-NA — RECLASSIFY candidate assessed,
+  conflict-check CLEAR, HELD as `BLOCKED-OPERATOR-DECISION`.** First verdict for this doc (no prior marker). Read
+  end-to-end; `grep -cE '^- \[ \]'` = **1**, matching this verdict's item count.
+
+  **Why it looked dispatch-ready.** The sole todo is unusually well-specified: one function (`_iter_runbook_files`) in
+  one PM file, a prescribed `os.walk(topdown=True)` implementation given verbatim, an explicit invariant ("keep the
+  verdict + baseline semantics byte-identical"), and a stated regression test. The doc's own triage says "AO-scope …
+  small + clear code fix in one pm-repo QG script + one test. Not operator-gated." **Phase-2 conflict-check run and
+  CLEAR** (protocol § 3): only three active docs mention `check_runbook_execution_owner` and **none is
+  `assigned_vm: planning`** — `orchestrator_vm_swap_exhaustion_masked_as_cpu_2026_07_29.md` (NA; its sole open todo is a
+  `[REVIEW] P3` prose correction, no file overlap) and `ag_closeout_audit_infra_parked_2026_08_01.md` (NA; a narrative
+  mention in finding 6), plus this doc. No sibling batch drafted this run; `infra_consolidated_closeout_2026_07_25.md`
+  holds no claim on it.
+
+  **Why it was NOT flipped — two independent reasons, each needing a human call:**
+  1. **Ownership is disputed and reserved to another tranche.** Two consecutive `/ag-closeout-audit infra` runs
+     (2026-08-01 finding 6, re-affirmed 2026-08-02 item 6) ruled this doc's real owning tranche is **`ao`**, not `infra`
+     (`parent_epic: agent_operating_framework_master`), and that under the owning-tranche-writes-only rule only `ao` may
+     write to it — an `assigned_vm` flip is a write. Flipping from the infra tranche is exactly the cross-tranche race
+     that rule exists to prevent.
+  2. **Blast radius is the fleet's ship path, not one repo.** This gate runs inside every `quality-gates.sh`, therefore
+     inside every `quickmerge`, in every repo. "Byte-identical verdict semantics" between `Path.rglob` and a pruning
+     `os.walk` is asserted by the todo, not proven by it — symlink traversal, the `archive/`-prefix substring semantics,
+     and result ordering all differ subtly between the two, and a silent change to the finding set would either
+     false-fail or false-pass every agent's commit. This skill's own calibration note warns against trusting a todo's
+     "fully-scoped, AO-dispatchable" self-framing when the change sits on live-ship-path machinery.
+
+  **BLOCKED-OPERATOR-DECISION — options:**
+  - **A [WORKER REC]: retag `asset_group: [meta] → [ao]` first, then let the `ao` tranche make the `assigned_vm` call.**
+    Settles the ownership question two prior audits already answered, and puts the flip with the tranche that owns the
+    content. The caveat that makes this a decision rather than an action: **`ao` cannot currently see this doc at all**
+    — tranche membership derives from `asset_group`, so the mistag is self-perpetuating (tranche-level deadlock recorded
+    in `infra_consolidated_closeout_2026_07_25.md`'s 2026-08-02 marker). A works only if the retag is applied by someone
+    outside the per-tranche sharding.
+  - **B: authorise the infra tranche to flip `assigned_vm: NA → planning` now**, on the grounds that the WORK is PM
+    repo/script-governance tooling (`unified-trading-pm/scripts/quality_gates/`), squarely infra's own Track-1/Track-3
+    remit per `infra_consolidated_closeout_2026_07_25.md`'s Reachability map, even though `parent_epic` points at `ao`.
+    Fastest path to fixing a live P1 throughput bug; accepts one cross-tranche write.
+  - **C: keep NA and fix it by hand in an interactive session**, given the ship-path blast radius — a human runs the
+    before/after via `scripts/quality_gates/profile_qg_resources.py` and diffs the finding set rather than trusting a
+    worker's "byte-identical" claim.
+  - Other: operator free-text.
+
+  **Standing note for the next run**: the conflict-check is done and clear, so if the operator picks B this is a
+  one-line frontmatter change plus `execution_scope: local-only → orchestrator-agent` and an `assigned_role` fill — do
+  not re-derive it.

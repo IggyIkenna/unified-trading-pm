@@ -326,3 +326,14 @@ blocked from its documented ship path whenever any unrelated repo in the workspa
   prose-only). Autonomous-mode parking registers are a recurring source of this class. **Open follow-up for the
   operator/next-toucher**: re-run the zero-checkbox sweep with the population widened to all 9 tranches — it currently
   has no owning active doc.
+- **na-eligibility-audit 2026-08-02** (infra tranche, incremental run): **KEEP-NA, valid — unchanged from the 2026-07-30
+  verdict, and the reason is now stronger, not weaker.** In scope this run because the 2026-07-31 zero-checkbox sweep
+  converted this doc's prose findings into real checkboxes and P0-B was resolved. Read end-to-end; `grep -cE '^- \[ \]'`
+  = **4** (was 0 at the last marker — that conversion is exactly why), matching this verdict's item count. All 4 remain
+  authority calls: the `[OPERATOR] P0` codex-freshness cliff, two `[DOC] P1`s each needing a human to choose between
+  repointing and deleting (the 4 successor-less doctrine refs; the botched-edit-vs-formatting-slip bold span, which the
+  doc itself routes to `/plan-reconcile`), and a `[DOC] P2` wording pass. **The `[OPERATOR] P0` is now 13 days from
+  becoming an outage** — `check_codex_doc_freshness.py` goes 24 → ~168 violations on **2026-08-15**, when 144 docs
+  bulk-stamped `last_reviewed: 2026-05-17` cross the 90-day limit together; it is a HARD PM QG gate and a shrinking
+  ratchet cannot absorb it. Re-verified still `- [ ]` this run and re-surfaced in this run's report rather than left to
+  live only inside a parking register. Options A-D with a worker recommendation are already in §P0-A.

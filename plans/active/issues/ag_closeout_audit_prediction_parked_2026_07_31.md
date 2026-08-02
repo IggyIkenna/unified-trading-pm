@@ -174,6 +174,18 @@ paired `_finalize` sibling will show the same gap; prediction is a confirmed liv
 
 ## Progress Log
 
+- **na-eligibility-audit 2026-08-02 (prediction tranche, autonomous)**: KEEP-NA, valid — 2 open, unchanged from the
+  2026-07-31 marker (re-counted live: 2). The only intervening commits to this file (`5f4d33007`, `e89cdd5eb`, both
+  2026-07-31) are append-only re-verification records from the same day's 2nd/3rd `/ag-closeout-audit prediction`
+  re-dispatches — no todo was added, closed, or re-scoped. Both items re-confirmed on their own standing citations, not
+  re-derived: Finding 1's todo is self-declared informational (it exists to explain why the two adapter dead-code docs
+  were NOT batched); Finding 2's todo carries an explicit redirect — its own text says the target script
+  (`generate_ag_closeout_audit_candidates.py`, `parent_epic: agent_operating_framework_master`) is `ao`/tooling-owned
+  and it is "flagging here for that tranche/the operator to fold in". Per this skill's Phase-1 rule (a), a body sentence
+  routing the work to a different owner is KEEP-NA on that citation alone even though the todo's own `Done when` reads
+  as cleanly bounded — flipping `assigned_vm` here would let backlog-regen dispatch a prediction-scoped worker at an
+  `ao`-owned file. Doc stays NA.
+
 - **na-eligibility-audit 2026-07-31 (prediction tranche)**: KEEP-NA, valid — 2 open. Both findings were ASSESSED, not
   defaulted, by the same-day sibling `/ag-closeout-audit prediction` run that filed this doc: Finding 1's todo is
   explicitly informational (no action needed unless an operator/future worker picks A-vs-B on the two linked adapter

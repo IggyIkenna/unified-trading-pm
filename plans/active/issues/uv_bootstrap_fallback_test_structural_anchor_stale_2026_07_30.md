@@ -78,6 +78,10 @@ exact quoting/flags), so a genuine future rewording of this line doesn't require
       `case` pattern (line 50) to match `setup.sh`'s current pip-fallback wording (unquoted `uv==0.10.8`, `--quiet`,
       `$PYTHON_CMD -m` prefix) instead of the stale quoted-literal expectation. Done when:
       `bash     scripts/quality-gates-base/tests/test-setup-sh-uv-bootstrap-fallback.sh` reports 5/5 passed.
+      **Extraction citation (na-eligibility-audit 2026-08-02):** the AO-dispatchable copy of this todo lives in
+      `/plans/active/ci_satellite_ao_dispatch_batch4_2026_07_31.md` (lines ~178-185, citing this doc as its Source) —
+      that plan is still `status: draft`, so no commit/sha exists to cite yet. This doc stays `assigned_vm: NA`; flip
+      this checkbox from batch4 when it ships.
 
 ## na-eligibility-audit verdict
 
@@ -90,6 +94,13 @@ Reclassifying this doc's own `assigned_vm` now would open a second, independent 
 fix once batch4 activates. Staying NA until batch4 ships it or is archived unshipped (then re-open as RECLASSIFY on the
 next pass). Same cross-skill population-overlap finding as `deployment_flow_doc_stale_pre_ldr_direct_mvp_2026_07_30.md`
 — tracked in `/plans/active/issues/na_and_ag_closeout_audit_population_overlap_2026_07_31.md`.
+
+**na-eligibility-audit 2026-08-02** (tranche `ci`, autonomous): **CONFIRMS KEEP-NA-STALE, unchanged.** Re-verified the
+holding condition live rather than trusting the prior verdict: `ci_satellite_ao_dispatch_batch4_2026_07_31.md` still
+carries this exact sole todo verbatim and is still `status: draft` — neither shipped nor archived-unshipped, so the
+"re-open as RECLASSIFY" trigger has NOT fired. The only change to this doc since the last marker is the 2026-08-01
+context-scout `context_scope` backfill (metadata only); the underlying defect is unchanged. Citation fix applied to the
+open checkbox above this run.
 
 ## Progress Log
 

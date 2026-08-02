@@ -30,6 +30,7 @@ related:
     /plans/active/defi_consolidated_closeout_2026_07_18.md,
   ]
 created: "2026-07-28"
+last_updated: "2026-08-02"
 source: sports_consolidated_native_ao_extract-010/cross_cutting_satellite_ao_dispatch_batch2-011 dispatch (slot-11)
 resolved_by:
 locked_by:
@@ -164,3 +165,12 @@ below is explicitly gated on a human design call) — a future triage pass shoul
 - **na-eligibility-audit 2026-07-30**: KEEP-NA, valid - doc explicitly self-declares NA at its own frontmatter level and
   carries a [LOCAL] todo citing dispatch-scope eligibility as a human design call
 - **context-scout 2026-08-01**: populated context_scope (5 entries).
+- **na-eligibility-audit 2026-08-02** (tranche=defi, autonomous, scheduled): KEEP-NA valid (2026-07-30 verdict re-
+  affirmed) — re-read end to end, 5 open items; content unchanged since that verdict (the only edit was context- scout's
+  `context_scope` backfill). The doc's own "Recommended decision" section self-declares NA at the frontmatter level and
+  its `[LOCAL] P2` item cites dispatch-scope eligibility for a genuine human design call (the
+  `governance_proposals_handler.py` dual-source merge has no single scalar HTTP status to report). Its `[CODE] P1`
+  governance_adapter fix is genuinely bounded and the doc says so — but it is one item inside a doc whose other 4
+  include that undecided design call and a `[CODE] P2` the doc itself says to "re-scope to the actual highest-value
+  single file once picked up", so a whole-doc flip would dispatch under-scoped work. Left for a future extraction rather
+  than reclassified.

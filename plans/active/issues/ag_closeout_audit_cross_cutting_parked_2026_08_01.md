@@ -216,6 +216,12 @@ member, not just a retag.
 
 ## Progress Log
 
+- **na-eligibility-audit 2026-08-02**: KEEP-NA, valid -- a cross-tranche PARKED-FINDINGS register: all 5 open todos are
+  `[DOCS] P3` `asset_group` retags of docs owned by OTHER tranches (ao x2, infrastructure, tradfi, and one
+  ao/ci-spanning), each explicitly scoped "leave to the owning tranche's own audit, not this run" per the 2026-07-30
+  concurrent-sharded-worker rule. Cross-cutting cannot execute its own todos here by construction; flipping
+  `assigned_vm` would dispatch writes into other tranches' files.
+
 - **2026-08-01** — `/ag-closeout-audit cross-cutting` run (autonomous, scheduled daily run, dispatch `agt-a5c7d6`, slot
   13). Phase 0: `generate_ag_closeout_audit_candidates.py --tranche cross-cutting` (90 members, 6 covering docs, 11
   never-cited) + 1 more found via a manual `asset_group: meta`-sweep gap check. Orthogonality HARD CHECK re-run: clean

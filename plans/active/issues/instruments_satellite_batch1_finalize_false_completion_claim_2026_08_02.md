@@ -184,3 +184,14 @@ No design call needed — every piece here is independently checkable, not a jud
   archival-touching todos are now formatted as non-ingestable digest bullets explicitly ROUTED to plan_reconciler's
   designated authority, not the general worker backlog (applied above). Full rationale in the ruling message — doing
   them ad-hoc would itself repeat the un-re-verified-completion pattern this doc documents.
+- **na-eligibility-audit 2026-08-02** (infra tranche, incremental run): **KEEP-NA, valid.** First verdict for this doc
+  (created earlier today, no prior marker). Read end-to-end; `grep -cE '^- \[ \]'` = **2**, matching this verdict's item
+  count (the 2 `[PLAN_RECONCILER]` items are deliberately non-ingestable digest bullets per `task_template.md` finding
+  H, correctly not counted). **KEEP-NA on a dated operator ruling from the same day** — `BLK-9fadbbb8`, 2026-08-02:
+  leave all 4 as tracked follow-up, with the 2 archival-touching items ROUTED to plan_reconciler's designated authority
+  rather than the general worker backlog. Flipping `assigned_vm` would make the other 2 generally dispatchable, which
+  that ruling did not authorise; per this skill's own rule an explicit dated ruling is confirmed on citation, never
+  re-derived. **Also noted, not actioned**: this doc's `parent_epic: instruments_master` maps to the `cross-cutting`
+  tranche, but its bare `asset_group: [meta]` default-folds it into `infra` — the same membership-vs-ownership mismatch
+  recorded as a tranche-level finding in `infra_consolidated_closeout_2026_07_25.md`'s 2026-08-02 marker. Classified and
+  marked here because infra is the machine-assigned owning tranche; the retag itself is outside this skill's apply set.

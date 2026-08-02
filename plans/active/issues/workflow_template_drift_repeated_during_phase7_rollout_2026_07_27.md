@@ -128,3 +128,11 @@ guarantee this doesn't recur if the Phase-7 rollout is still in flight when anot
   judgment-gated, not bounded-outcome work a worker could execute unilaterally. Item 1 ("Consider whether
   rollout-workflow-templates.sh ... could roll out to EVERY repo in one atomic pass") is an open-ended design question
   -- whether to build a new atomic fleet-...
+- **na-eligibility-audit 2026-08-02**: **CONFIRMS KEEP-NA, valid — unchanged** (tranche `ci`, autonomous). This doc
+  entered the `ci` tranche only today: the sole post-marker commit is the 2026-08-02 `/ag-closeout-audit cross-cutting`
+  operator-ruled retag `asset_group: [cross-cutting]` → `[ci]`. No content moved. Re-read end-to-end and both open items
+  re-tested against the bounded-outcome bar: the `[SCRIPT] P3` is an open-ended design question by its own first word
+  ("**Consider whether** … could roll out to EVERY repo in one atomic pass"), with no decided target mechanism; the
+  `[DATA] P3` is a conditional runbook step that is not startable at all until a future drift recurrence triggers it
+  ("**If** another workflow-template-parity failure recurs … check `git log` FIRST"). Neither outcome is determinable by
+  a worker today. Correctly NA.

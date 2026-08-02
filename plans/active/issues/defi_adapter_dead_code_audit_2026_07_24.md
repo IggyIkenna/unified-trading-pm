@@ -50,6 +50,7 @@ related:
     wsfeedconnector_phase35_gap_2026_07_06,
   ]
 created: "2026-07-24"
+last_updated: "2026-08-02"
 priority: P1
 parent_epic: infrastructure_master
 source:
@@ -466,3 +467,10 @@ files.
   batch7 todo 1 by citation; see that plan + the parent `defi_consolidated_closeout_2026_07_18.md:548` checkbox for the
   cross-reference.
 - **context-scout 2026-08-01**: populated/refreshed context_scope (5 entries).
+- **na-eligibility-audit 2026-08-02** (tranche=defi, autonomous, scheduled): KEEP-NA valid (2026-07-30 verdict re-
+  affirmed after the § 7 addendum) — re-read end to end, 4 open items, all in § 6 whose own header calls each "a real,
+  scoped decision". Every one is a wire-in-or-delete product call with registry/billing blast radius (jupiter.py's fate;
+  the governance-params poller's cross-repo re-verify + wire-or-restate; `defi_live/` disposition; helius_solana vs
+  native_staking_handler consolidation) — none worker-determinable. The 2026-08-01 § 7 addendum changed nothing here: it
+  explicitly records that "the 4 still-open follow-up todos in § 6 remain open, unaffected by this pass". Doc stays
+  `assigned_vm: NA`.

@@ -88,6 +88,25 @@ pattern) and burn real backfill throughput, exactly during the highest-value win
 > | skill `SKILL.md` § 3 (Tardis cap)              | overapplies doc — **DONE**                                       |
 > | skill `SKILL.md` Phase 2 (live leg)            | **THIS doc** (P3 below) — a different section, no overlap        |
 
+> **📤 THE TODOS BELOW ARE EXTRACTED AND DISPATCHED ELSEWHERE — do NOT dispatch from this doc (`/na-eligibility-audit`
+> 2026-08-02, tranche=cefi).** `/plans/active/cefi_satellite_ao_dispatch_batch5_2026_08_02.md` (`status: active`,
+> `assigned_vm: planning`, `parent_epic: cefi_master`, `unified-trading-pm@766822efe`) carries this doc's entire
+> remaining scope verbatim and Source-cites it: **batch5 todo 1 `[INFRA] P1`** covers P1 + P2 together (and widens P2
+> from the 2 siblings named below to all 8 `launch-*live*.sh` scripts), **batch5 todo 2 `[DOC] P3`** covers P3. This doc
+> stays `assigned_vm: NA` deliberately — flipping it would create a SECOND dispatch path for the same launcher edit. Any
+> checkbox still open below is genuinely unshipped; batch5's own done-when for each todo includes flipping it, so the
+> batch5 worker owns closing it.
+>
+> One correction batch5 verified live on 2026-08-02 that this doc's older prose gets wrong — **trust batch5, not the
+> text below**: the skill path is `unified-trading-pm/cursor-configs/skills/data-pipeline-check-mtds/`, not the
+> `.claude/skills/...` path P3 names (that directory does not exist).
+>
+> **⚠️ Integration note (2026-08-02, na-eligibility-audit batch merge)**: the audit banner above was written while all
+> three todos were still open. Concurrently, batch5 todo 1 shipped and **P1 + P2 below were closed NOT-A-BUG** under
+> operator ruling BLK-5aa3ce78 (`unified-trading-pm@c9bcd08ac`, `@f385698d4`) — which also retires the banner's original
+> "sibling-launcher scope is 8 scripts, not 2" correction by resolving that audit outright. The banner's do-not-dispatch
+> scope therefore now applies to **P3 only**; P1/P2 need no dispatch from anywhere.
+
 - [x] ✅ **NOT-A-BUG (2026-08-02).** [DATA] P1. ~~Source `tardis-concurrency-guard.sh` in
       `deployment-service/scripts/vm/launch-mtds-live.sh`~~ — **verified via code trace that the premise does not
       hold**: MTDS's live-mode capture (both `--live-source native` and `--live-source tardis-machine`) never opens the
@@ -123,6 +142,17 @@ live-incident report. Not escalating to the operator as a page; tracked here per
   editing the SAME `tardis-concurrency-guard.sh` venue-exemption logic this doc's P3 todo would tighten, and
   `cefi_track2_coverage_backfill_checkpoints_2026_07_25.md` already records the same launcher-gap finding. Filed as
   BLOCKED-OPERATOR-DECISION in this run's Deferred list; `assigned_vm` unchanged.
+- **na-eligibility-audit 2026-08-02** (tranche=cefi, autonomous): **KEEP-NA-STALE (already-duplicated) — citation fixed,
+  deliberately NOT reclassified.** This doc re-entered scope because the 2026-07-31 ownership-sweep banner resolved the
+  exact same-file collision that caused the 07-30 park, which on its own merits made all three todos a clean RECLASSIFY
+  (bounded, named files, named helper, gap re-verified live). The Phase-2 conflict-check then found the scope had
+  ALREADY been extracted verbatim, that same resolution having fed
+  `/plans/active/cefi_satellite_ao_dispatch_batch5_2026_08_02.md` (`unified-trading-pm@766822efe`, active/planning) —
+  its todos 1 and 2 Source-cite this doc for P1+P2 and P3 respectively. Per the verdict rubric this is a
+  checkbox-citation fix, not a reclassification: flipping `assigned_vm` here would let backlog-regen derive a second
+  dispatch of the same launcher edit. Extraction banner added above the todos; `assigned_vm: NA` unchanged. (Superseded
+  in part the same day — see the next entry: batch5 todo 1 then closed P1+P2 NOT-A-BUG, so the banner's live scope
+  narrowed to P3.)
 - **2026-08-02, slot 15** (`cefi_satellite_ao_dispatch_batch5_2026_08_02.md` todo 1): P1 + P2 closed NOT-A-BUG.
   Code-trace evidence showed MTDS live-mode capture never opens the authenticated `datasets.tardis.dev` connection —
   this doc's original contention claim (inferred from `VENUE_TO_ADAPTER_KEY == 'tardis'`) conflated the BATCH-mode

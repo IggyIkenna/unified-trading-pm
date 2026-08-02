@@ -106,7 +106,7 @@ related:
     /plans/active/data_pipeline_e2e_milestones_gate_2026_07_24.md,
   ]
 created: 2026-07-18
-last_updated: 2026-06-27
+last_updated: "2026-08-02"
 parent_epic: defi_master
 assigned_vm: NA
 execution_scope: local-only
@@ -871,3 +871,14 @@ live 2026-07-26 by `/plan-reconcile defi`: the real figure is **2** — `…aggr
   relevant Track section.
 
 - **context-scout 2026-08-01**: populated/refreshed context_scope (6 entries).
+
+## Progress Log
+
+- **na-eligibility-audit 2026-08-02** (tranche=defi, autonomous, scheduled): KEEP-NA valid (2026-08-01 MIXED verdict
+  re-affirmed) — re-scoped because of a 2026-08-02 content change and re-read: 18 open items (a Track-1 factory- address
+  roll-up todo was ADDED 2026-08-02; the adapter dead-code item was closed by citation to batch7). The new item needs no
+  fresh assessment — it self-declares "The Option A-vs-B fork is an undecided design call — operator- gated, NOT
+  AO-dispatchable until ruled" and "Single execution site — do not fork the work here" (it is the roll-up view of the
+  executable todo in the forked Track-1 child), citing this skill's own 2026-07-30 KEEP-NA verdict on the source issue.
+  Everything else is unchanged from the 2026-08-01 full read, whose 4 extractions already went to batch7. No new
+  RECLASSIFY-eligible items; no stale-done items. Doc stays `assigned_vm: NA`.

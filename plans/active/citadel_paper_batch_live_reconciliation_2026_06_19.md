@@ -550,7 +550,6 @@ audit) — 3 genuinely orphaned BLRS gaps, no successor plan previously tracked 
       proper playwright-dir regression for the archetype. Repo: unified-api-contracts (+ UI sync). Confirm the exact
       venue/asset-group capability profile with the operator (CeFi-only BTC, or the DeFi+CeFi hybrid).
 - [ ] [CODE] P2.11.18. **Add the intraday BTC mean-reversion signal as a cs ML feature** (research 2026-06-22, root
-- [ ] [CODE] P2.11.18. **Add the intraday BTC mean-reversion signal as a cs ML feature** (research 2026-06-22, root
       `_ic_test.py`). A short-horizon reversion z-score (`zscore = -(close - rolling_mean) / rolling_std`, anchors 60m +
       4h on the canonical OHLCV) has a **stable Spearman IC ≈ +0.05 vs forward 15m–1h returns, positive across all
       horizons + every recent year** (2022-26). It is intraday-microstructure information the daily-horizon delta_one
@@ -809,8 +808,10 @@ audit) — 3 genuinely orphaned BLRS gaps, no successor plan previously tracked 
 > [`plans/archive/2026_07/citadel_paper_batch_live_reconciliation_history_2026_07_24.md`](/plans/archive/2026_07/citadel_paper_batch_live_reconciliation_history_2026_07_24.md)
 > for the full historical narrative of how the determinism spine was built.
 
-- **na-eligibility-audit 2026-07-30**: KEEP-NA, valid — carries P7.3 / P2.7.3 live-wallet+custody
-  `BLOCKED-OPERATOR-DECISION`, re-confirmed 2026-07-28 as a PERMANENT human-only hard stop. NOTE a literal duplicated
-  `- [ ] [CODE] P2.11.18` line (the first is a truncated fragment of the second) inflates this doc's open-todo count
-  by 1.
+- **na-eligibility-audit 2026-08-02** (re-confirms 2026-07-30; re-read; verdict unchanged. This pass DELETED the
+  duplicated truncated `- [ ] [CODE] P2.11.18` fragment line the 07-30 marker had only noted, so the open-todo count
+  drops 11 -> 10 and backlog-regen can no longer derive a phantom duplicate task): KEEP-NA, valid — carries P7.3 /
+  P2.7.3 live-wallet+custody `BLOCKED-OPERATOR-DECISION`, re-confirmed 2026-07-28 as a PERMANENT human-only hard stop.
+  NOTE a literal duplicated `- [ ] [CODE] P2.11.18` line (the first is a truncated fragment of the second) inflates this
+  doc's open-todo count by 1.
 - **context-scout 2026-08-01**: populated/refreshed context_scope (6 entries).

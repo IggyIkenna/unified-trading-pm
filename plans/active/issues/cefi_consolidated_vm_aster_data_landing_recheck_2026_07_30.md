@@ -80,6 +80,17 @@ Launched `mtds-live-cefi-consolidated-20260730-010147` (`asia-northeast1-c`, `e2
 > The todo stays `- [ ]`. Whoever picks it up runs the command below first; a fabricated "rows landed" is worse than an
 > unrun check.
 
+> **📤 ALL THREE TODOS BELOW ARE EXTRACTED ELSEWHERE — do NOT dispatch from this doc (`/na-eligibility-audit`
+> 2026-08-02, tranche=cefi).** Split across two satellite batches, each Source-citing this doc: **todos 1 and 2** (the
+> `gcloud storage ls` ASTER landing re-check and the 2-3 pre-existing-venue spot-check) are claimed verbatim by
+> `/plans/active/cefi_satellite_ao_dispatch_batch4_2026_07_31.md` todo 2 (`assigned_vm: planning`, still `status: draft`
+> — activation is the operator's call, `unified-trading-pm@2d5fb4b59`); **todo 3** (the ASTER `liquidations` multi-hour
+> listen window, added 2026-07-31 and therefore not visible to batch4 when it was drafted) is claimed by
+> `/plans/active/cefi_satellite_ao_dispatch_batch5_2026_08_02.md` todo 4 `[DIAG] P3` (`status: active`,
+> `unified-trading-pm@766822efe`). This doc stays `assigned_vm: NA` deliberately — flipping it would create a second
+> dispatch path for checks already claimed twice over. Each batch's done-when includes flipping the source checkbox
+> here, so those workers own closing them.
+
 - [ ] [DATA] P2. **After 2026-07-30T13:30Z UTC**, re-check whether real rows are landing:
       `gcloud storage ls "gs://market-data-tick-cefi-prd-central-element-323112/raw_tick_data/by_date/day=2026-07-30/pipeline_mode=live_aster/**"`.
       If populated: flip `infra_capture_and_devops_leftovers_2026_07_06.md`'s ASTER-connector todo's remaining checkbox
@@ -128,8 +139,6 @@ Launched `mtds-live-cefi-consolidated-20260730-010147` (`asia-northeast1-c`, `e2
   "verify `live_aster` rows land" claim, and this doc's own todo says to flip THAT plan's checkbox. Duplicate dispatch
   risk. Filed as BLOCKED-OPERATOR-DECISION in this run's Deferred list; `assigned_vm` unchanged.
 
-## Progress Log (na-eligibility-audit)
-
 - **na-eligibility-audit 2026-08-01** (tranche=cefi, autonomous): KEEP-NA, pending. Both open todos (ASTER recheck +
   2-venue spot-check) clear the bounded-outcome bar on their own merits (one `gcloud storage ls` command per venue,
   fully-specified branches) and the 2026-07-30 park reason (conflict with
@@ -140,3 +149,12 @@ Launched `mtds-live-cefi-consolidated-20260730-010147` (`asia-northeast1-c`, `e2
   dispatched twice via two mechanisms once batch4 activates. Recommend: prefer batch4's operator-review/activation path
   over an independent flip here.
 - **context-scout 2026-08-01**: populated/refreshed context_scope (2 entries).
+- **na-eligibility-audit 2026-08-02** (tranche=cefi, autonomous): **KEEP-NA-STALE (already-duplicated) — citation fixed,
+  not reclassified.** Re-entered scope on the 2026-08-02 ASTER-liquidations investigation append (which added evidence,
+  not new work). The 08-01 verdict's open question — batch4 was `status: draft`, so was todo 3 covered anywhere? — is
+  now settled: `cefi_satellite_ao_dispatch_batch5_2026_08_02.md` (active, planning, `unified-trading-pm@766822efe`)
+  extracted todo 3 as its `[DIAG] P3` and explicitly documented in its "What was excluded and why" section that todos
+  1-2 were left to batch4 as a near-verbatim duplicate under conflict-check § 3. So all three todos are now claimed with
+  no gap and no double-claim. Extraction banner added above the todos. `assigned_vm: NA` unchanged. Also merged a stray
+  second `## Progress Log (na-eligibility-audit)` heading back into the single `## Progress Log` section (structural
+  fix, no content change).

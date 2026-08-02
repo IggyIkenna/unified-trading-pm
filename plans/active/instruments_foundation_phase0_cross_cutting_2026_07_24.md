@@ -609,6 +609,7 @@ wrong).
 
 ## Progress Log
 
-- **na-eligibility-audit 2026-07-30**: KEEP-NA, valid — all 10 items sit behind GATE 0, explicitly NOT RECORDED SIGNED
+- **na-eligibility-audit 2026-08-02** (re-confirms 2026-07-30; only change since = context-scout `context_scope`
+  frontmatter, body byte-identical): KEEP-NA, valid — all 10 items sit behind GATE 0, explicitly NOT RECORDED SIGNED
   OFF, and were re-reconciled 2026-07-28 with per-item evidence confirming each stays open.
 - **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).

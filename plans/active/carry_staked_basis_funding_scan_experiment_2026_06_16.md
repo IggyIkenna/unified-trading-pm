@@ -751,8 +751,9 @@ GCS `perp_funding` + `perp_daily_ctx` datasets (code in `e2e-testing/scripts/def
 
 ## Progress Log
 
-- **na-eligibility-audit 2026-07-30**: KEEP-NA, valid — exploratory operator-driven research journal; remaining todos
-  are strategy-design judgment plus cost-gated data asks (the Tardis universe expansion explicitly says 'confirm
+- **na-eligibility-audit 2026-08-02** (re-confirms 2026-07-30; only change since = context-scout `context_scope`
+  frontmatter, body byte-identical): KEEP-NA, valid — exploratory operator-driven research journal; remaining todos are
+  strategy-design judgment plus cost-gated data asks (the Tardis universe expansion explicitly says 'confirm
   scope/window with operator before launch'), and operator 2026-06-17 sequenced the next-fidelity set behind the v9
   migration.
 - **context-scout 2026-08-01**: populated/refreshed context_scope (6 entries).

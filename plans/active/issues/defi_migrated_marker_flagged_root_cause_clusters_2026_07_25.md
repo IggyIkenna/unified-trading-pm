@@ -18,6 +18,7 @@ scope: [engineer]
 tags: [defi, per-instrument-model, needs-attribution, symbol-resolution, migration, data-correctness]
 related: [defi_consolidated_closeout_2026_07_18]
 created: 2026-07-25
+last_updated: "2026-08-02"
 parent_epic: infrastructure_master
 assigned_vm: NA
 execution_scope: local-only
@@ -201,3 +202,9 @@ re-checked once that plan completes.
   assigned_vm:planning plan defi_dex_pool_symbol_fix_backfill_purge_2026_07_25.md, whose finalize twin carries an open
   todo to reconcile status back into this doc. Citation fixed, not reclassified (flipping would dispatch a duplicate)
 - **context-scout 2026-08-01**: populated context_scope (4 entries).
+- **na-eligibility-audit 2026-08-02** (tranche=defi, autonomous, scheduled): KEEP-NA-STALE (2026-07-30 verdict re-
+  affirmed; citation already fixed then, nothing further to correct) — re-read end to end; content unchanged since
+  (context-scout backfill only). The sole open item carries its own explicit "Tracked elsewhere — do NOT dispatch from
+  here ... Reclassifying this doc would dispatch a duplicate" annotation: its entire content is owned by the active
+  `assigned_vm: planning` plan `defi_dex_pool_symbol_fix_backfill_purge_2026_07_25.md`, whose gated twin already carries
+  an open `[REVIEW] P2` to reconcile status back into this doc.

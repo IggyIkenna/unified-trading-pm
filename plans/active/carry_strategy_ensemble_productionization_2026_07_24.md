@@ -328,7 +328,8 @@ vm_zombie_watchdog ruff cleanup. No DEFERRED-without-successor; no broken state.
 
 ## Progress Log
 
-- **na-eligibility-audit 2026-07-30**: KEEP-NA, valid — remaining todos are strategy/UI design judgment (rank-allocator
-  increment, archetype surfacing, asset-class filter). NOTE the `[HISTORICAL] P3` todo is self-labelled 'SUPERSEDED —
-  DONE above' (UAC@487b9a9 + strategy-service@6b285fad) and is a stale open checkbox.
+- **na-eligibility-audit 2026-08-02** (re-confirms 2026-07-30; re-read after intervening edits, verdict unchanged):
+  KEEP-NA, valid — remaining todos are strategy/UI design judgment (rank-allocator increment, archetype surfacing,
+  asset-class filter). NOTE the `[HISTORICAL] P3` todo is self-labelled 'SUPERSEDED — DONE above' (UAC@487b9a9 +
+  strategy-service@6b285fad) and is a stale open checkbox.
 - **context-scout 2026-08-01**: populated/refreshed context_scope (5 entries).

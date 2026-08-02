@@ -176,8 +176,59 @@ therefore treated the tradfi-marked doc as unverdicted; harmless here (it had be
 anyway), but the failure is silent and direction-dependent — a date-first-only grep would OVER-skip and silently drop
 genuinely-changed docs from Phase 1.
 
+## Finding 4 — the 1000-line hard cap makes the incremental marker PHYSICALLY unwritable in the biggest NA docs (BLOCKED-OPERATOR-DECISION)
+
+_Added 2026-08-02 by the scheduled `/na-eligibility-audit cross-cutting` run (autonomous). Same mechanism family as
+Finding 3: both defeat Phase 0's incremental skip, this one structurally rather than by regex._
+
+`check_line_caps.sh` enforces a flat **1000L HARD cap** on `plans/active/*.md` (`>1000` fails), and in
+scoped/`--precommit` mode ANY staged over-cap plan fails outright. Three of this tranche's docs are pinned at the
+ceiling **right now**:
+
+| doc                                                              | lines | open todos | headroom    |
+| ---------------------------------------------------------------- | ----- | ---------- | ----------- |
+| `data_completion_to_100_all_ag_2026_06_21.md`                    | 1000  | 16         | **0**       |
+| `instruments_completion_tracker_2026_07_06.md`                   | 1000  | 15         | **0**       |
+| `master_data_canonicalisation_migration_catalogue_2026_06_07.md` | 999   | 6          | 1 (needs 3) |
+
+Writing the one-line Phase-3 verdict marker into any of them pushes the file over the cap and blocks the commit. So the
+three **largest** NA docs in the tranche — 37 open todos between them, the most expensive to read — are the exact three
+that can never carry a skip marker, and every scheduled run re-reads all three in full, forever. That is the single
+biggest recurring cost in this tranche's runtime, and it grows as more docs get trimmed _to_ the cap rather than under
+it. (`master_data_canonicalisation` additionally has no `## Progress Log` section at all, so it needs 3 lines, not 1.)
+
+Note this is self-reinforcing with the line-cap remediation work: that effort's success condition is docs sitting _at_
+1000L, which is precisely the state that breaks marker-writability.
+
+- **A [WORKER REC]**: let the marker live in **frontmatter** instead of the body — one
+  `na_audit_verdict: KEEP-NA <date>` scalar, which `docspec` already parses and which `check_line_caps.sh` counts but is
+  1 line for a doc that has no Progress Log either. Still costs 1 line, so pair it with **A2**: exclude frontmatter
+  lines from the line-cap count (they are schema, not content — arguably the cap was always meant to bound prose).
+- **B**: keep an EXTERNAL marker sidecar — a single `scripts/plan-hygiene/na_audit_verdicts.yaml` keyed by doc path +
+  verdict + date + the git SHA the verdict was made against. Zero lines in any plan, survives the cap entirely, and the
+  SHA makes the staleness test exact instead of date-based. Costs one new tracked file and a small script change.
+- **C**: split the three docs under the cap so a marker fits. Correct in principle but it is real content surgery on
+  three live operator coordinators, and it buys ~a handful of lines before they refill.
+- **D**: accept the permanent re-read cost and document it in SKILL.md so future runs stop rediscovering it.
+- **Other**: operator text.
+
+## Finding 5 (mechanical, folded into the Finding-3 todo) — `task_template.md` is in the NA inventory population
+
+`plans/active/task_template.md` carries `assigned_vm: NA` + `status: active` so `generate_na_doc_tranche_inventory.py`
+counts it as a cross-cutting NA doc — but it is the **authoring template every plan is copied from**, with 0 real todos
+(its `- [ ]` examples are illustrative). `docspec.is_exempt` already exempts `INDEX.md` and `_`-prefixed docs, and
+`zero_checkbox_sweep_all_tranches_2026_07_31.md` independently lists `task_template.md` as structurally exempt — the NA
+inventory is the one population that still includes it. This run deliberately did **not** write a verdict marker into it
+(a dated audit line inside the template would be copied into every new plan authored from it), which means it re-enters
+scope on every run. Fix belongs with Finding 3's script todo.
+
 ## Todos
 
+- [ ] [OPERATOR] P2. Rule on Finding 4 (A / A2 / B / C / D) — where the incremental-skip verdict marker lives for a doc
+      pinned at the 1000L hard cap. **Done when**: the ruling is recorded here and, for A/A2/B, the marker mechanism is
+      implemented in `scripts/plan-hygiene/generate_na_doc_tranche_inventory.py` + named in
+      `/cursor-configs/skills/na-eligibility-audit/SKILL.md` Phase 0, and the three docs in the table above carry a
+      readable verdict. (repo: unified-trading-pm)
 - [ ] [OPERATOR] P1. Rule on Finding 1 (A / B / C / D) — how concurrent per-tranche audits arbitrate ownership of a
       legitimately multi-tranche doc. **Done when**: the ruling is recorded here and, if A, `primary_tranche` is emitted
       by `scripts/plan-hygiene/generate_na_doc_tranche_inventory.py` with a unit test, and both skills' Phase 3 sections
@@ -191,7 +242,14 @@ genuinely-changed docs from Phase 1.
       `**na-eligibility-audit YYYY-MM-DD (<tranche> tranche)**:`, which also carries the tranche needed by Finding 1's
       option D), and make the Phase-0 skip filter match both shapes so already-marked docs are not re-read while the
       corpus still carries the legacy form. **Done when**: the SKILL.md text names one format and the skip filter is
-      documented as accepting both. (repo: unified-trading-pm)
+      documented as accepting both. (repo: unified-trading-pm) **Scope extended 2026-08-02 (cross-cutting run): (a) a
+      THIRD live shape exists** —
+      `### 2026-07-30 (`/na-eligibility-audit`, tranche=cross-cutting, autonomous) — KEEP-NA     verdict` as a heading,
+      found in `issues/ag_closeout_linkage_gate_blind_to_four_tranches_2026_07_30.md` and normalized to the
+      name-then-date form by that run; whatever filter lands must tolerate the heading shape too, or re-normalize the
+      stragglers. **(b) also exclude `plans/active/task_template.md` from the NA inventory population** per Finding 5 —
+      mirror `docspec.is_exempt`'s existing `INDEX.md`/`_`-prefix carve-outs in `generate_na_doc_tranche_inventory.py`,
+      so the authoring template stops entering scope on every run.
 
 ## Codex SSOTs
 

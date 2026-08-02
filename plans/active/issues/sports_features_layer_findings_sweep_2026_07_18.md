@@ -494,10 +494,18 @@ identity, not noise.
       `sports_satellite_ao_dispatch_batch8_2026_07_30.md`, cross-referencing
       `instruments_foundation_phase0_cross_cutting_2026_07_24.md`'s G1.4 (whose "not implemented" framing is itself
       stale — live-verified the guard already exists in code).
-- [ ] [DIAG] P1. Quantify corpus-wide loss (the ~9.8% on 2021-11-26 is one sampled date) and re-capture the affected
+- [x] ✅ [DIAG] P1. Quantify corpus-wide loss (the ~9.8% on 2021-11-26 is one sampled date) and re-capture the affected
       date/league range once the guard is narrowed. **2026-07-30**: split into its own tracked todo (a single-date
       recapture takes >180s of real API-Football quota — VM-backfill-shaped, not an interactive call) in
-      `sports_satellite_ao_dispatch_batch8_2026_07_30.md`.
+      `sports_satellite_ao_dispatch_batch8_2026_07_30.md`. — **DONE THERE 2026-07-31; closed here 2026-08-02 by
+      `/na-eligibility-audit` (sports tranche) as a KEEP-NA-STALE citation fix, not new work.**
+      [`/plans/active/sports_satellite_ao_dispatch_batch8_2026_07_30.md`](/plans/active/sports_satellite_ao_dispatch_batch8_2026_07_30.md)'s
+      `[DIAG] P1` is `[x]` and names this doc §D as its own `Source:`. Evidence there: 2021-11-26 re-validated **225 →
+      225 instruments, 0 rejected** (was 225 → 203) against the live
+      `instruments-store-sports-prd-central-element-323112`; a 2nd sample date (2021-11-20) surfaced a NEW residual
+      non-Latin-script gap (Vietnamese `Công An Nhân Dân`, Azerbaijani `Səbail`) now carried as that same doc's own OPEN
+      `[CODE] P2` — the residual is owned there, not dropped here. Side-discovery fixed en route:
+      `instruments-service@627fd31c` (`--venues` case-mismatch silently returning 0 URDI records).
 
 ---
 
@@ -672,10 +680,17 @@ read is a coverage blind spot.
       `plans/active/issues/sports_manifest_read_staleness_budget_missing_2026_07_15.md` (no per-AG staleness-budget
       override for sports while the consolidator cadence is ~11 min vs. the 120s generic default). No new diagnosis
       needed here; see that issue doc for the fix.
-- [ ] [AUDIT] P2. Extend this audit to leagues / fixtures / betting-market identifiers (operator: "in sports case
+- [x] [AUDIT] P2. Extend this audit to leagues / fixtures / betting-market identifiers (operator: "in sports case
       leagues and fixtures and betting market canonicals are relevant too") and fold the result into the migration so
       everything lands on one SSOT. **2026-07-30 batch8 triage**: extracted as a tracked todo in
-      `sports_satellite_ao_dispatch_batch8_2026_07_30.md`.
+      `sports_satellite_ao_dispatch_batch8_2026_07_30.md`. — **DE-DUPLICATED here 2026-08-02 by `/na-eligibility-audit`
+      (sports tranche), KEEP-NA-STALE citation fix. ⚠️ This `[x]` means "no longer tracked HERE", NOT "done"** — the
+      work is still genuinely OPEN as
+      [`/plans/active/sports_satellite_ao_dispatch_batch8_2026_07_30.md`](/plans/active/sports_satellite_ao_dispatch_batch8_2026_07_30.md)'s
+      `[ ] [AUDIT] P2`, which restates this item verbatim (all 3 identifier classes + the fold-into-Track-C step) and
+      names this doc §F as its own `Source:`. That doc is `status: active`, `assigned_vm: planning`, so the item is live
+      in the AO backlog; leaving it open here as well double-counted one piece of work in the NA corpus. Same convention
+      as the 5 sibling items above (lines ~450/642/648/651/670) already closed as tracked-elsewhere.
 
 ---
 
@@ -707,3 +722,13 @@ have moved; use the section index above to locate it.
   bounded engineering, but `[MODEL] P2` ('consider adding T-6h or T-2h as a MODEL horizon') is a modelling judgment call
   and `[AUDIT] P2` ('extend this audit to leagues / fixtures / betting-market identifiers and fold the result into the
   migration') is open-ended by construction — neither has an outcome a worker can settle alone
+- **na-eligibility-audit 2026-08-02**: re-read (in scope again — 3 substantive commits landed after the 07-30 marker:
+  `03d0ef7c7`, `425366f35`, `26c07e337`, which closed 8 of the 12 then-open todos). **KEEP-NA stands; 4 open → 2 after
+  this pass.** Verdicts: **2 × KEEP-NA-STALE** (closed here as citation fixes — §D `[DIAG] P1`, already DONE in batch8
+  2026-07-31; §F `[AUDIT] P2`, extracted verbatim into batch8 and still open THERE, so keeping it open here too was
+  double-counting one item in the NA corpus). **2 × KEEP-NA valid**: §E `[CONFIG] P1` is explicitly gated on batch8's
+  still-open `[DIAG] P2` by its own text ("Leave open until that todo resolves it one way or the other" — gate
+  re-verified, that todo is still `[ ]`), and §E `[MODEL] P2` remains the modelling judgment call the 07-30 marker
+  named. No RECLASSIFY: the doc's own remaining work is a gated item plus a design call, and every bounded piece has
+  already been extracted to `sports_satellite_ao_dispatch_batch8_2026_07_30.md` (`assigned_vm: planning`) — flipping
+  this doc would dispatch duplicates of that batch

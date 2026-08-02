@@ -121,3 +121,10 @@ conservatively in the plan itself (human-execution-only kept) pending an explici
   na_doc_tranche_inventory_stale_citation_membership_cross_contamination_2026_07_29.md); classified here for
   completeness, no state changed, cefi tranche's own future audit owns this doc.
 - **context-scout 2026-08-01**: populated context_scope (3 entries).
+- **na-eligibility-audit 2026-08-02** (tranche=cefi, autonomous): KEEP-NA, valid — **first verdict by the OWNING
+  tranche.** The 2026-07-30 marker above was written by the infra tranche, which flagged in the same breath that this
+  doc's real `asset_group` is `[cefi, meta]` and that "cefi tranche's own future audit owns this doc";
+  `parent_epic: infrastructure_master` maps it to cefi under the primary-owner rule, so this run confirms it. Body
+  byte-identical to the 07-30 reading (`git diff f3b018596..HEAD` = the `context_scope` block only). Verdict unchanged:
+  the sole todo asks the operator to resolve a genuine same-day SSOT contradiction (codex vs plan banner) governing
+  whether an agent may execute a ~1.2M-object delete. Requires an explicit ruling, not worker-determinable.

@@ -180,3 +180,8 @@ solution.
   a threshold"), which the dispatch-scope eligibility rule
   (`/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md` § "Dispatch-scope eligibility") keeps
   human-resolved before any AO todo is cut against their outcome.
+- **na-eligibility-audit 2026-08-02** (autonomous, tranche `ao`): KEEP-NA, valid — re-read in full after the same-day
+  ao-tranche adoption ruling and todo-3 addition. That ruling itself states `assigned_vm: NA` deliberately unchanged:
+  all three todos are design decisions ("decide where the shared task-id-keyed checkpoint state lives", "pick the
+  heartbeat-staleness threshold and the stale-claim takeover rule"), which the dispatch-scope eligibility bar keeps
+  human-resolved before any AO todo is cut against their outcome. Verdict agrees with the ruling; no change.

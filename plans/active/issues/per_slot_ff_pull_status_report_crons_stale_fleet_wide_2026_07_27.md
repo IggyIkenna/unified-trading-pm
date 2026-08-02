@@ -207,3 +207,9 @@ uncommitted work above must be preserved before any decommission/reclaim action 
   P3 cron-diagnosis todo stays open alongside it (complementary, not duplicative — P3 is "is it dead and should it be
   re-armed", the new P1 is "don't lose the work regardless of how P3 resolves"). Both remain KEEP-NA: genuine
   operator-only access gap, not a dispatch-eligibility miss.
+- **na-eligibility-audit 2026-08-02** (autonomous, tranche `ao`): KEEP-NA, valid — 2026-08-01 verdict re-affirmed and
+  strengthened by the same-day review-role escalation above. BOTH open todos are `[OPERATOR]`-tagged and blocked on a
+  concretely-recorded access denial: `ssm:SendCommand` against `i-0dd9812a96cdda5dc` and `sts:AssumeRole` onto
+  `uts-orchestrator-epic-role` were both denied for the worker IAM identity (`ikenna-worker`) — a genuinely different
+  principal, so the IAM self-service carve-out in `/codex/05-infrastructure/orchestrator-cloud-identity-self-service.md`
+  does not apply. The new P1 adds a WIP-preservation requirement over 5 dirty repos on that host; still operator-only.

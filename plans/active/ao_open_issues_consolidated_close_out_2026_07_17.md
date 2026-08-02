@@ -991,7 +991,7 @@ the close-the-loop point: plan_health keeps correctly re-reporting a real, owned
   184:154 vs 1014:217 pre-fix) — the remaining spawn:done gap (184:27) is the lifecycle + park visibility classes, not
   the budget. Source docs each carry a consolidation banner pointing here. **➡️ MOVED 2026-07-20 to
   `ao_backlog_regen_integrity_2026_07_20.md` — do NOT action here.**
-- **na-eligibility-audit 2026-07-30**: KEEP-NA, valid — header declares
+- **na-eligibility-audit 2026-08-02** (re-affirms the 2026-07-30 verdict, unchanged): KEEP-NA, valid — header declares
   `Human plan — operator session executes it (assigned_vm: NA, never ingested)` /
   `LOCAL track — operator-driven, never dispatched`. Of its 8 open todos, 4 are explicitly operator-timing-gated
   (Layer-1 rewire 'do it at last'; plan_reconciler retry 'hold until the other concurrently-landing AO plans settle';

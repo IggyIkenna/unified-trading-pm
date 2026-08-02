@@ -228,3 +228,22 @@ both still awaiting operator approval to flip to `active`. Neither has been acti
   report) plus direct full-text classification of the 4 net-new ex-meta members. Surfaced 2 new findings this run (7-8
   above) plus classification of the 4 new members (9 above). **Ledger**: 2 new parked findings + 1 combined 4-sub-item
   classification note this run, 3 entries written above (7, 8, 9) — balanced.
+- **na-eligibility-audit 2026-08-02** (infra tranche, incremental run, later the same day): **KEEP-NA, valid.** First
+  verdict for this doc (created earlier today, no prior marker). Read end-to-end; `grep -cE '^- \[ \]'` = **4**,
+  matching this verdict's item count. NA is correct on the merits: todo 1 (batch3's `assigned_vm` flip) is self-declared
+  "OPERATOR CONFIRMATION NEEDED", todo 3 is `[OPERATOR] P0`, todo 4 is a re-carry-forward pointer with no independent
+  content, and only todo 2 (drop a redundant `meta` co-tag) is mechanical — one mechanical item does not make a doc
+  dispatchable when flipping it would also expose an explicitly operator-gated P0. **Finding 7 — independent concurrence
+  from the skill that actually owns `assigned_vm` verdicts.** `/na-eligibility-audit`'s Phase 3 is the mechanism that
+  flips `assigned_vm: NA → planning`, so this run assessed batch3 directly rather than deferring: **HELD NA, agreeing
+  with finding 7's park, on two grounds finding 7 did not cite.** (i) Batch3's own body (line 69) still carries a
+  `⚠️ STATUS: draft — NOT dispatched, NOT ingested. Flipping this ... is the operator's call` banner; this skill's
+  Phase-1 rule treats a do-not-dispatch/redirect banner as KEEP-NA **on the citation alone**, and this banner explicitly
+  reserves the call to the operator. (ii) A prior `/na-eligibility-audit` RECLASSIFY of a banner-guarded doc caused
+  three real mis-dispatches before it was caught and reverted
+  (`regen_positional_task_ids_not_content_stable_2026_07_17.md`, BLK-29884333, 2026-07-31) — that incident is precisely
+  why this skill now treats a banner-vs-frontmatter contradiction as an operator question, never a worker inference.
+  Finding 7's recommendation stands and is the right one; it needs the operator, so no duplicate park is filed here.
+  **Finding 9's `[OPERATOR] P0` (the 2026-08-15 `check_codex_doc_freshness.py` cliff) was re-confirmed live this run** —
+  still `- [ ]` at source (`docs_reconcile_autonomous_sweep_2026_07_30.md` todo 1), 13 days out, a hard PM QG gate
+  projected 24 → ~168 violations in a single day. Re-surfaced in this run's report rather than only living here.

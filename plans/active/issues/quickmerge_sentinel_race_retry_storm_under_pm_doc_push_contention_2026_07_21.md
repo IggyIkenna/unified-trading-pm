@@ -120,3 +120,10 @@ instruction not to dispatch a change to `quickmerge.sh` blind.
 - **na-eligibility-audit 2026-07-30**: KEEP-NA, valid (infra tranche, dispatch agt-30721a) — Sole remaining todo is
   explicitly gated for operator/careful review on shared, high-blast-radius ship infrastructure (quickmerge.sh) — a
   fast-path predicate error could bypass a genuinely-needed gate.
+- **na-eligibility-audit 2026-08-02**: **CONFIRMS KEEP-NA, valid — unchanged** (tranche `ci`, autonomous). Ownership
+  moved `infra` → `ci` since the last marker via the 2026-07-31 corpus-sweep `asset_group: [meta]` → `[ci]` retag; the
+  content did not move (only post-marker commit is that same sweep). Re-read end-to-end: the sole open todo carries an
+  explicit in-doc dispatch prohibition — its own heading reads "for operator / careful review — do NOT dispatch blind:
+  quickmerge is high-blast-radius shared ship infra", and the Notes section restates that operator sign-off is required
+  on the fast-path predicate because an over-eager "unchanged tree" skip could bypass a genuinely-needed gate. That is a
+  standing in-doc gate, confirmed present verbatim, not re-derived.

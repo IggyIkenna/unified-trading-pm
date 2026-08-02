@@ -78,3 +78,16 @@ Either way this needs a decision, not a blind `tofu apply` of whichever value co
       `utl@2bfb6a16` isn't holding) and either (a) apply the terraform `0` if live drifted unintentionally, or (b)
       update terraform's declared value to `604800` + the header comment if the live value is the intentional current
       state. (repo: deployment-service)
+
+## Progress Log (na-eligibility-audit incremental marker)
+
+- **na-eligibility-audit 2026-08-02** (infra tranche, incremental run): **KEEP-NA, valid.** First verdict for this doc
+  (no prior marker). Read end-to-end; `grep -cE '^- \[ \]'` = **1**, matching this verdict's item count. The sole todo
+  is a genuine intent judgment call, not a bounded outcome: the two directions are observationally symmetric (apply the
+  config's `0` and silently DISABLE soft-delete recovery on a live prod bucket, or update terraform to `604800` and
+  bless a possibly-unintended manual re-enable), and the doc's own text says so — "Either way this needs a decision, not
+  a blind `tofu apply`". It is additionally delete-safety-adjacent:
+  `gcs_bucket_soft_delete_retention_seconds() >= 604800s` is the exact reversibility bar the delete-safety protocol § 3a
+  cites for AO delete-eligible todos, so getting the direction wrong weakens a safety gate the rest of the corpus
+  depends on. Independently corroborated by the 2026-08-01 `/ag-closeout-audit infra` run, which classified it
+  `orphaned_never_touched` but correctly non-batchable on the same grounds.

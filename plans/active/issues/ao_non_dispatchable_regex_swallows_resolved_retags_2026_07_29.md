@@ -206,3 +206,12 @@ past tense rather than deleting it outright.
     and 1 file got a minor doc-hygiene checkbox flip; the remaining 21 mentions across 13 files are genuinely
     dispatchable as rephrased. Shipped: `unified-trading-pm` (this commit, files listed above).
 - **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).
+- **na-eligibility-audit 2026-08-02** (autonomous, tranche `ao`): KEEP-NA, valid — **this doc's own 2026-07-30
+  RECLASSIFY→`planning` (infra tranche, agt-30721a, recorded above) was REVERTED** by the 2026-07-31 operator directive
+  `unified-trading-pm@14478ca26` ("work these interactively now rather than queue behind AO's current busy backlog"),
+  which flipped it back to `assigned_vm: NA` + `execution_scope: local-only`. Per
+  `/cursor-configs/skills/na-eligibility-audit/SKILL.md` Phase 1 citation class (b), a revert is a standing ruling, not
+  a stale data point to re-evaluate fresh — not re-litigated.
+- **Counting note (2026-08-02)**: real open-todo count is **1** (the `[DATA] P1` rephrase-the-27 item), not the 3 the NA
+  inventory reports — the other 2 `- [ ]` matches are illustrative examples inside fenced code blocks in the Evidence
+  section. See `/plans/active/issues/na_inventory_counts_fenced_code_block_checkboxes_as_open_todos_2026_08_02.md`.

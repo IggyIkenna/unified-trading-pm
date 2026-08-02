@@ -85,10 +85,11 @@ context_scope:
   mechanically applies it). No new action taken beyond this evidence note; skipped the task per the established
   precedent (don't re-ask the already-answered question, don't force the compute step past its real infra blocker).
 
-- **na-eligibility-audit 2026-08-01**: KEEP-NA, valid -- Full audit rationale: The single open todo asks the worker to
-  'Pick one: (a) ... and/or (b) ...' between two design approaches for closing a disposition-to-action follow-through
-  gap in agent-orchestrator's core dispatch/backlog mechanism (adding a POST /api/backlog/{id}/park endpoint, and/or a
-  backend-surfaced operator a...
+- **na-eligibility-audit 2026-08-02** (re-confirms 2026-08-01; only change since = a referrer repoint to
+  /plans/archive/2026_08/; `locked_by: live-defi-rollout` unchanged, single todo is still a 2-way (a)/(b) backend design
+  choice): KEEP-NA, valid -- Full audit rationale: The single open todo asks the worker to 'Pick one: (a) ... and/or (b)
+  ...' between two design approaches for closing a disposition-to-action follow-through gap in agent-orchestrator's core
+  dispatch/backlog mechanism (adding a POST /api/backlog/{id}/park endpoint, and/or a backend-surfaced operator a...
 - **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).
 
 ## Codex SSOTs

@@ -27,6 +27,7 @@ tags: [defi, bridge-events, backfill, cli-convention, catalog-freshness, correct
 related:
   [/plans/archive/2026_07/defi_satellite_ao_dispatch_batch1_2026_07_25.md, /codex/02-data/pipeline-mode-partition.md]
 created: 2026-07-28
+last_updated: "2026-08-02"
 parent_epic: infrastructure_master
 assigned_vm: NA
 execution_scope: local-only
@@ -145,3 +146,9 @@ to _also_ unblock the bridge_events historical backfill, and so nobody re-invest
 - **na-eligibility-audit 2026-07-30**: KEEP-NA, valid - locked_by set; residual is a genesis-to-present multi-year
   production capture backfill with no VM-launch gating stated on the todo
 - **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).
+- **na-eligibility-audit 2026-08-02** (tranche=defi, autonomous, scheduled): KEEP-NA valid (2026-07-30 verdict re-
+  affirmed) — re-read end to end; content unchanged since that verdict (context-scout backfill only).
+  `locked_by: live-defi-rollout` is set, and the sole open item is a genesis-to-present (ACROSS 2021-11-11 / STARGATE
+  2022-03-17) multi-year production capture backfill against live GCS — the doc itself says the code precondition
+  shipped (`market-tick-data-service@c38e1b3f`) and what remains is "a real data-capture operation, not a code check",
+  left for whoever schedules the run.

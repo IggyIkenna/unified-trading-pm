@@ -144,3 +144,8 @@ enforces the equivalent for Cloud Build SHAs; the same integrity expectation app
   positives. Verified against both a real shallow-clone simulation (347 → 8, all `unified-trading-pm@...`, below the 20
   baseline) and the existing full-history workspace (unchanged: 19, below baseline). —
   `unified-trading-pm@<sha, this commit>`.
+- **na-eligibility-audit 2026-08-02** (autonomous, tranche `ao`): KEEP-NA, valid — sole open todo is explicitly
+  `[OPERATOR] P1` and self-describes as a governance decision ("NOTIFY OPERATOR per CLAUDE.md's 'big finding... SSOT
+  contradiction' triage"), with a done-when that only an operator can satisfy ("operator has reviewed and either
+  confirms isolated-incident or directs a process fix"). Also covered by the 2026-07-31 operator directive
+  `unified-trading-pm@14478ca26`. The machine half already shipped (`check_plan_commit_sha_evidence.py`).

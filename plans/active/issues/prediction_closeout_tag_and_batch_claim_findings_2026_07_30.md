@@ -218,6 +218,17 @@ candidate, not a batch todo.
 
 ## Progress Log
 
+- **na-eligibility-audit 2026-08-02 (prediction tranche, autonomous)**: KEEP-NA, valid — **1 open** (was 2 at the
+  2026-07-31 marker). Finding 1's `[DOC] P2` tag-scope todo closed 2026-08-02 by the sibling `ao-fix-prediction` ruling
+  pass, not by this run — the operator's 2026-07-30 option-A ruling was applied (both forks retagged
+  `asset_group: [prediction]`, `check_ag_closeout_linkage.py` 67 orphans before and after with byte-identical sorted
+  ORPHAN lists). That is a real -1 against this doc's open-todo count, so the corpus shrank here without this run
+  touching it. The 1 remaining item (Finding 4 — have the `ao` tranche adopt
+  `issues/prediction_trades_migration_concurrent_dispatch_2026_07_28.md` by naming it in
+  `ao_consolidated_closeout_2026_07_25.md`'s sources list) is re-confirmed genuinely gated: its `Done when` is
+  satisfiable ONLY by writing to an `ao`-owned file, which is outside this doc's `predictions_master` ownership under
+  the primary-owner rule. Not a defaulted-and-never-assessed item. Doc stays NA.
+
 - **2026-08-02 (slot 3, worker `ao-fix-prediction`) — operator ruling execution pass.** Executed the two 2026-07-30
   interactive-session rulings against the CURRENT corpus (verified before each change; the corpus has moved a lot since
   the audit). **Finding 1 → RULED option A, APPLIED**: both forks retagged `asset_group: [prediction]`;

@@ -210,3 +210,16 @@ cefi-specific** — same defect now reproduced on a second tranche.
 ## Progress Log
 
 - **context-scout 2026-08-01**: populated context_scope (4 entries).
+- **na-eligibility-audit 2026-08-02** (infra tranche, incremental run): **KEEP-NA, valid.** First verdict for this doc
+  (no prior marker). Read end-to-end; `grep -cE '^- \[ \]'` = **3**, matching this verdict's item count. All 3 are
+  `[SCRIPT]` fixes inside `agent-orchestrator`'s own boot-composer, `/done` completion gate and backlog task-binding
+  path. **KEEP-NA on a standing corpus ruling, not a fresh judgment**: the origin plan
+  `na_docs_validity_and_ao_eligibility_audit_2026_07_26.md`'s Phase-2 entry establishes that AO/orchestrator
+  dispatch-and-state machinery stays human-reviewed even when a fix "looks mechanical", because a wrong fix corrupts the
+  very backlog this audit depends on. This doc is the strongest instance of that class — its own escalation section
+  documents the `/done` empty-`sha` variant causing **silent data loss** (a real, security-relevant backlog item
+  recorded done with `done_sha=""`), reproduced across three occurrences (cefi 07-31, defi 08-01). Its "AO-scope,
+  small + clear, worker-dispatchable" self-framing is exactly what this skill's calibration note says to stay skeptical
+  of when the target is live-dispatch-critical-path machinery. **Also flagged**: `asset_group: [meta]` with
+  `parent_epic: agent_operating_framework_master` — a third instance of the `ao`-mistag deadlock measured this run; see
+  the tranche-level BLOCKED-OPERATOR-DECISION in `infra_consolidated_closeout_2026_07_25.md`'s 2026-08-02 marker.

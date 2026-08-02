@@ -137,3 +137,8 @@ pressure. The operator explicitly named this as "the rest of the work" for a lat
   `UP_TO_DATE` (up from 626/616/10/0 on 2026-07-31 — real progress, still majority-uncovered). This is a prose
   correction only; none of this doc's own open todos (design + rollout, both operator-gated) change.
 - **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).
+- **na-eligibility-audit 2026-08-02** (autonomous, tranche `ao`): KEEP-NA, valid — 2026-07-31 verdict re-affirmed. Todo
+  1 still requires the operator to pick among 3 named design options (where the `context_scope` read happens: task-brief
+  rendering / RULES.md STEP 0 / a QG-style first-tool-call gate) AND to answer the ask-before-creating HARD RULE's
+  LOCAL-vs-AO track question; todo 2 is gated behind todo 1 shipping. In scope this run only because of the 2026-08-01
+  prose correction (`307b55bd8`) and the 2026-08-02 retag sweep — neither changed the open todos.

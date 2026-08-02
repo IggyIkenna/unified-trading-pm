@@ -122,3 +122,12 @@ so nothing is blocked on this decision; the only remaining cost is 1.2 GB of dis
   explicitly `[OPERATOR]`-tagged and its own text states the guardrail (`block_destructive_commands.py`) unconditionally
   blocks any agent from running it, no override. Unambiguous human-only action. No other action.
 - **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).
+- **na-eligibility-audit 2026-08-02** (infra tranche, incremental run): **KEEP-NA, valid — unchanged from the 2026-07-31
+  verdict.** In scope only because a context-scout backfill touched the file; no content change since. Read end-to-end;
+  `grep -cE '^- \[ \]'` = **1**, matching this verdict's item count. The sole remaining todo is `[OPERATOR] P2` and its
+  own text states the blocker precisely: `block_destructive_commands.py`'s PreToolUse guardrail unconditionally refuses
+  any recursive delete for autonomous workers, with no override and no §3a-style reversibility carve-out (that carve-out
+  is GCS-specific; this is a local filesystem delete). Unambiguous human-only action. Note for a future run:
+  `issues/ag_closeout_audit_infra_parked_2026_07_31.md` finding 2 observes this directory already absent from a sandbox
+  `.tabs/3`, but that observation is explicitly non-authoritative for the real target host and does not license flipping
+  this checkbox.

@@ -48,6 +48,7 @@ related:
     /codex/05-infrastructure/data-pipeline-alerts.md,
   ]
 created: 2026-08-02
+last_updated: "2026-08-02"
 parent_epic: infrastructure_master
 assigned_vm: NA
 execution_scope: local-only
@@ -237,3 +238,13 @@ slow:
   duplicate `/blocked` for the same standing decision. Applied nothing — no scheduler change, no VM relaunch, no
   `--allow-catalogue-shrink`. Pinging `dp-fleet-monitor` (authoring slot) with the outcome and completing this one-shot
   escalation.
+- **na-eligibility-audit 2026-08-02** (tranche=defi, autonomous, scheduled): KEEP-NA valid — first audit of this doc
+  (filed today). All 3 open items are held by a LIVE operator gate: the `[OPERATOR] P0` A/B/C choice is main's own
+  "standing escalation #1" (3 CRITICAL `DP_CATALOG_NOT_RUNNING` pages, 38.5h and worsening), the `[DATA] P1` is
+  explicitly "once decided", and main's recorded interim guidance to every worker on this doc is "hold, apply nothing,
+  await operator go on R3" (the R3 relaunch is a destructive canonical migration = operator-sign-off-gated; main
+  explicitly rejected option C and said do NOT do B yet). The `[DATA] P2` vanished-VM forensics IS bounded and
+  independent of that decision, but extracting it out from under an explicit standing hold on a P0-escalation doc is the
+  redirect-banner class this skill's Phase 1 says not to override — recorded in
+  `defi_satellite_ao_dispatch_batch8_2026_08_02.md`'s Deferred section for re-assessment once R3 is ruled. Doc stays
+  `assigned_vm: NA`.

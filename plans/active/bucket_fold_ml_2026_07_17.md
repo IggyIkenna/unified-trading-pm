@@ -463,7 +463,8 @@ two `dependency_checker.py` per-AG guard maps; UTL `ml/model_registry.py` + `dom
   GCP job `--bucket`→`ml-store-prd-<pid>` AND verify the data-status reader's expected availability_index path BEFORE
   deleting `ml-training-artifacts`.
 
-- **na-eligibility-audit 2026-07-30**: KEEP-NA, valid — operator ruling 2026-07-17 (HUMAN plans) + the P0 open todo is a
-  5-source prod-bucket delete = human-only hard stop. NOTE the P1 SECURITY pickle-gate todo reads STALE — Fold-A's own
-  Progress Log lists `UTL@bccc4ca4` (ml Fold-B deserialize gate) in its shipped set.
+- **na-eligibility-audit 2026-08-02** (re-confirms 2026-07-30; re-read after intervening edits, verdict unchanged):
+  KEEP-NA, valid — operator ruling 2026-07-17 (HUMAN plans) + the P0 open todo is a 5-source prod-bucket delete =
+  human-only hard stop. NOTE the P1 SECURITY pickle-gate todo reads STALE — Fold-A's own Progress Log lists
+  `UTL@bccc4ca4` (ml Fold-B deserialize gate) in its shipped set.
 - **context-scout 2026-08-01**: populated/refreshed context_scope (5 entries).

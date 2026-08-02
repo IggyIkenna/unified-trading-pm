@@ -136,17 +136,17 @@ question rather than 36 times.
       no host left "unknown".
 
       **Partial progress 2026-07-30 (satellite corpus-hygiene pass) — genuinely not completable this session, left
-                              open:**
+                                                          open:**
 
-                              | fleet host                        | `cleanup-stale-qg-tmp` | `cleanup-stale-claude-session-tmp` | note                                                                                                                                                                                                                          |
-                              | ---------------------------------- | ----------------------- | ------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-                              | this operator laptop (macOS)       | absent (confirmed)      | absent (confirmed)                   | Install BLOCKED: the sanctioned installer refuses `WORKSPACE_ROOT` inside a `.tabs/` slot worktree by design (bakes a slot-relative path into the cron line); the one non-`.tabs/` root PM clone found on this host (`~/Code/unified-trading-system-repos/unified-trading-pm`) is a DIRTY, STALE, foreign working tree (uncommitted changes present, missing recent scripts, not this session's to touch per multi-agent-safety) — not safe to `git pull`/write into. Needs either the operator running the installer personally from their own clean root clone, or a second, deliberately-provisioned clean root clone. |
-                              | AO orchestrator VM (`planning`)    | unknown                 | unknown                              | Not attempted this session (would need SSM/interactive access + a judgment call on crontab-write permission for the invoking identity, matching the `ip-172-31-5-118` precedent above — treating as OPERATOR-adjacent rather than guessing).                                                                |
-                              | human-planning VM (`i-0dd9812a96cdda5dc`) | unknown          | unknown                              | Not attempted this session, same reasoning as above.                                                                                                                                                                         |
-                              | `ip-172-31-5-118`                  | present (per provenance) | present (per provenance)             | Per the provenance doc, the operator already installed both here personally.                                                                                                                                                |
+                                                          | fleet host                        | `cleanup-stale-qg-tmp` | `cleanup-stale-claude-session-tmp` | note                                                                                                                                                                                                                          |
+                                                          | ---------------------------------- | ----------------------- | ------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+                                                          | this operator laptop (macOS)       | absent (confirmed)      | absent (confirmed)                   | Install BLOCKED: the sanctioned installer refuses `WORKSPACE_ROOT` inside a `.tabs/` slot worktree by design (bakes a slot-relative path into the cron line); the one non-`.tabs/` root PM clone found on this host (`~/Code/unified-trading-system-repos/unified-trading-pm`) is a DIRTY, STALE, foreign working tree (uncommitted changes present, missing recent scripts, not this session's to touch per multi-agent-safety) — not safe to `git pull`/write into. Needs either the operator running the installer personally from their own clean root clone, or a second, deliberately-provisioned clean root clone. |
+                                                          | AO orchestrator VM (`planning`)    | unknown                 | unknown                              | Not attempted this session (would need SSM/interactive access + a judgment call on crontab-write permission for the invoking identity, matching the `ip-172-31-5-118` precedent above — treating as OPERATOR-adjacent rather than guessing).                                                                |
+                                                          | human-planning VM (`i-0dd9812a96cdda5dc`) | unknown          | unknown                              | Not attempted this session, same reasoning as above.                                                                                                                                                                         |
+                                                          | `ip-172-31-5-118`                  | present (per provenance) | present (per provenance)             | Per the provenance doc, the operator already installed both here personally.                                                                                                                                                |
 
-                              Still 2 hosts fully "unknown" and 1 host blocked-not-installed — done-when NOT yet met. Left as an open todo
-                              rather than force-completed against a foreign dirty clone or unverified VM access.
+                                                          Still 2 hosts fully "unknown" and 1 host blocked-not-installed — done-when NOT yet met. Left as an open todo
+                                                          rather than force-completed against a foreign dirty clone or unverified VM access.
 
 ## Reported, not parked — coverage gaps this run is honest about
 
@@ -257,3 +257,13 @@ are `*_finalize_*` companions whose authoring peer plausibly still has the epic 
   operator-decision parking register as an AO-dispatched plan. **Recorded here rather than silently buried so the
   operator can cheaply overrule**: if the audit half alone (report present/missing per host, flag the rest `[OPERATOR]`)
   is considered a sufficient done-when, this todo is dispatch-ready today and the flip is a one-line frontmatter change.
+- **na-eligibility-audit 2026-08-02** (infra tranche, incremental run): **KEEP-NA, valid — unchanged.** In scope this
+  run because the 2026-08-02 zero-checkbox sweep and the corpus-wide meta fold-in both touched the file. Read
+  end-to-end; `grep -cE '^- \[ \]'` = **1**, matching this verdict's item count. The sole todo already went through this
+  skill's FULL Phase-2 conflict-check on 2026-07-30 (result: CLEAR) and was deliberately HELD at NA with the reasoning
+  recorded inline — the remediation half needs host-level `crontab` write access this account demonstrably lacks (the
+  operator had to run both installers personally on `ip-172-31-5-118`), an OS-level permission the cloud-identity
+  self-service rule explicitly does not cover, so no worker can reach the stated "no host left unknown" done-when
+  unaided. That is this skill's own dated prior ruling and is not re-litigated here. The standing cheap-overrule offer
+  stands unchanged: if the audit half alone (report present/missing per host, flag the rest `[OPERATOR]`) counts as the
+  done-when, this is a one-line flip.

@@ -223,3 +223,16 @@ no drift:
   new for this run to add beyond confirming the classification, so it is reported in the Phase 2 summary, not duplicated
   into a Todos entry here.
 - **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).
+- **na-eligibility-audit 2026-08-02** (infra tranche, incremental run): **KEEP-NA, valid.** First verdict for this doc
+  (no prior marker). Read end-to-end; `grep -cE '^- \[ \]'` = **4**, matching this verdict's item count. NA is correct
+  on the merits for the doc as a whole: it is a parked-findings register whose four todos are each explicitly routed
+  elsewhere by their own text — the batch3 stale-banner fix and the `CITE_RE` hardening are named as
+  `/plan-reconcile`-class and shared-corpus-tooling work respectively ("outside infra's remit specifically"), the
+  `qg_owner_gate` retag is reserved for the `ao` tranche by the owning-tranche-writes-only rule, and todo 4 is a
+  re-carry-forward pointer with no independent content. Flipping the doc's `assigned_vm` would dispatch all four
+  including the two the doc deliberately declines to own. **Cross-reference for finding 5** (the `CITE_RE`
+  self-referential citation blind spot): this run independently confirms that finding's own closing claim — the
+  `/na-eligibility-audit` `assigned_vm: NA` sweep does not depend on the citation mechanism, and both docs it names
+  (`ao_self_pull_wedged_by_main_inbox_untracked_file_2026_07_30.md`,
+  `deployment_scripts_bucket_soft_delete_retention_drift_2026_07_31.md`) were in this run's candidate set and were read
+  and verdicted, so the safety net held as designed.

@@ -294,3 +294,10 @@ cleanly instead of ending on an issue-doc corroboration.
 ## Progress Log
 
 - **context-scout 2026-08-01**: populated context_scope (4 entries).
+- **na-eligibility-audit 2026-08-02** (autonomous, tranche `ao`): KEEP-NA, valid — first marker on this doc. Sole open
+  todo (`[BACKEND] P3`, idempotent-success on an already-archived own row) was explicitly DECLINED for a dedicated
+  backend pass on 2026-07-30, with the reason recorded inline: `tmux_session` is a per-SLOT name reused across
+  occupants, so a safe match also needs `claude_session_id`, which `DoneRequest` does not currently carry — i.e. the fix
+  needs a request-schema change plus full slot-reuse-lifecycle tracing on the fleet-wide `/done` endpoint. Doc is
+  `sequential: true` behind the shipped P2, and the 2026-08-01 slot-4 recurrence (7th instance, new `main_ci_red`
+  wall_type) confirms the finding is live, not moot.

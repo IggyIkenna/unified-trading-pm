@@ -208,3 +208,8 @@ not lost if the bound expires unanswered.
   `deployment-service/scripts/vm/tardis-concurrency-guard.sh` still caps `TARDIS_MAX_CONCURRENT_VMS=1`. Both root-cause
   fixes remain in place; no new failure class observed; the operator decision on lifetime-count-vs-trailing-window
   (options A/B/C above) is still open and unaffected. No code changed.
+- **na-eligibility-audit 2026-08-02** (tranche=cefi, autonomous): KEEP-NA, valid — re-verdicted because the 2026-08-02
+  3rd-dispatch entry above postdates the 07-31 marker, but that entry records a static-backlog re-confirmation only (+3
+  `attempted_failed` rows, both root-cause fixes still ancestors of LDR), adding no new work. Verdict unchanged: the
+  `[OPERATOR] P2` todo is an explicit A/B/C policy choice over shared alerting code, and the `[DIAG] P3` follow-up is
+  gated on that choice. Neither is worker-determinable.

@@ -195,3 +195,9 @@ same-corpus dependencies). Instead:
   cover, worth a follow-up note when that audit todo is worked.
 
 - **context-scout 2026-08-01**: populated context_scope (3 entries).
+- **na-eligibility-audit 2026-08-02** (autonomous, tranche `ao`): KEEP-NA, valid — covered by the 2026-07-31 operator
+  directive `unified-trading-pm@14478ca26` (`planning` → `NA` + local-only). Independently, the doc's own "Important
+  nuance" section and the slot-6 per-file disposition establish that the remaining ~13-file audit is NOT mechanical:
+  each occurrence needs per-case classification (external-gate mislabel → retag, vs. same-corpus dependency → convert to
+  `sequential`/`depends_on`), and the slot-6 entry records that the structural fix needs an operator plan-destination
+  decision, explicitly "not a worker's call to make unilaterally".

@@ -324,3 +324,13 @@ specific to any one task.
   with the prior entry's non-crisis reading, not worsening. No code/test/workflow action taken (none would be correct —
   there is no defect); pinged the authoring slot (`ci`) with this outcome and closed out the escalation via `/done`
   without further changes.
+- **na-eligibility-audit 2026-08-02** (infra tranche, incremental run): **KEEP-NA, valid.** First verdict for this doc —
+  flagged unclassified by the 2026-08-01 `/ag-closeout-audit infra` run ("not previously read by this skill; flagging
+  for a future Phase-1 pass"), now closed. Read end-to-end; `grep -cE '^- \[ \]'` = **2**, matching this verdict's item
+  count. The headline crisis is genuinely resolved (the volume was expanded 290G → 484G → 678G; the latest reading in
+  this doc's own thread is 77% used, non-crisis), so this is not an ARCHIVE case only because 2 real todos remain. Both
+  stay NA: they are open-ended investigations whose stated outcome is "propose an action" rather than a determinable
+  fact (audit 157G of live multi-slot workspace for "real cleanup headroom"; determine ownership/purpose of two
+  directories "before proposing any action"), any resulting cleanup is unconditionally blocked for autonomous workers by
+  `block_destructive_commands.py`, and this doc itself records a `du -sh` census being killed by host pressure before
+  completing — so even the measurement half is not reliably completable from a slot session.
