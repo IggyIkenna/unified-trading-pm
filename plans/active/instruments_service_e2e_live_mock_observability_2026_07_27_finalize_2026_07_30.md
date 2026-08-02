@@ -86,12 +86,17 @@ that turns those findings into tracked work and closes the plan properly.
       still-real-and-now-tracked / no-longer-applicable, with the tracking location named. Repo: unified-trading-pm. —
       **DONE 2026-08-01.** Triage table below; grepped `plans/active/issues/` for a duplicate on each bug's topic — 0
       hits on any of the 6. **Net: 0 of 6 are still-real; 0 new todos filed.**
-- [ ] [PLANNING] P3. **Archive the source plan per the 6-step ritual.** Once both reviews above are done and the source
-      plan has zero open todos and no `locked_by:`, run the standard archival ritual from
+- [x] ✅ [PLANNING] P3. **Archive the source plan per the 6-step ritual.** Once both reviews above are done and the
+      source plan has zero open todos and no `locked_by:`, run the standard archival ritual from
       [`/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`](/codex/12-agent-workflow/plan-completion-and-archival-discipline.md)
       (dated archive folder, `status: complete`, every corpus referrer repointed, inventory regenerated), then archive
       this finalize twin alongside it. **Done when**: both docs are under `plans/archive/2026_07/` and
-      `regenerate_active_plan_inventory.py` reports 0 new orphans. Repo: unified-trading-pm.
+      `regenerate_active_plan_inventory.py` reports 0 new orphans. Repo: unified-trading-pm. — **DONE 2026-08-02.** Gate
+      confirmed: source plan has 4/4 todos `[x]`, no `locked_by`. Actual archive folder used `plans/archive/2026_08/`
+      (dated by archival date, matching the existing convention — every other `2026_08` archive-pair uses the same rule,
+      not the `2026_07` folder this todo's text guessed at creation time). Both docs moved with archived-banners,
+      `superseded_by` pointers, and every corpus referrer (7 files) repointed in the follow-up `git mv` commit. See
+      Progress Log below for the full referrer list and evidence.
 
 ## Sub-check reconciliation (Phase 5/6/7, todo 1)
 
@@ -171,3 +176,30 @@ hyperliquid, catalogue, pydantic, cfe/cboe) before concluding — 0 duplicate op
   warning path unreachable). 0 still-real, 0 new todos filed — grepped `plans/active/issues/` per bug topic first, 0
   duplicates found. Full table added above. Todo 3 (archival) is a separate backlog item.
 - **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).
+- **slot 16 (backend_engineer worker) 2026-08-02 — todo 3 DONE, archival ritual executed.** Gate re-confirmed: source
+  plan (`instruments_service_e2e_live_mock_observability_2026_07_27.md`) has 4/4 todos `[x]`, `locked_by:` empty; this
+  finalize twin's own 2 review todos are `[x]`. Ran the 6-step ritual from
+  `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`:
+  1. **Deferred-item migration**: none needed — both real findings from the source plan's verification runs (the
+     `cleanup()` AttributeError cross-cutting root cause, the UAC sports-venue-overlap repo-red) are already tracked as
+     their own issue docs (`utl_mock_mode_event_sink_missing_coordination_protocol_2026_07_30.md`,
+     `instruments_service_qg_red_uac_sports_venue_overlap_2026_07_30.md`), and the six-bug triage in this finalize
+     twin's own todo 2 already confirmed 0 new todos needed.
+  2. **Archived banner + `superseded_by`**: added to both docs (see the `git mv` commit).
+  3. **Codex-alignment check**: no new contract was established — every real finding from the source plan's verification
+     runs (shard-level isolation, event taxonomy, `classify_venue_error()` usage) confirms existing codex SSOTs
+     (`/codex/04-architecture/shard-level-failure-isolation.md`) rather than changing them; the one genuine code fix
+     (the `cleanup()` suppress-tuple broadening) is an instruments-service-local bug fix, not a new pattern.
+  4. **CLAUDE.md/codex update**: none needed per (3).
+  5. **Corpus-wide referrer repoint**: grepped the full corpus for both plan basenames; found 7 distinct referring files
+     (`cross_cutting_consolidated_closeout_2026_07_25.md`, `plans/active/INDEX.md`,
+     `plans/archive/2026_07/active_plan_inventory_dashboard_2026_07_24.md` [frozen point-in-time snapshot, left as-is
+     per its own `nature: record` — it documents corpus state AS OF 2026-07-24, not a live pointer],
+     `plans/archive/2026_07/e2e_testing_001_instruments_service_2026_03_22.md`,
+     `plans/archive/issues/utl_mock_mode_event_sink_missing_coordination_protocol_2026_07_30.md`, plus the two docs' own
+     mutual cross-references) — every live-pointer reference repointed to `/plans/archive/2026_08/...` in the `git mv`
+     commit.
+  6. **Lock**: none existed on either doc. Both docs now live under `plans/archive/2026_08/`. Archive folder is
+     `2026_08` (archival-date convention, matching every other `2026_08` pair already in the corpus), not the `2026_07`
+     this todo's original text guessed — see the todo's own DONE note above. `regenerate_active_plan_inventory.py` run
+     post-move: 0 new orphans.
