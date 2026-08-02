@@ -208,9 +208,34 @@ Cross-verified with direct `gcloud storage ls` spot-checks of the true bare `ent
       satisfied vacuously and truthfully: a dry-run over an empty set trivially completes with 0 errors and a
       diff-preview of 0 candidates, which matches the Phase-1 census's confirmed count of 0 exactly. Flags the same
       implication forward for todo 4 (`--apply`) below.
-- [ ] [DATA] P1. `--apply` the migration for real (gated on the dry-run above being clean — never skip straight to
+- [x] ✅ [DATA] P1. `--apply` the migration for real (gated on the dry-run above being clean — never skip straight to
       apply). **Done when**: a post-migration re-run of the Phase-1 per-date diff shows 0 remaining load-bearing dates
-      (canonical now has data everywhere legacy used to be needed).
+      (canonical now has data everywhere legacy used to be needed). — **DONE 2026-08-02, `unified-trading-pm` (this doc,
+      no data moved).** Todo 3's dry-run gate was vacuously clean (0 candidates, 0 errors) and nothing was staged to
+      apply, so there is nothing this todo's "apply" step could act on — the done-when's re-check (0 remaining
+      load-bearing dates) was already true before this todo started and stays true, since no state changed. Before
+      flipping, performed the plan's own required re-check against `sports_consolidated_closeout_2026_07_19.md`'s Tracks
+      S/E/C1 (flagged as still-outstanding by both the 2026-07-25 batch3 triage and the na-eligibility-audit — see notes
+      above): **Track S line 550**
+      (`[ ] [CODE] P2. Eliminate (or document) the legacy bare entity=fixtures/     ... write path still active today alongside the canonical split writer`)
+      is the one genuinely relevant to this migration's scope. Investigated via code read (not a new manifest/GCS walk):
+      4 call sites still construct a sink via `_sports_ref_sink_for(bucket, date, "fixtures")` and pass misleading log
+      messages ("written to entity=fixtures/") — `sports_reference_fixtures.py:136-142,159-165,260-266`,
+      `triggers/sports_fixture_status_refresh.py:345-351` — but `_write_fixtures_per_league`
+      (`sports_fixtures.py:365-501`) **ignores that passed-in sink whenever `bucket` is truthy** (all 4 call sites
+      always pass `bucket=`) and instead builds its own internal sink via
+      `_sports_ref_sink_for(bucket, date,     "fixtures_schedule"/"fixtures_outcomes")`, with the GCS `entity=` hive
+      segment hardcoded at the `_gated_sink_write` call site itself (`partition={"entity": "fixtures_schedule", ...}` /
+      `"fixtures_outcomes"`, never `"fixtures"`) — confirmed further by `sports_fixture_status_refresh.py:363-369`
+      stamping its manifest row `data_type=FIXTURES_SCHEDULE`, not `FIXTURES`. **Conclusion: no live code path writes to
+      the bare `entity=fixtures/` GCS location** — Track S's finding describes stale/misleading variable names and log
+      strings left over from before the `254fb843` entity-split, not an actual active write; the "FROZEN since
+      2026-05-23" premise this whole plan is founded on holds at the code level today. This does not block todo 4
+      (nothing here changes the already-0 load-bearing count), but it is exactly the context todo 5 (removing the READ
+      fallback) and todo 6 (deleting legacy objects) need before they run — flagged forward, not fixed here (out of this
+      todo's scope; Track S's own checkbox lives in a sibling plan and was left untouched per the adjacent-finding
+      triage rule — a future worker/operator should correct or archive it there with this citation, not re-derive it
+      from scratch).
 - [ ] [CODE] P1. Remove `_read_fixtures_entity_with_schedule_fallback` and its 3 call sites in `sports_fixtures.py`,
       replacing them with direct canonical-only reads. **Done when**: the function and its call sites no longer exist,
       and the sports pipeline-check (or a targeted smoke test) still passes reading only canonical paths for the
@@ -284,3 +309,17 @@ Cross-verified with direct `gcloud storage ls` spot-checks of the true bare `ent
   would ever run against real data. Todo 3 flipped with this written confirmation instead. Todo 4 (`--apply`) was left
   untouched — out of this task's dispatched scope; a future worker should apply the same verify-don't-blind-flip
   standard to it, not assume it's covered by this entry.
+- **Todo 4 re-verification + Track S/E re-check (2026-08-02)**: dispatched as a follow-on task in the same session.
+  Nothing to apply (todo 3's dry-run was vacuously empty), so the done-when was already true. Performed the plan's own
+  required re-check against `sports_consolidated_closeout_2026_07_19.md`'s Tracks S/E before flipping (flagged as
+  still-outstanding by the 2026-07-25 batch3 triage note and the na-eligibility-audit note above): investigated Track
+  S's open P2 item claiming the legacy bare `entity=fixtures/` write path is "still active today" via a real code read
+  of all 4 remaining call sites that reference it — found the claim describes stale/misleading naming, not an actual
+  active write: `_write_fixtures_per_league` hardcodes the GCS `entity=` segment to `fixtures_schedule`/
+  `fixtures_outcomes` at its `_gated_sink_write` call sites and ignores the caller's passed-in "fixtures" sink whenever
+  `bucket` is truthy (always true at these call sites) — confirmed further by a manifest write stamping
+  `data_type=FIXTURES_SCHEDULE`, not `FIXTURES`, at one of the 4 sites. **No conflict found** — the "FROZEN since
+  2026-05-23" premise holds at the code level. Full evidence is on todo 4's own checkbox above; not repeated here.
+  Flagged forward for todos 5-6 (which touch this same subsystem) rather than acted on immediately (out of this
+  session's dispatched scope), and Track S's own checkbox was deliberately left untouched (lives in a sibling plan;
+  correcting it there is a separate action for whoever next touches that plan, not silently absorbed here).
