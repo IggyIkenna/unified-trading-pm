@@ -147,9 +147,40 @@ context_scope:
       diff, additive `ManifestWriter.add(per_vm_shards=True)` mirroring `OnchainPerpBatchHandler._record_captured`'s
       exact field shape) registered all 8 — verified via a same-instance-identity read showing gap 8→0. Candle side
       needed no code change (already correctly registered). 9 new unit tests; QG green (sentinel=HEAD, 7414+ passed).
-- [ ] [DATA] P2. Once ASTER's manifest correctly reflects its real captured range, re-scope
-      `cefi_satellite_ao_dispatch_batch1-001`'s ASTER leg (MDPS candle backfill) — it was carved out of that plan's
-      initial delivery pending this fix.
+- [x] [DATA] P2. **DONE 2026-08-02 (slot-8, data_engineering).** Once ASTER's manifest correctly reflects its real
+      captured range, re-scope `cefi_satellite_ao_dispatch_batch1-001`'s ASTER leg (MDPS candle backfill) — it was
+      carved out of that plan's initial delivery pending this fix. — Re-verified the manifest fix live (fresh filtered
+      `read_availability_index` read, not trusting the 2026-07-28 claim): ASTER's real raw-trade capture range is
+      genuinely reflected now — 246,778 `captured` rows for `market-tick-data-service`/ASTER spanning
+      `2023-07-22..2026-08-02` (vs. the original near-total `expected_unattempted` state), `trades` specifically
+      `captured 2024-01-01..2026-07-27` (112,303 rows), only 4,209 `attempted_failed` remaining. MDPS candle
+      registration for ASTER, by contrast, was still only 4 rows (`2026-07-20..2026-07-21` — the P1 fix's orphan
+      registration), confirming the carve-out's premise: real captured range now known, candle backfill was still
+      unscoped. Re-scoped and **launched** the same proven recipe from `cefi_satellite_ao_dispatch_batch1_2026_07_25.md`
+      todo 1 (HYPERLIQUID/LIGHTER-ZKSYNC/EXTENDED-STARKNET): `market-data-processing-service` code tarball was one
+      commit stale (republished via `create-code-tarballs.sh --include market-data-processing-service`, confirmed fresh
+      on re-dry-run), then launched `mdps-backfill-cefi-20260802-140125` (SPOT `e2-standard-8`,
+      `deployment-service/scripts/vm/launch-mdps-backfill-vm.sh --data-types trades --venues ASTER cefi 2024-01-01     2026-08-01 full`)
+      — scoped to ASTER's genuine captured raw-trade range. STARTED confirmed <60s (task PID 8727 launched within the
+      VM's setup script); **verified real progress, not fire-and-forget**:
+      `vm-logs/mdps-backfill-cefi-20260802-140125/PROGRESS.json` shows
+      `{"last_completed_date":"2024-01-01",     "monotonic":true}` within ~1 minute of task start — genuine per-date
+      candle output, not a hang. The backfill continues running independently (multi-day range, same as the sibling
+      venues' precedent — not waited-on to full completion in this session). Follow-up (verification + manifest
+      registration of the newly-written candles) is a new todo below, per the findings-closure discipline. No code
+      change was needed (pure re-scope + launch).
+
+- [ ] [DATA] P2. **Follow-up from the P2 re-scope above.** Verify `mdps-backfill-cefi-20260802-140125` (ASTER MDPS
+      candle backfill, `2024-01-01..2026-08-01`) reaches completion (check `PROGRESS.json`'s `last_completed_date`
+      advances to the end date, or the VM's exit code/heartbeat goes terminal), then run the additive manifest
+      reconciliation merge the launcher itself reminds to run post-backfill (NEVER
+      `rebuild_manifest_from_canonical_paths` — that wholesale-replaces the bucket's whole manifest index and would
+      delete this bucket's raw-tick rows, per
+      `/plans/active/issues/rebuild_manifest_from_canonical_paths_prefix_scoped_wipe_2026_07_27.md`):
+      `merge_manifest_from_canonical_paths('market-data-tick-cefi-central-element-323112',     service_name='market-data-processing-service', prefix='processed_candles/by_date')`.
+      Repo: market-data-processing-service / unified-trading-library. **Done when**: a fresh `read_availability_index`
+      read shows `market-data-processing-service` rows for ASTER spanning materially more than the current 2 days, and
+      the VM's terminal status (exit_code / heartbeat) is confirmed, not assumed.
 
 ## Progress Log (2026-07-26)
 
@@ -166,6 +197,13 @@ context_scope:
 ## Progress Log (2026-08-01)
 
 - **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).
+
+## Progress Log (2026-08-02)
+
+- Closed todo 3 (P2, the re-scope). Re-verified the manifest fix live, re-scoped and launched the ASTER MDPS candle
+  backfill (`mdps-backfill-cefi-20260802-140125`), confirmed genuine progress. See the todo's own evidence line for full
+  detail. A new follow-up todo (verify completion + additive manifest reconciliation) is queued above — the backfill is
+  multi-day and continues running independently, not waited-on to completion this session.
 
 ## Not yet checked (deliberately out of scope for this discovery pass)
 
