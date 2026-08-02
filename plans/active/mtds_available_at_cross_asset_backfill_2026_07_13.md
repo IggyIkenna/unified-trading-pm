@@ -564,3 +564,49 @@ rows share the historical rows' dedup key, so count should stay flat, not grow b
 resume the cron via `scripts/mtds_available_at_backfill_resume_prediction_2026_07_30.py` (not raw `gcloud`); (5) record
 the final before/after fill-rate evidence here and flip both checkboxes citing the apply's actual completion + the
 consolidate run + the resume run.
+
+### 2026-08-02 — #10 (slot-13, data_engineering) — diagnosed the real gap: corrected apply only covered 2021-06..2025-02; relaunched for the incomplete tail
+
+Fresh session, dispatched `-006` (`already_in_progress: true`, `dispatch_reason: resume`). No
+`rebuild_prediction_manifest` process was running (`ps aux` clean); the last recorded checkpoint (#9, chunk 42/62) was
+gone. A force-consolidate had run since (2026-08-02T11:35 UTC, `latest.json`: `rows_out=1,955,294`,
+`dedup_dropped=884,687`, `success=true`) — likely the tail end of #9's session before it ended.
+
+**Read the freshly-consolidated `_index/availability_index.parquet` directly** (one-off diagnostic download +
+`pd.read_parquet`, not a corpus GCS walk — the file `read_availability_index()` would itself read, just bypassing the
+120s cron-paused staleness gate for this one read): aggregate fill rate on `capture_status=captured` is 19.96%, matching
+#9's original bug signature — but splitting by `instrument_type` shows this is NOT a new regression:
+
+- `instrument_type=PREDICTION_MARKET` (canonical, n=323,716): 16.1% filled.
+- `instrument_type=prediction` (stale lowercase literal, n=18,096): 100% filled — these are the KNOWN #9-diagnosed
+  duplicate stragglers from the pre-fix buggy apply (`written_at` 2026-07-31), cleanup explicitly
+  deferred/operator-gated (issue-doc `mtds_prediction_rebuild_instrument_type_mismatch_2026_08_01.md` todo 2) and out of
+  THIS plan's scope per #9's own note — they cap the aggregate metric below 100% permanently until that separate cleanup
+  runs, which is expected, not a new bug.
+- `instrument_type=prediction_market` (different casing, n=9,720, `written_at` 07-17..07-23, 0% filled): unrelated
+  legacy/cross-contamination rows, not touched by this backfill's scope either.
+
+**The real signal is the canonical-only split by month**: `PREDICTION_MARKET` rows are **100% filled for every month
+2021-06 through 2025-02** (the corrected apply, `written_at` up to 2026-08-02, DID succeed for that range) but drop
+sharply from 2025-03 onward (66% → single digits by 2026-01..2026-05, a brief 95.8% spike in 2026-06, 25.6% in 2026-07,
+1.7% in 2026-08) — and that later range is where the bulk of the row volume actually lives (2025-09 alone has 17,834
+canonical rows vs ~30-120/month pre-2024-10). **The corrected apply never finished the dense recent range** — consistent
+with the #9 checkpoint's chunk-42-of-62 stopping point (5-year full-range run, `--chunk-days 30`) landing right around
+early 2025 before the session ended.
+
+**Action (efficiency north-star — don't re-scan the already-100%-filled 2021-2024 range)**: relaunched
+`rebuild_prediction_manifest.py --start-date 2025-01-01 --end-date 2026-08-01 --chunk-days 15` (small 1-month safety
+overlap before the 2025-03 cliff; `--end-date` one day before today to avoid an in-flight partial capture day),
+`GCP_PROJECT_ID=central-element-323112` exported per the #9-documented gotcha (script's `--project-id` flag alone does
+NOT wire into `ManifestWriter`'s env-based project resolution). Verified chunk 1 (2025-01-01..2025-01-15, 46,312
+objects) is processing cleanly, zero `ManifestWriter write failed` occurrences. Running in background under `Monitor`,
+not `ScheduleWakeup` (the #8-documented harness-teardown risk). `unified-trading-sa` GCP identity used for the
+diagnostic reads/cron-state checks (the default active gcloud account on this host, `github-actions-deploy`, lacks
+`cloudscheduler.jobs.get` — switched per RULES.md § 5's self-service ambient-identity rule, not a blocked-question).
+
+**Not yet done**: apply for 2025-01..2026-08 not finished, force-consolidate not re-run, fill-rate not re-verified, cron
+not resumed. **Both `-001` and `-006` stay unflipped.** Cron confirmed still `PAUSED`
+(`uts-prod-manifest-consolidator-market-data-prediction-cron`); 07-29 snapshot still the valid rollback point (untouched
+by this session — only ran read-only diagnostics + the idempotent apply script). Maintenance-window lock
+(`_maintenance_window.json`, expires 2026-08-03T04:56:45Z) still valid for this plan; if this session's apply runs past
+that, the lock needs renewing before it lapses.
