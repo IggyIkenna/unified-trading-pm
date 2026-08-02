@@ -765,6 +765,31 @@ mirroring the batch1/batch2/batch3/batch4 finalize pattern.
   resolution (or `mtds_available_at_cross_asset_backfill_2026_07_13.md` lines 305/314 flipping done) before attempting
   any tradfi download-VM launch for this todo — until then every such launch will fail identically.
 
+- **2026-08-02T17:55Z (slot-15, data_engineering) — gate now cleared, ES/MES backfill VM launched, IN PROGRESS.**
+  Re-verified live before attempting anything (not trusting the last decline's snapshot): the tradfi consolidator cron
+  (`uts-prod-manifest-consolidator-market-data-tradfi-cron`) is now `ENABLED` (independently confirmed resumed by slot-3
+  today per `mtds_available_at_cross_asset_backfill_2026_07_13.md`'s 2026-08-02 entry) and
+  `_index/availability_index.parquet`'s update time is live/current (checked twice, seconds apart — actively
+  refreshing), so the fleet-wide `exit_code=78` OOM-preflight self-delete that blocked every prior dispatch this year no
+  longer applies. Dry-run first
+  (`launch-mdps-backfill-vm.sh --instrument-ids "CME:FUTURE:ES CME:FUTURE:MES" tradfi 2020-01-01 2026-07-25 dry`) —
+  clean, all 5 tarballs fresh. **Launched for real**: `mdps-backfill-tradfi-20260802-175522` (SPOT), same instrument
+  scope + date range as the prior 2 attempts (for a clean hit-rate comparison against the ~19% (454/2398) baseline).
+  Verified STARTED (RUNNING within seconds) and genuine PROGRESS via `run.log` tail sampled 3 times over ~10min: passed
+  the OOM-preflight + dependency checks cleanly, then advanced `day=2020-01-03` → `2020-01-09` → `2020-01-16` →
+  `2020-01-23` (~3.5 days/min steady pace) — real per-day processing (POLARS AGGREGATED candle counts, chain-bundle
+  streaming), not a hung/idle VM. At this pace the full 2020-01-01..2026-07-25 (~2398-day) range is a multi-hour run
+  (~11h), consistent with this doc's and the archived
+  `tradfi_mdps_build_continuous_mismatches_2_and_4_still_open_2026_07_26.md`'s prior full-range attempts. **Not yet
+  done**: backfill still running, `build-continuous --root ES` not yet run, hit-rate re-measure not yet done. Watching
+  via a background Monitor task + heartbeats; will checkpoint again before this session ends if the run hasn't
+  completed. VM name for whoever resumes: `mdps-backfill-tradfi-20260802-175522`
+  (`gcloud compute instances describe … --zone=asia-northeast1-c`; log at
+  `gs://deployment-scripts-central-element-323112/vm-logs/mdps-backfill-tradfi-20260802-175522/run.log`). A second,
+  harmless dry-run VM (`mdps-backfill-tradfi-20260802-175427`, `--dry-run`, no live writes) was also launched moments
+  earlier for the pre-flight sanity check — it self-deletes on its own once its dry pass completes, no action needed on
+  it.
+
 ## Codex SSOTs
 
 No new durable contract is created by this plan — every todo executes an already-decided spec from its source doc, or
