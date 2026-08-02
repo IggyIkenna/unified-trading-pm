@@ -156,9 +156,9 @@ No design call needed — every fact here is independently checkable:
       never derived into a backlog task — agent-orchestrator (no commit, investigation-only; see Progress Log 2026-08-02
       slot-15 entry below for the code-line-cited cause and the reproduction that REFUTES the "Recommended decision"
       item 1 parser-shape hypothesis).
-- [ ] [BACKEND] P1. Fix the identified cause and confirm via `POST /api/backlog/regen` + `GET /api/backlog` that a task
-      now exists with `plan_ref:     plans/active/defi_satellite_ao_dispatch_batch8_2026_08_02.md`. Repo:
-      agent-orchestrator. Done when: the task is present and dispatchable (not blocked on an unrelated condition).
+- [x] ✅ [BACKEND] P1. Fix the identified cause and confirm via `POST /api/backlog/regen` + `GET /api/backlog` that a
+      task now exists with `plan_ref: plans/active/defi_satellite_ao_dispatch_batch8_2026_08_02.md`. Repo:
+      agent-orchestrator@ae003b58e — see Progress Log 2026-08-02 slot-8 entry below for the fix + verification.
 - [ ] [BACKEND] P2. Harden `_wire_gate_on_depends_prereqs` (or its caller) to fail loudly — log/flag, do not silently
       no-op — when a `gate_on_depends: true` plan's upstream `depends_on` plan is `status: active` with open todos but
       produced zero derived backlog tasks. Repo: agent-orchestrator. Done when: the same reproduction (an active/undone
@@ -262,3 +262,28 @@ No design call needed — every fact here is independently checkable:
   an open-ended investigation. Not picking up todo 2 myself mid-task (different craft — `[BACKEND]`/agent-orchestrator —
   and self-initiating unassigned "related work" outside the current dispatch is against the worker
   `/boot`-per-shippable-unit discipline); it stays queued for the next `backend_engineer`-eligible dispatch. Skipping.
+
+- **2026-08-02T17:05Z (slot 8, backend_engineer craft, task
+  `defi_batch8_finalize_gate_bypass_missing_upstream_task-002`) — todo 2 fix shipped + verified.** Implemented slot 15's
+  recommended fix: added `_STALE_MARKER_SUFFIX_RE` (`agent-orchestrator/server/regen_backlog_from_plan.py:1190-1198`), a
+  forward-lookahead counterpart to the existing backward-only `_STALE_MARKER_PREFIX_RE`, recognizing
+  marker-then-resolution-keyword phrasing ("`BLOCKED-<TOKEN>` ... was
+  retired/resolved/lifted/cleared/closed/superseded/dropped/ruled") within a bounded 60-char window AFTER a
+  `BLOCKED-<TOKEN>` match, mirroring the existing prefix check's structure. `_has_live_blocked_token` (line 1201) now
+  checks both prefix and suffix before treating a match as a live (dispatch-blocking) marker. Shipped as
+  `agent-orchestrator@ae003b58e` (`fix(backlog-regen): recognize marker-then-resolution BLOCKED-<token> phrasing`) — a
+  prior instance of this same slot session had already landed and pushed this commit (confirmed on `origin` via this
+  session's boot-time fresh-pull, `git merge-base --is-ancestor` implicitly satisfied by the ff-only merge) before
+  getting interrupted ahead of the verification + plan-flip steps; this entry completes that in-flight work rather than
+  re-doing it. **Verification (this session):** `POST /api/backlog/regen` →
+  `{"ok": true, "scanned_plans": 692, "new_tasks": 0, "skipped_existing": 7, "total_tasks": 668}` (0 new because a prior
+  regen tick, running sometime after `ae003b58e` landed at 16:43:35Z, had already derived the task —
+  `queued_at: 2026-08-02T17:01:41Z`, i.e. before this session's own regen call). `GET /api/backlog` (1349 tasks)
+  filtered on `plan_ref == "plans/active/defi_satellite_ao_dispatch_batch8_2026_08_02.md"` now returns exactly ONE row:
+  `defi_satellite_ao_dispatch_batch8-001`, `status: "queued"`, `dispatched_to: null`, `collision_group: null`,
+  `orphan: false` — present and dispatchable, not blocked on anything, per todo 2's own done-when. Brief correctly reads
+  `[DATA] P3. **Prove force + skip for the LST-rate surfaces against the \`-test-\` bucket**...` — the actual LST-rate
+  todo text, confirming this is the real upstream task, not a coincidental match. Todo 2 checkbox flipped above. Todo 3
+  (harden the gate to fail loudly instead of silently no-op'ing) and todo 4 (the real DATA-craft re-verification +
+  source-doc reconciliation once batch8's todo actually completes) remain open for their own dispatches — not in this
+  task's scope.
