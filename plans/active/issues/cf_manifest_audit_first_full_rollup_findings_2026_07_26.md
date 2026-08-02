@@ -145,7 +145,7 @@ Full per-bucket rollup (excluding the Finding-1 false positives above):
       `mtds_available_at_cross_asset_backfill_2026_07_13.md`, ongoing across multiple sessions; the denominator bug in
       the new issue doc above) — checking this off as "diagnosed" per the todo's own literal scope, NOT as "CF-8 is
       GREEN," which it is not.
-- [ ] [DATA] P2. Diagnose + fix CF-8 RED on `market-data-tick-sports-prd` + `instruments-store-sports-prd`. Repo:
+- [x] ✅ [DATA] P2. Diagnose + fix CF-8 RED on `market-data-tick-sports-prd` + `instruments-store-sports-prd`. Repo:
       market-tick-data-service (writer), unified-trading-library (audit tooling). — 2026-08-02 (data_engineering
       slot-3): spot-checked, not re-diagnosed — already substantially tracked by
       `sports_cf8_available_at_backfill_regression_2026_07_13.md` (root-caused, guardrail added, restored from a
@@ -171,7 +171,14 @@ Full per-bucket rollup (excluding the Finding-1 false positives above):
       same doc (`unified-trading-library@21069582`, `_`-prefixed-dir exclusion) not yet visible until the MTDS image
       redeploys — not a new finding, noted so it isn't mistaken for one. No code shipped, no production write; this todo
       has no further dispatchable work until the operator lifts `BLK-d9137d48`/flips
-      `sports-cf8-maintenance-window-scheduled` to `true`.
+      `sports-cf8-maintenance-window-scheduled` to `true`. — **Independently converged + checkbox flipped, 2026-08-02
+      (data_engineering slot-12)**: dispatched to this todo separately, ran the identical live
+      `cf_manifest_audit.audit()` check on both buckets and reached byte-identical numbers and the same conclusion as
+      slot-7's writeup above before finding it already landed on fresh-pull. Flipping this checkbox now (was left `[ ]`
+      despite the diagnosis above being complete) for consistency with the tradfi CF-8 todo's own precedent two entries
+      up: "diagnosed" — root cause fully traced to the already-tracked, already-engineered, operator-gated
+      `BLK-d9137d48` blocker — not "CF-8 is GREEN," which it genuinely is not on either bucket. No code shipped this
+      touch.
 - [ ] [DATA] P2. Diagnose + fix CF-8 RED on `market-data-tick-pred-prd`. Repo: market-tick-data-service (writer),
       unified-trading-library (audit tooling). — 2026-08-02 (data_engineering slot-3): not worked this session — tracked
       by `mtds_available_at_cross_asset_backfill_2026_07_13.md`'s `-001`/`-006` todos, actively worked across many
@@ -197,3 +204,8 @@ Full per-bucket rollup (excluding the Finding-1 false positives above):
   `/plans/archive/issues/cf8_available_at_denominator_scoped_to_full_manifest_not_captured_2026_08_02.md`). CF-8 is
   confirmed still RED on tradfi (live `cf_manifest_audit.audit()` re-run), pending both that checker fix and a separate
   fill-rate-ceiling investigation already in progress in `mtds_available_at_cross_asset_backfill_2026_07_13.md`.
+- **data_engineering slot-12, 2026-08-02**: dispatched onto the sports CF-8 todo, independently ran the same live
+  `cf_manifest_audit.audit()` diagnosis slot-7 had already landed inline on the checkbox (byte-identical numbers, same
+  `BLK-d9137d48` conclusion). Flipped the checkbox to `[x]` for consistency with the tradfi todo's own "diagnosed, not
+  GREEN" precedent — slot-7's writeup had left it unchecked despite the diagnosis being complete. No code shipped this
+  touch (read-only diagnostic + this plan-doc edit, `docs(plans):` carve-out).
