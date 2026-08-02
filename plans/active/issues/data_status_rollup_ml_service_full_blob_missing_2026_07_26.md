@@ -151,7 +151,7 @@ worth closing the same way (isolate + surface the real error) rather than leavin
       tests pass post-fix (`tests/unit/test_data_status_drilldown.py::TestBuildBucketName`). Full QG run before
       shipping. Live confirmation (`full.json.gz` actually refreshing on the next real `*/20` cron cycle) is a follow-up
       verification step, not blocking the fix landing.
-- [ ] [CODE] P2. NEW regression found while diagnosing the above (not present in the 2026-07-26 baseline table, where
+- [x] ✅ [CODE] P2. NEW regression found while diagnosing the above (not present in the 2026-07-26 baseline table, where
       instruments-service + market-data-processing-service both succeeded same-cycle): `instruments-service`'s manifest
       rollup step now fails every cycle with
       `Unable to allocate 2.55 GiB for an array with shape (29, ~11.8M) and data     type object` (its coverage step
@@ -179,6 +179,22 @@ worth closing the same way (isolate + surface the real error) rather than leavin
       ml-service's now-fixed bug. Not investigated further here (out of scope for this todo); worth a dedicated look at
       whether the container ceiling itself needs raising, or whether cumulative per-sweep memory (not just per-child)
       needs its own bound.
+
+      **RESOLVED 2026-08-02 (slot 10)**: `deployment-api@34a596b`. Took the documented alternative to raising the
+          ceilings/optimizing compute (out of scope for this todo — the whole-container 32Gi platform-kill evidence above
+          means the real fix is a capacity/architecture decision, not a quick patch): recorded both new failure modes as
+          accepted structural gaps in the code comment right next to the existing MTDS gap (`_CHILD_RLIMIT_AS_BYTES` /
+          `_CHILD_JOIN_TIMEOUT_S` block in `data_status_rollup_worker.py`), and added 2 regression tests to
+          `tests/unit/test_rollup_worker.py` asserting both fail LOUDLY, not silently: (1)
+          `test_memory_error_on_manifest_is_caught_not_silent` — a `MemoryError` matching instruments-service's exact
+          observed message is caught per-service and surfaces as `manifest_error`, never a false `manifest_ok=True`; (2)
+          `test_mdps_style_full_timeout_is_loud_and_does_not_block_next_service` — a service timing out on BOTH manifest
+          AND coverage fires a `SERVICE_FAILED` log_event and does not prevent the next queued service from running (same
+          isolation contract as the original MTDS gap). No production code change was needed — the existing per-service
+          isolation (added for MTDS) already generically handles any child failure mode this way; these tests close the
+          "guard the honest-failure path" half of this todo's done-when, and the comment update closes the "explicitly
+          records these as structural gaps" half. 35/35 tests pass (`tests/unit/test_rollup_worker.py`), full QG green.
+
 - [ ] [INFRA] P3. The `data-status-rollup-worker` `GcsEventSink` (the `log_event(SERVICE_PROCESSED/SERVICE_FAILED, ...)`
       calls in `run_rollup`) has not written a new dated prefix under
       `gs://central-element-323112-events/events/data-status-rollup-worker/` since `2026-06-17` — 6+ weeks stale — even
@@ -191,6 +207,12 @@ worth closing the same way (isolate + surface the real error) rather than leavin
 
 ## Progress Log
 
+- **data_engineering (slot-10) 2026-08-02T21:45Z**: closed todo 2 (the instruments-service MemoryError + MDPS
+  dual-timeout regression). `deployment-api@34a596b` — documented both as accepted structural gaps in
+  `data_status_rollup_worker.py`'s ceiling-config comment (alongside the existing MTDS gap) and added 2 regression tests
+  confirming the honest-failure path (loud `manifest_error`/`SERVICE_FAILED`, never silent) for both failure shapes. See
+  the todo's own resolution note above for the full detail. Full QG green, verified on origin. Did not touch todo 3
+  (event-sink dead since 2026-06-17) — out of scope for this task.
 - **data_engineering (slot-15) 2026-08-02T21:15Z**: root-caused + fixed todo 2 (see the todo's own entry above for the
   full evidence chain: live single-service probe → Cloud Logging → `SERVICE_TO_KIND["ml-service"]` pointing at the
   2026-07-19-sunset `"ml-models-store"` alias instead of `"ml-store"`). Fix + regression test in
