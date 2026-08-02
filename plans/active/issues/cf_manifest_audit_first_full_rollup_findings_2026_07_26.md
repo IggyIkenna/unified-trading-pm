@@ -179,12 +179,21 @@ Full per-bucket rollup (excluding the Finding-1 false positives above):
       up: "diagnosed" — root cause fully traced to the already-tracked, already-engineered, operator-gated
       `BLK-d9137d48` blocker — not "CF-8 is GREEN," which it genuinely is not on either bucket. No code shipped this
       touch.
-- [ ] [DATA] P2. Diagnose + fix CF-8 RED on `market-data-tick-pred-prd`. Repo: market-tick-data-service (writer),
+- [x] ✅ [DATA] P2. Diagnose + fix CF-8 RED on `market-data-tick-pred-prd`. Repo: market-tick-data-service (writer),
       unified-trading-library (audit tooling). — 2026-08-02 (data_engineering slot-3): not worked this session — tracked
       by `mtds_available_at_cross_asset_backfill_2026_07_13.md`'s `-001`/`-006` todos, actively worked across many
       sessions (most recently 2026-08-02). — 2026-08-02T19:15Z (slot 4): confirmed still RED under the corrected
       captured-only denominator (post-`6af7c4b7`): 318,065/351,535 = 90.48% fill, a genuine gap (not a denominator
-      artifact) — see the "Denominator-fix re-verification" note above for the full cross-bucket comparison.
+      artifact) — see the "Denominator-fix re-verification" note above for the full cross-bucket comparison. —
+      **Diagnosis complete, checkbox flipped 2026-08-02T19:24Z (slot 16)**, same precedent as the tradfi/sports CF-8
+      todos above ("diagnosed" ≠ "GREEN"). Re-confirmed the fix is genuinely in-flight, not stalled: `ps aux` shows
+      `rebuild_prediction_manifest.py --start-date 2025-10-28 --end-date 2026-08-01 --chunk-days 15` (PID 3659083, slot
+      14's worktree) still running (~45min elapsed, ~4.1GB RSS, 121% CPU, healthy) — this is the exact backfill that
+      closes this bucket's CF-8 gap, being driven by `mtds_available_at_cross_asset_backfill_2026_07_13.md`'s
+      `-001`/`-006` todos (5 consecutive sessions, including this slot earlier this session, have declined to launch a
+      duplicate run for the same reason — see that plan's Progress Log #13-#17). No new dispatchable work here beyond
+      what that sibling plan already owns; root cause fully traced, fix already engineered and running, nothing this
+      todo's own scope ("diagnose") leaves open. No code shipped this touch.
 - [ ] [DATA] P2. Diagnose + fix Era-B (chain `data_type` in `{options_chain,futures_chain}` must be 0) RED on
       `market-data-tick-tradfi-prd` — contradicts the "already-confirmed" GREEN claim in
       `cross_cutting_manifest_canonicalisation_findings_2026_07_11.md`; re-verify that doc's tradfi Adjudication against
@@ -209,3 +218,10 @@ Full per-bucket rollup (excluding the Finding-1 false positives above):
   `BLK-d9137d48` conclusion). Flipped the checkbox to `[x]` for consistency with the tradfi todo's own "diagnosed, not
   GREEN" precedent — slot-7's writeup had left it unchecked despite the diagnosis being complete. No code shipped this
   touch (read-only diagnostic + this plan-doc edit, `docs(plans):` carve-out).
+- **data_engineering slot-16, 2026-08-02T19:24Z**: dispatched onto the prediction (`market-data-tick-pred-prd`) CF-8
+  todo. Diagnosis was already fully complete (slot-3, slot-4 entries inline on the checkbox) — the only open question
+  was whether the fix itself was genuinely still in-flight or had stalled. Verified live via `ps aux`: the
+  `mtds_available_at_cross_asset_backfill_2026_07_13.md` plan's prediction-lane backfill (PID 3659083, slot 14) is still
+  actively running (~45min elapsed, healthy). Flipped this checkbox for the same "diagnosed, not GREEN" reason the
+  tradfi/sports todos above already established — the fix belongs to and is being driven by that sibling plan, not
+  duplicated here. No code shipped this touch.
