@@ -175,3 +175,10 @@ convention's scope).
   depend on that same policy answer for correctness (archival-caused dangling refs are a subset of the existence-
   violation backlog, per this doc's own 2026-07-25 Progress Log entries). Doc stays NA as a whole; unchanged from
   yesterday's assessment.
+- **na-eligibility-audit 2026-08-02** (infra tranche, dispatch agt-fe5e17): KEEP-NA, valid — third consecutive
+  confirmation. The only change since the 2026-07-31 verdict is the new REVIEW P3 item (added and closed same-day,
+  2026-08-02, slot-12: verified `check_reference_paths.py`'s existence check IS body-text-aware but blunted by
+  `--quiet` + ratchet slack, then extended `/plan-reconcile`'s SKILL.md with a new moved-doc-referrer hunter) — an
+  already-resolved investigation, not new open scope. The 5 open items (`- [ ]` count confirmed via
+  `grep -cE '^- \[ \]'`) are unchanged from the prior two verdicts: the P2 REVIEW archival-convention policy call is
+  still unresolved, and the two P3 dangling-reference backlogs still partially depend on it. Doc stays NA as a whole.

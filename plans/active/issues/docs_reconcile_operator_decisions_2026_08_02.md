@@ -99,3 +99,6 @@ sweep found was either auto-fixed (4 commits shipped, see Progress Log) or filed
 - 2026-08-02 (docs_reconciler, dispatch agt-0b4ee1): filed. 4 other commits from this same sweep already shipped
   (unified-trading-pm@7de163bf1, @50f2e668b, @c9dc2cfb5, @809a28c97) covering everything that WAS auto-fixable — see the
   sweep's Phase 5 report for the full breakdown.
+- **na-eligibility-audit 2026-08-02** (infra tranche, dispatch agt-fe5e17): KEEP-NA, valid — both items are explicit
+  `BLOCKED-OPERATOR-DECISION` authority calls (A/B/C options, no evidence-determined single answer) per this doc's own
+  title and framing. Textbook KEEP-NA, no re-derivation needed.

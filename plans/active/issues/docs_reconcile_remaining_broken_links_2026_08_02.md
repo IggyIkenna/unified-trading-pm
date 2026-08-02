@@ -136,3 +136,12 @@ that COULD be confidently fixed already shipped in the sweep's 4 commits (unifie
   `doc_body_link_checker_blind_to_backtick_citations_2026_08_02.md` (the infra gap that let most of the
   cursor-rules/*.mdc fixes in this sweep go undetected until a manual hunt) and
   `docs_reconcile_operator_decisions_2026_08_02.md` (2 genuine authority questions from the same sweep).
+- **na-eligibility-audit 2026-08-02** (infra tranche, dispatch agt-fe5e17): KEEP-NA, valid — heterogeneous mix, but the
+  large majority of the 15 open items explicitly need human judgment/knowledge this doc's own investigation could not
+  resolve ("needs a human who knows what these 3 were meant to cover", "no confident single target", two
+  plausible-but-conflicting readings for `ci-cd.md`, a README pass explicitly scoped as needing a human onboarding-doc
+  review rather than a mechanical repoint) or are non-actionable design observations (the freshness-ratchet count-only
+  note, explicitly "not proposing a fix here"). Stays NA as a whole, same pattern as
+  `reference_path_convention_2026_07_23.md`'s own precedent for a mixed bounded/judgment doc. Note for a future split:
+  one item (`.cursor/plans/phase_0_cod_service_specs_f0a0afbd.plan.md` dead link — "Fix: delete the dead link") reads as
+  individually bounded/mechanical if this doc is ever split; not split here since the doc stays NA in full.

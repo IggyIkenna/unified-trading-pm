@@ -24,6 +24,7 @@ related:
     /codex/05-infrastructure/orchestrator-cloud-identity-self-service.md,
     /codex/05-infrastructure/vm-launcher-runbook.md,
     /plans/active/issues/sports_fixture_events_refetch_progress_2026_07_25.md,
+    /plans/active/issues/bucket_iam_p2_tier_sa_scope_gap_and_default_compute_sa_overprivilege_2026_07_30.md,
   ]
 created: 2026-08-02
 priority: P1
@@ -123,3 +124,27 @@ Not escalating as `BLOCKED-OPERATOR` on the FIXTURE_EVENTS/FIXTURE_STATS/FIXTURE
 workaround unblocks all in-flight and planned launches for this campaign immediately. Filing this doc so (a) the
 underlying grant gap gets closed durably rather than every future session rediscovering the same 403, and (b) the
 workaround is written down for whoever hits it next before the grant lands.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-08-02 (infra tranche, dispatch agt-fe5e17)**: KEEP-NA, valid (parked, conflict found) —
+  this doc's "Recommended durable fix" (grant `iam.serviceAccountUser` on `uts-prd-sa` to the shared default compute SA
+  `1060025368044-compute@developer.gserviceaccount.com`) reads as bounded/worker-determinable in isolation (exact
+  command + verification given), so it was evaluated as a RECLASSIFY candidate. Conflict-check
+  (`/codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md` § 3) against active
+  `assigned_vm: planning` docs in the same `parent_epic: infrastructure_master` surfaced a genuine conflict:
+  `/plans/active/issues/bucket_iam_p2_tier_sa_scope_gap_and_default_compute_sa_overprivilege_2026_07_30.md` (P0,
+  `sequential: true`, actively dispatched) is mid-flight on the SAME two identities (`uts-prd-sa` and the default
+  compute SA) and explicitly frames the default compute SA's broad, unconditional, project-wide grant set (incl.
+  `roles/storage.admin` + `roles/iam.serviceAccountTokenCreator`) as "a bigger live exposure than the original god-SA
+  grant" — its own open P3.1/P3.2 todos are heading toward SCOPING DOWN / migrating launchers OFF the default compute SA
+  entirely, not granting it further reach. Applying this doc's recommended fix (granting the default compute SA MORE
+  impersonation reach — the ability to act as `uts-prd-sa` too) would extend exactly the identity that sibling doc's
+  active P0 effort is working to de-privilege, and duplicates ground already claimed by its P3.1/P3.2 (VM launcher SA
+  rewiring, "Do not attempt as a single mechanical bulk edit"). Per the conflict-check protocol: do NOT flip, do NOT
+  silently prefer one side — stays `assigned_vm: NA`, cross-referenced (see `related:` above) for reconciliation when
+  P3.1/P3.2 execute (the "right" durable fix may be wiring this specific launcher onto a properly-scoped identity per
+  that plan's Recommended-decision option (a), rather than this doc's proposed direct grant to the over-privileged
+  default compute SA). Not parked as `BLOCKED-OPERATOR-DECISION` (this doc's own workaround already unblocks the
+  campaign, no urgency), but flagged here so whoever next works either doc sees the connection before executing either
+  fix.

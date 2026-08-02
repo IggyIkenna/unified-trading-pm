@@ -105,3 +105,8 @@ corpus actually uses was never brought into the checker's purview.
 - 2026-08-02 (docs_reconciler, dispatch agt-0b4ee1): filed during the autonomous docs-reconcile sweep. 12 concrete
   instances of exactly this blind spot were hand-verified and fixed in the same sweep (unified-trading-pm@809a28c97)
   despite the checker not catching them — proof this is a real, exploitable gap, not a theoretical one.
+- **na-eligibility-audit 2026-08-02** (infra tranche, dispatch agt-fe5e17): KEEP-NA, valid — the doc's own "Options"
+  present P1 (broad `_LINK_RE` extension) and P2 (narrower `codex/`-only first cut) as genuine alternatives, not a
+  checklist, and P1 is explicitly flagged as needing a live violation-count measurement before its baseline-seed size is
+  known. Choosing between them is a real scope/risk judgment call on a change to shared QG infra, not a bounded,
+  worker-determinable outcome — stays NA.
