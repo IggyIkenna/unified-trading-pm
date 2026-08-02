@@ -46,6 +46,12 @@ jobs:
     # match, so [self-hosted, glue] lands ONLY on the JIT-ephemeral pool — never on glue-writer.
     # SSOT: scripts/self-hosted-runners/README.md
     runs-on: [self-hosted, glue]
+    outputs:
+      stalled: ${{ steps.reconcile.outputs.stalled }}
+      stall_report: ${{ steps.reconcile.outputs.stall_report }}
+      cleared: ${{ steps.reconcile.outputs.cleared }}
+      cleared_key: ${{ steps.reconcile.outputs.cleared_key }}
+      cleared_report: ${{ steps.reconcile.outputs.cleared_report }}
     steps:
       - uses: actions/checkout@v5
       # No actions/setup-python: this runs on the self-hosted glue pool, whose python3 IS the slot
@@ -54,6 +60,16 @@ jobs:
       # in scripts/self-hosted-runners/bootstrap-ci-host.sh; if the version is ever wrong, fix it
       # THERE, not here. NOTE: this workflow is now self-hosted-ONLY — restoring runs-on:
       # ubuntu-latest requires restoring setup-python with it.
+
+      - name: Restore release-tag stall state cache
+        # Persists the stalled-repo set across runs so the RESOLVED bookend below can name WHICH
+        # repo(s) just cleared (mirrors branch-health.yml's lag-monitor `.lag-state.json` cache).
+        uses: actions/cache@v5
+        with:
+          path: .release-tag-stall-state.json
+          key: release-tag-stall-state-${{ github.run_id }}
+          restore-keys: |
+            release-tag-stall-state-
 
       - name: Authenticate to GCP (Firestore repo-state write — best-effort)
         id: gcp_auth_tags
@@ -66,6 +82,7 @@ jobs:
       # Installing it per run on a box that already has it is the thing the long-lived VM exists to
       # avoid. Self-hosted-ONLY: restoring runs-on: ubuntu-latest requires restoring this step.
       - name: Reconcile release tags
+        id: reconcile
         env:
           GH_TOKEN: ${{ secrets.GH_PAT }}
           GCP_PROJECT_ID: ${{ vars.GCP_PROJECT_ID }}
@@ -73,7 +90,86 @@ jobs:
           set -euo pipefail
           DRY=""
           if [ "${{ github.event.inputs.dry_run }}" = "true" ]; then DRY="--dry-run"; fi
+          set +e
           # --max-creates 5: a one-time fleet backlog (≈20 untagged released versions, 2026-06-11) drains
           # over a few */15 ticks instead of firing 20 publish-package runs at once (shared-rate-limit safe);
           # a normal single release is well under the cap and tags within one tick.
-          python3 scripts/cicd/reconcile_release_tags.py $DRY --max-creates 5
+          # --state-in/--state-out/--cleared-out/--stall-out: route the STALL verdict to Slack (2026-08-02)
+          # instead of only a `::warning::` GH annotation nobody reads. SSOT: codex/04-architecture/ci-alerting.md.
+          python3 scripts/cicd/reconcile_release_tags.py $DRY --max-creates 5 \
+            --state-in .release-tag-stall-state.json \
+            --state-out .release-tag-stall-state.next.json \
+            --stall-out .release-tag-stall.txt \
+            --cleared-out .release-tag-stall-cleared.txt
+          RC=$?
+          set -e
+          # Persist the new stalled set (overwrite the restored prev) so the post-job cache save
+          # carries it forward. Skip if the script did not write it (crash) — keep the prev rather
+          # than wipe it.
+          [ -f .release-tag-stall-state.next.json ] && mv -f .release-tag-stall-state.next.json .release-tag-stall-state.json
+          STALLED=false
+          STALL_REPORT=""
+          if [ -s .release-tag-stall.txt ]; then
+            STALLED=true
+            STALL_REPORT=$(tail -n +2 .release-tag-stall.txt)
+          fi
+          CLEARED=false
+          CLEARED_KEY=""
+          CLEARED_REPORT=""
+          if [ -s .release-tag-stall-cleared.txt ]; then
+            CLEARED=true
+            CLEARED_KEY=$(head -n 1 .release-tag-stall-cleared.txt)
+            CLEARED_REPORT=$(tail -n +2 .release-tag-stall-cleared.txt)
+          fi
+          {
+            echo "stalled=$STALLED"
+            echo "stall_report<<__EOR__"
+            echo "$STALL_REPORT"
+            echo "__EOR__"
+            echo "cleared=$CLEARED"
+            echo "cleared_key=$CLEARED_KEY"
+            echo "cleared_report<<__EOR__"
+            echo "$CLEARED_REPORT"
+            echo "__EOR__"
+          } >> "$GITHUB_OUTPUT"
+          exit $RC
+
+  stall-notify:
+    needs: reconcile
+    if: needs.reconcile.outputs.stalled == 'true'
+    uses: ./.github/workflows/notify-slack.yml
+    with:
+      message: ${{ needs.reconcile.outputs.stall_report }}
+      severity: WARNING
+      workflow_name: reconcile-release-tags
+      run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+      dedup_key: release-tag-stall
+      # A release-tag stall persists for days once it starts (the 2026-06-27 incident ran 26-29
+      # days) — re-remind every ~6h (not every */30 tick) so a standing stall doesn't spam the
+      # channel while still surfacing well inside a single workday.
+      cooldown_min: 360
+      # Distinct concurrency lane from stall-notify-resolved (both can fire in one run if some
+      # repos clear while others newly stall).
+      concurrency_suffix: stall
+    secrets:
+      SLACK_WEBHOOK_URL: ${{ secrets.SLACK_CI_WEBHOOK_URL }}
+      GCP_SA_KEY: ${{ secrets.GCP_SA_KEY }}
+
+  stall-notify-resolved:
+    needs: reconcile
+    if: needs.reconcile.outputs.cleared == 'true'
+    uses: ./.github/workflows/notify-slack.yml
+    with:
+      # Names the specific repo(s) that just cleared (per-set diff in reconcile_release_tags.py),
+      # not a generic fleet all-clear.
+      message: ${{ needs.reconcile.outputs.cleared_report }}
+      severity: INFO
+      recovery: true
+      workflow_name: reconcile-release-tags
+      run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+      dedup_key: ${{ needs.reconcile.outputs.cleared_key }}
+      cooldown_min: 60
+      concurrency_suffix: stall-cleared
+    secrets:
+      SLACK_WEBHOOK_URL: ${{ secrets.SLACK_CI_WEBHOOK_URL }}
+      GCP_SA_KEY: ${{ secrets.GCP_SA_KEY }}
