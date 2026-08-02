@@ -85,15 +85,26 @@ on the Linux hosts where slots really run?) rather than a mechanical fix. Also: 
 workspace bans shipping from anything but a green `quality-gates.sh` tree, so `agent-orchestrator`'s copy of the
 `quality-gates-v2.yml` concurrency fix is sitting **locally modified but uncommitted** in this checkout, not shipped.
 
-- [ ] [SCRIPT] P3. Confirm this test actually passes on a real Linux host (any orchestrator-VM slot or a fresh
+- [x] ✅ [SCRIPT] P3. Confirm this test actually passes on a real Linux host (any orchestrator-VM slot or a fresh
       `ubuntu-latest`-equivalent) to close the "not live-verified" gap above — if it also fails there, the bug is worse
-      than a macOS-only gap and needs re-triage.
+      than a macOS-only gap and needs re-triage. — **2026-08-02 (slot-16): CONFIRMED.** Ran
+      `tests/test_dirty_state_resolution.py::test_default_proc_cwd_live_true_for_live_process_under_slot_dir` directly
+      on this Linux slot host (Ubuntu 24.04, `uname -a` = `Linux ... 6.17.0-1019-aws ...`) after `uv sync` — passed
+      cleanly (1 passed in 2.86s), confirming the mechanism hypothesis: `/proc/<pid>/cwd` resolves fine on Linux, this
+      is purely a macOS-local-dev gap, not a broken feature on the real deployment targets. Also confirmed via the full
+      `quality-gates.sh --no-fix` run (2226 passed, 2 skipped) — this test is not among the skips.
 - [ ] [SCRIPT] P3. Decide + implement a cross-platform fix (either a real non-`/proc` liveness signal for macOS, e.g.
       `psutil.Process(pid).cwd()`, or an explicit `sys.platform != "linux"` skip that degrades to the other two liveness
       signals — the function's own docstring says "the caller's other two signals (claim, worker_alive) still stand" —
       this suggests a graceful skip may already be the intended degraded behavior and only the TEST itself needs a
       `sys.platform`-conditional skip, not the implementation).
-- [ ] [SCRIPT] P2. Once fixed, ship the already-rendered local `.github/workflows/quality-gates-v2.yml` change in
+- [x] ✅ [SCRIPT] P2. Once fixed, ship the already-rendered local `.github/workflows/quality-gates-v2.yml` change in
       `agent-orchestrator` (`fix(ci): cancel-in-progress on pull_request events for quality-gates-v2 (was push-only)` —
       same commit message as the other 21 repos) via `quality-gates.sh --no-fix && quickmerge.sh --agent --files`,
-      completing the fleet rollout tracked in the companion issue doc.
+      completing the fleet rollout tracked in the companion issue doc. — **2026-08-02 (slot-16) — DONE.** Since this
+      Linux host isn't blocked by the macOS-only test (confirmed above), rendered the fix via the canonical
+      `rollout-workflow-templates.sh --repo agent-orchestrator --template quality-gates-v2.yml.tmpl` (never hand-edit a
+      per-repo workflow copy) rather than waiting on the stale macOS-checkout's uncommitted render — PM's template
+      already carried the fix. `agent-orchestrator@f7fe4e9` — quality-gates.sh --no-fix PASSED (2226 passed/2 skipped,
+      lint/format/ types/dashboard tsc+vitest all clean), quickmerge --agent landed + verified
+      ancestor-of-origin/live-defi-rollout. Fleet rollout for agent-orchestrator now complete.
