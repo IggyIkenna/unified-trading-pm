@@ -305,7 +305,14 @@ context_scope:
       (`server/state_store/cooldown.py`, `dispatch_cooldown_auto_park_skip_threshold` default 3). Closing THIS dispatch
       via `/skip-current-task` with `reason_code: GATED` instead, so it actually arms the fleet-scoped cooldown and
       counts toward durable auto-park — future dispatches of this same todo should do likewise (not `/done`) until it
-      either auto-parks or P2c genuinely lands.
+      either auto-parks or P2c genuinely lands. — **2026-08-02 (slot 13, review): re-dispatched again, still genuinely
+      blocked — P2c (line 278) confirmed still `[ ]`.** Checked
+      `GET /api/backlog/sports_closeout_track_s2_foldin-008/blockers` before declining: `"ready (no blockers)"` —
+      slot-5's 2026-07-31 GATED cooldown/skip_count has since expired (the 24h park window elapsed with no further GATED
+      decline in between to accumulate toward the auto-park threshold of 3). Declining via `/skip-current-task` with
+      `reason_code: GATED` again, per the established pattern above — this re-arms the fleet cooldown; whoever picks
+      this up next should do likewise until P2c lands or 3 GATED declines land close enough together to cross the
+      auto-park threshold.
 - [x] ✅ [DATA] P2. **RETAGGED 2026-07-28 (stale-tag audit — already ruled 2026-07-26, `[OPERATOR]` never removed).**
       Unresolved cefi-before-sports gate TENSION, never ruled (flagged 2026-07-14, still open).
       `instruments_foundation_completeness_2026_06_24.md` states sports does NOT start its G1→G5 until cefi is DONE, but
