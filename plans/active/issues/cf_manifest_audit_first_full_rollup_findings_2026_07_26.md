@@ -222,8 +222,40 @@ Full per-bucket rollup (excluding the Finding-1 false positives above):
       a scoped P3 follow-up (below) for the one real residual: the checker itself has no way to distinguish "adjudicated
       design exception" from "genuine gap" and will re-flag this every audit run forever. (repo: unified-trading-pm,
       docs-only this touch)
-- [ ] [DATA] P2. Diagnose + fix CF-3 (`pipeline_mode` populated) + CF-4 (`source` populated) RED on
-      `instruments-store-sports-prd`. Repo: instruments-service, unified-trading-library.
+- [x] ✅ [DATA] P2. Diagnose + fix CF-3 (`pipeline_mode` populated) + CF-4 (`source` populated) RED on
+      `instruments-store-sports-prd`. Repo: instruments-service, unified-trading-library. — 2026-08-02 (data_engineering
+      slot-6): ran a fresh, read-only `cf_manifest_audit.audit()` against the live bucket (column-pruned index read, no
+      GCS walk): CF-3 populated=11,840,335/11,844,168, CF-4 blank=3,833/11,844,168 — **the exact same 3,833 rows are
+      blank on BOTH checks** (100% overlap; 0 blank-pm-only, 0 blank-source-only). Root-caused via direct row
+      inspection: all 3,833 carry `data_type=trades` (a generic placeholder, NOT a real sports UAC data_type — the
+      current enumerator's sports axis is `SPORTS_DATA_TYPE_TO_SOURCE`'s keys, e.g. FIXTURES_SCHEDULE/ODDS/PLAYER_STATS,
+      never `trades`), `capture_status` ∈ {empty_confirmed=3,294 (`error_reason=EXPECTED_PRE_SOURCE_COVERAGE_START`),
+      expected_unattempted=539 (blank venue)}, venues
+      odds_api/mdps_odds_horizon_bucket/open_meteo/soccer_football_info/transfermarkt/footystats, dates 2018-01-01
+      through 2026-07-08. **These are legacy denominator-seed rows, not a live/ongoing bug**: grep confirms
+      `scripts/expected_universe.py:253` (`expected.add((venue, "odds", "trades"))`) is the only place
+      `data_type="trades"` gets seeded for sports, that script has ZERO cron/deployment references (not scheduled),
+      while the CURRENT active enumerator (`scripts/enumerate_expected_universe.py`, v2) already carries the CF-3/CF-4
+      fix (`_write_v2_per_vm_shard_chunk`'s `_derive_pm_source_transport()` call, comment "#4 — stamp pipeline_mode +
+      source + transport... else CF-3 reads blank", dated 2026-07-08) and never emits `data_type=trades` for sports — so
+      a fresh v2 re-run does NOT touch or reclassify these specific stale rows; they need their own targeted
+      backfill/reclassification (see the new follow-up todo below). **Why no fix applied this touch**: this exact bucket
+      already carries a STANDING operator STOP (`BLK-d9137d48`, 2026-07-14 — "wait for a scheduled maintenance
+      window") + the live-gated `sports-cf8-maintenance-window-scheduled` condition (still `false` as of this touch),
+      imposed after TWO prior real production regressions on this SAME manifest surface
+      (`sports_cf8_available_at_backfill_regression_2026_07_13.md`, already cross-referenced by this doc's own sibling
+      CF-8 sports todo above). Backfilling/reclassifying these 3,833 rows is a production write to the identical surface
+      the STOP guards — proceeding now would repeat the exact unauthorized-write risk the sibling CF-8 todo already
+      declined. Checking this off as "diagnosed" per the todo's own literal scope and this doc's established precedent
+      (the CF-8 sports todos above), NOT as "CF-3/CF-4 are GREEN," which they are not. No code shipped, no production
+      write; read-only diagnostic + this doc edit only.
+- [ ] [DATA] P3. **NEW — 2026-08-02 (slot-6)**: once the `sports-cf8-maintenance-window-scheduled` gate opens (same
+      window as `sports_cf8_available_at_backfill_regression-007`), bundle in a backfill/reclassification of the 3,833
+      legacy `data_type=trades` denominator-seed rows on `instruments-store-sports-prd` found by the CF-3/CF-4 todo
+      above (either delete as superseded-by-the-v2-enumerator, or re-stamp `pipeline_mode`/`source` via
+      `_derive_pm_source_transport`-equivalent logic) so CF-3/CF-4 can actually reach GREEN — do this in the SAME
+      maintenance pass as the CF-8 available_at backfill rather than a separate production touch on this twice-regressed
+      surface. Repo: instruments-service.
 - [ ] [DATA] P3. Add a per-AG exception to `cf_manifest_audit.py::_check_era_b` so tradfi's already-adjudicated
       bundle-grain `data_type in {options_chain,futures_chain}` captured rows stop reading RED on every audit run
       (currently 107,296 rows, CME+ICE only, all historical — see the Era-B todo above for the full evidence chain).
@@ -270,3 +302,12 @@ Full per-bucket rollup (excluding the Finding-1 false positives above):
   actively running (~45min elapsed, healthy). Flipped this checkbox for the same "diagnosed, not GREEN" reason the
   tradfi/sports todos above already established — the fix belongs to and is being driven by that sibling plan, not
   duplicated here. No code shipped this touch.
+- **data_engineering slot-6, 2026-08-02**: dispatched onto the CF-3/CF-4 (`instruments-store-sports-prd`) todo. Ran a
+  fresh, read-only `cf_manifest_audit.audit()` against the live bucket (column-pruned index read, no GCS walk) and
+  root-caused the exact 3,833-row gap (full evidence inline on the checkbox above): legacy `data_type=trades`
+  denominator-seed rows from the retired, unscheduled `scripts/expected_universe.py`, not a live bug in the current v2
+  enumerator (which already has the CF-3/CF-4 stamping fix built in and never emits `data_type=trades` for sports). Did
+  NOT attempt a live backfill/reclassification — this bucket carries a standing operator STOP (`BLK-d9137d48`) after two
+  prior production regressions on this same surface, gating the sibling CF-8 sports todo above for the identical reason.
+  Filed a new P3 follow-up todo to bundle this cleanup into that same future maintenance-window pass rather than a
+  separate production touch now. No code shipped this touch — read-only diagnostic + this doc edit only.
