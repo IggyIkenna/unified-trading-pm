@@ -817,3 +817,23 @@ those commits landed). The escalation's own repo-blocker list (`GET /api/repo-bl
   entries in `fleet_wide_qg_capacity_crisis_continues_day2_2026_07_29.md` (lines ~914-963) for the full prior chain.
   Also per `agt-45c03c`'s finding, did NOT attempt an `AUTHORING_SLOT=ci-reconcile` ping — confirmed `422` (non-integer
   `slot_id`) in that entry, a known dead end.
+- **slot-6 2026-08-02**: dispatched todo 8 (backlog task `pytest_timeout_60s_flaky_under_contention-006`). Checked the
+  "Done when" criteria: (a) requires a SECOND confirmed multi-hour wedge instance before this is "a proven general fix"
+  (currently N=1, per todo 8's own text) — not something a worker can produce on demand, only observe; (b) requires
+  deciding whether to build an auto-detect + auto-cancel + auto-retrigger watchdog for a wedged `quality-gates-v2` run.
+  Surveyed the existing watcher (`scripts/repo-management/ci_failure_watcher.py`, 2001 lines) for a natural home:
+  `detect_stuck_prs`/`auto_recover_stuck_prs` (close+reopen recovery) is scoped specifically to wedged PROMOTION PRs,
+  and `detect_glue_starvation` is scoped specifically to QUEUED self-hosted glue jobs in the PM dispatch repo — neither
+  covers todo 8's actual shape (a GH-hosted, non-PR `workflow_dispatch`/`push`-triggered `quality-gates-v2` run stuck
+  with ZERO step progress for 3h+). Recommend AGAINST building new automation yet: (1) todo 8's own text explicitly
+  frames this as N=1, not yet a confirmed general mechanism; (2) auto-cancelling an in-progress CI run carries real risk
+  (masking a genuinely slow-but-real hang, interrupting a legitimate long-running job) that a one-off manual
+  `gh run cancel` + re-trigger doesn't — building it now would be automation for an unconfirmed pattern; (3) the
+  existing `auto_recover_stuck_prs` precedent already bounds its own retries and only acts on a well-understood,
+  narrower failure shape (PR-level), which took multiple confirmed occurrences to earn that automation — todo 8 should
+  earn the same bar before a general workflow-run-level watchdog gets built. No code change made. Checkbox intentionally
+  stays `[ ]` — per this doc's own established precedent (todos 3/5/7), a "wait for a second occurrence" disposition is
+  not a completion; this is a genuine "not yet actionable" state, not a discipline gap. Releasing the task via
+  `/skip-current-task` rather than `/done` (a `/done` call with no checkbox flip would 409 under the M3 plan-flip gate,
+  correctly — see `ao_done_gate_tag_correlation_false_match_on_leading_marker_2026_08_02.md` for a related M3 finding
+  from this same session).
