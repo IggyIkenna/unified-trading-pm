@@ -17,7 +17,7 @@
 
 <!-- AUTO-INDEX-START -->
 
-_Auto-generated via `scripts/plans/regenerate_active_plan_index.py`. 244 plans across 10 domains. A plan tagged with
+_Auto-generated via `scripts/plans/regenerate_active_plan_index.py`. 242 plans across 10 domains. A plan tagged with
 multiple `asset_group:` values appears under each. Grep this block for a domain keyword before scanning `plans/active/`
 by hand._
 
@@ -137,7 +137,7 @@ by hand._
   — Gated closeout for vol_dvol_backtestable_engines_2026_07_13.md, reclassified `assigned_vm: NA -> planning` by the
   na-eligibility-audit cefi-tranche run 2026-07-30 (retroactive-reclassification shape, codex…
 
-### defi (37)
+### defi (35)
 
 - [`ag_closeout_audit_rollout_2026_07_25`](./ag_closeout_audit_rollout_2026_07_25.md) — Autonomous session (/autonomous,
   operator away, 2026-07-25) driving the /ag-closeout-audit skill across the 4 asset groups that haven't had it yet —
@@ -240,14 +240,6 @@ by hand._
 - [`defi_track5_coverage_mvp_backfill_2026_07_24`](./defi_track5_coverage_mvp_backfill_2026_07_24.md) — Forked verbatim
   from defi_consolidated_closeout_2026_07_18.md's "Track 5 — COVERAGE" section (2026-07-24, per task_template.md's
   "partial parallelism is NOT expressible inside one plan — SPLIT" rule and an operator ruling during the 5-AG…
-- [`defi_venue_pipeline_to_live_ao_build_2026_07_30`](./defi_venue_pipeline_to_live_ao_build_2026_07_30.md) — Executes
-  the operator's 2026-07-29 ruling on
-  /plans/archive/2026_07/defi_venue_phase_live_definition_contradiction_2026_07_22.md — count
-  ANKR/STADER/STAKEWISE/SWELL/MANTLE/MAKER toward the `defi` completeness_pct denominator, but only…
-- [`defi_venue_pipeline_to_live_ao_build_finalize_2026_07_30`](./defi_venue_pipeline_to_live_ao_build_finalize_2026_07_30.md)
-  — Gated finalize companion for defi_venue_pipeline_to_live_ao_build_2026_07_30.md — reconciles the completed build's
-  evidence back into its source issue doc, then archives both docs per plan-completion-and-archival-discipline once
-  every todo…
 - [`instruments_satellite_ao_dispatch_batch1_2026_07_27`](./instruments_satellite_ao_dispatch_batch1_2026_07_27.md) —
   First /na-eligibility-audit interactive dry-run (tradfi tranche, 2026-07-27) classified
   honest_coverage_shard_dimension_model_definitional_data_2026_07_07.md as mixed across 14 open items: 8 are genuinely

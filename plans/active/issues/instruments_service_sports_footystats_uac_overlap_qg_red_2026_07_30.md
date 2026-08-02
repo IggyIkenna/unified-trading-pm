@@ -15,7 +15,7 @@ parent_epic: sports_master
 superseded_by: instruments_service_qg_red_uac_sports_venue_overlap_2026_07_30
 resolved_by:
 source: >-
-  Discovered while shipping todo 1 of /plans/active/defi_venue_pipeline_to_live_ao_build_2026_07_30.md (a DeFi
+  Discovered while shipping todo 1 of /plans/archive/2026_08/defi_venue_pipeline_to_live_ao_build_2026_07_30.md (a DeFi
   instruments-service task, unrelated to sports) — full `quality-gates.sh` run surfaced 2 pre-existing RED tests,
   verified byte-identical on a clean `git stash` tree at LDR HEAD `cccc6ef5` before this session's DeFi diff.
 summary:

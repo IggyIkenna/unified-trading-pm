@@ -5,7 +5,7 @@ summary: >-
   Gated finalize companion for defi_venue_pipeline_to_live_ao_build_2026_07_30.md — reconciles the completed build's
   evidence back into its source issue doc, then archives both docs per plan-completion-and-archival-discipline once
   every todo is done.
-status: active
+status: complete
 nature: process
 asset_group: [defi]
 stage: [data]
@@ -14,11 +14,11 @@ scope: [engineer]
 tags: [defi, finalize, archival, ao-build]
 related:
   [
-    /plans/active/defi_venue_pipeline_to_live_ao_build_2026_07_30.md,
+    /plans/archive/2026_08/defi_venue_pipeline_to_live_ao_build_2026_07_30.md,
     /plans/archive/2026_07/defi_venue_phase_live_definition_contradiction_2026_07_22.md,
   ]
 created: "2026-07-30"
-last_updated: 2026-07-30
+last_updated: 2026-08-01
 parent_epic: infrastructure_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -35,7 +35,7 @@ locked_by:
 locked_since:
 context_scope:
   [
-    /plans/active/defi_venue_pipeline_to_live_ao_build_2026_07_30.md,
+    /plans/archive/2026_08/defi_venue_pipeline_to_live_ao_build_2026_07_30.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
   ]
 supersedes:
@@ -47,8 +47,15 @@ source: >-
 
 # Finalize — DeFi 6-venue pipeline→live build
 
+> **🟢 ARCHIVED 2026-08-01.** All 3 todos done: build-plan evidence reconciled back into the source issue doc
+> ([[defi_venue_phase_live_definition_contradiction_2026_07_22]]), that issue doc archived, and now the build plan
+> ([[defi_venue_pipeline_to_live_ao_build_2026_07_30]]) plus this finalize doc itself both archived to
+> `/plans/archive/2026_08/`. This doc's own checkbox-flip commit and its `git mv` are kept separate per RULES.md § 2's
+> never-combine rule. No new durable contract from this finalize plan itself — the codex-alignment work is recorded on
+> the build plan's own archived banner.
+
 Machine-held (`gate_on_depends: true`) until every todo in
-`/plans/active/defi_venue_pipeline_to_live_ao_build_2026_07_30.md` is done. Do not start manually before then.
+`/plans/archive/2026_08/defi_venue_pipeline_to_live_ao_build_2026_07_30.md` is done. Do not start manually before then.
 
 ## Todos
 

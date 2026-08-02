@@ -25,7 +25,7 @@ scope: [engineer]
 tags: [defi, vault-share-price, manifest, instrument-id, per-instrument-grain]
 related:
   [
-    /plans/active/defi_venue_pipeline_to_live_ao_build_2026_07_30.md,
+    /plans/archive/2026_08/defi_venue_pipeline_to_live_ao_build_2026_07_30.md,
     /plans/active/issues/defi_lst_oracle_timestamp_glued_instrument_id_2026_07_20.md,
   ]
 created: "2026-07-31"
@@ -51,7 +51,7 @@ locked_by:
 locked_since:
 context_scope:
   [
-    /plans/active/defi_venue_pipeline_to_live_ao_build_2026_07_30.md,
+    /plans/archive/2026_08/defi_venue_pipeline_to_live_ao_build_2026_07_30.md,
     /plans/active/issues/defi_lst_oracle_timestamp_glued_instrument_id_2026_07_20.md,
     /plans/epics/infrastructure_master.md,
   ]

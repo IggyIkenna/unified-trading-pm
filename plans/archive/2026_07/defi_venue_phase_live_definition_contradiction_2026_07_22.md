@@ -21,8 +21,8 @@ related:
   [
     /plans/archive/2026_07/distinct_values_noncanonical_audit_2026_07_20.md,
     /plans/archive/2026_07/honest_coverage_v2_instrument_denominator_2026_06_28.md,
-    /plans/active/defi_venue_pipeline_to_live_ao_build_2026_07_30.md,
-    /plans/active/defi_venue_pipeline_to_live_ao_build_finalize_2026_07_30.md,
+    /plans/archive/2026_08/defi_venue_pipeline_to_live_ao_build_2026_07_30.md,
+    /plans/archive/2026_08/defi_venue_pipeline_to_live_ao_build_finalize_2026_07_30.md,
   ]
 created: "2026-07-22"
 parent_epic: infrastructure_master
@@ -415,12 +415,12 @@ unresolved operator decision.
 - [x] [DATA] P1. **RULED 2026-07-29 (operator direct answer) — both: count them AND build out the real IS universe.**
 
   ✅ RESOLVED 2026-08-01 — the redirected build plan has now FULLY SHIPPED, independently re-verified, not just
-  redirected. `/plans/active/defi_venue_pipeline_to_live_ao_build_2026_07_30.md`'s 5 sequential todos (genuine IS
-  adapters, cron health fix, 90-day backfill, catalogue registration, `DEFI_VENUE_PHASE` flip) are all `[x]` done. The
-  gated finalize plan's reconciliation todo
-  (`/plans/active/defi_venue_pipeline_to_live_ao_build_finalize_2026_07_30.md`) independently re-verified all 7 cited
-  commit SHAs via `git log`/`git show` against fresh-pulled `origin/live-defi-rollout` (not trusting the build plan's
-  own evidence lines uncritically) — all 7 confirmed real ancestors with content matching each claim:
+  redirected. `/plans/archive/2026_08/defi_venue_pipeline_to_live_ao_build_2026_07_30.md`'s 5 sequential todos (genuine
+  IS adapters, cron health fix, 90-day backfill, catalogue registration, `DEFI_VENUE_PHASE` flip) are all `[x]` done.
+  The gated finalize plan's reconciliation todo
+  (`/plans/archive/2026_08/defi_venue_pipeline_to_live_ao_build_finalize_2026_07_30.md`) independently re-verified all 7
+  cited commit SHAs via `git log`/`git show` against fresh-pulled `origin/live-defi-rollout` (not trusting the build
+  plan's own evidence lines uncritically) — all 7 confirmed real ancestors with content matching each claim:
   `instruments-service@{6c193a19,149076bc,5cbf4d3e,1831bff0}`, `market-tick-data-service@{5b5caffa,9ae23495,77738598}`,
   `unified-api-contracts@4f215b4c`. Found + corrected 2 same-day SHA-attribution errors in the build plan (a
   companion/follow-up commit cited instead of the actual primary commit; substance was true in both cases) — see that
@@ -483,9 +483,9 @@ doesn't re-diagnose from scratch. Recommend this become its own dedicated multi-
   sub-steps across 3 repos, multi-day) is not a bounded single-worker-determinable outcome per the AO
   dispatch-scope-eligibility rule, so it was converted to a non-ingestable digest pointer (see Todos above) rather than
   left as a real checkbox that would keep re-dispatching an unscopable mega-task. Real work now tracked in
-  `/plans/active/defi_venue_pipeline_to_live_ao_build_2026_07_30.md` (5 sequential todos) +
-  `/plans/active/defi_venue_pipeline_to_live_ao_build_finalize_2026_07_30.md` (gated finalize, will archive this doc
-  once the build plan lands). `status` stays `open` — no code shipped yet, only re-scoping.
+  `/plans/archive/2026_08/defi_venue_pipeline_to_live_ao_build_2026_07_30.md` (5 sequential todos) +
+  `/plans/archive/2026_08/defi_venue_pipeline_to_live_ao_build_finalize_2026_07_30.md` (gated finalize, will archive
+  this doc once the build plan lands). `status` stays `open` — no code shipped yet, only re-scoping.
 - **2026-08-01 (slot-4, data_engineering craft) — finalize plan's reconciliation todo: build plan verified fully
   shipped, digest pointer above flipped to resolved.** Independently re-verified all 7 commit SHAs the build plan cites
   across its 5 todos via `git log`/`git show` against fresh-pulled `origin/live-defi-rollout` — all real ancestors,

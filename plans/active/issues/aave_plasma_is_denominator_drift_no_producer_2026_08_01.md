@@ -19,7 +19,8 @@ tags: [honest-coverage, denominator-drift, defi, plasma, aave, qg-red, instrumen
 related:
   [
     /plans/archive/issues/defi_plasma_chain_onboarding_gap_2026_07_26.md,
-    /plans/active/defi_venue_pipeline_to_live_ao_build_2026_07_30.md,
+    /plans/archive/2026_08/defi_venue_pipeline_to_live_ao_build_2026_07_30.md,
+    /plans/active/defi_consolidated_closeout_2026_07_18.md,
   ]
 created: 2026-08-01
 last_updated: 2026-08-01

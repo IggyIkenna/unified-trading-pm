@@ -112,8 +112,8 @@ match, and the golden fixture regenerated per its own docstring recipe).
   real failure surfaced by a concurrent commit (`unified-api-contracts@c64d2b2c`, slot-8): 6 new DeFi venue→adapter-key
   mappings (ANKR/STADER/STAKEWISE/SWELL/MANTLE/MAKER-ETHEREUM) with no matching adapter class yet in this tree. Root
   cause: slot-15 already had the matching `instruments-service` adapter commit (`cebead3d`, todo 1 of
-  `/plans/active/defi_venue_pipeline_to_live_ao_build_2026_07_30.md`) built and QG-green locally, but blocked on
-  shipping by this exact repo-blocker (`RB-ecfc50de`) — a circular cross-slot dependency (my fix needed theirs to
+  `/plans/archive/2026_08/defi_venue_pipeline_to_live_ao_build_2026_07_30.md`) built and QG-green locally, but blocked
+  on shipping by this exact repo-blocker (`RB-ecfc50de`) — a circular cross-slot dependency (my fix needed theirs to
   re-gate green; theirs needed mine to un-block). Cherry-picked slot-15's non-conflicting, additive-only commit into
   this session's worktree (verified clean merge-base, zero file overlap with my diff) and shipped both together —
   `instruments-service@6c193a19`. Full `quality-gates.sh`: 5093 passed, 0 failed. Repo-blocker `RB-ecfc50de` resolved.

@@ -175,7 +175,7 @@ locked_since:
   `market-tick-data-service@77738598` passes `per_vm_shards=True` explicitly on `DefiManifestRecorder`'s
   `ManifestWriter` construction — this recorder has no legitimate reason to want the legacy CAS path, so hardcoding it
   closes the gap without depending on env-var propagation a local invocation never gets. Full detail + the actual
-  90-day-backfill task this blocked: `/plans/active/defi_venue_pipeline_to_live_ao_build_2026_07_30.md` Progress Log.
-  Strengthens the case for todo 3's shared safe-by-default write helper (this doc's todo 3 already covers the read side;
-  the write side now has its OWN 2-incident precedent — gas_fees migration script + this core recorder — worth folding
-  into the same evaluation rather than treating as a separate class).
+  90-day-backfill task this blocked: `/plans/archive/2026_08/defi_venue_pipeline_to_live_ao_build_2026_07_30.md`
+  Progress Log. Strengthens the case for todo 3's shared safe-by-default write helper (this doc's todo 3 already covers
+  the read side; the write side now has its OWN 2-incident precedent — gas_fees migration script + this core recorder —
+  worth folding into the same evaluation rather than treating as a separate class).

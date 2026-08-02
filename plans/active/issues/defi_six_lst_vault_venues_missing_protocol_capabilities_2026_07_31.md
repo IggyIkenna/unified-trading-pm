@@ -28,8 +28,9 @@ scope: [engineer]
 tags: [defi, honest-coverage, layer1, protocol-capabilities, expected-universe, denominator]
 related:
   [
-    /plans/active/defi_venue_pipeline_to_live_ao_build_2026_07_30.md,
+    /plans/archive/2026_08/defi_venue_pipeline_to_live_ao_build_2026_07_30.md,
     /plans/archive/2026_07/defi_venue_phase_live_definition_contradiction_2026_07_22.md,
+    /plans/active/defi_consolidated_closeout_2026_07_18.md,
   ]
 created: "2026-07-31"
 last_updated: "2026-07-31"
@@ -59,7 +60,7 @@ locked_since:
 context_scope:
   [
     /codex/02-data/honest-coverage-model.md,
-    /plans/active/defi_venue_pipeline_to_live_ao_build_2026_07_30.md,
+    /plans/archive/2026_08/defi_venue_pipeline_to_live_ao_build_2026_07_30.md,
     unified-api-contracts/unified_api_contracts/registry/capability_declarations/_defi.py,
     instruments-service/scripts/expected_universe.py,
     market-tick-data-service/market_tick_data_service/cli/handlers/lst_rates_handler.py,

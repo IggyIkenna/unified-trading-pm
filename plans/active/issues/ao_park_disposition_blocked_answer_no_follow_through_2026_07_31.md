@@ -14,10 +14,11 @@ summary: >-
   (`defi_venue_pipeline_to_live_ao_build-006`): main's earlier "A — park it" lean was recorded but never applied, and
   the task kept being re-offered at normal priority (review msg 2978). It did no harm THIS time (the correct resolution
   turned out to be "don't park — the verify check was a squash-ancestry false-negative and the fix was already on main",
-  see `/plans/active/defi_venue_pipeline_to_live_ao_build_2026_07_30.md`), but the follow-through gap is real and today
-  depends on a human/agent remembering rather than a mechanism. Not urgent: `auto_park` is a genuine backstop once a
-  task actually starts getting DECLINED as GATED (as it did for `cefi_track2_backfill_vm_preempted_no_recovery-003`),
-  but a task that keeps getting ACCEPTED-and-worked (not declined) never trips it.
+  see `/plans/archive/2026_08/defi_venue_pipeline_to_live_ao_build_2026_07_30.md`), but the follow-through gap is real
+  and today depends on a human/agent remembering rather than a mechanism. Not urgent: `auto_park` is a genuine backstop
+  once a task actually starts getting DECLINED as GATED (as it did for
+  `cefi_track2_backfill_vm_preempted_no_recovery-003`), but a task that keeps getting ACCEPTED-and-worked (not declined)
+  never trips it.
 status: open
 nature: issue
 asset_group: [cross-cutting]
