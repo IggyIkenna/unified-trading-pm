@@ -277,9 +277,22 @@ but it is a deliberate, disclosed contribution to a RED ratchet, not an accident
 - [x] ✅ [OPERATOR] P1. **Rule § 1d and § 1e** — RULED 2026-08-02, option A for both. Track 1 un-checked (Script 1's
       ~4.5M-file backfill confirmed still in progress via the fleet doc, `status: open`); legacy-bucket cross-cutting
       doc corrected to "deleted 2026-07-14" citing both corroborating docs. (repo: `unified-trading-pm`)
-- [ ] [OPERATOR] P1. **Rule § 2a** — Massive/Polygon.io removal status. RULED 2026-08-02: option A (finish the removal
-      in instruments-service). Implementation not yet done — implicates real code + a codex SSOT + CLAUDE.md, tracked as
-      its own follow-up. (repo: `instruments-service`, `unified-trading-pm`)
+- [x] ✅ [CODE] P1. **Rule § 2a** — Massive/Polygon.io removal status. RULED 2026-08-02: option A (finish the removal in
+      instruments-service) — **EXECUTED 2026-08-03**. `instruments-service@e7933317` deletes
+      `reference_data/adapters/tradfi/massive.py` + `tests/unit/test_massive_adapter.py` and unwires every call site
+      (factory `_ADAPTERS`/`ADAPTER_DATA_SOURCES`, `_resolve_source_aware_adapter_key`,
+      `_DATE_AWARE_TRADFI_ADAPTER_KEYS`, the `--source` CLI flag + its whole `source=` plumbing through
+      `instruments_handler`→`process`→`process_fetch`/`process_completeness`→`urdi_reference_provider`→`factory`, the
+      `MASSIVE` pseudo-venue key-reloader branch, and the `sessions.py` `EXCHANGE_HOURS`/`get_session_metadata` aliases
+      whose only consumer was `massive.py`) — 19 files, −1,109/+36, `quality-gates.sh` green (exit 0, 5,113 tests pass,
+      coverage 88.76% ≥ 88.0% floor). Docs corrected in `unified-trading-pm@3fe932104` (codex
+      `/codex/02-data/tradfi-databento-sourcing-ssot.md` dated-2026-08-03 paragraph + CLAUDE.md domain index, both now
+      citing the completing sha alongside `uac@a2beed46`/`mtds@362a487e`). QG STEP 5.83's stale per-file baseline entry
+      for the deleted adapter cleared in `unified-trading-pm@77be36524` (single-entry removal, NOT
+      `--regenerate-baseline`, so no sibling repo's ratchet was silently re-based). Deliberately RETAINED, not a
+      residual gap: UAC's `external/massive/` normalisers + schemas, `PipelineMode.BATCH_MASSIVE` + `possible_manifest`
+      recognition, and the `source="massive"` mentions in instruments-service `scripts/` + `tests/scripts/` — all
+      historical data provenance, not adapter wiring. (repo: `instruments-service`, `unified-trading-pm`)
 - [x] ✅ [OPERATOR] P2. **Rule § 2b** — RULED 2026-08-02, option B (carve out a park-only exception). Documented in
       `/codex/04-architecture/agent-orchestrator-backlog-state-alignment.md`: an agent may hand-edit an existing row's
       `priority`/`prereqs` to park it, provided the task content is untouched AND the same park intent is also authored
