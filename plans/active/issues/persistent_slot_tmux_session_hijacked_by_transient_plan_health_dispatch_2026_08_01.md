@@ -152,13 +152,27 @@ boot-loop doc's citation of `server/prompts.py` and `server/routes/slots_worker.
 
 ## Recommended decision
 
-- [ ] [BACKEND] P1. Locate the dispatch/spawn code path(s) that emit `plan_health_dispatch_initiated` (at minimum the
+- [x] ✅ [BACKEND] P1. Locate the dispatch/spawn code path(s) that emit `plan_health_dispatch_initiated` (at minimum the
       `na_eligibility` mode; audit every mode: `na_eligibility`, `ag_closeout`, and whatever emits the
       `data_pipeline_failure` stale-role-clear pattern) and confirm whether they select a target tmux session/slot
       without checking for an existing, live, persistent-role claim on it. If confirmed, make the selection
       collision-aware: skip a tmux session that already has a live `AgentRow` for a persistent role (`review`, `main`,
       `monitor`), and pick a different / dedicated session for the transient dispatch instead. (repo:
-      agent-orchestrator)
+      agent-orchestrator) — **already shipped, checkbox was stale.** `agent-orchestrator@0c82906`
+      (`ikennaigboaka [slot-13·planning]`, 2026-08-01T14:52:57Z, `Quickmerge: agent`) fixed both of this codebase's ONLY
+      two slot-picker functions (`server/plan_health.py::_pick_free_slot` line ~160,
+      `server/escalation.py::     _pick_free_slot` line ~205 — confirmed via grep, no other
+      `_pick_free_slot`/`pick_free_slot` exists anywhere in `server/`) to exclude `config.review_slot_ids()` outright,
+      closing the `autospawn.ensure_review_agents()` TOCTOU respawn-gap race for both. Slot-9 (this task) verified scope
+      coverage rather than re-deriving the fix from scratch: `na_eligibility` and `ag_closeout` are both modes of the
+      single `plan_health.dispatch()` entry point (`valid_modes` at `plan_health.py:454`), which has exactly one
+      `_pick_free_slot` call site (line 492) — both modes route through the now-fixed picker. `data_pipeline_failure` is
+      one of `escalation.py`'s walls (`_DATA_PIPELINE_WALLS`, line 105) and escalation dispatch has exactly one
+      `_pick_free_slot` call site (line 398) — also now-fixed. Per todo 2's own audit below, `main`/`monitor` were never
+      reachable via this vector at all (structurally separate session namespaces), so excluding `review_slot_ids()` is
+      the complete fix for every persistent role actually exposed. Confirmed the "pick a different session" behavior
+      too, not just an exclusion: `test_dispatch_review_slot_is_the_only_slot_raises` proves the fleet falls back to
+      no-capacity refusal (never hijacks review) when no non-review slot is free.
 - [x] ✅ [BACKEND] P1. Audit whether `main` and `monitor` (the fleet's other persistent, single-instance roles) are
       reachable as targets by the same transient-dispatch selection logic, per main agent's own concern in chat
       (2026-08-01T13:06:55Z). If they are, this is materially higher severity than the review-role case documented here
@@ -169,9 +183,18 @@ boot-loop doc's citation of `server/prompts.py` and `server/routes/slots_worker.
       when the role it's clearing belongs to a KNOWN transient-dispatch mode colliding with a KNOWN persistent role —
       today it reads as routine cleanup; it should be diagnosable as "a collision just happened" without needing to
       cross-reference `plan_health_dispatch_initiated` timestamps by hand, the way this doc had to.
-- [ ] [BACKEND] P3. Add a regression test: dispatching a transient role (e.g. `na_eligibility_auditor`) while a
+- [x] ✅ [BACKEND] P3. Add a regression test: dispatching a transient role (e.g. `na_eligibility_auditor`) while a
       persistent role (e.g. `review`) already holds a live session on the same target must either be refused/rerouted,
-      or must not produce a `tmux_session_lost` kill for the persistent occupant. (repo: agent-orchestrator)
+      or must not produce a `tmux_session_lost` kill for the persistent occupant. (repo: agent-orchestrator) — **already
+      shipped in the same commit as todo 1, checkbox was stale.** `agent-orchestrator@0c82906` added 3 regression tests
+      covering exactly this: `test_pick_free_slot_skips_review_slot` (`tests/test_escalation.py`) and
+      `test_dispatch_never_claims_review_slots` + `test_dispatch_review_slot_is_the_only_slot_raises`
+      (`tests/test_plan_health.py`) — each constructs the TOCTOU respawn-gap state (`has_session()==False` on the review
+      slot, exactly the window the live incident exploited) and asserts the picker never selects it, falling back to
+      another free slot or a clean `PlanHealthError` (never a `tmux_session_lost` kill of the persistent occupant).
+      Verified via code read (not re-run — this is already-committed, already-`Quickmerge: agent`-gated code from a
+      prior session; per `RULES.md` never-run-pytest-directly, no redundant local pytest invocation for a spot-check of
+      code this task didn't modify).
 
 ## Codex SSOTs
 
@@ -259,3 +282,15 @@ boot-loop doc's citation of `server/prompts.py` and `server/routes/slots_worker.
   has no awareness that the calling session already has a complete, self-contained assignment from its own dispatch
   payload (`tranche`/`mode`), independent of the `review`-vs-`persistent-role` collision vector todo 1 already scopes
   for tmux-kill collisions specifically.
+
+- **backend_engineer 2026-08-02 (slot-9, todo 1 dispatch)**: on picking up todo 1's tracking task, found the fix (and
+  todo 4's regression tests) were **already shipped** — `agent-orchestrator@0c82906`
+  (`ikennaigboaka [slot-13·planning]`, 2026-08-01T14:52:57Z) landed same-day, well before this dispatch, but neither
+  checkbox had been flipped. Verified scope completeness rather than re-implementing: confirmed by grep that
+  `server/plan_health.py::_pick_free_slot` and `server/escalation.py::_pick_free_slot` are the ONLY two slot-picker
+  functions in `server/`, both now exclude `review_slot_ids()`; confirmed `na_eligibility`/`ag_closeout` are both
+  `plan_health.dispatch()` modes sharing its one `_pick_free_slot` call site, and `data_pipeline_failure` is an
+  `escalation.py` wall sharing its one call site — so all three named modes in todo 1's scope route through the fixed
+  code, no gap. Flipped todo 1 + todo 4 with evidence inline above; left todo 2 (higher-visibility
+  `stale_spawn_base_role_cleared` signal, still open) and the cross-referenced "no collision" task-assignment gap
+  (previous entry) untouched — genuinely separate, unshipped work outside this dispatch's task-001 scope.
