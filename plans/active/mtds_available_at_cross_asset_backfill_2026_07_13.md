@@ -913,3 +913,9 @@ itself are the real next steps, not another `rebuild_tradfi_manifest.py` invocat
 old lowercase rows to canonical uppercase (closing the split permanently) is the C2a ruling's own open migration work,
 out of this plan's scope — this doc's Apply todo should likely be evaluated against the FOLDED number, not the raw one,
 when deciding whether to flip it.
+
+**Checked whether the SAME casing-duplicate pattern affects the prediction lane's fill-rate numbers reported in this doc
+— it does NOT.** Prediction's `instrument_type` also carries a casing variant (`prediction_market`, 9,720 rows,
+alongside canonical `PREDICTION_MARKET`), but every prediction fill-rate figure in this doc's earlier entries already
+filters to the exact string `PREDICTION_MARKET`, so the casing split is orthogonal to prediction's low numbers (which
+are genuinely explained by the backfill not having reached that date range yet, not a dedup/casing artifact).
