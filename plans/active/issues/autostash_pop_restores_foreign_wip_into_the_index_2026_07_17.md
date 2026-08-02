@@ -114,7 +114,7 @@ right up until the pull, and the post-pull index is never re-inspected.
 - [x] ✅ [DEVOPS] P2. **Post-commit case (already have a local commit ahead of origin): keep `--rebase --autostash`**
       (this case is genuine commit-graph divergence, not FF-eligible, and rebase is what keeps `live-defi-rollout`
       linear instead of littering it with merge commits) **— but make the autostash-pop safe.** — **DONE 2026-08-02,
-      `unified-trading-pm@5ef8c8e35`.** Immediately after `git pull --rebase --autostash`, BEFORE any of this script's
+      `unified-trading-pm@9669098c3`.** Immediately after `git pull --rebase --autostash`, BEFORE any of this script's
       own `git add <files>`, `_qm_stage_0_4_not_behind_gate`'s post-commit branch (`scripts/quickmerge.sh` ~L746) now
       runs `git restore --staged . 2>/dev/null || true` unconditionally — it only unstages (never touches working-tree
       content, so it can't destroy anything), guaranteeing the index holds only what this run explicitly re-adds
