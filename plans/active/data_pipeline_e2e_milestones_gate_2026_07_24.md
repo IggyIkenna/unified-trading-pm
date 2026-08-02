@@ -461,9 +461,18 @@ cells have actually been proven wired through backfill=paper=live, vs. just decl
 
 ## Follow-up todo (added to make the Deferred-work table's open items real checkboxes)
 
-- [ ] [DATA] P2. **Run the first live 30-day VM billing-waste audit** — the Deferred-work table above still shows "Todo
+- [x] [DATA] P2. **Run the first live 30-day VM billing-waste audit** — the Deferred-work table above still shows "Todo
       #4's first live 30-day audit run | Not started"; tracked in
-      `plans/active/issues/vm_billing_waste_first_audit_and_preflight_gate_design_2026_07_24.md`.
+      `/plans/active/issues/vm_billing_waste_first_audit_and_preflight_gate_design_2026_07_24.md`. —
+      `unified-trading-pm@a5d0702de` + the tracking doc's own `[x] [SCRIPT] P1` at
+      `/plans/active/issues/vm_billing_waste_first_audit_and_preflight_gate_design_2026_07_24.md:57-63` records the run
+      DONE 2026-07-25 with GCP exhaustive (all 18 launcher families across two runs, 197/197 preemption events accounted
+      for, one confirmed `tradfi-bf-*` billing-waste finding + an alerting gap), backed by two dated Progress Log
+      entries citing real `gcloud compute operations list` output. Flipped 2026-08-02 by the `/plan-reconcile`
+      whole-corpus run after verifying `a5d0702de` is an ancestor of `origin/live-defi-rollout` — this checkbox and the
+      Deferred-work table row were simply never updated. **Residual, deliberately not blocking this checkbox** (it is
+      the tracking todo's own stated carve-out, not a gap this todo owns): the AWS half stays IAM-blocked on
+      `ec2:DescribeSpotInstanceRequests` for `uts-orchestrator-epic-role`, re-confirmed 2026-07-25.
 
 ## Lesson (2026-07-24, not yet elsewhere in codex — worth carrying)
 

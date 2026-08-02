@@ -113,7 +113,53 @@ This needs an operator/architecture call, not a guess — two plausible paths, n
 
 ## Status
 
-Open — not yet triaged into an AO-dispatchable todo (bounded outcome unclear until the operator picks A vs B).
+Open — finding 2's fix direction is not yet AO-dispatchable (bounded outcome unclear until the operator picks A vs B);
+findings 3 and 4 have concrete bounded next steps, tracked as todos below.
+
+## Todos
+
+> Converted from prose 2026-08-02 by the `/plan-reconcile` whole-corpus run's zero-checkbox sweep — this doc carried
+> zero `- [ ]`/`- [x]` lines, so all of the remaining work below was invisible to every mechanical check (open-todo
+> counts, `regen_backlog_from_plan.py`, the orphan/NA audits). Register:
+> [`/plans/active/issues/zero_checkbox_sweep_all_tranches_2026_07_31.md`](/plans/active/issues/zero_checkbox_sweep_all_tranches_2026_07_31.md).
+> No new work was invented — each todo restates a "Recommended decision" / "Not yet done" item already written above.
+> The doc is `execution_scope: local-only`, so these do NOT enter the AO backlog.
+
+- [ ] [OPERATOR] P2. **Rule finding 2: A vs B for the SPORTS honest-absence `FetchEvidence` dead-end.** A = mirror the
+      CEFI/DEFI/TRADFI fix — when `classify_sports_empty_reason` falls back to `SOURCE_RETURNED_ZERO`, route to
+      `record_failed_for_shard` (shard becomes visible + re-attemptable; loses the "legitimate calendar absence"
+      framing). B = thread real `league_id` down to both call sites so a calendar-typed reason resolves (preserves
+      intent; more invasive, touches tick-data → instrument-metadata plumbing in both files). Done-when: the operator
+      picks A or B and this todo is retagged to the reflecting tag in the SAME edit. (repo:
+      `market-data-processing-service`)
+- [ ] [DATA] P2. **Implement the ruled option from the todo above** in
+      `live_workers_chain.py::_write_or_record_empty_timeframe` and
+      `live_workers_streaming.py::_record_streaming_empty_timeframe`. Done-when: a SPORTS honest-absence candle
+      timeframe produces a real manifest row (not a `WARNING` + zero rows), proven on one re-run day. BLOCKED on the
+      A-vs-B ruling. (repo: `market-data-processing-service`)
+- [ ] [DIAG] P1. **Settle finding 4's `_collect_future_result` lead for the deterministic `~50/N "Unknown error"`
+      crash.** Grep a failing VM's `run.log` for `❌ Exception processing` (specifically — the generic
+      `Traceback|Exception` search already came back null twice) to catch the file-level exception
+      `batch_workers.py:513` should log before the summary. Done-when: either that grep locates the raising frame, or it
+      is null and `_process_instrument_file`'s full body + `_submit_instrument_file_tasks` have been read to find the
+      raise whose `str(e)` is `""`. (repo: `market-data-processing-service`)
+- [ ] [DIAG] P2. **Local repro against the known-bad instrument_ids** — e.g.
+      `FOOTBALL:bovada:h2h:soccer_argentina_primera_division:2025/2026:Racing Club-Estudiantes::AWAY` for `2025-12-18`
+      (finding 4) and `2025-12-24` (finding 3). Confirmed deterministic across ≥3 runs per date and reproducing on two
+      independent dates, so a single local run settles it without more log archaeology. Done-when: the crash is
+      reproduced locally and the raising frame is named. (repo: `market-data-processing-service`)
+- [ ] [DIAG] P3. **Read `_streaming_filter_slice` / `_streaming_resolve_inst_info` line-by-line** (finding 3's residual)
+      for a raise that stringifies to `""`; these two calls inside `_process_chain_bundle_streaming`'s per-symbol loop
+      (`live_workers_streaming.py:777-823`) are NOT individually try/excepted, unlike
+      `_streaming_process_slice_timeframes`. Done-when: either a candidate raise is named or both are confirmed
+      raise-free. NOTE: finding 4 already DISCONFIRMED the "falling back to eager" half of this hypothesis (zero hits
+      for that log string), so this is now the narrow residual, not the leading theory. (repo:
+      `market-data-processing-service`)
+- [ ] [SCRIPT] P3. **Do NOT relaunch `mdps-backfill-sports-` for `2025-12-24` / `2025-12-18` until the above lands** —
+      the prefix has already failed 6x in one day against `rb_infra_relaunch.md`'s `≤2/(vm-prefix,day)` bound, and the
+      crash is proven deterministic, so each further relaunch reproduces the identical `~50/N` failure and burns compute
+      for zero new information. Done-when: the crash fix is verified, then exactly one relaunch confirms green. (repo:
+      `deployment-service`)
 
 ## Related escalations (crash root cause — finding 1, RESOLVED)
 
