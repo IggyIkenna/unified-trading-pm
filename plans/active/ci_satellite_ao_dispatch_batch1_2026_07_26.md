@@ -431,9 +431,9 @@ concurrent workers do not collide on this file.
       tag, rather than the source pyproject) or delete it if superseded — state which and why. **Done when**: the
       api-contracts-version-overlap check either correctly resolves the git-tag version or the script is gone with zero
       dangling referrers. Repo: unified-api-contracts.
-- [ ] [INFRA] P2. **Fleet version/tag-state census (read-only, NO tag minting).** Three docs each ask for a slice of the
-      same measurement; do it once. (a) Re-derive manifest `versions{}` vs the highest real `vX.Y.Z` tag across all 24
-      repos (last measured 2026-07-17: 13 in sync / 9 LAGGING / 1 AHEAD — worst `e2e-testing` 0.6.0 vs v0.40.0). (b)
+- [x] ✅ [INFRA] P2. **Fleet version/tag-state census (read-only, NO tag minting).** Three docs each ask for a slice of
+      the same measurement; do it once. (a) Re-derive manifest `versions{}` vs the highest real `vX.Y.Z` tag across all
+      24 repos (last measured 2026-07-17: 13 in sync / 9 LAGGING / 1 AHEAD — worst `e2e-testing` 0.6.0 vs v0.40.0). (b)
       Determine why the versions-consolidator is not closing that gap, and confirm it runs at all. (c) Confirm each of
       the 22 repos the stall alarm reported STALLED on 2026-07-23 has since minted ONE post-fix tag capturing current
       `main`, and list those that have not. **HARD CONSTRAINT: audit only — do NOT mint, move, or delete any git tag**
@@ -443,6 +443,15 @@ concurrent workers do not collide on this file.
       `post_cutover_silent_assumption_sweep_2026_07_23.md`, with zero write operations performed. Sources:
       `issues/d13_orphaned_version_readers_and_manifest_drift_2026_07_17.md` (step 2) +
       `issues/post_cutover_silent_assumption_sweep_2026_07_23.md` ([INFRA] P2 "Reconcile the ~4 weeks of missing tags").
+      **2026-08-02 — unified-trading-pm@\<sha, filled by shipping commit below\>.** (a) 8 sync / 15 LAG / 0 AHEAD / 1
+      N/A (gap widened since 2026-07-17: 13 sync→8, `unified-trading-pm` flipped from the lone AHEAD to the worst LAG at
+      42 patch). (b) Root-caused: the writer (`update-repo-version.yml`) is healthy and `main`'s cache is current — the
+      break is `main-backmerge-to-ldr.yml`, failing on every run since 2026-07-29T15:48:27Z (0/100 recent runs, ~3 days,
+      previously unreported), which never propagates `main`'s current cache to `live-defi-rollout`. Filed a new P1:
+      `issues/main_backmerge_to_ldr_silent_failure_2026_08_02.md`. (c) 11/22 have since minted; 11/22 remain stalled
+      today (listed in the census table with unreleased-commit counts). Zero tags minted/moved/deleted — audit only, per
+      the HARD CONSTRAINT. Full table: `issues/d13_orphaned_version_readers_and_manifest_drift_2026_07_17.md` § "Fleet
+      version/tag-state census (2026-08-02)".
 - [ ] [INFRA] P2. **The repurposed release-STALL alarm emits a `::warning::` nobody reads.** `reconcile_release_tags.py`
       is now the fleet's release-stall detector (codex ruling, `/codex/08-workflows/ci-cd-flow.md:1004`), and it
       correctly measured a 4-week, 22-repo, ~2,490-commit outage — but by default it only emits a `::warning::` unless a

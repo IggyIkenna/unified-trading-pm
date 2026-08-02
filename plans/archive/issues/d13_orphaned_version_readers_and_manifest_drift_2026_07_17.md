@@ -209,3 +209,125 @@ Census now closed — the table above plus the original sample table cover every
 shell/workflow files; none found beyond the fleet-standard
 `semver-agent`/`request-major-bump`/`update-dependency- version` workflow set, which are already correctly git-tag-aware
 post-D13).
+
+## Fleet version/tag-state census (2026-08-02, `ci_satellite_ao_dispatch_batch1-020`)
+
+Read-only audit per the parent todo's HARD CONSTRAINT — **zero write operations performed** (no tag minted, moved, or
+deleted). Cross-linked from `post_cutover_silent_assumption_sweep_2026_07_23.md`'s "Reconcile the ~4 weeks of missing
+tags" todo. All measurements live, worktree `.tabs/6`, 2026-08-02 ~15:00 UTC.
+
+### (a) Manifest `versions{}` vs highest real `vX.Y.Z` tag — 24 repos
+
+Re-derived the 2026-07-17 baseline (13 in sync / 9 LAGGING / 1 AHEAD, worst `e2e-testing` 0.6.0 vs v0.40.0 = 34 minor).
+Tag detection excludes the pre-2026-02-28 version-reset tags still present on `instruments-service` (stray
+`v1.1.0-1.3.0`, dated 2025-11-13) and `unified-trading-library` (stray `v1.0.0`/`v1.2.0`, same date) — those predate the
+manifest note "All versions reset to 0.x.x (2026-02-28)" and are not comparable; the 2026-07-17 measurement did not hit
+this trap because those repos happened to lag on their `0.x` line at the time.
+
+```
+  in sync: 8    manifest LAGS the tag: 15    manifest AHEAD of the tag: 0    no comparable tag: 1 (deployment-ui)
+```
+
+| repo                              | manifest (`versions{}`) | highest real tag     | status                                          |
+| --------------------------------- | ----------------------- | -------------------- | ----------------------------------------------- |
+| agent-orchestrator                | 0.97.0                  | v0.99.0              | LAG 2 minor                                     |
+| alerting-service                  | 0.59.0                  | v0.60.0              | LAG 1 minor                                     |
+| batch-live-reconciliation-service | 0.49.0                  | v0.49.0              | sync                                            |
+| client-reporting-api              | 0.32.0                  | v0.32.0              | sync                                            |
+| deployment-api                    | 0.58.0                  | v0.66.0              | LAG 8 minor                                     |
+| deployment-service                | 0.108.0                 | v0.113.0             | LAG 5 minor                                     |
+| deployment-ui                     | 0.1.0                   | (no `v*` tags exist) | N/A — `version_source` unset, not tag-versioned |
+| e2e-testing                       | 0.41.0                  | v0.41.0              | sync                                            |
+| execution-service                 | 0.43.0                  | v0.46.0              | LAG 3 minor                                     |
+| features-service                  | 0.68.0                  | v0.74.0              | LAG 6 minor                                     |
+| fund-administration-service       | 0.9.32                  | v0.9.32              | sync                                            |
+| greeks-service                    | 0.18.13                 | v0.18.17             | LAG 4 patch                                     |
+| ibkr-gateway-infra                | 0.0.74                  | v0.5.0               | LAG 5 minor                                     |
+| instruments-service               | 0.94.0                  | v0.96.0              | LAG 2 minor                                     |
+| market-data-processing-service    | 0.24.0                  | v0.24.0              | sync                                            |
+| market-tick-data-service          | 0.99.0                  | v0.102.0             | LAG 3 minor                                     |
+| ml-service                        | 0.52.0                  | v0.52.0              | sync                                            |
+| strategy-service                  | 0.49.0                  | v0.51.0              | LAG 2 minor                                     |
+| system-integration-tests          | 0.15.0                  | v0.15.0              | sync                                            |
+| trading-agent-service             | 0.12.11                 | v0.12.11             | sync                                            |
+| unified-api-contracts             | 0.80.0                  | v0.86.0              | LAG 6 minor                                     |
+| unified-trading-api               | 0.2.19                  | v0.4.0               | LAG 2 minor (from a small base)                 |
+| unified-trading-library           | 0.65.0                  | v0.70.0              | LAG 5 minor                                     |
+| unified-trading-pm                | 1.2.655                 | v1.2.697             | LAG 42 patch                                    |
+
+**The gap widened, not closed, since 2026-07-17**: sync count dropped 13→8, LAG count rose 9→15, and the previous lone
+AHEAD case (`unified-trading-pm` 1.2.596 vs tag 1.2.595) has flipped to the single worst LAG (1.2.655 vs 1.2.697 = 42).
+`unified-trading-pm`'s `repositories{}.version` scalar (Problem 3, still unresolved) reads a THIRD number, `1.2.509` —
+three disagreeing values for one repo, still live evidence the vestigial scalar (suggested-order-of-work item 5) has not
+been deleted.
+
+### (b) Why the versions-consolidator is not closing the gap — confirmed root cause
+
+The consolidator chain is NOT one job — it is two, and only the first is healthy:
+
+1. **`update-repo-version.yml`** (PM, triggered by a `version-bump` `repository_dispatch` from each repo's
+   `semver-agent.yml` on `push:[main]`) is the actual writer of manifest `versions{}` (there is no separate "hourly
+   Firestore→manifest consolidator" — `version_registry_store.py`'s `get-map` verb, which WOULD read the Firestore
+   `repo_state/{repo}.release_tag` aggregate, has **zero callers fleet-wide** (grep-confirmed) — the comment describing
+   an "hourly versions-consolidator" in `version-registry-update.yml`'s header is aspirational/never built; the real
+   write path is `update-repo-version.yml`). **This job is healthy and current** — verified live: `origin/main`'s
+   `workspace-manifest.json` shows `unified-trading-library=0.70.0` (exact match to its highest tag) and
+   `unified-trading-pm=1.2.697` (exact match to its highest tag), i.e. `main`'s cache is NOT lagging at all.
+2. **`main-backmerge-to-ldr.yml`** is the bridge that projects `main` (where #1 writes) back onto `live-defi-rollout`
+   (the branch every fleet worker's `.tabs/<slot>/unified-trading-pm` clone reads — including this census). **This job
+   has failed on every run since its last success at 2026-07-29T15:48:27Z** — live-queried via `gh run list`: 0
+   successes in the most recent 100 runs (spanning 2026-07-30T18:38 → 2026-08-02T14:33), last success 2026-07-29 (a
+   different doc, `ao_slot_capacity_policy_ci_scheduled_split_2026_07_29.md`, independently confirms the
+   `quality-gates-v2 → main-backmerge-to-ldr → Semver Agent` chain ran clean that day). A representative failed run
+   (30752363942, 2026-08-02T14:33) fails in ~0.6s with **zero `[backmerge:...]` decision output at all** — it dies
+   before reaching the `decision=merged|conflict|noop` echo, meaning even the job's own conflict-escalation safety net
+   (open a visible PR + dispatch `escalate-to-orchestrator`) never fires; the failure is silent beyond the bare GitHub
+   Actions red X. `origin/live-defi-rollout` is measured 210 commits behind `origin/main` on `workspace-manifest.json`
+   alone (221 behind on `main` in general) as of this census.
+
+**Net**: the versions-consolidator (#1) is not the broken component — the manifest cache genuinely is current on `main`.
+The gap this census measures in (a) is a downstream symptom of #2's ~3-day-old, previously-unreported outage. Filed as
+its own P1 finding (out of this todo's read-only scope to fix):
+[/plans/active/issues/main_backmerge_to_ldr_silent_failure_2026_08_02.md](/plans/active/issues/main_backmerge_to_ldr_silent_failure_2026_08_02.md).
+
+### (c) Stall-alarm confirmation — the 22 repos reported STALLED 2026-07-23
+
+Re-ran `scripts/cicd/reconcile_release_tags.py --dry-run` live (read-only, confirmed zero tags created). The 22 repos
+from the 2026-07-23 measurement are exactly the 23 git-tag-versioned repos minus `unified-trading-pm` (the script
+explicitly skips PM — "not a published Python package"). Today's result:
+
+**11 of 22 have since minted a post-fix tag (now healthy)**: `alerting-service` (v0.60.0), `deployment-api` (v0.66.0),
+`deployment-service` (v0.113.0), `execution-service` (v0.46.0), `features-service` (v0.74.0), `instruments-service`
+(v0.96.0), `market-tick-data-service` (v0.102.0), `strategy-service` (v0.51.0), `unified-api-contracts` (v0.86.0),
+`unified-trading-api` (v0.4.0), `unified-trading-library` (v0.70.0) — includes the two 2026-07-25 hand-mints
+(`unified-trading-library`, `unified-api-contracts`) plus 9 more that have since minted organically.
+
+**11 of 22 remain STALLED today (have NOT minted since 2026-07-23)**:
+
+| repo                              | unreleased commits on `main` | newest tag age |
+| --------------------------------- | ---------------------------- | -------------- |
+| agent-orchestrator                | 104                          | 7.7d           |
+| batch-live-reconciliation-service | 85                           | 36.1d          |
+| client-reporting-api              | 83                           | 36.1d          |
+| e2e-testing                       | 36                           | 7.7d           |
+| fund-administration-service       | 69                           | 36.2d          |
+| greeks-service                    | 77                           | 36.5d          |
+| ibkr-gateway-infra                | 15                           | 7.7d           |
+| market-data-processing-service    | 27                           | 4.0d           |
+| ml-service                        | 27                           | 7.1d           |
+| system-integration-tests          | 28                           | 7.7d           |
+| trading-agent-service             | 63                           | 36.2d          |
+
+Spot-checked `agent-orchestrator` (104 unreleased commits despite the highest churn of any repo in the fleet):
+`semver-agent.yml` IS wired and running successfully on every `push:[main]` (10/10 recent runs green) — so this is not a
+dead/unwired workflow. The runs are non-bumping by DESIGN in the cases inspected: the "bump-rate circuit breaker" (≥2
+adjacent re-bump pairs / ≥3 consecutive / ≥6 bumps-per-hour trips a REFUSAL) and the "HEAD-commit re-entry brake" (skips
+when the triggering commit is itself a release-bump commit, to prevent a self-referential loop) both fired on inspected
+runs. Whether the remaining 10 repos are stalled for the same reason, a different circuit-breaker trip, or genuinely no
+feat/fix-worthy commits since their last tag was **not individually diagnosed per repo** — that is beyond this census's
+read-only scope; flagged as a follow-up todo in `post_cutover_silent_assumption_sweep_2026_07_23.md`'s "Reconcile the ~4
+weeks of missing tags" item rather than guessed at here.
+
+Separately, the 2 repos the reconciler reports as "no readable main pyproject" are `deployment-ui` and
+`unified-trading-system-ui` — both correctly out-of-model (JS/`package.json`-versioned, no `pyproject.toml` at all), not
+a stall condition.

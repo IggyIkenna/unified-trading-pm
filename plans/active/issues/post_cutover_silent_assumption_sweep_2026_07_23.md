@@ -462,7 +462,19 @@ codex, or a future staging re-entry gets a dead pipeline.
       version satisfied since 2026-06-27). The other ~20 stalled repos in the table above are still open; this todo item
       itself stays unchecked. **na-eligibility-audit 2026-08-01: already tracked (not yet done) as an open todo in
       `ci_satellite_ao_dispatch_batch1_2026_07_26.md` ("Fleet version/tag-state census (read-only, NO tag minting)"),
-      which cites this exact checkbox as its Source — track completion there.**
+      which cites this exact checkbox as its Source — track completion there.** **2026-08-02 census complete**
+      (`ci_satellite_ao_dispatch_batch1-020`, read-only, zero tags minted): 11 of the 22 have since minted a post-fix
+      tag; 11 remain stalled today (`agent-orchestrator`, `batch-live-reconciliation-service`, `client-reporting-api`,
+      `e2e-testing`, `fund-administration-service`, `greeks-service`, `ibkr-gateway-infra`,
+      `market-data-processing-service`, `ml-service`, `system-integration-tests`, `trading-agent-service`). Also found:
+      the manifest `versions{}` cache lags tags for 15 of 24 repos on `live-defi-rollout` specifically because
+      `main-backmerge-to-ldr.yml` has failed on every run since 2026-07-29T15:48:27Z (~3 days, previously unreported) —
+      the writer (`update-repo-version.yml`) is healthy and `main`'s cache is current. Full dated table + evidence:
+      [/plans/archive/issues/d13_orphaned_version_readers_and_manifest_drift_2026_07_17.md](/plans/archive/issues/d13_orphaned_version_readers_and_manifest_drift_2026_07_17.md)
+      § "Fleet version/tag-state census (2026-08-02)". New P1 filed for the backmerge outage:
+      [/plans/active/issues/main_backmerge_to_ldr_silent_failure_2026_08_02.md](/plans/active/issues/main_backmerge_to_ldr_silent_failure_2026_08_02.md).
+      This todo itself stays unchecked — the census is done, but the 11 still-stalled repos and the new backmerge P1 are
+      open follow-up work, not this todo's own completion.
 - [x] ✅ [INFRA] P1. **`publish-package.yml`'s per-repo DISPATCHER was never actually installed on the two frozen
       library repos (2026-07-25 finding, sharpens the "dead listener" framing above)** — not merely un-rolled-out in the
       abstract: `unified-trading-library/.github/workflows/publish-package.yml` was still the **pre-refactor "Publish to
