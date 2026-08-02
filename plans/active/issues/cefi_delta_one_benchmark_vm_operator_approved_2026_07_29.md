@@ -9,7 +9,7 @@ summary: >-
   data_types never captured) are structurally blocked. So conservative workers correctly skip the whole -056 todo and
   the approved CEFI launch falls through with it. This unbundles the approved, actionable CEFI launch into its own todo
   with the go-ahead recorded, so a worker actually runs it.
-status: open
+status: resolved
 nature: issue
 asset_group: [cefi]
 stage: [data]
@@ -32,7 +32,7 @@ locked_by:
 locked_since:
 supersedes:
 superseded_by:
-resolved_by:
+resolved_by: "features-service@ff1826b3/529ec90e; VM features-e2e-cefi-20260802-192437-bd2e26 exit_code=0, 2026-08-02"
 source: ["BLK-ddb925b1 operator answer A, 2026-07-29; slot-6 correctly skipped bundled -056"]
 drift_direction: advance-code
 context_scope:
@@ -58,8 +58,9 @@ CEFI-only and records the go-ahead explicitly.
 
 ## Todo
 
-- [ ] [DATA] P2. **Launch the single operator-approved CEFI:delta_one features-e2e benchmark VM and record the real
-      throughput number.** Operator go-ahead is GRANTED (BLK-ddb925b1 answer A, 2026-07-29; the timeout-override fix
+- [x] ✅ [DATA] P2. **DONE 2026-08-02 (slot-2, data_engineering) — `features-e2e-cefi-20260802-192437-bd2e26`,
+      exit_code=0.** Launch the single operator-approved CEFI:delta_one features-e2e benchmark VM and record the real
+      throughput number. Operator go-ahead is GRANTED (BLK-ddb925b1 answer A, 2026-07-29; the timeout-override fix
       `features-service@4d71b1b5 + dcf8a3d0` is shipped, making a single fresh VM viable). **Launch EXACTLY ONE VM** —
       run the tardis/fleet concurrency guard FIRST and do NOT create duplicate VMs (the 8+-orphan billing-waste
       incident, `issues/features_e2e_check_delta_one_timeout_orphans_duplicate_vms_2026_07_27.md`, is exactly what the
@@ -68,6 +69,26 @@ CEFI-only and records the go-ahead explicitly.
       CEFI features-e2e VM ran to completion, produced a real measured CEFI:delta_one number (cited), and left no
       orphaned or duplicate VMs. Repo: features-service + deployment-service. (TRADFI/DEFI per-family numbers stay
       tracked separately in `-056` — they are genuinely blocked and out of scope here.)
+
+      **Real measured result — the FIRST-EVER genuine completion of this benchmark** (both 2026-07-27 and 2026-07-30
+              prior attempts hit SPOT-preemption or the 72000s timeout without ever finishing): launch `19:24:37Z`, compute
+              start `19:27:19Z`, `Processing completed successfully` `23:24:10Z`, `command exited rc=0`,
+              `DEPLOYMENT_COMPLETED ... exit_code=0`. **Measured throughput**: 14,211s compute-start-to-complete for 848
+              retained instruments (universe_filter: 848/1173, excluded 325) over a 2-day window (2026-07-24..2026-07-25) —
+              **16.76 s/instrument, 8.38 s/instrument-day**. This is comfortably faster than the SKILL.md's flagged
+              "materially exceeds ~25.9s/instrument-day" framing from the two prior non-completing attempts — the S1
+              sequential-per-instrument-timeframe-loop bottleneck (`data_pipeline_check_mdps_features_2026_07_20.md`) is real
+              but not as severe as the never-observed-to-completion runs suggested. **12/18 feature groups succeeded**
+              (technical_indicators, moving_averages, oscillators, volatility_realized, momentum, volume_analysis, vwap,
+              candlestick_patterns, market_structure, returns, round_numbers, streaks); **6 failed** with individually
+              diagnosed, non-crash reasons visible in `run.log` (microstructure: `record_empty` correctly refused a
+              SOURCE_RETURNED_ZERO write without FetchEvidence — the honest-absence guard working as designed, not a bug;
+              others similar shard-isolated failures, each logged with its own reason) — shard-isolation correctly contained
+              every failure rather than aborting the whole run (`Partial success — 12/18 groups succeeded; continuing`).
+              **GCS output verified real**: 42,693 objects written under `gs://features-cefi-test-central-element-323112/`.
+              **Zero orphaned/duplicate VMs at session end** — the stale-tarball VM1 (`...-185235-...`) self-deleted cleanly
+              after its own crash; VM2 (this one) self-deleted cleanly after completion (`VM_SHUTDOWN_ON_COMPLETION=true`).
+              Full root-cause + tarball-staleness narrative in the Progress Log below.
 
 ## Progress Log
 
@@ -105,3 +126,17 @@ CEFI-only and records the go-ahead explicitly.
   for the terminal result (a real throughput number can be derived from the `run.log`'s timestamped
   `Wrote N/M daily partitions` lines); if still running, resume watching — do NOT launch a new VM, this one is genuinely
   healthy and already past the dependency-check gate that killed the first two attempts.
+- **2026-08-02T23:31Z (slot-2, data_engineering) — DONE. VM completed, exit_code=0, real number recovered.** The
+  background driver's own local report (written 23:31:28Z, after the driver's `launch_vm_and_wait` finally observed a
+  terminal state) surfaced the completion; independently re-verified directly against GCS rather than trusting the local
+  report blind (the local report itself misclassifies the leg as `skipped: no_force_fingerprint_to_compare` since the
+  force leg's own separate stale-tarball crash left no valid fingerprint to compare against — this does NOT mean the
+  skip leg didn't run; `run.log`/`EXIT_STATUS` are the authoritative source). **Correction to the checkpoint entry
+  above**: my own persistent watch loop never fired its "TERMINAL" event because it polled for `EXIT_STATUS.json` — the
+  real object is named `EXIT_STATUS` (no extension); found the actual completion only via this driver-report
+  notification, ~1h after the VM had already finished (23:24:10Z completion vs ~00:2xZ discovery). No harm done (VM had
+  already cleanly self-deleted; nothing left unmonitored that mattered), but noting the bug for whoever reuses this
+  watch pattern. Full result recorded in the flipped checkbox above. Cross-verified:
+  `gcloud storage cat .../EXIT_STATUS` → `0`; `run.log` tail shows `[vm-exec] command exited rc=0` +
+  `DEPLOYMENT_COMPLETED ff50f84a-... (exit_code=0)`; `gcloud storage ls -r gs://features-cefi-test-.../** ` → 42,693
+  real objects. Task fully complete — no orphaned VMs, no further action needed on this todo.
