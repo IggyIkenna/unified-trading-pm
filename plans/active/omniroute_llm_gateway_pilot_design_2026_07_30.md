@@ -96,16 +96,18 @@ service↔service dependency (already true per CLAUDE.md's tier-and-import-archi
 today by which this pilot's config can reach `accounts.py`. The guardrail makes that boundary an **explicit, documented
 rule** instead of an implicit accident of current architecture, so a future change can't cross it silently:
 
-- [ ] [INFRA] P2. Add a guard comment directly above `AccountProvider = Literal["anthropic", "deepseek"]` in
+- [x] [INFRA] P2. ✅ Add a guard comment directly above `AccountProvider = Literal["anthropic", "deepseek"]` in
       `agent-orchestrator/server/accounts.py` stating: this Literal must never gain a value that routes through a
       shared/opaque multi-provider gateway (OmniRoute or equivalent) without a fresh, explicit model-tier-risk review —
       cite `/codex/06-coding-standards/model-tier-selection.md`. Done-when: comment present, references the exact codex
-      path.
-- [ ] [INFRA] P2. Add a short note to `/codex/06-coding-standards/model-tier-selection.md` cross-referencing this plan
-      and stating the same boundary from the SSOT side (an opaque multi-provider router is out of scope for any
+      path. — `agent-orchestrator@f0c4726` (comment landed pre-generalization; carried forward intact through
+      `agent-orchestrator@24bd611`'s Phase-2 AccountProvider broadening).
+- [x] [INFRA] P2. ✅ Add a short note to `/codex/06-coding-standards/model-tier-selection.md` cross-referencing this
+      plan and stating the same boundary from the SSOT side (an opaque multi-provider router is out of scope for any
       `AccountProvider`-routed worker traffic; the one sanctioned pilot surface is `deployment-api` pipeline-UAT
       commentary, tracked here). Done-when: the note exists and the plan doc is linked from it (or vice versa via
-      `context_scope`).
+      `context_scope`). — `unified-trading-pm@<pending this commit>`, new "Multi-provider gateway boundary (2026-07-30)"
+      section added, cross-references this plan doc + the DeepSeek plan.
 
 This makes "don't extend this to the worker fleet" a documented, citable rule at exactly the two places someone would
 look (the enum itself, and the model-tier SSOT) — not just a paragraph in a design doc that stops being read once the
@@ -125,27 +127,30 @@ client = anthropic.AsyncAnthropic(api_key=config.anthropic_api_key)
 
 ### Implementation steps (human-executed; each names its exact file/field/test)
 
-- [ ] [BACKEND] P2. **Add the config field.** In `deployment-api/deployment_api/deployment_api_config.py`, in the
+- [x] [BACKEND] P2. ✅ **Add the config field.** In `deployment-api/deployment_api/deployment_api_config.py`, in the
       `# PIPELINE UAT COMMENTARY` section (currently lines 678-704, alongside
       `pipeline_uat_commentary_enabled`/`anthropic_api_key`/`pipeline_uat_model`), add:
       `python     pipeline_uat_llm_base_url: str | None = Field(         default=None,         validation_alias=AliasChoices("PIPELINE_UAT_LLM_BASE_URL"),         description="Optional Anthropic-compatible base URL override for pipeline UAT commentary "         "(e.g. a local OmniRoute gateway). None = call Anthropic directly (default, unchanged behavior).",     )     `
-      Done-when: field present, `basedpyright`/`ruff` clean, no other config field touched.
-- [ ] [BACKEND] P2. **Thread it into the client construction.** In
+      Done-when: field present, `basedpyright`/`ruff` clean, no other config field touched. — `deployment-api@c61070d`,
+      field added exactly as specified, no other field touched.
+- [x] [BACKEND] P2. ✅ **Thread it into the client construction.** In
       `deployment-api/deployment_api/commentary/pipeline_uat.py`'s `_call_anthropic` (line 237), change:
       `python     client = anthropic.AsyncAnthropic(api_key=config.anthropic_api_key)     ` to:
       `python     client = anthropic.AsyncAnthropic(         api_key=config.anthropic_api_key, base_url=config.pipeline_uat_llm_base_url     )     `
       (the `anthropic` SDK's `base_url` already defaults to `None` = its own default endpoint, so this is additive — no
       behavior change when the new config field is unset). Done-when: diff is exactly this one-line expansion, no other
-      line in `_call_anthropic` touched.
-- [ ] [BACKEND] P2. **Test both branches** in `deployment-api/tests/unit/test_pipeline_uat.py`, extending the existing
-      `patch("deployment_api.commentary.pipeline_uat.anthropic.AsyncAnthropic")` pattern (see
+      line in `_call_anthropic` touched. — `deployment-api@c61070d`, exactly this one-line expansion (ruff reformatted
+      it onto a single line; no other line in `_call_anthropic` touched).
+- [x] [BACKEND] P2. ✅ **Test both branches** in `deployment-api/tests/unit/test_pipeline_uat.py`, extending the
+      existing `patch("deployment_api.commentary.pipeline_uat.anthropic.AsyncAnthropic")` pattern (see
       `test_run_pipeline_uat_enabled_calls_anthropic`): - a test asserting
       `mock_client.call_args.kwargs["base_url"] is None` when `pipeline_uat_llm_base_url` is left at its default (proves
       the default path is byte-for-byte unchanged); - a test asserting
       `mock_client.call_args.kwargs["base_url"] == "http://localhost:20128/v1"` when the config field is set to that
       value. Done-when: both tests pass under `bash scripts/quality-gates.sh` in `deployment-api`, and every
       pre-existing test in `test_pipeline_uat.py` still passes unmodified (this is additive, not a rewrite of existing
-      assertions).
+      assertions). — `deployment-api@c61070d`, both new tests added + passing, full deployment-api QG green
+      (`quality-gates.sh --no-fix`, pytest + basedpyright + ruff clean), every pre-existing test unmodified.
 - [ ] [OPERATOR] P3. **Stand up OmniRoute itself** (self-host the gateway locally/on the deployment-api host,
       `localhost:20128/v1`) and set `PIPELINE_UAT_LLM_BASE_URL` in the relevant env for a trial window. Tagged
       `[OPERATOR]` — this installs and runs a new persistent third-party network service, a class of decision (like a VM
@@ -176,3 +181,11 @@ guardrail above, that would need its own fresh model-tier-risk review, not an in
   and directing the model-tier-SSOT-conflict objection be resolved by a structural guardrail, explicitly keeping this
   doc `assigned_vm: NA`/`execution_scope: local-only` by operator choice even though the individual todos read as
   AO-dispatch grade. Citation confirmed present verbatim in the doc body — never re-litigating an established ruling.
+- **2026-08-02 — `/autonomous` dispatch, all 5 non-operator-gated todos SHIPPED, closing them.** Guardrail comment +
+  codex cross-reference, the `pipeline_uat_llm_base_url` config field, its `_call_anthropic` threading, and both unit
+  tests — all landed exactly as this doc specified. Evidence: `agent-orchestrator@f0c4726` (guardrail comment),
+  `deployment-api@c61070d` (config field + threading + tests, full QG green), this same commit (codex cross-reference).
+  **Remaining on this plan — both operator-gated, none locally doable**: standing up OmniRoute itself (`[OPERATOR]` P3)
+  and running the real pilot window (`[REVIEW] P3`, depends on the former) — per the plan's own scoping, these install
+  persistent third-party infra and require a live 2-week window respectively, neither buildable/verifiable from a dev
+  checkout.

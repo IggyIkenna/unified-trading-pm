@@ -486,6 +486,28 @@ verifiable from a dev checkout. See each todo's own "Done when" below for what u
 
 - **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).
 
+**2026-08-02 — `/autonomous` dispatch on the Phase 2 todos: `[DATA] P2` SHIPPED, `[INFRA] P2` partially shipped
+(credential-gated), `[DATA] P1` confirmed not locally doable.**
+
+- Evidence: `agent-orchestrator@24bd611` — 5 files, +220/-16. Full suite 2224 passed / 4 skipped (up from 2218/3), all
+  34 pre-existing routing tests unmodified and green.
+- `[DATA] P2` (health-gate ring generalization) is genuinely complete — its own done-when says "simulated," and the new
+  `test_unhealthy_priority_free_provider_degrades_to_next_free_provider` test proves exactly that with a mock second
+  provider, no real credential needed.
+- `[INFRA] P2` (AccountProvider generalization) ships the full mechanism + comprehensive unit tests, but stays OPEN —
+  its own done-when explicitly requires "a real, isolated local pilot dispatch, not just unit tests," which needs a real
+  API key for a second provider (openrouter/gemini/groq/sambanova) that nobody has provisioned. Not a corner cut: this
+  is the exact same shape as the still-open `[INFRA] P0` two rows above (DeepSeek's own real-VM registration) — code
+  ships inert (zero real non-Claude, non-DeepSeek accounts exist anywhere today, so this changes zero production
+  behavior on its own) and stays open until an operator supplies a real credential.
+- `[DATA] P1` (ratio-check real account costs) confirmed NOT locally doable — `accounts.json` is gitignored/per-VM,
+  confirmed absent from this dev checkout (`find` over the whole workspace turned up only `accounts.mock.json`).
+- Also fixed, same commit, adjacent+fleet-blocking: `tests/test_dirty_state_resolution.py`'s
+  `test_default_proc_cwd_live_true_for_live_process_under_slot_dir` reads `/proc/<pid>/cwd`
+  (`server/worktree_clean_check/_liveness.py`), which doesn't exist on macOS — a stable (not flaky) failure blocking
+  every agent-orchestrator QG run from a Mac-hosted slot since `623009e` landed 2026-08-01. Narrow platform skip on the
+  test only; the underlying liveness-detection code (safety-sensitive — gates inherited-dirty-WIP claims) untouched.
+
 ## Recommended rollout sequence (2026-07-29)
 
 - **2026-07-29 — rollout sequence steps 1-5 executed, code SHIPPED**:
@@ -632,18 +654,41 @@ an external reference.
       Claude Max accounts as of 2026-07-30, not the stale "4" elsewhere in this doc or the external doc's generic "7") —
       produce a real current cost-per-month and effective-token-value baseline before any further optimization work,
       since every number in the external doc was generic/assumed, not measured against this fleet. Done when: a dated
-      Progress Log entry states the real per-account tier/cost and a computed monthly total.
+      Progress Log entry states the real per-account tier/cost and a computed monthly total. **Not locally doable**: the
+      real `accounts.json` is gitignored/per-VM (confirmed absent from this dev checkout — same VM-only property the
+      rest of this plan's `accounts.json` work already relies on); needs orchestrator-VM access, like the other items in
+      the "Remaining on this plan — none locally doable" note above.
 - [ ] [INFRA] P2. Generalize `AccountProvider` (`server/accounts.py`) from `Literal["anthropic", "deepseek"]` to an open
       provider set (e.g. `openrouter`, `gemini`, `groq`, `sambanova`), reusing `select_account_for_spawn()`'s existing
       eligibility/quota-adaptive/health-gate/mutual-fallback design rather than a new routing mechanism — and explicitly
       NOT via OmniRoute or any other opaque gateway (see reconciliation note above). Done when: a second non-DeepSeek
       provider can be registered and routed to under the same policy shape (opus/fable still hard-pinned to Claude),
       proven the same way the DeepSeek pilot was — a real, isolated local pilot dispatch, not just unit tests.
-- [ ] [DATA] P2. Generalize the DeepSeek-specific health-gate ring (`_recent_spawn_failures`) to a per-provider map, so
-      a failing/rate-limited free provider degrades to the next-priority free provider before falling back to Claude
+      **Partially done, code+tests shipped, the literal done-when's real-pilot-dispatch proof is credential-gated** —
+      `agent-orchestrator@24bd611`: `AccountProvider` Literal broadened, `select_account_for_spawn()`'s routing loop
+      generalized to a priority-ordered list of registered free providers (new `tuning.free_provider_priority`), the
+      deepseek-specific `model=None` spawn-arg special-case generalized to `provider != "anthropic"`. Same safety
+      property the original DeepSeek entry relied on before ITS OWN VM-side registration: zero real accounts for any new
+      provider today, so this is a pure no-op in production until an operator actually registers one. What's genuinely
+      missing (same shape as `[INFRA] P0` two rows below): a real API key for openrouter/gemini/groq/sambanova — none
+      available in this session, and none can be obtained without the operator (mirrors the DeepSeek rollout's own
+      credential step: env file + balance top-up were operator actions). Remains open until an operator provisions one
+      real second-provider credential and a live isolated pilot dispatch runs against it.
+- [x] [DATA] P2. ✅ Generalize the DeepSeek-specific health-gate ring (`_recent_spawn_failures`) to a per-provider map,
+      so a failing/rate-limited free provider degrades to the next-priority free provider before falling back to Claude
       (the external doc's "alternate free provider" priority step, ahead of Claude escalation). Done when: a simulated
       single-provider outage routes to a second free provider before falling back to Claude, with an activity-log event
-      recording the fallback chain.
+      recording the fallback chain. — `agent-orchestrator@24bd611`: `_deepseek_health_ok` renamed `_provider_health_ok`
+      (the ring was already account_id-keyed, provider-agnostic in mechanism); routing loop degrades through the
+      configured `free_provider_priority` order on a health-gate failure before falling to Claude, logging
+      `free_provider_health_gate_skipped` then `free_provider_spawn_selected`/`deepseek_spawn_selected`. Proven via
+      `test_unhealthy_priority_free_provider_degrades_to_next_free_provider` (simulated deepseek outage → routes to a
+      mock openrouter account, both events asserted) + `test_both_free_providers_unhealthy_falls_back_to_claude` +
+      `test_free_provider_priority_config_order_is_honored` +
+      `test_unlisted_registered_provider_still_reachable_as_safety_net` + a
+      `test_single_free_provider_fleet_behavior_unchanged` regression guard (all 34 pre-existing routing tests also pass
+      unmodified). This todo's done-when says "simulated" explicitly — unlike the sibling `[INFRA] P2` above, no real
+      credential is needed to satisfy it.
 - [ ] [REVIEW] P2. Investigate grep/symbol-based code-context reduction for implementation-tier work (ripgrep,
       ctags/AST-grep-style symbol lookup, import/dependency graphs) — per the retrieval-layer reconciliation note above,
       evaluate this BEFORE any vector-embedding approach, consistent with the standing grep-native governing principle.
