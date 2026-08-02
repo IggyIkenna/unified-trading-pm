@@ -680,3 +680,72 @@ entry's own guidance, widen the monitoring interval (this VM's sibling took ~6.5
 leagues before any per-fixture cascade even started) — a stall check only needs to confirm the lock-holding VM's
 heartbeat/log is still advancing, not tick every 30-60min. If the THIRD-consecutive-immediate-retake pattern above is
 confirmed on the next check, escalate via `/blocked` instead of continuing to just log it.
+
+**ROOT CAUSE FOUND + FIXED 2026-07-31T08:20Z-09:20Z (autonomous continuation, operator interactive): the 2 req/min
+throttle was NEVER a real vendor limit — a stray `FLEET_VMS` default of 250 was dividing the shared budget by 250
+instead of 1.** Two Explore-agent investigations traced
+`deployment_service/data_pipeline_monitors/ launch_budget_registry.py`'s `allocate_rate_budget()` +
+`launch-api-football-backfill-vm.sh`'s own measured-fleet override: `FLEET_VMS="${FLEET_VMS:-250}"` at line 99,
+contradicting its OWN comment 4 lines above ("Default 1 — this is the only VM"). `git show d259f61` ("perf(vm):
+pd-balanced >=250GB for ALL download-heavy backfill VMs") shows this was collateral damage from an unrelated disk-size
+sweep (`-FLEET_VMS="${FLEET_VMS:-1}"` / `+FLEET_VMS="${FLEET_VMS:- 250}"` alongside the real `--boot-disk-size` change)
+— a find-replace accident, not a deliberate throttle. Live `/status` confirmed the real vendor plan is "Mega" (1200
+req/min, 150,000/day — NOT the 300k the launcher's static constant assumes), so the correct solo-VM divisor of 1 yields
+~130-192 req/min depending on remaining daily quota, a **65-96x** speedup over the buggy 2 req/min. Same regression
+found + fixed in 2 more launchers (`launch-mtds-dex-pools/swaps-backfill-vm.sh`, cosmetic log-only there — `FLEET_VMS`
+isn't wired into any real computation in those two). **Shipped `deployment-service@c79d33c`** (all 3 files,
+`FLEET_VMS:-250` → `FLEET_VMS:-1`). Killed the stuck `af-backfill-20260730-220243` (FIXTURES resume, day-1-of-35 after
+~14h) and relaunched identically — `af-backfill-20260731-094047` completed the ENTIRE 35-day window in ~1h (most days
+already fresh via skip-if-fresh or future-dated with no stats to fetch yet), confirming the fix. Full root-cause
+detail + provenance already lives in this doc's own commit history (`unified-trading-pm@1b9a5d9e8`); this entry is the
+pointer for anyone reading forward.
+
+**FIXTURE_EVENTS pass-2 launched 2026-07-31T~12:30Z, PREEMPTED ~14:31Z (normal SPOT variance), relaunched.** Lock
+cleared once the FIXTURES VM above finished; launched
+`--entity FIXTURE_EVENTS --recovery-fixture-ids .../recovery_fixture_ids_2026_07_30.parquet 2020-06-06 2026-07-25` as
+`af-backfill-20260731-123439`. `gcloud compute operations list` confirms `compute.instances.preempted` at
+`2026-07-31T14:30:47-07:00`, matching the run.log's abrupt end (last processed `date=2021-09-12`, nowhere near the
+`2026-07-25` target) — genuinely preempted mid-run, not completed (the log's 44 `fail_fast` hits earlier in the run are
+an UNRELATED, self-resolved API-Football server-side bug, `error: 5xEr`, not a quota/preemption signal — log continued
+processing normally for ~1h after those).
+
+**NEW BLOCKER hit on relaunch: prod VM launches now require a service-account grant this session's identity lacks.**
+`deployment-service`'s 2026-08-01 `lc_tier_service_account()` (DP-VM-002 fix) now attaches
+`uts-prd-sa@central-element-323112.iam.gserviceaccount.com` to every `DEPLOYMENT_ENV=prod` launch; the shared
+`1060025368044-compute@...` identity every local session uses lacks `iam.serviceAccountUser` on it (confirmed: can't
+even `get-iam-policy` on it). Neither the `orchestrator-cloud-identity-self-service.md` self-service identity
+(`unified-trading-sa`, not ambient on a local laptop session) nor the operator's own `gcloud` account (expired token,
+can't reauth non-interactively) was reachable to self-grant. **Workaround (no extra grant needed):
+`LC_RUNTIME_SA=<your-own-identity-email>` — attaching a VM to the SAME identity you're already authenticated as needs no
+delegation permission.** Full writeup + the durable one-line fix (needs an operator or AO-orchestrator-identity
+session): `/plans/active/issues/prod_vm_launch_missing_service_account_user_grant_2026_08_02.md`. Relaunched
+FIXTURE_EVENTS pass-2 with this workaround as `af-backfill-20260802-152210` — running, resuming via skip-if-fresh from
+wherever the manifest shows work remains (no manual resume-state tracking needed).
+
+**Precise non-MVP FIXTURE_STATS/FIXTURE_LINEUPS widening volume censused 2026-07-31 (operator asked for a precise
+completion estimate).** First pass of a new manifest-only census script undercounted by querying
+`data_type == "FIXTURES"` alone — the writer migrated `FIXTURES` → `FIXTURES_SCHEDULE` mid-history (2026-07-14 cutover,
+`SCHEDULE_DEFINING_DATA_TYPES` in UAC's `_honest_coverage_logic.py`), silently dropping ~90% of the real denominator
+(567 vs the true 749 distinct non-MVP leagues). Corrected + verified twice: **749 distinct non-MVP leagues, 69,262
+`(date, league)` schedule shards, 138,336 shards still needing FIXTURE_STATS/FIXTURE_LINEUPS (125/91 already captured),
+≈634,600 estimated API calls** (using the empirical 4.5875 fixtures/shard ratio from this campaign's own FIXTURE_EVENTS
+recovery census) — **≈4.2 days at the measured live 150k/day quota, ≈8.5 days if the real usable daily budget is 75k**
+(operator's figure; the 150k I measured live 3× today vs. the operator's 75k was never reconciled — operator accepted
+the 8.5-day figure as the working assumption regardless). Census script shipped as `instruments-service@be3d8373`
+(`scripts/census_fixture_stats_lineups_widening_volume_2026_07_31.py`) so this number is cheaply re-checkable later
+without re-deriving it.
+
+**Operational decision (operator, 2026-07-31): the FIXTURE_STATS/FIXTURE_LINEUPS backfill should STOP once each day's
+quota is spent rather than run continuously for ~8.5 days.** Rationale beyond avoiding SPOT billing waste: the
+rate-budget is a ONE-TIME snapshot at launch (`effective_rpm = remaining_daily_quota / minutes_to_UTC_midnight`, never
+re-read mid-run — confirmed `ApiFootballAdapter.get_live_quota()` has zero production callers despite the launcher's own
+comment claiming a runtime re-read happens) — a VM left running past a UTC-midnight reset keeps using its STALE,
+now-far-too-conservative end-of-day rate rather than the fresh day's much larger budget, silently re-creating a
+throttle-shaped slowdown by a different mechanism than the FLEET_VMS bug. **Correct operational pattern**: launch →
+monitor → stop+delete near end of UTC day (or on a genuine quota-exhaustion signature) → wait for the `00:00Z` reset
+(VM-free `/status` probe) → relaunch WITHOUT `--force` (skip-if-fresh resumes cleanly, no manual state tracking) →
+repeat until the census (script above) shows non-MVP FIXTURE_STATS/FIXTURE_LINEUPS needed- shard count converges to 0.
+FIXTURE_STATS and FIXTURE_LINEUPS run as two SEPARATE sequential campaigns (the launcher CLI's `--sports-entity` takes
+exactly one entity, no multi-value support) — total ~8-9 daily cycles across both before this campaign's widening todo
+can be flipped. Not yet launched (FIXTURE_EVENTS pass-2 above still finishing); next dispatch launches FIXTURE_STATS for
+`2020-06-06..<today>` once pass-2 completes and the lock clears.
