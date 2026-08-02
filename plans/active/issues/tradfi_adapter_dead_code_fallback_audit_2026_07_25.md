@@ -284,12 +284,15 @@ stale/degraded trading data) — worth tightening but far lower severity than E-
 
 ## Todos
 
-- [ ] [OPERATOR] P1. **DECISION — instruments-service `massive.py`** (Finding I-2): live, tested, fully wired
-      (`factory.py:167,219,370,450-456,470`; `cli/main.py:345-353`; `cli/instruments_handler.py:94-98,150-154,207-210`)
-      but codex `tradfi-databento-sourcing-ssot.md:44-53` + workspace CLAUDE.md both assert it was "removed... deleted"
-      2026-07-19; the cited removal commits (`unified-api-contracts@a2beed46`, `market-tick-data-service@362a487e`)
-      never touched instruments-service. Decide: (a) finish the removal in instruments-service, or (b) correct the codex
-      SSOT + CLAUDE.md text to scope the 2026-07-19 removal accurately. Repos: instruments-service, unified-trading-pm.
+- [ ] [BACKEND] P1. **DECIDED 2026-08-02 (operator ruling on `plan_reconcile_parked_operator_decisions_2026_08_02.md` §
+      2a, option A) — finish the removal in instruments-service.** (Finding I-2): `massive.py` is live, tested, fully
+      wired (`factory.py:167,219,370,450-456,470`; `cli/main.py:345-353`;
+      `cli/instruments_handler.py:94-98,150-154,207-210`) but codex `tradfi-databento-sourcing-ssot.md:44-53` +
+      workspace CLAUDE.md both assert it was "removed... deleted" 2026-07-19; the cited removal commits
+      (`unified-api-contracts@a2beed46`, `market-tick-data-service@362a487e`) never touched instruments-service. Remove
+      the `massive` adapter registration + CLI wiring from instruments-service (the 5 call sites cited above) so the
+      docs become true as written — retagged from `[OPERATOR]` to `[BACKEND]` now that the decision itself is made; this
+      is dispatchable engineering work. Repos: instruments-service, unified-trading-pm.
 
 - [x] ✅ [BACKEND] P1. **Fix silent fabricated cancel-success** (Finding E-2):
       `execution-service/execution_service/trade_execution/adapters/ibkr_tradfi.py::cancel_order()` (lines 412-434) —

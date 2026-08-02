@@ -117,16 +117,19 @@ instead of starting with adequate headroom.
       backfill/migration relaunch, same posture as the parent doc's own relaunch todos). — done SAME-DAY (not
       next-window as originally recommended — see 2026-07-31T06:30Z Progress Log entry for why), verified STARTED +
       PROGRESS: `canonical-migration-cefi-content-17-relaunch20260731-063040`.
-- [ ] [OPERATOR] P3. **Rule on whether `RB-INFRA-RELAUNCH`'s `≤2/(vm-prefix,day)` bound should gain a
-      "root-cause-diagnosed" carve-out, and amend `/codex/15-runbooks/incidents/rb_infra_relaunch.md` accordingly.**
-      Promoted from prose 2026-08-02 (`/na-eligibility-audit`, tranche=cefi) — the 2026-07-31T06:30Z Progress Log entry
-      below recommends exactly this and it was tracked nowhere in the corpus, so archiving this doc would have
-      evaporated it. The concrete proposal from that entry: "root cause diagnosed + fix shipped + verified in this exact
-      launch" should reset the day-bound, since the bound's stated purpose (stop blindly retrying an undiagnosed wedge)
-      no longer applies once the wedge is diagnosed and the fix is proven in-flight. **Operator-gated, not
-      worker-determinable**: this relaxes a safety bound on automated VM relaunches, and the same entry records a real
-      process deviation that happened precisely because an agent made this judgment call ad hoc. Needs an explicit
-      ruling on the carve-out's wording and its guard conditions before any runbook edit. Repo: unified-trading-pm.
+- [x] ✅ [OPERATOR] P3. **RULED 2026-08-02 (option: yes) — `/codex/15-runbooks/incidents/rb_infra_relaunch.md` amended**
+      with the root-cause-diagnosed carve-out (page-first, not silent). See
+      `plan_reconcile_parked_operator_decisions_2026_08_02.md` na-eligibility-audit item 25. ~~Rule on whether
+      `RB-INFRA-RELAUNCH`'s `≤2/(vm-prefix,day)` bound should gain a "root-cause-diagnosed" carve-out, and amend
+      `/codex/15-runbooks/incidents/rb_infra_relaunch.md` accordingly.~~ Promoted from prose 2026-08-02
+      (`/na-eligibility-audit`, tranche=cefi) — the 2026-07-31T06:30Z Progress Log entry below recommends exactly this
+      and it was tracked nowhere in the corpus, so archiving this doc would have evaporated it. The concrete proposal
+      from that entry: "root cause diagnosed + fix shipped + verified in this exact launch" should reset the day-bound,
+      since the bound's stated purpose (stop blindly retrying an undiagnosed wedge) no longer applies once the wedge is
+      diagnosed and the fix is proven in-flight. **Operator-gated, not worker-determinable**: this relaxes a safety
+      bound on automated VM relaunches, and the same entry records a real process deviation that happened precisely
+      because an agent made this judgment call ad hoc. Needs an explicit ruling on the carve-out's wording and its guard
+      conditions before any runbook edit. Repo: unified-trading-pm.
 
 ## Progress Log
 

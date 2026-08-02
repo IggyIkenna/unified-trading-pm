@@ -213,10 +213,14 @@ nothing: it is architecturally cached against exactly the input that changed.
       first (second loaded gun).
 - [ ] [DEVOPS] P2. ~~Make the differ set `is_breaking` on value change~~ **DO NOT** — verified to false-break the fleet
       on benign recalibrations (e.g. `EMISSION_LATENCY_MS_BY_SOURCE`). Use the decoupled signal in [B] instead.
-- [ ] [DEVOPS] P2. Fix the invalid `sit_retry_cap` wall_type in `sit-debounce-trigger.yml` (it can never succeed) and
-      decide whether a red SIT should escalate to a background worker rather than Issue + Slack only.
-- [ ] [DEVOPS] P2. Correct the `full-workspace-sit` messaging/naming so `SIT_VALIDATED` cannot be read as "the resolved
-      cross-repo combination was executed" — it is a surface check.
+- [ ] [DEVOPS] P2. **EXTRACTED 2026-08-02** (operator ruling on `plan_reconcile_parked_operator_decisions_2026_08_02.md`
+      na-eligibility-audit item 18, option A) to `ci_satellite_ao_dispatch_batch1_2026_07_26.md` — this doc's main P0/P1
+      chain stays `locked_by`/operator-gated as before; only this bounded item moved. Fix the invalid `sit_retry_cap`
+      wall_type in `sit-debounce-trigger.yml` (it can never succeed) and decide whether a red SIT should escalate to a
+      background worker rather than Issue + Slack only.
+- [ ] [DEVOPS] P2. **EXTRACTED 2026-08-02** (same ruling, item 18) to `ci_satellite_ao_dispatch_batch1_2026_07_26.md`.
+      Correct the `full-workspace-sit` messaging/naming so `SIT_VALIDATED` cannot be read as "the resolved cross-repo
+      combination was executed" — it is a surface check.
 
 ## Progress Log
 

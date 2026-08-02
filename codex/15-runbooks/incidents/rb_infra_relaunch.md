@@ -67,7 +67,11 @@ The `context` field repeats this in prose; **prefer the structured fields**.
 ## Bounds + safety
 
 - The original in-image actuators bound relaunches to **≤2 / (vm-prefix, day)** — honour the same: if the registry
-  archive shows ≥2 relaunches of this prefix today, do NOT relaunch again; page the operator.
+  archive shows ≥2 relaunches of this prefix today, do NOT relaunch again; page the operator. **Root-cause-diagnosed
+  carve-out (ruled 2026-08-02, `plan_reconcile_parked_operator_decisions_2026_08_02.md` na-eligibility-audit item 25):**
+  the ≤2/day bound resets for a relaunch that is not blind retry — root cause diagnosed, a fix shipped, AND this exact
+  launch is the first attempt made WITH that fix live (i.e. genuinely new information, not a 3rd identical guess). Page
+  the operator with the diagnosis + shipped fix reference before using the carve-out, don't invoke it silently.
 - Protective/fail-safe actions are autonomous; a destructive `manual_unkill`-class action is human-only (see
   `/codex/04-architecture/autonomous-recovery-matrix.md`).
 

@@ -125,18 +125,18 @@ findings 3 and 4 have concrete bounded next steps, tracked as todos below.
 > No new work was invented — each todo restates a "Recommended decision" / "Not yet done" item already written above.
 > The doc is `execution_scope: local-only`, so these do NOT enter the AO backlog.
 
-- [ ] [OPERATOR] P2. **Rule finding 2: A vs B for the SPORTS honest-absence `FetchEvidence` dead-end.** A = mirror the
-      CEFI/DEFI/TRADFI fix — when `classify_sports_empty_reason` falls back to `SOURCE_RETURNED_ZERO`, route to
-      `record_failed_for_shard` (shard becomes visible + re-attemptable; loses the "legitimate calendar absence"
-      framing). B = thread real `league_id` down to both call sites so a calendar-typed reason resolves (preserves
-      intent; more invasive, touches tick-data → instrument-metadata plumbing in both files). Done-when: the operator
-      picks A or B and this todo is retagged to the reflecting tag in the SAME edit. (repo:
+- [x] ✅ [OPERATOR] P2. **RULED 2026-08-02 (operator ruling on `plan_reconcile_parked_operator_decisions_2026_08_02.md`
+      na-eligibility-audit item 21), option A** — mirror the CEFI/DEFI/TRADFI fix: when `classify_sports_empty_reason`
+      falls back to `SOURCE_RETURNED_ZERO`, route to `record_failed_for_shard` (shard becomes visible + re-attemptable;
+      loses the "legitimate calendar absence" framing — accepted, matches the precedent already set for the other 3
+      asset groups on 2026-06-22). Not option B (threading real `league_id` down both call sites) — more invasive,
+      deferred. (repo: `market-data-processing-service`)
+- [ ] [DATA] P2. **Implement the ruled option A above** in `live_workers_chain.py::_write_or_record_empty_timeframe` and
+      `live_workers_streaming.py::_record_streaming_empty_timeframe` — route the `SOURCE_RETURNED_ZERO`-fallback case to
+      `record_failed_for_shard` instead of `record_empty`, matching the CEFI/DEFI/TRADFI reference implementation
+      (2026-06-22 operator decision). Done-when: a SPORTS honest-absence candle timeframe produces a real manifest row
+      (not a `WARNING` + zero rows), proven on one re-run day. UNBLOCKED — ruling above resolved the A-vs-B gate. (repo:
       `market-data-processing-service`)
-- [ ] [DATA] P2. **Implement the ruled option from the todo above** in
-      `live_workers_chain.py::_write_or_record_empty_timeframe` and
-      `live_workers_streaming.py::_record_streaming_empty_timeframe`. Done-when: a SPORTS honest-absence candle
-      timeframe produces a real manifest row (not a `WARNING` + zero rows), proven on one re-run day. BLOCKED on the
-      A-vs-B ruling. (repo: `market-data-processing-service`)
 - [ ] [DIAG] P1. **Settle finding 4's `_collect_future_result` lead for the deterministic `~50/N "Unknown error"`
       crash.** Grep a failing VM's `run.log` for `❌ Exception processing` (specifically — the generic
       `Traceback|Exception` search already came back null twice) to catch the file-level exception

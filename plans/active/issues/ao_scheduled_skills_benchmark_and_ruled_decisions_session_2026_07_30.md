@@ -206,6 +206,15 @@ and shipped — do NOT re-run those two if resuming from the script (their branc
 - [ ] [SCRIPT] P1. Re-run `/na-eligibility-audit` (all 9 tranches + integrate) for a clean STEADY-STATE benchmark —
       today's run was a cold start (0 of any tranche's docs carried a prior verdict marker), so the ~13-27min/tranche
       numbers are a ceiling, not steady-state. Should be dramatically cheaper now that markers exist from today's run.
+- [ ] [SCRIPT] P1. **Verify/install the `context-scout.timer` on the orchestrator VM** — confirmed 2026-08-02: zero docs
+      anywhere in the corpus carry a `context_scope:` frontmatter field, despite `install-context-scout-timer.sh`
+      existing in `agent-orchestrator/scripts/` since 2026-07-30 (this session's own timer-family install). Either the
+      timer was never actually installed on the orchestrator VM, or it's installed but silently failing every fire.
+      Operator ruling 2026-08-02 (`plan_reconcile_parked_operator_decisions_2026_08_02.md`, "separately — the scheduling
+      gap"): yes, `/context-scout` should join the other four in the scheduled rotation. Done-when:
+      `systemctl status context-scout.timer` on the orchestrator VM shows `active (waiting)` with a real next-trigger
+      time, AND a subsequent corpus grep for `^context_scope:` returns a non-zero, growing count after its next fire.
+      (repo: agent-orchestrator, needs orchestrator-VM access — not executable from a dev checkout)
 - [ ] [DOC] P2. Update the published benchmark artifact
       (`https://claude.ai/code/artifact/246c4f9a-c3c8-4643-b099-d7023f7c17a4`) with the clean re-run numbers once both
       of the above land, and with the final status of every ruled decision above (shipped / still-open /

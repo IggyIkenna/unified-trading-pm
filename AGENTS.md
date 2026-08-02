@@ -99,7 +99,8 @@ bad files. Safe workflow: (1) detect: `git ls-files --ignored --exclude-standard
 Full standards: `unified-trading-codex/06-coding-standards/README.md`
 
 **No summary files** — never create `*_SUMMARY.md`, `*_STATUS.md`, `READY_TO_*`, `COMPLETION_*` files. Report results as
-text in the chat, not as committed documents. Rule: `cursor-rules/core/no-summary-docs.mdc`
+text in the chat, not as committed documents. Rule (ARCHIVED 2026-08-02, no longer live):
+`plans/archive/cursor-rules_2026_08_02/core/no-summary-docs.mdc`
 
 ---
 
@@ -214,8 +215,10 @@ Before proposing any commit message with `feat!:`, `feat:`, or `fix:`:
 
 Check a repo's current readiness state: `cat {repo}/.readiness-ref` to get path to its codex YAML.
 
-Cursor rules: `cursor-rules/core/repo-readiness-checklist.mdc`, `cursor-rules/core/semver-v1-hardening.mdc`,
-`cursor-rules/core/per-repo-semver-rules.mdc`
+Cursor rules (ARCHIVED 2026-08-02, no longer live — kept here as the historical rationale record):
+`plans/archive/cursor-rules_2026_08_02/core/repo-readiness-checklist.mdc`,
+`plans/archive/cursor-rules_2026_08_02/core/semver-v1-hardening.mdc`,
+`plans/archive/cursor-rules_2026_08_02/core/per-repo-semver-rules.mdc`
 
 ### MAJOR Bump Approval Gate (ABSOLUTE — all repos, no exceptions)
 
@@ -267,7 +270,7 @@ autonomously.
 
 PM and codex have a doc-only fast-path in quickmerge:
 
-- plans/, docs/, cursor-configs/, cursor-rules/ changes → direct to main (agents fire immediately)
+- plans/, docs/, cursor-configs// changes → direct to main (agents fire immediately)
 - scripts/, .github/workflows/ changes → staging (SIT validates before main)
 
 This means plan changes are available to agents (plan-health, rules-alignment, codex-sync, conflict-resolution) within
@@ -293,8 +296,8 @@ a dependent fails, an autonomous fix agent attempts code repair and creates a PR
 self-merge fix PRs — always require human /approve. See: cicd_code_rollout_master_2026_03_13.plan.md § Downstream
 Cascade Intelligence.
 
-Schema changes in T0 libraries (UAC, UIC, UEI) trigger reverse-dependency sync to update PM cursor-rules and codex docs
-automatically.
+Schema changes in T0 libraries (UAC, UIC, UEI) trigger reverse-dependency sync to update codex docs (PM cursor-rules/
+archived 2026-08-02) automatically.
 
 ---
 

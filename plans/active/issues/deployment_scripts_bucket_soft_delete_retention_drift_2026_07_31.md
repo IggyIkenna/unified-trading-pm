@@ -72,12 +72,16 @@ Either way this needs a decision, not a blind `tofu apply` of whichever value co
 
 ## Recommended decision
 
-- [ ] [INFRA] P3. Determine which value is correct (check the bucket's actual soft-deleted object volume today —
-      `gcloud storage du --readable-sizes gs://deployment-scripts-central-element-323112` mirroring the archived issue's
-      diagnostic step, since 604800 retention would be re-accumulating churn if the growth-threshold gate from
-      `utl@2bfb6a16` isn't holding) and either (a) apply the terraform `0` if live drifted unintentionally, or (b)
-      update terraform's declared value to `604800` + the header comment if the live value is the intentional current
-      state. (repo: deployment-service)
+- [x] ✅ [INFRA] P3. **RESOLVED 2026-08-02** (operator ruling on
+      `plan_reconcile_parked_operator_decisions_2026_08_02.md` na-eligibility-audit item 24). Terraform's
+      `deployment-service/terraform/gcp/main.tf` `google_storage_bucket.deployment_scripts` declares
+      `retention_duration_seconds = 0` with a clear, deliberate rationale in its own header comment ("soft-delete OFF —
+      was retaining 56 TiB of run.log re-upload shadow copies"), so this was unintentional drift, not a superseding
+      decision. Checked live soft-deleted object volume first (`gcloud storage ls -a`): **0 soft-deleted object versions
+      present** — nothing at risk from reconciling. Applied option (a): live-corrected via
+      `gcloud storage buckets update gs://deployment-scripts-central-element-323112 --clear-soft-delete`, verified
+      `softDeletePolicy.retentionDurationSeconds` now reads `0`, matching terraform. No terraform change needed — it was
+      already correct; only the live resource had drifted. (repo: deployment-service)
 
 ## Progress Log (na-eligibility-audit incremental marker)
 

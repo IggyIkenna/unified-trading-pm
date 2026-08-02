@@ -102,12 +102,17 @@ conservatively in the plan itself (human-execution-only kept) pending an explici
 
 ## Open question for the operator
 
-- [ ] [OPERATOR] P1. **Resolve which reading is correct** — (a) has Part 5's 100% twin-coverage proof actually been run
-      for the CeFi ~1.2M-object corpus yet (if not, run it — that alone may resolve this without a policy change), or
-      (b) is this genuinely a deliberate stricter carve-out for corpus-wide/large-scale deletes that the general codex
-      text should be amended to state explicitly? Once ruled, update whichever doc is wrong (codex needs a scale/
-      precondition caveat, or the plan's banner needs correcting) so the next similar delete doesn't hit the same
-      ambiguity.
+- [x] ✅ [OPERATOR] P1. **RULED 2026-08-02 (operator ruling on `plan_reconcile_parked_operator_decisions_2026_08_02.md`
+      na-eligibility-audit item 23): pursue reading (a) first** — verify whether Part 5's 100% twin-coverage proof has
+      actually been run for the CeFi ~1.2M-object corpus before assuming reading (b)'s deliberate-stricter-carve-out
+      interpretation. Converted to a checkable verification todo below rather than a further judgment call.
+- [ ] [DATA] P2. **Run/locate Part 5's 100%-twin-coverage proof for the CeFi ~1.2M-object corpus-wide sweep** (the
+      `/data-pipeline-reconciliation` census + orphan-detection procedure, `/codex/02-data/orphan-object-detection.md`).
+      Done-when: either (i) the proof comes back 100% and this issue resolves itself — human-execution-only was simply
+      correct-for-now, not permanent, re-banner the plan to say so and drop this issue; or (ii) the proof is incomplete
+      / cannot reach 100% for this corpus, in which case reading (b) (a deliberate stricter carve-out) is the remaining
+      explanation and the general codex text needs the scale/precondition caveat this issue's Progress Log describes.
+      (repo: unified-trading-pm)
 
 ## Progress Log
 

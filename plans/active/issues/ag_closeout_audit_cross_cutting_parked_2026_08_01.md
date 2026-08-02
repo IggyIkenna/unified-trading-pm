@@ -70,7 +70,7 @@ context_scope:
 
 ## New findings this run
 
-### 1. `plans/active/ao_slot_capacity_policy_ci_scheduled_split_2026_07_29.md` — likely real owner `ao` + `ci` (spans both)
+### 1. `plans/archive/2026_07/ao_slot_capacity_policy_ci_scheduled_split_2026_07_29.md` — likely real owner `ao` + `ci` (spans both)
 
 **Doc state**: `status: active`, `asset_group: [cross-cutting]`, `nature: process`, `stage: [meta]`. All 8 todos `[x]`
 ✅ with dated evidence; the 2026-07-31 Progress Log entry states the plan is complete but was deliberately left
@@ -186,7 +186,7 @@ member, not just a retag.
 
 ## Todos
 
-- [ ] [DOCS] P3. Retag `plans/active/ao_slot_capacity_policy_ci_scheduled_split_2026_07_29.md`'s `asset_group`
+- [ ] [DOCS] P3. Retag `plans/archive/2026_07/ao_slot_capacity_policy_ci_scheduled_split_2026_07_29.md`'s `asset_group`
       `[cross-cutting]` → `[ao, ci]` (finding 1) — owning-tranche fix, leave to the `ao`/`ci` tranches' own audit, not
       this run. Done when: the tag is corrected, the doc is folded into the receiving tranche(s)' closeout membership,
       and (since all 8 todos are already done) it is routed through the standard archival ritual.

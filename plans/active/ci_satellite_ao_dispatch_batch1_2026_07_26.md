@@ -636,6 +636,15 @@ here now, retroactively, to close that gap. Each item cites its source doc + ori
       (`mergeStateStatus: UNSTABLE`, `mergeable: MERGEABLE`, `mergedAt: null`, `autoMergeRequest: null`), repeated
       across 8 straight regenerated PRs (#788→#791). Check whether the promote-PR-creation step needs to explicitly
       enable auto-merge rather than relying on a default.
+- [ ] [DEVOPS] P2. **EXTRACTED** from `uac_value_only_config_change_breaks_utl_untested_2026_07_20.md` (locked doc, only
+      this bounded item extracted — its main P0/P1 chain stays there, operator-gated). Fix the invalid `sit_retry_cap`
+      wall_type in `sit-debounce-trigger.yml` (it can never succeed) and decide whether a red SIT should escalate to a
+      background worker rather than Issue + Slack only. **MIGRATED FROM**:
+      `/plans/active/issues/uac_value_only_config_change_breaks_utl_untested_2026_07_20.md`.
+- [ ] [DEVOPS] P2. **EXTRACTED** from `uac_value_only_config_change_breaks_utl_untested_2026_07_20.md` (same doc, same
+      extraction). Correct the `full-workspace-sit` messaging/naming so `SIT_VALIDATED` cannot be read as "the resolved
+      cross-repo combination was executed" — it is a surface check. **MIGRATED FROM**:
+      `/plans/active/issues/uac_value_only_config_change_breaks_utl_untested_2026_07_20.md`.
 
 ## Deferred
 
@@ -732,6 +741,12 @@ tag; (7) the tranche-membership rule misses every `asset_group: [meta]`/`[infras
 
 ## Progress Log
 
+- **2026-08-02 (operator ruling applied)** — Migrated 7 open prevention/follow-up todos from 3 `status: resolved` issue
+  docs that were archived without migration (`unified-trading-pm@17b53df1e`):
+  `github_actions_billing_wall_recurrence_2026_07_29.md` (3),
+  `github_actions_total_fleet_outage_startup_failure_2026_07_30.md` (2),
+  `ldr_to_main_promote_workflows_sustained_startup_failure_2026_07_30.md` (2). See "## Migrated from resolved incidents"
+  above. Ruling: `plan_reconcile_parked_operator_decisions_2026_08_02.md` § 3, option A.
 - **2026-08-02** (slot 7, infra, task `ci_satellite_ao_dispatch_batch1-027`) — Flipped the event-ledger-consumer todo
   (D2 unblocked in the source doc). **Incidental finding, out of scope for this todo**: the sibling alerts ledger
   (`cicd/alerts/{date}/alerts.jsonl`, same read-modify-write race, already tracked as partially-open in

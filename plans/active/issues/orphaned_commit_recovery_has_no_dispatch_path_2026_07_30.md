@@ -18,12 +18,14 @@ summary: >-
   commits_2026_07_27.md` says this outright in its own `⚠️ DISPATCH GAP` banner ("they will rot unless…") and escalated
   it 2026-07-27 — it has now sat unrouted for 3 days. Two of the items have real deadlines, not indefinite ones.
 status:
-  open # CORRECTED 2026-08-02 (operator ruling, plan_reconcile_parked_operator_decisions_2026_08_02.md § 3):
-  # "stays OPEN for open prevention todos" is the wrong pattern (codex requires ACKED-INTO-PLAN archival, not an
-  # indefinite-open exception) -- moot here anyway since all 3 prevention todos are already closed (see resolved_by
-  # comment below); stays open only pending the archival step routed through
-  # ao_satellite_ao_dispatch_batch3_finalize_2026_07_31.md's [REVIEW] P0 todo, not because open-prevention-todos is a
-  # valid terminal state
+  resolved # inventory 100% terminal (see banner); all todos now [x] (the 3 prevention todos the "stays OPEN"
+  # comment referred to have since shipped). RULED 2026-08-02 (operator ruling on
+  # plan_reconcile_parked_operator_decisions_2026_08_02.md § 3, option A): "stays OPEN to hold prevention todos" is the
+  # anti-pattern the codex lifecycle SSOT names -- the correct pattern is ACKED-INTO-PLAN then archive (see
+  # ci_satellite_ao_dispatch_batch1_2026_07_26.md's "Migrated from resolved incidents" section for that pattern applied
+  # to 3 sibling docs the same day). This doc now has zero open todos, so status:resolved is simply correct, not a
+  # contradiction of the ruling -- archival-eligible, tracked as a todo below rather than executed inline here to avoid
+  # a large multi-referrer (6 files) repoint mid-batch.
 nature: issue
 asset_group: [ao]
 stage: [meta]
@@ -61,7 +63,9 @@ estimate_baseline_ai_days: 0.5
 estimate_calibrated_ai_days: 0.4
 assigned_role: infra
 drift_direction: advance-code
-resolved_by: # NOT yet archivable — the ORIGINAL escalation (routing) is discharged, but 3 prevention todos remain open
+resolved_by:
+  bounded recovery sweep (2026-07-30, operator-authorized route (a)) + the 3 prevention todos it filed, all now [x] as
+  of 2026-08-02
 archive_exempt: true # inline status comment is stale (all 3 prevention todos now closed) -- archival routed through ao_satellite_ao_dispatch_batch3_finalize_2026_07_31.md's [REVIEW] P0 todo, not standalone (see na-eligibility-audit 2026-08-01 entry)
 locked_by:
 locked_since:
@@ -342,6 +346,18 @@ not a declined recovery.
 
 ## Progress Log
 
+- **2026-08-02 (operator ruling applied)**: `status` flipped `open → resolved` — see the frontmatter comment. The 3
+  "prevention todos" the old `status: open` comment referred to (verifier, liveness triangulation, wip-preserve triage,
+  logged in the entry below) are now all `[x]`. Not archived in this same edit — 6 files reference this doc's path and a
+  full repoint sweep is out of scope for this batch.
+  - [ ] [DOC] P3. **Archive this doc** (6-step ritual: banner, `git mv` to `plans/archive/2026_07/`, repoint all 6
+        referrers — `branch_reset_to_origin_orphans_unpushed_worker_commits_2026_07_27.md` (already archived, its own
+        copy's reference is historical, may not need a fix), `ao_open_issues_consolidated_close_out_2026_07_17.md`,
+        `ao_satellite_ao_dispatch_batch3_finalize_2026_07_31.md`,
+        `plan_reconcile_parked_operator_decisions_2026_08_02.md` (this run's own citation — will self-resolve once
+        archived), `ao_satellite_ao_dispatch_batch3_2026_07_31.md`,
+        `wip_preserve_refs_silently_unrecovered_2026_07_29.md`). Zero open todos, not locked — archival-eligible per
+        `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`.
 - **2026-07-30 (bounded recovery sweep, infra role, operator-authorized route (a))**: Executed the full 10-row inventory
   against `ip-172-31-5-118` read-only over AWS SSM. **Terminal verdicts: 8 SUPERSEDED, 1 PROTECTED-LIVE (slot-3 WIP's
   slot; the WIP itself GONE), 1 RESOLVED. Zero recoveries shipped, zero needed.** GC-clock items handled first and

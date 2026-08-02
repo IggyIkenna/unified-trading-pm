@@ -20,7 +20,10 @@ summary: >-
   slow quickmerges).
 status: open
 nature: issue
-asset_group: [meta]
+asset_group:
+  [ao] # retagged 2026-08-02 from [meta] (operator ruling on
+  # plan_reconcile_parked_operator_decisions_2026_08_02.md na-eligibility-audit item 19, option A) — parent_epic
+  # agent_operating_framework_master maps to ao; [meta] made this doc invisible to the ao tranche's own audit runs
 stage: [meta]
 repos: [unified-trading-pm]
 scope: [engineer]
@@ -29,7 +32,7 @@ related: [plans/active/issues/boot_composer_misroutes_lifecycle_roles_into_worke
 created: "2026-07-31"
 parent_epic: agent_operating_framework_master
 priority: P1
-assigned_vm: NA
+assigned_vm: NA # left NA for the ao tranche's own dispatch call (per the ruling), not auto-flipped to planning here
 execution_scope: local-only
 drift_direction: advance-code
 source: [main-orchestrator-triage-agt-26fe12, quickmerge-hang-observed]

@@ -262,10 +262,15 @@ but it is a deliberate, disclosed contribution to a RED ratchet, not an accident
       SMARKETS-purge clauses are struck from `sports_consolidated_closeout_2026_07_19.md`'s Track C todo; the STOP
       banner now records the historical disproof rather than gating a still-live instruction. (repo:
       `unified-trading-pm`)
-- [x] ✅ [OPERATOR] P0. **Rule § 1b** — RULED 2026-08-02, option A (retag `[OPERATOR]` + delete-safety §3a citation).
-      Both todos already carried this exact retag from the run's own auto-fix (`unified-trading-pm@b710bbd`, executing
-      the 2026-07-28 amendment) — the ruling confirms that disposition as final; option B (resolving the 1,492 rows) was
-      not selected, so the todos remain `[OPERATOR]`-gated pending that carve-out. (repo: `unified-trading-pm`)
+- [ ] [OPERATOR] P0. **Rule § 1b — CONFLICT, NOT applied, see below.** A different session on this same host (`slot-3`,
+      commit `df384e4cc`, 2026-08-02T16:32:32+01:00) already ruled + applied option A here ~30 minutes before this
+      operator gave THIS session the opposite instruction (option B — resolve the 1,492 rows first). Given the very
+      recent, already-shipped, explicitly-reasoned prior disposition ("carve-out resolution not selected, todos stay
+      operator-gated pending it"), this session did NOT silently overwrite it. **Needs the operator to confirm which
+      instruction stands** before either: (a) leaving A as final (matches the other session), or (b) actually doing the
+      1,492-row canonical-copy data migration B calls for (real data-pipeline work, not a doc edit) and then flipping
+      the retag. (repo: `unified-trading-pm`, `market-tick-data-service`)
+
 - [x] ✅ [OPERATOR] P1. **Rule § 1c** — RULED 2026-08-02, option A (un-check, restate as partial). E7's checkbox now
       reads "complete for the migrated corpus only", cross-references R1's data-loss finding directly. (repo:
       `unified-trading-pm`)
@@ -295,7 +300,10 @@ but it is a deliberate, disclosed contribution to a RED ratchet, not an accident
       `check_terminal_status_archived` ratchet reaching its baseline. (repo: `unified-trading-pm`)
 - [x] ✅ [OPERATOR] P2. **Rule § 4** — RULED 2026-08-02, option B (exclude `plans/archive/` from the ratchet).
       `check_reference_paths.py`'s `target_files()` now skips `plans/archive/`; re-baselined from
-      format=158/existence=407 down to format=81/existence=90 (both green, well under the reduced baseline). (repo:
+      format=158/existence=407 down to format=81/existence=90 (both green, well under the reduced baseline). A separate
+      tracked mechanical-cleanup plan, `plans/active/plans_archive_reference_path_hygiene_2026_08_02.md`, was also filed
+      independently (option A) to actually fix the underlying `plans/archive/` reference-path defects rather than only
+      exclude them from the ratchet — not urgent now that the ratchet itself is green, but still useful hygiene. (repo:
       `unified-trading-pm`)
 - [ ] [DOC] P2. **Name this register in the skill file** — `cursor-configs/skills/plan-reconcile/SKILL.md:301`'s
       zero-checkbox section owns the sweep but never cites

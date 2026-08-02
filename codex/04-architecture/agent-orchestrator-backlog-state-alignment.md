@@ -373,7 +373,15 @@ by this tool (no plaintext brief survives an orphaned row to fuzzy-match against
 
 - **Never delete done/dispatched rows from state.db** — they are audit history + live work.
 - **Never edit backlog.yaml manually to add/remove tasks** — `regen` is the SSOT; manual edits are overwritten or
-  produce inconsistency.
+  produce inconsistency. **Explicit park-only exception (ruled 2026-08-02,
+  `plan_reconcile_parked_operator_decisions_2026_08_02.md` § 2b):** tuning `priority` / `priority_override` /
+  `prereqs.prerequisites` on an ALREADY-DERIVED entry to defer its dispatch — the "Park a task" recipe in
+  `unified-trading-pm/agents/RULES.md` § 4 — is sanctioned for any agent, not operator-only. This is narrower than the
+  ban above: it never adds a new id, never removes an existing one, and never hand-edits
+  `title`/`description`/dependency-derived fields — those stay regen-only. A park survives the next regen tick only
+  because `priority_override: true` is set alongside it (regen preserves, never reverts, an overridden priority);
+  re-verify both fields stuck after the next `PlanRegenLoop` tick or `POST /api/backlog/regen`, per the known-bug note
+  in RULES.md § 4.
 - **Never run regen without `assigned_vm` scoping on multi-VM fleets** — without `ORCHESTRATOR_VM_ID` each VM ingests
   every plan → every VM's backlog = entire fleet's backlog.
 - **Never set `ORCHESTRATOR_REGEN_PRUNE_STALE=false` when zombie count is high** — disable prune only for one-off
