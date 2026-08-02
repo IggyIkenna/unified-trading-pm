@@ -153,9 +153,16 @@ report file exists YET because neither driver has finished its full 21-leg matri
 1. **STOP -- before launching ANY VM for this todo, check for an existing report, for already-running VMs, AND for a
    local driver process first** (checking only the first two was NOT enough -- 19:45Z's check missed 2 live local driver
    processes for the exact days this doc then called "NOT started"):
-   - `ls plans/audit/results/data_pipeline_e2e_check_is_<date>.md` for the target date -- if it exists with `status`
-     other than a stub, READ IT before relaunching; a complete report means that checkpoint's data collection is DONE
-     and only unresolved failure triage (if any) remains.
+   - **File-naming trap (confirmed live incident, slot 11, 2026-08-02T~19:31Z)**: the report file's `<date>` segment is
+     UNDERSCORED (`data_pipeline_e2e_check_is_2025_12_20.md`), NOT hyphenated like the `--day` CLI flag's own format
+     (`2025-12-20`) -- a hyphenated glob (`ls .../data_pipeline_e2e_check_is_2025-12-20.*`) silently matches nothing and
+     reads as "no report exists," which is exactly what caused a real redundant relaunch + wasted SPOT VM spend this
+     session (see the Progress Log confession entry below). Use a wildcard that catches BOTH separators, e.g.
+     `ls plans/audit/results/data_pipeline_e2e_check_is_${DATE//-/[-_]}.md 2>/dev/null || ls plans/audit/results/ | grep -F "${DATE//-/_}"`,
+     or just `ls plans/audit/results/data_pipeline_e2e_check_is_*.md` and eyeball the full list -- never trust a single
+     hyphenated glob returning empty as proof no report exists. If it exists with `status` other than a stub, READ IT
+     before relaunching; a complete report means that checkpoint's data collection is DONE and only unresolved failure
+     triage (if any) remains.
    - `gcloud compute instances list --filter="name~instr-backfill-sports-pchk"` -- if a VM is RUNNING, don't assume
      which day/leg it's for from its name alone (the leg-letter in the VM name has been observed to NOT reliably match
      the actual leg being run) --
@@ -212,23 +219,38 @@ report file exists YET because neither driver has finished its full 21-leg matri
       (baseline day=2025-12-20) -- distinct from both the known per-league skip-signal false-negative class and
       BETFAIR's known BLOCKED-CREDENTIALS gap (OPEN_METEO's force+live legs both passed). Read the skip-leg VM's
       launcher/run.log to find why the launcher script itself exited non-zero. (repo: instruments-service)
-- [ ] [DATA] P3. Check the 2 currently-running duplicate VMs
+- [x] ✅ [DATA] P3. Check the 2 currently-running duplicate VMs
       (`instr-backfill-sports-pchk-0802193055-f-a2a5-api-football`,
       `instr-backfill-sports-pchk-0802193411-f-cab3-api-football`, both API_FOOTBALL force-leg re-runs of an
       already-passed leg) -- confirm they're redundant against the existing complete baseline report and terminate if
       so, to stop further SPOT VM billing waste. (repo: instruments-service, operator/infra -- VM lifecycle)
 
       **⚠️ SAFETY CORRECTION 2026-08-02T20:01Z (slot 8) -- do NOT terminate the second VM named above without
-          re-checking its run.log first.** Read both VMs' `run.log` chunk headers directly (per this doc's own "Baseline
-          checkpoint -- CORRECTED status" section correction above): `instr-backfill-sports-pchk-0802193055-*-a2a5-...`
-          IS genuinely processing `2025-12-20` (baseline) -- consistent with this todo's redundancy concern, safe to
-          investigate/terminate once confirmed. **But `instr-backfill-sports-pchk-0802193411-*-cab3-...` is NOT a baseline
-          duplicate -- it is slot-7's legitimate, actively-running MID checkpoint (`2025-12-24`) driver's own VM** (the
-          SAME VM this doc's "Mid/final checkpoints" section above documents as healthy, in-progress work). Terminating it
-          would kill genuinely-needed live work, not billing waste. The leg-letter in a VM's name (`-f-`/`-s-`/`-l-`) has
-          been observed to NOT reliably match reality either (this exact VM read back with a `-s-` in its live name at one
-          check) -- always confirm BOTH the day and the leg from `run.log`'s own `--- Chunk N/M: <date> → <date> ---`
-          header before touching any VM this todo names, not from the name alone.
+              re-checking its run.log first.** Read both VMs' `run.log` chunk headers directly (per this doc's own "Baseline
+              checkpoint -- CORRECTED status" section correction above): `instr-backfill-sports-pchk-0802193055-*-a2a5-...`
+              IS genuinely processing `2025-12-20` (baseline) -- consistent with this todo's redundancy concern, safe to
+              investigate/terminate once confirmed. **But `instr-backfill-sports-pchk-0802193411-*-cab3-...` is NOT a baseline
+              duplicate -- it is slot-7's legitimate, actively-running MID checkpoint (`2025-12-24`) driver's own VM** (the
+              SAME VM this doc's "Mid/final checkpoints" section above documents as healthy, in-progress work). Terminating it
+              would kill genuinely-needed live work, not billing waste. The leg-letter in a VM's name (`-f-`/`-s-`/`-l-`) has
+              been observed to NOT reliably match reality either (this exact VM read back with a `-s-` in its live name at one
+              check) -- always confirm BOTH the day and the leg from `run.log`'s own `--- Chunk N/M: <date> → <date> ---`
+              header before touching any VM this todo names, not from the name alone.
+
+          **✅ RESOLVED 2026-08-02T~20:10Z (slot 11)**, confirming + closing out slot-8's warning above:
+          `-0802193055-f-a2a5-` was slot-11's OWN redundant force leg (see the
+          confession entry in the Progress Log below) -- it had already self-deleted on completion
+          (`VM_SHUTDOWN_ON_COMPLETION=true`) by the time this was checked, no action needed there. `-0802193411-f-cab3-`
+          was a FALSE ALARM, not a duplicate at all: its run_ts+hash (`0802193411-cab3`) is slot-7's legitimate mid
+          (2025-12-24) driver, confirmed via its VM's `run.log` chunk header (`--- Chunk 1/1: 2025-12-24 → 2025-12-24
+          ---`) -- it has since progressed through OPEN_METEO and other venues under the same driver, exactly as
+          expected for a healthy in-flight checkpoint. The venue/leg letters in a VM's name genuinely do not reliably
+          indicate which checkpoint-day driver launched it, confirming this doc's own earlier caution in the Resume
+          Instructions. **The real duplicate was slot-11's own live-leg VM** (`instr-backfill-sports-pchk-0802193055-l-a2a5-api-football`,
+          launched 20:01:56Z) -- confirmed via exact argv/run_ts match to slot-11's own driver log, terminated via
+          `gcloud compute instances delete` at 2026-08-02T~20:10Z. Post-cleanup `gcloud compute instances list
+          --filter="name~instr-backfill-sports-pchk"` shows exactly 2 VMs running, both confirmed (via run.log chunk
+          header) to belong to the legitimate mid/final drivers -- no orphans remain.
 
 - [ ] [DATA] P1. Run the mid (2025-12-24) checkpoint, same 7-venue force/skip/live matrix -- confirmed NOT STARTED
       (verified 2026-08-02, slot 13: no report file exists). (repo: instruments-service, skill-driven)
@@ -279,6 +301,40 @@ report file exists YET because neither driver has finished its full 21-leg matri
   `/skip-current-task {"reason_code": "OTHER"}`.
 - 2026-08-02T19:20Z (slot 11, data_engineering): filed this tracker as a context-limit checkpoint mid-baseline-run; see
   "Baseline checkpoint" section above for full state. Background VM continues independently of this session.
+- **2026-08-02T~19:31Z-20:10Z (slot 11, data_engineering, task `sports_track_k_is_pipeline_check_progress-002`,
+  dispatched to "complete the baseline checkpoint: 6 remaining venues x 3 legs")**: **repeated the exact
+  redundant-relaunch mistake this doc's own Resume Instructions already warned about, and independently re-discovered +
+  root-caused the `skip_signal_not_found` finding a second time before realizing both were already done.** Root cause of
+  my own mistake: my initial existing-report check used the WRONG filename pattern
+  (`data_pipeline_e2e_check_is_2025-12-20.*`, hyphenated date, per this doc's own now-corrected "Resume instructions"
+  text) against the REAL file which uses underscores (`data_pipeline_e2e_check_is_2025_12_20.md`) -- the glob found
+  nothing, I concluded no report existed, and launched a full relaunch (PID 223739) of the ALREADY-COMPLETE baseline
+  checkpoint. Force leg passed (913.5s, matches the existing report's own recorded duration), skip leg failed with
+  `skip_signal_not_found` (914.9s) -- I re-investigated this via the skip-leg VM's `run.log` and independently
+  reconstructed the exact same root cause slot-9 had already found and documented above (the
+  `_has_sports_per_league_in_scope` branch in `process_preflight.py:578-590` structurally never emits the coarse
+  `"SKIP date=..."` line the checker greps for) -- wasted effort, but at least confirms slot-9's root-cause
+  independently. **Caught the mistake when a routine re-read of this doc mid-session showed 3 new commits
+  (`5027108aa`/`64deea039`/`420e9fbd9`) I hadn't pulled/read yet, revealing the baseline was already fully complete
+  (`unified-trading-pm@48ae74001`, `plans/audit/results/data_pipeline_e2e_check_is_2025_12_20.md`, 21/21 legs) and that
+  slot-8's Progress Log entry had already flagged my own driver PID 223739 by name as "a further instance of the same
+  redundant-relaunch pattern."** Immediately: (1) `kill -TERM 223739` -- driver exited cleanly (exit 143); (2) confirmed
+  via `gcloud compute instances list` + each VM's `run.log` chunk header which of the 3 running VMs were genuinely mine
+  vs. the already-flagged-as-possibly-duplicate VMs vs. legitimate mid/final-checkpoint VMs (see the P3 todo resolution
+  above for the full breakdown); (3) `gcloud compute instances delete` on my own orphaned live-leg VM
+  (`instr-backfill-sports-pchk-0802193055-l-a2a5-api-football`), the only genuinely-redundant VM still running.
+  Force+skip legs of my redundant run had already self-deleted on completion before I caught this, so their cost (~2x
+  15min SPOT VM-minutes) is sunk; the live-leg termination stopped a 3rd ~15min leg from completing needlessly. **Did
+  NOT re-do any of the already-complete/already-claimed work** (baseline data-collection, the skip-signal root-cause,
+  mid/final checkpoints -- all correctly left to their existing owners). Releasing task `-002` via `/skip-current-task`
+  (reason: task premise already satisfied by prior sessions before dispatch) rather than fabricating a completion claim
+  for work that was never mine to do. **Process lesson for future pickers of this doc**: this doc's own "Resume
+  instructions" step 1 file-existence check needs the CORRECT filename pattern (underscored date,
+  `data_pipeline_e2e_check_is_YYYY_MM_DD.md` -- NOT the hyphenated `YYYY-MM-DD` this doc's earlier sections used
+  inconsistently when describing the launch command's own `--day` flag, which IS hyphenated); this exact wrong-glob
+  false negative is what caused slot-11's own redundant relaunch and real SPOT VM spend waste. (The separately-flagged
+  `0802193411` VM was NOT caused by this same mistake -- it was never actually a duplicate, just misidentified as one by
+  the reviewing slot at 19:40Z; see the P3 todo resolution above.)
 - 2026-08-02 (slot 9, data_engineering): root-caused the `skip_signal_not_found` finding on API_FOOTBALL's skip-leg by
   fetching the skip-leg VM's `run.log` directly from
   `gs://deployment-scripts-central-element-323112/vm-logs/instr-backfill-sports-pchk-0802183841-s-a2a5-api-football/run.log`
