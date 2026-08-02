@@ -173,3 +173,16 @@ call — not a default.
 - 2026-08-02 (slot 3, `data_pipeline_failure` escalation agt-7b8e54, DP-VM-001): filed per the findings above; posted
   `/blocked` `BLK-058d5928` (auto-continued with option A); no further relaunch attempted (RB-INFRA-RELAUNCH's
   same-failure-twice stop rule).
+- 2026-08-02 (slot 4, `data_pipeline_failure` escalation agt-fad570, DP-VM-001): independent corroborating hit on a
+  DIFFERENT tradfi launcher family — `tradfi-bf-cme-ohlcv-1m-g01-cl-cl-2026-20260802-120343` (exit_code=78, CME OHLCV-1m
+  current-year incremental shard, vs this doc's NASDAQ 2024 historical shard) — confirms the outage is genuinely
+  fleet-wide across venues, not NASDAQ-specific. Live-reconfirmed both signals independently:
+  `availability_index.parquet` still `Update time: 2026-07-31T18:29:55 GMT`;
+  `uts-prod-manifest-consolidator-market-data-tradfi-cron` still `state: PAUSED`. This shard's own relaunch history
+  (`vm-logs/tradfi-bf-cme-ohlcv-1m-g01-cl-cl-2026-*/EXIT_STATUS`) pins the outage onset precisely: 11 consecutive
+  successful ~3-hourly runs 2026-07-30T21:12Z..2026-08-01T18:12Z (all `EXIT_STATUS=0`), then 5 consecutive identical
+  `EXIT_STATUS=78` failures 2026-08-02T00:10Z..2026-08-02T12:03Z — the outage began between those two runs, consistent
+  with the 24h staleness budget elapsing ~2026-08-01T18:29Z (24h after the consolidator's last successful run). No
+  relaunch attempted (would fail identically — 5/5 confirmed since onset — and contradicts this doc's own Recommended
+  decision); no cron override (consistent with the existing `BLK-058d5928` ruling). Pinged authoring slot
+  `dp-fleet-monitor` with the outcome; deferring to this doc's existing `[OPERATOR]` todo for the actual fix.
