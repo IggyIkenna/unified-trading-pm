@@ -670,3 +670,31 @@ note above already covers. Independently re-verified before declining:
   `- [ ]` lines it matches are the upstream plan's todos quoted inside a fenced code block in the "What I found"
   section. Tracked as a tooling defect in
   `/plans/active/issues/na_inventory_counts_fenced_code_block_checkboxes_as_open_todos_2026_08_02.md`.
+- **2026-08-02 recurrence — 11th+ distinct plan pair (defi_satellite_ao_dispatch_batch8), zero-derived-parent-row case
+  reproduced again** (slot 15, `cicd`-role worker adopting `data_engineering` craft for the dispatched task). Dispatched
+  `defi_satellite_ao_dispatch_batch8_2026_08_02_finalize-001` (`already_in_progress: true`, `dispatch_reason: "resume"`)
+  — a fresh plan pair, both docs authored the same day (2026-08-02, single commit `f63b8eb1`). The finalize plan's todo
+  1 literally opens "Once `defi_satellite_ao_dispatch_batch8_2026_08_02.md`'s todo is `[x]`..." and the frontmatter
+  carries `depends_on: [defi_satellite_ao_dispatch_batch8_2026_08_02]` + `gate_on_depends: true`. Verified independently
+  after a fresh-pull to current `live-defi-rollout` HEAD:
+  - `plans/active/defi_satellite_ao_dispatch_batch8_2026_08_02.md`'s single `[DATA] P3` todo (the LST-rate force/skip
+    VM-launch proof) is still `- [ ]` on disk — not done.
+  - `GET /api/backlog/defi_satellite_ao_dispatch_batch8_2026_08_02_finalize-001/blockers` →
+    `{"explanation":"ready (no blockers)"}` (should have reported the unmet upstream).
+  - `GET /api/backlog` (1347 total tasks) has **zero rows** for the parent plan_ref
+    (`plans/active/defi_satellite_ao_dispatch_batch8_2026_08_02.md`) at all — only the finalize plan's own 3 tasks
+    exist. Not a timing/race artifact: `/api/state` shows `server_started: 2026-08-02T15:30:48Z` and
+    `last_updated: 2026-08-02T16:33:50Z`, i.e. ~1h after the plan pair's single commit (14:54:59 UTC) with the ~30-min
+    `PlanRegenLoop` cadence having had multiple ticks to derive it. This reproduces the exact "zero-derived-parent-row"
+    pattern the 10th-bounce note (above) first flagged as a plausible third contributing factor distinct from both
+    shipped fixes (`13a5dd8` in-process-cache staleness, `bd522d0` prose-masquerading-as- frontmatter) — that hypothesis
+    is still unconfirmed/unfixed. One additional data point for whoever investigates it: the parent's sole todo text is
+    `- [ ] [DATA] P3. **Prove force + skip for the LST-rate surfaces against the `-test-` bucket** — extracted verbatim from...`
+    — a `**bold**` phrase immediately after the `P<n>.` tag, the same shape flagged as a suspect in the
+    BYBIT/cefi_satellite_ao_dispatch_batch1 10th-bounce note ("a markdown-bold-text edge case"). Two data points now
+    share that exact shape; worth the `backend_engineer` checking whether `regen_backlog_from_plan.py`'s todo-derivation
+    regex mishandles a bold span directly after the priority tag specifically (as opposed to the wiring layer, which
+    both shipped fixes already addressed). Declining to author the Phase-3 annotation/Deferred-item re-check on the
+    false premise that batch8 shipped; not touching `lst_rate_honest_coverage_2026_07_21.md`'s Phase-3 checkbox.
+    Skipping via `POST /api/slots/15/skip-current-task` (`reason_code: GATED`) per this doc's established disposition
+    rather than filing a duplicate `/blocked` or issue doc.
