@@ -10,8 +10,11 @@ summary: >-
   delete-safety hazards sitting in still-OPEN todos; (2) the operator rulings the run could not make autonomously
   (SSOT-ownership disputes, two-active-docs-opposing-directives, issue-doc archival routing for resolved incidents whose
   prevention todos are still open); (3) the four RED hygiene ratchets, two of which are genuine regressions against
-  their baselines rather than pre-existing debt. Every item carries options + a worker recommendation. Nothing here was
-  acted on autonomously.
+  their baselines rather than pre-existing debt. Every item carries options + a worker recommendation. No DISPOSITION
+  here was decided autonomously; the two P0 delete-safety hazards (§ 1a, § 1b) did get non-destructive STOP banners + an
+  `[OPERATOR]` retag so a dispatched worker cannot execute the stale instruction while the ruling is pending — that is
+  the skill's "superseded content with no banner -> add banner" auto-fix, and for § 1b it also executes an amendment
+  already RULED on 2026-07-28 but never applied. Neither banner picks an option.
 status: open
 nature: issue
 asset_group: [cross-cutting]
@@ -239,6 +242,17 @@ but it is a deliberate, disclosed contribution to a RED ratchet, not an accident
   corpus-wide — `unified-trading-pm@a04f74e` + `@ff619d4`. Resolution evidence spot-verified reachable on
   `origin/live-defi-rollout` for `instruments-service@a340e34c`, `features-service@f57d11ae`,
   `unified-trading-library@6c0ca59b`, `deployment-service@b1f0a22`.
+- **Two P0 delete-safety STOP banners + `[OPERATOR]` retags** — `unified-trading-pm@b710bbd`. § 1a's Track C todo in
+  `sports_consolidated_closeout_2026_07_19.md` now carries the disproof of its UNIBET-fold and SMARKETS-purge premises
+  inline; § 1b's two `sports_reference_v2/by_date/` cull todos (in that same doc and in
+  `sports_consolidated_native_ao_extract_2026_07_25.md`) now carry the 1,492-sole-copy carve-out and lost their
+  "self-justified, not `[OPERATOR]`-gated" claim. **These make the todos safe to READ; they do NOT decide them** — the
+  dispositions remain parked above. § 1b additionally is the execution of an amendment batch5 already ruled on
+  2026-07-28 and whose finalize doc recorded as STILL UNDONE, so it is applying a ratified decision, not making one.
+- **1 done-but-unchecked checkbox flipped** in `data_pipeline_e2e_milestones_gate_2026_07_24.md` (the first live 30-day
+  VM billing-waste audit) — `unified-trading-pm@a5d0702de`, verified an ancestor of `origin/live-defi-rollout`, with the
+  target-side `[x]` and its dated Progress Log evidence read directly. The AWS-side IAM block is recorded on the flip as
+  a stated residual rather than silently absorbed.
 - **Zero-checkbox sweep re-run** against its standing register: 8 hits, 6 already classified, 1 converted to 6 canonical
   todos, 1 recorded as informational.
 
