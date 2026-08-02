@@ -124,7 +124,7 @@ running `/na-eligibility-audit defi`; every todo below cleared the shared confli
       correct, the remaining gap is a manifest-row retraction the writer can't produce). Source:
       `defi_consolidated_closeout_2026_07_18.md:644-653`.
 
-- [ ] [DATA] P2. **Audit `market-tick-data-service/scripts/` (and sibling repos' `scripts/`) one-offs for any OTHER
+- [x] ✅ [DATA] P2. **Audit `market-tick-data-service/scripts/` (and sibling repos' `scripts/`) one-offs for any OTHER
       direct `ManifestWriter(...)` construction missing `per_vm_shards=True`** against a populous bucket
       (defi/cefi/sports) — the same failure mode has now recurred independently 3 times in ~36 hours across different
       call sites (`scripts/migrate_legacy_gas_fees_venue_2026_07_30.py@8016c7e4`,
@@ -133,7 +133,12 @@ running `/na-eligibility-audit defi`; every todo below cleared the shared confli
       for. Repos: market-tick-data-service, instruments-service, market-data-processing-service. Done when: a written
       inventory of every direct `ManifestWriter(...)` construction site in the 3 repos' `scripts/` trees exists, each
       marked safe (already passes `per_vm_shards=True` or `MANIFEST_PER_VM_SHARDS=true`-guaranteed) or fixed. Source:
-      `issues/mtds_gas_fees_migration_script_unbounded_memory_2026_07_30.md:159-161`.
+      `issues/mtds_gas_fees_migration_script_unbounded_memory_2026_07_30.md:159-161`. — **DONE 2026-08-02 (slot-7)**:
+      47 sites inventoried (13 MTDS, 29 instruments-service, 5 MDPS), 13 confirmed unsafe and fixed
+      (`per_vm_shards=True` added), 1 hardened defense-in-depth, 3 traced and confirmed DELIBERATE `per_vm_shards=False`
+      (a CAS-swap design that would have broken if flipped — see the inventory doc for the full trace). Full inventory:
+      `issues/manifest_writer_scripts_per_vm_shards_audit_2026_08_02.md`. Shipped: `market-tick-data-service@<sha>`,
+      `instruments-service@<sha>`, `market-data-processing-service@<sha>`.
 
 ## Deferred — conflict-found, NOT extracted (parked on the source doc, no operator ruling needed — unambiguous)
 
@@ -181,3 +186,15 @@ running `/na-eligibility-audit defi`; every todo below cleared the shared confli
   rows), out of this task's scope. `delete_migrated_defi_markers --apply` stays correctly gated/blocked.
 
 - **context-scout 2026-08-01**: populated/refreshed context_scope (5 entries).
+
+- 2026-08-02 (slot-7, todo 4): Dispatched 3 parallel read-only sub-agents (one per repo) to inventory every direct
+  `ManifestWriter(`/`_ManifestWriter(` construction site under `scripts/` in market-tick-data-service (13 sites),
+  instruments-service (29 sites), and market-data-processing-service (5 sites). Found 13 confirmed-unsafe (no
+  `per_vm_shards=True`, no env guard) — fixed all 13 by adding the explicit kwarg, after first tracing each site's
+  post-write verification path to rule out a correctness regression. Caught and avoided one near-miss: 3 MTDS "manifest
+  swap" one-offs use `per_vm_shards=False` DELIBERATELY (their own `verify_swap()` does a raw un-merged
+  `client.download_bytes()` re-read of the consolidated index immediately after write — flipping to `True` would have
+  made every future run of those scripts fail its own verification step, since a per-VM shard write isn't visible to a
+  raw read until the async consolidator merges it). Also hardened 1 already-safe-but-fragile site
+  (`mtds_reconcile_partial_bundles.py`) with an explicit kwarg alongside its existing env-gate. Full inventory + fix
+  table: `issues/manifest_writer_scripts_per_vm_shards_audit_2026_08_02.md`.
