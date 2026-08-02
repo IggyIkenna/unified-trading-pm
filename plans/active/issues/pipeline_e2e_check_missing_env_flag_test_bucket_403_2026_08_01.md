@@ -17,7 +17,7 @@ summary: >-
   todos below.
 status: open
 nature: issue
-asset_group: [meta]
+asset_group: [cross-cutting] # retagged 2026-08-02 (/ag-closeout-audit cross-cutting meta-fold-in sweep) -- was [meta]; content is IS/MTDS/MDPS/features -test--bucket VM-launcher IAM/service-account misconfiguration, squarely cross-cutting data-pipeline scope per parent_epic: infrastructure_master's data-relevant subset
 stage: [data]
 repos: [instruments-service, market-tick-data-service, market-data-processing-service, features-service]
 scope: [engineer]

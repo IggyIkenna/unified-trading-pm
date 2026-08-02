@@ -73,6 +73,12 @@ DATA_EPICS = {
     "mtds_mdps_master",
     "manifest_master",
     "features_and_ml_master",
+    # batch=live determinism/event-log spine (paper(W)==batch-rerun(W), CLAUDE.md "Live = batch"
+    # section) -- genuinely cross-AG data-pipeline scope, just missing from this set until
+    # 2026-08-02 (/ag-closeout-audit cross-cutting): silently excluded 5 real cross-cutting docs
+    # (parent_epic=batch_live_symmetry_master) from membership entirely, not even reaching the
+    # never_cited bucket.
+    "batch_live_symmetry_master",
 }
 EXCLUDED_STATUS = {"resolved", "archived", "superseded"}
 

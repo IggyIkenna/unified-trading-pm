@@ -605,7 +605,11 @@ DIVERGENT_EMPTY backfill-vs-scope campaign) ·
 [data_pipeline_alert_substrate_residual_2026_07_24.md](/plans/archive/2026_07/data_pipeline_alert_substrate_residual_2026_07_24.md)
 (alert-substrate/digest/writer-invariant residuals, alerting-service app-log visibility) ·
 [data_pipeline_self_healing_completion_residual_2026_07_24.md](/plans/active/data_pipeline_self_healing_completion_residual_2026_07_24.md)
-(Phase 6-C self-heal actuator wiring/packaging/scheduling).
+(Phase 6-C self-heal actuator wiring/packaging/scheduling) ·
+[issues/pipeline_e2e_check_missing_env_flag_test_bucket_403_2026_08_01.md](/plans/active/issues/pipeline_e2e_check_missing_env_flag_test_bucket_403_2026_08_01.md)
+(retagged in from `meta` 2026-08-02, `/ag-closeout-audit cross-cutting` — IS/MTDS/MDPS/features `-test-`-bucket
+VM-launcher IAM/service-account gap; 5/6 items shipped, 1 residual P3 open: grant `uts-test-sa` write on the
+`central-element-323112-events` bucket + verify).
 
 **Close-out criterion**: all 3 forks' residual items closed; the parent's detect→recover→file→page loop verified live
 end-to-end for all 5 AGs.
