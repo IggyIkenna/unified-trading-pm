@@ -130,23 +130,49 @@ be re-run again -- only the OPEN_METEO investigation remains open for it.
 
 ## Mid (2025-12-24) and final (2025-12-18) checkpoints
 
-**Confirmed NOT started** (verified 2026-08-02T19:45Z, slot 13): no `data_pipeline_e2e_check_is_2025_12_24.{md,json}` or
-`data_pipeline_e2e_check_is_2025_12_18.{md,json}` exist anywhere under `plans/audit/results/`. This is the real
+**⚠️ STALE as of 2026-08-02T19:56Z -- both are now IN PROGRESS, do not launch duplicates.** The "confirmed NOT started"
+claim below was accurate at 19:45Z but is no longer current -- verified live at 19:56Z (slot 8): local driver processes
+for BOTH remaining checkpoints are running on this host, launched independently sometime between 19:45Z and now: **mid
+(2025-12-24)** -- slot-7, PID 283424,
+`pipeline_e2e_check.py --asset-group SPORTS --day 2025-12-24 --legs force,skip,live`, launched 19:33Z, healthy (its skip
+leg's VM, `instr-backfill-sports-pchk-0802193411-s-cab3-api-football`, just completed cleanly `exit_code=0` at 19:52Z
+and the driver is presumably moving to the next venue). **final (2025-12-18)** -- slot-12, PID 474834, same script
+`--day 2025-12-18 --legs force,skip,live`, launched 19:46Z, healthy. **Also noted (not this doc's scope to chase
+further, already covered by the P3 "check duplicate VMs" todo)**: a THIRD driver, slot-11 PID 223739, is re-running
+`--day 2025-12-20` (baseline) -- this looks like a further instance of the same redundant-relaunch pattern already
+flagged above, now with a 3rd concurrent baseline driver in addition to the 2 VMs already documented.
+
+~~**Confirmed NOT started** (verified 2026-08-02T19:45Z, slot 13): no `data_pipeline_e2e_check_is_2025_12_24.{md,json}`
+or `data_pipeline_e2e_check_is_2025_12_18.{md,json}` exist anywhere under `plans/audit/results/`. This is the real
 remaining work gating the parent plan's `-029` checkbox -- 2 of 3 checkpoints (42 of the 63 total legs) have not been
-attempted at all.
+attempted at all.~~ **SUPERSEDED, see correction above -- both are now genuinely in flight, just not complete yet (no
+report file exists YET because neither driver has finished its full 21-leg matrix).**
 
 ## Resume instructions
 
-1. **STOP -- before launching ANY VM for this todo, check for an existing report AND for already-running VMs first**
-   (this exact step was skipped at least twice already, producing the redundant re-runs documented above):
+1. **STOP -- before launching ANY VM for this todo, check for an existing report, for already-running VMs, AND for a
+   local driver process first** (checking only the first two was NOT enough -- 19:45Z's check missed 2 live local driver
+   processes for the exact days this doc then called "NOT started"):
    - `ls plans/audit/results/data_pipeline_e2e_check_is_<date>.md` for the target date -- if it exists with `status`
      other than a stub, READ IT before relaunching; a complete report means that checkpoint's data collection is DONE
      and only unresolved failure triage (if any) remains.
-   - `gcloud compute instances list --filter="name~instr-backfill-sports-pchk"` -- if a VM matching your target day is
-     already RUNNING, do not launch a duplicate; wait for it or investigate why it's slow instead.
-2. As of 2026-08-02T19:45Z: baseline (`2025-12-20`) is DONE (report exists, complete 21/21 legs) -- do NOT re-run it.
-   Only remaining baseline work is the OPEN_METEO skip investigation (todo below). Mid (`2025-12-24`) and final
-   (`2025-12-18`) have NOT been run at all -- that is the real remaining work.
+   - `gcloud compute instances list --filter="name~instr-backfill-sports-pchk"` -- if a VM is RUNNING, don't assume
+     which day/leg it's for from its name alone (the leg-letter in the VM name has been observed to NOT reliably match
+     the actual leg being run) --
+     `gcloud storage cat gs://deployment-scripts-central-element-323112/vm-logs/<vm>/run.log` and read its
+     `--- Chunk N/M: <date> → <date> ---` header line to confirm the real target day before concluding anything about
+     it.
+   - `ps aux | grep pipeline_e2e_check` -- the DRIVER (the local
+     `.venv/bin/python -u scripts/pipeline_e2e_check.py --day <D> ...` process that sequentially launches all 21 legs
+     for one checkpoint day) is a SEPARATE thing from the per-leg VMs it spawns; a driver can be alive and mid-matrix
+     even between VM launches, with zero VMs running at that instant, or a fresh VM just launched can lag a
+     `gcloud compute instances list` cache by a few seconds -- `ps aux` is the ground truth for whether a checkpoint day
+     is already being worked, check it every time.
+2. As of 2026-08-02T19:56Z: baseline (`2025-12-20`) is DONE (report exists, complete 21/21 legs) -- do NOT re-run it.
+   Only remaining baseline work is the OPEN_METEO skip investigation (todo below). Mid (`2025-12-24`, slot-7 driver) and
+   final (`2025-12-18`, slot-12 driver) are BOTH already in flight (confirmed live processes, see correction above) --
+   do NOT launch either. Health-check their progress instead; only launch if a fresh `ps aux` check finds no live driver
+   AND no complete report for that day.
 3. If a report exists but you still suspect it's stale/wrong, verify its `generated_at`/`Finished` timestamp against the
    most recent commit touching it (`git log -- plans/audit/results/<file>.md`) before trusting or discarding it.
 4. Once mid + final are both run (with reports committed) and the OPEN_METEO investigation is resolved (or explicitly
@@ -218,6 +244,21 @@ attempted at all.
   completion claim. Corrected the stale "Baseline checkpoint" / "Resume instructions" sections above so future pickers
   don't repeat the redundant-relaunch mistake. Returning the flip-todo to the queue via `/skip-current-task` rather than
   falsely completing it.
+- **2026-08-02T19:56Z (slot 8, data_engineering, task `sports_track_k_is_pipeline_check_progress-008`, dispatched to run
+  the mid (2025-12-24) checkpoint)**: per this doc's own Resume Instructions step 1, checked for an existing report
+  (none) and running VMs (`gcloud compute instances list --filter="name~instr-backfill-sports-pchk"` — 3 RUNNING) before
+  launching anything. **Found the 19:45Z "confirmed NOT started" claim was already stale**: reading each running VM's
+  `run.log` chunk header (not trusting the VM name's leg-letter, which doesn't reliably match) showed one VM actively
+  processing `2025-12-24` (my exact target day) and another processing `2025-12-18` (the final checkpoint) — NOT the
+  baseline duplicates the doc's text implied. `ps aux` confirmed two live local driver processes: slot-7 PID 283424
+  (`--day 2025-12-24`, launched 19:33Z) and slot-12 PID 474834 (`--day 2025-12-18`, launched 19:46Z) — both healthy,
+  both mid-matrix (slot-7's first VM leg completed cleanly `exit_code=0` at 19:52Z while I was checking). **Did NOT
+  launch a duplicate for 2025-12-24** — corrected the stale "Mid/final checkpoints" and "Resume instructions" sections
+  above (added the missing `ps aux` driver-process check + the VM-name-leg-letter caveat, so the next resumer doesn't
+  rely on the same incomplete signal that produced the stale claim). Also noted (not chased, already covered by the
+  existing P3 todo) a THIRD driver re-running baseline (`2025-12-20`, slot-11 PID 223739) — a further instance of the
+  already-flagged redundant-relaunch pattern. Releasing via `/skip-current-task {"reason_code": "OTHER"}` — collision,
+  not gated; both remaining checkpoints are already being worked by other slots.
 - 2026-08-02T19:20Z (slot 11, data_engineering): filed this tracker as a context-limit checkpoint mid-baseline-run; see
   "Baseline checkpoint" section above for full state. Background VM continues independently of this session.
 - 2026-08-02 (slot 9, data_engineering): root-caused the `skip_signal_not_found` finding on API_FOOTBALL's skip-leg by
