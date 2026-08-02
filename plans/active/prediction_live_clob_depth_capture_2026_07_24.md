@@ -7,7 +7,7 @@ summary: >-
   prediction_venue_perps_and_live_clob_depth_2026_06_20.md (plan line-cap remediation, 2026-07-24).
 status: active
 nature: process
-asset_group: [prediction, cefi]
+asset_group: [prediction]
 stage: [meta]
 repos:
   [agent-orchestrator, deployment-api, deployment-service, e2e-testing, features-service, fund-administration-service]
