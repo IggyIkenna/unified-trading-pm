@@ -488,16 +488,16 @@ concurrent workers do not collide on this file.
       retry does not mask a real hang. `shellcheck` clean (no new warnings vs. the pre-existing 3). Full
       `quality-gates.sh` green (63s) before shipping via quickmerge; verified `80148edde` on `origin/live-defi-rollout`
       before flipping this checkbox.
-- [ ] [INFRA] P2. **cassette-drift-check: the negative test its own fix requires is unevidenced.** All three prescribed
-      fixes shipped 2026-07-17 (`unified-trading-pm@f339ce5e8`: repointed to
-      `-m unified_api_contracts.testing.detect_cassette_drift`, `RUNNER_TEMP` venv install, `0)`/`1)`/`*)` exit-code
-      split) and the workflow was flipped to `[self-hosted, glue]` (`@e9d02e5d6`) — but the doc's own "Negative test
-      that must pass after the fix" was never run: a genuine drift must still open the issue, a genuinely-absent-drift
-      run must exit 0, and a BROKEN invocation (bad path / unimportable module) must FAIL the job rather than report
-      drift. Add that negative test and prove all three states are now distinguishable. **Explicitly OUT of scope**:
+- [x] ✅ [INFRA] P2. **cassette-drift-check: the negative test its own fix requires is unevidenced.** —
+      `unified-api-contracts@7450e744`: added `tests/unit/test_detect_cassette_drift.py`, exercising
+      `detect_cassette_drift.main()` directly for the three exit states the workflow's `case "${rc}" in 0) … 1) … *) …`
+      branches on — a genuinely-empty cassette dir exits 0, a fabricated genuine-schema-drift cassette exits 1
+      (venue-scoped model registry monkeypatch mirroring `_select_model`'s real matching), and a nonexistent
+      `--cassette-dir` exits 2 without writing a report. Full `quality-gates.sh` green (266s) before shipping via
+      quickmerge; verified `7450e744` on `origin/live-defi-rollout` before flipping this checkbox. Source doc's banner
+      updated with this evidence in this same commit. **Explicitly OUT of scope** (unchanged, still open elsewhere):
       closing the 52 false `[Cassette Drift]` issues and the detector's cassette→model matching lottery — both
-      operator-owned, and Ikenna owns the count verification (`## Deferred` D23). **Done when**: the three exit states
-      are covered by a test/dispatch and the source doc's banner records the evidence. Source:
+      operator-owned, and Ikenna owns the count verification (`## Deferred` D23). Source:
       `issues/cassette_drift_check_calls_deleted_script_and_swallows_it_2026_07_17.md`.
 - [ ] [INFRA] P2. **Verify the released Docker version tag is no longer re-pointed at new content.** The F2 blast-radius
       probe found the UTL base image rebuilt daily and re-tagged the SAME frozen `0.55.0`/`latest`, so `0.55.0` named a
