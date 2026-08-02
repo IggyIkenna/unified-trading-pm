@@ -114,11 +114,13 @@ ground to open up, and it did:
    `launch-tradfi-forward-poll.sh` launcher (not a new dedicated launcher, never default-on). The issue doc now carries
    a fully-specified `[CODE] P1` implementation plan ((i)-(iv), exact files, exact repos, explicit done-when) with zero
    judgment call left. batch4 (created 2026-07-26) cannot possibly reference this — it predates the ruling by 3 days.
-   **This batch (batch5) was itself never approved/dispatched (`status: draft` throughout) — the implementation instead
-   landed via a DIFFERENT, separately-active plan's bundled todo (`tradfi_satellite_ao_dispatch_batch2_2026_07_25.md`'s
-   `[OPERATOR] P2` item), shipped `deployment-service@c847395e` on 2026-07-30. Verified live: the commit matches this
-   doc's own (i)-(iv) plan exactly. See this batch's todo 1 (marked done-by-cross-reference) and the Progress Log
-   below.** This is the cleanest, highest-confidence todo in this batch.
+   **This batch (batch5) was still `status: draft` at the time the mvp_mode work shipped — it was approved + dispatched
+   later the same day (`5a6bbefc3`, 2026-07-30); the "draft throughout" wording here is scoped to that earlier moment,
+   corrected 2026-08-02 — the implementation instead landed via a DIFFERENT, separately-active plan's bundled todo
+   (`tradfi_satellite_ao_dispatch_batch2_2026_07_25.md`'s `[OPERATOR] P2` item), shipped `deployment-service@c847395e`
+   on 2026-07-30. Verified live: the commit matches this doc's own (i)-(iv) plan exactly. See this batch's todo 1
+   (marked done-by-cross-reference) and the Progress Log below.** This is the cleanest, highest-confidence todo in this
+   batch.
 2. **A blocker with wide downstream reach has a live mitigation to re-test.** `_retry_empty_day_listing`
    (`market-data-processing-service@22b926c`) shipped to address the listing-consistency hypothesis behind
    `issues/tradfi_mdps_build_continuous_mismatches_2_and_4_still_open_2026_07_26.md`'s stuck ~19% hit rate. That doc's
@@ -429,13 +431,15 @@ items 1/3/6/8 yet).
 
 ## Process observations (not batch todos — for the operator/main-agent, not silently fixed here)
 
-1. **`tradfi_satellite_ao_dispatch_batch4_2026_07_26.md` is 8/8 done and unlocked, but its gated finalize
-   (`tradfi_satellite_ao_dispatch_batch4_2026_07_26_finalize.md`) is still `status: draft`, 0/3 done.** Per
-   `gate_on_depends: true`, the finalize is dispatch-eligible now that batch4's last todo flipped — it just hasn't been
-   activated. That finalize's own todo 2 ("re-check batch4's Deferred sections... extract as a new tracked todo in a
-   follow-up batch5") is functionally superseded by this fresh full-corpus audit for the `mvp_mode` item specifically
-   (this batch's todo 1) — whoever runs batch4-finalize later should cite this batch rather than re-deriving that
-   finding.
+1. ~~**`tradfi_satellite_ao_dispatch_batch4_2026_07_26.md` is 8/8 done and unlocked, but its gated finalize is still
+   `status: draft`, 0/3 done.**~~ **RESOLVED — observation is STALE, corrected 2026-08-02.** As written on 2026-07-29
+   this was true; it no longer is. The finalize was flipped to `active` by the 2026-07-30 corpus-wide removal of the
+   redundant finalize draft double-gate (`233ebd614`), then ran to 3/3 done and was archived — it now sits at
+   `status: complete`, `/plans/archive/2026_07/tradfi_satellite_ao_dispatch_batch4_2026_07_26_finalize.md` (0 open
+   todos, verified 2026-08-02). Do NOT re-surface it to the operator. The still-useful half of the original note, for
+   the record: that finalize's todo 2 ("re-check batch4's Deferred sections... extract as a new tracked todo in a
+   follow-up batch5") was functionally superseded by this fresh full-corpus audit for the `mvp_mode` item specifically
+   (this batch's todo 1).
 2. **`tradfi_registry_coverage_and_ao_readiness_2026_07_25.md` is still `status: draft` (1/15 done)** despite carrying
    the live 2026-07-29 Phase A2 todo that tracks the FX/ICE/KRX historical re-stamp referenced in this batch's Deferred
    section above. It is gated on `tradfi_manifest_content_recovery_completion_2026_07_24.md` (17/20 done) and
@@ -705,6 +709,17 @@ mirroring the batch1/batch2/batch3/batch4 finalize pattern.
   the 1d/24h hit-rate re-measure against the ~19% (454/2398) baseline — no VM-side work is needed before that (fleet is
   fully idle).
 - **context-scout 2026-08-01**: populated/refreshed context_scope (5 entries).
+
+- **2026-08-02 (same correction pass, second commit — stale-status sweep over this doc's own text)** — While correcting
+  the delete-safety premise above, found and fixed two further statements in this doc that are now demonstrably false:
+  (a) § "Why this batch exists" item 1 asserted "This batch (batch5) was itself never approved/dispatched
+  (`status: draft` throughout)" — true only of the moment the `mvp_mode` work shipped; batch5 was approved + dispatched
+  later that same day (`5a6bbefc3`, 2026-07-30), so the claim is now time-scoped rather than left reading as current.
+  (b) Process observation 1 said batch4's gated finalize "is still `status: draft`, 0/3 done" — verified false:
+  `233ebd614` flipped it active 2026-07-30, it ran to 3/3, and it is now `status: complete` and archived at
+  `/plans/archive/2026_07/tradfi_satellite_ao_dispatch_batch4_2026_07_26_finalize.md` (0 open todos). Struck through and
+  marked RESOLVED so nobody re-surfaces it to the operator. Process observation 2 (`registry_coverage_and_ao_readiness`
+  still `status: draft`) was re-verified and is STILL TRUE — left standing, unchanged.
 
 - **2026-08-02 (operator-ruled correction pass, doc-content only — no bucket data touched, no GCS/manifest call made)**
   — Corrected a FALSE delete-safety premise in this plan's Deferred — conflict-gated section. The
