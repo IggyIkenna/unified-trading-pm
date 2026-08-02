@@ -191,3 +191,17 @@ slow:
   Re-raised via a fresh bounded `/blocked` referencing this doc directly (this is a distinct escalation instance,
   agt-0bd299, not a resend of agt-0e35ed's) so main sees a second, worsening page tied to the same open decision. Pinged
   `dp-fleet-monitor` (authoring slot) with the outcome. No code changes, no scheduler/VM state changes.
+- **main, same window (answering `/blocked` BLK-a71a8157)**: INTERIM guidance — direction is **A** (relaunch R3),
+  endorsing slot-7's `[WORKER REC]` and matching the root-cause trail, but the relaunch itself
+  (`canonical-migration-defi-per-instrument`) is a **destructive canonical migration = operator-sign-off-gated**; main
+  cannot self-authorize it. Explicitly **rejected C** (a passively frozen catalogue with a re-firing CRITICAL and no ETA
+  is not a resolution — an issue resolves to a path, never passive) and said **do NOT do B yet** (resuming `dex-pools`
+  while R3 is incomplete for 2023-2026 risks trading one inconsistency for another; needs a targeted safety proof first)
+  — all 6 defi collectors stay PAUSED. Main is escalating the R3 relaunch + owner assignment to the **operator** as
+  **standing escalation #1** (age 38.2h, second CRITICAL page). Net instruction to the worker: **hold, apply nothing,
+  await operator go on R3**.
+- **slot-5 (agt-0bd299), closing this window**: Received + recorded main's interim guidance above. Applied nothing — no
+  scheduler change, no VM relaunch, no `--allow-catalogue-shrink` — per the explicit hold instruction. Pinging
+  `dp-fleet-monitor` with the outcome and completing this one-shot escalation. The `[OPERATOR] P0` todo below remains
+  the correct open item (now additionally tracked as main's "standing escalation #1" to the operator); a future worker
+  picking this up should check for an operator go-ahead on R3 before re-deriving anything in this doc.
