@@ -174,11 +174,29 @@ is the durable record; the 5 per-AG plans' execution-item pointers above are how
       (matches the existing struck-through-banner convention). No operator input needed — resolved by commit timestamp +
       the fact that one side is an explicit fresh operator statement and the other an agent's inference from unrelated
       code.
-- [ ] [DATA] P2. When any of `cefi_consolidated_closeout_2026_07_18.md` / `defi_consolidated_closeout_2026_07_18.md` /
-      `tradfi_manifest_content_recovery_completion_2026_07_24.md` is next split under
-      `plan_line_cap_remediation_2026_07_23.md`, fold this doc's cefi/defi/tradfi-specific "target = 100%" /
-      "DeFi-specific refinement" language into the relevant child plan directly (verbatim, per the split convention used
-      elsewhere this session) rather than leaving it only cross-referenced here.
+- [x] ✅ [DATA] P2. **DONE 2026-08-02 (data_engineering slot-7).** The trigger condition already fired:
+      `plan_line_cap_remediation_2026_07_23.md` (`status: resolved`, now archived) already split all 3 named files below
+      the 1000-line cap (cefi 1421L→561L, defi 1489L→914L, tradfi 1633L→1000L) before this todo was ever dispatched.
+      Checked each for the fold-in: **tradfi** already cited this directive by name (line 263, done 2026-07-25 as part
+      of its own casing todo — no action needed). **cefi** did not cite this directive at all — its 2026-07-27
+      enumeration-audit checkpoint left a 2,982-row `instrument_type` non-canonical residual undescribed against the
+      literal-100% bar; added a new P2 todo citing this directive + the residual, done-when = a fresh live recount
+      hits 0. **defi** carried STALE pre-2026-07-24 text (the blanket-manifest-COLUMN-UPPERCASE framing this directive's
+      own DOC todo above already knew was superseded for DeFi specifically) with no mention of the 2026-07-24 per-value
+      refinement or its 2026-07-24 resolution (`defi_track01_per_instrument_and_canon_id_2026_07_24.md`,
+      already-100%-lowercase census, no migration needed) — corrected that section in place, citing both this directive
+      and the resolving todo. No production data touched — pure documentation fold-in, per this todo's own scope.
+- [ ] [DOC] P3. **Archival-eligible, not yet archived.** Both of this doc's own todos are now `[x]` and `locked_by` is
+      blank — per `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`'s archive-immediately rule this
+      doc should move to `plans/archive/<YYYY_MM>/`. Deliberately NOT done in the same turn the todos above completed:
+      16 corpus-wide referrers (`grep -rl cross_ag_instrument_type_casing_100pct_directive_2026_07_24 --include=*.md .`)
+      need their paths fixed per the ritual's step 5, plus a codex-alignment check (3 codex docs already carry
+      correction banners POINTING AT this doc as authoritative — `canonical-cutover-register.md` §3c/§7,
+      `cross-asset-canonical-target-ssot.md` §7, `reconciliation-finding-taxonomy.md` §5.1 — decide whether those
+      pointers just get their path updated post-move or whether this doc's unique content (the D1 measurement snapshot
+      table, the operator directive framing) should be absorbed into codex permanently instead of surviving only at an
+      archive path). This is genuinely more than a fold-in-sized task; flagging as its own todo rather than either
+      silently leaving it prose-only or rushing an under-scoped move. (repo: unified-trading-pm)
 
 ## Progress Log
 
@@ -186,3 +204,7 @@ is the durable record; the 5 per-AG plans' execution-item pointers above are how
   `plan_line_cap_remediation_2026_07_23.md` (cited above and in this doc's own P2 todo) has since moved to
   `/plans/archive/issues/` — the todo's gating condition may need re-verification against the archived doc's resolution
   state.
+- **data_engineering slot-7, 2026-08-02**: confirmed the archived remediation doc's `status: resolved` and its split
+  table show all 3 named plans already split (cefi/defi/tradfi all now well under the 1000-line cap) — the P2 fold-in
+  todo's trigger condition had already fired. Did the fold-in (see the flipped todo above) directly rather than
+  re-verifying the gate a second time.
