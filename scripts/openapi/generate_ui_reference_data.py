@@ -566,6 +566,50 @@ def extract_venue_data_availability() -> dict[str, dict[str, object]]:
     return availability
 
 
+def extract_jurisdiction_overlay() -> dict[str, object]:
+    """Extract the jurisdiction->venue restriction overlay from UAC.
+
+    Mirrors unified_api_contracts.internal.architecture_v2.jurisdiction_overlay
+    into the shape lib/registry/jurisdiction-overlay.ts expects: known_venue_ids,
+    jurisdictions, policies, allowed_venues_by_jurisdiction.
+    """
+    overlay: dict[str, object] = {}
+    try:
+        from unified_api_contracts.internal.architecture_v2.jurisdiction_overlay import (  # noqa: qg-deep-import
+            JURISDICTION_VENUE_POLICIES,
+            KNOWN_VENUE_IDS,
+            Jurisdiction,
+            allowed_venues_for_jurisdiction,
+        )
+
+        overlay["known_venue_ids"] = list(KNOWN_VENUE_IDS)
+        overlay["jurisdictions"] = [j.value for j in Jurisdiction]
+        overlay["policies"] = [
+            {
+                "venue_id": p.venue_id,
+                "jurisdiction": p.jurisdiction.value,
+                "access": p.access.value,
+                "needs_legal_review": p.needs_legal_review,
+                "reason": p.reason,
+                "source_note": p.source_note,
+            }
+            for p in JURISDICTION_VENUE_POLICIES
+        ]
+        overlay["allowed_venues_by_jurisdiction"] = {
+            j.value: sorted(allowed_venues_for_jurisdiction(j)) for j in Jurisdiction
+        }
+
+        logger.info(
+            "  Extracted %d jurisdiction venue policies, %d jurisdictions",
+            len(JURISDICTION_VENUE_POLICIES),
+            len(list(Jurisdiction)),
+        )
+    except Exception as e:
+        logger.warning("  Failed to extract jurisdiction overlay: %s", e)
+
+    return overlay
+
+
 def extract_venue_coordinates() -> dict[str, dict[str, float]]:
     """Extract stadium geographic coordinates from UAC."""
     coordinates: dict[str, dict[str, float]] = {}
@@ -847,6 +891,8 @@ def main() -> None:
     reference["lifecycle_enums"] = extract_lifecycle_enums()
     logger.info("\n21. Extracting architecture_v2 capability registry...")
     reference["archetype_capability_registry"] = extract_architecture_v2_capability_registry()
+    logger.info("\n22. Extracting jurisdiction overlay...")
+    reference["jurisdiction_overlay"] = extract_jurisdiction_overlay()
     logger.info("\n23. Validating config registry coverage...")
     validate_config_registry_coverage(pm_root, uac_root, workspace_root)
 
