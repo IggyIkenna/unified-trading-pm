@@ -452,19 +452,25 @@ concurrent workers do not collide on this file.
       today (listed in the census table with unreleased-commit counts). Zero tags minted/moved/deleted — audit only, per
       the HARD CONSTRAINT. Full table: `issues/d13_orphaned_version_readers_and_manifest_drift_2026_07_17.md` § "Fleet
       version/tag-state census (2026-08-02)".
-- [ ] [INFRA] P2. **The repurposed release-STALL alarm emits a `::warning::` nobody reads.** `reconcile_release_tags.py`
-      is now the fleet's release-stall detector (codex ruling, `/codex/08-workflows/ci-cd-flow.md:1004`), and it
-      correctly measured a 4-week, 22-repo, ~2,490-commit outage — but by default it only emits a `::warning::` unless a
-      caller passes `--fail-on-stall`, so the finding lands nowhere a human sees. Route the STALL verdict to a channel
-      someone reads: fire it through the reusable `notify-slack.yml` carrier with a state-transition `dedup_key` per
-      `/codex/04-architecture/ci-alerting.md`, so a NEW stall pages once and a RESOLVED stall all-clears — without
-      making the `*/30` schedule fail 48×/day. Also apply the source doc's silent-failure lesson if it still holds
-      post-repurpose: `_main_version()` returning `None` conflates "no pyproject" / "fetch failed" / "field absent" —
-      distinguish them, or record why the repurpose made it moot. **Done when**: a synthetic stall produces exactly one
-      alert with the repo names and staleness, a no-stall run produces none, and the `*/30` cron does not fail. Source:
-      `issues/reconcile_release_tags_dead_since_d13_git_tag_migration_2026_07_17.md` § "Also fix the silent-failure
-      class". **Note**: the separate question of what happens to the three dead `DELETE     reconcile-release-tags` todo
-      lines is parked with the operator; this todo stands under every option.
+- [x] ✅ [INFRA] P2. **DONE 2026-08-02 (slot 2, infra).** Routed the STALL alarm through the reusable `notify-slack.yml`
+      carrier. `reconcile_release_tags.py` gained `--state-in`/`--state-out`/`--cleared-out`/ `--stall-out` (mirroring
+      `promotion_lag_monitor.py`'s per-key clear-diff pattern — a repo only clears when affirmatively re-measured
+      healthy, never on a transient API-miss, which is carried forward instead) so `reconcile-release-tags.yml` now has
+      `stall-notify` (dedup_key=`release-tag-stall`, cooldown 360min — a standing condition, not a per-tick page) and
+      `stall-notify-resolved` (recovery bookend, per-cleared-set dedup key, cooldown 60min) jobs, mirroring
+      `branch-health.yml`'s lag-monitor/lag-notify trio. The `--fail-on-stall` default (warn-only) is UNCHANGED — the
+      `*/30` cron still does not fail on an ordinary stall. Also closed the residual silent-failure gap:
+      `_is_dynamic_versioned` already handles the original field-absent conflation correctly (bucketed as
+      `dynamic_ok`/`stalled`, never `unreadable`); the one shape that WOULD still silently read as a clean run — every
+      considered repo landing in `unreadable` at once (a broken `GH_TOKEN`/API, not a legitimate fleet state) — is now a
+      hard FATAL exit, independent of `--fail-on-stall`. Added 12 unit tests
+      (`test_reconcile_release_tags_stall_slack.py`) pinning: a synthetic multi-repo stall produces exactly ONE alert
+      block naming every stalled repo + staleness; a no-stall run produces no block; a repo that clears (affirmatively
+      re-measured, not merely unmeasured) produces exactly one RESOLVED block; an unmeasured repo is carried forward and
+      never treated as cleared; and the all-unreadable case is FATAL. `quality-gates.sh` green on a forced full run
+      (`QG_SENTINEL_DISABLE=true`, since the cheap content-sentinel skip would've been an unverified shortcut for
+      brand-new code) — 1617 passed/17 skipped/0 failed, basedpyright clean. Shipped via quickmerge; verified
+      `merge-base --is-ancestor` on `origin/live-defi-rollout`. (repo: unified-trading-pm@3838feeb2)
 - [x] ✅ [SCRIPT] P3. **`base-ui.sh`: one automatic retry on the build-timeout class.** A cold-cache UI build trips the
       90s QG budget and passes on retry; a genuine hang fails twice. Add exactly one automatic retry on the timeout
       class in `scripts/quality-gates-base/base-ui.sh` — removes the human re-run without weakening the budget. Exercise
