@@ -36,7 +36,7 @@ related:
     /plans/active/issues/deployment_api_sigabrt_crash_loop_2026_07_24.md,
   ]
 created: "2026-07-31"
-last_updated: "2026-07-31"
+last_updated: "2026-08-02"
 parent_epic: infrastructure_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -161,3 +161,30 @@ this service relative to its documented, measured requirement.
 ## Progress Log
 
 - **context-scout 2026-08-01**: populated context_scope (3 entries).
+- **2026-08-02T18:12Z (slot-5, infra, dispatched `bucket_iam_write_protection_per_tier-018` / P2.2e)** — attempted P3's
+  own recommended retry, per what looked like a genuinely promising signal: `gcloud run revisions list` showed 15
+  consecutive `Ready=True` fresh revisions (`00403-rvc`..`00417-7fh`) spanning `2026-08-01T00:54Z`..`2026-08-02T15:26Z`
+  (~38.5h, multiple quiet+busy periods), and a targeted Cloud Logging sweep for
+  `"Container called exit(0)"`/`"STARTUP TCP probe failed"` found **zero** hits since the last recorded failure
+  (`00402-zsg`, `2026-08-01T00:03:34Z`) — on its face this matched main-orchestrator's `2026-08-01T00:06Z` durable-close
+  bar ("N-consecutive fresh cold-starts over a multi-hour window spanning quiet periods, zero exit(0) failures").
+  Confirmed the latest revision (`00417-7fh`, created today) already runs `uts-prd-sa` + `16Gi/4cpu` (the target
+  config), so P3's "tag-verify 3-5 fresh cold starts" step just needed doing. **Result: FAILED on the very first
+  attempt.** `gcloud run services update-traffic --set-tags=prd-sa-precutover=uts-shared-deployment-api-00417-7fh` (0%
+  traffic, isolated tag only — no real traffic ever touched) hit the identical signature:
+  `"The user-provided container failed to start and listen on the port... within the allocated timeout"`. **This
+  directly refutes the apparent 38.5h clean streak** — a revision that reports `Ready=True` in `revisions list` (and
+  evidently serves real requests, e.g. `00417-7fh` and its siblings were likely serving routine CI/CD health traffic)
+  can STILL fail when actually force-cold-started via a fresh `update-traffic` invocation, exactly the same "looks
+  resolved, one retry away from failing again" shape as the `00401-4x7`→`00402-zsg` refutation main-orchestrator already
+  documented on 2026-08-01. **The durable-close bar as literally worded (zero `exit(0)` failures in the log stream) is
+  not the right proxy** — it only captures failures from revisions someone actually tried to cold-start via traffic/tag
+  operations, and apparently nobody attempted that between `00402-zsg` (07-31) and this session; ordinary CI/CD
+  `Ready=True` revisions with 0% traffic evidently do NOT reliably exercise this failure path, or exercise it
+  non-deterministically. **Production confirmed safe throughout**: traffic stayed 100% on the warm `00374-4pd`
+  (`unified-trading-sa`) the whole time; `/api/health` returned 200 before and after. Left the `prd-sa-precutover` tag
+  on `00417-7fh` as evidence (mirrors the existing `verify2`→`00402-zsg` precedent) — 0% traffic, no risk. **Declining
+  `bucket_iam_write_protection_per_tier-018` (P2.2e)** — the gate this doc's P3 todo and the SIGABRT doc's
+  `2026-08-01T00:06Z` entry both impose is still not met; do not re-attempt the cutover based on a clean
+  `revisions list`/log-sweep alone — the ONLY reliable signal is an actual fresh tag/traffic operation, which just
+  failed. No code shipped — live verification only. (repo: deployment-service, deployment-api)
