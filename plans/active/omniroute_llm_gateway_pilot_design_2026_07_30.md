@@ -1,14 +1,18 @@
 ---
 doc_type: plan
 title: OmniRoute multi-provider LLM-gateway pilot — deployment-api pipeline-UAT commentary (human execution)
-summary:
+summary: >-
   Operator flagged omniroute.online (a self-hosted, OpenAI/Anthropic-compatible local gateway that auto-routes across
   268 providers' free/cheap tiers) as a possible cost-routing layer, given the fleet already has a DeepSeek-swap
   precedent (`agent-orchestrator/server/accounts.py`'s `AccountProvider`). Operator ruling 2026-07-30 waived the
   trust-boundary objection and directed the model-tier-SSOT-conflict objection be resolved by a structural guardrail
   rather than by staying gated — this doc records both rulings and gives the pilot itself full build-grade detail (exact
   files/fields/tests/done-whens), while staying a LOCAL/human-executed plan (not AO-dispatched) per the operator's
-  explicit choice.
+  explicit choice. 2026-08-02: operator pushed back on the original "never touch the worker fleet" framing — the
+  "Worker- fleet routing" section records the actual fresh model-tier-risk review this required, resolving to a
+  BOUNDED-relay design (OmniRoute configured to a curated model set, never full-auto) rather than a blanket ban, with 3
+  research prerequisites (real OmniRoute account access, the real allowlist mechanism, the curated model list) before
+  any code.
 status: active
 nature: design
 asset_group: [ao, cross-cutting]
@@ -20,9 +24,10 @@ related:
   [
     /codex/06-coding-standards/model-tier-selection.md,
     /codex/12-agent-workflow/claude-cli-multi-account-headless-auth.md,
+    /plans/active/deepseek_claude_blended_provider_routing_2026_07_28.md,
   ]
 created: 2026-07-30
-last_updated: 2026-07-30
+last_updated: 2026-08-02
 parent_epic: orchestrator_master
 assigned_vm: NA
 execution_scope: local-only
@@ -106,8 +111,10 @@ rule** instead of an implicit accident of current architecture, so a future chan
       plan and stating the same boundary from the SSOT side (an opaque multi-provider router is out of scope for any
       `AccountProvider`-routed worker traffic; the one sanctioned pilot surface is `deployment-api` pipeline-UAT
       commentary, tracked here). Done-when: the note exists and the plan doc is linked from it (or vice versa via
-      `context_scope`). — `unified-trading-pm@<pending this commit>`, new "Multi-provider gateway boundary (2026-07-30)"
-      section added, cross-references this plan doc + the DeepSeek plan.
+      `context_scope`). — `unified-trading-pm@1afce7135`, "Multi-provider gateway boundary (2026-07-30)" section added,
+      cross-references this plan doc + the DeepSeek plan. (Superseded in spirit by the "worker-fleet routing" section
+      below — the codex note describes the ORIGINAL blanket boundary; the refined, conditional policy is recorded here
+      and should be folded into the codex note once the design is actually implemented, not before.)
 
 This makes "don't extend this to the worker fleet" a documented, citable rule at exactly the two places someone would
 look (the enum itself, and the model-tier SSOT) — not just a paragraph in a design doc that stops being read once the
@@ -161,11 +168,67 @@ client = anthropic.AsyncAnthropic(api_key=config.anthropic_api_key)
       "concise, plain-language, under 6 sentences unless critical" — easy to eyeball). Done-when: a reported
       before/after on cost + a pass/fail on the quality spot-check.
 
-## Explicitly out of scope (the guardrail's own boundary)
+## Worker-fleet routing — the "fresh model-tier-risk review" the guardrail called for (2026-08-02)
 
-Extending this to `agent-orchestrator/server/accounts.py`'s `AccountProvider` (i.e. routing actual Claude Code worker
-sessions through OmniRoute) is **not** part of this pilot and is not pre-approved by a good pilot result — per the
-guardrail above, that would need its own fresh model-tier-risk review, not an inference from this doc.
+The guardrail above says extending OmniRoute to `accounts.py`'s `AccountProvider` needs its own fresh review, not an
+inference from this doc. This section IS that review — conducted after the operator pushed back on the original "never"
+framing: the actual objection was never "OmniRoute must never touch the worker fleet," it was specifically **OmniRoute's
+own `auto` model-selection mode** (9-factor scoring, cheapest-across-268-providers) making the served model
+unpredictable per spawn — nothing in AO's dispatch path could then verify a `sonnet`-tier task actually got
+sonnet-equivalent quality, not some arbitrary weak free model.
+
+**The resolution: a bounded relay, not a blanket ban.** `omniroute.online`'s own landing page (fetched 2026-08-02;
+account signup required for the real dashboard/API docs, not yet done) confirms model selection supports **both** `auto`
+**and pinning a specific model name** per request, and references "18 routing strategies" + a "build your own combo"
+custom-routing-policy concept — very likely the mechanism for constraining the pool, though the exact config/field names
+aren't in the public marketing page and need verification once an account exists. Operator's framing (2026-08-02): AO
+would spawn a worker THROUGH OmniRoute, but OmniRoute itself is configured (gateway-side, an operator-curated "combo")
+to a bounded set of vetted models — OmniRoute still auto-picks CHEAPEST _within_ that set, so cost-optimization stays
+dynamic while quality risk is bounded to "one of several pre-vetted acceptable models," not "any of 268." This is
+materially different from full-auto mode, and a reasonable middle ground given AO's own dispatch design already does the
+heavy lifting of scoping work down to bounded, "easy" sonnet-tier tasks before a worker is ever spawned (context_scout +
+plan-brainstorm's pre-authoring scoping, heavy/judgment-call work staying `opus-required` and hard-pinned to Claude
+regardless).
+
+**What does NOT change**: the opus/fable hard pin (`_short_tier(model) != "sonnet"` branch in
+`select_account_for_spawn()`) is completely independent of which providers exist in the free pool — it already runs
+BEFORE any provider, OmniRoute or otherwise, is even considered. Nothing about this design touches that gate.
+
+**What's still missing before this can be built (research todos, not yet actionable as code):**
+
+- [ ] [OPERATOR] P3. Sign up for `omniroute.online` and obtain real dashboard/API access — the public landing page has
+      no developer docs; the actual "combo"/routing-strategy config schema, request/response shape, and auth model are
+      only visible post-signup. Done-when: real account exists, real docs or dashboard screenshots available to design
+      against.
+- [ ] [REVIEW] P3. Once signed up, confirm the exact mechanism for constraining OmniRoute's routing to a curated model
+      set (the "combo"/routing-strategy concept) — exact config location (dashboard vs. request header vs. a hosted
+      config file), exact field names, and whether the constraint is enforced gateway-side (so AO's own request is
+      simple) or must be specified per-request (so AO's code would need to carry the allowlist). Done-when: a dated
+      Progress Log entry names the real mechanism with a citation (screenshot/doc link/config example).
+- [ ] [OPERATOR] P3. Decide the actual curated model allowlist ("combo") — which specific models are vetted as
+      "sonnet-tier-equivalent good enough" for AO worker spawns. A quality/business judgment call, not a technical one;
+      tagged `[OPERATOR]` per the business-judgment carve-out (mirrors the self-hosted-models todo on the DeepSeek
+      plan). Done-when: a named, dated list of acceptable models exists in this plan's Progress Log.
+- [ ] [INFRA] P3. Once the above 3 are resolved, design + implement the actual `agent-orchestrator` integration:
+      register `"omniroute"` as a new `AccountProvider` value (the Literal is already open per
+      `deepseek_claude_blended_provider_routing_2026_07_28`'s Phase 2 generalization — `agent-orchestrator@24bd611` — so
+      this is additive, not a re-generalization), an account entry pointing `ANTHROPIC_BASE_URL` at the OmniRoute
+      gateway with whatever the confirmed allowlist mechanism requires, and a real isolated local pilot dispatch proving
+      a sonnet-tier spawn routes through it correctly (same bar as the DeepSeek and generalized-provider work).
+      Done-when: same proof standard as `[INFRA] P2` on the DeepSeek plan — a real, isolated local pilot dispatch, not
+      just unit tests.
+
+This section supersedes the earlier "not pre-approved by a good pilot result" framing below for the SPECIFIC bounded-
+relay design — the previous framing (extending to `AccountProvider` needs a fresh review) is satisfied by this section
+existing; what's not yet satisfied is the review's OWN 3 prerequisites above, so this remains a design decision with
+concrete next steps, not yet a green light to write the integration code.
+
+## Explicitly out of scope (the guardrail's remaining boundary)
+
+**Full-auto OmniRoute routing** (no curated model allowlist — genuinely any of the 268 providers, whatever scores
+cheapest) for worker-fleet traffic remains out of scope, full stop — that is the exact risk the guardrail exists to
+block, and no operator ruling has waived it. Only the BOUNDED-relay design above (gateway-side curated model set) is
+under active consideration, and only once its 3 prerequisite research todos resolve.
 
 ## Codex SSOTs
 
@@ -189,3 +252,20 @@ guardrail above, that would need its own fresh model-tier-risk review, not an in
   and running the real pilot window (`[REVIEW] P3`, depends on the former) — per the plan's own scoping, these install
   persistent third-party infra and require a live 2-week window respectively, neither buildable/verifiable from a dev
   checkout.
+- **2026-08-02 — worker-fleet routing revisited, interactive session.** Operator pushed back on this plan's original
+  "OmniRoute must never touch AO's worker fleet" framing after the todos above shipped — clarified the actual intent was
+  always "AO spawns through OmniRoute as another option," and asked whether that's still viable given the guardrail.
+  Re-examined: the real risk was never "OmniRoute touches the fleet," it was specifically OmniRoute's `auto`
+  model-selection mode making the served model unpredictable per spawn. Fetched `omniroute.online`'s public landing page
+  (no account yet — dashboard/API docs are not public) and confirmed: OpenAI-compatible single endpoint translating
+  OpenAI/Claude/Gemini request shapes; model selection supports both `auto` (9-factor scoring) and pinning a specific
+  model name per request; references "18 routing strategies" + a "build your own combo" custom-policy concept as the
+  likely (unconfirmed — needs real account access) mechanism for constraining the pool. Operator's resolution: a BOUNDED
+  relay — OmniRoute configured (gateway-side, a curated "combo") to a vetted model set, still auto-picking cheapest
+  WITHIN that set, reasoning that AO's own dispatch design (context_scout + plan-brainstorm's pre-authoring scoping)
+  already bounds worker-spawned tasks to "easy," sonnet-tier work before a worker ever spawns — so a curated-set quality
+  floor is an acceptable trade for dynamic free-tier cost optimization. Wrote this up as its own "Worker-fleet routing"
+  section (supersedes "Explicitly out of scope" for this specific bounded design; full-auto routing stays explicitly out
+  of scope, unchanged) with 3 research prerequisites before any code: real OmniRoute account/dashboard access, the real
+  allowlist/combo mechanism confirmed against real docs (not the marketing page), and the operator's actual curated
+  model list. No code shipped this entry — planning/research only.
