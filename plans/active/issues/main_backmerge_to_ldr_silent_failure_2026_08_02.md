@@ -104,22 +104,73 @@ against a MERGE producing wrong content; it does nothing when the job dies befor
 This is a live, bounded, worker-determinable investigation + fix — not an operator judgment call (the failure is a
 concrete git/CI defect, not a design question) — so it is dispatched here rather than filed `NA`.
 
-- [ ] [INFRA] P1. **Diagnose the exact failure point in `main-backmerge-to-ldr.yml`'s "Back-merge main into LDR" step**
-      (likely `git fetch origin main live-defi-rollout --quiet`,
-      `git ls-remote --exit-code --heads origin     live-defi-rollout`, or the `git config`/checkout steps immediately
-      before it — the job dies in <1s with zero `[backmerge:...]` output, before `DECISION` is ever set). Pull a full
-      `gh run view <id> --log` for a recent failed run and identify the first non-zero exit. Repo: unified-trading-pm.
-- [ ] [INFRA] P1. **Fix the root cause** (auth/token scope regression, a changed default branch/ref assumption, a GH API
-      rate-limit/outage during the fetch, or similar) and confirm 3 consecutive scheduled runs succeed
-      (`decision=merged` or `decision=noop`) before considering this closed. Repo: unified-trading-pm.
+- [x] ✅ [INFRA] P1. **Diagnose the exact failure point in `main-backmerge-to-ldr.yml`'s "Back-merge main into LDR"
+      step** — unified-trading-pm (diagnosis only, no code). Root cause confirmed via a `--debug` rerun (`set -x` + an
+      `ERR` trap) on a disposable, never-merged diagnostic branch (`diag/backmerge-tracing-2026-08-02`, deleted after
+      use — main/LDR untouched by the diagnostic run itself): the trap fired on
+      `_extracted="$(printf '%s' "$_msg" | grep -oE '^Promoted-From-LDR: [0-9a-f]{7,40}' | head -1 | awk '{print $2}')"`
+      — **`origin/main`'s copy of this file is missing the `|| true` pipefail guard** that commit `39abe46b8`
+      (2026-07-31, "fix(ci): apply main-backmerge-to-ldr pipefail+-e fix to PM's own live copy") already applied to
+      `origin/live-defi-rollout`'s copy. Under this step's `set -o pipefail` + `shell: bash -e {0}`, the first candidate
+      commit in the `main..LDR` range lacking a `Promoted-From-LDR:` trailer (the common case — only squash-promotes
+      carry it) makes `grep` exit 1 (no match), pipefail propagates that as the pipeline's exit status, and the bare
+      assignment (not inside an `if`/`while` condition) aborts the whole script under `-e` — silently, before `DECISION`
+      is ever set, exactly matching every symptom in "What I found" above. **Scope confirmed isolated to PM**:
+      `market-tick-data-service`/`instruments-service`/etc.'s `main` branches already carry the `|| true` fix (verified
+      via the GitHub contents API) — because PM's own `.github/workflows` is excluded from the automated
+      `rollout-workflow-templates.sh` mechanism (per `39abe46b8`'s own commit message, "PM excludes itself... its live
+      `.github/workflows` copy is hand-maintained"), the 07-31 hand-patch landed on LDR only and was never promoted
+      LDR→main for PM specifically. Every other repo's `main` got the fix via the normal template-rollout path.
+      Evidence: `gh run view 30754310086 --log` / the `--debug` rerun (job 91515060567) trap line
+      `[backmerge-diag] TRAP: line=50 cmd=_extracted=... exit=1`.
+- [x] ✅ [INFRA] P1. **Fix the root cause** — unified-trading-pm@507fe65d1 (direct push to `main`, per CLAUDE.md's
+      closed carve-out (3): a `.github/**` change that must reach `main` to unblock the pipeline). One-line fix:
+      restored the `|| true` guard (+ its explanatory comment) so `origin/main`'s copy is now byte-identical to
+      `origin/live-defi-rollout`'s already-fixed copy. **Verified live**: the push itself triggered a fresh run
+      (`30755035830`, job `91515643678`) which completed `success` and — for the first time since 2026-07-29 — printed a
+      real `[backmerge:...]` decision line: `decision=conflict` (`main and LDR conflict — human resolution required`),
+      correctly reached the conflict-PR-open + orchestrator-escalation path (`[backmerge] opened conflict PR`,
+      `[backmerge] escalated conflict to orchestrator (opus worker)`) — confirming both the silent-death bug is gone AND
+      the existing conflict safety net now fires as designed. The "3 consecutive `merged`/`noop` runs" bar from this
+      todo's original text is superseded by that conflict finding (see todo 4 below) — the silent-failure regression
+      itself is fixed and verified; a _separate_, expected, correctly-surfaced piece of work (resolving 3+ days of
+      accumulated main/LDR drift) now blocks a clean run.
 - [ ] [INFRA] P2. **Close the silent-failure gap**: whatever the root cause turns out to be, ensure a failure at or
       before the `git fetch`/`git ls-remote` step ALSO reaches a visible alert (either wrap those early commands so a
       failure still sets `DECISION=error` and hits the existing `exit 1` + (if a Slack step exists on this workflow)
       notify path, or add a dedicated failure notifier) — the current design's only safety net is the conflict-PR path,
       which this incident proved is unreachable when the failure happens earlier than that. Repo: unified-trading-pm.
+      **Still open** — the specific silent-failure instance (pipefail) is fixed above, but the general architectural gap
+      (a future different early failure would still die silently) is unaddressed; this is design work, not mechanical.
 - [ ] [INFRA] P1. **Once fixed, drain the backlog**: confirm `live-defi-rollout` catches up to `origin/main` (verify
       `git rev-list --count origin/live-defi-rollout..origin/main` reaches 0, or explain any remaining gap), then
       re-verify the 2026-08-02 census's LAG table in
       `/plans/archive/issues/d13_orphaned_version_readers_and_manifest_drift_2026_07_17.md` — most of the 15 LAGGING
       repos should resolve to `sync` once the backmerge catches up (a handful may still genuinely lag if `main` itself
-      hasn't been bumped for them). Repo: unified-trading-pm.
+      hasn't been bumped for them). Repo: unified-trading-pm. **BLOCKED on PR #2012**
+      (`https://github.com/IggyIkenna/unified-trading-pm/pull/2012`, "[backmerge] main → live-defi-rollout (CONFLICT —
+      needs resolution)"), auto-opened + auto-escalated to the orchestrator (opus worker) by the now-fixed workflow's
+      own conflict path in the `30755035830` verification run above. Human/opus resolution of that conflict (222+
+      commits of accumulated main/LDR drift since 2026-07-29) is a prerequisite for a clean backmerge to actually land —
+      do not re-attempt this todo until PR #2012 is resolved.
+
+## Progress Log
+
+- **slot-15 2026-08-02**: Diagnosed + fixed todos 1-2. Diagnosis method: rather than trust `gh run view --log` alone
+  (which showed literally zero stdout/stderr before the exit-1, even in `--debug` mode's plain rerun), pushed a
+  disposable diagnostic branch (`diag/backmerge-tracing-2026-08-02`, branched off `origin/main`, `set -x` + an `ERR`
+  trap added to the "Back-merge main into LDR" step only, never touched real `main`/LDR) and dispatched it via
+  `workflow_dispatch`. The trap pinpointed the exact failing statement (script line 50, the `_extracted=` assignment in
+  the `Promoted-From-LDR` trailer-scan loop) on the FIRST candidate commit lacking a trailer. Cross-checked
+  `origin/main` vs `origin/live-defi-rollout`'s copy of the file: the only diff was the missing `|| true` guard that
+  `39abe46b8` (2026-07-31) had already applied to LDR but never promoted to main (PM's `.github/workflows` is
+  hand-maintained / excluded from the automated template rollout that fixed every other repo's `main`). Applied the
+  one-line fix directly to `main` (`507fe65d1`, carve-out (3) — a `.github/**` change needed to unblock the pipeline)
+  and verified live: the triggered run (`30755035830`) now completes with a real decision (`conflict`, correctly routed
+  to the existing PR+escalation safety net — PR #2012, auto-escalated to an opus worker) instead of dying silently.
+  Diagnostic branch deleted after use (remote + local). Todo 3 (defense-in-depth for a _future_ early failure) and todo
+  4 (backlog drain) intentionally left open — todo 4 is now blocked on PR #2012's resolution, which is a separate,
+  correctly-surfaced piece of work, not a continuation of this diagnosis/fix. Note: slot-6 was independently diagnosing
+  this same incident concurrently (`54abad696`, "add temp verbose trace ... will be removed once root-caused", pushed
+  directly to LDR ~15:37Z, before my main-side fix at ~15:44Z) — no conflicting plan-doc edits from them, so removed
+  their now-redundant `set -x` (root cause is found) in the same commit as this flip.

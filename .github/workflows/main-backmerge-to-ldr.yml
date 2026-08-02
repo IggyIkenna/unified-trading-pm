@@ -89,10 +89,6 @@ jobs:
           GH_PAT: ${{ steps.app-token.outputs.token }}
         run: |
           set -uo pipefail
-          # TEMP DIAGNOSTIC (main_backmerge_to_ldr_silent_failure_2026_08_02, remove once root-caused):
-          # the job has died silently (exit 1, <1s, zero [backmerge:...] output) on every run since
-          # 2026-07-29T15:48:27Z — verbose trace to identify the exact failing command.
-          set -x
 
           # LDR must exist (some repos use main-only; nothing to back-merge then).
           if ! git ls-remote --exit-code --heads origin live-defi-rollout >/dev/null 2>&1; then
