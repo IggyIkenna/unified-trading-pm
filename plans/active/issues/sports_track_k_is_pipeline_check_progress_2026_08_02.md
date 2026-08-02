@@ -204,6 +204,25 @@ re-investigating per-venue -- citing this root-cause and letting the run continu
 correctness should be spot-verified from each venue's per-VM shard parquet directly (as done above for API_FOOTBALL)
 rather than trusted from the checker's force-leg PASS/FAIL verdict, until the checker fix below lands.
 
+## Final (2025-12-18) checkpoint -- driver died, NO report produced (2026-08-02T~20:30Z, slot 15, data_engineering)
+
+Re-verified live at dispatch of task `sports_consolidated_native_ao_extract-029` (the parent flip task): `ps -p 474834`
+returns NOTHING -- the final-checkpoint driver documented above (launched by slot 12,
+`--day 2025-12-18 --legs force,skip,live`) is **no longer running**, and no
+`data_pipeline_e2e_check_is_2025_12_18.{md,json}` report exists anywhere under `plans/audit/results/` (confirmed via
+`find`, both separator variants). `gcloud compute instances list --filter="name~instr-backfill-sports-pchk"` shows only
+ONE VM now, belonging to the still-live MID checkpoint driver (slot-7, `0802193411-cab3` hash) -- the final checkpoint's
+own VMs are gone too. Git log confirms no report was ever committed for this day. **This checkpoint made zero further
+progress past the single API_FOOTBALL force-leg failure documented above, then its driver died silently** -- most likely
+because it was launched as a harness-tracked `run_in_background` process scoped to slot-12's own Claude Code session,
+and that session ended (rotated/reassigned/context-reset) before the 21-leg matrix finished, killing its child process
+tree. **Process lesson for future pickers**: a multi-hour driver launched via `run_in_background` does not survive its
+spawning session ending -- if you need a driver to survive a session boundary, it needs to be launched in a way that's
+independent of this specific interactive session's lifetime (out of scope to solve here; flagging so the eventual
+final-checkpoint relauncher knows to re-verify liveness with fresh `ps` rather than trusting this doc's earlier
+"healthy" status, which was accurate only at write-time). **The final (2025-12-18) checkpoint needs a full relaunch from
+scratch** -- its own P1 todo below is updated to reflect this.
+
 ## Resume instructions
 
 1. **STOP -- before launching ANY VM for this todo, check for an existing report, for already-running VMs, AND for a
@@ -282,40 +301,41 @@ rather than trusted from the checker's force-leg PASS/FAIL verdict, until the ch
       so, to stop further SPOT VM billing waste. (repo: instruments-service, operator/infra -- VM lifecycle)
 
       **⚠️ SAFETY CORRECTION 2026-08-02T20:01Z (slot 8) -- do NOT terminate the second VM named above without
-                      re-checking its run.log first.** Read both VMs' `run.log` chunk headers directly (per this doc's own "Baseline
-                      checkpoint -- CORRECTED status" section correction above): `instr-backfill-sports-pchk-0802193055-*-a2a5-...`
-                      IS genuinely processing `2025-12-20` (baseline) -- consistent with this todo's redundancy concern, safe to
-                      investigate/terminate once confirmed. **But `instr-backfill-sports-pchk-0802193411-*-cab3-...` is NOT a baseline
-                      duplicate -- it is slot-7's legitimate, actively-running MID checkpoint (`2025-12-24`) driver's own VM** (the
-                      SAME VM this doc's "Mid/final checkpoints" section above documents as healthy, in-progress work). Terminating it
-                      would kill genuinely-needed live work, not billing waste. The leg-letter in a VM's name (`-f-`/`-s-`/`-l-`) has
-                      been observed to NOT reliably match reality either (this exact VM read back with a `-s-` in its live name at one
-                      check) -- always confirm BOTH the day and the leg from `run.log`'s own `--- Chunk N/M: <date> → <date> ---`
-                      header before touching any VM this todo names, not from the name alone.
+                          re-checking its run.log first.** Read both VMs' `run.log` chunk headers directly (per this doc's own "Baseline
+                          checkpoint -- CORRECTED status" section correction above): `instr-backfill-sports-pchk-0802193055-*-a2a5-...`
+                          IS genuinely processing `2025-12-20` (baseline) -- consistent with this todo's redundancy concern, safe to
+                          investigate/terminate once confirmed. **But `instr-backfill-sports-pchk-0802193411-*-cab3-...` is NOT a baseline
+                          duplicate -- it is slot-7's legitimate, actively-running MID checkpoint (`2025-12-24`) driver's own VM** (the
+                          SAME VM this doc's "Mid/final checkpoints" section above documents as healthy, in-progress work). Terminating it
+                          would kill genuinely-needed live work, not billing waste. The leg-letter in a VM's name (`-f-`/`-s-`/`-l-`) has
+                          been observed to NOT reliably match reality either (this exact VM read back with a `-s-` in its live name at one
+                          check) -- always confirm BOTH the day and the leg from `run.log`'s own `--- Chunk N/M: <date> → <date> ---`
+                          header before touching any VM this todo names, not from the name alone.
 
-                  **✅ RESOLVED 2026-08-02T~20:10Z (slot 11)**, confirming + closing out slot-8's warning above:
-                  `-0802193055-f-a2a5-` was slot-11's OWN redundant force leg (see the
-                  confession entry in the Progress Log below) -- it had already self-deleted on completion
-                  (`VM_SHUTDOWN_ON_COMPLETION=true`) by the time this was checked, no action needed there. `-0802193411-f-cab3-`
-                  was a FALSE ALARM, not a duplicate at all: its run_ts+hash (`0802193411-cab3`) is slot-7's legitimate mid
-                  (2025-12-24) driver, confirmed via its VM's `run.log` chunk header (`--- Chunk 1/1: 2025-12-24 → 2025-12-24
-                  ---`) -- it has since progressed through OPEN_METEO and other venues under the same driver, exactly as
-                  expected for a healthy in-flight checkpoint. The venue/leg letters in a VM's name genuinely do not reliably
-                  indicate which checkpoint-day driver launched it, confirming this doc's own earlier caution in the Resume
-                  Instructions. **The real duplicate was slot-11's own live-leg VM** (`instr-backfill-sports-pchk-0802193055-l-a2a5-api-football`,
-                  launched 20:01:56Z) -- confirmed via exact argv/run_ts match to slot-11's own driver log, terminated via
-                  `gcloud compute instances delete` at 2026-08-02T~20:10Z. Post-cleanup `gcloud compute instances list
-                  --filter="name~instr-backfill-sports-pchk"` shows exactly 2 VMs running, both confirmed (via run.log chunk
-                  header) to belong to the legitimate mid/final drivers -- no orphans remain.
+                      **✅ RESOLVED 2026-08-02T~20:10Z (slot 11)**, confirming + closing out slot-8's warning above:
+                      `-0802193055-f-a2a5-` was slot-11's OWN redundant force leg (see the
+                      confession entry in the Progress Log below) -- it had already self-deleted on completion
+                      (`VM_SHUTDOWN_ON_COMPLETION=true`) by the time this was checked, no action needed there. `-0802193411-f-cab3-`
+                      was a FALSE ALARM, not a duplicate at all: its run_ts+hash (`0802193411-cab3`) is slot-7's legitimate mid
+                      (2025-12-24) driver, confirmed via its VM's `run.log` chunk header (`--- Chunk 1/1: 2025-12-24 → 2025-12-24
+                      ---`) -- it has since progressed through OPEN_METEO and other venues under the same driver, exactly as
+                      expected for a healthy in-flight checkpoint. The venue/leg letters in a VM's name genuinely do not reliably
+                      indicate which checkpoint-day driver launched it, confirming this doc's own earlier caution in the Resume
+                      Instructions. **The real duplicate was slot-11's own live-leg VM** (`instr-backfill-sports-pchk-0802193055-l-a2a5-api-football`,
+                      launched 20:01:56Z) -- confirmed via exact argv/run_ts match to slot-11's own driver log, terminated via
+                      `gcloud compute instances delete` at 2026-08-02T~20:10Z. Post-cleanup `gcloud compute instances list
+                      --filter="name~instr-backfill-sports-pchk"` shows exactly 2 VMs running, both confirmed (via run.log chunk
+                      header) to belong to the legitimate mid/final drivers -- no orphans remain.
 
 - [ ] [DATA] P1. Run the mid (2025-12-24) checkpoint, same 7-venue force/skip/live matrix -- confirmed NOT STARTED
       (verified 2026-08-02, slot 13: no report file exists). (repo: instruments-service, skill-driven)
-- [ ] [DATA] P1. Run the final (2025-12-18) checkpoint, same 7-venue force/skip/live matrix -- **IN PROGRESS as of
-      2026-08-02T20:05Z (slot 12), driver PID 474834**. See "Final (2025-12-18) checkpoint -- NEW checker false-negative
-      class found" section above: API_FOOTBALL's force leg failed (`manifest_status_invalid:no_matching_row`),
-      root-caused as a checker consolidation-lag false-negative expected on all 7 venues' force legs for this specific
-      checkpoint (2025-12-18 tested for the first time in the `-test-` bucket). (repo: instruments-service,
-      skill-driven)
+- [ ] [DATA] P1. Run the final (2025-12-18) checkpoint, same 7-venue force/skip/live matrix -- **DRIVER DIED, NEEDS FULL
+      RELAUNCH** (verified 2026-08-02T~20:30Z, slot 15: PID 474834 no longer running, no report file, no VMs). Only 1/21
+      legs (API_FOOTBALL force) ever ran before the driver died -- see "Final (2025-12-18) checkpoint -- driver died"
+      section above for the full liveness re-check + likely cause (session-scoped `run_in_background` process didn't
+      survive its spawning session ending). The one completed leg's root-caused finding
+      (`manifest_status_invalid:no_matching_row` consolidation-lag false-negative) still stands and does not need
+      re-investigation on relaunch. (repo: instruments-service, skill-driven)
 - [ ] [DATA] P2. Fix `pipeline_e2e_check.py`'s IS force-leg verification to not false-fail on a `-test-` bucket's
       FIRST-EVER write for a given (venue, day): either (a) re-consolidate the manifest between each shard's VM launch
       and its force-leg verify (not just once at Phase-0), or (b) pass the force-leg VM's own per-VM shard directly to
@@ -326,11 +346,25 @@ rather than trusted from the checker's force-leg PASS/FAIL verdict, until the ch
       capture gap as a stale-read false pass). (repo: instruments-service)
 - [ ] [REVIEW] P2. Once all 3 checkpoints are done, flip `sports_consolidated_native_ao_extract-029` in
       `/plans/active/sports_consolidated_native_ao_extract_2026_07_25.md` citing all 3 report paths, and mark this doc
-      `status: resolved`. **NOT YET ELIGIBLE (verified 2026-08-02, slot 13): mid + final checkpoints have not been
-      run.** (repo: unified-trading-pm)
+      `status: resolved`. **STILL NOT ELIGIBLE (re-verified 2026-08-02T~20:30Z, slot 15): mid checkpoint still in
+      progress (slot-7 driver alive); final checkpoint's driver DIED with only 1/21 legs run and needs a full relaunch
+      (see "Final checkpoint -- driver died" section above) -- worse off than the last check, not closer to done.**
+      (repo: unified-trading-pm)
 
 ## Progress Log
 
+- 2026-08-02T~20:30Z (slot 15, data_engineering, task `sports_consolidated_native_ao_extract-029`, dispatched to flip
+  the parent Track K checkbox): re-verified ground truth before touching anything, per this doc's own established
+  practice. Mid (2025-12-24): slot-7's driver (PID 283424) still alive and progressing (confirmed via `ps aux` +
+  matching VM run_ts+hash), no report yet -- consistent with the immediately-preceding entry below. Final (2025-12-18):
+  **NEW finding** -- `ps -p 474834` returns nothing, the driver documented as "IN PROGRESS" in this doc's "Final
+  checkpoint" section is dead, no report exists, no VMs remain for it. Only 1 of 21 legs for this checkpoint ever
+  completed before the driver died silently (most likely: a `run_in_background` process doesn't outlive its spawning
+  session). Updated the "Final checkpoint" section + its own P1 todo above to reflect this so the next picker relaunches
+  from scratch instead of assuming it's still progressing. **Did NOT flip `sports_consolidated_native_ao_extract-029`**
+  -- its precondition (all 3 checkpoints done) is further from true than the last check, not closer. Releasing via
+  `/skip-current-task` rather than fabricating a completion claim; this parent flip task should not be re-dispatched
+  until both remaining checkpoints actually finish and commit reports.
 - 2026-08-02T~20:25Z (slot 15, data_engineering, task `sports_track_k_is_pipeline_check_progress-008` -- 3rd dispatch of
   this exact task id, same collision as the two prior dispatches below): re-verified ground truth per Resume
   instructions step 1 before touching anything. `ps aux` confirms slot-7's driver (PID 283424,
