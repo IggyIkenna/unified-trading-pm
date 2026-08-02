@@ -763,3 +763,23 @@ this specific task-type should be read as "full redo needed," not "resume from l
 date boundary for a bug. At the now-fixed ~192 req/min rate, a clean uninterrupted run should still only take ~1.7h
 total (19,850 ÷ 192), so a full redo is a modest cost, not a reason to change approach. Releasing without
 duplicate-launch; re-armed monitoring at the standard cadence.
+
+**Health-checked 2026-08-02T18:07Z (slot 7, data_engineering), RUNNING, healthy — but the ~1.7h clean-run estimate is
+not holding; genuinely still hours out.** `gcloud compute instances list` confirms `af-backfill-20260802-152210` is the
+only non-`TERMINATED` `af-backfill-*`/`af-audit-*` VM, `RUNNING` in `asia-northeast1-c`. Heartbeat blob epoch
+`1785693978` = `2026-08-02T18:06:18Z` (~1min old at check time). `run.log` `date=` boundary at `2022-03-10` (up from
+`2020-09-27` at the 14:56Z check, ~3h11m apart — ~529 days covered, ~2.8 days/min average), live per-fixture
+`Fetched N events for fixture=X` + `Recovery-mode merge for fixture_events/league=...` writes actively streaming at
+check time (tailed the log directly, not just a snapshot), no failure signature
+(`grep -c 'DEPLOYMENT_COMPLETED\|exit_code'` = 0). Genuine forward progress, no stall. **Pace is much slower than the
+14:56Z entry's back-of-envelope estimate**: at the observed ~2.8 days/min average since that check, the remaining ~1,598
+days to `2026-07-25` project to roughly another **~9.5h**, not the ~1.7h a clean flat-rate run would need — consistent
+with this campaign's long-documented pattern that per-fixture cascade pace varies a lot by era (sparse-allowlist years
+fly through, dense/real-fetch-heavy years are much slower; the 14:56Z 1.7h figure was a pure req-count/rate calculation
+that doesn't account for this unevenness). Not completable this turn. Releasing via
+`/skip-current-task {"reason_code": "GATED"}`, not duplicate-launched. Next dispatch: repeat this health-check (compare
+`date=` boundary + heartbeat freshness against this entry); once terminal (`DEPLOYMENT_COMPLETED`/`exit_code` marker, VM
+self-deleted/TERMINATED), re-run `census_fixture_events_schema_variants_2026_07_25.py` (full, no `--limit`) before
+flipping this checkbox + `sports_satellite_ao_dispatch_batch2_2026_07_24.md`'s `sports_satellite_ao_dispatch_batch2-002`
+todo — a widened monitoring interval (well beyond the standard 30-60min) is appropriate given the ~9.5h projected
+remaining runtime.
