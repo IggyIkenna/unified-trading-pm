@@ -114,6 +114,6 @@ instead of rediscovering it from scratch.
     `/plans/active/issues/wizard_jurisdiction_overlay_dropped_by_registry_regen_2026_08_01.md`.
   - Root-cause finding: this repo's `playwright.config.ts` only pins `workers: 1` under CI/human mode, unlike
     `deployment-ui` (fixed 2026-07-31 for the identical false-failure class). Filed as its own follow-up:
-    `/plans/active/issues/unified_trading_system_ui_smoke_suite_workers_unpinned_2026_08_01.md`.
+    `/plans/archive/issues/unified_trading_system_ui_smoke_suite_workers_unpinned_2026_08_01.md` (resolved 2026-08-02).
   - F38 (todo 2, this doc): confirmed already fixed in code since `unified-trading-system-ui@f178f7cc` (2026-07-28) —
     re-verified passing in isolation. Flipped above. Both todos flipped done; this doc has no remaining open items.

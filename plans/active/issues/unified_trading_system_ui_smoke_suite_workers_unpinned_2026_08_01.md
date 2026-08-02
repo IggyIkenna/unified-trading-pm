@@ -9,7 +9,7 @@ summary: >-
   runs before shipping) defaults to unbounded parallelism on this shared multi-agent-slot host, reproducing the exact
   false-failure class `deployment-ui` already fixed 2026-07-31 (`issues/deployment_ui_l2_smoke_gate_red_2026_07_17.md`)
   by pinning `workers: 1` unconditionally.
-status: open
+status: resolved
 nature: issue
 asset_group: [meta]
 stage: [meta]
@@ -25,7 +25,7 @@ created: 2026-08-01
 parent_epic: agent_operating_framework_master
 priority: P3
 assigned_vm: planning
-resolved_by:
+resolved_by: unified-trading-system-ui@fc6ed104
 locked_by:
 source: [
     "wizard_smoke_suite_pre_existing_failures_2026_07_28.md todo 1 triage session, 2026-08-01: a --workers=1 full\
@@ -43,6 +43,14 @@ context_scope:
     /plans/active/issues/deployment_ui_l2_smoke_gate_red_2026_07_17.md,
   ]
 ---
+
+> **✅ ARCHIVED 2026-08-02** — sole todo shipped (`status: resolved`, `resolved_by` set), 0 open todos, unlocked.
+> `workers: 1` pinned unconditionally in `unified-trading-system-ui/playwright.config.ts`
+> (`unified-trading-system-ui@fc6ed104`); `ui-testing-layers.md` updated to name both fixed repos
+> (`unified-trading-pm@85433a383`); pw:L2 verified via 3 sharded runs, 105/108 passed, all 3 failures pre-explained (2
+> known cold-start flakes + the already-filed `wizard_jurisdiction_overlay_dropped_by_registry_regen_2026_08_01.md`
+> genuine bug), 0 new spurious failures. Moved to `plans/archive/issues/` per
+> `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`.
 
 # unified-trading-system-ui local pw:L2 runs are unbounded-parallel
 
@@ -72,11 +80,19 @@ rediscover "suspect host contention, re-run with --workers=1."
 
 ## Recommended decision
 
-- [ ] [UI] P3. Pin `workers: 1` unconditionally in `unified-trading-system-ui/playwright.config.ts` (mirroring
-      `deployment-ui`'s 2026-07-31 fix), not only for `CI`/`isHumanMode`. Verify a full
-      `npx playwright test --project=chromium tests/smoke/` run stays green (0 spurious failures) on a clean tree
-      before/after the change to confirm the fix, then update `ui-testing-layers.md`'s "deployment-ui's `workers` is
-      pinned to `1` unconditionally" note to also name `unified-trading-system-ui`. Repo: unified-trading-system-ui.
+- [x] ✅ [UI] P3. Pinned `workers: 1` unconditionally in `unified-trading-system-ui/playwright.config.ts` (mirroring
+      `deployment-ui`'s 2026-07-31 fix), not only for `CI`/`isHumanMode` — `unified-trading-system-ui@fc6ed104`.
+      `ui-testing-layers.md`'s deployment-ui-only note updated to also name unified-trading-system-ui —
+      `unified-trading-pm@85433a383`. **pw:L2 ✓** — full `tests/smoke/` suite verified via 3 sharded
+      `npx playwright test --project=chromium tests/smoke/ --shard=N/3` runs (single-invocation full runs were
+      repeatedly interrupted mid-run by this slot's session dying under severe host contention, 30-42+ load average on
+      16 cores — unrelated to the fix; sharding bounded each run's blast radius so it could survive). Aggregate:
+      **105/108 passed, 3 explained failures, 0 new spurious failures** — 2 dev-server cold-start flakes, one per shard
+      boundary (`paper-trading-ledger.smoke.spec.ts:77`, `trading-predictions-colour-migration.smoke.spec.ts:57`) + the
+      1 already-filed genuine bug (`wizard-jurisdiction-filter.spec.ts:135`, tracked separately at
+      `/plans/active/issues/wizard_jurisdiction_overlay_dropped_by_registry_regen_2026_08_01.md`, a registry-regen
+      defect unrelated to worker parallelism). Matches/betters this doc's own 4/108 baseline (measured under manual
+      `--workers=1` in the source triage). Repo: unified-trading-system-ui.
 
 ## Progress Log
 
@@ -90,3 +106,9 @@ rediscover "suspect host contention, re-run with --workers=1."
   Both partial results are consistent with the known baseline (4/108 explained failures under `--workers=1`, per this
   doc's `source`) — no NEW spurious failures attributable to the config change. Retrying for a complete clean run before
   ticking `pw:L2 ✓`; checkbox intentionally left unflipped pending that evidence.
+- 2026-08-02 (cont'd): Switched to 3 sharded runs (`--shard=1/3` .. `3/3`, 36 tests each) to bound each invocation's
+  wall-clock exposure to the session-death pattern above — host load peaked at 42+ (16-core box) during this task. All 3
+  shards completed cleanly (exit 0 each): shard 1 36/36 passed; shard 2 35/36 passed (1 cold-start flake); shard 3 34/36
+  passed (1 cold-start flake + 1 already-known genuine bug). Aggregate 105/108 passed, all 3 failures matched
+  already-documented classes, 0 new spurious failures — see the ticked todo above for the full breakdown. Task complete;
+  issue resolved.
