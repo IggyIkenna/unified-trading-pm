@@ -1977,6 +1977,17 @@ fall back to a live shard-merge when the canonical blob is older than `MANIFEST_
 - One-off `rebuild_*_manifest.py` scripts: pass `per_vm_shards=True` to skip CAS contention with concurrent rebuilds /
   the consolidator daemon. Without this, OCC `generation_match` retries can re-merge stale views and drop most of the
   rebuild's output (observed 2026-05-02 on DeFi: 80k mid-run rows compacted to 12k canonical).
+- **Every one-off `scripts/` construction of `ManifestWriter(...)` against a populous bucket (defi/cefi/sports) — HARD
+  RULE, not just a performance tip.** Omitting `per_vm_shards=True` (with no `MANIFEST_PER_VM_SHARDS=true` env guarantee
+  either) makes every `.write()`/`.close()` flush take the legacy CAS path: a read-merge-write of the FULL consolidated
+  `_index/availability_index.parquet` for that bucket, independent of the script's own worklist size (~14.86 GiB
+  unfiltered for a populous bucket at the time of this writing). This caused a fleet-wide agent-orchestrator OOM outage
+  TWICE in ~15 minutes (`migrate_legacy_gas_fees_venue_2026_07_30.py`, root-caused + fixed
+  `market-tick-data-service@8016c7e4`) and was independently latent in 24 further call sites across
+  market-tick-data-service/instruments-service/market-data-processing-service, swept + fixed 2026-08-02
+  (`plans/archive/2026_08/defi_satellite_ao_dispatch_batch7_2026_08_01.md` todo 4). Safe to read back after: on both the
+  full-schema and slim-column paths, `read_availability_index()` self-shard-merges a caller's own pending per-VM writes,
+  so a script that reads its own writes back for verification sees them immediately post-fix.
 - Local multi-process rebuilds where every process inherits the same `HOSTNAME` — set a unique `VM_NAME` per chunk
   worker so they each get their own per-VM shard (not a shared one).
 

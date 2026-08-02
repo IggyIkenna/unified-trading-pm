@@ -124,16 +124,41 @@ running `/na-eligibility-audit defi`; every todo below cleared the shared confli
       correct, the remaining gap is a manifest-row retraction the writer can't produce). Source:
       `defi_consolidated_closeout_2026_07_18.md:644-653`.
 
-- [ ] [DATA] P2. **Audit `market-tick-data-service/scripts/` (and sibling repos' `scripts/`) one-offs for any OTHER
-      direct `ManifestWriter(...)` construction missing `per_vm_shards=True`** against a populous bucket
-      (defi/cefi/sports) — the same failure mode has now recurred independently 3 times in ~36 hours across different
-      call sites (`scripts/migrate_legacy_gas_fees_venue_2026_07_30.py@8016c7e4`,
-      `market_tick_data_service/cli/handlers/_defi_manifest.py`'s `DefiManifestRecorder@77738598`, and the
-      `expand_defi_pool_catalogue` script) — each found ad hoc, no one has yet run the systematic sweep this todo asks
-      for. Repos: market-tick-data-service, instruments-service, market-data-processing-service. Done when: a written
-      inventory of every direct `ManifestWriter(...)` construction site in the 3 repos' `scripts/` trees exists, each
-      marked safe (already passes `per_vm_shards=True` or `MANIFEST_PER_VM_SHARDS=true`-guaranteed) or fixed. Source:
-      `issues/mtds_gas_fees_migration_script_unbounded_memory_2026_07_30.md:159-161`.
+- [x] ✅ [DATA] P2. **DONE 2026-08-02 (slot-14).** Audited every direct `ManifestWriter(...)` construction site under
+      `scripts/` in market-tick-data-service, instruments-service, and market-data-processing-service (48 call sites
+      found via balanced-paren extraction, not a naive grep — 2 lines were docstring/comment mentions, not real
+      constructions). Classified each: **24 FIXED** (added `per_vm_shards=True` — all targeted a confirmed-populous
+      bucket via `resolve_bucket_name(asset_group="sports"/"prediction")` or an equivalent hardcoded
+      `instruments-store-sports-*`/`instruments-store-prediction-*`/`market-data-tick-*` bucket, and had NEITHER an
+      explicit `per_vm_shards=True` NOR a `MANIFEST_PER_VM_SHARDS=true` env guarantee): 2 in market-tick-data-service
+      (`mtds_reconcile_partial_bundles.py`, `rebuild_mtds_manifest.py`), 18 in instruments-service (all under
+      `scripts/backfill/api_football_*`, `scripts/backfill_sports_per_entity_manifest.py`,
+      `scripts/close_{fixtures_split,stale_enrichment}_expected_unattempted_cells_*.py`,
+      `scripts/{fixtures_eu_truthset_flip,fixtures_trickle_resolution,gw_false_empty_repair,     osc_repair_captured_over_empty,recency_masked_adjudication,reconcile_sports_lost_per_vm_shard}_2026_07_1{3,4}.py`,
+      `scripts/{full_polymarket_dump,patch_prediction_shards,rescan_prediction_v4}.py`), 4 in
+      market-data-processing-service (`scripts/close_odds_horizon_bucket_expected_unattempted_cells_2026_07_25.py`,
+      `scripts/reprocess_sports_odds.py`, `scripts/reconcile_1440_nan_placeholders.py` — whose own comment already
+      claimed "per-VM shard write per workspace concurrency rule" but never actually passed the kwarg,
+      `scripts/migrate_candle_canonical_2026_07.py` — the most severe: constructs + flushes a FRESH writer PER MIGRATED
+      OBJECT inside a corpus-scale loop, per its own docstring ~11M objects, so each unfixed call would have hit the
+      ~15GB legacy path once per object). **20 already SAFE, no change**: 8 in MTDS + 11 in instruments-service + 1 in
+      MDPS already pass `per_vm_shards=True` explicitly (incl. 2 via a `_ManifestWriter` alias), plus
+      `instruments-service/scripts/recover_fixtures_from_truthset.py` which sets
+      `os.environ["MANIFEST_PER_VM_SHARDS"] = "true"` immediately before construction (env-guaranteed, not kwarg —
+      correctly safe, left unchanged). **3 deliberately SAFE-BY-DESIGN, not the bug pattern** (left unchanged, explicit
+      `per_vm_shards=False`):
+      `market-tick-data-service/scripts/sports/{exchange_fixed_odds_fork/manifest_reconcile,     k1k2_casing_revert_2026_07_27/manifest_swap_casing_revert,league_id_relocation/manifest_swap}_2026_07_2{2,7}.py`
+      — these run a genuine CAS REMOVE+ADD reconciliation (snapshot → `client.download_bytes` the full index → remove
+      stale rows → add new rows → verify) that per-VM append-only shards structurally cannot support (no REMOVE
+      capability); the explicit `False` is a deliberate correctness requirement, not an oversight, though a future
+      re-run of this pattern still pays the inherent ~15GB CAS-read cost by design. **Safety of the mechanical fix
+      verified before applying it at scale**: read `unified_trading_library/manifest_writer/_read_index.py` —
+      `read_availability_index()` self-shard-merges a caller's own pending per-VM writes on read (both the full-schema
+      and slim-column paths), so any of the 24 fixed scripts that reads back its own writes for verification immediately
+      sees them post-fix, no behavior regression. Shipped as 3 repo-scoped commits, each `quality-gates.sh`-green:
+      `market-tick-data-service@e4cc07b7`, `instruments-service@d0e4e5a3`, `market-data-processing-service@6593011`.
+      Source: `issues/mtds_gas_fees_migration_script_unbounded_memory_2026_07_30.md:159-161` (checkbox there updated by
+      citation to this batch, per that doc's own na-eligibility-audit annotation).
 
 ## Deferred — conflict-found, NOT extracted (parked on the source doc, no operator ruling needed — unambiguous)
 
@@ -181,3 +206,13 @@ running `/na-eligibility-audit defi`; every todo below cleared the shared confli
   rows), out of this task's scope. `delete_migrated_defi_markers --apply` stays correctly gated/blocked.
 
 - **context-scout 2026-08-01**: populated/refreshed context_scope (5 entries).
+- 2026-08-02 (slot-14, todo 4): Audited all 48 direct `ManifestWriter(...)` construction sites under `scripts/` across
+  the 3 named repos (balanced-paren extraction, not a naive grep — caught 2 docstring-mention false positives). Fixed 24
+  genuinely-bare sites (added `per_vm_shards=True`) targeting confirmed-populous sports/prediction/candle buckets; left
+  20 already-safe sites unchanged (17 explicit `True`, 1 `_ManifestWriter`-alias `True` ×2, 1 env-guaranteed via
+  `MANIFEST_PER_VM_SHARDS=true`); left 3 sports CAS-remove+add scripts on their deliberate explicit `False` (per-VM
+  shards can't support REMOVE, not the bug pattern). Verified the fix's safety before applying at scale by reading
+  `read_availability_index()`'s self-shard-merge behavior (a script reading back its own per-VM write sees it
+  immediately, no consolidation-lag regression). Shipped as 3 QG-green repo-scoped commits:
+  `market-tick-data-service@e4cc07b7`, `instruments-service@d0e4e5a3`, `market-data-processing-service@6593011`. Closed
+  the source issue doc's todo by citation.

@@ -156,13 +156,16 @@ process is worth keeping so a future similar incident doesn't re-walk the same d
       `False` (no explicit arg, no `MANIFEST_PER_VM_SHARDS` env), log a loud one-time warning naming the legacy path's
       memory cost for the target bucket (or refuse construction outside a recognized deployed-service context) so a
       future one-off script doesn't silently inherit the unsafe default. (repo: unified-trading-library)
-- [ ] [DATA] P2. Audit `market-tick-data-service/scripts/` (and sibling repos' `scripts/`) one-offs for any OTHER direct
+- [x] [DATA] P2. Audit `market-tick-data-service/scripts/` (and sibling repos' `scripts/`) one-offs for any OTHER direct
       `ManifestWriter(...)` construction missing `per_vm_shards=True` against a populous bucket (defi/cefi/sports) —
       same failure mode is latent wherever found. (repo: market-tick-data-service, instruments-service,
       market-data-processing-service) **na-eligibility-audit 2026-08-01: extracted to
       `defi_satellite_ao_dispatch_batch7_2026_08_01.md` (conflict-check cleared — the failure mode has since recurred a
       3rd time via `DefiManifestRecorder@77738598`, strengthening the case for the sweep, no one has yet run it) — track
-      completion there, close this checkbox by citation once its batch-7 todo lands.**
+      completion there, close this checkbox by citation once its batch-7 todo lands.** — **DONE 2026-08-02 (slot-14)**:
+      see `defi_satellite_ao_dispatch_batch7_2026_08_01.md`'s todo 4 for the full inventory (48 sites audited, 24 fixed,
+      20 already-safe, 3 deliberately safe-by-design, 1 false-positive docstring mention). Shipped
+      `market-tick-data-service@e4cc07b7`, `instruments-service@d0e4e5a3`, `market-data-processing-service@6593011`.
 - [ ] [REVIEW] P2. This is the SECOND fleet-wide memory incident within the same session (the first, a stale cgroup cap,
       is fixed + self-healing per `orchestrator_api_full_outage_stale_cgroup_memory_cap_2026_07_30.md`) — consider
       whether a per-slot subprocess RSS ceiling (e.g. a `cgroup`/`ulimit` scoped to each slot's OWN spawned children,
