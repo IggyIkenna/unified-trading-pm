@@ -74,7 +74,7 @@ Tracing the call path:
    `if not league_id: return EmptyConfirmedReason.SOURCE_RETURNED_ZERO` (line 249-250) — so every one of these calls
    resolves to `SOURCE_RETURNED_ZERO`, never a calendar-derived `EXPECTED_*` reason.
 3. `_emit_status_for_shard` → `ManifestWriter.record_empty(reason="SOURCE_RETURNED_ZERO", ...)` — the UTL writer's
-   honest-absence gate (DP-FETCH-001, `codex/05-infrastructure/data-pipeline-alerts.md`) hard-requires `FetchEvidence`
+   honest-absence gate (DP-FETCH-001, `/codex/05-infrastructure/data-pipeline-alerts.md`) hard-requires `FetchEvidence`
    for `SOURCE_RETURNED_ZERO` (a post-_fetch_ honest-empty signal). This derivation layer only reads already-captured
    raw tick parquet — no live fetch happens here — so it structurally cannot supply that evidence. The write raises.
 4. `_emit_status_for_shard`'s `except Exception` (shard-level-failure-isolation, correctly) catches this and degrades to

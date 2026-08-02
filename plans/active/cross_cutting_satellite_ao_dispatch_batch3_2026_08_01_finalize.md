@@ -99,8 +99,8 @@ source: >-
 
 ## Codex SSOTs
 
-`/codex/11-project-management/plan-completion-and-archival-discipline.md`,
-`/codex/12-agent-workflow/ao-dispatch-batch-naming-and-conflict-check.md`.
+`/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`,
+`/codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md`.
 
 ## Progress Log
 
@@ -114,3 +114,8 @@ source: >-
   archival-discipline doc at `/codex/12-agent-workflow/`). `context_scope` above uses the CORRECTED, disk-verified
   paths; the body line is left unedited per this pass's scope (frontmatter + Progress Log only) — flagging for a future
   doc-body fix.
+- **plan_reconciler 2026-08-02** (whole-corpus pass, mechanical-adjudicator hunter): applied the doc-body fix flagged
+  above — swapped the "## Codex SSOTs" section's two paths to their disk-verified locations (confirmed via `ls`):
+  `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md` and
+  `/codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md`. Now matches `context_scope`. See
+  `/plans/active/issues/plan_reconciler_findings_undefined.md`.

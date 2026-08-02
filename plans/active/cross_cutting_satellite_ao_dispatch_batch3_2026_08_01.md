@@ -173,7 +173,7 @@ source: >-
 ## Codex SSOTs
 
 `/codex/02-data/availability-manifest-and-data-status.md`, `/codex/11-project-management/doc-frontmatter-schema.md`,
-`/codex/12-agent-workflow/ao-dispatch-batch-naming-and-conflict-check.md`.
+`/codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md`.
 
 ## Progress Log
 
@@ -186,3 +186,9 @@ source: >-
   conflict-check: all 8 drafted todos grepped clean against all 6 prior covering docs + spot-checked for
   recent-commit/lock collisions on the 2 todos touching other-tranche-titled docs (both clear). `status: draft` pending
   operator review.
+- **plan_reconciler 2026-08-02** (whole-corpus pass, mechanical-adjudicator hunter, `check_codex_refs.sh` BROKEN-ref
+  flag): fixed the "## Codex SSOTs" section's `ao-dispatch-batch-naming-and-conflict-check.md` ref, which was pointing
+  at the `12-agent-workflow` directory — disk-verified correct location is
+  `/codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md` (same directory-swap defect the
+  companion finalize plan's context-scout pass already flagged). See
+  `/plans/active/issues/plan_reconciler_findings_undefined.md`.

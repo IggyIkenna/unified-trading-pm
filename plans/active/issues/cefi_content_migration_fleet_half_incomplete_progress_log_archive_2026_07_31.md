@@ -249,10 +249,10 @@ cause + fix shipped" section, and the continued Progress Log (2026-07-30T19:15Z 
   cases) — genuinely different from the shard-19 mystery too: the actor deleting it was `unified-trading-sa` via
   `python-requests` (a Python GCP-API client), NOT `vm_zombie_watchdog.py`'s gcloud-CLI invocation pattern — this is
   almost certainly the same `data_pipeline_failure`/fleet-monitor `auto_recover` actuator described in
-  `RB-INFRA-RELAUNCH` (`codex/15-runbooks/incidents/rb_infra_relaunch.md`), triggering on a stalled-heartbeat detection,
-  distinct from both the zombie-watchdog AND the still-unresolved shard-19 delete. Heartbeat blob confirmed genuinely
-  stale (45m50s at delete time — `14:10:07Z` last update vs `14:55:57Z` delete), so THIS instance's reaper verdict was
-  correct, unlike shard 19's. **Read `RB-INFRA-RELAUNCH` before relaunching**: it bounds relaunches to
+  `RB-INFRA-RELAUNCH` (`/codex/15-runbooks/incidents/rb_infra_relaunch.md`), triggering on a stalled-heartbeat
+  detection, distinct from both the zombie-watchdog AND the still-unresolved shard-19 delete. Heartbeat blob confirmed
+  genuinely stale (45m50s at delete time — `14:10:07Z` last update vs `14:55:57Z` delete), so THIS instance's reaper
+  verdict was correct, unlike shard 19's. **Read `RB-INFRA-RELAUNCH` before relaunching**: it bounds relaunches to
   ≤2/(vm-prefix,day) for a genuine failure, then requires stopping + filing an issue rather than blind-retrying a 3rd
   time (exactly slot-7's handling of shard 16 above). Shard 44's `-132900` freeze was its FIRST genuine failure since
   this morning's fleet-wide relaunch/on-demand-conversion (those were deliberate strategic actions, not
@@ -427,7 +427,7 @@ cause + fix shipped" section, and the continued Progress Log (2026-07-30T19:15Z 
   1000-line hard cap." Parent doc `cefi_content_migration_fleet_half_incomplete_2026_07_26.md` independently confirmed
   active/open and NOT itself archival-eligible (currently 645 lines, under cap, has its own open work) — archiving THIS
   child doc does not require the parent to also be done. **Next action for whoever picks this up**: standard 6-step
-  archival ritual (`codex/12-agent-workflow/plan-completion-and-archival-discipline.md`); one required referrer fix
+  archival ritual (`/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`); one required referrer fix
   already identified — the parent doc's Progress Log cites this doc as where 2026-07-26 to 07-30T17:53Z detail "moved
   to," that citation needs updating to the new `plans/archive/...` path post-move.
 - **context-scout 2026-08-01**: populated/refreshed context_scope (2 entries).

@@ -11,7 +11,7 @@ summary: >-
   single line item found, but NOT attempted as a direct edit here per this plan family's own "prove on ONE caller before
   fleet rollout" lesson (22+ callers key off these jobs' output names). Also surfaced: live quickmerge output for PM
   says its promote mechanism is now "frozen-per-SHA-ref" via a "churn fix, 2026-07-27", which appears to contradict
-  codex/08-workflows/ci-cd-flow.md's still-live-branch-ref "PM Option-B standing LDR->main PR" description (codified
+  /codex/08-workflows/ci-cd-flow.md's still-live-branch-ref "PM Option-B standing LDR->main PR" description (codified
   2026-06-09) — flagging as a possible stale-SSOT, not verified further here.
 status: open
 nature: issue
@@ -70,7 +70,7 @@ locked_since:
 
 ## Open question — does PM's promote mechanism still match ci-cd-flow.md's "Option-B standing PR" description?
 
-`codex/08-workflows/ci-cd-flow.md` (read 2026-07-31, lines 1-645 of 1231; "PM Option-B standing LDR→main PR" section,
+`/codex/08-workflows/ci-cd-flow.md` (read 2026-07-31, lines 1-645 of 1231; "PM Option-B standing LDR→main PR" section,
 "codified 2026-06-09") describes PM's `ldr-to-main-promote.yml` as opening a PR whose head is the **live branch ref**
 `live-defi-rollout` itself (not a frozen SHA) — a "standing sweep" where every commit riding it before it merges shares
 one concurrency group, which is exactly the queue-not-cancel pattern this fix targets and the reason PM was expected to
