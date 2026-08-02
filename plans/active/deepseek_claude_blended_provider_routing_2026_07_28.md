@@ -507,6 +507,35 @@ verifiable from a dev checkout. See each todo's own "Done when" below for what u
   (`server/worktree_clean_check/_liveness.py`), which doesn't exist on macOS — a stable (not flaky) failure blocking
   every agent-orchestrator QG run from a Mac-hosted slot since `623009e` landed 2026-08-01. Narrow platform skip on the
   test only; the underlying liveness-detection code (safety-sensitive — gates inherited-dirty-WIP claims) untouched.
+- **`[REVIEW] P2` grep/symbol-based context-reduction investigation — measured comparison, closing the todo.** Used this
+  same `/autonomous` session's own two shipped implementation task classes as real, honest data points (not synthetic
+  examples), comparing naive full-file-read byte counts against the actual grep-anchored, bounded-window reads a
+  targeted approach would need:
+  - **Task class A — config-field threading** (the OmniRoute deployment-api todos: add a config field, thread it into
+    one function's client construction, extend an existing test pattern). Naive full-file read across the 3 touched
+    files (`deployment_api_config.py`, `pipeline_uat.py`, `test_pipeline_uat.py`): **59,491 bytes** (1,398 lines).
+    Grep-anchored targeted read (locate each symbol — `pipeline_uat_max_tokens`, `_call_anthropic`, `_make_config`/the
+    one test to mirror — then read a bounded ~25-40 line window around each hit): **5,485 bytes**. **~10.8x reduction
+    (91% smaller).**
+  - **Task class B — Literal/enum generalization across call sites** (the `AccountProvider` + health-gate ring
+    generalization: broaden a type, generalize its call sites across a 2,877-line module, add a config field, extend an
+    existing test file). Naive full-file read across the 4 touched files (`accounts.py`, `autospawn.py`, `config.py`,
+    `test_deepseek_provider_routing.py`): **269,511 bytes** (4,947 lines — `autospawn.py` alone is 2,877 lines).
+    Grep-anchored targeted read (locate `AccountProvider`, the health-gate ring + `select_account_for_spawn`, the
+    `model=None` spawn-arg site, the `TuningDefaults` deepseek block, and the existing test patterns to mirror, each via
+    a `grep -n` hit + a bounded window): **34,854 bytes**. **~7.7x reduction (87% smaller).**
+  - **Method**: real `wc -c`/`wc -l` + `sed -n '<range>p'` measurements against this repo's actual current files
+    (commands + line ranges are reproducible), not estimated or synthetic. The targeted-window sizes reflect windows
+    actually sufficient to implement each real change correctly (verified — both shipped, full QG green).
+  - **Finding**: grep/symbol-based reduction is already highly effective (~8-11x) for LOCALIZED implementation-tier
+    changes — a handful of symbol hits + bounded context windows, no semantic/embedding layer needed. This is a genuine
+    validation of the standing grep-native governing principle, not just a restatement of it.
+  - **Honest limitation, not glossed over**: 2 task classes, one session, both genuinely LOCALIZED changes (a handful of
+    well-named symbols to anchor on). This does NOT test the harder case — a change touching MANY call sites densely
+    spread through a large file (where bounded windows around each hit could approach or exceed a full-file read), or a
+    task where the right symbol to grep for isn't obvious up front. Recommendation: this finding is sufficient to NOT
+    reach for vector embeddings by default (per the standing grep-native principle) — a genuine future data point on the
+    dense/many-call-sites case would strengthen this further, but is not needed to close this todo's stated done-when.
 
 ## Recommended rollout sequence (2026-07-29)
 
@@ -689,10 +718,13 @@ an external reference.
       `test_single_free_provider_fleet_behavior_unchanged` regression guard (all 34 pre-existing routing tests also pass
       unmodified). This todo's done-when says "simulated" explicitly — unlike the sibling `[INFRA] P2` above, no real
       credential is needed to satisfy it.
-- [ ] [REVIEW] P2. Investigate grep/symbol-based code-context reduction for implementation-tier work (ripgrep,
+- [x] [REVIEW] P2. ✅ Investigate grep/symbol-based code-context reduction for implementation-tier work (ripgrep,
       ctags/AST-grep-style symbol lookup, import/dependency graphs) — per the retrieval-layer reconciliation note above,
       evaluate this BEFORE any vector-embedding approach, consistent with the standing grep-native governing principle.
       Done when: a measured before/after context-size comparison exists for at least one real implementation task class.
+      — See Progress Log entry below for the measured comparison (2 real task classes, both from this session's own
+      shipped work, ~8-11x reduction). Finding: grep/symbol-based reduction is already highly effective for
+      localized-change task classes — no evidence surfaced that a vector-embedding layer is currently warranted.
 - [ ] [OPERATOR] P3 (stretch). Evaluate self-hosted open-weight models (Kimi, Qwen Coder, DeepSeek open-weights) as a
       further execution-cost layer once the multi-provider generalization above is proven — a GPU-hosting/infra-cost
       business decision, tagged `[OPERATOR]` per the business/spend-judgment carve-out, not something to build
