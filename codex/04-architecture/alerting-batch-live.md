@@ -190,6 +190,12 @@ callback + applies three tiers of rules:
 | 2    | `consumer_lag_pending > 1000` for 60s OR `last_event_age_seconds > 60` | `StreamingHealthSnapshot` + duration window | `critical` | `KILL_SWITCH_STREAM_LAG` → execution-service `force_exit_only` action                 |
 | 3    | No events on any active shard for > 5min                               | Cross-shard aggregate                       | `critical` | `KILL_SWITCH_PIPELINE_DEAD` → all strategies `halt_strategy`; operator manual restart |
 
+> **`zero_activity_bar_rate` note (B2 marker reconciliation, 2026-06-02):** this is the real, shipped
+> `StreamingHealthSnapshot` field (`unified_trading_library/streaming/streaming_health.py`) — unrelated to the retired
+> `zero_activity=True` per-bar boolean column, which was never built. See
+> `/codex/05-infrastructure/live-pipeline-architecture.md` § "4-category live gap semantics" for the as-shipped per-bar
+> marker (`staleness_seconds>0 + trade_count==0`) this rate is computed from.
+
 > **⛔ DESIGN-ONLY, NOT SHIPPED — verified 2026-07-30.** The two AlertCodes in the Action column,
 > **`KILL_SWITCH_STREAM_LAG`** and **`KILL_SWITCH_PIPELINE_DEAD`**, do **not exist** in the `AlertCode` enum, nor
 > anywhere in unified-api-contracts / alerting-service / strategy-service / execution-service. Tiers 2 and 3 are a
