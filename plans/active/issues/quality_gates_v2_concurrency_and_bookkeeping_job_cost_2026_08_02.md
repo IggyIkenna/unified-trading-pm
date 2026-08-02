@@ -150,3 +150,14 @@ PM-specific win).
   full evidence) — PM's promote mechanism confirmed frozen-per-SHA-ref (matching the fleet), `ci-cd-flow.md` and
   `quickmerge.sh`'s own comments corrected to match. The `[VERIFY] P3` re-measure todo and the `[INFRA] P2`
   bookkeeping-job-cost todo remain open, untouched by this session.
+- **2026-08-02 (slot-15) — `[VERIFY] P3` re-measure todo dispatched next; declined as genuinely premature, not a
+  design/ambiguity block.** The concurrency fix this todo re-measures against landed at `2026-08-02T11:36:28Z`
+  (`unified-trading-pm@f55f9b11e6`, confirmed via `git show -s --format=%ad`); checked at `2026-08-02T11:57Z` — only ~21
+  minutes of run history exist since the fix, nowhere near the todo's own explicit "a few days after this lands" bar,
+  and its own caveat is direct: "Don't estimate a % savings without this." A same-day re-measurement would produce a
+  near-zero or statistically meaningless cancellation-rate sample, not a real answer. Declining + skipping (no
+  `/blocked` — nothing ambiguous to decide, just elapsed time that hasn't elapsed) rather than force a low-quality
+  number; recommending this todo be dispatch-gated by calendar time rather than re-checked every cycle (main/operator
+  backlog-tuning call, per `RULES.md` § 4 — not applied here). Resume point: re-run the same
+  push/pull_request/workflow_dispatch run-mix + cancellation-rate measurement once at least a few days of real PR churn
+  have accumulated against the fixed workflow (i.e. any time from ~2026-08-05 onward).
