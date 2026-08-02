@@ -96,17 +96,30 @@ since a MISSING key that was never in the generator's schema doesn't drift from 
 
 ## Recommended decision
 
-- [ ] [BACKEND] P2. Add `extract_jurisdiction_overlay()` to
+- [x] ✅ [BACKEND] P2. Add `extract_jurisdiction_overlay()` to
       `unified-trading-pm/scripts/openapi/generate_ui_reference_data.py`, mirroring the existing extractor pattern (e.g.
       `extract_sports_bookmaker_registry()` / `extract_venue_data_availability()`): pull `Jurisdiction`,
       `KNOWN_VENUE_IDS`, `JURISDICTION_VENUE_POLICIES`, and `allowed_venues_for_jurisdiction()` from
       `unified_api_contracts.internal.architecture_v2.jurisdiction_overlay`, and emit the same shape
       `lib/registry/jurisdiction-overlay.ts` already expects (`known_venue_ids`, `jurisdictions`, `policies`,
       `allowed_venues_by_jurisdiction`). Wire it into `main()` (numbered step ~22, alongside
-      `archetype_capability_registry`) so it's produced on every regen going forward. Repo: unified-trading-pm.
+      `archetype_capability_registry`) so it's produced on every regen going forward. Repo: unified-trading-pm. —
+      unified-trading-pm@31b7cf457 (2026-08-02). Verified: `extract_jurisdiction_overlay()` exists (line 569), wired
+      into `main()` step 22 (line 895), and imports/executes cleanly, producing 32 policies across 6 jurisdictions in
+      the exact shape `jurisdiction-overlay.ts` expects (`known_venue_ids`/`jurisdictions`/`policies`/
+      `allowed_venues_by_jurisdiction`) — confirmed `us_cftc` correctly resolves to an empty allowed-venue set.
 - [ ] [SCRIPT] P2. Re-run `generate_ui_reference_data.py`, commit the regenerated
       `unified-trading-system-ui/lib/registry/ui-reference-data.json` with the `jurisdiction_overlay` key restored, and
       verify `npx playwright test --project=chromium tests/smoke/wizard-jurisdiction-filter.spec.ts` passes 2/2 again.
       Repo: unified-trading-system-ui + unified-trading-pm.
 
 ## Progress Log
+
+- 2026-08-02 (slot 4): Todo 1 checkbox flip — the extractor was already shipped by another slot
+  (`unified-trading-pm@31b7cf457`, slot-10) ahead of this task's dispatch, but its plan checkbox was never flipped.
+  Verified the shipped code end-to-end (import + execute `extract_jurisdiction_overlay()` in isolation: 32 policies, 6
+  jurisdictions, correct shape, `us_cftc` allowed-set empty as expected) and flipped the checkbox to reflect reality.
+  Todo 2 (regen `ui-reference-data.json` + verify the playwright spec) is still open — the last regen
+  (`unified-trading-system-ui@19e849c2`, 2026-08-02 16:33 UTC) predates the extractor commit (17:17 UTC), so the JSON
+  still lacks the `jurisdiction_overlay` key. That is a separate backlog task
+  (`wizard_jurisdiction_overlay_dropped_by_registry_regen-002`, still queued) — not done here.
