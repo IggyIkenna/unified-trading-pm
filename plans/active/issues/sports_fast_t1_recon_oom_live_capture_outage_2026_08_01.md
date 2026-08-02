@@ -242,47 +242,143 @@ data-pipeline-correctness-hard-rule).
       execution is confirmed on all three counts. (repo: deployment-service, market-tick-data-service)
 
       **2026-08-02T16:07Z (slot 10) — 2 of 3 criteria now confirmed live; 3rd criterion FAILS, new blocker found. NOT
-                      flipping done.** The deploy-gap slot 9 found (promote stuck behind the runner-capacity crisis) has since cleared
-                      for this specific fix: `deployment-service@4e0e03d`'s content (`scope_to_leagues` call in
-                      `sports_trigger_scheduler.py::fire_trigger`) is confirmed present on `origin/main` as of promote PR #673
-                      (`7fb58f1a`, squash-merged `2026-08-02T14:47:16Z`) — **correcting slot 4's ancestry-based "NOT on main" check**,
-                      which was a false negative from squash-merge non-ancestry (exactly the trap `review.md` § "Is commit `<sha>` live"
-                      warns about — content-diff, not `git merge-base --is-ancestor`, is the valid check here). Further: the
-                      `uts-prod-sports-scheduler` / `uts-prod-market-tick-data-service-fast-t1-recon` Cloud Run Jobs reference their
-                      image by the **mutable `:latest` tag**, and Cloud Run *Jobs* (unlike Services) re-resolve that tag fresh per
-                      execution — confirmed via `gcloud run jobs executions describe`: the most recent execution's *resolved* image
-                      digest (`sha256:6709207951...`) exactly matches the `sports-scheduler` image tagged both `latest` and
-                      `7fb58f1ae6f54c67...` (built `2026-08-02T14:51:05Z`, 4 min after the PR #673 merge). **So no manual
-                      `gcloud run jobs update` was actually needed for this job** — slot 4's conclusion there doesn't hold for a
-                      `:latest`-tag job spec. Criteria (1) and (2) are live-confirmed: `gcloud run jobs executions describe
-                      uts-prod-market-tick-data-service-fast-t1-recon-bllc8` (started `16:01:35Z`) shows
-                      `args: [..., '--league', 'SLOVAKIA_SUPER_LIGA']` and `condition: Completed True ... in 1m28.22s` with zero
-                      `"memory limit"` log hits anywhere in the trailing 2h window. **Criterion (3) FAILS — new, distinct blocker**:
-                      every sampled execution for `date=2026-08-02` across a full 24h log window (`Processed date=2026-08-02: 0 venues
-                      ok, 0 failed, 0 skipped, 0 total records` — checked 8+ executions, zero exceptions) shows genuinely zero rows
-                      captured; direct GCS listing confirms `raw_tick_data/by_date/day=2026-08-02/` has **zero objects at all** (vs.
-                      `day=2026-08-01` which has real per-venue data from slot 14's earlier verification). The pre-flight log line
-                      itself is suspicious: `Pre-flight: venue=ODDS_API date=2026-08-02 — fully covered, skipping
-                      data_types=['odds_horizon_bucket']` implies prior success for that data_type, but GCS shows nothing — a possible
-                      stale/false-positive freshness-skip signal. The OTHER attempted data_types report `Odds API batch complete:
-                      date=2026-08-02 rows=0 credits_used=0` — **0 credits used** suggests no HTTP call was even attempted, not merely
-                      an empty API response. Ruled out as a today-only fixture-availability fluke (checked across many different
-                      fixtures/leagues, same pattern every time, not isolated to one league). **This is NOT the OOM bug recurring** (no
-                      OOM, no crash-loop signature) — it is a separate, new capture-path defect. Filed as a new todo below; not
-                      root-causing inline (would need a code-level read of the `odds_horizon_bucket`/data_type dispatch path in
-                      `odds_api_adapter.py`, out of scope for this live-verification pass). **Net**: 2/3 done-when criteria met, 1 new
-                      blocker found — NOT flipping this checkbox; the actual restoration of live capture (what my own gated `-003`
-                      backfill todo needs) has not happened.
+                          flipping done.** The deploy-gap slot 9 found (promote stuck behind the runner-capacity crisis) has since cleared
+                          for this specific fix: `deployment-service@4e0e03d`'s content (`scope_to_leagues` call in
+                          `sports_trigger_scheduler.py::fire_trigger`) is confirmed present on `origin/main` as of promote PR #673
+                          (`7fb58f1a`, squash-merged `2026-08-02T14:47:16Z`) — **correcting slot 4's ancestry-based "NOT on main" check**,
+                          which was a false negative from squash-merge non-ancestry (exactly the trap `review.md` § "Is commit `<sha>` live"
+                          warns about — content-diff, not `git merge-base --is-ancestor`, is the valid check here). Further: the
+                          `uts-prod-sports-scheduler` / `uts-prod-market-tick-data-service-fast-t1-recon` Cloud Run Jobs reference their
+                          image by the **mutable `:latest` tag**, and Cloud Run *Jobs* (unlike Services) re-resolve that tag fresh per
+                          execution — confirmed via `gcloud run jobs executions describe`: the most recent execution's *resolved* image
+                          digest (`sha256:6709207951...`) exactly matches the `sports-scheduler` image tagged both `latest` and
+                          `7fb58f1ae6f54c67...` (built `2026-08-02T14:51:05Z`, 4 min after the PR #673 merge). **So no manual
+                          `gcloud run jobs update` was actually needed for this job** — slot 4's conclusion there doesn't hold for a
+                          `:latest`-tag job spec. Criteria (1) and (2) are live-confirmed: `gcloud run jobs executions describe
+                          uts-prod-market-tick-data-service-fast-t1-recon-bllc8` (started `16:01:35Z`) shows
+                          `args: [..., '--league', 'SLOVAKIA_SUPER_LIGA']` and `condition: Completed True ... in 1m28.22s` with zero
+                          `"memory limit"` log hits anywhere in the trailing 2h window. **Criterion (3) FAILS — new, distinct blocker**:
+                          every sampled execution for `date=2026-08-02` across a full 24h log window (`Processed date=2026-08-02: 0 venues
+                          ok, 0 failed, 0 skipped, 0 total records` — checked 8+ executions, zero exceptions) shows genuinely zero rows
+                          captured; direct GCS listing confirms `raw_tick_data/by_date/day=2026-08-02/` has **zero objects at all** (vs.
+                          `day=2026-08-01` which has real per-venue data from slot 14's earlier verification). The pre-flight log line
+                          itself is suspicious: `Pre-flight: venue=ODDS_API date=2026-08-02 — fully covered, skipping
+                          data_types=['odds_horizon_bucket']` implies prior success for that data_type, but GCS shows nothing — a possible
+                          stale/false-positive freshness-skip signal. The OTHER attempted data_types report `Odds API batch complete:
+                          date=2026-08-02 rows=0 credits_used=0` — **0 credits used** suggests no HTTP call was even attempted, not merely
+                          an empty API response. Ruled out as a today-only fixture-availability fluke (checked across many different
+                          fixtures/leagues, same pattern every time, not isolated to one league). **This is NOT the OOM bug recurring** (no
+                          OOM, no crash-loop signature) — it is a separate, new capture-path defect. Filed as a new todo below; not
+                          root-causing inline (would need a code-level read of the `odds_horizon_bucket`/data_type dispatch path in
+                          `odds_api_adapter.py`, out of scope for this live-verification pass). **Net**: 2/3 done-when criteria met, 1 new
+                          blocker found — NOT flipping this checkbox; the actual restoration of live capture (what my own gated `-003`
+                          backfill todo needs) has not happened.
 
-- [ ] [DATA] P0. Root-cause why live SPORTS odds captures for `date=2026-08-02` write ZERO rows despite the `--league`
-      scoping fix being confirmed live (no OOM, correct `--league` flag) — see the finding directly above. Check (a)
-      whether the `Pre-flight: ... fully covered, skipping data_types=['odds_horizon_bucket']` line is a false-positive
-      freshness-skip (no matching GCS/manifest evidence for that claim), and (b) why the other attempted data_types
-      report `rows=0 credits_used=0` (0 API credits implies the call itself never fired, not an empty response) — likely
-      in `odds_api_adapter.py`'s per-league fetch loop or the freshness-check it consults before dispatching a fetch.
-      Done when: the specific code path causing the zero-row/zero-credit result is identified with a file:line citation,
-      distinguishing genuine honest-absence (no odds available yet for these leagues) from a real bug. Repo:
-      market-tick-data-service.
+- [x] ✅ [DATA] P0. **DONE 2026-08-02 (slot 16) — root-caused with file:line citations; TWO independent, coexisting
+      mechanisms found, no code shipped this todo (pure identification, per its own done-when + the sibling root-cause
+      todo's established precedent above).** Live `gcloud run jobs executions describe` + full-log reads of 4 real
+      2026-08-02 executions (`--league POLAND_I_LIGA`/`RUSSIA_PREMIER_LEAGUE`/`ELITESERIEN`/implied CANADA), cross-read
+      against `market-tick-data-service` + `deployment-service` + `unified-api-contracts` source: 1. **Part (a) — the
+      `Pre-flight: ... fully covered, skipping data_types=['odds_horizon_bucket']` line IS a confirmed false-positive
+      freshness-skip, and it's a RECURRENCE of an already-fixed bug class the fix never reached.**
+      `market_tick_data_service/engine/orchestrator/preflight.py::_run_preflight_availability_check` (lines 730-812)
+      reads the availability index via `_PREFLIGHT_AVAILABILITY_COLUMNS` (preflight.py:47-58) — this column list has NO
+      `source` column, so its per-`(venue, data_type)` match (line ~798:
+      `if _v and _dt and _v in _active_venue_set: state.preflight_captured_dts.setdefault(_v, set()).add(_dt)`) is
+      source-blind: ANY manifest row for `(venue=ODDS_API, data_type=odds_horizon_bucket)` on this date — including one
+      written by a completely different producer under a different `source` — counts as "captured" and trips the skip.
+      This is the EXACT bug class `sports_manifest_consolidator_zero_growth_stall_2026_07_29.md`'s P1 already
+      root-caused and fixed (`market-tick-data-service@362e64e34c1`, "scope smart-skip freshness evidence to odds_api's
+      declared source") — but that fix added `expected_sources={"ODDS_API": "odds_api"}` scoping to
+      `check_shard_freshness` (`unified-trading-library/unified_trading_library/manifest_writer/_queries.py:163`,
+      confirmed via direct read — a SEPARATE, independent freshness-check implementation used by the backfill-VM /
+      smart-skip path), NOT to `_run_preflight_availability_check` (a different file, different module, different call
+      site — used by the LIVE per-fixture Cloud Run dispatch this todo is about). The fix was never mirrored to this
+      second implementation, so the identical false-positive-skip defect persists here specifically. 2. **Part (b) — the
+      "0 rows / 0 credits_used" result decomposes into TWO different, coexisting causes depending on whether the
+      triggered league is in `LEAGUE_CLASSIFICATION_DATA` at all:** - **Registry-coverage gap (silent, no HTTP call —
+      confirmed for `POLAND_I_LIGA`, and by UAC-source inspection also applies to
+      `CANADA_PREMIER_LEAGUE`/`SLOVAKIA_SUPER_LIGA`)**: `OddsApiAdapter._fetch_all_leagues`
+      (`odds_api_adapter.py:543-585`) iterates `_candidate_leagues(registry, leagues)` — when `leagues` is a single
+      explicitly-scoped league (the post-`--league`-fix normal case), this is `registry.get_all_leagues()` (line 119),
+      i.e. every entry in UAC's `LEAGUE_CLASSIFICATION_DATA` (96 leagues) — but then line 568
+      (`if leagues and league_canonical not in leagues and          _raw_league_name(league_cls) not in leagues: continue`)
+      skips every candidate that doesn't match. Poland's TOP division (Ekstraklasa, `api_football_id=106`) IS
+      registered, but `POLAND_I_LIGA` (the SECOND division, `api_football_id=107`, confirmed via
+      `unified_api_contracts/canonical/domain/sports/league_data_other.py:          177-188`,
+      `classification="Features"`) is NOT a key in `LEAGUE_CLASSIFICATION_DATA` at all (confirmed via direct grep of
+      both `league_classification_data_a.py`/`_b.py` — 0 hits for id 107) — so EVERY one of the 96 candidates fails the
+      match, `_discover_fixtures` (the actual HTTP call) is NEVER invoked, and `_fetch_all_leagues` returns
+      `([], 0, "?", {})` cleanly with no exception. Live-confirmed via the full log for execution
+      `uts-prod-market-tick-data-service-fast-t1-recon-s7vvf` (`--league POLAND_I_LIGA`): shows
+      `Odds API batch complete: date=2026-08-02 rows=0 credits_used=0 remaining=?` with ZERO discovery/error lines
+      anywhere in the log — `remaining=?` (the `requests_remaining` variable's untouched default) independently confirms
+      no HTTP response was ever received. Same UAC-source pattern confirmed for `CANADA_PREMIER_LEAGUE`
+      (`league_data_other.py:3362-3374`, `api_football_id=479`, `classification="Reference"`,
+      `data_sources=REF_API_ONLY`) and `SLOVAKIA_SUPER_LIGA` (`league_data_other.py:2132-2144`, `api_football_id=332`,
+      `classification="Reference"`, `data_sources=REF_API_ONLY`, i.e. explicitly declared to have NO odds_api coverage
+      by design) — 0 hits for "slovak" anywhere in `LEAGUE_CLASSIFICATION_DATA`. **This is a genuine trigger-eligibility
+      bug, distinct from a fetch-code bug**: the ADAPTER's behavior is actually correct given the input (there is
+      nothing to fetch for these leagues) — the real defect is one layer up, in
+      `deployment-service/deployment_service/sports_trigger_evaluation.py::          evaluate_pre_match_triggers` (lines
+      46-96), which fires a pre-match trigger event for `for fixture in          fixtures:` with NO filter on the
+      fixture's league `classification`/`in_mvp_scope`/`data_sources.odds_api` — it dispatches an odds-fetch Cloud Run
+      execution for EVERY scheduled fixture regardless of whether that fixture's league was ever declared to have
+      odds_api coverage. Wasteful (a real Cloud Run execution + vendor dispatch every 5 minutes per in-window fixture,
+      for leagues that structurally can never produce odds rows), but NOT a data-loss/correctness bug — these leagues
+      never had capturable odds_api coverage to lose. - **Already-tracked credential/quota blocker (loud,
+      correctly-classified — confirmed for `RUSSIA_PREMIER_LEAGUE` and `ELITESERIEN`, both genuinely present in
+      `LEAGUE_CLASSIFICATION_DATA` with real `odds_api_league_name` mappings)**: for these, the match at line 568
+      SUCCEEDS, `_discover_fixtures` fires a real HTTP call to `/v4/historical/sports/{sport_key}/odds`, and BOTH
+      sampled executions' full logs show
+      `Discovery call for soccer_russia_premier_league on 2026-08-02 FAILED (re-raising): 401,          message='Unauthorized' ... error_code=OUT_OF_USAGE_CREDITS`
+      (same for `soccer_norway_eliteserien`) — this propagates uncaught out of `_discover_fixtures`
+      (odds_api_adapter.py:590-620, its own except block only logs + unconditionally re-raises, unlike
+      `_run_league_fetch_loop`'s later, more graceful `OUT_OF_USAGE_CREDITS`-specific handling at line ~881) through
+      `download_batch`/`_route_sports`, and is correctly caught by the top-level per-venue shard-isolation handler
+      (`market_tick_data_service/engine/orchestrator/__init__.py:810`,
+      `logger.error("Venue %s: unexpected error          (shard isolated): %s", ...)`) — producing
+      `FAILED SHARDS`/`SHARD_INCOMPLETE` log lines and a proper `attempted_failed`-classified manifest write, NOT a
+      silent gap. Live-reverified directly (same account, same key, moments before this investigation): `curl` against
+      `/v4/historical/sports/soccer_epl/odds?date=2026-08-02T12:00:00Z` (AND a much older `2026-07-29` date, to rule out
+      a date-specific effect) both return `401 OUT_OF_USAGE_CREDITS`, `x-requests-remaining: -772`, byte-identical
+      across both calls and unchanged from the reading in this doc's own earlier P1 backfill todo (2026-08-02, slot 14)
+      and this session's separate `sports_odds_api_scattered_multiyear_gaps_2026_07_27.md` VERIFY task — **this is the
+      SAME already-tracked, operator-gated quota-exhaustion blocker, not a new defect**; it is being handled CORRECTLY
+      by the existing shard-isolation architecture (loud failure, proper `attempted_failed` classification), just not
+      yet resolved (still waiting on the same operator billing decision: wait for monthly reset vs. purchase additional
+      credits). 3. **Net**: no genuinely new data-correctness bug found for the registered-league population (that's the
+      same, already-escalated credential blocker) — but TWO real, fixable defects ARE newly identified and filed as
+      follow-up todos directly below: the source-blind pre-flight false-skip (part a) and the trigger-eligibility gap
+      that wastes Cloud Run executions on structurally-uncoverable leagues (part b, registry-gap half). Neither fix
+      shipped in this todo — both are cleanly scoped, separately dispatchable changes, consistent with keeping this
+      root-cause todo pure-identification per its own done-when. (repo: market-tick-data-service, deployment-service,
+      unified-api-contracts — read-only investigation, no code changed)
+- [ ] [DATA] P1. Fix the source-blind false-positive freshness-skip in
+      `market_tick_data_service/engine/orchestrator/preflight.py::_run_preflight_availability_check` (lines 730-812):
+      add an `expected_sources`-equivalent scoping (mirroring
+      `unified_trading_library/unified_trading_library/manifest_writer/_queries.py::check_shard_freshness`'s
+      `expected_sources` param, added for the exact same bug class in
+      `sports_manifest_consolidator_zero_growth_stall_2026_07_29.md`'s P1) so a foreign-`source` row for
+      `(venue=ODDS_API, data_type=odds_horizon_bucket)` no longer counts as "captured" evidence for the ODDS_API
+      vendor's own pre-flight skip decision. Requires adding `source` to `_PREFLIGHT_AVAILABILITY_COLUMNS`
+      (preflight.py:47-58) and threading a per-venue expected-source map through
+      `_run_preflight_availability_check`/`_apply_preflight_skip_filter` (venue_fetch.py:229-277). Done when: a fresh
+      live dispatch for a date with only a foreign-source `odds_horizon_bucket` row shows `odds_horizon_bucket` in
+      `still fetching=[...]`, not `skipping data_types=[...]`. (repo: market-tick-data-service)
+- [ ] [DATA] P2. Fix the sports pre-match trigger scheduler firing odds-fetch dispatches for fixtures in leagues with no
+      odds_api coverage by design:
+      `deployment-service/deployment_service/sports_trigger_evaluation.py::     evaluate_pre_match_triggers` (lines
+      46-96) iterates every fixture with no filter on the fixture's league
+      `classification`/`in_mvp_scope`/`data_sources.odds_api` (per UAC `LeagueDefinition`,
+      `unified_api_contracts/canonical/domain/sports/league_registry.py` + `league_data_other.py`). Confirmed wasted
+      dispatches for `SLOVAKIA_SUPER_LIGA`/`CANADA_PREMIER_LEAGUE`/ `POLAND_I_LIGA` (all `data_sources=REF_API_ONLY` or
+      missing `odds_api` coverage) on 2026-08-02 — each produces a real Cloud Run execution + scheduler cycle every 5
+      minutes within the fixture's trigger window, for a league that can never produce odds rows. Add a filter (e.g.
+      `data_sources.get("odds_api")` truthy, or membership in `unified_api_contracts` `LEAGUE_CLASSIFICATION_DATA`)
+      before appending an odds-relevant `TriggerEvent`. Done when: `evaluate_pre_match_triggers` has a unit test
+      confirming a `REF_API_ONLY`/no-odds-coverage fixture does NOT produce a `market-tick-data-service` trigger event.
+      (repo: deployment-service)
 - [ ] [DATA] P1. Once fixed, backfill/re-fetch the resulting gap (2026-07-27, 2026-07-28, 2026-07-30, 2026-07-31, plus
       whatever additional days elapse before the fix ships — **as of 2026-08-02T16:07Z this now also includes 2026-08-02
       itself, since live capture is still confirmed at zero rows for today despite the OOM fix being live — see the new
@@ -451,3 +547,23 @@ standalone root-cause todo below (not re-investigating it here — out of this t
 Self-skipping (`reason_code: GATED`) per the same precedent as slots 4/9/10 above — this is now the 4th consecutive
 dispatch of this exact todo today confirming the identical unmet precondition; the blocking condition is the separate
 zero-row bug, not something a live-verify retry resolves.
+
+**2026-08-02 (slot 16, data_engineering) — picked up the standalone zero-row root-cause todo itself; root-caused with
+file:line citations, TWO coexisting mechanisms, no code shipped (pure identification).** Full detail in the flipped
+checkbox above; summary: (1) the `odds_horizon_bucket` pre-flight skip is a confirmed false-positive — the
+source-scoping fix `sports_manifest_consolidator_zero_growth_stall_2026_07_29.md`'s P1 shipped
+(`check_shard_freshness(expected_sources=...)`) was never mirrored to the LIVE dispatch path's own independent freshness
+check (`preflight.py::_run_preflight_availability_check`, no `source` column read at all); (2) the "0 credits used"
+result splits into a genuine registry-coverage gap (leagues like `SLOVAKIA_SUPER_LIGA`/
+`CANADA_PREMIER_LEAGUE`/`POLAND_I_LIGA` were never added to `LEAGUE_CLASSIFICATION_DATA`'s 96-league odds_api-coverage
+subset, so the adapter correctly finds no match and never calls the vendor — the real defect is
+`sports_trigger_evaluation.py` firing odds triggers for these leagues at all, with no
+classification/`in_mvp_scope`/`data_sources.odds_api` filter) vs. the SAME already-tracked `OUT_OF_USAGE_CREDITS` quota
+exhaustion for genuinely-registered leagues (`RUSSIA_PREMIER_LEAGUE`, `ELITESERIEN` — confirmed via full execution logs
+showing the loud, correctly-classified `401`/shard-isolated failure path, not a silent gap; live- reverified the vendor
+quota is still exhausted, byte-identical to every other check today). Filed 2 new follow-up `- [ ]` todos for the two
+real fixes (pre-flight source-scoping mirror; trigger-eligibility filter) rather than shipping either inline, since both
+are cleanly separable, independently-dispatchable changes and this todo's own done-when is identification-only.
+Cross-referenced against this session's separate finding on `sports_odds_api_scattered_multiyear_gaps_2026_07_27.md`
+(same vendor account, same quota-exhaustion state, independently reconfirmed there too) so the credential blocker isn't
+tracked as two different problems.
