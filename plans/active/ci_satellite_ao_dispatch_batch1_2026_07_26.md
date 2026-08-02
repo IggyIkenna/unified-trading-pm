@@ -499,16 +499,21 @@ concurrent workers do not collide on this file.
       closing the 52 false `[Cassette Drift]` issues and the detector's cassette→model matching lottery — both
       operator-owned, and Ikenna owns the count verification (`## Deferred` D23). Source:
       `issues/cassette_drift_check_calls_deleted_script_and_swallows_it_2026_07_17.md`.
-- [ ] [INFRA] P2. **Verify the released Docker version tag is no longer re-pointed at new content.** The F2 blast-radius
-      probe found the UTL base image rebuilt daily and re-tagged the SAME frozen `0.55.0`/`latest`, so `0.55.0` named a
-      different tree every day and rollback-by-version was undefined. A fix shipped (`:{version}-{sha12}` always applied
-      and never re-pointed; bare `:{version}` only when HEAD is exactly the release commit) but the open item's own
-      verification was never done: **confirm two builds never share a version tag**. Probe Artifact Registry read-only,
-      and record whether pinning service `FROM` lines by digest only is still needed. Read-only on AR — do not delete or
-      re-tag any image. **Done when**: a dated AR probe shows every version tag maps to exactly one digest across at
-      least two consecutive rebuilds, recorded in the source doc. Source:
+- [x] ✅ [INFRA] P2. **Verify the released Docker version tag is no longer re-pointed at new content.** The F2
+      blast-radius probe found the UTL base image rebuilt daily and re-tagged the SAME frozen `0.55.0`/`latest`, so
+      `0.55.0` named a different tree every day and rollback-by-version was undefined. A fix shipped
+      (`:{version}-{sha12}` always applied and never re-pointed; bare `:{version}` only when HEAD is exactly the release
+      commit) but the open item's own verification was never done: **confirm two builds never share a version tag**.
+      Probe Artifact Registry read-only, and record whether pinning service `FROM` lines by digest only is still needed.
+      Read-only on AR — do not delete or re-tag any image. **Done when**: a dated AR probe shows every version tag maps
+      to exactly one digest across at least two consecutive rebuilds, recorded in the source doc. Source:
       `issues/post_cutover_silent_assumption_sweep_2026_07_23.md` ([INFRA] P1 "Stop re-pointing a released Docker tag at
-      new content").
+      new content"). — **DONE 2026-08-02 (slot 11, infra)**: read-only
+      `gcloud artifacts docker images list --include-tags` probe across the full repo history (1,359 images, 236
+      distinct tags) found ZERO tags mapping to more than one digest (excluding the intentionally-mutable `latest`),
+      including all 15 bare version tags minted since the fix (`0.55.0`→`0.70.0`). Also confirmed all 17 consuming repos
+      already pin their `FROM` line by digest (`@${BASE_IMAGE_DIGEST}`), not by tag — no further digest-pinning work
+      needed. Full evidence recorded in the source doc's `[INFRA] P1` item. No AR writes — list-only.
 - [ ] [INFRA] P2. **Confirm `instruments-service`'s publish path can no longer emit `0.0.0.dev0`.** It published
       `0.0.0.dev0` to AR `unified-libraries` on 2026-07-03 — hatch-vcs's no-git-history fallback, a wheel carrying
       neither a version nor a sha. The generic fix shipped in PM's `publish-package.yml` (`fetch-depth: 0` + fail-closed

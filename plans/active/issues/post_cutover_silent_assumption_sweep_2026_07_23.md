@@ -452,6 +452,19 @@ codex, or a future staging re-entry gets a dead pipeline.
       tag), so every build between two tags re-tagged the same string. Now `:{version}-{sha12}` is always applied and
       never re-pointed, `:latest` stays the mutable alias, and the bare `:{version}` tag is applied **only when HEAD is
       exactly the release commit** — so a version tag names exactly one tree. Probe repointed to the unique tag.
+      **Verified 2026-08-02 (slot 11, `ci_satellite_ao_dispatch_batch1_2026_07_26.md`'s "Verify the released Docker
+      version tag is no longer re-pointed at new content" todo)**: read-only AR probe,
+      `gcloud artifacts docker images list asia-northeast1-docker.pkg.dev/central-element-323112/unified-trading-library/unified-trading-library --include-tags`
+      — **1,359 images (digests) across the repo's full history, 236 distinct tags, ZERO tags mapping to more than one
+      digest (excluding `latest`, which is correctly mutable by design)**. All 15 bare version tags minted since the fix
+      (`0.55.0` through `0.70.0`) each resolve to exactly one digest — the fix has held with no regression across ~5
+      weeks and hundreds of intervening `{version}-{sha12}` rebuilds. No image was retagged or deleted during this probe
+      (list-only). **Digest-pinning question also answered**: every one of the 17 consuming repos already pins its
+      `FROM` line by digest (`...unified-trading-library@${BASE_IMAGE_DIGEST}`), not by tag — confirmed via
+      `grep -rn "FROM.*unified-trading-library" */Dockerfile` across the full workspace (16 direct matches +
+      `instruments-service`'s indirect `ARG BASE_IMAGE=...@${BASE_IMAGE_DIGEST}`); `unified-trading-library/Dockerfile`
+      itself builds FROM `python:3.13-slim`, not applicable. **No further digest-pinning work is needed — it was already
+      fleet-wide before this verification, this todo just confirms it.**
 - [ ] [INFRA] P2. **Reconcile the ~4 weeks of missing tags.** NOTE: this is deliberately NOT a backfill of ~2,490
       intermediate releases — those artifacts never existed and inventing them would be fabrication. Each repo's first
       post-fix promotion mints ONE tag capturing current `main`; the gap stays a gap, correctly. This todo is only to
