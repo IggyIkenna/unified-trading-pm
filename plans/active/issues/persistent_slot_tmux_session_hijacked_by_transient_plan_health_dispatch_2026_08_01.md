@@ -179,10 +179,18 @@ boot-loop doc's citation of `server/prompts.py` and `server/routes/slots_worker.
       — file a follow-up or fold into the fix above. (repo: agent-orchestrator) — audited against
       agent-orchestrator@85590a6 (code-read only, no fix needed for this todo — verdict + evidence in the Progress Log
       below)
-- [ ] [BACKEND] P2. Make `stale_spawn_base_role_cleared` (or a sibling event) fire a distinct, higher-visibility signal
-      when the role it's clearing belongs to a KNOWN transient-dispatch mode colliding with a KNOWN persistent role —
-      today it reads as routine cleanup; it should be diagnosable as "a collision just happened" without needing to
-      cross-reference `plan_health_dispatch_initiated` timestamps by hand, the way this doc had to.
+- [x] ✅ [BACKEND] P2. Make `stale_spawn_base_role_cleared` (or a sibling event) fire a distinct, higher-visibility
+      signal when the role it's clearing belongs to a KNOWN transient-dispatch mode colliding with a KNOWN persistent
+      role — today it reads as routine cleanup; it should be diagnosable as "a collision just happened" without needing
+      to cross-reference `plan_health_dispatch_initiated` timestamps by hand, the way this doc had to.
+      `agent-orchestrator@ac7ac28` — `_typed_occupant_liveness` (`server/routes/slots_worker.py`) now also fires a
+      distinct `stale_spawn_base_role_collision_detected` event + `logger.warning` when the cleared role is a KNOWN
+      transient/one-shot dispatch kind (`plan_health.PLAN_HEALTH_FAMILY_ROLES` | the new
+      `escalation.ESCALATION_FAMILY_ROLES`, added this commit) AND the slot is a KNOWN persistent-role slot
+      (`config.review_slot_ids()`); registered in the dashboard's `ALERT_TYPES` (`dashboard/src/layout.tsx`) for
+      higher-visibility surfacing. 3 new regression tests (`tests/test_boot_typed_role_gate.py`) cover both dispatch
+      families firing the collision signal + a non-review-slot negative case that must NOT fire it. Full QG green (2238
+      passed, tsc/vitest clean).
 - [x] ✅ [BACKEND] P3. Add a regression test: dispatching a transient role (e.g. `na_eligibility_auditor`) while a
       persistent role (e.g. `review`) already holds a live session on the same target must either be refused/rerouted,
       or must not produce a `tmux_session_lost` kill for the persistent occupant. (repo: agent-orchestrator) — **already
