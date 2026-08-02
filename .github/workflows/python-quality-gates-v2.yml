@@ -797,13 +797,23 @@ jobs:
     # would emit `… / aggregate` and the required context would NEVER report → every PR
     # permanently BLOCKED. Verified live: the display name is what the check context uses.
     name: quality-gates-v2
-    needs: [content-gate, qg-slices]
+    # supersede-check added to needs 2026-08-02 (bookkeeping-job-cost merge — see issue doc
+    # quality_gates_v2_concurrency_and_bookkeeping_job_cost_2026_08_02.md): this job now also
+    # runs the former standalone record-qg-result job's steps (appended at the end of `steps:`
+    # below), which need supersede-check's verdict. On the GREEN path supersede-check's own
+    # `if:` is false, so it resolves to 'skipped' without ever provisioning a runner —
+    # negligible added latency here. On the fail/cancelled path it provisions a runner + makes
+    # one `gh api` call (~15-30s) before this required check can conclude — an accepted,
+    # bounded trade for folding a whole job's GitHub 1-minute billing floor into this one.
+    needs: [content-gate, qg-slices, supersede-check]
     if: always()
     runs-on: ubuntu-latest
     timeout-minutes: 10
     outputs:
       metadata_only: ${{ steps.vcheck.outputs.metadata_only }}
       docs_only: ${{ steps.vcheck.outputs.docs_only }}
+      # Folded in from the former standalone record-qg-result job (2026-08-02 merge).
+      recovered: ${{ steps.record_decide.outputs.recovered }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -1054,6 +1064,81 @@ jobs:
             "https://api.github.com/repos/${GITHUB_REPOSITORY_OWNER}/unified-trading-pm/dispatches" \
             -d "{\"event_type\": \"ci-status-update\", \"client_payload\": {\"repo\": \"${GITHUB_REPOSITORY#*/}\", \"status\": \"${STATUS}\", \"branch\": \"${EFFECTIVE_BRANCH}\", \"sha\": \"${GITHUB_SHA}\", \"failure_excerpt_b64\": \"\", \"codebase_health_b64\": \"${CH_B64:-}\"}}"
 
+      # ── QG RESULT MEMORY — independent fail/recovery bookend (operator ruling 2026-07-27) ──
+      # Folded in from the former standalone `record-qg-result` job (2026-08-02, bookkeeping-job-
+      # cost merge — billed GitHub's 1-min-per-job floor on every run for a job whose real work is
+      # a few seconds). Logic is BYTE-IDENTICAL to the old job's steps; only the `if:` moved from
+      # job-level to step-level (this job's own `if:` is `always()`, so these two steps carry the
+      # old job's `needs.supersede-check.outputs.superseded != 'true'` guard directly instead).
+      # notify-qg-fail (elsewhere in this file) has NO green counterpart: a repo that goes red then
+      # green on live-defi-rollout pages CRITICAL on the way down and stays silent on the way up.
+      # The obvious fix — hang "recovered" off ci_status (ci-status-update.yml) — is WRONG:
+      # ci_status_store's resolve_status() deliberately refuses to let a non-main FAILING clobber a
+      # stored MAIN_GREEN (2026-07-16 incident fix), so a live-defi-rollout fail/fix cycle on an
+      # already-MAIN_GREEN repo never touches ci_status and recovered never fires. So this tracks
+      # its OWN state instead: "did QG's verdict on THIS branch/PR just flip red→green?", answered
+      # from a dedicated Firestore doc (`qg_last_conclusion/{key}`, same key shape as
+      # notify-qg-fail's dedup_key), never from ci_status. Best-effort/fail-open: any auth/network
+      # hiccup skips silently — it can only cost a missed recovery post, never a false one.
+      - name: Authenticate to GCP (QG-result state doc read+write)
+        id: record_gcp_auth
+        if: needs.supersede-check.outputs.superseded != 'true'
+        continue-on-error: true
+        uses: google-github-actions/auth@v3
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+          token_format: access_token
+      - name: Read prior QG verdict, decide recovery, persist current verdict
+        id: record_decide
+        if: needs.supersede-check.outputs.superseded != 'true'
+        shell: bash
+        env:
+          TOKEN: ${{ steps.record_gcp_auth.outputs.access_token }}
+          PROJECT: ${{ steps.record_gcp_auth.outputs.project_id }}
+          RESULT: ${{ needs.qg-slices.result }}
+          REPO: ${{ github.event.repository.name }}
+          KEY_BRANCH: ${{ github.event_name == 'pull_request' && github.base_ref || github.ref_name }}
+        run: |
+          set -uo pipefail
+          # Only a conclusive verdict updates the memory — 'skipped' (this leg never ran, e.g. a
+          # docs-only fast-path elsewhere) says nothing about red/green and must not overwrite it.
+          CURRENT=""
+          case "${RESULT}" in
+            success) CURRENT=success ;;
+            failure | cancelled) CURRENT=failure ;;
+            *)
+              echo "qg-slices.result=${RESULT} — not conclusive, leaving QG-result memory untouched"
+              echo "recovered=false" >> "$GITHUB_OUTPUT"
+              exit 0
+              ;;
+          esac
+          RECOVERED=false
+          if [ -n "${TOKEN:-}" ] && [ -n "${PROJECT:-}" ]; then
+            SAFE_KEY="$(printf 'qg-fail:%s:%s' "${REPO}" "${KEY_BRANCH}" | tr -c 'A-Za-z0-9._-' '_')"
+            DOC_URL="https://firestore.googleapis.com/v1/projects/${PROJECT}/databases/(default)/documents/qg_last_conclusion/${SAFE_KEY}"
+            PREV="$(curl -s --max-time 15 -H "Authorization: Bearer ${TOKEN}" "${DOC_URL}" \
+              | jq -r '.fields.conclusion.stringValue // empty' 2>/dev/null || echo "")"
+            if [ "${PREV}" = "failure" ] && [ "${CURRENT}" = "success" ]; then
+              RECOVERED=true
+            fi
+            NOW="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+            CODE="$(curl -s -o /tmp/qg-result-save.json -w '%{http_code}' --max-time 15 -X PATCH \
+              -H "Authorization: Bearer ${TOKEN}" -H "Content-Type: application/json" \
+              "${DOC_URL}" \
+              -d "{\"fields\": {
+                    \"conclusion\": {\"stringValue\": \"${CURRENT}\"},
+                    \"repo\": {\"stringValue\": \"${REPO}\"},
+                    \"branch\": {\"stringValue\": \"${KEY_BRANCH}\"},
+                    \"commit_sha\": {\"stringValue\": \"${GITHUB_SHA}\"},
+                    \"updated_at\": {\"timestampValue\": \"${NOW}\"}
+                  }}" || echo 000)"
+            [ "${CODE}" = "200" ] || echo "::warning::qg_last_conclusion save failed (HTTP ${CODE}) for ${SAFE_KEY} — best-effort, next run retries."
+            echo "qg-result-memory: ${SAFE_KEY} prev=${PREV:-<none>} current=${CURRENT} recovered=${RECOVERED}"
+          else
+            echo "GCP auth unavailable — skipping QG-result memory this run (fail-open: no recovery post, no state corruption)."
+          fi
+          echo "recovered=${RECOVERED}" >> "$GITHUB_OUTPUT"
+
   # ── SUPERSEDE CHECK — is this run's verdict still authoritative? ─────────────
   # The caller template sets `concurrency.cancel-in-progress: github.event_name == 'push'`,
   # so a newer push KILLS the in-flight run on the same ref. The killed run's roll-up reads
@@ -1164,89 +1249,12 @@ jobs:
       cooldown_min: 120
     secrets: inherit
 
-  # ── QG RESULT MEMORY — independent fail/recovery bookend (operator ruling 2026-07-27) ────────
-  # notify-qg-fail (above) has NO green counterpart: a repo that goes red then green on
-  # live-defi-rollout pages CRITICAL on the way down and stays silent on the way up. The obvious
-  # fix — hang "recovered" off ci_status (ci-status-update.yml) — is WRONG: ci_status_store's
-  # resolve_status() deliberately refuses to let a non-main FAILING clobber a stored MAIN_GREEN
-  # (2026-07-16 incident fix — MAIN_GREEN is the on-main promotion-gate truth, not a per-branch QG
-  # verdict), so a live-defi-rollout fail/fix cycle on an already-MAIN_GREEN repo NEVER touches
-  # ci_status at all and recovered never fires. That carve-out is correct for the promotion gate
-  # and must stay untouched — so this tracks its OWN state instead: "did QG's verdict on THIS
-  # branch/PR just flip red→green?", answered from a dedicated Firestore doc
-  # (`qg_last_conclusion/{key}`, same key shape as notify-qg-fail's dedup_key), never from
-  # ci_status. Best-effort/fail-open throughout: any auth/network hiccup skips silently — it can
-  # only cost a missed recovery post, never a false one or a corrupted verdict.
-  record-qg-result:
-    name: Record QG result (fail/recovery memory)
-    needs: [qg-slices, supersede-check]
-    if: always() && needs.supersede-check.outputs.superseded != 'true'
-    runs-on: ubuntu-latest
-    timeout-minutes: 3
-    outputs:
-      recovered: ${{ steps.decide.outputs.recovered }}
-    steps:
-      - name: Authenticate to GCP (state doc read+write)
-        id: gcp_auth
-        continue-on-error: true
-        uses: google-github-actions/auth@v3
-        with:
-          credentials_json: ${{ secrets.GCP_SA_KEY }}
-          token_format: access_token
-      - name: Read prior verdict, decide recovery, persist current verdict
-        id: decide
-        shell: bash
-        env:
-          TOKEN: ${{ steps.gcp_auth.outputs.access_token }}
-          PROJECT: ${{ steps.gcp_auth.outputs.project_id }}
-          RESULT: ${{ needs.qg-slices.result }}
-          REPO: ${{ github.event.repository.name }}
-          KEY_BRANCH: ${{ github.event_name == 'pull_request' && github.base_ref || github.ref_name }}
-        run: |
-          set -uo pipefail
-          # Only a conclusive verdict updates the memory — 'skipped' (this leg never ran, e.g. a
-          # docs-only fast-path elsewhere) says nothing about red/green and must not overwrite it.
-          CURRENT=""
-          case "${RESULT}" in
-            success) CURRENT=success ;;
-            failure | cancelled) CURRENT=failure ;;
-            *)
-              echo "qg-slices.result=${RESULT} — not conclusive, leaving QG-result memory untouched"
-              echo "recovered=false" >> "$GITHUB_OUTPUT"
-              exit 0
-              ;;
-          esac
-          RECOVERED=false
-          if [ -n "${TOKEN:-}" ] && [ -n "${PROJECT:-}" ]; then
-            SAFE_KEY="$(printf 'qg-fail:%s:%s' "${REPO}" "${KEY_BRANCH}" | tr -c 'A-Za-z0-9._-' '_')"
-            DOC_URL="https://firestore.googleapis.com/v1/projects/${PROJECT}/databases/(default)/documents/qg_last_conclusion/${SAFE_KEY}"
-            PREV="$(curl -s --max-time 15 -H "Authorization: Bearer ${TOKEN}" "${DOC_URL}" \
-              | jq -r '.fields.conclusion.stringValue // empty' 2>/dev/null || echo "")"
-            if [ "${PREV}" = "failure" ] && [ "${CURRENT}" = "success" ]; then
-              RECOVERED=true
-            fi
-            NOW="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
-            CODE="$(curl -s -o /tmp/qg-result-save.json -w '%{http_code}' --max-time 15 -X PATCH \
-              -H "Authorization: Bearer ${TOKEN}" -H "Content-Type: application/json" \
-              "${DOC_URL}" \
-              -d "{\"fields\": {
-                    \"conclusion\": {\"stringValue\": \"${CURRENT}\"},
-                    \"repo\": {\"stringValue\": \"${REPO}\"},
-                    \"branch\": {\"stringValue\": \"${KEY_BRANCH}\"},
-                    \"commit_sha\": {\"stringValue\": \"${GITHUB_SHA}\"},
-                    \"updated_at\": {\"timestampValue\": \"${NOW}\"}
-                  }}" || echo 000)"
-            [ "${CODE}" = "200" ] || echo "::warning::qg_last_conclusion save failed (HTTP ${CODE}) for ${SAFE_KEY} — best-effort, next run retries."
-            echo "qg-result-memory: ${SAFE_KEY} prev=${PREV:-<none>} current=${CURRENT} recovered=${RECOVERED}"
-          else
-            echo "GCP auth unavailable — skipping QG-result memory this run (fail-open: no recovery post, no state corruption)."
-          fi
-          echo "recovered=${RECOVERED}" >> "$GITHUB_OUTPUT"
-
   notify-qg-recovered:
     name: Slack INFO — QG Recovered
-    needs: [qg-slices, record-qg-result]
-    if: always() && needs.record-qg-result.outputs.recovered == 'true'
+    # record-qg-result folded into the quality-gates-v2 aggregate job 2026-08-02 (bookkeeping-
+    # job-cost merge) — its `recovered` output now comes from there.
+    needs: [qg-slices, quality-gates-v2]
+    if: always() && needs.quality-gates-v2.outputs.recovered == 'true'
     uses: ./.github/workflows/notify-slack.yml
     with:
       message:
