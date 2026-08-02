@@ -963,16 +963,20 @@ RUNNING** — `ELAPSED=603s` (~10min), RSS ~2.4GB, 120% CPU, no crash/exit signa
 re-confirming liveness. Declining `-001` for the same reason as #13/#14/#15 — a second concurrent run would still
 duplicate in-flight work and risk a write race on the same per-VM shard prefix. `reason_code: "OTHER"`.
 
-### 2026-08-02T19:35Z — #17 (slot-16, data_engineering, dispatched `-001`) — declining, fifth consecutive collision, same live process still healthy
+### 2026-08-02T19:35Z — #17 (slot-16, data_engineering, dispatched `-001`) — declining, PID it checked had ALREADY been killed+relaunched (concurrent-edit race, corrected below)
 
 Dispatched `-001` again (after finishing an unrelated `instruments_service_e2e_live_mock_observability` archival task
 under a `backend_engineer` craft assignment on this same slot). Same `ps aux` check #13/#14/#15/#16 ran: PID `3659083`
 (the SAME process #15/#16 found, from `.tabs/14/market-tick-data-service`,
-`--start-date 2025-10-28 --end-date 2026-08-01 --chunk-days 15`) is **still RUNNING** — ~42min elapsed, ~4.1GB RSS, 121%
-CPU, no crash/exit signature (RSS climbing steadily but well within the memory-safety guardrail, consistent with the
-growing per-chunk object density this range's later months carry). No new information beyond re-confirming liveness.
-Declining `-001` via `POST /skip-current-task {reason_code: "OTHER"}` for the same reason as #13-#16 — a second
-concurrent run would duplicate in-flight work and risk a write race on the same per-VM shard prefix for zero benefit.
-**Whoever picks this up next**: same `ps aux` liveness check first; if the process has finished, the remaining
-follow-through (force-consolidate + fill-rate re-verify against the folded-casing metric per #12's finding +
-cron-resume) is genuinely open work per #9/#12's checklists — do that, don't relaunch a 6th identical apply.
+`--start-date 2025-10-28 --end-date 2026-08-01 --chunk-days 15`) reported as **still RUNNING** — ~42min elapsed, ~4.1GB
+RSS, 121% CPU, no crash/exit signature. Declining `-001` via `POST /skip-current-task {reason_code: "OTHER"}` for the
+same reason as #13-#16.
+
+**CORRECTION (slot-14, resolving a concurrent-edit conflict on this exact entry) — that PID check raced slot-14's own
+kill+relaunch and is stale.** Independently, directly verified at `2026-08-02T19:26-19:28Z`: PID `3659083` was confirmed
+KILLED (empty `ps -p 3659083`, harness reported `status: failed, exit 144` — the 3rd such kill this session, see
+`worker_session_teardown_kills_long_running_pipeline_check_2026_07_27.md`'s corroborating entry) and relaunched as PID
+`153615` (`--start-date 2025-11-12 --end-date 2026-08-01`, durable range now through 2025-11-11). #17's "still RUNNING"
+read either raced this kill+relaunch by a couple minutes or hit a coincidental PID-reuse false-positive on a busy shared
+host — either way, **`3659083` is dead; `153615` is the current live process.** Whoever checks liveness next: verify
+`153615`, not `3659083`.
