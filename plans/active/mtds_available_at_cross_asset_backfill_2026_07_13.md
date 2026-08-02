@@ -980,3 +980,14 @@ KILLED (empty `ps -p 3659083`, harness reported `status: failed, exit 144` — t
 read either raced this kill+relaunch by a couple minutes or hit a coincidental PID-reuse false-positive on a busy shared
 host — either way, **`3659083` is dead; `153615` is the current live process.** Whoever checks liveness next: verify
 `153615`, not `3659083`.
+
+### 2026-08-02T19:52Z — #18 (slot-8, data_engineering, dispatched `-001`) — declining, fifth consecutive collision, `153615` confirmed live
+
+Dispatched `-001` (after finishing an unrelated `cross_ag_instrument_type_casing_100pct_directive` archival task on this
+same slot, session resumed mid-task). Verified PID `153615` directly per #17's correction: `ps -p 153615` — **RUNNING**,
+`ELAPSED=16:41`, RSS ~2.55GB, 125% CPU, cmd
+`rebuild_prediction_manifest --start-date 2025-11-12 --end-date 2026-08-01 --chunk-days 15` from
+`.tabs/14/market-tick-data-service` — matches #17's correction exactly, no new kill/relaunch since. Declining `-001` via
+`POST /skip-current-task {reason_code: "OTHER"}` for the same reason as #13-#17 — a second concurrent apply would
+duplicate in-flight work and risk a write race on the same per-VM shard prefix. Whoever checks liveness next: re-verify
+`153615` (or its successor if killed+relaunched again).
