@@ -125,7 +125,27 @@ Full per-bucket rollup (excluding the Finding-1 false positives above):
       `sports_cf8_available_at_backfill_regression_2026_07_13.md` (root-caused, guardrail added, restored from a
       regression). Live check: `market-data-tick-sports-prd` CF-8 fill 82.17% (503,722/613,034 captured rows) — not
       100%, likely still RED. That doc's one remaining open item is gated on a TEAMS/STANDINGS deployment question
-      (`assigned_vm: NA`).
+      (`assigned_vm: NA`). — 2026-08-02 (data_engineering slot-7): read
+      `sports_cf8_available_at_backfill_regression_2026_07_13.md` in full (916 lines, incl. its 2026-07-23 RE-TRIAGE and
+      2026-07-30 na-eligibility-audit KEEP-NA verdicts) — the accurate current gate is NOT the deployment-freshness
+      question (resolved 2026-07-14, `instruments-service@ca3902bb`) but the operator's `BLK-d9137d48` STOP (option A,
+      2026-07-14: wait for a scheduled maintenance window) plus the live backlog parking condition
+      `sports-cf8-maintenance-window-scheduled` (seeded `false` 2026-07-14, still `false` as of the last read
+      2026-07-30) gating task `sports_cf8_available_at_backfill_regression-007`. Root cause is fully diagnosed
+      (manifest-consolidator dedup key includes `service_name`; the existing backfill stamps one fixed `service_name`
+      per surface so it can never dedupe-supersede a row originally written under a different `service_name`) and a fix
+      is already BUILT + unit-tested (`market-tick-data-service@af627b5b`, per-original-service_name `ManifestWriter`
+      routing) but never run against production — running it now would be an unauthorized production write on a surface
+      with two prior real regressions, exactly what the STOP exists to prevent; not doing that. Ran a fresh READ-ONLY
+      `cf_manifest_audit.audit()` against both target buckets directly (column-pruned index read, no GCS walk, no write)
+      to confirm current state and add the one data point slot-3 didn't check: `instruments-store-sports-prd` CF-8 RED,
+      non-null=5,856,820/6,396,870 captured rows (91.56%, unchanged in kind from history); `market-data-tick-sports-prd`
+      CF-8 RED, 503,722/613,034 (82.17%, byte-identical to slot-3's number today — confirms no drift). Both buckets'
+      CF-2-paths/CF-3-partition also read RED in this audit, but that is the ALREADY-FIXED Finding-1 checker bug in this
+      same doc (`unified-trading-library@21069582`, `_`-prefixed-dir exclusion) not yet visible until the MTDS image
+      redeploys — not a new finding, noted so it isn't mistaken for one. No code shipped, no production write; this todo
+      has no further dispatchable work until the operator lifts `BLK-d9137d48`/flips
+      `sports-cf8-maintenance-window-scheduled` to `true`.
 - [ ] [DATA] P2. Diagnose + fix CF-8 RED on `market-data-tick-pred-prd`. Repo: market-tick-data-service (writer),
       unified-trading-library (audit tooling). — 2026-08-02 (data_engineering slot-3): not worked this session — tracked
       by `mtds_available_at_cross_asset_backfill_2026_07_13.md`'s `-001`/`-006` todos, actively worked across many
