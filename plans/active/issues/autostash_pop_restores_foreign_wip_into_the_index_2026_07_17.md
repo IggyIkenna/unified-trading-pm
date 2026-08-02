@@ -127,7 +127,7 @@ right up until the pull, and the post-pull index is never re-inspected.
       safety block, replacing the current conflict-only guidance ("autostash conflict → rebase --abort + stash by name")
       with: (a) the pre-commit-case FF shortcut, and (b) the post-commit-case `git restore --staged .` step. Both docs
       are currently silent on this non-conflict happy-path hazard entirely. — **DONE 2026-08-02,
-      `unified-trading-pm@<SHA>`.** `per-tab-worktrees.md`'s Reconciliation step 1 now case-splits by `ahead`-count
+      `unified-trading-pm@461a5a0bc`.** `per-tab-worktrees.md`'s Reconciliation step 1 now case-splits by `ahead`-count
       (mirrors the shipped `_qm_stage_0_4_not_behind_gate` code: ahead=0 ff-only-or-`PRECOMMIT_WORKING_TREE_CONFLICT`,
       ahead>0 `--rebase --autostash` then `git restore --staged .` pre-add); a new "Non-conflict autostash-pop hazard"
       subsection (measured incident + both fix halves) is inserted right before the pre-existing conflict-only recovery
