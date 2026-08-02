@@ -220,9 +220,14 @@ defi source/schema-int) are code+rebuild work still homed in each AG's tracking 
 
 ## Todos
 
-- [ ] [DATA] P1. **Legacy-bucket delete (all 4 AGs) + cefi CF-audit adjudication** — the standalone legacy bucket each
-      AG's own E8 step targets (cefi/defi/tradfi/sports) remains genuinely undeleted, and cefi's CF-4/CF-5/Era-B
-      data-content claims are NOT ADJUDICATED (no fresh 2026-07 CF-audit re-run found for cefi).
+- [ ] [DATA] P1. **Legacy-bucket delete (defi/tradfi/sports) + cefi CF-audit adjudication** — the standalone legacy
+      bucket each of defi/tradfi/sports's own E8 step targets remains genuinely undeleted. **CORRECTED 2026-08-02
+      (operator ruling, plan_reconcile_parked_operator_decisions_2026_08_02.md § 1e): cefi's legacy bucket
+      (`market-data-tick-cefi-central-element-323112`) is NOT part of the "remains undeleted" set above — it was DELETED
+      2026-07-14**, per `cefi_legacy_bucket_deleted_before_l3_gate_2026_07_28.md` and
+      `cefi_e4_e8_orphan_sweep_gapfill_rebuild_execution_2026_07_28.md`, both written after this doc's original
+      adjudication and both independently confirming the same date. cefi's CF-4/CF-5/Era-B data-content claims remain
+      NOT ADJUDICATED (no fresh 2026-07 CF-audit re-run found for cefi) — that half of the todo still stands.
 
 ## Progress Log
 

@@ -135,18 +135,10 @@ content).
       passive check) — confirmed:
       `gh run list --repo IggyIkenna/unified-trading-pm --branch live-defi-rollout     --workflow quality-gates-v2.yml --limit 1`
       now shows real conclusions, not `startup_failure`/0 jobs.
-- [ ] [BACKEND] P1. Once CI resumes, re-verify this session's shipped-but-CI-unconfirmed commits actually go green on
-      GitHub's own quality-gates-v2 (list below) — local QG passing is necessary but the workspace's own hard rule
-      requires the real CI signal too:
-  - `instruments-service@76eba912` + `@4c05f2d3` (Cloud Build GAR-auth fix, reference implementation)
-  - `alerting-service@bd6aebb`, `market-data-processing-service@afcf984`, `ml-service@cc732d8`,
-    `strategy-service@9c499721` (same fix, rolled out)
-  - `agent-orchestrator@64365ad` (CI-escalation/scheduled-task slot-reserve split)
-  - `agent-orchestrator@b9d6190` (fleet-wide critical-pool-headroom halt)
-- [ ] [DATA] P2. Once resolved, revisit whether the elevated `ldr_qg_failure`/plan_health escalation counts seen across
-      2026-07-29 evening into 2026-07-30 were partly THIS outage rather than (or in addition to) the host-contention
-      root cause already tracked elsewhere — the two could be additive and worth separating in the record for future
-      triage.
+- [x] ✅ **MIGRATED 2026-08-02** (operator ruling, `plan_reconcile_parked_operator_decisions_2026_08_02.md` § 3) — both
+      prevention todos below moved into `/plans/active/ci_satellite_ao_dispatch_batch1_2026_07_26.md`'s "Migrated
+      prevention todos from resolved incidents" section. Original text preserved there verbatim with a source citation
+      back to this doc.
 
 ## Why P0 / big-finding triage
 

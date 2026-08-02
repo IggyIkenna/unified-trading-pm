@@ -17,7 +17,13 @@ summary: >-
   worktree. So the work cannot reach a worker by any existing route. `branch_reset_to_origin_orphans_unpushed_worker_
   commits_2026_07_27.md` says this outright in its own `⚠️ DISPATCH GAP` banner ("they will rot unless…") and escalated
   it 2026-07-27 — it has now sat unrouted for 3 days. Two of the items have real deadlines, not indefinite ones.
-status: open # inventory 100% terminal (see banner); stays OPEN for the 3 prevention todos the sweep filed
+status:
+  open # CORRECTED 2026-08-02 (operator ruling, plan_reconcile_parked_operator_decisions_2026_08_02.md § 3):
+  # "stays OPEN for open prevention todos" is the wrong pattern (codex requires ACKED-INTO-PLAN archival, not an
+  # indefinite-open exception) -- moot here anyway since all 3 prevention todos are already closed (see resolved_by
+  # comment below); stays open only pending the archival step routed through
+  # ao_satellite_ao_dispatch_batch3_finalize_2026_07_31.md's [REVIEW] P0 todo, not because open-prevention-todos is a
+  # valid terminal state
 nature: issue
 asset_group: [ao]
 stage: [meta]

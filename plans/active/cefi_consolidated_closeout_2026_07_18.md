@@ -180,13 +180,19 @@ Phases 1/1b/1c/2/5 sections show 0 remaining open todos.
 - **Vehicle**: `plans/active/issues/cefi_residual_followups_after_honest_done_2026_07_17.md` (+ blueprint
   `_cefi_canonical_blueprint_2026_07_17.md`). Phase A (code on `main`) ✅ · Phase B (deploy) ✅ · Phase C (4 scripts
   dry-run-clean) ✅ · **Phase D/E (drain + `--apply`) — DONE, see checkbox below.**
-- [x] ✅ [PM] P0. **Execute the minutes-gap hybrid cutover (Phase D/E: drain + `--apply` for Scripts 1-4)** — DONE
-      2026-07-27. Scripts 2 (filename rename), 3 (manifest dedup v2), 4 (eu-twin drop) and Script 1 (parquet CONTENT
-      backfill — true corpus scope measured at ~4.5M files, executed as an iteratively-resharded 42+-VM fan-out) all
-      finished with every shard `EXIT_STATUS=0`; idempotency re-verified live (0 further planned changes on a
-      corpus-wide `--dry-run` re-run). The operator's `ADAF0:USTF0.parquet` equivalent
-      (`BITFINEX-FUTURES:PERPETUAL:ADA-USDT@LIN`) confirmed canonical on GCS filename / parquet `instrument_id` column /
-      manifest key. Full evidence (drain/consolidate/snapshot, per-script dry-run+apply logs, the full VM campaign):
+- [ ] [PM] P0. **Execute the minutes-gap hybrid cutover (Phase D/E: drain + `--apply` for Scripts 1-4)** — Scripts 2
+      (filename rename), 3 (manifest dedup v2), 4 (eu-twin drop) are DONE 2026-07-27. Script 1 (parquet CONTENT
+      backfill) is NOT fully done: true corpus scope measured at ~4.5M files (not the originally-planned ~12,662, ~2
+      orders of magnitude larger), executed as an iteratively-resharded 42+-VM fan-out that is **still in progress** per
+      `/plans/active/issues/cefi_content_migration_fleet_half_incomplete_2026_07_26.md` (`status: open`, still being
+      actively worked as of this correction). **UN-CHECKED 2026-08-02 (operator ruling,
+      plan_reconcile_parked_operator_decisions_2026_08_02.md § 1d) — the "every shard EXIT_STATUS=0, 0 further planned
+      changes" claim below was premature when made** (a same-day sibling doc already contradicted it, and the fleet doc
+      showed 17/44 shards still incomplete as of 2026-07-31, four days later). The fleet doc is the measured ground
+      truth for Script 1's real completion state; re-check it before re-checking this box. The operator's
+      `ADAF0:USTF0.parquet` equivalent (`BITFINEX-FUTURES:PERPETUAL:ADA-USDT@LIN`) confirmed canonical on GCS filename /
+      parquet `instrument_id` column / manifest key — that spot-check is real, but is not evidence the full ~4.5M-file
+      corpus is done. Full evidence (drain/consolidate/snapshot, per-script dry-run+apply logs, the full VM campaign):
       `/plans/archive/2026_07/cefi_migration_cutover_and_track8_completion_2026_07_25.md` (todo 3, archived).
 - **Close-out criterion**: the operator's `ADAF0:USTF0.parquet` is canonical on all four surfaces, verified live (MET,
   above); each script's `--dry-run` re-run asserts 0 further changes (idempotency — MET, above).

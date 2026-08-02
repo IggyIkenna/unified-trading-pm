@@ -93,8 +93,8 @@ resolved_by:
   interactive session, 2026-07-31 — GitHub Actions billing wall (root cause) confirmed cleared via live gh run checks
 ---
 
-> **🟢 RESOLVED 2026-07-31** — root cause (GitHub Actions billing wall) confirmed cleared via live `gh run` checks in
-> an interactive session.
+> **🟢 RESOLVED 2026-07-31** — root cause (GitHub Actions billing wall) confirmed cleared via live `gh run` checks in an
+> interactive session.
 
 ## What I found
 
@@ -128,23 +128,10 @@ historical one.
       needed.
   - [x] ✅ **RESOLVED/MOOT 2026-07-31** — [CI] P1. File the concrete fix once root cause confirmed. Moot per above — the
         root cause was the billing wall (now cleared), not a dispatch-frequency issue requiring a fix here.
-- [ ] [SCRIPT] P2. Add a lightweight standing monitor (or extend an existing one, e.g.
-      `scripts/cicd/promotion_lag_monitor.py`) that alerts when `ldr-to-main-promote-fleet.yml` /
-      `ldr-to-main-promote.yml` post 3+ consecutive `startup_failure` runs — this incident ran silently for ~10h before
-      being noticed as a side-effect of an unrelated task; a dedicated alert would have caught it in under an hour.
-- [ ] [CI] P1. Separate but adjacent symptom found 2026-07-30 by `defi_venue_pipeline_to_live_ao_build_2026_07_30.md`'s
-      VERIFY-gate todo (8 consecutive re-checks, slot-12 through slot-3): `market-tick-data-service` promote PR #791
-      (`promote/market-tick-data-service/4849d4f6b00a`) sat with ALL required checks green (`quality-gates-v2`,
-      `image-build-gate`, `sit-gate/fleet-green`, `semver-agent/label-check`) for 10+ min without merging —
-      `gh pr view 791 --json mergeStateStatus,mergeable,mergedAt,autoMergeRequest` showed `mergeStateStatus: UNSTABLE`,
-      `mergeable: MERGEABLE`, `mergedAt: null`, **`autoMergeRequest: null`**. This dispatcher-recovery-but-never-merges
-      pattern repeated across 8 straight worker checks on successively regenerated PRs (#788→#789→#790→#791), each
-      superseded before merging. Check whether the promote-PR-creation step (likely in
-      `ldr-to-main-promote.yml`/`ldr-to-main-promote-fleet.yml` or a script it calls) actually issues a
-      `gh pr merge --auto` (or GraphQL `enablePullRequestAutoMerge`) call when it opens each PR — if that call is
-      missing, silently failing, or racing the PR-open step, no amount of the checks going green will ever cause GitHub
-      to merge it, since auto-merge must be explicitly requested per-PR. Fix: ensure the PR-creation step reliably
-      requests auto-merge (with retry/verification that the request stuck) on every regenerated promote PR.
+- [x] ✅ **MIGRATED 2026-08-02** (operator ruling, `plan_reconcile_parked_operator_decisions_2026_08_02.md` § 3) — both
+      prevention todos below moved into `/plans/active/ci_satellite_ao_dispatch_batch1_2026_07_26.md`'s "Migrated
+      prevention todos from resolved incidents" section. Original text preserved there verbatim with a source citation
+      back to this doc.
 
 - **2026-07-30 (slot-2, data_engineering craft)**: 10th consecutive re-check of the sibling VERIFY-gate todo in
   `defi_venue_pipeline_to_live_ao_build_2026_07_30.md` — identical unmet state, no new information.

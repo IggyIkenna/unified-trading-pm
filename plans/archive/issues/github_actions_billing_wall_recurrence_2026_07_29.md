@@ -141,28 +141,10 @@ return to a normal (non-zero-job) run.
       durations (67s-1m9s, incl. a 9-step job reaching a genuine `failure` conclusion, not `jobs:[]`);
       `instruments-service` `quality-gates-v2` ran a full 25m28s and the LDR→main promote chain completed clean
       end-to-end. Wall cleared fleet-wide, no longer blocking.
-- [ ] [BACKEND] P2. This is the 3rd+ recurrence of this exact class (2026-06-11, 2026-06-23, 2026-07-29) — the archived
-      doc's own P3 remediation item (spend telemetry / 50-80-95% budget alert, `BLOCKED-ON-DECISION` pending an
-      operator-minted `Plan: read` billing-scoped token) was never unblocked. Worth revisiting now that it has recurred
-      a third time: either mint that token so the workspace can self-detect this before it walls CI, or accept recurring
-      manual operator intervention as the standing posture.
-- [ ] [BACKEND] P3. `python-quality-gates-v2.yml`'s "Record CI status" step (`if: always()`) still dispatches a normal
-      FAILING status on a 0-step billing-kill, per the archived doc's still-open P1 "outage-aware v2 status dispatch"
-      remediation item — confirm whether that item shipped since 2026-06-11; if not, this wall is currently also
-      generating `ldr_qg_failure` escalation spam (like this one) fleet-wide for every affected repo, which is wasted
-      escalation-worker dispatch on a wall no worker can fix. Not actioned in this session (out of scope for a
-      single-repo one-shot escalation worker) — flagging for the next fleet-wide CI hygiene pass.
-- [ ] [BACKEND] P3. Every bare-LDR (`pr_number=0`) `ldr_qg_failure` escalation raised by the scheduler passes the
-      literal string `authoring_slot="ci-reconcile"` (`agent-orchestrator/server/ci_reconcile.py:546`), not a real
-      numbered slot — so a dispatched `cicd` worker's mandated "ping the authoring slot on completion" step
-      (`unified-trading-pm/agents/cicd.md` § "PING THE AUTHORING SLOT") always 400s
-      (`POST /api/slots/ci-reconcile/message` → `int_parsing`, path expects an int; confirmed `agt-69e9e4`/slot 14,
-      2026-07-29T22:xxZ). `_notify_authoring_slot` (the server's own dispatch-time ping) already treats it as a label,
-      not a real target, so this is a structural mismatch between the worker contract and this escalation source, not a
-      one-off. Either have `cicd.md` special-case a non-numeric `AUTHORING_SLOT` (skip the ping, it's advisory-only per
-      the source comment) or give scheduler-raised escalations a pingable surface (e.g. a Slack note keyed off
-      `escalation_id` instead of a slot). Low priority — the ping is best-effort/advisory, not a completion-blocking
-      check. (repo: agent-orchestrator, unified-trading-pm)
+- [x] ✅ **MIGRATED 2026-08-02** (operator ruling, `plan_reconcile_parked_operator_decisions_2026_08_02.md` § 3) — all 3
+      prevention todos below moved into `/plans/active/ci_satellite_ao_dispatch_batch1_2026_07_26.md`'s "Migrated
+      prevention todos from resolved incidents" section, so this resolved-status doc no longer carries live open work.
+      Original text preserved there verbatim with a source citation back to this doc.
 
 ## Evidence log
 

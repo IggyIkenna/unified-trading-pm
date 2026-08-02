@@ -577,6 +577,50 @@ concurrent workers do not collide on this file.
       empirically moot for the noise this finding tracked: no more red `failure` on promote PRs). Source doc archived:
       `plans/archive/issues/aws_codebuild_pr_approval_status_noise_2026_06_25.md`.
 
+## Migrated prevention todos from resolved incidents (2026-08-02)
+
+**Routing ruling** (operator, `plan_reconcile_parked_operator_decisions_2026_08_02.md` § 3): 3 `status: resolved`
+incident docs — the incidents themselves genuinely cleared, but each still carried open prevention/follow-up todos,
+which is the ACKED-INTO-PLAN case `/codex/11-project-management/issue-doc-lifecycle.md` requires migrating into a named
+active plan before archival. All 3 source docs were already moved to `plans/archive/issues/` without this step; migrated
+here now, retroactively, to close that gap. Each item cites its source doc + original todo tag/priority.
+
+- [ ] [BACKEND] P2. **(from `github_actions_billing_wall_recurrence_2026_07_29.md`)** 3rd+ recurrence of this exact
+      billing-wall class (2026-06-11, 2026-06-23, 2026-07-29) — the archived doc's own P3 remediation (spend telemetry /
+      50-80-95% budget alert) was never unblocked, `BLOCKED-ON-DECISION` pending an operator-minted `Plan: read`
+      billing-scoped token. Mint that token so the workspace can self-detect this before it walls CI, or accept
+      recurring manual operator intervention as the standing posture.
+- [ ] [BACKEND] P3. **(from `github_actions_billing_wall_recurrence_2026_07_29.md`)** Confirm whether
+      `python-quality-gates-v2.yml`'s "Record CI status" step (`if: always()`) still dispatches a normal FAILING status
+      on a 0-step billing-kill (the archived doc's still-open P1 "outage-aware v2 status dispatch" item) — if not
+      shipped, this wall also generates `ldr_qg_failure` escalation spam fleet-wide for every affected repo, a wasted
+      escalation-worker dispatch on a wall no worker can fix.
+- [ ] [BACKEND] P3. **(from `github_actions_billing_wall_recurrence_2026_07_29.md`)** Every bare-LDR (`pr_number=0`)
+      `ldr_qg_failure` escalation passes the literal string `authoring_slot="ci-reconcile"`
+      (`agent-orchestrator/server/ci_reconcile.py:546`), not a real numbered slot, so a dispatched `cicd` worker's
+      mandated "ping the authoring slot" step always 400s (confirmed `agt-69e9e4`/slot 14, 2026-07-29). Either have
+      `cicd.md` special-case a non-numeric `AUTHORING_SLOT` (skip the ping, advisory-only) or fix
+      `_notify_authoring_slot` to treat it as a real target.
+- [ ] [BACKEND] P1. **(from `github_actions_total_fleet_outage_startup_failure_2026_07_30.md`)** Re-verify that
+      session's shipped-but-CI-unconfirmed commits actually went green on GitHub's own `quality-gates-v2` (local QG
+      passing alone doesn't satisfy the workspace's real-CI-signal rule): `instruments-service@76eba912` + `@4c05f2d3`,
+      `alerting-service@bd6aebb`, `market-data-processing-service@afcf984`, `ml-service@cc732d8`,
+      `strategy-service@9c499721`, `agent-orchestrator@64365ad`, `agent-orchestrator@b9d6190`.
+- [ ] [DATA] P2. **(from `github_actions_total_fleet_outage_startup_failure_2026_07_30.md`)** Revisit whether the
+      elevated `ldr_qg_failure`/plan_health escalation counts seen 2026-07-29 evening into 2026-07-30 were partly caused
+      by this outage rather than (or in addition to) the host-contention root cause tracked elsewhere — worth separating
+      in the record for future triage.
+- [ ] [SCRIPT] P2. **(from `ldr_to_main_promote_workflows_sustained_startup_failure_2026_07_30.md`)** Add a lightweight
+      standing monitor (or extend `scripts/cicd/promotion_lag_monitor.py`) that alerts when
+      `ldr-to-main-promote-fleet.yml`/`ldr-to-main-promote.yml` post 3+ consecutive `startup_failure` runs — this
+      incident ran silently for ~10h before being noticed as a side-effect of an unrelated task.
+- [ ] [CI] P1. **(from `ldr_to_main_promote_workflows_sustained_startup_failure_2026_07_30.md`)** A promote PR can sit
+      with ALL required checks green (`quality-gates-v2`, `image-build-gate`, `sit-gate/fleet-green`,
+      `semver-agent/label-check`) for 10+ min without merging — observed on `market-tick-data-service` PR #791
+      (`mergeStateStatus: UNSTABLE`, `mergeable: MERGEABLE`, `mergedAt: null`, `autoMergeRequest: null`), repeated
+      across 8 straight regenerated PRs (#788→#791). Check whether the promote-PR-creation step needs to explicitly
+      enable auto-merge rather than relying on a default.
+
 ## Deferred
 
 Tagged by WHY, per the `/ag-closeout-audit` non-batchable taxonomy. Only **conflict-gated** items can be converted by a
