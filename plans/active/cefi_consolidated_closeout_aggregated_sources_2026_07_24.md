@@ -38,7 +38,7 @@ priority: P3
 estimate_class: infra
 estimate_baseline_ai_days: 0.5
 estimate_calibrated_ai_days: 0.4
-last_updated: "2026-07-25" # 2026-07-25: appended the parent's "Pass-through from the 2026-07-18 consolidated canonicalisation audit" section verbatim (4-child split pass, cefi.4)
+last_updated: "2026-08-02" # 2026-08-02: added 3 self-dispatched-but-unlinked citations (ag-closeout-audit linkage-gap fix); was 2026-07-25 (appended the parent's "Pass-through from the 2026-07-18 consolidated canonicalisation audit" section verbatim, 4-child split pass, cefi.4)
 locked_by:
 locked_since:
 supersedes:
@@ -767,8 +767,27 @@ Orthogonality mistags found scoping the new cross-cutting AG layer — see
 
 - [`crypto_alpha_research_2026_07_24.md`](/plans/active/crypto_alpha_research_2026_07_24.md) — book construction /
   signal research / paper-trading POC, overwhelmingly Binance-perp/CeFi content.
-- [`vol_dvol_backtestable_engines_2026_07_13.md`](/plans/active/vol_dvol_backtestable_engines_2026_07_13.md) —
+- [`vol_dvol_backtestable_engines_2026_07_13.md`](/plans/active/vol_dvol_backtestable_engines_2026_07_13.md) (+ its
+  gated [`_finalize_2026_07_30.md`](/plans/active/vol_dvol_backtestable_engines_2026_07_13_finalize_2026_07_30.md)) —
   DVOL-backtestable VOL_CARRY + VOL_ARB_RV_IV engines, exclusively Deribit DVOL-index CeFi vol trading.
+
+## Self-dispatched docs with no digest linkage (added 2026-08-02, ag-closeout-audit linkage-gap fix)
+
+`check_ag_closeout_linkage.py` flagged these as having zero real graph/mention path to the cefi closeout family — each
+is genuinely `assigned_vm: planning` + `status: open`/`active` (its own dispatch vehicle, so nothing is actually stuck),
+but none was ever named in this digest, making them invisible to a human reader tracing cefi's open work from here.
+Listed for discoverability only — being listed here is NOT dispatch, per this doc's own standing convention.
+
+- [`cefi_content_migration_corpus_still_incomplete_relaunch_round3_needed_2026_07_31.md`](/plans/active/issues/cefi_content_migration_corpus_still_incomplete_relaunch_round3_needed_2026_07_31.md)
+  — split-out child of `cefi_content_migration_fleet_half_incomplete_2026_07_26.md`; one open `[OPERATOR] P1` todo
+  (relaunch-strategy ruling for 10 repeat-failing shards).
+- [`mdps_cefi_candle_backfill_recent_date_bugs_2026_07_26.md`](/plans/active/issues/mdps_cefi_candle_backfill_recent_date_bugs_2026_07_26.md)
+  — 3 of 4 todos open (HYPERLIQUID `derivative_ticker`/`book_snapshot_5` MDPS candle-building bugs); no activity since
+  2026-07-26 despite 3 subsequent batches — worth a dispatch-priority check if it stays stalled.
+- [`tarball_stale_window_cefi_live_capture_correctness_risk_2026_08_01.md`](/plans/active/issues/tarball_stale_window_cefi_live_capture_correctness_risk_2026_08_01.md)
+  — 8 of 9 todos done as of 2026-08-02 (ASTER book_snapshot_5/liquidations fixes shipped); one open `[DATA] P3` to file
+  a follow-up issue for 2 incidentally-found unrelated chronic findings (OKX-FUTURES trades gaps, POLYMARKET-PERP
+  perp_funding).
 
 ## Todos
 
