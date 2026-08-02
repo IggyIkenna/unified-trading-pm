@@ -191,15 +191,17 @@ determinism needs.
       (nothing ever calls `publish()` for that shard) distinct from the subscription-expiry bug this plan fixes. File
       each such case as its own `plans/active/issues/<slug>_<date>.md` rather than leaving it unrecorded here — this is
       a `[DIAG]` finding-generator todo, not itself a fix.
-- [ ] [DATA] P3. 48h after the `terraform apply` todo above lands, re-check
+- [x] ✅ [DATA] P3. 48h after the `terraform apply` todo above lands, re-check
       `gcloud pubsub subscriptions list --filter="name:warm-sink"` still returns 52 (proves the never-expire policy
-      actually holds under real traffic, not just that recreation worked once). This todo is time-gated: if fewer than
-      48h have elapsed when a worker picks it up, leave it open and note the elapsed time rather than forcing an early
-      check. Piggyback (from the `[INFRA] P2` scheduler-trigger todo above): also check
-      `gcloud run jobs executions list --job=live-event-log-compactor` for a `live-event-log-compactor-daily`-sourced
-      execution dated 2026-08-01 (the first real 2 AM UTC cron tick after today's fixes) and confirm it succeeded —
-      closes the loop on that todo's literal DoD wording, which this todo's own manual-run substitution didn't
-      independently observe.
+      actually holds under real traffic, not just that recreation worked once). Piggyback (from the `[INFRA] P2`
+      scheduler-trigger todo above): also check `gcloud run jobs executions list --job=live-event-log-compactor` for a
+      `live-event-log-compactor-daily`-sourced execution dated 2026-08-01 and confirm it succeeded. — Re-checked
+      2026-08-02: `gcloud pubsub subscriptions list --filter="name:warm-sink"` still returns exactly **52** (the
+      never-expire policy holds under 2 full days of real traffic since the `739345c` apply). The real 2 AM UTC cron
+      fired **twice** since, both real Cloud Scheduler-sourced executions (not manual triggers): `-hhkvf`
+      (2026-08-01T02:00:19Z, `succeededCount: 1`) and `-xwlzj` (2026-08-02T02:00:06Z, `succeededCount: 1`) — closes the
+      loop on the `[INFRA] P2` todo's literal DoD, independently observed now rather than only via the manual-run
+      substitution.
 - [ ] [SCRIPT] P3. Update `/plans/active/issues/live_pipeline_persistence_hot_path_decoupling_2026_06_24.md`'s open
       `[CODE] P2` todo (the compaction-job build gap) to cite this plan as its resolution, and flip that issue doc's
       `resolved_by` once every todo above is done.
@@ -299,3 +301,11 @@ determinism needs.
   — stops the fleet churn. Option B (start a paper run) is explicitly left as the `[OPERATOR]` strategy-desk decision
   already tracked in the issue doc, not made here. P1.2 stays open/unflipped (parked, not done); unpark = flip
   `p1-2-preconditions-met` GREEN once BOTH the 24h window has elapsed AND a paper run is confirmed.
+- **2026-08-02**: Picked up the `[DATA] P3` 48h re-check (operator asked to confirm the durable-GCS-landing question was
+  actually closed out, not left open). Both preconditions the todo names now empirically hold: `warm-sink-*`
+  subscription count is still 52 two full days after the `739345c` apply, and the real Cloud Scheduler-sourced 2 AM UTC
+  cron has now fired successfully twice (`-hhkvf` 2026-08-01, `-xwlzj` 2026-08-02) — not just the manual substitution
+  run from 2026-07-31. Flipped. **Remaining open work is P1.2 (still correctly parked — genuine operator-decision gate,
+  not worker-satisfiable) and P2 (not due for another ~5 days — needs a full week of traffic to mean anything).** The
+  `[SCRIPT] P3` doc-cleanup todo stays open too, since it's explicitly gated on every todo above being done, which isn't
+  true yet.

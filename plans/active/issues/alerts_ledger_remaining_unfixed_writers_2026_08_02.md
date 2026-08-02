@@ -82,9 +82,22 @@ Apply the same proven, already-shipped fix (one never-overwritten object per wri
       `scripts/self-hosted-runners/hosted-baseline/notify-slack.yml` copy is an intentionally-frozen self-hosted-
       runner-migration REVERT-PATH template, not a live-executed workflow — its drift from the active file is an
       already-tracked, unrelated concern, e.g. `plans/active/june_2026_vintage_audit_findings_2026_07_27.md`.)
-- [ ] [INFRA] P2. Fix `semver-agent.yml.tmpl`'s fleet-wide "Persist CRITICAL pages" step the same way -- it is a
+- [x] ✅ [INFRA] P2. Fix `semver-agent.yml.tmpl`'s fleet-wide "Persist CRITICAL pages" step the same way -- it is a
       TEMPLATE (`scripts/workflow-templates/semver-agent.yml.tmpl`), so the fix must land there + roll out via
-      `rollout-workflow-templates.sh`, never hand-edited per-repo. (repo: unified-trading-pm)
+      `rollout-workflow-templates.sh`, never hand-edited per-repo. (repo: unified-trading-pm) — **ALREADY FIXED, no code
+      change needed** (verified 2026-08-02, slot 7). Same stale-citation pattern as todo 1: this issue doc's body
+      inherited `deployment_alerts_ingestion_completeness_2026_07_20.md`'s original unfixed-writers claim without
+      re-checking that a LATER doc (`plans/archive/issues/alerts_ledger_race_two_remaining_writers_2026_07_21.md`,
+      `status: resolved`) already closed exactly this gap on 2026-07-21: `unified-trading-pm@963daa611` rewrote the
+      template's "Persist CRITICAL pages to alert ledger" step to write each run's queued pages to a unique
+      `cicd/alerts/${DATE_PARTITION}/${UNIQUE_KEY}.jsonl` object (never a shared cp-down/append/cp-up), then
+      `rollout-workflow-templates.sh` propagated the rendered `.github/workflows/semver-agent.yml` to all 24 service
+      repos the same day (each committed+pushed individually — shas listed in that resolved issue doc). Verified live
+      2026-08-02: the fix is present in the current template
+      (`scripts/workflow-templates/semver-agent.yml.tmpl:918-943`, comment cites the exact 2026-07-21 issue doc) and
+      spot-checked still live/unreverted in 4 rendered per-repo copies (instruments-service, market-tick-data-service,
+      agent-orchestrator, deployment-api — `.github/workflows/semver-agent.yml`), no later commit touches the
+      persist-step in any of them.
 - [ ] [INFRA] P2. Fix `agent-orchestrator/server/notifications/slack.py::_persist_to_gcs()` (lines 127-169) the same way
       -- replace the `download_from_storage` + string-append + `upload_to_storage` dance with a single never-overwritten
       object write (e.g. `cicd/alerts/{date}/{alert_class}-{nanosecond-timestamp}-{random}.jsonl`), confirming
@@ -106,3 +119,12 @@ Apply the same proven, already-shipped fix (one never-overwritten object per wri
 - 2026-08-02 (slot 7, infra): filed as an incidental finding while resolving `ci_satellite_ao_dispatch_batch1-027` (the
   event-ledger-consumer audit). Did not fix inline -- out of that task's audit-only scope. No code changed this session
   for this doc.
+
+- 2026-08-02 (slot 7, infra): dispatched todo 2 (`semver-agent.yml.tmpl`). Per craft north-star + the precedent set by
+  todo 1 (also stale), read the LIVE template before implementing and found the fix already shipped:
+  `unified-trading-pm@963daa611` (2026-07-21) + a same-day `rollout-workflow-templates.sh` propagation to all 24 service
+  repos, tracked in the now-`resolved` `alerts_ledger_race_two_remaining_writers_2026_07_21.md`. This issue doc's own
+  body cites only the ORIGINAL `deployment_alerts_ingestion_completeness_2026_07_20.md` gap and never cross-referenced
+  the later doc that closed it. Flipped todo 2 with evidence; did not touch todo 3
+  (`agent-orchestrator/server/notifications/slack.py`) -- out of scope, not independently re-verified. A worker picking
+  it up should do the same live-file check first, given both prior todos in this doc turned out stale.
