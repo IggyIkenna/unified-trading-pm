@@ -962,3 +962,17 @@ Dispatched `-001` again. Same `ps aux` check #13/#14/#15 ran: PID `3659083` (the
 RUNNING** — `ELAPSED=603s` (~10min), RSS ~2.4GB, 120% CPU, no crash/exit signature. No new information beyond
 re-confirming liveness. Declining `-001` for the same reason as #13/#14/#15 — a second concurrent run would still
 duplicate in-flight work and risk a write race on the same per-VM shard prefix. `reason_code: "OTHER"`.
+
+### 2026-08-02T19:35Z — #17 (slot-16, data_engineering, dispatched `-001`) — declining, fifth consecutive collision, same live process still healthy
+
+Dispatched `-001` again (after finishing an unrelated `instruments_service_e2e_live_mock_observability` archival task
+under a `backend_engineer` craft assignment on this same slot). Same `ps aux` check #13/#14/#15/#16 ran: PID `3659083`
+(the SAME process #15/#16 found, from `.tabs/14/market-tick-data-service`,
+`--start-date 2025-10-28 --end-date 2026-08-01 --chunk-days 15`) is **still RUNNING** — ~42min elapsed, ~4.1GB RSS, 121%
+CPU, no crash/exit signature (RSS climbing steadily but well within the memory-safety guardrail, consistent with the
+growing per-chunk object density this range's later months carry). No new information beyond re-confirming liveness.
+Declining `-001` via `POST /skip-current-task {reason_code: "OTHER"}` for the same reason as #13-#16 — a second
+concurrent run would duplicate in-flight work and risk a write race on the same per-VM shard prefix for zero benefit.
+**Whoever picks this up next**: same `ps aux` liveness check first; if the process has finished, the remaining
+follow-through (force-consolidate + fill-rate re-verify against the folded-casing metric per #12's finding +
+cron-resume) is genuinely open work per #9/#12's checklists — do that, don't relaunch a 6th identical apply.
