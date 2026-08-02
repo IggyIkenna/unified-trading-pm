@@ -24,7 +24,7 @@ related:
     /codex/02-data/canonical-cutover-register.md,
     /codex/02-data/availability-manifest-and-data-status.md,
     /codex/05-infrastructure/gcs-object-operations.md,
-    /plans/active/issues/defi_orphan_sweep_test_artifact_prod_leak_2026_07_24.md,
+    /plans/archive/issues/defi_orphan_sweep_test_artifact_prod_leak_2026_07_24.md,
   ]
 created: 2026-07-20
 authoritative_for:
@@ -147,10 +147,10 @@ object under it with a hive-shaped tail flows straight through to A/B/D/E as if 
 sweep's own SEPARATE bucket-taxonomy pass (`_taxonomy_label`, `:956-964`) DOES flag it — that is the "0 unknown is the
 acceptance bar" line in `_print_report` — but nothing downstream ever consulted that signal before this fix.
 
-**Found 2026-07-23/24** (`plans/active/issues/defi_orphan_sweep_test_artifact_prod_leak_2026_07_24.md`): defi's terminal
-sweep classified 8 objects under `agent-sample-test-jupiter/` (an agent's own smoke-test write leaked into the PROD
-bucket) as genuine `E_orphan_real` — `backfill_orphan_class_e.py --apply` would have `record_captured`'d them as real
-production data. The SAME defect class, on a DIFFERENT prefix
+**Found 2026-07-23/24** (`plans/archive/issues/defi_orphan_sweep_test_artifact_prod_leak_2026_07_24.md`, RESOLVED
+2026-08-02): defi's terminal sweep classified 8 objects under `agent-sample-test-jupiter/` (an agent's own smoke-test
+write leaked into the PROD bucket) as genuine `E_orphan_real` — `backfill_orphan_class_e.py --apply` would have
+`record_captured`'d them as real production data. The SAME defect class, on a DIFFERENT prefix
 (`_remediation_backups/ kraken_futures_collision_2026_07_08/` — a legitimate server-side pre-fix backup, not test data,
 but equally not a source of NEW coverage), had ALREADY landed on cefi's manifest before the fix existed: 4 cells'
 `row_count` inflated ~180-199% by double-counting the backup copies alongside their canonical twins.
