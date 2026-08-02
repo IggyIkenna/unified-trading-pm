@@ -40,7 +40,7 @@ force/skip/live legs per checkpoint, 63 total. Each leg launches its own VM and 
 alone rate-limits at ~1 req/min per fixture endpoint across hundreds of fixtures). This is a genuinely multi-hour todo;
 this doc tracks cross-session resume state so it isn't re-derived from scratch on every dispatch.
 
-## Baseline checkpoint (2025-12-20) -- status as of 2026-08-02T19:20Z
+## Baseline checkpoint (2025-12-20) -- ORIGINAL status as of 2026-08-02T19:20Z (SUPERSEDED, see correction below)
 
 Launched via
 `GCP_PROJECT_ID=central-element-323112 .venv/bin/python -u scripts/pipeline_e2e_check.py --asset-group SPORTS --day 2025-12-20 --legs force,skip,live --report-dir ../unified-trading-pm/plans/audit/results`
@@ -85,29 +85,76 @@ Driver PID 3466458 on this host.
 **Remaining for this checkpoint**: 6 venues (BETFAIR, FOOTYSTATS, OPEN_METEO, SOCCER_FOOTBALL_INFO, TRANSFERMARKT,
 UNDERSTAT) x 3 legs each, not yet started.
 
+## Baseline checkpoint (2025-12-20) -- CORRECTED status as of 2026-08-02T19:45Z (slot 13, [REVIEW] verification)
+
+**The "6 venues not yet started" claim above (from the 19:20Z checkpoint) was STALE the moment it was written -- a
+COMPLETE 21-leg report already existed on disk at that point**, produced by a DIFFERENT, earlier driver run
+(`Started: 2026-08-02T13:33:14Z`, `Finished: 2026-08-02T15:35:00Z`, committed `unified-trading-pm@48ae74001` at
+`2026-08-02T16:03:49Z` -- over 3 hours before the 19:20Z checkpoint above was written). The 19:20Z checkpoint's own
+driver (PID 3466458, launched after 16:03) appears to have been a REDUNDANT re-run of an already-complete checkpoint,
+launched without first checking for an existing report -- exactly the failure mode the updated Resume instructions below
+now guard against. **The real, complete, already-shipped report is**:
+`plans/audit/results/data_pipeline_e2e_check_is_2025_12_20.md` (`status: partial`, `total=21 passed=12 failed=9`).
+
+Verified breakdown of the 9 failures (all 7 venues x 3 legs ARE accounted for in this report -- checkpoint 1's data
+collection is DONE; only failure triage is incomplete):
+
+- **6x `skip_signal_not_found`** (API_FOOTBALL, TRANSFERMARKT, SOCCER_FOOTBALL_INFO, UNDERSTAT, FOOTYSTATS skip legs) --
+  root-caused in the Todos section below: checker false-negative (SPORTS per-league mode structurally never emits the
+  coarse `SKIP date=...` line the checker greps for), NOT a real skip-logic regression. **KNOWN, already investigated --
+  do not re-investigate.**
+- **3x BETFAIR (force/skip/live, ALL legs)**: `no_parquet_at:.../venue=BETFAIR/` +
+  `manifest_status_invalid:no_matching_row`. **This matches BETFAIR's ALREADY-DOCUMENTED
+  `BLOCKED-CREDENTIALS`/zero-PROD-rows state** (see the parent plan's own progress log, slot-14 2026-08-01: "BETFAIR ...
+  failed separately on `manifest_status_invalid:manifest_empty` -- consistent with its known
+  BLOCKED-CREDENTIALS/zero-PROD-rows state"). **KNOWN, pre-existing gap, NOT a new finding -- do not re-investigate as
+  part of this checkpoint's scope.**
+- **1x OPEN_METEO skip**: `vm_run_not_successful:launcher_script_nonzero_rc=1` -- **NEW, UNEXPLAINED failure mode**,
+  distinct from both the per-league false-negative class and the BETFAIR credentials gap (OPEN_METEO's force+live legs
+  both PASSED normally, only its skip leg's launcher script itself exited non-zero). Not yet investigated -- new todo
+  filed below.
+
+**Currently-running duplicate VMs** (found live at 2026-08-02T19:40Z via
+`gcloud compute instances list --filter="name~instr-backfill-sports-pchk"`):
+`instr-backfill-sports-pchk-0802193055-f-a2a5-api-football` and
+`instr-backfill-sports-pchk-0802193411-f-cab3-api-football` -- both API_FOOTBALL **force**-leg launches, i.e. BOTH
+re-running a leg that ALREADY PASSED in the complete report above. This looks like a further round of the same
+redundant-relaunch pattern (a later slot likely picked up the "complete the baseline" todo without checking for the
+existing report first). Flagging here rather than unilaterally killing another slot's in-flight VM without full context
+on who launched it or why -- whoever next touches this todo should check the existing report FIRST and terminate these
+if confirmed redundant (SPOT VM billing waste -- `/vm-preemption-billing-waste-audit` territory).
+
+**Net for baseline (2025-12-20): checkpoint's data-collection IS complete (21/21 legs ran, real report exists). Its 9
+failures are FULLY accounted for except the 1 new OPEN_METEO `vm_run_not_successful` case.** This checkpoint should NOT
+be re-run again -- only the OPEN_METEO investigation remains open for it.
+
 ## Mid (2025-12-24) and final (2025-12-18) checkpoints
 
-Not yet started.
+**Confirmed NOT started** (verified 2026-08-02T19:45Z, slot 13): no `data_pipeline_e2e_check_is_2025_12_24.{md,json}` or
+`data_pipeline_e2e_check_is_2025_12_18.{md,json}` exist anywhere under `plans/audit/results/`. This is the real
+remaining work gating the parent plan's `-029` checkbox -- 2 of 3 checkpoints (42 of the 63 total legs) have not been
+attempted at all.
 
 ## Resume instructions
 
-1. Check for a still-running VM from this exact run before relaunching (avoid a duplicate/write-race):
-   `gcloud compute instances list --filter="name~instr-backfill-sports-pchk-0802183841"` (or the current run's own
-   timestamp-tagged prefix if a fresh run was launched since).
-2. If the baseline run's driver process has exited, check whether it wrote the final report:
-   `plans/audit/results/data_pipeline_e2e_check_is_2025-12-20.md` (+ sibling `.json`). If present, read it for the full
-   21-leg verdict table (per the skill's own reporting step, the script prints the full report to stdout too -- check
-   the driver log for that if the file write path was interrupted).
-3. If no report exists and no VM is running, the driver process died mid-run -- relaunch the SAME command (idempotent
-   per already-completed shard/leg is NOT automatic in this script; it does not skip already-passed legs on a fresh
-   invocation, so a full relaunch re-runs shard 1's force+skip+live again -- accept this cost rather than hand-rolling a
-   partial-resume flag that doesn't exist in the script).
-4. Investigate the `skip_signal_not_found` finding (real bug vs. false-negative) before citing this checkpoint as fully
-   green, regardless of how the remaining venues turn out.
-5. Once baseline is fully green (or its gaps are documented), move to mid (`2025-12-24`) then final (`2025-12-18`) the
-   same way.
-6. Once all 3 checkpoints are done, flip `sports_consolidated_native_ao_extract-029`'s checkbox in the parent plan
-   citing all 3 report paths, and mark this doc `status: resolved`.
+1. **STOP -- before launching ANY VM for this todo, check for an existing report AND for already-running VMs first**
+   (this exact step was skipped at least twice already, producing the redundant re-runs documented above):
+   - `ls plans/audit/results/data_pipeline_e2e_check_is_<date>.md` for the target date -- if it exists with `status`
+     other than a stub, READ IT before relaunching; a complete report means that checkpoint's data collection is DONE
+     and only unresolved failure triage (if any) remains.
+   - `gcloud compute instances list --filter="name~instr-backfill-sports-pchk"` -- if a VM matching your target day is
+     already RUNNING, do not launch a duplicate; wait for it or investigate why it's slow instead.
+2. As of 2026-08-02T19:45Z: baseline (`2025-12-20`) is DONE (report exists, complete 21/21 legs) -- do NOT re-run it.
+   Only remaining baseline work is the OPEN_METEO skip investigation (todo below). Mid (`2025-12-24`) and final
+   (`2025-12-18`) have NOT been run at all -- that is the real remaining work.
+3. If a report exists but you still suspect it's stale/wrong, verify its `generated_at`/`Finished` timestamp against the
+   most recent commit touching it (`git log -- plans/audit/results/<file>.md`) before trusting or discarding it.
+4. Once mid + final are both run (with reports committed) and the OPEN_METEO investigation is resolved (or explicitly
+   documented as out-of-scope, same as BETFAIR/the skip false-negative class), move to the flip step.
+5. Once all 3 checkpoints are done, flip `sports_consolidated_native_ao_extract-029`'s checkbox in the parent plan
+   citing all 3 report paths, and mark this doc `status: resolved`. **NOT DONE YET as of 2026-08-02T19:45Z (slot 13) --
+   2 of 3 checkpoints have not been run; the flip todo below was picked up prematurely and is being returned to the
+   queue rather than falsely flipped.**
 
 ## Todos
 
@@ -131,19 +178,46 @@ Not yet started.
       per-league-mode behavior. Out of scope for the investigation above (root-causing ≠ safely fixing -- a rushed fix
       risks a false-POSITIVE skip verification, which is worse for data-correctness than today's honest fail-closed
       state). (repo: instruments-service)
-- [ ] [DATA] P1. Complete the baseline (2025-12-20) checkpoint: 6 remaining venues x 3 legs, then write/finalize the
-      report at `plans/audit/results/data_pipeline_e2e_check_is_2025-12-20.md`. (repo: instruments-service,
-      skill-driven)
-- [ ] [DATA] P1. Run the mid (2025-12-24) checkpoint, same 7-venue force/skip/live matrix. (repo: instruments-service,
-      skill-driven)
-- [ ] [DATA] P1. Run the final (2025-12-18) checkpoint, same 7-venue force/skip/live matrix. (repo: instruments-service,
-      skill-driven)
+- [x] ✅ [REVIEW] P2. Verify baseline (2025-12-20) checkpoint's true status before further dispatch -- **CORRECTED
+      2026-08-02 (slot 13)**: the "6 venues remaining" claim was stale; a complete 21-leg report already existed
+      (`plans/audit/results/data_pipeline_e2e_check_is_2025_12_20.md`, 12/21 passed). Baseline data-collection is DONE;
+      see "CORRECTED status" section above for the full failure breakdown. (repo: unified-trading-pm)
+- [ ] [DATA] P2. Investigate the OPEN_METEO skip leg's NEW `vm_run_not_successful:launcher_script_nonzero_rc=1` failure
+      (baseline day=2025-12-20) -- distinct from both the known per-league skip-signal false-negative class and
+      BETFAIR's known BLOCKED-CREDENTIALS gap (OPEN_METEO's force+live legs both passed). Read the skip-leg VM's
+      launcher/run.log to find why the launcher script itself exited non-zero. (repo: instruments-service)
+- [ ] [DATA] P3. Check the 2 currently-running duplicate VMs
+      (`instr-backfill-sports-pchk-0802193055-f-a2a5-api-football`,
+      `instr-backfill-sports-pchk-0802193411-f-cab3-api-football`, both API_FOOTBALL force-leg re-runs of an
+      already-passed leg) -- confirm they're redundant against the existing complete baseline report and terminate if
+      so, to stop further SPOT VM billing waste. (repo: instruments-service, operator/infra -- VM lifecycle)
+- [ ] [DATA] P1. Run the mid (2025-12-24) checkpoint, same 7-venue force/skip/live matrix -- confirmed NOT STARTED
+      (verified 2026-08-02, slot 13: no report file exists). (repo: instruments-service, skill-driven)
+- [ ] [DATA] P1. Run the final (2025-12-18) checkpoint, same 7-venue force/skip/live matrix -- confirmed NOT STARTED
+      (verified 2026-08-02, slot 13: no report file exists). (repo: instruments-service, skill-driven)
 - [ ] [REVIEW] P2. Once all 3 checkpoints are done, flip `sports_consolidated_native_ao_extract-029` in
       `/plans/active/sports_consolidated_native_ao_extract_2026_07_25.md` citing all 3 report paths, and mark this doc
-      `status: resolved`. (repo: unified-trading-pm)
+      `status: resolved`. **NOT YET ELIGIBLE (verified 2026-08-02, slot 13): mid + final checkpoints have not been
+      run.** (repo: unified-trading-pm)
 
 ## Progress Log
 
+- 2026-08-02T19:45Z (slot 13, [REVIEW] task `sports_track_k_is_pipeline_check_progress-005`, dispatched to flip the
+  parent `-029` checkbox): verified ground truth before flipping anything, per this task's own craft (evidence-backed
+  completion, never trust a self-report). Findings: (1) the 19:20Z checkpoint's "6 venues remaining" claim was ALREADY
+  STALE when written -- a complete 21-leg baseline report existed 3+ hours earlier (`unified-trading-pm@48ae74001`,
+  finished 15:35Z); the 19:20Z driver (PID 3466458) was a redundant re-run that didn't check for the existing report
+  first. (2) Of the baseline's 9 failures, 6 are the known skip-signal false-negative (already root-caused) and 3
+  (BETFAIR, all legs) are the already-documented BLOCKED-CREDENTIALS gap -- but 1 (OPEN_METEO skip,
+  `vm_run_not_successful:launcher_script_nonzero_rc=1`) is NEW and unexplained; filed as its own todo. (3) Found 2
+  CURRENTLY RUNNING duplicate VMs re-launching the already-passed API_FOOTBALL force leg -- flagged as likely billing
+  waste, filed as its own todo rather than unilaterally killing another slot's VM without full context. (4) Confirmed
+  mid (2025-12-24) and final (2025-12-18) checkpoints have NOT been run at all -- no report files exist for either.
+  **Did NOT flip `sports_consolidated_native_ao_extract-029`'s checkbox in the parent plan** -- this task's own
+  precondition ("once all 3 checkpoints are done") is false (2 of 3 never run), so flipping it now would be a false
+  completion claim. Corrected the stale "Baseline checkpoint" / "Resume instructions" sections above so future pickers
+  don't repeat the redundant-relaunch mistake. Returning the flip-todo to the queue via `/skip-current-task` rather than
+  falsely completing it.
 - 2026-08-02T19:20Z (slot 11, data_engineering): filed this tracker as a context-limit checkpoint mid-baseline-run; see
   "Baseline checkpoint" section above for full state. Background VM continues independently of this session.
 - 2026-08-02 (slot 9, data_engineering): root-caused the `skip_signal_not_found` finding on API_FOOTBALL's skip-leg by
