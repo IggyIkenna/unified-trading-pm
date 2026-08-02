@@ -161,3 +161,28 @@ PM-specific win).
   backlog-tuning call, per `RULES.md` § 4 — not applied here). Resume point: re-run the same
   push/pull_request/workflow_dispatch run-mix + cancellation-rate measurement once at least a few days of real PR churn
   have accumulated against the fixed workflow (i.e. any time from ~2026-08-05 onward).
+- **2026-08-02 (slot-4) — same `[VERIFY] P3` todo redispatched ~27min after slot-15 declined it; independently
+  reconfirmed premature, harder evidence this time, escalating the redispatch-thrash risk.** Queried
+  `gh run list --repo IggyIkenna/unified-trading-pm --workflow quality-gates-v2.yml` directly at `2026-08-02T12:03:51Z`:
+  **zero runs of any event type since the fix landed** (`2026-08-02T11:36:28Z`) — the most recent run is a
+  `workflow_dispatch` from `2026-08-01T15:24:23Z`, ~20.7h before the fix, so there is currently no post-fix sample at
+  all, not merely an insufficient one. Also confirmed PM's `quality-gates-v2.yml` triggers are `push:[main]` /
+  `pull_request:[main,staging]` / `workflow_dispatch` only — it does NOT fire on push to `live-defi-rollout`, so the
+  fix-landing commit itself generated no run; the next real signal will be the frozen-per-SHA-ref promote PR
+  (`pull_request`-triggered, ~15-30min SLA per the "Open question" section above) or the next `workflow_dispatch`.
+  Declining again, not flipping the checkbox — forcing a number from an empty sample would be fabrication, not
+  verification. **Redispatch-thrash risk**: this task is `tier=1 priority=80`, dispatched as the "highest-rank queued
+  task" — with `/skip-current-task` only excluding the skipping slot (other slots still see it normally per
+  `dashboard/API_REFERENCE.md`), it will likely re-dispatch to a third slot within minutes and repeat this same ~2min
+  investigation, recurring every cycle until ~2026-08-05. Slot-15's recommended fix (dispatch-gate by calendar time,
+  RULES.md §4 park recipe) was never applied — confirmed why: `data/config/backlog.yaml` is gitignored, live-only server
+  state on the ROOT `agent-orchestrator` clone (verified via `git check-ignore` + process cwd inspection), which is
+  structurally unreachable from any `.tabs/<slot>/` worker clone, not merely discouraged. Pre-staged the fix as far as a
+  worker can: created prerequisite condition `qgv2-pm-remeasure-after-2026-08-05` (value=`false`, via
+  `POST /api/prerequisites/...` — API-only, no root-clone file touch needed for this half). **Remaining step needs
+  root-clone filesystem access** (main/operator/orchestrator-admin only): on this task's entry in
+  `data/config/backlog.yaml`, set `priority: 999`, `priority_override: true`,
+  `prereqs.prerequisites: [qgv2-pm-remeasure-after-2026-08-05]`, then `POST /api/backlog/reload`; flip the condition
+  `true` via `POST /api/conditions/qgv2-pm-remeasure-after-2026-08-05` on/after 2026-08-05 once real PR churn has
+  accumulated. Raised as a `/blocked` question from slot-4 (non-gating — proceeding to skip regardless) so this surfaces
+  on the dashboard instead of relying on a third slot re-discovering the same doc note.
