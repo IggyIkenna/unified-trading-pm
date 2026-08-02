@@ -459,7 +459,7 @@ todos:
   endpoints, parse, cache 15s" status: pending
 - id: obs-grafana-export content: Export Grafana dashboards (trading-overview.json, system-health.json), provisioning,
   SimpleJSON datasource status: pending
-- id: obs-prometheus-codex content: "Create unified-trading-/codex/03-observability/prometheus-metrics.md: metric
+- id: obs-prometheus-codex content: "Create unified-trading-/codex/06-coding-standards/prometheus-metrics.md: metric
   catalog, alert rules, service map, triage guide" status: pending
 - id: quality-importerror-fallbacks content: Fix except ImportError fallbacks (~130 files) status: pending
 - id: quality-large-file-splits content: "Split large files: engine.py (2826L), aws_schemas.py (1424L),
@@ -1132,7 +1132,7 @@ Sequence (strictly ordered):
   API service repos (execution-results-api, market-data-api, client-reporting-api, strategy-ui) as explicit nodes in the
   graph. status: pending priority: P1
 - id: codex-ui-service-separation-doc content: > MISSING DOC: Add
-  unified-trading-/codex/04-architecture/ui-service-separation.md (or 06-coding-standards/ui-service-separation.md)
+  unified-trading-/codex/06-coding-standards/ui-service-separation.md (or 06-coding-standards/ui-service-separation.md)
   documenting: (1) UI repos must be separate git repos from service engine; (2) Services expose FastAPI + SSE; (3) UIs
   consume via HTTP/SSE only; (4) No direct library imports from service engine repos in UI. Mirror the
   .cursor/rules/ui-service-separation.mdc content but as a codex reference doc. status: pending priority: P1

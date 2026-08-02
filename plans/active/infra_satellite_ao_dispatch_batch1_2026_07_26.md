@@ -465,19 +465,15 @@ orphaned?" resolves to "everything," because nothing in the covering set does an
       `ruff_rule_ratchet_baseline.yaml` (dtz 11→10, tid251 20→19) — unified-trading-pm@<see PM flip commit>. Repo:
       deployment-api. Source: `codex_violations_ratchet_to_five_2026_06_10.md`.
 
-- [ ] [SCRIPT] P2. **Measure fleet-wide lifecycle-marker coverage so the operator can clear the enforcement gate.** The
-      source doc's `[SCRIPT] P1` "build + wire `check_script_lifecycle_markers.py`" item is explicitly
-      `[OPERATOR]`-gated: "the operator unblocks this ONLY after confirming `grep -rL '^# Delete-when:' */scripts/` is
-      empty fleet-wide" (otherwise the checker instantly reds the whole fleet on still-unstamped repos). That
-      precondition is a MEASURABLE fact nobody has measured. Run the measurement properly: per repo, count `scripts/`
-      files missing each of `# Epic:` / `# Lifecycle:` / `# Delete-when:`, count `Epic:` values not in the epic
-      registry, and count non-`permanent` files carrying `Delete-when: NA` (all three fields are MANDATORY and PRESENT
-      on every script, `NA` only for `permanent` — `/codex/06-coding-standards/script-homes.md:97,100,154-155`). Write
-      the per-repo table into the source doc so the operator can rule on flipping the gate. **Do NOT build or wire the
-      checker** — that stays operator-gated until this measurement says the fleet is clean. **Done when**: the source
-      doc carries a dated per-repo coverage table with the four counts above and an explicit "gate-clearable: yes/no"
-      verdict. Repos: read-only across all repos with `scripts/`; write to unified-trading-pm. Source:
-      `repo_scripts_governance_audit_2026_06_18.md`.
+- [x] ✅ [SCRIPT] P2. **DONE 2026-08-02.** Measured fleet-wide lifecycle-marker coverage across all 25 repos in the
+      standard fleet (~1998 `scripts/` files): 3 files (2 repos) missing a mandatory field, 96 files with an `Epic:`
+      value outside the epic registry, 2 files misusing `Delete-when: NA` on a non-`permanent` lifecycle, plus a
+      supplementary 136 files with an invalid `Lifecycle:` enum value (mostly the `one-off` vs `oneoff` near-miss).
+      Per-repo table + verdict + recommended sequencing written into `repo_scripts_governance_audit_2026_06_18.md` §
+      "Fleet-wide lifecycle-marker coverage measurement (2026-08-02)". **Verdict: gate-clearable — NO** (down from 11+
+      repos at the 2026-07-15 baseline, but not yet clean; the checker would still fail CI fleet-wide on
+      invalid-Epic/invalid-Lifecycle/na-misuse even once the missing-field precondition clears). Did **not** build or
+      wire the checker, per scope. Source: `repo_scripts_governance_audit_2026_06_18.md`.
 
 - [ ] [BUG] P3. **Confirm or rule out the strategy-service → market-tick-data-service tier violation hiding in a
       Dockerfile.** `strategy-service`'s Dockerfile vendors `COPY market-tick-data-service/` into its build context —
@@ -494,7 +490,7 @@ orphaned?" resolves to "everything," because nothing in the covering set does an
       filed as a follow-up todo. Repos: strategy-service (read), unified-trading-pm (the verdict). Source:
       `issues/service_dockerfile_pattern_normalization_2026_06_17.md`.
 
-- [ ] [DOCS] P2. **Land the 3 bounded codex FIX-STALE corrections this audit plan has carried unowned since
+- [x] ✅ [DOCS] P2. **Land the 3 bounded codex FIX-STALE corrections this audit plan has carried unowned since
       2026-06-01.** (a) **AUDIT-03 F-45**: code wins — the events GCS path keys on `instance_id`; `correlation_id` is a
       column, NOT a path key. Find every codex doc claiming `correlation_id` is a path key and correct it to the
       implemented `instance_id` path semantics (verify against the writer's actual path construction before editing).
@@ -506,7 +502,22 @@ orphaned?" resolves to "everything," because nothing in the covering set does an
       `base-service.sh`, a deferred contention hotspot in this batch. **Done when**: all three corrections are shipped,
       `bash scripts/plan-hygiene/run_hygiene_sweep.sh --ci --no-regen` is no worse than before, and each corrected claim
       is verified against code/registry rather than restated. Repo: unified-trading-pm. Source:
-      `codex_vs_repo_docs_ssot_audit_2026_06_01.md`.
+      `codex_vs_repo_docs_ssot_audit_2026_06_01.md`. — **DONE 2026-08-02 (slot 7, data_engineering) — already resolved
+      as no-op, this todo was stale**: this exact source doc already carries all 3 items flipped `[x]` since 2026-07-27
+      (Phase-2, `unified-trading-pm@7c3fcfe68` — "flip 3 AUDIT-03/gcs_hive codex-migration items (all verified no-op)"),
+      one day AFTER this plan (created 2026-07-26) copied the still-open finding across — the two tracks diverged and
+      this copy was never updated. Independently re-verified against current code/registry before trusting the prior
+      resolution (per this todo's own done-when bar): (a) `rg correlation_id codex/` — every hit is a log field / column
+      / PubSub attribute / function param, none describe it as a GCS path key; the events path keys on `instance_id`
+      exactly as claimed. (b) `custody-providers.md`'s sole `Elysium` reference is the
+      `pod-elysium-client-onboarding.md` link (the client POD), not the removed data provider — no stale ref to scrub;
+      the entity-governance SSOT already lives in `org-fund-client-entity-model.md` +
+      `capital-structure-and-regulatory.md`, not custody-providers.md (grafting it there would violate the plan's own
+      no-duplicate-SSOT rule). (c) Sampled hive-partition path examples in
+      `sports-data-source-coverage-matrix.md`/`sports-data-types-catalog.md` — all canonical `key=value` segments
+      (`by_date/day=*/entity=.../league=...`, `asset_group=sports`), nothing malformed. **No codex edit needed** — 0
+      corrections to ship, all three verified already-correct. `run_hygiene_sweep.sh --ci --no-regen` baseline: 0 hard
+      failures (1 pre-existing unrelated soft warning), unchanged by this checkbox-only edit.
 
 - [x] ✅ [INFRA] P1. **Produce the resource-by-resource classification of the prod terraform drift backlog (READ-ONLY —
       the apply stays operator-only).** `terraform/state/prod` (`deployment-service/terraform/gcp`) shows
@@ -583,17 +594,17 @@ orphaned?" resolves to "everything," because nothing in the covering set does an
       job, scheduler, terraform, and entrypoint files named above are all deleted; see the DONE entry at the top of this
       todo for the actual execution record.)
 
-- [ ] [CI] P2. **Fold the `run_hygiene_sweep.sh --precommit`/`--staged` sweep into PM `quality-gates-v2` as a
-      content-sentinel-gated step (server backstop on PM PRs), THEN retire the standalone `plan-health-gate` GHA job.**
-      RULE-11 prove-then-retire: prove the prek + v2-step combo catches the same hard failures on PM before deleting the
-      job (don't open a gap). This is DISTINCT from the RULE-11 item above (which retires the daily
-      Haiku/schedule-triggered contradiction-detection job + the Cloud Run hygiene-sweep job) — this one retires the
-      separate `pull_request`-triggered `plan-health-gate` job in `.github/workflows/plan-health-agent.yml` (the item
-      above explicitly KEEPS that job; this todo is what eventually lets it go, once its server-side successor step is
-      proven). **Correction 2026-07-28**: a prior migration pass's banner in the source doc claimed this todo was "filed
-      as a new todo in `infra_satellite_ao_dispatch_batch1_2026_07_26.md` next to RULE-11" — it was NOT actually present
-      (verified via grep, zero hits for the fold/content-sentinel language); this is the real fix, landing the todo the
-      banner already claimed existed. Repo: unified-trading-pm. Source:
+- [x] ✅ [CI] P2. **DONE 2026-08-02 (slot-5, infra) — unified-trading-pm@f3afa397d.** Added a PM-only, content-sentinel-
+      gated "Plan hygiene hard gate" step (`run_hygiene_sweep.sh --ci --no-regen`) to the `checks` leg of
+      `python-quality-gates-v2.yml`, gated on repo==PM + the leg's existing skip_slice/QG_CONTENT_HIT fast-paths.
+      **Prove-then-retire evidence**: full sweep locally = 0 hard failures; a scratch no-frontmatter file reproduced the
+      exact hard-failure exit 1 the old job caught (discarded, never committed). Then retired the standalone job:
+      deleted `plan-health-agent.yml` + its hosted-baseline twin, pruned `MANIFEST.tsv` + the catalog script's entry,
+      regenerated `CICD-WORKFLOW-CATALOG.md`. Real upgrade not lateral: the old job was advisory-only (not a required
+      check); the fold makes hygiene an ACTUAL blocking PR gate. Auto-fix-and-escalate isn't carried over (this step
+      only detects) but isn't a gap — `ldr-docs-gate.yml` (hourly) + the daily `plan-reconciler` already independently
+      cover that. Updated both plan-hygiene codex SSOTs + the one dangling `AGENTS.md` mention. `actionlint` clean.
+      Repo: unified-trading-pm. Source:
       `/plans/archive/issues/plan_hygiene_precommit_and_agentic_resolution_2026_06_10.md`.
 
 - [x] ✅ [BACKEND] P2. **DONE 2026-08-01 (slot-4) — Serve the generated L0 doc-graph from the AO dashboard for central

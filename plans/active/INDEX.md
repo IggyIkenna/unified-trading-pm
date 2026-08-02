@@ -17,11 +17,11 @@
 
 <!-- AUTO-INDEX-START -->
 
-_Auto-generated via `scripts/plans/regenerate_active_plan_index.py`. 248 plans across 10 domains. A plan tagged with
+_Auto-generated via `scripts/plans/regenerate_active_plan_index.py`. 249 plans across 10 domains. A plan tagged with
 multiple `asset_group:` values appears under each. Grep this block for a domain keyword before scanning `plans/active/`
 by hand._
 
-### cefi (33)
+### cefi (36)
 
 - [`ag_closeout_audit_rollout_2026_07_25`](./ag_closeout_audit_rollout_2026_07_25.md) — Autonomous session (/autonomous,
   operator away, 2026-07-25) driving the /ag-closeout-audit skill across the 4 asset groups that haven't had it yet —
@@ -86,6 +86,14 @@ by hand._
   — Gated closeout for cefi_satellite_ao_dispatch_batch5_2026_08_02.md — machine-held via depends_on + gate_on_depends:
   true until all 5 of that plan's todos are done. Mirrors the batch1 through batch4 finalize pattern: reconcile each
   source…
+- [`cefi_satellite_ao_dispatch_batch6_2026_08_02`](./cefi_satellite_ao_dispatch_batch6_2026_08_02.md) **[draft]** —
+  Sixth AO-dispatch batch for cefi, produced by the `/ag-closeout-audit` skill run 2026-08-02 (scheduled autonomous
+  dispatch, tranche=cefi, slot 8). Phase 0 re-derived the covering-plan set via
+  `generate_ag_closeout_audit_candidates.py` (98…
+- [`cefi_satellite_ao_dispatch_batch6_2026_08_02_finalize`](./cefi_satellite_ao_dispatch_batch6_2026_08_02_finalize.md)
+  — Gated closeout for cefi_satellite_ao_dispatch_batch6_2026_08_02.md — machine-held via depends_on + gate_on_depends:
+  true until all 6 of that plan's todos are done. Mirrors the batch1 through batch5 finalize pattern: reconcile each
+  source…
 - [`cefi_track2_coverage_backfill_checkpoints_2026_07_25`](./cefi_track2_coverage_backfill_checkpoints_2026_07_25.md) —
   Resumes the CeFi Tardis COVERAGE backfill (reversing the archived "honest-done 50.79%" verdict — the throughput
   ceiling was a ~350x code bug, now fixed and measured live) and brackets it with the MID/POST…
@@ -122,6 +130,10 @@ by hand._
   — Gated closeout for defi_pipeline_e2e_and_coverage_validation_2026_06_20.md -- machine-held via depends_on +
   gate_on_depends: true until all of that plan's todos are done. Reconciles the source doc's own checkboxes/prose once
   its…
+- [`hyperliquid_aster_defi_to_cefi_asset_group_migration_2026_08_02`](./hyperliquid_aster_defi_to_cefi_asset_group_migration_2026_08_02.md)
+  **[draft]** — HYPERLIQUID and ASTER were removed from ALL_DEFI_VENUES/DEFI_VENUE_PHASE on 2026-06-21 (both are
+  code-classified pure CEFI today), but a frozen historical corpus written before that cutover still sits under
+  asset_group=defi in…
 - [`instruments_cefi_g1_g5_gate_execution_2026_07_24`](./instruments_cefi_g1_g5_gate_execution_2026_07_24.md) — Split
   out of instruments_foundation_completeness_2026_06_24.md (2026-07-24 line-cap remediation, 4-way split, operator-
   approved). Owns cefi's gated G1→G5 rebuild — instrument-definition correctness (G1.1-G1.4 catalogue false-delisting /…
@@ -137,7 +149,7 @@ by hand._
   — Gated closeout for vol_dvol_backtestable_engines_2026_07_13.md, reclassified `assigned_vm: NA -> planning` by the
   na-eligibility-audit cefi-tranche run 2026-07-30 (retroactive-reclassification shape, codex…
 
-### defi (33)
+### defi (35)
 
 - [`ag_closeout_audit_rollout_2026_07_25`](./ag_closeout_audit_rollout_2026_07_25.md) — Autonomous session (/autonomous,
   operator away, 2026-07-25) driving the /ag-closeout-audit skill across the 4 asset groups that haven't had it yet —
@@ -169,6 +181,9 @@ by hand._
 - [`data_pipeline_check_mdps_features_2026_07_20_finalize_2026_07_27`](./data_pipeline_check_mdps_features_2026_07_20_finalize_2026_07_27.md)
   — Gated closeout for data_pipeline_check_mdps_features_2026_07_20.md -- machine-held via depends_on + gate_on_depends:
   true until all of that plan's todos are done. Reconciles the source doc's own checkboxes/prose once its AO-dispatched…
+- [`defi_collateral_sizing_and_wizard_full_parameterization_2026_06_17`](./defi_collateral_sizing_and_wizard_full_parameterization_2026_06_17.md)
+  — Implement collateral-aware position sizing with USDC down-size branch, opportunity checker scoring for stables-only
+  venues, and full wizard parameterization for all supported archetypes.
 - [`defi_consolidated_closeout_2026_07_18`](./defi_consolidated_closeout_2026_07_18.md) — Single coordination plan that
   AGGREGATES (references, does NOT duplicate) every open defi + defi-touching IS/MTDS plan/issue into ONE ordered pass,
   mirroring cefi_consolidated_closeout_2026_07_18.md /…
@@ -178,14 +193,6 @@ by hand._
 - [`defi_consolidated_native_ao_extract_2026_07_25_finalize`](./defi_consolidated_native_ao_extract_2026_07_25_finalize.md)
   — Gated closeout for defi_consolidated_native_ao_extract_2026_07_25.md — machine-held via depends_on +
   gate_on_depends: true until all 4 of that plan's todos are done. Reconciles each shipped todo's evidence back into…
-- [`defi_dex_pool_symbol_fix_backfill_purge_2026_07_25`](./defi_dex_pool_symbol_fix_backfill_purge_2026_07_25.md) —
-  Operator decision 2026-07-25 -- delete the bad unattributed TRADER_JOE_V2/VELODROME_V2/CURVE dex_pool_state data, fix
-  the subgraph-query bug that caused it (see issues/defi_dex_pools_subgraph_query_missing_input_tokens_2026_07_25.md),
-  then…
-- [`defi_dex_pool_symbol_fix_backfill_purge_finalize_2026_07_25`](./defi_dex_pool_symbol_fix_backfill_purge_finalize_2026_07_25.md)
-  — Gated closeout for defi_dex_pool_symbol_fix_backfill_purge_2026_07_25.md — machine-held via depends_on +
-  gate_on_depends: true until all 5 of that plan's todos are done, so this never dispatches early. Reconciles the
-  originating bug report…
 - [`defi_pipeline_e2e_and_coverage_validation_2026_06_20`](./defi_pipeline_e2e_and_coverage_validation_2026_06_20.md) —
   End-to-end validation of the DeFi pipeline (features-onchain → strategy → execution) before the live cutover gate: run
   the full batch, verify each of the 11 registered DEFI handlers produces real (non-NaN) GCS coverage, confirm the
@@ -223,6 +230,12 @@ by hand._
   — Gated closeout for defi_satellite_ao_dispatch_batch6_2026_07_30.md — machine-held via depends_on + gate_on_depends:
   true until all 20 of that plan's todos are done. Mirrors batch1-5-finalize's pattern (reconcile each distinct source
   doc's…
+- [`defi_satellite_ao_dispatch_batch8_2026_08_02`](./defi_satellite_ao_dispatch_batch8_2026_08_02.md) — Eighth
+  AO-dispatch batch for defi, produced by the scheduled `na_eligibility_auditor` running `/na-eligibility-audit defi`
+  (2026-08-02). Phase 0 found 34 defi-OWNED `assigned_vm: NA` docs (48 in the tranche's candidate set, 14 owned by…
+- [`defi_satellite_ao_dispatch_batch8_2026_08_02_finalize`](./defi_satellite_ao_dispatch_batch8_2026_08_02_finalize.md)
+  — Gated closeout for defi_satellite_ao_dispatch_batch8_2026_08_02.md — machine-held via depends_on + gate_on_depends:
+  true until that plan's todo is done. Mirrors batch1-7-finalize: reconcile the single source doc…
 - [`defi_strategy_pnl_axis_index_2026_07_24`](./defi_strategy_pnl_axis_index_2026_07_24.md) — Entry-point index for the
   DeFi strategy/PnL/backtest-engine axis (`strategy-service`), extracted from defi_consolidated_closeout_2026_07_18.md's
   "Strategy/PnL/backtest-side DeFi tracking" section (folded in there 2026-07-23, "no orphans")…
@@ -233,6 +246,10 @@ by hand._
 - [`defi_track5_coverage_mvp_backfill_2026_07_24`](./defi_track5_coverage_mvp_backfill_2026_07_24.md) — Forked verbatim
   from defi_consolidated_closeout_2026_07_18.md's "Track 5 — COVERAGE" section (2026-07-24, per task_template.md's
   "partial parallelism is NOT expressible inside one plan — SPLIT" rule and an operator ruling during the 5-AG…
+- [`hyperliquid_aster_defi_to_cefi_asset_group_migration_2026_08_02`](./hyperliquid_aster_defi_to_cefi_asset_group_migration_2026_08_02.md)
+  **[draft]** — HYPERLIQUID and ASTER were removed from ALL_DEFI_VENUES/DEFI_VENUE_PHASE on 2026-06-21 (both are
+  code-classified pure CEFI today), but a frozen historical corpus written before that cutover still sits under
+  asset_group=defi in…
 - [`instruments_satellite_ao_dispatch_batch1_2026_07_27`](./instruments_satellite_ao_dispatch_batch1_2026_07_27.md) —
   First /na-eligibility-audit interactive dry-run (tradfi tranche, 2026-07-27) classified
   honest_coverage_shard_dimension_model_definitional_data_2026_07_07.md as mixed across 14 open items: 8 are genuinely
@@ -595,7 +612,7 @@ by hand._
   asset_group=prediction so a plan is READY, not to activate live trading now — both asset groups are deliberately
   backtest-only today per…
 
-### cross-cutting (65)
+### cross-cutting (62)
 
 - [`ag_closeout_audit_rollout_2026_07_25`](./ag_closeout_audit_rollout_2026_07_25.md) — Autonomous session (/autonomous,
   operator away, 2026-07-25) driving the /ag-closeout-audit skill across the 4 asset groups that haven't had it yet —
@@ -716,9 +733,6 @@ by hand._
   2026-07-24 from data_completion_to_100_all_ag_2026_06_21.md (M-1) per the plan line-cap remediation
   (plans/active/issues/plan_line_cap_remediation_2026_07_23.md, bucket-(d) split, operator-approved). This is the
   still-inline…
-- [`defi_collateral_sizing_and_wizard_full_parameterization_2026_06_17`](./defi_collateral_sizing_and_wizard_full_parameterization_2026_06_17.md)
-  — Implement collateral-aware position sizing with USDC down-size branch, opportunity checker scoring for stables-only
-  venues, and full wizard parameterization for all supported archetypes.
 - [`features_service_e2e_pipeline_test_2026_05_26`](./features_service_e2e_pipeline_test_2026_05_26.md) — Stands up a
   repeatable real-data end-to-end test of the full features-service pipeline per family (discover v8 manifest → read GCS
   inputs → calculate → write parquet + manifest row → read-back & assert). Fixes the WRITE blocker…
@@ -750,14 +764,6 @@ by hand._
 - [`instruments_mtds_consistency_remediation_residuals_2026_07_24`](./instruments_mtds_consistency_remediation_residuals_2026_07_24.md)
   — Split 2 of 3 from instruments_mtds_subset_consistency_remediation_2026_06_17.md (2026-07-24 line-cap remediation,
   clean-partition). This is the parent's own CORE original scope -- the F1-F7/N1-N9 findings from the 2026-06-17…
-- [`instruments_service_e2e_live_mock_observability_2026_07_27`](./instruments_service_e2e_live_mock_observability_2026_07_27.md)
-  — Re-scoped from the never-completed Phases 5-7 of the archived 2026-03 instruments-service E2E audit
-  (plans/archive/2026_07/e2e_testing_001_instruments_service_2026_03_22.md) — live-mode 15-min clock alignment,
-  mock-mode failure scenarios,…
-- [`instruments_service_e2e_live_mock_observability_2026_07_27_finalize_2026_07_30`](./instruments_service_e2e_live_mock_observability_2026_07_27_finalize_2026_07_30.md)
-  — Gated close-out twin for `instruments_service_e2e_live_mock_observability_2026_07_27.md`, which was reclassified
-  `assigned_vm: NA → planning` by the 2026-07-30 `/na-eligibility-audit cross-cutting` run. Holds the archival ritual +
-  the…
 - [`instruments_store_cf_canonicalization_single_walk_2026_07_24`](./instruments_store_cf_canonicalization_single_walk_2026_07_24.md)
   — Split 1 of 3 from instruments_mtds_subset_consistency_remediation_2026_06_17.md (2026-07-24 line-cap remediation,
   clean-partition). Carries the instruments-store canonical-form (CF-1..CF-12) single-walk code-remediation lineage --

@@ -50,7 +50,7 @@ context_scope:
     /codex/02-data/availability-manifest-and-data-status.md,
     /codex/05-infrastructure/manifest-consolidator-ssot.md,
     /plans/epics/manifest_master.md,
-    /plans/active/issues/mtds_manifest_rebuild_scripts_unbounded_memory_no_chunking_2026_07_31.md,
+    /plans/archive/issues/mtds_manifest_rebuild_scripts_unbounded_memory_no_chunking_2026_07_31.md,
   ]
 ---
 
@@ -318,13 +318,17 @@ verify the guardrail did not trip + row counts are unchanged before resuming the
       investigation — structurally-blank underlying-bundle rows, not data loss). `available_at` fill on captured rows
       rose (69.97% → ~77-82%, exact number disputed between #11's and #12's independent reads, both far from 100%).
       **Still open (2026-08-02, slot-14, Progress Log #12)**: per-month breakdown shows 2019-01..2023-03 sitting at a
-      stable ~50-60% fill, not near-100% — NOT resolved by this apply/consolidate. Unclear whether that's a genuine
-      structural ceiling (a bundled/no-timestamp shard class `_available_at_from_blob`'s GCS-`time_created` proxy can't
-      populate) or an incomplete-fill signal — chunks 1-52 of THIS todo's own apply ran the FIRST (pre-fix) launch's
-      code, before `9d354cea` shipped, even though they didn't crash there. **Do not flip this checkbox until that
-      question is resolved** — re-read `_available_at_from_blob`'s docstring + investigate, or re-run
-      `--start-date 2019-01-02 --end-date 2023-04-10 --chunk-days 30` now that the fix is live, to see if the ceiling
-      moves. (repo: market-tick-data-service, unified-trading-library)
+      stable ~50-60% fill, not near-100% — NOT resolved by this apply/consolidate. **RESOLVED-ISH (2026-08-02, resumed
+      session)**: re-ran `--start-date 2019-01-02 --end-date 2023-04-10     --chunk-days 30` on the fixed code (0
+      unparseable, 151,696 shards) — byte-identical result, ruling out both the structural-ceiling and
+      incomplete-fill-scan theories. **Actual root cause found + directly verified**: the known migration-pending C2a
+      `instrument_type` casing split (`combo`/`COMBO` etc.) keeps this rebuild's fresh uppercase-canonical rows
+      permanently separate from old lowercase rows in the manifest — case-folding jumps pre-2023-04 `ohlcv` coverage
+      from 56.8% to **84.0%**. Full evidence + an earlier retracted `instrument_id` theory in the doc's own Progress Log
+      (search "CONFIRMED, same session — re-ran the fill-rate check"). **Do not flip this checkbox yet** — 84.0%
+      (folded) is still short of the ~100% bar prior entries set, and a genuine ~16% remains unfilled even after folding
+      (real work, not a measurement artifact); do NOT re-run the rebuild a third time expecting a different result —
+      it's already landing correct data. (repo: market-tick-data-service, unified-trading-library)
 - [x] ✅ [DATA] P1. **No longer gated on an operator decision (retagged 2026-07-28, same ruling)** — Resume the tradfi
       consolidator cron; record evidence in the Progress Log. **Retrofit 2026-07-30** (dp_watcher_003 issue's 2nd todo):
       resume via `scripts/mtds_available_at_backfill_resume_tradfi_2026_07_30.py` (maintenance-window-aware), not raw
@@ -782,6 +786,28 @@ re-run — if unparseable stays 0 while fill rate still doesn't move, the gap is
 a different explanation (e.g. dedup losing the fresh row to an older un-touched one on the consolidator side). Did not
 attempt the re-run or the parser investigation this session (time-boxed to the prediction-lane launch).
 
+**2026-08-02, resumed session — re-run DONE, this exact fallback case confirmed. The path-parsing hypothesis is now
+DEFINITIVELY RULED OUT too.** Ran
+`rebuild_tradfi_manifest.py --start-date 2019-01-02 --end-date 2023-04-10 --chunk-days 30` on the `9d354cea`-fixed code:
+all 52 chunks completed clean, **0 unparseable across the entire range**, 151,696 total shards, 111s elapsed.
+Force-consolidate contended briefly with the tradfi cron's own lock (normal — `_LOCK_TTL_SECONDS=300`, not a stuck lock;
+a fresh cron cycle picked it up and the consolidated index genuinely refreshed, `Update Time` moved from `17:39:42Z` to
+`17:46:36Z`, well after this re-run's writes landed at `17:41:52Z`). Re-ran the fill-rate check against the
+confirmed-fresh index: **byte-identical to before the re-run** — `ohlcv_1s` 58.0%, `ohlcv_1m` 55.1%, overall 77.03%
+(1,307,774/1,697,765), down to the exact row counts. **A completely clean re-scan of the whole range, with genuinely
+fresh consolidated data, produced ZERO change.** This rules out both candidate explanations from the prior entry: not a
+bundled/no-timestamp class (already ruled out — 0 bundled rows in this era), and now not a scan/path-parsing coverage
+gap either (0 unparseable, so the scan lists and processes every object it can see). **The only remaining explanation
+from the original recommendation is the third one**: the manifest consolidator's dedup is losing the fresh, filled row
+to an older, unfilled one sharing the same row-key — i.e. this rebuild's writes ARE landing (confirmed via the per-VM
+shard `time_created` bumps + the consolidator picking them up), but something in the merge/dedup ordering
+(`rows_out`/`dedup_dropped` logic, or a `written_at` last-write-wins comparison) is choosing an OLDER pre-fix row over
+this rebuild's fresh one for roughly half of 2019-2023-04's non-bundled OHLCV cells. **Not investigated further this
+session** (would need reading the consolidator's actual dedup/last-write-wins comparator against a sample of the ~45%
+still-unfilled row-keys, checking whether their `written_at` is older or newer than this rebuild's run, and if older,
+whether the comparator is supposed to prefer newer writes but isn't) — flagging as the next concrete step, not
+re-guessing with a third re-run (would just reproduce the same result for the third time).
+
 **Prediction stays unflipped** (`-006`, neither lane complete for it). **Tradfi's cron-resume todo stays flipped**
 (independently verified complete, see #11) but **the Apply todo is reverted to unflipped** per this session's own
 finding above — the aggregate fill number alone hid a real per-month gap, so "applied without crashing" is not the same
@@ -818,3 +844,158 @@ fill-rate ceiling moves now that the bundled-shard fix is live, checking `unpars
 recommendation; (3) the operator has approved purchasing additional odds-api credits (BLK-6728ec9a, option B) for the
 UNRELATED sports odds_api backfill — re-verify live before resuming that separate work, do not assume the purchase is
 instant.
+
+### 2026-08-02T17:52Z — #13 (slot-15, data_engineering, dispatched `-001`) — declining, exact apply already live under slot-14's `-006`
+
+Dispatched `-001` ("Apply `rebuild_prediction_manifest.py`"). Before launching anything, verified live process state
+(not trusting the doc's last checkpoint blind): `ps aux` shows PID 1860179,
+`rebuild_prediction_manifest.py --start-date 2025-09-13 --end-date 2026-08-01 --chunk-days 15` — the EXACT command #12's
+handoff recommended — already RUNNING (started 17:31Z, ~20min uptime, 127% CPU, healthy) from
+`.tabs/14/market-tick-data-service`. Cross-checked `GET /api/state`: slot 14 is dispatched on
+`mtds_available_at_cross_asset_backfill-006` with `last_msg` confirming "Prediction backfill continues healthily in
+background (chunk 2/32, RSS ~2.3GB)" plus a completed tradfi pre-2023-04 re-run (see `unified-trading-pm@90dc8d193`).
+Launching a second, identical apply here would waste shared-host compute and risk a write race on the same per-VM shard
+prefix for no benefit — not doing that. Declining `-001` and skipping (not holding the slot for a multi-chunk apply
+another slot already owns), `reason_code: "OTHER"` (a per-slot duplication fact, not a fleet-wide blocking condition —
+the follow-through steps, force-consolidate/fill-rate-reverify/cron-resume, remain open work for whoever picks up next
+once slot-14's run actually finishes).
+
+**2026-08-02, resumed session (slot-14) — item (2) above done (see the tradfi Apply todo's own entry for the full
+result); a sharper, verified lead found for the consolidator-dedup hypothesis.** Sampled real `attempted_at`/
+`written_at`/`instrument_id` values directly from the manifest for the still-unfilled `pre-2023-04 ohlcv_1m` cells:
+**`instrument_id` is blank/`None` on BOTH the filled and unfilled rows** for the same `(date, venue, data_type)`
+combination (e.g. multiple distinct rows for `date=2020-01-02, venue=CME, data_type=ohlcv_1m` all carry
+`instrument_id=None`). This is a sharper, directly-verified fact (not code-reading speculation) than the prior "dedup
+last-write-wins" hypothesis — if the manifest's row-key groups by
+`(date, venue, instrument_type, data_type, instrument_id)` and `instrument_id` is never populated for this era's OHLCV
+rows, then MANY distinct real per-instrument objects (this row-key's dedup group plausibly represents dozens of
+different CME futures contracts trading that day, not one instrument) collapse onto a tiny number of manifest row-keys —
+consistent with the small `captured_cells` counts this session's re-run reported per chunk (e.g. `3796` cells for a
+whole 30-day chunk) vs. the much larger row counts the fill-rate check's `groupby` sees when reading the full manifest —
+those are two different levels of aggregation that this session did not fully reconcile.
+
+**Same session, follow-up — CONFIRMED via the actual dedup-key code, not just data sampling.** Read
+`unified_trading_library/manifest_consolidator.py`: `_BASE_DEDUP_COLS = ("date", "venue", "data_type", "service_name")`,
+and `_OPTIONAL_DEDUP_COLS` explicitly **includes `"instrument_id"`** (`_resolve_dedup_cols`, line ~2109) — it IS a real
+dedup dimension, not incidental.
+
+**CORRECTION, same session — the "populate instrument_id per-object" conclusion immediately below was premature;
+verified against the real GCS object and it does NOT hold.** Checked the actual object behind one of these rows directly
+(`gs://.../day=2020-01-02/pipeline_mode=batch_databento/asset_group=tradfi/venue=CME/instrument_type=future/ data_type=ohlcv_1m/ticks.parquet`):
+there is exactly ONE file, named `ticks.parquet` (not a per-instrument filename) — this shape is a genuine bundle-by-day
+file covering many instruments, not a mis-parsed per-instrument object. So a blank `instrument_id` for this shape is
+correct-by-design given the rebuild script's own parsing rules, not a parser bug — retracting the "real fix: populate
+instrument_id per-object" recommendation two paragraphs above.
+
+**What the same query DID surface, re-checked with `instrument_type` included this time (181 rows for just
+`date=2020-01-02, venue=CME, data_type=ohlcv_1m`)**: the manifest carries BOTH lowercase (`combo`, `future`) AND
+uppercase-canonical (`COMBO`, `FUTURE`) `instrument_type` values as PERMANENTLY DISTINCT dedup groups for what is
+conceptually the same instrument class — e.g. many `combo` rows (old, `written_at` 2026-07-18..07-28) coexist alongside
+`COMBO` rows (this session's fresh rebuild, `written_at` 2026-08-02T17:40) without ever merging, because dedup on
+`instrument_type` is case-sensitive. **This is NOT a new bug** — it's the already-known, already-ruled C2a
+`instrument_type` casing issue (`/codex/02-data/cross-asset-canonical-target-ssot.md` and siblings; CLAUDE.md's own
+domain index: "C2a instrument_type COLUMN casing... RULED (D1/D2 2026-07-20) but migration_pending — compare
+case-insensitively, do NOT flag, do NOT refuse"). Its practical effect here: this session's rebuild (uppercase) never
+actually overwrites/fixes the old lowercase rows' `available_at` — it just adds a SEPARATE, parallel-but-never- merged
+uppercase row, so the fill-rate check (which reads BOTH casings as distinct rows) sees the old unfilled lowercase rows
+persist forever alongside the new filled uppercase ones, diluting the aggregate. **This plausibly explains the
+byte-identical-after-re-run result better than the retracted instrument_id theory**: the rebuild isn't failing to write
+useful data, it's writing correct data that the still-migration-pending casing split prevents from ever superseding the
+old rows.
+
+**CONFIRMED, same session — re-ran the fill-rate check with `instrument_type.str.upper()` folded before grouping**
+(pre-2023-04, `ohlcv_1m`+`ohlcv_1s`, `n=280,005` rows): naive case-sensitive fill rate **56.8%**, matching the earlier
+per-data_type numbers. Folded — grouping by `(date, venue, data_type, UPPER(instrument_type))` and counting a key as
+"covered" if ANY casing variant of that key is filled — jumps to **8,832 distinct folded keys, 7,418 covered (84.0%)**.
+**Casing duplication explains the large majority of the apparent gap** (56.8% → 84.0% just from folding), though not all
+of it — a genuine ~16% remains unfilled even after folding, which is real remaining work, not a measurement artifact.
+**Practical implication for whoever closes this out**: (1) the "fill rate" metric this whole investigation has been
+using is measuring the wrong thing while the C2a casing migration stays pending — any completion check for this todo
+should fold casing first, or it will perpetually undercount; (2) do NOT attempt a third full re-run of the rebuild
+expecting a different result — the rebuild is already landing correct data, the remaining ~16% gap plus the casing-fold
+itself are the real next steps, not another `rebuild_tradfi_manifest.py` invocation; (3) whether to actually MIGRATE the
+old lowercase rows to canonical uppercase (closing the split permanently) is the C2a ruling's own open migration work,
+out of this plan's scope — this doc's Apply todo should likely be evaluated against the FOLDED number, not the raw one,
+when deciding whether to flip it.
+
+**Checked whether the SAME casing-duplicate pattern affects the prediction lane's fill-rate numbers reported in this doc
+— it does NOT.** Prediction's `instrument_type` also carries a casing variant (`prediction_market`, 9,720 rows,
+alongside canonical `PREDICTION_MARKET`), but every prediction fill-rate figure in this doc's earlier entries already
+filters to the exact string `PREDICTION_MARKET`, so the casing split is orthogonal to prediction's low numbers (which
+are genuinely explained by the backfill not having reached that date range yet, not a dedup/casing artifact).
+
+### 2026-08-02T18:18Z — #14 (slot-11, data_engineering, dispatched `-001`) — declining, same live process as #13, still running
+
+Dispatched `-001` ("Apply `rebuild_prediction_manifest.py`") again. Same check #13 already ran: live `ps aux` on this
+host shows PID `1860179`
+(`rebuild_prediction_manifest.py --start-date 2025-09-13 --end-date 2026-08-01 --chunk-days 15`, from
+`.tabs/14/market-tick-data-service`) **still RUNNING** — started `17:31Z`, now ~54min uptime, 117% CPU, ~2.6GB RSS,
+healthy. This is the exact continuation #12's handoff recommended and #13 already found live an hour ago. No new
+information to add; launching a second run would duplicate #13's already-diagnosed waste/write-race risk. Declining
+`-001` again, `reason_code: "OTHER"` — whoever picks this up next should re-check `ps aux` for
+`rebuild_prediction_manifest.py` live before doing anything, same as #13 and this entry did, since the process may
+finish (or die) between dispatches.
+
+### 2026-08-02T18:50Z — #15 (slot-3, data_engineering, dispatched `-001`) — declining, third consecutive live-process collision, further along than #13/#14
+
+Dispatched `-001` ("Apply `rebuild_prediction_manifest.py`") a third time. Same live-process check #13/#14 ran: `ps aux`
+on this host shows PID `3659083`
+(`rebuild_prediction_manifest.py --start-date 2025-10-28 --end-date 2026-08-01 --chunk-days 15`, from
+`.tabs/14/market-tick-data-service`) **RUNNING**, started `18:47Z`, ~4min uptime, ~101% CPU, ~2.1GB RSS, healthy — a
+DIFFERENT (later) PID than #13/#14's `1860179`, and a materially later `--start-date` (`2025-10-28` vs `2025-09-13`),
+confirming genuine forward progress since #14's check, not a stuck/restarted process. Cross-checked `GET /api/backlog`:
+`-001` still `dispatched` to slot 3 (this session) while `-006` sits `dispatched` to slot 14 (the live process's owner)
+— same per-slot dispatch-pointer split #13/#14 already documented, unrelated to
+`mtds_backfill_sequential_true_dispatch_order_violated_2026_07_29.md`'s underlying cause (not re-diagnosing it a third
+time). Declining `-001` again for the same reason as #13/#14 — launching a second identical run would duplicate
+in-flight work and risk a write race on the same per-VM shard prefix for zero benefit. `reason_code: "OTHER"`. **Note
+for whoever picks this up next**: this is the THIRD consecutive session to hit this exact collision (2026-08-02, slots
+15/11/3) — if the live process (currently at `2025-10-28`, target end `2026-08-01`) is still running on your dispatch,
+this is not a new finding, just re-verify liveness per the `ps aux` pattern above and decline again; if it has finished,
+the actual remaining work is the force-consolidate + fill-rate-reverify + cron-resume follow-through per #9's checklist,
+which is genuinely still open and worth doing.
+
+### 2026-08-02T18:57Z — #16 (slot-7, data_engineering, dispatched `-001`) — declining, fourth consecutive collision, same live process still healthy
+
+Dispatched `-001` again. Same `ps aux` check #13/#14/#15 ran: PID `3659083` (the SAME process #15 found, from
+`.tabs/14/market-tick-data-service`, `--start-date 2025-10-28 --end-date 2026-08-01 --chunk-days 15`) is **still
+RUNNING** — `ELAPSED=603s` (~10min), RSS ~2.4GB, 120% CPU, no crash/exit signature. No new information beyond
+re-confirming liveness. Declining `-001` for the same reason as #13/#14/#15 — a second concurrent run would still
+duplicate in-flight work and risk a write race on the same per-VM shard prefix. `reason_code: "OTHER"`.
+
+### 2026-08-02T19:35Z — #17 (slot-16, data_engineering, dispatched `-001`) — declining, PID it checked had ALREADY been killed+relaunched (concurrent-edit race, corrected below)
+
+Dispatched `-001` again (after finishing an unrelated `instruments_service_e2e_live_mock_observability` archival task
+under a `backend_engineer` craft assignment on this same slot). Same `ps aux` check #13/#14/#15/#16 ran: PID `3659083`
+(the SAME process #15/#16 found, from `.tabs/14/market-tick-data-service`,
+`--start-date 2025-10-28 --end-date 2026-08-01 --chunk-days 15`) reported as **still RUNNING** — ~42min elapsed, ~4.1GB
+RSS, 121% CPU, no crash/exit signature. Declining `-001` via `POST /skip-current-task {reason_code: "OTHER"}` for the
+same reason as #13-#16.
+
+**CORRECTION (slot-14, resolving a concurrent-edit conflict on this exact entry) — that PID check raced slot-14's own
+kill+relaunch and is stale.** Independently, directly verified at `2026-08-02T19:26-19:28Z`: PID `3659083` was confirmed
+KILLED (empty `ps -p 3659083`, harness reported `status: failed, exit 144` — the 3rd such kill this session, see
+`worker_session_teardown_kills_long_running_pipeline_check_2026_07_27.md`'s corroborating entry) and relaunched as PID
+`153615` (`--start-date 2025-11-12 --end-date 2026-08-01`, durable range now through 2025-11-11). #17's "still RUNNING"
+read either raced this kill+relaunch by a couple minutes or hit a coincidental PID-reuse false-positive on a busy shared
+host — either way, **`3659083` is dead; `153615` is the current live process.** Whoever checks liveness next: verify
+`153615`, not `3659083`.
+
+### 2026-08-02T19:52Z — #18 (slot-8, data_engineering, dispatched `-001`) — declining, fifth consecutive collision, `153615` confirmed live
+
+Dispatched `-001` (after finishing an unrelated `cross_ag_instrument_type_casing_100pct_directive` archival task on this
+same slot, session resumed mid-task). Verified PID `153615` directly per #17's correction: `ps -p 153615` — **RUNNING**,
+`ELAPSED=16:41`, RSS ~2.55GB, 125% CPU, cmd
+`rebuild_prediction_manifest --start-date 2025-11-12 --end-date 2026-08-01 --chunk-days 15` from
+`.tabs/14/market-tick-data-service` — matches #17's correction exactly, no new kill/relaunch since. Declining `-001` via
+`POST /skip-current-task {reason_code: "OTHER"}` for the same reason as #13-#17 — a second concurrent apply would
+duplicate in-flight work and risk a write race on the same per-VM shard prefix. Whoever checks liveness next: re-verify
+`153615` (or its successor if killed+relaunched again).
+
+### 2026-08-02T20:38Z — #19 (slot-6) — declining, 6th collision, `153615` confirmed still live (1h10m)
+
+Same check as #13-#18: PID `153615` running/healthy (etime 01:10:33, RSS ~4.3GB, 116% CPU), no new info. Declining
+`-001` via `/skip-current-task` for the same reason.
+
+**#20 (slot-13)**: same check, `153615` still live — declining, same reason. Doc at line cap, see line-cap remediation
+doc.

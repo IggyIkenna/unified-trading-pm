@@ -425,7 +425,7 @@ then reaps `lifecycle-complete` in <45 s, proving the cleanup path is correct; i
 session-death signal).
 
 **The contract (LANDED 2026-07-21, `agent-orchestrator@0d510e9` →
-[`ao_uniform_agent_liveness_contract`](../../plans/active/ao_uniform_agent_liveness_contract_2026_07_20.md)).** A
+[`ao_uniform_agent_liveness_contract`](../../plans/archive/2026_07/ao_uniform_agent_liveness_contract_2026_07_20.md)).** A
 `one_shot`/`scheduled` agent, on completing, POSTs an explicit **role-aware `/done`** (task-less for a task-less one-off
 — today's `/done` is task + plan-flip gated and must be extended to accept a task-less completion). The backend then (a)
 archives the AgentRow `lifecycle-complete`, (b) frees the slot, (c) flags it so `WorkerLivenessKicker` stops nudging it.

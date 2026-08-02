@@ -53,7 +53,7 @@ depends_on: []
 ---
 
 > **✅ ARCHIVED 2026-07-25** — `status: resolved`, unlocked. The one genuinely-open item (root-cause the sentinel skip)
-> was migrated to `/plans/active/issues/qg_size_gate_sentinel_skip_root_cause_2026_07_25.md` before archiving; the other
+> was migrated to `/plans/archive/issues/qg_size_gate_sentinel_skip_root_cause_2026_07_25.md` before archiving; the other
 > two acceptance items are done and now flipped. Moved to `plans/archive/issues/` per the issue-doc-lifecycle archival
 > ritual.
 
@@ -112,7 +112,7 @@ module.
       RE-TRIAGE below (all 3 functions re-measured well under their limits). Checkbox flipped 2026-07-25 (archival
       sweep) — the RE-TRIAGE below already established this as done but the checkbox was left unflipped per its own
       "additive-annotation" convention; flipping now since the doc is being archived and should reflect true state.
-- [ ] [SCRIPT] P3. **MIGRATED 2026-07-25** to `/plans/active/issues/qg_size_gate_sentinel_skip_root_cause_2026_07_25.md`
+- [ ] [SCRIPT] P3. **MIGRATED 2026-07-25** to `/plans/archive/issues/qg_size_gate_sentinel_skip_root_cause_2026_07_25.md`
       — root-cause WHY the size gate didn't block whichever commit introduced this (sentinel-skip vs scoped-gate run)
       and note the fix/process change so future same-day sports commits can't silently regress this ratchet again.
       Confirmed by the 2026-07-23 RE-TRIAGE as still genuinely open "in spirit"; not fixed by `ac22305c` (that commit

@@ -267,7 +267,7 @@ not duplicated here.
       PREDICTION lane, which IS actively running (backlog task `-006`, dispatched to slot 3, mid chunked-apply as of
       this check) — i.e. tradfi's resume has no live ETA yet because its own Apply hasn't even been picked up,
       consistent with the already-tracked dispatcher issue
-      `/plans/active/issues/mtds_backfill_sequential_true_dispatch_order_violated_2026_07_29.md`. **Not fixed here**:
+      `/plans/archive/issues/mtds_backfill_sequential_true_dispatch_order_violated_2026_07_29.md`. **Not fixed here**:
       running the tradfi Apply/Resume belongs to `mtds_available_at_cross_asset_backfill_2026_07_13.md`'s own todos
       (lines 296-308) — doing it from this doc's scope would duplicate ownership of a plan that already tracks it and
       risk the exact concurrent-dispatch collision the prediction lane's own Progress Log documents happening 3x.
@@ -336,7 +336,7 @@ not duplicated here.
   tracked under the OTHER plan's own todos (lines 296-308), and duplicating it here risks the same concurrent-dispatch
   collision that plan's own Progress Log already documents 3x for the prediction lane. Left the sports-`-test-` finding
   (P2, features-sports-test bucket, no consolidated index) untouched — separate root cause (consolidator scheduler never
-  wired to `-test-` buckets by design, per `codex/05-infrastructure/manifest-consolidator-ssot.md` § "Coverage
+  wired to `-test-` buckets by design, per `/codex/05-infrastructure/manifest-consolidator-ssot.md` § "Coverage
   exemptions"), out of this todo's scope.
 - 2026-08-01 (slot-12, data_engineering, backlog task `features_smoke_matrix_verification_findings-001`): closed finding
   1 (multi_timeframe CLI argparse duplicate). Root cause: `ServiceBootstrap` defaults `add_date_args=True`, which

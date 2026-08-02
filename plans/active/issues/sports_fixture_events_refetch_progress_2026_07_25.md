@@ -763,3 +763,47 @@ this specific task-type should be read as "full redo needed," not "resume from l
 date boundary for a bug. At the now-fixed ~192 req/min rate, a clean uninterrupted run should still only take ~1.7h
 total (19,850 ÷ 192), so a full redo is a modest cost, not a reason to change approach. Releasing without
 duplicate-launch; re-armed monitoring at the standard cadence.
+
+**Health-checked 2026-08-02T18:07Z (slot 7, data_engineering), RUNNING, healthy — but the ~1.7h clean-run estimate is
+not holding; genuinely still hours out.** `gcloud compute instances list` confirms `af-backfill-20260802-152210` is the
+only non-`TERMINATED` `af-backfill-*`/`af-audit-*` VM, `RUNNING` in `asia-northeast1-c`. Heartbeat blob epoch
+`1785693978` = `2026-08-02T18:06:18Z` (~1min old at check time). `run.log` `date=` boundary at `2022-03-10` (up from
+`2020-09-27` at the 14:56Z check, ~3h11m apart — ~529 days covered, ~2.8 days/min average), live per-fixture
+`Fetched N events for fixture=X` + `Recovery-mode merge for fixture_events/league=...` writes actively streaming at
+check time (tailed the log directly, not just a snapshot), no failure signature
+(`grep -c 'DEPLOYMENT_COMPLETED\|exit_code'` = 0). Genuine forward progress, no stall. **Pace is much slower than the
+14:56Z entry's back-of-envelope estimate**: at the observed ~2.8 days/min average since that check, the remaining ~1,598
+days to `2026-07-25` project to roughly another **~9.5h**, not the ~1.7h a clean flat-rate run would need — consistent
+with this campaign's long-documented pattern that per-fixture cascade pace varies a lot by era (sparse-allowlist years
+fly through, dense/real-fetch-heavy years are much slower; the 14:56Z 1.7h figure was a pure req-count/rate calculation
+that doesn't account for this unevenness). Not completable this turn. Releasing via
+`/skip-current-task {"reason_code": "GATED"}`, not duplicate-launched. Next dispatch: repeat this health-check (compare
+`date=` boundary + heartbeat freshness against this entry); once terminal (`DEPLOYMENT_COMPLETED`/`exit_code` marker, VM
+self-deleted/TERMINATED), re-run `census_fixture_events_schema_variants_2026_07_25.py` (full, no `--limit`) before
+flipping this checkbox + `sports_satellite_ao_dispatch_batch2_2026_07_24.md`'s `sports_satellite_ao_dispatch_batch2-002`
+todo — a widened monitoring interval (well beyond the standard 30-60min) is appropriate given the ~9.5h projected
+remaining runtime.
+
+**Re-dispatched 2026-08-02T18:22Z (slot 11, data_engineering), only ~15min after the 18:07Z check — bare check only, per
+that entry's own "widened interval" ask.** `gcloud compute instances list` confirms `af-backfill-20260802-152210` still
+`RUNNING` in `asia-northeast1-c` (only non-`TERMINATED` `af-backfill-*` VM). Did not re-tail `run.log` or re-derive a
+pace estimate — the 18:07Z entry already projects ~9.5h remaining and explicitly asked for a longer gap before the next
+real check, so a full re-investigation this soon would just reproduce the same "still running, no new info" result.
+Releasing via `/skip-current-task {"reason_code": "GATED"}`, not duplicate-launched. Next dispatch: wait meaningfully
+longer than 15min before the next full health-check (the projected terminal time is late tonight UTC).
+
+**Health-checked 2026-08-02T19:45Z (slot 8, data_engineering), RUNNING, healthy — genuine progress, ~1h38m after the
+18:07Z check (a meaningful gap, per that entry's ask).** `gcloud compute instances list` confirms
+`af-backfill-20260802-152210` is the only non-`TERMINATED` `af-backfill-*`/`af-audit-*` VM, `RUNNING` in
+`asia-northeast1-c`. `run.log` `date=` boundary at `2022-09-30` (up from `2022-03-10` at 18:07Z, ~204 days covered in
+~1h38m — consistent pace with the 18:07Z entry's ~2.8 days/min average), live per-fixture
+`Fetched N fixtures for date=X` + `Recovery-mode merge for fixture_events/league=...` writes actively streaming, only
+the expected benign `CANONICAL_LEAGUE_ID_LOOKUP_MISS` warnings, zero `reached the request limit for the day`/`fail_fast`
+occurrences (`grep -c` = 0 — no quota exhaustion, unlike the 2026-07-29T14:14Z incident). Heartbeat blob epoch
+`1785699924` = `19:45:24Z`, ~20s old at check time. No `DEPLOYMENT_COMPLETED`/`exit_code` terminal marker (`grep -c` =
+0). Not completable this turn — at the observed pace (~204 days/1h38m ≈ 2.1 days/min), the remaining ~1,029 days to
+`2026-07-25` project to roughly another **~8h**, close to the 18:07Z entry's ~9.5h estimate (measured from a slightly
+earlier point). Releasing via `/skip-current-task {"reason_code": "GATED"}`, not duplicate-launched. Next dispatch: wait
+meaningfully longer than 15min again (projected terminal time is still many hours out — late tonight/early tomorrow
+UTC); once terminal, re-run `census_fixture_events_schema_variants_2026_07_25.py` (full, no `--limit`) before flipping
+this checkbox + `sports_satellite_ao_dispatch_batch2_2026_07_24.md`'s `sports_satellite_ao_dispatch_batch2-002` todo.

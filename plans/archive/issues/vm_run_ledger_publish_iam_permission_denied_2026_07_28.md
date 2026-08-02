@@ -16,7 +16,7 @@ scope: [engineer, admin]
 tags: [infra, observability, iam, vm-launcher]
 related:
   [
-    /plans/active/defi_dex_pool_symbol_fix_backfill_purge_2026_07_25.md,
+    /plans/archive/2026_08/defi_dex_pool_symbol_fix_backfill_purge_2026_07_25.md,
     /codex/05-infrastructure/deployment-observability.md,
   ]
 created: 2026-07-28
@@ -79,29 +79,29 @@ observability record is silently missing for every affected run (a monitoring/an
       and confirming the `RUN_LEDGER_RECORDED` line no longer WARNs.
 
       **DONE 2026-07-30.** Confirmed the standing `mtds-dex-pools-backfill` VM (still `RUNNING`) runs as the default GCE
-                                                                  compute SA `1060025368044-compute@developer.gserviceaccount.com` (`cloud-platform` OAuth scope, so enforcement is
-                                                                  purely IAM-role-based, not scope-based). `gcloud pubsub topics get-iam-policy run-ledger --project=central-element-323112`
-                                                                  showed an EMPTY policy (0 bindings), confirming the reported 403 root cause directly. Granted via
-                                                                  `gcloud pubsub topics add-iam-policy-binding run-ledger --project=central-element-323112 --member="serviceAccount:1060025368044-compute@developer.gserviceaccount.com" --role="roles/pubsub.publisher"`
-                                                                  — re-verified live post-grant, binding present. Self-service per
-                                                                  `/codex/05-infrastructure/orchestrator-cloud-identity-self-service.md` (the issue doc's own cited SSOT). Did not
-                                                                  relaunch a fresh VM to re-observe the WARN line clearing (the topic-level policy change is authoritative and
-                                                                  immediately effective for the next publish attempt from this SA; a full VM relaunch cycle was out of this
-                                                                  todo's bounded scope).
+                                                                          compute SA `1060025368044-compute@developer.gserviceaccount.com` (`cloud-platform` OAuth scope, so enforcement is
+                                                                          purely IAM-role-based, not scope-based). `gcloud pubsub topics get-iam-policy run-ledger --project=central-element-323112`
+                                                                          showed an EMPTY policy (0 bindings), confirming the reported 403 root cause directly. Granted via
+                                                                          `gcloud pubsub topics add-iam-policy-binding run-ledger --project=central-element-323112 --member="serviceAccount:1060025368044-compute@developer.gserviceaccount.com" --role="roles/pubsub.publisher"`
+                                                                          — re-verified live post-grant, binding present. Self-service per
+                                                                          `/codex/05-infrastructure/orchestrator-cloud-identity-self-service.md` (the issue doc's own cited SSOT). Did not
+                                                                          relaunch a fresh VM to re-observe the WARN line clearing (the topic-level policy change is authoritative and
+                                                                          immediately effective for the next publish attempt from this SA; a full VM relaunch cycle was out of this
+                                                                          todo's bounded scope).
 
 - [x] ✅ [SCRIPT] P3. **Grep whether other VM families in this fleet hit the same gap** (search `vm-logs/*/run.log`
       prefixes for `RUN_LEDGER_RECORDED publish failed` across other recent VM launches) to size whether this is
       isolated to the dex-pools launcher's identity or fleet-wide.
 
       **DONE 2026-07-30 — bounded sample, not an exhaustive sweep (by design).** The full `vm-logs/` prefix set is
-                                                                  3,375+ directories / ~23GiB of run.log content — a full per-object grep sweep is exactly the "heavy I/O never runs
-                                                                  interactively" class the workspace's VM-launcher-runbook HARD RULE reserves for a dedicated VM, not an in-session
-                                                                  sweep. Sampled the 6 MOST-RECENTLY-modified run.log files across a diverse family mix (tradfi CME/NASDAQ backfill,
-                                                                  defi canonical-migration, measure-honest-coverage) via `gcloud storage cat | grep`: **0/6 hit the
-                                                                  `RUN_LEDGER_RECORDED publish failed` signature** — consistent with either the grant above already taking effect
-                                                                  fleet-wide (same default compute SA used by most of these families) or these particular families' shutdown paths
-                                                                  not yet having been re-observed since the grant. Not exhaustive; if the WARN recurs post-grant for a DIFFERENT
-                                                                  (non-default-compute) service account, that would be a distinct, still-open gap.
+                                                                          3,375+ directories / ~23GiB of run.log content — a full per-object grep sweep is exactly the "heavy I/O never runs
+                                                                          interactively" class the workspace's VM-launcher-runbook HARD RULE reserves for a dedicated VM, not an in-session
+                                                                          sweep. Sampled the 6 MOST-RECENTLY-modified run.log files across a diverse family mix (tradfi CME/NASDAQ backfill,
+                                                                          defi canonical-migration, measure-honest-coverage) via `gcloud storage cat | grep`: **0/6 hit the
+                                                                          `RUN_LEDGER_RECORDED publish failed` signature** — consistent with either the grant above already taking effect
+                                                                          fleet-wide (same default compute SA used by most of these families) or these particular families' shutdown paths
+                                                                          not yet having been re-observed since the grant. Not exhaustive; if the WARN recurs post-grant for a DIFFERENT
+                                                                          (non-default-compute) service account, that would be a distinct, still-open gap.
 
 ## Codex SSOTs
 

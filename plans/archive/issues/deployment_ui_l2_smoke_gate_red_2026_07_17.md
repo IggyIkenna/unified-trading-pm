@@ -231,7 +231,7 @@ passes — this is NOT a quick re-baseline, the gate has drifted meaningfully si
 ## 2026-07-30 update (slot-3, ui_developer) — measured while verifying an unrelated todo; gate drift is sideways, not converging
 
 Surfaced incidentally while verifying
-[`data_pipeline_alert_substrate_residual_2026_07_24_finalize_2026_07_30.md`](/plans/active/data_pipeline_alert_substrate_residual_2026_07_24_finalize_2026_07_30.md)
+[`data_pipeline_alert_substrate_residual_2026_07_24_finalize_2026_07_30.md`](/plans/archive/2026_07/data_pipeline_alert_substrate_residual_2026_07_24_finalize_2026_07_30.md)
 todo 2 (streaming-events pane, an unrelated deployment-ui change touching only `StreamingLogsPanel.tsx` + a new
 `tests/smoke/cockpit-streaming-logs-live-contract.spec.ts`). Ran the full
 `npx playwright test --project=chromium tests/smoke/` suite for my own `pw:L2 ✓` evidence: **407 passed, 17 failed**

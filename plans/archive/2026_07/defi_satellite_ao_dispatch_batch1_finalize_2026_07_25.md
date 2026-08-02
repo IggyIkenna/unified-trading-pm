@@ -129,14 +129,15 @@ drift_direction: advance-code
       residual TRADER_JOE_V2/VELODROME_V2 gaps already dispatched via batch1's own `dex_swaps_handler.py` todo). **Item
       1** (the `batch_onchain_subgraph` bare-`0x<address>.parquet` second writer path) — per the doc's own "Update
       2026-07-28" section — was SUPERSEDED: root-caused + fixed at the query/parser source (not via a resolver) and
-      historically re-backfilled + purged under `defi_dex_pool_symbol_fix_backfill_purge_2026_07_25.md`. **Independently
-      re-verified today** (not just trusting the doc's prior claim) that this superseding plan is genuinely complete:
-      all 5 of its own todos are `[x]` in the live plan file (`market-tick-data-service@63199601` query/parser fix,
-      `@0f40a69f` feasibility test, the `dex_pool_state` re-backfill, and the old address-keyed-leaf purge) — this is
-      notable because a live, currently-tracked dispatcher bug (`gate_on_depends` failing to wire a partially-done
-      upstream — see `issues/gate_on_depends_wiring_gap_defi_dex_pool_finalize_2026_07_25.md`) previously showed this
-      exact plan at 0/5 and 3/5 across several recurrence notes; confirmed it has since genuinely reached 5/5, so the
-      superseding claim holds and is not itself a stale artifact of that bug. **Net verdict**: no
+      historically re-backfilled + purged under
+      `/plans/archive/2026_08/defi_dex_pool_symbol_fix_backfill_purge_2026_07_25.md`. **Independently re-verified
+      today** (not just trusting the doc's prior claim) that this superseding plan is genuinely complete: all 5 of its
+      own todos are `[x]` in the live plan file (`market-tick-data-service@63199601` query/parser fix, `@0f40a69f`
+      feasibility test, the `dex_pool_state` re-backfill, and the old address-keyed-leaf purge) — this is notable
+      because a live, currently-tracked dispatcher bug (`gate_on_depends` failing to wire a partially-done upstream —
+      see `issues/gate_on_depends_wiring_gap_defi_dex_pool_finalize_2026_07_25.md`) previously showed this exact plan at
+      0/5 and 3/5 across several recurrence notes; confirmed it has since genuinely reached 5/5, so the superseding
+      claim holds and is not itself a stale artifact of that bug. **Net verdict**: no
       `defi_satellite_ao_dispatch_batch2` item drafted — nothing remains to extract from this doc.
 - [x] ✅ [DIAG] P1. **DONE 2026-07-30 (slot-7) — ANSWERED, and already fully extracted + executed + verified + archived;
       no batch2 item needed.** Entry 3 of `plans/active/issues/autonomous_session_operator_decisions_2026_07_25.md`

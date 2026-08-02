@@ -159,11 +159,22 @@ No design call needed — every fact here is independently checkable:
 - [x] ✅ [BACKEND] P1. Fix the identified cause and confirm via `POST /api/backlog/regen` + `GET /api/backlog` that a
       task now exists with `plan_ref: plans/active/defi_satellite_ao_dispatch_batch8_2026_08_02.md`. Repo:
       agent-orchestrator@ae003b58e — see Progress Log 2026-08-02 slot-8 entry below for the fix + verification.
-- [ ] [BACKEND] P2. Harden `_wire_gate_on_depends_prereqs` (or its caller) to fail loudly — log/flag, do not silently
-      no-op — when a `gate_on_depends: true` plan's upstream `depends_on` plan is `status: active` with open todos but
-      produced zero derived backlog tasks. Repo: agent-orchestrator. Done when: the same reproduction (an active/undone
-      upstream with zero derived tasks) is shown to raise a visible signal instead of silently unblocking the gated
-      plan's dispatch.
+- [x] ✅ [BACKEND] P2. **DONE 2026-08-02 (slot-16, backend_engineer)** — Repo: agent-orchestrator@11f2d4a. Added a
+      raw-checkbox scan (`_plan_has_any_unchecked_checkbox`, deliberately WITHOUT `_parse_open_todos`'s dispatchability
+      filtering) + a frontmatter-`status:` cross-check inside `_wire_gate_on_depends_prereqs`: when an upstream produces
+      zero backlog tasks AND `_parse_open_todos` also reports zero open todos, the function now independently
+      corroborates via the raw scan — if the upstream is present, NOT in a terminal status
+      (`complete`/`cancelled`/`superseded`/`resolved`), and still has ANY unchecked checkbox on disk, it is treated as
+      OPEN (blocking the gate via the existing named `gate-upstream-open:<stem>` prerequisite) and a `logger.warning`
+      fires citing this issue doc. This closes the exact silent-no-op path the incident hit: `_parse_open_todos` only
+      returns dispatchable todos, so a checkbox excluded from dispatch (by design, e.g. `**Stretch**`, or via a parser
+      false-positive like todo 1+2's word-order bug) used to read identically to "genuinely finished and pruned" and the
+      wiring pass took no action at all. Verified via 2 new tests in `test_regen_backlog_from_plan.py`:
+      `test_regen_gate_on_depends_holds_when_upstream_open_todo_excluded_from_dispatch` (the reproduction — an
+      active/undone upstream whose only checkbox is dispatch-excluded now correctly HOLDS the gate, was previously
+      silently unwired) and `test_regen_gate_on_depends_unwired_when_upstream_terminal_status_and_no_checkbox` (the
+      counterpart — a genuinely `status: complete` upstream with zero checkboxes stays correctly unwired, no
+      false-positive). Full quality-gates.sh green (2235 passed, 2 skipped) before shipping.
 - [ ] [DATA] P3. Once the above land and batch8's real todo is dispatched and completed (evidence: VM `run.log`
       force+skip verdict per the batch8 todo's own done-when), re-verify
       `defi_satellite_ao_dispatch_batch8_2026_08_02_finalize-001` re-gates correctly and only THEN do the actual
@@ -287,3 +298,24 @@ No design call needed — every fact here is independently checkable:
   (harden the gate to fail loudly instead of silently no-op'ing) and todo 4 (the real DATA-craft re-verification +
   source-doc reconciliation once batch8's todo actually completes) remain open for their own dispatches — not in this
   task's scope.
+
+- **2026-08-02 (slot-16, backend_engineer craft, task `defi_batch8_finalize_gate_bypass_missing_upstream_task-003`) —
+  todo 3 shipped + verified.** Implemented the loud-fail hardening: `_wire_gate_on_depends_prereqs` previously trusted
+  `_parse_open_todos` (dispatchable-only) as the sole disambiguator between a genuinely-finished upstream and a
+  never-ingested-but-open one — but `_parse_open_todos` deliberately excludes non-dispatchable-marked checkboxes
+  (BLOCKED-*/`**Stretch**`/etc.), so an upstream whose only remaining checkbox happened to be excluded (by design, or
+  via a parser false-positive — exactly todo 1/2's root cause) was indistinguishable from "done" and the wiring pass
+  silently took no action. Added `_plan_has_any_unchecked_checkbox` (a raw checkbox scan with NO dispatchability
+  filtering — structurally cannot be fooled by the same bug) + a frontmatter `status:` cross-check
+  (`_TERMINAL_PLAN_STATUSES = {complete, cancelled, superseded, resolved}`): when both `upstream_ids` and
+  `_parse_open_todos` are empty, the raw scan now independently corroborates — if the upstream file is present, not in a
+  terminal status, and still has ANY unchecked checkbox, the gate is now treated as OPEN (blocks via the existing named
+  `gate-upstream-open:<stem>` prerequisite) and a `logger.warning` fires citing this doc, so the bug CLASS surfaces on
+  the next regen tick's logs instead of needing 5+ worker sessions across many hours to notice (as this doc's own
+  Progress Log shows happened for the specific incident). 2 new regression tests added to
+  `test_regen_backlog_from_plan.py`: the reproduction (upstream's only checkbox is dispatch-excluded → gate now holds,
+  previously silently unwired) and the negative counterpart (genuinely `status: complete` upstream with zero checkboxes
+  → stays correctly unwired, confirming no false-positive on the happy path). Full `quality-gates.sh` green (2235
+  passed, 2 skipped, dashboard tsc/vitest clean) before shipping. Shipped as `agent-orchestrator@11f2d4a`, verified on
+  origin via `git merge-base --is-ancestor`. Todo 4 (DATA-craft re-verification + source-doc reconciliation once
+  batch8's real todo actually completes) remains open for its own dispatch — outside this task's scope.

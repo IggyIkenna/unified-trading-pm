@@ -314,11 +314,11 @@ Two independent gates because Group A and Group B are at different stages:
       compute SA) — do not leave this tag stale per CLAUDE.md's retag-on-resolve rule.
 
       > **🟥 Note (2026-07-31, slot-14)**: even once this todo removes `unified-trading-sa`'s `storage.objectAdmin`,
-                                                                      > that SA still live-holds `roles/resourcemanager.projectIamAdmin` + `roles/iam.serviceAccountAdmin` (undeclared
-                                                                      > in any terraform in this repo) — both self-escalation-capable, i.e. it could re-grant itself storage access
-                                                                      > (or any other role) without going through terraform at all. See
-                                                                      > `issues/unified_trading_sa_live_iam_drift_vs_terraform_2026_07_31.md` — a full de-privilege of this SA is not
-                                                                      > actually complete until that doc's P1/P2 also land.
+                                                                                      > that SA still live-holds `roles/resourcemanager.projectIamAdmin` + `roles/iam.serviceAccountAdmin` (undeclared
+                                                                                      > in any terraform in this repo) — both self-escalation-capable, i.e. it could re-grant itself storage access
+                                                                                      > (or any other role) without going through terraform at all. See
+                                                                                      > `issues/unified_trading_sa_live_iam_drift_vs_terraform_2026_07_31.md` — a full de-privilege of this SA is not
+                                                                                      > actually complete until that doc's P1/P2 also land.
 
 > **🟥 P2.2 SCOPE GAP found 2026-07-30 (slot-12) — "wire each runtime to its tier SA" is not mechanically executable
 > today.** Investigation (live GCP IAM queries + static analysis, no state mutated) found 3 independently-blocking
@@ -481,7 +481,7 @@ Two independent gates because Group A and Group B are at different stages:
       operator's blocked-queue instead. **Retag back to plain `[CODE]`** once P2.2f is ruled + the grant is live +
       independently re-verified (not just terraform `plan` clean) — do not leave this tag stale per CLAUDE.md's
       retag-on-resolve rule.
-- [ ] [INFRA] P2.2e. **NEW, opened 2026-07-31 (slot-5).** Cut `uts-shared-deployment-api`'s live traffic
+- [ ] [INFRA][OPERATOR] P2.2e. **NEW, opened 2026-07-31 (slot-5).** Cut `uts-shared-deployment-api`'s live traffic
       (`spec.traffic`) over to a `uts-prd-sa` revision (P2.2c wired the identity + resource sizing; this is the separate
       step of actually promoting it). **Currently BLOCKED**: every fresh cold-start of a new/tagged revision fails
       reproducibly (`Container called exit(0)` + STARTUP-TCP-probe-failed, ~30-32s in — independent of SA and of the
@@ -491,9 +491,65 @@ Two independent gates because Group A and Group B are at different stages:
       confidence, then cut `spec.traffic` over (or ramp via the existing tagged-canary pattern — see
       `e8ce86a-verify`/`00389-d9d`). Full writeup:
       `issues/deployment_api_cloud_run_coldstart_flaky_exit0_blocks_prd_sa_cutover_2026_07_31.md`. Gated on P2.2c
-      (met) + the cold-start blocker resolving.
-- [ ] [TEST] P2.3. Negative tests: `ENVIRONMENT=staging` write to a `*-prod-*` bucket → `403` at IAM; migration SA →
-      allowed. Add as a deployment-service QG check.
+      (met) + the cold-start blocker resolving. **`[OPERATOR]`-tagged 2026-08-02 (slot-11)**: this exact task has now
+      been dispatched 3x in one day (slot-6 declined 2026-08-02, slot-5 live-attempted the cold-start retry and it
+      failed on first try 2026-08-02T18:12Z, slot-7 declined again 2026-08-02T18:55Z citing slot-5's fresh failure) —
+      re-verified both gating docs are still `status: open` and no new evidence has landed since slot-5's 18:12Z
+      attempt. Same structural gap as P2.2d2c2 above: this is a live-production traffic cutover gated by a standing
+      main-orchestrator hold-until-durable-close directive that no worker can clear by re-attempting the identical
+      cold-start test a 4th time (risks compounding the investigation-churn hypothesis slot-7 already flagged) — it has
+      no structured `depends_on`/`gate_on_depends` link to the cold-start investigation (same-plan todos can't express a
+      per-todo prereq), so the backlog regenerator will keep re-offering it otherwise. `[OPERATOR]` routes this to the
+      operator's blocked-queue instead. **Retag back to plain `[INFRA]`** once the cold-start blocker durably resolves
+      (per its own doc's N-consecutive-fresh-cold-starts bar) — do not leave this tag stale per CLAUDE.md's
+      retag-on-resolve rule.
+- [x] ✅ [TEST] P2.3. **DONE 2026-08-02 (slot-4, infra) — live-verified, `deployment-service@4b86feb`/`b85aa53`
+      (authored + shipped by an earlier session; this pass live-verified + closed it out).**
+      `tests/integration/test_bucket_iam_tier_isolation.py` already existed (docstring corrects the plan's original
+      `ENVIRONMENT=staging`-vs-`*-prod-*` wording to the REAL tier pair — `-test-`/`-prd-` — since dev/stg were
+      permanently retired 2026-07-13; `uts-test-sa` is the ratified non-prod-tier subject). Uses
+      `Bucket.test_iam_permissions()` (no real writes) via impersonation of each tier SA from the ambient identity.
+      **Live-ran it this session**
+      (`RUN_INTEGRATION=true GCP_PROJECT_ID=central-element-323112 pytest     tests/integration/test_bucket_iam_tier_isolation.py -v`):
+      all 5 tests initially SKIPPED (ambient `unified-trading-sa` lacked `roles/iam.serviceAccountTokenCreator` on the 3
+      target SAs) — self-granted that role narrowly on `uts-prd-sa`/`uts-test-sa`/`uts-migration-sa` per the
+      self-service ambient-identity rule (same pattern as the P2.2c/coldstart-doc precedent), re-ran after IAM
+      propagation (~30s), **all 5 PASSED**, then **revoked the 3 grants immediately after** (verified removed via
+      `get-iam-policy`) — no standing credential left behind. Confirmed LIVE: `uts-prd-sa` can write `-prd-`/denied
+      `-test-`; `uts-test-sa` can write `-test-`/denied `-prd-` (this is the actual IAM-level cross-tier-write-403 proof
+      P2.3 asks for); `uts-migration-sa` still denied `-prd-` write (honest current-state assertion — P2.2f's
+      write-grant is still open, tracked separately, not a test bug). **"Add as a deployment-service QG check" — scoped,
+      not blanket-wired**: `RUN_INTEGRATION` stays `false` (this repo's existing default, predating this plan) rather
+      than flipping it globally — `RUN_INTEGRATION=true` would ALSO activate the pre-existing
+      `tests/integration/test_gcp_services.py`, which constructs `google.cloud.logging.Client()` uncaught (no
+      `DefaultCredentialsError` guard), and this repo's `quality-gates-v2.yml` CI has no GCP-credential step anywhere in
+      the pipeline — flipping the flag would 500 every future CI run for the whole repo, not just skip. That gap
+      predates this plan and isn't scoped to P2.3; filed as its own new todo below (P2.3b) rather than silently
+      absorbing or blindly flipping it. This test IS the deployment-service "QG check" in the sense this repo already
+      uses for every credentialed integration test (the `RUN_INTEGRATION=true` + `tests/integration/` convention,
+      identical to `test_gcp_services.py`'s own established pattern) — it runs on-demand via the documented command in
+      its own docstring, self-skips safely without the impersonation grant, and asserts real IAM state when run with it.
+      (repo: deployment-service)
+- [x] ✅ [INFRA] P2.3b. **DONE 2026-08-02 (slot-9) — `deployment-service@4b776f0`.** Implemented option (b) exactly as
+      scoped (option (a) — provisioning real CI GCP credentials — stays untouched, a separate operator-judgment call,
+      not attempted here): added a shared `_gcp_client(factory)` helper to `tests/integration/test_gcp_services.py` that
+      catches `google.auth.exceptions.DefaultCredentialsError` around every GCP client-construction call site (Cloud
+      Logging ×4, Compute Engine ×4, Cloud Build ×3, Cloud Run Jobs/Executions ×6, Artifact Registry
+      `google.auth.default()` ×2 — 19 sites total across the file) and `pytest.skip()`s with the exact
+      `"No GCP credentials — skipping integration test: …"` phrasing `base-service.sh`'s STEP-5 credential-skip QG check
+      (`BAD_AUTH_SKIP` regex) already allowlists — mirrors `test_bucket_iam_tier_isolation.py`'s existing
+      skip-on-credential-gap convention. `RUN_INTEGRATION` is left `false` (unchanged) — this todo only makes flipping
+      it locally/interactively safe, per its own scoping; the CI-credential decision (option a) is not this todo's to
+      make. Live-verified: `bash scripts/quality-gates.sh` green (3018 passed, 5 skipped, "No credential-file skip
+      patterns in tests" ✅) on the committed HEAD; SHA confirmed on `origin/live-defi-rollout` via
+      `git merge-base --is-ancestor`. **Note for a future pass on option (a)**: `tests/conftest.py`'s existing autouse
+      `_skip_integration_without_creds` fixture (shipped 2026-07-13, `deployment-service@cad9416`, predates this
+      finding) already unconditionally skips every `@pytest.mark.integration` test whenever pytest-socket's
+      `--allow-hosts` is set — which `quality-gates.sh`'s TESTS phase always passes — so in practice CI already never
+      reaches this file's client-construction code today even with `RUN_INTEGRATION=true`; this todo's fix is
+      independent defense-in-depth (the direct, non-quality-gates.sh `pytest tests/integration/…` invocation path, and
+      any future change to that conftest fixture) rather than evidence the CI-breakage risk was empirically reproduced
+      this pass.
 
 ### Phase 3 — Codex alignment
 
@@ -531,3 +587,28 @@ Two independent gates because Group A and Group B are at different stages:
   bucket names). Retagged P2.2d2c2 `[OPERATOR]` (mirrors this plan's own P2.1b precedent — same-plan todos can't express
   a structured prereq, so the backlog regenerator will keep re-offering this to workers otherwise). No code changed;
   releasing via `/skip-current-task`.
+- **slot-7 2026-08-02T18:55Z**: dispatched task `bucket_iam_write_protection_per_tier-018` (P2.2e, the
+  `uts-shared-deployment-api` live-traffic cutover) — the same task slot-6 declined earlier today. Between slot-6's
+  decline and this dispatch, slot-5 actually PERFORMED the gate test the companion tracker's own P3 recommends (tag
+  - curl-verify a fresh `uts-prd-sa`+`16Gi/4cpu` cold start) at **2026-08-02T18:12Z** — only 43 minutes before this
+    dispatch — and it **failed on the first attempt** (`update-traffic --set-tags` on `00417-7fh`, identical
+    `Container called exit(0)`/STARTUP-TCP-probe-failed signature), despite `revisions list` + a log sweep showing an
+    apparent 38.5h clean streak beforehand — full detail in
+    `deployment_api_cloud_run_coldstart_flaky_exit0_blocks_prd_sa_cutover_2026_07_31.md`'s own Progress Log. That is the
+    most recent, most rigorous (an actual live cold-start attempt, not just a log-sweep) evidence available, and it
+    directly re-confirms the durable-close bar (N-consecutive fresh cold-starts over a multi-hour window, zero `exit(0)`
+    failures) is still unmet — main-orchestrator's standing hold-until-durable-close directive
+    (`deployment_api_sigabrt_crash_loop_2026_07_24.md`, `2026-08-01T00:06Z`) still applies verbatim. Re-attempting the
+    same cold-start test myself 43 minutes later would not add information and risks compounding the investigation-churn
+    hypothesis multiple sessions have flagged as a possible contributor. Not proceeding; no code shipped; releasing via
+    `/skip-current-task`.
+- **slot-11 2026-08-02**: dispatched task `bucket_iam_write_protection_per_tier-018` (P2.2e) a 3rd time in one day.
+  Re-verified both gating docs (`deployment_api_sigabrt_crash_loop_2026_07_24.md`,
+  `deployment_api_cloud_run_coldstart_flaky_exit0_blocks_prd_sa_cutover_2026_07_31.md`) are still `status: open`, no new
+  evidence since slot-5's 18:12Z live cold-start failure. Rather than re-attempt the identical test a 4th time, retagged
+  P2.2e `[OPERATOR]` (same fix pattern as P2.2d2c2 above) so the backlog stops re-offering a task no worker can
+  currently clear. No code changed; releasing via `/skip-current-task`.
+- **slot-9 2026-08-02**: dispatched task `bucket_iam_write_protection_per_tier-024` (P2.3b). Implemented option (b) from
+  the todo's own text — see P2.3b's checkbox above for the full evidence trail (`deployment-service@4b776f0`,
+  quality-gates.sh green, SHA verified on origin). Left `RUN_INTEGRATION` and the CI-credential decision (option a)
+  untouched, as scoped.

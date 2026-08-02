@@ -124,7 +124,7 @@ FAILED/timeout" output hints that MEM_WRAP/D-Bus is the actual cause.
   reacts to the REAL call's own launch failure directly (not a stale proxy from an earlier probe), so it already covers
   this regardless of elapsed time since the preflight check; a re-validated preflight immediately before the real call
   would face the identical race window the real call's own systemd-run attempt already faces — redundant exposure, not a
-  fix. Both todos now closed; archiving this issue doc per `codex/11-project-management/issue-doc-lifecycle.md` (trigger
+  fix. Both todos now closed; archiving this issue doc per `/codex/11-project-management/issue-doc-lifecycle.md` (trigger
   2: commit SHA fixes the issue — P2's SHA plus this analysis-closure for P3). Fixed the two live corpus referrers so
   archival doesn't leave a broken path/stale status: `plans/active/qg_host_adaptive_resource_governor_2026_07_14.md`
   (path updated to `/plans/archive/issues/...`) and `plans/active/ci_satellite_ao_dispatch_batch4_2026_07_31.md` (status

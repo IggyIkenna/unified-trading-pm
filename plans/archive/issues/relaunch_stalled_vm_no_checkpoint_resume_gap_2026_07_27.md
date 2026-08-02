@@ -39,7 +39,7 @@ tags:
 related:
   [
     /plans/active/issues/migration_vm_hung_detection_monitoring_gap_2026_07_27.md,
-    /plans/active/issues/vm_fleet_preemption_autorecovery_gap_2026_07_23.md,
+    /plans/archive/issues/vm_fleet_preemption_autorecovery_gap_2026_07_23.md,
     /codex/05-infrastructure/spot-vms-for-backfill.md,
     /codex/05-infrastructure/deployment-observability.md,
     /codex/05-infrastructure/vm-preemption-and-billing-waste-monitoring.md,

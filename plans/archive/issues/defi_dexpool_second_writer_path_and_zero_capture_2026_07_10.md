@@ -21,8 +21,9 @@ assigned_vm: planning
 resolved_by:
   "Item 2 (4 zero-capture protocols) wired + verified 2026-07-14/24. Item 1 (second writer path) SUPERSEDED — root cause
   fixed at the query/parser source (not a resolver) and historically re-backfilled under
-  defi_dex_pool_symbol_fix_backfill_purge_2026_07_25.md: market-tick-data-service@63199601 (query/parser fix), @0f40a69f
-  (feasibility live-test), @249dc019 (purge of superseded address-keyed leaves, spot-verified 2026-07-28)."
+  /plans/archive/2026_08/defi_dex_pool_symbol_fix_backfill_purge_2026_07_25.md: market-tick-data-service@63199601
+  (query/parser fix), @0f40a69f (feasibility live-test), @249dc019 (purge of superseded address-keyed leaves,
+  spot-verified 2026-07-28)."
 source:
   "Real findings surfaced by the DEX-pool migrate-stage agent (wf_118d8268-18c, 2026-07-09) while landing the
   fee-tier/glued_pair_id symbol-shape fix (market-tick-data-service@0ce28623)."
@@ -108,9 +109,9 @@ cycle only if item 1's resolver/scope question gets independently investigated e
 
 Item 1's own resolver question ("pool address → symbol/venue/chain lookup ... join against it rather than re-deriving")
 got independently investigated exactly as the 2026-07-25 update anticipated, but not from this doc —
-`plans/active/defi_dex_pool_symbol_fix_backfill_purge_2026_07_25.md` (opened the same day as this doc's last re-check,
-for an unrelated FLAGGED-marker investigation) found and fixed the actual root cause first, making the resolver-build
-unnecessary.
+`/plans/archive/2026_08/defi_dex_pool_symbol_fix_backfill_purge_2026_07_25.md` (opened the same day as this doc's last
+re-check, for an unrelated FLAGGED-marker investigation) found and fixed the actual root cause first, making the
+resolver-build unnecessary.
 
 **Verified by code read (this task, 2026-07-28)**: `_dex_pools_subgraph.py`'s protocol table maps exactly
 `curve`/`sushiswap`/`velodrome_v2`/`trader_joe_v2` to the `messari_basic` entry (`_dex_pools_subgraph.py:300-308`) — no
@@ -140,12 +141,12 @@ historical range directly from the subgraph with real symbols attached, no resol
 
 **Disposition**: Item 1 is closed by this superseding work — no separate resolver or historical-migration build is
 needed, and starting one now would duplicate/conflict with the sibling plan's in-flight purge todo. Full detail:
-`plans/active/defi_dex_pool_symbol_fix_backfill_purge_2026_07_25.md` todos 2-5 + Progress Log.
+`/plans/archive/2026_08/defi_dex_pool_symbol_fix_backfill_purge_2026_07_25.md` todos 2-5 + Progress Log.
 
 ## Todos
 
 - [x] ✅ [BACKEND] P2. **Scope + build the `batch_onchain_subgraph` second-writer-path historical migration** — Item 1.
       **SUPERSEDED, no build needed** — root-caused + fixed at the source (subgraph query/parser, not a resolver) and
-      historically re-backfilled under `defi_dex_pool_symbol_fix_backfill_purge_2026_07_25.md`
+      historically re-backfilled under `/plans/archive/2026_08/defi_dex_pool_symbol_fix_backfill_purge_2026_07_25.md`
       (`market-tick-data-service@63199601`, `@0f40a69f`, `@249dc019`; backfill VMs completed + spot-verified
       2026-07-28). See "Update 2026-07-28" above for full evidence.

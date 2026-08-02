@@ -161,4 +161,4 @@ NOT required for transient drift. Required if Path 3 (manual rebalance) was used
   [`kill_switch_venue_disconnect.md`](./kill_switch_venue_disconnect.md).
 - **Operator playbook:** [`operator-playbook.md`](./operator-playbook.md).
 - **Implementing plan:**
-  [`alerting_service_live_rules_2026_05_07`](../../../plans/active/alerting_service_live_rules_2026_05_07.md).
+  [`alerting_service_live_rules_2026_05_07`](../../../plans/archive/2026_05/alerting_service_live_rules_2026_05_07.md).

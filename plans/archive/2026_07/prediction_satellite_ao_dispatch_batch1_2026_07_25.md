@@ -176,7 +176,7 @@ drift_direction: advance-code
       code changed, no GCS writes. Source: `prediction_phase_ab_residuals_2026_07_24.md`.
 
 - [x] ✅ [DECISION] P2. **Retagged 2026-07-29 (corpus hygiene pass): resolved-by-reference — see
-      `/plans/active/prediction_satellite_ao_dispatch_batch2_2026_07_25.md`.** **Resolve the conflict-gated candidates
+      `/plans/archive/2026_07/prediction_satellite_ao_dispatch_batch2_2026_07_25.md`.** **Resolve the conflict-gated candidates
       queued below** — the "Deferred — conflict-gated or excluded" section documents AO-eligible candidates across 12 of
       the 13 orphaned prediction docs (plus item 9 of `prediction_phase_ab_residuals_2026_07_24.md`) that were never
       converted into dispatchable todos, per the operator's 2026-07-25 instruction to queue rather than silently resolve

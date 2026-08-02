@@ -95,7 +95,7 @@ instead of rediscovering it from scratch.
 - **context-scout 2026-08-01**: populated/refreshed context_scope (2 entries).
 - **triage session 2026-08-01 (slot 9)**: Ran a clean `npx playwright test --project=chromium tests/smoke/ --workers=1`
   full baseline (108 tests, 13.3m) — the correct measurement methodology per
-  `codex/06-coding-standards/ui-testing-layers.md`'s documented shared-host-contention gotcha (unbounded parallel runs
+  `/codex/06-coding-standards/ui-testing-layers.md`'s documented shared-host-contention gotcha (unbounded parallel runs
   on this shared multi-agent-slot host produce spurious, run-to-run-varying failures). Result: **104/108 passed**, only
   4 failures — confirming the vast majority of the original 67 (2026-07-28, full-parallel run) were shared-host
   contention artifacts, not app bugs. Of the 4:
@@ -111,7 +111,7 @@ instead of rediscovering it from scratch.
     `unified-trading-system-ui@dfbfff68`'s registry regen silently dropped the `jurisdiction_overlay` key that
     `49a6fc9f` (this feature's ship commit, same day) had populated — the Stage-A jurisdiction `<select>` now renders
     with zero jurisdiction options. Filed as its own follow-up:
-    `/plans/active/issues/wizard_jurisdiction_overlay_dropped_by_registry_regen_2026_08_01.md`.
+    `/plans/archive/issues/wizard_jurisdiction_overlay_dropped_by_registry_regen_2026_08_01.md` (resolved 2026-08-02).
   - Root-cause finding: this repo's `playwright.config.ts` only pins `workers: 1` under CI/human mode, unlike
     `deployment-ui` (fixed 2026-07-31 for the identical false-failure class). Filed as its own follow-up:
     `/plans/archive/issues/unified_trading_system_ui_smoke_suite_workers_unpinned_2026_08_01.md` (resolved 2026-08-02).

@@ -67,7 +67,7 @@ resolved_by: "cicd agent, slot-3, 2026-07-31"
 > mechanism this doc's narrative describes (`process_repo`'s PR-arm fallthrough dropping a repo from every tally with no
 > `_done` call) is fixed. Zero open follow-up todos — this doc is a closed-out record, not a dispatch. The SEPARATE,
 > still-ACTIVE fleet-wide `startup_failure` outage discovered while confirming this is tracked in its own doc, not here:
-> `/plans/active/issues/ldr_to_main_promote_workflows_sustained_startup_failure_2026_07_30.md`.
+> `/plans/archive/issues/ldr_to_main_promote_workflows_sustained_startup_failure_2026_07_30.md`.
 
 ## What I fixed (the actual escalation)
 
@@ -101,7 +101,7 @@ resolved_by: "cicd agent, slot-3, 2026-07-31"
 - **Separate, currently-ACTIVE incident found while confirming the above** (NOT the same bug — a distinct, much larger
   outage discovered 2026-07-30): both fleet promote workflows have been returning `startup_failure` on every tick since
   2026-07-29T18:30:03Z, blocking the entire `ldr_main` fleet. Tracked separately, do not conflate:
-  `/plans/active/issues/ldr_to_main_promote_workflows_sustained_startup_failure_2026_07_30.md`.
+  `/plans/archive/issues/ldr_to_main_promote_workflows_sustained_startup_failure_2026_07_30.md`.
 
 ## Evidence
 

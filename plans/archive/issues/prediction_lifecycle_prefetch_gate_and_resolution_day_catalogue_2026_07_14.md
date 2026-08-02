@@ -194,7 +194,7 @@ locked_since:
   fresh `PIPELINE_HEARTBEAT` lines (<2 min old) plus real `Processed date=...` progress lines with captured record
   counts (up to 861,763 records for a single busy day) — genuinely live, not stalled. **Finding — real 429 contention
   under 4-way concurrency, but non-fatal.** The launcher's singleton lock exists specifically to prevent this
-  (`codex/05-infrastructure/vm-tarball-deployment.md` "Original 3 anchors"), and its stated rationale ("concurrent VMs
+  (`/codex/05-infrastructure/vm-tarball-deployment.md` "Original 3 anchors"), and its stated rationale ("concurrent VMs
   share the project egress NAT") was checked live and found WRONG — each VM gets its own distinct external IP
   (`gcloud compute instances describe` on all 4 confirmed 4 different ephemeral public IPs) — but the underlying 429
   collision it warns about IS real regardless of the wrong mechanism: 392-668 HTTP 429 responses observed per VM over

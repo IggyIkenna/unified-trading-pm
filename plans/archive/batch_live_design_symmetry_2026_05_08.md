@@ -20,11 +20,11 @@ tags: []
 related:
   [
     unified-trading-pm/plans/archive/2026_07/master_to_live_defi_2026_05_23.md,
-    unified-trading-pm/plans/active/live_pipeline_mtds_mdps_features_2026_05_08.md,
-    unified-trading-pm/plans/active/gcs_migration_bundle_pipeline_mode_2026_05_08.md,
+    unified-trading-pm/plans/archive/2026_05/live_pipeline_mtds_mdps_features_2026_05_08.md,
+    unified-trading-pm/plans/archive/2026_05/gcs_migration_bundle_pipeline_mode_2026_05_08.md,
     unified-trading-pm/plans/active/features_repo_consolidation_2026_05_08.md,
-    unified-trading-pm/plans/active/alerting_service_live_rules_2026_05_07.md,
-    unified-trading-pm/plans/active/deployment_ui_lifecycle_tabs_2026_05_08.md,
+    unified-trading-pm/plans/archive/2026_05/alerting_service_live_rules_2026_05_07.md,
+    unified-trading-pm/plans/archive/2026_05/deployment_ui_lifecycle_tabs_2026_05_08.md,
     unified-trading-pm/plans/archive/promote_workflow_backtest_to_paper_to_live_2026_05_08.md,
     unified-trading-pm/plans/questions/codex_vs_citadel_infrastructure_specs_2026_05_08.md,
   ]

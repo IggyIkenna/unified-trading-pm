@@ -12,7 +12,7 @@ summary: >-
   aggregate job (the one topologically-mergeable pair; content-gate strictly precedes the matrix and can't join). Cuts 1
   of the 3 job-floors (~1/3 of the measured figure); caller-facing outputs verified unaffected. Also surfaced: live
   quickmerge output for PM says its promote mechanism is now "frozen-per-SHA-ref" via a "churn fix, 2026-07-27", which
-  appears to contradict codex/08-workflows/ci-cd-flow.md's still-live-branch-ref "PM Option-B standing LDR->main PR"
+  appears to contradict /codex/08-workflows/ci-cd-flow.md's still-live-branch-ref "PM Option-B standing LDR->main PR"
   description (codified 2026-06-09) — flagging as a possible stale-SSOT, not verified further here.
 status: open
 nature: issue
@@ -51,7 +51,7 @@ locked_since:
 > answered 2026-08-02T12:49:12Z): a `data/config/backlog.yaml` hand-park is wrong (root-clone-only + `PlanRegenLoop`
 > reverts it every ~30min) — the correct fix is parking at the SOURCE doc. `status: draft` (main's first-offered option)
 > turned out to be schema-invalid for `doc_type: issue` (`open·blocked·resolved·false-positive·superseded` only, per
-> `codex/11-project-management/doc-frontmatter-schema.md` — the local `plan-hygiene` pre-commit hook caught this before
+> `/codex/11-project-management/doc-frontmatter-schema.md` — the local `plan-hygiene` pre-commit hook caught this before
 > it shipped). Used main's SECOND-offered option instead: `agent-orchestrator/server/dispatch.py`'s `_brief_is_deferred`
 > — a `FilterScope.FLEET` dispatch filter that unconditionally excludes ANY task whose brief (the checkbox's own first
 > physical line) starts with `DEFER`/`DEFERRED`/`NICE-TO-HAVE`/`OPTIONAL`/`LATER` + a separator char, for every slot,
@@ -102,7 +102,7 @@ locked_since:
 
 ## Open question — does PM's promote mechanism still match ci-cd-flow.md's "Option-B standing PR" description?
 
-`codex/08-workflows/ci-cd-flow.md` (read 2026-07-31, lines 1-645 of 1231; "PM Option-B standing LDR→main PR" section,
+`/codex/08-workflows/ci-cd-flow.md` (read 2026-07-31, lines 1-645 of 1231; "PM Option-B standing LDR→main PR" section,
 "codified 2026-06-09") describes PM's `ldr-to-main-promote.yml` as opening a PR whose head is the **live branch ref**
 `live-defi-rollout` itself (not a frozen SHA) — a "standing sweep" where every commit riding it before it merges shares
 one concurrency group, which is exactly the queue-not-cancel pattern this fix targets and the reason PM was expected to
@@ -144,13 +144,13 @@ PM-specific win).
       use `--auto --merge --delete-branch`, never `--squash`. This is more than a wording fix — a real merge commit
       (unlike squash) keeps the frozen LDR sha as a genuine ancestor of `main`, so the table's "ancestor check is Never
       valid" verdict for PM's row was also substantively wrong; corrected to "Always valid" with the reasoning inline.
-      Updated `codex/08-workflows/ci-cd-flow.md`: rewrote the "PM Option-B standing LDR→main PR" section (dated 🟡
+      Updated `/codex/08-workflows/ci-cd-flow.md`: rewrote the "PM Option-B standing LDR→main PR" section (dated 🟡
       CORRECTED banner + the frozen-head model description + the old branch-ref model kept as explicit historical
       context, not deleted), fixed the stale "manual immediate drain" recipe (a `--head live-defi-rollout` PR would now
       be auto-closed by the bot's own bug#7 guard), fixed the CONTENT-verification note, and fixed the squash/rebase
       table row + its "Bottom line" paragraph. Also fixed the same misattribution in `scripts/quickmerge.sh`'s own
       comment + user-facing echo line (it credited the wrong commit/date for the frozen-head switch). Evidence:
-      unified-trading-pm (this repo) — `codex/08-workflows/ci-cd-flow.md` + `scripts/quickmerge.sh`, this commit.
+      unified-trading-pm (this repo) — `/codex/08-workflows/ci-cd-flow.md` + `scripts/quickmerge.sh`, this commit.
 
 ## Bookkeeping-job 1-minute-floor cost (measured, not yet actioned)
 
@@ -307,7 +307,7 @@ PM-specific win).
   every time despite 4 slots agreeing it was premature. **Applied main's actual instruction — parked at the plan source,
   not `backlog.yaml`.** First attempt (`status: open` → `status: draft`) was caught and REFUSED by the local
   `plan-hygiene` pre-commit hook before it ever shipped: `draft` is not in the valid `doc_type: issue` status enum
-  (`open·blocked·resolved·false-positive·superseded`, per `codex/11-project-management/doc-frontmatter-schema.md`) —
+  (`open·blocked·resolved·false-positive·superseded`, per `/codex/11-project-management/doc-frontmatter-schema.md`) —
   main's first-offered option doesn't apply to issue docs, only plan docs. Corrected to main's SECOND-offered option:
   read `agent-orchestrator/server/dispatch.py` directly and found `_brief_is_deferred`/`_blocks_deferred_brief` — a
   `FilterScope.FLEET` filter (unconditional, every slot) that excludes any task whose `brief` (the checkbox's own first

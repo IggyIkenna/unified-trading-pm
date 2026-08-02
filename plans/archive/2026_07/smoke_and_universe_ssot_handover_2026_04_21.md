@@ -41,7 +41,7 @@ Critical architectural clarification from the operator:
 
 ```
 You are executing Phase A of the 2026-04-21 smoke dep-chain fixes plan at
-unified-trading-pm/plans/active/smoke_dep_chain_tactical_fixes_2026_04_20.plan.md
+unified-trading-pm/plans/archive/smoke_dep_chain_tactical_fixes_2026_04_20.plan.md
 
 Read that plan in full before starting. Execute the pending todos in order:
 
@@ -112,7 +112,7 @@ Substitute `{VENUE_CLASS}` + `{TODO_IDS}` + `{ADAPTER_FILES}` per class.
 
 ```
 You are executing {VENUE_CLASS} (todos {TODO_IDS}) of
-unified-trading-pm/plans/active/universe_ssot_fix_2026_04_20.plan.md
+unified-trading-pm/plans/archive/universe_ssot_fix_2026_04_20.plan.md
 
 ARCHITECTURAL PRINCIPLE (read carefully):
   instruments-service is the SSOT for every venue's instrument universe.

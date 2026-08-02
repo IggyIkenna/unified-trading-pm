@@ -72,3 +72,36 @@ CEFI-only and records the go-ahead explicitly.
 ## Progress Log
 
 - **context-scout 2026-08-01**: populated context_scope (3 entries).
+- **2026-08-02T18:52Z-19:27Z (slot-2, data_engineering), checkpoint — IN PROGRESS, VM running, not done yet.** Confirmed
+  no duplicate VM was in flight before launching (`gcloud compute instances list`, empty). First launch
+  (`features-e2e-cefi-20260802-185235-bd2e26`) hit a REAL, NEW bug (not the known SPOT-preemption/timeout history this
+  benchmark has hit before): `_resolve_mdps_bucket` in `features_service/delta_one/app/core/dependency_checker.py`
+  inherited the ambient `DEPLOYMENT_ENV=staging` (from the `--env staging` IAM-safe tier-SA fix) instead of forcing
+  `-prd-`, so the MDPS candle dependency check resolved `market-data-tick-cefi-stg-...` — a bucket that was NEVER
+  PROVISIONED for this family (confirmed TWO-TIER ONLY, `-test-`/`-prd-`, per
+  `bucket_iam_write_protection_per_tier_ 2026_06_09.md`'s live enumeration) — 404, hard crash. Root-caused, fixed +
+  shipped `features-service@ff1826b3`/`529ec90e` (2nd commit trims the docstring under the 900-line QG cap), full
+  `quality-gates.sh` green (18,299 tests), verified on `origin/live-defi-rollout`. **Relaunch #1 hit the SAME failure**
+  — traced to a SEPARATE, already-tracked bug class: the VM launches from a pre-built code TARBALL
+  (`gs://deployment-scripts-.../code/features-service-code.tar.gz`), not live git, and `LC_TARBALL_FRESHNESS:-warn` (the
+  unflipped default — see `issues/features_universe_filter_settlement_suffix_and_vm_tarball_staleness_2026_07_27.md`
+  todo `-013`, still gated on `-005`) let the launch proceed onto a tarball built `15:01:45Z`, hours before my fix
+  landed, instead of blocking or auto-republishing. Manually ran `create-code-tarballs.sh --include features-service` to
+  rebuild+republish (confirmed via the fresh manifest's `commit_sha` matching `529ec90e`). The driver had already
+  auto-launched a second (skip-leg) VM (`features-e2e-cefi-20260802-192437-bd2e26`) before the rebuild finished — by
+  luck its boot/download landed AFTER the republish, so it caught the fixed code:
+  `✅ Dependencies verified for 2026-07-24/CEFI` confirmed live, and it is now genuinely computing (real per-instrument
+  feature writes observed, e.g. `Wrote 1/2 daily partitions for HYPERLIQUID:PERPETUAL:PNUT-USD@LIN`). The first
+  (force-leg) VM on the stale tarball already self-deleted cleanly (no orphan). **This is now the one VM being tracked
+  to completion** — per this benchmark's own documented history
+  (`features_e2e_check_delta_one_timeout_orphans_duplicate_vms_2026_07_27.md`), CEFI:delta_one can take 10-20h+ to reach
+  `EXIT_STATUS`; a persistent background monitor (15min cadence, checks `run.log` growth + terminal `EXIT_STATUS.json`)
+  is armed for this session. **Checkbox stays unchecked** — no real measured throughput number exists yet. Corroborating
+  tarball-staleness evidence cross-posted to the `-013`/`-005` gating doc's Progress Log (not touching those todos
+  themselves, out of this task's scope). **If this session ends before the VM finishes**: check
+  `gcloud compute instances list --filter="name~'features-e2e-cefi'"` for `features-e2e-cefi-20260802-192437- bd2e26`
+  first — if gone, check
+  `gcloud storage cat gs://deployment-scripts-central-element-323112/vm-logs/features-e2e-cefi-20260802-192437- bd2e26/EXIT_STATUS.json`
+  for the terminal result (a real throughput number can be derived from the `run.log`'s timestamped
+  `Wrote N/M daily partitions` lines); if still running, resume watching — do NOT launch a new VM, this one is genuinely
+  healthy and already past the dependency-check gate that killed the first two attempts.

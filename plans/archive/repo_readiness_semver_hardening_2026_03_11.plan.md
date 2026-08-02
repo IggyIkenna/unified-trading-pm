@@ -571,7 +571,7 @@ later). BR8 can be granted for batch mode while live mode BR gates are still in 
 | `pm/cursor-configs/SUB_AGENT_MANDATORY_RULES.md`                | 5b    | Section 10                     |
 | `.github/workflows/overnight-agent-orchestrator.yml`            | 5c    | Readiness context injection    |
 | `.github/workflows/rules-alignment-agent.yml`                   | 5d    | Readiness mdc check            |
-| `pm/plans/active/code_readiness_master_plan_2026_03_11.plan.md` | 6a    | PM/Codex N/A waivers           |
+| `pm/plans/archive/code_readiness_master_plan_2026_03_11.plan.md` | 6a    | PM/Codex N/A waivers           |
 | `pm/scripts/check-repo-readiness.py`                            | 7a    | New verifier script            |
 | `.github/workflows/readiness-verifier.yml`                      | 7b    | New GHA workflow               |
 

@@ -85,7 +85,7 @@ source: >-
       `omniroute_llm_gateway_pilot_design_2026_07_30.md`, re-check whether the operator has since lifted the explicit
       NA/human-only ruling — if lifted, its 5 bounded `[INFRA]`/`[BACKEND]` todos become batch-4 material; if not, leave
       it deferred. Also re-check the data-correctness finding parked in
-      `/plans/active/issues/ag_closeout_audit_ao_parked_2026_07_31.md` (the false "backfill already done" claim in
+      `/plans/archive/issues/ag_closeout_audit_ao_parked_2026_07_31.md` (the false "backfill already done" claim in
       `context_scope_consumption_enforcement_2026_07_30.md`) — confirm whether it has been corrected; if not, escalate
       again rather than letting it go stale a second time. **Done when**: each of the 3 items is marked
       cleared-and-moved (naming the new batch-4 plan/todo or the resolving plan) or still-gated with the current reason

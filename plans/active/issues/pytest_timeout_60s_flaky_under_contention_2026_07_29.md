@@ -22,7 +22,18 @@ status: open
 nature: issue
 asset_group: [ci] # retagged 2026-07-31 (corpus-sweep meta fold-in) -- was [meta]
 stage: [meta]
-repos: [unified-trading-pm, unified-api-contracts, instruments-service, features-service]
+repos:
+  [
+    unified-trading-pm,
+    unified-api-contracts,
+    instruments-service,
+    features-service,
+    market-tick-data-service,
+    client-reporting-api,
+    unified-trading-api,
+    market-data-processing-service,
+    deployment-service,
+  ]
 scope: [engineer, admin]
 tags: [quality-gates, flaky-gate, timeout, pytest-timeout, ci, shared-host-contention, xdist]
 related:
@@ -31,7 +42,7 @@ related:
     /plans/archive/2026_07/ci_consolidated_closeout_2026_07_25.md,
   ]
 created: 2026-07-29
-last_updated: 2026-08-02
+last_updated: 2026-08-02T22:20Z
 parent_epic: infrastructure_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -919,3 +930,67 @@ those commits landed). The escalation's own repo-blocker list (`GET /api/repo-bl
   on this evidence). No market-data-processing-service code or test change made or needed — same "orphaned noise against
   an already-resolved wall" conclusion as every prior entry in this doc. Slot left clean (0 commits ahead of
   `origin/live-defi-rollout` besides this doc edit). Pinged the authoring slot (`ci`) with the outcome.
+- **2026-08-02 ~18:35Z (`cicd` escalation `agt-537de5`, slot 9, `WALL_TYPE=ldr_qg_failure`, `PR_NUMBER=0`)**: direct LDR
+  push-gate red for unified-trading-api — this is the run the `agt-60a920`/slot-8 entry above already flagged as "in
+  progress" while investigating a DIFFERENT run (`30748526804`, promotion PR #495): `workflow_dispatch` run
+  [30750131924](https://github.com/IggyIkenna/unified-trading-api/actions/runs/30750131924) on LDR HEAD `990187dd5`
+  (started `13:32:00Z`) finished `failure` after **4h50m36s** — its `checks` slice queued 2h43m before pickup then
+  passed; its `tests` slice ran ~2h and hit `Failed: Timeout (>150.0s)` on **12 tests across 10+ unrelated files**
+  (defi/basis, events/news, defi/lending, registry/lifecycle, defi/lp, catalogue, instrument routes, auth-middleware,
+  reporting, service-status) — the widest single-run spread yet recorded in this doc, matching its established "genuine
+  scheduler contention, not a per-test anti-pattern" signature even more starkly than prior entries. Every captured
+  stack trace is the same shape as this doc's earlier `test_understat_...`/`test_tardis_...` entries: `TestClient.get()`
+  → `anyio.from_thread.py:334 call` → `concurrent.futures._base.py:451 result` → `threading.py:359 wait` — genuinely
+  blocked waiting on the ASGI app's response via the anyio portal thread, not inside any handler-specific code path.
+  Reproduced locally end-to-end on current LDR HEAD (`990187dd5`, confirmed `HEAD == origin/live-defi-rollout`, zero
+  diff): backgrounded full `bash scripts/quality-gates.sh` per this role's mandatory non-blocking pattern — **ALL
+  QUALITY GATES PASSED in 111s, 441 passed, 0 failures, 0 timeouts** — a clean repro with zero contention-induced
+  slowness locally, consistent with every prior entry's "legitimately fast, blown out by CI-side scheduling" conclusion.
+  `GET /api/repo-blockers` → `{"open": []}`; `gh pr list --state open` → empty for unified-trading-api. Since this is a
+  direct-LDR push gate (no PR to self-merge past the flake, unlike most prior entries in this doc), triggered a fresh
+  `workflow_dispatch` re-verification
+  ([30761689446](https://github.com/IggyIkenna/unified-trading-api/actions/runs/30761689446)) on the same HEAD rather
+  than relying solely on the local repro — `content sentinel` passed in 5s, `QG slice (tests)`/`QG slice (checks)` still
+  running at investigation time; per this doc's own established precedent, not holding the slot to babysit it
+  synchronously (queued/running CI resolves asynchronously; the fleet-wide capacity crisis is the actionable item,
+  already tracked in `fleet_wide_qg_capacity_crisis_continues_day2_2026_07_29.md`, not something a single wall-clearer
+  can fix). No `live-defi-rollout` code or test change made or needed — same "orphaned noise / known flake class, tree
+  not actually broken" conclusion as every prior entry in this doc. Widens the confirmed-repo list's evidence for
+  unified-trading-api specifically (2nd occurrence within ~2h, `agt-60a920`'s PR #495 case and this direct-push case)
+  without adding a new repo to the list (already added by `agt-60a920`). Slot left clean (unified-trading-api on
+  `live-defi-rollout`, 0 commits ahead of `origin` besides this doc edit). Pinged the authoring slot (`ci-reconcile`)
+  with the outcome.
+- **2026-08-02 ~20:30Z (`cicd` escalation `agt-4385f0`, slot 8) — 9th confirmed repo (deployment-service)**: promotion
+  PR #673 (LDR→main), failing run `30752878298` (`QG slice (tests)`, `pull_request`-triggered, head SHA `24e0878d65e6`).
+  `tests/unit/test_cluster_materialisation.py::TestLoadSubscription::test_missing_raises_file_not_found` (pure tmp_path
+  `FileNotFoundError` check, no I/O) hit `Failed: Timeout (>150.0s)` → xdist `worker_internal_error`/`AssertionError` in
+  `dsession.py` — `1 failed, 597 passed, 10 skipped, 56 errors in 7217.43s (2:00:17)`. Isolated local re-run of the
+  whole file on current LDR HEAD (`e8963ec`, contains `24e0878d65e6` as ancestor): **9 passed in 14.67s** — same
+  "legitimately fast, blown out by scheduling" profile as every prior entry. PR #673 `state=MERGED`
+  (`mergedAt=14:47:16Z`, 3s after `createdAt`) — self-merged via an independent already-green check, same race as every
+  prior entry. Zero open PRs, zero open `/api/repo-blockers` for deployment-service. Current LDR `quality-gates-v2`
+  (`30765433226`) is `in_progress` (not wedged — `tests` job actively running since `20:24:42Z`), left to resolve
+  asynchronously per this doc's precedent. No `live-defi-rollout` code or test change made or needed. Added
+  `deployment-service` to this doc's `repos:` frontmatter. Slot left clean. Pinging authoring slot (`ci`) with the
+  outcome.
+- **2026-08-02 ~22:20Z (`cicd` escalation `agt-eb1cc8`, slot 5) — 3rd occurrence, unified-trading-api (direct LDR push
+  gate, `PR_NUMBER=0`)**: run `30761689446` — 10 tests across 9 unrelated files (defi_basis/events/defi_lending/
+  reporting_blrs_proxy/defi_lp/catalogue/routes/routes_extra x2/middleware) hit `Failed: Timeout (>150.0s)`,
+  `10 failed, 431 passed in 5704.25s`. Current LDR HEAD (`990187dd5`) byte-identical to the failing SHA (zero drift).
+  Reproduced locally on this exact HEAD: backgrounded `quality-gates.sh` — **ALL QUALITY GATES PASSED in 85s, 441
+  passed, 0 failures** (441 = CI's 431+10, same total). Host corroboration: `load avg 40.85/43.48/41.50`, `24Gi/47Gi`
+  swap in use, 22 concurrent `quality-gates.sh` processes — worse than every prior snapshot in this doc. Zero open
+  PRs/`/api/repo-blockers`. A 3rd `workflow_dispatch` re-verification (`30767355814`) already in flight (checks green,
+  tests in_progress) — left to resolve asynchronously, not babysat. No code/test change made or needed — same "orphaned
+  noise, fleet-capacity-crisis flake class" conclusion as every prior entry. Doc now near its 1000-line hard cap (~989
+  lines) — future entries should stay terse or a split/archive pass may be warranted. Slot left clean. Pinging authoring
+  slot (`ci-reconcile`) with the outcome.
+- **2026-08-02 ~22:30Z (`cicd` `agt-57f191`, slot 5)**: recurrence of this doc's OWN founding case —
+  unified-api-contracts `ldr_qg_failure`, run `30765447372`, `test_vcr_cassette_interactions_is_list[bybit/ticker.yaml]`
+  timeout, commit `7450e744` (self-contained new test file, unrelated). Isolated re-run: 0.01s. Host: `load avg 32-36`,
+  26Gi swap, 20 concurrent QG procs. Zero open PRs/blockers. Retry `30769856300` already in flight (tests running) —
+  left async. No code fix needed/made.
+- **2026-08-02 ~22:36Z (`cicd agt-17bfd9`, slot 12) — 4th unified-trading-api occurrence**: run `30767355814` (LDR push,
+  HEAD `990187dd5`), 10 tests / 9 unrelated files, same >150s timeout signature. Local repro: 441 passed/0 failed in
+  50.47s. Load avg 32-36, 25 QG procs. Zero blockers/PRs. Retriggered `30770482343`, left async. No fix needed. **Doc at
+  hard cap (992→now) — next occurrence MUST split/archive, not append.**

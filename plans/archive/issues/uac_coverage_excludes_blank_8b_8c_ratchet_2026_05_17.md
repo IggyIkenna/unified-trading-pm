@@ -12,7 +12,7 @@ tags: []
 related: []
 created: 2026-05-17
 author: slot-8 (ikenna side)
-source: ['unified-api-contracts/pyproject.toml:[tool.coverage.run].omit', unified-trading-pm/scripts/quality_gates/coverage_targets.yaml § validation_logic + error_classification, unified-trading-pm/plans/active/deployment_and_qg_strategy_implementation_2026_05_13.md § Phase 8.B + 8.C]
+source: ['unified-api-contracts/pyproject.toml:[tool.coverage.run].omit', unified-trading-pm/scripts/quality_gates/coverage_targets.yaml § validation_logic + error_classification, unified-trading-pm/plans/archive/deployment_and_qg_strategy_implementation_2026_05_13.md § Phase 8.B + 8.C]
 locked_by: live-defi-rollout
 ---
 

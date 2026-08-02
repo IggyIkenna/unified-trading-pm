@@ -3,7 +3,8 @@ doc_type: codex-ssot
 title: Plan Hygiene — Scripts, Runbook, and Cron
 summary:
   The `run_hygiene_sweep.sh` script suite (9 structural checks) + required/deprecated plan + epic frontmatter fields +
-  cron/GHA cadence (daily sweep, Plan Health Agent) + archive-eligibility discipline for `plans/active/` +
+  cron cadence (daily plan-reconciler, hourly ldr-docs-gate) + the quality-gates-v2 hard PR gate (standalone
+  plan-health-agent.yml GHA job RETIRED 2026-08-02, folded in) + archive-eligibility discipline for `plans/active/` +
   `plans/epics/`.
 status: current
 nature: ssot
@@ -27,13 +28,14 @@ referenced_by:
     /codex/11-project-management/doc-frontmatter-schema.md,
   ]
 owner: plan_hygiene_master
-last_reviewed: 2026-07-24
+last_reviewed: 2026-08-02
 code_refs:
   [
     scripts/plan-hygiene/run_hygiene_sweep.sh,
     scripts/plan-hygiene/fix_frontmatter.py,
     scripts/docs/docspec.py,
-    .github/workflows/plan-health-agent.yml,
+    .github/workflows/python-quality-gates-v2.yml,
+    .github/workflows/ldr-docs-gate.yml,
     agent-orchestrator/scripts/install-plan-reconciler-timer.sh,
   ]
 type: project-management
@@ -151,17 +153,32 @@ proof gate.
 - Both retired jobs' code is deleted (not just disabled): the Cloud Run job + Cloud Scheduler + their terraform
   (`deployment-service/terraform/gcp/hygiene_sweep_scheduler.tf`, deleted) + entrypoint script
   (`scripts/plan-hygiene/cron_hygiene_sweep_entrypoint.sh`, deleted in both PM and deployment-service) are gone; the GHA
-  workflow's `schedule:`-triggered `plan-health` + `notify` jobs are removed from
-  `.github/workflows/plan-health-agent.yml` and its template twin
-  `scripts/self-hosted-runners/hosted-baseline/plan-health-agent.yml` — only the `pull_request`-triggered
-  `plan-health-gate` hard gate (deterministic, $0, no LLM) remains in that file.
+  workflow's `schedule:`-triggered `plan-health` + `notify` jobs were removed from
+  `.github/workflows/plan-health-agent.yml` first — see "Plan-health PR gate — folded into quality-gates-v2" immediately
+  below for that file's own eventual retirement.
 
-## Plan Health Agent (GHA — `.github/workflows/plan-health-agent.yml`) — PR-only hard gate, daily job RETIRED
+## Plan-health PR gate — folded into quality-gates-v2, standalone GHA job RETIRED (2026-08-02)
 
-The workflow now carries exactly one job: `plan-health-gate`, triggered only on the PM→main promotion PR (PM is
-staging-less → LDR→main direct; this is PM's fast deterministic "pseudo-staging" check, `run_hygiene_sweep.sh --ci`,
-$0/no LLM). The daily/dispatch Haiku contradiction+doc-drift job (`plan-health`) and its Slack `notify` companion are
-**gone** — see the retirement section above for the successor.
+**RULE-11 prove-then-retire, second leg**: the standalone `.github/workflows/plan-health-agent.yml` (by this point down
+to its one surviving `plan-health-gate` job — the daily Haiku job was already gone per the retirement above) is now
+itself DELETED, along with its hosted-baseline snapshot twin
+`scripts/self-hosted-runners/hosted-baseline/plan-health-agent.yml`. The deterministic `run_hygiene_sweep.sh --ci` hard
+gate it ran is folded into `.github/workflows/python-quality-gates-v2.yml` as a PM-only step on the `checks` matrix leg
+(gated on `github.repository == 'IggyIkenna/unified-trading-pm'`, and — for free — on the same content-sentinel
+short-circuit + docs-only/metadata-only fast-paths every other `checks`-leg step already gets). This is a real upgrade,
+not a lateral move: the old job was **advisory-only** ("only quality-gates-v2 is a required check on main" — a red
+`plan-health-gate` never blocked a merge); folding the sweep into `quality-gates-v2` makes plan hygiene an ACTUAL
+blocking gate on every PM PR, backstopped locally by the `--precommit` prek hook (staged-files-only) that already gates
+every plan-touching commit. Proof-before-retire: the current PM tree passes the full `--ci` sweep clean (0 hard
+failures), and a component test (a scratch `plans/active/*.md` file with no frontmatter) reproduced the same
+`Frontmatter validity` hard failure + non-zero exit the old job caught. Not carried over: the retired job's
+auto-fix-and-commit-to-PR-head convenience (`fix_frontmatter.py` run at the gate) and its escalate-to-orchestrator
+dispatch on residual failures — the new step only DETECTS. That escalation path is not lost, though: the hourly
+`ldr-docs-gate.yml` job independently dispatches the SAME `wall_type: plan_health` resolver on live-defi-rollout, and
+the daily `plan-reconciler` timer (below) also fixes proactively — so a violation that somehow still lands is caught and
+resolved within the hour, not left unaddressed. SSOT for the fold: `python-quality-gates-v2.yml`'s "Plan hygiene hard
+gate" step (search that string). Source: `infra_satellite_ao_dispatch_batch1_2026_07_26.md`,
+`/plans/archive/issues/plan_hygiene_precommit_and_agentic_resolution_2026_06_10.md`.
 
 ---
 

@@ -31,7 +31,7 @@ code_refs:
 Codified 2026-06-08 (plan:
 [`bar_edge_left_vs_right_remediation_2026_06_08.md`](../../plans/archive/2026_07/bar_edge_left_vs_right_remediation_2026_06_08.md);
 surfacing issue:
-[`bar_edge_left_vs_right_systemic_2026_06_08.md`](../../plans/active/issues/bar_edge_left_vs_right_systemic_2026_06_08.md)).
+[`bar_edge_left_vs_right_systemic_2026_06_08.md`](../../plans/archive/issues/bar_edge_left_vs_right_systemic_2026_06_08.md)).
 
 ## The invariant (HARD RULE)
 

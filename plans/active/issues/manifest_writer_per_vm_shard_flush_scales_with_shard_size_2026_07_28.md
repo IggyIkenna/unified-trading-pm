@@ -24,7 +24,7 @@ resolved_by:
 locked_by:
 source:
   [
-    "found while working todo 4 of defi_dex_pool_symbol_fix_backfill_purge_2026_07_25.md (the
+    "found while working todo 4 of /plans/archive/2026_08/defi_dex_pool_symbol_fix_backfill_purge_2026_07_25.md (the
     curve/sushiswap/velodrome_v2/trader_joe_v2 dex_pool_state re-backfill)",
   ]
 execution_scope: orchestrator-agent

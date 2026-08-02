@@ -229,7 +229,7 @@ batch1/batch2 applied, per the candidate-generator script's own stated rationale
   2026-07-31 (dispatch agt-676f1e) as "KEEP-NA, valid" without catching the false premise, since its own design-question
   todos don't depend on the premise being true. Not fixed here (fixing prose-level factual drift in another doc is
   `/plan-reconcile`'s corpus, not this skill's); written up as its own durable finding — see
-  `/plans/active/issues/ag_closeout_audit_ao_parked_2026_07_31.md`.
+  `/plans/archive/issues/ag_closeout_audit_ao_parked_2026_07_31.md`.
 
 ## Codex SSOTs (read before starting a todo)
 

@@ -45,7 +45,7 @@ measurements captured on planning-vm under real concurrent load (Phase 2), so an
 before/after.
 
 All test changes used to trigger these runs are transient (a comment appended to
-`/plans/active/ao_fleet_observability_kpis_2026_07_20.md` + a scratch
+`/plans/archive/2026_07/ao_fleet_observability_kpis_2026_07_20.md` + a scratch
 `/plans/audit/results/qg_timing_test_2026_07_31.yaml`) — reverted once measurement is done, never shipped as real
 content changes.
 

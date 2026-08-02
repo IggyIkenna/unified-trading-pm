@@ -14,7 +14,7 @@ created: 2026-05-10
 author: agent-dart-mvp
 source:
   [
-    unified-trading-pm/plans/active/cross_cutting_may_23_deliverables_2026_05_08.md (Phase 4 BUILD scope),
+    unified-trading-pm/plans/archive/2026_05/cross_cutting_may_23_deliverables_2026_05_08.md (Phase 4 BUILD scope),
     unified-trading-pm/plans/archive/2026_07/master_to_live_defi_2026_05_23.md (Group G Item 23),
     unified-trading-pm/codex/09-strategy/architecture-v2/cross-cutting/dart-manual-trade-spec.md,
     unified-trading-pm/codex/09-strategy/architecture-v2/cross-cutting/operational-modes-matrix.md,

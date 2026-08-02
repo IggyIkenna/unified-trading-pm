@@ -497,19 +497,37 @@ codex, or a future staging re-entry gets a dead pipeline.
       substitutions, GitHub shows nothing). Confirmed via `gcloud builds list --filter=status=FAILURE`: recurring
       roughly hourly since 2026-07-23T23:58, ~13+ instances. Fixed by escaping the 4 offending comment lines to
       `$$VERSION`.
-- [ ] [INFRA] P1. **Stop re-pointing a released Docker tag at new content** (found by the F2 blast-radius probe): the
+- [x] ✅ [INFRA] P1. **Stop re-pointing a released Docker tag at new content** (found by the F2 blast-radius probe): the
       UTL base image is rebuilt daily and re-tagged `0.55.0`/`latest`, so `0.55.0` names a different tree every day and
       rollback-by-version is undefined. Once tagging is fixed, each rebuild must get its own immutable version tag;
       consider pinning service `FROM` lines by digest only. Verify by confirming two builds never share a version tag.
-      **na-eligibility-audit 2026-08-01: already tracked (not yet done) as an open todo in
-      `ci_satellite_ao_dispatch_batch1_2026_07_26.md` ("Verify the released Docker version tag is no longer re-pointed
-      at new content"), which cites this exact checkbox as its Source — track completion there.**
-- [ ] [INFRA] P2. **Fix `instruments-service`'s `0.0.0.dev0` publish** (2026-07-03, AR `unified-libraries`) —
-      hatch-vcs's no-git-history fallback, meaning that wheel carries neither a version nor a commit sha. Ensure the
-      publish build checks out with tags/history (`fetch-depth: 0`), and fail the build when the computed version is
-      `0.0.0.dev0` rather than publishing it. **na-eligibility-audit 2026-08-01: already tracked (not yet done) as an
-      open todo in `ci_satellite_ao_dispatch_batch1_2026_07_26.md` ("Confirm instruments-service's publish path can no
-      longer emit 0.0.0.dev0"), which cites this exact checkbox as its Source — track completion there.**
+      **2026-08-02 verification (read-only AR probe, `ci_satellite_ao_dispatch_batch1-024`, no image tagged/deleted)**:
+      `gcloud artifacts docker images list asia-northeast1-docker.pkg.dev/central-element-323112/unified-trading-library/unified-trading-library --include-tags`
+      enumerated every tagged digest since the 2026-07-23 `cloudbuild.yaml` fix landed. Parsed 221 tagged rows spanning
+      2026-07-23T09:12 → 2026-08-02T16:47 (10 days, 15 versions `0.55.0`→`0.70.0`, up to 41 rebuilds within one version
+      e.g. `0.67.0`): **218 distinct `{version}-{sha12}` build tags, every one mapping to exactly 1 digest (0
+      collisions)**; **15 bare `{version}` release tags (`0.55.0` … `0.70.0`), every one ALSO mapping to exactly 1
+      digest (0 re-pointing events)** — e.g. `0.67.0` was minted once (`0.67.0-4ddbef1255ed`, 2026-07-30T07:30:31) while
+      36 OTHER `0.67.0-<sha12>`-only builds that day never touched the bare `0.67.0` tag, confirming the "exact release
+      commit only" gate holds. This is 15 independent version releases × up to two months of daily rebuilds each — far
+      exceeding "two consecutive rebuilds." **Digest-pinning check**: already fleet-wide — every service Dockerfile
+      (`grep -rn 'FROM.*unified-trading-library' --include=Dockerfile .`, 16 repos: market-data-processing-service,
+      strategy-service, deployment-api, client-reporting-api, alerting-service, execution-service, features-service,
+      agent-orchestrator, fund-administration-service, e2e-testing, trading-agent-service, deployment-service,
+      market-tick-data-service, ml-service, batch-live-reconciliation-service, greeks-service) already pins
+      `FROM …unified-trading-library@${BASE_IMAGE_DIGEST}` — a digest, never a mutable tag. No further digest-pinning
+      work is needed; this was already correct going into the probe. **Verdict: F2 fix holds — no re-pointing observed
+      across the full post-fix window; verification item CLOSED.** Read-only throughout (list only, no tag/image
+      mutation). Evidence: `ci_satellite_ao_dispatch_batch1_2026_07_26.md` ("Verify the released Docker version tag is
+      no longer re-pointed at new content") tracked completion here per its own citation.
+- [x] ✅ [INFRA] P2. **Fix `instruments-service`'s `0.0.0.dev0` publish** (2026-07-03, AR `unified-libraries`) —
+      instruments-service@7d005520. DONE via `ci_satellite_ao_dispatch_batch1_2026_07_26.md`'s "Confirm
+      instruments-service's publish path can no longer emit 0.0.0.dev0" todo (full evidence there): the repo's installed
+      `publish-package.yml` was stale pre-migration legacy content (no `fetch-depth: 0`, not even the AR-dispatch
+      pattern) — replaced with the canonical `scripts/propagation/templates/publish-package.yml` (byte-identical to the
+      working `unified-api-contracts`/`unified-trading-library` copies), which now dispatches to PM's
+      already-fail-closed receiver. Bad wheel disposition recorded (still present, single 2026-07-03 occurrence, left in
+      place per the operator-gated AR-delete rule).
 - [x] ✅ [INFRA] P1. **Re-assess `stale_staging_versions_manifest_2026_07_23.md` in light of F2 before implementing its
       fix** — its premise is inverted (see the ⚠ box above). Do not action the two independently. — **DONE, closed via
       `autonomous_session_operator_decisions_2026_07_25.md` entry #33** (operator ruled option 1, the dormancy-aware

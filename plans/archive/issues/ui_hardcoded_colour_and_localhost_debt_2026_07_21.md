@@ -43,7 +43,7 @@ depends_on: []
 > home page, both themes); the 2 admin-gated heatmap-page tests are blocked by a pre-existing,
 > reproduced-against-two-unrelated-specs, host-contention auth-redirect race — NOT a regression in this change, not
 > fabricated as passing, tracked as its own issue:
-> `/plans/active/issues/ui_playwright_admin_gated_route_login_redirect_race_under_host_contention_2026_07_28.md`.
+> `/plans/archive/issues/ui_playwright_admin_gated_route_login_redirect_race_under_host_contention_2026_07_28.md`.
 > Superseded-by: none — fully resolved (the one still-open thread is that new, separate issue doc, not this one).
 
 # Hardcoded-colour + localhost debt surfaced by the app-router gate fix
@@ -300,7 +300,7 @@ rather than a single CSS var.
       across a fresh run + 2 retries each. Root-caused far enough to rule out a defect in this change (a
       `DemoAuthProvider.restore()` async-fetch-vs-route-guard race, amplified by load, not caused by colour-token
       changes) but not fixed — filed as its own tracked issue, not left as a dangling claim:
-      `/plans/active/issues/ui_playwright_admin_gated_route_login_redirect_race_under_host_contention_2026_07_28.md`. No
+      `/plans/archive/issues/ui_playwright_admin_gated_route_login_redirect_race_under_host_contention_2026_07_28.md`. No
       fabricated `pw:L2 ✓` for the heatmap sub-tests; the spec is left in place (will pass under normal host load — it's
       the identical assert pattern the 4 passing tests use) rather than deleted, since removing it would drop real
       regression coverage the doc explicitly asked for.

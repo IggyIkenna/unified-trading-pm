@@ -306,11 +306,11 @@ re-derived from the bare writer-key `symbol` (e.g. `"EUR-USD"`) inside `venue_fe
 `_canonicalize_manifest_instrument_id` → `_tradfi_manifest_canon.resolve_tradfi_manifest_shard`, a second
 canonicalization pass parallel to (not reusing) the one `fetch_yahoo_fx` already ran. **That second pass was itself
 already fixed** in an entirely unrelated, earlier effort: `market-tick-data-service@020b703e` (2026-07-25, the
-`cross_ag_instrument_type_casing_100pct_directive_2026_07_24.md` scope extension) added `"spot_pair"`/`"spot"` to
-`_TRADFI_MANIFEST_ITYPE_CANONICAL` (`_tradfi_manifest_canon.py:75-76`) — the SAME map NASDAQ/NYSE equity already used
-(confirming FX and equity share one code path, so the fix that already made equity/etf/index 0.11-0.81% blank also
-silently fixed FX's write path a day later, without anyone connecting the two). A regression test already exists and
-passes: `test_fx_spot_pair_now_resolves_canonical`
+`/plans/archive/2026_08/cross_ag_instrument_type_casing_100pct_directive_2026_07_24.md` scope extension) added
+`"spot_pair"`/`"spot"` to `_TRADFI_MANIFEST_ITYPE_CANONICAL` (`_tradfi_manifest_canon.py:75-76`) — the SAME map
+NASDAQ/NYSE equity already used (confirming FX and equity share one code path, so the fix that already made
+equity/etf/index 0.11-0.81% blank also silently fixed FX's write path a day later, without anyone connecting the two). A
+regression test already exists and passes: `test_fx_spot_pair_now_resolves_canonical`
 (`tests/unit/test_venue_fetch_cefi_manifest_canonicalization.py:606-612`) asserts
 `_canonicalize_manifest_instrument_id("FX", "spot_pair", "EUR-USD") == "FX:SPOT_PAIR:EUR-USD"`.
 

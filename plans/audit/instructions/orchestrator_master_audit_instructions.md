@@ -317,12 +317,12 @@ cadence + completeness matters more than any single subsystem.
 ### L. Plan workflow + audit pool
 
 - [ ] **(l1) `human_led_audit_pool_2026_05_21.md` is current.** Open
-      [`plans/active/issues/human_led_audit_pool_2026_05_21.md`](../../../plans/active/issues/human_led_audit_pool_2026_05_21.md)
+      [`plans/active/issues/human_led_audit_pool_2026_05_21.md`](../../../plans/archive/issues/human_led_audit_pool_2026_05_21.md)
       — at least one of the 14 rows has been picked up since the prior audit OR an operator [ack] is in the comments.
       Operator-judgment check.
 
 - [ ] **(l2) Workspace-qg ghost issue is tracked.** Open
-      [`plans/active/issues/workspace_qg_ci_startup_failure_2026_05_26.md`](../../../plans/active/issues/workspace_qg_ci_startup_failure_2026_05_26.md)
+      [`plans/active/issues/workspace_qg_ci_startup_failure_2026_05_26.md`](../../../plans/archive/issues/workspace_qg_ci_startup_failure_2026_05_26.md)
       — the affected-repos list reflects current state; the GitHub Support ticket reference is still valid.
 
 ### M. Closed-loop autonomy — the 24/7 trigger chain (added 2026-06-01)

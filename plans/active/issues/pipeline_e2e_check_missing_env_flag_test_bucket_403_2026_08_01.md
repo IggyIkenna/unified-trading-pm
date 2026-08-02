@@ -149,7 +149,7 @@ session; flag if it becomes a real problem.)
       `instruments-store-` Group A IAM gap (slot-15 independently hit the identical block on
       `instruments-store-sports-test-...` for SPORTS/API_FOOTBALL; my CEFI/HYPERLIQUID run is a second corroborating
       data point for a different asset_group). Full details + the open INFRA fix todo:
-      `/plans/active/issues/bucket_iam_group_a_market_data_tick_prefix_missing_asset_group_2026_08_01.md` (the
+      `/plans/archive/issues/bucket_iam_group_a_market_data_tick_prefix_missing_asset_group_2026_08_01.md` (the
       `market-data-tick-` half of that issue is already fixed & live-verified per that doc; `instruments-store-` is the
       one open todo left in it). A genuine 403-free instruments-service verification run is blocked on THAT specific
       todo landing — same pattern as the already-closed MDPS todo below. (repo: instruments-service)
@@ -160,7 +160,7 @@ session; flag if it becomes a real problem.)
       independent bug even with `--env staging` in place — `uts-test-sa`'s Group A `market-data-tick-test-` IAM
       condition also lacks the per-asset-group segment (same shape as `uts-prd-sa`'s), so `market-data-tick-{ag}-test-`
       buckets still 403 regardless of which tier SA is used. Full details + terraform fix recommendation:
-      `/plans/active/issues/bucket_iam_group_a_market_data_tick_prefix_missing_asset_group_2026_08_01.md`. A genuine
+      `/plans/archive/issues/bucket_iam_group_a_market_data_tick_prefix_missing_asset_group_2026_08_01.md`. A genuine
       403-free MDPS verification run is blocked on THAT issue's infra fix landing first. (repo:
       market-data-processing-service)
 - [x] ✅ [CODE] P0. Confirmed `market-tick-data-service/scripts/pipeline_e2e_check.py`'s launcher-argv builder had the
@@ -265,6 +265,40 @@ untouched (deliberately always reads PROD). Live-verified both directions post-f
 `IS_TEST_RUN=true`+`DEPLOYMENT_ENV=staging` → resolves `instruments-store-sports-test-central-element-323112` (exists);
 `IS_TEST_RUN` unset+`DEPLOYMENT_ENV=prod` → unchanged `instruments-store-sports-prd-central-element-323112`
 (byte-identical to pre-fix). New regression test added. `market-tick-data-service@5aba68be`.
+
+## Update 2026-08-02 (data_pipeline_failure escalation agt-299005, slot 6) — a FOURTH site in the same bug family, plus a DP-VM-002 classifier false-positive
+
+DP-VM-002 fired for VM `instr-backfill-sports-pchk-0802162514-f-cab3-open-meteo` (manifest `captured` did not climb,
+0→0). Fetched the durable `run.log` — the VM actually ran correctly:
+`OPEN_METEO short-circuit: skipping orchestrator for date=2025-12-24` →
+`Weather: no fixture venue_name data for date=2025-12-24 — skipping` → `record_empty(EXPECTED_NO_FIXTURE)`, 33 new
+per-league manifest entries written honestly to `instruments-store-sports-test-central-element-323112`, `exit_code=0`.
+No auth failure, no rate-limit, no real silent zero — a genuine honest-absence run (the probed `-test-` bucket has no
+fixture data for that date).
+
+**Two distinct root causes found, both fixed:**
+
+1. **Alerting false positive** — `deployment-service/deployment_service/data_pipeline_monitors/_gcs.py`'s
+   `_HONEST_ABSENCE_RE` (the DP-VM-002 false-positive-killer classifier) only matched the PLURAL "no fixtures" shape;
+   `weather.py`'s OPEN_METEO short-circuit logs the SINGULAR "no fixture venue_name data" / "no fixture venues with
+   coordinates", which never matched, so `classify_no_capture_reason()` fell through to `SILENT` and the exit-code fleet
+   monitor paged CRITICAL for a healthy run. Fixed: added the `no fixture venue` alternative + a regression test using
+   the real incident log text (verified the fixed classifier now returns `HONEST_ABSENCE` against the actual `run.log`
+   content, not just a hand-written fixture). `deployment-service@e8963ec`.
+2. **A FOURTH `-stg-`/`-test-` bucket-tier site in this doc's own tracked bug family** (same shape as this doc's MTDS
+   `--env staging` fix (`05a1e735`), the OOM-preflight `-stg-` suffix fix (`deployment-service@4a7b466`), and the
+   2026-08-01 Update's THIRD site, `market-tick-data-service::_resolve_manifest_bucket()`): `instruments-service`'s OWN
+   `instruments_handler.py::_get_instruments_bucket_for_asset_group()` — used only by `cleanup()`'s end-of-batch
+   final-flush loop — called `resolve_bucket_name(...)` with no `deployment_env` override, so under `--test-run`
+   (`DEPLOYMENT_ENV=staging`) it would resolve the never-provisioned `instruments-store-sports-stg-...` bucket instead
+   of `-test-`. Harmless THIS run only because `cleanup()` constructs a fresh, empty-buffer `ManifestWriter` for the
+   flush (nothing to flush, so the wrong-bucket resolution never actually attempted a write) — but load-bearing for any
+   real multi-chunk `--test-run` backfill that buffers writes across the run instead of writing per-shard immediately.
+   Fixed to mirror `engine/orchestrator/catalogue.py::_get_instruments_bucket()`'s already-correct
+   `deployment_env="test" if get_config().is_test_run else None` handling. New regression tests (test-run and
+   non-test-run branches) added; existing tests updated for the new kwarg. `instruments-service@af61454`.
+
+Both QG-green + quickmerge-landed + verified on `origin/live-defi-rollout`.
 
 ## Codex SSOTs
 

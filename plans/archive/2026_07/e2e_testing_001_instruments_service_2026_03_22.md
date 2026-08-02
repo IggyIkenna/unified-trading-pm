@@ -3,7 +3,7 @@ title: "E2E Test: instruments-service"
 service: instruments-service
 date: 2026-03-21
 status: superseded
-superseded_by: plans/active/instruments_service_e2e_live_mock_observability_2026_07_27.md
+superseded_by: plans/archive/2026_08/instruments_service_e2e_live_mock_observability_2026_07_27.md
 ---
 
 # E2E Test: instruments-service
@@ -11,8 +11,9 @@ superseded_by: plans/active/instruments_service_e2e_live_mock_observability_2026
 > **ARCHIVED (2026-07-27) — point-in-time snapshot, re-scoped.** Phases 1-4 + the 2026-03-23 DEFI E2E audit (6 logged
 > bugs) are real completed work but 4+ months cold — re-verify live if you still care about those bugs. The
 > USRI-not-installed finding is moot (USRI merged into instruments-service's own `sports/` sub-package, 2026-03
-> consolidation). Phases 5-7 (never run) are re-scoped as fresh work in
-> `plans/active/instruments_service_e2e_live_mock_observability_2026_07_27.md`.
+> consolidation). Phases 5-7 (never run) were re-scoped as fresh work in
+> `instruments_service_e2e_live_mock_observability_2026_07_27.md`, which ran to completion and archived 2026-08-02:
+> `plans/archive/2026_08/instruments_service_e2e_live_mock_observability_2026_07_27.md`.
 
 Follows `procedure.md`. Pipeline position: #1 (no upstream dependencies).
 

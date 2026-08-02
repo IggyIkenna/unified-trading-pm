@@ -32,7 +32,6 @@ major-bump-issue-handler.yml	worktree	31c67af30	never flipped
 notify-slack.yml	worktree	31c67af30	never flipped
 overnight-agent-orchestrator.yml	derived	31c67af30	live minus the mechanical flip 513f16773
 overnight-dead-man-switch.yml	worktree	31c67af30	never flipped
-plan-health-agent.yml	worktree	31c67af30	never flipped
 plan-notification.yml	derived	31c67af30	live minus the mechanical flip 513f16773
 publish-package.yml	worktree	31c67af30	never flipped
 python-quality-gates-v2.yml	worktree	31c67af30	never flipped

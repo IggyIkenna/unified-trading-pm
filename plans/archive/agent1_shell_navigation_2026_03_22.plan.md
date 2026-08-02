@@ -84,7 +84,7 @@ isProject: false
 ## CRITICAL: Read Before Any Work
 
 1. Read `unified-trading-system-ui/UI_STRUCTURE_MANIFEST.json` — SSOT for all page states, routes, and source files
-2. Read `unified-trading-pm/plans/active/CITADEL_VISION_2026_03_22.md` — system-wide vision
+2. Read `unified-trading-pm/plans/archive/CITADEL_VISION_2026_03_22.md` — system-wide vision
 
 ## TABS-ONLY RULE (enforced by this agent)
 

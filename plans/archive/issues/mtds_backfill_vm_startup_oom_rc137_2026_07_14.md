@@ -51,7 +51,7 @@ depends_on: []
 > thing that removes it from the capped corpus. This doc IS the 1509-line case the ruling was written about (see
 > `check_line_caps.sh`'s header comment and the codex section "The line-cap does NOT block archival of an already-done
 > doc"). **This supersedes** the `[DOC] P2` "split this doc into an under-cap pair" todo in
-> `/plans/active/issues/archive_candidate_docs_over_line_cap_blocks_edit_2026_07_29.md` — splitting a finished doc to
+> `/plans/archive/issues/archive_candidate_docs_over_line_cap_blocks_edit_2026_07_29.md` — splitting a finished doc to
 > appease a cap is explicitly what the ruling forbids.
 >
 > **Outcome**: the rc=137 startup-OOM mechanism (unscoped `ManifestFreshnessCache` / full-schema

@@ -288,6 +288,28 @@ causing a new task ID to be issued while the old one remains as an orphan. Fix: 
 `ORCHESTRATOR_VM_ID` scoping eliminates this accumulation going forward. One-shot cleanup requires running `prune_stale`
 once on the affected VM.
 
+### Same-plan brief collision silently conflates two todos (fixed `agent-orchestrator@3474b95`)
+
+`plan_tasks_by_brief` was a plain `{brief: task}` dict — when two todos in the SAME plan hard-wrap to a byte-identical
+first physical line (common when a plan clones a todo template across asset-group lanes and the distinguishing detail
+falls on a wrapped continuation line), both resolved to ONE existing task on every regen tick: the LATER doc occurrence
+always won `_reconcile_task_fields`, permanently overwriting the earlier task's `plan_order` (corrupting a
+`sequential: true` chain) while the earlier occurrence never got its own task at all (silently invisible to dispatch,
+its work never queued). Fix: `_group_plan_tasks_by_brief` groups existing same-plan tasks sharing a brief into a LIST
+(sorted by id/creation order), and a per-tick `brief_occurrence_index` matches the Nth doc occurrence of a brief to the
+Nth candidate positionally, instead of a `.get()` collapse; `_warn_on_brief_collisions` logs once per plan so a human
+can reword the colliding lines. Root-caused + fixed via
+`plans/archive/issues/mtds_backfill_sequential_true_dispatch_order_violated_2026_07_29.md`.
+
+### `sequential: true` chain-walk must exclude same-tick orphans (fixed `agent-orchestrator@77769ab`)
+
+A same-tick TEXT reword of an open todo (e.g. a retag) makes the OLD row's brief stop matching any live todo (it's an
+orphan, pending prune) while a FRESH row is created for the new text. If `_wire_sequential_prereqs`' chain walk runs
+BEFORE `_prune_stale` removes that orphan in the same `regen()` pass, the orphan's stale `plan_order` can sort into the
+middle of the fresh `(plan_order, id)` chain and hijack the immediate-predecessor slot — letting a downstream task
+dispatch while its true (still-open) predecessor is still `queued`. Fix: restrict the chain walk to each tick's live
+(non-orphan) task ids per plan. Same source issue doc as above.
+
 ### `/done`'s M3 checkbox-flip verification ALSO requires an exact brief match — annotate AFTER, never BEFORE
 
 Same `brief` exact-single-line-match mechanism as "Brief-mutation accumulation" above, but a distinct consumer:

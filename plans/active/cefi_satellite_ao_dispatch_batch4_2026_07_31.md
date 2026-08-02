@@ -38,7 +38,7 @@ related:
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]
 created: "2026-07-31"
-last_updated: "2026-07-31"
+last_updated: "2026-08-02"
 parent_epic: cefi_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -165,7 +165,14 @@ drift_direction: advance-code
   `[OPERATOR]` (confirm/trigger a fresh `deployment-api` build+deploy so the live Cloud Run monitor image picks up
   commit `09a2374`, which fixes a cross-asset-group false-paging bug on early SPOT preemptions — done-when is
   machine-checkable, `UPDATE_TIME` after `2026-07-31T08:06:31Z` + a named passing test). Item 2 (relaunch shard 24) is
-  gated on item 1 landing. Not drafted here; re-check once the operator confirms the deploy.
+  gated on item 1 landing. Not drafted here; re-check once the operator confirms the deploy. **Partial re-check
+  2026-08-02 (ag-closeout-audit, tranche=cefi, slot 8)**: live
+  `gcloud artifacts docker images list asia-northeast1-docker.pkg.dev/central-element-323112/unified-trading-system/deployment-api --include-tags --sort-by=~UPDATE_TIME --limit=1`
+  shows the `:latest` tag's `UPDATE_TIME=2026-08-02T15:23:00`, clearing the first sub-condition (after
+  `2026-07-31T08:06:31Z`). The second sub-condition (`test_sweep_early_preemption_no_marker_falls_back_to_op_checker`
+  confirmed passing on that specific build) was NOT verified this run — confirming it requires checking the deployed
+  build's test provenance, not just the image timestamp. Still gated pending that second confirmation; not drafted as a
+  batch7 candidate yet.
 
 ## Deferred — too-large-or-risky-for-a-batch-todo
 

@@ -36,7 +36,7 @@ related:
     /plans/active/ci_satellite_ao_dispatch_batch4_2026_07_31.md,
     /plans/active/issues/deployment_flow_doc_stale_pre_ldr_direct_mvp_2026_07_30.md,
     /plans/active/issues/uv_bootstrap_fallback_test_structural_anchor_stale_2026_07_30.md,
-    /plans/active/issues/ldr_to_main_promote_workflows_sustained_startup_failure_2026_07_30.md,
+    /plans/archive/issues/ldr_to_main_promote_workflows_sustained_startup_failure_2026_07_30.md,
     scripts/plan-hygiene/generate_ag_closeout_audit_candidates.py,
     scripts/plan-hygiene/generate_na_doc_tranche_inventory.py,
   ]

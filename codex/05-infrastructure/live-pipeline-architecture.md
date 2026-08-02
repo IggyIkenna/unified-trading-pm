@@ -334,7 +334,7 @@ every emitted event distinguishes scenario-fire from real-fire so alerting-servi
 recording the event.
 
 All layers except `ORDER` are post-cutover scope per
-[`simulation_scenarios_post_cutover_2026_06_01.md`](../../plans/active/simulation_scenarios_post_cutover_2026_06_01.md).
+[`simulation_scenarios_post_cutover_2026_06_01.md`](../../plans/archive/2026_05/simulation_scenarios_post_cutover_2026_06_01.md).
 For the full authoring guide, mutation types, and outcome-assertion categories, see
 [`/codex/04-architecture/scenario-injection-architecture.md`](/codex/04-architecture/scenario-injection-architecture.md).
 

@@ -67,13 +67,13 @@ entries:
     successor: read_availability_index_bare_defi_callers_2026_07_27
   - repo: deployment-api
     file: deployment_api/services/data_status_drilldown/_core.py
-    line: 171
+    line: 175
     function: _scoped_manifest_rows
     status: wrapper_alias_already_projected_internally
     successor: read_availability_index_bare_defi_callers_2026_07_27
   - repo: deployment-api
     file: deployment_api/services/data_status_drilldown/_core.py
-    line: 388
+    line: 392
     function: lookup_capture_status_for_shard
     status: wrapper_alias_already_projected_internally
     successor: read_availability_index_bare_defi_callers_2026_07_27

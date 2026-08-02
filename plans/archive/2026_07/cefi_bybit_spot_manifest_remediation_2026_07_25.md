@@ -21,7 +21,7 @@ related:
     /plans/archive/issues/bybit_spot_manifest_stray_captures_2026_07_07.md,
     /plans/active/issues/instruments_remaining_work_audit_2026_07_10.md,
     /plans/archive/issues/cefi_layer1_denominator_gaps_2026_07_03.md,
-    /plans/active/cefi_misc_audits_and_hygiene_2026_07_25.md,
+    /plans/archive/2026_08/cefi_misc_audits_and_hygiene_2026_07_25.md,
     /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
     /codex/02-data/honest-coverage-model.md,
   ]
@@ -88,9 +88,10 @@ needed to fix them:
 value: (1) operator ruling 2026-07-12 (`plan_reconciliation_operator_decisions_2026_07_11.md` §A2, finding 66); (2)
 `unified-api-contracts/unified_api_contracts/_instrument_enums.py`'s `InstrumentType` enum states it outright
 ("UPPERCASE values are the canonical standard") and every member's string value already equals its uppercase name; (3)
-the system-wide casing directive (`cross_ag_instrument_type_casing_100pct_directive_2026_07_24.md`) rules the same for
-cefi's manifest `instrument_type` COLUMN. Both scripts above were verified 2026-07-12 to already target uppercase
-`SPOT_PAIR` -- no code change needed.
+the system-wide casing directive
+(`/plans/archive/2026_08/cross_ag_instrument_type_casing_100pct_directive_2026_07_24.md`) rules the same for cefi's
+manifest `instrument_type` COLUMN. Both scripts above were verified 2026-07-12 to already target uppercase `SPOT_PAIR`
+-- no code change needed.
 
 **Why this plan exists instead of just re-flipping the archived doc back to open:** the archived doc's own Progress Log
 confirms "this was the LAST open todo... all todos now closed... -003 is now safe to run" (2026-07-12). Everything after

@@ -260,8 +260,8 @@ source: >-
       write window and resumed after. **Fresh live re-verification (separate read, post-apply): 0 non-UPPERCASE
       `instrument_type` rows for tradfi, excluding the permanent `futures_chain`/`options_chain` bundle-grain axis** —
       this satisfies the casing directive's literal-100% bar
-      (`cross_ag_instrument_type_casing_100pct_directive_2026_07_24.md`) for the CASING dimension specifically.
-      **INDEPENDENT re-verification (separate session, same day, post-writer-fix):** `Rows CHANGED: 0`,
+      (`/plans/archive/2026_08/cross_ag_instrument_type_casing_100pct_directive_2026_07_24.md`) for the CASING dimension
+      specifically. **INDEPENDENT re-verification (separate session, same day, post-writer-fix):** `Rows CHANGED: 0`,
       `SELF-VERIFY: 4,988,822/4,988,822 UPPERCASE` — corroborates 0 residual with a second, later read. Bundle atoms
       `futures_chain`/`options_chain` are a SEPARATE partition-grain axis (manifest-only, null-id) — kept distinct, NOT
       folded into the enum, per design. (repos: market-tick-data-service, unified-trading-library, instruments-service)

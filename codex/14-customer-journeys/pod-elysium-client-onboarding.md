@@ -197,5 +197,5 @@ Sui / Aptos / TON — not in May-23 cutover scope. When in scope: same pattern a
   scope.
 - [`per-archetype-wallet-isolation.md`](/codex/05-infrastructure/per-archetype-wallet-isolation.md) — multi-wallet
   model.
-- [`plans/active/api_keys_wallets_accounts_readiness_2026_05_10.md`](../../plans/active/api_keys_wallets_accounts_readiness_2026_05_10.md)
+- [`plans/active/api_keys_wallets_accounts_readiness_2026_05_10.md`](../../plans/archive/2026_05/api_keys_wallets_accounts_readiness_2026_05_10.md)
   — parent plan; POD scope clarification 2026-05-12 captured in plan body.

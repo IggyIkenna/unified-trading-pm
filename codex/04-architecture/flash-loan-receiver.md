@@ -165,7 +165,7 @@ Then validates on-chain: `eth_getCode(address)` must return non-empty bytecode.
 
 The passthrough `FlashLoanReceiver` cannot execute supply/borrow/swap inside `executeOperation()` — it only approves
 repayment. For atomic recursive-borrow opening (Family 1 + Family 2 of
-[`defi_recursive_borrow_archetypes_2026_05_10.md`](../../plans/active/defi_recursive_borrow_archetypes_2026_05_10.md)),
+[`defi_recursive_borrow_archetypes_2026_05_10.md`](../../plans/archive/2026_05/defi_recursive_borrow_archetypes_2026_05_10.md)),
 the receiver must loop through an encoded action sequence (`bytes[]`) calling Aave Pool / UniswapV3 Router / WETH9
 inside the callback. The two contracts coexist:
 
@@ -307,7 +307,7 @@ the chain-specific Aave V3 pool.
 ### Plan reference
 
 - Phase 4 of
-  [`defi_recursive_borrow_archetypes_2026_05_10.md`](../../plans/active/defi_recursive_borrow_archetypes_2026_05_10.md)
+  [`defi_recursive_borrow_archetypes_2026_05_10.md`](../../plans/archive/2026_05/defi_recursive_borrow_archetypes_2026_05_10.md)
 - See also
   [`/codex/15-runbooks/recursive-leverage-receiver-deploy-runbook.md`](/codex/15-runbooks/recursive-leverage-receiver-deploy-runbook.md)
   for the full operator runbook (owner / cadence / verifier / last_executed metadata).

@@ -75,9 +75,9 @@ Each transition writes an audit row to `strategy_promote_audit.parquet` with
 The 14-step CLI sequence + per-step verifier + per-step rollback procedure is in:
 
 - **May-23 cutover scope**:
-  [`plans/active/promote_workflow_may23_cli_path_2026_05_10.md`](../../../plans/active/promote_workflow_may23_cli_path_2026_05_10.md)
+  [`plans/active/promote_workflow_may23_cli_path_2026_05_10.md`](../../../plans/archive/2026_05/promote_workflow_may23_cli_path_2026_05_10.md)
 - **Post-cutover UI pipeline**:
-  [`plans/active/promote_workflow_post_cutover_ui_pipeline_2026_05_10.md`](../../../plans/active/promote_workflow_post_cutover_ui_pipeline_2026_05_10.md)
+  [`plans/active/promote_workflow_post_cutover_ui_pipeline_2026_05_10.md`](../../../plans/archive/2026_05/promote_workflow_post_cutover_ui_pipeline_2026_05_10.md)
 
 When the post-cutover UI pipeline lands, this doc updates to include the UI entry-point + cross-references to the
 UI-side workflow.

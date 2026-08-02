@@ -56,7 +56,7 @@ context_scope:
 > **🗄️ ARCHIVED 2026-08-01.** All 7 todos (P0-P3, Todo 4, Todo 5, Todo 6) `[x]` — the seeder is live, verified against
 > real prod DeFi data (zero gap across `lending_indices`/`liquidations`/`lst_rates`), and FLUID-ETHEREUM is wired. Todo
 > 6's follow-up (v2 per-instrument enumerator OOM-failing for DeFi) is tracked separately:
-> `/plans/active/issues/defi_v2_expected_universe_enumerator_oom_2026_08_01.md`. Closed out by
+> `/plans/archive/issues/defi_v2_expected_universe_enumerator_oom_2026_08_01.md`. Closed out by
 > `/plans/archive/2026_08/defi_expected_unattempted_seeder_design_2026_07_26_finalize_2026_07_28.md`. Per
 > `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`.
 
@@ -204,7 +204,7 @@ write a dishonest zero-rows manifest stamp (the exact FLUID failure mode in re-d
       in-memory `list[ExpectedRow]` before writing anything — fine for the other 4 asset_groups, not for DeFi's much
       larger catalogue. Filed as its own issue doc (the "distinct, larger task" this todo anticipated, though the actual
       shape is a memory-bounding bug fix, not new seeder code):
-      `/plans/active/issues/defi_v2_expected_universe_enumerator_oom_2026_08_01.md` (P0, `assigned_vm: planning`, 3
+      `/plans/archive/issues/defi_v2_expected_universe_enumerator_oom_2026_08_01.md` (P0, `assigned_vm: planning`, 3
       todos: fix the streaming/OOM, verify real EU rows materialise post-fix, investigate the adjacent
       `liquidation_events`/`risk_params` missing-scheduler gap). No code changes made in this session — this todo's "no
       human judgment needed to START it" scope was the investigation itself; the fix is correctly scoped as a separate
@@ -529,7 +529,7 @@ handlers that build a `DefiManifestRecorder`:
   data_types; the only 14 EU rows fleet-wide are this plan's own P2 `lending_indices`/`lst_rates` seeder output. Root
   cause read directly in `main()` (`enumerate_expected_universe.py:4309-4334`): the whole per-instrument generator is
   drained into one in-memory `list[ExpectedRow]` before any write, which fits in 8Gi for the other 4 asset_groups but
-  not DeFi's much larger catalogue. Filed `/plans/active/issues/defi_v2_expected_universe_enumerator_oom_2026_08_01.md`
+  not DeFi's much larger catalogue. Filed `/plans/archive/issues/defi_v2_expected_universe_enumerator_oom_2026_08_01.md`
   (P0, `assigned_vm: planning`) with the fix scoped as its own todo (stream/batch the write path) rather than absorbing
   it into this session — a genuine "distinct, larger task" per this todo's own framing, just a different shape
   (memory-bounding bug fix to existing code) than the todo anticipated (new seeder code). **Flag for the operator**:

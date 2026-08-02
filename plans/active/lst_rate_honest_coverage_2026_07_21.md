@@ -28,9 +28,9 @@ scope: [engineer, admin]
 tags: [lst, exchange-rate, oracle, dex, honest-coverage, pnl-correctness, defi, data-pipeline]
 related:
   [
-    /plans/active/issues/lst_exchange_rate_data_availability_2026_07_21.md,
+    /plans/archive/issues/lst_exchange_rate_data_availability_2026_07_21.md,
     /plans/active/issues/pnl_interest_accrual_wrong_engine_and_banned_formula_2026_07_21.md,
-    /plans/active/issues/onchain_manifest_dishonest_and_recompute_blocked_2026_07_21.md,
+    /plans/archive/issues/onchain_manifest_dishonest_and_recompute_blocked_2026_07_21.md,
   ]
 created: "2026-07-21"
 last_updated: "2026-07-21"

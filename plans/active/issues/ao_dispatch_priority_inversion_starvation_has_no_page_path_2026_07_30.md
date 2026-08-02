@@ -68,6 +68,7 @@ estimate_class: design
 drift_direction: advance-code
 depends_on: []
 resolved_by:
+archive_exempt: true # archival routed through ao_satellite_ao_dispatch_batch3_finalize_2026_07_31.md's [REVIEW] P0 todo, not standalone (see na-eligibility-audit 2026-08-01 entry)
 locked_by:
 context_scope:
   [
@@ -170,3 +171,8 @@ this, each time invisible until someone reads the backlog by hand.
   reconciled back. Archiving it here would duplicate that already-queued AO work. `assigned_vm` left as-is (`NA` —
   archival-pending status, not a dispatch-eligibility question).
 - **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).
+- **na-eligibility-audit 2026-08-02** (autonomous, tranche `ao`, dispatch agt-da0e58, slot 10): re-verified, no change —
+  still 0 open todos, `archive_exempt: true` still accurate (archival still routes through
+  `ao_satellite_ao_dispatch_batch3_finalize_2026_07_31.md`'s `[REVIEW] P0` todo, not standalone). The only file change
+  since the 2026-08-01 verdict was an unrelated corpus-wide reference-path fix (`unified-trading-pm@17b53df1e`) — no
+  content drift.

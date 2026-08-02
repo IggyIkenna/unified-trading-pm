@@ -36,7 +36,7 @@ related:
     /codex/02-data/sports-2020-06-data-floor.md,
     /codex/02-data/sports-gcs-path-ssot.md,
     /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
-    /plans/active/sports_p2_history_apifootball_2015_to_present_2026_06_27.md,
+    /plans/archive/2026_07/sports_p2_history_apifootball_2015_to_present_2026_06_27.md,
   ]
 created: "2026-07-24"
 last_updated: "2026-08-02"

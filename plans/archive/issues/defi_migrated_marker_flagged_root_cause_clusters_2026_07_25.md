@@ -1,0 +1,241 @@
+---
+doc_type: issue
+title: FLAGGED `_migrated_*` markers are 3+ distinct unresolved root-cause clusters, not just interrupted runs
+summary:
+  Live sampling of the delete_migrated_defi_markers_2026_07_23.py dry-run (2026-07-25) found the FLAGGED population is
+  NOT dominated by simple interrupted-migration cases as originally assumed. At least 3 distinct clusters with different
+  root causes and no safe blind-remediation path -- GMX perp_funding 1-row aggregate snapshots (~1,896 markers, matches
+  the tool's own docstring precedent, needs_attribution flush never ran), TRADER_JOE_V2/AVALANCHE dex_pool_state rows
+  that DO have a real distinct on-chain pool_id per row but never got symbol/pool_address resolved (~944 markers, NOT
+  unattributable data, an unresolved symbol-resolution gap), and an lst_rates cluster (COINBASE/MAKER/SWELL, ~678
+  markers). None of these are fixed by blindly re-running migrate_defi_batch_to_per_instrument.py --apply.
+status: resolved
+nature: issue
+asset_group: defi
+stage: [data]
+repos: [market-tick-data-service]
+scope: [engineer]
+tags: [defi, per-instrument-model, needs-attribution, symbol-resolution, migration, data-correctness]
+related: [defi_consolidated_closeout_2026_07_18]
+created: 2026-07-25
+last_updated: "2026-08-02"
+parent_epic: infrastructure_master
+assigned_vm: NA
+execution_scope: local-only
+priority: P1
+estimate_class: research
+drift_direction: unknown
+depends_on: []
+source:
+  [
+    "found 2026-07-25 during a /autonomous session's read-only sampling of the in-flight
+    delete_migrated_defi_markers_2026_07_23.py dry-run, per the operator's 'migrate the FLAGGED ones too' direction
+    (defi_consolidated_closeout_2026_07_18.md progress log, 2026-07-25 entry)",
+  ]
+resolved_by:
+  "GMX cluster: /plans/archive/2026_07/defi_gmx_venue_removal_2026_07_25.md (status: complete, verified);
+  TRADER_JOE_V2/VELODROME_V2/CURVE dex_pool_state + lst_rates (all 4 venues) clusters:
+  /plans/archive/2026_08/defi_dex_pool_symbol_fix_backfill_purge_2026_07_25.md, all 5 todos shipped/independently
+  re-verified 2026-08-02 -- both clusters this doc tracks are now independently confirmed closed"
+locked_by:
+locked_since:
+context_scope:
+  [
+    /plans/archive/2026_08/defi_dex_pool_symbol_fix_backfill_purge_2026_07_25.md,
+    /plans/archive/2026_08/defi_dex_pool_symbol_fix_backfill_purge_finalize_2026_07_25.md,
+    /plans/archive/issues/defi_dex_pools_subgraph_query_missing_input_tokens_2026_07_25.md,
+    market-tick-data-service/scripts/one_offs/delete_migrated_defi_markers_2026_07_23.py,
+  ]
+---
+
+# FLAGGED `_migrated_*` markers are 3+ distinct unresolved root-cause clusters
+
+> **🟢 RESOLVED 2026-08-02** — GMX cluster: `/plans/archive/2026_07/defi_gmx_venue_removal_2026_07_25.md` (complete,
+> verified). TRADER_JOE_V2/VELODROME_V2/CURVE dex_pool_state + lst_rates (all 4 venues) clusters:
+> `/plans/archive/2026_08/defi_dex_pool_symbol_fix_backfill_purge_2026_07_25.md`, all 5 todos shipped/independently
+> re-verified 2026-08-02 — both clusters this doc tracks are now independently confirmed closed.
+
+## Why this exists
+
+`delete_migrated_defi_markers_2026_07_23.py`'s dry-run (running now on VM
+`canonical-migration-defi-marker-cleanup-20260724-182226`, two parallel processes, see the plan's 2026-07-25 progress
+entry) never deletes FLAGGED markers — only SAFE ones. The operator asked: for markers that come back FLAGGED, we should
+also migrate/fix those, "else what's the point." Before attempting any remediation, this issue characterizes WHAT the
+FLAGGED population actually is, from live sampling of ~268k processed markers (both shards' resume-logs merged,
+pre-dedup) as of 2026-07-25 ~00:40 UTC.
+
+**Bottom line: do NOT blindly re-run `migrate_defi_batch_to_per_instrument.py --apply` against FLAGGED cells.** The
+population splits into distinct clusters with different root causes; at least one (TRADER_JOE_V2) would NOT be fixed by
+a re-run at all, since the underlying gap is upstream of the migration tool.
+
+## Cluster breakdown (raw counts, pre-dedup across shard-a/shard-b, ~268k of 356,391 markers sampled so far)
+
+| Cluster                                                                                      | Count                                | Disposition                     | Root cause (verified via direct parquet inspection)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| -------------------------------------------------------------------------------------------- | ------------------------------------ | ------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `GMX` / `ARBITRUM`+`AVALANCHE` / `perp_funding`                                              | 1,896                                | `FLAGGED_NO_SIBLINGS_NO_BACKUP` | Every sampled marker has `marker_rows == 1` — a single daily funding-rate aggregate, not per-instrument data. Matches the tool's own docstring precedent exactly ("5/9 sampled GMX perp_funding 1-row snapshots had NO needs_attribution twin... the marker itself is the ONLY surviving copy"). The `_needs_attribution/day=.../perp_funding_*.parquet` object is absent for these days — the original migration run's end-of-run flush apparently never fired for this pipeline_mode/data_type.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
+| `TRADER_JOE_V2` / `AVALANCHE` / `dex_pool_state`                                             | 944 (878 NO_SIBLINGS + 66 SHORTFALL) | both                            | Verified on a concrete example (`day=2022-02-15`, 659 rows / `day=2022-03-12`, 522 rows, etc.): `instrument_id`/`symbol`/`pool_address` are 100% NULL on every row, so the tool correctly sees "unattributable." **But `pool_id` is 100% populated with a distinct real on-chain address per row** (e.g. `0x92030226cbd8b8cf...`) — this is NOT identity-less data, the symbol-resolution step for these specific pools (obscure pairs — sampled names included WAVAX-MLORD, WAVAX-THRONE, WAVAX-THUNDER) never populated `symbol`/`pool_address` from `pool_id`. Re-running the SAME migration tool would not fix this — it doesn't do symbol resolution, it only routes rows that are ALREADY unattributable to the needs_attribution fallback (which also doesn't exist for these days — checked `_needs_attribution/day=2022-02-15/dex_pool_state_2022-02-15.parquet`, absent). Spans many consecutive days Jan-Mar 2022 — looks like a sustained gap for this venue/period, not a one-off. |
+| `COINBASE`/`MAKER`/`SWELL` / `ETHEREUM` / `lst_rates`                                        | 678 (404+264+10)                     | `FLAGGED_NO_SIBLINGS_NO_BACKUP` | Not yet root-caused in detail this session (time-boxed the investigation to the two largest clusters) — flagging the volume and the venue names since `lst_rates_handler.py` was ALREADY separately flagged this session (defi_consolidated_closeout_2026_07_18.md line ~768) as writing to "a non-canonical, non-hive path" — plausibly related, needs its own look.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| `VELODROME_V2`/OPTIMISM, `CURVE`/ETHEREUM, `SUSHISWAP`/ARBITRUM `dex_pool_state`/`dex_swaps` | 421 (223+132+2 sampled so far)       | `FLAGGED_ROWCOUNT_SHORTFALL`    | Same shape as TRADER_JOE_V2 SHORTFALL cases (siblings exist for the FEW attributable rows, but most rows in the bundle are unattributed and there's no needs_attribution twin) — likely the same symbol-resolution gap, not independently verified per-venue yet.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
+
+These counts are from a still-running dry-run (~75% of the corpus sampled as of this writing) and are NOT deduped across
+shard-a/shard-b — treat as directional, not final. The final report (once the dry-run completes or the 8h autonomous
+window ends) will have exact deduped counts.
+
+## Why this matters for the delete decision
+
+The tool's SAFE/FLAGGED classification itself looks correct and appropriately conservative — nothing here suggests a
+SAFE marker is wrongly classified. The finding is about what "fix the FLAGGED ones" actually requires:
+
+1. **GMX perp_funding** — these are single-row daily aggregates, not something that gets "split" in the per-instrument
+   sense. If the content is only in the marker (no needs_attribution twin), the real question isn't "re-run the
+   migration" — it's whether these 1-row aggregates are even meant to go through the per-instrument split at all, or
+   whether they should have a different retirement/keep policy from the start. **Design question, not a migration bug.**
+   (NOTE 2026-07-25, later same day: this design question is now MOOT — the operator decided to remove GMX platform-wide
+   rather than fix/retire its data in place; see `plans/archive/2026_07/defi_gmx_venue_removal_2026_07_25.md`.)
+2. **TRADER_JOE_V2 (and likely the other dex_pool_state SHORTFALL clusters)** — this is a genuine upstream gap: pools
+   have a real identity (`pool_id`) but no symbol resolution. The FIX (if pursued) is a symbol/pool metadata backfill
+   for these specific pools — likely an instruments-service / URDI concern, NOT something
+   `migrate_defi_batch_to_per_instrument.py` can do by re-running, since it never reads a token/symbol registry, it just
+   routes based on whatever `symbol`/`pool_address` already are on the row.
+3. **lst_rates cluster** — needs its own investigation; flagging the volume so it isn't lost.
+
+## Recommendation (operator decision needed — not made here)
+
+- Do NOT re-run `migrate_defi_batch_to_per_instrument.py --apply` against any of these clusters expecting it to resolve
+  them — verified it wouldn't fix at least the TRADER_JOE_V2 case, and the GMX case isn't really a "migration" problem
+  at all.
+- The FLAGGED markers should stay exactly as-is (never deleted) until each cluster gets its own scoped decision:
+  accept-as-permanently-orphaned (GMX 1-row aggregates — RULED 2026-07-25: GMX removed platform-wide, see
+  `/plans/archive/2026_07/defi_gmx_venue_removal_2026_07_25.md`, so this cluster is accept-as-orphaned by construction,
+  not a live decision), a symbol/pool-metadata backfill (TRADER_JOE_V2 + likely other dex_pool_state venues), or further
+  investigation (lst_rates).
+- This is exactly what the delete_migrated_defi_markers_2026_07_23.py dry-run is FOR — it correctly refuses to touch any
+  of this. No corrective action needed on that script; this issue is about what comes after, once its report is final.
+
+## Related
+
+- `plans/active/defi_consolidated_closeout_2026_07_18.md` — parent plan, 2026-07-25 progress log entry has the session
+  context and the queued operator decisions this issue backs.
+- `market-tick-data-service/scripts/one_offs/delete_migrated_defi_markers_2026_07_23.py` — the verification tool itself
+  (module docstring already documents the GMX 1-row precedent this issue confirms at scale).
+
+## Update (2026-07-25, later same session — deeper per-cluster verification)
+
+Direct parquet inspection + two dispatched research agents refined every cluster's characterization. Corrections to the
+analysis above:
+
+- **GMX perp_funding — confirmed venue-wide daily aggregate, not per-instrument data at all.** Downloaded and inspected
+  a real marker directly: `market="all"`, `symbol`/`instrument_id`/`coin` all NULL, but `funding_rate_long/short`,
+  `long_oi_usd`/`short_oi_usd`, `tvl_usd`, `daily_volume_usd` populated -- one row = the WHOLE GMX venue on one chain
+  for one day. There is no per-instrument content to lose; the per-instrument split migration was applied to a data_type
+  that structurally isn't per-instrument. Design question (should this data_type even go through per-instrument
+  splitting?), confirmed not a bug.
+- **lst_rates cluster root-caused, and it's actually TWO different, more benign situations than first assumed**:
+  - `COINBASE` (cbETH) / `SWELL` (swETH): every FLAGGED marker is `marker_rows=1`, and it's a genuinely legitimate
+    single-instrument row (cbETH is the only token for protocol=coinbase, so 1 row/day is correct, not a data-loss
+    symptom). The split-migration's "write my own leaf" step just never completed for these -- fixing this is a trivial,
+    low-risk leaf-copy, not a backfill, since there's zero ambiguity about the content.
+  - `MAKER` (sDAI) / `ETHENA` (sUSDe): these are PRE-2026-07-23 remnants of a data_type that has since been corrected --
+    `lst_rates_handler.py`'s own code history explicitly removed sDAI/sUSDe from `lst_rates` (2026-07-23,
+    `lst_venue_registry_gap_and_cron_crash_loop_2026_07_22.md`) because they're not real LSTs (no validator staking),
+    reassigning them to `vault_share_price_handler.py`. These old markers represent a classification the system has
+    already moved away from.
+  - **Canonical destination for the 4 rate types the operator asked about**: `lst_rates` (this handler) = ONLY the
+    on-chain protocol par/redemption rate (e.g. Lido's `getPooledEthByShares` via direct RPC `eth_call` -- confirmed
+    reading the handler code, not the subgraph). The Chainlink/lending-oracle rate already has its own separate
+    canonical home: `oracle_prices` (see `issues/defi_lst_oracle_timestamp_glued_instrument_id_2026_07_20.md`). DEX
+    market rate and CEX rate for an LST token need no new data_type -- they're just that token traded on whatever
+    DEX/CEX it trades on, captured by the existing `dex_pool_state`/`dex_swaps`/cefi market-data paths, same as any
+    other token.
+- **TRADER_JOE_V2/VELODROME_V2/CURVE dex_pool_state — root cause is an ACTIVE CODE BUG, not just historical.** Full
+  detail in the new sibling issue, `issues/defi_dex_pools_subgraph_query_missing_input_tokens_2026_07_25.md`: the
+  subgraph query used for these 3 venues (`_CURVE_QUERY`, verified byte-for-byte in `dex_pools_handler.py`) never
+  requests `inputTokens { symbol }` from the subgraph -- only a sibling query variant (`_MESSARI_DEX_QUERY`, used by
+  other venues) does. This means symbol resolution ONLY happens via the instruments-service catalogue fallback (tier 1),
+  never via the subgraph (tier 2), for these 5 venues (curve/sushiswap/gmx/velodrome_v2/trader_joe_v2). **This bug is
+  still live** -- DeFi capture is currently operator-paused (since 2026-07-18, pending the per-instrument
+  re-architecture), so it isn't actively producing bad rows RIGHT NOW, but will resume producing them the moment capture
+  restarts, unless fixed first.
+- **Canonical-coverage check, answering "do we already have canonical data for this shard dimension elsewhere?"**
+  (checked live GCS + codex, 2026-07-25):
+
+  | Shard                                  | Current/live coverage?                                                                                                      | Already well-attributed?                                              |
+  | -------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------- |
+  | TRADER_JOE_V2/AVALANCHE/dex_pool_state | None -- venue currently empty                                                                                               | N/A                                                                   |
+  | VELODROME_V2/OPTIMISM/dex_pool_state   | Yes, through 2026-07-24                                                                                                     | Yes -- masked by catalogue-tier-1 coverage despite the same query bug |
+  | CURVE/ETHEREUM/dex_pool_state          | Yes, through 2026-07-18                                                                                                     | No -- still address-keyed, bug visibly live                           |
+  | UNISWAP_V3/ETHEREUM/dex_pool_swaps     | Yes, through 2026-07-24                                                                                                     | Yes -- different query path, never had this bug                       |
+  | HYPERLIQUID/HYPERLIQUID/perp_funding   | None as this shard -- venue reclassified `asset_group=cefi` 2026-06-25, current cefi capture only writes `data_type=trades` | N/A -- whole data_type discontinued for this venue                    |
+  | SUSHISWAP dex_pool_state               | Stopped ~2026-06-20/25                                                                                                      | Was address-keyed when active (same bug)                              |
+  | AURORA/AURORA/gas_fees                 | Continues under `venue=ALCHEMY,chain=AURORA` (RPC provider replaced chain as the venue key)                                 | Not really comparable -- single feed, not per-pool                    |
+
+  Net: VELODROME_V2 and UNISWAP_V3's old batch markers are genuinely low-value to fix (current data already covers the
+  same shard well). CURVE's gap is live and ongoing. TRADER_JOE_V2 and HYPERLIQUID/perp_funding have literally no
+  current equivalent -- the old markers are the only record, for whatever that's worth given the underlying
+  attribution/classification issues.
+
+Full detail on the active bug: `issues/defi_dex_pools_subgraph_query_missing_input_tokens_2026_07_25.md`.
+
+## Update (2026-07-26 — GMX cluster confirmed CLOSED; overall `status` stays `open`)
+
+`/plans/archive/2026_07/defi_gmx_venue_removal_2026_07_25.md`'s all 8 todos are now `- [x]` done, including the
+`[OPERATOR]` GCS+manifest purge: verified live — zero `venue=GMX` objects remain in
+`market-data-tick-defi-prd-central-element-323112`, 5,374 `venue=GMX` manifest rows dropped (24,742,605 → 24,737,231).
+This closes the **GMX perp_funding cluster (~1,896 markers)** row above by construction, per the accept-as-orphaned
+disposition already recorded in this doc (line 91-92) — the venue no longer exists, so the FLAGGED markers are moot
+rather than needing any further remediation decision.
+
+**Not flipping this doc's top-level `status` to `resolved`** — the sibling **TRADER_JOE_V2/VELODROME_V2/CURVE
+dex_pool_state cluster (~944+421 markers)** and the **lst_rates cluster's MAKER/ETHENA half** are both owned by
+`/plans/archive/2026_08/defi_dex_pool_symbol_fix_backfill_purge_2026_07_25.md`, re-verified still 0/5 todos done (all
+`- [ ]`) as of this update — the query-fix, live-test, re-backfill, and both `[OPERATOR]` purges (lst_rates +
+dex_pool_state) remain unshipped. Per this plan's own gated finalize doc
+(`/plans/archive/2026_08/defi_dex_pool_symbol_fix_backfill_purge_finalize_2026_07_25.md`), this issue's overall status
+should be re-checked once that plan completes.
+
+## Update (2026-08-02 — `/plans/archive/2026_08/defi_dex_pool_symbol_fix_backfill_purge_finalize_2026_07_25.md` todo 1, slot-13 review craft):
+
+both remaining clusters now independently confirmed closed; flipping `status` to `resolved`
+
+Re-checked `/plans/archive/2026_08/defi_dex_pool_symbol_fix_backfill_purge_2026_07_25.md`: all 5 todos are now `- [x]`
+done, each with real, verified evidence (query fix `market-tick-data-service@63199601`, confirmed ancestor of
+`origin/live-defi-rollout`; backfill VMs completed + manifest spot-checked; both purge categories — lst_rates markers
+for all 4 venues COINBASE/SWELL/MAKER/ETHENA, and the old dex_pool_state address-keyed leaves for
+curve/sushiswap/velodrome_v2/ trader_joe_v2 — independently re-verified zero-SAFE-remaining). This resolves BOTH of this
+doc's remaining clusters at once: the **dex_pool_state cluster (TRADER_JOE_V2/VELODROME_V2/CURVE, ~944+421 markers)**
+via the query-fix + backfill + purge, and the **lst_rates cluster (~678 markers, COINBASE/MAKER/SWELL/ETHENA)** via the
+same plan's todo 1 (covers all 4 venues, not just MAKER/ETHENA).
+
+Per this update's own instruction above, also re-checked the **GMX cluster's** owning plan before touching the top-level
+`status`: `/plans/archive/2026_07/defi_gmx_venue_removal_2026_07_25.md` carries `status: complete` and is physically
+archived (confirmed by reading the file directly, not trusting the 2026-07-26 note alone).
+
+All 3 clusters this doc tracks (GMX, dex_pool_state, lst_rates) are now independently confirmed closed — flipping
+`status: open` → `status: resolved` with the `resolved_by` citation above in this same commit.
+
+## Todos
+
+- [x] ✅ [DATA] P1. **DONE 2026-08-02 (finalize task
+      `/plans/archive/2026_08/defi_dex_pool_symbol_fix_backfill_purge_finalize_2026_07_25.md` todo 1, slot-13 review
+      craft) — closed by citation.** `/plans/archive/2026_08/defi_dex_pool_symbol_fix_backfill_purge_2026_07_25.md`'s
+      all 5 todos shipped/independently re-verified (see the 2026-08-02 update above for full evidence); this doc's
+      overall `status` flipped to `resolved` in this same commit.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30**: KEEP-NA-STALE: its sole todo's content is wholly owned by the active
+  assigned_vm:planning plan /plans/archive/2026_08/defi_dex_pool_symbol_fix_backfill_purge_2026_07_25.md, whose finalize
+  twin carries an open todo to reconcile status back into this doc. Citation fixed, not reclassified (flipping would
+  dispatch a duplicate)
+- **context-scout 2026-08-01**: populated context_scope (4 entries).
+- **na-eligibility-audit 2026-08-02** (tranche=defi, autonomous, scheduled): KEEP-NA-STALE (2026-07-30 verdict re-
+  affirmed; citation already fixed then, nothing further to correct) — re-read end to end; content unchanged since
+  (context-scout backfill only). The sole open item carries its own explicit "Tracked elsewhere — do NOT dispatch from
+  here ... Reclassifying this doc would dispatch a duplicate" annotation: its entire content is owned by the active
+  `assigned_vm: planning` plan `/plans/archive/2026_08/defi_dex_pool_symbol_fix_backfill_purge_2026_07_25.md`, whose
+  gated twin already carries an open `[REVIEW] P2` to reconcile status back into this doc.
+- **2026-08-02 (slot-13, review craft, dispatched on
+  `/plans/archive/2026_08/defi_dex_pool_symbol_fix_backfill_purge_finalize_2026_07_25.md` todo 1)**: gate satisfied —
+  parent plan's all 5 todos confirmed `[x]` with verified evidence, and the sibling GMX cluster's owning plan
+  independently confirmed `status: complete`/archived. Flipped this doc's status to `resolved`. See the finalize plan +
+  `defi_consolidated_closeout_2026_07_18.md` for the other 2 legs of this same reconciliation.

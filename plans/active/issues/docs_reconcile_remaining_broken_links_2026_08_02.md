@@ -45,59 +45,59 @@ that COULD be confidently fixed already shipped in the sweep's 4 commits (unifie
 
 ## Genuinely dead links — no successor found anywhere in the repo (verified via `find`, not just grep-0)
 
-- [ ] [DOCS] P2. `.cursor/rules/core/provider-api-version-manifest.mdc` cites
-      `../../unified-trading-codex/02-data/provider-api-version-manifest.md` — points into the ARCHIVED
-      `unified-trading-codex` repo. The live content-of-record for this topic is a YAML file, not a doc:
+- [ ] [DOCS] P2. `.cursor/rules/core/provider-api-version-manifest.mdc` cites the ARCHIVED `unified-trading-codex`
+      repo's `02-data/provider-api-version-manifest.md` (via `../../unified-trading-codex/`). The live content-of-record
+      for this topic is a YAML file, not a doc:
       `unified-api-contracts/unified_api_contracts/config/provider_api_versions.yaml` (confirmed via the sibling rule
       `.cursor/rules/config/provider-manifest-ssot.mdc`). Fix: either write the missing stub doc pointing at the YAML,
       or drop the dead `CODEX:` pointer line.
-- [ ] [DOCS] P3. `codex/00-getting-started/E2E_WORKFLOW_UNIFIED.md` cites
-      `../../.cursor/plans/phase_0_cod_service_specs_f0a0afbd.plan.md` — `.cursor/plans/` doesn't exist; the
-      hash-suffixed filename is a transient Cursor-generated artifact, never durable. Fix: delete the dead link.
-- [ ] [DOCS] P2. `codex/04-architecture/README.md` (×4: `BATCH-LIVE-SYMMETRY.md`, `communication-patterns.md`,
-      `compute.md`, `scaling.md`) + `codex/04-architecture/batch-live-architecture.md` (`communication-patterns.md`) —
+- [ ] [DOCS] P3. `/codex/00-getting-started/E2E_WORKFLOW_UNIFIED.md` cites a transient `.cursor/plans/` artifact,
+      `phase_0_cod_service_specs_f0a0afbd.plan.md` — `.cursor/plans/` doesn't exist; the hash-suffixed filename is a
+      transient Cursor-generated artifact, never durable. Fix: delete the dead link.
+- [ ] [DOCS] P2. `/codex/04-architecture/README.md` (×4: `BATCH-LIVE-SYMMETRY.md`, `communication-patterns.md`,
+      `compute.md`, `scaling.md`) + `/codex/04-architecture/batch-live-architecture.md` (`communication-patterns.md`) —
       the README's own ToC clearly intended these as sibling docs fanned out from it, but none were ever created; the
       content lives entirely inline in README.md instead (control-verified: `concurrency.md`, linked from the same
       table, DOES exist — so this is a real gap, not a resolution-logic bug). Fix: either extract the relevant README
       sections into the 4 real files, or strip the dead ToC/inline links and note the content is inline.
-- [ ] [DOCS] P3. `codex/06-coding-standards/README.md` (×3: `./PREK_MIGRATION_WALKTHROUGH.md`,
+- [ ] [DOCS] P3. `/codex/06-coding-standards/README.md` (×3: `./PREK_MIGRATION_WALKTHROUGH.md`,
       `configuration-management.md`, `formatting-standards.md`) — same table already has a precedent fix (line 61: a
       broken `STANDARDS.md` link was redirected to `adapter-dead-code-and-fallback-ban.md` on 2026-07-24), but no
       confident redirect target was found for these 3 (checked `config-types.md` as a candidate for #2 — it's itself a
       redirect stub pointing back at this same README, so using it would create a cycle). Needs a human who knows what
       these 3 were meant to cover.
-- [ ] [DOCS] P3. `codex/06-coding-standards/ui-testing-layers.md` cites `../../../.claude/rules/workspace-workflow.md` —
-      no `rules/` subdir under `cursor-configs/`, no file named `workspace-workflow.md` anywhere in the repo.
-- [ ] [DOCS] P3. `codex/07-security/mev-protection.md` cites
-      `../../plans/questions/defi_readiness_catalogue_2026_05_08.md` — `plans/questions/` was wholesale retired
-      2026-05-20, but unlike the sibling case already fixed in this sweep (`per-venue-paper-policy.md`, resolved via a
-      concurrent process to the plan it spawned), no spawned successor for THIS specific slug is discoverable anywhere
-      in `plans/active/` or `plans/archive/`.
-- [ ] [DOCS] P3. `codex/09-strategy/architecture-v2/README.md` cites `templates/archetype-doc.md` — no `templates/` dir
+- [ ] [DOCS] P3. `/codex/06-coding-standards/ui-testing-layers.md` cites `../../../.claude/rules/workspace-workflow.md`
+      — no `rules/` subdir under `cursor-configs/`, no file named `workspace-workflow.md` anywhere in the repo.
+- [ ] [DOCS] P3. `/codex/07-security/mev-protection.md` cites the retired `plans/questions/` dir's
+      `defi_readiness_catalogue_2026_05_08.md` — `plans/questions/` was wholesale retired 2026-05-20, but unlike the
+      sibling case already fixed in this sweep (`per-venue-paper-policy.md`, resolved via a concurrent process to the
+      plan it spawned), no spawned successor for THIS specific slug is discoverable anywhere in `plans/active/` or
+      `plans/archive/`.
+- [ ] [DOCS] P3. `/codex/09-strategy/architecture-v2/README.md` cites `templates/archetype-doc.md` — no `templates/` dir
       exists under `architecture-v2/`; the real `archetypes/` dir holds ~19 fully-written archetype docs with no shared
       template file ever created.
-- [ ] [DOCS] P3. `codex/15-runbooks/custody-onboarding-checklist.md` cites
-      `../../plans/active/fireblocks_copper_client_integration_2026_06_01.md` — no plan under this or any similar slug
-      exists anywhere. Plausibly this custody/wallet-adjacent plan was simply never authored.
+- [ ] [DOCS] P3. `/codex/15-runbooks/custody-onboarding-checklist.md` cites a `plans/active/` slug,
+      `fireblocks_copper_client_integration_2026_06_01.md` — no plan under this or any similar slug exists anywhere.
+      Plausibly this custody/wallet-adjacent plan was simply never authored.
 - [ ] [DOCS] P3. `codex/README.md` cites `.github/PRE_COMMIT_SETUP.md` — `.github/` contains only `actionlint.yaml`,
       `actions/`, `workflows/`; no pre-commit doc under any name/case.
-- [ ] [DOCS] P2. `cursor-rules/architecture/feature-producer-consumer-contract.mdc` cites
-      `codex/04-architecture/feature-dictionary.md` — file does not exist anywhere in the repo, not a rename.
-- [ ] [DOCS] P2. `cursor-rules/testing/tradfi-path-builder-byte-identity.mdc` cites
-      `codex/04-architecture/path-canonicalization.md` — file does not exist anywhere in the repo, not a rename.
+- [ ] [DOCS] P2. `cursor-rules/architecture/feature-producer-consumer-contract.mdc` cites codex `04-architecture`'s
+      `feature-dictionary.md` — file does not exist anywhere in the repo, not a rename.
+- [ ] [DOCS] P2. `cursor-rules/testing/tradfi-path-builder-byte-identity.mdc` cites codex `04-architecture`'s
+      `path-canonicalization.md` — file does not exist anywhere in the repo, not a rename.
 
 ## Genuinely ambiguous — broken, but no confident single target (P2, report-only per the skill's own severity guidance — not an authority question)
 
-- [ ] [DOCS] P3. `codex/02-data/contracts-scope-and-layout.md` cites
-      `../../plans/active/uac_citadel_architecture_2026_05_07.md` — `plans/archive/INDEX.md` (line 177) tracks this
-      exact slug's disposition as "Superseded by completed execution plan," naming
-      `uac_citadel_implementation_execution` as the successor ("Complete (79/79)") — but neither slug corresponds to any
-      actual file on disk anywhere in `plans/`. These read as pure status-table labels, not filenames. Whoever picks
-      this up should start from `plans/archive/INDEX.md`'s citadel section rather than guessing.
-- [ ] [DOCS] P3. `codex/05-infrastructure/workspace-root-variable.md` cites `ci-cd.md` — two plausible readings: (a) the
-      same never-created-sibling-doc pattern as the `04-architecture/README.md` cluster above (the citing doc's own body
-      table lists `ci-cd.md` alongside two real siblings, `new-repo-setup.md` + `workspace-setup.md`, under "CI/CD setup
-      (uses repo-relative paths)" — no such doc exists); or (b) it should redirect to
+- [ ] [DOCS] P3. `/codex/02-data/contracts-scope-and-layout.md` cites the `plans/active/` slug
+      `uac_citadel_architecture_2026_05_07.md` — `plans/archive/INDEX.md` (line 177) tracks this exact slug's
+      disposition as "Superseded by completed execution plan," naming `uac_citadel_implementation_execution` as the
+      successor ("Complete (79/79)") — but neither slug corresponds to any actual file on disk anywhere in `plans/`.
+      These read as pure status-table labels, not filenames. Whoever picks this up should start from
+      `plans/archive/INDEX.md`'s citadel section rather than guessing.
+- [ ] [DOCS] P3. `/codex/05-infrastructure/workspace-root-variable.md` cites `ci-cd.md` — two plausible readings: (a)
+      the same never-created-sibling-doc pattern as the `04-architecture/README.md` cluster above (the citing doc's own
+      body table lists `ci-cd.md` alongside two real siblings, `new-repo-setup.md` + `workspace-setup.md`, under "CI/CD
+      setup (uses repo-relative paths)" — no such doc exists); or (b) it should redirect to
       `/codex/08-workflows/ci-cd-flow.md` (this workspace's real CI/CD SSOT) — but that doc's scope
       (gates/quickmerge/branch-protection/release) doesn't cleanly match the citing doc's stated scope ("setup,"
       "repo-relative paths"), so this may be a genuine scope mismatch rather than a simple rename.
@@ -143,5 +143,6 @@ that COULD be confidently fixed already shipped in the sweep's 4 commits (unifie
   review rather than a mechanical repoint) or are non-actionable design observations (the freshness-ratchet count-only
   note, explicitly "not proposing a fix here"). Stays NA as a whole, same pattern as
   `reference_path_convention_2026_07_23.md`'s own precedent for a mixed bounded/judgment doc. Note for a future split:
-  one item (`.cursor/plans/phase_0_cod_service_specs_f0a0afbd.plan.md` dead link — "Fix: delete the dead link") reads as
-  individually bounded/mechanical if this doc is ever split; not split here since the doc stays NA in full.
+  one item (the `.cursor/plans/` artifact `phase_0_cod_service_specs_f0a0afbd.plan.md` dead link — "Fix: delete the dead
+  link") reads as individually bounded/mechanical if this doc is ever split; not split here since the doc stays NA in
+  full.

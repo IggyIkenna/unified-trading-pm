@@ -621,7 +621,7 @@ You are slot N (Ikenna side). Boot in order:
 2. Read unified-trading-pm/ikenna_orchestrator/AGENT_ONBOARDING.md (LDR-alignment HARD RULE,
    plan-flip Half-1+Half-2 discipline, GCS backfill rule, External-Data HARD RULE).
 
-3. Read unified-trading-pm/plans/active/work_split_2026_05_15_ikenna.md § "Slot <N>".
+3. Read unified-trading-pm/plans/archive/2026_05/work_split_2026_05_15_ikenna.md § "Slot <N>".
    Look for items annotated **[CARRY FROM 14 MAY]** — these continue work-in-flight from yesterday.
 
 4. Read your top plan-of-record.

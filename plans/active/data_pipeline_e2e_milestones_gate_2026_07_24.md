@@ -67,6 +67,7 @@ priority: P1
 estimate_class: research
 estimate_baseline_ai_days: 8
 estimate_calibrated_ai_days: 9.6
+archive_exempt: true # standing reference surface by operator ruling — 0 open todos is expected here, re-confirmed by na-eligibility-audit 2026-08-02
 locked_by:
 locked_since:
 supersedes:
@@ -159,7 +160,7 @@ audit's ground-truth table is stale relative to today's state.
       (`4f81d0139`, 19:11:01 UTC) by the operator's own directive commit > (`adb28421d`, 19:31:37 UTC), which put defi
       back in scope for a narrower **per-value least-migration-cost** > convergence rule — a different rule that happens
       to produce the same LOWERCASE outcome today. See >
-      `/plans/active/issues/cross_ag_instrument_type_casing_100pct_directive_2026_07_24.md` (§ "Open todo", DONE >
+      `/plans/archive/2026_08/cross_ag_instrument_type_casing_100pct_directive_2026_07_24.md` (§ "Open todo", DONE >
       2026-07-24) for the authoritative framing and the correction banners already added to >
       `reconciliation-finding-taxonomy.md`, `canonical-cutover-register.md`, and `cross-asset-canonical-target-ssot.md`.
 - [x] [REVIEW] P2. ✅ **DONE 2026-07-24** — target: new issue doc under `plans/active/issues/`. Created

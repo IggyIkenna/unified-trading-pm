@@ -38,7 +38,7 @@ scope: [engineer, admin]
   reconcile UAC canonical lists against live backend registries. Endpoints owned by strategy-service (archetypes + ML
   models) and every `features-*-service` (features). Shared-secret `X-Admin-Token` auth, safe-by-default 503 when
   unconfigured.
-- [`../06-coding-standards/strategy-identity-versioning.md`](../06-coding-standards/strategy-identity-versioning.md) —
+- [`/codex/06-coding-standards/strategy-identity-versioning.md`](/codex/06-coding-standards/strategy-identity-versioning.md) —
   canonical strategy-id format (`FAMILY.ARCHETYPE.slot_id` fully-qualified OR `ARCHETYPE@slot_id` slot-label), parse +
   format contracts (`unified_api_contracts.strategy.parse_strategy_id` / `format_strategy_id`), per-surface usage table
   (UI URLs → fully-qualified, registry / records → slot-label), and legacy-migration notes. (Merged with the strategy

@@ -324,7 +324,7 @@ the 35 satellite docs. This plan extracts the conflict-clear, bounded-outcome su
   (BACKEND P3, make `/done` idempotent + owner-checked) both change the same `/done` handler in
   `server/routes/slots_worker.py`. They are compatible in direction but must land as one change, and the on-origin gate
   interacts with the operator-merge-gate governance question in
-  `/plans/active/issues/watchdog_unpushed_sweep_defeats_operator_merge_gate_2026_07_26.md` (P1, a held-behind-a-gate
+  `/plans/archive/issues/watchdog_unpushed_sweep_defeats_operator_merge_gate_2026_07_26.md` (P1, a held-behind-a-gate
   push must NOT be auto-shipped). Re-triage once that doc's gate-aware sweep decision exists.
 - **AutoSpawn no-eligible-worker gap** —
   `/plans/archive/issues/orchestrator_ready_p1_task_undispatched_no_matching_worker_autospawn_gap_2026_07_25.md`
@@ -335,7 +335,7 @@ the 35 satellite docs. This plan extracts the conflict-clear, bounded-outcome su
   this "the single riskiest automated code path in the system" and says the fix needs a real design decision; a
   characterisation test alone would land in `tests/test_watchdog_unpushed_sweep.py`, the same module the gate-aware
   sweep fix above will need. Held on both counts.
-- **Periodic dirty-resolution sweep** — `/plans/active/issues/idle_slot_dirty_wip_never_auto_resolves_2026_07_20.md`
+- **Periodic dirty-resolution sweep** — `/plans/archive/issues/idle_slot_dirty_wip_never_auto_resolves_2026_07_20.md`
   (BACKEND P2 ×2). Adding a NEW automatic caller of `commit_and_push_dirty_repos` (a realign path that has already
   destroyed work — see `slot_double_reset_dataloss_race_2026_07_25.md`) while the operator-merge-gate bypass above is
   unresolved is exactly the compounding this skill's non-batchable taxonomy warns about. Re-check after the gate-aware
@@ -391,7 +391,7 @@ the 35 satellite docs. This plan extracts the conflict-clear, bounded-outcome su
   full-completion fix (not a fallback). See the issue doc's updated todos for the fully-scoped mandate. No longer a
   design fork — retagged out of `[OPERATOR]`; not batched into THIS batch (file-scope), pick up as a normal execution
   todo from the issue doc directly.
-- `/plans/active/issues/autostash_pop_restores_foreign_wip_into_the_index_2026_07_17.md` — a section explicitly titled
+- `/plans/archive/issues/autostash_pop_restores_foreign_wip_into_the_index_2026_07_17.md` — a section explicitly titled
   "Candidate fixes (not yet decided)", two legs of which are codex/CLAUDE.md edits (never autonomous).
 - `/plans/active/issues/blocked_questions_ux_redesign_context_loss_and_scale_2026_07_24.md` — "Explicitly NOT actioned"
   per operator instruction; the one bounded leg (capture `claude_session_id` on `BlockedRow` at creation time) would
@@ -414,7 +414,7 @@ the 35 satellite docs. This plan extracts the conflict-clear, bounded-outcome su
   `/plans/active/issues/git_status_reporter_stale_public_url_token_expiry_2026_07_24.md` `[INFRA]` P3 (re-mint
   `~/.orch_token`) remains a distinct credential operation, unaffected by this ruling. Their code-side siblings ARE in
   this batch as todo 3.
-- `/plans/active/issues/idle_slot_dirty_wip_never_auto_resolves_2026_07_20.md` and
+- `/plans/archive/issues/idle_slot_dirty_wip_never_auto_resolves_2026_07_20.md` and
   `/plans/active/issues/reaper_kills_inflight_detached_quickmerge_false_done_2026_07_24.md` per-slot WIP recovery items
   — each needs foreign-worktree access plus a judgment call on whether specific commits are superseded.
 - `/plans/archive/issues/ao_backlog_done_row_disappearance_2026_07_25.md` — **stale tag here**: its watch-log-check todo

@@ -18,7 +18,7 @@ related:
   [
     /plans/active/issues/sports_clv_target_pit_gated_out_of_odds_features_export_2026_07_26.md,
     /plans/active/sports_satellite_ao_dispatch_batch5_2026_07_26.md,
-    /plans/active/issues/watchdog_unpushed_sweep_defeats_operator_merge_gate_2026_07_26.md,
+    /plans/archive/issues/watchdog_unpushed_sweep_defeats_operator_merge_gate_2026_07_26.md,
   ]
 created: 2026-07-26
 parent_epic: agent_operating_framework_master
@@ -44,7 +44,7 @@ superseded_by: watchdog_unpushed_sweep_defeats_operator_merge_gate_2026_07_26
 
 > **SUPERSEDED 2026-07-26** — main-agent independently root-caused the same gap moments after this doc was filed and
 > landed the canonical version first:
-> `/plans/active/issues/watchdog_unpushed_sweep_defeats_operator_merge_gate_2026_07_26.md` (also answers `BLK-eccd3383`
+> `/plans/archive/issues/watchdog_unpushed_sweep_defeats_operator_merge_gate_2026_07_26.md` (also answers `BLK-eccd3383`
 > below with `disposition:partial` — Option A declined, operator paged with a revert recommendation). Kept here only for
 > the investigation timeline; track the fix + `BLK-ec018203`/`BLK-eccd3383` disposition in the superseding doc.
 

@@ -163,7 +163,7 @@ Venue-collateral rows with `accepted=True` in the tables above are the cells exe
 - `unified-api-contracts/unified_api_contracts/registry/venue_collateral.py` — the SSOT this doc cites.
 - `unified-trading-pm/codex/04-architecture/interface-credential-convention.md` — execution-service credential injection
   (relevant for the live-API probe follow-up).
-- `unified-trading-pm/plans/active/defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.md` — the
+- `unified-trading-pm/plans/archive/2026_05/defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.md` — the
   canonicalisation plan that defines Stream A.
 - [recursive-borrow-backtest-scenarios-2026-05.md](recursive-borrow-backtest-scenarios-2026-05.md) — Phase 12 scenario
   taxonomy; per-cell verdict matrix; harness shape.

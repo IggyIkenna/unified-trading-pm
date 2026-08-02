@@ -2,7 +2,7 @@
 
 # CI/CD Workflow Catalog (auto-generated drill-down)
 
-**53 workflows** in `.github/workflows/`, grouped by pipeline stage. Top-down picture:
+**58 workflows** in `.github/workflows/`, grouped by pipeline stage. Top-down picture:
 `docs/repo-management/CI-CD-PIPELINE.svg`; narrative: `codex/08-workflows/ci-cd-flow.md`. This is the
 per-workflow index beneath them — regenerate with `python3 scripts/generate-workflow-catalog.py`.
 
@@ -10,34 +10,32 @@ Columns: **Triggers** (schedule / push / PR / `after:` run / `dispatch:` event /
 **Concurrency** group (`cancel` = cancel-in-progress) · **Mutates** (coarse, grepped) · **Fires next**
 (`*` = via repository_dispatch; `notify-slack` / `persist-cicd-event` reusable calls elided).
 
-## Promotion & image build — commit → LDR → staging → main → image (10)
+## Promotion & image build — commit → LDR → staging → main → image (9)
 
 | Workflow | Triggers | Concurrency | Mutates | Fires next |
 | -------- | -------- | ----------- | ------- | ---------- |
-| `cloud-build-failure-watcher` | schedule(*/30 * * * *) · manual | — | Slack | — |
-| `cloud-build-router` | dispatch:qg-passed | `cloud-build-router-<var>` | manifest→main, Slack | change-freeze-check |
+| `cloud-build-failure-watcher` | schedule(0 * * * *) · manual | — | Slack | — |
+| `cloud-build-router` | dispatch:qg-passed | `cloud-build-router-<var>` | manifest→main, Firestore, Slack | change-freeze-check |
 | `deterministic-promotion-conflict-resolve` | dispatch:promotion-conflict · manual | `det-resolve-<var>-<var>` | Slack | conflict-resolution-agent* |
-| `ldr-to-main-promote` | schedule(*/15 * * * *) · manual | `ldr-to-main-promote` | manifest, →LDR, opens-PR, merges-PR, Slack | — |
-| `ldr-to-staging-promote` | schedule(2,17,32,47 * * * *) · dispatch:tier-ab-green · manual | `ldr-to-staging-promote` | opens-PR, merges-PR, Firestore, Slack | deterministic-promotion-conflict-resolve*, quality-gates-v2 |
-| `main-backmerge-to-ldr` | schedule(0 * * * *) · push[main] · manual | `backmerge-to-ldr` | manifest, →LDR, opens-PR | escalate-to-orchestrator* |
-| `promotion-lag-monitor` | schedule(*/30 * * * *) · manual | `promotion-lag-monitor` cancel | Firestore, Slack | — |
+| `ldr-to-main-promote` | schedule(*/15 * * * *) · manual | `ldr-to-main-promote` | manifest, →LDR, opens-PR, merges-PR, Slack | escalate-to-orchestrator* |
+| `ldr-to-staging-promote` | manual | `ldr-to-staging-promote` | manifest, opens-PR, merges-PR, Firestore, Slack | deterministic-promotion-conflict-resolve*, quality-gates-v2 |
+| `main-backmerge-to-ldr` | push[main] · manual | `backmerge-to-ldr` | manifest, →LDR, opens-PR, Slack | escalate-to-orchestrator* |
 | `publish-package` | dispatch:publish-package | `publish-package-<var>` | manifest→main, Slack | — |
-| `staging-conflict-ldr-main-fallback` | schedule(47 * * * *) · manual | `staging-conflict-ldr-main-fallback` | opens-PR, merges-PR | — |
-| `staging-to-main` | schedule(*/15 * * * *) · dispatch:staging-validated · manual | `staging-to-main` | manifest, opens-PR, merges-PR, Firestore, Slack | conflict-resolution-agent*, escalate-to-orchestrator*, sit-debounce-trigger* |
+| `staging-conflict-ldr-main-fallback` | manual | `staging-conflict-ldr-main-fallback` | opens-PR, merges-PR | — |
+| `staging-to-main` | dispatch:staging-validated · manual | `staging-to-main` | manifest, opens-PR, merges-PR, Firestore, Slack | conflict-resolution-agent*, escalate-to-orchestrator*, sit-debounce-trigger* |
 
-## Quality gates, breaking detection & SIT (11)
+## Quality gates, breaking detection & SIT (10)
 
 | Workflow | Triggers | Concurrency | Mutates | Fires next |
 | -------- | -------- | ----------- | ------- | ---------- |
 | `cascade-qg-ordering` | dispatch:cascade-qg-trigger · manual | `cascade-qg-ordering` | manifest, Firestore, Slack | escalate-to-orchestrator* |
-| `change-freeze-check` | callable | `<wf>-<ref>` cancel | Slack | — |
-| `freeze-deferred-build-replay` | schedule(*/30 * * * *) · manual | `freeze-deferred-build-replay` | Slack | cloud-build-router* |
-| `python-quality-gates-v2` | callable | — | Firestore, Slack | ci-status-update* |
-| `quality-gates-v2` | push[main] · PR[main,staging] · manual | `quality-gates-v2-<ref>` | read-only | cloud-build-router*, python-quality-gates-v2 |
+| `change-freeze-check` | callable | — | Firestore, Slack | — |
+| `freeze-deferred-build-replay` | schedule(0 * * * *) · manual | `freeze-deferred-build-replay` | Slack | cloud-build-router*, cloud-build-router-aws* |
+| `python-quality-gates-v2` | callable | — | →LDR, Firestore, Slack | ci-status-update* |
+| `quality-gates-v2` | push[main] · PR[main,staging] · manual | `quality-gates-v2-<ref>` cancel | read-only | cloud-build-router*, cloud-build-router-aws*, python-quality-gates-v2 |
 | `readiness-verifier` | schedule(0 3 * * *) · manual | `<wf>-<ref>` cancel | Slack | — |
-| `sit-debounce-trigger` | schedule(*/5 * * * *) · dispatch:staging-changed · manual | `sit-debounce-trigger` | manifest, Slack | — |
-| `sit-gate` | dispatch:sit-lock | `manifest-update` | manifest, Firestore, Slack | — |
-| `sit-starvation-detector` | schedule(*/30 * * * *) · manual | `manifest-update` | manifest, Slack | sit-debounce-trigger |
+| `sit-debounce-trigger` | schedule(*/5 * * * *) · dispatch:staging-changed · manual | `sit-debounce-trigger` | manifest, Slack | escalate-to-orchestrator* |
+| `sit-gate` | dispatch:sit-lock | `manifest-update` | manifest, Firestore, Slack | escalate-to-orchestrator* |
 | `sit-unlock` | dispatch:sit-failed,sit-passed | `manifest-update` | manifest, Slack | staging-to-main* |
 | `workspace-quickmerge-validation` | schedule(0 */6 * * *) · manual | `<wf>-<ref>` cancel | read-only | — |
 
@@ -53,43 +51,49 @@ Columns: **Triggers** (schedule / push / PR / `after:` run / `dispatch:` event /
 | `supersede-stale-dep-update-prs` | schedule(23 */2 * * *) · manual | `supersede-stale-dep-update-prs` | read-only | conflict-resolution-agent* |
 | `update-repo-version` | dispatch:version-bump | `version-bump` | manifest, Slack | cascade-qg-ordering*, sit-debounce-trigger* |
 
-## ci_status SSOT, watchers & health (9)
+## ci_status SSOT, watchers & health (7)
 
 | Workflow | Triggers | Concurrency | Mutates | Fires next |
 | -------- | -------- | ----------- | ------- | ---------- |
 | `cassette-drift-check` | schedule(0 2 * * *) · manual | `<wf>-<ref>` cancel | Slack | — |
-| `ci-failure-watcher` | schedule(*/15 * * * *) · manual | — | Firestore, Slack | — |
 | `ci-status-consolidator` | schedule(8 * * * *) · manual | `ci-status-consolidator` | manifest, Firestore | — |
-| `ci-status-update` | dispatch:ci-status-update | — | manifest, Firestore, Slack | ldr-to-staging-promote* |
-| `ldr-ci-monitor` | schedule(0 * * * *) · manual | — | manifest, Slack | — |
-| `persist-cicd-event` | callable | `persist-cicd-event-<ref>-<var>` | Slack | — |
+| `ci-status-update` | dispatch:ci-status-update | — | manifest, Firestore, Slack | — |
+| `ldr-ci-monitor` | schedule(0 * * * *) · manual | — | manifest, Slack | escalate-to-orchestrator |
 | `removed-symbols-workspace-sweep` | schedule(0 3 * * *) · manual | `<wf>-<ref>` cancel | Slack | — |
 | `ruleset-drift-alert` | schedule(0 6 * * 1) · manual | — | Slack | — |
 | `secret-health-check` | schedule(0 6 * * 1) · manual | `<wf>-<ref>` cancel | Slack | — |
 
-## Agents, orchestration & alerts (13)
+## Agents, orchestration & alerts (12)
 
 | Workflow | Triggers | Concurrency | Mutates | Fires next |
 | -------- | -------- | ----------- | ------- | ---------- |
 | `agent-audit` | manual | `<wf>-<ref>` cancel | read-only | — |
 | `build-smoke-all-repos` | schedule(0 6 * * 0) · manual | `build-smoke` cancel | Slack | — |
 | `cold-storage-cleanup` | schedule(0 2 * * 0) · manual | `<wf>-<ref>` cancel | Slack | — |
-| `conflict-resolution-agent` | dispatch:merge-conflict-detected · manual | `conflict-resolution-<var>-<var>` | →main | escalate-to-orchestrator* |
+| `conflict-resolution-agent` | dispatch:merge-conflict-detected · manual | `conflict-resolution-<var>-<var>` | read-only | agent-runner |
 | `conflict-resolution-merged` | PR[main] | `<wf>-<ref>` cancel | Slack | staging-to-main* |
 | `escalate-to-orchestrator` | dispatch:escalate-to-orchestrator · callable · manual | `escalate-<var>-<var>` | Slack | — |
 | `fix-approval-timeout` | schedule(0 */2 * * *) · manual | `fix-approval-timeout` cancel | Slack | — |
-| `notify-slack` | callable | `notify-slack-<ref>-<var>` | Slack | — |
+| `notify-slack` | callable | `notify-slack-<ref>-<var>-<var>` | Slack | — |
 | `overnight-agent-orchestrator` | schedule(0 1 * * *) · manual | `overnight-orchestrator` cancel | Slack | agent-audit, change-freeze-check |
 | `overnight-dead-man-switch` | schedule(0 3 * * *) · manual | `<wf>-<ref>` cancel | Slack | — |
-| `plan-health-agent` | schedule(0 2 * * *) · PR[main] · manual | `<wf>-<ref>` cancel | Slack | escalate-to-orchestrator, escalate-to-orchestrator* |
 | `plan-notification` | push[main] · issue_comment | `<wf>-<ref>` cancel | Slack | — |
 | `rules-alignment-agent` | push[main] · manual | `<wf>-<ref>` cancel | Slack | — |
 
-## Unclassified — needs a stage in STAGE_BY_WORKFLOW (3)
+## Unclassified — needs a stage in STAGE_BY_WORKFLOW (13)
 
 | Workflow | Triggers | Concurrency | Mutates | Fires next |
 | -------- | -------- | ----------- | ------- | ---------- |
+| `agent-runner` | callable | — | read-only | escalate-to-orchestrator* |
+| `branch-health` | schedule(0 * * * *) · manual | `branch-health` cancel | Firestore, Slack | main-backmerge-to-ldr |
+| `ci-health` | schedule(0 * * * *) · dispatch:ci-failure-alert,glue-runner-health · manual | — | Firestore, Slack | — |
+| `cloud-build-router-aws` | dispatch:qg-passed | `cloud-build-router-aws-<var>` | manifest→main, Slack | change-freeze-check |
 | `digest-drift-sweep` | schedule(0 */6 * * *) · manual | — | read-only | — |
-| `ldr-to-main-promote-fleet` | schedule(8,23,38,53 * * * *) · manual | `ldr-to-main-promote-fleet` | opens-PR, merges-PR, Firestore, Slack | deterministic-promotion-conflict-resolve*, quality-gates-v2 |
-| `reconcile-staging-versions` | schedule(35 * * * *) · manual | `manifest-staging-versions-reconcile` | manifest | — |
-
+| `glue-pool-starvation-monitor` | schedule(*/15 * * * *) · manual | `glue-pool-starvation-monitor` cancel | Slack | — |
+| `image-build-validate` | callable | — | read-only | — |
+| `ldr-docs-gate` | schedule(0 * * * *) · manual | `ldr-docs-gate` | Slack | escalate-to-orchestrator |
+| `ldr-to-main-promote-fleet` | schedule(*/5 * * * *) · manual | `ldr-to-main-promote-fleet` | Firestore, Slack | — |
+| `reconcile-staging-versions` | manual | `manifest-staging-versions-reconcile` | manifest | — |
+| `stale-build-watcher` | schedule(0 * * * *) · manual | — | Slack | — |
+| `version-coherence-check` | schedule(*/30 * * * *) · manual | — | Firestore | — |
+| `version-registry-update` | dispatch:version-registry-update · manual | — | Firestore | — |

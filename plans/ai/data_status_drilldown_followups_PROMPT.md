@@ -63,11 +63,11 @@ refactor wave; do not refactor it as part of these follow-ups.
 
 **Reference plans:**
 
-- `unified-trading-pm/plans/active/manifest_429_per_vm_sharding_2026_04_25.plan.md` — parent for F + G + H + I. Read the
+- `unified-trading-pm/plans/archive/manifest_429_per_vm_sharding_2026_04_25.plan.md` — parent for F + G + H + I. Read the
   pre-audit manifest of writer/reader call sites before touching G.
-- `unified-trading-pm/plans/active/venue_axis_asset_group_vocabulary_2026_04_25.plan.md` — parent for C + D. Lists the
+- `unified-trading-pm/plans/archive/venue_axis_asset_group_vocabulary_2026_04_25.plan.md` — parent for C + D. Lists the
   canonical UAC symbols (`VENUE_TO_ASSET_GROUP` etc.).
-- `unified-trading-pm/plans/active/shard_dimension_naming_asset_group_ssot_2026_04_25.plan.md` — parent for E. ADR
+- `unified-trading-pm/plans/archive/shard_dimension_naming_asset_group_ssot_2026_04_25.plan.md` — parent for E. ADR
   `unified-trading-pm/codex/11-project-management/decisions/adr-2026-04-25-category-and-asset-group-field-naming.md` is
   the authoritative naming-rule SSOT.
 
@@ -307,7 +307,7 @@ earlier phases shipped (UI
 
 - `system-integration-tests/tests/integration/test_shard_calculation*.py`
 - `system-integration-tests/tests/fixtures/deployment_request_*.json`
-- `unified-trading-pm/plans/active/shard_dimension_naming_asset_group_ssot_2026_04_25.plan.md` — tick the boxes once
+- `unified-trading-pm/plans/archive/shard_dimension_naming_asset_group_ssot_2026_04_25.plan.md` — tick the boxes once
   confirmed.
 
 ---

@@ -190,6 +190,12 @@ Read in full before touching any todo — this is the concrete acceptance spec, 
       `include_venue: bool = True` parameter (`unified-api-contracts@e1023c80`) and migrated all 3 TradFi combo-leg call
       sites (`instruments-service@de870864`) to it, deleting the local `_build_leg_key()` helper. Full detail:
       `tradfi_satellite_ao_dispatch_batch3_2026_07_26.md`'s corresponding todo.
+- [ ] [OPERATOR] P2. **Re-apply the historical catalog canonicalization scripts** (`canonicalize_cboe_vx_combo_catalog_2026_07_08.py`,
+      `canonicalize_dbeq_stock_class_catalog_2026_07_08.py`) against the residual 91-CBOE + 312-DBEQ rows re-introduced
+      by `prod/catalog.parquet`'s self-refreshing roll-up (see the "Scope migration mechanics" todo above) — a small,
+      safe, sub-5-second single-file `--apply` (403 of 1,096,472 total rows), pending operator go-ahead per this plan's
+      rollout methodology. Not durable on its own; needs re-running after every rollup cycle until the upstream
+      `by_date` corpus is migrated (`tradfi_canonical_path_migration_design_2026_07_19.md`).
 
 ## Progress Log
 

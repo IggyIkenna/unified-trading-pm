@@ -319,11 +319,11 @@ items explicitly "FENCED" to another named agent/live process).
 > slot-14's check). Resolution: this was staleness, not a genuine live disagreement over dispatch authority — the direct
 > operator dispatch is the authoritative basis, per the same commit-timestamp-and-explicit-statement precedent used to
 > resolve the analogous defi-casing doc-supersession in
-> `cross_ag_instrument_type_casing_100pct_directive_2026_07_24.md`. What genuinely REMAINS human/coordination-shaped:
-> Script 1 (parquet content backfill) turned out ~2 orders of magnitude larger than planned (~4.5M objects, not ~12,662)
-> — a dedicated multi-VM, multi-hour-to-multi-day campaign of its own, still in progress under the same dispatch. The
-> bullets below are kept verbatim (struck-through-banner convention, nothing deleted) — read them as history, not
-> current gating state.
+> `/plans/archive/2026_08/cross_ag_instrument_type_casing_100pct_directive_2026_07_24.md`. What genuinely REMAINS
+> human/coordination-shaped: Script 1 (parquet content backfill) turned out ~2 orders of magnitude larger than planned
+> (~4.5M objects, not ~12,662) — a dedicated multi-VM, multi-hour-to-multi-day campaign of its own, still in progress
+> under the same dispatch. The bullets below are kept verbatim (struck-through-banner convention, nothing deleted) —
+> read them as history, not current gating state.
 
 - **Track 1 cutover** (`[PM] P0.` execute the minutes-gap hybrid) — the central 4-script canonical-ID migration's
   drain+apply; still gated on multiple other still-open P0 items below, needs human-coordinated timing.

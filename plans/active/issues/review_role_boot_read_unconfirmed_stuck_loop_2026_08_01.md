@@ -150,6 +150,6 @@ pending retag and the ordering risk against `boot_composer`. **C** — keep NA w
   with live evidence (zero slot-1 rejections since the one expected post-fix straggler at 08:23:22Z). Found the same gap
   live in 2 more role files while investigating a separate, unrelated slot-1 tmux-collision incident from the same
   session window (see
-  `/plans/active/issues/persistent_slot_tmux_session_hijacked_by_transient_plan_health_dispatch_2026_08_01.md` — a
+  `/plans/archive/issues/persistent_slot_tmux_session_hijacked_by_transient_plan_health_dispatch_2026_08_01.md` — a
   different bug, not a duplicate of this one) — added the 2 todos above and bumped this doc's priority P1→P1 (unchanged
   numeric value, but re-affirmed active given the live multi-file recurrence rather than letting it read as closed).

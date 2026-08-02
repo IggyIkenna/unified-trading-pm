@@ -25,7 +25,7 @@ scope: [engineer, admin]
 tags: [plan-hygiene, line-caps, na-eligibility-audit, incremental-mode, prose-trap, split-needed, blocked-operator]
 related:
   [
-    /plans/active/issues/archive_candidate_docs_over_line_cap_blocks_edit_2026_07_29.md,
+    /plans/archive/issues/archive_candidate_docs_over_line_cap_blocks_edit_2026_07_29.md,
     /plans/active/lst_rate_honest_coverage_2026_07_21.md,
     /plans/active/defi_satellite_ao_dispatch_batch8_2026_08_02.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
@@ -51,7 +51,7 @@ source:
   a Phase-0 incremental-skip verdict marker into an in-scope doc"
 context_scope:
   [
-    /plans/active/issues/archive_candidate_docs_over_line_cap_blocks_edit_2026_07_29.md,
+    /plans/archive/issues/archive_candidate_docs_over_line_cap_blocks_edit_2026_07_29.md,
     /plans/active/lst_rate_honest_coverage_2026_07_21.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
     scripts/plan-hygiene/check_line_caps.sh,
@@ -94,7 +94,7 @@ exception does not reach it. The consequences compound rather than sit still:
   mechanism exists to prevent.
 - **It is not one doc.** Any `plans/active/*.md` over 1000L with ≥1 open todo has the same property. This is the third
   recorded instance of the over-cap-blocks-edit class after the two in
-  [`/plans/active/issues/archive_candidate_docs_over_line_cap_blocks_edit_2026_07_29.md`](/plans/active/issues/archive_candidate_docs_over_line_cap_blocks_edit_2026_07_29.md)
+  [`/plans/archive/issues/archive_candidate_docs_over_line_cap_blocks_edit_2026_07_29.md`](/plans/archive/issues/archive_candidate_docs_over_line_cap_blocks_edit_2026_07_29.md)
   (both of which were the zero-open-todo flavour and are now closed by the 2026-07-30 ruling + archival) — this is the
   first LIVE-plan instance, which that issue explicitly did not cover.
 

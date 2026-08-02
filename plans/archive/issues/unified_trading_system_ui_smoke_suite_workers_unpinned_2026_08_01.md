@@ -18,7 +18,7 @@ scope: [engineer]
 tags: [ui, playwright, smoke, ci, host-contention, flake]
 related:
   [
-    /plans/active/issues/wizard_smoke_suite_pre_existing_failures_2026_07_28.md,
+    /plans/archive/issues/wizard_smoke_suite_pre_existing_failures_2026_07_28.md,
     /codex/06-coding-standards/ui-testing-layers.md,
   ]
 created: 2026-08-01
@@ -40,7 +40,7 @@ context_scope:
   [
     unified-trading-system-ui/playwright.config.ts,
     /codex/06-coding-standards/ui-testing-layers.md,
-    /plans/active/issues/deployment_ui_l2_smoke_gate_red_2026_07_17.md,
+    /plans/archive/issues/deployment_ui_l2_smoke_gate_red_2026_07_17.md,
   ]
 ---
 
@@ -48,8 +48,8 @@ context_scope:
 > `workers: 1` pinned unconditionally in `unified-trading-system-ui/playwright.config.ts`
 > (`unified-trading-system-ui@fc6ed104`); `ui-testing-layers.md` updated to name both fixed repos
 > (`unified-trading-pm@85433a383`); pw:L2 verified via 3 sharded runs, 105/108 passed, all 3 failures pre-explained (2
-> known cold-start flakes + the already-filed `wizard_jurisdiction_overlay_dropped_by_registry_regen_2026_08_01.md`
-> genuine bug), 0 new spurious failures. Moved to `plans/archive/issues/` per
+> known cold-start flakes + the `wizard_jurisdiction_overlay_dropped_by_registry_regen_2026_08_01.md` genuine bug, since
+> resolved 2026-08-02), 0 new spurious failures. Moved to `plans/archive/issues/` per
 > `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`.
 
 # unified-trading-system-ui local pw:L2 runs are unbounded-parallel
@@ -90,9 +90,9 @@ rediscover "suspect host contention, re-run with --workers=1."
       **105/108 passed, 3 explained failures, 0 new spurious failures** — 2 dev-server cold-start flakes, one per shard
       boundary (`paper-trading-ledger.smoke.spec.ts:77`, `trading-predictions-colour-migration.smoke.spec.ts:57`) + the
       1 already-filed genuine bug (`wizard-jurisdiction-filter.spec.ts:135`, tracked separately at
-      `/plans/active/issues/wizard_jurisdiction_overlay_dropped_by_registry_regen_2026_08_01.md`, a registry-regen
-      defect unrelated to worker parallelism). Matches/betters this doc's own 4/108 baseline (measured under manual
-      `--workers=1` in the source triage). Repo: unified-trading-system-ui.
+      `/plans/archive/issues/wizard_jurisdiction_overlay_dropped_by_registry_regen_2026_08_01.md`, a registry-regen
+      defect unrelated to worker parallelism, resolved 2026-08-02). Matches/betters this doc's own 4/108 baseline
+      (measured under manual `--workers=1` in the source triage). Repo: unified-trading-system-ui.
 
 ## Progress Log
 

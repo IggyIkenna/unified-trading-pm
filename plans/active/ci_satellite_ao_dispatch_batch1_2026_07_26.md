@@ -452,19 +452,25 @@ concurrent workers do not collide on this file.
       today (listed in the census table with unreleased-commit counts). Zero tags minted/moved/deleted — audit only, per
       the HARD CONSTRAINT. Full table: `issues/d13_orphaned_version_readers_and_manifest_drift_2026_07_17.md` § "Fleet
       version/tag-state census (2026-08-02)".
-- [ ] [INFRA] P2. **The repurposed release-STALL alarm emits a `::warning::` nobody reads.** `reconcile_release_tags.py`
-      is now the fleet's release-stall detector (codex ruling, `/codex/08-workflows/ci-cd-flow.md:1004`), and it
-      correctly measured a 4-week, 22-repo, ~2,490-commit outage — but by default it only emits a `::warning::` unless a
-      caller passes `--fail-on-stall`, so the finding lands nowhere a human sees. Route the STALL verdict to a channel
-      someone reads: fire it through the reusable `notify-slack.yml` carrier with a state-transition `dedup_key` per
-      `/codex/04-architecture/ci-alerting.md`, so a NEW stall pages once and a RESOLVED stall all-clears — without
-      making the `*/30` schedule fail 48×/day. Also apply the source doc's silent-failure lesson if it still holds
-      post-repurpose: `_main_version()` returning `None` conflates "no pyproject" / "fetch failed" / "field absent" —
-      distinguish them, or record why the repurpose made it moot. **Done when**: a synthetic stall produces exactly one
-      alert with the repo names and staleness, a no-stall run produces none, and the `*/30` cron does not fail. Source:
-      `issues/reconcile_release_tags_dead_since_d13_git_tag_migration_2026_07_17.md` § "Also fix the silent-failure
-      class". **Note**: the separate question of what happens to the three dead `DELETE     reconcile-release-tags` todo
-      lines is parked with the operator; this todo stands under every option.
+- [x] ✅ [INFRA] P2. **DONE 2026-08-02 (slot 2, infra).** Routed the STALL alarm through the reusable `notify-slack.yml`
+      carrier. `reconcile_release_tags.py` gained `--state-in`/`--state-out`/`--cleared-out`/ `--stall-out` (mirroring
+      `promotion_lag_monitor.py`'s per-key clear-diff pattern — a repo only clears when affirmatively re-measured
+      healthy, never on a transient API-miss, which is carried forward instead) so `reconcile-release-tags.yml` now has
+      `stall-notify` (dedup_key=`release-tag-stall`, cooldown 360min — a standing condition, not a per-tick page) and
+      `stall-notify-resolved` (recovery bookend, per-cleared-set dedup key, cooldown 60min) jobs, mirroring
+      `branch-health.yml`'s lag-monitor/lag-notify trio. The `--fail-on-stall` default (warn-only) is UNCHANGED — the
+      `*/30` cron still does not fail on an ordinary stall. Also closed the residual silent-failure gap:
+      `_is_dynamic_versioned` already handles the original field-absent conflation correctly (bucketed as
+      `dynamic_ok`/`stalled`, never `unreadable`); the one shape that WOULD still silently read as a clean run — every
+      considered repo landing in `unreadable` at once (a broken `GH_TOKEN`/API, not a legitimate fleet state) — is now a
+      hard FATAL exit, independent of `--fail-on-stall`. Added 12 unit tests
+      (`test_reconcile_release_tags_stall_slack.py`) pinning: a synthetic multi-repo stall produces exactly ONE alert
+      block naming every stalled repo + staleness; a no-stall run produces no block; a repo that clears (affirmatively
+      re-measured, not merely unmeasured) produces exactly one RESOLVED block; an unmeasured repo is carried forward and
+      never treated as cleared; and the all-unreadable case is FATAL. `quality-gates.sh` green on a forced full run
+      (`QG_SENTINEL_DISABLE=true`, since the cheap content-sentinel skip would've been an unverified shortcut for
+      brand-new code) — 1617 passed/17 skipped/0 failed, basedpyright clean. Shipped via quickmerge; verified
+      `merge-base --is-ancestor` on `origin/live-defi-rollout`. (repo: unified-trading-pm@3838feeb2)
 - [x] ✅ [SCRIPT] P3. **`base-ui.sh`: one automatic retry on the build-timeout class.** A cold-cache UI build trips the
       90s QG budget and passes on retry; a genuine hang fails twice. Add exactly one automatic retry on the timeout
       class in `scripts/quality-gates-base/base-ui.sh` — removes the human re-run without weakening the budget. Exercise
@@ -482,35 +488,53 @@ concurrent workers do not collide on this file.
       retry does not mask a real hang. `shellcheck` clean (no new warnings vs. the pre-existing 3). Full
       `quality-gates.sh` green (63s) before shipping via quickmerge; verified `80148edde` on `origin/live-defi-rollout`
       before flipping this checkbox.
-- [ ] [INFRA] P2. **cassette-drift-check: the negative test its own fix requires is unevidenced.** All three prescribed
-      fixes shipped 2026-07-17 (`unified-trading-pm@f339ce5e8`: repointed to
-      `-m unified_api_contracts.testing.detect_cassette_drift`, `RUNNER_TEMP` venv install, `0)`/`1)`/`*)` exit-code
-      split) and the workflow was flipped to `[self-hosted, glue]` (`@e9d02e5d6`) — but the doc's own "Negative test
-      that must pass after the fix" was never run: a genuine drift must still open the issue, a genuinely-absent-drift
-      run must exit 0, and a BROKEN invocation (bad path / unimportable module) must FAIL the job rather than report
-      drift. Add that negative test and prove all three states are now distinguishable. **Explicitly OUT of scope**:
+- [x] ✅ [INFRA] P2. **cassette-drift-check: the negative test its own fix requires is unevidenced.** —
+      `unified-api-contracts@7450e744`: added `tests/unit/test_detect_cassette_drift.py`, exercising
+      `detect_cassette_drift.main()` directly for the three exit states the workflow's `case "${rc}" in 0) … 1) … *) …`
+      branches on — a genuinely-empty cassette dir exits 0, a fabricated genuine-schema-drift cassette exits 1
+      (venue-scoped model registry monkeypatch mirroring `_select_model`'s real matching), and a nonexistent
+      `--cassette-dir` exits 2 without writing a report. Full `quality-gates.sh` green (266s) before shipping via
+      quickmerge; verified `7450e744` on `origin/live-defi-rollout` before flipping this checkbox. Source doc's banner
+      updated with this evidence in this same commit. **Explicitly OUT of scope** (unchanged, still open elsewhere):
       closing the 52 false `[Cassette Drift]` issues and the detector's cassette→model matching lottery — both
-      operator-owned, and Ikenna owns the count verification (`## Deferred` D23). **Done when**: the three exit states
-      are covered by a test/dispatch and the source doc's banner records the evidence. Source:
+      operator-owned, and Ikenna owns the count verification (`## Deferred` D23). Source:
       `issues/cassette_drift_check_calls_deleted_script_and_swallows_it_2026_07_17.md`.
-- [ ] [INFRA] P2. **Verify the released Docker version tag is no longer re-pointed at new content.** The F2 blast-radius
-      probe found the UTL base image rebuilt daily and re-tagged the SAME frozen `0.55.0`/`latest`, so `0.55.0` named a
-      different tree every day and rollback-by-version was undefined. A fix shipped (`:{version}-{sha12}` always applied
-      and never re-pointed; bare `:{version}` only when HEAD is exactly the release commit) but the open item's own
-      verification was never done: **confirm two builds never share a version tag**. Probe Artifact Registry read-only,
-      and record whether pinning service `FROM` lines by digest only is still needed. Read-only on AR — do not delete or
-      re-tag any image. **Done when**: a dated AR probe shows every version tag maps to exactly one digest across at
-      least two consecutive rebuilds, recorded in the source doc. Source:
-      `issues/post_cutover_silent_assumption_sweep_2026_07_23.md` ([INFRA] P1 "Stop re-pointing a released Docker tag at
-      new content").
-- [ ] [INFRA] P2. **Confirm `instruments-service`'s publish path can no longer emit `0.0.0.dev0`.** It published
-      `0.0.0.dev0` to AR `unified-libraries` on 2026-07-03 — hatch-vcs's no-git-history fallback, a wheel carrying
-      neither a version nor a sha. The generic fix shipped in PM's `publish-package.yml` (`fetch-depth: 0` + fail-closed
-      on the BUILT wheel's version), and the propagation template `scripts/propagation/templates/publish-package.yml`
-      was corrected — but this repo's INSTALLED copy was never confirmed. Read its live copy; if it lacks
-      `fetch-depth: 0` or the built-wheel assertion, install the corrected template copy. **Done when**:
-      instruments-service's publish workflow has both, evidenced by reading the file on `origin/live-defi-rollout`, and
-      the bad 2026-07-03 wheel's disposition is recorded (do NOT delete it — an AR delete is operator-gated). Source:
+- [x] ✅ [INFRA] P2. **Verify the released Docker version tag is no longer re-pointed at new content.** The F2
+      blast-radius probe found the UTL base image rebuilt daily and re-tagged the SAME frozen `0.55.0`/`latest`, so
+      `0.55.0` named a different tree every day and rollback-by-version was undefined. A fix shipped
+      (`:{version}-{sha12}` always applied and never re-pointed; bare `:{version}` only when HEAD is exactly the release
+      commit) but the open item's own verification was never done: **confirm two builds never share a version tag**.
+      Probe Artifact Registry read-only, and record whether pinning service `FROM` lines by digest only is still needed.
+      Read-only on AR — do not delete or re-tag any image. **Done when**: a dated AR probe shows every version tag maps
+      to exactly one digest across at least two consecutive rebuilds, recorded in the source doc. — **DONE 2026-08-02
+      (slot 4, infra), read-only, no code shipped.** `gcloud artifacts docker images list … --include-tags` over
+      `unified-trading-library/unified-trading-library`: 221 tagged rows, 2026-07-23→2026-08-02 (15 versions
+      `0.55.0`→`0.70.0`), 218 distinct `{version}-{sha12}` build tags each mapping to exactly 1 digest (0 collisions),
+      15 bare `{version}` release tags each ALSO mapping to exactly 1 digest (0 re-pointing) — far exceeding the "two
+      consecutive rebuilds" bar (up to 41 rebuilds within one version). Digest-pinning: already fleet-wide across all 16
+      service Dockerfiles (`FROM …@${BASE_IMAGE_DIGEST}`), no further work needed. Full evidence recorded in the source
+      doc. Source: `issues/post_cutover_silent_assumption_sweep_2026_07_23.md` ([INFRA] P1 "Stop re-pointing a released
+      Docker tag at new content").
+- [x] ✅ [INFRA] P2. **Confirm `instruments-service`'s publish path can no longer emit `0.0.0.dev0`.** —
+      instruments-service@7d005520. **FOUND**: the installed `.github/workflows/publish-package.yml` was NOT the
+      dispatch template at all — it was stale pre-migration legacy content (26 commits, all cosmetic action-version
+      bumps on top of the original "Add automatic publishing on tag push"; triggers on `release`/tag-push/
+      `workflow_dispatch`, uploads a GH Actions artifact via `actions/upload-artifact`, never touches AR; its own
+      `sed`-based version bump is dead code under this repo's current `dynamic = ["version"]` + hatch-vcs pyproject,
+      since there's no static `version = "..."` line left to replace). No `fetch-depth: 0`, no built-wheel assertion —
+      it lacked both because it isn't the same pipeline at all. **Confirmed byte-identical** to
+      `scripts/propagation/templates/publish-package.yml` against the working installed copies in
+      `unified-api-contracts`/`unified-trading-library` before installing the same content into instruments-service
+      (`push:main` → `dispatch-publish` job → `fetch-depth: 0` checkout → dispatches `publish-package` to PM's receiver,
+      which already fails closed on a built wheel version of `0.0.0.dev0`, confirmed read on
+      `origin/live-defi-rollout`). `GH_PAT` secret prerequisite confirmed present
+      (`gh secret list -R IggyIkenna/instruments-service`). **Bad wheel disposition**
+      (`gcloud artifacts versions list     --repository=unified-libraries --location=asia-northeast1 --package=instruments-service`):
+      `0.0.0.dev0` still present, `createTime=updateTime=2026-07-03T15:11:48`, a single isolated occurrence (surrounding
+      AR history shows `0.90.0` on 2026-06-27 then a ~4-week publish gap — the fleet-wide semver-agent dormancy this
+      doc's own source issue documents — then `0.91.0` on 2026-07-25 onward resuming normally; `0.0.0.dev0` sits alone
+      mid-gap, never duplicated). Left in place per the operator-gated AR-delete rule. Quality gates green (168s);
+      shipped via quickmerge, verified ancestor of `origin/live-defi-rollout`. Source:
       `issues/post_cutover_silent_assumption_sweep_2026_07_23.md` ([INFRA] P2).
 - [ ] [VERIFY] P1. **Re-measure the billed notify/glue cost — the 3-5 day window has long passed.** The mover flip
       landed 2026-07-17; the source doc's own table says the earliest useful measurement was ~2026-07-20/22, and it is
@@ -530,16 +554,11 @@ concurrent workers do not collide on this file.
       slippage (e.g. `03:02→05:07` is a ~2h gap, consistent with known throttling, not a real miss). The
       `push`→`schedule: "0 * * * *"` retarget from 2026-07-22 is genuinely live and healthy; no root-cause investigation
       needed. Source: `github_actions_operator_gated_followups_2026_07_17.md` (Deferred row 14).
-- [ ] [INFRA] P2. **Find the CI/CD event-ledger CONSUMER — the one blocking question behind decision D2.** The
-      `persist-cicd-event` ledger is written with an unlocked read-modify-write on ONE object per repo per day, so
-      overlapping writers silently discard each other's rows while every writer logs success. The operator's
-      fix-vs-accept ruling is explicitly blocked on ONE determinable fact the doc names: **who reads this ledger?** The
-      schema claims `GitHubWorkflowEvent` from `unified_api_contracts.internal`, implying a real consumer. Grep the
-      whole workspace (all repos, incl. UIs and deployment-api) for every reader of the `unified-trading-cicd-events`
-      bucket and of that type, then read each candidate consumer — **grep-then-READ, 0 hits ≠ missing.** Audit only: do
-      NOT change `persist-cicd-event` or the ledger's write path. **Done when**: the consumer set (possibly empty,
-      stated as a measured fact) is recorded in the source doc so the operator's D2 ruling is unblocked. **Do not
-      re-derive the loss analysis** — the doc says it is complete. Source:
+- [x] ✅ [INFRA] P2. **Find the CI/CD event-ledger CONSUMER — the one blocking question behind decision D2.** DONE
+      2026-08-02. Consumer confirmed via workspace-wide grep-then-READ:
+      `deployment-api/_repo_ci_alerts.py::_read_ledgers_sync()` prefix-walks `cicd/events/`, feeding
+      `unified_alerts.py`/`repo_ci.py`/`health_overview.py` → `deployment-ui`'s Alerts page. Recorded in the source doc,
+      unblocking + closing D2 (Option 1 was already shipped — see D2 entry for full evidence). Source:
       `github_actions_operator_gated_followups_2026_07_17.md` ([REVIEW] P0 / D2).
 - [x] ✅ [INFRA] P2. **Is the AWS CodeBuild cosmetic `failure` status still posted at all?** This doc's noise may
       already be moot: all native GitHub webhooks on the 18 CodeBuild projects in `427895769566`/ap-northeast-1 were
@@ -653,6 +672,13 @@ tag; (7) the tranche-membership rule misses every `asset_group: [meta]`/`[infras
 
 ## Progress Log
 
+- **2026-08-02** (slot 7, infra, task `ci_satellite_ao_dispatch_batch1-027`) — Flipped the event-ledger-consumer todo
+  (D2 unblocked in the source doc). **Incidental finding, out of scope for this todo**: the sibling alerts ledger
+  (`cicd/alerts/{date}/alerts.jsonl`, same read-modify-write race, already tracked as partially-open in
+  `deployment_alerts_ingestion_completeness_2026_07_20.md`, archived with the gap still open) has an UNFIXED writer not
+  enumerated in that doc's list — `agent-orchestrator/server/notifications/slack.py::_persist_to_gcs()`
+  (download→append→upload, confirmed live at line 163-167). Not fixed here (audit-only scope); filed as
+  `issues/alerts_ledger_remaining_unfixed_writers_2026_08_02.md` (all 3 known unfixed writers, one bounded todo each).
 - **2026-07-26** — Drafted by `/ag-closeout-audit ci` in autonomous mode, immediately after `/plan-reconcile ci` (whose
   14 auto-fixes shipped as `unified-trading-pm@29dda2bfd`, so frontmatter/checkbox state was trustworthy going in).
   Phase 0: covering-plan set EMPTY — closeout has 0 todos, no batch plan has ever existed, all 30 Sources are

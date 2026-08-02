@@ -80,10 +80,16 @@ depends_on: []
 > **Status deliberately left `open`.** Two operator-scope calls remain and are tracked as an open `[REVIEW] P0` in
 > [/plans/active/github_actions_operator_gated_followups_2026_07_17.md](/plans/active/github_actions_operator_gated_followups_2026_07_17.md):
 > (a) closing the 52 false `[Cassette Drift]` issues in `unified-api-contracts`, and (b) the detector's cassette→model
-> matching being a filename-stem lottery. This doc's own "Negative test that must pass after the fix" is also not
-> evidenced. Per this corpus's convention (see the 2026-07-12 annotation in
+> matching being a filename-stem lottery. Per this corpus's convention (see the 2026-07-12 annotation in
 > [/plans/archive/issues/aws_codebuild_pr_approval_status_noise_2026_06_25.md](/plans/archive/issues/aws_codebuild_pr_approval_status_noise_2026_06_25.md)),
 > _"closing/resolving is an operator-scope call, not a mechanical doc-sync"_.
+>
+> **✅ EVIDENCED 2026-08-02**: this doc's own "Negative test that must pass after the fix" is now covered —
+> `unified-api-contracts/tests/unit/test_detect_cassette_drift.py` exercises `detect_cassette_drift.main()` directly for
+> the three states the workflow's `case "${rc}" in 0) … 1) … *) …` branches on: a genuinely-empty cassette dir exits 0,
+> a fabricated genuine-schema-drift cassette exits 1, and a nonexistent `--cassette-dir` (the broken-invocation case
+> that used to silently report as drift) exits 2 and does not write a report. The two operator-scope items above remain
+> open and unaffected by this.
 
 ## Defect 1 — it calls a file that does not exist, and hides it
 

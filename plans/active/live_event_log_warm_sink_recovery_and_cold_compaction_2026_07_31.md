@@ -174,7 +174,7 @@ determinism needs.
       **Time-gated, unblocked by P1.1 above — needs real elapsed time, not just a worker pass.** Re-run the
       `paper(W)==batch-rerun(W)` determinism test for BINANCE-FUTURES/ASTER/OKX-FUTURES now that real warm+cold data is
       confirmed flowing (P1.1). DoD: epsilon=0 match cited with the test run's report path (per
-      `codex/09-strategy/operational/paper-batch-live-reconciliation.md` §5, the `daily-determinism`
+      `/codex/09-strategy/operational/paper-batch-live-reconciliation.md` §5, the `daily-determinism`
       CLI/`DailyDeterminismHandler` in `batch-live-reconciliation-service`). **Two real preconditions this todo cannot
       itself satisfy synchronously**: (1) a full day (T+1 cadence) of real post-2026-07-31T21:14Z capture for these
       venues needs to accumulate before a meaningful daily determinism window exists — checking today would compare

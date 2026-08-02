@@ -250,7 +250,7 @@ ls unified-trading-pm/codex/09-strategy/architecture-v2/uac-registry-gaps.md
 ls unified-api-contracts/unified_api_contracts/internal/architecture_v2/strategy_availability.py
 ls strategy-service/strategy_service/engine/strategies/v2/
 # Verify Wave A has merged (spot-check any one)
-ls unified-trading-pm/plans/active/refactor_g1_1_phase_unification_2026_04_20.plan.md
+ls unified-trading-pm/plans/archive/refactor_g1_1_phase_unification_2026_04_20.plan.md
 ```
 
 All must exist. STOP if any missing.

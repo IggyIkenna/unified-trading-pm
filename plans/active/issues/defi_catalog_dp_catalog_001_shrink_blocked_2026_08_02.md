@@ -248,3 +248,23 @@ slow:
   redirect-banner class this skill's Phase 1 says not to override — recorded in
   `defi_satellite_ao_dispatch_batch8_2026_08_02.md`'s Deferred section for re-assessment once R3 is ruled. Doc stays
   `assigned_vm: NA`.
+- **slot-9 (data_pipeline_failure escalation agt-3fb3fe) 2026-08-02, FIFTH dispatch (age now 2758min/46.0h)**: Read this
+  doc in full before touching anything; did not re-derive the diagnosis. Independently re-verified all four load-bearing
+  facts via fresh `gcloud`/`gsutil` calls (as `unified-trading-sa`): (1) `gsutil stat` on `catalog.parquet` — unchanged
+  `Creation/Update time: Fri, 31 Jul 2026 22:47:16 GMT`, byte-identical generation `1785538036682790` — zero writes
+  since slot-8's check; (2) `gcloud run jobs executions list --job=lifecycle-catalogue-regen-defi` — most recent two
+  executions still `Completed/False` (failed), matching the prior pattern (3 successes then failing since 2026-08-01);
+  (3) `gcloud scheduler jobs list` — all 6 gated crons
+  (`uts-prod-mtds-collect-{dex-pools,oracle-prices,evm-defi,solana-defi}-cron` +
+  `defi-fwd-{dex-pools,oracle-prices}-prd`) still `PAUSED`; (4)
+  `gcloud compute instances list --filter="name~'canonical-migration-defi-per-instrument'"` — still zero results, R3
+  still confirmed dead. `GET /api/slots/9/messages` — empty, no operator/main answer has landed. Every fact matches
+  slot-8's last snapshot exactly — **nothing has changed** in the ~7h since the last dispatch. The `[OPERATOR] P0` todo
+  remains unchecked, `resolved_by:` still blank. Per main's standing generic guidance already recorded in this doc
+  ("hold, apply nothing, await operator go on R3"), did **not** re-file a duplicate `/blocked` and did **not** apply any
+  of A/B/C. Applied nothing — no scheduler change, no VM relaunch, no `--allow-catalogue-shrink`. Note for whoever next
+  reviews this doc: this is now the fifth automated escalation dispatch against the same unresolved operator decision
+  (slots 7, 5, 9, 8, 9-again) spanning ~46h with the underlying gate untouched each time — if the operator decision on
+  R3 (option A per main's interim guidance) is still pending, consider whether the standing escalation needs a more
+  direct operator nudge than another re-fired CRITICAL page, since paging alone has not produced a decision across 5
+  cycles. Pinging `dp-fleet-monitor` (authoring slot) with the outcome and completing this one-shot escalation.

@@ -6,7 +6,10 @@ summary:
   venues, and full wizard parameterization for all supported archetypes.
 status: active
 nature: process
-asset_group: [cross-cutting]
+asset_group: [defi] # retagged 2026-08-02 (ag-closeout-audit defi, Orthogonality HARD CHECK, pattern-3 fork-inherits
+# -parent-tag class) — was [cross-cutting]; content is 100% defi-specific (staked-basis/LST collateral, defi
+# archetypes), zero cefi/tradfi/sports/prediction mentions in 213 lines. See defi_consolidated_closeout_2026_07_18.md
+# "Open follow-ups" section for the linkage citation this retag requires.
 stage: [meta]
 repos: [deployment-service, strategy-service, unified-api-contracts, unified-trading-pm, unified-trading-system-ui]
 scope: [engineer, admin]

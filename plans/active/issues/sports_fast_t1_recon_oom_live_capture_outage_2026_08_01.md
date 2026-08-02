@@ -242,37 +242,37 @@ data-pipeline-correctness-hard-rule).
       execution is confirmed on all three counts. (repo: deployment-service, market-tick-data-service)
 
       **2026-08-02T16:07Z (slot 10) — 2 of 3 criteria now confirmed live; 3rd criterion FAILS, new blocker found. NOT
-                          flipping done.** The deploy-gap slot 9 found (promote stuck behind the runner-capacity crisis) has since cleared
-                          for this specific fix: `deployment-service@4e0e03d`'s content (`scope_to_leagues` call in
-                          `sports_trigger_scheduler.py::fire_trigger`) is confirmed present on `origin/main` as of promote PR #673
-                          (`7fb58f1a`, squash-merged `2026-08-02T14:47:16Z`) — **correcting slot 4's ancestry-based "NOT on main" check**,
-                          which was a false negative from squash-merge non-ancestry (exactly the trap `review.md` § "Is commit `<sha>` live"
-                          warns about — content-diff, not `git merge-base --is-ancestor`, is the valid check here). Further: the
-                          `uts-prod-sports-scheduler` / `uts-prod-market-tick-data-service-fast-t1-recon` Cloud Run Jobs reference their
-                          image by the **mutable `:latest` tag**, and Cloud Run *Jobs* (unlike Services) re-resolve that tag fresh per
-                          execution — confirmed via `gcloud run jobs executions describe`: the most recent execution's *resolved* image
-                          digest (`sha256:6709207951...`) exactly matches the `sports-scheduler` image tagged both `latest` and
-                          `7fb58f1ae6f54c67...` (built `2026-08-02T14:51:05Z`, 4 min after the PR #673 merge). **So no manual
-                          `gcloud run jobs update` was actually needed for this job** — slot 4's conclusion there doesn't hold for a
-                          `:latest`-tag job spec. Criteria (1) and (2) are live-confirmed: `gcloud run jobs executions describe
-                          uts-prod-market-tick-data-service-fast-t1-recon-bllc8` (started `16:01:35Z`) shows
-                          `args: [..., '--league', 'SLOVAKIA_SUPER_LIGA']` and `condition: Completed True ... in 1m28.22s` with zero
-                          `"memory limit"` log hits anywhere in the trailing 2h window. **Criterion (3) FAILS — new, distinct blocker**:
-                          every sampled execution for `date=2026-08-02` across a full 24h log window (`Processed date=2026-08-02: 0 venues
-                          ok, 0 failed, 0 skipped, 0 total records` — checked 8+ executions, zero exceptions) shows genuinely zero rows
-                          captured; direct GCS listing confirms `raw_tick_data/by_date/day=2026-08-02/` has **zero objects at all** (vs.
-                          `day=2026-08-01` which has real per-venue data from slot 14's earlier verification). The pre-flight log line
-                          itself is suspicious: `Pre-flight: venue=ODDS_API date=2026-08-02 — fully covered, skipping
-                          data_types=['odds_horizon_bucket']` implies prior success for that data_type, but GCS shows nothing — a possible
-                          stale/false-positive freshness-skip signal. The OTHER attempted data_types report `Odds API batch complete:
-                          date=2026-08-02 rows=0 credits_used=0` — **0 credits used** suggests no HTTP call was even attempted, not merely
-                          an empty API response. Ruled out as a today-only fixture-availability fluke (checked across many different
-                          fixtures/leagues, same pattern every time, not isolated to one league). **This is NOT the OOM bug recurring** (no
-                          OOM, no crash-loop signature) — it is a separate, new capture-path defect. Filed as a new todo below; not
-                          root-causing inline (would need a code-level read of the `odds_horizon_bucket`/data_type dispatch path in
-                          `odds_api_adapter.py`, out of scope for this live-verification pass). **Net**: 2/3 done-when criteria met, 1 new
-                          blocker found — NOT flipping this checkbox; the actual restoration of live capture (what my own gated `-003`
-                          backfill todo needs) has not happened.
+                                                          flipping done.** The deploy-gap slot 9 found (promote stuck behind the runner-capacity crisis) has since cleared
+                                                          for this specific fix: `deployment-service@4e0e03d`'s content (`scope_to_leagues` call in
+                                                          `sports_trigger_scheduler.py::fire_trigger`) is confirmed present on `origin/main` as of promote PR #673
+                                                          (`7fb58f1a`, squash-merged `2026-08-02T14:47:16Z`) — **correcting slot 4's ancestry-based "NOT on main" check**,
+                                                          which was a false negative from squash-merge non-ancestry (exactly the trap `review.md` § "Is commit `<sha>` live"
+                                                          warns about — content-diff, not `git merge-base --is-ancestor`, is the valid check here). Further: the
+                                                          `uts-prod-sports-scheduler` / `uts-prod-market-tick-data-service-fast-t1-recon` Cloud Run Jobs reference their
+                                                          image by the **mutable `:latest` tag**, and Cloud Run *Jobs* (unlike Services) re-resolve that tag fresh per
+                                                          execution — confirmed via `gcloud run jobs executions describe`: the most recent execution's *resolved* image
+                                                          digest (`sha256:6709207951...`) exactly matches the `sports-scheduler` image tagged both `latest` and
+                                                          `7fb58f1ae6f54c67...` (built `2026-08-02T14:51:05Z`, 4 min after the PR #673 merge). **So no manual
+                                                          `gcloud run jobs update` was actually needed for this job** — slot 4's conclusion there doesn't hold for a
+                                                          `:latest`-tag job spec. Criteria (1) and (2) are live-confirmed: `gcloud run jobs executions describe
+                                                          uts-prod-market-tick-data-service-fast-t1-recon-bllc8` (started `16:01:35Z`) shows
+                                                          `args: [..., '--league', 'SLOVAKIA_SUPER_LIGA']` and `condition: Completed True ... in 1m28.22s` with zero
+                                                          `"memory limit"` log hits anywhere in the trailing 2h window. **Criterion (3) FAILS — new, distinct blocker**:
+                                                          every sampled execution for `date=2026-08-02` across a full 24h log window (`Processed date=2026-08-02: 0 venues
+                                                          ok, 0 failed, 0 skipped, 0 total records` — checked 8+ executions, zero exceptions) shows genuinely zero rows
+                                                          captured; direct GCS listing confirms `raw_tick_data/by_date/day=2026-08-02/` has **zero objects at all** (vs.
+                                                          `day=2026-08-01` which has real per-venue data from slot 14's earlier verification). The pre-flight log line
+                                                          itself is suspicious: `Pre-flight: venue=ODDS_API date=2026-08-02 — fully covered, skipping
+                                                          data_types=['odds_horizon_bucket']` implies prior success for that data_type, but GCS shows nothing — a possible
+                                                          stale/false-positive freshness-skip signal. The OTHER attempted data_types report `Odds API batch complete:
+                                                          date=2026-08-02 rows=0 credits_used=0` — **0 credits used** suggests no HTTP call was even attempted, not merely
+                                                          an empty API response. Ruled out as a today-only fixture-availability fluke (checked across many different
+                                                          fixtures/leagues, same pattern every time, not isolated to one league). **This is NOT the OOM bug recurring** (no
+                                                          OOM, no crash-loop signature) — it is a separate, new capture-path defect. Filed as a new todo below; not
+                                                          root-causing inline (would need a code-level read of the `odds_horizon_bucket`/data_type dispatch path in
+                                                          `odds_api_adapter.py`, out of scope for this live-verification pass). **Net**: 2/3 done-when criteria met, 1 new
+                                                          blocker found — NOT flipping this checkbox; the actual restoration of live capture (what my own gated `-003`
+                                                          backfill todo needs) has not happened.
 
 - [x] ✅ [DATA] P0. **DONE 2026-08-02 (slot 16) — root-caused with file:line citations; TWO independent, coexisting
       mechanisms found, no code shipped this todo (pure identification, per its own done-when + the sibling root-cause
@@ -354,18 +354,59 @@ data-pipeline-correctness-hard-rule).
       shipped in this todo — both are cleanly scoped, separately dispatchable changes, consistent with keeping this
       root-cause todo pure-identification per its own done-when. (repo: market-tick-data-service, deployment-service,
       unified-api-contracts — read-only investigation, no code changed)
-- [ ] [DATA] P1. Fix the source-blind false-positive freshness-skip in
-      `market_tick_data_service/engine/orchestrator/preflight.py::_run_preflight_availability_check` (lines 730-812):
-      add an `expected_sources`-equivalent scoping (mirroring
+- [x] ✅ [DATA] P1 — market-tick-data-service@afa8eaec (slot 9, code-shipped leg). Fixed the source-blind false-positive
+      freshness-skip in `market_tick_data_service/engine/orchestrator/preflight.py::_run_preflight_availability_check`
+      (lines 730-812): added `source` to `_PREFLIGHT_AVAILABILITY_COLUMNS` and a new
+      `_is_preflight_source_evidence(venue, row_source)` gate (mirroring
       `unified_trading_library/unified_trading_library/manifest_writer/_queries.py::check_shard_freshness`'s
       `expected_sources` param, added for the exact same bug class in
-      `sports_manifest_consolidator_zero_growth_stall_2026_07_29.md`'s P1) so a foreign-`source` row for
-      `(venue=ODDS_API, data_type=odds_horizon_bucket)` no longer counts as "captured" evidence for the ODDS_API
-      vendor's own pre-flight skip decision. Requires adding `source` to `_PREFLIGHT_AVAILABILITY_COLUMNS`
-      (preflight.py:47-58) and threading a per-venue expected-source map through
-      `_run_preflight_availability_check`/`_apply_preflight_skip_filter` (venue_fetch.py:229-277). Done when: a fresh
-      live dispatch for a date with only a foreign-source `odds_horizon_bucket` row shows `odds_horizon_bucket` in
-      `still fetching=[...]`, not `skipping data_types=[...]`. (repo: market-tick-data-service)
+      `sports_manifest_consolidator_zero_growth_stall_2026_07_29.md`'s P1) — a row for a source-scoped venue
+      (`_SOURCE_SCOPED_PREFLIGHT_VENUES = {"ODDS_API"}`) now only counts as captured evidence when its declared `source`
+      matches the venue's own `_VENUE_TO_DATA_SOURCE` entry or is undeclared (legacy tolerance); a foreign `source`
+      (e.g. an MDPS `odds_horizon_bucket` rollup stamping `source=mdps_odds_horizon_bucket`) no longer satisfies the
+      skip. Threaded into `_run_preflight_availability_check`'s per-row loop directly — the atom-skip filter
+      (`venue_fetch.py::_apply_preflight_skip_filter`) needed no change since it only consumes the already-scoped
+      `state.preflight_captured_dts`/`preflight_captured_atoms` this loop populates. 7 new regression tests in
+      `tests/unit/test_preflight_atom_coverage.py` (pure-function source-match/mismatch/undeclared cases + end-to-end
+      foreign-source-not-captured / genuine-source-still-captured / non-scoped-venue-unaffected). Full
+      `quality-gates.sh` green (re-run at the committed SHA per the sentinel-ordering rule). **Live-verification leg NOT
+      done this turn** (this todo's own literal done-when — "a fresh live dispatch... shows `odds_horizon_bucket` in
+      `still fetching=[...]`" — requires the fix to actually be running in the production Cloud Run job, which per this
+      doc's own earlier findings needs a manual redeploy + the LDR→staging→main promote pipeline to drain first, same
+      gap already documented for the `--league`-scoping fix above); split into the new P0 todo directly below rather
+      than left unflippable prose in this checkbox. (repo: market-tick-data-service)
+- [ ] [DATA] P0. Live-verify the pre-flight source-scoping fix (market-tick-data-service@afa8eaec, previous todo) once
+      it has rolled out to the production `uts-prod-market-tick-data-service-fast-t1-recon` Cloud Run Job (same
+      LDR→staging→main→deploy gap already tracked for the `--league`-scoping fix's live-verify todo above — check that
+      todo's precondition state first, since both fixes ship through the same pipeline and may clear together). Done
+      when: a live execution for a date whose only `(venue=ODDS_API, data_type=odds_horizon_bucket)` manifest evidence
+      carries a foreign `source` shows `odds_horizon_bucket` in the pre-flight's `still fetching=[...]` log line, not
+      `skipping data_types=[...]`. (repo: market-tick-data-service, deployment-service)
+
+      **2026-08-02T18:35Z (slot 11, data_engineering) — root cause of the deploy delay found: known, already-tracked
+                      self-hosted-runner capacity contention, not a new issue.** Traced why `afa8eaec` (landed LDR 18:14:46Z) hasn't
+                      reached `main` yet: the fleet `ldr-to-main-promote-fleet.yml` run at `18:31:07Z` explicitly reports `GATE BLOCK
+                      market-tick-data-service: ci_status=FAILING (cached='FAILING', live='FAILING')`. Checked the underlying CI run
+                      directly (`gh run view 30758739206`, `quality-gates-v2` on `live-defi-rollout`): `QG slice (tests)` and `QG slice
+                      (checks)` jobs have been stuck queued/running for ~1h, matching the exact signature
+                      `issues/fleet_wide_qg_self_hosted_runner_capacity_crisis_2026_07_27.md` already tracks fleet-wide (self-recovers
+                      on a green retry + the next ~15min promote-cron tick, per that doc's own established pattern for identical prior
+                      recurrences on other repos — no code/workflow change needed or warranted). Not escalating or intervening (matches
+                      CLAUDE.md's "v2-never-reported deadlock auto-recovers in-band... do NOT escalate"). Still no unblocked action for
+                      THIS todo. Released via `/skip-current-task {"reason_code": "GATED"}`. Next resumer: re-check
+                      `gh run list --repo IggyIkenna/market-tick-data-service --branch live-defi-rollout` for a fresh green
+                      `quality-gates-v2`, then re-check `origin/main` for `_is_preflight_source_evidence` (content-diff, not ancestry).
+
+              **2026-08-02T19:57Z (slot 8, data_engineering) — re-verified fresh, blocker unchanged, same known crisis
+                      class.** `_is_preflight_source_evidence` still absent from `origin/main` (content-diff). `gh run list` on
+                      `live-defi-rollout`: the run slot-11 found stuck (`30758739206`) is now `completed cancelled` after
+                      2h5m40s; a NEW run (`30763425674`, started 19:28:01Z) is queued/running, `QG slice (tests)` and
+                      `QG slice (checks)` both still pending after 27+min — same signature. Last genuine SUCCESS was
+                      `30736776674` at 06:54:31Z, over 7h ago; every run since has been cancelled or stuck. Confirmed
+                      `fleet_wide_qg_self_hosted_runner_capacity_crisis_2026_07_27.md` is still `status: open` (no resolution
+                      landed). Not escalating or intervening, same as slot-11. No unblocked action available. Released via
+                      `/skip-current-task {"reason_code": "GATED"}`.
+
 - [ ] [DATA] P2. Fix the sports pre-match trigger scheduler firing odds-fetch dispatches for fixtures in leagues with no
       odds_api coverage by design:
       `deployment-service/deployment_service/sports_trigger_evaluation.py::     evaluate_pre_match_triggers` (lines
@@ -387,6 +428,26 @@ data-pipeline-correctness-hard-rule).
       doesn't duplicate that backfill's own in-flight/approved scope if it hasn't run yet. Done when: the manifest
       (`instruments-store-sports-prd`, manifest-only read, no GCS walk) shows full coverage for the affected date range
       at the intended granularity. (repo: market-tick-data-service)
+
+      **2026-08-02T18:33Z (slot 11, data_engineering) — still genuinely gated, self-skipping per the 2026-08-01 note's
+                          established posture.** Both prerequisite live-verify todos above remain open: the `--league`-scoping live-verify
+                          (line ~235) found 2/3 criteria met but a NEW blocker (zero rows captured today via a stale preflight freshness
+                          skip); the pre-flight source-scoping fix (`market-tick-data-service@afa8eaec`, ~19min old at check time) that
+                          targets that exact blocker is confirmed present on `origin/live-defi-rollout` (`_is_preflight_source_evidence`
+                          grep-confirmed in the file) but **NOT yet on `origin/main`** (same function absent from a live `git show
+                          origin/main:.../preflight.py`) — the LDR→main promote pipeline hasn't drained it to production yet, so its own
+                          live-verify todo (line ~378) can't even start. Running the backfill now would write against the still-broken
+                          capture path. No unblocked action available. Released via `/skip-current-task {"reason_code": "GATED"}`. Next
+                          resumer: re-check whether `afa8eaec` has reached `origin/main` (content-diff, not ancestry — squash-merge trap)
+
+          **2026-08-02T19:59Z (slot 8, data_engineering) — still gated, reusing this same session's just-completed
+                          check on the sibling live-verify todo directly above (no need to re-derive).** `_is_preflight_source_evidence`
+                          confirmed still absent from `origin/main` moments ago; the blocking `quality-gates-v2` run
+                          (`30763425674`) was still queued/running at that check. Running the backfill now would still write
+                          against the unfixed capture path. No unblocked action available. Released via
+                          `/skip-current-task {"reason_code": "GATED"}`.
+                          before assuming this todo is unblocked.
+
 - [ ] [DATA] P2. Check whether PREDICTION and DEFI's fast-t1-recon dispatches are at risk of the same OOM class even
       though 0/846 sampled errors this pass were non-SPORTS -- a scoped blast-radius check (same method as
       `sports_batch_odds_api_capture_outage_recurrence_check_2026_07_26.md`'s DeFi/Prediction check) rather than an
@@ -567,3 +628,58 @@ are cleanly separable, independently-dispatchable changes and this todo's own do
 Cross-referenced against this session's separate finding on `sports_odds_api_scattered_multiyear_gaps_2026_07_27.md`
 (same vendor account, same quota-exhaustion state, independently reconfirmed there too) so the credential blocker isn't
 tracked as two different problems.
+
+**2026-08-02T17:44Z (slot 15, data_engineering) — re-dispatched `-008` again, ~1.5h after slot 3's last check. 5th
+consecutive dispatch of this exact todo today confirming the identical unmet precondition.** Live-reverified directly
+(not trusting prior verdicts blind): `gcloud run jobs executions describe` on the most recent execution
+(`uts-prod-market-tick-data-service-fast-t1-recon-zmg2g`) shows `--league ROMANIA_LIGA_I` in the container args
+(criterion 1 holds); a `gcloud logging read` sweep of the trailing 2h45m window (15:00Z-17:44Z) returns zero
+`"memory limit"` ERROR entries (criterion 2 holds); but `gsutil ls .../raw_tick_data/by_date/day=2026-08-02/` still
+returns `CommandException: One or more URLs matched no objects` (the `day=2026-08-02` prefix doesn't exist at all in
+GCS), and the trailing-log sweep through 17:37:25Z still shows only
+`Processed date=2026-08-02: 0 venues ok, 0 failed, 0 skipped, 0 total records` on every sampled execution — criterion 3
+still fails, unchanged from slots 4/9/10/3's checks earlier today. This is the same already-root-caused zero-row bug
+(pre-flight source-blind false-skip + trigger-eligibility registry gap + the separate OUT_OF_USAGE_CREDITS quota
+exhaustion for registered leagues), with its two fix todos already filed above (P1 pre-flight source-scoping mirror; P2
+trigger-eligibility filter) — not re-investigating it here, out of this todo's scope. Not flipping the checkbox.
+Self-skipping (`reason_code: GATED`) per the same established precedent as the 4 prior dispatches today — the blocking
+condition is the separate zero-row bug, not something a live-verify retry resolves, and repeatedly re-dispatching this
+exact todo on a tight loop is pure waste until one of the two filed fix todos actually ships.
+
+**2026-08-02T18:05Z (slot 2, data_engineering) — re-dispatched `-008` again, ~20min after slot 15's last check. 6th
+consecutive dispatch of this exact todo today confirming the identical unmet precondition.** Live-reverified directly:
+`gcloud run jobs executions describe` on the most recent execution
+(`uts-prod-market-tick-data-service-fast-t1-recon-mf79q`, completed `2026-08-02T18:02:13Z`) shows
+`--league GUATEMALA_LIGA_NACIONAL` in the container args (criterion 1 holds); a `gcloud logging read` sweep of the
+trailing 3h window returns zero `"memory limit"` ERROR entries (criterion 2 holds); but
+`gcloud storage ls .../raw_tick_data/by_date/day=2026-08-02/` returns `ERROR: One or more URLs matched no objects` (zero
+GCS objects for today), and the trailing-1h log sweep shows only
+`Processed date=2026-08-02: 0 venues ok, ..., 0 total records` on every sampled execution — criterion 3 still fails,
+unchanged from all 5 prior checks today. Same already-root-caused zero-row bug (pre-flight source-blind false-skip +
+trigger-eligibility registry gap + OUT_OF_USAGE_CREDITS quota exhaustion), fix todos already filed above (P1 pre-flight
+source-scoping mirror; P2 trigger-eligibility filter) — not re-investigating, out of this todo's scope. Not flipping the
+checkbox. Self-skipping (`reason_code: GATED`). **Flagging for the backlog owner**: this is now 6 consecutive same-day
+dispatches of this exact todo with zero net progress toward the actual gate (the precondition can only clear once one of
+the two filed fix todos ships) — recommend an explicit `prereqs.completed_tasks` gate or a priority-999 park against
+this task rather than relying on auto_park's implicit GATED-skip threshold, since the repeated-dispatch pattern is now
+clearly established rather than a one-off.
+
+**2026-08-02T18:50Z (slot 4, data_engineering) — dispatched the P0 pre-flight-source-scoping live-verify todo itself
+(line ~378, distinct from `-008`'s `--league`-scoping live-verify above — this one's own done-when is "shows
+`odds_horizon_bucket` in `still fetching=[...]`, not `skipping data_types=[...]`"). 2nd dispatch of this specific todo
+(1st was slot 11 at 18:35Z, ~15min earlier).** Re-checked slot 11's precondition directly rather than trusting it blind:
+(1) **content-diff on `origin/main`** —
+`git show origin/main:market_tick_data_service/engine/orchestrator/preflight.py | grep _is_preflight_source_evidence`
+returns 0 hits; the same grep against `origin/live-defi-rollout` finds the function defined (line 382) and referenced at
+the skip-gate call site (line 849) — confirms `afa8eaec` is still LDR-only, NOT yet promoted to `main`. (2) **CI drain
+status** — the same `quality-gates-v2` run slot 11 found stuck (`30758739206`, `live-defi-rollout`, headSha `3c51b3d0`)
+is STILL `status=queued` at check time (`QG slice (tests)` / `QG slice (checks)` both queued since `17:23:25Z`, now
+~1h27m with no runner pickup); a `gh api .../actions/runs` sweep of the last 10 `quality-gates-v2` runs on this repo's
+LDR shows the 4 runs after the last green one (`71918e21`, `12:24:14Z`) were all superseded-and-cancelled by newer
+pushes before ever running, and the current one is the first to actually sit in `queued` this long — consistent with,
+not a new instance of, the already-tracked `fleet_wide_qg_self_hosted_runner_capacity_crisis_2026_07_27.md` (2/5
+`glue-*` runners busy per slot 9's earlier check). Precondition unchanged from slot 11's finding 15 minutes ago. Not
+re-investigating the runner crisis (different craft, already owned) or the promote-backlog mechanics (already traced by
+slots 4/9 above). Self-skipping (`reason_code: GATED`) — same posture as every prior GATED dispatch in this doc.
+Seconding slot 2's recommendation directly above: this todo (and its `-008` sibling) should get an explicit park/prereq
+gate rather than continuing to re-dispatch on every tick until the runner crisis clears.

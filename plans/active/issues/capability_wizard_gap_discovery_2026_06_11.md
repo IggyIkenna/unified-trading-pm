@@ -322,8 +322,8 @@ flips an edge's `status`; capability-regression gate green.
       ~65 unrelated pre-existing smoke failures seen in that run were NOT individually triaged — filed as
       `plans/active/issues/wizard_smoke_suite_pre_existing_failures_2026_07_28.md`, since triaged and RESOLVED
       2026-08-01 (104/108 passed under the correct `--workers=1` measurement; 1 genuine defect found + filed as
-      `/plans/active/issues/wizard_jurisdiction_overlay_dropped_by_registry_regen_2026_08_01.md`) — archived at
-      `plans/archive/issues/wizard_smoke_suite_pre_existing_failures_2026_07_28.md`.
+      `/plans/archive/issues/wizard_jurisdiction_overlay_dropped_by_registry_regen_2026_08_01.md` (resolved 2026-08-02)
+      — archived at `plans/archive/issues/wizard_smoke_suite_pre_existing_failures_2026_07_28.md`.
 
 <!-- GAP ENTRIES: two-sided audit (auto-appended by audit_prospectus_vs_codex.py) -->
 

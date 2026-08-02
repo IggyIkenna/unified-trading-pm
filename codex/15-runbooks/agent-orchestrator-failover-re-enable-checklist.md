@@ -18,7 +18,7 @@ related:
     /codex/04-architecture/recovery-defence-in-depth-layers.md,
     /codex/04-architecture/autonomous-recovery-matrix.md,
     /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
-    ../../plans/active/ao_failover_multi_vm_readiness_2026_07_20.md,
+    ../../plans/archive/2026_07/ao_failover_multi_vm_readiness_2026_07_20.md,
   ]
 created: 2026-07-20
 owner: operator (ad-hoc — only when multi-VM genuinely returns)
@@ -53,7 +53,7 @@ execution:
 `FailoverLoop` (`agent-orchestrator/server/failover.py`) re-routes soft-pinned tasks off a host that stops heartbeating.
 It is **kept but dormant** — multi-VM is not running today, but the operator ruled 2026-07-20 it is likely to return for
 resilience/backup, so the code stays and gets hardened instead of deleted
-([`ao_failover_multi_vm_readiness_2026_07_20.md`](../../plans/active/ao_failover_multi_vm_readiness_2026_07_20.md)).
+([`ao_failover_multi_vm_readiness_2026_07_20.md`](../../plans/archive/2026_07/ao_failover_multi_vm_readiness_2026_07_20.md)).
 
 **Do not flip `ORCHESTRATOR_FAILOVER_ENABLED=true` (or call `POST /api/ops/failover/enable`) without going through this
 checklist first.** The loop has zero `failover_rerouted` events for all of production history — untested resilience
@@ -145,7 +145,7 @@ Do not assume it works because the loop is "running". Verify an actual cycle:
   failover sits among the workspace's recovery mechanisms.
 - [Autonomous recovery matrix](/codex/04-architecture/autonomous-recovery-matrix.md) — kill-switch / auto-recovery scope
   this loop does NOT participate in.
-- [`ao_failover_multi_vm_readiness_2026_07_20.md`](../../plans/active/ao_failover_multi_vm_readiness_2026_07_20.md) —
+- [`ao_failover_multi_vm_readiness_2026_07_20.md`](../../plans/archive/2026_07/ao_failover_multi_vm_readiness_2026_07_20.md) —
   the plan that produced this checklist + the paused-slot fix + the gate tests.
 - [`central-vm-relaunch-glue-runner-reinstall.md`](./central-vm-relaunch-glue-runner-reinstall.md) — the sibling
   central-VM runbook for a DIFFERENT concern (a from-scratch `launch-central-brain-aws.sh` relaunch does not

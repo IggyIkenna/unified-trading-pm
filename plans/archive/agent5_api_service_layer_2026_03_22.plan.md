@@ -103,7 +103,7 @@ isProject: false
 
 ## CRITICAL: Read Before Any Work
 
-1. Read `unified-trading-pm/plans/active/CITADEL_VISION_2026_03_22.md` — system-wide vision
+1. Read `unified-trading-pm/plans/archive/CITADEL_VISION_2026_03_22.md` — system-wide vision
 2. Read `unified-trading-system-ui/UI_STRUCTURE_MANIFEST.json` — see `pages_needing_api_wiring` (18 pages) and
    per-service API endpoint requirements
 3. The UI has 18 REAL pages using inline mock data that need API wiring. Your service layer must serve ALL endpoints
@@ -238,6 +238,6 @@ real microservices (Phase 9, post-sprint), the mock path has already validated t
 - **Phase 7 added:** Full registry coverage, strategy config API, real-time PnL test
 - **Phase 8 added (Gap Classification):** Pre-trade compliance check simulation, derivatives/options endpoints, risk
   analytics (VaR/stress/correlation), FX conversion, regulatory reports. READ
-  `.cursor/plans/GAP_CLASSIFICATION_2026_03_22.md` for the 3-category framework. Every Phase 8 todo identifies its gap
+  `.cursor/plans/archive/GAP_CLASSIFICATION_2026_03_22.md` for the 3-category framework. Every Phase 8 todo identifies its gap
   category (Type 1/2/3) and points to the REAL service implementation it's replicating. DO NOT rebuild service logic —
   simulate output shapes from seeded data.

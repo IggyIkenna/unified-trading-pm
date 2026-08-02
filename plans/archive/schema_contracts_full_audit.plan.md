@@ -92,7 +92,7 @@ todos:
     }
   - {
       id: compile-audit-doc,
-      content: Compile all agent findings into unified-trading-pm/plans/active/SCHEMA_CONTRACTS_AUDIT.md.,
+      content: Compile all agent findings into unified-trading-pm/plans/archive/SCHEMA_CONTRACTS_AUDIT.md.,
       status: completed,
     }
   - {
@@ -212,7 +212,7 @@ rg "from unified_api_contracts|from unified_internal_contracts" --type py --glob
 
 ## Audit Output Document
 
-Path: `unified-trading-pm/plans/active/SCHEMA_CONTRACTS_AUDIT.md`
+Path: `unified-trading-pm/plans/archive/SCHEMA_CONTRACTS_AUDIT.md`
 
 Sections:
 

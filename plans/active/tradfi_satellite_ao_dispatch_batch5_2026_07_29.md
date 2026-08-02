@@ -765,6 +765,65 @@ mirroring the batch1/batch2/batch3/batch4 finalize pattern.
   resolution (or `mtds_available_at_cross_asset_backfill_2026_07_13.md` lines 305/314 flipping done) before attempting
   any tradfi download-VM launch for this todo — until then every such launch will fail identically.
 
+- **2026-08-02T17:55Z (slot-15, data_engineering) — gate now cleared, ES/MES backfill VM launched, IN PROGRESS.**
+  Re-verified live before attempting anything (not trusting the last decline's snapshot): the tradfi consolidator cron
+  (`uts-prod-manifest-consolidator-market-data-tradfi-cron`) is now `ENABLED` (independently confirmed resumed by slot-3
+  today per `mtds_available_at_cross_asset_backfill_2026_07_13.md`'s 2026-08-02 entry) and
+  `_index/availability_index.parquet`'s update time is live/current (checked twice, seconds apart — actively
+  refreshing), so the fleet-wide `exit_code=78` OOM-preflight self-delete that blocked every prior dispatch this year no
+  longer applies. Dry-run first
+  (`launch-mdps-backfill-vm.sh --instrument-ids "CME:FUTURE:ES CME:FUTURE:MES" tradfi 2020-01-01 2026-07-25 dry`) —
+  clean, all 5 tarballs fresh. **Launched for real**: `mdps-backfill-tradfi-20260802-175522` (SPOT), same instrument
+  scope + date range as the prior 2 attempts (for a clean hit-rate comparison against the ~19% (454/2398) baseline).
+  Verified STARTED (RUNNING within seconds) and genuine PROGRESS via `run.log` tail sampled 3 times over ~10min: passed
+  the OOM-preflight + dependency checks cleanly, then advanced `day=2020-01-03` → `2020-01-09` → `2020-01-16` →
+  `2020-01-23` (~3.5 days/min steady pace) — real per-day processing (POLARS AGGREGATED candle counts, chain-bundle
+  streaming), not a hung/idle VM. At this pace the full 2020-01-01..2026-07-25 (~2398-day) range is a multi-hour run
+  (~11h), consistent with this doc's and the archived
+  `tradfi_mdps_build_continuous_mismatches_2_and_4_still_open_2026_07_26.md`'s prior full-range attempts. **Not yet
+  done**: backfill still running, `build-continuous --root ES` not yet run, hit-rate re-measure not yet done. Watching
+  via a background Monitor task + heartbeats; will checkpoint again before this session ends if the run hasn't
+  completed. VM name for whoever resumes: `mdps-backfill-tradfi-20260802-175522`
+  (`gcloud compute instances describe … --zone=asia-northeast1-c`; log at
+  `gs://deployment-scripts-central-element-323112/vm-logs/mdps-backfill-tradfi-20260802-175522/run.log`). A second,
+  harmless dry-run VM (`mdps-backfill-tradfi-20260802-175427`, `--dry-run`, no live writes) was also launched moments
+  earlier for the pre-flight sanity check — it self-deletes on its own once its dry pass completes, no action needed on
+  it.
+
+- **2026-08-02T18:56Z (slot-3, data_engineering) — adopted, no relaunch, watchdog armed.** Dispatched `-001` after
+  slot-15's session ended without a follow-up checkpoint. Re-verified live before touching anything (not trusting the
+  prior entry's snapshot):
+  `gcloud compute instances describe mdps-backfill-tradfi-20260802-175522 --zone asia-northeast1-c` → `RUNNING`;
+  `run.log` tail shows real forward progress (`day=2020-06-16` at 18:53:28Z, ~3 days/min steady pace, consistent with
+  slot-15's measured rate) — genuinely alive, not stalled. Per the Tardis-style single-VM-fleet caution (avoid duplicate
+  SPOT launches on the same shard prefix), did NOT launch a second backfill — this todo's "launch" instruction is
+  already satisfied by the in-flight VM. Armed a `run_in_background` Monitor watchdog (30-min poll cadence) tailing
+  `run.log` via a byte-range `gsutil cat` (cheap, no full re-download) for `day=` progress +
+  Traceback/ERROR/FAILED/Killed/OOM signatures + the VM's terminal (non-`RUNNING`) status — will checkpoint here again
+  on the next meaningful event. At the current pace the full `2020-01-01..2026-07-25` range (~2398 days) projects to
+  ~13h total, well past this VM's start (`17:55:22Z` → ETA roughly `2026-08-03T07:00Z`). **Not yet done**: backfill
+  still running; `build-continuous --root ES`, hit-rate re-measure, and this checkbox all remain open until the VM
+  reaches a genuine terminal state (not just "still running").
+
+- **2026-08-02T20:31Z (slot-3, data_engineering) — CORRECTION: the 18:56Z watchdog was silently non-functional; fixed
+  and re-armed.** ~1h35m of manual `/heartbeat`-driven check-ins (each backed by a fresh direct `gcloud`/`gsutil`
+  re-verify, not blind trust in the watchdog) kept confirming genuine progress — but a fresh direct test of the exact
+  `gsutil cat -r -150000-` byte-range syntax embedded in the 18:56Z Monitor script found it throws
+  `CommandException: Invalid range (-150000-)` (gsutil's `-r` flag wants `-150000`, no trailing dash, for "last N
+  bytes"). Every iteration of that watchdog has been failing this call silently since it was armed — `cur_day` always
+  came back empty, so it never printed a single `PROGRESS` line, and the `CommandException` text doesn't match any of
+  its own Traceback/ERROR/FAILED/Killed/OOM error-signal patterns either, so it never surfaced its own failure. Exactly
+  the "silence looks identical to success" trap this workspace's async-wait discipline warns about — the manual
+  re-verifies happened to catch real state anyway (independently, via correct-syntax ad-hoc commands each time), so no
+  actual progress was missed, but the watchdog itself was dead weight, not a safety net, for its full ~1.5h life.
+  Stopped it (`TaskStop`, confirmed the invalid syntax was present in both its progress-poll AND terminal-state
+  branches) and re-armed a corrected version: fixed byte-range syntax on both branches, plus a new
+  `CommandException|credentials are invalid|AccessDenied` self-error check that now explicitly emits a
+  `MONITOR_SELF_ERROR` event (instead of silently producing nothing) if the gsutil call itself ever fails again.
+  Verified working immediately: first iteration emitted `PROGRESS day=2021-05-03 at 20:31:53Z (status=RUNNING)`,
+  consistent with the manual check moments earlier (`day=2021-04-27` at `20:30Z`). VM remains healthy, 0 errors, ~13h
+  ETA holds. Follow-through (`build-continuous`, hit-rate re-measure, checkbox flip) still not yet done.
+
 ## Codex SSOTs
 
 No new durable contract is created by this plan — every todo executes an already-decided spec from its source doc, or

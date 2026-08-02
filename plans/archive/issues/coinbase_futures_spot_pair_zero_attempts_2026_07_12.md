@@ -26,7 +26,7 @@ tags:
 related:
   [
     /plans/archive/2026_07/mvp_backfill_cefi_tick_v10_2026_06_27.md,
-    /plans/active/issues/cefi_deribit_combo_and_okx_bare_venue_gaps_2026_07_12.md,
+    /plans/archive/2026_07/cefi_deribit_combo_and_okx_bare_venue_gaps_2026_07_12.md,
     /codex/02-data/honest-coverage-model.md,
     /codex/02-data/availability-manifest-and-data-status.md,
   ]

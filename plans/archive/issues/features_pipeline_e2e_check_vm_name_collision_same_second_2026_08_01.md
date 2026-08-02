@@ -29,7 +29,7 @@ tags: [pipeline-e2e-check, vm-launcher, race-condition, tooling]
 related:
   [
     /plans/active/sports_consolidated_native_ao_extract_2026_07_25.md,
-    /plans/active/issues/features_sports_env_staging_reads_empty_staging_reference_data_2026_08_01.md,
+    /plans/archive/issues/features_sports_env_staging_reads_empty_staging_reference_data_2026_08_01.md,
   ]
 created: "2026-08-01"
 parent_epic: infrastructure_master

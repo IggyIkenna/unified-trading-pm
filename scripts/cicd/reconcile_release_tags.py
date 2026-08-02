@@ -58,6 +58,7 @@ from __future__ import annotations
 
 import argparse
 import base64
+import hashlib
 import json
 import os
 import re
@@ -254,7 +255,123 @@ def _write_firestore_release_tags(owner: str, repo_versions: dict[str, str], pro
         )
 
 
-def reconcile(owner: str, manifest_path: Path, dry_run: bool, max_creates: int, fail_on_stall: bool) -> int:
+# ── Slack routing for the STALL alarm (2026-08-02) ──────────────────────────────────────
+# Before this, a STALL only ever emitted a `::warning::` GH annotation — visible in the run
+# log, invisible everywhere else. These helpers route it through the reusable notify-slack.yml
+# carrier the rest of the fleet uses (SSOT: codex/04-architecture/ci-alerting.md): a STALL is a
+# STANDING CONDITION (dedup_key + cooldown_min — page on the false->true transition, re-remind
+# on cooldown, never every tick) and its resolution gets an explicit RESOLVED bookend, mirroring
+# branch-health.yml's lag-monitor / lag-notify / lag-notify-resolved trio (same file's
+# `_emit_clear_diff` is the direct model for `_emit_stall_clear_diff` below).
+_STALL_DEDUP_KEY = "release-tag-stall"
+
+
+def _build_stall_block(stalled: dict[str, str]) -> str:
+    """The STALL payload written to --stall-out: line 1 = dedup key, line 2+ = Slack message.
+
+    Empty string when nothing is stalled (the workflow reads a 0-byte file as stalled=false).
+    ONE alert names every currently-stalled repo — never one alert per repo — so a synthetic
+    multi-repo stall still produces exactly one Slack post.
+    """
+    if not stalled:
+        return ""
+    header = f":rotating_light: *RELEASE TAG STALL* — {len(stalled)} repo(s) not advancing"
+    body = "\\n".join(f"  • {repo}: {msg}" for repo, msg in sorted(stalled.items()))
+    tail = (
+        "\\n→ Tag minter is semver-agent (fires on a push to the repo's promotion branch) — "
+        "check it is enabled and targeting the branch this repo actually promotes to."
+    )
+    message = header + "\\n" + body + tail
+    return _STALL_DEDUP_KEY + "\n" + message + "\n"
+
+
+def _cleared_dedup_key(cleared_repos: list[str]) -> str:
+    """A per-cleared-SET dedup key so two distinct clears each post once (see
+    promotion_lag_monitor.py's identically-named helper — notify-slack dedups on `dedup_key`
+    ALONE, so a static key would let the first clear swallow a second repo's clear)."""
+    joined = ",".join(sorted(cleared_repos))
+    digest = hashlib.sha256(joined.encode("utf-8")).hexdigest()[:12]
+    return f"{_STALL_DEDUP_KEY}-cleared:{digest}"
+
+
+def _build_cleared_block(cleared_repos: list[str], prev: dict[str, str], still_stalled: int) -> str:
+    """The CLEARED payload written to --cleared-out: line 1 = dedup key, line 2+ = Slack message.
+
+    Empty string when nothing cleared (the workflow reads a 0-byte file as cleared=false).
+    """
+    if not cleared_repos:
+        return ""
+    key = _cleared_dedup_key(cleared_repos)
+    header = f":ballot_box_with_check: *RELEASE TAG STALL CLEARED* — {len(cleared_repos)} repo(s) tagging again"
+    body = "\\n".join(f"  • {repo}: was {prev[repo]}" for repo in cleared_repos)
+    tail = f"\\n({still_stalled} repo(s) still stalled)" if still_stalled else "\\n— no repos currently stalled"
+    return key + "\n" + header + "\\n" + body + tail + "\n"
+
+
+def _load_state(path: str) -> dict[str, str]:
+    """Load the previous run's stalled-repo map ({repo: message}). Tolerates absent/corrupt/
+    old-schema files -> {} so a first run after deploy never false-fires a CLEAR."""
+    try:
+        with open(path) as f:
+            raw: object = json.load(f)
+    except (OSError, ValueError):
+        return {}
+    if not isinstance(raw, dict):
+        return {}
+    stalled = cast("dict[str, object]", raw).get("stalled")
+    if not isinstance(stalled, dict):
+        return {}
+    out: dict[str, str] = {}
+    for k, v in cast("dict[str, object]", stalled).items():
+        if isinstance(k, str) and isinstance(v, str):
+            out[k] = v
+    return out
+
+
+def _write_state(path: str, curr: dict[str, str]) -> None:
+    """Persist the current stalled-repo map for the next run's clear-diff. Best-effort."""
+    try:
+        with open(path, "w") as f:
+            json.dump({"stalled": curr}, f)
+    except OSError:
+        pass
+
+
+def _emit_stall_clear_diff(
+    stalled: dict[str, str], unresolved: set[str], state_in: str, state_out: str, cleared_out: str
+) -> None:
+    """Diff prev->current stalled-repo sets and (opt-in) persist state + write the CLEARED block.
+
+    A repo clears ONLY when it was stalled last run AND is affirmatively NOT stalled this run —
+    i.e. NOT in `unresolved` (an API-miss this run must never masquerade as a clear; it is carried
+    FORWARD into the persisted set instead, so it re-decides on the next successful probe).
+    """
+    prev = _load_state(state_in) if state_in else {}
+    carried = {repo: prev[repo] for repo in unresolved if repo in prev}
+    new_state = {**stalled, **carried}
+    if cleared_out:
+        cleared_repos = sorted(repo for repo in prev if repo not in stalled and repo not in unresolved)
+        block = _build_cleared_block(cleared_repos, prev, still_stalled=len(new_state))
+        try:
+            with open(cleared_out, "w") as f:
+                f.write(block)
+        except OSError:
+            pass
+    if state_out:
+        _write_state(state_out, new_state)
+
+
+def reconcile(
+    owner: str,
+    manifest_path: Path,
+    dry_run: bool,
+    max_creates: int,
+    fail_on_stall: bool,
+    state_in: str = "",
+    state_out: str = "",
+    cleared_out: str = "",
+    stall_out: str = "",
+) -> int:
     repos = _manifest_repos(manifest_path)
     if repos is None:
         return 1
@@ -262,12 +379,16 @@ def reconcile(owner: str, manifest_path: Path, dry_run: bool, max_creates: int, 
     created: list[str] = []
     repo_versions: dict[str, str] = {}  # repo -> latest resolvable main version (for the Firestore write-through)
     dynamic_ok: list[str] = []  # tag-derived repos that are releasing normally
-    stalled: list[str] = []  # tag-derived repos with unreleased commits — the silent-stall alarm
+    stalled: dict[str, str] = {}  # tag-derived repo -> message — the silent-stall alarm (keyed for clear-diffing)
+    unresolved: set[str] = set()  # repos whose stall verdict couldn't be measured this run (API miss) — carried
+    # forward across runs (never counted as newly-cleared) rather than silently dropped.
     unreadable = 0  # pyproject genuinely unreachable (archived / UI / transient API miss)
+    considered = 0  # repos actually probed (excludes the PM self-skip below) — the self-audit denominator
     for repo in repos:
         # PM itself is Option-B + not a published Python package — its versioning is the manifest, not a tag.
         if repo == "unified-trading-pm":
             continue
+        considered += 1
         pyproject = _main_pyproject(owner, repo)
         if pyproject is None:
             unreadable += 1
@@ -281,16 +402,17 @@ def reconcile(owner: str, manifest_path: Path, dry_run: bool, max_creates: int, 
         if _is_dynamic_versioned(pyproject):
             highest = _highest_existing_tag(owner, repo)
             if highest is None:
-                stalled.append(f"{repo}: dynamic versioning but NO v* tag exists at all")
+                stalled[repo] = "dynamic versioning but NO v* tag exists at all"
                 continue
             tag = f"v{'.'.join(map(str, highest))}"
             ahead = _commits_ahead_of_tag(owner, repo, tag)
             age = _newest_tag_age_days(owner, repo, tag)
             if ahead is None or age is None:
                 print(f"  UNKNOWN {repo}: cannot compare main against {tag} (API miss) — not asserting healthy")
+                unresolved.add(repo)
                 continue
             if ahead > 0 and age > _STALL_DAYS:
-                stalled.append(f"{repo}: {ahead} unreleased commit(s) on main; newest tag {tag} is {age:.1f}d old")
+                stalled[repo] = f"{ahead} unreleased commit(s) on main; newest tag {tag} is {age:.1f}d old"
             else:
                 dynamic_ok.append(f"{repo}:{tag}")
             continue
@@ -337,19 +459,51 @@ def reconcile(owner: str, manifest_path: Path, dry_run: bool, max_creates: int, 
     if dynamic_ok:
         print("  tag-derived (nothing to reconcile — the tag IS the version): " + ", ".join(dynamic_ok))
 
+    # Self-audit (applying the source doc's silent-failure lesson post-repurpose,
+    # issues/reconcile_release_tags_dead_since_d13_git_tag_migration_2026_07_17.md § "Also fix the
+    # silent-failure class"). The ORIGINAL conflation that hid the 2026-06-27 outage — a dynamic
+    # repo's absent version FIELD reading as "no version" — is now handled explicitly by
+    # `_is_dynamic_versioned` (bucketed as `dynamic_ok`/`stalled`, never `unreadable`). What's left
+    # unresolved in `_main_pyproject` returning None is "repo genuinely has no pyproject.toml"
+    # (benign — UI/archived repos) vs "the gh API call itself failed" (a real error) — but neither
+    # alone produces a FALSE-HEALTHY read (both land in `unreadable`, distinct from `dynamic_ok`).
+    # The one shape that WOULD still be a silent broken-lookup, unchanged from the original doc's
+    # concern, is every single considered repo landing in `unreadable` at once — that is not a
+    # legitimate fleet state (some repos always have a readable pyproject), it is a broken
+    # `GH_TOKEN`/API, and must not report as a quiet "N unreadable" line.
+    if considered > 0 and unreadable == considered:
+        print(
+            f"FATAL: all {considered} considered repo(s) came back unreadable — this is a broken "
+            "GH_TOKEN/API lookup, not a legitimate fleet state (some repos always have a readable "
+            "main pyproject). Exiting non-zero so this does not silently report as a clean run.",
+            file=sys.stderr,
+        )
+        return 1
+
     # The alarm this script previously could not raise. A tag-derived repo accumulating
     # unreleased commits means its version minter is not running — exactly the 2026-06-27
     # orphaning. Surface it as a GitHub annotation so it is visible in the run WITHOUT
     # failing 48 scheduled runs/day; --fail-on-stall opts a caller into a hard failure.
     if stalled:
         print(f"\n::warning::Release tagging STALLED for {len(stalled)} repo(s) — versions are not advancing.")
-        for line in stalled:
-            print(f"  STALL {line}")
+        for repo, msg in sorted(stalled.items()):
+            print(f"  STALL {repo}: {msg}")
         print(
             "  → The tag minter is semver-agent (fires on a push to the repo's promotion branch).\n"
             "    Check it is enabled and targeting the branch this repo actually promotes to.\n"
             "    SSOT: codex/08-workflows/ci-cd-flow.md § 'Release tag reconciler'."
         )
+
+    # Route the STALL verdict to a channel someone actually reads (2026-08-02) — see the helpers
+    # above. Opt-in via the file paths (empty = skip, unchanged behaviour for any other caller).
+    if stall_out:
+        try:
+            with open(stall_out, "w") as f:
+                f.write(_build_stall_block(stalled))
+        except OSError:
+            pass
+    if state_in or state_out or cleared_out:
+        _emit_stall_clear_diff(stalled, unresolved, state_in, state_out, cleared_out)
 
     # Firestore write-through (self-healing backstop): persist latest version↔SHA per repo via the
     # CAS store so tag-readers query Firestore (free quota, zero GitHub REST) instead of the GitHub
@@ -378,13 +532,48 @@ def main() -> int:
         help="exit non-zero when a tag-derived repo has unreleased commits (default: warn only, so the "
         "*/30 schedule does not fail 48x/day; opt in from a lower-frequency health check)",
     )
+    _ = ap.add_argument(
+        "--state-in",
+        default="",
+        help="Path to the PREVIOUS run's stalled-repo-state JSON — the clear-diff baseline "
+        "(missing/old-schema -> none).",
+    )
+    _ = ap.add_argument(
+        "--state-out",
+        default="",
+        help="Write the CURRENT stalled-repo-state JSON here for the next run's clear-diff.",
+    )
+    _ = ap.add_argument(
+        "--cleared-out",
+        default="",
+        help="Write the named CLEARED Slack block here (line 1 = dedup key, rest = message); empty if none cleared.",
+    )
+    _ = ap.add_argument(
+        "--stall-out",
+        default="",
+        help="Write the STALL Slack block here (line 1 = dedup key, rest = message); empty if nothing stalled.",
+    )
     ns = ap.parse_args()
     owner = cast(str, ns.owner)
     manifest = cast(str, ns.manifest)
     dry_run = cast(bool, ns.dry_run)
     max_creates = cast(int, ns.max_creates)
     fail_on_stall = cast(bool, ns.fail_on_stall)
-    return reconcile(owner, Path(manifest), dry_run, max_creates, fail_on_stall)
+    state_in = cast(str, ns.state_in)
+    state_out = cast(str, ns.state_out)
+    cleared_out = cast(str, ns.cleared_out)
+    stall_out = cast(str, ns.stall_out)
+    return reconcile(
+        owner,
+        Path(manifest),
+        dry_run,
+        max_creates,
+        fail_on_stall,
+        state_in=state_in,
+        state_out=state_out,
+        cleared_out=cleared_out,
+        stall_out=stall_out,
+    )
 
 
 if __name__ == "__main__":

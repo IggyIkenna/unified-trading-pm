@@ -50,7 +50,7 @@ code_refs:
 
 > **STATUS** — Documents the `pipeline_mode` hive partition column added across every parquet on disk during the bundled
 > GCS migration on 2026-05-19. Migration owner:
-> [`plans/active/gcs_migration_bundle_pipeline_mode_2026_05_08.md`](../../plans/active/gcs_migration_bundle_pipeline_mode_2026_05_08.md).
+> [`plans/active/gcs_migration_bundle_pipeline_mode_2026_05_08.md`](../../plans/archive/2026_05/gcs_migration_bundle_pipeline_mode_2026_05_08.md).
 > If this doc disagrees with the active plan, the plan wins.
 >
 > **CANONICAL FORM (M1/C-TRANSPORT, operator-ratified 2026-06-07)**: `pipeline_mode = {mode}_{source}[_{transport}]`
@@ -309,7 +309,7 @@ output. See `live_pipeline` Phase 12 for the full reconciliation gate criteria.
 ## Migration history
 
 Bundled migration 2026-05-19 per
-[`gcs_migration_bundle_pipeline_mode_2026_05_08`](../../plans/active/gcs_migration_bundle_pipeline_mode_2026_05_08.md).
+[`gcs_migration_bundle_pipeline_mode_2026_05_08`](../../plans/archive/2026_05/gcs_migration_bundle_pipeline_mode_2026_05_08.md).
 Three migrations rode together:
 
 1. Add `pipeline_mode=` segment to every existing batch parquet, applying the source-priority entry's value (e.g.
@@ -366,7 +366,7 @@ execution:
 ## Cross-references
 
 - Plan:
-  [`gcs_migration_bundle_pipeline_mode_2026_05_08`](../../plans/active/gcs_migration_bundle_pipeline_mode_2026_05_08.md)
+  [`gcs_migration_bundle_pipeline_mode_2026_05_08`](../../plans/archive/2026_05/gcs_migration_bundle_pipeline_mode_2026_05_08.md)
 - Foundation: [`availability-manifest-and-data-status.md`](./availability-manifest-and-data-status.md) — manifest
   schema + 4-state taxonomy + reason taxonomy.
 - Sibling:

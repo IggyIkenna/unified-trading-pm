@@ -6,14 +6,14 @@ title:
   as currently proposed"
 summary: >-
   Found during the five-part delete-safety proof for
-  plans/active/defi_dex_pool_symbol_fix_backfill_purge_2026_07_25.md's lst_rates `_migrated_*` purge candidate (todo
-  defi_dex_pool_symbol_fix_backfill_purge-001). `features-service/features_service/onchain/app/core/data_loader.py::
-  OnChainDataLoader._probe_mtds_blobs` (line ~133) matches ANY blob under a day partition with `n.endswith(".parquet")
-  and data_type_segment in n` — no filter excluding `_`-prefixed system markers. This is the matching logic behind
-  `load_oracle_prices()` (line 475-511, explicitly probes `data_type="lst_rates"` at line 488-489), which is wired LIVE
-  into `OnChainFeatureOrchestrator.compute_lst_features_for_day`
-  (`features_service/onchain/engine/orchestrator.py:462,877`) via
-  `LstYieldsComputeRunner`/`LstNativeRatesComputeRunner`. Empirical sampling (25 markers/venue,
+  /plans/archive/2026_08/defi_dex_pool_symbol_fix_backfill_purge_2026_07_25.md's lst_rates `_migrated_*` purge candidate
+  (todo defi_dex_pool_symbol_fix_backfill_purge-001).
+  `features-service/features_service/onchain/app/core/data_loader.py:: OnChainDataLoader._probe_mtds_blobs` (line ~133)
+  matches ANY blob under a day partition with `n.endswith(".parquet") and data_type_segment in n` — no filter excluding
+  `_`-prefixed system markers. This is the matching logic behind `load_oracle_prices()` (line 475-511, explicitly probes
+  `data_type="lst_rates"` at line 488-489), which is wired LIVE into
+  `OnChainFeatureOrchestrator.compute_lst_features_for_day` (`features_service/onchain/engine/orchestrator.py:462,877`)
+  via `LstYieldsComputeRunner`/`LstNativeRatesComputeRunner`. Empirical sampling (25 markers/venue,
   COINBASE/MAKER/ETHENA/SWELL, spread 2020-2026) found 76-100% of `_migrated_*` lst_rates markers for these venues
   ALREADY have a content-identical per-instrument twin sitting beside them in the same directory (R3 migration wrote the
   twin 2026-07-22/23, then renamed the source to `_migrated_*` — copy, not move, 100% content match on
@@ -48,20 +48,21 @@ source:
   [
     "found 2026-07-25 by an investigation-only sub-agent running the codex
     /codex/02-data/gcs-and-manifest-delete-safety-protocol.md five-part proof against
-    defi_dex_pool_symbol_fix_backfill_purge_2026_07_25.md todo defi_dex_pool_symbol_fix_backfill_purge-001 (Part 4:
-    grep+READ proof no live code reads the candidate)",
+    /plans/archive/2026_08/defi_dex_pool_symbol_fix_backfill_purge_2026_07_25.md todo
+    defi_dex_pool_symbol_fix_backfill_purge-001 (Part 4: grep+READ proof no live code reads the candidate)",
   ]
 resolved_by:
   features-service@69753a7c88ba2d33b2def282632ce853d3739dee (todo 1);
   canonical-migration-defi-lst-rates-fold-20260726-003855 fold VM run 346/346, 0 FLAGGED (todo 2); execution continues
-  in defi_dex_pool_symbol_fix_backfill_purge_2026_07_25.md todo 1
+  in /plans/archive/2026_08/defi_dex_pool_symbol_fix_backfill_purge_2026_07_25.md todo 1
 locked_by:
 locked_since:
 ---
 
 > **🟢 RESOLVED 2026-07-25 -- both todos done: the unfiltered-glob fix shipped + tested, and the twin-coverage purge
-> verified via a real fold VM run. Remaining execution lives in defi_dex_pool_symbol_fix_backfill_purge_2026_07_25.md
-> (active, sequential, reversibility-verified). Archived per issue-doc-lifecycle.**
+> verified via a real fold VM run. Remaining execution lives in
+> /plans/archive/2026_08/defi_dex_pool_symbol_fix_backfill_purge_2026_07_25.md (active, sequential,
+> reversibility-verified). Archived per issue-doc-lifecycle.**
 
 # `_migrated_*` lst_rates markers are read live, unfiltered, by features-service — double-count risk + delete-blocker
 
@@ -104,11 +105,11 @@ right now, on every day the `_migrated_*` markers have not yet been cleaned up.
 
 ## What this means for the purge candidate
 
-`plans/active/defi_dex_pool_symbol_fix_backfill_purge_2026_07_25.md` todo `defi_dex_pool_symbol_fix_backfill_purge-001`
-proposes purging every lst_rates `_migrated_*` marker for COINBASE/SWELL/MAKER/ETHENA. Per the delete-safety protocol's
-Part 4 ("a reader that currently raises still counts as a reader" — a fortiori one that succeeds and silently mixes bad
-rows in counts too), this reader being live and unfiltered means the disposition cannot exceed `no-migrate-first`
-regardless of Part 1/2/5 outcomes, until one of:
+`/plans/archive/2026_08/defi_dex_pool_symbol_fix_backfill_purge_2026_07_25.md` todo
+`defi_dex_pool_symbol_fix_backfill_purge-001` proposes purging every lst_rates `_migrated_*` marker for
+COINBASE/SWELL/MAKER/ETHENA. Per the delete-safety protocol's Part 4 ("a reader that currently raises still counts as a
+reader" — a fortiori one that succeeds and silently mixes bad rows in counts too), this reader being live and unfiltered
+means the disposition cannot exceed `no-migrate-first` regardless of Part 1/2/5 outcomes, until one of:
 
 - `_probe_mtds_blobs` (and any sibling MTDS-output prober with the same pattern — check for copies) is fixed to exclude
   `_`-prefixed leaves, matching `rebuild_defi_manifest.py`'s existing convention for the same markers; or
@@ -162,14 +163,14 @@ per-venue twin-coverage sampling, content-match results, and the writer-side (Pa
       all 346 previously-FLAGGED markers (`=== SUMMARY === folded: 346`, `rc=0`). Independently re-verified (exhaustive,
       all 346, not sampled) via the same `verify_marker()` oracle this doc cites: 0 still-FLAGGED, 0 exceptions —
       COINBASE/MAKER/SWELL/ETHENA are each now at 100% twin coverage (was 87.55%/89.66%/99.58%/99.28% respectively; full
-      before/after table in `plans/active/defi_dex_pool_symbol_fix_backfill_purge_2026_07_25.md`'s Progress Log). 12 of
-      the newly-written leaves (3/venue) were read back directly and confirmed non-empty with the full wide schema
-      intact. **The re-verify half of this todo is therefore done** (see that Progress Log for the full evidence) — only
-      the **purge itself** remains, un-executed/un-checked. **2026-07-27 update — no longer `[OPERATOR]`-gated:
+      before/after table in `/plans/archive/2026_08/defi_dex_pool_symbol_fix_backfill_purge_2026_07_25.md`'s Progress
+      Log). 12 of the newly-written leaves (3/venue) were read back directly and confirmed non-empty with the full wide
+      schema intact. **The re-verify half of this todo is therefore done** (see that Progress Log for the full evidence)
+      — only the **purge itself** remains, un-executed/un-checked. **2026-07-27 update — no longer `[OPERATOR]`-gated:
       reversibility-verified** (finding T, `task_template.md`): object-level delete only, target
       `market-data-tick-defi-prd-central-element-323112` — `gcs_bucket_soft_delete_retention_seconds(...)` returned
       `604800` (7 days) fresh-checked 2026-07-27 per `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` §3a.
       Re-query fresh before running, not from this citation. See
-      `plans/active/defi_dex_pool_symbol_fix_backfill_purge_2026_07_25.md` todo 1 for the executable form of this same
-      purge. — already covered by defi_dex_pool_symbol_fix_backfill_purge_2026_07_25.md todo 1 (see that doc for
-      execution).
+      `/plans/archive/2026_08/defi_dex_pool_symbol_fix_backfill_purge_2026_07_25.md` todo 1 for the executable form of
+      this same purge. — already covered by /plans/archive/2026_08/defi_dex_pool_symbol_fix_backfill_purge_2026_07_25.md
+      todo 1 (see that doc for execution).

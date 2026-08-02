@@ -41,7 +41,7 @@ code_refs:
 # ml-service architecture
 
 > **✅ STATUS: STABLE** — consolidation complete 2026-05-20 (Phases 1-9 of
-> [`ml_repo_consolidation_2026_05_19`](../../plans/active/ml_repo_consolidation_2026_05_19.md)). `ml-service` is the
+> [`ml_repo_consolidation_2026_05_19`](../../plans/archive/2026_05/ml_repo_consolidation_2026_05_19.md)). `ml-service` is the
 > canonical repo; both source repos (`ml-training-service`, `ml-inference-service`) are archived.
 
 ## TL;DR
@@ -164,7 +164,7 @@ migration used.
 
 ## Migration history
 
-- 2026-05-19: plan filed ([`ml_repo_consolidation_2026_05_19`](../../plans/active/ml_repo_consolidation_2026_05_19.md))
+- 2026-05-19: plan filed ([`ml_repo_consolidation_2026_05_19`](../../plans/archive/2026_05/ml_repo_consolidation_2026_05_19.md))
   — 10-phase shape per features-service precedent.
 - 2026-05-20: Phases 1-9 complete — ml-service repo live; source repos archived pending `gh repo archive` operator
   action (Phase 7 step 3). All downstream registries updated: deployment-service catalog, shard_builder, dependencies,

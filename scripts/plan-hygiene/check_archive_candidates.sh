@@ -40,6 +40,20 @@
 # 0 open todos of its own but a still-active finalize companion isn't forgotten, it's mid-chain;
 # flagging it is the same false-positive shape as an un-actionable locked_by doc.
 #
+# `archive_exempt: true` (frontmatter, found 2026-08-02, plan_health escalation agt-80ebc8)
+# excludes a doc whose 0-open-todos state is INTENTIONAL and durable, not a forgotten completion —
+# two real shapes surfaced during that triage: (a) a standing coordination/reference hub doc that
+# deliberately carries 0 native todos by design (e.g. a `gate_on_depends: false` parent hub, or a
+# `data-pipeline-check-*` milestones gate meant to stay a live reference surface forever), and (b) a
+# doc explicitly routed for archival THROUGH another plan's own dispatched reconciliation todo
+# (e.g. a `[REVIEW]` todo on a finalize plan that re-verifies + archives it as part of a larger
+# sequenced pass) rather than standalone right now. Both are judgment calls a human/agent already
+# made and documented (cite the reasoning in the doc's own Progress Log) — re-litigating them at
+# every hygiene-sweep run is wasted motion, and archiving them anyway would be a bare force-resolve.
+# This is NOT a way to silence a doc that's simply inconvenient to archive today; every use requires
+# a Progress Log entry naming why. Same shape as `locked_by`/`gate_on_depends` above — a real
+# escape hatch for a real false-positive class, not a floor-lowering shortcut.
+#
 # Usage: bash scripts/plan-hygiene/check_archive_candidates.sh [--quiet] [--update-baseline]
 # Exit 0 = candidate count <= baseline. Exit 1 = count exceeds baseline (a NEW candidate appeared).
 # --update-baseline: after archiving flagged docs, persist the new (lower) count. Refuses to raise
@@ -90,6 +104,8 @@ for f in "$PM_DIR/plans/active"/*.md "$PM_DIR/plans/active/issues"/*.md; do
 
   locked_by="$(grep -E '^locked_by:' "$f" 2>/dev/null | head -1 | sed -E 's/^locked_by:[[:space:]]*//')"
   [ -n "$locked_by" ] && continue
+
+  grep -qE '^archive_exempt:[[:space:]]*true' "$f" 2>/dev/null && continue
 
   slug="${name%.md}"
   case "$GATED_SLUGS" in

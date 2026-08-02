@@ -35,7 +35,7 @@ resolved_by:
   instruments-service@e9eac282). Retirement of the 13 legacy one-offs closed 2026-07-30: verified all 13 still exist,
   each carries a proper Lifecycle:oneoff + Delete-when: marker (script-homes.md convention), none is imported by other
   code (only docstring cross-references), and per this todo's own stated alternative ('leave as historical record — they
-  don't need deletion if inert') no deletion was executed. codex/06-coding-standards/script-homes.md updated with a
+  don't need deletion if inert') no deletion was executed. /codex/06-coding-standards/script-homes.md updated with a
   worked-example note pointing future incidents at the new CLI subcommand instead of a fresh one-off."
 locked_by:
 execution_scope: orchestrator-agent
@@ -153,7 +153,7 @@ service CLI subcommand"), as a permanent instruments-service CLI subcommand — 
       reduced", "GCS orphan-sweep = 0") that was out of this pass's bounded scope to re-verify live for all 13 — the
       todo's own stated alternative explicitly permits this ("they don't need deletion if inert, just no new ones going
       forward"), which the shipped CLI (items 1-3 above) already satisfies. Added a worked-example note to
-      `codex/06-coding-standards/script-homes.md` § "Repo `scripts/` sub-rules" pointing future incidents at
+      `/codex/06-coding-standards/script-homes.md` § "Repo `scripts/` sub-rules" pointing future incidents at
       `instruments-service --operation reprocess-shards` instead of a fresh hand-written one-off.
 
 > **🟢 ARCHIVED 2026-07-30** — status=resolved, all 4 todos done/covered, 0 open todos, moved to
@@ -231,6 +231,6 @@ service CLI subcommand"), as a permanent instruments-service CLI subcommand — 
 
 - **2026-07-30 (plans-corpus reduction marathon, wave 3)** — Closed the final `[SCRIPT] P3` retirement todo (see above)
   by taking the doc's own "leave as historical record" branch — verified all 13 one-offs, no deletions. Added the
-  worked-example note to `codex/06-coding-standards/script-homes.md`. All 4 todos now done/covered — archiving this
+  worked-example note to `/codex/06-coding-standards/script-homes.md`. All 4 todos now done/covered — archiving this
   session per the 6-step ritual (`/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`): referrer paths
   corpus-wide grep + fix pending in the same commit that moves this file.

@@ -24,7 +24,7 @@ tags: [ao-dispatch, assigned-vm, plan-hygiene, validity-audit, reclassification,
 related:
   [
     /plans/archive/issues/blank_assigned_vm_dispatch_classification_gap_2026_07_26.md,
-    /plans/active/issues/ag_closeout_audit_scope_widening_triage_2026_07_26.md,
+    /plans/archive/issues/ag_closeout_audit_scope_widening_triage_2026_07_26.md,
     /plans/active/issues/autonomous_session_operator_decisions_2026_07_25.md,
     /plans/active/ag_closeout_audit_rollout_2026_07_25.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,

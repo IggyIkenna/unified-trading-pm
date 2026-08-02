@@ -115,7 +115,7 @@ This twin holds that verification plus the archival ritual.
       `git stash`-ing both my touched files and re-reproducing an identical failure list on the pristine tree, so all 17
       are pre-existing and unrelated to this change; documented + 5 newly-surfaced clusters added as tracked todos in
       the already-open
-      [`/plans/active/issues/deployment_ui_l2_smoke_gate_red_2026_07_17.md`](/plans/active/issues/deployment_ui_l2_smoke_gate_red_2026_07_17.md)
+      [`/plans/archive/issues/deployment_ui_l2_smoke_gate_red_2026_07_17.md`](/plans/archive/issues/deployment_ui_l2_smoke_gate_red_2026_07_17.md)
       rather than duplicating a new issue doc. Also discovered `deployment-api/routes/log_stream.py`'s
       `_vm_sse_generator`/`_live_cluster_sse_generator` have zero direct test coverage of the honest-empty-stream
       behavior (verified true by code trace + my live curl, but not by an executable backend test) — out of scope for

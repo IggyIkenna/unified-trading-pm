@@ -59,14 +59,14 @@ related:
     /plans/archive/2026_07/defi_consolidated_closeout_history_2026_07_18.md,
     /plans/archive/2026_07/defi_gmx_venue_removal_2026_07_25.md,
     /plans/archive/2026_07/defi_gmx_venue_removal_finalize_2026_07_25.md,
-    /plans/active/defi_dex_pool_symbol_fix_backfill_purge_2026_07_25.md,
-    /plans/active/defi_dex_pool_symbol_fix_backfill_purge_finalize_2026_07_25.md,
+    /plans/archive/2026_08/defi_dex_pool_symbol_fix_backfill_purge_2026_07_25.md,
+    /plans/archive/2026_08/defi_dex_pool_symbol_fix_backfill_purge_finalize_2026_07_25.md,
     /plans/active/defi_consolidated_native_ao_extract_2026_07_25.md,
     /plans/active/defi_consolidated_native_ao_extract_2026_07_25_finalize.md,
     /plans/active/cefi_consolidated_closeout_2026_07_18.md,
     /plans/active/tradfi_consolidated_closeout_2026_07_18.md,
     /plans/active/data_completion_defi_2026_07_15.md,
-    /plans/active/defi_dedicated_bucket_shared_migration_2026_07_13.md,
+    /plans/archive/2026_07/defi_dedicated_bucket_shared_migration_2026_07_13.md,
     /plans/archive/2026_07/defi_onchain_derivable_values_and_date_drift_2026_06_20.md,
     /plans/active/defi_pipeline_e2e_and_coverage_validation_2026_06_20.md,
     /plans/archive/2026_07/mtds_defi_dex_zero_capture_protocols_2026_07_14.md,
@@ -348,7 +348,17 @@ Discriminator = **does a manifest row exist**.
   (writer grain), UPPER stays only in the id SEGMENT"~~.** Three separate legs: manifest **COLUMN → UPPERCASE**
   (catalogue wins, ruling D1) · GCS **path segment → lowercase** (unchanged) · **id middle segment → UPPER**
   (unchanged). Do not bundle path and column into one case. SSOT: `/codex/02-data/cross-asset-canonical-target-ssot.md`
-  §7.
+  §7. **⛔ FURTHER REFINED 2026-08-02 fold-in, operator directive 2026-07-24
+  (`/plans/archive/2026_08/cross_ag_instrument_type_casing_100pct_directive_2026_07_24.md`) — the
+  blanket-manifest-COLUMN-UPPERCASE framing above does NOT apply to DeFi.** DeFi's corpus was separately flagged as
+  genuinely mixed (not close-to-one-direction), so its manifest-COLUMN casing is decided PER `instrument_type` value on
+  a least-migration-cost basis (whichever casing is already dominant for that value wins; the minority migrates to
+  match) — DeFi is the sole asset_group with this per-value freedom, the other four (tradfi/cefi/prediction/sports)
+  target uniform UPPERCASE. **RESOLVED as a no-op 2026-07-24**:
+  `defi_track01_per_instrument_and_canon_id_2026_07_24.md`'s "Manifest instrument_type case + venue-spelling unify" todo
+  ran the required per-value census live and found every one of the 11 live `instrument_type` values already 100% one
+  casing — lowercase, zero uppercase rows anywhere — so no migration was needed; that casing IS the ratified target now.
+  The GCS path segment (lowercase) and id middle segment (UPPER) legs remain unchanged by any of this.
 - **Culled-venue purge = dead-only, snapshot-first, keep LIGHTER + EXTENDED** (see Track 7).
 - **Combos = leg-aware signed-weight spec** (cross-AG) — see Track 1 + the cefi/tradfi hand-offs.
 - **Restore the removed data-status enumeration** (raw distinct-values audit view) — Track 6.
@@ -556,19 +566,19 @@ file, not here.
       Solana-symbol-collision item above), so this specific pre-resume condition is now satisfied; the cron still waits
       on the Track-1/2 + migration-VM gates above like the rest. (repos: deployment-service, market-tick-data-service)
 - [ ] [INFRA] P1. **Resume the `dex_pool_state` collect + forward-poll schedulers ONLY AFTER
-      `defi_dex_pool_symbol_fix_backfill_purge_2026_07_25.md` lands** (operator ruling 2026-07-25, task_template.md
-      finding P) — these serve TRADER_JOE_V2/VELODROME_V2/CURVE, the exact venues that plan's
-      subgraph-query-missing-`inputTokens{symbol}` fix targets; resuming before it ships would resume writing the same
-      symbol-less rows that plan exists to stop. Same Track-1/2 + migration-VM gates as the item above ALSO apply here —
-      this is an additional gate, not a replacement. A 2026-07-23 GCS sample (every 3 days, both venues) had found ZERO
-      `dex_pool_state` objects for ORCA/RAYDIUM, confirming the (separate, already-fixed) Solana symbol-collision bug
-      hadn't yet corrupted data before ITS fix landed. (repos: deployment-service, market-tick-data-service) **UPDATE
-      2026-08-02 (finalize task, slot-13 review craft): THIS specific sub-gate is now satisfied —
-      `defi_dex_pool_symbol_fix_backfill_purge_2026_07_25.md`'s all 5 todos shipped/verified (query fix
-      `market-tick-data-service@63199601`, live-verified against all 4 real subgraphs; backfill + purge independently
-      verified — see the passage below for full evidence). The Track-1/2 + migration-VM gates named above are a
-      SEPARATE, unverified condition this task did not check — not claiming the cron is actually resumable, only that
-      the symbol-fix prerequisite specifically is done.
+      `/plans/archive/2026_08/defi_dex_pool_symbol_fix_backfill_purge_2026_07_25.md` lands** (operator ruling
+      2026-07-25, task_template.md finding P) — these serve TRADER_JOE_V2/VELODROME_V2/CURVE, the exact venues that
+      plan's subgraph-query-missing-`inputTokens{symbol}` fix targets; resuming before it ships would resume writing the
+      same symbol-less rows that plan exists to stop. Same Track-1/2 + migration-VM gates as the item above ALSO apply
+      here — this is an additional gate, not a replacement. A 2026-07-23 GCS sample (every 3 days, both venues) had
+      found ZERO `dex_pool_state` objects for ORCA/RAYDIUM, confirming the (separate, already-fixed) Solana
+      symbol-collision bug hadn't yet corrupted data before ITS fix landed. (repos: deployment-service,
+      market-tick-data-service) **UPDATE 2026-08-02 (finalize task, slot-13 review craft): THIS specific sub-gate is now
+      satisfied — `/plans/archive/2026_08/defi_dex_pool_symbol_fix_backfill_purge_2026_07_25.md`'s all 5 todos
+      shipped/verified (query fix `market-tick-data-service@63199601`, live-verified against all 4 real subgraphs;
+      backfill + purge independently verified — see the passage below for full evidence). The Track-1/2 + migration-VM
+      gates named above are a SEPARATE, unverified condition this task did not check — not claiming the cron is actually
+      resumable, only that the symbol-fix prerequisite specifically is done.
 
 ## Open follow-ups (carried forward from the pre-2026-07-24 Progress Log's "Deferred work after 2026-07-22/23" tables)
 
@@ -584,6 +594,13 @@ file, not here.
 > [`defi_consolidated_closeout_history_2026_07_25.md`](/plans/archive/defi_consolidated_closeout_history_2026_07_25.md).
 > The FLAGGED-marker remediation decision record and the Solana AMM symbol-collision fix stayed here (also done) because
 > open todos below point at them directly.
+
+> **Linkage note (2026-08-02, ag-closeout-audit defi Phase 0 Orthogonality HARD CHECK)**:
+> [`defi_collateral_sizing_and_wizard_full_parameterization_2026_06_17.md`](/plans/active/defi_collateral_sizing_and_wizard_full_parameterization_2026_06_17.md)
+> was retagged `asset_group: [cross-cutting]` → `[defi]` (a pattern-3 fork-inherits-parent-tag mistag — content is 100%
+> defi-specific staked-basis/LST collateral sizing + wizard parameterization work, previously invisible to this
+> tranche's membership test). Citing it here so it registers as covered-by-itself in the linkage check rather than a
+> newly-orphaned doc within this tranche.
 
 - [ ] [SCRIPT] P3. **Root-cause `quickmerge.sh` silently resetting an unpushed commit** (observed 2026-07-22, 2
       hypotheses ruled out, cause not confirmed, non-reproducible on retry). Needs a `bash -x`/`set -x` trace the next
@@ -670,32 +687,33 @@ file, not here.
       `inputTokens { symbol }` (verified byte-for-byte against the working sibling query), starving symbol resolution
       for these venues even in CURRENT/live captures (see
       `issues/defi_dex_pools_subgraph_query_missing_input_tokens_2026_07_25.md`). **Operator decided: delete the bad
-      data, fix the query, re-backfill** — `defi_dex_pool_symbol_fix_backfill_purge_2026_07_25.md` (5 todos, sequential:
-      fix → live-test recoverability → backfill → purge superseded data). - **lst_rates** (COINBASE/MAKER/SWELL/ETHENA)
-      — root-caused: legitimate single-row/day snapshots, re-derivable on demand from the current canonical RPC-based
+      data, fix the query, re-backfill** —
+      `/plans/archive/2026_08/defi_dex_pool_symbol_fix_backfill_purge_2026_07_25.md` (5 todos, sequential: fix →
+      live-test recoverability → backfill → purge superseded data). - **lst_rates** (COINBASE/MAKER/SWELL/ETHENA) —
+      root-caused: legitimate single-row/day snapshots, re-derivable on demand from the current canonical RPC-based
       `lst_rates_handler.py` (queries a historical block number directly, so nothing is actually lost by deleting the
       old copy); MAKER/ETHENA additionally obsolete (sDAI/sUSDe already reclassified out of `lst_rates` by a 2026-07-23
       fix). **Operator decided: purge as orphaned artifacts** — folded into
-      `defi_dex_pool_symbol_fix_backfill_purge_2026_07_25.md`'s first todo. Evidence: `unified-trading-pm@83c31fc87`
-      (refined root-cause), `@184387872` (GMX removal plan), `@781b98eea` (fix+backfill+purge plan). The underlying
-      dry-run (banner above) continues independently — once it completes, re-run it to confirm these clusters clear per
-      the two plans' own done-when criteria, before any `--apply`.
+      `/plans/archive/2026_08/defi_dex_pool_symbol_fix_backfill_purge_2026_07_25.md`'s first todo. Evidence:
+      `unified-trading-pm@83c31fc87` (refined root-cause), `@184387872` (GMX removal plan), `@781b98eea`
+      (fix+backfill+purge plan). The underlying dry-run (banner above) continues independently — once it completes,
+      re-run it to confirm these clusters clear per the two plans' own done-when criteria, before any `--apply`.
 
-      **UPDATE 2026-08-02 (finalize task `defi_dex_pool_symbol_fix_backfill_purge_finalize_2026_07_25.md`, slot-13
-          review craft): all 5 todos of `defi_dex_pool_symbol_fix_backfill_purge_2026_07_25.md` SHIPPED and independently
-          re-verified — no longer forward-looking.** Query fix: `market-tick-data-service@63199601` (verified an ancestor
-          of `origin/live-defi-rollout`; live-tested against all 4 real subgraphs, all returned populated
-          `inputTokens`/`fees`). Live-test recoverability: `market-tick-data-service@0f40a69f` (curve/OPTIMISM confirmed
-          DEINDEXED; curve/ETHEREUM+AVALANCHE, sushiswap/ARBITRUM, trader_joe_v2/AVALANCHE, velodrome_v2/OPTIMISM all
-          RECOVERABLE). Backfill: `mtds-dex-pools-symbolfix-batch1c`/`batch2` completed cleanly across the full
-          confirmed-recoverable range, manifest spot-checked (symbol-named leaves, creation-timestamp-verified against
-          each VM's run window). Purge (both categories — lst_rates `_migrated_*` markers AND the old dex_pool_state
-          address-keyed leaves): independently re-verified complete, zero SAFE markers remain (only the irreducible
-          FLAGGED floor — `FLAGGED_ROWCOUNT_SHORTFALL: 1287` + `FLAGGED_NO_SIBLINGS_NO_BACKUP: 977`, ZERO SAFE, an exact
-          match to the corpus's known FLAGGED ceiling). Full evidence trail (VM names, spot-checks, preemption-recovery
-          log) lives in that plan's own Progress Log — not duplicated here. Sibling issue doc
-          `issues/defi_dex_pools_subgraph_query_missing_input_tokens_2026_07_25.md` flipped `status: open` → `status:
-          resolved` accordingly in this same commit.
+      **UPDATE 2026-08-02 (finalize task `/plans/archive/2026_08/defi_dex_pool_symbol_fix_backfill_purge_finalize_2026_07_25.md`, slot-13
+                                              review craft): all 5 todos of `/plans/archive/2026_08/defi_dex_pool_symbol_fix_backfill_purge_2026_07_25.md` SHIPPED and independently
+                                              re-verified — no longer forward-looking.** Query fix: `market-tick-data-service@63199601` (verified an ancestor
+                                              of `origin/live-defi-rollout`; live-tested against all 4 real subgraphs, all returned populated
+                                              `inputTokens`/`fees`). Live-test recoverability: `market-tick-data-service@0f40a69f` (curve/OPTIMISM confirmed
+                                              DEINDEXED; curve/ETHEREUM+AVALANCHE, sushiswap/ARBITRUM, trader_joe_v2/AVALANCHE, velodrome_v2/OPTIMISM all
+                                              RECOVERABLE). Backfill: `mtds-dex-pools-symbolfix-batch1c`/`batch2` completed cleanly across the full
+                                              confirmed-recoverable range, manifest spot-checked (symbol-named leaves, creation-timestamp-verified against
+                                              each VM's run window). Purge (both categories — lst_rates `_migrated_*` markers AND the old dex_pool_state
+                                              address-keyed leaves): independently re-verified complete, zero SAFE markers remain (only the irreducible
+                                              FLAGGED floor — `FLAGGED_ROWCOUNT_SHORTFALL: 1287` + `FLAGGED_NO_SIBLINGS_NO_BACKUP: 977`, ZERO SAFE, an exact
+                                              match to the corpus's known FLAGGED ceiling). Full evidence trail (VM names, spot-checks, preemption-recovery
+                                              log) lives in that plan's own Progress Log — not duplicated here. Sibling issue doc
+                                              `issues/defi_dex_pools_subgraph_query_missing_input_tokens_2026_07_25.md` flipped `status: open` → `status:
+                                              resolved` accordingly in this same commit.
 
 - [x] ✅ [DATA] P2. **19 glued-id rows (was 21) — ALL CONFIRMED PHANTOM 2026-08-01, folds into the `:401` P0 purge, NOT
       fixable by retry/rebuild.** Writer fix SHIPPED (`market-tick-data-service@f2e3ad41`/`70b9a81a`). The 9 ORCA/SOLANA
@@ -749,8 +767,8 @@ file, not here.
       code half) + the currently-running per-instrument migration VM finishing first (resuming now would race live
       writes against the exact data types it's mid-migrating). **Duplicate of the Track 8 resume-crons item above** —
       same split, same gates; the `dex_pool_state` (TRADER_JOE_V2/VELODROME_V2/CURVE) half stays gated on
-      `defi_dex_pool_symbol_fix_backfill_purge_2026_07_25.md` too (operator ruling 2026-07-25, task_template.md finding
-      P).
+      `/plans/archive/2026_08/defi_dex_pool_symbol_fix_backfill_purge_2026_07_25.md` too (operator ruling 2026-07-25,
+      task_template.md finding P).
 - [ ] [DATA] P1. **DeFi MVP backfill to 100%** — C-GREEN gated on Track 1 (LENDING migration + canon walk, above) +
       Track 2 (path-shape-pin) + Track 3 (`catalogue_pool_ids_for_shard` generalization, execution work not a decision).
       Backlog task `mvp_backfill_defi_onchain_v10-001` stays parked (`priority: 999`) until
@@ -877,9 +895,9 @@ live 2026-07-26 by `/plan-reconcile defi`: the real figure is **2** — `…aggr
   `issues/defi_instrument_availability_duplicate_instrument_key_rows_2026_07_26.md`,
   `archive/issues/defi_maker_vault_share_price_29day_gap_2026_07_26.md` (RESOLVED, archived 2026-07-28),
   `archive/issues/defi_plasma_chain_onboarding_gap_2026_07_26.md` (RESOLVED, archived 2026-08-01),
-  `issues/defi_orphan_sweep_test_artifact_prod_leak_2026_07_24.md` (defi/cefi dual-tagged),
-  `issues/mdps_t1_recon_job_oom_failing_7_days_2026_07_26.md` (multi-AG tagged, defi among them). None were tracked in
-  any Track above; all are now `assigned_vm: planning` and live in the AO backlog.
+  `archive/issues/defi_orphan_sweep_test_artifact_prod_leak_2026_07_24.md` (RESOLVED, archived 2026-08-02, defi/cefi
+  dual-tagged), `issues/mdps_t1_recon_job_oom_failing_7_days_2026_07_26.md` (multi-AG tagged, defi among them). None
+  were tracked in any Track above; all are now `assigned_vm: planning` and live in the AO backlog.
 
 - **2026-07-30 (cicd worker, slot 16)**: this doc's `last_updated:` frontmatter field had been silently corrupted into a
   multi-date runaway YAML plain-scalar (root cause: `fix_frontmatter.py`'s `last_updated` auto-fill never stripped stale

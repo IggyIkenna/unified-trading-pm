@@ -58,7 +58,7 @@ applies uniformly. Reference: Sweep 3 of
 ---
 
 > **STATUS** — Workspace pattern doc codified during the live-pipeline activation 2026-05-08. Work plan in
-> [`plans/active/live_pipeline_mtds_mdps_features_2026_05_08.md`](../../plans/active/live_pipeline_mtds_mdps_features_2026_05_08.md)
+> [`plans/active/live_pipeline_mtds_mdps_features_2026_05_08.md`](../../plans/archive/2026_05/live_pipeline_mtds_mdps_features_2026_05_08.md)
 > Phase 10. Coordinated with [`instruments_master`](../../plans/epics/instruments_master.md). If this doc disagrees with
 > the active plans, the plans win.
 
@@ -144,7 +144,7 @@ reloader.stop()
 ## Per-service callback semantics
 
 The summary table below lists the high-level callback responsibilities. Per Phase 10 of
-[`live_pipeline_mtds_mdps_features_2026_05_08.md`](../../plans/active/live_pipeline_mtds_mdps_features_2026_05_08.md)
+[`live_pipeline_mtds_mdps_features_2026_05_08.md`](../../plans/archive/2026_05/live_pipeline_mtds_mdps_features_2026_05_08.md)
 which shipped 2026-05-11 with `InstrumentLifecycleCacheDeltaReloader` (UTL@`54d658e8`), the per-service implementation
 details + Protocol surface are documented in the expanded tables further down this section.
 
@@ -252,7 +252,7 @@ Banner each plan with the other to keep the work coordinated.
 ## Cross-references
 
 - Plan:
-  [`live_pipeline_mtds_mdps_features_2026_05_08`](../../plans/active/live_pipeline_mtds_mdps_features_2026_05_08.md)
+  [`live_pipeline_mtds_mdps_features_2026_05_08`](../../plans/archive/2026_05/live_pipeline_mtds_mdps_features_2026_05_08.md)
   Phase 10.
 - Plan: [`instruments_master`](../../plans/epics/instruments_master.md) — publish-side owner.
 - Pattern reference: `unified-trading-library/unified_trading_library/api_key_reloader.py` — same shape for API keys.

@@ -40,6 +40,7 @@ estimate_baseline_ai_days: 1.0
 estimate_calibrated_ai_days: 1.2
 assigned_role: data_engineering
 drift_direction: advance-code
+archive_exempt: true # archival routed through plans/active/issues/instruments_satellite_batch1_finalize_false_completion_claim_2026_08_02.md's reconciliation, not standalone (see Progress Log)
 locked_by:
 locked_since:
 supersedes:

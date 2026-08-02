@@ -170,7 +170,7 @@ Mixed, not uniform:
   prod delete 2026-07-21, legacy prefixes verified at 0 objects.
 - `plans/archive/issues/defi_lst_rates_migrated_marker_unfiltered_live_reader_2026_07_25.md:56-58` — a real fold-VM run
   (346/346, 0 flagged) but explicitly defers final purge to a still-active plan
-  (`defi_dex_pool_symbol_fix_backfill_purge_2026_07_25.md`).
+  (`/plans/archive/2026_08/defi_dex_pool_symbol_fix_backfill_purge_2026_07_25.md`).
 - This doc's case — scripted, code shipped, but the delete/completeness-gate todos left unchecked and the dedicated
   cleanup tool stuck in dry-run for 4+ days.
 

@@ -152,11 +152,22 @@ materially larger, separate operation, not something to do inside this 1-hour-sc
       football-only 17,767/734 manifest-index cut measured here. **Done-when**: the subset question is answered yes/no
       with the measured counts recorded in this doc. Until it is answered, §U's original approval must NOT be treated as
       covering any part of the current residual. Read-only — no `--apply`, no deletes. (repo: `instruments-service`)
-- [ ] [REVIEW] P3. **Corpus hygiene — update the closeout's G1 sub-item.** After the two todos above land, update
+- [ ] [REVIEW] P3. **⏸ PARKED (2026-08-02, main's BLOCKED-answer, Option A) — behind items 1+2 above; do NOT flip until
+      BOTH land.** Corpus hygiene — update the closeout's G1 sub-item. After the two todos above land, update
       `/plans/active/sports_closeout_track_s2_foldin_2026_07_25.md`'s G1 sub-item with the corrected figures and a
       citation to this doc. The plan's own text ("§U... already-approved... the scale differs by ~10x, so this must not
       be assumed") anticipated exactly this outcome. Ordering: do this LAST — it records the other two's results. (repo:
       `unified-trading-pm`)
+- [ ] [OPERATOR] P2. **Apply the RULES.md §4 mechanical park to the item-3 backlog task** (`priority: 999` +
+      `priority_override: true` + a false `prereqs.prerequisites: [sports-g1-rebaseline-decided]` condition on the
+      derived backlog task for the todo immediately above) so the dispatcher stops offering it before items 1+2 land.
+      **A slot worker cannot do this itself**: `agent-orchestrator/data/config/backlog.yaml` only exists in the ROOT
+      `agent-orchestrator` clone (confirmed absent from every `.tabs/<N>/agent-orchestrator/` slot clone), and
+      slot-scope rules (RULES.md § 1) forbid editing outside the assigned slot — same standing gap already documented
+      for the `sports_stats_delayed_live_capture_still_dead_post_fix_2026_07_29.md` park. Un-park by flipping
+      `sports-g1-rebaseline-decided` true (`POST /api/prerequisites/sports-g1-rebaseline-decided {"value": true}`) once
+      items 1+2 are both done; clearing the condition clears `priority_override` on the next regen tick too (no separate
+      priority reset needed, per `server/auto_park.py`'s unpark contract).
 
 ## Census script (read-only, no writes)
 
@@ -164,3 +175,15 @@ Ran from `instruments-service/` venv, `GCP_PROJECT_ID=central-element-323112`, s
 `gs://instruments-store-sports-prd-central-element-323112/_index/availability_index.parquet` via `gcsfs`, canonical sets
 loaded via `unified_api_contracts.sports.get_expected_leagues_for_source("api_football")`. No `--apply` of any delete
 script was run; no snapshots, no writes, no GCS deletes.
+
+## Progress Log
+
+- **2026-08-02 (slot 11, worker)**: Relayed main's answer to the item-3 BLOCKED question (Option A — park item-3 behind
+  items 1+2, reject sequential:true (B) and reject flip-now (C)). Marked item-3 `⏸ PARKED` in text (matches this doc's
+  own header note: no per-todo prereq syntax exists, ordering is prose-enforced) and added an `[OPERATOR]` todo to apply
+  the actual mechanical park (`priority_override`/`prereqs.prerequisites` on the derived backlog task) — verified
+  `agent-orchestrator/data/config/backlog.yaml` exists only in the root clone
+  (`/home/ubuntu/unified-trading-system-repos/agent-orchestrator/data/config/backlog.yaml`), not in this or any slot
+  clone, so a dispatched worker genuinely cannot perform that edit itself (root-clone reads are READ-ONLY per RULES.md §
+  1); did not fabricate a `POST /api/prerequisites/...` call ahead of the actual attachment since an unattached
+  condition would be inert. Did NOT flip item-3's checkbox.

@@ -359,7 +359,7 @@ stale-lock-clear path) — a function documented as memory-bounded ONLY for a 16
 when run from a bare CLI process. RSS grew to 44.4GB on this 61GB shared host before I killed it (safe — host recovered
 fully, no data lost, the 18 rows were already durably in GCS). Filed as its own P1 infra issue (this is a real
 host-safety bug, not Plasma-specific — could hit any defi capture, any time the consolidator lock goes stale):
-`/plans/active/issues/manifest_consolidator_inline_unbounded_memory_cli_2026_07_31.md`.
+`/plans/archive/issues/manifest_consolidator_inline_unbounded_memory_cli_2026_07_31.md`.
 
 **Net for this todo**: confirmed (via a targeted, filtered manifest read, not a bucket walk) that
 `venue=AAVE_V3, chain=PLASMA` has **0 rows** in the manifest — the registration genuinely did not complete, so

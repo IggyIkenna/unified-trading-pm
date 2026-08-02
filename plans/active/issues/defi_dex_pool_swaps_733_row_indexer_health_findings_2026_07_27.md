@@ -514,8 +514,94 @@ follow-up).
 Source: `DP_RUN_MOSTLY_EMPTY` (DP-FETCH-009) CRITICAL page ("STATIC BACKLOG" framing), `data_pipeline_failure`
 escalation `agt-35d769`, slot 8, 2026-08-01.
 
+## Verified live (2026-08-02, slot 8, data_engineering) — UNISWAP_V3/OPTIMISM crosses the multi-day bar; PANCAKESWAP_V3/BSC's earlier "self-heal" reveals a DIFFERENT, still-open condition
+
+Re-probed both subgraph IDs directly against the gateway
+(`https://gateway-arbitrum.network.thegraph.com/api/{key}/subgraphs/id/{id}`, `thegraph-api-key` GSM secret, same
+credential path `scripts/subgraph_health_probe.py` uses — the sanctioned daily/6h Cloud Run probe for exactly this
+purpose), 3 tries each, plus the sanctioned probe's own `--dry-run --no-write-fingerprints` mode for a second
+independent signal:
+
+**UNISWAP_V3/OPTIMISM — VERDICT: permanent/structural, not transient.** 3/3 identical:
+`bad indexers: {0xeccdf8231326a9c5aad32df76a633aaa4c49b104: Unavailable(too far behind), 0xf92f430dd8567b0d466358c79594ab58d919a6d4: BadResponse(no attestation: indexing_error), 0xfeff9093f6b32d0e5cddba743b06a1fedb87c004: Unavailable(no status: indexer not available)}`
+— **byte-identical to every probe this doc has recorded since 2026-07-27** (now 6+ consecutive days, 6 independent probe
+sessions across 2 slots/escalation workers, same 3 indexer addresses every time). This crosses the todo's own "multi-day
+window" bar: a condition reproducing identically for 6 days, unmoved by whatever transient recovery healed
+PANCAKESWAP_V3/BSC's original bad-indexers symptom same-day on 2026-07-27, is a structural indexer-fleet/allocation
+problem, not a blip. Manifest confirms: `UNISWAP_V3/OPTIMISM` `dex_pool_swaps` `attempted_failed` = 495 rows (up from
+477 on 2026-08-01, still actively growing, freshest row `2026-08-02T17:06:03Z`). **Answering the todo's own open
+question: yes, escalate** — this now warrants either (a) replacement subgraph deployment-ID research via The Graph
+Explorer, or (b) a taxonomy reason + runtime detection for the "bad indexers" condition (mirroring but not reusing
+`EXPECTED_SUBGRAPH_DEINDEXED`, per this doc's own established reasoning against conflating the two). Filing that as its
+own properly-scoped follow-up todo below rather than absorbing unplanned scope into this investigation (same practice as
+every prior pass of this doc).
+
+**PANCAKESWAP_V3/BSC — NEW, DIFFERENT finding: NOT "bad indexers" anymore, but its indexer head is frozen.** The `_meta`
+probe returns clean (no GraphQL error, `hasIndexingErrors: true`) — confirming the 2026-07-27 "self-heal" verdict for
+the _gateway-routing_ symptom still holds (no repeat of the original bad-indexers error). But the returned head block is
+**byte-identical across all 3 tries THIS session** (`block.number=95170462`, `block.timestamp=1777379226` =
+**2026-04-28T12:27:06Z**) **and matches the 2026-07-27 probe's own recorded block/timestamp to within 348 seconds of
+block-time** (`1777378878` = `2026-04-28T12:21:18Z`, from this doc's "Verified live (re-probe, 2026-07-27...)" section)
+— i.e., **this subgraph's indexer has not meaningfully advanced past 2026-04-28 in over 3 months**, including through
+the entire span this doc has been tracking it (2026-07-27 → 2026-08-02). The earlier "SELF-HEALED... HEALTHY now"
+verdict was based only on the absence of a gateway error on that day's probe and correctly noted
+`hasIndexingErrors=true` as "worth another look" — it did not check block-timestamp staleness, which is what actually
+reveals the real condition: **a stalled/dead indexer for forward data, structurally similar in effect to
+CURVE/OPTIMISM's "no allocations" (permanently stuck) but with a different fingerprint (frozen head +
+`hasIndexingErrors=true`, not a query-level rejection)**. This directly explains why the manifest's PANCAKESWAP_V3/BSC
+`dex_pool_swaps` `attempted_failed` count has resumed growing: 15 (2026-07-28, frozen) → 30 (2026-08-01, new
+`build_instrument_id`-shaped bucket) → **41 today** (freshest row `2026-08-02T13:24:28Z`) — any backfill day past
+~2026-04-28 now structurally cannot be captured from this subgraph. **This is NOT the same condition this todo asks
+about** (it explicitly investigates "bad indexers", which for PANCAKESWAP_V3/BSC is confirmed resolved/self-healed) —
+filing as its own new todo below so it isn't conflated with or silently closed alongside the UNISWAP_V3/OPTIMISM
+bad-indexers verdict.
+
+Ephemeral verification scripts (raw gateway probe + bounded manifest count read) were scratchpad-only, not committed —
+no code changes ship with this update, per this doc's own established practice that a root-cause/verdict pass does not
+absorb the actual remediation work.
+
+- [x] ✅ [DATA] P2. Investigate whether UNISWAP_V3/OPTIMISM + PANCAKESWAP_V3/BSC's "bad indexers" gateway errors are a
+      transient indexer-fleet health dip or a permanent de-indexing event — **RESOLVED 2026-08-02 (slot 8)**: re-probed
+      both subgraph IDs live (3/3 each) after a 6-day window (2026-07-27→2026-08-02). **UNISWAP_V3/OPTIMISM: PERMANENT
+      /STRUCTURAL** — identical 3-indexer bad-indexers fingerprint across 6 consecutive days, 495 attempted_failed rows
+      and growing; needs the taxonomy-reason/runtime-detection or replacement-deployment-ID follow-up (new todo below).
+      **PANCAKESWAP_V3/BSC: bad-indexers condition itself CONFIRMED TRANSIENT/RESOLVED** (self-healed 2026-07-27, no
+      repeat since) — but see the NEW, separate stalled-indexer-head finding filed as its own todo below; do not
+      conflate the two. (repo: market-tick-data-service)
+- [ ] [DATA] P2. **NEW, 2026-08-02 (slot 8).** Fix or replace UNISWAP_V3/OPTIMISM's dead subgraph deployment
+      (`Cghf4LfVqPiFw6fp6Y5X5Ubc8UpmUhSfJL82zwiBFLaj`) — confirmed structural "bad indexers" condition (6+ days,
+      identical fingerprint, 495+ growing `attempted_failed` rows). Either (a) research a replacement subgraph
+      deployment ID via The Graph Explorer/Network Subgraph for uniswap_v3/OPTIMISM, or (b) add a distinct taxonomy
+      reason + runtime detection for "bad indexers" (mirroring, NOT reusing, `EXPECTED_SUBGRAPH_DEINDEXED` — the
+      semantics differ: this subgraph HAS allocations, the serving indexers are unhealthy) so future backfill attempts
+      record an honest `empty_confirmed`-class outcome instead of accumulating `attempted_failed` forever. Out of scope
+      for this investigation pass (root-causing != safely fixing, same reasoning this doc has applied to every other
+      finding). Repo: market-tick-data-service, unified-api-contracts.
+- [ ] [DATA] P2. **NEW, 2026-08-02 (slot 8).** Investigate PANCAKESWAP_V3/BSC's stalled indexer head — the subgraph
+      (`Hv1GncLY5docZoGtXjo4kwbTvxm3MAhVZqBZE4sUT9eZ`) has not advanced past block 95170462 / 2026-04-28T12:27:06Z in
+      over 3 months (`hasIndexingErrors=true`, confirmed byte-identical head across 2026-07-27 and 2026-08-02 probes).
+      This is a DIFFERENT condition from the "bad indexers" gateway-routing symptom this doc already resolved as
+      self-healed/transient for this same subgraph — it's a dead/stalled indexer for forward data, structurally similar
+      to CURVE/OPTIMISM's "no allocations" case but with a different fingerprint. Explains the resumed growth in this
+      cell's `dex_pool_swaps` `attempted_failed` count (15→30→41 rows, 2026-07-28→2026-08-02) for backfill dates past
+      ~2026-04-28. Needs root-cause (is this genuinely dead, or an upstream re-indexing-in-progress state?) + a fix
+      scoped separately from the UNISWAP_V3/OPTIMISM todo above (possibly a replacement deployment ID, possibly its own
+      taxonomy reason if the "frozen head" signature turns out to be common enough to warrant runtime detection). Repo:
+      market-tick-data-service.
+
 ## Progress Log
 
+- 2026-08-02T~21:10Z (slot 8, data_engineering, task `defi_dex_pool_swaps_733_row_indexer_health_findings-001`):
+  resolved the open P2 "bad indexers transient vs. permanent" todo. Re-probed both subgraphs live (gateway + the
+  sanctioned `scripts/subgraph_health_probe.py --dry-run` tool) after the 6-day window this todo's own bar required.
+  UNISWAP_V3/OPTIMISM: confirmed PERMANENT/structural (identical fingerprint 6 days running, 495 attempted_failed rows
+  growing) — flipped the investigation todo, filed a properly-scoped follow-up fix todo. PANCAKESWAP_V3/BSC: the
+  specific "bad indexers" symptom this todo asks about IS resolved/transient (confirmed self-healed, no repeat) — but
+  found a NEW, distinct condition while re-checking (indexer head frozen since ~2026-04-28, `hasIndexingErrors=true`,
+  explains the cell's resumed attempted_failed growth) and filed it as its own separate todo rather than conflating it
+  with the resolved bad-indexers finding. See "Verified live (2026-08-02...)" section above for full evidence. No
+  service code changed this pass (root-causing != safely fixing, per this doc's established practice) — this commit is
+  doc-only (unified-trading-pm).
 - **na-eligibility-audit 2026-07-30**: RECLASSIFY -> assigned_vm: planning (conflict-check CLEAR against 231 active
   planning docs; no open todo elsewhere duplicates this claim) - all 4 todos are bounded re-probes / per-venue
   diagnostics / a VM restart onto current code; no design or authority call left

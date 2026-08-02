@@ -258,8 +258,13 @@ canonical grouping already exists. Build a browse-the-live-catalogue surface, de
 catalogue browser — completed checkbox evidence". The still-open todo (the `InstrumentRecord extra='forbid'`
 side-discovery) stays below, unmoved.
 
-- [ ] [DATA] P3. **DECIDED (operator 2026-07-18: extra='forbid' + workspace-grep callers + fix the discarded prediction
-      title). Executing this session — will flip on ship.** _(NEW — side-discovery 2026-07-17, adversarial review of the
+- [x] ✅ [DATA] P3. **DEDUPED 2026-08-02 — resolved-by-reference, not by completion.** This finding already has its own
+      proper home: `/plans/active/instrument_record_schema_completeness_extra_forbid_2026_07_18.md` (filed the same
+      day, same operator ruling) tracks the actual `extra='forbid'` + workspace-grep + prediction-title remediation
+      work end to end (currently 4 open todos there). Closing the duplicate pointer here to stop double-bookkeeping the
+      same finding in two docs — see that plan for live status, not this one. DECIDED (operator 2026-07-18:
+      extra='forbid' + workspace-grep callers + fix the discarded prediction
+      title). _(NEW — side-discovery 2026-07-17, adversarial review of the
       `question`/`title` todo)_ **`InstrumentRecord` silently swallows unknown kwargs — real data has been discarded on
       every prediction capture with zero signal.** Both prediction adapters pass a `symbol=` kwarg that
       `InstrumentRecord` does not declare; pydantic `extra='ignore'` drops it silently. Kalshi's value is
@@ -579,3 +584,12 @@ safely-completable work. Terminal state:
 | Downloads CeFi re-capture (EIGEN + added bases)                                                | VM-scale IS CLI backfill (per venue/date) — a "no fire-and-forget" prod-write op that needs an attended VM launch.                                                                                                                                                           |
 | Downloads CSV-download smoke + path-fix                                                        | Gated on the TIER-2 v9 `--apply` migration (the downloads plan's own sequencing gate).                                                                                                                                                                                       |
 | Sports fork / cell-grid / InstrumentRecord / DeFi POOL-id                                      | Now tracked human/canonical plans — multi-step efforts for their own focused execution.                                                                                                                                                                                      |
+
+## Todos (follow-up)
+
+- [ ] [DOC] P3. Confirm the 4 still-unbanked "⏳ Remaining" table rows above (non-Tardis confirmed venue bugs,
+      cache_oom 24h soak, Downloads CeFi re-capture, Downloads CSV-download smoke) each already have a real tracked
+      `- [ ]` todo in an owning doc (candidates found by grep: `non_tardis_dexperp_venue_data_status_smoketest_2026_07_07.md`,
+      `artifact_pipeline_observability_2026_07_17.md`, `cost_observability_deferred_followups_2026_07_10.md`) — or file
+      the missing ones. This table itself is prose, not a tracked todo, per
+      `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md` §2.

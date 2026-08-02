@@ -630,3 +630,26 @@ Phase B itself is a large multi-repo migration that warrants its own dedicated p
   (299/348 days, 0 anomalies), re-verify the cron + `-001` status fresh; if `-006`'s chunked apply (slot 3) has finished
   and `-001`/`-006` both show `done`, the cron should resume shortly after per that plan's own protocol — check
   `-001`/`-006` status before assuming the block persists.
+- **2026-08-02T18:24Z (slot 11, `data_engineering`, backlog task `prediction_satellite_ao_dispatch_batch4-023`)**:
+  blocker re-verified, unchanged. `uts-prod-manifest-consolidator-market-data-prediction-cron` still `PAUSED`
+  (`gcloud scheduler jobs describe`, `unified-trading-sa` account). `mtds_available_at_cross_asset_backfill-001`
+  `status: queued` (I was dispatched `-001` earlier this same session and declined it — live-verified
+  `rebuild_prediction_manifest.py` PID `1860179`, `--start-date 2025-09-13 --end-date 2026-08-01 --chunk-days 15`, still
+  RUNNING under slot 14's `-006`, now ~50min+ uptime, healthy). This confirms the sibling plan's chunked apply is real,
+  in-progress, ongoing work, not a stalled dispatch — consistent with the prior entry's finding for slot 3's earlier
+  chunk run. No change to this todo's action: not touching the cron, not re-scavenging the checkpoint (already durably
+  merged at the GCS path above). Released via `/skip-current-task {"reason_code": "GATED"}`. **For the next resumer**:
+  same as the prior entries — check `-001`/`-006` status fresh before assuming the block persists.
+- **2026-08-02T19:53Z (slot 8, `data_engineering`, backlog task `prediction_satellite_ao_dispatch_batch4-023`)**:
+  blocker re-verified fresh, unchanged. `uts-prod-manifest-consolidator-market-data-prediction-cron` still `PAUSED`
+  (`gcloud scheduler jobs describe`, `unified-trading-sa` account). `GET /api/backlog`:
+  `mtds_available_at_cross_asset_backfill-001` still `status: queued`, `-006` still `status: dispatched` (to slot 14,
+  `dispatched_at: 2026-08-02T15:51:02Z`, `done_at: null`, ~4h in). **First-hand corroboration**: I was independently
+  dispatched `-001` earlier this same session and directly verified its gating live process (PID `153615`,
+  `rebuild_prediction_manifest.py --start-date 2025-11-12 --end-date 2026-08-01 --chunk-days 15`, from
+  `.tabs/14/market-tick-data-service`) via `ps -p` — healthy, actively growing RSS, no crash signature — before
+  declining it as a collision (`/skip-current-task`, see that plan's own Progress Log). This confirms the sibling plan's
+  apply is real ongoing work, not a stalled/dead dispatch. No change to this todo's action: not touching the cron, not
+  re-scavenging the checkpoint (already durably merged at the GCS path above). Released via
+  `/skip-current-task {"reason_code": "GATED"}`. **For the next resumer**: same as the prior entries — check
+  `-001`/`-006` status fresh before assuming the block persists.

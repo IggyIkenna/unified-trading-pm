@@ -129,4 +129,4 @@ Required if Path 2 (restart) or 3 (failover) was used.
   [`defi_feature_stale.md`](./defi_feature_stale.md).
 - **Operator playbook:** [`operator-playbook.md`](./operator-playbook.md).
 - **Implementing plan:**
-  [`alerting_service_live_rules_2026_05_07`](../../../plans/active/alerting_service_live_rules_2026_05_07.md).
+  [`alerting_service_live_rules_2026_05_07`](../../../plans/archive/2026_05/alerting_service_live_rules_2026_05_07.md).

@@ -16,7 +16,7 @@ descope_reversal_reason: >
   by 2026-05-23.
 prior_descope: 2026-05-14 by harsh-slot-9 (now REVERSED per operator direction 2026-05-13 evening)
 successor_plan: >
-  /plans/active/defi_recursive_borrow_archetypes_post_cutover_2026_06_01.md (NOTE: post-cutover plan now covers ONLY
+  /plans/archive/2026_05/defi_recursive_borrow_archetypes_post_cutover_2026_06_01.md (NOTE: post-cutover plan now covers ONLY
   post-cutover scope-expansion items, NOT the May-23 implementation half which is back in this plan's scope per operator
   direction 2026-05-13)
 target_deadline: 2026-05-23

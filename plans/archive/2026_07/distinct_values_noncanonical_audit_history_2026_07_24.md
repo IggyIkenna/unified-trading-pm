@@ -16,7 +16,7 @@ tags: [canonicalisation, manifest, data-correctness, ssot-audit, distinct-values
 related:
   [
     /plans/archive/2026_07/distinct_values_noncanonical_audit_2026_07_20.md,
-    /plans/active/market_tick_data_service_lending_instrument_type_historical_restamp_2026_07_24.md,
+    /plans/archive/2026_07/market_tick_data_service_lending_instrument_type_historical_restamp_2026_07_24.md,
   ]
 created: "2026-07-24"
 parent_epic: manifest_master
@@ -46,7 +46,7 @@ source:
 > moved **verbatim** from that doc's `## Deferred work after 2026-07-20` section through end-of-file, unedited except
 > for this header. For the live todos and current state of the audit, read the parent doc; for the still-open MTDS
 > lending `instrument_type` historical re-stamp specifically, read
-> `/plans/active/market_tick_data_service_lending_instrument_type_historical_restamp_2026_07_24.md`.
+> `/plans/archive/2026_07/market_tick_data_service_lending_instrument_type_historical_restamp_2026_07_24.md`.
 
 ## Deferred work after 2026-07-20
 

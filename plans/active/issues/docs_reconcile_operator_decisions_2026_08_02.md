@@ -88,7 +88,7 @@ sweep found was either auto-fixed (4 commits shipped, see Progress Log) or filed
   `unified-trading-pm/` prefix (the citing doc is already inside that repo) and (b) uses shell brace-expansion syntax no
   path-existence checker can literally resolve, so it's permanently flagged broken regardless of the prefix fix.
 
-  A: **Expand the one brace-syntax string into 6 separate `/codex/02-data/....md` leading-slash entries** in the
+  A: **Expand the one brace-syntax string into 6 separate `/codex/02-data/<filename>.md` leading-slash entries** in the
   `source:` list. [RECOMMENDED — matches how every other multi-file citation in this corpus is written, and each of the
   6 targets was independently verified to exist] B: Leave as-is (the baseline already tolerates it as pre-existing debt;
   low real-world cost since `source:` is a provenance field, not a navigation aid). Other: operator can type a custom

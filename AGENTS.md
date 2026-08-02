@@ -254,8 +254,9 @@ Plans with `locked_by` in frontmatter are actively being implemented. Agents MUS
 - Delete or move locked plans
 - Remove the `locked_by` field programmatically
 
-The plan-health-agent checks this automatically. If you encounter a locked plan during conflict resolution, treat its
-contents as authoritative for the locked branch's changes.
+The plan-hygiene tooling checks this automatically (the daily `plan-reconciler` agent's HARD LIMITS forbid touching a
+locked plan; see `/codex/11-project-management/plan-hygiene.md`). If you encounter a locked plan during conflict
+resolution, treat its contents as authoritative for the locked branch's changes.
 
 **Agent unlock protocol:** If all todos in a locked plan are genuinely complete, agents MAY ask the human: "Plan X is
 locked but all todos are done. Should I unlock it?" If the human approves, remove `locked_by`/`locked_since` from

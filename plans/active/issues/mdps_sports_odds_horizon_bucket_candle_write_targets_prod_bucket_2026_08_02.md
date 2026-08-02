@@ -35,7 +35,7 @@ tags: [mdps, pipeline-e2e-check, bucket-isolation, data-correctness, iam, sports
 related:
   [
     /plans/active/issues/features_e2e_check_delta_one_timeout_orphans_duplicate_vms_2026_07_27.md,
-    /plans/active/issues/bucket_iam_group_a_market_data_tick_prefix_missing_asset_group_2026_08_01.md,
+    /plans/archive/issues/bucket_iam_group_a_market_data_tick_prefix_missing_asset_group_2026_08_01.md,
     /plans/active/issues/pipeline_e2e_check_missing_env_flag_test_bucket_403_2026_08_01.md,
     /plans/audit/results/data_pipeline_e2e_check_mdps_2026_08_01.md,
     /codex/05-infrastructure/bucket-isolation-model.md,
@@ -161,27 +161,20 @@ further this session (outside this task's scope — filed here instead of silent
       `pipeline_e2e_check.py --asset-group SPORTS     --data-types odds_horizon_bucket` and confirm a genuine (non-403,
       non-timeout) verdict — either a real pass or a real data-derivation failure, not an infra/bucket-targeting
       artifact. Feeds back into `sports_consolidated_native_ao_extract_2026_07_25.md`'s Track K (MDPS) checkpoint
-      cadence. **Still blocked** — the actual bucket-targeting bug is not yet fixed (see todo 5); re-running now would
-      reproduce the same 403.
-- [ ] [CODE] P1. **NEW (slot-16, infra)**: root-cause and fix the actual defect. Static tracing (todos 1+2 above) ruled
-      out both the obvious hypotheses — the launcher wiring is correct AND the candle-write dispatch code correctly
-      calls the override-aware `get_output_bucket_for_asset_group()` with no bypass — yet the write still targets PROD
-      with the override env var genuinely present in the process's environment. This needs INSTRUMENTED runtime
-      debugging (a temporary log line printing the literal return value of
-      `get_config("MDPS_OUTPUT_BUCKET_SPORTS", "<UNSET>")` immediately before the GCS upload call in
-      `candle_write_mixin.py::_write_candles`, or an equivalent `--log-level DEBUG` re-run with that instrumentation),
-      not further static reading — static analysis alone cannot distinguish "the value is silently empty at that exact
-      call site" from "something later in the call re-resolves/overrides `bucket_name`". Also worth checking, as cheaper
-      first probes before adding instrumentation: (a) whether the deployed `MDPS_TARBALL_SHA` for this VM run genuinely
-      matches HEAD (`TARBALL_PINS.json` records it as `"floating"` — i.e. NOT a pinned SHA in this artifact — so confirm
-      what commit was actually IN the tarball, not just that it floats); (b) the two duplicate-mechanism
-      `MDPS_OUTPUT_BUCKET_${cat_upper}` env-var-append branches in `launch-mdps-backfill-vm.sh` (lines ~261-262 from
-      `--output-bucket`, and a SEPARATE ~279-282 branch that re-reads `MDPS_OUTPUT_BUCKET_SPORTS` from the LAUNCHING
-      process's own calling environment via `MDPS_OUTPUT_BUCKET_SPORTS_OVERRIDE="${MDPS_OUTPUT_BUCKET_SPORTS:-}"` at
-      line 186) — in THIS run only the first branch fired (confirmed via the single `MDPS_OUTPUT_BUCKET_SPORTS=` term in
-      the launched `bash -c` line), so it isn't the cause here, but it's dead/confusing duplicate logic worth deleting
-      once the real bug is found. Repo: market-data-processing-service (primary) + deployment-service (if the tarball
-      staleness probe implicates it).
+      cadence. **UNBLOCKED 2026-08-02** — todo 5's fix (`market-data-processing-service@9642cbb`) landed; this re-run
+      can proceed whenever next dispatched.
+- [x] ✅ [CODE] P1. **DONE 2026-08-02 (slot-4, infra) — verified + checkbox-flipped by slot-16**.
+      `market-data-processing-service@9642cbb` ("fix(mdps): streaming chain-bundle write path resolves output bucket,
+      not source bucket"). Root cause: `_streaming_write_per_tf` in `live_workers_streaming.py`
+      (`LiveChainStreamingMixin`) resolved its write bucket via `get_bucket_for_asset_group()` (the
+      `PROTOCOL_DATA_SOURCE_BUCKET_{CAT}`/PROD getter) instead of `get_output_bucket_for_asset_group()` (the
+      `MDPS_OUTPUT_BUCKET_{CAT}` override-aware getter) — a SEPARATE dispatch path from the already-correct eager
+      `candle_write_mixin.py::_write_candles` that todos 1+2's static trace examined. Chain-bundle detection
+      (`_chain_bundle_likely_from_path`) routes every SPORTS `ticks.parquet` through this streaming path BEFORE the
+      eager path is ever reached, so the override was silently ignored regardless of how correct the eager path's own
+      code was — explaining the "both launcher and write-dispatch check out correct, yet the write still 403s"
+      contradiction todo 2 surfaced. Root-caused via runtime-path tracing, not further static reading (per the fix
+      commit's own message). Verified: `git merge-base --is-ancestor 9642cbb origin/live-defi-rollout` = true.
 
 ## Progress Log
 
@@ -237,3 +230,22 @@ further this session (outside this task's scope — filed here instead of silent
   false). Did NOT flip todo 4 (still blocked on the real fix) and filed a new todo 5 for the next actionable step
   (instrumented runtime debugging), per the "every follow-up is a tracked todo, never prose" HARD RULE — the specific
   next diagnostic moves are enumerated there rather than left as a vague "needs more investigation."
+
+- 2026-08-02 (slot-16, infra, dispatched on todo 5 / `-005`): Picked up todo 5 ("root-cause and fix the actual defect").
+  Followed the doc's own "cheaper first probe (a)" — checked `TARBALL_PINS.json` for the original force-leg VM
+  (`gs://deployment-scripts-central-element-323112/vm-logs/mdps-backfill-sports-pipelinecheck-20260802-161417-d0c755/TARBALL_PINS.json`):
+  confirmed `MDPS_TARBALL_SHA` was genuinely `"floating"` (unpinned) for that run, so the exact deployed commit wasn't
+  directly recoverable from the pin record. Before adding runtime instrumentation, re-read the current HEAD of the full
+  write chain myself (`candle_write_mixin.py` → `canonical_writer.py` → `canonical_writer_manifest.py`) to independently
+  verify todo 2's "no bypass" conclusion — confirmed correct for the EAGER path, but this is exactly where the
+  contradiction lived: `git log --since` on the service repo surfaced `market-data-processing-service@9642cbb` (slot-4,
+  landed 2026-08-02T17:19:06Z — after this doc's original 16:14-16:22Z reproduction run, and after my own session
+  started on this same todo), which root-caused the REAL defect: a separate streaming chain-bundle write dispatcher
+  (`live_workers_streaming.py::_streaming_write_per_tf`, reached via `_chain_bundle_likely_from_path` BEFORE the eager
+  path for every SPORTS `ticks.parquet`) called the source-bucket getter instead of the output-bucket getter — a genuine
+  second write path todos 1+2's trace never reached because it was static-reading the eager path only. Slot-4 shipped
+  the fix but never flipped this issue doc's checkbox (a plan-flip gap on their end). Verified the fix is real and on
+  origin (`git merge-base --is-ancestor 9642cbb origin/live-defi-rollout`), then flipped todo 5 to reflect the actual
+  completion and corrected todo 4's now-stale "still blocked" note. No new code change from this session — the fix was
+  already shipped; this session's contribution is verification + closing the plan-flip gap. Todo 4 (the from-scratch
+  re-verification run) remains open for whoever picks it up next.

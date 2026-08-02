@@ -318,7 +318,7 @@ source:
       **NOTE (na-eligibility-audit 2026-07-30, tradfi tranche)**: this exact item was extracted VERBATIM as
       `/plans/active/tradfi_satellite_ao_dispatch_batch5_2026_07_29.md`'s "Bundle CME roots into fewer larger VMs" todo
       (which cites this doc's own then-still-open item as its source, via
-      `/plans/active/tradfi_satellite_ao_dispatch_batch4_2026_07_26_finalize.md`'s 2026-07-30 Deferred re-check). batch5
+      `/plans/archive/2026_07/tradfi_satellite_ao_dispatch_batch4_2026_07_26_finalize.md`'s 2026-07-30 Deferred re-check). batch5
       was activated 2026-07-30 (`5a6bbefc3`) and its todo dispatched + shipped as above.
 - [x] ✅ [BACKEND] P1. **Real retry-on-429 in the Databento fetch path — SHIPPED mtds@73c286a2 (`databento_retry.py`).**
       The fetch previously recorded ANY exception (incl. `RATE_LIMIT`/429) as a per-schema shard failure with no retry
@@ -674,8 +674,8 @@ data-status, honest-coverage) still tracked on the parent, and the full aggregat
   `consolidator_throughput_backlog_monitor_2026_07_09`) rather than worker-determinable work of its own, so the doc
   stays NA. **Observation for the next pass (not actioned here):** the first of those three now has 0 open checkboxes
   and is itself flagged as an over-line-cap prose-trap by
-  `/plans/active/issues/archive_candidate_docs_over_line_cap_blocks_edit_2026_07_29.md`, so this umbrella todo's
-  citation is drifting.
+  `/plans/archive/issues/archive_candidate_docs_over_line_cap_blocks_edit_2026_07_29.md` (now archived, resolved
+  2026-08-02 — both target docs archived, no split needed), so this umbrella todo's citation is drifting.
 - **na-eligibility-audit 2026-08-02** (tradfi tranche): **KEEP-NA, stale items — 1 citation corrected.** In scope this
   run (not incrementally skipped) because the 2026-07-30 marker was followed by a substantive content edit: the "Bundle
   CME roots into fewer larger VMs" todo was flipped `- [x]` (`deployment-service@60b9d37`, via
