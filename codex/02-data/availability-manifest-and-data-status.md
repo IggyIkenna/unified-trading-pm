@@ -1619,6 +1619,32 @@ writing the parquet. NO partial passes.
 This 4-pillar model is the canonical write-gate going forward. Adapters that are post-migration MUST pass each pillar;
 pre-migration adapters get phased through Phase 2 of the writegate plan.
 
+### 4a. `DefiManifestRecorder`'s A4-full invariant — `chain` is NEVER blank, even for chain-less venues
+
+`DefiManifestRecorder` (used by every DeFi-family shard, including CeFi-asset_group `perp_funding` which is routed
+through this DeFi-originated recorder) enforces a hard invariant in `_build_row_key`: `chain` must be non-blank, or the
+call raises `BlankChainError`. Caught per-shard by shard-level failure isolation (logs a WARNING, does NOT crash) — but
+the manifest write is silently DROPPED, not degraded. For a venue with no underlying blockchain (`KALSHI_PERP`,
+`POLYMARKET_PERP`), the established, LOAD-BEARING workaround is `chain=<VENUE_NAME_UNDERSCORE_FORM>` — this is
+deliberate design, not a canonicalisation bug, even though `venue == chain` on these rows superficially looks like a
+wrong-axis mistake. **Incident (2026-07-30,
+`cefi_perp_funding_kalshi_polymarket_residual_and_capture_gap_2026_07_30.md`, archived)**: this exact pattern was
+misdiagnosed as a bug and "fixed" to `chain=""`, which silently dropped every kalshi_perp/polymarket_perp/hyperliquid
+`perp_funding` manifest write for ~2h15m before being caught (a pre-existing regression test asserting
+`chain == "KALSHI_PERP"` on the failure path proved the "fix" wrong) and reverted same session. Before touching
+`chain=<VENUE>` on any chain-less-venue row, confirm which of these two situations applies — `venue == chain` is
+expected and correct for these venues, not a canonicalisation defect.
+
+### 4b. `record_failed`'s `error_reason` is whatever precedes the FIRST colon — lead the message with the classification
+
+`DefiManifestRecorder.record_failed` derives the stored `error_reason` via `raw_message.split(":", 1)[0].strip()[:80]`
+(falling back to a `classify_venue_error()` verdict if present). Any raised exception message destined for
+`record_failed` MUST lead with the real classification token (`"SOURCE_UNREACHABLE: ..."`,
+`"PHANTOM_CAPTURED_ROW: ..."`, etc.) — leading with descriptive/contextual text instead (e.g.
+`"polymarket_perp: perps-api.polymarket.com unreachable..."`) silently stores the venue/protocol name as the
+`error_reason`, not a real reason, making the manifest useless for triage without re-deriving root cause from scratch.
+Confirmed real bug, same incident as 4a above, fixed `market-tick-data-service@dcd1bc8d`.
+
 ### 5. `available_at` per row, write-time, equal to live-pipeline-arrival (post-2026-05-06)
 
 Every shard's parquet contains an `available_at` column. Each row's value = when the live pipeline would have actually

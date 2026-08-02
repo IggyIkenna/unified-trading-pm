@@ -31,7 +31,7 @@ summary: >-
   BLOCKED, not on logic, but on `DefiManifestRecorder`'s full-index read-merge-write timing out repeatedly from a local
   session against the 9.5M-row consolidated manifest — this is the heavy-I/O-belongs-on-a-VM class of problem, not a
   data-correctness one.
-status: open
+status: resolved
 nature: issue
 asset_group: [cefi]
 stage: [data]
@@ -75,7 +75,9 @@ superseded_by:
 source: >-
   operator request 2026-07-30 — asked whether the small-drift census fixes actually removed the non-canonical values
   from the manifest/GCS (they had not); investigating exactly which rows needed migrating surfaced these 4 findings
-resolved_by:
+resolved_by: >-
+  market-tick-data-service@dcd1bc8d (Finding A), @5d856acb + @17204fca (P1 manifest re-stamp + oneoff cleanup),
+  @fb32fb65 (P0 regression revert); P3 redirected, not separately shipped — see that todo
 depends_on: []
 context_scope:
   [
@@ -84,6 +86,14 @@ context_scope:
     /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
   ]
 ---
+
+> **✅ ARCHIVED 2026-08-02** — all 5 todos `[x]`, `locked_by:` empty. P0-P2 shipped directly
+> (`market-tick-data-service@dcd1bc8d`/`@5d856acb`/`@17204fca`/`@fb32fb65`); the P3 "~76 prediction rows" todo was found
+> stale by ~4 orders of magnitude on re-check (real corpus-wide count ~652k+) and redirected to the already-in-progress,
+> correctly-scoped, operator-gated effort at
+> `/plans/active/issues/mtds_prediction_rebuild_instrument_type_mismatch_2026_08_01.md` (todo 2, `[OPERATOR]`) and
+> `/plans/active/mtds_available_at_cross_asset_backfill_2026_07_13.md` (tasks `-001`/`-006`) rather than executed here.
+> Moved to `plans/archive/issues/`.
 
 # CeFi perp_funding (KALSHI-PERP/POLYMARKET-PERP): residual manifest rows + a live capture failure + an unverified gap
 
@@ -226,12 +236,29 @@ workspace has already been burned by once.
       row — the live reference row showed `chain` deliberately stays the underscore form (`_chain_map` in
       `perp_funding_handler.py`) even for the now-canonical hyphenated `venue`, so venue/chain equality is NOT the
       post-fix invariant (only the 8 pre-fix rows had that property, and only by coincidence of the pre-fix bug).
-- [ ] [DATA] P3. **Migrate/correct the ~76 prediction `instrument_type=prediction` manifest rows** (from
-      `cefi_sports_prediction_first_census_small_drift_2026_07_30.md` items 6-7) — confirmed CQG bundle rows with no 1:1
-      GCS object (manifest-only), so this is a pure `record_captured_from_counts` re-stamp, no object migration. **Not
-      attempted this session** — deliberately deferred once the identical `DefiManifestRecorder` local-timeout wall hit
-      the todo above; the same VM/faster-path prerequisite applies. Lower priority than the cefi items above (pure
-      hygiene, no live-collection-failure component).
+- [x] [DATA] P3. **SUPERSEDED, not executed here — the "~76 rows" premise was stale by ~4 orders of magnitude.**
+      Re-checked before building a VM-based fix (per this doc's own pre-task conflict-check discipline) and found a
+      SEPARATE, already-in-progress investigation had root-caused the SAME `instrument_type="prediction"` (non-canonical
+      lowercase, vs. the canonical `PREDICTION_MARKET`) value one day after this todo was last touched:
+      `plans/active/issues/mtds_prediction_rebuild_instrument_type_mismatch_2026_08_01.md` found the real corpus-wide
+      straggler count is **~652k+** (per `canonicalize_prediction_manifest_2026_07_18.py`'s own FINDING 2, corpus-wide
+      as of 2026-07-18) plus a fresh **~2,704 duplicate rows** from a 2026-08-01 backfill re-run that hit the identical
+      writer-vs-rebuild-script mismatch this todo would have. Root cause fixed at the writer level twice over
+      (`market-tick-data-service@1ec415f8` 2026-07-19, `@b8a8fa7a` 2026-08-01); the corrected backfill apply was
+      actively re-running as of that doc's last checkpoint (2026-08-01 ~14:27 UTC, chunk 42/~62, PID `2843482`) against
+      the SAME `market-data-tick-pred-prd-central-element-323112` canonical index this todo would have written to —
+      writing an independent ad-hoc script against the same manifest right now would risk colliding with that in-flight
+      apply, exactly the class of "additive VM writes against a shared consolidated index" risk the perp_funding P1 todo
+      above already surfaced once (concurrent-write race). The actual cleanup tool for the straggler rows
+      (`scripts/canonicalize_prediction_manifest_2026_07_18.py --remove-stragglers --apply --confirm-prod-write`)
+      already exists, is safety-checked (snapshot-first, CAS-REPLACE, STOP-ON-SURPRISE), and its `--apply` path is
+      **explicitly operator-gated** ("do NOT self-execute") — an open `[OPERATOR] P2` todo in the linked issue doc
+      already tracks the authorization decision. **No separate action taken or needed from this doc** — closing this
+      todo as superseded/redirected rather than leaving a stale, wrong-scoped "~76 rows, VM-based" instruction that
+      could mislead a future dispatch into re-doing (or worse, duplicating against) already-correctly-scoped, in-flight,
+      operator-gated work. Track remaining prediction-manifest work at
+      `mtds_prediction_rebuild_instrument_type_mismatch_2026_08_01.md` and
+      `mtds_available_at_cross_asset_backfill_2026_07_13.md` (tasks `-001`/`-006`), not here.
 
 ## Progress Log
 
