@@ -79,3 +79,14 @@ rediscover "suspect host contention, re-run with --workers=1."
       pinned to `1` unconditionally" note to also name `unified-trading-system-ui`. Repo: unified-trading-system-ui.
 
 ## Progress Log
+
+- 2026-08-02: Code shipped — `workers: 1` pinned unconditionally in `unified-trading-system-ui/playwright.config.ts`
+  (`unified-trading-system-ui@fc6ed104`, verified on `origin/live-defi-rollout`). `ui-testing-layers.md`'s
+  deployment-ui-only note updated to also name unified-trading-system-ui (this commit). Two local
+  `npx playwright test --project=chromium tests/smoke/` verification runs were interrupted mid-run by this slot's
+  session dying unexpectedly (host under heavy load, 30+ load average / active swap on a 16-core box — unrelated to the
+  config change): run 1 reached 75/108 with 2 failures (1 dev-server cold-start `toBeEmpty` timeout on test 1, 1
+  `page.goto` 30s timeout on `research-real-data.smoke.spec.ts` around test 69); run 2 reached 57/108 with 0 failures.
+  Both partial results are consistent with the known baseline (4/108 explained failures under `--workers=1`, per this
+  doc's `source`) — no NEW spurious failures attributable to the config change. Retrying for a complete clean run before
+  ticking `pw:L2 ✓`; checkbox intentionally left unflipped pending that evidence.

@@ -816,16 +816,20 @@ compose:
 **`pw:L2 ✓`** means `npx playwright test --project=chromium tests/smoke/` exited 0 in the agent's local environment. If
 the agent cannot run a dev server, the todo stays `- [ ] [BLOCKED-PLAYWRIGHT]` until a slot with UI access verifies.
 
-**deployment-ui's `workers` is pinned to `1` unconditionally (fixed 2026-07-31,
-`issues/deployment_ui_l2_smoke_gate_red_2026_07_17.md`)** — not just in CI. This repo's `tests/smoke/` runs on a shared,
-multi-agent-slot host; Playwright's local default (unbounded parallelism, ~8 concurrent chromium instances) trips the 5s
-default assertion timeout under contention from OTHER slots' concurrent work, and WHICH specs trip varies run-to-run.
-Measured: two back-to-back full-parallel runs on an identical pristine tree produced 15 and 17 "failures" respectively
-with different compositions each time (some runs also saw the whole app bundle fail to load with
-`net::ERR_INSUFFICIENT_RESOURCES`, masquerading as a real redirect/routing bug); `--workers=1` on the same tree
-reproduced exactly 0, consistently. If a `pw:L2` run on a shared host shows failures that don't reproduce in isolation
-or that vary between identical runs, suspect host contention before suspecting the app — re-run with `--workers=1`
-(already the repo default) before filing a new regression.
+**Both `deployment-ui` and `unified-trading-system-ui` pin `workers` to `1` unconditionally** (deployment-ui fixed
+2026-07-31, `issues/deployment_ui_l2_smoke_gate_red_2026_07_17.md`; unified-trading-system-ui fixed 2026-08-02,
+`issues/unified_trading_system_ui_smoke_suite_workers_unpinned_2026_08_01.md`) — not just in CI. Both repos'
+`tests/smoke/` run on a shared, multi-agent-slot host; Playwright's local default (unbounded parallelism, ~8 concurrent
+chromium instances) trips the 5s default assertion timeout under contention from OTHER slots' concurrent work, and WHICH
+specs trip varies run-to-run. Measured (deployment-ui): two back-to-back full-parallel runs on an identical pristine
+tree produced 15 and 17 "failures" respectively with different compositions each time (some runs also saw the whole app
+bundle fail to load with `net::ERR_INSUFFICIENT_RESOURCES`, masquerading as a real redirect/routing bug); `--workers=1`
+on the same tree reproduced exactly 0, consistently. Measured (unified-trading-system-ui): the 2026-07-28 audit found
+~65 untriaged `tests/smoke/` failures under this same unbounded-parallel default; a clean `--workers=1` re-run of the
+full suite reproduced only 4/108 failures, all explained (3 dev-server cold-start/crash flakes, 1 genuine bug filed
+separately). If a `pw:L2` run on a shared host shows failures that don't reproduce in isolation or that vary between
+identical runs, suspect host contention before suspecting the app — re-run with `--workers=1` (already the repo default
+in both repos) before filing a new regression.
 
 Any plan todo for a UI repo that is ticked `✅` without `pw:` + `regression:` evidence is **review-blocking**. Agents
 and reviewers MUST enforce this — it is equivalent in weight to the `docs(plans):` flip rule.
