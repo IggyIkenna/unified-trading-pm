@@ -855,3 +855,21 @@ prefix for no benefit — not doing that. Declining `-001` and skipping (not hol
 another slot already owns), `reason_code: "OTHER"` (a per-slot duplication fact, not a fleet-wide blocking condition —
 the follow-through steps, force-consolidate/fill-rate-reverify/cron-resume, remain open work for whoever picks up next
 once slot-14's run actually finishes).
+
+**2026-08-02, resumed session (slot-14) — item (2) above done (see the tradfi Apply todo's own entry for the full
+result); a sharper, verified lead found for the consolidator-dedup hypothesis.** Sampled real `attempted_at`/
+`written_at`/`instrument_id` values directly from the manifest for the still-unfilled `pre-2023-04 ohlcv_1m` cells:
+**`instrument_id` is blank/`None` on BOTH the filled and unfilled rows** for the same `(date, venue, data_type)`
+combination (e.g. multiple distinct rows for `date=2020-01-02, venue=CME, data_type=ohlcv_1m` all carry
+`instrument_id=None`). This is a sharper, directly-verified fact (not code-reading speculation) than the prior "dedup
+last-write-wins" hypothesis — if the manifest's row-key groups by
+`(date, venue, instrument_type, data_type, instrument_id)` and `instrument_id` is never populated for this era's OHLCV
+rows, then MANY distinct real per-instrument objects (this row-key's dedup group plausibly represents dozens of
+different CME futures contracts trading that day, not one instrument) collapse onto a tiny number of manifest row-keys —
+consistent with the small `captured_cells` counts this session's re-run reported per chunk (e.g. `3796` cells for a
+whole 30-day chunk) vs. the much larger row counts the fill-rate check's `groupby` sees when reading the full manifest —
+those are two different levels of aggregation that this session did not fully reconcile. **Not confirmed as the root
+cause** (would need to trace the actual row-key definition in `_writer_captured.py`/`_resolve_dedup_cols` and confirm
+whether `instrument_id` SHOULD be populated for tradfi OHLCV rows specifically, or whether blank-`instrument_id` is
+by-design for this data_type and the real key differs) — flagging as the concrete next investigative step, sharper than
+the general "check the dedup ordering" note above.
