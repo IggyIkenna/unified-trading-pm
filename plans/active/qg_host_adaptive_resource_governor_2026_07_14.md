@@ -657,6 +657,41 @@ there: the governor gates **RAM/CPU admission, not disk**, so it must not be cit
   arbitration via the ledger's currently-unused per-row timestamp, and a real multi-slot fleet soak under measured
   contention (this session's verification is unit-test + manual-repro level, not a live fleet soak).
 
+### 2026-08-02 — LIVE finding: reservation ledger does NOT coordinate across repos on a GHA glue-runner host
+
+- **Trigger**: `cicd` escalation `agt-fea289` (`unified-api-contracts` `quality-gates-v2` RED on `main`). First attempt
+  (run `30746935856`) hung in TESTS for 64min then got the `_qg_watchdog` 80%-RAM-pressure SIGTERM. Re-triggered
+  (`30750913313`); still running 1h49m+ later, its pytest process (PID 2063426) had accumulated only 33s of CPU time —
+  alive, not deadlocked, just severely CPU-starved.
+- **Root cause, confirmed by direct process inspection while co-located on the glue-runner host (`ip-172-31-5-118`,
+  16-core/61GB)**: `load average ~42-43` with **~10 DIFFERENT repos'** `quality-gates.sh` running concurrently at once
+  (`unified-trading-api`, `unified-api-contracts`, `fund-administration-service`, `ml-service`, `execution-service`,
+  `strategy-service`, `market-tick-data-service`, `batch-live-reconciliation-service`, `deployment-service`,
+  `alerting-service`) plus heavy swap thrashing (`vmstat` si/so ~20-40 MB/s sustained) despite 26-40GB RAM nominally
+  free — a CPU/swap oversubscription this governor's RAM-percentage admission gate does not see, because RAM usage alone
+  stayed well under the 80% abort threshold the whole time.
+- **Mechanism**: `_qg_shared_root()` (`qg-host-governor.sh`) resolves the ledger dir from `WORKSPACE_ROOT`, stripping
+  `/.tabs/*` — correct for the interactive slot-worktree layout this was built for. On a GHA self-hosted runner, the job
+  cwd is `/opt/github-glue-runners-<repo>/glue-N/_work/<repo>/<repo>` (no `.tabs/` segment, and `WORKSPACE_ROOT` is not
+  the same shared value across repos' runner jobs) — confirmed live: this run's ledger dir was
+  `.../github-glue-runners-unified-api-contracts/glue-1/_work/unified-api-contracts/.benchmarks/qg-governor`, i.e.
+  **scoped to this one repo's runner workdir, not host-wide**. Each of the ~10 repos' GHA jobs therefore runs its own
+  independent reservation ledger, each admitting up to its own RAM/CPU budget as if it had the whole host to itself —
+  the admission gate that Phase 3/6 verified prevents over-admission _within one ledger_ never sees the other 9.
+  Distinct failure mode from the 2026-07-27 fleet-soak's "false 80% abort" check (that soak ran single-repo, single
+  ledger — this is cross-repo ledger fragmentation, only reachable on the GHA glue-runner topology, not the slot
+  worktree topology the soak covered).
+- [ ] [INFRA] P1. Fix (or explicitly scope-fence) `_qg_shared_root()` so GHA glue-runner jobs across DIFFERENT repos on
+      the SAME physical host share one ledger — e.g. derive the shared root from the stable `/opt/github-glue-runners-*`
+      parent (or a host-identity env var set once per VM at runner-install time) instead of `WORKSPACE_ROOT`, which is
+      per-repo-job on this topology. Until fixed, the governor provides NO cross-repo admission control on glue-runner
+      hosts — only the per-repo `QG_HOST_CONCURRENCY` limit and the (also per-repo) RAM-pressure watchdog apply, which
+      is why 10 repos could pile up here.
+- **Not fixed in this session** — flagged via `cicd` `/blocked` (`BLK-7eedce54`) rather than fixed in-scope: a one-shot
+  wall-clearing task is the wrong place to redesign ledger scoping across the whole glue-runner fleet: real blast radius
+  (every repo's CI), needs its own scoped plan/PR + a fleet soak on the GHA topology specifically (the existing 93-min
+  soak only covers the slot-worktree topology).
+
 ## Progress Log (na-eligibility-audit incremental marker)
 
 - **na-eligibility-audit 2026-07-30** (infra tranche, dispatch agt-30721a): KEEP-NA-STALE — closed 1 narrative-artifact
