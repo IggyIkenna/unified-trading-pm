@@ -805,6 +805,25 @@ mirroring the batch1/batch2/batch3/batch4 finalize pattern.
   still running; `build-continuous --root ES`, hit-rate re-measure, and this checkbox all remain open until the VM
   reaches a genuine terminal state (not just "still running").
 
+- **2026-08-02T20:31Z (slot-3, data_engineering) — CORRECTION: the 18:56Z watchdog was silently non-functional; fixed
+  and re-armed.** ~1h35m of manual `/heartbeat`-driven check-ins (each backed by a fresh direct `gcloud`/`gsutil`
+  re-verify, not blind trust in the watchdog) kept confirming genuine progress — but a fresh direct test of the exact
+  `gsutil cat -r -150000-` byte-range syntax embedded in the 18:56Z Monitor script found it throws
+  `CommandException: Invalid range (-150000-)` (gsutil's `-r` flag wants `-150000`, no trailing dash, for "last N
+  bytes"). Every iteration of that watchdog has been failing this call silently since it was armed — `cur_day` always
+  came back empty, so it never printed a single `PROGRESS` line, and the `CommandException` text doesn't match any of
+  its own Traceback/ERROR/FAILED/Killed/OOM error-signal patterns either, so it never surfaced its own failure. Exactly
+  the "silence looks identical to success" trap this workspace's async-wait discipline warns about — the manual
+  re-verifies happened to catch real state anyway (independently, via correct-syntax ad-hoc commands each time), so no
+  actual progress was missed, but the watchdog itself was dead weight, not a safety net, for its full ~1.5h life.
+  Stopped it (`TaskStop`, confirmed the invalid syntax was present in both its progress-poll AND terminal-state
+  branches) and re-armed a corrected version: fixed byte-range syntax on both branches, plus a new
+  `CommandException|credentials are invalid|AccessDenied` self-error check that now explicitly emits a
+  `MONITOR_SELF_ERROR` event (instead of silently producing nothing) if the gsutil call itself ever fails again.
+  Verified working immediately: first iteration emitted `PROGRESS day=2021-05-03 at 20:31:53Z (status=RUNNING)`,
+  consistent with the manual check moments earlier (`day=2021-04-27` at `20:30Z`). VM remains healthy, 0 errors, ~13h
+  ETA holds. Follow-through (`build-continuous`, hit-rate re-measure, checkbox flip) still not yet done.
+
 ## Codex SSOTs
 
 No new durable contract is created by this plan — every todo executes an already-decided spec from its source doc, or
