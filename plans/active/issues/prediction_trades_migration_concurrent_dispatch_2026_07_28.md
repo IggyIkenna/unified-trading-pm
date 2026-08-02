@@ -17,7 +17,7 @@ summary: >-
   canonical_enriched count) and resumed from the merged 140-day checkpoint rather than restarting from zero.
 status: open
 nature: issue
-asset_group: [prediction, ao]
+asset_group: [ao]
 stage: [data]
 repos: [agent-orchestrator, market-tick-data-service]
 scope: [engineer, admin]
@@ -29,7 +29,7 @@ related:
     /codex/12-agent-workflow/async-wait-and-poll-discipline.md,
   ]
 created: "2026-07-28"
-last_updated: "2026-07-28"
+last_updated: "2026-08-02"
 parent_epic: orchestrator_master
 assigned_vm: NA
 execution_scope: local-only
@@ -105,6 +105,10 @@ One or both of:
 > audits (the prediction tranche and the 2026-07-30 na-eligibility-audit) independently identified this doc as
 > prose-only and routed the conversion to a sweep doc that has since archived; doing it here now. Content unchanged —
 > the finding is live and unfixed. `assigned_vm: NA` unchanged, so neither item auto-dispatches.
+>
+> **Todo 3 added 2026-08-02** on the ao-tranche adoption ruling (see Progress Log) — it is NOT a conversion of the
+> prose above but a newly-scoped gap: todo 2's in-flight check needs a staleness threshold or it stalls abandoned
+> tasks forever. Still `assigned_vm: NA`, so it does not auto-dispatch either.
 
 - [ ] [BACKEND] P2. **Give resumable todos a shared, task-id-keyed checkpoint location.** For any todo whose brief names
       a `--report`/resumability file, point the convention at a durable per-TASK-ID directory rather than a
@@ -118,6 +122,19 @@ One or both of:
       second slot while the first is still live (a heartbeat check against the owning slot, mirroring the existing
       `completed_tasks`/`prerequisites` gating mechanism). **Done-when**: a second dispatch of an in-flight todo id is
       demonstrably skipped. (repo: `agent-orchestrator`)
+- [ ] [BACKEND] P2. **Define the heartbeat-staleness threshold that marks an in-flight attempt ABANDONED, so a second
+      slot knows it is safe to resume.** Todo 2 deadlocks without this: slot 7's session ended with no closing Progress
+      Log entry, so under a naive "is it still live?" gate its claim reads in-flight FOREVER and permanently blocks
+      re-dispatch of a task nobody is working — trading this doc's duplicate-dispatch waste for a silent stall. Decide
+      the threshold and whether it reuses an existing knob or needs its own; the live precedents are
+      `TuningDefaults.watchdog_heartbeat_timeout` (900s, `agent-orchestrator/server/config.py:473`) and
+      `one_shot_stale_grace_minutes` (15.0, `…/config.py:664`) — note `tuning.*` knobs are env-free (change the code
+      default + redeploy; `.env.local` silently no-ops). Must ALSO state what the resuming slot does with a stale
+      claim's partial checkpoint (adopt it vs re-verify from zero) — this incident's own ad-hoc answer was to merge the
+      3 report files by day, preferring the entry with the higher `canonical_enriched` count. **Done-when**: the
+      threshold value, the knob that carries it, and the stale-claim takeover rule are written down in
+      `/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md` (or the worker-liveness SSOT it cites).
+      (repo: `agent-orchestrator` + `unified-trading-pm`)
 
 ## What I did NOT do
 
@@ -147,3 +164,19 @@ solution.
   `/plans/archive/issues/issue_docs_zero_checkbox_sweep_2026_07_24.md` (`unified-trading-pm@17ba71f10`) the same day, so
   the routing target no longer exists as an active doc — the zero-checkbox class currently has no active owner (see
   `/plans/active/issues/docs_reconcile_autonomous_sweep_2026_07_30.md` Progress Log for the standing follow-up).
+- **ao-tranche ADOPTION 2026-08-02** (operator ruling, interactive Q&A 2026-07-30): the `ao` tranche formally adopts
+  this doc. `asset_group` retagged `[prediction, ao]` → `[ao]`, so the prediction tranche stops carrying it as an
+  orphan and `ao` owns it outright. Membership for `ao` is tested directly against `asset_group`
+  (`scripts/plan-hygiene/generate_na_doc_tranche_inventory.py`, 2026-07-27 schema expansion), and the OWNING tranche
+  was already `ao` via `parent_epic: orchestrator_master` → `EPIC_TO_TRANCHE` — the retag makes membership and
+  ownership agree on both axes instead of only one. The `prediction` entry in `tags:` is deliberately KEPT: it is
+  incident provenance (the trigger really was the `prediction_trades` migration), and tranche membership is derived
+  from `asset_group` only, never from `tags`.
+- **Scoping todos 2026-08-02**: the same ruling called for two scoping todos. (b) the heartbeat-staleness threshold was
+  genuinely missing and is added above as todo 3 — it is the gap that makes todo 2 implementable rather than a
+  deadlock. (a) "where the shared migration checkpoint state should live" was ALREADY tracked as todo 1 (added by the
+  2026-07-31 zero-checkbox sweep) and was therefore NOT duplicated; verified it still carries a real done-when and
+  names its repos. `assigned_vm: NA` deliberately unchanged — all three items are design decisions ("decide where the
+  state lives", "pick a threshold"), which the dispatch-scope eligibility rule
+  (`/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md` § "Dispatch-scope eligibility") keeps
+  human-resolved before any AO todo is cut against their outcome.
