@@ -7,7 +7,7 @@ summary: >-
   jurisdiction-select dropdown now renders with zero jurisdiction options, making the whole jurisdiction-filter feature
   inert. Confirmed via wizard_smoke_suite_pre_existing_failures_2026_07_28.md's triage (todo 1): reproducible
   deterministically in isolation, not a shared-host contention flake.
-status: open
+status: resolved
 nature: issue
 asset_group: [meta]
 stage: [meta]
@@ -24,7 +24,7 @@ created: 2026-08-01
 parent_epic: agent_operating_framework_master
 priority: P2
 assigned_vm: planning
-resolved_by:
+resolved_by: slot-10, 2026-08-02 (both todos flipped; see Progress Log)
 locked_by:
 source: [
     "wizard_smoke_suite_pre_existing_failures_2026_07_28.md todo 1 triage session, 2026-08-01: full tests/smoke/ run\
@@ -45,6 +45,11 @@ context_scope:
 ---
 
 # wizard-jurisdiction-filter.spec.ts genuinely broken — registry regen silently drops jurisdiction_overlay
+
+> **✅ ARCHIVED 2026-08-02** — both todos shipped: the `extract_jurisdiction_overlay()` extractor
+> (`unified-trading-pm@31b7cf457`) and the regenerated `ui-reference-data.json` carrying the restored key
+> (`unified-trading-system-ui@097e1d64`), verified via `wizard-jurisdiction-filter.spec.ts` 2/2 passing. 0 open todos,
+> unlocked. Moved to `plans/archive/issues/`.
 
 ## What I found
 
