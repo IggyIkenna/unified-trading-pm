@@ -406,17 +406,15 @@ context_scope:
       speculatively. (repo: features-service). **Done when**: `--fixture-ids` is a declared CLI flag on the sports
       family's real dispatched entrypoint, unit-tested, and threaded through to actually narrow which fixtures a batch
       run processes.
-- [ ] [DATA] P1. **Track K (IS) — run + cite 3 dated checkpoints (baseline/mid/final) for `data-pipeline-check-is`
-      against sports.** Split 2026-08-01 from the original single bundled Track K todo (5 mechanisms × 3 checkpoints =
-      15 independent, VM-launching, multi-minute-plus runs bundled into one 1-hour-estimated todo — violates the
-      plan-authoring "independent parallelizable work → split" rule; each mechanism is now its own todo so it can
-      dispatch/run independently). **Use the already-pinned `SPORTS_SMOKE_DATES` constants as the reference dates**
-      (busy `2025-12-20` / thin `2025-12-24` / `known_buggy_odds` `2025-12-18` / `known_buggy_fixtures` `2024-03-09` —
-      shipped `features-service@84cb4613`/`@0ae9f460`) rather than inventing a day.
-      `instruments-service/scripts/     pipeline_e2e_check.py --asset-group SPORTS --day <D> --legs force,skip,live` (7
-      shard-target venues: API_FOOTBALL, BETFAIR, FOOTYSTATS, OPEN_METEO, SOCCER_FOOTBALL_INFO, TRANSFERMARKT,
-      UNDERSTAT). (repo: instruments-service, skill-driven). **Done when**: 3 dated runs (baseline/mid/final) cited by
-      report path (`plans/audit/results/data_pipeline_e2e_check_is_<date>.md`). Source:
+- [x] ✅ [DATA] P1. **Track K (IS) — run + cite 3 dated checkpoints (baseline/mid/final) for `data-pipeline-check-is`
+      against sports.** DONE 2026-08-02 (multi-slot; final leg landed slot 16) — unified-trading-pm@(this commit). All 3
+      checkpoints complete + committed, each `total=21 passed=12 failed=9` (identical failure shape: 6x per-league
+      skip-signal checker false-negative, 3x BETFAIR known BLOCKED-CREDENTIALS gap): baseline
+      `plans/audit/results/data_pipeline_e2e_check_is_2025_12_20.md`, mid
+      `plans/audit/results/data_pipeline_e2e_check_is_2025_12_24.md`, final
+      `plans/audit/results/data_pipeline_e2e_check_is_2025_12_18.md`. Full cross-checkpoint findings + the two follow-up
+      todos (skip-leg checker fix; OPEN_METEO baseline `vm_run_not_successful` anomaly) tracked in
+      `/plans/active/issues/sports_track_k_is_pipeline_check_progress_2026_08_02.md` (now `status: resolved`). Source:
       `sports_consolidated_closeout_2026_07_19.md:665-669`.
 - [x] ✅ [DATA] P1. **Track K (MTDS) — run + cite 3 dated checkpoints (baseline/mid/final) for
       `data-pipeline-check-mtds` against sports.** DONE 2026-08-01 (slot 15). Split 2026-08-01, see Track K (IS) above
@@ -488,22 +486,22 @@ context_scope:
       genuine. Report: `plans/audit/results/data_pipeline_e2e_check_features_2025_12_18.md`.
 
       Cross-day diagnostic (VM `run.log` ground truth, all 3 dates): 11-12/17 sports reference entities read real rows
-                                              from PROD via the now-working source-bucket override; `entity=fixtures`/`fixtures_schedule` specifically still
-                                              404s on the never-provisioned `-stg-` bucket via `gcs_read_reference_fixtures` (a narrower, entity-scoped residue
-                                              of the same gap — noted for whoever next touches the issue doc above), so `derived_features`/`fixture_features`
-                                              correctly record `EMPTY ... confirmed empty` for that one input while the rest of the family's feature groups
-                                              compute for real — this is why every checkpoint's shard-level verdict is a genuine `captured` pass (real parquet
-                                              count > 0) rather than a blanket `empty_confirmed`.
+                                                      from PROD via the now-working source-bucket override; `entity=fixtures`/`fixtures_schedule` specifically still
+                                                      404s on the never-provisioned `-stg-` bucket via `gcs_read_reference_fixtures` (a narrower, entity-scoped residue
+                                                      of the same gap — noted for whoever next touches the issue doc above), so `derived_features`/`fixture_features`
+                                                      correctly record `EMPTY ... confirmed empty` for that one input while the rest of the family's feature groups
+                                                      compute for real — this is why every checkpoint's shard-level verdict is a genuine `captured` pass (real parquet
+                                                      count > 0) rather than a blanket `empty_confirmed`.
 
-                                              **Session note**: this task's worker session crashed mid-flight after the first (sequential) round of runs;
-                                              the resumed session found the repo tree hard-reset to origin (losing 2 already-completed report files that were
-                                              never committed) — re-ran all 3 checkpoints a second time in parallel to recover, this time committing each
-                                              report immediately on completion. That parallel re-run also reproduced + explains a separate, real tooling
-                                              defect (two same-cell/different-day launches racing to an identical VM name within the same UTC second — this
-                                              instance's result was independently verified correct, not corrupted by it): filed
-                                              `plans/archive/issues/features_pipeline_e2e_check_vm_name_collision_same_second_2026_08_01.md` (both
-                                              todos now resolved — VM-name hash widened to include the day across all 4 sibling drivers, and the
-                                              day-window-agnostic `_find_inflight_duplicate_vm()` dedup narrowed to the same day).
+                                                      **Session note**: this task's worker session crashed mid-flight after the first (sequential) round of runs;
+                                                      the resumed session found the repo tree hard-reset to origin (losing 2 already-completed report files that were
+                                                      never committed) — re-ran all 3 checkpoints a second time in parallel to recover, this time committing each
+                                                      report immediately on completion. That parallel re-run also reproduced + explains a separate, real tooling
+                                                      defect (two same-cell/different-day launches racing to an identical VM name within the same UTC second — this
+                                                      instance's result was independently verified correct, not corrupted by it): filed
+                                                      `plans/archive/issues/features_pipeline_e2e_check_vm_name_collision_same_second_2026_08_01.md` (both
+                                                      todos now resolved — VM-name hash widened to include the day across all 4 sibling drivers, and the
+                                                      day-window-agnostic `_find_inflight_duplicate_vm()` dedup narrowed to the same day).
 
 - [x] ✅ [DATA] P1. **Track K (reconciliation) — run + cite 3 dated checkpoints (baseline/mid/final) for
       `/data-pipeline-reconciliation` against sports.** DONE 2026-08-01 (slot 8, dispatched sub-agent) — 3 dated reports

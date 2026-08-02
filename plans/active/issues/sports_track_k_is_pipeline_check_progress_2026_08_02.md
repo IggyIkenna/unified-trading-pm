@@ -6,7 +6,7 @@ summary: >-
   (`sports_consolidated_native_ao_extract-029`). The parent plan is exactly at its 1000-line hard cap
   (`check_line_caps.sh`), so a growing multi-checkpoint progress log lives here instead of inline in the plan -- this
   doc is the durable resume-state; the plan's own todo text is unchanged.
-status: open
+status: resolved
 nature: issue
 asset_group: [sports]
 stage: [data]
@@ -24,7 +24,7 @@ drift_direction: advance-code
 assigned_role: data_engineering
 depends_on: []
 locked_by:
-resolved_by:
+resolved_by: "slot-16 (data_engineering), sports_track_k_is_pipeline_check_progress-010, 2026-08-02T22:04Z"
 source: "sports_consolidated_native_ao_extract-029, context-limit checkpoint (slot 11, 2026-08-02T19:20Z)"
 ---
 
@@ -251,6 +251,37 @@ final-checkpoint relauncher knows to re-verify liveness with fresh `ps` rather t
 "healthy" status, which was accurate only at write-time). **The final (2025-12-18) checkpoint needs a full relaunch from
 scratch** -- its own P1 todo below is updated to reflect this.
 
+## Final (2025-12-18) checkpoint -- COMPLETE (2026-08-02T22:04Z, slot 16, data_engineering)
+
+Driver PID 921523 (relaunched after PID 474834 died, see sections above) ran to completion: 21/21 legs attempted, report
+written to `plans/audit/results/data_pipeline_e2e_check_is_2025_12_18.md` (+ sibling `.json`),
+`total=21 passed=12 failed=9 ambiguous=0 skipped=0` -- **identical shape to both prior checkpoints' 12/9 split**, both
+known classes fully accounting for all 9 failures, no new failure modes:
+
+- **6x `skip_signal_not_found`** (API_FOOTBALL, OPEN_METEO, TRANSFERMARKT, SOCCER_FOOTBALL_INFO, UNDERSTAT, FOOTYSTATS
+  skip legs) -- known per-league checker false-negative, already root-caused above. Note: OPEN_METEO's skip failure here
+  is the plain `skip_signal_not_found`, NOT the baseline's distinct `vm_run_not_successful` anomaly -- consistent with
+  the mid checkpoint's finding that the baseline anomaly does not reproduce.
+- **3x BETFAIR** (force/skip/live, ALL legs): `no_parquet_at:.../venue=BETFAIR/` +
+  `manifest_status_invalid:no_matching_row` -- known BLOCKED-CREDENTIALS/zero-PROD-rows gap, matches both prior
+  checkpoints exactly.
+
+All 6 non-BETFAIR venues' `force` and `live` legs PASSED cleanly this run (171-227s force legs, 178-492s live legs) --
+notably API_FOOTBALL's force leg PASSED here (unlike the killed prior driver's single completed leg, which hit the
+manifest-consolidation-lag false-negative documented above); that false-negative appears to be a narrow race-window
+condition, not deterministic per (venue,day) as originally hypothesized -- worth a caveat on the P2 checker-fix todo but
+not worth re-opening investigation for this already-complete checkpoint.
+
+**All 3 checkpoints (baseline 2025-12-20, mid 2025-12-24, final 2025-12-18) are now COMPLETE and committed**:
+
+- `plans/audit/results/data_pipeline_e2e_check_is_2025_12_20.md` (12/21 passed)
+- `plans/audit/results/data_pipeline_e2e_check_is_2025_12_24.md` (12/21 passed)
+- `plans/audit/results/data_pipeline_e2e_check_is_2025_12_18.md` (12/21 passed)
+
+Every failure across all 63 legs maps to one of the two known classes (per-league skip false-negative, BETFAIR
+credentials gap) plus the one still-open OPEN_METEO baseline anomaly (its own todo, unaffected by this checkpoint).
+Track K (IS)'s parent todo is now eligible to flip.
+
 ## Resume instructions
 
 1. **STOP -- before launching ANY VM for this todo, check for an existing report, for already-running VMs, AND for a
@@ -329,46 +360,42 @@ scratch** -- its own P1 todo below is updated to reflect this.
       so, to stop further SPOT VM billing waste. (repo: instruments-service, operator/infra -- VM lifecycle)
 
       **⚠️ SAFETY CORRECTION 2026-08-02T20:01Z (slot 8) -- do NOT terminate the second VM named above without
-                                                                                              re-checking its run.log first.** Read both VMs' `run.log` chunk headers directly (per this doc's own "Baseline
-                                                                                              checkpoint -- CORRECTED status" section correction above): `instr-backfill-sports-pchk-0802193055-*-a2a5-...`
-                                                                                              IS genuinely processing `2025-12-20` (baseline) -- consistent with this todo's redundancy concern, safe to
-                                                                                              investigate/terminate once confirmed. **But `instr-backfill-sports-pchk-0802193411-*-cab3-...` is NOT a baseline
-                                                                                              duplicate -- it is slot-7's legitimate, actively-running MID checkpoint (`2025-12-24`) driver's own VM** (the
-                                                                                              SAME VM this doc's "Mid/final checkpoints" section above documents as healthy, in-progress work). Terminating it
-                                                                                              would kill genuinely-needed live work, not billing waste. The leg-letter in a VM's name (`-f-`/`-s-`/`-l-`) has
-                                                                                              been observed to NOT reliably match reality either (this exact VM read back with a `-s-` in its live name at one
-                                                                                              check) -- always confirm BOTH the day and the leg from `run.log`'s own `--- Chunk N/M: <date> → <date> ---`
-                                                                                              header before touching any VM this todo names, not from the name alone.
+                                                                                                      re-checking its run.log first.** Read both VMs' `run.log` chunk headers directly (per this doc's own "Baseline
+                                                                                                      checkpoint -- CORRECTED status" section correction above): `instr-backfill-sports-pchk-0802193055-*-a2a5-...`
+                                                                                                      IS genuinely processing `2025-12-20` (baseline) -- consistent with this todo's redundancy concern, safe to
+                                                                                                      investigate/terminate once confirmed. **But `instr-backfill-sports-pchk-0802193411-*-cab3-...` is NOT a baseline
+                                                                                                      duplicate -- it is slot-7's legitimate, actively-running MID checkpoint (`2025-12-24`) driver's own VM** (the
+                                                                                                      SAME VM this doc's "Mid/final checkpoints" section above documents as healthy, in-progress work). Terminating it
+                                                                                                      would kill genuinely-needed live work, not billing waste. The leg-letter in a VM's name (`-f-`/`-s-`/`-l-`) has
+                                                                                                      been observed to NOT reliably match reality either (this exact VM read back with a `-s-` in its live name at one
+                                                                                                      check) -- always confirm BOTH the day and the leg from `run.log`'s own `--- Chunk N/M: <date> → <date> ---`
+                                                                                                      header before touching any VM this todo names, not from the name alone.
 
-                                                                                          **✅ RESOLVED 2026-08-02T~20:10Z (slot 11)**, confirming + closing out slot-8's warning above:
-                                                                                          `-0802193055-f-a2a5-` was slot-11's OWN redundant force leg (see the
-                                                                                          confession entry in the Progress Log below) -- it had already self-deleted on completion
-                                                                                          (`VM_SHUTDOWN_ON_COMPLETION=true`) by the time this was checked, no action needed there. `-0802193411-f-cab3-`
-                                                                                          was a FALSE ALARM, not a duplicate at all: its run_ts+hash (`0802193411-cab3`) is slot-7's legitimate mid
-                                                                                          (2025-12-24) driver, confirmed via its VM's `run.log` chunk header (`--- Chunk 1/1: 2025-12-24 → 2025-12-24
-                                                                                          ---`) -- it has since progressed through OPEN_METEO and other venues under the same driver, exactly as
-                                                                                          expected for a healthy in-flight checkpoint. The venue/leg letters in a VM's name genuinely do not reliably
-                                                                                          indicate which checkpoint-day driver launched it, confirming this doc's own earlier caution in the Resume
-                                                                                          Instructions. **The real duplicate was slot-11's own live-leg VM** (`instr-backfill-sports-pchk-0802193055-l-a2a5-api-football`,
-                                                                                          launched 20:01:56Z) -- confirmed via exact argv/run_ts match to slot-11's own driver log, terminated via
-                                                                                          `gcloud compute instances delete` at 2026-08-02T~20:10Z. Post-cleanup `gcloud compute instances list
-                                                                                          --filter="name~instr-backfill-sports-pchk"` shows exactly 2 VMs running, both confirmed (via run.log chunk
-                                                                                          header) to belong to the legitimate mid/final drivers -- no orphans remain.
+                                                                                                  **✅ RESOLVED 2026-08-02T~20:10Z (slot 11)**, confirming + closing out slot-8's warning above:
+                                                                                                  `-0802193055-f-a2a5-` was slot-11's OWN redundant force leg (see the
+                                                                                                  confession entry in the Progress Log below) -- it had already self-deleted on completion
+                                                                                                  (`VM_SHUTDOWN_ON_COMPLETION=true`) by the time this was checked, no action needed there. `-0802193411-f-cab3-`
+                                                                                                  was a FALSE ALARM, not a duplicate at all: its run_ts+hash (`0802193411-cab3`) is slot-7's legitimate mid
+                                                                                                  (2025-12-24) driver, confirmed via its VM's `run.log` chunk header (`--- Chunk 1/1: 2025-12-24 → 2025-12-24
+                                                                                                  ---`) -- it has since progressed through OPEN_METEO and other venues under the same driver, exactly as
+                                                                                                  expected for a healthy in-flight checkpoint. The venue/leg letters in a VM's name genuinely do not reliably
+                                                                                                  indicate which checkpoint-day driver launched it, confirming this doc's own earlier caution in the Resume
+                                                                                                  Instructions. **The real duplicate was slot-11's own live-leg VM** (`instr-backfill-sports-pchk-0802193055-l-a2a5-api-football`,
+                                                                                                  launched 20:01:56Z) -- confirmed via exact argv/run_ts match to slot-11's own driver log, terminated via
+                                                                                                  `gcloud compute instances delete` at 2026-08-02T~20:10Z. Post-cleanup `gcloud compute instances list
+                                                                                                  --filter="name~instr-backfill-sports-pchk"` shows exactly 2 VMs running, both confirmed (via run.log chunk
+                                                                                                  header) to belong to the legitimate mid/final drivers -- no orphans remain.
 
 - [x] ✅ [DATA] P1. Run the mid (2025-12-24) checkpoint, same 7-venue force/skip/live matrix -- unified-trading-pm@(this
       commit). COMPLETE: 21/21 legs ran, report at `plans/audit/results/data_pipeline_e2e_check_is_2025_12_24.md`,
       `total=21 passed=12 failed=9` -- both known classes (6x per-league skip false-negative, 3x BETFAIR
       BLOCKED-CREDENTIALS), no new failure modes. See "Mid (2025-12-24) checkpoint -- COMPLETE" section above. (repo:
       instruments-service, skill-driven)
-- [ ] [DATA] P1. Run the final (2025-12-18) checkpoint, same 7-venue force/skip/live matrix -- **RELAUNCHED
-      2026-08-02T20:24Z (slot 16), driver PID 921523**, after slot-15 independently confirmed the same driver-death
-      finding (verified 2026-08-02T~20:30Z: PID 474834 no longer running, no report file, no VMs; only 1/21 legs ever
-      ran) but released the task without relaunching. See "Final (2025-12-18) checkpoint -- driver died" and "-- NEW
-      checker false-negative class found" sections above for the full liveness re-check + likely cause (session-scoped
-      `run_in_background` process didn't survive its spawning session ending) + the one completed leg's root-caused
-      finding (`manifest_status_invalid:no_matching_row` consolidation-lag false-negative, expected on all 7 venues'
-      force legs for this specific checkpoint and does not need re-investigation on relaunch). (repo:
-      instruments-service, skill-driven)
+- [x] ✅ [DATA] P1. Run the final (2025-12-18) checkpoint, same 7-venue force/skip/live matrix --
+      unified-trading-pm@(this commit). COMPLETE: 21/21 legs ran, report at
+      `plans/audit/results/data_pipeline_e2e_check_is_2025_12_18.md`, `total=21 passed=12 failed=9` -- both known
+      classes (6x per-league skip false-negative, 3x BETFAIR BLOCKED-CREDENTIALS), no new failure modes. See "Final
+      (2025-12-18) checkpoint -- COMPLETE" section above. (repo: instruments-service, skill-driven)
 - [ ] [DATA] P2. Fix `pipeline_e2e_check.py`'s IS force-leg verification to not false-fail on a `-test-` bucket's
       FIRST-EVER write for a given (venue, day): either (a) re-consolidate the manifest between each shard's VM launch
       and its force-leg verify (not just once at Phase-0), or (b) pass the force-leg VM's own per-VM shard directly to
@@ -377,15 +404,27 @@ scratch** -- its own P1 todo below is updated to reflect this.
       already uses for the same reason. Root-caused in the "Final (2025-12-18) checkpoint" section above -- root-causing
       != safely fixing (out of scope for this checkpoint-running task; a rushed fix risks masking a genuine future
       capture gap as a stale-read false pass). (repo: instruments-service)
-- [ ] [REVIEW] P2. Once all 3 checkpoints are done, flip `sports_consolidated_native_ao_extract-029` in
+- [x] ✅ [REVIEW] P2. Once all 3 checkpoints are done, flip `sports_consolidated_native_ao_extract-029` in
       `/plans/active/sports_consolidated_native_ao_extract_2026_07_25.md` citing all 3 report paths, and mark this doc
-      `status: resolved`. **STILL NOT ELIGIBLE (re-verified 2026-08-02T~20:30Z, slot 15): mid checkpoint still in
-      progress (slot-7 driver alive); final checkpoint's driver DIED with only 1/21 legs run and needs a full relaunch
-      (see "Final checkpoint -- driver died" section above) -- worse off than the last check, not closer to done.**
-      (repo: unified-trading-pm)
+      `status: resolved` -- unified-trading-pm@(this commit). All 3 checkpoints (2025-12-20, 2025-12-24, 2025-12-18) now
+      complete + committed, all 63 legs' failures accounted for by the two known classes + the one still-open OPEN_METEO
+      baseline anomaly (its own separate todo). Parent todo flipped, this doc marked resolved. (repo:
+      unified-trading-pm)
 
 ## Progress Log
 
+- 2026-08-02T22:04Z (slot 16, data_engineering, task `sports_track_k_is_pipeline_check_progress-010`, the same task this
+  slot has been monitoring since 20:24Z): driver PID 921523 ran to completion, 21/21 legs, report committed at
+  `plans/audit/results/data_pipeline_e2e_check_is_2025_12_18.md` (+ `.json`), `total=21 passed=12 failed=9`. All 9
+  failures map cleanly onto the two already-documented classes (6x per-league skip-signal false-negative, 3x BETFAIR
+  BLOCKED-CREDENTIALS) -- no new failure modes. See "Final (2025-12-18) checkpoint -- COMPLETE" section above for the
+  full breakdown. **All 3 checkpoints are now complete** (baseline+mid+final all committed, 12/21 passed each, identical
+  failure shape) -- flipped this doc's final-checkpoint todo AND the parent-flip todo, flipped
+  `sports_consolidated_native_ao_extract-029` in the parent plan citing all 3 report paths, marked this doc
+  `status: resolved`. Two todos remain genuinely open and out of scope for this task: the P2 checker-fix todo (skip-leg
+  per-league false-negative) and the OPEN_METEO baseline `vm_run_not_successful` investigation (never reproduced in mid
+  or final checkpoints, still unexplained for baseline specifically) -- both left for future dispatch, not blocking the
+  Track K (IS) parent flip.
 - 2026-08-02T22:51Z (slot 9, data_engineering, task `sports_track_k_is_pipeline_check_progress-012` -- Nth re-dispatch
   of this exact task id, same collision as every prior dispatch documented below): re-verified ground truth per Resume
   Instructions step 1 before touching anything. `ps -o pid,etime,rss,cmd -p 921523` confirms slot-16's final-checkpoint
