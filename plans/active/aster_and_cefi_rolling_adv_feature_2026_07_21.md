@@ -176,7 +176,8 @@ MDPS candle coverage to the 4 venues) is explicitly NOT started.
       generic-resolved (venue list is UAC-owned, timeframe list is one flat default, `resolve_pipeline_mode_from_source`
       is closed-set generic). Real backfill launched + verified live: HYPERLIQUID `trades` candles for 2026-07-19
       (BTC+ETH) confirmed with real non-zero `volume` (BTC 24h: `volume=28140.06`). ASTER excluded pending its own
-      manifest-registration gap (`issues/aster_raw_capture_manifest_registration_gap_2026_07_26.md`). Repo:
+      manifest-registration gap, since RESOLVED — re-scoped + backfill launched
+      (`/plans/archive/issues/aster_raw_capture_manifest_registration_gap_2026_07_26.md`). Repo:
       market-data-processing-service (no diff needed — infra/VM execution only).
 - [x] ✅ **DONE (substantially) 2026-07-26 — full-range VM in progress, not yet 100%.** Backfill VM
       `mdps-backfill-cefi-20260726-165959` (`trades`, 2024-01-01→2026-07-25,
