@@ -954,3 +954,11 @@ for whoever picks this up next**: this is the THIRD consecutive session to hit t
 this is not a new finding, just re-verify liveness per the `ps aux` pattern above and decline again; if it has finished,
 the actual remaining work is the force-consolidate + fill-rate-reverify + cron-resume follow-through per #9's checklist,
 which is genuinely still open and worth doing.
+
+### 2026-08-02T18:57Z — #16 (slot-7, data_engineering, dispatched `-001`) — declining, fourth consecutive collision, same live process still healthy
+
+Dispatched `-001` again. Same `ps aux` check #13/#14/#15 ran: PID `3659083` (the SAME process #15 found, from
+`.tabs/14/market-tick-data-service`, `--start-date 2025-10-28 --end-date 2026-08-01 --chunk-days 15`) is **still
+RUNNING** — `ELAPSED=603s` (~10min), RSS ~2.4GB, 120% CPU, no crash/exit signature. No new information beyond
+re-confirming liveness. Declining `-001` for the same reason as #13/#14/#15 — a second concurrent run would still
+duplicate in-flight work and risk a write race on the same per-VM shard prefix. `reason_code: "OTHER"`.
