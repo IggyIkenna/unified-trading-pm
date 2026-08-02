@@ -161,26 +161,26 @@ exists relative to kickoff (KO) / full-time (FT); the post-match lags are the em
       source is still unwired.
 
       **api_football `/odds` in-play second-source half STRUCK 2026-08-02 (`BLK-b969f5f0`, main, decision B) —
-          SUPERSEDED, not pursued.** Wiring api_football as a sports-odds/TRADES write source into MTDS directly
-          contradicts the operator's 2026-06-24 wipe ruling and would re-open the resolved 1.26M-row wrong-source
-          re-accumulation incident — api_football has ZERO sanctioned business writing sports odds into MTDS (its only
-          sanctioned writes are reference data in `instruments-store-sports`; the IS adapter's `get_odds()` is a literal
-          empty-list stub). Full evidence + the ruling:
-          `/plans/active/issues/sports_api_football_live_odds_second_source_conflicts_with_wipe_ruling_2026_08_02.md`. A
-          genuine second live-odds source remains a valid future idea but is now its OWN new operator-gated design
-          decision if ever wanted — not folded back into this todo.
+                  SUPERSEDED, not pursued.** Wiring api_football as a sports-odds/TRADES write source into MTDS directly
+                  contradicts the operator's 2026-06-24 wipe ruling and would re-open the resolved 1.26M-row wrong-source
+                  re-accumulation incident — api_football has ZERO sanctioned business writing sports odds into MTDS (its only
+                  sanctioned writes are reference data in `instruments-store-sports`; the IS adapter's `get_odds()` is a literal
+                  empty-list stub). Full evidence + the ruling:
+                  `/plans/active/issues/sports_api_football_live_odds_second_source_conflicts_with_wipe_ruling_2026_08_02.md`. A
+                  genuine second live-odds source remains a valid future idea but is now its OWN new operator-gated design
+                  decision if ever wanted — not folded back into this todo.
 
-          **Live ODDS quota decision** (market-tick-data-service + deployment-service) — resume the primary `odds_api`
-          live connector. **Done when**: the live sports-odds ingestion is confirmed resumed (a fresh poll cycle
-          succeeding against the live key in production, not just a direct-API-call verification).
+                  **Live ODDS quota decision** (market-tick-data-service + deployment-service) — resume the primary `odds_api`
+                  live connector. **Done when**: the live sports-odds ingestion is confirmed resumed (a fresh poll cycle
+                  succeeding against the live key in production, not just a direct-API-call verification).
 
-          **NEW BLOCKER found 2026-08-02**: the `odds-api-key` quota is now EXHAUSTED (`x-requests-remaining: -772`,
-          `x-requests-used: 5000772` — live-verified via direct curl), just 4 days after the 2026-07-29 provisioning
-          showed `5000000` remaining. No live WS VM is running (confirmed via `gcloud compute instances list`), so this
-          burn is NOT from 60s live polling — root cause unknown, tracked as its own P1 finding:
-          `/plans/active/issues/odds_api_key_quota_exhausted_4_days_after_provisioning_2026_08_02.md`. Launching the live
-          VM against an exhausted/negative-balance key would be pointless (requests will likely 401) until that is
-          understood — deferred, not done, pending that investigation.
+                  **NEW BLOCKER found 2026-08-02**: the `odds-api-key` quota is now EXHAUSTED (`x-requests-remaining: -772`,
+                  `x-requests-used: 5000772` — live-verified via direct curl), just 4 days after the 2026-07-29 provisioning
+                  showed `5000000` remaining. No live WS VM is running (confirmed via `gcloud compute instances list`), so this
+                  burn is NOT from 60s live polling — root cause unknown, tracked as its own P1 finding:
+                  `/plans/active/issues/odds_api_key_quota_exhausted_4_days_after_provisioning_2026_08_02.md`. Launching the live
+                  VM against an exhausted/negative-balance key would be pointless (requests will likely 401) until that is
+                  understood — deferred, not done, pending that investigation.
 
 - [x] ✅ [INFRA] P3. **Verify Open-Meteo forward weather uses the FREE forecast host on the live VM**
       (instruments-service) — confirm `open_meteo.py` resolves `https://api.open-meteo.com/v1/forecast` (keyless free)
