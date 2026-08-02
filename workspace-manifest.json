@@ -959,7 +959,7 @@
         "warn_file_count": 6,
         "coverage_pct": 82.62
       },
-      "ldr_ci_status": "RED",
+      "ldr_ci_status": "GREEN",
       "cascade_invalidated_by": "unified-trading-library=0.66.0"
     },
     "strategy-service": {
@@ -1220,7 +1220,7 @@
         "critical",
         "cross-domain"
       ],
-      "ldr_ci_status": "GREEN",
+      "ldr_ci_status": "RED",
       "codebase_health": {
         "large_file_count": 27,
         "coverage_pct": 96.47,
@@ -1308,7 +1308,7 @@
         "cross-domain",
         "standard"
       ],
-      "ldr_ci_status": "GREEN",
+      "ldr_ci_status": "RED",
       "codebase_health": {
         "qg_red_reason": "qg",
         "coverage_pct": 73.25,
