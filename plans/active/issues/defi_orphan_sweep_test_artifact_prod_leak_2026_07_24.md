@@ -26,7 +26,7 @@ summary: >-
   inflated ~180-199% (29,735,610 rows over-counted) by summing the backup copies alongside their canonical twins into
   one cell. Metadata-only (real objects untouched, honest-coverage stats affected), not blocking, filed as a follow-up
   todo.
-status: open
+status: resolved
 nature: issue
 asset_group: [defi, cefi]
 stage: [data]
@@ -53,7 +53,7 @@ related:
     /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
   ]
 created: 2026-07-24
-last_updated: 2026-07-24
+last_updated: 2026-08-02
 parent_epic: instruments_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -67,7 +67,7 @@ locked_by:
 locked_since:
 supersedes:
 superseded_by:
-resolved_by:
+resolved_by: instruments-service@016c5ab2
 source:
   found while triaging estate_orphan_assessment_2026_07_21.md todo 3's defi backfill (operator flagged the risk from a
   25-row log sample; this doc measures the true, full-population scope)
@@ -176,7 +176,7 @@ green, shipped via quickmerge.
       `unknown_prefixes=0` — clean. **cefi shows `unknown_prefixes=170`, ALL under `unknown:_remediation_backups/`** —
       NOT test contamination (a different, real finding — see todo 4).
 
-- [ ] 4. [DATA] P2. **cefi's ALREADY-COMPLETED backfill (`backfill-orphan-e-cefi-20260722-213220`, apply landed
+- [x] ✅ 4. [DATA] P2. **cefi's ALREADY-COMPLETED backfill (`backfill-orphan-e-cefi-20260722-213220`, apply landed
       2026-07-22 23:12 UTC, BEFORE the `split_unknown_prefix_rows` fix existed) double-counted 4 manifest cells'
       `row_count` by summing the KRAKEN-FUTURES collision-remediation server-side BACKUP copies alongside their
       canonical twins.** Root cause: `_remediation_backups/kraken_futures_collision_2026_07_08/` (see
@@ -204,7 +204,26 @@ green, shipped via quickmerge.
       patch) so cefi's honest-coverage numbers for 2024-02-01/2025-01-10 KRAKEN-FUTURES book_snapshot_5/trades are
       accurate. `split_unknown_prefix_rows` (this doc's fix, `instruments-service@9a491b23`) prevents this exact class
       from recurring on any FUTURE backfill run (defi/tradfi/prediction all still pending, and any cefi re-run) — it is
-      retroactive protection only, it does not correct the 4 cells already recorded before it shipped.
+      retroactive protection only, it does not correct the 4 cells already recorded before it shipped. — **DONE
+      2026-08-02**, `instruments-service@016c5ab2`. **Live-manifest re-verification found the state had already moved on
+      from what this todo describes**: the LIVE `_index/availability_index.parquet` currently carries ZERO rows from
+      `service_name="instruments-service"` for `venue=KRAKEN-FUTURES` on either affected date, at ANY `capture_status` —
+      the inflated `captured` row is not the row present today (its per-VM shard, which would have lived at
+      `_index/per_vm/orphan-backfill-cefi*.parquet`, no longer exists — already merged-and-dropped or never durably
+      flushed; the only physical rows at this key are 72 unrelated pre-existing `attempted_failed`/count=0
+      `market-tick-data-service` rows from a separate, older per-underlying bookkeeping gap, a different `service_name`
+      so the consolidator's dedup never partitions them against an instruments-service row anyway). Net effect is the
+      same either way: shipped `scripts/correct_cefi_kraken_futures_rowcount_2026_08_02.py`, which re-derives the TRUE
+      canonical-only row_count FRESH from GCS on every run (bounded per-cell prefix listing — never trusts the stale
+      `orphan_backfill_cefi.parquet` report; footer-sums every canonical, non-backup object) and records the corrected
+      `captured` cell via the normal `ManifestWriter.record_captured` path (mirrors `record_cells()`'s cefi RECORD_ONLY
+      shape, minus the backup-inclusion bug). Fresh footer-sums exactly matched this doc's independently-measured
+      canonical figures: `(2024-02-01, book_snapshot_5)`=2,199,192 (14 objects), `(2024-02-01, trades)`=1,490 (10
+      objects), `(2025-01-10, book_snapshot_5)`=14,141,726 (20 objects), `(2025-01-10, trades)`=19,206 (17 objects).
+      Applied live (`VM_NAME=cefi-kraken-futures-rowcount-fix`), verified the resulting per-VM shard
+      (`_index/per_vm/cefi-kraken-futures-rowcount-fix.parquet`) carries all 4 corrected `captured` rows with the true
+      `instrument_count`. 4 unit tests added (`tests/scripts/test_correct_cefi_kraken_futures_rowcount_2026_08_02.py`),
+      full `quality-gates.sh` green, shipped via quickmerge.
 
 ## Progress Log
 
