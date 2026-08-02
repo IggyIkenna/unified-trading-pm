@@ -68,9 +68,20 @@ Apply the same proven, already-shipped fix (one never-overwritten object per wri
 
 ## Todos
 
-- [ ] [INFRA] P2. Fix `notify-slack.yml`'s own alerts-ledger persist step (the reusable workflow's inline
+- [x] ✅ [INFRA] P2. Fix `notify-slack.yml`'s own alerts-ledger persist step (the reusable workflow's inline
       cp-down/append/cp-up against `cicd/alerts/{date}/alerts.jsonl`) to write a single never-overwritten per-event
-      object instead, mirroring `.github/actions/persist-event/action.yml`'s fix. (repo: unified-trading-pm)
+      object instead, mirroring `.github/actions/persist-event/action.yml`'s fix. (repo: unified-trading-pm) — **ALREADY
+      FIXED, no code change needed** (verified 2026-08-02). This todo's own claim was STALE: it cites
+      `deployment_alerts_ingestion_completeness_2026_07_20.md`'s archived text verbatim ("notify-slack.yml's own persist
+      step... still do the old unlocked read-modify-write") without re-checking the live file — a grep-then-conclude
+      miss. `git log -- .github/workflows/notify-slack.yml` shows `unified-trading-pm@363e8a7cc` ("notify-slack.yml
+      writes one alert object per call instead of shared alerts.jsonl") already shipped this EXACT fix on 2026-07-21 —
+      12 days before this issue doc was filed (2026-08-02) and confirmed still live/unreverted (no later commit touches
+      this file). The current persist step (lines ~449-464) writes `cicd/alerts/${DATE_PARTITION}/${UNIQUE_KEY}.jsonl`
+      per alert (never a shared cp-down/append/cp-up), byte-for-byte the pattern this todo asked for. (The separate
+      `scripts/self-hosted-runners/hosted-baseline/notify-slack.yml` copy is an intentionally-frozen self-hosted-
+      runner-migration REVERT-PATH template, not a live-executed workflow — its drift from the active file is an
+      already-tracked, unrelated concern, e.g. `plans/active/june_2026_vintage_audit_findings_2026_07_27.md`.)
 - [ ] [INFRA] P2. Fix `semver-agent.yml.tmpl`'s fleet-wide "Persist CRITICAL pages" step the same way -- it is a
       TEMPLATE (`scripts/workflow-templates/semver-agent.yml.tmpl`), so the fix must land there + roll out via
       `rollout-workflow-templates.sh`, never hand-edited per-repo. (repo: unified-trading-pm)
@@ -82,6 +93,15 @@ Apply the same proven, already-shipped fix (one never-overwritten object per wri
       agent-orchestrator)
 
 ## Progress Log
+
+- **2026-08-02 (slot 15, infra)**: dispatched todo 1 only (`notify-slack.yml`). Read the LIVE
+  `.github/workflows/notify-slack.yml` before implementing (per craft north-star — never launch/patch blind) and found
+  the described race is already gone: `unified-trading-pm@363e8a7cc` (2026-07-21) already rewrote the persist step to
+  one never-overwritten object per alert. This todo's summary/body inherited the archived
+  `deployment_alerts_ingestion_completeness_2026_07_20.md`'s stale unfixed-writers list without re-verifying current
+  code. Flipped todo 1 with the evidence; did NOT touch todos 2/3 (semver-agent.yml.tmpl, agent-orchestrator's slack.py)
+  — out of this task's scope, and not independently re-verified as still-broken or already-fixed. A worker picking
+  either of those up should do the same live-file check first, given todo 1 turned out stale.
 
 - 2026-08-02 (slot 7, infra): filed as an incidental finding while resolving `ci_satellite_ao_dispatch_batch1-027` (the
   event-ledger-consumer audit). Did not fix inline -- out of that task's audit-only scope. No code changed this session
