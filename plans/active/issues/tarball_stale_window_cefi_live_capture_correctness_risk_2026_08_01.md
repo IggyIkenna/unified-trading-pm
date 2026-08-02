@@ -226,36 +226,56 @@ for visibility per the data-pipeline-correctness HARD RULE, not to be conflated 
       **`ASTER book_snapshot_5`/`liquidations` did NOT recover** — see the new todo below; this is now CONFIRMED as a
       separate, deeper bug, not caused by (or fixable via) the tarball-staleness incident this doc tracks. (repo:
       deployment-service)
-- [ ] [DATA] P0. **NEW FINDING 2026-08-02, NOT the tarball-staleness bug — needs its own dedicated connector-level
-      investigation.** `ASTER book_snapshot_5` + `ASTER liquidations` remain 100% `empty_confirmed`
-      (`error_reason=SOURCE_RETURNED_ZERO`) on the FRESH, correctly-relaunched VM (confirmed running
-      `deployment-     service@aa146bc`-era code, Python 3.13.14, all other 4 venues checked ARE capturing correctly on
-      this exact same VM) — ruling out tarball/deployment/environment causes definitively. Live evidence gathered
-      (`gcloud compute ssh mtds-live-cefi-consolidated-20260801-151833`, both processes alive, real CPU time
-      accumulated, not crash-looping): the `websocket-streaming` processes for both ASTER shards ARE running and DO
-      receive/process real per-instrument windows (log:
-      `instrument-window flush failed for cefi/ASTER/book_snapshot_5/     ASTER:PERPETUAL:1000LUNC-USDT@LIN`), and the
-      per-VM manifest shard (the authoritative, non-consolidated source) confirms the write path itself works
-      (`ManifestWriter: per-VM shard updated` fires continuously, thousands of entries) — but EVERY window for EVERY
-      ASTER instrument is recorded via `market_tick_data_service/live/websocket_runner.py::_record_empty_window` (line
-      ~771, `EmptyConfirmedReason.SOURCE_RETURNED_ZERO`) rather than `record_captured`. Since `_in_connectivity_gap()`
-      is NOT true (would route to `record_failed`/`UPSTREAM_LIVE_GAP` instead), the connectivity watchdog believes the
-      feed is healthy — meaning the WS connection itself is fine but zero ticks are being PARSED/COUNTED per instrument
-      window, pointing at `market_tick_data_service/live/connectors/aster_book_liq_ws.py`'s message parsing/dispatch
-      path (`_parse_aster_depth5`/`_retag_aster_book_tick`/the combined-stream subscription list) as the most likely
-      fault, not yet root-caused to an exact line. A single transient Redis restart was also observed
-      (`redis-server.service` restarted once at `06:26Z` today, `journalctl` confirms exactly ONE restart in 15h — ran
-      healthy continuously from VM boot `2026-08-01T15:20Z` until then) — this is a RED HERRING for the main bug (a
-      single brief restart cannot explain a ~15h, 100%-unbroken empty stretch that started at VM boot, before the
-      restart even happened) but is itself worth a lightweight follow-up note (why did Redis restart at all —
-      unattended-upgrades? a systemd timer? — not investigated). **Also newly found**: `DERIBIT     derivative_ticker`
-      is ALSO 100% `empty_confirmed` on this same fresh VM (3506/3506 rows empty as of `2026-08-02` today) — NOT
-      previously flagged in this doc's original manifest check (which only named ASTER as confirmed P0); same
-      investigation should cover both, or a decision made to split them once root-caused (may be unrelated failure
-      modes). Done-when: both venues' respective connectors are read/instrumented/fixed (or ruled correctly
-      non-capturing for a real exchange-side reason), and manifest rows show `captured` (or a legitimate
-      `expected_unattempted`) instead of `SOURCE_RETURNED_ZERO` for a representative post-fix window. (repo:
-      market-tick-data-service)
+- [x] ✅ [DATA] P0. **ROOT-CAUSED + FIXED 2026-08-02 — `ASTER book_snapshot_5`.** Confirmed root cause via a real live
+      wire probe (both from an external network AND replayed with the production-scale instrument count):
+      `wss://fstream.asterdex.com/stream` **silently drops an oversized combined-stream SUBSCRIBE frame** — no ack, no
+      error, connection stays healthy, zero data for ANY subscribed symbol thereafter. Reproduced the exact boundary:
+      163 streams (~4089 bytes JSON payload) subscribes fine; 164 streams (~4112 bytes) is silently dropped forever.
+      `AsterBookWSConnector` (via the inherited `BinanceFuturesBookWSConnector._open_and_subscribe`) sends ASTER's FULL
+      ~500-symbol MVP perpetual universe in **one** SUBSCRIBE frame — always past the ~4.1KB cliff — so 100% of ASTER
+      book_snapshot_5 windows were empty_confirmed by design, on a WS connection that looks perfectly healthy (matches
+      every observed symptom: `_in_connectivity_gap()` false, manifest writer running continuously, zero captured rows).
+      Same failure class already fixed once in this codebase for Polymarket CLOB WS (`polymarket_clob_ws.py`
+      `_MAX_ASSETS_PER_SUBSCRIBE` chunking) — applied the identical fix here: `AsterBookWSConnector` now overrides
+      `_open_and_subscribe`/`subscribe`/`unsubscribe` to send ≤100-stream chunks (`_ASTER_MAX_STREAMS_PER_SUBSCRIBE`)
+      instead of the base class's single-frame behaviour. Verified: (1) the exact 164-stream reproduction now succeeds
+      after chunking, (2) all 15 pre-existing + 1 new regression unit test pass, (3) `basedpyright` clean on the touched
+      files. The earlier "instrument-window flush failed ... ASTER:PERPETUAL:1000LUNC-USDT@LIN" log line is a SEPARATE,
+      minor secondary issue (an exception in `_publish_boundary_event` AFTER `_record_empty_window` already succeeded —
+      not the root cause; worth a P3 note, not investigated further here). The transient single Redis restart (`06:26Z`)
+      remains a confirmed red herring (unrelated, ran healthy 15h before/after). (repo: market-tick-data-service,
+      `market_tick_data_service/live/connectors/aster_book_liq_ws.py`) — **Shipped: market-tick-data-service@593bd425.**
+- [ ] [DATA] P1. **`ASTER liquidations` — NOT reproduced as broken; needs a longer manifest-based observation, not
+      further live-probing.** The `AsterLiquidationsWSConnector` subscribes a SINGLE small all-market `!forceOrder@arr`
+      stream (not per-symbol — the ~4.1KB batch-size bug above cannot apply here). Live-tested: the subscribe ack
+      round-trips normally even when `!forceOrder@arr` is combined with a known-good stream in the same request (i.e.
+      ASTER's gateway accepts the request, doesn't silently poison the batch). Two live observation windows (25s, 70s)
+      captured ZERO force-order events — inconclusive on its own (liquidations are a genuinely low-frequency event on a
+      smaller venue) but the manifest shows a multi-DAY unbroken zero stretch, which is harder to explain by chance
+      alone for a 500+-symbol universe including majors. Left OPEN rather than guessed at: re-check the manifest ~24-48h
+      after the book_snapshot_5 fix ships (isolates whether this was ever genuinely broken, or was masked/conflated with
+      the book_snapshot_5 incident in the original triage). If still 100% empty after a multi-day window post-fix, the
+      next step is a longer (multi-hour) live capture + comparing against ASTER's REST liquidation-adjacent endpoints
+      (if any) to establish a real base rate. (repo: market-tick-data-service)
+- [ ] [DATA] P1. **`DERIBIT derivative_ticker` — NOT reproduced as broken via connector-level testing; likely a
+      DIFFERENT failure mode than ASTER (split per this doc's own note that they may be unrelated), needs an
+      IS-universe-side investigation.** Live-tested `DeribitTickerWSConnector` end-to-end (real
+      `wss://www.deribit.com/ws/api/v2`, real `BTC-PERPETUAL` canonical id from `build_deribit_canonical_id`) and it
+      correctly subscribed, received, parsed, and yielded a `ASTER`-analogous `derivative_ticker` tick with real
+      `funding_rate`/`mark_price` values — the connector's WS subscribe, wire-shape assumptions
+      (`current_funding`/`funding_8h`/`mark_price` keys all confirmed present on the real wire), and parsing path are
+      all correct for at least one real instrument. DERIBIT's MVP shard here is `derivative_ticker` ONLY (no
+      book_snapshot_5/trades on this VM), and DERIBIT's real instrument count (~5 perpetuals + a handful of dated
+      futures per currency) is far below the ~163-stream cliff that broke ASTER, so the same batch-size bug is unlikely
+      to apply. Most likely remaining explanation (NOT verified — next step for whoever picks this up): the canonical
+      instrument_ids IS actually publishes for DERIBIT in the day's `instruments.parquet` don't round-trip cleanly
+      through `deribit_ws.py`'s `build_deribit_canonical_id`/`deribit_name_from_canonical` pair (e.g. dated-future or
+      `@INV` marker construction mismatch), so `record_tick`'s `self._buffers.get(received.instrument_id)` silently
+      drops every real tick even though the WS layer is healthy — the SAME symptom shape as the ASTER bug but a
+      DIFFERENT mechanism (IS/connector id-format drift, not a subscribe-batch limit). Needs a direct read of the
+      production day's DERIBIT `instruments.parquet` `instrument_key` values compared against what
+      `_instrument_to_deribit_name`/`build_deribit_canonical_id` expect — not done in this pass (time-boxed; the
+      confirmed, fixed ASTER book_snapshot_5 bug was this todo's primary deliverable). (repo: market-tick-data-service)
 - [ ] [DATA] P3. File a SEPARATE issue doc for the two pre-existing, unrelated chronic findings surfaced incidentally by
       this check: `OKX-FUTURES trades` intermittent zero-capture (going back to at least `2026-07-20`, live pipeline)
       and `POLYMARKET-PERP perp_funding` permanently `attempted_failed` since at least `2026-07-28` (batch pipeline).
