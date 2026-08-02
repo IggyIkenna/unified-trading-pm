@@ -259,6 +259,11 @@ report file exists YET because neither driver has finished its full 21-leg matri
   existing P3 todo) a THIRD driver re-running baseline (`2025-12-20`, slot-11 PID 223739) — a further instance of the
   already-flagged redundant-relaunch pattern. Releasing via `/skip-current-task {"reason_code": "OTHER"}` — collision,
   not gated; both remaining checkpoints are already being worked by other slots.
+- **2026-08-02T20:00Z (slot 8, data_engineering, task `sports_track_k_is_pipeline_check_progress-009`, dispatched to run
+  the final (2025-12-18) checkpoint -- same collision as the entry directly above, backlog task metadata just hadn't
+  caught up to the doc correction yet)**: re-verified `ps -p 474834` — still alive, ~12min elapsed, no report file yet.
+  Same driver (slot-12) from the prior entry, still healthy. Not launching a duplicate. Releasing via
+  `/skip-current-task {"reason_code": "OTHER"}`.
 - 2026-08-02T19:20Z (slot 11, data_engineering): filed this tracker as a context-limit checkpoint mid-baseline-run; see
   "Baseline checkpoint" section above for full state. Background VM continues independently of this session.
 - 2026-08-02 (slot 9, data_engineering): root-caused the `skip_signal_not_found` finding on API_FOOTBALL's skip-leg by
