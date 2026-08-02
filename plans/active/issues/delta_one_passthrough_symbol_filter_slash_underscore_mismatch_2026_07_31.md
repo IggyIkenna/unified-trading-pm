@@ -52,7 +52,7 @@ depends_on: []
 context_scope:
   [
     /plans/active/issues/delta_one_candle_loader_no_pass_through_path_defi_2026_07_30.md,
-    /plans/active/issues/delta_one_passthrough_lookback_buffer_too_short_for_sparse_ticks_2026_07_31.md,
+    /plans/archive/issues/delta_one_passthrough_lookback_buffer_too_short_for_sparse_ticks_2026_07_31.md,
     /plans/active/issues/defi_delta_one_funding_oi_hyperliquid_missing_open_interest_2026_07_31.md,
     features-service/features_service/delta_one/app/core/_passthrough_loader.py,
   ]

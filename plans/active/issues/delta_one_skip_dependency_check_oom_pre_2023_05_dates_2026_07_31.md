@@ -27,9 +27,9 @@ repos: [features-service]
 scope: [engineer]
 tags: [defi, features-service, delta-one, memory, oom, passthrough, vm-spend-waste]
 related:
-  - /plans/active/issues/delta_one_dependency_checker_ignores_passthrough_feature_group_2026_07_31.md
-  - /plans/active/issues/features_service_defi_backfill_vm_oom_unexplained_2026_07_26.md
-  - /plans/active/issues/delta_one_passthrough_lookback_buffer_too_short_for_sparse_ticks_2026_07_31.md
+  - /plans/archive/issues/delta_one_dependency_checker_ignores_passthrough_feature_group_2026_07_31.md
+  - /plans/archive/issues/features_service_defi_backfill_vm_oom_unexplained_2026_07_26.md
+  - /plans/archive/issues/delta_one_passthrough_lookback_buffer_too_short_for_sparse_ticks_2026_07_31.md
   - /plans/active/defi_satellite_ao_dispatch_batch3_2026_07_26.md
 created: "2026-07-31"
 source:
@@ -50,7 +50,7 @@ depends_on: []
 context_scope:
   [
     /plans/active/defi_satellite_ao_dispatch_batch3_2026_07_26.md,
-    /plans/active/issues/delta_one_dependency_checker_ignores_passthrough_feature_group_2026_07_31.md,
+    /plans/archive/issues/delta_one_dependency_checker_ignores_passthrough_feature_group_2026_07_31.md,
     /plans/active/issues/mtds_backfill_vm_startup_oom_rc137_2026_07_14.md,
     features-service/features_service/delta_one/app/core/dependency_checker.py,
   ]
@@ -154,36 +154,36 @@ waste.
       `bash scripts/quality-gates.sh` green, fix shipped via `quickmerge.sh --agent --files`.
 
       **Root cause (neither original hypothesis) — `dependency_checker.py:805`,
-                                                                          `LookbackValidator._build_captured_index()`**: a dedicated research pass (a sub-agent that live-verified via
-                                                                          `gsutil` against the real prod bucket) first RULED OUT the initially-suspected
-                                                                          `instrument_type_filter.py:56-57` GCS listing — `day=2022-11-01` under
-                                                                          `instrument_availability/by_date/` has only ~85 real objects / 1.86 MB, categorically too small to explain
-                                                                          18-21 GB. It then found the real culprit: `_build_captured_index()` calls
-                                                                          `read_availability_index(bucket_name, columns=[...])` with **no `filters=`**, decoding the WHOLE availability
-                                                                          manifest on every lookback-validation run — this is the SAME confirmed anti-pattern as a prior, fully
-                                                                          investigated incident on the SAME real 27.4M-row DEFI index
-                                                                          (`mtds_backfill_vm_startup_oom_rc137_2026_07_14.md`: a live kernel OOM-kill, `anon-rss≈14.67 GiB` measured via
-                                                                          `dmesg`). `read_availability_index()`'s own docstring cites that exact incident's before/after measurement for
-                                                                          the identical fix pattern (row-group `filters=` pushdown): **~14.86 GiB → ~5 MB** for an equivalent single-day
-                                                                          filter on this same index. `_count_candles_for_lookback()` (the sole consumer of
-                                                                          `_build_captured_index()`'s output) only ever reads the `[date - buffer_days, date]` window, so the fix threads
-                                                                          `date`/`buffer_days` through and adds `filters=[("date", ">=", start_date), ("date", "<=", date)]` — bounding
-                                                                          peak memory to that window's matching row groups instead of the full index, for every caller (not just the
-                                                                          `--skip-dependency-check` path — this call is unconditional in `_check_all_instruments`, so the fix also
-                                                                          protects the normal/no-flag path for any future pre-coverage date). Fixed `dependency_checker.py:805-841`; all
-                                                                          7 call sites in `tests/delta_one/unit/test_lookback_validation.py` updated to pass `date=`/`buffer_days=`, incl.
-                                                                          the pre-existing pinned-signature regression test (`TestBuildCapturedIndexColumnProjection`) now asserting the
-                                                                          `filters=` kwarg — 36/36 tests pass, `quality-gates.sh` green on both commits. **Not run**: the "CONTROLLED 4th
-                                                                          combination" VM launch this todo's text suggested — the file:line citation + the sibling incident's own
-                                                                          measured before/after numbers on the identical index/pattern already meet the todo's actual "Done when" bar; a
-                                                                          live VM launch to re-measure would be confirmatory, not load-bearing for the fix's correctness, and the fix
-                                                                          itself now runs identically regardless of `--skip-dependency-check`, closing both the originally-reported
-                                                                          broken combination AND any future occurrence of it. **Filed as its own cross-repo follow-up** (not fixed here,
-                                                                          different repo): `unified-trading-library`'s `get_captured_instruments()`
-                                                                          (`feature_service_base/manifest_discovery.py:79-138`) has the SAME unfiltered-read anti-pattern, reached via a
-                                                                          DIFFERENT call path (`DataLoader.get_available_instruments()` → `_get_instruments()`, used whenever a batch run
-                                                                          doesn't pass an explicit `--instruments` list) — see
-                                                                          `issues/utl_get_captured_instruments_unfiltered_manifest_read_2026_07_31.md`.
+                                                                              `LookbackValidator._build_captured_index()`**: a dedicated research pass (a sub-agent that live-verified via
+                                                                              `gsutil` against the real prod bucket) first RULED OUT the initially-suspected
+                                                                              `instrument_type_filter.py:56-57` GCS listing — `day=2022-11-01` under
+                                                                              `instrument_availability/by_date/` has only ~85 real objects / 1.86 MB, categorically too small to explain
+                                                                              18-21 GB. It then found the real culprit: `_build_captured_index()` calls
+                                                                              `read_availability_index(bucket_name, columns=[...])` with **no `filters=`**, decoding the WHOLE availability
+                                                                              manifest on every lookback-validation run — this is the SAME confirmed anti-pattern as a prior, fully
+                                                                              investigated incident on the SAME real 27.4M-row DEFI index
+                                                                              (`mtds_backfill_vm_startup_oom_rc137_2026_07_14.md`: a live kernel OOM-kill, `anon-rss≈14.67 GiB` measured via
+                                                                              `dmesg`). `read_availability_index()`'s own docstring cites that exact incident's before/after measurement for
+                                                                              the identical fix pattern (row-group `filters=` pushdown): **~14.86 GiB → ~5 MB** for an equivalent single-day
+                                                                              filter on this same index. `_count_candles_for_lookback()` (the sole consumer of
+                                                                              `_build_captured_index()`'s output) only ever reads the `[date - buffer_days, date]` window, so the fix threads
+                                                                              `date`/`buffer_days` through and adds `filters=[("date", ">=", start_date), ("date", "<=", date)]` — bounding
+                                                                              peak memory to that window's matching row groups instead of the full index, for every caller (not just the
+                                                                              `--skip-dependency-check` path — this call is unconditional in `_check_all_instruments`, so the fix also
+                                                                              protects the normal/no-flag path for any future pre-coverage date). Fixed `dependency_checker.py:805-841`; all
+                                                                              7 call sites in `tests/delta_one/unit/test_lookback_validation.py` updated to pass `date=`/`buffer_days=`, incl.
+                                                                              the pre-existing pinned-signature regression test (`TestBuildCapturedIndexColumnProjection`) now asserting the
+                                                                              `filters=` kwarg — 36/36 tests pass, `quality-gates.sh` green on both commits. **Not run**: the "CONTROLLED 4th
+                                                                              combination" VM launch this todo's text suggested — the file:line citation + the sibling incident's own
+                                                                              measured before/after numbers on the identical index/pattern already meet the todo's actual "Done when" bar; a
+                                                                              live VM launch to re-measure would be confirmatory, not load-bearing for the fix's correctness, and the fix
+                                                                              itself now runs identically regardless of `--skip-dependency-check`, closing both the originally-reported
+                                                                              broken combination AND any future occurrence of it. **Filed as its own cross-repo follow-up** (not fixed here,
+                                                                              different repo): `unified-trading-library`'s `get_captured_instruments()`
+                                                                              (`feature_service_base/manifest_discovery.py:79-138`) has the SAME unfiltered-read anti-pattern, reached via a
+                                                                              DIFFERENT call path (`DataLoader.get_available_instruments()` → `_get_instruments()`, used whenever a batch run
+                                                                              doesn't pass an explicit `--instruments` list) — see
+                                                                              `issues/utl_get_captured_instruments_unfiltered_manifest_read_2026_07_31.md`.
 
 - [ ] [DATA] P2. Once the above lands, backfill the remaining 2022-11-01..2023-05-11 gap for `returns` (repo:
       features-service — a VM launch, not a code change).

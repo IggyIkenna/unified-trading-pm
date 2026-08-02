@@ -31,7 +31,7 @@ tags: [defi, features-service, delta-one, dependency-checker, preflight, passthr
 related:
   - /plans/active/issues/delta_one_candle_loader_no_pass_through_path_defi_2026_07_30.md
   - /plans/active/issues/delta_one_lookback_instrument_discovery_wrong_universe_for_passthrough_defi_2026_07_30.md
-  - /plans/active/issues/delta_one_passthrough_lookback_buffer_too_short_for_sparse_ticks_2026_07_31.md
+  - /plans/archive/issues/delta_one_passthrough_lookback_buffer_too_short_for_sparse_ticks_2026_07_31.md
   - /plans/active/defi_satellite_ao_dispatch_batch3_2026_07_26.md
 created: "2026-07-31"
 source: [features-delta-one-defi-20260731-104738, preflight failure on 2022-11-01/DEFI/returns]
