@@ -119,25 +119,38 @@ worth closing the same way (isolate + surface the real error) rather than leavin
       across 2-3 more `uts-prod-data-status-rollup-cron` cycles (~20 min apart) to confirm the gap is reproducible, not
       transient. Repo: deployment-api. Done when: a Progress Log entry records either "confirmed reproducible across N
       cycles" or "resolved itself — false alarm" with timestamps.
-- [ ] [CODE] P2. If confirmed reproducible: diagnose why `_build_one_service_rollup(dss, "ml-service", ...)` fails/is
-      skipped while `_build_one_service_coverage` succeeds for the same service in the same run — read
-      `DataStatusService`'s manifest-vs-coverage code paths for ml-service, find the divergence, and fix it (or, if
-      ml-service's full-history manifest genuinely has the same "too large for any RAM tier" property as MTDS/MDPS,
-      document that explicitly next to the MTDS/MDPS comment in `data_status_rollup_worker.py` rather than leaving it
-      unexplained). Repo: deployment-api. Done when: `ml-service/full.json.gz` is confirmed refreshing on a live cycle,
-      or the doc explicitly states why it structurally cannot (mirroring the MTDS/MDPS precedent) with a regression test
-      guarding the honest-failure path either way. **UPDATED LEAD (2026-08-02)**: the "silent skip" framing is now the
-      stronger hypothesis than "code-path-specific bug" — see Progress Log below. `run_rollup`'s per-service loop
-      unconditionally `logger.error()`s every failure mode it can observe, including the "child exited without reporting
-      (likely OOM/crashed)" fallback — yet zero Cloud Logging entries mention ml-service at all across ~24 cycles / 30h,
-      unlike every OTHER currently-failing service in the list, which logs reliably every cycle. Worth checking FIRST:
-      (1) does the deployed Cloud Run revision's image actually match current `_DEFAULT_SERVICES` (a stale/older
-      deployed image predating the 2026-05-21 ml-training/ml-inference→ml-service consolidation comment would silently
-      never attempt it), (2) does ml-service's specific compute shape trigger a native/C-level crash that takes down the
-      PARENT gen1 process (not just the isolated child) — the `_rollup.py` docstring already documents this exact crash
-      class for the gen2 Job; confirm it's truly gen1-safe for ml-service specifically, not just generically. A direct
-      single-service test (`POST /api/data-status/rollup-run?services=ml-service`, authenticated) would settle (1) vs
-      (2) vs a genuine fast-fail directly, faster than more passive cycle-watching.
+- [x] ✅ [CODE] P2. If confirmed reproducible: diagnose why `_build_one_service_rollup(dss, "ml-service", ...)` fails/is
+      skipped while `_build_one_service_coverage` succeeds for the same service in the same run. **ROOT-CAUSED + FIXED
+      2026-08-02 (slot 15)**: `deployment-api@aaa0d1d`. Verified image-freshness first (ruled OUT hypothesis (1) from
+      the updated lead below — the deployed revision `uts-prod-data-status-rollup-svc-00298-qgj` (image
+      `deployment-api:969bce0`) was deployed 2026-08-02T15:27Z, well after the 2026-05-21 ml-service consolidation, so a
+      stale image was never the cause). Settled it directly via the suggested single-service probe:
+      `POST /api/data-status/rollup-run?services=ml-service` (authenticated via `unified-trading-sa`'s existing
+      `roles/run.invoker` grant on the dedicated rollup service) returned in 27.8s with
+      `{"status":"partial","exit_code_live":1}`, and Cloud Logging for that exact window
+      (`resource.labels.service_name=     "uts-prod-data-status-rollup-svc"`, `timestamp>="2026-08-02T21:02:00Z"`)
+      showed the real, LOUD error:
+      `ERROR manifest rollup failed for service=ml-service: Unknown kind 'ml-models-store' for cloud 'gcp'. Valid     kinds: [..., 'ml-store', ...]`.
+      Root cause: `deployment_api/services/data_status_drilldown/_core.py`'s `SERVICE_TO_KIND["ml-service"]` still
+      pointed at the legacy `"ml-models-store"` alias, which UTL's `bucket_naming._KIND_ALIASES` REMOVED in the
+      2026-07-19 alias sunset (`bucket_naming.py`'s own comment: "ALIAS SUNSET 2026-07-19: all five ml aliases REMOVED —
+      the deployment-api / deployment-service / ml-service resolvers now call `kind='ml-store'` directly") — every OTHER
+      `ml-store` caller was repointed at the time, this one caller was missed. `_get_coverage_summary_sync` succeeds
+      because `_build_coverage_for_cat` does not go through this same `SERVICE_TO_KIND` →
+      `resolve_bucket_name(kind=...)` call site for its bucket resolution (confirmed by reading `coverage.py`), so only
+      the manifest ("full") path was ever broken — exactly matching the observed coverage-succeeds/manifest-fails split.
+      This also fully explains the "total silence" the earlier 30h Cloud Logging check found (see Progress Log below) —
+      that check ran against the OLD revision (pre-15:27Z today); whatever the OLD revision's failure mode was for
+      ml-service, TODAY's redeploy changed the code path enough to surface this exact, previously-masked bug as a clean,
+      loud, reproducible `ValueError`. **Fix**: `SERVICE_TO_KIND["ml-service"]` → `"ml-store"` (the direct kind,
+      matching every other repo's already-repointed callers) + updated the stale comment. **Regression test**: added
+      `TestBuildBucketName::test_every_service_to_kind_entry_resolves_a_real_bucket` (parametrized over every
+      `SERVICE_TO_KIND` entry, calling the REAL unmocked `resolve_bucket_name` — the existing `TestBuildBucketName`
+      tests all mock the resolver, so none of them would have caught a dead-alias regression; this one would have failed
+      loudly on the pre-fix `"ml-models-store"` value, confirmed by temporarily reverting it and re-running). 18/18
+      tests pass post-fix (`tests/unit/test_data_status_drilldown.py::TestBuildBucketName`). Full QG run before
+      shipping. Live confirmation (`full.json.gz` actually refreshing on the next real `*/20` cron cycle) is a follow-up
+      verification step, not blocking the fix landing.
 - [ ] [CODE] P2. NEW regression found while diagnosing the above (not present in the 2026-07-26 baseline table, where
       instruments-service + market-data-processing-service both succeeded same-cycle): `instruments-service`'s manifest
       rollup step now fails every cycle with
@@ -150,7 +163,22 @@ worth closing the same way (isolate + surface the real error) rather than leavin
       memory ceiling on instruments-service). Repo: deployment-api. Done when: either the per-service ceilings are
       raised/the compute is optimized to fit within them again, or (mirroring the MTDS precedent) the doc explicitly
       records these two as now-structural gaps next to the MTDS comment, with a regression test guarding the
-      honest-failure (not silent-placeholder) path for both.
+      honest-failure (not silent-placeholder) path for both. **NEW EVIDENCE (2026-08-02, slot 15)**: while diagnosing
+      the ml-service bug above, `gcloud logging read` on `uts-prod-data-status-rollup-svc` for the last ~4h surfaced
+      recurring PLATFORM-level (not per-service-child) memory events —
+      `ERROR Memory limit of 32768 MiB exceeded with     ~33000 MiB used` and
+      `the container instance was found to be using too much memory and was terminated ...     likely to cause a new container instance to be used for the next request`,
+      roughly every 1-2 `*/20` cron cycles (e.g. 18:20, 19:00, 19:40, 20:20 UTC). This means the WHOLE container
+      (parent + any in-flight isolated child), not just an individual service's `_CHILD_RLIMIT_AS_BYTES`-capped child,
+      is periodically hitting the 32Gi container ceiling and being platform-killed mid-sweep — the per-service child
+      isolation added 2026-07-13 was designed to prevent exactly this class of whole-container OOM, so either
+      cumulative/leaked memory across services within one sweep, or the PARENT process's own overhead, is now large
+      enough to blow the container ceiling on its own. A mid-sweep platform kill would also explain why a
+      `logger.error()` call queued just before the kill can fail to reach Cloud Logging (unflushed on SIGKILL) — a
+      plausible mechanism for other services' "silent" failures this doc and its siblings have observed, beyond just
+      ml-service's now-fixed bug. Not investigated further here (out of scope for this todo); worth a dedicated look at
+      whether the container ceiling itself needs raising, or whether cumulative per-sweep memory (not just per-child)
+      needs its own bound.
 - [ ] [INFRA] P3. The `data-status-rollup-worker` `GcsEventSink` (the `log_event(SERVICE_PROCESSED/SERVICE_FAILED, ...)`
       calls in `run_rollup`) has not written a new dated prefix under
       `gs://central-element-323112-events/events/data-status-rollup-worker/` since `2026-06-17` — 6+ weeks stale — even
@@ -163,6 +191,13 @@ worth closing the same way (isolate + surface the real error) rather than leavin
 
 ## Progress Log
 
+- **data_engineering (slot-15) 2026-08-02T21:15Z**: root-caused + fixed todo 2 (see the todo's own entry above for the
+  full evidence chain: live single-service probe → Cloud Logging → `SERVICE_TO_KIND["ml-service"]` pointing at the
+  2026-07-19-sunset `"ml-models-store"` alias instead of `"ml-store"`). Fix + regression test in
+  `deployment-api@aaa0d1d` (`deployment_api/services/data_status_drilldown/_core.py` +
+  `tests/unit/test_data_status_drilldown.py`). Also surfaced a NEW, separate finding (recurring whole-container 32Gi
+  memory-limit kills on the rollup service, not just per-service-child) — added to todo 3 above rather than opening a
+  new todo, since it's directly continuous with that todo's existing memory-ceiling evidence.
 - **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).
 - **data_engineering (slot-15) 2026-08-02T19:22Z**: **CONFIRMED REPRODUCIBLE — not transient.**
   `gs://central-element-323112-data-status-rollups/ml-service/full.json.gz` is still fully absent (only
