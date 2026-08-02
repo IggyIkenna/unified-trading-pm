@@ -318,3 +318,17 @@ boot-loop doc's citation of `server/prompts.py` and `server/routes/slots_worker.
   a tracked `- [ ]` todo, despite three corroborating occurrences already sitting in this doc. Added todo 5 above to
   close that gap per the findings-closure hard rule (prose flags don't dispatch; todos do). No new evidence gathered —
   the underlying occurrences are exactly the ones already documented above.
+
+- **na-eligibility-audit 2026-08-02 (autonomous, tranche `cross-cutting`, dispatch agt-c229d3, slot 10)**: a genuine 4th
+  occurrence, distinct from the three already logged above. This dispatch's `/boot` call returned
+  `task.id=persistent_slot_tmux_session_hijacked_by_transient_plan_health_dispatch-003` — **this doc's own todo-3
+  tracking task** (`assigned_role: backend_engineer`, `dispatch_reason: "tier=1 priority=50 plan_order=0 —
+  highest-rank queued task with prereqs met and no collision"`). Notable new data point: unlike the prior three
+  occurrences (which all landed on todo 1's tracking task, `-001`), this one landed on **todo 3's** tracking task
+  (`-003`) — i.e. the wrongly-substituted task is whatever the generic backlog picker currently ranks highest, not a
+  fixed target. This further corroborates todo 5's framing (the `/boot` → generic-backlog-picker path is unconditionally
+  wrong for a `plan_health`-dispatched session, not just misrouted toward one specific task) and rules out a narrower
+  fix that special-cases task `-001` alone. Proceeded per role file: called
+  `POST /api/slots/10/skip-current-task` (`reason_code: OTHER`) to release `-003` back to `queued` for a real
+  `backend_engineer`, then continued with the actual `na_eligibility_auditor`/`cross-cutting` assignment. No code
+  changes made under this dispatch — todo 5 (already tracked, unassigned) remains the correct fix; not duplicating it.
