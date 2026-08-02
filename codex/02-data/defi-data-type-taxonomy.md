@@ -158,8 +158,13 @@ defi-axis perp venue here until removed 2026-07-16, same ruling.
 `defi_perp_funding_canonicalisation_derivative_ticker_all_perps_2026_07_15.md`)**: `derivative_ticker` is the canonical
 RAW-funding home for EVERY perp venue, defi-axis and cefi-axis alike — captured at the highest resolution each source
 offers, even where the source has no open interest (OI/mark/index fields nullable; `funding_rate` + `ts_event`
-mandatory). `perp_funding` stays the per-interval canonical VIEW (annualizing a single rate into `annualized_rate` is
-fine — a unit conversion, not aggregation) but MUST NOT carry venue-specific rolling-window aggregates (the Drift-only
+mandatory). **HYPERLIQUID's `derivative_ticker.funding_rate` is the correct proxy for `perp_funding.funding_rate`, not
+`predicted_funding_rate`** (the asset_ctxs `premium` column) — measured 2026-08-02: `predicted_funding_rate` diverges
+FAR more (match_pct 3.9% vs 60.7%, p50 abs-diff ~30x larger) because `premium` is a raw un-annualized 8h premium
+component feeding INTO the funding formula, not a same-scale rate estimate; see
+`plans/archive/issues/defi_hyperliquid_perp_funding_derivative_ticker_divergence_2026_07_28.md` for the full comparison.
+`perp_funding` stays the per-interval canonical VIEW (annualizing a single rate into `annualized_rate` is fine — a unit
+conversion, not aggregation) but MUST NOT carry venue-specific rolling-window aggregates (the Drift-only
 `funding_rate_24h`/`funding_rate_7d`/`funding_rate_30d` columns were removed 2026-07-15 —
 `market-tick-data-service/.../cli/handlers/solana_defi_drift.py`'s `_collect_drift`). Per-venue resolution (verified
 2026-07-15, see the issue doc's coverage table for full evidence + file:line):
