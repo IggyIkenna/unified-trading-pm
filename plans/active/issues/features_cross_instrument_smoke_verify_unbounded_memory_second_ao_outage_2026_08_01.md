@@ -128,12 +128,23 @@ locked_since:
       whether it shares the unfiltered-wide-manifest-read anti-pattern already fixed in the 4 sibling incidents this
       week. If confirmed, apply the same fix shape (column-pruned/filtered read, `os._exit()` after the real work
       completes to avoid a lingering-thread hang). (repo: features-service)
-- [ ] [INFRA] P2. Fix or replace the `timeout 150` protection in all 8 `e2e-testing/scripts/<family>/smoke_matrix.py`'s
-      `_invoke_cli()` — either add `timeout --kill-after=<n> 150 ...` (forces `SIGKILL` if `SIGTERM` is ignored, closing
-      the exact gap this incident exposed) or wrap with a real memory cap (`ulimit -v`, or
-      `scripts/dev/run-bounded-analysis.sh`) since a process that ignores `SIGTERM` for over 100x its wall-clock budget
-      cannot be trusted to respect a bare `timeout`. Done when: a repro (a script that traps/ignores SIGTERM) is killed
-      within a few seconds of the deadline, not left running indefinitely. (repo: e2e-testing)
+- [x] ✅ [INFRA] P2. Fix or replace the `timeout 150` protection in all 8
+      `e2e-testing/scripts/<family>/smoke_matrix.py`'s `_invoke_cli()` — e2e-testing@404e4d8. **Correction to this
+      todo's premise**: `_invoke_cli()` never actually contained a literal shell `timeout 150` wrapper (grepped full git
+      history + working tree — 0 hits for a `150` timeout anywhere in this repo); all 8 families already used
+      `subprocess.run(cmd, timeout=600, ...)`. The `timeout 150`-wrapped command in this incident's "What's confirmed"
+      §1 was a hand-typed manual verification run by slot 12 directly in `.tabs/12/features-service` (not via
+      `smoke_matrix.py`). That said, `subprocess.run`'s built-in `timeout=` kwarg DOES already SIGKILL (not bare
+      SIGTERM) on expiry — verified live: a SIGTERM-trapping repro child was killed within its exact bound even before
+      any change. The REAL residual gap (also verified live): `subprocess.run`'s `kill()` only signals the direct child
+      PID — a repro parent that spawns its own grandchild subprocess left that grandchild running indefinitely as an
+      orphan after the parent was killed, which is the actual "unbounded memory survives the timeout" failure mode this
+      incident's symptom is consistent with. Fix applied: all 8 `_invoke_cli()`s (+ sports' inline equivalent) now use
+      `subprocess.Popen(start_new_session=True)` + `communicate(timeout=600)`, and on `TimeoutExpired` SIGKILL the whole
+      process GROUP via `os.killpg(os.getpgid(proc.pid), signal.SIGKILL)` — reaping the invoked CLI and any descendant
+      it spawned. Re-verified the done-when repro with this exact fix: both a SIGTERM-trapping parent AND its
+      SIGTERM-trapping grandchild are reaped within the deadline (previously the grandchild survived). QG green
+      (`quality-gates.sh`, sentinel 404e4d8). (repo: e2e-testing)
 - [ ] [DATA] P3. Once `[DATA] P2` above lands (or rules out the anti-pattern), resume the remaining unverified
       `smoke_matrix.py` legs (multi_timeframe, onchain, sports, volatility) for
       `features_e2e_smoke_matrix_writes_to_prod_bucket_2026_08_01.md`'s original verification goal, this time with the
@@ -162,3 +173,9 @@ locked_since:
   unpark before then") — not a duplicate claim, but a genuine blocking prerequisite for already-dispatched AO work,
   which argues FOR reclassifying promptly rather than against it. No competing claim found on the
   `[DATA] P2`/`[INFRA] P2`/`[DATA] P3` todos themselves.
+- **2026-08-02 (slot 8, infra)**: `[INFRA] P2` shipped — e2e-testing@404e4d8, QG green. Corrected this todo's premise in
+  place (the literal `timeout 150` never existed in `_invoke_cli()`; the real gap was `subprocess.run`'s `kill()` only
+  reaping the direct child, not descendant processes — see the flipped todo above for the full finding). Flipping the
+  `features_smoke_verify_timeout_hardening_landed` prerequisite green now so
+  `features_e2e_smoke_matrix_writes_to_prod_bucket_2026_08_01.md`'s parked `[DATA] P3`-adjacent re-verification work can
+  unpark.
