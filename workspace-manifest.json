@@ -959,7 +959,7 @@
         "qg_red_reason": "qg",
         "warn_file_count": 6
       },
-      "ldr_ci_status": "GREEN",
+      "ldr_ci_status": "RED",
       "cascade_invalidated_by": "unified-trading-library=0.66.0"
     },
     "strategy-service": {
