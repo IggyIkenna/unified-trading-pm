@@ -92,7 +92,32 @@ context_scope:
 
 ## Flips verified
 
-(none yet — appended as STEP 4/5 confirm missed-flip candidates)
+**Missed-flip hunter**: grepped every open `- [ ]` in `plans/active/**` whose own line carries a "shipped/already
+done/DONE 2026/sha/verified working" signal (63 raw candidates). Adversarially verified each (refuter: is the cited
+evidence actually for THIS todo's own completion, or just a precondition/partial/blocked-on-something-else? confirmer:
+re-locate the evidence, check reachability). The vast majority (~60) refuted as NOT missed flips — the cited "shipped"
+language describes a PRECONDITION for the still-open action (e.g. "engine SHIPPED" but
+BACKTEST-PENDING/no-authorised-backfill blocks registration; "code fix shipped" but the todo's own job is a separate
+re-verify/relaunch/reconcile action; multiple explicit "NOT ticked — pw:L2 ran but full suite doesn't exit 0, blocked on
+a separate doc" UI todos correctly honoring the playwright-gate HARD RULE). 1 CONFIRMED genuine missed-flip, applied:
+
+- **`cefi_satellite_ao_dispatch_batch3_finalize_2026_07_26.md`'s `[PM] P2` todo** ("Hand the 2 provably-shipped stale
+  checkboxes to a reconcile pass") — this todo's OWN job (verify 2 specific checkboxes in
+  `issues/deribit_combo_perpetual_partition_move_2026_07_21.md` and flip them if evidence holds) turned out to already
+  be done by a DIFFERENT pass (slot-15, 2026-07-27) — both target checkboxes are already `[x]` with the exact evidence
+  chain this todo asked for. Independently re-verified BOTH conditions myself before flipping: (1) `mtds@2ddc6d4a`
+  reachable on `origin/live-defi-rollout` — `gh api repos/.../compare/2ddc6d4a...live-defi-rollout` → `status: ahead`
+  (HARD evidence, since I have no local market-tick-data-service clone in this standalone environment); (2)
+  `tardis_cefi_shards.py` genuinely routes through the shared fixed classifier — fetched the file content directly via
+  `gh api .../contents/...` and confirmed lines 298/590 call `self._classify_row_instrument_type(s, venue)`, the exact
+  method the cited commit patched. Flipped the finalize doc's own todo `[x]`, citing both independent verifications.
+
+**1 finding NOT flipped (needs a UI-capable session)**: `data_status_tab_and_downloads_remediation_2026_06_16.md`
+carries 3 `[UI]` P1/P2 todos explicitly NOT ticked because the required `pw:L2` full-suite run was blocked by a separate
+regression (`deployment_ui_fleet_git_nav_entry_regression_2026_07_28.md`) — that blocking doc is now `status: resolved`
+and archived. This MAY unblock the 3 todos, but flipping them requires actually re-running `pw:L2` against
+`deployment-ui` (per CLAUDE.md's playwright-gate HARD RULE — "no tick without `[UI]` + `pw:L2` ✓ + a cited regression
+spec"), which this standalone/no-UI-repo environment cannot do. Filed here as a follow-up rather than guessed at.
 
 ## Contradictions
 
@@ -184,6 +209,24 @@ non-overlapping remainder — see Archive candidates section, updated as verifie
   `github_actions_total_fleet_outage_startup_failure_2026_07_30.md`,
   `ldr_to_main_promote_workflows_sustained_startup_failure_2026_07_30.md` — see `## Contradictions` below (same
   underlying pattern, filed together).
+- `sports_batch_odds_api_capture_outage_recurrence_check_2026_07_26.md` — see `F1` above (likely false-checked P0 todo,
+  real data-correctness question).
+- `data_status_tab_and_downloads_remediation_2026_06_16.md` — see `## Flips verified` above (3 UI todos likely unblocked
+  now, need a `pw:L2` re-run this environment cannot perform).
+- `tradfi_mdps_es_mes_backfill_fleet_consolidator_staleness_failures_2026_07_31.md` — grace-blocked referrer-path fix
+  (points at `mdps_tradfi_chain_bundle_aggregate_write_malformed_row_key_2026_07_31.md`'s pre-archival path).
+- `expand_defi_pool_catalogue_script_unbounded_memory_2026_07_31.md` — grace-blocked referrer-path fix (points at
+  `utl_get_captured_instruments_unfiltered_manifest_read_2026_07_31.md`'s pre-archival path).
+- `context_scope_consumption_enforcement_2026_07_30.md` — grace-blocked referrer-path fix (2 mentions of
+  `ag_closeout_audit_ao_parked_2026_07_31.md`'s pre-archival path).
+
+### Phase-0 hygiene finding: `assigned_vm:NA` corpus ratchet is RED — OUT OF THIS SKILL'S REMIT (P2, routed not fixed)
+
+`check_na_corpus_ratchet.py` reports the NA doc count/open-todo count grew beyond baseline (352 docs vs baseline 350;
+1302 open todos vs baseline 1292). Per this skill's own SKILL.md: "this skill... does not ask whether a doc's OWN `NA`
+classification is still correct — that reclassification question... is `/na-eligibility-audit`'s disjoint remit." Fixing
+this ratchet requires re-running that OTHER skill's methodology (reclassify/archive NA docs), which is explicitly out of
+scope here. Reported honestly rather than silently left red or worked around — recommend a `/na-eligibility-audit` pass.
 
 ## Archive candidates (operator review)
 

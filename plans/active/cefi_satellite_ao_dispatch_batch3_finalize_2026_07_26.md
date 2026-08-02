@@ -92,18 +92,17 @@ context_scope:
       explicit re-verified confirmation; do not re-ask an operator question that is already outstanding. **Done when**:
       each Deferred entry carries either a "gate cleared → batch4 candidate" note or a dated re-verification that it is
       still blocked.
-- [ ] [PM] P2. **Hand the 2 provably-shipped stale checkboxes to a reconcile pass.** This audit found (but deliberately
-      did not flip) that `issues/deribit_combo_perpetual_partition_move_2026_07_21.md`'s two `P1` todos — the `[DESIGN]`
-      cross-check against the DERIBIT-COMBO venue-registry purge, and the `[WRITER]` combo-shape guard-widen/port into
-      `tardis_cefi_shards.py` — are recorded as already complete in
-      `cefi_4surface_migration_execution_log_2026_07_24.md` item 7 ("INVESTIGATED, NO CODE NEEDED … the guard-widen
-      already shipped this session, `mtds@2ddc6d4a` … `tardis_cefi_shards.py` already shares the fixed classifier").
-      Verify `mtds@2ddc6d4a` is reachable on `origin/live-defi-rollout` and that `tardis_cefi_shards.py` genuinely
-      routes through the shared fixed classifier (read the code, do not trust the claim); if both hold, flip the 2
-      checkboxes citing that sha and the execution-log entry. If either fails to verify, record the discrepancy instead
-      and leave the checkboxes open. Do NOT touch that doc's remaining 2 `[DATA] P2` todos — the 15,119-row
-      partition-move `--apply` is held by an explicit 2026-07-23 operator ruling. Repo: unified-trading-pm. **Done
-      when**: both checkboxes are flipped with verified evidence, or a written finding explains why verification failed.
+- [x] [PM] P2. **STALE — already reconciled by a different pass, verified here 2026-08-02 (plan_reconciler).** This
+      audit found (but deliberately did not flip) that `issues/deribit_combo_perpetual_partition_move_2026_07_21.md`'s
+      two `P1` todos — the `[DESIGN]` cross-check against the DERIBIT-COMBO venue-registry purge, and the `[WRITER]`
+      combo-shape guard-widen/port into `tardis_cefi_shards.py` — were recorded as already complete in
+      `cefi_4surface_migration_execution_log_2026_07_24.md` item 7. Independently confirmed both checkboxes in that
+      target doc are ALREADY `[x]` (flipped 2026-07-27 by slot-15, citing the exact same evidence chain this todo asked
+      for verified: `mtds@2ddc6d4a` confirmed reachable on `origin/live-defi-rollout` via `gh api compare` — status
+      `ahead` — and `tardis_cefi_shards.py:298,590` independently re-confirmed via direct `gh api` content read to call
+      `self._classify_row_instrument_type(s, venue)`, the exact shared method the fix patched). Nothing left for this
+      todo to do — the reconcile pass it asked for already happened, this checkbox was simply never updated to reflect
+      it. Repo: unified-trading-pm.
 - [ ] [DOC] P1. **Archive `cefi_satellite_ao_dispatch_batch3_2026_07_26.md`** via the standard 6-step ritual (per
       CLAUDE.md's plan-archival rule): migrate every remaining Deferred item to a tracked todo elsewhere (todo 2 above
       should have resolved or re-confirmed each — verify none silently vanish, especially the PARKED conflict) → add the
