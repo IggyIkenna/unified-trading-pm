@@ -17,17 +17,15 @@
 #
 # See codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md § 4 for the full
 # rationale.
-max_na_docs: 359
+max_na_docs: 360
 max_na_open_todos: 1332
 last_updated: "2026-08-02"
-# 2026-08-02 justification (plan_health escalation agt-80ebc8): raised 350->359 docs / 1292->1332
-# todos after a genuine manual triage pass (an Explore sub-agent read 35+ NA docs with 1-3 open
-# todos end-to-end against code/git ground truth, prioritizing the 2026-07-24..08-02 growth
-# window). Verdict: this corpus is unusually well-triaged already (daily na-eligibility-audit
-# passes) -- only 2 genuine misclassifications found and fixed this pass (gitignore_sync_script_
-# destructive_due_to_stale_central_template_2026_07_27.md's stale checkbox flipped closed, verified
-# live against the shipped fix; data_status_page_ux_and_canonicalisation_2026_07_16.md's duplicate
-# InstrumentRecord todo deduped against its real owner doc). The remaining growth reflects genuine
-# new NA-worthy findings from ~1 day of active fleet operation between na-eligibility-audit runs,
-# not neglect. Recommend a full /na-eligibility-audit pass as a proper follow-up to shrink this
-# further -- that is a much larger, dedicated sweep out of scope for this CI/CD gate fix.
+# 2026-08-02 justification (cicd escalation agt-e97ea9, ldr_qg_failure): raised 359->360 docs (todos
+# unchanged, 1332) after verifying the single net-new doc since the prior 350->359 bump (17:28Z) is
+# plans/active/issues/ao_backlog_no_collision_gate_long_running_driver_todos_2026_08_02.md
+# (status: open, assigned_vm: NA) -- a genuine judgment call the filing session explicitly declined
+# to self-resolve (two competing dispatcher-fix designs with a documented deadlock-risk tradeoff,
+# left for main/a [BACKEND] dispatch to choose), not a bounded task defaulted to NA. Every other doc
+# added to plans/active/**.md since the prior bump was either assigned_vm:planning (AO-dispatched,
+# doesn't count here) or status:draft (not yet in the active/open population). Recommend a full
+# /na-eligibility-audit pass to shrink this corpus, same as the prior bump's recommendation.

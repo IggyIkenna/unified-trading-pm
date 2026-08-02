@@ -514,9 +514,11 @@ All handlers use `DefiManifestRecorder` to write honest-coverage entries:
   `lst_rates_handler.py`. NOT wired into the 5 per-instrument-grain handlers (`risk_params_handler.py`,
   `liquidation_events_handler.py`, `dex_pools_handler.py`, `dex_swaps_handler.py`, `oracle_prices_handler.py`) — calling
   it there would write an incorrect coarse-grain row; those data_types' honest-coverage instead comes from the v2
-  `enumerate_expected_universe.py` enumerator's per-instrument denominator (currently OOM-failing daily for DeFi
-  specifically — see `/plans/active/issues/defi_v2_expected_universe_enumerator_oom_2026_08_01.md`). Full design +
-  rationale: `/plans/archive/2026_08/defi_expected_unattempted_seeder_design_2026_07_26.md`.
+  `enumerate_expected_universe.py` enumerator's per-instrument denominator. It OOM'd daily for DeFi specifically from
+  2026-07-14 through 2026-08-01 (streaming write + streaming read fixes plus a DeFi-only cpu=8/memory=32Gi stopgap fixed
+  it 2026-08-02; `expected-universe-v2-defi` now completes on its normal 01:30 UTC schedule — see
+  `/plans/archive/issues/defi_v2_expected_universe_enumerator_oom_2026_08_01.md`). Full design + rationale:
+  `/plans/archive/2026_08/defi_expected_unattempted_seeder_design_2026_07_26.md`.
 
 ---
 

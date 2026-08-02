@@ -57,7 +57,7 @@ context_scope: [/plans/archive/2026_08/defi_expected_unattempted_seeder_design_2
       `market-tick-data-service@a5a93dc0`/`92a6ebb1`/`a283970`, `deployment-service@1e8af34`) — no unchecked residue, no
       `locked_by`. The one open thread Todo 6 surfaced (the v2 expected-universe enumerator's 19-day DeFi-only OOM) is
       already its own tracked, `assigned_vm: planning` issue doc
-      (`/plans/active/issues/defi_v2_expected_universe_enumerator_oom_2026_08_01.md`), so nothing was left uncaptured.
+      (`/plans/archive/issues/defi_v2_expected_universe_enumerator_oom_2026_08_01.md`), so nothing was left uncaptured.
       Ran the 6-step archival ritual: (1) no DEFERRED prose found needing migration — Todo 6's follow-up was already a
       real todo in its own issue doc; (2) archived-banners added to both this doc and the source plan; (3)
       codex-alignment — the source plan's design/P2 implementation established a genuinely new contract (a per-handler

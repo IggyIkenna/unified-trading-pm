@@ -61,6 +61,13 @@ supersedes:
 superseded_by:
 ---
 
+> **🟢 RESOLVED 2026-08-02 -- all 3 todos done: the drain-whole-generator write path + the whole-manifest-into-one-
+> DataFrame read path both fixed to stream, DeFi bumped to cpu=8/memory=32Gi as a documented stopgap once streaming
+> alone proved insufficient for the accumulated present/captured sets, and the liquidation_events/risk_params scheduler
+> gap wired. `expected-universe-v2-defi` completed successfully for the first time since 2026-07-13; live census
+> confirms real per-instrument `expected_unattempted` rows now materialise fleet-wide for DeFi. Archived per
+> issue-doc-lifecycle.**
+
 # DeFi v2 expected-universe enumerator OOMs daily — zero per-instrument `expected_unattempted` coverage
 
 ## What I found
