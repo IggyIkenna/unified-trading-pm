@@ -30,8 +30,9 @@ source:
   "slot-4, data_engineering -- 9th+ dispatch of sports_track_k_is_pipeline_check_progress-008, re-verified ground truth
   (both drivers still alive at 283424/921523, no report yet), found no dedicated issue doc existed for a pattern flagged
   7+ times in-doc by prior slots (6, 7, 8, 10, 12, 13, 15, 16)"
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
+assigned_role: backend_engineer
 drift_direction: advance-code
 depends_on: []
 resolved_by:
@@ -124,3 +125,9 @@ even if nobody revisits it.
   `agent-orchestrator/data/config/backlog.yaml`, since the orchestrator server runs on this same host) but declined due
   to the deadlock risk documented above. No code shipped this entry -- pure findings-closure doc per `RULES.md` § 4.5,
   converting 7+ prior slots' prose flags into a tracked, actionable pair of todos.
+- 2026-08-02 (cicd, plan_health escalation agt-c9f91f): reclassified `assigned_vm: NA` -> `planning` +
+  `execution_scope: local-only` -> `orchestrator-agent` + added `assigned_role: backend_engineer`. This pushed the
+  `assigned_vm:NA` corpus 1 doc over its ratchet baseline (359->360) the moment this doc landed. On its merits this is
+  RECLASSIFY, not KEEP-NA: both todos are already `[BACKEND]`-tagged (bounded implementation + a stated regression-test
+  acceptance criterion, option (b) already chosen over (a) in the doc's own "Recommended decision" section) -- a
+  deterministic-outcome AO-eligible task, not an open judgment call, per the dispatch-scope eligibility bar in RULES.md.
