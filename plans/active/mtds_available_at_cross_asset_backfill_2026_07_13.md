@@ -56,6 +56,15 @@ context_scope:
 
 # Cross-asset-group available_at manifest backfill (market-data-tick)
 
+> **🟡 URGENT — this plan's tradfi cron-pause is now causing a FLEET-WIDE tradfi backfill outage (2026-08-02).**
+> `uts-prod-manifest-consolidator-market-data-tradfi-cron` (paused by this plan's own 2026-07-29 pause todo) has kept
+> `market-data-tick-tradfi-prd-*`'s `_index/availability_index.parquet` stale past `setup-data-pipeline-vm.sh`'s 24h
+> OOM-preflight budget (~42h stale as of this writing) — EVERY tradfi download-VM launch now self-deletes at boot
+> (`exit_code=78`) before doing any work, fleet-wide, not one shard. Details + evidence:
+> `/plans/active/issues/tradfi_ohlcv_backfill_oom_preflight_fails_paused_consolidator_2026_08_02.md`. The "Apply
+> `rebuild_tradfi_manifest.py`..." + "Resume the tradfi consolidator cron" todos below are now CRITICAL PATH for the
+> whole tradfi asset group, not routine cleanup — prioritize accordingly.
+
 ## Why this plan exists
 
 `manifest_writer_record_captured_available_at_never_persisted_2026_07_13.md`'s audit (2026-07-13, live production read

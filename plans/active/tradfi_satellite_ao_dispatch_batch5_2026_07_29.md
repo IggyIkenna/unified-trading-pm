@@ -85,6 +85,13 @@ context_scope:
 
 # TradFi satellite AO batch 5 — fresh audit extraction
 
+> **🟡 tradfi backfill VM launches are currently BLOCKED fleet-wide (2026-08-02).** The tradfi market-data
+> manifest-consolidator cron is paused (owning plan:
+> `/plans/active/mtds_available_at_cross_asset_backfill_2026_07_13.md`), so every tradfi download-VM launch — including
+> todo 1's ES/MES re-run — self-deletes at boot (`exit_code=78`, OOM preflight) before doing any work. Do not relaunch a
+> tradfi download VM until that plan's cron-resume lands. Details:
+> `/plans/active/issues/tradfi_ohlcv_backfill_oom_preflight_fails_paused_consolidator_2026_08_02.md`.
+
 > **Status: active — approved + dispatched 2026-07-30 (`5a6bbefc3`, "activate 9 fresh ag-closeout-audit dispatch
 > batches").** This pass originally ran on the scheduled daily worker as `status: draft` per the ag-closeout-audit
 > skill's never-auto-ship design; the operator has since reviewed and approved it for dispatch alongside 8 other
