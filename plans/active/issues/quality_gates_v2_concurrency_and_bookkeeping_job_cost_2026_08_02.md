@@ -41,6 +41,27 @@ locked_since:
 
 # quality-gates-v2 concurrency fix (shipped) + bookkeeping-job cost + a possible stale SSOT
 
+> **🟡 PARKED (`DEFERRED-`-prefixed brief, 2026-08-02 slot-16) — the lone remaining todo below is calendar-gated, not
+> blocked/ambiguous.** It needs a few days of real post-fix `push`/`pull_request` PR churn to produce a statistically
+> meaningful sample (the concurrency fix landed `unified-trading-pm@f55f9b11e6`, `2026-08-02T11:36:28Z`) — target
+> reactivation **on/after 2026-08-05**. Four prior slots (15, 4, 9, 12) each independently redispatched to this exact
+> task within ~1h and reconfirmed the same "premature" finding, burning a full investigation every cycle because none of
+> their `/skip-current-task` calls used an escalating `reason_code` (all used `OTHER`, which never arms the fleet
+> cooldown/auto-park — confirmed via the activity log). Per main's ruling on slot-12's `/blocked` (`BLK-32a5fc40`,
+> answered 2026-08-02T12:49:12Z): a `data/config/backlog.yaml` hand-park is wrong (root-clone-only + `PlanRegenLoop`
+> reverts it every ~30min) — the correct fix is parking at the SOURCE doc. `status: draft` (main's first-offered option)
+> turned out to be schema-invalid for `doc_type: issue` (`open·blocked·resolved·false-positive·superseded` only, per
+> `codex/11-project-management/doc-frontmatter-schema.md` — the local `plan-hygiene` pre-commit hook caught this before
+> it shipped). Used main's SECOND-offered option instead: `agent-orchestrator/server/dispatch.py`'s `_brief_is_deferred`
+> — a `FilterScope.FLEET` dispatch filter that unconditionally excludes ANY task whose brief (the checkbox's own first
+> physical line) starts with `DEFER`/`DEFERRED`/`NICE-TO-HAVE`/`OPTIONAL`/`LATER` + a separator char, for every slot,
+> regardless of priority — from `pick_next_task`'s candidate set. This is per-todo (no doc-level status edit needed).
+> **To reactivate**: edit the checkbox line below back to its original `[VERIFY] P3. **Re-measure...` wording (drop the
+> `DEFERRED-until-2026-08-05:` prefix) once real PR churn has accumulated — `PlanRegenLoop`'s next tick re-derives it as
+> a normal dispatchable task. The prerequisite condition `qgv2-pm-remeasure-after-2026-08-05` (created by slot-4,
+> value=`false`) remains a secondary signal but is NOT what gates dispatch here; the brief-text prefix is the actual
+> gate.
+
 ## What shipped this session (2026-08-02)
 
 - [x] ✅ **DONE — `quality-gates-v2`'s `concurrency.cancel-in-progress` extended from `push`-only to unconditional
@@ -57,17 +78,17 @@ locked_since:
       plan's Progress Log entry below (todo #2) for the per-repo result table once the sequential ship completes.** The
       2 UI repos (`unified-trading-system-ui`, `deployment-ui`) correctly skipped — they call a separate
       `ui-quality-gates-v2.yml`, untouched by this fix.
-- [ ] [VERIFY] P3. **Re-measure PM's `quality-gates-v2` push/pull_request/workflow_dispatch run-mix + cancellation rate
-      a few days after this lands**, the same way the companion plan's own "re-measure billed job-minutes before/after"
-      VERIFY todo already calls for. Before this fix, PM measured 157 success / 12 failure / 31 cancelled over a 5-day
-      window — but that 31 was ENTIRELY push-triggered (the only path with `cancel-in-progress:true` before today), so
-      it's not a valid baseline for the pull_request-triggered cancellation rate this fix newly enables. Don't estimate
-      a % savings without this — see the caveat given to the operator in-session: expect a real but unquantified win
-      concentrated wherever a ref gets multiple `synchronize`/`workflow_dispatch` events before the gate finishes (PM's
-      own promote mechanism if it's still a moving ref — see the open question below — and `ldr-ci-monitor.yml`'s hourly
-      re-dispatch during host-contention episodes specifically), and near-zero on the 22 fleet repos' frozen-per-SHA
-      promote PRs in steady state (each tick gets a fresh PR number = a fresh concurrency group, so there was nothing to
-      collide with there to begin with).
+- [ ] DEFERRED-until-2026-08-05: [VERIFY] P3. **Re-measure PM's `quality-gates-v2` push/pull_request/workflow_dispatch
+      run-mix + cancellation rate a few days after this lands**, the same way the companion plan's own "re-measure
+      billed job-minutes before/after" VERIFY todo already calls for. Before this fix, PM measured 157 success / 12
+      failure / 31 cancelled over a 5-day window — but that 31 was ENTIRELY push-triggered (the only path with
+      `cancel-in-progress:true` before today), so it's not a valid baseline for the pull_request-triggered cancellation
+      rate this fix newly enables. Don't estimate a % savings without this — see the caveat given to the operator
+      in-session: expect a real but unquantified win concentrated wherever a ref gets multiple
+      `synchronize`/`workflow_dispatch` events before the gate finishes (PM's own promote mechanism if it's still a
+      moving ref — see the open question below — and `ldr-ci-monitor.yml`'s hourly re-dispatch during host-contention
+      episodes specifically), and near-zero on the 22 fleet repos' frozen-per-SHA promote PRs in steady state (each tick
+      gets a fresh PR number = a fresh concurrency group, so there was nothing to collide with there to begin with).
 
 ## Open question — does PM's promote mechanism still match ci-cd-flow.md's "Option-B standing PR" description?
 
@@ -134,68 +155,68 @@ PM-specific win).
       figure), not all 3 — `content-gate` cannot join the merge (see Finding 1).
 
       **Finding 1 — the naive "merge all 3" is topologically impossible, so it wasn't attempted.** `content-gate`
-                      (`needs: []`) runs FIRST and STRICTLY GATES `qg-slices` (`qg-slices: needs: content-gate; if:
-                      needs.content-gate.outputs.cache_hit != 'true'` — a HIT skips the whole matrix, saving ~2 runner-starts/run,
-                      a bigger win than its own 1-min floor cost). The aggregation job (`quality-gates-v2`) and `record-qg-result`
-                      both run AFTER `qg-slices` (`needs: [content-gate, qg-slices]` / `[qg-slices, supersede-check]`). A job that
-                      must complete BEFORE the matrix starts cannot be merged with two jobs that only exist to summarize the matrix's
-                      result — doing so would force `qg-slices` to wait on the aggregation/record-result logic too, defeating the
-                      whole point of the content-sentinel short-circuit. Only `quality-gates-v2` (agg) + `record-qg-result` — both
-                      downstream of `qg-slices` — are topologically mergeable.
+                              (`needs: []`) runs FIRST and STRICTLY GATES `qg-slices` (`qg-slices: needs: content-gate; if:
+                              needs.content-gate.outputs.cache_hit != 'true'` — a HIT skips the whole matrix, saving ~2 runner-starts/run,
+                              a bigger win than its own 1-min floor cost). The aggregation job (`quality-gates-v2`) and `record-qg-result`
+                              both run AFTER `qg-slices` (`needs: [content-gate, qg-slices]` / `[qg-slices, supersede-check]`). A job that
+                              must complete BEFORE the matrix starts cannot be merged with two jobs that only exist to summarize the matrix's
+                              result — doing so would force `qg-slices` to wait on the aggregation/record-result logic too, defeating the
+                              whole point of the content-sentinel short-circuit. Only `quality-gates-v2` (agg) + `record-qg-result` — both
+                              downstream of `qg-slices` — are topologically mergeable.
 
-                      **Finding 2 — the todo's own "prove on ONE caller first (agent-orchestrator)" premise doesn't hold for this
-                      target, and the design corrects it.** The concurrency fix (above, already shipped) is safely canary-able
-                      because it lives in the per-repo CALLER template (`scripts/workflow-templates/quality-gates-v2.yml.tmpl`),
-                      rolled out repo-by-repo via `rollout-workflow-templates.sh`. This merge lives INSIDE the single shared REUSABLE
-                      workflow (`.github/workflows/python-quality-gates-v2.yml`) that all 24 repos call via `uses:
-                      .../python-quality-gates-v2.yml@live-defi-rollout` — a moving ref, not a pinned SHA. There is no per-repo copy
-                      to canary: the instant this change lands on `live-defi-rollout`, every fleet repo (agent-orchestrator included)
-                      picks it up on its very next run, simultaneously. `agent-orchestrator` gets ZERO extra isolation from being
-                      "already self-hosted" here — that framing was for the CALLER-template rollout pattern and doesn't transfer.
-                      The only real pre-fleet validation available is PM's OWN `quality-gates-v2` run against the change itself (PM's
-                      caller uses a LOCAL `./`-path `uses:`, so PM's own PR/push run exercises the new merged job graph before the
-                      commit ever reaches LDR) — that is the "ONE caller" this shipped through, not agent-orchestrator specifically.
+                              **Finding 2 — the todo's own "prove on ONE caller first (agent-orchestrator)" premise doesn't hold for this
+                              target, and the design corrects it.** The concurrency fix (above, already shipped) is safely canary-able
+                              because it lives in the per-repo CALLER template (`scripts/workflow-templates/quality-gates-v2.yml.tmpl`),
+                              rolled out repo-by-repo via `rollout-workflow-templates.sh`. This merge lives INSIDE the single shared REUSABLE
+                              workflow (`.github/workflows/python-quality-gates-v2.yml`) that all 24 repos call via `uses:
+                              .../python-quality-gates-v2.yml@live-defi-rollout` — a moving ref, not a pinned SHA. There is no per-repo copy
+                              to canary: the instant this change lands on `live-defi-rollout`, every fleet repo (agent-orchestrator included)
+                              picks it up on its very next run, simultaneously. `agent-orchestrator` gets ZERO extra isolation from being
+                              "already self-hosted" here — that framing was for the CALLER-template rollout pattern and doesn't transfer.
+                              The only real pre-fleet validation available is PM's OWN `quality-gates-v2` run against the change itself (PM's
+                              caller uses a LOCAL `./`-path `uses:`, so PM's own PR/push run exercises the new merged job graph before the
+                              commit ever reaches LDR) — that is the "ONE caller" this shipped through, not agent-orchestrator specifically.
 
-                      **Finding 3 — caller-facing surface is unaffected (verified, not assumed).** Grepped every
-                      `needs.quality-gates-v2.*` reference in the caller template (`scripts/workflow-templates/quality-gates-v2.yml.tmpl:96,154,184`):
-                      fleet callers consume ONLY `needs.quality-gates-v2.result`, `.outputs.metadata_only`, `.outputs.docs_only` —
-                      none of which are touched by this merge (job id stays `quality-gates-v2`; those two outputs still come from the
-                      same `vcheck` step, unchanged). The `escalate-ldr-qg-failure` / `dispatch-cloud-build` x2 / notify-ci-watcher
-                      jobs the todo flagged as the collision risk are safe.
+                              **Finding 3 — caller-facing surface is unaffected (verified, not assumed).** Grepped every
+                              `needs.quality-gates-v2.*` reference in the caller template (`scripts/workflow-templates/quality-gates-v2.yml.tmpl:96,154,184`):
+                              fleet callers consume ONLY `needs.quality-gates-v2.result`, `.outputs.metadata_only`, `.outputs.docs_only` —
+                              none of which are touched by this merge (job id stays `quality-gates-v2`; those two outputs still come from the
+                              same `vcheck` step, unchanged). The `escalate-ldr-qg-failure` / `dispatch-cloud-build` x2 / notify-ci-watcher
+                              jobs the todo flagged as the collision risk are safe.
 
-                      **Finding 4 — bounded, accepted latency trade on the required check.** Today `quality-gates-v2` (agg) and
-                      `supersede-check` run as PARALLEL siblings (both `needs: [content-gate, qg-slices]`, no ordering between them).
-                      Folding `record-qg-result` in required adding `supersede-check` to the agg job's `needs:` (its guard —
-                      `needs.supersede-check.outputs.superseded != 'true'` — is a real dependency, not optional). On the GREEN path
-                      (the large majority — PM's own 5-day baseline was 157 success / 12 failure / 31 cancelled), `supersede-check`'s
-                      own `if:` is false, so it resolves to `skipped` without ever provisioning a runner — negligible added latency.
-                      On the fail/cancelled path (~20% of runs), `supersede-check` now provisions a real runner + makes one `gh api`
-                      call (~15-30s) BEFORE the required check can conclude, versus running in parallel today. Accepted: a ~20-30s
-                      slower red signal on the minority of already-broken runs, in exchange for removing a whole job's billed floor
-                      from every run (100% of runs, not just failures).
+                              **Finding 4 — bounded, accepted latency trade on the required check.** Today `quality-gates-v2` (agg) and
+                              `supersede-check` run as PARALLEL siblings (both `needs: [content-gate, qg-slices]`, no ordering between them).
+                              Folding `record-qg-result` in required adding `supersede-check` to the agg job's `needs:` (its guard —
+                              `needs.supersede-check.outputs.superseded != 'true'` — is a real dependency, not optional). On the GREEN path
+                              (the large majority — PM's own 5-day baseline was 157 success / 12 failure / 31 cancelled), `supersede-check`'s
+                              own `if:` is false, so it resolves to `skipped` without ever provisioning a runner — negligible added latency.
+                              On the fail/cancelled path (~20% of runs), `supersede-check` now provisions a real runner + makes one `gh api`
+                              call (~15-30s) BEFORE the required check can conclude, versus running in parallel today. Accepted: a ~20-30s
+                              slower red signal on the minority of already-broken runs, in exchange for removing a whole job's billed floor
+                              from every run (100% of runs, not just failures).
 
-                      **What shipped**: `record-qg-result`'s two steps (GCP auth + read/decide/persist) moved verbatim into
-                      `quality-gates-v2`'s `steps:` list (renamed `record_gcp_auth` / `record_decide` to avoid colliding with the
-                      agg job's own `marker_auth`), each carrying the old job-level `if:` as a step-level `if:` (the agg job's own
-                      `if:` stays `always()`, so per-step gating is required, not optional — verified the "not superseded" case is
-                      genuinely per-step-safe: an ungated `record_decide` would still fail-open cleanly on an empty token, but the
-                      explicit `if:` keeps behavior byte-identical to the original job-level gate rather than merely equivalent).
-                      Added `recovered` to the agg job's `outputs:`. Removed the standalone `record-qg-result` job. Rewired
-                      `notify-qg-recovered`'s `needs: [qg-slices, record-qg-result]` → `[qg-slices, quality-gates-v2]` and its
-                      `needs.record-qg-result.outputs.recovered` → `needs.quality-gates-v2.outputs.recovered`. Verified: YAML
-                      parses (`yaml.safe_load`), the local `check_workflow_yaml_valid.py` QG check passes (59 workflows parse; no
-                      `actionlint` binary available in this sandbox, so that leg is parse-only here — informational, non-blocking
-                      per the check's own design), and a `grep -rn record-qg-result` confirms zero remaining functional references
-                      (only historical-context comments + this doc). Evidence:
-                      unified-trading-pm@<shipped in this commit> — `.github/workflows/python-quality-gates-v2.yml`.
+                              **What shipped**: `record-qg-result`'s two steps (GCP auth + read/decide/persist) moved verbatim into
+                              `quality-gates-v2`'s `steps:` list (renamed `record_gcp_auth` / `record_decide` to avoid colliding with the
+                              agg job's own `marker_auth`), each carrying the old job-level `if:` as a step-level `if:` (the agg job's own
+                              `if:` stays `always()`, so per-step gating is required, not optional — verified the "not superseded" case is
+                              genuinely per-step-safe: an ungated `record_decide` would still fail-open cleanly on an empty token, but the
+                              explicit `if:` keeps behavior byte-identical to the original job-level gate rather than merely equivalent).
+                              Added `recovered` to the agg job's `outputs:`. Removed the standalone `record-qg-result` job. Rewired
+                              `notify-qg-recovered`'s `needs: [qg-slices, record-qg-result]` → `[qg-slices, quality-gates-v2]` and its
+                              `needs.record-qg-result.outputs.recovered` → `needs.quality-gates-v2.outputs.recovered`. Verified: YAML
+                              parses (`yaml.safe_load`), the local `check_workflow_yaml_valid.py` QG check passes (59 workflows parse; no
+                              `actionlint` binary available in this sandbox, so that leg is parse-only here — informational, non-blocking
+                              per the check's own design), and a `grep -rn record-qg-result` confirms zero remaining functional references
+                              (only historical-context comments + this doc). Evidence:
+                              unified-trading-pm@<shipped in this commit> — `.github/workflows/python-quality-gates-v2.yml`.
 
-                      **Not done / explicit follow-up**: this shipped on PM's own pre-merge CI as its proof, per Finding 2 — there is
-                      no additional agent-orchestrator-specific canary step to run (none exists for this file). The `[VERIFY]` P3
-                      re-measure todo below should, once its own calendar-gate clears, also confirm this merge didn't regress the
-                      QG-Recovered Slack notification (watch for a `record_decide`-sourced `recovered=true` firing correctly on the
-                      next real red→green cycle on any fleet repo — no dedicated test was run for that specific transition in this
-                      session, since it requires a genuine prior-failure state in `qg_last_conclusion` to observe honestly rather than
-                      synthetically).
+                              **Not done / explicit follow-up**: this shipped on PM's own pre-merge CI as its proof, per Finding 2 — there is
+                              no additional agent-orchestrator-specific canary step to run (none exists for this file). The `[VERIFY]` P3
+                              re-measure todo below should, once its own calendar-gate clears, also confirm this merge didn't regress the
+                              QG-Recovered Slack notification (watch for a `record_decide`-sourced `recovered=true` firing correctly on the
+                              next real red→green cycle on any fleet repo — no dedicated test was run for that specific transition in this
+                              session, since it requires a genuine prior-failure state in `qg_last_conclusion` to observe honestly rather than
+                              synthetically).
 
 ## Progress Log
 
@@ -263,3 +284,32 @@ PM-specific win).
   remain, and that is a ~30-second action for whoever has root-clone write access. Skipping this task now (not
   fabricating a measurement) to free the slot; resume point unchanged: re-run the run-mix/cancellation-rate measurement
   once at least a few days of real PR churn have accumulated (~2026-08-05 onward).
+- **2026-08-02 (slot-16) — applied main's ruling on slot-12's `/blocked` (`BLK-32a5fc40`, answered
+  `2026-08-02T12:49:12Z`, ~3.5min after slot-12 had already skipped and moved on) directly, rather than repeating the
+  same investigation a fifth time.** Independently re-confirmed the premise first
+  (`gh run list --workflow quality-gates-v2.yml --limit 20`, `2026-08-02T~12:55Z`): still only the single
+  `workflow_dispatch` run (`2026-08-02T12:24:28Z`) since the fix landed — no new signal. Root-caused WHY the park recipe
+  kept not sticking: read `server/regen_backlog_from_plan.py`'s `_is_non_dispatchable`/`maybe_auto_park` — every prior
+  skip (`slot_task_skipped` activity events for slots 15/4/9/12, all confirmed via `GET /api/activity`) used
+  `reason_code: "OTHER"`, which the skip endpoint's own logic (`server/routes/slots_ops.py`) only arms the fleet
+  cooldown/auto-park escalation for `{BLOCKED, PARKED, GATED}` — `OTHER` silently skips that path entirely
+  (`fleet_cooldown_armed: false` on every one of those 4 events), so the task was eligible for immediate redispatch
+  every time despite 4 slots agreeing it was premature. **Applied main's actual instruction — parked at the plan source,
+  not `backlog.yaml`.** First attempt (`status: open` → `status: draft`) was caught and REFUSED by the local
+  `plan-hygiene` pre-commit hook before it ever shipped: `draft` is not in the valid `doc_type: issue` status enum
+  (`open·blocked·resolved·false-positive·superseded`, per `codex/11-project-management/doc-frontmatter-schema.md`) —
+  main's first-offered option doesn't apply to issue docs, only plan docs. Corrected to main's SECOND-offered option:
+  read `agent-orchestrator/server/dispatch.py` directly and found `_brief_is_deferred`/`_blocks_deferred_brief` — a
+  `FilterScope.FLEET` filter (unconditional, every slot) that excludes any task whose `brief` (the checkbox's own first
+  physical line, per `regen_backlog_from_plan.py`'s `brief=description` derivation) starts with
+  `DEFER`/`DEFERRED`/`NICE-TO-HAVE`/`OPTIONAL`/`LATER` + a separator char. Prefixed the checkbox line itself with
+  `DEFERRED-until-2026-08-05:` (see todo above) — this is a per-todo mechanism, no doc-level status edit needed, and it
+  is schema-safe (brief-text content, not a frontmatter enum). `PlanRegenLoop`'s next tick re-derives this todo as a NEW
+  task-id (brief-hash changed) that `pick_next_task` then structurally excludes from every slot's candidate set, and the
+  OLD (currently-dispatched) task row is pruned as no-longer-a-current-brief. Shipping this edit via the normal
+  quickmerge flow, then `/skip-current-task` with `reason_code: "GATED"` (not `OTHER`, unlike every prior slot) as a
+  belt-and-suspenders safety net for the gap before the next regen tick — this correctly arms the fleet cooldown this
+  time, so even if the prune hasn't propagated yet, a redispatch to another slot within the next ~12min is blocked at
+  the dispatcher level too. Not calling `/done` — the VERIFY measurement itself still isn't done, only deferred;
+  `/done`-ing it would misrepresent the todo as complete. Reactivation instructions are in the banner above (drop the
+  `DEFERRED-until-2026-08-05:` prefix from the checkbox line).
