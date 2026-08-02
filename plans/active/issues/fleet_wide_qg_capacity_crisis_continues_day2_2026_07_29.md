@@ -352,3 +352,42 @@ not just noting.
   `live-defi-rollout` (only this doc + `strategy-service`'s already-clean working tree touched — no commit made in
   `strategy-service`, nothing to leave dirty). Seventh repo-specific corroboration of the
   `Type check FAILED/timeout (exit=124)` signature class in this doc-pair, second specific to `strategy-service`.
+
+- **2026-08-02 ~22:19-22:50Z (cicd escalation `agt-52cafa`, slot 5, `deployment-api`, `wall_type=main_ci_red`,
+  `pr_number=0` — no promotion PR stuck; this is Option-B direct-push promotion)** — first `deployment-api`
+  corroboration of the identical `Type check FAILED/timeout (exit=124)` signature, this time observed on `main` rather
+  than a promotion PR. `main` HEAD `969bce0` (the tip of the last successful Option-B promotion, PR #476, merged
+  15:18:38Z) failed `quality-gates-v2` twice on the SAME commit: the original `push`-triggered run (`30754060437`,
+  15:18:46Z, `checks` leg 13m56s → `❌ Type check FAILED/timeout (exit=124)`, `tests` leg ran 2h15m51s before also
+  failing) and a `workflow_dispatch` retrigger (`30767196199`, started 21:08:02Z, not triggered by me) that hit the
+  identical `checks`-leg timeout again in 14m19s. `ERROR_COUNT=0`/`WARN_COUNT=0` on both — the
+  `log_fail "Type check FAILED/timeout"` branch, not a real basedpyright finding. Separately, `live-defi-rollout` itself
+  (currently 3 commits ahead of the promoted `main` tip: `aaa0d1d`/`34a596b`/`d1d2a21`) has NOT completed a fresh
+  `workflow_dispatch` QG run since `12:23:51Z` (`b931b88`, success) — every subsequent dispatch (`15:24:36Z` 57m21s,
+  `16:21:23Z` 3h6m50s, `19:27:43Z` 1h52m41s, all `cancelled`; `22:19:20Z` still `queued` 28min+ at investigation time)
+  never completed, leaving the fleet-promote gate's cached `ci_status` stuck `FAILING` — confirmed live in
+  `ldr-to-main-promote-fleet` run `30770288568` (22:31:35Z):
+  `GATE BLOCK deployment-api: ci_status=FAILING (cached='FAILING', live='FAILING') — LDR CI is red; fix before LDR→main`,
+  correctly deferring promotion of the 3 newer LDR commits rather than a miss.
+
+  **Reproduced locally FIRST, backgrounded per the mandatory pattern** (host reading at launch: load average
+  32.44/33.71/35.07, swap 27Gi/47Gi used, 49 QG-related processes already live — same whole-host-thrashing signature as
+  every other entry in this doc). `bash scripts/quality-gates.sh --no-fix` at current `live-defi-rollout` HEAD `d1d2a21`
+  → **`✅ ALL QUALITY GATES PASSED (140s)`** — basedpyright completed clean with no timeout, all 100+ STEP-5.x
+  codex/architectural checks green, sentinel written matching HEAD. Decisive confirmation the code is 100% clean and
+  both the `main` push-triggered failures and LDR's own stuck dispatch chain are pure host contention, not a regression
+  — the CONTEXT premise this escalation was dispatched with ("live-defi-rollout is GREEN") is correct at the content
+  level even though the CI dispatch mechanism itself can't currently prove it.
+
+  **Disposition: no code or workflow change made or needed.** Did not add a redundant retrigger on either branch — a
+  `workflow_dispatch` run was already `in_progress` on `main`'s exact HEAD (`30767196199`, 1h39m+ elapsed) and another
+  already `queued` on `live-defi-rollout` (`30769846668`, 28min+ elapsed) at investigation time; per this doc's
+  established posture a duplicate dispatch onto an already-contended runner pool doesn't help. `gh pr list --state open`
+  → `[]` (no promotion PR to unblock — Option-B direct push already landed the promotable content),
+  `GET /api/repo-blockers` → `open: []` — nothing currently blocked. The fleet-promote gate's
+  `GATE BLOCK ... ci_status= FAILING` behavior is itself correct (defers promotion of unverified-by-CI content) and will
+  self-clear the moment any queued/in-progress dispatch on either branch completes green — not something to force.
+  Attempted to ping `AUTHORING_SLOT=ci-reconcile` per the standard completion step — expect the same non-numeric-literal
+  422 this doc's `ci`/`ci-reconcile` precedents already hit. Slot left clean on `live-defi-rollout` (only this doc
+  touched; `deployment-api` working tree already clean, no commit needed there). Eighth repo-specific corroboration of
+  the `Type check FAILED/timeout (exit=124)` signature class in this doc-pair, first specific to `deployment-api`.
