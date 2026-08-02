@@ -143,23 +143,45 @@ further this session (outside this task's scope — filed here instead of silent
 
 ## Recommended fix path
 
-- [ ] [INFRA] P1. Confirm directly (e.g. re-run one shard-day with `--log-level DEBUG` or inspect the VM's actual
-      launched `bash -c` command via `WATCHDOG_TRACE.log`/serial console) whether `MDPS_OUTPUT_BUCKET_SPORTS` is
-      genuinely present in the VM's process environment for a `pipeline_e2e_check.py`-launched MDPS backfill VM. (repo:
-      deployment-service)
-- [ ] [CODE] P1. If the env var IS present but still not honored: trace which code path SPORTS:odds_horizon_bucket
-      candle writes actually go through (the `MATCH_ODDS`/`odds_horizon_bucket` instrument_type in the failing paths
-      suggests a sports-specific writer) and confirm it calls `config.get_output_bucket_for_asset_group()` like every
-      other MDPS write path, not a bucket resolved some other way. (repo: market-data-processing-service)
-- [ ] [CODE] P1. If the env var is genuinely missing from the launched command: fix `launch-mdps-backfill-vm.sh`'s
-      `--output-bucket`/`MDPS_OUTPUT_BUCKET_${cat_upper}` wiring (lines ~261-282) — confirm `OUTPUT_BUCKET_OVERRIDE` and
-      the per-cat `_out_val` variable are both actually populated and reach the `cmd` string for the `sports` category
-      specifically. (repo: deployment-service)
+- [x] ✅ [INFRA] P1. **DONE 2026-08-02 (slot-16, infra)** — Confirmed directly via the archived VM logs (no need to
+      re-run — the original force-leg VM's `run.log` is still in GCS): `MDPS_OUTPUT_BUCKET_SPORTS` IS genuinely present
+      in the launched process's environment. Repo: deployment-service (evidence only; no code change — the launcher's
+      wiring is confirmed correct, see todo 3 below).
+- [x] ✅ [CODE] P1. **DONE 2026-08-02 (slot-16, infra)** — The env var IS present (per todo 1) but still not honored.
+      Traced the write path: confirmed it DOES call `config.get_output_bucket_for_asset_group()` — no sports-specific
+      bypass exists. Root cause remains unidentified after this trace; see new todo 5 below. Repo:
+      market-data-processing-service (investigation only; no code change).
+- [x] ✅ [CODE] P1. **N/A — premise false, 2026-08-02 (slot-16, infra)**. Per todo 1, `MDPS_OUTPUT_BUCKET_SPORTS` is
+      genuinely present in the launched command (confirmed via direct `run.log` evidence, not just the narrower
+      `LAUNCH_PARAMS.json` artifact this todo's own text flagged as inconclusive) — `launch-mdps-backfill-vm.sh`'s
+      `--output-bucket` wiring is CORRECT. This todo's contingent branch ("if the env var is genuinely missing") did not
+      materialize; no launcher fix is needed. Repo: deployment-service (no code change — closing as not-applicable, not
+      as done-with-a-fix).
 - [ ] [DATA] P2. Once fixed, re-run a from-scratch force+skip
       `pipeline_e2e_check.py --asset-group SPORTS     --data-types odds_horizon_bucket` and confirm a genuine (non-403,
       non-timeout) verdict — either a real pass or a real data-derivation failure, not an infra/bucket-targeting
       artifact. Feeds back into `sports_consolidated_native_ao_extract_2026_07_25.md`'s Track K (MDPS) checkpoint
-      cadence.
+      cadence. **Still blocked** — the actual bucket-targeting bug is not yet fixed (see todo 5); re-running now would
+      reproduce the same 403.
+- [ ] [CODE] P1. **NEW (slot-16, infra)**: root-cause and fix the actual defect. Static tracing (todos 1+2 above) ruled
+      out both the obvious hypotheses — the launcher wiring is correct AND the candle-write dispatch code correctly
+      calls the override-aware `get_output_bucket_for_asset_group()` with no bypass — yet the write still targets PROD
+      with the override env var genuinely present in the process's environment. This needs INSTRUMENTED runtime
+      debugging (a temporary log line printing the literal return value of
+      `get_config("MDPS_OUTPUT_BUCKET_SPORTS", "<UNSET>")` immediately before the GCS upload call in
+      `candle_write_mixin.py::_write_candles`, or an equivalent `--log-level DEBUG` re-run with that instrumentation),
+      not further static reading — static analysis alone cannot distinguish "the value is silently empty at that exact
+      call site" from "something later in the call re-resolves/overrides `bucket_name`". Also worth checking, as cheaper
+      first probes before adding instrumentation: (a) whether the deployed `MDPS_TARBALL_SHA` for this VM run genuinely
+      matches HEAD (`TARBALL_PINS.json` records it as `"floating"` — i.e. NOT a pinned SHA in this artifact — so confirm
+      what commit was actually IN the tarball, not just that it floats); (b) the two duplicate-mechanism
+      `MDPS_OUTPUT_BUCKET_${cat_upper}` env-var-append branches in `launch-mdps-backfill-vm.sh` (lines ~261-262 from
+      `--output-bucket`, and a SEPARATE ~279-282 branch that re-reads `MDPS_OUTPUT_BUCKET_SPORTS` from the LAUNCHING
+      process's own calling environment via `MDPS_OUTPUT_BUCKET_SPORTS_OVERRIDE="${MDPS_OUTPUT_BUCKET_SPORTS:-}"` at
+      line 186) — in THIS run only the first branch fired (confirmed via the single `MDPS_OUTPUT_BUCKET_SPORTS=` term in
+      the launched `bash -c` line), so it isn't the cause here, but it's dead/confusing duplicate logic worth deleting
+      once the real bug is found. Repo: market-data-processing-service (primary) + deployment-service (if the tarball
+      staleness probe implicates it).
 
 ## Progress Log
 
@@ -167,3 +189,51 @@ further this session (outside this task's scope — filed here instead of silent
   (`market-data-processing-service@dbcba44`). Confirmed the timeout mechanism itself works (both legs terminated
   genuinely within ~3.7min, well inside the new 3600s budget) — this doc tracks only the unrelated PROD-bucket-write
   defect discovered as a byproduct, not fixed in this session (outside this task's scope).
+
+- 2026-08-02 (slot-16, infra, dispatched on todo 2 / `-002`): Picked up todo 2 ("if the env var IS present but still not
+  honored, trace the code path"). Rather than wait on todo 1 (dispatched separately to slot 4, which was later `killed`
+  and released the task back to `queued` without completing it — confirmed via `GET /api/state`/`GET /api/backlog`), did
+  the underlying investigation myself since it's a direct prerequisite for my own todo and nothing else was actively
+  working it.
+
+  **Todo 1's answer (env var presence) — CONFIRMED PRESENT, with direct evidence**: the original force-leg VM
+  (`mdps-backfill-sports-pipelinecheck-20260802-161417-d0c755`) was already deleted (`gcloud compute instances list`
+  empty), but its `run.log` is still archived in GCS
+  (`gs://deployment-scripts-central-element-323112/vm-logs/mdps-backfill-sports-pipelinecheck-20260802-161417-d0c755/run.log`,
+  fetched via `gcloud storage cat` — `gsutil` is broken on this host per the `pipeline_e2e_check.py` 2026-08-01 finding
+  in a sibling issue, worked around the same way). Line 2 of `run.log` is the literal
+  `[vm-exec] starting: bash -c (...)` line showing the FULL launched command, which contains
+  `MDPS_OUTPUT_BUCKET_SPORTS=market-data-tick-sports-test-central-element-323112` as a genuine env-var prefix before the
+  `python -m market_data_processing_service` invocation — this settles the doc's own open question (the narrower
+  `LAUNCH_PARAMS.json` artifact not listing this key was correctly flagged as inconclusive by whoever filed the doc; the
+  full launched command proves it IS present).
+
+  **Todo 2's answer (code-path trace) — CONFIRMED CORRECT, no bypass found**: traced the actual write call chain for
+  this run. The `run.log` shows `Streaming chain bundle: N instrument_id groups in raw_tick_data/.../ticks.parquet`
+  lines (sports odds are chain-grouped), which routes to
+  `market_data_processing_service/app/core/live_workers_chain.py`'s per-timeframe writer loop (`~line 527`), which calls
+  `self._write_candles(...)` — the SAME `CandleWriteMixin._write_candles` (candle_write_mixin.py:186) used by every
+  other MDPS write path (batch_workers.py, orchestration_service.py). That function resolves the bucket via
+  `bucket_name: str = self.config.get_output_bucket_for_asset_group(category)` — no sports-specific override or bypass
+  exists anywhere in this call chain. `get_output_bucket_for_asset_group` itself (`config.py:545`) is also correct on
+  inspection: `get_config(f"MDPS_OUTPUT_BUCKET_{cat}", "")` where `cat = asset_group.value.upper()` — for SPORTS this is
+  `MDPS_OUTPUT_BUCKET_SPORTS`, an exact match to the env var confirmed present above. Traced `get_config()` itself
+  (`unified_trading_library/core/config.py:670`): it first checks the `UnifiedCloudServicesConfig` singleton for a
+  declared field named `mdps_output_bucket_sports` (none exists — `model_config` uses `extra="ignore"`, confirmed via
+  grep, so pydantic-settings does NOT auto-capture this as an extra attribute), then falls through to a plain, uncached
+  `os.environ.get("MDPS_OUTPUT_BUCKET_SPORTS", "")` — which, given the var is genuinely in this process's environment
+  from process start (part of the `bash -c` env-prefix, not a subprocess-inherited or later-set value), should return
+  the override correctly. Also checked the one plausible env-stripping culprit
+  (`process_handler.py::_run_date_as_subprocess`, which forks a per-date child and could in principle drop unlisted env
+  vars) — ruled out for this specific run: the `run.log`'s own `MDPS legacy argv` line already shows
+  `--no-subprocess-per-date`, i.e. `_build_legacy_argv` detected `start_date == end_date` and suppressed the subprocess
+  fork entirely, so no child-process env-inheritance path is even in play here.
+
+  **Net result**: both the launcher (todo 3's presumed track) and the write-dispatch code (todo 2's own ask) check out
+  as CORRECT on static inspection, yet the write empirically still 403s against PROD with the override var confirmed
+  present. This is a genuine, unresolved contradiction — I could not find the actual defect via code reading alone.
+  Flipped todo 1 (my own direct evidence settles it), todo 2 (my own scoped ask — fully investigated, correctly
+  concluding "no bypass" rather than forcing a fix that isn't there), and todo 3 (N/A — its contingent premise is
+  false). Did NOT flip todo 4 (still blocked on the real fix) and filed a new todo 5 for the next actionable step
+  (instrumented runtime debugging), per the "every follow-up is a tracked todo, never prose" HARD RULE — the specific
+  next diagnostic moves are enumerated there rather than left as a vague "needs more investigation."
