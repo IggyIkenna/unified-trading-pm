@@ -349,9 +349,10 @@ Discriminator = **does a manifest row exist**.
   (catalogue wins, ruling D1) · GCS **path segment → lowercase** (unchanged) · **id middle segment → UPPER**
   (unchanged). Do not bundle path and column into one case. SSOT: `/codex/02-data/cross-asset-canonical-target-ssot.md`
   §7. **⛔ FURTHER REFINED 2026-08-02 fold-in, operator directive 2026-07-24
-  (`cross_ag_instrument_type_casing_100pct_directive_2026_07_24.md`) — the blanket-manifest-COLUMN-UPPERCASE framing
-  above does NOT apply to DeFi.** DeFi's corpus was separately flagged as genuinely mixed (not close-to-one-direction),
-  so its manifest-COLUMN casing is decided PER `instrument_type` value on a least-migration-cost basis (whichever casing
+  (`/plans/archive/2026_08/cross_ag_instrument_type_casing_100pct_directive_2026_07_24.md`) — the
+  blanket-manifest-COLUMN-UPPERCASE framing above does NOT apply to DeFi.** DeFi's corpus was separately flagged as
+  genuinely mixed (not close-to-one-direction), so its manifest-COLUMN casing is decided PER `instrument_type` value on
+  a least-migration-cost basis (whichever casing
   is already dominant for that value wins; the minority migrates to match) — DeFi is the sole asset_group with this
   per-value freedom, the other four (tradfi/cefi/prediction/sports) target uniform UPPERCASE. **RESOLVED as a no-op
   2026-07-24**: `defi_track01_per_instrument_and_canon_id_2026_07_24.md`'s "Manifest instrument_type case +

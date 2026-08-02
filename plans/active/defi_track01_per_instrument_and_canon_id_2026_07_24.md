@@ -365,7 +365,7 @@ instruments in one `instruments.parquet` with `available_from/to`).
       `solana_vault` 1,026 · `staking` 669 · `solana_lending` 103 (+9,300 NULL/blank, a separate,
       much-smaller-than-the-plan's-cited-4.49M residual — out of this todo's casing/venue scope, tracked under the
       existing Wave-D id/grain-resolution item, not duplicated here). Per the least-migration-cost rule
-      (`plans/active/issues/cross_ag_instrument_type_casing_100pct_directive_2026_07_24.md`), lowercase is trivially
+      (`/plans/archive/2026_08/cross_ag_instrument_type_casing_100pct_directive_2026_07_24.md`), lowercase is trivially
       each value's target since it is the ONLY casing present (no near-50/50 split anywhere — the HARD-STOP condition
       for an ambiguous split never fires). **This also reconciles the stale-SSOT chain found in the same pass**: an
       intermediate same-day agent note (`4f81d0139`, 19:11 UTC) had inferred from `_comparison_set()`'s case-INSENSITIVE

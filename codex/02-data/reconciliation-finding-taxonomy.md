@@ -645,7 +645,7 @@ re-opening a settled ruling.
 > uppercase-target) are in-scope for the C2a/D1 migration_pending population this subsection otherwise describes.
 >
 > **⛔ FURTHER CORRECTED 2026-07-24, ~20 minutes later (operator, `adb28421d`,
-> `plans/active/issues/cross_ag_instrument_type_casing_100pct_directive_2026_07_24.md`) — supersedes the "defi is OUT of
+> `/plans/archive/2026_08/cross_ag_instrument_type_casing_100pct_directive_2026_07_24.md`) — supersedes the "defi is OUT of
 > scope, permanently lowercase" framing immediately above.** The scope correction above was an agent's INFERENCE from
 > `_comparison_set()`'s case-insensitive vocabulary-matching grain rule — that rule only governs whether a raw value
 > (`pool` vs `POOL`) is recognised as a member of the `InstrumentType` enum for census purposes; it says nothing about

@@ -456,7 +456,8 @@ Real but non-blocking, each in its own doc; listed for completeness so nothing i
       findings without an existing ruling filed as a new followup (not silently accepted):
       `issues/cefi_enumeration_audit_instrument_type_leakage_and_catalogue_orphans_2026_07_27.md`. Full evidence:
       `/plans/archive/2026_07/cefi_migration_cutover_and_track8_completion_2026_07_25.md` (todo 5, archived).
-- [ ] [DATA] P2. **Folded in 2026-08-02 from `cross_ag_instrument_type_casing_100pct_directive_2026_07_24.md` (operator
+- [ ] [DATA] P2. **Folded in 2026-08-02 from
+      `/plans/archive/2026_08/cross_ag_instrument_type_casing_100pct_directive_2026_07_24.md` (operator
       directive, 2026-07-24).** cefi's `instrument_type` casing target is literal **100% UPPERCASE**, not the
       "substantially complete"/99.41%-snapshot framing above — the 2,982-row non-canonical residual the checkpoint todo
       just above found (dominated by already-ruled D1/D2 lowercase-casing variants) must reach literal 0 before the
