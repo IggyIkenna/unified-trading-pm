@@ -990,3 +990,7 @@ those commits landed). The escalation's own repo-blocker list (`GET /api/repo-bl
   timeout, commit `7450e744` (self-contained new test file, unrelated). Isolated re-run: 0.01s. Host: `load avg 32-36`,
   26Gi swap, 20 concurrent QG procs. Zero open PRs/blockers. Retry `30769856300` already in flight (tests running) —
   left async. No code fix needed/made.
+- **2026-08-02 ~22:36Z (`cicd agt-17bfd9`, slot 12) — 4th unified-trading-api occurrence**: run `30767355814` (LDR push,
+  HEAD `990187dd5`), 10 tests / 9 unrelated files, same >150s timeout signature. Local repro: 441 passed/0 failed in
+  50.47s. Load avg 32-36, 25 QG procs. Zero blockers/PRs. Retriggered `30770482343`, left async. No fix needed. **Doc at
+  hard cap (992→now) — next occurrence MUST split/archive, not append.**
