@@ -122,7 +122,7 @@ proven correct via local reproduction — see that issue doc — but never succe
       `defi_wizard_batch2_018_residual_findings-004`/`-005` (the YAML is fully drafted and locally-verified — see that
       issue doc's evidence — just needs a clean real-CI run to merge with confidence). Repos: unified-trading-system-ui,
       unified-trading-pm.
-- [ ] [CICD] P3. **Addendum (slot 4, 2026-07-26)**: independently re-derived the same layer-1/layer-2 diagnosis while
+- [x] ✅ [CICD] P3. **Addendum (slot 4, 2026-07-26)**: independently re-derived the same layer-1/layer-2 diagnosis while
       picking up `defi_wizard_batch2_018_residual_findings-004` concurrently with slot 2 — see the sibling doc
       `hatch_vcs_main_tag_ancestry_gap_breaks_cross_repo_pip_install_2026_07_26.md` for the concurrently-completed
       root-cause work (its own todo 1). Also hit a THIRD, separate symptom while re-verifying on scratch PRs
@@ -134,7 +134,15 @@ proven correct via local reproduction — see that issue doc — but never succe
       Actions-disabled/billing issue (`actions/permissions` shows enabled, GitHub status page green). Whoever picks up
       the P3 re-verify todo above should check whether this recurs — if `pull_request` events are still silently
       dropping intermittently, that's a SEPARATE Actions-delivery reliability issue worth its own investigation
-      (possibly GitHub-side, possibly an org webhook config), not the tag-ancestry bug this doc tracks.
+      (possibly GitHub-side, possibly an org webhook config), not the tag-ancestry bug this doc tracks. — **DONE
+      2026-08-02T16:35Z (slot 3, data_engineering) — CONCLUSIVE, does not recur.** Every prior check (9 sessions,
+      2026-07-31 through 2026-08-01) was inconclusive-by-absence (no open PR existed to test against). This check had
+      real data: 4 merged PRs in the last 3 days (#379/#380/#381/#382, `gh pr list --state closed --limit 5`), each
+      cross-referenced against `gh api .../actions/runs?event=pull_request` by exact `created_at`. All 4
+      `pull_request`-triggered runs fired **3-5 seconds** after their PR's `createdAt` — no gap anywhere close to the
+      original 20+-minute stall. The original symptom (scratch PRs #353/#357/#358/#359, 2026-07-26) does not recur;
+      treating as resolved rather than reopening a fresh investigation — if it resurfaces, that's new evidence
+      warranting its own issue doc, not a reason to leave this checkbox open indefinitely on a non-repro.
 
 ## 2026-07-26 premature-dispatch finding + `depends_on`/`gate_on_depends` fix (slot 10)
 
@@ -428,6 +436,35 @@ than resolving it. `gh api .../actions/runners` → single `glue-ip-172-31-5-118
 in-progress runs for this repo → **0** (same signature — runner busy on a different repo's job). No code or config work
 available on this doc's own scope. Self-skipping (`reason_code: GATED`) per the now-confirmed auto-park mechanism —
 leaving todo 3 and todo 4 unchecked.
+
+## 2026-08-02T16:35Z re-check (slot 3, data_engineering) — real forward progress on both remaining todos
+
+Dispatched todo 4 (`-003`). Found the runner-capacity blocker has cleared since the last check (2026-08-01 ~10:2xZ):
+`registry-drift` is now completing (not stuck `queued`) on recent `main` runs (`30701483984`, `30695614270`,
+`30627739825`) — but failing on genuine fresh content staleness (`archetype_count: 23` committed vs `53` current UAC),
+the same drift class the 2026-07-31 `dfbfff68` fix addressed once already. Confirmed via job log
+(`gh run view --job ... --log`), not inferred.
+
+**Todo 4 — CONCLUSIVE at last (flipped above).** 9 prior sessions were inconclusive-by-absence (no open PR to test
+against). This check had 4 real merged PRs (#379-#382, 2026-07-31 through 2026-08-02) — cross-referenced each
+`createdAt` against `gh api .../actions/runs?event=pull_request`: every `pull_request`-triggered run fired within 3-5
+seconds. The original 2026-07-26 20+-min stall does not recur.
+
+**Todo 3 — picked up the now-actionable regen (adjacent work, same doc, RULES.md findings-triage) rather than leaving
+another "still gated" entry.** Repeated the exact CI-faithful recipe from the 2026-07-31 `dfbfff68` fix: detached
+`git worktree`s of UAC/UTL/PM at their real `origin/main` tips (not `live-defi-rollout`), throwaway py3.13 venv, ran
+`generate_ui_reference_data.py` with explicit `--uac-root`/`--pm-root`, content-normalized diff confirmed genuine
+staleness, copied the fresh output into `lib/registry/ui-reference-data.json`, committed (pre-commit hook chain auto-ran
+`prettier-autostage`), full `quality-gates.sh` green (346s, 288 tests, sentinel `19e849c2`), shipped via quickmerge,
+verified `19e849c2` reachable on `origin/live-defi-rollout`. Cleaned up the scratch worktrees after.
+`unified-trading-system-ui@19e849c2`.
+
+**Todo 3 still not flippable** — its own done-when is 3 CONSECUTIVE green `main` pushes, and this fix hasn't even landed
+on `main` yet (still needs the LDR→main promote cycle). Unlike every prior blocked-on-capacity entry, the next
+observation is a genuinely fresh baseline: no external queue-depth blocker, no known stale-content cause — whoever next
+checks `gh run list --workflow "CI - Test & Lint" --branch main --repo IggyIkenna/unified-trading-system-ui` should see
+this fix's promote run (and the two after it) actually reach `registry-drift: success`, not another external wait.
+Leaving todo 3 unchecked, this task (`-003`, todo 4) is done — calling `/done`.
 
 ## Progress Log
 
