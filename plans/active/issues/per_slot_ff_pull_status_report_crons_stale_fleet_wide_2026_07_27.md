@@ -41,11 +41,13 @@ tags:
     observability,
     staleness-detection,
     blind-spot,
+    wip-preservation,
+    dead-host,
   ]
 related: [/codex/05-infrastructure/per-tab-worktrees.md]
 created: 2026-07-27
-last_updated: 2026-07-30
-priority: P2
+last_updated: 2026-08-02
+priority: P1
 parent_epic: orchestrator_master
 source:
   "review role (msg 2387 to main agt-498659) reported fleet git-health reporter_stale_slots/ff_cron_stale_slots flat at
@@ -130,6 +132,33 @@ Bottom line: **no fleet-wide cron-wiring breakage exists today** — this closes
 question. The one open thread is operator/human-planning-VM-side: confirm whether slots 0-2 there need re-arming or
 whether that stalenesss is an accepted characteristic of an interactive-only VM.
 
+## Update 2026-08-02 (review role) — escalated: this is now a WIP-loss risk, not just a staleness metric
+
+Re-verified live (`GET /api/fleet/git-health`) and corroborating main's (agt-cb1851) independent read: the
+human-planning VM's staleness has not resolved and has sharpened into an actionable risk.
+
+- **Still stale, now worse**: slot 0 unreported since **2026-07-25T03:32:01Z** (8 days as of today); slots 1/2 since
+  **2026-07-28T14:02:02Z** (5 days). All 3 carry BOTH `reporter_stale` AND `ff_cron_stale` true.
+- **That combination supersedes the token-expiry explanation.**
+  `git_status_reporter_stale_public_url_token_expiry_2026_07_24.md` documents a mechanism that silences ONLY the
+  reporter and leaves ff-pull healthy — a `reporter_stale`-only signature. Seeing both flags down together, on all 3
+  tracked slots, for over a week, is a different signature: this reads as a genuinely dead/unreachable host, not a
+  reporting artifact.
+- **Slot 0 carries real uncommitted work across 5 repos**, all dated 2026-07-22..24 (9-11 days old as of today) — this
+  is the part that changes the urgency, since it converts "a stale metric" into "a specific inventory of at-risk work":
+  - `market-tick-data-service`: 2 dirty files (not_clean_since 2026-07-24T13:37:01Z)
+  - `strategy-service`: 1 dirty file, 3 commits behind LDR (not_clean_since 2026-07-24T02:27:02Z)
+  - `system-integration-tests`: 2 dirty files, 7 commits behind LDR (not_clean_since 2026-07-22T08:02:01Z)
+  - `unified-api-contracts`: 1 dirty file (not_clean_since 2026-07-24T13:37:01Z)
+  - `unified-trading-pm`: 5 dirty files (not_clean_since 2026-07-23T12:52:01Z)
+  - Also 2 detached-HEAD, zero-dirty-file worktree clones (`deployment-service-sports-wt`,
+    `market-tick-data-service-sports-wt`, both since 2026-07-22T08:02:01Z) — lower risk (no uncommitted diff to lose),
+    but the checkout state is still worth a look before any wipe.
+
+This does not change the diagnostic ask in the P3 todo below (still needs a human eye to confirm live-vs-dead and
+re-arm-vs-accept) — it adds a NEW, time-sensitive requirement: whatever the liveness verdict turns out to be, the
+uncommitted work above must be preserved before any decommission/reclaim action touches this host. See the new P1 todo.
+
 ## Todos
 
 - [x] [INFRA] P2. **Diagnose + re-arm the per-slot ff-pull/git-status-report crons** — confirm from a slot vantage
@@ -138,6 +167,21 @@ whether that stalenesss is an accepted characteristic of an interactive-only VM.
       / next step" above). — ✅ 2026-07-30, slot 4: confirmed firing (live process + log evidence) on both worker-fleet
       hosts (`ip-172-31-5-118`, `hk`); fleet-wide 19/19 has self-resolved to 3/36, all 3 isolated to the human-planning
       VM, not the worker fleet — nothing to re-arm on the hosts this worker could reach.
+- [ ] [OPERATOR] P1. **Preserve the human-planning VM's (`i-0dd9812a96cdda5dc`, `172.31.0.185`) unpushed WIP BEFORE any
+      decommission/teardown/reclaim action touches it** — escalated 2026-08-02 (review role, corroborating main
+      agt-cb1851's independent read; see "Update 2026-08-02" above for the full evidence). Per the inherited-dirty-WIP
+      rule (CLAUDE.md § Multi-agent safety: a dead claim means inherit + commit, not discard), this needs a preservation
+      pass, not a decommission decision made blind to it. Checklist (needs direct/console/SSM access this worker session
+      does not have — see the P3 item below for the same access gap): 1. Confirm liveness first: is the instance
+      actually stopped/terminated, or running-but-unreachable from worker sessions only (e.g. a network/IAM gap, not a
+      dead box)? 2. For each of the 5 dirty repos (`market-tick-data-service` 2 files, `strategy-service` 1 file,
+      `system-integration-tests` 2 files, `unified-api-contracts` 1 file, `unified-trading-pm` 5 files — see the
+      inventory above for exact dates), run `git -C .tabs/0/<repo> status` + `diff` on that VM: if it's real work,
+      commit + push to `live-defi-rollout`; if genuinely disposable scratch, note that explicitly rather than silently
+      dropping it. 3. Only after preservation is confirmed (or the content is confirmed disposable), proceed with
+      whatever liveness/decommission call the P3 item below resolves to. P1 rather than P0: nothing is actively broken
+      today (no live traffic depends on this host) — the risk is irreversible loss of real work the moment anyone
+      reclaims/wipes the instance without first checking it.
 - [ ] [OPERATOR] P3. **Check cron/ff-pull health on the human-planning VM (`i-0dd9812a96cdda5dc`) for slots 0-2** —
       `slot 0` stale since 2026-07-25, `slot 1`/`slot 2` since 2026-07-28T14:02Z per `GET /api/fleet/git-health`. Needs
       either (a) SSM/direct access to that VM to confirm whether `slot-cron-ff-pull.sh`/ `slot-git-status-report.sh` are
@@ -155,3 +199,11 @@ whether that stalenesss is an accepted characteristic of an interactive-only VM.
   concrete, verified denial (`ssm:SendCommand`/`sts:AssumeRole` onto `uts-orchestrator-epic-role` both denied for the
   worker's IAM identity), explicitly a genuinely different identity than the ambient orchestrator role — a real access
   barrier, correctly NA.
+- **2026-08-02 (review role, agt-8782c1)**: re-verified the human-planning VM's staleness live and found it unchanged/
+  worse (slot 0 now 8 days stale, slots 1-2 now 5 days), corroborating main's (agt-cb1851) independent read from the
+  same tick. Escalated: the combination of both `reporter_stale` + `ff_cron_stale` staying down together for a week
+  supersedes the token-expiry explanation, and slot 0's 5-repo dirty WIP (dated 2026-07-22..24) converts this from an
+  observability gap into a preservation-before-decommission risk. Added the P1 WIP-preservation todo above; the original
+  P3 cron-diagnosis todo stays open alongside it (complementary, not duplicative — P3 is "is it dead and should it be
+  re-armed", the new P1 is "don't lose the work regardless of how P3 resolves"). Both remain KEEP-NA: genuine
+  operator-only access gap, not a dispatch-eligibility miss.
