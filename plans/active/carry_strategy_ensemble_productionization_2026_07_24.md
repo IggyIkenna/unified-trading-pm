@@ -128,10 +128,24 @@ is the validated foundation + a runnable paper path TODAY.
       the catalog `build_funding_dispersion` slots) + any label/wizard-screener entry. **Playwright gate (HARD RULE):
       ticking needs `[UI]` + `pw:L2 ✓` + a regression spec → a UI-capable slot. Repo: unified-trading-system-ui (+ UAC
       generator).**
-- [ ] [HISTORICAL] P3. ~~funding_dispersion ENGINE + UAC archetype~~ (SUPERSEDED — DONE above; original blast-radius
-      analysis retained for the record). A new `StrategyArchetype.CARRY_FUNDING_DISPERSION` is fleet-import-breaking if
-      any exhaustive registry is missed: `ARCHETYPE_LEG_STRUCTURES._build_registry()` RAISES at UAC import on a missing
-      leg-spec seed; `ARCHETYPE_TO_FAMILY` (enums.py) consumed by `strategy_naming` + `test_family_assignment`;
+- [x] ✅ [HISTORICAL] P3. ~~funding_dispersion ENGINE + UAC archetype~~ (SUPERSEDED — DONE above; original blast-radius
+      analysis retained for the record). **FLIPPED 2026-07-31 (corpus-sweep, operator-ruled):** this item was already
+      self-labelled SUPERSEDED-DONE but left as an open checkbox, so it double-counted its own `[x]` twin (the
+      "funding_dispersion ENGINE + UAC archetype (the remaining P1c fold)" item above) in every open-todo sweep.
+      **Confirmed against shipped code, not just the twin's claim**: `unified-api-contracts@487b9a94` (_"feat:
+      CARRY_FUNDING_DISPERSION archetype — dollar-neutral cross-sectional funding-rank reversion"_) and
+      `strategy-service@6b285fad` (_"feat: CarryFundingDispersionEngine — …"_) are both ancestors of
+      `origin/live-defi-rollout`, and the artefacts they describe are live at HEAD today: `CARRY_FUNDING_DISPERSION`
+      resolves in UAC `internal/architecture_v2/enums.py` + `archetype_leg_spec_seeds.py` (+ the
+      `test_archetype_leg_spec` partition test), and the engine file
+      `strategy_service/engine/strategies/v2/carry_and_yield/funding_dispersion.py` exists. The "reverted-under-me by
+      foreign databento WIP" hazard described below was therefore resolved on the second autonomous pass, exactly as the
+      twin records. The remaining rank-allocator increment (`CarryFundingDispersionRankAllocator` +
+      `CARRY_FUNDING_DISPERSION_RANK`) is NOT closed by this flip — it stays tracked as its own open `[STRATEGY] P3`
+      NICE-TO-HAVE above. Original blast-radius analysis retained verbatim below for the record. A new
+      `StrategyArchetype.CARRY_FUNDING_DISPERSION` is fleet-import-breaking if any exhaustive registry is missed:
+      `ARCHETYPE_LEG_STRUCTURES._build_registry()` RAISES at UAC import on a missing leg-spec seed;
+      `ARCHETYPE_TO_FAMILY` (enums.py) consumed by `strategy_naming` + `test_family_assignment`;
       `algo_compatibility`/`venue_set_variants` auto-derive (OK once leg-spec added); the capability manifest is a
       partial `<=` map (no entry needed). Live **foreign databento WIP in UAC clobbered the enum edits mid-session**
       (enums.py reverted under me) — so it MUST be done when UAC is clean + via quickmerge (additive enum member =

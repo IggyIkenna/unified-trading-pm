@@ -112,11 +112,20 @@ per-domain path prefixes:
 
 ## Todos — DeFi-playbook order, but delete + reader-cutover OPERATOR-GATED
 
-- [ ] [DATA] P2. **Provision + yaml/registry scaffold** — add the folded `portfolio-state` key to `cloud-providers.yaml`
-      (all 3 copies), env-tiered; the PATH_REGISTRY flat trio needs its tier expressed via the UTL `DataSetSpec`
-      `bucket_template` (their SSOT — not yaml). Add `_KIND_ALIASES` mapping the retired kinds → `portfolio-state`
-      (§2.D). Provision `portfolio-state-{prd,test}` on GCP + AWS. Verify `terraform plan` shows only the new folded
-      buckets as creates. UTL QG green.
+- [x] ✅ [DATA] P2. **Provision + yaml/registry scaffold** — **DONE 2026-07-18/19** (flipped 2026-07-31 corpus-sweep
+      against this doc's own Progress Log + the `[x]` Cutover item below; the 2026-07-17 operator-ownership hold on
+      bucket-fold checkboxes is RESCINDED for hard-evidenced items, and the 2026-07-30 na-eligibility-audit had already
+      flagged this exact todo as reading STALE). **Provisioned** (2026-07-18, direct gcloud,
+      ASIA-NORTHEAST1/UBLA/STANDARD→COLDLINE@60d): `portfolio-state-{prd,test}-central-element-323112`. **yaml key
+      folded across all 3 copies**: PM mirrors `unified-trading-pm@a1c500097` (_"fix(config): fold portfolio-state key
+      into PM cloud-providers.yaml mirrors (Fold-E, unblock UTL CI)"_ — folded FIRST, applying the C+D PM-yaml-in-CI
+      lesson), plus the UAC yaml and deployment-service yaml landed in the same Cutover wave. **PATH_REGISTRY
+      `DataSetSpec` tier + `_KIND_ALIASES`**: UTL repointed `positions`/`pnl_attribution`/`risk_metrics` →
+      `portfolio-state-prd` with the literal domain prefix and `_KIND_ALIASES` for all 6 retired kinds. **UTL CI GREEN**
+      (recorded on the Cutover item). **GCP leg only** — the AWS leg + the `terraform plan` creates-only drift assert
+      this todo also asked for are NOT done, and (checked 2026-07-31) were NOT in fact covered by the IAM-and-lifecycle
+      or Alias-sunset todos below; they are now split out as their own open todo. The GCP TF reconcile that DID happen
+      (`import` of `portfolio-state-{prd,test}` + source `state rm`) is recorded on the Delete-sources item.
 - [x] ✅ [DATA] P2. **Parity migrate** — **DONE 2026-07-19.** Only 1 real object existed (pnl-attribution-store, an
       ARBITRAGE_PRICE_DISPERSION funding-rate parquet) → server-side copied to `portfolio-state-prd/pnl-attribution/`,
       parity verified. positions-store(0)/archetype-state-{prd,test}(0)/position-store-sports-{prd,test}(0)
@@ -141,6 +150,11 @@ per-domain path prefixes:
       TF-tracked sources (positions/pnl-attribution not TF-managed). yaml keys folded
       (archetype-state/position-store-sports kept for soft-window → closeout). This was the LAST destructive step of
       Wave-3 — ALL 5 FOLDS NOW COMPLETE.
+- [ ] [INFRA] P2. **AWS leg + `terraform plan` drift assert** — the residual of the (now `[x]`) Provision todo, split
+      out 2026-07-31 (corpus-sweep) after confirming no other open todo here covered it. Provision folded
+      `portfolio-state-{prd,test}` on **AWS** via the derived-from-yaml `for_each`, then run `terraform plan` and assert
+      the only creates are the new folded buckets. (GCP provisioning + GCP TF import/state-rm are already done — see the
+      Provision and Delete-sources items.)
 - [ ] [INFRA] P2. **IAM + lifecycle** — join `portfolio-state-prd` to
       [[bucket_iam_write_protection_per_tier_2026_06_09]] Phase-2 Group-B; `-test-` twin gets test-tier. **CONFIRM
       retention before COLDLINE** — live-trading snapshots may need STANDARD longer than 60d (design §2.E flags
