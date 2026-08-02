@@ -167,11 +167,17 @@ running `/na-eligibility-audit defi`; every todo below cleared the shared confli
   (2026-07-26/27, slot-4): the fix is code-complete (`scripts/vm/setup-data-pipeline-vm.sh` + a new
   `TestCanonicalMigrationServiceKeyedWorkspaceDir` regression test) but blocked on shipping by a shared-host `pytest`
   I/O stall, not abandoned. Verbatim/near-verbatim duplicate claim on an active `assigned_vm: planning` doc in the same
-  `parent_epic` — per the conflict-check protocol this stays with its current owner, not re-drafted here.
+  `parent_epic` — per the conflict-check protocol this stays with its current owner, not re-drafted here. **RESOLVED —
+  re-checked 2026-08-02 (finalize todo 2):** the blocking claim has cleared. Shipped `deployment-service@0ed2ca6`
+  (confirmed 2026-07-28, slot-13, per that plan's own Track-1 Progress Log); the source closeout doc's checkbox is now
+  flipped `[x]` citing the same SHA.
 - **`defi_migration_audit_log_2026_07_24.md:567`** ("LOCAL QG HARNESS collects the WRONG test suite") — already
   evaluated by `defi_satellite_ao_dispatch_batch6_2026_07_30.md`'s own Operator-gated/Deferred section:
   "bounded-sounding but under-evidenced (zero coverage found anywhere) — needs a scoping read before it's draftable." An
   established prior assessment, not re-litigated here; stays KEEP-NA on the source doc pending that scoping read.
+  **STILL-OPEN — re-checked 2026-08-02 (finalize todo 2):** no scoping read has happened since; the source doc's todo
+  (`defi_migration_audit_log_2026_07_24.md:577`) remains `[ ]`, KEEP-NA, unchanged. No new bounded work to fold into a
+  batch8 — stays parked pending an actual scoping read.
 
 ## Progress Log
 

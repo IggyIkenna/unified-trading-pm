@@ -452,13 +452,14 @@ Discriminator = **does a manifest row exist**.
         nested quoting breaking the startup script's own `python`→venv-python substitution. Population still tiny (144
         rows) and low-growth — safe to leave open. Full detail:
         `issues/defi_curve_optimism_subgraph_no_allocations_2026_07_15.md`.
-- [ ] [INFRA] P2. **NEW 2026-07-24 — fix the `canonical-migration` `VM_TASK` mtds-hardcoded `cd` bug** found above (the
-      canonical-migration `VM_TASK` case branch's hardcoded `cd` path in `setup-data-pipeline-vm.sh`) — mirror the
-      `VM_SERVICE`-keyed instruments branch other cases already use. (repo: deployment-service) **na-eligibility-audit
-      2026-08-01: already claimed elsewhere — this exact fix is IN PROGRESS in
-      `defi_consolidated_native_ao_extract_2026_07_25.md`'s Track-1 Progress Log (2026-07-26/27, slot-4): code-complete,
-      blocked on shipping by a shared-host `pytest` I/O stall, not abandoned. Not re-drafted; stays here pending that
-      plan's own completion — check there first before starting fresh work on this item.**
+- [x] ✅ [INFRA] P2. **DONE — fix the `canonical-migration` `VM_TASK` mtds-hardcoded `cd` bug** found above (the
+      canonical-migration `VM_TASK` case branch's hardcoded `cd` path in `setup-data-pipeline-vm.sh`) — mirrored the
+      `VM_SERVICE`-keyed instruments branch other cases already use. Shipped `deployment-service@0ed2ca6` (confirmed
+      2026-07-28, `defi_consolidated_native_ao_extract_2026_07_25.md` Track-1 Progress Log, slot-13 — the 2026-07-26/27
+      slot-4 attempt that hit a shared-host `pytest` I/O stall had the fix code-complete but unshipped; a later slot
+      independently re-verified + landed it). Re-checked 2026-08-02 via
+      `/plans/archive/2026_08/defi_satellite_ao_dispatch_batch7_2026_08_01_finalize.md` todo 2 — the blocking claim has
+      cleared. (repo: deployment-service)
   - [x] `spot_asset`/`spot_pair` reconciliation investigated + resolved via live re-measurement (see the P0 item's
         footnote above) — both were stale/non-issues, not a coding task.
 
@@ -591,24 +592,17 @@ file, not here.
       `defi_satellite_ao_dispatch_batch7_2026_08_01.md` todo 1: the full per-module audit already existed at
       `issues/defi_adapter_dead_code_audit_2026_07_24.md`, incrementally re-verified (§ 7 addendum) for the files added
       since.
-- [ ] [CONFIG] P2. **Retagged 2026-07-29 (corpus hygiene pass): reframed as a code-only extension task, not
-      credential-blocked — verified `curve_adapter.py` already has a fully-wired `_query_curve_pool_at_block`
-      (~line 617) / `_ensure_alchemy_client` (~line 217-228) RPC-fallback path using the same already-provisioned
-      `alchemy-api-key`; UAC (`_defi.py` `SUBGRAPH_IDS["curve"]`) already carries live Curve subgraph IDs for
-      ETHEREUM/OPTIMISM/AVALANCHE (only ARB/POLY lack one, per the UAC comment "ARB/POLY only on hosted service
-      (deprecated)"), and Alchemy already supports Arbitrum/Polygon (`_defi_chain_data.py` chain configs) — so the
-      remaining work is wiring the adapter's RPC path to the correct per-chain Alchemy URL (it currently hardcodes
-      `eth-mainnet.g.alchemy.com` in `_ensure_web3`) for ARB/POLY, not a new credential.** F4 (rehomed from
-      `/plans/archive/issues/vm_backfill_data_correctness_findings_2026_06_29.md`, was falsely cited "0 open todos"
-      there — corrected 2026-07-27) — Curve DEX pools dead: decommissioned subgraph. `mtds-dex-pools-backfill` VM:
-      `curve_adapter.py`'s hosted-service subgraph URL was decommissioned by The Graph; the gateway subgraph ID returns
-      "no allocations" (no indexers serve it). Curve REST (`api.curve.finance`) is alive but current-snapshot-only, not
-      historical `dex_pool_state`. ~~**BLOCKED-CREDENTIALS**: needs either a current indexer-allocated Curve subgraph ID
-      (The Graph gateway API key) or an RPC key (`_query_curve_pool_at_block`, Alchemy) for historical block-level
-      state~~ — the RPC-fallback path is already built and keyed; extend it to ARB/POLY (code-only), or accept
-      honest-absence for Curve pools on those 2 chains until wired. (repo: market-tick-data-service)
-      **na-eligibility-audit 2026-08-01: extracted to `defi_satellite_ao_dispatch_batch7_2026_08_01.md` (conflict-check
-      cleared) — track completion there, close this checkbox by citation once its batch-7 todo lands.**
+- [x] ✅ [CONFIG] P2. **DONE 2026-08-01, closed by citation via
+      `/plans/archive/2026_08/defi_satellite_ao_dispatch_batch7_2026_08_01.md` todo 2** — wired `curve_adapter.py`'s
+      `_ensure_web3` to resolve the RPC URL per-chain via
+      `AlchemyBaseClient(chain=self.chain,     project_id=self.project_id).get_rpc_url()` (UAC `CHAIN_CONFIGS`,
+      `arb-mainnet`/`polygon-mainnet` templates) instead of hardcoding `eth-mainnet.g.alchemy.com` for ARB/POLY —
+      exactly the code-only extension the 2026-07-29 retag (F4, rehomed from
+      `/plans/archive/issues/vm_backfill_data_correctness_findings_2026_06_29.md`) scoped: the RPC-fallback path
+      (`_query_curve_pool_at_block`/`_ensure_alchemy_client`) was already built and keyed, Curve's own hosted subgraph
+      being decommissioned by The Graph is what makes this RPC path the only route to historical `dex_pool_state` on
+      those 2 chains. 3 regression tests added (`test_defi_adapters_boost.py::TestCurveAdapter`). (repo:
+      market-tick-data-service) Shipped `market-tick-data-service@1f58a127`, full `quality-gates.sh` green.
 - [ ] [DATA] P3. **F6 (rehomed from `/plans/archive/issues/vm_backfill_data_correctness_findings_2026_06_29.md`, same
       correction) — DeFi lending-indices: heavy instruments-store fallback, ~39% zero-row writes.**
       `mtds-lending-indices-20260628` VM: instruments-store-defi parquet missing for

@@ -58,19 +58,21 @@ these until batch7 is fully done.**
 
 ## Todos
 
-- [ ] [DOC] P1. Once all 4 of `defi_satellite_ao_dispatch_batch7_2026_08_01.md`'s todos are `[x]`, reconcile each of the
-      2 distinct source docs (`defi_consolidated_closeout_2026_07_18.md` — 3 of the 4 todos;
-      `issues/     mtds_gas_fees_migration_script_unbounded_memory_2026_07_30.md` — the 4th) — flip/annotate their own
-      checkboxes with the batch-7 commit SHA, so a doc read independently (outside this batch) shows accurate state.
-      Repo: unified-trading-pm. Done when: both source docs show an annotation citing the batch-7 todo + commit SHA that
-      closed their item.
-- [ ] [DOC] P2. Re-check the 2 Deferred conflict-found items (the `setup-data-pipeline-vm.sh` canonical-migration `cd`
-      bug parked on `defi_consolidated_native_ao_extract_2026_07_25.md`'s in-progress claim; the "QG HARNESS collects
-      the wrong test suite" finding parked on `defi_satellite_ao_dispatch_batch6_2026_07_30.md`'s under-evidenced
-      verdict) — if the native-extract plan's fix has since shipped, or a scoping read has since evidenced the
-      QG-harness finding, resolve/close the parked note (fold into a batch8 todo if new bounded work results; otherwise
-      mark resolved-no-action). Repo: unified-trading-pm. Done when: both parked items have an explicit
-      resolved/still-open verdict recorded.
+- [x] ✅ [DOC] P1. **DONE 2026-08-02.** Reconciled the 2 distinct source docs. Of the 4 batch-7-mapped items, 2 were
+      already correctly closed-by-citation as part of batch-7's own execution (the adapter dead-code audit at
+      `defi_consolidated_closeout_2026_07_18.md` and the ManifestWriter sibling-script audit at
+      `issues/mtds_gas_fees_migration_script_unbounded_memory_2026_07_30.md`) and needed no further edit. The remaining
+      1 was still `[ ]` despite its batch-7 todo landing: flipped the Curve adapter ARB/POLY RPC item
+      (`defi_consolidated_closeout_2026_07_18.md`) to `[x]` ✅ citing batch-7 todo 2 +
+      `market-tick-data-service@1f58a127`. Repo: unified-trading-pm.
+- [x] ✅ [DOC] P2. **DONE 2026-08-02.** Re-checked both Deferred conflict-found items. (1) The
+      `setup-data-pipeline-vm.sh` canonical-migration `cd` bug — **RESOLVED**:
+      `defi_consolidated_native_ao_extract_2026_07_25.md`'s Track-1 Progress Log confirms it shipped 2026-07-28
+      (slot-13) as `deployment-service@0ed2ca6`; flipped the source closeout doc's checkbox to `[x]` citing that SHA.
+      (2) The "QG HARNESS collects the wrong test suite" finding — **STILL-OPEN**: no scoping read has happened since
+      `defi_satellite_ao_dispatch_batch6_2026_07_30.md`'s under-evidenced verdict;
+      `defi_migration_audit_log_2026_07_24.md:577` remains `[ ]`, KEEP-NA, no new bounded work to fold into a batch8.
+      Both verdicts recorded on batch7's own Deferred section. Repo: unified-trading-pm.
 - [ ] [DOC] P1. Archive `defi_satellite_ao_dispatch_batch7_2026_08_01.md` via the standard 6-step ritual (migrate any
       residual DEFERRED items → banner → codex-alignment check → update CLAUDE.md/codex on any new contract → update
       every referrer's path corpus-wide → clear lock). Repo: unified-trading-pm. Done when: batch7 is in
@@ -82,3 +84,6 @@ these until batch7 is fully done.**
 - 2026-08-01 (slot-7, scheduled `na_eligibility_auditor`): Drafted alongside batch7, both `status: active`, gated on
   batch7's 4 todos via `depends_on` + `gate_on_depends: true`. No work started — waiting on batch7's todos to land.
 - **context-scout 2026-08-01**: populated/refreshed context_scope (5 entries).
+- **2026-08-02 (slot-4)**: gate satisfied — all 4 of batch7's todos read `[x]`. Ran todos 1-2 (source-doc reconciliation
+  - Deferred re-check, see their own entries above for detail). Proceeding to todo 3 (archival) — this plan's own
+    `sequential: true` gate is satisfied.
