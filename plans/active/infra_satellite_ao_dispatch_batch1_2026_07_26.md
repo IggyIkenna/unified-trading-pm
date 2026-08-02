@@ -594,7 +594,7 @@ orphaned?" resolves to "everything," because nothing in the covering set does an
       job, scheduler, terraform, and entrypoint files named above are all deleted; see the DONE entry at the top of this
       todo for the actual execution record.)
 
-- [x] ✅ [CI] P2. **DONE 2026-08-02 (slot-5, infra) — unified-trading-pm@e77809213.** Added a PM-only, content-sentinel-
+- [x] ✅ [CI] P2. **DONE 2026-08-02 (slot-5, infra) — unified-trading-pm@f3afa397d.** Added a PM-only, content-sentinel-
       gated "Plan hygiene hard gate" step (`run_hygiene_sweep.sh --ci --no-regen`) to the `checks` leg of
       `python-quality-gates-v2.yml`, gated on repo==PM + the leg's existing skip_slice/QG_CONTENT_HIT fast-paths.
       **Prove-then-retire evidence**: full sweep locally = 0 hard failures; a scratch no-frontmatter file reproduced the
