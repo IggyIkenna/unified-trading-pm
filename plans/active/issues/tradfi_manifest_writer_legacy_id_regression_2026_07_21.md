@@ -440,3 +440,9 @@ not a live regression), but real enough to need their own scoped root-cause-and-
   justification clause to someone else's todo. Not a batch6 candidate as currently scoped; would become AO-eligible if a
   future author splits the investigation half into its own bounded todo and adds a stated safe-idempotent justification
   (CAS pattern + row-count bound) for the write half.
+- **na-eligibility-audit 2026-08-02** (tradfi tranche, dispatch agt-6397c9): **KEEP-NA, valid — re-verified,
+  unchanged.** Sole open todo (the historical manifest repair) re-read end-to-end via an independent sub-agent
+  classification; count reconciled (1/1). Same two independently-sufficient grounds as 2026-08-01 still hold: the
+  registration/recovery script identification step remains open-ended investigation, and the remediation is a
+  live-manifest CAS-write lacking a stated safe-idempotent justification or `[OPERATOR]` tag. No content drift. Nothing
+  to reclassify.

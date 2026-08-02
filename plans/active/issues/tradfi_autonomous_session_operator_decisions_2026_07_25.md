@@ -315,3 +315,8 @@ every day narrows or closes it permanently.
   re-read end-to-end; count matches tranche-inventory tool (2). No content change since the 2026-07-30 verdict — only a
   context-scout `context_scope` backfill touched the file since. Still operator-gated by construction; nothing to
   reclassify.
+- **na-eligibility-audit 2026-08-02** (tradfi tranche, dispatch agt-6397c9): **KEEP-NA, valid — re-verified, unchanged
+  (3rd consecutive pass).** Both open todos re-read end-to-end via an independent sub-agent classification; count
+  reconciled (2/2). All 10 numbered decision items are genuine operator escalations (authority/design/blast-radius
+  calls), and the 2 open checkboxes are meta-propagation todos explicitly gated on the operator answering them first —
+  fails the bounded-outcome bar by design. No content drift since 2026-08-01. Nothing to reclassify.

@@ -290,3 +290,8 @@ once confirmed with Databento") while `tradfi_instrument_universe.py` already ca
   re-read end-to-end; count matches tranche-inventory tool (1). No content change since the 2026-07-30 verdict — only a
   context-scout `context_scope` backfill touched the file since. Still self-tagged `P1-OPERATOR-DECISION`, not
   worker-determinable; nothing to reclassify.
+- **na-eligibility-audit 2026-08-02** (tradfi tranche, dispatch agt-6397c9): **KEEP-NA, valid — re-verified, unchanged
+  (3rd consecutive pass).** Sole open todo re-read end-to-end via an independent sub-agent classification; count
+  reconciled (1/1). Still self-tagged `P1-OPERATOR-DECISION`, blocked on the same non-injective `EXCHANGE_CODE_TO_NAME`
+  SSOT contradiction (two disagreeing `unified-api-contracts` files, 17 mismatched values) — a genuine operator call,
+  not worker-determinable. No content drift since 2026-08-01. Nothing to reclassify.

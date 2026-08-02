@@ -173,6 +173,16 @@ restated here.
 
 ## Progress Log
 
+- **na-eligibility-audit 2026-08-02** (tradfi tranche, dispatch agt-6397c9): **KEEP-NA, valid — re-verified,
+  unchanged.** Sole open checkbox (the legacy-twin bucket DELETE todo) re-read end-to-end via an independent sub-agent
+  classification; count reconciled (1/1). The delete gate still correctly does not clear — twin-coverage remains
+  last-measured at 0% (2026-07-31), not the 100% the §3a reversibility carve-out requires. Independently, this audit is
+  NOT unilaterally reclassifying this todo even though it is technically letter-compliant with the
+  safe-idempotent-justification bar (§3a path (c)): it bundles a re-verify step with an irreversible-if-wrong
+  multi-bucket (tradfi/defi/pred) prod GCS delete in one todo, which the bounded-outcome bar's "stay skeptical of
+  bundled, high-consequence actions" guidance flags for plan-owner confirmation before AO dispatch — recommend the plan
+  owner explicitly rule on dispatch-eligibility once/if twin-coverage reaches 100%, distinct from today's "does the gate
+  clear" question. Doc stays NA.
 - **na-eligibility-audit 2026-07-31** (tradfi tranche, dispatch agt-6d6eaf): **KEEP-NA, valid.** Sole open checkbox (the
   legacy-twin bucket DELETE todo) read end-to-end; count matches tranche-inventory tool (1). The delete gate still
   correctly does not clear — no new dry-run has been re-run since 2026-07-30 (twin-coverage still last-measured at 0%,

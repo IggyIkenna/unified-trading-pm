@@ -341,6 +341,15 @@ Everything below is scoped so these cells are canonical, honestly-covered, and s
   `status: active` with its own near-verbatim copy still unchecked. The only touches since the 2026-07-31 marker were
   the 2026-08-01 `/ag-closeout-audit tradfi` pass (batch6 drafting + a `depends_on:` fix, neither affecting this todo)
   and a context-scout backfill — nothing material changed. `assigned_vm` stays unchanged.
+- **na-eligibility-audit 2026-08-02** (tradfi tranche, dispatch agt-6397c9): **KEEP-NA-STALE, re-verified — citation
+  still accurate (4th consecutive confirmation).** Full end-to-end read via an independent sub-agent classification (892
+  lines: frontmatter, Split notice, Ground-truth verdict, MVP table, the one native todo, Progress Log, Phase A2+C fork,
+  Plan-quality review, Codex SSOTs, Aggregated source docs digest); sole native checkbox count reconciled (1/1) —
+  confirmed the "digest bullets" throughout the Aggregated source docs section are deliberately bold-not-bracket
+  formatted and correctly NOT counted as this doc's own open checkboxes. Independently re-confirmed the extracting doc
+  (`tradfi_consolidated_native_ao_extract_2026_07_25.md`) is still `status: active`/`assigned_vm: planning` with its own
+  copy still unchecked. Nothing here is RECLASSIFY-eligible — the sole native todo is correctly NA because the real
+  dispatchable copy already lives on an active planning doc. `assigned_vm` stays unchanged.
 
 ---
 

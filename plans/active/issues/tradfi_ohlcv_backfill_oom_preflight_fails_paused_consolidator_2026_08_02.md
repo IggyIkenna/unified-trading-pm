@@ -186,3 +186,9 @@ call — not a default.
   relaunch attempted (would fail identically — 5/5 confirmed since onset — and contradicts this doc's own Recommended
   decision); no cron override (consistent with the existing `BLK-058d5928` ruling). Pinged authoring slot
   `dp-fleet-monitor` with the outcome; deferring to this doc's existing `[OPERATOR]` todo for the actual fix.
+- **na-eligibility-audit 2026-08-02** (tradfi tranche, dispatch agt-6397c9): **KEEP-NA, valid.** First audit pass on
+  this doc (filed today, no prior marker). Sole open todo is explicitly `[OPERATOR]`-tagged — a genuine risk/priority
+  judgment call (expedite `mtds_available_at_cross_asset_backfill_2026_07_13`'s apply step vs. authorize an early,
+  sequencing-breaking cron resume), not a checkable fact. Independently sufficient: `depends_on` names that plan's
+  still- open prerequisite todos, and an already-filed + already-answered `/blocked` (`BLK-058d5928`) exists. Nothing to
+  reclassify.
