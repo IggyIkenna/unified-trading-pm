@@ -116,7 +116,7 @@
           "required": true
         }
       ],
-      "ci_status": "MAIN_GREEN",
+      "ci_status": "FAILING",
       "coverage_pct": 87,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "integration",
@@ -146,10 +146,10 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "qg_red_reason": null,
         "large_file_count": 1,
+        "qg_red_reason": "qg",
         "warn_file_count": 0,
-        "coverage_pct": null
+        "coverage_pct": 81.47
       },
       "cascade_invalidated_by": "unified-trading-library=0.66.0"
     },
@@ -307,7 +307,7 @@
       ],
       "completion_path": "cefi",
       "notes": "Fully extracted from unified-trading-deployment-v3 on 2026-03-01. 27 route modules, gunicorn config, Google OAuth. position-balance-monitor-service dep removed 2026-05-20 (merged into strategy-service/strategy_service/position/). strategy-service dep removed 2026-06-11 (last import was treasury_monitor NAV rollup, now consumed from UTL — no-service-to-service-deps HARD RULE).",
-      "ci_status": "MAIN_GREEN",
+      "ci_status": "FAILING",
       "coverage_pct": 71,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "unit",
@@ -343,7 +343,7 @@
       "cascade_invalidated_by": "unified-trading-library=0.66.0",
       "codebase_health": {
         "coverage_pct": null,
-        "qg_red_reason": null,
+        "qg_red_reason": "qg",
         "warn_file_count": 18,
         "large_file_count": 0
       }
@@ -369,7 +369,7 @@
       ],
       "completion_path": "cefi",
       "notes": "Full extraction from unified-trading-deployment-v3 completed 2026-03-02. All Python modules, configs (81 YAML), terraform (193 files), tests (48 files), scripts, docs extracted. deployment-api/configs/ is a symlink to deployment-service/configs/.",
-      "ci_status": "MAIN_GREEN",
+      "ci_status": "FAILING",
       "github_url": "https://github.com/IggyIkenna/deployment-service",
       "coverage_pct": 81,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
@@ -393,10 +393,10 @@
       "ldr_ci_status": "GREEN",
       "cascade_invalidated_by": "unified-trading-library=0.66.0",
       "codebase_health": {
-        "qg_red_reason": "pytest",
-        "coverage_pct": 73.81,
+        "large_file_count": 6,
+        "qg_red_reason": "qg",
         "warn_file_count": 7,
-        "large_file_count": 6
+        "coverage_pct": null
       }
     },
     "execution-service": {
@@ -456,10 +456,10 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "large_file_count": 0,
-        "coverage_pct": 84.22,
+        "coverage_pct": null,
+        "qg_red_reason": "qg",
         "warn_file_count": 22,
-        "qg_red_reason": null
+        "large_file_count": 0
       },
       "cascade_invalidated_by": "unified-trading-library=0.66.0"
     },
@@ -765,10 +765,10 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "qg_red_reason": "qg",
         "large_file_count": 8,
+        "qg_red_reason": "qg",
         "warn_file_count": 11,
-        "coverage_pct": null
+        "coverage_pct": 91.15
       }
     },
     "market-data-processing-service": {
@@ -954,8 +954,8 @@
       "consolidation_plan": "plans/active/ml_repo_consolidation_2026_05_19.md",
       "created": "2026-05-19",
       "codebase_health": {
-        "coverage_pct": null,
-        "qg_red_reason": null,
+        "coverage_pct": 82.62,
+        "qg_red_reason": "pytest",
         "warn_file_count": 6,
         "large_file_count": 0
       },
@@ -1019,10 +1019,10 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "qg_red_reason": null,
         "large_file_count": 5,
-        "coverage_pct": null,
-        "warn_file_count": 10
+        "qg_red_reason": "basedpyright",
+        "warn_file_count": 10,
+        "coverage_pct": null
       },
       "cascade_invalidated_by": "unified-trading-library=0.66.0"
     },
@@ -1087,7 +1087,7 @@
       ],
       "completion_path": "cefi",
       "notes": "Standalone repo. Not a library or service. SSOT: 06-coding-standards/integration-testing-layers.md. risk/position/pnl deps removed 2026-05-20 — coverage absorbed into strategy-service dep (strategy_service/{risk,position,pnl}/ sub-packages).",
-      "ci_status": "FAILING",
+      "ci_status": "MAIN_GREEN",
       "coverage_pct": 3,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "integration",
@@ -1112,10 +1112,10 @@
       "ldr_ci_status": "GREEN",
       "cascade_invalidated_by": "unified-trading-library=0.66.0",
       "codebase_health": {
+        "large_file_count": 0,
         "qg_red_reason": null,
         "warn_file_count": 0,
-        "large_file_count": 0,
-        "coverage_pct": 9.54
+        "coverage_pct": null
       }
     },
     "trading-agent-service": {
