@@ -170,3 +170,24 @@ slow:
   owner per the existing documented gate, consistent with the prior agent's restraint on
   `defi_oracle_prices_capture_stalled_since_2026_07_ 22.md`. Escalated via `/blocked` to the main agent for a bounded
   wait; this issue doc is the durable record regardless of whether that wait produces an answer in time.
+- **slot-5 (data_pipeline_failure escalation agt-0bd299) 2026-08-02, ~1h later**: Re-dispatched by a SECOND CRITICAL
+  `DP_CATALOG_NOT_RUNNING` page (age now 2294min/38.2h, up from 2234min/37.2h — monotonically worse, confirming the
+  condition is still live, not a stale/duplicate alert). Independently re-verified every load-bearing fact via fresh
+  `gcloud`/`gsutil` calls (as `unified-trading-sa`, not from the issue doc's prose) before touching anything: (1)
+  `gsutil stat` on `catalog.parquet` — unchanged `Creation/Update time: Fri, 31 Jul 2026 22:47:16 GMT`, byte-identical
+  generation `1785538036682790`, i.e. genuinely zero writes since slot-7's check, not a monitor-lag artifact; (2)
+  `gcloud run jobs executions list --job=lifecycle-catalogue-regen-defi` — 2026-08-01 and 2026-08-02 01:00 UTC runs both
+  still `Completed/False` (failed), no new/retried execution since; (3)
+  `gcloud scheduler jobs list --location=asia-northeast1` —
+  `uts-prod-mtds-collect-{dex-pools,oracle-prices,evm-defi,solana-defi}-cron` AND their
+  `defi-fwd-{dex-pools,oracle-prices}-prd` counterparts (6 jobs total, a superset of the "4" in the original trail) all
+  still `PAUSED`; (4) `gcloud compute instances list --filter="name~'canonical-migration-defi-per-instrument'"` — zero
+  results, R3 still confirmed dead (the only `canonical-migration-*` instance found anywhere is the unrelated, already
+  `TERMINATED` `canonical-migration-defi-gluedcheck-final-233636`). Checked `GET /api/slots/{5,7}/messages` — both
+  empty, no operator/main answer has landed on the original `/blocked` question; issue doc `resolved_by:` still blank
+  and the `[OPERATOR] P0` todo still unchecked, so the decision is confirmed STILL PENDING, not merely undelivered.
+  **Did not re-diagnose from scratch, did not apply any of options A/B/C, and did not file a duplicate issue** — this
+  entry exists precisely so a second independent read-only confirmation is on record without duplicating the trail.
+  Re-raised via a fresh bounded `/blocked` referencing this doc directly (this is a distinct escalation instance,
+  agt-0bd299, not a resend of agt-0e35ed's) so main sees a second, worsening page tied to the same open decision. Pinged
+  `dp-fleet-monitor` (authoring slot) with the outcome. No code changes, no scheduler/VM state changes.
