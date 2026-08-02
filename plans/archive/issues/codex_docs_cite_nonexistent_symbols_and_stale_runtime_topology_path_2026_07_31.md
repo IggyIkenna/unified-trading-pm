@@ -16,7 +16,7 @@ summary: >-
   now SYNCS it via `scripts/sync/sync-configs.py` — but 4 codex docs still cite the dead deployment-service path.
 status: resolved
 nature: issue
-asset_group: [meta]
+asset_group: [infrastructure] # retagged 2026-07-31 (corpus-sweep meta fold-in) -- was [meta]
 stage: [meta]
 repos: [unified-trading-pm]
 scope: [engineer]

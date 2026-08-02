@@ -8,7 +8,7 @@ summary:
   Claude-account ranking, which would greedily over-select a pay-per-token account every tick.
 status: active
 nature: process
-asset_group: [meta]
+asset_group: [ao] # retagged 2026-07-31 (corpus-sweep meta fold-in) -- was [meta]
 stage: [meta]
 repos: [agent-orchestrator]
 scope: [engineer, admin]
@@ -19,6 +19,7 @@ related:
     /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
     /codex/04-architecture/agent-orchestrator-overview.md,
     /codex/06-coding-standards/model-tier-selection.md,
+    /plans/archive/2026_07/ao_consolidated_closeout_2026_07_25.md,
   ]
 created: 2026-07-28
 parent_epic: orchestrator_master
