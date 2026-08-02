@@ -15,7 +15,7 @@ summary: >-
   actually implemented — shipped it now (`deployment-service@9e6004a`). Did NOT relaunch shard 17 again: the parent
   doc's own Progress Log already flagged this VM as the 2nd relaunch of the day (`RB-INFRA-RELAUNCH`'s
   ≤2/(vm-prefix,day) bound), so a 3rd death today pages/holds rather than relaunches.
-status: open
+status: resolved
 nature: issue
 asset_group: [cefi, meta]
 stage: [data, meta]
@@ -43,7 +43,7 @@ estimate_calibrated_ai_days: 0.08
 assigned_role: data_engineering
 drift_direction: advance-code
 depends_on: []
-resolved_by:
+resolved_by: cicd plan_health wall-clear, escalation agt-9a63eb, 2026-08-02 — both todos already [x], flipping status to match
 locked_by:
 context_scope:
   [
@@ -51,6 +51,11 @@ context_scope:
     /codex/15-runbooks/incidents/rb_infra_relaunch.md,
   ]
 ---
+
+> **🟢 RESOLVED 2026-08-02.** Both todos are `[x]`: the `MACHINE_TYPE=e2-standard-16` default shipped
+> (`deployment-service@9e6004a`) and the relaunched shard 17 VM (`-063040`) confirmed healthy; the `RB-INFRA-RELAUNCH`
+> day-bound carve-out was separately ruled 2026-08-02 (see `plan_reconcile_parked_operator_decisions_2026_08_02.md`
+> na-eligibility-audit item 25). `status` frontmatter was stale at `open` despite zero open todos — corrected here.
 
 # Shard 17's re-death confirms + ships the already-tracked MACHINE_TYPE default bump
 

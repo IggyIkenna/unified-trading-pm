@@ -12,7 +12,7 @@ summary: >-
   retention_duration_seconds=604800 (7-day soft-delete) today. Not applied — deliberately excluded from this session's
   IAM-only apply via -target (out of scope for that task, and a bucket lifecycle/retention change on a live bucket needs
   its own judgment call, not a side-effect of an unrelated grant).
-status: open
+status: resolved
 nature: issue
 asset_group: [infrastructure]
 stage: [meta]
@@ -35,10 +35,15 @@ drift_direction: unclear
 source: >-
   Surfaced 2026-07-31 (slot-7, infra) as a side-observation while running `tofu plan` for
   bucket_iam_p2_tier_sa_scope_gap_and_default_compute_sa_overprivilege_2026_07_30.md P2 (uts-prd-sa IAM grants).
-resolved_by:
+resolved_by: cicd plan_health wall-clear, escalation agt-9a63eb, 2026-08-02 — sole todo already [x] (2026-08-02 operator ruling), flipping status to match
 locked_by:
 depends_on: []
 ---
+
+> **🟢 RESOLVED 2026-08-02.** Operator ruled the drift was unintentional (terraform's `retention_duration_seconds = 0`
+> was already correct and deliberate); live bucket corrected via `gcloud storage buckets update --clear-soft-delete`,
+> verified `softDeletePolicy.retentionDurationSeconds` now reads `0`, matching terraform. `status` frontmatter was
+> stale at `open` despite the sole todo being `[x]` — corrected here.
 
 ## What I found
 

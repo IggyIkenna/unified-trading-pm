@@ -78,6 +78,14 @@ def scan_dir(rel_dir: str, doc_type: str, terminal: frozenset[str]) -> list[str]
             # already applies (added 2026-07-30 after 2 independent locked+terminal docs
             # surfaced the gap: check_archive_candidates.sh excluded them, this script didn't).
             continue
+        if fm.get("archive_exempt") is True:
+            # A doc can declare itself exempt when its own archival is explicitly owned by
+            # a DIFFERENT active, dispatched plan's todo (e.g. a [REVIEW] step that names it),
+            # so archiving it here would race/duplicate that already-queued work. Mirrors
+            # check_archive_candidates.sh's existing `archive_exempt: true` skip (2026-08-02) —
+            # this script never had the equivalent, so a doc could set the flag to satisfy one
+            # ratchet check while still tripping this one for the same declared reason.
+            continue
         status = fm.get("status")
         if status in terminal:
             violations.append(f"{relpath}: status={status} (doc_type={doc_type}) — should be in plans/archive/")
