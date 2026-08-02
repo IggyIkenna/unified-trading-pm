@@ -31,9 +31,9 @@ related:
   ]
 created: "2026-08-02"
 parent_epic: instruments_master
-assigned_vm: NA
+assigned_vm: planning
 resolved_by:
-execution_scope: local-only
+execution_scope: orchestrator-agent
 priority: P2
 estimate_class: refactor
 estimate_baseline_ai_days: 0.2
@@ -151,3 +151,20 @@ in the regenerated `ui-reference-data.json`.
 
 - **2026-08-02**: Filed from `instruments_satellite_ao_dispatch_batch1_2026_07_27.md` todo 4's audit. See that plan for
   the full definitive yes/no verdict + evidence trail.
+- **na-eligibility-audit 2026-08-02** (tradfi tranche, dispatch agt-6397c9): **RECLASSIFY → `assigned_vm: planning`.**
+  Sole open todo is a bounded, deterministic-outcome single-dict-entry deletion mirroring two already-proven precedent
+  commits (`e34afc1d`, `fec3f110`) in the same registry-file family; doc itself states "No design call needed — this is
+  a mechanical parity fix." No `depends_on`/`gate_on_depends` gate, no DO-NOT-DISPATCH banner, no
+  redirect-to-another-doc instruction, no prior audit-revert marker. Conflict-check
+  (`ao-dispatch-batch-naming-and-conflict-check.md` § 3) CLEAR: the source doc
+  (`instruments_satellite_ao_dispatch_batch1_2026_07_27.md` todo 4) explicitly deferred the fix to this doc rather than
+  claiming it itself ("audit-only, not fix-inline"); no active `assigned_vm: planning` doc in
+  `parent_epic: instruments_master` touches `data_availability.py`'s `VENUE_DATA_AVAILABILITY` dict; the related
+  `tradfi_adapter_dead_code_fallback_audit_2026_07_25.md` Finding I-2 is a distinct, non-duplicate finding (already
+  self-disclosed as such in this doc's own "What I found" § 6);
+  `instruments_satellite_batch1_finalize_false_completion_ claim_2026_08_02.md` is an unrelated
+  archival-process-integrity issue that, if anything, corroborates this doc's underlying audit is freshly re-verified
+  (2026-08-02), not stale. `execution_scope` flipped to `orchestrator-agent`; `assigned_role: data_engineering` was
+  already correctly set. No finalize twin required — `doc_type: issue` is structurally exempt from the
+  finalize-plan-coverage rule (`check_finalize_plan_coverage.py` only globs `plans/active/*.md`, not
+  `plans/active/issues/*.md`).
