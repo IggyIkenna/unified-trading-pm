@@ -116,3 +116,31 @@ Full per-bucket rollup (excluding the Finding-1 false positives above):
 ## Progress Log
 
 - **context-scout 2026-08-01**: populated context_scope (3 entries).
+- **data_engineering slot-3, 2026-08-02**: dispatched onto the first `- [ ]` todo above (CF-8), scoped to the
+  `market-data-tick-tradfi-prd` bucket named in its title. **Not flipping the checkbox** — it covers 4 buckets (tradfi,
+  sports ×2, prediction) and only tradfi was worked this session; the other three are separately tracked (see below),
+  not re-diagnosed here.
+  - **tradfi**: this bucket's CF-8 work is the SAME work as
+    `/plans/active/mtds_available_at_cross_asset_backfill_2026_07_13.md`'s tradfi Apply/Resume todos — folded in there
+    rather than duplicated (see that plan's Progress Log #11/#12 for full evidence). Found + fixed a real production bug
+    along the way: `rebuild_tradfi_manifest.py`'s historical backfill crashed on genuine 2023-era bundled-`data_type`
+    objects an earlier "dead code" cleanup had missed (`market-tick-data-service@9d354cea`, regression-tested,
+    quickmerged). Ran the apply, force-consolidated, resumed the tradfi consolidator cron (**closing the fleet-wide
+    tradfi backfill VM outage** tracked in
+    `/plans/active/issues/tradfi_ohlcv_backfill_oom_preflight_fails_paused_consolidator_2026_08_02.md`). `available_at`
+    fill on captured rows improved materially (69.97% → ~77-82%) but did NOT reach the ~100% ceiling the sibling plan's
+    todo anticipates — a concurrent session (slot-14) found a real per-month gap (pre-2023-04 stuck at ~50-60%) that
+    needs further investigation before tradfi's CF-8 can be called GREEN. **CF-8 is very likely still RED on
+    `market-data-tick-tradfi-prd`** pending that — re-run `cf_manifest_audit.py` against this bucket once the sibling
+    plan's Apply todo is fully resolved, not before.
+  - **sports** (`market-data-tick-sports-prd`, `instruments-store-sports-prd`): already substantially tracked + mostly
+    resolved by `sports_cf8_available_at_backfill_regression_2026_07_13.md` (root-caused, guardrail added, restored from
+    the regression). Live spot-check this session: `market-data-tick-sports-prd`'s CF-8 fill is 82.17% (503,722/613,034
+    captured rows) — not 100%, so likely still RED, but not re-diagnosed here since that doc already owns the remaining
+    gap (one open item there, gated on a TEAMS/STANDINGS deployment question, `assigned_vm: NA`).
+  - **prediction** (`market-data-tick-pred-prd`): tracked by the SAME `mtds_available_at_cross_asset_backfill` plan's
+    `-001`/`-006` todos, actively worked across many sessions (most recently slot-14, 2026-08-02) — not duplicated here
+    either.
+  - Given the above, this todo is best left open and re-worked by re-running `cf_manifest_audit.py` per-bucket once
+    `mtds_available_at_cross_asset_backfill`'s tradfi + prediction Apply todos and the sports doc's remaining item are
+    all closed, rather than flipped now on partial progress.
