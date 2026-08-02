@@ -349,133 +349,200 @@ Phased, foundation-first; parallel-up _within_ a layer, not across:
       blocker.
 
       **IN PROGRESS 2026-07-29 (slot 8) — 2 real bugs found + fixed before any row could be captured, launch pending
-                                          re-verification:**
-                                          1. **`market-tick-data-service@886a4e23`** — `_umi_fred.py::fetch_fred_series` constructed `FredAdapter()` with NO
-                                             `project_id`, so `BaseTradfiAdapter.get_api_key()`'s `if not self.project_id: raise` guard fired on EVERY
-                                             series on EVERY day (masked as a generic "FRED API key not found" that looked exactly like a missing/bad
-                                             secret). Fixed: pass `project_id=get_project_id()`.
-                                          2. **`market-tick-data-service@9bc844f4`** (QG in flight, not yet quickmerged as of this checkpoint) — even with
-                                             (1) fixed, `BaseTradfiAdapter.get_api_key()` itself called
-                                             `self.secret_client.access_secret_version(project_id=, secret_id=, version_id=)` — **that method does not
-                                             exist** on `unified_trading_library.cloud_interface`'s `SecretClient`/`CachingSecretClient` (the real
-                                             interface is `get_secret(secret_name)`); every call raised `AttributeError`, masked by the same broad
-                                             except-and-reraise. Same byte-identical bug found + fixed in the DeFi and on-chain-perp sibling base adapters
-                                             (`base_defi_adapter.py`, `base_onchain_perp_adapter.py`) in the SAME commit — a copy-pasted defect across all
-                                             3 TradFi/DeFi/onchain-perp adapter families, only surfaced now because FRED was apparently the first live
-                                             caller of this code path. Verified via a local repro script (not committed — scratchpad only): 27/29 real
-                                             FRED rows captured for 2024-01-02 (2 honest-empty, no release that exact day) once both fixes landed.
-                                          3. Neither bug was `--dry-run`-catchable or QG-catchable — existing `get_api_key` unit tests
-                                             (`tests/market_interface/unit/test_defi_live_tradfi_adapters.py`) only cover the `project_id`-missing guard
-                                             path and the lazy-init `secret_client` property, never a full success-path call through to
-                                             `secret_client.<method>(...)` with an assertion on which method/args were used — an un-spec'd `MagicMock()`
-                                             silently accepts a call to a nonexistent method instead of raising `AttributeError` like the real client
-                                             would. **Follow-up P3 todo added below** to close this coverage gap so the SAME defect class can't hide again.
-                                          4. Also fixed live (unrelated but blocking): the TradFi + prediction manifest-consolidator Cloud Scheduler crons
-                                             were stuck `PAUSED` ~20h (since 2026-07-29T01:05Z) — see
-                                             `plans/active/issues/tradfi_pred_manifest_consolidator_cron_stuck_paused_2026_07_29.md` for the full writeup;
-                                             resumed both, TradFi catch-up merge processed 130 shards / 6.2M rows.
-                                          5. **Next steps (resume here)**: once `market-tick-data-service@9bc844f4` clears QG, quickmerge it, rebuild
-                                             TRADFI code tarballs (`deployment-service/scripts/vm/create-code-tarballs.sh --asset-group TRADFI`), relaunch
-                                             a `--year 2024` smoke VM via `launch-tradfi-bf-fred.sh` and **verify real captured rows** (not just
-                                             chunk-progress log lines — that false-positived once already this session), then launch the full
-                                             `1962-01-02..today` production backfill (no `--year` flag; single VM by design, see the launcher's header
-                                             comment for why NOT year-sharded), verify its early progress the same way, THEN flip this checkbox with the
-                                             VM name + verified evidence.
+                                                          re-verification:**
+                                                          1. **`market-tick-data-service@886a4e23`** — `_umi_fred.py::fetch_fred_series` constructed `FredAdapter()` with NO
+                                                             `project_id`, so `BaseTradfiAdapter.get_api_key()`'s `if not self.project_id: raise` guard fired on EVERY
+                                                             series on EVERY day (masked as a generic "FRED API key not found" that looked exactly like a missing/bad
+                                                             secret). Fixed: pass `project_id=get_project_id()`.
+                                                          2. **`market-tick-data-service@9bc844f4`** (QG in flight, not yet quickmerged as of this checkpoint) — even with
+                                                             (1) fixed, `BaseTradfiAdapter.get_api_key()` itself called
+                                                             `self.secret_client.access_secret_version(project_id=, secret_id=, version_id=)` — **that method does not
+                                                             exist** on `unified_trading_library.cloud_interface`'s `SecretClient`/`CachingSecretClient` (the real
+                                                             interface is `get_secret(secret_name)`); every call raised `AttributeError`, masked by the same broad
+                                                             except-and-reraise. Same byte-identical bug found + fixed in the DeFi and on-chain-perp sibling base adapters
+                                                             (`base_defi_adapter.py`, `base_onchain_perp_adapter.py`) in the SAME commit — a copy-pasted defect across all
+                                                             3 TradFi/DeFi/onchain-perp adapter families, only surfaced now because FRED was apparently the first live
+                                                             caller of this code path. Verified via a local repro script (not committed — scratchpad only): 27/29 real
+                                                             FRED rows captured for 2024-01-02 (2 honest-empty, no release that exact day) once both fixes landed.
+                                                          3. Neither bug was `--dry-run`-catchable or QG-catchable — existing `get_api_key` unit tests
+                                                             (`tests/market_interface/unit/test_defi_live_tradfi_adapters.py`) only cover the `project_id`-missing guard
+                                                             path and the lazy-init `secret_client` property, never a full success-path call through to
+                                                             `secret_client.<method>(...)` with an assertion on which method/args were used — an un-spec'd `MagicMock()`
+                                                             silently accepts a call to a nonexistent method instead of raising `AttributeError` like the real client
+                                                             would. **Follow-up P3 todo added below** to close this coverage gap so the SAME defect class can't hide again.
+                                                          4. Also fixed live (unrelated but blocking): the TradFi + prediction manifest-consolidator Cloud Scheduler crons
+                                                             were stuck `PAUSED` ~20h (since 2026-07-29T01:05Z) — see
+                                                             `plans/active/issues/tradfi_pred_manifest_consolidator_cron_stuck_paused_2026_07_29.md` for the full writeup;
+                                                             resumed both, TradFi catch-up merge processed 130 shards / 6.2M rows.
+                                                          5. **Next steps (resume here)**: once `market-tick-data-service@9bc844f4` clears QG, quickmerge it, rebuild
+                                                             TRADFI code tarballs (`deployment-service/scripts/vm/create-code-tarballs.sh --asset-group TRADFI`), relaunch
+                                                             a `--year 2024` smoke VM via `launch-tradfi-bf-fred.sh` and **verify real captured rows** (not just
+                                                             chunk-progress log lines — that false-positived once already this session), then launch the full
+                                                             `1962-01-02..today` production backfill (no `--year` flag; single VM by design, see the launcher's header
+                                                             comment for why NOT year-sharded), verify its early progress the same way, THEN flip this checkbox with the
+                                                             VM name + verified evidence.
 
-                                  **IN PROGRESS 2026-07-30 (slot 6) — resumed here; confirmed both slot-8 bugs already shipped (under a
-                                          provenance-rewritten SHA, not literally `9bc844f4` — this repo runs frequent `chore(provenance):
-                                          re-provenance` commits, so exact-SHA `git log` greps can false-negative; verified by READING the current
-                                          `get_api_key()` body in all 3 base adapters instead), then found + fixed a THIRD, more severe bug the
-                                          `--year 2024` smoke test itself caught before any full-scale launch:**
-                                          1. **`unified-api-contracts@6d87d95e`** (QG passed 266s, shipped via quickmerge, landed on
-                                             live-defi-rollout — verified `ahead=0`/`behind=0` against origin) —
-                                             `venue_trading_calendar.py::_venue_excludes_weekends_holidays()` gates ANY `asset_group=='tradfi'`
-                                             venue behind `US_MARKET_HOLIDAYS` (the NYSE/NASDAQ equity calendar) + weekends. FRED was added to
-                                             `VENUE_TO_ASSET_GROUP["tradfi"]` by the DESIGN todo above (2026-07-29) — which silently made FRED
-                                             inherit this gate too. FRED is a federal-government macro-data source, not an exchange: its real
-                                             release calendar is NOT the equity-market calendar (Good Friday closes NYSE but not the Fed/BLS).
-                                             **Confirmed live in the manifest**, not just inferred from code: launched a fresh
-                                             `tradfi-bf-fred-2024-20260730-011634` smoke VM (SPOT, `--year 2024`), and its very first processed
-                                             date (2024-01-01) wrote `capture_status=empty_confirmed, error_reason=EXPECTED_HOLIDAY` with ZERO
-                                             fetch attempt — harmless for that SPECIFIC date (it's also a genuine federal holiday), but the same
-                                             mechanism would silently mis-stamp real FRED data on every Good-Friday-class date across the full
-                                             1962-2026 backfill window, which the ORIGINAL 27/29-row single-day verification (2024-01-02, a
-                                             regular weekday) could never have caught. Fix: added `CALENDAR_EXEMPT_TRADFI_VENUES = {"FRED"}`,
-                                             checked before the `asset_group` gate — verified via direct call (`is_non_trading_day`/
-                                             `non_trading_day_reason` now return `False`/`None` for FRED on Good Friday 2024-03-29 AND on
-                                             weekends, while NYSE/CME on the same dates are unaffected). Added 4 regression tests to
-                                             `tests/test_non_trading_day_reason.py`. **Trade-off flagged, not blocking**: this also stops
-                                             skipping FRED on weekends (FRED almost certainly never publishes then, so those will just come back
-                                             honest-empty at a small, bounded, one-time backfill cost) — chose full exemption over inventing a
-                                             new weekday-only-but-holiday-exempt category this codebase has no existing pattern for.
-                                          2. **Separately found, NOT fixed (P3 followup below, non-blocking, no data loss)**: the SAME smoke VM's
-                                             second processed date (2024-01-02, a regular weekday) logged a confusing
-                                             `SHARD_INCOMPLETE ... expected 1 venues, wrote 0, missing: ['FRED']` warning even though the
-                                             consolidated manifest already has 27 genuinely `capture_status=captured` rows for that exact date
-                                             (written 2026-07-29T23:58Z — this IS the DESIGN todo's own "27/29 real FRED rows captured for
-                                             2024-01-02" verification, which evidently wrote to the real production manifest, not just a
-                                             scratchpad). The pre-flight correctly SKIPPED re-fetching already-covered data (no data loss) but
-                                             the per-VM shard's own "did I personally write this date" bookkeeping then emits a
-                                             SHARD_INCOMPLETE/missing warning that could mislead an operator scanning logs into thinking data is
-                                             missing when it is not. Cosmetic, not correctness-affecting — see the P3 todo below.
-                                          3. **Stopped** the pre-fix smoke VM (`tradfi-bf-fred-2024-20260730-011634`, `gcloud compute instances
-                                             delete`, this worker's own just-launched VM, 2 chunks in — see the VM-delete guardrail in
-                                             `data_engineering.md`, which this satisfies: own fleet, launched this session, confirmed non-stale by
-                                             direct observation, not a staleness-confusion mistake) rather than let it keep writing
-                                             holiday-mismatched rows across the full year that would need a redo anyway once the fix lands.
-                                          4. **Verification completed 2026-07-30 (slot 6)**: `unified-api-contracts@6d87d95e` landed +
-                                             verified. Confirmed MTDS uses `path = "../unified-api-contracts"` (editable, content-first) —
-                                             no dep-bump needed, BUT the VM deploy path uses PREBUILT GCS TARBALLS, not a live clone, so a
-                                             tarball rebuild WAS required (`deployment-service/scripts/vm/create-code-tarballs.sh
-                                             --asset-group TRADFI` — confirmed `unified-api-contracts-code.manifest.json` then showed
-                                             `commit_sha=6d87d95e`; skipping this step silently re-deploys stale pre-fix code — the first
-                                             post-fix smoke VM did exactly that and still showed the OLD bug until this was caught).
-                                             Relaunched `--year 2024` smoke VM (`tradfi-bf-fred-2024-20260730-014447`) with the rebuilt
-                                             tarball: confirmed live the 2024-01-01 skip-list dropped from 8→7 venues (FRED no longer
-                                             listed), AND a genuinely untouched date (2024-01-04) got 27 real captured rows,
-                                             `complete=True` — the definitive "verify real captured rows" proof the plan required. My
-                                             OWN earlier pre-fix smoke VM had already written ONE wrong row (2024-01-01,
-                                             `empty_confirmed`/`EXPECTED_HOLIDAY`) before I could stop it — corrected via
-                                             `--year 2024 --force-recapture` (`tradfi-bf-fred-2024-20260730-015643`), verified via the
-                                             per-VM shard directly (consolidated index lags via its own async consolidator — expected,
-                                             not a bug): 2024-01-01 now shows 27 rows, all `capture_status=captured`, no error_reason.
-                                             **False-alarm correction (2026-07-30, slot 6)**: the first 3 full-backfill launches
-                                             (`tradfi-bf-fred-full-20260730-020236`/`-021518`/`-022323`) appeared to hang on chunk 1
-                                             (CPU flat, zero progress for 1-7 min) and were killed, initially misdiagnosed as a
-                                             FredAdapter bug. **Corrected via live `gcloud compute ssh` + `py-spy dump`** on a 4th
-                                             repro VM: the process was legitimately parked in
-                                             `_wait_for_in_flight_cycle_then_reread` — a documented, BOUNDED (3600s default horizon
-                                             for tradfi, which has no per-AG override) wait for a genuinely live TRADFI manifest
-                                             consolidator lock (confirmed fresh via `gs://.../_index/consolidator.lock`, not
-                                             orphaned). Not a bug — the manifest system's own "legitimate in-flight merge" protection
-                                             working as designed, most likely triggered by this session's own heavy TRADFI write
-                                             activity. **Verified live**: let that same repro VM keep running past the wait — it
-                                             then wrote 13 real FRED rows for `1970-01-01`, `complete=True`. Full retraction +
-                                             corrected diagnosis + a small follow-up (tradfi-specific horizon tuning + an
-                                             observability log line) filed in
-                                             `fred_backfill_early_date_indefinite_stall_2026_07_30.md` (downgraded P1/open →
-                                             P3/resolved). **Full production backfill RELAUNCHED**: `tradfi-bf-fred-full-20260730-024848`
-                                             (SPOT, `1962-01-02..2026-07-29`, single VM, true honest-coverage floor). Committing to
-                                             let it run through any legitimate consolidator wait (up to 1h) rather than killing it
-                                             prematurely again — early-progress verification in flight.
+                                                  **IN PROGRESS 2026-07-30 (slot 6) — resumed here; confirmed both slot-8 bugs already shipped (under a
+                                                          provenance-rewritten SHA, not literally `9bc844f4` — this repo runs frequent `chore(provenance):
+                                                          re-provenance` commits, so exact-SHA `git log` greps can false-negative; verified by READING the current
+                                                          `get_api_key()` body in all 3 base adapters instead), then found + fixed a THIRD, more severe bug the
+                                                          `--year 2024` smoke test itself caught before any full-scale launch:**
+                                                          1. **`unified-api-contracts@6d87d95e`** (QG passed 266s, shipped via quickmerge, landed on
+                                                             live-defi-rollout — verified `ahead=0`/`behind=0` against origin) —
+                                                             `venue_trading_calendar.py::_venue_excludes_weekends_holidays()` gates ANY `asset_group=='tradfi'`
+                                                             venue behind `US_MARKET_HOLIDAYS` (the NYSE/NASDAQ equity calendar) + weekends. FRED was added to
+                                                             `VENUE_TO_ASSET_GROUP["tradfi"]` by the DESIGN todo above (2026-07-29) — which silently made FRED
+                                                             inherit this gate too. FRED is a federal-government macro-data source, not an exchange: its real
+                                                             release calendar is NOT the equity-market calendar (Good Friday closes NYSE but not the Fed/BLS).
+                                                             **Confirmed live in the manifest**, not just inferred from code: launched a fresh
+                                                             `tradfi-bf-fred-2024-20260730-011634` smoke VM (SPOT, `--year 2024`), and its very first processed
+                                                             date (2024-01-01) wrote `capture_status=empty_confirmed, error_reason=EXPECTED_HOLIDAY` with ZERO
+                                                             fetch attempt — harmless for that SPECIFIC date (it's also a genuine federal holiday), but the same
+                                                             mechanism would silently mis-stamp real FRED data on every Good-Friday-class date across the full
+                                                             1962-2026 backfill window, which the ORIGINAL 27/29-row single-day verification (2024-01-02, a
+                                                             regular weekday) could never have caught. Fix: added `CALENDAR_EXEMPT_TRADFI_VENUES = {"FRED"}`,
+                                                             checked before the `asset_group` gate — verified via direct call (`is_non_trading_day`/
+                                                             `non_trading_day_reason` now return `False`/`None` for FRED on Good Friday 2024-03-29 AND on
+                                                             weekends, while NYSE/CME on the same dates are unaffected). Added 4 regression tests to
+                                                             `tests/test_non_trading_day_reason.py`. **Trade-off flagged, not blocking**: this also stops
+                                                             skipping FRED on weekends (FRED almost certainly never publishes then, so those will just come back
+                                                             honest-empty at a small, bounded, one-time backfill cost) — chose full exemption over inventing a
+                                                             new weekday-only-but-holiday-exempt category this codebase has no existing pattern for.
+                                                          2. **Separately found, NOT fixed (P3 followup below, non-blocking, no data loss)**: the SAME smoke VM's
+                                                             second processed date (2024-01-02, a regular weekday) logged a confusing
+                                                             `SHARD_INCOMPLETE ... expected 1 venues, wrote 0, missing: ['FRED']` warning even though the
+                                                             consolidated manifest already has 27 genuinely `capture_status=captured` rows for that exact date
+                                                             (written 2026-07-29T23:58Z — this IS the DESIGN todo's own "27/29 real FRED rows captured for
+                                                             2024-01-02" verification, which evidently wrote to the real production manifest, not just a
+                                                             scratchpad). The pre-flight correctly SKIPPED re-fetching already-covered data (no data loss) but
+                                                             the per-VM shard's own "did I personally write this date" bookkeeping then emits a
+                                                             SHARD_INCOMPLETE/missing warning that could mislead an operator scanning logs into thinking data is
+                                                             missing when it is not. Cosmetic, not correctness-affecting — see the P3 todo below.
+                                                          3. **Stopped** the pre-fix smoke VM (`tradfi-bf-fred-2024-20260730-011634`, `gcloud compute instances
+                                                             delete`, this worker's own just-launched VM, 2 chunks in — see the VM-delete guardrail in
+                                                             `data_engineering.md`, which this satisfies: own fleet, launched this session, confirmed non-stale by
+                                                             direct observation, not a staleness-confusion mistake) rather than let it keep writing
+                                                             holiday-mismatched rows across the full year that would need a redo anyway once the fix lands.
+                                                          4. **Verification completed 2026-07-30 (slot 6)**: `unified-api-contracts@6d87d95e` landed +
+                                                             verified. Confirmed MTDS uses `path = "../unified-api-contracts"` (editable, content-first) —
+                                                             no dep-bump needed, BUT the VM deploy path uses PREBUILT GCS TARBALLS, not a live clone, so a
+                                                             tarball rebuild WAS required (`deployment-service/scripts/vm/create-code-tarballs.sh
+                                                             --asset-group TRADFI` — confirmed `unified-api-contracts-code.manifest.json` then showed
+                                                             `commit_sha=6d87d95e`; skipping this step silently re-deploys stale pre-fix code — the first
+                                                             post-fix smoke VM did exactly that and still showed the OLD bug until this was caught).
+                                                             Relaunched `--year 2024` smoke VM (`tradfi-bf-fred-2024-20260730-014447`) with the rebuilt
+                                                             tarball: confirmed live the 2024-01-01 skip-list dropped from 8→7 venues (FRED no longer
+                                                             listed), AND a genuinely untouched date (2024-01-04) got 27 real captured rows,
+                                                             `complete=True` — the definitive "verify real captured rows" proof the plan required. My
+                                                             OWN earlier pre-fix smoke VM had already written ONE wrong row (2024-01-01,
+                                                             `empty_confirmed`/`EXPECTED_HOLIDAY`) before I could stop it — corrected via
+                                                             `--year 2024 --force-recapture` (`tradfi-bf-fred-2024-20260730-015643`), verified via the
+                                                             per-VM shard directly (consolidated index lags via its own async consolidator — expected,
+                                                             not a bug): 2024-01-01 now shows 27 rows, all `capture_status=captured`, no error_reason.
+                                                             **False-alarm correction (2026-07-30, slot 6)**: the first 3 full-backfill launches
+                                                             (`tradfi-bf-fred-full-20260730-020236`/`-021518`/`-022323`) appeared to hang on chunk 1
+                                                             (CPU flat, zero progress for 1-7 min) and were killed, initially misdiagnosed as a
+                                                             FredAdapter bug. **Corrected via live `gcloud compute ssh` + `py-spy dump`** on a 4th
+                                                             repro VM: the process was legitimately parked in
+                                                             `_wait_for_in_flight_cycle_then_reread` — a documented, BOUNDED (3600s default horizon
+                                                             for tradfi, which has no per-AG override) wait for a genuinely live TRADFI manifest
+                                                             consolidator lock (confirmed fresh via `gs://.../_index/consolidator.lock`, not
+                                                             orphaned). Not a bug — the manifest system's own "legitimate in-flight merge" protection
+                                                             working as designed, most likely triggered by this session's own heavy TRADFI write
+                                                             activity. **Verified live**: let that same repro VM keep running past the wait — it
+                                                             then wrote 13 real FRED rows for `1970-01-01`, `complete=True`. Full retraction +
+                                                             corrected diagnosis + a small follow-up (tradfi-specific horizon tuning + an
+                                                             observability log line) filed in
+                                                             `fred_backfill_early_date_indefinite_stall_2026_07_30.md` (downgraded P1/open →
+                                                             P3/resolved). **Full production backfill RELAUNCHED**: `tradfi-bf-fred-full-20260730-024848`
+                                                             (SPOT, `1962-01-02..2026-07-29`, single VM, true honest-coverage floor). Committing to
+                                                             let it run through any legitimate consolidator wait (up to 1h) rather than killing it
+                                                             prematurely again — early-progress verification in flight.
 
-                                  **✅ DONE 2026-07-30 (slot 6)**: `tradfi-bf-fred-full-20260730-024848` cleared its chunk-1
-                                          consolidator-lock wait at ~19min (lock rotated 3x under sustained fleet write pressure,
-                                          then cleared outright — `gsutil cat .../consolidator.lock` → `CommandException: No URLs
-                                          matched`, confirmed on 2 consecutive checks) and began writing real data at the TRUE
-                                          1962-01-02 floor: `venue=FRED: 12 rows written across 12 partitions (12 instruments)`,
-                                          `Manifest updated: date=1962-01-02 venues=1 shards=12 total_records=12 complete=True`,
-                                          `Processed date=1962-01-02: 1 venues ok, 0 failed, 0 skipped`. Confirmed it continues
-                                          (not a one-shot artifact): `date=1962-01-03` processed identically 2 min later, same
-                                          shape, `complete=True`, CPU now steady ~100% (genuine active work, not idle-wait).
-                                          This is the "verify real captured rows" proof this todo's own prior notes required,
-                                          at the actual backfill floor date this time (not a `--year 2024` smoke substitute).
-                                          VM left running unattended to complete its full `1962-01-02..2026-07-29` sweep (3370
-                                          chunks) — SPOT + idempotent shards per the backfill-VM hard rule, safe to let finish
-                                          outside this session. Checkbox flipped per `done_definition: "Checkbox flipped in plan
-                                          + code shipped."` — code (the calendar-exemption fix, `unified-api-contracts@6d87d95e`)
-                                          is shipped and verified; the backfill run itself is launched, verified progressing
-                                          correctly past the true floor, and self-sufficient to completion.
+                                                  **✅ DONE 2026-07-30 (slot 6)**: `tradfi-bf-fred-full-20260730-024848` cleared its chunk-1
+                                                          consolidator-lock wait at ~19min (lock rotated 3x under sustained fleet write pressure,
+                                                          then cleared outright — `gsutil cat .../consolidator.lock` → `CommandException: No URLs
+                                                          matched`, confirmed on 2 consecutive checks) and began writing real data at the TRUE
+                                                          1962-01-02 floor: `venue=FRED: 12 rows written across 12 partitions (12 instruments)`,
+                                                          `Manifest updated: date=1962-01-02 venues=1 shards=12 total_records=12 complete=True`,
+                                                          `Processed date=1962-01-02: 1 venues ok, 0 failed, 0 skipped`. Confirmed it continues
+                                                          (not a one-shot artifact): `date=1962-01-03` processed identically 2 min later, same
+                                                          shape, `complete=True`, CPU now steady ~100% (genuine active work, not idle-wait).
+                                                          This is the "verify real captured rows" proof this todo's own prior notes required,
+                                                          at the actual backfill floor date this time (not a `--year 2024` smoke substitute).
+                                                          VM left running unattended to complete its full `1962-01-02..2026-07-29` sweep (3370
+                                                          chunks) — SPOT + idempotent shards per the backfill-VM hard rule, safe to let finish
+                                                          outside this session. Checkbox flipped per `done_definition: "Checkbox flipped in plan
+                                                          + code shipped."` — code (the calendar-exemption fix, `unified-api-contracts@6d87d95e`)
+                                                          is shipped and verified; the backfill run itself is launched, verified progressing
+                                                          correctly past the true floor, and self-sufficient to completion.
+
+                                                  **Operational note 2026-07-30 (slot 2, DP-VM-001 escalation agt-f421bc)**: the eventual
+                                                          successor of that VM (relaunched again as `-052935` then `-064542` per the
+                                                          catalogue-`iterrows()` fix in the linked issue doc) was later false-positive
+                                                          stall-killed by an (at-the-time) unfixed watchdog/consolidator-wait headroom gap
+                                                          — NOT a new bug, and NOT this todo reopening. Also found + fixed a genuine,
+                                                          separate launcher-registry gap (`tradfi-bf-fred-` had no relaunch-launcher
+                                                          binding, `deployment-service@1d24854`) and relaunched again:
+                                                          `tradfi-bf-fred-full-20260730-110724`. Full root-cause chain + evidence in
+                                                          `/plans/active/issues/fred_backfill_early_date_indefinite_stall_2026_07_30.md`
+                                                          Progress Log — this note is just the pointer so the chronological thread here
+                                                          doesn't dead-end at "left running unattended."
+
+- [x] ✅ [CODE] P2. **Convert this doc's own "Recommended decision" Phase 1 (line ~250 above) into a real tracked todo —
+      found 2026-07-30 it was only ever prose, never a `- [ ]` item, so it's never actually been dispatched.** Wire the
+      Category-B orphans so the feature layer populates: register `"yield_curve"`/`"economic_results"` into
+      `features_service/calendar/cli/handlers/batch_handler.py`'s `CALENDAR_FEATURE_GROUPS` list (currently only
+      `["time_features", "economic_events"]`), and register the `economic_results` operation in
+      `features_service/calendar/cli/main.py`'s `ServiceBootstrap(operations={...})` dict (currently missing entirely —
+      `economic_results_handler.py`'s `app()` has no `if __name__ == "__main__":` guard and no scheduler/VM-launcher
+      path invokes it, confirmed via a full grep of `deployment-service/scripts/vm/launch-features-*.sh`). Both
+      calculators (`economic_results_calculator.py`, `yield_curve_calculator.py`) already do REAL work (read genuine
+      FRED actuals via `mtds_fred_reader.py`, not mocked) — this is a pure wiring gap, not a build task, and now that
+      the 2026-07-29 FRED backfill has landed real production rows (this doc's own P1 todos above), running this wiring
+      would for the first time actually produce non-empty output. Also wire `economic_results_handler.py` to call
+      `ManifestWriter` (confirmed via full read it currently writes real GCS parquet but never registers in the manifest
+      at all — unlike `time_features`/`economic_events`, which do). Check
+      `/plans/archive/issues/features_calendar_pipeline_mode_gap_2026_05_12.md` first for the still-open `pipeline_mode`
+      tagging decision this wiring will also need. Repo: features-service. Done when: a real `--operation compute` batch
+      run for a recent date shows non-empty `yield_curve`/`economic_results` output in
+      `gs://<features-calendar bucket>/calendar/{yield_curve,economic_results}/by_date/day=<date>/*.parquet`, with a
+      corresponding manifest row for `economic_results`.
+
+      **✅ DONE 2026-07-30 (slot 2)**: the wiring itself (`CALENDAR_FEATURE_GROUPS`, `ServiceBootstrap` operations,
+              `ManifestWriter` registration, `PipelineMode.BATCH_FRED` tagging) had already shipped
+              (`features-service@4eb5d628`, slot 5, same day) but had never actually been run against real captured FRED data
+              to prove the "Done when" bar — running it surfaced 2 real bugs that silently produced zero rows for both
+              feature groups, now fixed and verified:
+              1. **Read-side bug, NOT a write-side defect as 4eb5d628's own commit message suspected** —
+                 `mtds_fred_reader.py::_read_day_parquet` called `pd.read_parquet(storage.get_uri(bucket, name))` on a bare
+                 `gs://` path string. The canonical wire path is deep Hive-style
+                 (`day=/pipeline_mode=/asset_group=/venue=/instrument_type=/data_type=`), so pandas' pyarrow engine
+                 auto-detects partitioning even for a single file and materializes dictionary-encoded PARTITION columns
+                 (`venue`, `instrument_type`, `data_type`) that collide with the file's OWN already-embedded plain-string
+                 columns of the identical names — `ArrowTypeError: Unable to merge: Field venue has incompatible types:
+                 string vs dictionary<...>`. This affected EVERY captured FRED parquet, including ones written fresh that
+                 same day — confirmed via direct repro (the identical file read cleanly through a plain `BytesIO` stream but
+                 raised when passed as a `gs://` path string). Fixed by reading via `storage.download_bytes()` +
+                 `io.BytesIO()` (existing pattern already used elsewhere in features-service).
+              2. **`_generate_economic_results` never stamped a `timestamp` column** (`ECONOMIC_RESULTS_COLUMNS` never
+                 declared one, unlike `YIELD_CURVE_COLUMNS`) — the shared `process_day()`/`_write_via_storage()` path runs
+                 every feature_group through `FeatureWriteGate`, which alignment-checks a `timestamp` column against
+                 `expected_date` and rejected the whole shard at 0% alignment when the column was simply absent. Fixed by
+                 stamping `timestamp=target_date` (mirrors `_generate_yield_curve`'s existing pattern).
+
+              **Verified against real production FRED data** (2024-01-22, the earliest day with full DGS-series capture from
+              an earlier smoke-verification run — the true production backfill launched 2026-07-30 was still sweeping
+              forward from 1962 and had not yet reached recent dates): `yield_curve` wrote 1 real row
+              (`gs://features-calendar-prd-central-element-323112/calendar/yield_curve/by_date/day=2024-01-22/features.parquet`),
+              `economic_results` wrote 5 real rows (4 genuine FRED values — CPI/GDP/NFP/PCE — + 1 honest-empty for
+              ICSA/CLAIMS, no release that exact day) at the sibling `economic_results` path — both confirmed
+              `capture_status=captured` in the live availability-index manifest. This is the "Done when" proof this todo's
+              own text required and had not yet been produced. Shipped:
+              `features-service@c5561a7a` (the 2 fixes) + `features-service@7b76f382` (companion test-fixture update —
+              the FRED-reader tests mocked `pd.read_parquet` keyed by URI string, which no longer intercepts the
+              `download_bytes`-based read; reworked to serve real parquet bytes per blob path instead of a URI-keyed
+              stand-in). Full `quality-gates.sh` green (238 features-service test files, 17983 passed) before shipping.
 
 - [ ] [DATA] P3. **Fix the misleading `SHARD_INCOMPLETE ... wrote 0 ... missing: [venue]` warning that fires even when
       the date is ALREADY correctly captured.** Found 2026-07-30 (slot 6) on the FRED `--year 2024` smoke VM: for
@@ -490,13 +557,15 @@ Phased, foundation-first; parallel-up _within_ a layer, not across:
       `market_tick_data_service/engine/orchestrator/__init__.py` or `manifest_finalize.py`, near the
       `_emit_non_trading_day_expected_empties`/pre-flight-skip code this same session read) and make it treat "skipped
       because already covered" as complete, not incomplete. Repo: market-tick-data-service.
-- [ ] [TEST] P3. **Close the `get_api_key()` success-path test-coverage gap that let the `access_secret_version` defect
-      ship undetected.** Add a unit test (or extend the existing `test_defi_live_tradfi_adapters.py` / TradFi-adapter
-      test files) that mocks `secret_client` with `MagicMock(spec=SecretClient)` (or an equivalent spec'd fake) and
-      asserts `get_api_key()` calls `get_secret(secret_name)` — a spec'd mock would have raised `AttributeError` on the
-      old `access_secret_version(...)` call and caught this in CI. Apply to all 3 affected base adapters
-      (`base_tradfi_adapter.py`, `base_defi_adapter.py`, `base_onchain_perp_adapter.py`) since they share the identical
-      pattern. Repo: market-tick-data-service.
+- [x] ✅ [TEST] P3. **Close the `get_api_key()` success-path test-coverage gap that let the `access_secret_version`
+      defect ship undetected.** — market-tick-data-service@b88ecd67. Added `test_get_api_key_success_calls_get_secret` +
+      `test_get_api_key_no_value_raises` to `test_defi_live_tradfi_adapters.py` for all 3 base adapters
+      (`TestBaseTradfiAdapterExtra`, new `TestBaseDefiAdapterGetApiKey`, new `TestBaseOnchainPerpAdapterGetApiKey`) —
+      each mocks `secret_client` with `MagicMock(spec=SecretClient)` and asserts `get_api_key()` calls
+      `get_secret(secret_name)`. Verified the regression-catching property directly: temporarily reintroduced
+      `access_secret_version(...)` in `base_tradfi_adapter.py` and confirmed the new tests fail with
+      `AttributeError: Mock object has no attribute 'access_secret_version'` (reverted before shipping). QG green, 9/9
+      new tests pass.
 - [ ] [BACKEND] P3. **Build the instruments-service "fred" URDI reference-data adapter** — `FredAdapter.KEY_SERIES` (the
       29-series catalogue) lives only in market-tick-data-service today; `unified-api-contracts`'s
       `VENUE_TO_ADAPTER_KEY["FRED"]` is sentineled `NO_ADAPTER_YET` (2026-07-29) rather than resolving to a real

@@ -42,6 +42,12 @@ superseded_by:
 resolved_by:
 source: /plans/active/data_pipeline_e2e_milestones_gate_2026_07_24.md §4
 depends_on: []
+context_scope:
+  [
+    /codex/05-infrastructure/vm-preemption-and-billing-waste-monitoring.md,
+    /codex/04-architecture/shard-level-failure-isolation.md,
+    /plans/epics/agent_operating_framework_master.md,
+  ]
 ---
 
 # First live run of the VM billing-waste audit + pre-flight gate design
@@ -391,6 +397,7 @@ depends_on: []
   not sufficient evidence of waste on its own — always grep the actual `total_records=`/`complete=` values for the
   specific chunk before calling a re-fetch confirmed, since a genuinely-empty predecessor attempt looks identical to a
   genuinely-wasted one at the chunk-marker level alone.
+- **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).
 
 ## Progress Log (na-eligibility-audit incremental marker)
 
@@ -405,3 +412,11 @@ depends_on: []
   manifest-schema-vs-side-table choice — schema blast radius") — stays NA. Zero `assigned_vm`/backlog impact from this
   pass; this doc's own content was NOT wrong, it was simply already covered by an active plan this run's Phase 1 hunter
   didn't cross-check against in depth — exactly the class of catch Phase 2 exists for.
+- **na-eligibility-audit 2026-08-02** (infra tranche, incremental run): **KEEP-NA-STALE — unchanged from the 2026-07-30
+  verdict.** In scope only because a context-scout backfill touched the file. Read end-to-end; `grep -cE '^- \[ \]'` =
+  **7** (was 8 at the last marker; the CME BTC/ETH OPT-atom item was closed resolved-by-logic that run), matching this
+  verdict's item count. 6 of the 7 remain extracted verbatim as open todos in
+  `infra_satellite_ao_dispatch_batch1_2026_07_26.md` — re-checked this run, still open there, so the existing
+  cross-references stay correct and these checkboxes correctly stay unflipped. The 7th (the known-dead-shard pre-flight
+  gate's marker mechanism) is operator-gated per batch1's own BLOCKED-OPERATOR-DECISION section on the
+  manifest-schema-vs-side-table choice and its schema blast radius. Zero `assigned_vm`/backlog impact.

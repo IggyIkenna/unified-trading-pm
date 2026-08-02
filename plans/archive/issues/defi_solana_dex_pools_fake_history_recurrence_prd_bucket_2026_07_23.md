@@ -266,24 +266,24 @@ is regenerated after a fix.**
       47-object finding before concluding either a clean bill or a fake-history match.
 
       **✅ 2026-07-28 (slot-2) — DEFINITIVE VERDICT, mixed: the 47-object population is clean/resolved, BUT a NEW,
-              much larger fabrication was found in a THIRD shape.** Live probe on day=2026-04-14 (Track 2's own probe day):
-              `instrument_type=solana_amm_pool` has **ZERO** KAMINO `lending_indices` objects (any pipeline_mode) — it never
-              existed; Track 2's prose was corrected by its own successor doc
-              (`/plans/archive/issues/defi_dex_pools_delete_order_stale_2026_07_20.md`'s verification table) to the REAL shape,
-              `instrument_type=lending` (47 objects, 44 post-fold-verification 2026-07-21) — a legacy pre-SOLANA_LENDING-split
-              schema, distinct from BOTH `solana_amm_pool` (never existed) and `solana_lending` (current schema). Sampled 6
-              objects across `instrument_type=lending` + `instrument_type=solana_lending` for KAMINO+SOLEND specifically on
-              day=2026-04-14: **6/6 timestamp-vs-day exact match — that specific population, on that specific day, is clean**
-              (matches item 5's methodology, same clean result). **However**: sampling `instrument_type=lending` on OTHER days
-              (mirroring items 4/5's window, 2025-01-08/10/12) found a NEW, confirmed fabrication — every KAMINO/SOLEND market
-              object on those days carries an IDENTICAL frozen `timestamp` (KAMINO: epoch 1777937251 = 2026-05-04 23:27:31
-              UTC; SOLEND: epoch 1777937437 = 2026-05-04 23:30:37 UTC), present across ~21 months of `day=` partitions
-              (2024-06 through 2026-03, coarse probe) — a `_migrated_kamino_lending_SOLANA_20260504_232646.parquet` filename
-              confirms migration-script origin. **This is the SAME fabrication bug class as this issue's own dex_pools
-              finding, in a population this issue's own item 4 flagged but couldn't locate.** Full evidence + scope + todos:
-              `/plans/active/issues/defi_kamino_solend_lending_indices_legacy_shape_fabricated_history_2026_07_28.md` (new
-              issue doc — this population is materially different in scope/shape from what item 6 originally asked to
-              reconcile, so it's tracked separately rather than reopening this closed issue). (repo: market-tick-data-service)
+                      much larger fabrication was found in a THIRD shape.** Live probe on day=2026-04-14 (Track 2's own probe day):
+                      `instrument_type=solana_amm_pool` has **ZERO** KAMINO `lending_indices` objects (any pipeline_mode) — it never
+                      existed; Track 2's prose was corrected by its own successor doc
+                      (`/plans/archive/issues/defi_dex_pools_delete_order_stale_2026_07_20.md`'s verification table) to the REAL shape,
+                      `instrument_type=lending` (47 objects, 44 post-fold-verification 2026-07-21) — a legacy pre-SOLANA_LENDING-split
+                      schema, distinct from BOTH `solana_amm_pool` (never existed) and `solana_lending` (current schema). Sampled 6
+                      objects across `instrument_type=lending` + `instrument_type=solana_lending` for KAMINO+SOLEND specifically on
+                      day=2026-04-14: **6/6 timestamp-vs-day exact match — that specific population, on that specific day, is clean**
+                      (matches item 5's methodology, same clean result). **However**: sampling `instrument_type=lending` on OTHER days
+                      (mirroring items 4/5's window, 2025-01-08/10/12) found a NEW, confirmed fabrication — every KAMINO/SOLEND market
+                      object on those days carries an IDENTICAL frozen `timestamp` (KAMINO: epoch 1777937251 = 2026-05-04 23:27:31
+                      UTC; SOLEND: epoch 1777937437 = 2026-05-04 23:30:37 UTC), present across ~21 months of `day=` partitions
+                      (2024-06 through 2026-03, coarse probe) — a `_migrated_kamino_lending_SOLANA_20260504_232646.parquet` filename
+                      confirms migration-script origin. **This is the SAME fabrication bug class as this issue's own dex_pools
+                      finding, in a population this issue's own item 4 flagged but couldn't locate.** Full evidence + scope + todos:
+                      `/plans/archive/issues/defi_kamino_solend_lending_indices_legacy_shape_fabricated_history_2026_07_28.md` (new
+                      issue doc — this population is materially different in scope/shape from what item 6 originally asked to
+                      reconcile, so it's tracked separately rather than reopening this closed issue). (repo: market-tick-data-service)
 
 ## Lesson (do not re-learn)
 

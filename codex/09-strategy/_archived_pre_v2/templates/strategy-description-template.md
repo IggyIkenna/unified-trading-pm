@@ -12,7 +12,7 @@ stage: [meta]
 repos: [execution-service, strategy-service, unified-api-contracts, unified-trading-pm]
 scope: [engineer, admin]
 tags: [strategy, template, docspec, execution]
-related: [../../architecture-v2/README.md, ../../architecture-v2/naming-convention.md]
+related: [../../architecture-v2/README.md, ../../../06-coding-standards/strategy-identity-versioning.md]
 created: 2026-03-27
 authoritative_for:
 referenced_by:

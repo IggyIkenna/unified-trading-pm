@@ -28,7 +28,7 @@ referenced_by:
     /codex/02-data/shard-granularity-cefi.md,
   ]
 owner:
-last_reviewed: 2026-05-17
+last_reviewed: 2026-08-30
 code_refs:
 ---
 
@@ -152,7 +152,7 @@ These labels partition the trading **venue axis** (older terminology: “market 
 | DEFI        | `defi`              | Decentralized protocols (AMM, lending, LST)                      |
 | SPORTS      | `sports`            | Betting exchanges and bookmakers (Betfair, Pinnacle, Polymarket) |
 
-Mapping is defined in `dependencies.yaml` (keys may still say `category` in legacy YAML — values are venue asset
+Mapping is defined in `configs/dependencies.yaml` (keys may still say `category` in legacy YAML — values are venue asset
 groups):
 
 ```yaml
@@ -167,11 +167,16 @@ category_domain_mapping:
 
 ## Venue Dimension
 
-Venues are defined in `venues.yaml` and are the canonical list:
+> **SSOT correction (2026-07-30 re-review)** — the canonical venue list is **UAC data**, not `configs/venues.yaml`:
+> `unified_api_contracts.registry.venue_adapter_keys` (`VENUE_TO_ADAPTER_KEY`) per workspace CLAUDE.md
+> § "instruments-service owns reference data; venue lists + adapter KEYS are UAC data". `configs/venues.yaml` is a
+> derived deployment-sharding config (consumed by `deployment-api/deployment_api/config_loader.py`) and lags UAC — do
+> not treat it as the venue SSOT. The lists below are illustrative snapshots; resolve against UAC in code.
 
 ### CEFI Venues
 
-`BINANCE-SPOT`, `BINANCE-FUTURES`, `DERIBIT`, `BYBIT`, `OKX`, `UPBIT`, `COINBASE`, `HYPERLIQUID`, `ASTER`
+`BINANCE-SPOT`, `BINANCE-FUTURES`, `DERIBIT`, `BYBIT`, `OKX`, `UPBIT`, `COINBASE`, `HYPERLIQUID`, `ASTER`,
+`LIGHTER-ZKSYNC`, `EXTENDED-STARKNET`
 
 ### TRADFI Venues
 
@@ -203,14 +208,14 @@ Used by market-tick-data-service and market-data-processing-service:
 | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | CEFI        | `trades`, `book_snapshot_5`, `derivative_ticker`, `liquidations`, `options_chain` (bundled, cluster-validation MANDATORY), `futures_chain` (bundled, cluster-validation MANDATORY)                                                                                                                     |
 | TRADFI      | `trades`, `ohlcv_1m`, `ohlcv_15m`, `ohlcv_24h`, `tbbo`, `options_chain` (ES.OPT 11-cluster, MANDATORY), `futures_chain` (ES + MES seeds, MANDATORY)                                                                                                                                                    |
-| DEFI        | `dex_swaps`, `lending_indices`, `oracle_prices`, `utilization`, `dex_pools`, `risk_params`, `flash_loan_availability`, `rewards`                                                                                                                                                                       |
+| DEFI        | `dex_pool_state`, `dex_pool_swaps`, `lst_rates`, `lending_indices`, `oracle_prices`, `perp_funding`, `utilization`, `risk_params`, `flash_loan_availability`, `rewards` — **the legacy names `dex_pools` / `dex_swaps` are RETIRED** (collapsed to one canonical name at every layer, operator 2026-06-01; SSOT [`/codex/02-data/defi-canonical-naming-ssot.md`](/codex/02-data/defi-canonical-naming-ssot.md)) |
 | SPORTS      | Per-fixture: `ODDS_SNAPSHOT`, `ODDS_MOVEMENT`, `ARBITRAGE` (bundled, cluster_extractor=bookmaker, MANDATORY), `FIXTURE_STATS`, `FIXTURE_EVENTS`, `FIXTURE_LINEUPS`, `PLAYER_STATS`, `INJURIES` (when fixture-scoped). Day-aggregate: `STANDINGS`, `LEAGUES`, `TEAMS`, `REFEREES`, `COACHES`, `ROUNDS`. |
 | PREDICTION  | `prediction_canonical_question_group` (post-Plan A; bundled by canonical_question_group; cluster_extractor=market_id; MANDATORY). Pre-Plan A: per-base_asset legacy data_types `BTC` / `ETH` / `SPX` / `FOOTBALL` / `OTHER`.                                                                           |
 
 **Bundled data_types require cluster validation** at `ManifestWriter.record_captured` per writegate plan Phase 1A
 (`expected_root_clusters` + `cluster_extractor` kwargs MANDATORY; UTL guard raises `MissingClusterValidationError` if
 absent; QG STEP 5.64 statically checks). See
-[`06-coding-standards/validation-and-errors.md`](/codex/06-coding-standards/validation-and-errors.md)
+[[`/codex/06-coding-standards/validation-and-errors.md`](/codex/06-coding-standards/validation-and-errors.md)](/codex/06-coding-standards/validation-and-errors.md)
 `§2 Write-gate quartet at record_captured`.
 
 ### instrument_type

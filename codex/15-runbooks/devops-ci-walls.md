@@ -71,6 +71,15 @@ reconcile loop's own read path, so its verdict matches the dashboard by construc
 > escalated); a genuine red is caught the moment a run against the live head confirms it. So a just-fixed repo not
 > escalating for a few minutes is EXPECTED, not a miss. (Prior false-red: the loop was head-blind and escalated
 > already-fixed repos, spawning cicd workers that resolved `qg_v2_green` — wasted credits.)
+>
+> **The LDR query is also event-filtered to `workflow_dispatch` (2026-07-31, `agent-orchestrator@8fc338d`, closing a
+> false-GREEN recurrence — `plans/archive/issues/repo_health_watcher_false_positive_green_recurrence_2026_07_25.md`).**
+> `branch=live-defi-rollout` alone also matches a promote PR's `pull_request`-triggered run — GitHub reports that run's
+> `head_branch` as the PR's SOURCE ref, which for an LDR→staging/main promotion PR IS `live-defi-rollout`. That run
+> tests a merge commit (`refs/pull/N/merge`), not a pure LDR checkout, so it could satisfy the head-staleness gate above
+> (its `head_sha` is the PR head commit, which can still equal current LDR HEAD) while saying nothing about whether LDR
+> itself is green. `_qg_runs_endpoint()` now adds `event=workflow_dispatch` for the integration branch so only genuine
+> hourly LDR re-tests are read; `main` needs no such filter (its `pull_request` runs report a different `head_branch`).
 
 > **This runbook cross-links, it does not duplicate.** The mechanics SSOT is
 > [`/codex/08-workflows/ci-cd-flow.md`](/codex/08-workflows/ci-cd-flow.md); each recipe cites its section. If a recipe

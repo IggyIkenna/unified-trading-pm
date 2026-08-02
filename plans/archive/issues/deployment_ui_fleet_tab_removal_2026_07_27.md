@@ -43,7 +43,7 @@ tags:
   ]
 related:
   [
-    /plans/active/ao_fleet_observability_kpis_2026_07_20.md,
+    /plans/archive/2026_07/ao_fleet_observability_kpis_2026_07_20.md,
     /codex/05-infrastructure/deployment-observability.md,
     /plans/archive/2026_07/deployment_ui_fleet_tab_consolidation_2026_07_21.md,
     /plans/active/monitoring_control_plane_master_2026_06_10.md,

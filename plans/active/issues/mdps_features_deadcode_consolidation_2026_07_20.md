@@ -102,3 +102,17 @@ produced-but-unconsumed to VERIFY: TRADFI `ohlcv_1s`, DEFI `book_snapshot_5/mark
 captured → should be pinned False). These are handled by the `/data-pipeline-check-mdps` + `-features` skills' canonical
 
 - orphan checks (parent plan `data_pipeline_check_mdps_features_2026_07_20.md` todos 11/13).
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30** (tranche=cefi, autonomous): KEEP-NA, valid - the doc's own header puts 3 S1
+  findings behind an operator keep/delete A/B/C decision (self-heal rebinding + deleting a registered live launcher),
+  and todo 8 is an explicit design adjudication.
+- **na-eligibility-audit 2026-07-30** (tranche=defi, autonomous): KEEP-NA, valid - S1-a/S1-b/S3-b are explicit operator
+  keep/delete (A/B/C) decisions with self-heal + registered-live-launcher blast radius. Reached independently of the
+  cefi tranche above; both agree.
+
+- **na-eligibility-audit 2026-07-30**: KEEP-NA, valid (sports tranche) — carries an explicit unanswered 'Big findings —
+  operator keep/delete decision (options) A/B/C' block; todos 1, 2 and 8 each say 'pending operator' / 'operator-design
+  adjudication' in their own text. Todos 3-7 are bounded but cannot be dispatched without the doc, and the
+  launcher-deletion blast radius is exactly what the A/B/C ask covers

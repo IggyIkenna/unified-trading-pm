@@ -23,7 +23,7 @@ tags: [defi, mev_events, flashbots, pagination, honest-absence, data-completenes
 related:
   [
     plans/archive/issues/defi_five_never_captured_venues_fix_2026_07_22.md,
-    plans/active/defi_satellite_ao_dispatch_batch1_2026_07_25.md,
+    plans/archive/2026_07/defi_satellite_ao_dispatch_batch1_2026_07_25.md,
     /codex/02-data/honest-absence-downstream-handling.md,
   ]
 created: 2026-07-28

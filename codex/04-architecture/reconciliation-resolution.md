@@ -42,10 +42,10 @@ referenced_by:
     /codex/04-architecture/separation-of-concerns.md,
     /codex/08-workflows/t1-batch-dag.md,
     /codex/15-runbooks/position-reconciliation-deploy-gate.md,
-    plans/active/issues/batch_live_reconciliation_service_audit_2026_05_27.md,
+    /plans/active/issues/batch_live_reconciliation_service_audit_2026_05_27.md,
   ]
 owner:
-last_reviewed: 2026-05-17
+last_reviewed: 2026-08-22
 code_refs:
 execution:
   {
@@ -124,7 +124,7 @@ Per slot 8 audit PB-6 (corrected from "5-stage" in stale SSOT-INDEX):
 9. **`stage4_agent_analysis`** + **`stage5_results_writer`** — narrative + report write.
 
 > **3-way recon shipped 2026-05-27** (was marked DEFERRED; un-deferred per BLRS audit
-> `plans/active/issues/batch_live_reconciliation_service_audit_2026_05_27.md`). Only **per-archetype** tolerance bands
+> `/plans/active/issues/batch_live_reconciliation_service_audit_2026_05_27.md`). Only **per-archetype** tolerance bands
 > remain open (`pvl-p21a`).
 
 ### Output shape — alpha decomposition

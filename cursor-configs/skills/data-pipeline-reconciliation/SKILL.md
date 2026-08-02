@@ -369,10 +369,14 @@ compute tiers (§ 7): **sampled in-session**, **100% only on the VM tier**. SSOT
   `instrument_id` (and, for defi, `canonical_instrument_id`). **Never a regex** — a migration-heuristic `_CANON_ID_RE`
   is a fallback, not the oracle. The symbol column is looked up via `SchemaContract.symbol_column` /
   `lookup_contract(asset_group, instrument_type, data_type)`, never guessed. Legitimately id-less shapes (pattern-#2
-  chain bundles, the symbol-less `ticks.parquet` fan-in, the prediction CQG bundle) emit no id-form finding; the defi
-  two-id `instrument_id ≠ canonical_instrument_id` divergence is AE-3, suppressed. A mismatch or a builder `ValueError`
-  → **`non_canonical_id`** (NEW type; taxonomy-gap banner until added). This is the id-FORM leg that
-  `non_canonical_path` is structurally blind to (§ 3).
+  chain bundles, the symbol-less `ticks.parquet` fan-in, the prediction CQG bundle, and the sports fixture-id filename)
+  emit no id-form finding; the defi two-id `instrument_id ≠ canonical_instrument_id` divergence is AE-3, suppressed. A
+  mismatch or a builder `ValueError` → **`non_canonical_id`** (taxonomy: `reconciliation-finding-taxonomy.md` § 2.7).
+  This is the id-FORM leg that `non_canonical_path` is structurally blind to (§ 3). **Report `sports`/`prediction`
+  explicitly as `id_form: not_applicable (structural)` — never a bare 0-violations count.**
+  `_ID_FORM_CHECKED_ASSET_GROUPS` is `{cefi, defi}` only; `_stem_id_form_violations()` returns `[]` immediately for any
+  other asset_group, indistinguishable at the call site from "checked, zero violations" — the same false-clean shape
+  `canonical_path_oracle_blind_to_filename_stem_2026_07_20.md` exists to prevent, one level up.
 - **schema (G3)** — per parquet, resolve the `SchemaContract` via `lookup_contract` and run the existing read-side
   `validate_dataframe(df, contract)` — invent no validator. It emits the closed set: `missing_column`, `wrong_dtype`
   (tz-naive timestamps fall out here — the contract dtype is the tz-aware `datetime64[ns, UTC]` literal),

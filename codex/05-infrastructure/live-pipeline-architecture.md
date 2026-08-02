@@ -34,7 +34,7 @@ referenced_by:
     /codex/04-architecture/cefi-batch-live.md,
   ]
 owner:
-last_reviewed: 2026-05-17
+last_reviewed: 2026-09-06
 code_refs:
 ---
 
@@ -42,10 +42,10 @@ code_refs:
 
 > **STATUS** — entry-point doc for the live (websocket-streaming) pipeline activated for the 2026-05-23 DeFi cutover.
 > Full design + phased work plan in
-> [`plans/active/live_pipeline_mtds_mdps_features_2026_05_08.md`](../../plans/active/live_pipeline_mtds_mdps_features_2026_05_08.md).
+> [`/plans/archive/2026_05/live_pipeline_mtds_mdps_features_2026_05_08.md`](../..//plans/archive/2026_05/live_pipeline_mtds_mdps_features_2026_05_08.md).
 > Dependent prerequisites:
-> [`features_repo_consolidation_2026_05_08`](../../plans/active/features_repo_consolidation_2026_05_08.md) +
-> [`gcs_migration_bundle_pipeline_mode_2026_05_08`](../../plans/active/gcs_migration_bundle_pipeline_mode_2026_05_08.md).
+> [`features_repo_consolidation_2026_05_08`](../../plans/archive/features_repo_consolidation_2026_05_08.plan.md) +
+> [`gcs_migration_bundle_pipeline_mode_2026_05_08`](../../plans/archive/2026_05/gcs_migration_bundle_pipeline_mode_2026_05_08.md).
 > If this doc disagrees with the active plans, the plans win — flag conflicts to the user.
 
 ## TL;DR
@@ -230,8 +230,10 @@ into the tabs surface (per `deployment_ui_lifecycle_tabs_2026_05_08`) without wa
 
 ### Multi-timeframe cascade rule (Phase 4.2)
 
-The 1m candle MUST derive from 4× 15s candles, NOT from raw ticks re-aggregated. Aggregator waits for
-`parent_timeframe_fanout` (4 for 1m-from-15s, 5 for 5m-from-1m, 3 for 15m-from-5m, 4 for 1h-from-15m, 24 for 1d-from-1h)
+The 1m candle MUST derive from 4× 15s candles, NOT from raw ticks re-aggregated. Aggregator waits for `parent_fanout()`
+(corrected 2026-07-31, was cited as a `parent_timeframe_fanout` field — the real symbol is
+`market_data_processing_service.app.core.live_aggregator`'s `parent_fanout(parent: str) -> int` method; the counts
+themselves check out: 4 for 1m-from-15s, 5 for 5m-from-1m, 3 for 15m-from-5m, 4 for 1h-from-15m, 24 for 1d-from-1h)
 `CandleComputedEvent` emissions for a shard → feeds them through the SAME aggregation function as batch's
 `_process_standard_timeframe` → emits the parent. **Live = batch symmetry — re-aggregating ticks for parent timeframes
 diverges live from batch (batch uses cascade) and produces silent OHLCV drift across the timeframe DAG.**
@@ -348,10 +350,11 @@ For the full authoring guide, mutation types, and outcome-assertion categories, 
 ## Cross-references
 
 - Plan:
-  [`live_pipeline_mtds_mdps_features_2026_05_08`](../../plans/active/live_pipeline_mtds_mdps_features_2026_05_08.md)
-- Pre-req plan: [`features_repo_consolidation_2026_05_08`](../../plans/active/features_repo_consolidation_2026_05_08.md)
+  [`live_pipeline_mtds_mdps_features_2026_05_08`](../..//plans/archive/2026_05/live_pipeline_mtds_mdps_features_2026_05_08.md)
 - Pre-req plan:
-  [`gcs_migration_bundle_pipeline_mode_2026_05_08`](../../plans/active/gcs_migration_bundle_pipeline_mode_2026_05_08.md)
+  [`features_repo_consolidation_2026_05_08`](../../plans/archive/features_repo_consolidation_2026_05_08.plan.md)
+- Pre-req plan:
+  [`gcs_migration_bundle_pipeline_mode_2026_05_08`](../../plans/archive/2026_05/gcs_migration_bundle_pipeline_mode_2026_05_08.md)
 - Sibling docs: [`replay-subsystem.md`](./replay-subsystem.md),
   [`/codex/02-data/pipeline-mode-partition.md`](/codex/02-data/pipeline-mode-partition.md),
   [`/codex/04-architecture/instrument-lifecycle-cache-delta-hot-reload.md`](/codex/04-architecture/instrument-lifecycle-cache-delta-hot-reload.md)

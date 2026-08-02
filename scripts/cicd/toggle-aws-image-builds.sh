@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 # Toggle AWS image builds fleet-wide — the single switch for the AWS build path.
 #
 #   bash scripts/cicd/toggle-aws-image-builds.sh off          # disable (default state since 2026-07-03)
@@ -20,7 +23,7 @@
 #
 # Operator decision 2026-07-03 (Harsh): AWS builds were a test; GCP Cloud Build is the
 # production path; default = off.
-# SSOT: plans/active/cicd_mvp_ldr_to_main_pipeline_2026_06_30.md § Phase 2 +
+# SSOT: plans/archive/2026_07/cicd_mvp_ldr_to_main_pipeline_2026_06_30.md § Phase 2 +
 #       codex/05-infrastructure/dual-cloud-image-builds.md
 # Epic: infrastructure_master
 # Lifecycle: permanent (operational toggle)

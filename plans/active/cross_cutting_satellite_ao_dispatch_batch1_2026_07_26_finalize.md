@@ -7,7 +7,7 @@ summary: >-
   all 31 todos across both parts are done. Reconciles each distinct source doc's checkboxes independently, then
   re-checks the Deferred conflict-gated/operator-gated/time-gated items (4/13/2) plus the 7 mistags and 2 archivable_now
   docs found during Phase 0/1, then archives both batch docs via the standard 6-step ritual.
-status: draft
+status: active
 nature: process
 asset_group: [cross-cutting]
 stage: [data]
@@ -22,7 +22,7 @@ related:
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]
 created: "2026-07-26"
-last_updated: "2026-07-26"
+last_updated: "2026-07-30"
 parent_epic: infrastructure_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -43,6 +43,14 @@ source: >-
 assigned_role: data_engineering
 sequential: true
 drift_direction: advance-code
+context_scope:
+  [
+    /plans/active/cross_cutting_satellite_ao_dispatch_batch1_2026_07_26.md,
+    /plans/active/cross_cutting_satellite_ao_dispatch_batch1b_2026_07_26.md,
+    /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
+    /cursor-configs/skills/ag-closeout-audit/SKILL.md,
+    /plans/active/issues/gate_on_depends_wiring_gap_defi_dex_pool_finalize_2026_07_25.md,
+  ]
 ---
 
 # Cross-cutting satellite AO batch 1 — finalize
@@ -108,3 +116,45 @@ drift_direction: advance-code
       referrer of either doc and fix each path to point at the archived location → clear `locked_by` (already empty on
       both, confirm). **Done when**: both plans are moved to `plans/archive/2026_07/`, every corpus referrer resolves to
       the new path, and this finalize doc itself gets archived alongside them in the same commit.
+
+## Progress Log
+
+- **2026-07-30 (slot 14, review-craft-adopted) — todo 1 PARTIAL, NOT flipped: the "31 now-done" premise is stale/false
+  right now.** Picked up finalize-001 via `/boot`. Before reconciling, checked the live backlog (`GET /api/backlog`)
+  against the two `depends_on` plans this doc's own `gate_on_depends: true` should have blocked on: **9 of batch1's
+  current 19 todos and 11 of batch1b's current 18 todos are still `queued`, not `done`** — 20 still-open backlog tasks
+  total (real count now 37 todos across both docs, not the original "31"; both docs grew via mid-flight splits, e.g.
+  batch1's `-017`). The gate did not actually hold — this is the SAME recurring `gate_on_depends` wiring gap already
+  tracked (this exact batch1/batch1b dual-gate case was already documented twice, by slot 7 and slot 12, with
+  byte-identical 9/19 + 6/18 counts) at
+  `plans/active/issues/gate_on_depends_wiring_gap_defi_dex_pool_finalize_2026_07_25.md` — no new issue doc filed (a
+  first pass here mistakenly created a duplicate, since deleted).
+  - **What I did anyway (real, bounded, verified progress)**: identified every todo across both docs that IS currently
+    `[x]` done (~15), and for each, verified whether its named `Source:` doc's own checkbox/section was already
+    reconciled (most workers already did this inline as part of shipping their todo) or still needed a real edit.
+    Result: **13 of the ~15 were already correctly reconciled** (verified via direct read, not trusted blindly) —
+    `distinct_values_noncanonical_audit_2026_07_20.md` (archived, line-191),
+    `instruments_completion_tracker_2026_07_06.md` (46/61 checked, 15 genuinely still open, matches its own text),
+    `cf_manifest_audit_scheduled_job_daily_failure_2026_07_13.md` (archived, resolved),
+    `datapoint_validation_results_bucket_missing_2026_07_21.md` (archived, resolved),
+    `features_service_coverage_and_script_canon_2026_06_10.md` (flipped, cites features-service@25932d23),
+    `silent_wrong_answer_audit_candidates_2026_07_20.md` (archived, resolved),
+    `master_data_canonicalisation_migration_catalogue_2026_06_07.md` (R5-fix-5 flipped),
+    `pipeline_mode_source_batch_live_replay_standardisation_2026_06_05.md` (§#7 correctly left unchecked — partial
+    scope, no false-completion), `instruments_foundation_phase0_cross_cutting_2026_07_24.md` (per-item citations already
+    appended, GATE 0 correctly still open), `legacy_bucket_dual_write_decommission_2026_07_24.md` (both lead items
+    closed-with-evidence). **2 needed real edits, done this session**:
+    `instrument_record_schema_completeness_extra_forbid_2026_07_18.md` (todos 1-2 flipped `[x]` with the authoritative
+    field-list + per-field disposition-table evidence from batch1's DATA/P1 todo, citing `instruments-service@ee2d6c75`;
+    todos 3/4 annotated PARTIAL — REMOVE-subset done, `min_order_size` still ambiguous/unresolved so ADD/final-flip stay
+    open; verified `ee2d6c75` is a real ancestor commit before citing it) and
+    `instruments_foundation_completeness_2026_06_24.md` (DeFi completeness ORACLE P0 item annotated PARTIAL — only the
+    §9 schema-only rollout slice landed, `unified-api-contracts@1407b7fd` verified as a real commit; the checkbox
+    correctly stays unchecked since probe implementation + `--use-defi-oracle` wiring are still unbuilt). **1 item
+    (`DATA P0` CF-1…CF-12) explicitly should NOT be flipped** — batch1's own text already reasoned this correctly
+    (partial 4-of-5-AG coverage, flipping would overclaim); no action needed, confirmed correct as-is.
+  - **Not attempted**: the ~22 still-open batch1/batch1b todos have no `Source:` reconciliation to do yet (they aren't
+    done). This todo's own checkbox stays `[ ]` — flipping it now would be a false-completion claim (workspace HARD
+    RULE: plans run to actual completion). **Re-dispatch this todo once batch1 + batch1b actually reach 0 open todos**
+    to catch the remaining ~22 source-doc reconciliations in one pass.
+- **context-scout 2026-08-01**: populated/refreshed context_scope (5 entries).

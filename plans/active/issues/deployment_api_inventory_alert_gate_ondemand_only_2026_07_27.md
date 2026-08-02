@@ -28,7 +28,9 @@ summary: >-
   separately rather than silently folded into that fix.
 status: open
 nature: issue
-asset_group: [infrastructure]
+asset_group:
+  [ui] # corrected 2026-07-30 (ui-tranche launch) -- was [infrastructure]; deployment-api's own
+  # inventory/health-alert code path (repos: deployment-api primary, deployment-service for the missing cron)
 stage: [meta]
 repos: [deployment-api, deployment-service]
 scope: [engineer]
@@ -70,6 +72,13 @@ assigned_vm: NA
 execution_scope: local-only
 drift_direction: none
 depends_on: []
+context_scope:
+  [
+    /plans/active/issues/migration_vm_hung_detection_monitoring_gap_2026_07_27.md,
+    /codex/05-infrastructure/deployment-observability.md,
+    deployment-api/deployment_api/routes/deployments_inventory/_aggregation.py,
+    deployment-service/terraform/gcp/data_pipeline_fleet_monitor_scheduler.tf,
+  ]
 locked_by:
 locked_since:
 resolved_by:
@@ -158,3 +167,4 @@ automatic fleet-wide safety net that investigation's stated intent was.
 - **na-eligibility-audit 2026-07-30**: KEEP-NA, valid (infra tranche, dispatch agt-30721a) — Single todo embeds a real
   unresolved architecture trade-off (reuse existing endpoint vs. build a narrower alert-check-only path) citing a
   specific OOM-regression-risk code comment — genuine judgment call.
+- **context-scout 2026-08-01**: populated context_scope (4 entries).

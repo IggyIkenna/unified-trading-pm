@@ -53,6 +53,11 @@ drift_direction: advance-code
 depends_on: []
 resolved_by:
 locked_by:
+context_scope:
+  [
+    /codex/04-architecture/instruments-service-as-ssot-for-mtds.md,
+    /codex/02-data/data-pipeline-correctness-hard-rule.md,
+  ]
 ---
 
 # Sports `stats_delayed`/XG live capture still dead after the lookback fix — two further root causes
@@ -276,8 +281,8 @@ Two independently scoped, mechanically-determinable fixes (neither is a design c
       chain on the same cadence. If, once verified, the `No URDI adapter`/`URDI fetch...failed` lines for these 5 venues
       persist despite this fix, that would mean a THIRD, still-undiagnosed emission path — escalate rather than assume
       this fix alone closes the doc.
-- [ ] [VERIFY] P1. **Depends on the todo above landing + redeploying (or on confirming no fix is needed).** After a full
-      day-plus of live operation post-that-fix, re-run this doc's Step 3 manifest query (`data_type=XG`,
+- [x] ✅ [VERIFY] P1. **Depends on the todo above landing + redeploying (or on confirming no fix is needed).** After a
+      full day-plus of live operation post-that-fix, re-run this doc's Step 3 manifest query (`data_type=XG`,
       `capture_status=captured`, `written_at` > the new redeploy cutoff, `pipeline_mode != batch_understat`) — confirm a
       fresh row appears (closes this issue) or, if still zero, escalate further (a fourth cause would remain). **Also
       confirms item-2's own done-when** (added 2026-07-29 alongside item-2's fix, `instruments-service@12c176f8`): over
@@ -375,7 +380,70 @@ Two independently scoped, mechanically-determinable fixes (neither is a design c
       day-plus gate (`2026-07-30T18:02Z`). No change since the 23:25Z check. Releasing via
       `/skip-current-task {"reason_code":     "GATED"}`. Next dispatch: same condition as above — once
       `2026-07-30T18:02Z` passes, re-run both the Step-3 manifest query and the `gcloud logging read` sweep for the real
-      verdict.
+      verdict. — **Checked 2026-07-30T10:54Z (slot 5, data_engineering): still premature, bare check only (no manifest
+      re-query, per the prior check's own guidance).** Confirmed no further relevant change: instruments-service HEAD
+      (`695c399b`, `origin/live-defi-rollout`) has zero commits touching `*process_fetch*` since `2026-07-29T18:00:00Z`
+      — the only new commit since the last check (`695c399b`) is an unrelated docstring correction in
+      `repair_tradfi_instrument_type_counts.py`. Current time (`10:54Z`) is still ~7h08m before the day-plus gate
+      (`2026-07-30T18:02Z`). No change since the 00:29Z check. Releasing via
+      `/skip-current-task {"reason_code":     "GATED"}`. Next dispatch: same condition as above — once
+      `2026-07-30T18:02Z` passes, re-run both the Step-3 manifest query and the `gcloud logging read` sweep for the real
+      verdict. — **Checked 2026-07-30T11:59Z (slot 8, review): still premature, bare check only (no manifest re-query,
+      per the prior check's own guidance).** Confirmed no further relevant change: instruments-service HEAD (`cccc6ef5`,
+      `origin/live-defi-rollout`) has zero commits touching `*process_fetch*` since `2026-07-29T18:00:00Z` — unchanged
+      from the 10:54Z check's deploy state. Current time (`11:59Z`) is still ~6h03m before the day-plus gate
+      (`2026-07-30T18:02Z`). No change since the 10:54Z check. Releasing via
+      `/skip-current-task {"reason_code": "GATED"}`. Next dispatch: same condition as above — once `2026-07-30T18:02Z`
+      passes, re-run both the Step-3 manifest query and the `gcloud logging read` sweep for the real verdict. —
+      **Checked 2026-07-31T06:18Z-06:55Z (slot 14, worker): day-plus gate PASSED (2026-07-31T06:18Z, ~12h16m past
+      `2026-07-30T18:02Z`) — first real verdict, both original gates now genuinely satisfied. Full re-run done: item-2's
+      own gate CONFIRMED CLOSED (zero adapter-key error recurrence); Step-3 manifest STILL zero fresh XG captures — but
+      root cause is now identified and it is NOT a code defect (a fourth, benign cause).** 1. **`gcloud logging read`
+      sweep, `uts-prod-instruments-service-sports-fixtures`, `timestamp>="2026-07-29T18:02:00Z"` through now (~36h
+      window)**: ZERO `No URDI adapter for N venue(s)` / `URDI fetch: N venue(s) failed with        PERMANENT errors`
+      lines mentioning any of FOOTYSTATS/UNDERSTAT/TRANSFERMARKT/SOCCER_FOOTBALL_INFO/OPEN_METEO. Sanity-checked the
+      query itself is valid (same filter minus the timestamp bound returns the pre-fix occurrences, last one at
+      `2026-07-29T17:49:26Z` — 13 min before the `18:02:00Z` cutoff, i.e. it stopped exactly at deploy). **Item-2's own
+      done-when is CONFIRMED MET.** 2. **Step-3 manifest re-run** (`availability_index.parquet`, `data_type=XG`,
+      `capture_status='captured'`, `written_at > '2026-07-29T18:02:00Z'`): **0 rows**, confirmed both with the doc's
+      original filter (`pipeline_mode != batch_understat`) AND with that filter DROPPED entirely — same 0-row result
+      either way. All 7,714 all-time `captured` XG rows remain 100% `batch_understat`, max `written_at` unchanged at
+      `2026-07-22T05:23:36Z`. 3. **Methodology correction (real, but doesn't change the verdict)**: the doc's own
+      `pipeline_mode !=        batch_understat` filter is unsound as a live-vs-batch discriminator. Grepped
+      `instruments_service/engine/orchestrator/understat.py`: **every** write from `_fetch_understat_xg` /
+      `_run_understat_shots_date` hardcodes `pipeline_mode=PipelineMode.BATCH_UNDERSTAT` unconditionally — it is a
+      source-literal, not a live/batch tag. Confirmed both call sites use it identically: `process_preflight.py:317-318`
+      (the periodic completeness/"Date filter" sweep) AND `process_enrichment.py:293/306` (the REAL live per-fixture
+      `_run_remaining_enrichment` dispatch this whole doc is about) — so a genuine live-triggered capture would ALSO
+      show `pipeline_mode=batch_understat`, making the doc's filter unable to ever distinguish the two. Re-ran Step-3
+      with the filter dropped (see #2) — result unchanged (still 0), so this flaw did NOT mask a false negative here,
+      but future checks of this doc should drop the `pipeline_mode !=` clause entirely and rely on `written_at`
+      alone. 4. **Traced the actual dispatch gate** (`process_enrichment.py:291`:
+      `if "UNDERSTAT" in active_venues_set and        entity_wanted("XG")`) to rule out item-2's own fix having broken
+      it: read `process_fetch.py:96-142` (`_fetch_urdi_records`) — the `_ENRICHMENT_PROVIDERS` exclusion builds a NEW
+      local `_fetchable_venues` list (line 135); the caller's original `active_venues` parameter is never mutated. So
+      the enrichment-stage gate at line 291 is intact and unaffected by item-2's fix — ruled out as the 4th cause. 5.
+      **THE ACTUAL FOURTH CAUSE, confirmed via two independent data sources — genuinely benign, not a bug**: Understat
+      only covers 5 leagues (`UNDERSTAT_NAMES` in
+      `unified-api-contracts/unified_api_contracts/canonical/domain/sports/provider_league_ids.py`:
+      `BUNDESLIGA`/`EPL`/`LA_LIGA`/`LIGUE_1`/`SERIE_A`). Downloaded + queried the live `latency_observations` parquet
+      index (`day=2026-07-29`..`2026-07-31` shards): **1767** `stats_delayed` trigger fires occurred in the post-cutoff
+      window (`recorded_at_utc > '2026-07-29T18:02:00Z'`) — but **ZERO** of them are for any of the 5 Understat-covered
+      `league_id` values (the 1767 fires span ROMANIA_CUP/ARGENTINA_PRIMERA/
+      BRASILEIRAO/UCL/UECL/KOREAN_FA_CUP/COLOMBIA_CUP/etc. — South American leagues + continental competitions, none of
+      which Understat covers). Cross-checked independently via the `availability_index` manifest's own
+      `data_type=FIXTURES` rows for the 5 covered leagues: **`instrument_count=0` for every date `2026-07-25` through
+      `2026-08-01`** (the manifest's current forward-lookahead ceiling) across all 5 leagues — i.e. there are genuinely
+      no scheduled/known fixtures for EPL/Bundesliga/La Liga/Ligue 1/Serie A anywhere in this window (mid-to-late-July
+      is these leagues' off-season; 2026-27 season fixtures aren't in the manifest's lookahead window yet). **The live
+      pipeline cannot have captured Understat XG data in this window because no Understat-covered-league match ever
+      kicked off to fire `stats_delayed` for it — this is a data-availability gap, not a pipeline defect.** Both
+      structural fixes (item-1 registry sentinels, item-2 active_venues exclusion) are confirmed deployed and working
+      (zero error-log recurrence); the pipeline is validated as far as it CAN be validated without a real covered-league
+      match. **Flipping this todo done** — its own done-when ("confirm a fresh row appears... or, if still zero,
+      escalate further") is satisfied: escalated, found, and the 4th cause is identified as benign. Added a new
+      follow-up todo below (not prose, per `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md` § 2) to
+      re-verify once a real covered-league fixture exists — that is the first opportunity for genuine end-to-end proof.
 - [x] ✅ [INFRA] P2. Persist `FirstSuccessPoller._pending` across `--one-shot` invocations (state-bucket-backed, same
       pattern as `PeriodicTierState`) so `first_success=True` / genuine `fetched_rows` confirmations become structurally
       possible. Lower urgency than the two todos above (observability/confirmation only — does not gate the real
@@ -384,22 +452,112 @@ Two independently scoped, mechanically-determinable fixes (neither is a design c
       Repo: deployment-service.
 
       **DONE 2026-07-30 — deployment-service@a172915.** `FirstSuccessPoller` (`sports_latency_observation.py`) now
-                                                              accepts `bucket`/`key`/`storage` (mirrors `PeriodicTierState`'s exact adapter shape — `default_state_storage()`
-                                                              promoted from module-private to shared-public for this reuse); loads persisted `_pending` on construction,
-                                                              persists after every real mutation in `register_from_event()` (only when at least one entity was actually
-                                                              registered) and `poll()` (only when something was removed/updated) — best-effort, `except Exception` (broadened
-                                                              from the initially-narrower `(OSError, ValueError)` after discovering it could crash the live dispatch path on a
-                                                              transient storage failure; persistence must never block a real trigger fire). `SportsTriggerScheduler.__init__`
-                                                              wires it via a new `_build_first_success_poller()` (same `state_bucket or resolve_state_bucket()` + full-failure
-                                                              fallback-to-in-memory-only shape as the existing `_build_periodic_state()`). **The regression test asked for is
-                                                              exactly `test_first_success_poller_survives_fresh_instance_across_one_shot_restart`** (registers on instance A,
-                                                              discards it, constructs a brand-new instance B against the same bucket/storage, asserts B's `.pending` already
-                                                              contains the entry with no `register_from_event` call) — plus persist-on-register, persist-on-poll-removal,
-                                                              malformed-state-starts-fresh, and no-bucket-stays-in-memory-only (back-compat) tests, 5 new tests total in
-                                                              `tests/unit/test_sports_latency_observation.py`. Found + fixed a real test-isolation gap while wiring this in:
-                                                              the shared `_make_scheduler_with_recorder()` test helper (used by ~10 pre-existing tests) never overrode
-                                                              `state_bucket`, so every test sharing the default `resolve_state_bucket()` bucket name was reading/writing the
-                                                              SAME `CLOUD_MOCK_MODE=true` mock-storage-backed state file — invisible before this change because no prior code
-                                                              path actually persisted real content there; now scoped to a per-test-unique bucket
-                                                              (`f"deployment-scripts-test-{uuid.uuid4().hex}"`), fixing a latent cross-test-pollution risk for
-                                                              `PeriodicTierState` too, not just this new code. Full `quality-gates.sh` green (2967 passed).
+                                                                                                                                                                                                                  accepts `bucket`/`key`/`storage` (mirrors `PeriodicTierState`'s exact adapter shape — `default_state_storage()`
+                                                                                                                                                                                                                  promoted from module-private to shared-public for this reuse); loads persisted `_pending` on construction,
+                                                                                                                                                                                                                  persists after every real mutation in `register_from_event()` (only when at least one entity was actually
+                                                                                                                                                                                                                  registered) and `poll()` (only when something was removed/updated) — best-effort, `except Exception` (broadened
+                                                                                                                                                                                                                  from the initially-narrower `(OSError, ValueError)` after discovering it could crash the live dispatch path on a
+                                                                                                                                                                                                                  transient storage failure; persistence must never block a real trigger fire). `SportsTriggerScheduler.__init__`
+                                                                                                                                                                                                                  wires it via a new `_build_first_success_poller()` (same `state_bucket or resolve_state_bucket()` + full-failure
+                                                                                                                                                                                                                  fallback-to-in-memory-only shape as the existing `_build_periodic_state()`). **The regression test asked for is
+                                                                                                                                                                                                                  exactly `test_first_success_poller_survives_fresh_instance_across_one_shot_restart`** (registers on instance A,
+                                                                                                                                                                                                                  discards it, constructs a brand-new instance B against the same bucket/storage, asserts B's `.pending` already
+                                                                                                                                                                                                                  contains the entry with no `register_from_event` call) — plus persist-on-register, persist-on-poll-removal,
+                                                                                                                                                                                                                  malformed-state-starts-fresh, and no-bucket-stays-in-memory-only (back-compat) tests, 5 new tests total in
+                                                                                                                                                                                                                  `tests/unit/test_sports_latency_observation.py`. Found + fixed a real test-isolation gap while wiring this in:
+                                                                                                                                                                                                                  the shared `_make_scheduler_with_recorder()` test helper (used by ~10 pre-existing tests) never overrode
+                                                                                                                                                                                                                  `state_bucket`, so every test sharing the default `resolve_state_bucket()` bucket name was reading/writing the
+                                                                                                                                                                                                                  SAME `CLOUD_MOCK_MODE=true` mock-storage-backed state file — invisible before this change because no prior code
+                                                                                                                                                                                                                  path actually persisted real content there; now scoped to a per-test-unique bucket
+                                                                                                                                                                                                                  (`f"deployment-scripts-test-{uuid.uuid4().hex}"`), fixing a latent cross-test-pollution risk for
+                                                                                                                                                                                                                  `PeriodicTierState` too, not just this new code. Full `quality-gates.sh` green (2967 passed).
+
+- [ ] [VERIFY] P2. **New, opened 2026-07-31 by the VERIFY P1 todo above.** Both structural fixes (venue-adapter-key
+      registry sentinels + `active_venues` enrichment-provider exclusion) are confirmed deployed and working (zero
+      recurrence of `No URDI adapter`/`URDI fetch...failed` error-log lines mentioning the 5 enrichment venues over a
+      36h+ window). But the day-plus live-operation re-check found the reason Step-3's manifest query still shows zero
+      fresh Understat XG captures is NOT a code defect: Understat only covers 5 leagues
+      (BUNDESLIGA/EPL/LA_LIGA/LIGUE_1/SERIE_A) and all 5 are confirmed in their off-season — zero `stats_delayed`
+      trigger fires for any of them in the 36h post-fix window (1767 fires total, all for OTHER leagues), and the
+      `availability_index` manifest shows `instrument_count=0` FIXTURES for all 5 leagues through `2026-08-01` (the
+      manifest's current forward-lookahead ceiling). The live capture pipeline has therefore never had a real
+      opportunity to prove it works end-to-end since the fixes landed. **Done when**: once any of the 5
+      Understat-covered leagues has a real fixture whose `stats_delayed` trigger fires live (check via the
+      `latency_observations` parquet index, `trigger_name='stats_delayed'` + `league_id` in the 5-league set,
+      `recorded_at_utc` after the fixture is confirmed scheduled), re-run Step 3's manifest query (`data_type=XG`,
+      `capture_status='captured'`, `written_at` after that fire) — a fresh captured (or honestly `empty_confirmed`, if
+      Understat itself has no data for that specific match) row confirms the live pipeline genuinely works end-to-end;
+      if it's STILL zero despite a real covered-league match having fired, that would be a genuine fifth cause worth
+      escalating. **Also note for whoever picks this up**: the doc's original Step-3 filter
+      (`pipeline_mode != batch_understat`) is NOT a reliable live-vs-batch discriminator —
+      `instruments_service/engine/orchestrator/understat.py` hardcodes `pipeline_mode=PipelineMode.BATCH_UNDERSTAT` on
+      every write regardless of caller (both the periodic completeness sweep AND the real live per-fixture dispatch use
+      it identically) — query on `written_at` alone, don't filter on `pipeline_mode`. Repo: instruments-service
+      (read-only check, no code change expected unless a genuine 5th cause surfaces). — **Checked 2026-07-31T06:38Z
+      (slot 11, worker): still gated, no covered-league fixture has fired yet.** Queried
+      `latency_observations/day={2026-07-29..07-31}` directly via `pandas.read_parquet` against
+      `gs://instruments-store-sports-prd-central-element-323112/_index/` (ad-hoc, no committed query script exists for
+      this pair of datasets — confirmed via a dedicated tooling search): 1512 `stats_delayed` fires post-cutoff
+      (`>2026-07-29T18:02:00Z`, data through `2026-07-31T04:41:54Z`), **zero** for any of the 5 Understat-covered
+      `league_id`s (`BUNDESLIGA`/`EPL`/`LA_LIGA`/`LIGUE_1`/`SERIE_A`) — the 1512 span 24 other leagues/cups only.
+      Cross-checked `availability_index.parquet`'s `data_type=FIXTURES` rows for the same 5 leagues: forward-lookahead
+      ceiling is still `2026-08-01` (unchanged from the 06:18Z-06:55Z check), all rows through that date carry
+      `instrument_count=0` (`empty_confirmed`/`attempted_failed`); the last nonzero (`captured`) FIXTURES row for any of
+      the 5 leagues is `2026-05-29` (end of the prior season) — confirms still genuinely off-season, not a regression.
+      No change since the prior check ~20 min earlier. Releasing via `/skip-current-task {"reason_code": "GATED"}` — the
+      done-when (a real covered-league fixture firing `stats_delayed`) is not yet met; this doc does not need
+      re-checking on a tight cadence (leagues resume on a season schedule, not within-hour granularity) — next dispatch
+      should wait for a longer interval or an operator signal that the new season's fixture list has landed, rather than
+      re-polling every few minutes. — **Checked 2026-07-31T08:25Z-08:33Z (slot 7, backend_engineer): still gated, no
+      change.** Re-ran both checks via the canonical
+      `unified_trading_library.manifest_writer._read_index.     read_availability_index()` slim-column path (not raw
+      `pd.read_parquet`, per this pass's own tooling research) and a direct GCS blob listing for `latency_observations`:
+      (1) FIXTURES rows for the 5 covered leagues — per-league max `date` is still `2026-08-01` (the lookahead ceiling,
+      unchanged) with max `instrument_count` unchanged (7-10/league); every nonzero-`instrument_count` row is still
+      dated `2026-05-14..2026-05-29` (prior season, same set the 06:18Z check found — no new rows). (2) `stats_delayed`
+      fires over `day={2026-07-29..07-31}`: **1512** total (matches the 06:38Z check's count exactly), **zero** for any
+      of the 5 covered `league_id`s. Confirms the off-season gate is unchanged ~1h47m after the last check. **Process
+      note for main/operator**: this todo has now accumulated 9 "still gated, no change" checks since 2026-07-29T15:19Z
+      (03:50Z/05:02Z/09:06Z/14:12Z/15:19Z/20:07Z/23:25Z, 2026-07-30T00:29Z/10:54Z/11:59Z, 2026-07-31T06:18Z/06:38Z, this
+      one) at re-dispatch intervals as tight as ~20min-2h, despite every check since 06:18Z explicitly recommending a
+      longer interval — a season-schedule condition doesn't change within-day, so each of these re-checks burns a full
+      worker dispatch for a guaranteed-identical answer. Recommend main/operator PARK this task server-side
+      (`unified-trading-pm/agents/RULES.md` § 4 "Park a task" — `priority: 999` + `priority_override: true` + a
+      `prereqs.prerequisites` condition, e.g. `sports-understat-season-active`, flipped `true` once the new season's
+      fixture list lands in the manifest) rather than leaving it on the normal queue — a worker slot cannot do this
+      itself since `backlog.yaml` is server-side state not present in the slot's git checkout. Releasing via
+      `/skip-current-task {"reason_code": "GATED"}`. — **Checked 2026-07-31T09:37Z (slot 14, ui_developer): still gated,
+      no change, bare check only (per prior guidance).** Re-ran both checks via the same canonical tooling
+      (`read_availability_index()` slim-column path filtered on `league_id`, not `venue` — FIXTURES rows carry league in
+      `league_id`; `venue` is blank for this `data_type`) and a direct GCS parquet read of
+      `latency_observations/day={2026-07-29..07-31}`: (1) FIXTURES for the 5 covered leagues — lookahead ceiling still
+      `2026-08-01`, zero rows through it; last nonzero `instrument_count` row per league still in
+      `2026-05-24..2026-05-29` (prior season), unchanged from the 06:18Z/08:25Z checks. (2) `stats_delayed` fires
+      post-cutoff (`>2026-07-29T18:02:00Z`): **1512** total (identical count to the 08:25Z check — the underlying data
+      horizon (`latency_observations` max `recorded_at_utc` = `2026-07-31T03:11:25Z`) hadn't advanced past ~6.5h before
+      this check, a consolidation-cadence artifact, not a stall signal), **zero** for any of the 5 covered `league_id`s.
+      This is the 3rd consecutive "still gated, no change" check since the 08:25Z entry's explicit park recommendation —
+      filed `/blocked` to main reiterating it (workers can't edit `backlog.yaml` themselves, so the prose recommendation
+      alone hasn't stopped re-dispatch). Releasing via `/skip-current-task {"reason_code": "GATED"}`. — **Checked
+      2026-08-02T15:31Z (slot 11, backend_engineer): still gated, no change, bare check only.** Re-ran both checks via
+      direct GCS parquet reads against `gs://instruments-store-sports-prd-central-element-323112/_index/`: (1)
+      `availability_index.parquet` FIXTURES rows for the 5 covered leagues — lookahead ceiling still `2026-08-01`, zero
+      nonzero rows through it; last nonzero `instrument_count` row per league still `2026-05-29` (prior season),
+      unchanged from every prior check since 06:18Z on 2026-07-31. (2) `latency_observations` `stats_delayed` fires,
+      `day={2026-07-29..2026-08-02}` (4652 total, max `recorded_at_utc=2026-08-02T15:31:40Z`): **zero** for any of the 5
+      covered `league_id`s. This is now the 4th consecutive "still gated, no change" check since the first explicit park
+      recommendation (08:25Z, 2026-07-31) and the task has been re-dispatched again ~2 full days later despite two prior
+      `/blocked` escalations asking main/operator to park it server-side — the prose recommendation alone still hasn't
+      stopped re-dispatch. Filed `/blocked` again with the same ask, flagging the now-4-day dispatch waste explicitly.
+      Releasing via `/skip-current-task {"reason_code": "GATED"}`. — **Checked 2026-08-02T16:23Z (slot 3,
+      data_engineering): still gated, no change, bare filtered check only (`read_availability_index(filters=...)`,
+      row-group-pushdown, no full-corpus load).** FIXTURES lookahead ceiling for the 5 covered leagues still
+      `2026-08-01`, zero nonzero-`instrument_count` rows through it. **Diagnosed why auto-park (RULES.md §4 /
+      `auto_park.py`, threshold=3 GATED skips within a rolling 24h window) hasn't already fired despite 15+ GATED skips
+      across this doc's life**: `register_cooldown`'s window resets to `skip_count=1` whenever the gap since the
+      window's start exceeds `dispatch_cooldown_park_window_hours` (24h default) — and several of this task's real
+      dispatch gaps (e.g. 2026-07-31T09:37Z→2026-08-02T15:31Z, ~30h) exceeded that, resetting the counter before 3
+      accumulated. This is NOT a bug needing a fix — it's the mechanism correctly reflecting that dispatches have been
+      sparse enough not to trip the threshold, not evidence the recommendation was ignored. Practical effect: this skip
+      is #2 in the window slot-11 opened at 15:31Z; one more GATED skip before 2026-08-03T15:31Z auto-parks it without
+      further operator action. Releasing via `/skip-current-task {"reason_code": "GATED"}`.

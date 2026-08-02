@@ -1,0 +1,289 @@
+---
+doc_type: issue
+title:
+  defi_satellite_ao_dispatch_batch8_2026_08_02_finalize's gated todo-1 was dispatched to slot 4 despite batch8's own
+  upstream todo never being derived into the backlog at all (gate silently no-op'd)
+summary: >-
+  Dispatched to slot 4 (data_engineering) as `defi_satellite_ao_dispatch_batch8_2026_08_02_finalize-001` — brief reads
+  "Once `defi_satellite_ao_dispatch_batch8_2026_08_02.md`'s todo is `[x]`, reconcile the single source doc." The
+  finalize plan's own frontmatter sets `depends_on: [defi_satellite_ao_dispatch_batch8_2026_08_02]` + `gate_on_depends:
+  true`, and its body banner states "the dispatcher will not release these until batch8 is fully done." Verified
+  batch8's own todo is still `- [ ]` unchecked (only one commit, `f63b8eb1b`, has ever touched that file — the creation
+  commit; no work has landed). Verified via `GET /api/backlog` (1325 tasks) that ZERO entries exist anywhere with
+  `plan_ref: plans/active/defi_satellite_ao_dispatch_batch8_2026_08_02.md` (the upstream/source plan) — its own todo was
+  never derived into a dispatchable task at all, despite `status: active`, `assigned_vm: planning`, `depends_on: []`
+  (nothing blocking IT). Meanwhile the finalize plan's 3 todos WERE derived (`...finalize-001/002/003`) and `-001` was
+  dispatched to slot 4 at 2026-08-02T15:14:51Z — the gate silently didn't fire. Root cause is most plausibly that
+  `_wire_gate_on_depends_prereqs` (agent-orchestrator `server/regen_backlog_from_plan.py`) wires a gated plan's tasks to
+  wait on `prereqs.completed_tasks` derived from its upstream's OWN backlog tasks — if the upstream produced zero tasks,
+  there is nothing to wire the wait against, so the gate becomes a no-op and the downstream dispatches unblocked. This
+  is the same failure shape as two incidents already referenced in that file's own comments
+  (`gate_on_depends_wiring_gap_defi_dex_pool_finalize_2026_07_25.md`,
+  `gate_on_depends_noop_on_local_only_upstream_2026_07_21.md`), but with a novel trigger: the upstream plan's own task
+  was never derived in the first place (confirmed absent from the full backlog, not just path-mismatched), rather than a
+  directory-qualified path-matching bug.
+status: open
+nature: issue
+asset_group: [defi]
+stage: [meta]
+repos: [agent-orchestrator, unified-trading-pm]
+scope: [engineer, admin]
+tags:
+  [
+    plan-hygiene,
+    dispatch-correctness,
+    gate-on-depends,
+    backlog-regen,
+    process-integrity,
+    ssot-contradiction,
+    defi,
+    ao-dispatch,
+  ]
+related:
+  [
+    /plans/active/defi_satellite_ao_dispatch_batch8_2026_08_02.md,
+    /plans/active/defi_satellite_ao_dispatch_batch8_2026_08_02_finalize.md,
+    /plans/active/issues/instruments_satellite_batch1_finalize_false_completion_claim_2026_08_02.md,
+    /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
+    /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
+  ]
+created: "2026-08-02"
+parent_epic: defi_master
+assigned_vm: planning
+resolved_by:
+execution_scope: orchestrator-agent
+priority: P1
+estimate_class: infra
+estimate_baseline_ai_days: 0.5
+estimate_calibrated_ai_days: 0.5
+assigned_role: backend_engineer
+drift_direction: advance-code
+locked_by:
+locked_since:
+context_scope:
+  [
+    /plans/active/defi_satellite_ao_dispatch_batch8_2026_08_02.md,
+    /plans/active/defi_satellite_ao_dispatch_batch8_2026_08_02_finalize.md,
+    agent-orchestrator/server/regen_backlog_from_plan.py,
+  ]
+supersedes:
+superseded_by:
+depends_on:
+source: >-
+  Discovered while slot 4 (data_engineering) was dispatched `defi_satellite_ao_dispatch_batch8_2026_08_02_finalize-001`
+  on 2026-08-02 and found its stated gate precondition (batch8's todo done) was false.
+---
+
+# Finalize twin's gate silently didn't fire — its upstream never produced a backlog task to gate against
+
+## What I found
+
+1. **My assigned task's own precondition is false.** `defi_satellite_ao_dispatch_batch8_2026_08_02_finalize-001`'s brief
+   literally reads "Once `defi_satellite_ao_dispatch_batch8_2026_08_02.md`'s todo is `[x]`...". That todo is verifiably
+   still open: `git log --oneline -- plans/active/defi_satellite_ao_dispatch_batch8_2026_08_02.md` shows exactly one
+   commit (`f63b8eb1b`, the doc's own creation), and the current file content has the todo as `- [ ] [DATA] P3. **Prove
+   force
+   - skip for the LST-rate surfaces...**` — unchecked, no evidence text.
+2. **The finalize plan's own frontmatter says this should be impossible.**
+   `depends_on: [defi_satellite_ao_dispatch_batch8_2026_08_02]` + `gate_on_depends: true`, and the doc's body banner
+   states in plain prose: "the dispatcher will not release these until batch8 is fully done." It was released anyway —
+   `dispatched_at: 2026-08-02T15:14:51Z`, `dispatched_to: 4` (this slot), per `GET /api/backlog`.
+3. **The upstream plan's own todo was never derived into the backlog at all** — not merely blocked/queued.
+   `GET /api/backlog` returns 1325 tasks; filtering for
+   `plan_ref == "plans/active/defi_satellite_ao_dispatch_batch8_2026_08_02.md"` (the source/upstream plan, not its
+   finalize twin) returns **zero rows**. A content search across every task's title/brief for "LST", "AAVE oracle", or
+   "collect-oracle-prices" also returns nothing matching this specific todo (other unrelated LST-flavored tasks from
+   batch6/mvp_backfill exist and are unaffected). The upstream plan has `status: active`, `assigned_vm: planning`,
+   `depends_on: []` — nothing should be blocking its own derivation.
+4. **Root cause (plausible, not yet code-confirmed — flagging for a backend_engineer/infra pass, not fixing inline since
+   it's agent-orchestrator server code outside this task's craft/repo scope):**
+   `agent-orchestrator/server/regen_backlog_from_plan.py`'s `_wire_gate_on_depends_prereqs` wires a `gate_on_depends`
+   plan's derived tasks to wait on `prereqs.completed_tasks` built from the upstream `depends_on` plan's OWN derived
+   tasks (see the function's docstring around line 2063 and the gating-condition comments near line 1795-1812). If the
+   upstream plan produced **zero** backlog tasks (as observed here), there is nothing to wire the wait against — the
+   gate has no upstream task ids to reference, so it silently becomes a no-op and the downstream `finalize-001`
+   dispatches as if ungated. This is the same failure _shape_ as two incidents already referenced in that file's own
+   comments — `gate_on_depends_wiring_gap_defi_dex_pool_finalize_2026_07_25.md` and
+   `gate_on_depends_noop_on_local_only_upstream_2026_07_21.md` — but the trigger here is different and (as far as this
+   doc checked) novel: the upstream's task is genuinely absent from the whole backlog, not merely mismatched on a
+   directory-qualified path string.
+5. **Same false-progress shape as a same-day sibling incident**: this mirrors
+   [`/plans/active/issues/instruments_satellite_batch1_finalize_false_completion_claim_2026_08_02.md`](/plans/active/issues/instruments_satellite_batch1_finalize_false_completion_claim_2026_08_02.md)
+   — a gated finalize twin's mechanics proceeding ahead of the substance they're supposed to gate on. That incident was
+   a human/agent trusting a false "DONE" claim; this one is the dispatcher itself releasing gated work with nothing to
+   verify against. Worth noting as the same failure _class_ recurring via a different mechanism, for whoever eventually
+   does the "bounded sweep of other finalize twins" follow-up that doc's todo 4 already calls for.
+
+## Why it matters
+
+Two independent problems, both real:
+
+- **The actual, valuable, ungated work (batch8's LST-rate force/skip proof against the `-test-` bucket) is invisible to
+  the dispatcher** — it will never be picked up by any worker until whatever excludes it from derivation is fixed and a
+  regen tick re-runs. This is live-pipeline-adjacent correctness work (a `/data-pipeline-check-mtds`-shaped proof)
+  sitting silently un-dispatched.
+- **The `gate_on_depends` mechanism cannot be trusted when an upstream plan produces zero backlog tasks** — any other
+  currently-active `gate_on_depends: true` finalize plan whose upstream also failed derivation (for whatever reason) is
+  equally exposed to premature dispatch of gated todos, which — per the `instruments_satellite_batch1` sibling incident
+  — is exactly the shape that produces fabricated "reconciliation" claims when a worker doesn't catch it and instead
+  complies with the (false) precondition.
+
+## Recommended decision
+
+No design call needed — every fact here is independently checkable:
+
+1. Root-cause **why `defi_satellite_ao_dispatch_batch8_2026_08_02.md`'s own todo was never derived** into a backlog task
+   despite `status: active` / `assigned_vm: planning` / `depends_on: []`. Check the checkbox-continuation-block parser
+   against this specific todo's shape (a bolded `**Prove force + skip...**` immediately after the `P3.` marker, followed
+   by several bullet-indented sub-clauses spanning ~15 lines) — this is a plausible parser edge case distinct from the
+   two previously-fixed incidents.
+2. Once fixed, re-run `POST /api/backlog/regen` and confirm a task now exists with
+   `plan_ref: plans/active/defi_satellite_ao_dispatch_batch8_2026_08_02.md`, and confirm
+   `defi_satellite_ao_dispatch_batch8_2026_08_02_finalize-001` (still sitting `dispatched_to: 4`, undone) correctly
+   re-gates — i.e. that `_wire_gate_on_depends_prereqs` now has a real upstream task id to attach
+   `prereqs.completed_tasks` to.
+3. Harden `_wire_gate_on_depends_prereqs` (or the surrounding regen pass) to treat "upstream `depends_on` plan is
+   `status: active` but produced zero derived tasks" as a loud warning/failed-gate condition rather than a silent no-op
+   — mirroring the "loud-fails on stale index" posture already used elsewhere in this codebase
+   (`manifest-consolidator-ssot.md`). A gate that can't find anything to gate against should block dispatch, not wave it
+   through.
+4. This slot's own `finalize-001` claim should be released back to the queue (see Todos) rather than worked, since its
+   stated precondition is false — re-dispatch only after item 1-2 above land and batch8's real todo actually completes.
+
+## Todos
+
+- [x] ✅ [BACKEND] P1. Root-cause why `defi_satellite_ao_dispatch_batch8_2026_08_02.md`'s own `- [ ] [DATA] P3.` todo
+      never derived into a backlog task — agent-orchestrator (no commit, investigation-only; see Progress Log 2026-08-02
+      slot-15 entry below for the code-line-cited cause and the reproduction that REFUTES the "Recommended decision"
+      item 1 parser-shape hypothesis).
+- [x] ✅ [BACKEND] P1. Fix the identified cause and confirm via `POST /api/backlog/regen` + `GET /api/backlog` that a
+      task now exists with `plan_ref: plans/active/defi_satellite_ao_dispatch_batch8_2026_08_02.md`. Repo:
+      agent-orchestrator@ae003b58e — see Progress Log 2026-08-02 slot-8 entry below for the fix + verification.
+- [ ] [BACKEND] P2. Harden `_wire_gate_on_depends_prereqs` (or its caller) to fail loudly — log/flag, do not silently
+      no-op — when a `gate_on_depends: true` plan's upstream `depends_on` plan is `status: active` with open todos but
+      produced zero derived backlog tasks. Repo: agent-orchestrator. Done when: the same reproduction (an active/undone
+      upstream with zero derived tasks) is shown to raise a visible signal instead of silently unblocking the gated
+      plan's dispatch.
+- [ ] [DATA] P3. Once the above land and batch8's real todo is dispatched and completed (evidence: VM `run.log`
+      force+skip verdict per the batch8 todo's own done-when), re-verify
+      `defi_satellite_ao_dispatch_batch8_2026_08_02_finalize-001` re-gates correctly and only THEN do the actual
+      source-doc reconciliation this finalize todo calls for. Repo: unified-trading-pm. Done when:
+      `lst_rate_honest_coverage_2026_07_21.md`'s Phase-3 checkbox is annotated citing real batch8 evidence (VM name +
+      run.log verdict per surface, per that plan's own wording) — not before.
+
+## Progress Log
+
+- **2026-08-02**: Filed while slot 4 (data_engineering) was dispatched `finalize-001` and found its stated precondition
+  false. Verified via git log (single commit on batch8's file) and a full `GET /api/backlog` scan (1325 tasks, zero
+  matching the upstream plan's path, zero content-matching the specific LST-rate/AAVE-oracle todo). Skipping the current
+  task rather than fabricating a reconciliation against work that hasn't happened — see
+  `instruments_satellite_batch1_finalize_false_completion_claim_2026_08_02.md` for why that specific mistake is a
+  confirmed, named failure class in this corpus.
+- **2026-08-02 (slot 14, data_engineering) — corroborating recurrence, not yet fixed.** Same task
+  (`defi_satellite_ao_dispatch_batch8_2026_08_02_finalize-001`) re-dispatched to this slot; re-verified both facts
+  independently unchanged: batch8's own todo still `- [ ]` unchecked (still only the one creation commit), and
+  `GET /api/backlog` still returns zero tasks with
+  `plan_ref: plans/active/defi_satellite_ao_dispatch_batch8_2026_08_02.md`. This doc's own `[BACKEND] P1` root-cause
+  todo is `dispatched` (slot 5, in progress as of this check) — not re-doing that investigation. Declined `finalize-001`
+  again per this doc's own Recommended-decision item 4; skipping.
+- **2026-08-02 (slot 14, data_engineering) — SECOND, INDEPENDENT case found, strongly corroborating the parser-shape
+  hypothesis in "Recommended decision" item 1.** Dispatched to a completely different plan's gated finalize twin,
+  `sports_satellite_ao_dispatch_batch5_2026_07_26_finalize-016` (todo 2, gated on
+  `sports_satellite_ao_dispatch_batch5_2026_07_26.md` reaching 0 open todos). That plan's remaining open todo (line 114,
+  the "zombie-tick purge/re-derive + ML-readiness gate-semantics fix") has been re-confirmed `[ ]`-open-but-"genuinely
+  dispatchable, just not picked up" by FOUR prior slots (11, 3, 16, and now this one) across 2026-07-30 through
+  2026-08-02 — but a full `GET /api/backlog` scan (1337 tasks) finds **zero** tasks matching this todo's content
+  anywhere in the backlog (only one keyword-coincidental unrelated match from a different plan). The only task ever
+  derived for this plan_ref (`sports_satellite_ao_dispatch_batch5-024`) is `orphan: true`, `status: done`,
+  `done_at: 2026-07-26T01:27:01Z` — done just 3 minutes after being queued (`queued_at: 2026-07-26T01:24:07Z`), which
+  reads as a much simpler pre-reword version of this todo that was trivially satisfied before the text was expanded into
+  today's substantial multi-part description; the regen correctly flagged the old row as orphaned once the brief
+  changed, but never derived a FRESH task for the new wording — so all 4 prior "just hasn't been picked up yet" verdicts
+  were subtly wrong: it structurally could not have been picked up, not just wasn't. **Both affected todos share the
+  exact same shape** this doc's own item 1 flagged as the leading hypothesis: a bolded multi-clause description
+  immediately after the priority marker (`**Prove force + skip...**` there,
+  `**market-tick-data-service + ...: execute the zombie-tick purge...**` here), followed by several lettered/bulleted
+  sub-parts spanning many lines ((a)/(b)/(c) in both cases). This is independent evidence from an unrelated
+  plan/asset_group (sports, not defi) and a different trigger path (a same-plan reword-orphans-without- re-deriving
+  case, not a zero-upstream-tasks `gate_on_depends` case) — but the same textual shape in both strongly suggests one
+  shared parser gap, not two coincidentally similar bugs. Recommend whoever picks up this doc's `[BACKEND] P1`
+  root-cause todo test BOTH reproductions against the same parser-shape hypothesis before concluding the fix. Not fixing
+  inline (agent-orchestrator server code, outside this task's craft/repo scope) — added here rather than filing a
+  duplicate doc since it directly strengthens this doc's own open investigation.
+
+- **2026-08-02 (slot 4, backend_engineer craft, task `defi_batch8_finalize_gate_bypass_missing_upstream_task-002`)** —
+  Dispatched todo 2 ("fix the identified cause") while todo 1 (root-cause) was STILL `dispatched` to slot 8, in progress
+  (`dispatched_at: 2026-08-02T15:47:02Z`, not yet `done`, not stale by the 25-min bar). Todo 2's own done-when literally
+  requires "the identified cause" as a precondition — nothing has landed yet (`git log` on
+  `agent-orchestrator/server/regen_backlog_from_plan.py` shows no new commit since `2b0b9e9`, predating this issue doc).
+  Both todo 1 and todo 2 target the SAME file/function (`_wire_gate_on_depends_prereqs` / `regen_backlog_from_plan.py`)
+  per the file-scope each todo names — starting todo 2's fix work now would either duplicate slot 8's in-flight
+  investigation or collide with it mid-edit on the same file, violating the same-file-never multi-agent-safety rule even
+  though these are informal issue-doc todos rather than a `sequential: true`-gated plan. Declining rather than guessing
+  at a fix ahead of the confirmed root cause, or redoing slot 8's diagnosis. **Next dispatch**: check
+  `git log -- agent-orchestrator/server/regen_backlog_from_plan.py` for slot 8's root-cause commit (or this doc's todo 1
+  checkbox/Progress Log for the identified cause) before starting todo 2's fix.
+
+- **2026-08-02T16:01Z (slot 10, data_engineering craft) — 4th corroborating recurrence, still unfixed.**
+  `defi_satellite_ao_dispatch_batch8_2026_08_02_finalize-001` re-dispatched to this slot. Re-verified both facts
+  independently unchanged: `plans/active/defi_satellite_ao_dispatch_batch8_2026_08_02.md`'s own todo is still `- [ ]`
+  unchecked (fresh-pulled to latest `live-defi-rollout` before checking). `agent-orchestrator` HEAD is still `2b0b9e9`
+  (`git log -5 -- server/regen_backlog_from_plan.py`) — identical to slot 4's last check, so neither todo 1 (root-cause)
+  nor todo 2 (fix) has landed yet, despite todo 1 having shown `dispatched` (slot 8) as of the last entry. Not
+  re-investigating or duplicating that work. Declining `finalize-001` again per this doc's own Recommended-decision item
+  4; skipping rather than holding the slot.
+- **2026-08-02 (slot 15, backend_engineer craft, task `defi_batch8_finalize_gate_bypass_missing_upstream_task-001`)** —
+  **Root cause identified, code-line-cited, and reproduced. The "Recommended decision" item 1 parser-shape hypothesis
+  (bolded multi-clause todo text + lettered/bulleted sub-parts confusing the checkbox-continuation-block scanner) is
+  REFUTED for this specific todo** — a standalone repro against the live plan text confirms `_UNCHECKED_RE`
+  (`agent-orchestrator/server/regen_backlog_from_plan.py:96`) matches the checkbox line cleanly and
+  `_TODO_BLOCK_BOUNDARY_RE` (line 1216) correctly captures the full 27-line continuation block up to the next `- [` /
+  header boundary — the checkbox parse itself is fine. **Actual cause: `_is_non_dispatchable()` (line 1202) →
+  `_has_live_blocked_token()` (line 1180) false-positives on the todo's own resolved-blocker citation.** The todo's
+  continuation block reads (verbatim, batch8 plan line 86): "the source todo's original
+  `BLOCKED-CREDENTIALS (2026-07-22)` framing **was retired** 2026-07-29" — i.e. the resolution verb ("was retired")
+  trails the `BLOCKED-CREDENTIALS` marker instead of leading it. `_STALE_MARKER_PREFIX_RE` (line 1169) only recognizes
+  resolution language found in the ≤60 chars **immediately BEFORE** a `BLOCKED-<TOKEN>` match
+  (`was `X``, `no longer X`, `retagged from X`, `previously X` — all keyword-then-marker). This todo's phrasing is marker-then-keyword ("original `BLOCKED-CREDENTIALS` framing was retired"), which the backward-only lookback cannot see: the 60-char prefix immediately preceding the match is `"...the source todo's original \`"` (no stale keyword present), so `_STALE_MARKER_PREFIX_RE.search(prefix)` returns `None`, `_has_live_blocked_token` returns `True`, `_is_non_dispatchable` returns `True`, and `_parse_open_todos` (line 1309-1310) silently `continue`s past the todo — it is never appended to `results`, so it never becomes a backlog task. This is the SAME underlying bug class as `ao_non_dispatchable_regex_swallows_resolved_retags_2026_07_29.md` (a resolved-retag false-positive on the BLOCKED-token guard), but a THIRD, previously-uncovered trigger shape: not a missing token in the allow-list (that was the 2026-07-29 fix), not a missing token variant (`BLOCKED-UPSTREAM-DESIGN`, the `2b0b9e9` fix), but a **word-order variant** — the guard's stale-marker lookback is directionally one-sided (keyword-before-marker only) and this todo's prose states the resolution keyword-after-marker instead. **Verified via standalone reproduction** (regex definitions copied verbatim from `agent-orchestrator/server/regen_backlog_from_plan.py` lines 1154-1216, run against the live `plans/active/defi_satellite_ao_dispatch_batch8_2026_08_02.md` text — no fabricated input): `is_non_dispatchable()` returns `True` for this todo's block; the single `BLOCKED-CREDENTIALS` match's 60-char prefix is `"...the source todo's original \`"`, and `_STALE_MARKER_PREFIX_RE` does not match it. Not fixing inline — todo 2 ("fix the identified cause") is a separate dispatched task targeting the same file; per this doc's own slot-4 note above, starting the fix here would risk a same-file collision. **Next dispatch (todo 2)**: extend `_STALE_MARKER_PREFIX_RE`'s coverage (or add a companion forward-lookahead check) to also recognize marker-then-resolution-keyword phrasing (e.g. ``
+  `BLOCKED-<TOKEN>` ... (was retired|no longer applies|resolved) `` within a bounded lookahead window after the match,
+  mirroring the existing backward-lookback structure) — then re-run this doc's own reproduction against this exact todo
+  block to confirm `is_non_dispatchable()` flips to `False` before calling `POST /api/backlog/regen`.
+
+- **2026-08-02 (slot 9, data_engineering craft) — 5th corroborating recurrence, still unfixed; root cause now
+  documented, fix (todo 2) still unclaimed.** `defi_satellite_ao_dispatch_batch8_2026_08_02_finalize-001` re-dispatched
+  to this slot via `/heartbeat` after an unrelated skip. Fresh-pulled `unified-trading-pm` + `agent-orchestrator` to
+  latest `live-defi-rollout` before checking (not relying on a stale local ref). Re-verified: batch8's own
+  `- [ ] [DATA] P3.` todo is still unchecked on disk. `GET /api/backlog` confirms todo 1 (root-cause) is now `done`
+  (slot 15, `2026-08-02T16:03:39Z` — see the code-line-cited word-order-bug finding directly above) but todo 2 (the
+  actual fix) is still `queued`/unclaimed, and no new commit has landed on
+  `agent-orchestrator/server/regen_backlog_from_plan.py` beyond what slot 15's investigation already read (HEAD
+  `c547566`, an unrelated docs commit). Declining `finalize-001` again per this doc's own Recommended-decision item 4 —
+  same reasoning as the 4 prior recurrences, now with a concretely-identified, not-yet-landed fix to wait on rather than
+  an open-ended investigation. Not picking up todo 2 myself mid-task (different craft — `[BACKEND]`/agent-orchestrator —
+  and self-initiating unassigned "related work" outside the current dispatch is against the worker
+  `/boot`-per-shippable-unit discipline); it stays queued for the next `backend_engineer`-eligible dispatch. Skipping.
+
+- **2026-08-02T17:05Z (slot 8, backend_engineer craft, task
+  `defi_batch8_finalize_gate_bypass_missing_upstream_task-002`) — todo 2 fix shipped + verified.** Implemented slot 15's
+  recommended fix: added `_STALE_MARKER_SUFFIX_RE` (`agent-orchestrator/server/regen_backlog_from_plan.py:1190-1198`), a
+  forward-lookahead counterpart to the existing backward-only `_STALE_MARKER_PREFIX_RE`, recognizing
+  marker-then-resolution-keyword phrasing ("`BLOCKED-<TOKEN>` ... was
+  retired/resolved/lifted/cleared/closed/superseded/dropped/ruled") within a bounded 60-char window AFTER a
+  `BLOCKED-<TOKEN>` match, mirroring the existing prefix check's structure. `_has_live_blocked_token` (line 1201) now
+  checks both prefix and suffix before treating a match as a live (dispatch-blocking) marker. Shipped as
+  `agent-orchestrator@ae003b58e` (`fix(backlog-regen): recognize marker-then-resolution BLOCKED-<token> phrasing`) — a
+  prior instance of this same slot session had already landed and pushed this commit (confirmed on `origin` via this
+  session's boot-time fresh-pull, `git merge-base --is-ancestor` implicitly satisfied by the ff-only merge) before
+  getting interrupted ahead of the verification + plan-flip steps; this entry completes that in-flight work rather than
+  re-doing it. **Verification (this session):** `POST /api/backlog/regen` →
+  `{"ok": true, "scanned_plans": 692, "new_tasks": 0, "skipped_existing": 7, "total_tasks": 668}` (0 new because a prior
+  regen tick, running sometime after `ae003b58e` landed at 16:43:35Z, had already derived the task —
+  `queued_at: 2026-08-02T17:01:41Z`, i.e. before this session's own regen call). `GET /api/backlog` (1349 tasks)
+  filtered on `plan_ref == "plans/active/defi_satellite_ao_dispatch_batch8_2026_08_02.md"` now returns exactly ONE row:
+  `defi_satellite_ao_dispatch_batch8-001`, `status: "queued"`, `dispatched_to: null`, `collision_group: null`,
+  `orphan: false` — present and dispatchable, not blocked on anything, per todo 2's own done-when. Brief correctly reads
+  `[DATA] P3. **Prove force + skip for the LST-rate surfaces against the \`-test-\` bucket**...` — the actual LST-rate
+  todo text, confirming this is the real upstream task, not a coincidental match. Todo 2 checkbox flipped above. Todo 3
+  (harden the gate to fail loudly instead of silently no-op'ing) and todo 4 (the real DATA-craft re-verification +
+  source-doc reconciliation once batch8's todo actually completes) remain open for their own dispatches — not in this
+  task's scope.

@@ -33,7 +33,7 @@ related:
     issues/cefi_monotonicity_guard_alerting_and_dark_venues_2026_07_07.md,
     issues/honest_coverage_shard_dimension_model_definitional_data_2026_07_07.md,
     issues/aster_mtds_failure_count_regression_2026_07_07.md,
-    issues/manifest_reprocessing_generic_utility_2026_07_07.md,
+    /plans/archive/issues/manifest_reprocessing_generic_utility_2026_07_07.md,
     issues/perp_funding_data_semantics_and_cadence_2026_06_16.md,
     issues/uac_data_type_validity_combinator_fragmentation_2026_07_07.md,
     issues/defi_turbo_api_hides_real_captured_data_2026_07_07.md,

@@ -78,6 +78,7 @@ STEP_TIMEOUT_TYPECHECK=${STEP_TIMEOUT_TYPECHECK:-60}
 STEP_TIMEOUT_LINT=${STEP_TIMEOUT_LINT:-60}
 STEP_TIMEOUT_TEST=${STEP_TIMEOUT_TEST:-120}
 STEP_TIMEOUT_BUILD=${STEP_TIMEOUT_BUILD:-900}  # bumped 2026-06-20: the unified-trading-system-ui Next.js production build (~302 routes) legitimately exceeds 240s/420s cold-cache — raise the ceiling rather than skip the build (CLAUDE.md "bump MAX_DURATION over suppressing the time check")
+STEP_TIMEOUT_INSTALL=${STEP_TIMEOUT_INSTALL:-180}  # added 2026-07-31 (deployment_ui_coverage_floor_red_preexisting): the pnpm/yarn frozen-lockfile install-freshness guard below is a fast (~1-2s measured) no-op once node_modules matches the lockfile; generous headroom only matters on a cold local store
 
 # ── PROCESS CLEANUP (prevent zombie node processes) ──────────────────────────
 # When 14 UIs run in parallel and the parent (Cursor/shell) dies, orphaned
@@ -226,12 +227,58 @@ fi
 ESLINT_VER=$(npx eslint --version 2>/dev/null || echo "not found")
 log_success "ESLint ${ESLINT_VER}"
 
+# ── PACKAGE-MANAGER INSTALL FRESHNESS (early guard) ──────────────────────────
+# Hardens the vitest-presence check below against a stale/incomplete install that
+# survives it: a lockfile/package-manager migration (e.g. npm->pnpm, de5b7af) or a
+# new dependency (e.g. happy-dom, ee269ec) can land in a pre-existing clone whose
+# node_modules/.bin/vitest still exists from BEFORE the change — every DOM test then
+# errors at setup and coverage silently collapses toward 0%, with no attribution to
+# the real cause (root-caused in
+# plans/active/issues/deployment_ui_coverage_floor_red_preexisting_2026_07_31.md).
+# Detect the package manager from its lockfile (same precedence as scripts/setup.sh:
+# pnpm > yarn > npm) and verify node_modules actually matches it:
+#   - pnpm/yarn: their own --frozen-lockfile install IS the authoritative sync check
+#     and self-heals a stale install; measured ~1-2s no-op once already in sync
+#     (matches what CI's "Install dependencies" step already runs on every push).
+#   - npm: no fast frozen mode exists (`npm ci` always wipes node_modules — too slow
+#     to run unconditionally on every QG invocation), so compare npm's own
+#     installed-state marker (node_modules/.package-lock.json, an exact copy npm
+#     writes after every successful install) against the committed lockfile instead.
+PKG_MGR=""; PKG_LOCK=""
+if [ -f "pnpm-lock.yaml" ]; then
+  PKG_MGR="pnpm"; PKG_LOCK="pnpm-lock.yaml"
+elif [ -f "yarn.lock" ]; then
+  PKG_MGR="yarn"; PKG_LOCK="yarn.lock"
+elif [ -f "package-lock.json" ]; then
+  PKG_MGR="npm"; PKG_LOCK="package-lock.json"
+fi
+
+if [ -z "$PKG_MGR" ]; then
+  log_warn "No pnpm-lock.yaml/yarn.lock/package-lock.json found — skipping install-freshness guard"
+elif ! command -v "$PKG_MGR" &>/dev/null; then
+  log_fail "$PKG_LOCK present but '$PKG_MGR' not on PATH — install: npm install -g $PKG_MGR"; exit 1
+elif [ "$PKG_MGR" = "npm" ]; then
+  if [ -f "node_modules/.package-lock.json" ] && cmp -s "package-lock.json" "node_modules/.package-lock.json"; then
+    log_success "node_modules in sync with package-lock.json (npm)"
+  else
+    log_fail "node_modules is stale/incomplete vs package-lock.json — run 'npm install' locally to fix"; exit 1
+  fi
+else
+  if _out=$(run_timeout "$STEP_TIMEOUT_INSTALL" "$PKG_MGR" install --frozen-lockfile 2>&1); then
+    log_success "node_modules in sync with $PKG_LOCK ($PKG_MGR)"
+  else
+    echo "$_out"
+    log_fail "'$PKG_MGR install --frozen-lockfile' FAILED — node_modules is stale/incomplete vs $PKG_LOCK, or $PKG_LOCK is out of sync with package.json. Run '$PKG_MGR install' locally to fix (commit the updated $PKG_LOCK if it changes)."
+    exit 1
+  fi
+fi
+
 # vitest (warn if missing — older repos may not have it yet)
 if node_modules/.bin/vitest --version >/dev/null 2>&1; then
   VITEST_VER=$(node_modules/.bin/vitest --version 2>/dev/null || echo "?")
   log_success "vitest ${VITEST_VER}"
 else
-  log_warn "vitest not found in node_modules — run npm install; unit tests will be skipped"
+  log_warn "vitest not found in node_modules — run ${PKG_MGR:-npm} install; unit tests will be skipped"
 fi
 
 # ── [1/6] TYPE CHECK ────────────────────────────────────────────────────────
@@ -525,13 +572,30 @@ else
 fi
 
 # ── [4/6] BUILD ──────────────────────────────────────────────────────────────
+# One automatic retry on the TIMEOUT class only (rc 124/137 from run_timeout's
+# GNU-timeout wrapping): a cold-cache build legitimately trips the budget once
+# and passes on a warm retry (ui_build_warm_cache_2026_06_17.md), while a
+# genuine hang still fails twice. A non-timeout build failure (real compile/
+# lint-in-build error) is NOT retried — that would just burn the budget twice
+# on a failure a retry can never fix.
 if [ "$SKIP_BUILD" = false ]; then
   log_section "[4/6] BUILD"
   if _out=$(run_timeout "$STEP_TIMEOUT_BUILD" npm run build 2>&1); then
     log_success "Build passed"
   else
-    echo "$_out"
-    log_fail "Build FAILED (timeout=${STEP_TIMEOUT_BUILD}s)"; exit 1
+    _build_rc=$?
+    if [ "$_build_rc" -eq 124 ] || [ "$_build_rc" -eq 137 ]; then
+      log_warn "Build TIMED OUT (rc=${_build_rc}, timeout=${STEP_TIMEOUT_BUILD}s) — retrying once (cold-cache class)"
+      if _out=$(run_timeout "$STEP_TIMEOUT_BUILD" npm run build 2>&1); then
+        log_success "Build passed on retry (cold-cache trip self-recovered)"
+      else
+        echo "$_out"
+        log_fail "Build FAILED again on retry (timeout=${STEP_TIMEOUT_BUILD}s) — genuine hang, not cold-cache"; exit 1
+      fi
+    else
+      echo "$_out"
+      log_fail "Build FAILED (rc=${_build_rc}, timeout=${STEP_TIMEOUT_BUILD}s)"; exit 1
+    fi
   fi
 else
   log_section "[4/6] BUILD — skipped (--lint / --test / --quick)"
@@ -645,6 +709,12 @@ if { [ "${SKIP_TESTS:-false}" = false ] && [ "${SKIP_BUILD:-false}" = false ] &&
     git rev-parse HEAD > "${_UI_REPO_ROOT}/.qg_last_passed_sha" 2>/dev/null \
         && echo "Sentinel written: .qg_last_passed_sha=$(cat "${_UI_REPO_ROOT}/.qg_last_passed_sha")" \
         || echo "Warning: could not write .qg_last_passed_sha (non-git dir?)"
+    # Configuration binding (qg_sentinel_environment_blind_2026_07_23.md item 2) — mirror
+    # of base-service.sh: append (not overwrite) the resolved ENVIRONMENT/DEPLOYMENT_ENV so
+    # quickmerge's sentinel check can refuse a config mismatch. `head -1` (every SHA reader)
+    # is unaffected; an old bare-SHA sentinel still parses correctly.
+    { printf 'ENVIRONMENT=%s\n' "${ENVIRONMENT:-}"; printf 'DEPLOYMENT_ENV=%s\n' "${DEPLOYMENT_ENV:-}"; } \
+        >> "${_UI_REPO_ROOT}/.qg_last_passed_sha" 2>/dev/null || true
 else
     echo "Sentinel NOT written — partial UI run (skip flags active). Run full quality-gates.sh to enable quickmerge --agent fast-path."
 fi

@@ -30,7 +30,7 @@ referenced_by:
     /codex/09-strategy/architecture-v2/cross-cutting/transfer-rebalance.md,
   ]
 owner:
-last_reviewed: 2026-05-17
+last_reviewed: 2026-09-13
 code_refs:
 ---
 
@@ -40,7 +40,10 @@ code_refs:
 
 The system discriminates five transfer types, each with a different execution path, latency profile, and fee structure.
 Transfer type determines which adapter handles execution, how confirmation works, and what events are emitted. The SSOT
-for per-venue routing is `VenueWalletCapabilities` in UAC (`execution_service/transfer_types.py`).
+for per-venue routing is `VenueWalletCapabilities` in UAC —
+`unified_api_contracts/internal/domain/execution_service/transfer_types.py` (re-verified 2026-07-31; this doc
+previously gave the path as `execution_service/transfer_types.py`, which does not exist — the module lives in UAC, not
+in the execution-service package, even though its UAC sub-path is named after the consumer).
 
 ## Transfer Types
 

@@ -48,6 +48,13 @@ source:
   per the audit's own §9 follow-up flag (not yet its own issue at audit time); code-verified against the current
   market-tick-data-service vault_share_price_handler.py + _defi_manifest.py"
 resolved_by:
+context_scope:
+  [
+    /plans/audit/results/data_pipeline_reconciliation_defi_2026_07_20.md,
+    /codex/02-data/pipeline-mode-partition.md,
+    unified-api-contracts/unified_api_contracts/canonical/crosscutting/_source_priority_data.py,
+    market-tick-data-service/market_tick_data_service/cli/handlers/vault_share_price_handler.py,
+  ]
 ---
 
 # DeFi manifest pipeline_mode<->source desync on YEARN_V3 vault_share_price
@@ -134,7 +141,7 @@ vault-share-price collector) end-to-end:
       `source='onchain_subgraph'` on EVERY write to this cell — before AND after todo 3's fix below — regardless of
       whether the row was actually fetched via subgraph or RPC. The `pipeline_mode<->source` combination is a STRUCTURAL
       consequence of the single-source write-time provenance gate, not evidence any specific row is wrong. Full per-row
-      detail in the plan's flip note (`plans/active/defi_satellite_ao_dispatch_batch1_2026_07_25.md`).
+      detail in the plan's flip note (`plans/archive/2026_07/defi_satellite_ao_dispatch_batch1_2026_07_25.md`).
 - [x] 2. [DATA] P2. **DONE 2026-07-28 (slot-4), same scan as todo 1.** Blast radius: 7,476 total `vault_share_price`
       rows in the manifest; **185 desync rows (2.5%)**, spread EVENLY across **5 venues** (37 rows each) — ETHENA, FRAX,
       MAKER, MORPHOVAULTS, YEARN_V3 — all sharing the identical
@@ -157,3 +164,9 @@ vault-share-price collector) end-to-end:
 - [ ] 5. [DATA] P3. Append F10 to the reconciliation register per the audit's own §9 maintenance-contract note (the
       audit run flagged this as not-yet-registered and deferred it) — repo: unified-trading-pm,
       `/codex/02-data/non-canonical-path-inventory.md` or the register doc F10 belongs under.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30**: KEEP-NA, valid - todo 4 is an explicit [DECISION] on adding a second
+  SOURCE_PRIORITY source (multi-source cell + backfill call); todo 5 targets codex
+- **context-scout 2026-08-01**: populated context_scope (4 entries).

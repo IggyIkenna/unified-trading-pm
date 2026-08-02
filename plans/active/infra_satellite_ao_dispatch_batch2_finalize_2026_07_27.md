@@ -37,6 +37,11 @@ depends_on: [infra_satellite_ao_dispatch_batch2_2026_07_27]
 gate_on_depends: true
 locked_by:
 locked_since:
+context_scope:
+  [
+    /plans/active/infra_satellite_ao_dispatch_batch2_2026_07_27.md,
+    /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
+  ]
 supersedes:
 superseded_by:
 source: >-
@@ -70,3 +75,7 @@ source: >-
       with a verified commit sha, or explicitly left open with a re-confirmed judgment-call reason), any source doc left
       with zero open todos has been through the 6-step archival ritual, and this finalize plan + its parent are
       themselves archived.
+
+## Progress Log
+
+- **context-scout 2026-08-01**: populated/refreshed context_scope (2 entries).

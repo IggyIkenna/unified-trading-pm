@@ -53,6 +53,13 @@ resolved_by:
 source: >-
   measured 2026-07-20 by direct `gsutil ls` against market-data-tick-{cefi,tradfi,sports}-prd-central-element-323112
   while building the two data-pipeline-check skills; writer-side claims re-read from the actual writer code.
+context_scope:
+  [
+    /codex/02-data/per-asset-group-bucket-layouts.md,
+    /codex/02-data/pipeline-mode-partition.md,
+    /plans/archive/2026_07/candle_canonical_path_migration_execution_2026_07_24.md,
+    /plans/active/issues/mdps_candle_manifest_near_total_coverage_gap_2026_07_27.md,
+  ]
 ---
 
 # Candle + feature object paths diverge from their declared canonical templates
@@ -368,10 +375,13 @@ DECLARED template as a **separate** `content_check=non_canonical` verdict collec
 > rows exist today** (`data_type=dex_pool_swaps`, real timeframes `15s/1m/5m/15m/1h/4h/1d`, ~1,129-1,133 each), not 0.
 > So this todo's headline claim ("candle manifest was never systematically populated") is likely STALE for the
 > going-forward emission path — genuine remaining gap, if any, is far smaller than the 20,734-vs-6 framing suggests and
-> is probably now the SAME narrower class as `mdps_cefi_candle_manifest_orphan_reconciliation_2026_07_26.md` (PAST
-> OOM-era orphans only), not a total non-population defect. **Not fully re-verified for cefi/tradfi/prediction this
-> session** — do not close this todo on the DEFI spot-check alone; re-measure each AG with the correct vocabulary before
-> flipping.
+> is probably now the SAME narrower class as the now-archived
+> `mdps_cefi_candle_manifest_orphan_reconciliation_2026_07_26.md` (PAST OOM-era orphans only), not a total
+> non-population defect. **Not fully re-verified for cefi/tradfi/prediction this session** — do not close this todo on
+> the DEFI spot-check alone; re-measure each AG with the correct vocabulary before flipping. **Update 2026-07-31**: the
+> corpus-wide `mdps_candle_manifest_near_total_coverage_gap_2026_07_27.md` since ran exactly this re-measurement for all
+> 4 AGs (cefi 0.11%/defi 0%/tradfi 0.81%/prediction 2.28% pre-backfill coverage) and backfilled the gap; see that doc
+> for the actual numbers instead of re-deriving them here.
 
 - [x] ✅ 7. [DATA] P0. **ROOT-CAUSED + CODE FIX SHIPPED 2026-07-27 (slot-10); FULLY CLOSED 2026-07-27 (slot-8, todo 7 of
       the disconnect plan)** — owned + closed on `plans/active/mdps_candle_manifest_population_disconnect_2026_07_25.md`
@@ -493,6 +503,10 @@ DECLARED template as a **separate** `content_check=non_canonical` verdict collec
 
 ## Progress Log
 
+- **na-eligibility-audit 2026-07-30**: KEEP-NA, valid - ~7.1M TRADFI candle objects sit in _quarantine/ pending either a
+  real leaf-id resolution pass or an explicit operator ruling to accept the loss; todo 19's mop-up also performs prod
+  deletes
+
 > **Full chronological narrative extracted 2026-07-25** to two companion docs (split because the combined narrative
 > itself exceeded the 1000-line cap):
 > `/plans/archive/issues/candle_feature_canonical_path_divergence_history_part1_2026_07_25.md` (2026-07-21 writer/reader
@@ -540,3 +554,14 @@ new defect), now precisely quantified for the first time as a headline number ra
 verified clean across all 4 asset groups** — 0 orphans, 0 malformed objects, every residual fully accounted for (CEFI's
 149 = todo 19, TRADFI's ~7.1M = todo 3). **This issue doc stays `status: open`** — todos 2, 3, 7, 9, 13, 15, 16, 19
 remain genuinely open content-level work, distinct from the path-migration infra lift this phase completed.
+
+- **na-eligibility-audit 2026-07-30** (tranche=cefi, autonomous): KEEP-NA, valid - residual todos are entangled with the
+  in-flight candle-path migration owned by `candle_canonical_path_migration_execution_2026_07_24.md` (todo 9 gated on
+  its P5 dedup phase; todo 19 includes a prod mop-up pass).
+
+- **na-eligibility-audit 2026-07-30**: KEEP-NA, valid (sports tranche) — todo 9 is gated ('Pending P5 executor (dedup
+  phase)') and todo 3's ~7.1M quarantined TradFi candle objects need 'either a real leaf-id resolution pass or an
+  explicit operator ruling to accept the loss' — an unanswered authority call on the largest open item in the doc. Also
+  a 5-tranche `infrastructure_master` doc whose remaining content is cefi/tradfi/defi candle-migration work, not sports
+  (sports has no `processed_candles/` tree at all, per the doc's own measurement)
+- **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).

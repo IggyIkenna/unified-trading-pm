@@ -21,7 +21,7 @@ related:
     ../roadmap/next-waves.md,
   ]
 created: 2026-04-19
-authoritative_for: [visibility-slicing model (visible(user, item) filter across UI surfaces)]
+authoritative_for: ["visibility-slicing model (visible(user, item) filter across UI surfaces)"]
 referenced_by:
   [
     /codex/14-customer-journeys/README.md,

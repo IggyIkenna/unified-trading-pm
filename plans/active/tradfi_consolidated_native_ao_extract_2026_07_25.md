@@ -34,7 +34,7 @@ tags: [tradfi, ao-dispatch, close-out, native-extract, conflict-checked]
 related:
   [
     /plans/active/tradfi_consolidated_closeout_2026_07_18.md,
-    /plans/active/tradfi_satellite_ao_dispatch_batch1_2026_07_25.md,
+    /plans/archive/2026_07/tradfi_satellite_ao_dispatch_batch1_2026_07_25.md,
     /plans/active/tradfi_satellite_ao_dispatch_batch2_2026_07_25.md,
     /plans/active/tradfi_manifest_content_recovery_completion_2026_07_24.md,
     /plans/active/issues/tradfi_fx_provenance_and_manifest_id_defects_2026_07_24.md,
@@ -67,11 +67,12 @@ drift_direction: advance-code
 
 # TradFi consolidated closeout — native AO extract
 
-> **Status: draft.** Per CLAUDE.md's plan-destination rule, flip `status` to `active` only after operator review. All 10
-> todos below are same-priority-independent and touch DISTINCT files/targets (verified per-todo below — none of them
-> writes back to `tradfi_consolidated_closeout_2026_07_18.md` itself except todo 10, whose entire purpose is exactly
-> that; every other todo records its evidence in its own cited source/target so no two todos in this batch collide on
-> the same file), so they are safe to dispatch concurrently once activated.
+> **Status: active — approved + dispatched.** (Banner corrected 2026-07-31, slot-6: frontmatter already read `active`
+> and this session's task was dispatched from it; the "draft" text below was stale.) All 10 todos below are
+> same-priority-independent and touch DISTINCT files/targets (verified per-todo below — none of them writes back to
+> `tradfi_consolidated_closeout_2026_07_18.md` itself except todo 10, whose entire purpose is exactly that; every other
+> todo records its evidence in its own cited source/target so no two todos in this batch collide on the same file), so
+> they are safe to dispatch concurrently once activated.
 
 ## Why 3 of the 13 native todos are NOT here (see also the closing classification table)
 
@@ -123,9 +124,18 @@ drift_direction: advance-code
       Progress Log citation. The closeout's own MVP-cell table gets updated by this batch's companion finalize plan, not
       by this todo directly. Source: `tradfi_consolidated_closeout_2026_07_18.md` (native, lines 218-224).
 
-- [ ] [REVIEW] P2. **Verify CME's `VENUE_DATA_TYPE_CAPABILITIES` declares `mbp_10`/`trades`/`tbbo` as billing-gated (not
-      chased to full L3 history) — audit-only, no code change.** Source native todo (lines 238-244): the closeout's
-      framing that "no `ohlcv_15m/24h` aggregation writer exists" is **STALE** — live-checked against
+- [x] ✅ [REVIEW] P2. **Verify CME's `VENUE_DATA_TYPE_CAPABILITIES` declares `mbp_10`/`trades`/`tbbo` as billing-gated
+      (not chased to full L3 history) — audit-only, no code change.** **Live-verified 2026-07-31 (read-only, no code
+      shipped)**: `VENUE_DATA_TYPE_CAPABILITIES["CME"]` currently declares only `{ohlcv_1s, ohlcv_1m}` — `mbp_10`/
+      `trades`/`tbbo` are absent from that registry entirely (neither declared billing-gated nor unrestricted), per the
+      operator's still-standing 2026-05-15 OHLCV-only MVP scope decision. Separately confirmed the actual billing
+      enforcement mechanism IS live and correct: `unified_api_contracts/registry/databento_subscription_allowlist.py`'s
+      `LEVEL_MAX_LOOKBACK_DAYS = {L1: 365, L2: 30, L3: 30}` + `assert_databento_request_allowed()` fail-closed on any
+      request past the free window, tested by `tests/unit/test_databento_subscription_allowlist.py`. No path anywhere
+      declares these 3 data types unrestricted for CME — clean pass, no finding to file. Full evidence in
+      `tradfi_unreachable_databento_data_types_mbp10_ohlcv_coarse_calendar_2026_07_15.md`'s Progress Log
+      (unified-trading-pm, this commit). Source native todo (lines 238-244): the closeout's framing that "no
+      `ohlcv_15m/24h` aggregation writer exists" is **STALE** — live-checked against
       `tradfi_satellite_ao_dispatch_batch2_2026_07_25.md`'s todo 1, which found the writer code already shipped
       (`canonical_writer` fixes, tests green) and merely pending a tarball-rebuild deploy (that deploy is THAT todo's
       own scope, not re-drafted here). The **decision on whether to feed `vix_features`** is a genuine DESIGN call —
@@ -140,11 +150,30 @@ drift_direction: advance-code
       `tradfi_unreachable_databento_data_types_mbp10_ohlcv_coarse_calendar_2026_07_15.md`'s Progress Log. Source:
       `tradfi_consolidated_closeout_2026_07_18.md` (native, lines 238-244), narrowed.
 
-- [ ] [REVIEW] P2. **Verify the KRX equities intraday registry-vs-adapter mismatch fix still holds live, and separately
-      confirm the FX KRW cell (`FX:SPOT_PAIR:KRW-USD`, daily) has no analogous registry-vs-adapter gap — audit-only.**
-      Source native todo (lines 245-254), narrowed: the `mvp_mode` dead-gate decision bundled in the same native todo is
-      a genuine DESIGN call, already independently tracked as its own doc
-      (`plans/active/issues/tradfi_mvp_mode_unreachable_dead_gate_2026_07_08.md`) that
+- [x] ✅ [REVIEW] P2. **Verify the KRX equities intraday registry-vs-adapter mismatch fix still holds live, and
+      separately confirm the FX KRW cell (`FX:SPOT_PAIR:KRW-USD`, daily) has no analogous registry-vs-adapter gap —
+      audit-only.** **Live-verified 2026-07-31, both PASS (audit-only, no code changed):** **(a) KRX fix holds** —
+      `unified-api-contracts/unified_api_contracts/registry/expected_coverage.py:200` still declares
+      `"KRX": ["ohlcv_24h"]` (not re-expanded to `ohlcv_1m`/`ohlcv_15m`); `VENUE_DATA_TYPE_CAPABILITIES["KRX"]`
+      (`market_data_categories.py:368-370`) agrees (`ohlcv_24h` only);
+      `market-tick-data-service/market_tick_data_service/     adapters/_umi_yahoo.py:371-373`'s `route_yahoo_tradfi`
+      still honest-empties any non-`ohlcv_24h` request for KRX
+      (`if data_types and "ohlcv_24h" not in data_types: return pd.DataFrame()`) before reaching the Yahoo fetch — the
+      mechanical dispatch-filter fix (originally `market-tick-data-service@e128c5bc`) survives, now living in the
+      refactored `_umi_yahoo.py` module, wired via `umi_tick_provider.py:620-624`. Cites (does not edit) the archived
+      `krx_intraday_ohlcv_registry_vs_adapter_mismatch_2026_07_12.md`. **(b) FX KRW cell has no analogous gap** —
+      `expected_coverage.py:191` declares `"FX": ["ohlcv_24h"]` only; `VENUE_DATA_TYPE_CAPABILITIES["FX"]`
+      (`market_data_categories.py:352-354`) agrees (`ohlcv_24h` only); `FX_SPOT_PAIRS`
+      (`unified_api_contracts/registry/tradfi_instrument_universe.py:429-430`) confirms `FX:SPOT_PAIR:KRW-USD` is
+      registered (`FxSpotPairDef("KRW", "USD", "KRWUSD=X")`); `fetch_yahoo_fx` (same file) only ever calls
+      `download_daily` and hardcodes `data_type="ohlcv_24h"`; the same `route_yahoo_tradfi` honest-empty guard at line
+      371 applies identically to FX. instruments-service carries no separate KRX/FX capability declaration (grep found
+      only a stale comment in `venue_core.py:160`, no live registry) — this is purely a UAC + market-tick-data-service
+      concern, both confirmed consistent, no drift found. Repos: instruments-service (read-only, clean),
+      market-tick-data-service (read-only, clean), unified-api-contracts (read-only, clean). Source native todo (lines
+      245-254), narrowed: the `mvp_mode` dead-gate decision bundled in the same native todo is a genuine DESIGN call,
+      already independently tracked as its own doc
+      (`plans/archive/issues/tradfi_mvp_mode_unreachable_dead_gate_2026_07_08.md`) that
       `tradfi_satellite_ao_dispatch_batch2_2026_07_25.md` had classified "0 AO-eligible candidates... genuinely
       operator-gated" — **RULED 2026-07-29: wire via forward-poll opt-in flag, see the issue doc** — NOT included here,
       stays with that classification (the issue doc's own new [CODE] P1 implementation todo is the fresh AO-eligible
@@ -161,7 +190,7 @@ drift_direction: advance-code
       (the archived doc is cited, not edited). Source: `tradfi_consolidated_closeout_2026_07_18.md` (native, lines
       245-254), narrowed.
 
-- [ ] [BACKEND] P2. **Audit every adapter/handler module under the 3 named tradfi directories for duplicate
+- [x] ✅ [BACKEND] P2. **Audit every adapter/handler module under the 3 named tradfi directories for duplicate
       implementations, a runtime fallback masking a real failure, and dead (referenced-but-never-scheduled) code, per
       `/codex/06-coding-standards/adapter-dead-code-and-fallback-ban.md`.** Source native todo (lines 259-266),
       unmodified — this is already precisely scoped in the closeout doc: audit
@@ -172,7 +201,17 @@ drift_direction: advance-code
       adapter directory, cited with file paths, recorded in a NEW
       `plans/active/issues/tradfi_adapter_dead_code_fallback_audit_2026_07_25.md` doc (do not write into the closeout
       plan directly — this batch's finalize plan reconciles the closeout's own checkbox once this lands). Source:
-      `tradfi_consolidated_closeout_2026_07_18.md` (native, lines 259-266).
+      `tradfi_consolidated_closeout_2026_07_18.md` (native, lines 259-266). — **DONE 2026-07-31**: 3 parallel full-repo
+      sub-agent audits (one per directory) completed; findings filed in
+      `plans/active/issues/tradfi_adapter_dead_code_fallback_audit_2026_07_25.md` with 11 tracked todos. Headline
+      findings: instruments-service's `massive.py` is live/tested/fully-wired, directly contradicting the codex SSOT +
+      CLAUDE.md's claim it was deleted 2026-07-19 (SSOT-contradiction, flagged as a big finding); all 6
+      execution-service tradfi venue order-adapters are registered+tested but structurally unreachable from both
+      production entry points (direct new evidence for this plan's own todo 1); a real bug found in that same dead path
+      (`ibkr_tradfi.py::cancel_order()` silently fabricates `status="cancelled"` on a not-found order). 21/29 MTDS
+      files, 8/11 instruments-service files clean; no duplicate-implementation violations found anywhere (the
+      `_umi_yahoo.py`/`_umi_fred.py` naming-resemblance suspicion was investigated and cleared — routing layer, not a
+      competing implementation).
 
 - [ ] [CODE] P2. **Wire a durable classification so billing-gated Databento L2/L3 entitlement-guard rejections
       (`mbp_10`/`trades`/`tbbo` outside the 1-month L3 / 1-year L1 window) do not count as `attempted_failed`.** Source
@@ -231,9 +270,9 @@ drift_direction: advance-code
       (`ESM0`/`ESM0_MIGRATED_*` as tradfi chains, `YAHOO_FINANCE` as an unregistered venue) — read-only scope, not fixed
       inline.
 
-- [ ] [BACKEND] P2. **Re-verify 3 named denominator/catalogue-completeness findings against live tradfi state.** Source
-      native todo (lines 342-346), unmodified: (1) 875 tradfi atoms with narrowed historical objects + 153 duplicate KRX
-      row_keys — re-measure against the (now-archived, `status: resolved`)
+- [x] ✅ [BACKEND] P2. **Re-verify 3 named denominator/catalogue-completeness findings against live tradfi state.**
+      Source native todo (lines 342-346), unmodified: (1) 875 tradfi atoms with narrowed historical objects + 153
+      duplicate KRX row_keys — re-measure against the (now-archived, `status: resolved`)
       `tradfi_instrument_type_migration_read_stale_legacy_object_2026_07_17.md`'s claimed repair, cite don't edit the
       archived doc; (2) phantom captures — re-measure the ICE/FX 309-phantom and blank-`data_type` 1,083-row counts in
       `phantom_captures_tradfi_2026_06_28.md` against live state, update that doc's own open `[CODE] P2` diagnosis item
@@ -248,9 +287,36 @@ drift_direction: advance-code
       Repos: instruments-service, market-tick-data-service. **Done when**: counts re-measured or explained as stale for
       all 3 findings, recorded in each finding's own doc (phantom_captures_tradfi_2026_06_28.md gets a live update; the
       2 archived docs are cited with fresh evidence, not edited). Source: `tradfi_consolidated_closeout_2026_07_18.md`
-      (native, lines 342-346).
+      (native, lines 342-346). — **DONE 2026-07-31 (slot-6, backend_engineer)**. Re-measured via
+      `read_availability_index()` (single consolidated-parquet read, no GCS walk — the phantom-detection GCS listing
+      itself stayed deferred per this todo's own conflict-precedence note). **(1)**: 153 KRX duplicate row_keys —
+      RE-VERIFIED **0** on the canonical `_ROW_KEY_COLUMNS` composite, matching the archived doc's own post-repair
+      finding (no regression). The 875 narrowed-object atoms require checking GCS object _content_ against manifest
+      counts — that's the deferred listing, not independently re-verified this session; citing the archived doc's
+      finding as-is. **(2)** phantom captures: blank-`data_type` rows are now **0** in the live manifest (baseline was
+      1,083 on 2026-06-28) — a real, substantial improvement, but `phantom_captures_tradfi_2026_06_28.md` is now
+      ARCHIVED + `status: resolved` with both its own todos already `[x]` (no open `[CODE] P2` item exists to update,
+      contrary to this todo's assumption at authoring time) — per archival discipline, cited here rather than edited.
+      The ICE/FX 309-phantom cohort (captured-with-no-backing-parquet) can't be re-verified without the same deferred
+      GCS listing; current captured-row populations are much smaller than the pre-2026-06-28 baseline (ICE 359, FX
+      4,346), consistent with cleanup having occurred, but not conclusive. Investigating ICE's now-dominant
+      `attempted_failed` population (390,815 rows, `REMOVED_ENTITY_TOMBSTONE`) turned out to be a red herring — this is
+      the already-tracked, intentional tombstone marker for ICE's deliberate removal as a tradfi venue/source (per the
+      databento subscription-universe lockdown), not a new bug; confirmed via cross-reference before considering an
+      issue doc, none filed. **(3)** expected_reason misclassification: **0** current `attempted_failed` rows carry an
+      `EXPECTED_*`-prefixed `error_reason` — the 2026-07-15 `record_failed()` writer guard has held for 16 days with
+      zero recurrence, satisfying the archived doc's own INVESTIGATE item's "if it does NOT recur, not worth further
+      archaeology" resolution path. Re-grepped for the original writer's identity (found no new committed call site
+      producing the pattern — consistent with the archived doc's own exhaustive search) but surfaced a genuine
+      reframing: the sibling `tradfi_ohlcv_attempted_failed_cluster_2026_07_23.md` doc independently found that a
+      near-identical tight `attempted_at` clustering for a DIFFERENT row population was an artifact of a later CF-11
+      bulk-rebuild run re-stamping `attempted_at` on already-existing rows, not the original write time — the same
+      mechanism plausibly explains the original doc's "single ~50min batch" timestamp evidence, meaning the true
+      original write time (and writer) may be earlier/different than that window suggests. Writer identity: still NOT
+      FOUND, reported honestly with this caveat rather than guessed. DESIGN taxonomy item correctly left to a human, not
+      touched. No code shipped (pure re-measurement + citation, per this todo's own scope).
 
-- [ ] [BACKEND] P2. **KRX name-column "STILL OPEN" tracking (added 2026-07-25) — confirm or execute the 2 named
+- [x] ✅ [BACKEND] P2. **KRX name-column "STILL OPEN" tracking (added 2026-07-25) — confirm or execute the 2 named
       remaining pieces.** Source native todo (lines 392-400), unmodified: (a) the availability-manifest `name` column —
       per the parent P1 item's own STILL OPEN note this was **deliberately deferred** in favor of catalogue-as-SSOT +
       display-time join (manifest shard-atom/writer "owned by another agent") — this todo's job for (a) is to CONFIRM
@@ -265,28 +331,57 @@ drift_direction: advance-code
       live catalogue read shows the `name` column populated for KRX rows
       (`SK Hynix`/`Samsung Electronics`/`Hyundai     Motor` or equivalent), with the regen commit/run cited. Evidence
       reported via this todo's own commit/dispatch outcome (this batch's finalize plan updates the closeout's own "STILL
-      OPEN" note). Source: `tradfi_consolidated_closeout_2026_07_18.md` (native, lines 392-400).
+      OPEN" note). Source: `tradfi_consolidated_closeout_2026_07_18.md` (native, lines 392-400). — **DONE 2026-07-31
+      (slot-6, backend_engineer), audit-only, no code changed.** **(a) CONFIRMED still stands**: grepped
+      `unified-trading-library`'s manifest schema/writer (`manifest_writer/_schema.py`, `_rows.py`, `_core.py`,
+      `_queries.py`) and MTDS's manifest-write call sites — no `name` field exists anywhere in the manifest
+      schema/writer; catalogue-as-SSOT + display-time join remains the sole live mechanism, unchanged since
+      2026-07-20/25. **(b) ALREADY LANDED LIVE, no manual run needed** — the standing `lifecycle-catalogue-regen-tradfi`
+      daily Cloud Scheduler + Cloud Run Job
+      (`instruments-service/scripts/build_instrument_catalogue.py --asset-group tradfi`,
+      `deployment-service/terraform/     gcp/lifecycle_catalogue_scheduler.tf`) has run green every day 2026-07-22
+      through 2026-07-31 (`gcloud run jobs executions list --job=lifecycle-catalogue-regen-tradfi`; most recent
+      `lifecycle-catalogue-regen-tradfi-hdpmq`, Completed 2026-07-31T01:05:32Z). Live-read verification of
+      `gs://instruments-store-tradfi-prd-central-element-323112/prod/catalog.parquet` (generation 1785459927241567,
+      update_time 2026-07-31T01:05:27Z) confirms all 6 KRX single-stock-equity rows carry the `name` column:
+      `KRX:EQUITY:000660`→"SK Hynix", `KRX:EQUITY:005380`→"Hyundai Motor", `KRX:EQUITY:005930`→"Samsung Electronics"
+      (both bare and `.KS-USD` id variants); the 4 KRX index rows correctly have no name (indices, not equities). Row
+      count unchanged at 10 (no new KRX listings since 2026-07-20 — expected). Side finding (not blocking this todo,
+      filed separately): the weekly `lifecycle-catalogue-full-tradfi` self-heal job has failed its last 3 consecutive
+      runs (2026-07-11/18/25) — tracked + RESOLVED 2026-08-01 (per-blob GCS retry fix + manual re-trigger green), see
+      `plans/archive/issues/tradfi_catalogue_full_regen_job_failing_2026_07_31.md`.
 
-- [ ] [REVIEW] P2. **Run the adversarial AO-dispatch-readiness pass against `tradfi_consolidated_closeout_2026_07_18.md`
-      itself, for the 3 categories the doc's own 2026-07-24 spot-check left "still owed."** Source native todo (lines
-      418-430), narrowed: the doc's own in-line spot-check already confirmed clean for 3 of the 6 defect classes (bare
-      `§X` cross-doc shorthand, ambiguous non-literal verbs, delete-risk `[OPERATOR]` tagging consistency) — do NOT
-      re-check those 3, they're already recorded clean. This session's OWN triage pass (the one that produced this
-      extraction doc) additionally spot-checked the parent's 13 native todos directly and found: (i) the parent's own
-      Split-notice digest table is STALE relative to the child plan's live checkboxes (see this doc's frontmatter
-      `summary` and the "why 3 of 13 are not here" section above — catalogue Surface A migration shows "NOT yet
-      executed" in the digest but `[x]` "SHIPPED + APPLIED LIVE 2026-07-25" in the child); (ii) no digest-checkbox
-      misuse found among the native todos checked (all real `- [ ]`/`- [x]`, the Aggregated-source-docs section
-      correctly uses bold-no-brackets digest format). What's left for the full 6-category sweep: a formal stale-checkbox
-      sweep (the digest-staleness above is one instance — check for more) and a formal missing-definition-of-done sweep
-      across every native todo (this triage found all 13 DID carry a stated done-when, so this may resolve to a clean
-      verdict — but the closeout doc's own todo asks for the sweep to be run and recorded formally, not just spot-
-      checked). Repo: unified-trading-pm. **Done when**: a filed finding list (or a stated "clean" verdict) covering the
-      2 remaining categories (stale checkboxes, missing definition-of-done), with any fixes applied directly to
-      `tradfi_consolidated_closeout_2026_07_18.md` in the same commit, INCLUDING correcting the Split-notice digest's
-      stale catalogue-migration line found by this extraction. This is the ONE todo in this batch that edits the
-      closeout doc directly — no other todo in this batch touches that file. Source:
-      `tradfi_consolidated_closeout_2026_07_18.md` (native, lines 418-430), narrowed to the 3 still-owed categories.
+- [x] ✅ [REVIEW] P2. **Run the adversarial AO-dispatch-readiness pass against
+      `tradfi_consolidated_closeout_2026_07_18.md` itself, for the 3 categories the doc's own 2026-07-24 spot-check left
+      "still owed."** Source native todo (lines 418-430), narrowed: the doc's own in-line spot-check already confirmed
+      clean for 3 of the 6 defect classes (bare `§X` cross-doc shorthand, ambiguous non-literal verbs, delete-risk
+      `[OPERATOR]` tagging consistency) — do NOT re-check those 3, they're already recorded clean. This session's OWN
+      triage pass (the one that produced this extraction doc) additionally spot-checked the parent's 13 native todos
+      directly and found: (i) the parent's own Split-notice digest table is STALE relative to the child plan's live
+      checkboxes (see this doc's frontmatter `summary` and the "why 3 of 13 are not here" section above — catalogue
+      Surface A migration shows "NOT yet executed" in the digest but `[x]` "SHIPPED + APPLIED LIVE 2026-07-25" in the
+      child); (ii) no digest-checkbox misuse found among the native todos checked (all real `- [ ]`/`- [x]`, the
+      Aggregated-source-docs section correctly uses bold-no-brackets digest format). What's left for the full 6-category
+      sweep: a formal stale-checkbox sweep (the digest-staleness above is one instance — check for more) and a formal
+      missing-definition-of-done sweep across every native todo (this triage found all 13 DID carry a stated done-when,
+      so this may resolve to a clean verdict — but the closeout doc's own todo asks for the sweep to be run and recorded
+      formally, not just spot- checked). Repo: unified-trading-pm. **Done when**: a filed finding list (or a stated
+      "clean" verdict) covering the 2 remaining categories (stale checkboxes, missing definition-of-done), with any
+      fixes applied directly to `tradfi_consolidated_closeout_2026_07_18.md` in the same commit, INCLUDING correcting
+      the Split-notice digest's stale catalogue-migration line found by this extraction. This is the ONE todo in this
+      batch that edits the closeout doc directly — no other todo in this batch touches that file. Source:
+      `tradfi_consolidated_closeout_2026_07_18.md` (native, lines 418-430), narrowed to the 3 still-owed categories. —
+      **2026-07-31 (slot 14):** unified-trading-pm — done in `tradfi_consolidated_closeout_2026_07_18.md` directly (see
+      its own new Progress Log entry). Real-checkbox sweep: only 2 native todos exist in that file, both carry a stated
+      definition-of-done, neither stale — **missing-dod sweep: clean**. Stale-checkbox-class sweep (digest bullets):
+      live-re-derived 4 digest sections against their cited children's actual open-todo counts; found + fixed 4 stale
+      entries (the flagged-but-never-actually-corrected Split-notice catalogue-migration line, an unflagged
+      backfill-throughput 6→1 drift, a THIRD even-staler duplicate digest for the same 3 children in "Aggregated source
+      docs § Child plans" citing the ORIGINAL 2026-07-24 P0s, and an 11→14 count-drift in the Phase A2+C fork's digest
+      for the registry-coverage child). `tradfi_phase_d_terminal_gate`'s digest re-verified accurate, untouched. Not
+      exhaustive across all ~40 referenced docs (out of 1h scope) — the 4 corrected were the highest-risk, most-cited
+      digests. Both files (this checkbox flip + the closeout doc's own fixes) land in the same unified-trading-pm
+      commit.
 
 ## Deferred — stays human (3 of the 13 native todos)
 

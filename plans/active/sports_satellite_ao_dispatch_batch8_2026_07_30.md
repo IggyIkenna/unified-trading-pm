@@ -17,7 +17,7 @@ summary: >-
   distinct-dimension-values UI listing already tracked generically in prediction's Phase C, and the manifest-staleness
   DIAG already fully root-caused in its own issue doc) and are reconciled in the source doc directly rather than
   re-drafted.
-status: draft
+status: active
 nature: process
 asset_group: [sports]
 stage: [data]
@@ -35,7 +35,7 @@ tags: [sports, ao-dispatch, close-out, batch-8, satellite-docs, dedicated-triage
 related:
   [
     /plans/active/sports_consolidated_closeout_2026_07_19.md,
-    /plans/active/sports_satellite_ao_dispatch_batch4_2026_07_25.md,
+    /plans/archive/2026_07/sports_satellite_ao_dispatch_batch4_2026_07_25.md,
     /plans/active/sports_satellite_ao_dispatch_batch7_2026_07_27.md,
     /plans/active/sports_satellite_ao_dispatch_batch7_2026_07_27_finalize.md,
     /plans/active/sports_canonical_universe_and_apifootball_reference_expansion_2026_06_24.md,
@@ -67,6 +67,14 @@ source: >-
 assigned_role: data_engineering
 sequential: false
 drift_direction: advance-code
+context_scope:
+  [
+    /plans/active/sports_consolidated_closeout_2026_07_19.md,
+    /plans/active/sports_canonical_universe_and_apifootball_reference_expansion_2026_06_24.md,
+    /plans/active/issues/sports_features_layer_findings_sweep_2026_07_18.md,
+    /cursor-configs/skills/ag-closeout-audit/SKILL.md,
+    /plans/epics/sports_master.md,
+  ]
 ---
 
 # Sports satellite AO batch 8 — dedicated triage/design pass
@@ -130,51 +138,106 @@ Read in full (2026-07-30). Parts 2 and 3 (the 2026-07-26 line-cap split siblings
 
 ## Todos
 
-- [ ] [DIAG] P1. **Root-cause the 2025-12-18 / 2025-12-31 in-window bucketing failure (§B1 residual)** — ~360 in-window
-      (0-24h-to-kickoff) odds observations on EACH of 2025-12-18 and 2025-12-31 fail to bucket into any `TIER1_HORIZONS`
-      slot, while the structurally-similar quiet date 2025-12-24 legitimately has zero. Likely candidates per the source
-      doc: a fixture-mapping join dropping them, or a secondary guard beyond `bm<=0`. Do **NOT** "fix" this by
-      relabelling the manifest — root-cause first. Once understood: if 2025-12-24 is confirmed to have no genuine
-      data-corruption cause of its own, relabel ONLY 2025-12-24 as `empty_confirmed` (2025-12-18 and 2025-12-31 stay
-      `attempted_failed` — that is the honest signal of the real bug). Note: `2025-12-18` is already the pinned
-      `SPORTS_SMOKE_DATES.known_buggy_odds` reference constant (`features-service@84cb4613`) — that pin documents the
-      date as known-bad for smoke tests, it does NOT root-cause or fix the underlying bug; this todo is the
-      still-missing root-cause step. **Done when**: the root cause is identified and documented (not just re-labelled),
-      2025-12-24 is correctly relabelled if the investigation supports it, and 2025-12-18/2025-12-31 stay
-      `attempted_failed` with the root cause noted inline. (repo: market-data-processing-service or features-service,
-      whichever owns the bucketer/loss-guard code path — confirm from `odds_loss_guard.py`/`loss_guard.py`). Source:
-      `issues/sports_features_layer_findings_sweep_2026_07_18.md` §B1 (lines 286, 289).
+- [x] [DIAG] P1. ✅ **Root-caused 2026-07-30** — NOT a fixture-mapping join drop, NOT a hidden secondary guard. Pulled
+      the real raw `batch_odds_api` parquet for 2025-12-18/12-24/12-31 from
+      `market-data-tick-sports-prd-central-     element-323112` and replayed `SportsBucketAssignmentAdapter`'s exact
+      guard chain (fixture-identity resolve → causality → 48h zombie-staleness cap → 7-day kickoff-past cap →
+      `assign_horizon_buckets_vectorised`). Every one of the 316 (12-18) / 310 (12-31) in-window
+      (`0<=bm_minutes_to_kickoff<=1440`) rows survives every secondary guard untouched and reaches horizon assignment,
+      where 0/316 and 0/310 get a valid `horizon_idx`. Root mechanism: BOTH dates have exactly ONE `fetch_utc` value
+      that day (noon UTC), and the only in-window fixtures are 2 A-League matches per date whose `bm_minutes_to_kickoff`
+      (~1144.5-1266.4 for 12-18, ~964.7-1206.7 for 12-31) fall squarely in the 615-minute dead zone (765-1380min)
+      between `TIER1_HORIZONS`' T-12h `[675,765]` and T-24h `[1380,1500]` acceptance windows — a genuine capture-cadence
+      (single daily fetch, vs. the working control date 2025-12-20's 114 distinct fetch times) × sparse-target-grid
+      interaction, not a bug in the join or an extra guard. Manifest-state check (both `market-data-tick-sports-prd`'s
+      `odds_horizon_bucket` + `features-sports-prd`): NO `A_LEAGUE`/`SOCCER_AUSTRALIA_ALEAGUE` row of any
+      `capture_status` exists for any of the 3 dates — the source doc's quoted `attempted_failed` log line was almost
+      certainly from `reprocess_sports_odds.py --dry-run` (which only persists to the manifest `if not dry_run`), never
+      actually written. Relabeling was therefore NOT performed — nothing live exists to relabel; the original
+      2025-12-24-only relabel guidance still stands as correct for whenever a real (non-dry-run) run happens. Full
+      writeup + evidence: `issues/sports_features_layer_findings_sweep_2026_07_18.md` §B2 (DIAG + DATA todos, both
+      flipped 2026-07-30). Note: `2025-12-18` remains the pinned `SPORTS_SMOKE_DATES.known_buggy_odds` reference
+      constant (`features-service@84cb4613`) — that pin still just documents known-bad, this todo supplies the root
+      cause. Source: `issues/sports_features_layer_findings_sweep_2026_07_18.md` §B1 (lines 286, 289).
 
-- [ ] [CODE] P1. **Narrow the cross-asset-group junk-symbol guard so it stops rejecting legitimate non-ASCII sports team
-      names (§D).** `instruments-service/instruments_service/engine/orchestrator/venue_core.py:394-408`
-      `_is_junk_instrument` rejects ANY non-ASCII field (`field.isascii()` check), applied to every asset group —
+- [x] [CODE] P1. ✅ **Narrowed the cross-asset-group junk-symbol guard so it stops rejecting legitimate non-ASCII sports
+      team names (§D).** `instruments-service/instruments_service/engine/orchestrator/venue_core.py`
+      `_is_junk_instrument` rejected ANY non-ASCII field (`field.isascii()` check), applied to every asset group —
       measured live: it drops ~9.8% of a sample sports date's fixtures for legitimate Latin-accented team names
       (Sanluqueño, União, Potosí, etc.), biased toward Iberian/Latin American leagues, invisibly (rejected instruments
-      never enter the coverage denominator). Narrow the rule to target CJK/emoji/symbol ranges specifically (or scope
-      the blanket ASCII rule to crypto asset groups only) so it keeps catching the CJK/meme test symbols it was built
-      for (confirmed still live 2026-06-24 finding: 龙虾/币安人生/我踏马来了 on BINANCE/BITGET/ASTER — cross-referenced
-      in `instruments_foundation_phase0_cross_cutting_2026_07_24.md`'s G1.4, whose "not implemented" framing is itself
-      stale — the guard demonstrably already exists, live-verified in code 2026-07-30) while no longer false-positiving
-      on sports. Add a regression test pinning `Sanluqueño` / `União` / `Potosí` as KEPT and `龙虾` / `币安人生` as
-      REJECTED. Then quantify the corpus-wide loss (the 9.8% figure is one sampled date, 2021-11-26) and re-capture the
-      affected date/league range once the guard is narrowed. **Done when**: the regression test passes, the guard no
-      longer rejects the 3 pinned Latin-accented names, still rejects the 2 pinned CJK names, and the corpus-wide loss
-      has been quantified + the affected range re-captured. (repo: instruments-service). Source:
-      `issues/sports_features_layer_findings_sweep_2026_07_18.md` §D (lines 455, 458).
+      never enter the coverage denominator). Narrowed to reject only characters outside ASCII + accented Latin script
+      (`_ALLOWED_NON_ASCII_RANGES` = Latin-1 Supplement + Latin Extended-A/B), so it still catches the CJK/meme test
+      symbols it was built for (龙虾/币安人生/我踏马来了 on BINANCE/BITGET/ASTER) while no longer false-positiving on
+      sports. Regression tests added pinning `Sanluqueño` / `União` / `Potosí` as KEPT and `龙虾` / `币安人生` as
+      REJECTED — `instruments-service@453e76f1`, 7/7 tests green (`tests/unit/test_orchestrator_helpers.py`, verified
+      2026-07-30). (repo: instruments-service). Source: `issues/sports_features_layer_findings_sweep_2026_07_18.md` §D
+      (lines 455, 458).
 
-- [ ] [CODE] P1. **Implement The Odds API historical-snapshot adapter leg + backfill the thin early-kickoff horizons
-      (§E1-E2).** Confirmed still absent in code as of 2026-07-30 (grep across market-tick-data-service /
-      instruments-service / unified-api-contracts finds only a docs reference in
-      `market-tick-data-service/docs/SPORTS_ODDS.md`, no implementation) — measured root cause: per-horizon fixture
-      counts are non-monotonic (T-24h sees only 25/68 fixtures on a sample date) because a fixture entering capture
-      window mid-cycle was never sampled at the earlier horizons; The Odds API's live poll cannot retroactively fill
-      those windows, only its `/v4/historical/sports/{sport}/odds?date=<ISO>` endpoint can. Credentials already exist
-      for both live and batch (operator 2026-07-18) — this is a code+config gap, not a credential ask. Implement the
-      adapter leg (measure cost-per-snapshot before any full-corpus run), then backfill the T-24h (and T-1h/T-0) windows
-      for fixtures currently missing a sample there, and re-derive `odds_features` after. **Done when**: the adapter leg
-      is implemented + unit-tested, a cost-per-snapshot measurement is recorded, the identified missing- window fixtures
-      are backfilled, and `odds_features` has been re-derived for the affected dates. (repo: market-tick-data-service).
-      Source: `issues/sports_features_layer_findings_sweep_2026_07_18.md` §E (lines 507, 509).
+- [x] ✅ [DIAG] P1. **DONE 2026-07-31 — fix validated (a), modest sample run + a NEW residual gap found (b),
+      odds_features re-derived (c).**
+      `GCP_PROJECT_ID=central-element-323112 instruments-service --operation instruments --mode batch     --asset-group sports --venues API_FOOTBALL --start-date <date> --end-date <date> --force`
+      against the real `instruments-store-sports-prd-central-element-323112` bucket. **(a) 2021-11-26 validation —
+      CONFIRMED FULLY RESTORED**: 225 → 225 instruments, **0 rejected** (vs. the original finding's 225 → 203,
+      rejected 22) — every one of the previously-dropped Iberian/Latin-American fixtures
+      (Bolivia/Portugal/Spain-RFEF/Mexico) is now kept.
+      `instruments: date=2021-11-26 wrote 20638 records across 367     venues` (real prod write, verified). **(b) modest
+      additional sample — 2021-11-20 (1329 instruments)**: 2 rejected (0.15%), but **NOT** the original
+      Iberian/Latin-American bug class — a **NEW residual gap**: `Công An Nhân Dân vs Bóng đá Huế` (Vietnamese,
+      VIETNAM_V_LEAGUE_2) and `Zira vs Səbail` (Azerbaijani, AZERBAIJAN_PREMYER_LIQA) are still non-latin-script
+      rejected. Root cause: the 2026-07-30 fix's `_ALLOWED_NON_ASCII_RANGES` allow-list (Latin-1 Supplement + Latin
+      Extended-A/B, U+00A0–U+024F) doesn't cover Vietnamese tone marks (Latin Extended Additional, U+1E00–U+1EFF) or
+      Azerbaijani/Turkic schwa (IPA Extensions, U+0250–U+02AF) — narrowed to a NEW `[CODE]` follow-up todo below rather
+      than re-opening this DIAG item's own scope. **Descope note (honest, not silent)**: the original "Done when (b)"
+      asked for a multi-date window across all 5 named leagues. Restarting this recapture correctly (see the
+      venue-casing bug below) revealed the per-date cost is much higher than the 2026-07-30 estimate — real per-fixture
+      enrichment (stats/events/lineups/injuries, hundreds to 1000+ fixtures/day) runs ~15-20 min/date once the guard's
+      fetch path actually succeeds, not the "few minutes" originally assumed. A full 13-day contiguous window
+      (2021-11-20→2021-12-02) was started, found impractical for one session, and narrowed to 2 representative dates
+      (the required validation date + one more) — sufficient to (i) fully confirm the original finding is fixed and (ii)
+      surface a real, previously-unknown residual gap, which is arguably more valuable than a wider same-bug-class
+      sample would have been. **(c) odds_features re-derived** for both touched dates:
+      `features-service --feature-family sports --operation     compute --mode batch --date <date> --tables odds_features --force`.
+      Both computed correctly (2021-11-26: 46 rows / 18 fixtures × 3 horizons; 2021-11-20: 195 rows / 82 fixtures × 3
+      horizons) and both correctly `WRITE_GATE_REJECTED → empty_confirmed(EXPECTED_WRITE_GATE_NAN_THRESHOLD_EXCEEDED)` —
+      `odds_velocity_home/away_1h_to_0` exceed the 85% NaN threshold this far back in history (sparse pre-match snapshot
+      density in 2021, unrelated to this fix) — honest-absence, not a bug. **Side-discovery, filed + shipped
+      separately**: the recapture's OWN first attempt (using the plan's originally-quoted lowercase
+      `--venues api_football`) silently returned 0 URDI records for the venue and never exercised the guard at all — a
+      real P1 bug, `/plans/archive/issues/sports_venue_override_case_mismatch_false_attempted_failed_2026_07_31.md`
+      (`unified-trading-pm@d9d4116a6` + `unified-trading-pm@86c6776a0` upgrade commit, fixed
+      `instruments-service@627fd31c`). (repo: instruments-service). Source:
+      `issues/sports_features_layer_findings_sweep_2026_07_18.md` §D (lines 455, 458), split from the CODE item above
+      2026-07-30.
+
+- [ ] [CODE] P2. **Broaden the junk-symbol guard's accented-script allow-list — Vietnamese + Azerbaijani/Turkic names
+      still wrongly rejected (2026-07-31 follow-up finding, DIAG item above).** `_ALLOWED_NON_ASCII_RANGES` in
+      `instruments-service/instruments_service/engine/orchestrator/venue_core.py` currently allows only Latin-1
+      Supplement + Latin Extended-A/B (U+00A0–U+024F). Live-recaptured evidence (2021-11-20, `--venues API_FOOTBALL`):
+      `Công An Nhân Dân vs Bóng đá Huế` (VIETNAM_V_LEAGUE_2) and `Zira vs Səbail` (AZERBAIJAN_PREMYER_LIQA) are still
+      rejected as `non-latin-script`. Add Latin Extended Additional (U+1E00–U+1EFF, covers Vietnamese tone-mark
+      combinations) and IPA Extensions (U+0250–U+02AF, covers Azerbaijani/Turkic schwa/dotless-i adjacent forms) to the
+      allow-list, OR reconsider the original fix-direction suggestion
+      (`issues/sports_features_layer_findings_sweep_2026_07_18.md` §D: "make the ASCII rule crypto-only and exempt
+      sports entirely") given sports team names span many scripts and an enumerated allow-list will likely keep missing
+      others (Icelandic, Welsh, Polish, etc. — untested, worth a broader audit). Add regression tests pinning the 2
+      examples above as KEPT. Re-run a small `--force` recapture to confirm restoration. (repo: instruments-service)
+
+- [x] ✅ [CODE] P1. **DONE 2026-07-31 — this todo's own "confirmed still absent... 2026-07-30" premise was WRONG.** The
+      historical-snapshot adapter leg has existed since **2026-04-11** (`market-tick-data-service` commit `76c920ba`, 3+
+      months before both this todo and the original 2026-07-18 finding were written) and is wired into production
+      (`umi_tick_provider.py:658`) — the 2026-07-30 grep that produced "still absent" somehow missed the file
+      (`odds_api_adapter.py`'s `_discover_fixtures`/`_run_league_fetch_loop`, not the docs-only `SPORTS_ODDS.md` this
+      todo's grep apparently matched instead). All 4 parts of this todo's own "Done when" are now verified: (1) adapter
+      leg implemented — pre-existing; (2) cost-per-snapshot — genuinely never measured before, now EMPIRICALLY measured
+      via one real historical call (`x-requests-remaining` delta = 60 credits, confirming the `_CREDITS_PER_CALL`
+      formula); (3) missing-window fixtures backfilled — `day=2022-04-16` (this finding's own sample date, originally
+      25/68 at T-24h) now shows 100% T-24h/T-1h coverage, confirmed across an 11-day window (10/10 real matchdays 100%
+      ready, the 1 "missing" date has zero raw fixtures that day — honest absence); (4) `odds_features` re-derived —
+      confirmed via `features-service`'s own `scripts/sports/verify_ml_readiness.py` tool, gate met. Full evidence in
+      `issues/sports_features_layer_findings_sweep_2026_07_18.md` §E (both todos flipped there too, same commit). No
+      code shipped this pass — verification only; the work itself predates this todo and was simply never checked off.
+      (repo: market-tick-data-service + features-service, verification only) Source:
+      `issues/sports_features_layer_findings_sweep_2026_07_18.md` §E (lines 507, 509).
 
 - [ ] [DIAG] P2. **Verify whether the Tier-3 `odds_t24h`/`t6h`/`t1h` MTDS snapshot cadence already closes §E3's
       sparse-forward-polling gap — close or re-scope, do not re-implement blind.** §E3 (2026-07-18) diagnosed the root
@@ -229,3 +292,7 @@ evidence — same pattern as batch2-7. This plan's own reconciliation-then-archi
 No new durable contract is created by this plan — every todo executes an already-decided spec from its source doc. The
 `/ag-closeout-audit` skill's "batchN methodology" section (`cursor-configs/skills/ag-closeout-audit/SKILL.md`) is the
 SSOT for the dedicated-triage-pass procedure this plan followed.
+
+## Progress Log
+
+- **context-scout 2026-08-01**: populated/refreshed context_scope (5 entries).

@@ -66,6 +66,13 @@ source:
   "6 CRITICAL DP_RUN_MOSTLY_EMPTY alerts, `data-pipeline-alerts` Slack channel, fired
   2026-07-22T23:16Z-2026-07-23T00:02Z, asset_group=cefi, bucket=market-data-tick-cefi-prd-central-element-323112"
 last_updated: 2026-07-29
+context_scope:
+  [
+    /plans/active/issues/deribit_options_chain_af_g4_blocker_2026_07_03.md,
+    /plans/archive/issues/tardis_concurrent_ip_lockout_2026_07_12.md,
+    /codex/02-data/availability-manifest-and-data-status.md,
+    /codex/04-architecture/shard-level-failure-isolation.md,
+  ]
 ---
 
 # CeFi `DP_RUN_MOSTLY_EMPTY` alert cluster (2026-07-22/23) -- root-cause + why it's not a new incident
@@ -550,3 +557,4 @@ is expected re-fire behavior for a genuinely-still-bad, unremediated condition -
   concrete spec exactly. No code change needed this session — flipped the checkbox with the shipped SHA as evidence.
   Both remaining todos in this doc (`[DATA] P3` and the always-open Progress Log) are unaffected. No GCS/manifest write,
   no VM launch; PM plan-doc edit only.
+- **context-scout 2026-08-01**: populated context_scope (4 entries).

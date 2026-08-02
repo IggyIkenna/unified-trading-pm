@@ -135,3 +135,11 @@ backfill).
 - **The fix is forward-acting.** It does not un-pin the `ao_remediation_a` tasks already sitting at `target_slot=2` from
   the old behavior (the medium-affinity 600s spill releases those); the clean fan-out shows on the NEXT non-sequential
   plan dispatched after deploy.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30**: KEEP-NA, valid — the sole remaining open todo is a `[DOCS] P1` edit to two codex
+  SSOTs (`/codex/12-agent-workflow/work-philosophy.md`,
+  `/codex/04-architecture/agent-orchestrator-backlog-state-alignment.md`) and states its own gate verbatim: '**Operator
+  sign-off required before editing a codex SSOT** (workspace HARD RULE — codex edits are never autonomous)'. Its sibling
+  `[BACKEND] P1` was already self-serviced + closed 2026-07-29.

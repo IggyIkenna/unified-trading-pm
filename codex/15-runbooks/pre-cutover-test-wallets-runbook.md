@@ -25,7 +25,7 @@ authoritative_for: [pre-cutover test wallet provisioning]
 referenced_by:
   [/codex/05-infrastructure/credentials-matrix.md, /codex/14-customer-journeys/pod-elysium-client-onboarding.md]
 owner: operator (ikenna) — wallet generation + KMS encryption
-last_reviewed: 2026-05-17
+last_reviewed: 2026-09-08
 code_refs:
 execution:
   {
@@ -40,6 +40,13 @@ last_executed: pending May-23 cutover (test-wallet ramp)
 ---
 
 # Pre-cutover test-wallet operator runbook
+
+> **[2026-07-31 freshness re-review] — `last_executed` is unresolved and now >2 months overdue.** The frontmatter still
+> reads `last_executed: pending May-23 cutover`; that date passed on 2026-05-23. This review had no cloud access, so
+> whether the wallets were actually provisioned was **not** verified — do not read "pending" as evidence either way.
+> Before relying on this runbook, run its own declared verifier (`gcloud secrets list --filter='name~wallet_'` +
+> Tenderly testnet balance check) and stamp the real `last_executed`. Procedure content below was re-read and its
+> cross-references resolve.
 
 > **Created 2026-05-12** by slot 4. **Updated 2026-05-12** with operator confirmation: _"yeah seems trust wallet is the
 > direction we're going"_ — Trust Wallet is the canonical pre-cutover test wallet across all 5 EVM testnets. MetaMask

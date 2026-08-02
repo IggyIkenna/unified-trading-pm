@@ -200,11 +200,55 @@ four now route through the one helper.
       progressing, not stalled) rather than babysat to completion in-session given its large universe; a future session
       should check its final report (`plans/audit/results/data_pipeline_e2e_check_features_2026_07_26.md`, overwritten
       per-run) or re-run cleanly for the actual throughput number.
-- [ ] [SCRIPT] P3. Latent (currently unreachable, no live bug today) copy of the same bug pattern in
+- [x] ✅ [SCRIPT] P3. Latent (currently unreachable, no live bug today) copy of the same bug pattern in
       `features_service/volatility/core/{dependency_checker,data_loader}.py` — both call
       `resolve_bucket_name(kind="market-data", asset_group=...)` directly on a variable `asset_group`, same shape as the
       4 delta_one instances fixed this session. Unreachable today because `volatility`'s CLI `ASSET_GROUP_CHOICES`
       (repo: features-service) only lists CEFI/TRADFI — PREDICTION was never a valid choice. Fix before (not after)
       PREDICTION is ever added to `volatility`'s asset_group choices: route both through
       `DependencyChecker._resolve_mdps_bucket` (same fix pattern as this issue doc), or extract a shared helper if
-      `dependency_checker.py` cross-family imports are undesirable.
+      `dependency_checker.py` cross-family imports are undesirable. — **2026-08-02 (slot-15, data_engineering craft) —
+      DONE, shipped.** `features-service@0997fbac`, verified on origin (`git merge-base --is-ancestor` true, tree
+      clean). See this doc's own Progress Log entry below for the full implementation + shipping detail, including an
+      independent duplicate-discovery note:
+      `plans/active/issues/features_orphaned_mdps_resolver_commit_slot9_2026_08_02.md` (filed concurrently, describing
+      slot-9's earlier orphaned attempt at the identical fix) is now resolved by this same commit.
+
+## Progress Log
+
+- **2026-08-02 (slot-15, data_engineering craft) — last `[SCRIPT] P3` todo: code DONE + committed locally, NOT yet
+  shipped (blocked on shared-host QG capacity, not a code issue).** Chose the "extract a shared helper" branch
+  (cross-family imports between `delta_one`/`volatility` have zero precedent in this codebase, confirmed via grep) —
+  added `features_service.common.resolve_mdps_candle_bucket` (new function in the already-cross-family-shared
+  `features_service/common/__init__.py`, alongside its existing `resolve_bucket`/`resolve_bucket_uri`), routed both
+  `volatility/core/dependency_checker.py::_resolve_input_bucket` and
+  `volatility/core/data_loader.py::_get_market_data_bucket` through it, added regression tests at all 3 layers (the new
+  shared helper directly in `tests/common/test_common_init.py`, plus both volatility call sites), mirroring delta_one's
+  existing `TestResolveMdpsBucketPredictionAbbreviation` pattern. Committed: `features-service@0997fbac` (local HEAD,
+  `git rev-list --count HEAD ^origin/live-defi-rollout` = 1). **Blocked shipping**: Pass-1 `quality-gates.sh` was killed
+  by the shared-host QG governor/CPU-backstop 3 CONSECUTIVE times, identical failure signature each time (`Terminated`
+  right after `dep-content gate: PASS`, before venv setup even completes) — confirmed via
+  `qg-host-governor.sh --status` + `uptime` this is genuine fleet-wide contention (load average 18-26 on an 8-core host,
+  13-17 concurrent `quality-gates.sh` processes observed, well over the documented "≤2 full QGs at once" budget), not a
+  bug in this commit — matches the already-tracked, unresolved
+  `plans/active/issues/fleet_wide_qg_capacity_crisis_continues_day2_2026_07_29.md` pattern. Per the retry-discipline
+  rule (3 identical consecutive failures = a stable condition, stop blind-retrying), not attempting a 4th immediate
+  retry.
+- **2026-08-02 (slot-15, continued) — shipped.** Host load eased (18-26 → 13-18); retried `quality-gates.sh --no-fix`
+  twice more, both killed identically at first (governor still contended), then once it actually ran to completion it
+  hit a REAL failure — `ImportError: No module named 'pytz.lazy'` — a genuinely corrupted `.venv` (confirmed via
+  `.venv/bin/python -c "import pytz"` failing directly), root-caused to one of the earlier interrupted QG runs
+  SIGTERM-ing mid `uv sync` and leaving a partially-written package on disk (not caused by this commit — no dependency
+  files touched). `uv sync --reinstall-package pytz` fixed that one package but surfaced a SECOND corrupted package
+  (`ethpm`/`web3`) on the next run — rather than whack-a-mole individual packages, ran a full `uv sync --reinstall` (234
+  packages) to restore full venv consistency in one pass. `quality-gates.sh --no-fix` then ran clean (sentinel
+  `0997fbac` == HEAD). Shipped via `quickmerge --agent --files`: landed on `origin/live-defi-rollout`, verified via
+  `git merge-base --is-ancestor 0997fbac origin/live-defi-rollout` → true, `git status --porcelain` empty. Both todos
+  above flipped. While pulling this repo post-ship, discovered
+  `plans/active/issues/features_orphaned_mdps_resolver_commit_slot9_2026_08_02.md` — filed concurrently by main/review
+  describing slot-9's own earlier (2026-08-01), never-landed, orphaned attempt at this identical fix; resolved that doc
+  too, citing this same shipped commit. **Lesson for future QG-governor-kill diagnosis**: after any run gets
+  `Terminated`/`SIGTERM`'d mid-`uv sync` on this shared host, don't assume a clean retry just picks up where it left off
+  — verify the venv is actually intact (`import`-test a package touched by the interrupted install, or just
+  `uv sync --reinstall` proactively) before spending more retry cycles chasing what looks like flaky test failures but
+  is actually leftover install corruption.

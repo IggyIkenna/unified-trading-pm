@@ -13,8 +13,8 @@ tags:
 # Repo Readiness Checklist — Per-Repo Standards
 
 SSOT: `unified-trading-pm/docs/REPO_READINESS_CHECKLIST.md`
-Master tracker: `unified-trading-pm/plans/active/code_readiness_master_plan_2026_03_11.md`
-Semver rule: `unified-trading-pm/cursor-rules/core/semver-v1-hardening.mdc`
+Master tracker: `unified-trading-pm/plans/archive/code_readiness_master_plan_2026_03_11.plan.md`
+Semver rule: `unified-trading-pm/.cursor/rules/core/semver-v1-hardening.mdc`
 
 ---
 
@@ -100,7 +100,7 @@ Before claiming a repo is v1.0.0 eligible, EVERY unmet checklist item must be tr
 
 ## RULE: Code Readiness Master Plan Is the Tracker
 
-`plans/active/code_readiness_master_plan_2026_03_11.md` is the authoritative per-repo CR/DR/BR state tracker
+`plans/archive/code_readiness_master_plan_2026_03_11.plan.md` is the authoritative per-repo CR/DR/BR state tracker
 for all 65 repos. Do NOT track individual repo readiness in ad-hoc comments or chat — update the master plan.
 
 Active sub-plans (phase2_library_tier_hardening, phase3_service_hardening_integration, etc.) align to the master

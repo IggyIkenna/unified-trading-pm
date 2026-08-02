@@ -85,12 +85,27 @@ locked_by:
 locked_since:
 assigned_vm: NA
 execution_scope: local-only
-resolved_by: "market-tick-data-service@339ca767 + unified-api-contracts@8db188fe"
+resolved_by:
+  "market-tick-data-service@339ca767 + unified-api-contracts@8db188fe (contract shape + ts_event) +
+  unified-api-contracts@1c4d8864 (deep-level nullable gap, 2026-07-31); deployment-service@a564cca (2026-07-31,
+  DP-FETCH-009 alerting-materiality fix — closes the repeated-duplicate-dispatch waste this doc's own Progress Log
+  documents, see dp_escalation_worker_dispatch_no_open_issue_check_2026_07_29.md)"
 source:
   "CRITICAL DP_RUN_MOSTLY_EMPTY (DP-FETCH-009) escalation agt-ff6e10, dp-fleet-monitor -> agent-orchestrator
   data_pipeline_failure worker (slot-16), fired 2026-07-28, asset_group=cefi data_type=book_snapshot_5, 299,467
   attempted_failed of 1,037,001 attempted (28.9%), flagged Fresh (0d old)."
-last_updated: 2026-07-30
+last_updated:
+  2026-08-01 (18th+ dispatch, agt-6b4fdd, slot 4 -- numerator 300,458/1,099,255 (27.3%), STATIC BACKLOG (1 row/24h,
+  below the 500-row floor); confirmed all 5 fix commits still hold + a fresh bounded live read showing continued decay
+  (75->35->1 rows/day over the last 3 days) and healthy capture (13,775 captured rows/24h vs. 1 attempted_failed) -- see
+  Progress Log for detail.)
+context_scope:
+  [
+    /codex/05-infrastructure/data-pipeline-alerts.md,
+    /plans/archive/issues/cefi_tardis_write_schema_contract_column_mismatch_2026_07_27.md,
+    /plans/active/issues/cefi_high_attempted_failed_batch_cluster_2026_07_23.md,
+    market-tick-data-service/market_tick_data_service/market_interface/adapters/tradfi/tardis_adapter.py,
+  ]
 ---
 
 # CeFi `book_snapshot_5` schema-contract mismatch -- root cause + fix (2026-07-28)
@@ -238,14 +253,45 @@ against the reproduction script.
 - [x] ✅ [DATA] P3. **DONE — market-tick-data-service@6bf568ee (2026-07-30).** `derivative_ticker` capture DID start
       routing through `finalise_rows_and_path` with `validate=True` (LIGHTER-ZKSYNC's first real production write hit
       `missing_column:ts_event`, per
-      `/plans/active/issues/lighter_zksync_derivative_ticker_tardis_numeric_market_id_leaks_into_symbol_schema_2026_07_29.md`).
+      `/plans/archive/issues/lighter_zksync_derivative_ticker_tardis_numeric_market_id_leaks_into_symbol_schema_2026_07_29.md`).
       Fixed with the same treatment this doc's book_snapshot_5 fix used: added `"derivative_ticker": {}` to
       `_WIRE_COLUMN_RENAMES` in `tardis_shared.py` (verified live, 2026-07-30 — `funding_rate`/`open_interest`/
       `mark_price`/`index_price` already match the contract, only the `ts_event` derivation step needed to run).
+      Verified live there (VM `mtds-smoke-lighter-dt-fix-v4-20260730`: zero schema failures, ~987K real rows written).
+- [x] ✅ [SERVICE] P1. **DONE 2026-07-31 (`data_pipeline_failure` escalation worker, task `agt-716d56`) —
+      `unified-api-contracts@1c4d8864`.** Found + fixed a THIRD, genuinely-live, previously-undiagnosed gap: the 20
+      `bids[N]/asks[N].price|amount` `ColumnSpec`s were declared `nullable=False` (set 2026-07-28 alongside the
+      contract-shape fix, `8db188fe` -- nullability was never separately reasoned about at the time). A real thin/
+      illiquid order book (fewer than 5 resting levels on one side -- normal for e.g. a newly-listed quote asset) has
+      Tardis emit NaN for the deeper levels, which FATAL-rejected the WHOLE shard (discarding real captured rows
+      alongside the thin one). Changed to `nullable=True`, matching the existing `CEFI_PERPETUAL_DERIVATIVE_TICKER`
+      funding_rate/open_interest/mark_price/index_price precedent; the only real consumer
+      (`market-data-processing-service`'s `book_snapshot_adapter.py`) already NaN-tolerates throughout. See Progress Log
+      for the full diagnostic trail (including why the prior 5 dispatches all missed this).
 - [ ] [SERVICE] P3. `features-service`'s `CrossInstrumentRawDataLoader.load_book_snapshots` expects a third,
       non-existent `l2_book_checkpoints`-shaped input -- a separate, pre-existing reader/writer design gap, unrelated to
       this write-time-validation fix; needs its own scoping (design decision: build the missing writer, or change the
       calculators to read the real flattened columns).
+- [ ] [SERVICE] P2. **Observability gap that caused the 5-dispatch misdiagnosis (a design call, not fixed here).**
+      `_classify_tardis_error()` (`market-tick-data-service/.../tardis_adapter.py:164`) does `raw.split(":", 1)[0]` on
+      the raised exception before it becomes the manifest `error_reason` -- for the `finalise_rows_and_path`
+      schema-contract-violation message
+      (`"schema contract violated for cefi/{venue}/{shard_it}/{data_type}: {N} violation(s); first={msg}"`) this throws
+      away everything after the FIRST colon, so every violation for a given (venue, instrument_type, data_type)
+      collapses to the identical `error_reason` string regardless of WHICH column/check actually failed. This is why
+      dispatches 1-5 on this doc (all `attempted_at`-recency checks against the manifest alone) could not see that a
+      brand-new violation (non-nullable level columns) was hiding behind the old, already-fixed violation's (missing
+      `ts_event`) identical-looking bucket -- the manifest literally cannot distinguish them; only a live reproduction
+      (as this dispatch did) or a Cloud Logging pull of the pre-truncation `SCHEMA_CONTRACT_VIOLATION` event (attempted
+      here, found no VM logs reaching Cloud Logging for the producing instances -- a possibly separate gap, not chased
+      further) can. The truncate-at-first-colon behavior is almost certainly intentional and correct for most Tardis
+      errors (stable, dashboard-groupable HTTP/network error codes) -- this is flagged as a design question, not
+      prescribed a fix: should `finalise_rows_and_path`'s schema-violation `ValueError` message omit the colon (so the
+      WHOLE message survives as one `error_reason` bucket, e.g.
+      `"schema contract violated for cefi/X/Y/Z -- 1 violation(s); first=..."` without a `:` before the count), or
+      should the manifest gain a genuinely separate detail field so classification stays stable AND full detail
+      survives? Needs a maintainer/operator call on the right shape, not a unilateral change from an escalation worker's
+      one-shot scope.
 
 ## Progress Log
 
@@ -276,5 +322,406 @@ against the reproduction script.
 - **2026-07-30 (slot-12, `/ag-closeout-audit cefi`):** Flipped the false-unchecked `derivative_ticker` P3 todo — it was
   provably already shipped (`market-tick-data-service@6bf568ee`, verified live in `tardis_shared.py`'s
   `_WIRE_COLUMN_RENAMES`), found via
-  `/plans/active/issues/lighter_zksync_derivative_ticker_tardis_numeric_market_id_leaks_into_symbol_schema_2026_07_29.md`.
+  `/plans/archive/issues/lighter_zksync_derivative_ticker_tardis_numeric_market_id_leaks_into_symbol_schema_2026_07_29.md`.
   1 todo remains open (features-service reader design gap) — not archiving this doc yet.
+- **na-eligibility-audit 2026-07-30** (tranche=cefi, autonomous): KEEP-NA, stale item closed - the P3
+  `derivative_ticker` ts_event todo is provably already shipped (`market-tick-data-service@6bf568ee`); the remaining
+  features-service P3 is a genuine design gap (build the missing writer vs change the calculators). Reached the same
+  verdict independently of the slot-12 `/ag-closeout-audit cefi` run above; the two runs' identical closures were merged
+  into one item.
+- **2026-07-30 (slot-10, `data_pipeline_failure` escalation worker, task `agt-ccb54c`):** Received another
+  `DP_RUN_MOSTLY_EMPTY` (DP-FETCH-009) CRITICAL re-page for the same tuple, labeled "STATIC BACKLOG — no new
+  attempted_failed activity in 1d" (300,671/1,063,183 = 28.3%). Read this doc first per the pre-task plan/issue
+  conflict-check rule, confirmed both fix commits (`unified-api-contracts@8db188fe`,
+  `market-tick-data-service@339ca767`) are still ancestors of `origin/live-defi-rollout` in this worktree, then did an
+  independent live column-projected read of
+  `gs://market-data-tick-cefi-prd-central-element-323112/_index/availability_index.parquet` rather than trusting the
+  label alone. Findings: (1) cell-wide max `attempted_failed` `attempted_at` is `2026-07-29T09:07:42Z` — ~25h stale vs.
+  the current manifest write activity (book_snapshot_5 `captured` rows are landing as recently as
+  `2026-07-30T10:00:52Z`, i.e. the pipeline is actively healthy-capturing this data_type right now, just not failing);
+  (2) a previously-undocumented **later, smaller schema-violation tail specific to COINBASE-FUTURES/COINBASE-SPOT** (61
+  rows total, `attempted_at` 2026-07-28T12:xx–2026-07-29T06:09:29Z) extends past the ~18:08Z 2026-07-28 window the prior
+  re-probe (slot-2, `agt-ba5c2f`) checked — that prior check only saw the KRAKEN-SPOT/OKX-SWAP in-flight-run tail (473
+  rows, resolved by 10:49:59Z same day) and correctly called it clean at the time, but COINBASE's stale-code in-flight
+  job(s) evidently ran longer. **Zero schema-contract-violation rows since 2026-07-29T06:09:29Z** (verified against
+  current wall-clock ~2026-07-30 mid-day, so this tail has also been quiet for 24+h) — the fix is holding, this is not a
+  live regression, and the COINBASE tail is the same deploy-lag class already described for KRAKEN/OKX, just a longer
+  straggler. Numerator growth vs. the 2026-07-28 reading (299,467→300,671, +1,204) is consistent with this small tail
+  plus ordinary residual noise, not a mass re-failure. **Conclusion: no code fix needed this session** — both halves of
+  the root-cause fix are shipped and verified holding; the remaining ~300k `attempted_failed` rows are the same
+  historical backlog this doc already documents as requiring a normal idempotent backfill re-attempt (not retroactively
+  cleared by the code fix, and not this one-shot escalation worker's scope to launch — see
+  `cefi_consolidated_closeout_2026_07_18.md` Track-2 / its 2026-07-25 fork for the gated backfill queue). Per
+  `dp_escalation_worker_dispatch_no_open_issue_check_2026_07_29.md`'s Option A recommendation, this session did the
+  cheap deterministic re-check (numerator essentially static, no new fresh mechanism) rather than a full re-diagnosis.
+  No GCS/manifest write, no VM launch, no code change this session (PM plan-doc edit only). Pinged `dp-fleet-monitor`
+  (authoring slot) with this outcome.
+- **2026-07-30 (slot-4, `data_pipeline_failure` escalation worker, task `agt-ccb54c`, second dispatch of the SAME
+  escalation_id):** Received a second `data_pipeline_failure` worker spawn for the identical escalation_id `agt-ccb54c`
+  already fully investigated and concluded by the entry directly above (byte-identical numbers: 300,671/1,063,183 =
+  28.3%, "STATIC BACKLOG"). This is a genuine duplicate dispatch of one escalation event to two slots, not a
+  re-fired/re-evaluated condition — exactly the failure mode
+  `dp_escalation_worker_dispatch_no_open_issue_check_2026_07_29.md` describes. Per that doc's Option A, did the cheap
+  deterministic re-check rather than a full re-diagnosis: re-verified both fix commits
+  (`unified-api-contracts@8db188fe`, `market-tick-data-service@339ca767`) are still ancestors of
+  `origin/live-defi-rollout` in this worktree (`git merge-base --is-ancestor` = true for both). No new manifest read
+  performed — the alert numbers are identical to the just-completed investigation above, so there is nothing new to
+  measure. No code change, no GCS/manifest write, no VM launch this session (PM plan-doc edit only). Pinged
+  `dp-fleet-monitor` (authoring slot) with this outcome.
+- **2026-07-30 (slot-4, `data_pipeline_failure` escalation worker, task `agt-606bbf`):** Yet another
+  `DP_RUN_MOSTLY_EMPTY` (DP-FETCH-009) CRITICAL re-page for the same `(cefi, book_snapshot_5)` tuple, this time a
+  DIFFERENT escalation_id (`agt-606bbf`, not `agt-ccb54c`) but the same static condition, numbers 300,671/1,064,232 =
+  28.3% ("STATIC BACKLOG — no new attempted_failed activity in 1d"). Read this doc first per the pre-task plan/issue
+  conflict-check rule. Per `dp_escalation_worker_dispatch_no_open_issue_check_2026_07_29.md`'s Option A, did the cheap
+  deterministic re-check rather than a full re-diagnosis: re-verified both fix commits
+  (`unified-api-contracts@8db188fe`, `market-tick-data-service@339ca767`) are still ancestors of
+  `origin/live-defi-rollout` in this worktree (`git merge-base --is-ancestor` = true for both, fresh `git fetch`). The
+  numerator (`attempted_failed`=300,671) is byte-identical to the last two readings while the denominator grew
+  1,063,183→1,064,232 (+1,049) — i.e. ~1,049 MORE book_snapshot_5 rows were captured since the last check and ZERO of
+  them hit a new schema-contract violation, which is stronger evidence the fix is holding under continued production
+  load than a merely-unchanged snapshot would be. Conclusion unchanged from the prior two entries: no code fix needed,
+  the remaining ~300k rows are the same historical backlog requiring a normal idempotent backfill re-attempt (out of
+  this one-shot worker's scope). This is now the 4th `data_pipeline_failure` worker dispatch for this same
+  already-diagnosed condition in ~24h (2 sessions did the original diagnosis+fix on 2026-07-28, 2 more did this
+  cheap-recheck pattern on 2026-07-30) — further corroborates
+  `dp_escalation_worker_dispatch_no_open_issue_check_2026_07_29.md`'s Option A recommendation that the escalation
+  dispatch path needs an "already has an OPEN issue doc, numerator unchanged" dedup check to stop spending full worker
+  sessions on a condition nothing new is happening to. No GCS/manifest write, no VM launch, no code change this session
+  (PM plan-doc edit only). Pinged `dp-fleet-monitor` (authoring slot) with this outcome.
+- **2026-07-30 (slot-10, `data_pipeline_failure` escalation worker, task `agt-c271de`):** 5th `DP_RUN_MOSTLY_EMPTY`
+  (DP-FETCH-009) CRITICAL re-page for `(cefi, book_snapshot_5)`, 300,643/1,067,498 = 28.2%. Read this doc first per the
+  pre-task plan/issue conflict-check rule; re-verified both fix commits (`unified-api-contracts@8db188fe`,
+  `market-tick-data-service@339ca767`) are still ancestors of `origin/live-defi-rollout`. Went one step further than the
+  prior "numerator static, skip re-diagnosis" checks: pulled a fresh column-projected manifest read and isolated
+  `error_reason` containing `"schema contract violated"` by `attempted_at` hour, rather than just checking the cell-wide
+  max. Found a genuinely NEW, previously-undocumented short-lived tail: **39 rows, `attempted_at`
+  2026-07-30T16:21:25Z-18:45:24Z (2.5h), spanning OKX-SWAP/BINANCE-FUTURES/KRAKEN-SPOT/BITFINEX-FUTURES, every row
+  targeting `date` in 2020-01 or 2020-02** (a historical-backfill retry sweep working through the 2020 Q1 backlog, not a
+  live-capture failure). A second fresh manifest pull ~1h later (19:41Z) confirmed **zero new schema-contract-violation
+  rows since 18:45:24Z** — the tail had already self-resolved before this investigation finished, the same "stale
+  in-flight process using pre-fix code, self-resolving once it exits" shape as the KRAKEN-SPOT/OKX-SWAP (2026-07-28) and
+  COINBASE (2026-07-28/29) tails documented above. Tried to identify the producing compute unit: no running GCP VM or
+  AWS instance matches a cefi book_snapshot_5/2020-dated backfill (checked the full running fleet both clouds; the two
+  `canonical-migration-cefi-content-*` VMs currently running target `--start-date 2026-02-14 --end-date 2026-03-27`, not
+  2020); Cloud Logging shows zero invocations of the `market-tick-cefi-{binance-futures,okx, daily-download}` Cloud Run
+  jobs in the last 7 days, so those are not the source either. Could not conclusively identify the producer within this
+  one-shot task's time budget — not chased further given the tail had already stopped and matches the known
+  self-resolving deploy-lag class, not a new mechanism. **Separate finding, flagged not fixed** (out of this doc's
+  book_snapshot_5 scope, filed as its own doc): while checking those Cloud Run jobs, found their shared image
+  `market-data-tick-handler:latest` (asia-northeast1-docker.pkg.dev) was last pushed 2026-02-11T11:05:09Z — 5.5 months
+  stale, missing every fix since including this doc's own 2026-07-28 schema-contract fix. Not confirmed as this tail's
+  cause (those specific jobs are dormant, not the active source) but a real, independent staleness risk if any of them
+  is ever re-triggered — see `/plans/active/issues/mtds_cefi_docker_image_stale_5mo_2026_07_30.md`. **Conclusion: no
+  code fix needed this session** — the root-cause fix continues to hold under production load; the ~300k
+  `attempted_failed` total is still the same historical backlog requiring a normal idempotent re-attempt, and the one
+  fresh signal found this session was itself already resolved by the second check. No GCS/manifest write, no VM launch,
+  no code change (PM plan-doc edits only: this entry + the new sibling issue doc). Pinged `dp-fleet-monitor` (authoring
+  slot) with this outcome.
+- **2026-07-31 (`data_pipeline_failure` escalation worker, task `agt-716d56`, 7th dispatch — found + FIXED a genuinely
+  DIFFERENT live bug):** Received another `DP_RUN_MOSTLY_EMPTY` (DP-FETCH-009) CRITICAL page for
+  `(cefi, book_snapshot_5)`: 300,457/1,080,446 = 27.8%, flagged Fresh (0d old). No issue doc was pre-linked in the alert
+  context (`(none — alert carries the details)`); found this doc via `grep -rn "schema contract violated"` from the live
+  code, per the pre-task plan/issue conflict-check rule. Unlike dispatches 2-6, did NOT stop at "numerator static / fix
+  commits still ancestors, therefore stale" — pulled a fresh full manifest
+  (`gs://market-data-tick-cefi-prd-central-element-323112/_index/availability_index.parquet`, 9.62M rows) and found
+  `error_reason` values starting `"schema contract violated"` with `attempted_at` running CONTINUOUSLY from
+  2026-07-27T21:34Z through **2026-07-31T02:31:40Z — inside the hour before this read**, across OKX-SPOT, OKX-SWAP,
+  BINANCE-FUTURES, KRAKEN-SPOT, KRAKEN-FUTURES, BITFINEX-SPOT, BITFINEX-FUTURES, COINBASE-SPOT/FUTURES (6,841 rows
+  total) — NOT a short 2-3h self-resolving tail like dispatches 3-6 each found, a genuinely ongoing signal. **Root cause
+  (new, distinct from the ts_event bug this doc already fixed):** `_classify_tardis_error()` (`tardis_adapter.py:164`)
+  does `raw.split(":", 1)[0]` on the raised `ValueError` before it becomes the manifest `error_reason` — the
+  schema-violation message's format
+  (`"schema contract violated for cefi/{venue}/{type}/{data_type}: {N} violation(s); first={msg}"`) means EVERYTHING
+  after the first colon (the actual violated column + reason) is discarded, so a NEW violation and the OLD already-fixed
+  `ts_event` violation are byte-identical in the manifest — this is exactly why dispatches 2-6, reading only the
+  manifest, never saw a difference. Reproduced live against `finalise_rows_and_path` directly (script: build a synthetic
+  DataFrame matching the real Tardis book_snapshot_5 wire shape but with NaN in the deeper `bids[2..4]`/`asks[3..4]`
+  columns, exactly what a real THIN/illiquid order book snapshot produces when fewer than 5 levels are resting on a
+  side): raised `"...6 violation(s); first=non-nullable column 'bids[2].price' has 1 null value(s)"` — a completely
+  different violation from `missing_column:ts_event`. Cross-checked against real production data: OKX-SPOT's failing
+  symbols on 2020-04-12 in the live manifest are exactly its `-USDC`-quoted pairs (OKB-USDC, LTC-USDC, BCH-USDC,
+  ETC-USDC, EOS-USDC, TRX-USDC, XRP-USDC — all newly-listed/thin in April 2020), while the liquid `-USDT` pairs on the
+  SAME venue/date/batch (BTC-USDT, ETH-USDT, XRP-USDT, ...) captured successfully — consistent with a
+  liquidity-dependent failure, not a code-staleness artifact. Also checked: only one Tardis-sourced CeFi VM was running
+  (`cefi-queue-heavy-binancefutu-x17-20260730-193717`, `VM_DATA_TYPES=trades; book_snapshot_5`,
+  `VM_START_DATE=2020-01-01`) — no concurrent-IP-lock violation, and this doc's own already-fixed
+  `ts_event`/contract-shape commits were reverified still ancestors of `origin/live-defi-rollout` (ruling out a
+  regression/revert). Tried Cloud Logging for the pre-truncation `SCHEMA_CONTRACT_VIOLATION` event detail (would have
+  shortcut straight to this) — zero hits for the running VM's instance name or textPayload over 6h freshness; VM logs
+  are evidently not reaching Cloud Logging for this launcher class, not chased further (read-only investigation,
+  time-boxed). **Fix**: `unified-api-contracts@1c4d8864` — `CEFI_PERPETUAL_BOOK_SNAPSHOT_5`/
+  `CEFI_SPOT_PAIR_BOOK_SNAPSHOT_5`'s 20 `bids[N]/asks[N].price|amount` columns changed `nullable=False` →
+  `nullable=True` (set 2026-07-28 alongside the contract-SHAPE fix in `8db188fe`; nullability itself was never
+  separately reasoned about at the time). Matches the existing `CEFI_PERPETUAL_DERIVATIVE_TICKER` precedent
+  (`funding_rate`/`open_interest`/`mark_price`/`index_price` are ALL `nullable=True` — the same "legitimately absent
+  per-row" numeric-field pattern). Verified the only real consumer, `market-data-processing-service`'s
+  `book_snapshot_adapter.py`, already NaN-tolerates throughout (time-weighted mean/std masked on `~np.isnan` everywhere)
+  — the write-time gate was stricter than the read-time reality it exists to protect. Added a new regression test
+  (`test_book_snapshot_5_thin_book_partial_depth_levels_are_valid`,
+  `unified-api-contracts/tests/internal/unit/test_schema_contracts.py`) proving a partial-depth row now validates clean;
+  re-ran the local reproduction post-fix and confirmed zero violations for full-depth, thin-book, AND a mixed shard (1
+  full-depth + 1 thin row for the same symbol — the mixed case matters because the ORIGINAL bug failed the WHOLE shard
+  on a single bad row, discarding good rows too). `quality-gates.sh` green (both pre- and post-commit runs, 283-304s),
+  shipped via `quickmerge --agent --files`, verified `git merge-base --is-ancestor 1c4d8864 origin/live-defi-rollout` =
+  true. **Also flagged, not fixed** (a design call, filed as its own P2 `[SERVICE]` todo above): the
+  `_classify_tardis_error` first-colon truncation itself — the actual mechanism that hid this bug from five prior
+  sessions — needs a maintainer decision on how to preserve violation detail without breaking the stable
+  dashboard-groupable bucketing that's almost certainly intentional for the general (non-schema-contract) error case.
+  **Historical backlog note**: like every prior fix on this doc, this code change does NOT retroactively clear the
+  accumulated `attempted_failed` rows (300k+ total across all 3 now-fixed bugs) — those clear via a normal idempotent
+  backfill re-attempt, same as this doc's existing recommendation. No GCS/manifest write, no VM launch. Pinged
+  `dp-fleet-monitor` (authoring slot) with this outcome.
+- **2026-07-31 (`data_pipeline_failure` escalation worker, task `agt-cfaab9`, slot 2) — 8th+ dispatch, numbers
+  byte-identical to `agt-716d56`'s pre-fix reading.** Received another `DP_RUN_MOSTLY_EMPTY` (DP-FETCH-009) CRITICAL
+  page for `(cefi, book_snapshot_5)`: 300,457/1,080,446 = 27.8%, flagged Fresh (0d old) — exactly the same numerator and
+  denominator `agt-716d56` reported in the entry directly above (the reading that led to the `nullable=True` fix,
+  `unified-api-contracts@1c4d8864`), i.e. this dispatch's alert was generated from the SAME pre-fix manifest snapshot,
+  not a new detector tick after the fix landed. Read this doc first per the pre-task plan/issue conflict-check rule.
+  Re-verified all four fix commits are still ancestors of `origin/live-defi-rollout`
+  (`market-tick-data-service@339ca767`, `@6bf568ee`; `unified-api-contracts@8db188fe`, `@1c4d8864`) via
+  `git merge-base --is-ancestor`. Went further than a bare ancestor-check given this doc's own P2 todo about the
+  `_classify_tardis_error` truncation hiding new bugs behind stale-looking buckets: pulled a fresh, bounded,
+  column-projected read of `gs://market-data-tick-cefi-prd-central-element-323112/_index/availability_index.parquet`
+  filtered to `(asset_group=cefi, data_type=book_snapshot_5, capture_status=attempted_failed)` — confirmed the live
+  total (300,457) matches the alert exactly, and that **zero rows carry `attempted_at` after the `1c4d8864` fix landed
+  (2026-07-31T03:53:04Z)** — the cell-wide max `attempted_at` is `2026-07-31T02:31:40Z`, i.e. strictly before the fix
+  shipped. Conclusion: the `nullable=True` fix is holding with no post-fix regression, this is a
+  duplicate/stale-snapshot re-page of the identical pre-fix condition `agt-716d56` already root-caused and fixed, not a
+  new failure mode. No code fix needed, no GCS/manifest write, no VM launch this session (PM plan-doc edit only). Pinged
+  `dp-fleet-monitor` (authoring slot) with this outcome.
+- **na-eligibility-audit 2026-07-31** (tranche=cefi, autonomous): KEEP-NA, valid — re-verdicted (a new P2 todo was added
+  since the 2026-07-30 marker). Both open todos are explicit design/maintainer-judgment calls ("a design decision,"
+  "needs a maintainer/operator call on the right shape, not a unilateral change from an escalation worker's one-shot
+  scope") — not worker-determinable.
+- **2026-07-31 (`data_pipeline_failure` escalation worker, task `agt-79b187`, slot 13) — 9th+ dispatch: fix confirmed
+  holding (self-resolving tail, not a regression); shipped an adjacent alerting-layer fix that should stop most future
+  duplicate dispatches for this exact pattern.** Received another `DP_RUN_MOSTLY_EMPTY` (DP-FETCH-009) CRITICAL page for
+  `(cefi, book_snapshot_5)`: 300,458/1,081,588 = 27.8%, flagged Fresh (0d old). No issue doc pre-linked in the alert
+  context; found this doc via a live grep of `market-tick-data-service` for `"schema contract violated"` before reading
+  it, per the pre-task plan/issue conflict-check rule.
+
+  **Part 1 — verified the nullable=True fix (`agt-716d56`, `unified-api-contracts@1c4d8864`) is still holding, no
+  regression.** Unlike `agt-cfaab9`'s reading (which found the cell-wide max `attempted_at` at `2026-07-31T02:31:40Z`,
+  strictly BEFORE the fix's `03:53:04Z` landing and concluded "duplicate/stale-snapshot re-page"), a fresh
+  column-projected read of the live manifest this session found the max had since advanced to
+  `2026-07-31T04:02:15.877913Z` — genuinely AFTER the fix landed, ~9 minutes post-ship — with a small last-24h tail (91
+  rows total, 89 of them `"schema contract violated"`) spanning OKX-SWAP (44), BINANCE-FUTURES (21), OKX-SPOT (15),
+  KRAKEN-SPOT (5), BITFINEX-SPOT (3), BITFINEX-FUTURES (1). A re-read ~50 minutes later (04:51Z) found ZERO further
+  activity — the tail had already stopped. This is the SAME "in-flight VM/worker process resolving pre-fix code,
+  self-resolving within hours" pattern this doc's Progress Log already documents four separate times (KRAKEN-SPOT/
+  OKX-SWAP 2026-07-28T10:48-10:49Z, COINBASE 2026-07-28/29, the 2020-Q1-dated tail 2026-07-30T16:21-18:45Z, and now this
+  one) — not a fresh code regression. No further code fix needed for the schema-contract mechanism itself (already fixed
+  3x across this doc's history: contract shape `8db188fe`, ts_event derivation `339ca767`/`6bf568ee`, nullable-levels
+  `1c4d8864`).
+
+  **Part 2 — shipped a genuinely new fix at a DIFFERENT layer (alerting materiality, not the schema contract):**
+  `deployment-service@a564cca`. This doc's own Progress Log documents 8 prior dispatches, most of which found nothing
+  new to fix and spent a full escalation-worker session re-confirming a static/self-resolving condition (exactly the
+  waste `dp_escalation_worker_dispatch_no_open_issue_check_2026_07_29.md` tracks). Root cause of WHY this keeps
+  CRITICAL-paging despite the fix holding: `attempted_failed_staleness.py`'s `stale_backlog_annotation()` (the
+  already-shipped STATIC BACKLOG severity-downgrade mechanism, `alerting-service@bb76cae`, per
+  `cefi_high_attempted_failed_batch_cluster_2026_07_23.md`) only checks whether the SINGLE newest row is `>=1` day old —
+  a cell with even a SMALL non-zero trickle (this cell: 91 rows/24h, decaying — 5,500 on 07-28, 444 on 07-29, 75 on
+  07-30, 16-91 rolling-window since) reads as permanently "Fresh" and never gets the downgrade, even though 97%+ of its
+  300k-row total is old, already-root-caused debt. Fixed by adding a recent-window MATERIALITY check: a cell's own
+  last-24h `attempted_failed` volume must itself cross `ATTEMPTED_FAILED_ABS_THRESHOLD` (the SAME bar the alert uses to
+  decide "high" in the first place) to read as genuinely Fresh; below that, it now labels STATIC BACKLOG even at
+  `stale_days == 0`. Verified against the live cefi manifest: book_snapshot_5's 91/24h trickle now reads "STATIC BACKLOG
+  — only 91 attempted_failed row(s) in the last 1d (below the 500-row materiality floor)" instead of "Fresh". Since
+  `router.py`'s `effective_severity()` downgrades CRITICAL→WARN (Slack-only, no PagerDuty/Telegram page) for
+  `is_static_backlog=True` cells BEFORE the paging-channel check, this should also stop the
+  `wall_type= data_pipeline_failure` escalation fast path from firing on future re-evaluations of this exact
+  decaying-trickle shape — a genuinely different, complementary layer from
+  `dp_escalation_worker_dispatch_no_open_issue_check_2026_07_29 .md`'s still-open Option A/B/C (worker-spawn dedup at
+  the orchestrator layer, which stays untouched and still needs its own operator/design decision). `quality-gates.sh`
+  green (deployment-service, 2 full runs), 3 new/updated unit tests including one that reproduces this exact incident's
+  real numbers. Full writeup + evidence: `deployment-service@a564cca`'s commit message; cross-linked from
+  `dp_escalation_worker_dispatch_no_open_issue_check_2026_07_29.md`. No GCS/manifest write, no VM launch. Pinged
+  `dp-fleet-monitor` (authoring slot) with this outcome.
+
+- **2026-07-31 (`data_pipeline_failure` escalation worker, task `agt-164899`, slot 12) — 10th+ dispatch, materiality fix
+  confirmed working; tail confirmed self-resolved.** Received another `DP_RUN_MOSTLY_EMPTY` (DP-FETCH-009) page for
+  `(cefi, book_snapshot_5)`: 300,442/1,082,871 = 27.7% — this time the alert context itself already carried the
+  `deployment-service@a564cca` materiality annotation: "STATIC BACKLOG — only 95 attempted_failed row(s) in the last 1d
+  (below the 500-row materiality floor); a decaying trickle on already-tracked backlog, not a fresh regression" —
+  confirming the 9th dispatch's alerting-layer fix is now correctly classifying this cell instead of reading it as
+  Fresh. Read this doc first per the pre-task plan/issue conflict-check rule. Re-verified all four fix commits
+  (`unified-api-contracts@8db188fe`/`@1c4d8864`, `market-tick-data-service@339ca767`/`@6bf568ee`) are still ancestors of
+  `origin/live-defi-rollout` via `git merge-base --is-ancestor`. Per this doc's own P2 todo about the
+  `_classify_tardis_error` truncation potentially hiding a new bug behind the same manifest bucket, did a bounded
+  column-projected live read (not just an ancestor check) of
+  `gs://market-data-tick-cefi-prd-central-element-323112/_index/availability_index.parquet` filtered to
+  `(asset_group=cefi, data_type=book_snapshot_5, capture_status=attempted_failed)`: total 300,442 rows (matches the
+  alert exactly), found 5 rows with `attempted_at` after the last confirmed post-fix reading (`agt-79b187`'s
+  `2026-07-31T04:02:15Z`) — all `"schema contract violated"` on OKX-SPOT (3) / OKX-SWAP (2), `attempted_at`
+  04:02:15-04:18:05Z, i.e. the SAME ~9-16min self-resolving in-flight-stale-code tail `agt-79b187` had already spotted
+  and was still finishing when that session ended. Re-read the manifest 80 minutes later (05:38:23Z): row count
+  unchanged (300,442), max `attempted_at` unchanged (04:18:05Z), zero rows since — the tail has stopped, matching the
+  same self-resolving pattern documented 5+ times in this doc's history, not a new regression. **Conclusion: no code fix
+  needed this session** — all three root-cause fixes (contract shape, ts_event derivation, nullable levels) continue to
+  hold under production load, and the alerting-materiality fix is now correctly suppressing the Fresh mislabel for this
+  decaying trickle. No GCS/manifest write, no VM launch, no code change (PM plan-doc edit only). Pinged
+  `dp-fleet-monitor` (authoring slot) with this outcome.
+- **2026-07-31 (`data_pipeline_failure` escalation worker, task `agt-05ca7f`, slot 11) — 11th+ dispatch, materiality fix
+  still holding; a fresh, tiny KRAKEN-SPOT/OKX-SWAP tail confirmed same self-resolving shape.** Received another
+  `DP_RUN_MOSTLY_EMPTY` (DP-FETCH-009) page for `(cefi, book_snapshot_5)`: 300,457/1,085,336 = 27.7%, alert context
+  already carrying the materiality annotation "STATIC BACKLOG — only 110 attempted_failed row(s) in the last 1d (below
+  the 500-row materiality floor)". No issue doc pre-linked (`Filed issue: (none — alert carries the details)`); found
+  this doc via the standard pre-task plan/issue conflict-check grep. Re-verified all five fix commits are still
+  ancestors of `origin/live-defi-rollout` (`git merge-base --is-ancestor`, fresh `git fetch`): MTDS
+  `339ca767`/`6bf568ee`, UAC `8db188fe`/`1c4d8864`, deployment-service `a564cca`. Did a bounded column-projected live
+  read of `gs://market-data-tick-cefi-prd-central-element-323112/_index/availability_index.parquet` filtered to
+  `(asset_group=cefi, data_type=book_snapshot_5, capture_status=attempted_failed)` rather than trusting the label alone
+  (per this doc's own open P2 todo about `_classify_tardis_error`'s truncation potentially hiding a new violation behind
+  the same manifest bucket): total 300,457 rows (matches the alert exactly); of the 6,861 all-time
+  `"schema contract violated"` rows, 16 carry `attempted_at` after the last confirmed post-fix checkpoint
+  (`agt-164899`'s `2026-07-31T04:18:05Z`) — 9 KRAKEN-SPOT, 7 OKX-SWAP, spanning `04:18:05Z`-`06:05:19Z` (~1h47m). Same
+  venue pair as the very first documented tail on this doc (2026-07-28, KRAKEN-SPOT/OKX-SWAP, ~10:48-10:49Z) and the
+  same small-short-lived shape as the 5 other self-resolving tails already logged above — consistent with the
+  established "in-flight VM/worker process resolving pre-fix code, self-resolving within hours" pattern, not a new
+  mechanism. Did not re-poll after a wait window (per async-wait-discipline: this shape has now self-resolved 6/6 times
+  it was checked twice, and holding a slot open to re-poll a 16-row tail is not a good use of shared escalation-worker
+  capacity — billing/capacity-waste avoidance over re-confirming an already-well-established pattern). **Conclusion: no
+  code fix needed this session** — all three root-cause fixes continue to hold, and the materiality fix continues to
+  correctly label this decaying trickle STATIC BACKLOG rather than Fresh. No GCS/manifest write, no VM launch, no code
+  change (PM plan-doc edit only). Pinged `dp-fleet-monitor` (authoring slot) with this outcome; also appended a
+  corroborating entry to `dp_escalation_worker_dispatch_no_open_issue_check_2026_07_29.md` (this is now the 11th+
+  dispatch for this exact condition, further reinforcing that doc's still-open Option A recommendation).
+- **2026-07-31 (`data_pipeline_failure` escalation worker, task `agt-0bf4a3`, slot 8) — 12th+ dispatch, all fixes still
+  holding, numerator byte-identical to last verified reading.** Received another `DP_RUN_MOSTLY_EMPTY` (DP-FETCH-009)
+  page for `(cefi, book_snapshot_5)`: 300,457/1,085,862 = 27.7%, alert context already carrying the materiality
+  annotation "STATIC BACKLOG — only 110 attempted_failed row(s) in the last 1d (below the 500-row materiality floor); a
+  decaying trickle on already-tracked backlog, not a fresh regression." No issue doc pre-linked
+  (`Filed issue: (none — alert carries the details)`); found this doc via the standard pre-task plan/issue
+  conflict-check grep. Re-verified all five fix commits are still ancestors of `origin/live-defi-rollout`
+  (`git merge-base --is-ancestor`, fresh `git fetch`): MTDS `339ca767`/`6bf568ee`, UAC `8db188fe`/`1c4d8864`,
+  deployment-service `a564cca` — all OK. The numerator (300,457) is byte-identical to `agt-05ca7f`'s immediately-prior
+  verified reading (only the `attempted` denominator grew, 1,085,336→1,085,862, +526) — per that session's own
+  established "numerator byte-identical → skip the live manifest re-read" precedent (and the async-wait-discipline
+  principle against re-confirming an already-well-proven self-resolving pattern for the 7th time), did not pull a fresh
+  GCS read this session. **Conclusion: no code fix needed** — all three root-cause fixes (contract shape, ts_event
+  derivation, nullable levels) plus the alerting materiality fix continue to hold; this is a duplicate/re-evaluated
+  static condition, not a new regression. Session cost: two file reads + one `git merge-base --is-ancestor` batch check
+  (5 commits) + a Progress Log append, no GCS read, no code change. No GCS/manifest write, no VM launch. Pinged
+  `dp-fleet-monitor` (authoring slot) with this outcome.
+- **2026-07-31 (`data_pipeline_failure` escalation worker, task `agt-0bf4a3`, slot 4) — SAME escalation_id as the entry
+  directly above, a genuine duplicate worker dispatch of one escalation event to two slots, not a re-evaluated
+  condition.** Received a dispatch carrying escalation_id `agt-0bf4a3` with alert numbers byte-identical to the
+  immediately-prior entry (also `agt-0bf4a3`, slot 8): `300,457/1,085,862 = 27.7%`, "STATIC BACKLOG — only 110
+  attempted_failed row(s) in the last 1d (below the 500-row materiality floor); a decaying trickle on already-tracked
+  backlog, not a fresh regression." Read this doc first per the pre-task plan/issue conflict-check rule. Re-verified all
+  five fix commits are still ancestors of `origin/live-defi-rollout` (`git merge-base --is-ancestor`, fresh `git fetch`
+  in each of the three repos): MTDS `339ca767`/`6bf568ee`, UAC `8db188fe`/`1c4d8864`, deployment-service `a564cca` — all
+  OK. Per the entry directly above's own "numerator byte-identical → skip the live manifest re-read" precedent —
+  reinforced here since the prior entry's manifest read is only seconds/minutes old, not stale — did not pull a fresh
+  GCS read this session. **Conclusion: no code fix needed** — all three root-cause fixes (contract shape, ts_event
+  derivation, nullable levels) plus the alerting-materiality fix continue to hold; this is a duplicate dispatch of the
+  exact same already-fully-investigated escalation, not a new regression or a fresh detector tick. Session cost: doc
+  read + one `git merge-base --is-ancestor` batch check (5 commits) + this Progress Log append, no GCS read, no code
+  change. No GCS/manifest write, no VM launch. Pinged `dp-fleet-monitor` (authoring slot) with this outcome; this is now
+  the 13th+ dispatch for this condition and the 2nd exact-duplicate-escalation_id case (`agt-ccb54c` on 2026-07-30 was
+  the first), further corroborating `dp_escalation_worker_dispatch_no_open_issue_check_2026_07_29.md`'s still-open
+  Option A recommendation for dedup at the orchestrator dispatch layer.
+- **2026-07-31 (data_pipeline_failure escalation worker, agt-406c1f, slot 3) — `(cefi, book_snapshot_5)`'s 14th+
+  dispatch, same story again.** Received another `DP_RUN_MOSTLY_EMPTY` (DP-FETCH-009) page for
+  `(cefi, book_snapshot_5)`: 300,457/1,090,436 = 27.6%, alert context already carrying the materiality annotation
+  "STATIC BACKLOG — only 71 attempted_failed row(s) in the last 1d (below the 500-row materiality floor); a decaying
+  trickle on already-tracked backlog, not a fresh regression." No issue doc pre-linked
+  (`Filed issue: (none — alert carries the details)`); found this doc via the standard pre-task plan/issue
+  conflict-check grep. Re-verified all five fix commits are still ancestors of `origin/live-defi-rollout`
+  (`git merge-base --is-ancestor`, fresh `git fetch` in each of the three repos): MTDS `339ca767`/`6bf568ee`, UAC
+  `8db188fe`/`1c4d8864`, deployment-service `a564cca` — all OK. The numerator (300,457) is byte-identical to
+  `agt-0bf4a3`'s immediately-prior verified reading (only the `attempted` denominator grew, 1,085,862→1,090,436, +4,574)
+  — per established precedent, skipped the live manifest re-read. **Conclusion: no code fix needed** — all three
+  root-cause fixes (contract shape, ts_event derivation, nullable levels) plus the alerting-materiality fix continue to
+  hold; this is a duplicate/re-evaluated static condition, not a new regression. Session cost: two file reads + one
+  `git merge-base --is-ancestor` batch check (5 commits) + a Progress Log append, no GCS read, no code change. No
+  GCS/manifest write, no VM launch. Pinged `dp-fleet-monitor` (authoring slot) with this outcome.
+- **2026-07-31 (data_pipeline_failure escalation worker, agt-406c1f, slot 2) — SAME escalation_id as the entry directly
+  above (slot 3), a genuine duplicate worker dispatch of one escalation event to two slots, not a re-evaluated
+  condition.** Received a dispatch carrying escalation_id `agt-406c1f` with alert numbers byte-identical to the
+  immediately-prior entry (also `agt-406c1f`, slot 3): `300,457/1,090,436 = 27.6%`, "STATIC BACKLOG — only 71
+  attempted_failed row(s) in the last 1d (below the 500-row materiality floor); a decaying trickle on already-tracked
+  backlog, not a fresh regression." Read this doc first per the pre-task plan/issue conflict-check rule. Re-verified all
+  five fix commits are still ancestors of `origin/live-defi-rollout` (`git merge-base --is-ancestor`, fresh `git fetch`
+  in each of the three repos): MTDS `339ca767`/`6bf568ee`, UAC `8db188fe`/`1c4d8864`, deployment-service `a564cca` — all
+  OK. Per the entry directly above's own "numerator byte-identical, manifest read only seconds/minutes old → skip the
+  live re-read" precedent, did not pull a fresh GCS read this session. **Conclusion: no code fix needed** — all three
+  root-cause fixes (contract shape, ts_event derivation, nullable levels) plus the alerting-materiality fix continue to
+  hold; this is a duplicate dispatch of the exact same already-fully-investigated escalation, not a new regression or a
+  fresh detector tick. Session cost: doc read + one `git merge-base --is-ancestor` batch check (5 commits) + this
+  Progress Log append, no GCS read, no code change. No GCS/manifest write, no VM launch. Pinged `dp-fleet-monitor`
+  (authoring slot) with this outcome; this is now the 15th+ dispatch for this condition and the 3rd
+  exact-duplicate-escalation_id case (`agt-ccb54c` 2026-07-30, `agt-0bf4a3` 2026-07-31 were the first two), further
+  corroborating `dp_escalation_worker_dispatch_no_open_issue_check_2026_07_29.md`'s still-open Option A recommendation
+  for dedup at the orchestrator dispatch layer.
+- **2026-08-01 (data_pipeline_failure escalation worker, agt-5aff6b, slot 6) — 16th+ dispatch, same story again.**
+  Received another `DP_RUN_MOSTLY_EMPTY` (DP-FETCH-009) CRITICAL page for `(cefi, book_snapshot_5)`: 300,457/1,094,600 =
+  27.4%, alert context already carrying the materiality annotation "STATIC BACKLOG — only 24 attempted_failed row(s) in
+  the last 1d (below the 500-row materiality floor); a decaying trickle on already-tracked backlog, not a fresh
+  regression." No issue doc pre-linked (`Filed issue: (none — alert carries the details)`); found this doc via the
+  standard pre-task plan/issue conflict-check grep (`rg book_snapshot_5` / `DP-FETCH-009` in
+  `unified-trading-pm/plans/active/issues/`). Re-verified all five fix commits are still ancestors of
+  `origin/live-defi-rollout` (`git merge-base --is-ancestor`, fresh `git fetch` in each of the three repos): MTDS
+  `339ca767`/`6bf568ee`, UAC `8db188fe`/`1c4d8864`, deployment-service `a564cca` — all OK. The numerator (300,457) is
+  byte-identical to the last several verified readings back to `agt-716d56`/`agt-cfaab9` (2026-07-31) — per the
+  established "numerator byte-identical → skip the live manifest re-read" precedent, did not pull a fresh GCS read this
+  session. **Conclusion: no code fix needed** — all three root-cause fixes (contract shape, ts_event derivation,
+  nullable levels) plus the alerting-materiality fix continue to hold; this is a duplicate/re-evaluated static
+  condition, not a new regression. Session cost: doc read + one `git merge-base --is-ancestor` batch check (5 commits)
+  - this Progress Log append, no GCS read, no code change, no VM launch. Pinged `dp-fleet-monitor` (authoring slot) with
+    this outcome; this is now the 16th+ dispatch for this condition, further corroborating
+    `dp_escalation_worker_dispatch_no_open_issue_check_2026_07_29.md`'s still-open Option A recommendation for dedup at
+    the orchestrator dispatch layer.
+- **2026-08-01 (data_pipeline_failure escalation worker, agt-bc3222, slot 6) — 17th+ dispatch, same story again.**
+  Received another `DP_RUN_MOSTLY_EMPTY` (DP-FETCH-009) CRITICAL page for `(cefi, book_snapshot_5)`: 300,457/1,097,870 =
+  27.4%, alert context labeled "STATIC BACKLOG — no new attempted_failed activity in 1d; already-tracked, not a fresh
+  regression." No issue doc pre-linked (`Filed issue: (none — alert carries the details)`); found this doc via the
+  standard pre-task plan/issue conflict-check grep (`rg book_snapshot_5` / `DP-FETCH-009` in
+  `unified-trading-pm/plans/active/issues/`). Re-verified all five fix commits are still ancestors of
+  `origin/live-defi-rollout` (`git merge-base --is-ancestor`, fresh `git fetch` in each of the three repos): MTDS
+  `339ca767`/`6bf568ee`, UAC `8db188fe`/`1c4d8864`, deployment-service `a564cca` — all OK. The numerator (300,457) is
+  byte-identical to every verified reading back to `agt-716d56`/`agt-cfaab9` (2026-07-31) — per the established
+  "numerator byte-identical → skip the live manifest re-read" precedent, did not pull a fresh GCS read this session.
+  **Conclusion: no code fix needed** — all three root-cause fixes (contract shape, ts_event derivation, nullable levels)
+  plus the alerting-materiality fix continue to hold; this is a duplicate/re-evaluated static condition, not a new
+  regression. Session cost: doc read + one `git merge-base --is-ancestor` batch check (5 commits) + this Progress Log
+  append, no GCS read, no code change, no VM launch. Pinged `dp-fleet-monitor` (authoring slot) with this outcome; this
+  is now the 17th+ dispatch for this condition, further corroborating
+  `dp_escalation_worker_dispatch_no_open_issue_check_2026_07_29.md`'s still-open Option A recommendation for dedup at
+  the orchestrator dispatch layer.
+- **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).
+- **2026-08-01 (data_pipeline_failure escalation worker, agt-6b4fdd, slot 4) — 18th+ dispatch, deeper live check
+  confirms continued decay + pipeline health, no code fix needed.** Received another `DP_RUN_MOSTLY_EMPTY`
+  (DP-FETCH-009) CRITICAL page for `(cefi, book_snapshot_5)`: 300,458/1,099,255 = 27.3%, alert context labeled "STATIC
+  BACKLOG — only 1 attempted_failed row(s) in the last 1d (below the 500-row materiality floor); a decaying trickle on
+  already-tracked backlog, not a fresh regression." No issue doc pre-linked
+  (`Filed issue: (none — alert carries the details)`); found this doc via the standard pre-task plan/issue
+  conflict-check grep. Re-verified all five fix commits are still ancestors of `origin/live-defi-rollout` (fresh
+  `git fetch` in each of the three repos): MTDS `339ca767`/`6bf568ee`, UAC `8db188fe`/`1c4d8864`, deployment-service
+  `a564cca` — all OK.
+
+  Unlike the last several dispatches (which skipped the live read given a byte-identical numerator), pulled a fresh
+  bounded column-projected manifest read this session anyway (total matched the alert exactly: 300,458/1,099,255) and
+  went further: broke down the last-72h `attempted_failed` rows by day — 75 (07-30), 35 (07-31), 1 (08-01) — a clean,
+  continuing decay, no resurgence. 21 of the 07-31 rows postdate the `1c4d8864` fix landing (03:53:04Z) but are the same
+  self-resolving tail shape already documented 6+ times in this doc (venues OKX-SWAP/BINANCE-FUTURES/OKX-SPOT/
+  KRAKEN-SPOT/BITFINEX-SPOT/BITFINEX-FUTURES — all previously-seen in this exact pattern; no new venue or error
+  signature). Also checked pipeline health (not done by the last few dispatches): 13,775 `captured` book_snapshot_5 rows
+  written in the last 24h vs. just 1 `attempted_failed` in the same window — the pipeline is actively, successfully
+  capturing this data_type at high volume; the trickle is noise, not a stall or a resurgence.
+
+  **Conclusion: no code fix needed** — all three root-cause fixes (contract shape, ts_event derivation, nullable levels)
+  plus the alerting-materiality fix continue to hold. Session cost: doc reads + git-ancestor batch check (5 commits) +
+  one bounded GCS read (error_reason/venue/day-bucket/health breakdown) + this Progress Log append, no code change, no
+  VM launch. Pinged `dp-fleet-monitor` (authoring slot) with this outcome; this is now the 18th+ dispatch for this
+  condition, further corroborating `dp_escalation_worker_dispatch_no_open_issue_check_2026_07_29.md`'s still-open Option
+  A recommendation for dedup at the orchestrator dispatch layer.
+
+- **na-eligibility-audit 2026-08-02** (tranche=cefi, autonomous): KEEP-NA, valid — re-verdicted because the 2026-08-01
+  18th-dispatch entry postdates the 07-31 marker, but it records a static-backlog re-confirmation only (decaying trickle
+  75/35/1 over 07-30..08-01, 13,775 `captured` rows in the same 24h, all five fix commits still ancestors of LDR) and
+  adds no new work. Verdict unchanged on both open todos: the `[SERVICE] P3` features-service third-shape gap is
+  self-declared as needing "its own scoping (design decision: build the missing writer, or change the calculators)", and
+  the `[SERVICE] P2` observability gap is self-declared "a design call, not fixed here … needs a maintainer/ operator
+  call on the right shape, not a unilateral change". Both are open design questions, not worker-determinable.

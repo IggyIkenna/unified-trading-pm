@@ -33,7 +33,7 @@ referenced_by:
     /codex/02-data/prediction-data-types-catalog.md,
   ]
 owner:
-last_reviewed: 2026-05-17
+last_reviewed: 2026-08-15
 code_refs:
 ---
 
@@ -94,10 +94,12 @@ These counts are live-derived from `VenueMapping` and are the authoritative deno
   chain as separate field → e.g. `venue="UNISWAP_V3" chain="ETHEREUM"`. Era 2 (post-migration 2026-05-07): 411k rows
   with embedded chain → `venue="UNISWAP_V3-ETHEREUM" chain=""`. Both registered in `expected_coverage._DEFI`. Ghost
   era-2 no-underscore rows (UNISWAP_V3, AAVE_V3 without chain suffix) require phantom reconciler; tracked in
-  `plans/active/issues/defi_coverage_capability_alignment_2026_05_22.md` Bug 3.
-- **DEFI handler naming inconsistency** (Bug 2 OPEN): `evm_defi_handler` writes `AAVE_V3` (underscore);
-  `flash_loan_events_handler` and `position_data_handler` hardcode `AAVE_V3` (no underscore). Both in manifest as
-  separate venues. Fix: normalise all to `AAVE_V3`. Tracked in issue doc above.
+  `/plans/archive/issues/defi_coverage_capability_alignment_2026_05_22.md` Bug 3.
+- **DEFI handler naming inconsistency** (Bug 2, logged 2026-05-22): `evm_defi_handler` writes `AAVE_V3` (underscore);
+  `flash_loan_events_handler` and `position_data_handler` historically hardcoded `AAVEV3` (no underscore). Both landed
+  in the manifest as separate venues. Resolution: UAC `LEGACY_DEFI_VENUE_ALIASES`
+  (`unified_api_contracts/registry/defi_venues.py`) maps BOTH spellings to the canonical `AAVE_V3-ETHEREUM`, so the
+  divergence is absorbed at canonicalisation rather than requiring every handler to agree.
 - DEFI multi-chain legacy entries (`AAVE_V3-ARBITRUM`, `AAVE_V3-BASE`, etc.) now in `expected_coverage._DEFI` (flat
   variants for current handlers + VENUE-CHAIN variants for 411k migrated rows).
 
@@ -135,12 +137,14 @@ single shard for `trades` / `book_snapshot_5`).
 
 ## 3. TRADFI — per venue × data_type matrix
 
-**OHLCV-only MVP (operator direction 2026-05-15)** — see `plans/active/tradfi_ohlcv_only_mvp_backfill_2026_05_15.md`.
-`trades` + `tbbo` (L1/L2 tick data) moved to post-cutover; only `ohlcv_1m` (cheap pre-aggregated bars) collected in MVP.
-`TRADFI_TICK_DATA_WINDOWS = []` in UAC (`unified_api_contracts/registry/market_data_categories.py`) —
-`is_in_tradfi_tick_window()` returns False for every date, suppressing every tbbo/trades fetch attempt in MTDS
-orchestrator.py:3014. Historical windows preserved in `_DEFERRED_TRADFI_TICK_DATA_WINDOWS` (list-shape, mirrors the
-TRADFI_TICK_DATA_WINDOWS shape) and `_DEFERRED_VENUE_DATA_TYPE_COVERAGE_WINDOWS` (dict-shape, mirrors
+**OHLCV-only MVP (operator direction 2026-05-15)** — see
+`/plans/archive/2026_05/tradfi_ohlcv_only_mvp_backfill_2026_05_15.md`. `trades` + `tbbo` (L1/L2 tick data) moved to
+post-cutover; only `ohlcv_1m` (cheap pre-aggregated bars) collected in MVP. `TRADFI_TICK_DATA_WINDOWS = []` in UAC
+(`unified_api_contracts/registry/market_data_categories.py`) — `is_in_tradfi_tick_window()` returns False for every
+date, suppressing every tbbo/trades fetch attempt in MTDS `market_tick_data_service/engine/orchestrator/sentinels.py`
+(the orchestrator is a PACKAGE, not the monolithic `orchestrator.py` this doc used to cite by line number — never re-add
+a line-number reference here). Historical windows preserved in `_DEFERRED_TRADFI_TICK_DATA_WINDOWS` (list-shape, mirrors
+the TRADFI_TICK_DATA_WINDOWS shape) and `_DEFERRED_VENUE_DATA_TYPE_COVERAGE_WINDOWS` (dict-shape, mirrors
 VENUE_DATA_TYPE_COVERAGE_WINDOWS — preserves the CME tbbo + CME mbp_10 reference windows). Both restored by post-cutover
 plan (`tradfi_l1_l2_l3_tick_data_post_cutover_2026_06_01.md`).
 
@@ -290,13 +294,15 @@ for the 3-tier progression (MVP=50 → Expanded=200 → Full=10000) and observab
 - ✅ **DEFI multi-chain expansion** (Phase 7 #4) — 58 canonical PROTOCOL-CHAIN venues registered across 11 chains
   (ETHEREUM / ARBITRUM / BASE / OPTIMISM / POLYGON / AVALANCHE / BSC / LINEA / SCROLL / ZKSYNC / SOLANA).
   `VENUE_DATA_TYPE_CAPABILITIES` filled for every new venue. **2026-05-07 closeout:** UTL
-  `ManifestWriter._coerce_row_key` + `.add()` canonicalise legacy underscore venues (`AAVE_V3 → AAVE_V3`,
-  `UNISWAP_V3 → UNISWAP_V3`, …) at write time via UAC `LEGACY_DEFI_VENUE_ALIASES`; the manifest migration
-  (`market_tick_data_service/scripts/migrate_mtds_defi_legacy_venue_underscore.py`) rewrote 411,620 historical rows.
-  Read-time venue fallback in deployment-api removed (commit 64d2be9). Hyphenated DEFI data_types
-  (`lending-indices → lending_indices`) still normalised at read-time via `_canonicalise_defi_data_types` — paired
-  data_type migration is the natural follow-up. Lifted DEFI coverage from 4% to ~50% with 48/63 venues lighting up
-  honestly.
+  `ManifestWriter._coerce_row_key` + `.add()` canonicalise legacy bare/no-underscore venues to the chain-suffixed
+  canonical form (`AAVE_V3` and `AAVEV3` → `AAVE_V3-ETHEREUM`; `UNISWAP_V3` → `UNISWAP_V3-ETHEREUM`, …) at write time
+  via UAC `LEGACY_DEFI_VENUE_ALIASES` (`unified_api_contracts/registry/defi_venues.py`); a one-off manifest migration
+  rewrote 411,620 historical rows (that script has since been deleted per the one-off script lifecycle rule —
+  `/codex/06-coding-standards/script-homes.md`; the surviving canonicalisers are
+  `market_tick_data_service/scripts/canonicalize_mtds_index.py` + `rebuild_defi_manifest.py`). Read-time venue fallback
+  in deployment-api removed (commit 64d2be9). Hyphenated DEFI data_types (`lending-indices → lending_indices`) still
+  normalised at read-time via `_canonicalise_defi_data_types` — paired data_type migration is the natural follow-up.
+  Lifted DEFI coverage from 4% to ~50% with 48/63 venues lighting up honestly.
 - ✅ **DeFi CLI handler ManifestWriter wiring** (Phase 7 #2) — `_defi_manifest.DefiManifestRecorder` helper plus 11
   handler wires (dex_pools / dex_swaps / lending_indices / oracle_prices / lst_rates / liquidations / gas_fee /
   perp_funding / evm_defi / solana_defi / eigenlayer_rewards). Live DeFi captures now emit honest v5 manifest rows

@@ -197,7 +197,7 @@ for the live picture.
   - 6. **[CODE] P2.** Give `backfill_orphan_class_e.py --apply` a batched-incremental `record_cells()` call
   - 8. **[DATA] P2.** Measure prediction's `B_legacy_duplicate` population — never reported anywhere in this doc's
        already-durable sweep report (prediction-specific; other-AG-only todos 7/3c not listed here)
-- [`plans/active/issues/group_c_cloud_run_job_failures_triage_2026_07_16.md`](/plans/active/issues/group_c_cloud_run_job_failures_triage_2026_07_16.md)
+- [`plans/archive/issues/group_c_cloud_run_job_failures_triage_2026_07_16.md`](/plans/archive/issues/group_c_cloud_run_job_failures_triage_2026_07_16.md)
   — 0 open todos (all 6 `[x]`; **corrected 2026-07-26, `/plan-reconcile` prediction shard** — the previously-listed
   `[INFRA] P1` default-to-yesterday date bridge is `[x]` in the target doc, and the artifact is live:
   `unified_trading_library/service_framework/_adapter.py::_default_batch_dates_to_yesterday()` (line 26) is called by
@@ -252,7 +252,7 @@ for the live picture.
   (closed/archived/record-only)")
   - **[CODE] P2.** Add a collision-resistant component (e.g. an 8-hex slug of `hash(venue, data_type)`) to the
     pipeline-e2e-check VM name
-- [`plans/active/issues/prediction_lifecycle_prefetch_gate_and_resolution_day_catalogue_2026_07_14.md`](/plans/active/issues/prediction_lifecycle_prefetch_gate_and_resolution_day_catalogue_2026_07_14.md)
+- [`/plans/archive/issues/prediction_lifecycle_prefetch_gate_and_resolution_day_catalogue_2026_07_14.md`](/plans/archive/issues/prediction_lifecycle_prefetch_gate_and_resolution_day_catalogue_2026_07_14.md)
   (dup ref — see `prediction_consolidated_closeout_2026_07_18.md`'s "Aggregated source docs → Capture / correctness"
   subsection for its 2 open todos — corrected 2026-07-25, was "see Capture / correctness above," which only resolved
   while this content lived in the same file as that subsection)

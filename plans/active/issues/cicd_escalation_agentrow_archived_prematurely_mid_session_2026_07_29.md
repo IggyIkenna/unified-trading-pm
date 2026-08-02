@@ -36,7 +36,7 @@ summary: >-
   lifecycle-complete, which is itself an inconsistent state regardless of what caused the original archival.
 status: open
 nature: issue
-asset_group: [meta]
+asset_group: [ao] # retagged 2026-07-31 (corpus-sweep meta fold-in) -- was [meta]
 stage: [meta]
 repos: [agent-orchestrator]
 scope: [engineer]
@@ -48,6 +48,7 @@ related:
     /plans/archive/issues/ag_closeout_auditor_one_shot_complete_no_agentrow_recurrence_2026_07_29.md,
     /plans/active/issues/one_shot_worker_completes_but_no_clean_exit_signal_watchdog_rekicks_2026_07_25.md,
     /plans/active/issues/data_pipeline_failure_one_shot_done_no_agentrow_2026_07_29.md,
+    /plans/archive/2026_07/ao_consolidated_closeout_2026_07_25.md,
   ]
 created: "2026-07-29"
 parent_epic: agent_operating_framework_master
@@ -56,8 +57,8 @@ estimate_class: refactor
 estimate_baseline_ai_days: 1.0
 estimate_calibrated_ai_days: 0.4
 assigned_role: backend_engineer
-assigned_vm: planning
-execution_scope: orchestrator-agent
+assigned_vm: NA
+execution_scope: local-only
 sequential: true
 depends_on: []
 locked_by:
@@ -67,6 +68,13 @@ superseded_by:
 resolved_by:
 drift_direction: advance-code
 source: "slot 3, cicd escalation agt-a14109 (wall_type=plan_health, repo=unified-trading-pm#1780), 2026-07-29"
+context_scope:
+  [
+    /plans/archive/issues/cicd_escalation_heartbeat_steals_slot_before_done_no_agentrow_2026_07_28.md,
+    /plans/archive/issues/ag_closeout_auditor_one_shot_complete_no_agentrow_recurrence_2026_07_29.md,
+    /plans/active/issues/data_pipeline_failure_one_shot_done_no_agentrow_2026_07_29.md,
+    agent-orchestrator/server/routes/slots_worker.py,
+  ]
 ---
 
 # `one_shot_complete` — AgentRow archived ~40 min before the session ever called `/done`, a third distinct trigger
@@ -174,17 +182,44 @@ same silent-mid-session-archival pattern regardless of which of the two already-
       `tests/test_task_lifecycle_done_gate_resume.py` were left asserting `"lifecycle-complete"`, unchanged — they
       exercise the real API call, not a heuristic). 114 tests green across the four affected test files. (repo:
       agent-orchestrator)
-- [ ] [BACKEND] P3. Investigate why `GET /api/agents?include_finished=true` omitted `agt-a14109` (only the direct by-id
-      `GET /api/agents/agt-a14109` surfaced it) — confirm whether this is an intentional time-window/status-enum gap or
-      a real bug in that endpoint's filter, since the two precedent docs' own diagnostic recipe (`GET /api/agents`)
-      would have silently reported "zero active/stale AgentRow rows" here too, same false-negative shape the 2026-07-26
-      doc already flagged once. (repo: agent-orchestrator)
+- [x] ✅ [BACKEND] P3. Investigate why `GET /api/agents?include_finished=true` omitted `agt-a14109` (only the direct
+      by-id `GET /api/agents/agt-a14109` surfaced it) — confirm whether this is an intentional time-window/status-enum
+      gap or a real bug in that endpoint's filter, since the two precedent docs' own diagnostic recipe
+      (`GET     /api/agents`) would have silently reported "zero active/stale AgentRow rows" here too, same
+      false-negative shape the 2026-07-26 doc already flagged once. (repo: agent-orchestrator) — **Investigated via full
+      call-chain code read (`server/routes/agents.py::list_agents` → `server/state_store/agents.py::list_agents`); NOT
+      reproducible as a filter/status-enum bug in the current code.** With `include_finished=true` and no explicit
+      `status`, the SQL applies NO status filter at all
+      (`elif not include_finished: stmt = stmt.where(...notin_(archived,     finished))` — the exclusion is skipped
+      entirely once `include_finished=True`), so an archived row is included by construction; confirmed the dashboard's
+      own caller (`dashboard/src/App.tsx` → `api.ts::listAgents`) passes `{ include_finished: true }` with no `limit`,
+      matching the no-narrowing case. One real (but narrower) issue found along the way, worth flagging even though it
+      doesn't explain a full omission: the query's `ORDER BY role,     agent_id` is NOT recency-ordered, so any caller
+      that DOES pass a `limit` for "recent past runs" (a reasonable reading of the endpoint's own docstring) gets an
+      alphabetically-arbitrary slice, not the most-recent rows — a genuinely recent archived row could be silently
+      absent from a limited page while older-but-alphabetically-earlier rows fill it. Not fixed here (no evidence the
+      reporting session's own query used a `limit` — fixing an ordering bug that may not be the actual cause would be a
+      speculative change to fleet-critical query code); noting for whoever next touches `list_agents`' ordering. The
+      specific `agt-a14109` omission is most plausibly a transient artifact of that investigation session (unknown exact
+      query mechanics, no live DB access to reproduce) rather than a standing code defect — closing as
+      investigated/non-reproducible rather than leaving open indefinitely.
 - [ ] [BACKEND] P3. Once the reap-vs-done distinction above lands, consider whether `one_shot_complete` should
       special-case an already-`exit_reason: "lifecycle-complete"` (or the new `"reaped-stale"`) row for a session whose
       OWN `claude_session_id`/`tmux_session` matches the caller — i.e. treat "the row is already archived AND it is
       genuinely mine" as an idempotent success rather than a 400, so a worker that finishes real, correct,
       independently-verified work is never blocked from a clean sign-off purely by an unrelated prior archival race.
-      (repo: agent-orchestrator)
+      (repo: agent-orchestrator) — **Declined for this pass (2026-07-30, corpus-reduction sweep): read
+      `_done_one_off`/`find_active_agent_for_session` (`server/routes/slots_worker.py:1153-1220`,
+      `server/state_store/agents.py:203-221`) and confirmed the fix is real but NOT safely bounded without deeper
+      verification.** `tmux_session` (the only identity `find_active_agent_for_session` currently matches on) is a
+      per-SLOT name (`orch-slot-N`) reused across every worker that ever occupies that slot — a naive "archived row with
+      this tmux_session exists → treat as idempotent success" would also match a DIFFERENT, later worker's late `/done`
+      call against a slot that has since been reused, unless the match is ALSO gated on `claude_session_id` (which
+      `DoneRequest` does not currently carry — would need a request-schema change too). Getting this right needs tracing
+      the full slot-reuse lifecycle + a live-fleet check for whether `claude_session_id` is reliably available at
+      `/done` time, which is exactly the kind of `/done`-endpoint (fleet-wide, every worker, every completion) surgery
+      this corpus-reduction pass is scoped to decline rather than rush — left open for a dedicated backend-engineer
+      pass.
 
 ## Current session status (informational, not part of the fix)
 
@@ -231,3 +266,38 @@ commit above, which only bumped the baseline to 10 rather than fixing the false-
 400d with the byte-identical message this doc already documents:
 `"one_shot_complete on slot 11 but no active agent owns its session 'orch-slot-11' — a Class-A worker must /done with a task_id."`
 Not retrying `/done` further per the precedent set above; ending this turn here.
+
+## Recurrence corroboration (slot 4, escalation agt-0cadd0, 2026-08-01)
+
+A seventh instance, different `wall_type` this time (`main_ci_red` — every prior recurrence in this doc was
+`plan_health`): escalation `agt-0cadd0` (`repo=features-service`, `#0`), assigned mandate fully complete and
+independently verified (main's HEAD confirmed a literal ancestor of `live-defi-rollout` — no code fix existed or was
+needed; the wall is the tracked fleet-wide QG capacity crisis, corroborated in
+`/plans/active/issues/fleet_wide_qg_capacity_crisis_continues_day2_2026_07_29.md`). This session's own investigation
+spanned ~5h (multiple bounded `ScheduleWakeup` cycles polling a genuinely slow CI queue — not idle drift), which is
+plausibly exactly the kind of long-elapsed, session-spanning gap the `TmuxPruner`/`reap_orphan_agents` heuristics (P2
+fix `agent-orchestrator@81f54a8` above) are prone to false-negative on. `POST /api/slots/4/done` with both `task_id: ""`
+and a retry with `task_id: "agt-0cadd0"` 400d with the byte-identical message. Tried two recovery steps not previously
+logged in this doc, neither helped: (1) re-sent `/heartbeat` first, hoping a fresh ping would reactivate the row the way
+`touch_main_agent_heartbeat`/`reactivate_review_agent` do for their roles — it succeeded (200, slot went
+`status=working`) but `/done` still 400d identically, confirming heartbeat only touches `SlotRow`, not the archived
+`AgentRow`, for this role; (2) the successful heartbeat's own response carried an unrelated `new_task` (a
+`defi_satellite_ao_dispatch_batch2` backlog item) — the dispatcher treating the slot as idle-and-claimable despite the
+escalation still being mid-session, consistent with the AgentRow already reading `archived` from its side. Skipped that
+erroneous dispatch via `/skip-current-task` before the (still-400) final `/done` retry, so it doesn't strand a task. Not
+retrying further per the precedent set above; ending this turn here. Adds one new data point for the open P3 todo above
+(idempotent-success-on-already-archived-own-row): this occurrence's own `tmux_session`/escalation pairing would have
+been a clean, safe match for that proposed fix (single occupant, no slot-reuse ambiguity in this session's own
+timeline), i.e. a real instance where that declined-for-now fix would have let a fully-correct wall resolution sign off
+cleanly instead of ending on an issue-doc corroboration.
+
+## Progress Log
+
+- **context-scout 2026-08-01**: populated context_scope (4 entries).
+- **na-eligibility-audit 2026-08-02** (autonomous, tranche `ao`): KEEP-NA, valid — first marker on this doc. Sole open
+  todo (`[BACKEND] P3`, idempotent-success on an already-archived own row) was explicitly DECLINED for a dedicated
+  backend pass on 2026-07-30, with the reason recorded inline: `tmux_session` is a per-SLOT name reused across
+  occupants, so a safe match also needs `claude_session_id`, which `DoneRequest` does not currently carry — i.e. the fix
+  needs a request-schema change plus full slot-reuse-lifecycle tracing on the fleet-wide `/done` endpoint. Doc is
+  `sequential: true` behind the shipped P2, and the 2026-08-01 slot-4 recurrence (7th instance, new `main_ci_red`
+  wall_type) confirms the finding is live, not moot.

@@ -21,7 +21,7 @@ related:
   ]
 created: 2026-06-27
 authoritative_for:
-  [dual-cloud image build flow (GCP Cloud Build + AWS CodeBuild routers, buildspec, promote gate, provenance)]
+  ["dual-cloud image build flow (GCP Cloud Build + AWS CodeBuild routers, buildspec, promote gate, provenance)"]
 referenced_by: [/codex/05-infrastructure/cicd-setup.md]
 owner:
 last_reviewed:

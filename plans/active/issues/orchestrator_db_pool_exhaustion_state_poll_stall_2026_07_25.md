@@ -261,3 +261,16 @@ self-clear/restart-clear under the ~10-min page threshold, so no page yet — **
 or the cadence tightens further, this crosses into page/operator-action territory.** BACKEND-P1 should be prioritised
 now; until it lands the fleet loses a growing fraction of wall-clock to these windows. Main remains charter-barred from
 restarting the service and from shipping the fix (routes via BACKEND worker + quickmerge).
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30**: KEEP-NA, valid, with 2 stale items annotated (not closed — neither is fully
+  done). (1) The `[BACKEND] P2` leak-vs-concurrency question is **already answered inside this doc**: occurrence #6
+  records the verdict ('sustained concurrency over the 15-conn ceiling, not a slow accumulating leak') and #7 supersedes
+  even that with the spawn-holds-write-lock root cause, whose fix shipped via
+  `ao_satellite_ao_dispatch_batch1_2026_07_26.md` (`agent-orchestrator@361e0fe`); only the formal per-handler release
+  proof + pool-exhaustion recovery test remain. (2) The `[BACKEND] P3` **resize direction is superseded** — that same
+  batch1 todo explicitly ruled 'Do NOT also raise `pool_size`/`max_overflow` — that doc's own occurrence #6/#7 evidence
+  supersedes the resize direction'; only the git-status write batching/serialisation leg still stands. Doc stays NA
+  because the `[BACKEND] P2` readiness-probe todo embeds a `/codex/04-architecture/autonomous-recovery-matrix.md` edit,
+  which is never autonomous.

@@ -18,7 +18,7 @@ tags: [strategy, v2-engine, vol-trading, backtest, deribit]
 related: [/plans/active/v2_engine_venue_buildout_2026_06_15.md]
 created: 2026-07-13
 parent_epic: strategy_master
-assigned_vm: NA
+assigned_vm: planning
 execution_scope: orchestrator-agent
 priority: P1
 estimate_class: brand-new
@@ -34,6 +34,13 @@ supersedes:
 superseded_by:
 source: [v2_engine_venue_buildout_2026_06_15.md follow-up, operator decision 2026-07-13]
 sequential: true
+context_scope:
+  [
+    /plans/active/v2_engine_venue_buildout_2026_06_15.md,
+    /plans/epics/strategy_master.md,
+    /codex/02-data/pipeline-mode-partition.md,
+    /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
+  ]
 ---
 
 # DVOL-Backtestable VOL Engines
@@ -121,12 +128,12 @@ what's missing.
       contention from the rest of the fleet right now — a genuine manifest flush took ~9 retry attempts / ~9 min
       wall-clock to land under this session's load. Not a defect in this handler, but worth knowing before scheduling
       the full 2021→now historical pull (many more shards writing to the same contended index).
-- [ ] [DATA] P1. **RULED 2026-07-28 (operator general-theme ruling — no longer operator-gated, now AO-dispatchable)**:
-      pull the FULL DVOL historical series, 2021-03-24 → now, for both BTC and ETH, via the
-      `collect-deribit-volatility-index` handler built in the todo above. **Ruling: full history, not a shorter window —
-      go-ahead granted.** **Reasoning (operator's standing 2026-07-28 theme, applied here)**: (1) "full backfills/full
-      migrations — as long as an item isn't superseded by more recent work, do it": this plan is confirmed still active
-      and not superseded (checked 2026-07-28 — `v2_engine_venue_buildout_2026_06_15.md`,
+- [x] ✅ [DATA] P1. **DONE 2026-07-30 (slot-2, `data_engineering`).** RULED 2026-07-28 (operator general-theme ruling —
+      no longer operator-gated, now AO-dispatchable): pulled the FULL DVOL historical series, 2021-03-24 → now, for both
+      BTC and ETH, via the `collect-deribit-volatility-index` handler built in the todo above. **Ruling: full history,
+      not a shorter window — go-ahead granted.** **Reasoning (operator's standing 2026-07-28 theme, applied here)**: (1)
+      "full backfills/full migrations — as long as an item isn't superseded by more recent work, do it": this plan is
+      confirmed still active and not superseded (checked 2026-07-28 — `v2_engine_venue_buildout_2026_06_15.md`,
       `cefi_consolidated_closeout_aggregated_sources_2026_07_24.md`, and
       `cross_cutting_satellite_ao_dispatch_batch2_2026_07_26.md` all still list this plan as the live open item for
       VOL_CARRY/VOL_ARB_RV_IV); (2) DVOL is free/credential-free (Deribit public REST, no auth) so "cost under
@@ -136,22 +143,57 @@ what's missing.
       for a defensible backtest verdict under the HARD CONTRACT above (a false `not_available` from under-coverage is
       exactly the partial/cheap outcome the theme rules against). **This resolves `BLK-011c84cb`** (the standing
       operator-decision escalation raised 2026-07-14, still open as of the 2026-07-25 Progress Log entry below).
-      **Full-completion bar for whoever dispatches this** (no partial runs): pull EVERY day 2021-03-24→now for BOTH BTC
-      and ETH, verify manifest rows show `capture_status=captured` across the COMPLETE window (spot-check the 2021-03-24
-      launch-day boundary AND the most recent day, not just a middle sample), and re-run to closure if any days land
-      `attempted_failed`/`empty` rather than leaving partial coverage. Expect the shared `availability_index.parquet`
-      write-contention already noted in the todo above (retries, not failure) — that is not a reason to shrink scope.
-- [ ] [SCRIPT] P1. **Gate resolved 2026-07-28 (was BLOCKED-OPERATOR-DECISION — the operator decision is now RULED, see
-      the `[DATA]` todo immediately above)**: the remaining prerequisite is a REAL data dependency, not an operator gate
-      — DO NOT WORK THIS TODO until the `[DATA]` todo above is actually complete and the full DVOL history pull has
-      landed. Check the manifest for `data_type=volatility_index` rows spanning the FULL 2021-03-24→now window BEFORE
-      picking this up; if the range is incomplete, pick up the `[DATA]` todo instead rather than re-verifying from
-      scratch (3 slots already burned a dispatch on the old operator-gate confusion — see Progress Log). Once the full
-      history is available: wire it + the underlying's realised-vol close series as `GroupBRunner` backtest input for
-      **VOL_CARRY** and run the backtest.
-- [ ] [SCRIPT] P1. If VOL_CARRY's backtest passes the HARD CONTRACT bar above, register it in
+      **Execution**: a same-repo-family connectivity smoke-test (small 3-day range) run inline first hit a REAL memory
+      spike (~17GB RSS, ignored a 120s `timeout` SIGTERM) — root-caused to `ManifestWriter.flush()`'s per-day full
+      read-merge-write of the shared cefi `availability_index.parquet` (~7.5M rows), the SAME class already root-caused
+      for other cefi MTDS backfills (`mtds_backfill_vm_memory_hang_large_chunk_2026_07_22.md`, fixed there via
+      e2-highmem-4). Killed the runaway process (exact PID, SIGTERM) per the runaway-process HARD RULE, then built +
+      shipped a dedicated one-off VM launcher rather than running the full historical pull on the shared orchestrator
+      host: `deployment-service@42b80f65f9f3` — new `dvol-deribit-` VM prefix (registry + launcher-registry parity,
+      `test_launcher_registry.py`/`test_validate_vm_prefix_mapping.py` green) + `launch-deribit-dvol-backfill-vm.sh`
+      (e2-highmem-4/250GB pd-balanced, SPOT, `VM_TASK=deribit-dvol-backfill` routed through the generic
+      `VM_OPERATION`-driven dispatch branch in `setup-data-pipeline-vm.sh`, which was also extended to forward
+      `VM_BATCH_DATE_CONCURRENCY` — previously only the `mtds-backfill` branch read it). Full quality-gates.sh green
+      before commit (incl. the backfill-VM-disk-provisioning gate, which caught the initial 100GB disk as under the
+      250GB minimum for this workload class). **Real VM run** (`dvol-deribit-backfill`, launched 2026-07-30T14:00:09Z,
+      self-shutdown+self-deleted 2026-07-30T14:10:41Z on exit_code=0, ~10.5min wall-clock — no contention/slowdown
+      observed running unopposed on its own VM, unlike the shared-host smoke test): manifest verification (not just
+      GCS-object existence) via a direct read of the per-VM shard
+      `market-data-tick-cefi-prd-central-element-323112/_index/per_vm/dvol-deribit-backfill.parquet` shows **3910/3910
+      rows `capture_status=captured`** (0 `attempted_failed`, 0 `empty`) — 1955 distinct dates × {BTC, ETH}, date range
+      exactly `2021-03-24` → `2026-07-30`, matching the expected 1955 calendar-day count for that inclusive window
+      (`(date(2026,7,30)-date(2021,3,24)).days+1 == 1955`, verified programmatically). Both boundaries (`day=2021-03-24`
+      DVOL-launch day and `day=2026-07-30` today) independently spot-checked in raw GCS before the full-distribution
+      manifest check. **No partial runs, no gaps, no re-run needed.**
+- [x] ✅ [SCRIPT] P1. **DONE 2026-07-30 (slot-7, `backend_engineer`).** Wired the DVOL implied-vol index + the
+      underlying's realised-vol close series as `GroupBRunner` backtest input for **VOL_CARRY** and ran the backtest —
+      strategy-service@`18d7e775`. See Progress Log below for the full methodology + real results (both underlyings'
+      backtests came back NON-passing — near-zero/slightly-negative Sharpe — so the next todo should leave VOL_CARRY
+      `not_available` and file the `BLOCKED-*` naming this, not register it).
+- [x] ✅ [SCRIPT] P1. If VOL_CARRY's backtest passes the HARD CONTRACT bar above, register it in
       `ARCHETYPE_ENGINE_REGISTRY`. If it does not pass, leave `not_available` and file a new `BLOCKED-*` todo naming the
-      specific failure (e.g. degenerate PnL, insufficient sample). Repo: strategy-service.
+      specific failure (e.g. degenerate PnL, insufficient sample). Repo: strategy-service. — **DONE 2026-07-30 (slot-14,
+      `backend_engineer`).** Confirmed the recorded 2026-07-30 (slot-7) backtest result stands (no new methodology
+      challenge, no re-run per the plan's own instruction): BTC `sharpe_ratio=-0.0063`, ETH `sharpe_ratio=+0.0461`, both
+      PnL flat-to-negative (-119.76 / -191.40), win rate 22.8%/24.75% — an order of magnitude below any defensible-edge
+      threshold. **Verified VOL_CARRY is NOT in `ARCHETYPE_ENGINE_REGISTRY`**
+      (`strategy_service/engine/strategies/v2/factory.py` — zero hits for `VOL_CARRY`), so `not_available` is already
+      the live state; no registry code change needed (nothing to revert). Filed the `BLOCKED-*` todo below naming the
+      specific failure + citing the exact metrics. No code shipped this todo (a leave-as-is decision, not a
+      registration) — plan-only commit.
+- [ ] [SCRIPT] P3. **BLOCKED-INSUFFICIENT-EDGE — VOL_CARRY fails the HARD CONTRACT bar, no further work planned unless a
+      concrete param-sweep candidate is proposed.** The 2026-07-30 (slot-7) real backtest — `iv_atm` from the captured
+      DVOL series, realised vol from the captured BINANCE-FUTURES `derivative_ticker` `index_price` series, full honest
+      intersection window 2021-03-24→2026-05-22, `entry_vrp=0.04`/`exit_vrp=0.01` (carry.py defaults, untested) — came
+      back non-passing for both underlyings: BTC `sharpe_ratio=-0.0063`, `sortino_ratio=-0.0052`, `total_pnl=-119.76`,
+      `win_rate=22.8%` (29 cycles/58 fills); ETH `sharpe_ratio=+0.0461`, `sortino_ratio=+0.0360`, `total_pnl=-191.40`,
+      `win_rate=24.75%` (51 cycles/102 fills). Both Sharpes are indistinguishable-from-noise, PnL is flat-to-negative,
+      and win rate ~23-25% has no compensating asymmetric payoff — this is a genuine "no edge at the default thresholds"
+      result, not a methodology gap (real captured data both legs, real `GroupBRunner` wiring, full available window).
+      **Not scheduling a param sweep here** — `entry_vrp`/`exit_vrp` were left at defaults and a different threshold
+      pair MIGHT clear the bar, but that is a fresh trading-judgment hypothesis the operator/quant_dev should decide to
+      pursue, not a mechanical follow-up. VOL_CARRY stays `not_available`; re-open only if a specific alternative
+      parameterization is proposed with a stated rationale. Repo: strategy-service (no code — decision record).
 - [ ] [SCRIPT] P1. Same backtest-then-conditionally-register sequence for **VOL_ARB_RV_IV**
       (`vol_trading/arb_rv_iv.py`). Repo: strategy-service.
 - [ ] [SCRIPT] P2. Regenerate + commit `capability-verdict-matrix.json`; cite the regenerated-matrix commit as evidence
@@ -220,3 +262,59 @@ what's missing.
   manifest rows actually exist. **No production action taken in this pass** (no GCS writes, no VM launches, no `--apply`
   runs) — this was a docs/backlog-unblocking edit only; the actual full historical pull is the next AO-dispatchable
   step.
+
+- **na-eligibility-audit 2026-07-30** (tranche=cefi, autonomous): RECLASSIFY -> `assigned_vm: planning` (in place, name
+  unchanged). the operator gate was RULED 2026-07-28 and the doc itself states "no longer operator-gated, now
+  AO-dispatchable"; all 5 todos are bounded (DVOL pull -> backtest -> conditional register -> matrix regen).
+  Conflict-check clear: `cross_cutting_satellite_ao_dispatch_batch2` and the cefi digest both name THIS doc as the live
+  owner. Shared conflict-check protocol: `/codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md`
+  sect.3 - CLEARED.
+
+- 2026-07-30 (slot-2, `data_engineering`): Dispatched the `[DATA] P1` full-history DVOL pull todo. An inline 3-day
+  connectivity smoke-test on the shared orchestrator host hit a real ~17GB RSS memory spike (ManifestWriter.flush()'s
+  per-day full read-merge-write of the shared cefi `availability_index.parquet`, ~7.5M rows) — killed the runaway
+  process (exact PID) and built a dedicated one-off VM launcher instead (`deployment-service@42b80f65f9f3`:
+  `dvol-deribit-` prefix + `launch-deribit-dvol-backfill-vm.sh`, e2-highmem-4/250GB SPOT). Real VM run completed clean
+  in ~10.5min (no contention running unopposed): manifest-verified 3910/3910 `capture_status=captured` rows (1955 dates
+  × {BTC,ETH}, exactly 2021-03-24→2026-07-30, 0 failures/empties). Todo flipped `[x]`. Next: the `[SCRIPT]`
+  backtest-wiring todo below is now genuinely dispatchable (its manifest prerequisite is fully satisfied).
+
+- 2026-07-30 (slot-7, `backend_engineer`): Wired + ran the VOL_CARRY DVOL backtest — strategy-service@`18d7e775`
+  (`scripts/vol_carry_dvol_backtest.py` + `tests/unit/scripts/test_vol_carry_dvol_backtest.py`, full `quality-gates.sh`
+  green before ship, 6 new unit tests). **Methodology**: `iv_atm` from the already-captured DVOL parquet
+  (`data_type=volatility_index`, last hourly bar/day, vol-points→fraction); realised vol from a SECOND already-captured
+  real series — BINANCE-FUTURES perpetual `derivative_ticker` `index_price` (Tardis batch capture; confirmed via direct
+  GCS probe this codebase already holds this data 2021-03-24→2026-05-22, i.e. it predates the current Tardis-credentials
+  block — no new external calls made), 20-day rolling annualised close-to-close log-return vol (same formula as
+  features-service's `realized_vol_calculator.py`, reimplemented locally per the no-service-to-service-imports rule
+  rather than importing it). **Honest window**: backtest run over 2021-03-24→2026-05-22 — the real, GCS-probe-confirmed
+  INTERSECTION of both series' coverage (not the full DVOL range, which runs 45 days further to 2026-07-30 with no
+  matching underlying-close data yet) — 1866/1886 candidate days had both series (the 20-day gap is the RV lookback
+  warmup, not a data hole). **GroupBRunner wiring**: VOL_CARRY is not yet in `ARCHETYPE_ENGINE_REGISTRY` (that is the
+  NEXT todo's decision), so the script injects a process-local registry entry before constructing the runner (never
+  touches the committed `factory.py`) — the backtest genuinely runs through the real v2 orchestrator + benchmark-fill
+  engine, not a bypass. Each ATM CALL/PUT leg's `MarketStateSnapshot.mid_price` is set to the DVOL level itself (no
+  per-strike premium series exists — that's precisely what the other 15 VOL_* engines are `BLOCKED-CREDENTIALS` on), so
+  the runner's benchmark P&L measures vega P&L (IV-level moves between entry/exit), the economically meaningful quantity
+  here. **Real results (both underlyings, full window, no synthetic data)**:
+  - BTC: 29 open+flatten cycles (58 fills), `total_pnl=-119.76`, `sharpe_ratio=-0.0063`, `sortino_ratio=-0.0052`,
+    `win_rate=22.8%`.
+  - ETH: 51 cycles (102 fills), `total_pnl=-191.40`, `sharpe_ratio=+0.0461`, `sortino_ratio=+0.0360`, `win_rate=24.75%`.
+    Full JSON in the commit's script output (re-runnable:
+    `python scripts/vol_carry_dvol_backtest.py --underlyings BTC,ETH`). **Verdict against the HARD CONTRACT bar**: this
+    does NOT clear it — both Sharpes are indistinguishable-from-noise (an order of magnitude below any defensible-edge
+    threshold), PnL is flat-to-negative for both assets, and win rate ~23-25% with no compensating asymmetric payoff.
+    Flipped this todo `[x]`; annotated the next `[SCRIPT]` (register-or-not) todo above so it does NOT re-run the
+    backtest — it should go straight to `not_available` + file the `BLOCKED-*` finding citing these numbers, unless a
+    worker has a concrete, stated reason to try a different param sweep (entry_vrp/exit_vrp were left at carry.py's
+    defaults 0.04/0.01 — untested whether a different threshold pair would clear the bar; that would be a legitimate
+    reason to re-run, not a silent do-over).
+
+- 2026-07-30 (slot-14, `backend_engineer`): Closed the register-or-not todo per the plan's own instruction (no re-run,
+  no new methodology challenge). Verified live: `VOL_CARRY` has zero hits in
+  `strategy_service/engine/strategies/v2/factory.py` (`ARCHETYPE_ENGINE_REGISTRY`'s wiring point), confirming
+  `not_available` is already the actual state — nothing to revert, nothing to register. Filed the
+  `BLOCKED-INSUFFICIENT-EDGE` todo (new, P3) directly above citing the exact slot-7 metrics, scoped as a decision record
+  (not a code task) so it doesn't silently vanish from the plan. Next: the VOL_ARB_RV_IV todo below runs the same
+  backtest-then-conditionally-register sequence independently (separate engine, separate verdict expected).
+- **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).

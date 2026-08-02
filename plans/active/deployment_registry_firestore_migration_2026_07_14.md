@@ -11,7 +11,9 @@ summary:
   phase-plans below are the dispatched work.
 status: active
 nature: design
-asset_group: [meta]
+asset_group:
+  [ui] # corrected 2026-07-30 (ui-tranche launch) -- was [meta]; deployment registry backs the
+  # deployment-ui Deployments tab directly (the "~3k stale entries make the prod Deployments tab render empty" defect)
 stage: [meta]
 repos: [deployment-api, unified-trading-library, deployment-ui, deployment-service, unified-trading-pm]
 scope: [engineer]
@@ -42,6 +44,13 @@ locked_since:
 supersedes:
 superseded_by:
 source: interactive session 2026-07-14 (operator + agent diagnosis of empty-inventory prod bug)
+context_scope:
+  [
+    /codex/05-infrastructure/deployment-observability.md,
+    /codex/05-infrastructure/gcs-object-operations.md,
+    /plans/active/deployment_registry_firestore_p3_cutover_2026_07_14.md,
+    /plans/active/issues/deployment_registry_dualwrite_flag_not_propagated_to_vm_launchers_2026_07_30.md,
+  ]
 ---
 
 # Deployment registry → Firestore migration (OVERVIEW + phase index)
@@ -87,8 +96,8 @@ heartbeat
   per row (slow/absent registry → "—" columns, never a missing row). → solves #3 partial-render.
 - **AWS-ready** — a **DynamoDB** backend behind the same interface, cloud-selected (GCP → Firestore, AWS → DynamoDB)
   like `resolve_bucket_name` selects GCS vs S3. Both are ~~free at 10–100 VMs; at 5,000 VMs Firestore ≈
-  $13/day, DynamoDB
-  ≈ $4.5/day, both cheaper than the current GCS overwrite (~~$36/day). No cross-cloud
+  $13/day,
+  DynamoDB ≈ $4.5/day, both cheaper than the current GCS overwrite (~~$36/day). No cross-cloud
   Firestore-from-AWS.
 - **Heartbeat cadence is the cost lever** — cost scales linearly with write frequency; dial to 2–5 min at high scale
   (resource-sample forensics ride the run.log per `utl@600fe4f4`, so a slower registry write loses no resource history).
@@ -213,3 +222,4 @@ heartbeat
   "the codex/CLAUDE.md doc updates + master archival ... stay BLOCKED on P3 ... completing"), which is still correctly
   blocked. The finalize plan itself archived (its own todo done, no lock); this overview stays `active` until P3
   unblocks and P5 runs.
+- **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).

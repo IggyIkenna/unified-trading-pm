@@ -46,15 +46,25 @@ source:
   "defi_track01_per_instrument_and_canon_id_2026_07_24.md line ~691-703 (restating
   defi_consolidated_closeout_2026_07_18.md line 815-816's 'surfaced but not filed' note); this doc supplies the live
   verification neither prior note carried."
-execution_scope: local-only
+execution_scope: orchestrator-agent
 drift_direction: advance-docs
 depends_on: []
+context_scope:
+  [
+    /plans/active/defi_consolidated_closeout_2026_07_18.md,
+    /plans/active/defi_track01_per_instrument_and_canon_id_2026_07_24.md,
+    /plans/active/issues/canonical_path_oracle_blind_to_filename_stem_2026_07_20.md,
+    /codex/02-data/defi-data-types-catalog.md,
+    market-tick-data-service/market_tick_data_service/market_interface/adapters/defi/canonical_write.py,
+    deployment-service/terraform/gcp/defi_collection_scheduler.tf,
+  ]
 locked_by:
 locked_since:
-assigned_vm: NA
+assigned_vm: planning
 resolved_by:
   "market-tick-data-service (docstring corrections only — see § 5); the two substantive follow-ups (wire a
   staking-yields Terraform/Scheduler entry; nothing to migrate for lst_rates) remain open, tracked in § 6"
+assigned_role: data_engineering
 ---
 
 # staking_yields dead-in-prod confirmed; lst_rates non-canonical-path claim was stale
@@ -251,3 +261,10 @@ issue doc. No functional code changed; `quality-gates.sh` run scoped to these tw
       (2026-04-24)** label — it is not, and has never been, actually running in production; restate as "Implemented,
       unscheduled" (or similar) until § 6.1 ships, then flip to Production with the real ship date. — already covered by
       defi_satellite_ao_dispatch_batch1_2026_07_25.md (lines 326-333) (see that doc for execution).
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30**: RECLASSIFY -> assigned_vm: planning (conflict-check CLEAR against 231 active
+  planning docs; no open todo elsewhere duplicates this claim) - precondition (S6.1 scheduler wiring) shipped
+  2026-07-26; both residual todos are bounded leaf-name verification + a named-target capability scoping pass
+- **context-scout 2026-08-01**: populated context_scope (6 entries).

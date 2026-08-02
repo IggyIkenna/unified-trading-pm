@@ -36,7 +36,7 @@ scope: [engineer, admin]
 tags: [agent-orchestrator, dashboard, context-tracking, worker-liveness, monitor-tool, ui, display-bug]
 related:
   [
-    /plans/active/issues/context_compact_directive_did_not_fire_slot_rode_to_96pct_2026_07_27.md,
+    /plans/archive/issues/context_compact_directive_did_not_fire_slot_rode_to_96pct_2026_07_27.md,
     /plans/active/issues/slot_recurring_wedge_at_context_pct_75_compact_confirmation_2026_07_25.md,
   ]
 created: 2026-07-29
@@ -53,6 +53,13 @@ assigned_vm: NA
 resolved_by:
 locked_by:
 locked_since:
+context_scope:
+  [
+    /codex/06-coding-standards/ui-testing-layers.md,
+    /plans/active/issues/slot_recurring_wedge_at_context_pct_75_compact_confirmation_2026_07_25.md,
+    agent-orchestrator/server/worker_liveness/__init__.py,
+    agent-orchestrator/server/orm.py,
+  ]
 ---
 
 # AO context-% shows 0% for Monitor-heavy one-shot/scheduled workers — a sampling gap, not idleness
@@ -112,3 +119,12 @@ Not a functional bug in the sense of lost work or incorrect state — `cicd1-sho
 this session (and independently, throughout the earlier CI-cost-reduction work) are genuinely doing real work while
 reading 0%. This is purely a monitoring/display accuracy gap, but a real one worth closing since it actively misleads an
 operator glancing at the dashboard into suspecting stuck/idle workers that are not stuck.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30**: KEEP-NA, valid — not dispatchable as one unit: the `[UI] P2` explicitly depends
+  on the `[DATA] P3`'s representation decision ('needs a way to detect this — see DATA todo below'), and a plan's
+  independent same-priority todos run CONCURRENTLY by default, so flipping would dispatch the dependant and its
+  prerequisite in parallel — partial-parallelism is not expressible in one doc (CLAUDE.md § Plans). The `[BACKEND] P3`
+  is additionally declared 'not actionable today' pending an upstream Claude Code CLI change.
+- **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).

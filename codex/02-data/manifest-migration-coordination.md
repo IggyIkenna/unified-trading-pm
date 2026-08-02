@@ -21,27 +21,31 @@ related:
   ]
 created: 2026-05-07
 authoritative_for: [manifest migration coordination protocol (freeze/migrate/verify/unfreeze + rollback)]
-referenced_by: [plans/epics/manifest_master.md, plans/active/manifest_schema_final_gate_2026_05_09.md]
+referenced_by:
+  [/plans/epics/manifest_master.md, /plans/archive/2026_05/manifest_schema_final_gate_2026_05_09.md]
 owner:
-last_reviewed: 2026-05-17
+last_reviewed: 2026-10-01
 code_refs:
 last_updated: 2026-05-12
 ---
 
 # Manifest Migration Coordination
 
-> **Status (updated 2026-05-22 per codex differential audit Group B):** ACTIVE. The v7→v8 code-path cutover is
-> **COMPLETE** — `MANIFEST_SCHEMA_VERSION = 8` in `unified-trading-library/unified_trading_library/manifest_writer.py`
-> as of `UTL@547ff3c` (Phase 4.DEFAULT-REMOVAL, 2026-05-12). The `pipeline_mode` default is removed (explicit-or-fail)
-> from all 6 public `record_*` methods. **However**: as of the mega-audit Phase A (2026-05-20), 0% of 7.4M production
-> manifest rows were at `schema_version=8` — the writer fleet was stale (Docker images deployed to VMs built before the
-> v8 constant bump). The full data-side migration (Docker rebuild + v8 row backfill + label-flip) is sequenced in
-> `plans/epics/mtds_mdps_master.md` Phases 6–7 as part of the data-pipeline master coordination. This doc's migration
-> phases below describe the protocol used for the schema code bump; for the production data catch-up, read
-> `plans/epics/mtds_mdps_master.md` § Phase 7.
+> **Status (re-verified 2026-07-31):** ACTIVE as a **protocol** doc. The v7→v8 cutover it was written around is
+> historical — the canonical schema constant is now **`MANIFEST_SCHEMA_VERSION = 9`** (v9 added the `source` column,
+> `tradfi_massive_dual_source` Phase 3), declared in
+> `unified-trading-library/unified_trading_library/manifest_writer/_schema.py`. Note `manifest_writer` is now a
+> **package** (`manifest_writer/`), not the single `manifest_writer.py` module this doc originally cited. The
+> `pipeline_mode` default remains removed (explicit-or-fail) on the public `record_*` methods.
 >
-> **Reader fallback**: `read_availability_index()` backfills missing v7/v8 columns to defaults until the ~2026-06-15
-> reader-fallback deletion cutoff (tracked in `plans/active/manifest_schema_final_gate_2026_05_09.md` Phase 7).
+> **Read the distribution, not the constant.** Per CLAUDE.md § "Working on DATA", the constant states the target shape;
+> the share of production rows actually at v9 is an empirical question — query the manifest, never assume parity from
+> this doc. The precedent that motivated the warning: at mega-audit Phase A (2026-05-20), 0% of 7.4M rows were at v8
+> despite the v8 constant having shipped, because the writer-fleet Docker images predated the bump.
+>
+> **Reader fallback**: `read_availability_index()` backfills missing legacy columns to defaults. The original
+> ~2026-06-15 deletion cutoff has passed; treat the fallback's current status as owned by
+> `/plans/epics/manifest_master.md`, not by the (now-archived) final-gate plan.
 
 ## Purpose
 
@@ -73,8 +77,12 @@ sequencing that change so we never have a moment where canonical manifest drifts
 
 ### Phase 2 — Freeze (T0)
 
-- Pause consolidator daemon: SIGTERM `manifest-consolidator-*` VM in both `asia-northeast1` (GCP) and `ap-northeast-1`
-  (AWS). Confirm `STOPPED` event in `gs://{pid}-events/events/manifest-consolidator/...`.
+- Pause the consolidator. **It is not a daemon on a VM** (the legacy GCE-VM hybrid was retired 2026-05-20): it is a
+  **GCP Cloud Run Job + Cloud Scheduler** and an **AWS Batch Fargate job + EventBridge Rule** per bucket. Pause by
+  disabling the schedulers — Cloud Scheduler jobs on GCP, EventBridge rules on AWS (`aws events disable-rule`, prefix
+  `uts-prod-consolidator`) — then let any in-flight job run to completion before proceeding. Exact job/rule inventory
+  and verification commands:
+  [`/codex/05-infrastructure/manifest-consolidator-ssot.md`](/codex/05-infrastructure/manifest-consolidator-ssot.md).
 - Reject new manifest writes at writer-layer guard: `ManifestWriter.__init__` raises `ManifestFrozenForMigrationError`
   when a sentinel file `gs://{pid}-manifest/_index/MIGRATION_IN_PROGRESS.lock` is present. The lock file carries the
   freeze-start ISO timestamp + owner agent's plan filename.
@@ -86,16 +94,18 @@ sequencing that change so we never have a moment where canonical manifest drifts
   `instruments-service/scripts/migrate_local_sfi_to_canonical.py`). For v7→v8: explicit-or-fail removal of the four
   `None`-default kwargs from `record_*` (`pipeline_mode` / `service_emission_state` / `last_emission_decision_at` /
   `expected_window_completeness_fraction`), driven by
-  [`plans/active/manifest_schema_final_gate_2026_05_09.md`](../../plans/active/manifest_schema_final_gate_2026_05_09.md)
-  Phase 4.DEFAULT-REMOVAL.
+  [`/plans/archive/2026_05/manifest_schema_final_gate_2026_05_09.md`](/plans/archive/2026_05/manifest_schema_final_gate_2026_05_09.md)
+  Phase 4.DEFAULT-REMOVAL (that plan is now complete + archived).
 - Drain `_index/per_vm/*.parquet` per-VM shard files into canonical `_index/availability_index.parquet` FIRST; assert
   empty after (`gsutil ls _index/per_vm/` returns no objects). Multi-worker per-VM shard isolation contract is in
   [`availability-manifest-and-data-status.md`](./availability-manifest-and-data-status.md) § "Per-VM shard isolation".
 
 ### Phase 4 — Verify
 
-- Schema check: post-migration `_index/availability_index.parquet` columns set-equals the v8 column set declared in
-  `AvailabilityRecord`. `MANIFEST_SCHEMA_VERSION` constant in UTL is now `8`.
+- Schema check: post-migration `_index/availability_index.parquet` columns set-equals the target column set declared in
+  `AvailabilityRecord`, and the `MANIFEST_SCHEMA_VERSION` constant in
+  `unified-trading-library/unified_trading_library/manifest_writer/_schema.py` matches the version just migrated to
+  (currently `9`).
 - Per-asset-group row-count parity vs pre-migration snapshot (≤0.01% drift; any drift > 0 requires explicit owner
   acknowledgement in the active plan body).
 - Downstream-consumer smoke: deployment-api `/api/data-status/shard-detail?service=&category=&day=&...` returns success
@@ -107,7 +117,8 @@ sequencing that change so we never have a moment where canonical manifest drifts
 ### Phase 5 — Unfreeze
 
 - Delete `gs://{pid}-manifest/_index/MIGRATION_IN_PROGRESS.lock`.
-- Resume consolidator daemon (relaunch `manifest-consolidator-*` VMs).
+- Resume the consolidator: re-enable the Cloud Scheduler jobs (GCP) and EventBridge rules (AWS); confirm every rule
+  reports `ENABLED` and each job definition is `ACTIVE`.
 - Owner agent removes the `🟡 IN-FLIGHT REFACTOR` banner from every plan it was added to (same logical unit as the
   unfreeze commit).
 - Backfill VMs resume from their stored checkpoints; QG STEP 5.66 (per-VM shard isolation) continues to enforce.
@@ -117,9 +128,10 @@ sequencing that change so we never have a moment where canonical manifest drifts
 Once verification holds for 30 calendar days AND the `READER_FELL_BACK_TO_LEGACY_PATH` event-count is zero for 7
 consecutive days, the v7-shape fallback in `read_availability_index()` is deleted (workspace rule "manifest migration
 NOT fallback" — also see [`pipeline-mode-partition.md`](./pipeline-mode-partition.md) § "Reader fallback chain"). The
-deletion is the final phase of
-[`plans/active/manifest_schema_final_gate_2026_05_09.md`](../../plans/active/manifest_schema_final_gate_2026_05_09.md)
-Phase 7.
+deletion was the final phase of
+[`/plans/archive/2026_05/manifest_schema_final_gate_2026_05_09.md`](/plans/archive/2026_05/manifest_schema_final_gate_2026_05_09.md)
+Phase 7; that plan is complete + archived, so current ownership sits with
+[`/plans/epics/manifest_master.md`](/plans/epics/manifest_master.md).
 
 ## Rollback procedure
 
@@ -128,7 +140,8 @@ endpoint returns 5xx:
 
 1. Re-acquire the `MIGRATION_IN_PROGRESS.lock` (writes stay frozen).
 2. Restore `_index/availability_index.parquet` from GCS object-versioning to the pre-migration snapshot.
-3. Revert `MANIFEST_SCHEMA_VERSION` constant in UTL to `7` + re-add the `None`-default kwargs in `record_*` methods.
+3. Revert the `MANIFEST_SCHEMA_VERSION` constant in UTL to the previous version + re-add the `None`-default kwargs in
+   `record_*` methods.
 4. Notify operator immediately (the rollback IS the "big finding" per CLAUDE.md "Findings Triage Discipline" rule).
 5. File a post-mortem under `plans/active/issues/manifest_v7_v8_rollback_<YYYY_MM_DD>.md` with the rollback diagnostic
    - root cause + corrective plan reference.
@@ -151,13 +164,16 @@ Rollback window: pre-migration snapshot retained in GCS object-versioning for 7 
   2026-05-21).
 - **Related codex SSOTs:** [`availability-manifest-and-data-status`](./availability-manifest-and-data-status.md),
   [`honest-absence-downstream-handling`](./honest-absence-downstream-handling.md).
-- **Code:** `unified-trading-library/manifest_writer.py`, consolidator daemon under `manifest-consolidator-*` VM,
+- **Code:** `unified-trading-library/unified_trading_library/manifest_writer/` (package; schema constant in
+  `_schema.py`, reader in `_read_index.py`), the consolidator (Cloud Run / Batch-Fargate — **not** a VM, see
+  [`/codex/05-infrastructure/manifest-consolidator-ssot.md`](/codex/05-infrastructure/manifest-consolidator-ssot.md)),
   migration scripts in `instruments-service/scripts/`.
 
 ## Open questions
 
-- Typical freeze-window duration is plan-specific; precedent: v3→v5 was ~2 hours; v7→v8 estimate documented in
-  [`manifest_schema_final_gate_2026_05_09.md`](../../plans/active/manifest_schema_final_gate_2026_05_09.md) Phase 4.
+- Typical freeze-window duration is plan-specific; precedent: v3→v5 was ~2 hours; the v7→v8 estimate is documented in
+  [`/plans/archive/2026_05/manifest_schema_final_gate_2026_05_09.md`](/plans/archive/2026_05/manifest_schema_final_gate_2026_05_09.md)
+  Phase 4.
 - Shadow-consolidator parallel run: implement as future-work if v7→v8 verification fails on first attempt; not in scope
   for the v7→v8 cutover itself.
 - Rollback window: GCS object-versioning is canonical (7 days); full backup-bucket copy is NOT required.

@@ -39,6 +39,12 @@ resolved_by:
 locked_by:
 source: agent-discovered (orphaned-archetype build, mechanical pre-flight sweep, 2026-07-23)
 depends_on: []
+context_scope:
+  [
+    strategy-service/tests/unit/engine/strategies/v2/test_all_catalogued_archetypes_construct_and_fire.py,
+    strategy-service/strategy_service/engine/strategies/v2/target_universe/catalog.py,
+    /plans/active/issues/defi_archetype_universe_no_curtailment_mechanism_2026_07_23.md,
+  ]
 ---
 
 # strategy-service catalog/engine config-key contract has no validation — systemic, cross-archetype
@@ -712,11 +718,29 @@ auto-generated section's own owner script, rather than hand-editing the table) �
 
 ## Todos
 
+> **na-eligibility-audit 2026-08-01**: KEEP-NA-STALE-ITEMS — item 1 (human design decision) stays KEEP-NA valid
+> (textbook judgment call, escalated rather than guessed). Item 2 (7-archetype sweep) closed as stale, see inline note.
+> Doc stays `assigned_vm: NA` — item 1's real work remains open.
+
 - [ ] [DESIGN] P0. **Human design decision for 5 broken archetypes (66 rows)** — `RULES_DIRECTIONAL_CONTINUOUS`,
       `RULES_DIRECTIONAL_EVENT_SETTLED`, `ML_DIRECTIONAL_EVENT_SETTLED`, `MARKET_MAKING_EVENT_SETTLED`,
       `VOL_TRADING_OPTIONS` each need a real trading-parameter/design ruling (threshold values, outcome-id convention,
       option strike/expiry rule) before the mechanical catalog fix can ship; currently held as visible
       `xfail(strict=True)`.
-- [ ] [SCRIPT] P2. **Sweep the remaining 7 already-drivable archetypes** — `CARRY_FUNDING_DISPERSION`,
+- [x] ✅ [SCRIPT] P2. **Sweep the remaining 7 already-drivable archetypes** — `CARRY_FUNDING_DISPERSION`,
       `DEFI_LP_CONCENTRATED`, `DEFI_LP_POOL`, `DEFI_LP_VAULT` remain fully unchecked against either catalog surface for
-      the same config-key-contract drift bug class this doc found everywhere else.
+      the same config-key-contract drift bug class this doc found everywhere else. **na-eligibility-audit 2026-08-01:
+      CLOSED — already covered by this doc's own later section.** "Systemic guardrail shipped (2026-07-24)" above
+      (`strategy-service@03310bdf`,
+      `tests/unit/engine/strategies/v2/test_all_catalogued_archetypes_construct_and_fire.py`) enumerates all 32
+      `target_universe/catalog.py` archetypes + all 28 `DEFI_SLOTS` entries and asserts construction + non-empty
+      `on_tick` firing unless allow-listed; CARRY_FUNDING_DISPERSION/DEFI_LP_CONCENTRATED/DEFI_LP_POOL/DEFI_LP_VAULT are
+      on neither the 6-item `_ALLOWED_EMPTY_ARCHETYPES` nor the 5-item `_KNOWN_BROKEN_ARCHETYPES` xfail list; suite
+      green with "5 xfailed (exactly the 5 archetypes above ... zero unexpected failures, zero XPASS)" — matches this
+      doc's own earlier Recommendation §3 update: "✅ DONE 2026-07-24 ... CARRY_FUNDING_DISPERSION (78 rows) ...
+      DEFI_LP_CONCENTRATED/_POOL/_VAULT (3 rows each) all confirmed firing cleanly, zero silent-degradation found." This
+      checkbox predated that confirmation and was never flipped.
+
+## Progress Log
+
+- **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).

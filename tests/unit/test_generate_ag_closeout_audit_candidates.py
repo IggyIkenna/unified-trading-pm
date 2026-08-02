@@ -306,3 +306,71 @@ def test_finalize_doc_depends_on_pulls_in_its_line_cap_fork_as_covering(monkeypa
     assert "plans/active/issues/cefi_cited_only_by_the_fork_2026_07_01.md" not in never_cited_paths, (
         "the fork's own Source: citation must count as coverage once the fork is in the covering set"
     )
+
+
+def test_closeout_doc_depends_on_pulls_in_a_fork_with_no_finalize_pair(monkeypatch, tmp_path):
+    """2026-08-01 (ag-closeout-audit, tradfi tranche): a line-cap-split fork that never got its OWN
+    `*_finalize*` doc (e.g. tradfi_backfill_throughput_followups_2026_07_24.md,
+    tradfi_phase_d_terminal_gate_2026_07_24.md -- both forked straight out of the consolidated closeout,
+    tracked as plain ongoing plans rather than gated batch+finalize pairs) was previously invisible to
+    `_covering_paths()`: the old code only resolved `depends_on:` for docs matching `_finalize` in their
+    name, never for the closeout doc itself. Measured impact before this fix: tradfi's own
+    total_members read 67 instead of the correct 65, because both such forks were double-counted as
+    ordinary candidate members rather than recognized as covering apparatus. This test proves a fork
+    named ONLY in the closeout's own `depends_on:` (no finalize doc anywhere) is now resolved into the
+    covering set, and a doc cited only inside that fork's own todos is no longer misreported as orphaned.
+    """
+    _write_doc(
+        tmp_path,
+        "plans/active/issues/cefi_cited_only_by_the_depends_on_fork_2026_07_01.md",
+        title="cefi doc cited only inside the depends_on-only fork's own todos",
+        status="open",
+        asset_group="cefi",
+    )
+    _write_doc(
+        tmp_path,
+        "plans/active/cefi_satellite_ao_dispatch_batch1_2026_07_26.md",
+        title="cefi dispatch batch 1",
+        status="active",
+        asset_group="cefi",
+    )
+    fork = _write_doc(
+        tmp_path,
+        "plans/active/cefi_throughput_followups_2026_07_24.md",
+        title="cefi throughput followups (line-cap fork, no finalize pair)",
+        status="active",
+        asset_group="cefi",
+    )
+    fork.write_text(
+        fork.read_text(encoding="utf-8") + "\nSource: `cefi_cited_only_by_the_depends_on_fork_2026_07_01.md`\n",
+        encoding="utf-8",
+    )
+    closeout = _write_doc(
+        tmp_path,
+        "plans/active/cefi_consolidated_closeout_2026_07_25.md",
+        title="cefi consolidated closeout",
+        status="active",
+        asset_group="cefi",
+    )
+    closeout.write_text(
+        closeout.read_text(encoding="utf-8").replace(
+            "depends_on: []", "depends_on: [cefi_throughput_followups_2026_07_24]"
+        ),
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(MOD, "PM", tmp_path)
+
+    covering_paths = MOD._covering_paths("cefi")
+    assert any(p.name == "cefi_throughput_followups_2026_07_24.md" for p in covering_paths), (
+        "the closeout doc's own depends_on: must resolve a finalize-less fork into the covering set"
+    )
+
+    result = json.loads(_run_json("cefi"))
+    assert result["total_members"] == 1, (
+        "the finalize-less fork must be excluded from total_members as covering apparatus, not counted "
+        "as an ordinary candidate alongside the real member doc"
+    )
+    never_cited_paths = {c["path"] for c in result["never_cited"]}
+    assert "plans/active/issues/cefi_cited_only_by_the_depends_on_fork_2026_07_01.md" not in never_cited_paths, (
+        "the fork's own Source: citation must count as coverage once the fork is in the covering set"
+    )

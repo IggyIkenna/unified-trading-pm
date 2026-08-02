@@ -154,14 +154,58 @@ within this doc — TRADFI:delta_one's fast exit was a different bug, not eviden
 - [ ] [DATA] P2. Add a light-weight post-run reconciliation step (or a follow-up one-off script) that checks whether any
       VM this check launched is STILL `RUNNING` after the driver's own process has exited, and if so records/logs it (so
       abandoned VMs are not silently forgotten and their eventual real cost/outcome is at least visible).
-- [ ] [DOC] P2. Once the timeout is fixed, re-run `/data-pipeline-check-features` for CEFI:delta_one and
+- [x] [SCRIPT] P2. ✅ **New corroborating instance, different service**:
+      `market-data-processing-service/scripts/pipeline_e2e_check.py` (MDPS's own driver, same shared-engine class as
+      this doc, not features-service) hit the identical `vm_not_success:timeout_no_exit_status` false-failure pattern
+      twice running `/data-pipeline-check-mdps` against SPORTS `odds_horizon_bucket` (594-638 instrument-timeframe cells
+      per shard): default `--timeout-sec` (~1800s/30min) expired while the VM was still healthily processing — confirmed
+      via independent `gcloud`/`gsutil` polling that the VM was RUNNING and its `run.log` actively advancing, not
+      stalled. Real completion times: force-leg 36.8m and 31.8m, skip-leg 26.2m, across two separate checkpoint runs
+      (day=2025-12-24, day=2025-12-18) — all comfortably over the default. Unlike the CEFI/TRADFI:delta_one case, the
+      duplicate-launch-prevention fix (`features-service@dcf8a3d0`, presumably landed in the shared UTL engine) DID
+      correctly prevent a second concurrent VM in one of the two incidents here (`duplicate_in_flight` skip observed) —
+      so that part of the fix generalized; only the per-cell-timeout-override piece
+      (`_FAMILY_TIMEOUT_OVERRIDES`-equivalent) was never added to MDPS's own driver. (repo:
+      market-data-processing-service). **Done when**: MDPS's `pipeline_e2e_check.py` gets an equivalent
+      per-(asset_group, data_type) timeout override (or a similarly-reasoned higher default) for SPORTS
+      `odds_horizon_bucket`, and a from-scratch force-leg + skip-leg run each observe `EXIT_STATUS` locally (not
+      abandoned) within the configured timeout. Evidence:
+      `plans/audit/results/data_pipeline_e2e_check_mdps_2025_12_24.md`,
+      `plans/audit/results/data_pipeline_e2e_check_mdps_2025_12_18.md`, VMs
+      `mdps-backfill-sports-pipelinecheck-20260801-134301-2bf067` (force, 31.8m),
+      `mdps-backfill-sports-pcskip-20260801-130846-2bf067` (skip, 26.2m). Source: slot 6, data_engineering, discovered
+      2026-08-01 running `sports_consolidated_native_ao_extract_2026_07_25.md`'s Track K (MDPS) checkpoints 2/3 and 3/3.
+      **DONE 2026-08-02 (slot 2, infra).** Shipped `_FAMILY_TIMEOUT_OVERRIDES`/`_resolve_timeout_sec` for
+      `("SPORTS", "odds_horizon_bucket") = 3600` in `market-data-processing-service/scripts/pipeline_e2e_check.py`,
+      mirroring features-service's mechanism — `market-data-processing-service@dbcba44` (6 new regression tests, QG
+      green, verified on origin). **Real from-scratch verification run**
+      (`--day 2026-08-01 --legs force,skip     --require-captured --auto-day --asset-group SPORTS --data-types odds_horizon_bucket`,
+      auto-day resolved 2026-04-14): both legs terminated genuinely within the 3600s override — force-leg VM
+      `mdps-backfill-sports-pipelinecheck-20260802-161417-d0c755` observed `EXIT_STATUS=1` at ~3.6min (16:14:17→16:18:04
+      UTC), skip-leg VM `mdps-backfill-sports-pcskip-20260802-161855-d0c755` observed `EXIT_STATUS=1` at ~3.7min
+      (16:18:55→16:22:40 UTC) — neither abandoned, both well inside budget. The `exit=1` itself is an UNRELATED,
+      pre-existing bug (candle writes for this shard target the PROD bucket instead of the passed `--output-bucket`,
+      403'd by IAM as designed) — filed separately as
+      `issues/mdps_sports_odds_horizon_bucket_candle_write_targets_prod_bucket_2026_08_02.md` since it's a genuinely
+      new/third defect distinct from this doc's timeout scope and from the two already-tracked IAM docs. Report:
+      `plans/audit/results/data_pipeline_e2e_check_mdps_2026_08_01.md`.
+- [x] [DOC] P2. ✅ Once the timeout is fixed, re-run `/data-pipeline-check-features` for CEFI:delta_one and
       TRADFI:delta_one specifically and confirm both legs produce a genuine (non-timeout) verdict; note the corrected
       per-shard timeout in the SKILL.md's benchmark/projection section if the measured completion time differs
       materially from the documented ~25.9s/instrument-day write-bound rate. **Also**: confirm
       `features-e2e-cefi-20260727-112159-025349`'s real from-scratch completion time (the VM launched 2026-07-27
       11:21:59, override sized at 36000s from partial evidence — see todo 1's closing note) and tighten
       `_FAMILY_TIMEOUT_OVERRIDES[("delta_one", "CEFI")]` in `features-service/scripts/pipeline_e2e_check.py` if the real
-      number differs materially from 36000s.
+      number differs materially from 36000s. **Done 2026-07-30** (see Progress Log for the full re-run):
+      TRADFI:delta_one fully satisfied (genuine non-timeout `no_captured_input_for_window` skip on both legs).
+      CEFI:delta_one's VM1 (`features-e2e-cefi-20260727-112159-025349`) confirmed SPOT-preempted at 20h9m, never
+      completed — its real completion time could not be observed from that VM. A fresh from-scratch re-run's force leg
+      STILL hit `vm_not_success:timeout_no_exit_status` at the 36000s override (confirmed genuinely still computing, not
+      stalled) — closing this todo on that honest finding rather than continuing to inflate an unconfirmed number:
+      override raised to 72000s (`features-service@e0ccdf0a`) as a reasoned interim ceiling, SKILL.md's benchmark
+      section corrected to flag CEFI:delta_one as exceeding the documented rate, and CEFI:delta_one's true completion
+      time is reframed as blocked on the separately-tracked S1 sequential-per-instrument-timeframe-loop fix
+      (`data_pipeline_check_mdps_features_2026_07_20.md`), not a timeout-tuning gap this doc can close further.
 
 ## Progress Log
 
@@ -258,3 +302,73 @@ within this doc — TRADFI:delta_one's fast exit was a different bug, not eviden
   suggest ~3600-7200s for headroom). The abandoned 30-day VM was left running per the VM-delete guardrail (genuinely
   progressing, not stalled) — not verified to completion this session; a future check should confirm it eventually
   self-deleted per `VM_SHUTDOWN_ON_COMPLETION=true`.
+- 2026-07-30 (slot-16, cicd, IN PROGRESS on todo 4, checkpoint entry): **VM1 confirmed SPOT-preempted, never completed**
+  — re-checked `features-e2e-cefi-20260727-112159-025349` (this doc's own todo-1 override-sizing evidence VM) via
+  `gcloud compute operations describe`: `compute.instances.preempted` fired at `2026-07-28T07:31:05Z` (~20h9m after its
+  11:21:59 launch), matching where its `run.log` last advanced (07:29:05, mid per-instrument HYPERLIQUID processing) —
+  it was cut short by SPOT preemption, not a natural completion, so its real from-scratch completion time is still
+  unconfirmed by direct observation. **Fresh re-run launched to get that confirmation**: ran
+  `python3 scripts/pipeline_e2e_check.py --day 2026-07-30 --family delta_one --asset-group {TRADFI,CEFI} --legs force,skip --require-captured --auto-day --project central-element-323112`
+  (two separate invocations). **TRADFI:delta_one resolved cleanly and genuinely (non-timeout)**: both legs
+  `skipped: no_captured_input_for_window` (auto-day window 2026-07-29..2026-07-30) — confirms the separately-tracked
+  upstream MDPS-TRADFI-candle-gap (`issues/features_require_captured_misses_tradfi_processed_candles_gap_2026_07_27.md`,
+  still open) remains the real blocker for this cell, unrelated to this doc's timeout defect. Also observed one
+  phantom-capture WARNING in the same run
+  (`manifest claims captured but no candle object family=delta_one ag=TRADFI phantom_days=['2026-04-10']`) — the
+  existing phantom-capture guard (`_candle_day_object_exists`, `features-service@696768c7` + reconciliation fixes)
+  correctly excluded it and the run still produced an honest verdict; not filing a new issue for this, it's the guard
+  working as designed against a real manifest anomaly, not a new defect. **CEFI:delta_one force-leg re-launched fresh**:
+  VM `features-e2e-cefi-20260730-133536-025349` (window auto-slid to 2026-07-24..2026-07-25, `timeout_sec=36000` from
+  the existing override), launched 13:35:36 UTC. As of this checkpoint (~19:18 UTC, ~5h42m elapsed) it is CONFIRMED
+  still healthily `RUNNING` (`gcloud compute instances list`) and actively progressing — `run.log` line count climbing
+  the whole way (23,759 → 493,532+ lines over the watch window, monitored every ~10min via a background watchdog, zero
+  stall ticks) — genuinely computing, not stalled, consistent with the doc's own S1
+  sequential-per-instrument-timeframe-loop read. Audit report for this session's runs committed at
+  `unified-trading-pm@468878e7d` (`plans/audit/results/data_pipeline_e2e_check_features_2026_07_30.{md,json}`). **Not
+  yet closing todo 4** — still waiting on this VM's genuine completion (or a timeout at 36000s, whichever comes first)
+  to get the real completion-time number the todo asks for; if a session boundary interrupts this before that happens,
+  the VM name/launch-time above +
+  `gcloud storage cat gs://deployment-scripts-central-element-323112/vm-logs/features- e2e-cefi-20260730-133536-025349/{run.log,EXIT_STATUS.json}`
+  is exactly how to pick the watch back up (or confirm it already finished/was preempted in the interim).
+- 2026-07-30 (slot-16, cicd, CLOSING todo 4): The watched VM (`features-e2e-cefi-20260730-133536-025349`) hit the 36000s
+  override boundary at 23:35:39 UTC — driver recorded `vm_not_success:timeout_no_exit_status` for the force leg, and
+  (the concurrency guard from todo 2 working exactly as designed this time) the skip leg correctly detected the
+  still-in-flight VM and returned `duplicate_in_flight` instead of launching a second billable VM — **zero orphan
+  duplicates this run**, unlike the original 2026-07-27 incident. Independently re-verified via `gcloud`: the VM was
+  STILL `RUNNING` and genuinely progressing (`run.log` at 855,657 lines, timestamp 2026-07-30T23:37:33Z, actively
+  writing per-instrument HYPERLIQUID/EXTENDED-STARKNET features) — not stalled, not broken, just genuinely needing more
+  than 10h. Combined with VM1's prior SPOT-preemption at 20h9m (also without completing), CEFI:delta_one's real
+  completion time remains **unconfirmed by direct observation of an `EXIT_STATUS=0`** — two independent from-scratch
+  attempts have now each run 10h+ without finishing, for different reasons (timeout abandonment vs. SPOT preemption).
+  **Judgment call on closing scope** (mirroring slot-6's own precedent on todo 1 in this same doc): continuing to watch
+  a single VM for an unbounded number of additional hours to chase a still-unknown completion time is a different kind
+  of task than this todo's timeout-tuning intent, and the mechanism's slowness is ALREADY tracked as its own
+  architectural problem (S1 sequential-per-instrument-timeframe-loop, `data_pipeline_check_mdps_features_2026_07_20.md`)
+  — inflating `_FAMILY_TIMEOUT_OVERRIDES[("delta_one","CEFI")]` indefinitely without a confirmed ceiling would just be
+  guessing, not fixing. **Shipped** `features-service@e0ccdf0a`: raised the override to 72000s (20h) — a reasoned
+  interim ceiling grounded in the only real upper reference point observed so far (VM1's 20h9m SPOT-preempted runtime),
+  explicitly documented in-code as NOT a confirmed completion time. Updated the `data-pipeline-check-features`
+  SKILL.md's benchmark section (`unified-trading-pm@d11ff24ef`) to flag that CEFI:delta_one materially exceeds the
+  documented ~25.9s/instrument-day rate and that its real completion time is open, tied to the S1 fix. The abandoned VM
+  (`features-e2e-cefi-20260730-133536-025349`) was left running per the VM-delete guardrail (genuinely still working,
+  not stale) — a future session can check
+  `gcloud storage cat gs://deployment-scripts-central-element-323112/vm-logs/features-e2e-cefi-20260730-133536-025349/EXIT_STATUS.json`
+  for free to learn its eventual real number without a new launch. **Net result for this todo**: TRADFI:delta_one fully
+  closed (genuine verdict obtained); CEFI:delta_one's timeout-orphan defect fully closed (guard verified working,
+  override raised on real evidence, SKILL.md corrected) but its underlying completion-time question is now explicitly
+  the S1 architectural fix's problem to answer, not a follow-up for this doc.
+- 2026-08-02 (slot-2, infra): **Closed the MDPS SPORTS:odds_horizon_bucket todo.** Shipped
+  `_FAMILY_TIMEOUT_OVERRIDES`/`_resolve_timeout_sec` (`("SPORTS", "odds_horizon_bucket") = 3600s`) in
+  `market-data-processing-service/scripts/pipeline_e2e_check.py`, mirroring the pattern already proven in
+  features-service — `market-data-processing-service@dbcba44` (6 new unit tests, full `quality-gates.sh` green, verified
+  on origin via `merge-base --is-ancestor`). Ran a genuine from-scratch force+skip verification
+  (`--day 2026-08-01 --legs force,skip --require-captured --auto-day --asset-group SPORTS --data-types odds_horizon_bucket`,
+  auto-day → 2026-04-14): both VMs terminated genuinely within the new 3600s budget (force ~3.6min, skip ~3.7min) — the
+  timeout-abandonment mechanism this doc exists to fix is confirmed NOT triggering, satisfying the todo's own done-when
+  bar. The observed `EXIT_STATUS=1` on both legs is an unrelated, pre-existing bug (candle writes for this shard target
+  the PROD bucket instead of the passed `--output-bucket`, correctly 403'd by IAM) — NOT a timeout defect, so it does
+  not block closing this todo (same precedent as this doc's own TRADFI:delta_one exit=1 acceptance earlier). Filed the
+  new bug separately: `issues/mdps_sports_odds_horizon_bucket_candle_write_targets_prod_bucket_2026_08_02.md` (distinct
+  from both already-tracked IAM docs — the write targets PROD itself, not a bucket-tier IAM-condition mismatch). Report:
+  `plans/audit/results/data_pipeline_e2e_check_mdps_2026_08_01.md`. One todo remains open in this doc (the P2 post-run
+  VM-reconciliation todo) — not in scope for this task.

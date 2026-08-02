@@ -26,10 +26,10 @@ referenced_by:
     /codex/04-architecture/tier-and-import-architecture.md,
     /codex/05-infrastructure/README.md,
     /codex/05-infrastructure/aws-migration-cost-snapshot-2026-05-07.md,
-    plans/epics/cross_cutting_may_23_SUPERSEDED_2026_05_21.md,
+    /plans/epics/cross_cutting_may_23_SUPERSEDED_2026_05_21.md,
   ]
 owner:
-last_reviewed: 2026-05-17
+last_reviewed: 2026-08-19
 code_refs:
 ---
 
@@ -52,21 +52,28 @@ one-liner statement of this rule.
 
 ## The Abstraction Layer
 
-`unified-cloud-interface` (UCI) is a Tier 0 library. It exposes factory functions that return cloud-agnostic protocol
-implementations:
+> **⛔ REPO + CLASS NAMES CORRECTED 2026-07-30.** The `unified-cloud-interface` (UCI) repo no longer exists — the
+> cloud-agnostic layer folded into **unified-trading-library (UTL)** at `unified_trading_library/cloud_interface/`. The
+> protocol classes were also renamed: they carry **no `Cloud*` prefix**. The factory functions and the `CLOUD_PROVIDER`
+> env-var contract are unchanged and still correct.
 
-| Factory function       | Returns protocol     | What it does                                               |
-| ---------------------- | -------------------- | ---------------------------------------------------------- |
-| `get_storage_client()` | `CloudStorageClient` | Read/write blobs (GCS bucket or S3)                        |
-| `get_secret_client()`  | `CloudSecretClient`  | Access secrets (GCP Secret Manager or AWS Secrets Manager) |
-| `get_queue_client()`   | `CloudQueueClient`   | Publish/subscribe (Pub/Sub or SQS/SNS)                     |
+UTL's `cloud_interface` is the Tier-0 cloud-agnostic layer. It exposes factory functions that return cloud-agnostic
+abstract implementations (`unified_trading_library/cloud_interface/abstractions.py`):
+
+| Factory function       | Returns (actual class) | What it does                                               |
+| ---------------------- | ---------------------- | ---------------------------------------------------------- |
+| `get_storage_client()` | `StorageClient`        | Read/write blobs (GCS bucket or S3)                        |
+| `get_secret_client()`  | `SecretClient`         | Access secrets (GCP Secret Manager or AWS Secrets Manager) |
+| `get_queue_client()`   | `QueueClient`          | Publish/subscribe (Pub/Sub or SQS/SNS)                     |
+
+Also present in the same module: `AsyncStorageClient`, `CachingSecretClient`, `PubSubClient`, `AnalyticsClient`.
 
 ```python
-from unified_cloud_interface import get_storage_client, get_secret_client
+from unified_trading_library import get_storage_client, get_secret_client
 ```
 
-All service code must import from `unified_cloud_interface`. No other import path for cloud I/O is acceptable in
-non-provider source files.
+All service code must import from `unified_trading_library`. No other import path for cloud I/O is acceptable in
+non-provider source files — direct `google.cloud` / `boto3` imports are a QG-enforced ban.
 
 ---
 
@@ -90,10 +97,16 @@ This env var is the **only** acceptable way to inject cloud provider choice. Nev
 
 ## Naming Convention
 
-### Protocols and Abstract Classes — `Cloud*` prefix (mandatory)
+### Protocols and Abstract Classes
+
+> **⛔ Superseded 2026-07-30 — the `Cloud*` prefix is NOT the shipped convention.** The real protocol/ABC names in
+> `unified_trading_library/cloud_interface/abstractions.py` are unprefixed (`StorageClient`, `SecretClient`,
+> `QueueClient`, `PubSubClient`, `AnalyticsClient`, `StorageBucket`, `StorageBlob`). The example below shows the
+> ORIGINALLY-PROPOSED naming and is retained only to explain the provider-vs-protocol split that follows; do not name
+> new classes `Cloud*` to match it.
 
 ```python
-# CORRECT — protocol uses Cloud* prefix
+# Illustrative only — the shipped class is `StorageClient`, without the Cloud* prefix.
 class CloudStorageClient(Protocol):
     def read(self, path: str) -> bytes: ...
     def write(self, path: str, data: bytes) -> None: ...

@@ -28,6 +28,12 @@ execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
 last_updated: 2026-07-30
+context_scope:
+  [
+    /plans/active/issues/capability_wizard_analysis_findings_2026_06_11.md,
+    /plans/archive/2026_07/capability_wizard_and_manifest_2026_06_11.md,
+    /plans/archive/issues/cefi_margin_model_hyphenated_instrument_id_misclassification_2026_07_27.md,
+  ]
 ---
 
 # Capability wizard — gap discovery tracker
@@ -314,7 +320,10 @@ flips an edge's `status`; capability-regression gate green.
       (3286 tests) + full `quality-gates.sh` all green. Also fixed one adjacent pre-existing stale count assertion found
       while running the full smoke suite (venue count drifted 195→225 in `tests/smoke/wizard.spec.ts`); the remaining
       ~65 unrelated pre-existing smoke failures seen in that run were NOT individually triaged — filed as
-      `plans/active/issues/wizard_smoke_suite_pre_existing_failures_2026_07_28.md`.
+      `plans/active/issues/wizard_smoke_suite_pre_existing_failures_2026_07_28.md`, since triaged and RESOLVED
+      2026-08-01 (104/108 passed under the correct `--workers=1` measurement; 1 genuine defect found + filed as
+      `/plans/active/issues/wizard_jurisdiction_overlay_dropped_by_registry_regen_2026_08_01.md`) — archived at
+      `plans/archive/issues/wizard_smoke_suite_pre_existing_failures_2026_07_28.md`.
 
 <!-- GAP ENTRIES: two-sided audit (auto-appended by audit_prospectus_vs_codex.py) -->
 
@@ -840,3 +849,7 @@ fired.
       active_may23) / COPPER_MPC (active_june1, selectable) / FIREBLOCKS_MPC (out_of_scope, greyed); choice flows into
       `StrategyConfigArtifact.capital.signingSurface` + onboarding checklist. Tests: custody-signing.test.ts + pw:L2 ✓
       tests/smoke/wizard-custody.spec.ts (13 passed). dep-ui@0db05b7 capability-tab counts re-synced.
+
+## Progress Log
+
+- **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).

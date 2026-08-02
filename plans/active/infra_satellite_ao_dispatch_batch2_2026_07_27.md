@@ -41,6 +41,12 @@ assigned_role: infra
 drift_direction: advance-code
 locked_by:
 locked_since:
+context_scope:
+  [
+    /cursor-configs/skills/na-eligibility-audit/SKILL.md,
+    /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
+    /plans/active/infra_satellite_ao_dispatch_batch2_finalize_2026_07_27.md,
+  ]
 supersedes:
 superseded_by:
 depends_on: []
@@ -150,3 +156,7 @@ once the corresponding todo below is actually done — not this plan.
   "Done when" clause flips the corresponding checkboxes in the source doc once done. Drafting a competing todo here
   would duplicate live dispatched work — held back, not re-drafted. No operator ruling needed (unambiguous: batch2
   already owns this); reported informationally in the dry-run's chat summary instead of a parked escalation doc.
+
+## Progress Log
+
+- **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).

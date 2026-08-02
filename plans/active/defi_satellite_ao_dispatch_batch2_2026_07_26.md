@@ -41,8 +41,8 @@ related:
   [
     /plans/active/defi_consolidated_closeout_2026_07_18.md,
     /plans/archive/2026_07/defi_consolidated_closeout_aggregated_sources_2026_07_24.md,
-    /plans/active/defi_satellite_ao_dispatch_batch1_2026_07_25.md,
-    /plans/active/defi_satellite_ao_dispatch_batch1_finalize_2026_07_25.md,
+    /plans/archive/2026_07/defi_satellite_ao_dispatch_batch1_2026_07_25.md,
+    /plans/archive/2026_07/defi_satellite_ao_dispatch_batch1_finalize_2026_07_25.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]
 created: "2026-07-26"
@@ -58,6 +58,13 @@ locked_by:
 locked_since:
 supersedes:
 superseded_by:
+context_scope:
+  [
+    /plans/active/defi_consolidated_closeout_2026_07_18.md,
+    /plans/active/defi_satellite_ao_dispatch_batch2_2026_07_26_finalize.md,
+    /cursor-configs/skills/ag-closeout-audit/SKILL.md,
+    /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
+  ]
 depends_on: []
 source: >-
   /ag-closeout-audit skill run 2026-07-26 (interactive, operator-approved scope) — Phase 1 classified all 56 defi
@@ -88,10 +95,17 @@ drift_direction: advance-code
   DRIFT-SOLANA present is unsatisfiable-by-design (deliberately removed 2026-07-16). Full re-diagnosis:
   `/plans/archive/issues/defi_manifest_no_expected_unattempted_seeder_2026_07_26.md`. **RULED 2026-07-26 (slot-2)**:
   Option A (build a real seeder) — the actual work is tracked as human plan
-  `/plans/active/defi_expected_unattempted_seeder_design_2026_07_26.md` (assigned_vm: NA, gated on an operator
+  `/plans/archive/2026_08/defi_expected_unattempted_seeder_design_2026_07_26.md` (assigned_vm: NA, gated on an operator
   capability-reconciliation decision). This entry is intentionally NOT a `- [ ]`/`- [x]` checkbox — it must never be
   faked `[x]` (no seeder exists to complete against) and must never re-enter the dispatchable queue; the superseding
-  plan is the live tracking doc going forward. Source: /plans/active/data_completion_defi_2026_07_15.md (item C8).
+  plan is the live tracking doc going forward. Source: /plans/active/data_completion_defi_2026_07_15.md (item C8, now
+  also flipped `[x]` by citation). **Seeder shipped 2026-08-01 (slot 8)**: the superseding plan's P2 landed
+  (`unified-api-contracts@91bafdae`, `market-tick-data-service@a5a93dc0`) — see that plan's Progress Log for the full
+  accounting (scope, design corrections, deferred live-census verification). **Fully closed + archived 2026-08-01**: all
+  7 todos done (P0-P3, Todo 4 live-census PASS, Todo 5 FLUID wiring, Todo 6 v2-enumerator OOM investigation),
+  reconciled + archived via
+  `/plans/archive/2026_08/defi_expected_unattempted_seeder_design_2026_07_26_finalize_2026_07_28.md`. This C8 entry
+  stays non-checkbox prose per the instruction above; the archived plan remains the historical tracking doc.
 - [x] ✅ [CHORE] P3. **DONE 2026-07-26 (worker, slot 6).** (1) Deleted, `market-tick-data-service@5dadaae7` — all 3
       gating buckets re-verified live still deleted. (2) Audited all 10 campaign scripts: 9 reference now-confirmed-dead
       buckets AND have their governing plan(s) archived, but did NOT delete them — the "GCS orphan sweep = 0" half of
@@ -108,7 +122,7 @@ drift_direction: advance-code
       `backfill_hl_*_2026_06_17.py` scripts (all tagged `Lifecycle: campaign`) for hardcoded dead bucket-name templates
       tied to earlier, already-completed migrations — repoint or mark for deletion per each script's own Lifecycle
       marker; not urgent but currently orphaned. Source:
-      plans/active/defi_dedicated_bucket_shared_migration_2026_07_13.md. Done when:
+      /plans/archive/2026_07/defi_dedicated_bucket_shared_migration_2026_07_13.md. Done when:
       `migrate_lst_perp_shared_bucket_gap_2026_07_13.py` is deleted (or its deletion is confirmed already done with a
       cited commit), and each of the ~8 campaign scripts has been checked for dead bucket-name templates with either a
       repoint applied or a documented reason no fix is needed.
@@ -285,7 +299,7 @@ drift_direction: advance-code
   divergence is 1/3,045 (0.03%). Verdict: the original 45.2% figure is confirmed almost entirely a
   comparison-methodology artifact; real content divergence is effectively 0%. Full writeup + the duplicate-key discovery
   (filed as its own follow-up,
-  `plans/active/issues/defi_instrument_availability_duplicate_instrument_key_rows_2026_07_26.md`) in Source's new
+  `plans/archive/issues/defi_instrument_availability_duplicate_instrument_key_rows_2026_07_26.md`) in Source's new
   2026-07-26 dated section.
 
 - [ ] [DATA] P2. Once `defi_satellite_ao_dispatch_batch1_2026_07_25.md`'s P1 [BACKEND]
@@ -332,7 +346,7 @@ drift_direction: advance-code
       `defi_track5_coverage_mvp_backfill_2026_07_24.md`'s own deferral to this doc) and is separately gated on the
       auth-blocked `gcloud compute` access noted in this doc's § Auth block; this todo covers the code + unit-test
       portion only, which the source doc states is safe to implement without live infra. Source:
-      `plans/active/issues/defi_mvp_backfill_optimization_ready_2026_07_20.md` § "Optimization — the perf bundle" (P1
+      `plans/archive/issues/defi_mvp_backfill_optimization_ready_2026_07_20.md` § "Optimization — the perf bundle" (P1
       item). Done when: the 3 new knobs exist in `service_config.py`; `solana_defi_handler.py` and
       `dex_pools_handler.py` fan out fetch+upload via `ParallelPerSymbolRunner` with sequential post-loop
       manifest-write/heartbeat application; blocking upload calls run on a dedicated `ThreadPoolExecutor`; new/updated
@@ -635,7 +649,7 @@ drift_direction: advance-code
       `archive/issues/defi_maker_vault_share_price_29day_gap_2026_07_26.md` (RESOLVED, archived 2026-07-28, both
       follow-up todos done — 29-day gap backfilled for all 5 protocols) with the exact evidence + 2 follow-up todos
       (root-cause + backfill, gated on each other). Zero manifest/GCS writes performed — pure verification. Source:
-      `issues/defi_venue_phase_live_definition_contradiction_2026_07_22.md`,
+      `/plans/archive/2026_07/defi_venue_phase_live_definition_contradiction_2026_07_22.md`,
       `issues/defi_five_never_captured_venues_fix_2026_07_22.md`. **Done when**: either (a) the 90-day backfill is
       complete and manifest-verified for all 6 venues with cited cron-health evidence, or (b) a new issue doc exists
       citing the crash-loop evidence and explicitly defers the backfill.
@@ -650,7 +664,7 @@ drift_direction: advance-code
   this doc — the unchecked `- [ ] [FEATURE] P2 delta_one funding_oi venue-aware annualisation` todo (features-service,
   thread venue through the delta_one calculator interface so non-8h venues like Hyperliquid annualise correctly) — is
   explicitly annotated in the doc itself as "DEFERRED —...
-- **`plans/active/issues/lst_exchange_rate_data_availability_2026_07_21.md`**: Phase-1's "orphaned_never_touched"
+- **`plans/archive/issues/lst_exchange_rate_data_availability_2026_07_21.md`**: Phase-1's "orphaned_never_touched"
   verdict is a false positive produced by the narrow covering-set grep — the target doc is NOT actually orphaned.
   Grepping the covering set for the mechanism names (lst_yields, lst_rates, aave_oracle/AaveOracle, dex_pool_swaps,
   Curve, Orca/Raydium/Meteora) surfaced...
@@ -674,10 +688,10 @@ drift_direction: advance-code
   confirmed Phase-1's evidence exactly. Of the 3 open todos, the VERIFY (P2) is dispatched by
   defi_satellite_ao_dispatch_batch1_2026_07_25.md (line ~546-549); the other two are explicitly excluded there (lines
   ~578-592) with detailed reasoning I independently re-verified against the source doc's...
-- **`plans/active/issues/defi_pool_chain_collision_curve_balancer_gap_2026_07_21.md`**: Confirmed uncovered: todo-2
-  (reconcile the 2026-07-08 Balancer `@CHAIN` instrument_id patch against the 2026-07-18 Option-A ruling — revert vs
-  ratify) and todo-3 (fix CURVE's still-bare colliding instrument_id) are not cited by any doc in the covering set. Only
-  todo-1 (read-only audit/verify, explicitly told to flag...
+- **`plans/archive/issues/defi_pool_chain_collision_curve_balancer_gap_2026_07_21.md`** (archived 2026-07-30, fully
+  closed): Confirmed uncovered: todo-2 (reconcile the 2026-07-08 Balancer `@CHAIN` instrument_id patch against the
+  2026-07-18 Option-A ruling — revert vs ratify) and todo-3 (fix CURVE's still-bare colliding instrument_id) are not
+  cited by any doc in the covering set. Only todo-1 (read-only audit/verify, explicitly told to flag...
 - **`plans/active/issues/defi_swaps_ohlcv_candle_data_types_axis_gap_2026_07_22.md`**: Confirmed via full read: the
   target doc's 4 open todos split as (1) VERIFY completeness_pct impact and (4) VERIFY the swaps_ohlcv_4h timeframe
   discrepancy — both explicitly covered by defi_satellite_ao_dispatch_batch1_2026_07_25.md lines 341-355
@@ -686,7 +700,7 @@ drift_direction: advance-code
   Conflict check: grepped the consolidated closeout plan's own todos plus every
   batch1/track01/lending-writer-retire/gmx-venue-removal/dex-pool-symbol-fix/track5(+finalize) doc for overlap on this
   doc's remaining ground. The 4 todos in defi_satellite_ao_dispatch_batch1_2026_07_25.md (lines ~386-419: [DATA] P1...
-- **`plans/active/issues/e2e_testing_collateral_validation_dead_import_2026_07_23.md`**: No conflict with any
+- **`plans/archive/issues/e2e_testing_collateral_validation_dead_import_2026_07_23.md`**: No conflict with any
   covering-set doc (grep for test_collateral_validation.py, funding_ensemble_engine.py, CollateralValidationMixin,
   defi_enhancements across the full defi covering set returned zero hits — nothing else claims this ground). The blocker
   is a genuine three-way operator decision baked into the source doc...
@@ -727,8 +741,8 @@ drift_direction: advance-code
 
 ## Deferred — human-only (needs a dedicated engineering/design session, not an AO todo)
 
-- **`plans/active/issues/onchain_manifest_dishonest_and_recompute_blocked_2026_07_21.md`**: Confirmed via full read: the
-  doc's 4-step fix chain is only partially covered. defi_satellite_ao_dispatch_batch1_2026_07_25.md's 2 cited todos
+- **`plans/archive/issues/onchain_manifest_dishonest_and_recompute_blocked_2026_07_21.md`**: Confirmed via full read:
+  the doc's 4-step fix chain is only partially covered. defi_satellite_ao_dispatch_batch1_2026_07_25.md's 2 cited todos
   cover (a) a DIAGNOSTIC-only pass on the frozen onchain consolidator (fixes only if trivial; otherwise "remediation
   stays open pending a human design decision" — so step 1 does...
 - **`plans/active/issues/solana_dex_pool_swaps_indexer_scope_2026_07_12.md`**: Conflict check found no genuine conflict:
@@ -779,3 +793,5 @@ source issue doc directly as the successor reference.
   regression on the already-correct path. New parametrized tests added to
   `tests/unit/scripts/test_migrate_instruments_store_v9.py`. `quality-gates.sh` green on instruments-service (twice —
   once per change). Done-criteria (a)/(b)/(c) all satisfied; (c) is the QG-green run itself.
+
+- **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).

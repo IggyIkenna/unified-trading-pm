@@ -38,6 +38,12 @@ model_tier: sonnet-doable
 drift_direction: advance-code
 assigned_vm: planning
 depends_on: []
+context_scope:
+  [
+    instruments-service/instruments_service/engine/orchestrator/process_completeness.py,
+    instruments-service/instruments_service/engine/orchestrator/process_write.py,
+    /plans/active/sports_data_sources_canonical_completion_2026_07_13.md,
+  ]
 ---
 
 ## What I found
@@ -258,17 +264,17 @@ list bucket routing); row 1's class is a documented, scoped, NEW follow-up todo 
 reproducible and root-caused, just deliberately out-of-scope for this cleanup pass per findings-triage: audit-scope
 discoveries beyond the immediate ask get their own tracked todo, not unplanned scope absorbed inline).
 
-- [ ] [DATA] P2. **Fix `process_completeness.py`'s honest-coverage `ManifestWriter` instances (the missing-shards
-      `record_failed`/`record_expected_empty` loop and the empty-ok-venues `record_zero_rows` loop in
-      `_finalize_completeness()`/`_completeness_and_retry()`) to route each venue to its OWN asset_group bucket,
-      mirroring `_write_all_venues()`'s existing `_get_venue_bucket()` per-venue routing** — today these diagnostic
-      writers always use the single `bucket` param passed into `_completeness_and_retry()`, so a combined multi-AG run
-      (even the correctly-detected "ALL" sentinel case) can still misroute a missing/adapter-failed non-primary -AG
-      venue's honest-coverage row into the primary bucket (the same bug class as Finding C's row 1, still live). Needs a
-      bucket-resolver threaded through `_completeness_and_retry()`'s signature (repo: instruments-service). **Done
-      when**: a regression test proves a non-primary-AG venue's `record_failed`/`record_zero_rows` call resolves that
-      venue's OWN bucket (not the run's primary bucket) during a combined multi-AG run; `quality-gates.sh` green.
-      Source: this doc's 2026-07-27 update.
+- [x] ✅ [DATA] P2. **DONE 2026-08-02 (slot-9)** — Fixed `process_completeness.py`'s honest-coverage `ManifestWriter`
+      instances (the missing-shards `record_failed`/`record_expected_empty` loop, extracted into
+      `_stamp_missing_shards_attempted_failed()`, and the empty-ok-venues `record_zero_rows` loop in
+      `_completeness_and_retry()`) to route each venue to its OWN asset_group bucket, mirroring `_write_all_venues()`'s
+      existing `_get_venue_bucket()` per-venue routing — `instruments-service@5c2e88da`. Added a shared
+      `_venue_bucket_resolver()` in `process_write.py` (used by both `_write_all_venues()` and the completeness stage)
+      and threaded it through `_completeness_and_retry()` → `_finalize_completeness()`. **Done-when satisfied**: 2 new
+      regression tests (`TestCompletenessStageMultiAssetGroupBucketRouting` in `test_silent_absent_fixes.py`) prove a
+      non-primary-AG venue's `record_zero_rows`/`record_failed` call resolves that venue's OWN bucket (not the run's
+      primary bucket) during a combined `["SPORTS","CEFI"]` multi-AG run; `quality-gates.sh` green (5145 passed, 88.94%
+      coverage, file/function size gates clean). Source: this doc's 2026-07-27 update.
 
 ## Update 2026-07-15 (final) — Finding B FULLY RESOLVED, no redeploy needed after all
 
@@ -286,3 +292,7 @@ non-sports rows are the already-tracked Finding C rows, not a new gap. Held stab
 **Finding B is closed. Both todos above (the heal + the redeploy follow-up) are DONE — no manual Cloud Build/redeploy
 action was actually required.** Full evidence:
 `unified-trading-pm/plans/active/sports_data_sources_canonical_completion_2026_07_13.md` Progress Log, 2026-07-15 entry.
+
+## Progress Log
+
+- **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).

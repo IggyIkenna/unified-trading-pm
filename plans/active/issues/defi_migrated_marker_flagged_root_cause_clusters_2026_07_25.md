@@ -9,7 +9,7 @@ summary:
   that DO have a real distinct on-chain pool_id per row but never got symbol/pool_address resolved (~944 markers, NOT
   unattributable data, an unresolved symbol-resolution gap), and an lst_rates cluster (COINBASE/MAKER/SWELL, ~678
   markers). None of these are fixed by blindly re-running migrate_defi_batch_to_per_instrument.py --apply.
-status: open
+status: resolved
 nature: issue
 asset_group: defi
 stage: [data]
@@ -18,6 +18,7 @@ scope: [engineer]
 tags: [defi, per-instrument-model, needs-attribution, symbol-resolution, migration, data-correctness]
 related: [defi_consolidated_closeout_2026_07_18]
 created: 2026-07-25
+last_updated: "2026-08-02"
 parent_epic: infrastructure_master
 assigned_vm: NA
 execution_scope: local-only
@@ -32,8 +33,19 @@ source:
     (defi_consolidated_closeout_2026_07_18.md progress log, 2026-07-25 entry)",
   ]
 resolved_by:
+  "GMX cluster: /plans/archive/2026_07/defi_gmx_venue_removal_2026_07_25.md (status: complete, verified);
+  TRADER_JOE_V2/VELODROME_V2/CURVE dex_pool_state + lst_rates (all 4 venues) clusters:
+  defi_dex_pool_symbol_fix_backfill_purge_2026_07_25.md, all 5 todos shipped/independently re-verified 2026-08-02 --
+  both clusters this doc tracks are now independently confirmed closed"
 locked_by:
 locked_since:
+context_scope:
+  [
+    /plans/active/defi_dex_pool_symbol_fix_backfill_purge_2026_07_25.md,
+    /plans/active/defi_dex_pool_symbol_fix_backfill_purge_finalize_2026_07_25.md,
+    /plans/active/issues/defi_dex_pools_subgraph_query_missing_input_tokens_2026_07_25.md,
+    market-tick-data-service/scripts/one_offs/delete_migrated_defi_markers_2026_07_23.py,
+  ]
 ---
 
 # FLAGGED `_migrated_*` markers are 3+ distinct unresolved root-cause clusters
@@ -176,9 +188,46 @@ unshipped. Per this plan's own gated finalize doc
 (`plans/active/defi_dex_pool_symbol_fix_backfill_purge_finalize_2026_07_25.md`), this issue's overall status should be
 re-checked once that plan completes.
 
+## Update (2026-08-02 — `defi_dex_pool_symbol_fix_backfill_purge_finalize_2026_07_25.md` todo 1, slot-13 review craft):
+
+both remaining clusters now independently confirmed closed; flipping `status` to `resolved`
+
+Re-checked `defi_dex_pool_symbol_fix_backfill_purge_2026_07_25.md`: all 5 todos are now `- [x]` done, each with real,
+verified evidence (query fix `market-tick-data-service@63199601`, confirmed ancestor of `origin/live-defi-rollout`;
+backfill VMs completed + manifest spot-checked; both purge categories — lst_rates markers for all 4 venues
+COINBASE/SWELL/MAKER/ETHENA, and the old dex_pool_state address-keyed leaves for curve/sushiswap/velodrome_v2/
+trader_joe_v2 — independently re-verified zero-SAFE-remaining). This resolves BOTH of this doc's remaining clusters at
+once: the **dex_pool_state cluster (TRADER_JOE_V2/VELODROME_V2/CURVE, ~944+421 markers)** via the query-fix + backfill +
+purge, and the **lst_rates cluster (~678 markers, COINBASE/MAKER/SWELL/ETHENA)** via the same plan's todo 1 (covers all
+4 venues, not just MAKER/ETHENA).
+
+Per this update's own instruction above, also re-checked the **GMX cluster's** owning plan before touching the top-level
+`status`: `/plans/archive/2026_07/defi_gmx_venue_removal_2026_07_25.md` carries `status: complete` and is physically
+archived (confirmed by reading the file directly, not trusting the 2026-07-26 note alone).
+
+All 3 clusters this doc tracks (GMX, dex_pool_state, lst_rates) are now independently confirmed closed — flipping
+`status: open` → `status: resolved` with the `resolved_by` citation above in this same commit.
+
 ## Todos
 
-- [ ] [DATA] P1. **Ship `defi_dex_pool_symbol_fix_backfill_purge_2026_07_25.md`'s 5 todos** — the TRADER_JOE_V2/
-      VELODROME_V2/CURVE `dex_pool_state` cluster and the lst_rates MAKER/ETHENA half remain unresolved (query-fix,
-      live-test, re-backfill, and both `[OPERATOR]` purges all unshipped as of 2026-07-26); re-check this doc's overall
-      status once that sibling plan completes.
+- [x] ✅ [DATA] P1. **DONE 2026-08-02 (finalize task `defi_dex_pool_symbol_fix_backfill_purge_finalize_2026_07_25.md`
+      todo 1, slot-13 review craft) — closed by citation.** `defi_dex_pool_symbol_fix_backfill_purge_2026_07_25.md`'s
+      all 5 todos shipped/independently re-verified (see the 2026-08-02 update above for full evidence); this doc's
+      overall `status` flipped to `resolved` in this same commit.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30**: KEEP-NA-STALE: its sole todo's content is wholly owned by the active
+  assigned_vm:planning plan defi_dex_pool_symbol_fix_backfill_purge_2026_07_25.md, whose finalize twin carries an open
+  todo to reconcile status back into this doc. Citation fixed, not reclassified (flipping would dispatch a duplicate)
+- **context-scout 2026-08-01**: populated context_scope (4 entries).
+- **na-eligibility-audit 2026-08-02** (tranche=defi, autonomous, scheduled): KEEP-NA-STALE (2026-07-30 verdict re-
+  affirmed; citation already fixed then, nothing further to correct) — re-read end to end; content unchanged since
+  (context-scout backfill only). The sole open item carries its own explicit "Tracked elsewhere — do NOT dispatch from
+  here ... Reclassifying this doc would dispatch a duplicate" annotation: its entire content is owned by the active
+  `assigned_vm: planning` plan `defi_dex_pool_symbol_fix_backfill_purge_2026_07_25.md`, whose gated twin already carries
+  an open `[REVIEW] P2` to reconcile status back into this doc.
+- **2026-08-02 (slot-13, review craft, dispatched on `defi_dex_pool_symbol_fix_backfill_purge_finalize_2026_07_25.md`
+  todo 1)**: gate satisfied — parent plan's all 5 todos confirmed `[x]` with verified evidence, and the sibling GMX
+  cluster's owning plan independently confirmed `status: complete`/archived. Flipped this doc's status to `resolved`.
+  See the finalize plan + `defi_consolidated_closeout_2026_07_18.md` for the other 2 legs of this same reconciliation.

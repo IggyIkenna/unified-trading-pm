@@ -50,6 +50,13 @@ source:
 locked_by:
 locked_since:
 resolved_by:
+context_scope:
+  [
+    /plans/active/artifact_pipeline_observability_2026_07_17.md,
+    .github/workflows/freeze-deferred-build-replay.yml,
+    .github/workflows/cloud-build-router-aws.yml,
+    deployment-service/scripts/vm/lib/aws_ec2_launch_lib.sh,
+  ]
 ---
 
 # Build/deploy pipeline provenance + AWS-deferred gaps
@@ -138,3 +145,17 @@ acting. (The artifact-pipeline page does not depend on this — it reads the Clo
   `unified-trading-deployment-scripts-427895769566` is 404 and `uts-prod-deployment-state/code/` is populated. No
   existing issue doc covered these; the adjacent `change_freeze_…` doc (resolved) is about the freeze calendar, not the
   replay-filter naming. Loop Ikenna in before any fix — every open item lives in a file in his active CI area.
+- **context-scout 2026-08-01**: populated context_scope (4 entries).
+
+## na-eligibility-audit verdict
+
+**na-eligibility-audit 2026-07-30** (tranche `ci`, autonomous): KEEP-NA, valid — carries an explicit dated operator
+ruling at the top of the doc ("Page-first, do NOT fix here", operator 2026-07-21). #4 and #7 are AWS-lane and gated on
+AWS credits resuming; #1 and #3 are explicitly framed as "do not assume it is a bug" judgment calls in an
+actively-edited CI area requiring coordination. Ruling confirmed present, not re-derived.
+
+**na-eligibility-audit 2026-08-02** (tranche `ci`, autonomous): **CONFIRMS the verdict above, unchanged.** Re-read
+end-to-end; all 4 open todos re-verified against the rubric (#4 + #7 AWS-lane gated on credits resuming, #1 + #3
+explicit "do not assume it is a bug" / "confirm whether" judgment calls). The only change since the last marker is the
+2026-08-01 context-scout `context_scope` backfill — pure metadata, zero content movement, so nothing to re-verdict. The
+operator ruling was re-confirmed present verbatim, not re-derived.

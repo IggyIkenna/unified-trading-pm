@@ -125,6 +125,120 @@ BUILD_LDR_EXPLICIT=false
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
+    -h|--help)
+      # HARD RULE (2026-07-30, quickmerge_help_flag_misparsed_as_commit_message_2026_07_30):
+      # this case MUST stay the first arm in this statement and MUST exit before anything else
+      # runs. The bug this guards against: --help used to fall through to the `*)` catch-all,
+      # got silently treated as the commit message, and the script then executed the REAL
+      # pipeline — including an unscoped `quality-gates.sh --lint --fix` tree-wide reformat
+      # (STAGE 3, non-agent path) — reformatting ~1,300 files repo-wide and hanging on the
+      # subsequent full test/typecheck/codex pass. --help/-h must always be a pure, immediate,
+      # side-effect-free no-op.
+      cat <<'QM_USAGE'
+CANONICAL QUICKMERGE — unified-trading-system
+
+Single source of truth for all repos (scripts/quickmerge.sh in every repo is a symlink here).
+
+USAGE
+  bash scripts/quickmerge.sh "commit message" [FLAGS]
+  bash scripts/quickmerge.sh "commit message" --agent --files "path1 path2"   # agent convention
+
+BRANCH MODEL (staging-first)
+  feat/*    QG only, no PR (feature iteration, auto-detected)
+  staging   ALL human commits converge here first; semver-agent validates label vs API diff;
+            SIT validates before promoting to main
+  main      always stable; only updated via staging->main promotion, or [skip ci] automation
+  [skip ci] automation commits (chore(release):, chore(manifest):, chore(deps):) route direct
+  to main, bypassing staging/semver-agent.
+
+PIPELINE (what actually runs, in order)
+  1.   Dependency validation (workspace-manifest.json)
+  1.5  PM dependency-alignment check; staging lock check (all repos)
+  1.6  Dependency version gate (deps semver-behind staging)
+  1.7  Dependency tier-readiness gate (deps ci_status must be STAGING_GREEN+)
+  2.   Pre-flight audit (skippable: --skip-preflight)
+  3.   Local quality gates — TWO-PHASE: auto-fix pass, then verify pass. This is the stage
+       that reformats/tests/typechecks the tree; see FLAGS for how it's scoped.
+  4.   Act simulation (default on; skip with --quick)
+  5.   Create PR + enable auto-merge (base: staging for human commits; main for [skip ci])
+
+FLAGS
+
+  Scoping (read this before running unattended or from a script/agent):
+    --files "p1 p2"       Stage only these paths. Strongly recommended for anything but an
+                           interactive human commit of your own full working tree.
+    --agent                Marks this as an agent-driven run. REQUIRES --files (refused
+                           otherwise) so an agent can never accidentally stage/ship another
+                           session's uncommitted work. Also switches STAGE 3 to the fast
+                           sentinel-verification path instead of re-running the full QG.
+
+  Routing / branch:
+    --dep-branch NAME      HUMAN-ONLY. Branch isolation when a dependency has uncommitted
+                            changes not yet on main. Refused under --agent (agents use
+                            active_feature_branch from workspace-manifest.json instead).
+    --to-staging            No-op, kept for backwards compat (staging is already the default
+                             route for every human commit).
+    --hotfix                Break-glass: staging with abbreviated SIT (<2 min), for production
+                             incidents only. Requires a literal [hotfix] marker in the commit
+                             message (auditable).
+    --hotfix-to-main         Rarest break-glass: lands on LDR AND fast-tracks just this one
+                              commit to main via its own PR (v2-gated; no trunk promote, no
+                              protection bypass). Requires a [hotfix-main] marker in the commit
+                              message AND operator env QUICKMERGE_HOTFIX_TO_MAIN_OK=1 — agents
+                              cannot self-authorize this path.
+
+  Gate control:
+    --quick                Skip Stage 4 (act simulation) only; Stage 3 quality gates still run
+                            in full. Not a substitute for the real gate before shipping.
+    --no-pr                 Run through quality gates but do not open a PR / enable auto-merge.
+    --unit-only              Shorthand for --quick --no-pr.
+    --skip-preflight          Skip Stage 2's pre-flight audit (a multi-agent safety check, not
+                               a quality gate — does not weaken QG enforcement).
+    --skip-dep-tier-gate       HUMAN-ONLY. Skip Stage 1.7's dep-tier-readiness check. Refused
+                               under --agent (exists specifically to catch agent promotion
+                               races).
+    --skip-tests / --skip-typecheck / --skip-codex
+                               DISABLED — always exits 1. WS-L #1014 (2026-06-26): the full
+                               quality gate (lint+format+typecheck+tests+codex) is mandatory
+                               before every push; there is no partial-skip flag. Use plain
+                               `bash scripts/quality-gates.sh <phase-flags>` locally while
+                               iterating, then quickmerge for the real, full-gate run.
+
+  Build:
+    --build                  Opt in to an LDR image build (stamps `Build-LDR: true` on the
+                              commit; the AWS CodeBuild LDR trigger only fires with this
+                              trailer present). Default off. The always-on main/deploy build is
+                              unaffected either way. Never combine with --agent.
+    --no-build                Explicit opt-out; overrides the per-repo
+                               `auto_build_on_quickmerge` manifest default.
+
+  Misc:
+    --user-approved            Deprecated no-op, kept for backwards compat (Stage 0.3 is
+                                advisory-only now; there is no gate left for it to bypass).
+    -h, --help                  Show this message and exit 0. Never runs any pipeline stage,
+                                 never touches git, never touches the working tree.
+
+EXAMPLES
+  bash scripts/quickmerge.sh "fix: correct off-by-one in shard cursor" --agent \
+      --files "src/foo.py tests/test_foo.py"
+  bash scripts/quickmerge.sh "docs(plans): flip todo 3" --agent --files "plans/active/x.md"
+  bash scripts/quickmerge.sh "fix: prod incident [hotfix]" --hotfix --files "src/bar.py"
+
+NOTES
+  - Any flag NOT listed above is a hard error (exit 1) — quickmerge does not guess. This
+    includes typos of the flags above; re-run with --help if unsure.
+  - Exactly one non-flag argument is treated as the commit message (default, if none given:
+    "chore: automated update"). It does not need to be quoted specially — pass it as one shell
+    argument.
+  - Agent sessions MUST pass --files with the changed-file list, via --agent, to avoid staging
+    another session's partial work.
+  - If quickmerge fails and you fix the underlying issue: just re-run quickmerge. Do not run
+    quality-gates.sh by hand first — quickmerge already runs it.
+
+SSOT: unified-trading-pm/scripts/quickmerge.sh — /codex/08-workflows/ci-cd-flow.md
+QM_USAGE
+      exit 0
+      ;;
     --files)
       FILES_ARG="$2"
       shift 2
@@ -205,6 +319,18 @@ while [[ $# -gt 0 ]]; do
       BUILD_LDR=false
       BUILD_LDR_EXPLICIT=true
       shift
+      ;;
+    -*)
+      # quickmerge_help_flag_misparsed_as_commit_message_2026_07_30: this arm is the actual
+      # fix — previously ANY unrecognized token (flag or not) fell into the commit-message
+      # arm below, so a typo'd/unknown flag silently became the commit message and the REAL
+      # pipeline ran anyway instead of failing loud. Anything that looks like a flag
+      # (leading dash) and didn't match a case above is now a hard error instead of a guess.
+      # A commit message that itself needs to start with a dash is not supported — SSOT
+      # convention (see --help) is that commit messages don't start with `-`.
+      echo "[quickmerge] ❌ Unknown flag: $1" >&2
+      echo "             Run 'bash scripts/quickmerge.sh --help' for the full flag list." >&2
+      exit 1
       ;;
     *)
       COMMIT_MSG="$1"
@@ -597,8 +723,37 @@ else
       echo "[$REPO_NAME] behind $_QM_REMOTE_REF by $_QM_BEHIND (ahead=$_QM_AHEAD) — pulling latest first..."
       if git pull --ff-only "$_QM_REMOTE_NAME" "$_QM_REMOTE_BRANCH" --quiet 2>/dev/null; then
         echo "[$REPO_NAME] ✅ fast-forwarded to latest — now current"
+      elif [ "${_QM_AHEAD:-0}" = "0" ]; then
+        # Pre-commit case (autostash_pop_restores_foreign_wip_into_the_index_2026_07_17.md,
+        # decided fix 2026-08-01): ahead=0 means there is no local commit for `--rebase` to
+        # replay, so ff-only's failure here can ONLY be a working-tree content OVERLAP (a
+        # locally-dirty tracked file the incoming diff also touches) — not commit-graph
+        # divergence. Skip the forced `--rebase --autostash` fallback for this case: it would
+        # stash-and-repop that overlapping file (and any OTHER dirty foreign file in this shared
+        # checkout) back into the working tree/index for zero reconciliation benefit — the exact
+        # non-conflict happy-path hazard this doc measured. Report + block; git's own refusal
+        # already named the overlapping file(s).
+        _QM_CODE="PRECOMMIT_WORKING_TREE_CONFLICT"
+        if [ "${QUICKMERGE_ALLOW_BEHIND:-}" = "1" ]; then
+          echo "[$REPO_NAME] ⚠️  still $_QM_BEHIND behind (${_QM_CODE}) — QUICKMERGE_ALLOW_BEHIND=1, continuing"
+        else
+          echo "QUICKMERGE_BLOCKED code=${_QM_CODE} repo=${REPO_NAME} branch=${_QM_REMOTE_BRANCH} behind=${_QM_BEHIND} ahead=0"
+          echo "RECOVERY: a dirty file in your working tree overlaps the incoming upstream diff (ahead=0 — not commit-graph divergence, so --rebase --autostash is not attempted here). Commit or 'git stash push -- <your-file>' YOUR file BY NAME, re-run the pull, then restore your stash. See autostash_pop_restores_foreign_wip_into_the_index_2026_07_17.md."
+          echo "[$REPO_NAME] ❌ BLOCKED: $_QM_BEHIND behind $_QM_REMOTE_REF, ff-only refused (working-tree overlap, ahead=0)."
+          echo "   Emergency override: QUICKMERGE_ALLOW_BEHIND=1 bash scripts/quickmerge.sh ..."
+          exit 1
+        fi
       elif git pull --rebase --autostash "$_QM_REMOTE_NAME" "$_QM_REMOTE_BRANCH" --quiet 2>/dev/null; then
         echo "[$REPO_NAME] ✅ rebased local commits onto latest — now current"
+        # Post-commit case (autostash_pop_restores_foreign_wip_into_the_index_2026_07_17.md,
+        # decided fix 2026-08-01): --autostash's pop restores EVERY file it stashed back into the
+        # INDEX (staged) on pop — including foreign files owned by other agents dirty in this
+        # shared checkout, not just this repo's own already-committed work. Unconditionally
+        # unstage right here, BEFORE any of this script's own `git add` below: `git restore
+        # --staged .` only touches the index (never working-tree content, so it cannot destroy
+        # anything) and guarantees the index holds only what this run explicitly re-adds,
+        # regardless of what the pop just restaged.
+        git restore --staged . 2>/dev/null || true
       else
         # Structured error contract (265, 2026-06-17): emit a machine-parseable QUICKMERGE_BLOCKED
         # line so an agent self-serves recovery without an operator paste. Capture the conflicting
@@ -1227,10 +1382,29 @@ fi
 
 CURRENT_BRANCH=$(git branch --show-current 2>/dev/null || echo "main")
 if [ -z "${ENVIRONMENT:-}" ]; then
-  if [ "$CURRENT_BRANCH" = "main" ] || [ "${PROD_FLAG:-false}" = "true" ]; then
-    export ENVIRONMENT="production"
-  else
-    export ENVIRONMENT="development"
+  # Single source of truth (qg_sentinel_environment_blind_2026_07_23.md item 5): this
+  # branch check used to live ONLY here, as a second, independently-authored copy of
+  # the same logic a standalone `quality-gates.sh` run needed — the two drifted (that
+  # run left ENVIRONMENT unset, defaulting to prod downstream, while quickmerge always
+  # forced development off any non-main branch). qg-environment.sh (also sourced from
+  # qg-common.sh) is now the ONE place this check lives. `|| true` + the inline
+  # fallback below: PM is a foundational sibling dependency fleet-wide, so a missing
+  # sibling should not happen in practice, but quickmerge must never hard-fail on it.
+  _QM_ENV_HELPER="${REPO_DIR}/../unified-trading-pm/scripts/quality-gates-base/qg-environment.sh"
+  if [ -f "$_QM_ENV_HELPER" ]; then
+    # shellcheck disable=SC1090
+    source "$_QM_ENV_HELPER"
+    qg_resolve_environment
+  fi
+  unset _QM_ENV_HELPER
+  if [ -z "${ENVIRONMENT:-}" ]; then
+    if [ "$CURRENT_BRANCH" = "main" ] || [ "${PROD_FLAG:-false}" = "true" ]; then
+      export ENVIRONMENT="production"
+    else
+      export ENVIRONMENT="development"
+    fi
+  fi
+  if [ "$ENVIRONMENT" != "production" ]; then
     export GCP_PROJECT_ID="${GCP_PROJECT_ID_DEV:-${GCP_PROJECT_ID:-}}"
     echo "[$REPO_NAME] 🟡 BRANCH MODE: using dev project (branch: $CURRENT_BRANCH)"
   fi
@@ -1336,9 +1510,38 @@ if [ -f "scripts/quality-gates.sh" ]; then
       _SENTINEL=".qg_last_passed_sha"
       _CURRENT_SHA=$(git rev-parse HEAD 2>/dev/null || echo "")
       _SENTINEL_SHA=""
-      [ -f "$_SENTINEL" ] && _SENTINEL_SHA=$(cat "$_SENTINEL" | tr -d '[:space:]')
+      # Line 1 = the SHA (unchanged contract); lines 2+ = the ENVIRONMENT/DEPLOYMENT_ENV
+      # config the sentinel was written under (qg_sentinel_environment_blind_2026_07_23.md
+      # item 2 — see base-service.sh's sentinel-write block for the writer side). `head -n1`
+      # rather than the old whole-file `tr -d '[:space:]'` so multi-line sentinels parse
+      # correctly; an OLD single-line (bare-SHA, pre-fix) sentinel still parses identically.
+      [ -f "$_SENTINEL" ] && _SENTINEL_SHA=$(head -n1 "$_SENTINEL" 2>/dev/null | tr -d '[:space:]')
       if [ -z "$_SENTINEL_SHA" ]; then
         echo "[$REPO_NAME] ❌ Pass 1 quality-gates.sh sentinel missing — run: bash scripts/quality-gates.sh"
+        return 1
+      fi
+      # Configuration binding: a sentinel verified under a DIFFERENT ENVIRONMENT/
+      # DEPLOYMENT_ENV than THIS run resolved cannot certify this run's configuration —
+      # e.g. a `quality-gates.sh --no-fix` re-run under the ambient prod default must not
+      # satisfy a quickmerge run that will actually ship as ENVIRONMENT=development. An
+      # OLD sentinel (written before this fix shipped — no config lines at all) has no
+      # match and is treated as a mismatch: fails closed, forcing exactly one re-gate
+      # under the new contract rather than silently trusting stale state. The
+      # <absent> marker (rather than comparing against "") distinguishes
+      # "no ENVIRONMENT= line at all" (old sentinel) from "line present with an empty
+      # value" — a real ENVIRONMENT/DEPLOYMENT_ENV value can never legitimately equal it.
+      if _SENTINEL_ENV_LINE=$(grep -m1 '^ENVIRONMENT=' "$_SENTINEL" 2>/dev/null); then
+        _SENTINEL_ENV="${_SENTINEL_ENV_LINE#ENVIRONMENT=}"
+      else
+        _SENTINEL_ENV="<absent>"
+      fi
+      if _SENTINEL_DEPLOYMENT_ENV_LINE=$(grep -m1 '^DEPLOYMENT_ENV=' "$_SENTINEL" 2>/dev/null); then
+        _SENTINEL_DEPLOYMENT_ENV="${_SENTINEL_DEPLOYMENT_ENV_LINE#DEPLOYMENT_ENV=}"
+      else
+        _SENTINEL_DEPLOYMENT_ENV="<absent>"
+      fi
+      if [ "$_SENTINEL_ENV" != "${ENVIRONMENT:-}" ] || [ "$_SENTINEL_DEPLOYMENT_ENV" != "${DEPLOYMENT_ENV:-}" ]; then
+        echo "[$REPO_NAME] ❌ Pass 1 sentinel config mismatch — sentinel verified under ENVIRONMENT=${_SENTINEL_ENV:-<unset>}/DEPLOYMENT_ENV=${_SENTINEL_DEPLOYMENT_ENV:-<unset>}, this run resolved ENVIRONMENT=${ENVIRONMENT:-<unset>}/DEPLOYMENT_ENV=${DEPLOYMENT_ENV:-<unset>}. Re-run: bash scripts/quality-gates.sh"
         return 1
       fi
       if [ "$_SENTINEL_SHA" = "$_CURRENT_SHA" ]; then
@@ -1437,6 +1640,16 @@ fi
 
 echo ""
 
+# Snapshot of the QG-certified commit + branch, taken the instant Stage 3 finishes.
+# STAGE 5 below resolves/checks-out a branch by NAME and can, on the same-named branch,
+# land on a ref that no longer contains this commit (checkout -B origin/$BRANCH silently
+# resets refs/heads/$BRANCH when it isn't recognised as already checked out — the same
+# reset-vs-rebase class already fixed once in cascade_dep_branch, 2026-07-22; see
+# quickmerge_agent_regate_resets_branch_loses_local_commit_2026_07_31.md for the repro).
+# STAGE 5 verifies this snapshot is still reachable before it ever pushes.
+_QM_PRE_STAGE5_HEAD=$(git rev-parse HEAD 2>/dev/null || echo "")
+_QM_PRE_STAGE5_BRANCH=$(git branch --show-current 2>/dev/null || echo "")
+
 # ============================================================================
 # STAGE 4: ACT SIMULATION (skip with --quick)
 # ============================================================================
@@ -1519,6 +1732,27 @@ else
   fi
 fi
 echo ""
+
+# ============================================================================
+# No-regression guard (quickmerge_agent_regate_resets_branch_loses_local_commit_2026_07_31.md):
+# the branch-selection block above just ran a `checkout -B $BRANCH origin/$BRANCH` in its
+# `elif` arm whenever `refs/heads/$BRANCH` wasn't recognised — on the SAME branch name we
+# were already committed on, that call resets refs/heads/$BRANCH straight to origin,
+# silently discarding the QG-certified commit captured in _QM_PRE_STAGE5_HEAD above (reflog
+# still has it — "branch: Reset to origin/<branch>" — but nothing else does). Only meaningful
+# when $BRANCH is the SAME branch we snapshotted (a genuinely NEW PR branch created fresh off
+# origin/main is expected to NOT contain it — that's not a regression, it's branch creation).
+if [ -n "$_QM_PRE_STAGE5_HEAD" ] && [ "$BRANCH" = "$_QM_PRE_STAGE5_BRANCH" ] \
+   && ! git merge-base --is-ancestor "$_QM_PRE_STAGE5_HEAD" HEAD 2>/dev/null; then
+  _QM_LOST_PRESERVE_REF="refs/wip-preserve/quickmerge-stage5-regate-${_QM_PRE_STAGE5_HEAD:0:12}"
+  git update-ref "$_QM_LOST_PRESERVE_REF" "$_QM_PRE_STAGE5_HEAD" 2>/dev/null || true
+  echo "[$REPO_NAME] ❌ STAGE 5 branch resolution DROPPED the QG-certified commit ${_QM_PRE_STAGE5_HEAD:0:9}"
+  echo "    (branch '$BRANCH' no longer contains it after checkout). Recovered — preserved at:"
+  echo "      $_QM_LOST_PRESERVE_REF"
+  echo "    Recover with: git checkout $BRANCH && git merge --ff-only $_QM_LOST_PRESERVE_REF"
+  echo "    (or, if $BRANCH has since moved further, rebase it back on: git rebase $_QM_LOST_PRESERVE_REF)"
+  exit 1
+fi
 
 # Restore stash on new branch
 if [ "$RESTORE_STASH" = 1 ] && git stash list | grep -q "quickmerge-$$"; then
@@ -1679,6 +1913,22 @@ _qm_restage_target_files() {
 # ff-only-then-rebase-autostash-then-QUICKMERGE_BLOCKED contract already
 # trusted elsewhere in this script) so a GENUINE same-file conflict still hard-
 # blocks with the structured error instead of this loop papering over it.
+#
+# prek_patch_cache_replays_stale_diff_onto_unrelated_files_2026_07_29: the commit-hook
+# chain (prek) has been observed leaving UNRELATED tracked files (outside --files scope)
+# dirty with corrupted content after a successful commit — e.g. a garbled repeated-date
+# `last_updated:` runaway string, a silently-deleted `author:` line — reproduced twice
+# byte-identical in one session. `_qm_restage_target_files` above already stops that
+# corruption from being STAGED into the commit (scoped re-stage, never `git add -A`), but
+# nothing previously stopped it from lingering DIRTY in the working tree afterward, where
+# it rides along invisibly until some later `git status` catches it (or worse, a future
+# `git add -A` slip commits it). Snapshot the unstaged-diff paths BEFORE any hook runs so
+# we can tell, after the commit, exactly which paths the hook chain newly dirtied — a path
+# that was clean pre-hook and dirty post-hook is proven hook side-effect noise, not
+# pre-existing foreign WIP (which we must never touch per the multi-agent safety rule), so
+# it is safe to auto-revert.
+_QM_PRE_HOOK_UNSTAGED="$(git diff --name-only 2>/dev/null || true)"
+_QM_FRESH_COMMIT=0
 _QM_COMMIT_RETRY_MAX=15
 _QM_COMMIT_ATTEMPT=0
 while true; do
@@ -1711,6 +1961,7 @@ while true; do
   fi
 
   if git commit -m "$_QM_COMMIT_MSG" --quiet; then
+    _QM_FRESH_COMMIT=1
     break
   fi
 
@@ -1722,6 +1973,7 @@ while true; do
   # foreign modified files stay out of the index). Only the unscoped path uses `git add -A`.
   _qm_restage_target_files
   if git commit -m "$_QM_COMMIT_MSG" --quiet; then
+    _QM_FRESH_COMMIT=1
     if [ -n "$FILES_ARG" ]; then
       echo "[$REPO_NAME] Pre-commit modified files; re-staged (scoped to --files) and committed on retry" >&2
     else
@@ -1758,6 +2010,47 @@ while true; do
   _qm_stage_0_4_not_behind_gate
   _qm_restage_target_files
 done
+
+# prek_patch_cache_replays_stale_diff_onto_unrelated_files_2026_07_29 (continued from the
+# baseline snapshot above): only check after a commit ACTUALLY ran hooks this invocation —
+# the _QM_ALREADY_COMMITTED fast path above never called `git commit`, so no hook chain ran
+# and there is nothing new to purge.
+if [ "$_QM_FRESH_COMMIT" = 1 ]; then
+  _QM_POST_HOOK_UNSTAGED="$(git diff --name-only 2>/dev/null || true)"
+  _QM_NEW_FOREIGN_DIRT=""
+  if [ -n "$_QM_POST_HOOK_UNSTAGED" ]; then
+    while IFS= read -r _qm_path; do
+      [ -z "$_qm_path" ] && continue
+      # Already unstaged-dirty before this run's hooks fired — real foreign WIP, not
+      # something our hook chain introduced. Leave it alone (multi-agent safety rule).
+      if printf '%s\n' "$_QM_PRE_HOOK_UNSTAGED" | grep -Fxq -- "$_qm_path"; then
+        continue
+      fi
+      # A path we intentionally staged/committed ourselves (--files scope) — its hook-driven
+      # edits are legitimate and already handled by _qm_restage_target_files, not foreign dirt.
+      _qm_is_target=0
+      if [ -n "$FILES_ARG" ]; then
+        for _qm_f in $FILES_ARG; do
+          [ "$_qm_f" = "$_qm_path" ] && { _qm_is_target=1; break; }
+        done
+      fi
+      [ "$_qm_is_target" = 1 ] && continue
+      _QM_NEW_FOREIGN_DIRT="${_QM_NEW_FOREIGN_DIRT}${_qm_path}
+"
+    done <<EOF
+$_QM_POST_HOOK_UNSTAGED
+EOF
+  fi
+  if [ -n "$_QM_NEW_FOREIGN_DIRT" ]; then
+    echo "[$REPO_NAME] ⚠️  Commit-hook chain left file(s) OUTSIDE this commit's scope newly dirty (clean before the hooks ran, modified after) — reverting them, they were never staged or committed:" >&2
+    printf '%s' "$_QM_NEW_FOREIGN_DIRT" | while IFS= read -r _qm_path; do
+      [ -z "$_qm_path" ] && continue
+      echo "  - $_qm_path" >&2
+      git restore --worktree -- "$_qm_path" 2>&2 || echo "    ❌ restore failed for $_qm_path — inspect manually before proceeding" >&2
+    done
+    echo "[$REPO_NAME]     See plans/active/issues/prek_patch_cache_replays_stale_diff_onto_unrelated_files_2026_07_29.md — this is the known hook-side-effect class, not something you did." >&2
+  fi
+fi
 
 # shared_clone_concurrent_commit_message_swap_2026_07_28: on a shared per-tab clone, two
 # concurrent `git commit` invocations in the SAME .git directory have been observed landing
@@ -1897,13 +2190,18 @@ fi
 # re-triggers a fresh quality-gates-v2 run on EVERY subsequent commit anyone ships, fleet-wide,
 # for as long as it stays open (measured: 22 runs in ~45min on one such PR). The standing
 # ldr-to-main-promote.yml bot already drains PM→main on its own ~15min tick via an IMMUTABLE
-# per-SHA ref (frozen snapshot, no re-trigger churn — the fix shipped earlier this same day,
-# commit 48800b7ad) — so quickmerge opening a second, unfrozen, competing PR on top of that was
-# pure waste, not an additional safety net. Land on LDR and let the bot own 100% of the
-# promotion, same as every other (staging-first) repo already does above. --hotfix is kept as an
-# escape hatch for a case that genuinely needs the old immediate-PR behavior.
+# per-SHA ref (frozen snapshot, no re-trigger churn — corrected 2026-08-02,
+# quality_gates_v2_concurrency_and_bookkeeping_job_cost_2026_08_02.md: the frozen-head switch
+# actually shipped 9 days earlier, 2026-07-18, commit 40386f0274 ("PM LDR-to-main bot — frozen
+# per-SHA head + PAT-authored PR"); commit 48800b7ad, same day as THIS quickmerge fix, is a
+# separate later refinement — an in-flight-validation-preemption guard on the already-frozen
+# bot, not the frozen-head mechanism itself) — so quickmerge opening a second, unfrozen,
+# competing PR on top of that was pure waste, not an additional safety net. Land on LDR and let
+# the bot own 100% of the promotion, same as every other (staging-first) repo already does
+# above. --hotfix is kept as an escape hatch for a case that genuinely needs the old
+# immediate-PR behavior.
 if [ "$PM_OPTION_B" = true ] && [ "$HOTFIX" != true ]; then
-  echo "[$REPO_NAME] ✅ Landed on $BRANCH (LDR trunk). ldr-to-main-promote.yml drains PM→main (frozen-per-SHA-ref, ~15-30min SLA) — quickmerge no longer opens a direct PR here (churn fix, 2026-07-27)."
+  echo "[$REPO_NAME] ✅ Landed on $BRANCH (LDR trunk). ldr-to-main-promote.yml drains PM→main (frozen-per-SHA-ref since 2026-07-18, ~15-30min SLA) — quickmerge stopped opening a competing direct PR here (churn fix, 2026-07-27)."
   echo "[$REPO_NAME]    Need it on main immediately? re-run with --hotfix (opens a direct PR, old behavior)."
   exit 0
 fi

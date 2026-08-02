@@ -35,6 +35,13 @@ depends_on: []
 source: ["three parallel read-only writer audits run after the 2026-07-18 CeFi disk/throughput investigation"]
 resolved_by:
 locked_by:
+context_scope:
+  [
+    /plans/active/defi_satellite_ao_dispatch_batch2_2026_07_26.md,
+    market-tick-data-service/market_tick_data_service/cli/handlers/dex_swaps_handler.py,
+    market-tick-data-service/market_tick_data_service/cli/handlers/solana_defi_handler.py,
+    unified-trading-library/unified_trading_library/service_framework/_adapter.py,
+  ]
 ---
 
 # Blocking GCS writes on the event loop — cross-asset-group audit
@@ -113,6 +120,36 @@ the call is still awaited (ordering preserved), and check the file's line/functi
 
 ## Todos
 
-- [ ] [INFRA] P2. **Add concurrency (`asyncio.gather` + `Semaphore`) to the DeFi CLI handler family** — per "Open — in
-      priority order" item 1, `_adapter.py`'s BatchPayload loop and the nested protocol/chain loops run fully serial
-      today; do the blocking-write fix (item 2) first or in the same change.
+- [ ] [INFRA] P2. **Add concurrency (`asyncio.gather` + `Semaphore`) to the REMAINING DeFi CLI handlers** — per "Open —
+      in priority order" item 1. **SCOPE NARROWED 2026-07-31 (corpus-wide ownership-conflict sweep, resolving the
+      "GENUINE overlap" `cross_cutting_satellite_ao_dispatch_batch1_2026_07_26.md` recorded against this doc).**
+      Re-verified against live code today, not inferred: - ✅ **Already shipped elsewhere — do NOT redo.**
+      `defi_satellite_ao_dispatch_batch2_2026_07_26.md`'s `[SCRIPT] P1` landed `mtds@ff1b5d51` (2026-07-26) covering (i)
+      `solana_defi_handler.py` + `dex_pools_handler.py` fan-out via UTL `ParallelPerSymbolRunner`, and (ii) **all of
+      item 2's blocking-write fix** — every blocking parquet- serialize + `upload_bytes` now routes through the
+      dedicated `_defi_upload_executor.py` `ThreadPoolExecutor` (file confirmed present today), which is exactly the "do
+      item 2 FIRST" precondition this todo stated. - ✅ **Also already shipped:** the `_adapter.py` BatchPayload-level
+      loop is no longer unconditionally serial — UTL now has `_drive_concurrent` (`asyncio.Semaphore`) selected by
+      `--batch-date-concurrency` (default 1 = serial, `_adapter.py:169-191`). Remaining question there is a
+      _tuning/enablement_ call, not missing code. - 🔴 **STILL OPEN and owned HERE (the genuinely-uncovered residual)**:
+      `ParallelPerSymbolRunner` is adopted in exactly two handlers (grep-verified today: `solana_defi_handler.py`,
+      `dex_pools_handler.py`). The nested `for protocol: for chain: await ...` loops remain serial in
+      `dex_swaps_handler.py`, `evm_defi_collectors.py`, `gas_fee_handler.py`, `lst_rates_handler.py`,
+      `liquidations_handler.py`, `liquidation_events_handler.py`, `vault_share_price_handler.py`,
+      `eigenlayer_rewards_handler.py`. **This doc is the more complete/authoritative side for that residual** (batch2
+      only ever claimed the two-handler subset), so ownership stays here. - **Done when**: each handler above either
+      fans out through `ParallelPerSymbolRunner` with the existing `defi_max_concurrent_fetches` knob and a sequential
+      manifest-write/heartbeat apply pass afterward (preserving `record_captured` grain + shard-level isolation, the
+      pattern `mtds@ff1b5d51` established), or carries an in-code note saying why it must stay serial. Re-check
+      `dex_swaps_handler.py`'s 900-line cap first — the note below still applies.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30**: RECLASSIFY candidate PARKED (conflict) — stays KEEP-NA —
+  `cross_cutting_satellite_ao_dispatch_batch1_2026_07_26.md` explicitly records 'GENUINE overlap found' against this
+  doc. Not flipped.
+- **na-eligibility-audit 2026-08-01**: KEEP-NA, valid -- Full audit rationale: The single remaining open todo (adding
+  asyncio.gather+Semaphore concurrency, via the established ParallelPerSymbolRunner pattern, to 8 remaining DeFi CLI
+  handlers: dex_swaps_handler.py, evm_defi_collectors.py, gas_fee_handler.py, lst_rates_handler.py,
+  liquidations_handler.py, liquidation_events_hand...
+- **context-scout 2026-08-01**: populated context_scope (4 entries).

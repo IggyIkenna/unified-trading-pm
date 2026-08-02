@@ -755,6 +755,14 @@ That bucket **404s**. The real one is `features-sports-prd-central-element-32311
 `<family>-<asset_group>` and omits the `-prd-` env segment. The data prefix in the hint is wrong too: objects live under
 `sports_features/`, not `features/by_date/`.
 
+**Addendum (2026-07-30, `rebuild_manifest_from_canonical_paths_prefix_scoped_wipe_2026_07_27.md` todo 4's corpus
+sweep)**: fixing only the bucket/prefix strings is not sufficient — `rebuild_manifest_from_canonical_paths()` itself
+wholesale-REPLACES the target bucket's entire manifest index on any prefix-scoped call (never merges with existing rows
+outside `prefix`; see that issue doc for the full mechanism). Once the bucket name resolves correctly, this hint becomes
+a live wipe risk instead of a harmless 404. The fix must ALSO swap the function to the additive
+`merge_manifest_from_canonical_paths()` (same module, same call shape, `prefix` required not optional) — the bucket-name
+fix and the function-safety fix ship together in one edit, not as two separate passes.
+
 **This bit me immediately and is worth recording as a monitoring hazard, not just a typo.** I armed the launch watchdog
 on the hinted bucket, so its progress metric read `shard_days=0` for 20 minutes — indistinguishable from a genuinely
 stalled backfill. A 404 bucket does not error in a `| wc -l` pipeline; it silently returns zero forever. This is the
@@ -877,3 +885,12 @@ overwrite.
       from what it shows if the job is dead?"_ Plus the three concrete guards: resolve buckets via `resolve_bucket_name`
       (never trust a launcher's printed hint), prefer creation-time counts over inventory counts (inventory is blind to
       overwrite), and take a baseline at arm time so "flat" is measured against a known-live number.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30**: KEEP-NA, valid (sports tranche) — 3 of the 4 open todos are explicitly owned
+  elsewhere — two duplicate `[DIAG] P0`s annotated 'Owned by `sports_consolidated_closeout_2026_07_19.md` Track E ...
+  Not duplicated here', and a `[CODE] P2` annotated 'Owned by `sports_satellite_ao_dispatch_batch6_2026_07_26.md` todo 3
+  ... Left open here intentionally; do not flip it from this doc'. The 4th (`[PROCESS] P1`, codify an
+  entity-rename/split consumer-migration rule) needs a codex authoring ruling. NOTE: the two `[DIAG] P0`s at ~line 387
+  and ~line 440 are literal duplicates of each other within this same doc

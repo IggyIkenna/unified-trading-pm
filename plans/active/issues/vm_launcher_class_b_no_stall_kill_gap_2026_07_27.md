@@ -54,6 +54,12 @@ depends_on: []
 locked_by:
 locked_since:
 resolved_by:
+context_scope:
+  [
+    /plans/active/issues/migration_vm_hung_detection_monitoring_gap_2026_07_27.md,
+    /codex/05-infrastructure/spot-vms-for-backfill.md,
+    /codex/05-infrastructure/vm-launcher-runbook.md,
+  ]
 ---
 
 # 8 Class-B launcher VMs have zero in-VM stall-kill; 6 of them also fail the fleet naming heuristic
@@ -180,3 +186,12 @@ for n in ['aave-lending-rate-val-20260727', 'amm-golden-shape-20260727', 'cefi-f
 - **na-eligibility-audit 2026-07-30**: KEEP-NA, valid (infra tranche, dispatch agt-30721a) — All 3 todos require a
   fleet-wide blast-radius verification/judgment call (avoiding false positives against legitimately-continuous
   live/paper VM names) that the doc itself says was explicitly rejected as out-of-scope for a prior, narrower fix.
+- **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).
+- **na-eligibility-audit 2026-08-02** (infra tranche, incremental run): **KEEP-NA, valid — unchanged from the 2026-07-30
+  verdict.** In scope only because a context-scout backfill touched the file; no content change since. Read end-to-end;
+  `grep -cE '^- \[ \]'` = **3**, matching this verdict's item count. All 3 are `[HUMAN]`-tagged and each needs the
+  whole-fleet naming-collision review the parent issue doc's own blast-radius rule mandates before touching the shared
+  `_is_backfill_vm()` — a widening explicitly rejected as out-of-scope for the narrower Gap-3 fix, whose failure mode is
+  a false positive against a legitimately-continuous live/paper VM name. Independently corroborated:
+  `infra_satellite_ao_dispatch_batch3_2026_07_30.md`'s own non-batchable table classifies this doc
+  **blast-radius-judgment-gated**. Not a bounded worker-determinable outcome.

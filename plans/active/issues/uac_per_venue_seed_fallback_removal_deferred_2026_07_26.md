@@ -25,7 +25,7 @@ scope: [engineer, admin]
 tags: [uac, fallback, operator-ruling, honest-coverage, deferred]
 related:
   [
-    /plans/active/cefi_misc_audits_and_hygiene_2026_07_25.md,
+    /plans/archive/2026_08/cefi_misc_audits_and_hygiene_2026_07_25.md,
     /plans/active/cefi_consolidated_native_ao_extract_2026_07_25.md,
     /plans/active/instruments_cefi_g1_g5_gate_execution_2026_07_24.md,
     /plans/active/instruments_tradfi_g1_g5_gate_execution_2026_07_24.md,
@@ -46,6 +46,13 @@ drift_direction: advance-code
 depends_on: []
 locked_by:
 locked_since:
+assigned_role: backend_engineer
+context_scope:
+  [
+    /plans/active/cefi_consolidated_native_ao_extract_2026_07_25.md,
+    /codex/02-data/instruments-foundation-and-catalogue-completeness.md,
+    /plans/epics/cefi_master.md,
+  ]
 ---
 
 # UAC per-venue seed fallback — removal deferred
@@ -110,3 +117,20 @@ Three real production call sites, deduped across worktree/branch clones:
 
 No code change ships from this doc. It exists so the deferred decision has a durable, re-discoverable home instead of
 dangling inside a closed plan todo.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30** (tranche=cefi, autonomous): KEEP-NA, valid - records an explicit 2026-07-26
+  operator DEFERRED ruling with a 4-item revisit trigger; the open todo is the first trigger item and is gated on
+  CEFI/TRADFI G1-G5 closing.
+- **⚠️ CONTESTED VERDICT — na-eligibility-audit 2026-07-30** (tranche=defi, autonomous): reached the OPPOSITE verdict
+  from the cefi tranche above — **RECLASSIFY → `assigned_vm: planning`**: "conflict-check CLEAR against 231 active
+  planning docs; no open todo elsewhere duplicates this claim - todo mirrors the existing CEFI live-catalogue-provider
+  branch for 3 more asset groups; the 2026-07-26 operator ruling gates the REMOVAL, not this wiring work." **Not
+  adjudicated by the integrator**: whether the 2026-07-26 operator DEFERRED ruling gates only the removal or also this
+  wiring work is a reading of the operator's intent, not a checkable fact. The defi tranche's frontmatter flip
+  auto-merged silently (the two tranches' edits did not textually collide); the integrator **reverted it to the
+  status-quo `assigned_vm: NA`** — a contested reclassification would make this doc AO-dispatchable and workers would
+  start executing it, whereas leaving it NA has no active consequence. **Operator/next-toucher: rule on the scope of the
+  2026-07-26 DEFERRED ruling, then flip deliberately.**
+- **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).

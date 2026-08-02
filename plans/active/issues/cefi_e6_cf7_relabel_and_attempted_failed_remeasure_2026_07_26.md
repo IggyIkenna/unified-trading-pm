@@ -43,6 +43,13 @@ locked_by:
 locked_since:
 supersedes:
 superseded_by:
+context_scope:
+  [
+    /plans/active/cefi_satellite_ao_dispatch_batch3_2026_07_26.md,
+    /plans/active/issues/cefi_instruments_store_blank_data_type_residual_2026_07_29.md,
+    /plans/active/issues/cefi_high_attempted_failed_batch_cluster_2026_07_23.md,
+    /plans/archive/issues/tardis_concurrent_ip_lockout_2026_07_12.md,
+  ]
 ---
 
 # CeFi E6 CF-7 relabel candidates + attempted_failed re-measure
@@ -149,3 +156,38 @@ rows) is real but small and not urgent.
       for those resolved-venue populations at 0, the 7-row bare-`OKX` subset is reclassified (marked
       malformed/superseded, not backfilled), the cross-cutting doc's own COINBASE(7)/OKX(7) figure is independently
       re-verified (not assumed satisfied), and both source docs' checkboxes are flipped with the commit(s) cited.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30** (tranche=cefi, autonomous): RECLASSIFY candidate PARKED on conflict-check:
+  `cefi_instruments_store_blank_data_type_residual_2026_07_29.md` (active, planning) claims the adjacent
+  blank-`data_type` remediation and `manifest_reprocessing_generic_utility_2026_07_07.md` already registers a
+  blank-data_type backfill script. Needs an operator call on which doc owns which bucket's population before dispatch.
+  Filed as BLOCKED-OPERATOR-DECISION in this run's Deferred list; `assigned_vm` unchanged.
+- **✅ OWNERSHIP RESOLVED 2026-07-31** (corpus-wide ownership-conflict sweep; the operator call the entry above was
+  waiting on). All three docs read; the split is by **BUCKET**, and it is clean — the two active docs were never
+  measuring the same rows:
+
+  | Doc                                                                                  | Bucket / population it OWNS                                                                                                                                                                                                            |
+  | ------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+  | **THIS doc**                                                                         | `market-data-tick-cefi-prd-central-element-323112` (MTDS tick manifest) — the **9,750**-row blank-`data_type` population: 9,743 BACKFILL + 7 bare-`OKX` RECLASSIFY                                                                     |
+  | `/plans/active/issues/cefi_instruments_store_blank_data_type_residual_2026_07_29.md` | `instruments-store-cefi-prd-central-element-323112` (IS instruments manifest) — the **1** `captured`+blank row (BITFINEX-SPOT, 2023-12-16); its 5,806 non-captured blanks are already closed by evidence as correct universal behavior |
+  | `/plans/archive/issues/manifest_reprocessing_generic_utility_2026_07_07.md`          | **Not an owner — shared TOOLING**, and already resolved/archived (4/4 done). It shipped the instruments-service `--operation reprocess-shards` CLI; reuse it, do not re-register a competing one-off script.                           |
+
+  Neither active doc's population overlaps the other's, so both stay open and independently dispatchable — the only
+  thing that was ever wrong here was the missing cross-reference, now added in both directions. The genuinely-unresolved
+  cross-doc question is unchanged and stays in this doc's todo: the cross-cutting doc's older COINBASE(7)+OKX(7) figure
+  is a **different 2026-06-18 measurement** and must be independently re-verified, not assumed satisfied by this one.
+
+- **na-eligibility-audit 2026-08-01** (tranche=cefi, autonomous): KEEP-NA-STALE-duplicated — supersedes the 2026-07-30
+  park above (that conflict is independently confirmed RESOLVED via
+  `cefi_instruments_store_blank_data_type_residual_2026_07_29.md`'s 2026-07-31 ownership-map commit: that doc owns a
+  disjoint population, instruments-store manifest not MTDS-tick manifest). Going further: the sole open `[DATA] P3` todo
+  above (9,743-row backfill + 7-row bare-OKX reclassify) is already a VERBATIM duplicate of
+  `cefi_satellite_ao_dispatch_batch3_2026_07_26.md` line 144 (`[DATA] P2`, status: active, assigned_vm: planning — same
+  row split, same framing, same Done-when clause covering both docs' checkboxes). Batch3's copy predates this doc's
+  2026-07-30 marker (2026-07-30 03:12 commit already cross-referenced both docs together). **Do not reclassify** — this
+  is execution-duplication, not a mis-defaulted NA. Citation: whoever next touches this doc's P3 checkbox should flip it
+  citing `cefi_satellite_ao_dispatch_batch3_2026_07_26.md` line 144 as the executing doc, mirroring this doc's own
+  already-`[x]`'d `[DOCS] P3` sibling todo's pattern ("already covered by ...batch3..., see that doc for execution").
+- **context-scout 2026-08-01**: populated context_scope (4 entries).

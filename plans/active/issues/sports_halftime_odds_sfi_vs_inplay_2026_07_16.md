@@ -249,3 +249,13 @@ already-fixed-but-unflipped** — every one is genuinely still open.
 - The cutover runbook (`sports_legacy_bucket_cutover_2026_07_16.md`) already carries this doc's B-REFINED verdict inline
   (dated 2026-07-16), so no doc-drift found there either.
 - No conflicting doc found.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30**: KEEP-NA, valid (sports tranche) — of the 3 remaining todos, one is explicitly
+  blocked on an unmerged dependency (`_index/per_vm/cutover-move-20260716.parquet`, 'must not be merged by anyone
+  else'), one is the CLV retrain now owned by the reclassified `sports_clv_target_pit_gated_...` doc, and the writer fix
+  is an either/or ('populate `fixture_id` at write time OR drop the column'). NOTE for a future pass: the top
+  STATUS-CORRECTION banner still says '5 genuinely open checkboxes' and 'the count is still exactly 5' — a live grep now
+  returns 3 (items 1 and 3 shipped `features-service@4f365d23`, already flagged SUPERSEDED in the RE-TRIAGE section);
+  the banner's count is stale prose, not a stale checkbox, so it was left for the owning doc's next edit

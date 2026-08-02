@@ -40,6 +40,14 @@ master:
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
+context_scope:
+  [
+    /codex/02-data/defi-data-pipeline.md,
+    /plans/audit/results/defi_pipeline_code_codex_drift_2026_05_27.md,
+    /codex/02-data/defi-canonical-naming-ssot.md,
+    /plans/archive/2026_07/solana_defi_legacy_migration_2026_05_27.md,
+    /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
+  ]
 last_updated:
   '2026-07-10 (was: 2026-06-27 — verify-rerun-2 finding 50, corrected 2026-07-14 — body''s D10 todo documents "RESOLVED
   2026-07-10 (operator decision #9...)"; frontmatter never bumped)'
@@ -151,6 +159,13 @@ Code (DEFERRED-UNTIL-PIPELINE-DONE; other agents are correcting code — re-veri
       `plans/archive/2026_07/solana_defi_legacy_migration_2026_05_27.md`'s pattern — legacy→ canonical prefix migration,
       coordinated with instruments-service + manifest); heavy GCS I/O, needs a VM, not a local-machine operation. Not
       yet scoped — this checkbox stays `[~]` until that migration plan exists.
+
+      **CLEAR for dispatch (2026-07-30, conflict-check)** — no other active doc claims this migration. **Flagging, not
+                                                                              blocking**: `honest_coverage_shard_dimension_model_definitional_data_2026_07_07.md` still carries an unretracted
+                                                                              "intentional hybrid CEFI+DEFI" classification note for these venues that this doc itself calls out as "never
+                                                                              reconciled" against the later 06-21 operator ruling — worth a quick operator confirmation before/while scoping the
+                                                                              migration plan, not a hard block.
+
 - [x] ✅ [CODE] P3. D7 — **SHIPPED** MTDS@d3e02228
       (`fix(mev): remove banned bloxroute relays + stale .bak from     mev_events_handler`): the 2 bloxroute URLs are
       gone from `mev_events_handler.py` `MEV_BOOST_RELAYS` (Flashbots / agnostic / ultra_sound retained, comment cites
@@ -187,3 +202,7 @@ Code (DEFERRED-UNTIL-PIPELINE-DONE; other agents are correcting code — re-veri
       `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md`, this checkbox flip is read-only bookkeeping — no GCS
       delete run in this pass (the prod delete already happened 2026-07-21, operator-executed). Source/cross-ref:
       `plans/archive/2026_07/defi_satellite_ao_dispatch_batch4_2026_07_26.md` todo 1.
+
+## Progress Log
+
+- **context-scout 2026-08-01**: populated context_scope (5 entries).

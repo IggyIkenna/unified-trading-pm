@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# Epic: agent_operating_framework_master
+# Lifecycle: permanent
+# Delete-when: NA
 """docspec — the machine SSOT for documentation frontmatter.
 
 Implements: codex/11-project-management/doc-frontmatter-schema.md (the human SSOT).
@@ -21,6 +24,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import sys
 from dataclasses import dataclass, field
 from enum import Enum
@@ -44,7 +48,7 @@ DOC_TYPES = frozenset(
 )
 NATURE = frozenset({"ssot", "guideline", "process", "design", "spec", "record", "notes", "issue"})
 ASSET_GROUP = frozenset(
-    {"cefi", "defi", "tradfi", "sports", "prediction", "cross-cutting", "ao", "ci", "infrastructure", "meta"}
+    {"cefi", "defi", "tradfi", "sports", "prediction", "cross-cutting", "ao", "ci", "infrastructure", "ui", "meta"}
 )
 STAGE = frozenset({"data", "features", "strategy", "backtest", "paper", "live", "execution", "reporting", "meta"})
 SCOPE = frozenset({"engineer", "admin", "sales", "prospect", "investor"})
@@ -132,6 +136,7 @@ PER_TYPE: dict[str, list[FieldSpec]] = {
         FieldSpec("depends_on", Req.O, "free_list"),
         FieldSpec("source", Req.O, "scalar"),
         FieldSpec("assigned_role", Req.E, "registry", registry="role"),
+        FieldSpec("context_scope", Req.E, "free_list"),
     ],
     "epic": [
         FieldSpec("name", Req.R, "scalar"),
@@ -155,6 +160,7 @@ PER_TYPE: dict[str, list[FieldSpec]] = {
         FieldSpec("assigned_vm", Req.R, "registry_or_na", registry="vm"),
         FieldSpec("resolved_by", Req.C, "scalar", conditional_on=("status", "resolved")),
         FieldSpec("locked_by", Req.O, "scalar"),
+        FieldSpec("context_scope", Req.E, "free_list"),
     ],
     "audit-result": [
         FieldSpec("audited_scope", Req.R, "scalar"),
@@ -383,8 +389,15 @@ def _validate_value(spec: FieldSpec, v: object, reg: Registries, doc_type: str) 
             out.append(Violation(spec.name, Sev.HARD, msg))
     elif spec.kind == "date":
         s = str(v)
-        if not (len(s) >= 10 and s[4] == "-" and s[7] == "-" and s[:4].isdigit()):
-            out.append(Violation(spec.name, Sev.SOFT, f"'{v}' not YYYY-MM-DD"))
+        # Full-string match, not a prefix check (2026-07-14, fix_2026_07_30_prek_patch_cache_docspec_date_gap):
+        # the OLD prefix-only check (len>=10 + dash positions) only inspected the first 10 chars, so a
+        # garbled runaway value like `2026-06-27 "2026-07-30"` — the exact corruption signature from
+        # plans/active/issues/prek_patch_cache_replays_stale_diff_onto_unrelated_files_2026_07_29.md —
+        # started with something date-shaped and sailed through undetected, landing corrupted content on
+        # origin twice. A plain unquoted YAML date auto-parses to datetime.date, whose str() is always a
+        # clean 10-char ISO date, so this tightening does not affect any legitimately-dated doc.
+        if not re.fullmatch(r"\d{4}-\d{2}-\d{2}", s):
+            out.append(Violation(spec.name, Sev.SOFT, f"'{v}' not YYYY-MM-DD (full match, not just a prefix)"))
     return out
 
 

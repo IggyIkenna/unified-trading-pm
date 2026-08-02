@@ -60,6 +60,18 @@ resolved_by:
 3. Observed drift-per-attempt across the 16 tries: 1, 1, 3, 4, 5, 6, 5(narrower after), 2, 4, 2, 6, 4, 2 — no consistent
    downward trend from retrying faster; the limiting factor is QG wall-clock time vs. push frequency, not anything the
    caller controls.
+4. **`check-branch-drift.sh` hard-blocks the merge that RESOLVES the drift (new, measured 2026-07-30, slot-3).** The
+   hook computes `BEHIND=$(git rev-list HEAD..origin/$BRANCH --count)` and exits 1 on `BEHIND > 0`
+   (`scripts/hooks/check-branch-drift.sh:26-36`) with **no `MERGE_HEAD` exemption**. During `git merge origin/<branch>`
+   — the canonical way to reconcile a diverged branch — the pre-commit hook fires BEFORE the merge commit exists, so
+   `HEAD` is still the pre-merge commit and the hook always reads the full drift and fails, leaving
+   `Not committing merge; use 'git commit' to complete the merge`. Re-running `git commit` re-runs the hook (which does
+   its OWN fresh `git fetch`), so under churn it never converges. The only documented escapes are `SKIP_BRANCH_DRIFT=1`
+   — explicitly labelled **"Human-only — agents MUST NOT use this override"** in the hook's own message — and
+   `--no-verify`, which the workspace restricts to prek auto-restore symptoms. **Net effect: merge-based reconciliation
+   is structurally unavailable to an agent**; only `git pull --rebase*` works, because rebase replays commits without
+   running `pre-commit`. That is fine for linear WIP but silently forces an agent that was told to preserve `--no-ff`
+   merge commits to either flatten them (plain `--rebase`) or know to reach for `--rebase=merges`.
 
 ## Why it matters
 
@@ -95,19 +107,59 @@ resolved_by:
       `agents/worker.md`). **Done when**: a fresh `--agent`-flow commit made per the now-updated ship-loop example
       already carries the trailer, so quickmerge Stage 5 finds it via `git log -1 --format=%B | grep -q '^Quickmerge:'`
       and never reaches the late-amend branch at all.
-- [ ] [INFRA] P2. **Add a bounded retry-with-rebase loop AROUND the final `git push` in Stage 5** (not around the whole
-      pipeline) — e.g. on a non-fast-forward rejection, `git pull --rebase --autostash` + retry the push up to N times
-      (N=3-5) before failing, entirely inside quickmerge.sh, without re-running Pass-1 QG (the content hasn't changed,
-      only the base commit). This turns "the caller must re-run the whole ~1-5 min pipeline per retry" into "quickmerge
-      retries its own few-second push automatically" — directly attacks the root cause (QG wall-clock >> push interval)
-      without needing QG to get faster. **Done when**: a simulated high-churn scenario (another process pushing every
-      20-30s during a quickmerge run) succeeds within one quickmerge invocation instead of requiring the caller to loop.
+- [x] ✅ [INFRA] P2. **ALREADY SHIPPED 2026-07-27, discovered + verified 2026-07-30 (slot-12, infra).** Found while
+      shipping this doc's own todo 1: `scripts/quickmerge.sh` already has exactly this — a bounded retry-with-rebase
+      loop around the final `git push` in Stage 5 (lines ~1790-1805), `_QM_PUSH_RETRIES` defaulting to 5 (overridable
+      via `QUICKMERGE_PUSH_RETRIES`), on a non-fast-forward rejection it does `git pull --rebase --autostash` and
+      retries the push (never re-running Pass-1 QG, exactly this todo's ask), and a genuine same-file conflict during
+      the retry hard-fails with a clear message rather than silently papering over it. Shipped by
+      `unified-trading-pm@0e48ffe51` (2026-07-27, slot-1/laptop, "quickmerge Stage 5 hardening") — the SAME day this
+      issue was filed, but this checkbox was never flipped, so the closeout kept reading it as open for 3 days (the
+      exact staleness trap this workspace's own audit tooling exists to catch). Directly confirmed working, not just
+      code-read: this todo's own todo-1 ship (this session) hit exactly one non-fast-forward push rejection under the
+      live high-churn conditions on `live-defi-rollout` this session, and quickmerge auto-rebased + retried + succeeded
+      within the SAME invocation, with zero manual intervention — matching this todo's own "Done when" criterion
+      verbatim. Re-confirmed still present after a session restart mid-task (unrelated tmux/session death, not a revert)
+      before flipping this checkbox. Repo: unified-trading-pm (no code changed by this todo — verification + checkbox
+      only).
 - [ ] [INFRA] P3. **Surface push-churn as a named condition** (mirroring the existing repo-blocker mechanism in
       `unified-trading-pm/agents/worker.md` § 4b, which already exists for `qg_red` on a repo) so a worker hitting this
       doesn't have to self-diagnose it as a mystery repeated failure — a `push_race` repo-blocker kind that lets the
       backend own the retry-and-notify loop instead of the calling agent burning its own turns on blind retries. **Done
       when**: a worker hitting 3+ consecutive Stage-5 push failures on the same repo can declare this condition and get
-      notified when a push window opens, instead of re-invoking quickmerge manually.
+      notified when a push window opens, instead of re-invoking quickmerge manually. **PARTIAL PROGRESS 2026-07-30
+      (autonomous marathon session) — a real prerequisite bug found + fixed, full feature still open.** Investigated
+      `agent-orchestrator/server/state_store/repo_blockers.py` + `routes/repo_blockers.py` (the backend this todo would
+      reuse): `declare_repo_blocker(kind=...)` already accepts an arbitrary `kind` string (no schema/enum change needed
+      to declare a `push_race` blocker) — BUT `repo_blocker_condition_name(repo)` derived the gating prerequisite name
+      from `repo` ONLY, ignoring `kind`, so declaring ANY non-`qg_red` kind for a repo would have flipped the SAME
+      `repo-<repo>-qg-green` prerequisite that `qg_red`-gated tasks depend on — a real collision that would have
+      incorrectly held back unrelated work for a reason (a push race) that has nothing to do with the repo's actual
+      quality-gate health. Fixed this landmine (backward-compatible: `kind="qg_red"` still returns the exact original
+      string; any other kind gets its own `repo-<repo>-<kind>-green` name) —
+      `agent-orchestrator@(pending commit, see     Progress Log)`, `tests/test_repo_blockers.py` 7/7 still green. **NOT
+      done**: (1) `RepoHealthWatcher.tick_once()` only polls/resolves `kind == "qg_red"` blockers via CI-green state —
+      there is no equivalent "push window open" signal to poll for a `push_race` kind (CI-green is a real, checkable
+      repo state; a push race is a point-in-time contention event with no persistent state to observe), so genuine
+      backend auto-resolution needs a NEW polling mechanism, not a mirror of the existing one — an open design question,
+      not a mechanical extension. (2) No caller anywhere yet declares `kind="push_race"` (quickmerge.sh doesn't
+      detect+declare it; no worker.md documentation for it, unlike qg_red's documented § 4b pattern). Leaving the todo
+      open — the collision-safety fix is real, necessary groundwork (any future attempt to reuse this mechanism for a
+      non-qg_red kind needed it regardless), but the actual declare-on-3-failures wiring + resolution mechanism is
+      genuine design work, not a bounded mirror-the-pattern task.
+- [x] ✅ [INFRA] P2. **DONE 2026-07-31 (slot-2, infra).** **Exempt an in-progress merge from `check-branch-drift.sh`**
+      (finding #4). Added a `MERGE_HEAD` guard right after the existing `SKIP_BRANCH_DRIFT` / CI early-exits:
+      `git rev-parse -q --verify MERGE_HEAD >/dev/null && exit 0`, with a comment scoping why it's safe (a merge commit
+      can only ever REDUCE drift, so exempting it cannot let an agent commit on top of an un-reconciled branch — the
+      plain-commit path the hook exists for is untouched). Confirmed via corpus-wide grep that every per-repo
+      `.pre-commit-config.yaml` resolves this hook dynamically via `WORKSPACE_ROOT`-relative path to this ONE file
+      (`unified-trading-pm/scripts/hooks/check-branch-drift.sh`) — no per-repo static copy exists, so a single edit
+      covers the whole fleet. Repo: unified-trading-pm (`scripts/hooks/check-branch-drift.sh`). **Verified against the
+      exact "Done when" criterion** in a scratch git sandbox (bare origin + two diverged clones, hook installed as
+      `.git/hooks/pre-commit`): with a branch genuinely 1-ahead/1-behind origin, a plain `git commit` still hard-fails
+      with the branch-drift message (unchanged behavior); `git merge origin/<branch>` with hooks fully enabled (no
+      `SKIP_BRANCH_DRIFT`, no `--no-verify`) completed and created the real merge commit (`ort` strategy, non-fast-
+      -forward) with zero hook interference.
 
 ## Progress Log
 
@@ -116,3 +168,32 @@ resolved_by:
   #1) mid-session, which measurably helped (attempts reliably reach `Stage 5 → Proceeding to push` now, vs. failing
   earlier in the pipeline before), but the residual final-push race (finding #2) persists and is this doc's actual
   scope. Continuing to retry the underlying ship in parallel; not blocking on this doc's own fix path.
+- 2026-07-30 (slot-12, `infra`): Dispatched todo 1. Shipped it (`agents/RULES.md` + `agents/worker.md` doc fix, option
+  (a), `unified-trading-pm@2c9aa0b25`) and dogfooded the fix on its own ship: pre-stamped `Quickmerge: agent` on this
+  session's own commit, confirmed live that quickmerge Stage 5 found the trailer and skipped the late amend entirely (no
+  "missing the Quickmerge trailer; amended HEAD" message this time). While shipping, also discovered todo 2 was ALREADY
+  shipped 3 days ago (`unified-trading-pm@0e48ffe51`, 2026-07-27) but never flipped here — verified by code read AND by
+  this same ship hitting one real non-fast-forward rejection under live high churn, which quickmerge
+  auto-rebased-and-retried without any manual re-invocation. Session died mid-flip (unrelated tmux/session crash while
+  retrying against a very high churn window — this doc's own subject); resumed, re-verified todo 2's claim still holds
+  (code unchanged), re-applied the flip. Todo 3 (the `push_race` repo-blocker condition) confirmed NOT implemented
+  (corpus-wide grep, 0 hits) — genuinely still open, left as-is; this doc stays `status: open` until it lands.
+- 2026-07-30 (autonomous plans-corpus-reduction marathon session): Investigated todo 3 for bounded-ness. Found a real,
+  necessary prerequisite bug in the repo-blocker backend it would reuse (see todo 3's own updated text) and fixed it
+  (`agent-orchestrator/server/state_store/repo_blockers.py` + `routes/repo_blockers.py`, kind-parameterized condition
+  name, backward-compatible for `qg_red`). Did NOT implement the full `push_race` declare+resolve feature — the
+  resolution half needs a genuinely new polling mechanism (no "push window open" CI-state analog exists to observe,
+  unlike `qg_red`'s CI-green poll), which is design work outside this pass's bounded-effort budget. Doc stays
+  `status: open`.
+- 2026-07-30 (slot-3, per-tranche ruled-fixes integration): Filed finding #4 + its todo while integrating two AO worker
+  branches into PM's main checkout. Sequence that surfaced it: merged both branches `--no-ff` cleanly (hooks green, 0
+  behind at that moment), origin then moved 3 commits during the Pass-1 QG run, so the branch had genuinely diverged (5
+  ahead / 3 behind) and needed reconciling. `git merge origin/live-defi-rollout` was hard-blocked by
+  `check-branch-drift` with `Not committing merge` — the hook cannot see that the commit it is refusing IS the fix. Did
+  NOT use `SKIP_BRANCH_DRIFT` (agent-forbidden) or `--no-verify`; recovered with `git pull --rebase=merges --autostash`,
+  which reconciled cleanly AND preserved both `--no-ff` merge commits (plain `--rebase` would have flattened them).
+  Worth noting for whoever takes the todo: `--rebase=merges` is the merge-preserving escape hatch and is currently
+  undocumented in the workspace's behind-remote recipe, which says only `git pull --rebase --autostash`.
+- 2026-07-31 (slot-2, `infra`): Shipped todo 4 (`MERGE_HEAD` guard on `check-branch-drift.sh`). Todo 3 (the `push_race`
+  repo-blocker feature) remains genuinely open — real design work, not a bounded mirror-the-pattern task per its own
+  note above — so this doc stays `status: open`, not archival-eligible yet.

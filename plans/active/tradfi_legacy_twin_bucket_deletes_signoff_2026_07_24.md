@@ -85,7 +85,17 @@ restated here.
       measurement. Corrected the frontmatter summary and body banner below to state sports is NOT yet done, citing that
       doc; left the cefi half of the claim unchanged (out of this todo's scope — no contradicting evidence found for
       cefi in this pass).
-- [ ] [DATA] P1. **Run the dry-run (not the delete) as the safe next step**:
+- [x] ✅ [DATA] P1. **DONE 2026-07-30 — flipped by na-eligibility-audit (tradfi tranche) against this doc's OWN Progress
+      Log evidence; the definition-of-done below is met verbatim.** **Evidence (this doc's Progress Log, 2026-07-30
+      doc-triage pass, dispatched from `/plans/archive/2026_07/tradfi_satellite_ao_dispatch_batch1_2026_07_25.md`'s
+      REVIEW todo — the same batch1 todo the superseded 2026-07-27 note below said this was waiting on)**: the dry-run
+      WAS run against the live prod report
+      `gs://market-data-tick-tradfi-prd-central-element-323112/_index/audit/orphan_sweep_tradfi.parquet` — **900 class-B
+      legacy twins loaded → 0 deletable, 900 blocked**, every one with reason "canonical twin NOT captured in manifest -
+      would delete the only copy". Report path + row count are both cited, so the DoD is satisfied. The RESULT is a
+      negative one (Part 5 twin-coverage is 0%, not the 100% the gated delete below requires), which is recorded against
+      the delete todo — not a reason to keep this dry-run todo open. Original text and its now-superseded note follow.
+      **Run the dry-run (not the delete) as the safe next step**:
       `cleanup_legacy_twins.py --asset-group tradfi --report-uri _index/audit/orphan_sweep_tradfi.parquet --dry-run`
       against the 995 legacy-B candidate rows (see "Where the dry-run evidence already lives" above). This is NOT the
       operator-gated delete — `--apply` stays hard-stopped on Ikenna's sign-off per the banner above; this todo only
@@ -162,6 +172,29 @@ restated here.
   worker must re-query fresh.
 
 ## Progress Log
+
+- **na-eligibility-audit 2026-08-02** (tradfi tranche, dispatch agt-6397c9): **KEEP-NA, valid — re-verified,
+  unchanged.** Sole open checkbox (the legacy-twin bucket DELETE todo) re-read end-to-end via an independent sub-agent
+  classification; count reconciled (1/1). The delete gate still correctly does not clear — twin-coverage remains
+  last-measured at 0% (2026-07-31), not the 100% the §3a reversibility carve-out requires. Independently, this audit is
+  NOT unilaterally reclassifying this todo even though it is technically letter-compliant with the
+  safe-idempotent-justification bar (§3a path (c)): it bundles a re-verify step with an irreversible-if-wrong
+  multi-bucket (tradfi/defi/pred) prod GCS delete in one todo, which the bounded-outcome bar's "stay skeptical of
+  bundled, high-consequence actions" guidance flags for plan-owner confirmation before AO dispatch — recommend the plan
+  owner explicitly rule on dispatch-eligibility once/if twin-coverage reaches 100%, distinct from today's "does the gate
+  clear" question. Doc stays NA.
+- **na-eligibility-audit 2026-07-31** (tradfi tranche, dispatch agt-6d6eaf): **KEEP-NA, valid.** Sole open checkbox (the
+  legacy-twin bucket DELETE todo) read end-to-end; count matches tranche-inventory tool (1). The delete gate still
+  correctly does not clear — no new dry-run has been re-run since 2026-07-30 (twin-coverage still last-measured at 0%,
+  not the 100% §3a reversibility carve-out requires). Nothing changed since the prior verdict; doc stays NA.
+- **na-eligibility-audit 2026-07-30** (tradfi tranche): **KEEP-NA, valid — 1 stale item CLOSED.** Both open todos read
+  end-to-end. Todo 1 (the `cleanup_legacy_twins.py` dry-run) was flipped `[x]` this pass: its stated definition-of- done
+  ("dry-run output cited — report path + row count") is met verbatim by this doc's OWN 2026-07-30 Progress Log entry
+  (900 class-B twins loaded → 0 deletable, 900 blocked), and the 2026-07-27 note saying it was waiting on
+  `tradfi_satellite_ao_dispatch_batch1_2026_07_25.md`'s 2nd todo is superseded — that batch1 todo is what executed it.
+  The remaining delete todo correctly stays open and gated: the same fresh dry-run measured Part 5 twin-coverage at
+  **0%**, not the 100% the 2026-07-28 §3a reversibility carve-out requires, so the delete gate does NOT clear today. Doc
+  stays NA.
 
 <!-- Append newest entries at the top: `- **YYYY-MM-DD** — <what landed> (<repo>@<sha> / evidence).` -->
 

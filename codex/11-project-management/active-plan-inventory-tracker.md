@@ -28,7 +28,7 @@ referenced_by:
     plans/epics/README.md,
   ]
 owner: pm-orchestrator
-last_reviewed: 2026-05-17
+last_reviewed: 2026-09-22
 code_refs:
   [
     scripts/plans/regenerate_active_plan_inventory.py,
@@ -42,24 +42,28 @@ code_refs:
 type: project-management
 cadence: morning + EOD + before planning decisions (slot 1 main, both sides)
 verifier: python3 unified-trading-pm/scripts/plans/regenerate_active_plan_inventory.py
-last_executed: 2026-05-17
+last_executed: 2026-07-31
 ---
 
 # Active Plan Inventory + Done-vs-Left Dashboard
 
-> **🟡 HOST PLAN ARCHIVED 2026-07-24** — `master_to_live_defi_2026_05_23.md` closed out (98% done, May-23 target ~2
-> months past) and moved to `plans/archive/2026_07/master_to_live_defi_2026_05_23.md` per
-> `plans/active/issues/plan_line_cap_remediation_2026_07_23.md` #2. The dashboard table + markers still physically exist
-> in that file, but `scripts/plans/regenerate_active_plan_inventory.py`'s `MASTER_FILE` constant still hardcodes the old
-> `plans/active/` path, so **the auto-regen step now errors `MASTER_FILE not found` on every run** (daily via
-> `run_hygiene_sweep.sh`'s default regen step, invoked as STEP 1 of the daily deep `plan-reconciler` agent — the
-> `hygiene_sweep_scheduler.tf` Cloud Run job that used to invoke it directly was retired 2026-07-28, RULE-11
-> prove-then-retire; the underlying regen-step bug this note describes is unaffected by that retirement, same broken
-> `MASTER_FILE` constant, different daily caller now) until a human either repoints `MASTER_FILE` at a new host doc
-> (e.g. `plans/active/INDEX.md`) or retires this feature outright now that the May-23 cutover it was built for is over.
-> Not resolved as part of the archival — needs an owner decision, not a mechanical fix.
+> **✅ RESOLVED 2026-07-28 — re-verified 2026-07-31.** The `MASTER_FILE not found` breakage this banner used to warn
+> about is fixed. History: `master_to_live_defi_2026_05_23.md` closed out 2026-07-24 (98% done) and moved to
+> `plans/archive/2026_07/`, which broke the regen step because `MASTER_FILE` still pointed into `plans/active/`. The
+> inventory table was then **extracted into its own host doc**, and `MASTER_FILE` repointed at it:
+>
+> ```python
+> MASTER_FILE = PM_ROOT / "plans" / "archive" / "2026_07" / "active_plan_inventory_dashboard_2026_07_24.md"
+> ```
+>
+> That file exists and carries both `AUTO-INVENTORY-START` / `-END` markers, so the regen step runs clean. A second
+> constant, `MASTER_HISTORICAL_ARCHIVE` → `plans/archive/2026_07/master_to_live_defi_2026_05_23.md`, is read-only and
+> exists solely so the ~175-sub-plan cross-reference corpus left behind in the old cutover doc still participates in
+> `master`-owner attribution. The script only ever rewrites between the markers, so the host doc's own frontmatter,
+> ARCHIVED banner and Deferred-work section are untouched.
 
-> SSOT for the auto-tracked workspace-wide plan inventory that lives inside `master_to_live_defi_2026_05_23.md`. Shipped
+> SSOT for the auto-tracked workspace-wide plan inventory, now hosted in
+> `active_plan_inventory_dashboard_2026_07_24.md`. Shipped
 > 2026-05-12 (PM@ab1a471f) to solve two coupled problems surfaced in the calibration thread:
 >
 > 1. **"What's done vs left across the workspace?"** — was a 20-line grep + manual tally every time.
@@ -91,8 +95,10 @@ once).
 
 ## Where the dashboard lives
 
-`unified-trading-pm/plans/archive/2026_07/master_to_live_defi_2026_05_23.md` § **Active plan inventory + Done-vs-Left
-dashboard (auto-tracked)**, between the "Epics index" section and "What this plan is".
+`unified-trading-pm/plans/archive/2026_07/active_plan_inventory_dashboard_2026_07_24.md`, between the
+`<!-- AUTO-INVENTORY-START -->` / `<!-- AUTO-INVENTORY-END -->` markers. (Until 2026-07-24 the table lived inside
+`master_to_live_defi_2026_05_23.md` § "Active plan inventory + Done-vs-Left dashboard (auto-tracked)"; it was extracted
+into its own host doc by `plan_line_cap_remediation_2026_07_23.md` op #2.)
 
 Columns: `Plan | Owner | Class | Checkboxes | % done | Cal left | Deadline`.
 

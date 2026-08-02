@@ -46,6 +46,7 @@ depends_on: []
 last_updated: 2026-07-17
 locked_by:
 locked_since:
+context_scope: [/plans/archive/issues/cefi_tardis_throughput_collapse_350x_2026_07_17.md, /plans/epics/cefi_master.md]
 ---
 
 # Tardis impossible combinations are recorded as `attempted_failed`
@@ -173,3 +174,11 @@ out of the denominator. One cheap cacheable call per venue (the endpoint Tardis'
     (UAC's `EXPECTED_UPSTREAM_OUT_OF_ BOUNDS`, explicitly documented as "REGISTRY-DERIVED ONLY, never hand-stamp at a
     callsite") is a taxonomy decision this script deliberately does NOT make.
   - `--apply` was never invoked — the live manifest is untouched by this todo.
+
+- **na-eligibility-audit 2026-07-30** (tranche=cefi, autonomous): KEEP-NA, valid - the P1 sizing/purge half is
+  explicitly operator-gated and snapshot-first; the vendor-catalog gate must coordinate with in-flight
+  `coverage_exclusions` work in UAC.
+
+## Progress Log
+
+- **context-scout 2026-08-01**: populated/refreshed context_scope (2 entries).

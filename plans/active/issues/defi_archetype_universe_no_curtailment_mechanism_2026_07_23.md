@@ -35,6 +35,15 @@ resolved_by:
 locked_by:
 source: agent-discovered (per-archetype DeFi universe mapping audit, 2026-07-23)
 depends_on: []
+context_scope:
+  [
+    strategy-service/strategy_service/engine/strategies/v2/target_universe/catalog.py,
+    strategy-service/strategy_service/engine/strategies/v2/factory.py,
+    strategy-service/strategy_service/engine/strategies/v2/carry_and_yield/recursive_staked.py,
+    strategy-service/strategy_service/engine/strategies/v2/carry_and_yield/basis_perp.py,
+    unified-api-contracts/unified_api_contracts/canonical/crosscutting/_mvp_scope_predicate.py,
+    /plans/archive/issues/mvp_scope_resolver_code_read_2026_07_24.md,
+  ]
 ---
 
 # DeFi strategy archetype universe — no curtailment mechanism, two unreconciled registries, one dead field
@@ -545,8 +554,32 @@ run SEQUENTIALLY, not in parallel:
       against real prod GCS, 2026-07-24): AAVE_V3/COMPOUND_V3/SPARK resolve for real coverage; MORPHO and KAMINO never
       appear in the corpus at all (permanent data gaps, not transient) — the KAMINO-only catalog row is honestly
       excluded via a new satisfiability gate, mirroring the Phase 4a precedent, rather than fed guaranteed-empty data.
-- [ ] [BACKEND] P2. **Phase 5 — LIQUIDATION_CAPTURE**. New data source: on-chain liquidation-cascade feed +
-      `health_factor_trigger`.
+- [x] ✅ [BACKEND] P2. **Phase 5 — LIQUIDATION_CAPTURE — HELD-FINDING, 2026-07-31 (slot 11, backend_engineer),
+      `defi_satellite_ao_dispatch_batch3-005`.** Ran the mechanical pre-check (catalog `initial_config` keys vs
+      `LiquidationCaptureEngine.on_tick`/read pattern) and confirmed the engine `on_tick` (`liquidation_capture.py:68`)
+      is NOT a stub — real gating logic (health-factor threshold, profit-after-gas/slippage) and a real 5-leg
+      `AtomicInstruction` emission. But structurally it can NEVER fire from a day-partition paper-replay tick: `on_tick`
+      hard-gates on `if not all([protocol, chain, debt_asset, collateral_asset, underwater_address]): return []` (line
+      ~115), and BOTH catalog sources — `catalog_yield_defi.py::build_liquidation_capture()` (7 rows) and
+      `archetype_slots_defi.py`'s `DEFI_SLOTS["LIQUIDATION_CAPTURE"]` (1 row) — leave `debt_asset`/`underwater_address`
+      DELIBERATELY EMPTY on every row (re-read both sources directly this session, not trusting the 2026-07-23 finding:
+      both carry the exact comment confirming this is intentional, not an oversight). Re-verified fresh (not
+      re-guessing) that no live-injection/params-mutation path has been added since 2026-07-23: `orchestrator.py`'s
+      `register_instance()` still constructs the engine's `params` ONCE via `ArchetypeEngineFactory.build(...)` and
+      `on_allocation_directive()` only carries rebalance/equity fields — no API exists anywhere in
+      `BaseArchetypeEngineV2`/`V2EngineOrchestrator` to inject a per-event identity (`debt_asset`/`underwater_address`)
+      into a running engine instance mid-replay. This is unchanged from this doc's own 2026-07-23 finding (same section,
+      above) — the blocker is a genuine unbuilt live-injection integration (same class as
+      `CARRY_RECURSIVE_BORROW_LENDING_ONLY`'s `RecursiveLoopOrchestrator` gap), not a threshold/config decision, and per
+      this doc's `Recommendation` section that live-injection integration is already flagged as its own not-yet-scoped
+      follow-on requiring operator/design input — building it here would mean either fabricating
+      `debt_asset`/`underwater_address` values (a fake signal, explicitly disallowed) or adding LIQUIDATION_CAPTURE to
+      `_ENGINE_DRIVABLE_ARCHETYPES` as dead code that can never actually emit. **Not adding LIQUIDATION_CAPTURE to
+      `strategy_service/cli/handlers/paper_universe.py`'s `_ENGINE_DRIVABLE_ARCHETYPES`, and not building a
+      `_load_liquidation_capture_ticks()` tick loader** — zero fabricated wiring, per this doc's and the batch3 todo's
+      own stated honest-finding branch. No code shipped this session (investigation-only, confirmed via fresh code
+      reads). Cross-referenced to `defi_satellite_ao_dispatch_batch3_2026_07_26.md`'s todo 5, flipped there too citing
+      this entry.
 - [x] [BACKEND] P1. **After Phases 1-5 — Layer-3 curtailment mechanism SHIPPED 2026-07-24,
       `strategy-service@f3e9d748`.** Built exactly the design sketch in this doc's Finding 1 + the RESUME POINT 3-layer
       architecture: `PaperUniverseConfig` gains two sibling fields to the (still separately unwired) `archetypes` field
@@ -801,3 +834,11 @@ favor of `dated_expiry`+`roll_on_dte`. The paper-replay TICK-LOADER build itself
 half of the Phase 1 checkbox above, now unblocked for a follow-on dispatch. Full test evidence:
 `tests/unit/engine/strategies/v2/test_carry_staked_basis_dated_contract_resolution.py` (golden dated-future values,
 roll-boundary + determinism proofs, and a real-catalog-spec construction/`on_tick` proof).
+
+## Progress Log addendum
+
+- **na-eligibility-audit 2026-08-01**: KEEP-NA valid — both remaining open checkboxes (RecursiveLoopOrchestrator gap,
+  MVP_SCOPE catalog-identity precondition) are explicitly operator-design-gated per their own text ("Verdict: still
+  correctly NOT AO-dispatchable ... Remains parked pending an operator design/scoping session"; "Scope/sequencing
+  decision needed before dispatch"). No stale/duplicate/reclassify-eligible items found. Doc stays `assigned_vm: NA`.
+- **context-scout 2026-08-01**: populated/refreshed context_scope (6 entries).

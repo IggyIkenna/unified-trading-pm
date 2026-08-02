@@ -7,7 +7,7 @@ summary: >-
   each of the 4 distinct source docs' checkboxes independently), plus one batch1-specific addition: re-check the 38
   conflict-gated Deferred items once the operator has ruled on the queued decision in
   autonomous_session_operator_decisions_2026_07_25.md.
-status: draft
+status: active
 nature: process
 asset_group: [tradfi]
 stage: [data]
@@ -21,7 +21,7 @@ related:
     /plans/active/issues/autonomous_session_operator_decisions_2026_07_25.md,
   ]
 created: "2026-07-25"
-last_updated: "2026-07-25"
+last_updated: "2026-07-30"
 parent_epic: tradfi_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -39,6 +39,13 @@ source: >-
   /autonomous session 2026-07-25, per task_template.md §4's finalize-plan-coverage rule — every AO-dispatched plan needs
   a companion gated finalize plan.
 assigned_role: data_engineering
+context_scope:
+  [
+    /plans/active/tradfi_satellite_ao_dispatch_batch1_2026_07_25.md,
+    /plans/active/tradfi_consolidated_closeout_2026_07_18.md,
+    /plans/active/issues/autonomous_session_operator_decisions_2026_07_25.md,
+    /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
+  ]
 sequential: true
 drift_direction: advance-code
 ---

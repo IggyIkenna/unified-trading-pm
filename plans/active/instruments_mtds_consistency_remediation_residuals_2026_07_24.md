@@ -64,6 +64,14 @@ source:
     "plans/active/issues/plan_line_cap_remediation_2026_07_23.md",
   ]
 drift_direction: advance-code
+context_scope:
+  [
+    /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
+    /codex/02-data/availability-manifest-and-data-status.md,
+    /codex/02-data/pipeline-mode-partition.md,
+    /plans/active/instruments_store_cf_canonicalization_single_walk_2026_07_24.md,
+    /plans/audit/results/instruments_mtds_subset_and_consistency_audit_2026_06_17.md,
+  ]
 ---
 
 # Instruments <-> MTDS F1-N9 consistency remediation -- residual continuation
@@ -472,11 +480,16 @@ the killer leg vs Polymarket BTC binaries) are in `_CME_EVENT_CONTRACTS`
 subscription (no extra dataset), tagged `event_contract`, validity `{trades, ohlcv-1s, tbbo}`. Gather was STARTED, not
 finished. Active plan: `tradfi_cme_event_contract_backfill_2026_06_20.md`.
 
-- [ ] [DATA] P1. **CME EC\* event-contract backfill — v9-certification dependency only** (execution owned by
+- [x] [DATA] P1. **CME EC\* event-contract backfill — v9-certification dependency only** (execution owned by
       `tradfi_cme_event_contract_backfill_2026_06_20`, tradfi_master). I-2's stake is narrow: verify the EC\* cells (9
       `.OPT`-parent series on GLBX.MDP3, `{trades, ohlcv_1s, tbbo}`) land in the v9 `_index` and that this plan's FINAL
       CERTIFICATION explicitly checks EC\* coverage (esp. ECBTC). Do NOT launch a duplicate EC\* backfill here — defer
-      to the plan-of-record. — market-tick-data-service / instruments-service
+      to the plan-of-record. — market-tick-data-service / instruments-service -- CLOSED (na-eligibility-audit
+      2026-08-01): the cited plan-of-record `plans/archive/2026_06/tradfi_cme_event_contract_backfill_2026_06_20.md` is
+      ARCHIVED status:complete with a TRULY-DONE banner (214k rows, 9 EC roots, 100% coverage) and its own verify entry
+      confirming "CME manifest window 2025-09-28→2026-06-24: 240 captured + 31 empty_confirmed = 100% coverage (0
+      failures)", dated before this residuals doc even existed -- the narrow verification stake this item states is
+      already independently satisfied.
 
 ## Autonomous-run residuals (2026-06-18, surfaced during the migration drive)
 
@@ -654,19 +667,27 @@ TWIN-VERIFIED-SAFE.** Authoritative per-object reclassification writing to
       reconciling `attempted_failed` 1.40M→782,005, genuine `VENUE_FETCH_FAILED`(83,975)+ `HTTP_429`(3,652) preserved
       for backfill. Do not re-diagnose this figure — see "F3 (reframed)" for current state. Original open-todo text
       preserved below for audit-trail purposes:
-- [ ] [DATA] P0. **F3 — CEFI: 1.40M `attempted_failed` MTDS cells (36%)**. Break down by venueÃdata_type; diagnose the
+- [x] [DATA] P0. **F3 — CEFI: 1.40M `attempted_failed` MTDS cells (36%)**. Break down by venueÃdata_type; diagnose the
       failing adapters/venues; backfill. (Data-pipeline-correctness heartbeat — no deferral.) — market-tick-data-service
-      **Correction 2026-07-12** (finding id 90, §A2 B-queue ruling): the "confirm whether options ARE listed but not
-      captured... close the options capture gap if real" question below is REFUTED, not open — Phase C (line ~949, same
-      doc) already confirmed "options ARE captured (CME 8,602 opts/day, ES options_chain 20,956 rows) — the 'thinness'
-      is a typing artifact, REFUTED." There is no real capture gap to chase. The remaining, still-open work is narrower
-      and tracked separately as "F6 (reframed)" below (line ~1004: unify the two options encodings + stamp
-      `instrument_type` on the 182k blank-type cells) — that item is unaffected by this correction and stays open.
-      Original text (was: framed as an open capture-gap question) preserved below:
-- [ ] [CODE] P2. **F6 — TRADFI: 182k blank `instrument_type` + thin options (`options_chain` 3,287 vs `futures_chain`
+      -- CLOSED (na-eligibility-audit 2026-08-01): this checkbox sits directly under its own SUPERSEDED [x] entry above
+      ("SUPERSEDED by 'F3 (reframed)' below — FIXED mtds@aaeada9 ... Original open-todo text preserved below for
+      audit-trail purposes") -- it is the literal preserved-for-audit-trail text of an already-fixed finding, not live
+      remaining work; current state tracked at "F3 (reframed)". **Correction 2026-07-12** (finding id 90, §A2 B-queue
+      ruling): the "confirm whether options ARE listed but not captured... close the options capture gap if real"
+      question below is REFUTED, not open — Phase C (line ~949, same doc) already confirmed "options ARE captured (CME
+      8,602 opts/day, ES options_chain 20,956 rows) — the 'thinness' is a typing artifact, REFUTED." There is no real
+      capture gap to chase. The remaining, still-open work is narrower and tracked separately as "F6 (reframed)" below
+      (line ~1004: unify the two options encodings + stamp `instrument_type` on the 182k blank-type cells) — that item
+      is unaffected by this correction and stays open. Original text (was: framed as an open capture-gap question)
+      preserved below:
+- [x] [CODE] P2. **F6 — TRADFI: 182k blank `instrument_type` + thin options (`options_chain` 3,287 vs `futures_chain`
       15,875)**. Phase-2 sub-agent opens tradfi instruments files to confirm whether options ARE listed but not captured
       (the "we list options but have no options data" case); fix the instrument_type stamping + close the options
-      capture gap if real. — market-tick-data-service / instruments-service
+      capture gap if real. — market-tick-data-service / instruments-service -- CLOSED (na-eligibility-audit 2026-08-01):
+      immediately preceded (same doc, F3 correction note) by confirmation this item's capture-gap half is REFUTED --
+      Phase C already confirmed "options ARE captured (CME 8,602 opts/day, ES options_chain 20,956 rows) -- the
+      'thinness' is a typing artifact, REFUTED" -- and the narrower remaining scope is tracked live as "F6 (reframed)"
+      below; this original item's full scope is superseded/refuted.
 - [x] ✅ [DATA] P2. **F5 — SPORTS INSTR index hygiene** — FIXED instruments-service@7b7d3a3 (new
       `scripts/canonicalize_instruments_store_index.py`). sports v2 projection: blank `capture_status` **6,869→0**
       (6,869 malformed blank-data_type+blank-league rows dropped as no-shard-identity), `date='all'` **preserved (2,
@@ -867,16 +888,25 @@ TWIN-VERIFIED-SAFE.** Authoritative per-object reclassification writing to
       2.17M cefi / 1.58M defi / 144k tradfi / 804k sports).
 
       CONSEQUENCE: the data-status `_apply_pipeline_mode_filter`
-                                                                                                                      chip (`coverage.py`) narrows to ZERO on any `batch_*` filter — the manifest rows have no `pipeline_mode` to match —
-                                                                                                                      even though the GCS objects ARE canonically `pipeline_mode={mode}_{source}/`-keyed. Coverage % + the drilldown are
-                                                                                                                      UNAFFECTED (they read `capture_status`/ derive canonical segments from UAC, not the manifest pipeline_mode
-                                                                                                                      column). FIX = the wholesale v9 `_index` rebuild-and-replace (already tracked per-AG: N5r/N6r for defi, the
-                                                                                                                      migrate-first + rebuild for tradfi/sports/pred) must POPULATE `pipeline_mode`+`source`+`asset_group` from the
-                                                                                                                      canonical object paths, not just classify capture_status. Re-verify `pipeline_mode` non-blank > 0 post-rebuild per
-                                                                                                                      AG. — market-tick-data-service
+                                                                                                                                                                                                                                                                                                                                                                                                                                                  chip (`coverage.py`) narrows to ZERO on any `batch_*` filter — the manifest rows have no `pipeline_mode` to match —
+                                                                                                                                                                                                                                                                                                                                                                                                                                                  even though the GCS objects ARE canonically `pipeline_mode={mode}_{source}/`-keyed. Coverage % + the drilldown are
+                                                                                                                                                                                                                                                                                                                                                                                                                                                  UNAFFECTED (they read `capture_status`/ derive canonical segments from UAC, not the manifest pipeline_mode
+                                                                                                                                                                                                                                                                                                                                                                                                                                                  column). FIX = the wholesale v9 `_index` rebuild-and-replace (already tracked per-AG: N5r/N6r for defi, the
+                                                                                                                                                                                                                                                                                                                                                                                                                                                  migrate-first + rebuild for tradfi/sports/pred) must POPULATE `pipeline_mode`+`source`+`asset_group` from the
+                                                                                                                                                                                                                                                                                                                                                                                                                                                  canonical object paths, not just classify capture_status. Re-verify `pipeline_mode` non-blank > 0 post-rebuild per
+                                                                                                                                                                                                                                                                                                                                                                                                                                                  AG. — market-tick-data-service
 
 - [x] ✅ [DATA] P3. **N3b — SPORTS: captured cells still NULL source** — DONE 2026-06-19. Live-index audit shows
       captured NULL-source = **0** (already resolved on the live `_index`; the v9 source-stamp populated every captured
       cell — verified `source` nonblank 100%/803,796 pre-recovery). The combined recovery (mtds@ba21ee5) derives
       `source` from the recovered pipeline_mode for every emitted/re-stamped cell, so it stays 0. —
       market-tick-data-service
+
+## Progress Log
+
+- **na-eligibility-audit 2026-08-01**: KEEP-NA, stale items closed -- 3 item(s) closed as stale/duplicated (see
+  checkboxes above), doc stays assigned_vm: NA. Full audit rationale: Full top-to-bottom read of all 883 lines / 14 open
+  checkboxes. This is NOT a uniform-judgment doc: it is a technical remediation continuation whose already-DONE items
+  (29/43) were almost all scoped script/data fixes executed directly by past sub-agents (N1,N2,N3,N9,N9c,F3-reframed,
+  N6r apply, UNISWA...
+- **context-scout 2026-08-01**: populated/refreshed context_scope (5 entries).

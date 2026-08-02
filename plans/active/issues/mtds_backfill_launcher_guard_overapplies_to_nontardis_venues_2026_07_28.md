@@ -83,6 +83,15 @@ whoever reads it already knows to discount it, which defeats the point of an aut
 
 ## Recommended decision
 
+> **✅ SAME-FILE COLLISION RESOLVED 2026-07-31** (corpus-wide ownership-conflict sweep, operator ruling: only one doc's
+> todo claims the edit, the other cites it). This doc and
+> `/plans/active/issues/mtds_live_smoke_vm_not_tardis_guarded_2026_07_28.md` both touch the Tardis-guard machinery. They
+> now own **disjoint** files: **this doc** owns `tardis-concurrency-guard.sh`'s exempt logic (DONE —
+> `TARDIS_CAP_EXEMPT_VENUES` + `tardis_venue_list_needs_guard()`, `deployment-service@2d6b01a`),
+> `launch-mtds-backfill-vm.sh` (DONE), and the skill's **§ 3 (Tardis cap)** note (DONE); **the live-smoke doc** owns
+> `launch-mtds-live.sh` + the sibling live launchers and the skill's **Phase-2 (live leg)** section. Nothing here should
+> edit a live launcher, and nothing there should re-implement the exempt list.
+
 - [x] ✅ [DATA] P1. Scope the guard call in `launch-mtds-backfill-vm.sh` to Tardis-sourced venues only — reuse the same
       CAP-EXEMPT venue list (HYPERLIQUID / ASTER / LIGHTER-ZKSYNC / EXTENDED-STARKNET / PACIFICA-SOLANA) the codex
       already documents elsewhere, e.g. gate on `VENUE_TO_ADAPTER_KEY[venue] == 'tardis'` (UAC) rather than
@@ -97,12 +106,12 @@ whoever reads it already knows to discount it, which defeats the point of an aut
       against this doc, not taken at face value. (repo: unified-trading-pm, `.claude/skills/data-pipeline-check-mtds/`)
 
       **RESOLVED-MOOT 2026-07-30** — this todo's own trigger condition was "until P1 ships." Re-verified 2026-07-30:
-                                                              P1 (`deployment-service@2d6b01a`) is confirmed live in the current codebase
-                                                              (`grep -n "TARDIS_CAP_EXEMPT_VENUES\|tardis_venue_list_needs_guard" scripts/vm/tardis-concurrency-guard.sh
-                                                              scripts/vm/launch-mtds-backfill-vm.sh` shows both wired and in use). Since P1 already shipped, the skill's
-                                                              existing § 3 claim ("Non-Tardis cells... UNAFFECTED... may still run in parallel") is now ACCURATE again —
-                                                              adding a caveat saying it's currently broken would itself be the stale/wrong statement. Decision, not silence:
-                                                              no skill-doc edit needed; closing as moot rather than leaving open against a condition that already resolved.
+                                                                                                                                                                                                                                                                                                                                                                      P1 (`deployment-service@2d6b01a`) is confirmed live in the current codebase
+                                                                                                                                                                                                                                                                                                                                                                      (`grep -n "TARDIS_CAP_EXEMPT_VENUES\|tardis_venue_list_needs_guard" scripts/vm/tardis-concurrency-guard.sh
+                                                                                                                                                                                                                                                                                                                                                                      scripts/vm/launch-mtds-backfill-vm.sh` shows both wired and in use). Since P1 already shipped, the skill's
+                                                                                                                                                                                                                                                                                                                                                                      existing § 3 claim ("Non-Tardis cells... UNAFFECTED... may still run in parallel") is now ACCURATE again —
+                                                                                                                                                                                                                                                                                                                                                                      adding a caveat saying it's currently broken would itself be the stale/wrong statement. Decision, not silence:
+                                                                                                                                                                                                                                                                                                                                                                      no skill-doc edit needed; closing as moot rather than leaving open against a condition that already resolved.
 
 No manifest corruption or data-correctness issue here — every "failed" cell in this run genuinely never launched a VM
 (`vm_not_success:launcher_script_nonzero_rc=1`, zero parquet writes), so nothing was mis-captured. This is a

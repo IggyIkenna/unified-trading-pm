@@ -47,6 +47,13 @@ source: >-
 assigned_role: data_engineering
 sequential: false
 drift_direction: advance-code
+context_scope:
+  [
+    /plans/active/sports_consolidated_closeout_2026_07_19.md,
+    /plans/active/sports_closeout_track_x_hygiene_2026_07_25_finalize.md,
+    /plans/active/issues/sports_peripheral_bucket_league_vocabulary_contamination_2026_07_20.md,
+    /codex/02-data/sports-gcs-path-ssot.md,
+  ]
 ---
 
 # Sports closeout Track X — plan/doc hygiene + orphan-satellite reconciliation
@@ -128,3 +135,7 @@ drift_direction: advance-code
 
 `/codex/02-data/sports-gcs-path-ssot.md`, `/codex/02-data/pipeline-mode-partition.md`. Plan↔codex drift is
 review-blocking.
+
+## Progress Log
+
+- **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).

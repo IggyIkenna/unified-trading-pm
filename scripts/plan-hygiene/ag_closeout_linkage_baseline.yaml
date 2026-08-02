@@ -1,10 +1,53 @@
 # Baseline for check_ag_closeout_linkage.py — every single-asset-group plan/issue
-# doc must have a findable path to its AG's consolidated closeout plan (operator
-# request 2026-07-25).
+# doc must have a findable path to its tranche's consolidated closeout plan
+# (operator request 2026-07-25).
 #
 # This is a SHRINKING ratchet. orphan_count is the number of pre-existing orphans
 # the gate tolerates. A live count EXCEEDING this fails the check — a NEW doc
-# landed with no path back to its AG's closeout, fix it (add a related: link or a
-# closeout-doc mention), don't raise the number. LOWER it (re-run
+# landed with no path back to its tranche's closeout, fix it (add a related: link
+# or a closeout-doc mention), don't raise the number. LOWER it (re-run
 # --update-baseline) the moment orphans get fixed. NEVER hand-raise it.
-orphan_count: 0
+#
+# 2026-07-30 RE-SEED 0 -> 32 (operator ruling; the ONE documented exception to the
+# never-raise rule). The old 0 was not a clean corpus — it was the artifact of a
+# stale hand-listed REAL_AGS plus a filename-prefix bug that left 5 of 10 tranches
+# enforcing NOTHING (cross-cutting, ao, ci, infrastructure, ui). Widening coverage
+# and fixing both bugs surfaced 32 real pre-existing orphans that had always been
+# there and were never measured. Per AUTONOMOUS_AGENT_RULES.md rule 11(a) the
+# widened gate is seeded at its MEASURED count, then ratcheted DOWN as docs get
+# linked — it is not a licence to raise this number again.
+#
+# 32 is the count measured against the tree at commit time on 2026-07-30 (per-tranche:
+# cross-cutting 21/97, infrastructure 8/36, cefi 2/61, tradfi 1/38; defi, prediction,
+# sports and ui are clean). Two earlier passes the same day recorded 31 and 34 against
+# different corpus snapshots — this corpus is edited concurrently by several agents, so
+# the number moves; 32 is the one this gate was actually verified green against (exit 0).
+# Every one of the 32 pre-dates this change (verified `git cat-file -e HEAD:<path>`); the
+# one NEW orphan this session would have introduced was fixed by adding a `related:` link,
+# not by absorbing it into the baseline. A later run reading HIGHER than 32 means a new
+# unlinked doc landed — link it, do not raise this.
+#
+# 2026-07-31 RE-SEED 32 -> 69 (SECOND documented exception to the never-raise rule; see
+# ag_closeout_audit_scope_widening_triage_2026_07_26.md todo -002). The "32" above was never
+# actually enforced by shipped code: `ag_closeout_linkage_gate_blind_to_four_tranches_2026_07_
+# 30.md` todo 1 claimed the widening (COVERED_ASSET_GROUPS, archived-family resolution, loud
+# empty-family warning) was DONE 2026-07-30, but `git log --follow` on
+# check_ag_closeout_linkage.py shows only its ORIGINAL 2026-07-25 commit ever touched the file
+# — that fix was never actually committed, so every run since 2026-07-30 was silently still
+# gated on the stale hard-coded `REAL_AGS = (cefi, defi, tradfi, prediction, sports)`, and the
+# "32" this file recorded never corresponded to any code that ran (a fresh run against that
+# code measures 12, not 32). This session implemented the widening for real:
+# COVERED_ASSET_GROUPS = docspec.ASSET_GROUP - {meta} (10 tranches); closeout_family_for() now
+# searches plans/active + plans/archive, closing the `ao`/`ci` archived-family gap the prior
+# attempt only warned about (no empty-family warning fires — both resolve non-empty); an
+# empty family still prints loudly to stderr unconditionally, never a silent continue.
+# Measured fresh against the real widened code: ao 11, cefi 3, ci 11, cross-cutting 29,
+# defi 4, infrastructure 7, sports 1, tradfi 3 (prediction 0, ui 0) = 69 total. Every one of
+# the 69 pre-dates this change (spot-verified `git cat-file -e HEAD:<path>` on the
+# most-recently-dated hits; none were created this session). This is the corpus's true, now
+# actually-measured figure — no bug remains to ratchet in as legitimate debt (the `ci`
+# family-resolution defect the prior unshipped attempt would have papered over is fixed, not
+# absorbed: its 11 orphans are measured against a real resolved archived closeout family).
+# Ratchet DOWN from here as docs get linked; NEVER hand-raise again without a fresh measured
+# justification of this same shape.
+orphan_count: 69

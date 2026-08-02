@@ -17,11 +17,11 @@ related:
   [
     /plans/active/sports_satellite_ao_dispatch_batch5_2026_07_26.md,
     /plans/active/sports_consolidated_closeout_2026_07_19.md,
-    /plans/active/sports_satellite_ao_dispatch_batch4_finalize_2026_07_25.md,
+    /plans/archive/2026_07/sports_satellite_ao_dispatch_batch4_finalize_2026_07_25.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]
 created: "2026-07-26"
-last_updated: "2026-07-29"
+last_updated: "2026-07-31"
 parent_epic: sports_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -41,6 +41,13 @@ source: >-
 assigned_role: data_engineering
 sequential: true
 drift_direction: advance-code
+context_scope:
+  [
+    /plans/active/sports_satellite_ao_dispatch_batch5_2026_07_26.md,
+    /plans/active/sports_consolidated_closeout_2026_07_19.md,
+    /cursor-configs/skills/ag-closeout-audit/SKILL.md,
+    /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
+  ]
 ---
 
 # Sports satellite AO batch 5 — finalize
@@ -98,19 +105,70 @@ drift_direction: advance-code
       todo shipped `market-tick-data-service@76ca401f`, done 2026-07-27) — so the remaining batch5 todo is itself now
       dispatchable, it just hasn't been picked up/executed yet. This finalize closeout has nothing further for THIS todo
       to do until that separate batch5 todo lands. Releasing via `/skip-current-task {"reason_code": "GATED"}`. Next
-      dispatch: re-check once batch5's zombie-tick todo flips `[x]`. **Archive every source doc todo 1 drives to
-      `status: resolved`/`complete` — in the same commit as the flip, never left sitting in `plans/active/`.**
-      `check_terminal_status_archived.py` HARD-fails on any doc whose frontmatter reads a terminal status while it still
-      lives under `plans/active/` (including `plans/active/issues/`) — the omission of this exact step across the sports
-      finalize-plan family already forced one such HARD-fail: the `plan_health` gate's own remediation
-      (`unified-trading-pm@57ed9271c`, escalation `agt-9a5061`, PR #1545) auto-archived 11 docs nobody's plan owned. For
-      every source doc todo 1 flips to `resolved` with 0 open todos: re-verify the 0-open-todos count and the resolution
-      banner one more time, then archive it to `plans/archive/2026_07/` IN THE SAME COMMIT as the status flip — fix
-      every corpus referrer of the archived doc's pre-archive path (grep for the basename). If todo 1 already ran before
-      this todo existed in the plan, archive any already-`resolved`-but-still-active doc now, noting the flip predated
-      this rule. **Done when**: no source doc this plan drives to a terminal status remains under `plans/active/`,
-      `bash scripts/plan-hygiene/run_hygiene_sweep.sh --ci` reports 0 hard failures, and every corpus referrer resolves
-      to the archived path. Source: `archive/issues/sports_plan_reconcile_operator_decisions_2026_07_26.md` § 2.
+      dispatch: re-check once batch5's zombie-tick todo flips `[x]`. **Reconfirmed 2026-07-31 (slot 3,
+      data_engineering): gate still open, zero drift since slot 11's check.** Direct re-read of
+      `sports_satellite_ao_dispatch_batch5_2026_07_26.md` shows its zombie-tick todo still `[ ]`, no commits landed
+      against it in the interim. Also pre-resolved the archiving requirement below: the one doc todo 1 flipped to
+      `status: resolved` (`sports_t6_8_oneoff_retirement_residual_2026_07_25.md`) is already archived at
+      `plans/archive/issues/sports_t6_8_oneoff_retirement_residual_2026_07_25.md` — nothing outstanding there. Releasing
+      again via `/skip-current-task {"reason_code": "GATED"}`. **Reconfirmed 2026-07-31T10:57Z (slot 16,
+      data_engineering): gate still open, zero drift since slot 3's check.** Direct re-read of
+      `sports_satellite_ao_dispatch_batch5_2026_07_26.md`: the zombie-tick purge/re-derive + ML-readiness gate-semantics
+      todo (line 107) is still `[ ]` — no commits landed against it. Confirmed no `slot_done` activity in the last 30
+      events references this todo or batch5 either. Its own input (batch4's read-only sweep report,
+      `market-tick-data-service@76ca401f`, done 2026-07-27) remains available, so that todo is itself dispatchable as
+      its own backlog task derived from batch5's doc — just not yet picked up/executed. Releasing again via
+      `/skip-current-task {"reason_code": "GATED"}`. **Reconfirmed 2026-08-02 (slot 14, data_engineering) — root cause
+      of the 4+ day stall found: it was never "not yet picked up," it structurally could not be picked up.** A full
+      `GET /api/backlog` scan (1337 tasks) found **zero** tasks matching this todo's content anywhere — the only task
+      ever derived for `sports_satellite_ao_dispatch_batch5_2026_07_26.md` is an orphan
+      (`sports_satellite_ao_dispatch_batch5-024`, `done_at: 2026-07-26T01:27:01Z`, done 3 minutes after queuing —
+      clearly a much simpler pre-reword version of this todo). The regen correctly orphaned the stale row once the text
+      was expanded to today's substantial multi-part description, but never derived a fresh task for the new wording —
+      every prior "genuinely dispatchable, just not picked up" verdict (slots 11/3/16) was a reasonable read at the time
+      but is now known to be off by one level: dispatchability itself was the missing piece. Filed as corroborating
+      evidence (not a new doc — same shape, second independent case) in
+      `/plans/active/issues/defi_batch8_finalize_gate_bypass_missing_upstream_task_2026_08_02.md`'s Progress Log
+      (unified-trading-pm commit follows) — both this todo and that doc's affected todo share the identical shape
+      (bolded multi-clause description immediately after the priority marker, followed by lettered sub-parts spanning
+      many lines), strengthening that doc's own parser-shape hypothesis. Releasing again via
+      `/skip-current-task {"reason_code": "GATED"}` — nothing this data_engineering task can do until the
+      agent-orchestrator backend fix lands and a fresh task actually derives. **Reconfirmed 2026-08-02 (slot 9,
+      data_engineering): zero drift, and the shared root cause is now narrower than the parser-shape hypothesis.**
+      Fresh-pulled to latest `live-defi-rollout` first. The zombie-tick todo text (this doc's line 114-138) is still
+      `[ ]`, and `GET /api/backlog` still shows only the same stale orphan (`sports_satellite_ao_dispatch_batch5-024`,
+      `done_at: 2026-07-26T01:27:01Z`) — no fresh task derived. The sibling defi doc's own investigation (todo 1, slot
+      15, `2026-08-02T16:03Z`) has since REFUTED the parser-shape hypothesis for its own case and found a different,
+      narrower cause instead (a word-order bug in `_is_non_dispatchable`'s `BLOCKED-<TOKEN>` stale-marker lookback —
+      only catches keyword-before-marker phrasing). Checked whether that exact mechanism applies here too: this todo's
+      own continuation block (lines 114-138) contains **no `BLOCKED-` token at all** — so this is likely a genuinely
+      DIFFERENT non-derivation cause sharing only the surface symptom, not automatically fixed by that same regex patch
+      once it lands. Flagging for whoever picks up the defi doc's todo 2 fix: re-test THIS todo specifically after the
+      word-order patch, don't assume one fix covers both. Separately: this is dispatch #6 for this exact gated todo
+      (slots 8, 11, 3, 16, 14, now 9) — the todo's own text above cites an auto-park threshold of 3 BLOCKED/GATED
+      declines, which this has exceeded by 2x without auto-parking; noting as a possible second, independent dispatcher
+      gap, not investigating further (outside this task's scope). Releasing again via
+      `/skip-current-task {"reason_code": "GATED"}`. **Reconfirmed 2026-08-02T16:14Z (slot 10, data_engineering) —
+      dispatch #7, zero drift, escalated for a manual park.** `sports_satellite_ao_dispatch_batch5_2026_07_26.md`'s
+      zombie-tick todo still `[ ]`; `agent-orchestrator` HEAD still `2b0b9e9` (same as when the defi sibling's fix was
+      last checked this session) — neither the parser-shape nor the word-order-bug fix has landed yet. This is now 7
+      dispatches (slots 8, 11, 3, 16, 14, 9, now 10) against a stated auto-park-at-3 threshold, more than double with no
+      auto-park firing. Rather than re-confirm a 8th time later, messaged main directly requesting a manual park (per
+      RULES.md § "Park a task" — a main/operator action, not something this data_engineering task should hand-edit)
+      until the backend fix lands. Releasing again via `/skip-current-task {"reason_code": "GATED"}`. **Archive every
+      source doc todo 1 drives to `status: resolved`/`complete` — in the same commit as the flip, never left sitting in
+      `plans/active/`.** `check_terminal_status_archived.py` HARD-fails on any doc whose frontmatter reads a terminal
+      status while it still lives under `plans/active/` (including `plans/active/issues/`) — the omission of this exact
+      step across the sports finalize-plan family already forced one such HARD-fail: the `plan_health` gate's own
+      remediation (`unified-trading-pm@57ed9271c`, escalation `agt-9a5061`, PR #1545) auto-archived 11 docs nobody's
+      plan owned. For every source doc todo 1 flips to `resolved` with 0 open todos: re-verify the 0-open-todos count
+      and the resolution banner one more time, then archive it to `plans/archive/2026_07/` IN THE SAME COMMIT as the
+      status flip — fix every corpus referrer of the archived doc's pre-archive path (grep for the basename). If todo 1
+      already ran before this todo existed in the plan, archive any already-`resolved`-but-still-active doc now, noting
+      the flip predated this rule. **Done when**: no source doc this plan drives to a terminal status remains under
+      `plans/active/`, `bash scripts/plan-hygiene/run_hygiene_sweep.sh --ci` reports 0 hard failures, and every corpus
+      referrer resolves to the archived path. Source:
+      `archive/issues/sports_plan_reconcile_operator_decisions_2026_07_26.md` § 2.
 - [x] ✅ [REVIEW] P1. **DONE 2026-07-28 — unified-trading-pm (this commit).** Re-checked all Deferred items from
       batch5's own doc via direct reads of every named target/blocker doc (not trusting batch5's own dated ruling-text
       at face value — several turned out stale). **Count correction found at pickup**: `grep -c '^- \*\*'` under
@@ -196,3 +254,7 @@ drift_direction: advance-code
       location → clear `locked_by` (already empty here, confirm). **Done when**: the plan is moved to
       `plans/archive/2026_07/`, every corpus referrer resolves to the new path, and this finalize doc itself gets
       archived alongside it in the same commit.
+
+## Progress Log
+
+- **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).

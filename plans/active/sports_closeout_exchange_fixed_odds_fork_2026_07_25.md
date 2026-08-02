@@ -30,10 +30,11 @@ related:
   [
     /plans/active/sports_consolidated_closeout_2026_07_19.md,
     /plans/active/sports_closeout_exchange_fixed_odds_fork_2026_07_25_finalize.md,
+    /plans/active/issues/sports_odds_venue_enumeration_undercount_predrain_2026_07_27.md,
     /plans/archive/2026_07/sports_odds_exchange_fixed_fork_2026_07_18.md,
   ]
 created: "2026-07-25"
-last_updated: "2026-07-25"
+last_updated: "2026-08-02"
 parent_epic: sports_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -45,7 +46,8 @@ locked_by:
 locked_since:
 supersedes:
 superseded_by:
-depends_on: []
+depends_on: [sports_odds_venue_enumeration_undercount_predrain_2026_07_27]
+gate_on_depends: true
 source: >-
   Extracted 2026-07-25 from sports_consolidated_closeout_2026_07_19.md's Track C "EXCHANGE_ODDS vs FIXED_ODDS fork"
   block (line-cap split pass — the parent was over its 1000L hard cap), itself absorbed 2026-07-23 verbatim from the
@@ -53,6 +55,13 @@ source: >-
 assigned_role: data_engineering
 sequential: true
 drift_direction: advance-code
+context_scope:
+  [
+    /plans/active/sports_consolidated_closeout_2026_07_19.md,
+    /plans/active/sports_closeout_exchange_fixed_odds_fork_2026_07_25_finalize.md,
+    /codex/02-data/availability-manifest-and-data-status.md,
+    /codex/02-data/sports-data-types-catalog.md,
+  ]
 ---
 
 # Sports EXCHANGE_ODDS vs FIXED_ODDS fork
@@ -69,6 +78,27 @@ drift_direction: advance-code
 > mapping resolved (the source block's own words: "non-ambiguous poles may proceed to design without waiting"). **Todo 1
 > is now ruled + closed, and todo 6 is now un-gated to `[DATA]`** (2026-07-26) — the sequential chain now runs straight
 > through with no operator-tag skip needed.
+
+> **🔴 HARD ORDERING GATE (operator ruling 2026-07-30, wired 2026-08-02) — this plan is now machine-gated on
+> `sports_odds_venue_enumeration_undercount_predrain_2026_07_27`** via frontmatter `depends_on` + `gate_on_depends` (set
+> `true`). **The legacy `odds` contract retirement MUST NOT run before the venue→class mapping for the 19
+> currently-unmapped venues lands.** That doc's 2026-07-29 census measured **292,117 real `data_type=trades` shards /
+> 51,291,778 rows across all 19 venues** (BETONLINEAG, UNIBET, BETRIVERS, WILLIAMHILL, CASUMO, SPORT888, CORAL,
+> PADDYPOWER, DRAFTKINGS, UNIBET_UK, SKYBET, BETSSON, FANDUEL, VIRGINBET, LIVESCOREBET, BETVICTOR, LADBROKES_UK, BOVADA,
+> BETWAY, UNIBET_EU), 100% `captured` — retiring the legacy contract while they are unmapped would **silently orphan all
+> 51.3M rows**. Until then this was tracked only as PROSE (the "⛔ GATED" note on the already-executed 3-venue move
+> todo, plus that doc's own operator-notify banner) — prose is explicitly NOT a dispatch gate, which is the same class
+> of gap already recorded in `/plans/active/issues/mtds_backfill_sequential_true_dispatch_order_violated_2026_07_29.md`.
+>
+> **Mechanism (verified against `agent-orchestrator/server/regen_backlog_from_plan.py`)**: the upstream is an
+> `assigned_vm: NA` issue doc, so it contributes zero backlog-task ids. `_wire_gate_on_depends_prereqs` explicitly
+> disambiguates that case — it reads the upstream FILE's open todos (`_parse_open_todos`, and `plan_files` includes
+> `plans/active/issues/*.md`) and, since that doc has 1 genuinely open `[DATA] P0`, holds every task of THIS plan behind
+> the derived named prerequisite `gate-upstream-open:sports_odds_venue_enumeration_undercount_predrain_2026_07_27`
+> (named prereqs default to blocking when absent). So this is a REAL hold, not a silent no-op on a non-ingested
+> upstream. **Scope note**: the gate holds the whole plan, which also covers the writer-cutover todo — deliberate, and
+> correct: cutting live writers over to `exchange_odds`/`fixed_odds` is equally undefined for 19 venues with no class.
+> All previously-executed todos are already `[x]` and unaffected.
 
 ## Todos
 
@@ -302,15 +332,45 @@ drift_direction: advance-code
 - [ ] [DATA] P2. **Cut the live sports odds writers over to the new instrument_types and un-drain** (reverse of the
       pre-drain todo above). (repo: market-data-processing-service / deployment-service). **Done when**: a fresh live
       write is observed landing under the new instrument_types and the drain flag is confirmed lifted.
-- [ ] [DATA] P2. **Retire the legacy `odds` contract entry + the dual-read path once no object/manifest row remains
-      under `odds`** (requires the `[OPERATOR]`-gated 3-venue move above to have landed too) **and a full corpus re-read
+- [ ] [DATA] P2. **⛔ HARD-GATED (2026-08-02) on the 19-venue venue→class mapping — see this plan's HARD ORDERING GATE
+      banner above.** Machine-held via frontmatter
+      `depends_on:     [sports_odds_venue_enumeration_undercount_predrain_2026_07_27]` + `gate_on_depends`, so this can
+      no longer dispatch while that doc's `[DATA] P0` mapping todo is open. **Retire the legacy `odds` contract entry +
+      the dual-read path once no object/manifest row remains under `odds`** (requires the 3-venue move above to have
+      landed — it has, 2026-07-27 — AND all 19 remaining venues to be classified + moved) **and a full corpus re-read
       confirms parity.** (repo: unified-api-contracts). **Done when**: a corpus-wide census confirms 0 remaining
-      objects/manifest rows carrying the legacy `odds` instrument_type value, and the dual-read code path is deleted.
+      objects/manifest rows carrying the legacy `odds` instrument_type value **across every venue, not just the 9
+      already migrated**, and the dual-read code path is deleted.
 - [ ] [REVIEW] P2. **Post-phase codex audit**: update `/codex/02-data/availability-manifest-and-data-status.md` + the
       sports canonical-naming codex doc with the new instrument_types + migration order. (repo: unified-trading-pm).
       **Done when**: both named codex docs cite EXCHANGE_ODDS/FIXED_ODDS and the migration ordering used.
+
+      **DISPATCHED PREMATURELY 2026-07-31T15:38Z (slot 14) — declined, still genuinely blocked.** This plan's own
+                      banner states the intended chain ends `... → cutover → retire legacy → codex audit`, but both predecessors
+                      are still `[ ]` open at dispatch time: the "cut the live sports odds writers over" todo (2 above) and the
+                      "retire the legacy `odds` contract entry" todo (1 above). Writing the codex "migration ordering used" section
+                      now would describe an ordering that hasn't actually finished executing yet. This is the SAME `sequential: true`
+                      dispatch-order gap already tracked in
+                      `plans/active/issues/mtds_backfill_sequential_true_dispatch_order_violated_2026_07_29.md` (now confirmed across
+                      4 independent plans — mtds prediction-lane, mdps tradfi ohlcv, and now this sports fork) — added as further
+                      corroborating evidence there rather than re-diagnosing here. Declined to write the codex update prematurely; no
+                      code shipped.
 
 ## Codex SSOTs
 
 `/codex/02-data/availability-manifest-and-data-status.md`, `/codex/02-data/sports-data-types-catalog.md`,
 `/codex/05-infrastructure/gcs-object-operations.md`. Plan↔codex drift is review-blocking.
+
+## Progress Log
+
+- **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).
+- **2026-08-02 (operator ruling 2026-07-30, executed)**: wired the hard ordering gate on the legacy-contract retirement
+  — `depends_on: [sports_odds_venue_enumeration_undercount_predrain_2026_07_27]` + `gate_on_depends` set true. Before
+  this, the only thing standing between a dispatched worker and retiring the legacy `odds` contract with 51,291,778
+  unmapped rows still live was PROSE (an "⛔ GATED" note on an already-completed sibling todo and an operator-notify
+  banner on a different doc) — `depends_on` alone is documentation/archival-only per `plans/PLAN_FORMAT.md:242-243`, so
+  a real dispatch hold required `gate_on_depends`. Verified the mechanism actually fires for an `assigned_vm: NA`
+  upstream (the failure mode recorded in `gate_on_depends_noop_on_local_only_upstream_2026_07_21.md`): the wiring
+  function falls back to reading the upstream file's open todos and emits a blocking `gate-upstream-open:<stem>` named
+  prerequisite, and that upstream has exactly 1 open `[DATA] P0`. No todo state changed; the previously-executed todos
+  stay `[x]`.

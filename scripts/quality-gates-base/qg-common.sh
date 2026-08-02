@@ -88,6 +88,17 @@ SCRIPT_DIR="${SCRIPT_DIR:-$QG_SCRIPT_DIR}"
 PROJECT_ROOT="${PROJECT_ROOT:-$QG_PROJECT_ROOT}"
 REPO_ROOT="${REPO_ROOT:-$(cd "$PROJECT_ROOT/.." 2>/dev/null && pwd)}"
 
+# ── ENVIRONMENT RESOLUTION (single source of truth shared with quickmerge.sh) ──
+# qg_sentinel_environment_blind_2026_07_23.md item 5: a standalone `quality-gates.sh`
+# run and a quickmerge run must resolve the SAME ENVIRONMENT for the same branch
+# context, or the two silently diverge (quickmerge forces development off any
+# non-main branch; a standalone run previously left ENVIRONMENT unset and every
+# downstream resolver, e.g. UTL's bucket_naming.py, defaulted to prod). qg-environment.sh
+# is sourced from BOTH this file and quickmerge.sh so there is exactly one
+# branch-conditional check to keep correct, not two copies that can drift apart again.
+source "${BASH_SOURCE[0]%/*}/qg-environment.sh"
+qg_resolve_environment "$PROJECT_ROOT"
+
 # ── WORKTREE-IDENTITY GUARD (fail loud, never silently gate the wrong clone) ──
 # Confirmed root cause (qg_backfill_disk_and_lint_checks_resolve_via_main_clone_not_worktree_2026_07_24.md):
 # PROJECT_ROOT/REPO_ROOT/WORKSPACE_ROOT all use `${VAR:-fresh-derivation}` patterns that TRUST an
@@ -141,12 +152,21 @@ unset _QG_CALLER QG_SCRIPT_DIR QG_PROJECT_ROOT
 # ── FLEET-WIDE PIP-AUDIT IGNORE LIST (single control point; item 252) ────────
 # Add to base-service.sh _pa_extra / base-library.sh _pa_extra via ${QG_PIP_AUDIT_COMMON_IGNORES}.
 # NEVER duplicate this list inline in a base script — update HERE ONLY.
-# PYSEC-2026-3447: setuptools 82.0.1 (TRANSITIVE build/packaging tool, not a runtime dep) — new
-#   2026-07-14 advisory that red-flagged the whole fleet. Exploit surface nil: setuptools is used
-#   only at image/build time to install first-party packages, never at runtime on untrusted input.
-#   SUCCESSOR (drop this ignore): bump setuptools to the fixed line in workspace-constraints +
-#   lock-regen fleet-wide once the patched release resolves. MUST mirror base-library.sh.
-QG_PIP_AUDIT_COMMON_IGNORES="--ignore-vuln CVE-2026-4539 --ignore-vuln CVE-2026-45409 --ignore-vuln CVE-2026-3219 --ignore-vuln CVE-2026-6357 --ignore-vuln GHSA-6v7p-g79w-8964 --ignore-vuln GHSA-4xgf-cpjx-pc3j --ignore-vuln CVE-2026-54911 --ignore-vuln PYSEC-2026-196 --ignore-vuln PYSEC-2024-277 --ignore-vuln PYSEC-2025-183 --ignore-vuln PYSEC-2026-161 --ignore-vuln GHSA-rpj2-4hq8-938g --ignore-vuln PYSEC-2026-215 --ignore-vuln PYSEC-2026-3447"
+#
+# RESOLVED 2026-07-30 (slot-21): the list is now EMPTY. A full re-audit re-verified all 14 prior entries
+# against each of the 23 Python repos' REAL current uv.lock version (direct `pip-audit -r` queries, not
+# assumptions) — 4 were already fully moot (fleet never in the affected range: PYSEC-2024-277 joblib,
+# PYSEC-2025-183 pyjwt, PYSEC-2026-161 starlette, GHSA-rpj2-4hq8-938g vcrpy), 1 was a duplicate alias
+# (CVE-2026-45409 == PYSEC-2026-215), and the remaining 9 (PYSEC-2026-3447 setuptools, CVE-2026-3219/
+# CVE-2026-6357/PYSEC-2026-196 pip, GHSA-6v7p-g79w-8964 msgpack, GHSA-4xgf-cpjx-pc3j pydantic-settings,
+# CVE-2026-54911 ujson, CVE-2026-4539 pygments, PYSEC-2026-215 idna) were REAL gaps — every repo below
+# the fix version was bumped (`uv lock --upgrade-package <name>`) and QG-validated before shipping.
+# Fleet-wide re-verify confirmed 100% clean (every repo, every package, at/above fix version) before
+# these ignores were dropped. Also found + fixed one gap no prior ignore covered at all:
+# ibkr-gateway-infra was on fastapi 0.136.1/starlette 1.1.0 (missed by the 2026-07-28 fleet bump, which
+# only touched repos declaring fastapi directly). Full audit + every shipped sha:
+# cve_affected_pinned_deps_remediation_2026_06_18.md.
+QG_PIP_AUDIT_COMMON_IGNORES=""
 
 # ── QG PROFILER (opt-in; inactive unless QG_PROFILE=1) ────────────────────────
 # No-op by default — zero behaviour change for normal runs across all repos. When

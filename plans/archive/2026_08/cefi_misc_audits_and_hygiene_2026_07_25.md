@@ -1,0 +1,151 @@
+---
+doc_type: plan
+title: CeFi misc audits + hygiene — UAC fallback decision, reconciliation spot-check, archival
+summary: >-
+  3 independent, ungated todos on different files/repos forked from cefi_consolidated_closeout_2026_07_18.md's "Operator
+  dispositions" section (2026-07-25 split): the `[OPERATOR]`-gated UAC per-venue seed fallback removal decision, a
+  bounded spot-check slice of the GCS/manifest/UI reconciliation-gap doc, and archival of the one cefi issue doc still
+  genuinely awaiting it (`cefi_layer1_denominator_gaps_2026_07_03.md` — its sibling
+  `betfair_instrument_id_delimiter_cross_repo_2026_07_08.md` is already archived, confirmed during this split). Every
+  other candidate originally considered for this plan (the ccxt/native adapter audit, the non-Tardis VM sweep, the
+  UAC-fallback blast-radius audit, the data-status axis-value-census quickmerge, the UPBIT wiring check) is already
+  drafted in cefi_consolidated_native_ao_extract_2026_07_25.md — deliberately NOT duplicated here.
+status: complete
+nature: process
+asset_group: [cefi]
+stage: [data]
+repos: [unified-api-contracts, instruments-service, unified-trading-pm]
+scope: [engineer]
+tags: [cefi, close-out, hygiene, audit, archival]
+related:
+  [
+    /plans/active/cefi_consolidated_closeout_2026_07_18.md,
+    /plans/active/cefi_consolidated_native_ao_extract_2026_07_25.md,
+    /plans/active/issues/adapter_findings_gcs_manifest_deployment_api_reconciliation_gap_2026_07_08.md,
+    /plans/archive/issues/cefi_layer1_denominator_gaps_2026_07_03.md,
+    /plans/archive/2026_08/cefi_misc_audits_and_hygiene_finalize_2026_07_25.md,
+    /plans/active/issues/uac_per_venue_seed_fallback_removal_deferred_2026_07_26.md,
+  ]
+created: "2026-07-25"
+last_updated: "2026-08-01"
+parent_epic: cefi_master
+assigned_vm: planning
+execution_scope: orchestrator-agent
+priority: P2
+estimate_class: infra
+estimate_baseline_ai_days: 0.6
+estimate_calibrated_ai_days: 0.5
+locked_by:
+locked_since:
+supersedes:
+superseded_by:
+depends_on: []
+source: >-
+  Forked from cefi_consolidated_closeout_2026_07_18.md's "Operator dispositions" section, 2026-07-25 split — path 4 of
+  that parent's 4 reachability paths, the misc-audit path. Deliberately smaller than the design pass's initial ~8-todo
+  estimate: cross-checking against cefi_consolidated_native_ao_extract_2026_07_25.md (a parallel sibling triage of this
+  same parent's native todos) found 5 of the originally-considered candidates already drafted there — excluded here to
+  avoid duplication, per the explicit cross-check requirement for this split.
+assigned_role: data_engineering
+sequential: false
+drift_direction: advance-code
+---
+
+# CeFi misc audits + hygiene
+
+> **🟢 ARCHIVED 2026-08-01.** All 3 todos resolved (UAC per-venue seed fallback ruling: KEEP, deferred not declined;
+> reconciliation-gap spot-check: 3 findings PASS/FAIL-verdicted; `issues/cefi_layer1_denominator_gaps_2026_07_03.md`
+> archived). Closed out via the companion `cefi_misc_audits_and_hygiene_finalize_2026_07_25.md`, which reconciled the 3
+> corresponding checkboxes in `cefi_consolidated_closeout_2026_07_18.md` and archives alongside this doc in the same
+> commit. Moved to `/plans/archive/2026_08/cefi_misc_audits_and_hygiene_2026_07_25.md`; corpus referrers updated. No new
+> durable contract from this plan — codex-alignment check: nothing to update (every todo executed an already-decided
+> spec or fed a still-open human decision, per this plan's own "Codex SSOTs" section below).
+
+> **Ungated, independent todos on different files/repos** — the default per `task_template.md` §4, safe to dispatch
+> concurrently. **Why only 3 todos (deliberate, not an oversight).** The original design pass estimated ~8 todos for
+> this plan; cross-checking against `cefi_consolidated_native_ao_extract_2026_07_25.md` (drafted by a parallel sibling
+> triage of this same parent's native todos) found 5 already covered there: the `*_ccxt.py`/`*_native.py` adapter audit
+> (Track 5), the non-Tardis VM sweep (Track 6), the UAC per-venue-seed-fallback blast-radius audit, the data-status
+> axis-value-census quickmerge (Track 8), and the UPBIT wiring check (MVP universe). Re-drafting any of them here would
+> duplicate dispatchable work. Companion gated finalize: `cefi_misc_audits_and_hygiene_finalize_2026_07_25.md`.
+
+## Todos
+
+- [x] ✅ [PM] P1. **2026-07-28 retag** (was `[OPERATOR]` — ruling already recorded 2026-07-26, retagged per the
+      operator's 2026-07-28 stale-gate audit to the reflecting `[PM]` decision-record tag, matching this file's
+      archival-todo convention). **Decide whether to remove the UAC per-venue seed fallback**
+      (`unified_api_contracts.registry.market_data_categories.get_expected_instruments_for_venue`'s fallback to the
+      per-venue MVP seed when a present catalogue lacks a venue), using the blast-radius caller list produced by
+      `cefi_consolidated_native_ao_extract_2026_07_25.md`'s own UAC-fallback-audit candidate (once it ships). The
+      operator's "catalogues should be the sole source" ruling (already applied to the wholesale MTDS fallback removal)
+      points toward removal, but this is a UAC change with fleet-wide blast radius — an operator/interactive call on
+      acceptable risk, not a background-dispatchable decision. Non-dispatchable (`[OPERATOR]`, per `task_template.md`
+      §3) — stays visible for the operator to act on directly. Repo: unified-api-contracts. **Done when**: the ruling is
+      recorded in this plan's Progress Log, then executed as a follow-up todo if the ruling is "remove." ✅ **RULING
+      (2026-07-26): KEEP the fallback, do not remove — deferred, not declined.** The gating candidate-9 audit had never
+      actually run (still `[ ]` in the sibling plan); a fresh blast-radius audit was performed here instead of waiting
+      further. Verdict: all 3 real production callers currently depend on the fallback firing, 2 of them by explicit
+      documented design — MTDS `_resolve_instrument_provider`'s case-5 resolution order
+      (`market-tick-data-service/.../orchestrator/sentinels.py:461-506`), and deployment-api's `venue_resolution.py`,
+      which builds a live catalogue provider for CEFI only — DEFI/TRADFI/PREDICTION pass `instruments_provider=None`
+      unconditionally today, making this fallback the sole source of the Tier-3 honest-coverage denominator on the
+      data-status UI for those 3 asset groups. Removing it now would reproduce, for DEFI/TRADFI/PREDICTION, exactly the
+      silent-coverage-loss regression the operator's 2026-07-18 ruling (`mtds@3253cae3`) eliminated for CEFI — that
+      commit covered a narrower "catalogue read fails" case, not this "venue not yet catalog-wired" case. CEFI's own
+      G1-G5 gates are also still open (G4 OPEN; 211-row measured catalogue gap, `instruments-service@f6f16785`). Full
+      audit + revisit trigger recorded in `issues/uac_per_venue_seed_fallback_removal_deferred_2026_07_26.md` (new doc)
+      — re-open once (a) deployment-api gets live DEFI/TRADFI/PREDICTION catalogue-provider wiring, and (b) CEFI +
+      TRADFI G1-G5 gates close.
+- [x] ✅ [VERIFY] P2. **DONE — spot-checked the next 3 unverified findings across GCS/manifest/UI.** Reused the AAVE_V3
+      pilot's methodology (direct GCS/manifest parquet reads via `get_storage_client()`/`resolve_bucket_name()`, plus a
+      deployment-api/deployment-ui code grep for how each field is actually surfaced), all live-production read-only.
+      **Finding A (DERIBIT live-vs-batch FUTURE misclassification)**: FAIL to surface at manifest + UI layers —
+      structurally blind, not corroborating/refuting (zero `live_deribit`+`trades`-data_type rows exist for ANY
+      instrument_type in the 9.66M-row MTDS manifest). **Finding B (HUOBI-SPOT/HUOBI-FUTURES/BITSTAMP-SPOT missing from
+      venue universe)**: FAIL, confirmed absent + corroborating at all 3 layers — and the UI's venue list derives from
+      the same broken `VENUES_BY_ASSET_GROUP` registry, so the gap is invisible (no zero-row), not just wrong. **Finding
+      C (OKX margin_type inversion)**: GCS layer has the field populated both ways; manifest layer blank/ unstamped for
+      all 7,718 OKX rows; deployment-api/UI have zero `margin_type` references anywhere — real bug, zero UI blast radius
+      today. Full PASS/FAIL verdicts + evidence recorded in the issue doc's Progress Log (`unified-trading-pm@` this
+      commit). The `[DECISION]` P2 reconciliation-cadence todo in that issue doc remains open/human, confirmed
+      untouched. Repo: instruments-service (read-only investigation, no code changed).
+- [x] ✅ [PM] P1. **Archive `issues/cefi_layer1_denominator_gaps_2026_07_03.md`** (confirmed during this split: 0
+      checkbox-syntax open todos of its own — a 1000-line narrative/findings doc whose actionable items were already
+      forked into other docs, still carrying `status: open`) via the standard 6-step archival ritual. **Scope note**:
+      its sibling `issues/betfair_instrument_id_delimiter_cross_repo_2026_07_08.md` is ALREADY archived (verified during
+      this split, `plans/archive/issues/`) — no action needed there, do not re-archive. Also re-scoped from the source
+      todo's broader "pull forked-elsewhere todos into THIS plan" + "any other otherwise-complete cefi plans" asks, both
+      open-ended with no defined target list — those stay a human/PM judgment call in
+      `cefi_consolidated_closeout_2026_07_18.md`, not dispatched here. Repo: unified-trading-pm. **Done when**:
+      `cefi_layer1_denominator_gaps_2026_07_03.md` is confirmed 0-open-todos, `status` flipped to `resolved`, moved to
+      `plans/archive/issues/`, every corpus referrer's path fixed, and this plan's Progress Log cites the commit. ✅ —
+      unified-trading-pm@(this commit). A deeper cross-doc investigation (dispatched agent, full 1000-line read + every
+      prose-described residual gap traced to a sibling doc) confirmed safe: OKX-SPOT Option-A/B decision lives in
+      `instruments_service_cefi_qg_red_on_ldr_head_2026_07_08.md`; DERIBIT-COMBO real-row capture is gated on
+      `tardis_concurrent_ip_lockout_2026_07_12.md`; v1-enumerator retirement + DERIBIT-COMBO catalogue backfill are
+      fully shipped. Moved to `plans/archive/issues/`, `status: resolved`, 20 corpus referrers fixed (3 archived
+      "plan_reconciliation_operator_decisions_history_part*" docs intentionally left citing the OLD active-path — they
+      are frozen historical records of findings at the time, not live pointers). **Separate finding surfaced, NOT this
+      todo's scope — flagged to the operator instead**: `bybit_spot_manifest_stray_captures_2026_07_07.md` was flipped
+      `resolved` 2026-07-14 on checkbox-only evidence, but a 2026-07-10 live-manifest read
+      (`instruments_remaining_work_audit_2026_07_10.md` item 7) found the actual `--apply` relabel/delete was never run
+      against production (135,444 anomalous BYBIT-SPOT rows unchanged) — likely needs its status corrected + the
+      remediation actually re-run, independent of this archival. **CLOSED 2026-07-26**:
+      `plans/archive/2026_07/cefi_bybit_spot_manifest_remediation_2026_07_25.md` (mtds@87004c5b fixed the stale target
+      mask, mtds@d5c07559 added VM-launcher parity, unified-trading-pm@b94956932 closed all 5 todos) re-verified, ran
+      the real `--apply` (53,934 spot-nonsense rows deleted, verified via `by_data_type` + `measure_honest_coverage.py`
+      -- 0 remaining BYBIT-SPOT stray tuples), and added a closure addendum to the archived issue doc confirming its
+      `status: resolved` is now genuinely accurate to live production state, not just to checkbox history. No further
+      action needed on this finding.
+
+## Reconciliation
+
+Once this plan's todos ship, flip the 3 corresponding checkboxes in `cefi_consolidated_closeout_2026_07_18.md` (Operator
+dispositions' UAC-fallback-decision item, the reconciliation-gap `[VERIFY]` item, the consolidate+archive `[PM]` item),
+citing evidence. Gated via the companion `cefi_misc_audits_and_hygiene_finalize_2026_07_25.md`
+(`depends_on: [cefi_misc_audits_and_hygiene_2026_07_25]` — `gate_on_depends: true`).
+
+## Codex SSOTs
+
+No new durable contract is created by this plan — every todo executes an already-decided spec from the parent doc, or is
+a bounded audit feeding a still-open human decision recorded there.

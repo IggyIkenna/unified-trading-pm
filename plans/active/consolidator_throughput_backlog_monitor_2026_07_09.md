@@ -13,7 +13,9 @@ summary:
   to (deployments owns liveness/fired-on-time). LOCAL plan — built interactively in this slot.
 status: active
 nature: design
-asset_group: [cross-cutting]
+asset_group:
+  [ui] # corrected 2026-07-30 (ui-tranche launch) -- was [cross-cutting]; the Consolidators cockpit
+  # tab itself (repos: deployment-ui, deployment-api, unified-trading-library)
 stage: [meta]
 repos: [deployment-ui, deployment-api, unified-trading-library]
 scope: [engineer]
@@ -40,6 +42,14 @@ depends_on:
 source:
 assigned_role: ui_developer
 drift_direction: advance-code
+context_scope:
+  [
+    /codex/05-infrastructure/manifest-consolidator-ssot.md,
+    /codex/02-data/availability-manifest-and-data-status.md,
+    /codex/06-coding-standards/ui-testing-layers.md,
+    /plans/archive/2026_07/deployment_full_estate_cost_provenance_2026_07_09.md,
+    deployment-api/deployment_api/routes/health_consolidator/,
+  ]
 ---
 
 # Consolidators tab — per-AG backlog + consolidation throughput monitor
@@ -515,3 +525,7 @@ drift_direction: advance-code
   `issues/phantom_audit_estate_coverage_gap_2026_07_10.md` (`_BUCKET_KIND_MAP` walks only 5 buckets, cron never passes
   `--manifest-bucket` → instruments-{cefi,defi,tradfi} incl. the verified 86,977-row cefi index, gas-fees /
   lending-indices / oracle-prices, features/execution/… never phantom-checked). For Ikenna (data pipeline).
+
+- **na-eligibility-audit 2026-07-30**: KEEP-NA, valid — LOCAL plan built interactively; both [REVIEW] gates are
+  explicitly deferred by a dated operator decision (2026-07-10, local-dev-only until all cockpit plans complete).
+- **context-scout 2026-08-01**: populated/refreshed context_scope (5 entries).

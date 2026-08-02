@@ -159,7 +159,7 @@ drift_direction: advance-code
   covering-set doc for the two uncovered items' target files/mechanisms (`EventTransport`,
   `AtomicLegExecutor`/`atomic_leg_executor`, `betfair.*lay`, `back+lay`, `CanonicalOdds`) — zero hits anywhere in the
   covering set. The only references to this doc at all are acknowledgment-only:...
-- **`plans/active/issues/prediction_lifecycle_prefetch_gate_and_resolution_day_catalogue_2026_07_14.md`**: The single
+- **`/plans/archive/issues/prediction_lifecycle_prefetch_gate_and_resolution_day_catalogue_2026_07_14.md`**: The single
   remaining uncovered item is the `[ ] [INFRA] P1 [BLOCKED-OPERATOR-DECISION]` todo (source doc lines 117-121): "Launch
   the historical prediction re-backfill under the widened catalogue." Confirmed by direct read: this is not merely
   tagged BLOCKED-OPERATOR-DECISION as a label of convenience — the doc's own Progress Log states explicitly...

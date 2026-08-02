@@ -31,6 +31,14 @@ superseded_by:
 depends_on:
 source: [data_completion_to_100_all_ag_2026_06_21 (M-1) — split 2026-07-15, plan-reconcile §8 operator ruling A]
 drift_direction: advance-code
+context_scope:
+  [
+    /plans/active/data_completion_to_100_all_ag_2026_06_21.md,
+    /codex/02-data/tradfi-databento-sourcing-ssot.md,
+    /codex/02-data/availability-manifest-and-data-status.md,
+    /codex/02-data/canonical-cutover-register.md,
+    /codex/05-infrastructure/gcs-object-operations.md,
+  ]
 ---
 
 # Data completion to 100% — TradFi
@@ -77,21 +85,21 @@ drift_direction: advance-code
       `tradfi_manifest_canonicalisation_2026_06_01.md`, 2026-07-13 per MTDS consolidation ruling.)**
 
       **✅ POST-WALK VERIFY HOOK RE-RUN (slot-6, 2026-07-27)**: fresh live read of
-                                                  `gs://market-data-tick-tradfi-prd-central-element-323112/_index/availability_index.parquet` (5,873,616 rows, up
-                                                  from the 5,553,198-row count confirmed 2026-07-16 in E7 below — a +320,418 GROWTH from continued backfills, no
-                                                  unexplained ~6,602-row shrink). Result: **0 blank venue, 0 `UNKNOWN` venue, 0 blank data_type, 0
-                                                  `asset_group=None`** — the 2026-06-04 diagnosis's 6,602-row drift (4,130 venue + 2,472 data_type) is FULLY
-                                                  RESOLVED by the E5 path-re-derivation walk; venue sample is exactly the canonical set
-                                                  `{BARCHART,CBOE,CME,FX,ICE,KRX,NASDAQ,NYSE,YAHOO_FINANCE}`, data_type sample fully populated (12 real values, 0
-                                                  blank). **Residual finding (different axis, NOT part of this candidate's tracked drift)**: `instrument_type` is
-                                                  blank on 310,386 rows (202,221 `attempted_failed` / 105,936 `empty_confirmed` / 2,229 `captured`), spread across
-                                                  ALL real venues (CME 219,095 / CBOE 18,032 / NASDAQ 14,805 / NYSE 13,095 / KRX 12,497 / FX 12,102 / ICE 11,641 /
-                                                  BARCHART 9,119) and real data_types — 85% (262,649) are the aggregated `ohlcv_1s/1m/24h/15m` data_types, matching
-                                                  the canonical_writer's own by-design omission of per-instrument fields on aggregated (non-per-instrument) shards
-                                                  (see the E6/line-629 candle-writer fix below); the remainder (`tbbo/trades/macro_result/mbp_10/
-                                                  corporate_action_confirmed/earnings_result/options_chain`) is not root-caused here — out of this candidate's
-                                                  scope (blank/`UNKNOWN` venue + blank data_type only), flagged for a future dedicated pass, not a re-open of this
-                                                  checkbox.
+                                                                                  `gs://market-data-tick-tradfi-prd-central-element-323112/_index/availability_index.parquet` (5,873,616 rows, up
+                                                                                  from the 5,553,198-row count confirmed 2026-07-16 in E7 below — a +320,418 GROWTH from continued backfills, no
+                                                                                  unexplained ~6,602-row shrink). Result: **0 blank venue, 0 `UNKNOWN` venue, 0 blank data_type, 0
+                                                                                  `asset_group=None`** — the 2026-06-04 diagnosis's 6,602-row drift (4,130 venue + 2,472 data_type) is FULLY
+                                                                                  RESOLVED by the E5 path-re-derivation walk; venue sample is exactly the canonical set
+                                                                                  `{BARCHART,CBOE,CME,FX,ICE,KRX,NASDAQ,NYSE,YAHOO_FINANCE}`, data_type sample fully populated (12 real values, 0
+                                                                                  blank). **Residual finding (different axis, NOT part of this candidate's tracked drift)**: `instrument_type` is
+                                                                                  blank on 310,386 rows (202,221 `attempted_failed` / 105,936 `empty_confirmed` / 2,229 `captured`), spread across
+                                                                                  ALL real venues (CME 219,095 / CBOE 18,032 / NASDAQ 14,805 / NYSE 13,095 / KRX 12,497 / FX 12,102 / ICE 11,641 /
+                                                                                  BARCHART 9,119) and real data_types — 85% (262,649) are the aggregated `ohlcv_1s/1m/24h/15m` data_types, matching
+                                                                                  the canonical_writer's own by-design omission of per-instrument fields on aggregated (non-per-instrument) shards
+                                                                                  (see the E6/line-629 candle-writer fix below); the remainder (`tbbo/trades/macro_result/mbp_10/
+                                                                                  corporate_action_confirmed/earnings_result/options_chain`) is not root-caused here — out of this candidate's
+                                                                                  scope (blank/`UNKNOWN` venue + blank data_type only), flagged for a future dedicated pass, not a re-open of this
+                                                                                  checkbox.
 
 - [ ] [DATA] P0. **Phase 0 — layout audit (MANDATORY, blocking — slot-2 DeFi lesson 2026-06-01)**: enumerate ALL
       top-level trees + nested layouts in the tradfi source + canonical buckets before the walk; classify duplicate
@@ -234,37 +242,37 @@ drift_direction: advance-code
       date≥2023-04-15 (2,087,240 scoped cells). Per-year `capture_status` breakdown:
 
       | venue | data_type | year | captured | empty_confirmed | expected_unattempted | attempted_failed |
-                                      |---|---|---|---|---|---|---|
-                                      | NASDAQ | ohlcv_1m | 2023 | 10,062 | 79,989 | 8,378 | 0 |
-                                      | NASDAQ | ohlcv_1m | 2024 | 15,703 | 136,411 | 11,337 | 0 |
-                                      | NASDAQ | ohlcv_1m | 2025 | 15,784 | 139,699 | 11,176 | 0 |
-                                      | NASDAQ | ohlcv_1m | 2026 | 7,303 | 41,772 | 21,851 | 0 |
-                                      | NASDAQ | ohlcv_1s | 2023 | 9,838 | 78,871 | 0 | 0 |
-                                      | NASDAQ | ohlcv_1s | 2024 | 14,461 | 135,757 | 0 | 0 |
-                                      | NASDAQ | ohlcv_1s | 2025 | 14,813 | 171,646 | 0 | 0 |
-                                      | NASDAQ | ohlcv_1s | 2026 | 7,087 | 58,629 | 18,441 | 0 |
-                                      | NYSE | ohlcv_1m | 2023 | 88,242 | 19,099 | 7,479 | 0 |
-                                      | NYSE | ohlcv_1m | 2024 | 129,385 | 22,686 | 10,470 | 0 |
-                                      | NYSE | ohlcv_1m | 2025 | 113,015 | 19,185 | 10,838 | 0 |
-                                      | NYSE | ohlcv_1m | 2026 | 70,143 | 17,032 | 18,028 | 85 |
-                                      | NYSE | ohlcv_1s | 2023 | 88,010 | 17,859 | 0 | 0 |
-                                      | NYSE | ohlcv_1s | 2024 | 128,330 | 21,223 | 0 | 0 |
-                                      | NYSE | ohlcv_1s | 2025 | 112,506 | 52,137 | 0 | 0 |
-                                      | NYSE | ohlcv_1s | 2026 | 70,019 | 46,864 | 15,512 | 0 |
+                                                                      |---|---|---|---|---|---|---|
+                                                                      | NASDAQ | ohlcv_1m | 2023 | 10,062 | 79,989 | 8,378 | 0 |
+                                                                      | NASDAQ | ohlcv_1m | 2024 | 15,703 | 136,411 | 11,337 | 0 |
+                                                                      | NASDAQ | ohlcv_1m | 2025 | 15,784 | 139,699 | 11,176 | 0 |
+                                                                      | NASDAQ | ohlcv_1m | 2026 | 7,303 | 41,772 | 21,851 | 0 |
+                                                                      | NASDAQ | ohlcv_1s | 2023 | 9,838 | 78,871 | 0 | 0 |
+                                                                      | NASDAQ | ohlcv_1s | 2024 | 14,461 | 135,757 | 0 | 0 |
+                                                                      | NASDAQ | ohlcv_1s | 2025 | 14,813 | 171,646 | 0 | 0 |
+                                                                      | NASDAQ | ohlcv_1s | 2026 | 7,087 | 58,629 | 18,441 | 0 |
+                                                                      | NYSE | ohlcv_1m | 2023 | 88,242 | 19,099 | 7,479 | 0 |
+                                                                      | NYSE | ohlcv_1m | 2024 | 129,385 | 22,686 | 10,470 | 0 |
+                                                                      | NYSE | ohlcv_1m | 2025 | 113,015 | 19,185 | 10,838 | 0 |
+                                                                      | NYSE | ohlcv_1m | 2026 | 70,143 | 17,032 | 18,028 | 85 |
+                                                                      | NYSE | ohlcv_1s | 2023 | 88,010 | 17,859 | 0 | 0 |
+                                                                      | NYSE | ohlcv_1s | 2024 | 128,330 | 21,223 | 0 | 0 |
+                                                                      | NYSE | ohlcv_1s | 2025 | 112,506 | 52,137 | 0 | 0 |
+                                                                      | NYSE | ohlcv_1s | 2026 | 70,019 | 46,864 | 15,512 | 0 |
 
-                                      **Totals**: NASDAQ ohlcv_1m 48,852 captured / 397,871 empty_confirmed / 52,742 expected_unattempted (0 failed);
-                                      NASDAQ ohlcv_1s 46,199 / 444,903 / 18,441 (0); NYSE ohlcv_1m 400,785 / 78,002 / 46,815 (85); NYSE ohlcv_1s
-                                      398,865 / 138,083 / 15,512 (85). **Verdict: PARTIALLY FILLED, asymmetric by venue** — NYSE is well-covered
-                                      (72-76% `captured`), NASDAQ is mostly `empty_confirmed` (79-87%) with only ~9-10% `captured`; both venues still
-                                      carry a real not-yet-attempted remainder (`expected_unattempted`: NASDAQ 71,183 combined, NYSE 62,327 combined)
-                                      that needs an actual fetch attempt before this axis can close — this is NOT the 2026-06-02 never-ingested state
-                                      (real Databento data now exists at volume for both venues), but it is also not fully filled.
-                                      `attempted_failed` is negligible (170 rows total, all NYSE 2026). **Restating the remainder, not flipping the
-                                      checkbox** — the NASDAQ `empty_confirmed`/`captured` skew reads as plausible honest-absence (lower-liquidity
-                                      names genuinely not printing every 1m/1s bar vs NYSE blue-chip volume), not an obvious write-path defect, but is
-                                      flagged here rather than silently absorbed for whoever re-triages this axis next.
-                                      **NOTE (na-eligibility-audit 2026-07-27, now executed — see above)**: this manifest-verify item was claimed in
-                                      `tradfi_satellite_ao_dispatch_batch4_2026_07_26.md` (todo 8); see that plan's checkbox for shipped evidence.
+                                                                      **Totals**: NASDAQ ohlcv_1m 48,852 captured / 397,871 empty_confirmed / 52,742 expected_unattempted (0 failed);
+                                                                      NASDAQ ohlcv_1s 46,199 / 444,903 / 18,441 (0); NYSE ohlcv_1m 400,785 / 78,002 / 46,815 (85); NYSE ohlcv_1s
+                                                                      398,865 / 138,083 / 15,512 (85). **Verdict: PARTIALLY FILLED, asymmetric by venue** — NYSE is well-covered
+                                                                      (72-76% `captured`), NASDAQ is mostly `empty_confirmed` (79-87%) with only ~9-10% `captured`; both venues still
+                                                                      carry a real not-yet-attempted remainder (`expected_unattempted`: NASDAQ 71,183 combined, NYSE 62,327 combined)
+                                                                      that needs an actual fetch attempt before this axis can close — this is NOT the 2026-06-02 never-ingested state
+                                                                      (real Databento data now exists at volume for both venues), but it is also not fully filled.
+                                                                      `attempted_failed` is negligible (170 rows total, all NYSE 2026). **Restating the remainder, not flipping the
+                                                                      checkbox** — the NASDAQ `empty_confirmed`/`captured` skew reads as plausible honest-absence (lower-liquidity
+                                                                      names genuinely not printing every 1m/1s bar vs NYSE blue-chip volume), not an obvious write-path defect, but is
+                                                                      flagged here rather than silently absorbed for whoever re-triages this axis next.
+                                                                      **NOTE (na-eligibility-audit 2026-07-27, now executed — see above)**: this manifest-verify item was claimed in
+                                                                      `tradfi_satellite_ao_dispatch_batch4_2026_07_26.md` (todo 8); see that plan's checkbox for shipped evidence.
 
 - [ ] [CODE] P1. ⑦ tradfi could-exist denominator seed — build the `--catalog-path` parquet from the tradfi IS catalog
       (per-instrument lifecycle: `instrument_id`/`instrument_type`/`venue`/`available_from`/`available_to`) and run
@@ -367,19 +375,19 @@ drift_direction: advance-code
       `tradfi_manifest_canonicalisation_2026_06_01.md`, 2026-07-13 per MTDS consolidation ruling.)**
 
       **ATTEMPTED 2026-07-30 — could NOT complete on the shared planning host, aborted for host-safety; needs a
-                  dedicated VM instead.** Ran `GCP_PROJECT_ID=central-element-323112 DEPLOYMENT_ENV=prod .venv/bin/python
-                  scripts/reconcile_phantom_manifest_rows_all.py --asset-group tradfi --dry-run` live. The manifest load
-                  (`merge_canonical_with_outstanding_shards` over the 5,894,011-row `-prd` `_index` + its outstanding
-                  `_index/per_vm/` shards — tradfi has an extensive VM-launch history in this plan family) drove the process to
-                  ~13GB RSS and growing swap (5.9Gi→9.3Gi) on a host with only 15Gi total memory and other concurrent sessions
-                  active, with zero log progress past "Loading manifest" for 6+ minutes (flat progress = stall per
-                  async-wait-discipline). Killed it (`kill -9`) before it either OOM-crashed or started thrashing badly enough to
-                  harm other concurrent work on the shared host — this is the same "heavy I/O/heavy-compute-on-shared-host" class
-                  the infra codex SSOT gates to a dedicated VM, not the interactive/planning host, and the ⑫ FOLLOW todo's "the
-                  dry-run is runnable now" framing undersold the actual resource cost for tradfi's corpus size. **Not completed
-                  this session** — re-run via a proper VM launch (or `--start-date`/`--end-date`/`--venues` scoping to shrink the
-                  per-VM-shard merge) rather than the shared host. No mutation attempted (never got to `--apply`, and this was
-                  `--dry-run` throughout).
+                                                  dedicated VM instead.** Ran `GCP_PROJECT_ID=central-element-323112 DEPLOYMENT_ENV=prod .venv/bin/python
+                                                  scripts/reconcile_phantom_manifest_rows_all.py --asset-group tradfi --dry-run` live. The manifest load
+                                                  (`merge_canonical_with_outstanding_shards` over the 5,894,011-row `-prd` `_index` + its outstanding
+                                                  `_index/per_vm/` shards — tradfi has an extensive VM-launch history in this plan family) drove the process to
+                                                  ~13GB RSS and growing swap (5.9Gi→9.3Gi) on a host with only 15Gi total memory and other concurrent sessions
+                                                  active, with zero log progress past "Loading manifest" for 6+ minutes (flat progress = stall per
+                                                  async-wait-discipline). Killed it (`kill -9`) before it either OOM-crashed or started thrashing badly enough to
+                                                  harm other concurrent work on the shared host — this is the same "heavy I/O/heavy-compute-on-shared-host" class
+                                                  the infra codex SSOT gates to a dedicated VM, not the interactive/planning host, and the ⑫ FOLLOW todo's "the
+                                                  dry-run is runnable now" framing undersold the actual resource cost for tradfi's corpus size. **Not completed
+                                                  this session** — re-run via a proper VM launch (or `--start-date`/`--end-date`/`--venues` scoping to shrink the
+                                                  per-VM-shard merge) rather than the shared host. No mutation attempted (never got to `--apply`, and this was
+                                                  `--dry-run` throughout).
 
 - [ ] [DATA] P0. **R1 RUNBOOK — the tradfi `migrate_tradfi_to_v9_canonical --apply` MUST include `--also-legacy`** to
       cover the 2,008-day no-env `market-data-tick-tradfi` corpus, then decommission that legacy bucket after the
@@ -445,7 +453,11 @@ per MTDS consolidation ruling.)**
       instruments delisted → unblocks gate-b → then G1.run `--apply-write` (Step 3) becomes runnable. Not yet run under
       this replacement path (do not assume gate-b is unblocked). Repo: instruments-service. parent_epic:
       mtds_mdps_master. **(MIGRATED FROM: `tradfi_manifest_canonicalisation_2026_06_01.md`, 2026-07-13 per MTDS
-      consolidation ruling.)**
+      consolidation ruling.)** **CITATION (na-eligibility-audit 2026-08-02, tradfi tranche)**: this exact replacement
+      path is now tracked live as `tradfi_registry_coverage_and_ao_readiness_2026_07_25.md`'s 2026-07-29 operator-ruled
+      "run the full Databento re-feed chain to completion" todo — cite/track there going forward. That doc is itself
+      `status: draft`/`assigned_vm: NA` (not yet an active dispatched plan), so this is dedup within the NA corpus, not
+      a duplicate-of-an-AO-plan citation fix.
 
 ### From `macro_econ_adapter_scaffolds_2026_06_09.md` (archived 2026-07-13 -- Macro/alt-data free adapter scaffolds (fear_greed / CFTC COT / Baker Hughes / EIA))
 
@@ -743,9 +755,13 @@ ohlcv_15m/24h (MDPS-DERIVED not MTDS-fetched), ICE (off-allowlist). Two real man
       at the manifest validation gate (`record_empty(reason=SOURCE_RETURNED_ZERO)` called without the required
       `FetchEvidence` — 6,650 rejections across both runs, on regular trading Mondays, not weekends); (b) CME
       combo/chain-bundle candles silently produce ZERO output despite confirmed real raw-tick input being read (no
-      WARNING, no ERROR, no candle file — a genuine silent-failure gap, worse than (a)). Neither blocker is caused by,
-      or fixable within, the row_key/source fix deployed here — both are new root-cause targets tracked in the new issue
-      doc. (3) ❌ ~64k of the 1m corpus is OLD migrated data with malformed
+      WARNING, no ERROR, no candle file — a genuine silent-failure gap, worse than (a)). **CITATION
+      (na-eligibility-audit 2026-08-02, tradfi tranche)**: part (b)'s root-cause instrumentation is already an open todo
+      in `tradfi_satellite_ao_dispatch_batch5_2026_07_29.md` (`status: active`, `assigned_vm: planning`), citing
+      `issues/mdps_tradfi_ohlcv_15m_24h_conversion_still_zero_2026_07_27.md` as Source — track there going forward.
+      Parts (a), (3), and (4) remain untracked by any active batch (genuine open, judgment-laden diagnosis work).
+      Neither blocker is caused by, or fixable within, the row_key/source fix deployed here — both are new root-cause
+      targets tracked in the new issue doc. (3) ❌ ~64k of the 1m corpus is OLD migrated data with malformed
       `instrument_id='ticks_migrated_20260418T143552Z'` → StreamingParquet partition_mismatch on the aggregated DATA
       write (the 167k databento 1m are clean + aggregate fine; only the 64k massive-migrated fail) — needs the migrated
       1m re-keyed/re-backfilled. (4) ❌ the 15m/24h `expected_unattempted` is seeded `source=massive`/blank (legacy —
@@ -755,3 +771,29 @@ ohlcv_15m/24h (MDPS-DERIVED not MTDS-fetched), ICE (off-allowlist). Two real man
       ohlcv_15m/24h rows (any status) for 2026-07-13 through 07-15, consistent with this gap. Repo:
       market-data-processing-service + unified-api-contracts/instruments-service (seeding). Provenance: this Progress
       Log.
+
+- **na-eligibility-audit 2026-07-30** (tradfi tranche): **KEEP-NA, valid.** All 14 open todos read end-to-end. The doc
+  is a genuine mix and cannot flip as a whole: 5 are explicitly operator- or credential-gated (the `altdata`
+  asset_group-home `[OPERATOR-DECISION]` plus its 3 dependents, and the `[BLOCKED-CREDENTIALS]` EIA API key); the R1
+  `--also-legacy` item is self-marked "checkbox stays OPEN pending operator decision" with a data-loss issue doc already
+  filed; and G1.run `--apply-write` is gated on named, still-unmet prerequisites (gate-b Databento IS reference re-feed,
+  gate-c the v9 instruments-store walk). Bounded AO-eligible content does exist here (the pre- existing UAC
+  `test_schema_version_matrix` QG-RED item; the `--source databento` IS reference-capture re-run), but a whole-doc
+  `assigned_vm` flip would dispatch the operator-gated majority alongside it — that content belongs in an
+  `/ag-closeout-audit` carve-out, not a reclassification. No content found stale on this pass.
+- **na-eligibility-audit 2026-08-02** (tradfi tranche, dispatch agt-6397c9): **KEEP-NA, MIXED — 2 citation touch-ups
+  applied, 1 orphan flagged out-of-tranche.** All 14 open todos re-read end-to-end via an independent sub-agent
+  classification; count reconciled (14/14). 11 items remain genuinely operator/credential/design-gated (corroborated by
+  the fresh 2026-08-01 `/ag-closeout-audit tradfi` batch6 pass, which independently classifies the Phase 0 layout
+  audit + ~133K-cell NASDAQ/NYSE backfill + G1.run/gate-b/gate-c chain + catalogue-scheduler wiring as real but
+  "too-large-or-risky" for a batch todo). 2 items were KEEP-NA-STALE-duplicated and got citation fixes applied above:
+  the Massive→Databento re-feed item (line ~444, now pointing to
+  `tradfi_registry_coverage_and_ao_readiness_2026_07_25.md`'s 2026-07-29 todo) and the ohlcv_15m/24h item's part (b)
+  (line ~740, now pointing to `tradfi_satellite_ao_dispatch_batch5_2026_07_29.md`'s open, active todo). **1 item (line
+  ~433, `test_schema_version_matrix` QG-RED) is a genuine bounded RECLASSIFY-shaped fix but is self-declared out of
+  tradfi's own scope** ("outside the tradfi AG... Owner: the schema_version-provider/cefi AG or vm-cross-cutting") — NOT
+  reclassified here (this tranche has no authority to flip a cefi/cross-cutting-owned item's dispatch), flagging for the
+  next cefi or cross-cutting na-eligibility-audit/ag-closeout-audit pass to pick up; it will not surface under tradfi's
+  own scope again since tradfi's own `/ag-closeout-audit` correctly excludes it as cross-AG. `assigned_vm` unchanged.
+
+- **context-scout 2026-08-01**: populated/refreshed context_scope (5 entries).

@@ -50,6 +50,14 @@ source: >-
 assigned_role: data_engineering
 sequential: false
 drift_direction: advance-code
+context_scope:
+  [
+    /plans/active/sports_consolidated_closeout_2026_07_19.md,
+    /plans/active/sports_consolidated_native_ao_extract_2026_07_25.md,
+    /codex/02-data/sports-2020-06-data-floor.md,
+    /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
+    /cursor-configs/skills/ag-closeout-audit/SKILL.md,
+  ]
 ---
 
 # Sports satellite AO batch 6 — post-batch5 orphans
@@ -169,16 +177,23 @@ otherwise-independent P3 todos over one soft file-overlap risk).
       fix**: the source finding records that a watchdog armed on the hinted bucket read `shard_days=0` for 20 minutes,
       indistinguishable from a genuinely stalled backfill — a 404 bucket does not error in a `| wc -l` pipeline, it
       silently returns zero forever. This is the inverted form of the async-wait rule 1a hazard
-      (`/codex/12-agent-workflow/async-wait-and-poll-discipline.md`). Repo: deployment-service. **No `[OPERATOR]` gate
-      needed (`task_template.md` finding O justification)**: this todo names a VM launcher (`launch-features-vm.sh`) and
-      so trips the `check_delete_vm_launch_gating.sh` soft pre-filter, but it **launches no VM, writes no GCS object and
+      (`/codex/12-agent-workflow/async-wait-and-poll-discipline.md`). **ALSO swap the function itself (added 2026-07-30,
+      `rebuild_manifest_from_canonical_paths_prefix_scoped_wipe_2026_07_27.md` todo 4's corpus sweep)**:
+      `rebuild_manifest_from_canonical_paths()` wholesale-REPLACES the target bucket's whole manifest index on a
+      prefix-scoped call — fixing only the bucket/prefix strings turns this hint from a harmless 404 into a LIVE wipe
+      risk the moment the bucket name resolves. Swap to the additive `merge_manifest_from_canonical_paths()` (same
+      module; `prefix` is required, not optional, on the additive sibling) in the SAME edit — do not ship the
+      bucket/prefix fix without the function fix. Repo: deployment-service. **No `[OPERATOR]` gate needed
+      (`task_template.md` finding O justification)**: this todo names a VM launcher (`launch-features-vm.sh`) and so
+      trips the `check_delete_vm_launch_gating.sh` soft pre-filter, but it **launches no VM, writes no GCS object and
       deletes nothing** — the entire change is to the launcher's printed post-backfill HINT TEXT (a Python bucket-name
       string it echoes for the operator to copy), shipped as source via the normal quickmerge path, and its done-when is
       a `quality-gates.sh` run plus a checkbox flip. Safe-idempotent by construction. **Coordination**: todo 2 (P1,
       drains first) leaves part3's § Y checkbox open and annotated for you — flip it as part of THIS todo's evidence,
-      and do not make any other edit to part3. **Done when**: the hint resolves both the bucket and the prefix through
-      `resolve_bucket_name`/the real `sports_features/` prefix, a `quality-gates.sh` run is green on deployment-service,
-      and part3's § Y checkbox is `[x]` with the shipping sha. Source:
+      and do not make any other edit to part3. **Done when**: the hint resolves the bucket and prefix through
+      `resolve_bucket_name`/the real `sports_features/` prefix AND calls `merge_manifest_from_canonical_paths()` (not
+      the wholesale-replacing sibling), a `quality-gates.sh` run is green on deployment-service, and part3's § Y
+      checkbox is `[x]` with the shipping sha. Source:
       `issues/sports_features_layer_findings_sweep_2026_07_18_part3_2026_07_26.md` § Y.
 
 - [x] ✅ [DATA] P1. **`sports_batch_odds_api_capture_outage_recurrence_check_2026_07_26.md` carries
@@ -223,16 +238,34 @@ otherwise-independent P3 todos over one soft file-overlap risk).
       retention on the sports prd buckets) is deliberately NOT extracted here — it is an infra spend decision, see the
       Deferred section.
 
-- [ ] [REVIEW] P3. **Sweep `features_service/sports/` for the same `= pd.NA`-then-never-filled idiom that upcast 23 xG
-      columns to object dtype and crashed the first real SPORTS model fit.** The root cause is already fixed at one site
-      (`features-service@c54f9eaf`: `multisource_xg_calculator.py`'s `out[col] = pd.NA` → `np.nan`, since `pd.NA`
-      upcasts a column to `object`, which then survives GCS write/read and poisons ml-service's cross-date merge). The
-      open question is whether the idiom exists elsewhere. **One named lead to check first, not just a blind grep**: the
-      investigation that found the original flagged `writer.py`'s `season_context` columns as using an identical
-      "initialized to `pd.NA`" pattern per its own code comment — that was never independently verified as dead, only
-      flagged. Repo: features-service. **Done when**: every `pd.NA` initialisation site under `features_service/sports/`
-      is listed with a verdict (genuinely filled later / never filled → converted to `np.nan` / not a dtype risk),
-      `writer.py`'s `season_context` case is explicitly resolved either way, and `quality-gates.sh` is green. Source:
+- [x] ✅ [REVIEW] P3. **DONE — `features-service@06a98496`.** Swept every `= pd.NA` initialisation site under
+      `features_service/sports/` (`grep -rn "pd\.NA" features_service/sports/`, 14 hits across 9 files) and verdicted
+      each: - `season_context.py:255` / `writer.py:157`'s comment — **NOT a dtype risk, no change.** Already
+      independently verified 2026-07-30 in
+      `issues/sports_multisource_xg_21_of_28_columns_never_computed_2026_07_26.md`'s own sibling `[REVIEW]` item: every
+      one of the 20 `SEASON_CONTEXT_COLUMNS` has a real, grep-confirmed assignment site. Spot- re-read this pass:
+      unchanged since that verdict — no new action. - `goal_timing.py:301` — **genuinely never-filled → FIXED.**
+      `early_goal_rate_*`/`late_goal_rate_*` (via `_derive_rates`) and the bucket/situational copies are only
+      conditionally overwritten when their source columns are present in the input; when absent, the `pd.NA` pre-fill
+      survives to return. Converted to `np.nan`. - `league_calculator.py:78` — **genuinely never-filled → FIXED.**
+      `compute_league_features` (a live registered feature builder, `tracking/feature_builder_registry.py:66`) only ever
+      assigns 5 of the 29 `LEAGUE_COLUMNS` (position/points-pct); the other 24 (attack/defense strength, goal metrics,
+      win/draw/loss rates, home/away splits, relative strength) are NEVER computed by this entry point at all — always
+      `pd.NA` (same class as the original 21 dead xG columns). Converted to `float("nan")`. - `venue_context.py:171` —
+      **genuinely never-filled → FIXED.** Several numeric columns (`home_venue_*` stats, `away_cumulative_travel_km`,
+      `*_days_since_last_match`, `is_evening_kickoff`, `is_midweek_match`, and the direct-copy columns) are only
+      conditionally overwritten when their source column is present. Converted to `np.nan`. -
+      `xg_decomposition_calculator.py:442` — **genuinely dtype-risk → FIXED (different mechanism, same root cause).**
+      The per-fixture exception-handler fallback defaulted a failed fixture's row to `pd.NA`; confirmed empirically
+      (`pd.DataFrame(rows)` with mixed `pd.NA`/float rows) that this upcasts the WHOLE column to `object` dtype for
+      every fixture in the batch, not just the failed one, whenever `pd.DataFrame(rows)` mixes it with a successful
+      fixture's real float values. Converted to `float("nan")`. - `relative_context_calculator.py:132` — **NOT a dtype
+      risk, no change.** The `pd.NA` pre-fill is unconditionally and fully overwritten by the `METRIC_FAMILIES` loop for
+      every one of the 60 `RELATIVE_CONTEXT_COLUMNS` before `out` is ever returned — a dead pre-fill, never
+      observable. - `bucketed_features_calculator.py` (2 sites) — **NOT a dtype risk, no change.**
+      `BUCKETED_FEATURES_COLUMNS` are genuinely categorical/string bucket labels (e.g. `"3-4"`, `"low"`) — `object`
+      dtype is the correct, intended dtype for these columns, not an upcast artifact. `quality-gates.sh` green
+      (sentinel-verified at `06a98496`). Repo: features-service. Source:
       `issues/sports_multisource_xg_21_of_28_columns_never_computed_2026_07_26.md` (`[REVIEW]` item). **Note**: that
       doc's sibling `[OPERATOR/DESIGN] P3` item (decide which of the 5 unfilled xG column groups to build vs prune) is
       deliberately NOT extracted — the doc itself stops at diagnosis per the dispatch-scope rule.
@@ -333,20 +366,25 @@ otherwise-independent P3 todos over one soft file-overlap risk).
       `bash scripts/plan-hygiene/check_reference_paths.py` reports no new violations. **Do not** execute the diff itself
       — it belongs to the existing todo, which is `status: draft` pending the same operator review as this plan.
 
-- [ ] [INFRA] P2. **RULED 2026-07-28 (2026-07-28 operator-decisions pass, applying the general theme: recurring cost
-      here is expected to be modest storage spend and "cost under $100 is not a concern" + prefer full protection over
-      an all-or-nothing risk) — retagged away from `[OPERATOR]`, moved out of Deferred.** Enable a **bucket-level
-      soft-delete retention window** (not full object versioning — this matches the reversibility mechanism already
-      standardized elsewhere in this workspace, e.g. the `gcs_bucket_soft_delete_retention_seconds()` ≥604800s/7-day bar
-      cited in `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` §3a; use **30 days**, comfortably above that
-      floor) on `instruments-store-sports-prd-central-element-323112` and its sibling prd sports buckets named in
-      `issues/sports_player_stats_empty_write_followups_2026_07_26.md`. That source doc is outside this batch's file
-      scope (not one of this session's assigned files) — its own `[OPERATOR] P2` tag/text still needs syncing to this
-      ruling the next time it is touched; this todo carries the actual ruling + terraform work so the fix isn't blocked
-      on that sync. Repo: deployment-service (terraform). **Done when**: every sports prd bucket named in that source
-      doc shows an active soft-delete retention policy of ≥30 days (verified via
-      `gcloud storage buckets describe --format='value(softDeletePolicy)'` or the terraform state), and the source doc's
-      own todo is updated to cite this ship once picked up.
+- [x] ✅ [INFRA] P2. **DONE 2026-07-30.** RULED 2026-07-28 (operator-decisions pass, applying the general theme:
+      recurring cost here is expected to be modest storage spend and "cost under $100 is not a concern" + prefer full
+      protection over an all-or-nothing risk) — retagged away from `[OPERATOR]`, moved out of Deferred. Enabled a
+      **bucket-level soft-delete retention window** (not full object versioning — matches the reversibility mechanism
+      already standardized elsewhere in this workspace, e.g. the `gcs_bucket_soft_delete_retention_seconds()`
+      ≥604800s/7-day bar cited in `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` §3a) on all 3 sibling prd
+      sports buckets named in `issues/sports_player_stats_empty_write_followups_2026_07_26.md`
+      (`instruments-store-sports-prd-central-element-323112`, `features-sports-prd-central-element-323112`,
+      `market-data-tick-sports-prd-central-element-323112`) — raised from the 604800s (7-day) baseline that doc's own
+      `[OPERATOR] P2` item had already verified fleet-wide (2026-07-27) up to **2,592,000s (30 days)**, comfortably
+      above the §3a floor. **No terraform change** — matched the exact precedent of the prior 7-day fix (per that source
+      doc: applied imperatively via `gcloud storage buckets update`, not tracked in `canonical_buckets.tf`, which
+      declares no `soft_delete_policy` block for any canonical bucket, so there is no terraform-state drift risk
+      introduced). **Verified live** (fresh
+      `gcloud storage buckets describe --format='value(soft_delete_policy.retentionDurationSeconds)'` run this session,
+      all 3 buckets): each reads `2592000`. Source doc
+      (`issues/sports_player_stats_empty_write_followups_2026_07_26.md`) is `status: resolved` + archived — left
+      untouched per its own note ("its own tag/text still needs syncing... this todo carries the actual ruling... so the
+      fix isn't blocked on that sync"); this todo's evidence here is the durable record.
 
 - [ ] [DATA] P3. **RULED 2026-07-28 (applying the operator's adapter/feature-completion theme: "All adaptors should be
       FINISHED with respect to data, UNLESS it is literally proven the data cannot be obtained — in which case the
@@ -365,7 +403,25 @@ otherwise-independent P3 todos over one soft file-overlap risk).
       column nobody computes. That source doc is outside this batch's file scope; its own `[OPERATOR/DESIGN]` tag still
       needs syncing to this ruling when next touched. Repo: features-service. **Done when**: each of the 5 groups
       carries either a shipped, fully-computed implementation or a proven-infeasible removal (column purged from
-      schema/manifest/docs), with no group left half-built or merely diagnosed.
+      schema/manifest/docs), with no group left half-built or merely diagnosed. **Investigated 2026-07-30 (operator-
+      ruling closeout pass) — feasibility is genuinely mixed per group, not implemented this pass.** Read
+      `multisource_xg_calculator.py` + `gcs_normalizers.py` directly (not assumed): per-source passthrough for
+      `home_xg_understat`/`away_xg_understat` IS mechanically buildable today (the raw normalizer already produces
+      exactly those column names — `_normalize_understat_xg`, confirmed real data). But
+      `home_xg_footystats`/`away_xg_footystats`/`home_xg_api_football`/`away_xg_api_football` are NOT — grepped the
+      whole repo and found these 4 names exist NOWHERE outside this calculator's own dead column declarations;
+      FootyStats' raw normalizer (`_normalize_footystats_matches`) produces unsuffixed `home_xg`/`away_xg` columns, not
+      per-source-suffixed ones, and no merge step anywhere renames/joins them into `target_fixtures` under the suffixed
+      names this calculator expects — so 4 of the 6 per-source-passthrough columns need new upstream data-plumbing (a
+      real, not-yet-scoped change to the fixture-assembly/merge step), not just a calculator edit. The other 3 groups
+      (disagreement/range, derived-consensus formulas, historical-accuracy, league-rank) all need genuine per-group
+      feature-engineering DESIGN decisions with no formula specified anywhere in this corpus (e.g. the exact
+      Poisson/heuristic form for `xg_implied_over_2_5`, the historical-accuracy lookback window, the league-rank
+      tie-break rule) — inventing these silently risks shipping plausible-but-wrong ML training features, which this
+      task's own guardrails (no policy/design calls, data-pipeline-correctness-is-the-heartbeat) weigh against
+      improvising alone. Left un-implemented and the checkbox unflipped rather than partially done or guessed; whoever
+      picks this up next should start from the `home_xg_understat` passthrough (the one group confirmed mechanically
+      ready) and treat the other 4 groups' exact formulas as their own scoped sub-decisions.
 
 - [ ] [DATA] P3. **`issues/odds_api_raw_ingestion_gap_2026_06_21_24_2026_07_26.md`'s ownership-routing todo — ALREADY
       RULED 2026-07-28, do not re-draft here.** Operator direct answer: _"This isn't actually a real open question —
@@ -451,3 +507,7 @@ otherwise-independent P3 todos over one soft file-overlap risk).
 `/codex/05-infrastructure/spot-vms-for-backfill.md`, `/codex/12-agent-workflow/async-wait-and-poll-discipline.md` (rule
 1a — todo 3's monitoring hazard), `/codex/11-project-management/issue-doc-lifecycle.md` (todo 7). Plan↔codex drift is
 review-blocking.
+
+## Progress Log
+
+- **context-scout 2026-08-01**: populated/refreshed context_scope (5 entries).

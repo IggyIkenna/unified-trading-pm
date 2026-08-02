@@ -17,7 +17,7 @@ created: 2026-03-27
 authoritative_for: [OpenTelemetry tracing setup convention, setup_service_observability tracing wiring]
 referenced_by:
 owner:
-last_reviewed: 2026-05-17
+last_reviewed: 2026-08-22
 code_refs:
 ---
 

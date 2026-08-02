@@ -34,7 +34,7 @@ referenced_by:
     /codex/05-infrastructure/deployment-and-qg-strategy.md,
   ]
 owner: deployment-platform
-last_reviewed: 2026-05-17
+last_reviewed: 2026-09-07
 code_refs:
 ---
 
@@ -313,8 +313,16 @@ The singleton-lock pattern grew from 3 anchor launchers (2026-04-20) to **~36 la
 
 - `launch-sfi-forward-poll.sh` — SFI/RapidAPI rate-limits per-key; 10 concurrent VMs thrash on 429 backoffs and produce
   no useful data. Lock: refuses launch if any `sfi-fwd-*` VM is RUNNING in the zone. `--force` bypass.
-- `launch-mtds-prediction-backfill-vm.sh` — Polymarket gamma rate-limits per-IP; concurrent VMs share the project egress
-  NAT. Same lock pattern. `--force` bypass.
+- `launch-mtds-prediction-backfill-vm.sh` — Polymarket gamma rate-limits concurrent traffic from this project. Same lock
+  pattern. `--force` bypass. **Correction (2026-07-30, `prediction_satellite_ao_dispatch_batch6_2026_07_29.md` todo 3
+  launch)**: the "share the project egress NAT" mechanism above is WRONG — live `gcloud compute instances describe` on 4
+  concurrent `mtds-prediction-*` VMs showed each gets its OWN distinct ephemeral external IP (no shared NAT gateway),
+  not a 1:1 shared egress. The 429 contention is still EMPIRICALLY REAL under `--force` 4-way concurrency (392-668 429s
+  per VM over ~25 min) — the actual mechanism is unconfirmed (likely Polymarket-side IP-range/ASN-level throttling
+  rather than exact-IP), but the practical guidance is unchanged: expect real 429 contention under forced concurrency.
+  It is NOT fatal — the adapter's retry/backoff (3 attempts) absorbed all observed 429s with 0 recorded `failed`
+  outcomes across all 4 shards in this run — so `--force` sharding remains usable, just slower than a naive ÷N
+  throughput estimate (budget for retry overhead, don't assume linear speedup).
 - `launch-tradfi-backfill-vm.sh` (2026-04-20, CME Tier 1 Phase A) — Databento account is shared across the team;
   concurrent VMs on wide windows risk contract-exceeded errors. Lock: refuses launch if any `tradfi-bf-*` VM is RUNNING
   in the zone. `--force` bypass. Shards CME ES expiries year-by-year 2022-2026 (4 quarterly contracts per year on
@@ -337,7 +345,7 @@ The singleton-lock pattern grew from 3 anchor launchers (2026-04-20) to **~36 la
   `launch-defi-phantom-recon-vm.sh`, `launch-fixtures-truthset-audit-vm.sh` — singleton prevents double-counting of
   manifest flips.
 
-Incident reference: `memory/project_session_handover_2026_04_19.md` + the 2026-04-19 SFI herd that produced ~4
+Incident reference: the 2026-04-19 SFI herd that produced ~4
 successful writes across 10 VMs in 6 hours.
 
 **If you build a new launcher for a rate-limited / shared-quota / shared-feed adapter**: copy the singleton-lock pattern
@@ -479,7 +487,7 @@ needed) — those can use `gcloud storage ls` safely.
 ```
 
 Honest-coverage `capture_status` taxonomy (introduced at schema v5; current schema v7 — see
-`02-data/availability-manifest-and-data-status.md`) means every attempted shard has a manifest row: `captured` (data
+[`/codex/02-data/availability-manifest-and-data-status.md`](/codex/02-data/availability-manifest-and-data-status.md)) means every attempted shard has a manifest row: `captured` (data
 written), `empty_confirmed` (attempted, zero rows), or `attempted_failed` (attempted, raised — with `error_reason`
 populated).
 
@@ -677,7 +685,7 @@ verification recipe + coverage gap status + operational invariants.
 **SSOT cross-refs:**
 
 - [`manifest-consolidator-ssot.md`](manifest-consolidator-ssot.md) — canonical runtime SSOT
-- [`02-data/availability-manifest-and-data-status.md`](/codex/02-data/availability-manifest-and-data-status.md)
+- [[`/codex/02-data/availability-manifest-and-data-status.md`](/codex/02-data/availability-manifest-and-data-status.md)](/codex/02-data/availability-manifest-and-data-status.md)
   "Manifest consolidator + per_vm shard merge mechanics"
 - UTL CLI: `python -m unified_trading_library.manifest_consolidator --bucket <X> --once`
 
@@ -830,8 +838,8 @@ as silent. Verify all four at the T+10min post-launch check.
 - Tarball bucket: `gs://deployment-scripts-central-element-323112/code/`
 - Setup script bucket: `gs://deployment-scripts-central-element-323112/vm/setup-data-pipeline-vm.sh`
 - Honest-coverage manifest schema (what VMs write on success/empty/failure):
-  [`02-data/availability-manifest-and-data-status.md`](/codex/02-data/availability-manifest-and-data-status.md)
+  [[`/codex/02-data/availability-manifest-and-data-status.md`](/codex/02-data/availability-manifest-and-data-status.md)](/codex/02-data/availability-manifest-and-data-status.md)
 - Shard-level failure isolation (why VMs don't raise inside per-venue loops):
-  [`04-architecture/shard-level-failure-isolation.md`](/codex/04-architecture/shard-level-failure-isolation.md)
+  [[`/codex/04-architecture/shard-level-failure-isolation.md`](/codex/04-architecture/shard-level-failure-isolation.md)](/codex/04-architecture/shard-level-failure-isolation.md)
 - Coverage roadmap (how to use VM tarball deployment to reach ~100% honest coverage):
   `plans/archive/proper_coverage_roadmap_2026_04_20.plan.md`

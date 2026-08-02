@@ -23,9 +23,12 @@ authoritative_for:
   How Docker images, VM tarballs, and code tarballs are built, tagged, and tracked across BOTH GCP Artifact Registry and
   AWS ECR so that a single git SHA produces parity-verified artifacts on both clouds.
 referenced_by:
-  [plans/archive/2026_07/master_to_live_defi_2026_05_23.md, plans/active/aws_migration_defi_first_2026_05_07.md]
+  [
+    /plans/archive/2026_07/master_to_live_defi_2026_05_23.md,
+    /plans/archive/2026_05/aws_migration_defi_first_2026_05_07.md,
+  ]
 owner:
-last_reviewed: 2026-05-17
+last_reviewed: 2026-09-16
 code_refs:
 ---
 
@@ -62,7 +65,8 @@ running in production must trace back to a known git SHA + builder run on both c
 4. **Lineage metadata schema** — JSONL record per artifact:
    `{sha, repo, builder, build_ts, gcp_uri, aws_uri, digest_gcp, digest_aws}`.
 5. **Parity verification** — `verify-build-parity.sh` runs `docker manifest inspect` on both clouds, asserts digest
-   equality.
+   equality. (Not written; no parity script exists anywhere in the workspace as of 2026-07-31. Consistent with this
+   doc's `status: draft` — the whole section is a specification, not a description.)
 6. **VM launchers** — how `setup-data-pipeline-vm.sh` resolves cloud-specific tarball URI from the registry's lineage
    record.
 7. **Rollback procedure** — pin a service to an older SHA across both clouds; verify pin held after a redeploy.

@@ -43,7 +43,7 @@ related:
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]
 created: "2026-07-26"
-last_updated: "2026-07-28"
+last_updated: "2026-08-01"
 parent_epic: infrastructure_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -79,10 +79,32 @@ drift_direction: advance-code
 
 ## Todos
 
-- [ ] [DOCS] P2. **Reconcile the two bookkeeping-only residuals in
-      `bucket_estate_consolidation_closeout_2026_07_24.md`** (cross-cutting, first AO batch for this doc): (a) re-verify
-      current deletion status of the 3 items in the "Track to completion the deletions OWNED BY OTHER PLANS" checkpoint
-      — `dex-pools-prd`/`lst-rates-prd`/`perp-funding-prd` (per `[[defi_dedicated_bucket_shared_migration_2026_07_13]]`
+- [x] ✅ [DOCS] P2. **DONE 2026-07-31 — `unified-trading-pm@<see plan-flip commit>`.** Both checkpoint checkboxes in
+      `bucket_estate_consolidation_closeout_2026_07_24.md` flipped `[x]` with freshly-verified evidence (not
+      carried-forward text). **(a)** Cross-plan deletion checkpoint: DeFi trio TRANSCRIBED per the scope-fence from
+      `defi_dedicated_bucket_shared_migration_2026_07_13.md` (archived, 16/17 done, authoritative). The other 2
+      sub-items needed real re-derivation, not transcription — both were stale in the 2026-07-25 checkpoint text:
+      `lending-indices`+`-prd` were actually CONFIRMED DELETED 2026-07-15 (`gcs_bucket_estate_cleanup_2026_07_10.md`
+      §5l), and the "sports pair HELD" note was stale — `sports_legacy_bucket_cutover_2026_07_16.md` (archived complete
+      2026-07-27) deleted both `instruments-store-sports` (2026-07-16T19:52Z) and `market-data-tick-sports`
+      (2026-07-17T~16:50Z) independently of the CF-8 gate the old text assumed was still blocking. All 13 buckets across
+      the checkpoint's 3 sub-items (DeFi trio 3 + lending-indices pair 2 + legacy flat twins 8) confirmed deleted, zero
+      residual. **(b)** The 3 bucket-SSOT audit issue docs: never named by filename anywhere in the corpus — identified
+      via `bucket_estate_fold_design_2026_07_13.md`'s `related:` frontmatter + body citation trail as
+      `terraform_bucket_estate_drift_resurrection_2026_07_13.md` (already resolved 2026-07-19),
+      `strategy_store_split_brain_2026_07_13.md` (already resolved), and `legacy_bucket_template_literals_2026_07_16.md`
+      (re-confirmed genuinely still open — pay-down todo unfinished, though a fresh live check confirmed all 5
+      referenced legacy bucket names are already 404). Full evidence inline on both todos + a dated Progress Log entry
+      in the target doc. **Original text (for provenance): sub-item (a) is TRANSCRIPTION, not re-derivation.** The 3
+      dedicated DeFi buckets (`dex-pools-prd`/`lst-rates-prd`/`perp-funding-prd`) are owned end-to-end by
+      `/plans/active/defi_dedicated_bucket_shared_migration_2026_07_13.md`, which is **16/17 done** — its migration +
+      reader-repoint + Terraform-removal + deletion todos are all already `[x]` with evidence, and its only remaining
+      open item is an unrelated `[CHORE] P3` dead-bucket-name housekeeping cluster. **Read that doc's checkboxes and
+      copy their status into the checkpoint; do NOT run an independent `gcloud storage buckets list` re-audit of those
+      three and do NOT re-open work there.** Sub-item (b) (identifying the three bucket-SSOT audit issue docs) is
+      genuinely this todo's own and is unaffected. Original text: (a) re-verify current deletion status of the 3 items
+      in the "Track to completion the deletions OWNED BY OTHER PLANS" checkpoint —
+      `dex-pools-prd`/`lst-rates-prd`/`perp-funding-prd` (per `[[defi_dedicated_bucket_shared_migration_2026_07_13]]`
       todos 6-9), `lending-indices`/`-prd` (gated on VM `mtds-lending-indices-20260712-112557`), and the legacy flat
       tick+instruments twins (per `data_completion_to_100_all_ag_2026_06_21.md` M-1 L6) — query current bucket existence
       (`gcloud storage buckets list` / `aws s3api head-bucket`) and the cited owning plans' latest status, then update
@@ -97,7 +119,7 @@ drift_direction: advance-code
       `bucket_estate_consolidation_closeout_2026_07_24.md`. Done when: both checkboxes reflect a freshly-verified status
       (not carried-forward text) with cited evidence (bucket-existence probes, owning-plan status quotes, or issue-doc
       close commits), and the 3 audit-issue docs are named explicitly in this doc's evidence trail.
-- [ ] [TERRAFORM] P2. **Join folded `features-{ag}-prd` buckets to Group-B IAM + add COLDLINE lifecycle** — Source:
+- [x] ✅ [TERRAFORM] P2. **Join folded `features-{ag}-prd` buckets to Group-B IAM + add COLDLINE lifecycle** — Source:
       `bucket_fold_features_2026_07_17.md`'s open P2 "IAM + lifecycle" todo. (a) Once
       `bucket_iam_write_protection_per_tier_2026_06_09.md` Phase 1 (P1.1-P1.3: per-tier SAs + per-suffix IAM bindings)
       has landed, extend that plan's Phase-2 Group-B terraform to bind
@@ -109,20 +131,25 @@ drift_direction: advance-code
       `features-{ag}-prd` buckets (+ `-test-` twins) in the derived-from-yaml terraform (`canonical_buckets.tf` /
       `setup-buckets.py`, same mechanism as the other folded families). Done when: `terraform plan` shows the new IAM
       bindings + lifecycle rules with zero unrelated bucket create/destroy, and (if (a) landed) a negative IAM test
-      confirms a non-prd credential is denied a `features-*-prd-*` write.
-- [ ] [DESIGN] P2. **Land colocated feature pipeline in-memory DAG handoff + parquet consolidation + basedpyright
-      strictness restore** — (1) pass derived feature frames between calculators in-process instead of round-tripping
-      through parquet, so a colocated run computes the dependency DAG once; (2) consolidate the per-instrument parquet
-      fan-out into a single file per (day, feature_group, timeframe) to cut object count + selective-read list cost; (3)
-      restore features-service `pyrightconfig.json`/`pyproject.toml`
-      `reportUnknownMemberType`/`reportUnknownVariableType`/`reportUnknownArgumentType` (+6 more) severities from
-      `"none"` back to `error` (or a downward-only ratchet) and burn down the ~574 masked errors, adding no new
-      suppressions. Repo: features-service. Source: colocated_feature_pipeline_in_memory_handoff_2026_06_21.md (items
-      1.4, 1.3b, 1.7e — item 1.5b read-time column pruning intentionally excluded, still gated behind
-      `features_service_e2e_pipeline_test_2026_05_26.md` reaching end-to-end green). Done when: features-service
-      `quality-gates.sh` is green with a measured I/O reduction (object count / read bytes) shown for a sample (day, fg,
-      tf) covering items 1-2, and basedpyright `reportUnknown*` severities are `error` (or a stated downward-only
-      ratchet) with the prior ~574 errors resolved and zero new suppressions for item 3.
+      confirms a non-prd credential is denied a `features-*-prd-*` write. **DONE — already-shipped, re-verified
+      2026-08-01, no new terraform.** Stale by dispatch: Phase 1 IAM landed `deployment-service@72c78a8`/`@76a2459`
+      (P1.2b); lifecycle shipped via `bucket_fold_features_2026_07_17.md` P2 (2026-07-28). `tofu plan` re-verify → **"No
+      changes."** Negative IAM test (never run before): self-granted+revoked `iam.serviceAccountTokenCreator` on
+      `uts-test-sa`, impersonated, write to `features-cefi-prd-*` → **real HTTP 403 storage.objects.create denied** (no
+      object landed); read succeeded (objectViewer). Repo: deployment-service, verification only.
+- [x] ✅ [DESIGN] P2. **Item 1/3 (in-memory DAG handoff) — DONE 2026-08-01 (slot 7), 1.3b/1.7e split below.**
+      `features-service@b457ee43`: composite_sr/flow_interaction get liquidity_walls/liquidation_clusters in-memory via
+      the registry's `depends_on` order — fixes a real live-prod bug (composite_sr was ALWAYS null). 786 tests + full QG
+      green. Source: colocated_feature_pipeline_in_memory_handoff_2026_06_21.md (item 1.4).
+- [ ] [REFACTOR] P3. **Item 2/3 — parquet consolidation.** Consolidate delta_one's per-instrument parquet fan-out
+      (`FeatureWriter._write_parquet`) into one file per (day, fg, timeframe), preserving write resumability; update
+      readers (`_load_parquets_concat` globs per-instrument today). Repo: features-service. Source:
+      colocated_feature_pipeline_in_memory_handoff_2026_06_21.md (item 1.3b). Done when: `quality-gates.sh` green with a
+      measured I/O reduction, readers updated, no regression.
+- [ ] [CODE] P3. **Item 3/3 — basedpyright burn-down** (862 `reportUnknown*`/`reportAny` errors, 590 files; config
+      already `error` since `e8c8693d` — pure burn-down, zero new suppressions). Repo: features-service. Source:
+      colocated_feature_pipeline_in_memory_handoff_2026_06_21.md (item 1.7e). Done when: 0 such errors (or an
+      operator-approved ratchet), `quality-gates.sh` green.
 - [ ] [SCRIPT] P1. **Cross-cutting data-completion prep residuals — `data_completion_to_100_all_ag_2026_06_21.md` Step
       4 + finding-144 follow-up.** Two independent, bounded items from the target doc that no active cross-cutting/AG
       closeout batch currently claims: (a) **Credential-gated venue asks (Step 4, L786-787)** — file BLOCKED-CREDENTIALS
@@ -192,24 +219,26 @@ drift_direction: advance-code
       (defi.venues carrying 9 chain-names + 5 cefi-exchange-names, defi+cefi.chains both carrying `FUTURES` — flagged as
       a **big finding** per findings-triage, cross-AG/cross-repo, not yet root-caused). Full evidence + per-value
       classification table in the Progress Log below.
-- [ ] [INFRA] P2. **Infra/ops residual tail — bounded fixes (rollup image-lag, deployment-ui could-exist/capture
-      surfacing, local-dev restart flakiness, unique_instruments precompute).** Four independent, self-contained fixes
-      carried unfixed from the archived migration-verification harness; do all four in one pass: **(A)** Make
-      `deployment-service/scripts/cloud-run/deploy-shared.sh` (or the cloud-build-router deploy dispatch) also bump the
-      `uts-prod-data-status-rollup` Cloud Run Job's `deployment-api` image tag (or pin both to the same digest) so a
-      code deploy auto-refreshes the rollup — Done when: a `deploy-shared.sh` run updates both the
-      `uts-shared-deployment-api` service AND the rollup Job to the same image digest, verified via
-      `gcloud run jobs describe uts-prod-data-status-rollup`. **(B)** deployment-ui `DataStatusTab`/`HonestCoverageCard`
-      — surface shards-weighted could-exist completion_pct, manifest-capture ratio, and `out_of_window` as three
-      distinct labeled values (not one ambiguous card) — Done when: `[UI]` + `pw:L2 ✓` regression spec confirms all
-      three render distinctly. **(C)** Make the local-dev restart helper (`restart-deployment-stack`-style script)
-      deterministically port-clear `:8004` before relaunch (e.g. `fuser -k` built in) instead of relying on manual
-      workaround — Done when: repeated restarts no longer race on bind. **(D)**
-      `deployment_api/scripts/data_status_rollup_worker.py` — add the catalogue read for `unique_instruments` to the
-      LIVE (non-beta) fast path and redeploy the Cloud Run job — Done when: a live rollup run's coverage summary
-      includes `unique_instruments` without the recompute fallback. Source:
-      `infra_ops_residual_migration_verification_2026_07_24.md` (items 3-6 of 9; forked verbatim from the archived
-      `migration_verification_orphan_safety_2026_06_10.md`).
+- [x] ✅ [INFRA] P2. **DONE 2026-08-01 — Infra/ops residual tail (rollup image-lag, deployment-ui could-exist/capture
+      surfacing, local-dev restart flakiness, unique_instruments precompute).** 3 of 4 sub-items were ALREADY FIXED
+      months ago (stale carry-forward, never checked off across the archived→residual→satellite doc-fork chain); only
+      (B) was genuinely open. **(A)** rollup image-lag — ALREADY FIXED: `deployment-service@c04d4562` (2026-06-15) added
+      the `gcloud run jobs update --image` + async `execute` sync step to `deploy-shared.sh`. **(B)** deployment-ui
+      could-exist/capture surfacing — GENUINELY OPEN, now FIXED: `deployment-ui@727298b` — `HonestCoverageCard.tsx`
+      added 2 new distinct labelled rows (`completion_pct_shards_weighted` could-exist, hidden not faked when absent;
+      `out_of_window` as an explicit count, not just a bar segment). `pw:L2 ✓` — extended
+      `tests/smoke/data_status_coverage_labels.spec.ts` (4/4 passed incl. a new test proving all 3 render distinctly);
+      Vitest 8/8; full `quality-gates.sh` green (sentinel 727298b5). **(C)** local-dev restart flakiness — ALREADY
+      FIXED: `unified-trading-pm@678188510` (2026-06-15) added a deterministic `stop_port()` free-wait (lsof+`ss`
+      double-check, `kill -9` fallback) to `restart-deployment-stack.sh` — equivalent to the suggested `fuser -k`.
+      **(D)** rollup worker `unique_instruments` precompute — ALREADY FIXED: `deployment-api@5938b3e` (2026-06-12, same
+      day as the operator ask) wired `read_unique_instrument_count()` into `coverage.py`'s `_assemble_coverage_entry`,
+      which the rollup worker's own `_build_one_service_coverage` calls — a live rollup's `coverage.json.gz` already
+      includes `unique_instruments` with no recompute fallback (exactly this sub-item's done-when; the separate
+      manifest/turbo surface still lacks it, but that's not what this done-when names). Full per-sub-item citations +
+      original todo text preserved in `infra_ops_residual_migration_verification_2026_07_24.md` items 3-6 (also flipped
+      `[x]` this session). Source: `infra_ops_residual_migration_verification_2026_07_24.md` (items 3-6 of 9; forked
+      verbatim from the archived `migration_verification_orphan_safety_2026_06_10.md`).
 - [x] ✅ [DATA] P1. **InstrumentRecord extra='forbid' — get the authoritative list + apply the already-justified REMOVE
       dispositions.** On a branch, flip `model_config = ConfigDict(extra="forbid")` on
       `unified_api_contracts/internal/reference/instrument.py::InstrumentRecord` and run the FULL UAC +
@@ -425,11 +454,27 @@ drift_direction: advance-code
       source-doc Next-steps flipped in `issues/cf_manifest_audit_scheduled_job_daily_failure_2026_07_13.md` (now
       `status: resolved`). Genuine (non-checker-bug) CF reds this run surfaced across cefi/tradfi/sports/prediction are
       tracked separately: `issues/cf_manifest_audit_first_full_rollup_findings_2026_07_26.md`.
-- [ ] [DATA] P1. **Bring cefi's raw_tick_data manifest to CF-1/CF-4/CF-5/Era-B GREEN using the proven cross-AG
-      playbook.** cefi is the one AG this doc's 2026-07-14 Adjudication explicitly leaves un-adjudicated (no fresh
-      CF-audit found). First re-run `cf_manifest_audit.py` against the live `market-data-tick-cefi-prd` manifest to get
-      a current baseline, then apply the same fixes already landed for prediction/sports/tradfi/defi: (1) **CF-1** —
-      normalize the `_index`'s `schema_version` column from string `'9'` to int64 via
+- [x] ✅ [DATA] P1. **DONE 2026-08-01 (slot 6, data_engineering) — CF-1/CF-4/CF-5/Era-B all GREEN on live prod,
+      independently re-verified.** All 4 named CFs are now GREEN — CF-1/CF-3/CF-5/Era-B were already GREEN per
+      2026-07-31's re-verification; the sole remaining gap was CF-4's regression (13,399 blank-`source` rows, all
+      live-path `empty_confirmed`/`attempted_failed`, dated 2026-06-21→2026-08-01). Root cause: the live
+      `MTDSShardManifestRecorder.record_captured` already derived `source` via `source_string_for(pipeline_mode)`, but
+      `record_empty`/`record_failed`/`record_zero_rows` never did — they relied solely on the writer's asset_group
+      auto-stamp, which never fires because a venue's live capture source can differ from its batch source (e.g. DERIBIT
+      batch=tardis, live=deribit), making it a multi-source cell. Fixed all 3 methods to thread
+      `source = source_string_for(pipeline_mode) or ""` the same way `record_captured` does, + 3 new regression tests.
+      `market-tick-data-service@c2ae82e0`. Backfilled the 13,399 existing blank rows via the same idempotent,
+      snapshot-first `populate_v9_index_columns_inplace.py --asset-group cefi --apply` tool used for the original CF-4
+      fix (dry-run confirmed `source_filled: 13399`, all other counters 0 — no side effects on already-green CFs; gate
+      OK: rows/captured counts exactly preserved). Independently re-verified via a fresh `cf_manifest_audit.py` run
+      against the live manifest post-apply: `CF-1/CF-3/CF-4/CF-5/Era-B` all GREEN
+      (`market-data-tick-cefi-prd-central-element-323112`, 9,662,116 rows). CF-8/CF-2-paths remain RED, unchanged —
+      explicitly out of this todo's named scope per the original text. See the split-off P2 CF-4-regression todo below
+      (same fix closes it too). — **Bring cefi's raw_tick_data manifest to CF-1/CF-4/CF-5/Era-B GREEN using the proven
+      cross-AG playbook.** cefi is the one AG this doc's 2026-07-14 Adjudication explicitly leaves un-adjudicated (no
+      fresh CF-audit found). First re-run `cf_manifest_audit.py` against the live `market-data-tick-cefi-prd` manifest
+      to get a current baseline, then apply the same fixes already landed for prediction/sports/tradfi/defi: (1)
+      **CF-1** — normalize the `_index`'s `schema_version` column from string `'9'` to int64 via
       `pd.to_numeric(df["schema_version"]).astype("int64")` (snapshot the `_index` parquet first); (2) **CF-4** —
       backfill the ~54% (3.9M-row) blank `source` column via `record_captured(source=...)`, deriving source from the
       `{mode}_{source}` pipeline_mode or the venue→source map; (3) **CF-5** — type the ~189,665 untyped-reason rows; (4)
@@ -454,112 +499,167 @@ drift_direction: advance-code
       only.)
 
       **CF-1/CF-3/CF-4 — DONE + LIVE-VERIFIED 2026-07-29.** `market_tick_data_service/scripts/
-                                                  populate_v9_index_columns_inplace.py --asset-group cefi --apply` (the exact pre-existing tool already used for
-                                                  defi/tradfi/sports/pred — row-preserving, snapshot-first at
-                                                  `_index/snapshots/pre_v9_apply_cefi_2026_06_18.parquet` (kept, already existed), GATE-checked
-                                                  captured-preserved-before-write). Applied successfully: `APPLIED — live _index written ... (9,783,677 rows,
-                                                  schema_version=9)`, GATE `captured 3,955,852->3,955,852 (OK)`. **Independently re-verified by a fresh direct
-                                                  manifest read** (not trusting the script's own log): `schema_version dist={9: 9,783,677}` (100% int 9),
-                                                  `pipeline_mode blank=0`, `source blank=0`, `captured=3,955,852` — CF-1 and CF-4 (+ CF-3, not in this todo's
-                                                  named scope but fixed as a side effect of the same tool) are all GREEN on live prod. No data loss (row count
-                                                  and captured count both exactly preserved pre/post).
+                                                                                                                                                                                  populate_v9_index_columns_inplace.py --asset-group cefi --apply` (the exact pre-existing tool already used for
+                                                                                                                                                                                  defi/tradfi/sports/pred — row-preserving, snapshot-first at
+                                                                                                                                                                                  `_index/snapshots/pre_v9_apply_cefi_2026_06_18.parquet` (kept, already existed), GATE-checked
+                                                                                                                                                                                  captured-preserved-before-write). Applied successfully: `APPLIED — live _index written ... (9,783,677 rows,
+                                                                                                                                                                                  schema_version=9)`, GATE `captured 3,955,852->3,955,852 (OK)`. **Independently re-verified by a fresh direct
+                                                                                                                                                                                  manifest read** (not trusting the script's own log): `schema_version dist={9: 9,783,677}` (100% int 9),
+                                                                                                                                                                                  `pipeline_mode blank=0`, `source blank=0`, `captured=3,955,852` — CF-1 and CF-4 (+ CF-3, not in this todo's
+                                                                                                                                                                                  named scope but fixed as a side effect of the same tool) are all GREEN on live prod. No data loss (row count
+                                                                                                                                                                                  and captured count both exactly preserved pre/post).
 
-                                                  **Real obstacle + resolution (save the next session the rediscovery — this took 4 attempts)**: the naive
-                                                  unbounded `--apply` run got OOM-killed partway through (host swap hit 100% full from an unrelated concurrent
-                                                  host-wide event) with ZERO error output and no live-manifest change — **do not mistake a fresh `updateTime` on
-                                                  the live blob for your own write landing**; this is a continuously-live production index other processes write
-                                                  to independently, so always re-read + diff actual column values after an apply, never trust timestamp alone.
-                                                  Retried via `unified-trading-pm/scripts/dev/run-bounded-analysis.sh --mem-cap <N>G -- ...` (the sanctioned
-                                                  cgroup-capped wrapper for exactly this ad-hoc-heavy-memory-op class, per its own docstring's 2026-07-27
-                                                  precedent incident) — needed **26G** to actually complete (10G failed at parquet-read, 16G failed at the
-                                                  internal `df.copy()`, 20G failed at the final `to_parquet` re-serialize just before upload); this cefi index's
-                                                  real peak footprint (9.78M rows x 36 mostly-`object`-dtype columns, held in 2-3 copies across
-                                                  read->transform->reserialize) is genuinely ~20-26GB, well past the wrapper's 4G default and worth flagging for
-                                                  the next AG-scale manifest op of this shape (a streamed/chunked rewrite would avoid this entirely, but that's a
-                                                  bigger change to a script 4 other AGs already used successfully as-is — out of this todo's scope to modify it).
+                                                                                                                                                                                  **Real obstacle + resolution (save the next session the rediscovery — this took 4 attempts)**: the naive
+                                                                                                                                                                                  unbounded `--apply` run got OOM-killed partway through (host swap hit 100% full from an unrelated concurrent
+                                                                                                                                                                                  host-wide event) with ZERO error output and no live-manifest change — **do not mistake a fresh `updateTime` on
+                                                                                                                                                                                  the live blob for your own write landing**; this is a continuously-live production index other processes write
+                                                                                                                                                                                  to independently, so always re-read + diff actual column values after an apply, never trust timestamp alone.
+                                                                                                                                                                                  Retried via `unified-trading-pm/scripts/dev/run-bounded-analysis.sh --mem-cap <N>G -- ...` (the sanctioned
+                                                                                                                                                                                  cgroup-capped wrapper for exactly this ad-hoc-heavy-memory-op class, per its own docstring's 2026-07-27
+                                                                                                                                                                                  precedent incident) — needed **26G** to actually complete (10G failed at parquet-read, 16G failed at the
+                                                                                                                                                                                  internal `df.copy()`, 20G failed at the final `to_parquet` re-serialize just before upload); this cefi index's
+                                                                                                                                                                                  real peak footprint (9.78M rows x 36 mostly-`object`-dtype columns, held in 2-3 copies across
+                                                                                                                                                                                  read->transform->reserialize) is genuinely ~20-26GB, well past the wrapper's 4G default and worth flagging for
+                                                                                                                                                                                  the next AG-scale manifest op of this shape (a streamed/chunked rewrite would avoid this entirely, but that's a
+                                                                                                                                                                                  bigger change to a script 4 other AGs already used successfully as-is — out of this todo's scope to modify it).
 
-                                                  **Era-B — remaining scope, investigated further 2026-07-29 (slot 14).** `era_b_legacy_purge.py` inspected: it
-                                                  is NOT the reclassify tool — it's a closed-set REGISTRY safety guard (`assert_era_b_purge_safe`) called by a
-                                                  per-AG migrator right before dropping the retired `options_chain`/`futures_chain` `SOURCE_PRIORITY`/
-                                                  `AVAILABILITY_AT_SEMANTICS` registry entries, AFTER the on-disk relabel already happened — it never touches
-                                                  manifest rows or GCS objects itself. **No existing tool does cefi's actual reclassify**: grepped
-                                                  `market-tick-data-service` for an Era-B-aware relabeler — `populate_v9_index_columns_inplace.py` (the tool that
-                                                  fixed CF-1/CF-3/CF-4 above) has zero `options_chain`/`futures_chain`/Era-B logic (its `_MERGED_DATA_TYPE_MAP`
-                                                  scope is DeFi-only); `migrate_cefi_flat_to_v9_canonical.py` already carries SOME chain-aware on-disk-path
-                                                  logic (`_ONDISK_DATA_TYPE_MERGE`, `_CHAIN_BUNDLE_DTYPES`) but for the v6→v9 physical-path migration, a
-                                                  different job than the CF-audit's Era-B `_index` check. **Open question before building a fix**: is the CF
-                                                  audit's `data_type=options_chain/futures_chain` count a MANIFEST-only `_index` artifact (fixable in-place,
-                                                  same shape as the CF-1/CF-4 fix) or does it reflect the actual on-disk GCS path (requiring a physical-object
-                                                  relabel, VM-scale per the playbook's item 8 precedent — sports/tradfi/defi's already-done E3+E4/G4 fleet
-                                                  runs)? Must be answered by reading the manifest writer's Era-B-era row-emission code path before writing any
-                                                  fix — not yet done. Released via `/skip-current-task {"reason_code": "GATED"}`; not attempting a fix on an
-                                                  unconfirmed manifest-vs-physical distinction against 491k live-prod rows. Re-run `cf_manifest_audit.py` after
-                                                  whichever fix lands to confirm all 4 named CFs GREEN before flipping this todo's checkbox.
+                                                                                                                                                                                  **Era-B — remaining scope, investigated further 2026-07-29 (slot 14).** `era_b_legacy_purge.py` inspected: it
+                                                                                                                                                                                  is NOT the reclassify tool — it's a closed-set REGISTRY safety guard (`assert_era_b_purge_safe`) called by a
+                                                                                                                                                                                  per-AG migrator right before dropping the retired `options_chain`/`futures_chain` `SOURCE_PRIORITY`/
+                                                                                                                                                                                  `AVAILABILITY_AT_SEMANTICS` registry entries, AFTER the on-disk relabel already happened — it never touches
+                                                                                                                                                                                  manifest rows or GCS objects itself. **No existing tool does cefi's actual reclassify**: grepped
+                                                                                                                                                                                  `market-tick-data-service` for an Era-B-aware relabeler — `populate_v9_index_columns_inplace.py` (the tool that
+                                                                                                                                                                                  fixed CF-1/CF-3/CF-4 above) has zero `options_chain`/`futures_chain`/Era-B logic (its `_MERGED_DATA_TYPE_MAP`
+                                                                                                                                                                                  scope is DeFi-only); `migrate_cefi_flat_to_v9_canonical.py` already carries SOME chain-aware on-disk-path
+                                                                                                                                                                                  logic (`_ONDISK_DATA_TYPE_MERGE`, `_CHAIN_BUNDLE_DTYPES`) but for the v6→v9 physical-path migration, a
+                                                                                                                                                                                  different job than the CF-audit's Era-B `_index` check. **Open question before building a fix**: is the CF
+                                                                                                                                                                                  audit's `data_type=options_chain/futures_chain` count a MANIFEST-only `_index` artifact (fixable in-place,
+                                                                                                                                                                                  same shape as the CF-1/CF-4 fix) or does it reflect the actual on-disk GCS path (requiring a physical-object
+                                                                                                                                                                                  relabel, VM-scale per the playbook's item 8 precedent — sports/tradfi/defi's already-done E3+E4/G4 fleet
+                                                                                                                                                                                  runs)? Must be answered by reading the manifest writer's Era-B-era row-emission code path before writing any
+                                                                                                                                                                                  fix — not yet done. Released via `/skip-current-task {"reason_code": "GATED"}`; not attempting a fix on an
+                                                                                                                                                                                  unconfirmed manifest-vs-physical distinction against 491k live-prod rows. Re-run `cf_manifest_audit.py` after
+                                                                                                                                                                                  whichever fix lands to confirm all 4 named CFs GREEN before flipping this todo's checkbox.
 
-                                                  **Era-B open question — ANSWERED 2026-07-29 (slot-6, data_engineering): physical on-disk path, NOT a
-                                                  manifest-only artifact.** Read the live writer's actual partition-path logic directly:
-                                                  `market_tick_data_service/engine/orchestrator/symbol_rules.py`'s `_MERGED_DATA_TYPE_MAP = {"futures_chain":
-                                                  "options_chain"}` (used by `_resolve_partition_data_type()`, called from `partitioned_writer.py`'s GCS-path
-                                                  builders — doc comment there: `"GCS path: …/instrument_type={itype}/data_type={dt}/…"`) confirms
-                                                  `data_type=` is a REAL, literal GCS path segment for cefi raw_tick_data objects, and neither
-                                                  `options_chain` nor `futures_chain` maps to `trades` anywhere in the writer — `futures_chain` only merges
-                                                  INTO `options_chain`'s physical folder, it does not become `trades`. Cross-confirmed via
-                                                  `migrate_cefi_flat_to_v9_canonical.py`'s own comment on its mirrored `_ONDISK_DATA_TYPE_MERGE` constant:
-                                                  *"The live writer writes futures_chain shards under `data_type=options_chain/` on disk (the
-                                                  dex_pool_state-class logical≠on-disk lesson)."* That migrator only handles the v6→v9 flat-to-canonical
-                                                  PATH migration (preserving the chain on-disk naming as-is) — it does not reclassify chain data to
-                                                  `trades`. **No existing script anywhere in market-tick-data-service does this reclassify** (grepped
-                                                  `scripts/*relabel*`/`*era_b*` — `defi_chain_genesis_relabel_migration_2026_06_01.py`/
-                                                  `relabel_bybit_spot_perpetual_itype_2026_07_07.py`/etc. are structurally similar precedents but none target
-                                                  this specific data_type). **Conclusion: cefi's Era-B fix requires a genuine physical-object relabel
-                                                  (copy 491,146 objects' worth of shards from `data_type=options_chain/` to `data_type=trades/` while
-                                                  stamping `instrument_type=options_chain`/`futures_chain`, then re-point the manifest `_index` rows) —
-                                                  VM-scale per playbook item 8, same category as sports/tradfi's E3+E4/G4 fleet runs, not an in-session
-                                                  `populate_v9_index_columns_inplace.py`-style fix.** This is real, bounded, but substantial new-script
-                                                  engineering + a live-prod GCS migration against ~491k rows — properly scoped as its own follow-up rather
-                                                  than attempted inline here (script would need to be written + unit-tested + dry-run-verified against a
-                                                  small sample before any live `--apply`, mirroring the existing relabel-script precedents' structure).
-                                                  Todo's checkbox stays unflipped — CF-1/CF-3/CF-4/CF-5 are GREEN, but Era-B genuinely remains open pending
-                                                  that follow-up build+run. New follow-up todo filed below.
+                                                                                                                                                                                  **Era-B open question — ANSWERED 2026-07-29 (slot-6, data_engineering): physical on-disk path, NOT a
+                                                                                                                                                                                  manifest-only artifact.** Read the live writer's actual partition-path logic directly:
+                                                                                                                                                                                  `market_tick_data_service/engine/orchestrator/symbol_rules.py`'s `_MERGED_DATA_TYPE_MAP = {"futures_chain":
+                                                                                                                                                                                  "options_chain"}` (used by `_resolve_partition_data_type()`, called from `partitioned_writer.py`'s GCS-path
+                                                                                                                                                                                  builders — doc comment there: `"GCS path: …/instrument_type={itype}/data_type={dt}/…"`) confirms
+                                                                                                                                                                                  `data_type=` is a REAL, literal GCS path segment for cefi raw_tick_data objects, and neither
+                                                                                                                                                                                  `options_chain` nor `futures_chain` maps to `trades` anywhere in the writer — `futures_chain` only merges
+                                                                                                                                                                                  INTO `options_chain`'s physical folder, it does not become `trades`. Cross-confirmed via
+                                                                                                                                                                                  `migrate_cefi_flat_to_v9_canonical.py`'s own comment on its mirrored `_ONDISK_DATA_TYPE_MERGE` constant:
+                                                                                                                                                                                  *"The live writer writes futures_chain shards under `data_type=options_chain/` on disk (the
+                                                                                                                                                                                  dex_pool_state-class logical≠on-disk lesson)."* That migrator only handles the v6→v9 flat-to-canonical
+                                                                                                                                                                                  PATH migration (preserving the chain on-disk naming as-is) — it does not reclassify chain data to
+                                                                                                                                                                                  `trades`. **No existing script anywhere in market-tick-data-service does this reclassify** (grepped
+                                                                                                                                                                                  `scripts/*relabel*`/`*era_b*` — `defi_chain_genesis_relabel_migration_2026_06_01.py`/
+                                                                                                                                                                                  `relabel_bybit_spot_perpetual_itype_2026_07_07.py`/etc. are structurally similar precedents but none target
+                                                                                                                                                                                  this specific data_type). **Conclusion: cefi's Era-B fix requires a genuine physical-object relabel
+                                                                                                                                                                                  (copy 491,146 objects' worth of shards from `data_type=options_chain/` to `data_type=trades/` while
+                                                                                                                                                                                  stamping `instrument_type=options_chain`/`futures_chain`, then re-point the manifest `_index` rows) —
+                                                                                                                                                                                  VM-scale per playbook item 8, same category as sports/tradfi's E3+E4/G4 fleet runs, not an in-session
+                                                                                                                                                                                  `populate_v9_index_columns_inplace.py`-style fix.** This is real, bounded, but substantial new-script
+                                                                                                                                                                                  engineering + a live-prod GCS migration against ~491k rows — properly scoped as its own follow-up rather
+                                                                                                                                                                                  than attempted inline here (script would need to be written + unit-tested + dry-run-verified against a
+                                                                                                                                                                                  small sample before any live `--apply`, mirroring the existing relabel-script precedents' structure).
+                                                                                                                                                                                  Todo's checkbox stays unflipped — CF-1/CF-3/CF-4/CF-5 are GREEN, but Era-B genuinely remains open pending
+                                                                                                                                                                                  that follow-up build+run. New follow-up todo filed below.
 
-                                                  **Other lessons from this session**: (1) `/tmp` is a SHARED 2GB tmpfs across ALL 8 slots on this host —
-                                                  `cf_manifest_audit.py`'s `gcloud storage cp` temp downloads (100s of MB per AG) do NOT self-clean on script
-                                                  exit; clean your own `/tmp/cf_audit_*` dirs after use (per-file `rm -f` + `rmdir`, NOT `rm -rf`/`find -delete`
-                                                  — both are hook-blocked workspace-wide, even for harmless local-fs cleanup). (2) `cf_manifest_audit.py`'s
-                                                  `--env` default is `prd` (correct) — passing `--env prod` breaks bucket resolution.
+                                                                                                                                                                                  **Era-B — RESOLVED 2026-07-31 (data_engineering, the split-off todo below), premise was stale, no code
+                                                                                                                                                                                  needed.** A fresh `cf_manifest_audit.py` Era-B check + a direct live-manifest/GCS re-verification (full
+                                                                                                                                                                                  evidence on the split-off todo below) found **Era-B is ALREADY GREEN** — zero manifest rows carry
+                                                                                                                                                                                  `data_type ∈ {options_chain, futures_chain}`, and the physical `options_chain/` GCS path is empty in every
+                                                                                                                                                                                  sampled day. The "491,146 objects" figure above was a stale/conflated number, not a live gap. **However,
+                                                                                                                                                                                  the SAME fresh audit found CF-4 (source) has REGRESSED to RED** (13,399 blank-source rows, all dated
+                                                                                                                                                                                  2026-06-21→2026-08-01 — NEW drift since this todo's own 2026-07-29 "source blank=0" claim, not the original
+                                                                                                                                                                                  gap) — so this todo's overall CF-1/CF-4/CF-5/Era-B GREEN gate is still NOT fully met: CF-1/CF-3/CF-5/Era-B
+                                                                                                                                                                                  are GREEN, but CF-4 needs a fresh diagnosis + fix (out of the Era-B split-off's scope; not attempted this
+                                                                                                                                                                                  session). Checkbox stays unflipped pending that.
 
-                          **Re-verified 2026-07-29T20:21Z (slot 4, data_engineering): still correctly unflipped, no change since 16:08Z.**
-                          This todo's own remaining scope (Era-B) has no independent action left under ITS boundary — the physical relabel
-                          is now the separate `[SCRIPT] P1` todo immediately below (build+run the migrator), by slot 6's deliberate split.
-                          Doing that build under THIS task id would duplicate/collide with that todo's own dispatch once regen'd. Released
-                          via `/skip-current-task {"reason_code": "GATED"}` so the dispatcher can route the actual buildable work to the
-                          split-off todo. Next dispatch: flip this checkbox once the Era-B migrator todo lands + a fresh `cf_manifest_audit.py`
-                          re-run confirms cefi's Era-B GREEN.
+                                                                                                                                                                                  **Other lessons from this session**: (1) `/tmp` is a SHARED 2GB tmpfs across ALL 8 slots on this host —
+                                                                                                                                                                                  `cf_manifest_audit.py`'s `gcloud storage cp` temp downloads (100s of MB per AG) do NOT self-clean on script
+                                                                                                                                                                                  exit; clean your own `/tmp/cf_audit_*` dirs after use (per-file `rm -f` + `rmdir`, NOT `rm -rf`/`find -delete`
+                                                                                                                                                                                  — both are hook-blocked workspace-wide, even for harmless local-fs cleanup). (2) `cf_manifest_audit.py`'s
+                                                                                                                                                                                  `--env` default is `prd` (correct) — passing `--env prod` breaks bucket resolution.
 
-- [ ] [SCRIPT] P1. **NEW 2026-07-29 (slot-6), split off cefi's Era-B open question above (now answered — physical
-      relabel confirmed required).** Build + run cefi's Era-B physical relabel in the same two-phase copy-then-delete
-      shape already used for the `dex_pools`/`lending_indices` fold precedent (fold to canonical + verify FIRST; delete
-      old only after, operator-gated) — do NOT do a single-pass move: **Phase 1 (AO-eligible, additive-only, no
-      [OPERATOR] tag needed — safe-idempotent per the delete-safety HARD RULE, since nothing is deleted in this
-      phase)**: a new migrator script (mirroring the structure of existing precedents —
-      `defi_chain_genesis_relabel_migration_2026_06_01.py`, `relabel_bybit_spot_perpetual_itype_2026_07_07.py`,
-      `migrate_tradfi_manifest_itype_semantic_relabel_2026_07_27.py` — snapshot-first, GATE-checked captured-count
-      preservation) that COPIES the ~491,146 affected cefi raw_tick_data objects from `data_type=options_chain/` (the
-      merged on-disk home for both `options_chain` and `futures_chain` per `_ONDISK_DATA_TYPE_MERGE`) to a NEW
-      `data_type=trades/` location, preserving `instrument_type=options_chain`/`instrument_type=futures_chain` on each
-      row so the chain distinction survives; re-points the corresponding `_index` manifest rows to the new
-      `data_type=trades` value (old objects + old manifest rows left untouched/still readable); unit-tested against a
-      synthetic fixture; dry-run-verified against a handful of real `market-data-tick-cefi-prd` objects before a full
-      `--apply`. Re-run `cf_manifest_audit.py` after Phase 1 lands to confirm cefi's Era-B goes GREEN via the new
-      copies, then flip the parent CF-1/CF-4/CF-5/Era-B todo's checkbox. **Phase 2 ([OPERATOR]-gated, separate follow-up
-      todo, filed only once Phase 1 is verified GREEN)**: delete the now-orphaned old
-      `data_type=options_chain/futures_chain` objects, per delete-safety-protocol §3a (prod GCS delete — human-only
-      unless a fresh same-run `gcs_bucket_soft_delete_retention_seconds()` ≥604800s check qualifies it for the
-      reversibility path). Per playbook item 8, Phase 1 is VM-scale (fleet-drain pattern, same category as sports's
-      E3+E4 fleet and tradfi/defi's G4 apply) — launch via the standard `deployment-service/scripts/vm/` launcher
-      convention (grep `VM_PREFIX_TO_BUCKET` for a matching entry or extend an existing `launch-*.sh`, SPOT provisioning
-      per the HARD RULE). Repo: market-tick-data-service (migrator script), deployment-service (VM launcher). Source:
-      this doc's cefi CF-1/CF-4/CF-5/Era-B todo above.
+                                                                                                                                                          **Re-verified 2026-07-29T20:21Z (slot 4, data_engineering): still correctly unflipped, no change since 16:08Z.**
+                                                                                                                                                          This todo's own remaining scope (Era-B) has no independent action left under ITS boundary — the physical relabel
+                                                                                                                                                          is now the separate `[SCRIPT] P1` todo immediately below (build+run the migrator), by slot 6's deliberate split.
+                                                                                                                                                          Doing that build under THIS task id would duplicate/collide with that todo's own dispatch once regen'd. Released
+                                                                                                                                                          via `/skip-current-task {"reason_code": "GATED"}` so the dispatcher can route the actual buildable work to the
+                                                                                                                                                          split-off todo. Next dispatch: flip this checkbox once the Era-B migrator todo lands + a fresh `cf_manifest_audit.py`
+                                                                                                                                                          re-run confirms cefi's Era-B GREEN.
+
+- [x] ✅ [SCRIPT] P1. **NEW 2026-07-29 (slot-6), split off cefi's Era-B open question above.** **CLOSED 2026-07-31
+      (data_engineering) — the premise was stale, not fixed by new code: Era-B is ALREADY GREEN on live prod, no
+      physical relabel needed.** Before writing any migrator against a live-prod bucket, re-verified the ~491,146-object
+      figure from first principles (data-correctness HARD RULE — never execute a stale premise against real infra)
+      rather than trusting the carried-forward number: 1. **Live manifest query** (`_index/availability_index.parquet`,
+      `market-data-tick-cefi-prd-central-element-323112`, 9,662,116 rows): **zero rows** with `data_type` column
+      literally `options_chain`/`futures_chain` (checked directly — this is exactly the axis `cf_manifest_audit.py`'s
+      own `_check_era_b()` reads, per its source:
+      `ERA_A_CHAIN_DATA_TYPES = frozenset({"options_chain", "futures_chain"})`,
+      `era_a =        df["data_type"].astype(str).isin(ERA_A_CHAIN_DATA_TYPES).sum()`). 34,931 rows carry
+      `instrument_type ∈        {options_chain, futures_chain}` (a DIFFERENT axis) but their `data_type` column already
+      correctly reads `trades`/`book_snapshot_5`/`derivative_ticker`/etc — not the legacy chain value. 2. **Live GCS
+      probe** (`list_blobs` on `data_type=options_chain/` vs `data_type=trades/` prefixes for OKX-FUTURES/futures_chain
+      across 4 sampled days spanning 2022-2025): the `options_chain/` physical path is EMPTY at every sample; real
+      objects already live under `data_type=trades/`. No orphaned-path objects found in the sampled range. 3. **Ran the
+      actual `cf_manifest_audit.py` Era-B check directly** (`unified_trading_library.cf_manifest_audit.audit()` against
+      the live cefi tick bucket, 2026-07-31):
+      `Era-B chain data_type [GREEN] data_type in        {options_chain,futures_chain} rows=0 (must be 0)`.
+      **Conclusion**: the "491,146 objects" figure this todo (and the "Era-B open question — ANSWERED 2026-07-29"
+      analysis it built on) carried forward was a conflation — the manifest-row Era-B RED count from an earlier
+      (now-stale) audit reading was reinterpreted as a live GCS object count, and/or the CF-1/CF-3/CF-4 fix that ran
+      2026-07-29 (`populate_v9_index_columns_inplace.py --asset-group cefi --apply`, a full-index rewrite) already
+      normalized the manifest's `data_type` column values for these rows as a side effect, closing Era-B without that
+      session crediting it explicitly. Either way: **no migrator was built, no GCS objects were touched** — building and
+      running a live-prod copy migration against a premise that doesn't hold would have been wasted work + an
+      unjustified write against a shared production bucket. Parent CF-1/CF-4/CF-5/Era-B todo's Era-B sub-item is now
+      correctly resolved — see the update there. **Adjacent finding, NOT fixed here (out of this todo's Era-B-only
+      scope, flagging per findings-triage)**: the same fresh audit run found **CF-4 (source column) has REGRESSED to
+      RED** — 13,399/9,662,116 blank-`source` rows (0.1%), all `empty_confirmed`/`attempted_failed` (never `captured`),
+      dated 2026-06-21→2026-08-01 (today, `written_at` max = live), concentrated on DERIBIT (6,361)/ASTER
+      (2,287)/HYPERLIQUID (1,994)/BINANCE-FUTURES (1,562)/OKX-FUTURES (831)/KRAKEN-FUTURES (363) — this is NEW drift
+      since the 2026-07-29 fix's "source blank=0" claim, not a residual of the original ~54%/3.9M-row gap. Likely root
+      cause (not traced further here): the writer's `record_expected_empty`/`record_failed` path may not thread
+      `source=` the same way `record_captured` does (only empty/failed rows are affected, never captured ones). CF-8
+      (`available_at`) and CF-2-paths also remain RED per this same audit run, matching the parent todo's own
+      already-tracked out-of-scope items.
+
+- [x] ✅ [DATA] P2. **DONE 2026-08-01 (slot 6, data_engineering) — root-cause writer fix shipped + backfilled +
+      independently re-verified GREEN.** Root cause found in `market_tick_data_service/live/manifest_recorder.py`:
+      `MTDSShardManifestRecorder.record_captured` already derived `source` via `source_string_for(pipeline_mode)`, but
+      `record_empty`/`record_failed`/`record_zero_rows` never did — the writer's own asset_group auto-stamp never fires
+      here because a venue's live capture source can differ from its batch source (e.g. DERIBIT batch=tardis,
+      live=deribit), making every affected venue a multi-source cell. Fixed all 3 methods to thread
+      `source = source_string_for(pipeline_mode) or ""`, matching `record_captured`'s pattern exactly; 3 new regression
+      tests added (`test_live_manifest_recorder.py`) proving each method now derives `source` correctly.
+      `market-tick-data-service@c2ae82e0`, `quality-gates.sh` green, shipped via quickmerge, verified on origin.
+      Backfilled the 13,399 existing blank rows via `populate_v9_index_columns_inplace.py --asset-group cefi --apply`
+      (the exact tool + snapshot-first/GATE-checked pattern the original 2026-07-29 CF-4 fix used) — dry-run confirmed
+      `source_filled: 13399` with every other counter at 0 (no side effects on CF-1/CF-3/CF-5/Era-B, all already GREEN),
+      then applied; GATE held (rows 9,662,116→9,662,116, captured 4,135,169→4,135,169 exactly preserved). Independently
+      re-verified via a fresh `cf_manifest_audit.py` run against the live manifest post-apply: CF-4 GREEN
+      (`source=9,662,116/9,662,116 (100.0%)`), alongside CF-1/CF-3/CF-5/Era-B — matches + closes the parent
+      CF-1/CF-4/CF-5/Era-B todo above. — **NEW 2026-07-31 (data_engineering) — cefi CF-4 (source column) has REGRESSED
+      to 2026-07-29 fix.** Fresh `cf_manifest_audit.py` run against `market-data-tick-cefi-prd-central-element-323112`
+      found 13,399/9,662,116 blank-`source` rows (0.1%) — all `capture_status ∈ {empty_confirmed, attempted_failed}`
+      (never `captured`), dated 2026-06-21→2026-08-01 (live, `written_at` max = today), venues DERIBIT (6,361)/ASTER
+      (2,287)/HYPERLIQUID (1,994)/BINANCE-FUTURES (1,562)/OKX-FUTURES (831)/KRAKEN-FUTURES (363). This is NEW ongoing
+      drift, not a residual of the original ~54%/3.9M-row gap the 2026-07-29 fix closed (that fix's own evidence claimed
+      "source blank=0" at the time). Diagnose the writer's `record_expected_empty`/`record_failed` path in
+      `market-tick-data-service` (likely candidate: `orchestrator.py`'s empty/failed-recording call sites don't thread
+      `source=` the same way `record_captured` does — only empty/failed rows are affected, captured rows are clean) and
+      fix at the root so new empty/failed rows stop landing blank; then either backfill the 13,399 existing blank rows
+      (mirroring the original CF-4 fix's `record_captured(source=...)` backfill pattern, deriving source from
+      `{mode}_{source}` pipeline_mode or the venue→source map) or confirm they self-heal via the next consolidator pass.
+      Source: found during the Era-B split-off todo above's fresh audit re-verification. Done when: a fresh
+      `cf_manifest_audit.py` re-run shows cefi's CF-4 GREEN (or the residual is explicitly re-classified as expected and
+      excluded), and the root-cause writer fix ships with a regression test proving new empty/failed rows carry
+      `source=`.
 
 - [x] ✅ [INFRA] P1. **DONE 2026-07-26 (slot-7) — all 3 items closed, evidence in the Progress Log below + the source
       issue doc (now `status: resolved`).** Close the 3 residual items on
@@ -584,6 +684,21 @@ drift_direction: advance-code
       with an explicit note that the Round-1 UAC workflow has not yet landed.
 
 ## Progress Log
+
+- **2026-07-31 (data_engineering, `cross_cutting_satellite_ao_dispatch_batch1-017`) — cefi's Era-B split-off todo CLOSED
+  without writing code: fresh re-verification found the premise stale (Era-B already GREEN on live prod, no physical
+  relabel needed).** Before building a migrator against a live-prod bucket touching ~491k objects, re-derived the actual
+  current state from first principles rather than trusting the carried-forward figure — live manifest query + a direct
+  GCS `list_blobs` probe + running `cf_manifest_audit.py`'s actual `_check_era_b()` all agreed:
+  `data_type ∈ {options_chain, futures_chain}` rows = 0 on the live cefi manifest, and the `options_chain/` physical
+  path is empty in every sampled day. The "491,146 objects" number this todo's own text carried forward was a stale
+  conflation (likely the 2026-07-29 `populate_v9_index_columns_inplace.py --apply` full-index rewrite already normalized
+  these rows' `data_type` column as a side effect, without that session crediting Era-B explicitly). Full evidence trail
+  on the split-off todo. **Found + tracked as a fresh todo, not fixed inline (adjacent, out of this todo's Era-B-only
+  scope)**: the same audit run surfaced a NEW regression — cefi's CF-4 (source column) is RED again (13,399 blank rows,
+  all dated 2026-06-21→today, never present in the 2026-07-29 fix's "source blank=0" snapshot). Filed as its own
+  `- [ ] [DATA] P2` todo above rather than left as prose, per the HARD RULE. No code shipped this session (a
+  negative/stale-premise finding, not a build) — only plan-doc updates.
 
 - **2026-07-26 (slot-7) — DONE, all 3 items closed.** Worked the
   `datapoint_validation_results_bucket_missing_2026_07_21.md` 3-item close-out todo (source issue doc flipped to
@@ -625,36 +740,36 @@ drift_direction: advance-code
   honest-coverage rollup (`source_date=2026-07-28`) — the exact shipped endpoint, no reimplementation. **Per-cluster
   classification** (◆ = already attributed to a live owning plan/issue/ruling, ✚ = new, filed this session):
 
-  | AG         | Axis             | Value(s)                                                                           | Disposition                                                                                                           |
-  | ---------- | ---------------- | ---------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
-  | defi       | venues           | BLAZESTAKE, HYPERLIQUID                                                            | ◆ `defi_venue_phase_live_definition_contradiction_2026_07_22.md` (phase=="pipeline" grain)                            |
-  | defi       | venues           | ARBITRUM/AURORA/AVALANCHE/BASE/BSC/ETHEREUM/LINEA/OPTIMISM/POLYGON (9)             | ✚ `defi_cefi_venue_chain_axis_contamination_2026_07_28.md`                                                            |
-  | defi       | venues           | BITFINEX/BITGET/BYBIT/KRAKEN/OKX (5)                                               | ✚ `defi_cefi_venue_chain_axis_contamination_2026_07_28.md`                                                            |
-  | defi       | data_types       | dex_pools, dex_swaps, rate_indices                                                 | ◆ `master_data_canonicalisation_migration_catalogue_2026_06_07.md`                                                    |
-  | defi       | data_types       | perp_daily_ctx, perp_mark_price                                                    | ◆ `defi_perp_daily_ctx_manifest_gap_reader_risk_2026_07_22.md`                                                        |
-  | defi       | data_types       | dex_pool_fees                                                                      | ◆ `defi_dedicated_bucket_shared_migration_2026_07_13.md`                                                              |
-  | defi       | chains           | HYPERLIQUID                                                                        | ◆ (cross-refs the venues row above)                                                                                   |
-  | defi       | chains           | FUTURES                                                                            | ✚ `defi_cefi_venue_chain_axis_contamination_2026_07_28.md`                                                            |
-  | cefi       | instrument_types | spot                                                                               | ◆ `master_data_canonicalisation_migration_catalogue_2026_06_07.md` (uppercase migration)                              |
-  | cefi       | chains           | FUTURES                                                                            | ✚ `defi_cefi_venue_chain_axis_contamination_2026_07_28.md`                                                            |
-  | tradfi     | venues           | BARCHART                                                                           | ◆ operator ruling 2026-07-20 (quarantine-with-tracking)                                                               |
-  | tradfi     | venues           | YAHOO_FINANCE                                                                      | ✚ `tradfi_distinct_values_net_new_clusters_2026_07_28.md`                                                             |
-  | tradfi     | instrument_types | FUTURES                                                                            | ◆ `master_data_canonicalisation_migration_catalogue_2026_06_07.md` (case drift)                                       |
-  | tradfi     | instrument_types | UNKNOWN                                                                            | ◆ operator ruling 2026-07-18 (classify-or-quarantine)                                                                 |
-  | tradfi     | instrument_types | continuous_future                                                                  | ◆ `tradfi_mdps_build_continuous_mismatches_2_and_4_still_open_2026_07_26.md`                                          |
-  | tradfi     | instrument_types | UD                                                                                 | ✚ `tradfi_distinct_values_net_new_clusters_2026_07_28.md`                                                             |
-  | tradfi     | chains           | ESM0, ESM0_MIGRATED_20260418T131054Z                                               | ✚ `tradfi_distinct_values_net_new_clusters_2026_07_28.md`                                                             |
-  | prediction | instrument_types | prediction                                                                         | ◆ `prediction_phase_ab_residuals_2026_07_24.md` (line 278/338, actively-growing blank/malformed instrument_type todo) |
-  | prediction | data_types       | prediction_trades                                                                  | ◆ `prediction_phase_ab_residuals_2026_07_24.md` (line 539, POLYMARKET schema-extension migration)                     |
-  | sports     | venues           | BET888SPORT, LADBROKES, LADBROKES_UK, SPORT888                                     | ◆ `sports_consolidated_native_ao_extract_2026_07_25.md` (in-flight rename, line 739 follow-up still open)             |
-  | sports     | venues           | SMARKETS                                                                           | ◆ `sports_closeout_exchange_fixed_odds_fork_2026_07_25.md`                                                            |
-  | sports     | venues           | KALSHI                                                                             | ◆ `cross_ag_prediction_rows_bleed_into_sports_instruments_index_2026_07_20.md` (resolved, residual)                   |
-  | sports     | venues           | FOOTYSTATS                                                                         | ◆ `sports_consolidated_closeout_2026_07_19.md` (line 514/549, legacy bundle mislabel, open todo)                      |
-  | sports     | instrument_types | odds                                                                               | ◆ operator ruling 2026-07-17 (not-a-defect)                                                                           |
-  | sports     | instrument_types | exchange_odds, fixed_odds                                                          | ◆ `sports_closeout_exchange_fixed_odds_fork_2026_07_25.md`                                                            |
-  | sports     | instrument_types | ODDS                                                                               | ◆ `sports_consolidated_closeout_2026_07_19.md` (line 406, K1/K2 uppercase-revert P0)                                  |
-  | sports     | instrument_types | ASIAN_HANDICAP_\* (18), MATCH_ODDS, MATCH_ODDS_LAY, OVER_UNDER_\* (10), SPORT (30) | ✚ `sports_instrument_type_market_token_ssot_gap_2026_07_28.md`                                                        |
-  | sports     | data_types       | ODDS, ODDS_MOVEMENT, ODDS_SNAPSHOT, TRADES                                         | ◆ `sports_consolidated_closeout_2026_07_19.md` (line 406, same K1/K2 revert P0)                                       |
+  | AG         | Axis             | Value(s)                                                                           | Disposition                                                                                                                                     |
+  | ---------- | ---------------- | ---------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+  | defi       | venues           | BLAZESTAKE, HYPERLIQUID                                                            | ◆ `/plans/archive/2026_07/defi_venue_phase_live_definition_contradiction_2026_07_22.md` (phase=="pipeline" grain, RESOLVED+archived 2026-08-01) |
+  | defi       | venues           | ARBITRUM/AURORA/AVALANCHE/BASE/BSC/ETHEREUM/LINEA/OPTIMISM/POLYGON (9)             | ✚ `defi_cefi_venue_chain_axis_contamination_2026_07_28.md`                                                                                      |
+  | defi       | venues           | BITFINEX/BITGET/BYBIT/KRAKEN/OKX (5)                                               | ✚ `defi_cefi_venue_chain_axis_contamination_2026_07_28.md`                                                                                      |
+  | defi       | data_types       | dex_pools, dex_swaps, rate_indices                                                 | ◆ `master_data_canonicalisation_migration_catalogue_2026_06_07.md`                                                                              |
+  | defi       | data_types       | perp_daily_ctx, perp_mark_price                                                    | ◆ `defi_perp_daily_ctx_manifest_gap_reader_risk_2026_07_22.md`                                                                                  |
+  | defi       | data_types       | dex_pool_fees                                                                      | ◆ `defi_dedicated_bucket_shared_migration_2026_07_13.md`                                                                                        |
+  | defi       | chains           | HYPERLIQUID                                                                        | ◆ (cross-refs the venues row above)                                                                                                             |
+  | defi       | chains           | FUTURES                                                                            | ✚ `defi_cefi_venue_chain_axis_contamination_2026_07_28.md`                                                                                      |
+  | cefi       | instrument_types | spot                                                                               | ◆ `master_data_canonicalisation_migration_catalogue_2026_06_07.md` (uppercase migration)                                                        |
+  | cefi       | chains           | FUTURES                                                                            | ✚ `defi_cefi_venue_chain_axis_contamination_2026_07_28.md`                                                                                      |
+  | tradfi     | venues           | BARCHART                                                                           | ◆ operator ruling 2026-07-20 (quarantine-with-tracking)                                                                                         |
+  | tradfi     | venues           | YAHOO_FINANCE                                                                      | ✚ `tradfi_distinct_values_net_new_clusters_2026_07_28.md`                                                                                       |
+  | tradfi     | instrument_types | FUTURES                                                                            | ◆ `master_data_canonicalisation_migration_catalogue_2026_06_07.md` (case drift)                                                                 |
+  | tradfi     | instrument_types | UNKNOWN                                                                            | ◆ operator ruling 2026-07-18 (classify-or-quarantine)                                                                                           |
+  | tradfi     | instrument_types | continuous_future                                                                  | ◆ `tradfi_mdps_build_continuous_mismatches_2_and_4_still_open_2026_07_26.md`                                                                    |
+  | tradfi     | instrument_types | UD                                                                                 | ✚ `tradfi_distinct_values_net_new_clusters_2026_07_28.md`                                                                                       |
+  | tradfi     | chains           | ESM0, ESM0_MIGRATED_20260418T131054Z                                               | ✚ `tradfi_distinct_values_net_new_clusters_2026_07_28.md`                                                                                       |
+  | prediction | instrument_types | prediction                                                                         | ◆ `prediction_phase_ab_residuals_2026_07_24.md` (line 278/338, actively-growing blank/malformed instrument_type todo)                           |
+  | prediction | data_types       | prediction_trades                                                                  | ◆ `prediction_phase_ab_residuals_2026_07_24.md` (line 539, POLYMARKET schema-extension migration)                                               |
+  | sports     | venues           | BET888SPORT, LADBROKES, LADBROKES_UK, SPORT888                                     | ◆ `sports_consolidated_native_ao_extract_2026_07_25.md` (in-flight rename, line 739 follow-up still open)                                       |
+  | sports     | venues           | SMARKETS                                                                           | ◆ `sports_closeout_exchange_fixed_odds_fork_2026_07_25.md`                                                                                      |
+  | sports     | venues           | KALSHI                                                                             | ◆ `cross_ag_prediction_rows_bleed_into_sports_instruments_index_2026_07_20.md` (resolved, residual)                                             |
+  | sports     | venues           | FOOTYSTATS                                                                         | ◆ `sports_consolidated_closeout_2026_07_19.md` (line 514/549, legacy bundle mislabel, open todo)                                                |
+  | sports     | instrument_types | odds                                                                               | ◆ operator ruling 2026-07-17 (not-a-defect)                                                                                                     |
+  | sports     | instrument_types | exchange_odds, fixed_odds                                                          | ◆ `sports_closeout_exchange_fixed_odds_fork_2026_07_25.md`                                                                                      |
+  | sports     | instrument_types | ODDS                                                                               | ◆ `sports_consolidated_closeout_2026_07_19.md` (line 406, K1/K2 uppercase-revert P0)                                                            |
+  | sports     | instrument_types | ASIAN_HANDICAP_\* (18), MATCH_ODDS, MATCH_ODDS_LAY, OVER_UNDER_\* (10), SPORT (30) | ✚ `sports_instrument_type_market_token_ssot_gap_2026_07_28.md`                                                                                  |
+  | sports     | data_types       | ODDS, ODDS_MOVEMENT, ODDS_SNAPSHOT, TRADES                                         | ◆ `sports_consolidated_closeout_2026_07_19.md` (line 406, same K1/K2 revert P0)                                                                 |
 
   **Total: 81 non-canonical values, 51 already attributed to a live owning plan/issue/ruling, 30 newly attributed via 3
   fresh issue docs filed this session.** The sports spike (12 → 45 since 2026-07-25) is almost entirely the
@@ -743,14 +858,20 @@ drift_direction: advance-code
   table (line 825) and traced each of the 8 listed items against the current corpus state — every one is either already
   resolved/stale, or already actively claimed by an AG-specific (not cross-cutting) dispatch track, so none survives as
   genuinely-uncovered cross-cutting...
-- **`plans/active/issues/blocking_gcs_writes_on_event_loop_cross_asset_group_2026_07_18.md`**: GENUINE overlap found,
-  not a clean duplicate. `plans/active/defi_satellite_ao_dispatch_batch2_2026_07_26.md` (already-active, [SCRIPT] P1
+- **`/plans/active/issues/blocking_gcs_writes_on_event_loop_cross_asset_group_2026_07_18.md`**: GENUINE overlap found,
+  not a clean duplicate. `/plans/active/defi_satellite_ao_dispatch_batch2_2026_07_26.md` (already-active, [SCRIPT] P1
   'MTDS DeFi perf bundle') dispatches a concurrency+blocking-write fix that partially covers this doc's Open items 1 and
-  2, but via a DIFFERENT mechanism and for only a SUBSET of the...
-- **`plans/active/issues/manifest_reprocessing_generic_utility_2026_07_07.md`**: Not actually orphaned — the Phase-1
-  "zero hits" grep was a false negative caused by a stray space in the covering plan's own citation.
-  `plans/active/cross_cutting_consolidated_closeout_2026_07_25.md` Track 14 ("Scheduled-job reliability +
-  concurrency/OOM defects + manifest reprocessing tooling") lists this exact doc...
+  2, but via a DIFFERENT mechanism and for only a SUBSET of the... **✅ RESOLVED 2026-07-31** (corpus-wide
+  ownership-conflict sweep, operator ruling keep-the-more-complete-side): the batch2 item **shipped** (`mtds@ff1b5d51`,
+  2026-07-26) — it closed all of Open item 2 (dedicated `_defi_upload_executor.py`) plus item 1 for the two-handler
+  subset it claimed (`solana_defi_handler.py`, `dex_pools_handler.py`). Grep-verified today that those are still the
+  only two handlers using `ParallelPerSymbolRunner`, so the source doc remains the authoritative owner of the
+  **residual** eight handlers; its todo has been narrowed in place to exactly that residual, with the shipped half
+  cited. Nothing further is owed from this batch.
+- **`/plans/archive/issues/manifest_reprocessing_generic_utility_2026_07_07.md`** (archived 2026-07-30, all todos done):
+  Not actually orphaned — the Phase-1 "zero hits" grep was a false negative caused by a stray space in the covering
+  plan's own citation. `plans/active/cross_cutting_consolidated_closeout_2026_07_25.md` Track 14 ("Scheduled-job
+  reliability + concurrency/OOM defects + manifest reprocessing tooling") lists this exact doc...
 
 ## Deferred — operator decision needed (BLOCKED-OPERATOR-DECISION, not batchable)
 
@@ -799,7 +920,7 @@ drift_direction: advance-code
   "Open" carries exactly two unresolved items, both of which resolve to gates rather than a fresh batchable todo. (1)
   Stray empty bucket `market-data-tick-prediction-test-{pid}` (0 objects, created by the string-mangling smoke harness
   that instance #5 documents). The doc's own text is...
-- **`plans/active/issues/wsfeedconnector_phase35_gap_2026_07_06.md`**: Confirmed via direct read: the doc's sole open
+- **`plans/archive/issues/wsfeedconnector_phase35_gap_2026_07_06.md`**: Confirmed via direct read: the doc's sole open
   checkbox is the ICE WSFeedConnector build item (P1, CODE) - Databento supports ICE datasets but is BLOCKED-CREDENTIALS
   on the Real-Time key per the Databento connector docstring; once the credential arrives, ICE gets wired under the
   existing databento_tradfi_ws.py factory...
@@ -868,3 +989,12 @@ and slot-6's prior analysis (unchanged): CF-1/CF-3/CF-4/CF-5 are GREEN and live-
 has no independent action left — the only remaining piece (Era-B) now lives entirely under -017. Releasing via
 `/skip-current-task {"reason_code": "GATED"}` rather than duplicate slot 9's in-flight work. Next dispatch: flip this
 checkbox once -017 lands + a fresh `cf_manifest_audit.py` confirms cefi's Era-B GREEN.
+
+### 2026-07-31 (slot-10, data_engineering) — re-confirmed parent todo (-016) still GATED on the split-off migrator (-017)
+
+Picked up the parent CF-1/CF-4/CF-5/Era-B todo fresh via `/boot`. Checked live backlog state before any redundant
+re-audit: `cross_cutting_satellite_ao_dispatch_batch1-017` is `status: dispatched, dispatched_to: 11` (dispatched
+2026-07-31T23:37:38Z, `orphan: false`) — actively being worked. Nothing has changed since slot-12's 2026-07-29 check:
+CF-1/CF-3/CF-4/CF-5 remain GREEN, and the only remaining piece (Era-B) still lives entirely under -017's own build.
+Releasing via `/skip-current-task {"reason_code": "GATED"}` rather than duplicate slot 11's in-flight work. Next
+dispatch: flip this checkbox once -017 lands + a fresh `cf_manifest_audit.py` confirms cefi's Era-B GREEN.

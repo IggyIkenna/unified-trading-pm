@@ -64,6 +64,13 @@ source:
     "plans/active/issues/plan_line_cap_remediation_2026_07_23.md",
   ]
 drift_direction: advance-code
+context_scope:
+  [
+    /plans/epics/instruments_master.md,
+    /codex/05-infrastructure/vm-launcher-runbook.md,
+    /codex/05-infrastructure/manifest-consolidator-ssot.md,
+    /codex/02-data/mvp-scope-canonical.md,
+  ]
 ---
 
 # MTDS venue onboarding + ops-hardening residuals
@@ -555,10 +562,18 @@ Two genuine hits in this plan:
    scraper sources, tracked in sports_master DEFERRED-INDEFINITELY scraper set)." **`plans/epics/sports_master.md`** §
    "Scrapers DEFERRED-INDEFINITELY 2026-05-12 per operator" — this is the real, already-documented named successor: a
    formal 2026-05-12 operator ruling that these credentialed/blocked scraper sources are out of scope for the active
-   sports universe indefinitely (see also `plans/active/issues/wsfeedconnector_phase35_gap_2026_07_06.md` for the same
+   sports universe indefinitely (see also `plans/archive/issues/wsfeedconnector_phase35_gap_2026_07_06.md` for the same
    ruling applied to DRAFTKINGS/FANDUEL). Not a B0 gap for this plan.
 2. (line ~1724) "**DEFERRED** — the silent-worker watchdog (already a pending residual) is the systemic fix for the
    gas/sfi 'VM RUNNING but work-process silent' class." **Not yet identified** — no separate successor plan exists; this
    is tracked as this same plan's own open `- [ ]` [SCRIPT] P2 todo (line ~1724), Target repo: deployment-service. It
    remains this plan's responsibility until shipped; grepping `plans/active/` and `plans/epics/` found no other plan
    that has picked up the "silent-worker watchdog" item.
+
+- **na-eligibility-audit 2026-08-02** (re-confirms 2026-07-30; only change since = context-scout `context_scope`
+  frontmatter, body byte-identical): KEEP-NA, valid — open set spans credential-gated venue onboarding, a cross-plan
+  B0→B1→B2 dependency chain the operator sequenced 2026-06-18, and cost-gated backfill scope.
+
+## Progress Log
+
+- **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).

@@ -29,9 +29,9 @@ parent_epic: infrastructure_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
 source: >-
-  cefi_satellite_ao_dispatch_batch1-003 (`plans/active/cefi_satellite_ao_dispatch_batch1_2026_07_25.md`), which asked to
-  "verify MDPS candle-manifest faithfulness" on a sample day per `data_completion_cefi_2026_07_15.md`'s open sub-item.
-  FAIL verdict — filed here per the findings-closure hard rule.
+  cefi_satellite_ao_dispatch_batch1-003 (`plans/archive/2026_07/cefi_satellite_ao_dispatch_batch1_2026_07_25.md`), which
+  asked to "verify MDPS candle-manifest faithfulness" on a sample day per `data_completion_cefi_2026_07_15.md`'s open
+  sub-item. FAIL verdict — filed here per the findings-closure hard rule.
 execution_scope_note: read-only verification this session; the fix is the follow-up todo below.
 locked_by:
 locked_since:
@@ -45,7 +45,7 @@ depends_on: []
 > verification-methodology mistake, not a code defect (see "Root cause" below). The one genuine, still-open follow-up
 > (reconciling candle files orphaned by past OOM crashes before the fix landed) was extracted to its own tracked doc at
 > archival time so it doesn't get buried in a resolved issue:
-> `/plans/active/issues/mdps_cefi_candle_manifest_orphan_reconciliation_2026_07_26.md`.
+> `/plans/archive/issues/mdps_cefi_candle_manifest_orphan_reconciliation_2026_07_26.md`.
 
 # MDPS cefi candle-manifest emission: 0 rows, ever
 
@@ -187,7 +187,7 @@ real trace, not further manifest-query guessing):
 - [x] ✅ [DATA] P2. Reconcile the manifest for candle files orphaned by PAST OOM crashes (before the
       `market-data-processing-service@335e9cc` OOM fix landed). — EXTRACTED 2026-07-26 (cicd plan_health wall-clear) to
       its own tracked doc rather than left open inside this now-resolved doc:
-      `/plans/active/issues/mdps_cefi_candle_manifest_orphan_reconciliation_2026_07_26.md`.
+      `/plans/archive/issues/mdps_cefi_candle_manifest_orphan_reconciliation_2026_07_26.md`.
 
 ## Progress Log
 

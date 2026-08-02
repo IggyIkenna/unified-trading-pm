@@ -39,6 +39,13 @@ depends_on:
 assigned_role: data_engineering
 source:
 drift_direction: advance-code
+context_scope:
+  [
+    /plans/epics/defi_master.md,
+    /plans/archive/2026_07/defi_manifest_canonicalisation_2026_06_01.md,
+    /plans/archive/2026_07/master_to_live_defi_2026_05_23.md,
+    /codex/02-data/data-pipeline-correctness-hard-rule.md,
+  ]
 ---
 
 > **Provenance**: extracted 2026-06-20 from the inline `defi_master` epic body (§§ "Oracle prices + chain expansion" E2E
@@ -145,3 +152,7 @@ remaining lower-priority half.
 **Full-execution criterion** (per "Plans Run To Actual Completion" HARD RULE): the E2E batch, the per-handler coverage
 runs, the historical carry tracer, and the backfill-final-state checks all execute on real GCS data; the golden-swap
 fixtures are real on-chain `Swap` events, not synthetic.
+
+## Progress Log
+
+- **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).

@@ -20,7 +20,7 @@ stage: [meta]
 repos: [agent-orchestrator]
 scope: [engineer, admin]
 tags: [backlog, regen, id-collision, tooling-defect, dispatch]
-related: [/plans/active/issues/cefi_mtds_writer_raw_symbol_vs_canonical_eu_namespace_mismatch_2026_07_15.md]
+related: [/plans/archive/issues/cefi_mtds_writer_raw_symbol_vs_canonical_eu_namespace_mismatch_2026_07_15.md]
 created: 2026-07-15
 parent_epic: agent_operating_framework_master
 assigned_vm: planning
@@ -47,7 +47,7 @@ the new checkbox can be assigned the SAME id suffix the completed checkbox used 
 not reset on reuse: it retained the completed task's `status: "done"`, `dispatched_to`, and `done_sha`, even though the
 row's `title`/`brief` now describe the brand-new, never-worked checkbox.
 
-Concretely, in `plans/active/issues/cefi_mtds_writer_raw_symbol_vs_canonical_eu_namespace_mismatch_2026_07_15.md`:
+Concretely, in `plans/archive/issues/cefi_mtds_writer_raw_symbol_vs_canonical_eu_namespace_mismatch_2026_07_15.md`:
 
 - Checkbox 1 ("Fix venue_fetch.py...") → task id `...-004`, completed by slot-11, `done_sha=5d44a197`.
 - I appended a 4th checkbox ("Confirm a fresh MTDS deployment tarball exists...") after the 3rd.

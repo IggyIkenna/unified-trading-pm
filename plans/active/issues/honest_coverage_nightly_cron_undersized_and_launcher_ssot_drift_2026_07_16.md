@@ -22,11 +22,11 @@ related:
 created: 2026-07-16
 last_updated: 2026-07-16
 parent_epic: deployment_and_user_management_master
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 priority: P1
 estimate_class: infra
-assigned_role: infra_engineer
+assigned_role: infra
 drift_direction: advance-code
 resolved_by:
 locked_by:
@@ -92,10 +92,28 @@ Also: the tarball publisher (`create-code-tarballs.sh`) publishes launchers to
       is per-instrument). The correct fix is a pyarrow row-group streaming aggregation OR a metadata-deferred primary
       read (secondaries are already re-read eu-only) — a real refactor with correctness surface + ~6 selection-test
       updates, not a one-line column drop.
-- [ ] [INFRA] P2. Republish the instruments-service tarball so the nightly writer has partial-stamping (a29e483) —
-      CURRENTLY BLOCKED: `create-code-tarballs.sh` rebuilds fleet-wide core tarballs (UAC 922M / UTL 1.2G / MTDS 1.3G)
-      and errors on the foreign uncommitted `terraform/services/features-service-sports/gcp/terraform.tfvars`. Do NOT
-      `--allow-dirty-tarball` (ships another worker's uncommitted state fleet-wide). Run from a clean tree.
+- [x] ✅ [INFRA] P2. **DONE 2026-07-31 (slot-10, infra craft)** — Republished the instruments-service tarball so the
+      nightly writer has partial-stamping (a29e483). The previously-blocking foreign uncommitted
+      `terraform/services/features-service-sports/gcp/terraform.tfvars` was already committed upstream by the time this
+      ran (deployment-service tree confirmed byte-clean); ran
+      `bash scripts/vm/create-code-tarballs.sh --include     instruments-service` (no `--allow-dirty-tarball`) from
+      deployment-service. Verified via the uploaded manifest
+      (`gcloud storage cat gs://deployment-scripts-central-element-323112/code/instruments-service-code.manifest.json`):
+      `commit_sha: a875238da080a1f6132576f527c768ba2fb4cc38`, `git_status_clean: true`, uploaded 2026-07-31T13:10:41Z —
+      confirmed `a29e483` is an ancestor of the published commit (`git merge-base --is-ancestor a29e483 a875238da080`).
+      Also republished `unified-api-contracts-code.tar.gz` and `mtds-code.tar.gz` (both had unpushed/uncommitted-then-
+      resolved state ahead of the last publish); `deployment-service-code.tar.gz` was skipped this run (transient
+      `uv.lock` dirtiness from a `setup.sh` venv-bootstrap that was immediately discarded as unrelated churn) — no
+      functional impact on this todo, re-runnable anytime from a clean tree.
 - [ ] [INFRA] P3. Reconcile the launcher SSOT drift: make the tarball publisher maintain the `vm/` path the Cloud Run
       Job reads (or point the Job at `code/deployment-service/scripts/vm/`), and delete/merge the redundant
       `launch-honest-coverage-vm.sh` + `honest-coverage-daily-workflow.yaml` so ONE launcher is the SSOT.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30**: RECLASSIFY NA → planning — the 3 remaining todos are a specified refactor
+  (pyarrow row-group streaming aggregation, with the unsafe naive column-drop explicitly ruled out in-doc), a tarball
+  republish from a clean tree, and a launcher-SSOT reconcile. batch1 explicitly records this as a DIFFERENT bug from its
+  own item.
+- 2026-07-31 (slot-10, infra craft): Flipped the tarball-republish todo. See the flipped checkbox above for the full
+  evidence chain (manifest verification, ancestor check). 2 P2/P3 todos remain open for follow-up dispatch.

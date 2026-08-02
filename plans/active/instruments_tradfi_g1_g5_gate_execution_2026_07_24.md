@@ -54,6 +54,13 @@ source:
     "plan-hygiene split of instruments_foundation_completeness_2026_06_24.md, 2026-07-24 (operator-approved, see
     plans/active/issues/plan_line_cap_remediation_2026_07_23.md row #14)",
   ]
+context_scope:
+  [
+    /codex/02-data/instruments-foundation-and-catalogue-completeness.md,
+    /codex/02-data/tradfi-databento-sourcing-ssot.md,
+    /plans/active/instruments_foundation_phase0_cross_cutting_2026_07_24.md,
+    /plans/active/instruments_foundation_completeness_2026_06_24.md,
+  ]
 ---
 
 # Instruments Foundation — tradfi G1→G5 gate execution
@@ -164,13 +171,18 @@ status index across all 4 children (this one, Phase-0, cefi, and the defi/sports
       (shared Databento quota protection, not ES-specific), so launching ES_OPT now would either be refused by the lock
       or require `--force`, which the script itself warns is for "legitimate parallel investigation" only — did not
       force past someone else's live job. **Re-attempt once `tradfi-bf-fred-full-*` completes** (re-check via the same
-      `gcloud compute instances list` filter).
+      `gcloud compute instances list` filter). **CITATION (na-eligibility-audit 2026-08-02, tradfi tranche)**: this
+      item, combined with the manifest-verify item below, is already extracted verbatim as todo #2 in
+      `tradfi_satellite_ao_dispatch_batch6_2026_08_01.md` (`assigned_vm: planning`, `status: draft`, citing this doc by
+      name and live-reconfirming the singleton lock cleared as of 2026-08-01) — track there once that batch activates.
 - [ ] [DATA] P1. **Wire the ES_OPT post-launch manifest-verify into Phase-D gate tracking** (per the 2026-07-29 operator
       ruling above) — once the ES_OPT launch todo above completes, run the same manifest-count-only check used for ES
       futures (mirrors the NASDAQ/NYSE precedent, `data_completion_tradfi_2026_07_15.md`) scoped to venue=CME ×
       root∈{ES,EW,EW1,EW2,EW4,E1A,E2A,E3A,E4A,E5A,EOM} × data_type=ohlcv_1m, and record the result as a line item in
       `plans/active/tradfi_consolidated_closeout_2026_07_18.md`'s MVP-cell table, "S&P index options" row — so the
-      post-completion manifest-verify isn't missed. Done when: that row cites the live query + counts.
+      post-completion manifest-verify isn't missed. Done when: that row cites the live query + counts. **CITATION
+      (na-eligibility-audit 2026-08-02, tradfi tranche)**: combined with the ES_OPT launch item above into the same
+      `tradfi_satellite_ao_dispatch_batch6_2026_08_01.md` todo #2 extraction — see that citation for detail.
 - [x] [DATA] P1. ✅ **Yahoo FX / Treasuries / DXY instruments — universe COMPLETE.** Treasuries (all 5 tenors:
       US3M/US2Y/US5Y/US10Y/US30Y → ^IRX/2YY=F/^FVX/^TNX/^TYX) + DXY (DX-Y.NYB) were ALREADY enumerated in UAC
       `YAHOO_INDICES`. Gap was FX (only KRW/USD) → added the **10 G10 FX majors** (EUR/GBP/JPY/AUD/CAD/CHF/NZD crosses +
@@ -516,7 +528,12 @@ status index across all 4 children (this one, Phase-0, cefi, and the defi/sports
       the L0 16y window, sharded; verify per-dataset manifest coverage (captured + honest-absence); confirm equity cells
       re-routed to DBEQ.BASIC and CFE/VX cells exist. **EXECUTE UNDER M-1** (`path_to_100pct_backfill_mtds_is`, which
       owns MTDS market-data backfill-to-100% and already ran the Databento OHLCV pass 2026-06-19) — gated on the IS CME
-      catalog backfill above. Listed here only as the cross-link. (MIGRATED FROM: same.)
+      catalog backfill above. Listed here only as the cross-link. (MIGRATED FROM: same.) **CITATION
+      (na-eligibility-audit 2026-08-02, tradfi tranche)**: confirmed live —
+      `data_completion_to_100_all_ag_2026_06_21.md` lines 112-116 show this identical tradfi 3-dataset batch (GLBX via
+      CME-b + DBEQ.BASIC + CFE/XCBF) checked `[x]` DONE (`deployment-service@f243eb4`, 17 VMs RUNNING,
+      `VM_TASK=mtds-backfill` confirmed on all) — no independent action owned by this doc; this checkbox is a stale
+      cross-link only.
 - [x] ✅ [SCRIPT] P1. **instruments-service — post tradfi-v9 close-out, tombstone dropped Databento instruments.** Run
       `reconcile_manifest_after_entity_change.py --mode remove --asset-group tradfi` for the dropped ICE roots
       (BRN/G/DX, softs CT/CC/KC/SB/OJ; datasets IFEU.IMPACT/IFUS.IMPACT) → `REMOVED_ENTITY_TOMBSTONE` (dry-run → audit
@@ -588,3 +605,32 @@ status index across all 4 children (this one, Phase-0, cefi, and the defi/sports
 | --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---- | -------- | ------------------------------------------------------- |
 | 1   | **NEW FINDING (2026-07-26)**: full CME instrument-definitions re-fetch for `2020-01-01`→`2026-06-18` (~2,368 days), captured under the pre-lockdown narrower universe (EC\* event contracts + DBEQ.BASIC consolidation absent) — sample-verified (2 dates re-fetched, both confirm the gap: instrument_count jumps from ~15-18K/day pre-lockdown to ~74-95K/day post). This is a real backfill campaign, not a "small sample" task — needs its own dedicated plan/VM launch, not attempted here. | IS   | P2       | Nothing (scoping only; needs a dedicated backfill plan) |
 | 2   | 2 anomalous Sundays (`2024-06-02`, `2024-10-06`) in the CME instrument-definitions manifest hard-fail with `RuntimeError: URDI returned zero records` instead of writing an honest `empty_confirmed` row like the other 363 weekends — a minor adapter-level inconsistency (99.92% floor coverage otherwise), needs investigation into why these 2 specific dates diverge.                                                                                                                       | IS   | P3       | Nothing (low-priority, non-blocking)                    |
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30** (tradfi tranche): **KEEP-NA, valid.** All 8 open todos read end-to-end (7 top-
+  level + 1 nested under the G1 checklist). Three are genuinely gated and keep the doc NA: G1 retirement is "OPERATOR-
+  CONFIRM before purge", the surviving ICE-futures half of the BLOCKED-CREDENTIALS finding needs a paid ICE/OPRA
+  subscription the operator already declined once (2026-06-18 ruling), and the optional ICE-Databento parquet cleanup is
+  an operator-gated GCS delete. Two items ARE bounded and were operator-ruled 2026-07-29 (run the ES CME ohlcv_1s/1m
+  manifest-count check; launch the ES_OPT backfill via `launch-tradfi-backfill-vm.sh --root-symbol ES_OPT`) — real
+  AO-eligible content a whole-doc flip cannot reach in isolation. Flagged for a future `/ag-closeout- audit` carve-out
+  rather than reclassified.
+
+- **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).
+- **na-eligibility-audit 2026-08-02** (tradfi tranche, dispatch agt-6397c9): **KEEP-NA, MIXED — 3 citation touch-ups
+  applied, 0 fresh RECLASSIFY candidates.** 7 open `- [ ]` checkboxes re-read end-to-end via an independent sub-agent
+  classification (count dropped 8→7 since the 2026-07-30 marker — the ES CME manifest-count-check item flipped `[x]` in
+  the interim, expected corpus drift). 4 items stay genuinely operator/credential-gated (G1 retirement purge, ICE
+  BLOCKED-CREDENTIALS on the cited 2026-06-18 ruling, the optional GCS parquet cleanup, and the top-level Gated-Phase-2
+  rollup). The 2 items the 2026-07-30 marker flagged as "bounded/AO-eligible, deferred to a future carve-out" have since
+  materialized — `tradfi_satellite_ao_dispatch_batch6_2026_08_01.md` (created 2026-08-01, one day before this audit)
+  extracted both (the ES_OPT launch + its manifest-verify wiring, combined into todo #2) verbatim citing this doc as
+  Source; added citation notes at both sites (lines ~155, ~175) pointing to that extraction rather than reclassifying
+  this doc directly. Also tightened the M-1 cross-link (line ~527) to cite the specific already-DONE lines in
+  `data_completion_to_100_all_ag_2026_06_21.md` (112-116) instead of a bare pointer. Cross-reference: the G1 retirement
+  item (line ~340) is the exact trigger `uac_per_venue_seed_fallback_removal_deferred_2026_07_26.md` (cefi-owned,
+  carries an unresolved CONTESTED cefi-vs-defi verdict) cites as its own revisit condition — since G1 retirement remains
+  genuinely open here, that cross-tranche gate correctly stays unfired; no action needed on this doc for that reason. No
+  fresh RECLASSIFY candidates this pass (the 2 that would have are already covered by the drafted batch6). `assigned_vm`
+  unchanged.

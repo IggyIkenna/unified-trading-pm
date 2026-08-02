@@ -31,6 +31,14 @@ superseded_by:
 depends_on:
 source: [data_completion_to_100_all_ag_2026_06_21 (M-1) — split 2026-07-15, plan-reconcile §8 operator ruling A]
 drift_direction: advance-code
+context_scope:
+  [
+    /plans/active/data_completion_to_100_all_ag_2026_06_21.md,
+    /codex/02-data/availability-manifest-and-data-status.md,
+    /codex/02-data/per-asset-group-bucket-layouts.md,
+    /codex/02-data/pipeline-mode-partition.md,
+    market-tick-data-service/market_tick_data_service/scripts/rebuild_prediction_manifest.py,
+  ]
 ---
 
 # Data completion to 100% — Prediction
@@ -113,18 +121,14 @@ drift_direction: advance-code
       cross-cutting G1-ENUM SSOT, not prediction). **(MIGRATED FROM:
       `prediction_manifest_canonicalisation_2026_06_01.md`, 2026-07-13 per MTDS consolidation ruling.)**
 
-- [ ] [UAC] P3. **FINDING — new `grain_for_instrument_type('prediction','prediction_market')` returns `leaf` (slot-5
-      verify 2026-06-07).** Correct for the INSTRUMENT axis (prediction markets are per-market leaves; no
-      options_chain/futures_chain underlying-bundle), and **INERT today** — prediction's enumerator/catalogue do NOT
-      consume `grain_for_instrument_type`; they drive cqg enumeration via the per-row `instr.data_type` grain-binding
-      (the G1-ENUM reference). **Latent trap**: prediction's MANIFEST/atom grain is the cqg BUNDLE
-      (`prediction_canonical_question_group`), NOT a per-market leaf — so IF a future refactor unifies the grain
-      mechanisms and treats `grain_for_instrument_type` as THE enumeration-grain SSOT for prediction, it would over-fan
-      per-market → the exact false-`expected_unattempted` pollution G1-ENUM prevents. Reconcile then (prediction needs a
-      cqg-bundle grain value OR the unified path must preserve the data_type binding). Owner: the G1-ENUM bundle-grain
-      SSOT (`proper_instrument_catalogue_lifecycle_rollup_2026_06_04` / coordinator G1-ENUM). Repo:
-      unified-api-contracts. parent_epic: manifest_master. **Not owed now (HOLD; inert).** **(MIGRATED FROM:
-      `prediction_manifest_canonicalisation_2026_06_01.md`, 2026-07-13 per MTDS consolidation ruling.)**
+- [x] [UAC] P3. **CLOSED 2026-07-30 (na-eligibility-audit, prediction tranche) — EXACT DUPLICATE of the item directly
+      above, no work dropped.** This checkbox was a verbatim second copy of the
+      `grain_for_instrument_type('prediction','prediction_market')` finding (its text is a strict subset of the
+      preceding item's — identical through "Not owed now (HOLD; inert)", minus that item's extra "and NOT a deferred
+      fix" paragraph). Both were introduced by the same 2026-07-13 MTDS-consolidation migration from
+      `prediction_manifest_canonicalisation_2026_06_01.md`, which folded the finding in twice. Closing the duplicate
+      only — the surviving copy above still carries the full finding, its HOLD status, and its G1-ENUM owner, so the
+      tracked work is unchanged and nothing becomes untracked by this close.
 
 ### 2026-07-13 — Plan A `canonical_question_group` OBJECT-LAYER migration — combined design (supersedes the C0/E-checklist copy-walk above for the _object shape_ question; the copy-walk itself already ran)
 
@@ -350,15 +354,15 @@ range never overlaps a still-in-flight per-market-only day).
       writer-fix-first, re-audit when input C-GREEN + first batch runs). Home: this plan § C. **(MIGRATED FROM:
       `downstream_services_manifest_canonicalisation_2026_06_01.md`, 2026-07-13 per MTDS consolidation ruling.)**
 
-- [ ] [CODE] P1. **FLAG 3 (bucket-SSOT, deployment-api) — DECIDED (operator 2026-06-02): env-tier the `*-store` buckets,
-      `-prd` initial.** `commentary/pipeline_uat.py:167/181/195/211` (+ `deployment_api_config.py:547`
-      `ml-configs-store`) hardcode no-env `instruments-store`/`features-store`/`ml-store`/`execution-store` (NOT in
-      cloud-providers.yaml). These buckets ARE in scope for env-tiering → `# CORRECT-LOCAL` markers come off; route
-      through `resolve_bucket_name(kind=…, env=…)` (resolves to `-prd` initially). Prereq: bucket-SSOT owner registers
-      the env-tiered `*-store` names (prd/stg/dev) in cloud-providers.yaml (`bucket_name_ssot…`). prd-store data
-      migrates to `-prd` in the initial migration; no-env buckets become legacy → deleted post-cutover. Coordinate with
-      the active deployment-api agent. **(MIGRATED FROM: `downstream_services_manifest_canonicalisation_2026_06_01.md`,
-      2026-07-13 per MTDS consolidation ruling.)**
+- [x] [CODE] P1. **CLOSED 2026-07-30 (na-eligibility-audit, prediction tranche) — EXACT DUPLICATE of the "FLAG-3
+      (deployment-api)" item earlier in this section, no work dropped.** Same operator decision (2026-06-02, env-tier
+      the `*-store` buckets, `-prd` initial), same call sites (`commentary/pipeline_uat.py:167/181/195/211` +
+      `deployment_api_config.py:547`), same prereq (bucket-SSOT owner registers the env-tiered names in
+      `cloud-providers.yaml`), same repo, and the same
+      `(MIGRATED FROM: downstream_services_manifest_canonicalisation_2026_06_01.md,     2026-07-13)` provenance — the
+      consolidation folded this one finding in twice under two spellings of its own name ("FLAG-3" and "FLAG 3").
+      Closing the duplicate only; the surviving copy above still carries the full work item, so nothing becomes
+      untracked by this close.
 
 - [ ] [CODE] P2. **FLAG 2 (DEFI scope → slot-2 / bucket_name_ssot): `_BUCKET_CATEGORY_OVERRIDES`**
       (data_status_service.py:2902) hardcodes 6 DeFi sub-buckets
@@ -405,3 +409,14 @@ range never overlaps a still-in-flight per-market-only day).
       canonical-form section in its audit-instruction file goes GREEN. Hands C-GREEN to `bucket_name_ssot…` L6 for any
       downstream legacy buckets. **(MIGRATED FROM: `downstream_services_manifest_canonicalisation_2026_06_01.md`,
       2026-07-13 per MTDS consolidation ruling.)**
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30 (prediction tranche)**: KEEP-NA, valid (+2 stale duplicate items closed) — P0
+  cross-repo object-layer migration whose remaining work is a pre-migration writer drain, a registered-launcher VM walk,
+  and a gated prod-object delete; `/ag-closeout-audit` has independently re-triaged this doc's Phase-B CQG-bundle
+  migration to "0 AO-eligible, needs its own dedicated plan" across FOUR separate passes (batch1/2/3/4, re-confirmed by
+  batch6 2026-07-29). Not re-litigated. Two exact-duplicate checkboxes introduced by the 2026-07-13 MTDS-consolidation
+  migration were closed with evidence (the second `grain_for_instrument_type` copy and the second `FLAG 3`
+  deployment-api copy) — 23 open todos -> 21, no tracked work dropped.
+- **context-scout 2026-08-01**: populated/refreshed context_scope (5 entries).

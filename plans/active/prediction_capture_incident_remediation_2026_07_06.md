@@ -63,6 +63,13 @@ source:
   ]
 assigned_role: data_engineering
 drift_direction: advance-code
+context_scope:
+  [
+    /plans/epics/instruments_master.md,
+    /codex/05-infrastructure/manifest-consolidator-ssot.md,
+    /codex/04-architecture/instruments-service-as-ssot-for-mtds.md,
+    /codex/02-data/data-pipeline-correctness-hard-rule.md,
+  ]
 ---
 
 # Prediction-capture incident remediation
@@ -308,7 +315,9 @@ orchestrator-dispatched).
 
 ### Phase 6 — fix the Kalshi CQG-bucketing write-time bug (found by Phase 3's VERIFY, 2026-07-26)
 
-- [ ] [CODE] P1. Fix `instruments-service/instruments_service/engine/orchestrator/prediction.py:95`
+- [x] ✅ [CODE] P1. **DONE 2026-07-30 — `instruments-service@e0f7aaad` (via
+      `prediction_satellite_ao_dispatch_batch6_2026_07_29.md` todo 1).** Fix
+      `instruments-service/instruments_service/engine/orchestrator/prediction.py:95`
       (`_extract_prediction_canonical_group`): `ticker = str(row.get("instrument_key", "") or "")` passes the FULL
       `"KALSHI:PREDICTION_MARKET:{ticker}"` string into `classify_kalshi_to_canonical_group(ticker=...)` instead of the
       bare ticker, so every override/prefix-table lookup fails (they match against the string START) and 100% of Kalshi
@@ -320,7 +329,10 @@ orchestrator-dispatched).
       `venue=KALSHI/canonical_question_group=OTHER` parquet's rows through the fixed extraction yields the same ~30 real
       named-group split this VERIFY's diagnostic already measured client-side (30 groups, ~7,510/9,513 rows, not
       9,513/9,513 OTHER); a new unit test asserts `_extract_prediction_canonical_group` on a `KALSHI` row with a real
-      named-series ticker (e.g. `KXBTCD-...`) returns that group, not `OTHER`; `quality-gates.sh` green.
+      named-series ticker (e.g. `KXBTCD-...`) returns that group, not `OTHER`; `quality-gates.sh` green. **Verified**:
+      `tests/unit/test_prediction_canonical_group_shard.py::test_kalshi_composite_instrument_key_still_classifies_correctly`
+      asserts a `KXBTC-26MAR-90000`-style composite key now classifies to `BTC_PRICE_RANGE_DAILY`, not `OTHER`; 3/3
+      Kalshi CQG tests pass at HEAD.
 - [ ] [DATA] P2. Once the Phase 6 CODE fix ships + is verified live for ≥1 day, assess whether the historical
       `OTHER`-bucketed Kalshi rows (2026-07-12 onward, ~9,500/day, ~30 days) are worth a one-off backfill/reclassify
       pass into their correct CQG buckets, or whether forward-only correctness is sufficient (per
@@ -330,6 +342,14 @@ orchestrator-dispatched).
 ---
 
 ## Progress log
+
+- **na-eligibility-audit 2026-07-30 (prediction tranche)**: KEEP-NA, valid — 9 open, none dispatchable from here. 7 are
+  explicitly `[DESCOPED-NOT-MVP 2026-07-14]` under a dated operator ruling (Kalshi/Polymarket perps are not MVP, no prod
+  access); 1 is self-labelled "operator/architect call, not a mechanical todo" (the historical `OTHER`-bucket reclassify
+  assessment). The one genuinely bounded item — Phase 6's one-line `prediction.py:95` CQG-bucketing fix — is CONFLICT
+  under the shared conflict-check: `prediction_satellite_ao_dispatch_batch6_2026_07_29.md` todo 1 already claims it
+  verbatim as its headline P0. Not flipped; see this run's report for the escalation that batch6 is still
+  `status: draft`.
 
 - **2026-07-14 — Operator ruling: Kalshi/Polymarket perps NOT MVP (Workstream B descoped).** Operator (chat, main
   session): "Kalshi/Polymarket perps prod access — not part of MVP, nothing we can do, we can't get perps on those yet;
@@ -457,3 +477,11 @@ orchestrator-dispatched).
   work in this plan: Phase 6 (the CQG-bucketing write-time fix at `prediction.py:95` + its backfill-assessment
   follow-up) plus the 7 `[DESCOPED-NOT-MVP 2026-07-14]` perp-repoint items (Phases 1-4), which stay parked pending an
   operator ruling on perps prod access, not genuinely dispatchable.
+
+- **na-eligibility-audit 2026-07-30** (tranche=cefi, autonomous): KEEP-NA, valid - carries a DESCOPED-NOT-MVP item
+  explicitly "parked behind the access ruling", demo-credential provisioning, and research against a beta-gated
+  Polymarket perps API.
+
+## Progress Log
+
+- **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).

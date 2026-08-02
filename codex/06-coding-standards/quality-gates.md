@@ -1239,9 +1239,20 @@ other unstaged files, hooks modify the staged file, then prek tries to restore a
 
 **Solution — Formatter Conflict Resolution Protocol:**
 
+> **Never invoke a bare `npx prettier`/`prettier` command on this corpus.** An unpinned `npx prettier` resolves whatever
+> the local npm cache/registry gives it — proven to silently resolve to versions `<3.9.5`, which deterministically
+> corrupt markdown under this workspace's `proseWrap: always` (underscore identifiers rewritten as asterisks, e.g.
+> `asset_group` → `asset*group`). This has bitten the corpus twice: 2026-07-14
+> (`plans/archive/issues/prettier_emphasis_mangling_corpus_corruption_2026_07_14.md`) and 2026-08-01
+> (`plans/archive/issues/raw_npx_prettier_bypasses_version_guard_recurs_mangling_2026_08_01.md`). Always go through
+> `scripts/hooks/prettier-autostage.sh <file>` (version-guarded — prefers a local `>=3.9.5` binary, else a pinned
+> `npx -y prettier@3.9.5` fetch, else skips with a warning rather than risk corruption). If a manual pass is genuinely
+> needed outside that wrapper, pin explicitly (`npx -y prettier@3.9.5 --write <file>`) and run
+> `bash scripts/plan-hygiene/check_prettier_mangling.sh <file>` before staging.
+
 1. **Pre-format ALL formatters before `git add`:**
    ```bash
-   npx prettier --write <file>          # JSON, YAML, MD, etc.
+   bash scripts/hooks/prettier-autostage.sh <file>   # JSON, YAML, MD, etc. — version-guarded, never bare `npx prettier`
    .venv/bin/ruff format <file>         # Python only
    .venv/bin/ruff check <file> --fix    # Python only
    ```
@@ -1251,10 +1262,10 @@ other unstaged files, hooks modify the staged file, then prek tries to restore a
    git add <file>
    git commit -m "..."
    ```
-4. **For `.basedpyright-baseline.json`** — always run `npx prettier --write` AFTER `--writebaseline`, BEFORE `git add`:
+4. **For `.basedpyright-baseline.json`** — always run the prettier wrapper AFTER `--writebaseline`, BEFORE `git add`:
    ```bash
    .venv/bin/basedpyright <src>/ --baselinefile .basedpyright-baseline.json --writebaseline
-   npx prettier --write .basedpyright-baseline.json
+   bash scripts/hooks/prettier-autostage.sh .basedpyright-baseline.json
    git add .basedpyright-baseline.json
    git commit -m "..."
    ```
@@ -1894,11 +1905,11 @@ contains only an empty object), count = 0 and the gate passes.
 
 ### Pre-commit formatter note
 
-When writing a new baseline (during initial migration only), always run prettier immediately after:
+When writing a new baseline (during initial migration only), always run the prettier wrapper immediately after:
 
 ```bash
 .venv-workspace/bin/basedpyright <src>/ --baselinefile .basedpyright-baseline.json --writebaseline
-npx prettier --write .basedpyright-baseline.json
+bash scripts/hooks/prettier-autostage.sh .basedpyright-baseline.json
 git add .basedpyright-baseline.json
 ```
 
@@ -2950,6 +2961,19 @@ spot-check that the integration-test exclusion logic still holds).
 > venue credentials in CI). These tests are skipped, not excluded — they will run when credentials land per
 > `BLOCKED-CREDENTIALS` workflow.
 
+### PYTEST_UNIT_DIR fleet-coverage check — SHIPPED 2026-07-30
+
+The override pattern above is opt-in and easy to silently miss when a repo grows a new `tests/<family>/unit/` dir after
+its `PYTEST_UNIT_DIR` was last set (exactly the class of bug MTDS hit — see
+`plans/archive/issues/mtds_ungated_test_families_2026_07_17.md`, 35 real failures accumulated ungated over 13 days).
+PM's own `quality-gates.sh` wires in `scripts/quality_gates/check_pytest_unit_dir_coverage.py`
+(`unified-trading-pm@bf583ea3b`) as a new blocking post-gate: for every fleet repo, it resolves that repo's effective
+`PYTEST_UNIT_DIR` (literal assignment / self-discovering via `find ... -name unit` / the `tests/unit/` base default) and
+flags any `tests/<family>/unit/` directory with zero overlap with the resolved scope. Shrinking-ratchet baseline:
+`pytest_unit_dir_coverage_baseline.yaml`, seeded at the real fleet count when shipped (1 pre-existing gap,
+`execution-service`'s `tests/sports_execution/unit/`, not fixed by this checker's introduction). New repos/families must
+close any real gap the checker finds rather than widen the baseline.
+
 ---
 
 ## STEP 5.94 + 5.95 — grep-able-rule ratchets (fallback-imports · DTZ · TID251) — SHIPPED 2026-06-10
@@ -3001,13 +3025,16 @@ pytest tests/ -v  # Fix what fails
 
 ---
 
-## Proposed STEP 5.83+ Additions (PENDING OPERATOR APPROVAL)
+## Proposed STEP 5.86+ Additions (PENDING OPERATOR APPROVAL)
 
 > **Status**: PROPOSAL — doc-only. Each STEP below requires operator approval before being added to `base-service.sh`.
 > None of these are active enforcement today. Authored 2026-05-15 (slot 8). Approval mechanism: operator comments
-> `[approve-step-5.83]` / `[approve-step-5.84]` / etc. in ping file.
+> `[approve-step-5.86]` / `[approve-step-5.87]` / etc. in ping file. **Renumbered 2026-08-02** (docs-reconcile
+> self-consistency sweep): originally drafted as 5.83/5.84/5.85, but two of those numbers were independently claimed by
+> real shipped checks added after this proposal was authored (see the STEP cross-reference table above) — `grep`ing
+> "STEP 5.83" landed on two contradictory definitions. Renumbered into the open 5.86-5.100 range; no content change.
 
-### STEP 5.83: no-bare-noqa — `# noqa` suppressions must specify error code
+### STEP 5.86: no-bare-noqa — `# noqa` suppressions must specify error code
 
 **What it catches**: `# noqa` without an error code suppresses ALL ruff warnings on a line. This creates a permanent
 blind spot: future ruff rules that fire on the same line are silently suppressed. Current workspace has 1,376 `# noqa`
@@ -3038,7 +3065,7 @@ execution-service: 188, UTL: 163, strategy-service: 154). Total workspace effort
 
 ---
 
-### STEP 5.84: no-bare-exit — `sys.exit(1)` must be preceded by `log_event FAILED`
+### STEP 5.87: no-bare-exit — `sys.exit(1)` must be preceded by `log_event FAILED`
 
 **What it catches**: Services that exit with error code without emitting the required FAILED lifecycle event. This
 breaks STARTED/STOPPED/FAILED monitoring — the VM zombie watchdog sees the process die but no FAILED event was emitted,
@@ -3072,7 +3099,7 @@ feed into `sys.exit(run(...))` are excluded (STEP applies to service logic paths
 
 ---
 
-### STEP 5.85: no-print-in-source — `print()` calls banned in service source code
+### STEP 5.88: no-print-in-source — `print()` calls banned in service source code
 
 **What it catches**: `print()` statements in service source code (not tests, not scripts, not CLI) emit to stdout,
 bypassing the structured `log_event` system. These show up in container logs untagged, making correlation impossible and
@@ -3267,9 +3294,16 @@ it matters most there). `base-ui.sh` (TS repos) is out of scope (no pytest fan-o
 
 - **Green sentinel (`qg-repo-green-sentinel`) — SHIPPED, default ON.** Skips TESTS + TYPE CHECK when the working tree is
   **byte-identical** (conservative content hash: HEAD + working diff + untracked-minus-artifacts + gate scripts + tool
-  versions) to the last FULL green run; light codex/production checks still run. **Safe by construction:** no sentinel /
-  malformed hash / any content change → normal full run; only an exact 64-char match skips. `.qg_content_sentinel` is
-  separate from quickmerge's `.qg_last_passed_sha`. Escape: `QG_SENTINEL_DISABLE=true`.
+  versions + resolved `ENVIRONMENT`/`DEPLOYMENT_ENV` — added 2026-07-30, `qg_sentinel_environment_blind_2026_07_23.md`,
+  so a byte-identical tree verified under a different configuration never false-HITs) to the last FULL green run; light
+  codex/production checks still run. **Safe by construction:** no sentinel / malformed hash / any content change →
+  normal full run; only an exact 64-char match skips. `.qg_content_sentinel` is separate from quickmerge's
+  `.qg_last_passed_sha` (that one ALSO now binds `ENVIRONMENT`/`DEPLOYMENT_ENV`, as appended lines after the SHA — see
+  `/codex/08-workflows/ci-cd-flow.md` § "Two-Pass Workflow Model"). Both paths resolve `ENVIRONMENT` via the shared
+  `qg_resolve_environment()` (`scripts/quality-gates-base/qg-environment.sh`), sourced from `qg-common.sh` (every
+  base-*.sh tier) and from `quickmerge.sh` — the single source of truth that keeps a standalone `quality-gates.sh` run
+  and a quickmerge run from silently resolving different configs for the same branch. Escape:
+  `QG_SENTINEL_DISABLE=true`.
 - **Selective testing (`qg-selective-tests`) — AUDITED, NOT enabled (operator 2026-06-02).** Evaluated `pytest-testmon`
   / import-graph changed-files→affected-tests mapping. **Decision: keep running the FULL test suite** — not ready to
   bypass any test; a missed-test false-negative is strictly worse than slowness, and the green sentinel + governor

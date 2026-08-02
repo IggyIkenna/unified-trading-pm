@@ -16,7 +16,7 @@ stage: [data]
 repos: [unified-trading-library]
 scope: [engineer]
 tags: [cf-manifest-audit, utl, bug, data-audit-tooling]
-related: [/plans/active/issues/tradfi_mdps_build_continuous_mismatches_2_and_4_still_open_2026_07_26.md]
+related: [/plans/archive/issues/tradfi_mdps_build_continuous_mismatches_2_and_4_still_open_2026_07_26.md]
 created: 2026-07-26
 parent_epic: infrastructure_master
 priority: P2

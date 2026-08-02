@@ -40,6 +40,14 @@ execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
 last_updated: 2026-06-27
+context_scope:
+  [
+    /plans/archive/2026_06/cefi_hl_aster_batch_data_gaps_history_2026_06_22.md,
+    /plans/active/issues/cefi_universe_capture_rule_2026_06_23.md,
+    /plans/active/issues/coverage_floor_registries_no_cross_propagation_2026_07_17.md,
+    /codex/02-data/cefi-capture-universe.md,
+    /codex/05-infrastructure/manifest-consolidator-ssot.md,
+  ]
 ---
 
 # CeFi HL/ASTER batch data gaps — not 100%, with 3 diagnosed bugs
@@ -275,131 +283,13 @@ to today (a hardcoded date goes stale tomorrow).
 
   ### Scoping 2026-07-12 (operator-ordered pre-launch) — READ-ONLY breakdown before the Tardis paid backfill launch
 
-  Operator ruling 2026-07-12 ("Scope first"): before dispatching the MTDS-run todo above, produced a launch-decision
-  breakdown of the current live cefi manifest's `attempted_failed` population — **not** a re-statement of the 2026-06-21
-  775.9k snapshot cited in `cefi_tardis_historical_blocked_credentials_2026_06_21.md` (that count is stale; the manifest
-  has been purged/relaunched/re-shaped multiple times since — clip fixes, NOT_LISTED purge, catalogue full-universe
-  expansion, mvp-gate — per this doc's own Progress Log). Method: `read_availability_index` (UTL) against the live cefi
-  consolidated `_index` (bucket `market-data-tick-cefi-prd-central-element-323112`), MTDS `.venv`, read-only,
-  2026-07-12. HYPERLIQUID/ASTER (native, non-Tardis venues per the resolved billing-gate doc) excluded — everything else
-  on cefi routes through Tardis.
-
-  **Headline (measured, live index, 2026-07-12):**
-
-  | metric                                                                               |         count | share |
-  | ------------------------------------------------------------------------------------ | ------------: | ----: |
-  | Total cefi `attempted_failed` (all venues)                                           |     1,724,328 |  100% |
-  | Native-venue (HYPERLIQUID/ASTER) `attempted_failed` (out of scope)                   |         2,096 |  0.1% |
-  | **Tardis-attributable `attempted_failed` (this todo's population)**                  | **1,722,232** | 99.9% |
-  | ↳ under CANONICAL launcher venue names (`launch-cefi-sharded-backfill.sh` `VENUES=`) |     1,319,017 | 76.6% |
-  | ↳ under LEGACY/raw-Tardis-exchange-id venue tags (launcher will NOT target by name)  |       403,215 | 23.4% |
-  | ↳ `error_reason` contains `403` (see CRITICAL blocker below)                         |     1,291,049 | 74.9% |
-  | ↳ `error_reason` = `VENUE_FETCH_FAILED` (non-HTTP-coded adapter failures)            |       353,405 | 20.5% |
-
-  **Breakdown by venue × year** (Tardis-attributable `attempted_failed` cells; canonical launcher venues only —
-  legacy-tag venues broken out separately below):
-
-  | venue               |  2020 |  2021 |  2022 |  2023 |  2024 |  2025 |  2026 |         TOTAL |
-  | ------------------- | ----: | ----: | ----: | ----: | ----: | ----: | ----: | ------------: |
-  | DERIBIT             | 88794 | 88843 | 88654 | 89315 | 91357 | 91571 | 37716 |       576,288 |
-  | BINANCE-FUTURES     | 15005 | 28719 | 49532 | 54161 | 36195 |  6919 |   476 |       191,007 |
-  | BYBIT               |     4 |   691 | 44058 | 42481 | 11284 | 22146 | 48210 |       168,874 |
-  | BITFINEX-FUTURES    |     0 |   528 |  5484 | 11097 | 15120 | 17400 | 15264 |        64,893 |
-  | KRAKEN-FUTURES      |     0 |  4692 |  7941 | 18750 | 20400 |  8550 | 12315 |        72,648 |
-  | OKX-SWAP            |     0 |   789 |   497 |  1910 |   762 |   780 |   435 |         5,173 |
-  | BITGET-FUTURES      |     0 |     0 |     0 |     0 | 36400 | 41091 | 88388 |       165,879 |
-  | BINANCE-SPOT        |   170 |    66 |  2166 |  5143 |  4334 |  2377 |    14 |        14,270 |
-  | UPBIT               |     0 |     0 |  4404 |  9099 |  8856 |  7561 |  7167 |        37,087 |
-  | COINBASE-SPOT       |     6 |   756 |   898 |   588 |   542 |   299 |     5 |         3,094 |
-  | OKX-FUTURES         |     0 |     0 |     0 |     0 |   991 |  1361 |    47 |         2,399 |
-  | OKX-SPOT            |     0 |     1 |    30 |   186 |   577 |   300 |    35 |         1,129 |
-  | BITGET-SPOT         |     0 |     0 |     0 |     0 |   400 |  2300 |  4900 |         7,600 |
-  | KRAKEN-SPOT         |     0 |   100 |   800 |   600 |   500 |   200 |   700 |         2,900 |
-  | BYBIT-SPOT          |     0 |   536 |   808 |   284 |   668 |   854 |   626 |         3,776 |
-  | BITFINEX-SPOT       |     0 |     0 |     0 |     0 |   500 |     0 |  1500 |         2,000 |
-  | **canonical TOTAL** |     — |     — |     — |     — |     — |     — |     — | **1,319,017** |
-
-  **Breakdown by data_type** (Tardis-attributable, all venues incl. legacy tags): `book_snapshot_5` 633,090 (36.8%) ·
-  `trades` 474,068 (27.5%) · `derivative_ticker` 278,881 (16.2%) · `options_chain` 113,589 (6.6%, ~all DERIBIT) ·
-  `futures_chain` 112,716 (6.5%, ~all DERIBIT) · `liquidations` 100,818 (5.9%) · blank/other 9,070.
-
-  **Legacy/non-canonical venue tags** (403,215 cells, 23.4% — `launch-cefi-sharded-backfill.sh`'s default `VENUES=` list
-  does **not** contain these spellings, so a plain relaunch will silently skip them): BITFINEX 103,860 · OKEX-SWAP
-  102,126 · BINANCE 78,855 · OKEX-FUTURES 50,160 · COINBASE 34,133 · CRYPTOFACILITIES 20,601 (= Kraken Futures'
-  pre-rebrand Tardis exchange id) · OKEX 5,327 · BITFINEX-DERIVATIVES 4,299 · KRAKEN 1,973 · BITGET 1,003 ·
-  COINBASE-INTERNATIONAL 673 · LIGHTER 108 · BYBIT-FUTURES 45 · bare `OKX` 14 · blank/`UNKNOWN` 38. These look like
-  pre-venue-canonicalization row survivors (raw Tardis exchange-id spellings vs the UAC canonical `VENUE`-suffixed
-  names) rather than a genuinely separate population — **flagged for a follow-up venue-tag reconciliation pass (are
-  these stale duplicates of already-migrated canonical rows, or orphaned captures needing their own re-fetch under the
-  legacy spelling?), not fixed here** (read-only scope).
-
-  **Distinct exchange-days**: 17,836 distinct `(venue, date)` pairs across the whole Tardis-attributable population
-  (13,784 of those under canonical venue tags). Tardis's own historical-replay billing model bills per
-  exchange-day-of-data typically (per the resolved billing-gate issue doc), so this is the unit the cost model (below)
-  would apply to if a per-unit price existed.
-
-  **Cost-model status: NO committed Tardis per-exchange-day/month pricing found.** Grepped
-  `/codex/02-data/tradfi-databento-sourcing-ssot.md` (TradFi/Databento-focused, no Tardis unit pricing) and the whole
-  `codex/` + `plans/` corpus for a Tardis $/exchange-day or $/venue-month figure — none exists. The one Tardis
-  $ figure
-  in the corpus, `/codex/14-customer-journeys/commercial-model/pricing-building-blocks.md:101` ("Tardis £0.67[k/mo]"), is
-  an internal blended COGS allocation for the commercial pricing model, **not** a per-exchange-day historical-replay
-  unit price — not usable for sizing this launch. The operator's 2026-07-12 ruling ("paid, unlimited access
-  confirmed") + the 2026-06-23 Progress Log entry above ("academic/unlimited plan... FLAT plan = no per-request
-  billing") both point to **no incremental Tardis $
-  per exchange-day for this launch** — the marginal cost driver is GCP VM compute (VM-hours), not a Tardis vendor fee.
-  State this explicitly rather than inventing a $/day number.
-
-  **⚠️ CRITICAL PRE-LAUNCH BLOCKER (found same-day, 2026-07-12): the 74.9% HTTP-403 share above is NOT genuine data
-  unavailability.** `plans/active/issues/tardis_concurrent_ip_lockout_2026_07_12.md` (P0, still OPEN) diagnosed —
-  live-reproduced via a direct `curl` returning Tardis error code 274 — that the shared academic-tier `tardis-api-key`
-  permits only **ONE concurrent IP** for the bulk-CSV dataset endpoint. `launch-cefi-sharded-backfill.sh` provisions
-  every VM with its own external IP and defaults `MAX_CONCURRENT=15` (operators have driven it to 20-80+ concurrent VMs
-  historically) — so in any concurrent wave, at most ONE VM's Tardis calls succeed; every other VM 403s for its entire
-  overlap. **Relaunching the fleet in the same parallel pattern used historically will very likely reproduce most of
-  this same 403 backlog, not resolve it.** Status of the fix (per that issue's todos): a DEFAULT-OFF, CAS-hardened
-  `TardisConcurrencyLease` GCS-lease serialization stopgap has SHIPPED (`market-tick-data-service@a9f1b52b`/`@7b8144ff`,
-  `unified-trading-library@b010c7ad`, `deployment-service@c33f681`) but is **NOT YET smoke-tested on a real VM or
-  enabled** (blocked todo: needs one real VM launch with `TARDIS_CONCURRENCY_LEASE=1` +
-  `TARDIS_CONCURRENCY_LEASE_BUCKET=<bucket>` to prove acquire/renew/release, then a 2-VM serialization proof). That
-  issue's own recommendation ranks **option (b) — ask Tardis to upgrade the academic-tier key to a multi-concurrent-IP
-  paid tier — as the actual unlock** (zero engineering, a Secret-Manager value swap) over option (a) the lease stopgap
-  (serialises waves ~20-80x slower) or (c) a centralized fetch proxy (2-3 dev-days, preserves full parallelism). **This
-  todo's dispatch should be gated on that P0 issue's resolution**, not run in parallel with it — a pre-fix launch wastes
-  VM-hours reproducing the same lockout.
-
-  **VM fleet / wall-clock estimate** (canonical-venue population only, using `launch-cefi-sharded-backfill.sh`'s
-  existing 1-VM-per-`(venue, year, heavy|light)` shard atom — same convention as every prior wave in this doc's Progress
-  Log): **127 shards** = 84 heavy (`trades`+`book_snapshot_5`) + 43 light
-  (`derivative_ticker`+`liquidations`+`futures_chain`[+`options_chain` for DERIBIT]) across the 16 canonical venues with
-  outstanding failed cells. Heaviest venues by shard count: BINANCE-FUTURES (14), DERIBIT (14), BYBIT (12),
-  BITFINEX-FUTURES (12), KRAKEN-FUTURES (12), OKX-SWAP (11). No committed per-shard wall-clock exists (this launcher's
-  own inline comments cite anecdotal single-shard runtimes ranging ~24-48h in earlier/lighter-volume eras up to
-  multi-day on 2022-2023 bull-market DERIBIT/BINANCE-FUTURES heavy shards — not a stable unit to multiply by 127 without
-  empirical re-measurement) — do **not** invent a fleet-wall-clock number; measure off the first smoke-tested wave
-  instead. **If the concurrency-lease stopgap is what ships** (vs the Tardis-plan upgrade), budget for the documented
-  ~20-80x wall-clock inflation on top of whatever per-shard baseline the smoke wave measures, since every shard's Tardis
-  fetches now serialize through one workspace-wide lease.
-
-  **Recommended launch shape (sequencing, not yet executed — read-only scope of this pass):**
-
-  1. **GATE 0 — resolve `tardis_concurrent_ip_lockout_2026_07_12.md` first.** Either land the Tardis multi-IP plan
-     upgrade (option b, preferred — zero eng, moots the wall-clock hit) or complete the lease's on-VM smoke-test +
-     enable it fleet-wide (option a stopgap). Do not dispatch the fleet before one of these is proven.
-  2. **First wave = smoke, not the full 127.** Launch a small `ONLY=` slice (1-2 shards per venue-tier: one high-volume
-     like DERIBIT or BINANCE-FUTURES, one low-volume like KRAKEN-SPOT) with whichever GATE-0 fix landed, to (a) measure
-     real per-shard wall-clock post-fix and (b) confirm the 403 rate actually drops before committing VM-hours to the
-     remaining ~120 shards.
-  3. **Fleet wave** — the remaining canonical-venue shards, SPOT (per the workspace HARD RULE), `MAX_CONCURRENT=15`
-     default (compute parallelism; Tardis-call serialization is handled by the lease/upgrade from GATE 0, not by capping
-     VM count), staged in the launcher's existing per-venue batching.
-  4. **Legacy-tag venues (403,215 cells, 23.4%) are OUT of this fleet's scope** — route to the follow-up
-     venue-tag-reconciliation todo above, not a blind relaunch under the wrong spelling.
-  5. **Re-verify via a fresh live-manifest query** (this same method) after the fleet wave completes, not by trusting
-     the pre-launch `attempted_failed` count as a genuine-gap census — per
-     `tardis_concurrent_ip_lockout_2026_07_12.md`'s own finding, historical `attempted_failed` counts across this
-     workspace's multi-week CeFi backfill history are dominated by the self-inflicted lockout, not real per-cell data
-     unavailability.
+  **Extracted 2026-07-31** (line-cap remediation — see
+  `/plans/archive/2026_06/cefi_hl_aster_batch_data_gaps_history_2026_06_22.md` § "Scoping 2026-07-12" for the full
+  pre-launch `attempted_failed` breakdown, cost-model note, and the CRITICAL Tardis 403/concurrent-IP-lockout finding).
+  Headline: 1,722,232 Tardis-attributable `attempted_failed` cells (99.9% of the cefi total) at scoping time, 74.9% of
+  which were the `tardis_concurrent_ip_lockout_2026_07_12.md` 403 lockout rather than genuine absence. The launch this
+  scoped has since run (Track-2 backfill, see Progress Log below) — this section is READ-ONLY history now, no open todo
+  depends on it.
 
 - [x] ✅ [MTDS] P2. **Empty/failed re-analysis** — market-tick-data-service@83fee813. Shipped
       `scripts/classify_cefi_catalogue_caused_gaps_2026_07_28.py` (+ 5-case unit test,
@@ -416,13 +306,15 @@ to today (a hardcoded date goes stale tomorrow).
       pass — no new VM launch needed for the "re-fetch" half of this todo. `--apply` itself is left for a follow-up
       operator-approved run (same Phase-C-style gate as the sibling script) — code shipped + QG green (7326 passed) is
       this todo's done_definition.
-- [ ] [SCRIPT] P3. **NICE-TO-HAVE** **deployment-service** — `create-code-tarballs.sh --asset-group X` hard-`exit`s on
-      the FIRST dirty service repo in the asset-group set (a peer's uncommitted WIP in e.g. features-service), aborting
-      the loop BEFORE the end-of-run upload → even the CLEAN core tarballs (mtds/UAC/UTL) never upload. Make the
-      dirty-tree check per-repo SKIP-with-warning (like the not-found SKIP at line ~247) instead of a global abort, OR
-      build+upload core first then services, so one peer's dirty leaf can't block a core-only deploy. Workaround used
-      2026-06-23: `--include instruments-service` (core-only set, no cefi service repos) to get the core tarballs up.
-      Provenance: Tardis CEX mvp-backfill dispatch — the `--asset-group CEFI` build aborted on dirty features-service.
+- [x] ✅ [SCRIPT] P3. **DONE 2026-07-31 (slot 9) — `deployment-service@76eff29`.** Made the dirty-tree check in
+      `create_tarball()` a per-repo SKIP-with-warning (mirrors the existing not-found SKIP) instead of `return 1` under
+      `set -euo pipefail`, which previously aborted the WHOLE script on the FIRST dirty repo — even already-built CLEAN
+      core tarballs (mtds/UAC/UTL) in `$TMP_DIR` never reached the end-of-run upload step. Added a
+      `_skipped_dirty_repos` counter + end-of-run WARNING summary listing skipped repo names so a dirty-skip stays
+      visible instead of silent. Verified via a scoped dry-run against a throwaway fake-repo workspace: with one dirty
+      extra repo (`instruments-service`), all 4 CORE tarballs built successfully, the dirty repo was SKIPPED (not
+      fatal), and the script reached the upload step with exit 0 — the prior behavior (hard abort before upload) is
+      fixed. QG green (217s, sentinel@76eff29).
 
 ---
 
@@ -557,10 +449,22 @@ Synthetic `DEPLOYMENT_FAILED` routed through the real notifier mirrors with the 
 
 ### Codex SSOT to update (follow-up)
 
-- [ ] [DOCS] P2. **unified-trading-pm** — update `/codex/05-infrastructure/deployment-observability.md` § "Slack parity"
-      to state the umbrella-driven channel split (LIVE→#uts-live-alerts, BATCH→#data-pipeline-alerts) + the emitter
-      umbrella-stamping contract (was: "DEPLOYMENT\_\* → #data-pipeline-alerts" only). Provenance: alerting routing
-      split shipped alerting-service@f94b3b5 + deployment-service@94dfcfc 2026-06-23.
+- [x] ✅ [DOCS] P2. **unified-trading-pm** — update `/codex/05-infrastructure/deployment-observability.md` § "Slack
+      parity" to state the umbrella-driven channel split (LIVE→#uts-live-alerts, BATCH→#data-pipeline-alerts) + the
+      emitter umbrella-stamping contract (was: "DEPLOYMENT\_\* → #data-pipeline-alerts" only). Provenance: alerting
+      routing split shipped alerting-service@f94b3b5 + deployment-service@94dfcfc 2026-06-23.
+
+      **SHIPPED 2026-07-30 (slot 8) — `unified-trading-pm@66fa926d5`.** Executed via
+                                                                                                                  `plans/active/cefi_satellite_ao_dispatch_batch3_2026_07_26.md`'s owning todo (per the SUPERSEDED note below,
+                                                                                                                  which this entry preserves for history): both cited shas verified reachable on `origin/live-defi-rollout`, the
+                                                                                                                  live routing code read directly and confirmed to match the claimed split, codex corrected. Both checkboxes
+                                                                                                                  flipped citing the same commit, per that todo's own instruction.
+
+                                                                                                                  **SUPERSEDED (2026-07-30, conflict-check `blank_assigned_vm_dispatch_classification_gap_2026_07_26.md`-005)** —
+                                                                                                                              this exact fix is already carried as its own todo (`[DOCS] P2. Correct the codex Slack-parity contract...`) in the
+                                                                                                                              currently-active `plans/active/cefi_satellite_ao_dispatch_batch3_2026_07_26.md` (which explicitly cites THIS
+                                                                                                                              doc/line as its source). Do not dispatch this copy — that plan owns execution; when it ships, flip both
+                                                                                                                              checkboxes citing the same commit.
 
 ## UAC capture-universe expansion — survivorship-bias-free (operator 2026-06-23)
 
@@ -803,13 +707,24 @@ scheduler.
 - [x] ✅ [INFRA] P1. **consolidator reverted (2026-06-24)** — args back to incremental (`--force` removed), memory
       32Gi→**16Gi/cpu4** (lean=cheap), scheduler resumed `*/5` ENABLED. Steady-state: `*/5` incremental merges new lean
       shards onto the lean 137MB canonical (O(changed-shards) memory, no OOM).
-- [ ] [INFRA] P2. **deployment-service** — deadman/consolidator-watchdog AUTO-ESCALATE safety net (operator idea
-      2026-06-24): on the OOM signature (terminal exit 137/signal-9 in the persisted run.log AND index mtime did not
-      advance), re-run the consolidator job at the next tier of a machine-size REGISTRY
-      `[16Gi/cpu4→32Gi/cpu8→64Gi/cpu16]` via `gcloud run jobs update --memory --cpu` then execute, capped at the top
-      tier (top-tier OOM → page, no infinite loop). Mirrors VM `lifecycle_class` + autonomous-recovery-matrix
-      `auto_cooldown`. NOTE: this is the safety net UNDER the bounded-canonical design (the purge), NOT a substitute —
-      Cloud Run "autoscaling" is parallelism not RAM, so it can't bump per-execution memory.
+- [x] ✅ [INFRA] P2. **ACTUATOR SHIPPED (2026-07-31, slot-4) — deployment-service@4ca051e**: extended the existing
+      `RelaunchConsolidator` (`scripts/recovery/relaunch_consolidator.py`, the wired `CONSOLIDATOR_DOWN` auto_recover
+      actuator) — `relaunch(ag, oom=True)` climbs `_MACHINE_TIER_REGISTRY [16Gi/cpu4→32Gi/cpu8→64Gi/cpu16]` one rung per
+      call (`run_v2.JobsClient` get/mutate-limits/update — the SDK equivalent of
+      `gcloud run jobs update     --memory --cpu`), persisted per-AG sticky state; already-top-rung → PAGES
+      (`CONSOLIDATOR_DOWN` CRITICAL) instead of relaunch-looping. `_recover_consolidator` now threads
+      `finding.details["oom"]` into `relaunch(oom=...)` (back-compat: unset key ⇒ unchanged plain-relaunch path). 10
+      new/updated tests, 57/57 pass; QG GREEN. **Scoped to the actuator, not a live trigger**: Cloud Run Jobs have no
+      persisted `run.log` (VM-only convention, confirmed via grep) — the real OOM signal is the Job's Execution API,
+      whose exact `conditions[]` message shape needs verifying against a real OOM'd execution before wiring an
+      auto-detector (risk: a guessed heuristic either never fires or false-pages). Follow-up detector todo below.
+  - [ ] [INFRA] P3. **deployment-service** — automatic OOM-signature detector so the actuator above fires without a
+        human passing `--oom`: new watcher (sibling to `consolidator_scheduler_watcher.py`) reads each per-AG
+        `manifest-consolidator-{ag}` Job's latest `run_v2.ExecutionsClient` execution, classifies `failed_count>0` as
+        OOM via `conditions[].message`/`.reason` (VERIFY the real text via `gcloud run jobs executions describe` on a
+        deliberately-undersized job first), ANDs it with the index blob mtime not advancing (`_gcs.blob_age_minutes`),
+        then emits `PipelineFinding(event=CONSOLIDATOR_DOWN, tier=AUTO_RECOVER,     details={"oom":True,...})`; wire
+        into `cli.py`'s sweep, gated on `MissTracker` like the sibling watcher.
 
 ## CEFI data-completion RESIDUAL follow-ups (operator dispatch 2026-06-24, /autonomous)
 
@@ -932,14 +847,22 @@ absence is only the 1.27M `SOURCE_RETURNED_ZERO`.
       deleted the 103-VM `085745` backfill fleet (live `mtds-live-cefi-*` + `instr-backfill-cefi-*` VMs PRESERVED) →
       purged → relaunched `launch-cefi-sharded-backfill.sh` as run-id `20260624-211958` on the fixed tarball (resume
       idempotent, no NOT_LISTED re-seed). Verifying T+10min capturing-without-re-seeding.
-- [ ] [SCRIPT] P2. **Cleanup inert pre-listing plumbing** (mtds `orchestrator/sentinels.py` + `__init__.py`): with the
-      source retired, `catalog_list_not_yet_listed_cefi` always returns empty → `cefi_pre_listing_by_venue` is always
-      `{}` and the `record_expected_empty(EXPECTED_INSTRUMENT_NOT_LISTED)` write loop never fires. The threaded param +
-      write block are now dead — remove them across the ~6 call sites for a clean break (non-urgent; harmless while
-      inert).
-- [ ] [SCRIPT] P2. **Real zero-capture gaps (separate from the optic)**: `perp_funding`=0 captured (core to carry
-      archetype), `futures_chain`=223, `options_chain`=3, `ohlcv_1m`=738 — these aren't Tardis-tick types; diagnose
-      their source/handler.
+- [x] ✅ [SCRIPT] P2. **DONE 2026-07-30 (slot 4) — `market-tick-data-service@fc64e092`.** Removed the dead
+      `cefi_pre_listing_by_venue` thread + write block from `sentinel_catalogs.py`/`orchestrator/__init__.py`/
+      `sentinels.py` (`_load_sentinel_catalogs` now returns a 3-tuple); updated the 4 tests referencing removed symbols.
+      64/64 tests green, full `quality-gates.sh` clean.
+- [x] ✅ [SCRIPT] P2. **DONE 2026-07-30 (slot 4) — VERIFIED-STALE, no code fix needed.** `perp_funding`=0 is BY DESIGN
+      (see PARTIAL-STALE note below). The `futures_chain`=223/`options_chain`=3/`ohlcv_1m`=738 counts are **stale,
+      pre-hard-cutover measurements**: re-queried the LIVE prod cefi manifest today (`read_availability_index` UTL, MTDS
+      `.venv`, read-only; 9,531,264 rows) and found **0 rows of any status** for
+      `(HYPERLIQUID|ASTER) × {futures_chain, options_chain, ohlcv_1m}` — confirmed twice independently. The 223/3/738
+      figures were from the 2026-06-24 19:36 UTC pre-cutover snapshot (that fleet was deleted + relaunched same day —
+      see paragraph above). Every registry (`unified-api-contracts` `DATA_TYPE_CAPABILITY_REGISTRY` /
+      `expected_coverage._CEFI` / `market_data_categories`) and launcher
+      (`launch-cefi-hl-aster-historical-backfill.sh:106-111`, `onchain_perp_batch_handler.py:105`) agrees these 3
+      data_types are structurally out-of-scope for HL/ASTER (perp-only DEXes; `ohlcv_1m` is on-chain-CLOB-only, e.g.
+      LIGHTER-ZKSYNC/EXTENDED-STARKNET, never HL/ASTER) and none currently request them. No reclass needed — rows no
+      longer exist to reclassify. Self-resolved by the 2026-06-24 cutover + dedicated-launcher split.
 
 ## CeFi attempted_failed + expected_unattempted audit (operator 2026-06-24, post-purge index 5.02M rows)
 
@@ -971,10 +894,44 @@ bad-request, needs a look). Failing instruments are IN-UNIVERSE (e.g. `KRAKEN-FU
       `quality-gates.sh` green. Self-heals on the next nightly `lifecycle-catalogue-regen-cefi` run. **(b) SPLIT to the
       follow-up todo below** — `OKEX`/`ATOM`/`USDC-TRY` need real investigation, not a same-shape fix. ~2k
       `In CSV column #` decode errors remain a separate Tardis-CSV parse class.
-- [ ] [SCRIPT] P2. **Follow-up — CeFi legacy-venue-spelling fold + USDC-TRY quote-bypass check** (split 2026-07-27,
-      investigation-only): (1) `CEFI_VENUE_FOLD` (`unified-api-contracts/.../market_data_categories.py:549-567`, folds
-      `OKEX`/`CRYPTOFACILITIES`/etc.) is wired into an audit script + UI panel only, never the rollup — confirm a raw
-      legacy `venue` reaches `catalog.parquet` first; trace `instrument_id` derivation too — a post-hoc fold could
-      collide with an already-canonical row. (2) Check `_resolve_base_quote()` (tardis/parsing.py) against the real
-      `USDC-TRY` symbol — a failed split bypasses the quote-gate via an empty string, not a genuine leak. (3) **NOT a
-      bug**: `ATOM` in `CEFI_BASE_ASSET_UNIVERSE` is a RULED 2026-06-23 decision — no fix without a fresh ruling.
+- [x] ✅ [SCRIPT] P2. **RESOLVED — investigation-only, NO code fix needed (2026-07-31, slot-10)**. Both parts confirmed,
+      no bug found in either:
+
+      **(1) `CEFI_VENUE_FOLD` rollup wiring — CONFIRMED display/audit-only, no collision risk today.**
+                                                                                      `CEFI_VENUE_FOLD` (`unified-api-contracts/unified_api_contracts/registry/market_data_categories.py:611-629`) has
+                                                                                      exactly two consumers repo-wide: `instruments-service/scripts/check_enumeration_completeness.py:43,163,188` (the
+                                                                                      Honest Coverage v2 Layer-1 completeness **audit**) and `deployment-api/deployment_api/routes/data_status/
+                                                                                      _distinct_values.py:140-206` (via `CEFI_VENUE_ACCEPTED_NONCANONICAL_ALIASES`, suppressing dialect spellings from
+                                                                                      "non-canonical drift" badging on the distinct-values **UI panel**). `instruments-service/scripts/
+                                                                                      build_instrument_catalogue.py` (the script that writes `catalog.parquet`) has NO import of `CEFI_VENUE_FOLD` —
+                                                                                      a raw legacy venue spelling (`OKEX`, `CRYPTOFACILITIES`, etc.) reaches `catalog.parquet` UNFOLDED, exactly as
+                                                                                      suspected. `instrument_id` is derived by `unified_api_contracts/internal/reference/canonical_id_builder.py:735-750`
+                                                                                      (`build_instrument_id(venue, instrument_type, symbol, ...)` → `VENUE:INSTRUMENT_TYPE:SYMBOL`, raw venue embedded
+                                                                                      verbatim) — so a legacy-spelled row's `instrument_id` (`OKEX:PERPETUAL:BTC-USD`) is byte-distinct from the
+                                                                                      canonical row's (`OKX:PERPETUAL:BTC-USD`); no collision exists in current code because nothing re-derives
+                                                                                      `instrument_id` from a folded venue. The collision risk the todo flagged is a real hazard **only if** a future
+                                                                                      consumer applies the fold to `venue` AND re-derives `instrument_id` before joining against
+                                                                                      `_aggregate_key()`/`_canonical_instrument_id()` (`build_instrument_catalogue.py:1173-1221`) — noted here as a
+                                                                                      guardrail for any future write-time use of the fold, not an open defect today.
+
+                                                                                      **(2) `USDC-TRY` quote-bypass — CONFIRMED fail-safe, but NOT via the hypothesized empty-string mechanism.**
+                                                                                      `_resolve_base_quote()` lives in **instruments-service** `reference_data/adapters/cefi/tardis/parsing.py:307-415`
+                                                                                      (not MTDS — MTDS's `tardis_symbol_parsing.py` only comments on IS's function). `TRY` is already a recognized
+                                                                                      quote currency in `_QUOTE_CURRENCIES` (`parsing.py:81-148`, line 115) — the split on `USDC-TRY` (or concatenated
+                                                                                      `USDCTRY`) resolves correctly to `("USDC", "TRY")`; **quote never comes back empty**, so the hypothesized
+                                                                                      failed-split/empty-string bypass does not occur. The row is instead rejected by the ordinary, intended branch of
+                                                                                      `_passes_asset_filter()` (`parsing.py:581`): `TRY` is not in `CEFI_ACCEPTED_QUOTE_ASSETS = {USDT, USDC, USD}`
+                                                                                      (`unified-api-contracts/unified_api_contracts/registry/cefi_instrument_universe.py:132-134`) or any per-venue
+                                                                                      extension, so the non-empty-quote-not-accepted branch fires and the row is dropped — a working, designed gate,
+                                                                                      not an accidental fallback. (A separate empty-quote/`instrument_type` skip guard also exists at `adapter.py:
+                                                                                      791-804` as an unrelated second line of defense, for genuine parse failures — not triggered here.) Verdict:
+                                                                                      fail-safe, not a leak — confirmed, with the correct mechanism now documented in case this resurfaces.
+
+                                                                                      **(3) `ATOM`** — untouched, per the doc's own note this needs a fresh operator ruling, not a fix; no action taken.
+
+                                                                                      No code changes required in any repo — both investigations resolved with existing behavior already correct.
+                                                                                      This doc update is the full deliverable.
+
+## Progress Log
+
+- **context-scout 2026-08-01**: populated context_scope (5 entries).

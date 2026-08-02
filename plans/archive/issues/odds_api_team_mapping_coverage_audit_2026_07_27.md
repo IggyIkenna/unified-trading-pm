@@ -20,7 +20,7 @@ scope: [engineer]
 tags: [sports, odds, team-mapping, coverage-audit, data-correctness]
 related:
   [
-    /plans/active/sports_satellite_ao_dispatch_batch3_2026_07_25.md,
+    /plans/archive/2026_07/sports_satellite_ao_dispatch_batch3_2026_07_25.md,
     /plans/archive/issues/sports_derived_features_per_league_layout_unread_by_ml_loader_2026_07_14.md,
   ]
 created: 2026-07-27

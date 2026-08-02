@@ -127,6 +127,6 @@ def test_pagination_capped_signals_truncation(self):
 
 ## Reference
 
-- Plan: `plans/active/data_pipeline_acquisition_remediation_2026_06_03.md` § Phase 1 (dex_swaps truncation)
+- Plan: `plans/archive/2026_06/data_pipeline_acquisition_remediation_2026_06_03.md` § Phase 1 (dex_swaps truncation)
 - SSOT: `codex/02-data/availability-manifest-and-data-status.md` § Honest-absence capture signals
 - Related: `cursor-rules/architecture/phantom-captured-row-handling.mdc` (reader-side honest-absence)

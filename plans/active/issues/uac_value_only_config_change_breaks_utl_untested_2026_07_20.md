@@ -43,6 +43,8 @@ source:
 locked_by: live-defi-rollout
 locked_since: 2026-05-21
 resolved_by:
+context_scope:
+  [/plans/active/issues/tradfi_canonical_path_migration_design_2026_07_19.md, /plans/epics/infrastructure_master.md]
 ---
 
 # UAC value-only config changes break UTL with no gate able to see it
@@ -233,3 +235,33 @@ nothing: it is architecturally cached against exactly the input that changed.
   gate cache (highest blast radius) → needs operator direction before implementation. The adversarial verification
   earned its cost: it prevented shipping a fleet-wedging (false-break) or actively-worse (unmasked false-green) change
   under autonomous momentum.
+- **context-scout 2026-08-01**: populated/refreshed context_scope (2 entries).
+
+## na-eligibility-audit verdict
+
+**na-eligibility-audit 2026-07-30** (tranche `ci`, autonomous): KEEP-NA, valid — the head todo [A] (make the v2
+content-sentinel dependency-content-aware) states in its own text "**operator sign-off required**, not an autonomous
+ship" because it is the core gate's cache with the highest blast radius in the fleet; [B] is explicitly "blocked on
+[A]"; and the two remaining items are struck-through as SUPERSEDED and DO-NOT respectively. Adversarial verification
+recorded in this doc already refuted the originally-planned fix on three counts.
+
+**na-eligibility-audit 2026-08-02** (tranche `ci`, autonomous): **CONFIRMS KEEP-NA, valid — with one parked item for the
+operator.** Only change since the last marker is the 2026-08-01 context-scout `context_scope` backfill (metadata). All 6
+open checkboxes re-read individually (completeness check: `grep -cE '^- \[ \]'` = 6 = verdicts reported). Four are
+unambiguously NA: [A] states "**operator sign-off required**, not an autonomous ship" in its own text; [B] is "blocked
+on [A]"; the two `~~struck-through~~` P2s are deliberately-unchecked **ruled-out** items (SUPERSEDED and DO-NOT), not
+pending work — this is the exact "decommissioned item left unchecked" trap the skill names, so they must NOT be read as
+open scope.
+
+**PARKED — `BLOCKED-OPERATOR-DECISION` (extraction of two bounded trailing items from a locked doc):** the remaining two
+`[DEVOPS] P2` items look bounded and worker-determinable on their own merits — (i) fix the invalid `sit_retry_cap`
+`wall_type` in `sit-debounce-trigger.yml` (the doc itself measures that it "can never succeed", so the fix target is a
+checkable fact), and (ii) correct the `full-workspace-sit` messaging so `SIT_VALIDATED` cannot be read as "the resolved
+cross-repo combination was executed". Both are independent of the operator-gated [A]/[B] chain. They were NOT extracted
+autonomously because this doc carries `locked_by: live-defi-rollout` (since 2026-05-21) and its P1 head is
+operator-gated. Options: **A [WORKER REC]** — extract just these two into the next `ci_satellite_ao_dispatch_batchN`
+plan, leaving this doc NA and locked (mirrors the batch5 pattern already used for the cloudbuild rollout todo); **B** —
+leave both here until [A] is decided, accepting they stay unshipped; **C** — `[unlock-plan]` this doc and flip the whole
+thing to `assigned_vm: planning` (NOT recommended — [A] is explicitly not an autonomous ship). Note item (i) embeds a
+second clause ("and decide whether a red SIT should escalate to a background worker") that is a genuine design call and
+should stay NA regardless of which option is picked.

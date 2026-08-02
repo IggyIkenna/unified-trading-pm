@@ -54,6 +54,12 @@ locked_by:
 locked_since:
 assigned_vm: planning
 resolved_by:
+context_scope:
+  [
+    /codex/02-data/tradfi-databento-sourcing-ssot.md,
+    /codex/02-data/four-surface-reconciliation-procedure.md,
+    /plans/active/tradfi_consolidated_closeout_2026_07_18.md,
+  ]
 ---
 
 # TradFi — live source-mislabeling + FX manifest instrument_id defects
@@ -211,6 +217,17 @@ not lost; it is simply not discoverable through the manifest's own key.
 
 ## Progress Log
 
+- **2026-07-30 (rulings-closeout pass, this session) — historical ICE/KRX/FX `ohlcv_24h` re-stamp EXECUTED + VERIFIED.**
+  Found the re-stamp script (`scripts/restamp_ice_krx_fx_ohlcv24h_databento_provenance_2026_07_30.py`, MTDS repo) + its
+  regression test already written earlier the same day but never run/shipped. Confirmed a fresh
+  `gcs_bucket_soft_delete_retention_seconds()` read = 604800s (≥ the §3a floor) on
+  `market-data-tick-tradfi-prd-central-element-323112` before proceeding — no operator sign-off needed per this doc's
+  own "Deferred work" table ruling. Ran regression tests (8 passed), `--dry-run` (1,141, matches the census exactly),
+  `--apply` (snapshot taken first, maintenance window paused/resumed cleanly, 1,141 rows re-stamped), then `--verify` (0
+  remaining, exit 0). Script + test deleted post-run per the script's own `Delete-when` lifecycle marker (fulfilled) and
+  the script-homes one-off convention — its job is done, nothing references it going forward. The FX `SPOT_PAIR`
+  `instrument_id` historical backfill todo below (the 6-step plan) is a SEPARATE, larger, not-yet-attempted item — NOT
+  touched this pass.
 - **2026-07-26 (slot-3) — Finding 1 ROOT-CAUSED + FIXED at the code level; historical re-stamp + Finding 2 still open.**
   Traced the write path: `market-tick-data-service`'s manifest-finalize call (`_write_shard_counts_to_manifest` →
   `_resolve_pipeline_mode_for_sentinel(..., source=state.source)`) reaches
@@ -240,11 +257,11 @@ not lost; it is simply not discoverable through the manifest's own key.
 
 ### Deferred work after 2026-07-26 (slot-3)
 
-| Item                                                                                    | State                                                                                                             | Blocked on                                                                                                                                                                                                                                                                                                                                                                                              |
-| --------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Re-stamp historical ICE/KRX/FX `ohlcv_24h` rows (4+12+802, snapshot-first)              | ✅ Census DONE 2026-07-26 (slot 2) — see below; APPLY re-tagged `[DATA]` 2026-07-28, no longer `[OPERATOR]`-gated | a FRESH `gcs_bucket_soft_delete_retention_seconds()` check on `market-data-tick-tradfi-prd-central-element-323112` at execution time (≥604800s qualifies per finding T / `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` §3a), then normal CAS-apply against the already-completed 1,141-row census with the existing snapshot — no operator sign-off needed once that fresh check is cited |
-| Finding 2 — FX `SPOT_PAIR` manifest `instrument_id` write-path fix + 4,310-row backfill | ✅ Write-path DONE 2026-07-26 (slot 2) — see below; historical backfill stays out of scope                        | nobody — backfill needs its own scoped design/apply plan                                                                                                                                                                                                                                                                                                                                                |
-| Confirm/rule out an actual Databento billing-guard gap for the pre-fix window           | Not done — needs Databento request-log access, not just code reading                                              | possibly operator (Databento account access)                                                                                                                                                                                                                                                                                                                                                            |
+| Item                                                                                    | State                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    | Blocked on                                               |
+| --------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------- |
+| Re-stamp historical ICE/KRX/FX `ohlcv_24h` rows (4+12+802, snapshot-first)              | ✅ **DONE 2026-07-30** — census DONE 2026-07-26 (slot 2); APPLY executed this session. Fresh `gcs_bucket_soft_delete_retention_seconds()` check confirmed 604800s (≥ the §3a floor) on `market-data-tick-tradfi-prd-central-element-323112` immediately before the run. `scripts/restamp_ice_krx_fx_ohlcv24h_databento_provenance_2026_07_30.py --apply`: snapshotted the consolidated index first (`gs://.../_index/snapshots/pre_ice_krx_fx_ohlcv24h_provenance_restamp_20260730T100057Z.parquet`), paused/resumed the `uts-prod-manifest-consolidator-market-data-tradfi-cron` maintenance window cleanly, re-stamped exactly 1,141 rows (matches the census). `--verify` confirms **0 remaining mis-stamped rows**, exit 0. Script + its regression test (8 passed) deleted post-run per its own `Delete-when` lifecycle marker (fulfilled) and the script-homes one-off convention. | none — closed                                            |
+| Finding 2 — FX `SPOT_PAIR` manifest `instrument_id` write-path fix + 4,310-row backfill | ✅ Write-path DONE 2026-07-26 (slot 2) — see below; historical backfill stays out of scope                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               | nobody — backfill needs its own scoped design/apply plan |
+| Confirm/rule out an actual Databento billing-guard gap for the pre-fix window           | Not done — needs Databento request-log access, not just code reading                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     | possibly operator (Databento account access)             |
 
 Recommended next: the historical re-stamp (bounded, mechanical, unblocks nothing else) before Finding 2 (a fresh
 investigation of similar depth to Finding 1's).
@@ -321,6 +338,8 @@ fresh `gcs_bucket_soft_delete_retention_seconds()` check, (2) snapshot the manif
 re-stamp script, (4) CAS-apply, (5) verify rows-in==rows-out/0 duplicate row_keys/100% `FX:SPOT_PAIR:` prefix, (6)
 resume the consolidator cron. The todo is already fully dispatchable in its current form — nothing further needs to be
 broken out of it.
+
+- **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).
 
 ## Todos
 

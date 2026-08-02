@@ -44,6 +44,13 @@ source: >-
   data_status_page_ux_and_canonicalisation_2026_07_16.md's P10-B section per
   plans/active/issues/plan_line_cap_remediation_2026_07_23.md row #10 (bucket c, clean-partition). The parent plan's own
   3 open P10-B todos (below) are moved here verbatim, unedited; only frontmatter + this orienting header are new.
+context_scope:
+  [
+    /plans/active/data_status_page_ux_and_canonicalisation_2026_07_16.md,
+    /plans/active/data_status_catalogue_true_source_phase2_2026_07_24.md,
+    /codex/02-data/sports-2020-06-data-floor.md,
+    /codex/02-data/honest-absence-downstream-handling.md,
+  ]
 ---
 
 # Sports fixtures browser — switch to the single-file catalogue source
@@ -95,3 +102,7 @@ Parent plan's P10-B (operator round-3, 2026-07-17) already shipped: `CATALOG_COL
   `FixturesBrowser.tsx` window note + `MAX_SPAN_DAYS=120` warning are now stale and should be relabeled/dropped) — it is
   not yet its own AO-dispatched todo anywhere; whoever picks up sports UI work next should add it. The `[DATA] P2`
   freshness-caveat todo also remains open (regen-cadence decision, unrelated to this backend change).
+- **na-eligibility-audit 2026-07-30**: KEEP-NA, valid (sports tranche) — the sole open `[DATA] P2` is an explicit
+  either/or design call ('confirm the regen cadence and EITHER accept + label it, OR keep a live-day overlay for today's
+  fixtures') — a judgment call wearing a todo's clothes, per the dispatch-scope eligibility bar
+- **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).

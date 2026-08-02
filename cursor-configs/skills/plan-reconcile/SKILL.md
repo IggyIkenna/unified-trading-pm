@@ -15,8 +15,8 @@ description:
   archive fully-done plans (verified, unlocked), flag near-complete plans (<=1 open todo) for consolidation, and leave
   the corpus canonical (prettier + run_hygiene_sweep.sh-green, within line-caps). Plan↔codex drift is in scope and
   plans→codex SSOT updates are applied ONLY after an explicit operator ruling. **Optionally topic-scoped** — invoke as
-  `/plan-reconcile [<tranche>]` across the same 9 tranches `/ag-closeout-audit` uses (`cefi`, `defi`, `tradfi`,
-  `prediction`, `sports`, `cross-cutting`, `ao`, `ci`, `infra`), or `all` (the default with no argument — preserves
+  `/plan-reconcile [<tranche>]` across the same 10 tranches `/ag-closeout-audit` uses (`cefi`, `defi`, `tradfi`,
+  `prediction`, `sports`, `cross-cutting`, `ao`, `ci`, `infra`, `ui`), or `all` (the default with no argument — preserves
   today's whole-corpus behavior exactly) for smaller, faster sharded runs a scheduled AO trigger can complete
   reliably. Trigger on /plan-reconcile [<tranche>], "reconcile the plans", "reconcile <tranche>", "plan contradiction
   audit", "check the plans for contradictions", "flip done-but-unchecked plan items", "archive done plans",
@@ -46,14 +46,18 @@ the doc should flip to `assigned_vm: planning` is not.
 
 **`all` (no argument) is the default and preserves today's exact whole-corpus behavior — nothing changes for an existing
 unscoped invocation.** Passing a specific tranche narrows the audited corpus for a smaller, faster run, using the SAME
-classification mechanism `/ag-closeout-audit` uses (see that skill's "9 tranches" section for the full mechanism —
-summarized here): the 5 AGs (`cefi`/`defi`/`tradfi`/`prediction`/`sports`) filter on `asset_group` directly;
-`cross-cutting` filters on `asset_group: cross-cutting` + the classification already baked into
-`cross_cutting_consolidated_closeout_2026_07_25.md`'s own Tracks; `ao`/`ci`/`infra` have no dedicated `asset_group`
-value (all 3 stay tagged `cross-cutting`) so their membership is exactly the Sources listed in
-`ao_consolidated_closeout_2026_07_25.md` / `ci_consolidated_closeout_2026_07_25.md` /
-`infra_consolidated_closeout_2026_07_25.md` respectively. The normative refs (`PLAN_FORMAT.md`, `task_template.md`,
-`INDEX.md`, `ACTIVE_INDEX.md`) and codex stay in scope for EVERY shard (they're corpus-wide policy, not tranche-owned).
+classification mechanism `/ag-closeout-audit` uses (see that skill's "10 tranches" section for the full mechanism —
+summarized here, corrected 2026-07-30 to match current reality): the 5 AGs
+(`cefi`/`defi`/`tradfi`/`prediction`/`sports`) filter on `asset_group` directly; `cross-cutting` filters on
+`asset_group: cross-cutting` + the classification already baked into
+`cross_cutting_consolidated_closeout_2026_07_25.md`'s own Tracks; **`ao`/`ci`/`infrastructure`/`ui` are now real
+dedicated `asset_group` enum values** (`ao`/`ci`/`infrastructure` since 2026-07-27, `ui` since 2026-07-30 — see
+`docspec.py`/`PLAN_FORMAT.md`/`doc-frontmatter-schema.md` §5) — filter on `asset_group` directly exactly like the 5 real
+AGs; `parent_epic` (`ao_consolidated_closeout_2026_07_25.md` / `ci_consolidated_closeout_2026_07_25.md` /
+`infra_consolidated_closeout_2026_07_25.md` / `ui_consolidated_closeout_2026_07_30.md`'s own Sources lists) is only a
+secondary hint for docs the tag doesn't yet cover, same caveat as `/ag-closeout-audit`. The normative refs
+(`PLAN_FORMAT.md`, `task_template.md`, `INDEX.md`, `ACTIVE_INDEX.md`) and codex stay in scope for EVERY shard (they're
+corpus-wide policy, not tranche-owned).
 
 **Why shard**: this corpus routinely runs 500+ active plans/issues — a full sweep is expensive enough that a
 scheduled/cron AO trigger benefits from a smaller, bounded-runtime shard instead of always paying for the whole corpus.
@@ -67,7 +71,7 @@ topic-scoped run genuinely cannot find it. Sharded runs are a good default for r
 needed to catch genuinely cross-tranche contradictions. Don't let sharding become the ONLY mode this skill ever runs in.
 
 **Archival caution in a topic-scoped run**: before archiving a doc that looks fully done within the current shard, grep
-the OTHER 8 tranches' consolidated-closeout docs (or their Sources lists) for a reference to it — a doc can be primary
+the OTHER 9 tranches' consolidated-closeout docs (or their Sources lists) for a reference to it — a doc can be primary
 to one tranche but still cross-referenced from another's Track content (the way this session's cross-cutting Tracks 2/13
 explicitly flag overlap with the cefi/defi closeouts). Archiving it without checking would silently orphan the other
 tranche's reference. When in doubt, leave it and note the cross-reference for a future `all` pass.
@@ -168,7 +172,10 @@ Flags are CANDIDATES, not findings — a "dangling" ref often resolves to `plans
   bare `related:` entry the 2026-07-23 migration left untouched; what the correct reference is when a doc has genuinely
   moved/been renamed/archived (the archival ritual's 6th step — grep every referrer, update each — is this skill's job
   to actually execute, not just check); and whether a dangling reference should be fixed (target existed, got lost) or
-  removed (the claim itself is stale). Backlog: `/plans/active/issues/reference_path_convention_2026_07_23.md`.
+  removed (the claim itself is stale). Backlog: `/plans/active/issues/reference_path_convention_2026_07_23.md`. **Caveat
+  (2026-08-02)**: this framing assumes the mechanical checker at least SURFACES the flag for the skill to adjudicate —
+  verified 2026-08-02 that for `check_reference_paths.py` specifically, its `--quiet`, ratchet-gated invocation here
+  often does not (see Phase 1 hunter 8, "Moved-doc referrer hunter", for the closing mechanism).
 - **Phase 5 (exit, HARD green-gate):** re-run it **with** regen (`--ci`) and require **0 hard failures** + `0 orphans`
   before the run may be called done (see Phase 5).
 
@@ -265,6 +272,37 @@ history; properly-bannered supersession (an UNbannered superseded doc that still
    on the SAME physical line, never across a blank line; (b) **internal self-consistency** — any stated
    rule/invariant/formula, re-derived against an example or formula the same doc shows elsewhere, must not contradict it
    or itself mid-sentence.
+8. **Moved-doc referrer hunter** — added 2026-08-02 (`issues/reference_path_convention_2026_07_23.md`'s "Confirm
+   `/plan-reconcile` catches a doc moving without its referrers being updated" todo, dispatched via
+   `infra_satellite_ao_dispatch_batch1_2026_07_26.md`), after determining the existing mechanism does NOT reliably catch
+   this class for the dominant referrer shape. Verified by reading the actual code, not assuming from this skill's own
+   prose: `check_reference_paths.py`'s existence check DOES scan every `/codex/...`/`/plans/...` reference ANYWHERE in
+   body text, not just frontmatter (`GOOD_REF_RE.finditer(text)` over the whole doc) — but two things blunt it in
+   practice. (a) `run_hygiene_sweep.sh` invokes it `--quiet` (its own line:
+   `run_check ... check_reference_paths.py --quiet`), which suppresses the itemized per-file violation list — only a
+   binary pass/fail per check reaches Phase 0's candidate set, never the actual dangling-ref lines, so Phase 1
+   mechanical adjudicators have nothing to adjudicate even when the gate is red. (b) it is a SHRINKING-RATCHET check
+   against a baseline with substantial slack (`reference_paths_baseline.yaml`; live-verified 2026-08-02: existence
+   baseline 901, live count 913 — already over, unrelated to any specific move) — a moderate single-move regression (the
+   cited incidents: 78/66/3 new dangling referrers each) can land entirely inside that slack without ever pushing the
+   corpus-wide total over the ratchet ceiling, especially if unrelated fixes elsewhere in the same window offset the
+   count. Net effect: for INLINE BODY-TEXT references (the dominant referrer shape — a doc archival/rename breaks
+   citations scattered through OTHER docs' prose, not just their `related:` frontmatter list), the existing mechanism
+   gives no per-move specificity and can silently miss a genuine regression, which is exactly what happened in all three
+   of the cited 2026-07-25 incidents — none were caught by a `/plan-reconcile` pass; all were found by a human/agent
+   noticing a broken link after the fact. (Frontmatter `related:`/`depends_on`/`supersedes` referrers ARE reliably
+   caught today — Phase 0's own throwaway inventory script computes those directly, ungated by any ratchet, as genuine
+   per-doc Phase-1 candidates every run; this hunter closes the remaining body-text gap, it does not duplicate that
+   coverage.) **Fix**: for every doc that moved/archived/renamed since the last reconcile run
+   (`git log --diff-filter=AR --name-status --since=<last-run-timestamp> -- plans/ codex/`), grep the FULL corpus body
+   text (not just frontmatter) for the OLD path/basename; any hit is a hard finding routed straight to the existing
+   Phase 4 auto-fix row ("Dangling ref where the target moved to archive/codex → Repoint the ref") — ungated by the
+   ratchet, since a specific tracked move's referrers are a deterministic, provable check (the old path is gone, the new
+   one exists, a grep hit names exactly which doc + line), not a preference call. Also re-run `check_reference_paths.py`
+   WITHOUT `--quiet` (or capture its stdout directly instead of piping through `run_hygiene_sweep.sh`'s summary) so its
+   itemized existence-violation list becomes a real Phase-1 candidate feed on every run, closing the residual gap for
+   dangling refs the git-log-diff pass structurally can't catch (e.g. a referrer added after its target was already
+   gone, so there's no "move" to diff against).
 
 ## Phase 2 — done-but-unchecked sweep
 
@@ -293,6 +331,32 @@ surfaces; evidence in descending strength — a flip requires at least one HARD 
 Flip format is the CLAUDE.md HARD RULE: `- [x] … — <repo>@<sha> + <one-line evidence>`, committed with the
 `docs(plans):` prefix (**not** `plan(...)` — hook-rejected). Half-done items: flip only the shipped half, annotate the
 rest `**DEFERRED**:` with why.
+
+### 4. ZERO-CHECKBOX docs — this skill's standing responsibility, all 10 tranches (added 2026-07-30)
+
+**This skill OWNS the zero-checkbox sweep.** A doc with no `- [ ]` and no `- [x]` at all has no surface for any of the
+three sweeps above — it is invisible to `check_todo_format.sh`, to `regen_backlog_from_plan.py`, to the near-complete /
+fully-done candidate computation in Phase 0, and to every orphan and NA audit that counts todos. It is the purest form
+of the false-progress class this skill exists to kill: real remaining work written as prose, with nothing mechanical
+able to see it. Named owner + named cadence, so it stops being a periodically-rediscovered one-off: **it runs as part of
+this skill's own periodic run, every run.**
+
+- **Corpus scope is ALL 10 tranches** — `cefi`, `defi`, `tradfi`, `prediction`, `sports`, `cross-cutting`, `ao`, `ci`,
+  `infra`, `ui`, PLUS `asset_group: meta` and any doc whose tag doesn't resolve to a tranche at all. This is the
+  correction: the previous sweep covered only the 5 original AGs, and that was a STRUCTURAL blind spot, not an oversight
+  of execution — `ao`/`ci`/`infrastructure` (real enum values since 2026-07-27) and `ui` (since 2026-07-30) are
+  precisely where prose-only process/incident write-ups collect. In a topic-scoped run, sweep your own tranche; an
+  `all`/unscoped run must cover every one.
+- **Per doc**: read it end to end, decide whether it holds genuine remaining work. If yes → convert each item into a
+  canonical `- [ ]` [TAG] P<n>. todo in the doc (never leave it prose — `/codex/12-agent-workflow/`
+  `plan-completion-and-archival-discipline.md` § 2). If no → it is a finished record: archive it via the 6-step ritual
+  (a zero-open-todo doc archives regardless of line-cap — same codex doc, § "The line-cap does NOT block archival").
+  Genuinely ambiguous → route through Phase 4 like any other judgment call.
+- **Report the count every run** (docs with zero checkboxes found / converted / archived / routed), so a growing
+  population is visible instead of silently accumulating between sweeps.
+- **Standing register**: `/plans/active/issues/zero_checkbox_sweep_all_tranches_2026_07_31.md` tracks the sweep's owner,
+  cadence, and running count across runs — read/update it each pass rather than re-deriving population definitions from
+  scratch.
 
 ## Phase 3 — adversarial verification (nothing ships unverified)
 
@@ -326,6 +390,24 @@ the same way: the refuter attacks the evidence chain (sha actually reachable? ar
   work lives is a planning decision: interactive → ask with a recommended fold-target; autonomous/AO → **park with the
   specific recommended target named**, never auto-fold (moving live todos between plans without a ruling is
   review-blocking). Once the remnant is folded by ruling, the emptied shell archives as a fully-done plan.
+
+  **The ONE narrow fold-by-default carve-out (operator ruling 2026-07-30).** Auto-folding without a ruling is authorized
+  ONLY when BOTH hold:
+  1. the single remaining open todo is tagged **`[REVIEW]` or `[DOC]`** — the two lowest-blast-radius classes, where a
+     wrong fold target costs a re-read, not mis-routed engineering work; AND
+  2. its `parent_epic` has **exactly one** obvious ACTIVE sibling plan — i.e. the fold target is not a choice at all, it
+     is the only destination that exists. Two or more candidate siblings means the destination IS a preference call and
+     the default rule above applies unchanged.
+
+  Anything else stays operator-gated — a `[SCRIPT]`/`[DATA]`/`[OPERATOR]` remnant, a zero-sibling epic, a multi-sibling
+  epic, or any remnant carrying a `locked_by:`. When the carve-out DOES apply, still record the fold both ways
+  (FOLDED-OUT marker in the shell, FOLDED-IN section in the target) so Phase 5.9(d)'s conservation assertion balances.
+
+  **Ongoing near-complete-plan handling routes through the regular audit cadence, not a one-off mechanism.** This
+  skill's own periodic run plus `/ag-closeout-audit` and `/na-eligibility-audit` on their standing schedules already
+  sweep the whole corpus for this shape — near-complete plans are a steady-state condition, not a backlog to be drained
+  once. Do not build (or ask the operator to schedule) a special one-off near-complete sweep; if the cadence isn't
+  catching them, fix the cadence.
 
 | Claim provably wrong vs the source of truth | **AUTO-RESOLVE — do not escalate.** If a number/name/status is countable
 or checkable (AST, `git cat-file`, `os.path.exists`, a newer dated banner in the same doc), RUN the check and fix it,
@@ -416,14 +498,19 @@ to zero.
 
 ## AO-VM handoff — LIVE (this skill's own doc was stale on the cadence; fixed ao_remediation_a_independent_fixes_2026_07_23 #8)
 
-The handoff described below is DONE, not a target end-state: `plan_reconciler` (the `agents/plan_reconciler.md` daily
-worker that folds this skill's autonomous contract in) runs automatically once a day, autonomous mode, via
-`plan-reconciler.timer` on the central orchestrator VM — `agent-orchestrator/scripts/install-plan-reconciler-timer.sh`
-installs it (01:00 UTC, a quiet window before the fleet's morning activity). The timer POSTs `{"mode": "reconcile"}` to
-`/api/plan-health/dispatch`, which spawns the worker (opus / effort max / thinking on) on a free Max-plan slot. The
-autonomous contract above (no pauses, auto-fix only, park rulings, notify on big findings) is exactly the
-non-interactive behaviour that daily worker runs under. This skill (`/plan-reconcile`) stays directly invocable
-interactively any time — the timer is additive, not a replacement for an on-demand run.
+The handoff described below is DONE, not a target end-state: `plan_reconciler` (the `agents/plan_reconciler.md` worker
+that folds this skill's autonomous contract in) runs automatically in autonomous mode via `plan-reconciler.timer` on the
+central orchestrator VM — `agent-orchestrator/scripts/install-plan-reconciler-timer.sh` installs it. **Cadence as of
+2026-07-30: every 2 hours, on EVEN hours at :00 UTC**, with an idempotency guard that makes every fire after the day's
+first success a cheap no-op — so this is retry-until-capacity, not 12 reconciles a day. Widened from the 2026-07-29
+hourly cadence because a whole-corpus run MEASURED 4175s (69.6min) on 2026-07-30 (45-50min even on a quiet corpus), well
+past the 15-min inter-job stagger the hourly schedule assumed; the unit's `TimeoutStartSec` went 2450 → 6000 in the same
+change. If a run ever needs more than ~2h, shard it by tranche (this skill already supports that) rather than growing
+one monolithic run's budget again. The timer POSTs `{"mode": "reconcile"}` to `/api/plan-health/dispatch`, which spawns
+the worker (opus / effort max / thinking on) on a free Max-plan slot. The autonomous contract above (no pauses, auto-fix
+only, park rulings, notify on big findings) is exactly the non-interactive behaviour that daily worker runs under. This
+skill (`/plan-reconcile`) stays directly invocable interactively any time — the timer is additive, not a replacement for
+an on-demand run.
 
 ## Codex SSOTs
 

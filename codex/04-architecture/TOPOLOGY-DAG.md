@@ -16,7 +16,7 @@ created: 2026-03-27
 authoritative_for: []
 referenced_by: [/codex/05-infrastructure/unified-libraries/INTERNAL_DEPENDENCY_GRAPH.md]
 owner:
-last_reviewed: 2026-05-17
+last_reviewed: 2026-10-03
 code_refs:
 ---
 
@@ -28,7 +28,7 @@ code_refs:
 > When tiers or services change, one PR in one repo updates both the manifest and this diagram. Codex owns architectural
 > narrative and contracts, not living diagrams.
 >
-> **Direct link:** [unified-trading-pm/TOPOLOGY-DAG.md](../../unified-trading-pm/TOPOLOGY-DAG.md)
+> **Direct link:** [`/TOPOLOGY-DAG.md`](/TOPOLOGY-DAG.md) (repo root of `unified-trading-pm`)
 
 ## What lives where
 
@@ -36,6 +36,6 @@ code_refs:
 | --------------------------- | -------------------------------------------------------------------------- | ----------------------------------------------- |
 | Human-readable tier diagram | `unified-trading-pm/TOPOLOGY-DAG.md`                                       | Full Mermaid flowchart — T0→services→UIs→infra  |
 | Code DAG (machine-readable) | `unified-trading-pm/workspace-manifest.json`                               | Tier membership, version pins, merge order      |
-| Runtime wiring              | `deployment-service/configs/runtime-topology.yaml`                         | Topics, storage, co-location rules per service  |
+| Runtime wiring              | `unified-trading-pm/configs/runtime-topology.yaml`                         | Topics, storage, co-location rules per service  |
 | Tier architecture narrative | `unified-trading-pm/codex/04-architecture/tier-and-import-architecture.md` | Why the tiers exist; import rules; enforcement  |
 | Protocol injection contract | `unified-trading-pm/codex/04-architecture/tier-and-import-architecture.md` | How libraries resolve live vs batch, GCP vs AWS |

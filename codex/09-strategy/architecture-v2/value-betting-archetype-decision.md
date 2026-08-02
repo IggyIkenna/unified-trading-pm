@@ -16,12 +16,12 @@ tags: [strategy, sports, prediction, ml, odds, archetype, ssot-audit]
 related:
   [
     /codex/09-strategy/architecture-v2/strategy-registry-v2.md,
-    /codex/09-strategy/architecture-v2/naming-convention.md,
+    /codex/06-coding-standards/strategy-identity-versioning.md,
     /codex/09-strategy/architecture-v2/legacy-family-migration.md,
     archetypes/ml-directional-event-settled.md,
   ]
 created: 2026-04-21
-authoritative_for: [value-betting archetype decision (VALUE_PROB_VS_IMPLIED edge-method, not a separate archetype)]
+authoritative_for: ["value-betting archetype decision (VALUE_PROB_VS_IMPLIED edge-method, not a separate archetype)"]
 referenced_by:
 owner:
 last_reviewed:
@@ -110,6 +110,6 @@ Slot labels (v2 canonical):
 ## 5. Cross-references
 
 - `/codex/09-strategy/architecture-v2/strategy-registry-v2.md` — v2 registry overview.
-- `/codex/09-strategy/architecture-v2/naming-convention.md` — slot label grammar.
+- `/codex/06-coding-standards/strategy-identity-versioning.md` — slot label grammar.
 - `/codex/09-strategy/architecture-v2/legacy-family-migration.md` § 2.2 — v1→v2 equivalency audit (post-Wave-6 zero-gap
   state).

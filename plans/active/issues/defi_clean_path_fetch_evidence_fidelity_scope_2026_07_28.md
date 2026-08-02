@@ -30,6 +30,7 @@ related:
     /plans/active/defi_consolidated_closeout_2026_07_18.md,
   ]
 created: "2026-07-28"
+last_updated: "2026-08-02"
 source: sports_consolidated_native_ao_extract-010/cross_cutting_satellite_ao_dispatch_batch2-011 dispatch (slot-11)
 resolved_by:
 locked_by:
@@ -40,6 +41,14 @@ priority: P2
 assigned_role: data_engineering
 drift_direction: advance-code
 depends_on: []
+context_scope:
+  [
+    /codex/02-data/honest-absence-downstream-handling.md,
+    /plans/active/task_template.md,
+    /plans/active/defi_consolidated_closeout_2026_07_18.md,
+    market-tick-data-service/market_tick_data_service/cli/handlers/_defi_manifest.py,
+    unified-api-contracts/unified_api_contracts/canonical/crosscutting/honest_coverage.py,
+  ]
 ---
 
 # DeFi clean-path fetch-evidence fidelity — scoping correction
@@ -150,3 +159,18 @@ below is explicitly gated on a human design call) — a future triage pass shoul
 - `/codex/02-data/honest-absence-downstream-handling.md` (the 4-state capture_status contract this fidelity work sits
   inside).
 - `plans/active/task_template.md` § dispatch-scope eligibility (why this doc exists instead of a rushed 25-site change).
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30**: KEEP-NA, valid - doc explicitly self-declares NA at its own frontmatter level and
+  carries a [LOCAL] todo citing dispatch-scope eligibility as a human design call
+- **context-scout 2026-08-01**: populated context_scope (5 entries).
+- **na-eligibility-audit 2026-08-02** (tranche=defi, autonomous, scheduled): KEEP-NA valid (2026-07-30 verdict re-
+  affirmed) — re-read end to end, 5 open items; content unchanged since that verdict (the only edit was context- scout's
+  `context_scope` backfill). The doc's own "Recommended decision" section self-declares NA at the frontmatter level and
+  its `[LOCAL] P2` item cites dispatch-scope eligibility for a genuine human design call (the
+  `governance_proposals_handler.py` dual-source merge has no single scalar HTTP status to report). Its `[CODE] P1`
+  governance_adapter fix is genuinely bounded and the doc says so — but it is one item inside a doc whose other 4
+  include that undecided design call and a `[CODE] P2` the doc itself says to "re-scope to the actual highest-value
+  single file once picked up", so a whole-doc flip would dispatch under-scoped work. Left for a future extraction rather
+  than reclassified.

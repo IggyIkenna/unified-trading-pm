@@ -28,14 +28,14 @@ referenced_by:
     /codex/14-customer-journeys/authentication/firebase-local.md,
   ]
 owner:
-last_reviewed: 2026-05-17
+last_reviewed: 2026-08-25
 code_refs:
 ---
 
 # AWS IAM matrix — per-service role + policy SSOT
 
 > **Created 2026-05-12** by slot 4 per
-> [`plans/active/api_keys_wallets_accounts_readiness_2026_05_10.md`](../../plans/active/api_keys_wallets_accounts_readiness_2026_05_10.md)
+> [`/plans/archive/2026_05/api_keys_wallets_accounts_readiness_2026_05_10.md`](/plans/archive/2026_05/api_keys_wallets_accounts_readiness_2026_05_10.md)
 > Phase 9.B (PENDING Phase 1.B operator provisioning — stub provides per-service shape + closed-set policy attachments
 > for slot-4-successor / Harsh to apply via Terraform / CDK).
 
@@ -151,5 +151,5 @@ execution:
 - [`per-archetype-wallet-isolation.md`](per-archetype-wallet-isolation.md) — wallet × IAM mapping.
 - [`hsm-wallet-signing.md`](hsm-wallet-signing.md) — Cloud-KMS Decrypter IAM discipline.
 - [`runtime-tiers-and-deployment.md`](runtime-tiers-and-deployment.md) — deployment matrix.
-- [`plans/active/api_keys_wallets_accounts_readiness_2026_05_10.md`](../../plans/active/api_keys_wallets_accounts_readiness_2026_05_10.md)
+- [`/plans/archive/2026_05/api_keys_wallets_accounts_readiness_2026_05_10.md`](/plans/archive/2026_05/api_keys_wallets_accounts_readiness_2026_05_10.md)
   Phase 1.B + Phase 9.B.

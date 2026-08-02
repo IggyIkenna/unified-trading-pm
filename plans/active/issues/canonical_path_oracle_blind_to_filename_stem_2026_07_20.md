@@ -58,6 +58,14 @@ resolved_by:
   2026-07-27 (§ 7 P1, unified-trading-pm slot-15) — 1,697 colon_wire live population confirmed gone, new batch-side
   bare-wire-symbol finding tracked as § 7 P2; residual followups tracked in § 7 (quarantine disposition) and the
   batch=live divergence issue"
+context_scope:
+  [
+    /codex/02-data/four-surface-reconciliation-procedure.md,
+    /codex/02-data/reconciliation-finding-taxonomy.md,
+    /plans/archive/issues/batch_live_filename_divergence_sanitize_symbol_2026_07_20.md,
+    /plans/active/issues/fail_hard_canonical_enforcement_design_2026_07_20.md,
+    market-tick-data-service/market_tick_data_service/market_interface/adapters/cefi/tardis_shared.py,
+  ]
 ---
 
 # The canonical-path machine oracle was blind to the filename stem
@@ -308,17 +316,22 @@ Full write-path treatment (the verbatim-write + no-guard + `validate=False` fami
       unchecked. Regression tests: `tests/unit/test_partition_path_is_canonical.py`
       (`test_defi_canonical_stem_per_type_is_clean`, `test_defi_bare_symbol_stem_is_non_canonical_by_id_form`,
       `test_defi_gmx_chainless_perpetual_is_canonical`, `test_is_canonical_instrument_id` DeFi cases).
-- [ ] [DATA] P2. The legitimately-unresolvable objects need a quarantine / honest-absence disposition (separate design).
-      **NOT resolved by this session's work** — noting state found while investigating: a STANDALONE building block
-      already exists (`unified_api_contracts/canonical/quarantine.py` — `is_quarantined_instrument_id` /
-      `ResolutionEvidence` / `QUARANTINE_REGISTRY` / `classify_id_form`, `unified-api-contracts@989e9d16`), shipped
-      against a DIFFERENT, more recent design doc:
-      `plans/active/issues/fail_hard_canonical_enforcement_design_2026_07_20.md`. Per that module's own docstring it is
-      "standalone — nothing here is wired into any write or read guard"; the design doc's own §7 todo list (Stage 0
-      OBSERVE / Stage 1 WRITE ENFORCE / Stage 2 MANIFEST CLASSIFY / Stage 3 READ ENFORCE) is a materially larger,
-      separately-gated program (3 adversarially-CONFIRMED gaps in its own §5 must close before write-enforce ships) —
-      out of scope for this session. This item stays open until that program's registry-gated enforcement actually wires
-      a disposition for the legitimately-unresolvable population.
+- [ ] BLOCKED-UPSTREAM-DESIGN [DATA] P2. The legitimately-unresolvable objects need a quarantine / honest-absence
+      disposition (separate design) — gated on `fail_hard_canonical_enforcement_design_2026_07_20.md`'s own still-open
+      `[DESIGN] P1. Close the three §5 gaps` todo; not independently worker-actionable until that lands. **Re-confirmed
+      2026-08-02 (slot-12)**: `unified_api_contracts/canonical/quarantine.py` (`is_quarantined_instrument_id` /
+      `ResolutionEvidence` / `QUARANTINE_REGISTRY` / `classify_id_form`, `unified-api-contracts@989e9d16`) remains a
+      STANDALONE module — grep across every slot repo found 0 non-test, non-`__init__.py` callers. Wiring it into a
+      write/read guard requires first closing the design doc's §5 gaps (derivative/chain-bundle lane defeats all three
+      write gates; "column == manifest by construction" is TARDIS-only, so the live/on-chain dual-resolver split can
+      route a genuinely-canonical object to `record_failed`; the read-gate three-valued classification assumes a
+      positive on-disk marker the corpus lacks) — that design doc is itself `assigned_vm: NA` /
+      `execution_scope: local-only` (explicit human/design judgment work, not AO-dispatchable), so this item was
+      mis-tagged `[DATA]` (AO-eligible) here. Retagged `BLOCKED-UPSTREAM-DESIGN` so backlog regen stops re-dispatching
+      it to a worker who cannot act on it alone. Re-open for AO dispatch (as a properly scoped sub-todo) only once
+      `fail_hard_canonical_enforcement_design_2026_07_20.md`'s `[DESIGN] P1` gap-closing todo is done and defines a
+      concrete, worker-determinable wiring step. (AO dashboard blocked-question BLK-fd7b206d records this retag's
+      rationale.)
 
 ## 8. Codex SSOTs updated
 
@@ -341,3 +354,29 @@ Full write-path treatment (the verbatim-write + no-guard + `validate=False` fami
 
 The UAC diff (`partition_paths.py`, `__init__.py`, `tests/unit/test_partition_path_is_canonical.py`) is complete and its
 own tests pass (178 passed across the four canonical-path test modules).
+
+## Progress Log
+
+- **context-scout 2026-08-01**: populated/refreshed context_scope (5 entries).
+- **slot-12 2026-08-02**: dispatched task `canonical_path_oracle_blind_to_filename_stem-002` (the §7 "legitimately-
+  unresolvable objects need a quarantine/honest-absence disposition" P2 todo). Determined it is not independently
+  worker-actionable: `unified_api_contracts/canonical/quarantine.py` remains a standalone, unwired module (0 non-test
+  callers, grep-verified across every slot repo), and wiring it is gated on
+  `fail_hard_canonical_enforcement_design_2026_07_20.md`'s own still-open `[DESIGN] P1` todo (closing 3 adversarially-
+  confirmed §5 architecture gaps) — that design doc is `assigned_vm: NA` / `execution_scope: local-only`, i.e. human/
+  design-judgment work. Raised BLK-fd7b206d; operator answered A (retag, don't force-flip). Retagged the todo
+  `BLOCKED-UPSTREAM-DESIGN` so backlog-regen stops re-dispatching it until the upstream design closes. Checkbox stays
+  `[ ]` — the disposition genuinely is not wired; this is a doc-hygiene fix, not the substantive work.
+- **slot-6 2026-08-02**: dispatched task `canonical_path_oracle_blind_to_filename_stem-003` — the SAME §7 todo,
+  redispatched under a fresh id despite slot-12's retag. Root cause:
+  `agent-orchestrator/server/regen_backlog_from_plan.py`'s `_BLOCKED_TOKEN_RE` (the regen's non-dispatchable-marker
+  allowlist) never included `UPSTREAM-DESIGN` — only `UPSTREAM-OUTAGE` — so the retag didn't actually stop ingestion;
+  the todo re-entered the backlog on the very next regen tick. Verified `BLOCKED-UPSTREAM-DESIGN` is an established
+  corpus convention, not a one-off (`ao_residuals_after_dispatch_hardening_2026_07_17.md`,
+  `ao_open_issues_consolidated_close_out_2026_07_17.md`, the archived
+  `ao_satellite_ao_dispatch_batch1_2026_07_26.md`/`ao_issue_docs_consolidated_remediation_2026_07_23.md`). **Fixed at
+  root**: added `UPSTREAM-DESIGN` to `_BLOCKED_TOKEN_RE`'s alternation + a regression test case, shipped
+  `agent-orchestrator@2b0b9e9` (verified on origin/live-defi-rollout). This closes the churn for every
+  `BLOCKED-UPSTREAM-DESIGN`-tagged todo corpus-wide, not just this one. Checkbox stays `[ ]` — same as slot-12's
+  determination, the quarantine disposition itself is still not wired and still gated on
+  `fail_hard_canonical_enforcement_design_2026_07_20.md`'s open `[DESIGN] P1` todo.

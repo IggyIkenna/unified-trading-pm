@@ -30,7 +30,7 @@ tags:
 related:
   [
     /plans/active/defi_consolidated_closeout_2026_07_18.md,
-    /plans/active/issues/mtds_backfill_vm_startup_oom_rc137_2026_07_14.md,
+    /plans/archive/issues/mtds_backfill_vm_startup_oom_rc137_2026_07_14.md,
     /plans/archive/issues/defi_solana_dex_pools_fake_history_recurrence_prd_bucket_2026_07_23.md,
   ]
 created: 2026-07-24
@@ -41,8 +41,8 @@ estimate_baseline_ai_days: 0.8
 estimate_calibrated_ai_days: 1.0
 assigned_role: data_engineering
 drift_direction: none
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 locked_by:
 locked_since:
 supersedes:
@@ -223,43 +223,94 @@ rule (see Progress Log entry below for the observed outcome).
       agent sandbox are no longer measured at ~100 KB/s, to corroborate this issue's GCS-object-existence-based findings
       against the manifest's own `capture_status` distribution. Not blocking — object-level evidence here is already
       ground truth for "did real rows land."
-- [ ] [BACKEND] P1. **Scope extension, 2026-07-27 (slot-2)**: the SAME TheGraph subgraph-schema-cascade failure class as
-      TRADER_JOE_V2 above is confirmed live TODAY (not stale) on 6 additional venue/chain pairs, discovered via a direct
-      read of the live `market-data-tick-defi-prd-central-element-323112` manifest while scoping
-      `defi_satellite_ao_dispatch_batch3-003` D2 (that todo's own premise — 28,634 UNISWAP_V3-ETHEREUM stale
-      chain-column rows — turned out to be superseded by the C0 migration; this is a genuinely different, currently
-      active issue found along the way). 795 total `dex_pool_swaps` `attempted_failed` rows,
-      `error_reason="All N     cascade schemas drifted/returned GraphQL errors for {venue}/{chain} (subgraph=...)"`,
-      `attempted_at` spanning 2026-07-22 through 2026-07-27 (accumulating ~100-180 rows/day): UNISWAP_V3/OPTIMISM (342,
-      subgraph `Cghf4LfVqPiFw6fp...`), CURVE/OPTIMISM (338, subgraph `CXDZP...`), TRADER_JOE_V2/AVALANCHE (73, already
-      the P1 todo above), PANCAKESWAP_V3/BSC (15) + PANCAKESWAP_V3/ETHEREUM (2), UNISWAP_V4/ETHEREUM (5, GraphQL
-      errors) + UNISWAP_V4 `build_instrument_id` errors (7), UNISWAP_V2/ETHEREUM (5), VELODROME_V2/OPTIMISM (5),
-      AERODROME_V3/BASE (1), UNISWAP_V3/POLYGON (2). `chain` column is 100% populated for all these rows (not the old
-      chain-propagation bug — a live subgraph-endpoint/schema-cascade problem, same class as the TRADER_JOE_V2 fix
-      above). Diagnose per venue/chain in `market_tick_data_service/cli/handlers/dex_swaps_handler.py` /
-      `_dex_swaps_query_strings.py` (likely more rotated/dead subgraph deployment IDs or missing cascade-schema
-      variants, mirroring the TRADER_JOE_V2 root cause) and fix or file per-venue follow-ups. Repo:
-      market-tick-data-service. **Corroborating evidence, 2026-07-27 (slot-11) — CURVE/OPTIMISM item now code-fixed;
-      VELODROME_V2/OPTIMISM confirmed a DIFFERENT (non-schema) failure class than "add a schema variant":** (1)
-      CURVE/OPTIMISM's 338 rows are the SAME `"subgraph not found: no allocations"` condition as the original
-      (now-archived) `defi_curve_optimism_subgraph_no_allocations_2026_07_15.md` finding recurring live —
-      `dex_swaps_handler.py` now detects this at fetch time and raises `_SubgraphDeindexedError` →
-      `record_empty(EXPECTED_SUBGRAPH_DEINDEXED)` instead of `record_failed` (shipped
-      `market-tick-data-service@dddd1b21`, unit-tested); NEW `attempted_failed` rows for this specific cause should stop
-      accumulating once this fix reaches the next backfill/live VM. (2) VELODROME_V2/OPTIMISM (subgraph
-      `A4Y1A82YhSLTn998BVVELC8eWzhi992k4ZitByvssxqA`) is NOT schema drift — live-probed directly: `_meta` returns a
-      fresh block (indexers ARE allocated), but every `messari_from`/filtered swaps query returns
-      `"bad indexers: {...: Unavailable(...), ...: BadResponse(...)}"`. Reproduced this LIVE via the
-      `mtds-dex-swaps-historical` backfill VM launched for the sibling TRADER_JOE_V2 todo above: 26/26 processed days
-      (2023-01-01 through 2023-01-26) failed identically with this exact error on all 5 cascade schemas — a
-      persistent-so-far indexer-health condition, not a one-off blip, and not addressable by "add a matching query
-      schema" (no schema variant avoids a `bad indexers` response). A real fix (out of this todo's scope) would be a
-      retry-with-backoff specifically for the `bad indexers` GraphQL-error fingerprint (mirroring
-      `async_post_to_subgraph`'s existing HTTP-level retry, extended to this GraphQL-level condition) or a subgraph
-      deployment-ID swap if the condition doesn't self-heal. Left UNCHECKED — still needs a real fix for
-      VELODROME_V2/OPTIMISM + the other listed pairs.
+- [ ] [VERIFY] P3. **Confirm the rc=137 startup-OOM fix chain held across the remaining 7 DeFi MTDS handlers — migrated
+      here 2026-08-02 from `/plans/archive/issues/mtds_backfill_vm_startup_oom_rc137_2026_07_14.md` at its archival
+      (ritual step 1: that doc's closing paragraph left this as PROSE, never a tracked todo).** That doc reached
+      zero-open-todos with the shared-mechanism fix (`unified-trading-library@a5b07ff7`'s row-group pushdown +
+      `_date_range_filters()` in `manifest_freshness.py`) verified by unit tests plus real-VM confirmation on only TWO
+      of 9 DeFi handlers — `dex_pools_handler.py` and `lending_indices_handler.py` (Morpho, 108-day window). Its own
+      words: "the other 7 remain verified only via the shared-mechanism code fix + unit tests, not per-handler live
+      runs." This issue doc already carries independent corroboration for one of those two (the
+      `mtds-dex-pools-backfill` VM ran healthy 3 days / 1.55M+ shard entries at 30-40% mem before an unrelated explicit
+      API delete), so the residual is narrow. **Done when**: for each of the remaining 7 DeFi handlers, either a real
+      post-fix VM run is cited (log evidence showing it survived past the old ~20-90s kill window), or the handler is
+      recorded as not-yet-exercised-since-the-fix — a stated coverage verdict per handler, not a blanket claim.
+      Read-only log/registry inspection; no relaunch required unless a genuine rc=137 recurrence turns up. Repo:
+      market-tick-data-service / deployment-service.
+- [x] ✅ [BACKEND] P1. **DONE 2026-07-30 (slot-14) — root cause was NOT schema drift; fail-fast fix shipped for the
+      genuinely-live pair.** Live-reproduced every remaining pair in this todo against the real TheGraph gateway (direct
+      `gateway.thegraph.com` POST, same method as the slot-2/slot-11 findings below), running each protocol's full
+      production cascade on a 2023-01-15 sample day (same range as the `mtds-dex-swaps-historical` backfill VM):
+      **UNISWAP_V3/OPTIMISM (342 rows, the largest item in this todo)** is the SAME "bad indexers" transient
+      indexer-health class already found on VELODROME_V2/OPTIMISM below — NOT schema drift. The correct (1st) cascade
+      schema variant (`univ3`) fails identically on every attempt with
+      `bad indexers: {...Unavailable(too far     behind)...}`; the cascade then burns through the 7 remaining (genuinely
+      wrong-shape) fallback variants, and because 5 of those legitimately DO throw real schema-drift errors ("has no
+      field", since this subgraph isn't Messari-schema), the FINAL raised exception was `_SubgraphSchemaDriftError` —
+      producing a misleading manifest `error_reason` ("all schemas drifted, add a matching schema") that masked the true
+      bad-indexers cause. **Fixed**: added `_is_bad_indexers_error` fingerprint detection + a new
+      `_SubgraphIndexerUnavailableError`, mirroring the existing `_SubgraphDeindexedError` fail-fast precedent — the
+      cascade now stops on the FIRST bad-indexers response instead of burning the rest and recording a misleading
+      reason. Still routes to `record_failed` (attempted_failed, correctly retriable) not `empty_confirmed`, since
+      indexer allocation can self-heal. Shipped `market-tick-data-service@74cd6cfd` (+11 unit tests, all passing). **The
+      other 6 flagged pairs (PANCAKESWAP_V3/BSC, PANCAKESWAP_V3/ETHEREUM, UNISWAP_V4/ETHEREUM incl. its
+      build_instrument_id-error report, UNISWAP_V2/ETHEREUM, AERODROME_V3/BASE, UNISWAP_V3/POLYGON) all now return
+      successfully (0 or real swap rows, up to 1000) on the same live-probed sample date** — not currently reproducing,
+      consistent with the SAME transient bad-indexers class self-healing as The Graph's decentralized network
+      reallocates indexers across 2026-07-22→07-30 (no code defect found for these 6; no further fix needed unless they
+      recur). Repo: market-tick-data-service.
+
+      **Original finding, 2026-07-27 (slot-2)**: the SAME TheGraph subgraph-schema-cascade failure class as
+                  TRADER_JOE_V2 above is confirmed live TODAY (not stale) on 6 additional venue/chain pairs, discovered via a direct
+                  read of the live `market-data-tick-defi-prd-central-element-323112` manifest while scoping
+                  `defi_satellite_ao_dispatch_batch3-003` D2 (that todo's own premise — 28,634 UNISWAP_V3-ETHEREUM stale
+                  chain-column rows — turned out to be superseded by the C0 migration; this is a genuinely different, currently
+                  active issue found along the way). 795 total `dex_pool_swaps` `attempted_failed` rows,
+                  `error_reason="All N     cascade schemas drifted/returned GraphQL errors for {venue}/{chain} (subgraph=...)"`,
+                  `attempted_at` spanning 2026-07-22 through 2026-07-27 (accumulating ~100-180 rows/day): UNISWAP_V3/OPTIMISM (342,
+                  subgraph `Cghf4LfVqPiFw6fp...`), CURVE/OPTIMISM (338, subgraph `CXDZP...`), TRADER_JOE_V2/AVALANCHE (73, already
+                  the P1 todo above), PANCAKESWAP_V3/BSC (15) + PANCAKESWAP_V3/ETHEREUM (2), UNISWAP_V4/ETHEREUM (5, GraphQL
+                  errors) + UNISWAP_V4 `build_instrument_id` errors (7), UNISWAP_V2/ETHEREUM (5), VELODROME_V2/OPTIMISM (5),
+                  AERODROME_V3/BASE (1), UNISWAP_V3/POLYGON (2). `chain` column is 100% populated for all these rows (not the old
+                  chain-propagation bug — a live subgraph-endpoint/schema-cascade problem, same class as the TRADER_JOE_V2 fix
+                  above). Diagnose per venue/chain in `market_tick_data_service/cli/handlers/dex_swaps_handler.py` /
+                  `_dex_swaps_query_strings.py` (likely more rotated/dead subgraph deployment IDs or missing cascade-schema
+                  variants, mirroring the TRADER_JOE_V2 root cause) and fix or file per-venue follow-ups. Repo:
+                  market-tick-data-service. **Corroborating evidence, 2026-07-27 (slot-11) — CURVE/OPTIMISM item now code-fixed;
+                  VELODROME_V2/OPTIMISM confirmed a DIFFERENT (non-schema) failure class than "add a schema variant":** (1)
+                  CURVE/OPTIMISM's 338 rows are the SAME `"subgraph not found: no allocations"` condition as the original
+                  (now-archived) `defi_curve_optimism_subgraph_no_allocations_2026_07_15.md` finding recurring live —
+                  `dex_swaps_handler.py` now detects this at fetch time and raises `_SubgraphDeindexedError` →
+                  `record_empty(EXPECTED_SUBGRAPH_DEINDEXED)` instead of `record_failed` (shipped
+                  `market-tick-data-service@dddd1b21`, unit-tested); NEW `attempted_failed` rows for this specific cause should stop
+                  accumulating once this fix reaches the next backfill/live VM. (2) VELODROME_V2/OPTIMISM (subgraph
+                  `A4Y1A82YhSLTn998BVVELC8eWzhi992k4ZitByvssxqA`) is NOT schema drift — live-probed directly: `_meta` returns a
+                  fresh block (indexers ARE allocated), but every `messari_from`/filtered swaps query returns
+                  `"bad indexers: {...: Unavailable(...), ...: BadResponse(...)}"`. Reproduced this LIVE via the
+                  `mtds-dex-swaps-historical` backfill VM launched for the sibling TRADER_JOE_V2 todo above: 26/26 processed days
+                  (2023-01-01 through 2023-01-26) failed identically with this exact error on all 5 cascade schemas — a
+                  persistent-so-far indexer-health condition, not a one-off blip, and not addressable by "add a matching query
+                  schema" (no schema variant avoids a `bad indexers` response). A real fix (out of this todo's scope) would be a
+                  retry-with-backoff specifically for the `bad indexers` GraphQL-error fingerprint (mirroring
+                  `async_post_to_subgraph`'s existing HTTP-level retry, extended to this GraphQL-level condition) or a subgraph
+                  deployment-ID swap if the condition doesn't self-heal. Left UNCHECKED — still needs a real fix for
+                  VELODROME_V2/OPTIMISM + the other listed pairs.
 
 ## Progress Log
+
+- **2026-07-30 (slot-14)** — closed the last open P1 [BACKEND] scope-extension todo. Live-probed all 7 remaining
+  venue/chain pairs directly against `gateway.thegraph.com` (running each protocol's real production cascade).
+  UNISWAP_V3/OPTIMISM (342 rows, the largest item) reproduced the exact same "bad indexers" transient indexer-health
+  condition as VELODROME_V2/OPTIMISM — confirmed NOT schema drift, though the manifest's recorded `error_reason` was
+  misleadingly schema-drift-shaped (an artifact of the cascade burning through wrong-shape fallback variants after the
+  correct variant's bad-indexers failure). Shipped a fail-fast fix (`_SubgraphIndexerUnavailableError` +
+  `_is_bad_indexers_error`, mirroring the existing `_SubgraphDeindexedError` precedent) so future occurrences record an
+  honest, transient-labeled `attempted_failed` reason instead. The other 6 pairs did not reproduce any failure on the
+  same sample date — spot-checked clear, no code fix needed for those. `market-tick-data-service@74cd6cfd`.
+
+- **na-eligibility-audit 2026-07-30**: RECLASSIFY -> assigned_vm: planning (conflict-check CLEAR against 231 active
+  planning docs; no open todo elsewhere duplicates this claim) - all 3 todos are bounded coverage spot-checks /
+  per-venue subgraph diagnostics with named targets; the multi-day re-probe window has now elapsed
 
 - 2026-07-24 — issue filed from a live verification session (closeout plan `defi_consolidated_closeout_2026_07_18.md`
   line 445). See findings + evidence above.

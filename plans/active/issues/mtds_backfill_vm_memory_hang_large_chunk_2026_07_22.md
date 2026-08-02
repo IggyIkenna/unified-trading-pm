@@ -344,8 +344,15 @@ disproving a pure date-span explanation there), this sports case has a much clea
 growth across sequential real-fetch days — so a small fixed chunk size should be a reliable mitigation here even though
 it wasn't a reliable one for CEFI.
 
-- [ ] [DATA] P1. **Root-cause the actual retained-memory object(s) across date iterations in the sports odds_api
-      download path** (`market_tick_data_service`, the code path `--operation download --asset-group SPORTS` walks
+- [ ] [DATA] P1. **BLOCKED-CREDENTIALS 2026-08-02 (slot 14) — the-odds-api.com account is OUT OF USAGE CREDITS
+      (5,000,772/5,000,000 used); no further real-fetch profiling (memray/tracemalloc/lightweight sampler) is possible
+      until the operator either waits for the monthly reset or purchases additional credits — see this doc's 2026-08-02
+      Progress Log entry and `sports_odds_api_scattered_multiyear_gaps_2026_07_27.md`'s matching P1 for full detail. Do
+      NOT re-dispatch/re-attempt until credits are confirmed available again.** **Operator decision 2026-08-02
+      (answering `BLK-6728ec9a`): Option B — purchase additional credits now.** Re-verify live before resuming (do not
+      assume the purchase is instant) — the promoted `scripts/odds_api_rss_sampler_2026_08_02.py` is the preferred next
+      step once confirmed. Root-cause the actual retained-memory object(s) across date iterations in the sports odds_api
+      download path (`market_tick_data_service`, the code path `--operation download --asset-group SPORTS` walks
       per-date inside one process — likely `TickDataHandler.process()`'s date loop or the `odds_api` adapter/finalizer
       holding a growing cache/buffer keyed across dates instead of per-date). A memray/tracemalloc profile across 2-3
       consecutive real-fetch days would show whether it's an unbounded cache, an un-drained event-sink buffer, or
@@ -357,6 +364,78 @@ it wasn't a reliable one for CEFI.
       pre-flight gap count per chunk) or just a documented operator convention ("scope a small `--chunk-size` explicitly
       when re-running a tail that's known to have a high real-fetch-day density"). Repo: deployment-service.
 
+## 2026-07-31 third recurrence — machine-type bump now insufficient even for SKIP-dense OLDER history (slot-5, `data_engineering`, task `sports_odds_api_scattered_multiyear_gaps-004`)
+
+**New, more severe signature than either prior recurrence.** `mtds-backfill-odds-sentinel-fix-20260731`
+(`launch-mtds-sports-odds-backfill-vm.sh --start 2020-06-06 --end 2026-07-31`, default `--chunk-size 250`, already on
+the fixed `e2-highmem-4` machine type) OOM-killed on **6 of its first 6 completed chunks**
+(`CHUNK_FAILED: ... exit=137 reason=OOM_KILLED` for chunks 1-6; chunk 7's log then cuts off mid-run with no further
+lines — the same silent-freeze signature as this doc's original CEFI incident). Unlike the 2026-07-29 sports recurrence
+(which only failed on chunk 9, the dense recent-history tail, and was explained by cross-day memory accumulation within
+one real-fetch-heavy chunk), **these 6 chunks cover 2020-06-06..2024-07-14 — mostly `SKIP` days** (the manifest already
+holds real captures for most of this range; only 7 `Processed date=` lines appear across the whole visible log vs. 201
+`SKIP` lines). A chunk that is >95% skip-days should have a near-flat memory profile, yet still OOM-killed on a 32GB
+machine that already has ~2.2x headroom over every previously-observed peak (14.6GB CEFI, ~23-25GB sports-tail). This
+means **the machine-type bump is no longer a reliable mitigation even for the "safe" (skip-dense, older-history) case
+the original fix was validated against** — a genuinely new severity level, not just a recurrence in a new launcher. Root
+cause not further narrowed this session (same P1 below covers it — the retained-memory object hypothesis would explain
+this too: if the leak is per-date-iteration regardless of SKIP vs. real-fetch, a 250-day chunk accumulates 250
+iterations' worth of leaked state even when almost all of them no-op). **Mitigation applied**: relaunched with
+`--chunk-size 5` (this doc's own best-validated workaround) as `mtds-backfill-odds-smallchunk-20260731` — full detail +
+resume instructions in `sports_odds_api_scattered_multiyear_gaps_2026_07_27.md`'s Progress Log (same date, slot 5).
+Given `--chunk-size 5` was previously 0/3 successful on the dense tail (2026-07-29 addendum above), this relaunch is a
+mitigation attempt, not a confirmed fix — if it also fails, that's further evidence the P1 root-cause below needs to
+land before this launcher can be trusted for any full-range run.
+
+## 2026-07-31 fifth recurrence — `--chunk-size 5` mitigation now confirmed exhausted (data_pipeline_failure escalation, DP_VM_STALL)
+
+**Dispatched via `POST /api/escalate wall_type=data_pipeline_failure` on a fleet-monitor `DP_VM_STALL` finding
+(heartbeat 13m stale) against `mtds-backfill-odds-smallchunk2-20260731`** (the manual retry from the section above,
+after its sibling `smallchunk-20260731` was preempted at ~55s with zero progress). Per
+`/codex/15-runbooks/incidents/rb_infra_relaunch.md`, verified state before deciding relaunch-vs-stop:
+
+- `gcloud compute instances describe` → `status=RUNNING` (NOT preempted — ruled out per the companion doc's own
+  instruction to check `compute.instances.preempted` first).
+- Dedicated GCS heartbeat blob (`vm-heartbeat/mtds-backfill-odds-smallchunk2-20260731.txt`) last updated
+  `2026-07-31T09:28:52Z`; deployment-registry row (`deployments/active/536fc001-....json`) `last_heartbeat_at` same
+  timestamp, `mem_pct: 68.3` with a positive, ACCELERATING `mem_slope` (2.08→3.23→6.11→...→6.87 %/min across the last 5
+  samples) — i.e. still climbing toward the ceiling at the moment it went silent, not plateaued.
+- `run.log` frozen at the same timestamp; re-checked twice ~18min apart, zero new bytes both times.
+- Serial console (`get-serial-port-output`) shows **4 confirmed kernel OOM-kills on this single VM instance**, all
+  `task=python`, all landing at `anon-rss≈31.7-31.8GB` (right at the `e2-highmem-4` 32GB ceiling): chunks 18, 26, 32, 74
+  (`CHUNK_FAILED: ... exit=137 reason=OOM_KILLED` for each, confirmed via `run.log` grep). Chunk 74's OOM self-recovered
+  (loop advanced to chunk 75 normally — the `mtds_chunk_loop.sh` fail-loud fix from the 2026-07-26 addendum is working
+  as designed for THAT part). Chunk 75 then started fresh (RSS baseline ~518MiB), processed `2021-06-11` cleanly, hit
+  three `SKIP` days, and went completely silent mid-chunk — **the fifth failure, and this one produced NO serial-console
+  OOM line at all** (0 new serial bytes past the last-checked offset), matching this doc's original CEFI "silent freeze"
+  signature (§ "Note on why the whole VM... went silent") rather than a clean OOM-kill: the dedicated 60s heartbeat
+  sidecar (a trivial `while true; sleep 60` loop, immune to the python subprocess's own OOM) also stopped — consistent
+  with prolonged kernel direct-reclaim/thrashing stalling the entire box, not just the worker process.
+- Real progress made before the freeze: chunks 1-73 clean (skip-dense, already-covered history) + chunk 74 recovered +
+  chunk 75 partial (`2021-06-11` processed) — last durable checkpoint ≈ `2021-06-11`, all via the standard
+  `ManifestWriter` per-VM-shard path
+  (`instruments-store-sports-prd-.../_index/per_vm/mtds-backfill-odds-smallchunk2-20260731-c75.parquet`), so nothing is
+  lost — a future relaunch's skip-if-fresh logic will resume cleanly from here.
+
+**Verdict: `--chunk-size 5` is CONFIRMED insufficient, not just unconfirmed.** This is the second full attempt at this
+mitigation today (after `smallchunk-20260731`'s SPOT preemption denied it a real test) and it OOM'd 4 times in 75 chunks
+(~5.3% chunk-failure rate) before a full unrecovered freeze — squarely inside "genuinely failing (not just preempting)
+even at `--chunk-size 5`" that `sports_odds_api_scattered_multiyear_gaps_2026_07_27.md`'s own Progress Log already
+flagged as the trigger to stop relaunching with the same parameters and escalate here instead.
+
+**Action taken (per `rb_infra_relaunch.md`'s "if it re-fails the SAME way twice... STOP relaunching, file an issue"
+bound — NOT relaunched)**: `gcloud compute instances delete mtds-backfill-odds-smallchunk2-20260731` — ended the SPOT
+billing waste on a VM making zero further progress; no data lost (per the checkpoint evidence above). Did not attempt a
+sixth launch with a smaller chunk size — CEFI's own experience (chunk-size 1 still OOM'd unpredictably, see "CONFIRMED:
+real kernel OOM-kill, recurring UNPREDICTABLY" above) argues against assuming a further reduction reliably fixes this,
+and repeatedly guessing at smaller chunk sizes without addressing the retained-memory root cause is exactly the pattern
+the companion doc's Progress Log asked future resumers to stop doing.
+
+**This raises the priority of the P1 root-cause todo below** — the sports odds_api backfill has now burned real SPOT
+compute across 5 attempts today alone (`sentinel-fix` at `--chunk-size 250`: 6/6 completed chunks OOM'd; `smallchunk`:
+preempted; `smallchunk2`: 4 OOMs + a final freeze) with the corpus still ~590/2247 days short — the operational
+mitigation ladder (bigger machine → smaller chunks) is exhausted; only the code-level fix remains.
+
 ## Progress Log
 
 - **na-eligibility-audit 2026-07-30**: KEEP-NA, valid (infra tranche, dispatch agt-30721a) — All 4 items are genuine
@@ -364,3 +443,143 @@ it wasn't a reliable one for CEFI.
   chunk-size design choice), none with a worker-determinable checkable outcome today. NOTE: this doc's real asset_group
   is [cefi, meta], not infra — a residual scope-leak from this session's pre-fix Phase 0 population; classified here for
   completeness, no state changed, cefi tranche's own future audit owns this doc.
+- 2026-07-31 (slot 5, data_engineering): Documented a third OOM recurrence (see new section above) while working
+  `sports_odds_api_scattered_multiyear_gaps_2026_07_27.md`'s P1 backfill todo — worse severity than either prior
+  instance (SKIP-dense older history now OOMs on `e2-highmem-4`, not just dense real-fetch chunks). No code fix
+  attempted this session (out of scope for the dispatched task); relaunched the odds_api backfill with the
+  `--chunk-size 5` mitigation as a workaround. The P1 root-cause todo below remains the durable fix and is still `[ ]`
+  open.
+- 2026-07-31 (slot 7, data_pipeline_failure escalation, DP_VM_STALL on `mtds-backfill-odds-smallchunk2-20260731`):
+  Documented a fifth recurrence (see new section above) — the `--chunk-size 5` mitigation OOM'd 4 more times then froze
+  unrecovered. Stopped the wedged VM (billing-waste avoidance, no data lost) rather than relaunching a sixth time with
+  the same/smaller parameters, per this doc's own "silent freeze" precedent and the companion doc's explicit
+  stop-and-escalate instruction. No code fix attempted (out of scope for a one-shot relaunch-escalation worker). The P1
+  root-cause todo below is now the only remaining path to a reliable full-range run and should be treated as blocking
+  further sports odds_api backfill attempts, not just a nice-to-have follow-up.
+- **2026-07-31 (slot 3, data_engineering, task `sports_odds_api_scattered_multiyear_gaps-004`) — started the P1
+  root-cause investigation itself (per the sibling doc's own "check that P1 first, do not relaunch again"
+  instruction).** Confirmed via `mtds_chunk_loop.sh` (`deployment-service/scripts/vm/setup-data-pipeline-vm.sh`) that
+  each CHUNK is a fresh `python -m market_tick_data_service --start-date CS --end-date CE` subprocess — the shell
+  `while` loop persists across chunks, but the Python process (and everything in its heap) does NOT. So any leak must
+  accumulate WITHIN one chunk's date range (confirmed real: `--chunk-size 5` still OOM'd after processing only ~5 dates
+  per subprocess in some cases), not across chunks. **Ruled out `FixtureIdResolver._cache`
+  (`market_interface/adapters/sports/fixture_id_resolver.py`) as the leak source** — traced
+  `umi_tick_provider.py::_route_sports` (the actual per-date, per-venue dispatch call site) and confirmed it calls
+  `get_adapter(venue.lower(), **_sports_kwargs)` fresh for EVERY date (no caching in `get_adapter`/`factory.py`), so a
+  brand-new `OddsApiAdapter` — and hence a brand-new, empty `FixtureIdResolver._cache = {}` — is created each date; the
+  cache cannot survive to accumulate across dates. This was my leading hypothesis before tracing the call site; a real,
+  useful negative result, not a dead end (rules out re-deriving this same wrong lead later). Promoted a reusable local
+  tracemalloc profiling harness (mirrors production exactly: fresh adapter per date + `gc.collect()`/`malloc_trim(0)`
+  after each, matching `tick_data_handler.py::TickDataHandler.process()`) to
+  `market-tick-data-service/scripts/profile_odds_api_backfill_memory_2026_07_31.py` — runnable locally against the real
+  odds-api (now-working key) for a few consecutive real-fetch dates, no VM launch needed, per this todo's own
+  "memray/tracemalloc profile across 2-3 consecutive real-fetch days" methodology. **Launched but NOT YET COMPLETE at
+  session-end** (a single real-fetch date takes 60-190+s — dozens of leagues × multiple rate-limited API calls each);
+  partial result so far: `2026-04-16` (0 rows, a genuinely quiet day) → 111.17 MB traced heap; `2026-04-17` (a
+  real-fetch-dense day, many leagues with real fixtures) still in progress when this entry was written. **Next steps for
+  whoever resumes**: re-run the promoted script directly
+  (`GCP_PROJECT_ID=central-element-323112 CLOUD_PROVIDER=gcp .venv/bin/python scripts/profile_odds_api_backfill_memory_2026_07_31.py <date1> <date2> <date3>`,
+  picking 2-3 real-fetch-dense dates from the known-problematic tail e.g. `2026-04-16..2026-07-29`) and read its
+  `tracemalloc.compare_to` output — if traced-heap-per-date grows monotonically across dates despite the fresh-adapter
+  pattern, the leak is module-level/global state (check for module-level `@lru_cache`/mutable-default caches anywhere in
+  the sports adapter's import chain) or something outside Python's tracked heap entirely (aiohttp connector-pool state
+  that `_make_session()`'s `async with` should already close per-request, or glibc arena fragmentation `malloc_trim`
+  can't reach). If it does NOT grow, the leak is likely something `tracemalloc` itself can't see (C-extension buffers,
+  e.g. inside `aiohttp`/`pandas`/`pyarrow` native code) and the investigation should shift to `memray` (which tracks
+  native allocations tracemalloc misses) instead of assuming the code is clean. **Trap hit**:
+  `gcloud secrets versions access` can silently return an EMPTY string (not error) if the ambient `gcloud` CLI active
+  account has drifted to a lower-privileged identity (`github-actions-deploy` instead of `unified-trading-sa`, same
+  drift class `sports_odds_api_scattered_multiyear_gaps_2026_07_27.md` already documented) — this is a SEPARATE
+  credential path from `GOOGLE_APPLICATION_CREDENTIALS`/ADC (what the Python client actually uses), so a CLI-level
+  failure does not necessarily mean the real fetch path is broken; check `gcloud config get-value account` before
+  concluding the key itself needs re-verification.
+- **2026-07-31 (slot 3, data_engineering) — the profiling run FINISHED enough of itself to yield the actual answer;
+  strong new lead, not yet a confirmed+shipped fix.** `2026-04-16` (0 real rows) → 111.17 MB traced Python heap.
+  `2026-04-17` (a real-fetch-dense day: 22,713 real rows across ~25 leagues, hundreds of real HTTP calls) → **112.00 MB
+  traced heap — under 1MB of growth despite processing thousands of real rows.** Meanwhile the OS-level RSS of the SAME
+  process (`ps aux`, sampled 3 times across the run) climbed **930MB → 1.25GB → 1.92GB** over the same span. **This is
+  the smoking gun**: `tracemalloc` (Python-object-tracked heap) stays essentially FLAT while OS RSS grows substantially
+  — the leak is NOT retained Python objects (rules out dict/list/DataFrame accumulation definitively, on top of already
+  ruling out `FixtureIdResolver._cache` above) — it's native/C-extension memory tracemalloc structurally cannot see.
+  **Strong candidate, not yet proven**: `odds_api_adapter.py::_make_session()` —
+  `aiohttp.TCPConnector(resolver=aiohttp.resolver.ThreadedResolver())` — is called FRESH for EVERY SINGLE HTTP request
+  (5 call sites in this file, each wrapped `async with _make_session() as session, session.get(...) as resp:` — never
+  one session reused across a league's or a date's many calls). A single real-fetch-dense date issues hundreds of these
+  (the log shows leagues needing 8-30 API calls each, dozens of leagues per date). `ThreadedResolver` backs onto a real
+  OS thread pool for DNS lookups; if the thread pool's native stack/buffer memory isn't promptly released back to the
+  allocator on high-churn create/destroy cycles (a known aiohttp/thread-pool pattern, distinct from a pure-Python object
+  leak), that would explain RSS-only, tracemalloc- invisible growth scaling with REQUEST COUNT (matching the doc's own
+  observation that dense real-fetch dates are worse than skip-dense ones) rather than date-range span. **Not yet
+  confirmed** — this needs either (a) a `memray` run (tracks native allocations tracemalloc misses — exactly the tool
+  this todo originally called for as the alternative if tracemalloc came back flat) attributing the growth specifically
+  to `ThreadedResolver`/`TCPConnector` construction, or (b) a quicker correlation check: log
+  `len(threading.enumerate())` or RSS immediately before/after each `_make_session()` call across a dense date and see
+  if it step-changes per call. **Recommended fix IF confirmed**: hoist one shared `aiohttp.ClientSession`/`TCPConnector`
+  per `OddsApiAdapter` instance (or per `download_batch()` call) instead of constructing a fresh one per HTTP request —
+  standard aiohttp guidance is one session per logical unit of work, not one per request, for exactly this class of
+  resource-churn reason. **Did not apply this fix in this session** — it is a real code change to a hot path (5 call
+  sites, all fetch/discovery methods) that needs its own verification (a session-reuse bug could silently break
+  concurrent request isolation or auth-header handling) rather than a rushed edit at session-end; the promoted profiling
+  script (`market-tick-data-service/scripts/profile_odds_api_backfill_memory_2026_07_31.py`) is exactly what a follow-up
+  worker should re-run before/after any such fix to prove it actually closes the RSS-growth gap. **This todo stays `[ ]`
+  open** — a strong, evidence-backed lead is not the same as a shipped, verified fix.
+- **2026-07-31 (slot 3, same session) — profiling run finished all 3 dates; confirms the finding above, doesn't change
+  it.** Full 3-point comparison, same single process throughout: `2026-04-16` (0 rows) → 111.17 MB traced; `2026-04-17`
+  (22,713 rows) → 112.00 MB traced; `2026-04-18` (141,798 rows, the densest of the three, 628s elapsed) → **112.05 MB
+  traced**. Traced Python heap is FLAT (111.17→112.05 MB, <1MB total drift) across a 0→141,798-row range — conclusive,
+  not just suggestive. `tracemalloc.compare_to`'s top-15 growth entries are all trivial import-machinery noise
+  (`importlib._bootstrap`/`_bootstrap_external` caches, `abc` registry, `urllib.parse`) — nothing resembling a real
+  per-date accumulator anywhere in this codebase's own tracked allocations. This closes off "maybe it's a slow
+  Python-level leak that just needs more dates to show up" as a competing explanation — 3 dates spanning a 0→141K-row
+  range already show zero signal. The `ThreadedResolver`/native-memory hypothesis above is the only lead standing; next
+  step is still the `memray` run (or the thread-count/RSS-per-`_make_session()`-call correlation check), not more
+  tracemalloc dates.
+- **2026-07-31 (slot 3, same session) — shipped the session-reuse fix as a resource-efficiency improvement; live
+  re-profile does NOT confirm it closes the OOM. Todo stays OPEN.** Shipped `market-tick-data-service@6ca2d278`
+  (verified landed via `git merge-base --is-ancestor`): folded reuse-or-create into `_make_session(existing=None)`
+  itself (`@contextlib.asynccontextmanager`) so `_fetch_all_leagues` opens ONE real session/`ThreadedResolver` for a
+  whole `download_batch()` call instead of one per HTTP request; two new regression tests
+  (`tests/market_interface/unit/sports/test_odds_api_session_reuse.py`) assert exactly 1 real construction per batch and
+  were verified to genuinely fail (18 and 2 constructions) against the true pre-fix SHA `86da3fa1` before trusting them
+  green. File is 897/900 lines (was exactly 900; required folding an `AsyncExitStack`-based first attempt into the
+  leaner `existing=` design to fit). **This is a real, verified, worthwhile change on its own merits** — fewer OS thread
+  pools/sockets churned per batch is strictly better regardless of the OOM outcome. **However**: a live re-profile of
+  the fixed adapter (same 3-date harness) showed RSS **comparable-to-or-higher** than the pre-fix baseline, not reduced
+  — so this does **NOT** confirm the `ThreadedResolver`/native-memory hypothesis above as the actual OOM cause. Either
+  (a) the hypothesis is wrong and something else drives the native growth, or (b) the fix is real but too small relative
+  to other allocators (pandas/pyarrow buffers, the underlying `aiohttp` connection pool itself) to show up in this
+  harness's 3-date range. **Do not claim the OOM is fixed anywhere** — this todo remains `[ ]` open. **Next step,
+  unchanged in kind but now sharper**: a real `memray` run (tracks native allocations tracemalloc cannot see) across the
+  same 3 dates, run on BOTH the pre-fix and post-fix code, to see whether the session-reuse fix moved the needle on
+  native allocations at all — if `memray` also shows no native-heap signal correlated with request count, the
+  `ThreadedResolver` hypothesis should be considered refuted and the search should widen to `pandas`/`pyarrow` (both do
+  their own native buffer management) or the OS-level page-cache/malloc-arena fragmentation class of causes instead.
+
+- **na-eligibility-audit 2026-08-01** (cefi tranche): KEEP-NA, valid — reaffirms + closes out the 2026-07-30
+  infra-tranche deferral. All 4 items remain genuine investigation/design work; P1 (sports odds_api native-memory leak)
+  substantially advanced 2026-07-31 (session-reuse fix shipped, RSS reduction NOT confirmed; 5th OOM recurrence
+  escalated via DP_VM_STALL, VM stopped safely) but correctly stays open. Cross-confirmed via
+  `sports_odds_api_scattered_multiyear_gaps_2026_07_27.md` (active planning doc) whose own P1 is explicitly blocked on
+  this doc's P1 landing.
+- **2026-08-02 (slot 14, data_engineering, task `sports_odds_api_scattered_multiyear_gaps-004`) — attempted the `memray`
+  native-allocation profile this P1 todo's own "Next step" calls for; aborted on time-cost, then hit an unrelated
+  vendor-credit exhaustion blocker before a cheaper alternative could get real signal.** `memray --native` against the
+  post-session-reuse-fix code (`market-tick-data-service@6ca2d278`), same 3 dates (`2026-04-16/17/18`) the prior
+  tracemalloc run used: killed cleanly by exact PID after ~9 minutes, still mid-way through the FIRST ("quiet", 0-row)
+  date, which took seconds under plain tracemalloc — memray's native-stack-capture instrumentation overhead (CPU pegged
+  ~93%) makes a full 3-date run disproportionately expensive for this task's budget; host memory was never at risk
+  (peaked ~1.3GB of 49GB available). Pivoted to a much cheaper non-memray diagnostic (a background thread sampling
+  `/proc/self/status` VmRSS + `threading.active_count()` once/sec during `download_batch()`, no instrumentation
+  overhead) specifically to test whether RSS growth correlates with thread churn (the `ThreadedResolver` hypothesis)
+  without memray's cost. **Before that sampler could produce a useful signal, the very first real historical-data call
+  401'd** — live-verified via direct curl that the-odds-api.com account has exhausted its entire 5,000,000/month credit
+  quota (`x-requests-used: 5000772`, `error_code=OUT_OF_USAGE_CREDITS` on `/v4/historical/...` specifically; the live
+  `/v4/sports` endpoint still returns 200, ruling out a repeat of the July `DEACTIVATED_KEY` incident — the key itself
+  is valid, the account is just out of credits, plausibly consumed by the sheer number of full-history backfill attempts
+  this investigation has already burned through). **This P1 root-cause todo is now ALSO blocked on the same
+  vendor-credit exhaustion as the sibling doc's P1 backfill todo** — no further real-fetch profiling (memray,
+  tracemalloc, or the lightweight sampler) is possible until the operator either waits for the monthly reset or
+  purchases additional credits. Retagged (see sibling doc) and escalated via `/blocked`. The `ThreadedResolver`
+  hypothesis remains neither confirmed nor refuted — next resumer should re-run either the lightweight sampler
+  (preferred — near-zero overhead) or a `memray --aggregate` (much smaller/faster output mode, untried this session)
+  once credits are available again, rather than assuming the hypothesis from the 2026-07-31 entries above is settled.

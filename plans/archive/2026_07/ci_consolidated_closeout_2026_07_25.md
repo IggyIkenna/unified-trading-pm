@@ -81,8 +81,9 @@ does not close any tranche work; see that batch plan for the live picture.
 (quickmerge silently no-ops on new-file-only ships) ·
 [issues/provenance_gate_override_and_unenforced_quickmerge_hook_2026_07_17.md](/plans/active/issues/provenance_gate_override_and_unenforced_quickmerge_hook_2026_07_17.md)
 (provenance gate hand-overridden + the strict-quickmerge hook installed in zero clones) ·
-[issues/stale_staging_versions_manifest_2026_07_23.md](/plans/active/issues/stale_staging_versions_manifest_2026_07_23.md)
-(`workspace-manifest.json` `staging_versions` frozen, breaks the quickmerge dependency gate) ·
+[issues/stale_staging_versions_manifest_2026_07_23.md](/plans/archive/issues/stale_staging_versions_manifest_2026_07_23.md)
+(`workspace-manifest.json` `staging_versions` frozen, breaks the quickmerge dependency gate — resolved + archived
+2026-08-01) ·
 [issues/quickmerge_environment_autodetect_forces_dev_off_main_2026_07_25.md](/plans/active/issues/quickmerge_environment_autodetect_forces_dev_off_main_2026_07_25.md)
 (`quickmerge.sh` `ENVIRONMENT` auto-detect bug on `live-defi-rollout`) ·
 [issues/orchestrator_gcloud_active_account_wif_poisoning_2026_07_25.md](/plans/active/issues/orchestrator_gcloud_active_account_wif_poisoning_2026_07_25.md)
@@ -127,7 +128,7 @@ closed; the deploy SA's Secret Manager access scoped down.
 **Sources**:
 [issues/sit_validated_tree_treadmill_blocks_breaking_promotes_2026_07_20.md](/plans/active/issues/sit_validated_tree_treadmill_blocks_breaking_promotes_2026_07_20.md)
 (SIT gate compares against a moving LDR tip, can block breaking promotes indefinitely) ·
-[issues/promotion_lag_alert_hides_provenance_block_2026_07_17.md](/plans/active/issues/promotion_lag_alert_hides_provenance_block_2026_07_17.md)
+[issues/promotion_lag_alert_hides_provenance_block_2026_07_17.md](/plans/archive/issues/promotion_lag_alert_hides_provenance_block_2026_07_17.md)
 (promotion-lag alert masks the real quickmerge provenance-block root cause) ·
 [issues/silent_failures_surfacing_as_generic_promotion_lag_2026_07_17.md](/plans/active/issues/silent_failures_surfacing_as_generic_promotion_lag_2026_07_17.md)
 (three unrelated failures all surfaced as one generic "PROMOTION LAG" alert) ·

@@ -106,6 +106,12 @@ gate_on_depends:
 source:
 assigned_role: data_engineering
 drift_direction: advance-code
+context_scope:
+  [
+    /plans/epics/sports_master.md,
+    /codex/02-data/sports-2020-06-data-floor.md,
+    /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
+  ]
 ---
 
 # Sports consolidated close-out — one pass to canonical, honestly-covered, leakage-free, ML-ready
@@ -294,28 +300,43 @@ manifest-atom fix (C-track) and the ODDS-LEAK shard cleanup — else the re-run 
       (`deployment-service@78a0aa4`, 2026-07-21, part of the same 212,519-object `features-sports-prd` deletion cited
       above), not regenerated. Regenerating fabricated pre-floor data would have re-created fabrication-by-construction
       — the floor ruling's whole point is that this population should not exist at all. No further action needed here.
-- [ ] [DATA] P0. **PURGE the fabricated POST-FLOOR remainder (Jun-Dec 2020 + 2021-2026 only — 2017-2019 + pre-06-06 2020
-      are moot, already deleted by the pre-floor wipe), only after the re-run todo above is done for that same
-      post-floor scope** — overwriting alone is provably insufficient (a re-run never rewrites a day it produces no
-      output for, so a fabricated object on a zero-output day survives). Snapshot the delete list FIRST (GCS soft-delete
-      gives a 7-day recovery window), then delete every POST-FLOOR `derived_features` parquet still carrying a
+- [x] ✅ [DATA] P0. **DONE — verified 2026-07-30 (satellite corpus-hygiene pass; independently confirmed by a concurrent
+      `/na-eligibility-audit` sports-tranche pass the same day, same evidence, same conclusion), previously
+      false-unchecked (see
+      `/plans/active/issues/ag_closeout_audit_sports_prefilter_covering_gap_and_false_unchecked_p0_2026_07_30.md`
+      finding 2).** PURGE the fabricated POST-FLOOR remainder (Jun-Dec 2020 + 2021-2026 only — 2017-2019 + pre-06-06
+      2020 are moot, already deleted by the pre-floor wipe), only after the re-run todo above is done for that same
+      post-floor scope — overwriting alone is provably insufficient (a re-run never rewrites a day it produces no output
+      for, so a fabricated object on a zero-output day survives). Snapshot the delete list FIRST (GCS soft-delete gives
+      a 7-day recovery window), then delete every POST-FLOOR `derived_features` parquet still carrying a
       PRE-`2026-07-19` GCS creation timestamp — do NOT re-touch pre-floor dates, they're already handled by the wipe's
       own snapshot+delete. Honest absence beats an invented `competition_phase`
-      (`/codex/02-data/honest-absence-downstream-handling.md`). **⚠️ Corrected 2026-07-27 — the prior "Not
-      `[OPERATOR]`-gated ... reversible-for-a-week" framing here was an UNVERIFIED assertion (the canonical negative
-      example `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` §3a cites, alongside this same todo's
-      duplicate copy in `sports_consolidated_native_ao_extract_2026_07_25.md`, which was independently corrected
-      2026-07-26).** Fixed now with an actual fresh check, not a re-assertion: this is an object-scoped delete (specific
-      `derived_features` parquet objects filtered by creation timestamp, never the bucket) against
+      (`/codex/02-data/honest-absence-downstream-handling.md`). Satisfied by
+      `/plans/archive/2026_07/sports_derived_features_postfloor_residue_purge_2026_07_27.md` (`status: complete`, both
+      todos `[x]`): its Todo 1 ran the exhaustive Tier-2 SPOT census (2400/2400 in-scope days scanned, Jun-Dec 2020 +
+      2021-2026, 26,891 objects) and returned `total_delete=0` / `total_keep=26891` / `total_unparseable=0`; its Todo 2
+      (the reversibility-verified purge, downgraded from `[OPERATOR]` 2026-07-27 per a fresh
+      `gcs_bucket_soft_delete_retention_seconds()` check) resolved as a verified no-op because nothing was left to
+      delete — every in-scope object already carries a `last_modified` on/after the 2026-07-19 cutoff. Sibling checkbox
+      in `/plans/active/issues/sports_derived_features_fabricated_corpus_scope_2026_07_20.md` closed on the same
+      evidence (now archived). The reversibility framing below stays accurate and re-usable but was never load-bearing,
+      since no delete was needed. **⚠️ Corrected 2026-07-27 — the prior "Not `[OPERATOR]`-gated ...
+      reversible-for-a-week" framing here was an UNVERIFIED assertion (the canonical negative example
+      `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` §3a cites, alongside this same todo's duplicate copy
+      in `sports_consolidated_native_ao_extract_2026_07_25.md`, which was independently corrected 2026-07-26).** Fixed
+      then with an actual fresh check, not a re-assertion: this is an object-scoped delete (specific `derived_features`
+      parquet objects filtered by creation timestamp, never the bucket) against
       `features-sports-prd-central-element-323112` — `gcs_bucket_soft_delete_retention_seconds(...)` returned `604800`
       (7 days) fresh-checked 2026-07-27 per §3a, so it genuinely qualifies for the reversibility carve-out (finding T,
-      `task_template.md`) this time, verified rather than assumed. Re-query fresh before running, not from this
-      citation. The snapshot-first step stays as extra safety margin, not as the load-bearing justification.
-- [ ] [DATA] P0. **Re-verify by CENSUS, not sampling, only after the PURGE todo above is done** — the terminal check is
-      "zero pre-fix-dated POST-FLOOR `derived_features` objects remain" (pre-floor is separately verified 0 by the
-      wipe's own census), decidable from object metadata alone (a GCS creation-time listing, not a content sample).
-      Sampling is what produced the retracted CLEAN claim above. **Done when**: the census returns 0 post-floor objects
-      with a pre-`2026-07-19` creation timestamp.
+      `task_template.md`) this time, verified rather than assumed.
+- [x] ✅ [DATA] P0. **DONE — same evidence + timestamp as the PURGE todo above.** Re-verify by CENSUS, not sampling,
+      only after the PURGE todo above is done — the terminal check is "zero pre-fix-dated POST-FLOOR `derived_features`
+      objects remain" (pre-floor is separately verified 0 by the wipe's own census), decidable from object metadata
+      alone (a GCS creation-time listing, not a content sample). Sampling is what produced the retracted CLEAN claim
+      above. **Done when**: the census returns 0 post-floor objects with a pre-`2026-07-19` creation timestamp. — MET:
+      the same exhaustive Tier-2 SPOT census cited above (2400/2400 days, 26,891 objects) IS this census-based
+      re-verification; it returned 0 objects with a pre-`2026-07-19` creation timestamp in the post-floor scope
+      (`total_delete=0`).
 - [x] [DIAG] P1. ✅ Root-caused + backfilled — `batch1_ao_ready` todo 5. Two stacked bugs (unrun Phase-0.6 backfill + a
       deleted legacy-bucket launcher) fixed; 2020-01-01→2026-07-24 re-run shipped (16,661 rows, was 1).
       `features-service@89a2ac9d`, `deployment-service@826ca68`, `instruments-service@47c1ffb3` (verified via
@@ -492,17 +513,31 @@ manifest-atom fix (C-track) and the ODDS-LEAK shard cleanup — else the re-run 
       the raw-tick vendor `source=ODDS_API`; multiple other already-shipped scripts independently hardcode this exact
       value as protected). **Done when**: the Distinct Values panel + the QG assertion todo below both read 0
       non-canonical for all three axes.
-- [ ] [DATA] P1. **NEW — venue vocabulary cleanup, 4 distinct dispositions for the 9 non-canonical values** (once the
-      parse-bug fix above stops new pollution — fix the parser FIRST, re-stamp SECOND, same ordering lesson as the
-      original F1/F2 note): (1) casing/aliasing rewrite — LADBROKES_UK→LADBROKES, UNIBET_UK/UNIBET_EU→UNIBET,
-      SPORT888→BET888SPORT (all 4 already exist correctly-cased in the UAC venue registry, this is a pure re-stamp, no
-      registry gap); (2) cross-AG bleed — KALSHI, POLYMARKET rows belong to `asset_group=prediction`; same remediation
-      pattern as the "Cross-AG finding" section below (root-cause the write path, then purge); (3) residual-only —
-      SMARKETS is an explicitly deleted venue (codex: "removed from all repos, no manifest rows should be expected") —
-      any remaining rows are stale residue to purge, not a registry gap; (4) parse-bug residue — FOOTBALL/UNKNOWN clear
-      once the venue-parts[0] fix above ships and existing rows are re-stamped. Also still fix the original footystats
-      legacy bundle mislabel (`venue=ODDS_API`→`FOOTYSTATS`, 42,476 rows) — unrelated to the parse bug, a separate
-      writer defect.
+- [ ] [DATA] P1. **NEW — venue vocabulary cleanup, dispositions for the 9 non-canonical values** (once the parse-bug fix
+      above stops new pollution — fix the parser FIRST, re-stamp SECOND, same ordering lesson as the original F1/F2
+      note): (1) casing/aliasing rewrite — LADBROKES_UK→LADBROKES, SPORT888→BET888SPORT (both already exist
+      correctly-cased in the UAC venue registry, this is a pure re-stamp, no registry gap); **UNIBET_UK/UNIBET_EU are
+      NOT part of this rewrite — struck 2026-08-02, see the disproof + pointer below**; (2) cross-AG bleed — KALSHI,
+      POLYMARKET rows belong to `asset_group=prediction`; same remediation pattern as the "Cross-AG finding" section
+      below (root-cause the write path, then purge); (3) **SMARKETS residual — struck 2026-08-02, see below**; (4)
+      parse-bug residue — FOOTBALL/UNKNOWN clear once the venue-parts[0] fix above ships and existing rows are
+      re-stamped. Also still fix the original footystats legacy bundle mislabel (`venue=ODDS_API`→`FOOTYSTATS`, 42,476
+      rows) — unrelated to the parse bug, a separate writer defect. **RESOLVED 2026-08-02 (operator ruling on
+      plan_reconcile_parked_operator_decisions_2026_08_02.md § 1a, option A): the UNIBET-fold and SMARKETS-purge clauses
+      are STRUCK from disposition (1)/(3) above, not just banered** — both premises were DISPROVEN 2026-07-27, two days
+      after this todo was authored, by measured evidence in
+      [`/plans/active/sports_consolidated_native_ao_extract_2026_07_25.md:151-166`](/plans/active/sports_consolidated_native_ao_extract_2026_07_25.md).
+      **(a) `UNIBET_UK`/`UNIBET_EU` → `UNIBET` is NOT a casing/alias fold** — a live content comparison proved they are
+      genuinely distinct bookmaker feeds (a shared day/league/fixture/market shows DIFFERENT simultaneous odds), so the
+      fold was ADDED to `SPORTS_VENUE_FOLD` and REMOVED the same day; it now contains ONLY
+      `{"ladbrokes_uk": "LADBROKES", "sport888": "BET888SPORT"}`. Folding would silently conflate two distinct
+      bookmakers' live data on every future capture. **(b) `SMARKETS` is NOT deleted-venue residue** — two independent
+      live manifest census passes measured **1,113,644–1,652,384 rows** through 2026-07-26, and
+      `/codex/01-domain/sports-instruments.md` § "VENUE COUNT CORRECTED 2026-07-24" lists SMARKETS among the 28 live
+      registered ODDS_API bookmaker venues. It was never "removed from all repos"; a purge would destroy over a million
+      rows of genuine live production data. The `LADBROKES_UK`/`SPORT888` re-stamps in (1), and dispositions (2) and
+      (4), are UNAFFECTED and still stand. No worker can pick up the struck clauses anymore — they no longer exist in
+      the todo text above, only this historical record of why they were removed.
 - **[CODE] P0/P1.** EXCHANGE_ODDS vs FIXED_ODDS fork — **MOVED 2026-07-25** to its own child,
   `sports_closeout_exchange_fixed_odds_fork_2026_07_25.md` (`sequential: true`, 11 todos — the GCS-move step split into
   an immediately-dispatchable pass for the 5 already-unambiguous venues plus a separate `[OPERATOR]`-gated follow-on for
@@ -528,8 +563,24 @@ manifest-atom fix (C-track) and the ODDS-LEAK shard cleanup — else the re-run 
       2026-07-27 — this checkbox was stale (real work done, never flipped here).
 - [ ] [CODE] P2. Eliminate (or document) the legacy bare `entity=fixtures/` (no `pipeline_mode=`) write path still
       active today alongside the canonical split writer (5-league subset).
-- [ ] [CLEANUP] P2. Snapshot-then-cull the dead `sports_reference_v2/by_date/` dual-layout (frozen 2026-04-20, no
-      entities). Confirm no reader consumes it first.
+- [ ] [OPERATOR] [CLEANUP] P2. Snapshot-then-cull the dead `sports_reference_v2/by_date/` dual-layout (frozen
+      2026-04-20, no entities). Confirm no reader consumes it first. <br>⛔ **STOP — THE READER-CHECK GATE IS NOT
+      SUFFICIENT HERE, and this amendment was already RULED 2026-07-28.**
+      [`/plans/active/sports_satellite_ao_dispatch_batch5_2026_07_26.md:184-197`](/plans/active/sports_satellite_ao_dispatch_batch5_2026_07_26.md)
+      proved **1,492 of these rows are the SOLE surviving copy** of that data (no canonical twin exists) and ruled that
+      they fold explicitly into the pre-floor-wipe scope per
+      [`/codex/02-data/sports-2020-06-data-floor.md`](/codex/02-data/sports-2020-06-data-floor.md) — precisely because
+      this todo's reader-check-only gate "does not actually cover twin-existence". That same ruling directed a follow-up
+      pass to "amend the two colliding cull todos... so neither silently deletes these 1,492 rows via the wrong
+      (reader-check-only) mechanism first"; its own finalize doc
+      (`sports_satellite_ao_dispatch_batch5_2026_07_26_finalize.md:141-145`, 2026-07-28) records the amendment as
+      **STILL UNDONE**, and batches 6/7/8 never picked it up. Retagged `[OPERATOR]` and bannered 2026-08-02 by the
+      `/plan-reconcile` whole-corpus run, executing the already-ratified 2026-07-28 amendment — this is not a new
+      decision. Prod-bucket deletes are human-only unless reversibility-qualified per
+      [`/codex/02-data/gcs-and-manifest-delete-safety-protocol.md`](/codex/02-data/gcs-and-manifest-delete-safety-protocol.md)
+      § 3a. Tracked at
+      [`/plans/active/issues/plan_reconcile_parked_operator_decisions_2026_08_02.md`](/plans/active/issues/plan_reconcile_parked_operator_decisions_2026_08_02.md)
+      § 1b.
 - [ ] [DOC] P2. **Finding C correction (2026-07-23): this was mis-scoped, downgraded from the original P1/HIGH.**
       `sports_canonical_raw_truncated_rederive_destroys_corpus_2026_07_16.md` is `status: resolved` (corpus-destroying
       risk already remediated, byte-exact GCS soft-delete restore verified) — only its 1 remaining open todo needs
@@ -708,12 +759,12 @@ manifest-atom fix (C-track) and the ODDS-LEAK shard cleanup — else the re-run 
       honest-absence (393 rows, season not yet published) + fetch-miss residue (7 rows) — both already the sweep's own
       accepted terminal classes — plus a NEW 86-row writer bug (structurally unreachable by the canonical-folder-scoped
       mechanism), filed as its own issue doc:
-      `plans/active/issues/sports_fixtures_schedule_noncanonical_raw_league_id_folders_2026_07_24.md` (status: open at
+      `plans/archive/issues/sports_fixtures_schedule_noncanonical_raw_league_id_folders_2026_07_24.md` (status: open at
       the time, 1 open todo, correctly not resolved by this todo's scope — that remaining todo was itself resolved
-      separately 2026-07-26, `unified-trading-pm@554be628c`; doc now `status: resolved`). Also spun off (found
-      incidentally): `plans/archive/issues/sports_fixtures_schedule_wrong_schema_day_2026_04_14.md` (status: open, 1
-      open todo). The mechanism itself ran to full closure with zero remaining ambiguity — every row has a specific,
-      verified reason.
+      separately 2026-07-26, `unified-trading-pm@554be628c`; doc now `status: resolved`, archived). Also spun off (found
+      incidentally): `plans/active/issues/sports_fixtures_schedule_wrong_schema_day_2026_04_14.md` (status: open, 1 open
+      todo). The mechanism itself ran to full closure with zero remaining ambiguity — every row has a specific, verified
+      reason.
 - [x] [DATA] P1. ✅ **RETAGGED 2026-07-28 (stale-tag audit — already answered + executed, `[OPERATOR]` never removed).**
       §U decision — ANSWERED 2026-07-20 (decision 2): stop capturing non-registry leagues; the 489-pair/10,869-row
       population is excluded from the denominator, a purge candidate. **UNBLOCKED 2026-07-24**, **CORRECTED
@@ -910,3 +961,26 @@ section above, which conflated answered and open items):
   `issues/mdps_odds_horizon_bucket_reprocess_launch_prep_2026_07_25.md`, was ALSO reclassified this session but no
   longer needs a Sources mention — a real AO worker already claimed, resolved, and archived it mid-session, per
   `unified-trading-pm@4be5cf08f`.)
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30**: KEEP-NA, valid (sports tranche) — the sports tranche's flagship multi-track
+  closeout (30 open todos across Tracks C/E/F/H/S/V). Stays NA: it carries operator-gated prod GCS DELETEs (Track V
+  raw-keyed league_id objects), the CF-8 maintenance-window item under the same `BLK-d9137d48` STOP, and several
+  cross-track design calls. One stale item WAS closed in this pass — the `[DATA] P0` PURGE of the fabricated post-floor
+  `derived_features` remainder, provably a verified no-op per
+  `/plans/archive/2026_07/sports_derived_features_postfloor_residue_purge_2026_07_27.md` (2400/2400 days, 26,891
+  objects, `total_delete=0`). Its sibling `[DATA] P0` census-re-verify checkbox is satisfied by the same artifact but
+  was left open and filed as a P3 follow-up rather than closed on an unnamed inference
+- **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).
+- **na-eligibility-audit 2026-08-02**: re-read (in scope again — `5fb83f4ea` 07-31 and `b710bbd40` 08-02 both landed
+  after the 07-30 marker). **KEEP-NA, valid — verdict UNCHANGED, and now citation-locked twice over.** Not re-litigated:
+  this doc's own `assigned_vm:` field carries the standing ⛔ operator ruling (2026-07-23) against a direct flip, plus
+  `gate_on_depends: true` on 3 forked children — per the skill's "never re-litigate an established ruling" rule that is
+  KEEP-NA on the citation alone (citation grep-verified in the frontmatter, still present). The 08-02 `/plan-reconcile`
+  commit strengthens it: two Track C/S todos were bannered as P0 delete-safety hazards (`UNIBET_UK/EU` is NOT an alias
+  fold — distinct live bookmaker feeds; `SMARKETS` is NOT deleted-venue residue — 1.1-1.65M live rows), and the
+  `sports_reference_v2/by_date/` cull was retagged `[OPERATOR]` because its reader-check-only gate does not cover
+  twin-existence for 1,492 sole-surviving-copy rows. All 28 open todos read this pass; no newly-stale item found beyond
+  what that same-day run already corrected. RECLASSIFY would be actively unsafe here — naive concurrent dispatch is
+  exactly what the ⛔ note and the prose-only sequencing warnings guard against

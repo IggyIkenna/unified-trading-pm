@@ -110,23 +110,38 @@ hard-kill-escalation todo (that todo is now explicitly gated on this one landing
 active harm right now, the harden side's evidence is a single 5-day-old stuck slot, and hardening while the classifier
 is known-wrong is actively dangerous.
 
-- [ ] [BACKEND] P1. **Make the liveness kick host-load-aware / require two-window confirmation.** Before firing
-      `worker_kicked`, require the ping/pane to be stale across TWO consecutive verify windows (not one), OR widen
-      `verify_window_s` adaptively when host load average / swap pressure is high, OR gate the kick on a progress marker
-      (don't kick a pane whose progress advanced within the last N seconds even if the latest read is stale). The point:
-      a single transient pane-read delay under host thrash must NOT interrupt a genuinely-progressing worker. **Done
-      when**: a regression test simulating pane-read latency > `verify_window_s` while progress markers keep advancing
-      produces ZERO `worker_kicked` events. Repo: agent-orchestrator.
+- [x] ✅ [BACKEND] P1. **SHIPPED ELSEWHERE — `agent-orchestrator@64b5310` (citation fix by `/na-eligibility-audit ao`
+      2026-07-30; the work landed, this checkbox was simply never flipped).** Executed as
+      `/plans/active/ao_consolidated_closeout_2026_07_25.md`'s `[BACKEND] P1` todo, which cites this doc's spec
+      verbatim. Implementation took the third of the three options this todo offered (progress-marker gating, not
+      two-window or adaptive-window): `_progress_marker_shields_kick` + a new `kick_progress_grace_seconds` knob
+      (default 90s) in `WorkerLivenessKicker._tick_once` — a worker whose `last_ping` advanced inside the grace window
+      is never kicked even when the pane read classifies frozen. **This todo's own stated done-when is met**: regression
+      test `test_pane_read_latency_with_advancing_progress_markers_produces_zero_kicks` simulates 4 ticks of a
+      persistently- FROZEN pane read while `last_ping` keeps advancing and asserts ZERO
+      `worker_kicked`/`worker_kick_failed` events; full local QG green (1993 passed, ruff/basedpyright clean). Note the
+      shipping todo also corrected a location premise: the pane-classification path that actually emits `worker_kicked`
+      is `server/worker_liveness/__init__.py`, not `worker_liveness_watchdog.py`. Original text follows. Make the
+      liveness kick host-load-aware / require two-window confirmation. Before firing `worker_kicked`, require the
+      ping/pane to be stale across TWO consecutive verify windows (not one), OR widen `verify_window_s` adaptively when
+      host load average / swap pressure is high, OR gate the kick on a progress marker (don't kick a pane whose progress
+      advanced within the last N seconds even if the latest read is stale). The point: a single transient pane-read
+      delay under host thrash must NOT interrupt a genuinely-progressing worker. **Done when**: a regression test
+      simulating pane-read latency > `verify_window_s` while progress markers keep advancing produces ZERO
+      `worker_kicked` events. Repo: agent-orchestrator.
 - [ ] [DEVOPS] P1. **Enforce the shared-host QG cap as an actual admission gate.** Replace the advisory
       `max(2, floor(cores/4))` guidance with a real host-level semaphore/lock around full-suite QG launches so they
       cannot queue back-to-back and pin the host at saturation; a slot that wants to run QG waits for a slot rather than
       launching unconditionally. **Done when**: with N slots wanting QG simultaneously, at most `max(2, floor(cores/4))`
       run concurrently and the rest queue on the semaphore (verified by a launch test). Repo: agent-orchestrator (QG
       launcher) — coordinate with quality-gates.sh entry point.
-- [ ] [DOC] P2. Document the host-saturation → false-kick → completion-stall failure mode and the two-window /
+- [x] ✅ [DOC] P2. Document the host-saturation → false-kick → completion-stall failure mode and the two-window /
       load-aware kick contract in the orchestrator watchdog SSOT
       (`/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md`), so future liveness tuning treats "stale
-      pane under host load" as distinct from "wedged agent."
+      pane under host load" as distinct from "wedged agent." — unified-trading-pm. Added a cross-referenced note under
+      the "Liveness" bullet describing the failure mode + the shipped `agent-orchestrator@64b5310` grace-shield fix, and
+      pointing to `worker-liveness.md`'s existing full-detail section (which already documented the fix itself; this
+      doc's own SSOT was the one still missing the cross-reference).
 
 ## Progress Log
 
@@ -168,3 +183,30 @@ is known-wrong is actively dangerous.
   degradation, not a hard-stop. Escalation trigger to watch: a slot going dead with committed-unpushed WIP while
   false-kicked, which would cross into the unpushed-sweep governance-bypass path. Fix is BACKEND/DEVOPS-owned; main is
   charter-barred from killing/capping QGs, reaping slots, or editing AO runtime state.
+- **na-eligibility-audit 2026-07-30**: KEEP-NA-STALE (citation fixed, no reclassification) — the `[BACKEND] P1`
+  two-window/load-aware kick todo was ALREADY SHIPPED as `agent-orchestrator@64b5310` via
+  `/plans/active/ao_consolidated_closeout_2026_07_25.md`'s `[BACKEND] P1`, which cites this doc's spec verbatim; the
+  checkbox was simply never flipped. Flipped `[x]` with the commit + the regression-test evidence its own done-when
+  asked for. Doc stays `assigned_vm: NA`: its `[DOC] P2` sibling edits
+  `/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md` (never autonomous), and the `[DEVOPS] P1`
+  host-level QG admission semaphore remains genuinely open.
+- **2026-07-30 (plans-corpus reduction marathon, wave 3)**: shipped `[DOC] P2` — added a cross-referenced note under the
+  "Liveness" bullet in `/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md` describing this failure
+  mode + the shipped grace-shield fix, pointing to `worker-liveness.md`'s existing full-detail section
+  (unified-trading-pm only, no code/build). **`[DEVOPS] P1` (host-level QG admission semaphore) assessed and left open —
+  genuinely out of bounded scope for this pass**: it requires a real semaphore/lock around every full-suite
+  `quality-gates.sh` launch fleet-wide (not just agent-orchestrator's own QG), touching the shared `base-service.sh`/QG
+  entry point every repo in the fleet invokes — per this workspace's own rule-11 blast-radius discipline ("a gate change
+  is not done until proven across the fleet + all promotion branches"), this is exactly the kind of shared-infra change
+  that needs fleet-wide verification, not a single-repo bounded fix. Left for a dedicated DEVOPS pass with room to
+  verify across repos.
+- **2026-07-31 (conflict-gated re-triage) — RECLASSIFIED, not actually conflict-gated.** This doc WAS one side of the
+  watchdog kick+escalation contradiction, and that side is fully shipped (`@64b5310` + the `[DOC] P2` SSOT note). The
+  remaining `[DEVOPS] P1` (fleet-wide QG admission semaphore) was never itself gated by the contradiction or by any
+  other doc — it's genuinely open, standalone, large-blast-radius infra work that needs its own scoped implementation
+  pass (touches `base-service.sh`/the QG entry point every repo invokes). Mis-filed into the conflict-gated bucket by
+  association with its sibling item, not by an actual dependency.
+- **na-eligibility-audit 2026-08-01** (autonomous, tranche `ao`, dispatch agt-8e95ca, slot 2): KEEP-NA, valid — the
+  single open item is the fleet-wide QG-admission semaphore (`[DEVOPS] P1`), assessed and correctly left open by two
+  prior audit passes (2026-07-30, 2026-07-31) as genuinely out-of-bounded-scope, large-blast-radius infra work touching
+  the shared `base-service.sh`/QG entry point every repo invokes. Re-confirmed on independent re-read — no change.

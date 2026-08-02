@@ -23,7 +23,7 @@ scope: [engineer, admin]
 tags: [ao-dispatch, assigned-vm, plan-hygiene, validity-audit, reclassification, ag-closeout-audit, orphan-detection]
 related:
   [
-    /plans/active/issues/blank_assigned_vm_dispatch_classification_gap_2026_07_26.md,
+    /plans/archive/issues/blank_assigned_vm_dispatch_classification_gap_2026_07_26.md,
     /plans/active/issues/ag_closeout_audit_scope_widening_triage_2026_07_26.md,
     /plans/active/issues/autonomous_session_operator_decisions_2026_07_25.md,
     /plans/active/ag_closeout_audit_rollout_2026_07_25.md,
@@ -53,6 +53,13 @@ source: >-
   explicitly scoped this as NEXT-session work, and explicitly chose the LOCAL/human track over AO-dispatched when asked
   (2026-07-26).
 drift_direction: advance-code
+context_scope:
+  [
+    /plans/active/ag_closeout_audit_rollout_2026_07_25.md,
+    /cursor-configs/skills/ag-closeout-audit/SKILL.md,
+    /plans/active/task_template.md,
+    /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
+  ]
 ---
 
 # Audit the ~444 `assigned_vm: NA` docs for validity + AO-eligibility
@@ -603,6 +610,8 @@ inline in the doc itself (Progress Log entry) or in a per-tranche audit-results 
   the classifying agent's read, but archival is its own 6-step-ritual action deserving independent re-verification
   before executing, not a rider on this already-large tick.
 
+- **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).
+
 ## Progress Log (na-eligibility-audit incremental marker)
 
 - **na-eligibility-audit 2026-07-30** (infra tranche, dispatch agt-30721a): KEEP-NA-STALE — closed Phase 0's 2 todos
@@ -614,3 +623,12 @@ inline in the doc itself (Progress Log entry) or in a per-tranche audit-results 
   Self-referential note: this run (`/na-eligibility-audit infra`) is itself one incremental instance of the
   daily-scheduled generalization this plan's own Phase 2 todo describes authoring — no circularity issue, just worth
   flagging for a future reader.
+- **na-eligibility-audit 2026-08-02** (infra tranche, incremental run): **KEEP-NA, valid** (upgraded from the 2026-07-30
+  KEEP-NA-STALE — that verdict's 2 stale Phase-0 todos are now flipped, so nothing stale remains). In scope this run
+  only because a context-scout backfill touched the file. Read end-to-end; `grep -cE '^- \[ \]'` = **13**, matching this
+  verdict's item count. All 13 are genuinely unexecuted: the 9 Phase-1 per-tranche checkboxes, Phase 2's
+  conflict-check/fold-in pair, and Phase 3's pre-filter widening + prose-trap conversion. **Deliberately did NOT flip
+  the `infra` tranche checkbox** even though this run gives every infra NA doc a dated verdict: that section's own
+  done-when is "every `assigned_vm: NA` doc in that tranche", and the inventory this run consumed enumerates only docs
+  with >=1 open todo, so a flip would overclaim against zero-open-todo members — exactly the overclaim this doc's own
+  honest "would overclaim" note warns about. That note is a standing self-ruling and is not re-litigated here.

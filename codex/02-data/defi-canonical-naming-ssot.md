@@ -28,7 +28,7 @@ related:
     /codex/02-data/defi-data-type-taxonomy.md,
     /codex/02-data/pipeline-mode-partition.md,
     ../../plans/archive/2026_07/defi_manifest_canonicalisation_2026_06_01.md,
-    /plans/active/issues/defi_pool_chain_collision_curve_balancer_gap_2026_07_21.md,
+    /plans/archive/issues/defi_pool_chain_collision_curve_balancer_gap_2026_07_21.md,
   ]
 created: 2026-06-01
 authoritative_for:
@@ -112,7 +112,8 @@ keep diverging for POOL rows** — collapsing them (e.g. suffixing `instrument_i
 This is why the 6 known cross-chain pool-address collisions (1 CURVE + 5 BALANCER pool contracts, each deployed on two
 chains) are **not bugs**: `instrument_id` colliding across chains is expected under Option A — the two rows are
 disambiguated by `canonical_instrument_id`/`glued_pair_id`, not by `instrument_id`. Live-verified 2026-07-26:
-`plans/active/issues/defi_pool_chain_collision_curve_balancer_gap_2026_07_21.md`.
+`plans/archive/issues/defi_pool_chain_collision_curve_balancer_gap_2026_07_21.md` (archived 2026-07-30, fully closed —
+Stage 4/5 trace also completed, see that doc for the full 5-stage verdict).
 
 **Separate, internal-only chain-key**: `instruments-service/scripts/build_instrument_catalogue.py::_aggregate_key` folds
 `chain` into the catalogue's own lifecycle-merge key (`pool::{chain}::{pool_address}`) so the two chains' listing

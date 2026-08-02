@@ -48,6 +48,14 @@ source:
   "Successor execution plan of bucket_estate_fold_design_2026_07_13 §3 todo 1 (split-plan authoring). Operator ruling
   2026-07-17: author all 5 folds as HUMAN plans. This is Fold B (ml — lowest risk, migrated FIRST per the design's risk
   order)."
+context_scope:
+  [
+    /codex/05-infrastructure/bucket-isolation-model.md,
+    /codex/05-infrastructure/manifest-consolidator-ssot.md,
+    /codex/02-data/pipeline-mode-partition.md,
+    /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
+    /plans/archive/2026_07/bucket_estate_fold_design_2026_07_13.md,
+  ]
 ---
 
 # Bucket fold — ml 5 kind-buckets → 1 (`ml-store-{env}-{pid}`)
@@ -186,7 +194,7 @@ two `dependency_checker.py` per-AG guard maps; UTL `ml/model_registry.py` + `dom
       [[bucket_iam_write_protection_per_tier_2026_06_09]] Phase-2 Group-B (signal it unblocked for THIS fold); `-test-`
       twin gets the test-tier policy. (Prefix-scoped STANDARD exception for `ml-store/configs/` optional — configs/ is
       empty today.)
-- [ ] [CODE] P1. **SECURITY — gate `CloudModelArtifactStore.load_model` pickle deserialization** (found by the Fold-B
+- [x] ✅ [CODE] P1. **SECURITY — gate `CloudModelArtifactStore.load_model` pickle deserialization** (found by the Fold-B
       UTL adversarial review, security lens). `domain_client/artifact_store.py` `load_model` joblib-deserializes with NO
       trusted-prefix allowlist and NO sha256 gate — UNLIKE `ModelRegistry` (`_ALLOWED_JOBLIB_PREFIXES` + optional
       sha256). Pre-existing, but Fold B now CO-LOCATES its objects (`artifacts/`) in the SAME `ml-store` bucket as
@@ -200,9 +208,19 @@ two `dependency_checker.py` per-AG guard maps; UTL `ml/model_registry.py` + `dom
       `artifacts/`, rejects `models/`+`evil/`+sha-mismatch). UTL QG green modulo an UNRELATED foreign failure
       (`test_instruments_catalog_reader` fails ONLY because a LIVE foreign UAC dirty-WIP —
       `venue_launch_dates.py`/`chain_env.py`, mtime 11:38 — contaminates the local defi-catalog test; origin UTL
-      quality-gates-v2 is GREEN, proving my change + tree are clean). Change is UNCOMMITTED WIP in UTL; **ships bundled
-      with Fold A's UTL T0 cutover** (same repo, disjoint files) once the foreign UAC WIP clears (or via
-      `--skip-preflight` with a fresh sentinel).
+      quality-gates-v2 is GREEN, proving my change + tree are clean). ~~Change is UNCOMMITTED WIP in UTL; ships bundled
+      with Fold A's UTL T0 cutover.~~ — **SHIPPED + FLIPPED 2026-07-31 (corpus-sweep; the 2026-07-17 operator-ownership
+      hold on bucket-fold checkboxes is RESCINDED for hard-evidenced items).** Evidence
+      `unified-trading-library@bccc4ca449057e37ae19d5c384aeaffd71e08b08` (2026-07-18T19:02:38+0100, _"feat(security): ml
+      Fold-B co-location deserialize gate for CloudModelArtifactStore"_, `Quickmerge: agent`) — 2 files / +68 lines:
+      `unified_trading_library/domain_client/artifact_store.py` (+37) and `tests/unit/test_model_registry.py` (+33).
+      **Verified live at HEAD, not just claimed**: the commit is an ancestor of `origin/live-defi-rollout`
+      (`git merge-base --is-ancestor` = true, so it is not a local-only or reverted change), and `artifact_store.py`
+      today carries the trusted-prefix allowlist comment (_"under this store's own trusted `artifacts/` prefix may be
+      deserialized here — mirroring `ModelRegistry._ALLOWED_JOBLIB_PREFIXES`"_) plus
+      `_deserialize_model(self, model_bytes, blob_name, expected_sha256: str | None)` raising
+      `ValueError("Model integrity check failed: …")` on digest mismatch — i.e. the allowlist AND the optional sha256
+      gate the todo asked for are both present in the shipped code.
 - [ ] [CODE] P2. **Ship deployment-api ml-store display cutover** (4 files: `commentary/pipeline_uat.py`,
       `deployment_api_config.py`, `routes/services.py`, `services/data_status_drilldown/_core.py`) — implemented +
       QG-verified 2026-07-17 (display-only: data-status drilldown + config-buckets scope to ml-store prefixes;
@@ -444,3 +462,9 @@ two `dependency_checker.py` per-AG guard maps; UTL `ml/model_registry.py` + `dom
   potential data-status regression since the real model index is under `models/_index/`). Phase E must: repoint the live
   GCP job `--bucket`→`ml-store-prd-<pid>` AND verify the data-status reader's expected availability_index path BEFORE
   deleting `ml-training-artifacts`.
+
+- **na-eligibility-audit 2026-08-02** (re-confirms 2026-07-30; re-read after intervening edits, verdict unchanged):
+  KEEP-NA, valid — operator ruling 2026-07-17 (HUMAN plans) + the P0 open todo is a 5-source prod-bucket delete =
+  human-only hard stop. NOTE the P1 SECURITY pickle-gate todo reads STALE — Fold-A's own Progress Log lists
+  `UTL@bccc4ca4` (ml Fold-B deserialize gate) in its shipped set.
+- **context-scout 2026-08-01**: populated/refreshed context_scope (5 entries).

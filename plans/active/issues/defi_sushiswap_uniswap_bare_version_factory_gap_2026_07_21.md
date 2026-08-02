@@ -27,7 +27,7 @@ scope: [engineer, admin]
 tags: [data-correctness, defi, venue-canonicalization, factory-address, sushiswap, uniswap, dex-pool, residual]
 related: [defi_consolidated_closeout_2026_07_18, canonical_closeout_open_questions_2026_07_18]
 created: 2026-07-21
-last_updated: 2026-07-21
+last_updated: "2026-08-02"
 parent_epic: infrastructure_master
 assigned_vm: NA
 execution_scope: local-only
@@ -38,6 +38,14 @@ estimate_calibrated_ai_days: 0.4
 assigned_role: data_engineering
 drift_direction: advance-code
 depends_on: []
+context_scope:
+  [
+    /plans/active/defi_consolidated_closeout_2026_07_18.md,
+    /plans/archive/issues/canonical_closeout_open_questions_2026_07_18.md,
+    instruments-service/instruments_service/reference_data/adapters/defi/_dex_factory_registry.py,
+    instruments-service/scripts/canonicalize_defi_manifest_venue_2026_06_14.py,
+    unified-api-contracts/unified_api_contracts/registry/defi_venues.py,
+  ]
 locked_by:
 locked_since:
 supersedes:
@@ -150,9 +158,19 @@ original audit and this measurement, not a discrepancy in method; both counts de
 
 ## Follow-up (tracked)
 
-- Added a new `[DATA]` todo under `defi_consolidated_closeout_2026_07_18.md` Track 1 for: (1) deciding + landing Option
-  A or B above to actually start capturing factory addresses, and (2) the UAC `ALL_DEFI_VENUES` registration gap for
-  SushiSwap-on-Arbitrum (and an audit for any other bare-venue chain with the same gap).
+- A `[DATA]` todo tracks: (1) deciding + landing Option A or B above to actually start capturing factory addresses, and
+  (2) the UAC `ALL_DEFI_VENUES` registration gap for SushiSwap-on-Arbitrum (and an audit for any other bare-venue chain
+  with the same gap). **Two live locations, one execution site** (pointer corrected 2026-08-02 — this bullet previously
+  named only `defi_consolidated_closeout_2026_07_18.md` Track 1, which went stale when Track 1 was forked out on
+  2026-07-24 and the todo moved with it; a `grep -i factory` against the closeout returned zero hits):
+  - **Executable todo** (the one to work): the `[DATA] P2` "NEW 2026-07-21 — actually start capturing factory addresses"
+    entry in
+    [`/plans/active/defi_track01_per_instrument_and_canon_id_2026_07_24.md`](/plans/active/defi_track01_per_instrument_and_canon_id_2026_07_24.md),
+    the forked Track-1 child.
+  - **Roll-up view**: the matching Track-1 entry re-added to
+    [`/plans/active/defi_consolidated_closeout_2026_07_18.md`](/plans/active/defi_consolidated_closeout_2026_07_18.md)
+    on 2026-08-02, so the AG-level close-out surfaces the residual instead of silently dropping it. Close all three
+    (this doc's todo + both plan entries) together.
 - This doc stays `status: open` (not `resolved`) — the CODE-level infra (map + resolver + wiring + tests) is done and
   shipped, but the actual 199,397-row residual is NOT reduced by this fix (0 rows resolve today, by honest design) —
   closing this doc as resolved would misrepresent that as "fixed."
@@ -162,3 +180,23 @@ original audit and this measurement, not a discrepancy in method; both counts de
 - [ ] [DATA] P2. **Land factory-address capture (Option A or B) + register the missing UAC SushiSwap-Arbitrum venues** —
       the resolver built in this doc resolves 0 of 206,107 bare SUSHISWAP/UNISWAP rows today because no factory-address
       data is captured anywhere and UAC has no `SUSHISWAP_V2-ARBITRUM`/`SUSHISWAP_V3-ARBITRUM` registry entries.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30**: KEEP-NA, valid - Option A (subgraph augmentation) vs Option B (on-chain RPC) is
+  an explicitly undecided design fork; A needs a live-schema probe per fork before landing
+- **context-scout 2026-08-01**: populated context_scope (5 entries).
+- 2026-08-02 (worker, slot-3): Verified this doc's "Follow-up (tracked)" claim against the corpus — the claimed Track-1
+  todo in `defi_consolidated_closeout_2026_07_18.md` was genuinely absent (`grep -i factory` → 0 hits), but the work was
+  never lost: it had migrated into the forked Track-1 child `defi_track01_per_instrument_and_canon_id_2026_07_24.md`
+  during the 2026-07-24 line-cap fork, where it is still open and carries both halves (Option A/B capture + the UAC
+  SushiSwap-Arbitrum registration). Re-added the roll-up entry to the close-out's Track 1 per operator ruling and
+  corrected the pointer above to name both locations. No change to the measured figures (206,107 residual, resolved=0)
+  and no change to this doc's `status: open` / KEEP-NA classification — the Option A-vs-B design fork is still unruled.
+- **na-eligibility-audit 2026-08-02** (tranche=defi, autonomous, scheduled): KEEP-NA valid (2026-07-30 verdict re-
+  affirmed after the 2026-08-02 pointer correction) — re-read end to end, 1 open item. The 2026-08-02 edit was a pointer
+  fix only (naming both the executable Track-1 child and the re-added roll-up view) and its own note states there is "no
+  change to this doc's `status: open` / KEEP-NA classification — the Option A-vs-B design fork is still unruled".
+  Confirmed: Option A (subgraph query augmentation, needs a live-schema probe per fork or a wrong field name hard-errors
+  the query) vs Option B (on-chain RPC `factory()` lookup, needs an RPC provider + pool_address enumeration) remains an
+  undecided design call, plus a cross-repo UAC `ALL_DEFI_VENUES` registration prerequisite.

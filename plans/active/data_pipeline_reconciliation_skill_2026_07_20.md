@@ -34,7 +34,7 @@ related:
     issues/tradfi_canonical_path_migration_design_2026_07_19.md,
   ]
 created: 2026-07-20
-last_updated: 2026-07-25
+last_updated: 2026-07-30
 parent_epic: manifest_master
 assigned_vm: NA
 execution_scope: local-only
@@ -49,6 +49,14 @@ locked_since:
 supersedes:
 superseded_by:
 depends_on:
+context_scope:
+  [
+    /cursor-configs/skills/data-pipeline-reconciliation/SKILL.md,
+    /codex/02-data/four-surface-reconciliation-procedure.md,
+    /codex/02-data/reconciliation-finding-taxonomy.md,
+    /codex/02-data/cross-asset-canonical-target-ssot.md,
+    /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
+  ]
 source: operator request 2026-07-20 — "per-AG skill /data-pipeline-reconciliation, audit first then plan then execute"
 ---
 
@@ -608,6 +616,70 @@ integration text (not applied — SKILL.md is owned by the in-flight Phase C). P
       not actually depend on todo 39's oracle (it is an independent vocabulary check, not built atop
       `canonical_path_violations()`), so it did not block on 39 being unshipped.
 
+### Phase G — close 3 coverage gaps found auditing the skill against its own criteria (operator request 2026-07-30)
+
+> **Provenance**: operator asked whether the skill's existing combination actually verifies, across ALL 5 AGs and ALL
+> buckets, that every GCS object carries a UAC-recognized + manifest-recognized venue/instrument_id/pipeline_mode/
+> instrument_type/bundle-key, in human-readable (not raw-wire) form. A read-only research pass against the shipped
+> skill + `canonical_path_violations()` + `_axis_census.py` + the census codex doc found: (1) path STRUCTURE is covered
+> for all 5 AGs (the oracle, Phase C todos 16-18); (2) the venue/instrument_type/data_type vocabulary CENSUS (G1, §3f)
+> is mechanism-complete for all 5 AGs but had only ever been MEASURED for defi (H6 in `reference-defi.md`) —
+> cefi/tradfi/sports/prediction were never run; (3) the id-FORM leg (human-readable vs raw-wire symbol) is correctly
+> `{cefi, defi}`-only by design (sports/prediction route through domain-specific fixture-id/condition-id builders, not
+> the `VENUE:ITYPE:SYMBOL` grammar — confirmed by reading `_partition_path_canonicality.py`'s own doc comments, NOT a
+> gap to widen), but the taxonomy/skill docs never said so explicitly for sports (only prediction was named), so a
+> report silently prints `0` for both, indistinguishable from "checked, clean" — the same false-clean shape
+> `canonical_path_oracle_blind_to_filename_stem_2026_07_20.md` exists to prevent, one level up; (4) "bundle" (the
+> underlying-keyed / CQG-keyed multi-instrument grain) had no positive machine-checkable finding type, only prose hazard
+> warnings (`reference-prediction.md` H1). **Scope note**: this phase closes the 3 doc/taxonomy gaps + runs the census
+> (G1) for the 4 unmeasured AGs — it does NOT re-run the full four-surface `/data-pipeline-reconciliation` skill
+> end-to-end for all 5 AGs again (that already happened, Phase C todos 16-18, 2026-07-20); a fresh full re-audit is a
+> separate, much larger undertaking and is not what this phase's finding required.
+
+- [x] 43. ✅ [DATA] P1. **Document sports as an explicit ID_FORM N/A-by-design carve-out (not silence)** — widened
+      `reconciliation-finding-taxonomy.md` § 2.7 `non_canonical_id`'s N/A carve-out list to name the sports fixture-id
+      filename alongside prediction's CQG bundle (it was only ever named for prediction, leaving sports's identical
+      status undocumented); same fix mirrored in `SKILL.md` § 3g. Both now instruct the report to print an explicit
+      `id_form: not_applicable (structural)` line for sports/prediction rather than a bare 0-violations count. No code
+      change — `_ID_FORM_CHECKED_ASSET_GROUPS = {cefi, defi}` in `_partition_path_canonicality.py` was already correctly
+      scoped (verified by reading the function + its own doc comments); the gap was purely in report/doc disclosure.
+      Gate: diff shows both docs' N/A carve-out lists now name sports explicitly.
+- [x] 44. ✅ [DATA] P1. **Add `bundle_atom_key_mismatch` finding type** — new § 2.7 entry in
+      `reconciliation-finding-taxonomy.md` giving the `reference-prediction.md` H1 hazard ("phantom reconciler mis-keys
+      prediction, wipes CQG bundle rows") a positive, machine-checkable verdict of its own (previously prose-only);
+      covers both the cefi/tradfi `underlying=`-keyed chain-bundle re-derivation case and the prediction CQG
+      re-derivation case. Updated the closed-set count (twenty → twenty-one) and the delete-eligibility table (eighteen
+      → nineteen non-eligible) in the same doc. Gate: `grep -c "^#### \`" reconciliation-finding-taxonomy.md` == 21 ·
+      delete-eligibility table sums to 21.
+- [x] 45. ✅ [DATA] P1. **Ran the distinct-value census (G1, § 3f) for cefi/tradfi/sports/prediction** — the four AGs
+      whose census had never been measured (only defi's H6 existed). Called the real, unmodified
+      `get_axis_value_census()` + `_distinct_values._canonical_set`/`_is_accepted_exception` in-process
+      (deployment-api's venv fixed per todo 46). Measured: cefi 9,492,020 rows / tradfi 5,894,343 / sports 628,349 /
+      prediction 1,661,267. Cross-checked every non-canonical finding against the existing corpus BEFORE writing
+      anything up (pre-task conflict check): tradfi's 4 findings (`BARCHART`/`YAHOO_FINANCE`/`ESM0`/`UD`/`UNKNOWN`/
+      `continuous_future`) and sports' 33-value `instrument_type` finding are BYTE-IDENTICAL to two already-open
+      2026-07-28 issue docs (`tradfi_distinct_values_net_new_clusters`, `sports_instrument_type_market_token_ssot_gap`)
+      — good independent re-confirmation, no new filing. Sports' `KALSHI` venue finding (20,785 rows) matches the
+      archived `cross_ag_prediction_rows_bleed_into_sports_instruments_index_2026_07_20.md` todo 15 exactly
+      (`row_count=0` throughout, already tracked P2). Genuinely NEW small-scale residuals (cefi venue/instrument_type/
+      chain-column drift, 6 un-registered sports bookmaker venues, prediction instrument_type/data_type case drift) —
+      filed as `plans/archive/issues/cefi_sports_prediction_first_census_small_drift_2026_07_30.md` (P2, per
+      `/codex/11-project-management/plan-priority-tier-and-dispatch-ordering.md` — small-scale hygiene, not
+      backfill-critical, matches the P2 precedent of the two sibling census docs). Full per-AG results recorded in
+      `reference-cefi.md` H7-refinement + H8, `reference-tradfi.md` H7, `reference-sports.md` H11,
+      `reference-     prediction.md` H6 — `unified-trading-pm@a2a84b66c` (docs) + this commit (results + new issue doc).
+      AGs, not just a "mechanism exists" claim.
+- [x] 46. ✅ [INFRA] P2. **Diagnosed + fixed a stale local venv, not a code bug** — `deployment_api.routes`/`.services`
+      failed to import (pinned `fastapi==0.136.3`/`starlette==1.1.0` installed, lacking `iter_route_contexts` that
+      unified-trading-library's `service_framework.fastapi_factory` imports at load time). Checked
+      `plans/active/issues/cve_affected_pinned_deps_remediation_2026_06_18.md` first (pre-task conflict check) — this is
+      the ALREADY-TRACKED, ALREADY-SHIPPED fleet-wide fastapi bump (`deployment-api@2c1d446`, `pyproject.toml`/`uv.lock`
+      both correctly declare `fastapi>=0.137.0,<1.0.0`→resolves `0.140.7`); this checkout's `deployment-api/.venv`
+      simply hadn't been `uv sync`'d since that fix landed. Ran `uv sync` in `deployment-api/` (picked up
+      `fastapi 0.136.3→0.140.7`, `starlette 1.1.0→1.3.1`, `deployment-api`/`deployment-service`/
+      `unified-trading-library` all to current HEAD) — `get_axis_value_census` now imports + is callable in-process. No
+      new issue filed (would have duplicated the existing tracked doc). Local-venv-only change, nothing shipped.
+
 ---
 
 ## Deferred work after 2026-07-20
@@ -854,6 +926,15 @@ blocked AGs first so the whole-estate orphan picture is complete before back-fil
       2026-07-21" table above, this is still "Not done" (real data-correctness work; the audit parquets are already in
       GCS); pick up `estate_orphan_assessment_2026_07_21` todos 1-2. (The table above lists 7 more still-"Not done"
       items from the same deferral — this is the recommended-next one, not the only one.)
+- [ ] [DATA] P2. **Measure the historical per-venue non-canonical row count for the 8 CeFi live spot venues fixed in
+      `cefi_live_spot_connectors_noncanonical_instrument_id_2026_07_30.md`** (archived, resolved) — that issue's own
+      code-level fix (BINANCE/COINBASE/OKX/UPBIT/BITFINEX/BITGET/BYBIT/KRAKEN-SPOT now emit canonical `SPOT_PAIR` +
+      `BASE-QUOTE` ids) shipped without ever measuring the SIZE of the pre-fix non-canonical population — the census
+      that originally found this only measured the aggregate `instrument_type=spot` lowercase axis (4,923 rows across
+      ALL cefi), never the id-FORM/hyphenation dimension per venue. Run this skill's distinct-value census (G1, § 3f)
+      scoped to `asset_group=cefi`, filtered to these 8 venues, comparing `is_canonical_instrument_id()` pre-fix-shape
+      vs post-fix-shape row counts — a real, not-yet-known number needed to size any historical backfill/repair decision
+      (the fix only stops NEW rows from being wrong).
 
 ## Lessons (do not re-learn)
 
@@ -872,3 +953,8 @@ blocked AGs first so the whole-estate orphan picture is complete before back-fil
   before any object was written. Never `--apply` a prod migration without inspecting the dry-run.
 - **The pre-commit hygiene gate caught 4 real defects** this session (unquoted `: ` in YAML summaries ×2,
   `nature: refactor`, invalid audit-result `status`) — the commit-is-the-quality-boundary rule works.
+
+- **na-eligibility-audit 2026-07-30**: KEEP-NA, valid — same dated operator ruling as the milestones gate (entry #10,
+  option A) — standing reference surface; the single residual todo is a prod sports orphan back-fill + legacy-dup
+  triage.
+- **context-scout 2026-08-01**: populated/refreshed context_scope (5 entries).

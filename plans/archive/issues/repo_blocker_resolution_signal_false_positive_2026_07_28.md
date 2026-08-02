@@ -12,7 +12,10 @@ summary:
   measurements; only the resolution signal did.
 status: resolved
 nature: issue
-asset_group: [cross-cutting]
+asset_group:
+  [ao] # corrected 2026-08-02 (/ag-closeout-audit cross-cutting, operator-ruled) -- was [cross-cutting]; content is an
+  # agent-orchestrator repo-blocker resolution-signal false positive (repos: [agent-orchestrator]), squarely
+  # ao-tranche; the MTDS QG red is only the triggering condition, not the subject.
 stage: [meta]
 repos: [agent-orchestrator]
 scope: [engineer, admin]

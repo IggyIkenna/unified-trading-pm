@@ -41,7 +41,7 @@ related:
   [
     /plans/archive/issues/shared_host_tmp_tmpfs_exhaustion_2026_07_08.md,
     /plans/archive/issues/shared_host_tmp_tmpfs_exhaustion_2026_07_26.md,
-    /plans/active/ao_satellite_ao_dispatch_batch1_2026_07_26.md,
+    /plans/archive/2026_07/ao_satellite_ao_dispatch_batch1_2026_07_26.md,
     /plans/archive/issues/shared_host_tmp_tmpfs_full_2026_07_26.md,
   ]
 created: "2026-07-26"

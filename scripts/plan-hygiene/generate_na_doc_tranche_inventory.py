@@ -55,13 +55,74 @@ def _load_docspec():
 ds = _load_docspec()
 
 AGS = ["cefi", "defi", "tradfi", "prediction", "sports"]
-NON_AG_TRANCHES = ["ao", "ci", "infra"]
+NON_AG_TRANCHES = ["ao", "ci", "infra", "ui"]
 ALL_TRANCHES = [*AGS, "cross-cutting", *NON_AG_TRANCHES]
 
 # infra's TRANCHE name (CLI --tranche, closeout-doc prefix) does not match its actual `asset_group`
 # enum VALUE, which is `infrastructure` (plans/PLAN_FORMAT.md's ASSET_GROUP enum has no "infra"
-# member) -- ao/ci have no such mismatch (their enum values equal their tranche names).
+# member) -- ao/ci/ui have no such mismatch (their enum values equal their tranche names).
 TRANCHE_ASSET_GROUP_VALUE = {"infra": "infrastructure"}
+
+# One owning tranche per multi-tranche doc, ruled 2026-07-30
+# (sharded_per_tranche_audit_stash_race_and_multitranche_marker_gap_2026_07_30.md, option A): derived
+# from `parent_epic` -- single-valued, maps 1:1 onto a real plans/epics/{parent_epic}.md -- rather than
+# the first `asset_group` list entry (codex/11-project-management/ao-dispatch-batch-naming-and-conflict-
+# check.md SS 2 "Grouping"). Built by reading every plans/epics/*.md's own dominant scope (most non-AG
+# epics self-tag `asset_group: [cross-cutting]` or `[meta]`, too coarse to derive a single tranche from
+# directly -- see that same codex SS 2 -- so this table encodes the ag-closeout-audit SKILL.md
+# classification-mechanism section's documented epic groupings instead of re-deriving them per run).
+EPIC_TO_TRANCHE = {
+    # 5 real AGs -- each has one dedicated master epic.
+    "cefi_master": "cefi",
+    "defi_master": "defi",
+    "tradfi_master": "tradfi",
+    "predictions_master": "prediction",
+    "sports_master": "sports",
+    # ao -- agent-orchestrator dispatch/worker-lifecycle.
+    "orchestrator_master": "ao",
+    "agent_operating_framework_master": "ao",
+    # infra -- generic repo/dependency/terraform/org hygiene + plan-corpus hygiene tooling. CI-specific
+    # docs already self-tag `asset_group: ci` directly (2026-07-27 schema expansion), so this epic-level
+    # fallback rarely needs to arbitrate the ci/infra split within infrastructure_master's own content.
+    "infrastructure_master": "infra",
+    "plan_hygiene_master": "infra",
+    # ui -- deploy/launch consoles, data-status UI, cost/VM/alerts observability (tranche added 2026-07-30).
+    "deployment_and_user_management_master": "ui",
+    "observability_master": "ui",
+    # Every other epic is a genuinely cross-AG / platform-wide coordinator -- cross-cutting is the
+    # correct single owner (includes DATA_EPICS' non-infra members plus the rest, and the SUPERSEDED
+    # coordinators for defensiveness even though no live doc should still carry them as parent_epic).
+    "batch_live_symmetry_master": "cross-cutting",
+    "client_isolation_and_governance_master": "cross-cutting",
+    "dart_and_promote_master": "cross-cutting",
+    "escalation_and_disaster_recovery_master": "cross-cutting",
+    "execution_master": "cross-cutting",
+    "features_and_ml_master": "cross-cutting",
+    "global_ledger_pnl_attribution_master": "cross-cutting",
+    "instruments_master": "cross-cutting",
+    "manifest_master": "cross-cutting",
+    "mtds_mdps_master": "cross-cutting",
+    "strategy_master": "cross-cutting",
+    "trading_agent_master": "cross-cutting",
+    "cross_cutting_may_23_SUPERSEDED_2026_05_21": "cross-cutting",
+    "manifest_evolution_SUPERSEDED_2026_05_21": "cross-cutting",
+    "manifest_migration_SUPERSEDED_2026_05_21": "cross-cutting",
+    "strategy_and_dart_master_SUPERSEDED_2026_05_21": "cross-cutting",
+}
+
+
+def owning_tranche(parent_epic: str, tranches: list[str]) -> str:
+    """The ONE tranche that writes this doc's incremental-skip verdict marker (every other tranche a
+    multi-tranche doc belongs to still classifies + reports it, but never writes to it -- see this
+    script's module docstring precedent + the primary-owner rule in na-eligibility-audit/SKILL.md).
+    Falls back to the first classified tranche when `parent_epic` is unmapped/blank or its mapped
+    tranche isn't one of the doc's own classified tranches -- ownership is never assigned to a tranche
+    the doc isn't otherwise a real member of."""
+    mapped = EPIC_TO_TRANCHE.get(parent_epic)
+    if mapped and mapped in tranches:
+        return mapped
+    return tranches[0]
+
 
 DOC_TREES = ["plans/active/*.md", "plans/active/issues/*.md"]
 
@@ -95,7 +156,14 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--tranche", choices=[*ALL_TRANCHES, "all"], default="all")
     parser.add_argument("--json", action="store_true", help="emit JSON instead of a summary table")
+    parser.add_argument(
+        "--owned-only",
+        action="store_true",
+        help="filter to docs this --tranche OWNS (writes the verdict marker for) -- requires --tranche != all",
+    )
     args = parser.parse_args(argv)
+    if args.owned_only and args.tranche == "all":
+        parser.error("--owned-only requires --tranche to name a specific tranche, not 'all'")
 
     records = []
     for path in _iter_docs():
@@ -126,8 +194,9 @@ def main(argv: list[str] | None = None) -> int:
             if ag in asset_group:
                 tranches.append(ag)
         for t in NON_AG_TRANCHES:
-            # ao/ci/infra are real dedicated asset_group enum values (2026-07-27 schema expansion) --
-            # tested identically to the 5 real AGs, not via the retired closeout-citation proxy (see
+            # ao/ci/infra are real dedicated asset_group enum values (2026-07-27 schema expansion);
+            # ui joined them 2026-07-30 -- all tested identically to the 5 real AGs, not via the
+            # retired closeout-citation proxy (see
             # na_doc_tranche_inventory_stale_citation_membership_cross_contamination_2026_07_29.md).
             if TRANCHE_ASSET_GROUP_VALUE.get(t, t) in asset_group:
                 tranches.append(t)
@@ -136,6 +205,7 @@ def main(argv: list[str] | None = None) -> int:
         if "cross-cutting" in asset_group and (parent_epic in DATA_EPICS or not tranches):
             tranches.append("cross-cutting")
 
+        doc_tranches = tranches or ["UNCLASSIFIED"]
         records.append(
             {
                 "path": rel,
@@ -144,12 +214,15 @@ def main(argv: list[str] | None = None) -> int:
                 "asset_group": asset_group,
                 "parent_epic": parent_epic,
                 "open_todos": open_todos,
-                "tranches": tranches or ["UNCLASSIFIED"],
+                "tranches": doc_tranches,
+                "owning_tranche": owning_tranche(parent_epic, doc_tranches),
             }
         )
 
     if args.tranche != "all":
         records = [r for r in records if args.tranche in r["tranches"]]
+    if args.owned_only:
+        records = [r for r in records if r["owning_tranche"] == args.tranche]
 
     if args.json:
         print(json.dumps(records, indent=1))
@@ -157,9 +230,11 @@ def main(argv: list[str] | None = None) -> int:
 
     tranches_with_unclassified = [*ALL_TRANCHES, "UNCLASSIFIED"]
     by_tranche: dict[str, list[dict]] = {t: [] for t in tranches_with_unclassified}
+    owned_by_tranche: dict[str, list[dict]] = {t: [] for t in tranches_with_unclassified}
     for r in records:
         for t in r["tranches"]:
             by_tranche.setdefault(t, []).append(r)
+        owned_by_tranche.setdefault(r["owning_tranche"], []).append(r)
 
     total_docs = len(records)
     total_zero = sum(1 for r in records if r["open_todos"] == 0)
@@ -167,7 +242,8 @@ def main(argv: list[str] | None = None) -> int:
     for t in tranches_with_unclassified:
         docs = by_tranche.get(t, [])
         zero = sum(1 for r in docs if r["open_todos"] == 0)
-        print(f"  {t:14s} {len(docs):4d} docs  ({zero} zero-open-todo)")
+        owned = len(owned_by_tranche.get(t, []))
+        print(f"  {t:14s} {len(docs):4d} docs  ({zero} zero-open-todo)  [{owned} owned]")
     return 0
 
 

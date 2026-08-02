@@ -20,7 +20,7 @@ summary: |
   exemption.
 status: open
 nature: issue
-asset_group: [meta]
+asset_group: [ao] # retagged 2026-07-31 (corpus-sweep meta fold-in) -- was [meta]
 stage: [meta]
 repos: [agent-orchestrator]
 scope: [engineer]
@@ -35,10 +35,10 @@ related:
     ../../epics/orchestrator_master.md,
   ]
 created: 2026-07-17
-last_updated: 2026-07-28 # (was: 2026-07-17; RULED 2026-07-28 — do the content-hash rewrite now, see Progress Log)
+last_updated: 2026-07-31 # (RULED 2026-07-28: do rewrite via re-scope; assigned_vm REVERTED planning->NA 2026-07-31 per BLK-29884333 — see Progress Log)
 parent_epic: orchestrator_master
-assigned_vm: planning
-execution_scope: orchestrator-agent
+assigned_vm: NA # NOT AO-dispatchable: banner-guarded, local-only-homed fleet-core rewrite (BLK-29884333 option A); na-audit 2026-07-30 misclassified NA->planning, reverted 2026-07-31
+execution_scope: local-only
 priority: P2
 estimate_class: refactor
 estimate_baseline_ai_days: 2
@@ -204,6 +204,17 @@ unauditable tail, reached from a different direction: there they are un-AUDITABL
 
 ## Progress Log
 
+- **2026-07-31 (main-agent, BLK-29884333 enforcement)** — **THIRD mis-dispatch; `assigned_vm` REVERTED planning->NA.**
+  Re-dispatched to slot 4 at `2026-07-31T01:47:40Z`; the worker got 3+ todos into actually rewriting fleet-core
+  `_make_task_id`/`regen_backlog_from_plan.py` before the review agent caught it and halted the slot (slot 11 had
+  already `/skip`ped the same task at `2026-07-30T23:53Z` citing option A). Root cause per BLK-29884333 (option A,
+  main): the 2026-07-30 na-eligibility-audit flipped `assigned_vm: NA -> planning`, wrongly surfacing a banner-guarded,
+  local-only-homed, multi-day live-dispatch-core rewrite as a 1-hour AO-dispatchable todo — NOT AO-eligible (outcome not
+  worker-determinable; phased design = human decision). Applying the ruling's prescribed revert now (reversible park,
+  deletes nothing) to stop the recurrence. The 2026-07-28 "do the rewrite" ruling STANDS but must be re-homed into
+  `ao_open_issues_consolidated_close_out_2026_07_17.md` as properly-phased operator/human-planning todos before any
+  dispatch — that re-scope, plus hardening the na-audit against banner-guarded/local-homed docs, remain operator-pending
+  (BLK-29884333).
 - **2026-07-28 (slot-12)** — **Fresh live recurrence, post-fix, on a `done` row this time (not `dispatched`).**
   `sports_consolidated_native_ao_extract-010` (`plan_ref: sports_consolidated_native_ao_extract_2026_07_25.md`, Track H
   denominator todo) was dispatched to me at `2026-07-28T23:02:42Z`. Its plan checkbox had already been flipped +
@@ -229,7 +240,7 @@ unauditable tail, reached from a different direction: there they are un-AUDITABL
   normal, fully-scoped AO-dispatchable todo (full blast-radius mandate: `existing_ids`/`existing_briefs`, `slot_skips`,
   dashboard/API id refs, `done_sha` history migration — no partial rewrite). The 2026-07-27 dispatched-row gap todo is
   folded into the same rewrite's gate rather than patched standalone. Mirrored to
-  `/plans/active/ao_satellite_ao_dispatch_batch1_2026_07_26.md` and
+  `/plans/archive/2026_07/ao_satellite_ao_dispatch_batch1_2026_07_26.md` and
   `/plans/archive/2026_07/ao_issue_docs_consolidated_remediation_2026_07_23.md`, both of which carried the same
   BLOCKED-OPERATOR-DECISION framing. Plan-only change, no code shipped.
 - **2026-07-20** — NULL-`brief_hash` tail todo landed, decision (c) accept-permanently (`agent-orchestrator@aaa2db8`,
@@ -249,3 +260,16 @@ unauditable tail, reached from a different direction: there they are un-AUDITABL
   bounded/deterministic-outcome work, no operator gate or live judgment call found; flipped
   `assigned_vm: NA -> planning`. Conflict-check run against all active `assigned_vm: planning` docs in this doc's
   `parent_epic` + the infra tranche's consolidated-closeout digest: zero/milestone-only overlap, clear to proceed.
+- **na-eligibility-audit 2026-07-31**: KEEP-NA, valid — **DO NOT RECLASSIFY THIS DOC.** Confirmed the 2026-07-31
+  BLK-29884333 entry above: the 2026-07-30 na-eligibility-audit RECLASSIFY verdict directly above was itself a
+  misclassification, caused a THIRD mis-dispatch of a banner-guarded, local-only-homed, multi-day live-dispatch-core
+  rewrite before the operator/main-agent caught and reverted it. This doc carries a top-of-body "🟢 EXECUTION
+  CONSOLIDATED" banner explicitly reading "Do NOT start work from this doc alone" (work routes through
+  `ao_open_issues_consolidated_close_out_2026_07_17.md` instead) and an `assigned_vm: NA` inline frontmatter comment
+  stating "NOT AO-dispatchable" — both citations verified real by reading them directly, per the skill's own
+  never-re-litigate rule. Leaving `assigned_vm: NA` untouched. Closed the operator-pending "hardening the na-audit
+  against banner-guarded/local-homed docs" half of BLK-29884333 directly: strengthened
+  `/cursor-configs/skills/na-eligibility-audit/SKILL.md`'s "Never re-litigate an established ruling" paragraph to
+  explicitly name a redirect-to-another-doc banner and an inline `assigned_vm: NA #`-comment citing a prior
+  RECLASSIFY-then-revert as hard KEEP-NA triggers (same commit as this marker), so a future run's Phase 1 does not need
+  to rediscover this citation by luck.

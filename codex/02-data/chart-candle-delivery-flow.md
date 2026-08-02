@@ -31,7 +31,7 @@ authoritative_for: [chart candle delivery end-to-end flow (GCS parquet to price-
 referenced_by:
   [/codex/02-data/availability-manifest-and-data-status.md, /codex/02-data/bar-boundary-candle-edge-convention.md]
 owner:
-last_reviewed: 2026-05-17
+last_reviewed: 2026-09-30
 code_refs:
 ---
 

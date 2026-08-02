@@ -3,7 +3,8 @@ title: Strict per-plan VM matching — fail-closed dispatch
 parent_epic: agent_operating_framework_master
 assigned_vm: harsh_pc
 priority: P0
-status: supersededexecution_scope: orchestrator-agent
+status: superseded
+execution_scope: orchestrator-agent
 estimate_class: infra
 estimate_baseline_ai_days: 2
 estimate_calibrated_ai_days: 1.6

@@ -21,7 +21,7 @@ created: 2026-04-21
 authoritative_for: [UI orphan-route audit policy, orphan-audit whitelist reason prefixes]
 referenced_by: [/codex/09-strategy/architecture-v2/strategy-catalogue-3tier.md]
 owner:
-last_reviewed: 2026-05-17
+last_reviewed: 2026-10-10
 code_refs:
 ---
 

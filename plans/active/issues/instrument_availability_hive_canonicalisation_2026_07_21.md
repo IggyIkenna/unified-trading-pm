@@ -200,17 +200,17 @@ shape, which is the one now actually stale).
       separate top-level prefix) + `market_lifecycle/by_canonical_group/` (prediction only):
 
       | asset_group | instrument_availability (+ futures_contracts) | market_lifecycle |
-                                                          |---|---|---|
-                                                          | cefi | 53,419 | 0 |
-                                                          | defi | 177,346 | 0 |
-                                                          | tradfi | 50,700 | 0 |
-                                                          | sports | 148,691 | 0 |
-                                                          | prediction | 22,637 | 12,582 |
-                                                          | **TOTAL** | **452,793** | **12,582** |
+                                                                                                                                                                                                                                                                                                                                                  |---|---|---|
+                                                                                                                                                                                                                                                                                                                                                  | cefi | 53,419 | 0 |
+                                                                                                                                                                                                                                                                                                                                                  | defi | 177,346 | 0 |
+                                                                                                                                                                                                                                                                                                                                                  | tradfi | 50,700 | 0 |
+                                                                                                                                                                                                                                                                                                                                                  | sports | 148,691 | 0 |
+                                                                                                                                                                                                                                                                                                                                                  | prediction | 22,637 | 12,582 |
+                                                                                                                                                                                                                                                                                                                                                  | **TOTAL** | **452,793** | **12,582** |
 
-                                                          **465,375 flat objects total** need copy-up to full hive. Confirms the doc's own "likely VM-scale" assessment —
-                                                          this is a dedicated migration-VM job (copy → verify → human-only purge per the delete-safety protocol), not an
-                                                          in-session action. Sizing now available to scope todo 7c.
+                                                                                                                                                                                                                                                                                                                                                  **465,375 flat objects total** need copy-up to full hive. Confirms the doc's own "likely VM-scale" assessment —
+                                                                                                                                                                                                                                                                                                                                                  this is a dedicated migration-VM job (copy → verify → human-only purge per the delete-safety protocol), not an
+                                                                                                                                                                                                                                                                                                                                                  in-session action. Sizing now available to scope todo 7c.
 
 - [ ] 7c. [DATA] P2. **Split from the original 7c 2026-07-28, per its own recommendation below — copy-and-verify half,
       no `[OPERATOR]` tag needed.** Copy the 465,375 flat objects UP into the full-hive tree (VM-only, never in-session,

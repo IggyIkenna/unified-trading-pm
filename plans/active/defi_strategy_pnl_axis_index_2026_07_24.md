@@ -33,8 +33,8 @@ related:
     /plans/active/issues/pnl_interest_accrual_wrong_engine_and_banned_formula_2026_07_21.md,
     /plans/active/issues/defi_catalog_engine_config_key_contract_drift_2026_07_23.md,
     /plans/active/issues/defi_archetype_universe_no_curtailment_mechanism_2026_07_23.md,
-    /plans/active/issues/e2e_testing_collateral_validation_dead_import_2026_07_23.md,
-    /plans/active/issues/vm_fleet_preemption_autorecovery_gap_2026_07_23.md,
+    /plans/archive/issues/e2e_testing_collateral_validation_dead_import_2026_07_23.md,
+    /plans/archive/issues/vm_fleet_preemption_autorecovery_gap_2026_07_23.md,
   ]
 created: "2026-07-24"
 last_updated: "2026-07-24"
@@ -57,6 +57,14 @@ source: >-
   plans/active/issues/plan_line_cap_remediation_2026_07_23.md (bucket-(c) split #11: "Extract Strategy/PnL index +
   1800-line historical log"). Content moved verbatim, no rewrite — see the parent's Progress Log / this remediation
   job's evidence for the split rationale.
+context_scope:
+  [
+    /plans/active/defi_consolidated_closeout_2026_07_18.md,
+    /plans/active/lst_rate_honest_coverage_2026_07_21.md,
+    /plans/active/issues/pnl_interest_accrual_wrong_engine_and_banned_formula_2026_07_21.md,
+    /plans/active/issues/defi_catalog_engine_config_key_contract_drift_2026_07_23.md,
+    /plans/active/issues/defi_archetype_universe_no_curtailment_mechanism_2026_07_23.md,
+  ]
 ---
 
 # DeFi strategy/PnL/backtest axis index — entry point for the strategy-service track
@@ -113,9 +121,10 @@ source: >-
   `test_collateral_validation.py` has imported a module deleted 2026-05-01 for ~2.5 months, 9/9 scenarios dead, zero CI
   signal; underlying safety property still holds in prod via a newer v2 mechanism. Operator ruling needed: rewrite vs
   delete vs gate-hardening.
-- **`vm_fleet_preemption_autorecovery_gap_2026_07_23.md`** (`issues/`, not defi-scoped itself but directly affects the
-  `dex_pool_swaps` fleet above) — confirmed `launch-mtds-dex-swaps-backfill-vm.sh` is missing the same SPOT-preemption
-  auto-recovery wiring (`lc_write_preemption_signal_file`) as 13+ other launchers.
+- **`/plans/archive/issues/vm_fleet_preemption_autorecovery_gap_2026_07_23.md`** (archived 2026-07-30, all 9 todos done;
+  not defi-scoped itself but directly affected the `dex_pool_swaps` fleet above) —
+  `launch-mtds-dex-swaps-backfill-vm.sh` was missing the same SPOT-preemption auto-recovery wiring
+  (`lc_write_preemption_signal_file`) as 13+ other launchers; fixed + shipped `deployment-service@db5d3c7`.
 
 **Recommended next action (strategy/PnL axis)**: Phase 1 of the orphaned-archetype build (CARRY_STAKED_BASIS_DATED) is
 running in a background agent as of this addendum — check its result first, then continue Phase 2 (E3, the Aave
@@ -128,4 +137,12 @@ independently-startable item any session can pick up without waiting on the phas
 - [ ] [BACKEND] P2. **`LENDING_INTEREST` mismodeling correction for `carry_staked_basis` not implemented** — E4 already
       ruled the row-set should drop it entirely, but per this doc's own text implementation has not started; separately,
       `issues/e2e_testing_collateral_validation_dead_import_2026_07_23.md`'s rewrite-vs-delete-vs-gate-hardening choice
-      still needs an operator ruling.
+      was **RULED 2026-07-29 (operator direct answer): Option A, rewrite against the current v2 mechanism** — that half
+      is no longer pending (citation corrected 2026-07-30, /na-eligibility-audit defi).
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30**: KEEP-NA-STALE: its todo says the e2e_testing_collateral_validation
+  rewrite-vs-delete choice 'still needs an operator ruling' — that ruling landed 2026-07-29 (Option A). Citation
+  corrected; doc stays NA (index/entry-point doc, nature: process, drift_direction: none)
+- **context-scout 2026-08-01**: populated/refreshed context_scope (5 entries).

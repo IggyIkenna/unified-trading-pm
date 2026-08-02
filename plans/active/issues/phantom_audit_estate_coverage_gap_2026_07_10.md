@@ -169,3 +169,17 @@ noted here only so the two aren't conflated.
       widen `_BUCKET_KIND_MAP` to the full kind×AG matrix) instead of the hardcoded 5-entry map, so the other 42
       un-audited manifests (incl. the 64,227-row `instruments-store-cefi-prd` flagship case) get phantom-checked too
       (see "Suggested fix" above).
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30** (tranche=cefi, autonomous): KEEP-NA, valid - the doc explicitly files it "for the
+  data-pipeline owner to scope", and the fix fans a weekly full-corpus GCS walk over ~20 more buckets (cost/runtime
+  design call).
+- **na-eligibility-audit 2026-07-30** (tranche=defi, autonomous): KEEP-NA, valid - widening the audit from 5 to 47
+  buckets adds ~42 new whole-corpus GCS walks — review-blocking under single-walk discipline; doc defers the scoping to
+  the data-pipeline owner. Reached independently of the cefi tranche above; both agree.
+
+- **na-eligibility-audit 2026-07-30**: KEEP-NA, valid (sports tranche) — the sole todo's own section header is
+  'Suggested fix (data-pipeline owner to scope)' and the fix carries an unresolved cost/parallelism question (a fan-out
+  over ~20 buckets of full-corpus GCS walks against the deliberate weekly cadence) — a scoping call, not a determinable
+  outcome. 4-tranche doc, cefi-flagship evidence

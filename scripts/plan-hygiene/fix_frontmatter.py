@@ -308,6 +308,50 @@ def is_continuation_line(line: str) -> bool:
     return bool(line and (line[0] in (" ", "\t")))
 
 
+def _clear_field_continuations(fm_lines: list[str], field: str) -> list[str]:
+    """Drop ACCIDENTAL multiline-folded continuation lines attached to `field`'s own line.
+
+    `last_updated`/`execution_scope` are meant to be single-line plain scalars, but YAML's
+    plain-scalar folding silently absorbs any following indented lines into the SAME value —
+    so a one-off stray manual edit (or an earlier bug) can leave dangling garbage attached
+    that a plain emptiness check on the field's own line never detects once that line itself
+    holds a real value. Left unstripped, each fixer run only ever patches the field's own
+    line and never removes the stale continuation, so repeated runs accumulate a runaway
+    string rather than converging (confirmed via live repro on
+    plans/active/defi_consolidated_closeout_2026_07_18.md — a multi-date runaway value with
+    embedded changelog prose folded into `last_updated:`; see
+    plans/active/issues/prek_patch_cache_replays_stale_diff_onto_unrelated_files_2026_07_29.md).
+    Call this unconditionally (not just when the field looks empty) so a field whose own
+    line already holds a real value still gets its stale continuation cleaned.
+
+    Distinguishes that accidental-fold garbage from a DELIBERATELY-authored quoted multiline
+    scalar (e.g. `last_updated:\n  '2026-07-10 (was: 2026-06-27 -- ...)'`, a real annotation
+    pattern already in this corpus — plans/active/issues/defi_code_codex_drift_2026_05_27.md,
+    plans/active/issues/uac_data_type_validity_combinator_fragmentation_2026_07_07.md): if the
+    FIRST continuation line (after stripping leading whitespace) opens with a quote character,
+    it's an intentional quoted scalar, not this bug's signature — leave it untouched.
+    """
+    result: list[str] = []
+    i = 0
+    n = len(fm_lines)
+    while i < n:
+        ln = fm_lines[i]
+        if re.match(rf"^{re.escape(field)}:", ln):
+            result.append(ln)
+            i += 1
+            if i < n and is_continuation_line(fm_lines[i]) and fm_lines[i].strip()[:1] in ("'", '"'):
+                while i < n and is_continuation_line(fm_lines[i]):
+                    result.append(fm_lines[i])
+                    i += 1
+            else:
+                while i < n and is_continuation_line(fm_lines[i]):
+                    i += 1
+            continue
+        result.append(ln)
+        i += 1
+    return result
+
+
 def frontmatter_yaml_error(text: str) -> str | None:
     """Return a one-line YAML error if this doc's frontmatter does NOT parse, else None.
 
@@ -622,6 +666,10 @@ def _apply_field_defaults(  # noqa: C901
             print(f"  WARN {filename}: assigned_vm={val!r} is not in {VALID_ASSIGNED_VM} - leaving as-is")
 
     # 15. execution_scope
+    cleaned = _clear_field_continuations(new_fm, "execution_scope")
+    if cleaned != new_fm:
+        new_fm[:] = cleaned
+        changes.append("stripped stray execution_scope continuation lines")
     if not has_field(new_fm, "execution_scope"):
         new_fm.append("execution_scope: orchestrator-agent\n")
         changes.append("added execution_scope=orchestrator-agent")
@@ -663,6 +711,10 @@ def _apply_field_defaults(  # noqa: C901
     # Optional: last_updated (only for active plans)
     status_val = get_field_value(new_fm, "status") or ""
     if status_val == "active":
+        cleaned = _clear_field_continuations(new_fm, "last_updated")
+        if cleaned != new_fm:
+            new_fm[:] = cleaned
+            changes.append("stripped stray last_updated continuation lines")
         if not has_field(new_fm, "last_updated"):
             new_fm.append(f"last_updated: {TODAY}\n")
             changes.append(f"added last_updated={TODAY}")

@@ -59,13 +59,19 @@ thinking_tier: medium
 estimate_class: research
 estimate_baseline_ai_days: 3
 estimate_calibrated_ai_days: 3.6
-last_updated: 2026-07-08
+last_updated: 2026-08-01
 supersedes:
 superseded_by:
 depends_on:
 assigned_role: data_engineering
 drift_direction: advance-code
 locked_since:
+context_scope:
+  [
+    /codex/02-data/honest-coverage-model.md,
+    /plans/active/issues/mtds_is_full_adapter_smoketest_findings_2026_07_07.md,
+    /plans/active/issues/instrument_id_format_canonicalization_2026_07_08.md,
+  ]
 ---
 
 > **Verification-gap finding, not a confirmed bug — the whole point is we don't yet know.** Every finding in the two
@@ -207,8 +213,8 @@ to pursue actual ID canonicalization — not something to fix inside this doc.
       expected-universe-derived numbers (denominators, expected cells) refresh within ≤24h automatically. No flag needed
       in future fixes' rollout plans beyond noting the ≤24h expected-universe lag if a fix specifically depends on that
       artifact.
-- [x] [VERIFY] P2. **[already covered by plans/active/cefi_misc_audits_and_hygiene_2026_07_25.md, see that doc for
-      execution]** Spot-check 2-3 more findings from the smoke-test doc across all 3 layers** — good candidates: the
+- [x] [VERIFY] P2. **[already covered by plans/archive/2026_08/cefi_misc_audits_and_hygiene_2026_07_25.md, see that doc
+      for execution]** Spot-check 2-3 more findings from the smoke-test doc across all 3 layers** — good candidates: the
       DERIBIT live-vs-batch FUTURE misclassification (does deployment-ui show a FUTURE count that matches the real GCS
       row count, or does the live-WS mislabel bleed into the manifest?), and HUOBI-SPOT's missing-from-venue-universe
       gap (does deployment-ui even have a HUOBI-SPOT row to look wrong, or does the venue not appear in the UI's venue
@@ -230,6 +236,9 @@ to pursue actual ID canonicalization — not something to fix inside this doc.
       formats, not a one-line scoping question anymore.
 
 ## Progress Log
+
+- **na-eligibility-audit 2026-07-30**: KEEP-NA, valid - sole open todo is an explicit [DECISION] on reconciliation
+  cadence (full trace vs lighter spot-check) for 58 findings
 
 - **2026-07-08** — Filed after the operator asked, while reviewing the drilldown mockup's AAVE_V3 entry, whether this
   session's adapter-level findings have been reconciled against the manifest and deployment-ui/API layers too.
@@ -253,3 +262,74 @@ to pursue actual ID canonicalization — not something to fix inside this doc.
   with zero canonical structure across 6,180 rows/13 protocols; PERP-vs-PERPETUAL key/field mismatch across all 5
   on-chain-perp venues; PERPETUAL-gets-cleaned-but-FUTURE-doesn't on the same CeFi venue; an AAVE_V3-OPTIMISM
   misspelled-venue-token duplicate fragmenting 4 real rows). New P2 decision todo added; not actioned, just scoped.
+
+- **na-eligibility-audit 2026-07-30** (tranche=cefi, autonomous): KEEP-NA, valid - the sole open todo is an explicit
+  `[DECISION]` on reconciliation cadence across 58 remaining findings.
+- **na-eligibility-audit 2026-07-30**: KEEP-NA, valid (sports tranche) — the sole open todo is tagged `[DECISION]` and
+  is one — 'decide the reconciliation cadence for the remaining 58 findings: full trace per finding (expensive,
+  thorough) vs a lighter spot-check pattern' — a portfolio-cost tradeoff, not a determinable fact, even though its
+  AAVE_V3 pilot prerequisite is now `[x]`
+
+- **2026-07-31/08-01 (data_engineering slot-13, `cefi_misc_audits_and_hygiene-002`)**: spot-checked the next 3
+  unverified findings from the smoke-test doc's 59-item list across all 3 layers, reusing the AAVE_V3 pilot's
+  methodology (direct GCS/manifest parquet reads via `get_storage_client()`/`resolve_bucket_name()`, plus a
+  deployment-api/deployment-ui code grep for how each field is actually surfaced). All 3 reads were live-production,
+  read-only (no writes, no code changed).
+
+  **Finding A — DERIBIT live-vs-batch FUTURE misclassification** (`deribit_ws.py:100`, P0). GCS/adapter layer already
+  established by the smoke test (not re-verified). **Manifest layer: FAIL to surface — structurally blind, not
+  corroborating or refuting.** Read `market-data-tick-cefi-prd-central-element-323112/_index/availability_index.parquet`
+  (9,658,011 rows): DERIBIT has 419,457 rows; `pipeline_mode=live_deribit` rows exist ONLY for
+  `data_type=derivative_ticker` (148 FUTURE rows, 3,360 OPTION rows, 100% `capture_status=expected_unattempted` — never
+  actually captured) — **zero `live_deribit` + `data_type=trades` rows exist for ANY instrument_type.** The manifest
+  simply does not instrument live trade captures at the granularity this bug lives at, so it cannot show the mislabeling
+  either way. **deployment-api/UI layer: also FAIL to surface, for the same root reason.**
+  `deployment_api/routes/data_status/_deploy_turbo.py` supports `pipeline_mode` filtering (a v9 provenance axis) and
+  `_live_coverage.py` has a dedicated `_is_live_mode()` live-prefix helper, so an operator COULD filter by
+  `pipeline_mode=live_deribit` — but given the manifest gap above, any such query returns the same
+  empty/`expected_unattempted`-only picture. **Net: this is a worse gap than AAVE_V3's** — there, the wrong value was at
+  least consistently visible everywhere; here, the entire live-trade-classification path is a manifest blind spot,
+  independent of whether the underlying classification bug is real.
+
+  **Finding B — HUOBI-SPOT / HUOBI-FUTURES / BITSTAMP-SPOT missing from venue universe** (`market_data_categories.py`
+  `VENUES_BY_ASSET_GROUP["cefi"]`, P0). **GCS layer: FAIL (confirmed absent) — corroborates.** 0 rows for all 3 venues
+  in `instruments-store-cefi-prd-central-element-323112/prod/catalog.parquet` (430,290 total rows). **Manifest layer:
+  FAIL (confirmed absent) — corroborates.** 0 rows for all 3 venues in both the instruments-store manifest (84,615 rows)
+  and the MTDS manifest (9,658,011 rows). **deployment-api/UI layer: FAIL, and a WORSE kind of fail than a visible
+  zero-row.** `deployment_api/routes/data_status/_distinct_values.py:315` derives the expected venue set directly from
+  `VENUES_BY_ASSET_GROUP[asset_group]` — the exact same UAC registry the finding names as the root cause. Since
+  deployment-ui's venue-driven views (dropdowns, per-venue grid rows) are built from this same registry, the 3 venues
+  **don't appear in the UI at all** — not a 0%-coverage row an operator could notice, a venue that silently doesn't
+  exist in the picker. **Net: consistent 3-layer absence, and the UI's failure mode is the invisible kind, not the
+  visible-but-wrong kind.**
+
+  **Finding C — OKX margin_type inversion** (`tardis/parsing.py:388-427`, P0, real P&L-relevant per the finding's own
+  framing — same bug class as the AAVE_V3 lending mislabel). **GCS layer: field populated, consistent with the finding's
+  premise.** Catalog confirms real rows both ways (OKX-FUTURES: linear=2,895/inverse=2,592; OKX-SWAP:
+  linear=607/inverse=46) — the field exists and varies, so if the finding's "inverted" claim is correct, a real user
+  reading the catalog directly (e.g. strategy code) would see the wrong value. **Manifest layer: FAIL to surface —
+  different shape of gap than Finding A.** All 7,718 OKX manifest rows (FUTURES=5,036, SWAP=2,682) carry a
+  **blank/unpopulated `margin_type`** — the schema has the column, but nothing stamps it for OKX captures, so the
+  manifest can't corroborate OR refute the inversion (distinct from AAVE_V3, where the manifest DID corroborate the same
+  wrong value). **deployment-api/UI layer: FAIL — zero references to `margin_type` anywhere.** Grepped both
+  `deployment-api` and `deployment-ui` end to end: no route, service, or component reads or renders `margin_type` today.
+  **Net: the bug is real and GCS-verified, but has zero blast radius on the operator-facing coverage UI as it stands** —
+  lower operator-visible urgency than the P0 tag implies for THIS specific surface, though the underlying P&L risk for
+  any code reading the catalog field directly is unaffected by that.
+
+  **Consolidated verdict across all 3**: none of the 3 findings are correctly reconciled end-to-end — every one FAILs at
+  least one layer, and 2 of the 3 (A, B) fail ALL three layers in a way where the manifest/UI gap is not merely "shows
+  the same wrong thing" (like AAVE_V3) but "cannot show anything at all" (a different, arguably more urgent class of gap
+  — an operator has zero signal, not a misleading signal). No code changed this touch (read-only spot check, per this
+  todo's own scope). The `[DECISION]` P2 reconciliation-cadence todo below remains open/human — these 3 results (2 of 3
+  being "manifest doesn't even track this" rather than "manifest shows a fixable wrong value") should inform that
+  cadence call: a full trace won't help findings where the gap is structural non-instrumentation, those need a
+  manifest/schema fix before any per-finding trace would be meaningful.
+
+## Progress Log (na-eligibility-audit)
+
+- **na-eligibility-audit 2026-08-01** (tranche=cefi, autonomous): KEEP-NA, valid. Sole open todo is the `[DECISION] P2`
+  reconciliation-cadence call — a genuine portfolio-cost tradeoff across 58 findings, not a determinable fact.
+  `cefi_consolidated_native_ao_extract_2026_07_25.md` (active/planning) already reviewed and explicitly excluded this
+  exact item as an undecided policy question. No reclassification.
+- **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).

@@ -16,7 +16,7 @@ summary: >-
   generated `.json`, so 14 markdown docs), several with multiple occurrences.
 status: open
 nature: notes
-asset_group: [meta]
+asset_group: [ao] # retagged 2026-07-31 (corpus-sweep meta fold-in) -- was [meta]
 stage: [meta]
 repos: [agent-orchestrator]
 scope: [engineer]
@@ -27,16 +27,17 @@ related:
     /plans/active/issues/sports_odds_api_scattered_multiyear_gaps_2026_07_27.md,
     /plans/archive/issues/sports_odds_api_key_deactivated_2026_07_26.md,
     /plans/active/sports_closeout_track_s2_foldin_2026_07_25.md,
+    /plans/archive/2026_07/ao_consolidated_closeout_2026_07_25.md,
   ]
 created: 2026-07-28
 last_updated: 2026-07-28
 parent_epic: agent_operating_framework_master
 priority: P2
 source: [sports_odds_api_scattered_multiyear_gaps-002]
-assigned_vm: planning
+assigned_vm: NA
 resolved_by:
 locked_by:
-execution_scope: orchestrator-agent
+execution_scope: local-only
 estimate_class: research
 estimate_baseline_ai_days: 1.0
 estimate_calibrated_ai_days: 1.2
@@ -46,6 +47,12 @@ locked_since:
 depends_on: []
 supersedes:
 superseded_by:
+context_scope:
+  [
+    agent-orchestrator/server/regen_backlog_from_plan.py,
+    /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
+    agents/RULES.md,
+  ]
 ---
 
 # `BLOCKED-PREREQUISITES` — not a recognized non-dispatchable token
@@ -162,3 +169,35 @@ same-corpus dependencies). Instead:
   other ~13 — several are legitimately same-corpus todo dependencies where the structurally-correct fix is
   `sequential`/`depends_on`, not a text marker at all; that needs real per-case judgment, filed here as its own
   properly-scoped audit rather than done blind in this session.
+
+- **2026-07-30 (slot-6) — per-file disposition, `plans/active/sports_closeout_track_s2_foldin_2026_07_25.md` (one of the
+  8-occurrence file named in "What I found" above).** Dispatched as `sports_closeout_track_s2_foldin-010` (the "FINAL
+  full-history zero-missing (R1/R2/R3)" todo, line ~298) — its own text already said "bounced 6× as of last check,"
+  confirming this is the same churn class. **Classification: case (b), genuine same-corpus dependency** (on P2a/P2b/P2c
+  earlier in the same plan) — NOT a mislabeled external/operator gate, so retagging to an existing
+  `BLOCKED-CREDENTIALS`/`-OPERATOR`/etc. token would be inaccurate here (unlike the odds-api-scattered-gaps case above).
+  Confirmed the plan's own banner explicitly intended the free-text `BLOCKED-PREREQUISITES` marker to suppress dispatch
+  ("the several `BLOCKED-PREREQUISITES`/`[OPERATOR]` tags below make real cross-item and cross-plan ordering
+  non-dispatchable explicitly... so serializing the whole plan is unnecessary") — i.e. the plan author's intent matches
+  this doc's root cause exactly; the marker is doing its documented job, the regex just doesn't honor it. **Could not
+  apply a structural fix**: `sequential: true` would over-serialize this plan's many unrelated fold-in items (correctly
+  rejected by the plan's own banner); a `depends_on`-gated plan split needs an operator plan-destination decision (HARD
+  RULE — not a worker's call to make unilaterally); task-level `backlog.yaml` prereqs (the RULES.md §4 "park a task"
+  recipe) need direct file access to the orchestrator server's `data/config/backlog.yaml`, which is not present in a
+  worker's slot git clone (confirmed: `find` for `backlog.yaml` under the slot's `agent-orchestrator` checkout returns
+  nothing — it's server-runtime state, not a repo file). Net: no mechanical fix available from a worker slot for this
+  occurrence; sharpened the todo's own text with the precise current blocker instead (P2b's 616-day `odds_api` gap, no
+  backfill run yet) so the next dispatch doesn't re-derive the diagnosis, and logged this disposition here.
+  **Recommendation for whoever completes the full 13-file audit todo below**: same-corpus-dependency occurrences like
+  this one likely need either (a) a main-agent/operator pass with real `backlog.yaml` file access to apply per-task
+  `prereqs.prerequisites` tuning, or (b) a small `agent-orchestrator` enhancement letting a plan declare per-todo (not
+  just whole-plan) same-file ordering — a real design gap this doc's existing recommended-decision text doesn't yet
+  cover, worth a follow-up note when that audit todo is worked.
+
+- **context-scout 2026-08-01**: populated context_scope (3 entries).
+- **na-eligibility-audit 2026-08-02** (autonomous, tranche `ao`): KEEP-NA, valid — covered by the 2026-07-31 operator
+  directive `unified-trading-pm@14478ca26` (`planning` → `NA` + local-only). Independently, the doc's own "Important
+  nuance" section and the slot-6 per-file disposition establish that the remaining ~13-file audit is NOT mechanical:
+  each occurrence needs per-case classification (external-gate mislabel → retag, vs. same-corpus dependency → convert to
+  `sequential`/`depends_on`), and the slot-6 entry records that the structural fix needs an operator plan-destination
+  decision, explicitly "not a worker's call to make unilaterally".

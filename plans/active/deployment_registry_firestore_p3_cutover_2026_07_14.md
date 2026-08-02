@@ -8,7 +8,9 @@ summary:
   autonomously with no human gate.
 status: active
 nature: process
-asset_group: [meta]
+asset_group:
+  [ui] # corrected 2026-07-30 (ui-tranche launch) -- was [meta]; deployment-api's own registry
+  # backing-store migration, core ui-tranche scope
 stage: [meta]
 repos: [unified-trading-library, deployment-api, unified-trading-pm]
 scope: [engineer]
@@ -37,6 +39,13 @@ locked_since:
 supersedes:
 superseded_by:
 source: deployment_registry_firestore_migration_2026_07_14.md (master, Phase 3)
+context_scope:
+  [
+    /codex/05-infrastructure/gcs-object-operations.md,
+    /codex/05-infrastructure/deployment-observability.md,
+    /plans/active/deployment_registry_firestore_migration_2026_07_14.md,
+    /plans/active/issues/deployment_registry_dualwrite_flag_not_propagated_to_vm_launchers_2026_07_30.md,
+  ]
 ---
 
 # Phase 3 — Cutover to Firestore-only + decommission the GCS registry
@@ -174,6 +183,30 @@ QG-green per repo.
   `DEPLOYMENT_REGISTRY_FIRESTORE_DUALWRITE`, then a real soak on non-benchmark production VMs, then a fresh 4-criteria
   re-measurement) — not a re-run of this same measurement. Per the finalize plan's own instruction, `assigned_vm` here
   is intentionally left untouched.
+
+- **2026-07-30 (slot 4, cicd) — soak results in; HALT status updated for next-worker visibility, NOT lifted (per the
+  linked issue doc's own P2 todo).** The project-metadata fallback fix shipped (deployment-service@deba676) and its soak
+  ran (fresh 2026-07-30 ~03:52 UTC measurement, 5 real non-benchmark production VMs launched via their normal launchers)
+  — full detail in
+  `/plans/active/issues/deployment_registry_dualwrite_flag_not_propagated_to_vm_launchers_2026_07_30.md`'s soak todo.
+  Result: **3 of 4 GO/NO-GO criteria FULLY PASS** with fresh live evidence — (2) resource stats read from Firestore
+  (real non-zero cpu/mem/disk on a live, non-reap-created VM), (3) per-VM `/{id}/detail` retrievable from Firestore for
+  that same live VM, (4) Firestore doc == GCS blob parity, byte-for-byte, for a live deployment. **Criterion (1)'s
+  underlying MECHANISM is confirmed correct** — every freshly-booted VM (including one independent VM the soak worker
+  never launched) now writes Firestore with `status=running` and heartbeats advancing every ~60s — but literal
+  fleet-wide doc-count parity has NOT yet been reached: only 4 of ~19 currently-`RUNNING` GCE instances were
+  Firestore-represented at soak time, because the other ~15 are long-running processes that booted BEFORE the fix landed
+  (03:11:34 UTC) and won't re-read the corrected metadata until they cycle (complete/restart). This is the expected
+  transient shape of a read-at-boot metadata fallback, not a residual defect — a materially different failure mode than
+  the original issue (0/16 overlap with zero working mechanism, not a convergence lag). **Net: criteria 1-4 do not yet
+  ALL literally pass this checklist's item-1 bar (doc-count ≈ live-VM count) — this HALT is NOT lifted by this note.**
+  The root-cause fix is verified working end-to-end though, so the remaining gap is pure convergence timing, not an open
+  defect. **For the next P3 worker/operator**: this HALT can be reconsidered once a follow-up count shows the Firestore
+  `status=running` doc count tracking the live fleet as the pre-fix population cycles out (no code work needed — a
+  passive wait + a fresh count). Re-verify with fresh measurements at that time; do not reuse this note's or the linked
+  issue doc's counts (per this doc's own re-verification convention). The remaining GO/NO-GO items stay
+  operator-supervised per this doc's own banner; `assigned_vm` is intentionally left untouched.
+- **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).
 
 ## Codex SSOTs
 

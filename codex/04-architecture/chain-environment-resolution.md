@@ -3,7 +3,7 @@ doc_type: codex-ssot
 title: Chain Environment Resolution
 summary:
   Resolves canonical chain names (ETHEREUM/ARBITRUM) to chain IDs + RPC URLs via CHAIN_ENV (mainnet/testnet/fork);
-  resolve_chain_id/resolve_rpc_url in the UAC registry; 19 EVM chains + Solana + Bitcoin.
+  resolve_chain_id/resolve_rpc_url in the UAC registry; 24 mainnet chains incl. Solana + Bitcoin (registry is the SSOT).
 status: current
 nature: ssot
 asset_group: [meta]
@@ -26,7 +26,7 @@ referenced_by:
     /codex/05-infrastructure/per-venue-paper-policy.md,
   ]
 owner:
-last_reviewed: 2026-05-17
+last_reviewed: 2026-10-05
 code_refs:
 ---
 
@@ -59,7 +59,10 @@ rpc_url = resolve_rpc_url("ETHEREUM", env="mainnet", alchemy_api_key="...")
 
 ## Supported Chains
 
-19 EVM chains + Solana + Bitcoin. Full list in: `unified_api_contracts/registry/chain_env.py`
+24 chains in `MAINNET_CHAIN_IDS` — 22 EVM / EVM-adjacent L1+L2 entries (incl. `STARKNET`, `HYPERLIQUID_L1`, and
+`PLASMA`, onboarded 2026-07-27) plus `SOLANA` and `BITCOIN`. `TESTNET_CHAIN_IDS` covers 21 of them.
+`FORK_CHAIN_IDS = MAINNET_CHAIN_IDS` (same IDs, Tenderly RPC). The registry is the SSOT and grows — read it, don't
+copy the count: `unified_api_contracts/registry/chain_env.py`
 
 ## Configuration
 

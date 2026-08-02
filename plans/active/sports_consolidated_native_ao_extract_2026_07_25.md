@@ -35,8 +35,8 @@ related:
     /plans/active/sports_consolidated_closeout_2026_07_19.md,
     /plans/active/sports_consolidated_native_ao_extract_2026_07_25_finalize.md,
     /plans/active/sports_satellite_ao_dispatch_batch2_2026_07_24.md,
-    /plans/active/sports_satellite_ao_dispatch_batch3_2026_07_25.md,
-    /plans/active/sports_satellite_ao_dispatch_batch4_2026_07_25.md,
+    /plans/archive/2026_07/sports_satellite_ao_dispatch_batch3_2026_07_25.md,
+    /plans/archive/2026_07/sports_satellite_ao_dispatch_batch4_2026_07_25.md,
     /plans/active/sports_track_h_denominator_gated_2026_07_28.md,
     /plans/active/sports_track_h_denominator_prereqs_2026_07_28.md,
     /plans/active/issues/autonomous_session_operator_decisions_2026_07_25.md,
@@ -63,6 +63,14 @@ source: >-
 assigned_role: data_engineering
 sequential: false
 drift_direction: advance-code
+context_scope:
+  [
+    /plans/active/sports_consolidated_closeout_2026_07_19.md,
+    /plans/active/sports_consolidated_native_ao_extract_2026_07_25_finalize.md,
+    /codex/02-data/sports-2020-06-data-floor.md,
+    /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
+    /plans/epics/sports_master.md,
+  ]
 ---
 
 # Sports consolidated closeout — native AO extract
@@ -193,13 +201,19 @@ drift_direction: advance-code
       carrying the footystats-legacy-bundle `venue=ODDS_API` signature under `pipeline_mode=batch_footystats` — NOT
       UNIBET_UK/UNIBET_EU/SMARKETS (excluded above; forcing those to 0 would be a data-correctness regression, not a
       fix). FOOTBALL is already 0 (no further action). Source: `sports_consolidated_closeout_2026_07_19.md:364-374`.
-- [ ] [CLEANUP] P2. **Track S — snapshot-then-cull the dead `sports_reference_v2/by_date/` dual-layout** (frozen
-      2026-04-20, no entities). **Built-in safety gate**: first confirm no reader consumes it (grep both repos for the
-      path); if a reader is found, STOP and report instead of deleting — do not proceed with the cull. Self-justified,
-      not `[OPERATOR]`-gated: snapshot-first + the reader-check is a hard fail-safe baked into the todo itself. (repo:
-      instruments-service / GCS). **Done when**: the reader-check result is recorded, AND (if clear) the snapshot+delete
-      has executed with a post-delete listing confirming 0 objects remain. Source:
-      `sports_consolidated_closeout_2026_07_19.md:421-422`.
+- [ ] [OPERATOR] [CLEANUP] P2. **Track S — snapshot-then-cull the dead `sports_reference_v2/by_date/` dual-layout**
+      (frozen 2026-04-20, no entities). ⛔ **The former "self-justified, reader-check is a hard fail-safe" gating was
+      STRUCK 2026-08-02 — a reader-check answers "is anyone reading this path", NOT "is this the last copy".** The
+      amendment was already RULED 2026-07-28
+      ([`batch5:184-197`](/plans/active/sports_satellite_ao_dispatch_batch5_2026_07_26.md)): **1,492 of these rows are
+      the SOLE surviving copy** (no canonical twin) and fold into pre-floor-wipe scope per
+      [`sports-2020-06-data-floor`](/codex/02-data/sports-2020-06-data-floor.md); batch5's finalize (`:141-145`) records
+      the amendment **STILL UNDONE** and batches 6/7/8 never picked it up, so `/plan-reconcile` executed it here — not a
+      new decision. Prod deletes are human-only unless §3a-reversibility-qualified
+      ([delete-safety](/codex/02-data/gcs-and-manifest-delete-safety-protocol.md)); tracked at
+      [parked-decisions](/plans/active/issues/plan_reconcile_parked_operator_decisions_2026_08_02.md) § 1b. **Done
+      when**: the 1,492-row carve-out is resolved AND the reader-check is recorded AND (if clear) snapshot+delete ran
+      with a post-delete listing showing 0 objects. (repo: instruments-service / GCS)
 - [ ] [DOC] P2. **Track S — Finding C correction: fix the cutover runbook's canonical-is-a-superset premise for raw odds
       on early dates**, citing `sports_canonical_raw_truncated_rederive_destroys_corpus_2026_07_16.md`
       (`status:     resolved`, corpus-destroying risk already remediated — only this documentation correction remains).
@@ -356,20 +370,154 @@ drift_direction: advance-code
       citing VM log/dispatch record; if serial, a follow-up todo is filed requiring the parallel launcher for every
       future sports features backfill (that follow-up todo, not this one, would be the actual VM-launch-relevant
       action). Source: `sports_consolidated_closeout_2026_07_19.md:635-638`.
-- [ ] [BACKEND] P2. **Track K — confirm whether any primary sports entrypoint (not a one-off script) exposes a genuine
-      fixture-level targeting flag for shard-splitting a backfill run.** (repo: features-service / market-data-
-      processing-service, read-only CLI audit). **Done when**: either a cited flag+file is named, or the add-flag todo
-      exists with a named target CLI. Source: `sports_consolidated_closeout_2026_07_19.md:661-664`.
-- [ ] [DATA] P1. **Track K — run + cite 3 dated checkpoints (pre-backfill baseline, mid-backfill spot-check,
-      post-backfill final gate) for EACH of the 5 required mechanisms** (`data-pipeline-check-is`/`-mtds`/`-mdps`/
-      `-features` + `/data-pipeline-reconciliation`) against sports — currently ZERO real run-todos exist for any of the
-      5 despite all 5 already supporting sports's shard atoms (task_template.md §3 finding K). **Use the already-pinned
-      `SPORTS_SMOKE_DATES` constants as the reference dates** (busy `2025-12-20` / thin `2025-12-24` /
-      `known_buggy_odds` `2025-12-18` / `known_buggy_fixtures` `2024-03-09` — shipped
-      `features-service@84cb4613`/`@0ae9f460`) rather than inventing a day, since several of these skills explicitly
-      require the day to come from the operator, not be invented — these are the doc's own already-established canonical
-      smoke dates, resolving that constraint. (repo: cross-repo, skill-driven). **Done when**: each of the 5 mechanisms
-      has 3 dated runs cited by report path/dispatch_id, baseline through final. Source:
+- [x] ✅ [BACKEND] P2. **Track K — confirm whether any primary sports entrypoint (not a one-off script) exposes a
+      genuine fixture-level targeting flag for shard-splitting a backfill run.** **DONE — audited both named primary
+      entrypoints (not one-off scripts), NEITHER exposes a genuine fixture-level flag; add-flag todo filed below per the
+      done-when's second branch.** **features-service** — the real dispatched sports entrypoint is
+      `features_service/sports/cli/main.py::main()` (confirmed live: `features_service/sports/__init__.py::run()`
+      forwards to `features_service.sports.cli.main.main`, the Phase-4.2 dispatcher's actual target for
+      `--feature-family sports`); its `_extra_args()` (registered into the UTL `ServiceCLI` framework parser at
+      `main.py:181` `extra_args_fn=_extra_args`) declares `--date` (single day), `--league` (`main.py:114-119`,
+      "Comma-separated league IDs for league-level sharding (batch only, default: all)"), `--tables`, and
+      `--worker-count` (parallel DATE-shard workers) — sharding granularity bottoms out at league, not fixture.
+      `features_service/sports/cli/parser.py::create_parser()` (same repo, same package) declares an almost-identical
+      flag set (`--date`/`--providers`/`--tables`/`--worker-count`, no `--league`) but is DEAD — grepped the whole
+      `sports/` package for callers of `create_parser`; the only definition is its own, zero call sites — so it isn't
+      even a live secondary entrypoint. **market-data-processing-service** — the primary `process` subcommand
+      (`market_data_processing_service/cli/parser.py:103-338`) declares `--instrument-ids` (`parser.py:174-179`,
+      "Specific instrument IDs to process") and `--venues`, but sports canonical instrument IDs are per
+      (market,selection) — e.g. `FOOTBALL:BETFAIR:MATCH_ODDS:ENG-PREMIER_LEAGUE:2024-2025:LIVERPOOL-C_PALACE::DRAW`
+      (`/codex/01-domain/sports-instruments.md:104-119`) — so targeting one fixture via `--instrument-ids` means
+      enumerating every venue/market/selection combination for that fixture by hand, not passing one fixture identifier;
+      that is NOT a genuine fixture-level flag. Grepped both repos' `add_argument(...)` call sites corpus-wide for
+      `fixture`/`event.id`/`match.id`/`competition` — zero hits anywhere outside docstrings/type annotations in non-CLI
+      modules (confirmed those are unrelated runtime code, e.g. `features_service/sports/live/feature_cache.py`'s
+      `fixture_id`-keyed cache, not a CLI flag). Source: `sports_consolidated_closeout_2026_07_19.md:661-664`.
+- [ ] [CODE] P3. **Track K follow-up — add a genuine `--fixture-ids` targeting flag to the features-service sports CLI
+      for finer-grained backfill shard-splitting.** Per the audit above, `--league` (comma-separated league IDs,
+      `features-service/features_service/sports/cli/main.py:114-119` `_extra_args()`) is currently the FINEST
+      shard-splitting grain the real primary sports entrypoint exposes; a busy league/date combination can still be one
+      large unsplit unit of work. Add `--fixture-ids` (comma-separated API-Football canonical fixture IDs, the canonical
+      ID per `/codex/01-domain/sports-instruments.md`'s "Solution: Canonical Fixture Mapping" section) beside `--league`
+      in the same `_extra_args()` function, threaded through to the batch handler
+      (`features_service/sports/cli/handlers/batch_handler.py`) as an optional filter narrowing the date+league scope to
+      specific fixtures before dispatch. `market-data-processing-service`'s `--instrument-ids` is a secondary target
+      only if the features-service flag alone proves insufficient for a real backfill's needs — do not implement both
+      speculatively. (repo: features-service). **Done when**: `--fixture-ids` is a declared CLI flag on the sports
+      family's real dispatched entrypoint, unit-tested, and threaded through to actually narrow which fixtures a batch
+      run processes.
+- [ ] [DATA] P1. **Track K (IS) — run + cite 3 dated checkpoints (baseline/mid/final) for `data-pipeline-check-is`
+      against sports.** Split 2026-08-01 from the original single bundled Track K todo (5 mechanisms × 3 checkpoints =
+      15 independent, VM-launching, multi-minute-plus runs bundled into one 1-hour-estimated todo — violates the
+      plan-authoring "independent parallelizable work → split" rule; each mechanism is now its own todo so it can
+      dispatch/run independently). **Use the already-pinned `SPORTS_SMOKE_DATES` constants as the reference dates**
+      (busy `2025-12-20` / thin `2025-12-24` / `known_buggy_odds` `2025-12-18` / `known_buggy_fixtures` `2024-03-09` —
+      shipped `features-service@84cb4613`/`@0ae9f460`) rather than inventing a day.
+      `instruments-service/scripts/     pipeline_e2e_check.py --asset-group SPORTS --day <D> --legs force,skip,live` (7
+      shard-target venues: API_FOOTBALL, BETFAIR, FOOTYSTATS, OPEN_METEO, SOCCER_FOOTBALL_INFO, TRANSFERMARKT,
+      UNDERSTAT). (repo: instruments-service, skill-driven). **Done when**: 3 dated runs (baseline/mid/final) cited by
+      report path (`plans/audit/results/data_pipeline_e2e_check_is_<date>.md`). Source:
+      `sports_consolidated_closeout_2026_07_19.md:665-669`.
+- [x] ✅ [DATA] P1. **Track K (MTDS) — run + cite 3 dated checkpoints (baseline/mid/final) for
+      `data-pipeline-check-mtds` against sports.** DONE 2026-08-01 (slot 15). Split 2026-08-01, see Track K (IS) above
+      for the split rationale. Scoped `--venue ODDS_API` (unscoped `SPORTS` enumerates 199 shards via `smoke_matrix`
+      fallback — `is_mvp()` returns 0 SPORTS cells for MTDS raw-capture — hours of sequential VMs; ODDS_API bounds to
+      the 10 UAC-registered cells, `--require-captured --auto-day` still surfaces every cell with real PROD data). **3
+      dated runs, same finding every time** (`total=20 failed=4 skipped=16`: 8 cells honest
+      `no_captured_data_for_cell`-skip, 2 genuinely-captured cells `odds_horizon_bucket`/`trades` both force-fail
+      `no_parquet_under`): baseline `plans/audit/results/data_pipeline_e2e_check_mtds_2025_12_20.md`, mid
+      `plans/audit/results/data_pipeline_e2e_check_mtds_2025_12_24.md`, final
+      `plans/audit/results/data_pipeline_e2e_check_mtds_2025_12_18.md`. Finding filed:
+      `plans/active/issues/mtds_sports_odds_api_force_fetch_no_parquet_2026_08_01.md`. **Done when**: 3 dated runs cited
+      by report path/dispatch_id, baseline through final. Source: `sports_consolidated_closeout_2026_07_19.md:665-669`.
+- [x] ✅ [DATA] P1. **Track K (MDPS) — run + cite 3 dated checkpoints (baseline/mid/final) for
+      `data-pipeline-check-mdps` against sports.** Split 2026-08-01, see Track K (IS) above for the split rationale. Use
+      `SPORTS_SMOKE_DATES` as the reference dates. (repo: market-data-processing-service, skill-driven). **Done when**:
+      3 dated runs cited by report path/dispatch_id, baseline through final. Source:
+      `sports_consolidated_closeout_2026_07_19.md:665-669`. **DONE 2026-08-01 (slots 13 + 6) — all 3 checkpoints
+      complete.** **Checkpoint 1/3 (baseline, day=2025-12-20) DONE 2026-08-01 (slot 13)** — genuine, IAM-unblocked
+      verdict: `total=30 passed=0 failed=7 skipped=23`. Report:
+      `plans/audit/results/data_pipeline_e2e_check_mdps_2025_12_20.md`. Root-caused + fixed the force-leg failures
+      same-session: `sports:trades`/`trades_inplay` have no registered MDPS candle adapter (declared
+      `needs_candle_processing=True` globally but MDPS's own runtime bypasses them — `pipeline_e2e_check.py`'s
+      enumeration didn't consult `CandleAdapterRegistry.has_adapter()`) — `market-data-processing-service@4eb53db`.
+      `odds_horizon_bucket` correctly de-duped against a concurrent slot-7 session on the same shard — needs a follow-up
+      run once free. Full details:
+      `plans/active/issues/bucket_iam_group_a_market_data_tick_prefix_missing_asset_group_2026_08_01.md` todo 3.
+      **Checkpoint 2/3 (mid, day=2025-12-24) DONE 2026-08-01 (slot 6)** — of the 4 SPORTS MVP shard cells,
+      `odds_horizon_bucket` is the only one with genuinely-captured raw-tick input on this day (confirmed even with
+      `--auto-day`; `arbitrage_opportunity`/`odds_movement`/`odds_snapshot` have no captured input for SPORTS at all —
+      honest `no_captured_input_for_cell` skip, not a bug). `odds_horizon_bucket` force+skip both ran to genuine
+      completion on real VMs (`mdps-backfill-sports-pipelinecheck-20260801-122555-2bf067` force, 36.8m;
+      `mdps-backfill-sports-pcskip-20260801-130846-2bf067` skip, 26.2m — skip confirmed genuine via VM launch argv
+      lacking `--force`): 542/594 instrument-timeframe cells wrote `empty_confirmed` honest-absence correctly (0 candles
+      is the correct outcome — every row fell outside its pre-match horizon or had no recognized market_key); 52/594 hit
+      a pre-existing, already-tracked bug
+      (`plans/active/issues/mdps_sports_honest_absence_writes_fail_fetchevidence_gate_2026_08_01.md`, opened same-day
+      from an independent DP-VM-001 escalation, auto-linked to this exact VM as a related crash), not a new regression.
+      Report (hand-completed from VM `run.log` ground truth after both local driver polls hit their own wrapper timeout
+      — VMs ran to genuine completion independently): `plans/audit/results/data_pipeline_e2e_check_mdps_2025_12_24.md`.
+      **Checkpoint 3/3 (final, day=2025-12-18) DONE 2026-08-01 (slot 6)** — same pattern as checkpoint 2/3: other 3
+      data_types confirmed `no_captured_input_for_cell` again; `odds_horizon_bucket` force-leg (VM
+      `mdps-backfill-sports-pipelinecheck-20260801-134301-2bf067`, 31.8m) and skip-leg (VM
+      `mdps-backfill-sports-pcskip-20260801-141836-2bf067`, 30.5m, launched with no `--force` in argv and genuinely
+      re-walked all 638 cells rather than short-circuiting) both ran to completion: 588/638 instrument-timeframe cells
+      correctly wrote `empty_confirmed` honest-absence (0 candles is the correct outcome — every row fell outside its
+      pre-match horizon or had no recognized market_key), 50/638 hit the same already-tracked FetchEvidence-gate bug as
+      checkpoint 2/3. Both driver invocations' own `--timeout-sec` default expired before the VMs' real ~30-35min
+      runtime and wrote false-failure reports — corroborating finding filed in
+      `plans/active/issues/features_e2e_check_delta_one_timeout_orphans_duplicate_vms_2026_07_27.md` (existing P1 issue,
+      same shared-engine bug class, previously only confirmed in features-service). Report (hand-completed from VM
+      `run.log` ground truth): `plans/audit/results/data_pipeline_e2e_check_mdps_2025_12_18.md`. **All 3 checkpoints
+      (baseline/mid/final) now done.**
+- [x] ✅ [DATA] P1. **Track K (features) — run + cite 3 dated checkpoints (baseline/mid/final) for
+      `data-pipeline-check-features` against sports.** Split 2026-08-01, see Track K (IS) above for the split rationale.
+      Use `SPORTS_SMOKE_DATES` as the reference dates. (repo: features-service, skill-driven). **Done when**: 3 dated
+      runs cited by report path/dispatch_id, baseline through final. Source:
+      `sports_consolidated_closeout_2026_07_19.md:665-669`. **DONE 2026-08-01 (slot 13) — all 3 genuine passes, no
+      `empty_confirmed`.** An earlier same-session baseline attempt hit `empty_confirmed` (17/17 sports reference
+      entities missing) because sports reference-data reads were routing to the never-seeded `-stg-` tier —
+      root-caused + fixed same-session (`features-service@72393fbf`/`@8ea48a33`, issue doc
+      `plans/active/issues/features_sports_env_staging_reads_empty_staging_reference_data_2026_08_01.md`), then ALL
+      THREE checkpoints re-run fresh against the fix: - **Checkpoint 1/3 (baseline, day=2025-12-20)**: total=2 passed=2
+      failed=0. Force leg wrote 6 real parquet files (`manifest=captured`); skip leg genuine (byte-unchanged). Report:
+      `plans/audit/results/data_pipeline_e2e_check_features_2025_12_20.md`. - **Checkpoint 2/3 (mid, day=2025-12-24)**:
+      total=2 passed=2 failed=0. Force leg wrote 4 real parquet files (`manifest=captured`); skip leg genuine. Report:
+      `plans/audit/results/data_pipeline_e2e_check_features_2025_12_24.md`. - **Checkpoint 3/3 (final,
+      day=2025-12-18)**: total=2 passed=2 failed=0. Force leg wrote 6 real parquet files (`manifest=captured`); skip leg
+      genuine. Report: `plans/audit/results/data_pipeline_e2e_check_features_2025_12_18.md`.
+
+      Cross-day diagnostic (VM `run.log` ground truth, all 3 dates): 11-12/17 sports reference entities read real rows
+                                              from PROD via the now-working source-bucket override; `entity=fixtures`/`fixtures_schedule` specifically still
+                                              404s on the never-provisioned `-stg-` bucket via `gcs_read_reference_fixtures` (a narrower, entity-scoped residue
+                                              of the same gap — noted for whoever next touches the issue doc above), so `derived_features`/`fixture_features`
+                                              correctly record `EMPTY ... confirmed empty` for that one input while the rest of the family's feature groups
+                                              compute for real — this is why every checkpoint's shard-level verdict is a genuine `captured` pass (real parquet
+                                              count > 0) rather than a blanket `empty_confirmed`.
+
+                                              **Session note**: this task's worker session crashed mid-flight after the first (sequential) round of runs;
+                                              the resumed session found the repo tree hard-reset to origin (losing 2 already-completed report files that were
+                                              never committed) — re-ran all 3 checkpoints a second time in parallel to recover, this time committing each
+                                              report immediately on completion. That parallel re-run also reproduced + explains a separate, real tooling
+                                              defect (two same-cell/different-day launches racing to an identical VM name within the same UTC second — this
+                                              instance's result was independently verified correct, not corrupted by it): filed
+                                              `plans/archive/issues/features_pipeline_e2e_check_vm_name_collision_same_second_2026_08_01.md` (both
+                                              todos now resolved — VM-name hash widened to include the day across all 4 sibling drivers, and the
+                                              day-window-agnostic `_find_inflight_duplicate_vm()` dedup narrowed to the same day).
+
+- [x] ✅ [DATA] P1. **Track K (reconciliation) — run + cite 3 dated checkpoints (baseline/mid/final) for
+      `/data-pipeline-reconciliation` against sports.** DONE 2026-08-01 (slot 8, dispatched sub-agent) — 3 dated reports
+      now exist: baseline `plans/audit/results/data_pipeline_reconciliation_sports_2026_07_20.md`, mid
+      `plans/audit/results/data_pipeline_reconciliation_sports_2026_07_22.md`, final
+      `plans/audit/results/data_pipeline_reconciliation_sports_2026_08_01.md` (+ sibling `.json`,
+      `unified-trading-pm@<see commit below>`). The final run confirmed the 07-24 report's own F1 headline (manifest
+      staleness) is genuinely RESOLVED (deliberate 2026-06-07 architecture, closed 2026-07-26 via an addendum to
+      `sports_odds_capture_pipeline_scheduling_status_unknown_2026_07_23.md`) and found a NEW, currently-active big
+      finding while re-verifying it: F5, a live Cloud Run Job OOM outage
+      (`uts-prod-market-tick-data-service-fast-t1-recon`, SPORTS-scoped, since ~2026-07-27) zeroing out real raw-tick
+      capture for 3+ consecutive days as of check time — new issue doc
+      `plans/active/issues/sports_fast_t1_recon_oom_live_capture_outage_2026_08_01.md` filed, operator notified per the
+      big-finding trigger. (repo: cross-repo, skill-driven). Source:
       `sports_consolidated_closeout_2026_07_19.md:665-669`.
 - [ ] [DOC] P2. **Track X — update the sports issue-doc index**: it lists
       `sports_odds_feature_naming_four_way_mismatch_2026_07_21.md` as merely open/P2, but
@@ -379,13 +527,15 @@ drift_direction: advance-code
       to find every referencing doc — the exact index location isn't self-evident from the source todo alone). (repo:
       unified-trading-pm, doc edit). **Done when**: every located index entry is corrected, citing the decided doc.
       Source: `sports_consolidated_closeout_2026_07_19.md:727-731`.
-- [ ] [BACKEND] P2. **Track X — audit adapters under instruments-service's `.../adapters/sports/adapters/`,
+- [x] ✅ [BACKEND] P2. **Track X — audit adapters under instruments-service's `.../adapters/sports/adapters/`,
       market-tick-data-service's `.../adapters/sports/`, and execution-service's `.../sports_execution/adapters/` for
       dead code, silent fallbacks, and duplicated logic** — cite
       `/codex/06-coding-standards/adapter-dead-code-and-fallback-ban.md`. (repo: instruments-service /
       market-tick-data-service / execution-service, read-only). **Done when**: a written per-repo finding list (or an
       explicit "none found") exists, each finding citing a symbol. Source:
-      `sports_consolidated_closeout_2026_07_19.md:770-773`.
+      `sports_consolidated_closeout_2026_07_19.md:770-773`. **DONE 2026-08-01** — 14 findings (3 instruments-service / 6
+      market-tick-data-service / 5 execution-service), each citing file+symbol, filed with 13 scoped fix todos at
+      `plans/active/issues/sports_adapter_dead_code_fallback_duplicate_audit_2026_08_01.md`.
 - [ ] [DOC] P3. **Track X — add `data_completion_sports_history_2026_07_24.md` (0 open todos) as a bulleted entry to
       `sports_consolidated_closeout_aggregated_sources_2026_07_24.md`'s Aggregated-source-docs index** — it is not
       currently listed there. (repo: unified-trading-pm, doc edit). **Done when**: the entry appears in that file's
@@ -806,3 +956,45 @@ recommend the backlog task be PARKED (per `agents/RULES.md` § "Park a task") un
 (`odds_horizon_bucket` MDPS reprocess + `batch_footystats` copy+swap, both tracked in the league_id-migration issue doc,
 neither is a todo in THIS plan) land, rather than continuing to burn a fresh worker-dispatch on the same unproductive
 re-check every cycle.
+
+- **context-scout 2026-08-01**: populated/refreshed context_scope (5 entries).
+- **2026-08-01 (slot-14, `data_engineering`)**: split the bundled 15-run Track K checkpoint todo into 5 per-mechanism
+  todos (see split rationale on each) — `unified-trading-pm@e4df6330a`. Ran Track K (IS) checkpoint 1 (baseline,
+  `day=2025-12-20`) for real before the split-off IS todo was reassigned to another dispatch: total=21 passed=0
+  failed=21 — report `plans/audit/results/data_pipeline_e2e_check_is_2025_12_20.md`. Root cause for 6/7 shards
+  (API_FOOTBALL/FOOTYSTATS/OPEN_METEO/SOCCER_FOOTBALL_INFO/TRANSFERMARKT/UNDERSTAT): `launch-instruments-backfill-vm.sh`
+  has no `--sports-provider` passthrough (pre-existing gap, previously only documented inline in
+  `pipeline_e2e_check.py`'s own docstring, now tracked in
+  `issues/instruments_backfill_launcher_missing_sports_provider_passthrough_2026_08_01.md` with a fix todo). BETFAIR
+  (the 7th, venue-routed shard) failed separately on `manifest_status_invalid:manifest_empty` — consistent with its
+  known `BLOCKED-CREDENTIALS`/zero-PROD-rows state. **Whoever picks up Track K (IS) next: checkpoint 1/3 is already done
+  and cited above — don't re-run it; the launcher fix must land before a genuine pass is possible for the 6
+  provider-routed shards.**
+- **2026-08-01 (slot-15, `data_engineering`)** — picked up Track K (IS) fresh (`-029`). Shipped the launcher fix slot-14
+  flagged: `--sports-provider` arg added to `launch-instruments-backfill-vm.sh` (`deployment-service@b1f0a22`, verified
+  live via `--dry-run`), resolving
+  `issues/instruments_backfill_launcher_missing_sports_provider_passthrough_2026_08_01.md`. Re-ran the baseline — hit a
+  SECOND, independent blocker mid-run: `uts-prd-sa`'s IAM condition doesn't cover `-test-` buckets by design (tier
+  isolation), and every cell 403'd. This was DP-VM-002, already independently diagnosed + fixed by another agent while
+  my run was in flight (`deployment-service@dd5f235`, landed 10:36:50Z — my early cells predate it and cascaded into
+  dependency failures on later venues; killed that contaminated run and restarted clean). **A THIRD, still-open blocker
+  surfaced on the clean restart**: even with the correct `uts-test-sa` identity, writes to
+  `instruments-store-sports-test-central-element-323112` still 403 — the underlying Terraform IAM condition's
+  `instruments-store-` prefix is missing its per-asset-group segment (real buckets are
+  `instruments-store-{ag}-{tier}-{project}`, the condition only matches a literal `instruments-store-{tier}-` that no
+  real bucket has). This is the SAME bug class already tracked + partially fixed for `market-data-tick-` in
+  `issues/bucket_iam_group_a_market_data_tick_prefix_missing_asset_group_2026_08_01.md` — I corrected that doc (it had
+  incorrectly assumed `instruments-store-` was flat/unaffected) and added the matching P0 INFRA todo + evidence
+  (`unified-trading-pm@093c62146`). Confirmed clean via API_FOOTBALL's full 3-leg run (force/skip/live all
+  `no_parquet_at`/`manifest_status_invalid:manifest_empty` — the SAME single root cause on every leg, and the fetch
+  itself succeeded — `Fetched 724 fixtures for date=2025-12-20` — proving this is purely a storage-write-layer block,
+  not a data/adapter regression); stopped the run there rather than burning VM spend re-proving the identical blocker
+  across the remaining 6 venues (evidence:
+  `gs://deployment-scripts-central-element-323112/vm-logs/instr-backfill-sports-pchk-0801110449-{f,s,l}-api-football/run.log`).
+  **Net for this session: 2 real bugs fixed (launcher arg + confirmed/documented the IAM condition gap), 1 more bug
+  found and P0-tracked (not fixed — `[INFRA]`-scoped Terraform work, outside `data_engineering` craft). A genuine
+  PASS-capable Track K (IS) baseline is still not achievable until
+  `bucket_iam_group_a_market_data_tick_prefix_missing_asset_group_2026_08_01.md`'s `instruments-store-` todo lands.
+  Leaving this todo unchecked — not self-skipping (real, valuable diagnostic + code work shipped this session, unlike
+  the externally-gated CI-capacity pattern elsewhere in this plan family) — next picker-upper should check that issue
+  doc's INFRA todo status before re-running.**

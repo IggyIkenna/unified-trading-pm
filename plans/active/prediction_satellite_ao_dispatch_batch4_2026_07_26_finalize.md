@@ -7,7 +7,7 @@ summary: >-
   (`prediction_cross_venue_arb_and_coverage_2026_07_24.md`, `prediction_live_clob_depth_capture_2026_07_24.md`),
   re-checks the gated `[OPERATOR]` walk/backfill deferrals for whether their gate cleared, and archives any sibling doc
   whose remaining work is fully closed. `status: draft` until batch4 itself is operator-approved and dispatched.
-status: draft
+status: active
 nature: process
 asset_group: [prediction]
 stage: [data]
@@ -22,7 +22,7 @@ related:
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]
 created: "2026-07-26"
-last_updated: "2026-07-26"
+last_updated: "2026-07-30"
 parent_epic: predictions_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -42,6 +42,13 @@ source: >-
 assigned_role: data_engineering
 sequential: true
 drift_direction: advance-code
+context_scope:
+  [
+    /plans/active/prediction_satellite_ao_dispatch_batch4_2026_07_26.md,
+    /plans/active/prediction_cross_venue_arb_and_coverage_2026_07_24.md,
+    /plans/active/prediction_live_clob_depth_capture_2026_07_24.md,
+    /plans/epics/predictions_master.md,
+  ]
 ---
 
 # Prediction satellite AO batch 4 — finalize
@@ -84,3 +91,4 @@ drift_direction: advance-code
 - 2026-07-26 (slot 7, ag_closeout_auditor): drafted as the paired finalize for
   `prediction_satellite_ao_dispatch_batch4_2026_07_26.md`. Inert (`status: draft`, gated on batch4) until the operator
   approves + dispatches batch4.
+- **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).

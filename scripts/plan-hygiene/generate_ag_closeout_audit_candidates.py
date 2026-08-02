@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# Epic: plan_hygiene_master
+# Lifecycle: permanent
+# Delete-when: NA
 """Cheap Phase-0 pre-filter for /ag-closeout-audit: per tranche, which AG-primary docs are NEVER
 cited by basename in any of that tranche's real covering docs (consolidated-closeout's own todos +
 every *_dispatch_batch*/*_finalize* doc; explicitly EXCLUDES *_aggregated_sources* digests, which are
@@ -41,7 +44,7 @@ def _load_docspec():
 ds = _load_docspec()
 
 AGS = ["cefi", "defi", "tradfi", "prediction", "sports"]
-NON_AG_TRANCHES = ["ao", "ci", "infra"]
+NON_AG_TRANCHES = ["ao", "ci", "infra", "ui"]
 ALL_TRANCHES = [*AGS, "cross-cutting", *NON_AG_TRANCHES]
 # The `infra` TRANCHE name (CLI --tranche, SKILL.md, closeout-doc prefix) does not match the actual
 # `asset_group` enum VALUE, which is `infrastructure` (plans/PLAN_FORMAT.md's ASSET_GROUP enum has no
@@ -49,7 +52,7 @@ ALL_TRANCHES = [*AGS, "cross-cutting", *NON_AG_TRANCHES]
 # (generate_ag_closeout_audit_candidates_ao_ci_infra_membership_stale_after_closeout_archival_2026_07_29.md):
 # a naive `t in asset_group` for t="infra" would silently match zero docs (every real doc is tagged
 # `infrastructure`), reproducing the exact silent-zero-candidates failure class this fix exists to
-# close, just via a different root cause. `ao`/`ci` have no such mismatch (their enum values equal
+# close, just via a different root cause. `ao`/`ci`/`ui` have no such mismatch (their enum values equal
 # their tranche names).
 TRANCHE_ASSET_GROUP_VALUE = {"infra": "infrastructure"}
 
@@ -120,9 +123,9 @@ def _resolve_depends_on(path: Path) -> list[Path]:
 
 def _covering_paths(tranche: str, include_closeout: bool = True) -> list[Path]:
     """Real covering docs: the consolidated closeout(s) + every dispatch_batch/finalize doc for this
-    tranche, PLUS (Phase 0.2 path (b)) every plan a discovered `*_finalize*` doc's `depends_on:`
-    resolves to. Excludes *_aggregated_sources* (digest, non-covering per skill -- see
-    `_closeout_paths()`) and *_history_* (archive).
+    tranche, PLUS (Phase 0.2 path (b)) every plan a discovered `*_finalize*` doc's OR the closeout
+    doc's own `depends_on:` resolves to. Excludes *_aggregated_sources* (digest, non-covering per
+    skill -- see `_closeout_paths()`) and *_history_* (archive).
 
     ao/ci/infra membership is now tested the SAME way as the 5 real AGs (`t in asset_group`, see
     main()) -- as of the 2026-07-27 asset_group schema expansion (`unified-trading-pm@a97bc7bed`),
@@ -132,6 +135,15 @@ def _covering_paths(tranche: str, include_closeout: bool = True) -> list[Path]:
     generate_ag_closeout_audit_candidates_ao_ci_infra_membership_stale_after_closeout_archival_2026_07_29.md
     for the incident this fixed: once a tranche's closeout doc archives, the OLD citation-based
     membership mechanism silently returned zero members for that tranche).
+
+    Resolving `depends_on:` for the closeout doc itself (added 2026-08-01, ag-closeout-audit tradfi
+    tranche) closes a real gap: a line-cap-split fork with no paired `*_finalize*` doc of its own
+    (e.g. tradfi_backfill_throughput_followups_2026_07_24.md, tradfi_phase_d_terminal_gate_2026_07_24.md
+    -- both forked straight out of tradfi_consolidated_closeout_2026_07_18.md's own line-cap trim, per
+    its Split notice table) was previously invisible to this function unless SOME OTHER covering doc's
+    `_finalize` happened to also depend on it. The closeout's own `depends_on:` is the one place a fork
+    with no finalize pair is guaranteed to be named -- ONLY if that field is kept complete (see the fix
+    landed the same day on tradfi_consolidated_closeout_2026_07_18.md itself).
     """
     prefix = "cross_cutting" if tranche == "cross-cutting" else tranche
     paths = list(_closeout_paths(tranche)) if include_closeout else []
@@ -142,7 +154,7 @@ def _covering_paths(tranche: str, include_closeout: bool = True) -> list[Path]:
         if re.search(r"(dispatch_batch|satellite|_finalize)", name):
             paths.append(p)
     for p in list(paths):
-        if re.search(r"_finalize", p.name):
+        if re.search(r"_finalize", p.name) or p in set(_closeout_paths(tranche)):
             paths.extend(_resolve_depends_on(p))
     return sorted(set(paths))
 

@@ -25,7 +25,7 @@ summary: >-
   async-fixture-teardown fragility, but this was NOT confirmed as the mechanism).
 status: open
 nature: issue
-asset_group: [meta]
+asset_group: [ci] # retagged 2026-07-31 (corpus-sweep meta fold-in) -- was [meta]
 stage: [data]
 repos: [market-tick-data-service]
 scope: [engineer]
@@ -33,6 +33,7 @@ tags: [ci, testing, pytest-xdist, flake, quickmerge-blocker, test-isolation, mon
 related:
   - plans/active/defi_consolidated_closeout_2026_07_18.md
   - plans/active/issues/mtds_deployment_env_race_survives_single_worker_2026_07_23.md
+  - /plans/archive/2026_07/ci_consolidated_closeout_2026_07_25.md
 created: 2026-07-23
 parent_epic: infrastructure_master
 assigned_vm: NA
@@ -332,3 +333,10 @@ investigation" guidance) — retrying with real spacing (not back-to-back) per t
 - **na-eligibility-audit 2026-07-30**: KEEP-NA, valid (infra tranche, dispatch agt-30721a) — Unresolved root-cause
   investigation with 14+ occurrences and multiple falsified hypotheses; doc explicitly states the exact mechanism
   remains genuinely open.
+- **na-eligibility-audit 2026-08-02**: **CONFIRMS KEEP-NA, valid — unchanged** (tranche `ci`, autonomous). Ownership
+  moved `infra` → `ci` since the last marker because the 2026-07-31 corpus-sweep retagged `asset_group: [meta]` →
+  `[ci]`; the content itself did not move (the only post-marker commit is that same near-complete-fold/meta-retag
+  sweep). Re-read end-to-end: the sole open todo is still an open-ended root-cause hunt whose own text records TWO
+  empirically falsified test-level fixes, a falsified "structural guarantee" (`PYTEST_WORKERS=1` reproduced 5/5), and a
+  leading-but-unproven cascade-step theory across 14+ occurrences. Outcome is not determinable by a worker alone —
+  correctly NA.

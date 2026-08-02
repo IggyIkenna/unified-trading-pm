@@ -8,7 +8,7 @@ summary: >-
   Deferred item's gate has since cleared (the time-gated item in particular — its 2026-08-02 date will likely have
   passed by the time this finalize runs), archives the source docs that reach zero open todos, and runs the standard
   6-step archival ritual on the batch plan itself.
-status: draft
+status: active
 nature: process
 asset_group: [ao]
 stage: [meta]
@@ -18,8 +18,8 @@ tags: [ao, agent-orchestrator, ao-dispatch, close-out, batch-2, finalize]
 related:
   [
     /plans/active/ao_satellite_ao_dispatch_batch2_2026_07_30.md,
-    /plans/active/ao_satellite_ao_dispatch_batch1_2026_07_26.md,
-    /plans/active/ao_satellite_ao_dispatch_batch1_finalize_2026_07_26.md,
+    /plans/archive/2026_07/ao_satellite_ao_dispatch_batch1_2026_07_26.md,
+    /plans/archive/2026_07/ao_satellite_ao_dispatch_batch1_finalize_2026_07_26.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]
 created: "2026-07-30"
@@ -43,6 +43,13 @@ sequential: true
 source: >-
   Operator ruling 2026-07-24 (task_template.md §4) — every AO-dispatched plan needs a gated finalize plan. Authored in
   the same turn as its batch by the /ag-closeout-audit ao skill run of 2026-07-30.
+context_scope:
+  [
+    /plans/active/ao_satellite_ao_dispatch_batch2_2026_07_30.md,
+    /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
+    /codex/11-project-management/cross-reference-path-convention.md,
+    /codex/12-agent-workflow/commit-push-flip-rule.md,
+  ]
 ---
 
 # AO satellite AO batch 2 — finalize
@@ -120,3 +127,4 @@ source: >-
 - **2026-07-30** — Authored in the same turn as its batch by `/ag-closeout-audit ao` (autonomous mode).
   `sequential: true` is deliberate here: the five todos are a genuine chain (verify → reconcile → re-check gates →
   archive sources → archive self) and several touch the same files. Left `status: draft`.
+- **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).

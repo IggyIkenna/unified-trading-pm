@@ -254,3 +254,100 @@ def test_ag_tagged_doc_with_cross_cutting_is_not_double_counted_unless_data_epic
     records = _run_json("all")
     assert _tranches_of(records, "multi_tag_non_data_epic_2026_07_01.md") == ["cefi"]
     assert _tranches_of(records, "multi_tag_data_epic_2026_07_01.md") == ["cefi", "cross-cutting"]
+
+
+def _owning_tranche_of(records: list[dict], basename: str) -> str:
+    for r in records:
+        if r["basename"] == basename:
+            return r["owning_tranche"]
+    raise AssertionError(f"{basename} not present in inventory output")
+
+
+def test_owning_tranche_single_membership_is_trivial(monkeypatch, tmp_path):
+    """A doc with exactly one classified tranche owns itself -- parent_epic never needs to arbitrate."""
+    _write_doc(
+        tmp_path,
+        "plans/active/issues/solo_cefi_doc_2026_07_01.md",
+        title="solo cefi doc",
+        asset_group="cefi",
+        parent_epic="orchestrator_master",  # deliberately wrong epic -- must not matter, only 1 tranche
+    )
+    monkeypatch.setattr(MOD, "PM", tmp_path)
+
+    records = _run_json("all")
+    assert _owning_tranche_of(records, "solo_cefi_doc_2026_07_01.md") == "cefi"
+
+
+def test_owning_tranche_multi_membership_uses_parent_epic_not_first_asset_group_entry(monkeypatch, tmp_path):
+    """The exact bug this ships to fix: for a genuinely multi-tranche doc, ownership must come from
+    `parent_epic`, not from `asset_group`'s list order. Put the AG that should NOT own second in the
+    asset_group list, and prove parent_epic (mapped to cross-cutting via instruments_master, a
+    DATA_EPICS member) still wins over cefi (the first-listed asset_group value)."""
+    _write_doc(
+        tmp_path,
+        "plans/active/issues/multi_tag_owned_by_epic_2026_07_01.md",
+        title="multi-tag, owned by parent_epic",
+        asset_group="cefi, cross-cutting",
+        parent_epic="instruments_master",
+    )
+    monkeypatch.setattr(MOD, "PM", tmp_path)
+
+    records = _run_json("all")
+    assert _tranches_of(records, "multi_tag_owned_by_epic_2026_07_01.md") == ["cefi", "cross-cutting"]
+    assert _owning_tranche_of(records, "multi_tag_owned_by_epic_2026_07_01.md") == "cross-cutting"
+
+
+def test_owning_tranche_falls_back_to_first_tranche_when_epic_unmapped(monkeypatch, tmp_path):
+    """An unknown/blank parent_epic (or one mapped to a tranche the doc isn't otherwise a member of)
+    must not raise or assign ownership outside the doc's real classification -- fall back to the first
+    classified tranche, matching the pre-fix behaviour. Two real AG tags on one doc is an unusual shape
+    (the Orthogonality HARD CHECK discourages it) but the script itself doesn't reject it, so it's a
+    clean way to force genuine multi-membership without depending on the cross-cutting/DATA_EPICS path."""
+    _write_doc(
+        tmp_path,
+        "plans/active/issues/multi_tag_unmapped_epic_2026_07_01.md",
+        title="multi-tag, unmapped epic",
+        asset_group="cefi, sports",
+        parent_epic="some_epic_not_in_the_table",
+    )
+    monkeypatch.setattr(MOD, "PM", tmp_path)
+
+    records = _run_json("all")
+    assert _tranches_of(records, "multi_tag_unmapped_epic_2026_07_01.md") == ["cefi", "sports"]
+    assert _owning_tranche_of(records, "multi_tag_unmapped_epic_2026_07_01.md") == "cefi"
+
+
+def test_owned_only_filters_to_the_owning_tranche(monkeypatch, tmp_path):
+    """--owned-only against --tranche cross-cutting must include the cross-cutting-owned doc and
+    exclude the cefi-owned one, even though both carry `cross-cutting` in their `tranches` list."""
+    _write_doc(
+        tmp_path,
+        "plans/active/issues/owned_by_cross_cutting_2026_07_01.md",
+        title="owned by cross-cutting",
+        asset_group="cefi, cross-cutting",
+        parent_epic="instruments_master",
+    )
+    _write_doc(
+        tmp_path,
+        "plans/active/issues/owned_by_cefi_2026_07_01.md",
+        title="owned by cefi",
+        asset_group="cefi, cross-cutting",
+        parent_epic="cefi_master",
+    )
+    monkeypatch.setattr(MOD, "PM", tmp_path)
+
+    buf = io.StringIO()
+    with contextlib.redirect_stdout(buf):
+        rc = MOD.main(["--tranche", "cross-cutting", "--owned-only", "--json"])
+    assert rc == 0
+    records = json.loads(buf.getvalue())
+    basenames = {r["basename"] for r in records}
+    assert basenames == {"owned_by_cross_cutting_2026_07_01.md"}
+
+
+def test_owned_only_without_specific_tranche_errors(monkeypatch, tmp_path):
+    """--owned-only against --tranche all is meaningless (ownership is tranche-relative) -- must fail
+    fast with a usage error rather than silently ignoring the flag."""
+    monkeypatch.setattr(MOD, "PM", tmp_path)
+    with pytest.raises(SystemExit):
+        MOD.main(["--tranche", "all", "--owned-only", "--json"])

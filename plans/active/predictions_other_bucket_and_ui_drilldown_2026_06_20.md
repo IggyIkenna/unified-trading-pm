@@ -34,6 +34,7 @@ depends_on:
 source:
 assigned_role: ui_developer
 drift_direction: advance-code
+context_scope: [/plans/epics/predictions_master.md]
 ---
 
 > **Provenance**: extracted 2026-06-20 from the inline `predictions_master` epic body during the asset-group-umbrella
@@ -163,3 +164,11 @@ after each backfill VM run and recurring patterns promoted to first-class groups
 **Full-execution criterion** (per "Plans Run To Actual Completion" HARD RULE): the UI changes are playwright-verified
 (`pw:L2 ✓` + regression spec) on a UI-capable slot; the `OTHER` bucket is confirmed populated against real manifest data
 in the deployment-ui panel; the sentinel fan-out is verified to emit honest 0% rows for an inactive CQG day.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30 (prediction tranche)**: KEEP-NA, valid — 2 open. The `[VERIFY][UI] P0` is
+  `[BLOCKED-PLAYWRIGHT]` pending a UI-capable slot with a running dev server (a real environment prerequisite, not a
+  judgment call); the `[SCRIPT] P1` Phase-5 canonical-groups backfill is CONFLICT — claimed by
+  `prediction_satellite_ao_dispatch_batch6_2026_07_29.md` todo 11. Doc is also `locked_by: live-defi-rollout`.
+- **context-scout 2026-08-01**: populated/refreshed context_scope (1 entries).

@@ -169,17 +169,18 @@ silent-failure classes surface** — this is the shared pool the per-AG IS/MTDS 
 
 ### DP-MANIFEST / DP-CATALOG / DP-WATCHER — infra meta (the "is the checker itself alive")
 
-| ID              | Sev | Fires when                                                                           | Detector                                                | Escalation                                         | Status  |
-| --------------- | --- | ------------------------------------------------------------------------------------ | ------------------------------------------------------- | -------------------------------------------------- | ------- |
-| DP-MANIFEST-001 | 🔴  | consolidator not running / stale `_index` while per-VM shards exist                  | [S] `assert_consolidator_healthy` (already alerts)      | auto-recover (re-merge) then page                  | active  |
-| DP-MANIFEST-002 | 🟠  | schema_version distribution for an AG < 100% v9 (read actual rows, not the constant) | [S] `audit_canonical_form` CF-1                         | file issue                                         | verbose |
-| DP-MANIFEST-003 | 🟠  | phantom rows: `captured` cell with no GCS parquet                                    | [S] `reconcile_phantom_manifest_rows_all --dry-run`     | file issue (false-positive-guard before `--apply`) | verbose |
-| DP-MANIFEST-004 | 🟠  | divergence: UAC oracle expects data but 0 captured                                   | [S] `detect_manifest_divergence`; [L] gap-vs-oracle-bug | file issue → planning-VM                           | verbose |
-| DP-MANIFEST-005 | 🟠  | 4-pillar shard validation fails (rowcount/NaN/schema/cluster)                        | [S] `validate_shards_4pillar`                           | file issue                                         | verbose |
-| DP-CATALOG-001  | 🔴  | instrument catalogue for an AG not refreshed in 24h (no enumerator run)              | [S] catalogue-freshness watcher                         | page                                               | verbose |
-| DP-WATCHER-001  | 🔴  | the zombie-VM watchdog itself is down (meta-watcher)                                 | [S] watchdog-liveness probe                             | page                                               | verbose |
-| DP-WATCHER-002  | 🔴  | a scheduled audit/consolidator/digest cron did not fire on schedule                  | [S] cron-alive probe                                    | page                                               | verbose |
-| DP-WATCHER-003  | 🔴  | `dp-fleet-monitor`'s own `run_lifecycle()` terminal-failure event (meta)             | [S] `run_lifecycle(service_name="dp-fleet-monitor")`    | page                                               | verbose |
+| ID              | Sev | Fires when                                                                                                                          | Detector                                                | Escalation                                         | Status  |
+| --------------- | --- | ----------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------- | -------------------------------------------------- | ------- |
+| DP-MANIFEST-001 | 🔴  | consolidator not running / stale `_index` while per-VM shards exist                                                                 | [S] `assert_consolidator_healthy` (already alerts)      | auto-recover (re-merge) then page                  | active  |
+| DP-MANIFEST-002 | 🟠  | schema_version distribution for an AG < 100% v9 (read actual rows, not the constant)                                                | [S] `audit_canonical_form` CF-1                         | file issue                                         | verbose |
+| DP-MANIFEST-003 | 🟠  | phantom rows: `captured` cell with no GCS parquet                                                                                   | [S] `reconcile_phantom_manifest_rows_all --dry-run`     | file issue (false-positive-guard before `--apply`) | verbose |
+| DP-MANIFEST-004 | 🟠  | divergence: UAC oracle expects data but 0 captured                                                                                  | [S] `detect_manifest_divergence`; [L] gap-vs-oracle-bug | file issue → planning-VM                           | verbose |
+| DP-MANIFEST-005 | 🟠  | 4-pillar shard validation fails (rowcount/NaN/schema/cluster)                                                                       | [S] `validate_shards_4pillar`                           | file issue                                         | verbose |
+| DP-CATALOG-001  | 🔴  | instrument catalogue for an AG not refreshed in 24h (no enumerator run)                                                             | [S] catalogue-freshness watcher                         | page                                               | verbose |
+| DP-WATCHER-001  | 🔴  | the zombie-VM watchdog itself is down (meta-watcher)                                                                                | [S] watchdog-liveness probe                             | page                                               | verbose |
+| DP-WATCHER-002  | 🔴  | a scheduled audit/consolidator/digest cron did not fire on schedule                                                                 | [S] cron-alive probe                                    | page                                               | verbose |
+| DP-WATCHER-003  | 🔴  | `dp-fleet-monitor`'s own `run_lifecycle()` terminal-failure event (meta)                                                            | [S] `run_lifecycle(service_name="dp-fleet-monitor")`    | page                                               | verbose |
+| DP-WATCHER-004  | 🔴  | a non-`-legacy-` manifest-consolidator Cloud Scheduler job is PAUSED with no live maintenance window covering it (accidental pause) | [S] `check_consolidator_scheduler_paused`               | page                                               | verbose |
 
 ### DP-DIGEST — routine INFO telemetry (never the incident path)
 
@@ -198,6 +199,12 @@ silent-failure classes surface** — this is the shared pool the per-AG IS/MTDS 
 > `event_pattern="*"`), which pages `#uts-live-alerts` (the incident channel) instead of mirroring to
 > `#data-pipeline-alerts` — every routine fleet-monitor sweep was silently paging the wrong channel, and a genuine
 > fleet-monitor crash (`_RUN_FAILED`) wasn't triggering an incident page at all.
+
+> **2026-07-31 fix**: `DP_CONSOLIDATOR_SCHEDULER_PAUSED` (`consolidator_scheduler_watcher.py`) was emitting with
+> `registry_id="DP-WATCHER-003"` — the id DP-WATCHER-003 above already owns for the DISTINCT
+> `DP_FLEET_MONITOR_RUN_FAILED` event. Same failure class as the 2026-07-27 fix note above: the collision meant
+> `DP_CONSOLIDATOR_SCHEDULER_PAUSED` had no exact-match `DATA_PIPELINE_ALERT_RULES` entry of its own, risking the
+> generic-catch-all fallthrough. Assigned its own id, DP-WATCHER-004 (table row above).
 
 ## Self-heal actuator layer (Layer-0 recovery — `auto_recover` tier)
 

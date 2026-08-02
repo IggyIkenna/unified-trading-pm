@@ -16,7 +16,7 @@ created: 2026-05-06
 authoritative_for: [Resend transactional email architecture (UTS-UI)]
 referenced_by:
 owner:
-last_reviewed: 2026-05-17
+last_reviewed: 2026-09-23
 code_refs:
 ---
 

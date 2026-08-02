@@ -8,7 +8,9 @@ summary: >-
   criterion" rule; not fixed here to avoid scope creep on an unrelated dispatch.
 status: open
 nature: process
-asset_group: [infrastructure]
+asset_group:
+  [ui] # corrected 2026-07-30 (ui-tranche launch) -- was [infrastructure]; repos:[deployment-ui]
+  # only, smoke-test failures in deployment-ui's own pages
 stage: [meta]
 repos: [deployment-ui]
 scope: [engineer]
@@ -65,15 +67,23 @@ or their MTDS-related constants).
       `menu|hamburger|navigation` regex) and asserts against the `mobile-nav` testid instead of a generic
       `nav`/`[role=navigation]` locator. Freshly re-verified this session:
       `npx playwright test --project=chromium tests/smoke/mobile_responsive.spec.ts` — 10/10 passed.
-- [ ] [UI] P3. Reconcile `nav-menu-dedup.spec.ts`'s expected count (5 → 6, or find and fix the extra entry) — whichever
-      the current nav design intends. **UPDATE 2026-07-28**: the original 5→6 drift this item named was briefly resolved
-      by deployment-ui@2340c68 (2026-07-26 — "already correct, no fix needed"), but the nav has since drifted further in
-      a 2026-07-27 reorg: `nav-menu-dedup.spec.ts` now fails with a DIFFERENT signature (expects 17 entries not 6; a
-      `fleet` nav item/route/testid appears to have been dropped), alongside 3 sibling specs (`fleet-git-tab.spec.ts`,
-      `cockpit.spec.ts`, `repos-tab.spec.ts` — 13 failures total, confirmed via a fresh full `tests/smoke/` run this
-      session). This is now root-caused in detail and gated on an explicit `[OPERATOR]` regression-vs-intentional-fold
-      decision in `/plans/archive/issues/deployment_ui_fleet_git_nav_entry_regression_2026_07_28.md` — resolve THERE
-      (this item's narrower "5→6" framing is stale; do not re-diagnose from scratch here).
+- [x] ✅ [UI] P3. Reconcile `nav-menu-dedup.spec.ts`'s expected count (5 → 6, or find and fix the extra entry) —
+      whichever the current nav design intends. **UPDATE 2026-07-28**: the original 5→6 drift this item named was
+      briefly resolved by deployment-ui@2340c68 (2026-07-26 — "already correct, no fix needed"), but the nav has since
+      drifted further in a 2026-07-27 reorg: `nav-menu-dedup.spec.ts` now fails with a DIFFERENT signature (expects 17
+      entries not 6; a `fleet` nav item/route/testid appears to have been dropped), alongside 3 sibling specs
+      (`fleet-git-tab.spec.ts`, `cockpit.spec.ts`, `repos-tab.spec.ts` — 13 failures total, confirmed via a fresh full
+      `tests/smoke/` run this session). This is now root-caused in detail and gated on an explicit `[OPERATOR]`
+      regression-vs-intentional-fold decision in
+      `/plans/archive/issues/deployment_ui_fleet_git_nav_entry_regression_2026_07_28.md` — resolve THERE (this item's
+      narrower "5→6" framing is stale; do not re-diagnose from scratch here). **RESOLVED 2026-08-01 (slot-4,
+      ui_developer craft)**: the gating doc was resolved+archived 2026-07-29 (operator-directed path (b) — Fleet
+      Git-Health nav entry deliberately removed, its only home is now agent-orchestrator's own dashboard;
+      `deployment-ui@067f7cd` updated `nav-menu-dedup.spec.ts` to the new 16-entry CANONICAL count). Confirmed `067f7cd`
+      is an ancestor of my slot's current HEAD, then freshly re-ran
+      `npx playwright test --project=chromium tests/smoke/nav-menu-dedup.spec.ts` — **19/19 passed** (21.0s), including
+      "the always-visible top bar carries the same 16 entries as the dropdown". No new code change needed; this item
+      closes on the already-shipped fix + fresh verification, `pw:L2 ✓`.
 
 ## Progress Log
 
@@ -86,3 +96,11 @@ or their MTDS-related constants).
   `tests/smoke/vm-resource-rolling-window.spec.ts` ("filters by service name" raced `.count()` against the in-flight
   mock fetch instead of waiting for a row like its sibling test does) — outside this doc's scope, fixed inline per the
   small+clear findings-triage rule, shipped as its own commit.
+- **2026-08-01 (slot-4, ui_developer craft)** — Dispatched item 3 with a STALE brief (the "5 → 6" framing this todo's
+  own text already flagged as superseded). Pre-task conflict check: read the gating doc
+  `/plans/archive/issues/deployment_ui_fleet_git_nav_entry_regression_2026_07_28.md` first (per the "grep-then-READ, not
+  grep-then-conclude" rule) rather than re-diagnosing from scratch — found it RESOLVED + ARCHIVED 2026-07-29,
+  operator-directed path (b), `deployment-ui@067f7cd`. Verified `067f7cd` is an ancestor of my slot's current
+  deployment-ui HEAD, then froze-verified live rather than trusting the citation: ran
+  `npx playwright test --project=chromium tests/smoke/nav-menu-dedup.spec.ts` fresh — 19/19 passed. Flipped item 3
+  citing this evidence; no code change needed (all 3 items in this doc are now done).

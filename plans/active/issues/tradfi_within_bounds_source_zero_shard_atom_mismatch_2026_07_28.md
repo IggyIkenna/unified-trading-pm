@@ -80,6 +80,12 @@ source: >-
   WithinBoundsTradfiSourceZero trigger), worked 2026-07-28 (slot 6): live VM run.log + GCS-events grep (0 hits) + direct
   availability_index.parquet cross-reference (59.3-100% false-positive match rate) + code trace
   (instruments-service@f6d479f8, market_tick_data_service/scripts/_rebuild_tradfi_cf11.py).
+context_scope:
+  [
+    /plans/archive/issues/tradfi_ohlcv_attempted_failed_cluster_2026_07_23.md,
+    /plans/active/tradfi_satellite_ao_dispatch_batch2_2026_07_25.md,
+    /codex/02-data/availability-manifest-and-data-status.md,
+  ]
 ---
 
 # WithinBoundsTradfiSourceZero — root-caused as a stale bundle-grain shard-atom mismatch, not a Databento bug
@@ -222,14 +228,42 @@ population — the "elsewhere" gap that doc pointed at is this manifest bookkeep
 
 ## Todos
 
+> **NOTE (na-eligibility-audit 2026-07-30, tradfi tranche) — KEEP-NA-STALE, do NOT reclassify.** Todos 1 + 2 below are
+> already claimed VERBATIM as one combined todo in `/plans/active/tradfi_satellite_ao_dispatch_batch5_2026_07_29.md`
+> ("Migration/purge pass for CME+CBOE `WithinBoundsTradfiSourceZero` bundle-grain rows, plus harden the script against
+> recurrence", whose `Source:` cites this doc by name). That batch doc is `assigned_vm: planning` but
+> **`status: draft`** — NOT ingested, NOT dispatched today. Flipping this doc's `assigned_vm` would dispatch a
+> duplicate, so the shared conflict-check (`/codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md`
+> § 3) verdict is CONFLICT → citation fix only. Independently of that, todo 1 is a ~198K-row destructive manifest
+> mutation whose directly-analogous sibling (the 50,520-row retire-phase `--apply` in
+> `/plans/active/tradfi_manifest_content_recovery_completion_2026_07_24.md`) is a standing operator-review hard stop —
+> so this doc would stay NA on that ground even if the batch5 overlap did not exist. Live blocker = batch5's draft
+> status (operator item 5 in `/plans/active/issues/tradfi_autonomous_session_operator_decisions_2026_07_25.md`).
+>
+> **CITATION UPDATE (na-eligibility-audit 2026-08-02, tradfi tranche)**:
+> `tradfi_satellite_ao_dispatch_batch5_2026_07_29.md` has since flipped `status: draft` → `status: active` and its
+> combined extraction-todo is now `[x]` DONE (confirming `--apply` was intentionally NOT run there either, still pending
+> operator approval — same substance, not a live-run). The "NOT ingested, NOT dispatched today" wording above is stale
+> prose; todo 1 here stays open/NA on the independently-sufficient operator-gate ground (below), unaffected by this
+> correction.
+
 - [ ] [DATA] P0. Migration/purge pass: for every CME + CBOE bundle-grain
       `attempted_failed(WithinBoundsTradfiSourceZero)` row keyed by the retired `instrument_id=<parent>.FUT`/`.OPT`
       grain, verify a real `captured` row exists at `(date, venue, data_type, instrument_type, underlying)` and retire
-      the stale row if so (snapshot-before-write, dry-run default). Repo: `market-tick-data-service`.
-- [ ] [SCRIPT] P1. Harden `market_tick_data_service/scripts/_rebuild_tradfi_cf11.py::_handle_srz_tradfi_row` to check
+      the stale row if so (snapshot-before-write, dry-run default). Repo: `market-tick-data-service`. **Script shipped +
+      dry-run executed 2026-07-30 (see Progress log) — measured counts recorded. `--apply` NOT run — this is a
+      destructive ~81K-row live-manifest mutation the script's own docstring gates on a recorded operator go-ahead
+      (mirrors the `tradfi_manifest_content_recovery_completion_2026_07_24.md` retire-phase hard-stop). Checkbox stays
+      open until the operator approves and `--apply` actually runs + self-verifies 0 remaining.**
+- [x] ✅ [SCRIPT] P1. Harden `market_tick_data_service/scripts/_rebuild_tradfi_cf11.py::_handle_srz_tradfi_row` to check
       for an existing correctly-keyed captured shard before reclassifying a historical
       `empty_confirmed[SOURCE_RETURNED_ZERO]` row to `attempted_failed` — prevents this false-positive class recurring
-      for future stale rows. Repo: `market-tick-data-service`.
+      for future stale rows. Repo: `market-tick-data-service`. — `market-tick-data-service@11be9cfe` (2026-07-30):
+      `_handle_srz_tradfi_row` now resolves a retired CME/CBOE parent symbol to its bundle-grain shadow target via the
+      static `TRADFI_DATABENTO_INSTRUMENTS` registry and suppresses reclassification when a real captured shard already
+      exists for the same underlying/date; 6-tuple `covered_keys` (added `underlying`) in both
+      `rebuild_tradfi_manifest.py` and `_rebuild_tradfi_cf11.py`. Regression coverage:
+      `tests/unit/test_rebuild_tradfi_manifest_cf11.py` (14 tests, re-verified green 2026-07-30).
 - [ ] [DATA] P2. Reconcile the `BASE_ASSET`/manifest `underlying` string-naming drift found incidentally during the
       cross-check (`HEATING-OIL`/`HEATINGOIL`/`HO`, `NAT-GAS`/`NAT-GAS-HH`/`NATGAS`, and similar) if it is found to
       cause its own denominator/accounting issues. Repo: `market-tick-data-service` / `unified-api-contracts`.
@@ -245,3 +279,62 @@ population — the "elsewhere" gap that doc pointed at is this manifest bookkeep
   Confirmed NASDAQ/NYSE's share of the original alert is already resolved (separate, already-closed root cause). No fix
   implemented in this pass — this todo was investigate/diagnose-only per its own Done-when; remediation todos above are
   the follow-up.
+
+- **na-eligibility-audit 2026-07-30** (tradfi tranche): **KEEP-NA-STALE — citation fixed, `assigned_vm` deliberately
+  unchanged.** Two independent reasons, either sufficient: (1) the shared conflict-check returned CONFLICT —
+  `/plans/active/tradfi_satellite_ao_dispatch_batch5_2026_07_29.md` already extracts todos 1+2 verbatim as one combined
+  todo citing this doc as its `Source:`; (2) todo 1 is a destructive manifest mutation over up to ~198K CME + 2,489 CBOE
+  rows, and its directly-analogous sibling (the 50,520-row retire-phase `--apply` in
+  `/plans/active/tradfi_manifest_content_recovery_completion_2026_07_24.md`) is a standing operator-review hard stop.
+  See the note added above the todos.
+
+- **2026-07-30 (batch5 dispatch, slot 5)**: Shipped both the hardening fix and the migration/purge script
+  (`market-tick-data-service@11be9cfe`, landed independently by slot 11 just before this dispatch — verified live, diff
+  matches this doc's remediation plan items 1-2 exactly). This session ran the dry-run
+  (`scripts/retire_tradfi_cf11_bundle_grain_shard_atom_mismatch_2026_07_30.py`, no `--apply`) against the LIVE
+  `gs://market-data-tick-tradfi-prd-central-element-323112/_index/availability_index.parquet` (6,021,751 rows at read
+  time; a second confirmatory read ~40s later saw 6,075,313 — the manifest is actively being written by other in-flight
+  backfills, expected, handled safely by the script's CAS write). **Measured results** (supersedes this doc's earlier
+  ~198K/2,489 upper-bound estimate with the actual defect-signature count):
+
+  | venue | candidates | dropped (real captured twin found) | unresolved (no twin — genuine failure or commodity naming-drift) |
+  | ----- | ---------: | ---------------------------------: | ---------------------------------------------------------------: |
+  | CME   |    111,829 |                             78,965 |                                                           32,864 |
+  | CBOE  |      2,489 |                              2,489 |                                                                0 |
+  | Total |    114,318 |                             81,454 |                                                           32,864 |
+
+  CBOE matches the doc's original evidence chain exactly (100% false-positive — every VX.FUT row has a real captured
+  twin). CME's 32,864 unresolved rows are the expected mix of genuine failures plus the already-documented
+  commodity-symbol naming-drift tail (todo 3 below) — left untouched by design, never guessed. Self-verify
+  (post-simulated-drop, still dry-run): 0 candidate rows would retain a captured twin — confirms the transform is
+  internally consistent. `stop_on_surprise` bounds `[0, 300000]` held (114,318 well inside). Regression suite
+  (`tests/unit/scripts/test_retire_tradfi_cf11_bundle_grain_shard_atom_mismatch_2026_07_30.py` +
+  `tests/unit/test_rebuild_tradfi_manifest_cf11.py`, 23 tests) re-verified green in a fresh `.venv`.
+  `market-tick-data-service` `quality-gates.sh` was already green on this HEAD (no code changed this session — dry-run
+  execution + doc updates only). **`--apply` was deliberately NOT run** — per the script's own docstring gate and this
+  doc's na-audit finding above, a ~81K-row live-manifest CAS mutation needs a recorded operator go-ahead citing these
+  measured counts before the real write. Flagged to the operator via this session's `/blocked` on
+  `tradfi_satellite_ao_dispatch_batch5-002`; todo 1 above stays unchecked pending that approval.
+
+- **na-eligibility-audit 2026-07-31** (tradfi tranche, dispatch agt-6d6eaf): **KEEP-NA, valid — re-verified.** All 3
+  open todos read end-to-end; count matches tranche-inventory tool. Todo 1 stays operator-gated exactly per the
+  2026-07-30 entry above (still awaiting the `--apply` go-ahead on the now-measured 81,454-row drop); todos 3-4 are
+  genuinely open follow-on work with no new blocking condition. No stale items, no duplicate claim by any other active
+  doc, no archival trigger. Nothing changed since the last verdict beyond the doc being git-touched for unrelated
+  reasons.
+
+## Progress Log
+
+- **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).
+- **na-eligibility-audit 2026-08-01** (tradfi tranche): **KEEP-NA, valid — re-verified, unchanged.** All 3 open todos
+  re-read end-to-end; count matches tranche-inventory tool (3). No content change since the 2026-07-31 verdict — only a
+  context-scout `context_scope` backfill touched the file since. Todo 1 stays operator-gated per the 2026-07-30/07-31
+  entries above (still awaiting the `--apply` go-ahead on the measured 81,454-row drop); todo 4 is explicitly sequenced
+  after todo 1 so it cannot start independently; todo 3 is conditionally-scoped ("if it is found to cause..."), not a
+  hard bounded task. Nothing to reclassify.
+- **na-eligibility-audit 2026-08-02** (tradfi tranche, dispatch agt-6397c9): **KEEP-NA, valid — re-verified, citation
+  drift found and fixed.** All 3 open todos re-read end-to-end via an independent sub-agent classification; count
+  reconciled (3/3). Found batch5's `status` field had flipped `draft` → `active` with its combined extraction-todo now
+  `[x]` DONE (still no live `--apply` run) — updated the NOTE block above to correct the stale wording. Todo 1's
+  independently-sufficient operator-gate ground (81,454-row measured drop still awaiting go-ahead) is unaffected; todos
+  3/4 unchanged (conditional / sequenced-after). Nothing to reclassify.

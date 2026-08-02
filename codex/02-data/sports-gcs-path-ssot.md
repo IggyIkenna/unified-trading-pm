@@ -3,7 +3,8 @@ doc_type: codex-ssot
 title: Sports GCS Path SSOT
 summary:
   Canonical GCS path resolver for sports parquet (UAC candidate_parquet_paths / SPORTS_DATA_TYPE_TO_FOLDER); three
-  layouts (PER_LEAGUE/BARE/FLAT) plus non-obvious entity= folder names — never hardcode paths (phantom-row trap).
+  layouts (PER_DAY_PER_LEAGUE/PER_DAY_PER_SEASON/PER_DAY_BARE/FLAT) plus non-obvious entity= folder names — never
+  hardcode paths (phantom-row trap).
 status: current
 nature: ssot
 asset_group: [meta]
@@ -20,7 +21,10 @@ related:
   ]
 created: 2026-05-08
 authoritative_for:
-  [sports GCS parquet path resolver and entity-folder naming, sports path-layout taxonomy (PER_LEAGUE/BARE/FLAT)]
+  [
+    sports GCS parquet path resolver and entity-folder naming,
+    sports path-layout taxonomy (PER_DAY_PER_LEAGUE/PER_DAY_PER_SEASON/PER_DAY_BARE/FLAT),
+  ]
 referenced_by:
   [
     /codex/01-domain/sports-instruments.md,
@@ -28,7 +32,7 @@ referenced_by:
     /codex/02-data/sports-data-types-catalog.md,
   ]
 owner:
-last_reviewed: 2026-05-17
+last_reviewed: 2026-08-16
 code_refs:
 ---
 
@@ -40,7 +44,7 @@ code_refs:
 > entity is SPLIT**: `entity=fixtures_schedule` + `entity=fixtures_outcomes` (2026-05-23), replacing the now-FROZEN bare
 > `entity=fixtures`. Note the live layout is under `sports_reference/by_date/` — `sports_reference_v2/by_date/` is a
 > DEAD abandoned layout (frozen 2026-04-20), do not read/write it. See
-> `plans/active/sports_consolidated_closeout_2026_07_19.md` (ENTITY-SPLIT / STORE).
+> `/plans/active/sports_consolidated_closeout_2026_07_19.md` (ENTITY-SPLIT / STORE).
 
 **What it is.** The canonical path-resolver for sports parquet on GCS. Every sports reader / writer / data-status audit
 / phantom-row reconciler uses this SSOT — no hardcoded `entity=...` strings inline.
@@ -52,8 +56,8 @@ in UAC. Re-exported via
 
 ## Why this SSOT exists
 
-**Reference incident — phantom-row audit 2026-04-29.** A data-status reconciler probed `entity=odds/` for `ODDS_API`
-fixtures and reported 26% phantom coverage. Reality: api_football odds are stored under `entity=footystats_odds/`
+**Reference incident — phantom-row audit 2026-04-29.** A data-status reconciler probed `entity=odds/` for the `ODDS`
+data_type and reported 26% phantom coverage. Reality: footystats odds are stored under `entity=footystats_odds/`
 (historical naming from the migration era). The probe used a hardcoded path string instead of the canonical resolver —
 so it scanned the wrong directory and produced fake phantoms.
 
@@ -68,7 +72,7 @@ from unified_api_contracts.sports import (
     candidate_parquet_uris,         # same, prefixed with gs://<bucket>/
     SPORTS_DATA_TYPE_TO_FOLDER,     # data_type → entity-folder canonical name
     SPORTS_DATA_TYPE_LAYOUT,        # data_type → SportsPathLayout enum
-    SportsPathLayout,               # PER_LEAGUE | BARE | FLAT
+    SportsPathLayout,               # PER_DAY_PER_LEAGUE | PER_DAY_PER_SEASON | PER_DAY_BARE | FLAT
     sports_bucket_name,             # asset_group=sports → GCS bucket name resolver
 )
 
@@ -81,50 +85,73 @@ return None  # honest absence; record_empty(reason=EXPECTED_*)
 
 ## Path layout taxonomy
 
-Three layout variants, declared per data_type in `SPORTS_DATA_TYPE_LAYOUT`:
+**Four** layout variants (`SportsPathLayout`), declared per data_type in `SPORTS_DATA_TYPE_LAYOUT`. The `pipeline_mode=`
+segment (canonical, see the correction banner) sits between `day=` and `entity=`; `candidate_parquet_paths()` emits the
+`pipeline_mode`-bearing candidates first and the `pipeline_mode`-less legacy shapes as fallbacks.
 
-### Layout 1 — `PER_LEAGUE` (default for fixture-grain data)
+### Layout 1 — `PER_DAY_PER_LEAGUE` (default for fixture-grain data)
 
 Per-league subpartition first; bare fallback for legacy.
 
 ```
-gs://<bucket>/sports_reference/by_date/day=YYYY-MM-DD/entity=<folder>/league=<league_id>/<folder>.parquet  # canonical
-gs://<bucket>/sports_reference/by_date/day=YYYY-MM-DD/entity=<folder>/<folder>.parquet                      # legacy fallback
+sports_reference/by_date/day=YYYY-MM-DD/pipeline_mode=<mode>/entity=<folder>/league=<league_id>/<folder>.parquet  # canonical
+sports_reference/by_date/day=YYYY-MM-DD/entity=<folder>/<folder>.parquet                                          # legacy fallback
 ```
 
-Used by: `FIXTURE_LINEUPS`, `FIXTURE_EVENTS`, `FIXTURE_STATS`, `PLAYER_STATS`, `INJURIES`, `ODDS_SNAPSHOT`,
-`ODDS_MOVEMENT`, `LINEUPS_PRE_MATCH`, etc. (see `SPORTS_DATA_TYPE_TO_FOLDER` for the full mapping).
-
-### Layout 2 — `BARE` (per-league grouping intentionally absent)
+### Layout 2 — `PER_DAY_PER_SEASON` (season-keyed rather than league-keyed)
 
 ```
-gs://<bucket>/sports_reference/by_date/day=YYYY-MM-DD/entity=<folder>/<folder>.parquet
+sports_reference/by_date/day=YYYY-MM-DD/pipeline_mode=<mode>/entity=<folder>/season=<season>/<folder>.parquet
 ```
 
-Used by: data_types where league_id grouping has no meaning (cross-league reference data).
+Used by: `PLAYER_VALUES`.
 
-### Layout 3 — `FLAT` (singletons; no by_date partition)
+### Layout 3 — `PER_DAY_BARE` (per-league grouping intentionally absent)
 
 ```
-gs://<bucket>/sports_reference/<folder>/<folder>.parquet
+sports_reference/by_date/day=YYYY-MM-DD/pipeline_mode=<mode>/entity=<folder>/<folder>.parquet
+```
+
+Used by: cross-league reference data where `league_id` grouping has no meaning (`LEAGUES`, `XG`).
+
+### Layout 4 — `FLAT` (singletons; no by_date partition)
+
+```
+sports_reference/<folder>/<folder>.parquet
 ```
 
 Used by: `VENUES` (stadium reference table — single global file), other singletons.
 
+Bucket: `sports_bucket_name(project_id, env=...)` → `instruments-store-sports-{env}-{project_id}`
+(`SPORTS_BUCKET_TEMPLATE`). `candidate_parquet_uris()` prefixes the same candidates with `gs://<bucket>/`.
+
 ## `entity=` folder naming — the phantom-row trap
 
-Some sources have non-obvious `entity=` folder names that don't match the data_type name:
+Some sources have non-obvious `entity=` folder names that don't match the data_type name. Full mapping as of 2026-07-30
+(ground truth is `SPORTS_DATA_TYPE_TO_FOLDER` — read the code, this table is orientation):
 
-| `data_type`             | `entity=` folder              | Source                         |
-| ----------------------- | ----------------------------- | ------------------------------ |
-| `ODDS_API`              | `entity=odds_api`             | odds_api                       |
-| `ODDS_SNAPSHOT` (fs)    | `entity=footystats_odds`      | footystats                     |
-| `FIXTURE_STATS` (af)    | `entity=fixture_statistics`   | api_football                   |
-| `PLAYER_STATS` (af)     | `entity=fixture_player_stats` | api_football                   |
-| `INJURIES`              | `entity=fixture_injuries`     | api_football                   |
-| `WEATHER`               | `entity=open_meteo_forecasts` | open_meteo                     |
-| `SFI_PROGRESSIVE_STATS` | `entity=sfi_progressive`      | soccer_football_info           |
-| `LINEUPS_PRE_MATCH`     | `entity=fixture_lineups`      | api_football (pre-kickoff cut) |
+| `data_type`             | `entity=` folder                | Layout               | Source               |
+| ----------------------- | ------------------------------- | -------------------- | -------------------- |
+| `FIXTURES` (FROZEN)     | `entity=fixtures`               | `PER_DAY_PER_LEAGUE` | api_football         |
+| `FIXTURES_SCHEDULE`     | `entity=fixtures_schedule`      | `PER_DAY_PER_LEAGUE` | api_football         |
+| `FIXTURES_OUTCOMES`     | `entity=fixtures_outcomes`      | `PER_DAY_PER_LEAGUE` | api_football         |
+| `FIXTURE_EVENTS`        | `entity=fixture_events`         | `PER_DAY_PER_LEAGUE` | api_football         |
+| `FIXTURE_LINEUPS`       | `entity=fixture_lineups`        | `PER_DAY_PER_LEAGUE` | api_football         |
+| `FIXTURE_STATS`         | `entity=fixture_stats`          | `PER_DAY_PER_LEAGUE` | api_football         |
+| `PLAYER_STATS`          | `entity=player_stats`           | `PER_DAY_PER_LEAGUE` | api_football         |
+| `INJURIES`              | `entity=injuries`               | `PER_DAY_PER_LEAGUE` | api_football         |
+| `STANDINGS`             | `entity=standings`              | `PER_DAY_PER_LEAGUE` | api_football         |
+| `TEAMS`                 | `entity=teams`                  | `PER_DAY_PER_LEAGUE` | api_football         |
+| `LEAGUES`               | `entity=leagues`                | `PER_DAY_BARE`       | api_football         |
+| `VENUES`                | `entity=venues`                 | `FLAT`               | api_football         |
+| `MATCHES`               | `entity=footystats_matches`     | `PER_DAY_PER_LEAGUE` | footystats           |
+| `ODDS`                  | `entity=footystats_odds`        | `PER_DAY_PER_LEAGUE` | footystats           |
+| `PREDICTIONS`           | `entity=footystats_predictions` | `PER_DAY_PER_LEAGUE` | footystats           |
+| `PLAYER_VALUES`         | `entity=player_values`          | `PER_DAY_PER_SEASON` | footystats           |
+| `SFI_PROGRESSIVE_STATS` | `entity=progressive_stats`      | `PER_DAY_PER_LEAGUE` | soccer_football_info |
+| `WEATHER`               | `entity=weather`                | `PER_DAY_PER_LEAGUE` | open_meteo           |
+| `XG`                    | `entity=understat_xg`           | `PER_DAY_BARE`       | understat            |
+| `XG_SHOTS`              | `entity=understat_xg_shots`     | `PER_DAY_PER_LEAGUE` | understat            |
 
 Hardcoding any of these inline is a phantom-row foot-gun. The resolver maintains the mapping; readers never need to know
 it.
@@ -165,10 +192,10 @@ The resolver writes canonical for new paths; reader fallback is hive-key-agnosti
 > versions purged, 0 errors; `describe` → 404; no-resurrection proved by a clean `tofu plan`). The
 > `market-data-tick-sports-central-element-323112` bucket was similarly **DELETED 2026-07-17T~16:50Z** (342,629
 > objects/versions purged, 0 errors; `describe` → 404). Both legacy no-env sports buckets no longer exist — do NOT write
-> new code that depends on them. Evidence: `plans/active/sports_legacy_bucket_cutover_2026_07_16.md` § "FINAL STATUS"
-> (T5.4); full detail in `plans/archive/2026_07/sports_legacy_bucket_cutover_history_2026_07_24.md`. The post-phase
-> codex audit of this SSOT (confirming no reader still special-cases the legacy shape) is tracked as **T6.7**, still
-> open P1, in `plans/archive/sports_legacy_cutover_closeout_tasks_2026_07_24.md`.
+> new code that depends on them. Evidence: `/plans/archive/2026_07/sports_legacy_bucket_cutover_2026_07_16.md` § "FINAL
+> STATUS" (T5.4); full detail in `/plans/archive/2026_07/sports_legacy_bucket_cutover_history_2026_07_24.md`. The
+> post-phase codex audit of this SSOT (confirming no reader still special-cases the legacy shape) is tracked as
+> **T6.7**, still open P1, in `/plans/archive/sports_legacy_cutover_closeout_tasks_2026_07_24.md`.
 
 ## Cross-references
 
@@ -180,7 +207,7 @@ The resolver writes canonical for new paths; reader fallback is hive-key-agnosti
   shards (asset_group, source, data_type, league_id, fixture_id_or_day).
 - CLAUDE.md § "Sports GCS path SSOT" — the workspace rule that mandates resolver usage; this codex doc is its durable
   home.
-- [`plans/epics/sports_master.md`](../../plans/epics/sports_master.md) — sports asset_group umbrella; cites this SSOT as
+- [`/plans/epics/sports_master.md`](//plans/epics/sports_master.md) — sports asset_group umbrella; cites this SSOT as
   the path-layout authority.
 - `/plans/active/issues/sports_phantom_audits_reference_not_marketdata_2026_07_14.md` and
   `/plans/archive/issues/reconciliation_skill_sports_raw_tick_ssot_wrong_bucket_2026_07_24.md` (resolved 2026-07-25) —

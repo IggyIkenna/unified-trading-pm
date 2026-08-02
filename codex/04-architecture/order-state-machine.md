@@ -25,7 +25,7 @@ authoritative_for:
   [per-order state machine, order lifecycle states and transitions, per-transition order event emission]
 referenced_by: [/codex/04-architecture/oms-protocol-and-state-machine.md]
 owner:
-last_reviewed: 2026-05-17
+last_reviewed: 2026-09-28
 code_refs:
 doc_kind: contract_stub
 ssot_for: order_state_machine
@@ -53,8 +53,20 @@ created_per: plans/archive/issues/codex_audit_execution_2026_05_12.md EX-24
 | `FAIL_OUTBOUND`    | Failed to reach venue (network / auth / signing); pre-NEW failure  | YES       |
 | `RECONCILED`       | Terminal state matched by position-balance-monitor reconciler      | YES       |
 
-UAC SSOT: `unified_api_contracts.canonical.domain.execution.OrderState` (or `internal/execution.py` `OrderState`
-StrEnum).
+> **⚠️ The 9-state set above is the DESIGN TARGET, not the shipped enum (verified 2026-07-31).** There is no
+> `OrderState` symbol anywhere in UAC. What ships is
+> `unified_api_contracts.canonical.domain.execution.base.OrderStatus` — a **7**-member StrEnum:
+>
+> ```python
+> PENDING · OPEN · PARTIALLY_FILLED · FILLED · CANCELLED · REJECTED · EXPIRED
+> ```
+>
+> Deltas vs this doc: `PENDING_NEW`→ships as `PENDING`; `NEW`→ships as `OPEN`; **`FAIL_OUTBOUND` and `RECONCILED` do
+> not exist in UAC at all**. The previously-cited fallback location `internal/execution.py` `OrderState` also does not
+> exist. Until the enum is reconciled, do NOT write code against `OrderState`, `FAIL_OUTBOUND` or `RECONCILED` — they
+> will not import. Tracked in `/plans/active/issues/order_state_machine_ssot_vs_uac_orderstatus_2026_07_31.md`.
+
+UAC SSOT (shipped): `unified_api_contracts.canonical.domain.execution.base.OrderStatus`.
 
 ## Transitions
 
@@ -118,7 +130,9 @@ states (`REJECTED` / `FAIL_OUTBOUND`) fire P0 / P1 alerts depending on `AlertSev
 
 - `OrderState` flips trigger `position-balance-monitor` reconciler ticks (see `position-balance-monitor-service`).
 - Risk-and-exposure-service reads `OrderState` to compute `PendingExposure` (NEW + PARTIALLY_FILLED states).
-- `paper-mode-execution-seam.md` describes the simulated fill path that maps `NEW → FILLED` via the matching engine.
+- [`paper-vs-live-execution-seam.md`](./paper-vs-live-execution-seam.md) describes the simulated fill path that maps
+  `NEW → FILLED` via the matching engine. (Was cited as `paper-mode-execution-seam.md` — no such file; corrected
+  2026-07-31.)
 
 ## Execution-owner block
 
@@ -131,7 +145,8 @@ execution:
     reconciler SLA)
   verifier: |
     `execution-service/scripts/quality-gates.sh` runs state-machine invariant unit tests under
-    `tests/unit/orders/test_state_machine.py` (to be added; tracked in EX-24 follow-up). CI fails on transition
+    `tests/unit/orders/test_state_machine.py` (STILL NOT ADDED as of 2026-07-31 — no file matching
+    `test_state_machine*.py` exists in execution-service; tracked in EX-24 follow-up). CI fails on transition
     coverage gap.
   last_executed: NEVER (this codex stub created 2026-05-12; tests + matching state-machine code pending)
 ```

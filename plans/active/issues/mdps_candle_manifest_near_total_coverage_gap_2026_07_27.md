@@ -160,10 +160,16 @@ the candle layer instead of raw-tick.
       normal cadence.
 - [ ] [DATA] P2. **Complete the sports full-corpus sweep** (only a bounded 200-object sample has been run) to confirm
       the ~100% coverage pattern holds across sports's entire historical corpus, not just a recent-day sample.
-- [ ] [REVIEW] P2. Cross-check whether `mdps_cefi_candle_manifest_orphan_reconciliation_2026_07_26.md`'s narrower
-      CEFI-only scope (3 known venues, one known day, "corpus-wide extent unknown") is now superseded by this
-      corpus-wide measurement — likely yes, this doc should probably fold into or supersede that one once the backfill
-      scope is finalized.
+- [x] ✅ [REVIEW] P2. **DONE 2026-07-31 (slot-5, `review`).** Cross-check confirmed: YES, superseded. Live-verified via
+      a single-day, row-group-pushdown `read_availability_index` read (not a corpus walk,
+      `filters=[("date",">=",     "2026-05-03"),("date","<=","2026-05-03")]`) that the narrower doc's exact named shards
+      — BITGET-FUTURES (29 rows)/BITFINEX-FUTURES (14 rows)/KRAKEN-FUTURES (7 rows), all `data_type`/`timeframe` combos,
+      `day=2026-05-03` — now carry real `captured` MDPS manifest rows, with `written_at` timestamps matching THIS doc's
+      own todo 2 backfill campaign (`backfill-candle-manifest-cefi-20260727-151741`, ~16:23:49Z 2026-07-27), not the
+      narrower doc's own prescribed `merge_manifest_from_canonical_paths()` recipe (never actually run against prod).
+      Folded: the narrower doc's own todo flipped + archived to
+      `plans/archive/issues/mdps_cefi_candle_manifest_orphan_reconciliation_2026_07_26.md` citing this evidence, all
+      corpus referrers updated in the same commit.
 - [ ] [DATA] P2. **Remediate cefi + prediction `processed_candles/` objects mis-tagged with an unregistered
       `source=databento`** — two independent AGs hit the identical mistag SHAPE (a manifest write attempted with
       `source='databento'`, which isn't in that AG's `SOURCE_PRIORITY`-registered source list), confirmed via

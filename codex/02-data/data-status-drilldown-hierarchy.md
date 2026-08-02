@@ -64,8 +64,8 @@ Per-asset_group depth (matches CLAUDE.md "Per-asset-group shard-key matrix"):
 | ↳ `feature_family=multi_timeframe`  | `feature_family → venue [→ chain] → feature_group → timeframe → instrument_id → date`                                                                         |
 
 > **`feature_family` is the outermost axis for features-service drilldowns** (added 2026-05-08 per
-> [`features_repo_consolidation_2026_05_08`](../../plans/active/features_repo_consolidation_2026_05_08.md) Phase 1A).
-> The 8 previously-separate `features-*-service` repos are sub-packages of the consolidated
+> [`features_repo_consolidation_2026_05_08`](../../plans/archive/features_repo_consolidation_2026_05_08.plan.md) Phase
+> 1A). The 8 previously-separate `features-*-service` repos are sub-packages of the consolidated
 > [`features-service`](../../../features-service/); the data-status drilldown surfaces `feature_family` (the UAC
 > `FeatureFamily` StrEnum: `onchain` / `volatility` / `cross_instrument` / `sports` / `calendar` / `commodity` /
 > `delta_one` / `multi_timeframe`) as the top-level shard axis so operators see the consolidated repo's coverage

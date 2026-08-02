@@ -103,7 +103,7 @@ drift_direction: advance-code
       lifecycle gate (market-tick-data-service@abe0904d) and the active-window catalogue widening
       (instruments-service@41ca79d7) have both shipped, and append the before/after counts. Repo: read-only measurement.
       — `unified-trading-pm`. Before/after counts appended to
-      `plans/active/issues/prediction_lifecycle_prefetch_gate_and_resolution_day_catalogue_2026_07_14.md`'s Progress
+      `/plans/archive/issues/prediction_lifecycle_prefetch_gate_and_resolution_day_catalogue_2026_07_14.md`'s Progress
       Log: captured fraction of attempted rows 26.3% → 97.9% (+71.6pp), captured rows/day ~46× (44.6 → 2,058.1),
       comparing live-cron-captured windows straddling the 2026-07-14 fix (historical corpus re-backfill is still
       operator-gated, so no historical before/after exists yet — this is the honest currently-measurable comparison). No
@@ -202,7 +202,7 @@ touch this exact same ground.
 AO-eligible candidates in `data_completion_prediction_2026_07_15.md` (0 AO-eligible, 21 human-only, 3 conflicts on the
 doc generally), `issues/kalshi_live_capture_regression_and_drift_2026_07_13.md` (1, 2 conflicts),
 `issues/prediction_arb_live_execution_bridge_2026_07_20.md` (0 AO-eligible, 2 conflicts),
-`issues/prediction_lifecycle_prefetch_gate_and_resolution_day_catalogue_2026_07_14.md` (1, 2 conflicts),
+`/plans/archive/issues/prediction_lifecycle_prefetch_gate_and_resolution_day_catalogue_2026_07_14.md` (1, 2 conflicts),
 `issues/prediction_phantom_reconciler_wipes_bundle_atom_2026_07_10.md` (2, 3 conflicts),
 `issues/prediction_polymarket_legacy_dual_write_trees_metadata_loss_2026_07_24.md` (2, 2 conflicts — but see todo 5
 above, which independently reaches the same ground via `prediction_phase_ab_residuals`'s citation, conflict-free from

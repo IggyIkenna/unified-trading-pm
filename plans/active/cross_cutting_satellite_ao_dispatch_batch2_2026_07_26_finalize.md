@@ -7,7 +7,7 @@ summary: >-
   re-checks batch 2's own Deferred items (3 conflict-gated, 7 operator-gated, 3 time-gated, 9 needs-own-triage-pass),
   actions the two membership/classification findings this audit raised, and archives the batch via the standard 6-step
   ritual.
-status: draft
+status: active
 nature: process
 asset_group: [cross-cutting]
 stage: [data]
@@ -23,7 +23,7 @@ related:
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]
 created: "2026-07-26"
-last_updated: "2026-07-26"
+last_updated: "2026-07-30"
 parent_epic: infrastructure_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -43,6 +43,14 @@ source: >-
 assigned_role: data_engineering
 sequential: true
 drift_direction: advance-code
+context_scope:
+  [
+    /plans/active/cross_cutting_satellite_ao_dispatch_batch2_2026_07_26.md,
+    /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
+    /codex/02-data/availability-manifest-and-data-status.md,
+    /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
+    /cursor-configs/skills/ag-closeout-audit/SKILL.md,
+  ]
 ---
 
 # Cross-cutting satellite AO batch 2 — finalize
@@ -55,16 +63,40 @@ drift_direction: advance-code
 
 ## Todos
 
-- [ ] [REVIEW] P1. **Reconcile every named source doc's checkboxes.** Batch 2's 14 todos cite ~22 distinct source docs
-      (each todo's text ends with `Source:` / `Sources:`). For each: flip the corresponding checkbox or section, citing
-      the batch commit that shipped it — verify the commit actually exists before citing it. Several batch-2 todos flip
-      a source checkbox as **already-landed with re-verification evidence rather than newly-shipped** (the dp-audit
-      image-default and `--reclassify-apply` terraform halves, the alerting-subscriber Cloud-Run code ship, the
+- [x] ✅ [REVIEW] P1. **Reconcile every named source doc's checkboxes.** Batch 2's 14 todos cite ~22 distinct source
+      docs (each todo's text ends with `Source:` / `Sources:`). For each: flip the corresponding checkbox or section,
+      citing the batch commit that shipped it — verify the commit actually exists before citing it. Several batch-2
+      todos flip a source checkbox as **already-landed with re-verification evidence rather than newly-shipped** (the
+      dp-audit image-default and `--reclassify-apply` terraform halves, the alerting-subscriber Cloud-Run code ship, the
       `lifecycle-events-sub` terraform codification) — preserve that distinction in the evidence text; do not restate
       them as work this batch performed. After flipping, re-check each source doc for 0 remaining open items (checkbox
       AND prose-form) and only then consider flipping its `status` to `resolved`. **Done when**: every cited source
       checkbox is flipped with verified evidence and no doc's `status` was advanced past what its remaining items
-      support.
+      support. — DONE 2026-07-30 (unified-trading-pm, this commit). Enumerated all 14 `Source:`/`Sources:` citations
+      across batch2's 14 todos → 14 distinct source-doc paths (the todo's "~22" was an overcount; several todos cite the
+      same doc — `data_pipeline_alert_substrate_residual_2026_07_24.md` alone is cited by 5 different batch2 todos).
+      Read every one in full and cross-checked its checkbox/status against batch2's own DONE evidence:
+      `issues/catalogue_census_equivalents_inventory_2026_07_24.md`,
+      `plans/archive/issues/{coverage_percent_symmetric_inclusion_audit,cli_shard_split_flag_coverage_audit,     mvp_scope_resolver_code_read,features_service_catalogue_completeness_inventory,dp_event_pubsub_delivery_gap,     manifest_hygiene_red_2026_06_27,manifest_hygiene_red_2026_06_29,     read_availability_index_unfiltered_callsite_audit_2026_07_26,     data_pipeline_alerts_dp_not_v9_and_rate_limited_false_positives_2026_06_27,     gcs_data_access_audit_log_cost_2026_07_24}`,
+      `plans/archive/2026_07/{data_pipeline_alert_substrate_residual_2026_07_24,gcs_data_access_audit_log_cost_2026_07_24}`,
+      `plans/active/{data_pipeline_self_healing_completion_residual_2026_07_24,     data_pipeline_ag_residual_backfill_decisions_2026_07_24}`.
+      **13 of 14 were already correctly reconciled** — prior sessions had flipped each source checkbox in the same turn
+      as shipping the citing batch2 todo, with correct already-landed-vs-newly-shipped attribution throughout
+      (spot-verified several cited SHAs exist: e.g. `unified-trading-library@d7b3ed7d`, `deployment-service@f2d094e`,
+      `alerting-service@62b850c`); docs whose remaining items are genuinely still open correctly stayed
+      `status: active`/`open` (`data_pipeline_self_healing_completion_residual_2026_07_24.md`,
+      `data_pipeline_ag_residual_backfill_decisions_2026_07_24.md`,
+      `catalogue_census_equivalents_inventory_2026_07_24.md` — each has a live unflipped batch2 sibling todo or a
+      genuinely-new follow-up gap); docs with 0 remaining items were correctly archived with `status: resolved`. **One
+      discrepancy found and fixed**: batch2's own todo 8 (UTL `DP_DAILY_DIGEST`/`DP_HYGIENE_SUMMARY` constants + MTDS
+      per-source rate-limit event) was still unchecked, but both halves had actually landed 2026-07-30 via the sibling
+      `data_pipeline_alert_substrate_residual_2026_07_24_finalize_2026_07_30.md` gated-twin plan
+      (`unified-trading-library@0f851fd6`, `market-tick-data-service@7f42c557` — both commits verified to exist) — the
+      source doc's own checkboxes were already correctly flipped there, batch2's citing checkbox simply never got
+      re-synced. Flipped batch2 todo 8 `[x]` in this same commit with the already-landed attribution preserved (see
+      `cross_cutting_satellite_ao_dispatch_batch2_2026_07_26.md`). The `gcs_data_access_audit_log_cost_2026_07_24.md`
+      "duplicate" is not a bug: the `plans/archive/issues/` copy is an intentional `status: superseded` stub pointing at
+      the real resolved doc in `plans/archive/2026_07/` — both archive copies are correct as-is.
 - [ ] [REVIEW] P1. **Re-check batch 2's own Deferred items now that time has passed and its todos have landed.** For
       each of the 3 conflict-gated, 7 operator-gated, 3 time-gated and 9 needs-own-triage-pass entries: re-read the
       specific gating ground and decide whether it has cleared. Route each to exactly one of — ready for a batch 3 (note
@@ -104,3 +136,20 @@ drift_direction: advance-code
       path → confirm `locked_by` is empty on both (it is). **Done when**: both docs are in `plans/archive/2026_07/`,
       every corpus referrer resolves to the new path, and `bash scripts/plan-hygiene/run_hygiene_sweep.sh --ci` reports
       0 hard failures and 0 orphans.
+
+## Progress Log
+
+- 2026-07-30 (slot 7, worker on `assigned_role: review`, dispatch `...finalize-002`): **HOLDING OFF — same
+  `gate_on_depends` wiring gap as the tracked recurring bug.** Todo 1 is genuinely done (verified above). But batch2's
+  own plan file shows only 10/15 todos checked `[x]` (5 still `- [ ]`: the features-service catalogue inventory, the
+  dp-audit OOM driver fix, the two bounded data-pipeline-alert bug fixes, the retagged `[DATA]` P2 item, and the
+  unfiltered-callsite-audit item) — not the "all 14 done" this finalize plan's own header requires before ANY of its
+  todos dispatch. `GET /api/backlog/cross_cutting_satellite_ao_dispatch_batch2_2026_07_26_finalize-002/blockers` →
+  `"ready (no blockers)"` confirms the gate did not hold. Same bug as
+  `plans/active/issues/gate_on_depends_wiring_gap_defi_dex_pool_finalize_2026_07_25.md` (added as a new recurrence there
+  rather than re-investigating from scratch — this is the 2nd distinct plan pair I've hit this exact bug on in one
+  session, after `prediction_satellite_ao_dispatch_batch6_2026_07_29_finalize`). Not flipping todo 2's checkbox — its
+  own "Done when" (a dated re-verification verdict for every Deferred entry) is a genuine, non-trivial audit that the
+  plan's authors explicitly intended to run only after the full batch lands, and re-checks (a)/(b) in its own text
+  reference OTHER tranches' finalizes whose state I have not verified either. Skipped back to the queue.
+- **context-scout 2026-08-01**: populated/refreshed context_scope (5 entries).

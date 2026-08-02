@@ -31,7 +31,7 @@ referenced_by:
     /codex/02-data/sports-gcs-path-ssot.md,
   ]
 owner:
-last_reviewed: 2026-05-17
+last_reviewed: 2026-09-15
 code_refs:
 last_updated: 2026-04-21
 ---

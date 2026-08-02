@@ -4,7 +4,7 @@ title: Operation Capability Registry
 summary: >-
   Operation Capability Registry — the UAC per-(source, operation, environment) validation layer (SourceCapability /
   operation_details / EndpointSpec); validate_operation / resolve_venue_context / compose_validation resolve
-  signing_scheme + required_credential + execution_pattern; 77 sources registered, 53 with populated operation_details.
+  signing_scheme + required_credential + execution_pattern; 60 sources registered, 40 with populated operation_details.
 status: current
 nature: ssot
 asset_group: [meta]
@@ -17,7 +17,7 @@ created: 2026-03-27
 authoritative_for: [operation capability registry per-(source operation env) validation]
 referenced_by:
 owner:
-last_reviewed: 2026-05-17
+last_reviewed: 2026-10-01
 code_refs:
   [
     unified-api-contracts/unified_api_contracts/registry/capability.py,
@@ -192,7 +192,12 @@ Derived from `signing_scheme` + `sports_venue_type` + `venue_category`:
 
 ## Population Status
 
-- **77 sources** registered across 5 categories (CeFi, DeFi, TradFi, Sports, AltData)
-- **53 sources** with populated `operation_details`
-- **24 sources** with empty details (data-only — falls back to source-level)
-- **80 unit tests** + parametrized integration across all 53 sources
+Measured 2026-07-31 (`bootstrap_capabilities()` then count `_CAPABILITIES`; cross-checked against
+`SourceCapability(` declarations in `registry/capability_declarations/`):
+
+- **60 sources** registered across 5 categories — CeFi 21 (`_cefi.py`), Sports 15 (`_sports.py`), AltData 12
+  (`_altdata.py`), DeFi 6 (`_defi_source_capabilities.py`), TradFi 6 (`_tradfi.py`)
+- **40 sources** with populated `operation_details`
+- **20 sources** with empty details (data-only — falls back to source-level)
+
+These counts drift on every venue onboarding — re-measure rather than quoting this block.

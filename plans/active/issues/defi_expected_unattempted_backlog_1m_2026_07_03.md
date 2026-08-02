@@ -32,6 +32,13 @@ last_updated: 2026-07-10
 locked_by: live-defi-rollout
 locked_since: 2026-07-03
 resolved_by:
+context_scope:
+  [
+    unified-api-contracts/unified_api_contracts/registry/market_data_categories.py,
+    unified-api-contracts/unified_api_contracts/registry/venue_mapping.py,
+    instruments-service/scripts/enumerate_expected_universe.py,
+    /codex/02-data/honest-coverage-model.md,
+  ]
 ---
 
 > **🟢 2026-07-10 RESOLVED — fresh operator decision made at the real v2 scale (Option A, full 63,876,053-row apply,
@@ -106,14 +113,14 @@ The enumerator's halt message is explicit: "Increase `--max-writes-per-run` afte
       report per-(venue, data_type, year) distribution so the operator can review what's being seeded.
 
       2026-07-03 run `enum-universe-defi-20260703-154354` (scan-only, cap 50M): **1,380,376 candidates**, report CSV
-                                      `/tmp/enum-universe-defi-20260703-154354.csv` (slot-2 host). Distribution: **99.95% is 2018 (695,830) + 2019
-                                      (683,862)** — pre-launch/pre-genesis days for protocols that did not exist yet (AAVE_V3 / PANCAKESWAP_V3 /
-                                      YEARN_V3 / BEEFY etc. all launched years later), i.e. HONEST-ABSENCE documentation rows (record_expected_empty
-                                      reason EXPECTED wildcard), NOT download work.
+                                                                                                                  `/tmp/enum-universe-defi-20260703-154354.csv` (slot-2 host). Distribution: **99.95% is 2018 (695,830) + 2019
+                                                                                                                  (683,862)** — pre-launch/pre-genesis days for protocols that did not exist yet (AAVE_V3 / PANCAKESWAP_V3 /
+                                                                                                                  YEARN_V3 / BEEFY etc. all launched years later), i.e. HONEST-ABSENCE documentation rows (record_expected_empty
+                                                                                                                  reason EXPECTED wildcard), NOT download work.
 
-                                      Only **684 cells across 2021–2025** are potentially actionable "remaining to download" rows. Even spread across
-                                      data_types (~80k each); top venues BEEFY 96k / BALANCER 86k / PANCAKESWAP_V3 64k. (First attempt hit a
-                                      transient consolidator read race — 404 on a replaced `_index` generation — retry succeeded; not a defect.)
+                                                                                                                  Only **684 cells across 2021–2025** are potentially actionable "remaining to download" rows. Even spread across
+                                                                                                                  data_types (~80k each); top venues BEEFY 96k / BALANCER 86k / PANCAKESWAP_V3 64k. (First attempt hit a
+                                                                                                                  transient consolidator read race — 404 on a replaced `_index` generation — retry succeeded; not a defect.)
 
 - [x] ✅ [INFRA] P1. **RESOLVED 2026-07-10 (operator, fresh review at real v2 scale): Option A — apply the full
       63,876,053 rows in one run**, same "honest by default" principle as the original 2026-07-03 decision, now at the
@@ -136,7 +143,12 @@ The enumerator's halt message is explicit: "Increase `--max-writes-per-run` afte
       bug** (distinct from the already-open `is_daily_enum_prediction_sports_fail_despite_coercion_2026_07_06.md` P0,
       which is the `build_instrument_catalogue.py` Cloud Run catalog-builder job, a different script) — prediction's v2
       EXPECTED-UNIVERSE enumerator cannot currently complete even a scan-only run against the full catalog. Not fixed
-      here (out of this task's scope); needs its own fix-worker dispatch. This P2 scan-only investigation is
+      here (out of this task's scope); needs its own fix-worker dispatch. **DONE 2026-07-30**
+      (defi_satellite_ao_dispatch_batch1 finalize reconciliation) — fixed via the identical `tz_localize(None)`
+      normalization pattern this note describes, shipped `instruments-service@b90bc2d9` ("fix(scripts): fix
+      tz-naive/tz-aware comparison crash in prediction v2 enumerator"), landed 2026-07-10; live-verified 2026-07-28 by
+      defi_satellite_ao_dispatch_batch1_2026_07_25.md todo 8 (`enumerate_v2(asset_group="prediction", ...)` against a
+      synthetic tz-aware catalogue entry completes with zero `TypeError`). This P2 scan-only investigation is
       complementary to (and updates) `plans/archive/issues/cross_ag_never_seeded_backlog_scan_2026_07_06.md`, whose
       cefi/tradfi/prediction quantum estimates (~1.75M cefi Kraken-6yr, ~818k prediction cqg EU, etc.) were grep-based
       static estimates against the OLD landscape and are now understated by 1-2+ orders of magnitude post the 2026-07-06
@@ -218,6 +230,11 @@ scratchpad and is not part of any repo — available on request if the count nee
 above are otherwise fully reproducible via the shipped CLI.
 
 ## Progress log
+
+- **na-eligibility-audit 2026-07-30**: KEEP-NA, valid - sole open item asks to DECIDE which of two disagreeing
+  registries is the SSOT for A_TOKEN/DEBT_TOKEN valid data_types — the doc itself calls this a genuine
+  SSOT-contradiction call
+- **context-scout 2026-08-01**: populated context_scope (4 entries).
 
 - 2026-07-03: Issue filed from the incremental-catalogue plan's Phase 4 verification; pre-existence proven via the
   `--end-date 2026-06-29` bounded re-run. Operator notified in-session.

@@ -764,3 +764,11 @@ into the same fix — carried forward here so it isn't lost with the archive:
       the corpus (`sports_satellite_ao_dispatch_batch3_2026_07_25.md`,
       `sports_consolidated_closeout_aggregated_sources_2026_07_24.md`) are about a DIFFERENT concern on the same
       function (QG function-size decomposition, 89L→≤50L) — unrelated to this denominator bug. Still open.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30**: KEEP-NA, valid (sports tranche) — 2 of the 7 open todos are explicitly owned
+  elsewhere and annotated 'not duplicated here — left open, owned by Track V'; `[PROCESS] P1` asks for a NEW codex
+  authoring rule (an operator ruling this run cannot obtain, and codex edits are out of scope); and `[DATA] P2` on
+  `emit_empty_gaps_for_entity` states its own alternative as 'or an operator decision accepts the wider denominator as
+  intentional'

@@ -63,8 +63,8 @@ related:
 created: 2026-07-22
 last_updated: 2026-07-22
 parent_epic: instruments_master
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 priority: P1
 estimate_class: research
 estimate_baseline_ai_days: 1
@@ -406,3 +406,13 @@ sweep's classifier has needed a floor-aware or twin-existence-aware correction l
 `gcs-and-manifest-delete-safety-protocol.md` Part 5 names as the "legacy-COPIED-not-MOVED" trap, and it recurs anytime a
 classifier or reconciler treats a manifest `captured` row as proof of anything beyond "captured somewhere, at some
 point, per this data_type/day/league key."
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30**: RECLASSIFY -> `assigned_vm: planning` — 4 of the 5 recommendations are closed;
+  the sole remaining `[DATA] P2` is explicitly 'a migrate-forward, NOT a delete': copy 58 v2 post-floor rows (16 days)
+  into the canonical per-league `entity=fixtures`/`entity=fixture_stats` shape reusing `migrate_sports_per_league.py`'s
+  existing join logic, then re-run the sweep to confirm they flip to `A_canonical`. Additive + idempotent +
+  self-verifying, so it needs no `[OPERATOR]` delete-safety gate. Conflict-check CLEAR: the
+  `sports_satellite_ao_dispatch_batch2_2026_07_24.md` grep hit was an unrelated curated-universe todo, not this
+  migrate-forward.

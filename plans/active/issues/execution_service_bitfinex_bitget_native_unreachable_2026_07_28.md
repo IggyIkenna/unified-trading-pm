@@ -25,8 +25,9 @@ related:
   ]
 created: 2026-07-28
 parent_epic: execution_master
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+assigned_role: backend_engineer
+execution_scope: orchestrator-agent
 priority: P3
 estimate_class: research
 source: >-
@@ -112,3 +113,11 @@ scratch. That's why this was kept out of the binance/bybit/okx todo's scope rath
       creation + key generation on each exchange) is a real-world vendor-account action for the operator (or AO's own
       ambient identity, if a self-service path exists for these two vendors — unconfirmed) to complete before live
       trading can actually use these venues; it does not block landing this wiring todo.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30** (tranche=cefi, autonomous): RECLASSIFY -> `assigned_vm: planning` (in place, name
+  unchanged). the keep-vs-delete judgment was RULED 2026-07-28; the residue is a fully-specified factory.py wiring
+  change; conflict-check clear (the parent `cefi_consolidated_native_ao_extract` explicitly scoped bitfinex/bitget OUT).
+  Shared conflict-check protocol: `/codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md` sect.3 -
+  CLEARED.

@@ -22,7 +22,7 @@ dependencies = [
     "duckdb>=1.2.0,<2.0.0",
     "aiohttp>=3.14.1,<4.0.0",
     "cryptography>=47.0.0,<50.0.0",
-    "pygments>=2.20.0",
+    "pygments<3.0.0,>=2.20.0",
 ]
 [tool.setuptools.packages.find]
 include = []

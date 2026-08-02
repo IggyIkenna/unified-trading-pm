@@ -185,6 +185,21 @@ for it. Report as `drift_axis_false_positive`; the cross-repo fix is the UAC lay
 here). Precedent: the PLAYER_VALUES layout had the identical drift (see the `gcs_paths.py:70-79` comment) and was
 realigned to the writer's truth — WEATHER is the same class, unfixed.
 
+### H11 — 2026-07-30 census re-run (Phase G) confirms H_market-token unchanged + 7 venue aliases still un-registered
+
+Census re-run against `market-data-tick-sports-prd` (628,349 rows). The `instrument_type` axis (all 33 distinct values
+non-canonical: `MATCH_ODDS`, `OVER_UNDER_*`, `ASIAN_HANDICAP_*`, `exchange_odds`, `fixed_odds`, `odds`, `SPORT`) is
+byte-identical to `plans/active/issues/sports_instrument_type_market_token_ssot_gap_2026_07_28.md`'s finding — a
+DELIBERATE MDPS market-generalization output, an SSOT-registration gap not a data defect, no new action.
+
+**Genuinely new (not covered by any existing doc found)**: 7 `venue` values are non-canonical and NOT yet in
+`SPORTS_ODDS_API_ACCEPTED_NONCANONICAL_BOOKMAKERS` alongside the 18 that already are — `FOOTYSTATS` (22,962 rows),
+`SPORT888` (20,066), `BET888SPORT` (18,903), `LADBROKES_UK` (13,560), `LADBROKES` (12,210, likely the same bookmaker as
+`LADBROKES_UK` under two spellings), `SMARKETS` (8,518). `KALSHI` (20,785 rows) is the ALREADY-TRACKED cross-AG bleed
+(archived `cross_ag_prediction_rows_bleed_into_sports_instruments_index_2026_07_20.md` todo 15, still open, P2,
+`row_count=0` throughout — not real data, no new action). The 6 bookmaker venues are tracked in
+`plans/active/issues/cefi_sports_prediction_first_census_small_drift_2026_07_30.md`.
+
 ## Known-good spot-check — run BEFORE trusting any absence result
 
 **Sports has its own dispatcher — `canonical_path_templates` will hand you an EMPTY LIST and that is correct.**

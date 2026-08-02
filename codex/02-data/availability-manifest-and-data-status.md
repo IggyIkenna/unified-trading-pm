@@ -1619,6 +1619,32 @@ writing the parquet. NO partial passes.
 This 4-pillar model is the canonical write-gate going forward. Adapters that are post-migration MUST pass each pillar;
 pre-migration adapters get phased through Phase 2 of the writegate plan.
 
+### 4a. `DefiManifestRecorder`'s A4-full invariant — `chain` is NEVER blank, even for chain-less venues
+
+`DefiManifestRecorder` (used by every DeFi-family shard, including CeFi-asset_group `perp_funding` which is routed
+through this DeFi-originated recorder) enforces a hard invariant in `_build_row_key`: `chain` must be non-blank, or the
+call raises `BlankChainError`. Caught per-shard by shard-level failure isolation (logs a WARNING, does NOT crash) — but
+the manifest write is silently DROPPED, not degraded. For a venue with no underlying blockchain (`KALSHI_PERP`,
+`POLYMARKET_PERP`), the established, LOAD-BEARING workaround is `chain=<VENUE_NAME_UNDERSCORE_FORM>` — this is
+deliberate design, not a canonicalisation bug, even though `venue == chain` on these rows superficially looks like a
+wrong-axis mistake. **Incident (2026-07-30,
+`cefi_perp_funding_kalshi_polymarket_residual_and_capture_gap_2026_07_30.md`, archived)**: this exact pattern was
+misdiagnosed as a bug and "fixed" to `chain=""`, which silently dropped every kalshi_perp/polymarket_perp/hyperliquid
+`perp_funding` manifest write for ~2h15m before being caught (a pre-existing regression test asserting
+`chain == "KALSHI_PERP"` on the failure path proved the "fix" wrong) and reverted same session. Before touching
+`chain=<VENUE>` on any chain-less-venue row, confirm which of these two situations applies — `venue == chain` is
+expected and correct for these venues, not a canonicalisation defect.
+
+### 4b. `record_failed`'s `error_reason` is whatever precedes the FIRST colon — lead the message with the classification
+
+`DefiManifestRecorder.record_failed` derives the stored `error_reason` via `raw_message.split(":", 1)[0].strip()[:80]`
+(falling back to a `classify_venue_error()` verdict if present). Any raised exception message destined for
+`record_failed` MUST lead with the real classification token (`"SOURCE_UNREACHABLE: ..."`,
+`"PHANTOM_CAPTURED_ROW: ..."`, etc.) — leading with descriptive/contextual text instead (e.g.
+`"polymarket_perp: perps-api.polymarket.com unreachable..."`) silently stores the venue/protocol name as the
+`error_reason`, not a real reason, making the manifest useless for triage without re-deriving root cause from scratch.
+Confirmed real bug, same incident as 4a above, fixed `market-tick-data-service@dcd1bc8d`.
+
 ### 5. `available_at` per row, write-time, equal to live-pipeline-arrival (post-2026-05-06)
 
 Every shard's parquet contains an `available_at` column. Each row's value = when the live pipeline would have actually
@@ -1951,6 +1977,17 @@ fall back to a live shard-merge when the canonical blob is older than `MANIFEST_
 - One-off `rebuild_*_manifest.py` scripts: pass `per_vm_shards=True` to skip CAS contention with concurrent rebuilds /
   the consolidator daemon. Without this, OCC `generation_match` retries can re-merge stale views and drop most of the
   rebuild's output (observed 2026-05-02 on DeFi: 80k mid-run rows compacted to 12k canonical).
+- **Every one-off `scripts/` construction of `ManifestWriter(...)` against a populous bucket (defi/cefi/sports) — HARD
+  RULE, not just a performance tip.** Omitting `per_vm_shards=True` (with no `MANIFEST_PER_VM_SHARDS=true` env guarantee
+  either) makes every `.write()`/`.close()` flush take the legacy CAS path: a read-merge-write of the FULL consolidated
+  `_index/availability_index.parquet` for that bucket, independent of the script's own worklist size (~14.86 GiB
+  unfiltered for a populous bucket at the time of this writing). This caused a fleet-wide agent-orchestrator OOM outage
+  TWICE in ~15 minutes (`migrate_legacy_gas_fees_venue_2026_07_30.py`, root-caused + fixed
+  `market-tick-data-service@8016c7e4`) and was independently latent in 24 further call sites across
+  market-tick-data-service/instruments-service/market-data-processing-service, swept + fixed 2026-08-02
+  (`plans/archive/2026_08/defi_satellite_ao_dispatch_batch7_2026_08_01.md` todo 4). Safe to read back after: on both the
+  full-schema and slim-column paths, `read_availability_index()` self-shard-merges a caller's own pending per-VM writes,
+  so a script that reads its own writes back for verification sees them immediately post-fix.
 - Local multi-process rebuilds where every process inherits the same `HOSTNAME` — set a unique `VM_NAME` per chunk
   worker so they each get their own per-VM shard (not a shared one).
 
@@ -2155,13 +2192,17 @@ Measured from the consolidated v9 `_index` (production bucket `central-element-3
 gas-fees + monitoring running). Source: `plans/active/data_completion_to_100_all_ag_2026_06_21.md` § "Measured snapshot
 2026-06-21".
 
-| AG     | MTDS rows | MTDS v9% | MTDS honest-cov% | MTDS capture (cap/empty/failed/unattempted) | IS honest-cov%          | LIVE rows |
-| ------ | --------- | -------- | ---------------- | ------------------------------------------- | ----------------------- | --------- |
-| cefi   | 3.87M     | 96.6%    | **33.9%**        | 1.31M / 1.28M / **802k failed** / 482k      | 99.9%                   | **0**     |
-| defi   | 6.17M     | 100%     | **6.0%**         | 369k / 3.48M / 6k / 2.31M                   | 100%                    | **0**     |
-| tradfi | 1.94M     | 99.7%    | **5.3%**         | 103k / 1.01M / 10k / 818k                   | 96% (v9 only **46.6%**) | **0**     |
-| sports | 920k      | 100%     | **37.7%**        | 346k / 574k / 164 / 0                       | **15.9%**               | **0**     |
-| pred   | 42k       | 96.5%    | **40.5%**        | 17k / 24.5k / 50 / 338                      | 100%                    | **0**     |
+**MTDS honest-cov% below is `all_shards_coverage` (empty_confirmed INCLUDED in the denominator) — named here per the
+"MUST name which formula" rule above; it is NOT `reachable_coverage`** (the cefi row's `reachable_coverage` would read
+~50.5%, not 33.9% — verified against the capture-count columns: `1.31M / (1.31M + 802k + 482k)`).
+
+| AG     | MTDS rows | MTDS v9% | MTDS all_shards_coverage% | MTDS capture (cap/empty/failed/unattempted) | IS honest-cov%          | LIVE rows |
+| ------ | --------- | -------- | ------------------------- | ------------------------------------------- | ----------------------- | --------- |
+| cefi   | 3.87M     | 96.6%    | **33.9%**                 | 1.31M / 1.28M / **802k failed** / 482k      | 99.9%                   | **0**     |
+| defi   | 6.17M     | 100%     | **6.0%**                  | 369k / 3.48M / 6k / 2.31M                   | 100%                    | **0**     |
+| tradfi | 1.94M     | 99.7%    | **5.3%**                  | 103k / 1.01M / 10k / 818k                   | 96% (v9 only **46.6%**) | **0**     |
+| sports | 920k      | 100%     | **37.7%**                 | 346k / 574k / 164 / 0                       | **15.9%**               | **0**     |
+| pred   | 42k       | 96.5%    | **40.5%**                 | 17k / 24.5k / 50 / 338                      | 100%                    | **0**     |
 
 **Three structural findings as of 2026-06-21:**
 

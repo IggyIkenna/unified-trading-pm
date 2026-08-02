@@ -32,7 +32,7 @@ referenced_by:
     /codex/09-strategy/architecture-v2/cross-cutting/capital-client-isolation.md,
   ]
 owner:
-last_reviewed: 2026-05-17
+last_reviewed: 2026-08-31
 code_refs:
 ---
 

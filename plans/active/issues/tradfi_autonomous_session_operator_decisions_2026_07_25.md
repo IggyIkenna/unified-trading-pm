@@ -36,6 +36,12 @@ locked_by:
 resolved_by:
 drift_direction: none
 depends_on: []
+context_scope:
+  [
+    /plans/epics/tradfi_master.md,
+    /plans/active/tradfi_consolidated_closeout_2026_07_18.md,
+    /plans/active/tradfi_satellite_ao_dispatch_batch2_2026_07_25.md,
+  ]
 ---
 
 # TradFi /autonomous session (2026-07-25) — queued operator decisions
@@ -291,3 +297,26 @@ the 403-denied list call yields it). No available worker credential can close th
 
 **Recommendation: A.** It is a single read-only command, it is the only step that can still change the outcome, and
 every day narrows or closes it permanently.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30** (tradfi tranche): **KEEP-NA, valid — operator-gated by construction.** Both open
+  todos are literally "once you've answered items 1-3 / 5-9, record the decision inline here and propagate into the
+  named plan doc(s)"; this doc IS the tranche's queued-operator-decision register. Nothing to reclassify. **Cross-
+  reference for whoever answers it: item 5 (tradfi AO batch plans sitting `status: draft`) is now the single live
+  blocker behind four separate KEEP-NA-STALE verdicts from this run** —
+  `tradfi_manifest_writer_legacy_id_regression_2026_07_21`, `tradfi_distinct_values_net_new_clusters_2026_07_28`,
+  `tradfi_yahoo_venue_vendor_conflation_2026_07_27` and
+  `tradfi_within_bounds_source_zero_shard_atom_mismatch_2026_07_28` are all extracted verbatim into
+  `/plans/active/tradfi_satellite_ao_dispatch_batch5_2026_07_29.md`, which is `assigned_vm: planning` but still
+  `status: draft`, so none of that work is dispatched. Answering item 5 (extended to batch5) unblocks all four at once.
+- **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).
+- **na-eligibility-audit 2026-08-01** (tradfi tranche): **KEEP-NA, valid — re-verified, unchanged.** Both open todos
+  re-read end-to-end; count matches tranche-inventory tool (2). No content change since the 2026-07-30 verdict — only a
+  context-scout `context_scope` backfill touched the file since. Still operator-gated by construction; nothing to
+  reclassify.
+- **na-eligibility-audit 2026-08-02** (tradfi tranche, dispatch agt-6397c9): **KEEP-NA, valid — re-verified, unchanged
+  (3rd consecutive pass).** Both open todos re-read end-to-end via an independent sub-agent classification; count
+  reconciled (2/2). All 10 numbered decision items are genuine operator escalations (authority/design/blast-radius
+  calls), and the 2 open checkboxes are meta-propagation todos explicitly gated on the operator answering them first —
+  fails the bounded-outcome bar by design. No content drift since 2026-08-01. Nothing to reclassify.

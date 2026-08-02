@@ -235,8 +235,8 @@ to drop the org-migration clause, unblocking the track. [WORKER REC] B: Keep pau
 the frontmatter so it stops silently blocking Track 2 — and amend Track 2's criterion to "org migration is either
 executed or formally abandoned" so the track can close either way. C: Un-pause and schedule the cut — still wanted for
 org secrets / team access / bus-factor; if so it needs a cutover window and Phase 0's CI/CD-drain precondition
-re-verified against `/plans/active/cicd_mvp_ldr_to_main_pipeline_2026_06_30.md` first (per the plan's own 2026-07-14
-finding-92 note). Other: operator can type a custom answer
+re-verified against `/plans/archive/2026_07/cicd_mvp_ldr_to_main_pipeline_2026_06_30.md` first (per the plan's own
+2026-07-14 finding-92 note). Other: operator can type a custom answer
 
 **Status**: resolved — **option A** (operator decision 2026-07-27,
 `plans/active/june_2026_vintage_audit_findings_2026_07_27.md` §5#39): formally abandoned — stay on `IggyIkenna` Pro.

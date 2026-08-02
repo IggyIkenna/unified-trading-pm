@@ -26,7 +26,7 @@ stage: [meta]
 repos: [unified-trading-pm]
 scope: [engineer]
 tags: [quickmerge, git-push, silent-failure, race-condition, branch-contention, ci-cd, ldr]
-related: [/plans/active/ao_satellite_ao_dispatch_batch1_2026_07_26.md, /codex/08-workflows/ci-cd-flow.md]
+related: [/plans/archive/2026_07/ao_satellite_ao_dispatch_batch1_2026_07_26.md, /codex/08-workflows/ci-cd-flow.md]
 created: "2026-07-27"
 last_updated: "2026-07-28"
 parent_epic: infrastructure_master
@@ -49,8 +49,8 @@ depends_on: []
 > **✅ RESOLVED — `unified-trading-pm@0e48ffe51`.** Already fixed by a concurrent session before this doc's todo was
 > picked up: the final push now runs a bounded, exit-code-checked retry loop with a rebase-and-retry cycle between
 > attempts, exactly per this doc's own recommendation. Archived. (A separate, still-open sibling doc —
-> `quickmerge_stage5_push_loses_fast_forward_race_under_high_churn_2026_07_27.md` — tracks unrelated follow-on polish
-> on the same code path.)
+> `quickmerge_stage5_push_loses_fast_forward_race_under_high_churn_2026_07_27.md` — tracks unrelated follow-on polish on
+> the same code path.)
 
 # quickmerge.sh's final push silently swallows non-fast-forward rejections
 
@@ -142,6 +142,6 @@ loudly (non-zero exit, stderr visible) rather than silently proceeding into PR-c
       captured stderr (`$_qm_push_err`) if all retries are exhausted or the rebase hits a real conflict — no path
       through this code can silently exit 0 without a real push landing. Re-read the live code at
       `scripts/quickmerge.sh` lines ~1764-1779 to confirm this is still in place and unmodified from the fix's intent —
-      it is. Confirming + citing the existing fix; no new code needed for this item. (A separate, still-open sibling
-      doc — `quickmerge_stage5_push_loses_fast_forward_race_under_high_churn_2026_07_27.md` — tracks unrelated
-      follow-on polish on the same code path; out of this item's scope, not touched here.)
+      it is. Confirming + citing the existing fix; no new code needed for this item. (A separate, still-open sibling doc
+      — `quickmerge_stage5_push_loses_fast_forward_race_under_high_churn_2026_07_27.md` — tracks unrelated follow-on
+      polish on the same code path; out of this item's scope, not touched here.)

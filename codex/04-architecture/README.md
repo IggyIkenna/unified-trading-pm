@@ -1,29 +1,38 @@
 ---
 scope: [engineer, admin]
-last_reviewed: 2026-05-17
+last_reviewed: 2026-09-16
 ---
 
 # 04 - Architecture Principles
 
 ## TL;DR
 
-- **17 pipeline service repos** (see `unified-trading-pm/workspace-manifest.json` for full repo registry); **core
-  pipeline** forms a strict DAG: instruments -> market-tick-data-service -> market-data-processing -> features -> ML ->
-  strategy -> execution.
+- **25 repos in `workspace-manifest.json`** (the registry SSOT; not all are pipeline services). The **core pipeline**
+  is 7 repos forming a strict DAG: instruments-service -> market-tick-data-service -> market-data-processing-service ->
+  features-service -> ml-service -> strategy-service -> execution-service.
+  - **[Corrected 2026-07-31]** `ml-training-service` and `ml-inference-service` no longer exist as separate repos —
+    they are the `training/` and `inference/` sub-packages of a single **`ml-service`** repo. References to the two old
+    repo names throughout this doc are historical.
 - **Batch**: GCS is the message bus. Service A writes Parquet to a bucket; Service B reads it. No inter-service RPCs. No
   PubSub.
 - **Live**: two distinct concerns — **feature calculation** runs in the consolidated `features-service` (per
   [`features-service-architecture.md`](features-service-architecture.md)), deployed asset-scoped colocated with MDPS +
   cross-cutting standalone. The same code path as batch — only the trigger swaps from Cloud Scheduler to Redis Stream
-  events. **Data transport** uses **Redis Stream** for the inner-loop cascade (MTDS → MDPS → features-service via
-  CANDLE_BOUNDARY_CROSSED + CANDLE_COMPUTED + FEATURES_COMPUTED, see
-  [`/codex/05-infrastructure/live-pipeline-architecture.md`](/codex/05-infrastructure/live-pipeline-architecture.md))
-  and **PubSub** for cross-service async fan-out (instruments-service catalogue refresh, strategy → execution signals,
-  alerting). Both are async message buses, not REST/RPC — the "no network hops" rule applies to synchronous HTTP/REST
+  events. **Data transport** now goes through the UTL **`EventTransport` facade**
+  (`unified_trading_library/streaming/event_facade.py`), which has three interchangeable implementations —
+  `InMemoryTransport` (paper / colocated), `RedisStreamTransport` (inner-loop cascade), `PubSubTransport`
+  (cross-service async fan-out). Inner-loop events are CANDLE_BOUNDARY_CROSSED → CANDLE_COMPUTED → FEATURES_COMPUTED
+  (see
+  [`/codex/05-infrastructure/live-pipeline-architecture.md`](/codex/05-infrastructure/live-pipeline-architecture.md)).
+  Because every mode publishes through the same facade, `paper(W)` equals `batch-rerun(W)` at epsilon=0 — see
+  [`/codex/02-data/live-data-persistence-and-event-log.md`](/codex/02-data/live-data-persistence-and-event-log.md).
+  **[Updated 2026-07-31 — previously described Redis Stream and PubSub as two hardcoded, separate mechanisms.]**
+  All are async message buses, not REST/RPC — the "no network hops" rule applies to synchronous HTTP/REST
   calls between services, not async messaging.
 - **Live deployments** (post-2026-05-08, per [`features-service-architecture.md`](features-service-architecture.md) +
-  the live-pipeline activation): one consolidated **`features-service`** repo (8 family sub-packages: calendar,
-  commodity, cross_instrument, delta_one, multi_timeframe, onchain, sports, volatility) deployed in two flavors —
+  the live-pipeline activation): one consolidated **`features-service`** repo (family sub-packages — 11 as of
+  2026-07-31: calendar, cefi, commodity, cross_instrument, delta_one, multi_timeframe, onchain, performance_features,
+  sports, strategy_pnl_archetype, volatility, up from the original 8) deployed in two flavors —
   **asset-scoped** colocated with MDPS per asset_group cluster + **cross-cutting** standalone for cross-asset /
   cross-venue features. Plus: (1) MTDS cluster (sharded by v5 shard atom), (2) instruments-service, (3)
   strategy-service, (4) execution-service (per-client). Pre-2026-05-08 the features tier was 5-6 separate repos
@@ -46,8 +55,10 @@ last_reviewed: 2026-05-17
 
 ## Pipeline DAG
 
-The 13 pipeline services (12 original + features-service (sports family)) form a directed acyclic graph with strict
-topological ordering. **Mermaid source (machine-readable):**
+The pipeline services form a directed acyclic graph with strict topological ordering. Note the layers below name
+`features-service (X family)` and `ml-training-service` / `ml-inference-service` as if they were separate services —
+they are **sub-packages** of the single `features-service` and `ml-service` repos respectively (verified 2026-07-31).
+The DAG ordering is still correct; only the repo granularity changed. **Mermaid source (machine-readable):**
 `unified-trading-pm/codex/04-architecture/runtime-deployment-topology.md`
 
 ```

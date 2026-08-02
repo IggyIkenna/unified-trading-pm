@@ -29,7 +29,7 @@ referenced_by:
     plans/epics/defi_master.md,
   ]
 owner:
-last_reviewed: 2026-05-17
+last_reviewed: 2026-10-16
 code_refs:
 overview:
   SSOT for the per-venue paper-mode policy — simulate-first floor for every venue (matching engine is the universal
@@ -132,9 +132,13 @@ pvl-p20b audit confirms: Hyperliquid testnet wired; Binance/Bybit/OKX/Aster pend
 
 ### DeFi (EVM)
 
-Tenderly fork is the canonical paper target for every EVM chain we trade. Per chain → fork URL via
-`unified_api_contracts/canonical/registry/capability_declarations/_defi.py:CHAIN_RPC_TEMPLATES` (extended to carry
-`fork_url` alongside `live_rpc_url`).
+Tenderly fork is the canonical paper target for every EVM chain we trade. `CHAIN_RPC_TEMPLATES`
+(`unified_api_contracts/registry/capability_declarations/_defi_chain_data.py`, re-exported via `_defi.py`) carries only
+the live/mainnet RPC template per chain (`ChainConfig.rpc_url_template`) — there is no per-chain `fork_url` field. The
+fork RPC is resolved separately by `get_defi_rpc_url()` (`execution_service/defi_execution/protocols/base.py`) via a
+`FORK_MODE` switch: `anvil` → `http://localhost:8545`; `tenderly` → a single global Secret Manager secret
+`tenderly-fork-rpc-url` (not per-chain), injected into the connector config as `tenderly_fork_rpc_url`. See
+`unified-api-contracts/docs/DEFI_DATA_ORDER_STRATEGY_MATRIX.md` § Position Routing Architecture.
 
 ### DeFi (Solana / non-EVM)
 
@@ -175,7 +179,7 @@ paper-mode. Real-time TradFi paper would be matching-engine against live tick st
 
 Per-venue paper credentials (testnet API keys + Tenderly tokens + Solana devnet wallets) live in a separate Secret
 Manager namespace from live keys. Exact path scoping in
-[`api_keys_wallets_accounts_readiness_2026_05_08.md`](../../plans/questions/api_keys_wallets_accounts_readiness_2026_05_08.md);
+[`api_keys_wallets_accounts_readiness_2026_05_08.md`](../../plans/archive/2026_05/api_keys_wallets_accounts_readiness_2026_05_10.md);
 banner mutual.
 
 ## Composes with

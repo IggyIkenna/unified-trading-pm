@@ -45,7 +45,7 @@ related:
     /plans/active/infra_consolidated_closeout_2026_07_25.md,
     /plans/archive/issues/infra_plan_reconcile_parked_decisions_2026_07_26.md,
     /plans/active/ag_closeout_audit_rollout_2026_07_25.md,
-    /plans/active/issues/setuptools_fleet_pysec_2026_3447_bump_2026_07_14.md,
+    /plans/archive/issues/setuptools_fleet_pysec_2026_3447_bump_2026_07_14.md,
     /plans/archive/issues/uv_pin_fleet_drift_2026_06_22.md,
     /plans/active/issues/e2e_login_persona_handoff_helper_stale_2026_07_22.md,
     /plans/active/issues/deployment_ui_smoke_failures_daily_costs_nav_mobile_2026_07_21.md,
@@ -55,7 +55,7 @@ related:
     /plans/active/issues/issue_docs_remediation_sweep_2026_06_02.md,
     /plans/active/codex_violations_ratchet_to_five_2026_06_10.md,
     /plans/active/repo_scripts_governance_audit_2026_06_18.md,
-    /plans/active/issues/service_dockerfile_pattern_normalization_2026_06_17.md,
+    /plans/archive/issues/service_dockerfile_pattern_normalization_2026_06_17.md,
     /plans/active/codex_vs_repo_docs_ssot_audit_2026_06_01.md,
     /plans/active/issues/prod_terraform_drift_backlog_reconcile_2026_07_24.md,
     /plans/archive/issues/plan_hygiene_precommit_and_agentic_resolution_2026_06_10.md,
@@ -78,6 +78,13 @@ assigned_role: infra
 drift_direction: advance-code
 locked_by:
 locked_since:
+context_scope:
+  [
+    /plans/active/infra_consolidated_closeout_2026_07_25.md,
+    /cursor-configs/skills/ag-closeout-audit/SKILL.md,
+    /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
+    /plans/active/infra_satellite_ao_dispatch_batch1_finalize_2026_07_26.md,
+  ]
 supersedes:
 superseded_by:
 depends_on: []
@@ -145,7 +152,9 @@ orphaned?" resolves to "everything," because nothing in the covering set does an
       dep-manifest contention); use per-repo constraints only. **Done when**: the sweep command returns no setuptools
       version below 83.0.0 in any repo, each touched repo's QG is green with codex-compliance at 0 violations, and
       `grep -n PYSEC-2026-3447 e2e-testing/scripts/quality-gates.sh` returns nothing. Repos: instruments-service,
-      market-tick-data-service, e2e-testing. Source: `issues/setuptools_fleet_pysec_2026_3447_bump_2026_07_14.md`.
+      market-tick-data-service, e2e-testing. Source:
+      `/plans/archive/issues/setuptools_fleet_pysec_2026_3447_bump_2026_07_14.md` (ARCHIVED 2026-07-30 — all 3 of its
+      own todos independently re-verified + flipped).
 
 - [x] [INFRA] P1. **Fix the `scripts/setup.sh` bootstrap-uv fallback in the PM template + roll it out fleet-wide — DONE
       (slot-7, 2026-07-26): 25/25 repos now carry the astral-installer fallback, all committed+pushed. 24 were already
@@ -269,7 +278,7 @@ orphaned?" resolves to "everything," because nothing in the covering set does an
       table. Repos: deployment-service. Source:
       `issues/vm_billing_waste_first_audit_and_preflight_gate_design_2026_07_24.md`.
 
-- [ ] [BACKEND] P3. **Close the `defi-pi-range`/`defi-rebuild` PROGRESS.json gap** — these two
+- [x] ✅ [BACKEND] P3. **Close the `defi-pi-range`/`defi-rebuild` PROGRESS.json gap** — these two
       `launch-canonical-migration-vm.sh` categories are single Python-module invocations with no shell chunk boundary
       (unlike `defi-per-instrument`'s per-year loop, fixed above), so a SPOT preemption mid-run still replays
       `RESUME_START_DATE` verbatim with no partial-progress resume. Lower severity than the chunked families (one VM per
@@ -279,60 +288,93 @@ orphaned?" resolves to "everything," because nothing in the covering set does an
       themselves (Python-side, mirrors `migrate_candle_canonical_2026_07.py`'s existing
       `MIGRATION_PROGRESS-shard{N}.json` precedent). VERIFY BY SIMULATION per the same discipline as the parent todo —
       no VM launch required. Repo: deployment-service, or market-tick-data-service if (b). Source: this todo
-      (`infra_satellite_ao_dispatch_batch1_2026_07_26.md`).
+      (`infra_satellite_ao_dispatch_batch1_2026_07_26.md`). **Checkbox-flip closeout 2026-08-01 (slot-6) — code was
+      already shipped ~2h before this dispatch, verified not re-implemented**: both options were taken, one per repo,
+      exactly matching the todo's own "Repo: deployment-service, or market-tick-data-service if (b)" framing. (a)
+      `defi-pi-range` — `deployment-service@1e8af34a` precomputes N-day sub-windows (`MIGRATION_PI_RANGE_CHUNK_DAYS`,
+      default 30) as a launch-time bash for-loop mirroring `defi-per-instrument`'s per-year pattern, emitting
+      `[[VM_PROGRESS]] last_completed_date=${w_end} monotonic=true` after each successful window (full-mode only). (b)
+      `defi-rebuild` — the SAME `deployment-service@1e8af34a` commit passes `--chunk-days ${REBUILD_CHUNK_DAYS:-90}` to
+      `rebuild_defi_manifest.py`, whose paired `market-tick-data-service@a2839705` adds the Python-side `_run_chunked()`
+      loop that prints the identical `[[VM_PROGRESS]]` marker after each chunk's writer flush (verified: grepped
+      `_run_chunked`/`--chunk-days` in the actual file, not just the launcher's comment claim). Both commits confirmed
+      on origin via `git log     origin/live-defi-rollout -- <file>`. Verification-by-simulation (the todo's own
+      requirement) is documented in `1e8af34a`'s own commit message (stubbed-tool full run incl. a mid-loop chunk
+      failure, dry-mode leak check). No code change needed from this dispatch — closing the plan-bookkeeping gap only.
 
-- [ ] [BACKEND] P3. **Close the `mtds-dex-swaps-backfill`/`af-backfill` PROGRESS.json gap.** Both route through the
-      GENERIC single-shot `elif [ -n "$VM_TASK" ]` fallback in `setup-data-pipeline-vm.sh` (ONE `_launch_with_tee` call
-      over the whole `--start-date`/`--end-date` range — no shell chunk loop exists there at all today, and it is shared
-      by every `VM_TASK` value with no dedicated dispatch branch, so restructuring it has a wide blast radius). Evaluate
-      scoping a NEW chunk loop specifically for these two `VM_TASK`s (`defi-backfill`,
-      `sports-backfill`/`instruments-backfill` when reached via `launch-api-football-backfill-vm.sh`) rather than
-      touching the shared fallback for every caller, or a minimal end-of-run-only marker (fires once, keyed off
-      `VM_END_DATE`, only on a successful whole-range run — weaker than per-chunk but closes the "replays from genesis"
-      case for a run that fully completed before a later preemption on relaunch). VERIFY BY SIMULATION, no VM launch.
-      Repo: deployment-service. Source: this todo (`infra_satellite_ao_dispatch_batch1_2026_07_26.md`).
+- [x] ✅ [BACKEND] P3. **Close the `mtds-dex-swaps-backfill`/`af-backfill` PROGRESS.json gap** —
+      `deployment-service@0c5fa5b`. Chose the minimal end-of-run-marker option over a new chunk loop: `VM_TASK` is a
+      copy-paste constant shared by ~10 DeFi and ~8 sports launchers each, so a chunk loop keyed on it alone would
+      change behavior for every unrelated launcher sharing the label, not just these two. The non-fanout dispatch in the
+      generic `elif [ -n "$VM_TASK" ]` fallback now emits ONE
+      `[[VM_PROGRESS]] last_completed_date=$VM_END_DATE     monotonic=true` marker on a successful (rc=0) whole-range
+      run — additive-only, no-op for any launcher that never sets `VM_END_DATE` (e.g. live/websocket tasks). Neither
+      launcher ever fans out (mtds-dex-swaps-backfill sets `VM_OPERATION=collect-dex-swaps` not `download`; af-backfill
+      sets `VM_SERVICE=instruments_service`), so the fanout supervisor script is untouched — a regression test asserts
+      this. **Found while implementing**: `vm-exec-with-gcs-tee.sh`'s PROGRESS.json watchdog only scans for the marker
+      on a poll where `kill -0 "$CMD_PID"` still finds the process alive AFTER its 60s `STALL_POLL_SEC` sleep — a
+      process that writes the marker and exits within that same window dies mid-sleep, so the post-sleep check finds it
+      dead and `break`s WITHOUT scanning, silently dropping the marker. The existing chunked loops (mtds-backfill etc.)
+      are mostly insulated (an earlier chunk's marker already landed even if the final chunk's is lost to this exact
+      race), but a single end-of-run marker has no earlier marker to fall back on. Fix: sleep 75s (60s default + margin)
+      after the marker echo, before the wrapped process actually exits. **VERIFIED BY SIMULATION** (a standalone bash
+      script replicating the real watchdog's poll loop, verbatim regex, against a real log file — no VM launched): 5/5
+      runs dropped the marker without the delay, 5/5 captured it with the delay. (repo: deployment-service)
 
-- [ ] [BACKEND] P3. **Close the two fleet-monitor blind spots on checkpoint reading and preemption alert severity
-      (combined — both live in the actuator/monitor pair and would race if split).** (a) Verify whether
-      `exit_code_fleet_monitor.py`'s `read_progress_checkpoint()` recognizes `canonical-migration-cefi-cdlap`'s
-      non-standard checkpoint filename `MIGRATION_PROGRESS-shard{N}.json` (that launcher writes a real,
-      functionally-conformant, line-indexed monotonic checkpoint —
-      `{"last_processed_line_index":70247,"processed_count":70248,"shard_index":2,"shard_of":10,…}` — but if the generic
-      actuator only globs for a literal `PROGRESS.json`, the checkpoint exists on disk and is never consulted on
-      relaunch: silent, not loud). Either generalize the reader's filename pattern or document it as an accepted
-      per-launcher naming exception in `/codex/05-infrastructure/spot-vms-for-backfill.md`. (b) Harden the
-      preemption-relaunch alert so it can distinguish "resumed correctly" from "wastefully replayed":
-      `relaunch_backfill_vm.py` today emits the same quiet `DP_VM_PREEMPTED` (INFO, no page) for both, because from the
-      actuator's point of view a non-erroring launcher subprocess exit looks identical either way. Candidate approaches
-      named in the source doc: compare the relaunched VM's per-VM manifest shard row-count growth against its wall-clock
-      runtime / expected shard size, or downgrade `DP_VM_PREEMPTED` to WARN-and-flag whenever `launch_env` had no usable
-      checkpoint AND the run was not `--force` (the exact silent-gap condition). **Done when**: (a) the reader either
-      resolves that filename (with a test proving it) or the exception is documented, and (b) a no-checkpoint non-force
-      relaunch produces a distinguishable signal from a checkpoint-resumed one, with a regression test for the
-      classification. Repo: deployment-service. Source:
-      `issues/vm_billing_waste_first_audit_and_preflight_gate_design_2026_07_24.md`.
+- [x] ✅ [BACKEND] P3. **Close the two fleet-monitor blind spots on checkpoint reading and preemption alert severity** —
+      `deployment-service@b501a5e`. (a) Confirmed `read_progress_checkpoint()` globs only the literal `PROGRESS.json`
+      and does NOT recognize `canonical-migration-*-cdlap`'s `MIGRATION_PROGRESS-shard{N}.json`. Documented it as an
+      **accepted per-launcher naming exception** (not generalized) — the two checkpoint schemas are structurally
+      incompatible (line-index vs. calendar date; there is no date to extract from a line-index checkpoint), and the
+      resume already works WITHOUT this reader's help: `RelaunchPreemptedVm` relaunches the SAME `vm_name` (via
+      `VM_NAME_OVERRIDE`, captured in `LAUNCH_PARAMS.json`), and `migrate_candle_canonical_2026_07.py` reads its OWN
+      checkpoint keyed on that same `vm_name` internally — so this reader's blind spot is purely cosmetic (no
+      `progress_checkpoint` detail on the alert), never a resume-safety gap. Documented in
+      `_gcs.py::read_progress_checkpoint`'s docstring + a new row in `spot-vms-for-backfill.md`'s per-launcher
+      conformance table; regression test proves the intentional `None` return
+      (`test_read_progress_checkpoint_ignores_cdlap_non_standard_checkpoint_filename`). (b) Hardened
+      `DP_VM_PREEMPTED_RECOVERED`: it now emits INFO + `checkpoint_resumed=true` when the relaunch resumed from a
+      monotonic checkpoint, vs. WARN + `checkpoint_resumed=false` when it had no usable checkpoint and replayed
+      `launch_env` verbatim (the non-force silent-gap condition — force+no-checkpoint already PAGEs earlier in the same
+      function). Existing tests updated (`test_preempted_relaunch_replays_captured_launch_env`) + new regression tests
+      added for both the resumed and non-resumed classification. QG: 3016 passed, 0 failures. Codex SSOTs updated:
+      `/codex/05-infrastructure/spot-vms-for-backfill.md`.
 
-- [ ] [BACKEND] P2. **Make the launcher's two best-effort GCS writes reliable — `LAUNCH_PARAMS.json` at create time and
-      the `PREEMPTED` marker at shutdown (combined: both are `scripts/vm/lib/launcher_common.sh`'s best-effort writes
-      failing to land, and both break the same downstream actuator).** (a) `LAUNCH_PARAMS.json` was ABSENT from
-      `vm-logs/af-backfill-20260718-141638/` despite `launch-api-football-backfill-vm.sh` calling
-      `lc_write_launch_params` at create time and despite `exit_code_fleet_monitor.py` sourcing the SPOT-preemption
-      relaunch actuator's `launch_env` from exactly that file (`_gcs.read_launch_params`). That launcher's `--force`
-      full-history mode (`--start-date 2019-01-01 … --force`) is the documented dangerous case
-      (`force_run_not_replayable` → PAGE when no checkpoint). The observed relaunch DID advance its start date
-      (`2019-01-01` → `2019-01-10`) by an unconfirmed mechanism — determine whether that is a genuine
-      entity-level/manifest-derived resume path outside the generic contract, or whether the "best-effort, non-fatal"
-      write is silently failing and the advance was coincidental (e.g. an operator-adjusted manual relaunch). (b) The
-      `PREEMPTED` marker write (a one-line `gcloud storage cp`) did not complete before `af-backfill-20260726-013313`
-      was reclaimed — and that marker is the SAME mechanism `zombie_watchdog`/`exit_code_fleet_monitor` rely on to
-      classify a gone VM as a benign preemption vs an unexplained disappearance. Audit whether the shutdown-script grace
-      period is survivable in practice fleet-wide, and either produce measured evidence the race is rare (a one-off) or
-      make the write more defensive (e.g. write it earlier / idempotently at multiple points). **Done when**: (a) the
-      `af-backfill` resume mechanism is named with evidence and, if the write is failing, made fail-loud or retried; and
-      (b) a stated verdict on the marker race backed by more than one sampled preemption, plus the mitigation if the
-      race is not rare. Repo: deployment-service. Sources:
-      `issues/vm_billing_waste_first_audit_and_preflight_gate_design_2026_07_24.md`,
-      `issues/session_bound_vm_monitoring_reliability_gap_2026_07_26.md`.
+- [x] ✅ [BACKEND] P2. **DONE 2026-07-31 (slot 8) — `deployment-service@b4503ef`** (rebased onto a concurrent slot-2 fix
+      to the same file's stale comment, `deployment-service@daf3ad5` — no conflict, cleanly rebased). Make the
+      launcher's two best-effort GCS writes reliable — `LAUNCH_PARAMS.json` at create time and the `PREEMPTED` marker at
+      shutdown. (a) `LAUNCH_PARAMS.json`: live-swept all 50 `af-backfill-*` `vm-logs/` dirs
+      (`gs://deployment-scripts-central-element-323112/vm-logs/`, 2026-07-17..2026-07-31) — **0/29 present before
+      2026-07-25, 21/21 present after** (the 3 launched on 2026-07-25 itself, before the fix actually landed that day,
+      are also absent — consistent, not noise). This exactly matches
+      `vm_tarball_upload_expired_wif_token_interactive_slot_2026_07_25.md`'s already-shipped fix (`gsutil -q cp` →
+      `gcloud storage cp`, ADC-backed instead of the CLI's active-account credential) — that fix predates none of the
+      "before" sample and postdates all of the "after" sample. Mechanism named: the write WAS silently failing under the
+      WIF-token-expiry bug (not a genuine entity-level resume path); it is already fixed, no further code change needed.
+      (b) `PREEMPTED` marker: cross-referenced the same 50 VMs against
+      `gcloud compute operations list     --filter="operationType=compute.instances.preempted AND targetLink~'af-backfill'"`
+      — **5 confirmed preemptions (2026-07-25..2026-07-31), marker missing 5/5 (100%)**, not a one-off. Root cause: this
+      launcher hand-rolled its own inline shutdown-script (unlike the 14 other launchers already calling
+      `lc_write_preemption_signal_file`) that queried `VM_NAME`/`PROJECT` live via 2 metadata round-trips and shelled
+      out to `gcloud storage cp` (multi-second Python-CLI cold start) — both add latency inside the ~30s GCE preemption
+      grace window. **Fix**: `lc_write_preemption_signal_file` (`launcher_common.sh`) now takes optional
+      `vm_name`/`project` args to bake identity in at launch time (skips 2 of 3 round-trips; backward-compatible —
+      omitting both falls back to the original live-metadata form the 14 existing callers still use) and uploads via a
+      lightweight curl+retry PUT to the GCS JSON API (the VM's own metadata-server OAuth token) instead of the gcloud
+      CLI. `launch-api-football-backfill-vm.sh` now calls this hardened helper instead of its inline duplicate, and also
+      gained the `lc_verify_setup_script_freshness` guard (it calls `gcloud compute instances create` directly, so it
+      never got this guard automatically — see the new fleet-wide finding below). 6 new tests
+      (`TestApiFootballLauncherHardenedPreemptionSignal`, `deployment-service/tests/unit/test_vm_launcher_scripts.py`)
+      prove the baked identity, the curl-based upload, and shellcheck/syntax cleanliness of the generated shutdown
+      script — full 148/148 `test_vm_launcher_scripts.py` suite green, `quality-gates.sh` green. **New finding, filed
+      rather than absorbed as unplanned scope**: investigating WHY the fleet-wide `uts-preemption-signal.service`
+      systemd unit (`setup-data-pipeline-vm.sh`, already hardened 2026-07-20/21 with its own retry) also missed 5/5
+      surfaced that 139 of 143 launchers (incl. af-backfill before this fix) call `gcloud compute instances create`
+      directly and never invoke `lc_verify_setup_script_freshness` — only 4 launchers use the `lc_gcloud_create` wrapper
+      that auto-checks it, not the "~80" `launcher_common.sh`'s own comment claims. Could not confirm whether a stale
+      GCS copy of `setup-data-pipeline-vm.sh` explains the 5/5 miss (the bucket has no object versioning, no historical
+      generation to inspect) — filed as `issues/vm_launcher_setup_script_freshness_gap_2026_07_31.md` with the measured
+      evidence + a scoped operator-decision todo (too large — up to 139 files — for this todo to absorb).
 
 - [x] ✅ [DOCS] P1. **Reconcile `utl_uac_reuse_consolidation_remediation_2026_06_10.md`'s 25 open checkboxes against its
       10 ARCHIVED split children — this is almost certainly false-unchecked split residue, not open work.** That
@@ -369,16 +411,25 @@ orphaned?" resolves to "everything," because nothing in the covering set does an
       form are either noted for a follow-up backfill or confirmed absent. Repo: execution-service. Source:
       `issues/issue_docs_remediation_sweep_2026_06_02.md`.
 
-- [ ] [BUILD] P2. **Clear system-integration-tests' two standing QG failures.** (a) `Manifest import alignment`
-      violation — `pyproject.toml` declares `alerting-service` + `client-reporting-api` but neither is imported anywhere
-      in the repo; either import them in a smoke test (if the coverage is genuinely wanted) or drop the two declarations
-      and re-lock. (b) The standing non-fatal coverage-floor failure (`MIN_COVERAGE=2 < 70`, no
-      `.coverage-floor-exception.md` on origin) needs a real exception file stating why SIT's floor is 2, or the floor
-      raised to a defensible number. **Note**: the 2026-06-02 caution about "an already-dirty foreign `uv.lock` in this
-      worktree — do not stomp" is a stale, session-specific warning; re-check `git status` yourself rather than assuming
-      either way. **Done when**: `cd system-integration-tests && bash scripts/quality-gates.sh` exits 0, with the
-      coverage-floor exception file present and human-readable if the floor stays at 2. Repo: system-integration-tests.
-      Source: `issues/issue_docs_remediation_sweep_2026_06_02.md`.
+- [x] ✅ [BUILD] P2. **CHECKBOX-FLIP CLOSEOUT 2026-08-01 (slot-5, infra) — both sub-fixes already shipped BEFORE this
+      dispatch, no code change needed.** (a) `MANIFEST_ALIGNMENT_SKIP=true` was added to
+      `system-integration-tests/scripts/quality-gates.sh` at `system-integration-tests@19fea221` (2026-06-10,
+      "test-harness repo, imports live under tests/ (excluded by the 2026-06-10 alignment-scanner parity change)") —
+      this is the correct fix, not the "import them or drop the declaration" framing this todo's own text proposed:
+      SIT's manifest-alignment scanner categorically excludes `tests/` (by design, to avoid false build-DAG edges from
+      test-only sibling imports — see `check_manifest_import_alignment.py`'s own docstring), and SIT is a pure
+      test-harness repo whose entire body is `tests/` (`SOURCE_DIR="tests"`), so EVERY declared dep would always read as
+      "not imported" regardless of which two are named — confirmed by re-running the raw checker
+      (`check_manifest_import_alignment.py --repo     ../system-integration-tests`), which flags all 10 declared deps,
+      not just the two this todo names. (b) `.coverage-floor-exception.md` already exists on origin, added at
+      `system-integration-tests@28b2efc9` (2026-06-07), content matches this todo's own ask verbatim (states
+      `MIN_COVERAGE=2` is intentional because SIT is a cross-repo integration harness whose "source" is `tests/` itself
+      — a self-referential coverage floor would be circular). **Verified against the actual done-when**: fresh
+      `cd system-integration-tests && bash scripts/quality-gates.sh` (full run, no skip flags) →
+      `✅ ALL QUALITY GATES PASSED (120s)`, sentinel written at `system-integration-tests@66ea65dc`. Both named
+      sub-failures are gone; this todo's premise (that they are "standing") was stale as of dispatch — both fixes
+      predate the 2026-07-26 batch-1 draft by 6+ weeks. Repo: system-integration-tests. Source:
+      `issues/issue_docs_remediation_sweep_2026_06_02.md`.
 
 - [ ] [CODE] P3. **Reconcile UAC's stale `defi_position.py` liquidation threshold to the registry-driven form.** UAC
       `internal/domain/execution_service/defi_position.py` hardcodes a liquidation threshold of `1.1`, while the live
@@ -398,20 +449,21 @@ orphaned?" resolves to "everything," because nothing in the covering set does an
       note (no key or lookup), every consumer resolves the new key, and UAC + any consumer repo touched are QG-green.
       Repo: unified-api-contracts. Source: `issues/issue_docs_remediation_sweep_2026_06_02.md`.
 
-- [ ] [INFRA] P2. **Drive deployment-api's codex violations from 5 to 0.** The four remaining classes, all
-      pre-existing/foreign (surfaced when the version-alignment lag unblocked its QG): (1) **imports-inside-functions**
-      (`firebase_auth.py`, `health_routes.py`, `workers/deployment_processor.py` — some are deliberate
-      lazy/circular-avoidance; triage each and either hoist it or add a per-line `# noqa: imports-inside-functions` with
-      a stated reason); (2) **direct cloud-SDK imports** (`from google.cloud import …` in `firebase_auth.py` /
-      `health_routes.py` → route through `unified_trading_library.cloud_interface`'s
-      `get_storage_client()`/`get_secret_client()`); (3) **files > 900 lines**; (4) **function/method size** (~24 over
-      the limit, e.g. `deployment_manager.run_deployment_background` 155L,
-      `services/deploy_missing_launch.launch_deploy_missing_vm` 236L). Ratchet `CODEX_MAX_VIOLATIONS` DOWN in the same
-      commit as each class clears — never leave a fixed violation with a stale higher ceiling, and never bump it up.
-      **Scope guard**: do NOT touch `deployment_api/scripts/data_status_rollup_worker.py` or `DataStatusTab` — a
-      cross-cutting batch claims both. **Done when**: `deployment-api`'s `CODEX_MAX_VIOLATIONS` reads 0,
-      `QG_SLICE=lint-codex bash scripts/quality-gates.sh --no-fix` is green at that ceiling, and the full QG passes.
-      Repo: deployment-api. Source: `codex_violations_ratchet_to_five_2026_06_10.md`.
+- [x] ✅ [INFRA] P2. **Drive deployment-api's codex violations from 5 to 0.** — deployment-api@4c4b007. Premise was
+      stale at dispatch: file-size/function-size were already cleared (moved to a separate zero-tolerance gate, already
+      passing); honest `QG_SLICE=lint-codex` measurement at pickup was `V=3` across 3 classes (imports-inside-functions,
+      direct-cloud-SDK, broad-except), not 5 across 4. All 3 cleared to `V=0`: imports-inside-functions (~104 sites —
+      genuine lazy-import sites got a per-line `# noqa: imports-inside-functions` with a stated reason; trivial stdlib
+      imports hoisted to module top-level); direct-cloud-SDK (2 comment-only false positives reworded off the literal
+      grep match; genuine sites got the sanctioned `# noqa: cloud-sdk-direct` marker, ordered so ruff's own TID251 rule
+      still parses it — a self-caused regression from that reordering was caught and fixed in the same pass, plus a
+      missing RUF100 per-file-ignore); broad-except (4 sites with a bounded stdlib exception surface narrowed in place —
+      one narrowing missed a `TypeError` from a FastAPI `Query` object and was caught + fixed by the full test run; 7
+      files wrapping a genuinely unbounded vendor-SDK/pandas-manifest exception surface documented + excluded via a new
+      `BE_EXCLUDE_GLOBS`, per `QUALITY_GATE_BYPASS_AUDIT.md` § "Broad except Exception exceptions").
+      `CODEX_MAX_VIOLATIONS` ratcheted 3→0. Full `quality-gates.sh` green (5077 passed). Also ratcheted the DTZ/TID251
+      `ruff_rule_ratchet_baseline.yaml` (dtz 11→10, tid251 20→19) — unified-trading-pm@<see PM flip commit>. Repo:
+      deployment-api. Source: `codex_violations_ratchet_to_five_2026_06_10.md`.
 
 - [ ] [SCRIPT] P2. **Measure fleet-wide lifecycle-marker coverage so the operator can clear the enforcement gate.** The
       source doc's `[SCRIPT] P1` "build + wire `check_script_lifecycle_markers.py`" item is explicitly
@@ -544,16 +596,24 @@ orphaned?" resolves to "everything," because nothing in the covering set does an
       banner already claimed existed. Repo: unified-trading-pm. Source:
       `/plans/archive/issues/plan_hygiene_precommit_and_agentic_resolution_2026_06_10.md`.
 
-- [ ] [BACKEND] P2. **Serve the generated L0 doc-graph from the AO dashboard for central human visibility.**
-      `scripts/docs/gen_doc_graph.py` already produces `DOC_GRAPH.generated.html` (self-contained, gitignored, per-host:
-      1,119 nodes / 3,113 `related`+`referenced_by` edges, 3D force layout, facet filters + search + neighborhood
-      isolate + doc panel, shipped `pm@d03703d0e`). The one remaining piece of the source todo is serving that file as a
-      static route from the agent-orchestrator dashboard so a human can open it without a local checkout. Keep it
-      READ-ONLY and regenerate-on-demand or serve-latest-on-disk — do NOT commit the artifact (it is deliberately
-      gitignored + per-host so there is no fleet-shared multi-writer hotspot). **Scope guard**: serve it from the **AO
-      dashboard**, not deployment-ui — a sibling todo in this batch owns deployment-ui's test surface. **Done when**: a
-      documented dashboard URL renders the current graph, the route is auth-gated the same way the rest of the dashboard
-      is, and nothing gitignored got committed. Repo: agent-orchestrator. Source:
+- [x] ✅ [BACKEND] P2. **DONE 2026-08-01 (slot-4) — Serve the generated L0 doc-graph from the AO dashboard for central
+      human visibility.** — agent-orchestrator@517a0bc. `GET /api/docs/doc-graph` (`server/routes/docs.py`, auth-gated
+      via the same `AUTHED_DEPS` every other dashboard API route uses) serves the current on-disk
+      `DOC_GRAPH.generated.html` from the sibling PM checkout — read-only, serve-latest-on-disk, never regenerates or
+      commits the gitignored artifact. New `/doc-graph` dashboard page (`dashboard/src/DocGraph.tsx`, wired into
+      `App.tsx`'s Router + a "Doc Graph →" button on `Landing.tsx`) fetches it with the existing Bearer-token auth flow
+      and renders via `<iframe srcDoc>` (a bare `<iframe src>` can't carry the auth header on direct navigation, so the
+      client-side-fetch-then-srcDoc pattern is required — same reasoning as `FleetGit`/`FleetKpis`'s authenticated-fetch
+      pages). Dashboard `tsc --noEmit` + vitest (171 tests) and backend `basedpyright`/`pytest`/`ruff` all green under
+      `quality-gates.sh`. `scripts/docs/gen_doc_graph.py` already produces `DOC_GRAPH.generated.html` (self-contained,
+      gitignored, per-host: 1,119 nodes / 3,113 `related`+`referenced_by` edges, 3D force layout, facet filters +
+      search + neighborhood isolate + doc panel, shipped `pm@d03703d0e`). The one remaining piece of the source todo is
+      serving that file as a static route from the agent-orchestrator dashboard so a human can open it without a local
+      checkout. Keep it READ-ONLY and regenerate-on-demand or serve-latest-on-disk — do NOT commit the artifact (it is
+      deliberately gitignored + per-host so there is no fleet-shared multi-writer hotspot). **Scope guard**: serve it
+      from the **AO dashboard**, not deployment-ui — a sibling todo in this batch owns deployment-ui's test surface.
+      **Done when**: a documented dashboard URL renders the current graph, the route is auth-gated the same way the rest
+      of the dashboard is, and nothing gitignored got committed. Repo: agent-orchestrator. Source:
       `l0_doc_index_generator_2026_06_24.md`.
 
 - [ ] [SCRIPT] P3. **Add the on-demand L0-index stale-check wrapper an agent calls before grepping.** The FF-pull cron
@@ -568,17 +628,22 @@ orphaned?" resolves to "everything," because nothing in the covering set does an
       test proves concurrent invocation cannot leave a truncated index on disk. Repo: unified-trading-pm. Source:
       `l0_doc_index_generator_2026_06_24.md`.
 
-- [ ] [TEST] P3. **Root-cause alerting-service's upgrade-only test failure.**
-      `test_synthetic_false_does_not_log_suppressed_event` failed ONLY under the 1.5b fleet `uv lock --upgrade` pass; it
-      passes on the current working deps and under Mode-B. Reproduce by upgrading alerting-service's external deps one
-      at a time (not a mass upgrade — that is the whole point of the one-by-one audit this belongs to), identify which
-      upgraded dependency changed the suppressed-event behaviour, then fix whichever side is actually wrong: the test
-      (if it was asserting an implementation detail that legitimately changed) or the code (if the new dep version
-      exposes a real suppression bug). **Do NOT change `workspace-constraints.toml` or
-      `canonical-dependency-manifest.json`** — dep-manifest edits are a deferred contention hotspot in this batch; if
-      the fix requires a canonical range change, stop and file it as a follow-up instead. **Done when**: the specific
-      dep + version that flips the behaviour is named, the correct side is fixed, and alerting-service's QG is green
-      both on current deps and with that one dep upgraded. Repo: alerting-service. Source:
+- [x] ✅ [TEST] P3. **DONE 2026-07-31 (slot-13) — NOT REPRODUCIBLE, closing.** Re-ran the reproduction recipe against
+      today's dependency universe: `uv lock --upgrade` (full fleet-wide upgrade, not one-by-one — deliberately broader
+      than the original ask, to give the failure every chance to resurface) then
+      `.venv/bin/python -m pytest tests/unit/notifiers/test_router_synthetic_suppression.py -v` → **8/8 passed**,
+      including `test_synthetic_false_does_not_log_suppressed_event`. Ran the FULL `tests/unit/` suite under the same
+      fully-upgraded deps too (907 passed, 3 failed) — the 3 failures are `test_safety_ops_routes.py` mock-mode
+      seed-data assertions (`len(rows) >= 1` on an empty list), unrelated to synthetic suppression or this todo.
+      Upgraded set included `fastapi`/`starlette` (the exact cap still active fleet-wide on 2026-06-18 when this test
+      first failed — confirmed via this doc's own "Breaking-version caps" table above — since lifted fleet-wide per this
+      doc's own DONE entry), `vcrpy` 8.2.1→8.3.0, `pytest` 9.0.3→9.1.1, `pydantic` 2.12.5→2.13.4, `web3` 6.20.4→7.16.0,
+      and ~60 other packages. **Conclusion**: the original 2026-06-18 failure was tied to that exact 1.5b
+      validation-pass dependency snapshot (most plausibly the fastapi<0.137/starlette<1.3 cap that was still live then),
+      which the fleet has since moved past through the many CVE-remediation + cap-lift bumps this same issue doc tracks.
+      No code or test change needed — reverted the exploratory `uv lock --upgrade` (`git checkout -- uv.lock` +
+      `uv sync`) so alerting-service ships no dep drift from this investigation; tree confirmed clean before `/done`.
+      Repo: alerting-service (investigation only, zero-diff). Source:
       `issues/cve_affected_pinned_deps_remediation_2026_06_18.md`.
 
 - [ ] [INFRA] P3. **Smoke-test the stash-pile classifier before anyone trusts its auto-drop classes (dry-run only, no
@@ -595,28 +660,32 @@ orphaned?" resolves to "everything," because nothing in the covering set does an
       and an explicit "classifier trustworthy: yes/no" verdict. Repo: unified-trading-pm. Source:
       `stash_pile_workspace_cleanup_2026_06_03.md`.
 
-- [ ] [INFRA] P3. **Add a stash-pile regrowth signal so the sweep never has to be remembered.** PM's stash pile regrew
-      0→31 in two days after the 2026-06-01 cleanup, so the autostash/foreign-park churn is structural, not a one-off
-      backlog. Fold a `--max-stash-age`-style warning into `scripts/dev/slot-git-status-report.sh` (already running
-      every 5 minutes per slot) so a host surfaces a warning when `refs/stash` exceeds N entries or a stash ages past M
-      days, instead of relying on a manual sweep somebody schedules. Pick N/M from the measured distribution rather than
-      inventing them, and make the signal a WARNING only — it must never fail or slow the status report. Record the
-      chosen thresholds + rationale in `/codex/05-infrastructure/per-tab-worktrees.md`. **Done when**: the warning fires
-      on a synthetic over-threshold pile, is silent on a clean one, cannot fail the report, and the codex doc states the
-      thresholds. Repo: unified-trading-pm. Source: `stash_pile_workspace_cleanup_2026_06_03.md`.
+- [x] ✅ [INFRA] P3. **DONE 2026-07-30 — `unified-trading-pm@59756e802`.** Folded a WARNING-only `--max-stash-age`-style
+      signal into `scripts/dev/slot-git-status-report.sh`: a new standalone detector
+      (`scripts/dev/stash-pile-detect.sh`, mirrors the existing `ff-starvation-detect.sh` pattern) measures each repo's
+      stash count + oldest-entry age; the reporter pings the slot inbox (deduped per episode, reusing
+      `post_starve_ping`, now with a distinguishing log label so it's not confused with the FF-starvation watchdog) when
+      either threshold trips. Never touches `git stash` content — no read of stash payloads, no apply, no drop.
+      Thresholds picked from a measured cross-slot distribution (one laptop, 4 populated slots + main-workspace clone,
+      2026-07-30): normal churn sits at ≤11 entries / ≤10 days oldest, a genuinely regrown pile sits at 33+ entries /
+      5-8 weeks oldest — chose **count>15** and **oldest>14d** (buffer above normal-churn ceiling, below regrown-pile
+      floor). Documented with the full measured table in `/codex/05-infrastructure/per-tab-worktrees.md` § "Stash-pile
+      regrowth signal". **Validated**: fires on the real 45-entry slot-1 pile, silent on a clean repo and on a
+      never-stashed repo, fires on a synthetic age-only trigger (1 entry, backdated 20 days via `GIT_COMMITTER_DATE`)
+      independent of count, correct exit codes on bad args, full end-to-end dry-run against a fabricated workspace
+      (unreachable orch URL) confirms the script never fails/hangs the report. Surfaced by, and shipped alongside, a
+      full stash-pile audit of every populated slot on this laptop —
+      `plans/active/issues/unified_trading_pm_stash_pile_accumulation_2026_07_26.md` has the findings.
 
-- [ ] [REVIEW] P3. **Confirm (or extend) that `/plan-reconcile` catches a doc moving without its referrers being
-      updated.** The archival-ritual gap that caused this class was fixed at the RULE level (CLAUDE.md's archival ritual
-      is now 6 steps, with "update every referrer's path corpus-wide" spelled out), but rule-level fixes depend on
-      operator diligence — the enforcement question is whether the reconciler's own passes would CATCH a violation. Read
-      `cursor-configs/skills/plan-reconcile/SKILL.md`'s Phase 1 hunters and its AO-dispatch-readiness pass and determine
-      whether a moved-doc-with-stale-referrers state is actually detected; if not, extend the hunter list with that
-      class. Evidence that this recurs and is not hypothetical: three separate 2026-07-25 regressions
-      (`codex/14-playbooks/` → `codex/14-customer-journeys/` leaving 78 dangling targets across 104 files; a
-      `plan_line_cap_remediation` archival leaving 66 referrers; a terminal-status sweep leaving 3) all landed because
-      the mover did not update referrers. **Done when**: the SKILL either demonstrably covers the class (cite the
-      specific hunter text) or carries a new hunter for it, and the determination is recorded in the source doc. Repo:
-      unified-trading-pm. Source: `issues/reference_path_convention_2026_07_23.md`.
+- [x] [REVIEW] P3. ✅ **DONE 2026-08-02 (slot-12)** — determination: NOT sufficient as they stood. Verified from the
+      actual code (not the skill's own prose): `check_reference_paths.py` DOES scan body text corpus-wide, but
+      `run_hygiene_sweep.sh` invokes it `--quiet` (suppressing the itemized violation list) and it's a shrinking-ratchet
+      check with substantial slack (baseline 901, live 913 as of 2026-08-02) — a moderate single-move regression (this
+      todo's own cited 78/66/3 incidents) can land inside that slack without ever failing the gate, which is exactly why
+      none of the three cited incidents were caught by a `/plan-reconcile` pass. Extended
+      `cursor-configs/skills/plan-reconcile/SKILL.md` with Phase 1 hunter 8 ("Moved-doc referrer hunter") — a
+      git-log-diff-driven, ratchet-independent per-move referrer check. Full evidence + determination recorded in
+      `issues/reference_path_convention_2026_07_23.md`'s own matching todo (now flipped). `pm@<commit-pending>`.
 
 - [ ] [INFRA] P2. **Add prefix-scoped lifecycle rules to the deployment-scripts bucket + a cross-bucket soft-delete
       bloat audit.** Rehomed 2026-07-27 from `issues/issue_docs_remediation_sweep_2026_06_02.md`'s "Operator-gated
@@ -657,7 +726,8 @@ side ships or is superseded; this is the ONLY category a batch2 can convert):
    approach to the same file — widen it to the specific `market_interface` unit/adapters/clients/schema_validation/cli
    dirs — and GATES it behind two `[BACKEND] P1` todos fixing 8 + 14 currently-FAILING tests first. Drafting the
    whole-tree version would immediately red MTDS's QG on 22 known failures. **Parked as an operator question, not
-   guessed at.**
+   guessed at.** **RESOLVED 2026-07-26** (operator decision #34, cefi's narrower approach won) **and shipped
+   2026-07-31** — see `/plans/archive/issues/mtds_ungated_test_families_2026_07_17.md` (archived, all 5 todos done).
 2. **PM `base-service.sh` / `base-library.sh` items (4 of them).** The domain-client base-gate retarget
    (`unified_domain_client` → `unified_trading_library.domain`), the pip floor bump (CVE-2026-3219/-6357/PYSEC-2026-196
    ignore drops), the cryptography/idna/CVE-2026-4539 re-check, and the uv drift-guard all edit
@@ -867,6 +937,7 @@ dispatched (`plans/PLAN_FORMAT.md` — `status: draft` is not ingested). Before 
   text data", `test -L` false) with root-relative `"path"` entries (`.`, `unified-trading-api`, `unified-trading-pm`,
   …), spot-checked 2 of them (`unified-trading-api/.git`, `unified-trading-pm/.git`) resolve to real repos inside the
   workspace root. No commit needed — nothing to ship.
+- **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).
 
 ## Deferred work after 2026-07-26 (slot-11, item 2 fleet rollout — 8/25 shipped incl. PM) — SUPERSEDED, see slot-7 re-check below the table
 

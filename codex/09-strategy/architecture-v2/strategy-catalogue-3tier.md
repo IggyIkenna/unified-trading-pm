@@ -365,8 +365,8 @@ FOMO feed on the Explore tab deliberately shows three surfaces:
 
 The derivative generator (ARCHETYPE_CAPABILITY_REGISTRY × base/premium/multicat/full ladders) is the authoritative
 source; `STRATEGY_REGISTRY` is a 99-entry derivative. See
-[`feedback_generic_variant_ladder_applies_to_every_archetype.md`](../../../../.claude/projects/…/memory/feedback_generic_variant_ladder_applies_to_every_archetype.md)
-for the ladder pattern.
+`feedback_generic_variant_ladder_applies_to_every_archetype.md` (a personal agent-memory file — not a repo path, cannot
+resolve for other readers) for the ladder pattern.
 
 ---
 

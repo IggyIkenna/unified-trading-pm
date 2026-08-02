@@ -38,6 +38,12 @@ superseded_by:
 resolved_by:
 source: agent diagnosis of defi_satellite_ao_dispatch_batch1-032 (uts-prod-data-status-rollup health check), 2026-07-26
 depends_on: []
+context_scope:
+  [
+    /codex/02-data/honest-absence-downstream-handling.md,
+    deployment-api/deployment_api/scripts/data_status_rollup_worker.py,
+    deployment-api/deployment_api/services/data_status_service.py,
+  ]
 ---
 
 # data-status rollup: ml-service's `full.json.gz` never gets written (2026-07-26)
@@ -121,3 +127,7 @@ worth closing the same way (isolate + surface the real error) rather than leavin
       unexplained). Repo: deployment-api. Done when: `ml-service/full.json.gz` is confirmed refreshing on a live cycle,
       or the doc explicitly states why it structurally cannot (mirroring the MTDS/MDPS precedent) with a regression test
       guarding the honest-failure path either way.
+
+## Progress Log
+
+- **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).

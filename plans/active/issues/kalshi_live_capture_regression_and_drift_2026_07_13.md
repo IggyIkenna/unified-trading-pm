@@ -243,3 +243,11 @@ captured rows). The ~29-day stall is broken; live capture resumed same-day as la
 - [ ] [DATA] P2. **Verify the Kalshi execution-service paper-order flow end-to-end** — still genuinely open: only the
       elections-subdomain URL swap shipped; no test/log/commit confirms the paper-order flow was ever actually verified
       end-to-end.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30 (prediction tranche)**: KEEP-NA, valid — 1 open ([DATA] P2, verify the Kalshi
+  execution-service paper-order flow end to end). CONFLICT: this is the same deliverable as
+  `prediction_satellite_ao_dispatch_batch6_2026_07_29.md` todo 5's second leg, which is itself correctly gated on the
+  credential reshape in `issues/kalshi_execution_credential_secret_name_mismatch_2026_07_26.md` (the root cause of why
+  this verification could never have passed). Leave it owned there.

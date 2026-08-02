@@ -3,16 +3,23 @@
 # Lifecycle: permanent
 # Delete-when: NA
 """
-check-pyrightconfig-extrapaths.py — Validate pyrightconfig.json extraPaths against
+check-pyrightconfig-extrapaths.py — Validate basedpyright extraPaths against
 the workspace manifest declared dependencies.
 
+Config source per repo (fleet-wide migration off pyrightconfig.json is complete —
+see codex/06-coding-standards/quality-gates.md § "pyrightconfig.json silently
+overrides pyproject.toml"): prefer `pyrightconfig.json` if a repo still has one
+(back-compat), else fall back to `pyproject.toml`'s `[tool.basedpyright]` table.
+
 Rules enforced:
-  1. DEAD extraPath — listed in pyrightconfig.json but NOT declared in manifest deps
+  1. DEAD extraPath — listed in the config but NOT declared in manifest deps
        --apply: remove it (if code doesn't import it) OR error (if code imports it)
+       (pyrightconfig.json sources only — auto-apply is not supported for
+       pyproject.toml sources; those report as a warning requiring a manual edit)
   2. PHANTOM dep — declared in manifest deps AND in pyproject.toml, but code has
        zero imports from that package → always ERROR (cannot auto-fix a missing usage)
   3. MISSING extraPath — declared as internal manifest dep but not in extraPaths
-       --apply: add it
+       --apply: add it (pyrightconfig.json sources only, same caveat as Rule 1)
 
 Usage:
     python3 check-pyrightconfig-extrapaths.py          # check only
@@ -26,6 +33,7 @@ import json
 import re
 import subprocess
 import sys
+import tomllib
 from pathlib import Path
 from typing import cast
 
@@ -120,6 +128,31 @@ def get_source_dir(repo_root: Path, config: dict[str, object]) -> Path:
     return repo_root
 
 
+def load_basedpyright_config(repo_root: Path) -> tuple[dict[str, object], Path] | None:
+    """Resolve the basedpyright config for a repo: pyrightconfig.json if present
+    (back-compat), else pyproject.toml's [tool.basedpyright] table. Returns
+    (config_dict, source_path) or None if neither carries a usable config.
+
+    tomllib parses [tool.basedpyright] into the same dict shape pyrightconfig.json
+    would have ("include"/"extraPaths"/"executionEnvironments" keys), so it's a
+    drop-in for extrapaths_from_config()/get_source_dir() below.
+    """
+    pyright_path = repo_root / "pyrightconfig.json"
+    if pyright_path.exists():
+        return cast(dict[str, object], json.loads(pyright_path.read_text())), pyright_path
+
+    pyproject_path = repo_root / "pyproject.toml"
+    if not pyproject_path.exists():
+        return None
+    with pyproject_path.open("rb") as f:
+        data = tomllib.load(f)
+    tool = cast(dict[str, object], data.get("tool") or {})
+    basedpyright = tool.get("basedpyright")
+    if not isinstance(basedpyright, dict) or not basedpyright:
+        return None
+    return cast(dict[str, object], basedpyright), pyproject_path
+
+
 def get_pyproject_internal_deps(repo_root: Path, internal_repos: set[str]) -> set[str]:
     """Return set of internal repo names declared in pyproject.toml dependencies."""
     pyproject = repo_root / "pyproject.toml"
@@ -166,12 +199,15 @@ def main() -> int:
 
     for repo_name, repo_meta in repositories.items():
         repo_root = workspace_root / repo_name
-        pyright_path = repo_root / "pyrightconfig.json"
 
-        if not pyright_path.exists():
+        loaded = load_basedpyright_config(repo_root)
+        if loaded is None:
             continue
+        config, config_path = loaded
+        # Auto-apply (--apply) mutates JSON in place; pyproject.toml sources are
+        # reported as warnings requiring a manual edit instead (see module docstring).
+        can_apply = config_path.suffix == ".json"
 
-        config: dict[str, object] = cast(dict[str, object], json.loads(pyright_path.read_text()))
         raw_paths = extrapaths_from_config(config)
         if not raw_paths:
             continue
@@ -202,17 +238,18 @@ def main() -> int:
                     f"[{repo_name}] extraPath '{raw}' (→ {dep_name}) is NOT in manifest deps "
                     f"but IS imported in source — add '{dep_name}' to manifest dependencies first"
                 )
+            elif apply_fix and can_apply:
+                _remove_extrapath(config_path, config, raw)
+                fixes_applied.append(f"[{repo_name}] Removed dead extraPath '{raw}' (not in manifest, not imported)")
             else:
-                if apply_fix:
-                    _remove_extrapath(pyright_path, config, raw)
-                    fixes_applied.append(
-                        f"[{repo_name}] Removed dead extraPath '{raw}' (not in manifest, not imported)"
-                    )
-                else:
-                    warnings.append(
-                        f"[{repo_name}] Dead extraPath '{raw}' (→ {dep_name}) not in manifest "
-                        f"and not imported — run --apply to remove"
-                    )
+                suffix = (
+                    " (edit pyproject.toml manually — auto-apply unsupported for toml sources)"
+                    if apply_fix
+                    else " — run --apply to remove"
+                )
+                warnings.append(
+                    f"[{repo_name}] Dead extraPath '{raw}' (→ {dep_name}) not in manifest and not imported{suffix}"
+                )
 
         # ── Rule 2: Phantom deps (manifest + pyproject dep but no imports) ───
         for dep in manifest_internal_deps & pyproject_internal_deps:
@@ -228,11 +265,16 @@ def main() -> int:
         configured_repos = set(path_to_repo.values())
         missing: set[str] = manifest_internal_deps - configured_repos
         for dep in sorted(missing):
-            if apply_fix:
-                _add_extrapath(pyright_path, config, f"../{dep}")
+            if apply_fix and can_apply:
+                _add_extrapath(config_path, config, f"../{dep}")
                 fixes_applied.append(f"[{repo_name}] Added missing extraPath '../{dep}' (declared manifest dep)")
             else:
-                warnings.append(f"[{repo_name}] Manifest dep '{dep}' has no extraPath '../{dep}' — run --apply to add")
+                suffix = (
+                    " (edit pyproject.toml manually — auto-apply unsupported for toml sources)"
+                    if apply_fix
+                    else " — run --apply to add"
+                )
+                warnings.append(f"[{repo_name}] Manifest dep '{dep}' has no extraPath '../{dep}'{suffix}")
 
     # ── Report ───────────────────────────────────────────────────────────────
     if fixes_applied:

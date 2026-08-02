@@ -19,10 +19,16 @@ that can break a consumer's import or call:
   * a public class was removed, or a public method on it was removed;
   * a Pydantic/dataclass FIELD (annotated class attribute) was removed, renamed, or
     its type annotation changed (schema/contract surface — the UAC case);
-  * an HTTP route (``@app.get`` / ``@router.post`` …) was removed.
+  * an HTTP route (``@app.get`` / ``@router.post`` …) was removed;
+  * a module-level dict/list/set constant tagged ``# @contract-surface`` lost a
+    top-level key or a collection-member/inner-key (the UAC registry-data-dict case —
+    e.g. ``INSTRUMENT_TYPES_BY_VENUE: dict[str, set[str]]`` losing ``"SPOT_PAIR"`` from
+    a venue's set stays the same annotated, exported dict, invisible to every other
+    check above, but is a real contract break for consumers that enumerate it).
 
 NOT breaking: added names, added *optional* (defaulted) parameters, added methods,
-added fields, docstring/comment/body changes, reformatting, reordering.
+added fields, docstring/comment/body changes, reformatting, reordering, an ADDED
+key/member/inner-key on a tagged registry constant.
 
 Stdlib-only (``ast`` + ``subprocess`` + ``git``) — no external dependency so it can
 run inside any repo's semver-agent job without a fleet-wide pin.
@@ -43,6 +49,15 @@ import subprocess
 import sys
 from dataclasses import dataclass, field
 from typing import cast
+
+CONTRACT_SURFACE_MARKER = "@contract-surface"
+"""Comment tag placed directly above a module-level registry dict/list/set constant
+to opt it into literal-level contract-surface diffing (see ``_diff_registry_value``).
+Precedent: the manifest ``schema_version`` bump is an explicit, deliberate signal that
+a data contract changed (``/codex/02-data/availability-manifest-and-data-status.md``);
+this marker is the same idea applied to a plain Python data registry — an explicit,
+grep-able tag rather than a name/path heuristic the differ would have to guess at.
+"""
 
 
 def _git_show(ref: str, path: str) -> str | None:
@@ -144,6 +159,7 @@ class PublicSurface:
     methods: dict[str, Signature] = field(default_factory=dict)  # Class.method -> sig
     fields: dict[str, str] = field(default_factory=dict)  # Class.field -> annotation
     routes: set[str] = field(default_factory=set)  # "GET /path" decorators
+    registry: dict[str, object] = field(default_factory=dict)  # tagged constant -> literal snapshot
 
 
 def _annotation_str(node: ast.AST | None) -> str:
@@ -180,6 +196,126 @@ def _route_decorators(node: ast.AST) -> set[str]:
     return routes
 
 
+def _marker_above(lines: list[str], lineno: int, window: int = 12) -> bool:
+    """True if a ``# @contract-surface`` comment appears in the ``window`` lines
+    immediately preceding the 1-indexed AST ``lineno`` (allows a short explanatory
+    comment block between the tag and the declaration it tags)."""
+    start = max(0, lineno - 1 - window)
+    return any(CONTRACT_SURFACE_MARKER in ln for ln in lines[start : lineno - 1])
+
+
+def _resolve_literal(node: ast.expr, env: dict[str, str]) -> object:
+    """Best-effort literal evaluation of a registry constant's AST value.
+
+    Unlike ``ast.literal_eval`` this also resolves a bare ``ast.Name`` against ``env`` —
+    the registry convention of declaring ``BINANCE_SPOT = "BINANCE-SPOT"`` then using
+    the bare name as a dict key/member elsewhere in the same file. Raises ``ValueError``
+    on anything else non-literal (a call, comprehension, attribute access, ...) so the
+    caller can skip just that one entry rather than guess at its meaning.
+    """
+    if isinstance(node, ast.Constant):
+        return node.value
+    if isinstance(node, ast.Name):
+        if node.id in env:
+            return env[node.id]
+        raise ValueError(f"unresolved name {node.id!r}")
+    if isinstance(node, (ast.List, ast.Tuple)):
+        return [_resolve_literal(e, env) for e in node.elts]
+    if isinstance(node, ast.Set):
+        return {_resolve_literal(e, env) for e in node.elts}
+    if isinstance(node, ast.Dict):
+        out: dict[object, object] = {}
+        for k, v in zip(node.keys, node.values, strict=True):
+            if k is None:  # a `**other` unpack — too dynamic to track safely
+                raise ValueError("dict unpacking (**) is not literal-resolvable")
+            out[_resolve_literal(k, env)] = _resolve_literal(v, env)
+        return out
+    raise ValueError(f"non-literal node {type(node).__name__}")
+
+
+def _resolve_registry_dict(node: ast.expr, env: dict[str, str]) -> dict[str, object] | None:
+    """Best-effort literal snapshot of a tagged registry constant's TOP-LEVEL keys.
+
+    A per-key value that isn't statically resolvable (e.g. a computed list
+    comprehension, as `VENUES_BY_ASSET_GROUP["defi"]` currently is) is DROPPED rather
+    than aborting the whole constant — every other, literal key stays diffable. Returns
+    None if ``node`` isn't a dict literal at all (nothing to snapshot).
+    """
+    if not isinstance(node, ast.Dict):
+        return None
+    out: dict[str, object] = {}
+    for k, v in zip(node.keys, node.values, strict=True):
+        if k is None:
+            continue
+        try:
+            key = _resolve_literal(k, env)
+            val = _resolve_literal(v, env)
+        except ValueError:
+            continue
+        if isinstance(key, str):
+            out[key] = val
+    return out
+
+
+def _process_class_def(node: ast.ClassDef, surf: PublicSurface) -> None:
+    """Fold one module-level class's methods/fields/enum-members into ``surf``."""
+    surf.classes.add(node.name)
+    surf.exports.add(node.name)
+    # Enum members are a CONTRACT surface (consumers match on the member + its serialized
+    # value — e.g. UAC StrEnums like DefiErrorCode). They are PLAIN `ast.Assign` (FOO = "foo"),
+    # NOT annotated, so the AnnAssign branch below misses them. Capture them into `fields`
+    # (keyed Class.MEMBER, value = the literal) so a removed/renamed member OR a changed value
+    # trips the removed-field / changed-field-value breaking checks. Gate on an Enum base.
+    is_enum = any(_is_enum_base(b) for b in node.bases)
+    for item in node.body:
+        if isinstance(item, (ast.FunctionDef, ast.AsyncFunctionDef)):
+            if not item.name.startswith("_") or item.name in ("__init__",):
+                surf.methods[f"{node.name}.{item.name}"] = Signature.from_node(item)
+            surf.routes |= _route_decorators(item)
+        elif isinstance(item, ast.AnnAssign) and isinstance(item.target, ast.Name):
+            fname = item.target.id
+            if not fname.startswith("_"):
+                surf.fields[f"{node.name}.{fname}"] = _annotation_str(item.annotation)
+        elif is_enum and isinstance(item, ast.Assign):
+            _val = item.value
+            val_repr = repr(_val.value) if isinstance(_val, ast.Constant) else "<enum member>"
+            for tgt in item.targets:
+                if isinstance(tgt, ast.Name) and not tgt.id.startswith("_"):
+                    surf.fields[f"{node.name}.{tgt.id}"] = val_repr
+
+
+def _process_module_annassign(node: ast.AnnAssign, lines: list[str], env: dict[str, str], surf: PublicSurface) -> None:
+    """Fold one module-level annotated constant into ``surf`` — including registry
+    contract-surface tracking (closes the gap from
+    breaking_change_differ_blind_to_registry_data_dicts_2026_07_09.md): a module-level
+    dict constant tagged `# @contract-surface` is diffed at the LITERAL level (removed
+    top-level key / removed collection-member / removed inner key is breaking) —
+    invisible to every other check, which only sees the unchanged name + unchanged
+    `dict[...]` annotation.
+    """
+    assert isinstance(node.target, ast.Name)
+    if not node.target.id.startswith("_"):
+        surf.exports.add(node.target.id)
+    if _marker_above(lines, node.lineno):
+        snapshot = _resolve_registry_dict(node.value, env)
+        if snapshot is not None:
+            surf.registry[node.target.id] = snapshot
+
+
+def _process_module_assign(node: ast.Assign, env: dict[str, str], surf: PublicSurface) -> None:
+    """Fold one module-level plain assignment into ``surf`` + accumulate ``env``."""
+    for tgt in node.targets:
+        if isinstance(tgt, ast.Name) and not tgt.id.startswith("_") and tgt.id != "__all__":
+            surf.exports.add(tgt.id)
+    if (
+        len(node.targets) == 1
+        and isinstance(node.targets[0], ast.Name)
+        and isinstance(node.value, ast.Constant)
+        and isinstance(node.value.value, str)
+    ):
+        env[node.targets[0].id] = node.value.value
+
+
 def extract_surface(source: str, module: str) -> PublicSurface:
     """Extract the public API surface of one module's source text."""
     surf = PublicSurface()
@@ -187,6 +323,12 @@ def extract_surface(source: str, module: str) -> PublicSurface:
         tree = ast.parse(source)
     except SyntaxError:
         return surf
+
+    lines = source.splitlines()
+    # name -> string-literal value, accumulated left-to-right as we walk the module
+    # (the registry convention: `BINANCE_SPOT = "BINANCE-SPOT"` defined BEFORE it is
+    # used as a dict key/member further down the same file).
+    env: dict[str, str] = {}
 
     # __all__ if declared
     declared_all: set[str] | None = None
@@ -216,33 +358,11 @@ def extract_surface(source: str, module: str) -> PublicSurface:
         elif isinstance(node, ast.ClassDef):
             if node.name.startswith("_"):
                 continue
-            surf.classes.add(node.name)
-            surf.exports.add(node.name)
-            # Enum members are a CONTRACT surface (consumers match on the member + its serialized
-            # value — e.g. UAC StrEnums like DefiErrorCode). They are PLAIN `ast.Assign` (FOO = "foo"),
-            # NOT annotated, so the AnnAssign branch below misses them. Capture them into `fields`
-            # (keyed Class.MEMBER, value = the literal) so a removed/renamed member OR a changed value
-            # trips the removed-field / changed-field-value breaking checks. Gate on an Enum base.
-            is_enum = any(_is_enum_base(b) for b in node.bases)
-            for item in node.body:
-                if isinstance(item, (ast.FunctionDef, ast.AsyncFunctionDef)):
-                    if not item.name.startswith("_") or item.name in ("__init__",):
-                        surf.methods[f"{node.name}.{item.name}"] = Signature.from_node(item)
-                    surf.routes |= _route_decorators(item)
-                elif isinstance(item, ast.AnnAssign) and isinstance(item.target, ast.Name):
-                    fname = item.target.id
-                    if not fname.startswith("_"):
-                        surf.fields[f"{node.name}.{fname}"] = _annotation_str(item.annotation)
-                elif is_enum and isinstance(item, ast.Assign):
-                    _val = item.value
-                    val_repr = repr(_val.value) if isinstance(_val, ast.Constant) else "<enum member>"
-                    for tgt in item.targets:
-                        if isinstance(tgt, ast.Name) and not tgt.id.startswith("_"):
-                            surf.fields[f"{node.name}.{tgt.id}"] = val_repr
+            _process_class_def(node, surf)
+        elif isinstance(node, ast.AnnAssign) and isinstance(node.target, ast.Name):
+            _process_module_annassign(node, lines, env, surf)
         elif isinstance(node, ast.Assign):
-            for tgt in node.targets:
-                if isinstance(tgt, ast.Name) and not tgt.id.startswith("_") and tgt.id != "__all__":
-                    surf.exports.add(tgt.id)
+            _process_module_assign(node, env, surf)
 
     # If __all__ is declared, the export surface is exactly it (the intentional public API) —
     # minus by-convention-private (underscore-prefixed) names. Listing a ``_name`` in __all__ is
@@ -262,6 +382,7 @@ def merge(a: PublicSurface, b: PublicSurface) -> PublicSurface:
     out.methods = {**a.methods, **b.methods}
     out.fields = {**a.fields, **b.fields}
     out.routes = a.routes | b.routes
+    out.registry = {**a.registry, **b.registry}
     return out
 
 
@@ -275,6 +396,35 @@ def surface_at(ref: str, paths: list[str]) -> PublicSurface:
         module = path.replace("/", ".").removesuffix(".py")
         surf = merge(surf, extract_surface(content, module))
     return surf
+
+
+def _diff_registry_value(name: str, old: object, new: object) -> list[str]:
+    """Structural literal diff for one `# @contract-surface`-tagged registry constant.
+
+    Recurses through the 3 shapes this closes the gap for (dict-of-set, dict-of-list,
+    dict-of-dict — INSTRUMENT_TYPES_BY_VENUE / VENUES_BY_ASSET_GROUP /
+    VENUE_DATA_TYPE_CAPABILITIES). A removed top-level key, or a removed inner
+    collection-member/dict-key, is breaking; an added one is not (mirrors the
+    additive-OK rule everywhere else in this differ). A type mismatch (e.g. a value
+    that failed literal resolution on one side) is silently skipped — best-effort,
+    never a crash.
+    """
+    reasons: list[str] = []
+    if isinstance(old, dict) and isinstance(new, dict):
+        removed_keys = sorted(str(k) for k in (set(old) - set(new)))
+        if removed_keys:
+            reasons.append(f"registry {name}: removed key(s) {removed_keys}")
+        for k in sorted(set(old) & set(new), key=str):
+            reasons.extend(_diff_registry_value(f"{name}[{k!r}]", old[k], new[k]))
+    elif isinstance(old, set) and isinstance(new, set):
+        removed = sorted(str(m) for m in (old - new))
+        if removed:
+            reasons.append(f"registry {name}: removed member(s) {removed}")
+    elif isinstance(old, list) and isinstance(new, list):
+        removed = sorted(str(m) for m in (set(old) - set(new)))
+        if removed:
+            reasons.append(f"registry {name}: removed member(s) {removed}")
+    return reasons
 
 
 def diff_surfaces(old: PublicSurface, new: PublicSurface) -> list[str]:
@@ -331,6 +481,14 @@ def diff_surfaces(old: PublicSurface, new: PublicSurface) -> list[str]:
     removed_routes = sorted(old.routes - new.routes)
     if removed_routes:
         reasons.append(f"removed HTTP route(s): {removed_routes}")
+
+    # 5) Registry data-dict contract surface (the UAC INSTRUMENT_TYPES_BY_VENUE case,
+    #    issue: breaking_change_differ_blind_to_registry_data_dicts_2026_07_09.md): a
+    #    `# @contract-surface`-tagged constant's removed top-level key or removed
+    #    collection-member/inner-key is breaking even though the name stayed exported
+    #    with the same annotation — invisible to every check above.
+    for name in sorted(set(old.registry) & set(new.registry)):
+        reasons.extend(_diff_registry_value(name, old.registry[name], new.registry[name]))
 
     return reasons
 

@@ -36,7 +36,8 @@ related:
   [
     /plans/active/data_pipeline_check_mdps_features_2026_07_20.md,
     /plans/active/issues/estate_orphan_assessment_2026_07_21.md,
-    /plans/active/issues/mdps_cefi_candle_manifest_orphan_reconciliation_2026_07_26.md,
+    /plans/archive/issues/mdps_cefi_candle_manifest_orphan_reconciliation_2026_07_26.md,
+    /plans/active/issues/mdps_candle_manifest_near_total_coverage_gap_2026_07_27.md,
     /codex/02-data/orphan-object-detection.md,
   ]
 created: "2026-07-27"

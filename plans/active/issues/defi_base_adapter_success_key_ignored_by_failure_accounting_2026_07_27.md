@@ -28,24 +28,31 @@ tags: [defi, adapters, failure-accounting, honest-absence, masking, shard-isolat
 related:
   [
     /plans/active/issues/defi_adapter_dead_code_audit_2026_07_24.md,
-    /plans/active/defi_satellite_ao_dispatch_batch1_2026_07_25.md,
+    /plans/archive/2026_07/defi_satellite_ao_dispatch_batch1_2026_07_25.md,
   ]
 created: 2026-07-27
 parent_epic: infrastructure_master
 priority: P2
 source:
   "Dispatched todo defi_satellite_ao_dispatch_batch1-012 (trace curve_adapter.py::_download_liquidity masking,
-  plans/active/defi_satellite_ao_dispatch_batch1_2026_07_25.md) — tracing the shared caller
+  plans/archive/2026_07/defi_satellite_ao_dispatch_batch1_2026_07_25.md) — tracing the shared caller
   (base_defi_adapter.py::_download_all_instruments) for the Curve-specific verdict surfaced this broader, cross-adapter
   version of the same failure-accounting gap."
-execution_scope: local-only
+execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
 locked_by:
 locked_since:
-assigned_vm: NA
+assigned_vm: planning
 resolved_by:
 last_reviewed:
+assigned_role: data_engineering
+context_scope:
+  [
+    /codex/02-data/honest-absence-downstream-handling.md,
+    market-tick-data-service/market_tick_data_service/market_interface/adapters/defi/base_defi_adapter.py,
+    /plans/active/issues/defi_adapter_dead_code_audit_2026_07_24.md,
+  ]
 ---
 
 # `base_defi_adapter.py`'s failure accounting never reads the `success` key it already receives
@@ -147,3 +154,10 @@ adapters' venues.
       silently dropping real rows, before/alongside shipping the fix above — the fix changes behavior (failures start
       counting as failures), so knowing the current blast radius avoids a surprise jump in `failed` counts once wired.
       Repo: market-tick-data-service.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30**: RECLASSIFY -> assigned_vm: planning (conflict-check CLEAR against 231 active
+  planning docs; no open todo elsewhere duplicates this claim) - primary fix shipped mtds@df3d55dd; residual is a
+  bounded production blast-radius audit over 12 named adapters
+- **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).

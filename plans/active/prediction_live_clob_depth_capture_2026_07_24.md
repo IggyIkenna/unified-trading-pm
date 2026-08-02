@@ -7,7 +7,7 @@ summary: >-
   prediction_venue_perps_and_live_clob_depth_2026_06_20.md (plan line-cap remediation, 2026-07-24).
 status: active
 nature: process
-asset_group: [prediction, cefi]
+asset_group: [prediction]
 stage: [meta]
 repos:
   [agent-orchestrator, deployment-api, deployment-service, e2e-testing, features-service, fund-administration-service]
@@ -43,6 +43,12 @@ source: >-
   cross-venue arb+coverage). This file carries the live CLOB-depth capture infra third verbatim.
 assigned_role: data_engineering
 drift_direction: advance-code
+context_scope:
+  [
+    /plans/epics/predictions_master.md,
+    /plans/active/prediction_cross_venue_arb_and_coverage_2026_07_24.md,
+    /plans/archive/2026_07/prediction_venue_perps_and_live_clob_depth_2026_06_20.md,
+  ]
 ---
 
 # Prediction live + batch CLOB depth & trades capture infrastructure
@@ -277,6 +283,28 @@ drift_direction: advance-code
 
 ## Progress Log
 
+- **na-eligibility-audit 2026-08-02 (prediction tranche, autonomous)**: KEEP-NA, **1 stale item cited** — 2 open,
+  unchanged in count. The only commit to this file since the 2026-07-30 marker (`1ab67de59`) dropped the inherited
+  `cefi` tag per the operator's 2026-07-30 option-A ruling; no content moved. New this run, found by the Phase-2
+  conflict-check rather than by a content change: the `[DATA] P2` depth-retention checkbox was already extracted
+  verbatim into `prediction_satellite_ao_dispatch_batch4_2026_07_26.md` (`status: active`, `assigned_vm: planning`),
+  which cites it as its own `Source:` — but this doc's checkbox carried no back-citation, so a future audit would keep
+  re-flagging it as unclaimed. Fixed as a KEEP-NA-STALE citation correction (rubric 3 / conflict-check protocol step 4):
+  citation added, `assigned_vm` untouched, checkbox deliberately left `[ ]` as the tracking anchor. The other open item
+  is the `DEFERRED-CROSS-DEP` batch `book_snapshot_5` row-proof, still gated on an instruments-service re-enumeration of
+  a past date carrying `clob_token_ids` — no active doc claims it. **Frontmatter note re-checked at the code level, not
+  re-reported as a contradiction**: this doc pairs `execution_scope: orchestrator-agent` with `assigned_vm: NA`, which
+  the two prior markers flagged as part of a "7-doc contradiction class". Read
+  `agent-orchestrator/server/regen_backlog_from_plan.py` at HEAD to settle it — `_resolve_plan_vms()` maps the `NA`
+  sentinel to an EMPTY vm set, so the strict per-VM ownership gate in `_plan_contributes_briefs()` blocks ingestion
+  regardless of `execution_scope`. The pairing is cosmetic, NOT a live mis-dispatch hazard; no flip needed and no
+  operator ruling required. Doc stays NA.
+
+- **na-eligibility-audit 2026-07-30 (prediction tranche)**: KEEP-NA, valid — 2 open checkboxes, both P2, one explicitly
+  `DEFERRED-CROSS-DEP` on an instruments-service prerequisite. The doc's two PROSE items (BQ external tables, the
+  `roles/pubsub.publisher` grant) are CONFLICT — claimed by `prediction_satellite_ao_dispatch_batch6_2026_07_29.md`
+  todos 12 and 13. Same `execution_scope`/`assigned_vm` note as its sibling fork: see this run's report.
+
 ### 2026-06-26 (autonomous /autonomous) — Plan04 InMemoryTransport bug fixed, DP-LIVE-002 alert shipped, VMs verified
 
 **Critical data loss RESOLVED.** Plan 04 commit `3b956b70` (LiveEventFacadeSink with `transport=None`) silently routed
@@ -331,7 +359,14 @@ crypto set).
       VERIFY: (1) MDPS prediction live-scan cadence ≤ flush window; (2) the processed prediction book/candle store
       actually accumulates multi-hour history. Repos: market-tick-data-service + market-data-processing-service.
       Provenance: operator "do we have depth for a few hours of history / isn't there a plan for how live data
-      persists?" 2026-06-24.
+      persists?" 2026-06-24. **EXTRACTED — sole executing owner is
+      [`prediction_satellite_ao_dispatch_batch4_2026_07_26.md`](/plans/active/prediction_satellite_ao_dispatch_batch4_2026_07_26.md)'s
+      `[DATA] P2` "Verify END-TO-END MDPS prediction depth-history retention" todo** (`status: active`,
+      `assigned_vm: planning`), which names this checkbox verbatim as its own
+      `Source: prediction_live_clob_depth_capture_2026_07_24.md (P2 "Verify END-TO-END depth-history retention")` and
+      carries the bounded `Done when` (a dated PASS/FAIL verdict with the measured processed-store time span cited).
+      Citation added by `/na-eligibility-audit` 2026-08-02 — this checkbox stays `[ ]` and stays NA (it is the tracking
+      anchor, not a second dispatch claim); it flips when batch4's todo records its verdict here.
 
 - [x] [SCRIPT] P2. **Live book partition is keyed by producer LAUNCH-day, not event-day** (discovered 2026-06-24:
       producers launched 06-23 still write `day=2026-06-23` at 11:37Z 06-24). The detector works around it (trailing
@@ -709,6 +744,11 @@ to fcd6549 (foreign tradfi-lane deployment-service WIP forced `--allow-dirty-tar
   `cd deployment-service/terraform/gcp/live_event_log && terraform apply -var="create_bq_external_tables=true" -var="warm_gcs_bucket=central-element-323112-events" -var="cold_gcs_bucket=central-element-323112-events" -var="compactor_sa_email=unified-trading-sa@central-element-323112.iam.gserviceaccount.com" -auto-approve`
 - Grant project-level `roles/pubsub.publisher` to `1060025368044-compute@developer.gserviceaccount.com` (needs admin):
   `gcloud projects add-iam-policy-binding central-element-323112 --member="serviceAccount:1060025368044-compute@developer.gserviceaccount.com" --role="roles/pubsub.publisher"`
+
+- **na-eligibility-audit 2026-07-30** (tranche=cefi, autonomous): KEEP-NA, valid - the depth-retention todo surfaces an
+  architecture question about the live sink's rolling-window overwrite model (not a bounded verification), and the other
+  is a cross-repo deferred cross-dependency.
+- **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).
 
 ## Deferred work — migrated to:
 

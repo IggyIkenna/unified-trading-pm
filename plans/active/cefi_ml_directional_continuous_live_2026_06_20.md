@@ -33,6 +33,12 @@ superseded_by:
 depends_on:
 source:
 drift_direction: advance-code
+context_scope:
+  [
+    /plans/epics/cefi_master.md,
+    /codex/09-strategy/operational/paper-batch-live-reconciliation.md,
+    /codex/04-architecture/autonomous-recovery-matrix.md,
+  ]
 ---
 
 > **Provenance**: extracted 2026-06-20 from the `cefi_master` epic body (formerly the folded
@@ -180,3 +186,12 @@ live-capital gate itself is withheld). Not retagged, not unlocked.
 the window/universe work lands" — but no plan currently tracks that window/universe work as a distinct, named item;
 grepped `plans/active/` and `plans/epics/` for "window/universe sweep"/"cs/ext window" with no hit outside this plan.
 This plan's own "Model-improvement backlog" section remains the owner until a successor is authored.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30** (tranche=cefi, autonomous): KEEP-NA, valid - live wallet keys + kill-switch arming
+  are a PERMANENT human-only hard-stop (re-confirmed 2026-07-28), and the 2-year config-grid run is operator-scheduled.
+- **na-eligibility-audit 2026-07-30** (tranche=defi, autonomous): KEEP-NA, valid - live wallet keys + kill-switch arming
+  are a PERMANENT human-only hard-stop, re-confirmed by the operator 2026-07-28; `locked_by` set. Reached independently
+  of the cefi tranche above; both agree.
+- **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).

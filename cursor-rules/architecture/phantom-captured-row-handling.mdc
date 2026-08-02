@@ -159,5 +159,5 @@ def test_reader_logs_phantom_and_continues(self):
 ## Reference
 
 - SSOT: `codex/02-data/pipeline-mode-partition.md` § Axis-10 (Manifest phantom audit)
-- Plan: `plans/active/cefi_manifest_canonicalisation_2026_06_01.md` § CF-11 (Root-cause analysis + phantom reconcile)
+- Plan: `plans/archive/2026_07/cefi_manifest_canonicalisation_2026_06_01.md` § CF-11 (Root-cause analysis + phantom reconcile)
 - Related: `cursor-rules/architecture/pipeline-mode-partition-structure.mdc` (path migration that triggers phantom scenarios)

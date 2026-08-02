@@ -37,6 +37,11 @@ depends_on: []
 locked_by: live-defi-rollout
 locked_since: 2026-05-21
 resolved_by:
+context_scope:
+  [
+    /plans/archive/2026_07/bybit_futures_chain_write_shape_migration_2026_07_13.md,
+    /codex/02-data/data-pipeline-correctness-hard-rule.md,
+  ]
 ---
 
 # BYBIT futures_chain write-shape inconsistency (3 shapes across history)
@@ -100,7 +105,64 @@ workspace).
 
 ## Todos
 
-- [ ] [DATA] P2. **Backfill/re-shape BYBIT `futures_chain` historical writes to the correct `underlying=` hive form** —
-      confirm the exact affected date range, then reshape the flat glued-symbol files (2026-01→2026-07-09 window) and
-      the legacy flat-sibling era (2023-06/2025-01) to canonical `underlying=` hive paths; not started, no GCS objects
-      modified yet.
+- [x] ✅ [DATA] P2. **[already covered by
+      `/plans/archive/2026_07/bybit_futures_chain_write_shape_migration_2026_07_13.md`, see that doc for execution]** —
+      closed 2026-07-30 (`/na-eligibility-audit` tranche=cefi, stale-citation correction). Backfill/re-shape BYBIT
+      `futures_chain` historical writes to the correct `underlying=` hive form. **The owning agent-orchestrator plan
+      named in this doc's own 🟡 TRACKED banner has since reached `status: complete` (0 open / 11 done) and was ARCHIVED
+      2026-07-15**, so the banner's own release condition ("leave `status: open` here until the plan reports the fix
+      complete") is satisfied. That plan's phases record the full day-by-day audit, the reshape script, the dry-run
+      parity check, the `--apply`, the post-apply verification (0 non-canonical shapes remaining), and the manifest-row
+      rewrite. The "not started, no GCS objects modified yet" text above was written before that plan ran and was never
+      updated.
+
+> **📤 THE OPEN P1 BELOW IS EXTRACTED — do NOT dispatch it from this doc (`/na-eligibility-audit` 2026-08-02,
+> tranche=cefi).** `/plans/active/cefi_satellite_ao_dispatch_batch4_2026_07_31.md` todo 1 `[SCRIPT] P1`
+> (`assigned_vm: planning`, `unified-trading-pm@2d5fb4b59`) carries it verbatim and Source-cites this doc; its done-when
+> is "the full-scope diff completes, results are recorded in the source doc, and its open P1 todo is flipped citing this
+> run". **Caveat — batch4 is still `status: draft`, so it is NOT ingested and this work has no live dispatch path**
+> until the operator activates it. That is an activation decision, not a reason to reclassify this doc (which would
+> create a second, competing dispatch path for the same read-only diff); see this run's report for the parked item.
+
+- [ ] [DATA] P1. **MIGRATED 2026-07-30 from `cefi_satellite_ao_dispatch_batch1_2026_07_25.md` line 355 (never shipped)**
+      — **Extend BYBIT futures_chain shape-2 duplicate verification to the full audited scope.** Extend the archived
+      migration plan's 5-day sample to every day the existing Phase-1 scope-audit output
+      (`_index/audit/bybit_futures_chain_shape_scope_2026_07_13.parquet`, `market-tick-data-service@5e367479`)
+      classified `bare_flat_only`/`bundled_flat_only`/`mixed` — row-level diff each bare_flat/bundled_flat object
+      against its hive/canonical counterpart using the same columns Phase 1 Todo 2 used, and write a per-day
+      duplicate-verdict audit parquet. Read-only verification only — does NOT delete anything (the actual cleanup stays
+      BLOCKED-OPERATOR-DECISION). Repo: market-tick-data-service. **Done when**: a new audit parquet gives a per-day
+      duplicate/not-duplicate verdict for every day the Phase-1 scope audit classified
+      bare_flat_only/bundled_flat_only/mixed, closing the "sample-based, not exhaustive" caveat.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30** (tranche=cefi, autonomous): KEEP-NA-STALE, citation corrected - the owning plan
+  named in this doc's own TRACKED banner (`bybit_futures_chain_write_shape_migration_2026_07_13.md`) reached
+  `status: complete` (0 open / 11 done) and was ARCHIVED 2026-07-15, so the banner's "leave open until the plan reports
+  the fix complete" condition is met. Todo closed with that evidence; doc is now ARCHIVE-worthy but
+  `locked_by: live-defi-rollout` blocks autonomous archival.
+- **2026-07-30 (slot-11, `data_engineering`, `cefi_satellite_ao_dispatch_batch1_finalize_2026_07_25.md` todo 4, archival
+  ritual)**: `cefi_satellite_ao_dispatch_batch1_2026_07_25.md` line 355 dispatched this exact extended
+  duplicate-verification scope as an AO todo (`assigned_vm: planning`) and it was never shipped — the ONLY one of that
+  plan's 33 todos left undone (flagged 2026-07-30 by the finalize plan's own todo-1 reconciliation pass). Per the
+  archival discipline ("split it, or fold the remnant" for a near-complete plan with a genuine open item —
+  `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`), the remnant is folded back into this, its own
+  named Source doc, as a fresh open todo above (never marked done — the work itself still needs doing) rather than
+  silently evaporating inside the archived batch1 plan. This doc stays correctly active (not archive-eligible) as long
+  as this todo is open, superseding the prior entry's ARCHIVE-worthy note above. Kept `assigned_vm: NA` here (no
+  operator ruling taken on re-promoting it to AO-dispatched) — a future `/na-eligibility-audit` or operator call can
+  reclassify it.
+- **context-scout 2026-08-01**: populated context_scope (3 entries).
+- **na-eligibility-audit 2026-08-02** (tranche=cefi, autonomous): **KEEP-NA-STALE (already-duplicated) — citation fixed,
+  NOT reclassified.** Re-entered scope on the 2026-07-30 folded-back P1. That entry explicitly invited this skill to
+  reconsider ("a future `/na-eligibility-audit` or operator call can reclassify it"), and on its own merits the todo
+  does clear the bounded-outcome bar — read-only row-level diff, scope fixed by an existing audit parquet, an explicit
+  **Done when**, no delete/`--apply`/VM launch, and it was already deemed AO-eligible once when batch1 dispatched it.
+  The Phase-2 conflict-check nevertheless found it ALREADY re-extracted verbatim into
+  `cefi_satellite_ao_dispatch_batch4_2026_07_31.md` todo 1 (`unified-trading-pm@2d5fb4b59`, Source-cited), so a flip
+  here would be the near-verbatim duplicate claim conflict-check § 3 forbids. Citation banner added above the todo;
+  `assigned_vm: NA` unchanged. `locked_by: live-defi-rollout` is not the deciding factor (PLAN_FORMAT § locked_by blocks
+  ARCHIVAL, not an `assigned_vm` flip) and no unlock question arises — the doc has genuine open work either way.
+  **Parked for the operator**: batch4 has sat `status: draft` since 2026-07-31, so this todo currently has no live
+  dispatch path via either doc — see this run's report.

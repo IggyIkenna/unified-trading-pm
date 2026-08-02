@@ -46,6 +46,14 @@ locked_by:
 locked_since:
 supersedes:
 superseded_by:
+context_scope:
+  [
+    /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
+    /codex/05-infrastructure/vm-launcher-runbook.md,
+    /plans/active/issues/defi_dex_pools_subgraph_query_missing_input_tokens_2026_07_25.md,
+    /plans/active/issues/defi_migrated_marker_flagged_root_cause_clusters_2026_07_25.md,
+    /plans/active/defi_consolidated_closeout_2026_07_18.md,
+  ]
 ---
 
 # Fix dex-pools subgraph symbol bug, backfill, purge orphaned data
@@ -99,24 +107,24 @@ is quick and doesn't block anything.
       to now read `SAFE`. Exact per-venue twin coverage, before -> after:
 
       | Venue    | Total markers | FLAGGED (before) | Coverage before | FLAGGED (after) | Coverage after |
-                                                                                                  | -------- | ------------- | ----------------- | --------------- | ----------------- | -------------- |
-                                                                                                  | COINBASE | 1623          | 202                | 87.55%           | 0                  | **100.00%**    |
-                                                                                                  | MAKER    | 1276          | 132                | 89.66%           | 0                  | **100.00%**    |
-                                                                                                  | SWELL    | 1192          | 5                  | 99.58%           | 0                  | **100.00%**    |
-                                                                                                  | ETHENA   | 975           | 7                  | 99.28%           | 0                  | **100.00%**    |
+                                                                                                                              | -------- | ------------- | ----------------- | --------------- | ----------------- | -------------- |
+                                                                                                                              | COINBASE | 1623          | 202                | 87.55%           | 0                  | **100.00%**    |
+                                                                                                                              | MAKER    | 1276          | 132                | 89.66%           | 0                  | **100.00%**    |
+                                                                                                                              | SWELL    | 1192          | 5                  | 99.58%           | 0                  | **100.00%**    |
+                                                                                                                              | ETHENA   | 975           | 7                  | 99.28%           | 0                  | **100.00%**    |
 
-                                                                                                  "Total markers" = every `_migrated_*` lst_rates object for that venue (server-side `match_glob` listing over
-                                                                                                  the FULL 2020-2026 range, independent of the marker-cleanup VM's own scan progress). All 4 venues are now at
-                                                                                                  genuine 100% verified twin coverage -- the disposition can move from `no-migrate-first` to `yes-after-verify`
-                                                                                                  for the PURGE half of this todo. **The purge itself remains un-executed but is now agent-executable, not
-                                                                                                  `[OPERATOR]`-gated. Reversibility-verified** (finding T, `task_template.md`): object-level delete only
-                                                                                                  (specific `_migrated_*` marker objects, never the bucket), target
-                                                                                                  `market-data-tick-defi-prd-central-element-323112` -- `gcs_bucket_soft_delete_retention_seconds(...)`
-                                                                                                  returned `604800` (7 days) fresh-checked 2026-07-27 per
-                                                                                                  `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` §3a. Re-query fresh before running, not from
-                                                                                                  this citation -- the content-correctness gate (twin coverage, live-reader fix) is independently satisfied
-                                                                                                  per the table above. Full detail (VM name/zone/mode, resume-log caveat, 12-leaf spot-check): this plan's
-                                                                                                  Progress Log below.
+                                                                                                                              "Total markers" = every `_migrated_*` lst_rates object for that venue (server-side `match_glob` listing over
+                                                                                                                              the FULL 2020-2026 range, independent of the marker-cleanup VM's own scan progress). All 4 venues are now at
+                                                                                                                              genuine 100% verified twin coverage -- the disposition can move from `no-migrate-first` to `yes-after-verify`
+                                                                                                                              for the PURGE half of this todo. **The purge itself remains un-executed but is now agent-executable, not
+                                                                                                                              `[OPERATOR]`-gated. Reversibility-verified** (finding T, `task_template.md`): object-level delete only
+                                                                                                                              (specific `_migrated_*` marker objects, never the bucket), target
+                                                                                                                              `market-data-tick-defi-prd-central-element-323112` -- `gcs_bucket_soft_delete_retention_seconds(...)`
+                                                                                                                              returned `604800` (7 days) fresh-checked 2026-07-27 per
+                                                                                                                              `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` §3a. Re-query fresh before running, not from
+                                                                                                                              this citation -- the content-correctness gate (twin coverage, live-reader fix) is independently satisfied
+                                                                                                                              per the table above. Full detail (VM name/zone/mode, resume-log caveat, 12-leaf spot-check): this plan's
+                                                                                                                              Progress Log below.
 
 - [x] ✅ [BACKEND] P1. **Fix the `messari_basic` subgraph query** in
       `market_tick_data_service/cli/handlers/dex_pools_handler.py` -- add `inputTokens { symbol }` (and
@@ -165,18 +173,43 @@ is quick and doesn't block anything.
       **2026-07-28**: `mtds-dex-pools-symbolfix-batch1c` completed cleanly (`DEPLOYMENT_COMPLETED exit_code=0`,
       self-deleted) after walking its full assigned range (2025-04-02→2026-07-27) for curve/sushiswap/trader_joe_v2 —
       full detail in the Progress Log below.
-- [ ] [SCRIPT] P1. **Purge the now-superseded old data** for curve/sushiswap/velodrome_v2/trader_joe_v2 dex_pool_state
-      -- the old FLAGGED `_migrated_*` markers AND the still-current-but-unattributed address-keyed per-instrument
-      leaves (e.g. `0x00836fe5....parquet`-style names), now replaced by the backfill's properly symbol-named leaves.
-      **Gated on the backfill todo above landing + being spot-checked first** (a content-correctness prerequisite,
-      independent of the reversibility check below -- NOT yet satisfied as of this edit, this plan's `sequential: true`
-      chain still has the backfill todo unchecked). **Reversibility-verified, no `[OPERATOR]` gate needed** (finding T,
-      `task_template.md`): object-level delete only, target `market-data-tick-defi-prd-central-element-323112` --
-      `gcs_bucket_soft_delete_retention_seconds(...)` returned `604800` (7 days) fresh-checked 2026-07-27 per
-      `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` §3a. Re-query fresh before running, not from this
-      citation. Done-when: zero unattributed (address-keyed) `dex_pool_state` leaves remain for these venues within the
-      confirmed-recoverable range, and re-running `delete_migrated_defi_markers_2026_07_23.py`'s dry-run shows these
-      venues' FLAGGED count at (near) zero. (repo: market-tick-data-service)
+- [x] ✅ [SCRIPT] P1. **Purge the now-superseded old data** for curve/sushiswap/velodrome_v2/trader_joe_v2
+      dex_pool_state -- the old FLAGGED `_migrated_*` markers AND the still-current-but-unattributed address-keyed
+      per-instrument leaves (e.g. `0x00836fe5....parquet`-style names), now replaced by the backfill's properly
+      symbol-named leaves. **2026-07-30 (slot-3): both purge categories verified complete, todo closed.** Category-2
+      (address-keyed leaf purge) was already done + verified in the 2026-07-28/29 session (190,955 leaves deleted, 5/5
+      spot-checked gone; 541,890 no-replacement leaves correctly retained permanently per
+      `issues/defi_dex_pools_catalogue_undercoverage_vs_historical_capture_2026_07_28.md`). This session closed
+      category-1 (the `_migrated_*` marker purge via `delete_migrated_defi_markers_2026_07_23.py`), continuing from 3
+      prior partial sessions (slots 15/4/6) whose independent resume-logs left ~2706 SAFE markers un-deleted. **Real bug
+      found + fixed before trusting any of it**: the first `--apply` run this session completed with exit 0 and a
+      clean-looking disposition-only `=== SUMMARY ===`, but EVERY delete had actually raised
+      `ValueError: GCP_PROJECT_ID or AWS_ACCOUNT_ID must be set in environment` (action=`delete_failed` for all 2706,
+      silently caught) -- the exact same failure class that produced slot-15's earlier `.bak_env_failure` file this
+      session. Filtered the resume-log to drop the 2706 `delete_failed` entries (the resume-log gates purely on marker
+      presence, not delete success, so a naive re-run would have skipped them forever), set `GCP_PROJECT_ID` correctly,
+      and re-ran: all 2706 now show real `action=deleted`. **Independently verified, not trusted from the log**: (1) 8
+      sampled `deleted` markers across all 4 venues confirmed genuinely absent via direct `blob_exists` GCS calls; (2) a
+      final fresh dry-run (`--venues CURVE,SUSHISWAP,VELODROME_V2,TRADER_JOE_V2 --data-types dex_pool_state`, live
+      server-side `match_glob` discovery, no cache) found EXACTLY 2264 markers remaining --
+      `FLAGGED_ROWCOUNT_SHORTFALL:     1287` + `FLAGGED_NO_SIBLINGS_NO_BACKUP: 977`, ZERO SAFE -- an exact match to the
+      full corpus's known FLAGGED ceiling, proving every one of the 21,324 SAFE markers (across all sessions combined)
+      is now genuinely deleted and only the correctly-permanently-retained FLAGGED set remains. Done-when satisfied on
+      both counts: zero unattributed leaves remain (category-2, prior session) and the marker dry-run's FLAGGED count is
+      at its true irreducible floor (category-1, this session) -- re-running
+      `delete_migrated_defi_markers_2026_07_23.py --dry-run` will always show 2264 FLAGGED for these venues going
+      forward; that is the correct terminal state, not an open gap. **Also shipped** (blocked on an unrelated repo-red,
+      see below): a fix to `scripts/one_offs/delete_migrated_defi_markers_2026_07_23.py` tracking real delete `action`
+      outcomes separately from verification `disposition` and exiting 1 with a loud warning on any `delete_failed`, so
+      this exact silent-looks-clean trap can't recur a third time -- committed locally
+      (`market-tick-data-service@1e3815af` post-rebase) but NOT YET PUSHED: `quality-gates.sh` Pass-1 is currently red
+      repo-wide on an UNRELATED pre-existing empty-string-fallback baseline breach (STEP 5.101, 93 > baseline 89,
+      introduced by two other slots' commits in
+      `tardis_cefi_shards.py`/`verify_kamino_solend_lending_relabel_2026_07_30.py` -- confirmed via git log + direct
+      grep that neither touched file is mine). Joined the already-open repo-blocker `RB-88a81995` as a waiter (slot 6
+      already owns the actual fix task); will ship once the repo goes green. This purge todo's own done-when does not
+      depend on that fix landing -- it is a bonus hardening find, not required for THIS todo's completion. (repo:
+      market-tick-data-service)
 
 ## Codex SSOTs
 
@@ -735,3 +768,5 @@ is quick and doesn't block anything.
     once the apply run's own `=== SUMMARY ===` shows `deleted` counts matching 21,324 (or explains any small delta —
     `delete_failed` entries would be the only expected source of a gap), do the GCS spot-check, flip the checkbox, and
     `/done`.
+
+- **context-scout 2026-08-01**: populated/refreshed context_scope (5 entries).

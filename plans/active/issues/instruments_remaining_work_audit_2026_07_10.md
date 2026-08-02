@@ -184,7 +184,7 @@ Real code fixes / features needed (not backfills, not pure doc drift).
    production rows were ever captured to compare); doc archived, `status: resolved`.
 
 8. **WSFeedConnector Phase-3.5 rollout gap — 73 unregistered venues**
-   `plans/active/issues/wsfeedconnector_phase35_gap_2026_07_06.md` COINBASE bare-name removal blocked on a
+   `plans/archive/issues/wsfeedconnector_phase35_gap_2026_07_06.md` COINBASE bare-name removal blocked on a
    drafted-but-unexecuted migration plan; ICE WSFeedConnector blocked on Real-Time Databento credentials; ~46 DeFi
    venues + sports/tradfi venues pending Option-B architectural decision.
 
@@ -205,7 +205,7 @@ Real code fixes / features needed (not backfills, not pure doc drift).
     instruments-service@f7e64c54) 3 todos unchecked at the time of this audit: decide direction, implement, ship.
 
 12. **TradFi's mvp_mode fetch-time filter is unreachable dead code**
-    `plans/active/issues/tradfi_mvp_mode_unreachable_dead_gate_2026_07_08.md` Zero callers workspace-wide; 3 todos
+    `plans/archive/issues/tradfi_mvp_mode_unreachable_dead_gate_2026_07_08.md` Zero callers workspace-wide; 3 todos
     (operator decision wire-live-vs-delete, implement, ship).
 
 13. **Crypto-venue single-stock perps + tokenized stocks — equity basis/dispersion arb** (CODE_PATH primary; also
@@ -417,7 +417,7 @@ Manifest correctness / denominator / honest-coverage work (excludes pure backfil
    retire DERIBIT-COMBO as its own venue key, remove phantom `OPTION` from bare OKX, move `market_metadata` off the MTDS
    daily axis, backfill historical rows, add `missing_dates` to breakdown entries, spot-check 5 more CeFi venues.
 
-9. **Phantom captures — defi manifest (2026-06-28)** `plans/active/issues/phantom_captures_defi_2026_06_28.md` 219,529
+9. **Phantom captures — defi manifest (2026-06-28)** `plans/archive/issues/phantom_captures_defi_2026_06_28.md` 219,529
    `captured` rows with no backing parquet (10.5% of captured defi scope), concentrated in `swaps_ohlcv_*`/UNISWAP_V4. 3
    unchecked: diagnose systematic writer failure, apply reconciliation, confirm no recurrence.
 
@@ -651,9 +651,10 @@ Tooling / infra / ML-training / strategy-research items that don't fit the above
 
 ### P2
 
-8. **No generic manifest-reprocessing mechanism — 11 near-identical one-off reclassify scripts**
-   `plans/active/issues/manifest_reprocessing_generic_utility_2026_07_07.md` 4 unchecked: design + build
-   `select_shards_for_reprocess()`, wire as IS CLI subcommand, retire the 11 one-offs.
+8. **No generic manifest-reprocessing mechanism — 11 near-identical one-off reclassify scripts** — **RESOLVED
+   2026-07-30**, all 4 todos done (design + build `select_shards_for_reprocess()`, wired as IS CLI subcommand, 13
+   one-offs left in place as historical record per the doc's own carve-out). Archived:
+   `/plans/archive/issues/manifest_reprocessing_generic_utility_2026_07_07.md`.
 
 9. **instruments-service GET /api/data-status is dead code**
    `plans/active/issues/instruments_service_data_status_endpoint_dead_code_2026_07_07.md` 2 unchecked:
@@ -906,6 +907,10 @@ the source docs if this list is used for dispatch planning.
   `instruments-service` image rebuild + redeploy is a plausible one-shot fix for two separate open P0s. Investigating
   next.
 
+- **na-eligibility-audit 2026-07-30** (tranche=cefi, autonomous): KEEP-NA, valid - the sole todo is an umbrella over 6
+  distinct P0 workstreams (Turbo API, monotonicity alerting, is-daily-enum crash, 59-bug record, completion tracker,
+  tradfi v9 stage1); not a single determinable outcome.
+
 ## Orchestration state — dispatched execution workflow
 
 `wf_1e191185-1c2` (`instruments-audit-decisions-execution`) — **COMPLETE**, 8/8 agents returned. Real per-item verdict:
@@ -977,3 +982,7 @@ Script:
       monotonicity guard alerting (live incident), is-daily-enum cloud crash, the 59-bug smoketest master record, the
       Instruments Completion Tracker (33/37 open), and Layer-1 tradfi's `tradfi_v9_stage1_finish` block (per the final
       `wf_60ecfd13-752` Progress Log entry).
+- **na-eligibility-audit 2026-07-30**: KEEP-NA, valid (sports tranche) — the sole todo is an umbrella 'close the 6
+  remaining Headline P0s not covered by any in-flight workflow' across a 979-line, 5-asset-group audit — a portfolio of
+  independently-scoped P0s, not a single determinable outcome, and several of its constituents are themselves
+  operator-gated (e.g. the HUOBI/BITSTAMP SSOT contradiction)

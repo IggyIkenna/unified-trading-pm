@@ -55,6 +55,24 @@ STALE — report or fix it, do not act on it. SSOT: `codex/05-infrastructure/per
   where `scripts/dev/install-pkill-guard-shell-env.sh` has run: a `pkill`/`pgrep` shell function REFUSES a bare
   name-only pattern instead of executing it host-wide — see `/codex/05-infrastructure/per-tab-worktrees.md` §
   "pkill/pgrep cross-slot-kill guard".
+- **Bound memory BEFORE running any heavy script directly on this shared host (HARD RULE, RECURRING incident class — 3
+  same-shape outages: 2026-07-27 `candle_coverage_gap.py` 15.8GB degraded AO's poll loop; 2026-07-31
+  `expand_defi_pool_catalogue_from_manifest.py` 43.6GB caused a full AO outage; 2026-08-01
+  `features_service.cross_instrument` 38.8GB caused a SECOND full AO outage the same day — the SSOT rule below already
+  existed after incident 1 and still didn't stop 2 or 3).** The SSOT's own wording ("ad-hoc scratchpad script") is
+  misleadingly narrow — incidents 2 and 3 were REAL, tracked service/CLI code (`instruments-service/scripts/...`,
+  `features_service.cross_instrument`), not throwaway files, run directly as part of ordinary task work. Read it as:
+  **any subprocess you invoke directly on this VM that could plausibly load a nontrivial dataset into memory** (a
+  manifest, a multi-day/multi-instrument batch compute, a corpus scan) — scratchpad or production code, doesn't matter.
+  Before running one: (1) confirm it already reads via a streamed/chunked/column-pruned path rather than materializing
+  the whole working set, (2) if unsure or it can't be bounded easily, wrap it —
+  `bash scripts/dev/run-bounded-analysis.sh <cmd>` (cgroup-enforced memory cap, exit 137 on breach) — or (3) if it's
+  genuinely corpus-scale, dispatch it to a dedicated VM instead of running it here. **Do not trust `timeout <n>` alone
+  as a substitute for a memory bound** — a process that ignores/delays `SIGTERM` runs past its stated wall-clock bound
+  regardless (confirmed 2026-08-01: a `timeout 150`-wrapped process ran ~100x past its bound, then also ignored a direct
+  `SIGTERM` for 12+ seconds, needing `SIGKILL`); use `timeout --kill-after=<n>` if you need a hard wall-clock cutoff,
+  and bound memory separately regardless. Full SSOT: `/codex/05-infrastructure/vm-launcher-runbook.md` § "Heavy
+  COMPUTE/MEMORY on the shared planning-vm".
 
 ---
 
@@ -96,6 +114,24 @@ git push origin HEAD:live-defi-rollout
 
 # 3) Call /done with SHA_CODE
 ```
+
+**Verify — never trust quickmerge's own "✅ Landed" message alone (2026-07-31,
+`quickmerge_agent_regate_resets_branch_loses_local_commit_2026_07_31.md`).** A sentinel-invalid retry/re-gate can, on a
+high-churn shared branch, land the branch on a ref that no longer contains your commit while still printing "Landed" —
+reflog-recoverable, but silently lost if you don't check. Before calling `/done`, confirm your SHA is actually on
+origin:
+
+```bash
+git fetch origin live-defi-rollout --quiet && git merge-base --is-ancestor "$SHA_CODE" origin/live-defi-rollout \
+  && echo "✅ verified on origin" || echo "❌ NOT on origin — see recovery below"
+```
+
+On failure: `git reflog` to find your dangling commit (it survives there even though the branch tip no longer has it),
+`git merge --ff-only <sha>` (or rebase your branch back onto it if origin has since moved further), re-run the
+Pass-1/Pass-2 ship flow, and re-verify before retrying `/done`. `quickmerge.sh` itself now also self-checks this exact
+condition in STAGE 5 (a `refs/wip-preserve/quickmerge-stage5-regate-<sha12>` ref + a hard failure instead of a silent
+push if it detects the loss) — this manual check is the belt to that suspenders, since the STAGE 5 guard only covers the
+specific mechanism it was built to catch, not every way a shared branch could theoretically move.
 
 **Ordering note**: commit BEFORE running `quality-gates.sh` (as the snippet above already shows) — the QG sentinel is
 keyed to HEAD at the moment it's written, so QG-before-commit moves HEAD past the sentinel and forces an avoidable

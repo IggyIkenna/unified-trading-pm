@@ -50,6 +50,12 @@ depends_on:
 assigned_role: data_engineering
 drift_direction: correct-codex
 locked_since:
+context_scope:
+  [
+    /plans/active/issues/honest_coverage_shard_dimension_model_definitional_data_2026_07_07.md,
+    /codex/02-data/defi-canonical-naming-ssot.md,
+    /codex/02-data/partitioning.md,
+  ]
 ---
 
 > **Scope note (operator-confirmed 2026-07-07):** this combinator applies to **CEFI, DEFI, TRADFI only**. Sports has no
@@ -160,6 +166,16 @@ just belongs on a different layer than instrument_type does, and conflating the 
 
 ## Todos
 
+- [ ] [CODE] P2. **Retire the `dex_pools` / `dex_swaps` SchemaContract keys in `_defi_v2_contracts.py`** (finding 6,
+      added 2026-07-31). `unified-api-contracts/unified_api_contracts/internal/schemas/_defi_v2_contracts.py:470-471`
+      still registers `("defi", "pool", "dex_pools")` and `("defi", "pool", "dex_swaps")`, but those data_type names
+      were RETIRED and collapsed to `dex_pool_state` / `dex_pool_swaps` at every layer (operator 2026-06-01, SSOT
+      [`/codex/02-data/defi-canonical-naming-ssot.md`](/codex/02-data/defi-canonical-naming-ssot.md)). The canonical key
+      `("defi", "pool", "dex_pool_state")` DOES exist in `internal/schemas/contracts.py:1046`, so this is dead
+      dual-registration rather than a live lookup break — but it is exactly the declared-vs-real registry drift this
+      issue is about. Done-when: the two retired keys are gone (or explicitly commented as legacy-only) and no consumer
+      resolves a defi pool contract by the retired name.
+
 - [x] [CODE] P1. **Fix the live CME/ICE cell** (finding 1) — shipped `unified-api-contracts@fa9cece5`
       (`origin/live-defi-rollout`, verified post-push): `valid_data_types_for_venue_instrument_type` now actually uses
       `venue` for TRADFI (a new `VALID_DATA_TYPES_VENUE_EXCLUSIONS` table, checked for every asset_group, not just
@@ -205,6 +221,13 @@ just belongs on a different layer than instrument_type does, and conflating the 
       COMPOUND_V3/MORPHO/FLUID/SPARK/RADIANT/DRIFT/KAMINO + AAVE_V3/ALCHEMY-\*.)**
 
 ## Progress Log
+
+- **2026-07-31** — **Finding 6 added (`dex_pools`/`dex_swaps` SchemaContract keys survive their own retirement).**
+  Surfaced incidentally while re-reviewing `/codex/02-data/partitioning.md` under the codex freshness-stagger sweep
+  (shard offset-0), not from a fresh UAC audit. Same declared-vs-real registry-drift pattern as findings 2 and 4, one
+  layer over: the naming SSOT says the collapse to `dex_pool_state`/`dex_pool_swaps` is complete "at every layer", and
+  the canonical contract key does exist — but `_defi_v2_contracts.py` still carries the retired names as live registry
+  keys. Filed as a P2 todo above rather than fixed here (different plan's file; collision risk). No UAC files edited.
 
 - **2026-07-10** — **Two-layer combinator redesign implemented and shipped, `unified-api-contracts@fa9cece5`**
   (`origin/live-defi-rollout`; content verified present post-push via `git show origin/live-defi-rollout:<path>`).
@@ -298,3 +321,4 @@ just belongs on a different layer than instrument_type does, and conflating the 
   following the ASTER/CEFI shard-dimension work. Operator confirmed the scope exclusion for Sports/Prediction before
   this doc was written — the combinator redesign targets CEFI/DEFI/TRADFI only; Prediction's separate
   venue-map-completeness gap (finding 5) is tracked as its own smaller, independent todo. No files edited.
+- **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).

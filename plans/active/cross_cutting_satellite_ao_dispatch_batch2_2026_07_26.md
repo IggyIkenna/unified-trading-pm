@@ -56,6 +56,14 @@ locked_by:
 locked_since:
 supersedes:
 superseded_by:
+context_scope:
+  [
+    /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
+    /plans/active/cross_cutting_satellite_ao_dispatch_batch1_2026_07_26.md,
+    /plans/active/cross_cutting_satellite_ao_dispatch_batch2_2026_07_26_finalize.md,
+    /cursor-configs/skills/ag-closeout-audit/SKILL.md,
+    /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
+  ]
 depends_on: []
 source: >-
   /ag-closeout-audit cross-cutting re-invocation 2026-07-26 (autonomous, operator away). Phase 0 re-derived tranche
@@ -117,19 +125,78 @@ drift_direction: advance-code
       has zero `MVP_SCOPE`/`is_mvp` references anywhere — the universe resolver hardcodes catalog specs with no
       MVP-membership filter — 1 fix follow-up filed, cross-referenced against
       `defi_archetype_universe_no_curtailment_mechanism_2026_07_23.md`.
-- [ ] [DIAG] P2. **features-service catalogue completeness inventory + the smoke-check masking test.** (a) Per-module
-      table across all 9 features-service modules: does a per-feature declarative registry exist (`BuilderEntry`-shaped
-      or equivalent), and does each entry carry `status`/`formula_version` — confirming or correcting the known baseline
-      (`delta_one` full but 98% un-audited against a 2026-05-28 baseline; 6 partial with no `status`/`formula_version`;
-      `commodity`/`performance_features`/`strategy_pnl_archetype` absent entirely). (b) Empirically test whether the
-      family-level smoke check masks a broken individual external-data-source adapter, scoped to the ~16 real vendor
-      adapters in the commodity/calendar families — cite an ACTUAL run showing either a deliberately-broken adapter
-      leaving the family check green (masking confirmed) or the check failing (refuted); a code-read inference alone
-      does not satisfy this. **Coordination**: (b) exercises `scripts/*/smoke_matrix.py`, which batch1b's
-      features-service script-canon todo RELOCATES to `e2e-testing/scripts/<domain>/` — run (b) against whichever
-      location the harness lives in at execution time and note which, rather than assuming the pre-relocation path.
-      Source: `issues/features_service_catalogue_completeness_inventory_2026_07_24.md`. **Done when**: both checkboxes
-      are flipped, (a) carries the 9-module table and (b) cites a real run with its verdict.
+- [x] ✅ [DIAG] P2. **features-service catalogue completeness inventory + the smoke-check masking test.** — DONE
+      2026-08-01, slot-13. Source: `issues/features_service_catalogue_completeness_inventory_2026_07_24.md`.
+
+      **(a) Per-module table** — **CORRECTS the baseline's module count**: the real total is **11** feature-family
+                                              modules under `features_service/` (excluding shared infra dirs `api/`/`cli`/`common`), not 9 — the baseline's own
+                                              breakdown (1 full + 6 partial + 3 absent) already only summed to 10, and a grep for `BuilderEntry`/registry
+                                              patterns across the whole repo surfaced an 11th, previously-unlisted module (`cefi`) that is ALSO absent-entirely
+                                              (added 2026-05-19..07-28 per `git log`, predates the 2026-05-28 baseline, so it should have been caught):
+
+                                              | Module | Registry exists? | Shape | `status`/`formula_version`? | Verdict |
+                                              |---|---|---|---|---|
+                                              | `delta_one` | Y | `FeatureSpec` (`app/features/registry.py` + `registry_specs.yaml`, 1389 specs) — plus a separate `BuilderEntry` DAG registry (`schemas/feature_builder_registry.py`) | Y (on `FeatureSpec` only) | **FULL** |
+                                              | `calendar` | Y | `BuilderEntry` (`schemas/feature_builder_registry.py`) | N | PARTIAL |
+                                              | `cross_instrument` | Y | `BuilderEntry` | N | PARTIAL |
+                                              | `multi_timeframe` | Y | `BuilderEntry` | N | PARTIAL |
+                                              | `volatility` | Y | `BuilderEntry` | N | PARTIAL |
+                                              | `onchain` | Y | `BuilderEntry` | N | PARTIAL |
+                                              | `sports` | Y | local `BuilderEntry` (function-callable-based, `tracking/feature_builder_registry.py`) | N | PARTIAL |
+                                              | `commodity` | N | `FACTOR_REGISTRY` maps factor_group→class only, not a per-feature entry | N/A | ABSENT |
+                                              | `performance_features` | N | none (just `cli_handler.py`/`passthrough_compute.py`) | N/A | ABSENT |
+                                              | `strategy_pnl_archetype` | N | none (just `rolling_compute.py`) | N/A | ABSENT |
+                                              | `cefi` | N | none (bare calculator files, no registry) | N/A | **ABSENT — not in original baseline (correction)** |
+
+                                              1 full + 6 partial + 4 absent = 11 (all 7 `BuilderEntry`-shaped registries confirmed to lack `status`/
+                                              `formula_version` — UTL's canonical `BuilderEntry` dataclass, `unified_trading_library/feature_service_base/
+                                              builder_registry.py`, has no such fields). The "6 partial" and "delta_one full" parts of the baseline are
+                                              CONFIRMED correct; the "commodity/performance_features/strategy_pnl_archetype absent" part is confirmed correct
+                                              but incomplete (missed `cefi`). The 98%-un-audited delta_one figure is CONFIRMED and measured exactly:
+                                              `registry_specs.yaml` has 1389 specs, `status: listed`=1329, `verified`=28, `tested`=26, `need_data`=6 — non-
+                                              `verified` = 1361/1389 = **97.98% ≈ 98%**.
+
+                                              **(b) Empirical smoke-check-masking test** — real runs (not code-read inference), against
+                                              `e2e-testing/scripts/{commodity,calendar}/smoke_matrix.py` (batch1b's relocation already landed; confirmed the
+                                              pre-relocation `features-service/scripts/<family>/` copies no longer contain `smoke_matrix.py`). **Mixed
+                                              verdict, richer than a single yes/no**:
+                                              - **REFUTED** for the 6 vendor adapters actually wired into the batch code path (commodity: cftc/eia_crude/
+                                                eia_ng/open_meteo/yahoo_finance/baker_hughes; calendar: mtds_fred_reader/yahoo_finance_adapter). Both
+                                                families implement an explicit, deliberate fail-closed guard: commodity's `_has_full_factor_coverage()`
+                                                fails the whole day if ANY enabled factor is missing (`BatchHandler.run()` returns
+                                                `success_count == total`, so ONE bad day fails the entire CLI exit code); calendar's `_log_batch_summary()`
+                                                `sys.exit(1)`s if `total_failed > 0` across any (day, feature_group). Proved with a REAL run, not a
+                                                synthetic break: Baker Hughes' rig-count adapter is CURRENTLY broken in prod ("unexpected file format") and
+                                                this correctly cascaded to `smoke_matrix.py` reporting `FAIL` (`CLI rc=1`) for commodity — confirming the
+                                                check does NOT mask it. Follow-up fix filed (adapter regression is a NEW symptom, distinct from the
+                                                already-fixed URL-scraping issue).
+                                              - **CONFIRMED (masking)** for calendar's other 4 declared vendor adapters (cryptopanic_adapter,
+                                                lunarcrush_adapter, yfinance_earnings_adapter, polygon_corporate_actions_adapter) — verified via code-read
+                                                that `SentimentCalculator` (wraps the first 2) and `corporate_actions_handler.py` (wraps the last 2) are
+                                                DEAD CODE, never imported by `calendar_orchestrator.py`'s batch path nor wired into `cli/main.py`'s
+                                                `_OPERATIONS` map. Since `smoke_matrix.py` only ever invokes `--operation compute --mode batch`, these 4
+                                                adapters can NEVER cause the family-level check to fail, regardless of how broken they are — a stronger,
+                                                unconditional masking mechanism (coverage gap) distinct from the refuted partial-tolerance hypothesis.
+                                              - Total real vendor adapters actually inventoried: commodity 6 + calendar 6 (2 wired, 4 dead) = 12, not quite
+                                                the estimated ~16 — the estimate was in the right order of magnitude; no additional vendor adapters found in
+                                                either family beyond the 12 enumerated.
+
+                                              **Coordination note honoured**: ran against the POST-relocation `e2e-testing/scripts/<domain>/` location as
+                                              instructed (features-service's own `scripts/<family>/` dirs confirmed to no longer carry `smoke_matrix.py`).
+
+                                              **2 follow-up findings filed, not fixed inline** (outside this audit todo's own done-when):
+                                              `issues/features_service_catalogue_completeness_smoke_masking_findings_2026_08_01.md` (Baker Hughes
+                                              regression P2; calendar dead-code wire-vs-delete decision P2).
+
+                                              **1 big finding escalated separately** (discovered incidentally while running the required empirical test, out
+                                              of this todo's scope, filed immediately per the data-correctness "big finding" rule rather than absorbed):
+                                              `issues/features_e2e_smoke_matrix_writes_to_prod_bucket_2026_08_01.md` (P0) — ALL 8
+                                              `e2e-testing/scripts/<family>/smoke_matrix.py` harnesses set only `IS_TEST_RUN=true` in their subprocess env,
+                                              never the `PROTOCOL_DATA_SINK_BUCKET*` override each family's config actually requires to route away from
+                                              PROD — live-verified for commodity, calendar, AND delta_one (all 3 resolved to their PROD bucket name under
+                                              bare `IS_TEST_RUN=true`). Every real (non-dry-run) smoke_matrix.py invocation across every family has likely
+                                              been reading/writing PROD buckets, not the `-test-` buckets each file's own docstring claims.
+
 - [x] ✅ [CODE] P0. **UTL writer-side invariant bundle — three verbatim residuals in one repo pass** (Source:
       `data_pipeline_alert_substrate_residual_2026_07_24.md` Phase-4 + Phase-6-B items). (a) Make
       `record_captured`/`record_empty` assert the resolved GCS path `is_canonical()` before write, so a non-canonical
@@ -229,15 +296,55 @@ drift_direction: advance-code
       provisioned. All 3 source checkboxes flipped in `data_pipeline_self_healing_completion_residual_2026_07_24.md` (2)
       and `data_pipeline_alert_substrate_residual_2026_07_24.md` (1), with the false "already applied" prose corrected
       to past tense + the new evidence. `quality-gates.sh` green (sentinel-verified).
-- [ ] [PERF] P2. **Fix the real dp-audit OOM driver (the 16Gi bump is a band-aid).** `e2e-testing`'s
-      `data_pipeline_daily_digest.py` + `_dp_common.read_manifest_index` read the full index with `columns=None` and
-      then count-EXPAND into per-row Python lists (`["captured"]*N` for millions of rows). Restrict to
-      `read_manifest_index(columns=["pipeline_mode","venue","chain","data_type","capture_status"])` and aggregate counts
-      without list expansion, then confirm the jobs run green at ~4-8Gi. Source:
-      `data_pipeline_self_healing_completion_residual_2026_07_24.md`. **Coordination**: sequence AFTER the 16Gi bump
-      todo above (or re-verify against whatever limit is live) so a memory regression is not masked by the raised
-      ceiling. **Done when**: the column-restricted read + non-expanding aggregation land with a test, a real digest run
-      completes inside the reduced limit with the memory figure cited, and the source checkbox is flipped.
+- [x] ✅ [PERF] P2. **Fix the real dp-audit OOM driver (the 16Gi bump is a band-aid).** — `e2e-testing@5d7f53a` +
+      `e2e-testing@edd12c6`. Landed the prose's own ask (column-restricted `read_manifest_index` + non-expanding
+      aggregation) plus TWO further OOM contributors the measurement itself surfaced — neither visible from reading the
+      code, only from running it against real prod-scale data: (1) **column restriction** — `_digest_for_ag` now reads
+      `columns=["pipeline_mode","venue","chain","data_type","capture_status","schema_version"]` (added `schema_version`
+      beyond the todo's literal list — it's read off the SAME df for the v9-readiness gate, and omitting it would have
+      made `schema_version_readiness()` silently read every row as non-v9). `_dp_common.read_manifest_index` now peeks
+      the parquet footer schema first and drops any requested column an AG's index doesn't actually carry (only defi has
+      "chain" — pyarrow raises `ArrowInvalid` on a column-restricted read for any AG without it, confirmed via the
+      existing no-chain test fixture). The `overall` tally in `_digest_for_ag` now sums per-cell `CaptureCounts` fields
+      directly instead of the `["captured"]*N`-style list rebuild the todo flagged (though that specific expansion was
+      already cell-bounded, not row-bounded, since each cell's count is 0/1 pre-union — real find below was elsewhere).
+      (2) **`.str.lower()` speculative complex128 allocation** — `capture_status.astype(str).str.lower()` on a plain
+      object column routes through pandas' `map_infer_mask` → `maybe_convert_objects`, which speculatively allocates
+      full-length candidate buffers while probing for a numeric-castable result — on defi's real ~33.4M-row index this
+      alone MemoryError'd allocating a stray 510MiB complex128 array. Switched to the pyarrow-backed `"string"` dtype,
+      whose `.str.lower()` calls `pyarrow.compute.utf8_lower` directly (no Python-level type inference). (3)
+      **unnecessary `df.copy()`** — `_union_across_sources`'s defensive copy forced pandas to consolidate same-dtype
+      columns into one combined block via `np.vstack` (a further ~1.24GiB single allocation at defi's row count); the
+      copy was unneeded (the caller's later `schema_version_readiness(df)` only reads `df["schema_version"]`, unaffected
+      by mutation), so removed it. **Real measured verdict** (2026-08-01, run against live prod manifests, not a mock):
+      before any of these fixes, all 5 `dp-audit` Cloud Run jobs were confirmed already live-OOM-killing (see the
+      sibling 16Gi-bump todo above). After all three fixes, a real 5-AG digest run completes end-to-end
+      (cefi/defi/tradfi/sports/prediction all succeeded, one union `DP_DAILY_DIGEST` emitted) at **peak RSS ≈ 11.8GiB**
+      (`VmHWM`-measured, defi alone — the largest AG at ~33.4M rows — peaks ≈ 11.2GiB standalone). This is a large real
+      improvement over the pre-fix baseline (OOM-killing at 4Gi) and fits comfortably under the currently-provisioned
+      16Gi ceiling, but is **above** this todo's own aspirational "~4-8Gi" prose estimate — flagging that honestly
+      rather than rounding it down; further reduction (e.g. a DuckDB/streamed aggregation instead of pandas) would be
+      new scope, not part of this fix — tracked as the new todo directly below. 71/71 unit tests green
+      (`tests/unit/test_dp_audit.py`, 3 new: column restriction, missing-column graceful drop, digest requests the
+      restricted set), `quality-gates.sh` green on both commits (sentinel-verified).
+- [ ] [PERF] P3. **Further reduce dp-audit digest memory below the ~4-8Gi aspirational target (currently ~11.8GiB
+      measured).** Deferred from the item above: after the column-restriction + pyarrow-string-lower + no-copy fixes,
+      `e2e-testing`'s `data_pipeline_daily_digest.py` completes a real 5-AG run at peak RSS ≈ 11.8GiB (defi alone ≈
+      11.2GiB standalone, ~33.4M rows) — safely under the current 16Gi Cloud Run ceiling but above the original prose
+      estimate. The remaining cost is fundamentally `pandas.groupby` materialising a full-frame `object`-dtype DataFrame
+      for defi's row count; a genuine further reduction needs a different execution engine (e.g. DuckDB SQL aggregation
+      directly over the parquet bytes — see `manifest-consolidator-ssot.md`'s DuckDB-over-pandas precedent — or a
+      chunked/streamed groupby) rather than another pandas-level micro-fix. Low priority: not correctness-blocking, jobs
+      run green today. **Related**: `issues/read_availability_index_slim_read_oom_at_defi_scale_2026_08_01.md` (filed
+      same-day by a different worker) found the SAME class of problem in a DIFFERENT helper —
+      `unified_trading_library`'s `read_availability_index(columns=[...])` also OOMs at DeFi's current ~33.4M-row scale
+      despite its own column-projection contract — and independently confirms the `run-bounded-analysis.sh`
+      RLIMIT_AS-fallback false-positive this session also hit (an 8G `ulimit -v` cap failed well before real RSS
+      pressure; raising to 16-24G let the same code complete cleanly). That doc's DuckDB-workaround precedent is the
+      same direction noted above. **Done when**: the digest's peak RSS for the full 5-AG run is re-measured at ≤8Gi with
+      the same real-prod-data methodology (VmHWM via `/usr/bin/time -v`, not a mock), or a documented decision that
+      11.8GiB is an acceptable steady state and the Cloud Run job's memory allocation stays at 16Gi (in which case
+      downgrade/close this todo instead of chasing the estimate further).
 - [x] ✅ [SCRIPT] P0. **Close the two remaining `audit_criteria_automation` honest-SKIPs and add the v9-readiness
       gate.** — `unified-trading-library@fb63477a` + `e2e-testing@98d499a`. CF-10 (phantom) now runs a real GREEN/RED
       via `--mode full` (reuses `reconcile_phantom_manifest_rows_all.py --dry-run`, cached per asset_group), staying an
@@ -255,15 +362,25 @@ drift_direction: advance-code
       duplicate alert alongside the existing `DP_NOT_V9` WARN). Both source checkboxes in
       `data_pipeline_alert_substrate_residual_2026_07_24.md` flipped in the same turn. Both repos' `quality-gates.sh`
       green.
-- [ ] [CODE] P2. **Add the two missing UTL event-string constants and the per-source rate-limit health event.** (a) UTL
-      `events/event_types.py` + `events/__init__` export: add `DP_DAILY_DIGEST` and `DP_HYGIENE_SUMMARY` (verified
+- [x] ✅ [CODE] P2. **Add the two missing UTL event-string constants and the per-source rate-limit health event.** (a)
+      UTL `events/event_types.py` + `events/__init__` export: add `DP_DAILY_DIGEST` and `DP_HYGIENE_SUMMARY` (verified
       absent 2026-07-26 — the routing already works via the UAC rule matching the event string, so this is cleanliness,
       but the constants genuinely do not exist yet). (b) MTDS: emit a per-source
       `SOURCE_RATE_LIMITED{source, venue,     http_429_count}` and `SOURCE_KEY_POOL_EXHAUSTED` event to
       `data-pipeline-alerts` (C5 — the TheGraph 9-key pool, Databento, etc.). Source:
       `data_pipeline_alert_substrate_residual_2026_07_24.md`. **Done when**: both constants exist and are exported with
       UTL QG green, the MTDS emit lands with a test asserting the 429-count payload, and both source checkboxes are
-      flipped.
+      flipped. — **ALREADY-LANDED, found during finalize todo-1 reconciliation (2026-07-30, this commit) — NOT shipped
+      by this batch.** Both halves landed via the sibling
+      `data_pipeline_alert_substrate_residual_2026_07_24_finalize_2026_07_30.md` gated-twin plan, dated AFTER this
+      batch's own 2026-07-26 "verified absent" premise: (a) `unified-trading-library@0f851fd6` (2026-07-30) adds
+      `DP_DAILY_DIGEST`/`DP_HYGIENE_SUMMARY` to `events/event_types.py` + `events/__init__` export. (b)
+      `market-tick-data-service@7f42c557` (2026-07-30) — `DP_SOURCE_RATE_LIMITED{source,venue,http_429_count}` extended
+      to Databento's `DatabentoIPRateLimiter` (TheGraph's half already existed via `477de66c`); `DP_KEY_POOL_EXHAUSTED`
+      correctly does not apply to Databento post-cutover (single canonical key, no pool to exhaust). Both source
+      checkboxes in `data_pipeline_alert_substrate_residual_2026_07_24.md` are flipped there (verified — that doc is now
+      archived at `/plans/archive/2026_07/data_pipeline_alert_substrate_residual_2026_07_24.md`). This batch's own
+      checkbox was simply never re-synced after the sibling plan shipped; flipping now closes that gap.
 - [x] ✅ [CODE] P1. **RESOLVED 2026-07-28 — root cause was NOT alerting-service code (none of the doc's 3 named
       hypotheses); it was a project-wide Cloud Logging sink exclusion.** `gcloud logging read` on the live
       `dp-alerting-subscriber` (project `central-element-323112`) returned **zero** `run.googleapis.com/stdout` or
@@ -513,10 +630,15 @@ drift_direction: advance-code
   (`/codex/02-data/availability-manifest-and-data-status.md`) forbids scheduling a dedicated walk just for this, so it
   lands when the owning L3 canonicalisation plans walk, not on a batch cadence. The doc also carries an unresolved
   `[⚠️ NEEDS VERIFICATION 2026-07-21]` marker on its cefi/tradfi/prediction owner rows.
-- **`data_pipeline_hardening_self_monitoring_2026_06_22.md`** (1 open `[INFRA] P0`, "9 live data VMs frozen 5.5-32h,
-  silently RUNNING, zero capture"). Dated 2026-06-22 — a specific month-old incident, not a standing defect. It needs a
-  fresh live-fleet re-measure before anyone acts (the named VMs are long gone); re-measuring is cheap but belongs with
-  `/vm-preemption-billing-waste-audit`, not a batch todo that would re-diagnose a stale snapshot.
+- **`/plans/active/data_pipeline_hardening_self_monitoring_2026_06_22.md`** (1 open `[INFRA] P0`, "9 live data VMs
+  frozen 5.5-32h, silently RUNNING, zero capture"). Dated 2026-06-22 — a specific month-old incident, not a standing
+  defect. It needs a fresh live-fleet re-measure before anyone acts (the named VMs are long gone); re-measuring is cheap
+  but belongs with `/vm-preemption-billing-waste-audit`, not a batch todo that would re-diagnose a stale snapshot.
+  **OWNERSHIP RESOLVED 2026-07-31** (corpus-wide ownership-conflict sweep): this routing stands and reflects current
+  reality (the source doc's own 2026-07-25 re-verification found **zero** matching instances in either cloud, so there
+  is nothing left to batch-diagnose) — but "routed away" is not "unowned". **The source doc RETAINS the todo**; batch2
+  cites it and does not own it. The `/vm-preemption-billing-waste-audit` skill is the execution mechanism, not a new
+  owner.
 - **`data_feed_sla_registry_and_active_self_healing_2026_06_19.md`** (2 open). Both are fleet dependency/CVE ops, not
   data-pipeline work: the msgpack `>=1.2.1` bump is 21/23 repos done and blocked on alerting-service's
   version/internal-dep-alignment gate plus agent-orchestrator's foreign UI test infra, and the vcrpy
@@ -595,6 +717,10 @@ drift_direction: advance-code
 - **`issues/live_pipeline_persistence_hot_path_decoupling_2026_06_24.md`** (`status: blocked`, 0 open) — PROMOTED
   2026-06-25 into `live_data_persistence_central_event_log_2026_06_25.md`; the issue doc is the problem record, the plan
   is the executable SSOT.
+
+## Progress Log
+
+- **context-scout 2026-08-01**: populated/refreshed context_scope (5 entries).
 - **`issues/live_tardis_machine_and_hl_aster_s3_batch_2026_06_21.md`** (0 open) — its substantial residual (run the
   HL/ASTER batch launcher over the 2023→26 / 2024→26 ranges, 48.5k `attempted_failed` cells) is tracked in the **cefi**
   tranche's `data_completion_cefi_2026_07_15.md`, and the batch1 finalize already retags this doc `[cefi]`.

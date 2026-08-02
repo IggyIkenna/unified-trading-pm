@@ -6,7 +6,9 @@ summary:
   manifest migration completion.
 status: active
 nature: process
-asset_group: [cross-cutting]
+asset_group:
+  [ui] # corrected 2026-07-30 (ui-tranche launch) -- was [cross-cutting]; title/summary are deployment-api/
+  # deployment-ui data-status tab UI bugs, the new ui tranche's exact scope
 stage: [meta]
 repos: [deployment-api, deployment-service, deployment-ui, instruments-service, market-tick-data-service, ml-service]
 scope: [engineer, admin]
@@ -35,6 +37,12 @@ source:
   ]
 assigned_role: backend_engineer
 drift_direction: advance-code
+context_scope:
+  [
+    /plans/archive/issues/deployment_ui_fleet_git_nav_entry_regression_2026_07_28.md,
+    /codex/06-coding-standards/ui-testing-layers.md,
+    /plans/audit/results/data_status_tab_and_instruments_download_audit_2026_06_16.md,
+  ]
 ---
 
 # Data-status tab + instruments download remediation
@@ -426,3 +434,10 @@ for blank-chain manifest rows that produce phantom entries" is explicitly gated 
 tracked within this document (see the `### APPLY-GATE todos` section). Searched `plans/active/` + `plans/epics/` for a
 plan that has since taken ownership of this specific sub-bucket phantom-row audit — none found. This plan remains the
 owner; the item stays blocked until this plan's own APPLY-GATE + TIER-2 v9 migration land.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30**: KEEP-NA, valid — `locked_by: live-defi-rollout`; carries an explicit APPLY GATE
+  requiring operator eyeball of every service × asset_group projected index before any TIER-2 `--apply`, and 3 UI todos
+  blocked on a separate playwright-suite regression doc.
+- **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).

@@ -161,3 +161,9 @@ of a venue-day outage.
       yet wired into any write/read guard (that's Stage 3, still future work per the `[DESIGN] P1` todo above). Stale
       checkbox flip per the same Deferred-item re-check — commit verified to exist.
 - [ ] [DATA] P3. Schema v10 `instrument_id_form` + backfill classification (Stage 2), after the v2 dedup `--apply`.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30** (tranche=cefi, autonomous): KEEP-NA, valid - `nature: design`,
+  APPROVED-IN-PRINCIPLE only; the open `[DESIGN]` todo is closing 3 adversarially-confirmed architecture gaps before
+  write-enforce.

@@ -114,3 +114,26 @@ Confirmed a **second victim** of the same mechanism (review slot-1 msg 1892; mai
   (memory/CPU contention) is a shared driver with the host-oversubscription flag.
 - Sibling: /plans/active/issues/killed_slot_orphans_committed_unpushed_work_no_push_path_2026_07_21.md (the orphaned
   commit terminal state); this doc adds the specific reaper-vs-in-flight-quickmerge mechanism that produces it.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30**: KEEP-NA, valid — all 3 open todos are held by established rulings in
+  `ao_satellite_ao_dispatch_batch1_2026_07_26.md`: the `[INFRA] P1` reaper fix is named in the conflict-gated
+  worker-liveness cluster, the `[INFRA] P1` `/done` on-origin gate 'must land as one change' with
+  `orchestrator_failover_double_dispatch_duplicate_work_2026_07_25.md`'s `/done` item and interacts with the unresolved
+  operator-merge-gate question, and the `[INFRA] P1` slot-8/slot-9 commit recovery is in the operator-decision list
+  ('needs foreign-worktree access plus a judgment call on whether specific commits are superseded').
+- **2026-07-31 (conflict-gated re-triage)**: Three findings. (1) The `/done`-on-origin gate item's blocking governance
+  question is now ANSWERED — `watchdog_unpushed_sweep_defeats_operator_merge_gate_2026_07_26.md`'s gate-aware sweep
+  shipped `agent-orchestrator@49c919d`; this item is unblocked and ready to work directly (still unbuilt). (2) The
+  reaper-overeagerness item (CPU-progress-on-descendant-process-tree check) is a DIFFERENT check than the shipped fix
+  (which gates on `last_ping`/blocked-queue state, not process-tree CPU) — confirmed by direct code read, still unbuilt,
+  not resolved by anything shipped so far. (3) **The slot-8/slot-9 commit-recovery item is very likely MOOT** — both
+  source plans that carried the blocked critical-path work
+  (`/plans/archive/2026_07/sports_closeout_batch1_ao_ready_2026_07_24.md`,
+  `/plans/archive/2026_07/sports_closeout_batch1_finalize_2026_07_24.md`) are now fully ARCHIVED with 0 open todos and
+  evidenced completion on every item, including the sports middle-leg feature work this doc's `-010`/`-011` tasks were
+  part of. Neither archived plan names this doc directly or these specific slot/sha pairs, so this is inference from
+  "the blocking critical path fully landed and archived" rather than a direct commit citation — worth a 5-minute direct
+  check (does `features-service` have BOTH commits from slots 9 and 8 on origin, or did only one supersede the other)
+  before formally closing this item, but not treated as still-live work.

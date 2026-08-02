@@ -22,7 +22,7 @@ created: 2026-04-17
 authoritative_for: [AccountInstruction operator-driven account-ops envelope]
 referenced_by: [/codex/04-architecture/strategy-execution-protocol.md]
 owner:
-last_reviewed: 2026-05-17
+last_reviewed: 2026-08-31
 code_refs:
 ---
 
@@ -215,7 +215,10 @@ params:
   resume_at_utc: "2026-04-17T18:00Z"
 ```
 
-Strategies emitting during pause get `ACCOUNT_PAUSED` response; queue instructions.
+Strategies emitting during pause get `ACCOUNT_PAUSED` response; queue instructions. **(`ACCOUNT_PAUSED` is a
+specified response code, not a shipped symbol — verified absent workspace-wide 2026-07-31. `AccountInstruction`
+itself IS shipped: UAC `internal/architecture_v2/schemas.py`, driven by
+`execution_service/v2/account_orchestrator.py::AccountInstructionOrchestrator`.)**
 
 ## Risk gate behavior
 

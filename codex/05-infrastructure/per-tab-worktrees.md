@@ -273,14 +273,15 @@ is a known archived/consolidated repo. SSOT for the incident + remediation:
 
 ### Troubleshooting
 
-| Symptom                                                                                                                                                                                   | Likely cause                                                                                                                                                                                         | Fix                                                                                                                                                                                                                                                                                                                                                                        |
-| ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `--init` reports `SKIP <repo>` for an unexpected repo                                                                                                                                     | Repo not cloned as sibling under `$WORKSPACE_ROOT`                                                                                                                                                   | Re-run `bash scripts/workspace/workspace-bootstrap.sh --skip-fresh` to clone missing repos; then re-run `--init` (idempotent).                                                                                                                                                                                                                                             |
-| `--reset-slot <N>` aborts with "dirty file(s)" + an unfamiliar file                                                                                                                       | Foreign-agent WIP OR runtime artifact (e.g. `.local-dev-cache/`, `catboost_info/`)                                                                                                                   | Per CLAUDE.md "Two teammates" rule: do NOT `git checkout --` foreign WIP. For runtime artifacts: discard with `git checkout --`. For WIP: commit/stash.                                                                                                                                                                                                                    |
-| prek auto-restore wipes your edits mid-session                                                                                                                                            | Per-slot `PREK_CACHE_DIR` not exported (direnv not loading `.envrc`)                                                                                                                                 | Manually: `source $WORKSPACE_ROOT/.tabs/<N>/.envrc` before any commit, OR install direnv + run `direnv allow`.                                                                                                                                                                                                                                                             |
-| A slot clone silently falls dozens/hundreds of commits behind `origin/live-defi-rollout` even though the FF-pull cron runs                                                                | **FF-pull starvation**: an uncommitted local edit COLLIDES with an incoming changed file, so every `git pull --ff-only` aborts. Both crons treat "couldn't FF" as a benign skip, so nothing alerts.  | The **FF-pull starvation watchdog** pages on this (below): a `FF-PULL STARVATION — slot N / repo` message lands in the slot inbox naming the colliding files. Remediate: `git stash push -- <colliding paths> && git pull --ff-only && (commit-or-restore the stash)`. The colliding file is usually foreign WIP — **stash-by-name, do NOT discard**.                      |
-| `git pull` / `git fetch --tags` rejected with `! [rejected] vX.Y.Z (would clobber existing tag)` (commonly after a 1.0.0 graduation)                                                      | **Stale local release tag**: a local tag points at a different object than the remote's same-named tag, re-created by **semver-agent** (the SSOT for version tags).                                  | **`git fetch origin --tags --force`** — a **local-only** ref update pointing the stale local tags at the canonical remote objects. No commits lost, nothing pushed. Then `git pull --ff-only`. **Never** force-push local tags to remote (can revert a semver bump). `slot-cron-ff-pull.sh` fetches `--tags --force`, so cron-driven hosts auto-heal between manual pulls. |
-| A slot clone's `git fsck` FAILS with `invalid sha1 pointer` / `invalid reflog entry` for an object "missing" from the store (VM git-health guard alerts "genuine missing/broken objects") | **Reference-clone prune hazard** (below): the base clone's default auto-gc pruned an unreachable object that a slot's stale ref/reflog still points at. The base's gc has no knowledge of slot refs. | **Prevent:** `git -C <base> config gc.pruneExpire never` on every base (asserted by `setup-tab-worktrees.sh` at clone time + `fleet-git-health-guard.sh` every 15 min). **Repair a broken slot:** reset the stale local ref off the missing object (`git update-ref refs/heads/<b> origin/<b>`) + `git reflog expire --stale-fix --all`, then re-fsck. See § below.        |
+| Symptom                                                                                                                                                                                                                                                                                                                | Likely cause                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           | Fix                                                                                                                                                                                                                                                                                                                                                                        |
+| ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `--init` reports `SKIP <repo>` for an unexpected repo                                                                                                                                                                                                                                                                  | Repo not cloned as sibling under `$WORKSPACE_ROOT`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     | Re-run `bash scripts/workspace/workspace-bootstrap.sh --skip-fresh` to clone missing repos; then re-run `--init` (idempotent).                                                                                                                                                                                                                                             |
+| `--reset-slot <N>` aborts with "dirty file(s)" + an unfamiliar file                                                                                                                                                                                                                                                    | Foreign-agent WIP OR runtime artifact (e.g. `.local-dev-cache/`, `catboost_info/`)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     | Per CLAUDE.md "Two teammates" rule: do NOT `git checkout --` foreign WIP. For runtime artifacts: discard with `git checkout --`. For WIP: commit/stash.                                                                                                                                                                                                                    |
+| prek auto-restore wipes your edits mid-session                                                                                                                                                                                                                                                                         | Per-slot `PREK_CACHE_DIR` not exported (direnv not loading `.envrc`)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   | Manually: `source $WORKSPACE_ROOT/.tabs/<N>/.envrc` before any commit, OR install direnv + run `direnv allow`.                                                                                                                                                                                                                                                             |
+| A slot clone silently falls dozens/hundreds of commits behind `origin/live-defi-rollout` even though the FF-pull cron runs                                                                                                                                                                                             | **FF-pull starvation**: an uncommitted local edit COLLIDES with an incoming changed file, so every `git pull --ff-only` aborts. Both crons treat "couldn't FF" as a benign skip, so nothing alerts.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    | The **FF-pull starvation watchdog** pages on this (below): a `FF-PULL STARVATION — slot N / repo` message lands in the slot inbox naming the colliding files. Remediate: `git stash push -- <colliding paths> && git pull --ff-only && (commit-or-restore the stash)`. The colliding file is usually foreign WIP — **stash-by-name, do NOT discard**.                      |
+| `git pull` / `git fetch --tags` rejected with `! [rejected] vX.Y.Z (would clobber existing tag)` (commonly after a 1.0.0 graduation)                                                                                                                                                                                   | **Stale local release tag**: a local tag points at a different object than the remote's same-named tag, re-created by **semver-agent** (the SSOT for version tags).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    | **`git fetch origin --tags --force`** — a **local-only** ref update pointing the stale local tags at the canonical remote objects. No commits lost, nothing pushed. Then `git pull --ff-only`. **Never** force-push local tags to remote (can revert a semver bump). `slot-cron-ff-pull.sh` fetches `--tags --force`, so cron-driven hosts auto-heal between manual pulls. |
+| A slot clone's `git fsck` FAILS with `invalid sha1 pointer` / `invalid reflog entry` for an object "missing" from the store (VM git-health guard alerts "genuine missing/broken objects")                                                                                                                              | **Reference-clone prune hazard** (below): the base clone's default auto-gc pruned an unreachable object that a slot's stale ref/reflog still points at. The base's gc has no knowledge of slot refs.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   | **Prevent:** `git -C <base> config gc.pruneExpire never` on every base (asserted by `setup-tab-worktrees.sh` at clone time + `fleet-git-health-guard.sh` every 15 min). **Repair a broken slot:** reset the stale local ref off the missing object (`git update-ref refs/heads/<b> origin/<b>`) + `git reflog expire --stale-fix --all`, then re-fsck. See § below.        |
+| A repo's test/QG run fails with `ImportError: cannot import name 'X'` (or similar) while importing/probing a **sibling** repo's code (e.g. unified-trading-pm's capability-schema tests reading strategy-service's live engine registry) — even though that sibling's own quality-gates is green on its current branch | **Stale sibling `.venv` on THIS slot**: each slot's sibling clones have fully independent `.venv`s (3-tier isolation above). A fleet-wide dependency bump landing in the sibling's `pyproject.toml`/`uv.lock` does **not** retroactively refresh any slot's already-built venv — only the NEXT `uv sync` in that specific clone does. Confirmed 2026-07-31: `strategy-service/.venv` on slot 2 had `fastapi==0.135.1` installed while its own `pyproject.toml`/`uv.lock` already required `0.140.7` (a fleet-wide CVE-remediation bump shipped 2026-07-28, `plans/active/issues/cve_affected_pinned_deps_remediation_2026_06_18.md`) — a cross-repo probe in unified-trading-pm's tests hit `ImportError: cannot import name 'iter_route_contexts' from 'fastapi.routing'` purely from the stale venv. | **Self-service first, don't escalate**: `cd <sibling-repo> && uv sync`, then verify — e.g. `.venv/bin/python -c "import <pkg>; print(<pkg>.__version__)"` should match the version pinned in that repo's own `uv.lock`. No code/pyproject change needed; this is a local environment refresh, not a dependency-resolution bug.                                             |
 
 ### Reference-clone prune hazard (codified 2026-07-13)
 
@@ -461,6 +462,61 @@ worktree-level (separate index/working tree). Separate clones drop the entire **
 (deleted fleet-wide), the tab-rebase/upstream self-heal in `slot-cron-ff-pull.sh`, and the diverged-tab recovery class.
 Contention moves to **LDR push-time** (rebase-on-reject), already handled by quickmerge STAGE 0.4.
 
+### What worktree isolation does NOT cover (codified 2026-07-30)
+
+Worktree/clone isolation covers exactly three things: the **working tree**, the **index**, and **HEAD**. Two surfaces
+that agents routinely assume are isolated are NOT, and both have caused real data loss:
+
+**1. `refs/stash` is a SINGLE shared LIFO stack per `.git` directory — not per worktree.** Multiple `git worktree`s on
+ONE clone (including the `Agent` tool's `isolation: "worktree"` scratch worktrees under `.claude/worktrees/<id>/`) all
+push to and pop from the same stack. Worker A's `git stash push` followed by worker B's `git stash pop` pops **A's**
+entry, not B's — silently, with no conflict and no warning. **Confirmed incident 2026-07-30**: a push/pop race between
+two concurrent sharded tranche workers of `/na-eligibility-audit` swapped two workers' unrelated changesets. This is
+distinct from (and additive to) the "never `git stash drop` foreign WIP" rule below — here nobody drops anything, the
+stack just hands the wrong entry to the wrong worker.
+
+- **HARD RULE**: never `git stash` while running as one of several concurrent workers on a shared clone. Need a
+  pristine-tree comparison? Use a **throwaway second worktree at HEAD** — `git worktree add <scratch> HEAD`, read it,
+  `git worktree remove <scratch>` — which IS properly isolated. The `--autostash` flavours drive the same stack, so
+  prefer `git pull --ff-only` from an already-clean tree over `git pull --rebase --autostash` in that shape. (Per-SLOT
+  clones are separate `.git` dirs and therefore separate stash stacks — the hazard is concurrency WITHIN one clone,
+  which is the normal shape for sub-agents and for the sharded per-tranche audit workers.)
+- Note the asymmetry with the neighbouring rules: separate slot CLONES made cross-slot index collisions unrepresentable,
+  which is exactly why the remaining shared-state surfaces are easy to forget.
+
+**2. A shared scratch/temp filesystem path is not isolated either.** If two agents resolve the same scratchpad or temp
+directory (a shared `TMPDIR`, a hardcoded workspace-relative scratch dir, a per-session path that two sub-agents of the
+same session both inherit), they will clobber each other's intermediate files with no git involvement at all. Scope
+scratch artifacts by a unique per-agent token (agent id / PID / `mktemp -d`), never by a name two concurrent workers can
+both derive.
+
+**3. `.git/COMMIT_EDITMSG` is a single unlocked file per `.git` directory — `git commit` invocations racing in the same
+clone can swap MESSAGES across each other while each keeps its OWN correct tree (root-caused 2026-07-30,
+`/plans/archive/issues/shared_clone_concurrent_commit_message_swap_2026_07_28.md`).** Every `git commit`, including a
+non-interactive `git commit -m "..."`, still writes its message to `.git/COMMIT_EDITMSG` early (right after the
+`pre-commit` hook) and only reads it back — to actually build the commit object — after the `prepare-commit-msg` and
+`commit-msg` hooks finish. Unlike the index (`index.lock`, exclusive) and `HEAD` (compare-and-swap; a losing writer gets
+`fatal: cannot lock ref 'HEAD': is at ... but expected ...`), **that message file has no locking at all.** If a second
+`git commit` in the same clone — including one that ultimately FAILS (a branch-drift rejection, a prettier/plan-hygiene
+auto-fix forcing a re-stage) — writes to `COMMIT_EDITMSG` while a first, slower invocation is still inside its own hook
+chain (prek's formatter/linter/checker set commonly runs hundreds of ms–seconds), the first invocation's final commit
+object gets ITS OWN tree (built from the index it already staged) but the SECOND process's message. Confirmed by direct
+reproduction (a scratch repo + an artificial slow `prepare-commit-msg` hook): a clean `index.lock`/ref-CAS failure rules
+out the index and `HEAD` as the culprit, and prek's own patch-stash tempfiles are PID-namespaced (`<ts>-<pid>.patch` —
+not shared), leaving `COMMIT_EDITMSG` as the confirmed, reproduced root cause.
+
+- **HARD RULE — one `git commit` in flight at a time per clone.** Do not run two `git commit` invocations (yours + a
+  sub-agent's, or two sub-agents sharing this slot's index per "Within-slot ergonomics" below) concurrently against the
+  same `.git` directory. Serialize: finish (or cleanly abort) one commit before starting the next.
+- **Detection, not prevention, already ships**: `scripts/quickmerge.sh`'s Commit+Push+Flip step compares
+  `git log -1 --format=%s` against the subject line it intended to commit and prints a loud `WARN` (never silently) on a
+  mismatch — it does not auto-`--amend` (a swapped-in message may belong to a process still relying on its own HEAD
+  read). Treat any such WARN as license to re-verify the SHA before citing it as `- [x] ... — <repo>@<sha>` evidence.
+- This is a distinct mechanism from item 2 in that issue doc's "Corroboration" section (`git commit` silently picking up
+  a FOREIGN process's staged files into the tree) — that one is a real index-sharing hazard requiring
+  `git diff --cached --stat` + `git restore --staged <foreign-file>` before every commit (see "Within-slot ergonomics"
+  below); this one (message-only) can happen even when the tree is provably clean.
+
 ## Within-slot ergonomics
 
 Every slot clone's `.envrc` declares:
@@ -490,8 +546,22 @@ the slot clone's index. Master agent mitigations:
 A slot clone commits ON `live-defi-rollout` and pushes straight to it. If the push is **rejected as behind** (a peer
 landed first), aligning is a **content merge, not a pointer overwrite**:
 
-1. `git pull --rebase --autostash` (quickmerge STAGE 0.4 does this for you) — replays YOUR commits onto current LDR,
-   dropping patch-id duplicates.
+1. **Case-split by whether you already have a local commit ahead of origin (`ahead`-count) — that is the variable that
+   decides fast-forward eligibility, not file-content overlap** (decided fix 2026-08-01,
+   `autostash_pop_restores_foreign_wip_into_the_index_2026_07_17.md` — see the non-conflict hazard subsection below for
+   the incident this closes):
+   - **`ahead=0` (pre-commit — no local commit yet)**: `git pull --ff-only` only. quickmerge STAGE 0.4
+     (`_qm_stage_0_4_not_behind_gate`) does this for you and, on ff-only failure at `ahead=0`, reports
+     `PRECOMMIT_WORKING_TREE_CONFLICT` and **blocks instead of falling back to `--rebase --autostash`** — with no local
+     commit for rebase to replay, an ff-only failure here can only be a working-tree content overlap (a dirty tracked
+     file the incoming diff also touches), and autostashing anyway would stash-and-repop the WHOLE dirty tree — every
+     OTHER foreign file in this shared checkout, not just the overlapping one — for zero reconciliation benefit.
+   - **`ahead>0` (post-commit — you already have a local commit ahead of origin)**: this IS genuine commit-graph
+     divergence — `git pull --rebase --autostash` (quickmerge STAGE 0.4 does this for you) replays YOUR commits onto
+     current LDR, dropping patch-id duplicates. **Immediately after the pop, BEFORE your own `git add <files>`, run
+     `git restore --staged .` unconditionally** — it only unstages (never touches working-tree content, so it can't
+     destroy anything), guaranteeing your index holds only what you explicitly `git add` this round regardless of what
+     the autostash pop restaged.
 2. **Resolve each conflict keeping BOTH sides' genuine work.** Additive plan/doc/code from both agents survives. Where
    two agents independently wrote the **same** rule/fix (a "two-similar" conflict), MERGE into the single best version
    (fold the weaker subset into the stronger superset — don't keep redundant duplicates). Incident 2026-06-03: a slot
@@ -535,6 +605,36 @@ git cat-file -e origin/live-defi-rollout:<path> && echo "exists" || echo "absent
 These commands read the locally-cached `origin/live-defi-rollout` ref, which is updated by any `git fetch` and is not
 overwritten by concurrent session fetches (unlike `FETCH_HEAD`, which is a single file updated on every fetch).
 
+### Non-conflict autostash-pop hazard — foreign WIP silently lands in your index (2026-07-17)
+
+Distinct from the CONFLICT case in the next subsection. The stage-by-name rule ("`git add <your files>`, never
+`git add .`/`-A`") assumes naming your own files is sufficient to keep a concurrent agent's uncommitted work out of your
+commit. In a shared per-slot checkout it is NOT, on the happy (non-conflict) path.
+
+`--autostash` = `git stash` + restore. The restore re-applies the stashed changes **and their index state** — foreign
+files that were merely dirty in the working tree (not staged by you) come back **staged**. A subsequent `git commit`
+commits the whole index, so it sweeps up every foreign file regardless of what you passed to `git add`. It is invisible
+pre-commit: `git status` correctly reports the foreign files as "Changes not staged for commit" right up until the pull,
+and the post-pull index is never re-inspected. **Measured 2026-07-17**: `unified-trading-pm@1a59516af` was meant to add
+ONE new issue doc; it landed with 3 files — a foreign agent's 157-insertion/125-deletion in-progress plan edit and a
+brand-new issue doc they had not yet committed, published under this slot's authorship. Not data loss (the content was
+intact on origin), but mis-attribution and premature publication of WIP the owning agent hadn't chosen to ship yet.
+
+**The fix splits on `ahead`-count, not content overlap** (decided 2026-08-01, full derivation in
+`autostash_pop_restores_foreign_wip_into_the_index_2026_07_17.md`) — see step 1 of the Reconciliation list above:
+
+- **Pre-commit (`ahead=0`)**: skip the autostash path entirely — ff-only-or-block (`PRECOMMIT_WORKING_TREE_CONFLICT`).
+  Shipped 2026-08-01, `unified-trading-pm@72bdb200e`.
+- **Post-commit (`ahead>0`)**: keep `--rebase --autostash` (genuine commit-graph divergence — rebase is what keeps
+  `live-defi-rollout` linear instead of littering it with merge commits), but immediately after the pop, BEFORE your own
+  `git add <files>`, run `git restore --staged .` unconditionally.
+
+**Do NOT "fix" a sweep after the fact by reverting.** Once pushed, the foreign content is the other agent's only
+committed copy of that work — a revert or force-push to "clean up" the attribution deletes their uncommitted work,
+turning a cosmetic problem into real data loss (force-pushing a shared branch is independently banned regardless). The
+correct response to a sweep that already happened: leave it, tell the operator, and let the owning agent carry on (their
+tree simply shows those files as already-committed after their next pull).
+
 ### Autostash conflict recovery on rebase
 
 When `git pull --rebase --autostash` (or `git rebase`) reports `Applying autostash resulted in conflicts`, the autostash
@@ -553,6 +653,39 @@ contain the ONLY copy of a foreign agent's uncommitted WIP:
 **NEVER do `git checkout HEAD -- <file>` then `git stash drop`**: `git checkout HEAD -- <file>` discards ALL uncommitted
 content for that file — if the autostash held a foreign agent's only WIP copy for that path, it is permanently gone
 (UNRECOVERABLE). The autostash drop follows silently and the WIP is lost with no warning.
+
+### Stash-pile regrowth signal (2026-07-30, stash_pile_workspace_cleanup_2026_06_03.md Phase 5)
+
+The autostash-conflict pattern above means `refs/stash` piles regrow silently between manual `audit-stash-pile.sh`
+sweeps — nothing un-stashes on its own, and per the multi-agent-safety HARD RULE a foreign WIP stash is never
+auto-dropped. `scripts/dev/slot-git-status-report.sh` (already running every 5 minutes per slot) now carries a
+WARNING-only watchdog: `scripts/dev/stash-pile-detect.sh` measures each repo's stash `count` and the age (in days) of
+its OLDEST entry, and the reporter pings the slot's inbox (deduped once per episode, same mechanism as the existing
+FF-pull-starvation watchdog) when either threshold trips. **It never touches `git stash`** — no read of stash content,
+no apply, no drop; remediation stays the existing `audit-stash-pile.sh` dry-run-then-`--apply` runbook.
+
+**Thresholds — measured, not invented** (2026-07-30, one laptop, 4 populated slots + the main-workspace clone,
+`unified-trading-pm`):
+
+| Slot / clone   | count | oldest entry             |
+| -------------- | ----- | ------------------------ |
+| slot 1         | 45    | 9-10 days                |
+| slot 2         | 10    | 10 days                  |
+| slot 3         | 33    | ~5 weeks                 |
+| slot 4         | 1     | (residual, post-cleanup) |
+| main-workspace | 11    | ~8 weeks                 |
+| slots 5-11     | 0     | —                        |
+
+The split is clean: a "still normal churn" slot sits at ≤11 entries with a max age around 10 days; a genuinely regrown
+pile sits at 33+ entries with entries running 5-8 weeks old. Chosen thresholds (env-overridable —
+`STASH_WARN_COUNT`/`STASH_WARN_AGE_DAYS` on the reporter, `STASH_PILE_WATCHDOG=0` disables the whole check):
+
+- **count > 15** — comfortably above the observed normal-churn ceiling (11), comfortably below the observed regrown-pile
+  floor (33).
+- **oldest entry > 14 days** — one confirmation-window's worth of buffer past the observed normal-churn max (10 days),
+  short enough to catch a pile going stale well before it reaches the multi-week range.
+
+Either condition alone trips the warning (an old-but-small pile, e.g. one long-forgotten stash, still deserves a nudge).
 
 ### Silent duplicate-file resurrection after a rebase/stash-pop (2026-07-25)
 

@@ -35,6 +35,13 @@ assigned_vm: planning
 resolved_by:
 locked_by:
 locked_since:
+context_scope:
+  [
+    /codex/05-infrastructure/deployment-observability.md,
+    /codex/05-infrastructure/vm-launcher-runbook.md,
+    /plans/active/deployment_registry_firestore_p3_cutover_2026_07_14.md,
+    deployment-service/scripts/vm/setup-data-pipeline-vm-aws.sh,
+  ]
 ---
 
 # What I found
@@ -157,50 +164,63 @@ own QG-verified change + a real soak before P3's checklist is re-run).
       `gcloud`/Firestore REST/`gsutil`, not reused from this doc's original numbers):
 
       Launched 5 real (non-benchmark) production VMs via their normal launchers: `funding-ensemble-paper-20260730-034022`
-          (`launch-funding-ensemble-paper-cron-vm.sh`), `batch-live-recon-20260729-20260730-033916`
-          (`launch-batch-live-recon-cron-vm.sh`), `disaster-drill-cron-20260730-033955`
-          (`launch-disaster-drill-cron-vm.sh`), `datapoint-validation-tradfi-20260730-034632`
-          (`launch-datapoint-validation-vm.sh tradfi`), `orphan-sweep-tradfi-20260730-034704`
-          (`launch-orphan-sweep-vm.sh tradfi`). 2 of the 5 (batch-live-recon, disaster-drill-cron) hit a pre-existing,
-          **unrelated** `setup-data-pipeline-vm.sh` dispatch-branch gap (no `VM_TASK=batch-live-recon` branch; unrecognized
-          `VM_SERVICE=chaos-drill`) and SETUP FAILED before ever reaching the heartbeat/registration code — filed as
-          `setup_data_pipeline_vm_dispatch_gap_batch_live_recon_chaos_drill_2026_07_30.md` (confirmed via `git show deba676`
-          that this fix never touched the `VM_TASK`/`VM_SERVICE` dispatch `elif` chain). The other 3 all completed setup and
-          exercised the heartbeat path cleanly.
+                                                                                                                                      (`launch-funding-ensemble-paper-cron-vm.sh`), `batch-live-recon-20260729-20260730-033916`
+                                                                                                                                      (`launch-batch-live-recon-cron-vm.sh`), `disaster-drill-cron-20260730-033955`
+                                                                                                                                      (`launch-disaster-drill-cron-vm.sh`), `datapoint-validation-tradfi-20260730-034632`
+                                                                                                                                      (`launch-datapoint-validation-vm.sh tradfi`), `orphan-sweep-tradfi-20260730-034704`
+                                                                                                                                      (`launch-orphan-sweep-vm.sh tradfi`). 2 of the 5 (batch-live-recon, disaster-drill-cron) hit a pre-existing,
+                                                                                                                                      **unrelated** `setup-data-pipeline-vm.sh` dispatch-branch gap (no `VM_TASK=batch-live-recon` branch; unrecognized
+                                                                                                                                      `VM_SERVICE=chaos-drill`) and SETUP FAILED before ever reaching the heartbeat/registration code — filed as
+                                                                                                                                      `setup_data_pipeline_vm_dispatch_gap_batch_live_recon_chaos_drill_2026_07_30.md` (confirmed via `git show deba676`
+                                                                                                                                      that this fix never touched the `VM_TASK`/`VM_SERVICE` dispatch `elif` chain). The other 3 all completed setup and
+                                                                                                                                      exercised the heartbeat path cleanly.
 
-          1. **Fleet writing Firestore, doc count ≈ live-VM count** — MECHANISM CONFIRMED, literal fleet-wide parity still
-             converging (expected). Firestore `deployments` `status=running` query returned exactly the VMs booted AFTER
-             the fix: my 3 successful soak VMs (`funding-ensemble-paper-...` transitioned running→completed within its
-             ~31s run; `datapoint-validation-tradfi-...` and `orphan-sweep-tradfi-...` both live `status=running`,
-             `last_heartbeat_at` advancing every ~60s: 03:49:34→03:50:35→03:51:37→03:52:39Z) **plus a 4th, INDEPENDENT VM I
-             never launched** (`canonical-migration-defi-relabel-lending-20260730-035025-solend`, some other slot/process),
-             also `status=running` — proof the project-metadata fallback works fleet-wide for ANY freshly-booted VM, not
-             just my test cases. Of the ~19 VMs `RUNNING` in GCE at measurement time, only these 4 are Firestore-represented
-             — the other ~15 (`cefi-hyperliquid-*`, `mtds-dex-swaps-backfill-*`, `vm-zombie-watchdog`, `prediction-live-*`,
-             etc.) are long-running processes that booted well before this fix landed (`deba676`, 03:11:34 UTC) and never
-             re-read the corrected metadata — they'll converge into Firestore as the pre-fix population naturally cycles
-             (completes/restarts), not because the fix is incomplete. This is the expected transient shape of a
-             read-at-boot fallback, not a residual failure.
-          2. **Resource stats read from the Firestore surface** — PASSES. Live doc for
-             `datapoint-validation-tradfi-20260730-034632` (`deployment_id=612fc353-ebc7-453c-9775-2ea7097f7c8d`):
-             `cpu_pct=5.7, mem_pct=14.7, disk_pct=4.7` — real non-zero values, not placeholders (confirmed 3 successive
-             heartbeat samples in the GCS `host_metrics_window`, each ~60s apart).
-          3. **Per-VM `/{id}/detail` retrievable from Firestore** — PASSES against a genuinely LIVE (not reap-created) VM
-             this time (closing the original doc's gap #3): `GET /api/vm-deployments/612fc353-ebc7-453c-9775-2ea7097f7c8d`
-             on `uts-shared-deployment-api` returned the full live record, `status: "running"`, `health_status: "starting"`,
-             matching the Firestore/GCS state exactly.
-          4. **Parity (Firestore doc == GCS blob for N live deployments)** — PASSES. Firestore doc and
-             `gs://deployment-scripts-central-element-323112/deployments/active/612fc353-ebc7-453c-9775-2ea7097f7c8d.json`
-             are field-identical for the same live, running deployment (`status`, `cpu_pct`, `mem_pct`, `disk_pct`,
-             `last_heartbeat_at`, `started_at` all match byte-for-byte).
+                                                                                                                                      1. **Fleet writing Firestore, doc count ≈ live-VM count** — MECHANISM CONFIRMED, literal fleet-wide parity still
+                                                                                                                                         converging (expected). Firestore `deployments` `status=running` query returned exactly the VMs booted AFTER
+                                                                                                                                         the fix: my 3 successful soak VMs (`funding-ensemble-paper-...` transitioned running→completed within its
+                                                                                                                                         ~31s run; `datapoint-validation-tradfi-...` and `orphan-sweep-tradfi-...` both live `status=running`,
+                                                                                                                                         `last_heartbeat_at` advancing every ~60s: 03:49:34→03:50:35→03:51:37→03:52:39Z) **plus a 4th, INDEPENDENT VM I
+                                                                                                                                         never launched** (`canonical-migration-defi-relabel-lending-20260730-035025-solend`, some other slot/process),
+                                                                                                                                         also `status=running` — proof the project-metadata fallback works fleet-wide for ANY freshly-booted VM, not
+                                                                                                                                         just my test cases. Of the ~19 VMs `RUNNING` in GCE at measurement time, only these 4 are Firestore-represented
+                                                                                                                                         — the other ~15 (`cefi-hyperliquid-*`, `mtds-dex-swaps-backfill-*`, `vm-zombie-watchdog`, `prediction-live-*`,
+                                                                                                                                         etc.) are long-running processes that booted well before this fix landed (`deba676`, 03:11:34 UTC) and never
+                                                                                                                                         re-read the corrected metadata — they'll converge into Firestore as the pre-fix population naturally cycles
+                                                                                                                                         (completes/restarts), not because the fix is incomplete. This is the expected transient shape of a
+                                                                                                                                         read-at-boot fallback, not a residual failure.
+                                                                                                                                      2. **Resource stats read from the Firestore surface** — PASSES. Live doc for
+                                                                                                                                         `datapoint-validation-tradfi-20260730-034632` (`deployment_id=612fc353-ebc7-453c-9775-2ea7097f7c8d`):
+                                                                                                                                         `cpu_pct=5.7, mem_pct=14.7, disk_pct=4.7` — real non-zero values, not placeholders (confirmed 3 successive
+                                                                                                                                         heartbeat samples in the GCS `host_metrics_window`, each ~60s apart).
+                                                                                                                                      3. **Per-VM `/{id}/detail` retrievable from Firestore** — PASSES against a genuinely LIVE (not reap-created) VM
+                                                                                                                                         this time (closing the original doc's gap #3): `GET /api/vm-deployments/612fc353-ebc7-453c-9775-2ea7097f7c8d`
+                                                                                                                                         on `uts-shared-deployment-api` returned the full live record, `status: "running"`, `health_status: "starting"`,
+                                                                                                                                         matching the Firestore/GCS state exactly.
+                                                                                                                                      4. **Parity (Firestore doc == GCS blob for N live deployments)** — PASSES. Firestore doc and
+                                                                                                                                         `gs://deployment-scripts-central-element-323112/deployments/active/612fc353-ebc7-453c-9775-2ea7097f7c8d.json`
+                                                                                                                                         are field-identical for the same live, running deployment (`status`, `cpu_pct`, `mem_pct`, `disk_pct`,
+                                                                                                                                         `last_heartbeat_at`, `started_at` all match byte-for-byte).
 
-          **Net**: 3 of 4 criteria fully PASS with fresh live evidence; criterion 1's underlying mechanism is confirmed
-          correct but literal fleet-wide doc-count parity is still converging as the pre-fix VM population cycles out —
-          this is expected, not a new defect. Soak VMs `datapoint-validation-tradfi-...` and `orphan-sweep-tradfi-...` are
-          safe read-only single-walk audits and were left running to completion (not force-killed) since they're doing
-          genuine production work as a side effect of the soak.
+                                                                                                                                      **Net**: 3 of 4 criteria fully PASS with fresh live evidence; criterion 1's underlying mechanism is confirmed
+                                                                                                                                      correct but literal fleet-wide doc-count parity is still converging as the pre-fix VM population cycles out —
+                                                                                                                                      this is expected, not a new defect. Soak VMs `datapoint-validation-tradfi-...` and `orphan-sweep-tradfi-...` are
+                                                                                                                                      safe read-only single-walk audits and were left running to completion (not force-killed) since they're doing
+                                                                                                                                      genuine production work as a side effect of the soak.
 
-- [ ] [DOC] P2. Once the soak confirms criteria 1-4 all pass, note the clear in
+- [x] ✅ [DOC] P2. Once the soak confirms criteria 1-4 all pass, note the clear in
       `deployment_registry_firestore_p3_cutover_2026_07_14.md`'s Progress Log (its own text: don't flip its
       `assigned_vm` — its remaining GO/NO-GO items stay operator-supervised per its own text even once this precondition
-      clears) so P3's own next worker knows the HALT can be reconsidered (repo: unified-trading-pm).
+      clears) so P3's own next worker knows the HALT can be reconsidered (repo: unified-trading-pm). — this commit
+      (unified-trading-pm). Honest note, not a blind "all pass": per this doc's soak todo above, only 3/4 criteria FULLY
+      pass with fresh evidence — criterion 1's mechanism is confirmed correct (every freshly-booted VM now writes
+      Firestore correctly) but literal fleet-wide doc-count parity is still converging as the pre-fix VM population
+      cycles out, so criteria 1-4 do NOT yet ALL literally pass this checklist's bar. Added a Progress Log entry to the
+      P3 doc stating this precisely — 3/4 full pass + criterion 1 mechanism-confirmed-but-converging — so the HALT is
+      explicitly NOT lifted by the note, but the next P3 worker/operator has the fresh evidence + a clear "reconsider
+      once doc-count tracks the live fleet" signal instead of stale pre-fix numbers.
+
+## Progress Log
+
+- **context-scout 2026-08-01**: verified the 2 pre-existing context_scope entries still resolve and are relevant (kept
+  in place), added the gated downstream cutover plan + the exact AWS-launcher source file the remaining OPERATOR todo
+  targets — refreshed (4 entries).

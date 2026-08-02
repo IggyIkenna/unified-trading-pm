@@ -44,6 +44,12 @@ source:
     unified-api-contracts/pyproject.toml,
     unified-trading-library/pyproject.toml,
   ]
+context_scope:
+  [
+    /plans/archive/issues/hatch_vcs_main_tag_ancestry_gap_breaks_cross_repo_pip_install_2026_07_26.md,
+    /plans/active/issues/fleet_wide_qg_capacity_crisis_continues_day2_2026_07_29.md,
+    /plans/archive/issues/defi_wizard_batch2_018_residual_findings_2026_07_26.md,
+  ]
 ---
 
 ## What I found
@@ -116,7 +122,7 @@ proven correct via local reproduction — see that issue doc — but never succe
       `defi_wizard_batch2_018_residual_findings-004`/`-005` (the YAML is fully drafted and locally-verified — see that
       issue doc's evidence — just needs a clean real-CI run to merge with confidence). Repos: unified-trading-system-ui,
       unified-trading-pm.
-- [ ] [CICD] P3. **Addendum (slot 4, 2026-07-26)**: independently re-derived the same layer-1/layer-2 diagnosis while
+- [x] ✅ [CICD] P3. **Addendum (slot 4, 2026-07-26)**: independently re-derived the same layer-1/layer-2 diagnosis while
       picking up `defi_wizard_batch2_018_residual_findings-004` concurrently with slot 2 — see the sibling doc
       `hatch_vcs_main_tag_ancestry_gap_breaks_cross_repo_pip_install_2026_07_26.md` for the concurrently-completed
       root-cause work (its own todo 1). Also hit a THIRD, separate symptom while re-verifying on scratch PRs
@@ -128,7 +134,15 @@ proven correct via local reproduction — see that issue doc — but never succe
       Actions-disabled/billing issue (`actions/permissions` shows enabled, GitHub status page green). Whoever picks up
       the P3 re-verify todo above should check whether this recurs — if `pull_request` events are still silently
       dropping intermittently, that's a SEPARATE Actions-delivery reliability issue worth its own investigation
-      (possibly GitHub-side, possibly an org webhook config), not the tag-ancestry bug this doc tracks.
+      (possibly GitHub-side, possibly an org webhook config), not the tag-ancestry bug this doc tracks. — **DONE
+      2026-08-02T16:35Z (slot 3, data_engineering) — CONCLUSIVE, does not recur.** Every prior check (9 sessions,
+      2026-07-31 through 2026-08-01) was inconclusive-by-absence (no open PR existed to test against). This check had
+      real data: 4 merged PRs in the last 3 days (#379/#380/#381/#382, `gh pr list --state closed --limit 5`), each
+      cross-referenced against `gh api .../actions/runs?event=pull_request` by exact `created_at`. All 4
+      `pull_request`-triggered runs fired **3-5 seconds** after their PR's `createdAt` — no gap anywhere close to the
+      original 20+-minute stall. The original symptom (scratch PRs #353/#357/#358/#359, 2026-07-26) does not recur;
+      treating as resolved rather than reopening a fresh investigation — if it resurfaces, that's new evidence
+      warranting its own issue doc, not a reason to leave this checkbox open indefinitely on a non-repro.
 
 ## 2026-07-26 premature-dispatch finding + `depends_on`/`gate_on_depends` fix (slot 10)
 
@@ -177,3 +191,281 @@ the full command trail. Re-ran this doc's own P3 todo (`gh run rerun 30217824955
   newly-exposed blockers are independently fixed" rather than re-diagnosing tags again. Not filing new issue docs for
   the 2 new blockers in this pass (out of this doc's scope, no further investigation done on either) — flagging here so
   the next picker-upper doesn't mistake them for a tag-fix regression.
+
+## 2026-07-31 blocker 1 fixed (registry content regen); blocker 2 already fixed; a 3rd blocker found — NOT this doc's scope
+
+Picked up this doc's own P3 todo 3 fresh. Fresh-pulled the fleet, re-checked `main`'s last 10+ `CI - Test & Lint` runs.
+
+**Blocker 1 (registry-drift's own stale-content failure) — FIXED this session.** Set up `git worktree` checkouts of
+UAC/UTL/PM at their actual `main` tips (the exact refs `registry-drift`'s job checks out — NOT `live-defi-rollout`,
+which can differ), built a throwaway py3.13 venv, and ran the documented regen command CI-faithfully. Confirmed genuine,
+large drift: `archetype_count` 23→53 (+30 archetypes accumulated on UAC main since the file was last regenerated —
+TSMOM/DEFI_LP/PORTFOLIO_FACTOR_ALLOCATION/etc — 6197 lines of content-normalized diff, not a formatting artifact). No
+`MVP_CME_EXCHANGE_CODES` import warning this time (38 codes extracted cleanly) — that part of the 07-27 finding is gone
+(unrelated prior fix, not reinvestigated). Regenerated, ran `prettier --write` to match the committed style, and
+confirmed the new committed file content-normalizes BYTE-IDENTICAL to a fresh generation (the exact check
+`registry-drift`'s `Diff ui-reference-data.json` step runs). Shipped: `unified-trading-system-ui@dfbfff68`
+(`fix(registry): regenerate ui-reference-data.json from UAC/UTL main`).
+
+**Blocker 2 (e2e's `.gitleaks.toml` ENOENT) — already fixed by someone else, prior to this session.** `git log` shows
+`1306658c fix(ci): replace dangling .gitleaks.toml symlink with real file copy`, already on both `main` and
+`live-defi-rollout` (`git ls-tree` confirms `100644` regular blob, not a `120000` symlink, on both). Not this session's
+work — noting it here so the "3 consecutive greens" bar isn't miscounted against a blocker that's already gone.
+
+**Blocker 3, newly found — a flaky `test` job failure, NOT filing a new issue doc, cross-referencing instead.** 3 of the
+last ~10 `main` CI runs (e.g. `30544453841`, `30543110912`, `30403417035`) show the `test` job itself failing on
+`tests/unit/components/strategy-catalogue/admin-editor-wiring.test.tsx` ("surfaces the load error banner on GET failure"
+— `TestingLibraryElementError: Unable to find an element by: [data-testid="admin-editor-load-error"]`), which skips
+`registry-drift`/`e2e` entirely (both `needs: test`). Ran this exact test file in isolation locally 5/5 times — 100%
+pass, 6-8s each — ruling out a real app/test bug. The failing CI runs show adjacent
+`ECONNREFUSED 127.0.0.1:8030`/`socket hang up` noise from concurrent workers in the same log, and separately observed
+`gh api .../actions/runners` showing exactly ONE `glue-ip-172-31-5-118-1` runner (shared, frequently `busy`) with 2-3
+runs sitting `queued` for 1-2.5+ hours at time of writing. This matches, symptom-for-symptom, the ALREADY-TRACKED,
+still-open multi-day incident `plans/active/issues/fleet_wide_qg_capacity_crisis_continues_day2_2026_07_29.md`
+(host-contention-induced timeouts/hangs on the same shared `glue` runner fleet, `i-0c9b283b31d6b5ca7`) — that doc's own
+entries repeatedly conclude "host contention, no code fix" for symptomatically-identical CI flakes. Not duplicating a
+new issue doc for this; deliberately cross-referencing instead.
+
+**Verdict / what's left**: this doc's registry-drift-specific scope is now fully unblocked in principle (both real
+blockers fixed). The "3 consecutive green `main` pushes" bar itself is NOT yet observed — it requires the fix above to
+actually run to completion on `main` via the LDR→main promotion cycle, competing for the same contended single runner
+tracked by the day2 capacity doc, so wall-clock to observe 3 greens could span hours and depends on that separate
+incident's trajectory, not on anything left to do in THIS doc. Leaving todo 3 unchecked pending that live observation —
+whoever next has a natural CI-status check in flight (or the next `/check-agent-orchestrator`-adjacent session) should
+glance at `gh run list --workflow "CI - Test & Lint" --branch main --repo IggyIkenna/unified-trading-system-ui` and, if
+3 consecutive `registry-drift: success` are visible, flip the checkbox and move on to the
+capability-manifest.json/capability-verdict-matrix.json CI-check extension the todo also names.
+
+## Deferred work after 2026-07-31 (pre-compact checkpoint, slot 7)
+
+| Item                                                                               | State / why deferred                                                                                                                                                                                  | Blocked on                                                                                                                                     |
+| ---------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| Todo 3: 3 consecutive `registry-drift: success` on `main`                          | Cannot be done yet — the fix (`unified-trading-system-ui@dfbfff68`) is shipped and its first verification run (`30635331302`) has been `queued` since 13:39:22Z (2h43m+ at last check, zero movement) | Elapsed real time on the contended shared `glue` runner (see `fleet_wide_qg_capacity_crisis_continues_day2_2026_07_29.md`) — not work, waiting |
+| Todo 4: capability-manifest.json/capability-verdict-matrix.json CI-check extension | Not started — explicitly gated behind todo 3 by the todo's own wording ("Once the above is resolved... THEN pick up...")                                                                              | Todo 3                                                                                                                                         |
+
+**Recommended next item**: re-check
+`gh run list --workflow "CI - Test & Lint" --branch main --repo IggyIkenna/unified-trading-system-ui --json databaseId,status,conclusion,createdAt --limit 10`
+and, per-run,
+`gh run view <id> --repo IggyIkenna/unified-trading-system-ui --json jobs -q '.jobs[] | select(.name=="registry-drift") | .conclusion'`
+— once `30635331302` (or its successor push) resolves, count consecutive `registry-drift: success` results back from the
+newest completed run. 3 in a row → flip todo 3's checkbox with the run IDs as evidence, then start todo 4 (the
+capability-manifest/verdict-matrix CI-check YAML is already drafted per
+`defi_wizard_batch2_018_residual_findings-004`/`-005`, cited above — it just needs a clean real-CI merge). A background
+poller (5-min interval, self-heartbeating, `MAX_CYCLES=48` ≈ 4h cap) may still be running in slot 7's session scratchpad
+watching exactly this — if so, its next completion notification carries the answer; if that session has since ended, the
+check above reproduces it from scratch in under a minute.
+
+**Lessons for whoever picks this up next**:
+
+- The registry-drift job's own `main`-tip-vs-committed-file diff check is CI-faithful only if you regenerate against
+  UAC/UTL/PM's actual `main` tips (via `git worktree add ... origin/main --detach`), NOT `live-defi-rollout` — the two
+  can differ meaningfully (confirmed here: LDR-tip UAC differs from main-tip UAC often enough that this file drifts
+  repeatedly, per the git history of `fix(registry): refresh/regenerate ...` commits on this same file).
+- `busy: true` on `gh api .../actions/runners` does NOT mean YOUR run is progressing — cross-check
+  `gh api .../actions/runs?status=in_progress` for the SAME repo; if that's empty while the runner is busy, the runner
+  is busy on a DIFFERENT repo's job (the "glue" runner fleet is shared cross-repo by name, not per-repo-exclusive
+  despite each repo having its own `/actions/runners` registration entry).
+- A queued-but-not-failed CI run has NO retrigger remedy — the established "resolve via retrigger" posture in the
+  capacity-crisis doc applies to runs that already failed/died from contention, not ones still waiting for the runner.
+  Don't waste a retrigger on a run that's simply queued.
+- Markdown pre-commit/prettier reformatting can mangle spacing around adjacent inline-code spans in long wrapped
+  paragraphs (observed + fixed in this same doc, see the Blocker 3 paragraph above) — worth a visual re-read of any long
+  backtick-dense paragraph after it round-trips through a commit, not just a diff-stat check.
+
+## 2026-07-31 ~18:47Z re-check (slot 14) — still queued, still not this doc's work to do
+
+Picked up todo 3 fresh via `/boot`. Re-ran the exact recommended check:
+`gh run list --workflow "CI - Test & Lint" --branch main --repo IggyIkenna/unified-trading-system-ui --json databaseId,status,conclusion,createdAt,updatedAt --limit 15`.
+
+All three runs the prior (slot 7 pre-compact) entry named as pending are **still `queued`, zero progress**:
+`30635331302` (created 13:39:22Z, `updatedAt` unchanged at 13:39:22Z — 5h+ with no state transition at all),
+`30627739825` (created 11:38:27Z, `updatedAt` 18:43:37Z — touched recently but still `queued`, not `in_progress`),
+`30625075106` (created 10:53:00Z, `updatedAt` 18:18:16Z — same). `gh api .../actions/runners` shows the single
+`glue-ip-172-31-5-118-1` runner still `busy: true`. Host `uptime` on this orchestrator VM: load average
+11.02/14.40/14.11 on 16 vCPU — elevated again versus the prior entry's 18:08:44Z "eased" reading (6.00/6.85/7.17),
+consistent with `fleet_wide_qg_capacity_crisis_continues_day2_2026_07_29.md`'s own documented
+"fluctuating-but-still-elevated," not resolved, pattern.
+
+No consecutive-green count is observable yet — the last 3 runs before these are still `queued` are `failure`
+(2026-07-30, pre-dating this doc's own fixes having had a chance to run). Per this doc's own established lesson ("a
+queued-but-not-failed CI run has NO retrigger remedy... don't waste a retrigger on a run that's simply queued"), not
+retriggering. This is the third session in a row (session-3 2026-07-27, slot-7 pre-compact 2026-07-31, this one) to find
+the identical genuinely-external-wait state — nothing left to DO here until the shared runner fleet actually drains and
+one of these runs transitions to `in_progress`/`completed`. Leaving todo 3 unchecked; self-skipping this task rather
+than holding the slot idle-waiting (mirrors slot 10's 2026-07-26 `reason_code: GATED` skip earlier in this same doc) so
+the slot can pick up other queued work instead of busy-polling a condition only external CI capacity can change.
+
+## 2026-07-31 ~19:36Z re-check (slot 15) — real partial movement this time, but still not resolved
+
+Picked up todo 3 fresh. Unlike the prior 3 checks (zero state transitions), this session observed **genuine forward
+progress**: run `30635331302`'s `test` job left `queued` for the first time in this doc's history, ran, and
+**succeeded** (`19:03:08Z` → `19:11:12Z`, ~8 min). Watched via a bounded 30-min background poll (5-min interval) rather
+than a single snapshot, specifically to distinguish "still stuck" from "about to move."
+
+**But `registry-drift` itself (the job this todo actually gates on) never got a turn.** Once `test` passed, both
+`registry-drift` and `e2e` immediately re-queued for the same single `glue-ip-172-31-5-118-1` runner and sat there for
+25+ minutes with zero further state change (confirmed via 6 samples at `19:05/19:10/19:15/19:21/19:26/19:31Z`, then a
+final fresh check at `19:36:40Z` — all identical: `registry-drift=queued`). `gh api .../actions/runners` still shows the
+one runner `busy: true` — per this doc's own established lesson, that does not mean progress on THIS run, since the
+runner is shared cross-repo.
+
+**Verdict**: still not this doc's work to do — the blocker is 100% the same tracked external capacity incident
+(`fleet_wide_qg_capacity_crisis_continues_day2_2026_07_29.md`), not a code or config issue. The new data point worth
+keeping for the next picker-upper: `test` passing confirms the pip-install/tag-ancestry fix AND the registry-content
+regen fix (both already shipped) are not themselves blocking anything — the entire remaining gap is queue depth on the
+one shared runner. No consecutive-green count observable yet (0 of 3 target runs have reached `registry-drift`
+completion). Leaving todo 3 unchecked; self-skipping this task (4th session in a row, `reason_code: GATED`) rather than
+holding the slot — same posture as the three prior sessions.
+
+## 2026-07-31 ~19:50Z re-check (slot 12) — same 3 runs, `e2e` now progressing, `registry-drift` still queued
+
+Picked up todo 3 fresh via `/boot`. Re-ran the exact recommended check on the same 3 pending runs
+(`30635331302`/`30627739825`/`30625075106`) plus per-job status:
+
+- All 3 runs: `test` job = `success` (confirms slot 15's finding still holds).
+- `30625075106`: `e2e` now `in_progress` (first movement on `e2e` observed across all sessions so far) —
+  `registry-drift` still `queued`.
+- `30635331302`, `30627739825`: both `e2e` AND `registry-drift` still `queued`.
+- `gh api .../actions/runners` → single `glue-ip-172-31-5-118-1` runner, `busy: true`;
+  `gh api .../actions/runs?status=in_progress` for this repo → **0** — confirms (per this doc's own established lesson)
+  the runner is busy on a different repo's job, not making progress on any of these 3 runs' `registry-drift` step.
+
+**Verdict**: identical externally-gated state as the last 2 sessions (slot 14 at 18:47Z, slot 15 at 19:36Z) — no new
+code work available, 0 of 3 target runs have reached `registry-drift` completion, so the "3 consecutive green" bar
+remains unobserved. This is purely the shared-runner capacity incident draining on its own schedule. Leaving todo 3
+unchecked; self-skipping this task (5th session in a row, `reason_code: GATED`) — same posture as slots 10/14/15.
+
+## 2026-07-31 ~20:xxZ re-check (slot 4) — IDENTICAL state to slot 12, zero movement in 10+ min — flagging redispatch churn
+
+Picked up todo 3 fresh via `/boot` (`already_in_progress: true`, `dispatch_reason: "resume"`). Re-ran the exact same
+check on the exact same 3 runs:
+
+- All 3 runs: `test` = `success` (unchanged).
+- `30625075106`: `e2e` = `in_progress` (unchanged from slot 12's reading).
+- `30635331302`, `30627739825`: `e2e` = `queued` (unchanged).
+- All 3: `registry-drift` = `queued` (unchanged — still 0 of 3 target runs reached completion).
+- `gh api .../actions/runners` → single `glue-ip-172-31-5-118-1` runner, `busy: true`;
+  `gh api .../actions/runs?status=in_progress` for this repo → **0** (unchanged).
+
+**This is byte-for-byte the same observable state slot 12 recorded ~10-15 minutes ago** — no state transition occurred
+between that check and this one. This is now the **6th consecutive session** (slots 10, 14, 15, 12, and this one, plus
+the original slot-7 pre-compact entry) to `/boot` this exact todo, spend a check confirming nothing changed, and
+self-skip. Per the workspace CLAUDE.md async-wait/poll-discipline HARD RULE ("a bare skip re-queues it to re-dispatch
+every cycle with zero new information — a textbook async-wait/poll-discipline violation... gate it behind a condition so
+it only re-dispatches once the fleet actually advances") — this doc's own todo 3 has now hit exactly that pattern.
+Posting a `/blocked` (not a code question — a scheduling one: should this task be parked via `priority_override` + a
+`registry-drift-observable` prerequisite condition, gated on the tracked capacity incident, so it stops burning a fresh
+worker dispatch every cycle for identical zero-new-information reads) with `can_continue: true` and moving to other
+queued work rather than holding this slot on a 7th identical poll. Leaving todo 3 unchecked; self-skipping
+(`reason_code: GATED`) — same posture as the 5 prior sessions, but flagging the churn itself as the actionable finding
+here.
+
+## 2026-08-01 ~09:36-09:45Z re-check (slot 9) — todo 4's own ask (pull_request-stall recurrence), new queue-depth record, no code regression found
+
+Dispatched todo 4 (this doc's own `[CICD] P3` addendum item — id `-003`), not todo 3. Its concrete ask is narrower than
+todo 3's: "whoever picks up the P3 re-verify todo above should check whether [the `pull_request`-event stall] recurs."
+Checked that directly rather than repeating todo 3's exhausted 3-run poll:
+
+- **No open PRs currently exist on `unified-trading-system-ui`** (`gh pr list --state open` → `[]`), so there is no live
+  case to reproduce the original 20+-minute `pull_request`-event-delivery stall against. The most recent
+  `pull_request`-triggered runs are all from 2026-07-31T13:32Z (the `dfbfff68` promote PR) and fired normally — no gap
+  observed between repo activity and run dispatch in the available data. **Inconclusive, not clean**: absence of a
+  currently-open PR means this check cannot positively confirm the symptom is gone, only that it isn't observable right
+  now. Whoever next has a live PR in flight on this repo should re-check
+  `gh api repos/IggyIkenna/unified-trading-system-ui/actions/runs?event=pull_request` against that PR's actual open
+  time.
+- **Confirmed the tracked capacity incident (`fleet_wide_qg_capacity_crisis_continues_day2_2026_07_29.md`) is still open
+  and was updated as recently as ~07:52Z today (2026-08-01)** — i.e., ~1h45m before this check, not a stale reference.
+- **New queue-depth record**: run `30635331302` (the actual post-fix verification run per the 2026-07-31 "blocker 1
+  fixed" entry — `dfbfff68` landed before this run was dispatched) has now been sitting `queued` since
+  `2026-07-31T13:39:22Z` — **~20h as of this check**, its `registry-drift` job still `status: queued`, never started.
+  This exceeds every previously-logged queue-depth figure in either doc (prior worst: ~3h+). `30627739825` similarly
+  unchanged (`e2e`=`in_progress`, `registry-drift`=`queued`).
+- **One of the 3 originally-tracked runs, `30625075106`, finally completed** (`conclusion: cancelled`, its
+  `registry-drift` job `conclusion: failure`) — but this is **not a regression**: `30625075106` was created
+  `2026-07-31T10:53:00Z`, which is BEFORE the `dfbfff68` registry-content-regen fix landed (the doc's own 07-31 entry
+  identifies `30635331302`, created 13:39:22Z, as the FIRST run to test the fix). Pulled the actual job log
+  (`gh run view --job 91235842697 --log`): the job ran end-to-end (checkout → pip install → regen → diff), reaching the
+  `Fail on stale registry` step with `archetype_count: 23` (committed, stale pre-fix content) vs `53` (fresh regen) —
+  the exact drift signature the doc's 07-31 entry already diagnosed and fixed. This confirms the diff mechanism works
+  correctly and that no new drift/regression exists on the actual fix commit; it's simply a stale-queued pre-fix run
+  finally getting a turn on the runner and correctly failing against content that was superseded 20+ hours ago.
+  `e2e`=`cancelled` (superseded), consistent with GitHub's own supersede-check behavior on an outdated run.
+- `gh api .../actions/runners` → single `glue-ip-172-31-5-118-1` runner, still `busy: true`;
+  `gh api .../actions/runs?status=in_progress` for this repo → **0** (same signature as every prior entry — the runner
+  is busy on a different repo's job).
+
+**Verdict**: todo 4's own ask is inconclusive-by-absence (no open PR to test against) rather than resolved — recommend
+whoever next opens a PR on this repo do the check with a live case. Todo 3's blocker is unchanged in kind (same tracked
+external capacity incident) but WORSE in degree (new 20h queue-depth record) — still zero code work available on this
+doc's own scope. No repo state changed by this check; no code or config touched. Leaving todo 3 and todo 4 unchecked;
+self-skipping this task (`reason_code: GATED`) — 7th consecutive session to hit this doc's capacity blocker, same
+posture as the 6 prior sessions. Did not re-post a duplicate `/blocked` (slot 4's scheduling question above already
+covers the parking ask; a generic worker session doesn't have `data/config/backlog.yaml` write access to self-action it
+per RULES.md §4's "main agent + operator" scoping — flagging for main/operator to action, not re-asking).
+
+## 2026-08-01 ~10:10Z re-check (slot 15) — byte-identical to slot 9's check 30 min earlier; self-skip is auto-parking, no further manual action needed
+
+Picked up todo 4 (`-003`) fresh via `/boot` (`already_in_progress: true`). Re-ran the same checks slot 9 ran ~30 min
+prior: `gh pr list --state open` on `unified-trading-system-ui` → still `[]` (no live PR to test the
+`pull_request`-stall question against — unchanged). The 2 still-pending runs (`30635331302`, `30627739825`) show
+unchanged `updatedAt` timestamps vs slot 9's reading — zero state transition. `gh api .../actions/runners` → single
+`glue-ip-172-31-5-118-1` runner, `busy: true`; `gh api .../actions/runs?status=in_progress` for this repo → **0** (same
+signature). The sibling `fleet_wide_qg_capacity_crisis_continues_day2_2026_07_29.md` doc is still `status: open`,
+`last_updated: 2026-08-01`.
+
+**Not re-deriving the same finding at length** — this is now the 8th consecutive session with zero new information on
+this doc's capacity blocker. **Correction to prior sessions' stated limitation**: found that a generic worker session
+does NOT actually need `data/config/backlog.yaml` write access to action the parking slot 4 asked about —
+`agent-orchestrator/server/auto_park.py` already implements exactly that recipe automatically:
+`POST /api/slots/<N>/skip-current-task` with `reason_code: "GATED"` is counted per-task, and once the count crosses
+`tuning.dispatch_cooldown_auto_park_skip_threshold`, the server itself applies `priority: 999` +
+`priority_override: true` + a synthetic `auto_unpark__<task_id>` prerequisite (idempotent — a task already parked is
+left alone) — no hand-edit needed, no operator action needed to trigger it, and no duplicate `/blocked` needed. Calling
+`/skip-current-task` with `reason_code: GATED` (as every prior session in this doc has already been doing) IS the
+correct self-action; it was already accumulating toward auto-park with each skip. Doing the same now. Leaving todo 3 and
+todo 4 unchecked; self-skipping (`reason_code: GATED`).
+
+## 2026-08-01 ~10:2xZ re-check (slot 12) — byte-identical, 9th consecutive session, no new information
+
+Picked up todo 4 (`-003`) fresh via `/boot` (`already_in_progress: true`, `dispatch_reason: "resume"`). Re-ran the same
+checks: `gh pr list --state open` on `unified-trading-system-ui` → still `[]` (unchanged — no live PR to test the
+`pull_request`-stall question against). `30635331302`/`30627739825` unchanged (`updatedAt` identical to slot 15's 10:10Z
+reading). One new run appeared (`30695614270`, created 10:23:26Z) but is itself `queued`, adding to the backlog rather
+than resolving it. `gh api .../actions/runners` → single `glue-ip-172-31-5-118-1` runner, still `busy: true`;
+in-progress runs for this repo → **0** (same signature — runner busy on a different repo's job). No code or config work
+available on this doc's own scope. Self-skipping (`reason_code: GATED`) per the now-confirmed auto-park mechanism —
+leaving todo 3 and todo 4 unchecked.
+
+## 2026-08-02T16:35Z re-check (slot 3, data_engineering) — real forward progress on both remaining todos
+
+Dispatched todo 4 (`-003`). Found the runner-capacity blocker has cleared since the last check (2026-08-01 ~10:2xZ):
+`registry-drift` is now completing (not stuck `queued`) on recent `main` runs (`30701483984`, `30695614270`,
+`30627739825`) — but failing on genuine fresh content staleness (`archetype_count: 23` committed vs `53` current UAC),
+the same drift class the 2026-07-31 `dfbfff68` fix addressed once already. Confirmed via job log
+(`gh run view --job ... --log`), not inferred.
+
+**Todo 4 — CONCLUSIVE at last (flipped above).** 9 prior sessions were inconclusive-by-absence (no open PR to test
+against). This check had 4 real merged PRs (#379-#382, 2026-07-31 through 2026-08-02) — cross-referenced each
+`createdAt` against `gh api .../actions/runs?event=pull_request`: every `pull_request`-triggered run fired within 3-5
+seconds. The original 2026-07-26 20+-min stall does not recur.
+
+**Todo 3 — picked up the now-actionable regen (adjacent work, same doc, RULES.md findings-triage) rather than leaving
+another "still gated" entry.** Repeated the exact CI-faithful recipe from the 2026-07-31 `dfbfff68` fix: detached
+`git worktree`s of UAC/UTL/PM at their real `origin/main` tips (not `live-defi-rollout`), throwaway py3.13 venv, ran
+`generate_ui_reference_data.py` with explicit `--uac-root`/`--pm-root`, content-normalized diff confirmed genuine
+staleness, copied the fresh output into `lib/registry/ui-reference-data.json`, committed (pre-commit hook chain auto-ran
+`prettier-autostage`), full `quality-gates.sh` green (346s, 288 tests, sentinel `19e849c2`), shipped via quickmerge,
+verified `19e849c2` reachable on `origin/live-defi-rollout`. Cleaned up the scratch worktrees after.
+`unified-trading-system-ui@19e849c2`.
+
+**Todo 3 still not flippable** — its own done-when is 3 CONSECUTIVE green `main` pushes, and this fix hasn't even landed
+on `main` yet (still needs the LDR→main promote cycle). Unlike every prior blocked-on-capacity entry, the next
+observation is a genuinely fresh baseline: no external queue-depth blocker, no known stale-content cause — whoever next
+checks `gh run list --workflow "CI - Test & Lint" --branch main --repo IggyIkenna/unified-trading-system-ui` should see
+this fix's promote run (and the two after it) actually reach `registry-drift: success`, not another external wait.
+Leaving todo 3 unchecked, this task (`-003`, todo 4) is done — calling `/done`.
+
+## Progress Log
+
+- **context-scout 2026-08-01**: populated context_scope (3 entries).

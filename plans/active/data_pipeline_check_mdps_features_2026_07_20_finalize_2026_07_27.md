@@ -9,7 +9,7 @@ summary: >-
   2026-07-27 as part of na_docs_validity_and_ao_eligibility_audit_2026_07_26.md's Phase 1 reclassification pass, per
   task_template.md's finalize-plan-coverage rule (every assigned_vm:planning plan needs a companion gated finalize
   plan).
-status: draft
+status: active
 nature: process
 asset_group: [cefi, defi, tradfi, sports, prediction]
 stage: [meta]
@@ -23,7 +23,7 @@ related:
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]
 created: "2026-07-27"
-last_updated: "2026-07-27"
+last_updated: "2026-07-30"
 parent_epic: infrastructure_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -44,6 +44,11 @@ source: >-
   closes the finalize-plan-coverage gate the reclassification itself triggered.
 assigned_role: infra
 drift_direction: advance-code
+context_scope:
+  [
+    /plans/active/data_pipeline_check_mdps_features_2026_07_20.md,
+    /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
+  ]
 ---
 
 # data_pipeline_check_mdps_features_2026_07_20 — finalize
@@ -59,3 +64,7 @@ drift_direction: advance-code
       pointer on a new contract, update every referrer's path corpus-wide, clear lock) if the plan is fully closed. If
       real work remains after the AO-dispatched todos land, leave `data_pipeline_check_mdps_features_2026_07_20.md`
       active (do not force-archive) and note what's still open here instead.
+
+## Progress Log
+
+- **context-scout 2026-08-01**: populated/refreshed context_scope (2 entries).

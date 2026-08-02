@@ -45,6 +45,15 @@ source: >-
   (plans/active/issues/plan_line_cap_remediation_2026_07_23.md), operator-approved (sports parity-sibling creation -- 4
   of 5 asset groups already got a 2026-07-15 split, sports did not).
 drift_direction: advance-code
+context_scope:
+  [
+    /plans/active/data_completion_to_100_all_ag_2026_06_21.md,
+    /plans/archive/issues/plan_line_cap_remediation_2026_07_23.md,
+    /codex/02-data/sports-2020-06-data-floor.md,
+    /codex/02-data/honest-coverage-model.md,
+    /codex/05-infrastructure/vm-launcher-runbook.md,
+    unified-api-contracts/unified_api_contracts/canonical/crosscutting/honest_coverage.py,
+  ]
 ---
 
 # Data completion to 100% — Sports
@@ -165,7 +174,15 @@ cell into out_of_scope / pre_coverage_date / known_gap / genuine_gap. Findings:
   observed-coverage maps in UAC** (mirror `sports_league_entity_coverage`, derived from ≥1 captured row) so denominators
   are honest.
 - **Enumeration grain inconsistency**: 2026 seeds ~10× the prior-year cell count per data_type — investigate why + make
-  grain consistent + frontier-bounded.
+  grain consistent + frontier-bounded. **INVESTIGATED 2026-07-27** (`sports_satellite_ao_dispatch_batch3_2026_07_25.md`
+  todo 10, slot-9): measured against the live `-prd-` manifest over a matched H1 window — overall ratio **3.13x**
+  (363,842 → 1,137,706 cells; most data_types 2.2x-3.6x; `FIXTURES` 16.6x, `FIXTURES_OUTCOMES` 15.7x, `ODDS` 6.0x
+  outliers). **STILL PERSISTS, but via a DIFFERENT mechanism than this over-seeding hypothesis** — root cause is the v2
+  expected-universe enumerator's `--start-date` being a static, never-overridden Terraform default (`"2026-02-20"`), so
+  the entire 2025 H1 window structurally never gets `expected_unattempted` seeded at all (a bounded-window design
+  artifact, not a live over-seeding regression). Full measurement + root-cause + 2 follow-up todos (1 `[OPERATOR]`
+  window-policy decision, 1 `[DATA]` league-count-growth investigation) filed:
+  `issues/sports_manifest_2026_h1_vs_2025_h1_enumeration_grain_persists_2026_07_27.md`.
 
 ### Execution strategy + blocker resolutions (operator 2026-06-23): 3-MONTH GOLDEN WINDOW
 
@@ -457,6 +474,25 @@ heartbeat-stall auto-kill) + `@e754c9f` (the canonical `launch_budget_registry` 
       **Remaining unaddressed gaps (follow-on todos):** ODDS+PREDICTIONS blank-reason relabeling (3,062+3,078 cells),
       PLAYER_VALUES Transfermarkt failures (256), XG genuine absence (documented). (instruments-service +
       deployment-service)
+- [ ] [DATA] P2. **Re-launch the instruments-service Transfermarkt PLAYER_VALUES backfill scoped to the golden window**
+      (2025-09-01→2025-11-30) with skip-fresh enabled so only the 256 `attempted_failed` cells (as of the 2026-06-24
+      measurement above) are re-attempted; re-measure after. Cheap (256 cells, one launcher run), read-write only to
+      already-known-failed cells. **Cleared for dispatch 2026-07-30**: was conflict-gated against
+      `sports_consolidated_closeout_2026_07_19.md`'s Sports P2b (full-history 2015→present extension of the same recipe,
+      still `[ ]` open, unstarted) — operator ruled (option A) in
+      `plans/active/issues/autonomous_session_operator_decisions_2026_07_25.md` entry #5 (2026-07-25): dispatch this
+      narrow relaunch now regardless of P2b's timeline, since P2b's smart-skip logic will simply no-op these cells once
+      it eventually runs — no correctness conflict, only a handful of redundant re-attempts at worst.
+      (instruments-service + deployment-service)
+- [ ] [DATA] P2. **Re-measure the golden-window (2025-09-01→2025-11-30) ODDS+PREDICTIONS blank-reason `empty_confirmed`
+      residual** (~3,062/3,078 as of the 2026-06-24 measurement above, later ~3,255 combined per the 2026-06-24 DONE
+      entry below) against the live manifest, and file (not implement) a scoped issue doc capturing the root cause + fix
+      options. Read-only/diagnosis-only — no code or manifest change. **Cleared for dispatch 2026-07-30**: was
+      conflict-gated against `sports_consolidated_closeout_2026_07_19.md`'s open "FINAL full-history zero-missing
+      (R1/R2/R3)" gate (still `[ ]`, BLOCKED-PREREQUISITES) — operator ruled (option A) in
+      `autonomous_session_operator_decisions_2026_07_25.md` entry #6 (2026-07-25): dispatch now since it's a strict
+      superset of useful input for whoever eventually re-runs R1/R2/R3, cannot regress or race that gate.
+      (instruments-service)
 - [x] [DATA] P0. ✅ **POST-00:00-UTC-RESET RAMP — relaunch the api_football golden-window fleet at FULL 1200/min on the
       fresh Custom300 daily quota (300,000/day)** to COMPLETE 2025-09-01..2025-11-30 (the pre-reset ~85.7k budget only
       covers a fraction). After 00:00 UTC: re-run the 7-entity fleet via
@@ -807,8 +843,28 @@ watches the relaunched 3 for repeat-137. Codified lesson candidate: backfill mon
 > disparate-source fleet launch, skip-fresh verification, golden-window FIXTURE_LINEUPS diagnosis. All
 > shipped/`[x]`/narrative, zero open todos. See that file for the full early-campaign narrative.
 
+- **context-scout 2026-08-01**: populated/refreshed context_scope (6 entries).
+
 ## Deferred work — migrated to:
 
 - Stale `features_sports_service`-tarball class bug (2 other launchers, line ~709): N/A — no migration. Already fixed +
   shipped within this plan (deployment-service@5075a3e + e2e-testing@fbcdc45, QG green); "DEFERRED" in the item text
   describes the discovery, not an open gap.
+- **na-eligibility-audit 2026-07-30**: KEEP-NA, valid (sports tranche) — MIXED, left NA: the `[SCRIPT] P1` ramp-to-429
+  calibration probe is now explicitly de-gated ('Downgraded from operator-gated 2026-07-27 ... no further human step is
+  needed to fire it') and is a strong extraction candidate, but the `[DATA] P2` enrichment-ceiling todo is an operator
+  spend decision by construction ('to exceed ~34% needs operator bump to 1.5M/day OR multi-day skip-fresh re-runs').
+  Flipping the doc dispatches that too
+- **na-eligibility-audit 2026-08-02**: re-read (in scope again — `746ada09c` + `70c50d052` both landed 2026-07-30 AFTER
+  the marker above was written at 07:55Z). **KEEP-NA, valid — verdict UNCHANGED, rationale UPDATED.** The MIXED ground
+  still holds unchanged: the `[DATA] P2` enrichment-ceiling todo is an operator SPEND decision (1.5M/day quota bump),
+  and the `[DATA] P1` entity-coverage relabel needs a consolidator drain + all backfill VMs stopped — flipping
+  `assigned_vm` dispatches both. What CHANGED is the extraction picture: there are now **three** dispatch-cleared
+  candidates, not one. `70c50d052` recorded operator rulings (option A) in
+  [`/plans/active/issues/autonomous_session_operator_decisions_2026_07_25.md`](/plans/active/issues/autonomous_session_operator_decisions_2026_07_25.md)
+  entries #5 and #6 explicitly clearing the two golden-window `[DATA] P2` todos (Transfermarkt PLAYER_VALUES relaunch;
+  ODDS+PREDICTIONS blank-reason re-measure) for dispatch, joining the already-de-gated `[SCRIPT] P1` ramp-to-429 probe.
+  All 6 open todos verified against the file this pass. **Extracting those 3 into a `planning` batch doc is the right
+  next move and is a plan-authoring call, parked** for the operator (same disposition as
+  `sports_prelaunch_cf5_verify_residual_2026_07_24.md`'s marker) — this skill's Phase 3 flips `assigned_vm` in place, it
+  does not author carve-out batches, and an in-place flip here would dispatch the two genuinely-NA todos alongside them

@@ -28,7 +28,7 @@ related:
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]
 created: 2026-07-25
-last_updated: "2026-07-25"
+last_updated: "2026-08-01"
 parent_epic: infrastructure_master
 assigned_vm: NA
 execution_scope: local-only
@@ -40,6 +40,12 @@ assigned_role: infra
 drift_direction: none
 locked_by:
 locked_since:
+context_scope:
+  [
+    /cursor-configs/skills/ag-closeout-audit/SKILL.md,
+    /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
+    /plans/active/infra_satellite_ao_dispatch_batch5_2026_08_01.md,
+  ]
 supersedes:
 superseded_by:
 depends_on: []
@@ -75,8 +81,8 @@ governance — ruff-lint, deprecate/delete audit) ·
 (ARCHIVED 2026-07-27, RESOLVED — CVE vs vcrpy dependency conflict + pyproject duplicate-key) ·
 [issues/cve_affected_pinned_deps_remediation_2026_06_18.md](/plans/active/issues/cve_affected_pinned_deps_remediation_2026_06_18.md)
 (lift CVE-driven dependency caps once blockers clear) ·
-[issues/setuptools_fleet_pysec_2026_3447_bump_2026_07_14.md](/plans/active/issues/setuptools_fleet_pysec_2026_3447_bump_2026_07_14.md)
-(fleet-wide setuptools CVE, PYSEC-2026-3447, blocking the zero-tolerance codex gate) ·
+[issues/setuptools_fleet_pysec_2026_3447_bump_2026_07_14.md](/plans/archive/issues/setuptools_fleet_pysec_2026_3447_bump_2026_07_14.md)
+(ARCHIVED 2026-07-30, RESOLVED — fleet-wide setuptools CVE, PYSEC-2026-3447, bumped 82.0.1→83.0.0, ignore removed) ·
 [/plans/archive/issues/uv_pin_fleet_drift_2026_06_22.md](/plans/archive/issues/uv_pin_fleet_drift_2026_06_22.md) (uv
 binary drifted off its pinned version on the VM fleet) ·
 [issues/pm_scripts_typecheck_debt_2026_06_11.md](/plans/active/issues/pm_scripts_typecheck_debt_2026_06_11.md) (PM
@@ -85,7 +91,7 @@ binary drifted off its pinned version on the VM fleet) ·
 (ARCHIVED 2026-07-27; UTL/UAC dedup/reimplementation consolidation refactor) ·
 [stash_pile_workspace_cleanup_2026_06_03.md](/plans/active/stash_pile_workspace_cleanup_2026_06_03.md) (cross-host git
 stash-pile audit/cleanup runbook) ·
-[issues/service_dockerfile_pattern_normalization_2026_06_17.md](/plans/active/issues/service_dockerfile_pattern_normalization_2026_06_17.md)
+[issues/service_dockerfile_pattern_normalization_2026_06_17.md](/plans/archive/issues/service_dockerfile_pattern_normalization_2026_06_17.md)
 (9 services' Dockerfiles inconsistent vs the clean base-image pattern) ·
 [issues/execution_service_aioresponses_to_adapter_mock_migration_2026_06_23.md](/plans/archive/issues/execution_service_aioresponses_to_adapter_mock_migration_2026_06_23.md)
 (ARCHIVED 2026-07-27, RESOLVED — execution-service@9ce159a7, aiohttp-3.14 CVE bump unblocked).
@@ -157,7 +163,14 @@ reference-path convention rollout complete corpus-wide.
 
 ## Track 4 — Generic product/UI bugs (no data-pipeline or single-AG content) · P2
 
-**Source**:
+> **✅ SUPERSEDED 2026-07-30 — moved to the new `ui` tranche.** Both this Track's sources were retagged
+> `asset_group: [ui]` (was `[infrastructure]`) when the UI tranche launched — deployment-ui/deployment-api now has its
+> own dedicated tranche instead of falling into this infra catch-all. See
+> [ui_consolidated_closeout_2026_07_30.md](/plans/active/ui_consolidated_closeout_2026_07_30.md) Track 4 (nav/smoke/
+> mock-parity hygiene) and Track 3 (observability surfaces), which now own this content. Left cited below for history;
+> this Track's close-out criterion no longer belongs to the infra tranche's own completeness measurement.
+
+**Source** (historical — now `ui`-tranche primary):
 [issues/deployment_ui_smoke_failures_daily_costs_nav_mobile_2026_07_21.md](/plans/active/issues/deployment_ui_smoke_failures_daily_costs_nav_mobile_2026_07_21.md)
 (8 pre-existing deployment-ui smoke/playwright failures — Daily Costs page, mobile nav; generic product/UI bugs, not
 data-pipeline or CI mechanics) ·
@@ -165,8 +178,7 @@ data-pipeline or CI mechanics) ·
 (build→artifact→deploy lineage UI — Cloud Build images, VM tarballs, drift-vs-running; deployment-observability domain,
 not data-pipeline).
 
-**Close-out criterion**: the 8 smoke failures fixed + pw:L2 regression specs added; the artifact-lineage UI's remaining
-phases ship.
+**Close-out criterion**: **N/A here — see `ui_consolidated_closeout_2026_07_30.md` Tracks 3/4 instead.**
 
 ## Codex SSOTs (read before touching a track)
 
@@ -181,13 +193,19 @@ phases ship.
 - [ ] [REVIEW] P2. Track 1 close-out: all CVE remediations landed (aiohttp/vcrpy, setuptools PYSEC-2026-3447,
       execution-service aioresponses migration); codex-violation ratchet green; `scripts/` governance sweep complete; uv
       pin re-synced fleet-wide; PM typecheck debt cleared; UTL/UAC dedup shipped; Dockerfile pattern normalized.
-- [ ] [REVIEW] P2. Track 2 close-out: org migration verified fleet-wide (no stale `IggyIkenna` refs); terraform drift
-      reconciled + applied; VM startup scripts auto-roll to GCS; `managed-by` label convention adopted; billing-waste
-      pre-flight gate designed + shipped.
+- [ ] [REVIEW] P2. Track 2 close-out: terraform drift reconciled + applied; VM startup scripts auto-roll to GCS;
+      `managed-by` label convention adopted; billing-waste pre-flight gate designed + shipped. (The "org migration
+      verified fleet-wide / no stale `IggyIkenna` refs" clause was **DROPPED 2026-07-28** — operator ruled **STAY on
+      `IggyIkenna` Pro**, so those refs are the permanent correct state, not drift;
+      `june_2026_vintage_audit_findings_2026_07_27.md` §5-RESOLVED #36, applied in `unified-trading-pm@cd5c0bde1`. That
+      commit dropped the clause from this Track's body criterion above but missed this todo's restatement of it — fixed
+      here by the 2026-07-30 na-eligibility-audit.)
 - [ ] [REVIEW] P2. Track 3 close-out: each tooling doc's own open todos closed; the zero-checkbox sweep's findings
       triaged; the reference-path convention rollout complete corpus-wide.
-- [ ] [REVIEW] P2. Track 4 close-out: the 8 deployment-ui smoke failures fixed + pw:L2 regression specs added; the
-      artifact-lineage UI's remaining phases ship.
+- [x] ➡️ [REVIEW] P2. **SUPERSEDED 2026-07-30** (was: "Track 4 close-out: the 8 deployment-ui smoke failures fixed +
+      pw:L2 regression specs added; the artifact-lineage UI's remaining phases ship.") — both Track 4 sources retagged
+      `asset_group: [ui]`, moved to `ui_consolidated_closeout_2026_07_30.md` Tracks 3/4. Not this tranche's completeness
+      measurement anymore; not double-counted as done here.
 
 ## Progress Log
 
@@ -256,7 +274,9 @@ phases ship.
   `issues/deployment_service_ungated_revision_delete_no_rollback_target_2026_07_26.md` (archived — resolved,
   deployment-service@5690ad3, now at
   `/plans/archive/issues/deployment_service_ungated_revision_delete_no_rollback_target_2026_07_26.md`),
-  `issues/unified_trading_system_ui_codex_violations_far_exceed_estimate_2026_07_21.md`,
+  `issues/unified_trading_system_ui_codex_violations_far_exceed_estimate_2026_07_21.md` (archived — resolved,
+  unified-trading-system-ui@030d2575, now at
+  `/plans/archive/issues/unified_trading_system_ui_codex_violations_far_exceed_estimate_2026_07_21.md`),
   `archive/issues/quickmerge_agent_files_pure_deletion_gap_2026_07_26.md`,
   `issues/ui_hardcoded_colour_and_localhost_debt_2026_07_21.md` (archived — resolved,
   unified-trading-system-ui@145bf5dd, now at
@@ -269,5 +289,149 @@ phases ship.
   unified-trading-system-ui@ff811a8c, now at
   `/plans/archive/issues/ui_repos_eslint_base_config_never_wired_no_explicit_any_unenforced_2026_07_21.md`),
   `/plans/archive/issues/claude_code_settings_symlink_chain_broken_2026_07_23.md`,
-  `issues/deployment_ui_l2_smoke_gate_red_2026_07_17.md`. None were tracked in any Track above; all are now
-  `assigned_vm: planning` and live in the AO backlog.
+  `issues/deployment_ui_l2_smoke_gate_red_2026_07_17.md` (archived — resolved 2026-07-31, root cause was
+  playwright.config.ts host-contention false positives, now at
+  `/plans/archive/issues/deployment_ui_l2_smoke_gate_red_2026_07_17.md`). None were tracked in any Track above; all are
+  now `assigned_vm: planning` and live in the AO backlog.
+- **na-eligibility-audit 2026-07-30** (infra tranche, incremental run): **KEEP-NA, valid — stale-item clause fixed on
+  todo 2.** This hub was the one infra-tranche doc carrying no verdict marker from the earlier same-day pass
+  (`unified-trading-pm@4c6587543`/`ddf6a8adf`/`f3b018596`), so it was in scope here. All 4 open `[REVIEW]` todos read
+  end-to-end (`grep -cE '^- \[ \]'` = 4, matches this verdict's item count). **KEEP-NA is confirmed on citation, not
+  re-derived**: the todos exist by an explicit resolved operator decision —
+  `issues/autonomous_session_operator_decisions_2026_07_25.md` entry #38, option A, `unified-trading-pm@2c61a8dc4` —
+  which added them as _verification_ roll-ups so a future tranche audit measures a real covering set instead of a
+  zero-todo digest. Independently re-checked against the bounded-outcome bar rather than accepting the doc's own "not
+  AO-eligible" gloss: each todo is an all-of-N close-out gate whose underlying work lives in its source docs (many
+  already `assigned_vm: planning`, plus `infra_satellite_ao_dispatch_batch1_2026_07_26.md`), so it can only flip once
+  those finish. Dispatching it eagerly would burn a worker re-deriving "not yet"; that gating shape belongs in a
+  `depends_on` + `gate_on_depends: true` companion, not an `NA → planning` flip. **Fix applied**: todo 2 still demanded
+  "org migration verified fleet-wide (no stale `IggyIkenna` refs)" — a criterion the operator CANCELLED on 2026-07-28
+  (§5-RESOLVED #36; `IggyIkenna` refs are now correct-by-ruling, not drift). `unified-trading-pm@cd5c0bde1` dropped that
+  clause from the Track 2 body criterion but missed the todo restating it, so the todo would have sent a reviewer
+  hunting for "stale" refs that are the intended permanent state. Clause removed with the ruling cited inline. No
+  conflict-check needed (no RECLASSIFY).
+- **2026-07-31** — `/ag-closeout-audit infra` re-run (autonomous mode, scheduled daily run, slot 13). Covering set is
+  now 9 docs (batch1/finalize + batch2/finalize + batch3(draft)/finalize(draft) + this hub +
+  `infra_capture_and_devops_ leftovers`/finalize — batch2 and batch3 existed since 2026-07-27/30 but were never
+  previously logged in this hub's own Progress Log, a discoverability gap worth noting for the next reader).
+  `generate_ag_closeout_audit_candidates.py --tranche infra` now reports 32 members (corpus has grown/shrunk since
+  2026-07-26's 34). Phase 1 ran a 10-agent Workflow over the 9 currently-never-cited docs plus a targeted re-check of
+  `codex_violations_ratchet_to_five_2026_06_ 10.md` (whose citation in batch1 turned out to only partially cover its
+  remaining work on full re-read): 8 of the 9 never-cited docs are legitimately self-dispatched
+  (`assigned_vm: planning`, not orphans by the skill's own tooling definition), 1
+  (`stale_agentwork_scratch_clone_not_deletable_unpushed_stashes_2026_07_30.md`) is a genuine orphan but
+  guardrail-blocked operator-only work (non-batchable), and `codex_violations_ratchet_to_five` has 5 of 7 open items
+  genuinely uncovered — 3 remain correctly gated by batch1's own pre-existing Deferred classification (unchanged), 1
+  (`delta_proxy_repricer.py`) turned out to be ALREADY SHIPPED (`execution-service@89fbf99d`) with a stale checkbox, and
+  1 (`_solana_utils.py` line-cap split) was genuinely new, conflict-clear, and bounded. Phase 3 drafted a single-todo
+  `infra_satellite_ao_dispatch_batch4_2026_07_31.md` (`status: draft`, no finalize twin per the single-todo carve-out)
+  for that one item. The stale-checkbox finding plus a filesystem-vs-doc discrepancy on the stash-clone deletion (target
+  directory already absent from disk in this session's environment, but the doc's todo still shows it open) are parked
+  in `issues/ag_closeout_audit_infra_parked_2026_07_31.md` per the "parked findings always get a durable issue doc" hard
+  rule — both are `/plan-reconcile`'s job to reconcile, not this skill's (false-unchecked-flip is out of scope here). G1
+  (`base-service.sh`/`base-library.sh` serialization) shows partial progress
+  (`ci_satellite_ao_dispatch_batch2_2026_ 07_29.md`'s both claims now `[x]`) but remains gated —
+  `cross_cutting_satellite_ao_dispatch_batch1b_2026_07_26.md`'s own claim on the same file is still open. G3
+  (`DataStatusTab.tsx`) unchanged. No new `[REVIEW]` Track criteria needed above — the 3 existing ones still accurately
+  measure this tranche's completeness.
+- **2026-07-31 ~21:26 UTC** — `/ag-closeout-audit infra` re-dispatched same-day (autonomous mode, scheduled, slot 13,
+  ~7h after the run above). Re-verification, not a from-scratch re-audit: candidate set re-derived twice
+  (`generate_ag_closeout_audit_candidates.py --tranche infra`, 32→36→37 members across a mid-run `git pull --ff-only`);
+  every net-new-since-14:06 doc (3) and the one persistently-never-cited candidate direct-read rather than re-running
+  the full Phase 1 Workflow (justified in the parked-findings doc's own Progress Log — mirrors the sibling `prediction`
+  tranche's same-day precedent, `unified-trading-pm@e89cdd5eb`). Result: **0 new genuine infra orphans, no batch5
+  drafted.** The 3 new docs are all already self-dispatched (`assigned_vm: planning`) and well-fitted to their Tracks.
+  The one never-cited candidate (`ao_self_pull_wedged_by_main_inbox_untracked_file_2026_07_30.md`) is a likely
+  `asset_group` mistag — real owning tranche is `ao` (its content is agent-orchestrator dispatch/worker- lifecycle,
+  `parent_epic: orchestrator_master`), not `infra` — reported as finding 3 in the parked-findings doc rather than
+  retagged directly (owning-tranche-writes-only rule, concurrent sharded workers). Findings 1-2 from the 14:06 run
+  re-checked live: both still open/unreconciled, no drift. Batch4 re-checked: still `status: draft`, untouched. Deferred
+  gates G1/G3 re-checked against live checkbox state: both unchanged, nothing newly cleared.
+- **2026-08-01** — `/ag-closeout-audit infra` re-run (autonomous mode, scheduled daily run, slot 5). Re-derived the
+  candidate set (`generate_ag_closeout_audit_candidates.py --tranche infra`: 39 members, 10 covering docs, 1 never-cited
+  — `issues/deployment_scripts_bucket_soft_delete_retention_drift_2026_07_31.md`, a genuine but operator-gated
+  terraform-drift judgment call, correctly non-batchable). Per the iterative-drain methodology, re-checked
+  batch1/batch3's tracked Deferred gates (G1-G6) live before any fresh Phase-1 triage. **G3 cleared**: the
+  `DataStatusTab.tsx` `DATA_PIPELINE_SERVICES` sequencing gate (held since 2026-07-26, entry #35) was waiting on
+  `cross_cutting_satellite_ao_dispatch_batch1_2026_07_26.md` item (B) — confirmed shipped today
+  (`deployment-ui@727298b`, 2026-08-01 01:42 UTC) and the file confirmed genuinely quiet corpus-wide (no other active
+  plan holds an unshipped claim on it). Drafted
+  [infra_satellite_ao_dispatch_batch5_2026_08_01.md](/plans/active/infra_satellite_ao_dispatch_batch5_2026_08_01.md)
+  (single todo, no finalize twin per the single-todo carve-out, `status: draft` — operator flip required). G1/G2
+  (`base-service.sh`/`base-library.sh` serialization) remain gated, unchanged. G4 (`PYTEST_UNIT_DIR`) reconfirmed
+  already resolved elsewhere (shipped 2026-07-31). G5's MTDS >900-line-tail sub-item reconfirmed already resolved
+  elsewhere too (verified 2026-07-27, stale tracking note only, not new material). G6 stays owned by tradfi, unchanged.
+  The 3 carried-forward findings from the 2026-07-31 parked-findings doc were re-verified live: all still open, no
+  drift. 3 NEW findings surfaced this run (a stale `draft` banner in batch3's body text contradicting its own
+  already-`active` frontmatter; a self-referential citation blind spot in `generate_ag_closeout_audit_candidates.py`'s
+  never-cited pre-filter, discovered because it silently dropped the still-live
+  `ao_self_pull_wedged_by_main_inbox_untracked_file_2026_07_30.md` mistag from this run's never-cited list purely
+  because a prior Progress Log entry named the file in prose; and a second likely `asset_group: [meta]` mistag whose
+  real owner is probably `ao`, not `infra`) — all recorded in
+  [issues/ag_closeout_audit_infra_parked_2026_08_01.md](/plans/active/issues/ag_closeout_audit_infra_parked_2026_08_01.md)
+  per the parked-findings hard rule. **Linkage discoverability fix**: `check_ag_closeout_linkage.py` showed the
+  shrinking-ratchet count risen to 78 (baseline 69) — corpus-wide, mostly other tranches' concurrent activity (not this
+  run's doing; this run's own 2 new docs are both correctly linked, verified). Of the 78, exactly 7 carry
+  `asset_group: [infrastructure]` and are this tranche's own responsibility to link. Adding them here per the
+  established discoverability-mention remedy (SKILL.md's own prescribed fix: name the doc in the hub so the graph/
+  mention check finds it) — none of these were tracked in any Track above:
+  `basedpyright_extrapaths_pyproject_migration_findings_2026_08_01.md` (self-dispatched),
+  `ci_registry_drift_uac_utl_stale_tag_version_conflict_2026_07_26.md` (self-dispatched),
+  `deployment_registry_dualwrite_flag_not_propagated_to_vm_launchers_2026_07_30.md` (self-dispatched),
+  `quickmerge_stage5_push_loses_fast_forward_race_under_high_churn_2026_07_27.md` (self-dispatched),
+  `issues/legacy_bucket_template_literals_2026_07_16.md` (`assigned_vm: NA` — this is G5 item 5 from batch1's own
+  Deferred tracking, event-timing-gated, non-batchable, unchanged),
+  `issues/shared_host_home_filesystem_full_2026_07_26.md` (`assigned_vm: NA` — not previously read by this skill;
+  flagging for a future Phase-1 pass to classify, not classified this run), and
+  `issues/vm_launcher_class_b_no_stall_kill_gap_2026_07_27.md` (`assigned_vm: NA` — this is G5 item from batch3's own
+  non-batchable table, blast-radius-judgment-gated, unchanged). Re-ran the linkage check after adding these mentions:
+  71/78 (7 infra orphans resolved; the residual 71 are other tranches', outside this run's remit — flagged in this run's
+  `evidence` for visibility, not fixed here).
+- **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).
+- **na-eligibility-audit 2026-08-02** (infra tranche, incremental run): **KEEP-NA, valid — unchanged from the 2026-07-30
+  verdict.** In scope this run because the doc was edited since that marker (2026-08-01 `/ag-closeout-audit`
+  Progress-Log appends, the Track-4 supersession, and a context-scout backfill). Read end-to-end; `grep -cE '^- \[ \]'`
+  = **3** (was 4 at the last marker; Track 4's todo has since been correctly closed as SUPERSEDED into the `ui`
+  tranche), matching this verdict's item count. The 3 remaining `[REVIEW]` todos are unchanged all-of-N Track close-out
+  gates created by an explicit resolved operator decision (`issues/autonomous_session_operator_decisions_2026_07_25.md`
+  entry #38, `unified-trading-pm@2c61a8dc4`); the reasoning recorded on 2026-07-30 (a gating shape belongs in a
+  `depends_on` + `gate_on_depends` companion, not an `NA → planning` flip) still holds and is not re-derived here.
+
+  **BLOCKED-OPERATOR-DECISION (tranche-level, new this run) — the `asset_group` mistag retag is structurally deadlocked,
+  and the deadlock is now measured, not suspected.** Three infra-tranche docs whose real owner is `ao` by `parent_epic`
+  have had a retag recommended-but-never-applied across multiple consecutive audits, each run correctly declining under
+  `/ag-closeout-audit`'s owning-tranche-writes-only rule:
+
+  | doc                                                                                    | `asset_group`      | `parent_epic`                      | retag first recommended |
+  | -------------------------------------------------------------------------------------- | ------------------ | ---------------------------------- | ----------------------- |
+  | `issues/ao_self_pull_wedged_by_main_inbox_untracked_file_2026_07_30.md`                | `[infrastructure]` | `orchestrator_master`              | 2026-07-31 (finding 3)  |
+  | `issues/qg_owner_gate_full_workspace_rglob_walk_hangs_quickmerge_2026_07_31.md`        | `[meta]`           | `agent_operating_framework_master` | 2026-08-01 (finding 6)  |
+  | `issues/boot_composer_misroutes_lifecycle_roles_into_worker_boot_branch_2026_07_31.md` | `[meta]`           | `agent_operating_framework_master` | not previously flagged  |
+
+  **Root cause, verified by direct code read of `scripts/plan-hygiene/generate_na_doc_tranche_inventory.py` this run,
+  not inferred**: tranche membership is derived from `asset_group`, never `parent_epic` — `ao` membership requires a
+  literal `asset_group: ao` (line ~201), a bare `[meta]` doc **default-folds into `infra`** (line ~202), and
+  `owning_tranche()` deliberately refuses to assign ownership to a tranche the doc is not a member of, falling back to
+  `tranches[0]`. So the corrective retag is reserved for a tranche that provably cannot see the docs needing it.
+  **Measured**: `generate_na_doc_tranche_inventory.py --tranche ao --json` returns 61 docs and **none of the three
+  above** — the same result `/ag-closeout-audit ao`'s own `asset_group`-driven pre-filter will produce. Every future
+  `ao` run will keep not-seeing them and every future `infra` run will keep declining to write; the recommendation
+  cannot converge on its own.
+
+  - **A [WORKER REC]: authorise the tranche that CAN see a mistagged doc to apply the `asset_group` retag**, when the
+    correct owner is evidenced by `parent_epic` + content and two independent audits already agree — i.e. treat a
+    provably-unreachable owner as an exception to owning-tranche-writes-only. Cheapest fix, unblocks all three today,
+    and the write is one frontmatter line with no dispatch effect.
+  - **B: run the retags from a corpus-wide (non-sharded) pass** — a `meta`/mistag fold-in sweep like the 2026-07-31 one
+    (`unified-trading-pm@0409fa053` region) that already retagged four docs into `infra`. Preserves the sharding rule
+    intact; costs a separate scheduled pass, and these three were missed by exactly that sweep once already.
+  - **C: make `owning_tranche()` (and `/ag-closeout-audit`'s pre-filter) fall back to the `parent_epic`-mapped tranche
+    even when the doc is not an `asset_group` member of it**, so the real owner sees the doc and can retag it. Fixes the
+    class rather than the three instances; changes shared corpus tooling used by all 9 tranches, so it needs its own
+    conflict-check and is not a same-run action.
+  - Other: operator free-text.
+
+  Not actioned this run either way — the retag is an `asset_group` write, outside this skill's own Phase-3 apply set
+  (which covers `assigned_vm`, checkbox citations, archival and verdict markers), and picking between A/B/C is a process
+  ruling. Recorded here rather than in a new parked doc so it does not add to the very NA corpus this skill's ratchet is
+  meant to shrink.

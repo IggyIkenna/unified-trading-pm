@@ -17,7 +17,10 @@ summary: >-
   worker slot) — flagging with the diagnostic head-start for whoever has orchestrator-DB access.
 status: open
 nature: issue
-asset_group: [cross-cutting]
+asset_group:
+  [ao] # corrected 2026-08-02 (/ag-closeout-audit cross-cutting, operator-ruled) -- was [cross-cutting]; the defect is
+  # agent-orchestrator's one-shot AgentRow / `/done` lifecycle (repos: [agent-orchestrator]), squarely ao-tranche --
+  # `data_pipeline_failure` is the worker ROLE that hit it, not a data/multi-AG subject.
 stage: [meta]
 repos: [agent-orchestrator]
 scope: [engineer, admin]
@@ -45,6 +48,13 @@ superseded_by:
 resolved_by:
 source: "data_pipeline_failure escalation worker, slot 10, escalation_id agt-79063c"
 last_updated: 2026-07-29
+context_scope:
+  [
+    /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
+    agent-orchestrator/server/escalation.py,
+    agent-orchestrator/server/routes/slots_worker.py,
+    agent-orchestrator/server/state_store/agents.py,
+  ]
 ---
 
 # `data_pipeline_failure` one-shot worker's `/done {one_shot_complete: true}` 400s despite a registration path that should cover it
@@ -154,3 +164,38 @@ still in flight.
   no code fix available; noting this explicitly so a reader doesn't conflate the two blockers (one is GitHub's billing
   API, the other is this orchestrator's own local `/done` endpoint — no causal link between them). Ending session
   without a clean `/done` per the established precedent; relying on the idle-lingering-reclaim reaper path.
+
+- **na-eligibility-audit 2026-07-30**: RECLASSIFY NA → planning — both todos are bounded: query the live
+  AgentRow/`escalation_dispatched` record for a named escalation_id, then fix whichever of the two stated hypotheses it
+  proves, with a named precedent regression test. All 3 citations are `related:` cross-refs, not dispatch claims.
+
+- **2026-07-31 (data_pipeline_failure escalation worker, slot 2, `agt-8fa8d1`, wall_type=`data_pipeline_failure`,
+  repo=`market-tick-data-service`):** fourth corroboration, same shape — 400 on three `/done {one_shot_complete: true}`
+  attempts (`task_id: ""`, `task_id: "agt-8fa8d1"`, retried after a `heartbeat` call whose `dispatch_reason` read "spawn
+  registration pending (grace window, holding slot)" — that text did not resolve the mismatch; heartbeat itself
+  succeeded normally every time, only the AgentRow lookup fails, matching all three prior reports). This session's
+  actual assigned root-cause fix (DP-VM-002 false-CRITICAL on an early-SPOT-preempted VM whose in-guest shutdown-script
+  never ran) shipped clean and unrelated: `unified-trading-library@61566617` + `deployment-service@09a2374`, both
+  QG-green on `live-defi-rollout`. Ending session without a clean `/done` per the established precedent; relying on the
+  idle-lingering-reclaim reaper path. Not attempting the diagnostic todos below (no orchestrator-DB/dashboard access
+  from this worker slot, same constraint every prior reporter hit).
+
+- **2026-08-01 (na_eligibility_auditor, slot 2, `agt-8e95ca`, mode=`na_eligibility`, tranche=`ao`):** fifth
+  corroboration, a NEW variant of the same root cause. This session's `/boot` call never registered a
+  `na_eligibility_auditor` AgentRow at all — the server instead returned a stale/unrelated Class-A backlog task
+  (`code_tarball_refresh_job_silently_failing_since_2026_07_30-001`, `assigned_role: infra`) already bound to slot 2. A
+  subsequent `/done {task_id: "", one_shot_complete: true}` 400'd with the same message this doc already tracks ("no
+  active agent owns its session 'orch-slot-2' ... a Class-A worker must /done with a task_id"), and a follow-up
+  heartbeat confirmed the server still sees slot 2 as the Class-A `code_tarball_refresh` worker
+  (`dispatch_reason: "resume"`), not as this session's actual na_eligibility_auditor dispatch. Unlike the four prior
+  reports (which hit the gap AFTER real work but WITH a correctly-registered AgentRow), this occurrence never had a
+  matching AgentRow to begin with — suggesting the registration gap can also manifest as a `plan_health_dispatch` spawn
+  landing on a slot whose tmux session already carries a DIFFERENT role's live claim, i.e. the same collision class as
+  `persistent_slot_tmux_session_hijacked_by_transient_plan_health_dispatch_2026_08_01.md` (also reclassified to
+  `planning` this same audit run) rather than a pure post-hoc AgentRow-status change. This session's actual assigned
+  work (the `/na-eligibility-audit ao` run) is independently git-verified complete regardless — 4 doc-edit commits + 1
+  ratchet-baseline commit, all confirmed ancestors of `origin/live-defi-rollout`
+  (`ded844253`/`c4a8dc394`/`96797d327`/`f667a4dc9`/`5411ba307`). Ending session without a clean `/done` per the
+  established precedent; relying on the idle-lingering-reclaim reaper path. from this worker slot, same constraint every
+  prior reporter hit).
+- **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).

@@ -305,3 +305,17 @@ assertion — otherwise we keep a third detector nobody reads.
 - [ ] [DEVOPS] P1. **Investigate why `update-dependency-version.yml`'s primary cascade has been dormant since
       2026-06-28** — recommendation 1 above remains the sole unresolved item; recommendations 2b/2c/3 already shipped
       2026-07-26.
+
+## na-eligibility-audit verdict
+
+**na-eligibility-audit 2026-07-30** (tranche `ci`, autonomous): KEEP-NA, valid — the sole remaining todo (why
+`update-dependency-version.yml`'s primary cascade has been dormant since 2026-06-28) was re-triaged one day before this
+run by `/plans/archive/2026_07/ci_satellite_ao_dispatch_batch2_2026_07_29.md` Deferred **E9**, which re-verified it
+still open and concluded the root cause "is still unparked/unresolved, so no bounded fix exists to dispatch yet".
+Recommendations 2b/2c/3 already shipped via ci batch1 todo 3.
+
+**na-eligibility-audit 2026-08-01** (tranche `ci`, autonomous): KEEP-NA, valid — re-confirmed. The sole open todo is
+still an unresolved root-cause investigation with no bounded fix identified; grepped `plans/active/*.md` for
+"dormant"+"cascade" — the only hit (`ci_satellite_ao_dispatch_batch1_2026_07_26.md:142`) explicitly states this
+investigation "remains open and out of this todo's scope," corroborating it is un-owned, not duplicated. Not
+RECLASSIFY-eligible (open-ended diagnosis, not a checkable fact or scoped change).

@@ -22,7 +22,7 @@ created: 2026-04-21
 authoritative_for: [chunk-safe parallel manifest migration pattern (worker/coordinator/partial-shard)]
 referenced_by: [/codex/02-data/cross-asset-rescan-protocol.md, /codex/02-data/sports-scheduling-and-sharding.md]
 owner:
-last_reviewed: 2026-05-17
+last_reviewed: 2026-08-29
 code_refs:
 last_updated: 2026-04-21
 ---
@@ -196,7 +196,7 @@ coordinator/worker/partial-path logic in service repos.
 
 ## SSOT cross-refs
 
-- [`/codex/02-data/availability-manifest-and-data-status.md`](availability-manifest-and-data-status.md) — manifest v5
+- [`/codex/02-data/availability-manifest-and-data-status.md`](availability-manifest-and-data-status.md) — manifest v9
   shard columns + `capture_status`.
 - [`/codex/02-data/sports-data-source-coverage-matrix.md`](sports-data-source-coverage-matrix.md) — Phase 5 FIXTURES
   per-league rescan motivation.

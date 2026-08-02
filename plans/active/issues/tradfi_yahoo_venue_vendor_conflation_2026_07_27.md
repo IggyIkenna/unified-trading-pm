@@ -48,6 +48,12 @@ resolved_by:
 locked_by:
 drift_direction: advance-code
 depends_on: []
+context_scope:
+  [
+    /codex/02-data/tradfi-databento-sourcing-ssot.md,
+    /codex/02-data/venue-availability.md,
+    /plans/active/tradfi_consolidated_closeout_2026_07_18.md,
+  ]
 ---
 
 # TradFi YahooFinanceAdapter stamps venue="YAHOO" (vendor) instead of a real per-instrument venue
@@ -117,6 +123,44 @@ classes (EQUITY looks like the clearest win, since a real exchange is normally r
 
 ## Todos
 
+> **NOTE (na-eligibility-audit 2026-07-30, tradfi tranche) — KEEP-NA-STALE, do NOT reclassify.** This doc's sole todo is
+> already claimed VERBATIM by `/plans/active/tradfi_satellite_ao_dispatch_batch5_2026_07_29.md` ("Run the Phase-0
+> YAHOO_FINANCE venue-vendor-conflation investigation methodology already defined in the doc", whose `Source:` cites
+> this doc by name, and which explicitly sequences it FIRST among its three entangled Yahoo/venue todos). That batch doc
+> is `assigned_vm: planning` but **`status: draft`** — NOT ingested, NOT dispatched today. Flipping this doc's
+> `assigned_vm` would dispatch a duplicate AND break batch5's deliberate run-once-cite-thrice sequencing across the
+> three Yahoo-axis docs, so the shared conflict-check
+> (`/codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md` § 3) verdict is CONFLICT → citation fix
+> only. Live blocker = batch5's draft status (operator item 5 in
+> `/plans/active/issues/tradfi_autonomous_session_operator_decisions_2026_07_25.md`).
+>
+> **CITATION UPDATE (na-eligibility-audit 2026-08-02, tradfi tranche)**:
+> `tradfi_satellite_ao_dispatch_batch5_2026_07_29.md` has since flipped `status: draft` → `status: active` (confirmed
+> live, 2026-08-02) — its todo 8 (this doc's extraction) is now a live, active, dispatched item and is still open. The
+> "NOT ingested, NOT dispatched today" wording above is stale prose; the underlying disposition is unchanged
+> (KEEP-NA-STALE, citation fix only) — if anything this strengthens the duplicate-coverage conclusion, since the live
+> copy is the one that will actually get worked.
+
 - [ ] [DATA] P2. **Run the Phase-0 investigation methodology** (reconcile real counts + trace consumers for a
       `venue="YAHOO"` dependency) before deciding whether/how to fix the vendor-as-venue stamp — per "Recommended next
       step," this has NOT been done yet.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30** (tradfi tranche): **KEEP-NA-STALE — citation fixed, `assigned_vm` deliberately
+  unchanged.** The sole todo is a bounded, precedented investigate-only task (the sports `venue=ODDS_API` Phase-0
+  methodology, named entry point `yahoo_finance_adapter.py::write_canonical_shard`) and would otherwise be a clean
+  RECLASSIFY. Conflict-check returned CONFLICT: `/plans/active/tradfi_satellite_ao_dispatch_batch5_2026_07_29.md`
+  already extracts it verbatim citing this doc as its `Source:`, and explicitly sequences it FIRST among three entangled
+  Yahoo/venue todos so the investigation runs once and is cited by the other two.
+- **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).
+- **na-eligibility-audit 2026-08-01** (tradfi tranche): **KEEP-NA-STALE, re-verified — citation still accurate.** Sole
+  open todo re-read; count matches tranche-inventory tool (1). No content change since the 2026-07-30 verdict — only a
+  context-scout `context_scope` backfill touched the file since. Conflict-check basis unchanged: batch5 still extracts
+  this todo verbatim and still sequences it first among the three entangled Yahoo/venue todos.
+- **na-eligibility-audit 2026-08-02** (tradfi tranche, dispatch agt-6397c9): **KEEP-NA-STALE, re-verified — citation
+  drift found and fixed.** Sole open todo re-read end-to-end via an independent sub-agent classification; count
+  reconciled (1/1). Confirmed via direct grep of batch5's content that todo 8 there still verbatim-covers this doc's
+  investigation and is sequenced first among 3 entangled Yahoo/venue todos. Found batch5's `status` field has since
+  flipped `draft` → `active` (last touched 2026-08-01) — updated the NOTE block above to correct the stale "NOT
+  ingested, NOT dispatched today" wording; disposition unchanged (KEEP-NA-STALE, `assigned_vm` stays NA).

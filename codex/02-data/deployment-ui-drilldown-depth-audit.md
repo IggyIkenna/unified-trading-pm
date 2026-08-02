@@ -4,9 +4,9 @@ title: Deployment UI Drilldown Depth Audit
 summary: >-
   Per-asset-group drilldown depth audit of the deployment-ui Data Status panel — compares the columns the UI exposes
   today against the target leaf atom per the codex shard-key matrix (DeFi needs first-class chain, options needs
-  root/instrument_type, prediction needs canonical_question_group, sports needs league_id) and tracks the remediation
-  backlog so every asset_group can drill to its proper leaf. Stub — body to be filled as the alignment plan executes.
-status: draft
+  root/instrument_type, prediction needs canonical_question_group, sports needs league_id). RESOLVED — the remediation
+  shipped via data_status_drilldown_shard_atom_alignment_2026_05_07 (complete, archived); this doc records the outcome.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
@@ -16,16 +16,22 @@ tags: [ui, data-status, manifest, audit, defi, single-walk]
 related: [/codex/02-data/availability-manifest-and-data-status.md, /codex/02-data/cross-asset-canonical-target-ssot.md]
 created: 2026-05-07
 authoritative_for: [deployment-ui data-status drilldown depth audit]
-referenced_by: [plans/epics/infrastructure_master.md, plans/ai/data_status_drilldown_shard_atom_alignment_2026_05_07.md]
+referenced_by:
+  [
+    /plans/epics/infrastructure_master.md,
+    /plans/archive/data_status_drilldown_shard_atom_alignment_2026_05_07.md,
+  ]
 owner:
-last_reviewed: 2026-05-17
+last_reviewed: 2026-09-30
 code_refs:
 ---
 
 # Deployment UI Drilldown Depth Audit
 
-> **Status:** PLANNED — stub created 2026-05-07 to anchor forward-references from active plans. Body to be filled in as
-> the drilldown alignment plan is executed.
+> **Status:** RESOLVED (verified 2026-07-31). The stub was created 2026-05-07 to anchor forward-references from the
+> then-active alignment plan. That plan — `/plans/archive/data_status_drilldown_shard_atom_alignment_2026_05_07.md` —
+> is `status: complete` (41/41 todos) and archived, and the drilldown gap it tracked is closed in code (see § Outcome).
+> This doc is kept as the audit record; it is no longer a forward-looking backlog.
 
 ## Purpose
 
@@ -36,12 +42,14 @@ exposes a per-asset-group set of columns that does not always reach those leaves
 
 ## Scope
 
-- Per-asset-group drilldown column lists in `deployment-ui/src/pages/data-status/`.
-- API surface in `deployment-api/deployment_api/services/data_status.py` powering each drill.
+- Per-asset-group drilldown column lists in `deployment-ui/src/components/DataStatusDrilldown.tsx` (with
+  `DataStatusTab.tsx` / `LiveDataStatusTab.tsx` and helpers in `deployment-ui/src/lib/data-status-helpers.ts`).
+- API surface in `deployment-api/deployment_api/services/data_status_drilldown/` powering each drill (sibling modules:
+  `services/data_status_service.py`, `services/data_status_hierarchical.py`, `routes/data_status/`).
 - Per-shard-detail / per-shard-download endpoints.
 - Excluded: the rollup-level summary (handled by slicer); UI design / styling.
 
-## Outline (planned sections)
+## Outline (audit dimensions, as scoped 2026-05-07)
 
 1. **Audit methodology** — for each asset_group, list current drilldown columns from the UI source + API param schema
    - shard-key matrix target; produce a delta table.
@@ -56,17 +64,36 @@ exposes a per-asset-group set of columns that does not always reach those leaves
 6. **MTDS recovery wiring** — drill-down leaves expose "rerun this shard" CTA via MTDS CLI flags (`--instrument-type`,
    `--root`, `--day`, `--shard-key`).
 
+## Outcome (verified 2026-07-31)
+
+The remediation backlog above is closed. Verified against the working tree:
+
+| Target leaf axis                        | Where it landed                                                                        |
+| --------------------------------------- | -------------------------------------------------------------------------------------- |
+| `chain` (DeFi first-class)              | `deployment-api/deployment_api/services/data_status_drilldown/`                        |
+| `instrument_type` / `root` (options)    | `deployment-api/deployment_api/services/data_status_drilldown/`                        |
+| `canonical_question_group` (prediction) | `deployment-api/deployment_api/services/data_status_drilldown/`                        |
+| `league_id` (sports)                    | `deployment-api/deployment_api/services/data_status_drilldown/`                        |
+| Drilldown UI                            | `deployment-ui/src/components/DataStatusDrilldown.tsx`                                 |
+| MTDS per-shard recovery CTA flags       | `market-tick-data-service` CLI — `--instrument-type`, `--root`, `--day`, `--shard-key`  |
+
+The § "Open questions" below were the 2026-05-07 design questions; they are retained as historical context, not as
+live decisions.
+
 ## Cross-references
 
-- **Plan(s) implementing this:** [`infrastructure_master`](../../plans/epics/infrastructure_master.md),
-  [`data_status_drilldown_shard_atom_alignment`](../../plans/active/data_status_drilldown_shard_atom_alignment_2026_05_07.md).
-- **Related codex SSOTs:** [`availability-manifest-and-data-status`](./availability-manifest-and-data-status.md),
-  [`cross-asset-canonical-target-ssot`](./cross-asset-canonical-target-ssot.md) (the shard-atom grain matrix this doc's
-  "shard-key matrix" referred to; the CLAUDE.md "Shard-granularity SSOT" section it was originally slated to be lifted
-  from no longer exists verbatim — this 2026-07-18 cross-asset-group consolidation is the doc that superseded it).
-- **Code:** `deployment-ui/src/pages/data-status/`, `deployment-api/deployment_api/services/data_status.py`.
+- **Plan(s) that implemented this:** [`/plans/epics/infrastructure_master.md`](/plans/epics/infrastructure_master.md),
+  [`/plans/archive/data_status_drilldown_shard_atom_alignment_2026_05_07.md`](/plans/archive/data_status_drilldown_shard_atom_alignment_2026_05_07.md)
+  (`status: complete`, archived).
+- **Related codex SSOTs:** [`/codex/02-data/availability-manifest-and-data-status.md`](/codex/02-data/availability-manifest-and-data-status.md),
+  [`/codex/02-data/cross-asset-canonical-target-ssot.md`](/codex/02-data/cross-asset-canonical-target-ssot.md) (the
+  shard-atom grain matrix this doc's "shard-key matrix" referred to; the CLAUDE.md "Shard-granularity SSOT" section it
+  was originally slated to be lifted from no longer exists verbatim — this 2026-07-18 cross-asset-group consolidation is
+  the doc that superseded it).
+- **Code:** `deployment-ui/src/components/DataStatusDrilldown.tsx`,
+  `deployment-api/deployment_api/services/data_status_drilldown/`.
 
-## Open questions
+## Open questions (historical — 2026-05-07)
 
 - Should the drilldown UI be metadata-driven (read shard-key matrix from UAC at runtime) or hardcoded per-asset-group
   React components? (metadata-driven scales better but heavier upfront).

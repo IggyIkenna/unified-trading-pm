@@ -204,8 +204,8 @@ Listed here only so this doc is a complete record of the shard; each is already 
    target since moved) repointed to the real `/codex/05-infrastructure/gcs-object-operations.md`.
 3. `/plans/active/sports_consolidated_native_ao_extract_2026_07_25.md` — a heading split across a blank line into two
    `##` headings, orphaning a `)`.
-4. `/plans/active/sports_satellite_ao_dispatch_batch3_2026_07_25.md` — mangled inline-code path token restored to the
-   canonical form the same doc states verbatim two lines below.
+4. `/plans/archive/2026_07/sports_satellite_ao_dispatch_batch3_2026_07_25.md` — mangled inline-code path token restored
+   to the canonical form the same doc states verbatim two lines below.
 5. `/plans/active/sports_closeout_track_x_hygiene_2026_07_25.md` — `check_delete_vm_launch_gating.sh` soft-warn cleared
    with the explicit "ships a launcher script, launches no VM" justification `task_template.md` finding O requires.
 

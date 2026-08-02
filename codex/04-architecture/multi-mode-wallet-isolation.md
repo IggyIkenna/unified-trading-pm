@@ -9,7 +9,7 @@ status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
-repos: [execution-service]
+repos: [execution-service, strategy-service, unified-api-contracts]
 scope: [engineer, admin]
 tags: [execution, defi, cefi, reconciliation, live-trading, ssot]
 related:
@@ -22,13 +22,27 @@ created: 2026-05-15
 authoritative_for: [paper-live shared-wallet isolation, PBMS virtual-ledger overlay, CanonicalPosition mode tagging]
 referenced_by:
 owner: topology_qgroup_gap_closure_2026_05_09 Phase 4
-last_reviewed: 2026-05-17
+last_reviewed: 2026-09-03
 code_refs:
 updated: 2026-05-15
 closes: GAP-13
 ---
 
 # Multi-Mode Wallet Isolation
+
+> **⚠️ DESIGN DECISION — NOT YET IMPLEMENTED (verified 2026-07-31 freshness re-review).** The decision below stands, but
+> nothing in § "Implementation Contract" / § "Integration Test Gate" is shipped. Measured against the current tree:
+>
+> | Doc claim                                                          | Reality                                                                                                                             |
+> | ------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------- |
+> | `CanonicalPosition.mode` field                                     | **Does not exist.** `unified_api_contracts/canonical/domain/position/__init__.py::CanonicalPosition` has no `mode` field.            |
+> | PBMS `_live_positions` / `_paper_positions` split ledgers          | **Not implemented** anywhere in `strategy_service/position/`.                                                                        |
+> | `execution-service/tests/integration/test_multi_mode_wallet_isolation.py` | **Does not exist.** The "gates the May-23 ramp" claim never had a gate behind it.                                              |
+> | "position-balance-monitor (PBMS)" as a standalone service          | **Retired 2026-05-20** — subtree-merged into `strategy-service` as the `strategy_service/position/` sub-package (SSOT [`/codex/04-architecture/strategy-service-architecture.md`](/codex/04-architecture/strategy-service-architecture.md)). Read every "PBMS" below as that sub-package. |
+> | Paper positions "written to BigQuery"                              | **Stale storage claim** — BigQuery dual-write was removed; all production data lands in GCS Parquet (SSOT [`/codex/02-data/hive-schema-compatibility.md`](/codex/02-data/hive-schema-compatibility.md)). |
+>
+> Treat this doc as the design record for the shared-wallet isolation approach, **not** as a description of shipped
+> behaviour. Anything building on it must implement the contract first.
 
 ## Decision (2026-05-15)
 
@@ -43,8 +57,9 @@ accounted in PBMS memory + emitted as `CanonicalPosition` records tagged `mode=p
 - May-23 target venues (Binance, Bybit, OKX) all support sub-accounts, but provisioning + permission setup takes 3-5
   business days per venue — too late for May-23.
 - Virtual ledger works on any venue without new account provisioning.
-- Off-chain paper position tracking is auditable: every `CanonicalPosition(mode=paper)` record is written to BigQuery
-  with the same schema as live fills, enabling post-hoc parity analysis.
+- Off-chain paper position tracking is auditable: every paper position record is persisted with the same schema as live
+  fills, enabling post-hoc parity analysis. (The 2026-05-15 text said "written to BigQuery" — the storage target is now
+  GCS Parquet; BigQuery dual-write no longer exists.)
 
 **Post-cutover (June+)**: migrate to sub-account isolation (Option A) once provisioning is complete. Sub-accounts give
 cleaner on-chain audit trails and simplify margin attribution.
@@ -53,12 +68,15 @@ cleaner on-chain audit trails and simplify margin attribution.
 
 ### CanonicalPosition mode tag
 
-`CanonicalPosition.mode` (str): `"live"` | `"paper"`. PBMS writes all positions with the `mode` field set. Downstream
-consumers (risk service, analytics) MUST filter by mode before aggregating exposure.
+**TARGET, not shipped** — `CanonicalPosition` currently has no `mode` field; adding it to
+`unified_api_contracts/canonical/domain/position/__init__.py` is step 1 of implementing this doc.
+
+`CanonicalPosition.mode` (str): `"live"` | `"paper"`. The position sub-package writes all positions with the `mode`
+field set. Downstream consumers (risk sub-package, analytics) MUST filter by mode before aggregating exposure.
 
 ### PBMS split rule
 
-PBMS maintains two independent position ledgers per instrument per venue:
+**TARGET, not shipped.** The position sub-package maintains two independent position ledgers per instrument per venue:
 
 - `_live_positions: dict[str, Decimal]` — derived from real fills (CanonicalFill stream)
 - `_paper_positions: dict[str, Decimal]` — derived from simulated fills (BatchMatchingEngine output)
@@ -86,6 +104,10 @@ actual margin.
 
 ## Integration Test Gate
 
+**NOT BUILT** — this file does not exist in `execution-service`. The May-23 dual-mode launch shipped without it, so the
+"without green, the dual-mode launch is blocked" line below was never an enforced gate. Kept as the spec for the test
+whoever implements the contract must write.
+
 `execution-service/tests/integration/test_multi_mode_wallet_isolation.py` MUST:
 
 1. Inject two fills for the same instrument: one from the live fill stream, one from BatchMatchingEngine
@@ -94,7 +116,7 @@ actual margin.
 4. Assert `CanonicalPosition(mode="live")` and `CanonicalPosition(mode="paper")` are emitted separately
 5. Assert live margin attribution excludes paper positions
 
-This test gates the May-23 carry-live + funding-arb-paper ramp. Without green, the dual-mode launch is blocked.
+This test was specified to gate the May-23 carry-live + funding-arb-paper ramp.
 
 ## Post-Cutover Migration Path
 

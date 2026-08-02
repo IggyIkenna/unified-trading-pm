@@ -29,7 +29,7 @@ related:
   [
     /plans/active/issues/sports_halftime_odds_sfi_vs_inplay_2026_07_16.md,
     /plans/active/sports_satellite_ao_dispatch_batch5_2026_07_26.md,
-    /plans/active/issues/ml_service_sports_feature_frame_non_numeric_columns_break_feature_selection_2026_07_26.md,
+    /plans/archive/issues/ml_service_sports_feature_frame_non_numeric_columns_break_feature_selection_2026_07_26.md,
   ]
 created: 2026-07-26
 parent_epic: sports_master
@@ -179,5 +179,12 @@ same CLI path would hit the identical wall.
       independent finding surfaced in the same run: the CLV target resolves 100% "flat" for this exact date window
       (`pinnacle_closing_odds_home`/`odds_home_avg` missing), so even a dtype-fixed retrain of this specific window may
       not produce a meaningful model. Both filed with full diagnostic evidence in
-      `/plans/active/issues/ml_service_sports_feature_frame_non_numeric_columns_break_feature_selection_2026_07_26.md`.
+      `/plans/archive/issues/ml_service_sports_feature_frame_non_numeric_columns_break_feature_selection_2026_07_26.md`.
       The 3 quarantined artifacts remain untouched/unpromoted. This todo stays open, now blocked on that new doc.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30**: KEEP-NA, valid (sports tranche) — todo 1 is EXPLICITLY DEFERRED in its own text
+  as 'a genuine design decision, not a mechanical fix' (wire `--family` to actually scope SPORTS training vs drop the
+  vestigial required-arg), and todo 2 (the CLV retrain) is blocked one layer deeper on
+  `sports_clv_target_pit_gated_out_of_odds_features_export_2026_07_26.md`, which this pass reclassified instead

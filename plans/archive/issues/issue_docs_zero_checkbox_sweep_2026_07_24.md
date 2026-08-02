@@ -71,7 +71,7 @@ depends_on: []
       (`_cefi_canonical_blueprint_2026_07_17.md`, a supplementary blueprint, not a tracked issue); **96 are
       `status: open`**. Grepped all 96 for real checkbox syntax (`- [ ]`/`- [x]`, anchored AND unanchored patterns, to
       catch nonstandard indentation/casing) — **95/96 have at least one real checkbox somewhere in the body**. The one
-      zero-checkbox hit, `plans/active/issues/cme_combo_underlying_extraction_garbage_2026_07_19.md`, uses a numbered
+      zero-checkbox hit, `plans/archive/issues/cme_combo_underlying_extraction_garbage_2026_07_19.md`, uses a numbered
       `~~item~~ **DONE**` remediation-list format instead of checkbox syntax — read it directly: all 3 items are
       genuinely done (commit hashes cited, `resolved_by` frontmatter filled), it stays `status: open` only because
       `locked_by: live-defi-rollout` blocks archival (an unrelated, out-of-scope lock — not this todo's to touch; the

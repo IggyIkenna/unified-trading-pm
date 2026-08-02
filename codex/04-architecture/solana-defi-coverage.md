@@ -25,7 +25,7 @@ authoritative_for:
 referenced_by:
   [/codex/04-architecture/drift-v2-data-sources.md, /codex/09-strategy/architecture-v2/archetypes/carry-basis-perp.md]
 owner: defi-adapters
-last_reviewed: 2026-05-17
+last_reviewed: 2026-08-24
 code_refs:
 type: architecture
 ---
@@ -48,14 +48,13 @@ type: architecture
 > removal (adapters/drift_adapter.py, adapters/\_umi_pacifica.py, cli/handlers/solana_defi_drift\*.py,
 > cli/handlers/drift_v2*\*.py, live/connectors/drift_solana_ws.py, live/connectors/pacifica_solana_perp_ws.py) tracked
 > under a sibling task. GCS/manifest data purge is a separate sibling task
-> (`unified-trading-pm/plans/active/issues/solana_perp_dex_cull_drift_pacifica_2026_07_16.md`). **Everything below this
-> banner describing DRIFT-SOLANA / PACIFICA-SOLANA / the Velocity Data API is now HISTORICAL RECORD ONLY — do not use it
-> to justify re-adding these venues.** `/codex/04-architecture/drift-v2-data-sources.md` is SUPERSEDED by this banner in
-> full.
+> (`/plans/active/issues/solana_perp_dex_cull_drift_pacifica_2026_07_16.md`). **Everything below this banner describing
+> DRIFT-SOLANA / PACIFICA-SOLANA / the Velocity Data API is now HISTORICAL RECORD ONLY — do not use it to justify
+> re-adding these venues.** `/codex/04-architecture/drift-v2-data-sources.md` is SUPERSEDED by this banner in full.
 
 > **SSOT for Solana DeFi adapter architecture.** Created: 2026-05-13 per
-> `plans/active/solana_perp_dex_adapters_2026_05_13.md` Phase 6. Extended: 2026-05-13 per
-> `plans/active/solana_amm_coverage_expansion_2026_05_13.md` (Plan C).
+> `/plans/archive/solana_perp_dex_adapters_2026_05_13.md` Phase 6. Extended: 2026-05-13 per
+> `/plans/archive/solana_amm_coverage_expansion_2026_05_13.md` (Plan C).
 
 ## Overview
 
@@ -86,9 +85,9 @@ was the sole entry; historical record:
 > NXDOMAIN, `dex.zeta.markets/api` returns HTML not JSON, verified 2026-07-15) and DeFiLlama TVL is
 > ~$0 (Mango V4 Perps
 > $14,405, Zeta $0 — pivoted to "Bullet Perps", also $0, FlashTrade $8.0M but host dead). See
-> `unified-trading-pm/plans/archive/issues/defi_perp_funding_canonicalisation_derivative_ticker_all_perps_2026_07_15.md`
-> for the full evidence trail. **Do not re-add these venues without a fresh viability check** (live host + real TVL + an
-> actual MTDS capture plan) — this is not a "come back to it later" gap, it's a deliberate deletion.
+> `/plans/archive/issues/defi_perp_funding_canonicalisation_derivative_ticker_all_perps_2026_07_15.md` for the full
+> evidence trail. **Do not re-add these venues without a fresh viability check** (live host + real TVL + an actual MTDS
+> capture plan) — this is not a "come back to it later" gap, it's a deliberate deletion.
 >
 > **DRIFT-SOLANA — REMOVED 2026-07-16 (operator ruling).** Drift was hacked
 > ~$280M on 2026-04-01 (Lazarus-attributed),
@@ -132,6 +131,10 @@ derives `tick_size = Decimal(str(bin_step)) / Decimal("10000")`. For example, `b
 ## Data Types (per venue)
 
 ### Perp DEX (Plan B)
+
+> **Implementation status re-verified 2026-07-30.** `perp_funding` and `perp_open_interest` exist in code;
+> **`perp_mark_prices` and `perp_index_prices` do not** — they appear nowhere in unified-api-contracts or
+> market-tick-data-service. Treat the last two rows as planned, not captured.
 
 | data_type            | Purpose                          | Sources                                |
 | -------------------- | -------------------------------- | -------------------------------------- |
@@ -188,7 +191,7 @@ Pre-launch manifest rows (2018-01-01 start date) were incorrectly `expected_unat
 
 ### DRIFT-SOLANA capture path resolved (2026-06-01 — Velocity Data API)
 
-> Added 2026-06-01 from `plans/archive/solana_basis_trading_mvp_2026_06_01.plan.md` Phase 1 (DriftV2HistoricalIngester
+> Added 2026-06-01 from `/plans/archive/solana_basis_trading_mvp_2026_06_01.plan.md` Phase 1 (DriftV2HistoricalIngester
 > shipped at mtds@0f70f376). Full SSOT: `/codex/04-architecture/drift-v2-data-sources.md`.
 
 The MTDS consumer gap is closed via the **Drift Velocity Data API** (`data.api.drift.trade`), not the S3 archive.
@@ -200,7 +203,7 @@ legacy) ended 2025-01-08; Velocity API covers from then on AND historically. Liv
 canonical layout.
 
 The Bug-D-prime saga (Helius sig-walker path, 28GB sig-index parquet) is SUPERSEDED by this design;
-`plans/active/issues/bug_d_prime_drift_backfill_2026_05_31.md` banner-marked SUPERSEDED 2026-06-01. Sig-index
+`/plans/archive/issues/bug_d_prime_drift_backfill_2026_05_31.md` banner-marked SUPERSEDED 2026-06-01. Sig-index
 infrastructure REMAINS in the MTDS repo as cold infrastructure (not on any critical path).
 
 ### Floor dates
@@ -210,7 +213,7 @@ rows before the floor date are `empty_confirmed/EXPECTED_PRE_VENUE_LAUNCH`.
 
 ## Venue Registry — Plan E: Restaking (InstrumentType=YIELD_BEARING)
 
-> Added 2026-05-13 per `plans/active/solana_restaking_rewards_coverage_2026_05_13.md`.
+> Added 2026-05-13 per `/plans/archive/solana_restaking_rewards_coverage_2026_05_13.md`.
 
 | Venue                | UAC Key                                              | Program ID (best-guess)                 | Deploy Date | Adapter                           | Status              |
 | -------------------- | ---------------------------------------------------- | --------------------------------------- | ----------- | --------------------------------- | ------------------- |
@@ -219,7 +222,7 @@ rows before the floor date are `empty_confirmed/EXPECTED_PRE_VENUE_LAUNCH`.
 > Solayer/Picasso/Cambrian removed 2026-06-02 — no usable/decodable data source (operator decision). The Plan-E
 > SOLAYER/PICASSO/CAMBRIAN-SOLANA venues, UAC capabilities, and IS adapters were fully wiped. sSOL is a custom LRT vault
 > with no decodable exchange-rate layout / no IDL; Picasso/Cambrian program IDs were never field-verified (best-guess
-> placeholders). SSOT: `plans/active/issues/issue_docs_remediation_sweep_2026_06_02.md`.
+> placeholders). SSOT: `/plans/active/issues/issue_docs_remediation_sweep_2026_06_02.md`.
 
 ## Restaking layer
 
@@ -239,7 +242,10 @@ the AVS premium component, causing P&L to appear worse than actual. Restaking co
 | `restaking_rewards`            | Per-epoch/operator reward accrual rate (APY + absolute)         | REST API / RPC (future MTDS scope) |
 | `restaking_operator_set`       | Active operators/NCNs securing a vault                          | On-chain account reads             |
 | `cross_chain_restaking_routes` | Available cross-chain paths for restaked assets (no live venue) | API / SDK                          |
-| `lst_rates`                    | Exchange rate (underlying SOL per receipt token)                | Stake pool state accounts          |
+
+> **Not implemented (verified 2026-07-30):** `restaking_operator_set` and `cross_chain_restaking_routes` exist nowhere
+> in code. Of this family only `restaking_rewards` is real. | `lst_rates` | Exchange rate (underlying SOL per receipt
+> token) | Stake pool state accounts |
 
 ### Jito Restaking (already shipped — Plan A)
 
@@ -255,7 +261,7 @@ it could not be field-verified; Picasso (~3 tx/month, no public yield/rate API) 
 building NCNs on Jito Restaking, not a DeFi venue) had only best-guess placeholder program IDs that were never verified.
 The venues, UAC `PROTOCOL_CAPABILITIES`/`_STATIC_VENUE_CHAINS` entries, IS `solayer.py`/`picasso.py`/`cambrian.py`
 adapters, and all tests were wiped. "Rather have no implementation than a partial one." SSOT:
-`plans/active/issues/issue_docs_remediation_sweep_2026_06_02.md`.
+`/plans/active/issues/issue_docs_remediation_sweep_2026_06_02.md`.
 
 ### carry_staked_basis cross-reference
 
@@ -267,7 +273,7 @@ second-order yield source; the archetype should aggregate:
 
 Until MTDS restaking source wiring is complete, restaking APY is not captured in historical parquets. Reference data
 (instrument discovery) is available via Plan E adapters. MTDS wiring tracked in
-`plans/active/issues/solana_defi_coverage_gaps_2026_05_13.md`.
+`/plans/archive/issues/solana_defi_coverage_gaps_2026_05_13.md`.
 
 ## Venue naming convention
 
@@ -285,7 +291,7 @@ banner above.)
 
 **Legacy bare-name rows** (`MARINADE`, `DRIFT`, `JITO`, `RAYDIUM`, `ORCA`, `KAMINO`, `SOLEND`, `MARGINFI`) are migration
 artifacts from an adapter version that predated the `{PROTOCOL}-{CHAIN}` pattern. They are being resolved by
-`plans/active/solana_venue_naming_reconciliation_2026_05_14.md` (Plan D):
+`/plans/archive/solana_venue_naming_reconciliation_2026_05_14.md` (Plan D):
 
 - **Category A** venues with real captured data (MARINADE/RAYDIUM/ORCA/KAMINO/SOLEND/MARGINFI): parquets re-written to
   `{PROTOCOL}-SOLANA` path; bare-name manifest rows flipped to `attempted_failed`.
@@ -301,7 +307,7 @@ After Phase 3, only `{PROTOCOL}-SOLANA` rows will carry `capture_status=captured
 ### MTDS Solana source wiring (Plan B — perp DEX)
 
 MTDS perp DEX source wiring is **NOT IN PLAN B**. Tracked in:
-`plans/active/issues/solana_defi_coverage_gaps_2026_05_13.md`
+`/plans/archive/issues/solana_defi_coverage_gaps_2026_05_13.md`
 
 Until MTDS source is wired, DRIFT-SOLANA (the one remaining Plan B venue) has 0% `perp_funding` capture via this Plan-B
 path — note `derivative_ticker` capture for DRIFT-SOLANA WAS wired 2026-07-15 via the Drift Data API through a different
@@ -319,14 +325,14 @@ warning until MTDS pipeline wiring is complete. Successor: MTDS Solana AMM/oracl
 
 MTDS restaking reward source wiring is **NOT IN PLAN E**. Plan E ships reference data (instrument discovery) only.
 Actual per-epoch AVS reward rates require MTDS source wiring. Tracked in
-`plans/active/issues/solana_defi_coverage_gaps_2026_05_13.md`.
+`/plans/archive/issues/solana_defi_coverage_gaps_2026_05_13.md`.
 
 ## Cross-references
 
-- Plan B: `plans/active/solana_perp_dex_adapters_2026_05_13.md`
-- Plan C: `plans/active/solana_amm_coverage_expansion_2026_05_13.md`
-- Plan E (restaking layer): `plans/active/solana_restaking_rewards_coverage_2026_05_13.md`
-- Issue doc: `plans/active/issues/solana_defi_coverage_gaps_2026_05_13.md`
+- Plan B: `/plans/archive/solana_perp_dex_adapters_2026_05_13.md`
+- Plan C: `/plans/archive/solana_amm_coverage_expansion_2026_05_13.md`
+- Plan E (restaking layer): `/plans/archive/solana_restaking_rewards_coverage_2026_05_13.md`
+- Issue doc: `/plans/archive/issues/solana_defi_coverage_gaps_2026_05_13.md`
 - UAC SSOT: `unified_api_contracts/registry/capability_declarations/_defi_chain_data.py` § `SOLANA_DEFI_PROTOCOLS`
 - Factory: `instruments-service/instruments_service/reference_data/factory.py`
 - Solana utils: `instruments-service/instruments_service/reference_data/adapters/defi/_solana_utils.py`

@@ -1,0 +1,161 @@
+---
+doc_type: issue
+title:
+  "TradFi's mvp_mode fetch-time filter is unreachable dead code — production always downloads the full 93-instrument
+  universe unfiltered"
+summary: >-
+  databento_enrichment.py::_resolve_by_dataset branches on an mvp_mode: bool param that would call
+  get_mvp_databento_symbols_for_venue() (a curated, narrower ES-only-for-CME-style subset) instead of the full
+  get_databento_symbols_for_venue(). download_batch_df's mvp_mode defaults False and a workspace-wide grep for
+  mvp_mode=True returns zero hits anywhere — no real caller ever requests the MVP-filtered path. Production always
+  downloads the full TRADFI_DATABENTO_INSTRUMENTS universe (93 instruments) unfiltered for every venue including CME,
+  regardless of mvp_scope.py's curated TradFi MVP rule (CME + ES/NQ/VX/commodity-root underliers only).
+status: resolved
+nature: notes
+asset_group: [tradfi]
+stage: [meta]
+repos: [market-tick-data-service, unified-api-contracts]
+scope: [engineer]
+tags: [mvp, tradfi, dead-code, cli, p2]
+related:
+  [
+    ../../docs-mirror/instruments-service/TRADFI_INSTRUMENTS.md,
+    /plans/audit/results/canonical_instrument_id_audit_2026_07_08.md,
+  ]
+created: 2026-07-08
+parent_epic: instruments_master
+priority: P2
+source:
+  "Found during a dedicated audit of the real MVP catalogue/classification code (operator request, 2026-07-08: 'Audit
+  the real MVP catalogue code'). Re-verified directly before filing: grep for mvp_mode=True across the whole workspace
+  returns zero hits; get_mvp_databento_symbols_for_venue has no caller outside its own unit test and
+  databento_enrichment.py's dead branch."
+assigned_vm: NA
+execution_scope: local-only
+model_tier: sonnet-doable
+thinking_tier: medium
+estimate_class: refactor
+estimate_baseline_ai_days: 0.5
+estimate_calibrated_ai_days: 0.2
+last_updated: 2026-07-29
+supersedes:
+superseded_by:
+depends_on:
+assigned_role: data_engineering
+drift_direction: advance-code
+locked_by:
+locked_since:
+resolved_by:
+  "deployment-service@c847395e (opt-in --mvp-mode flag wired onto launch-tradfi-forward-poll.sh, per operator ruling
+  2026-07-29; 3 new regression tests, quality-gates.sh green)"
+---
+
+> **✅ ARCHIVED 2026-07-30** — every todo done: operator ruled 2026-07-29 (wire, don't delete, via an opt-in flag on the
+> existing forward-poll launcher) and the implementation landed 2026-07-30 (`deployment-service@c847395e`). The
+> 2026-07-30 na-eligibility-audit already marked this ARCHIVE-READY but deferred the physical move + referrer sweep to
+> avoid N-way merge conflicts with concurrent per-tranche workers — this pass executes that deferred sweep, including
+> flipping the stale first todo on `tradfi_satellite_ao_dispatch_batch5_2026_07_29.md` that still asked for this
+> already-shipped wiring. 0 open todos, unlocked. Moved to `plans/archive/issues/`.
+
+## The bug
+
+`market-tick-data-service/market_tick_data_service/market_interface/adapters/tradfi/databento_enrichment.py:208-226`
+(`_resolve_by_dataset`) takes an `mvp_mode: bool` param:
+
+```python
+if mvp_mode:
+    defs = get_mvp_databento_symbols_for_venue(venue_name)
+else:
+    defs = get_databento_symbols_for_venue(venue_name)
+```
+
+`get_mvp_databento_symbols_for_venue`
+(`unified-api-contracts/unified_api_contracts/registry/tradfi_instrument_universe.py:724`) is a real, implemented,
+unit-tested function — it correctly returns a narrower MVP-scoped instrument-definition set (e.g. ES option surfaces +
+commodity option-on-futures defs for CME). But the ONLY place `_resolve_by_dataset` is reachable from is
+`download_batch_df` (`databento_enrichment.py:299-324`), whose `mvp_mode: bool = False` default is never overridden
+anywhere:
+
+- Workspace-wide grep for `mvp_mode=True` / `mvp_mode = True`: **zero hits**, any repo.
+- `get_mvp_databento_symbols_for_venue`'s only non-definition references are its own dedicated unit test
+  (`unified-api-contracts/tests/unit/test_cme_options_universe.py`) and the dead `if mvp_mode:` branch itself.
+
+**Real operator impact**: `unified_api_contracts.canonical.crosscutting.mvp_scope.py::MVP_SCOPE["tradfi"]`
+(`TradFiMvpRule`) declares a real, curated TradFi MVP universe — CME only, `FUTURE`/`OPTION`, underliers
+`ES`/`NQ`/`VX` + the 7 commodity roots backing a Binance tradfi-perp (`GC`/`SI`/`PL`/`PA`/`NG`/`CL`/`HG`) — but this
+rule is enforced ONLY at the classification layer (tagging already-captured rows `mvp=true/false` for downstream
+reporting), never at the fetch layer. Production downloads and captures the FULL 93-instrument
+`TRADFI_DATABENTO_INSTRUMENTS` universe unfiltered for every TradFi venue including CME, every run, regardless of
+whether the caller wanted the MVP-scoped subset. This is not itself a data-loss bug (the full universe is a superset of
+MVP, so nothing MVP-relevant is missing) — the real costs are: (a) the `mvp_mode`-filtered code path is maintained (has
+its own registry function + unit tests) but has never actually run in production, so it's unverified against live
+Databento responses; (b) any future caller that actually wants a cheaper/narrower MVP-only fetch (e.g. a
+cost-constrained CME-options-only backfill) will silently get the full universe instead, with no error or warning.
+
+## Todos
+
+- [x] ✅ [DECISION] P2. **Operator-ruled 2026-07-29 (interactive decision session): wire `mvp_mode` to a real caller —
+      do NOT delete it. The caller is an opt-in flag on the existing recurring forward-poll launcher
+      (`launch-tradfi-forward-poll.sh`), not a brand-new dedicated launcher, and it must stay a manually-invoked
+      non-default flag — never silently default-on, per the existing 2026-06-22 "download everything, no client-side
+      filters" ruling on the CME backfill launcher. See the new [CODE] P1 todo below for the concrete implementation
+      plan.** Decide whether `mvp_mode` should ever be wired live — either (a) find/create a real caller that needs the
+      narrower MVP-only fetch (e.g. a cost-optimization backfill mode) and wire `mvp_mode=True` through from a CLI flag
+      or config, or (b) if the full-universe-unfiltered fetch is actually the intended production behavior and the
+      MVP-scoped fetch path was speculative/never-needed, delete `mvp_mode`, `_resolve_by_dataset`'s dead branch, and
+      `get_mvp_databento_symbols_for_venue` (checking its unit test first) rather than keep unreachable code around.
+      Operator call — not prescribed here.
+- [x] ✅ [SCRIPT] P2. **Operator-ruled 2026-07-29: superseded by the concrete [CODE] P1 todo below** (wire via an opt-in
+      `--mvp-mode` flag on `launch-tradfi-forward-poll.sh` — see the (i)-(iv) plan). Implement the chosen direction —
+      either wire a real caller + add a regression test proving `mvp_mode=True` actually narrows the fetched instrument
+      set for a real venue (e.g. CME), or remove the dead path cleanly (no shims, delete the now-unused registry
+      function + its dedicated test file/class).
+- [x] ✅ [SCRIPT] P2. **Operator-ruled 2026-07-29: superseded — folded into the new [CODE] P1 todo's own "done when"
+      below** (ship via quickmerge once that todo lands, per the standard commit-push-flip discipline). Ship via
+      quickmerge, quality-gates green in both `market-tick-data-service` and `unified-api-contracts` if the removal path
+      is chosen.
+- [x] ✅ [CODE] P1. **DONE 2026-07-30 (autonomous session).** Wired `mvp_mode` via an opt-in flag on the existing
+      forward-poll launcher, exactly per the operator-ruled 2026-07-29 concrete implementation plan: (i) `VM_MVP_MODE`
+      metadata plumbing added to `setup-data-pipeline-vm.sh`'s `mtds-backfill` branch, mirroring `VM_FORCE`'s identical
+      metadata->CLI-flag pattern. (ii) New opt-in `--mvp-mode` CLI flag on `launch-tradfi-forward-poll.sh` ->
+      `VM_MVP_MODE=true` metadata, mirroring the launcher's existing `--force` parsing; no flag = unchanged
+      full-universe fetch (verified via the launcher's own dry-run echo). (iii) New regression test class
+      `TestMtdsBackfillMvpModeFlag` in `deployment-service/tests/unit/test_vm_launcher_scripts.py` (the correct home —
+      the doc's suggested MTDS test files don't test shell-launcher CLI generation; this repo's existing
+      `TestCanonicalMigrationServiceKeyedWorkspaceDir` class is the established idiom for exactly this, extracting the
+      real script lines rather than a hand-duplicated copy) — 3 new tests (true/false/absent), all green; full
+      `test_vm_launcher_scripts.py` suite (130 tests) green. (iv) `launch-tradfi-bf-cme-ohlcv-1m.sh` /
+      `launch-tradfi-backfill-vm.sh` confirmed untouched. Shipped `deployment-service@c847395e`, quality-gates green,
+      quickmerge landed on `live-defi-rollout`.
+
+## Progress Log
+
+- **2026-07-08** — Filed from the operator-requested MVP-catalogue-code audit. Root cause re-verified directly before
+  filing: `rg -rn "mvp_mode=True|mvp_mode = True"` across the whole workspace (all repos) returns zero matches;
+  `get_mvp_databento_symbols_for_venue`'s only callers are its own unit test and the dead branch. No fix applied yet —
+  operator decision needed on direction (a) vs (b) above.
+- **2026-07-29 — RULED (interactive decision session).** Operator ruled TWO things: (1) wire `mvp_mode` to a real caller
+  — do not delete it; (2) the specific caller is an opt-in flag on the existing recurring forward-poll launcher
+  (`launch-tradfi-forward-poll.sh`), NOT a brand-new dedicated launcher, and it must stay a manually-invoked non-default
+  flag (never silently default-on, consistent with the 2026-06-22 "download everything, no client-side filters" ruling
+  on the CME backfill launcher). All 3 original todos flipped to record this ruling; a new concrete [CODE] P1 todo added
+  with the (i)-(iv) implementation plan (VM_MVP_MODE metadata plumbing in `setup-data-pipeline-vm.sh`, opt-in
+  `--mvp-mode` flag in `launch-tradfi-forward-poll.sh` only, dry-run regression test, explicit non-touch note for
+  `launch-tradfi-bf-cme-ohlcv-1m.sh`/`launch-tradfi-backfill-vm.sh`). Doc stays `status: open` pending that
+  implementation todo. Every corpus doc citing this issue as "genuinely operator-gated"/"0 AO-eligible"/"DECISION still
+  open" is being retagged in the same pass to point at this ruling.
+
+- **na-eligibility-audit 2026-07-30** (tradfi tranche): **ARCHIVE-READY — verified, but the 6-step ritual was NOT
+  executed this run; do not re-derive, just finish it.** Every checkbox in this doc is now `[x]`: the 3 original todos
+  were closed by the 2026-07-29 operator ruling, and the gating `[CODE] P1` implementation landed 2026-07-30 —
+  independently verified this pass against the real repo (`deployment-service@c847395`, "feat(vm): wire tradfi mvp_mode
+  via opt-in --mvp-mode flag on the forward-poll launcher", committed 2026-07-30). The doc's own Progress Log condition
+  ("Doc stays `status: open` pending that implementation todo") is therefore satisfied, `locked_by:` is empty, and no
+  open work remains. **Why it was not archived here:** the referrer sweep is the blocker, not the verdict — 13 corpus
+  docs cite this path, and several of them (`instruments_remaining_work_audit_2026_07_10`,
+  `ag_closeout_audit_rollout_2026_07_25`) are multi-tranche docs being audited concurrently by sibling per-tranche
+  workers in this same sharded run, so repathing them from here would create N-way merge conflicts at integration. Two
+  real dependencies also need confirming first: `tradfi_satellite_ao_dispatch_batch2_finalize_2026_07_25.md` is
+  documented as owning the job of re-checking this doc, and
+  `/plans/active/tradfi_satellite_ao_dispatch_batch5_2026_07_29.md`'s first todo still asks for the mvp_mode wiring that
+  has now already shipped — that batch5 todo is itself stale and should be flipped in the same pass.

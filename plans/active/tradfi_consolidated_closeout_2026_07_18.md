@@ -55,8 +55,12 @@ related:
     /plans/active/tradfi_registry_coverage_and_ao_readiness_2026_07_25.md,
     /plans/active/tradfi_registry_coverage_and_ao_readiness_2026_07_25_finalize.md,
     /plans/archive/2026_07/tradfi_consolidated_closeout_history_2026_07_25.md,
-    /plans/active/tradfi_satellite_ao_dispatch_batch1_2026_07_25.md,
+    /plans/archive/2026_07/tradfi_satellite_ao_dispatch_batch1_2026_07_25.md,
     /plans/active/tradfi_satellite_ao_dispatch_batch2_2026_07_25.md,
+    /plans/active/tradfi_satellite_ao_dispatch_batch5_2026_07_29.md,
+    /plans/active/tradfi_satellite_ao_dispatch_batch5_2026_07_29_finalize.md,
+    /plans/active/tradfi_satellite_ao_dispatch_batch6_2026_08_01.md,
+    /plans/active/tradfi_satellite_ao_dispatch_batch6_2026_08_01_finalize.md,
     /plans/active/tradfi_consolidated_native_ao_extract_2026_07_25.md,
     /plans/active/tradfi_consolidated_native_ao_extract_2026_07_25_finalize.md,
     /plans/active/cefi_consolidated_closeout_2026_07_18.md,
@@ -76,7 +80,7 @@ related:
     /plans/active/data_pipeline_e2e_milestones_gate_2026_07_24.md,
   ]
 created: 2026-07-18
-last_updated: "2026-07-25"
+last_updated: "2026-08-01"
 parent_epic: tradfi_master
 assigned_vm: NA
 execution_scope: local-only
@@ -90,7 +94,16 @@ locked_by:
 locked_since:
 supersedes:
 superseded_by:
-depends_on: [tradfi_manifest_content_recovery_completion_2026_07_24, tradfi_backfill_throughput_followups_2026_07_24]
+depends_on:
+  [
+    tradfi_manifest_content_recovery_completion_2026_07_24,
+    tradfi_backfill_throughput_followups_2026_07_24,
+    tradfi_phase_d_terminal_gate_2026_07_24,
+  ]
+# 2026-08-01 (ag-closeout-audit, tradfi tranche): added the 3rd forked child (tradfi_phase_d_terminal_gate_2026_07_24)
+# to depends_on -- it was named in the Split notice table above from day one but never actually listed here, which
+# left generate_ag_closeout_audit_candidates.py's covering-plan discovery blind to it (that script only resolves
+# depends_on for *_finalize* docs, so a closeout's own depends_on needs to be complete for docs with no finalize pair).
 # gate_on_depends removed 2026-07-25 (second-tier trim, fix #6): the 2 items it protected -- Phase C's
 # honest-coverage-gated-on-Phase-B residue, and the BLOCKED-INFRA Layer-1-cert item -- both forked to
 # tradfi_registry_coverage_and_ao_readiness_2026_07_25.md, which now carries the real depends_on+gate_on_depends:true.
@@ -139,28 +152,27 @@ source:
 > | [`tradfi_backfill_throughput_followups_2026_07_24.md`](tradfi_backfill_throughput_followups_2026_07_24.md)               | Phase A3/A3.1 — download/backfill throughput follow-ups (DNS-starvation fix, T+1 job, OOM hardening, Databento e2e throughput optimization)   |
 > | [`tradfi_phase_d_terminal_gate_2026_07_24.md`](tradfi_phase_d_terminal_gate_2026_07_24.md)                               | Phase D — the post-migration all-shards re-smoke-test terminal gate                                                                           |
 >
-> **Per-child open-todo digest (2026-07-24, so this split is AO-legible without opening the children)**:
+> **Per-child open-todo digest — RE-DERIVED LIVE 2026-07-31 (slot 14, AO-dispatch-readiness sweep)**: the prior digest
+> text (2026-07-24/25 vintage) was stale relative to each child's own current checkboxes; live `grep -c '^- \[ \]'`
+> counts substituted below, replacing the earlier "8 open" / "6 open" figures rather than layering another banner on top
+> of them.
 >
-> - `tradfi_manifest_content_recovery_completion_2026_07_24.md` — digest below is **STALE as of 2026-07-27** (see the
->   Ground-truth verdict supersede banner above): the "top P0s still open" it names are now BOTH done — catalogue
->   (Surface A) SHIPPED+APPLIED LIVE 2026-07-25 (instruments-service@52d8b3ef) and chain-bundle content (Surfaces C+D)
->   GATE CLOSED 2026-07-27 (checked=961 canonical=961 violations=0). Re-derive the live open-todo count from the child
->   plan directly rather than trusting the count below. Original 2026-07-24 digest text retained for history: **8 open**
->   (2×P0, 5×P1, 1×P2, re-verified 2026-07-25 against the child's own checkboxes — down from the earlier 11-open/5×P0
->   count). Top P0s said still open: (1) **Migrate the catalogue (Surface A)** via
->   `canonicalize_tradfi_catalogue_usd_lin_*.py` — NOT yet executed (DURABILITY TRAP: a `prod/n`-only rewrite silently
->   reverts on the next `build_instrument_catalogue.py` rebuild — must also migrate the per-day corpus); (2) **Migrate
->   GCS filenames + tick CONTENT (Surfaces C+D)**. The manifest migration (Surface B) is now DONE + RE-VERIFIED LIVE
->   2026-07-25, and the enumeration-driven-migration casing sub-scope CLOSED 2026-07-25 (its semantic-mislabel +
->   null/blank residual moved to a separate open P1) — both are no longer open P0s.
-> - `tradfi_backfill_throughput_followups_2026_07_24.md` — **6 open as of 2026-07-25 (was 11 at this digest's 2026-07-24
->   generation; 3 more shipped independently since — SIGKILL verify, phantom-row retirement, concurrency-cap raise —
->   corrected via plan-reconcile; expect this to drop further once tradfi batch2 lands)**. Top P1s: (1) Backfill-VM
->   startup OOM rc137 + OOM remediation baked default + consolidator throughput/backlog monitor (3 sub-issues bundled);
->   (2) TradFi has NO working T+1 forward-fill job — add source-scoped `…-tradfi-databento-t1-recon` Cloud Run job.
-> - `tradfi_phase_d_terminal_gate_2026_07_24.md` — **2 open** (1×P0, 1×P1). The P0: MVP backfill readiness gate — run
->   the tradfi MVP backfills only after A-D are green; **still blocked** on the chain-bundle sampler follow-up. The P1:
->   post-full-backfill `/data-pipeline-reconciliation` RUN checkpoint, gated on the P0.
+> - `tradfi_manifest_content_recovery_completion_2026_07_24.md` — **3 open (live 2026-07-31)**, down from the 2026-07-24
+>   vintage's 8. The 2 P0s that digest named (catalogue Surface A migration, GCS-filename/tick-content Surfaces C+D
+>   migration) are BOTH now done — catalogue SHIPPED+APPLIED LIVE 2026-07-25 (`instruments-service@52d8b3ef`),
+>   chain-bundle content GATE CLOSED 2026-07-27 (checked=961 canonical=961 violations=0). What remains open now is
+>   different work entirely: (1) a 2026-07-28-ruled qualifier-normalization fix, (2) a 2026-07-28-ruled decision on the
+>   1,328-cell unrecoverable population, (3) a verify-and-close pointer to
+>   `candle_feature_canonical_path_divergence_2026_07_20.md` todo 3.
+> - `tradfi_backfill_throughput_followups_2026_07_24.md` — **1 open (live 2026-07-31)**, down from the 2026-07-25
+>   digest's 6 (both named P1s — the OOM/monitor bundle and the T+1 forward-fill job — the T+1 job has since shipped;
+>   `tradfi_t1_no_working_mtds_job_2026_07_17.md` is archived `status: resolved` per this same doc's own Aggregated
+>   source docs section below). The one remaining open item is the Backfill-VM startup OOM rc137 + OOM-remediation +
+>   consolidator throughput/backlog-monitor bundle.
+> - `tradfi_phase_d_terminal_gate_2026_07_24.md` — **2 open (live 2026-07-31, unchanged from the 2026-07-24 digest)**:
+>   re-verified accurate, no correction needed. The P0: MVP backfill readiness gate — run the tradfi MVP backfills only
+>   after A-D are green; **still blocked** on the chain-bundle sampler follow-up. The P1: post-full-backfill
+>   `/data-pipeline-reconciliation` RUN checkpoint, gated on the P0.
 >
 > **Retained here (as of 2026-07-24)**: the ground-truth verdict + MVP universe (foundational context for all children),
 > Phase A2 (adapter/registry correctness), Phase C (data-status + honest-coverage), the aggregated Codex SSOT +
@@ -261,6 +273,51 @@ Everything below is scoped so these cells are canonical, honestly-covered, and s
 
 ## Progress Log
 
+- **`/ag-closeout-audit tradfi` 2026-08-01 (slot 2, dispatch agt-d7b683, scheduled `ag_closeout_auditor` worker,
+  operator away)**: fresh full pass. Phase 0 fixed a same-session tooling gap
+  (`generate_ag_closeout_audit_candidates.py` wasn't resolving this doc's own `depends_on:` for finalize-less forks —
+  see this doc's own `depends_on:` fix above) that corrected the covering-plan count 11→13 and the real candidate count
+  67→65. Phase 1 ran a 65-agent Workflow classifying every tradfi-primary candidate against the 13-doc covering set: 31
+  excluded (genuinely multi-AG, confirmed by content not just tag), 3 archivable now, 19 archivable-after-planned-work,
+  12 orphaned (5 partial, 7 never-touched). Phase 3 conflict-check cleared 4 of the 12 for a fresh batch —
+  `tradfi_satellite_ao_dispatch_batch6_2026_08_01.md` (+ gated finalize), `status: draft` pending operator review. The
+  other 8 orphans stay deferred (3 too-large-or-risky unchanged + 1 newly-scoped, 3 operator-gated unchanged, 1 whose
+  precondition changed since batch5 and needs fresh investigation before any todo —
+  `tradfi_legacy_twin_bucket_deletes_signoff_2026_07_24.md`'s delete gate now measures 0% twin-coverage, not the 100% it
+  needs). One further genuine orphan (`mtds_is_full_adapter_smoketest_findings_2026_07_07.md`, 4 TradFi bugs never
+  promoted to checkboxes) is flagged but not batched — that doc is genuinely 5-AG-shared
+  (`parent_epic: instruments_master`), so per the primary-owner rule its write belongs to whichever tranche actually
+  owns it. See `tradfi_satellite_ao_dispatch_batch6_2026_08_01.md`'s own summary + Deferred sections for full detail.
+- **AO-dispatch-readiness sweep 2026-07-31 (slot 14, via `tradfi_consolidated_native_ao_extract_2026_07_25.md` todo 10 —
+  the 2 remaining categories: stale checkboxes, missing definition-of-done)**: `sports_consolidated_closeout`'s Track Y
+  method applied to the 2 categories this file's own todo (below, `[x]` closed 2026-07-25) left owed after closing for
+  A2+Phase C content only. **Real-checkbox sweep**: `grep -n '^- \[ \]\|^- \[x\]'` finds exactly 2 native todos in this
+  file (line ~250 `[DATA] P2` MVP-cell-wiring-proof, line ~324 `[REVIEW] P2` the audit-pass todo itself) — both carry a
+  stated definition-of-done, neither is stale (the P2 correctly cross-references its live tracking location; the REVIEW
+  todo's own `[x]` closure text is accurate for its stated A2+Phase C scope). **Missing-dod sweep: clean, 0 findings.**
+  **Stale-checkbox-class sweep (the digest bullets, not real checkboxes, per this file's own bold-no-brackets
+  convention)**: live re-derived 4 digest sections against their cited child docs' actual `- [ ]` counts — found + fixed
+  3 stale entries: (1) Split-notice digest's `tradfi_manifest_content_recovery_ completion_2026_07_24.md` line
+  (previously flagged stale by an earlier pass but never actually corrected — this pass replaced the "8 open, catalogue
+  NOT yet executed" text with the true 3-open/all-done state); (2) same digest's
+  `tradfi_backfill_throughput_followups_2026_07_24.md` line (6→1, T+1 job shipped+archived, not previously flagged); (3)
+  the separate "Aggregated source docs § Child plans" digest for the SAME 3 children, which cited yet a THIRD,
+  even-more-stale set of counts (11/11/2) naming the ORIGINAL 2026-07-24 P0s that are now done — corrected to match.
+  Also re-derived the Phase A2+C fork's own digest for `tradfi_registry_coverage_and_ao_readiness_2026_07_25.md` (11→14
+  open; 3 genuinely new todos landed since 2026-07-25 plus the child's own copy of this same audit-pass todo) —
+  corrected with a count-drift note rather than a full item-by-item rewrite (all 11 originally-named items are still
+  open and still accurately described; only the total was stale). `tradfi_phase_d_terminal_gate_2026_07_24.md`'s digest
+  (2 open) was independently re-verified accurate, no correction needed. Evidence: live grep counts run 2026-07-31
+  against each child's current `plans/active/*.md`. No new stale entries found beyond these 4; not an exhaustive
+  re-verification of every one of the ~40 docs referenced in the Aggregated source docs section (out of this todo's
+  1h-class scope) — the 4 corrected here were the highest-risk (most recently active, most-cited) digests.
+- **na-eligibility-audit 2026-07-31** (tradfi tranche, dispatch agt-6d6eaf): **KEEP-NA-STALE, re-verified — citation
+  still accurate, no change needed.** This is this doc's correct owning tranche (per the note below). Independently
+  re-checked the sole open checkbox's duplicate claim against current state, not a rubber-stamp: the extracting doc
+  (`tradfi_consolidated_native_ao_extract_2026_07_25.md`) is still `status: active` / `assigned_vm: planning`, and its
+  own near-verbatim copy of this todo is still unchecked. Only one commit has touched this file since the 2026-07-30
+  marker (`39d663e92`, 2026-07-31 — an unrelated cross-reference path fix), so nothing material changed. `assigned_vm`
+  stays unchanged; no backlog impact.
 - **na-eligibility-audit 2026-07-30** (infra tranche, dispatch agt-30721a): KEEP-NA-STALE — sole remaining native
   checkbox is already duplicated near-verbatim in the active `tradfi_consolidated_native_ao_extract_2026_07_25.md`;
   citation added above, zero `assigned_vm`/backlog impact. NOTE: this doc's real `asset_group` is `[tradfi]`, not
@@ -268,6 +325,31 @@ Everything below is scoped so these cells are canonical, honestly-covered, and s
   `na_doc_tranche_inventory_stale_citation_membership_cross_contamination_2026_07_29.md`'s own Progress Log for the full
   accounting); classified here for completeness, no other state changed, the `tradfi` tranche's own future audit owns
   this doc going forward.
+- **Operator-ruling closeout sweep 2026-07-30**: grepped this file for every `RULED`/`Operator-ruled`/`operator ruling`
+  instance. Found the `tradfi_mvp_mode_unreachable_dead_gate_2026_07_08.md` digest entry (Aggregated source docs §
+  TradFi-specific residuals) was STALE — it described a "remaining open" `[CODE] P1` implementation todo that had
+  already shipped. Verified live: the issue doc itself shows all 4 todos `[x]`, and
+  `git -C deployment-service log --oneline -1 c847395e` resolves to
+  `feat(vm): wire tradfi mvp_mode via opt-in --mvp-mode flag on the forward-poll launcher` — corrected the digest entry
+  above to reflect 0 open todos. The other 2 live rulings in this file (ES CME futures manifest-verify + ES_OPT launch,
+  both "Operator-ruled 2026-07-29") are pointers to concrete `[DATA] P0` todos tracked in
+  `instruments_tradfi_g1_g5_gate_execution_2026_07_24.md` (confirmed still genuinely open there, not this file's own
+  checkbox to flip, and out of this pass's assigned-file scope) — left as-is, already accurate.
+- **na-eligibility-audit 2026-08-01** (tradfi tranche): **KEEP-NA-STALE, re-verified — citation still accurate.** Sole
+  native open checkbox (MVP-cell-wiring-proof, line ~262) re-read; count matches tranche-inventory tool (1).
+  Independently re-confirmed the extracting doc (`tradfi_consolidated_native_ao_extract_2026_07_25.md`) is still
+  `status: active` with its own near-verbatim copy still unchecked. The only touches since the 2026-07-31 marker were
+  the 2026-08-01 `/ag-closeout-audit tradfi` pass (batch6 drafting + a `depends_on:` fix, neither affecting this todo)
+  and a context-scout backfill — nothing material changed. `assigned_vm` stays unchanged.
+- **na-eligibility-audit 2026-08-02** (tradfi tranche, dispatch agt-6397c9): **KEEP-NA-STALE, re-verified — citation
+  still accurate (4th consecutive confirmation).** Full end-to-end read via an independent sub-agent classification (892
+  lines: frontmatter, Split notice, Ground-truth verdict, MVP table, the one native todo, Progress Log, Phase A2+C fork,
+  Plan-quality review, Codex SSOTs, Aggregated source docs digest); sole native checkbox count reconciled (1/1) —
+  confirmed the "digest bullets" throughout the Aggregated source docs section are deliberately bold-not-bracket
+  formatted and correctly NOT counted as this doc's own open checkboxes. Independently re-confirmed the extracting doc
+  (`tradfi_consolidated_native_ao_extract_2026_07_25.md`) is still `status: active`/`assigned_vm: planning` with its own
+  copy still unchecked. Nothing here is RECLASSIFY-eligible — the sole native todo is correctly NA because the real
+  dispatchable copy already lives on an active planning doc. `assigned_vm` stays unchanged.
 
 ---
 
@@ -286,18 +368,27 @@ Everything below is scoped so these cells are canonical, honestly-covered, and s
 > (`tradfi_registry_coverage_and_ao_readiness_2026_07_25_finalize.md`) reconciles + archives that child once its content
 > is fully closed.
 >
-> **Open-todo digest (2026-07-25, so this fork is AO-legible without opening the child)**:
+> **Open-todo digest (2026-07-25, so this fork is AO-legible without opening the child)** — **STALE, count-corrected
+> 2026-07-31 (slot 14, AO-dispatch-readiness sweep)**: live `grep -c '^- \[ \]'` against the child shows **14 open**
+> (not 11) as of 2026-07-31 — 3 genuinely new todos landed since 2026-07-25 (a 2026-07-29 historical-backfill execution
+> todo, a 2026-07-29 operator-ruling dry-run todo, a 2026-07-29 Databento `by_date` re-feed P0), plus the child itself
+> now carries its own copy of this same audit-obligation `[REVIEW]` todo (added when the child was created — an audit
+> todo is re-run per-file as content evolves, per this parent's own established convention above). The 11 items
+> originally named below are still open (still accurate as descriptions), just no longer the complete set — re-derive
+> the live list from the child directly rather than trusting "11" as the total:
 >
-> - **A2 (adapter/registry correctness)** — 5 open: CME mbp_10/trades/tbbo capability-declaration verify (P1, the
+> - **A2 (adapter/registry correctness)** — CME mbp_10/trades/tbbo capability-declaration verify (P1, the
 >   `ohlcv_15m/24h` writer DESIGN decision split out as a non-dispatchable pointer), KRX equities registry-vs-adapter
 >   verify (P2, the `mvp_mode` DECISION split out as a non-dispatchable pointer), Full MTDS+IS adapter smoke findings
 >   re-verify (P2), adapter dead-code/fallback audit (P2), the "two live defects" digest pointer (source-mislabel + FX
->   manifest id, reformatted non-checkbox per finding H).
-> - **Phase C (data-status/honest-coverage) — still-open residue only** — 6 open: billing-gated Databento L2/L3
->   classification (P2), data-status page canonical render (P1), distinct-values/axis-value census (P1),
->   denominator/catalogue-completeness re-verify (P2), KRX name-column follow-up tracking (P2, rewritten inline per the
->   fork), and the BLOCKED-INFRA "Certify tradfi Layer-1" gate (P0, still blocked as of 2026-07-25 — the catalogue
->   rebuild+promote "FINAL STEP" in `tradfi_backfill_throughput_followups_2026_07_24.md` remains pending).
+>   manifest id, reformatted non-checkbox per finding H — NOT a real `- [ ]` line, so the original "5 open" count for
+>   this sub-group over-counted by 1; the 4 real checkboxes above are A2's actual open total).
+> - **Phase C (data-status/honest-coverage) — still-open residue only** — 6 open (verified still accurate):
+>   billing-gated Databento L2/L3 classification (P2), data-status page canonical render (P1),
+>   distinct-values/axis-value census (P1), denominator/catalogue-completeness re-verify (P2), KRX name-column follow-up
+>   tracking (P2, rewritten inline per the fork), and the BLOCKED-INFRA "Certify tradfi Layer-1" gate (P0, still blocked
+>   as of 2026-07-31 — the catalogue rebuild+promote "FINAL STEP" in
+>   `tradfi_backfill_throughput_followups_2026_07_24.md` remains pending).
 >
 > **Retained here**: the ground-truth verdict + MVP universe (unchanged), the Codex SSOTs index, and the Aggregated
 > source docs digest (untouched, 421 lines).
@@ -346,22 +437,21 @@ Everything below is scoped so these cells are canonical, honestly-covered, and s
 > todos list every P0/P1 in full and cap P2/P3 with a `+N more` marker (never a silent drop).
 
 - **Child plans (forked from this parent, 2026-07-24 split — digested here too so this section alone is complete without
-  needing the Split-notice table above)**:
+  needing the Split-notice table above)**. **STALE digest corrected 2026-07-31 (slot 14, AO-dispatch-readiness sweep)**
+  — this section's item-level text still named the ORIGINAL 2026-07-24 P0s (catalogue/enumeration migration), both now
+  done; see the Split-notice table above for the fuller re-derivation + evidence citations:
   - [`plans/active/tradfi_manifest_content_recovery_completion_2026_07_24.md`](/plans/active/tradfi_manifest_content_recovery_completion_2026_07_24.md)
-    (11 open — capped)
-    - **[DATA] P0.** Migrate the catalogue (Surface A) via `canonicalize_tradfi_catalogue_usd_lin_*.py`
-    - **[DATA] P0.** Enumeration-driven migration (SINGLE SOURCE OF TRUTH, operator 2026-07-18) — must be driven by the
-      full distinct dimension-value set, not sampled shapes
-    - +9 more (P0/P1/P2) — see file for the rest
+    (3 open — live 2026-07-31, down from 11)
+    - **[DATA] P2.** RULED 2026-07-28 — qualifier-normalization fix (Option A)
+    - **[DATA] P1.** RULED 2026-07-28 — decision on the 1,328-cell unrecoverable population
+    - **[DATA] P2.** Verify + close `candle_feature_canonical_path_divergence_2026_07_20.md` todo 3
   - [`plans/active/tradfi_backfill_throughput_followups_2026_07_24.md`](/plans/active/tradfi_backfill_throughput_followups_2026_07_24.md)
-    (11 open — capped)
+    (1 open — live 2026-07-31, down from 11; the T+1 forward-fill job shipped + archived, see Aggregated source docs §
+    Throughput / jobs / VMs below)
     - **[INFRA] P1.** Backfill-VM startup OOM rc137 + OOM remediation baked default + consolidator throughput/backlog
       monitor (3 sub-issues bundled)
-    - **[DATA] P1.** TradFi has NO working T+1 forward-fill job — add source-scoped `…-tradfi-databento-t1-recon` Cloud
-      Run job
-    - +9 more (P1/P2) — see file for the rest
   - [`plans/active/tradfi_phase_d_terminal_gate_2026_07_24.md`](/plans/active/tradfi_phase_d_terminal_gate_2026_07_24.md)
-    (2 open)
+    (2 open — live 2026-07-31, unchanged)
     - **[DATA] P0.** MVP backfill readiness gate — run the tradfi MVP backfills only after A-D are green; still blocked
       on the chain-bundle sampler follow-up
     - **[DATA] P1.** Post-full-backfill reconciliation RUN checkpoint (both raw-tick and candles layers), gated on the
@@ -483,7 +573,7 @@ Everything below is scoped so these cells are canonical, honestly-covered, and s
       `tardis_csv_transport._get_parse_executor`)
     - **[AUDIT] P2.** Sweep the repo for other `run_in_executor(None, ...)` call sites doing network-blocking work
     - **[CODE] P2.** Consider an `aiodns`/`AsyncResolver` for aiohttp sessions
-  - [`plans/active/issues/mtds_backfill_vm_startup_oom_rc137_2026_07_14.md`](/plans/active/issues/mtds_backfill_vm_startup_oom_rc137_2026_07_14.md)
+  - [`plans/archive/issues/mtds_backfill_vm_startup_oom_rc137_2026_07_14.md`](/plans/archive/issues/mtds_backfill_vm_startup_oom_rc137_2026_07_14.md)
     — 0 open todos (closed/archived/record-only)
   - [`plans/active/issues/tradfi_backfill_oom_remediation_2026_06_24.md`](/plans/active/issues/tradfi_backfill_oom_remediation_2026_06_24.md)
     - **[INFRA] P2.** After the next deployment-service image rebuild, drop the runtime `TRADFI_OHLCV_MACHINE` env
@@ -496,7 +586,7 @@ Everything below is scoped so these cells are canonical, honestly-covered, and s
   - [`plans/archive/issues/tradfi_t1_no_working_mtds_job_2026_07_17.md`](/plans/archive/issues/tradfi_t1_no_working_mtds_job_2026_07_17.md)
     — 0 open todos; `status: resolved` 2026-07-26 (live-reverified: 6 consecutive scheduled T+1 executions succeeded,
     2026-07-21 through 2026-07-26; archived 2026-07-26 per issue-doc-lifecycle.md)
-  - [`plans/active/issues/group_c_cloud_run_job_failures_triage_2026_07_16.md`](/plans/active/issues/group_c_cloud_run_job_failures_triage_2026_07_16.md)
+  - [`plans/archive/issues/group_c_cloud_run_job_failures_triage_2026_07_16.md`](/plans/archive/issues/group_c_cloud_run_job_failures_triage_2026_07_16.md)
     - **[INFRA] P1.** Decide + implement a default-to-yesterday date bridge for MTDS's batch CLI
 
 - **Coverage/data-status/honest**:
@@ -551,7 +641,7 @@ Everything below is scoped so these cells are canonical, honestly-covered, and s
   skills, no bare `.md` todo tracker to check).
 
 - **TradFi-specific residuals**:
-  - [`plans/active/issues/cme_combo_underlying_extraction_garbage_2026_07_19.md`](/plans/active/issues/cme_combo_underlying_extraction_garbage_2026_07_19.md)
+  - [`plans/archive/issues/cme_combo_underlying_extraction_garbage_2026_07_19.md`](/plans/archive/issues/cme_combo_underlying_extraction_garbage_2026_07_19.md)
     — 0 open todos (closed/archived/record-only)
   - [`plans/archive/issues/instruments_service_fx_adapter_key_unresolved_2026_07_23.md`](/plans/archive/issues/instruments_service_fx_adapter_key_unresolved_2026_07_23.md)
     (`status: resolved`) — 0 open todos (closed/archived/record-only)
@@ -754,11 +844,11 @@ Everything below is scoped so these cells are canonical, honestly-covered, and s
     - **[DATA] P2.** Investigate the CBOE `ohlcv_15m` `INDEX`/`OPTION` null-`instrument_id` writes (103 rows)
     - **[DOC] P3.** Re-verify the `future`/`FUTURE` population characterization (now 9,126 rows and growing, was stale
       "2,023 static")
-  - [`plans/active/issues/tradfi_mvp_mode_unreachable_dead_gate_2026_07_08.md`](/plans/active/issues/tradfi_mvp_mode_unreachable_dead_gate_2026_07_08.md)
-    - **RULED 2026-07-29: wire via forward-poll opt-in flag, see the issue doc.** The original 3 todos (DECISION /
-      implement / ship) are flipped there; a new **[CODE] P1** concrete implementation todo (VM_MVP_MODE metadata
-      plumbing + opt-in `--mvp-mode` flag on `launch-tradfi-forward-poll.sh` + dry-run regression test) is the remaining
-      open work.
+  - [`plans/archive/issues/tradfi_mvp_mode_unreachable_dead_gate_2026_07_08.md`](/plans/archive/issues/tradfi_mvp_mode_unreachable_dead_gate_2026_07_08.md)
+    — **0 open todos, all 4 `[x]`.** RULED 2026-07-29 (wire via forward-poll opt-in flag) AND the concrete **[CODE] P1**
+    implementation (VM_MVP_MODE metadata plumbing + `--mvp-mode` flag on `launch-tradfi-forward-poll.sh` + regression
+    tests) are both now shipped — `deployment-service@c847395e`, quality-gates green, quickmerge landed on
+    `live-defi-rollout`. Doc archived, nothing left to dispatch off it.
   - [`plans/archive/issues/tradfi_todo_cells_below_vendor_discovery_floor_2026_07_20.md`](/plans/archive/issues/tradfi_todo_cells_below_vendor_discovery_floor_2026_07_20.md)
     - **[DATA] P1.** Re-measure and break down the 182,407 by (venue, data_type, year)
     - **[BACKEND] P1.** Teach the sentinel/enumerator path the discovery floor

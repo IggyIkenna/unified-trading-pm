@@ -10,8 +10,8 @@ description: >-
   auto-shipped) the next `<ag>_satellite_ao_dispatch_batchN_<date>.md` + gated `batchN_finalize` plan pair, mirroring
   the pattern built for sports (`sports_satellite_ao_dispatch_batch2_2026_07_24.md` +
   `sports_satellite_ao_dispatch_batch2_finalize_2026_07_24.md`). Parameterized by topic tranche — invoke as
-  `/ag-closeout-audit <tranche>` across all 9: `cefi`, `defi`, `tradfi`, `prediction`, `sports`, `cross-cutting`, `ao`,
-  `ci`, `infra`. **`all` is a valid tranche and the DEFAULT when invoked with no argument** (e.g. a scheduled AO
+  `/ag-closeout-audit <tranche>` across all 10: `cefi`, `defi`, `tradfi`, `prediction`, `sports`, `cross-cutting`, `ao`,
+  `ci`, `infra`, `ui`. **`all` is a valid tranche and the DEFAULT when invoked with no argument** (e.g. a scheduled AO
   trigger) — runs every tranche's audit and aggregates one combined report, so a no-arg scheduled invocation never fails
   for lack of a tranche name. Trigger on `/ag-closeout-audit [<tranche>]`, "run the sports treatment for <tranche>",
   "audit <tranche> orphans", "how many <tranche> docs would be orphaned if we finished the consolidated plan",
@@ -25,15 +25,20 @@ Generalizes the sports-corpus closeout arc built 2026-07-24/25 (triage → `spor
 procedure. As of 2026-07-25 all 5 AGs (cefi/defi/tradfi/prediction/sports) have been through this treatment at least
 once AND through a follow-on consolidated-plan line-cap split (parent trimmed to ~450-750L, forked into
 Track/phase-named AO-dispatch children per `task_template.md` findings I/R) — this skill's Phase 0.2 (below) discovers
-BOTH doc classes. As of 2026-07-25 a full 9-way topic partition exists: the 5 AGs, `cross-cutting` (data-pipeline
+BOTH doc classes. As of 2026-07-25 a full 9-way topic partition existed: the 5 AGs, `cross-cutting` (data-pipeline
 concerns spanning IS→features-service→data-status-UI→manifest/GCS-path→UAC→UTL that aren't specific to any one AG,
 `cross_cutting_consolidated_closeout_2026_07_25.md`), `ao` (agent-orchestrator dispatch/worker-lifecycle,
 `ao_consolidated_closeout_2026_07_25.md`), `ci` (CI/CD pipeline mechanics, `ci_consolidated_closeout_2026_07_25.md`),
 and `infra` (generic repo/dependency/terraform/org hygiene, `infra_consolidated_closeout_2026_07_25.md`) — built the
 same day from a corpus-wide classification pass so this AG↔topic partition covers the WHOLE plans/issues corpus with
-zero unaccounted docs.
+zero unaccounted docs. **A 10th tranche, `ui`, was added 2026-07-30** (deployment-ui/deployment-api/
+unified-trading-system-ui closeout — deploy/launch consoles, data-status UI, cost/VM/alerts observability surfaces,
+`ui_consolidated_closeout_2026_07_30.md`) — operator finding: this UI-specific work had been sitting split across the
+`deployment_and_user_management_master` EPIC (never audited by this skill — epics live in `plans/epics/`, outside Phase
+0's `plans/active/<ag>_consolidated_closeout_*.md` discovery pattern, and epics aren't part of the asset_group partition
+at all) and various `infrastructure`/`cross-cutting`-tagged plans, with no dedicated tranche of its own.
 
-## The 9 tranches + `all` default — classification mechanism differs by tranche
+## The 10 tranches + `all` default — classification mechanism differs by tranche
 
 **5 AGs (`cefi`/`defi`/`tradfi`/`prediction`/`sports`)**: membership is `asset_group` frontmatter — a doc's
 `asset_group` list containing exactly that AG name is ground truth (subject to the Orthogonality HARD CHECK below).
@@ -61,12 +66,38 @@ retag pass only covered docs that were bare-tagged `cross-cutting` at the time; 
 a habitually-typed `cross-cutting` tag (old muscle memory) or a blank/mistagged `asset_group` needs the same
 content-judgment fallback the old workaround used: read that tranche's own consolidated-closeout doc's Track/Sources
 lists, or read the doc itself, before concluding it's out of scope. **Still do not fully trust `asset_group` alone
-without a linkage check** — `check_ag_closeout_linkage.py` remains the safety net for any doc the tag and the Sources
-lists disagree about.
+without a linkage check** — `check_ag_closeout_linkage.py` is the safety net for any doc the tag and the Sources lists
+disagree about. **Read that gate's real coverage before relying on it (corrected 2026-07-31)**: it used to enforce only
+the 5 original AGs — a hand-listed `REAL_AGS` that never got the 2026-07-27 `ao`/`ci`/`infrastructure` expansion, plus a
+filename-prefix bug that silently matched zero closeout docs for `cross-cutting` and `infrastructure` — so it reported a
+comfortable "0 orphans" while checking nothing at all for 5 of 10 tranches. A 2026-07-30 attempt to fix this was
+recorded as DONE in `ag_closeout_linkage_gate_blind_to_four_tranches_2026_07_30.md` but never actually shipped
+(`git log --follow` on the script showed only its original 2026-07-25 commit); this line went stale for a day as a
+result. It now genuinely derives its covered set from docspec's live `ASSET_GROUP` enum minus `meta`, searches BOTH
+`plans/active` and `plans/archive` for each tranche's closeout family (closing the `ao`/`ci` gap for real — both are
+archived-only and now resolve non-empty, 11/44 and 11/38 enforced respectively), and reports any tranche with no
+discoverable closeout family LOUDLY instead of skipping it in silence. Baseline re-seeded 32 → 69 at the honest measured
+count. Track: `/plans/active/issues/ag_closeout_linkage_gate_blind_to_four_tranches_2026_07_30.md`,
+`/plans/active/issues/ag_closeout_audit_scope_widening_triage_2026_07_26.md`.
 
-**`all` (the default with no argument)**: run the audit for all 9 tranches (parallel Agent dispatch, one per tranche, is
-the efficient path given the scale — see Phase 1) and aggregate one combined report: total orphan count per tranche, any
-genuine new mistags found (feed back into the Orthogonality HARD CHECK below), and per-tranche next-batch
+**`ui`**: **`ui` is a real dedicated `asset_group` enum value from the day it was added** (2026-07-30,
+`unified-trading-pm@<sha-this-session>` — `docspec.py`/`PLAN_FORMAT.md`/`doc-frontmatter-schema.md` §5, now 11 values:
+`cefi · defi · tradfi · sports · prediction · cross-cutting · ao · ci · infrastructure · ui · meta`) — there is no
+pre-2026-07-30 "workaround" period to describe, unlike `ao`/`ci`/`infrastructure`'s 2026-07-25→27 transition. Scope:
+`deployment-ui`, `deployment-api`, `unified-trading-system-ui` — deploy/launch consoles, data-status honest-coverage
+surface, cost/VM/artifact/alerts observability, promote endpoints, auth flow (the same repo scope
+`deployment_and_user_management_master.md`'s epic already declares). `parent_epic` is a secondary hint, same caveat as
+`ao`/`ci`/`infra` — most `ui`-tagged docs carry `parent_epic: deployment_and_user_management_master` or
+`observability_master`, but a doc's `asset_group` tag is the primary signal, not its epic. **A corpus-wide retag pass
+(mirroring the 2026-07-27 `asset_group_ao_ci_infra_schema_expansion` migration) is still owed** — only the bounded set
+of docs discovered + retagged when `ui_consolidated_closeout_2026_07_30.md` was authored are tagged so far; a doc
+authored before 2026-07-30 that's genuinely UI-scoped but still reads `infrastructure`/`cross-cutting` needs the same
+content-judgment fallback (read the doc, don't trust the tag alone) until that migration runs — see
+`ui_consolidated_closeout_2026_07_30.md`'s own todos for the tracked follow-up.
+
+**`all` (the default with no argument)**: run the audit for all 10 tranches (parallel Agent dispatch, one per tranche,
+is the efficient path given the scale — see Phase 1) and aggregate one combined report: total orphan count per tranche,
+any genuine new mistags found (feed back into the Orthogonality HARD CHECK below), and per-tranche next-batch
 recommendations. **This is the mode a scheduled/cron AO invocation with no explicit tranche argument should resolve to —
 never fail or block asking "which tranche?"**.
 
@@ -94,9 +125,21 @@ of 2026-07-25, a single topic-scoped shard of it — see `/plan-reconcile`'s own
 drafts the next AO-dispatch batch to close the gap. Run `/plan-reconcile` first if the corpus might have
 stale/false-unchecked state — this skill's classification is only as good as the frontmatter `status` it reads.
 
-**Also NOT `/na-eligibility-audit`.** An `assigned_vm: NA`, `status: active`/`open` doc is by definition NOT orphaned
-(it has an owner: itself) — this skill correctly never touches it. Whether that doc's OWN `NA` self-classification is
-still correct is a disjoint question `/na-eligibility-audit` answers, over a disjoint population, on its own schedule.
+**Also NOT `/na-eligibility-audit` — but an `assigned_vm: NA` doc is NOT categorically excluded from orphan-eligibility
+here (RULED 2026-07-30, correcting this section's prior wording).** The two skills are disjoint by QUESTION, not by
+population. This skill asks "does any currently-active covering plan actually claim this doc's remaining work?";
+`/na-eligibility-audit` asks "is this doc's own `NA` self-classification still correct?". **An NA doc's
+self-classification correctness is out of scope here** — never reclassify one from this skill, never verdict its
+NA-ness, just report whether anything covers it.
+
+The prior wording ("an `assigned_vm: NA` doc is by definition NOT orphaned — it has an owner: itself") was WRONG, and it
+contradicted the shipped tooling. **Tooling wins — `generate_ag_closeout_audit_candidates.py` is the definition.** That
+script treats a doc as covering itself only when it is SELF-DISPATCHED: `assigned_vm == "planning"` AND `status` ∈
+`{active, open}` (its `self_dispatched` flag). `assigned_vm: NA` is precisely the case where the doc is NOT its own
+dispatch vehicle — nothing will pick it up — which is exactly the orphan signal this skill exists to raise. Reading the
+old prose literally excludes every NA doc from the candidate set; that swung one tranche's orphan count by 19 docs on
+2026-07-30. An NA doc reported orphaned here is an accurate "no active plan covers this" finding: report it, and let
+`/na-eligibility-audit` separately decide, on its own schedule, whether NA was the right classification to begin with.
 
 ## Why `batchN` exists as a SIBLING doc, not content folded into the consolidated closeout plan
 
@@ -173,6 +216,32 @@ a cycle:
   not ingested/dispatched), but flipping it to `status: active` to actually dispatch it is an operator decision — park
   it as a normal `- [ ]` follow-up item, never auto-flip.
 
+## Running as one of N concurrent sharded tranche workers — two HARD safety rules (added 2026-07-30)
+
+The scheduled shape of this skill is NOT one worker sweeping 10 tranches — it is up to 9-10 workers, ONE PER TRANCHE,
+dispatched concurrently onto separate slots by `ag-closeout-auditor.timer`
+(`agent-orchestrator/scripts/install-ag-closeout-auditor-timer.sh`). Two failure classes exist only in that shape, and
+both bit on 2026-07-30:
+
+**1. A doc that legitimately spans multiple tranches has exactly ONE owning tranche — derive it from `parent_epic`.**
+Stated once, not twice: `cursor-configs/skills/na-eligibility-audit/SKILL.md` § "Primary-owner rule for multi-tranche
+docs" is the rule, and `/codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md` § 2 (`parent_epic`,
+not `asset_group`, is the clean grouping axis) is the SSOT both skills defer to. This skill and `/na-eligibility-audit`
+partition the SAME corpus by the SAME 10-way split, so they hit the SAME collision — measured on the NA corpus
+2026-07-30: one doc appeared in 6 of 9 tranches, and up to 47% of a single tranche's docs appeared in 2+. Applied here:
+a NON-owning tranche still classifies a shared doc and still reports its orphan verdict (that verdict is real and
+belongs in that tranche's report), but any **write** to the shared doc itself — a linkage/`related:` fix, a retag, a
+verdict marker — belongs to the OWNING tranche alone, so N workers never race the same file.
+
+**2. NEVER `git stash` while running as one of several concurrent sharded tranche workers on a shared clone.**
+`refs/stash` is a SINGLE shared LIFO stack per `.git` directory — it is **not** worktree-scoped, so worktree isolation
+does not protect it (`/codex/05-infrastructure/per-tab-worktrees.md` § "What worktree isolation does NOT cover"). A
+`stash push` in worker A followed by a `stash pop` in worker B pops **A's** entry, not B's. That exact push/pop race on
+2026-07-30 swapped two workers' unrelated changesets. **If you need a pristine-tree comparison, use a throwaway second
+worktree at HEAD instead** — `git worktree add <scratch-path> HEAD`, read it, `git worktree remove <scratch-path>`. The
+same hazard applies to the `--autostash` flavours (`git pull --rebase --autostash` drives the same stack), so prefer an
+explicit `git pull --ff-only` from an already-clean tree.
+
 ## Phase 0 — discover the AG's covering-plan set (cheap, no agents)
 
 For the target `<ag>`:
@@ -182,9 +251,9 @@ For the target `<ag>`:
    NON-covering: being listed there is not dispatch) and `<ag>_consolidated_audit_*.md` (an earlier audit that may have
    spawned the closeout). Confirm these exist — if there is no `<ag>_consolidated_closeout_*.md` yet, stop and tell the
    operator this AG hasn't been consolidated at all (a different, prior gap than this skill addresses). **Naming
-   exception for `<ag>=cross-cutting`**: filenames are snake_case, so substitute the underscore form, not the literal
-   asset_group value — the doc is `cross_cutting_consolidated_closeout_*.md` (underscore between "cross" and "cutting"),
-   NOT `cross-cutting_consolidated_closeout_*.md` (hyphen). Every other AG name has no internal separator so this
+   exception for `<ag>=cross-cutting`**: filenames are snake*case, so substitute the underscore form, not the literal
+   asset_group value — the doc is `cross_cutting_consolidated_closeout*_.md`(underscore between "cross" and "cutting"),
+   NOT`cross-cutting*consolidated_closeout*_.md` (hyphen). Every other AG name has no internal separator so this
    exception never comes up for them.
 2. **Existing AO-dispatch-batch + finalize pairs for this AG** — TWO discovery paths, UNION the results (added
    2026-07-25 after the 5-AG consolidated-plan split found the filename-only path alone misses a real class of covering
@@ -209,8 +278,8 @@ For the target `<ag>`:
    `task_template.md` §4's finalize-plan-coverage rule — cross-check with
    `.venv/bin/python scripts/quality_gates/check_finalize_plan_coverage.py --workspace-root <root>` if convenient). Also
    check `plans/archive/2026_*/` for already-archived batches of this AG (their coverage is DONE, not a gap).
-3. **AG-primary doc inventory**: for the 5 real AGs + `cross-cutting` + `ao`/`ci`/`infrastructure` (all 9 now have a
-   real dedicated `asset_group` value as of 2026-07-27 — see the classification-mechanism section above), enumerate
+3. **AG-primary doc inventory**: for the 5 real AGs + `cross-cutting` + `ao`/`ci`/`infrastructure`/`ui` (all 10 now have
+   a real dedicated `asset_group` value as of 2026-07-30 — see the classification-mechanism section above), enumerate
    every `plans/active/*.md` and `plans/active/issues/*.md` whose frontmatter `asset_group` list contains `<ag>`
    (`infra` reads as `infrastructure` here, matching the enum). **Discovery MUST be a frontmatter-block-aware parse that
    strips YAML comments before tokenising — a single-line `rg '^asset_group:.*<ag>'` is NOT sufficient** (added
@@ -232,9 +301,9 @@ For the target `<ag>`:
    EXCLUDING `<ag>` itself and the historically-confirmed same-work dual-tag `prediction` when auditing `sports` or vice
    versa — that pairing describes the same betting-market work tagged two ways, not two different scopes) — these are
    the deterministic cross-cutting candidates to exclude from the deep audit. This is a CANDIDATE filter only; the
-   per-doc agent in Phase 1 re-checks scope from real content (step 5 below), since asset_group tagging is not perfectly
-   reliable. Further exclude docs already `status: resolved`/`archived`/`superseded` — they're already closed, not
-   orphans. **Orthogonality HARD CHECK (added 2026-07-25 — a real corpus-quality bug, not a hypothetical)**:
+   per-doc agent in Phase 1 re-checks scope from real content (step 5 below), since `asset_group` tagging is not
+   perfectly reliable. Further exclude docs already `status: resolved`/`archived`/`superseded` — they're already closed,
+   not orphans. **Orthogonality HARD CHECK (added 2026-07-25 — a real corpus-quality bug, not a hypothetical)**:
    `cefi`/`defi`/ `tradfi`/`prediction`/`sports` and `cross-cutting` are meant to be a MUTUALLY EXCLUSIVE partition — a
    doc belongs to exactly one specific AG, or is genuinely cross-AG, never both. A doc tagged with exactly ONE specific
    AG PLUS `cross-cutting` (e.g. `[cefi, cross-cutting]`) is a MISTAG, not a valid third category — and it is actively
@@ -255,8 +324,8 @@ For the target `<ag>`:
    closeout family (its `related:` graph or its aggregated-sources digest body text) mentions it yet — the check went
    0→4→0 orphans, then 0→1→0, then 0→3→0 across 3 separate retag rounds this session, each time because the fix landed
    correctly but the linkage step was skipped first. The remedy is a one-line addition to the AG's
-   `<ag>_consolidated_closeout_aggregated_sources_*.md` (or the main closeout doc if no aggregated-sources sibling
-   exists) naming the retagged doc — use a proper `[text](path)` markdown link, not a bare backtick-quoted filename,
+   `<ag>\_consolidated_closeout_aggregated_sources*\*.md`(or the main closeout doc if no aggregated-sources sibling
+   exists) naming the retagged doc — use a proper`[text](path)` markdown link, not a bare backtick-quoted filename,
    since prettier can wrap a long bare filename across a line break and silently break the substring match the linkage
    check relies on.
 
@@ -289,12 +358,26 @@ For the target `<ag>`:
    / `issues/(cefi|defi|tradfi|prediction|sports)_.*\.md` against the cross-cutting-tagged file list as a fast first
    pass before the full corpus sweep.
 
+   **`asset_group: [meta]` on a NEW doc is an authoring defect going forward (added 2026-07-30, after this session's
+   one-time meta fold-in sweep).** `meta` is a legitimate value for genuinely process-level content that belongs to no
+   tranche (the frontmatter schema itself, the plan-format spec, a corpus-wide convention doc). It is NOT a default, and
+   it is NOT a place to park a doc whose content is really single-tranche or genuinely cross-AG — a bare `[meta]` doc is
+   invisible to all 10 tranche membership rules, which is exactly the invisible-orphan class Phase 0.3 exists to catch
+   (the one-time sweep that folded the standing `meta` population into its real tranches is done; the point of this note
+   is that the population must not silently rebuild). **Authoring rule**: pick the correct tag at creation time — a real
+   tranche value when the content is tranche-scoped, `cross-cutting` when it genuinely spans AGs, `meta` only when it
+   spans everything or nothing. **Tooling follow-up**: `check_frontmatter_schema.py` (or a lighter dedicated QG check)
+   should at minimum FLAG — not necessarily hard-block — a `meta`-tagged doc whose filename carries an AG-specific-
+   sounding prefix (`cefi_`/`defi_`/`tradfi_`/`prediction_`/`sports_`/`ao_`/`ci_`/`infra_`/`ui_`), mirroring the
+   existing cross-cutting-mistag heuristic two paragraphs above. Until that check exists, an `all`-mode run still sweeps
+   `asset_group: meta` by hand per the "Total-coverage gap" note above.
+
 ## Phase 1 — per-doc classification (Workflow tool, one agent per doc)
 
-**`all` mode**: run Phase 0-3 once PER TRANCHE, as 9 separate top-level `Workflow` invocations (never nest a
+**`all` mode**: run Phase 0-3 once PER TRANCHE, as 10 separate top-level `Workflow` invocations (never nest a
 `workflow()` call inside another — the tool throws on >1 level of nesting) — either sequentially or fired in parallel
-from the calling context, then aggregate the 9 reports into one combined summary at the end. Do not try to flatten all 9
-tranches' docs into one giant Workflow pipeline; each tranche's Phase 0 discovery (its own consolidated closeout +
+from the calling context, then aggregate the 10 reports into one combined summary at the end. Do not try to flatten all
+10 tranches' docs into one giant Workflow pipeline; each tranche's Phase 0 discovery (its own consolidated closeout +
 batch/finalize pairs) is genuinely distinct context per doc.
 
 Given the AG-primary candidate list from Phase 0.3, launch a `Workflow` (`pipeline()` over the doc list — this corpus
@@ -322,6 +405,34 @@ Use the exact schema and covering-context prompt pattern from the sports run
 Count by verdict, excluding `exclude_cross_cutting`. Report to the operator: total AG-primary docs audited, counts per
 verdict, and the full list of `orphaned_partial_coverage` + `orphaned_never_touched` paths with one-line reasoning each.
 This alone answers "how many docs are left orphaned" — stop here if the operator only asked the audit question.
+
+## Parked findings ALWAYS get a durable issue doc — including a Phase-0-2-only run (HARD, added 2026-07-30)
+
+**The failure this closes**: on 2026-07-30, **30 of 41** parked ag-closeout decisions were never written anywhere
+durable — they existed only in the ephemeral chat/return text of the agent that found them. The root cause is
+structural, not carelessness: until now the ONLY parking location this skill designated was **Phase 3's** new-batch
+`## Deferred` section, and a **Phase-0-2-only run never reaches Phase 3**. That is the NORMAL daily-cron shape (audit +
+report, no drafting), so the standard scheduled run had nowhere sanctioned to put a parked finding and simply reported
+them into the void.
+
+**The rule**: every genuine parked / `BLOCKED-OPERATOR-DECISION` finding is written to a durable doc in the SAME run
+that found it, whichever phase the run stops at. **Never leave one only in the agent's own return text** — chat is not a
+durable surface, and an AO-dispatched run has no human reading its chat at all.
+
+- **Phase 3 ran** → the new batch's own `## Deferred` section stays the durable home (unchanged; tag each entry with its
+  non-batchable-taxonomy category, above).
+- **Phase 0-2 only** — including EVERY scheduled/cron invocation → write
+  `plans/active/issues/ag_closeout_audit_<tranche>_parked_<YYYY_MM_DD>.md`. This is the same pattern `/plan-reconcile`,
+  `/docs-reconcile` and `/na-eligibility-audit` already use for their own parked findings; do not invent a new shape.
+  One doc per tranche per run — APPEND to a same-day doc if one already exists rather than creating a second. Each entry
+  carries: the doc/finding, which taxonomy category it is parked under, and an options block with a marked
+  recommendation (`cursor-configs/SUB_AGENT_MANDATORY_RULES.md` § escalation format). **ASK > PARK still applies** — if
+  the operator is reachable, ask; the issue doc is for a genuinely absent operator, not a mode flag.
+- **`all` mode** → each tranche writes its OWN doc; the aggregated report cites every one by path.
+- **Count it, don't eyeball it.** Mirror `/plan-reconcile`'s Phase 5.9(a) ledger: assert
+  `parked_findings == entries_actually_written_to_the_issue_doc(s)` and print BOTH numbers in the final report. That
+  reconciliation is the specific defence against the 30-of-41 class — a run whose two numbers do not balance is NOT
+  done; go write the difference before reporting.
 
 ## Phase 3 — draft the next batch (only if the operator wants this AG progressed, not just measured)
 
@@ -365,15 +476,26 @@ author it with the SAME discipline as `sports_satellite_ao_dispatch_batch2_2026_
 - **`status: draft`** — this is the safety rail. A draft is not ingested/dispatched (`plans/PLAN_FORMAT.md`); flipping
   it to `active` is the operator's call, in interactive mode ask directly, in autonomous mode park it as a follow-up.
 
-Pair it with `<ag>_satellite_ao_dispatch_batch<N>_finalize_<date>.md` in the SAME turn (`depends_on: [<batchN-slug>]`
+Pair it with `<ag>_satellite_ao_dispatch_batch<N>_finalize_<date>.md` in the SAME turn (`depends_on: [<batchN-slug>]` +
+`gate_on_depends: true` + `sequential: true`) — per `task_template.md` §4's finalize-plan-coverage rule. Author it
+**`status: active`, NOT draft** (corrected 2026-07-30 — see finding below). Validate both with
+`.venv/bin/python scripts/plan-hygiene/check_frontmatter_schema.py --files <paths>` and
+`bash scripts/plan-hygiene/check_todo_format.sh <paths>` before presenting them.
 
-- `gate_on_depends: true` + `sequential: true`) — per `task_template.md` §4's finalize-plan-coverage rule, ALSO
-  `status: draft` until the batch itself is approved and dispatched. Validate both with
-  `.venv/bin/python scripts/plan-hygiene/check_frontmatter_schema.py --files <paths>` and
-  `bash scripts/plan-hygiene/check_todo_format.sh <paths>` before presenting them.
+**Why the finalize plan is `active`, not `draft` (2026-07-30 finding — no double gate)**: `gate_on_depends: true`
+already machine-holds every one of the finalize plan's tasks until the batch's own todos are done —
+`_wire_gate_on_depends_prereqs` (`regen_backlog_from_plan.py`) covers BOTH an already-active batch (holds via
+`prereqs.completed_tasks` until its tasks are literally `done`) AND a still-draft batch (holds via a derived
+`gate-upstream-open:<stem>` condition read straight off the batch file's own checkboxes, regardless of the batch's
+`status`). A finalize plan carries no independent judgment call — its content (reconcile checkboxes + archive) is fully
+decided at authoring time — so stacking the batch's `status: draft` safety rail on top of it is a redundant second gate
+that requires a SEPARATE manual flip nobody reliably remembers: a 2026-07-30 corpus audit found 46 finalize plans stuck
+in draft, most with their batch already done and archived weeks earlier. Only the BATCH itself (genuinely unreviewed,
+judgment-call content) needs `status: draft` + explicit operator approval.
 
-**Never quickmerge/ship the drafted pair without the operator explicitly approving it** (flip `status: draft` → `active`
-yourself only after that approval, then ship).
+**Never quickmerge/ship the drafted BATCH without the operator explicitly approving it** (flip its `status: draft` →
+`active` yourself only after that approval, then ship). The finalize plan needs no separate flip — it ships `active`
+from the start and `gate_on_depends` holds it correctly either way.
 
 ## Codex SSOTs
 
@@ -382,8 +504,12 @@ yourself only after that approval, then ship).
 - `/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md` § "Dispatch-scope eligibility"
 - `/codex/11-project-management/` — findings triage, archival ritual
 - `/codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md` — the shared conflict-check protocol
-  (§ 3) this skill's Phase 3 runs, also used by `/na-eligibility-audit`
-- `cursor-configs/skills/na-eligibility-audit/SKILL.md` — sibling skill (already-owned `assigned_vm: NA` doc validity,
-  disjoint population from this skill's orphan detection)
+  (§ 3) this skill's Phase 3 runs, also used by `/na-eligibility-audit`; § 2 (`parent_epic` as the grouping axis) is the
+  SSOT behind the primary-owner rule for multi-tranche docs
+- `/codex/05-infrastructure/per-tab-worktrees.md` § "What worktree isolation does NOT cover" — why `git stash` is banned
+  for concurrent sharded tranche workers (`refs/stash` is one shared LIFO stack per clone)
+- `cursor-configs/skills/na-eligibility-audit/SKILL.md` — sibling skill (already-owned `assigned_vm: NA` doc validity —
+  a disjoint QUESTION over an OVERLAPPING population; see the "Also NOT `/na-eligibility-audit`" note above) + the
+  statement of the primary-owner rule this skill references rather than duplicates
 - Precedent: `plans/active/sports_satellite_ao_dispatch_batch2_2026_07_24.md` +
   `plans/active/sports_satellite_ao_dispatch_batch2_finalize_2026_07_24.md`

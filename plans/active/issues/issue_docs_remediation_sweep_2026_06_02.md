@@ -431,13 +431,18 @@ verified complete**.
 - [ ] [CODE] P3. execution-service: reconcile `service_name` drift — `results/save_operations.py` writes
       `"execution-service"` but `cli/backtest.py` writes `"execution-services"` (plural); one producer must use one
       canonical `service_name`. Source: e2e-pipeline-manifest-wiring (smaller findings).
-- [ ] [BUILD] P2. system-integration-tests: full `scripts/quality-gates.sh` exits 1 on a PRE-EXISTING
-      `Manifest import     alignment` violation — `pyproject.toml` declares `alerting-service` + `client-reporting-api`
-      but neither is imported anywhere in the repo. Either import them in a smoke test or drop the two declarations
-      (coordinate with the already-dirty foreign `uv.lock` in this worktree — do not stomp). Also a standing non-fatal
-      coverage-floor ❌ (`MIN_COVERAGE=2<70`, no `.coverage-floor-exception.md`) needs a human-approved exception file.
-      Surfaced 2026-06-02 while landing `tests/unit/test_pipeline_manifest_wiring.py` (that file itself is fully
-      gate-clean). Source: e2e-pipeline-manifest-wiring (SIT QG repo-state).
+- [x] ✅ [BUILD] P2. **RESOLVED — closed via `infra_satellite_ao_dispatch_batch1_2026_07_26.md` todo #10 (2026-08-01,
+      slot-5).** Both fixes predate this todo's own dispatch: `MANIFEST_ALIGNMENT_SKIP=true`
+      (`system-integration-tests@19fea221`, 2026-06-10) and `.coverage-floor-exception.md`
+      (`system-integration-tests@28b2efc9`, 2026-06-07). Fresh full `bash scripts/quality-gates.sh` on
+      system-integration-tests confirmed green (`✅ ALL QUALITY GATES PASSED`, sentinel `66ea65dc`). Full evidence +
+      rationale in the batch-1 plan's flip. system-integration-tests: full `scripts/quality-gates.sh` exits 1 on a
+      PRE-EXISTING `Manifest import     alignment` violation — `pyproject.toml` declares `alerting-service` +
+      `client-reporting-api` but neither is imported anywhere in the repo. Either import them in a smoke test or drop
+      the two declarations (coordinate with the already-dirty foreign `uv.lock` in this worktree — do not stomp). Also a
+      standing non-fatal coverage-floor ❌ (`MIN_COVERAGE=2<70`, no `.coverage-floor-exception.md`) needs a
+      human-approved exception file. Surfaced 2026-06-02 while landing `tests/unit/test_pipeline_manifest_wiring.py`
+      (that file itself is fully gate-clean). Source: e2e-pipeline-manifest-wiring (SIT QG repo-state).
 
 ## Operator-gated infra (NOT credentials — ADC admin perms exist; runs after code lands)
 
@@ -495,3 +500,11 @@ tracked here.
   Zero `assigned_vm` or backlog impact from this pass. Not re-verdicting the 3 items flagged as future RECLASSIFY
   candidates (MTDS liquidations/risk_params reconciliation, strategy-service staked-lend additions) — that's a targeted
   future pass, not this incremental check.
+- **na-eligibility-audit 2026-08-02** (infra tranche, incremental run): **KEEP-NA, valid — unchanged from the 2026-07-30
+  verdict.** In scope this run because item #10 (the SIT QG-failure pair) was flipped 2026-08-01 by
+  `infra_satellite_ao_dispatch_batch1_2026_07_26.md` todo #10. Read end-to-end; `grep -cE '^- \[ \]'` = **11** (was 12
+  at the last marker), matching this verdict's item count. The 5 rehomed/duplicated items still carry correct inline
+  cross-references, so no citation change is warranted. Doc stays NA on two independent grounds it already records:
+  `locked_by: live-defi-rollout` with no `[unlock-plan]` grant, and genuinely-open non-infra work outside any infra
+  pass's scope (the UAC DeFi venue-registry `BLOCKED-DISCIPLINE` items, alerting's `NEEDS-LIVE` ML-baseline item, 2
+  `tofu apply` operator-gated infra items, and the BLOCKED backfill-VM cluster).

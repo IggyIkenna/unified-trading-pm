@@ -22,7 +22,7 @@ tags: [ci-cd, sit, promotion, ldr-main, race-condition, quality-gates]
 related:
   [
     /plans/active/issues/uac_value_only_config_change_breaks_utl_untested_2026_07_20.md,
-    /plans/active/cicd_mvp_ldr_to_main_pipeline_2026_06_30.md,
+    /plans/archive/2026_07/cicd_mvp_ldr_to_main_pipeline_2026_06_30.md,
   ]
 created: 2026-07-20
 parent_epic: infrastructure_master
@@ -125,19 +125,27 @@ decide "already promoted".
       cross-reference existed between the two docs until now).
 - [ ] [DEVOPS] P3. Add a regression test / monitor that fires when a repo has been SIT-BLOCKED for N consecutive ticks —
       the treadmill is currently only visible as a promotion-lag alert, which reads as slowness rather than a stuck
-      gate.
-- [ ] [DEVOPS] P2. Distinct sub-finding (2026-07-25, not the moving-tree race itself): when two `SIT-on-LDR` dispatches
-      for the same repo overlap (e.g. two promote-fleet ticks within the concurrency-group's cancellation window), the
-      OLDER dispatch gets `cancelled` by `system-integration-tests`'s concurrency group, but its `state=failure` status
-      can still be POSTED to the LDR commit AFTER a newer, actually-`success` run's own status — clobbering a real green
-      result with a stale red one. Live-measured 2026-07-25: run `30158515857` reached `conclusion=success` at
-      `12:50:49Z`; run `30158518796` (an older, overlapping dispatch) was `cancelled` but posted `state=failure` to the
-      SAME commit at `12:51:02Z`, 13s later, becoming the commit's latest/authoritative status. Fix direction: either
-      have the status-posting step no-op when its own run was `cancelled` (a cancelled run has no informative verdict to
-      report), or key the posted status's `created_at`-ordering off run START time / a monotonic dispatch counter
-      instead of POST-call completion order so a late-posting stale run can't overwrite a fresher good one. (repo:
-      unified-trading-pm, `.github/workflows/ldr-to-main-promote-fleet.yml` and/or
-      `system-integration-tests/.github/workflows/full-workspace-sit.yml`'s status-post step)
+      gate. **na-eligibility-audit 2026-08-01: already tracked (not yet done) as an open todo in
+      `ci_satellite_ao_dispatch_batch1_2026_07_26.md` ([INFRA] P3, "A repo SIT-BLOCKED for N consecutive promoter ticks
+      must be visible as a stuck gate"), which cites this exact checkbox as its Source — track completion there.**
+- [x] ✅ [DEVOPS] P2. Distinct sub-finding (2026-07-25, not the moving-tree race itself): when two `SIT-on-LDR`
+      dispatches for the same repo overlap (e.g. two promote-fleet ticks within the concurrency-group's cancellation
+      window), the OLDER dispatch gets `cancelled` by `system-integration-tests`'s concurrency group, but its
+      `state=failure` status can still be POSTED to the LDR commit AFTER a newer, actually-`success` run's own status —
+      clobbering a real green result with a stale red one. Live-measured 2026-07-25: run `30158515857` reached
+      `conclusion=success` at `12:50:49Z`; run `30158518796` (an older, overlapping dispatch) was `cancelled` but posted
+      `state=failure` to the SAME commit at `12:51:02Z`, 13s later, becoming the commit's latest/authoritative status.
+      Fix direction: either have the status-posting step no-op when its own run was `cancelled` (a cancelled run has no
+      informative verdict to report), or key the posted status's `created_at`-ordering off run START time / a monotonic
+      dispatch counter instead of POST-call completion order so a late-posting stale run can't overwrite a fresher good
+      one. (repo: unified-trading-pm, `.github/workflows/ldr-to-main-promote-fleet.yml` and/or
+      `system-integration-tests/.github/workflows/full-workspace-sit.yml`'s status-post step) — **DONE 2026-07-29
+      (slot-2, infra) — `unified-trading-pm@2f9646585` + `@466c7621e`** (`ldr-to-main-promote-fleet.yml`
+      `SIT_FLEET_LINE` fix filtering cancelled runs before selecting `[0]`) and **`system-integration-tests@33cf6f0`**
+      (`full-workspace-sit.yml` no-ops on `job.status=cancelled`), via `ci_satellite_ao_dispatch_batch1_2026_07_26.md`
+      line 312, citing this exact sub-finding as source. Two regression tests back it:
+      `test-sit-fleet-green-cancelled-run-clobber.sh`, `test_full_workspace_sit_cancelled_run_noop.py`. Landed the day
+      before the 2026-07-30 na-eligibility-audit pass, which missed flagging it as done — caught this pass.
 
 ## Progress Log
 
@@ -193,3 +201,17 @@ decide "already promoted".
   self-inflicted-status-race sub-finding (a cancelled run's status clobbering an already-successful run's status when
   dispatches overlap) is a DISTINCT, independently fixable bug from the moving-tree race itself — worth its own todo
   line rather than folding into "tighten cadence".
+
+## na-eligibility-audit verdict
+
+**na-eligibility-audit 2026-07-30** (tranche `ci`, autonomous): KEEP-NA, valid — the head todo is an explicit unmade
+direction ruling (promote-lease vs SIT-sha-pin + gate-side change vs accept-and-monitor) that this doc's own text says
+must be recorded before anything ships, and todo 2 is conditional on it ("if a retarget is chosen"). The doc also
+documents two independently-verified FATAL objections to the intuitive fix, so this is a live design fork, not a
+default. The P3 stuck-gate monitor is already claimed by `/plans/active/ci_satellite_ao_dispatch_batch1_2026_07_26.md`.
+
+**na-eligibility-audit 2026-08-01** (tranche `ci`, autonomous): KEEP-NA, stale-items — re-confirmed the head direction
+ruling is still genuinely undecided (grepped every active plan for a recorded ruling; none found). Found and flipped one
+gap the 2026-07-30 pass missed: the SIT-overlap status-clobber sub-finding shipped 2026-07-29 (one day before that audit
+ran) — closed with commit citations. Annotated the stuck-gate-monitor duplicate (still open in both docs, no false-done
+risk). Doc stays NA overall — 2 genuinely open items remain (the direction ruling and its conditional follow-on).

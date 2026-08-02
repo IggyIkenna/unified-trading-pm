@@ -2,7 +2,7 @@
 doc_type: codex-ssot
 title: Client Reporting Architecture
 summary:
-  "Single-entry SSOT for the per-client NAV/PnL/attribution pipeline: PBMS+execution lineage → UTL pnl_attribution
+  "Single-entry SSOT for the per-client NAV/PnL/attribution pipeline: strategy-service position + execution lineage → UTL pnl_attribution
   joiner/emitter → attribution.parquet (PnLAttributionRow) → client-reporting-api → deployment-ui; decomposition
   invariants; factor×layer model lives in pnl-attribution.md."
 status: current
@@ -28,9 +28,9 @@ referenced_by:
     /codex/04-architecture/global-ledger-architecture.md,
   ]
 owner:
-last_reviewed: 2026-05-17
+last_reviewed: 2026-09-01
 code_refs:
-ssot_plan: plans/active/client_reporting_pnl_attribution_mvp_2026_05_10.md Phase 7.A
+ssot_plan: /plans/archive/client_reporting_pnl_attribution_mvp_2026_05_10.md Phase 7.A
 ---
 
 # Client Reporting Architecture
@@ -42,7 +42,7 @@ ssot_plan: plans/active/client_reporting_pnl_attribution_mvp_2026_05_10.md Phase
 ## Lineage flow
 
 ```
-position-balance-monitor-service       execution-service
+strategy-service (position sub-pkg)    execution-service
   (PositionEvent w/ archetype_id         (FillAttributionContext w/
    strategy_leg_id, trade_id)             client_id, trade lineage)
            |                                      |
@@ -106,7 +106,7 @@ The API layer (`attribution_reader.py`) reads parquets and exposes three rollup 
 | `GET /api/v1/clients/{id}/nav`         | Sum all rows per date → NAV delta snapshot                     |
 | `GET /api/v1/clients/{id}/pnl`         | Sum by layer per date → strategy_alpha / execution_alpha split |
 | `GET /api/v1/clients/{id}/attribution` | Raw rows grouped by (strategy_id, instrument, factor, layer)   |
-| `GET /api/v1/clients/{id}/positions`   | Live snapshot from position-balance-monitor parquet (Phase 8+) |
+| `GET /api/v1/clients/{id}/positions`   | Live snapshot from the strategy-service position sub-package's parquet (Phase 8+) |
 
 Mock mode (`CLOUD_MOCK_MODE=true`): all endpoints return stub data with `client_id` echoed from path — no parquet reads.
 
@@ -136,4 +136,5 @@ The May-23 demo client is seeded from UAC `unified_api_contracts.registry.client
 - Emitter implementation: `unified_trading_library.pnl_attribution.emitter`
 - API routes: `client-reporting-api/client_reporting_api/api/routes/attribution.py`
 - UI tab: `deployment-ui/src/components/ClientReportingTab.tsx`
-- Plan (full Phase list + done/todo): `plans/active/client_reporting_pnl_attribution_mvp_2026_05_10.md`
+- Plan (full Phase list + done/todo, now ARCHIVED):
+  [`/plans/archive/client_reporting_pnl_attribution_mvp_2026_05_10.md`](/plans/archive/client_reporting_pnl_attribution_mvp_2026_05_10.md)

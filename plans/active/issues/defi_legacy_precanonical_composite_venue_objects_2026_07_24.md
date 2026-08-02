@@ -31,6 +31,7 @@ related:
   - /plans/active/issues/canonical_path_oracle_blind_to_filename_stem_2026_07_20.md
   - /plans/active/issues/defi_lst_oracle_timestamp_glued_instrument_id_2026_07_20.md
 created: 2026-07-24
+last_updated: "2026-08-02"
 parent_epic: defi_master
 assigned_vm: NA
 execution_scope: local-only
@@ -47,6 +48,14 @@ source: >-
   Operator question 2026-07-24, mid-session, prompted by a specific GCS path they encountered directly and asked whether
   it was really canonical / how downstream code reads it.
 resolved_by:
+context_scope:
+  [
+    /plans/archive/issues/defi_dex_pools_delete_order_stale_2026_07_20.md,
+    /plans/archive/issues/defi_fold_manifest_registration_pending_2026_07_21.md,
+    /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
+    market-tick-data-service/market_tick_data_service/scripts/rebuild_defi_manifest.py,
+    /codex/02-data/orphan-object-detection.md,
+  ]
 ---
 
 ## What was found (measured, not inferred)
@@ -191,16 +200,28 @@ manifest — both prerequisite facts (scale + distribution) are now in hand for 
       historical data. Definition-of-done: a stated distribution (e.g. "N of M sampled objects are single-row", or a
       size histogram) that the decision todo below can be answered against. — already covered by
       defi_satellite_ao_dispatch_batch1_2026_07_25.md (see that doc for execution).
-- [ ] [DATA] P1. **Retagged from [OPERATOR] 2026-07-28** (auto-resolvable under the existing self-service rules — no
-      fresh operator ask needed): both prerequisite facts (scale + distribution) are in hand (see the two 2026-07-28
-      updates above), and this corpus already has an operator-approved, validated fold pattern for structurally the same
-      problem — the 2026-07-21 `dex_pools/`+`lending_indices/` fold
-      (`/plans/archive/issues/defi_dex_pools_delete_order_stale_2026_07_20.md`, resolved: 648 legacy-only twins folded
-      to canonical + verified, reader repointed, operator prod-deleted) plus its manifest-registration recipe
-      (`/plans/archive/issues/defi_fold_manifest_registration_pending_2026_07_21.md`: one `record_captured` row per
-      folded instrument, NOT a re-derive-from-GCS assumption). **Execute the non-destructive fold**: for each of the
-      5,332 legacy composite-venue objects, parse the parquet's own `instrument_key`/`data_type` columns to derive the
-      correct canonical hive path
+- [x] ✅ [DATA] P1. **DONE 2026-08-01 — closed by citation 2026-08-02 (`/na-eligibility-audit defi`, Phase-2
+      conflict-check).** The fold was executed to completion under
+      [`/plans/active/defi_satellite_ao_dispatch_batch6_2026_07_30.md`](/plans/active/defi_satellite_ao_dispatch_batch6_2026_07_30.md)'s
+      matching `[DATA] P1` todo (slot-16, data_engineering), shipped `market-tick-data-service@13f14b78`
+      (`scripts/fold_legacy_composite_venue_objects_2026_07_31.py` + 32 unit tests): **5,332/5,332 shards processed,
+      ZERO errors, 324,867 canonical objects written, 324,867 `record_captured` manifest rows registered** (per-venue:
+      AAVEV3=42,302 · CURVE=2,211 · ETHENA=631 · ETHERFI=1,225 · LIDO=631 · MORPHO=22,968 · UNISWAPV2=22,168 ·
+      UNISWAPV3=186,452 · UNISWAPV4=46,279), with a per-shard content-parity invariant + GCS read-back spot-check
+      enforced throughout and legacy objects left un-deleted/unregistered exactly as this todo specified. Three real
+      correctness findings were baked into the fold script rather than guessed (`VenueMapping.normalize_defi_venue`
+      needed for `UNISWAPV2/V3/V4-ETHEREUM` + `AAVEV3-ETHEREUM`; 3 legacy row-level `data_type` values remapped to the
+      live vocabulary — `rate_indices`/`utilization`→`lending_indices`, `liquidity`→`dex_pool_state`,
+      `swaps`→`dex_pool_swaps`; a Morpho symbol sanitizer for `{pair}:{market_address}`). **This checkbox was simply
+      never flipped when batch6 shipped** — the work is done, not outstanding. Original text follows for the audit
+      trail: both prerequisite facts (scale + distribution) are in hand (see the two 2026-07-28 updates above), and this
+      corpus already has an operator-approved, validated fold pattern for structurally the same problem — the 2026-07-21
+      `dex_pools/`+`lending_indices/` fold (`/plans/archive/issues/defi_dex_pools_delete_order_stale_2026_07_20.md`,
+      resolved: 648 legacy-only twins folded to canonical + verified, reader repointed, operator prod-deleted) plus its
+      manifest-registration recipe (`/plans/archive/issues/defi_fold_manifest_registration_pending_2026_07_21.md`: one
+      `record_captured` row per folded instrument, NOT a re-derive-from-GCS assumption). **Execute the non-destructive
+      fold**: for each of the 5,332 legacy composite-venue objects, parse the parquet's own `instrument_key`/`data_type`
+      columns to derive the correct canonical hive path
       (`venue={venue}/chain={chain}/instrument_type={type}/data_type={dt}/{instrument_id}.parquet`), copy to that path,
       verify content parity, then register a `record_captured` manifest row per the same recipe (do NOT rely on the
       consolidator to re-derive rows from raw GCS — it only merges `record_captured` shards). **Leave the old legacy
@@ -209,3 +230,25 @@ manifest — both prerequisite facts (scale + distribution) are now in hand for 
       sign-off), not this one.
 - [ ] [PM] P2. File a proper migration plan once scale + the fold-vs-migrate decision are both in hand — this issue doc
       is the scoping step per CLAUDE.md's findings triage ("audit-scope → wrapper plan"), not the execution surface.
+      **SCOPE NARROWED 2026-08-02**: the fold ITSELF no longer needs a migration plan — it was executed directly and to
+      completion via batch6 (see the closed `[DATA] P1` above). What genuinely remains for this todo is only the
+      **delete-the-legacy-copies** phase the fold todo deliberately left out of scope: the 5,332 legacy composite-venue
+      objects are still present, un-deleted and unregistered, alongside their 324,867 verified canonical twins. That
+      delete is a PROD-bucket delete — human-only unless reversibility-qualified per
+      [`/codex/02-data/gcs-and-manifest-delete-safety-protocol.md`](/codex/02-data/gcs-and-manifest-delete-safety-protocol.md)
+      § 3a (a FRESH same-run `gcs_bucket_soft_delete_retention_seconds()` ≥604800s check, never a whole-bucket destroy)
+      — so it stays `assigned_vm: NA` and needs the operator's plan-destination answer before anything is authored.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30**: KEEP-NA, valid - the [PM] todo is 'file a proper migration plan'
+  (plan-destination operator ask) and the doc's own text calls itself the scoping step, not the execution surface
+- **context-scout 2026-08-01**: populated context_scope (5 entries).
+- **na-eligibility-audit 2026-08-02** (tranche=defi, autonomous, scheduled): KEEP-NA, stale item closed — re-read end to
+  end (2 open items at entry). The `[DATA] P1` fold item was found **already executed elsewhere** by the Phase-2
+  conflict-check: `defi_satellite_ao_dispatch_batch6_2026_07_30.md`'s matching todo shipped it 2026-08-01
+  (`market-tick-data-service@13f14b78`, 5,332/5,332 shards, 0 errors, 324,867 objects + manifest rows) and this doc's
+  checkbox simply never got flipped — a stale-checkbox correction per the conflict-check protocol § 3 step 4, NOT a
+  reclassification. Closed by citation. The remaining `[PM] P2` item stays KEEP-NA valid and was narrowed to the
+  delete-the-legacy-copies phase only (prod-bucket delete = human-only unless reversibility-qualified; plan-destination
+  is still an operator ask). Doc stays `assigned_vm: NA`.

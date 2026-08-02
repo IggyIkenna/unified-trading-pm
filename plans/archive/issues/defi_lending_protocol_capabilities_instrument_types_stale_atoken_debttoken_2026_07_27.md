@@ -30,7 +30,7 @@ tags: [defi, instrument-type, capability-declarations, market-data-categories, l
 related:
   [
     /plans/active/canonical_id_builder_retrofit_checklist_2026_07_08.md,
-    /plans/active/cefi_satellite_ao_dispatch_batch1_2026_07_25.md,
+    /plans/archive/2026_07/cefi_satellite_ao_dispatch_batch1_2026_07_25.md,
   ]
 created: "2026-07-27"
 last_updated: "2026-07-27"

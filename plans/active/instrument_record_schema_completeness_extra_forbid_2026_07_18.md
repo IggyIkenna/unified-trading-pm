@@ -33,6 +33,12 @@ source:
   2026-07-18: schema-completeness, not minimal-remove)"
 locked_by:
 locked_since:
+context_scope:
+  [
+    /codex/02-data/honest-absence-downstream-handling.md,
+    /codex/02-data/availability-manifest-and-data-status.md,
+    unified-api-contracts/unified_api_contracts/internal/reference/instrument.py,
+  ]
 supersedes:
 superseded_by:
 ---
@@ -76,25 +82,44 @@ authoritative list comes from the full-suite `extra='forbid'` run (todo 1).
 
 ## Todos
 
-- [ ] [DATA] P1. **Get the AUTHORITATIVE list** — flip `model_config = ConfigDict(extra="forbid")` on a branch and run
-      the FULL UAC + IS suites (not a -k subset); collect every `extra_forbidden` field name + the adapter/call-site
-      that passes it. This is the foundation gate (my measurement was a subset).
-- [ ] [DATA] P1. **Per-field disposition table — the bias is REMOVE, ADD is the exception.** These kwargs are currently
-      DUMPED across the board by the adapters and READ BY NOTHING (that silent no-op is why they went unnoticed). So for
-      each dropped kwarg apply a three-part test (operator 2026-07-18) and ADD to the schema ONLY if all three hold,
-      else REMOVE from the caller: 1. **Code usage** — grep for a real CONSUMER: does any code path
+- [x] ✅ [DATA] P1. **Get the AUTHORITATIVE list** — flip `model_config = ConfigDict(extra="forbid")` on a branch and
+      run the FULL UAC + IS suites (not a -k subset); collect every `extra_forbidden` field name + the adapter/call-site
+      that passes it. This is the foundation gate (my measurement was a subset). — **DONE** (via
+      `cross_cutting_satellite_ao_dispatch_batch1_2026_07_26.md`, 2026-07-28, slot-6): flipped `extra='forbid'` on a
+      local scratch branch, ran the FULL UAC + instruments-service `quality-gates.sh` suites, AST-parsed every
+      `InstrumentRecord(...)` call site. Authoritative complete list: `symbol`, `is_active`, `updated_at`,
+      `min_order_size`, plus two newly-surfaced fields the partial measurement missed — `asset_group`, `lot_size`. See
+      that plan's Progress Log for the full method + evidence.
+- [x] ✅ [DATA] P1. **Per-field disposition table — the bias is REMOVE, ADD is the exception.** These kwargs are
+      currently DUMPED across the board by the adapters and READ BY NOTHING (that silent no-op is why they went
+      unnoticed). So for each dropped kwarg apply a three-part test (operator 2026-07-18) and ADD to the schema ONLY if
+      all three hold, else REMOVE from the caller: 1. **Code usage** — grep for a real CONSUMER: does any code path
       (features/ml/strategy/UI/download) actually read this field off the record/parquet, or would a concrete consumer
       want it? "An adapter passes it" is NOT usage. 2. **Business reason** — is there a plausible trading/reference-data
       reason to persist it (does it carry decision value), vs incidental adapter scratch state. 3. **Doesn't already
       exist** — no declared field already carries the same information. Record the verdict + evidence per field.
       Anchors: `is_active`→already `status` (REMOVE/map); `symbol`→already `raw_symbol` (likely REMOVE);
       `min_order_size` vs `min_size` (distinct? only ADD if a consumer needs the order minimum separately); `updated_at`
-      (a consumer of capture-provenance? else REMOVE).
+      (a consumer of capture-provenance? else REMOVE). — **DONE** (batch1, 2026-07-28, slot-6): verdicts —
+      `symbol`→REMOVE (zero usage, `raw_symbol` covers it); `is_active`→REMOVE (zero usage, `MarketLifecycle` is the
+      real lifecycle signal); `updated_at`→REMOVE (zero usage); `lot_size`→REMOVE (test-fixture-only, zero production
+      usage); `asset_group`→**RENAME to `asset_class`** (bug-fix — an already-declared field was being silently missed
+      under the wrong kwarg name across 6 TradFi/Databento/IBKR call sites, defaulting `asset_class` to CRYPTO
+      regardless of real class); `min_order_size`→**LEFT AMBIGUOUS** (operator-judgment flag stands, distinct from
+      `min_size`, execution-sizing use unclear — not yet resolved).
 - [ ] [DATA] P1. **ADD the kept fields** — declare them on `InstrumentRecord` + align `INSTRUMENTS_PARQUET_SCHEMA` (1:1
       model↔column contract); additive + optional (non-breaking added-optional-field), so existing rows/validators are
-      unaffected. UAC unit test per added field.
+      unaffected. UAC unit test per added field. — **N/A so far**: no field's verdict is ADD (only `min_order_size` is
+      still ambiguous/pending — this todo only applies if a future ruling adds it as a genuinely-new field). Stays open
+      pending that ruling.
 - [ ] [DATA] P1. **FIX the callers** — for REMOVE fields, drop the undeclared kwarg from each adapter; for ADD fields,
-      point the adapter at the new declared field. Cover every call site the todo-1 run surfaced.
+      point the adapter at the new declared field. Cover every call site the todo-1 run surfaced. — **PARTIAL, DONE for
+      the REMOVE-verdict subset** — `instruments-service@ee2d6c75`: dropped `symbol`/`is_active`/`updated_at`/`lot_size`
+      from all 9 production + test-fixture call sites; renamed `asset_group`→`asset_class` at all 6 real sites (a
+      correctness fix, not cosmetic) + opportunistically fixed `ibkr.py::_build_instrument_from_uac`'s missing
+      `raw_symbol=`. instruments-service `quality-gates.sh --no-fix` ALL PASSED (4988 passed / 0 failed). Still open:
+      `min_order_size` is unresolved (todo 2's ambiguous verdict), so this todo can't fully close until that ruling
+      lands and any resulting caller change ships.
 - [ ] [DATA] P1. **Flip `extra='forbid'`** — add `model_config = ConfigDict(extra="forbid")`; UAC + IS suites green
       (proves no remaining undeclared-kwarg caller). Add a UAC test asserting an unknown kwarg now RAISES.
 - [ ] [REVIEW] P2. **Post-phase codex audit** — note the extra='forbid' contract + any new fields in
@@ -122,3 +147,7 @@ authoritative list comes from the full-suite `extra='forbid'` run (todo 1).
     the AUTHORITATIVE complete list (the static scan flagged further defi/deribit candidates —
     `spot_asset`/`debt_symbol`/`onchain_symbol`/etc. — to be confirmed real-vs-parse-artifact and dispositioned the same
     way).
+
+- **na-eligibility-audit 2026-07-30**: KEEP-NA, valid — the per-field disposition todo carries an explicit OPERATOR
+  JUDGMENT field (`min_order_size`: ADD only if execution needs the order-minimum) that gates the ADD/REMOVE pass.
+- **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).

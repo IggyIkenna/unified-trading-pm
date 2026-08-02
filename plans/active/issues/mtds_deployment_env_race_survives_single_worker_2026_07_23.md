@@ -111,8 +111,48 @@ did not have time to instrument the cascade step itself (e.g. diffing `os.enviro
 completes, or checking whether the ancestor repos' own `setup.sh`/dependency-install step executes any Python in the
 same shell) — that instrumentation is the concrete next step, not another blind retry loop.
 
+## Update (2026-07-30) — a look-alike failure that is NOT this leak, root-caused and closed
+
+While widening `PYTEST_UNIT_DIR` (`ci_satellite_ao_dispatch_batch2_2026_07_29.md` todo 11), a full
+`bash scripts/quality-gates.sh --no-fix` run failed
+`tests/market_interface/adapters/tradfi/test_databento_write_pipeline.py::test_bucket_resolution_uses_category_tradfi`
+(a file that was NEVER gated before this todo) with a bucket ending `...-prd-test-account` instead of the test's
+expected `...-prd-test-project`. Initially looked like a sibling of this doc's leak on a different variable
+(`GCP_PROJECT_ID`) — but a direct repro
+(`CLOUD_PROVIDER=local CLOUD_MOCK_MODE=true GCP_PROJECT_ID=test-project AWS_ACCOUNT_ID=test-account .venv/bin/python -c '...get_tick_data_bucket(...)'`,
+i.e. the exact env this repo's own `tests/conftest.py` sets for EVERY test, no other test involved) reproduced the
+"failing" value byte-for-byte on the very first call in a brand-new process. **Root cause: not a leak at all.**
+`tests/conftest.py` sets `CLOUD_PROVIDER=local` for the whole suite, and its own comment there says exactly why: "under
+CLOUD_PROVIDER=local `_active_cloud()` resolves to aws" — so `get_market_data_bucket` always takes the AWS template
+(`${AWS_ACCOUNT_ID}` -> conftest's `test-account` default), never the GCP one. The test's own
+`bucket.endswith("-test-project")` assertion simply assumed the GCP branch, which was never actually this suite's
+default — a plain stale/wrong assertion, unrelated to any ambient-state race. Fixed by pinning
+`unified_config.cloud_provider`/`.gcp_project_id` (the live singleton attributes — `monkeypatch.setenv` doesn't reach
+them, since `unified_config` is built once at import and doesn't re-read `os.environ`) directly in the test via
+`monkeypatch.setattr`, so it explicitly forces + asserts the GCP branch rather than depending on which branch happens to
+be ambient-default. **Does not touch or explain this doc's actual DEPLOYMENT_ENV race** — left exactly as still open
+below.
+
 ## Todos
 
 - [ ] [INFRA] P2. **Instrument quickmerge's cascade/pull step** — diff `os.environ` before/after `STAGE 0: Cascade` and
       check whether ancestor repos' dependency-install steps execute Python in the same shell; per "Recommendation,"
       this is the concrete next step to root-cause the race, not another blind retry loop.
+
+## na-eligibility-audit verdict
+
+**na-eligibility-audit 2026-07-30** (tranche `ci`, autonomous): KEEP-NA, valid —
+`/plans/archive/2026_07/ci_satellite_ao_dispatch_batch2_2026_07_29.md` Deferred **E7** (2026-07-29) explicitly rules
+this class NOT bounded as currently framed: five independent investigation sessions have failed to pin the leak
+mechanism, and this doc plus `/plans/active/issues/mtds_deployment_env_monkeypatch_leak_blocks_quickmerge_2026_07_23.md`
+are to be "read together, do not duplicate investigation". Stays parked on that single shared blocker.
+
+**na-eligibility-audit 2026-07-31** (tranche `ci`, autonomous): **CONFIRMS the verdict above, unchanged.** The "Update
+(2026-07-30)" section added since documents a LOOK-ALIKE failure (`test_bucket_resolution_uses_category_tradfi`, a
+`CLOUD_PROVIDER=local` test-suite-default assertion bug) that was root-caused as NOT the same leak and fixed separately
+(not tracked as a checkbox here) — the section explicitly states it "does not touch or explain this doc's actual
+DEPLOYMENT_ENV race — left exactly as still open below". Cross- verified against the live
+`ci_satellite_ao_dispatch_batch2_2026_07_29.md`: todo 11 (`[x]` done) cites this doc to avoid confusion with "that
+still-open, unrelated leak"; Deferred **E7** remains open/parked, unchanged. Independently corroborated by the sibling
+`/ag-closeout-audit ci` skill's same-day draft `ci_satellite_ao_dispatch_batch4_2026_07_31.md` (row D4-12):
+"genuinely-unbounded investigation... same as batch1 D3(3) / batch2 E7." No reclassification.

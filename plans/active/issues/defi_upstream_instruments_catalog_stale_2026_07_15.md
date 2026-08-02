@@ -90,6 +90,13 @@ assigned_role: data_engineering
 drift_direction: advance-code
 depends_on: []
 last_updated: 2026-07-15
+context_scope:
+  [
+    /codex/02-data/honest-absence-downstream-handling.md,
+    /codex/02-data/availability-manifest-and-data-status.md,
+    /plans/active/data_pipeline_alerts_batch_remediation_2026_07_15.md,
+    market-tick-data-service/market_tick_data_service/cli/handlers/_defi_manifest.py,
+  ]
 ---
 
 # DeFi `dex_pool_state` + `lst_rates` `UPSTREAM_INSTRUMENTS_CATALOG_STALE` — temporal-race root cause, code gap fixed, data remediation scoped as follow-up
@@ -320,6 +327,9 @@ already handles honestly).
 
 ## Progress Log
 
+- **na-eligibility-audit 2026-07-30**: KEEP-NA, valid - sole residual is an explicit [DESIGN] P3 nice-to-have
+  (IS-catalogue completion-signal retry-sweep) with no concrete done-when
+
 - 2026-07-15: Investigated per `data_pipeline_alerts_batch_remediation_2026_07_15.md`'s "New todos" entry for
   `defi/dex_pool_state` + `defi/lst_rates`. Live-requeried the manifest (current counts above, close to but not
   identical to the operator's cited numbers — dex_pool_state's tail is 06-25 not 06-30). Determined root cause via
@@ -516,3 +526,5 @@ the classification target is already verified at 0 and this issue's own Done-whe
 OR a documented monitored handoff," the `[DATA] P1` and `[DEPLOY] P1` follow-up checkboxes above are flipped now on the
 redeploy+launch+before-evidence, not on VM self-termination. Status left `open` (not `resolved`) — the `[SCRIPT] P3`
 mode-threading residual and `[DESIGN] P3` completion-signal items remain genuinely unaddressed.
+
+- **context-scout 2026-08-01**: populated context_scope (4 entries).

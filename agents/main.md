@@ -304,9 +304,18 @@ loses the operator's message; it comes back next tick. Two things you MUST honou
 
 - You will SEE the same message id again until you reply. That is expected, not a duplicate — do not treat a repeat as a
   new question.
-- The moment you drain a NON-EMPTY `messages`, append it to a scratch file (`${WORKSPACE_ROOT}/.orch-main-inbox.json`)
-  BEFORE doing anything else, so a mid-tick /compact cannot make you forget to answer. Remove an entry once you've
-  replied to it.
+- The moment you drain a NON-EMPTY `messages`, append it to a scratch file
+  (`${WORKSPACE_ROOT:-$HOME/unified-trading-system-repos}/.orch-main-inbox.json` — **always the fully-resolved absolute
+  path with this fallback, never the bare `${WORKSPACE_ROOT}/...` token**: `WORKSPACE_ROOT` is NOT delivered in your
+  boot message — see § "Your boot message provides" above, it lists only `server_url`/`model`/`machine`/`rc_url`/
+  `loop_seconds` — so an unguarded reference resolves against whatever your shell's cwd happens to be at write time, not
+  the true workspace root. This is a confirmed incident, not a hypothetical: it landed the scratch file INSIDE the
+  `agent-orchestrator` repo checkout, which wedged `ao-self-pull.sh`'s dirty-gate for ~7h with zero page because
+  `AGENT_ORCHESTRATOR_SLACK_WEBHOOK` was unset —
+  `plans/archive/issues/ao_self_pull_wedged_by_main_inbox_untracked_file_2026_07_30.md`. The fallback form is
+  cwd-independent and matches the same defensive pattern `worker.md`'s fresh-pull script already uses
+  (`WS_ROOT="${WORKSPACE_ROOT:-$HOME/unified-trading-system-repos}"`)) BEFORE doing anything else, so a mid-tick
+  /compact cannot make you forget to answer. Remove an entry once you've replied to it.
 
 STEP 2B — for each message in `messages` (most ticks this will be empty): read it, think about it in the context of
 current orchestration work, compose a response, then answer via `/reply` with `in_reply_to` set to the message's id —
@@ -380,9 +389,10 @@ is needed; you do NOT check your own context every tick:
 ## Available skills (MVP — documented commands; a real skill-dispatch framework comes later)
 
 - /plan-status <epic|plan> — report done / in-flight / blocked / next-P0 for a plan or epic. Read the plan file under
-  `${WORKSPACE_ROOT}/unified-trading-pm/plans/{active,epics}/<name>.md`, count `- [x]` vs `- [ ]` todos, cross-ref
-  dispatched/blocked state via `curl -sS $SERVER_URL/api/backlog` (match by plan_ref) + `$SERVER_URL/api/state`
-  (blocked_queue), and surface the first unchecked P0 todo.
+  `${WORKSPACE_ROOT:-$HOME/unified-trading-system-repos}/unified-trading-pm/plans/{active,epics}/<name>.md` (same
+  cwd-independent fallback as § "Available skills" above — never the bare token), count `- [x]` vs `- [ ]` todos,
+  cross-ref dispatched/blocked state via `curl -sS $SERVER_URL/api/backlog` (match by plan_ref) +
+  `$SERVER_URL/api/state` (blocked_queue), and surface the first unchecked P0 todo.
 - /whats-dispatched <slot|vm> — list tasks currently dispatched to a slot/VM. Run
   `curl -sS "$SERVER_URL/api/backlog?status=dispatched"` and filter by `dispatched_to == <slot>`; cross-ref
   `$SERVER_URL/api/state` slots[] for the live last_msg.

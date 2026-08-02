@@ -38,11 +38,41 @@ superseded_by:
 resolved_by:
 source: ["cross_cutting_satellite_ao_dispatch_batch1b-006, slot 14, 2026-07-28"]
 drift_direction: advance-code
+context_scope:
+  [
+    /plans/active/issues/defi_hyperliquid_perp_funding_derivative_ticker_divergence_2026_07_28.md,
+    /plans/active/issues/perp_funding_data_semantics_and_cadence_2026_06_16.md,
+    deployment-service/scripts/vm/launch-cefi-hl-aster-historical-backfill.sh,
+    market-tick-data-service/market_tick_data_service/cli/handlers/perp_funding_handler.py,
+  ]
 ---
 
 # Aster perp-funding backfill — stale launcher + genesis conflict (2026-07-28)
 
 ## What I found
+
+> **⚠️ PREMISE CORRECTION 2026-07-31 (corpus-wide ownership-conflict sweep) — READ BEFORE FINDING 1 BELOW.** Finding 1
+> quotes the 2026-07-08 retirement docstring's claim that HL/ASTER funding "is byte-identical to the `funding_rate`
+> field already carried on `derivative_ticker`". **That claim is FALSE and was already measured false and ruled on
+> before this doc was written.**
+> `/plans/active/issues/defi_hyperliquid_perp_funding_derivative_ticker_divergence_2026_07_28.md` compared 2,640 rows
+> across the full 2023-05..2025-01 historical overlap and found only **60.7% matched** within a 2e-5 absolute tolerance
+> — p90 divergence 5.6e-5, **worst case 1.2e-3, roughly 10× typical funding-rate magnitude** (worst offenders cluster on
+> BANANA/CRV/BCH, i.e. genuinely different values, not float noise). **The operator RULED on 2026-07-28 to REVERSE the
+> 2026-07-08 retirement and resume dedicated `perp_funding` capture for HYPERLIQUID/ASTER/LIGHTER-ZKSYNC** (that doc's
+> `[DATA] P1`, already `[x]`, retagged from `[OPERATOR]`).
+>
+> **This is not a fresh decision anyone needs to re-take** — it is settled. What it means for this doc: the mechanical
+> facts in Finding 1 are still accurate _as a description of the code as it stood on 2026-07-28_ (the handler docstring
+> says what it says, `DEFAULT_PROTOCOLS` lists only kalshi_perp/polymarket_perp, and dispatching
+> `--perp-protocols aster` at it would still write false `attempted_failed` rows today) — so the "don't run the
+> plan-literal command" warning stands until the reversal lands. But the **justification** is "the retired path is not
+> yet restored", NOT "derivative_ticker is an equivalent substitute". Once the reversal ships, re-read Finding 1 before
+> acting on it: the standalone `perp_funding` shard becomes the canonical source again and the `derivative_ticker`-only
+> routing below becomes the stale advice.
+>
+> This doc's own **open todo is unaffected** — the Aster genesis-date window (2023-07-22→2023-11-01) is a separate,
+> genuinely operator-gated recall question and stays `[OPERATOR]`.
 
 **1. The plan's named launcher targets a retired code path.**
 `market_tick_data_service/cli/handlers/ perp_funding_handler.py`'s own module docstring: "RETIRED (2026-07-08,
@@ -135,3 +165,28 @@ is confirmed. Also update the parent plan's leg (c) text to stop citing the reti
   is already fully captured (226,008 rows through 2026-07-27), so the ONLY remaining scope is the disputed
   2023-07-22→2023-11-01 window this blocker gates. Nothing to do until the operator answers. Released via
   `/skip-current-task {"reason_code": "BLOCKED"}` on the parent todo.
+- 2026-08-01 (slot 6, data_engineering): re-verified — `BLK-a94f446d` still has no answer (fresh pull, corpus grep,
+  `/api/blocked/stats` shows no resolution, `/api/backlog/.../blockers` confirms no formal dispatcher-level gate; the
+  gate lives on this issue doc's own todo, unchanged). **New cross-reference for whoever answers next**: the source doc
+  `perp_funding_data_semantics_and_cadence_2026_06_16.md` GAP 2 already contains the raw 2026-06-17 operator-confirmed
+  decision text this blocker's "reconstruct vs out-of-scope" question is asking about — it is not a lost/undiscoverable
+  conversation, it is written down: "Operator confirmed 2026-06-17: genesis = `2023-07-22`" plus an explicit instruction
+  to treat the 2023-07-22→~2024 window as real (Binance-proxied) data to be labeled honestly, not excluded — and GAP 4
+  separately states "2023-07-22 should win for any coverage %, missing-days, or **backfill-target** calculation." Slot
+  15's 2026-07-29 research read this same passage but treated it as insufficient because it isn't a raw conversation
+  transcript; I don't think that's the right bar — a written, dated, operator-attributed decision in an issue doc IS the
+  standard form a plan decision-record takes here (per `plans/active/issues/*` being the durable record), and main's own
+  gate summary already quotes this exact fact ("2023-07-22 was the operator-confirmed Binance-proxied (synthetic)
+  start") without disputing it. **What's still a genuine judgment call, not something I'm resolving myself**: whether
+  that documented genesis/coverage-start decision also constitutes authorization to spend compute physically running the
+  backfill VM over the disputed window, vs. being a config/labeling-only decision that a human still needs to extend
+  into "yes, backfill it" — main already looked at the same facts and chose to gate rather than assume the former, so I
+  am not overriding that call as a worker. Flagging this connection explicitly (via `/blocked`) so main/ operator can
+  resolve `BLK-a94f446d` with it in hand, rather than re-researching from scratch a 3rd time. **This is also the 6th
+  dispatch of this exact task to hit the identical "sole leg fully gated, no unblocked action" conclusion across 5
+  calendar days (slots 14, 9, 15, 4, 13, now 6)** — recommending this task be PARKED (mirroring the 3 same-class parks
+  main executed tonight for `live_event_log_warm_sink_recovery_and_cold_compaction-011`, `ibkr-...-015`, and
+  `mtds_available_at_cross_asset_backfill_2026_07_13-002`) rather than continuing to re-dispatch it fleet-wide for the
+  same unanswered blocker. Released via `/skip-current-task {"reason_code": "BLOCKED"}` on the parent todo; posting a
+  `/blocked` recommending the park.
+- **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).

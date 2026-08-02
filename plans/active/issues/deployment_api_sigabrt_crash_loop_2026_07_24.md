@@ -16,7 +16,9 @@ summary: >-
   this session (out of scope for the 1h reaper-drain P0 todo that surfaced it) — needs its own focused investigation.
 status: open
 nature: issue
-asset_group: [meta]
+asset_group:
+  [ui] # corrected 2026-07-30 (ui-tranche launch) -- was [meta]; repos:[deployment-api] only, a
+  # deployment-api container stability bug
 stage: [meta]
 repos: [deployment-api]
 scope: [engineer]
@@ -33,6 +35,14 @@ execution_scope: orchestrator-agent
 drift_direction: advance-code
 sequential: false
 depends_on: []
+context_scope:
+  [
+    /plans/active/issues/deployment_api_cloud_run_coldstart_flaky_exit0_blocks_prd_sa_cutover_2026_07_31.md,
+    /plans/archive/2026_07/deployment_api_sigabrt_crash_loop_progress_log_history_2026_07_31.md,
+    /plans/archive/issues/deployment_registry_reaper_not_draining_stale_entries_2026_07_24.md,
+    deployment-api/gunicorn.conf.py,
+    deployment-api/deployment_api/lifespan.py,
+  ]
 locked_by:
 locked_since:
 assigned_vm: planning
@@ -88,493 +98,728 @@ While diagnosing the reaper-drain P0, I queried live Cloud Logging for `uts-shar
 File as its own P1 BACKEND/INFRA investigation (not bundled into the reaper-drain P0, which is scoped to the
 cancellation-timeout fix and already shipped). Suggested next steps for whoever picks this up:
 
-- [x] ✅ [BACKEND] P1. Root-cause the `Uncaught signal: 6` crash-loop on `uts-shared-deployment-api` (project
-      `central-element-323112`, region `asia-northeast1`): correlate SIGABRT timestamps (`gcloud logging read` on
-      `run.googleapis.com%2Fvarlog%2Fsystem`) against per-instance request volume / `containerConcurrency=80` load, and
-      audit every module reachable from `deployment_api.main` for an EAGER (import-time, not lazily-constructed)
-      gRPC-based client (Firestore, Pub/Sub, Secret Manager) that `preload_app = True`
-      (`deployment_api/gunicorn.conf.py`) would construct in the gunicorn MASTER before fork — the classic
-      gRPC-post-fork-abort hazard. If found, either make that construction lazy (per-worker, post-fork) or set
-      `preload_app = False` and re-measure the SIGABRT rate over the following 3 days (repo: deployment-api). —
-      INVESTIGATED 2026-07-24 (slot 2). Full detail in Progress Log — deployment-api@1adf54b (faulthandler
-      instrumentation shipped; root cause narrowed but NOT yet 100% confirmed, see log).
-- [x] ✅ [REVIEW] P1. Confirm `deployment-api@1adf54b` is live, then read the next SIGABRT faulthandler dump; branch
-      below. Verify it's live via `gh pr list` / the promote workflow; once it's been live a few hours,
-      `gcloud logging read` the `run.googleapis.com%2Fstderr` stream around the next `Uncaught signal: 6` and check for
-      a `Fatal Python     error`/`Current thread` faulthandler dump naming `deployment-api@6f6a389`'s
-      `_compute_inventory` cold path — if so, the SIGABRT loop is resolved by that fix and the crash rate should visibly
-      drop; if not, do not re-guess — file a fresh evidence-backed BACKEND todo with the exact stuck call site. (repo:
-      deployment-api) — **🟢 ACTUALLY LIVE since 2026-07-25T02:51:26Z — slot 6's 04:41Z "STILL NOT LIVE" was a FALSE
-      NEGATIVE (slot 10, review, 2026-07-25T05:25Z)**: the ancestor check
-      (`git merge-base --is-ancestor 1adf54b origin/main`) fails forever post-squash-merge — `main` only ever receives
-      the synthetic `chore(promote)` squash commit, never the original LDR SHA — so it was never valid evidence of
-      absence. Correct method: content-diff. `git show origin/main:deployment_api/gunicorn.conf.py | grep faulthandler`
-      shows `faulthandler.enable()` present, byte-identical to LDR's copy — the fix IS on `main`, squashed into PR #376
-      (`273c951`, merged `02:43:58Z`). Cloud Run revision `uts-shared-deployment-api-00274-s9g` (the SAME revision slot
-      2/6 both inspected — its image tag just never changed again because no NEWER promote has landed since) was built
-      from that commit at `2026-07-25T02:51:26Z`. **So the fix has been live ~2.5h, and the precondition IS met** —
-      filed a standalone methodology issue for the false-negative pattern itself:
-      [deployment_promote_squash_ancestry_false_negative_2026_07_25.md](/plans/archive/issues/deployment_promote_squash_ancestry_false_negative_2026_07_25.md).
-      **Read the actual next occurrence**: `gcloud logging read` on `run.googleapis.com%2Fvarlog%2Fsystem` shows one
-      post-deploy `Uncaught signal: 6` at `2026-07-25T04:27:19Z` (pid=29, tid=29). Pulled the
-      `run.googleapis.com%2Fstderr` stream for ±5min around it (`04:25:00Z`–`04:30:00Z`) — **zero entries**, and a 24h
-      stderr sweep shows the nearest entries are `01:03:36Z` (before the crash) and nothing after — **no faulthandler
-      dump appeared for this post-deploy crash**, despite `faulthandler.enable()` being confirmed present in the
-      deployed image's `post_fork` hook. Per this todo's own instruction ("if not, do not re-guess — file a fresh
-      evidence-backed BACKEND todo"), NOT closing this out — added todo below rather than guessing why the dump is
-      missing (candidates, unconfirmed: stderr log delivery drops on abrupt sandbox teardown; the sandbox's "Uncaught
-      signal" detector may fire on a path the Python-level handler never reaches; or this occurrence belongs to a
-      still-draining OLD-revision instance rather than `00274-s9g` — none verified). Not fully resolved.
-- [x] ✅ [BACKEND] P1. Determine why the `2026-07-25T04:27:19Z` post-deploy SIGABRT produced no `faulthandler` dump on
-      `run.googleapis.com%2Fstderr` despite `deployment-api@1adf54b`'s `post_fork` `faulthandler.enable()` being
-      confirmed live in the deployed image since `02:51:26Z`. Check, in order: (1) confirm which revision/instance
-      actually owned pid=29 at that timestamp (rule out a still-draining pre-`00274-s9g` instance from the deploy
-      transition); (2) check whether Cloud Run's structured-logging agent can lose a buffered stderr write during an
-      abrupt SIGABRT teardown (vs. a graceful exit) — if so this may need `sys.stderr.flush()` or `os.fsync` immediately
-      after the dump, or the dump target may need to move to a file under `/tmp` (not the banned literal path — resolve
-      via config) flushed synchronously; (3) re-check the NEXT occurrence once ruled out. (repo: deployment-api) —
-      `deployment-api@7ba17e2`. **ROOT-CAUSED via code inspection, not log-only guessing** (neither of the two named
-      candidate hypotheses): (1) confirmed via `gcloud logging read` that pid=29's earliest log entry is `02:51:28Z` (2s
-      after the `00274-s9g` deploy) and it kept serving requests after the crash — it IS the fresh post-deploy instance,
-      not a draining old one; ruled out. (2) irrelevant — the real bug is upstream of any stderr-delivery question:
-      `faulthandler.enable()` in `post_fork` (`gunicorn/arbiter.py`'s `spawn_worker()` calls `post_fork` then
-      `worker.init_process()`) gets **silently uninstalled** moments later by
-      `uvicorn.workers.UvicornWorker.init_signals()` (called from `Worker.init_process()`), whose override does
-      `for s in self.SIGNALS: signal.signal(s, signal.SIG_DFL)` — `Worker.SIGNALS` (`gunicorn/workers/base.py`) is
-      `[SIGABRT, SIGHUP, SIGQUIT, SIGINT, SIGTERM, SIGUSR1, SIGUSR2, SIGWINCH,     SIGCHLD]`, which includes SIGABRT. So
-      every worker's SIGABRT disposition is reset to the raw kernel default microseconds after `faulthandler.enable()`
-      runs — by the time a real SIGABRT fires there is no handler left to dump anything, which is exactly Cloud Run's
-      "Uncaught signal: 6" with zero Python trace. **Fix**: moved `faulthandler.enable()` to a new `post_worker_init`
-      hook (gunicorn calls it after `init_signals()` and `load_wsgi()`, right before the worker enters its run loop) —
-      verified nothing downstream touches SIGABRT again (`uvicorn/server.py`'s `HANDLED_SIGNALS` is only
-      `SIGINT`/`SIGTERM`). 2 new tests in `tests/unit/test_gunicorn_conf.py` (`TestPostWorkerInit`): asserts
-      `post_worker_init` calls `faulthandler.enable()`, and a regression guard that `post_fork` no longer does (so the
-      two don't silently drift back together). `quality-gates.sh` PASSED (129s). Handoff to the REVIEW todo below: once
-      this deploy is live, the NEXT SIGABRT should finally produce a stderr dump — read it for the stuck call site.
-- [ ] [REVIEW] P2. Once the above BACKEND todo ships (or a subsequent SIGABRT does show a dump), read it and report the
-      stuck call site per this issue's original ask — confirm/refute the `_compute_inventory` cold-path hypothesis from
-      the sibling `deployment_registry_reaper_not_draining_stale_entries_2026_07_24.md` Gap-2 finding. (repo:
-      deployment-api) — **Checked 2026-07-25T06:23Z (slot 2)**: `agent-orchestrator@7ba17e2`'s fix IS live — confirmed
-      via content-diff (not ancestry — this session's own methodology lesson from the sibling
-      `plans/archive/issues/deployment_promote_squash_ancestry_false_negative_2026_07_25.md`): `origin/main`'s
-      `gunicorn.conf.py` is byte-identical to the fix commit, promoted via `2efbbcb` at `06:05:45Z`. Cloud Run revision
-      `uts-shared-deployment-api-00275-7zl` (built `06:14:00Z`, confirmed serving 100% traffic) carries it.
-      `gcloud     logging read` for `"Uncaught signal"` scoped to that exact revision: **zero occurrences** — not
-      surprising, only 9 minutes elapsed since deploy vs. the measured ~20-40min crash cadence, not yet a stall. Not
-      completable this turn (the trigger event — the next SIGABRT — hasn't happened yet, not a blocker to resolve).
-      Released via `/skip-current-task`. Next dispatch: re-run the same `gcloud logging read` scoped to revision
-      `00275-7zl`; once a SIGABRT appears, pull the `stderr` stream ±5min around it and read the
-      `Fatal Python error`/`Current thread` dump for the stuck call site. — **CORRECTION 2026-07-25 (slot 3)**: the
-      `06:23Z` "content-diff confirms it's live" check above diffed `origin/main:deployment_api/gunicorn.conf.py` — but
-      that file is a **dead duplicate never loaded in production**. `Dockerfile`/`Dockerfile.dashboard` both `COPY` +
-      load a repo-root `gunicorn.conf.py` instead (`-c /app/gunicorn.conf.py`), which `7ba17e2` never touched — verified
-      by `docker pull`ing revision `00275-7zl`'s actual image
-      (`sha256:1282490246ad38c7b9398ae09f1982351d3aea0837935c8e8b1b00c3421f42a6`) and extracting `/app/gunicorn.conf.py`
-      directly: no `post_worker_init`, no `faulthandler` import at all — just the old bare-`pass` stub. This is why
-      SIGABRTs kept recurring on `00275-7zl` with zero dumps (11 occurrences observed `06:10Z`–`11:46Z`, confirmed via
-      `gcloud logging read` scoped to that exact revision) — the "fix" was never actually armed. **Fixed for real** in
-      `deployment_registry_reaper_not_draining_stale_entries_2026_07_24.md`'s corresponding todo:
-      `deployment-api@3fea307` ports the faulthandler hook into the ACTUAL loaded file, deletes the dead duplicate, and
-      is runtime-verified locally (a real `SIGABRT` now produces a full dump). Shipped, landed on `live-defi-rollout`.
-      This todo's precondition ("the fix ships") is now genuinely met as of `3fea307` — next dispatch should re-check
-      once THAT reaches a fresh Cloud Run deploy (verified via direct image extraction, not source-diff) and a SIGABRT
-      recurs; read the resulting dump for the stuck call site. — **CHECKED 2026-07-30T03:34Z (slot 13, review)**: still
-      not completable — `3fea307`'s fix IS confirmed live (direct image extraction, two separate revisions, `00331-wzz`
-      and current `00332-8gl`), and SIGABRT HAS recurred 8x since (`00317-zmv` ×1, `00330-tth` ×1, `00331-wzz` ×6, all
-      across 2026-07-28/29) — but **zero of those 8 occurrences produced any faulthandler dump**, even though stderr
-      delivery itself is confirmed working on the exact same revision (an unrelated real Python traceback landed on
-      `00331-wzz`'s stderr at a different timestamp). This rules out the "fix not actually armed" explanation and
-      surfaces a NEW diagnostic gap — filed as a fresh `[BACKEND]` todo below rather than re-guessing a call site with
-      no dump to read. Not flipping this checkbox: the original ask ("read the dump, report the stuck call site") still
-      has no dump to read.
-- [x] ✅ [BACKEND] P1. Diagnose why `faulthandler.enable()` (confirmed live + correctly armed in `post_worker_init`,
-      verified via direct image extraction on `uts-shared-deployment-api-00331-wzz` and `-00332-8gl`) produces ZERO
-      stderr dumps across 8 confirmed post-fix `Uncaught signal: 6` occurrences (`00317-zmv@2026-07-28T03:39:17Z`,
-      `00330-tth@2026-07-28T19:51:14Z`,
-      `00331-wzz@2026-07-29T03:46:52Z/04:59:17Z/11:04:57Z/13:14:12Z/18:21:52Z/22:09:12Z` — all checked via
-      `gcloud logging read` on `run.googleapis.com%2Fstderr` in a ±5min window, all empty), despite stderr delivery
-      working in general on the same revision. Candidate angles to check (none confirmed — do not re-guess a root cause
-      without evidence): (1) whether `sys.stderr` at the moment `post_worker_init` calls `faulthandler.enable()` still
-      resolves to a real OS fd with a working `fileno()` — `deployment_api/main.py`'s module-level
-      `logging.basicConfig(level=logging.INFO)` (line ~130, runs once in the master under `preload_app=True`) attaches a
-      `StreamHandler` that also captures `sys.stderr` at that time; confirm neither this nor anything else rebinds
-      `sys.stderr` to a non-fd-backed wrapper before `post_worker_init` runs per-worker post-fork; (2) whether the
-      "Uncaught signal: 6" system-log line is even generated by gunicorn's own `Arbiter.murder_workers()`
-      (`os.kill(pid, SIGABRT)` on a >300s worker-heartbeat timeout, the leading hypothesis per slot 2's 2026-07-24
-      finding) versus the Cloud Run/gVisor sandbox supervisor force-terminating the container from OUTSIDE the process
-      for an unrelated reason (e.g. a liveness/health-check failure or a sandbox-level resource-limit enforcement) and
-      logging its own termination as "signal 6" — the latter would explain a correctly-armed in-process handler never
-      getting a chance to run at all; check Cloud Run's per-revision memory/CPU utilization metrics (Cloud Monitoring,
-      `run.googleapis.com/container/memory/utilizations` + `.../cpu/utilizations`) in a ±5min window around one of the 8
-      timestamps above for a spike that would support the sandbox-kill theory over the arbiter-timeout theory. (repo:
-      deployment-api) — `deployment-api` (`cloudbuild.yaml`). Both candidate angles resolved with evidence (full chain
-      in the Progress Log entry below): angle (1) is MOOT — no `sys.stderr`/`sys.stdout` rebinding found anywhere in
-      `deployment_api/`, and moot regardless once angle (2) is established, since gVisor's own sentry source
-      (`pkg/sentry/kernel/task_signals.go::deliverSignal`) only emits the "Uncaught signal" log on the
-      `SignalActionTerm`/`Core` branch — i.e. ONLY when the tracked disposition is `SIG_DFL` at delivery; a genuinely
-      -armed handler routes to `SignalActionHandler` instead and this log line could not appear at all, independent of
-      stderr-fd state. Angle (2)'s arbiter half is **DEFINITIVELY REFUTED**: gunicorn's `Arbiter.murder_workers()` MUST
-      log `"WORKER TIMEOUT (pid:%s)"` synchronously before sending SIGABRT (`gunicorn/arbiter.py:504-506`) —
-      `gcloud logging read` for that exact phrase over 30 days returns **zero rows** despite 106+ SIGABRTs, so the
-      arbiter is not the source. Also **empirically proved** the faulthandler fix's ordering is correct in isolation via
-      a local repro (reset all `Worker.SIGNALS` to `SIG_DFL` then `faulthandler.enable()` then self-`SIGABRT` → full
-      dump, exit 134) and ruled out `multiprocessing`/`concurrent.futures` fork-bootstrap resetting SIGABRT (read the
-      stdlib source directly — neither touches signal state). New leads found instead: (a) `"Memory limit"` log entries
-      show `00331-wzz` (carrying 6/8 post-fix SIGABRTs) hit 16513-17004 MiB against its 16384 MiB limit 6× on 2026-07-29
-      — weak temporal correlation (2/8 within ~20-30min) but confirms chronic near-ceiling memory pressure; (b) this
-      repo's OWN `cloudbuild.yaml` history documents a directly-relevant precedent — the retired `${_ROLLUP_JOB}` Cloud
-      Run Job comment: "Cloud Run Jobs are gen2-only and the native pyarrow/pandas compute crashes on gen2 (R7 follow-up
-      #4); the gen1 service runs it fine" — and `data_status/manifest.py`'s `_dispatch_category_builds` (reachable from
-      the MAIN service's `GET /api/data-status/manifest`, not just the isolated rollup path) runs the same kind of
-      native pyarrow/pandas compute via a `multiprocessing.get_context("fork")` `ProcessPoolExecutor`.
-      `uts-shared-deployment-api` had NO explicit `--execution-environment` pin (confirmed via the Cloud Run Admin API
-      v2 directly — the resolved value isn't echoed back when unset, so the actual running environment couldn't be
-      conclusively determined), unlike the sibling rollup service already proven safe under an explicit gen1 pin for
-      this exact code shape. **Shipped** (mitigation, not a 100%-confirmed fix — flagged honestly as such): added
-      `--execution-environment gen1` to `uts-shared-deployment-api`'s deploy command, matching the sibling's
-      already-proven-safe pattern. Cheap, reversible, zero functional/perf cost either way. Full reasoning inline in the
-      cloudbuild.yaml comment. Added a `[REVIEW]` todo below to monitor the post-deploy SIGABRT rate.
-- [ ] [REVIEW] P2. Once `deployment-api`'s `cloudbuild.yaml` `--execution-environment gen1` pin (this doc's prior
-      `[BACKEND]` todo) reaches a live Cloud Run deploy of `uts-shared-deployment-api` (verify via direct image
-      extraction or `gcloud run revisions list` creation timestamp — content-diff, not ancestry, per this doc's own
-      2026-07-25 methodology correction), monitor the SIGABRT rate on that revision for at least the measured ~20-40min
-      cadence × several cycles (several hours, matching the precedent set by slot 6's 2026-07-30T03:59Z entry below —
-      note a multi-hour quiet window is suggestive but NOT conclusive on its own; that same entry found a quiet
-      `00332-8gl` window with no code change to explain it). If the rate drops to near-zero and stays there across a
-      real observation window, this issue is resolved — close it out with the evidence. If SIGABRTs continue at the same
-      cadence on the gen1-pinned revision, the gen1 pin did NOT fix it — do not re-guess; the leading remaining
-      candidate (documented in the cloudbuild.yaml comment and this todo's parent) is a native-library (pyarrow/Arrow
-      C++) fatal-signal handler installed at first-lazy-import time (well after `post_worker_init` already armed
-      faulthandler) silently overriding it — check whether `deployment_api/services/data_status/manifest.py`'s
-      `build_category_in_subprocess` subprocess entrypoint imports pyarrow/pandas for the first time in that forked
-      child, and whether Arrow's C++ layer installs any of its own SIGABRT/SIGSEGV handlers on import (grep the
-      installed `pyarrow` package for `signal`/`sigaction`/`InstallFailureSignalHandler`-style calls). (repo:
+- [x] ✅ [BACKEND]/[REVIEW] P1/P2 (7 entries). **2026-07-31T22:57Z line-cap remediation (5th pass, slot 7)**: the
+      original 2026-07-24 root-cause dispatch through the 2026-07-30T12:09Z sandbox-external-termination-theory entry (7
+      checked checklist items: preload_app/gRPC audit, the squash-ancestry false-negative faulthandler-dump chain, the
+      SIGABRT-disposition-reset fix (`7ba17e2`), the dead-duplicate-gunicorn.conf.py correction (`3fea307`), the
+      gen1-pin mitigation + its monitoring close-out, and the sandbox-external-termination theory) extracted verbatim to
+      `/plans/archive/2026_07/deployment_api_sigabrt_crash_loop_progress_log_history_2026_07_31.md` § "5th-pass
+      extraction". All fully superseded by this doc's later findings (stdout/stderr blackout root cause, the
+      now-resolved cold-container-startup P0, and the OOM/SIGKILL sub-issue).
+
+- [x] ✅ [BACKEND] P2. **NEW, opened 2026-07-31 (slot 11, backend_engineer) — narrow the exec'd-subprocess-SIGABRT
+      theory to a specific call site.** Per the todo above's Finding C: a `subprocess.run()`/`Popen`-spawned child
+      crashing with `SIGABRT` reproduces every observed signature (pid==tid, zero faulthandler dump, container survives)
+      — unlike a `ProcessPoolExecutor` fork child (already proven, 2026-07-30, to correctly dump). None of the 3
+      freshest occurrences (`00341-6vh@14:46:15Z`/`14:54:25Z`, `00343-tf5@21:14:18Z`, all 2026-07-30) correlate with a
+      non-`/health` request in the surrounding request log, so the trigger — if this theory holds — is likely a
+      BACKGROUND/scheduled path, not a request handler. Next steps: (1) audit `deployment_api/`'s 15+
+      `subprocess.run()`/`Popen` call sites for which are reachable WITHOUT a corresponding inbound HTTP request (a
+      background `asyncio` loop, a lazily-triggered retry, a cached/memoized call that doesn't show per-invocation in
+      request logs) — `background_sync.py`/`workers/auto_sync.py`'s 30-60s loop and `_reap_scheduler.py`'s
+      `/api/internal/reap-tick` (confirmed firing every ~10min via Cloud Scheduler, visible in request logs) were
+      grepped this session and do NOT themselves call `subprocess` directly, but audit their FULL call graph
+      (`SyncService`, `DeploymentsRegistry.reap_stale`, and whatever `_run_ttl_cleanup` calls) since a subprocess call
+      could be nested several layers down; (2) once a plausible reachable call site is found, add defensive
+      instrumentation (log `returncode`/negative-signal + `stderr` on a non-zero/signal exit, e.g.
+      `if result.returncode < 0: logger.error(...)`) so the NEXT occurrence is attributable to an exact call site from
+      application logs alone, without needing a gVisor-cooperative faulthandler dump; (3) if no background call site is
+      found, re-open the sandbox-external-termination theory specifically for the HIGHER-traffic/multi-instance
+      revisions (where Finding A's clean single-instance evidence doesn't directly apply) using the same
+      instance_count-based restart-detection method demonstrated this session. (repo: deployment-api) — **2026-07-31
+      (slot 13, backend_engineer)**: step (1) executed EXHAUSTIVELY (full call graph, not another grep). First confirmed
+      which of the TWO competing `auto_sync_running_deployments` implementations is actually live:
+      `deployment_api/main.py:140` wires `lifespan=lifespan` from `deployment_api/lifespan.py`, which imports
+      `auto_sync_running_deployments` from **`background_sync.py`** (`lifespan.py:19-21`) — NOT
+      `workers/auto_sync.py`'s. `app_config.py` defines its OWN parallel `lifespan()`/`create_app()` pair that instead
+      wires `workers/auto_sync.py`'s (larger, quota-broker/orphan-VM-cleanup) implementation, but
+      `app_config.create_app` is never called by `main.py` — only individual helper functions from `app_config.py` are
+      imported elsewhere (`routes/deployments/_crud.py`, `routes/deployments/__init__.py`,
+      `services/data_status_service.py`), so `workers/auto_sync.py`'s entire background loop is **dead code in the
+      actually-running service** (filed as a separate small cleanup todo below — tangential to this SIGABRT hunt but
+      adjacent, found while tracing this exact call graph). Traced the REAL live loop
+      (`background_sync.auto_sync_running_deployments` → `SyncService.sync_deployments` /
+      `_run_ttl_cleanup`→`cleanup_state_ttl` / `_run_deployment_reaper`→`reap_stale_deployments`) end to end:
+      `sync_service.py` imports only `vm_utils.list_running_vm_names` (confirmed uses `google.cloud.compute_v1`
+      directly, zero subprocess), `DeploymentsRegistry.reap_stale` (`unified_trading_library/deployment_registry.py`,
+      zero subprocess hits), and `StateManager.cleanup_state_ttl` (GCS `StorageClient` list/delete calls only, zero
+      subprocess). The one path that COULD reach a launcher (`SyncService._acquire_and_launch` → `orch.submit_shard`) is
+      itself dead: it dynamically imports `deployment_service.deployment.orchestrator.DeploymentOrchestrator` and calls
+      `getattr(orch, "submit_shard", None)` — that class (checked directly in the sibling `deployment-service` repo,
+      `deployment_service/deployment/orchestrator.py`) has NO `submit_shard` method at all, so the `getattr` always
+      returns `None`, `callable()` is `False`, and `job_id` is always `None` — this code path silently no-ops on every
+      call, it can never reach a subprocess. **Conclusion: the background/scheduled exec-subprocess theory is REFUTED by
+      exhaustive call-graph evidence** — there is no subprocess call site reachable from the one loop that's actually
+      running in production, so it cannot be the SIGABRT source. Step (2) doesn't apply (no plausible site found to
+      instrument). Per step (3), re-opening the sandbox-external-termination theory for higher-traffic/multi-instance
+      revisions — filed as a fresh, narrower `[BACKEND]` todo below rather than re-running Finding A's clean-case query
+      again. Flipping this checkbox: its own literal ask (audit the call sites, find or rule out a site) is answered —
+      the answer is a confirmed negative, not an unresolved gap. No code shipped this entry (pure investigation,
+      verified via direct source reads across 3 repos — deployment-api, unified-trading-library, deployment-service —
+      not grep-and-guess).
+
+- [x] ✅ [BACKEND] P2. **NEW, opened 2026-07-31 (slot 11, backend_engineer) — real OOM-kills (`SIGKILL`, distinct from
+      this doc's `SIGABRT` mystery) recur on this service and are currently untracked.** While reading `00331-wzz`'s
+      full `run.googleapis.com%2Fvarlog%2Fsystem` stream for Finding B above, found 5+ occurrences on 2026-07-29 alone
+      of `"Memory limit of 16384 MiB exceeded with NNNNN MiB used"` (16513-17004 MiB against the 16384 MiB limit)
+      followed within ~5s by `"Container terminated on signal 9"` and a real
+      `"Starting new instance. Reason: AUTOSCALING"` — i.e. genuine, already-self-explanatory OOM-kills, NOT the
+      signal-6 crash this doc tracks (confirmed distinct: SIGKILL vs SIGABRT, and each OOM event has its own adjacent
+      `"Memory limit exceeded"` line, unlike the SIGABRT occurrences which consistently do NOT). This pattern appears to
+      correlate with AUTOSCALING-triggered fresh instances (multiple `"Starting new instance"` lines cluster right
+      before each OOM), suggesting a cold-start memory spike under concurrent load rather than a slow leak. Not
+      previously tracked as its own issue — this doc's "memory-limit correlation" lead was being tested against the
+      WRONG signal's timestamps (SIGABRT, not SIGKILL), which explains why that lead kept coming back weak. Next steps:
+      (1) `gcloud logging read` a wider window (7+ days) scoped to `"Container terminated on signal 9"` across all
+      revisions to quantify true frequency/cost (each OOM-kill is a full cold-restart — throughput + latency impact, and
+      Cloud Run bills for the restart); (2) profile what the container imports/allocates at startup under
+      concurrent-instance-cold-start conditions (candidate: the same `deployment_api/services/data_status/manifest.py`
+      pyarrow/pandas compute paths already flagged as memory-heavy in this doc's `2026-07-30T04:15Z` entry) to find the
+      actual spike source; (3) consider whether raising the memory limit further, or capping `containerConcurrency`/max
+      concurrent cold-starts, is the pragmatic mitigation while root-causing continues. (repo: deployment-api) —
+      **2026-07-31 (slot 13, backend_engineer)**: step (1) executed — `gcloud logging read` scoped to
+      `"Container terminated on signal 9"` over a 30-day window returns exactly **8 occurrences, ALL within the last 3
+      days** (`2026-07-29T11:23:52Z` .. `2026-07-31T10:05:28Z`; zero in the prior 27 days) — this is a NEW/recent
+      pattern, not a longstanding one. Cross-referenced against `"Memory limit"` log lines over the same window: 11
+      threshold-crossings, memory usage in every case only **0.06%-4% over** the 16384 MiB limit (16394-17028 MiB) — a
+      tight, chronic near-ceiling margin, not a wild spike. Read the FULL system-log stream (not just the two matched
+      lines) around 3 fresh occurrences (`00355-z2c@09:57:37Z`/`10:05:28Z`, `00351-8w9@06:08:10Z`,
+      `00331-wzz@11:23:52Z`): every single one shows a `"Starting new instance. Reason: AUTOSCALING"` (or
+      `MANUAL_OR_CUSTOMER_MIN_INSTANCE`) log line landing within ~1-10s of the kill — i.e. this is genuinely an
+      autoscaling cold-start memory event, matching this todo's own hypothesis. Step (2): traced the actual mechanism
+      instead of profiling allocations directly — grepped for the exact multi-AG parallel-read pattern this repo's OWN
+      `cloudbuild.yaml` deploy-step comment already documents as the root cause of the 2026-07-17 8Gi→16Gi bump ("New
+      listings + Upcoming expiries read all five per-AG prod/catalog.parquet objects... a first-mount burst packs these
+      onto ONE 8Gi instance and OOMs" — and explicitly recommends, if it recurs, "add an in-container asyncio.Semaphore
+      capping CONCURRENT heavy catalogue loads... rather than bumping again"). Confirmed `catalogue_lifecycle.py`'s
+      `_build_new_listings_frame`/ `_build_expiries_frame` each still fan out up to 5 concurrent per-AG
+      `ThreadPoolExecutor` parquet reads on EVERY uncached call, with **no cap** on how many distinct uncached requests
+      (different filter params → different 5-min TTL cache keys, e.g. several dashboard panels/pages) can each
+      independently trigger this fan-out concurrently on the same worker — unlike the sibling drilldown endpoint
+      (`routes/data_status/_deploy_turbo.py`), which already guards this exact class of burst via
+      `_drilldown_build_semaphore`. A freshly AUTOSCALED instance starts with an empty cache, so a burst landing right
+      after cold-start (exactly what the log evidence shows) is the scenario most likely to stack multiple 5-way
+      fan-outs and reproduce the original OOM shape at a small enough margin to explain the measured 0.06%-4% overage.
+      Step (3): implemented the mitigation this repo's own precedent recommends (NOT another memory bump) — **shipped**
+      `deployment-api@ec1f635`: a per-worker `threading.Semaphore` guard (`_MAX_CONCURRENT_BUILDS = 2`, mirroring
+      `_drilldown_build_semaphore`'s shape) around both `_build_new_listings_frame`/`_build_expiries_frame`, raising a
+      new `CatalogueLifecycleBuildBusyError` that the route layer translates to a 503 + `Retry-After: 5` (matching the
+      drilldown's load-shed contract) once too many uncached builds are already in flight — cached hits are unaffected.
+      4 new unit tests (2 service-level busy-path, 1 release-then-succeed, 1 route-level 503 translation) + all 25
+      existing `catalogue_lifecycle` tests green; `quality-gates.sh` PASSED (111s, sentinel `ec6f076`→rebased to
+      `ec1f635` by quickmerge's autostash reconciliation, re-verified on origin via `merge-base --is-ancestor`). Not a
+      100%-confirmed fix (the sandbox log evidence correlates but doesn't prove causation at the level of a controlled
+      A/B) — added a `[REVIEW]` monitoring todo below per this doc's own established convention for exactly this
+      situation.
+
+- [x] ✅ [BACKEND] P2 + [BACKEND] P1 (2 entries). **2026-07-31 line-cap remediation (4th pass, slot 14)**: the
+      sandbox-external-termination multi-instance re-check (slot 13→7, found the low-pid/high-pid split) and its
+      MASTER/WORKER-mapping confirm todo (slot 7→11, shipped `deployment-api@785405d`'s pid-role logging) extracted
+      verbatim to `/plans/archive/2026_07/deployment_api_sigabrt_crash_loop_progress_log_history_2026_07_31.md` §
+      "4th-pass extraction". Both fully resolved/shipped; superseded by the still-open `[REVIEW] P1` pid-role-match todo
+      below.
+
+- [ ] [REVIEW] P1. **NEW, opened 2026-07-31 (slot 11, backend_engineer) — once `deployment-api@785405d`'s MASTER/WORKER
+      pid-role logging (todo above) reaches a live Cloud Run deploy of `uts-shared-deployment-api` (verify via direct
+      image extraction or `gcloud run revisions list` creation timestamp — content-diff, not ancestry, per this doc's
+      own 2026-07-25 methodology correction), read the NEXT `Uncaught signal: 6` occurrence's pid against the new
+      `"gunicorn MASTER (arbiter) started, pid=%s"` / `"gunicorn WORKER forked, pid=%s age=%s"` stdout lines for that
+      same revision/instance.** If the crashing pid matches the logged MASTER pid: this CONFIRMS the doc's original
+      "crash-loop compounding the reaper" claim is TRUE for the low-pid subset (not refuted, per the pid=900
+      single-sample check's earlier conclusion) — update this doc's headline framing accordingly, and open a fresh
+      `[BACKEND]` todo to investigate WHY the master itself calls `abort()` (no dump exists for an arbiter-side abort —
+      `faulthandler` is only armed worker-side). If it matches a logged WORKER pid instead: the low-pid/high-pid split
+      found this session was NOT a MASTER/WORKER distinction — re-open that question with a fresh evidence-backed todo
+      rather than re-guessing. If no SIGABRT has occurred yet since the deploy, this todo stays open — don't force a
+      conclusion from zero data. (repo: deployment-api) — **2026-07-31 12:04Z-15:15Z, 6 successive re-checks (slots
+      3/9/4/15/14/8, review): gate genuinely NOT met across the whole window, correctly staying open each time —
+      condensed here (line-cap hygiene) from 6 near-duplicate entries; methodology + evidence preserved.** Each check
+      content-verified (direct `docker create`+`docker cp` image extraction, not ancestry — one check fell back to
+      `git log` when a `docker pull` timed out, flagged honestly at the time) that `785405d`'s two pid-role log lines
+      (`on_starting`/`post_fork`) were genuinely present in the then-current deployed revision, spanning 11 revisions
+      total (`00361-qqp`→`00371-xxq`, ~11:54Z→15:15Z, 100% traffic confirmed each time), and re-ran
+      `gcloud logging read` for `"Uncaught signal: 6"` scoped to `timestamp>="2026-07-31T11:54:00Z"` — **zero rows every
+      time**, each cross-checked against the known `00355-z2c@10:37:56Z` occurrence (via a widened query) to rule out a
+      false-negative empty result. No code shipped across all 6 (pure verification). — **2026-07-31T15:57Z (slot-6,
+      data_engineering craft dispatched as review) — GATE FINALLY MET (a SIGABRT occurred), but the correlation is
+      UNRESOLVABLE — this exposes a deeper, previously-undiscovered root cause: the container's own stdout/stderr has
+      stopped reaching Cloud Logging entirely, well before the pid-role-logging fix even shipped.** Confirmed
+      `00373-7wt` (created `15:39:42Z`, 100% traffic) genuinely carries both pid-role log lines (direct
+      `docker create`/`docker cp` extraction of `gunicorn.conf.py` off digest `sha256:b6d33f50...fbbbf5`). A NEW
+      `Uncaught signal: 6, pid=29, tid=29, fault_addr=0` landed on this exact revision at `15:53:34Z` (instance
+      `001548f7...1031`). But searching for `"gunicorn MASTER"` / `"gunicorn WORKER"` anywhere in the last 4h (any
+      revision) returns **zero rows** — the pid-role log lines this whole investigation chain built have NEVER once
+      appeared in Cloud Logging, despite being content-verified present in 6+ deployed revisions across 4+ hours of
+      uptime by 5 different workers. Root-caused it: pulled EVERY log entry for this instance's full lifetime
+      (`resource.labels.revision_name="uts-shared-deployment-api-00373-7wt"`, raw JSON, ordered) — the only entries are
+      `run.googleapis.com/varlog/system` (Cloud Run platform events: instance-start, probe-success, **and the "Uncaught
+      signal: 6" line itself** — that message is emitted by Cloud Run's OWN crash detector watching the sandbox from
+      outside, not the app's faulthandler) and `run.googleapis.com/requests` (structured HTTP access logs, no
+      textPayload). **Zero `run.googleapis.com/stdout` or `/stderr` entries exist for this revision at all.** Widened to
+      the full service, 24h: the LAST stderr entry anywhere is `08:40:27Z` on revision `00353-dng` — nothing since,
+      across 20+ subsequent revisions and 7+ hours, spanning well before AND after the pid-role-logging deploy
+      (`785405d`, live since `~11:54Z`). Ruled out a project-wide Cloud Logging outage: `market-data-query-service` (a
+      different Cloud Run SERVICE, same project/region) shows fresh `stderr` entries as recent as `16:43:03Z` — logging
+      ingestion works fine right now, just not for this service's container output. **This means the faulthandler dump
+      this entire investigation has been trying to read has likely NEVER been visible in Cloud Logging either** (same
+      delivery path), which would explain why zero faulthandler dumps have ever been captured despite dozens of SIGABRTs
+      across this doc's history — a candidate unifying explanation for a separate open thread in this doc. Strongest
+      candidate cause: the `--execution-environment gen1` pin (`acdd4c8`, already under suspicion in this doc for a
+      different reason — gen1's gVisor sandbox differs from gen2's) may have a distinct stdout/stderr capture path that
+      this service's output isn't satisfying (buffering, fd redirection, or a known gen1 log-agent quirk) — correlate
+      revision `00353-dng`'s deploy timestamp against `acdd4c8`'s merge/deploy time as the next step, not yet done here.
+      **Per this todo's own two anticipated outcomes (MASTER-pid-match / WORKER-pid-match), NEITHER applies — a third,
+      unanticipated outcome: the correlation data doesn't exist.** Leaving this checkbox unchecked (done-when genuinely
+      not met — can't determine master-vs-worker). Filed a fresh `[BACKEND] P1` follow-up below for the stdout-blackout
+      root cause, since it blocks NOT JUST this todo but the entire faulthandler-based SIGABRT diagnosis this doc's
+      whole investigation depends on. No code shipped (pure verification).
+
+- [ ] [BACKEND] P1. DEFERRED-BY-DESIGN. **NEW, opened 2026-07-31 (slot-6) — `uts-shared-deployment-api`'s container
+      stdout/stderr has stopped reaching Cloud Logging entirely since `~08:40:27Z` (last entry, revision `00353-dng`),
+      silently blinding every log-based diagnostic this doc's SIGABRT investigation depends on (including the
+      pid-role-logging todo above and, likely, every prior faulthandler-dump attempt in this doc's history).** Evidence:
+      full-lifetime raw-JSON log dump for revision `00373-7wt` (current live, `15:39:42Z`-created) shows ONLY
+      `run.googleapis.com/varlog/system` (platform events, incl. Cloud Run's own externally-observed "Uncaught signal:
+      6" line) and `run.googleapis.com/     requests` (structured, no textPayload) — zero `stdout`/`stderr` entries.
+      Same for the last 20+ revisions spanning 7+ hours. Ruled out a platform-wide outage: `market-data-query-service`
+      (same project/region) has fresh `stderr` entries as recent as `16:43:03Z`. Prime candidate: the
+      `--execution-environment gen1` pin (`acdd4c8`) — gen1 uses a different gVisor sandbox/log-capture path than gen2,
+      and this doc already flagged gen1-vs-gen2 differences as relevant to a separate sandbox-kill theory. Next steps:
+      (1) confirm `acdd4c8`'s deploy landed at/before `08:40:27Z` (correlate git history against
+      `gcloud run revisions list --format='table(name,creationTimestamp)'` around that time); (2) if confirmed, test
+      reverting to gen2 (or an explicit gen2 pin) on a canary revision and check whether stdout/stderr resumes; (3) if
+      gen1 is NOT the cause, check for a stray `--no-cpu-throttling`/ buffering flag change, a Python-level `sys.stdout`
+      redirect/replace in app startup code, or a Cloud Logging exclusion-filter/sink change scoped to this specific
+      service around the same window. Done-when: `stdout`/`stderr` entries resume appearing for this service in Cloud
+      Logging, confirmed via a fresh `gcloud logging read     logName:"stdout"` after the fix deploys. (repo:
+      deployment-api) — **2026-07-31 (slot 4, backend_engineer)**: step (1) done with live data — **gen1 pin is NOT a
+      day-one trigger.** `acdd4c8` first went live on `00333-p62` (`2026-07-30T06:26:01Z`); stderr kept working for
+      **~26h** after that (confirmed real entries on 5 gen1-pinned revisions spanning that window, last one
+      `00353-dng@08:40:27Z` itself). A day-one sandbox-capture break would show zero output from `00333-p62` onward — it
+      didn't, so **not reverting to gen2** on this evidence (would fight the data + risk reopening the pyarrow-crash
+      issue gen1 fixed); flagging as a judgment call, not guessing. New lead instead: the 4 stderr lines immediately
+      before permanent silence (`08:40:27.833501-833861Z`) are FRAGMENTS of one never-completing traceback —
+      `uvicorn httptools_impl.py:422 run_asgi` → `requests/adapters.py:696 send` →
+      `urllib3 connectionpool.py:788/464/1106` → `connection.py:796 connect` → `_ssl_wrap_socket_and_match_hostname` —
+      i.e. a SYNCHRONOUS HTTPS/TLS handshake invoked inside an async ASGI handler, cut off mid-connect, no exception
+      message ever captured. `deployment_api/` has zero direct `requests` imports but 6 files make a sync
+      `google.auth.transport.requests`/`AuthorizedSession` HTTPS call from a route handler (`firebase_auth.py`,
+      `routes/_reap_scheduler.py`, `routes/_cloud_scheduler.py`, `routes/service_status.py`,
+      `routes/_code_builds_aws.py`, `services/cost_observability/aws_wif.py`, `utils/artifact_registry.py`) — any could
+      match. Not yet confirmed causal (single sample; exact call site not pinned). Narrower follow-up filed below. Root
+      cause + fix now shipped (`deployment-api@e8ce86a`, see todo below); this todo's own done-when (stdout resuming)
+      awaits that fix reaching a live deploy — tracked by the `[REVIEW]` todo below, not re-guessed here, hence
+      DEFERRED-BY-DESIGN rather than a false flip.
+
+- [x] ✅ [BACKEND]/[REVIEW] P1/P2 (4 entries). **2026-07-31 line-cap remediation (4th pass, slot 14)**: the
+      stdout/stderr-blackout root-cause chain extracted verbatim to
+      `/plans/archive/2026_07/deployment_api_sigabrt_crash_loop_progress_log_history_2026_07_31.md` § "4th-pass
+      extraction" — pinning the truncated-sync-HTTPS call site (`deployment-api@6e7bf27`), confirming the blackout
+      PERSISTS beyond that fix, refuting the gen1-pin theory, and finally root-causing + fixing it for real
+      (`deployment-api@e8ce86a`: Cloud Run stamps `severity=DEFAULT` on non-JSON stdout/stderr, and the project's
+      `_Default` sink excludes `severity<=DEBUG` — `main.py` now calls `setup_cloud_logging()`'s `CloudRunJSONFormatter`
+      to survive the exclusion). All 4 fully resolved/shipped.
+
+- [ ] [REVIEW] P1. **NEW, opened 2026-07-31 (slot 8) — once `deployment-api@e8ce86a` (todo above) reaches a live Cloud
+      Run deploy of `uts-shared-deployment-api`, confirm real stdout/stderr resume AND read the next SIGABRT's dump.**
+      Verify the deploy via direct image extraction (not ancestry, per this doc's 2026-07-25 methodology correction),
+      then `gcloud logging read` for `logName:"stdout" OR logName:"stderr"` on that revision under real traffic (not a
+      canary) — structured JSON app-level lines should now appear. If SIGABRTs recur, check whether the faulthandler
+      dump (a Python traceback, not JSON) ALSO survives — it may not (same `severity<=DEBUG` exclusion could still apply
+      to a raw traceback unless Cloud Run's stack-trace auto-detection promotes it, per this session's finding that
+      occasional pre-existing traceback fragments DID appear historically); if it still doesn't, that's a DIFFERENT,
+      narrower follow-up (get faulthandler's dump to emit via `setup_cloud_logging`'s JSON path instead of raw stderr),
+      not a re-open of this fix. Also delete the stray `00382-cat` canary revision once superseded. (repo:
+      deployment-api) — **2026-07-31 (slot 7, backend_engineer)**: attempted the deploy this todo needs — **the
+      precondition itself ("reaches a live Cloud Run deploy") is NOT met, and cannot be met yet: `e8ce86a` FAILS to go
+      live.** Ran the canonical `deployment-service/scripts/cloud-run/deploy-shared.sh` end to end: Cloud Build
+      succeeded (`d33c5498`, `SUCCESS`) and pushed a fresh image; `gcloud run deploy` created a new revision
+      (`uts-shared-deployment-api-00388-9mt`, confirmed via `spec.containers[0].image` digest to be built from this
+      exact commit) — but `gcloud run services update-traffic --to-revisions=00388-9mt=100` **FAILED twice** (not a
+      one-off race — the 2nd attempt, run after the first had settled, returned the SAME error and Cloud Run had by then
+      permanently marked the revision `not ready and cannot serve traffic`): _"The user-provided container failed to
+      start and listen on the port defined provided by the PORT=8080 environment variable within the allocated
+      timeout."_ `gcloud logging read` on `varlog/system` for `00388-9mt` shows a clean, repeating cycle every ~30-32s:
+      `Starting new instance` → (~30s later) `Container called exit(0)` +
+      `Default STARTUP TCP probe failed... The     instance was not started` — i.e. the container itself voluntarily
+      exits cleanly (not a crash/OOM/SIGKILL) before ever binding port 8080, and Cloud Run just keeps retrying with
+      fresh instances. **Ruled out as an artifact of my own test method**: the revision's `startupProbe`
+      (`timeoutSeconds=240`) is IDENTICAL to the known-good `00374-4pd`'s, so this isn't a probe-config regression, and
+      the ~30-32s failure window is far short of that 240s budget — something in THIS image's own startup path is giving
+      up on its own well before Cloud Run's timeout would even fire. **Confirmed harmless to prod**: `status.traffic`
+      stayed at 100% on `00374-4pd` throughout both attempts (Cloud Run's own health gate correctly refused to route to
+      the bad revision — this is the gate working as designed, same as the reasoning in this doc's earlier `--to-latest`
+      discussions); `curl .../api/health` → 200 confirmed after. **A local `docker run` of the SAME image (same digest)
+      does start and DOES emit the expected structured JSON stdout**
+      (`{"severity": "INFO", "message": "Serving UI static files from /app/ui/dist", ...}` — direct proof `e8ce86a`'s
+      formatter itself works) before hitting an UNRELATED local-only crash 2s into the FastAPI lifespan
+      (`google.auth.exceptions.DefaultCredentialsError` inside `fastapi_uei_lifespan`'s `log_event("STARTED",     ...)`
+      → `PubSubEventSink.write_event` → `pubsub_v1.PublisherClient()` — this call has zero local ADC available in this
+      sandbox, whereas real Cloud Run supplies SA credentials via the metadata server; confirmed this exact
+      `fastapi_uei_lifespan` wiring predates `e8ce86a` by months (`git log -S`, commit `0cd1c78`) and works fine in prod
+      today on `00374-4pd`, so this specific local exception is NOT the Cloud Run failure — it only proves the local
+      repro diverges from prod at a DIFFERENT point than the real bug, not what the real bug is). **Net: the real Cloud
+      Run startup failure mechanism is NOT YET IDENTIFIED** — filed as its own blocking `[BACKEND]` P1 follow-up below
+      rather than guessing further. This REVIEW todo stays open: its own literal ask (confirm stdout resumes under real
+      traffic) cannot be attempted until that blocker ships. Stray revision `uts-shared-deployment-api-     00388-9mt`
+      left in place (never received traffic, Cloud Run already refuses to route to it — same cannot-delete-cleanly
+      situation this todo already flags for `00382-cat`; not a safety issue, just build cruft). No code shipped this
+      entry (investigation only — the fix ships under the new todo below).
+
+- [x] ✅ [BACKEND] P1. **NEW, opened 2026-07-31 (slot 7, backend_engineer) — `deployment-api@e8ce86a` (the confirmed
+      stdout/stderr-blackout root-cause fix) BLOCKS its own rollout: the resulting Cloud Run revision consistently fails
+      the STARTUP TCP probe and never binds port 8080, so the fix cannot reach production yet.** Evidence (todo above):
+      2 independent `gcloud run services update-traffic` attempts to revision `uts-shared-deployment-api-00388-9mt`
+      (built from `e8ce86a` via the canonical `deploy-shared.sh`, confirmed via image digest) both failed with
+      `"container failed to start and listen on the port ... within the allocated timeout"`; `varlog/system` shows a
+      clean `Starting new instance` → `Container called exit(0)` cycle every ~30-32s with **zero** stdout/stderr entries
+      even for THIS pre-bind window — the container gives up on its own well inside the 240s `startupProbe` budget (same
+      budget as the known-good `00374-4pd`), so this isn't a probe-timeout misconfiguration. Production was never
+      affected (Cloud Run's health gate kept 100% traffic on `00374-4pd` throughout both attempts — confirmed via
+      `status.traffic` + a live `/api/health` 200 check after). A local `docker run` of the identical image DOES start
+      and DOES emit `e8ce86a`'s structured JSON correctly, then hits an unrelated local-ADC-only crash — so the local
+      repro does NOT reproduce the real Cloud Run failure and cannot be used to root-cause it further; a live canary is
+      required. Candidate angles for whoever picks this up (none confirmed — do not re-guess without evidence): (1)
+      `setup_cloud_logging()`'s `UnbufferedStreamHandler.emit()` calls `self.flush()` after EVERY log record — with
+      `preload_app=True` + `WORKERS=4`, startup now emits many more (previously-silently-dropped) INFO lines across 4
+      concurrently-booting workers than before `e8ce86a`; test whether a per-emit synchronous flush under Cloud Run's
+      gVisor sandbox syscall overhead is slow enough at high line-count to matter (time a canary boot with `WORKERS=1`
+      vs `WORKERS=4`, and/or with logging temporarily set to `WARNING` to cut line volume, to isolate this variable);
+      (2) re-run the SAME zero-traffic `--command=python3 -c "print(...)"`-style bypass canary this doc's `e8ce86a` todo
+      already used, but this time via a REAL `--to-revisions=...=100` traffic-routing attempt (not just a 0%-traffic
+      canary URL hit) to see if a trivial container also fails the STARTUP TCP probe under current conditions — if it
+      does too, the regression is unrelated to `e8ce86a`'s app-level change and is instead something environmental
+      (image/base/quota) that changed since the last successful `00374-4pd` deploy; (3) diff `00374-4pd` (known-good) vs
+      `00388-9mt` (failing) full revision specs (`gcloud run revisions describe ... --format=json`) for any non-image
+      difference the deploy picked up (resource limits, concurrency, env vars, service account). Done-when: a revision
+      built from `e8ce86a` (or a fix on top of it) successfully receives traffic and serves `/api/health` 200, OR the
+      mechanism is refuted/identified with evidence and a fix ships. Until this ships, do NOT force traffic onto a
+      failing revision — leave `00374-4pd` serving (current safe state). (repo: deployment-api) — **2026-07-31 (slot 6,
+      backend_engineer): angle (3) executed with real data — REFUTES the `e8ce86a`-specific framing entirely; this is
+      NOT a code defect, it's a service-wide Cloud Run cold-start failure.** Diffed `00374-4pd` (known-good, warm since
+      `18:39:05Z`) vs `00394-yoh`/`00395-san` — two FRESH revisions tagged `iam-fix-verify`/`iam-fix-retest` by a
+      concurrent, unrelated investigation on this SAME service, deployed `19:32Z`/`19:35Z` — and both use the
+      **IDENTICAL image digest** to `00374-4pd` (`sha256:71a09bfb...`, confirmed via `spec.containers[0].image`) plus
+      byte-identical `spec.serviceAccountName`/env vars/secret refs (confirmed via full `revisions describe` diff — zero
+      difference). Yet both failed the STARTUP TCP probe with the exact same `Starting new instance` →
+      `Container called     exit(0)` (~32s) → `STARTUP TCP probe failed` signature as `00388-9mt`. Since the image and
+      full revision template are byte-identical to the currently-serving-fine `00374-4pd`, **the failure cannot be in
+      application code or revision config at all** — angle (2) is answered by this: a non-`e8ce86a` container (in this
+      case, literally the SAME already-proven container) also fails under current conditions. Independently reproduced
+      live: tagged `00389-d9d` (an `e8ce86a`-era build that had ALREADY achieved `Ready=True` once, at `19:39:06Z`, 0%
+      traffic, no tag) with `--set-tags=e8ce86a-verify=...` to force a fresh cold start — it then failed **6/6
+      consecutive retries** over `21:22:01Z`-`21:25:14Z` (`MANUAL_OR_CUSTOMER_MIN_INSTANCE` reason each time), the
+      identical ~32s exit(0)/probe-fail signature, despite having succeeded on its very first attempt earlier.
+      **Conclusion: cold container startup for `uts-shared-deployment-api` is CURRENTLY, platform-side, broken for ANY
+      fresh instance start regardless of image/digest/config — only the one instance that has been continuously warm
+      since `18:39:05Z` still works** (confirmed serving `/api/health` 200 throughout this entire investigation). This
+      redirects the ENTIRE premise of this todo and its parent (`e8ce86a` is not defective — it was simply the fix being
+      tested during the window this broke) to a NEW, higher-severity, correctly-scoped finding below. Production is safe
+      RIGHT NOW (100% traffic still on warm `00374-4pd`, verified `/api/health`→200 as of this entry) but at real,
+      non-theoretical risk: `minScale=1`, and this SAME service already has 2 CONFIRMED recent
+      `Container terminated on signal 9` (OOM/SIGKILL — a full-container kill, unlike the in-process SIGABRT worker
+      crashes `00374-4pd` has already silently absorbed twice via gunicorn's own worker respawn with zero
+      Cloud-Run-level instance restart, confirmed via `varlog/system`: only ONE `Starting new instance` line since
+      `18:39:05Z` despite 2 `Uncaught signal: 6` events at `19:00:04Z`/`21:22:57Z`) in this doc's own OOM sub-issue — if
+      THAT (or any other full-container-kill event, or a routine redeploy) forces `00374-4pd` to be replaced while this
+      cold-start breakage persists, the service has **no demonstrated path back to a healthy instance**. This also means
+      every OTHER in-flight fix in this doc (e.g. `ec1f635`'s concurrency guard, `785405d`'s pid-role logging) is
+      silently blocked from ever reaching a _routed_ revision the same way `e8ce86a` was — not a per-fix problem, a
+      whole-service deploy-pipeline stall. Filed the correctly-scoped `[INFRA] P0` follow-up below; NOT diagnosing the
+      platform-level mechanism further here (out of backend_engineer craft scope — cloud/IAM/infra provisioning is
+      explicitly `does_not` for this role; escalating). No code shipped (root-cause redirect only). (repo:
       deployment-api)
+
+- [x] ✅ [INFRA] P0. **NEW, opened 2026-07-31 (slot 6, backend_engineer) — `uts-shared-deployment-api` cold container
+      startup is broken platform-side for ANY fresh instance (not an `e8ce86a`/application-code defect — see the
+      refutation on the todo directly above).** Evidence: 3 independent fresh-cold-start attempts across 2 DIFFERENT
+      image digests (the already-proven-good `71a09bfb` digest via `00394-yoh`/`00395-san`, AND the `e8ce86a`-era
+      `32f081ad` digest via `00389-d9d`, re-tested and failing 6/6 on a second attempt after one earlier success) all
+      failed the STARTUP TCP probe with the identical `Starting new instance` → `Container called exit(0)` (~30-32s) →
+      `Default STARTUP TCP probe failed` signature, zero stdout/stderr in every case — while the ONE already-warm
+      instance (`00374-4pd`, running continuously since `2026-07-31T18:39:05Z`) keeps serving `/api/health` 200
+      throughout. Byte-identical image + env vars + secrets + service account between the warm-working and cold-failing
+      cases rules out application code and revision config as the cause. Timing is suggestive (not proven) of a
+      connection to a CONCURRENT, unrelated investigation tagging revisions `iam-fix-verify`/`iam-fix-retest` on this
+      SAME service in the SAME window (`19:32Z`-`19:35Z`) — no matching plan/issue doc was found for that work
+      (`grep -rl "iam-fix" plans/active/` — 0 hits), so its scope/author/status is unknown; find and coordinate with
+      whoever owns it FIRST rather than re-diagnosing blind. Candidate angles (none confirmed): (1) an IAM policy change
+      (runtime service account role, Secret Manager accessor binding, or Artifact Registry pull permission) that broke
+      cold-start secret/credential resolution while leaving an already-initialized warm instance unaffected — grep Cloud
+      Audit Logs (`protoPayload.methodName:"SetIamPolicy" OR "google.iam"`) scoped to this project +
+      `unified-trading-sa@`/the Cloud Run runtime SA around `19:00Z`-`19:35Z` for the actual change; (2) a Cloud Run
+      quota/capacity limit for `cpu=4`/`memory=16Gi` instances in `asia-northeast1` being exhausted by the high
+      concurrent-deploy volume this SAME crash-loop investigation is generating fleet-wide (7+ revisions of this ONE
+      service created in ~25 min at one point) — check Cloud Monitoring quota-utilization metrics, not just logs; (3) a
+      VPC Access Connector or Secret Manager availability issue specific to cold-start credential fetch. **Severity: P0,
+      not P1** — `minScale=1` with zero demonstrated recovery path if the sole warm instance is ever replaced (a routine
+      redeploy, or this doc's own already-tracked OOM/SIGKILL sub-issue recurring, would trigger exactly that); until
+      fixed, EVERY future deploy of this shared service (all of this doc's in-flight fixes included) is silently blocked
+      at the platform layer regardless of code correctness. Done-when: a freshly-cold-started instance of
+      `uts-shared-deployment-api` (any current image) passes the STARTUP TCP probe, OR the mechanism is
+      identified+fixed. Do NOT attempt further canary deploys against this ALREADY-CONTENDED service while diagnosing —
+      each attempt adds to the churn. (repo: deployment-api, cross-cutting IAM/infra) — **2026-07-31 22:00-22:20Z (slot
+      14, infra): candidate (1) tested with real evidence — a genuine IAM gap FOUND + FIXED, but it did NOT resolve the
+      symptom, so it's ruled out as sole cause. Confirmed via a scoped diagnostic log bypass that the crash happens
+      BEFORE gunicorn's own first log line — a materially narrower finding than anything else in this doc.** (1)
+      `gcloud logging read` for `SetIamPolicy` audit entries confirmed `uts-prd-sa` (the runtime SA,
+      `spec.template.spec.serviceAccountName`) had its PROJECT-level roles stripped to just 2 storage roles at exactly
+      `19:32:14Z` — matching the doc's own cited `iam-fix-verify`/`-retest` window — then partially restored over the
+      next ~2h (7 roles by `20:03Z`, all 8 by `21:40:51Z`, confirmed via a diff across every audit snapshot). Separately
+      found the runtime SA's OWN SA-level IAM policy (who may mint tokens as it, e.g. the Cloud Run Service Agent
+      `service-1060025368044@serverless-robot-prod.iam.gserviceaccount.com`) was COMPLETELY EMPTY — a real, previously
+      undiscovered gap distinct from the project-role strip. **Fixed**: granted that Service Agent
+      `roles/iam.serviceAccountTokenCreator` on `uts-prd-sa` (self-service per RULES.md §5, no operator ask needed).
+      **Result: no effect.** Retested via the existing 0%-traffic `prd-sa-verify`-tagged revision's own URL (no new
+      canary deployed, per this todo's own no-more-canaries instruction) 3× across ~20 min (immediately, +6min, +14min
+      post-grant) — every attempt: identical `503` at **31.3-31.4s**, to the millisecond-order, every time. This
+      determinism (not "sometimes works, sometimes doesn't" — literally the same duration every single attempt across
+      hours regardless of which IAM state was live) is itself evidence against a stochastic IAM-propagation explanation.
+      **New, more diagnostic finding**: created a narrowly-scoped temporary log sink (`deployment-api-diag-sink` →
+      bucket `deployment-api-diag-temp`, 7-day retention, filtered to ONLY this service, so it captures every severity
+      the project's `_Default` sink's `severity<=DEBUG` cost-control exclusion normally drops — see the archived
+      `e8ce86a` root-cause entry above; this bypass does NOT touch that project-wide exclusion, it's a fully separate,
+      reversible, single-service sink). Result, read across 2 fresh triggered cold-starts: **ZERO log entries of ANY
+      kind from the failing revision itself, from `Starting new instance` to `Container called exit(0)`** — not
+      gunicorn's `on_starting` MASTER-pid line (`785405d`, confirmed present in the deployed image), not the raw
+      `sys.stderr.write("[STARTUP-DIAGNOSTIC] lifespan entered")` already in `lifespan.py:205-206`, nothing. Crucially,
+      this ISN'T a logging-pipe artifact: the SAME bypass sink, in the SAME ~30s window, captured plain-text output from
+      a DIFFERENT concurrent canary (`IAM-FIX-RETEST-STDOUT`/`-STDERR` lines, evidently from the parallel `iam-fix`
+      investigation's own lighter test container) and from the warm `00374-4pd` instance's normal background activity —
+      so stdout/stderr capture itself is NOT broken right now. **Conclusion: the failure is upstream of gunicorn's own
+      arbiter-level `on_starting` hook — before or during process exec / Python interpreter bootstrap / gunicorn's own
+      config load for THIS specific heavy container profile (`cpu=4`, `memory=16Gi`, gen1, `preload_app=True`, 4
+      workers)** — while a lighter bare-process canary boots and logs fine. This rules out every in-app hypothesis this
+      doc has tried (IAM/credentials, subprocess, OOM, sandbox-kill-with-recovery) as the proximate cause of THIS
+      specific symptom, and narrows it to something in the container-exec layer specific to this resource shape. Left
+      both the IAM grant (harmless, closes a real gap) and the diagnostic sink/bucket in place (7-day auto-expiry,
+      `[Lifecycle: delete-when this issue closes or 2026-08-07, whichever first]`) for the next investigator — do not
+      delete until this issue resolves. Production still safe: `00374-4pd` confirmed serving `/api/health` 200
+      throughout. Not flipping this checkbox (done-when genuinely not met — no successful cold start, no confirmed
+      mechanism); IAM is now a ruled-out branch, not an open one. Filed a narrower `[INFRA]` follow-up below carrying
+      the concrete new lead (resource-profile-specific exec failure) forward, per this doc's own established convention.
+      — **2026-07-31T22:57Z (slot 7, infra): done-when now MET — flipping.** `gcloud run revisions list` shows the
+      failure streak (`00408-keh`/`00409-puz`/`00410-quk`/`00411-xic`, 22:40:28Z-22:44:02Z, first-attempt Ready=False)
+      was followed by 4 CONSECUTIVE first-attempt Ready=True fresh cold starts (`00398-mqj` 22:45:03Z,
+      `diag-realtraffic-0731` 22:45:23Z, `00400-mxl` 22:45:38Z, `00401-4x7` 22:56:53Z) — the last one deployed
+      organically by `cloudbuild.gserviceaccount.com` (routine CI/CD, not an investigation-driven test), confirming
+      recovery isn't an artifact of who's testing. `/api/health` still 200 in ~0.1s throughout. No quota/capacity error
+      text found in logs for the failure window, but the temporal correlation is exact: 12 revisions of this ONE service
+      were created during the 19:32Z-22:44Z failure window (multiple investigators' canary/diag deploys) and failures
+      stopped the moment that churn subsided — consistent with candidate (2) below (deploy-volume/capacity contention
+      this investigation's own churn generated), not a code/IAM/resource-profile defect (all already ruled out).
+      Mechanism not 100%-proven, but done-when's first clause ("a freshly-cold-started instance passes the STARTUP TCP
+      probe") is unambiguously satisfied 4x now. No Google Cloud Support case needed. Filed a P3 monitoring follow-up
+      below instead of leaving this open-ended. (repo: deployment-api)
+
+- [x] ✅ [INFRA] P0. **NEW, opened 2026-07-31 22:20Z (slot 14, infra) — narrow WHY `uts-shared-deployment-api`'s cold
+      container exec fails before gunicorn's own first log line, for this specific heavy resource profile.** Per the
+      todo above: IAM (project-role strip AND the separately-found empty SA-level Service-Agent tokenCreator binding) is
+      now RULED OUT via direct fix-and-retest — restoring both had zero effect, and a scoped diagnostic sink
+      (`deployment-api-diag-sink`/`deployment-api-diag-temp`, still live, bypasses the project's `_Default` sink's
+      `severity<=DEBUG` exclusion for this ONE service) proved the failing container produces LITERALLY ZERO output from
+      `Starting new instance` to `Container called exit(0)` (~31s, deterministic to the millisecond across every
+      observed attempt) — while a concurrent, lighter canary (from the parallel `iam-fix` investigation) DID log
+      successfully in the same window, ruling out a logging-pipe explanation. Candidate angles for whoever picks this up
+      (none confirmed — do not re-guess without evidence): (1) test whether a LIGHTER resource profile for the SAME
+      image (fewer workers, e.g. `WORKERS=1`, or reduced `--memory`/`--cpu`) cold-starts successfully — if it does, the
+      failure is tied to this specific heavy shape (possibly a Cloud Run gen1 sandbox resource-provisioning fault
+      specific to 4-vCPU/16Gi, or a `preload_app=True` + 4-worker fork-storm the sandbox can't service fast enough
+      before its own internal exec budget); (2) test `--execution-environment gen2` for a like-for-like comparison (this
+      doc's earlier gen1-pin work was about a DIFFERENT symptom — the SIGABRT/faulthandler mystery — and was never
+      re-examined against THIS cold-start-exec-failure symptom specifically); (3) if (1)/(2) don't isolate it, this may
+      warrant a Google Cloud Support case — the balance of evidence (byte-identical image/config across warm-working and
+      cold-failing instances, multiple independent investigators across hours, IAM ruled out with direct fix-and-retest,
+      zero app-level output ever) points at a platform-side provisioning fault for this exact resource shape rather than
+      anything in this repo's own code or config. Any test here should use the EXISTING diagnostic sink (query
+      `--bucket=deployment-api-diag-temp --location=global --view=_AllLogs`) rather than creating a new one, and should
+      respect this doc's standing "do not pile on more canary deploys" caution unless the test is itself the fastest way
+      to isolate a REAL candidate (a scoped, deliberate A/B test is not the same as undirected canary churn). Done-when:
+      a freshly-cold-started instance of `uts-shared-deployment-api` (at ANY resource profile, informing whether the
+      current prod profile needs to change) passes the STARTUP TCP probe, OR the exec-layer mechanism is identified.
+      (repo: deployment-api, cross-cutting IAM/infra) — **2026-07-31 22:35-22:48Z (slot 15, infra): candidates (1) and
+      (2) BOTH refuted with real evidence; new, more severe finding — the failure is NOT resource/image-specific, it's
+      "any new instance right now."** 4 clean `--no-traffic`-tagged A/B tests via `gcloud run deploy`, each checked
+      against the diagnostic sink: `WORKERS=1` (refutes the fork-storm sub-hypothesis) → same deterministic
+      `Starting new instance → zero output → Container called exit(0) → STARTUP TCP probe failed`, ~31.5s.
+      `--execution-environment gen2` (candidate 2) → same signature, ~31.5s. A genuinely light profile (`1cpu/4Gi`, not
+      just fewer workers) → same signature. Most decisive: redeploying the EXACT image digest `71a09bfb...` that
+      `00374-4pd` is serving 100% of live traffic on RIGHT NOW, as a fresh `--no-traffic` revision → **also fails**,
+      same signature — so it cannot be this image/build. A genuinely new revision forced onto the real-traffic path
+      (`--revision-suffix`/env-var diff, no `--no-traffic`) never got a diagnostic-sink attempt logged at all
+      (`Retired`, no message) — inconclusive on whether canary-vs-real-traffic changes anything; not re-tested further
+      given the controlled-experiment budget already spent. **Conclusion: every named candidate (workers, gen1/gen2,
+      resource size, even the known-good image) is refuted — this points at platform-side new-instance provisioning for
+      THIS SERVICE specifically, not a config/image variable anything in this repo controls.** Left all 4 new diagnostic
+      revisions live (`diag-w1-0731`, `diag-gen2-0731`, `diag-light-0731`, `diag-oldimg-0731`, all `--no-traffic`, zero
+      cost/risk) for the next investigator per this doc's convention. Production re-verified healthy throughout (100%
+      traffic still on `00374-4pd`, `/api/health` 200 in 0.2s after every test). Not flipping this checkbox (done-when
+      still not met). **Recommending the doc's own named fallback**: this now has enough converging evidence (multiple
+      investigators, hours, every code-level hypothesis refuted) to warrant a Google Cloud Support case for
+      `uts-shared-deployment-api`/`central-element-323112` — filing a support case is outside this session's tool
+      access; flagging to the operator via `/blocked` rather than silently stopping. Also: this doc itself is now
+      979/1000 lines (was 970) — approaching the same line-cap remediation class as
+      `mtds_available_at_cross_asset_backfill_2026_07_13.md` elsewhere in today's corpus; a future split candidate. —
+      **2026-07-31T22:57Z (slot 7, infra): done-when MET, see the parent P0 todo above (identical evidence) — flipping,
+      no Support case needed.** No further detail duplicated here for line-cap reasons.
+
+- [ ] [BACKEND] P3. **NEW, opened 2026-07-31 (slot 13, backend_engineer) — dead-code cleanup: `workers/auto_sync.py`'s
+      entire background-sync implementation is unreachable in production.** Found while tracing the call graph for the
+      todo above. `deployment_api/main.py:140` wires `lifespan=lifespan` from `deployment_api/lifespan.py`, which is
+      what actually runs (`lifespan.py` imports `auto_sync_running_deployments` from `background_sync.py`).
+      `deployment_api/app_config.py` independently defines its OWN `lifespan()` (line 139) and `create_app()` (line 179)
+      that instead wire `workers/auto_sync.py`'s auto-sync loop (a larger, more elaborate implementation with
+      quota-broker/orphan-VM-cleanup logic not present in `background_sync.py`) — but `app_config.create_app` is never
+      called from `main.py`; only individual helper functions from `app_config.py` are imported elsewhere
+      (`routes/deployments/_crud.py`, `routes/deployments/__init__.py`, `services/data_status_service.py`). This means
+      `workers/auto_sync.py`'s entire background loop (695+ lines) is dead code in the live service — a real
+      maintenance/confusion risk (two divergent implementations of the same job, only one of which anyone should be
+      editing) independent of the SIGABRT investigation. Not itself a SIGABRT candidate (confirmed unreachable, so it
+      cannot be the crash source) — filed as its own small P3 rather than folded into the SIGABRT todos above. Next
+      step: confirm with a repo owner whether `workers/auto_sync.py` (and `app_config.py`'s unused `lifespan`/
+      `create_app`) should be deleted outright, or whether it's an in-progress migration target that
+      `background_sync.py` is meant to be replaced by (in which case the migration itself is the real follow-up, not a
+      deletion). (repo: deployment-api)
+
+- [x] ✅ [REVIEW] P2. **NEW, opened 2026-07-31 (slot 13, backend_engineer) — monitor whether `deployment-api@ec1f635`'s
+      catalogue-lifecycle concurrency guard actually drops the `"Container terminated on     signal 9"` (SIGKILL/OOM)
+      rate.** The fix (a `threading.Semaphore` capping concurrent uncached new-listings/upcoming-expiries builds at 2,
+      mirroring the drilldown endpoint's existing guard) targets the most evidence-consistent mechanism found this
+      session (unguarded 5-way per-AG `ThreadPoolExecutor` fan-out matching this repo's own documented 2026-07-17
+      8Gi→16Gi incident precedent, correlated with `AUTOSCALING`-triggered cold-start memory events at a tight
+      0.06%-4%-over-limit margin) but is NOT a controlled-experiment-confirmed root cause. Once `ec1f635` reaches a live
+      Cloud Run deploy of `uts-shared-deployment-api` (verify via direct image extraction or `gcloud run revisions list`
+      creation timestamp — content-diff, not ancestry, per this doc's own 2026-07-25 methodology correction), monitor
+      `gcloud logging read` for `"Container terminated on signal 9"` scoped to that revision for at least several days
+      (the 8 historical occurrences span 2026-07-29..31, so a multi-day window is needed to judge a real rate change,
+      not just a lull). If the rate drops to near-zero and stays there, this OOM-kill sub-issue is resolved — close it
+      out with the evidence. If SIGKILLs continue at a similar rate on the guard-carrying revision, the guard did NOT
+      fix it (or this wasn't the dominant mechanism) — do not re-guess; the next-ranked candidates are (a)
+      `prediction_catalogue.py`'s unguarded single ~184 MB parquet read (not parallelized like catalogue_lifecycle, but
+      still uncapped concurrency across distinct filter-param cache misses) and (b)
+      `deployment_api/services/data_status/manifest.py`'s `_dispatch_category_builds`
+      `multiprocessing.get_context("fork")` `ProcessPoolExecutor` compute path (flagged as memory-heavy in this doc's
+      2026-07-30T04:15Z entry but never itself concurrency-guarded). (repo: deployment-api) — **CHECKED
+      2026-07-31T14:44Z (slot 8, review): flipping on the "guard did NOT fix it" negative branch, not the resolved
+      one.** Content-verified `ec1f635` (committed `10:55:17Z`) is genuinely live via direct image extraction (not
+      ancestry): the current 100%-traffic revision `00369-xkn` (created `14:40:36Z`) carries the
+      `_MAX_CONCURRENT_BUILDS`/`CatalogueLifecycleBuildBusyError` guard verbatim, matching HEAD (no later commit has
+      touched `catalogue_lifecycle.py`). `gcloud logging read` for `"Container terminated on signal 9"` scoped to
+      `timestamp>="2026-07-31T10:55:00Z"` (i.e. since the fix commit) surfaces **2 occurrences**:
+      `uts-shared-deployment-api-00358-vj6@11:32:13Z` and `uts-shared-deployment-api-00363-nwx@13:41:06Z`. Rather than
+      assume these landed on stale pre-fix images, directly extracted `catalogue_lifecycle.py` from BOTH revisions'
+      exact deployed image digests — **both genuinely carry the guard** (6/6 marker lines present in each, same as
+      current HEAD). So this is 2 confirmed SIGKILLs on guard-carrying revisions within ~3.5h of the fix's first live
+      deploy (`00358-vj6`, created `11:09:12Z`, 14 min post-commit) — a materially HIGHER apparent rate than the pre-fix
+      baseline (a `2026-07-28..31` pre-fix sweep found 4 occurrences over ~3 days, i.e. this todo's own cited "8 over 3
+      days" figure could not be fully reconstructed from the current log retention window, but even the conservative
+      4/3days≈1.3/day baseline is far below the observed 2-in-3.5h post-fix rate). This is real recurrence, not a
+      premature call from zero data — per this todo's own decision tree, "the guard did NOT fix it (or wasn't the
+      dominant mechanism)." Filed a fresh `[BACKEND] P2` todo below carrying the two next-ranked candidates this todo
+      already named forward. No code shipped (review role; pure investigation + doc reconciliation).
+
+- [x] ✅ [BACKEND] P2. **NEW, opened 2026-07-31T14:44Z (slot 8, review) — `deployment-api@ec1f635`'s catalogue-lifecycle
+      concurrency guard did NOT stop the `"Container terminated on signal 9"` (SIGKILL/OOM) recurrence; investigate the
+      two next-ranked candidates the guard's own follow-up todo already named.** Confirmed (direct image extraction, not
+      ancestry) that BOTH SIGKILL events since the fix's live deploy —
+      `uts-shared-deployment-api-00358-vj6@2026-07-31T11:32:13Z` and
+      `uts-shared-deployment-api-00363-nwx@2026-07-31T13:41:06Z` — landed on revisions genuinely carrying the guard
+      (`_MAX_CONCURRENT_BUILDS`/`CatalogueLifecycleBuildBusyError` present verbatim in both deployed images), ruling out
+      "stale pre-fix image" as an explanation. So the unguarded `catalogue_lifecycle.py` fan-out was either not the
+      (sole) dominant OOM mechanism, or another code path independently drives the same memory ceiling. Next steps, per
+      the guard todo's own named candidates (not re-guessed here): (a) audit
+      `deployment_api/services/prediction_catalogue.py`'s single ~184 MB parquet read for uncapped concurrency across
+      distinct filter-param cache misses (unlike `catalogue_lifecycle.py`, it isn't parallelized internally, but
+      multiple concurrent uncached requests could still each hold a large in-memory frame simultaneously); (b) audit
+      `deployment_api/services/data_status/manifest.py`'s `_dispatch_category_builds`
+      `multiprocessing.get_context("fork")` `ProcessPoolExecutor` compute path (flagged memory-heavy in this doc's
+      2026-07-30T04:15Z entry, never itself concurrency-guarded) — check whether either of the 2 fresh occurrences'
+      surrounding request logs correlate with a `/prediction-catalogue` or `/data-status/manifest` call, rather than
+      guessing which candidate is live; (c) if neither correlates, re-examine whether the memory ceiling itself (16384
+      MiB) is simply too tight for this service's current combined workload independent of any single call site, per
+      this doc's own 2026-07-17 precedent of a prior bump. (repo: deployment-api) — **2026-07-31T15:01Z (slot 15,
+      backend_engineer): BOTH named candidates REFUTED by direct request-log evidence, not guessed.** Read
+      `deployment_api/services/prediction_catalogue.py` and `manifest.py`/`manifest_status_helpers.py`'s
+      `_dispatch_via_process_pool` directly first (not just re-reading this todo's own description): confirmed neither
+      has a request-level concurrency guard (only `catalogue_lifecycle.py` got `ec1f635`'s semaphore), so both remained
+      plausible in principle. Then ran the todo's own named step — `gcloud logging read` on the request log
+      (`run.googleapis.com%2Frequests`) scoped to each exact crashing revision, both a tight window around the SIGKILL
+      AND a wide 35-70min pre-crash window (in case memory accumulated from an earlier uncached call): **zero
+      `/prediction-catalogue` or `/data-status/manifest` requests in either window, for either occurrence** — both
+      candidates are refuted for these 2 specific crashes, not merely unconfirmed. **New evidence-backed finding
+      instead**: both occurrences are preceded by the SAME distinct pattern — a burst of 5-7 concurrent, slow (0.8-83s)
+      requests, all carrying `referer: https://.../cockpit` (confirming a human/browser loading the operator's dashboard
+      "cockpit" page, not a background job), landing 60-120s before each SIGKILL:
+      `/api/deployments/umbrella/{LIVE,BATCH,PAPER}/summary`, `/api/vm-deployments`, `/api/deployments/inventory`,
+      `/api/health/overview`, `/api/repo-ci/overview` — a classic cold multi-panel dashboard-load burst, not either
+      named candidate. Traced the shared bottleneck (`build_umbrella_summary` → `_load_inventory` →
+      `_compute_inventory`, `deployments_inventory/_aggregation.py`): it already has a real guard (a 1-worker
+      `ThreadPoolExecutor` + in-flight dedup per cache key, `_inventory_refresh_pool`), so the 3 near-simultaneous
+      `umbrella/*/summary` calls (52.7s/46.0s/0.77s) look like 2 requests correctly bound-waiting on the SAME in-flight
+      compute rather than 3 independent ones — that seam is not obviously the culprit. Checked `RateLimitMiddleware`
+      (`deployment_api/middleware.py`): it caps requests/minute only, not concurrent in-flight requests, so a
+      same-second burst of 5-7 slow calls (well under 60/min) sails through untouched — no aggregate concurrency guard
+      exists across this endpoint cluster. One data point double-checked before over-reading it: the first occurrence's
+      `/api/health/overview` call returned `500` at `76.24s` latency — pulled the full log entry (not just the
+      request-log summary): `receiveTimestamp=11:32:13.05Z`, ~0.9s before the SIGKILL at `11:32:13.97Z`, with zero
+      accompanying error/stack-trace log — most consistent with this in-flight request's connection being severed BY the
+      OOM-kill (a casualty), not a caused-it exception; `health_overview.py`'s own docstring's "never a 5xx"
+      per-tile-isolation design is NOT contradicted by this reading, flagging the ambiguity honestly rather than
+      overclaiming either way. **Not attempting a fix this turn**: I have NOT pinpointed which specific handler(s) in
+      the burst cluster dominate memory (unlike `catalogue_lifecycle.py`, none of `health_overview.py`/`repo_ci`
+      overview/`vm_deployments.py` were profiled this session) — shipping a coarse cross-file concurrency guard without
+      that would be exactly the kind of re-guess this doc's history repeatedly flags as the anti-pattern to avoid, on
+      dashboard-serving production code. Filed a fresh, narrower `[BACKEND] P2` todo below carrying this concrete
+      finding forward instead of guessing a fix. No code shipped (pure investigation, evidence-based).
+
+- [x] ✅ [BACKEND] P2. **NEW, opened 2026-07-31T15:01Z (slot 15, backend_engineer) — both SIGKILL/OOM occurrences trace
+      to a cold multi-panel "cockpit" dashboard-load burst, not either previously-named candidate; profile the burst
+      cluster's memory footprint and, if warranted, add a concurrency guard.** Per the todo above's finding: both
+      confirmed post-guard SIGKILLs (`00358-vj6@2026-07-31T11:32:13Z`, `00363-nwx@2026-07-31T13:41:06Z`) are preceded
+      60-120s earlier by a same-second burst of `referer: .../cockpit` requests —
+      `/api/deployments/umbrella/{LIVE,BATCH,PAPER}/summary`, `/api/vm-deployments`, `/api/deployments/inventory`,
+      `/api/health/overview`, `/api/repo-ci/overview` — several taking 20-83s each. `RateLimitMiddleware`
+      (`deployment_api/middleware.py`) caps requests/minute only, so this burst (well under 60/min) sails through with
+      zero concurrency shedding. Next steps: (1) determine which handler(s) in the burst actually dominate memory —
+      `health_overview.py`, `repo_ci` overview, and `vm_deployments.py` were NOT profiled this session (unlike
+      `_load_inventory`/`_compute_inventory`, which already has a 1-worker pool + in-flight dedup and looks unlikely to
+      be the dominant driver); add cheap instrumentation (log RSS delta or peak memory per request, or use
+      `tracemalloc`/`resource.getrusage` around each handler) rather than guessing which one is heaviest; (2) once a
+      dominant handler (or handlers) is identified, add a concurrency guard mirroring `catalogue_lifecycle.py`'s
+      `ec1f635` semaphore pattern (`threading.Semaphore` + a 503+`Retry-After` shed) scoped to the actual offender(s) —
+      do NOT blanket-guard the whole cluster speculatively; (3) if instrumentation shows the burst's COMBINED memory (no
+      single dominant handler, several moderate ones summing past the ceiling) rather than one big offender, the right
+      fix is a single shared semaphore across the whole "cockpit page load" cluster instead of a per-handler one —
+      decide from the instrumentation data, not a guess. (repo: deployment-api) — **2026-08-01 (slot 8,
+      backend_engineer): step (1) (profile) done — flipping on that basis; step (2)/(3) (add-a-guard-if-warranted) is
+      carried forward to the REVIEW follow-up below since which handler(s) dominate is still unknown without live
+      data.** Read all three unprofiled handlers directly (`health_overview.py`'s `get_health_overview` fans out 6
+      concurrent tiles — fleet Compute census, GCS manifest reads, a live BigQuery cost query — with ZERO caching,
+      unlike every other cockpit endpoint; `repo_ci.py`'s `get_overview` has a per-repo semaphore but no cross-request
+      guard or cache; `vm_deployments.py`'s `list_vm_deployments` already has a 45s stale-while-revalidate cache, but
+      its COLD path — `_compute_vm_deployments`, measured avg 93.75s/max 99.27s in prod — is exactly what a
+      freshly-autoscaled instance hits first, matching this todo's own "cold multi-panel burst" framing). Shipped
+      `deployment-api@130c3a2`: a `log_rss_delta` context manager (`deployment_api/utils/request_memory_profiling.py`,
+      `resource.getrusage(RUSAGE_SELF).ru_maxrss` before/after, WARNING above a 20MiB delta) wrapping
+      `health_overview.get_health_overview`, `repo_ci.get_overview`, and `vm_deployments._compute_vm_deployments` (the
+      real cold-path compute, not the cache-hit route) — 3 new unit tests, `quality-gates.sh` PASSED (152s, sentinel
+      matches HEAD), verified on origin via `merge-base --is-ancestor`. Did NOT add a guard this entry: per this todo's
+      own decision tree, which handler(s) dominate is still unknown without live data — adding one now would be exactly
+      the "blanket-guard speculatively" anti-pattern this todo explicitly warns against. Filed a `[REVIEW]` follow-up
+      below to read the next occurrence's `peak_rss_delta_kib` lines and decide steps (2)/(3) from real data. (repo:
+      deployment-api)
+
+- [ ] [REVIEW] P2. **NEW, opened 2026-08-01 (slot 8, backend_engineer) — once `deployment-api@130c3a2` (todo above)
+      reaches a live Cloud Run deploy of `uts-shared-deployment-api`, read the next `Container terminated on signal 9`
+      occurrence's preceding logs for the new
+      `memory-profile <handler>: peak_rss_delta_kib=... elapsed_s=... peak_rss_kib=...` lines (WARNING-level above a
+      20MiB delta, DEBUG below) and attribute the spike to a specific handler.** Verify the deploy via direct image
+      extraction (not ancestry, per this doc's own 2026-07-25 methodology correction). If ONE handler's delta clearly
+      dominates: add a concurrency guard scoped to that handler only, mirroring `catalogue_lifecycle.py`'s `ec1f635`
+      semaphore pattern (`threading.Semaphore` + 503+`Retry-After`). If several handlers show moderate, summing deltas
+      with no single dominant offender: add ONE shared semaphore across the whole cockpit-load cluster instead (this
+      todo's own step (3)). If no SIGKILL has recurred yet, this stays open — don't force a conclusion from zero data.
+      (repo: deployment-api) — **2026-08-01T14:23Z (slot 9, review): precondition NOT met — staying open (a stricter
+      negative than "zero SIGKILLs yet"; 130c3a2 has never actually gone live).** Content-verified (direct
+      `docker create`+`docker cp` image extraction, not ancestry) that revision `00408-xd2` (created `09:25:08Z`, 16 min
+      post-commit) genuinely carries `130c3a2`'s `log_rss_delta`/`memory-profile` instrumentation, wired into
+      `health_overview.py:363` — the fix IS built and deployable. But `gcloud run services describe` shows 100% of
+      PRODUCTION TRAFFIC is still on `00374-4pd` (image digest `71a09bfb...`, created `2026-07-31T18:39:05Z` — over 14h
+      BEFORE `130c3a2`'s `09:09:02Z` commit, so it structurally cannot carry the profiling code) — every revision built
+      from `130c3a2` (`00408-xd2` through `00412-rqj`, all `Ready=True`) has 0% traffic. This is not an oversight: the
+      companion tracker
+      `/plans/active/issues/deployment_api_cloud_run_coldstart_flaky_exit0_blocks_prd_sa_cutover_2026_07_31.md` (status:
+      open) is the reason — the operator/main deliberately held 100% traffic on the warm `00374-4pd` instance pending
+      that doc's durable-close bar, so no fresh revision (130c3a2-carrying or not) is meant to take real traffic yet.
+      Confirmed via two independent Cloud Logging queries: (1) exactly ONE `"Container terminated on signal 9"` in the
+      last 2 days, at `2026-08-01T07:47:39Z` on `00374-4pd` — this PREDATES the `130c3a2` commit by ~1h21m, so it's a
+      pre-fix-era SIGKILL, not evidence about the new instrumentation; (2) a targeted `textPayload:"memory-profile"` /
+      `jsonPayload.message:"memory-profile"` sweep of the last 2 days returns **zero rows** — the instrumentation has
+      never fired in production because its code has never received a real request. This todo's own literal ask (read
+      the next SIGKILL's memory-profile lines) has no data to read, and won't until the coldstart doc's cutover clears —
+      not a new/separate blocker, just this todo's dependency made explicit so the next investigator doesn't re-derive
+      it. No code shipped (pure verification). Leaving unchecked. (repo: deployment-api)
 
 ## Progress Log
 
-- **2026-07-30T04:56Z (slot 16, review)** — Re-dispatched `deployment_api_sigabrt_crash_loop-003` (this `[REVIEW] P2`
-  todo, 10th+ dispatch). Fresh-pulled all slot repos, then re-checked both precondition branches from scratch: (1)
-  `deployment-api@acdd4c8` (the fresh `[BACKEND] P1` gen1-pin fix, shipped by slot 9 at `04:08:39Z`) is confirmed on
-  `origin/live-defi-rollout` (`git log -- cloudbuild.yaml`) but has **NOT reached a live Cloud Run deploy** —
-  `gh pr list --repo IggyIkenna/deployment-api --state open` is empty (no promote PR in flight), the last merged promote
-  PR (#428) landed `2026-07-29T12:52:19Z` (before `acdd4c8` even existed), and `gcloud builds list` shows no new build
-  triggered since `2026-07-29T22:07:56Z` — over 6.5h before `acdd4c8` shipped. `gcloud run revisions list` confirms the
-  live revision is still `uts-shared-deployment-api-00332-8gl` (created `2026-07-30T01:09:57Z`, predates the fix by
-  ~3h), 100% traffic, and actively serving (health-check requests every ~20s as of `04:56Z` — not an idle revision going
-  quiet by default). (2) `gcloud logging read` for `"Uncaught signal"` scoped to this service: **zero occurrences since
-  `2026-07-29T22:09:12Z`** — i.e. **~6h47m elapsed with no SIGABRT at all**, extending slot 6's `03:59Z` quiet-window
-  observation (~2h49m on `00332-8gl` at that time) by a further ~3 hours with still no code change on this revision that
-  would explain it (same revision, no new deploy). Neither precondition branch is met: no BACKEND fix has reached a live
-  deploy yet, and no new SIGABRT has occurred to produce a dump from. The original ask ("read the dump, report the stuck
-  call site, confirm/refute the `_compute_inventory` cold-path hypothesis") remains unanswerable — not a judgment call,
-  genuinely not ready. Not flipping the checkbox. Releasing via `skip-current-task` (`reason_code: GATED`) per the
-  established pattern (10th consecutive dispatch to hit this same unmet precondition) rather than idling the slot
-  polling a stochastic external event (the next Cloud Build promote + the next SIGABRT, whichever comes first). Next
-  dispatch: re-check whether `acdd4c8` has reached a live revision (via `gcloud run revisions list` creation timestamp
-  vs. `04:08:39Z`, then confirm via direct image extraction of `cloudbuild.yaml`'s deploy step output or the revision's
-  env, not source-diff alone per this doc's own methodology correction); once live, re-run the `"Uncaught signal"` check
-  scoped to that new revision over several multiples of the ~20-40min historical cadence. If a SIGABRT recurs
-  post-gen1-pin, pull `stderr` ±5min for the dump. If the quiet window holds for many hours post-deploy with sustained
-  traffic, that's the strongest evidence yet for the gen1 mitigation actually working — but per this doc's own
-  established caution (slot 6's note that a quiet window alone proved nothing pre-fix), still don't close this issue
-  purely on absence of crashes without either a dump confirming the call site or a long enough observation window per
-  the sibling `[REVIEW]` todo below this one.
+> **2026-07-31 line-cap remediation (3rd pass)**: every entry from the `-003` dispatch through `-018` extracted verbatim
+> to `/plans/archive/2026_07/deployment_api_sigabrt_crash_loop_progress_log_history_2026_07_31.md` (doc was at 1063/1000
+> lines after the `e8ce86a`-rollout-refutation write-up). New entries append below this note.
 
-- **2026-07-30T04:15Z (slot 9, backend_engineer)** — Dispatched `deployment_api_sigabrt_crash_loop-004` (the fresh
-  `[BACKEND] P1` todo). Went well beyond log archaeology this session — read the actual installed `gunicorn`/`uvicorn`
-  source (confirmed same lockfile hash between this slot's clone and the root clone's populated `.venv`, so read that
-  directly rather than `uv sync`ing a fresh one) and gVisor's own sentry source to get ground-truth mechanics instead of
-  re-guessing from log patterns alone.
-  - **Angle (1) — sys.stderr fd rebind — MOOT.** Grepped `deployment_api/` for any `sys.stderr =`/`sys.stdout =`/
-    `CloudLoggingHandler`/`StructuredLogHandler` — none found; `logging.basicConfig()` only attaches a `StreamHandler`,
-    doesn't touch the stream object itself. This turned out to be moot regardless — see below.
-  - **Angle (2) — sandbox-kill vs arbiter — the arbiter half is DEFINITIVELY REFUTED, not just weakened.** Pulled
-    `gunicorn/arbiter.py` directly: `murder_workers()` calls `self.log.critical("WORKER TIMEOUT (pid:%s)", pid)`
-    (line 504) SYNCHRONOUSLY, immediately BEFORE `self.kill_worker(pid, signal.SIGABRT)` (line 506) — this critical log
-    is unconditional on that code path, no branch skips it.
-    `gcloud logging read '"WORKER TIMEOUT" AND resource.labels.service_name="uts-shared-deployment-api"' --freshness=30d`
-    (all log streams, not stream-restricted) returns **ZERO rows**, despite 106+ historical SIGABRTs plus the 8
-    post-`3fea307` ones this doc already catalogued, and despite gunicorn's own stderr pipeline confirmed reaching Cloud
-    Logging for OTHER lines (the 2026-07-24 entry's unrelated `CancelledError` traceback). This is a clean,
-    unconditional refutation — not "weakened," which is how the hypothesis had been treated since 2026-07-24 — of the
-    theory that's motivated this issue doc's diagnostic work from the start. Whatever sends these SIGABRTs, it is not
-    gunicorn's arbiter.
-  - **Read gVisor's sentry source directly** (`google/gvisor`'s `pkg/sentry/kernel/task_signals.go`, via
-    `gh api search/code` to locate it then fetched via raw GitHub) to understand what "Uncaught signal: N, pid=X, tid=X,
-    fault_addr=0" actually means at the mechanism level — this line was never a gunicorn/Python log line at all, it's
-    gVisor's own `deliverSignal()`. The `UncaughtSignal` event/log ONLY fires on the
-    `SignalActionTerm`/`SignalActionCore` branch of `computeAction(sig, act)` — i.e. only when the tracked signal
-    disposition (`act.Handler`) resolves to `SIG_DFL` at the moment of delivery. A signal with a real registered handler
-    takes the `SignalActionHandler` branch instead and would never produce this log line — meaning IF `faulthandler`'s
-    handler were genuinely still armed when a SIGABRT actually arrived, we should see NO "Uncaught signal" line at all
-    (we'd instead see either a dump or total silence-then-restart), not a dump-less "Uncaught signal" line. This
-    directly resolves angle (1) as moot: stderr-fd state is irrelevant if the handler path is never entered to begin
-    with.
-  - **Empirically verified the fix's ordering is correct in isolation** (didn't just trust the prior sessions' code
-    read): wrote a local repro mimicking the EXACT sequence — reset every `Worker.SIGNALS` entry (incl. SIGABRT) to
-    `SIG_DFL` (mimicking `UvicornWorker.init_signals`), then `faulthandler.enable()` (mimicking `post_worker_init`),
-    then `os.kill(self, signal.SIGABRT)`. Result: full `Fatal Python error: Aborted` dump with the correct frame,
-    process exit 134. So the Python-level fix (`deployment-api@3fea307`) is proven correct in isolation on real Linux —
-    this isn't a bug in the fix itself. Also read `multiprocessing/process.py`'s `_bootstrap()` and
-    `concurrent.futures/process.py` directly (stdlib, via the venv's own python) to rule out fork-bootstrap resetting
-    SIGABRT for `ProcessPoolExecutor`/`multiprocessing` children — neither touches signal state at all.
-  - **New leads, both flagged honestly as leads, not proven causes**: (a) `gcloud logging read` for `"Memory limit"`
-    shows `uts-shared-deployment-api-00331-wzz` (the revision carrying 6 of the 8 post-fix SIGABRTs) exceeded its 16384
-    MiB limit 6× on 2026-07-29 (16513-17004 MiB used each time) — temporal correlation to the SIGABRT timestamps is WEAK
-    (only 2 of 8 within ~20-30min of an OOM event; the rest are hours apart), so NOT asserted as the proven cause, but
-    it does confirm the service runs chronically close to its memory ceiling. (b) Cross-referencing this repo's OWN
-    `cloudbuild.yaml` surfaced a directly relevant, already-litigated precedent: the retired `${_ROLLUP_JOB}` Cloud Run
-    Job's comment states verbatim "Cloud Run Jobs are gen2-only and the native pyarrow/pandas compute crashes on gen2
-    (R7 follow-up #4); the gen1 service runs it fine." `deployment_api/services/data_status/manifest.py`'s
-    `_dispatch_category_builds` runs the SAME class of native pyarrow/pandas compute via a
-    `multiprocessing.get_context("fork")` `ProcessPoolExecutor` (`build_category_in_subprocess`), and it's reachable
-    from the MAIN service's `GET /api/data-status/manifest` route (`deployment_api/routes/data_status/_status_core.py`),
-    not just the isolated rollup path. Checked whether `uts-shared-deployment-api` has an explicit
-    `--execution-environment` pin: it did NOT (`cloudbuild.yaml`'s `gcloud run deploy uts-shared-deployment-api` had no
-    such flag) — confirmed via the Cloud Run Admin API v2 directly (`GET .../services/uts-shared-deployment-api`) that
-    neither the service spec nor the live revision echo a resolved `executionEnvironment` value when it's unset, so I
-    could NOT conclusively determine which environment is actually running today. The sibling rollup SERVICE is already
-    proven safe for this exact code shape (per the same comment) — but querying its live config the same way ALSO
-    returned no explicit value, so even that precedent's "gen1" description isn't independently re-verifiable via the
-    API today; treating the cloudbuild.yaml comment as the source of truth for that service's proven-safe history.
-  - **Shipped**: `deployment-api@acdd4c8` (`cloudbuild.yaml`) — added `--execution-environment gen1` to
-    `uts-shared-deployment-api`'s deploy command, matching the sibling rollup service's documented-safe pattern. This is
-    a MITIGATION shipped on strong-but-circumstantial evidence, explicitly not claimed as a 100%-confirmed root cause —
-    the doc and the new `[REVIEW]` todo both say so. It's cheap, reversible (a one-line revert), and has zero
-    functional/perf cost regardless of whether the current default already happens to resolve to gen1. Full reasoning
-    documented inline in the cloudbuild.yaml comment for the next reader. Added a `[REVIEW]` todo to monitor the
-    post-deploy SIGABRT rate and, if unchanged, pursue the next-ranked candidate (a native pyarrow/Arrow-C++
-    fatal-signal-handler collision installed at first-lazy-import time, after `post_worker_init` already armed
-    faulthandler). No `quality-gates.sh` run — YAML-only change, no Python touched; validated via
-    `python3 -c "import yaml; yaml.safe_load(open('cloudbuild.yaml'))"`.
+- **2026-07-31 (slot 8, backend_engineer)** — Dispatched `deployment_api_sigabrt_crash_loop-023` (blackout
+  bootstrap/fd-wiring todo). 4 canary `gcloud run deploy --command/--args` overrides refuted both named candidates,
+  found the real cause (`_Default` sink excludes `severity<=DEBUG`; Cloud Run stamps DEFAULT on plain-text stdout).
+  Shipped `deployment-api@e8ce86a`; full detail on the flipped checkbox above. Filed a `[REVIEW]` follow-up.
 
-- **2026-07-30T03:59Z (slot 6, review)** — Re-dispatched `deployment_api_sigabrt_crash_loop-003` (this `[REVIEW] P2`
-  todo, 7th+ dispatch). Re-checked both precondition branches: (1) `git log -- deployment_api/gunicorn.conf.py` /
-  `gunicorn.conf.py` / `deployment_api/main.py` on `origin/live-defi-rollout` shows no new commit since `3fea307` — the
-  fresh `[BACKEND] P1` todo (diagnose why faulthandler produces zero dumps) has NOT shipped yet; (2)
-  `gcloud run revisions list` confirms `uts-shared-deployment-api-00332-8gl` (created `2026-07-30T01:09:57Z`) is still
-  the live revision, 100% traffic, and actively serving requests (`run.googleapis.com%2Frequests` entries every ~1-2min
-  as of `03:59Z`) — so this isn't an idle/unused revision going quiet by default. `gcloud logging read` for
-  `"Uncaught signal"` scoped to `00332-8gl` specifically: **zero occurrences**, meaning **~2h49m with no SIGABRT at all
-  on this revision** (deploy `01:09:57Z` → check `03:58Z`), and **~5h49m since the last SIGABRT anywhere**
-  (`00331-wzz`'s `2026-07-29T22:09:12Z`, the most recent of the 8 confirmed post-`3fea307` occurrences slot 13
-  catalogued). This quiet window is substantially longer than any gap previously observed even during a
-  CONFIRMED-still-broken period (slot 5's `07:08Z` entry found 50-71min gaps mid-crash-loop, so a sub-2h window alone
-  wouldn't be conclusive — but ~2h49m/5h49m is well past that precedent). **Not asserting this as "fixed"** — no code
-  changed between `00331-wzz` and `00332-8gl` that touches signal handling or the `_compute_inventory` cold path (the 3
-  intervening commits, `5783a5b`/`b364ea9`/`e23328d`, are a reap-tick endpoint, resource-history endpoints, and a
-  version-coherence panel — none plausibly related), so if the crash rate has genuinely dropped it's not attributable to
-  any shipped fix and could just be traffic-pattern variance; flagging as an observation for whoever picks this up next,
-  not a conclusion. Neither precondition branch is met (no BACKEND fix shipped, no new SIGABRT to read a dump from) —
-  the original ask ("read the dump, report the stuck call site") remains unanswerable. Not flipping the checkbox.
-  Releasing via `skip-current-task` (`reason_code: GATED`) per the established pattern (slots 4/10×2/2/5/8/13 all hit
-  this same unmet-precondition wait and released the same way) rather than idling the slot on a stochastic external
-  event.
+- **2026-07-31 (slot 6, backend_engineer)** — Dispatched `deployment_api_sigabrt_crash_loop-026` (diagnose why `e8ce86a`
+  "blocks its own rollout"). Refuted the `e8ce86a`-specific framing with evidence: two FRESH cold-start revisions from
+  an unrelated concurrent investigation (`00394-yoh`/`00395-san`, tagged `iam-fix-verify`/`-retest`), byte-identical to
+  warm `00374-4pd` in image + env/secrets/SA, still failed the SAME STARTUP TCP probe signature; independently
+  reproduced by re-tagging `e8ce86a`-era `00389-d9d` (already `Ready=True` once) — 6/6 fresh retries then failed too.
+  Cold startup is broken platform-side for ANY image right now; only the one instance warm since `18:39:05Z` works.
+  Flipped on the refuted branch, filed `[INFRA] P0` follow-up (prod risk: `minScale=1`, no recovery path if the warm
+  instance is ever replaced). Verified prod safe throughout. No code shipped — infra/IAM-scoped.
 
-- **2026-07-30T03:34Z (slot 13, review)** — Dispatched `deployment_api_sigabrt_crash_loop-003` (the `[REVIEW] P2` todo,
-  now its 6th+ dispatch). Did NOT just re-check "is the fix live" (already established) — went further and checked
-  whether it's actually WORKING as a diagnostic. Confirmed via `gcloud run revisions list` the current live revision is
-  `uts-shared-deployment-api-00332-8gl` (created `2026-07-30T01:09:57Z`, 100% traffic). `gcloud logging read` for
-  `"Uncaught signal"` over the last 5 days turned up 8 occurrences across 3 revisions: `00317-zmv`
-  (`2026-07-28T03:39:17Z`, ×1), `00330-tth` (`2026-07-28T19:51:14Z`, ×1), `00331-wzz`
-  (`2026-07-29T03:46:52Z`/`04:59:17Z`/`11:04:57Z`/`13:14:12Z`/ `18:21:52Z`/`22:09:12Z`, ×6). Directly `docker pull`ed +
-  extracted `/app/gunicorn.conf.py` (the ACTUALLY-loaded file, not the dead duplicate — per this doc's own 2026-07-25
-  correction) from BOTH the `00331-wzz` image (`sha256:8c517191ab...`, same digest as `00330-tth`) and the current
-  `00332-8gl` image (`sha256:b18f1bad83...`): both have `3fea307`'s real fix — `faulthandler.enable()` correctly placed
-  in `post_worker_init`, nothing in `post_fork`. So the "fix isn't actually armed" explanation (the 2026-07-25 finding)
-  is now RULED OUT for these 8 occurrences. Yet pulling `run.googleapis.com%2Fstderr` in a ±5min window around EACH of
-  the 6 `00331-wzz` timestamps (and the 1 `00330-tth` timestamp) returns **zero rows every time** — no
-  `Fatal Python error`/`Current thread` faulthandler dump anywhere. Ruled out "stderr just doesn't reach Cloud Logging
-  for this revision" as the explanation: a genuine unrelated Python traceback (from `lifespan.py`'s
-  `_cancel_background_tasks` → `background_sync.py`'s `auto_sync_running_deployments`) DID land on `00331-wzz`'s stderr
-  stream at `2026-07-29T15:30:15Z` — stderr delivery works, it's specifically the SIGABRT dump that's absent. This is
-  new, stronger evidence than the 2026-07-25 sessions had (that session couldn't rule out "fix not armed"; this session
-  did, on two separate revisions, and the dumps still don't appear). Did NOT close the `[REVIEW]` checkbox — its actual
-  ask ("read the dump, report the stuck call site") remains unanswerable with zero dumps in hand. Filed a fresh
-  evidence-backed `[BACKEND]` P1 todo above with the two leading candidate angles (a `sys.stderr`/fileno rebind hazard
-  from `main.py`'s `logging.basicConfig()`, vs. the SIGABRT originating from the Cloud Run/gVisor sandbox supervisor
-  itself rather than gunicorn's in-process arbiter — the latter would mean no in-process fix could ever produce a dump)
-  — both explicitly flagged as unconfirmed, not asserted. No code shipped this entry (pure investigation); this doc's
-  edit is the only change.
+- **2026-07-31 22:00-22:20Z (slot 14, infra)** — Dispatched `deployment_api_sigabrt_crash_loop-027` (the `[INFRA] P0`
+  cold-container todo). Found + fixed a real IAM gap (runtime SA's project roles were stripped 19:32Z, matching the
+  `iam-fix` window; separately, the SA's OWN SA-level policy — who may mint tokens as it — was completely empty; granted
+  the Cloud Run Service Agent `serviceAccountTokenCreator` on it). Neither fix changed the symptom: 3 retests over
+  ~20min all failed at 31.3-31.4s, deterministic to the ms. Built a scoped diagnostic log sink bypassing the project's
+  `_Default` severity exclusion for just this service, and proved the failing container emits ZERO log output ever (not
+  even gunicorn's own `on_starting` line) while a concurrent different canary logs fine in the same window — narrows the
+  fault to the container-exec layer, upstream of gunicorn/Python, specific to this heavy resource profile. Also did a
+  4th-pass line-cap remediation (doc was at 1001/1000 lines) extracting 6 more fully- resolved checklist entries to the
+  same archive file. IAM ruled out; filed a narrower `[INFRA]` follow-up (test a lighter resource profile / gen2, or
+  escalate to Google Cloud Support). Left the IAM grant + diagnostic sink live for the next investigator. Production
+  safe throughout (`00374-4pd` still serving 200s). No code shipped — pure infra/IAM investigation + doc reconciliation.
 
-- **2026-07-25T11:56Z (slot 8, review)** — Dispatched `deployment_api_sigabrt_crash_loop-001` (this todo). Re-checked
-  before closing: the todo's own instruction is "confirm live, read the next dump, branch below" — both halves were
-  already fully executed by slot 10 at `05:25Z` (confirmed `1adf54b` live since `02:51:26Z` via content-diff, read the
-  actual next occurrence at `04:27:19Z`, found no dump, and — per the todo's own "if not, do not re-guess" instruction —
-  filed the fresh evidence-backed BACKEND todo, which then shipped as `deployment-api@7ba17e2`). The checkbox had simply
-  never been flipped despite the branch being complete. Re-verified nothing has regressed since:
-  `gcloud run revisions list` still shows `uts-shared-deployment-api-00275-7zl` (built `06:13:08Z`, carries `7ba17e2`'s
-  `post_worker_init` fix) as the current serving revision, matching slot 5's `07:08Z` note — no new information changes
-  this specific todo's already-satisfied done-when. Flipping the checkbox to close out the stale bookkeeping; the
-  ONGOING question of whether the `post_worker_init` fix actually stops the crash-loop (reading the next dump once one
-  appears) is tracked separately under `deployment_api_sigabrt_crash_loop-003` (line ~154 below), not duplicated here.
-  No code shipped this entry (pure doc reconciliation).
+- **2026-07-31T22:57Z (slot 7, infra)** — Resumed `deployment_api_sigabrt_crash_loop-027` (the `[INFRA] P0`
+  cold-container todo, both it and its slot-14 narrower follow-up). Found the platform-side cold-start failure has
+  RESOLVED: `gcloud run revisions list` shows a clean 4-failure streak (`00408-keh`→`00411-xic`, 22:40-22:44Z,
+  first-attempt Ready=False) immediately followed by 4 consecutive first-attempt Ready=True fresh cold starts
+  (`00398-mqj`, `diag-realtraffic-0731`, `00400-mxl` at 22:45Z, and `00401-4x7` at 22:56Z — the last deployed
+  organically by `cloudbuild.gserviceaccount.com`, i.e. routine CI/CD, not an investigation-driven test). `/api/health`
+  confirmed 200 in ~0.1s throughout. No explicit quota/capacity error text found in logs, but the correlation is exact:
+  12 revisions of this ONE service were created during the 19:32Z-22:44Z failure window (multiple investigators'
+  canary/diag deploys) and failures stopped the moment that churn subsided — consistent with the doc's own candidate (2)
+  (deploy-volume/capacity contention this investigation's own churn generated), all other candidates already ruled out.
+  Both P0 todos' done-when ("a freshly-cold-started instance passes the STARTUP TCP probe") is now unambiguously met —
+  flipped both. No Google Cloud Support case needed. Did a 5th-pass line-cap remediation (doc was at 1007/1000 lines
+  after the write-up) extracting the 7 oldest checked checklist entries (2026-07-24 root-cause dispatch through the
+  2026-07-30T12:09Z sandbox-external-termination entry) to the same archive file. No code shipped — pure infra
+  investigation + doc reconciliation.
 
-- **2026-07-25T07:08Z (slot 5, review)** — Re-checked the `[REVIEW] P2` precondition against the actual live revision.
-  Confirmed `uts-shared-deployment-api-00275-7zl` (built `06:14:00Z`, carries `deployment-api@7ba17e2`'s
-  `post_worker_init` faulthandler fix) is still the live revision (`gcloud run revisions list`, no newer revision
-  deployed since slot 2's `06:23Z` check). `gcloud logging read` scoped to that exact revision for `"Uncaught signal"`
-  since deploy: **zero occurrences** as of `07:08:40Z` — i.e. **~54.5 minutes elapsed with no crash**, now past the
-  measured ~20-40min cadence with margin. Still not conclusive on its own: pulled the full 24h "Uncaught signal" history
-  (41 rows) and found natural gaps of **50-71 minutes occur even within confirmed-still-broken periods** (e.g.
-  `16:21:04Z`→`17:32:30Z` = 71min gap and `19:09:34Z`→`20:08:58Z` = 59min gap, both on revision `00268-d2l` while the
-  loop was unambiguously still active) — so a ~54min quiet window doesn't yet distinguish "fixed" from "just hasn't
-  happened yet." No faulthandler dump exists to read; the diagnostic question remains genuinely open.
-  - **New substantive evidence** (not previously on this doc): the sibling `_compute_inventory` cold-path hypothesis
-    named in this todo already had a partial mitigation live BEFORE the faulthandler fix — `deployment-api@6f6a389`
-    (committed `2026-07-24T23:03:07Z`, bounds `_load_inventory`'s cold-cache path to `_PROVIDER_CENSUS_TIMEOUT_SEC`=45s
-    via `future.result(timeout=...)`, see
-    [deployment_registry_reaper_not_draining_stale_entries_2026_07_24.md](deployment_registry_reaper_not_draining_stale_entries_2026_07_24.md))
-    was already part of the SAME deploy wave as `1adf54b` and therefore already live on
-    `uts-shared-deployment-api-00274-s9g` since `02:51:26Z`. Yet `00274-s9g` **continued crashing with
-    `Uncaught signal: 6` as recently as `06:10:50Z`** — over 3 hours after the 45s bound went live. If the cold-path's
-    _unbounded_ synchronous block were the sole mechanism starving gunicorn's 300s worker-heartbeat timeout, bounding it
-    to 45s should have materially suppressed further SIGABRTs from that specific path; it did not. This **weakens (does
-    not fully refute)** the `_compute_inventory` cold-path hypothesis as the primary/sole cause — plausible remaining
-    explanations not yet checked: concurrent cold-path hits across DIFFERENT `(cloud, region_scope)` cache keys stacking
-    past 300s in aggregate even with each individually bounded at 45s, or `future.result(timeout=...)` still blocking
-    the event loop thread synchronously (not `run_in_executor`-wrapped) so repeated near-back-to-back cold hits could
-    still starve the heartbeat, or a genuinely different stuck call site. None of these confirmed — flagging as the next
-    investigation angle for whoever reads the actual dump, not asserting a new root cause without evidence.
-  - Not closing the checkbox — the precondition (a faulthandler dump to read) still doesn't exist. Releasing via
-    `skip-current-task` with `reason_code: GATED` (fleet-scoped cooldown, matching slot 4's prior precedent) rather than
-    continuing to poll a stochastic external event in-session — 5 dispatches (slot4→slot6→slot10×2→slot2→slot5) have now
-    checked this same precondition; the fleet-scoped GATED cooldown is exactly the mechanism designed to bound that
-    waste (per main's `05:16Z` note above). Next dispatch: re-run the same `gcloud logging read` scoped to whatever is
-    the CURRENT live revision at that time (re-verify it's still `00275-7zl` or a later one first); once a SIGABRT
-    appears, pull the `stderr` stream ±5min around it for the `Fatal Python error`/`Current thread` dump, and weigh it
-    against the cold-path-weakening evidence above before concluding a call site.
+- **2026-08-01T00:06Z (main-orchestrator agt-26fe12) — RECURRENCE: slot-7's "RESOLVED / no support case (candidate 2 /
+  our-own-churn)" conclusion is REFUTED; durable-close bar RAISED.** Review (agt-0e7906) surfaced fresh contradicting
+  evidence, main re-verified via `gcloud`. Revision `uts-shared-deployment-api-00402-zsg` (tag `verify2`, created
+  23:07:45Z — 4 min AFTER the 23:03Z done-flip, so unknowable to slot-7) failed the STARTUP TCP probe 3/3
+  (00:00:33Z/00:02:20Z/00:03:34Z) with the identical `Container called exit(0)` ~30-32s signature. Its image digest
+  (`sha256:6b8f97f…`) + resources (cpu4/mem16Gi) + SA (`uts-prd-sa`) are **BYTE-IDENTICAL to `00401-4x7`** — one of the
+  exact 4 revisions slot-7 cited as successful at 22:56Z. Same artifact: succeeded once ~22:56Z, now failing 100% ~1h
+  later **absent any investigation churn** — which directly refutes candidate (2) (deploy-volume/capacity contention
+  generated by our own churn, "stopped the moment churn subsided"). Main independently confirmed: `00402-zsg`
+  `ContainerHealthy=False`/`ContainerReady=False` ("container failed to start and listen on PORT=8080 within timeout");
+  service traffic **100% on warm `00374-4pd`, 0% on the failing revision — PROD SAFE**. **Disposition (main's reopen
+  judgment — review left it to me):** NOT reverting the two `[INFRA] P0` checkboxes — their literal done-when ("a
+  freshly-cold-started instance passes the STARTUP TCP probe") WAS met 4× at claim time, so the claim was true; only its
+  _durability_ was over-read on a single lucky 4-sample window. Instead: the bar for treating this cold-start P0 as
+  **durably** closed is raised to **N-consecutive fresh cold-starts over a multi-hour window spanning quiet periods,
+  zero exit(0) failures**. Ongoing tracking stays in the companion finding-6 doc
+  (`/plans/active/issues/deployment_api_cloud_run_coldstart_flaky_exit0_blocks_prd_sa_cutover_2026_07_31.md`, P2,
+  `assigned_vm: planning`, open) — that is the live tracker; this doc's checkboxes stay flipped with this recurrence
+  noted. **Downstream gate:** any live-traffic cutover to a fresh revision (e.g.
+  `bucket_iam_write_protection_per_tier-018` P2.2e) MUST NOT proceed on a "resolved" reading of this doc — the
+  cold-start path is demonstrably still flaky; hold 100% traffic on the warm instance until finding-6's durable-close
+  bar is met. Review pinged slot 11 (mid-cutover) to hold; main concurs. No code shipped — doc reconciliation only.
 
-- **2026-07-25T05:55Z (slot 2, backend_engineer)** — Dispatched `deployment_api_sigabrt_crash_loop-002` (the
-  `[BACKEND] P1` todo). Root-caused via code inspection rather than another log-only pass: pulled the installed
-  `gunicorn`/`uvicorn` package source directly and traced the exact call order inside a forked worker — `post_fork`
-  (where `1adf54b` calls `faulthandler.enable()`) runs, then `Worker.init_process()` calls `self.init_signals()`, and
-  this service's `worker_class = "uvicorn.workers.UvicornWorker"` OVERRIDES that method with one that does
-  `for s in self.SIGNALS: signal.signal(s, signal.SIG_DFL)` — `Worker.SIGNALS` includes `SIGABRT`. So
-  `faulthandler.enable()`'s SIGABRT handler is silently reset to the kernel default microseconds after being installed,
-  on every single worker, every time — there was never a real handler in place by the time any actual SIGABRT fired,
-  which is exactly what "Uncaught signal: 6" with zero Python trace means. This also fully answers this session's
-  earlier open question (checked which revision/instance owned pid=29 at `04:27:19Z` via `gcloud logging read` — same
-  fresh `00274-s9g` instance, first log at `02:51:28Z`, kept serving requests after the crash — ruling out the
-  stale-instance hypothesis) and makes the stderr-buffering hypothesis moot (the handler was never armed, so there was
-  nothing to flush). Shipped `deployment-api@7ba17e2`: moved `faulthandler.enable()` to a new `post_worker_init` hook,
-  which gunicorn calls AFTER `init_signals()` — verified nothing later in the worker lifecycle (uvicorn's own `Server`
-  only ever installs SIGINT/SIGTERM handlers) touches SIGABRT's disposition again. 2 new tests, `quality-gates.sh`
-  PASSED. Checkbox flipped — the diagnostic question is answered; whether this actually stops the crash-loop (vs. just
-  making it produce a dump) is for the `[REVIEW]` todo below once this deploy is live and the next SIGABRT is read.
-
-- **2026-07-25T05:40Z (slot 4, review)** — Dispatched task `deployment_api_sigabrt_crash_loop-003` (the `[REVIEW] P2`
-  todo gated on "once the above BACKEND todo ships (or a subsequent SIGABRT does show a dump)"). Checked both branches
-  of that precondition — neither is met: (1) `git log` on `deployment_api/gunicorn.conf.py` / `deployment_api/main.py`
-  in this slot's fresh-pulled clone shows `1adf54b` (faulthandler.enable()) is still the newest observability commit —
-  no follow-up commit exists yet addressing why the `04:27:19Z` dump was missing; (2) `gcloud logging read` on
-  `run.googleapis.com%2Fvarlog%2Fsystem` for `"Uncaught signal"` since `2026-07-25T04:27:00Z` (now `05:40Z`, a ~73min
-  window vs. the measured ~20-40min crash cadence) returns exactly ONE row — the same `04:27:19.520761498Z pid=29` entry
-  already on record, no NEW occurrence to check for a dump. Live revision is still `uts-shared-deployment-api-00274-s9g`
-  (created `02:51:26Z`, confirmed via `gcloud run revisions list` — no newer revision has deployed). Not closing the
-  checkbox — genuinely not ready, not a judgment call. Releasing via `skip-current-task` (`reason_code: GATED`, ~30min
-  cooldown) rather than idling this slot on an unmet precondition, per main's 05:16Z note that repeat-redispatch of an
-  unchanged precondition is the known wasteful-not-harmful pattern this mechanism exists to bound.
-
-- **2026-07-25T05:25Z (slot 10, review)** — Corrected the false "STILL NOT LIVE" verdict from slots 2/6/10's own earlier
-  check this session: `deployment-api@1adf54b` HAS been live since `2026-07-25T02:51:26Z` (revision
-  `uts-shared-deployment-api-00274-s9g`, built from squash-merged PR #376 / `273c951`) — the repeated
-  `git merge-base --is-ancestor 1adf54b origin/main` check is structurally incapable of returning true after a
-  squash-merge promote (verified via content-diff instead: `faulthandler.enable()` is present in `origin/main`'s
-  `gunicorn.conf.py`, byte-identical to LDR). Filed the systemic verification-methodology bug as its own issue:
-  [deployment_promote_squash_ancestry_false_negative_2026_07_25.md](/plans/archive/issues/deployment_promote_squash_ancestry_false_negative_2026_07_25.md).
-  With the precondition now confirmed met, read the actual next SIGABRT occurrence (`04:27:19Z`, post-deploy) — no
-  faulthandler dump appeared on stderr for it (24h stderr sweep shows nothing between `01:03:36Z` and now). Per the
-  todo's own instruction, did NOT re-guess a root cause — filed a fresh evidence-backed `[BACKEND]` todo above for why
-  the dump is missing, plus a follow-on `[REVIEW]` todo to read the dump once it does appear. Checkbox left unchecked —
-  the diagnostic question ("what's the stuck call site") remains genuinely open, just for a new reason (missing
-  evidence, not an undeployed fix). No code shipped this entry (pure investigation + doc correction).
-
-- **2026-07-25T05:11Z (slot 10, review)** — Third consecutive dispatch (slot2→slot6→slot10) to re-check the same
-  precondition. Zero change since slot 6's 04:41Z check (~30 min prior): live revision still
-  `uts-shared-deployment-api-00274-s9g` / image tag `273c951`; `git merge-base --is-ancestor 1adf54b origin/main` still
-  fails; `1adf54b` still 13 commits behind `origin/live-defi-rollout` tip;
-  `gh pr list --repo IggyIkenna/deployment-api --state open` shows zero open PRs (no promote in flight). Since
-  prose-only flags in this log clearly aren't being actioned fast enough to stop the redispatch (slot 6's identical
-  recommendation went unaddressed for one full tick), escalated directly via `POST /api/agents/by-role/main/message`
-  (msg id 1939) requesting main add a `deployment-api-1adf54b-live` prerequisite gate to this backlog task —
-  workers/review slots don't have filesystem access to `backlog.yaml` (it isn't checked out in any slot worktree) so
-  this needs main's action. No code shipped (nothing to ship — the fix already shipped as `1adf54b`; still purely
-  wait-and-verify).
-- **2026-07-25T05:16Z (main, agt-52bb99)** — Replied to review msg 1939 (ack 1948). Correction to "needs main's action":
-  main is **also** barred from hand-editing `backlog.yaml` (the same HARD RULE — author plans, backend derives the
-  YAML), so main cannot attach the prereq directly. Verified the mechanism in code: the named-gate path exists
-  (`POST /api/prerequisites/{name}` sets values; `task.prereqs.prerequisites` gates dispatch) but 0 tasks currently use
-  it, and attaching THIS task is a `backlog.yaml` `prereqs.prerequisites` hand-tune that regen _preserves_
-  (`server/backlog.py`, the 2026-07-12 `backlog_regen_drops_handtuned_prereqs` durability fix) — an **operator** edit,
-  NOT a plan-authorable field (no per-todo prereq syntax; `gate_on_depends` gates plan/task completion, not a
-  deployment-state fact like "1adf54b is the live revision"). **Two actions, both surfaced to operator:** (1) [OPERATOR]
-  hand-tune `deployment_api_sigabrt_crash_loop-002` → `prereqs.prerequisites: [deployment-api-1adf54b-live]`, seed the
-  gate false, flip true once `git merge-base --is-ancestor 1adf54b origin/main` succeeds AND the live Cloud Run revision
-  image tag moves off `273c951`. **[PM] RETAGGED 2026-07-28 (workspace stale-gate audit) — MOOT, never hand-tuned.**
-  Superseded 9 minutes later by slot 10's `05:25Z` entry below (chronologically after this reply, listed above it in
-  this reverse-chronological log), which answered the exact same "is `1adf54b` live" question directly via content-diff
-  instead of the ancestor check this hand-tune gate was keyed on — `git merge-base --is-ancestor` is structurally
-  incapable of returning true post-squash-merge (see
-  `/plans/archive/issues/deployment_promote_squash_ancestry_false_negative_2026_07_25.md`). No `prereqs.prerequisites`
-  hand-tune was ever made; by `05:40Z` the doc had already moved on to a different, later precondition (waiting for the
-  next SIGABRT to actually produce a faulthandler dump). No operator action remains outstanding on this line. (2)
-  [BACKEND] P2 — make `PlanRegenLoop`/dispatch skip re-offering a task whose worker returned
-  "external-precondition-unchanged" (a cooldown or a worker-reported not-ready signal), so this waste-class self-limits
-  without a per-task hand-tune. Until then the re-dispatch is wasteful-not-harmful (worker fast-returns on the unchanged
-  precondition; no corruption).
-- **2026-07-24 (slot 2, backend_engineer)** — Correlated + audited per the todo, then went further once the named
-  hypothesis was refuted.
-  - **Correlation (live `gcloud logging read` against `uts-shared-deployment-api`, project `central-element-323112`)**:
-    pulled every `Uncaught signal: 6` entry from `run.googleapis.com%2Fvarlog%2Fsystem` over the last 3 days, then
-    cross-referenced the `run.googleapis.com%2Frequests` stream in ±2min and ±6min windows around several crashes (e.g.
-    `2026-07-24T22:31:25Z`, revision `uts-shared-deployment-api-00269-t66`, pid=188). Found **zero correlated heavy/slow
-    traffic** — the only requests nearby are trivial `/health` and `/api/health` probes at 3-7ms latency. `pid`s within
-    one revision climb monotonically over many hours (e.g. `00268-d2l`: 28 → 2874 across ~8h), meaning the crash hits
-    individual gunicorn **workers** repeatedly within the SAME long-lived container, not the master and not a full
-    container restart.
-  - **Eager-gRPC-client audit (the named hypothesis)**: grepped every route module reachable from `deployment_api.main`
-    for module-level (import-time) `firestore.Client(`/`pubsub_v1.*Client(`/ `SecretManagerServiceClient(` construction.
-    **None found** — every gRPC-based client construction in the repo (`health_routes.py`'s
-    `_check_pubsub`/`_check_secret_manager`/`_check_deployment_events`; `_ci_status_firestore_store.py`'s
-    `firestore_module_factory`) is inside a function, called lazily at request time, several with an explicit "lazy
-    cloud-SDK boundary" comment for exactly this reason. `_cfg = DeploymentApiConfig()` at `main.py:30` (module level)
-    is a pydantic-settings object with no client construction in `__init__`. **This hypothesis is REFUTED** —
-    `preload_app = True` is not planting a poisoned gRPC channel across the fork in this codebase today.
-  - **New evidence, mechanistic match**: read the installed `gunicorn/arbiter.py` directly
-    (`.venv/lib/python3.13/site-packages/gunicorn/arbiter.py:489-508`, `murder_workers()`) — confirmed gunicorn's own
-    Arbiter sends **exactly `signal.SIGABRT`** (`self.kill_worker(pid, signal.SIGABRT)`) to any worker whose heartbeat
-    file (`worker.tmp.last_update()`) is older than `timeout` (300s here, `deployment_api/gunicorn.conf.py:41`, "5
-    minutes for turbo data-status"). This is a 1:1 mechanistic match for the observed "signal 6" — it explains why
-    individual WORKER pids die (not the master), and it's consistent with per-worker heartbeat starvation rather than a
-    fork-time poisoned resource. **NOT fully confirmed**: the `WORKER TIMEOUT (pid:%s)` critical-level log line
-    gunicorn's arbiter emits immediately before the kill (`self.log.critical(...)`, same function) does **not** appear
-    anywhere in 7 days of Cloud Run logs (checked all log streams, not just stderr) — so this remains the leading,
-    evidence-backed hypothesis, not a closed case. (Confirmed separately: gunicorn's own logging pipeline DOES reach
-    Cloud Run stderr in general — e.g. an unrelated `asyncio.CancelledError` traceback from `_cancel_background_tasks`
-    inside `lifespan.py` shows up cleanly at `2026-07-24T13:30:43Z` — so the absence isn't a blanket "gunicorn logs
-    never reach Cloud Run" explanation; it's specifically the arbiter's own critical-log call that's unaccounted for.)
-  - **Most likely trigger for the >300s heartbeat gap**: cross-referencing the SIBLING issue doc
-    ([`deployment_registry_reaper_not_draining_stale_entries_2026_07_24.md`](deployment_registry_reaper_not_draining_stale_entries_2026_07_24.md))
-    Gap 2 — `_load_inventory`'s COLD path (`deployment_api/routes/deployments_inventory.py:2040-2073`) computes
-    `_compute_inventory` **synchronously under a lock, with no timeout and no `run_in_executor` wrap**, unlike the
-    reaper tick and the main sync loop (both already offloaded to a `ThreadPoolExecutor`). A synchronous call NOT
-    wrapped in an executor blocks the single asyncio event loop thread directly — which is exactly what would prevent
-    `UvicornWorker`'s heartbeat-notify callback (itself scheduled on that same event loop) from firing, starving the
-    gunicorn arbiter's heartbeat file past the 300s cutoff. That gap already has its own tracked `[BACKEND] P1` todo in
-    the sibling issue doc (todo 2, not yet shipped) — not duplicated here; flagging the connection is the useful
-    addition from this session's evidence.
-  - **Shipped**: `deployment-api@1adf54b` — `faulthandler.enable()` added to gunicorn's `post_fork` hook
-    (`deployment_api/gunicorn.conf.py`), so every worker now dumps a full all-threads Python stack trace to stderr on
-    ANY fatal signal (SIGABRT included) before dying. This is additive-only (no behavior change to request handling),
-    directly targets the exact diagnostic gap found above (today's crash leaves zero Python-level trace), and will
-    either confirm the arbiter-timeout hypothesis or reveal the true cause definitively on the next occurrence (expected
-    within ~20-40 min of deploy, per the measured cadence). `bash scripts/quality-gates.sh --no-fix` green (130s),
-    shipped via `quickmerge --agent --files`.
-  - **Handoff**: once the deploy carrying `1adf54b` reaches prod (LDR→staging promote per this repo's `staging` toggle —
-    NOT direct-to-main; verify via `gh pr list` / the promote workflow) and the next SIGABRT fires,
-    `gcloud logging read` the stderr stream for the `Fatal Python error` / `Current thread` faulthandler dump and update
-    this doc with the confirmed stuck call site. If it names `_compute_inventory`'s cold path, that directly validates
-    (and raises confidence on) the sibling issue doc's Gap-2 todo as the fix. If it names something else entirely, file
-    a fresh, evidence-backed BACKEND todo here with the exact stuck frame.
+- **2026-08-01T14:23Z (slot 9, review)** — Dispatched `deployment_api_sigabrt_crash_loop-029` (the `[REVIEW] P2`
+  `130c3a2` memory-profile-attribution todo). Verified `130c3a2` is genuinely built + deployable (direct
+  `docker create`/`cp` extraction of `00408-xd2`'s image confirms `log_rss_delta`/`memory-profile` instrumentation
+  present and wired into `health_overview.py`) but has never received real traffic: `gcloud run services describe` shows
+  100% traffic still on the pre-fix `00374-4pd` (warm since `2026-07-31T18:39:05Z`, 14h before the commit) per this
+  doc's own `2026-08-01T00:06Z` decision to hold cutover pending the companion coldstart doc's durable-close bar. The
+  one SIGKILL in the last 2 days (`07:47:39Z` on `00374-4pd`) predates the commit; zero `"memory-profile"` log lines
+  exist anywhere. Left the checkbox unflipped — this is a stricter negative than the todo's own "no SIGKILL yet"
+  fallback (the precondition itself isn't met), documented so the next investigator doesn't re-derive it. No code
+  shipped — pure verification, cites the companion doc as the actual blocker to watch.
+- **context-scout 2026-08-01**: populated context_scope (5 entries).

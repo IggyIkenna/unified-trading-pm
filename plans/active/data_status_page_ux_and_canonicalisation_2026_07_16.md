@@ -11,7 +11,9 @@ summary:
   guide; operator decisions are all resolved.
 status: active
 nature: process
-asset_group: [cross-cutting]
+asset_group:
+  [ui] # corrected 2026-07-30 (ui-tranche launch) -- was [cross-cutting]; title/summary are the
+  # deployment-ui + deployment-api data-status PAGE UX itself, not the underlying data pipeline
 stage: [meta]
 repos: [deployment-ui, deployment-api, instruments-service, unified-api-contracts, deployment-service]
 scope: [engineer, admin]
@@ -52,6 +54,14 @@ supersedes:
 superseded_by:
 depends_on:
 source: operator request 2026-07-16 (data-status page review) + multi-agent audit workflow wf_872e8051-00a
+context_scope:
+  [
+    /codex/02-data/honest-coverage-model.md,
+    /codex/02-data/availability-manifest-and-data-status.md,
+    /codex/06-coding-standards/ui-testing-layers.md,
+    unified-api-contracts/unified_api_contracts/internal/reference/instrument.py,
+    /plans/active/data_status_tab_and_downloads_remediation_2026_06_16.md,
+  ]
 ---
 
 # Data-status page — honest-coverage fix + UX & canonicalisation follow-ups
@@ -171,6 +181,8 @@ proving the lookup is generic/registry-driven across asset groups. Fix holds.
 
 Verified against `deployment-api@c19edcc` (fresh-pulled to `origin/live-defi-rollout` before checking); read-only
 verification, no code changed. Source: `tradfi_consolidated_native_ao_extract_2026_07_25.md` todo 6.
+
+- **context-scout 2026-08-01**: populated/refreshed context_scope (5 entries).
 
 ## P1 — Honest Coverage: remaining hardening
 
@@ -381,9 +393,9 @@ breakdown: CeFi chain-axis drift — completed checkbox evidence".
 
 ## P8 — Sports league-drilldown consistency + TEAMS data-correctness
 
-**Design guide.** Drillability is set per data_type by the `axis` in `SPORTS_DATA_TYPE_META`
-(`deployment-api/deployment_api/services/data_status/sports_helpers.py:77-219`): `per_league_*` → the response carries a
-`leagues` map → the UI's `hasLeagues` gate (`DataStatusTab.tsx:4288,5279`) renders a league drilldown; `global_*` →
+**Design guide.** Drillability is set per `data_type` by the `axis` in `SPORTS_DATA_TYPE_META`
+(`deployment-api/deployment_api/services/data_status/sports_helpers.py:77-219`): `per_league` → the response carries a
+`leagues` map → the UI's `hasLeagues` gate (`DataStatusTab.tsx:4288,5279`) renders a league drilldown; `global` →
 `per_league: None` → no league section at all. So some sources drill by league and some don't. Separately, the deeper
 per-fixture drill + downloads are hardcoded to `name === "FIXTURES"`
 (`DataStatusTab.tsx:5285,5385,5393,5433,5440,5462`).

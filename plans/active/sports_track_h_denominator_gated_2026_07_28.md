@@ -46,6 +46,13 @@ source: >-
 assigned_role: data_engineering
 sequential: false
 drift_direction: advance-code
+context_scope:
+  [
+    /plans/active/sports_track_h_denominator_prereqs_2026_07_28.md,
+    /plans/active/sports_consolidated_native_ao_extract_2026_07_25.md,
+    /plans/active/issues/sports_league_id_namespace_migration_2026_07_20.md,
+    /plans/active/sports_consolidated_closeout_2026_07_19.md,
+  ]
 ---
 
 # Sports Track H — registry-aware honest-coverage denominator (gated)
@@ -85,3 +92,5 @@ drift_direction: advance-code
 
 See `sports_track_h_denominator_prereqs_2026_07_28.md`'s Progress Log for the split rationale. The original plan's Track
 H line is replaced with a non-checkbox pointer to this plan (so it stops being offered as an open todo there).
+
+- **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).

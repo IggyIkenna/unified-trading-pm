@@ -9,7 +9,10 @@ summary: >-
   discovered entangled in the same files, and scoped the remaining benchmark + live-VM-correction work as tracked todos.
 status: active
 nature: process
-asset_group: [cross-cutting]
+asset_group:
+  [ci] # corrected 2026-08-02 (/ag-closeout-audit cross-cutting, operator-ruled) -- was [cross-cutting]; the subject is
+  # the CI/CD-escalation vs scheduled-task slot reserve (CI pipeline mechanics driving the capacity split), squarely
+  # ci-tranche, not generic cross-AG content.
 stage: [meta]
 repos: [agent-orchestrator, unified-trading-pm, instruments-service]
 scope: [engineer, admin]
@@ -22,7 +25,7 @@ related:
     /plans/active/issues/cloud_build_unified_api_contracts_publish_ordering_race_2026_07_29.md,
   ]
 created: 2026-07-29
-last_updated: 2026-07-29
+last_updated: 2026-07-30
 parent_epic: infrastructure_master
 assigned_vm: NA
 execution_scope: local-only
@@ -213,19 +216,14 @@ From `/plans/active/issues/fleet_wide_qg_capacity_crisis_continues_day2_2026_07_
       teens. The remaining activity is now concentrated on `instruments-service` specifically, which on investigation
       turned out to be a DIFFERENT, separate, much bigger problem — see the new P0 issue immediately below, not a
       continuation of the host-contention story this todo was tracking.
-- [ ] [OPERATOR] **NEW, P0 — GitHub Actions is down fleet-wide right now.** Found while investigating the
-      instruments-service `ldr_qg_failure` spike above: every workflow on every repo (including PM itself and
-      `deployment-ui`, an unrelated non-Python/non-self-hosted stack) is failing instantly with `startup_failure` and 0
-      jobs created — PM's own last 60 runs (2h12m span) are 60/60 `startup_failure`. Strong circumstantial evidence
-      (July Actions spend $1,112.69, matching the ~$1,150-1,200/mo baseline this account has hovered near) points at a
-      GitHub Actions spending-limit cap, but the actual limit value isn't readable via the API this session has
-      (`/users/{user}/settings/billing/actions` is deprecated, 410). Needs the operator to check
-      https://github.com/settings/billing directly — full writeup + evidence:
-      `/plans/active/issues/github_actions_billing_wall_recurrence_2026_07_29.md` (repointed 2026-07-30 by
-      `/plan-reconcile`: the originally-cited `github_actions_total_fleet_outage_startup_failure_2026_07_30.md` filename
-      never existed anywhere in the corpus; this doc is the one carrying that fleet-wide 0-step `startup_failure`
-      writeup + the `settings/billing` evidence). Pushed a notification given the operator is away ~6h and this is the
-      one thing this session cannot fix itself.
+- [x] ✅ **RESOLVED 2026-07-31 — GitHub Actions billing wall cleared, fleet running clean.** Was: NEW P0, GitHub Actions
+      down fleet-wide (every workflow on every repo failing instantly with `startup_failure`, 0 jobs created), strong
+      evidence of a spending-limit cap. Re-verified live 2026-07-31T08:16Z: `unified-trading-pm` runs completing with
+      real durations (67s-1m9s, incl. a 9-step job that ran and failed on its own merits, not `jobs:[]`);
+      `instruments-service` `quality-gates-v2` ran a full 25m28s and the LDR→main promote chain
+      (`quality-gates-v2`→`main-backmerge-to-ldr`→`Semver Agent`) completed clean end-to-end — the exact fleet-wide
+      promote path the incident had blocked. Full evidence + timeline in
+      `/plans/active/issues/github_actions_billing_wall_recurrence_2026_07_29.md`.
 
 ## Codex SSOTs
 
@@ -252,3 +250,36 @@ From `/plans/active/issues/fleet_wide_qg_capacity_crisis_continues_day2_2026_07_
   session before my own fix landed, confirmed same resolution. Biggest finding: GitHub Actions is currently down
   fleet-wide (likely a spending-limit cap) — filed as its own P0 issue doc, pushed a notification, left for the operator
   since it needs their billing UI.
+
+- **na-eligibility-audit 2026-07-30**: KEEP-NA, valid — sole open todo is `[OPERATOR] P0` — needs the operator's own
+  github.com/settings/billing UI; `locked_by: live-defi-rollout`.
+- **2026-07-30 (rulings-closeout pass, separate session)** — re-verified this doc's state per a workspace-wide sweep
+  closing out recorded operator rulings implying unshipped work. Both `[OPERATOR]`-class actions this doc originally
+  flagged as deliberately-left-alone (reclaiming another slot's foreign uncommitted `autospawn.py` WIP; restarting the
+  live orchestrator VM) are confirmed **already executed** by the `/autonomous` continuation recorded in §3/§4 above —
+  independently re-verified rather than trusted at face value: `agent-orchestrator@b9d6190` exists and is a confirmed
+  ancestor of the repo's current `origin/live-defi-rollout` HEAD (`81f54a8`, `git merge-base --is-ancestor` confirmed).
+  Nothing left to re-attempt from that pair. The one remaining open item (§6, GitHub Actions billing wall) is correctly
+  `[OPERATOR]`-gated — genuinely needs the operator's own `github.com/settings/billing` access, not something any agent
+  can resolve. No action taken; no changes needed.
+- **2026-07-31** — GitHub Actions billing wall confirmed cleared (live `gh run list`/`timing` checks on
+  `unified-trading-pm` and `instruments-service`, real run durations + a completed LDR→main promote chain, vs. the
+  incident's `run_duration_ms:1000`/`jobs:[]` signature). Flipped the sole remaining todo (§6) to done. **All 8/8 todos
+  now done — plan is complete, left `status: active`/not archived per operator instruction** (not yet run through the
+  archival ritual).
+- **context-scout 2026-08-01**: verified the 2 pre-existing context_scope entries still resolve and are relevant (both
+  mirror the doc's own Codex SSOTs section) — kept unchanged, refreshed (2 entries).
+- **na-eligibility-audit 2026-08-02** (tranche `ci`, autonomous): **KEEP-NA — archival PARKED as
+  `BLOCKED-OPERATOR-DECISION`, no autonomous action taken.** Mechanically this doc is a textbook ARCHIVE candidate: 0
+  open checkboxes (`grep -cE '^- \[ \]'` = 0), all 8/8 todos done with cited evidence, and CLAUDE.md's HARD RULE says a
+  plan with every todo done + unlocked MUST be archived immediately. It is NOT archivable autonomously for two
+  independent reasons, both verified in-file: (1) `locked_by: live-defi-rollout` / `locked_since: 2026-05-21` — the
+  archival ritual requires `[unlock-plan]`, which the skill states must be asked for, never taken autonomously; and (2)
+  the 2026-07-31 Progress Log entry records a standing instruction to the contrary — "plan is complete, left
+  `status: active`/not archived **per operator instruction**". Per the "never re-litigate an established ruling" rule
+  that citation alone holds the doc as-is; it is surfaced here only because a complete-but-`active` locked plan will
+  otherwise be re-examined by every future audit pass. Options: **A [WORKER REC]** — operator confirms the instruction
+  has served its purpose, issues `[unlock-plan]`, and the doc runs the standard 6-step archival ritual; **B** — keep it
+  `active` deliberately and record the reason + a review date in-file so future passes stop re-flagging it; **C** —
+  clear `locked_by` only (it reads as a stale branch-name lock, not an owner) and leave `status: active` otherwise
+  untouched.

@@ -17,7 +17,7 @@ created: 2026-03-27
 authoritative_for: [pre-implementation unknowns-questionnaire locked decisions]
 referenced_by:
 owner:
-last_reviewed: 2026-05-17
+last_reviewed: 2026-10-18
 code_refs:
 ---
 

@@ -8,7 +8,7 @@ summary: >-
   remediation, 2026-07-24).
 status: active
 nature: process
-asset_group: [prediction, cefi]
+asset_group: [prediction]
 stage: [meta]
 repos:
   [agent-orchestrator, deployment-api, deployment-service, e2e-testing, features-service, fund-administration-service]
@@ -45,6 +45,12 @@ source: >-
   cross-venue arb+coverage). This file carries the cross-venue arb + honest-coverage third verbatim.
 assigned_role: data_engineering
 drift_direction: advance-code
+context_scope:
+  [
+    /plans/epics/predictions_master.md,
+    /codex/04-architecture/cross-venue-prediction-arb-detection.md,
+    /plans/active/prediction_live_clob_depth_capture_2026_07_24.md,
+  ]
 ---
 
 # Prediction cross-venue arb detection + honest-coverage correctness
@@ -61,6 +67,40 @@ drift_direction: advance-code
 > `plans/archive/2026_07/prediction_venue_perps_and_live_clob_depth_2026_06_20.md`.
 
 ## Progress Log
+
+- **na-eligibility-audit 2026-08-02 (prediction tranche, autonomous)**: KEEP-NA, **2 stale items cited** — 9 open, count
+  unchanged, re-verified live (`grep -cE '^\s*- \[ \]'` = 9, matching the 9 verdicts below). In scope this run because
+  of a real post-marker content change (`3798d1674`, 2026-07-31): the fixture-pairing residual todo gained a
+  Partial-progress block recording that MLB shipped across `unified-api-contracts@1dddc680` /
+  `instruments-service@62a8b1d8` / `strategy-service@d71c8aa4`, with the remaining team-name-canonicaliser half spun out
+  as batch6's own `[DATA] P2` "team-name alias tables" todo. That item therefore already carries its extraction citation
+  and needed no fix. **Two siblings did not**, both confirmed extracted verbatim by the Phase-2 conflict-check and both
+  now cited in place: the `[UAC] P2` politics/geo item → batch6's `[UAC] P2` (whose own `Done when` ends "and the source
+  doc's checkbox is flipped"), and the `[SCRIPT] P2` cqg recent-window re-enumeration → batch4's `[SCRIPT] P2` (sole
+  owner since batch6's duplicate copy was resolved 2026-07-31). Rubric-3 citation fixes only — `assigned_vm` untouched,
+  no checkbox flipped, zero backlog impact. The remaining six are re-confirmed genuinely NA on the 2026-07-30 marker's
+  own reasoning, unchanged: the POLYMARKET instrument-lifecycle item is a self-declared BIG data-correctness finding
+  spanning 3 repos plus a UAC taxonomy judgment; the rest are a deployment-service tarball-race design question, a
+  per-instrument arb-pairing design call, and manifest polish riding the next single walk. **Also fixed this run
+  (hygiene, same file)**: the (3c) sub-block and the 2026-07-31 partial-progress note had drifted to 32-60 spaces of
+  leading indentation, which parses as an indented CODE BLOCK inside the list item — so prettier preserved it verbatim
+  and every corpus-wide pass re-indented it deeper (measured +8 per pass across three commits, max line 189 chars in an
+  898-line doc against the 1000-line hard cap). Re-indented to list-content depth so it renders as prose and prettier
+  can normalise it. **Frontmatter note settled at the code level**: the `execution_scope: orchestrator-agent` +
+  `assigned_vm: NA` pairing the prior marker reported as a contradiction is cosmetic —
+  `regen_backlog_from_plan.py::_resolve_plan_vms()` maps the `NA` sentinel to an empty vm set, so ingestion is blocked
+  regardless of `execution_scope`. Not a mis-dispatch hazard; no flip, no operator ruling needed.
+
+- **na-eligibility-audit 2026-07-30 (prediction tranche)**: KEEP-NA, valid — 9 open. Three (fixture-pairing residual,
+  politics/geo canonicalization, cqg recent-window re-enumeration) are CONFLICT: claimed verbatim by
+  `prediction_satellite_ao_dispatch_batch6_2026_07_29.md` todos 7/8/9 (and the cqg one doubly, by `batch4` todo 3 — see
+  `issues/prediction_closeout_tag_and_batch_claim_findings_2026_07_30.md` Finding 2). The remaining six are genuinely
+  NA: the POLYMARKET instrument-lifecycle item is a self-declared BIG data-correctness finding spanning 3 repos plus a
+  UAC taxonomy judgment (does `EXPECTED_INSTRUMENT_NOT_LISTED` belong in `EMPTY_CONFIRMED_REASONS`?) plus a manifest
+  re-walk; the rest are a deployment-service tarball-race design question, a per-instrument pairing design call, and
+  NICE-TO-HAVE manifest polish riding the next single walk. Frontmatter note: this doc declares
+  `execution_scope: orchestrator-agent` with `assigned_vm: NA` — reported as part of a 7-doc contradiction class in this
+  run's summary, not silently flipped.
 
 ### 2026-06-24 (autonomous /autonomous) — FULL ARB-DETECTOR STACK SHIPPED (4 repos) + operational findings
 
@@ -315,14 +355,31 @@ Confirmed feasible — Kalshi GAME-series EVENT tickers encode the fixture clean
         the sports-prediction instrument record) + `PredictionMarketCrossVenueMapping` (the
         `kalshi_event_ticker`/`polymarket_condition_id`/`api_football_fixture_id` join row).
 
-        (3c) the arb-layer consumer (features/strategy) groups the two venues' instruments by
-                        `SportsFixtureKey.pairing_key()` WITHIN the shared `SPORTS_{LEAGUE}_{BETTYPE}` cqg → the same-game arb pair.
-                        Needs a cross-venue team-name canonicaliser (Kalshi "Seattle" ↔ Polymarket "Seattle Mariners"/"Mariners") —
-                        extend the existing `get_canonical_team_for_polymarket` maps with Kalshi city/abbrev aliases, validated vs
-                        REAL paired samples (no false pairs — operator). Repos:
-                        unified-api-contracts (mapping populate + team canon) + instruments-service (sports-event link on prediction
-                        enum) + features-service/strategy-service (arb grouping). Provenance: operator "parse fixture ids" 2026-06-23
-                        (residual after parser UAC@3effe2fc).
+    (3c) the arb-layer consumer (features/strategy) groups the two venues' instruments by
+    `SportsFixtureKey.pairing_key()` WITHIN the shared `SPORTS_{LEAGUE}_{BETTYPE}` cqg → the same-game arb pair. Needs a
+    cross-venue team-name canonicaliser (Kalshi "Seattle" ↔ Polymarket "Seattle Mariners"/"Mariners") — extend the
+    existing `get_canonical_team_for_polymarket` maps with Kalshi city/abbrev aliases, validated vs REAL paired samples
+    (no false pairs — operator). Repos: unified-api-contracts (mapping populate + team canon) + instruments-service
+    (sports-event link on prediction enum) + features-service/strategy-service (arb grouping). Provenance: operator
+    "parse fixture ids" 2026-06-23 (residual after parser UAC@3effe2fc).
+
+    **Partial progress 2026-07-31 (`prediction_satellite_ao_dispatch_batch6-008`, slot 14)** — real, tested code shipped
+    for MLB across 3 repos (`unified-api-contracts@1dddc680`, `instruments-service@62a8b1d8`,
+    `strategy-service@d71c8aa4`; full evidence in batch6's own Progress trail): (3a)/(3b) `_build_mapping()` now stamps
+    `PredictionMarketCrossVenueMapping.api_football_fixture_id` (was computed then silently discarded); Kalshi's
+    `_parse_market` now stamps `canonical_instrument_id` via `build_fixture_id`/`build_team_id` for every sports league
+    (was Polymarket-only); (3c) `strategy-service`'s arb-layer consumer needed NO new grouping logic
+    (`_on_tick_cross_venue_prediction` was already fully venue/league-agnostic) — only a live `PREDICTION_ARB_MLB`
+    catalogue slot to route MLB ticks into it. `mapped_sport_event_id` (`CanonicalPredictionMarket`, the field this
+    item's (3b) originally named) was investigated and found to be DEAD/unwired in production — a separate
+    `PredictionMarketMapper.map_market()` pipeline, never called by `build_cross_venue_mapping` or any of its consumers,
+    only ever populated by test code — so populating it would not have advanced the real arb-pairing mechanism;
+    `api_football_fixture_id` on `PredictionMarketCrossVenueMapping` is the field this pairing pipeline actually
+    reads/writes, and that one is now populated. **Still open**: the team-name canonicaliser this sub-item explicitly
+    calls for was NOT built — confirmed via direct code reads that NO alias registry exists for MLB/NFL/NBA/tennis
+    anywhere in this codebase (only soccer has one); building it unvalidated would risk exactly the false-pair outcome
+    this item's own text warns against. Tracked as its own new todo:
+    `prediction_satellite_ao_dispatch_batch6_2026_07_29.md`'s `[DATA] P2` "team-name alias tables" item.
 
 ### 2026-06-23 (autonomous) — P0 DATA-CORRECTNESS: 142k POLYMARKET empty_confirmed inflated by NULL instrument lifecycle (operator drill-down — CONFIRMED)
 
@@ -392,7 +449,13 @@ already on LDR.
       (which Kalshi political series resolve on the SAME event+criteria as a Polymarket group) + possibly the World
       category
   - new shared geo groups. Repo: unified-api-contracts (classifiers + maybe canonical_groups) + instruments-service (add
-    "World" category once mapped). Provenance: operator "do proper kalshi / more crossover" 2026-06-23.
+    "World" category once mapped). Provenance: operator "do proper kalshi / more crossover" 2026-06-23. **EXTRACTED —
+    sole executing owner is
+    [`prediction_satellite_ao_dispatch_batch6_2026_07_29.md`](/plans/active/prediction_satellite_ao_dispatch_batch6_2026_07_29.md)'s
+    `[UAC] P2` "Politics/geo cross-venue canonicalization — structured audit + build" todo** (`status: active`,
+    `assigned_vm: planning`), which names this item verbatim as its `Source:` and whose `Done when` explicitly ends "and
+    the source doc's checkbox is flipped". Citation added by `/na-eligibility-audit` 2026-08-02 — checkbox stays `[ ]`
+    as the tracking anchor, `assigned_vm` untouched.
 - [x] [UAC] P1. **Cross-venue canonicalization BREADTH audit — close the non-crypto gaps (MEASURED 2026-06-24, operator
       "kalshi isn't as verbose as polymarket? sports not just soccer, weather, politics across ALL asset classes")**:
       empirical catalogue snapshot (`instruments-store-pred-prd`, day=2026-06-23): **KALSHI 34 cqg groups / POLYMARKET
@@ -682,7 +745,15 @@ live `status=open` is unauth-OK so live wasn't broken by it — the `/historical
       enumerated window (e.g. 2026-06-20..22) with the fixed classifier so those dates' catalogue also carries real cqg
       (rides the 1.2 Kalshi recent-window enumeration). Deep history is the bulk-tick-seed (no per-date catalogue) →
       covered by the BATCH re-walk above. Repo: instruments-service. Provenance: operator partition-completeness Q
-      2026-06-23.
+      2026-06-23. **EXTRACTED — sole executing owner is
+      [`prediction_satellite_ao_dispatch_batch4_2026_07_26.md`](/plans/active/prediction_satellite_ao_dispatch_batch4_2026_07_26.md)'s
+      `[SCRIPT] P2` "cqg recent-window catalogue re-enumeration with the already-fixed classifier" todo**
+      (`status: active`, `assigned_vm: planning`), which names this item verbatim as its `Source:`. batch6's duplicate
+      copy of the same extraction was resolved 2026-07-31 (checked `[x]` in place with a "DUPLICATE — not independently
+      executed" note plus a `## Deferred` section naming batch4 todo 3 as sole owner), per
+      [`issues/prediction_closeout_tag_and_batch_claim_findings_2026_07_30.md`](/plans/active/issues/prediction_closeout_tag_and_batch_claim_findings_2026_07_30.md)
+      Finding 2 — so there is exactly ONE executing owner. Citation added by `/na-eligibility-audit` 2026-08-02 —
+      checkbox stays `[ ]` as the tracking anchor, `assigned_vm` untouched.
 
 ### 2026-06-26 (autonomous /autonomous) — Kalshi fallback path fixed; IS enum + Polymarket book backfill VMs launched; stale-image alert shipped
 
@@ -855,3 +926,8 @@ themselves required manual VM backfill triggers.
 - **MONITOR**: Arb detector `prediction-arb-detector-20260627-091140` (RUNNING since 09:11 UTC) — stall alert has been
   firing to `#paper-trading-alerts` since ~09:41 UTC (STALL_ALERT_TICKS=3, ~10-min ticks). Non-zero `two_way_on_both`
   pairs expected after MTDS restart post-IS-run.
+
+- **na-eligibility-audit 2026-07-30** (tranche=cefi, autonomous): KEEP-NA, valid - dominated by `[DESIGN]`/`[UAC]`
+  cross-venue arb-pairing and politics/geo canonicalization calls the doc says would create FALSE arb pairs if
+  blanket-mapped.
+- **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).

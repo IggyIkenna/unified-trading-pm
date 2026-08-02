@@ -42,8 +42,8 @@ related:
     /plans/active/canonical_id_builder_retrofit_checklist_2026_07_08.md,
     /plans/active/issues/instrument_id_format_canonicalization_2026_07_08.md,
     /plans/active/cefi_consolidated_closeout_aggregated_sources_2026_07_24.md,
-    /plans/active/cefi_satellite_ao_dispatch_batch1_2026_07_25.md,
-    /plans/active/cefi_satellite_ao_dispatch_batch1_finalize_2026_07_25.md,
+    /plans/archive/2026_07/cefi_satellite_ao_dispatch_batch1_2026_07_25.md,
+    /plans/archive/2026_07/cefi_satellite_ao_dispatch_batch1_finalize_2026_07_25.md,
     /plans/active/cefi_consolidated_native_ao_extract_2026_07_25.md,
     /plans/active/cefi_consolidated_native_ao_extract_2026_07_25_finalize.md,
   ]
@@ -74,6 +74,15 @@ source:
   3-agent cefi plan/issue audit + direct verification (slot-3, 2026-07-18) at operator request ("consolidate all
   remaining cefi issues/plans into one plan referencing the others so we can close them off once and for all");
   restructured 2026-07-25 into a 4-child split (read-only design pass + operator-resolved ambiguities cefi.1-4).
+context_scope:
+  [
+    /codex/02-data/availability-manifest-and-data-status.md,
+    /codex/02-data/pipeline-mode-partition.md,
+    /codex/04-architecture/instruments-service-as-ssot-for-mtds.md,
+    /codex/05-infrastructure/vm-launcher-runbook.md,
+    /codex/06-coding-standards/read-time-filter-pushdown.md,
+    /plans/active/cefi_consolidated_closeout_aggregated_sources_2026_07_24.md,
+  ]
 ---
 
 # CeFi consolidated close-out
@@ -170,9 +179,17 @@ Phases 1/1b/1c/2/5 sections show 0 remaining open todos.
 
 - **Vehicle**: `plans/active/issues/cefi_residual_followups_after_honest_done_2026_07_17.md` (+ blueprint
   `_cefi_canonical_blueprint_2026_07_17.md`). Phase A (code on `main`) ✅ · Phase B (deploy) ✅ · Phase C (4 scripts
-  dry-run-clean) ✅ · **Phase D/E (drain + `--apply`) tracked in the forked child plan.**
-- **Close-out criterion**: the operator's `ADAF0:USTF0.parquet` is canonical on all four surfaces, verified live; each
-  script's `--dry-run` re-run asserts 0 further changes (idempotency).
+  dry-run-clean) ✅ · **Phase D/E (drain + `--apply`) — DONE, see checkbox below.**
+- [x] ✅ [PM] P0. **Execute the minutes-gap hybrid cutover (Phase D/E: drain + `--apply` for Scripts 1-4)** — DONE
+      2026-07-27. Scripts 2 (filename rename), 3 (manifest dedup v2), 4 (eu-twin drop) and Script 1 (parquet CONTENT
+      backfill — true corpus scope measured at ~4.5M files, executed as an iteratively-resharded 42+-VM fan-out) all
+      finished with every shard `EXIT_STATUS=0`; idempotency re-verified live (0 further planned changes on a
+      corpus-wide `--dry-run` re-run). The operator's `ADAF0:USTF0.parquet` equivalent
+      (`BITFINEX-FUTURES:PERPETUAL:ADA-USDT@LIN`) confirmed canonical on GCS filename / parquet `instrument_id` column /
+      manifest key. Full evidence (drain/consolidate/snapshot, per-script dry-run+apply logs, the full VM campaign):
+      `/plans/archive/2026_07/cefi_migration_cutover_and_track8_completion_2026_07_25.md` (todo 3, archived).
+- **Close-out criterion**: the operator's `ADAF0:USTF0.parquet` is canonical on all four surfaces, verified live (MET,
+  above); each script's `--dry-run` re-run asserts 0 further changes (idempotency — MET, above).
 - **Subsumes / closes on cutover**: `cefi_mtds_writer_raw_symbol_vs_canonical_eu_namespace_mismatch_2026_07_15.md`
   (relabel + purge `--apply`), `instrument_id_format_canonicalization_2026_07_08.md` (id-format traces),
   `instruments_remaining_work_audit_2026_07_10.md` (BYBIT-SPOT anomaly).
@@ -213,6 +230,31 @@ baselines are drafted, ungated, as candidates 3/4 of `cefi_consolidated_native_a
 checkpoints (timing-coupled to the backfill) are in the forked
 `cefi_track2_coverage_backfill_checkpoints_2026_07_25.md`.
 
+**Reconciled 2026-07-30** (finalize-001, slot 10) — 3 of 5 sub-checkpoints have genuine, verified evidence; the
+POST-BACKFILL pair does NOT (the backfill VM was preempted mid-run, see below) and stays unflipped:
+
+- [x] ✅ [DATA] P1. **Resume the coverage backfill** — DONE 2026-07-27 (slot-6). Launched
+      `cefi-queue-heavy-binancefutu-x17-20260727-210013` (SPOT, N=1 Tardis cap satisfied), confirmed RUNNING with
+      progress climbing over 2+ checks. Full evidence: `cefi_track2_coverage_backfill_checkpoints_2026_07_25.md` todo 1.
+- [x] ✅ [DATA] P1. **MID-BACKFILL `/data-pipeline-check-is` checkpoint** — DONE 2026-07-28 (slot-6). Report:
+      `instruments-service/pipeline_e2e_check_reports/data_pipeline_e2e_check_is_2026_03_15.md` (run date 2026-03-15;
+      live-leg `total=26 passed=21 failed=1 ambiguous=0 skipped=4`, 1 genuine gap filed as
+      `issues/cefi_coinbase_cde_urdi_zero_records_2026_07_28.md`). Full evidence: gating plan todo 2.
+- [x] ✅ [DATA] P1. **MID-BACKFILL `/data-pipeline-check-mtds` checkpoint** — DONE 2026-07-28 (slot-6). Report:
+      `plans/audit/results/data_pipeline_e2e_check_mtds_2026_03_15.md` (run date 2026-03-15; root-caused failures to a
+      launcher guard scoping bug, filed as
+      `issues/mtds_backfill_launcher_guard_overapplies_to_nontardis_venues_2026_07_28.md`, not a data-correctness
+      regression). Full evidence: gating plan todo 3.
+- [ ] [DATA] P1. **POST-BACKFILL `/data-pipeline-check-is` final gate** — **NOT DONE.** The backfill VM was **preempted
+      2026-07-28T10:51 UTC** at only ~2.3% of the target span (`compute.instances.preempted`, confirmed via
+      `gcloud compute operations list`); no relaunch has occurred since. Running this gate against a 2.3%-complete, dead
+      backfill would misrepresent it as finished — declined per the data-pipeline-correctness HARD RULE. See
+      `issues/cefi_track2_backfill_vm_preempted_no_recovery_2026_07_30.md` for the relaunch todo.
+- [ ] [DATA] P1. **POST-BACKFILL `/data-pipeline-check-mtds` final gate + new coverage %** — **NOT DONE**, same blocker
+      as above. **No new coverage % supersedes the archived 50.79%** — that measurement is gated on this checkpoint
+      genuinely running post-completion. (The 2026-07-27 pre-launch baseline, 44.96%, is NOT the post-backfill number
+      and should not be cited as one.)
+
 ## Track 3 — Manifest completeness axis (SEPARATE from id-format) · P1
 
 - **Source**: `data_completion_cefi_2026_07_15.md` — a DIFFERENT canonicalization axis: manifest `pipeline_mode`
@@ -239,7 +281,7 @@ checkpoints (timing-coupled to the backfill) are in the forked
 ## Track 5 — Adapter canonical-ID-builder retrofit (RE-DRIFT prevention, post-migration) · P2
 
 - **Sources**: `issues/instruments_docs_audit_outstanding_items_2026_07_08.md` (B1 — only ~4/63 adapters route through
-  the shared canonical-id builder); `canonical_id_builder_retrofit_checklist_2026_07_08.md` (FI_/FF_ Kraken-Futures
+  the shared canonical-id builder); `canonical_id_builder_retrofit_checklist_2026_07_08.md` (FI*/FF* Kraken-Futures
   13-instrument collision, unresolved).
 - **Why separate**: Track 1's scripts are one-time DATA migrations; they do NOT change the ~59/63 adapters that stamp
   ids ad hoc, so new writes can re-drift unless retrofitted. This is the durability half of "canonical everywhere."
@@ -259,9 +301,10 @@ Real but non-blocking, each in its own doc; listed for completeness so nothing i
   venues → read from `VENUE_DATA_TYPE_CAPABILITIES`.
 - `issues/cefi_hl_aster_batch_data_gaps_2026_06_22.md` — `DATA_TYPE_CAPABILITY_REGISTRY` missing entries; consolidator
   incremental no-op root cause never fixed (worked around); Tardis HTTP-400 from IS-catalog missing `available_to`.
-- `issues/mtds_ungated_test_families_2026_07_17.md` — reader-surface test
-  (`test_canonical_parquet_reader_integration.py`) sits in the ungated `tests/integration/**` (`RUN_INTEGRATION=false`),
-  so the D3 reader-bridge half of Track 1 has **no CI enforcement** yet.
+- `/plans/archive/issues/mtds_ungated_test_families_2026_07_17.md` — reader-surface test
+  (`test_canonical_parquet_reader_integration.py`) sat in the ungated `tests/integration/**` (`RUN_INTEGRATION=false`).
+  **Resolved and archived 2026-07-31**: that doc's own todo 4 folded this file (credential-free, 74/74 passing) directly
+  into `PYTEST_UNIT_DIR` — the D3 reader-bridge half of Track 1 now HAS CI enforcement.
 - `issues/cefi_batch_manifest_blank_instrument_type_on_failure_2026_07_12.md` — blank-itype `attempted_failed` re-tag,
   gated on `cefi-recapture-sweep-complete` (still false).
 - `issues/cefi_onchain_perp_batch_venue_allowlist_gap_2026_07_12.md` — `lighter` Tardis entitlement
@@ -301,9 +344,12 @@ Real but non-blocking, each in its own doc; listed for completeness so nothing i
 > The operator reviewed the audit and directed a pre-migration close-out. Each maps to a source doc; archive the source
 > when its item lands.
 
-- **DERIBIT missing-quote fix + `prod/catalog.parquet` rebuild** → forked to
-  `/plans/archive/2026_07/cefi_migration_cutover_and_track8_completion_2026_07_25.md` (todo 1) — see the Reachability
-  map above.
+- [x] ✅ [BACKEND] P0. **DERIBIT missing-quote fix + `prod/catalog.parquet` rebuild** — DONE
+      `instruments-service@d72edcf7` (adapter/builder fix — DERIBIT `instrument_id` always `BASE-QUOTE`) +
+      `instruments-service@b2e084fa` (Phase-−1 gate extended with the quote-mandatory assertion), both 2026-07-18;
+      live-verified 2026-07-27 against the 429,129-row `prod/catalog.parquet`: `GREEN=True`, 0 `:PERP:`, 0
+      id!=canonical, **0 missing-quote**. Full evidence:
+      `/plans/archive/2026_07/cefi_migration_cutover_and_track8_completion_2026_07_25.md` (todo 1, archived).
 - [x] ✅ [BACKEND] P0. **Remove the UAC-seed catalogue fallback — catalogues FAIL LOUD** — DONE
       `market-tick-data-service@3253cae3`. New `InstrumentCatalogUnavailableError(RuntimeError)`; cefi/defi/tradfi
       `list_instruments` + sentinel paths now RAISE on absent/empty/schema-drift; off-season empty sports stays honest.
@@ -313,8 +359,12 @@ Real but non-blocking, each in its own doc; listed for completeness so nothing i
       FILL on the Track-2 coverage backfill, not a reclass.
 - **AUDIT the UAC per-venue seed fallback's blast radius** → dispatched as candidate 9 of
   `cefi_consolidated_native_ao_extract_2026_07_25.md`.
-- **[OPERATOR] Decide whether to remove the UAC per-venue seed fallback** → forked to
-  `cefi_misc_audits_and_hygiene_2026_07_25.md` (non-dispatchable, feeds off the audit above).
+- [x] ✅ [PM] P1. **Decide whether to remove the UAC per-venue seed fallback — RULING: KEEP, do not remove** (deferred,
+      not declined). Forked to `cefi_misc_audits_and_hygiene_2026_07_25.md`, ruled 2026-07-26 (retagged
+      `[OPERATOR]`→`[PM]` 2026-07-28): all 3 real production callers currently depend on the fallback firing (2 by
+      explicit design), removing it now would reproduce the silent-coverage-loss regression the 2026-07-18
+      `mtds@3253cae3` ruling eliminated for CEFI. Full audit + revisit trigger:
+      `issues/uac_per_venue_seed_fallback_removal_deferred_2026_07_26.md` (unified-trading-pm@2a6a7db62).
 - [x] ✅ [DOCS] P1. **Upgrade the `data-pipeline-check-mtds` skill** — DONE `unified-trading-pm@ca3aebfc7` (DERIBIT
       futures_chain negative check, DERIBIT/BINANCE-FUTURES content spot-checks).
 - [x] ✅ [INFRA] P1. **`issues/solana_perp_dex_cull_drift_pacifica_2026_07_16.md`** — DONE (`deployment-service@9b13679`
@@ -324,11 +374,18 @@ Real but non-blocking, each in its own doc; listed for completeness so nothing i
       in the issue doc (DeFi, not cefi — outside this close-out).
 - **Track 0 above**: `cryptovenue_equity_perps_and_tokenized_stocks_2026_06_20.md` Phases 1/1b/1c/2/5 (operator ruling
   2026-07-25 — see Track 0, embedded natively in this doc, sequenced ahead of/alongside the migration).
-- **Reconciliation-gap spot-check** → dispatched (bounded slice) as part of
-  `cefi_misc_audits_and_hygiene_2026_07_25.md`.
-- **Consolidate + archive** `issues/cefi_layer1_denominator_gaps_2026_07_03.md` (+
-  `issues/betfair_instrument_id_delimiter_cross_repo_2026_07_08.md`, already archived) → dispatched (re-scoped to the 2
-  named docs) as part of `cefi_misc_audits_and_hygiene_2026_07_25.md`.
+- [x] ✅ [VERIFY] P2. **Reconciliation-gap spot-check — DONE.** Spot-checked the next 3 unverified findings (DERIBIT
+      live-vs-batch FUTURE misclassification, HUOBI/BITSTAMP venue-universe gaps, OKX `margin_type` inversion) across
+      GCS/manifest/deployment-api/UI layers, dispatched as part of `cefi_misc_audits_and_hygiene_2026_07_25.md`. Full
+      PASS/FAIL verdicts + evidence:
+      `issues/adapter_findings_gcs_manifest_deployment_api_reconciliation_gap_2026_07_08.md` Progress Log
+      (unified-trading-pm@ab28a0f39). That doc's `[DECISION]` P2 reconciliation-cadence todo remains separately
+      open/human.
+- [x] ✅ [PM] P1. **Consolidate + archive `issues/cefi_layer1_denominator_gaps_2026_07_03.md` — DONE.** Confirmed 0 open
+      checkbox-syntax todos of its own, `status` flipped to `resolved`, moved to `plans/archive/issues/`
+      (unified-trading-pm@ff8312609), dispatched (re-scoped to the 2 named docs) as part of
+      `cefi_misc_audits_and_hygiene_2026_07_25.md`. Sibling
+      `issues/betfair_instrument_id_delimiter_cross_repo_2026_07_08.md` already archived — no action needed there.
 - [x] ✅ [REVIEW] P0. **Track-2 coverage decision — RULED** (same decision as the Track-2 ruling above; not a second
       decision). Re-open the completion program + reverse the inferred 50.79% acceptance. Autonomous ruling within
       documented intent (/autonomous 2026-07-18); operator can reverse.
@@ -361,25 +418,44 @@ Real but non-blocking, each in its own doc; listed for completeness so nothing i
       3,824,258 itype rows changed; canonical-fraction 84.98%→99.41%). **`--apply` DRAIN-GATED under the Track-1
       cutover.** Casing freeze lifted 2026-07-20 (ruling D1, UPPERCASE ratified) — ruling recorded in
       `plans/active/data_pipeline_reconciliation_skill_2026_07_20.md` § D1.
-- **`:PERP:` → `:PERPETUAL:` rewrite** — manifest side SHIPPED (`instruments-service@555ddf1c`, 374,227/374,272 rows).
-  **On-disk GCS rename** → forked to `/plans/archive/2026_07/cefi_migration_cutover_and_track8_completion_2026_07_25.md`
-  (todo 2). **Writer-side fix** (future captures) → dispatched as candidate 8 of
-  `cefi_consolidated_native_ao_extract_2026_07_25.md`.
+- [x] ✅ [SCRIPT] P0. **`:PERP:` → `:PERPETUAL:` rewrite** — manifest side SHIPPED (`instruments-service@555ddf1c`,
+      374,227/374,272 rows). **On-disk GCS rename — DONE 2026-07-27** (sub-agent): live audit confirmed 0 `:PERP:`-form
+      rows both before and after (manifest side already corpus-wide-complete); a fresh 9-shard `--dry-run`
+      re-verification (full corpus, 2019-03-30..today) confirmed 0 further planned changes on every shard except the
+      already-analyzed DERIBIT spot/perpetual-mislabel collision class (~5,001 objects, left honest-raw per that
+      finding's own "leave as-is, zero data loss" ruling — not a fresh open call). Full evidence:
+      `/plans/archive/2026_07/cefi_migration_cutover_and_track8_completion_2026_07_25.md` (todo 2, archived).
+      **Writer-side fix** (future captures) → dispatched as candidate 8 of
+      `cefi_consolidated_native_ao_extract_2026_07_25.md` (separate, not part of this flip).
 - [x] ✅ [SCRIPT] P1. **bare-wire / missing-quote / DATED-contract recovery** — DONE `instruments-service@555ddf1c`
       (operator Option A + resolver-gap fix). +115,225 captured dated rows / ~40.7B ticks recovered via the dated-wire
       itype-fix; +3,531 rows / 186M ticks via the `-SPOT`/`-SWAP` override. Result: adjusted canonical-fraction 99.41%.
       Residual 53,965 captured rows / 7.46B ticks, all genuinely-unresolvable (captured-with-data dropped = 0).
-- **POST-CUTOVER: flip the smoke-check + downloader to canonical ids** → forked to
-  `/plans/archive/2026_07/cefi_migration_cutover_and_track8_completion_2026_07_25.md` (todo 4). Full evidence:
-  `issues/cefi_shard_enumeration_blindspots_and_canonical_fetch_dependency_2026_07_18.md`.
+- [x] ✅ [BACKEND] P0. **POST-CUTOVER: flip the smoke-check + downloader to canonical ids** — CODE SHIPPED
+      `market-tick-data-service@a4f90769` (2026-07-27, slot-13): `venue_fetch._process_venue` resolves canonical
+      `--instrument-ids` to raw wire symbols via `CeFiWireCanonicalMap.raw_symbol_for`; `pipeline_e2e_check.py`'s
+      canonical-stem skip-guard removed. **Residual live-refetch proof CLOSED 2026-07-28**: a real end-to-end VM smoke
+      run (`pipeline_e2e_check.py --day 2024-06-15 --venue BITFINEX-FUTURES --tardis-only --legs force --auto-day`) —
+      the `CEFI:BITFINEX-FUTURES:trades` shard passed `exit=0`, a real parquet written
+      (`BITFINEX-FUTURES:PERPETUAL:AAVE-USDT@LIN`), manifest status `captured`; the other 8 shards' `no_parquet_under`
+      failures are an unrelated data-availability gap (the venue genuinely has no data for those data_types on that
+      day), not a canonical-id-resolution failure. Full evidence:
+      `/plans/archive/2026_07/cefi_migration_cutover_and_track8_completion_2026_07_25.md` (todo 4, archived);
+      `issues/cefi_shard_enumeration_blindspots_and_canonical_fetch_dependency_2026_07_18.md` (RESOLVED section).
 - **Re-add the "data status" enumeration to deployment-ui/api** — code COMPLETE + `quality-gates.sh`-green
   (deployment-ui shipped `deployment-ui@3fb6779`; deployment-api blocked only on 3 dirty sibling-repo deps as of
   2026-07-18, now **7 days stale — re-check before trusting**). Investigation found no single removal commit; shipped as
   a NEW read-only endpoint (`GET /api/data-status/axis-value-census`) rather than touching the legitimate math fix that
   eroded the raw-value signal. **Dispatched**: landing the quickmerge (with a fresh dirty-deps re-check first) is
   candidate 5 of `cefi_consolidated_native_ao_extract_2026_07_25.md`.
-- **Enumeration-audit terminal checkpoint** → forked to
-  `/plans/archive/2026_07/cefi_migration_cutover_and_track8_completion_2026_07_25.md` (todo 5).
+- [x] ✅ [DATA] P1. **Enumeration-audit terminal checkpoint** — DONE 2026-07-27. Re-ran
+      `scripts/audit_cefi_manifest_noncanonical_enumeration_2026_07_18.py` (read-only) against the live cefi manifest
+      post-cutover (8,880,557 rows): **`instrument_id` 8,790,637/8,880,557 canonical (99.49%)**, the 45,170-row residual
+      all bare-wire/missing-quote/bad-itype (accepted-exception class), down from the pre-migration ~1.48M.
+      `instrument_type`: 2,982 non-canonical, dominated by already-ruled lowercase-casing variants (D1/D2 2026-07-20). 2
+      findings without an existing ruling filed as a new followup (not silently accepted):
+      `issues/cefi_enumeration_audit_instrument_type_leakage_and_catalogue_orphans_2026_07_27.md`. Full evidence:
+      `/plans/archive/2026_07/cefi_migration_cutover_and_track8_completion_2026_07_25.md` (todo 5, archived).
 
 ## CEFI CANONICAL SPEC (operator-authoritative, 2026-07-18 — the migration target)
 
@@ -479,3 +555,7 @@ UPBIT · LIGHTER-ZKSYNC · EXTENDED-STARKNET.
   apply-of-proven-pattern) and `mdps_candle_manifest_population_disconnect_2026_07_25.md` (candle-manifest root-cause +
   fix, multi-AG tagged cefi-first). Neither is tracked in any Track above; both are now `assigned_vm: planning` and live
   in the AO backlog.
+
+- **na-eligibility-audit 2026-07-30** (tranche=cefi, autonomous): KEEP-NA, valid - carries a BLOCKED-DATA Korea-equity
+  vendor ask (operator) plus 3 `[DESIGN]` archetype/hedge-venue calls that are not worker-determinable.
+- **context-scout 2026-08-01**: populated/refreshed context_scope (6 entries).

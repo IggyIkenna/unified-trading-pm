@@ -42,7 +42,7 @@ the paid subscription + the `databento_subscription_allowlist`, or (b) another I
 
 ## CREDENTIAL APPROVAL REQUEST — `AWS_BUILD_ROLE_ARN` for image-build-gate (CICD) — 2026-07-03
 
-**Ref**: `plans/active/cicd_mvp_ldr_to_main_pipeline_2026_06_30.md` § Phase 2 `[BLOCKED-CREDENTIALS] P1`
+**Ref**: `plans/archive/2026_07/cicd_mvp_ldr_to_main_pipeline_2026_06_30.md` § Phase 2 `[BLOCKED-CREDENTIALS] P1`
 
 **What it unblocks**: the dual-cloud image-build promote gate (`image-build-gate.yml`, fleet rollout 2026-06-27) — it
 has NEVER passed. Every run fails at "Authenticate to AWS via OIDC" with "Could not load credentials from any providers"

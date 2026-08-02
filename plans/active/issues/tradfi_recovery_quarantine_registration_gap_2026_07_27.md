@@ -24,7 +24,7 @@ tags: [tradfi, manifest, recovery, registration-gap, data-correctness]
 related:
   [
     /plans/active/tradfi_satellite_ao_dispatch_batch2_2026_07_25.md,
-    /plans/active/issues/cme_combo_underlying_extraction_garbage_2026_07_19.md,
+    /plans/archive/issues/cme_combo_underlying_extraction_garbage_2026_07_19.md,
   ]
 created: 2026-07-27
 priority: P2
@@ -39,6 +39,12 @@ assigned_vm: planning
 resolved_by: ""
 locked_by: live-defi-rollout
 locked_since: 2026-05-21
+context_scope:
+  [
+    /plans/active/tradfi_satellite_ao_dispatch_batch2_2026_07_25.md,
+    /plans/archive/issues/cme_combo_underlying_extraction_garbage_2026_07_19.md,
+    /plans/epics/tradfi_master.md,
+  ]
 ---
 
 # TradFi garbage-underlying recovery: 428 recovered rows unregistered + stale quarantine ground truth
@@ -107,15 +113,29 @@ wound), but should be tracked rather than silently absorbed.
       a dry-run mapping TSV (`--apply` for the additive write). NOT yet executed against prod GCS — that dry-run +
       `--apply` pass is tracked as a new follow-up todo below (VM-scale I/O, out of scope for an interactive session per
       the heavy-I/O HARD RULE).
-- [ ] [SCRIPT] P2. Run `register_tradfi_recovery_quarantine_manifest_2026_07_30.py` (market-tick-data-service) against
-      prod: first a dry-run (`--out register_mapping.tsv`, no `--apply`) and inspect the confirmed-candidate count
-      against the ~428 upper bound + spot-check a sample of the mapping TSV's `target_uri` column for a real captured
-      bundle; then, once the dry-run count looks sane, `--apply` (additive `ManifestWriter.add()`/
+- [x] ✅ [SCRIPT] P2. Run `register_tradfi_recovery_quarantine_manifest_2026_07_30.py` (market-tick-data-service)
+      against prod: first a dry-run (`--out register_mapping.tsv`, no `--apply`) and inspect the confirmed-candidate
+      count against the ~428 upper bound + spot-check a sample of the mapping TSV's `target_uri` column for a real
+      captured bundle; then, once the dry-run count looks sane, `--apply` (additive `ManifestWriter.add()`/
       `record_captured_from_counts()`, no CAS — safe to re-run) to register the confirmed rows, sharded
       (`--shard-of`/`--shard-index`) if the unsharded dry-run's candidate-key count makes a single-process
       `gcs_describe_object` sweep impractically slow. Repo: market-tick-data-service. **Done when**: the dry-run mapping
       TSV + confirmed count are reported, the `--apply` run completes, and a post-run spot-check confirms a sample of
-      the newly-registered canonical keys read `captured` in the live manifest.
+      the newly-registered canonical keys read `captured` in the live manifest. — **Dry-run**: 248/585,331 candidates
+      confirmed present on GCS (within the ~428 upper bound; 6,797 distinct cells x 144 recognised roots), 2
+      independently spot-checked `target_uri`s confirmed real content on GCS. **Apply**: 248 canonical rows registered
+      into `_index/per_vm/local-2108856-43a6.parquet` (additive, no CAS). **Data-correctness finding + remediation**
+      (see `/plans/archive/issues/tradfi_register_underlying_translation_bug_2026_07_30.md`, RESOLVED): 98/248 (39.5%)
+      of the written rows carried a manifest `underlying` that did NOT match the `underlying=` segment of the row's own
+      physically-confirmed GCS path (chain instrument_types translate the root through `_exchange_to_product_root` when
+      building the target path, but `apply_register` wrote the untranslated root). Caught BEFORE the
+      manifest-consolidator cron merged the shard (main index `updateTime` 12:00:59 UTC, shard write 12:06:04 UTC,
+      caught+patched by 12:10 UTC) — hand-patched the shard in place via a generation-CAS read-modify-write, verified 0
+      remaining mismatches across all 186 affected cells. Root cause fixed at market-tick-data-service@35d1f328 (added
+      `actual_underlying` to `RegisterCandidate`, used in both `apply_register` write branches; 4 new regression tests,
+      19 total unit tests green). Also fixed an unrelated pre-existing QG-blocking failure (stale `SPORTS` shard-count
+      pin, verified against `unified-api-contracts` commit history as a legitimate re-pin, not a regression) at
+      market-tick-data-service@b4fd439e so both commits could ship. Full `quality-gates.sh` clean on both.
 - [ ] [DATA] P3. Investigate what pruned/reused `_quarantine/raw_tick_data/` between 2026-07-20 and 2026-07-27 (only 9
       unrelated `day=2026-01-*` prefixes remain, from a different quarantine event — full instrument-id-as-underlying,
       not this run's numeric/opaque garbage codes). Not urgent (no destructive-risk signal found — no lifecycle
@@ -123,3 +143,7 @@ wound), but should be tracked rather than silently absorbed.
       quarantine passes. Repo: market-tick-data-service (or infra, if traced to a shared migration/cleanup script).
       **Done when**: root cause identified (which script/run touched `_quarantine/raw_tick_data/` and when) or
       documented as unable-to-determine with the evidence gathered.
+
+## Progress Log
+
+- **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).

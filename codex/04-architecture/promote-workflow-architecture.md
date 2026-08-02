@@ -33,7 +33,7 @@ referenced_by:
     /codex/08-workflows/deployment-flow.md,
   ]
 owner: strategy-platform
-last_reviewed: 2026-05-17
+last_reviewed: 2026-09-03
 code_refs:
 type: architecture
 ---
@@ -43,8 +43,10 @@ type: architecture
 > **Scope**: May-23 subset. Post-cutover Phase 2 ships full pinned-shas `CandidateManifest`, state-machine
 > consolidation, and cross-service auto-registration. This doc describes the minimal May-23 shape only.
 >
-> SSOT plan: `plans/active/promote_workflow_may23_cli_path_2026_05_10.md` Post-cutover successor:
-> `plans/active/promote_workflow_post_cutover_ui_pipeline_2026_05_10.md`
+> SSOT plan (ARCHIVED):
+> [`/plans/archive/2026_05/promote_workflow_may23_cli_path_2026_05_10.md`](/plans/archive/2026_05/promote_workflow_may23_cli_path_2026_05_10.md)
+> Post-cutover successor (ARCHIVED):
+> [`/plans/archive/2026_05/promote_workflow_post_cutover_ui_pipeline_2026_05_10.md`](/plans/archive/2026_05/promote_workflow_post_cutover_ui_pipeline_2026_05_10.md)
 
 ---
 
@@ -139,34 +141,42 @@ IDEATION
 Only `CANDIDATE → PAPER_1D` and `PAPER_1D → LIVE_EARLY` are valid promote targets for May-23. `LIVE_FULL` is
 post-cutover.
 
-UTL enum: `unified_trading_library.strategy.strategy_maturity_phase.StrategyMaturityPhase`.
+UAC enum: `StrategyMaturityPhase`, defined in
+`unified_api_contracts/internal/domain/strategy_service/lifecycle.py` (import from the top-level
+`unified_api_contracts` surface). It is **not** a UTL symbol — the pre-2026-07 pointer to
+`unified_trading_library.strategy.strategy_maturity_phase` was wrong; no such UTL module exists.
 
 ---
 
 ## MinimalCandidateManifest (Phase U1 shape)
 
 ```python
-class MinimalCandidateManifest(BaseModel):
-    manifest_id: str          # UUID
+@dataclass
+class MinimalCandidateManifest:
+    # Required (no defaults)
     strategy_instance_id: str
-    version_id: str | None
     archetype: StrategyArchetype
-    config_json: dict[str, Any]
+    config_json: dict[str, object]      # NOT dict[str, Any] — Any is QG-banned workspace-wide
     score_vector: GroupBMetrics
     target_phase: StrategyMaturityPhase
-    created_at: datetime
     created_by: str
     reason: str
 
-    # Post-cutover Phase 2 (None for May-23):
+    # Defaulted
+    manifest_id: str = field(default_factory=make_manifest_id)
+    created_at: datetime = field(default_factory=lambda: datetime.now(UTC))
+    version_id: str | None = None
+
+    # Post-cutover Phase 2 (always None at May-23):
     pinned_shas: dict[str, str] | None = None
     model_refs: list[ModelRef] | None = None
     features_manifest_version: str | None = None
     chain_rpc_pins: dict[str, str] | None = None
 ```
 
-Stored in Firestore `strategy_candidate_manifests` collection. UAC type:
-`unified_api_contracts.internal.domain.strategy_service.candidate_manifest.MinimalCandidateManifest`.
+It is a **`@dataclass`, not a Pydantic `BaseModel`** (the pre-2026-07 text said `BaseModel`). Stored in Firestore
+`strategy_candidate_manifests` collection. Defined in
+`unified_api_contracts/internal/domain/strategy_service/candidate_manifest.py`.
 
 ---
 
@@ -227,8 +237,8 @@ Cross-reference:
 
 ## Post-Cutover Deferred Items
 
-> These are explicitly out of May-23 scope. Named successor plan:
-> `plans/active/promote_workflow_post_cutover_ui_pipeline_2026_05_10.md`
+> These are explicitly out of May-23 scope. Named successor plan (ARCHIVED):
+> [`/plans/archive/2026_05/promote_workflow_post_cutover_ui_pipeline_2026_05_10.md`](/plans/archive/2026_05/promote_workflow_post_cutover_ui_pipeline_2026_05_10.md)
 
 - Full `CandidateManifest` enrichment (pinned shas, model refs, features manifest version)
 - Firebase `execution-full` backend enforcement (currently at UI layer only)
@@ -237,4 +247,4 @@ Cross-reference:
 - CEFFU custody integration (June-1+ per custody-providers.md § CEFFU)
 - `LIVE_FULL` maturity phase
 - UI as primary track without CLI fallback
-- Shard auto-spawn end-to-end (E.2 — `per_client_isolation_and_venue_fanout_topology_2026_05_20.md`)
+- Shard auto-spawn end-to-end (E.2 — [`/plans/archive/2026_05/per_client_isolation_and_venue_fanout_topology_2026_05_20.md`](/plans/archive/2026_05/per_client_isolation_and_venue_fanout_topology_2026_05_20.md))

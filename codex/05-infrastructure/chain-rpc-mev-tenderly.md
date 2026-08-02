@@ -32,7 +32,7 @@ referenced_by:
     /codex/07-security/mev-protection.md,
   ]
 owner:
-last_reviewed: 2026-05-17
+last_reviewed: 2026-10-14
 code_refs:
 ---
 

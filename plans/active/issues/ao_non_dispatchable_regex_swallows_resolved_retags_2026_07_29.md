@@ -25,7 +25,7 @@ summary:
   in the body."
 status: open
 nature: issue
-asset_group: [meta]
+asset_group: [ao] # retagged 2026-07-31 (corpus-sweep meta fold-in) -- was [meta]
 stage: [meta]
 repos: [agent-orchestrator, unified-trading-pm]
 scope: [engineer, admin]
@@ -34,6 +34,7 @@ related:
   [
     /plans/active/infra_capture_and_devops_leftovers_2026_07_06.md,
     /plans/active/cross_cutting_satellite_ao_dispatch_batch2_2026_07_26.md,
+    /plans/archive/2026_07/ao_consolidated_closeout_2026_07_25.md,
   ]
 created: 2026-07-29
 priority: P1
@@ -43,11 +44,17 @@ source:
   agent-orchestrator/server/regen_backlog_from_plan.py"
 resolved_by:
 locked_by:
-assigned_vm: planning
-execution_scope: orchestrator-agent
+assigned_vm: NA
+execution_scope: local-only
 assigned_role: backend_engineer
 drift_direction: advance-code
 depends_on: []
+context_scope:
+  [
+    agent-orchestrator/server/regen_backlog_from_plan.py,
+    /cursor-configs/CLAUDE.md,
+    /plans/active/infra_capture_and_devops_leftovers_2026_07_06.md,
+  ]
 ---
 
 # `_NON_DISPATCHABLE_RE` swallows already-ruled todos that restate the old `BLOCKED-*` marker in past tense
@@ -162,7 +169,7 @@ past tense rather than deleting it outright.
   since those could have superseded the state `6edd4486a` captured.
   - **CONFIRMED-RESOLVED / CORRECT-AS-IS (12 files, 21 items)**: `cefi_satellite_ao_dispatch_batch3_2026_07_26.md`,
     `infra_capture_and_devops_leftovers_2026_07_06.md`,
-    `issues/prediction_lifecycle_prefetch_gate_and_resolution_day_catalogue_2026_07_14.md`,
+    `/plans/archive/issues/prediction_lifecycle_prefetch_gate_and_resolution_day_catalogue_2026_07_14.md`,
     `mtds_available_at_cross_asset_backfill_2026_07_13.md` (8 items — all trace to the same real CLAUDE.md
     maintenance-window ruling), `prediction_phase_ab_residuals_2026_07_24.md`,
     `sports_live_availability_and_source_latency_2026_07_24.md` (correctly updated in-place by the later key-rotation
@@ -198,3 +205,13 @@ past tense rather than deleting it outright.
     needed a correction (1 credential-marker restoration done previously, 1 numeric-fact correction done this session)
     and 1 file got a minor doc-hygiene checkbox flip; the remaining 21 mentions across 13 files are genuinely
     dispatchable as rephrased. Shipped: `unified-trading-pm` (this commit, files listed above).
+- **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).
+- **na-eligibility-audit 2026-08-02** (autonomous, tranche `ao`): KEEP-NA, valid — **this doc's own 2026-07-30
+  RECLASSIFY→`planning` (infra tranche, agt-30721a, recorded above) was REVERTED** by the 2026-07-31 operator directive
+  `unified-trading-pm@14478ca26` ("work these interactively now rather than queue behind AO's current busy backlog"),
+  which flipped it back to `assigned_vm: NA` + `execution_scope: local-only`. Per
+  `/cursor-configs/skills/na-eligibility-audit/SKILL.md` Phase 1 citation class (b), a revert is a standing ruling, not
+  a stale data point to re-evaluate fresh — not re-litigated.
+- **Counting note (2026-08-02)**: real open-todo count is **1** (the `[DATA] P1` rephrase-the-27 item), not the 3 the NA
+  inventory reports — the other 2 `- [ ]` matches are illustrative examples inside fenced code blocks in the Evidence
+  section. See `/plans/active/issues/na_inventory_counts_fenced_code_block_checkboxes_as_open_todos_2026_08_02.md`.

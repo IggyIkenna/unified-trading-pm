@@ -14,19 +14,25 @@ scope: [engineer, admin]
 tags: [cefi, defi, bybit, execution, strategy, kill-switch]
 related:
   [
-    plans/active/defi_recursive_borrow_archetypes_post_cutover_2026_06_01.md Phase 10,
-    plans/archive/2026_07/master_to_live_defi_2026_05_23.md Group F (Family 2 perp leg),
+    /plans/archive/2026_05/defi_recursive_borrow_archetypes_post_cutover_2026_06_01.md,
+    /plans/archive/2026_07/master_to_live_defi_2026_05_23.md,
   ]
 created: 2026-05-15
 authoritative_for: [Bybit Family-2 perp hedge-leg topology]
 referenced_by: [/codex/09-strategy/architecture-v2/archetypes/carry-recursive-borrow-perp-hedged.md]
 owner:
-last_reviewed: 2026-05-17
+last_reviewed: 2026-09-19
 code_refs:
 author: ikenna-slot-2
 ---
 
 # CeFi Perp Leg — Bybit (Family 2 SECONDARY venue)
+
+> **Re-review 2026-07-31**: symbols spot-checked and still valid — `CARRY_BASIS_PERP_INV` is a live UAC archetype id,
+> `DEFI_PERP_VENUE_OUTAGE` and `DEFI_FUNDING_RATE_FLIP` are live `AlertCode` members, and `PerpHedgeSizer` is still
+> referenced as the execution-service class by UTL `risk/net_delta.py`. Both `related:` plans are now ARCHIVED (paths
+> corrected above), so the "first 30 days post-cutover" counterparty cap below has no active plan tracking its
+> re-evaluation — treat the ≤50% cap as still in force until an owner says otherwise.
 
 > **Context**: Family 2 (`CARRY_BASIS_PERP_INV`) runs a USDC-margined ETH perp short as the delta-hedge leg. Hyperliquid
 > is PRIMARY; Bybit is SECONDARY (≤50% of HL notional for first 30 days post-cutover). This doc covers Bybit-specific

@@ -32,7 +32,7 @@ referenced_by:
     /codex/09-strategy/architecture-v2/archetypes/market-making-continuous.md,
   ]
 owner:
-last_reviewed: 2026-05-17
+last_reviewed: 2026-10-04
 code_refs:
 ---
 
@@ -401,9 +401,11 @@ unallocated.
 
 - UAC `ClientShareClassSubscription` — subscription type; fields: `client_id`, `share_class_id`, `archetype`,
   `allocation_pct`, `status` (`ACTIVE` / `SUSPENDED_DRAWDOWN` / `TERMINATED`)
-- UAC `AllocationDecision` — per-(client, archetype) capital allocation output; fields: `client_id`, `archetype`,
-  `allocated_usd`, `allocation_pct`, `reason`
-- UAC `AllocationDecisionEvent` — event emitted on each decision; consumed by PBMS + risk service
+- UTL `AllocationDecision` (`unified_trading_library.allocation.engine`) — per-(client, archetype) capital allocation
+  output; fields: `client_id`, `archetype_id`, `share_class_id`, `allocation_amount_usd`, `allocation_pct`,
+  `subscription`, `effective_from` (internal to UTL, not UAC — allocation-decision types are service-internal; UAC
+  carries only the subscription contract)
+- UTL `AllocationDecisionEvent` — event emitted on each decision; consumed by PBMS + risk service
 - UTL `AllocationEngine` — resolves allocations per archetype; enforces sum ≤ 100%; emits `AllocationDecisionEvent`
 - Client lifecycle prerequisite: subscriptions require `ClientOnboardingState == SUBSCRIBED` (or later) —
   [`client-lifecycle-state-machine.md`](client-lifecycle-state-machine.md)

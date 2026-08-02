@@ -32,7 +32,7 @@ referenced_by:
     /codex/06-coding-standards/strategy-identity-versioning.md,
   ]
 owner:
-last_reviewed: 2026-05-17
+last_reviewed: 2026-09-04
 code_refs:
 ---
 

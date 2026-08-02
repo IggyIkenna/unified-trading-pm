@@ -30,7 +30,7 @@ referenced_by:
     /codex/14-customer-journeys/playbook-concepts/fund-org-hierarchy.md,
   ]
 owner:
-last_reviewed: 2026-05-17
+last_reviewed: 2026-09-20
 code_refs:
 ---
 

@@ -31,7 +31,7 @@ referenced_by:
     /codex/15-runbooks/instruments-live/t1-audit-discrepancy.md,
   ]
 owner:
-last_reviewed: 2026-05-17
+last_reviewed: 2026-09-02
 code_refs:
 ---
 
@@ -84,7 +84,7 @@ routing table below.
 | asset_group | entity-type                                                     | Cadence / Trigger                      | Source adapter                        | Manifest shard                                                   | Detail doc                                                                                                     |
 | ----------- | --------------------------------------------------------------- | -------------------------------------- | ------------------------------------- | ---------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
 | cefi        | instrument-catalog                                              | 15-min wall-clock                      | CCXT (replaces Tardis T+1 historical) | `(asset_group=cefi, venue, instrument_type, day)`                | [`asset-class-ownership.md`](asset-class-ownership.md)                                                         |
-| tradfi      | instrument-catalog                                              | 15-min wall-clock                      | Polygon / Yahoo (Databento alt)       | `(asset_group=tradfi, venue, instrument_type, root, day)`        | [`asset-class-ownership.md`](asset-class-ownership.md)                                                         |
+| tradfi      | instrument-catalog                                              | 15-min wall-clock                      | Databento (primary) / Yahoo (daily candles) | `(asset_group=tradfi, venue, instrument_type, root, day)`  | [`asset-class-ownership.md`](asset-class-ownership.md)                                                         |
 | prediction  | market-discovery                                                | 15-min wall-clock                      | Polymarket / Kalshi REST              | `(asset_group=prediction, venue, canonical_question_group, day)` | [`/codex/02-data/prediction-schema-paths.md`](/codex/02-data/prediction-schema-paths.md)                       |
 | sports      | fixtures                                                        | daily fixture re-poll                  | api_football                          | `(asset_group=sports, source=af, league_id, day)`                | [`/codex/02-data/sports-fixtures-lifecycle.md`](/codex/02-data/sports-fixtures-lifecycle.md)                   |
 | sports      | teams + mappings                                                | per-league season-roll trigger         | api_football, sfi, transfermarkt      | `(asset_group=sports, source, league_id, season)`                | [`/codex/02-data/sports-data-source-coverage-matrix.md`](/codex/02-data/sports-data-source-coverage-matrix.md) |
@@ -119,5 +119,6 @@ routing table below.
 - `unified_api_contracts/canonical/crosscutting/instruments_preflight_dag.py` — preflight DAG SSOT consumed by every
   trigger before fetching.
 - `unified_api_contracts/internal/events.py` — `INSTRUMENTS_LIVE_*` lifecycle events.
-- `unified_api_contracts.canonical.crosscutting.transfer_windows` + sports trigger calendar — UAC SSOT for sports
-  triggers.
+- `unified_api_contracts.canonical.domain.sports.transfer_windows` (+ `…sports.season_dates`, which joins transfer
+  windows into the season calendar) — UAC SSOT for sports triggers. Import via the top-level `unified_api_contracts`
+  surface; the deep path is given for orientation only.

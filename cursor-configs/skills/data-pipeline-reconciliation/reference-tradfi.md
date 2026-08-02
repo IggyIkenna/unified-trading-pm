@@ -130,6 +130,15 @@ fraction per surface; the "0 canonical" figure is stale (codex contradiction, ab
 
 Per `SKILL.md` § 3e, surface these with citations and a severity; do not resolve or migrate them.
 
+### H7 — 2026-07-30 census re-run (Phase G) reproduces H6 unchanged, zero new findings
+
+First full-vocabulary census run for tradfi via the corrected (§ 3f-compliant) methodology, 5,894,343 rows. Every
+non-canonical value found (`BARCHART`/`YAHOO_FINANCE` venues, `ESM0`/`ESM0_MIGRATED_20260418T131054Z` chain-axis
+mis-stamps, `continuous_future`/`UD`/`UNKNOWN`/`FUTURES` instrument_types) is byte-identical to
+`plans/active/issues/tradfi_distinct_values_net_new_clusters_2026_07_28.md`'s 2026-07-28 findings — no new action, that
+doc is the live tracker. `futures_chain`/`options_chain` instrument_type + data_type values (239,184 / 196,895 / 103,224
+/ 8 rows) are CORRECTLY suppressed as accepted exceptions, not a finding.
+
 ## Known-good spot-check — run BEFORE trusting any absence result
 
 1. Enumerate prefixes from `canonical_path_templates("tradfi")` —

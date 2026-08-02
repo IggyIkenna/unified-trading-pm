@@ -37,7 +37,7 @@ referenced_by:
     /codex/15-runbooks/wallet-tier-kill-switch-operator.md,
   ]
 owner: ikenna
-last_reviewed: 2026-05-17
+last_reviewed: 2026-09-02
 code_refs:
 related_codex:
   [
@@ -50,6 +50,14 @@ related_codex:
 ---
 
 # Kill-Switch Event Bus — UTL `KillSwitchBus` + Audit-Log Persistence
+
+> **[2026-07-31 freshness re-review] — `position-balance-monitor-service`, `risk-and-exposure-service` and
+> `pnl-attribution-service` NO LONGER EXIST as separate repos.** All three were subtree-merged into **`strategy-service`**
+> on 2026-05-20 as the `strategy_service/{position,risk,pnl}/` sub-packages — one Docker image parameterised by
+> `--operation`. Read every mention of those three names below as "the corresponding strategy-service sub-package"; the
+> responsibilities described are unchanged. SSOT:
+> [`/codex/04-architecture/strategy-service-architecture.md`](/codex/04-architecture/strategy-service-architecture.md).
+
 
 > **What it is:** The canonical workspace SSOT for the kill-switch arm/disarm event lifecycle. The bus owns the
 > `(switch_id, scope, applies_to) → armed/disarmed` state machine; every subscriber (execution-service matching engine,
@@ -224,7 +232,8 @@ gs://{pid}-kill-switch-audit/
 Writes are append-only via GCS `objects.create` with `If-Generation-Match: 0` semantics — no overwrite is ever
 performed. The bus retries on transient failures (3 attempts, exponential backoff); permanent failure raises
 `KillSwitchAuditLogPersistenceError` and the arm aborts with no in-process fan-out either. This is by design — an arm
-that can't be audited is unsafe.
+that can't be audited is unsafe. **(2026-07-31: `KillSwitchAuditLogPersistenceError` is verified absent from code —
+the abort-on-unauditable-arm rule is specified here but the named exception type has not been implemented.)**
 
 ### Dev / testnet path (local fallback)
 
@@ -270,7 +279,8 @@ bus.subscribe(ExecutionMatchingEngineSubscriber())
 - Subscribers MUST be idempotent. Re-emitted events are valid (process restart replay; bus reconstructs from audit log).
 - Subscribers MUST NOT raise on event consumption. Failures are logged + counted in `KillSwitchBus.fan_out_failures` but
   never propagate to the publisher.
-- Subscribers SHOULD acknowledge state via a lifecycle event (`KILL_SWITCH_ACKED` per
+- Subscribers SHOULD acknowledge state via a lifecycle event (`KILL_SWITCH_ACKED` — specified, verified absent from
+  code 2026-07-31; per
   [`alerting.md`](/codex/03-observability/alerting.md)) so the operator-facing UI can render per-subscriber state.
 
 ## Multi-subscriber broadcast — execution / strategy / PBMS / alerting

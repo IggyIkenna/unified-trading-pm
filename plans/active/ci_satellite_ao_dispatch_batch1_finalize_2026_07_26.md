@@ -8,7 +8,7 @@ summary: >-
   deliver as standalone files (three concurrent todos cannot share that file). Then reconciles each distinct source
   doc's checkboxes/prose independently, re-checks the 6 conflict-gated Deferred items for any whose competing claim has
   since cleared, and archives batch 1 via the standard 6-step ritual.
-status: draft
+status: active
 nature: process
 asset_group: [ci]
 stage: [meta]
@@ -23,7 +23,7 @@ related:
     /codex/06-coding-standards/quality-gates.md,
   ]
 created: "2026-07-26"
-last_updated: "2026-07-26"
+last_updated: "2026-08-02"
 parent_epic: infrastructure_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -43,16 +43,29 @@ source: >-
 assigned_role: cicd
 sequential: true
 drift_direction: advance-code
+context_scope:
+  [
+    /plans/active/ci_satellite_ao_dispatch_batch1_2026_07_26.md,
+    /codex/06-coding-standards/quality-gates.md,
+    /codex/08-workflows/ci-cd-flow.md,
+    /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
+    /plans/active/task_template.md,
+  ]
 ---
 
 # CI satellite AO batch 1 — finalize
 
-> **⚠️ STATUS: `draft` — NOT dispatched.** Flips to `active` only with the batch it gates, on explicit operator
-> approval. Drafted 2026-07-26 while the operator was unreachable.
+> **🔒 GATED, not draft.** (Corrected 2026-08-02 — this banner still read "STATUS: `draft`" long after the frontmatter
+> was flipped to `status: active`; the frontmatter was right and the banner was stale.) `gate_on_depends: true` alone
+> correctly holds every todo below, so no separate draft flip is needed for this doc.
 
 > **Machine-gated on `ci_satellite_ao_dispatch_batch1_2026_07_26.md`** (`depends_on` + `gate_on_depends: true`) — the
 > dispatcher will not queue anything below until all 29 of that plan's todos are `done`. `sequential: true` because todo
 > 1 must land before todo 2's reconciliation cites it, todo 3 needs both, and todo 4 (archival) must run last.
+>
+> **One scoped exception (operator ruling 2026-07-30): todo 2 is applied INCREMENTALLY** — a source doc may be
+> reconciled as soon as its own batch-1 item is verifiably done, without waiting for the rest of batch 1. Todos 1, 3 and
+> 4 remain fully gated. Details and the running list of discharged items are on todo 2 itself.
 
 ## Todos
 
@@ -77,6 +90,31 @@ drift_direction: advance-code
       work as numbered prose with no checkboxes, so a checkbox count is not an answer. Only set `status: resolved` on a
       doc that genuinely reaches zero. **Done when**: every cited doc is flipped/annotated with verified evidence, and
       each doc that genuinely reaches zero open work is `status: resolved`.
+  - **⚖️ OPERATOR RULING 2026-07-30 — THIS TODO IS EXEMPT FROM THE `gate_on_depends` HOLD; APPLY IT INCREMENTALLY.**
+    Reconciliation of an individual source doc may proceed the moment that item's own batch-1 work is verifiably done —
+    it does NOT have to wait for all of batch 1 to finish. The rationale is that a batch-1 item that shipped weeks ago
+    but whose source-doc checkbox is still `[ ]` is exactly the false-progress this rule exists to prevent, and holding
+    the flip behind an unrelated sibling todo manufactures that state. **The `gate_on_depends: true` frontmatter is
+    deliberately UNCHANGED** — it still correctly holds todos 1, 3 and 4 (the single QG-registration commit, the
+    deferral re-check, and archival), all of which genuinely need the whole batch done first. The carve-out is scoped to
+    this todo only. Per-item rule when applying it: verify the cited commit is a real ancestor of
+    `origin/live-defi-rollout` BEFORE flipping, and do not mark this parent todo `[x]` until every one of the 29 has
+    been reconciled.
+  - **Discharged incrementally so far (3 of 29 items) — all three verified 2026-08-02, all three already flipped in
+    their source docs by the 2026-08-01 `/na-eligibility-audit ci` sweep; recorded here so this todo's remaining scope
+    is honest rather than re-derived from scratch:**
+    1. `issues/silent_failures_surfacing_as_generic_promotion_lag_2026_07_17.md` `[DEVOPS] P1` ("Ban the `|| true`
+       credential idiom") — flipped `[x] ✅` in the source doc. Evidence re-verified: `unified-trading-pm@c91844b09`
+       delivers `scripts/quality_gates/check_no_swallowed_credential_fetch.py` +
+       `no_swallowed_credential_fetch_baseline.yaml`; both files exist at HEAD and the commit is a confirmed ancestor of
+       `origin/live-defi-rollout`. **Note the same doc carries a SECOND, DIFFERENT `[DEVOPS] P1`** (the 0-runners-
+       listening pool alert, still `[ ]`) — that one is NOT discharged and is correctly still open.
+    2. `issues/post_cutover_silent_assumption_sweep_2026_07_23.md` `[DOC] P2` (`ci-cd-flow.md` LDR→main narrative +
+       staging re-entry procedure) — flipped `[x] ✅`. Evidence re-verified: `unified-trading-pm@97970974e`
+       (2026-07-26), confirmed ancestor.
+    3. `issues/post_cutover_silent_assumption_sweep_2026_07_23.md` `[REVIEW] P3` (hardcode the PM dispatch target in
+       `agent-runner.yml` / `sit-gate.yml`) — flipped `[x] ✅`. Evidence re-verified: `unified-trading-pm@cb5e944f0`
+       (2026-07-28), confirmed ancestor.
 - [ ] [REVIEW] P1. **Re-check the 6 conflict-gated Deferred items (D1-D6) and the 2 time-gated ones (D29-D30).** Each
       names the specific competing claim it collided with, so this is a few greps and reads, not fresh investigation. D1
       is discharged by todo 1 above. For D2-D6: has the competing side shipped, been superseded, or been ruled on? In
@@ -114,3 +152,17 @@ drift_direction: advance-code
   found PM `scripts/quality-gates.sh` claimed by three separate new checkers — the documented remedy for
   partial-parallelism (parallel work in plan A, the shared gated step in plan B via `depends_on` +
   `gate_on_depends: true`).
+- **context-scout 2026-08-01**: populated/refreshed context_scope (5 entries).
+- **2026-08-02 (operator ruling executed)** — Recorded the ruling that todo 2's reconciliation is exempt from the
+  `gate_on_depends` hold and applies incrementally, per source doc, as each batch-1 item verifies done.
+  `gate_on_depends` frontmatter left `true` on purpose — todos 1/3/4 still need the whole batch. Verified and recorded
+  the first 3 of 29 discharged items (`silent_failures_…_2026_07_17.md` `[DEVOPS] P1`;
+  `post_cutover_silent_assumption_sweep_2026_07_23.md` `[DOC] P2` and `[REVIEW] P3`); all three were already flipped in
+  their source docs by the 2026-08-01 `/na-eligibility-audit ci` sweep, and all three cited commits (`c91844b09`,
+  `97970974e`, `cb5e944f0`) were re-verified this session as real ancestors of `origin/live-defi-rollout` before being
+  recorded. No source-doc checkbox needed changing as a result. Also corrected the stale "STATUS: `draft`" banner, which
+  contradicted this doc's own `status: active` frontmatter. Separately re-checked the ruling's third item — flagging
+  `ci_satellite_ao_dispatch_batch2_2026_07_29.md`'s todo 4(b) as stale-as-drafted: **already done and no edit made**.
+  That plan completed and was archived to `/plans/archive/2026_07/`, and its todo 4 sub-item (b) already carries the
+  verbatim finding ("the 2 SPECIFIC 2026-07-17 offenders named in this todo … are STALE", with the live re-verification
+  that `deployment-ui` has no open promote PR).

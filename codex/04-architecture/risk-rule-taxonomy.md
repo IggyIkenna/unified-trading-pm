@@ -31,7 +31,7 @@ referenced_by:
     /codex/04-architecture/risk-preflight-flow.md,
   ]
 owner:
-last_reviewed: 2026-05-17
+last_reviewed: 2026-08-22
 code_refs:
 ---
 
@@ -57,12 +57,35 @@ logic lives in service code — services consume the registry.
 
 ## Closed enums
 
-### `RiskRuleId` (UAC `canonical/crosscutting/risk_rule.py`)
+### `RiskRuleId` (UAC `canonical/crosscutting/risk_rule/_enums.py`)
 
 The closed-enum identifier for every rule shape. **Twenty-eight members shipped at UAC@`risk_rule.py:53-130`** (counted
 2026-05-12 per slot 8 audit R-7 PRE*CUTOVER refresh; baseline was 22 at UAC@945ad5d, plus 6 `FAMILY*\*` members added
 Phase 2.H — see § "Family-aggregate rules" below). Extension closed-enum allowed for archetype-unique additions (Phase
 2.A onward).
+
+> **⛔ ENUM DRIFT — re-verified against code 2026-07-30. The table below has stale member names.** `risk_rule.py` is now
+> a package (`canonical/crosscutting/risk_rule/`, enum in `_enums.py`) carrying **31** members, not 28. Seven names this
+> doc documents **do not exist in the enum**; six of them were renamed, one was dropped:
+>
+> | Name in the table below                | Actual `RiskRuleId` member                                                                                                       |
+> | -------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
+> | `ORACLE_STALENESS_BLOCK`               | `ORACLE_OUTAGE_HALT`                                                                                                             |
+> | `MAX_SINGLE_INSTRUMENT_SIZE_PER_VENUE` | `MAX_POSITION_SIZE_PER_INSTRUMENT`                                                                                               |
+> | `MAX_CROSS_INSTRUMENT_SIZE_PER_VENUE`  | `MAX_POSITION_SIZE_PER_VENUE`                                                                                                    |
+> | `PER_CLIENT_DRAWDOWN`                  | `MAX_DRAWDOWN_PER_CLIENT`                                                                                                        |
+> | `CAPITAL_AT_RISK_CEILING`              | `CAPITAL_AT_RISK_CEILING_PER_ARCHETYPE`                                                                                          |
+> | `GLOBAL_KILL_CONDITION`                | split into `GLOBAL_PORTFOLIO_DRAWDOWN_HALT` / `GLOBAL_DATA_STALENESS_HALT` / `CROSS_CLOUD_EGRESS_HALT` / `CUSTODY_ENDPOINT_HALT` |
+> | `LST_TRACKING_ERROR_MONITOR`           | **DROPPED** — no LST tracking-error rule exists                                                                                  |
+> | `PER_CLIENT_SUBSCRIPTION_SIZE`         | **DROPPED**                                                                                                                      |
+>
+> Members present in the enum but undocumented below: `MAX_DRAWDOWN_PER_ACCOUNT`, `MAX_DAILY_LOSS_PER_ACCOUNT`,
+> `MAX_LEVERAGE_PER_ACCOUNT`, `MAX_CONCENTRATION_PER_ASSET_GROUP`, `MAX_GROSS_EXPOSURE_PER_ACCOUNT`,
+> `MAX_NET_EXPOSURE_PER_ACCOUNT`, `COUNTERPARTY_RATIO_CAP`, `FAMILY_NET_EXPOSURE_CAP`, `FAMILY_DRAWDOWN_CAP`,
+> `FAMILY_CAPITAL_AT_RISK_CEILING`, `FAMILY_CONCENTRATION_PER_VENUE`.
+>
+> **Read `_enums.py` for the authoritative closed set** — the table below is kept for its per-rule rationale, which is
+> still useful, but its NAMES are not code-accurate.
 
 | `RiskRuleId`                           | One-line description                                                                                                                              |
 | -------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -124,7 +147,7 @@ The closed-set decision a rule's evaluator returns. Four values; each maps to a 
 
 The full event-emission cross-product is codified in the [§ 7 SSOT seam diagram](#§-7-ssot-seam-diagram-verbatim) below
 and at the
-[risk plan body](../../plans/archive/risk_simulations_limits_alerting_2026_05_10.md#-7-ssot-reconciliation-seam-framing-1--picked-2026-05-10);
+[risk plan body](/plans/archive/risk_simulations_limits_alerting_2026_05_10.md#-7-ssot-reconciliation-seam-framing-1--picked-2026-05-10);
 reviewers must reject changes that drift the two.
 
 ### `RiskRuleTrigger` (UAC `canonical/crosscutting/risk_rule.py`)
@@ -170,10 +193,10 @@ registry-only change (no new trigger type needed).
 ## § 7 SSOT seam diagram (verbatim)
 
 The `RiskRuleConsequence` × 5-canonical-SSOT cross-product table is mirrored from
-[`risk_simulations_limits_alerting_2026_05_10.md` § "§ 7 SSOT reconciliation seam (Framing 1)"](../../plans/archive/risk_simulations_limits_alerting_2026_05_10.md#-7-ssot-reconciliation-seam-framing-1--picked-2026-05-10).
+[`risk_simulations_limits_alerting_2026_05_10.md` § "§ 7 SSOT reconciliation seam (Framing 1)"](/plans/archive/risk_simulations_limits_alerting_2026_05_10.md#-7-ssot-reconciliation-seam-framing-1--picked-2026-05-10).
 Reviewers reject any PR that drifts this table from the plan-body source-of-truth.
 
-| Consequence  | Risk-gates Layer       | Event(s) emitted                                                                                       | Composes with kill-switch trigger (5-set per [`kill-switch-circuit-breaker.md`](kill-switch-circuit-breaker.md))                                       | Composes with circuit-breaker action (3-set per [`alerting_service_live_rules`](../../plans/active/alerting_service_live_rules_2026_05_07.md))                                                                                                                                                      | Composes with strategy kill-switch behaviour (4-set)                                                                                                                 | AlertCode mapping (UAC@d00326d)                                                            |
+| Consequence  | Risk-gates Layer       | Event(s) emitted                                                                                       | Composes with kill-switch trigger (5-set per [`kill-switch-circuit-breaker.md`](kill-switch-circuit-breaker.md))                                       | Composes with circuit-breaker action (3-set per [`alerting_service_live_rules`](/plans/archive/2026_05/alerting_service_live_rules_2026_05_07.md))                                                                                                                                                  | Composes with strategy kill-switch behaviour (4-set)                                                                                                                 | AlertCode mapping (UAC@d00326d)                                                            |
 | ------------ | ---------------------- | ------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------ |
 | `BLOCK`      | Layer 2                | `INSTRUCTION_REJECTED_RISK` + `RiskRuleFiredEvent` (sev: HIGH/CRITICAL)                                | If `triggers_kill_switch: true` AND per-rule threshold count met → engages `DAILY_LOSS_BREACH` / `MAX_DRAWDOWN_BREACH` / `DATA_STALE` per trigger type | Aggregated BLOCK rate ≥ 60% across N instructions → execution-service breaker may transition CLOSED→DEGRADED→OPEN per per-venue failure-rate threshold; emits `stop_new_signals` / `force_exit_only` / `halt_strategy` cascade per [`autonomous-recovery-matrix.md`](autonomous-recovery-matrix.md) | If kill-switch engaged: `STOP_NEW_ONLY` (default) / `FAST_UNWIND` (MAX_DRAWDOWN_BREACH) / `SLOW_UNWIND` (operator override) / `DELTA_HEDGE` (cross-venue still open) | `PREFLIGHT_FAILED` (generic) or `RISK_RULE_BLOCKED` (per-rule granular, added UAC@945ad5d) |
 | `SCALE_DOWN` | Layer 2 → Layer 3      | `INSTRUCTION_ACCEPTED_PREFLIGHT` (with `size_adjusted: true`) → `RESIZED_EXECUTION` + sev: WARN        | Does NOT trigger kill-switch (sized-down instruction proceeds; no breach)                                                                              | Does NOT trigger breaker (instruction approved, just smaller)                                                                                                                                                                                                                                       | Strategy continues normally with reduced size                                                                                                                        | `RISK_RULE_SCALED_DOWN` (UAC@945ad5d)                                                      |
@@ -202,6 +225,6 @@ Reviewers reject any PR that drifts this table from the plan-body source-of-trut
   [/codex/09-strategy/architecture-v2/cross-cutting/risk-gates.md](/codex/09-strategy/architecture-v2/cross-cutting/risk-gates.md)
 - Autonomous recovery (Layer 4 ErrorAction): [autonomous-recovery-matrix.md](autonomous-recovery-matrix.md)
 - Plan-of-record:
-  [plans/active/risk_simulations_limits_alerting_2026_05_10.md](../../plans/archive/risk_simulations_limits_alerting_2026_05_10.md)
+  [/plans/archive/risk_simulations_limits_alerting_2026_05_10.md](/plans/archive/risk_simulations_limits_alerting_2026_05_10.md)
 - Alerting-service rule registry:
-  [plans/active/alerting_service_live_rules_2026_05_07.md](../../plans/active/alerting_service_live_rules_2026_05_07.md)
+  [/plans/archive/2026_05/alerting_service_live_rules_2026_05_07.md](/plans/archive/2026_05/alerting_service_live_rules_2026_05_07.md)

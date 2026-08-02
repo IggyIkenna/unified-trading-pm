@@ -110,3 +110,9 @@ its own review):
 - [ ] [SCRIPT] P3. Once either fix above ships, verify against a synthetic large per-VM shard (~1M+ rows) that flush
       latency no longer scales linearly with existing shard size, and add a regression test guarding it. (repo:
       unified-trading-library)
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30**: KEEP-NA, valid — the doc states its todos 'name the investigation + design work,
+  not a pre-committed implementation, since this is a shared-infra performance change needing its own review', and the
+  P3 alternative needs an explicit durability-vs-throughput tradeoff call.

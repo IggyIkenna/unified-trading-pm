@@ -6,7 +6,7 @@ summary: >-
   gate_on_depends: true until all 13 of that plan's todos are done. Mirrors the batch4-finalize pattern (reconcile each
   of the 9 distinct source docs' checkboxes/Progress-Log entries independently, re-check the deferred/excluded
   population for cleared gates, then archive). `status: draft` until batch6 itself is approved and dispatched.
-status: draft
+status: active
 nature: process
 asset_group: [prediction]
 stage: [data]
@@ -20,7 +20,7 @@ related:
     /plans/active/prediction_satellite_ao_dispatch_batch4_2026_07_26_finalize.md,
   ]
 created: "2026-07-29"
-last_updated: "2026-07-29"
+last_updated: "2026-07-30"
 parent_epic: predictions_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -40,6 +40,12 @@ source: >-
 assigned_role: data_engineering
 sequential: true
 drift_direction: advance-code
+context_scope:
+  [
+    /plans/active/prediction_satellite_ao_dispatch_batch6_2026_07_29.md,
+    /plans/active/prediction_consolidated_closeout_2026_07_18.md,
+    /plans/epics/predictions_master.md,
+  ]
 ---
 
 # Prediction satellite AO batch 6 — finalize
@@ -53,7 +59,7 @@ drift_direction: advance-code
 - [ ] [REVIEW] P1. **Reconcile the 9 distinct source docs.** batch6's 13 todos cite 9 source docs
       (`prediction_capture_incident_remediation_2026_07_06.md`,
       `issues/prediction_arb_live_execution_bridge_2026_07_20.md`,
-      `issues/prediction_lifecycle_prefetch_gate_and_resolution_day_catalogue_2026_07_14.md`,
+      `/plans/archive/issues/prediction_lifecycle_prefetch_gate_and_resolution_day_catalogue_2026_07_14.md`,
       `issues/kalshi_execution_credential_secret_name_mismatch_2026_07_26.md`,
       `issues/kalshi_mass_attempted_failed_unclassified_adapter_error_2026_07_27.md`,
       `prediction_cross_venue_arb_and_coverage_2026_07_24.md` (3 todos cite this one),
@@ -99,3 +105,18 @@ drift_direction: advance-code
 ## Progress Log
 
 - 2026-07-29 (slot 14, ag_closeout_auditor): drafted alongside batch6, `status: draft`, gated on batch6's 13 todos.
+- 2026-07-30 (slot 7, worker on `assigned_role: review`, dispatch `...finalize-001`): **HOLDING OFF — todo 1 was
+  dispatched prematurely.** Before starting the reconciliation, verified batch6's actual completion state: only 3/14
+  todos are `done` (001 CQG fix, 002 EventTransport bridge, 004 VM launch-only) — 11 are still `queued` (003, 005-014,
+  including the P1 VM-completion VERIFY, credential reshape, and several P2 backend/data items). The gate
+  (`depends_on` + `gate_on_depends: true`) should have withheld this todo until all of batch6 is done, per this plan's
+  own header — confirmed via `GET /api/backlog/prediction_satellite_ao_dispatch_batch6_2026_07_29_finalize-001/blockers`
+  → `"ready (no blockers)"`, i.e. the gate never actually wired. **This is the same recurring dispatcher bug already
+  tracked in `plans/active/issues/gate_on_depends_wiring_gap_defi_dex_pool_finalize_2026_07_25.md`** (10+ prior bounces
+  across ≥6 distinct plan pairs, root-cause fix already P0 and in flight per that doc's Progress Log) — added this as a
+  new recurrence there rather than filing a duplicate (my first attempt at a fresh issue doc duplicated it and was
+  reverted). **Not flipping this todo's checkbox** — most of the 9 source docs genuinely have NOT been touched by batch6
+  yet, so "all 9 verified present" is false today. Skipped the task back to the queue (slot 7) rather than ship a
+  false-progress flip. Whoever picks this up next: re-check batch6's own todo statuses first — do not repeat this
+  reconciliation until it reads 14/14 `done` (or re-verify the gate_on_depends fix has landed and genuinely holds).
+- **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).

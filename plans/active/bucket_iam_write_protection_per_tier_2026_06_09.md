@@ -29,7 +29,7 @@ priority: P1
 estimate_class: infra
 estimate_baseline_ai_days: 3.0
 estimate_calibrated_ai_days: 2.4
-last_updated: 2026-06-27
+last_updated: 2026-07-31
 locked_by: live-defi-rollout
 locked_since: 2026-06-09
 supersedes:
@@ -40,6 +40,15 @@ source:
 Codex SSOTs:
   [/codex/05-infrastructure/bucket-isolation-model.md, /codex/16-strategy-playbooks/infra-spec/stage-3e-g2-env-split.md]
 drift_direction: advance-code
+context_scope:
+  [
+    /codex/05-infrastructure/bucket-isolation-model.md,
+    /plans/active/issues/bucket_iam_per_tier_dev_stg_retired_ssot_contradiction_2026_07_27.md,
+    /plans/active/issues/bucket_iam_p2_god_sa_removal_before_runtime_rewire_2026_07_30.md,
+    /plans/active/issues/bucket_iam_p2_tier_sa_scope_gap_and_default_compute_sa_overprivilege_2026_07_30.md,
+    /plans/active/issues/deployment_api_cloud_run_coldstart_flaky_exit0_blocks_prd_sa_cutover_2026_07_31.md,
+    /plans/active/issues/unified_trading_sa_live_iam_drift_vs_terraform_2026_07_31.md,
+  ]
 ---
 
 # Bucket IAM write-protection — per-tier/per-domain SAs (§8 implementation)
@@ -145,7 +154,7 @@ Two independent gates because Group A and Group B are at different stages:
   > packs), R8-prediction `[ ]` (dry-run regen pending), 5 R5 smoke-test bugs (cefi tardis datetime64 P0, tradfi FX
   > yahoo writer P1, footystats ODDS source label P1, kalshi IS 400 P1, manifest consolidator restore P1). G4 applies
   > are operator-fired (HARD-STOP); no whole-corpus walk has completed and several are still scheduled. P0.1 checkbox
-  > remains unchecked → Group A IAM (Phase 1/2) remains blocked. Re-verify after G4 applies complete. **[2026-07-14
+  > remains unchecked → Group A IAM (Phase 1/2) remains blocked. Re-verify after G4 applies complete. **[2026-07-14 >
   > update, verify-rerun-2 finding 205]**: the G4-whole-corpus-walk blocking premise above is now STALE —
   > `master_data_canonicalisation_migration_catalogue_2026_06_07.md`'s own status grid confirms **"G4 🟢 all 5 AGs
   > (updated 2026-07-12)"**: defi/cefi/sports/prediction `--apply` complete 2026-06-29, and TradFi `--apply` DONE
@@ -264,12 +273,225 @@ Two independent gates because Group A and Group B are at different stages:
 
 ### Phase 2 — Prod cutover + wiring
 
-- [ ] [TERRAFORM] P2.1. Apply `-prd-` write-scope; remove the god-SA `objectAdmin`. Verify live/batch prod workloads
-      retain `-prd-` write; verify a dev/stg credential is **denied** a `-prd-` write (IAM-level, not just
-      name-resolver). **Group B buckets join here only after the consolidation plan's Wave-3 folds provision their
-      `-{env}-` form (re-gated 2026-07-13; env-split plan archived).**
-- [ ] [CODE] P2.2. Wire each runtime to its tier SA (deployment-service launchers / Cloud Run service identities);
-      migration scripts opt into `uts-migration-sa` explicitly.
+> **🟥 SEQUENCING HAZARD found 2026-07-30 (slot-11) — P2.1 as originally written is UNSAFE to execute before P2.2.**
+> `unified-trading-sa` is the ACTUAL LIVE runtime identity for essentially the entire fleet today (deployment-api, Cloud
+> Run services, VM backfill launchers — `main.tf:651` comment: "unified-trading-sa, deployment-api's actual runtime
+> identity"). Live-verified 2026-07-30: zero references to `uts-prd-sa`/`uts_prd`/`uts-test-sa` anywhere in
+> deployment-service outside `terraform/`
+> (`grep -rn "uts-prd-sa\|uts_prd\|uts-test-sa" --include=*.py --include=*.yaml --include=*.sh .` → 0 hits), and only 5
+> of 165 `scripts/vm/launch-*.sh` even pass `--service-account=` at all. P2.2 ("wire each runtime to its tier SA") is
+> still fully unchecked — **nothing anywhere in the codebase authenticates as `uts-prd-sa` yet.** Removing
+> `unified_trading_storage_admin` (`main.tf:598-602`, the project-wide `roles/storage.objectAdmin` grant — the literal
+> "god-SA objectAdmin" this todo names) BEFORE P2.2 rewires runtimes would immediately 403 every live + batch GCS write
+> across the whole fleet (MTDS/MDPS/IS/features/execution/strategy stores, everything) — a direct violation of the
+> data-pipeline-correctness-is-the-heartbeat HARD RULE, and it would ALSO fail P2.1's own stated verification ("verify
+> live/batch prod workloads retain `-prd-` write") since they would in fact LOSE write access. **Split below mirrors
+> this plan's own precedent** (P1.2 → P1.2a/P1.2b: "a single checkbox covering both a genuinely-complete slice and a
+> still-blocked slice left nothing honestly flippable"). Full evidence + recommendation:
+> `issues/bucket_iam_p2_god_sa_removal_before_runtime_rewire_2026_07_30.md`.
+
+- [x] ✅ [TERRAFORM] P2.1a. **`-prd-` write-scope is already live** — P1.2b's `uts_prd_objectadmin_group_a` /
+      `uts_prd_objectadmin_group_b` bindings (`bucket_iam_per_tier_sa.tf`) were confirmed LIVE via `tofu state list` + a
+      clean `tofu plan` on 2026-07-29 (P1.2b's own evidence trail). No new terraform state change made this pass —
+      re-verified by reading `bucket_iam_per_tier_sa.tf` against that evidence. — slot-11, 2026-07-30.
+- [ ] [TERRAFORM][OPERATOR] P2.1b. **Remove the god-SA `objectAdmin`** (`unified_trading_storage_admin` in
+      `main.tf:598-602`); verify live/batch prod workloads retain `-prd-` write (now via `uts-prd-sa`, not the god-SA);
+      verify a dev/stg credential is **denied** a `-prd-` write (IAM-level, not just name-resolver). **HARD-GATED on
+      P2.2e AND P2.2d (below) both completing + being live-verified first** — do not remove the god-SA grant while any
+      runtime still authenticates as `unified-trading-sa` OR the GCP default compute SA for writes. **P2.2c alone
+      (2026-07-31) is NOT sufficient for this gate** — it wires the identity into `deploy-shared.sh` and live-verifies
+      `uts-prd-sa`'s grants, but deployment-api's actual LIVE runtime is still `unified-trading-sa` (traffic cutover
+      split out as the new P2.2e, currently blocked on a cold-start reliability issue) — do not misread P2.2c's ✅ as
+      satisfying this gate. **Group B buckets join here only after the consolidation plan's Wave-3 folds provision their
+      `-{env}-` form (re-gated 2026-07-13; env-split plan archived).** **`[OPERATOR]`-tagged 2026-07-30 (slot-13)**:
+      this checkbox has no structured `depends_on`/`gate_on_depends` link to P2.2 (same-plan todos can't express a
+      per-todo prereq — CLAUDE.md), so the backlog regenerator has auto-dispatched this fleet-wide-blast-radius IAM
+      removal to a worker TWICE in one day despite the HARD-GATED note above (slot-11 earlier today, slot-13 this pass)
+      — both independently declined per `issues/bucket_iam_p2_god_sa_removal_before_runtime_rewire_2026_07_30.md`.
+      `[OPERATOR]` routes this to the operator's blocked-queue instead of re-offering it to workers who can only
+      re-derive the same "not yet" verdict. **Retag back to plain `[TERRAFORM]`** once P2.2e and P2.2d are both done +
+      live-verified (every write-path runtime confirmed running as its tier SA, not `unified-trading-sa` or the default
+      compute SA) — do not leave this tag stale per CLAUDE.md's retag-on-resolve rule.
+
+      > **🟥 Note (2026-07-31, slot-14)**: even once this todo removes `unified-trading-sa`'s `storage.objectAdmin`,
+                                                                      > that SA still live-holds `roles/resourcemanager.projectIamAdmin` + `roles/iam.serviceAccountAdmin` (undeclared
+                                                                      > in any terraform in this repo) — both self-escalation-capable, i.e. it could re-grant itself storage access
+                                                                      > (or any other role) without going through terraform at all. See
+                                                                      > `issues/unified_trading_sa_live_iam_drift_vs_terraform_2026_07_31.md` — a full de-privilege of this SA is not
+                                                                      > actually complete until that doc's P1/P2 also land.
+
+> **🟥 P2.2 SCOPE GAP found 2026-07-30 (slot-12) — "wire each runtime to its tier SA" is not mechanically executable
+> today.** Investigation (live GCP IAM queries + static analysis, no state mutated) found 3 independently-blocking
+> findings: (1) `uts-prd-sa`/`uts-test-sa`/`uts-migration-sa` hold ONLY storage roles (live-verified via
+> `gcloud projects get-iam-policy` — zero secretmanager/pubsub/bigquery/run.invoker) — wiring any real runtime to them
+> today breaks its Secret Manager / Pub/Sub / BigQuery access immediately; (2) the "instead of `unified-trading-sa`"
+> framing above is itself wrong for VM launchers — 155/165 `launch-*.sh` scripts actually run as the GCP **default
+> compute SA** (`main.tf`'s own comment + a live IAM query confirm this), which live-verified holds 28 UNCONDITIONAL
+> project-wide roles incl. `roles/storage.admin` and `roles/iam.serviceAccountTokenCreator` — a BIGGER live security
+> exposure than the god-SA grant this plan exists to close; (3) a second, already-partially-live per-service SA scheme
+> (`deployment-service/configs/gcp_service_accounts.yaml`, `features-prod`/etc.) coexists unreconciled with this plan's
+> per-tier design. Full evidence + recommendation:
+> `issues/bucket_iam_p2_tier_sa_scope_gap_and_default_compute_sa_overprivilege_2026_07_30.md`. Split below mirrors this
+> plan's own P1.2→P1.2a/P1.2b precedent.
+
+- [x] ✅ [OPERATOR] P2.2a. **RESOLVED 2026-07-31** — operator ruling on BLK-0c84ceac: **"C: hybrid" — per-tier SAs
+      (`uts-prd-sa`/`uts-test-sa`/`uts-migration-sa`) stay the write-owner for the Group A/B raw-data buckets this plan
+      already covers; per-service SAs (`deployment-service/configs/gcp_service_accounts.yaml`) own already-migrated
+      domain services (`features-prod` etc.); reconcile the undocumented ad-hoc SA family (`uts-*-batch-sa`,
+      `t1-batch-sa`, ...) into whichever bucket it structurally belongs.** Full boundary table (bucket→scheme mapping +
+      ad-hoc-family disposition) already drafted in the linked issue doc's "Hybrid (C) boundary proposal" section — that
+      table is the ratified answer, not just a proposal, as of this ruling. Unblocks P2.2b-P2.2d. — slot-14, 2026-07-31.
+- [x] ✅ [TERRAFORM] P2.2b. **DONE 2026-07-31 (slot-14) — `deployment-service@e8684fe`.** Retagged back to plain
+      `[TERRAFORM]` (P2.2a resolved above). Granted the 7 non-storage roles `unified-trading-sa` currently holds
+      (`bigquery.dataEditor`, `secretmanager.secretAccessor`, `run.invoker`, `pubsub.editor`,
+      `compute.instanceAdmin.v1`, `iam.serviceAccountUser`, `artifactregistry.reader` — `main.tf`'s `unified_trading_*`
+      project members) to `uts-prd-sa`/`uts-test-sa`/`uts-migration-sa`, project-wide, mirroring `unified-trading-sa`'s
+      own (unconditioned) grant scope. Applied via `tofu apply` against the real `terraform/state/prod` backend (21
+      adds, 0 changes/destroys); live-verified via `gcloud projects get-iam-policy` — all 3 SAs now hold all 7 roles; a
+      follow-up `tofu plan` shows 0 changes (config/state/live in sync). INERT until P2.2c/P2.2d actually wire a runtime
+      to one of these SAs — no live runtime identity changed as a result.
+- [x] ✅ [CODE] P2.2c. **DONE 2026-07-31 (slot-5, reconciled with a concurrent slot-7 session on the same file) —
+      `deployment-service@8a8125e`/`c518cda` + `118ad9e`.** Wired `deploy-shared.sh`'s default `--service-account` for
+      `uts-shared-deployment-api`/deployment-api from `unified-trading-sa` to `uts-prd-sa` (env-overridable via
+      `RUNTIME_SA=` for an instant revert), and live-verified access: Secret Manager `versions.access`, Pub/Sub
+      `topics.list`, BigQuery `datasets.list`, Storage `objects.list` (Group A `-prd-`) all confirmed working directly
+      via an impersonated `uts-prd-sa` token. Concurrently, slot-7 found + fixed 2 grant gaps this check didn't cover
+      (`roles/bigquery.jobUser`, bucket-level write on `unified-deployment-state-*`/`deployment-scripts-*`),
+      live-verified via real endpoints — see
+      `issues/bucket_iam_p2_tier_sa_scope_gap_and_default_compute_sa_overprivilege_2026_07_30.md` P2 (flipped ✅ there).
+      Also fixed an unrelated drift bug found along the way: `deploy-shared.sh` had a stale `--memory=4Gi --cpu=2`
+      predating `cloudbuild.yaml`'s documented 2026-07-17 8Gi→16Gi OOM fix for this service — now `16Gi/4cpu` to match.
+      **`uts-prd-sa`'s functional readiness for deployment-api is thoroughly confirmed** — the remaining live-traffic
+      cutover is split out below as P2.2e (new finding, blocked on a separate reliability issue, not on anything this
+      checkbox covers).
+- [x] ✅ [CODE] P2.2d1. **DONE 2026-07-31 (slot-7) — `deployment-service@0ff5bc8`.** Split out of P2.2d (single checkbox
+      covering both a genuinely-complete slice and a large still-open one — mirrors this plan's own P1.2a/P1.2b,
+      P2.1a/P2.1b, P2.2a-e precedent). Added `lc_tier_service_account <env> <project>` to
+      `scripts/vm/lib/launcher_common.sh` (env→`uts-prd-sa`/`uts-test-sa` resolver, `LC_RUNTIME_SA=` override for an
+      instant revert — mirrors `deploy-shared.sh`'s `RUNTIME_SA=` pattern from P2.2c) and an optional 8th
+      `service_account` arg to `lc_gcloud_create()` (omitted/empty preserves prior default-compute-SA behavior — fully
+      backward-compatible). Wired all 3 real `lc_gcloud_create()` callers whose target buckets are unambiguously Group
+      A/B raw-data per the ratified bucket→scheme table (`launch-canonical-smoke-vm.sh`,
+      `launch-instruments-smoke-vm.sh`, `launch-deribit-options-chain-daily.sh`) — dry-run verified
+      `--env prod/staging/dev` each resolve to the correct tier SA email. `launch-qg-snapshot-vm.sh` (the 4th
+      `lc_gcloud_create()` caller) deliberately left UNWIRED — its write target (`${PROJECT}-deployment-events`) doesn't
+      match the ratified table's Group A/B raw-data definition; folded into P2.2d2 below rather than guessed.
+- [x] ✅ [CODE] P2.2d2a. **DONE 2026-08-01 (slot-7) — `deployment-service@7538587`/`01edfe8`/`ef891c1`.** Split out of
+      P2.2d2 (single checkbox covering both a genuinely-classifiable-and-safe slice and a large still-ambiguous one —
+      mirrors this plan's own P1.2a/P1.2b, P2.1a/P2.1b, P2.2a-e, P2.2d1 precedent). Ran the per-launcher tier
+      classification pass P2.2d2 called for: of 134 direct-`gcloud`-calling launchers (133 found via
+      `grep -L 'lc_gcloud_create\|--service-account='`, +1 `launch-api-football-backfill-vm.sh` recovered after its own
+      comment — "rather than the `lc_gcloud_create` wrapper" — produced a grep false-positive that had excluded it),
+      cross-referenced each against the target service tarball it pulls (`lc_verify_tarball_freshness`/tarball-name
+      grep) and, for `market-data-processing-service`, against its actual `resolve_bucket_name(kind=...)` call sites
+      (confirmed MDPS candles land in `kind="market-data"` — the SAME `market-data-tick-*` family as raw MTDS ticks, not
+      a separate bucket kind). **95 launchers** write EXCLUSIVELY into Group A raw-data
+      (`market-data-tick-*`/`instruments-store-*`) with no `features-service` co-dependency — unambiguously covered by
+      `uts-prd-sa`/`uts-test-sa`'s IAM condition, so wired via
+      `--service-account="$(lc_tier_service_account "$DEPLOYMENT_ENV" "$PROJECT")"` on their real
+      `gcloud compute instances create` invocation (87 via a scripted transform targeting the `--project=` line +
+      dry-run/shellcheck/`bash -n` verified across all 95; 8 hand-edited for non-standard formatting — arrays, same-line
+      flags, no-backslash-continuation — 3 of those also needed `lib/launcher_common.sh` sourced in for the first time).
+      Full per-file list + rationale in the 3 commits above. `launch-cefi-week-test.sh` needed no edit (pure delegator
+      to the now-wired `launch-cefi-forward-poll.sh`, fixed transitively).
+- [x] ✅ [CODE] P2.2d2b. **DONE 2026-08-01 (slot-7) — `deployment-service@3dc37d6`.** Per-script bucket-name verify (as
+      required) + wire for the 12 features-service launchers P2.2d2a deliberately skipped. **10 wired** via
+      `--service-account="$(lc_tier_service_account "${DEPLOYMENT_ENV}" "$PROJECT")"`: `launch-features-backfill-vm.sh`,
+      `launch-features-sharded-backfill.sh`, `launch-features-sports-backfill-vm.sh`, `launch-features-vm.sh` (all
+      confirmed via `features_service/common/__init__.py`'s shared `resolve_bucket(kind="features", asset_group=...)`
+      wrapper → canonical `features-{ag}-`), `launch-mdps-features-live.sh` + `launch-mtds-live.sh` (per-asset_group
+      `market-data`/`features` kinds, Group A/B), `launch-prediction-arb-detector.sh` (confirmed via
+      `features_service/cross_instrument/config.py:142` — resolves to canonical `features-pred-`, NOT the legacy
+      `features-cross-instrument-prediction-*` bucket the plan warned about for its sibling
+      `launch-prediction-features-vm.sh`), `launch-prediction-live.sh` (`VM_SERVICE=market_tick_data_service` →
+      `market-data-tick-pred-`, Group A), `launch-sports-derived-features-census-vm.sh` (env-aware via VM metadata; the
+      shell `$SPORTS_BUCKET` var is echo-only, not the real write path).
+      `launch-sfi-progressive-features-backfill-vm.sh` wired with a HARDCODED `"prod"` tier (not `${DEPLOYMENT_ENV}`)
+      because its `--bucket` arg is hardcoded `features-sports-prd-*` regardless of `--env` — a dynamic lookup would
+      carry `uts-test-sa` into a run that still writes the prd bucket and 403. `launch-features-onchain-backfill-vm.sh`
+      needed no edit — it `exec`s into the now-wired `launch-features-vm.sh` (pure delegator, resolves transitively,
+      same pattern as P2.2d2a's `launch-cefi-week-test.sh`). **2 deliberately left unwired** (split out below, not
+      silently dropped): `launch-canonical-migration-vm.sh` (multi-category dispatcher writing BOTH Group A/B raw-data
+      AND the `deployment-scripts` control-plane bucket in the same run — the tier SA's IAM condition is prefix-scoped
+      to Group A/B only, wiring would break its staging-output writes) and `launch-features-cross-cutting.sh` (genuinely
+      cross-asset_group; no `resolve_bucket_name` call found anywhere in its live runner code —
+      `features_service/cross_instrument/live/` + `features_service/calendar/live/`; its own header comments describe
+      bucket names — `features-cross-instrument-{env}-{pid}` / `features-multi-timeframe-{env}-{pid}` — that don't exist
+      anywhere in the current `cloud-providers.yaml`, i.e. stale documentation of a pre-Fold-A shape). The **~11
+      ambiguous/control-plane launchers are now fully dispositioned**: `launch-bucket-rsync-vm.sh` (explicitly
+      cross-bucket, flat→tiered — same migration-SA-blocked class as the 2 migration launchers, folded into P2.2d2c2
+      below) + 6 confirmed OUT OF SCOPE via the authoritative registry (`deployment_service/vm_prefix_registry.py`
+      `VM_PREFIX_TO_BUCKET`, all map to `bucket=None`): `launch-dashboard-vm.sh`, `launch-disaster-drill-cron-vm.sh`,
+      `launch-dr-drill-cutover-vm.sh`, `launch-sports-scheduler-vm.sh`, `launch-vm-zombie-watchdog.sh` (control-plane /
+      heartbeat-only, confirms the plan's own "not a data writer" suspicion for each) +
+      `launch-features-onchain-backfill-vm.sh` (resolved above, pure delegator). The 17 execution/strategy/ml-service +
+      9 AWS launchers remain correctly out of scope (unchanged from P2.2d2a's disposition — per-service SA /
+      different-cloud, not this helper). Evidence: `bash -n` + shellcheck clean on all 10 touched files;
+      `quality-gates.sh` green; CI verified.
+- [ ] [TERRAFORM][OPERATOR] P2.2f. **NEW finding, opened 2026-08-01 (slot-7) during P2.2d2b.** `uts-migration-sa` — this
+      plan's own § Open design decisions designates it "the sanctioned cross-tier writer" for migration scripts —
+      currently holds ONLY `roles/storage.objectViewer` project-wide (`bucket_iam_per_tier_sa.tf`'s
+      `uts_migration_objectviewer` resource); it has ZERO write grant (no `objectAdmin`, conditioned or otherwise).
+      Confirmed by reading the terraform source (not yet re-confirmed against live GCP — do that before granting). It
+      cannot actually write anything, contradicting its stated purpose and blocking every launcher that needs it
+      (`launch-legacy-bucket-migration-sharded.sh`, `launch-gcs-migration-bundle-vm.sh`, `launch-bucket-rsync-vm.sh` —
+      see P2.2d2c2 below). **`[OPERATOR]`**: the exact grant scope is a judgment call, not mechanically determinable —
+      options are (a) an unconditioned project-wide `storage.objectAdmin` (simplest, but re-creates a mini god-SA for
+      exactly these 3 migration-purpose launchers), (b) a CEL condition scoped to the specific legacy bucket name
+      patterns these 3 launchers actually touch (`market-data-tick-{ag}-{project}` flat legacy shape confirmed for
+      `launch-gcs-migration-bundle-vm.sh`; the other 2 need their own enumeration), or (c) extend
+      `lc_tier_service_account` with a migration mode AND scope the grant narrowly to match. Recommend (b) — mirrors
+      this plan's own least-privilege design intent for the tier SAs. Once ruled + granted, live-verify via a real write
+      (not just `get-iam-policy`) before unblocking P2.2d2c2.
+- [x] ✅ [CODE] P2.2d2c. **NEW, split from P2.2d2b 2026-08-01 (slot-7).** Wire the 3 launchers blocked on the
+      migration-SA write-grant gap (P2.2f above): `launch-legacy-bucket-migration-sharded.sh`,
+      `launch-gcs-migration-bundle-vm.sh`, `launch-bucket-rsync-vm.sh` — all three read/write a LEGACY (non-env-tiered,
+      flat) bucket name that no tier SA's `startsWith` IAM condition matches. **DONE 2026-08-02 (slot-13) —
+      `deployment-service@24e0878`, the 2 launchers this todo flagged as independently investigable (not gated on
+      P2.2f)**: `launch-canonical-migration-vm.sh` — confirmed via `terraform/gcp/bucket_iam_per_tier_sa.tf` +
+      `issues/pipeline_e2e_check_missing_env_flag_test_bucket_403_2026_08_01.md` that BOTH `uts-prd-sa` (already
+      terraform-declared) and `uts-test-sa` (live-granted 2026-08-01, was terraform-UNdeclared — now added in this same
+      commit, closing that drift) already hold a non-tier-conditioned `storage.objectAdmin` grant on
+      `deployment-scripts-<project>` — so a single
+      `--service-account="$(lc_tier_service_account "$DEPLOYMENT_ENV"     "$PROJECT")"` covers BOTH its env-tiered Group
+      A/B migration-target writes AND its `CODE_BUCKET` (mapping-TSV + standard VM observability) writes; no second
+      `--service-account` needed. Wired. `launch-features-cross-cutting.sh` — read
+      `unified_trading_library/feature_service_base/live_aggregator.py`'s `CrossCuttingFeaturesRunner` in full: it is
+      EVENT-ONLY (Redis Streams in, `FeaturesComputedEvent` out via an injected `emission_publisher`), no
+      GCS/`resolve_bucket_name` call anywhere — confirms the header comment's
+      `features-cross-instrument-{env}-{pid}`/`features-multi-timeframe-{env}-{pid}` bucket names are stale (corrected
+      in this commit, matching P2.2d2b's own suspicion). So this launcher needs only the standard tier SA for its
+      observability writes, same as every other launcher — wired via `lc_tier_service_account`. Both `bash -n` +
+      shellcheck clean; `quality-gates.sh` green; CI verified. **The 3 migration-SA-blocked launchers remain undone,
+      split out below as P2.2d2c2** (not silently dropped — mirrors P2.2d2b's own split precedent).
+- [ ] [CODE][OPERATOR] P2.2d2c2. **NEW, split from P2.2d2c 2026-08-02 (slot-13).** Wire the 3 launchers still blocked on
+      the migration-SA write-grant gap: `launch-legacy-bucket-migration-sharded.sh`,
+      `launch-gcs-migration-bundle-vm.sh`, `launch-bucket-rsync-vm.sh` — all three read/write a LEGACY (non-env-tiered,
+      flat) bucket name that no tier SA's `startsWith` IAM condition matches. Gated on P2.2f (still open — `[OPERATOR]`
+      grant not yet made). **`[OPERATOR]`-tagged 2026-08-02 (slot-12)**: re-verified independently before touching code
+      — live GCP
+      (`gcloud projects get-iam-policy central-element-323112 --filter="bindings.members:uts-migration-sa@..."`)
+      confirms `uts-migration-sa` still holds ONLY `roles/storage.objectViewer` project-wide, zero write grant, matching
+      terraform source (`bucket_iam_per_tier_sa.tf`'s `uts_migration_objectviewer` resource — no `objectAdmin` block for
+      this SA). Wiring any of these 3 launchers to it today would 403 on every write; wiring them to a tier SA instead
+      would be wrong too (P2.2f's own text: none of the 3's legacy flat bucket names match any tier SA's `startsWith`
+      condition). Same structural gap as P2.1b above — this checkbox has no structured `depends_on`/`gate_on_depends`
+      link to P2.2f (same-plan todos can't express a per-todo prereq — CLAUDE.md), so the backlog regenerator will keep
+      re-offering it to workers who can only re-derive the same "not yet" verdict. `[OPERATOR]` routes this to the
+      operator's blocked-queue instead. **Retag back to plain `[CODE]`** once P2.2f is ruled + the grant is live +
+      independently re-verified (not just terraform `plan` clean) — do not leave this tag stale per CLAUDE.md's
+      retag-on-resolve rule.
+- [ ] [INFRA] P2.2e. **NEW, opened 2026-07-31 (slot-5).** Cut `uts-shared-deployment-api`'s live traffic
+      (`spec.traffic`) over to a `uts-prd-sa` revision (P2.2c wired the identity + resource sizing; this is the separate
+      step of actually promoting it). **Currently BLOCKED**: every fresh cold-start of a new/tagged revision fails
+      reproducibly (`Container called exit(0)` + STARTUP-TCP-probe-failed, ~30-32s in — independent of SA and of the
+      `16Gi/4cpu` resource fix, both confirmed via direct testing), a failure signature that looks like the same
+      mechanism as the open `issues/deployment_api_sigabrt_crash_loop_2026_07_24.md` investigation. Once that
+      investigation (or this specific cold-start angle) resolves: tag + curl-verify a fresh instance 3-5× for
+      confidence, then cut `spec.traffic` over (or ramp via the existing tagged-canary pattern — see
+      `e8ce86a-verify`/`00389-d9d`). Full writeup:
+      `issues/deployment_api_cloud_run_coldstart_flaky_exit0_blocks_prd_sa_cutover_2026_07_31.md`. Gated on P2.2c
+      (met) + the cold-start blocker resolving.
 - [ ] [TEST] P2.3. Negative tests: `ENVIRONMENT=staging` write to a `*-prod-*` bucket → `403` at IAM; migration SA →
       allowed. Add as a deployment-service QG check.
 
@@ -284,3 +506,28 @@ Two independent gates because Group A and Group B are at different stages:
 - Live/batch prod + dev workloads unaffected (read-anything preserved; tier writes preserved).
 - Migration SA is the single sanctioned cross-tier writer; no remaining project-wide `objectAdmin`.
 - Codex §8 reflects enforced reality.
+
+## Progress Log
+
+- **context-scout 2026-08-01**: populated/refreshed context_scope (6 entries).
+- **slot-6 2026-08-02**: dispatched task `bucket_iam_write_protection_per_tier-018` (P2.2e, the
+  `uts-shared- deployment-api` live-traffic cutover). Did NOT proceed — confirmed both gating docs are still
+  `status: open` and the explicit downstream gate from `deployment_api_sigabrt_crash_loop_2026_07_24.md`'s
+  `2026-08-01T00:06Z (main-orchestrator agt-26fe12)` entry is still in force verbatim: "any live-traffic cutover to a
+  fresh revision (e.g. `bucket_iam_write_protection_per_tier-018` P2.2e) MUST NOT proceed on a 'resolved' reading of
+  this doc — the cold-start path is demonstrably still flaky; hold 100% traffic on the warm instance until finding-6's
+  durable-close bar is met." Checked the companion tracker
+  (`deployment_api_cloud_run_coldstart_flaky_exit0_blocks_prd_sa_cutover_2026_07_31.md`) — no `durable-close` language
+  present, i.e. the raised bar (N-consecutive fresh cold-starts over a multi-hour window spanning quiet periods, zero
+  `exit(0)` failures) has not been met. Also confirmed the related `BLK-a14e9de5` (Google Cloud Support case question on
+  `deployment_api_sigabrt_crash_loop-028`) is still unanswered. This is a live-production service traffic cutover
+  explicitly gated by main-orchestrator's own instruction — not proceeding without that gate clearing is not optional
+  caution, it's compliance with a standing directive. No action taken; releasing via `/skip-current-task`.
+- **slot-12 2026-08-02**: dispatched task `bucket_iam_write_protection_per_tier-023` (P2.2d2c2, the 3
+  migration-SA-blocked launchers). Independently re-verified P2.2f's gate before touching code: live GCP
+  `get-iam-policy` confirms `uts-migration-sa` still holds only `roles/storage.objectViewer` (zero write grant),
+  matching terraform source — the gate is genuinely still unmet, not just stale-looking. Wiring the 3 launchers now
+  would either 403 (migration SA) or silently mismatch (tier SA's `startsWith` condition doesn't cover their legacy flat
+  bucket names). Retagged P2.2d2c2 `[OPERATOR]` (mirrors this plan's own P2.1b precedent — same-plan todos can't express
+  a structured prereq, so the backlog regenerator will keep re-offering this to workers otherwise). No code changed;
+  releasing via `/skip-current-task`.

@@ -23,14 +23,15 @@ related:
   ]
 created: 2026-07-28
 source: ["mvp_backfill_defi_onchain_v10-002 / pyth_oracle_prices_stale_ghost_failure_rows_2026_07_28.md, 2026-07-28"]
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 priority: P2
 parent_epic: infrastructure_master
 resolved_by:
 locked_by:
 drift_direction: advance-code
 depends_on: []
+assigned_role: infra
 ---
 
 ## What I found
@@ -100,14 +101,21 @@ Given this session's actual task resolved via other means (see
 resolved/archived), this doc is filed to prevent the same wall from blocking the next defi manifest-recon need, not
 because it is currently blocking anything urgent.
 
-- [ ] [INFRA] P2. **Retagged from [OPERATOR] 2026-07-28 — direction 1 adopted by default, no operator decision needed.**
-      `cf_manifest_audit.py`'s Cloud Run job (`deployment-service/terraform/gcp/cf_manifest_audit_scheduler.tf`) is the
-      existing, proven precedent for this exact corpus (32Gi/8vCPU, explicitly provisioned because 4Gi/16Gi OOM'd on the
-      same ~26.3M-row defi tick manifest) — adopt that sizing/pattern as the default for defi manifest-recon rather than
-      the ad-hoc per-run `MACHINE_TYPE` override this session used (`deployment-service@420c8be`): either bump the
-      defi-specific default VM machine type to a 32Gi+/8vCPU-equivalent size, or move defi manifest-recon passes to a
-      Cloud Run job mirroring `cf_manifest_audit_scheduler.tf`'s own provisioning (matching the manifest consolidator's
-      own established Cloud-Run-not-VM precedent). (repo: deployment-service)
+- [x] ✅ [INFRA] P2. **DONE 2026-07-30 — deployment-service@6bfeae2bc.** Chose the VM-machine-type-bump half of
+      direction 1 (not the Cloud Run migration — a materially bigger lift than this P2's scope, and the existing VM
+      launchers already have the singleton-lock/metadata/shutdown machinery a fresh Cloud Run job would need to
+      rebuild). All three manifest-recon launchers that run `reconcile_phantom_manifest_rows_all.py`/its chain
+      (`launch-manifest-recon-all-vm.sh`, `launch-manifest-recon-apply-vm.sh`, `launch-defi-phantom-recon-vm.sh`) now
+      default `MACHINE_TYPE` to `e2-highmem-8` (8vCPU/64GB) specifically when `ASSET_GROUP=defi` — other asset_groups
+      are unaffected and keep the existing `e2-standard-4` default. `e2-highmem-8` was chosen over a minimal 32Gi box
+      because it's the largest size this incident actually tested (it stalled at 96% mem under the heavier
+      chained-script load but did NOT hard kernel-OOM-kill, unlike `e2-standard-4` at 15.4GB RSS) — comfortably clears
+      `cf_manifest_audit.py`'s proven 32Gi/8vCPU precedent on the same corpus. Documented in each script's header
+      comment that this bumped default is NOT a guaranteed-sufficient floor for the full 3-4-script chain (per the
+      incident's own 64GB-stall data point) — the real fix is this doc's P3 follow-on (column-pruned read path), left
+      open/out of scope for this todo (different repos: instruments-service, unified-trading-library). The
+      `MACHINE_TYPE` env-var override added by the prior ad-hoc fix (`deployment-service@420c8be`) still works unchanged
+      (`${MACHINE_TYPE:-$_DEFAULT_MACHINE_TYPE}`).
 - [ ] [SCRIPT] P3. **Follow-on efficiency improvement (direction 2), not gating on the above.** Add a lighter-weight,
       column-pruned read path to `merge_canonical_with_outstanding_shards` (or a scoped sibling helper) for callers that
       only need a handful of columns / a single (venue, data_type) slice — mirroring the ad-hoc 6-column pyarrow read
@@ -115,3 +123,9 @@ because it is currently blocking anything urgent.
       file). Reserve the expensive full-frame path for callers that genuinely need to WRITE back the whole index (the
       real `--apply` mutation path, which needs full-frame safety guarantees regardless). (repo: instruments-service,
       unified-trading-library)
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30**: RECLASSIFY -> assigned_vm: planning (conflict-check CLEAR against 231 active
+  planning docs; no open todo elsewhere duplicates this claim) - both todos retagged from [OPERATOR] with direction 1
+  adopted; bounded machine-type/Cloud-Run sizing + a column-pruned read path

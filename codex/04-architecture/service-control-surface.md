@@ -16,7 +16,7 @@ created: 2026-03-27
 authoritative_for: [service control surface (CLI/env/config three-channel model), ServiceRuntime validated-input object]
 referenced_by: [/codex/04-architecture/service-framework.md]
 owner:
-last_reviewed: 2026-05-17
+last_reviewed: 2026-10-11
 code_refs:
 ---
 

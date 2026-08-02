@@ -18,7 +18,7 @@ created: 2026-05-15
 authoritative_for: [RecursiveLeverageReceiver deploy runbook]
 referenced_by: [/codex/04-architecture/flash-loan-receiver.md]
 owner: slot-2-ikenna
-last_reviewed: 2026-05-17
+last_reviewed: 2026-08-29
 code_refs:
 execution:
   {
@@ -196,6 +196,6 @@ UAC registry SHA:  unified-api-contracts@468df51
 ## Plan reference
 
 - Phase 4 of
-  [`defi_recursive_borrow_archetypes_2026_05_10.md`](../../plans/active/defi_recursive_borrow_archetypes_2026_05_10.md)
+  [`defi_recursive_borrow_archetypes_2026_05_10.md`](/plans/archive/2026_05/defi_recursive_borrow_archetypes_2026_05_10.md)
 - Companion: [`/codex/04-architecture/flash-loan-receiver.md`](/codex/04-architecture/flash-loan-receiver.md)
   (passthrough sibling contract)

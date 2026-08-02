@@ -72,17 +72,92 @@ pattern) and burn real backfill throughput, exactly during the highest-value win
 
 ## Recommended decision
 
-- [ ] [DATA] P1. Source `tardis-concurrency-guard.sh` in `deployment-service/scripts/vm/launch-mtds-live.sh` — call
-      `tardis_concurrency_guard` pre-flight + `tardis_guard_reserve_slot` immediately before VM creation, gated on the
-      shard's venue being Tardis-sourced (mirror the CAP-EXEMPT venue list already used elsewhere: HYPERLIQUID / ASTER /
-      LIGHTER-ZKSYNC / EXTENDED-STARKNET / PACIFICA-SOLANA skip the guard call; every other cefi venue does not). (repo:
-      deployment-service)
-- [ ] [DATA] P2. Audit sibling live launchers for the same gap (`launch-mtds-live-cefi-consolidated.sh`,
-      `launch-mtds-live-prediction-consolidated.sh`, any other `launch-*-live*.sh` under `scripts/vm/`) — grep each for
-      the same guard-sourcing markers used above; wire in whichever are missing it. (repo: deployment-service)
-- [ ] [DATA] P3. Update `data-pipeline-check-mtds` skill's Phase-2 (live leg) section to note the guard-gap risk and
+> **✅ SAME-FILE COLLISION RESOLVED 2026-07-31 (corpus-wide ownership-conflict sweep, operator ruling: only one doc's
+> todo claims the edit, the other cites it).** The doc this collided with —
+> `/plans/active/issues/mtds_backfill_launcher_guard_overapplies_to_nontardis_venues_2026_07_28.md`
+> (`assigned_vm: planning`) — has **already SHIPPED its half** (`deployment-service@2d6b01a`): the shared exemption
+> logic now lives in `tardis-concurrency-guard.sh` itself as `TARDIS_CAP_EXEMPT_VENUES` +
+> `tardis_venue_list_needs_guard()` (verified in live code today). So the two docs are no longer racing on the same
+> logic — they own **disjoint** files:
+>
+> | File                                           | Owner                                                            |
+> | ---------------------------------------------- | ---------------------------------------------------------------- |
+> | `tardis-concurrency-guard.sh` (exempt logic)   | overapplies doc — **DONE**, `deployment-service@2d6b01a`         |
+> | `launch-mtds-backfill-vm.sh`                   | overapplies doc — **DONE**                                       |
+> | `launch-mtds-live.sh` + sibling live launchers | **THIS doc** (P1/P2 below) — no other active doc claims the edit |
+> | skill `SKILL.md` § 3 (Tardis cap)              | overapplies doc — **DONE**                                       |
+> | skill `SKILL.md` Phase 2 (live leg)            | **THIS doc** (P3 below) — a different section, no overlap        |
+
+> **📤 THE TODOS BELOW ARE EXTRACTED AND DISPATCHED ELSEWHERE — do NOT dispatch from this doc (`/na-eligibility-audit`
+> 2026-08-02, tranche=cefi).** `/plans/active/cefi_satellite_ao_dispatch_batch5_2026_08_02.md` (`status: active`,
+> `assigned_vm: planning`, `parent_epic: cefi_master`, `unified-trading-pm@766822efe`) carries this doc's entire
+> remaining scope verbatim and Source-cites it: **batch5 todo 1 `[INFRA] P1`** covers P1 + P2 together (and widens P2
+> from the 2 siblings named below to all 8 `launch-*live*.sh` scripts), **batch5 todo 2 `[DOC] P3`** covers P3. This doc
+> stays `assigned_vm: NA` deliberately — flipping it would create a SECOND dispatch path for the same launcher edit. Any
+> checkbox still open below is genuinely unshipped; batch5's own done-when for each todo includes flipping it, so the
+> batch5 worker owns closing it.
+>
+> One correction batch5 verified live on 2026-08-02 that this doc's older prose gets wrong — **trust batch5, not the
+> text below**: the skill path is `unified-trading-pm/cursor-configs/skills/data-pipeline-check-mtds/`, not the
+> `.claude/skills/...` path P3 names (that directory does not exist).
+>
+> **⚠️ Integration note (2026-08-02, na-eligibility-audit batch merge)**: the audit banner above was written while all
+> three todos were still open. Concurrently, batch5 todo 1 shipped and **P1 + P2 below were closed NOT-A-BUG** under
+> operator ruling BLK-5aa3ce78 (`unified-trading-pm@c9bcd08ac`, `@f385698d4`) — which also retires the banner's original
+> "sibling-launcher scope is 8 scripts, not 2" correction by resolving that audit outright. The banner's do-not-dispatch
+> scope therefore now applies to **P3 only**; P1/P2 need no dispatch from anywhere.
+
+- [x] ✅ **NOT-A-BUG (2026-08-02).** [DATA] P1. ~~Source `tardis-concurrency-guard.sh` in
+      `deployment-service/scripts/vm/launch-mtds-live.sh`~~ — **verified via code trace that the premise does not
+      hold**: MTDS's live-mode capture (both `--live-source native` and `--live-source tardis-machine`) never opens the
+      authenticated `datasets.tardis.dev` connection this guard protects. The `TARDIS_CONCURRENCY_LEASE` passthrough
+      this doc originally cited as evidence of live contention is inert boilerplate for the live path (only consumed by
+      the batch-side `tardis_concurrency_lease.py`, never called from the live WS handler). Full evidence:
+      `/plans/active/issues/mtds_live_mode_never_touches_authenticated_tardis_datasets_endpoint_2026_08_02.md`
+      (unified-trading-pm@c34bfd176). Operator-ruled Option A (BLK-5aa3ce78, 2026-08-02): do not gate a 24/7 live
+      producer behind a hard refusal cap that protects against contention that cannot occur — that would be a new outage
+      class (refusing a legitimate live-producer relaunch during an unrelated concurrent cefi backfill), not a
+      protection. (repo: deployment-service)
+- [x] ✅ **NOT-A-BUG (2026-08-02).** [DATA] P2. ~~Audit sibling live launchers for the same gap~~ — audited all 8
+      `launch-*live*.sh` scripts under `scripts/vm/`; only 2 (`launch-mtds-live.sh`,
+      `launch-mtds-live-cefi-consolidated.sh`) even create cefi WS-capture VMs, and per P1's finding neither actually
+      contends for the authenticated Tardis slot. The other 6 are structurally non-Tardis regardless (prediction/perp
+      venues, or no market-data ingestion at all — see the finding doc's "What I found" for the per-launcher verdict).
+      Same resolution as P1:
+      `/plans/active/issues/mtds_live_mode_never_touches_authenticated_tardis_datasets_endpoint_2026_08_02.md`.
+- [ ] [DATA] P3. Update `data-pipeline-check-mtds` skill's **Phase-2 (live leg)** section to note the guard-gap risk and
       recommend deferring live-leg checks for Tardis-sourced venues while a real Tardis backfill/sharded VM is confirmed
       running, until P1 above ships. (repo: unified-trading-pm, `.claude/skills/data-pipeline-check-mtds/`)
+      **Scope-fenced 2026-07-31**: **Phase-2 ONLY.** The same file's **§ 3 (Tardis cap)** section is owned by
+      `/plans/active/issues/mtds_backfill_launcher_guard_overapplies_to_nontardis_venues_2026_07_28.md`'s `[DATA] P3`,
+      which is already **done** — read what it wrote and cross-link it rather than restating or editing it.
 
 No corruption confirmed this run (0 403s observed in the concurrent window) — this is a structural gap finding, not a
 live-incident report. Not escalating to the operator as a page; tracked here per the findings-closure rule.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30** (tranche=cefi, autonomous): RECLASSIFY candidate PARKED on conflict-check:
+  `mtds_backfill_launcher_guard_overapplies_to_nontardis_venues_2026_07_28.md` (active, planning) is concurrently
+  editing the SAME `tardis-concurrency-guard.sh` venue-exemption logic this doc's P3 todo would tighten, and
+  `cefi_track2_coverage_backfill_checkpoints_2026_07_25.md` already records the same launcher-gap finding. Filed as
+  BLOCKED-OPERATOR-DECISION in this run's Deferred list; `assigned_vm` unchanged.
+- **na-eligibility-audit 2026-08-02** (tranche=cefi, autonomous): **KEEP-NA-STALE (already-duplicated) — citation fixed,
+  deliberately NOT reclassified.** This doc re-entered scope because the 2026-07-31 ownership-sweep banner resolved the
+  exact same-file collision that caused the 07-30 park, which on its own merits made all three todos a clean RECLASSIFY
+  (bounded, named files, named helper, gap re-verified live). The Phase-2 conflict-check then found the scope had
+  ALREADY been extracted verbatim, that same resolution having fed
+  `/plans/active/cefi_satellite_ao_dispatch_batch5_2026_08_02.md` (`unified-trading-pm@766822efe`, active/planning) —
+  its todos 1 and 2 Source-cite this doc for P1+P2 and P3 respectively. Per the verdict rubric this is a
+  checkbox-citation fix, not a reclassification: flipping `assigned_vm` here would let backlog-regen derive a second
+  dispatch of the same launcher edit. Extraction banner added above the todos; `assigned_vm: NA` unchanged. (Superseded
+  in part the same day — see the next entry: batch5 todo 1 then closed P1+P2 NOT-A-BUG, so the banner's live scope
+  narrowed to P3.)
+- **2026-08-02, slot 15** (`cefi_satellite_ao_dispatch_batch5_2026_08_02.md` todo 1): P1 + P2 closed NOT-A-BUG.
+  Code-trace evidence showed MTDS live-mode capture never opens the authenticated `datasets.tardis.dev` connection —
+  this doc's original contention claim (inferred from `VENUE_TO_ADAPTER_KEY == 'tardis'`) conflated the BATCH-mode
+  adapter classification with the structurally-different LIVE path. Operator-ruled Option A (BLK-5aa3ce78): do not wire
+  the guard into the live launchers. Full evidence + follow-up todo:
+  `/plans/active/issues/mtds_live_mode_never_touches_authenticated_tardis_datasets_endpoint_2026_08_02.md`. **P3 (the
+  skill Phase-2 doc note) is untouched — out of scope for this todo, tracked separately as this batch's todo 2** (its
+  premise may also need revisiting given this finding, but that is not this todo's call to make).

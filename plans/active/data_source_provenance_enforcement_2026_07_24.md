@@ -37,6 +37,12 @@ source: >-
   data_completion_to_100_all_ag_2026_06_21 (M-1) -- extracted 2026-07-24, plan line-cap remediation
   (plans/active/issues/plan_line_cap_remediation_2026_07_23.md) bucket-(d) split, operator-approved.
 drift_direction: advance-code
+context_scope:
+  [
+    /plans/active/data_completion_to_100_all_ag_2026_06_21.md,
+    /codex/02-data/tradfi-databento-sourcing-ssot.md,
+    unified-api-contracts/unified_api_contracts/canonical/crosscutting/source_priority.py,
+  ]
 ---
 
 # Data-source provenance enforcement — all asset groups
@@ -214,3 +220,11 @@ drift_direction: advance-code
 
 Scope exemptions (by design, not gaps): features-service / strategy / execution outputs (computed — no vendor source).
 **(MIGRATED FROM: `data_source_provenance_all_asset_groups_2026_06_01.md`, 2026-07-13 per MTDS consolidation ruling.)**
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30**: KEEP-NA, valid — P0 provenance enforcement whose [DATA] todos are prod corpus
+  backfills explicitly folded into other plans' single-walk windows (cefi/sports C-source riders) — cross-plan
+  single-walk sequencing is coordination judgment. Genuinely AO-eligible slices exist ([SCRIPT]
+  backfill_defi_source_column, [TEST] unit tests, [QG] checker wiring) but splitting them out is a plan-authoring call.
+- **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).

@@ -9,7 +9,7 @@ summary: >-
   items + the 1 operator-gated item once the operator has ruled on the queued FX-sequencing / mvp_mode decisions, and
   recommend whether `tradfi_manifest_content_recovery_completion_2026_07_24.md` (excluded from both batch1 and batch2)
   is ready for its own dedicated triage/design pass yet.
-status: draft
+status: active
 nature: process
 asset_group: [tradfi]
 stage: [data]
@@ -20,12 +20,12 @@ related:
   [
     /plans/active/tradfi_satellite_ao_dispatch_batch2_2026_07_25.md,
     /plans/active/tradfi_consolidated_closeout_2026_07_18.md,
-    /plans/active/tradfi_satellite_ao_dispatch_batch1_2026_07_25.md,
-    /plans/active/tradfi_satellite_ao_dispatch_batch1_finalize_2026_07_25.md,
+    /plans/archive/2026_07/tradfi_satellite_ao_dispatch_batch1_2026_07_25.md,
+    /plans/archive/2026_07/tradfi_satellite_ao_dispatch_batch1_finalize_2026_07_25.md,
     /plans/active/issues/autonomous_session_operator_decisions_2026_07_25.md,
   ]
 created: "2026-07-25"
-last_updated: "2026-07-25"
+last_updated: "2026-07-30"
 parent_epic: tradfi_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -45,6 +45,13 @@ source: >-
 assigned_role: data_engineering
 sequential: true
 drift_direction: advance-code
+context_scope:
+  [
+    /plans/active/tradfi_satellite_ao_dispatch_batch2_2026_07_25.md,
+    /plans/active/tradfi_consolidated_closeout_2026_07_18.md,
+    /cursor-configs/skills/ag-closeout-audit/SKILL.md,
+    /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
+  ]
 ---
 
 # TradFi satellite AO batch 2 — finalize
@@ -100,3 +107,26 @@ drift_direction: advance-code
       `locked_by` (already empty here, confirm). **Done when**: the plan is moved to `plans/archive/2026_07/`, every
       corpus referrer resolves to the new path, and this finalize doc itself gets archived alongside it in the same
       commit.
+
+## Progress Log
+
+- **2026-07-30 (gate re-check, this session)** — Re-read `tradfi_satellite_ao_dispatch_batch2_2026_07_25.md` fresh (not
+  from a stale prior read) to determine whether this finalize plan is now unblocked. **Result: still correctly gated,
+  NOT unblocked.** Batch2 has 12 total checkboxes, 11 `[x]` done and exactly 1 (`grep -n "^- \["` confirms, line 436)
+  still `[ ]`: the bundled `[OPERATOR] P2` todo ("Resolve the still-conflict-gated / operator-gated / too-large
+  candidates below"). That todo carries 3 sub-parts: (a) the 8 still-genuinely-conflict-gated candidates across 5 docs —
+  unresolved; (b) the `tradfi_mvp_mode_unreachable_dead_gate_2026_07_08.md` operator-gated design call — **NOW
+  RESOLVED**, ruled 2026-07-29 and implemented 2026-07-30 (`deployment-service@c847395e`, verified live: commit exists,
+  matches the issue doc's (i)-(iv) plan exactly — `launch-tradfi-forward-poll.sh` opt-in `--mvp-mode` flag,
+  `setup-data-pipeline-vm.sh` `VM_MVP_MODE` metadata plumbing, 3 new regression tests in
+  `deployment-service/tests/unit/test_vm_launcher_scripts.py`, issue doc's 4 todos all `[x]` with matching evidence);
+  (c) the `tradfi_manifest_content_recovery_completion_2026_07_24.md` too-large-or-risky recommendation — unresolved.
+  Since (a) and (c) remain genuinely open and are unrelated to the mvp_mode ruling, the bundled todo as a whole cannot
+  be flipped `[x]`, and the AO dispatcher's actual gate mechanism
+  (`agent-orchestrator/server/regen_backlog_from_plan.py::_parse_open_todos`) counts any unchecked checkbox without a
+  `BLOCKED-*`/`DEFERRED-BY-DESIGN`/stretch marker as genuinely open regardless of its `[TAG]` — confirmed this todo's
+  continuation block carries none of those markers, so it is NOT excluded from the open-todo count. **Conclusion: batch2
+  is not yet all-done; this finalize plan's `depends_on`/`gate_on_depends: true` hold is correct and unchanged. No todos
+  executed in this doc — leaving as-is for the agent actively working batch2 to resolve (a) and (c), or for this gate to
+  naturally clear once they do.**
+- **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).

@@ -81,15 +81,30 @@ it never reaches `origin/live-defi-rollout` on its own.
 
 ## Proposed fixes
 
-- [ ] [INFRA] P2. **Gated 2026-07-26** (resolved `autonomous_session_operator_decisions_2026_07_25.md` entry #21, option
-      A — soften first): do NOT land this hard-kill-escalation ahead of
-      `issues/host_saturation_false_worker_kicks_stall_fleet_completions_2026_07_26.md`'s two-window/completion-signal
-      fix. That doc has MEASURED evidence the current classifier already fires falsely on live, progressing workers
-      (zero fleet completions for over an hour, 2026-07-26) — landing faster hard-kill escalation on top of a
-      known-wrong classifier turns false kicks into false hard-kills, strictly worse. Re-scope N/timing against the
-      CORRECTED classifier once that fix lands, not before. Escalate the watchdog from soft-kick to hard-kill + respawn
-      after N consecutive `post_kick_classification=frozen` observations (e.g. N=3, ~15-20 min) instead of soft-kicking
-      indefinitely; the daily hard-kill budget (50) is ample. SSOT:
+- [x] ✅ [INFRA] P2. **DONE — confirmed already-implemented pre-existing code, audited + re-scoped via
+      `agent-orchestrator@77fc60a` (2026-07-31, in the now-archived
+      `/plans/archive/2026_07/ao_consolidated_closeout_2026_07_25.md`).** That plan's own claimed `[INFRA] P2` todo
+      (cited below) ran its audit AFTER the `host_saturation` gate cleared and found the escalation mechanism this todo
+      asks for was already shipped: `kick_escalation_threshold` (config field, default 3) was introduced in `5b07bd3`,
+      and the ping-advanced-reset bug that let the 2026-07-21 incident's wedged worker dodge escalation for 55 kicks was
+      already fixed in `2a48eda` — both predating this plan. `WorkerLivenessKicker._tick_once` already forces
+      `_maybe_auto_respawn_stuck_slot(..., force=True)` (kills the wedged tmux session + resumes the in-flight task via
+      `--resume`) once `_consecutive_kick_failures` reaches `kick_escalation_threshold`, gated on `genuinely_recovered`
+      (pane verified 'working'), not merely `ping_advanced`. **This doc's own checkbox was stale** — the closeout's
+      finalize plan (`ao_consolidated_closeout_2026_07_25_finalize_2026_07_30.md`) did not cite or reconcile evidence
+      back into this file; flipped directly during the 2026-07-31 conflict-gated re-triage pass instead. (Prior note,
+      retained for history: this todo was previously flagged "ALREADY CLAIMED by
+      `/plans/active/ao_consolidated_closeout_2026_07_25.md`'s `[INFRA] P2` todo — do NOT dispatch from here" by
+      `/na-eligibility-audit ao` 2026-07-30, with the sequencing gate below noted CLEARED via
+      `agent-orchestrator@64b5310`.) Original gating note follows for history. **Gated 2026-07-26** (resolved
+      `autonomous_session_operator_decisions_2026_07_25.md` entry #21, option A — soften first): do NOT land this
+      hard-kill-escalation ahead of `issues/host_saturation_false_worker_kicks_stall_fleet_completions_2026_07_26.md`'s
+      two-window/completion-signal fix. That doc has MEASURED evidence the current classifier already fires falsely on
+      live, progressing workers (zero fleet completions for over an hour, 2026-07-26) — landing faster hard-kill
+      escalation on top of a known-wrong classifier turns false kicks into false hard-kills, strictly worse. Re-scope
+      N/timing against the CORRECTED classifier once that fix lands, not before. Escalate the watchdog from soft-kick to
+      hard-kill + respawn after N consecutive `post_kick_classification=frozen` observations (e.g. N=3, ~15-20 min)
+      instead of soft-kicking indefinitely; the daily hard-kill budget (50) is ample. SSOT:
       `/codex/04-architecture/autonomous-recovery-matrix.md`.
 - [ ] [INFRA] P2. Add a reclaim-and-push (or inherit) path for a killed/idle slot that git-health reports as
       ahead/diverged with `unpushed_plans`: either (a) AutoSpawn prioritises re-occupying a slot with a standing
@@ -145,3 +160,23 @@ review(slot1)'s behalf per the async-wait/stuck-recovery watchdog guidance.
   unbuilt `[INFRA] P2` reclaim-and-push todo would automate; main is barred from push/respawn, so remediation routes
   through that todo + operator action. Second same-day recurrence (slot 10 ~02:33Z, slot 5 ~04:48Z) — the gap is
   actively recurring.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30**: KEEP-NA-STALE (citation fixed, no reclassification) — the `[INFRA] P2`
+  hard-kill-escalation todo is already claimed verbatim by an OPEN todo in the active `assigned_vm: planning` doc
+  `/plans/active/ao_consolidated_closeout_2026_07_25.md`; flipping this doc would duplicate that dispatch. Also recorded
+  that the todo's stated gate has CLEARED — the
+  `host_saturation_false_worker_kicks_stall_fleet_completions_2026_07_26.md` two-window fix it waits on shipped as
+  `agent-orchestrator@64b5310`, so the closeout's todo is now unblocked. The second `[INFRA] P2` reclaim-and-push item
+  stays in the deferred worker-liveness cluster.
+- **2026-07-31 (conflict-gated re-triage)**: Flipped `[INFRA] P2` (hard-kill escalation speed) to `[x]` — the claiming
+  plan's own audit (`agent-orchestrator@77fc60a`) found the mechanism was already shipped pre-existing (`5b07bd3` +
+  `2a48eda`), and that plan is now archived, but its finalize never reconciled evidence back into THIS doc. See the
+  flipped todo above for the full evidence trail. The second `[INFRA] P2` (reclaim-and-push automation) remains
+  genuinely open, independent work — not gated by anything, just unbuilt.
+- **na-eligibility-audit 2026-08-01** (autonomous, tranche `ao`, dispatch agt-8e95ca, slot 2): KEEP-NA, valid — the
+  single remaining open item offers two unresolved competing designs (AutoSpawn re-prioritization vs. a dedicated reaper
+  component) touching live-dispatch-critical-path machinery — a genuine architectural fork, not a mechanically bounded
+  fix. No change since the 2026-07-31 verdict above. genuinely open, independent work — not gated by anything, just
+  unbuilt.

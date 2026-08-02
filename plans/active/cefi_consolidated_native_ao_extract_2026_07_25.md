@@ -32,8 +32,8 @@ related:
   [
     /plans/active/cefi_consolidated_closeout_2026_07_18.md,
     /plans/active/cefi_consolidated_closeout_aggregated_sources_2026_07_24.md,
-    /plans/active/cefi_satellite_ao_dispatch_batch1_2026_07_25.md,
-    /plans/active/cefi_satellite_ao_dispatch_batch1_finalize_2026_07_25.md,
+    /plans/archive/2026_07/cefi_satellite_ao_dispatch_batch1_2026_07_25.md,
+    /plans/archive/2026_07/cefi_satellite_ao_dispatch_batch1_finalize_2026_07_25.md,
     /plans/active/cefi_4surface_migration_execution_log_2026_07_24.md,
     /plans/active/issues/cefi_chain_drop_root_cause_and_heavy_io_vm_rule_2026_07_24.md,
   ]
@@ -58,6 +58,13 @@ source: >-
 assigned_role: data_engineering
 sequential: false
 drift_direction: advance-code
+context_scope:
+  [
+    /plans/active/cefi_consolidated_closeout_2026_07_18.md,
+    /plans/active/cefi_consolidated_closeout_aggregated_sources_2026_07_24.md,
+    /codex/06-coding-standards/adapter-dead-code-and-fallback-ban.md,
+    /codex/05-infrastructure/vm-launcher-runbook.md,
+  ]
 ---
 
 # CeFi consolidated closeout — native todo AO extraction
@@ -466,6 +473,8 @@ reproduce the same guard-polluted `passed=0`, so a second VM sweep would add cos
 report meets this todo's literal bar (a real, dated, cited MTDS pipeline-check run for cefi); the caveat that most cells
 reflect guard-refusal rather than a clean verdict is already tracked against the sibling MID-BACKFILL todo, not new
 information here. A genuinely clean baseline follow-up is already queued on that issue doc, not duplicated in this plan.
+
+- **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).
 
 ## Reconciliation
 

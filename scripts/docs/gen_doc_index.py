@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# Epic: agent_operating_framework_master
+# Lifecycle: permanent
+# Delete-when: NA
 """gen_doc_index — the L0 map generator (W4 of agent_operating_framework_master).
 
 Builds an `llms.txt`-style index FROM frontmatter: one greppable line per doc with its title,

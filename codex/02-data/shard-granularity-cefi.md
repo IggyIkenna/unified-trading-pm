@@ -26,7 +26,7 @@ authoritative_for:
   ]
 referenced_by:
 owner:
-last_reviewed: 2026-05-17
+last_reviewed: 2026-10-02
 code_refs:
 ---
 
@@ -41,21 +41,25 @@ code_refs:
 > ML+strategy+execution job_id / TradFi EVENT_CONTRACT).
 
 **Status:** v6 columns (`quote_asset` / `margin_type` / `combo_type` / `leg_weights`) active as of 2026-04-23 (manifest
-schema v6 shipped). Current overall schema is **v9** (`MANIFEST_SCHEMA_VERSION = 9` in UTL `manifest_writer.py`) — v7
+schema v6 shipped). Current overall schema is **v9** (`MANIFEST_SCHEMA_VERSION = 9` in UTL
+`manifest_writer/_schema.py` — `manifest_writer` is a package, not a module) — v7
 added `fixture_id` (sports per-fixture) + `job_id` (ML / strategy / execution experiment-keyed services); v8 added
 `pipeline_mode` + `service_emission_state` + `last_emission_decision_at` + `expected_window_completeness_pct`; v9 added
 `source` (universal provider tag, 2026-05-30); the v6 CeFi columns described in this doc are unchanged under v7/v8/v9.
 
-> **[DELTA 2026-06-01]** **Current state:** `MANIFEST_SCHEMA_VERSION = 9` (code constant rolled 2026-05-30). Data-side
-> migration target is 100% of production rows at v9. The Phase 2.2 single-walk migration
-> (`plans/active/gcs_migration_bundle_pipeline_mode_2026_05_08.md`) is in progress as a per-AG L3 walk rider. **Target
-> architecture:** 100% of production rows at v9.
+> **[DELTA 2026-06-01, re-verified 2026-07-31]** **Current state:** `MANIFEST_SCHEMA_VERSION = 9` (code constant rolled
+> 2026-05-30) — confirmed still 9. Data-side migration target is 100% of production rows at v9. The Phase 2.2
+> single-walk migration plan
+> ([`/plans/archive/2026_05/gcs_migration_bundle_pipeline_mode_2026_05_08.md`](/plans/archive/2026_05/gcs_migration_bundle_pipeline_mode_2026_05_08.md))
+> is now **archived** — it is no longer an in-progress rider, so do not treat it as live tracking. Per CLAUDE.md
+> § "Working on DATA", trust the measured row distribution, not this constant. **Target architecture:** 100% of
+> production rows at v9.
 
 Cluster validation as 4th write-gate pillar in progress (writegate Phase 1A + 2.B). **SSOT:**
 [availability-manifest-and-data-status.md](./availability-manifest-and-data-status.md) for the canonical schema-version
 constant + full column list; this doc is the CeFi-specific v6 column rollout reference.
 `unified-trading-pm/plans/archive/manifest_schema_v6_quote_margin_combo_2026_04_23.plan.md` +
-`unified-trading-pm/plans/active/writegate_honest_coverage_endtoend_2026_05_06.md`. **Related:**
+`unified-trading-pm/plans/archive/2026_05/writegate_honest_coverage_endtoend_2026_05_06.md`. **Related:**
 [partitioning.md](./partitioning.md),
 [04-architecture/shard-level-failure-isolation.md](/codex/04-architecture/shard-level-failure-isolation.md),
 [06-coding-standards/validation-and-errors.md](/codex/06-coding-standards/validation-and-errors.md).
@@ -103,25 +107,38 @@ Legacy v1–v5 parquets are read with all four columns backfilled to `""` — sa
 [tardis_shared.py](../../../market-tick-data-service/market_tick_data_service/market_interface/adapters/cefi/tardis_shared.py)
 — extracts `(quote_asset, margin_type)` per row.
 
-| Venue                    | Symbol pattern                        | quote                                              | margin      |
-| ------------------------ | ------------------------------------- | -------------------------------------------------- | ----------- |
-| DERIBIT                  | `BTC-*` / `ETH-*` (no `_` before `-`) | `USD`                                              | `inverse`   |
-| DERIBIT                  | `BTC_USDC-*`, `ETH_USDT-*`            | `USDC` / `USDT`                                    | `linear`    |
-| BINANCE-FUTURES          | `*USDT`, `*USDC`                      | `USDT` / `USDC`                                    | `linear`    |
-| BINANCE-FUTURES          | `*USD_PERP`, `*USD_{YYMMDD}`          | `USD`                                              | `inverse`   |
-| BYBIT                    | `*USDT`, `*USDC`, `*PERP`             | `USDT` / `USDC` / `USDC`                           | `linear`    |
-| BYBIT                    | `*USD` (no T)                         | `USD`                                              | `inverse`   |
-| OKX-SWAP                 | `*-USDT-SWAP`, `*-USDC-SWAP`          | `USDT` / `USDC`                                    | `linear`    |
-| OKX-SWAP                 | `*-USD-SWAP`                          | `USD`                                              | `inverse`   |
-| HYPERLIQUID              | all perps                             | `USDC`                                             | `linear`    |
-| ASTER                    | all perps                             | per-symbol real quote (`USDT`, tail `USD1`/`USDC`) | `linear`    |
-| CME / CBOE               | `ESM26`, `VX-21JAN26-20-C`            | `USD`                                              | `linear`    |
-| COINBASE-SPOT / OKX-SPOT | `BTC-USD`, `BTC-USDT`                 | quote                                              | `""` (spot) |
-| BINANCE-SPOT             | `btcusdt` (lowercase concat)          | quote                                              | `""` (spot) |
-| UPBIT                    | `KRW-BTC` (quote-first)               | `KRW`                                              | `""` (spot) |
+| Venue                                    | Symbol pattern                        | quote                                                        | margin      |
+| ---------------------------------------- | ------------------------------------- | ------------------------------------------------------------ | ----------- |
+| DERIBIT                                  | `BTC-*` / `ETH-*` (no `_` before `-`) | `USD`                                                        | `inverse`   |
+| DERIBIT                                  | `BTC_USDC-*`, `ETH_USDT-*`            | `USDC` / `USDT`                                              | `linear`    |
+| BINANCE-FUTURES                          | `*USDT`, `*USDC`                      | `USDT` / `USDC`                                              | `linear`    |
+| BINANCE-FUTURES                          | `*USD_PERP`, `*USD_{YYMMDD}`          | `USD`                                                        | `inverse`   |
+| BYBIT                                    | `*USDT`, `*USDC`, `*PERP`             | `USDT` / `USDC` / `USDC`                                     | `linear`    |
+| BYBIT                                    | `*USD` (no T)                         | `USD`                                                        | `inverse`   |
+| OKX-SWAP                                 | `*-USDT-SWAP`, `*-USDC-SWAP`          | `USDT` / `USDC`                                              | `linear`    |
+| OKX-SWAP                                 | `*-USD-SWAP`                          | `USD`                                                        | `inverse`   |
+| HYPERLIQUID                              | all perps                             | `USDC`                                                       | `linear`    |
+| ASTER                                    | all perps                             | per-symbol real quote (`USDT`, tail `USD1`/`USDC`)           | `linear`    |
+| CME / CBOE                               | `ESM26`, `VX-21JAN26-20-C`            | `USD`                                                        | `linear`    |
+| COINBASE-SPOT / OKX-SPOT                 | `BTC-USD`, `BTC-USDT`                 | quote                                                        | `""` (spot) |
+| BINANCE-SPOT                             | `btcusdt` (lowercase concat)          | quote                                                        | `""` (spot) |
+| UPBIT                                    | `KRW-BTC` (quote-first)               | `KRW`                                                        | `""` (spot) |
+| BITFINEX-SPOT / BITGET-SPOT / BYBIT-SPOT | `BTCUSD`/`BTCUSDT` (concatenated)     | quote (Bitfinex legacy `UST`/`UDC` aliased to `USDT`/`USDC`) | `""` (spot) |
+| KRAKEN-SPOT                              | `BTC/USD` (`/`-separated, v2 API)     | quote                                                        | `""` (spot) |
 
 Unknown venues or ambiguous symbols return `("", "")` — the shard falls back to the v5 path shape without the nested
 `quote=`/`margin=` segments.
+
+**Live spot connector instrument_id canonicalization (2026-07-30,
+`cefi_live_spot_connectors_noncanonical_instrument_id_2026_07_30.md`, archived)**: all 8 live CeFi spot WS venues above
+build their canonical `instrument_id`/shard filename via `derive_spot_pair_symbol(venue, raw_symbol)` (same module) —
+the SINGLE insertion point that reaches the canonical `BASE-QUOTE` hyphenated shape `is_canonical_instrument_id()`
+requires, regardless of the venue's native wire shape: concatenated venues (Binance/Bitfinex/Bitget/Bybit) split on the
+longest matching quote suffix; Kraken swaps `/` for `-`; **Upbit's native market-code order is QUOTE-BASE and gets
+REVERSED** to `BASE-QUOTE` (`KRW-BTC` → `BTC-KRW`) — this is a DIFFERENT transform from the `quote` column above (which
+correctly reports `KRW` as the quote regardless of its position in the wire string; the id-canonicalization step
+additionally reorders the SYMBOL itself). Every live spot connector's `instrument_type` is `SPOT_PAIR` — a bare `SPOT`
+token is NEVER canonical for this asset group.
 
 ## Downstream implications
 

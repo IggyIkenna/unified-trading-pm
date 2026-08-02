@@ -1,0 +1,365 @@
+#!/usr/bin/env python3
+# Epic: agent_operating_framework_master
+# Lifecycle: permanent
+# Delete-when: NA
+"""Plan commit-SHA evidence gate — a `resolved_by:` / `- [x] ... — <repo>@<sha>` citation must
+resolve to a REAL commit, not a fabricated one.
+
+The recurring failure class this closes (codified from
+plans/active/issues/mtds_plan_flip_fabricated_commit_sha_evidence_2026_07_30.md): a `docs(plans):`
+flip commit cites `resolved_by: <repo>@<sha>` (or an inline `- [x] ... — <repo>@<sha>` todo
+citation) for a SHA that does not exist anywhere in the cited repo's history — a fabricated
+completion-evidence citation, distinct from `check_evidence_backed_completion.py`'s Cloud Build
+SHA gate (which covers runtime infra "went green" claims; PLAN_FORMAT.md § 8b explicitly carves a
+code-ship `<repo>@<sha>` claim OUT of that gate's scope on the theory its evidence is "the commit
++ the local QG sentinel" — this gate is the missing structural check that actually verifies that
+commit exists). This gate mirrors the Cloud Build gate's shape, generalized to git commit
+citations: run it, don't read it — `git cat-file -t <sha>` in the cited repo's sibling worktree,
+not a trust-the-self-report.
+
+Scope (deliberately narrow to avoid false positives):
+  - Only `<repo>@<sha>` tokens where `<repo>` is the EXACT directory name of a repo actually
+    present as a FULL (non-shallow) sibling clone under `--workspace-root` are checked. A shallow
+    (`--depth=1`) sibling clone — e.g. CI's dep_repos fetch for unified-trading-library /
+    unified-api-contracts — is treated the same as "not present": it can only resolve its own tip
+    commit, so checking it against historical citations would flag genuine, non-fabricated commits
+    as violations. Abbreviated forms used informally in plan prose (`mtds@...`, `uac@...`,
+    `IS@...`) are NOT matched — they're inherently ambiguous (mirrors the Cloud Build gate's
+    "can't check it from here" soft-skip,
+    implemented here by construction: an unregistered name is simply never a regex alternative).
+  - `<sha>` must be a hex string, 6-40 chars (git's own minimum useful abbreviation length through
+    a full SHA-1).
+  - Scans `resolved_by:` frontmatter (any YAML scalar/list form) plus checked `- [x]` todo blocks
+    (checkbox line + continuation lines) in `plans/active/*.md` and `plans/active/issues/*.md`.
+
+Verification: `git -C <repo_path> cat-file -t <sha>` must print `commit`. A repo present locally
+whose cited SHA does NOT resolve is a violation (fabricated-or-broken citation) — git history for
+a REACHABLE commit never expires (unlike Cloud Build's retention window), so there is no
+"aged out, not the citer's fault" soft bucket to mirror here; a citation that doesn't resolve
+against a full local clone is either fabricated or points at history that was rewritten out from
+under it, and either way the citation is broken and worth flagging.
+
+Baselined ratchet (not strict-0): the corpus already has some amount of pre-existing citation
+drift (renamed repos, long-forgotten short-hash collisions) unrelated to today's incident — this
+gate ratchets that count DOWN over time rather than failing the whole fleet on first rollout.
+Fix a flagged citation by correcting/removing it, or re-baseline with --baseline-write after
+verifying the new count is itself all pre-existing, non-fabricated drift.
+
+Exit-code semantics: 0 = at/below baseline; 1 = regression; 2 = arg/IO error.
+"""
+
+from __future__ import annotations
+
+import argparse
+import io
+import re
+import subprocess  # invokes `git cat-file` in a sibling repo clone (fixed argv, no shell=True)
+import sys
+from dataclasses import dataclass
+from pathlib import Path
+from typing import cast
+
+import yaml
+
+DEFAULT_BASELINE_PATH = Path(__file__).parent / "plan_commit_sha_evidence_baseline.yaml"
+
+_FRONTMATTER_RE = re.compile(r"\A---\s*\n(.*?\n)---\s*\n", re.DOTALL)
+_CHECKED_RE = re.compile(r"^\s*-\s*\[[xX]\]\s")
+_UNCHECKED_OR_CHECKED_RE = re.compile(r"^\s*-\s*\[[ xX]\]\s")
+
+_SHA_RE = r"[0-9a-fA-F]{6,40}"
+
+
+@dataclass(frozen=True)
+class Citation:
+    path: Path
+    line_no: int
+    repo: str
+    sha: str
+    source: str  # "frontmatter:resolved_by" | "todo"
+    context: str  # short snippet for the printed diagnostic
+
+
+@dataclass(frozen=True)
+class ShaViolation:
+    citation: Citation
+
+    def __str__(self) -> str:
+        return (
+            f"{self.citation.path}:{self.citation.line_no}: "
+            f"[{self.citation.source}] {self.citation.repo}@{self.citation.sha} does not resolve "
+            f"to a commit in the local {self.citation.repo} clone — {self.citation.context}"
+        )
+
+
+def _is_shallow_clone(repo_path: Path) -> bool:
+    """A `--depth=1` sibling clone (CI's dep_repos fetch, for speed) can only ever resolve its
+    own tip commit — `git cat-file -t <sha>` fails for every older, perfectly real commit, which
+    would otherwise read as a mass of fabricated citations. Detected via the plumbing command so
+    it degrades safely (non-shallow) if git itself can't answer."""
+    try:
+        proc = subprocess.run(
+            ["git", "-C", str(repo_path), "rev-parse", "--is-shallow-repository"],
+            capture_output=True,
+            text=True,
+            timeout=30,
+            check=False,
+        )
+    except (FileNotFoundError, subprocess.TimeoutExpired, OSError):
+        return False
+    return proc.returncode == 0 and proc.stdout.strip() == "true"
+
+
+def _discover_sibling_repos(workspace_root: Path) -> dict[str, Path]:
+    """Repo name -> absolute path, for every directory directly under workspace_root that is a
+    git repo (`.git` dir or file — the latter covers a legacy linked-worktree layout).
+
+    A shallow clone is excluded (same soft-skip treatment as a repo not present at all) — it
+    structurally cannot verify a citation to any commit but its own tip, so including it produces
+    false "unresolvable" violations for genuine historical citations rather than catching real
+    fabrication. CI's dep_repos (unified-trading-library, unified-api-contracts) are cloned
+    `--depth=1` for speed; this is what makes those clones untrustworthy for this check
+    specifically, not a general repo-health signal."""
+    repos: dict[str, Path] = {}
+    for child in sorted(workspace_root.iterdir()):
+        if not child.is_dir():
+            continue
+        if (child / ".git").exists() and not _is_shallow_clone(child):
+            repos[child.name] = child
+    return repos
+
+
+def _build_citation_re(repo_names: list[str]) -> re.Pattern[str]:
+    if not repo_names:
+        # No sibling repos found (unexpected in a real workspace) — a pattern that matches
+        # nothing, so the scan degrades to "no citations found" rather than crashing.
+        return re.compile(r"(?!x)x")
+    alternation = "|".join(re.escape(name) for name in sorted(repo_names, key=len, reverse=True))
+    # `(?!-\d)` excludes a distinct existing convention: `<repo>@<date>-<time>` VM-launch instance
+    # identifiers (e.g. `deployment-service@20260624-011134`), which are shaped exactly like a
+    # `<repo>@<sha>` citation up to the hyphen but are not commit evidence at all — confirmed via
+    # the corpus (the only such hit, 2026-07-30: the repo has zero commits with that hex prefix).
+    return re.compile(rf"(?<![\w-])(?P<repo>{alternation})@(?P<sha>{_SHA_RE})(?!-\d)\b")
+
+
+def _iter_frontmatter_citations(text: str, path: Path, citation_re: re.Pattern[str]) -> list[Citation]:
+    m = _FRONTMATTER_RE.match(text)
+    if not m:
+        return []
+    fm_text = m.group(1)
+    try:
+        fm = cast(object, yaml.safe_load(io.StringIO(fm_text)))
+    except yaml.YAMLError:
+        return []
+    if not isinstance(fm, dict):
+        return []
+    fm_dict = cast(dict[str, object], fm)
+    raw = fm_dict.get("resolved_by")
+    if raw is None:
+        return []
+    resolved_by_str = raw if isinstance(raw, str) else str(raw)
+
+    # Locate the actual line number of `resolved_by:` within the file for a useful diagnostic.
+    line_no = 1
+    for i, line in enumerate(text.splitlines(), start=1):
+        if line.strip().startswith("resolved_by:"):
+            line_no = i
+            break
+
+    out: list[Citation] = []
+    for cm in citation_re.finditer(resolved_by_str):
+        out.append(
+            Citation(
+                path=path,
+                line_no=line_no,
+                repo=cm.group("repo"),
+                sha=cm.group("sha"),
+                source="frontmatter:resolved_by",
+                context=resolved_by_str.strip()[:160],
+            )
+        )
+    return out
+
+
+def _iter_todo_citations(text: str, path: Path, citation_re: re.Pattern[str]) -> list[Citation]:
+    out: list[Citation] = []
+    lines = text.splitlines()
+    n = len(lines)
+    i = 0
+    while i < n:
+        line = lines[i]
+        if _CHECKED_RE.match(line):
+            buf = [line]
+            j = i + 1
+            while j < n:
+                nxt = lines[j]
+                if _UNCHECKED_OR_CHECKED_RE.match(nxt) or not nxt.strip():
+                    break
+                buf.append(nxt)
+                j += 1
+            block_text = "\n".join(buf)
+            for cm in citation_re.finditer(block_text):
+                out.append(
+                    Citation(
+                        path=path,
+                        line_no=i + 1,
+                        repo=cm.group("repo"),
+                        sha=cm.group("sha"),
+                        source="todo",
+                        context=buf[0].strip()[:160],
+                    )
+                )
+            i = j
+        else:
+            i += 1
+    return out
+
+
+def _resolves_to_commit(repo_path: Path, sha: str) -> bool:
+    try:
+        proc = subprocess.run(  # fixed argv, no shell=True
+            ["git", "-C", str(repo_path), "cat-file", "-t", sha],
+            capture_output=True,
+            text=True,
+            timeout=30,
+            check=False,
+        )
+    except (FileNotFoundError, subprocess.TimeoutExpired, OSError):
+        # git itself couldn't run — treat as verifiable-elsewhere-only, never a violation here.
+        return True
+    return proc.returncode == 0 and proc.stdout.strip() == "commit"
+
+
+def _load_baseline(baseline_path: Path) -> int:
+    if not baseline_path.exists():
+        return 0
+    try:
+        loaded = cast(object, yaml.safe_load(baseline_path.read_text(encoding="utf-8")))
+    except yaml.YAMLError:
+        return 0
+    if isinstance(loaded, dict):
+        count = cast(dict[str, object], loaded).get("fabricated_sha_citation_baseline")
+        if isinstance(count, int):
+            return count
+    return 0
+
+
+def _write_baseline(baseline_path: Path, violations: list[ShaViolation]) -> None:
+    payload: dict[str, object] = {
+        "fabricated_sha_citation_baseline": len(violations),
+        "rule": "plan-commit-sha-evidence (ratchet)",
+        "source": "plans/active/issues/mtds_plan_flip_fabricated_commit_sha_evidence_2026_07_30.md",
+        "baseline_citations": [
+            {"path": str(v.citation.path), "line": v.citation.line_no, "cited": f"{v.citation.repo}@{v.citation.sha}"}
+            for v in violations
+        ],
+    }
+    baseline_path.write_text(yaml.safe_dump(payload, sort_keys=False), encoding="utf-8")
+
+
+def _parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(
+        description="Plan commit-SHA evidence check (resolved_by:/`<repo>@<sha>` citations must resolve to a commit)."
+    )
+    parser.add_argument(
+        "--workspace-root",
+        type=Path,
+        default=Path(__file__).resolve().parents[2].parent,
+    )
+    parser.add_argument("--baseline-path", type=Path, default=DEFAULT_BASELINE_PATH)
+    parser.add_argument("--baseline-write", action="store_true")
+    return parser.parse_args()
+
+
+def main() -> int:
+    ns = _parse_args()
+    workspace_root: Path = cast(Path, ns.workspace_root).resolve()
+    baseline_path: Path = cast(Path, ns.baseline_path)
+    baseline_write: bool = cast(bool, ns.baseline_write)
+
+    active_dir = workspace_root / "unified-trading-pm" / "plans" / "active"
+    if not active_dir.is_dir():
+        print(f"ERROR: plans/active not found at {active_dir}", file=sys.stderr)
+        return 2
+
+    plan_files = sorted(active_dir.glob("*.md"))
+    issues_dir = active_dir / "issues"
+    if issues_dir.is_dir():
+        plan_files.extend(sorted(issues_dir.glob("*.md")))
+
+    repos = _discover_sibling_repos(workspace_root)
+    citation_re = _build_citation_re(list(repos.keys()))
+
+    citations: list[Citation] = []
+    for p in plan_files:
+        try:
+            text = p.read_text(encoding="utf-8")
+        except (OSError, UnicodeDecodeError):
+            continue
+        citations.extend(_iter_frontmatter_citations(text, p, citation_re))
+        citations.extend(_iter_todo_citations(text, p, citation_re))
+
+    # De-dupe identical (path, line, repo, sha) hits — a frontmatter+todo scan of the same line
+    # region could otherwise double-count.
+    seen: set[tuple[Path, int, str, str]] = set()
+    deduped: list[Citation] = []
+    for c in citations:
+        key = (c.path, c.line_no, c.repo, c.sha)
+        if key in seen:
+            continue
+        seen.add(key)
+        deduped.append(c)
+    citations = deduped
+
+    sha_cache: dict[tuple[str, str], bool] = {}
+    violations: list[ShaViolation] = []
+    for c in citations:
+        repo_path = repos.get(c.repo)
+        if repo_path is None:
+            continue  # not a present sibling clone — can't verify from here, soft-skip
+        key = (c.repo, c.sha)
+        if key not in sha_cache:
+            sha_cache[key] = _resolves_to_commit(repo_path, c.sha)
+        if not sha_cache[key]:
+            violations.append(ShaViolation(citation=c))
+
+    checked = sum(1 for c in citations if c.repo in repos)
+    print(
+        f"Scanned {len(plan_files)} plan(s), {len(citations)} `<repo>@<sha>` citation(s) found, "
+        f"{checked} checkable against a present sibling clone — {len(violations)} unresolvable."
+    )
+
+    if baseline_write:
+        _write_baseline(baseline_path, violations)
+        print(f"✅ Wrote baseline ({len(violations)}) to {baseline_path}")
+        return 0
+
+    baseline = _load_baseline(baseline_path)
+    regression = len(violations) > baseline
+    if violations:
+        print(f"\nUnresolvable commit-SHA citations: {len(violations)} (baseline {baseline}).")
+        for v in violations[:20]:
+            try:
+                rel = v.citation.path.relative_to(workspace_root)
+            except ValueError:
+                rel = v.citation.path
+            print(f"  - {rel}:{v.citation.line_no}: [{v.citation.source}] {v.citation.repo}@{v.citation.sha}")
+        if len(violations) > 20:
+            print(f"  ... + {len(violations) - 20} more")
+
+    if regression:
+        print(
+            f"\n❌ Plan-commit-SHA-evidence regression: {len(violations)} > baseline {baseline}. "
+            "Correct or remove the fabricated/unresolvable citation, or re-baseline with --baseline-write "
+            "after confirming it is pre-existing, non-fabricated drift."
+        )
+        return 1
+
+    if violations and len(violations) < baseline:
+        print(f"\n⚠️  Improvement: {len(violations)} < baseline {baseline}. Re-baseline to codify.")
+    print("\n✅ Plan-commit-SHA-evidence: all checkable citations resolve; at/below baseline.")
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

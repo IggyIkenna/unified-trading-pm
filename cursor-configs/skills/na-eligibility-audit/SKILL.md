@@ -95,6 +95,49 @@ session (dozens of sub-agents, multi-hour).
 
 Report the Phase-0 split up front: total in-tranche docs, already-verdicted-and-unchanged (skipped), in scope this run.
 
+### Primary-owner rule for multi-tranche docs — ONLY the owning tranche writes the marker (HARD, added 2026-07-30)
+
+**The problem, measured**: the 10-way tranche split does not partition this corpus cleanly. On 2026-07-30 one doc
+appeared in the candidate set of **6 of 9** tranches, and in the worst tranche **up to 47%** of its docs also appeared
+in at least one other. Because the scheduled shape is 9 CONCURRENT workers (one dispatch per tranche —
+`na-eligibility-auditor.timer`), every one of those shared docs had N workers all trying to write the SAME
+incremental-skip verdict marker into the SAME file at the same time. The result was an N-way merge-conflict storm, and
+markers that frequently never landed at all — which silently defeats Phase 0's whole incremental design (a doc with no
+marker is re-read in full every single run, forever).
+
+**The rule — apply in Phase 0, before any Phase-1 fan-out:**
+
+1. For every doc in this tranche's candidate set, compute its **owning tranche** from `parent_epic`, using the
+   `parent_epic`→tranche mapping already blessed in
+   `/codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md` § 2 (`parent_epic` is single-valued and
+   maps 1:1 onto a real `plans/epics/{parent_epic}.md`, which is exactly why that doc names it the clean grouping axis —
+   `asset_group` is multi-valued and is the source of the overlap in the first place).
+2. **Only the owning tranche writes the verdict marker.** A non-owning tranche that also sees the doc still reads it,
+   still classifies it, and still reports its verdict in that tranche's own report — it just does NOT write the dated
+   `na-eligibility-audit YYYY-MM-DD` marker (nor any other in-file edit to that shared doc: no `assigned_vm` flip, no
+   checkbox-citation fix, no archival). Those writes are the owning tranche's job, so exactly one worker ever touches
+   the file.
+3. If two tranches' verdicts for the same shared doc DISAGREE, that is a finding, not a race to resolve by writing
+   first: report it and route it through the normal conflict path (Phase 2 / operator ruling), never let
+   last-writer-wins pick the answer.
+
+**Machine-enforcement is a tracked follow-up, deliberately NOT shipped with this rule.** Once the hand-applied rule has
+been validated over a few real runs, `scripts/plan-hygiene/generate_na_doc_tranche_inventory.py` should emit an explicit
+`owning_tranche` field per doc so a worker filters to the docs it owns instead of re-deriving the mapping inline. That
+work is the `[SCRIPT] P2` todo already tracked in
+`/plans/archive/issues/sharded_per_tranche_audit_stash_race_and_multitranche_marker_gap_2026_07_30.md` — do not open a
+second one here.
+
+### NEVER `git stash` as one of several concurrent sharded tranche workers (HARD, added 2026-07-30)
+
+`refs/stash` is a **single shared LIFO stack per `.git` directory** — it is not worktree-scoped, so worktree isolation
+does NOT protect it (`/codex/05-infrastructure/per-tab-worktrees.md` § "What worktree isolation does NOT cover"). A
+`stash push` in worker A followed by a `stash pop` in worker B pops **A's** entry, not B's. That exact push/pop race on
+2026-07-30 swapped two workers' unrelated changesets. **If you need a pristine-tree comparison, use a throwaway second
+worktree at HEAD instead** — `git worktree add <scratch-path> HEAD`, read it, `git worktree remove <scratch-path>`. The
+same hazard applies to the `--autostash` flavours (`git pull --rebase --autostash` drives the same stack), so prefer an
+explicit `git pull --ff-only` from an already-clean tree.
+
 ## Phase 1 — per-tranche classification (the real work)
 
 Fan out read-only sub-agents (max 10 parallel; paste `cursor-configs/SUB_AGENT_MANDATORY_RULES.md` at the top of every
@@ -118,7 +161,21 @@ the hunter's own reported verdicts for that doc (KEEP items
 
 **Never re-litigate an established ruling.** A doc whose own text already cites an explicit dated operator ruling, a
 `depends_on`+`gate_on_depends` gate on a still-open prerequisite, or a "🟡 DO NOT DISPATCH" banner is KEEP-NA on that
-citation alone — confirm the citation is real (grep it), don't re-derive the underlying judgment call yourself.
+citation alone — confirm the citation is real (grep it), don't re-derive the underlying judgment call yourself. Two more
+citation classes count exactly the same way, added after a live incident
+(`plans/active/issues/regen_positional_task_ids_not_content_stable_2026_07_17.md`, BLK-29884333, 2026-07-31 — a prior
+na-eligibility-audit RECLASSIFY of that exact doc caused three real mis-dispatches of a banner-guarded, multi-day
+fleet-core rewrite before the operator/main-agent caught and reverted it): **(a) a banner or body sentence redirecting
+work to a DIFFERENT doc/plan** (e.g. "Do NOT start work from this doc alone", "tracked and executed via `<other doc>`")
+— even when this doc's own todo text reads as a clean, bounded, fully-scoped AO-dispatchable item, a redirect banner
+means the DISPATCH MECHANISM is wrong (flipping this doc's `assigned_vm` would let backlog-regen derive tasks directly
+from it, bypassing the doc it's supposed to route through); **(b) an inline `assigned_vm: NA #`-comment or a Progress
+Log entry documenting that THIS SAME SKILL previously reclassified this doc and was reverted** — a revert is a standing
+ruling, not a stale data point to re-evaluate fresh. Also stay skeptical of a todo's own "fully-scoped, AO-dispatchable"
+self-framing when the underlying change is a multi-file, multi-day rewrite of live-dispatch-critical-path machinery —
+bounded/bundled-into-one-todo is not the same test as small/low-risk; the
+`ao-dispatch-batch-naming-and-conflict-check.md`-flavoured "worker-determinable outcome" bar still applies on top of
+whatever the doc's own prose claims.
 
 ## Phase 2 — conflict-check before any RECLASSIFY flip
 
@@ -165,17 +222,23 @@ that plainly too — a grown-then-hidden number is worse than a grown-and-report
 
 ## Scheduled cadence
 
-Runs automatically once a day, autonomous mode, via `na-eligibility-auditor.timer` on the central orchestrator VM —
-`agent-orchestrator/scripts/install-na-eligibility-auditor-timer.sh` installs it (07:00 UTC, staggered 2h after
-`ag-closeout-auditor.timer`'s 05:00 UTC, which is itself staggered after `docs-reconciler.timer` 03:00 UTC and
-`plan-reconciler.timer` 01:00 UTC — four daily deep audits, 2h apart, never contending for the same free slot). Sharded
-the same way `ag_closeout` is: one dispatch per tranche, up to 9 concurrent, each its own free slot. Still directly
-invocable interactively any time.
+Runs automatically in autonomous mode via `na-eligibility-auditor.timer` on the central orchestrator VM —
+`agent-orchestrator/scripts/install-na-eligibility-auditor-timer.sh` installs it. **Cadence as of 2026-07-30: every 2
+hours, on ODD hours at :30 UTC** (a per-tranche idempotency guard makes every fire after that tranche's first success of
+the day a cheap no-op, so this is retry-until-capacity, not 12 audits a day). The ODD-hour phase is deliberately 1 hour
+offset from `ag-closeout-auditor.timer` (:30 on EVEN hours): both jobs fan out to 9 concurrent slots, so a same-hour
+overlap would be 18 slots of instantaneous demand. The other two scheduled jobs sit on their own phases —
+`docs-reconciler.timer` :15 hourly, `plan-reconciler.timer` :00 on EVEN hours. Sharded the same way `ag_closeout` is:
+one dispatch per tranche, up to 9 concurrent, each its own free slot — which is exactly why the primary-owner and
+no-`git stash` rules in Phase 0 above are HARD. Still directly invocable interactively any time.
 
 ## Codex SSOTs
 
 - `/codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md` — naming/pairing convention, grouping
-  semantics, the shared conflict-check protocol, and the NA-corpus ratchet rationale
+  semantics (§ 2 `parent_epic`-as-grouping-axis is the SSOT behind Phase 0's primary-owner rule), the shared
+  conflict-check protocol, and the NA-corpus ratchet rationale
+- `/codex/05-infrastructure/per-tab-worktrees.md` § "What worktree isolation does NOT cover" — why `git stash` is banned
+  for concurrent sharded tranche workers (`refs/stash` is one shared LIFO stack per clone)
 - `/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md` § "Dispatch-scope eligibility" —
   bounded-outcome bar for a RECLASSIFY verdict
 - `plans/active/task_template.md` §§ 1-4 — LOCAL vs AO-dispatched tracks, AO frontmatter, finalize-plan-coverage rule

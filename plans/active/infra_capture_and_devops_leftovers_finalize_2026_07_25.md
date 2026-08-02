@@ -23,7 +23,7 @@ related:
     /plans/active/instruments_completion_tracker_2026_07_06.md,
   ]
 created: "2026-07-25"
-last_updated: "2026-07-26"
+last_updated: "2026-08-02"
 parent_epic: instruments_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -38,6 +38,13 @@ depends_on: [infra_capture_and_devops_leftovers_2026_07_06]
 gate_on_depends: true
 locked_by:
 locked_since:
+context_scope:
+  [
+    /plans/active/infra_capture_and_devops_leftovers_2026_07_06.md,
+    /plans/active/task_template.md,
+    /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
+    /plans/archive/issues/finalize_plan_coverage_regression_2_plans_2026_07_25.md,
+  ]
 supersedes:
 superseded_by:
 source: >-
@@ -166,4 +173,36 @@ source: >-
       `BLK-55d45a68`/`BLK-4f52080e`; MANTLE paid-RPC Secret Manager grant; Live-ODDS quota decision; rate-limit-probe VM
       sanction) — or once an operator decision changes how `check_finalize_plan_coverage.py` should be satisfied for a
       permanently-blocked parent. Only then run the standard 6-step archival ritual on both this finalize plan and its
-      parent together. (Per this doc's own 2026-07-26 banner: do not re-attempt archival until then.)
+      parent together. (Per this doc's own 2026-07-26 banner: do not re-attempt archival until then.) — **🟡 TRIGGER
+      MET, PARTIAL RECONCILIATION DONE 2026-08-02 (slot 2) — still NOT fully resolved, archival NOT run.** 2 of the 4
+      named items have cleared since the 2026-07-25 re-check: **MANTLE paid-RPC** — no Secret Manager grant was actually
+      needed; `unified-api-contracts@1924bfed` (2026-07-29) routes it through Alchemy's already-provisioned
+      `alchemy-api-key` instead, live-verified. **Live-ODDS quota decision** — operator ruled 2026-07-28 + a new
+      5M-credits/mo key landed + live-verified 2026-07-29; the sibling gate half (api_football second-source scaffold)
+      is still open but is no longer operator-decision-gated (tracked in
+      `sports_live_availability_and_source_latency_2026_07_24.md`'s own todo, not duplicated here). Both flipped/updated
+      on the parent with full citations — see the parent's 2026-08-02 Progress Log entry (parent checkbox count now 6/9
+      done, up from 5/9). **3 checkboxes remain genuinely open on the parent** (not 2 — the Live-ODDS item's
+      operator-decision component cleared, but its own checkbox stays `[ ]` pending the still-unwired second-source
+      scaffold): **rate-limit-probe VM** (re-confirmed `BLOCKED-OPERATOR-DECISION`, no operator answer found);
+      **Live-ODDS second-source scaffold** (api_football `/odds` in-play not yet wired — now a plain execution todo,
+      tracked in the sibling sports plan, not this doc); **ASTER** (freeze already lifted 2026-07-28, but the "+ live
+      VM" data-landing verification remains unconfirmed — spot-check this session found ZERO `live_aster` rows across
+      2026-07-30 through 2026-08-01 and an unexplained VM replacement, logged as a new finding in
+      `issues/cefi_consolidated_vm_aster_data_landing_recheck_2026_07_30.md` rather than chased here). Per this todo's
+      own gate ("only then run the standard 6-step archival ritual"), 3 open checkboxes is NOT "all clear" — **no
+      archival ritual run, this finalize plan and its parent both stay `active`.** This todo remains the standing
+      re-check pointer; re-run again once the rate-limit-probe VM sanction lands, the ASTER live-data-landing
+      verification confirms, or the Live-ODDS second source ships.
+
+## Progress Log
+
+- **2026-08-02 (slot 2, finalize reconciliation)**: re-ran the parent-reconciliation trigger check. Of the parent's
+  originally-named 4 `BLOCKED-*` items, MANTLE paid-RPC fully cleared and the Live-ODDS quota decision-component cleared
+  (2 of 4 blocker-framings resolved) — flipped/updated on the parent with citations (checkbox count 5/9 → 6/9). **3
+  checkboxes remain open** (not 2): rate-limit-probe VM sanction (unchanged, still gated), Live-ODDS second-source
+  scaffold (no longer decision-gated, but still unwired — plain execution todo now, owned by the sibling sports plan),
+  and ASTER live-data-landing verification (also logged a new finding there re: 3 days of zero rows + an unexplained VM
+  replacement). Archival ritual NOT run; both docs stay `active`. Full detail on this todo's own checkbox above and the
+  parent's matching Progress Log entry.
+- **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).

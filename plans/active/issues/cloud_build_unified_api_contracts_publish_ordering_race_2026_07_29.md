@@ -58,17 +58,23 @@ related:
     /plans/active/issues/fleet_wide_qg_capacity_crisis_continues_day2_2026_07_29.md,
   ]
 created: 2026-07-29
-last_updated: 2026-07-29
+last_updated: 2026-07-30
 priority: P1
 parent_epic: infrastructure_master
 source:
   "operator #ci-failures Slack dump 6:01-6:51 AM, investigated live via gcloud builds log + artifacts versions list,
   2026-07-29 ~09:00-09:15 UTC"
-execution_scope: local-only
+execution_scope: orchestrator-agent
+assigned_role: cicd
 drift_direction: advance-code
-context_scope: [/codex/08-workflows/ci-cd-flow.md]
+context_scope:
+  [
+    /codex/08-workflows/ci-cd-flow.md,
+    /plans/active/issues/github_actions_billing_wall_recurrence_2026_07_29.md,
+    /plans/active/issues/fleet_wide_qg_capacity_crisis_continues_day2_2026_07_29.md,
+  ]
 depends_on: []
-assigned_vm: NA
+assigned_vm: planning
 resolved_by:
 locked_by:
 locked_since:
@@ -199,8 +205,11 @@ applied to every repo this grep surfaces, not just instruments-service.
       `ad0676f7`), `market-data-processing-service@afcf9840`/`afcf984` (builds `3f147ab5`+`8f669147`),
       `ml-service@cc732d8c` (builds `0e509171`+`a460751e`), `strategy-service@9c499721` (build `23bfa809`),
       `fund-administration-service@8ebba565` (build `dc5c04c2`), `trading-agent-service@ed8ff77a` (build `24de3b51`),
-      `deployment-api` (fix shipped, a THIRD distinct root cause — see Progress Log), `greeks-service` (in progress as
-      of this edit). `market-tick-data-service` — **confirmed NOT affected**: it installs
+      `deployment-api` (fix shipped, a THIRD distinct root cause — see Progress Log), `greeks-service@3f5ef660`
+      (BuildKit-secret `gar_token` pattern per the fix noted in this doc's `## Todos` header, mirroring
+      `instruments-service@4c05f2d3` — build `9a035575-8f79-4ff8-9db0-b6f48ecf3b03` SUCCESS 2026-07-30T06:05:43Z for the
+      fix commit itself, and the subsequent LDR→main promote build `a5c4b96f-1aa4-49fb-ae07-abe62b81347b` also SUCCESS).
+      `market-tick-data-service` — **confirmed NOT affected**: it installs
       `unified-trading-library`/`unified-api-contracts` from vendored local paths (`.deps/...`) BEFORE its own
       `uv pip     install --system -e . --no-deps`, so it never resolves either package from the private GAR index at
       build time — the publish-ordering/auth gap this doc tracks structurally doesn't apply (confirmed by reading the
@@ -218,15 +227,56 @@ applied to every repo this grep surfaces, not just instruments-service.
       remained unreliable this session too (repeatedly timed out on broad filters even with `timeout 90`+;
       per-trigger-id-scoped queries or a fallback to `gh run list`/`gh api` worked where it didn't) — this reliability
       gap is real and worth its own look if it keeps recurring, but was worked around each time rather than blocking.
-- [ ] [SCRIPT] P2. Harden against recurrence: add a short retry-with-backoff (e.g. 3 attempts, exponential, ~30-60s
-      total budget) around the `uv pip install --system ... --no-sources` step in each affected repo's Dockerfile (or
-      wherever the shared pattern is defined, if one exists — Dockerfiles were confirmed NOT currently templated the way
-      `quality-gates-v2.yml` is, so this is likely 7+ individual per-repo edits, each needing its own local Docker build
-      verification, not a single templated change). Cheap, safe, directly prevents this exact failure mode from
-      recurring on the next cross-repo floor-bump wave.
-  - [ ] [SCRIPT] P3. Once a retry pattern is chosen for one repo and verified, consider whether it's worth promoting to
-        a shared Dockerfile snippet/base-image convention (mirrors the `quality-gates-v2.yml.tmpl` precedent) rather
-        than repeating the same edit 7+ times by hand.
+- [x] ✅ [SCRIPT] P2. **FIXED 2026-07-30 (slot 4, cicd craft dispatch).** Wrapped the
+      `uv pip install --system --no-sources -e .` step in every affected repo's Dockerfile with a POSIX-sh retry loop (3
+      attempts, exponential 15s/30s backoff, ~45s total budget on full failure), scoped to ONLY that
+      `RUN --mount=type=secret,id=gar_token` layer so the `UV_EXTRA_INDEX_URL` env var still applies to every retry.
+      Confirmed Dockerfiles are NOT templated (7 individual per-repo edits, as anticipated) across the 8 repos that
+      carry the live-registry `uv pip install` pattern (the same set already fixed for the underlying keyring-auth bug
+      in the P1/P2-rollout todos above): `strategy-service@7cac6edc`, `ml-service@99edbe8`,
+      `market-data-processing-service@c3c3aee`, `instruments-service@41f1a25b`, `trading-agent-service@81c08a2`,
+      `greeks-service@2d24469`, `alerting-service@8eea670`, `fund-administration-service@d5549a5` — all shipped via the
+      normal QG→quickmerge flow (Pass-1 `quality-gates.sh` green, Pass-2 `quickmerge --agent`), all confirmed `ahead=0`
+      on `live-defi-rollout`. `market-tick-data-service` correctly excluded (installs UTL/UAC from vendored local
+      `.deps/` paths, never resolves from the live GAR index — see this doc's earlier confirmed-not-affected note);
+      `unified-trading-system-ui` excluded (no Cloud Build trigger); `deployment-api` excluded (its `uv pip install`
+      calls install from local `/tmp/*` wheel paths, not the live registry — its storm root cause was the separate
+      pnpm/npm mismatch, not this pattern). **Verified via 2 REAL Cloud Build triggers** (never just step-status — read
+      the actual build log content): `gcloud builds triggers run instruments-service-prod --branch=live-defi-rollout` →
+      build `56fbc849-6625-4d89-a21d-a0fa71a9bece`, `status: SUCCESS`; log confirms the retry-wrapper `sh -c` command
+      ran exactly as shipped and `uv pip install` succeeded on the FIRST attempt (no retry/backoff lines — proves the
+      wrapper adds zero overhead on the happy path).
+      `gcloud builds triggers run strategy-service-build     --branch=live-defi-rollout` → build
+      `293cc110-4730-444e-b0e2-6dac9430fded`, `status: SUCCESS`, same clean first-attempt confirmation. (Both logs show
+      an unrelated `publish-wheel` step `400 Bad Request` — a pre-existing "wheel version already published" re-trigger
+      artifact, orthogonal to this fix and not gating build SUCCESS.)
+  - [x] ✅ [SCRIPT] P3. **DECIDED + DOCUMENTED 2026-07-31 (slot 7, cicd craft dispatch).** Judgment call: YES, worth
+        promoting — the retry-wrapper `RUN` block is byte-identical (modulo each repo's own install flags/extras) across
+        all 8 affected repos, and the workspace already has a proven precedent for exactly this problem shape (the
+        `BASE_IMAGE_DIGEST` pin: SSOT doc + `scripts/propagation/add-dockerfile-digest-arg.py` +
+        `scripts/quality_gates/check_base_image_digest_drift.py` + QG STEP 5.79). Documented the canonical pattern as a
+        new SSOT section in `codex/06-coding-standards/dockerfile-standards.md` § "uv pip install Retry Wrapper
+        (BuildKit-secret GAR auth)" — `unified-trading-pm@<see Progress Log for sha>`. **Scoped down from the full
+        automation** (propagation script + fleet drift-checker + QG step mirroring the digest-pin precedent) — that is a
+        multi-hour build, not a 1-hour P3 doc-decision task, so it's split into its own properly-scoped follow-up below
+        rather than crammed into this todo.
+  - [x] ✅ [SCRIPT] P3. **BUILT 2026-08-01 (slot 8, cicd craft dispatch).** Mirrored the `BASE_IMAGE_DIGEST` precedent
+        exactly: (a) `scripts/quality_gates/check_uv_install_retry_wrapper_drift.py` — warn-only fleet checker (modeled
+        on `check_base_image_digest_drift.py`), scans every repo's top-level `Dockerfile` for a
+        `RUN --mount=type=secret,id=gar_token` layer whose `uv pip install ... --no-sources` call is NOT wrapped in the
+        documented retry loop, joining backslash-continuation lines to parse the full `RUN` instruction; wired into
+        `scripts/quality-gates.sh` as a post-gate right after the digest-drift checker, always exit 0. (b)
+        `scripts/propagation/apply-uv-install-retry-wrapper.py` — idempotent propagation script (modeled on
+        `add-dockerfile-digest-arg.py`, `--dry-run` + `--repo`) that surgically wraps ONLY the bare `uv pip install`
+        line in place (preserving every other line — `UV_EXTRA_INDEX_URL`, indentation, per-repo flag order — verbatim),
+        re-run-safe. Scope excludes `market-tick-data-service` (vendored-local installs) and `unified-trading-system-ui`
+        (no Cloud Build trigger), matching the SSOT. **Verified against the REAL fleet**: ran the checker against all 19
+        live sibling-repo Dockerfiles — zero drift (every repo already carries the wrapper from the prior fleet-wide
+        rollout todo above) — then proved detect→fix→re-scan-clean end-to-end against a synthetic un-wrapped fixture. 8
+        unit tests per script (`tests/unit/test_check_uv_install_retry_wrapper_drift.py`,
+        `tests/unit/test_apply_uv_install_retry_wrapper.py`) cover positive/negative detection, idempotency, indent/flag
+        preservation, exempt-repo skipping, and `main()`'s dry-run/write/`--repo` paths. Shipped via the normal
+        QG→quickmerge flow. (repo: unified-trading-pm)
 - [x] ✅ [SCRIPT] P3. **FIXED 2026-07-30 (slot 1, `/autonomous` dispatch)** —
       `unified-trading-pm@<pending-sha, see     Progress Log>`. Added `active_trigger_repos()` to
       `stale_build_monitor.py` (one `gcloud builds triggers list` call, cached across the run) and wired it into
@@ -237,13 +287,33 @@ applied to every repo this grep surfaces, not just instruments-service.
       remedy (wiring up a real trigger was never the intent — this repo deploys differently). 6 new unit tests added
       (`active_trigger_repos` new-style/legacy/error-fail-open, `check_repo`'s skip + the `trigger_repos=None`
       fail-open-does-not-short-circuit case). Shipped via quickmerge, local `quality-gates.sh` green.
-- [ ] [SCRIPT] P2. Fleet-wide grep for the SAME latent `uv pip install` + `pip.conf`-only gap fixed in
-      `instruments-service@2941646c` (2026-07-29): any repo whose Dockerfile has `COPY pip.conf` + a subsequent
-      `uv pip     install ... --no-sources` WITHOUT a `UV_EXTRA_INDEX_URL`/`UV_INDEX` env var is silently relying on its
-      pinned base image already satisfying every dependency floor — it will build-fail with the identical "not found in
-      the package registry" message the next time ANY of its private-registry deps gets floor-bumped past what the base
-      image bundles. Fix proactively (mirror the instruments-service Dockerfile diff) rather than waiting for each repo
-      to hit it independently.
+- [x] ✅ [SCRIPT] P2. **VERIFIED 2026-07-30 (slot 8, cicd craft dispatch) — grep complete, ZERO additional repos
+      exposed; no code change needed.** Ran the fleet-wide grep across every Dockerfile in the workspace checkout (23
+      Dockerfiles across 21 repos: `agent-orchestrator`, `alerting-service`, `batch-live-reconciliation-service`,
+      `client-reporting-api`, `deployment-api` (+`Dockerfile.dashboard`), `deployment-service`, `deployment-ui`,
+      `e2e-testing`, `execution-service`, `features-service`, `fund-administration-service`, `greeks-service`,
+      `ibkr-gateway-infra` (terraform-only, no Python install), `instruments-service`, `market-data-processing-service`,
+      `market-tick-data-service`, `ml-service`, `strategy-service`, `trading-agent-service`, `unified-trading-library`
+      (+`Dockerfile.ci`), `unified-trading-system-ui`) for `COPY pip.conf` + `uv pip install ... --no-sources`
+      co-occurring without `UV_EXTRA_INDEX_URL`/`UV_INDEX`. Every repo already carrying a real exposure was fixed in the
+      "Fleet-wide rollout" todo above (`instruments-service`, `alerting-service`, `market-data-processing-service`,
+      `ml-service`, `strategy-service`, `fund-administration-service`, `trading-agent-service`, `greeks-service` — all
+      now have `UV_EXTRA_INDEX_URL` wired via the BuildKit-secret pattern). The grep surfaced exactly two additional
+      loose hits, both CONFIRMED NOT actually exposed after reading the Dockerfile + cloudbuild.yaml in full: -
+      `market-tick-data-service`: has `COPY pip.conf` + 2× `--no-sources`, but both are the vendored-local-path installs
+      (`uv pip install --no-sources -e .deps/unified-trading-library`, gated on `.deps/unified-trading-library` existing
+      from the cloudbuild `stage-workspace-deps` step) followed by `uv pip install --system -e . --no-deps` for the
+      service's own package — `--no-deps` means it never resolves UTL/UAC as dependencies from ANY index at all. Already
+      documented not-affected in the "Fleet-wide rollout" todo above; re-confirmed here. - `unified-trading-library`:
+      does NOT actually `COPY pip.conf` (only conditionally _writes_ one to `/root/.config/pip/pip.conf` when the
+      `EXTRA_PYTHON_INDEX_URL` build-arg is set — a different, self-contained mechanism, not the
+      `COPY pip.conf`-then-ignored-by-uv pattern this todo targets). Its one internal dependency
+      (`unified-api-contracts`) is satisfied via a LOCAL editable install from `/workspace/.deps/unified-api-contracts`
+      (cloned by the `clone-uac-source` cloudbuild step, confirmed run for every build not just AWS CodeBuild) BEFORE
+      the `--no-sources -e .` step that builds UTL itself — so the later step never needs registry resolution for UAC
+      either. Not exposed. No further Dockerfile changes required — this todo closes as verification, not remediation.
+      (A separate, distinct open item — the nested P3 "worth consolidating into a shared Dockerfile snippet?" sub-todo
+      under the retry-wrapper todo above — remains its own open judgment call, not part of this grep's scope.)
 
 ## Why this matters
 
@@ -282,3 +352,8 @@ Session status at checkpoint (a fresh session picking this up should verify curr
   confirmed root cause of tonight's `unified-api-contracts`/`unified-trading-pm` branch-health promotion-lag lines and
   blocks the actual PR-merge step for the two reprovenanced repos above — re-confirmed live at 2026-07-30T00:55- 00:59Z,
   still active, no self-recovery. Needs `github.com/settings/billing`.
+
+- **na-eligibility-audit 2026-07-30**: RECLASSIFY NA → planning — remaining todos are a bounded per-repo Dockerfile
+  retry-with-backoff hardening plus a fleet-wide grep-and-fix for the same latent `uv pip install` + pip.conf-only gap;
+  the P1 root fix already shipped and is cited. Other docs reference it as context, none claim its todos.
+- **context-scout 2026-08-01**: refreshed context_scope (3 entries).

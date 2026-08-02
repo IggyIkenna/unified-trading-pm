@@ -24,7 +24,7 @@ related:
     /codex/05-infrastructure/deployment-observability.md,
   ]
 created: 2026-07-06
-last_updated: 2026-07-14
+last_updated: 2026-08-02
 parent_epic: instruments_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -39,6 +39,13 @@ drift_direction: advance-code
 depends_on:
 locked_by:
 locked_since:
+context_scope:
+  [
+    /plans/active/instruments_completion_tracker_2026_07_06.md,
+    /codex/05-infrastructure/spot-vms-for-backfill.md,
+    /codex/05-infrastructure/deployment-observability.md,
+    /codex/02-data/external-data-always-available-rule.md,
+  ]
 supersedes:
 superseded_by:
 source:
@@ -71,15 +78,20 @@ source:
       appended at the end of this task's history below.** Register + launch the ASTER live connector —
       `aster_book_liq_ws.py` into `live/connector_registry.py` + a live VM (the KALSHI-PERP book5 VM is the in-cefi
       template). **PREREQ: Plan 1's enumerator `start_date` support + the UAC capability flip for ASTER
-      book5/liquidations have landed** (else you re-create the 17,282-row over-seed). Verify `live_aster` rows land
-      (per-VM shard spot-check at T+10-15min). **This gates Plan 1's ASTER re-measure (2c/2f).** Connector SSOT:
-      `issues/cefi_hl_aster_batch_data_gaps_2026_06_22` BUG #4. Gate: `live_aster` book5/liquidations rows landing
-      daily. **STATUS 2026-07-07 06:31 UTC — BLOCKED-PREREQUISITES** (main-agent answer to `BLK-26ed6571`, task 001
-      pickup, slot-9): both hard prereqs unmet on LDR — (a) `instruments-service/scripts/expected_universe.py` has zero
-      `get_venue_data_type_start_date` awareness on LDR (cefi-007 impl is done on slot 5, 126/126 green, but has NOT
-      been quickmerged yet); (b) UAC `market_data_categories.py` `VENUE_DATA_TYPE_CAPABILITIES["ASTER"]` still only
-      lists trades/derivative_ticker/perp_funding — NO book_snapshot_5, NO liquidations (**stale as of 2026-07-07 08:10
-      UTC — corrected 2026-07-12, finding id 114, §A2 B-queue ruling**: `unified-api-contracts@3652f99f`, verified via
+      book5/liquidations have landed** (else you re-create the 17,282-row over-seed). ~~Verify `live_aster` rows land
+      (per-VM shard spot-check at T+10-15min).~~ **VERIFICATION HALF RE-HOMED 2026-07-31** (corpus-wide
+      ownership-conflict sweep, operator ruling keep-one-cite-the-other): the `live_aster` row-landing check is owned by
+      the newer, dedicated `/plans/active/issues/cefi_consolidated_vm_aster_data_landing_recheck_2026_07_30.md`, which
+      carries the concrete dated command and already declares itself the thing that flips THIS checkbox. **This todo
+      owns register + launch only**; do not run a second, competing verification here. **This gates Plan 1's ASTER
+      re-measure (2c/2f).** Connector SSOT: `issues/cefi_hl_aster_batch_data_gaps_2026_06_22` BUG #4. Gate: `live_aster`
+      book5/liquidations rows landing daily. **STATUS 2026-07-07 06:31 UTC — BLOCKED-PREREQUISITES** (main-agent answer
+      to `BLK-26ed6571`, task 001 pickup, slot-9): both hard prereqs unmet on LDR — (a)
+      `instruments-service/scripts/expected_universe.py` has zero `get_venue_data_type_start_date` awareness on LDR
+      (cefi-007 impl is done on slot 5, 126/126 green, but has NOT been quickmerged yet); (b) UAC
+      `market_data_categories.py` `VENUE_DATA_TYPE_CAPABILITIES["ASTER"]` still only lists
+      trades/derivative_ticker/perp_funding — NO book_snapshot_5, NO liquidations (**stale as of 2026-07-07 08:10 UTC —
+      corrected 2026-07-12, finding id 114, §A2 B-queue ruling**: `unified-api-contracts@3652f99f`, verified via
       `git log`/`git show` on `live-defi-rollout`, added `book_snapshot_5` + `liquidations` to
       `VENUE_DATA_TYPE_CAPABILITIES["ASTER"]` (`start_date=2026-06-23`), landing ~2h after this 06:31 UTC status check.
       Current tree confirms both keys present. The (a) prereq — `enumerate_expected_universe.py` per-(venue,dt)
@@ -162,36 +174,36 @@ source:
       ASTER) satisfies this ruling — both halves ship together.
 
       **EXECUTED 2026-07-30 (autonomous session) — VM launched + verified healthy; real data-landing verification
-          BLOCKED on a ~12h timing gap, not a bug. Checkbox intentionally left unticked pending that follow-up.**
-          (1) Added `ASTER:book_snapshot_5` + `ASTER:liquidations` to BOTH copies of `setup-cefi-live-consolidated-vm.sh`'s
-          `MVP_SHARDS` array (§6 outer script + the inline supervisor-heredoc duplicate, which must stay in sync) —
-          `deployment-service@28fe829f` + `9615791d` (doc-comment sync). (2) Launched for real, on-demand:
-          `mtds-live-cefi-consolidated-20260730-010147`, `asia-northeast1-c`, `e2-highmem-16`. First attempt hit
-          `ZONE_RESOURCE_POOL_EXHAUSTED_WITH_DETAILS` — added a `--zone` override restricted to same-region fallback only
-          (`deployment-service@` this session, per `/codex/05-infrastructure/strategy-shard-vm-topology.md` § Zone;
-          cross-region forbidden, all GCS data lives in asia-northeast1); the retry in the default zone then succeeded
-          (stockout was transient). (3) **STARTED <60s**: confirmed via direct serial-console read — full boot +
-          dependency-install + all shard launches completed in ~140s, `=== VM SETUP COMPLETE ===`, "Consolidated CeFi live
-          VM running 17 MVP shards" (15 original + 2 new ASTER). **Process liveness confirmed via SSH**: both
-          `cefi:ASTER:book_snapshot_5` and `cefi:ASTER:liquidations` processes running (PIDs alive, steady CPU
-          accumulation, not crash-looping). (4) **Data-quality spot-check ATTEMPTED, correctly inconclusive — not a
-          failure.** Every shard on this VM (ASTER AND all 15 pre-existing venues, e.g. HYPERLIQUID, BINANCE-FUTURES —
-          confirmed via direct log read, this is fleet-wide on this VM, not ASTER-specific) logs
-          `read_is_universe_sync: no instruments.parquet for cefi/{VENUE} day=2026-07-30 in either by_date layout` /
-          `IS universe empty ... emitting honest-absence — retrying in 300s`. Root-caused: instruments-service's daily
-          catalogue-enumeration job (`deployment-service/terraform/gcp/daily_is_enumeration_scheduler.tf`,
-          `google_cloud_scheduler_job.is_daily_enum`, `schedule = "30 13 * * *"` — 13:30 UTC) had not yet run for today at
-          launch time (01:16 UTC) — confirmed via direct GCS listing: yesterday's (2026-07-29) `instruments.parquet`
-          exists for every CeFi venue including ASTER at
-          `instrument_availability/by_date/day=2026-07-29/pipeline_mode=batch_instruments_service/asset_group=cefi/venue={VENUE}/`,
-          today's (2026-07-30) does not exist yet anywhere under that prefix. This is expected, designed behavior (the
-          300s retry loop exists precisely for this), not a connector/launch bug — every shard will pick up real data
-          automatically once the 13:30 UTC job lands, with no VM restart needed. **Follow-up needed**: whoever next checks
-          this VM after ~13:30 UTC 2026-07-30 should re-run the data-quality spot-check (`gcloud storage ls
-          "gs://market-data-tick-cefi-prd-central-element-323112/raw_tick_data/by_date/day=2026-07-30/pipeline_mode=live_aster/**"`)
-          and, if rows are landing, flip this checkbox + complete step (4) below (archive the 2 dormancy issue docs). If
-          still empty well past 13:30 UTC, that WOULD be a genuine new bug worth investigating (this session's finding
-          only explains absence BEFORE that time).
+                                                                                                                                                                                                                                                                                                                                                      BLOCKED on a ~12h timing gap, not a bug. Checkbox intentionally left unticked pending that follow-up.**
+                                                                                                                                                                                                                                                                                                                                                      (1) Added `ASTER:book_snapshot_5` + `ASTER:liquidations` to BOTH copies of `setup-cefi-live-consolidated-vm.sh`'s
+                                                                                                                                                                                                                                                                                                                                                      `MVP_SHARDS` array (§6 outer script + the inline supervisor-heredoc duplicate, which must stay in sync) —
+                                                                                                                                                                                                                                                                                                                                                      `deployment-service@28fe829f` + `9615791d` (doc-comment sync). (2) Launched for real, on-demand:
+                                                                                                                                                                                                                                                                                                                                                      `mtds-live-cefi-consolidated-20260730-010147`, `asia-northeast1-c`, `e2-highmem-16`. First attempt hit
+                                                                                                                                                                                                                                                                                                                                                      `ZONE_RESOURCE_POOL_EXHAUSTED_WITH_DETAILS` — added a `--zone` override restricted to same-region fallback only
+                                                                                                                                                                                                                                                                                                                                                      (`deployment-service@` this session, per `/codex/05-infrastructure/strategy-shard-vm-topology.md` § Zone;
+                                                                                                                                                                                                                                                                                                                                                      cross-region forbidden, all GCS data lives in asia-northeast1); the retry in the default zone then succeeded
+                                                                                                                                                                                                                                                                                                                                                      (stockout was transient). (3) **STARTED <60s**: confirmed via direct serial-console read — full boot +
+                                                                                                                                                                                                                                                                                                                                                      dependency-install + all shard launches completed in ~140s, `=== VM SETUP COMPLETE ===`, "Consolidated CeFi live
+                                                                                                                                                                                                                                                                                                                                                      VM running 17 MVP shards" (15 original + 2 new ASTER). **Process liveness confirmed via SSH**: both
+                                                                                                                                                                                                                                                                                                                                                      `cefi:ASTER:book_snapshot_5` and `cefi:ASTER:liquidations` processes running (PIDs alive, steady CPU
+                                                                                                                                                                                                                                                                                                                                                      accumulation, not crash-looping). (4) **Data-quality spot-check ATTEMPTED, correctly inconclusive — not a
+                                                                                                                                                                                                                                                                                                                                                      failure.** Every shard on this VM (ASTER AND all 15 pre-existing venues, e.g. HYPERLIQUID, BINANCE-FUTURES —
+                                                                                                                                                                                                                                                                                                                                                      confirmed via direct log read, this is fleet-wide on this VM, not ASTER-specific) logs
+                                                                                                                                                                                                                                                                                                                                                      `read_is_universe_sync: no instruments.parquet for cefi/{VENUE} day=2026-07-30 in either by_date layout` /
+                                                                                                                                                                                                                                                                                                                                                      `IS universe empty ... emitting honest-absence — retrying in 300s`. Root-caused: instruments-service's daily
+                                                                                                                                                                                                                                                                                                                                                      catalogue-enumeration job (`deployment-service/terraform/gcp/daily_is_enumeration_scheduler.tf`,
+                                                                                                                                                                                                                                                                                                                                                      `google_cloud_scheduler_job.is_daily_enum`, `schedule = "30 13 * * *"` — 13:30 UTC) had not yet run for today at
+                                                                                                                                                                                                                                                                                                                                                      launch time (01:16 UTC) — confirmed via direct GCS listing: yesterday's (2026-07-29) `instruments.parquet`
+                                                                                                                                                                                                                                                                                                                                                      exists for every CeFi venue including ASTER at
+                                                                                                                                                                                                                                                                                                                                                      `instrument_availability/by_date/day=2026-07-29/pipeline_mode=batch_instruments_service/asset_group=cefi/venue={VENUE}/`,
+                                                                                                                                                                                                                                                                                                                                                      today's (2026-07-30) does not exist yet anywhere under that prefix. This is expected, designed behavior (the
+                                                                                                                                                                                                                                                                                                                                                      300s retry loop exists precisely for this), not a connector/launch bug — every shard will pick up real data
+                                                                                                                                                                                                                                                                                                                                                      automatically once the 13:30 UTC job lands, with no VM restart needed. **Follow-up needed**: whoever next checks
+                                                                                                                                                                                                                                                                                                                                                      this VM after ~13:30 UTC 2026-07-30 should re-run the data-quality spot-check (`gcloud storage ls
+                                                                                                                                                                                                                                                                                                                                                      "gs://market-data-tick-cefi-prd-central-element-323112/raw_tick_data/by_date/day=2026-07-30/pipeline_mode=live_aster/**"`)
+                                                                                                                                                                                                                                                                                                                                                      and, if rows are landing, flip this checkbox + complete step (4) below (archive the 2 dormancy issue docs). If
+                                                                                                                                                                                                                                                                                                                                                      still empty well past 13:30 UTC, that WOULD be a genuine new bug worth investigating (this session's finding
+                                                                                                                                                                                                                                                                                                                                                      only explains absence BEFORE that time).
 
 - [x] ✅ [DATA] P1. **Deribit `options_chain` live runner** — wire a live cron/VM to run
       `--operation deribit-options-chain` (the handler `mtds@9ecd1e29e` is **live/replay only — no backfill**,
@@ -256,17 +268,42 @@ source:
       `oracle_prices` `attempted_failed` count actively dropping across sessions through 2026-07-24 as of this check).
       No further action needed here — this item duplicated already-in-flight work; tracking continues in the v10
       operational log, not this doc.
-- [ ] [DATA] P1. **BLOCKED-CREDENTIALS — gas-fees MANTLE paid RPC.** gas-fees on MANTLE needs a paid RPC endpoint key (→
-      Secret Manager) [ack-pending]. Build the adapter scaffold anyway. Gate: adapter scaffold ready;
-      BLOCKED-CREDENTIALS. **RE-CONFIRMED STILL BLOCKED, checked 2026-07-25 (slot 9, finalize task)**: no Secret Manager
-      entry or key-grant evidence found; the ask is still open and most recently restated 2026-07-24 in
-      `plans/archive/2026_07/defi_consolidated_closeout_aggregated_sources_2026_07_24.md` and
-      `plans/active/data_completion_defi_2026_07_15.md`. Genuinely still credential-gated.
-- [ ] [DATA] P2. **BLOCKED-CREDENTIALS — Live ODDS quota + cheap second source.** The live ODDS quota decision + a cheap
-      second source [ack-pending]. Gate: quota decision documented; scaffold for the second source. **RE-CONFIRMED STILL
-      BLOCKED, checked 2026-07-25 (slot 9, finalize task)**: still open, most recently restated 2026-07-24 in
+- [x] ✅ [DATA] P1. **BLOCKED-CREDENTIALS premise RESOLVED, checked 2026-08-02 (slot 2, finalize reconciliation).**
+      gas-fees on MANTLE needs a paid RPC endpoint key (→ Secret Manager) [ack-pending]. Build the adapter scaffold
+      anyway. Gate: adapter scaffold ready; BLOCKED-CREDENTIALS. **RE-CONFIRMED STILL BLOCKED, checked 2026-07-25 (slot
+      9, finalize task)**: no Secret Manager entry or key-grant evidence found; the ask is still open and most recently
+      restated 2026-07-24 in `plans/archive/2026_07/defi_consolidated_closeout_aggregated_sources_2026_07_24.md` and
+      `plans/active/data_completion_defi_2026_07_15.md`. **RESOLVED 2026-07-29 — no new Secret Manager grant was needed
+      after all.** `unified-api-contracts@1924bfed` ("fix(defi): route Mantle gas-fee RPC through Alchemy, not
+      rate-limited public endpoint") repoints MANTLE's `ChainConfig.rpc_url_template` to
+      `https://mantle-mainnet.g.alchemy.com/v2/{api_key}`, reusing the already-provisioned `alchemy-api-key` that ~16
+      other EVM chains already use — Alchemy officially supports Mantle mainnet, so the real blocker was the free public
+      `rpc.mantle.xyz` endpoint's rate limit, not a missing credential. Live-verified 2026-07-29 per the code comment: a
+      real `eth_feeHistory` call against the Alchemy endpoint returned a populated `baseFeePerGas`. This exceeds the
+      gate (adapter scaffold ready) — the fix is fully wired, not just scaffolded. Cross-referenced in
+      `plans/active/data_completion_defi_2026_07_15.md` (2026-06-22 status entry, struck-through "Unblock = a paid
+      MANTLE RPC endpoint..." note) and `plans/active/instruments_completion_tracker_2026_07_06.md:449` ("Retagged
+      2026-07-29: pyth+MANTLE resolved"). No further action needed here.
+- [ ] [DATA] P2. **NO LONGER OPERATOR-DECISION-GATED, checked 2026-08-02 (slot 2, finalize reconciliation) — retagged;
+      remaining scope is a plain scaffold todo, tracked in the sibling plan below, not a fresh blocker here.** Live ODDS
+      quota + cheap second source. The live ODDS quota decision + a cheap second source [ack-pending]. Gate: quota
+      decision documented; scaffold for the second source. **RE-CONFIRMED STILL BLOCKED, checked 2026-07-25 (slot 9,
+      finalize task)**: still open, most recently restated 2026-07-24 in
       `plans/active/sports_live_availability_and_source_latency_2026_07_24.md` (book set + quota tier undecided); no
-      operator answer recorded. Genuinely still operator-decision-gated.
+      operator answer recorded. **PART 1/2 RESOLVED 2026-07-28/29**: operator directly ruled (2026-07-28) "picked a paid
+      sports-odds API quota tier now — proceed with the resume" — The Odds API, sized above Starter (a NEW
+      `odds-api-key` on a 5,000,000-credits/month subscription, live-verified via direct curl
+      `x-requests-remaining: 5000000`, 2026-07-29). This clears the "quota decision documented" half of the gate
+      outright — no longer BLOCKED-OPERATOR-DECISION. **PART 2/2 STILL OPEN**: the "scaffold for the second source" half
+      (api_football `/odds` in-play as a free fallback) is NOT yet wired (grepped
+      `market-tick-data-service`/`instruments-service` for an api_football odds connector/scaffold — none found beyond
+      unrelated manifest-migration scripts), and the live connector's actual production resume is also not yet
+      confirmed. This remaining, now-plain (non-blocked) execution work is already tracked precisely in
+      `plans/active/sports_live_availability_and_source_latency_2026_07_24.md`'s own `[DATA] P2` todo (same gate, "Done
+      when: the api_football `/odds` in-play second source is wired ... and the live sports-odds ingestion is confirmed
+      resumed") — not duplicating a second copy here. This item is left `[ ]` here only because the sibling plan's todo,
+      not this one, is the live pointer for the remaining scaffold work; the operator-decision component this task
+      tracked is fully cleared.
 - [ ] [INFRA] P1. **BLOCKED-OPERATOR-DECISION — rate-limit probe VM.** Needs a disposable-IP VM (operator-gated). Gate:
       probe design ready; awaits the operator's disposable-IP sanction. **RE-CONFIRMED STILL BLOCKED, checked 2026-07-25
       (slot 9, finalize task)**: no sanction found; only restated in
@@ -283,7 +320,10 @@ source:
       carries reputational/ToS/abuse-detection exposure that is a business risk-tolerance judgment, not a data-derivable
       fact or an engineering prerequisite a worker can clear. Left as BLOCKED-OPERATOR-DECISION — this is the one
       decision in this file's assigned set that the general theme does not determine; it needs the operator's own direct
-      yes/no.
+      yes/no. **RE-CONFIRMED STILL BLOCKED, checked 2026-08-02 (slot 2, finalize reconciliation)**: grepped the corpus
+      for any operator sanction/answer on the disposable-IP rate-limit probe — none found; only restated (unchanged) in
+      `plans/active/instruments_completion_tracker_2026_07_06.md` and
+      `plans/active/issues/instruments_remaining_work_audit_2026_07_10.md`. Genuinely still operator-decision-gated.
 - [x] ✅ [DATA] P1. **CLASSIFICATION ALREADY DECIDED — remaining scope is enumerator/data-status consistency** (was:
       "BLOCKED-OPERATOR-DECISION — CLOB-on-chain asset_group classification (Lighter / Pacifica / Extended): are these
       cefi or a distinct on-chain-CLOB group? Operator classification call." — corrected 2026-07-14, doc-reconciliation
@@ -329,6 +369,39 @@ source:
 
 <!-- Append newest entries at the top: `- **YYYY-MM-DD** — <what landed> (<repo>@<sha> / evidence).` -->
 
+- **2026-08-02 (slot 3, infra_capture_and_devops_leftovers-001)** — Backlog task derived from this doc's Live-ODDS
+  `[DATA] P2` checkbox (line ~287), which by its own text is a pointer — the live tracker is
+  `/plans/active/sports_live_availability_and_source_latency_2026_07_24.md`'s own `[DATA] P2` todo, not this one, so
+  this checkbox stays `[ ]` here by design (unchanged). Worked the actual referenced todo there instead: found the
+  api_football `/odds` in-play second-source half directly conflicts with the operator's 2026-06-24 wipe ruling
+  (escalated `/blocked` `BLK-b969f5f0`, answered B — struck, not built) and a NEW quota-exhaustion finding on the
+  primary `odds-api-key` (5,000,000-credit/month allocation already negative 4 days after provisioning, no live VM
+  running to explain the burn). Full detail + evidence in that doc's Progress Log and two new issue docs:
+  `/plans/active/issues/sports_api_football_live_odds_second_source_conflicts_with_wipe_ruling_2026_08_02.md`,
+  `/plans/active/issues/odds_api_key_quota_exhausted_4_days_after_provisioning_2026_08_02.md`. No code shipped (none was
+  safe/correct to ship this session); docs-only.
+- **2026-08-02 (finalize-plan reconciliation, slot 2)** — Re-ran the credential/operator-gated section per
+  `infra_capture_and_devops_leftovers_finalize_2026_07_25.md` todo 2 (triggers "once any of the 4 remaining BLOCKED-*
+  items clears"). Result: **2 of 4 cleared since the last 2026-07-25 re-check**. (1) **MANTLE gas-fees RPC** — flipped
+  `[x]`: `unified-api-contracts@1924bfed` (2026-07-29) routes the RPC through Alchemy's `mantle-mainnet.g.alchemy.com`
+  using the already-provisioned `alchemy-api-key`, live-verified (`eth_feeHistory` returned a real `baseFeePerGas`); no
+  Secret Manager grant was actually needed. (2) **Live ODDS quota** — the operator-decision half cleared (2026-07-28
+  ruling + 2026-07-29 credential rotation to a 5M-credits/mo `odds-api-key`, live-verified), but the "scaffold for the
+  second source" half of this item's gate is still open (api_football `/odds` in-play not yet wired) — left `[ ]` here
+  since the live pointer for that remaining work is `sports_live_availability_and_source_latency_2026_07_24.md`'s own
+  `[DATA] P2` todo, not this doc. (3) **rate-limit-probe VM** — re-confirmed still genuinely
+  `BLOCKED-OPERATOR-DECISION`, no change. (4) **ASTER connector** — the freeze itself already cleared 2026-07-28 (prior
+  retag sweep); its remaining "+ live VM" verification stays tracked in
+  `issues/cefi_consolidated_vm_aster_data_landing_recheck_2026_07_30.md`. While reconciling, spot-checked that doc's own
+  open re-check todo (`gcloud storage ls` for `pipeline_mode=live_aster` on days 2026-07-30 through 2026-08-01): **found
+  zero rows on all 3 days** (only `batch_*` pipeline_modes present), and the 2026-07-30-launched consolidated VM
+  (`mtds-live-cefi-consolidated-20260730-010147`) is gone from the live fleet, replaced by a brand-new instance
+  (`mtds-live-cefi-consolidated-20260802-130832`) created only ~24 min before this check — too fresh to expect data yet,
+  but the 3-day gap on the prior VM producing zero verified live rows is a genuine open question, not explained by the
+  original "13:30 UTC catalogue refresh" theory alone. Logged as a finding in that issue doc rather than investigated
+  further here (out of this DOC-tagged finalize task's scope). **Net: parent now 6/9 done (up from 5/9); 3 checkboxes
+  remain genuinely open (rate-limit-probe VM, Live-ODDS second-source scaffold, ASTER data-landing verification) —
+  archival ritual NOT run, doc stays `active`.**
 - **2026-07-28 (gated-decision retag sweep)** — Applied the operator's 2026-07-28 general-theme ruling to this file's
   two remaining gated design-choice decisions. **Task 001 (ASTER live connector / CeFi freeze)**: RULED — lift the
   freeze and do the full consolidation properly (launch the actual consolidated CeFi live-capture VM with ASTER's
@@ -518,3 +591,4 @@ source:
 - **2026-07-06** — Plan authored + dispatched to AO (Plan 6 of the instruments-completion set). Infra-role slice of
   Stage-5 capture: ASTER connector (moved from Plan 1, gates its ASTER re-measure), Deribit options live runner, + the
   credential/operator-gated capture items parked as BLOCKED-\* (scaffold, don't descope).
+- **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).

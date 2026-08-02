@@ -19,6 +19,17 @@ Baseline mode (`--baseline-write`) writes the current violation count to
 `scripts/quality_gates/codex_doc_freshness_baseline.yaml`. Ratchet mode
 (default) fails if violations exceed baseline.
 
+A `last_reviewed:` date in the FUTURE is not a data error — it is an intentional staggering
+technique (docs-reconcile finding, 2026-08-02): a real content re-review was done, then the
+resulting stamp was deliberately set to a disjoint future date so a large cohort of docs that
+previously shared one synchronized stamp doesn't all tip stale on the same day again (see e.g.
+commit 44aecd1dc, "staggered re-review of 38 codex docs (freshness shard offset-0)"). This
+script does not (and should not) validate `last_reviewed <= today` — DO NOT "fix" a future-dated
+doc by resetting it to today's date; that collapses the stagger back into the exact cliff this
+convention exists to avoid. This is documented ONLY here and in scattered commit messages, not in
+a codex doc, as of 2026-08-02 — grep `git log --grep="staggered re-review"` for the full history
+if the pattern needs extending to a new cohort.
+
 Exit-code semantics:
   0 — at-or-below baseline (clean)
   1 — regression / missing-frontmatter / stale-doc

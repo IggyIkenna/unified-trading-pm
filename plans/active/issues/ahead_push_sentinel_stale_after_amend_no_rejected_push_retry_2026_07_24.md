@@ -43,6 +43,13 @@ drift_direction: advance-code
 resolved_by:
 locked_by:
 depends_on: []
+context_scope:
+  [
+    /codex/04-architecture/agent-orchestrator-worker-liveness.md,
+    agent-orchestrator/server/worktree_clean_check/_ahead_push.py,
+    agent-orchestrator/tests/test_watchdog_unpushed_sweep.py,
+    /plans/active/issues/watchdog_unpushed_sweep_defeats_operator_merge_gate_2026_07_26.md,
+  ]
 ---
 
 # `_ahead_push.py` — rejected-push leaves a verified commit permanently stranded
@@ -97,3 +104,15 @@ behind — rather than a guessed one-line patch to the riskiest file in the code
   `ao_held_safety_fixes_dispatch` plans found this as the one gap not worth rushing a fix for. 7 of 8 total gaps found
   in that audit were fixed same session (`agent-orchestrator@06c5f8e9a2`, `agent-orchestrator@0cc12fdbb2`,
   `unified-trading-pm@5cc0ea829`); this is the sole deliberate deferral.
+- **na-eligibility-audit 2026-07-30**: KEEP-NA, valid — the doc's own `Why this wasn't fixed immediately` section states
+  the fix needs a real design decision (retry count/backoff vs re-stamp vs alert) on what it calls 'the single riskiest
+  automated code path in the system'. Independently held in `ao_satellite_ao_dispatch_batch1_2026_07_26.md`'s
+  conflict-gated Deferred list, which adds a file-collision reason (its characterisation test lands in
+  `tests/test_watchdog_unpushed_sweep.py`, the same module the gate-aware sweep fix needs).
+- **2026-07-31 (re-triage)**: The file-collision reason has CLEARED —
+  `watchdog_unpushed_sweep_defeats_operator_merge_gate_2026_07_26.md`'s gate-aware sweep shipped
+  `agent-orchestrator@49c919d`, adding 3 new tests to `tests/test_watchdog_unpushed_sweep.py` (12/12 passing, no
+  conflict). This doc's own design-decision gap is UNCHANGED and still open — this todo still needs its own
+  retry/backoff-vs-alert design call — but it is no longer blocked on anything else landing first; it's ready to be
+  worked directly whenever picked up.
+- **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).

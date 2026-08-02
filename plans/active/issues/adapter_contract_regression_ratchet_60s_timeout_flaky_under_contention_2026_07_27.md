@@ -12,12 +12,16 @@ summary: >-
   diff (features-service orchestrator.py pipeline_mode fix) purely due to this flake.
 status: open
 nature: issue
-asset_group: [meta]
+asset_group: [ci] # retagged 2026-07-31 (corpus-sweep meta fold-in) -- was [meta]
 stage: [meta]
 repos: [unified-trading-pm, features-service]
 scope: [engineer, admin]
 tags: [quality-gates, flaky-gate, timeout, adapter-contract-regression, ci, shared-host-contention]
-related: [/plans/archive/issues/lint_sweep_774602ea8_regression_audit_2026_05_20.md]
+related:
+  [
+    /plans/archive/issues/lint_sweep_774602ea8_regression_audit_2026_05_20.md,
+    /plans/archive/2026_07/ci_consolidated_closeout_2026_07_25.md,
+  ]
 created: 2026-07-27
 last_updated: 2026-07-27
 parent_epic: infrastructure_master
@@ -40,6 +44,12 @@ source: >-
   (features-service). 2 of 4 full quality-gates.sh --no-fix runs on an unrelated diff failed at STEP [5.83/6] with
   "Adapter contract-call regression"; running scripts/qg/no_adapter_contract_regression.sh standalone (same tree, same
   moment) exited 0 both times, and `time` measured real=2m21.478s / user=0m12.093s — real, not inferred.
+context_scope:
+  [
+    scripts/qg/no_adapter_contract_regression.sh,
+    /plans/archive/issues/lint_sweep_774602ea8_regression_audit_2026_05_20.md,
+    /plans/active/issues/fleet_wide_qg_self_hosted_runner_capacity_crisis_2026_07_27.md,
+  ]
 ---
 
 # QG STEP 5.83 (adapter contract-call regression ratchet) flakes under fleet-wide shared-host contention
@@ -132,3 +142,4 @@ an adapter/handler file.
   `run_timeout 300` by prior work; only `market-tick-data-service` still had `run_timeout 60`. Fixed there —
   `market-tick-data-service@57dfccc7`, full `quality-gates.sh` green (sentinel-verified), shipped via quickmerge. No
   other repo in the workspace still wraps the check at 60s.
+- **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).

@@ -293,8 +293,8 @@ drift_direction: advance-code
     - **[DATA] P0.** Corpus-wide `derived_features` re-run required (clean, replaces the stopped fleet)
     - +10 more P0 (staleness audits across ~9 stale-entity consumers, backfill pilot follow-through, full-corpus dry-run
       gating), +40 P1, +14 P2, +1 P3 — see file for the complete 73-item breakdown.
-  - [`plans/active/issues/sports_derived_features_fabricated_corpus_scope_2026_07_20.md`](/plans/active/issues/sports_derived_features_fabricated_corpus_scope_2026_07_20.md)
-    — 0 open todos.
+  - [`plans/archive/issues/sports_derived_features_fabricated_corpus_scope_2026_07_20.md`](/plans/archive/issues/sports_derived_features_fabricated_corpus_scope_2026_07_20.md)
+    — 0 open todos, archived 2026-07-30 (`status: resolved`).
   - [`plans/active/issues/sports_derived_features_per_league_layout_unread_by_ml_loader_2026_07_14.md`](/plans/archive/issues/sports_derived_features_per_league_layout_unread_by_ml_loader_2026_07_14.md)
     — `status: resolved`, 2 residual:
     - **[DOC] P3.** Write the features-bucket path SSOT (codex/02-data)
@@ -333,7 +333,7 @@ drift_direction: advance-code
     - **[DATA] P2.** BLOCKED-PREREQUISITES — re-verify + re-dispatch footystats backfill VM
   - [`plans/archive/issues/mtds_sports_api_football_wrong_source_reaccumulated_post_wipe_2026_07_22.md`](/plans/archive/issues/mtds_sports_api_football_wrong_source_reaccumulated_post_wipe_2026_07_22.md)
     — `status: resolved`, 0 open todos.
-  - [`plans/active/issues/sports_trades_attempted_failed_2026_07_23.md`](/plans/active/issues/sports_trades_attempted_failed_2026_07_23.md)
+  - [`plans/archive/issues/sports_trades_attempted_failed_2026_07_23.md`](/plans/archive/issues/sports_trades_attempted_failed_2026_07_23.md)
     (2 open):
     - **[DESIGN] P3.** Flag `check_high_attempted_failed` owner (deployment-service) re: same-day manifest
     - **[VERIFY] P3.** Once `sports_master_closeout`'s K1/K2 fully flip + the DELETE lands, re-verify
@@ -368,7 +368,7 @@ drift_direction: advance-code
     — `status: resolved`, 0 open todos.
   - [`plans/archive/issues/sports_shard_enumeration_cartesian_blowup_2026_07_20.md`](/plans/archive/issues/sports_shard_enumeration_cartesian_blowup_2026_07_20.md)
     — 0 open todos.
-  - [`plans/active/issues/dp_catalog_not_running_sports_prediction_2026_07_15.md`](/plans/active/issues/dp_catalog_not_running_sports_prediction_2026_07_15.md)
+  - [`plans/archive/issues/dp_catalog_not_running_sports_prediction_2026_07_15.md`](/plans/archive/issues/dp_catalog_not_running_sports_prediction_2026_07_15.md)
     — `status: resolved`, 2 residual (cross-AG with prediction, also referenced in
     `prediction_consolidated_closeout_2026_07_18.md`):
     - **[OPS] P2.** Verify the next scheduled `lifecycle-catalogue-regen-sports` run
@@ -382,13 +382,13 @@ drift_direction: advance-code
   `/plans/active/issues/coverage_floor_registries_no_cross_propagation_2026_07_17.md`,
   `/plans/active/issues/estate_orphan_assessment_2026_07_21.md`,
   `/plans/archive/issues/features_by_date_root_canonicalisation_2026_07_21.md`,
-  `/plans/active/issues/group_c_cloud_run_job_failures_triage_2026_07_16.md`,
+  `/plans/archive/issues/group_c_cloud_run_job_failures_triage_2026_07_16.md`,
   `/plans/active/issues/instruments_docs_audit_outstanding_items_2026_07_08.md`,
   `/plans/active/issues/instruments_remaining_work_audit_2026_07_10.md`,
   `/plans/archive/issues/manifest_completeness_full_corpus_map_build_2026_07_20.md`,
   `/plans/active/issues/mdps_features_deadcode_consolidation_2026_07_20.md`,
   `/plans/archive/issues/mdps_prior_seed_context_thread_unsafe_2026_07_20.md`,
-  `/plans/active/issues/mtds_backfill_vm_startup_oom_rc137_2026_07_14.md`,
+  `/plans/archive/issues/mtds_backfill_vm_startup_oom_rc137_2026_07_14.md`,
   `/plans/active/issues/mtds_is_full_adapter_smoketest_findings_2026_07_07.md`,
   `/plans/active/issues/phantom_audit_estate_coverage_gap_2026_07_10.md`,
   `/plans/archive/issues/pipeline_e2e_check_vm_name_collision_2026_07_12.md`,

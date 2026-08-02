@@ -84,6 +84,7 @@ assigned_role: data_engineering
 drift_direction: unknown
 depends_on: []
 last_updated: 2026-07-16
+context_scope: [/codex/02-data/tradfi-databento-sourcing-ssot.md, /codex/02-data/honest-coverage-model.md]
 ---
 
 # TRADFI mbp_10 / ohlcv_15m / ohlcv_24h / corporate_action_confirmed / earnings_result — unreachable fetch paths
@@ -975,3 +976,21 @@ UAC) — no separate deploy needed here.
   write-back/verify-HOLD playbook as the YAHOO_FINANCE cleanup, HOLD proven across 6 real consolidator merge cycles.
   `market-tick-data-service@c24db4cf`. Full evidence in "Resolution — corporate_action_confirmed / earnings_result"
   above.
+
+- **na-eligibility-audit 2026-07-30** (tradfi tranche): **KEEP-NA, valid.** Sole open todo is a `[DESIGN] P2` "decide
+  whether real aggregated `ohlcv_15m`/`ohlcv_24h` TradFi bars are wanted" — a scope/product judgment call, not a
+  worker-determinable fact. Not reclassified.
+- **2026-07-31 (slot 4, review — `tradfi_consolidated_native_ao_extract_2026_07_25.md` todo 2, audit-only, no code
+  change)**: live-verified CME `VENUE_DATA_TYPE_CAPABILITIES` billing-gating for `mbp_10`/`trades`/`tbbo` per the
+  operator's 2026-07-18 "1-month L3 + 1-year L1" note. **Clean pass, no finding.** (1) `market_data_categories.py`'s
+  `VENUE_DATA_TYPE_CAPABILITIES["CME"]` still declares ONLY `{ohlcv_1s, ohlcv_1m}` — the 3 datatypes are absent entirely
+  (neither billing-gated nor unrestricted), matching the still-standing 2026-05-15 MVP-scope decision above;
+  `_DEFERRED_VENUE_DATA_TYPE_COVERAGE_WINDOWS` preserves their pre-narrowing windows for the stalled post-cutover
+  restoration. (2) The actual enforcement mechanism IS live + correct: `databento_subscription_allowlist.py`'s
+  `LEVEL_MAX_LOOKBACK_DAYS = {L1: 365, L2: 30, L3: 30}` + `assert_databento_request_allowed()` fail-closed
+  (`DatabentoLookbackExceededError`) past each level's free window (`trades`/`tbbo`→L1, `mbp-10`→L2) — live-tested in
+  `tests/unit/test_databento_subscription_allowlist.py`. No path declares these unrestricted for CME. No code shipped
+  (repo: unified-api-contracts, read-only).
+- **context-scout 2026-08-01**: populated/refreshed context_scope (2 entries).
+- **na-eligibility-audit 2026-08-02** (tradfi tranche): **KEEP-NA, valid** — re-read after the 2026-07-31 CME
+  billing-gating entry (audit-only, no finding); sole open todo is still the same `[DESIGN] P2` product-intent call.

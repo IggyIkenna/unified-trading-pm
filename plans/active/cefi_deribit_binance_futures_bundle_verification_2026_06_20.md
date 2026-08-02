@@ -6,7 +6,12 @@ summary:
   residuals.
 status: active
 nature: process
-asset_group: [cefi, defi]
+asset_group:
+  [cefi] # corrected 2026-07-31 (ag-closeout-audit defi, Phase 0.3 orthogonality check) -- was [cefi, defi],
+  # a mistag: 198-line body is 100% CeFi (DERIBIT options/futures + BINANCE-FUTURES perp, parent_epic:cefi_master),
+  # zero DeFi content anywhere. The dual tag made this doc invisible to BOTH cefi's and defi's own tranche audits
+  # (each excludes docs carrying a peer-AG marker per SKILL.md's Orthogonality HARD CHECK) -- the exact
+  # falls-through-both-audits failure class that check exists to catch.
 stage: [meta]
 repos: [deployment-service, instruments-service, market-data-processing-service, market-tick-data-service]
 scope: [engineer, admin]
@@ -20,7 +25,7 @@ priority: P0
 estimate_class: infra
 estimate_baseline_ai_days: 3
 estimate_calibrated_ai_days: 2.4
-last_updated: 2026-06-27
+last_updated: 2026-07-31
 locked_by: live-defi-rollout
 locked_since: 2026-06-20
 supersedes:
@@ -29,6 +34,14 @@ depends_on:
 assigned_role: data_engineering
 source:
 drift_direction: advance-code
+context_scope:
+  [
+    /plans/active/issues/deribit_options_chain_af_g4_blocker_2026_07_03.md,
+    /plans/active/cefi_track2_coverage_backfill_checkpoints_2026_07_25.md,
+    /plans/active/cefi_deribit_binance_futures_bundle_verification_2026_06_20_finalize_2026_07_27.md,
+    /plans/active/issues/cefi_track2_backfill_vm_preempted_no_recovery_2026_07_30.md,
+    /plans/archive/2026_07/cefi_manifest_canonicalisation_2026_06_01.md,
+  ]
 ---
 
 > **Provenance**: extracted 2026-06-20 from the inline `cefi_master` epic body during the asset-group-umbrella
@@ -176,6 +189,17 @@ perpetual-code normalization ~400). These need per-cluster real-vs-false-positiv
 
 ## Success criteria
 
+> **🟡 [2026-07-31 finalize-reconciliation finding]** — this plan's own todos above are all `[x]` and accurate for the
+> actions taken, but the Success criterion immediately below is **NOT yet met**: DERIBIT `options_chain`/`futures_chain`
+> remains a genuine, still-open capture gap (113,615/1 and 112,728/0 `attempted_failed`/`captured` respectively as of
+> 2026-07-29/30 — see `issues/deribit_options_chain_af_g4_blocker_2026_07_03.md`, `status: open`), gated on the Track-2
+> coverage backfill (`plans/active/cefi_track2_coverage_backfill_checkpoints_2026_07_25.md`) actually completing — its
+> backfill VM was preempted 2026-07-28 and has not been recovered
+> (`issues/cefi_track2_backfill_vm_preempted_no_recovery_2026_07_30.md`). Per
+> `cefi_deribit_binance_futures_bundle_verification_2026_06_20_finalize_2026_07_27.md`'s reconciliation, this plan stays
+> `status: active` — do NOT archive it yet. Re-check is tracked as todo 4 of
+> `cefi_track2_coverage_backfill_checkpoints_finalize_2026_07_25.md` (gated on Track-2 finishing).
+
 - DERIBIT options/futures + BINANCE-FUTURES bundle coverage is manifest-verified (not assumed): every (venue, data_type,
   day) cell is `captured`, honestly `empty_confirmed`/`expected_unattempted`, or has a genuine-gap backfill that ran to
   completion.
@@ -185,3 +209,7 @@ perpetual-code normalization ~400). These need per-cluster real-vs-false-positiv
 **Full-execution criterion** (per "Plans Run To Actual Completion" HARD RULE): the verification queries + any gap
 backfill run on real GCS manifest data; the phantom-audit re-run executes on a same-region VM and reports the post-fix
 rate.
+
+## Progress Log
+
+- **context-scout 2026-08-01**: populated/refreshed context_scope (5 entries).

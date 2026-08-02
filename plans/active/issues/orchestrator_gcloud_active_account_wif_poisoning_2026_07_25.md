@@ -36,7 +36,7 @@ related:
     /codex/07-security/gha-wif-migration.md,
   ]
 created: 2026-07-25
-last_updated: 2026-07-25
+last_updated: 2026-08-01
 parent_epic: orchestrator_master
 assigned_vm: NA
 execution_scope: local-only
@@ -150,3 +150,72 @@ workflow job step runs `google-github-actions/auth` on this host, which happens 
   CI job that runs on this host, not a narrow bugfix.
 - The VM stop this incident was blocking on succeeded once the manual repoint above completed; no data-correctness
   impact from the auth failure itself (the underlying VM-stop urgency was about a separate bug, not this one).
+- **2026-07-30 corroborating evidence (slot-15)**: hit this exact mechanism THREE times in one session while running
+  `gcloud compute instances create/delete/list` for `cefi_content_migration_fleet_half_incomplete_2026_07_26.md`'s VM
+  fleet recovery — each time `gcloud config get-value account` showed a poisoned account instead of
+  `unified-trading-sa`. Two occurrences were `github-actions-deploy@...` (matches this doc); the THIRD was a **different
+  SA, `github-deploy@central-element-323112.iam.gserviceaccount.com`** — a second glue-workflow identity poisoning the
+  shared config the same way, not previously named in this doc's root-cause section (worth checking which workflow's
+  `service_account:` maps to `github-deploy` vs `github-actions-deploy` when scoping fix option (a)).
+  `gcloud config set account unified-trading-sa@...` fixed it each time (this incident's stopgap, not the
+  activate-service-account recipe — the ADC key/token itself was never invalid in my case, only the active-account
+  pointer). Did not hit the todo-3 `CLOUDSDK_AUTH_ACCESS_TOKEN` per-command stopgap this session; a bare
+  `gcloud config set account` sufficed each time (worth noting as a lighter-weight alternative fix for the
+  active-account-pointer-only poisoning case, vs. the todo-3 workaround's presumed scope of a fully invalid/expired
+  credential).
+- **2026-07-30 follow-up (slot-15, same session, later cycle)**: hit a FOURTH occurrence, and it is qualitatively worse
+  than the three above — `gcloud config configurations list` showed the system-wide active configuration had flipped
+  from this slot's own `slot15-work` to a DIFFERENT slot's isolated config, `slot11-work` (not just `default`). AND,
+  separately, `slot15-work` itself was found with its stored `account` mutated to `github-deploy@…` (not
+  `unified-trading-sa@…`). This means the earlier working hypothesis — "give each slot its own named config and the
+  isolation holds" — is disproven with direct evidence: a foreign CI job or another slot's session mutated a DIFFERENT
+  slot's named-config account property, not just the shared `default`/active-selector. Whatever writes
+  `gcloud config set account` (or edits the underlying `~/.config/gcloud/configurations/config_*` files directly) is not
+  scoped to the invoking job's own config file. Fixed via `gcloud config configurations activate slot15-work` +
+  `gcloud config set account unified-trading-sa@…`. This raises the priority of option (a)/(d) in the head todo —
+  per-slot config isolation (already deployed) is NOT a sufficient mitigation on its own.
+
+- **2026-08-01 corroborating evidence (slot-2, infra role)**: hit this exact mechanism (active account poisoned to
+  `github-actions-deploy@central-element-323112.iam.gserviceaccount.com`) mid-session while doing live-verification work
+  for `bucket_iam_group_a_market_data_tick_prefix_missing_asset_group_2026_08_01.md`'s P0 IAM-condition fix — a
+  `gcloud config get-value account` check earlier in the same session confirmed `unified-trading-sa` was active (used
+  successfully for a `tofu apply` and two IAM grants), then a later
+  `gcloud iam service-accounts remove-iam-policy-binding` call failed with `PERMISSION_DENIED` under
+  `github-actions-deploy`'s identity — the flip happened with zero action from this session, consistent with a
+  concurrent glue-workflow job step (or another slot) overwriting the shared `~/.config/gcloud` state, as this doc's
+  root cause describes. Fixed via explicit `--account=` on the two blocked `gcloud` calls (pinning the identity
+  per-invocation rather than correcting the shared active pointer) — both reverts then succeeded first try. This is a
+  lighter-weight variant of the todo-3 stopgap already proven for `gcloud storage`/`gcloud compute instances create`
+  (`CLOUDSDK_AUTH_ACCESS_TOKEN=...`): a bare `--account=` flag sufficed here because the underlying credential for
+  `unified-trading-sa` was never invalidated, only the ambient active-account pointer was overwritten (same shape as the
+  2026-07-30 slot-15 finding that a bare `gcloud config set account` was enough when the key itself stayed valid). No
+  data-correctness or fix-quality impact — the actual terraform apply + IAM-policy reads that mattered for that task ran
+  while the correct identity was still active, confirmed at the time via an explicit account check. 5th documented
+  occurrence; still consistent with the open `[OPERATOR-DECISION]` gate, no new candidate direction — logged as further
+  frequency evidence only.
+
+## na-eligibility-audit verdict
+
+**na-eligibility-audit 2026-07-30** (tranche `ci`, autonomous): KEEP-NA, valid — the head todo carries an explicit
+`[OPERATOR-DECISION]` tag and enumerates four unadopted candidate directions (a)-(d) for a shared-infrastructure auth
+design affecting every CI job on the host; the doc's own Notes confirm none was attempted for exactly that reason. Todo
+2 is stated blocked on that decision, and todo 3 is a partial mitigation of the same surface.
+
+**na-eligibility-audit 2026-07-31** (tranche `ci`, autonomous): **CONFIRMS the verdict above, unchanged — new evidence
+reinforces rather than weakens it.** Two purely-additive Notes landed since: a THIRD occurrence (2026-07-30 13:41)
+naming a second poisoning SA variant not previously identified, and a FOURTH occurrence (2026-07-30 16:12) that is
+qualitatively worse — cross-slot poisoning where a foreign job flipped another slot's active config AND mutated its
+stored `account` property, directly disproving the working hypothesis that per-slot config isolation alone mitigates
+this. Neither commit touched the Todos section; the commit message itself states this "raises priority of options
+(a)/(d)" in the still-open `[OPERATOR-DECISION]` todo. This is new information feeding the same unresolved decision, not
+progress toward a mechanical fix — correctly stays NA, no reclassification. (Doc-hygiene: `last_updated:` frontmatter
+corrected below, was stale at `2026-07-25` despite the two 2026-07-30 body edits.)
+
+**na-eligibility-audit 2026-08-02** (tranche `ci`, autonomous): **CONFIRMS the verdict above, unchanged — the one new
+edit is additive evidence, not progress.** This doc was in scope this run because `last_updated` advanced to 2026-08-01;
+the change is a single new Notes entry recording a **5th** documented occurrence (slot-2, infra role, mid- session
+poisoning to `github-actions-deploy@…` during unrelated IAM work, worked around with a per-invocation `--account=` pin).
+That entry explicitly self-classifies as "no new candidate direction — logged as further frequency evidence only", and
+the Todos section is untouched. The head todo still carries `[OPERATOR-DECISION]` with four unadopted directions (a)-(d)
+for a shared-infrastructure auth design affecting every CI job on the host; todo 2 is still stated blocked on that
+decision; todo 3 is still a partial mitigation of the same surface. Correctly NA.

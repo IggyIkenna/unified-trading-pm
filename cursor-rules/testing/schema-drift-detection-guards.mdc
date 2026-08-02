@@ -130,5 +130,5 @@ def test_raise_on_v9_missing_asset_group_column(self):
 
 ## Reference
 
-- Plan: `plans/active/downstream_services_manifest_canonicalisation_2026_06_01.md` (GAP-4)
+- Plan: `plans/archive/2026_07/downstream_services_manifest_canonicalisation_2026_06_01.md` (GAP-4)
 - SSOT: `codex/02-data/availability-manifest-and-data-status.md` (manifest schema v9)

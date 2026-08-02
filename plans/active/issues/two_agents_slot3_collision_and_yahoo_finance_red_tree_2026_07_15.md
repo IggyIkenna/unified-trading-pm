@@ -33,6 +33,7 @@ superseded_by:
 depends_on:
 source: CeFi completion program /autonomous session (slot-3, 2026-07-15T14:36Z) + this session's 2026-07-16 recurrence
 resolved_by:
+context_scope: [/plans/archive/2026_07/cefi_completion_program_2026_07_15.md, /plans/epics/cefi_master.md]
 ---
 
 # Slot-3 collision + YAHOO_FINANCE fleet-blocking red IS tree
@@ -149,3 +150,14 @@ is not complete until the counterpart's files build again, not just until your o
       hunk-level staging (`git add -p` / a restricted `git diff <path> | git apply --cached`) so shipping a hot shared
       file no longer silently sweeps a concurrent agent's uncommitted WIP into the commit; not attempted in this doc
       ("outside this plan's scope and risks its own regressions under contention").
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30**: KEEP-NA, valid — the one open `[INFRA] P2` changes `quickmerge.sh --files`
+  staging semantics, i.e. the fleet-wide SSOT shipping tool that every repo symlinks. The doc itself declines it as
+  'outside this plan's scope and risks its own regressions under contention', and frames the primary ask as an operator
+  policy call ('each slot = ONE agent, or explicit non-overlapping file ownership … not something either concurrent
+  session can enforce on its own'). Same too-high-blast-radius class as
+  `utl_shared_clone_commits_repeatedly_reset_2026_07_22.md` item 5, which batch1 already deferred for needing 'its own
+  scoped plan with operator sign-off'.
+- **context-scout 2026-08-01**: populated/refreshed context_scope (2 entries).

@@ -34,6 +34,12 @@ execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
 last_updated: 2026-07-27
+context_scope:
+  [
+    /codex/05-infrastructure/data-pipeline-alerts.md,
+    /codex/05-infrastructure/deployment-observability.md,
+    alerting-service/alerting_service/notifiers/data_pipeline_slack.py,
+  ]
 ---
 
 ## What I found
@@ -257,3 +263,8 @@ for these messages to close the verification loop.
   Logging + GCS `alerting/history/` for any `DP_VM_EXIT_NONZERO` occurrence — none found, so there is currently nothing
   for anyone (agent or operator) to inspect. Doc stays open (Gap 3 + Gap 4's render-verification remain genuine,
   currently un-triggerable, operator-only work) — not archived.
+
+- **na-eligibility-audit 2026-07-30**: KEEP-NA, valid — `locked_by: live-defi-rollout`; both remaining todos are
+  operator-only by construction (a Slack-channel spot-check, and a render-verification with no real DP_VM_EXIT_NONZERO
+  occurrence to inspect).
+- **context-scout 2026-08-01**: populated context_scope (3 entries).

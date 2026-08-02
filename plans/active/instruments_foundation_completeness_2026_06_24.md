@@ -60,6 +60,12 @@ assigned_role: monitor
 last_updated: "2026-07-24" # was: 2026-07-13 — updated 2026-07-24, plan-line-cap remediation 4-way split (plans/active/issues/plan_line_cap_remediation_2026_07_23.md row #14): Phase-0/cefi/tradfi gate-execution content + the 945-line historical Progress Log extracted to 3 new child plans; this file slimmed to a process SSOT + rolling-status index; locked_by/locked_since cleared per operator-approved unlock.
 locked_by:
 locked_since:
+context_scope:
+  [
+    /codex/02-data/instruments-foundation-and-catalogue-completeness.md,
+    /plans/active/instruments_foundation_phase0_cross_cutting_2026_07_24.md,
+    /plans/active/instruments_cefi_g1_g5_gate_execution_2026_07_24.md,
+  ]
 supersedes:
 superseded_by:
 depends_on:
@@ -215,7 +221,14 @@ child's Phase 1 section for the full gate-by-gate detail.
         = the pool's on-chain **creation block** (this IS the genesis oracle — kills the RAYDIUM `1970-01-01` = missing
         creation timestamp). DoD: per (protocol,chain) completeness % surfaced in the drilldown; 100% = complete; any
         &lt;100% is a typed gap. A venue/AG is NOT "complete" until this Tier-B oracle is green — never assert
-        completeness from our own capture.
+        completeness from our own capture. — **PARTIAL — §9 P0 schema-only rollout step landed** (via
+        `cross_cutting_satellite_ao_dispatch_batch1_2026_07_26.md`, 2026-07-26, slot-7):
+        `unified-api-contracts@1407b7fd` landed `CompletenessProbe`/`CompletenessProbeStatus`/`CompletenessProbeKind` in
+        `canonical/crosscutting/honest_coverage.py` per `/codex/02-data/defi-completeness-oracle.md` §2, plus
+        `factory_address_by_chain` populated (web-verified on-chain addresses) for the top-10 DEX protocols on
+        `_ProtocolCapability`. Schema-only — **no probe implementations, no `--use-defi-oracle` wiring, no on-chain
+        `poolCount` cross-check runs yet** — this checkbox stays open pending the actual probe implementation +
+        drilldown surfacing described above.
 
 > **Folded-in defi residual** (from I-1 consolidation 2026-06-26, `defi_venue_name_canonicalisation_and_reth_2026_06_17`
 > archived; 4/5 done — moved here verbatim 2026-07-24):
@@ -338,3 +351,11 @@ cefi/tradfi/Phase-0 children; see each child's own "Historical progress log" sec
 prediction 1,204,816 rows; monotonic ACCEPT) and the per-AG daily scheduler (T+1 producers → catalogue aggregation,
 monotonic guard) went live the same day (deployment-service@9d0e457) — see the cefi child's historical log for the full
 autonomous-run narrative and the Phase-0 child's "Autonomous run results" section for the cross-AG summary.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-08-02** (re-confirms 2026-07-30; only change since = context-scout `context_scope`
+  frontmatter, body byte-identical): KEEP-NA, valid — gated umbrella whose entire premise is per-gate operator sign-off
+  ('ask every time'); GATE 0 is NOT RECORDED SIGNED OFF and the remaining todos are per-AG G-gate work delegated to
+  child plans.
+- **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).

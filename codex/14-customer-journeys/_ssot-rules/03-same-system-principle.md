@@ -18,7 +18,7 @@ related:
     /codex/14-customer-journeys/_ssot-rules/06-show-dont-show-discipline.md,
   ]
 created: 2026-04-19
-authoritative_for: [same-system principle (one system, partitioned views; phase vs maturity)]
+authoritative_for: ["same-system principle (one system, partitioned views; phase vs maturity)"]
 referenced_by:
   [
     /codex/08-workflows/client-onboarding.md,

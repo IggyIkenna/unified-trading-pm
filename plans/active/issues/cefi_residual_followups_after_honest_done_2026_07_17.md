@@ -43,11 +43,11 @@ related:
   [
     /plans/archive/2026_07/cefi_completion_program_2026_07_15.md,
     /plans/active/issues/cefi_hl_aster_batch_data_gaps_2026_06_22.md,
-    /plans/active/issues/cefi_mtds_writer_raw_symbol_vs_canonical_eu_namespace_mismatch_2026_07_15.md,
+    /plans/archive/issues/cefi_mtds_writer_raw_symbol_vs_canonical_eu_namespace_mismatch_2026_07_15.md,
     /plans/archive/issues/phantom_captures_cefi_2026_06_28.md,
   ]
 created: 2026-07-17
-last_updated: 2026-07-25
+last_updated: 2026-07-30
 parent_epic: cefi_master
 assigned_vm: NA
 execution_scope: local-only
@@ -64,6 +64,15 @@ superseded_by:
 depends_on:
 source: CeFi completion program /autonomous close-out (slot-3, 2026-07-17) — archival ritual step 1 (migrate DEFERRED)
 resolved_by:
+context_scope:
+  [
+    /codex/02-data/defi-canonical-naming-ssot.md,
+    /codex/02-data/availability-manifest-and-data-status.md,
+    /codex/02-data/chart-candle-delivery-flow.md,
+    /codex/06-coding-standards/read-time-filter-pushdown.md,
+    /codex/05-infrastructure/vm-launcher-runbook.md,
+    /codex/05-infrastructure/gcs-object-operations.md,
+  ]
 ---
 
 # CeFi residual follow-ups after honest-done close-out
@@ -81,11 +90,21 @@ resolved_by:
 1. **[P2] HYPERLIQUID recent-tail fill (~2026-06-24 → now-2).** HL is a DEX venue (non-Tardis, exempt from the N=1 cap)
    so its tail IS fillable — it was simply not run before the close-out. Fill via the HL batch lane (not the Tardis
    fleet). Detail: `cefi_hl_aster_batch_data_gaps_2026_06_22.md`. Evidence on pickup: manifest rows for HL over the tail
-   range.
+   range. **Status (2026-07-27, `cefi_satellite_ao_dispatch_batch1_2026_07_25.md`): IN PROGRESS, not yet closed** — VM
+   `cefi-hyperliquid-2026-20260727-150820` launched + verified genuinely healthy (real advancing manifest writes, no
+   fire-and-forget); slot-5's `/done` on the batch1 todo was correctly hard-rejected by the AO server's M3 gate since
+   `expected_unattempted`→0 was not yet reached. See the 3 Progress Log entries below (2026-07-27,
+   slot-6/slot-11/slot-5) for the measured before/after counts — genuinely still open, do not re-flip without a fresh
+   `expected_unattempted=0` measurement.
 
 2. **[P2] HYPERLIQUID phantom re-census (1,277 rows → `@LIN` canonical path).** Cosmetic manifest-labelling — does NOT
    affect captured data. Blocked only on box size: the re-census (`reconcile_phantom_manifest_rows_all.py`) OOMs on the
-   15GB VM; needs a 32-64GB box. Detail: `phantom_captures_cefi_2026_06_28.md`. Evidence: phantom count → 0 for HL.
+   15GB VM; needs a 32-64GB box. Detail: `phantom_captures_cefi_2026_06_28.md`. Evidence: phantom count → 0 for HL. —
+   **DONE 2026-07-27 (slot-2, `cefi_satellite_ao_dispatch_batch1_2026_07_25.md`), root cause = box size.** Extended
+   `launch-defi-phantom-recon-vm.sh` (`deployment-service@369c1e3`: `MACHINE_TYPE`/`VENUES` + SPOT); ran
+   `defi-phantom-recon-cefi-20260727-173241` (`e2-highmem-4`, HL-scoped, `--apply`): `Real captures: 104153`,
+   `Phantom captures: 0`. Re-verified via fresh `_index/phantom_audit_latest.json` (`phantom_count: 0`) — live manifest,
+   not exit code.
 
 3. **[P1] Drop eu twins of natively-canonical (non-Tardis) captures — ~10,368 rows (⚠️ superseded estimate, see
    correction below).** The OnchainPerp/native-canonical lane writes canonical `captured` rows but nothing drops the
@@ -345,8 +364,9 @@ pairs stay honest-unresolved (reported, never guessed).
     `scripts/quality-gates.sh` `PYTEST_UNIT_DIR`. **Evidence**: full `bash scripts/quality-gates.sh` GREEN (exit 0, ZERO
     ❌, **6162 passed** — up from the 6046 baseline that never moved despite 17 new D3 tests, which WAS the bug;
     `.qg_last_passed_sha` == HEAD). Shipped via **quickmerge** (deps clean; carries the `Quickmerge:` trailer →
-    promotable, unlike the earlier carve-out ships). See `mtds_ungated_test_families_2026_07_17.md` for the residual 38
-    whole-tree failures still tracked.
+    promotable, unlike the earlier carve-out ships). See
+    `/plans/archive/issues/mtds_ungated_test_families_2026_07_17.md` for the residual 38 whole-tree failures — since
+    fixed and the doc archived 2026-07-31 (all 5 todos done).
 - [x] ✅ [BACKEND] P0. **FIX D-features — cefi reads (REQUIRED before cutover, not optional).** features
       `raw_data_loader.py`: inherit the D3 bridge (if it reads via MTDS `reader.py`) or add its own
       `get_cefi_wire_map()` bridge; reconcile the `instrument_id`↔`instrument_key` column-name mismatch. (repo:
@@ -688,3 +708,23 @@ pairs stay honest-unresolved (reported, never guessed).
       from the adjacent `DRY_RUN="${DRY_RUN:-250}"` line. **Done when**: default reads `false`, existing dry-run/force
       tests (if any target this script) still pass, `quality-gates.sh --no-fix` green. Source: this doc, slot-5
       checkbox.
+
+- **na-eligibility-audit 2026-07-30** (tranche=cefi, autonomous): KEEP-NA, valid - carries an operator-gated corpus-wide
+  (~4.5M file) content `--apply`, a features schema-shape gap the doc says needs a real decision, and a 586-row
+  blast-radius call.
+
+- **2026-07-30 (finalize-plan reconciliation, `cefi_migration_cutover_and_track8_completion_finalize_2026_07_25.md`
+  todo 2)**: Reviewed this doc's own Phase-1/2 section end-to-end against the shipped work. **Every Phase-1/2 checkbox
+  that can be honestly closed already IS closed** — spot-verified a sample of the cited code commits as genuine
+  ancestors of `origin/live-defi-rollout` (`instruments-service@8166676465f1`, `@f06eba12989d`, `@b61f9bdd`;
+  `market-tick-data-service@d47609ec`, `@d302f07a`, `@ec04e8f5`, `@0388e1a9`; `unified-api-contracts@825878f7`,
+  `@11adf279`, `@dfecc787` — all confirmed via `git merge-base --is-ancestor`). The two Phase-1/2 items still `- [ ]`
+  are correctly left open, not missed reconciliation: (1) **Parquet CONTENT backfill (corpus-wide)** — genuinely
+  in-flight, tracked in exhaustive detail in `cefi_content_migration_fleet_half_incomplete_2026_07_26.md` (44-shard
+  fleet, multiple OOM/preemption/freeze failure classes diagnosed and fixed, still not corpus-complete as of the most
+  recent entry there); (2) **Progress Log at every gate** — the discipline itself has been followed for every apply gate
+  that HAS run (drain, filename rename, manifest dedup, eu-twin drop all cite measured before/after counts above), but
+  the item is tied to the still-incomplete Script-1 migration, so flipping it now would be a premature completion claim.
+  Both stay open until Script 1 finishes. **No reconciliation gap found** — this doc's Phase-1/2 state already
+  accurately reflects shipped work.
+- **context-scout 2026-08-01**: populated context_scope (6 entries).

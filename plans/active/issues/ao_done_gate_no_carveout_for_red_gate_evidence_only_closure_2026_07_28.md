@@ -36,10 +36,19 @@ source: "worker, slot 12, hit live while closing out data_completion_cefi-011 pe
 assigned_vm: NA
 execution_scope: local-only
 estimate_class: refactor
+assigned_role: backend_engineer
+sequential: true # all 4 todos change the same file (server/verify.py) — same-file overlap, must serialise
 drift_direction: advance-code
 depends_on: []
 resolved_by:
 locked_by:
+context_scope:
+  [
+    /codex/02-data/data-pipeline-correctness-hard-rule.md,
+    /plans/active/data_completion_cefi_2026_07_15.md,
+    /plans/active/task_template.md,
+    agent-orchestrator/server/verify.py,
+  ]
 ---
 
 # /done checkbox-flip verification has no carve-out for RED-gate evidence-only closure
@@ -112,25 +121,36 @@ forces an operator/main manual DB patch outside the normal flow.
 
 ## Recommended decision
 
-- [ ] [BACKEND] P2. Add a fourth accepted Mode-2/Mode-1 disposition in `server/verify.py` for "genuinely still open,
+- [x] ✅ [BACKEND] P2. Add a fourth accepted Mode-2/Mode-1 disposition in `server/verify.py` for "genuinely still open,
       temporarily blocked on another owner's in-flight fix, evidence documented" -- e.g. a `BLOCKED-ON:<ref>` or similar
       non-checkbox marker convention (this exact plan already uses an ad-hoc "🔴 BLOCKED ... confirmed by main" bold
       prefix on a sibling todo at `data_completion_cefi_2026_07_15.md` for the same purpose, but verify.py has no regex
       recognizing it -- only `_ADDED_CANCELLED_LINE_RE` and `_ADDED_DEFERRED_LINE_RE` exist). Mirror
       `_diff_cancels_checkbox`/`_diff_defers_checkbox`'s structure: a `_diff_blocks_checkbox` matching a
       `- [ ]     <brief>` line replaced by one still carrying `- [ ]` plus a recognizable `BLOCKED` marker, accepted
-      with `reason="todo_blocked_pending_other_owner"`. Repo: agent-orchestrator.
-- [ ] [BACKEND] P2. Separately: widen (or remove) the Mode-2 30-minute window specifically for the fallback
+      with `reason="todo_blocked_pending_other_owner"`. Repo: agent-orchestrator. — agent-orchestrator@22a14b1: added
+      `_ADDED_BLOCKED_LINE_RE` (`BLOCKED-ON:<ref>` marker convention) + `_diff_blocks_checkbox` +
+      `_blocks_at_path_or_rename`, wired into `_mode1_disposition`/`_mode2_disposition` as the 4th disposition
+      (`reason="todo_blocked_pending_other_owner"`), plus single-repo + cross-repo unit tests in
+      `tests/test_done_gate_plan_flip_hard_reject.py`. QG green, shipped via quickmerge.
+- [x] ✅ [BACKEND] P2. Separately: widen (or remove) the Mode-2 30-minute window specifically for the fallback
       `checkbox_currently_checked`-style checks -- i.e. even when `pm_shas` is empty because the evidence commit is old,
       still fall through to reading the CURRENT on-disk plan text for a recognized disposition marker (mirrors how Mode
       1's fallback at L920-932 already does this for the `[x]`-flip case; Mode 2's empty-`pm_shas` branch at L1006-1025
       currently only checks `checkbox_currently_checked` for a real `[x]`, not for the CANCELLED/DEFERRED/ (future
       BLOCKED) marker text). This closes the "evidence aged out of the log window" half of the gap independently of the
-      marker-convention fix above. Repo: agent-orchestrator.
+      marker-convention fix above. Repo: agent-orchestrator. — agent-orchestrator@e1b30f5: added
+      `_marker_disposition_in_text` (diff-less on-disk marker check, correlated by the todo's `[TAG] P<n>.` prefix since
+      full-brief matching doesn't survive any of the three marker rewrites; fails closed on an ambiguous same-prefix
+      match), wired into new `_mode1_fallback_disposition`/`_mode2_no_recent_commit_disposition` helpers (extracted to
+      keep `check_plan_flip` under the C901 gate). 5 new unit tests in `tests/test_done_gate_plan_flip_hard_reject.py`
+      (all three dispositions cross-repo outside the log window, incl. the exact BLOCKED-ON real-world scenario; the
+      single-repo mode-1 fallback; the ambiguous-match fail-closed case). QG green (2041 passed), shipped via
+      quickmerge.
 - [ ] [DOC] P3. Once either fix above ships, add the accepted BLOCKED-marker convention to `task_template.md`'s
       "remove/re-state a todo" section (alongside the existing CANCELLED/SUPERSEDED and DEFERRED-BY-DESIGN conventions)
       so future RED-gate todos use a consistent, machine-recognized marker from the start.
-- [ ] [BACKEND] P2. **Self-archival variant** (recurrence 2026-07-29, below): when a `/done`'s commit RENAMES/deletes
+- [x] ✅ [BACKEND] P2. **Self-archival variant** (recurrence 2026-07-29, below): when a `/done`'s commit RENAMES/deletes
       the `plan_ref` out of `plans/active/` (an in-same-commit archival closure) AND the moved content carries an
       accepted disposition marker (`[x]` flip / SUPERSEDED / CANCELLED), Mode-2 must accept it. Today the checker reads
       the old active path with rename-detection effectively off (`git show` of `plans/active/...` shows only a deletion
@@ -140,7 +160,20 @@ forces an operator/main manual DB patch outside the normal flow.
       `rename plans/active/... ->     plans/archive/...` whose new blob carries the marker as
       `reason="plan_ref_self_archived_with_marker"`. This is the previously-seen
       `/plans/archive/issues/ao_done_gate_checkbox_flip_blind_to_self_archived_plan_ref_2026_07_26.md` failure mode,
-      recurring. Repo: agent-orchestrator.
+      recurring. Repo: agent-orchestrator. — agent-orchestrator@3839380: the diff-rename following
+      (`_flips_at_path_or_rename` + `_same_commit_added_path_matching_basename`) already existed from an earlier fix and
+      follows the rename fine, but only proves the flip when the destination path's diff shows a paired removed+added
+      line — a pure `git mv` + heavy content edit renders the destination as a pure "add" with nothing removed, so that
+      path (and the exact-full-brief-string `checkbox_currently_checked` fallback) still 409'd once a real closure
+      annotates the checked line (a `✅` checkmark or a `— <repo>@<sha>: <evidence>` trailer, per this workspace's own
+      archival convention). Added `_archival_rename_disposition` (content-based, not diff-based): confirms the commit's
+      PARENT revision at the old path had this todo genuinely open, then checks the renamed destination BLOB for a real
+      `[x]` flip or a CANCELLED/DEFERRED/BLOCKED marker, both correlated by the todo's `[TAG] P<n>.` prefix (fails
+      closed on an ambiguous same-prefix match) rather than an exact brief-string match. Wired into `_mode2_disposition`
+      as the final, lowest-priority tier, returning the distinct `reason="plan_ref_self_archived_with_marker"` exactly
+      as recommended. 2 new unit tests in `tests/test_done_gate_plan_flip_hard_reject.py` (the annotated-checked-line
+      acceptance case; an ambiguous duplicate-tag+priority fail-closed 409 case). Full `quality-gates.sh` green (2129
+      passed, 2 skipped); shipped via `quickmerge --agent`.
 
 ## Progress Log
 
@@ -185,3 +218,57 @@ forces an operator/main manual DB patch outside the normal flow.
   precedent: task LEFT in-progress, NOT skipped/redispatched, checkbox flip NOT re-attempted. This is now the SECOND
   confirmed self-archival-variant recurrence (after the phantom_captures_prediction-002 case above) — reinforces the
   [BACKEND] P2 fix below is worth prioritizing (rename-following in `_pm_log_commits_touching_plan_ref`).
+- **na-eligibility-audit 2026-07-30**: RECLASSIFY → planning, conflict-cleared — all 4 open todos are
+  precisely-specified, bounded changes to `agent-orchestrator/server/verify.py` with named functions, named accepted
+  `reason=` values and machine-checkable done-whens (a 4th `_diff_blocks_checkbox` disposition; the Mode-2
+  empty-`pm_shas` fallback reading current on-disk marker text; rename-following in `_pm_log_commits_touching_plan_ref`;
+  plus a `plans/active/task_template.md` convention note — a PLAN file, not codex). No operator gate, no undecided
+  design fork anywhere in the doc; the `assigned_vm: NA` + `execution_scope: local-only` pair was an unassessed default.
+  Recurrence evidence is strong (4 logged occurrences across 3 slots). **Phase-2 conflict-check**: run against every
+  active `assigned_vm: planning` doc in `parent_epic: orchestrator_master`, the sibling
+  `ao_satellite_ao_dispatch_batch1_2026_07_26.md` + `ao_consolidated_closeout_2026_07_25.md`, and the tranche digest.
+  The only `verify.py`/`check_plan_flip` hits are in `issues/e2e_defi_config_taxonomy_wizard_roundtrip_2026_06_17.md`,
+  and reading them confirms they are a `- [x]` SHIPPED record (`agent-orchestrator@85eb84b`, `_diff_defers_checkbox` +
+  the 10→30 min window widening), not an open competing claim — this doc's todos build ON that work. CLEAR. Set
+  `sequential: true` (all 4 todos change the same file), `assigned_role: backend_engineer`,
+  `execution_scope: orchestrator-agent`. No finalize twin: `doc_type: issue` is structurally exempt
+  (`check_finalize_plan_coverage.py` globs `plans/active/*.md` only).
+- **2026-07-30 (worker, slot 7)**: Shipped todo 1 (the `_diff_blocks_checkbox` 4th disposition) —
+  `agent-orchestrator@22a14b1`. Added `_ADDED_BLOCKED_LINE_RE` (`BLOCKED-ON:<ref>` marker, still-unchecked `- [ ]` shape
+  mirroring `_ADDED_DEFERRED_LINE_RE`), `_diff_blocks_checkbox` + `_blocks_at_path_or_rename` (mirroring the
+  CANCELLED/DEFERRED siblings incl. archival-rename following), wired into both `_mode1_disposition` and
+  `_mode2_disposition` as the 4th priority-ordered disposition, and into `check_plan_flip`'s mode-1/mode-2 branches with
+  `reason="todo_blocked_pending_other_owner"`. Added single-repo + cross-repo unit tests
+  (`test_done_accepts_when_commit_blocks_todo_pending_other_owner`,
+  `test_done_accepts_cross_repo_when_pm_commit_blocks_todo_pending_other_owner`) in
+  `tests/test_done_gate_plan_flip_hard_reject.py`. Full `quality-gates.sh` green (2033 passed, 1 skipped; ruff +
+  basedpyright clean); shipped via `quickmerge --agent`. `sequential: true` holds for todos 2-4 (same file).
+- **2026-07-30 (worker, slot 7)**: Shipped todo 2 (widen/remove the Mode-2 aged-out-window gap for the marker
+  dispositions) — `agent-orchestrator@e1b30f5`. The diff-based CANCELLED/DEFERRED-BY-DESIGN/BLOCKED-ON checks from todo
+  1 all need a commit inside `_pm_log_commits_touching_plan_ref`'s lookback window to diff — when `pm_shas` comes back
+  empty (the exact real-world case this issue documents: evidence commit older than the window), the only fallback was
+  `checkbox_currently_checked` (a real `[x]`), so a genuinely-blocked/deferred/cancelled todo whose retag commit aged
+  out still hard-409'd `cross_repo_pm_log_clean`. Added `_marker_disposition_in_text`: since all three marker
+  conventions REWRITE the todo's line (verified against both the test fixtures' convention and a real corpus example,
+  `defi_satellite_ao_dispatch_batch2_2026_07_26.md:82`), the full `brief` string does not survive as a substring — only
+  the `[TAG] P<n>.` prefix reliably does, so the check correlates on that prefix and fails CLOSED (returns no match)
+  when a doc has more than one same-prefix marker line, to avoid a false-positive `/done` on the wrong todo (this exact
+  issue doc has three `[BACKEND] P2.` todos, which is why prefix-only correlation without the ambiguity guard would have
+  been unsafe). Wired into new `_mode1_fallback_disposition` and `_mode2_no_recent_commit_disposition` helpers
+  (extracted from `check_plan_flip`'s body to keep its McCabe complexity under the C901 gate — the inline version
+  tripped it at 29 > 26). 5 new unit tests in `tests/test_done_gate_plan_flip_hard_reject.py`: all three dispositions
+  cross-repo outside the log window (the BLOCKED-ON one reproduces the issue's exact real-world scenario), the
+  single-repo mode-1 fallback (BLOCKED-ON via an earlier commit + a later unrelated cited sha), and a negative test
+  proving the ambiguous-match fail-closed behavior. Full `quality-gates.sh` green (2041 passed, 1 skipped; ruff +
+  basedpyright clean); shipped via `quickmerge --agent`. `sequential: true` holds for todos 3-4 (same file).
+- **na-eligibility-audit 2026-08-01** (autonomous, tranche `ao`, dispatch agt-8e95ca, slot 2): KEEP-NA, valid — verified
+  the 2026-07-30 RECLASSIFY verdict recorded elsewhere in this doc's own Progress Log was subsequently REVERTED: commit
+  `unified-trading-pm@14478ca26` ("docs(plans): reclassify 25 AO-related plans/issues to local-only execution",
+  2026-07-31, operator directive to work these interactively rather than queue behind AO's busy backlog) flipped
+  `assigned_vm: planning -> NA` and `execution_scope` back to `local-only` — this is the standing, dated revert ruling
+  per the corpus's established citation rule, so current frontmatter is correct and current. Flagging as a hygiene note
+  (not fixed this run, out of scope for a KEEP-NA marker pass): this doc's own Progress Log is silent about the revert,
+  which could mislead a future reader into thinking the 2026-07-30 RECLASSIFY is still the live state. The one open item
+  (`[DOC] P3`, BLOCKED-marker convention for `task_template.md`) is small and unblocked, but the doc as a whole is
+  correctly NA per the revert.
+- **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).

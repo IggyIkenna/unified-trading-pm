@@ -33,7 +33,7 @@ referenced_by:
     /codex/05-infrastructure/live-pipeline-architecture.md,
   ]
 owner:
-last_reviewed: 2026-05-17
+last_reviewed: 2026-08-17
 code_refs:
 ---
 
@@ -140,8 +140,8 @@ SSOTs:
 
 - UAC `unified_api_contracts.alerting.AlertCode` (codes), `LIVE_ALERT_RULES` (routing rules),
   `ALERT_THRESHOLDS["tick_staleness_seconds"]` (threshold).
-- Plan: `unified-trading-pm/plans/active/alerting_service_live_rules_2026_05_07.md` § "Tick-staleness + connectivity-gap
-  event taxonomy".
+- Plan: `/plans/archive/2026_05/alerting_service_live_rules_2026_05_07.md` § "Tick-staleness + connectivity-gap event
+  taxonomy".
 - Coalesce impl: `alerting-service/alerting_service/notifiers/router.py` (`_COALESCE_WINDOW_SECONDS`,
   `_COALESCED_EVENT_NAMES`, `_check_coalesce_window`).
 - Tests: `alerting-service/tests/unit/notifiers/test_router_coalesce.py` (22 unit tests covering all coalesce shapes).
@@ -149,7 +149,11 @@ SSOTs:
 ## DeFi Operational Alert Codes (Phase 1.E, 2026-05-13)
 
 8 codes added at UAC@`086144e` — DeFi pre-cutover operational readiness for `carry_staked_basis` +
-`arbitrage_price_dispersion`. AlertCode closed set: 61 → 69.
+`arbitrage_price_dispersion`. AlertCode closed set at the time: 61 → 69. **All 8 re-verified present 2026-07-30.**
+
+> **Count is stale by design — do not cite it.** `AlertCode` now carries **89** members
+> (`unified_api_contracts/canonical/crosscutting/alerting/codes.py`; re-exported from `unified_api_contracts.alerting`).
+> Read the enum for the live closed set; the numbers in this section are a dated record of one expansion.
 
 | AlertCode                       | Severity | Channels             | Threshold key                          | Purpose                                                                              |
 | ------------------------------- | -------- | -------------------- | -------------------------------------- | ------------------------------------------------------------------------------------ |
@@ -170,8 +174,8 @@ SSOTs:
 - UAC `unified_api_contracts.alerting.AlertCode` (codes) + `LIVE_ALERT_RULES` (routing rules) + `ALERT_THRESHOLDS`
   (thresholds) — all at UAC@`086144e`.
 - 12 taxonomy tests in `unified-api-contracts/tests/internal/unit/test_alerting_taxonomy.py`.
-- Plan: `alerting_service_live_rules_2026_05_07.md` § "Phase 1.E — Venue / lending / market-data / gas / oracle
-  kill-switch AlertCode extensions".
+- Plan: `/plans/archive/2026_05/alerting_service_live_rules_2026_05_07.md` § "Phase 1.E — Venue / lending / market-data
+  / gas / oracle kill-switch AlertCode extensions".
 
 ## Live-Pipeline Alert Tier Table
 
@@ -185,6 +189,20 @@ callback + applies three tiers of rules:
 | 1    | `last_event_age_seconds > 30` OR `zero_activity_bar_rate > 0.05`       | `StreamingHealthSnapshot` (per shard)       | `warning`  | Page on-call (PagerDuty/Telegram); no kill switch                                     |
 | 2    | `consumer_lag_pending > 1000` for 60s OR `last_event_age_seconds > 60` | `StreamingHealthSnapshot` + duration window | `critical` | `KILL_SWITCH_STREAM_LAG` → execution-service `force_exit_only` action                 |
 | 3    | No events on any active shard for > 5min                               | Cross-shard aggregate                       | `critical` | `KILL_SWITCH_PIPELINE_DEAD` → all strategies `halt_strategy`; operator manual restart |
+
+> **`zero_activity_bar_rate` note (B2 marker reconciliation, 2026-06-02):** this is the real, shipped
+> `StreamingHealthSnapshot` field (`unified_trading_library/streaming/streaming_health.py`) — unrelated to the retired
+> `zero_activity=True` per-bar boolean column, which was never built. See
+> `/codex/05-infrastructure/live-pipeline-architecture.md` § "4-category live gap semantics" for the as-shipped per-bar
+> marker (`staleness_seconds>0 + trade_count==0`) this rate is computed from.
+
+> **⛔ DESIGN-ONLY, NOT SHIPPED — verified 2026-07-30.** The two AlertCodes in the Action column,
+> **`KILL_SWITCH_STREAM_LAG`** and **`KILL_SWITCH_PIPELINE_DEAD`**, do **not exist** in the `AlertCode` enum, nor
+> anywhere in unified-api-contracts / alerting-service / strategy-service / execution-service. Tiers 2 and 3 are a
+> design proposal that was never implemented — do not write code against these codes, and do not assume a stream-lag
+> kill-switch is armed. (The three circuit-breaker **actions** below — `stop_new_signals` / `force_exit_only` /
+> `halt_strategy` — ARE real: `unified_api_contracts/canonical/crosscutting/circuit_breaker/_enums.py`.) Every other
+> AlertCode named in this doc was re-verified present.
 
 ### Circuit-breaker action set
 

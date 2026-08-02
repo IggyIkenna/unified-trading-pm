@@ -87,7 +87,7 @@ they are not silently lost on archival (per the plan-archival HARD RULE).
       db233e2 — also fixed defi/swap_adapter), Finding 2 429-backoff (UTL `_upload_with_backoff_on_429`), Finding 3
       UNKNOWN-partition re-normalization (canonical_writer), Finding 4 faulthandler (UTL). Reprocess is the only
       remaining step — run with current code, part of the deferred backfill pass.
-- [ ] [DOC] P3. **B2 codex marker reconciliation (HARD-RULE SSOT — do deliberately, NOT a find-replace).** Code emits
+- [x] ✅ [DOC] P3. **B2 codex marker reconciliation (HARD-RULE SSOT — do deliberately, NOT a find-replace).** Code emits
       carried-forward-bar markers as `staleness_seconds`>0 + `trade_count==0`; codex
       `honest-absence-downstream-handling.md` + `live-pipeline-architecture.md` (Category D) still describe a
       `zero_activity=True` / `ZERO_ACTIVITY_BAR` marker. Reconcile when the honest-absence SSOT is next revised — but
@@ -95,6 +95,22 @@ they are not silently lost on archival (per the plan-archival HARD RULE).
       tradfi/cefi session-grid forward-fill (no NaN). The marker column may stay a boolean (renamed) rather than
       collapse to `staleness_seconds`. Verified `zero_activity` has no code consumers (pure doc drift, not a live
       breakage).
+
+      **MOSTLY STALE-DONE (2026-07-30, conflict-check)** — `plans/active/issues/issue_docs_remediation_sweep_2026_06_02.md:375`
+                      already shipped this exact reconciliation in BOTH `honest-absence-downstream-handling.md` and
+                      `live-pipeline-architecture.md` (reconciliation banners verified live in both). Real residual: a named 3-doc set
+                      (incl. `00-SSOT-INDEX.md`) still untouched — narrow this todo to that residual rather than re-doing the whole
+                      reconciliation.
+
+          **DONE (2026-08-02, slot-15)** — read all 3 named residual docs deliberately (not a find-replace); none of them
+          claimed the retired `zero_activity=True` boolean column (the actual B2 error) — `codex/00-SSOT-INDEX.md` and
+          `codex/04-architecture/batch-live-architecture.md` only use `ZERO_ACTIVITY_BAR` as the category *label*, which
+          the existing banner in `live-pipeline-architecture.md` explicitly retains for continuity; `alerting-batch-live.md`
+          uses `zero_activity_bar_rate`, a real, shipped `StreamingHealthSnapshot` field
+          (`unified_trading_library/streaming/streaming_health.py`), unrelated to the retired boolean. Added a short
+          cross-reference note to each of the 3 docs pointing to the as-shipped marker
+          (`staleness_seconds>0 + trade_count==0`) and the B2 banner, so a reader landing on the legacy token isn't misled.
+          — unified-trading-pm@(this commit).
 
 ### DeFi chain-column reprocess (folded in 2026-06-01)
 

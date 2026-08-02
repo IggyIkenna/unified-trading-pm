@@ -448,5 +448,21 @@ one-line caveat in its first output ("proceeding at <tier> per operator override
 
 ---
 
+## Multi-provider gateway boundary (2026-07-30)
+
+`agent-orchestrator/server/accounts.py`'s `AccountProvider` Literal (the DeepSeek-routing mechanism, see
+`/plans/active/deepseek_claude_blended_provider_routing_2026_07_28.md`) is the one sanctioned way a worker-fleet spawn
+picks a non-Anthropic backend — each value gets its own explicit eligibility/quota-adaptive/health-gate wiring in
+`select_account_for_spawn()`, and `opus-required`/`fable-required` stay a hard, unconditional pin to Claude regardless
+of provider count. An opaque multi-provider gateway (OmniRoute or equivalent — see
+`/plans/active/omniroute_llm_gateway_pilot_design_2026_07_30.md`) that silently substitutes a cheaper/free model
+underneath a task's tier assignment is **out of scope for any `AccountProvider`-routed worker traffic** — it would let a
+task correctly tiered "sonnet is enough" land on some unrelated free-tier model with nothing in the dispatch path aware
+of the difference, invisibly. The one sanctioned pilot surface for that class of gateway is `deployment-api`'s
+pipeline-UAT commentary caller (a direct SDK call from a non-worker service, no model-tier semantics at all — tracked in
+the OmniRoute plan above), not the worker fleet.
+
+---
+
 _Companion plan_: `plans/active/ruff_workspace_cleanup_*.md` (example of correctly classified Sonnet-suitable work).
 _Enforced by_: work-split review — any slot missing `model_tier` or `thinking` defaults to Sonnet 5 / medium.

@@ -39,6 +39,7 @@ source: >-
   This content was a scope-creep section covering agent-orchestrator bootstrap/watchdog/memory-guardrail hardening,
   file-disjoint from the parent's CI-dashboard/fleet-git-health mission — moved verbatim, nothing summarized or dropped.
 last_updated: 2026-06-27
+context_scope: [/plans/active/monitoring_control_plane_master_2026_06_10.md, /plans/epics/observability_master.md]
 ---
 
 # Orchestrator e2e control-plane validation + VM-from-scratch hardening
@@ -445,3 +446,16 @@ bans. Fleet VMs (setup-token env files) are unaffected.
 - Live-spawn verification (DEFERRED-BY-HEADROOM, line ~337): N/A — no migration. Not a gap in the fix (code + unit tests
   shipped); live observation is expected to surface naturally on the next real dispatch once any account has headroom
   (`skips={'queue_satisfied': N}` in the tick log is the confirming signal).
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30**: KEEP-NA, valid — all 3 open todos are operator-gated and already ruled so in
+  `/plans/archive/2026_07/ao_satellite_ao_dispatch_batch1_2026_07_26.md`'s Deferred list: two `[CREDS]` secret/IAM
+  writes (`ORCHESTRATOR_JWT_SECRET` SM alignment, which the doc itself states is 'permission-blocked by design' for
+  agents; and a `harsh-worker` IAM grant with no self-service path) plus one `[DESIGN]` dirty-worktree policy whose step
+  4 is an operator-sanctioned hard reset.
+- **context-scout 2026-08-01**: populated/refreshed context_scope (2 entries).
+- **na-eligibility-audit 2026-08-01** (autonomous, tranche `ao`, dispatch agt-8e95ca, slot 2): KEEP-NA, valid —
+  re-verified all 3 remaining open items against live doc text: a permission-blocked-by-design SM secret write, an
+  operator-sanctioned dirty-worktree reset policy, and a `BLOCKED-CREDENTIALS`-tagged IAM grant with a filed approval
+  request. All three remain genuinely operator-gated, no change since the 2026-07-30 verdict.

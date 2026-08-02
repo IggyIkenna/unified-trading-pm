@@ -67,14 +67,24 @@ resolved_by:
 
 ## What's deferred, and why
 
-- [ ] [DATA] P3. Run
-      `rebuild_manifest_from_canonical_paths(bucket="market-data-tick-cefi-prd-central-element-323112",     service_name="market-data-processing-service", prefix="processed_candles/by_date")`
-      **on a VM, not locally** — this walks every `.parquet` under the ENTIRE `processed_candles/by_date` prefix
-      corpus-wide, which is exactly the full-corpus GCS walk this workspace's heavy-I/O HARD RULE requires to run
-      in-region on a VM, never from a local/operator session. Not run in this session for that reason. Purpose:
-      consolidate any per-VM manifest shards that didn't fully flush (see `r20251225` below) into the canonical index.
-      Repo: unified-trading-library (function lives there), invoked via market-tick-data-service or deployment-service
-      tooling.
+- [ ] [DATA] P3. **CORRECTED 2026-07-30 (ag-closeout-audit cefi) — do NOT call `rebuild_manifest_from_canonical_paths`
+      as originally written below; it wholesale-REPLACES this co-located bucket's entire manifest index and would
+      silently delete essentially the whole CEFI `raw_tick_data` manifest to register 7 candle rows.** Confirmed via
+      `issues/rebuild_manifest_from_canonical_paths_prefix_scoped_wipe_2026_07_27.md` (P0 data-correctness finding, same
+      bucket-layout hazard, fixed 2026-07-27 by shipping an additive sibling function) — this doc predates that fix by
+      one day and was never updated to use it. Run
+      `merge_manifest_from_canonical_paths(bucket="market-data-tick-cefi-prd-central-element-323112",     service_name="market-data-processing-service", prefix="processed_candles/by_date")`
+      instead (`unified-trading-library@2352e7c8`, `_maintenance.py:757`) — additive only: computes
+      `discovered - existing` and uploads `existing + new_only`, every row outside `prefix` (incl. the co-located MTDS
+      `raw_tick_data` rows) survives untouched; safe-idempotent per its own regression tests
+      (`test_merge_from_canonical_paths_preserves_rows_outside_prefix`,
+      `test_merge_from_canonical_paths_is_idempotent_no_duplicate_rows` in `tests/unit/test_manifest_v4_migration.py`) —
+      no `[OPERATOR]` gate needed for this corrected call. **On a VM, not locally** — this walks every `.parquet` under
+      the ENTIRE `processed_candles/by_date` prefix corpus-wide, which is exactly the full-corpus GCS walk this
+      workspace's heavy-I/O HARD RULE requires to run in-region on a VM, never from a local/operator session. Not run in
+      this session for that reason. Purpose: consolidate any per-VM manifest shards that didn't fully flush (see
+      `r20251225` below) into the canonical index. Repo: unified-trading-library (function lives there), invoked via
+      market-tick-data-service or deployment-service tooling.
 - [x] ✅ [INFRA] P3. **FIXED 2026-07-29.** The shared `pubsub.topics.publish` IAM gap on the `run-ledger` topic — 6 of
       the 15 campaign VMs (`r20251225`, `p20250620`, `p20260213`, `p20260422`, `p20260526`, `p20260629`) hit the
       identical `IAM_PERMISSION_DENIED` error at shutdown trying to publish their final run-ledger record (cosmetic
@@ -102,3 +112,9 @@ process consolidates/cleans up per-VM shards on completion ran before that flush
 `gs://market-data-tick-cefi-prd-central-element-323112/processed_candles/by_date/day=2025-12-25/` and `day=2026-01-09/`
 (its range's first/last dates) both have real `pipeline_mode=batch_hyperliquid` output present — the underlying data is
 safe; only the manifest's registration of it is what the reconciliation todo above will fix.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30** (tranche=cefi, autonomous): KEEP-NA, valid - the sole todo is a full-corpus GCS
+  walk requiring a VM launch, with no `[OPERATOR]` tag and no stated safe-idempotent justification; near-miss for
+  reclassification, needs the gating line added first.

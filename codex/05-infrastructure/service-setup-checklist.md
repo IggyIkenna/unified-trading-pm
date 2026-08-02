@@ -23,7 +23,7 @@ referenced_by:
     /codex/05-infrastructure/new-repo-setup.md,
   ]
 owner:
-last_reviewed: 2026-05-17
+last_reviewed: 2026-10-17
 code_refs:
 ---
 

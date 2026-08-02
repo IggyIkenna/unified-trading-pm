@@ -23,7 +23,7 @@ tags: [deployment-ui, smoke-tests, playwright, regression, nav, cockpit, fleet-g
 related:
   [
     /plans/active/data_status_tab_and_downloads_remediation_2026_06_16.md,
-    /plans/active/issues/deployment_ui_nav_consolidation_2026_07_17.md,
+    /plans/archive/issues/deployment_ui_nav_consolidation_2026_07_17.md,
     /plans/active/issues/deployment_ui_smoke_failures_daily_costs_nav_mobile_2026_07_21.md,
     /codex/06-coding-standards/ui-testing-layers.md,
   ]

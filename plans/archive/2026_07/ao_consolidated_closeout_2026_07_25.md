@@ -31,8 +31,8 @@ related:
     /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
     /plans/archive/2026_07/ci_consolidated_closeout_2026_07_25.md,
     /plans/active/infra_consolidated_closeout_2026_07_25.md,
-    /plans/active/ao_satellite_ao_dispatch_batch1_2026_07_26.md,
-    /plans/active/ao_satellite_ao_dispatch_batch1_finalize_2026_07_26.md,
+    /plans/archive/2026_07/ao_satellite_ao_dispatch_batch1_2026_07_26.md,
+    /plans/archive/2026_07/ao_satellite_ao_dispatch_batch1_finalize_2026_07_26.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]
 created: 2026-07-25
@@ -91,9 +91,9 @@ of its own**" outside the 2 `## Todos` items just closed). Archiving it does NOT
 This doc is a **digest** — being listed as a Source below is discoverability, NOT dispatch, and this doc carries **zero
 todos of its own**. The plans that actually work these docs' open items:
 
-- [ao_satellite_ao_dispatch_batch1_2026_07_26](/plans/active/ao_satellite_ao_dispatch_batch1_2026_07_26.md) —
+- [ao_satellite_ao_dispatch_batch1_2026_07_26](/plans/archive/2026_07/ao_satellite_ao_dispatch_batch1_2026_07_26.md) —
   **`status: draft`, awaiting operator approval** (10 todos) + its gated pair
-  [ao_satellite_ao_dispatch_batch1_finalize_2026_07_26](/plans/active/ao_satellite_ao_dispatch_batch1_finalize_2026_07_26.md).
+  [ao_satellite_ao_dispatch_batch1_finalize_2026_07_26](/plans/archive/2026_07/ao_satellite_ao_dispatch_batch1_finalize_2026_07_26.md).
 - [ao_open_issues_consolidated_close_out_2026_07_17](/plans/active/ao_open_issues_consolidated_close_out_2026_07_17.md)
   — an earlier AO-scope tracker (9 open todos) that is **not** in the Sources lists below but does cover some of them
   (its Recovery-audit Layer-1 producer todo owns `issues/ao_recovery_audit_layer1_deleted_2026_07_15.md`). Whether it
@@ -117,7 +117,7 @@ todos of its own**. The plans that actually work these docs' open items:
 (GATED skip-task auto-park path never pages Slack) ·
 [issues/external_promote_gated_task_redispatch_churn_no_durable_park_2026_07_25.md](/plans/active/issues/external_promote_gated_task_redispatch_churn_no_durable_park_2026_07_25.md)
 (redispatch churn when a task is gated on an external CI promote, no durable park) ·
-[issues/escalation_backlog_repo_collision_blind_spot_2026_07_25.md](/plans/active/issues/escalation_backlog_repo_collision_blind_spot_2026_07_25.md)
+[issues/escalation_backlog_repo_collision_blind_spot_2026_07_25.md](/plans/archive/issues/escalation_backlog_repo_collision_blind_spot_2026_07_25.md)
 (escalation-dispatch vs backlog-dispatch repo-collision blind spot) ·
 [issues/reaper_kills_inflight_detached_quickmerge_false_done_2026_07_24.md](/plans/active/issues/reaper_kills_inflight_detached_quickmerge_false_done_2026_07_24.md)
 (orphan-reaper kills an in-flight detached quickmerge, marks false-done) ·
@@ -151,7 +151,7 @@ reaper-false-done, clean-exit-signal, auto-park-enforcement).
 (git-health reporter races the FF-pull cron, phantom-dirty flicker) ·
 [issues/utl_shared_clone_commits_repeatedly_reset_2026_07_22.md](/plans/active/issues/utl_shared_clone_commits_repeatedly_reset_2026_07_22.md)
 (shared UTL clone repeatedly reset to origin, destroying local commits) ·
-[issues/orphan_rootm_branch_unmerged_work_2026_06_05.md](/plans/active/issues/orphan_rootm_branch_unmerged_work_2026_06_05.md)
+[issues/orphan_rootm_branch_unmerged_work_2026_06_05.md](/plans/archive/issues/orphan_rootm_branch_unmerged_work_2026_06_05.md)
 (orphaned unmerged work on dead root-VM agent-slot branches).
 
 **Close-out criterion**: each git-safety race fixed (killed-slot orphan recovery, idle-slot inherit, double-reset guard,
@@ -165,7 +165,7 @@ guard); orphaned branch work recovered or explicitly written off with evidence.
 (planning-VM relaunch doesn't reprovision the self-hosted glue-runner pool) ·
 [issues/orchestrator_db_pool_exhaustion_state_poll_stall_2026_07_25.md](/plans/active/issues/orchestrator_db_pool_exhaustion_state_poll_stall_2026_07_25.md)
 (SQLAlchemy `QueuePool` exhaustion under concurrent slot traffic) ·
-[issues/orchestrator_jwt_secret_not_pinned_causes_fleet_git_status_outage_2026_07_24.md](/plans/active/issues/orchestrator_jwt_secret_not_pinned_causes_fleet_git_status_outage_2026_07_24.md)
+[issues/orchestrator_jwt_secret_not_pinned_causes_fleet_git_status_outage_2026_07_24.md](/plans/archive/issues/orchestrator_jwt_secret_not_pinned_causes_fleet_git_status_outage_2026_07_24.md)
 (unpinned JWT secret causes fleet-wide auth outage) ·
 [issues/long_lived_vm_logs_not_backed_up_2026_07_02.md](/plans/active/issues/long_lived_vm_logs_not_backed_up_2026_07_02.md)
 (long-lived planning/epic/central-brain/orchestrator-worker VM logs not backed up) ·
@@ -183,8 +183,8 @@ pinned across the fleet; VM log backup wired; the e2e hardening suite green; the
 **Sources**:
 [agent_orchestrator_alert_channel_cleanup_2026_07_13.md](/plans/archive/2026_07/agent_orchestrator_alert_channel_cleanup_2026_07_13.md)
 (complete, archived 2026-07-27 — AO alerts Slack channel dedup/lifecycle-churn/BLOCKED-schema redesign) ·
-[ao_fleet_observability_kpis_2026_07_20.md](/plans/active/ao_fleet_observability_kpis_2026_07_20.md)
-(dispatch-completion/escalator-efficacy/account-burn observability KPIs) ·
+[ao_fleet_observability_kpis_2026_07_20.md](/plans/archive/2026_07/ao_fleet_observability_kpis_2026_07_20.md)
+(dispatch-completion/escalator-efficacy/account-burn observability KPIs, archived 2026-07-31) ·
 [issues/plan_health_tests_leak_real_slack_alerts_2026_07_24.md](/plans/active/issues/plan_health_tests_leak_real_slack_alerts_2026_07_24.md)
 (`plan_health` test suite firing real Slack posts to the AO alerts channel) ·
 [issues/ao_repo_docs_deleted_against_instructions_dead_code_refs_2026_07_23.md](/plans/archive/issues/ao_repo_docs_deleted_against_instructions_dead_code_refs_2026_07_23.md)
@@ -330,16 +330,16 @@ missing from Sources entirely).
   15 docs that are explicitly NOT dispatched. Mechanically: of the 44 members only **12** are cited anywhere inside a
   real `- [ ]`/`- [x]` covering todo; the other 32 appear solely in digest/Deferred/Progress-Log prose. **Highest-value
   now-actionable orphan**:
-  `/plans/active/issues/orchestrator_jwt_secret_not_pinned_causes_fleet_git_status_outage_2026_07_24.md`'s `[DEVOPS] P1`
-  (pin `ORCHESTRATOR_JWT_SECRET_GCS`) — its only blocker was an operator-chosen maintenance window, which the 2026-07-28
-  CLAUDE.md ruling removed; it is a fleet-wide ~4.5h-outage root cause sitting unclaimed by any covering plan. **Phase 3
-  deliberately NOT run** (no batch2 drafted): the skill forbids shipping a drafted pair without operator approval and no
-  operator was reachable this run. **Corpus-hygiene fixes applied this run** (Phase 0.3 Orthogonality HARD CHECK): the
-  dual-tag `<one specific AG> + cross-cutting` mistag class is **CLEAN — 0 hits corpus-wide** (the 4 `cross-cutting`
-  multi-tag docs are all the legitimate spans-all-5-AGs pattern). Four genuine content mistags were retagged to `[ao]`
-  instead, each verified by reading the doc, not by tag shape: `ao_open_issues_consolidated_close_out_2026_07_17.md`
-  (was `[meta]` — this tranche's single most-important covering plan, 9 open todos, named as covering in this very doc,
-  yet invisible to `ao`'s own membership rule),
+  `/plans/archive/issues/orchestrator_jwt_secret_not_pinned_causes_fleet_git_status_outage_2026_07_24.md`'s
+  `[DEVOPS] P1` (pin `ORCHESTRATOR_JWT_SECRET_GCS`) — its only blocker was an operator-chosen maintenance window, which
+  the 2026-07-28 CLAUDE.md ruling removed; it is a fleet-wide ~4.5h-outage root cause sitting unclaimed by any covering
+  plan. **Phase 3 deliberately NOT run** (no batch2 drafted): the skill forbids shipping a drafted pair without operator
+  approval and no operator was reachable this run. **Corpus-hygiene fixes applied this run** (Phase 0.3 Orthogonality
+  HARD CHECK): the dual-tag `<one specific AG> + cross-cutting` mistag class is **CLEAN — 0 hits corpus-wide** (the 4
+  `cross-cutting` multi-tag docs are all the legitimate spans-all-5-AGs pattern). Four genuine content mistags were
+  retagged to `[ao]` instead, each verified by reading the doc, not by tag shape:
+  `ao_open_issues_consolidated_close_out_2026_07_17.md` (was `[meta]` — this tranche's single most-important covering
+  plan, 9 open todos, named as covering in this very doc, yet invisible to `ao`'s own membership rule),
   `issues/branch_reset_to_origin_orphans_unpushed_worker_commits_2026_07_27.md`,
   `issues/per_slot_ff_pull_status_report_crons_stale_fleet_wide_2026_07_27.md`, and
   `issues/wip_preserve_refs_silently_unrecovered_2026_07_29.md` (all three were bare `[cross-cutting]` with

@@ -66,6 +66,10 @@ _qg_content_hash() {
         "${BASEDPYRIGHT_CMD:-basedpyright}" --version 2>/dev/null
         "${PYTHON_CMD:-python3}" --version 2>/dev/null
         _qg_editable_sibling_hash                                        # workspace sibling deps (qg-common.sh)
+        # gate-affecting config (qg_sentinel_environment_blind_2026_07_23.md item 2):
+        # see base-service.sh for the full rationale — a byte-identical tree verified
+        # under a different ENVIRONMENT/DEPLOYMENT_ENV is not the same verified surface.
+        printf 'ENVIRONMENT=%s DEPLOYMENT_ENV=%s\n' "${ENVIRONMENT:-}" "${DEPLOYMENT_ENV:-}"
     } | sha256sum | awk '{print $1}'
 }
 
@@ -111,6 +115,46 @@ MAX_FUNCTION_LINES=${MAX_FUNCTION_LINES:-200}; MAX_CLASS_LINES=${MAX_CLASS_LINES
 FIX_MODE=false; QUICK_MODE=false; RUN_LINT=true; RUN_TESTS=true; SKIP_TYPECHECK=false; ACT_MODE=false; SKIP_VERSION_ALIGNMENT=false
 for arg in "$@"; do
     case $arg in
+        --help|-h)
+            # quickmerge_help_flag_misparsed_as_commit_message_2026_07_30: mirrors the guard
+            # added to base-service.sh — --help/-h must be a pure, immediate, side-effect-free
+            # no-op, never fall through to the unknown-flag arm below (or, before that arm
+            # existed, be silently ignored and run the full gate with default settings).
+            cat <<'QG_USAGE'
+Usage: quality-gates.sh [FLAGS]   (library-repo gate body: base-library.sh)
+
+Mode flags:
+  --no-fix                  Don't auto-reformat the tree (DEFAULT — safe for agents/CI;
+                             use for any run whose diff you intend to commit).
+  --fix                     Opt into tree-wide auto-fix (ruff --fix / prettier --write).
+                             Can dirty files outside your own change — use deliberately.
+  --quick                   Faster iteration pass (skips version-alignment / merge-sentinel
+                             write) — NOT a substitute for a full gate before shipping.
+  --fast                    Change-scoped codex-grep tier (scans only files changed vs the
+                             merge-base). Never writes the merge sentinel — the full gate
+                             still runs at quickmerge/CI. Local iteration only.
+
+Scope flags (skip one phase):
+  --lint                    Lint-only (skips tests).
+  --test                    Test-only (skips lint).
+  --skip-tests               Skip the pytest phase.
+  --skip-typecheck           Skip basedpyright.
+  --skip-version-alignment    Skip the version-alignment check.
+
+Other:
+  --act                      Run under `act` (local GitHub Actions emulation).
+  --help, -h                 Show this message and exit 0 (no gate phases run).
+
+Env var:
+  QG_SLICE=tests|typecheck|lint-codex   CI parallel-job slice selector used by the
+                                         reusable workflow — not usually set by hand.
+
+Unknown flags are a hard error (exit 1) — see quickmerge_help_flag_misparsed_as_commit_message_2026_07_30
+for why: a silently-ignored unrecognized flag is how a fat-fingered run ends up executing the
+full gate with unintended default settings instead of failing loud.
+QG_USAGE
+            exit 0
+            ;;
         --no-fix) FIX_MODE=false ;;   --quick) QUICK_MODE=true ;;
         --lint) RUN_TESTS=false ;;    --test) RUN_LINT=false ;;
         --skip-tests) RUN_TESTS=false ;;
@@ -120,6 +164,14 @@ for arg in "$@"; do
         # --fast: change-scoped ITERATION tier — codex greps only changed source files (see the
         # CODEX_SCOPE_GLOBS block). Never writes the merge sentinel → commit still runs the FULL gate.
         --fast) QG_FAST=1; export QG_FAST ;;
+        *)
+            # quickmerge_help_flag_misparsed_as_commit_message_2026_07_30: previously any
+            # unrecognized flag was silently ignored here (no catch-all arm at all). Hard
+            # error instead, mirroring base-service.sh.
+            echo "❌ quality-gates.sh: unknown flag: $arg" >&2
+            echo "   Run 'bash scripts/quality-gates.sh --help' for the full flag list." >&2
+            exit 1
+            ;;
     esac
 done
 
@@ -194,6 +246,12 @@ WORKSPACE_VENV="${REPO_ROOT}/.venv-workspace"
 if [ -z "${GITHUB_ACTIONS:-}" ] && [ -z "${CI:-}" ] && [ -z "${CLOUD_BUILD:-}" ]; then
     unset VIRTUAL_ENV   # never inherit an activated workspace venv from the parent shell
     command -v uv &>/dev/null || pip install "uv==0.10.8" --quiet
+    # uv-version drift-guard — WARN-ONLY (mirrors base-service.sh; same rationale + SSOT).
+    _uv_ver="$(uv --version 2>/dev/null | awk '{print $2}')"
+    if [[ -n "$_uv_ver" && "$_uv_ver" != "0.10.8" ]]; then
+        echo "⚠️  uv version drift: running $_uv_ver, workspace pin is 0.10.8 — re-lock output may not match CI. Realign: curl -LsSf https://astral.sh/uv/0.10.8/install.sh | env UV_UNMANAGED_INSTALL=\$HOME/.local/bin sh"
+    fi
+    unset _uv_ver
     # uv.lock freshness — WARN-ONLY, never blocking (stays warn-only per 1.5b: making it blocking
     # treadmills on the semver CI-side `version =` bump). The lock IS now the install SSOT —
     # `uv sync --frozen` (below, 1.5b) installs the committed lock EXACTLY, byte-for-byte with CI — so a
@@ -309,8 +367,11 @@ BP_VER=$("$BASEDPYRIGHT_CMD" --version 2>/dev/null | head -1 | awk '{print $NF}'
 if [ "$RUN_LINT" = true ] && [ "$FIX_MODE" = true ]; then
     log_section "[1/6] AUTO-FIX"
     qg_prof start autofix
+    # prettier@3.9.5 (not 3.6.2) — see base-service.sh's identical comment:
+    # prettier_emphasis_mangling_corpus_corruption_2026_07_14 proved <3.9.5 corrupts markdown;
+    # this tree-wide invocation was a second, un-updated pin of the proven-buggy version.
     if command -v npx &>/dev/null; then
-        npx --yes prettier@3.6.2 --write --cache "**/*.{md,json,yaml,yml}" --ignore-path .gitignore --ignore-path .prettierignore >/dev/null 2>&1 \
+        npx --yes prettier@3.9.5 --write --cache "**/*.{md,json,yaml,yml}" --ignore-path .gitignore --ignore-path .prettierignore >/dev/null 2>&1 \
             || log_warn "Prettier not available or no files to format (skipping)"
     else
         log_warn "npx not available — skipping prettier pre-format (commit may require re-staging)"
@@ -655,13 +716,22 @@ codex_rg "central-element-323112" --type py --glob "!tests/**" "${GCP_LIB_EXTRA[
 BAD_PROJECT=$(codex_rg "GOOGLE_CLOUD_PROJECT|GCP_PROJECT(?!_ID)" --type py --glob "!tests/**" "$SOURCE_DIR/" 2>/dev/null || :)
 [[ -n "$BAD_PROJECT" ]] && { log_fail "Use GCP_PROJECT_ID; banned: GOOGLE_CLOUD_PROJECT, GCP_PROJECT"; echo "$BAD_PROJECT" | head -3; V=$(( V + 1 )); } || log_success "Project ID uses GCP_PROJECT_ID"
 
-UCS_DOMAIN=$(codex_rg 'from unified_trading_library import[^#]*?(InstrumentsDomainClient|ExecutionDomainClient|MarketCandleDataDomainClient|MarketTickDataDomainClient|create_instruments_client|create_execution_client|create_features_client|create_market_candle_data_client|create_market_tick_data_client)' \
-    --type py --glob "!tests/**" "$SOURCE_DIR/" 2>/dev/null || :)
-[[ -n "$UCS_DOMAIN" ]] && { log_fail "Domain clients must come from unified_domain_client, not unified_trading_library"; echo "$UCS_DOMAIN" | head -5; V=$(( V + 1 )); } || log_success "Domain clients imported from unified_domain_client"
+# Domain clients live in unified_trading_library.domain (re-exported at the UTL top level) — there is NO
+# separate unified_domain_client package anywhere in the workspace. RETARGETED 2026-07-30 (mirrors
+# base-service.sh): the prior check demanded imports come FROM unified_domain_client and failed on the
+# correct top-level form, directly contradicting the deep-import (DI) check below, which independently
+# requires top-level and fails on a `.domain` submodule import — no import shape could pass both.
+# FOLLOW-UP FIX 2026-07-30 (mirrors base-service.sh): added a second `(?!\.)` lookahead — the first
+# retarget's module-name class still matched a RELATIVE import's leading dot (`from .instruments import
+# X`), breaking UTL's own internal source. SSOT:
+# plans/active/codex_violations_ratchet_to_five_2026_06_10.md.
+UCS_DOMAIN=$(codex_rg 'from (?!unified_trading_library)(?!\.)[a-zA-Z0-9_.]+ import[^#]*?(InstrumentsDomainClient|ExecutionDomainClient|MarketCandleDataDomainClient|MarketTickDataDomainClient|create_instruments_client|create_execution_client|create_features_client|create_market_candle_data_client|create_market_tick_data_client)' \
+    --pcre2 --type py --glob "!tests/**" "$SOURCE_DIR/" 2>/dev/null || :)
+[[ -n "$UCS_DOMAIN" ]] && { log_fail "Domain clients must come from unified_trading_library (top-level or .domain), not a per-repo shim"; echo "$UCS_DOMAIN" | head -5; V=$(( V + 1 )); } || log_success "Domain clients imported from unified_trading_library"
 
-DOMAIN_FROM_UCS=$(codex_rg 'from unified_trading_library import.*(market_category|DomainValidation|UnifiedCloudServicesConfig)' \
-    --type py "$SOURCE_DIR/" 2>/dev/null || :)
-[[ -n "$DOMAIN_FROM_UCS" ]] && { log_fail "Library imports domain symbols from UCS — use unified_domain_client instead"; echo "$DOMAIN_FROM_UCS" | head -5; V=$(( V + 1 )); } || log_success "No domain imports from UCS"
+DOMAIN_FROM_UCS=$(codex_rg 'from (?!unified_trading_library)(?!\.)[a-zA-Z0-9_.]+ import.*(market_category|DomainValidation|UnifiedCloudServicesConfig)' \
+    --pcre2 --type py "$SOURCE_DIR/" 2>/dev/null || :)
+[[ -n "$DOMAIN_FROM_UCS" ]] && { log_fail "Library imports domain symbols from a non-unified_trading_library source — use unified_trading_library instead"; echo "$DOMAIN_FROM_UCS" | head -5; V=$(( V + 1 )); } || log_success "No stray domain imports outside unified_trading_library"
 
 if codex_rg 'def setup_events|def setup_service' --type py "$SOURCE_DIR/" -q 2>/dev/null; then
     log_success "setup_service() check skipped (repo defines setup_events/setup_service)"
@@ -955,44 +1025,17 @@ qg_prof end size-checks
 # Security: pip-audit (prefer project venv to avoid workspace transitive vulns)
 qg_prof start pip-audit
 if $PYTHON_CMD -c "import pip_audit" 2>/dev/null; then
-    # CVE-2026-4539: pygments 2.19.2 (latest, no fix version) — transitive via pytest+rich
-    # CVE-2026-45409: idna 3.14 follow-up to CVE-2024-3651; fix: upgrade to idna>=3.15
-    # aiohttp cookie-CVE cluster CVE-2026-34993/47265/50269/54273-54280 — RESOLVED: execution-service (the last holdout,
-    #   held on aiohttp 3.13.5 via a [tool.uv] override for its aioresponses test files) migrated to adapter-boundary
-    #   mocks and bumped to aiohttp>=3.14.1 fleet-wide; the 11 ignore-vuln entries were dropped from
-    #   QG_PIP_AUDIT_COMMON_IGNORES (qg-common.sh). See plans/active/issues/aiohttp_cve_2026_34993_vcrpy_deadlock_2026_06_03.md.
-    # The three pip advisories below MUST stay in parity with base-service.sh — they are sanctioned
-    # ignores for the SAME shared pip dep (operator-accepted 2026-06-05); a library-vs-service drift
-    # here reddens UTL/UAC while services pass (incident 2026-06-11: PYSEC-2026-196 published, present
-    # in base-service but missing here → UTL pip-audit failed once its 24h cache expired).
-    # CVE-2026-3219: pip 26.0.1 concatenated tar+ZIP handling; fix: upgrade pip >= 26.1
-    # CVE-2026-6357: pip < 26.1 self-update check; fix: upgrade pip >= 26.1
-    # PYSEC-2026-196: pip 26.0.1 console_scripts/gui_scripts treated as paths without sanitizing the
-    #   resolved absolute path. Fleet stays on the vulnerable pip line because the next pip release is
-    #   incompatible with the pinned vcrpy. Exploit surface nil — the fleet never pip-installs untrusted
-    #   packages at runtime. SUCCESSOR (remove all three): the same vcrpy-unblock that lets aiohttp reach 3.14.0.
-    # CVE-2026-54283 / -54282 (starlette <1.3.1, transitive via fastapi) — RESOLVED 2026-07-28: fastapi/starlette
-    # floor lifted to fastapi>=0.137.0/starlette>=1.3.1 fleet-wide (the _IncludedRouter route-introspection break
-    # fixed via UTL service_framework.fastapi_factory.get_route_paths/find_matching_route). Ignore DROPPED from
-    # QG_PIP_AUDIT_COMMON_IGNORES (qg-common.sh). See
-    # plans/active/issues/cve_affected_pinned_deps_remediation_2026_06_18.md.
-    # GHSA-6v7p-g79w-8964: msgpack <=1.1.2 (TRANSITIVE) — Unpacker re-used after an unpack error can SEGV. Exploit
-    #   surface nil (we never re-use an Unpacker post-error on untrusted data). Fix 1.2.1 exists but is a fleet-wide
-    #   transitive lock-bump. SUCCESSOR: bump msgpack >=1.2.1 fleet-wide + lock-regen. Tracked:
-    #   plans/active/data_feed_sla_registry_and_active_self_healing_2026_06_19.md § QG-unblock follow-ups.
-    # GHSA-4xgf-cpjx-pc3j: pydantic-settings <=2.13.x (TRANSITIVE) — NestedSecretsSettingsSource reads secret VALUES
-    #   from files in a configured secrets_dir. Exploit surface nil: services configure secrets_dir to trusted
-    #   Secret-Manager mount paths only, never untrusted input. Fleet-wide transitive lock-bump. MUST mirror
-    #   base-service.sh. SUCCESSOR: bump pydantic-settings to the fixed line + lock-regen fleet-wide (2026-06-19 advisory).
-    # CVE-2026-54911: ujson <=5.12.0 (TRANSITIVE) — ujson.dumps(reject_bytes=False) edge case on bytes encoding.
-    #   Exploit surface nil: we never serialize untrusted bytes with reject_bytes=False. Fleet-wide transitive
-    #   lock-bump. MUST mirror base-service.sh. SUCCESSOR: bump ujson to the fixed line + lock-regen (2026-06-19 advisory).
-    # GHSA-rpj2-4hq8-938g: vcrpy <8.2.1 (TRANSITIVE) YAML deserialization — re-added 2026-06-24: dropped on the fleet
-    #   vcrpy 8.2.1 bump, but transitive-vcrpy repos (no direct dep) still lock 8.1.1. Exploit surface nil (first-party
-    #   cassettes). SUCCESSOR: lock-regen transitive-vcrpy repos to 8.2.1. MUST mirror base-service.sh.
-    # PYSEC-2026-215: idna <3.18 (TRANSITIVE) — new 2026-06-24 advisory hitting idna 3.11 fleet-wide. Exploit surface nil
-    #   (controlled hostnames). SUCCESSOR: idna>=3.18 in workspace-constraints + lock-regen fleet-wide. MUST mirror base-service.sh.
-    # Fleet-wide ignore list now lives in qg-common.sh::QG_PIP_AUDIT_COMMON_IGNORES (item 252).
+    # aiohttp cookie-CVE cluster CVE-2026-34993/47265/50269/54273-54280 — RESOLVED: execution-service (the last
+    #   holdout) migrated to adapter-boundary mocks and bumped to aiohttp>=3.14.1 fleet-wide; the 11 ignore-vuln
+    #   entries were dropped from QG_PIP_AUDIT_COMMON_IGNORES. See
+    #   plans/active/issues/aiohttp_cve_2026_34993_vcrpy_deadlock_2026_06_03.md.
+    # CVE-2026-54283 / -54282 (starlette <1.3.1) — RESOLVED 2026-07-28: fastapi/starlette floor lifted to
+    #   fastapi>=0.137.0/starlette>=1.3.1 fleet-wide. Ignore DROPPED. See
+    #   plans/active/issues/cve_affected_pinned_deps_remediation_2026_06_18.md.
+    # RE-AUDITED 2026-07-30 (mirrors base-service.sh): every entry currently in QG_PIP_AUDIT_COMMON_IGNORES was
+    # re-verified against each repo's ACTUAL locked version — 4 entries confirmed fully moot and dropped with zero
+    # repo changes; every remaining entry's real fix version + still-vulnerable repo list is documented at the
+    # ignore list itself (qg-common.sh), the single SSOT — do NOT re-duplicate that detail here.
     _pa_extra="${PIP_AUDIT_EXTRA_ARGS:-} ${QG_PIP_AUDIT_COMMON_IGNORES}"
     # DEPS-CHANGE/CRON TRIGGER (plan quality_gates_speed_and_config_ssot_2026_06_09 Phase 3;
     # parity with base-service.sh): the OSV query runs only when the deps-hash (pyproject.toml
@@ -1513,6 +1556,12 @@ if { { [ "${QUICK_MODE:-false}" = false ] && [ "${RUN_TESTS:-false}" = true ] &&
     git rev-parse HEAD > "${PROJECT_ROOT}/.qg_last_passed_sha" 2>/dev/null \
         && echo "Sentinel written: .qg_last_passed_sha=$(cat "${PROJECT_ROOT}/.qg_last_passed_sha")" \
         || echo "Warning: could not write .qg_last_passed_sha (non-git dir?)"
+    # Configuration binding (qg_sentinel_environment_blind_2026_07_23.md item 2) — mirror
+    # of base-service.sh: append (not overwrite) the resolved ENVIRONMENT/DEPLOYMENT_ENV so
+    # quickmerge's sentinel check can refuse a config mismatch. `head -1` (every SHA reader)
+    # is unaffected; an old bare-SHA sentinel still parses correctly.
+    { printf 'ENVIRONMENT=%s\n' "${ENVIRONMENT:-}"; printf 'DEPLOYMENT_ENV=%s\n' "${DEPLOYMENT_ENV:-}"; } \
+        >> "${PROJECT_ROOT}/.qg_last_passed_sha" 2>/dev/null || true
 fi
 # Green content sentinel (qg-repo-green-sentinel): record on a full green so an
 # unchanged tree skips the heavy phases next run. See base-service.sh for rationale.

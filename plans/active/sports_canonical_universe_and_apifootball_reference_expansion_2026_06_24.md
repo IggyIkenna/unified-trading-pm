@@ -29,6 +29,13 @@ depends_on:
 source:
 assigned_role: data_engineering
 drift_direction: correct-codex
+context_scope:
+  [
+    /plans/active/sports_consolidated_closeout_2026_07_19.md,
+    /codex/02-data/sports-data-source-coverage-matrix.md,
+    /codex/02-data/availability-manifest-and-data-status.md,
+    /plans/epics/sports_master.md,
+  ]
 ---
 
 # Sports canonical universe + API-Football reference expansion
@@ -515,6 +522,7 @@ materialized.
   `uts-prod-sports-scheduler-cron` (`*/5` live poller) + `uts-prod-sports-fixtures-noon-t1-schedule` (12:00 UTC). These
   wrote out-of-universe/numeric rows (the over-capture) + burned the 6M API-Football budget on the full ~2,400-league
   provider universe. They stay paused until the write-gate ships (see Temporary states).
+- **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).
 
 ## Temporary states + their canonical follow-up
 
@@ -542,3 +550,8 @@ materialized.
   paused 2026-06-24 so it can't re-merge the numeric-laden `_legacy_seed.parquet` shard back into the freshly
   canonicalized consolidated `_index`. **Re-enable gate**: resume ONLY after P0b (seed-canonicalize) is done. Resume:
   `gcloud scheduler jobs resume uts-prod-manifest-consolidator-instruments-sports-cron --location=asia-northeast1`.
+- **na-eligibility-audit 2026-07-30**: KEEP-NA, valid (sports tranche) — `locked_by: live-defi-rollout` (archival
+  blocked) plus a 🟡 do-not-re-archive banner; among the 6 open todos, the E8 legacy-delete is explicitly
+  BLOCKED-OPERATOR pending sign-off and is entangled in the still-open hard-stop-#2 carve-out contradiction
+  (`cefi_hardstop2_carveout_codex_vs_plan_contradiction_2026_07_29.md`), 'define the curated ~300-league reference set'
+  is a design call, and the curated backfill is a deliberate ~6M-API-call budget burn

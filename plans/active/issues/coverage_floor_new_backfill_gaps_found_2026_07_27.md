@@ -35,6 +35,12 @@ resolved_by:
 locked_by:
 locked_since:
 depends_on: []
+context_scope:
+  [
+    /plans/active/issues/coverage_floor_registries_no_cross_propagation_2026_07_17.md,
+    unified-api-contracts/unified_api_contracts/registry/venue_mapping.py,
+    market-tick-data-service/market_tick_data_service/adapters/hyperliquid_s3.py,
+  ]
 ---
 
 # 3 new backfill/data-completeness findings
@@ -72,15 +78,46 @@ depends_on: []
       is set on that VM) and is NOT evidence the backfill is stalled. **Residual**: re-verify captured rows for this
       window once the VM completes (a few hours, VM-scale — not re-dispatched as a separate todo here since it is a
       natural follow-up check on already-in-flight work, not new work).
-- [ ] [DATA] P2. **DERIBIT sparse/partial 2019 historical backfill.** `trades` data_type has real captured rows
-      (thousands-to-hundreds-of-thousands `instrument_count`/day, not placeholders) 2019-05-08 through 2019-12, but NOT
-      on every calendar day (multi-day gaps) — unlike `book_snapshot_5`/`derivative_ticker`, which start cleanly and
-      densely at 2020-01-01. Investigate whether more complete 2019 Deribit history is available from Tardis (their
-      archive plausibly reaches further back, per DERIBIT's now-corrected-but-previously-unverified 2016-06-13 seed) and
-      whether the existing sparse rows are worth completing into a dense daily series. (repo: market-tick- data-service
-      backfill)
+- [x] ✅ [DATA] P2. **DONE 2026-08-02 (slot-9)** — **DERIBIT sparse/partial 2019 historical backfill — root-caused +
+      code fix shipped.** Confirmed via a bounded, column-projected manifest read
+      (`gs://market-data-tick-cefi-prd-central-element-323112/_index/availability_index.parquet`, no corpus walk) of
+      DERIBIT/`trades` 2019-05-08..2019-12-31 (238 calendar days): 84 days carry real `capture_status=captured` rows
+      (`source=tardis`, `instrument_count` 3,800-193,593/day — genuine partial historical data, not placeholders); the
+      other 154 days have NO manifest row of ANY status (never attempted, not a failure). **Answer: YES, worth
+      completing, and more is available than even the 2019-05-08 floor implies.** Queried Tardis's own exchange metadata
+      (`GET https://api.tardis.dev/v1/exchanges/deribit`, public, read-only): `BTC-PERPETUAL`/`ETH-PERPETUAL`
+      `trades`/`book_snapshot_5`/`derivative_ticker`/etc. are ALL `availableSince: 2019-03-30` — i.e. Tardis has dense
+      vendor-side data 5+ weeks before our registry floor (2019-05-08) and 9+ months before `book_snapshot_5`/
+      `derivative_ticker`'s clean 2020-01-01 start. **Root cause of why 2019 was never backfilled**: the standard
+      sharded-backfill launcher (`deployment-service/scripts/vm/launch-cefi-sharded-backfill.sh`)'s `_venue_years()`
+      never included `"2019"` for DERIBIT (only `2020..2026`), even after the registry floor
+      (`venue_mapping.py`/`coverage_starts.py`) was corrected to 2019-05-08 on 2026-07-27 — so no full-year sharded run
+      has EVER targeted 2019; the existing sparse 84-day rows are the residue of some earlier ad-hoc/pre-launcher
+      process, not this launcher's output. **Fix shipped**: added `"2019"` to DERIBIT's year list in `_venue_years()`,
+      and generalized the `START_DATE` override (previously 2026-only) to non-2026 years, so a future launch can start
+      exactly at `2019-03-30` (Tardis's real `availableSince`) instead of a year-granular launch wasting ~89 days
+      (2019-01-01..2019-03-29) where the vendor has zero data. **Not launched as a live VM in this task** — the Tardis
+      fleet's hard 1-concurrent-VM cap was clear at investigation time (verified via `gcloud compute instances list`,
+      zero Tardis-consuming VMs running), but a DERIBIT 2019 heavy+light launch is 2 buckets (heavy=trades+
+      book_snapshot_5, light=derivative_ticker+options_chain+futures_chain per `DATA_LIGHT_DERIBIT`) that must be
+      sequenced one-at-a-time under the cap, plus real multi-day GCP/Tardis cost — out of scope for this investigation
+      task to launch unilaterally. **Follow-up** (not re-dispatched as a separate todo — a natural next step on
+      already-shipped code, same class as the HYPERLIQUID item above): dispatch
+      `YEARS=2019 START_DATE=2019-03-30 LAUNCH_GROUPS=heavy VENUES=DERIBIT bash scripts/vm/launch-cefi-sharded-backfill.sh`
+      (then `LAUNCH_GROUPS=light` once heavy completes/frees the Tardis slot). Evidence: `deployment-service@4fff44f`
+      (quickmerge-landed, verified ancestor of `origin/live-defi-rollout`). (repo: market-tick-data-service backfill /
+      deployment-service)
 - [ ] [DATA] P3. **BINANCE-DELIVERY has zero real data.** `venue_mapping.py`'s `BINANCE-DELIVERY` entry (`2020-01-01`)
       has ZERO real captured rows in the manifest — only 7 `attempted_failed` rows dated 2026-07-26. The registered
       floor is unverifiable against measured reality because no real data exists yet. Investigate whether Binance COIN-M
       delivery contracts are actually being fetched at all, or whether this is a dead/never-implemented shard. (repo:
       market-tick-data-service)
+
+## Progress Log
+
+- **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).
+- **slot-9 2026-08-02**: closed the DERIBIT P2 todo — root-caused (launcher's `_venue_years()` never had 2019 for
+  DERIBIT) + fix shipped (`deployment-service@4fff44f`) + synced the duplicate todo in
+  `coverage_floor_registries_no_cross_propagation_2026_07_17.md`. 1 of 3 todos in this doc now remain open (P3
+  BINANCE-DELIVERY); the doc's own header note (fold into the parent doc + delete once disk recovers) is still
+  outstanding but out of scope for this task.

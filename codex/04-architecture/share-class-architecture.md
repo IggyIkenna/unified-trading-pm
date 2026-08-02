@@ -26,7 +26,7 @@ referenced_by:
     /codex/14-customer-journeys/roadmap/plan-references.md,
   ]
 owner:
-last_reviewed: 2026-05-17
+last_reviewed: 2026-10-12
 code_refs:
 ---
 
@@ -103,12 +103,14 @@ detects and alerts; strategy and execution services act.
 When share class != USD, P&L is decomposed into two components:
 
 ```
-total_pnl_share_class = strategy_pnl_usd / fx_rate + fx_pnl
+total_pnl_share_class = total_pnl_usd / fx_rate + fx_pnl
 ```
 
 Where:
 
-- `strategy_pnl_usd`: P&L from yield, funding rates, fees (computed in USD by execution-service).
+- `total_pnl_usd`: P&L from yield, funding rates, fees (computed in USD by
+  `strategy-service/strategy_service/engine/core/settlement_service.py`'s `calculate_settlement_pnl()` +
+  `convert_settlement_to_share_class()`, which materialises both `total_pnl_usd` and `total_pnl_share_class` keys).
 - `fx_pnl`: Change in `account_equity_share_class` due to share class price movement. For ETH share class with ETH at
   $3,500 → $3,800: fx_pnl = equity_eth \* 300/3500.
 

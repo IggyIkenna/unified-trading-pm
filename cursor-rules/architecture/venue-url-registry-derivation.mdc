@@ -224,6 +224,6 @@ def test_adapter_derives_url_from_registry(self):
 
 ## Reference
 
-- Plan: `plans/active/data_pipeline_acquisition_remediation_2026_06_03.md` § Phase 4 (venue URL registry)
+- Plan: `plans/archive/2026_06/data_pipeline_acquisition_remediation_2026_06_03.md` § Phase 4 (venue URL registry)
 - SSOT: `unified_api_contracts/canonical/venues/` (canonical host registry)
-- Related: `cursor-rules/workflow/no_hardcoded_venue_urls.sh` (QG enforcement)
+- Related: `scripts/qg/no_hardcoded_venue_urls.sh` (QG enforcement)

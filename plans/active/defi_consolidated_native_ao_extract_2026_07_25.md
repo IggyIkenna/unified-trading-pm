@@ -20,8 +20,8 @@ tags: [defi, ao-dispatch, close-out, native-extract, conflict-checked]
 related:
   [
     /plans/active/defi_consolidated_closeout_2026_07_18.md,
-    /plans/active/defi_satellite_ao_dispatch_batch1_2026_07_25.md,
-    /plans/active/defi_satellite_ao_dispatch_batch1_finalize_2026_07_25.md,
+    /plans/archive/2026_07/defi_satellite_ao_dispatch_batch1_2026_07_25.md,
+    /plans/archive/2026_07/defi_satellite_ao_dispatch_batch1_finalize_2026_07_25.md,
     /plans/active/defi_track01_per_instrument_and_canon_id_2026_07_24.md,
     /plans/active/issues/honest_coverage_nightly_cron_undersized_and_launcher_ssot_drift_2026_07_16.md,
     /plans/active/issues/defi_adapter_dead_code_audit_2026_07_24.md,
@@ -47,6 +47,14 @@ source: >-
   Fresh AO-eligibility triage 2026-07-25, dispatched specifically to check defi_consolidated_closeout_2026_07_18.md's
   own native open todos (previously untouched by this session's satellite-doc extraction pass) against task_template.md
   §4's dispatch-scope-eligibility bar.
+context_scope:
+  [
+    /plans/active/defi_consolidated_closeout_2026_07_18.md,
+    /plans/archive/2026_07/defi_satellite_ao_dispatch_batch1_2026_07_25.md,
+    /plans/active/defi_track01_per_instrument_and_canon_id_2026_07_24.md,
+    /plans/active/issues/honest_coverage_nightly_cron_undersized_and_launcher_ssot_drift_2026_07_16.md,
+    /plans/active/issues/defi_adapter_dead_code_audit_2026_07_24.md,
+  ]
 ---
 
 # DeFi consolidated closeout — native-todo AO extraction
@@ -78,7 +86,7 @@ source: >-
       post-run manifest spot-check shows the ~144 previously-`attempted_failed` CURVE/OPTIMISM rows now carry
       `EXPECTED_SUBGRAPH_DEINDEXED`; `quality-gates.sh` green in deployment-service. Source:
       `defi_consolidated_closeout_2026_07_18.md` Track 3 (native, line ~440 + its Track 3 nested `--apply` item).
-- [ ] [DATA] P2. **Real column-prune refactor of `measure_honest_coverage.py`** so the nightly honest-coverage VM no
+- [x] ✅ [DATA] P2. **Real column-prune refactor of `measure_honest_coverage.py`** so the nightly honest-coverage VM no
       longer needs 32GB (`e2-highmem-4`) and can run on the originally-intended 16GB (`e2-standard-4`). A naive drop of
       `instrument_id` from `_READ_COLUMNS` is UNSAFE — `_merge_manifests` dedups the prd+oracle merge on
       `(date, venue, instrument_id, data_type)`; dropping the column falls back to `(date, venue, data_type)` and
@@ -90,7 +98,50 @@ source: >-
       32GB machine (or a documented tolerance if pyarrow ordering differs), no OOM; ~6 selection tests updated and
       passing; `quality-gates.sh` green. Source:
       `issues/honest_coverage_nightly_cron_undersized_and_launcher_ssot_drift_2026_07_16.md` (cited by
-      `defi_consolidated_closeout_2026_07_18.md` Track 8 as part of "fix the honest-coverage-nightly right-size").
+      `defi_consolidated_closeout_2026_07_18.md` Track 8 as part of "fix the honest-coverage-nightly right-size"). —
+      **2026-08-01 (slot-10, data_engineering craft) — instruments-service@12825e81.** `main()` now reads/computes/
+      releases ONE asset_group's primary manifest at a time (new `_init_coverage_accumulator`/`_accumulate_coverage`
+      pair) instead of holding all 5 asset_groups' DataFrames simultaneously in a `dfs` dict for the whole run —
+      `_compute_coverage`'s per-ag loop body has no cross-ag state, so this bounds peak memory to the single largest
+      asset_group's read instead of the sum of all 5, without touching `_READ_COLUMNS` or the
+      `(date, venue, instrument_id, data_type)` merge key at all. Added 4 tests incl. a byte-identical equivalence proof
+      between the old batched and new streaming paths (`TestPerAssetGroupStreaming`); all 47 tests in
+      `test_measure_honest_coverage.py` pass; full `quality-gates.sh` green, verified on origin via
+      `git merge-base --is-ancestor`. **Honest gap**: this ships the code-level memory-bounding fix only — the empirical
+      "fresh run on a reduced 16GB machine, no OOM, byte-identical row counts vs. the 32GB control run" half of this
+      todo's own done-when needs an actual VM launch + comparison run, which is infra craft (this task's
+      `assigned_role: data_engineering` scopes VM launches out — `does_not: infra/VM launches`). Tracked as its own
+      follow-up todo immediately below rather than left unverified in prose.
+- [x] ✅ [INFRA] P2. **DONE 2026-08-01 (slot-12, infra) — holds; downsized.** Added `--machine-type`/`--oom-monitor`
+      flags to `launch-measure-honest-coverage-vm.sh` (non-behavior-changing, `deployment-service@fec7946`), then ran a
+      control (`e2-highmem-4`) and test (`e2-standard-4`) launch, both against `instruments-service@147550ab` (past
+      `12825e81`), `--asset-group all`. **Hit + fixed a real blocker first**: the control run's initial attempt 403'd —
+      `uts-prd-sa` had zero IAM grant on the `central-element-323112-honest-coverage` bucket (a pre-existing gap, not
+      caused by this todo; the visible "fresh" `coverage.json` before this run was the 00:30 UTC nightly cron's last
+      SUCCESSFUL write from an earlier working state, not evidence this path was currently healthy). Self-granted
+      `roles/storage.objectAdmin` bucket-scoped to `uts-prd-sa` per
+      `/codex/05-infrastructure/orchestrator-cloud-identity-self-service.md` (not an `[OPERATOR]` gap per that SSOT),
+      live-verified via impersonation write+read before re-running. **Results**: control run (32GB) — exit 0, peak RSS
+      7.53GB. Test run (16GB) — exit 0, peak RSS 8.20GB, zero OOM/dmesg-kill signals. Diffed both `coverage.json`
+      outputs at full `(venue, instrument_type, data_type)` leaf-shard granularity (the finest grain the output actually
+      carries — `instrument_id` is an internal dedup key, not an output dimension): cefi (81 shards), tradfi (243),
+      sports (528), prediction (15) were **byte-identical** between runs; defi (193 shards) had 4 differing leaf shards,
+      **all monotonic growth** (test≥control, zero regressions, zero shard-set drift), summing to the same +168 captured
+      delta visible at the `by_asset_group` level — consistent with genuine live DeFi capture activity in the ~8min gap
+      between the two runs (defi has the highest write throughput of any AG here), not a machine-type artifact. Verdict:
+      **holds**. Flipped `MACHINE_TYPE` default to `e2-standard-4`, rewrote the stale "reverting to the PROVEN 32 GiB"
+      rationale comment with this verification's evidence (`deployment-service@d880de3`). **Re-upload note**:
+      `create-code-tarballs.sh`'s general publish does NOT sync arbitrary launchers (incl. this one) to the real `vm/`
+      cron-read path — it only auto-publishes
+      `setup-data-pipeline-vm.sh`/`vm-exec-with-gcs-tee.sh`/`heartbeat_daemon.py` there; everything else lands under
+      `code/deployment-service/scripts/vm/` instead (this IS the drift the sibling P3 "launcher SSOT cleanup" todo below
+      already tracks — not re-filing). Published this one file directly to
+      `gs://deployment-scripts-central-element-323112/vm/launch-measure-honest-coverage-vm.sh` via the same sanctioned
+      `gcs_upload_via_adc.py` ADC-backed uploader the publish script itself uses (never bare gcloud/gsutil), verified
+      live: object updateTime 2026-08-01T10:42:45Z, content confirms `MACHINE_TYPE="e2-standard-4"`. Evidence preserved
+      in GCS: pre-run nightly-cron output backed up to `2026-08-01/_pre_rightsizing_verification_nightly_cron.json`;
+      control run preserved to `2026-08-01/_verification_control_e2-highmem-4.json` before the test run overwrote the
+      shared date-keyed output path. `quality-gates.sh` green both commits (sentinel-verified), shipped via quickmerge.
 - [ ] [INFRA] P3. **Combined honest-coverage launcher SSOT cleanup (2 sub-steps, same underlying drift, different
       files):** (a) delete/merge the redundant honest-coverage launcher artifacts —
       `scripts/vm/launch-honest-coverage-vm.sh` (not the live cron path; the GCS
@@ -252,6 +303,8 @@ session's final report; condensed here for anyone re-auditing this doc later:
   CURVE/OPTIMISM `dex_pool_swaps` `attempted_failed` rows matching the dead-subgraph cascade error) is now met — left in
   place as this todo's scope was fix+apply, not cleanup; a future pass can delete the one-off script + its launcher
   category.
+
+- **context-scout 2026-08-01**: populated/refreshed context_scope (5 entries).
 
 ## Codex SSOTs
 

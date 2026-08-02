@@ -30,7 +30,7 @@ referenced_by:
     /codex/14-customer-journeys/demo-ops/staging-demo-setup.md,
   ]
 owner:
-last_reviewed: 2026-05-17
+last_reviewed: 2026-08-30
 code_refs:
 ---
 
@@ -39,8 +39,8 @@ code_refs:
 > **Status:** canonical (2026-04-24) **Owner:** UI Architecture + UAC Architecture **SSOT for:**
 > `unified-api-contracts/unified_api_contracts/internal/architecture_v2/restriction_profiles.py::QuestionnaireResponse`,
 > `unified-trading-system-ui/lib/questionnaire/types.ts::QuestionnaireResponse`. **Plans:**
-> [`plans/archive/reg_umbrella_questionnaire_and_onboarding_docs_2026_04_21.plan.md`](../../plans/archive/reg_umbrella_questionnaire_and_onboarding_docs_2026_04_21.plan.md),
-> [`plans/archive/dart_ui_strategy_filtering_and_onboarding_2026_04_24.plan.md`](../../plans/archive/dart_ui_strategy_filtering_and_onboarding_2026_04_24.plan.md).
+> [`/plans/archive/reg_umbrella_questionnaire_and_onboarding_docs_2026_04_21.plan.md`](/plans/archive/reg_umbrella_questionnaire_and_onboarding_docs_2026_04_21.plan.md),
+> [`/plans/archive/dart_ui_strategy_filtering_and_onboarding_2026_04_24.plan.md`](/plans/archive/dart_ui_strategy_filtering_and_onboarding_2026_04_24.plan.md).
 > **Companion docs:**
 > [`/codex/08-workflows/prospect-questionnaire-flow.md`](/codex/08-workflows/prospect-questionnaire-flow.md) (form +
 > admin playback + docs flow),
@@ -95,7 +95,7 @@ optional axes default to `None` (scalars) / `()` (tuples), so responses authored
 
 ### 3.3 `venue_scope: Literal["all"] | tuple[str, ...]`
 
-- **Python type:** `Literal["all"] | tuple[str, ...]`
+- **Python type:** `tuple[str, ...] | Literal["all"]`, model default `= "all"` (the one base axis carrying a default)
 - **TS type:** `readonly string[] | "all"`
 - **Semantics:** `"all"` sentinel = no venue restriction; tuple of venue ids = explicit allowlist
 - **Validation:** venue ids resolved against UAC venue registry on admin playback

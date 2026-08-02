@@ -275,3 +275,6 @@ numbering.)**
   `regen_backlog_from_plan.py`; parking must go through either (a) `POST /api/backlog/<id>/update` with `priority: 999`,
   (b) task `DELETE /api/backlog/<id>`, or (c) adding `depends_on` at the todo level in the plan/issue doc and regen.
   Slot-8 continues to next task per `can_continue`.
+
+- **na-eligibility-audit 2026-07-30**: KEEP-NA, valid — sole todo self-parked BLOCKED-PREREQUISITES after 4 bounces,
+  with an explicit 'Operator action required (any one of)' list and a prerequisite chain in another plan.

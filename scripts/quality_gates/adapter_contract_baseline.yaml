@@ -24,7 +24,7 @@ baseline:
     count: 1
   deployment-api/deployment_api/services/data_status/coverage_metrics.py:
     count: 1
-  deployment-api/deployment_api/services/data_status/mtds.py:
+  deployment-api/deployment_api/services/data_status/mtds_meta.py:
     count: 5
   deployment-api/deployment_api/services/data_status/sports_helpers.py:
     count: 1
@@ -163,7 +163,9 @@ baseline:
   instruments-service/instruments_service/engine/orchestrator/sports_reference_core.py:
     count: 12
   instruments-service/instruments_service/engine/orchestrator/sports_reference_fixtures.py:
-    count: 7
+    count: 1
+  instruments-service/instruments_service/engine/orchestrator/sports_reference_fixtures_write.py:
+    count: 10
   instruments-service/instruments_service/engine/orchestrator/transfermarkt.py:
     count: 8
   instruments-service/instruments_service/engine/orchestrator/understat.py:
@@ -484,14 +486,10 @@ baseline:
     count: 5
   market-tick-data-service/market_tick_data_service/market_interface/adapters/prediction/polymarket_adapter.py:
     count: 11
-  market-tick-data-service/market_tick_data_service/market_interface/adapters/sports/betfair_adapter.py:
-    count: 7
   market-tick-data-service/market_tick_data_service/market_interface/adapters/sports/footystats_adapter.py:
     count: 7
   market-tick-data-service/market_tick_data_service/market_interface/adapters/sports/odds_api_adapter.py:
     count: 9
-  market-tick-data-service/market_tick_data_service/market_interface/adapters/sports/polymarket_adapter.py:
-    count: 7
   market-tick-data-service/market_tick_data_service/market_interface/adapters/sports/sportradar_adapter.py:
     count: 7
   market-tick-data-service/market_tick_data_service/market_interface/adapters/tradfi/baker_hughes_adapter.py:
@@ -515,9 +513,11 @@ baseline:
   market-tick-data-service/market_tick_data_service/market_interface/adapters/tradfi/tardis_adapter.py:
     count: 4
   market-tick-data-service/market_tick_data_service/market_interface/adapters/tradfi/tardis_batch_download.py:
-    count: 11
+    count: 7
   market-tick-data-service/market_tick_data_service/market_interface/adapters/tradfi/tardis_bulk_download.py:
     count: 1
+  market-tick-data-service/market_tick_data_service/market_interface/adapters/tradfi/tardis_cefi_shards.py:
+    count: 11
   market-tick-data-service/market_tick_data_service/market_interface/adapters/tradfi/tardis_csv_transport.py:
     count: 9
   market-tick-data-service/market_tick_data_service/market_interface/adapters/tradfi/tradfi_shared.py:

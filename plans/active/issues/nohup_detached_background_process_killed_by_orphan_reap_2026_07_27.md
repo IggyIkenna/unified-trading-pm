@@ -14,7 +14,7 @@ summary: >-
   parented and tracked, and the harness notifies on real completion.
 status: open
 nature: issue
-asset_group: [meta]
+asset_group: [ao] # retagged 2026-07-31 (corpus-sweep meta fold-in) -- was [meta]
 stage: [meta]
 repos: [agent-orchestrator]
 scope: [engineer, admin]
@@ -23,14 +23,15 @@ related:
   [
     /codex/04-architecture/agent-orchestrator-worker-liveness.md,
     /codex/12-agent-workflow/async-wait-and-poll-discipline.md,
+    /plans/archive/2026_07/ao_consolidated_closeout_2026_07_25.md,
   ]
 created: "2026-07-27"
 source: "found while verifying instrument_availability_hive_canonicalisation-001 on real infra, slot-8, 2026-07-27"
 parent_epic: agent_operating_framework_master
 priority: P2
 estimate_class: research
-assigned_vm: planning
-execution_scope: orchestrator-agent
+assigned_vm: NA
+execution_scope: local-only
 drift_direction: advance-code
 resolved_by:
 locked_by:
@@ -163,3 +164,13 @@ Recovery: resumed again (idempotent via `--report`) + immediately began sending 
       misdiagnosed, not genuine memory pressure. If confirmed, correct that doc's root-cause framing rather than leaving
       two docs describing the same incidents under different causes. Repo: unified-trading-pm (investigation + doc
       correction only, no code).
+
+## Progress Log
+
+- **na-eligibility-audit 2026-08-02** (autonomous, tranche `ao`): KEEP-NA, valid — first marker on this doc. Covered by
+  the 2026-07-31 operator directive `unified-trading-pm@14478ca26` (`planning` → `NA` + local-only). The primary
+  mitigation already shipped (the `nohup`-avoidance callout in `worker.md`); both remaining `[SCRIPT] P3` items are
+  explicitly optional/defense-in-depth — todo 2 is framed "consider whether `orphan_reap.py` should special-case a
+  worker-shell-parented process (there might not be a legitimate use case)", and todo 3 is a cross-doc root-cause
+  RE-ATTRIBUTION judgment (deciding whether `shared_host_ram_exhaustion_kills_background_qg_2026_07_27.md`'s occurrences
+  are actually this bug misdiagnosed). Neither has a worker-determinable done-state.

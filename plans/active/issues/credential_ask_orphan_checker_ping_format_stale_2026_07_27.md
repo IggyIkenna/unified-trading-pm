@@ -12,12 +12,16 @@ summary: >-
   than the baseline silently ratcheting up again next time.
 status: open
 nature: issue
-asset_group: [meta]
+asset_group: [ci] # retagged 2026-07-31 (corpus-sweep meta fold-in) -- was [meta]
 stage: [meta]
 repos: [unified-trading-pm]
 scope: [engineer, admin]
 tags: [quality-gates, credential-ask, ping, stale-check, taxonomy]
-related: [/plans/active/issues/bucket_iam_per_tier_dev_stg_retired_ssot_contradiction_2026_07_27.md]
+related:
+  [
+    /plans/active/issues/bucket_iam_per_tier_dev_stg_retired_ssot_contradiction_2026_07_27.md,
+    /plans/archive/2026_07/ci_consolidated_closeout_2026_07_25.md,
+  ]
 created: "2026-07-27"
 last_updated: "2026-07-27"
 parent_epic: infrastructure_master
@@ -36,6 +40,12 @@ resolved_by:
 locked_by:
 locked_since:
 depends_on: []
+context_scope:
+  [
+    scripts/quality_gates/check_credential_ask_orphans.py,
+    /codex/02-data/external-data-always-available-rule.md,
+    agents/RULES.md,
+  ]
 ---
 
 # credential-ask orphan checker: stale ping-format + BLOCKED-CREDENTIALS meaning overload
@@ -85,3 +95,7 @@ resolved — the baseline creeps toward meaninglessness instead of catching real
       command, no secret needed) should be tagged `BLOCKED-PERMISSIONS` instead of `BLOCKED-CREDENTIALS` going forward —
       a naming split, not a behavior change, so the vendor-credential ratchet stays meaningful. If adopted, migrate the
       two lines found here as part of the same change.
+
+## Progress Log
+
+- **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).

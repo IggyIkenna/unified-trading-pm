@@ -100,10 +100,10 @@ locked_since:
       Stale-skipped (verified, not assumed): plan_discipline_unquoted_deferred_by_design, qg_5_83 timeout,
       quickmerge_silent_push_failure — all archived with evidence. UI-coverage generator-script half done jointly with
       the UI agent (`unified-trading-system-ui@7900f560`). Surfaced a real infra finding:
-      `plans/active/issues/shared_clone_concurrent_commit_message_swap_2026_07_28.md` (P1) — this shared clone showed
-      git-plumbing-level contamination under 9-agent concurrent load (index races, foreign-file sweep-ins, one hard
-      conflict); every agent this round adopted a "verify content after every commit, never trust exit code alone"
-      recovery pattern.
+      `plans/archive/issues/shared_clone_concurrent_commit_message_swap_2026_07_28.md` (P1, root-caused + archived
+      2026-07-30) — this shared clone showed git-plumbing-level contamination under 9-agent concurrent load (index
+      races, foreign-file sweep-ins, one hard conflict); every agent this round adopted a "verify content after every
+      commit, never trust exit code alone" recovery pattern.
 
 - [x] **unified-trading-library (4 items) — DONE.** `unified-trading-library@0db19a72` (all 3 real fixes: capped
       `_CANONICAL_CACHE` eviction in `_state.py`, narrowed the broad `except` in both `_read_availability_index_slim`

@@ -556,7 +556,10 @@ The 4-category gap semantics (FRESH / ZERO_ACTIVITY_BAR / no-emit / STALE / WS-d
 cascade buffer aggregates the per-child flags into the parent according to the `data_freshness` propagation table in
 [`/codex/05-infrastructure/live-pipeline-architecture.md`](/codex/05-infrastructure/live-pipeline-architecture.md) §
 "Live gap semantics — stale-not-missing." `PUBLISHED_DEGRADED` on any child → `PUBLISHED_DEGRADED` on parent (degraded
-propagates up); pure carry-forward across all 4 children → `data_freshness=STALE` on parent.
+propagates up); pure carry-forward across all 4 children → `data_freshness=STALE` on parent. `ZERO_ACTIVITY_BAR` is the
+retained legacy category label (B2 marker reconciliation, 2026-06-02) — the as-shipped per-bar signal is
+`staleness_seconds>0 + trade_count==0`, not a standalone `zero_activity` boolean; see the linked doc's "4-category live
+gap semantics" banner.
 
 ### §10.4 Cross-cutting features fan-in
 

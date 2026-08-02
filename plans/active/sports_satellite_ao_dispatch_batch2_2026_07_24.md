@@ -84,6 +84,12 @@ source: >-
   per-todo (via a 22-agent verification workflow) for real AO-eligibility, distinguishing concrete worker-executable
   todos from open operator/design judgment calls. This plan is the extraction of the AO-eligible subset, mirroring the
   sports_closeout_batch1_ao_ready_2026_07_24.md pattern for the master closeout plan.
+context_scope:
+  [
+    /plans/active/sports_consolidated_closeout_2026_07_19.md,
+    /plans/active/data_completion_sports_2026_07_24.md,
+    /plans/epics/sports_master.md,
+  ]
 ---
 
 # Sports satellite docs — AO dispatch batch 2
@@ -311,7 +317,23 @@ source: >-
       drop (step 3) MUST flip it**:
       `curl -X POST $SERVER_URL/api/prerequisites/sports-curated-universe-backfill-walk-complete -d '{"value": true, "set_by": "<slot>"}'`
       — then this todo will dispatch normally to actually flip the checkbox. Do not delete/rename this condition without
-      updating `backlog.yaml`'s `prereqs.prerequisites` for this task accordingly.
+      updating `backlog.yaml`'s `prereqs.prerequisites` for this task accordingly. **Check-in 2026-07-30T08:4xZ
+      (interactive session, re-verified from scratch per this section's own instruction)**: the backfill VM
+      (`af-backfill-20260727-064958`) is GONE from GCE (`gcloud compute instances     describe` → not found) — checked
+      its final `run.log` (`gs://deployment-scripts-central-element-323112/vm-logs/af-backfill-20260727-064958/run.log`)
+      instead of assuming preemption: it **completed successfully 2026-07-28T05:34:06Z** —
+      `chunk=25/25     range=2026-05-06→2026-07-25`, `DEPLOYMENT_COMPLETED ... exit_code=0`, clean self-delete on
+      completion, not a preemption-vanish. Step 2 (curated-universe backfill) is DONE and has been for over 2 days;
+      nobody checked back since the last logged check-in (2026-07-27T21:11Z, ~8h before it actually finished). Confirmed
+      the prerequisite is still `false` (`data/config/state.json`'s `prerequisites` entry:
+      `set_by: slot-14, set_at:     2026-07-27T21:21:12Z` — unchanged since it was created, i.e. never touched
+      post-completion). **Not executed in this check-in** (deliberately — this needs its own careful pass, not a
+      tack-on): (a) verify the backfill's actual data completeness against the curated ~300-league set (the run.log
+      confirms the WALK finished, not that every league's data is honest-complete — a separate manifest-level check);
+      (b) execute step 3 (drop residual out-of-curated rows/objects, snapshot-first, twin-verified per
+      `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md`); (c) only then flip the prerequisite via the curl
+      command above. Next slot: steps (a)-(c) are now genuinely actionable (not a "still running, nothing to do"
+      check-in like every prior one) — this is the first check-in where real forward progress is possible.
 
 ### From `sports_odds_bookmaker_coverage_enumeration_2026_06_20.md`
 
@@ -808,7 +830,12 @@ source: >-
       own documented daily-quota reset time) rather than another blind hourly probe. Full detail in
       `issues/sports_fixture_events_refetch_progress_2026_07_25.md`. Not completable this turn. Released via
       `/skip-current-task {"reason_code": "GATED"}`. Next dispatch: not before `2026-07-30T00:00Z`; then re-probe once
-      and relaunch (without `--force`) on a clean response.
+      and relaunch (without `--force`) on a clean response. — **Health-checked 2026-07-30T22:20Z (slot 3,
+      data_engineering) — re-fetch VM reached terminal completion, ran the mandated VERIFY, done-when NOT met**:
+      non-canonical objects dropped 12,603→4,327 (real progress) but not zero; fresh recovery-ids parquet staged to GCS,
+      next-recovery-launch blocked only on the af-backfill singleton lock (held by an unrelated task). Full numbers +
+      exact resume command in `issues/sports_fixture_events_refetch_progress_2026_07_25.md`. Not flipping this checkbox.
+      Released via `/skip-current-task {"reason_code": "GATED"}`.
 - [x] ✅ [CODE] P2. **Writer-side de-dup + schema-conformance gate** so neither defect re-accrues — the `player_stats`
       writer rejects/dedupes rows on write; the `fixture_events` writer validates/enforces the canonical 13-col schema
       before accepting new objects. — `instruments-service@f5fa9f8a`. Added a `player_stats` de-dup gate (drop
@@ -946,6 +973,7 @@ source: >-
   as a small separate follow-up if it recurs elsewhere. Full root-cause history (MVP-league-scope leak → OOM take-1
   insufficient chunking → OOM take-2 real per-chunk-shard fix, now verified complete):
   `/plans/archive/issues/per_vm_shard_growth_oom_long_running_backfills_2026_07_27.md`.
+- **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).
 
 ## Reconciliation
 

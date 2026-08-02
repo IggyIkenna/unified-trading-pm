@@ -47,6 +47,13 @@ locked_since:
 supersedes:
 superseded_by:
 source: plans/archive/issues/asset_class_to_asset_group_rename_scope_underestimated_2026_07_21.md
+context_scope:
+  [
+    /codex/04-architecture/tier-and-import-architecture.md,
+    /codex/02-data/availability-manifest-and-data-status.md,
+    /plans/archive/issues/asset_class_to_asset_group_rename_scope_underestimated_2026_07_21.md,
+    /plans/archive/issues/dart_ui_capability_manifest_and_catalogue_formatting_gaps_2026_07_21.md,
+  ]
 ---
 
 # AssetClass → AssetGroup rename (domain enum only)
@@ -133,3 +140,11 @@ repo above imports from — this is exactly the shape that makes a UAC rename a 
 independent-PR problem), `/codex/02-data/availability-manifest-and-data-status.md` (persisted-schema-change caution —
 cited by the originating issue doc; this plan's Todo 1 finding is that it does NOT apply here, but re-verify before
 trusting that).
+
+## Progress Log
+
+- **na-eligibility-audit 2026-08-02** (re-confirms 2026-07-30; only change since = context-scout `context_scope`
+  frontmatter, body byte-identical): KEEP-NA, valid — explicit dated destination ruling (BLK-87fc93e4, 2026-07-21):
+  LOCAL/human by deliberate operator-protective default for a 9+-repo atomic breaking rename — 'do not do that
+  unilaterally'.
+- **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).

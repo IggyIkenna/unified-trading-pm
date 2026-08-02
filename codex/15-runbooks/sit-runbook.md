@@ -3,8 +3,8 @@ doc_type: codex-runbook
 title: SIT (System Integration Tests) Runbook
 summary:
   SIT (System Integration Tests) operational runbook — staging force-unlock via the sit-unlock dispatch, manual SIT
-  trigger, the starvation detector (30-min poll / 2h lock threshold), the common-failure-mode table, and the SIT
-  staging-lock lifecycle.
+  trigger, the (NOT-IMPLEMENTED) starvation detector spec, the common-failure-mode table, and the SIT staging-lock
+  lifecycle. Re-verified 2026-07-31 — several named workflows do not exist and staging is dormant; see the banner.
 status: current
 nature: ssot
 asset_group: [meta]
@@ -17,7 +17,7 @@ created: 2026-03-27
 authoritative_for: [SIT staging force-unlock procedure, SIT staging-lock lifecycle + starvation detector]
 referenced_by:
 owner: workspace-platform (CI maintainers)
-last_reviewed: 2026-05-17
+last_reviewed: 2026-09-25
 code_refs:
 execution:
   {
@@ -25,14 +25,34 @@ execution:
     cadence: ad-hoc — when SIT is stuck or staging is locked,
     verifier:
       gh workflow run sit-unlock.yml --repo IggyIkenna/unified-trading-pm + verify staging-lock GCS blob removed,
-    last_executed: documented; force-unlock procedure exercised periodically per CI fail-recovery,
+    last_executed: 2026-07-31 (static re-verification of named workflows; force-unlock not exercised),
   }
 cadence: ad-hoc — when SIT is stuck or staging is locked
 verifier: gh workflow run sit-unlock.yml --repo IggyIkenna/unified-trading-pm + verify staging-lock GCS blob removed
-last_executed: documented; force-unlock procedure exercised periodically per CI fail-recovery
+last_executed: 2026-07-31 (static re-verification of named workflows; force-unlock not exercised)
 ---
 
 # SIT (System Integration Tests) Runbook
+
+> **⚠️ Re-review 2026-07-31 — read this before following any procedure below.** Three of this runbook's named artifacts
+> do not exist, and its default promotion assumption is obsolete:
+>
+> | This runbook says                         | Verified reality (2026-07-31)                                                     |
+> | ----------------------------------------- | --------------------------------------------------------------------------------- |
+> | `sit-starvation-detector.yml`             | **Does not exist.** No such workflow in `unified-trading-pm/.github/workflows/`.   |
+> | `system-integration-tests.yml` (SIT repo) | **Does not exist.** The SIT workflow is `full-workspace-sit.yml`.                  |
+> | "Telegram alert"                          | Alerts route to **Slack** via `notify-slack.yml`. `telegram_*` names survive only  |
+> |                                           | as output-variable names "kept for compat" (see `cold-storage-cleanup.yml:236`).   |
+> | Staging is the promotion path             | **Staging is DORMANT.** Default promote is LDR→`main` direct (`promotion_model:    |
+> |                                           | ldr_main`). Staging is reversible-on-demand, not the steady state.                 |
+>
+> The closest live equivalent to the described starvation detector is `glue-pool-starvation-monitor.yml`, but it is a
+> **different check** — it pages on glue-job queue depth while the runner pool is idle, not on a stale
+> `staging_status.locked_since`. Nothing currently watches staging-lock age. The live SIT signal that actually gates
+> LDR→main is the `sit-gate/fleet-green` required check emitted by `sit-gate.yml`.
+>
+> Sections below are kept because the force-unlock mechanics and the failure-mode table are still useful when staging is
+> deliberately re-enabled, but treat every workflow filename as suspect until re-verified.
 
 ## Force-Unlock Staging
 
@@ -55,12 +75,17 @@ Or manually edit `workspace-manifest.json` in unified-trading-pm:
 }
 ```
 
-Then commit with `[skip ci]` to avoid re-triggering cascades.
+Then commit **without** any CI-skip marker.
+
+> **HARD RULE — do NOT use the literal CI-skip marker here.** Writing it (even in a commit *body*, even when only
+> describing it) makes the required `quality-gates-v2` check go MISSING, which permanently BLOCKS the promotion PR.
+> Always spell it `skip-ci` in prose. Recovery if it happens:
+> `gh workflow run quality-gates-v2.yml --ref <branch>`. SSOT: `/codex/08-workflows/ci-cd-flow.md`.
 
 ## Manual SIT Trigger
 
 ```bash
-gh workflow run system-integration-tests.yml \
+gh workflow run full-workspace-sit.yml \
   --repo IggyIkenna/system-integration-tests \
   --ref main
 ```
@@ -76,12 +101,16 @@ gh api repos/IggyIkenna/system-integration-tests/dispatches \
 
 ## Starvation Detector
 
-The starvation detector (`sit-starvation-detector.yml`) is a scheduled workflow that checks if staging has been locked
-longer than a configured threshold (default: 2 hours). It runs every 30 minutes and:
+> **This workflow does not exist (verified 2026-07-31).** Kept as the specification of a check we no longer have —
+> nothing currently watches staging-lock age. `glue-pool-starvation-monitor.yml` is a different check (glue-job queue
+> depth vs idle pool). If staging is re-enabled, this detector has to be rebuilt.
+
+The starvation detector was specified as a scheduled workflow that checks if staging has been locked longer than a
+configured threshold (default: 2 hours), running every 30 minutes and:
 
 1. Reads `staging_status.locked_since` from `workspace-manifest.json`
 2. Computes elapsed time since lock acquisition
-3. If elapsed > threshold: sends a Telegram alert and optionally dispatches `sit-unlock`
+3. If elapsed > threshold: sends a Slack alert (via `notify-slack.yml`) and optionally dispatches `sit-unlock`
 
 When it fires, it means SIT either failed silently, hung, or was never triggered after a staging lock. Check the
 system-integration-tests workflow logs first.
@@ -98,7 +127,7 @@ system-integration-tests workflow logs first.
 | **Merge conflict**        | staging-to-main reports "dirty" mergeable state | Resolve conflict on the repo's staging branch; re-run promotion                                                      |
 | **Manifest corruption**   | JSON parse errors on workspace-manifest.json    | `git log -1 workspace-manifest.json` to find last good state; `git checkout <sha> -- workspace-manifest.json`        |
 | **Emulator port clash**   | Address already in use on 8085/4443/9050        | Kill orphan emulator processes; check for zombie docker containers                                                   |
-| **Cassette drift**        | Schema parity tests fail in UAC                 | Re-record cassettes: `cd unified-api-contracts && pytest tests/test_cassette_schema_parity.py --record-mode=rewrite` |
+| **Cassette drift**        | Schema parity tests fail in UAC                 | Re-record via the repo gate, never bare pytest: `cd unified-api-contracts && bash scripts/quality-gates.sh`          |
 
 ## Recovery Workflow
 
@@ -112,7 +141,7 @@ system-integration-tests workflow logs first.
 
 ## Escalation Path
 
-1. **Automated**: Telegram alert fires (starvation detector or dead man switch)
+1. **Automated**: Slack alert fires (`overnight-dead-man-switch.yml`; the starvation detector no longer exists)
 2. **L1 -- Self-service**: Check this runbook; try force-unlock + manual SIT trigger
 3. **L2 -- Investigation**: Check GHA run logs at `github.com/IggyIkenna/system-integration-tests/actions`; check
    emulator logs
@@ -129,6 +158,6 @@ Version bump committed to staging
   → staging_status.locked = true (with timestamp)
   → system-integration-tests.yml runs
   → On PASS: staging-to-main promotes; lock released
-  → On FAIL: Telegram alert; lock stays (starvation detector watches)
-  → On timeout (>2h): starvation detector force-unlocks
+  → On FAIL: Slack alert; lock stays (NOTE: no detector currently watches it)
+  → On timeout (>2h): would be force-unlocked by the starvation detector — NOT IMPLEMENTED today
 ```

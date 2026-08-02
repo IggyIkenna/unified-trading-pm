@@ -17,17 +17,26 @@
 #   globs (`data_type=*/`, `venue=*`), escaped wildcards (`\*_manifest_...`), arithmetic (8*3600),
 #   bold (**WORD**), and docs QUOTING the mangled forms inside fenced code blocks (the issue doc).
 # Fenced code blocks are therefore skipped entirely before matching.
-# Usage: check_prettier_mangling.sh [--quiet] [files...]
+# Usage: check_prettier_mangling.sh [--quiet] [--strict] [files...]
 #   no files -> scans plans/**.md (active+epics+audit) + codex/**.md
+#   --strict -> ALSO applies a broader, noisier heuristic (any `alnum*identifier` span) on top of
+#     the curated signature below. Catches mangled families the curated list hasn't been extended
+#     to yet (e.g. `defi*delta_one_funding_oi_...` from the 2026-08-01 recurrence, which the
+#     curated list missed) at the cost of more false positives on legit `word*word`-shaped text.
+#     Opt-in only — NOT wired into the default precommit gate (raw_npx_prettier_bypasses_version_
+#     guard_recurs_mangling_2026_08_01.md's own todo 2: widen without raising the default gate's
+#     false-positive rate). Use for periodic/manual deeper corpus sweeps.
 set -uo pipefail
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 PM_DIR="$(cd "$SCRIPT_DIR/../.." && pwd)"
 
 QUIET=0
+STRICT=0
 FILES=()
 for a in "$@"; do
   case "$a" in
     --quiet) QUIET=1 ;;
+    --strict) STRICT=1 ;;
     *) FILES+=("$a") ;;
   esac
 done
@@ -48,6 +57,15 @@ fi
 # Extend this list when a new mangled family is found (add the mangled form, never the clean one).
 PAT='\{mode\}\*\{source\}|asset\*group|schema\*version|pipeline\*mode|instrument\*type|data\*type|record\*(captured|failed|empty)|last\*updated|[a-z]\*[a-z_]+ < v9'
 
+# --strict-only broader heuristic (2026-08-01, raw_npx_prettier_bypasses_version_guard_recurs_
+# mangling_2026_08_01.md todo 2): any `alnum` immediately followed by `*` immediately followed by
+# an identifier char. Naturally excludes bold markdown (`**` — second `*` isn't `[a-zA-Z_]`),
+# globs (`prefix=*` — char before `*` usually isn't alnum, or nothing legit follows), and
+# arithmetic (`8*3600` — digits after `*` don't match `[a-zA-Z_]`). Still noisier than the curated
+# list (a real `n*items`-shaped expression in bare prose would false-positive) — that tradeoff is
+# why this only runs under --strict, never the default precommit gate.
+STRICT_PAT='[a-zA-Z0-9]\*[a-zA-Z_]+'
+
 RC=0
 for f in "${FILES[@]}"; do
   [ -f "$f" ] || continue
@@ -62,14 +80,24 @@ for f in "${FILES[@]}"; do
   esac
   # Preprocess: blank out fenced code blocks (``` ... ```), then inline code spans (`...`),
   # keeping line numbers stable (fences emit empty lines; spans are removed in-line).
-  HITS=$(awk 'BEGIN{fence=0} /^[[:space:]]*```/{fence=!fence; print ""; next} {print fence?"":$0}' "$f" \
-    | sed 's/`[^`]*`//g' \
-    | grep -nE "$PAT" 2>/dev/null) || true
+  STRIPPED=$(awk 'BEGIN{fence=0} /^[[:space:]]*```/{fence=!fence; print ""; next} {print fence?"":$0}' "$f" \
+    | sed 's/`[^`]*`//g')
+  HITS=$(printf '%s\n' "$STRIPPED" | grep -nE "$PAT" 2>/dev/null) || true
   if [ -n "$HITS" ]; then
     RC=1
     if [ "$QUIET" -eq 0 ]; then
       echo "❌ prettier emphasis-mangling in $f (underscore rewritten as asterisk — see plans/active/issues/prettier_emphasis_mangling_corpus_corruption_2026_07_14.md for the repair recipe):"
       printf '%s\n' "$HITS" | sed 's/^/    /'
+    fi
+  fi
+  if [ "$STRICT" -eq 1 ]; then
+    STRICT_HITS=$(printf '%s\n' "$STRIPPED" | grep -nE "$STRICT_PAT" 2>/dev/null) || true
+    if [ -n "$STRICT_HITS" ]; then
+      RC=1
+      if [ "$QUIET" -eq 0 ]; then
+        echo "⚠️  --strict broader heuristic hit in $f (review for mangling — may be a legit alnum*identifier span):"
+        printf '%s\n' "$STRICT_HITS" | sed 's/^/    /'
+      fi
     fi
   fi
 done

@@ -11,8 +11,8 @@ estimate_calibrated_ai_days: 2.0
 created: 2026-06-10
 source:
   - operator 2026-06-10 ("this is really slow, barely committing code, ~12 min per attempt and per repo")
-  - measured: execution-service v2 = 12m58s, of which the single "Run quality gates" step = 715s; cross-repo is
-    ALREADY parallel (3 v2s in-flight concurrently); the cost is within-repo
+  - 'measured: execution-service v2 = 12m58s, of which the single "Run quality gates" step = 715s; cross-repo is ALREADY
+    parallel (3 v2s in-flight concurrently); the cost is within-repo'
 related:
   - plans/active/cicd_contract_hardening_2026_06_01.md
 ---
@@ -232,11 +232,11 @@ All success criteria met. Shipped: PM@673157019 (slicing + content-sentinel) · 
 
 **What changed (file:line):**
 
-- `scripts/quality-gates-base/base-service.sh` — `QG_SLICE` selector (~:199-249) + `_qg_slice_done` after [3] TESTS
-  (~:572) + typecheck-only exit after [4] (~:697) + `_QG_RUN_CODEX` guard on [3.5]/[3.6] + CI `pytest -n auto` (~:454) +
-  sentinel-write guarded on `QG_SLICE` empty (~:2917).
-- `scripts/quality-gates-base/base-library.sh` — same `QG_SLICE` selector (~:93-130) + boundary exits + `pytest -n auto`
-  (~:248) + sentinel guards (~:1118, ~:1125).
+- `scripts/quality-gates-base/base-service.sh` — `QG_SLICE` selector (~~:199-249) + `_qg_slice_done` after [3] TESTS
+  (~~:572) + typecheck-only exit after [4] (~~:697) + `_QG_RUN_CODEX` guard on [3.5]/[3.6] + CI `pytest -n auto`
+  (~~:454) + sentinel-write guarded on `QG_SLICE` empty (~:2917).
+- `scripts/quality-gates-base/base-library.sh` — same `QG_SLICE` selector (~~:93-130) + boundary exits +
+  `pytest -n auto` (~~:248) + sentinel guards (~:1118, ~:1125).
 - `.github/workflows/python-quality-gates-v2.yml` — restructured: `content-gate` job (tree-hash GHA-cache short-circuit)
   → `qg-slices` matrix `[tests, typecheck, lint-codex]` (each: cheap setup + `QG_SLICE=<leg> quality-gates.sh --no-fix`)
   → `quality-gates-v2` aggregation job (`name:` MUST be `quality-gates-v2` — the required context; reports green iff all

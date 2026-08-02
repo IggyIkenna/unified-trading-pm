@@ -129,10 +129,10 @@ not re-derive them:
   `_DEFAULT_PROTOCOLS` lists versus `SUBGRAPH_IDS`, and (b) the FRAX-ETHEREUM `vault_share_price` scheduling check, with
   the same read-only and no-`fluid`-without-a-collector guardrails. Sub-item (c), the MORPHO-ARBITRUM/OPTIMISM/POLYGON
   `SUBGRAPH_IDS` scoping re-verification, is dispositioned by batch3 as `skip_covered` — routed to
-  `/plans/active/defi_expected_unattempted_seeder_design_2026_07_26.md`'s `[OPERATOR] P0`. That routing is arguably wide
-  (a scoping re-read is bounded; the `[OPERATOR] P0` is the capability-versus-collectibility judgment), but it IS a
-  stated disposition, and drafting a competing todo against it is exactly what the conflict check forbids. Flagged for
-  the operator's eye, not re-drafted.
+  `/plans/archive/2026_08/defi_expected_unattempted_seeder_design_2026_07_26.md`'s `[OPERATOR] P0`. That routing is
+  arguably wide (a scoping re-read is bounded; the `[OPERATOR] P0` is the capability-versus-collectibility judgment),
+  but it IS a stated disposition, and drafting a competing todo against it is exactly what the conflict check forbids.
+  Flagged for the operator's eye, not re-drafted.
 - **The agent-orchestrator M3 done-gate exception** — batch3 drafted it directly as an explicitly `[CROSS-AG]`-tagged
   `[INFRA] P3`. This run had instead routed it out to the `ao` tranche. Batch3's approach is live; no competing todo.
 - **The targeted single-day glued-instrument-id manifest re-verify** — a clear duplicate of the consolidated closeout's
@@ -158,7 +158,7 @@ Two additions this run makes to those lists, not present in either:
   `/plans/active/issues/autonomous_session_operator_decisions_2026_07_25.md`, and explicitly excluded by batch1 as never
   AO-eligible. Its own as-written gate ("todo 4's parity results") is unsatisfiable — todo 4 closed MOOT 2026-07-16 with
   no parity check ever run. Do not re-ask; it is already in the operator queue.
-- **`/plans/active/defi_expected_unattempted_seeder_design_2026_07_26.md`** — operator-gated by explicit ruling
+- **`/plans/archive/2026_08/defi_expected_unattempted_seeder_design_2026_07_26.md`** — operator-gated by explicit ruling
   BLK-3221d4b3. All 4 todos sit behind its own `[OPERATOR] P0`. Correctly a human plan (`assigned_vm: NA`).
 
 ## Notes — findings recorded, not actioned

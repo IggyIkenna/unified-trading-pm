@@ -19,7 +19,10 @@ summary: >-
   stepped on again before it could settle.
 status: open
 nature: issue
-asset_group: [cross-cutting]
+asset_group:
+  [ci] # corrected 2026-08-02 (/ag-closeout-audit cross-cutting, operator-ruled) -- was [cross-cutting]; content is
+  # workflow-template-parity QG drift during the Phase-7 self-hosted-runner rollout, squarely ci-tranche (CI/CD
+  # pipeline mechanics), not generic cross-AG content.
 stage: [meta]
 repos: [unified-trading-pm, agent-orchestrator]
 scope: [engineer, admin]
@@ -29,13 +32,14 @@ created: 2026-07-27
 priority: P2
 parent_epic: infrastructure_master
 source: "slot-3, infra, discovered while shipping unrelated plan-doc updates, 2026-07-27"
-execution_scope: orchestrator-agent
+execution_scope: local-only
 drift_direction: advance-code
 depends_on: []
-assigned_vm: planning
+assigned_vm: NA
 resolved_by:
 locked_by:
 locked_since:
+context_scope: [/codex/08-workflows/ci-cd-flow.md, /plans/epics/infrastructure_master.md]
 ---
 
 # workflow-template-parity drifted + blocked all PM commits 3x in ~1hr during Phase-7 rollout
@@ -116,3 +120,19 @@ guarantee this doesn't recur if the Phase-7 rollout is still in flight when anot
       future rollout, check `git log --oneline -15 -- .github/workflows/<file>.yml` in the affected repo FIRST to
       distinguish "stale SSOT drift" (one clean fix suffices) from "an active multi-actor migration is still landing
       direct commits" (a fix will not hold; escalate per this doc rather than blind-retrying).
+
+## Progress Log
+
+- **context-scout 2026-08-01**: populated/refreshed context_scope (2 entries).
+- **na-eligibility-audit 2026-08-01**: KEEP-NA, valid -- Full audit rationale: Both remaining open items are genuinely
+  judgment-gated, not bounded-outcome work a worker could execute unilaterally. Item 1 ("Consider whether
+  rollout-workflow-templates.sh ... could roll out to EVERY repo in one atomic pass") is an open-ended design question
+  -- whether to build a new atomic fleet-...
+- **na-eligibility-audit 2026-08-02**: **CONFIRMS KEEP-NA, valid — unchanged** (tranche `ci`, autonomous). This doc
+  entered the `ci` tranche only today: the sole post-marker commit is the 2026-08-02 `/ag-closeout-audit cross-cutting`
+  operator-ruled retag `asset_group: [cross-cutting]` → `[ci]`. No content moved. Re-read end-to-end and both open items
+  re-tested against the bounded-outcome bar: the `[SCRIPT] P3` is an open-ended design question by its own first word
+  ("**Consider whether** … could roll out to EVERY repo in one atomic pass"), with no decided target mechanism; the
+  `[DATA] P3` is a conditional runbook step that is not startable at all until a future drift recurrence triggers it
+  ("**If** another workflow-template-parity failure recurs … check `git log` FIRST"). Neither outcome is determinable by
+  a worker today. Correctly NA.

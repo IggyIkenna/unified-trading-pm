@@ -30,7 +30,7 @@ tags: [ag-closeout-audit, plan-hygiene, script-bug, asset-group, tranche-members
 related:
   [
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
-    /plans/active/ci_satellite_ao_dispatch_batch2_2026_07_29.md,
+    /plans/archive/2026_07/ci_satellite_ao_dispatch_batch2_2026_07_29.md,
     /plans/archive/2026_07/ci_consolidated_closeout_2026_07_25.md,
     /plans/archive/2026_07/asset_group_ao_ci_infra_schema_expansion_2026_07_27.md,
   ]

@@ -29,7 +29,7 @@ related:
     /plans/archive/issues/plan_line_cap_remediation_2026_07_23.md,
     /plans/archive/issues/staging_workflow_shutdown_2026_07_23.md,
     /plans/active/issues/post_cutover_silent_assumption_sweep_2026_07_23.md,
-    /plans/active/issues/stale_staging_versions_manifest_2026_07_23.md,
+    /plans/archive/issues/stale_staging_versions_manifest_2026_07_23.md,
   ]
 created: "2026-07-24"
 last_updated: 2026-07-24
@@ -59,8 +59,8 @@ drift_direction: advance-code
 2026-07-26 (`unified-trading-pm@97970974e`, `/codex/08-workflows/ci-cd-flow.md` §"Staging re-entry procedure"),
 re-verified live 2026-07-28. The two related side-findings this plan spun off during execution
 (`plans/active/issues/post_cutover_silent_assumption_sweep_2026_07_23.md`,
-`plans/active/issues/stale_staging_versions_manifest_2026_07_23.md`) are separately tracked docs, not prose deferrals of
-this plan's own scope.
+`plans/archive/issues/stale_staging_versions_manifest_2026_07_23.md` — resolved + archived 2026-08-01) are separately
+tracked docs, not prose deferrals of this plan's own scope.
 
 > **🗄️ ARCHIVED 2026-07-28 (plan-hygiene sweep)** — verified zero open todos; the one residual noted at authoring time
 > is closed (see "Deferred work" above). Per `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`.
@@ -238,4 +238,5 @@ this plan's own scope.
     makes this a **WARN for normal landings and a BLOCK only under `--hotfix`**. The staleness is real and verified (4
     repos where `staging_versions` > `versions`: UAC 0.71.0→0.72.0, instruments-service 0.88.0→0.90.0, MTDS
     0.91.0→0.92.0, ibkr-gateway-infra 0.0.74→0.0.75 — and 8 more stale in the BEHIND direction), but the severity is
-    lower than reported. Written up separately: `plans/active/issues/stale_staging_versions_manifest_2026_07_23.md`.
+    lower than reported. Written up separately: `plans/archive/issues/stale_staging_versions_manifest_2026_07_23.md`
+    (resolved + archived 2026-08-01).

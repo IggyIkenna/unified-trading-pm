@@ -59,6 +59,13 @@ source:
     "plans/active/issues/plan_line_cap_remediation_2026_07_23.md",
   ]
 drift_direction: advance-code
+context_scope:
+  [
+    /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
+    /codex/02-data/availability-manifest-and-data-status.md,
+    /codex/02-data/pipeline-mode-partition.md,
+    /plans/active/instruments_mtds_consistency_remediation_residuals_2026_07_24.md,
+  ]
 ---
 
 # Instruments-store CF canonicalisation — inherited single-walk lineage
@@ -135,10 +142,10 @@ AG now has blank_status=0 AND dup_cells=0.** prediction was already clean (500 r
       −861 legitimate spelling-dedup).
 
       **tradfi v9-column apply DEFERRED until the running DBEQ/CBOE per-date backfills
-                                                                                                              finish** (avoid clobbering their in-flight per-VM-shard writes; the consolidator merges them). Snapshots →
-                                                                                                              `_index/snapshots/pre_is_v9_{ag}_2026_06_19`. WRITER ROOT-FIX so new captures don't regress source-blank:
-                                                                                                              UTL@f8ec9096 `_stamp_producer_source` stamps `source_string_for(pipeline_mode)` on blank batch producer rows
-                                                                                                              (C-#6-identity-safe; +3 regression tests). — instruments-service@7a63be9 + unified-trading-library@f8ec9096
+                                                                                                                                                                                  finish** (avoid clobbering their in-flight per-VM-shard writes; the consolidator merges them). Snapshots →
+                                                                                                                                                                                  `_index/snapshots/pre_is_v9_{ag}_2026_06_19`. WRITER ROOT-FIX so new captures don't regress source-blank:
+                                                                                                                                                                                  UTL@f8ec9096 `_stamp_producer_source` stamps `source_string_for(pipeline_mode)` on blank batch producer rows
+                                                                                                                                                                                  (C-#6-identity-safe; +3 regression tests). — instruments-service@7a63be9 + unified-trading-library@f8ec9096
 
 - [ ] [SCRIPT] P3. **`canonicalize_instruments_store_index.py` can't resolve the prediction bucket** — `_bucket_for`
       calls `resolve_bucket_name(kind="instruments-store", asset_group="prediction")` which raises `BucketNamingError`
@@ -241,3 +248,10 @@ AG now has blank_status=0 AND dup_cells=0.** prediction was already clean (500 r
 - [ ] [PLAN] P3. **Delete the orphaned static-snapshot catalogue path** (`reference_data/catalogue/catalogue_builder.py`
       `CatalogueBuilder` + `orchestrator.py refresh_catalogue`) — superseded by `build_instrument_catalogue.py`, no
       CLI/TF/test caller. Repo: instruments-service. (MIGRATED FROM: same.)
+
+## Progress Log
+
+- **na-eligibility-audit 2026-08-02** (re-confirms 2026-07-30; only change since = context-scout `context_scope`
+  frontmatter, body byte-identical): KEEP-NA, valid — the C0/E3-E6 single-walk todos are gated whole-corpus migration
+  runs (E6 is explicitly IRREVERSIBLE and hands C-GREEN to a permanent legacy-bucket delete).
+- **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).

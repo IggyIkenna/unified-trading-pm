@@ -5,7 +5,7 @@ title:
   (MagicMock/datetime comparison TypeError, missing `escalation_queue` table, `list.all()` AttributeError), plus 1 flaky
   test_worker_liveness_watchdog.py test observed on a shared host.
 summary: >-
-  While shipping a fix for /plans/active/issues/context_compact_directive_did_not_fire_slot_rode_to_96pct_2026_07_27.md
+  While shipping a fix for /plans/archive/issues/context_compact_directive_did_not_fire_slot_rode_to_96pct_2026_07_27.md
   (progress_slot's compact_now directive had no activity-log record), `bash scripts/quality-gates.sh` failed on
   agent-orchestrator with 7 pre-existing failures entirely unrelated to that change. Verified pre-existing via the
   RULES.md §4b protocol: stashed the fix, re-ran the exact failing tests on a byte-identical clean HEAD (commit at time
@@ -34,7 +34,7 @@ scope: [engineer, admin]
 tags: [agent-orchestrator, quality-gates, test-red, autospawn, account-usage, repo-blocker]
 related:
   [
-    /plans/active/issues/context_compact_directive_did_not_fire_slot_rode_to_96pct_2026_07_27.md,
+    /plans/archive/issues/context_compact_directive_did_not_fire_slot_rode_to_96pct_2026_07_27.md,
     /codex/12-agent-workflow/pre-task-plan-conflict-check.md,
   ]
 created: 2026-07-30

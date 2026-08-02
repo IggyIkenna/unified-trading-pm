@@ -77,7 +77,7 @@ resolved_by:
 > book_snapshot_5 confirmation, and the 69,223-row manifest cleanup). Archived per
 > /codex/12-agent-workflow/plan-completion-and-archival-discipline.md. The follow-up derivative_ticker schema bug found
 > during this work is tracked in its own doc, not lost by this archival:
-> /plans/active/issues/lighter_zksync_derivative_ticker_tardis_numeric_market_id_leaks_into_symbol_schema_2026_07_29.md.
+> /plans/archive/issues/lighter_zksync_derivative_ticker_tardis_numeric_market_id_leaks_into_symbol_schema_2026_07_29.md.
 >
 > Investigation-only record (this doc, stale banner kept for history). No code was changed while authoring this doc —
 > `assigned_vm: NA`, a human decides when to pick this up.
@@ -210,6 +210,6 @@ instruments) as a direct follow-up. The Tardis fetch itself succeeded (confirmin
 failed a schema-contract check due to a SEPARATE, previously-undiscovered bug: Tardis's numeric `market_id` leaks into
 the written `symbol` column/filename instead of the original ticker. Full root cause, evidence, and a scoped
 (not-yet-implemented) fix approach are tracked in the new companion doc:
-`/plans/active/issues/lighter_zksync_derivative_ticker_tardis_numeric_market_id_leaks_into_symbol_schema_2026_07_29.md`.
+`/plans/archive/issues/lighter_zksync_derivative_ticker_tardis_numeric_market_id_leaks_into_symbol_schema_2026_07_29.md`.
 No manifest cleanup was needed from this attempt — verified the brief VM run only wrote honest `empty_confirmed` rows
 for genuinely pre-coverage dates, no false `attempted_failed`/`captured`.

@@ -176,3 +176,8 @@ fail-hard is a separate gate** and is NOT blocked by this issue (see the resolve
 - `/codex/02-data/pipeline-mode-partition.md` — the source-aware `{mode}_{source}` contract and the reader PREFIX-MATCH
   rule this issue violates.
 - `/codex/04-architecture/solana-defi-coverage.md` — the Pacifica cull ruling.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30** (tranche=cefi, autonomous): KEEP-NA, valid - 3 of 4 todos are prod GCS
+  pipeline_mode re-partitions requiring de-dup MERGE semantics against a live split-brain; delete/move-safety gated.

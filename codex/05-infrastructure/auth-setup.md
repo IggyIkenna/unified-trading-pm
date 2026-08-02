@@ -27,11 +27,20 @@ referenced_by:
     /codex/05-infrastructure/firebase-split-topology.md,
   ]
 owner:
-last_reviewed: 2026-05-17
+last_reviewed: 2026-09-05
 code_refs:
 ---
 
 # Authentication Setup Guide
+
+> **[2026-07-31 freshness re-review] — `unified_trading_services` does not exist.** Every `from
+> unified_trading_services import ...` snippet below is dead: there is no such repo or package in this workspace.
+> `get_secret_client` lives in **`unified_trading_library`** (`core/client_factory.py`, re-exported from the UTL
+> top level) — import it as `from unified_trading_library import get_secret_client`. The
+> `.../unified-trading-services/unified-trading-services:latest` Artifact-Registry image paths below are likewise
+> historical and were **not** re-verified against a live AR listing in this pass. Direct `google.cloud` /
+> `os.environ` use in the snippets is also QG-banned today — go through `UnifiedCloudConfig` /
+> `get_secret_client()`.
 
 ## TL;DR
 
@@ -701,7 +710,12 @@ openssl rand -hex 32 | gcloud secrets create execution-service-kill-switch-api-k
 
 ### 8.3 Auth class location
 
-`GoogleOIDCAuth` and `GoogleOAuthMiddleware` are **service-local** modules, not in `unified_trading_services`:
+`GoogleOIDCAuth` and `GoogleOAuthMiddleware` are **service-local** modules:
+
+> **STALE (verified 2026-07-31).** Neither class exists any more. client-reporting-api's auth now lives in
+> `client_reporting_api/auth_standardized.py` (no `GoogleOAuthMiddleware`); the `client_reporting_api.auth` module
+> named below is gone. There is also no `unified_trading_services` repo in this workspace — cross-cutting code is in
+> `unified-trading-library` / `unified-api-contracts`. The table below is retained as historical provenance only.
 
 | Class                   | Module                      | Service              |
 | ----------------------- | --------------------------- | -------------------- |

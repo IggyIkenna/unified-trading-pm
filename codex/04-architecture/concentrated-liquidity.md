@@ -18,7 +18,7 @@ authoritative_for: [concentrated-liquidity tick-math invariants shared across CL
 referenced_by:
   [/codex/04-architecture/amm-slippage-simulation.md, /codex/04-architecture/tenderly-execution-provider.md]
 owner:
-last_reviewed: 2026-05-17
+last_reviewed: 2026-10-06
 code_refs:
 ---
 

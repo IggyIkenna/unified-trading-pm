@@ -45,6 +45,12 @@ estimate_calibrated_ai_days: 1.2
 assigned_role: data_engineering
 drift_direction: advance-code
 depends_on: []
+context_scope:
+  [
+    /plans/active/issues/cross_cutting_manifest_canonicalisation_findings_2026_07_11.md,
+    /plans/active/cross_cutting_satellite_ao_dispatch_batch1_2026_07_26.md,
+    unified-trading-library/unified_trading_library/cf_manifest_audit.py,
+  ]
 ---
 
 # First complete CF-audit rollup — a fixed checker bug + genuine cross-AG data-quality reds
@@ -96,13 +102,50 @@ Full per-bucket rollup (excluding the Finding-1 false positives above):
 
 ## Recommended decision
 
-- [ ] [DATA] P2. Diagnose + fix CF-8 (`available_at` non-null coverage) RED on `market-data-tick-tradfi-prd`,
-      `market-data-tick-sports-prd`, `instruments-store-sports-prd`, `market-data-tick-pred-prd` (cefi's CF-8 folds into
-      the existing cefi todo above). Re-run `cf_manifest_audit.py` per-bucket after each fix. Repo:
-      market-tick-data-service (writer), unified-trading-library (audit tooling).
+> **Split 2026-08-02 (data_engineering slot-3)**: the original single CF-8 todo below covered 4 buckets across 3
+> asset_groups — too broad to flip as one unit once real per-bucket work started landing at different paces. Split into
+> 4 per-bucket todos; see the Progress Log for the full tradfi investigation (which also surfaced a likely checker-level
+> bug in CF-8 itself, filed separately:
+> `/plans/active/issues/cf8_available_at_denominator_scoped_to_full_manifest_not_captured_2026_08_02.md`).
+
+- [x] ✅ [DATA] P2. Diagnose CF-8 (`available_at` non-null coverage) RED on `market-data-tick-tradfi-prd`. Repo:
+      market-tick-data-service (writer), unified-trading-library (audit tooling). — 2026-08-02 (data_engineering
+      slot-3): diagnosed + fixed a real crash bug blocking the historical backfill
+      (`market-tick-data-service@9d354cea`), ran the apply, force-consolidated, resumed the tradfi consolidator cron
+      (closing the fleet-wide tradfi backfill VM outage). Captured-row `available_at` fill improved materially (69.97% →
+      ~77-82%) but a live re-run of `cf_manifest_audit.audit()` against this bucket confirms **CF-8 is still RED** (the
+      checker's own denominator is arguably wrong too — see the new issue doc above). Diagnosis is complete and two
+      concrete follow-ups are now tracked (the fill-rate ceiling investigation in
+      `mtds_available_at_cross_asset_backfill_2026_07_13.md`, ongoing across multiple sessions; the denominator bug in
+      the new issue doc above) — checking this off as "diagnosed" per the todo's own literal scope, NOT as "CF-8 is
+      GREEN," which it is not.
+- [ ] [DATA] P2. Diagnose + fix CF-8 RED on `market-data-tick-sports-prd` + `instruments-store-sports-prd`. Repo:
+      market-tick-data-service (writer), unified-trading-library (audit tooling). — 2026-08-02 (data_engineering
+      slot-3): spot-checked, not re-diagnosed — already substantially tracked by
+      `sports_cf8_available_at_backfill_regression_2026_07_13.md` (root-caused, guardrail added, restored from a
+      regression). Live check: `market-data-tick-sports-prd` CF-8 fill 82.17% (503,722/613,034 captured rows) — not
+      100%, likely still RED. That doc's one remaining open item is gated on a TEAMS/STANDINGS deployment question
+      (`assigned_vm: NA`).
+- [ ] [DATA] P2. Diagnose + fix CF-8 RED on `market-data-tick-pred-prd`. Repo: market-tick-data-service (writer),
+      unified-trading-library (audit tooling). — 2026-08-02 (data_engineering slot-3): not worked this session — tracked
+      by `mtds_available_at_cross_asset_backfill_2026_07_13.md`'s `-001`/`-006` todos, actively worked across many
+      sessions (most recently 2026-08-02).
 - [ ] [DATA] P2. Diagnose + fix Era-B (chain `data_type` in `{options_chain,futures_chain}` must be 0) RED on
       `market-data-tick-tradfi-prd` — contradicts the "already-confirmed" GREEN claim in
       `cross_cutting_manifest_canonicalisation_findings_2026_07_11.md`; re-verify that doc's tradfi Adjudication against
       this fresh evidence. Repo: market-tick-data-service.
 - [ ] [DATA] P2. Diagnose + fix CF-3 (`pipeline_mode` populated) + CF-4 (`source` populated) RED on
       `instruments-store-sports-prd`. Repo: instruments-service, unified-trading-library.
+
+## Progress Log
+
+- **context-scout 2026-08-01**: populated context_scope (3 entries).
+- **data_engineering slot-3, 2026-08-02**: dispatched onto the CF-8 todo, scoped to the `market-data-tick-tradfi-prd`
+  bucket named in its title. Split the original 4-bucket compound todo into per-bucket items (see "Recommended decision"
+  above) and worked tradfi's specifically — full evidence + per-bucket status is recorded inline on each split todo
+  rather than duplicated here. Headline: fixed a real crash bug (`market-tick-data-service@9d354cea`), ran the
+  historical backfill, closed the fleet-wide tradfi backfill VM outage, and — while re-verifying whether CF-8 actually
+  went GREEN — found the CF-8 checker itself likely uses the wrong denominator (filed as its own issue:
+  `/plans/active/issues/cf8_available_at_denominator_scoped_to_full_manifest_not_captured_2026_08_02.md`). CF-8 is
+  confirmed still RED on tradfi (live `cf_manifest_audit.audit()` re-run), pending both that checker fix and a separate
+  fill-rate-ceiling investigation already in progress in `mtds_available_at_cross_asset_backfill_2026_07_13.md`.

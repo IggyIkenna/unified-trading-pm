@@ -13,7 +13,7 @@ summary: >-
   a batch 2. Only then does the standard archival ritual run on batch 1. The goal is that after this plan, every infra
   satellite doc's real remaining work is either shipped, re-tracked as an explicit new todo, or confirmed still
   correctly gated on a human decision — with the count of genuinely-orphaned infra docs re-measured rather than assumed.
-status: draft
+status: active
 nature: process
 asset_group: [infrastructure]
 stage: [meta]
@@ -29,7 +29,7 @@ related:
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]
 created: "2026-07-26"
-last_updated: "2026-07-26"
+last_updated: "2026-07-30"
 parent_epic: infrastructure_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -41,6 +41,13 @@ assigned_role: infra
 drift_direction: advance-code
 locked_by:
 locked_since:
+context_scope:
+  [
+    /plans/active/infra_satellite_ao_dispatch_batch1_2026_07_26.md,
+    /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
+    /codex/11-project-management/cross-reference-path-convention.md,
+    /plans/active/task_template.md,
+  ]
 supersedes:
 superseded_by:
 depends_on: [infra_satellite_ao_dispatch_batch1_2026_07_26]
@@ -72,8 +79,8 @@ source: >-
       one (the setuptools 3-step chain, the uv `setup.sh` fix + rollout pair, the e2e-login 3-step chain, the
       PROGRESS.json rollout folding three families, the fleet-monitor pair, the launcher-write pair) — flip ALL the
       constituent boxes, not just one per todo, and say in each flip which combined todo covered it. The 17 source docs
-      are: `issues/setuptools_fleet_pysec_2026_3447_bump_2026_07_14.md`,
-      `/plans/archive/issues/uv_pin_fleet_drift_2026_06_22.md`,
+      are: `/plans/archive/issues/setuptools_fleet_pysec_2026_3447_bump_2026_07_14.md` (ARCHIVED 2026-07-30 — already
+      reconciled + archived independently, skip for this one), `/plans/archive/issues/uv_pin_fleet_drift_2026_06_22.md`,
       `issues/e2e_login_persona_handoff_helper_stale_2026_07_22.md`,
       `issues/deployment_ui_smoke_failures_daily_costs_nav_mobile_2026_07_21.md`,
       `issues/vm_billing_waste_first_audit_and_preflight_gate_design_2026_07_24.md`,
@@ -96,20 +103,25 @@ source: >-
       shipped, been superseded, or otherwise resolved; if it has, the conflict is CLEAR and the item becomes a batch-2
       candidate with zero new investigation (this is the cheap path the `/ag-closeout-audit` methodology depends on).
       The 10 and their named competing claims: (1) `PYTEST_UNIT_DIR` vs
-      `issues/mtds_ungated_test_families_2026_07_17.md`'s two `[BACKEND] P1` test-fix gates — check whether those 22
-      failures are fixed and which approach won; (2)+(3) the 4 `base-service.sh`/`base-library.sh` items vs
-      `cross_cutting_satellite_ao_dispatch_batch1b_2026_07_26.md` item (3) and
-      `tradfi_satellite_ao_dispatch_batch4_2026_07_26.md` — check whether both have landed; (4) `DATA_PIPELINE_SERVICES`
-      vs `cross_cutting_satellite_ao_dispatch_batch1_2026_07_26.md` item (B)'s `DataStatusTab` change; (5) `managed-by`
-      label vs the wave-launcher terraform item in cross-cutting batch1b; (6) repo_scripts DEPRECATE remediation vs
-      cross-cutting batch1 item (k)'s ~60-script cloud-agnostic sweep; (7) the fastapi/starlette + pyarrow/twisted/mako/
-      ujson dep work vs whoever last touched `workspace-constraints.toml` / `canonical-dependency-manifest.json`; (8)
-      MTDS >900 tail vs cefi batch1 + defi batches 2/3/4's `market_interface/` edits; (9) the corpus-wide sweeps vs the
-      concurrent per-tranche reconcile/audit runs; (10) the two sports-doc line-cap splits vs sports batches 3 and 5.
-      For each cleared conflict write an explicit batch-2 candidate line (source doc + the specific todo + the evidence
-      the conflict cleared); for each still-conflicting one, restate the live competing claim so batch 2 does not have
-      to re-derive it. **Done when**: all 10 carry a dated CLEARED-or-STILL-CONFLICTING verdict with evidence, and the
-      cleared set is written up as the batch-2 candidate list. Repo: unified-trading-pm.
+      `/plans/archive/issues/mtds_ungated_test_families_2026_07_17.md`'s two `[BACKEND] P1` test-fix gates — **ANSWERED
+      (na-eligibility-audit ci tranche, 2026-07-31): fixed, cefi's narrower approach won.** Doc archived, all 5 todos
+      done (`market-tick-data-service@4849d4f6` + `unified-trading-pm@5e1d7786a`/`bf583ea3b`); the competing
+      `codex_violations_ratchet_to_five_2026_06_10.md` todo was rewritten as a pointer back in 2026-07-26
+      (`unified-trading-pm@36c5433eb`) and its own checkbox flipped `[x]` same date as this archival. No batch-2
+      candidate needed — already fully resolved, not just conflict-cleared; (2)+(3) the 4
+      `base-service.sh`/`base-library.sh` items vs `cross_cutting_satellite_ao_dispatch_batch1b_2026_07_26.md` item (3)
+      and `tradfi_satellite_ao_dispatch_batch4_2026_07_26.md` — check whether both have landed; (4)
+      `DATA_PIPELINE_SERVICES` vs `cross_cutting_satellite_ao_dispatch_batch1_2026_07_26.md` item (B)'s `DataStatusTab`
+      change; (5) `managed-by` label vs the wave-launcher terraform item in cross-cutting batch1b; (6) repo_scripts
+      DEPRECATE remediation vs cross-cutting batch1 item (k)'s ~60-script cloud-agnostic sweep; (7) the
+      fastapi/starlette + pyarrow/twisted/mako/ ujson dep work vs whoever last touched `workspace-constraints.toml` /
+      `canonical-dependency-manifest.json`; (8) MTDS >900 tail vs cefi batch1 + defi batches 2/3/4's `market_interface/`
+      edits; (9) the corpus-wide sweeps vs the concurrent per-tranche reconcile/audit runs; (10) the two sports-doc
+      line-cap splits vs sports batches 3 and 5. For each cleared conflict write an explicit batch-2 candidate line
+      (source doc + the specific todo + the evidence the conflict cleared); for each still-conflicting one, restate the
+      live competing claim so batch 2 does not have to re-derive it. **Done when**: all 10 carry a dated
+      CLEARED-or-STILL-CONFLICTING verdict with evidence, and the cleared set is written up as the batch-2 candidate
+      list. Repo: unified-trading-pm.
 
 - [ ] [REVIEW] P1. **Re-measure the infra tranche's orphan count and close the coverage-gap that made batch 1
       necessary.** Two parts. (a) Re-run the `/ag-closeout-audit infra` classification over the tranche's now-updated
@@ -166,3 +178,4 @@ the orphan count look better while leaving the mechanism that produced it untouc
 
 - **2026-07-26** — Drafted alongside `infra_satellite_ao_dispatch_batch1_2026_07_26.md` by `/ag-closeout-audit infra`
   (Autonomous mode). Left `status: draft` — flips to `active` only with its parent, on explicit operator approval.
+- **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).

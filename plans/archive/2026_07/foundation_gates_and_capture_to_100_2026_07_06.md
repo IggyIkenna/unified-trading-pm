@@ -96,7 +96,7 @@ source:
       `resolve_live_venue_key`; cell counts match the QG roll-up (1,439 = 104 + 1225 + 70 + 40). **0 built-but-
       unregistered** (the 11 "unregistered" `_ws.py` files are all data-type-specific helpers imported by their base
       venue's factory — the C5-class bug does NOT recur at the WS layer). Filed as
-      `plans/active/issues/wsfeedconnector_phase35_gap_2026_07_06.md` with per-AG actionable todos (bare-venue triage,
+      `plans/archive/issues/wsfeedconnector_phase35_gap_2026_07_06.md` with per-AG actionable todos (bare-venue triage,
       per-venue build, DeFi live-connector naming policy, BLOCKED-CREDENTIALS scaffolds).
 
 ## Foundation gate sign-offs (cefi-first — reconcile drift, take the sign-offs)
@@ -385,10 +385,10 @@ source:
     hyperliquid_l2book_ws + hyperliquid_ticker_ws → hyperliquid_ws; kalshi_trades_ws → kalshi_clob_ws;
     polymarket_trades_ws → polymarket_clob_ws; coinbase_book_ws → coinbase_spot_ws; bybit/kraken/okx `_book_ticker`
     variants → their base modules; tardis_machine_ws is intentional opt-in fallback). The C5-class bug does NOT recur at
-    the WS layer. **Filed** `plans/active/issues/wsfeedconnector_phase35_gap_2026_07_06.md` with per-AG actionable todos
-    (bare-venue triage · per-venue build · DeFi live-connector naming policy call · BLOCKED-CREDENTIALS scaffolds).
-    **Interpretation for Plan 4:** the 1,439 `blocked-not-registered` cells are a live-transport rollout gap, not a
-    wiring bug — Layer-2 capture % should not be dragged down by them if the underlying batch REST capture is
+    the WS layer. **Filed** `plans/archive/issues/wsfeedconnector_phase35_gap_2026_07_06.md` with per-AG actionable
+    todos (bare-venue triage · per-venue build · DeFi live-connector naming policy call · BLOCKED-CREDENTIALS
+    scaffolds). **Interpretation for Plan 4:** the 1,439 `blocked-not-registered` cells are a live-transport rollout
+    gap, not a wiring bug — Layer-2 capture % should not be dragged down by them if the underlying batch REST capture is
     honest-complete.
 
 - **2026-07-06** — Systemic unregistered-handler audit (item 1) **shipped**. Grep-audited the 34 `class *Handler`

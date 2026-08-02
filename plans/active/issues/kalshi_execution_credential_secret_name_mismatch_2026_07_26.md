@@ -112,13 +112,42 @@ Two directions, both viable, not adjudicated by this doc:
 > the operator. **This doc intentionally still does not reproduce the secret's field names/values** — whoever executes
 > this reads `kalshi-api-credentials` directly at execution time rather than trusting a copy pasted into a planning doc.
 
-- [ ] [SCRIPT] P1. **RULED — execute Option (A).** Read the existing `kalshi-api-credentials` secret's JSON fields,
-      create `kalshi-api-key-id` (plain-string) and `kalshi-private-key-pem` (plain-string) in GCP Secret Manager
-      (`central-element-323112`) from those field values, and verify both via `gcloud secrets versions access` resolve
-      non-empty. Leave `routing.py`/`sports_factory.py` unchanged (Option A requires no code change). (repo:
-      execution-service, + GCP Secret Manager)
-- [ ] [DATA] P1. Once the credential wiring is fixed, place a real Kalshi paper order through execution-service
-      end-to-end (order submit → fill/ack → position update) against the elections-subdomain host and capture
-      logs/commit evidence it works — this is the ORIGINAL verification
-      `kalshi_live_capture_regression_and_drift_2026_07_13.md` asked for, gated on the todo above. (repo:
-      execution-service)
+- [x] ✅ [SCRIPT] P1. **DONE 2026-07-31.** Read `kalshi-api-credentials`' 3 JSON fields (`api_key_id`, `key_id`
+      [identical value to `api_key_id`, confirmed by equality check, never printed], `private_key`). Created
+      `kalshi-api-key-id` and `kalshi-private-key-pem` as two new plain-string secrets in GCP Secret Manager
+      (`central-element-323112`), piping each field value directly between `gcloud secrets versions access` and
+      `gcloud secrets versions add --data-file=-` in a single process chain so the raw credential material was never
+      echoed to any visible output. Verified both resolve non-empty (36 and 1,675 bytes respectively) AND byte-for-byte
+      identical to the source fields (boolean equality check only, values never printed). `unified-trading-sa` lacked
+      `secretmanager.secrets.create` (`secretAccessor`/`.viewer` are read-only) — self-granted `secretmanager.admin`
+      (least-privilege gap-closer, not blanket) per
+      `/codex/05-infrastructure/orchestrator-cloud-identity-self-service.md`, verified live, updated that codex doc's
+      grants list. `routing.py`/`sports_factory.py` left unchanged (Option A requires no code change — confirmed by
+      reading both files first). (repo: execution-service config only, + GCP Secret Manager; no code shipped)
+- [ ] [DATA] P1. **BLOCKED-OPERATOR-DECISION 2026-07-31** (see `prediction_satellite_ao_dispatch_batch6_2026_07_29.md`
+      todo 5 for the full question + options — filed there, not duplicated here). Once the credential wiring is fixed,
+      place a real Kalshi paper order through execution-service end-to-end (order submit → fill/ack → position update)
+      against the elections-subdomain host and capture logs/commit evidence it works — this is the ORIGINAL verification
+      `kalshi_live_capture_regression_and_drift_2026_07_13.md` asked for, gated on the todo above (now unblocked —
+      credentials exist). **Not attempted**: `KalshiAdapter` defaults to Kalshi's LIVE production host
+      (`api.elections.kalshi.com`, which literally matches this todo's "elections-subdomain host" text) — this
+      codebase's own `OperationalMode.PAPER` never calls any real venue API at all (routes everything through a
+      simulated `PaperBettingAdapter`), so "paper order" cannot mean that, and the operator's 2026-07-28 ruling on this
+      doc explicitly scoped itself to the secret-reshape todo above ("does not touch the exchange side at all") — it
+      never separately authorized placing a real order on the live exchange. (repo: execution-service)
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-31 (prediction tranche)**: KEEP-NA, valid — 1 open (was 2 at the 2026-07-30 marker; the
+  `[SCRIPT] P1` secret-reshape leg shipped 2026-07-31, see its own checkbox evidence above). The remaining `[DATA] P1`
+  item is explicitly tagged `BLOCKED-OPERATOR-DECISION` with its own reasoning (KalshiAdapter defaults to the LIVE
+  production host; this codebase's `OperationalMode.PAPER` never calls a real venue API, so "paper order" can't mean
+  what the original ask intended; the 2026-07-28 operator ruling on this doc explicitly scoped itself to the
+  secret-reshape only) and already correctly cites its duplicate tracking home
+  (`prediction_satellite_ao_dispatch_batch6_2026_07_29.md` todo 5) rather than needing a fresh citation fix. Doc stays
+  NA.
+
+- **na-eligibility-audit 2026-07-30 (prediction tranche)**: KEEP-NA, valid — both open todos are CONFLICT:
+  `prediction_satellite_ao_dispatch_batch6_2026_07_29.md` todo 5 claims both the Secret Manager reshape (RULED
+  2026-07-28 as not wallet-key-class) and the gated live paper-order verify. Flipping this doc would dispatch a
+  duplicate against real credential material.

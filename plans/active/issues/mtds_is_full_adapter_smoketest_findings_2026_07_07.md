@@ -422,6 +422,9 @@ the todos already promised.
 
 ## Progress Log
 
+- **na-eligibility-audit 2026-07-30**: KEEP-NA, valid - master 59-bug findings ledger: dozens of items live as prose
+  only, and one open todo ('update both drilldown mockups') has no determinable done-when
+
 - **2026-07-07** — Filed after a 17-cluster parallel smoke test (each cluster ran real adapter execution against real
   production data / live APIs, not code-reading alone) covering every live CeFi venue, every DeFi protocol category, all
   7 TradFi venues, all 7 Sports providers, and both Prediction venues. Found 59 distinct real bugs plus a full real
@@ -643,3 +646,11 @@ the todos already promised.
         respectively — correctly not duplicated here (per this doc's own existing cross-reference).
     12. `TardisAdapter.download_csv()` crash outside full `ServiceBootstrap` — **already assessed** in this doc as
         "likely a test-harness artifact, not verified further (out of scope)" — not reopened.
+
+- **na-eligibility-audit 2026-07-30** (tranche=cefi, autonomous): KEEP-NA, valid - the FLUID coverage gap needs research
+  into an alternate historical read path (resolver address / storage-slot reads / subgraph) that the doc itself says is
+  not a bounded fix.
+- **na-eligibility-audit 2026-07-30**: KEEP-NA, valid (sports tranche) — the 3 remaining todos are (a) FLUID's ~18-month
+  pre-resolver coverage gap, which the doc itself says 'needs research into an alternate historical read path ... NOT a
+  <=30-min fix', (b) an untraced root-cause on 273 mistagged DERIBIT/COMBO rows, and (c) 'update both drilldown mockups'
+  with no done-when. Research + an under-specified deliverable, not bounded work

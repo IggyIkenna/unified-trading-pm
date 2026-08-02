@@ -27,13 +27,19 @@ parent_epic: orchestrator_master
 source:
   "worker, slot 7, hit live on sports_satellite_ao_dispatch_batch5-026 after inheriting the reclaimed session; filed as
   BLK-eccd3383 (main-agent answered partial: operator-reserved, escalated)"
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
+assigned_role: infra
 estimate_class: refactor
 drift_direction: advance-code
 depends_on: []
 resolved_by:
 locked_by:
+context_scope:
+  [
+    /plans/active/issues/sports_clv_target_pit_gated_out_of_odds_features_export_2026_07_26.md,
+    /plans/epics/orchestrator_master.md,
+  ]
 ---
 
 # Watchdog unpushed-sweep defeats an open operator merge gate
@@ -76,15 +82,30 @@ defeated by automation, not by any agent or operator decision. This is a governa
 
 ## Recommended decision
 
-- [ ] [BACKEND] P1. Make `_sweep_unpushed_slots` **gate-aware**: before pushing a dead session's unpushed HEAD, check
-      whether the slot's `task_id` has an OPEN (unanswered / partial / operator_pending) task-linked blocked-queue
-      entry; if so, SKIP the push for those commits and instead surface a distinct alert
-      (`unpushed_held_behind_open_gate`) so a human decides. Preserve the commits locally (do not discard) — the point
-      is "don't auto-ship held work," not "lose it." Add a regression test: a dead slot whose HEAD is unpushed AND whose
-      task has an open operator_pending BLK must NOT be auto-pushed. Repo: agent-orchestrator.
-- [ ] [DOC] P2. Document the "hold a merge behind a `/blocked` gate" pattern's failure mode + the gate-aware sweep
-      contract in the orchestrator watchdog SSOT, so future gated-merge workflows rely on the enforced skip rather than
-      on the holding session staying alive.
+- [x] ✅ [BACKEND] P1. **DONE — `agent-orchestrator@49c919d`.** Make `_sweep_unpushed_slots` **gate-aware**: before
+      pushing a dead session's unpushed HEAD, check whether the slot's `task_id` has an OPEN (unanswered / partial /
+      operator_pending) task-linked blocked-queue entry; if so, SKIP the push for those commits and instead surface a
+      distinct alert (`unpushed_held_behind_open_gate`) so a human decides. Preserve the commits locally (do not
+      discard) — the point is "don't auto-ship held work," not "lose it." Add a regression test: a dead slot whose HEAD
+      is unpushed AND whose task has an open operator_pending BLK must NOT be auto-pushed. Repo: agent-orchestrator.
+      **Implementation**: `push_or_preserve_ahead_commits` (`_ahead_push.py`) takes a new `gated: bool` param — when
+      True, every repo's commit is preserved on `wip-preserve/` instead of pushed, and `OrphanCommit.gated=True` is
+      logged. `_sweep_unpushed_slots` (`worker_liveness_watchdog.py`) queries `BlockedRow` for an open entry
+      (`answered_at IS NULL`, which also covers `partial_answer_blocked` rows per its own docstring) tied to the slot's
+      `current_task`, and fires a distinct `unpushed_held_behind_open_gate` activity event per gated repo. **Done-when
+      evidence**: 3 new regression tests in `tests/test_watchdog_unpushed_sweep.py` —
+      `test_sweep_gates_push_behind_open_operator_blocked_entry` (unanswered row gates + preserves + distinct event),
+      `test_sweep_gates_push_behind_partial_answered_blocked_entry` (a partial/interim answer still gates, since
+      `answered_at` stays unset), `test_sweep_pushes_when_blocked_entry_already_answered` (a FINAL-answered historical
+      row does NOT false-positive gate) — plus all 9 pre-existing tests in that module still pass (12/12). Full
+      `quality-gates.sh` green (2145 passed, basedpyright 0/0/0, ruff clean).
+- [x] ✅ [DOC] P2. **DONE — `unified-trading-pm` (this commit).** Documented the "hold a merge behind a `/blocked` gate"
+      pattern's failure mode + the gate-aware sweep contract in
+      `/codex/04-architecture/agent-orchestrator-worker-liveness.md` § "Held-behind-a-`/blocked`-gate merge pattern —
+      failure mode + the gate-aware unpushed sweep (2026-07-26/31)" — covers the legitimate hold pattern, the 2026-07-26
+      defeat sequence, the `gated: bool` mechanism (`_sweep_unpushed_slots` + `push_or_preserve_ahead_commits` + the
+      distinct `unpushed_held_behind_open_gate` event), and the forward contract (route future holds through a
+      task-linked unanswered `/blocked` entry — any other hold mechanism is invisible to this sweep).
 
 ## Progress Log
 
@@ -93,3 +114,31 @@ defeated by automation, not by any agent or operator decision. This is a governa
   held (no repoint, no further push, no self-authorized revert); operator paged with a recommendation to revert the two
   commits from LDR to restore the pre-ratification state before the next `*/15` cycle reaches main. This doc captures
   the watchdog root cause so the fix is tracked independently of that specific merge decision.
+- **na-eligibility-audit 2026-07-30**: KEEP-NA, valid — this doc's `[BACKEND] P1` gate-aware-sweep decision is the
+  **prerequisite** that `ao_satellite_ao_dispatch_batch1_2026_07_26.md`'s whole `/done`-acceptance-semantics cluster is
+  explicitly waiting on ('Re-triage once that doc's gate-aware sweep decision exists'), and it is a governance call
+  (when may automation ship work a human deliberately held behind a merge gate). Its `[DOC] P2` sibling is an edit to
+  the orchestrator watchdog codex SSOT, which is never autonomous.
+- **2026-07-31**: `[BACKEND] P1` shipped (`agent-orchestrator@49c919d`) — see the flipped todo above for the full
+  implementation + evidence. This clears the prerequisite the conflict-gated cluster in
+  `ao_satellite_ao_dispatch_batch1_2026_07_26.md` was waiting on for
+  `ahead_push_sentinel_stale_after_amend_no_rejected_push_retry_2026_07_24.md` (test-module collision reason moot now)
+  and the `/done`-acceptance-semantics items in `reaper_kills_inflight_detached_quickmerge_false_done_2026_07_24.md` +
+  `orchestrator_failover_double_dispatch_duplicate_work_2026_07_25.md` (the governance question those items said they
+  were "interacting with" now has a shipped answer — gate on the open blocked-queue entry, not on session liveness). Doc
+  stays `status: open`: the `[DOC] P2` SSOT-documentation sibling is still unbuilt.
+- **context-scout 2026-08-01**: populated/refreshed context_scope (2 entries).
+- **2026-08-01** (slot 6, backend_engineer): shipped the `[DOC] P2` SSOT write — see the flipped todo above. Doc is now
+  the only remaining open item resolved; both todos in this issue are done.
+- **na-eligibility-audit 2026-08-01** (autonomous, tranche `ao`, dispatch agt-8e95ca, slot 2): RECLASSIFY
+  `NA -> planning`. The 2026-07-30 KEEP-NA verdict was correct at the time (design-decision-pending), but its own
+  prerequisite — the `[BACKEND] P1` governance decision — shipped 2026-07-31 (`agent-orchestrator@49c919d`, full test
+  evidence above). The sole remaining item, `[DOC] P2`, is now a scoped, deterministic codex-SSOT documentation edit
+  describing an already-implemented, already-tested mechanism (`push_or_preserve_ahead_commits`'s `gated:` param,
+  `unpushed_held_behind_open_gate` event) — no open design question, no operator-only act, checkable done-when (the doc
+  section exists and cites the shipped contract). Phase 2 conflict-check:
+  `plans/active/ao_satellite_ao_dispatch_batch2_2026_07_30.md` and this doc's own sibling
+  `ahead_push_sentinel_stale_after_amend_no_rejected_push_retry_2026_07_24.md` (still `assigned_vm: NA`, unchanged this
+  run) both reference the shipped `[BACKEND] P1` fix but neither claims the `[DOC] P2` SSOT-write itself — clear. Set
+  `assigned_role: infra` (no prior value; closest real match in the live `agents/*.md` registry for a
+  `codex/05-infrastructure/` watchdog-SSOT edit).

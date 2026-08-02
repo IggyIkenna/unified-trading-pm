@@ -49,6 +49,11 @@ source: >-
   ruling 2026-07-24 removed the umbrella:true exemption entirely (flat 1000L hard cap, no exceptions).
 assigned_role: data_engineering
 drift_direction: advance-code
+context_scope:
+  [
+    /plans/active/cefi_consolidated_closeout_2026_07_18.md,
+    /plans/archive/issues/plan_line_cap_remediation_2026_07_23.md,
+  ]
 ---
 
 # CeFi consolidated close-out — aggregated source docs (discoverability index)
@@ -190,7 +195,7 @@ drift_direction: advance-code
     `cefi_e6_cf7_relabel_and_attempted_failed_remeasure_2026_07_26.md` per the archived doc's own todo #2 note.
   - [`plans/active/issues/mtds_backfill_vm_memory_hang_large_chunk_2026_07_22.md`](/plans/active/issues/mtds_backfill_vm_memory_hang_large_chunk_2026_07_22.md)
     — 0 open todos (status: open, narrative finding doc — no checkbox-tracked items, see file for recommended fix).
-  - [`plans/active/issues/mtds_backfill_vm_startup_oom_rc137_2026_07_14.md`](/plans/active/issues/mtds_backfill_vm_startup_oom_rc137_2026_07_14.md)
+  - [`plans/archive/issues/mtds_backfill_vm_startup_oom_rc137_2026_07_14.md`](/plans/archive/issues/mtds_backfill_vm_startup_oom_rc137_2026_07_14.md)
     — 0 open todos (closed/archived/record-only).
   - [`plans/active/issues/cefi_backfill_per_day_catalogue_reload_2026_07_20.md`](/plans/active/issues/cefi_backfill_per_day_catalogue_reload_2026_07_20.md)
     — 0 open todos (status: open, narrative finding doc — no checkbox-tracked items, see file for recommended fix).
@@ -435,7 +440,7 @@ drift_direction: advance-code
     — 0 open todos (status: open, narrative finding doc — no checkbox-tracked items, see file for recommended fix).
   - [`plans/archive/issues/vm_backfill_data_correctness_findings_2026_06_29.md`](/plans/archive/issues/vm_backfill_data_correctness_findings_2026_06_29.md)
     — 0 open todos (status: open, narrative finding doc — no checkbox-tracked items, see file for recommended fix).
-  - [`plans/active/issues/group_c_cloud_run_job_failures_triage_2026_07_16.md`](/plans/active/issues/group_c_cloud_run_job_failures_triage_2026_07_16.md)
+  - [`plans/archive/issues/group_c_cloud_run_job_failures_triage_2026_07_16.md`](/plans/archive/issues/group_c_cloud_run_job_failures_triage_2026_07_16.md)
     - **[INFRA] P1.** Decide + implement a default-to-yesterday date bridge for MTDS's batch CLI (needs an owner
       decision on which repo).
   - [`plans/archive/2026_07/is_daily_enum_capture_heal_2026_07_07.md`](/plans/archive/2026_07/is_daily_enum_capture_heal_2026_07_07.md)
@@ -475,7 +480,7 @@ drift_direction: advance-code
       reserved for whole-plan migrations per the plan-discipline gate — this is a single low-priority research idea, not
       a plan-level deferral, and has no successor plan to banner): volume as a first-class feature for the cs/ext ML
       models.
-  - [`plans/active/issues/dp_catalog_not_running_sports_prediction_2026_07_15.md`](/plans/active/issues/dp_catalog_not_running_sports_prediction_2026_07_15.md)
+  - [`plans/archive/issues/dp_catalog_not_running_sports_prediction_2026_07_15.md`](/plans/archive/issues/dp_catalog_not_running_sports_prediction_2026_07_15.md)
     (status: resolved, 2 open)
     - **[OPS] P2.** Verify the next scheduled `lifecycle-catalogue-regen-sports` run promotes successfully +
       `prod/catalog.parquet` row count is `>= 27,216`.
@@ -603,7 +608,7 @@ drift_direction: advance-code
       reconcile genuinely-permanent blank-instrument_type gaps.
   - [`plans/archive/issues/cefi_layer1_denominator_gaps_2026_07_03.md`](/plans/archive/issues/cefi_layer1_denominator_gaps_2026_07_03.md)
     — 0 open todos (closed/archived/record-only).
-  - [`plans/active/issues/cefi_mtds_writer_raw_symbol_vs_canonical_eu_namespace_mismatch_2026_07_15.md`](/plans/active/issues/cefi_mtds_writer_raw_symbol_vs_canonical_eu_namespace_mismatch_2026_07_15.md)
+  - [`plans/archive/issues/cefi_mtds_writer_raw_symbol_vs_canonical_eu_namespace_mismatch_2026_07_15.md`](/plans/archive/issues/cefi_mtds_writer_raw_symbol_vs_canonical_eu_namespace_mismatch_2026_07_15.md)
     — all todos checked, but `status: open` — 2 operator-gated `--apply` production data-mutation sign-offs still
     pending (relabel ~2.59M/3.13M raw-symbol Tardis manifest rows to canonical ids; purge ~49,720 stale-shape
     `expected_unattempted` rows), deliberately never captured as separate checkboxes. NOT closed/archived/record-only.
@@ -659,7 +664,8 @@ drift_direction: advance-code
     - **[VERIFY] P1.** Root-cause the 273 mistagged DERIBIT/COMBO rows (open question #1) — not attempted, out of
       dispatched scope.
     - **[CODE] P2.** Update both drilldown mockups — not attempted, out of dispatched scope.
-  - [`plans/active/issues/mtds_ungated_test_families_2026_07_17.md`](/plans/active/issues/mtds_ungated_test_families_2026_07_17.md)
+  - [`plans/archive/issues/mtds_ungated_test_families_2026_07_17.md`](/plans/archive/issues/mtds_ungated_test_families_2026_07_17.md)
+    (archived 2026-07-31, all 5 todos done)
     - **[BACKEND] P1.** Fix the 8 non-integration `tests/market_interface/unit/` failures (defi handlers/adapters,
       barchart/yahoo).
     - **[BACKEND] P1.** Fix the remaining 14 `tests/market_interface/adapters/**` canonical-output/write failures.
@@ -770,3 +776,12 @@ Orthogonality mistags found scoping the new cross-cutting AG layer — see
       docs" section catalogs dozens of genuinely open cefi todos as bold non-checkbox markers by design (e.g. Script 2
       P0 embedded-slash wire-stem fix, catalogue-dedup P0, DERIBIT combo P1 partition-move); none of that open work is
       tracked as a checkbox in this index itself.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30** (tranche=cefi, autonomous): KEEP-NA, valid - the sole todo is a standing
+  discoverability-index sync with no terminal done-state; by design a human-maintained digest, not a dispatchable unit.
+- **na-eligibility-audit 2026-07-31** (tranche=cefi, autonomous): KEEP-NA, valid — re-verified after the file's last
+  commit (5fb83f4ea) touched only a corpus-referrer link (archived-doc path fix from an unrelated ag-closeout-audit
+  run), not this doc's own todo/scope. Verdict unchanged from 2026-07-30.
+- **context-scout 2026-08-01**: populated/refreshed context_scope (2 entries).

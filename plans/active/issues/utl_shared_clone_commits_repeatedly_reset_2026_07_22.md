@@ -46,6 +46,12 @@ superseded_by:
 resolved_by:
 source: observed live during the data_pipeline_reconciliation_skill_2026_07_20 R2 rescue, 2026-07-22
 depends_on: []
+context_scope:
+  [
+    /codex/05-infrastructure/per-tab-worktrees.md,
+    /codex/08-workflows/ci-cd-flow.md,
+    /plans/epics/infrastructure_master.md,
+  ]
 ---
 
 # unified-trading-library shared clone repeatedly reset to origin (2026-07-22)
@@ -213,3 +219,18 @@ single canonical clone per repo and behaves incorrectly under multi-clone (workt
       fix: either the PM identity test should derive repo identity from `git remote get-url origin` (worktree-safe)
       instead of `Path.cwd().name`, or `PROJECT_ROOT` should scope ONLY the identity-string check and never the
       file-scan/sentinel-write basis.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30**: KEEP-NA, valid — items 4 and 5 are already held in
+  `ao_satellite_ao_dispatch_batch1_2026_07_26.md`'s conflict-gated Deferred list as QG-harness worktree-isolation
+  defects ('Item 5 … changes what "QG green" MEANS — the per-repo quality boundary itself. Too high blast-radius for a
+  batch todo; needs its own scoped plan with operator sign-off'). Item 8 is an open design fork on the same fleet-wide
+  `quickmerge.sh` shipping tool ('**consider** a stronger prevention fix … arguably never the right default behavior'),
+  and item 3's audit is bundled with them.
+- **2026-07-31 (conflict-gated re-triage) — RECLASSIFIED, not a contradiction or file-collision at all.** No other doc
+  disputes items 4/5/8's direction; they're held back purely on BLAST-RADIUS grounds (item 5 redefines what "QG green"
+  means fleet-wide; item 8 changes `cascade_dep_branch`'s default behavior for every caller). This belongs in the "needs
+  operator scoping / sign-off before an AO batch can touch it" bucket, not conflict-gated — there is no competing claim
+  to wait out via re-triage; it needs an explicit go-ahead on scope instead.
+- **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).

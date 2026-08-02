@@ -61,6 +61,13 @@ source: >-
   (part1 = 2026-07-18→07-20 narrative, part2 = the 2026-07-21 PRE-COMPACT checkpoint); the 7 open todos + all recent
   (2026-07-22/23) state stayed live in this file.
 umbrella: true
+context_scope:
+  [
+    /plans/active/cefi_consolidated_closeout_2026_07_18.md,
+    /plans/active/issues/cefi_residual_followups_after_honest_done_2026_07_17.md,
+    /plans/active/issues/_cefi_canonical_blueprint_2026_07_17.md,
+    /codex/02-data/cross-asset-canonical-target-ssot.md,
+  ]
 ---
 
 # CeFi 4-surface canonicalization migration — execution log
@@ -121,6 +128,10 @@ umbrella: true
 > updates through 2026-07-22 ~04:33Z (would_patch fleet reaching ALL_DONE). This entire range is explicitly superseded
 > by the "REVISED REMAINING QUEUE" section and the final deferred-work table later in THIS file — moved verbatim,
 > nothing summarized or dropped.
+
+- **na-eligibility-audit 2026-07-30** (tranche=cefi, autonomous): KEEP-NA, valid - todos are FENCED to other owners
+  (live rename fleet / DeFi removal-probe agent), the DERIBIT combo partition-MOVE needs explicit operator sign-off, and
+  the doc records an explicit operator STOP.
 
 ## PRE-COMPACT RESUMPTION CHECKPOINT — 2026-07-22 ~05:00Z (3rd checkpoint, post would_patch-ALL_DONE)
 
@@ -815,3 +826,5 @@ The `/autonomous` loop is now OFF — resuming requires a fresh explicit invocat
 > Step 8 verdict) are now appended here, verbatim, completing the migration this file's own header always intended
 > ("moved verbatim, nothing summarized or dropped" — see the top-of-file note). The parent no longer duplicates any of
 > this — read here for the full narrative.
+
+- **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).

@@ -70,6 +70,14 @@ def scan_dir(rel_dir: str, doc_type: str, terminal: frozenset[str]) -> list[str]
             continue
         if fm.get("doc_type") != doc_type:
             continue
+        locked_by = fm.get("locked_by")
+        if locked_by:
+            # A locked doc cannot be archived without a human `[unlock-plan]` (HARD RULE) —
+            # counting it as a violation would make this ratchet un-satisfiable by any
+            # autonomous agent, mirroring the same exclusion check_archive_candidates.sh
+            # already applies (added 2026-07-30 after 2 independent locked+terminal docs
+            # surfaced the gap: check_archive_candidates.sh excluded them, this script didn't).
+            continue
         status = fm.get("status")
         if status in terminal:
             violations.append(f"{relpath}: status={status} (doc_type={doc_type}) — should be in plans/archive/")

@@ -22,7 +22,7 @@ related:
   [
     plans/archive/2026_07/bucket_estate_fold_design_2026_07_13.md,
     plans/active/bucket_estate_consolidation_to_sub100_2026_07_13.md,
-    plans/active/defi_dedicated_bucket_shared_migration_2026_07_13.md,
+    /plans/archive/2026_07/defi_dedicated_bucket_shared_migration_2026_07_13.md,
     plans/active/bucket_iam_write_protection_per_tier_2026_06_09.md,
     plans/active/bucket_fold_closeout_2026_07_17.md,
     /codex/05-infrastructure/bucket-isolation-model.md,
@@ -48,6 +48,15 @@ superseded_by:
 source:
   "Successor execution plan of bucket_estate_fold_design_2026_07_13 §3 todo 1. Operator ruling 2026-07-17: all 5 folds
   as HUMAN plans. This is Fold A (features — second in the design's risk order, after ml)."
+context_scope:
+  [
+    /plans/archive/2026_07/bucket_estate_fold_design_2026_07_13.md,
+    /plans/archive/2026_07/defi_dedicated_bucket_shared_migration_2026_07_13.md,
+    /codex/05-infrastructure/bucket-isolation-model.md,
+    /codex/05-infrastructure/manifest-consolidator-ssot.md,
+    /codex/02-data/pipeline-mode-partition.md,
+    /plans/active/bucket_iam_write_protection_per_tier_2026_06_09.md,
+  ]
 ---
 
 # Bucket fold — features 25 per-AG/kind → 5 per-AG (`features-{ag}-{env}-{pid}`)
@@ -120,7 +129,7 @@ design's counts are 2026-07-13).
       root `features-defi-prd/_index/latest.json`. (single-root, not per-kind — consolidator only supports `--bucket`;
       reader reads root `_index/` so correct. Naming warts → closeout.)
 - [x] ✅ [INFRA] P1. **Delete sources + TF-reconcile** — **DONE 2026-07-18.** DELETED all 15 legacy per-kind buckets
-      (features-{delta-one,volatility,onchain,xinstrument,mtf}-* incl -test). SAFETY: parity pre-verified — big legacy
+      (features-{delta-one,volatility,onchain,xinstrument,mtf}-\* incl -test). SAFETY: parity pre-verified — big legacy
       (delta-one-cefi 314, onchain-defi 727, xinstrument-pred 207, delta-one-cefi-test 315) migrated to folded (BQ 766k
       rows confirms); small legacy (volatility/mtf/delta-one-defi/tradfi) held ONLY consolidator `_index/` artifacts, no
       real data. TF: imported folded features-{cefi,defi,tradfi}-{prd,test}; state-rm'd the 14 TF-tracked legacy.
@@ -301,7 +310,7 @@ design's counts are 2026-07-13).
   honoured the dep-gate: UAC yaml first (leaf gates clone UAC-LDR for the `features` key), then UTL resolver, then
   leaves. Contention handled inline (peer backmerge pulled, ml-gate re-gated after drift, FF-pulls clean via
   empty-overlap stash/pop). **NOT YET DONE (gated follow-ons):** (a) **REDEPLOY+VERIFY** — pipeline-driven: LDR→main
-  promote (*/15, v2-gated) → features-service cloudbuild → my `cloudbuild.yaml` STEP 6.5 re-pins
+  promote (\*/15, v2-gated) → features-service cloudbuild → my `cloudbuild.yaml` STEP 6.5 re-pins
   `features-service-sports-job` to `:latest`. Verify-exercised = a feature batch run WRITES under
   `features-{ag}-{env}/{kind}/` + an ml READ resolves it (cite `Evidence: cloudbuild=<id>` SUCCESS). ASYNC — awaits the
   promote+build; a later tick verifies. (b) **BQ re-mount** — gated on the writer being deployed+writing (migrated
@@ -351,3 +360,9 @@ design's counts are 2026-07-13).
   being handled by a separate agent this same tick (also covering this plan's sibling "IAM + lifecycle" P2 todo above).
   Leaving the "Alias sunset" checkbox unchecked since it's one joint todo spanning both repos' work — flip it only once
   the deployment-service terraform/yaml-key half also lands.
+
+- **na-eligibility-audit 2026-08-02** (re-confirms 2026-07-30; re-read after intervening edits, verdict unchanged):
+  KEEP-NA, valid — operator ruling 2026-07-17: all 5 folds are HUMAN plans; the sole open todo (alias sunset) is a joint
+  UTL+deployment-service item whose UTL half is verified done and whose terraform/yaml half is another agent's in-flight
+  work.
+- **context-scout 2026-08-01**: populated/refreshed context_scope (6 entries).

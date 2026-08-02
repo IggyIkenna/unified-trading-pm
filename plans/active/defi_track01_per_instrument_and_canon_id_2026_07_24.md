@@ -20,7 +20,7 @@ related:
     /plans/archive/2026_07/defi_consolidated_closeout_history_2026_07_18.md,
   ]
 created: "2026-07-24"
-last_updated: "2026-07-24"
+last_updated: "2026-08-02"
 parent_epic: defi_master
 assigned_vm: NA
 execution_scope: local-only
@@ -32,6 +32,13 @@ assigned_role: data_engineering
 drift_direction: none
 locked_by:
 locked_since:
+context_scope:
+  [
+    /plans/active/defi_consolidated_closeout_2026_07_18.md,
+    /codex/02-data/defi-canonical-naming-ssot.md,
+    /codex/02-data/canonical-cutover-register.md,
+    market-tick-data-service/market_tick_data_service/market_interface/adapters/defi/canonical_write.py,
+  ]
 supersedes:
 superseded_by:
 depends_on:
@@ -48,6 +55,11 @@ source: >-
 > parent back under the 1000-line hard cap (2026-07-24 line-cap remediation). Nothing here was rewritten or summarized —
 > every line below is a verbatim move from the parent. See the parent for the Canonical target spec, the Operator
 > decisions, and Tracks 2-8 (which depend on this work landing).
+
+> **na-eligibility-audit 2026-08-01**: KEEP-NA-STALE-ITEMS — re-read end to end (10 open items). 8 stay KEEP-NA valid
+> (design/judgment calls on live-production canonicalization machinery, consistent with this doc's own history of
+> reversed attempts). 2 items closed as stale (LENDING retire — decided WON'T-DO 2026-07-26; Combo cross-AG hand-off —
+> shipped elsewhere), see inline notes below. No RECLASSIFY-eligible items found. Doc stays `assigned_vm: NA`.
 
 ## Per-instrument re-architecture (operator 2026-07-18 — SUPERSEDES the batch-model tracks; DeFi capture STOPPED)
 
@@ -163,13 +175,30 @@ the duplicate/phantom rows. Fix = **fetch bulk, write per-instrument** (the id i
       a merge onto a PRE-EXISTING R1-forward leaf sharing an event key — bites ONLY in the R1-forward/R3 overlap window
       → **scope `--apply` to the pre-R1 historical batch days (R3's actual target) OR add a single-instrument-per-leaf
       guard first.** (repo: market-tick-data-service)
-- [~] [DATA] P0 (R3-run — RUNNING, partial). Dry-run recon validated + scoped `--apply` proven on real GCS (CHAINLINK
-  oracle_prices → 22 canonical leaves + `_migrated_*`, 0 err). **FULL migration on SPOT VM
-  `canonical-migration-defi-per-instrument-20260719-053435`** (in-region, chunked per-year, preemption-recovery loop
-  `bd014y3c2` armed): **2020 ✓ (2,241→4,694), 2021 ✓ (30,513→607,867 instr, 18M rows, 0 err)**, 2022 applying,
-  2023–2026 + `rebuild_defi_manifest` remain (~8-12h). **INCOMPLETE — see R5**: it walks ONLY `raw_tick_data/by_date/`
-  and MISSES (a) the gas_fees `{data_type}_{blk}_{blk}` block-range shape (discovery regex gap), (b) the legacy
-  top-level prefixes entirely. (repo: market-tick-data-service)
+- [~] [DATA] P0 (R3-run — **STALLED, confirmed DEAD 2026-08-02, was mis-stated "RUNNING"**). Dry-run recon validated +
+  scoped `--apply` proven on real GCS (CHAINLINK oracle_prices → 22 canonical leaves + `_migrated_*`, 0 err). **FULL
+  migration on SPOT VM `canonical-migration-defi-per-instrument-20260719-053435`** (in-region, chunked per-year,
+  preemption-recovery loop `bd014y3c2` armed): **2020 ✓ (2,241→4,694), 2021 ✓ (30,513→607,867 instr, 18M rows, 0 err)**,
+  2022 applying, 2023–2026 + `rebuild_defi_manifest` remain (~8-12h). **INCOMPLETE — see R5**: it walks ONLY
+  `raw_tick_data/by_date/` and MISSES (a) the gas_fees `{data_type}_{blk}_{blk}` block-range shape (discovery regex
+  gap), (b) the legacy top-level prefixes entirely. **STALL CONFIRMED (slot-7 data_pipeline_failure escalation,
+  2026-08-02, agt-0e35ed)**: this checkbox has read `[~] RUNNING, partial` unrevised since 2026-07-24/25, and
+  `defi_oracle_prices_capture_stalled_since_2026_07_22.md` already flagged the VM as 6 days idle as of 2026-07-30
+  without a re-check. Re-verified today —
+  `gcloud compute instances list --filter="name~'canonical-migration-defi-per-instrument'"` and
+  `gcloud compute operations list --filter="targetLink~'canonical-migration-defi-per-instrument'"` both return ZERO
+  results (no running instance, no operation history at all — not just idle, the VM is gone). R3 has been dead for **9+
+  days** (last confirmed activity 2026-07-24T07:26 UTC-7), stuck mid-way through 2022, years 2023-2026 +
+  `rebuild_defi_manifest` never ran. **Downstream impact newly confirmed**: this is the reason
+  `collect-{dex-pools,oracle-prices,evm-defi,solana-defi}` stay paused per Track 8's `gate_on_depends`, which is now the
+  traced root cause of a CRITICAL `DP_CATALOG_NOT_RUNNING` (`DP-CATALOG-001`) page — the defi instrument catalogue's
+  `CATALOGUE_SHRINK_BLOCKED` monotonic guard has rejected 3 consecutive rollup runs (2026-08-01×2, 2026-08-02×1) because
+  ~2800-3400 pool rows across 9 EVM DEX venues stopped appearing in `instrument_availability/ by_date/` — 807 of them
+  were captured every day through 2026-07-30 then went silent, consistent with `dex-pools` being one of the 4
+  gated-paused collectors. Full evidence + decision request in
+  `/plans/active/issues/defi_catalog_dp_catalog_001_shrink_blocked_2026_08_02.md`. **This todo needs an owner to either
+  relaunch the SPOT VM from its 2022 checkpoint (if resumable) or restart R3 from scratch for 2022-2026 — it will not
+  un-stall on its own.** (repo: market-tick-data-service)
 
 ### R5 — Full-corpus canon reconciliation (operator-caught 2026-07-19; R3-as-scoped is NOT the whole job) · P0
 
@@ -298,16 +327,25 @@ instruments in one `instruments.parquet` with `available_from/to`).
 > (ruff/basedpyright clean, full MTDS suite green apart from 2 unrelated pre-existing cross-repo test-baseline
 > regressions — see that plan's Progress Log) but NOT YET COMMITTED (blocked on those unrelated regressions clearing the
 > shared tree's `quality-gates.sh`); todos 8/10/11 (the actual UAC+MTDS+UTL atomic retire + its runtime proof) are NOT
-> started. The gate remains BLOCKED. Do not start this migration until that plan says CLEARED.
+> started. The gate remains BLOCKED. Do not start this migration until that plan says CLEARED. **[na-eligibility-audit
+> 2026-08-01: superseded — the gated migration below was ruled WON'T-DO permanently, 2026-07-26 (see the closed
+> checkbox), not cleared to proceed. This banner is historical context only.]**
 
-- [ ] [DATA] P0. **Retire legacy `LENDING` → A_TOKEN/DEBT_TOKEN.** **Builder-bake DONE `instruments-service@1af1be34`**
-      (FIX 2, runtime-proven): the split is now INTRINSIC to `build_instrument_catalogue.py` row-construction — the
-      canonical_id's `VENUE:TYPE:SYMBOL` segment is AUTHORITATIVE over a stale `LENDING` column for the
-      A_TOKEN/DEBT_TOKEN/SPOT_ASSET family, so a `--mode full` rebuild can't re-stamp LENDING (kills the 2026-07-14
-      durability landmine). Verify caveat (non-blocking): a dataless-tail row mis-stamped by a PRE-fix rebuild survives
-      verbatim through `_merge_incremental(close_absent=False)` until it reappears in by_date — **fully closed by the
-      remaining half below.** **REMAINING (Wave D, [DATA]): migrate the ~16.7M legacy `lending` rows** to the split
-      (code done for 9 EVM protocols) on real infra. (repos: instruments-service)
+- [x] ⛔ [DATA] P0. **WON'T-DO (session-3, 2026-07-26, operator present) — closed, not deferred.** Was: **Retire legacy
+      `LENDING` → A_TOKEN/DEBT_TOKEN.** **Builder-bake DONE `instruments-service@1af1be34`** (FIX 2, runtime-proven):
+      the split is now INTRINSIC to `build_instrument_catalogue.py` row-construction — the canonical_id's
+      `VENUE:TYPE:SYMBOL` segment is AUTHORITATIVE over a stale `LENDING` column for the A_TOKEN/DEBT_TOKEN/SPOT_ASSET
+      family, so a `--mode full` rebuild can't re-stamp LENDING (kills the 2026-07-14 durability landmine). Verify
+      caveat (non-blocking): a dataless-tail row mis-stamped by a PRE-fix rebuild survives verbatim through
+      `_merge_incremental(close_absent=False)` until it reappears in by_date — **fully closed by the remaining half
+      below.** Was REMAINING (Wave D, [DATA]): migrate the ~16.7M legacy `lending` rows to the split (code done for 9
+      EVM protocols) on real infra. (repos: instruments-service) **na-eligibility-audit 2026-08-01: CLOSED — not
+      gated-and-pending, actually decided against.**
+      `plans/archive/2026_07/defi_lending_writer_retire_prerequisite_2026_07_20.md` (status: complete): "Session-3
+      (2026-07-26, operator present) decision: the physical A_TOKEN/DEBT_TOKEN retire (todos 8/10/11/14) is WON'T-DO,
+      permanently — after two reversals, a read-side resolver function (todo 15) delivers the same canonical-instrument-
+      id → rate lookup without the GCS rewrite / manifest re-key / IS re-seed the flip required." Todo 15 shipped
+      `unified-api-contracts@1d01a911` (confirmed ancestor of `origin/live-defi-rollout`).
 - [ ] [DATA] P0. **Residual canon walk C2–C12** (single-walk discipline — reuse the existing worklist, no NEW
       whole-corpus walk): C2 data_type alias dedup (`dex_swaps`→`dex_pool_swaps`, `dex_pools`→`dex_pool_state`,
       `lending-indices`→`lending_indices`, `staking_yields`→`lst_rates`); C3 `VENUE-CHAIN`→flat venue + `chain`; C4
@@ -416,16 +454,29 @@ instruments in one `instruments.parquet` with `available_from/to`).
       explicit-`asset_group='cefi'` `ManifestWriter` precedent) — see the new todo below. Also noted, NOT yet filed:
       `source` is also wrongly stamped `"hyperliquid"` for both KALSHI_PERP/POLYMARKET_PERP rows (should be
       venue-derived), same writer, same follow-up. (repo: market-tick-data-service)
-- [ ] [BACKEND] P2. **NEW 2026-07-24 — fix `_perp_funding_kalshi_polymarket.py`'s asset_group/chain/source routing for
+- [x] [BACKEND] P2. **NEW 2026-07-24 — fix `_perp_funding_kalshi_polymarket.py`'s asset_group/chain/source routing for
       KALSHI_PERP/POLYMARKET_PERP** (see the resolved item above for full root cause): route these 2 venues through a
       cefi-classified write path instead of the DeFi-only `write_defi_rows`, fix the `source` mislabel (currently
       hardcoded `"hyperliquid"` for both), then run the (by-then-frozen, still-tiny) manifest cleanup of the stale
       KALSHI_PERP/POLYMARKET_PERP rows as part of the SAME follow-up once the writer lands — never before, or the
-      still-live bug just resurrects them. (repo: market-tick-data-service)
-- [ ] [BACKEND] P2. **Combo cross-AG hand-off (leg-aware signed-weight spec).** Extend the 1–4-leg cap + shared
+      still-live bug just resurrects them. (repo: market-tick-data-service) — **DONE 2026-07-30**
+      (defi_satellite_ao_dispatch_batch1 finalize reconciliation), see defi_satellite_ao_dispatch_batch1_2026_07_25.md
+      todo 10 for full evidence: both venues now route through `_write_cefi_perp_funding_rows()` (cefi-classified,
+      `asset_group="cefi"`); `source` now explicitly `_source_for_protocol(protocol)` on every manifest call (was blank,
+      auto-stamping "hyperliquid"). Manifest cleanup executed and verified against prod:
+      `scripts/remove_kalshi_polymarket_defi_manifest_rows_2026_07_26.py` removed the 8 pre-existing stale rows
+      (26,540,325 → 26,540,317), zero remaining KALSHI_PERP/POLYMARKET_PERP rows confirmed post-write.
+      `market-tick-data-service@2aa23de5` (writer fix), `market-tick-data-service@6998ea4c` (cleanup script's final
+      streaming-rewrite).
+- [x] ✅ [BACKEND] P2. **Combo cross-AG hand-off (leg-aware signed-weight spec).** Extend the 1–4-leg cap + shared
       `build_leg()` path to the DERIBIT-COMBO builders (`cefi/deribit_combo_adapter.py`, `tardis/combos.py`) —
       `canonical_id_p1_tradfi_combo_leg_canonicalization_2026_07_08.md` open P2. DeFi has no combos; this rides here
       only because the DERIBIT-COMBO fix is cefi-side and passed to `cefi_consolidated_closeout_2026_07_18.md`.
+      **na-eligibility-audit 2026-08-01: CLOSED — done elsewhere.**
+      `canonical_id_p1_tradfi_combo_leg_canonicalization_2026_07_08.md` line ~167: "DONE 2026-07-27 (slot-8,
+      data_engineering)... Extend the 1-4 leg hard cap + logged-drop behavior to Deribit's existing combo builders
+      (cefi/deribit_combo_adapter.py, cefi/tardis/combos.py)... Evidence: instruments-service@9416be7d." Confirmed
+      ancestor of `origin/live-defi-rollout`.
 - [ ] [BACKEND] P0. **NEW 2026-07-21 (operator ruling) — eliminate the address/UUID fallback in
       `canonical_instrument_id` for POOL + LENDING; resolve token symbols for real, don't fall back.** Operator: "it
       needs to be fully canonical no fallback and migrated." Does NOT touch the two-id model or the machine
@@ -722,17 +773,17 @@ instruments in one `instruments.parquet` with `available_from/to`).
       market-tick-data-service)
 
       **RE-VERIFIED 2026-07-24 (this pass) — the `--apply` handoff is still NOT unblocked; NOT 0 glued ids.** The 9
-                                                                                                                                                                                                              ORCA `dex_pool_state` cells (2025-12-23..12-31) finished migrating clean this session (all 9 confirmed
-                                                                                                                                                                                                              `errors=0` across a retry chain: `leafparallel`+`lpar5`+`lpar7` VMs, cumulative `cells=1+3+5=9`) and a scoped
-                                                                                                                                                                                                              manifest rebuild ran after — but a fresh `verify_defi_glued_ids_2026_07_24.py` run still shows **21 glued-id
-                                                                                                                                                                                                              rows** (unchanged: the same 9 ORCA + the same 12 liquidations). Root cause (code-read, not inferred): neither
-                                                                                                                                                                                                              the migration, the scoped rebuild, nor this delete-marker script (GCS-objects-only, confirmed via its own
-                                                                                                                                                                                                              docstring) ever **retracts** a pre-existing manifest row once its source object is renamed to `_migrated_*` —
-                                                                                                                                                                                                              the old glued-id row and the new per-instrument rows have different `instrument_id`s, so upsert never
-                                                                                                                                                                                                              supersedes the old one. Full findings + recommended next step (a manifest-row-level purge, not yet built):
-                                                                                                                                                                                                              `plans/archive/issues/mtds_defi_migration_cell_stall_untimed_gcs_read_2026_07_22.md` addendum "tick 3"
-                                                                                                                                                                                                              (2026-07-24). **The `--apply` operator handoff at the parent plan (line 708) stays gated — do not consider it
-                                                                                                                                                                                                              unblocked by the 9 ORCA cells finishing; a separate manifest-side fix is still required first.**
+                                                                                                                                                                                                                                                                                  ORCA `dex_pool_state` cells (2025-12-23..12-31) finished migrating clean this session (all 9 confirmed
+                                                                                                                                                                                                                                                                                  `errors=0` across a retry chain: `leafparallel`+`lpar5`+`lpar7` VMs, cumulative `cells=1+3+5=9`) and a scoped
+                                                                                                                                                                                                                                                                                  manifest rebuild ran after — but a fresh `verify_defi_glued_ids_2026_07_24.py` run still shows **21 glued-id
+                                                                                                                                                                                                                                                                                  rows** (unchanged: the same 9 ORCA + the same 12 liquidations). Root cause (code-read, not inferred): neither
+                                                                                                                                                                                                                                                                                  the migration, the scoped rebuild, nor this delete-marker script (GCS-objects-only, confirmed via its own
+                                                                                                                                                                                                                                                                                  docstring) ever **retracts** a pre-existing manifest row once its source object is renamed to `_migrated_*` —
+                                                                                                                                                                                                                                                                                  the old glued-id row and the new per-instrument rows have different `instrument_id`s, so upsert never
+                                                                                                                                                                                                                                                                                  supersedes the old one. Full findings + recommended next step (a manifest-row-level purge, not yet built):
+                                                                                                                                                                                                                                                                                  `plans/archive/issues/mtds_defi_migration_cell_stall_untimed_gcs_read_2026_07_22.md` addendum "tick 3"
+                                                                                                                                                                                                                                                                                  (2026-07-24). **The `--apply` operator handoff at the parent plan (line 708) stays gated — do not consider it
+                                                                                                                                                                                                                                                                                  unblocked by the 9 ORCA cells finishing; a separate manifest-side fix is still required first.**
 
 - [x] ✅ [DATA] P1. **Verify the fake-history relabel-forward migration to actual completion** (todo 3,
       `/plans/archive/issues/defi_solana_dex_pools_fake_history_recurrence_prd_bucket_2026_07_23.md`) — **VERIFIED
@@ -768,3 +819,16 @@ instruments in one `instruments.parquet` with `available_from/to`).
       commit against it in this pass). Note the file is still over the 500L SOFT threshold (996L) — the "Aggregated
       source docs" / "Contradiction resolution" extraction candidates named below remain a reasonable FUTURE hygiene
       improvement, just no longer a hard blocker on anyone editing the file. (repo: unified-trading-pm)
+
+## Progress Log
+
+- **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).
+- **na-eligibility-audit 2026-08-02** (tranche=defi, autonomous, scheduled): KEEP-NA valid (2026-08-01 verdict re-
+  affirmed) — re-scoped because of a 2026-08-02 content change and re-read: 8 open items. The change was a correctness
+  fix, not new work — R3's `[~]` checkbox was corrected from a stale "RUNNING, partial" to "STALLED, confirmed DEAD
+  2026-08-02" after `gcloud compute instances/operations list` returned zero results for
+  `canonical-migration-defi- per-instrument-20260719-053435` (9+ days dead, stuck mid-2022). That correction makes the
+  doc MORE operator-gated, not less: relaunching R3 is a destructive canonical migration under main's standing
+  escalation #1, and it is the traced root cause of the CRITICAL `DP-CATALOG-001` page
+  (`issues/defi_catalog_dp_catalog_001_shrink_blocked_2026_08_02.md`). The doc also carries a live "🟡 In-flight
+  refactor + capture halted" banner with all DeFi capture STOPPED. Doc stays `assigned_vm: NA`.

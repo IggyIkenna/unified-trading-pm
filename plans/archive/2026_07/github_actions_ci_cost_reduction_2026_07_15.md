@@ -19,7 +19,7 @@ scope: [engineer, admin]
 tags: [ci-cd, github-actions, cost, self-hosted-runner, workflows, spend-reduction]
 related:
   - /plans/archive/issues/github_billing_dashboard_access_2026_07_09.md
-  - /plans/active/cicd_mvp_ldr_to_main_pipeline_2026_06_30.md
+  - /plans/archive/2026_07/cicd_mvp_ldr_to_main_pipeline_2026_06_30.md
 created: 2026-07-15
 last_updated: 2026-07-24
 parent_epic: deployment_and_user_management_master

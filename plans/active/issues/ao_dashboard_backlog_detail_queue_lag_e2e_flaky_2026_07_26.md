@@ -7,15 +7,19 @@ summary:
   reproducibly, in isolation, on a clean tree with zero code changes — pre-existing, not caused by that plan's work.
 status: open
 nature: issue
-asset_group: [meta]
+asset_group: [ao] # retagged 2026-07-31 (corpus-sweep meta fold-in) -- was [meta]
 stage: [meta]
 repos: [agent-orchestrator]
 scope: [engineer]
 tags: [dashboard, playwright, e2e, flaky-test, backlog]
-related: [/plans/archive/2026_07/ao_backlog_collision_alert_and_remediation_ui_2026_07_26.md]
+related:
+  [
+    /plans/archive/2026_07/ao_backlog_collision_alert_and_remediation_ui_2026_07_26.md,
+    /plans/archive/2026_07/ao_consolidated_closeout_2026_07_25.md,
+  ]
 created: 2026-07-26
 parent_epic: orchestrator_master
-assigned_vm: planning
+assigned_vm: NA
 execution_scope: local-only
 priority: P2
 estimate_class: research
@@ -24,6 +28,12 @@ resolved_by:
 locked_by:
 drift_direction: advance-code
 depends_on: []
+context_scope:
+  [
+    /plans/archive/2026_07/ao_backlog_collision_alert_and_remediation_ui_2026_07_26.md,
+    agent-orchestrator/dashboard/tests/e2e/backlog-detail.spec.ts,
+    agent-orchestrator/dashboard/tests/e2e/fixtures/seed_e2e_state.py,
+  ]
 ---
 
 # backlog-detail.spec.ts Queue-lag/sort tests fail reproducibly
@@ -84,3 +94,12 @@ is just wrong to assume it won't fire.
 ## Codex SSOTs
 
 - None specific — this is dashboard e2e test infra, not a documented pattern.
+
+## Progress Log
+
+- **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).
+- **na-eligibility-audit 2026-08-02** (autonomous, tranche `ao`): KEEP-NA, valid — this doc was deliberately flipped
+  `assigned_vm: planning` → `NA` + `execution_scope: local-only` by the 2026-07-31 operator directive
+  `unified-trading-pm@14478ca26` ("work these interactively now rather than queue behind AO's current busy backlog"). A
+  dated operator ruling is not re-litigated by this skill. Both todos re-read and still accurate: the `E2E-DISPATCHED`
+  seed drift is unfixed and the root cause is still an untested hypothesis.

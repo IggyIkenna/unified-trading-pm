@@ -20,7 +20,7 @@ related:
     ../../09-strategy/architecture-v2/performance-overlay.md,
   ]
 created: 2026-04-22
-authoritative_for: [DART strategy-version approval/rollout operator playbook (backtest_1yr floor, SLAs)]
+authoritative_for: ["DART strategy-version approval/rollout operator playbook (backtest_1yr floor, SLAs)"]
 referenced_by:
   [
     /codex/09-strategy/architecture-v2/dart-exclusive-research-fork.md,

@@ -22,7 +22,7 @@ scope: [engineer]
 tags: [quality-gates, eslint, ui, codex-compliance, ssot-drift, no-explicit-any, cross-repo]
 related:
   [
-    plans/active/issues/unified_trading_system_ui_codex_violations_far_exceed_estimate_2026_07_21.md,
+    plans/archive/issues/unified_trading_system_ui_codex_violations_far_exceed_estimate_2026_07_21.md,
     /codex/06-coding-standards/ui-testing-layers.md,
   ]
 created: "2026-07-21"

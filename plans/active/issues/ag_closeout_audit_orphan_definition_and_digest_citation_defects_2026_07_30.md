@@ -39,8 +39,8 @@ created: "2026-07-30"
 last_updated: "2026-07-30"
 parent_epic: agent_operating_framework_master
 priority: P1
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 drift_direction: none
 assigned_role: cicd
 estimate_class: refactor
@@ -55,6 +55,13 @@ depends_on: []
 source: >-
   `/ag-closeout-audit cefi` run 2026-07-30 (autonomous benchmark stand-in for the `ag_closeout_auditor` scheduled
   per-tranche dispatch, tranche=cefi) — Phase 0.2/0.3 covering-set discovery + Phase 1 classification.
+context_scope:
+  [
+    /cursor-configs/skills/ag-closeout-audit/SKILL.md,
+    /scripts/plan-hygiene/generate_ag_closeout_audit_candidates.py,
+    /plans/active/issues/ag_closeout_audit_scope_widening_triage_2026_07_26.md,
+    /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
+  ]
 ---
 
 # `/ag-closeout-audit` orphan count is not reproducible — two coverage-definition defects
@@ -146,7 +153,7 @@ Other: operator can type a custom answer
 - `plans/active/issues/cefi_book_snapshot5_schema_contract_ts_event_levels_mismatch_2026_07_28.md`'s open P3 todo
   ("if/when `derivative_ticker` is routed through `finalise_rows_and_path` with `validate=True` it will need the same
   `ts_event`-derivation treatment") is **provably already shipped** —
-  `plans/active/issues/lighter_zksync_derivative_ticker_tardis_numeric_market_id_leaks_into_symbol_schema_2026_07_29.md`
+  `plans/archive/issues/lighter_zksync_derivative_ticker_tardis_numeric_market_id_leaks_into_symbol_schema_2026_07_29.md`
   records `market-tick-data-service@6bf568ee` adding `"derivative_ticker": {}` to `_WIRE_COLUMN_RENAMES` for exactly
   this reason. False-unchecked.
 
@@ -204,3 +211,9 @@ Other: operator can type a custom answer
   reading" (A) as this doc's prior run for this session's own Phase 1 classification, labelled explicitly, not silently.
   Proceeding to a fresh Phase 0-3 pass over the corrected candidate set (see
   `/plans/active/cefi_satellite_ao_dispatch_batch4_2026_07_30.md` if drafted).
+- **na-eligibility-audit 2026-07-30** (tranche=cefi, autonomous): RECLASSIFY -> `assigned_vm: planning` (in place, name
+  unchanged). 2 SCRIPT todos are bounded script fixes with explicit done-whens; the one genuine judgment call is
+  correctly `[OPERATOR]`-tagged (stays non-dispatchable). Conflict-check clear
+  (`ag_closeout_audit_scope_widening_triage` cites a different, already-archived defect). Shared conflict-check
+  protocol: `/codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md` sect.3 - CLEARED.
+- **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).

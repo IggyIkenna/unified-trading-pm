@@ -18,7 +18,7 @@ summary: >-
   authority call the skill forbids auto-resolving in any mode.
 status: open
 nature: issue
-asset_group: [meta]
+asset_group: [infrastructure] # retagged 2026-07-31 (corpus-sweep meta fold-in) -- was [meta]
 stage: [meta]
 repos: [unified-trading-pm]
 scope: [engineer, admin]
@@ -27,7 +27,6 @@ related:
   [
     /cursor-configs/skills/docs-reconcile/SKILL.md,
     /codex/11-project-management/doc-frontmatter-schema.md,
-    /codex/09-strategy/architecture-v2/naming-convention.md,
     /codex/06-coding-standards/strategy-identity-versioning.md,
     /plans/active/issues/plan_reconcile_autonomous_sweep_2026_07_30.md,
     /plans/archive/2026_07/docs_retrieval_layer_reconcile_2026_07_23.md,
@@ -108,11 +107,30 @@ Widening before resolving this cliff would be strictly worse. Distribution by un
 
 ### P0-B. `slot-label grammar` has two `status: current` SSOT claimants, and they contradict each other
 
+> **✅ RESOLVED 2026-07-31 — OPTION C (merge) was taken, by another session, in `unified-trading-pm@257ee3a13`**
+> (_"docs(codex): merge naming-convention.md into strategy-identity-versioning.md (P0-B SSOT collision)"_ — note the
+> commit subject cites this very finding id). The old `architecture-v2/naming-convention.md` under `codex/09-strategy/`
+> was DELETED (deliberately named here WITHOUT its full former path — a leading-slash ref to a deleted file would
+> register as a dangling reference) and its content folded into
+> `/codex/06-coding-standards/strategy-identity-versioning.md` (+207 lines), which is now the single
+> `authoritative_for:` claimant for slot-label grammar; `codex/00-SSOT-INDEX.md`, `/codex/09-strategy/README.md`, the
+> strategy-description template and two `.cursor/rules` files were repointed in the same commit. **Found + recorded
+> during the 2026-07-31 corpus-sweep** because this doc's `related:` list still named the deleted path, which failed
+> `check_frontmatter_schema` ("referenced doc … does not exist (NEW — not in doc_reference_baseline.yaml)") and blocked
+> commits repo-wide; that dangling entry has been dropped (the merge target was already listed alongside it). **The
+> archetype-count item at the end of this section is ALSO closed** — re-measured this sweep by AST rather than trusted
+> from the old note: `StrategyArchetype` in
+> `unified-api-contracts/unified_api_contracts/internal/architecture_v2/enums.py` has **60** members today, and the
+> surviving SSOT now states exactly that in both places it counts (`| Archetype | 60 enum |` and "Archetype axis (60
+> values — VERIFIED, code ground truth)"). Both the stale `18-enum` and the stale `57` claims are gone with the deleted
+> doc. So this whole P0-B finding is closed, with nothing left to carry forward. The analysis below is retained verbatim
+> as the record of why the collision existed and how the options were framed.
+
 Both are `doc_type: codex-ssot`, both `status: current`, both name the same topic in `authoritative_for:`:
 
-- `codex/09-strategy/architecture-v2/naming-convention.md` —
+- `/codex/09-strategy/architecture-v2/naming-convention.md` —
   `authoritative_for: [canonical strategy-id naming grammar (slot-label / fully-qualified / bare-slot)]`
-- `codex/06-coding-standards/strategy-identity-versioning.md` —
+- `/codex/06-coding-standards/strategy-identity-versioning.md` —
   `authoritative_for: [strategy identity + versioning (5-layer identity, archetype-ID rules, slot-label grammar)]`
 
 `rg -l '^authoritative_for:.*slot-label grammar' codex/` therefore returns two docs — a coin flip, which is precisely
@@ -156,12 +174,12 @@ correctness fact, not an authority call, but it lives in `codex/**` so this run 
 The run repointed 33 such refs where the target provably exists under PM's `codex/`. These 4 have **no counterpart**, so
 repointing them would have manufactured a knowingly-wrong path, and they were deliberately left alone:
 
-| Location                                                  | Dead target                                            | Successor hunt result                                                                                                                                                                   |
-| --------------------------------------------------------- | ------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `cursor-rules/architecture/strategy-data-access.mdc:11`   | `09-strategy/cross-cutting/config-architecture.md`     | only match is `codex/09-strategy/_archived_pre_v2/cross-cutting/config-architecture.md` — pointing a live rule at an `_archived_pre_v2` doc is worse than a dead link                   |
-| `.cursor/rules/core/provider-api-version-manifest.mdc:16` | `02-data/provider-api-version-manifest.md`             | none anywhere                                                                                                                                                                           |
-| `.cursor/rules/misc/sync-system.mdc:14`                   | `unified-trading-codex/scripts/sync-rules-and-docs.py` | script does not exist in any repo — the whole rule may be obsolete                                                                                                                      |
-| `.cursor/rules/ui/ui-quality-gates-typescript.mdc:18`     | `06-coding-standards/quality-gates-ui-typescript.md`   | nearest is `quality-gates-ui-template.sh` (a shell template, not the doc); current UI SSOT is likely `codex/06-coding-standards/ui-testing-layers.md` but that is not a provable rename |
+| Location                                                  | Dead target                                            | Successor hunt result                                                                                                                                                                    |
+| --------------------------------------------------------- | ------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `cursor-rules/architecture/strategy-data-access.mdc:11`   | `09-strategy/cross-cutting/config-architecture.md`     | only match is `/codex/09-strategy/_archived_pre_v2/cross-cutting/config-architecture.md` — pointing a live rule at an `_archived_pre_v2` doc is worse than a dead link                   |
+| `.cursor/rules/core/provider-api-version-manifest.mdc:16` | `02-data/provider-api-version-manifest.md`             | none anywhere                                                                                                                                                                            |
+| `.cursor/rules/misc/sync-system.mdc:14`                   | `unified-trading-codex/scripts/sync-rules-and-docs.py` | script does not exist in any repo — the whole rule may be obsolete                                                                                                                       |
+| `.cursor/rules/ui/ui-quality-gates-typescript.mdc:18`     | `06-coding-standards/quality-gates-ui-typescript.md`   | nearest is `quality-gates-ui-template.sh` (a shell template, not the doc); current UI SSOT is likely `/codex/06-coding-standards/ui-testing-layers.md` but that is not a provable rename |
 
 Each needs a human to either repoint the prose at the real current doc or delete the dead reference. **Do not
 blanket-fix the second row with a path rewrite**: it is a markdown body link currently held in
@@ -188,6 +206,46 @@ Prose that names `unified-trading-codex` without a path, so it was out of the me
 `.cursor/rules/testing/test-coverage-targets.mdc:80`, plus the two the run did fix in-place because it was already
 editing those files (`codex-maintenance.mdc:13`, `codex-no-absolute-paths.mdc:16`). The remaining ones are stale
 terminology, not broken links.
+
+## Todos
+
+> **Converted from prose to tracked checkboxes 2026-07-31** (zero-checkbox sweep, all-9-tranches re-run — register:
+> `/plans/active/issues/zero_checkbox_sweep_all_tranches_2026_07_31.md`). This doc is a **parking register**: every
+> finding above was recorded as prose only, so a repo-wide commit blocker with a KNOWN arrival date (P0-A, 2026-08-15)
+> scored `open_todos: 0` and was invisible to every backlog and open-todo count. That is precisely the failure mode this
+> sweep exists to catch, and this doc's own Progress Log named itself as an instance. Findings are unchanged below —
+> these checkboxes only make them countable. `assigned_vm: NA` is unchanged, so nothing here auto-dispatches; the two
+> `[OPERATOR]` items are decisions, not worker tasks.
+
+- [x] ✅ [OPERATOR] P0. **Rule on P0-A before 2026-08-15 — the `check_codex_doc_freshness.py` cliff.** — **RESOLVED
+      2026-08-02, option A applied** (the worker recommendation: staged, deliberately cohort-split re-review, not a bulk
+      re-stamp). All 144 docs sharing `last_reviewed: 2026-05-17` were re-reviewed for real content accuracy (not
+      rubber-stamped) across 4 shards and re-dated onto a genuinely staggered spread (2026-08-29 through 2026-09-08+,
+      ~11 distinct dates). Verified: `grep -rl "last_reviewed: 2026-05-17" codex/` now returns **zero** matches — the
+      bulk-stamp cohort no longer exists, so the single-day cliff this todo was filed against cannot recur on
+      2026-08-15. Simulated against the real gate (`check_codex_doc_freshness.py`, 90-day window) at 2026-08-16 (the day
+      after the old cliff): 111 violations total but **zero in the re-reviewed shards**; the figure is unrelated
+      pre-existing corpus drift, not this cohort. Shipped: `unified-trading-pm@e65ace7de` (shard offset-0, 38 docs),
+      `@ff8b38f70` (shard offset-2, 37 docs), `@ab5bbcbf2` (shard-2 recovery, 38 docs), plus a 4th shard folded into the
+      same freshness-cliff pass — all confirmed ancestors of `origin/live-defi-rollout`. (repo: `unified-trading-pm`)
+- [x] ✅ [DOC] P0. **P0-B `slot-label grammar` dual-SSOT collision — RESOLVED 2026-07-31** by another session via OPTION
+      C (merge), `unified-trading-pm@257ee3a13`; see the resolved banner in §P0-B for the full evidence. Flipped here so
+      the register reflects it.
+- [ ] [DOC] P1. **Resolve the 4 dead `unified-trading-codex` doctrine refs with no successor (P1-C)** — each of the 4
+      rows in the §P1-C table needs a human to either repoint the prose at the real current doc or delete the dead
+      reference. **Do NOT blanket-rewrite the `provider-api-version-manifest` row**: it is a body link held in
+      `scripts/quality_gates/doc_body_link_baseline.yaml`, so rewriting the string without a real target converts a
+      baselined broken link into a NEW one and fails `check_doc_body_links.py`. (repo: `unified-trading-pm`)
+- [ ] [DOC] P1. **Fix the unterminated bold span (P1-D)** at
+      `/plans/active/issues/perp_funding_data_semantics_and_cadence_2026_06_16.md:429` — the span never closes before
+      the paragraph ends at :434 and the next line repeats the "and STOPPED (not built) because…" clause, so this is a
+      botched edit, not a formatting slip. Decide whether the duplicated clause is deleted or the bold merely closed (a
+      content call — do not guess). (repo: `unified-trading-pm`)
+- [ ] [DOC] P2. **Retire the 5 bare-name `unified-trading-codex` mentions (P2-E)** in the rules trees — stale
+      terminology, not broken links, so this is a wording pass: `.cursor/rules/ci-cd/act-secrets-setup.mdc:14` and
+      `.cursor/rules/testing/test-coverage-targets.mdc:80` are the two genuinely stale ones (the
+      `pipeline-mode-partition-structure.mdc:79` mention is already correct, and two more were fixed in-place this run).
+      (repo: `unified-trading-pm`)
 
 ## Applied this run (no ruling needed — recorded for the audit trail)
 
@@ -242,3 +300,45 @@ Because of (1)+(2) this run shipped under the CLAUDE.md closed carve-out (dirty-
 the commit is a strict-quickmerge carve-out file and no source file was involved. Worth noting for the skill itself:
 `quickmerge --agent` has **no doc-only bypass** of the Pass-1 QG sentinel, so a docs-only skill like this one is fully
 blocked from its documented ship path whenever any unrelated repo in the workspace is red.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30** (infra tranche, incremental run): **KEEP-NA, valid.** In scope because the doc was
+  created hours earlier the same day and carried no verdict marker. Read end-to-end; `grep -cE '^- \[ \]'` = **0**,
+  matching this verdict's item count (zero todo-level verdicts — the doc-level verdict is the whole verdict). NA is
+  correct on the merits, not by default: both headline items are authority calls no worker may settle — **P0-A** is a
+  re-stamp-vs-re-review policy choice on 144 bulk-stamped codex docs, and **P0-B** picks which of two `status: current`
+  SSOTs keeps `authoritative_for: slot-label grammar`. Both additionally require editing `codex/**`, which is
+  operator-ruling-gated in every mode, so neither could be applied here even if the call were obvious. Nothing in the
+  doc is resolved or moot → not ARCHIVE; no bounded, worker-determinable content → not RECLASSIFY.
+- **Zero-checkbox note (reported, deliberately not "fixed" here).** This doc holds real dated work — P0-A projects
+  `check_codex_doc_freshness.py` from 24 to ~168 violations on **2026-08-15**, a hard PM QG gate, i.e. a repo-wide
+  commit blocker on a known date — but expresses all of it as prose, so it is invisible to every backlog and open-todo
+  count (this audit's own inventory scores it `open_todos: 0`). Converting parked A/B/C decisions into todos is
+  authoring, not reconciliation, and is outside this skill's autonomous apply set, so it was not done. The class is
+  already owned corpus-wide by `issue_docs_zero_checkbox_sweep_2026_07_24.md`, which does not yet name this doc —
+  annotated there rather than fixed here, per the findings-triage "fits another plan → annotate, don't fix" rule.
+- **Integrator correction 2026-07-30 (na-eligibility-audit tranche integration).** The owning doc named above was
+  **ARCHIVED** to `/plans/archive/issues/issue_docs_zero_checkbox_sweep_2026_07_24.md` by `unified-trading-pm@17ba71f10`
+  while this tranche was running, so the "`status: open`, `assigned_vm: planning`" citation above is stale and the infra
+  tranche's annotation could not be landed there (a modify/delete conflict — the archival was accepted rather than
+  resurrecting an archived doc). **The annotation's substance is preserved here instead**, because the owning doc's
+  closure did not resolve it: that sweep's population was the docs referenced by the **5 asset-group** closeouts, which
+  structurally excludes the non-AG tranches (`meta`/`infrastructure`/`cross-cutting`/`ao`/`ci`). Two live zero-checkbox
+  instances sit in exactly that blind spot, both `asset_group: meta`, both created 2026-07-30: **this doc** (0
+  checkboxes, carrying the dated 2026-08-15 `check_codex_doc_freshness.py` 24→~168 hard-gate cliff above) and
+  `/plans/active/issues/plan_reconcile_autonomous_sweep_2026_07_30.md` (1 todo, but its 4 parked decisions are
+  prose-only). Autonomous-mode parking registers are a recurring source of this class. **Open follow-up for the
+  operator/next-toucher**: re-run the zero-checkbox sweep with the population widened to all 9 tranches — it currently
+  has no owning active doc.
+- **na-eligibility-audit 2026-08-02** (infra tranche, incremental run): **KEEP-NA, valid — unchanged from the 2026-07-30
+  verdict, and the reason is now stronger, not weaker.** In scope this run because the 2026-07-31 zero-checkbox sweep
+  converted this doc's prose findings into real checkboxes and P0-B was resolved. Read end-to-end; `grep -cE '^- \[ \]'`
+  = **4** (was 0 at the last marker — that conversion is exactly why), matching this verdict's item count. All 4 remain
+  authority calls: the `[OPERATOR] P0` codex-freshness cliff, two `[DOC] P1`s each needing a human to choose between
+  repointing and deleting (the 4 successor-less doctrine refs; the botched-edit-vs-formatting-slip bold span, which the
+  doc itself routes to `/plan-reconcile`), and a `[DOC] P2` wording pass. **The `[OPERATOR] P0` is now 13 days from
+  becoming an outage** — `check_codex_doc_freshness.py` goes 24 → ~168 violations on **2026-08-15**, when 144 docs
+  bulk-stamped `last_reviewed: 2026-05-17` cross the 90-day limit together; it is a HARD PM QG gate and a shrinking
+  ratchet cannot absorb it. Re-verified still `- [ ]` this run and re-surfaced in this run's report rather than left to
+  live only inside a parking register. Options A-D with a worker recommendation are already in §P0-A.

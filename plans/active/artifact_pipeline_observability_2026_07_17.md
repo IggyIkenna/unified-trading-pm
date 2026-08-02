@@ -10,7 +10,11 @@ summary:
   narrow per-service tab. Mock-first is done (real probed data); this plan wires the real API + UI.
 status: active
 nature: design
-asset_group: [infrastructure]
+asset_group:
+  [ui] # corrected 2026-07-30 (ui-tranche launch) -- was [infrastructure]; the deployment-ui
+  # /artifacts page itself (repos: deployment-ui, deployment-api only) -- still cited from
+  # infra_consolidated_closeout_2026_07_25.md as a cross-tranche mention, which is fine (same pattern as any
+  # other tranche's Sources list citing a doc it doesn't primarily own)
 stage: [meta]
 repos: [deployment-ui, deployment-api, unified-trading-pm]
 scope: [engineer, admin]
@@ -52,6 +56,13 @@ depends_on:
 source: operator request 2026-07-17 (interactive, tab-2)
 assigned_role: infra
 drift_direction: advance-code
+context_scope:
+  [
+    /codex/05-infrastructure/dual-cloud-image-builds.md,
+    /codex/05-infrastructure/vm-tarball-deployment.md,
+    /codex/06-coding-standards/ui-testing-layers.md,
+    /plans/archive/deployment_api_cache_oom_and_ui_latency_remediation_2026_07_13.md,
+  ]
 ---
 
 # Artifact pipeline observability — build → artifact → deploy lineage
@@ -882,7 +893,7 @@ this: a top banner (GCP active / AWS parked), a Health `deferred` tier (blue, "n
 - [ ] [SCRIPT] P3. **Correct the misattributed VM origin in
       `issues/deployment_service_qg_red_qg_snapshot_launcher_live_vm_flake_2026_07_27.md`** — that issue doc (filed by a
       different agent/slot-4, independently) states `qg-snapshot-20260727-232717` was "the actual daily qg-snapshot cron
-      VM (terraform schedule '0 6 * * *')"; it was actually this session's ad-hoc Phase 3c verification launch
+      VM (terraform schedule '0 6 \* \* \*')"; it was actually this session's ad-hoc Phase 3c verification launch
       (confirmed: this session ran `bash launch-qg-snapshot-vm.sh` directly at that exact timestamp). The doc's actual
       finding (the launcher's singleton-lock preflight breaking `--dry-run-scheduler-body`'s statelessness) is still
       correct and still worth fixing — only the "which VM was this" attribution is wrong. Low-priority since it doesn't
@@ -933,3 +944,4 @@ issue-doc-correction todo (Phase 3c section), and AWS resume (operator/credits-g
 - **na-eligibility-audit 2026-07-30**: KEEP-NA, valid (infra tranche, dispatch agt-30721a) — Explicit human/local-plan
   banner, dense ongoing operator sign-off history; remaining 12 items are either operator-paused, explicitly-optional
   stretch items, or follow-on cleanup tied to the same operator-reviewed design track.
+- **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).

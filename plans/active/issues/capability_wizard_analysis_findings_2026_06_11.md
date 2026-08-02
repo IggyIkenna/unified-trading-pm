@@ -26,7 +26,13 @@ locked_by: live-defi-rollout
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
-last_updated: 2026-06-27
+last_updated: 2026-07-31
+context_scope:
+  [
+    /plans/active/issues/capability_wizard_gap_discovery_2026_06_11.md,
+    /plans/archive/2026_07/capability_wizard_and_manifest_2026_06_11.md,
+    /codex/04-architecture/execution-algorithm-selection.md,
+  ]
 ---
 
 # Capability wizard — analysis findings (bugs / conflicting truths / dual implementations)
@@ -390,14 +396,18 @@ at install (engine floor 20.19). Remedy for agents on this host: `PATH="/usr/bin
 
 ### F33–F37 — Five selector contradictions: execution-algo truth disagrees across its own code paths
 
-**Status**: OPEN — transcribed declaratively in UAC `algo_compatibility.py::SELECTOR_CONTRADICTIONS` (UAC@180fb56, the
-detail SSOT; manifest carries them as edges). Slugs: **F33 iceberg_path_split** (ICEBERG valid via manual API + live
-selector + factory but excluded from canonical ALGORITHMS_BY_INSTRUCTION_TYPE), **F34 sor_naming_mismatch** (factory
-keys SOR differently from the canonical name), **F35 ghost_algorithms** (SEQUENTIAL_LEGS/SPREAD_ROLL/
-BEST_PRICE/KELLY_STAKE valid in enums but unimplemented), **F36 heuristic_selector_bypasses_instruction_type** (live
-selection path ignores the instruction-type map), **F37 missing_ssot_doc** (no codex SSOT for algo selection). Exactly
-the operator's "codebase isn't blocking impossible combinations" — now declared, blocked in the verdict matrix, and
-awaiting execution-service remediation.
+**Status**: FIXED — verified 2026-07-30, execution-service@d0597237 + unified-api-contracts@91df8e34 (see the F33–F37
+todo below for the per-slug remediation detail). Originally transcribed declaratively in UAC
+`algo_compatibility.py:: SELECTOR_CONTRADICTIONS` (UAC@180fb56, the detail SSOT; manifest carries them as edges). Slugs:
+**F33 iceberg_path_split** (ICEBERG valid via manual API + live selector + factory but excluded from canonical
+ALGORITHMS_BY_INSTRUCTION_TYPE — resolved as an intentional, now-documented two-axis split), **F34 sor_naming_mismatch**
+(factory keys SOR differently from the canonical name — fixed via a canonical-name alias), **F35 ghost_algorithms**
+(SEQUENTIAL_LEGS/SPREAD_ROLL/BEST_PRICE/KELLY_STAKE valid in enums but unimplemented — verified fail-loud not silent,
+inline-flagged), **F36 heuristic_selector_bypasses_instruction_type** (live selection path ignored the instruction-type
+map — the dead, never-instantiated heuristic selector was deleted), **F37 missing_ssot_doc** (no codex SSOT for algo
+selection — created `codex/04-architecture/execution-algorithm-selection.md`). Exactly the operator's "codebase isn't
+blocking impossible combinations" — the impossible combinations were already declared/blocked in the verdict matrix;
+execution-service remediation is now complete.
 
 ### F38 — IBKR modeled as a VENUE in ENDPOINT_REGISTRY (broker/venue conflation — operator-caught, system-design floor)
 
@@ -424,14 +434,15 @@ hand-named lists.
 
 ### F40 — AO server persists runtime usage state into tracked accounts.json → perpetual dirty churn
 
-**Status**: OPEN — recommended owner agent-orchestrator (orchestrator_master). 2026-06-12, operator-directed dirty-repo
-cleanup: agent-orchestrator's only dirt was `data/config/accounts.json` rewritten by the SERVER itself — it persists
-live usage fields (weekly_msgs_used, five_hour_msgs_used, rate_limited_until, last_used_at) into the operator-edited
-tracked config, with ensure_ascii serialization (unicode → — escapes). Consequences: the repo re-dirties on every usage
-tick (jams ff-pull cron per the stale-clone rule), and a `git checkout` of the file is safe ONLY because the server
-re-persists from memory (verified via GET /api/accounts — live state intact). Remedy: split runtime usage state into an
-untracked data/state/ file (or gitignore a dedicated state sidecar); keep accounts.json operator-edited-only; preserve
-unicode on any rewrite. Same antipattern class as the generated-artifacts HARD RULE.
+**Status**: FIXED agent-orchestrator@6385056 (2026-06-22) — `data/config/accounts.json` gitignored + untracked.
+2026-06-12, operator-directed dirty-repo cleanup: agent-orchestrator's only dirt was `data/config/accounts.json`
+rewritten by the SERVER itself — it persists live usage fields (weekly_msgs_used, five_hour_msgs_used,
+rate_limited_until, last_used_at) into the operator-edited tracked config, with ensure_ascii serialization (unicode → —
+escapes). Consequences: the repo re-dirties on every usage tick (jams ff-pull cron per the stale-clone rule), and a
+`git checkout` of the file is safe ONLY because the server re-persists from memory (verified via GET /api/accounts —
+live state intact). Remedy: split runtime usage state into an untracked data/state/ file (or gitignore a dedicated state
+sidecar); keep accounts.json operator-edited-only; preserve unicode on any rewrite. Same antipattern class as the
+generated-artifacts HARD RULE.
 
 ## Phase 6A findings (2026-06-12 registry/exporter wave)
 
@@ -625,26 +636,26 @@ F49–F53 are FIXED as of 2026-06-14); trust this table. Status taxonomy: **FIXE
 **LOGIC-FREEZE** (engine fix gated on the strategy-service freeze lifting; surface-ready) · **BLOCKED-CREDENTIALS** ·
 **BLOCKED-OPERATOR-DECISION**. Verified-in-code 2026-06-15 (grep-then-read).
 
-| Domain                         | Findings                                                                                                                                                      | Status                                           | Evidence                                                                                                                            |
-| ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------- |
-| Unfinished adapters            | F46 (binance/bybit/okx perp `place_order`)                                                                                                                    | BLOCKED-CREDENTIALS                              | `binance_native.py:326`/`bybit_native.py:318`/`okx_native.py:329` `raise NotImplementedError`                                       |
-| Unfinished adapters            | F42 (6 adapter-backed venues absent from VENUE_CATEGORY_MAP) — F43 RESOLVED uac@61ba5239 (2026-07-15, plan-reconcile §10)                                     | FIXED uac@f3440731 (2026-07-28)                  | UAC registry                                                                                                                        |
-| Catalogue ↔ engine             | F47 (verdict-matrix venues v2 slot-token registry rejects)                                                                                                    | FIXED (verified 2026-07-30)                      | `KNOWN_VENUE_TOKENS` + verdict-matrix regression test — see F47 section above                                                       |
-| Catalogue ↔ engine             | F48 (22 VOL*\*/MARKET_MAKING*\* archetypes, no v2 engine)                                                                                                     | FIXED (verified 2026-07-30)                      | verdict-matrix demotes to `not_registered(no_v2_engine)` + `test_f48_engineless_archetypes_are_not_registered` — see F48 todo above |
-| Catalogue ↔ engine             | F27 (carry-staked-basis `deribit`≠`DERIBIT` case mismatch), F33–F37 (execution-algo selector contradictions)                                                  | LOGIC-FREEZE                                     | strategy-service / execution-service                                                                                                |
-| Catalogue ↔ engine             | F22 (multi-leg collapsed to one cell)                                                                                                                         | FIXED (leg-spec registry)                        | derive-from-legs follow-up open                                                                                                     |
-| Collateral + movements         | **F28 (two collateral SSOTs disagree on LST haircuts — 4 conflicts)**                                                                                         | OPEN                                             | `venue_collateral.py` vs `lst_collateral_resolver.py:51-82` (HL wstETH; Bybit 10%vs15%; Deribit 7.5%vs20%; OKX absent vs 15%)       |
-| Collateral + movements         | F7 (policy was derivation)                                                                                                                                    | FIXED (registry backfilled)                      | —                                                                                                                                   |
-| Trader ledger                  | `transfer_purpose` + COLLATERAL_POSTED/MARGIN_RELEASED                                                                                                        | UAC surface FIXED; **no emitter** (LOGIC-FREEZE) | symbols only in UAC `crosscutting/transfer_events.py` + `ledger/_enums.py`, zero consumers                                          |
-| PnL / attribution              | **F45 (exposure netting — primitives exist, no service owns the pipeline)**, multi-leg inter-leg delta = no owner                                             | FIXED (2026-06-15)                               | canonical netting in UTL `risk/net_delta.py`; `engine_findings_remediation_2026_06_15.md`                                           |
-| Balances                       | margin: `margin_event_emitter.py:98` hardcodes `venue_type="defi"`; `venue_balance_tracker.py` is sports-only; `margin_health.py:32` Phase-1 stub `return []` | LOGIC-FREEZE                                     | strategy-service (3 files)                                                                                                          |
-| Balances                       | F40 (AO writes runtime state into tracked `accounts.json`)                                                                                                    | OPEN                                             | agent-orchestrator                                                                                                                  |
-| Reconciliation                 | F1/F2/F3 (service-set truths; coverage warns-not-fails; v2 enums invisible)                                                                                   | FIXED (Phase-0)                                  | —                                                                                                                                   |
-| Reconciliation                 | F12 (config-registry regen empties destructively on non-workspace-venv host)                                                                                  | OPEN (environmental)                             | —                                                                                                                                   |
-| Circuit breakers / kill-switch | F17 (predicates runtime-fired, not engine-introspectable), F16 (`log_event(service_name=)` TypeError on GCS-config path)                                      | LOGIC-FREEZE                                     | strategy-service                                                                                                                    |
-| Circuit breakers / kill-switch | F49 (`custody_provider` node-kind was a dumping ground incl. kill_switch)                                                                                     | FIXED (Waves A/B/C)                              | —                                                                                                                                   |
-| Redundancy / duplication       | F6, F41, F44, F51, F52                                                                                                                                        | FIXED                                            | —                                                                                                                                   |
-| Registry under-coverage        | F50 (fund_structure), F52 (data_source split), F53 (ml_model 1→8 + signal-grounded edges)                                                                     | FIXED (Wave B/C 2026-06-14)                      | manifest 574/2433                                                                                                                   |
+| Domain                         | Findings                                                                                                                                                      | Status                                              | Evidence                                                                                                                            |
+| ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| Unfinished adapters            | F46 (binance/bybit/okx perp `place_order`)                                                                                                                    | BLOCKED-CREDENTIALS                                 | `binance_native.py:326`/`bybit_native.py:318`/`okx_native.py:329` `raise NotImplementedError`                                       |
+| Unfinished adapters            | F42 (6 adapter-backed venues absent from VENUE_CATEGORY_MAP) — F43 RESOLVED uac@61ba5239 (2026-07-15, plan-reconcile §10)                                     | FIXED uac@f3440731 (2026-07-28)                     | UAC registry                                                                                                                        |
+| Catalogue ↔ engine             | F47 (verdict-matrix venues v2 slot-token registry rejects)                                                                                                    | FIXED (verified 2026-07-30)                         | `KNOWN_VENUE_TOKENS` + verdict-matrix regression test — see F47 section above                                                       |
+| Catalogue ↔ engine             | F48 (22 VOL*\*/MARKET_MAKING*\* archetypes, no v2 engine)                                                                                                     | FIXED (verified 2026-07-30)                         | verdict-matrix demotes to `not_registered(no_v2_engine)` + `test_f48_engineless_archetypes_are_not_registered` — see F48 todo above |
+| Catalogue ↔ engine             | F27 (carry-staked-basis `deribit`≠`DERIBIT` case mismatch), F33–F37 (execution-algo selector contradictions)                                                  | FIXED (F27 verified 2026-07-27; F33–F37 2026-07-30) | strategy-service@dac939d6 / execution-service@d0597237 + uac@91df8e34 — see F33–F37 todo above                                      |
+| Catalogue ↔ engine             | F22 (multi-leg collapsed to one cell)                                                                                                                         | FIXED (leg-spec registry)                           | derive-from-legs follow-up open                                                                                                     |
+| Collateral + movements         | **F28 (two collateral SSOTs disagree on LST haircuts — 4 conflicts)**                                                                                         | OPEN                                                | `venue_collateral.py` vs `lst_collateral_resolver.py:51-82` (HL wstETH; Bybit 10%vs15%; Deribit 7.5%vs20%; OKX absent vs 15%)       |
+| Collateral + movements         | F7 (policy was derivation)                                                                                                                                    | FIXED (registry backfilled)                         | —                                                                                                                                   |
+| Trader ledger                  | `transfer_purpose` + COLLATERAL_POSTED/MARGIN_RELEASED                                                                                                        | UAC surface FIXED; **no emitter** (LOGIC-FREEZE)    | symbols only in UAC `crosscutting/transfer_events.py` + `ledger/_enums.py`, zero consumers                                          |
+| PnL / attribution              | **F45 (exposure netting — primitives exist, no service owns the pipeline)**, multi-leg inter-leg delta = no owner                                             | FIXED (2026-06-15)                                  | canonical netting in UTL `risk/net_delta.py`; `engine_findings_remediation_2026_06_15.md`                                           |
+| Balances                       | margin: `margin_event_emitter.py:98` hardcodes `venue_type="defi"`; `venue_balance_tracker.py` is sports-only; `margin_health.py:32` Phase-1 stub `return []` | LOGIC-FREEZE                                        | strategy-service (3 files)                                                                                                          |
+| Balances                       | F40 (AO writes runtime state into tracked `accounts.json`)                                                                                                    | FIXED agent-orchestrator@6385056                    | agent-orchestrator                                                                                                                  |
+| Reconciliation                 | F1/F2/F3 (service-set truths; coverage warns-not-fails; v2 enums invisible)                                                                                   | FIXED (Phase-0)                                     | —                                                                                                                                   |
+| Reconciliation                 | F12 (config-registry regen empties destructively on non-workspace-venv host)                                                                                  | OPEN (environmental)                                | —                                                                                                                                   |
+| Circuit breakers / kill-switch | F17 (predicates runtime-fired, not engine-introspectable), F16 (`log_event(service_name=)` TypeError on GCS-config path)                                      | FIXED (F17 2026-07-31; F16 2026-07-30)              | strategy-service@915ff464 (F17), strategy-service@31ee01ec (F16)                                                                    |
+| Circuit breakers / kill-switch | F49 (`custody_provider` node-kind was a dumping ground incl. kill_switch)                                                                                     | FIXED (Waves A/B/C)                                 | —                                                                                                                                   |
+| Redundancy / duplication       | F6, F41, F44, F51, F52                                                                                                                                        | FIXED                                               | —                                                                                                                                   |
+| Registry under-coverage        | F50 (fund_structure), F52 (data_source split), F53 (ml_model 1→8 + signal-grounded edges)                                                                     | FIXED (Wave B/C 2026-06-14)                         | manifest 574/2433                                                                                                                   |
 
 ## Open findings — tracked todos (2026-06-15, operator-requested capture)
 
@@ -691,8 +702,12 @@ F49–F53 are FIXED as of 2026-06-14); trust this table. Status taxonomy: **FIXE
       origin/live-defi-rollout; NASDAQ/NYSE now referenced by leg seeds — `archetype_leg_spec_seeds.py:947`
       `ibkr-aapl-msft (NASDAQ)`, `ibkr-xom-cvx`/`ibkr-jpm-bac` (NYSE)). Flipped 2026-07-15, plan-reconcile §10: the F43
       section at ~L459 already read RESOLVED while this todo and the L411/L607 rollups still said OPEN.
-- [ ] [SCRIPT] P3. **F40 — gitignore AO runtime `accounts.json`** (server persists usage state into a tracked file →
-      perpetual dirty churn). Target: agent-orchestrator.
+- [x] ✅ [SCRIPT] P3. **F40 — gitignore AO runtime `accounts.json`** (server persists usage state into a tracked file →
+      perpetual dirty churn). Target: agent-orchestrator. — **Already shipped** agent-orchestrator@6385056
+      ("chore(orchestrator): gitignore + untrack data/config/accounts.json (fleet_git_health P3)", 2026-06-22) —
+      `data/config/accounts.json` is gitignored (`.gitignore:46`) and untracked (`git ls-files` empty), already an
+      ancestor of current `live-defi-rollout` HEAD. This todo predated that fix landing; flipping to close the stale
+      duplicate.
 
 **Tracked, gated (engine — strategy-service LOGIC FREEZE / credentials / operator decision):**
 
@@ -745,12 +760,64 @@ F49–F53 are FIXED as of 2026-06-14); trust this table. Status taxonomy: **FIXE
       strategy engines) remains explicitly NOT done — that is a separate, much larger strategy-service feature build,
       out of scope here; the wizard/matrix now honestly reports these archetypes as unbuildable instead of silently
       over-claiming AVAILABLE, which was the actual correctness defect this finding raised.
-- [ ] [LOGIC] P2. **F33–F37 — reconcile the 5 execution-algo selector contradictions** (iceberg/SOR/ghost-algos/
-      heuristic-bypass/no-SSOT). LOGIC-FREEZE. Target: execution-service.
-- [ ] [BUG] P2. **F16 — latent `log_event(service_name=)` TypeError on the GCS-config path.** LOGIC-FREEZE. Target:
-      strategy-service.
-- [ ] [SPEC] P3. **F17 — expose kill-switch/stop-loss predicates for engine introspection** (currently runtime-fired
-      only — invisible to the capability graph). Post-unfreeze enhancement. Target: strategy-service.
+- [x] ✅ [LOGIC] P2. **F33–F37 — reconcile the 5 execution-algo selector contradictions** (iceberg/SOR/ghost-algos/
+      heuristic-bypass/no-SSOT). LOGIC-FREEZE. Target: execution-service. — **DONE 2026-07-30 —
+      execution-service@d0597237 + unified-api-contracts@91df8e34 + pm codex doc (this commit).** FREEZE STATUS:
+      verified lifted (same basis as F27/F47/F48 above — `plans/epics/strategy_master.md` carries zero freeze language).
+      Per-slug resolution: **F34 (sor_naming_mismatch)** — `AlgorithmFactory._ALGO_MAP` now carries a
+      `"smart_order_router"` alias alongside `"sor"` (both -> `SORAlgorithm`); regression test
+      `test_algorithm_factory.py::test_create_smart_order_router_alias`. **F36
+      (heuristic_selector_bypasses_instruction_type)** — `execution_service/engine/live/algo_selector.py`'s
+      `AlgoSelector` deleted outright: repo-wide grep confirmed zero production call sites (only its own module + the
+      package `__init__.py` re-export) and zero test coverage — dead code with no live bypass, removed per the
+      no-shims/delete-deprecated-code rule rather than patched in place. **F35 (ghost_algorithms)** — verified
+      fail-loud, not silent: a caller routing `SEQUENTIAL_LEGS`/`SPREAD_ROLL`/`BEST_PRICE`/`KELLY_STAKE` through
+      `ExecutionOrchestrator.execute_instruction` gets `ValueError("Unknown algorithm: ...")`, never a silent
+      misexecution; `selector.py` now inline-flags each key GHOST, mirroring UAC's existing `implemented=False`. **F33
+      (iceberg_path_split)** — reconciled as an intentional two-axis split, not a bug: ICEBERG has a real
+      `algo_library.IcebergAlgorithm` implementation and stays valid for manual/live real-fill trading (the
+      backtest-fill-simulation concern that excludes it from the canonical automated selector doesn't apply there);
+      documented inline at both code sites + in the new SSOT doc, no behavior change on any of the 4 paths. **F37
+      (missing_ssot_doc)** — created `unified-trading-pm/codex/04-architecture/execution-algorithm-selection.md`;
+      `selector.py` + `instruction_type.py` docstrings now cite it in place of the nonexistent
+      `UNIFIED_EXECUTION_DELTA.md`. UAC's `SELECTOR_CONTRADICTIONS` gained `resolved`/`resolution` fields and all 5
+      records are marked resolved (kept as a permanent record, not deleted — the taxonomy split they document is itself
+      durable). `execution-service/scripts/quality-gates.sh` + `unified-api-contracts/scripts/quality-gates.sh` both
+      green.
+- [x] ✅ [BUG] P2. **F16 — latent `log_event(service_name=)` TypeError on the GCS-config path.** DONE —
+      **strategy-service@31ee01ec** (2026-07-30). Root cause: two `ADAPTER_FETCH_FAILED` call sites
+      (`load_strategy_config`, `discover_instruments` in `strategy_config_loader.py`) passed
+      `service_name=`/`operation=`/`error_code=`/`venue=` as top-level `log_event()` kwargs, but UTL `log_event()` only
+      accepts `event_name`/`severity`/`details`/`client_id`/`correlation_id` — TypeError on the GCS-config error path.
+      Fixed by wrapping the extra fields into `details={}`, matching the already-correct `load_strategy_config_by_type`
+      call in the same file. Added regression tests (`TestAdapterFetchFailedLogging` in
+      `tests/unit/test_strategy_config_loader.py`) verified to fail against the pre-fix call shape and pass against the
+      fix; `quality-gates.sh` green on commit 31ee01ec.
+- [x] ✅ [SPEC] P3. **F17 — expose kill-switch/stop-loss predicates for engine introspection** (currently runtime-fired
+      only — invisible to the capability graph). Post-unfreeze enhancement. Target: strategy-service. — **DONE
+      strategy-service@915ff464.** FREEZE STATUS: verified lifted (same basis as F27/F47/F48/F33-F37 above —
+      `plans/epics/strategy_master.md` carries zero freeze language). Added
+      `BaseArchetypeEngineV2.declare_kill_switch_predicates()` (`engine/strategies/v2/base.py`), a read-only
+      introspection hook following the existing `declare_leg_portfolio_state()`/`declare_pending_dust_basket()`
+      "declare, don't act" convention — it never touches `killed`/`kill_reason`/fires `on_kill_switch`. Backed by a new
+      `KillSwitchRulesEngine.predicate_status_for_archetype()` (`risk/v2/kill_switch_rules.py`) returning a
+      `KillSwitchPredicateStatus` (`reason`, `threshold`, `current_value`, `distance_to_trigger`, `fired`) per
+      registered predicate (drawdown + position-breach), reusing the exact `current >= threshold` inequality
+      `evaluate_archetype_breach()` already applies so the reported `fired` flag can never disagree with the real
+      rules-engine decision. The engine has no NAV/peak-drawdown history of its own (that state is owned by
+      position-balance-monitor's `PeakNavTracker`/`PortfolioRiskState`, one layer up) — callers supply the
+      already-computed current metrics; omitting one reports `current_value`/`distance_to_trigger` as `None` (honest
+      "not observed") instead of guessing. **Scope note**: only the two archetypes with a registered threshold today
+      (`CARRY_STAKED_BASIS`, `ARBITRAGE_PRICE_DISPERSION`) get non-empty predicate lists — no `DAILY_LOSS_BREACH`
+      threshold is registered anywhere in strategy-service yet, so that half of the e2e-testing scenario stepper's
+      `introspection_gap` (`e2e-testing/scripts/strategy/_stepper_engine.py` `build_trigger_evaluations()`) remains a
+      real config gap, not an engine-exposure gap — wiring the stepper to consume the new method + registering a real
+      daily-loss threshold are separate follow-ups (e2e-testing + strategy-service config, not part of this SPEC's
+      target repo). New tests: 8 in `tests/risk/unit/v2/test_v2_risk.py` (predicate math: unregistered archetype,
+      no-current-values honest gap, below/at/above-threshold distance signs, `fired` parity with
+      `evaluate_archetype_breach`) + 3 in `tests/unit/engine/strategies/v2/test_kill_switch_propagation.py`
+      (engine-level: distance reporting, no-current-values gap, `fired=True` predicate never mutates `engine.killed`).
+      `quality-gates.sh` green (5657 passed, 0 failed; 74.0% coverage floor, 83.24% actual).
 
 > The **CeFi-margin-traceability cluster** (CeFi margin emitter DeFi-only · `margin_health` stub · no CeFi balance
 > tracker · collateral runtime consumer) is already tracked as `- [ ]` todos in
@@ -767,3 +834,7 @@ F49–F53 are FIXED as of 2026-06-14); trust this table. Status taxonomy: **FIXE
       transient PM version-alignment flap (local trailing main while the 5-day backlog drained fleet-wide); a watcher
       landed it the moment alignment held stably green. Root cause was already fixed + deployed: `semver-agent.yml.tmpl`
       apply step commits the bump with NO `[skip ci]` (2026-06-09) and was rolled out to all 24 repos 2026-06-15.
+
+## Progress Log
+
+- **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).

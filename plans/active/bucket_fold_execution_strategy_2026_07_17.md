@@ -59,6 +59,14 @@ source:
   "Successor execution plan of bucket_estate_fold_design_2026_07_13 §3 todo 1. Operator ruling 2026-07-17: all 5 folds
   as HUMAN plans. This bundles Folds C (execution-store) + D (strategy-store) — same services, one cutover window
   (design §3 groups them)."
+context_scope:
+  [
+    /codex/05-infrastructure/bucket-isolation-model.md,
+    /codex/05-infrastructure/manifest-consolidator-ssot.md,
+    /codex/02-data/pipeline-mode-partition.md,
+    /plans/archive/2026_07/bucket_estate_fold_design_2026_07_13.md,
+    /plans/archive/issues/strategy_store_split_brain_2026_07_13.md,
+  ]
 ---
 
 # Bucket fold — execution-store 4+pred → 1 & strategy-store flat → tiered
@@ -99,32 +107,52 @@ UAC facade `canonical/gcs_paths.py::strategy_store_bucket` (must return the flat
 
 ## Todos — DeFi-playbook order (Fold C + Fold D interleaved by phase)
 
-- [ ] [DATA] P1. **Provision + yaml scaffold** — add folded `execution-store` key + `${DEPLOYMENT_ENV_SHORT}-` to the
-      existing `strategy-store` flat key in `cloud-providers.yaml` (all 3 copies); add `_KIND_ALIASES` mapping the 4
-      per-AG execution kinds + `execution-store-prediction` → `execution-store` (§2.D). Provision
-      `execution-store-{prd,test}` on GCP + AWS via derived-from-yaml `for_each`. Verify `terraform plan` shows only the
-      new folded buckets as creates. UTL QG green.
-- [ ] [CODE] P1. **GATE — confirm W2 strategy_store_split_brain repoint landed** — Fold D cutover cannot ship until the
-      parent plan's Wave-2 [[strategy_store_split_brain_2026_07_13]] per-AG→flat reader repoint is done. Verify (grep
-      the readers resolve flat `kind="strategy-store"`, not per-AG). If not landed, this plan BLOCKS here — do NOT
-      re-tier over a split-brain reader set.
-- [ ] [DATA] P1. **Parity migrate** — server-side copy `execution-store-{ag}/*` →
-      `execution-store-{env}-{pid}/{ag}/execution/…` (incl. `nautilus-catalog-cache/`) and the prediction kind →
-      `.../pred/…`; byte-count parity per AG (cefi ≈ 6142 obj — re-measure). strategy-store is a name re-tier, not a
-      data move — copy the flat bucket contents to the tiered name, parity-verify.
+- [x] ✅ [DATA] P1. **Provision + yaml scaffold** — **DONE 2026-07-18** (flipped 2026-07-31 corpus-sweep against this
+      doc's own Progress Log; the 2026-07-17 operator-ownership hold on bucket-fold checkboxes is RESCINDED for
+      hard-evidenced items). GCP targets provisioned direct-gcloud (ASIA-NORTHEAST1/UBLA/STANDARD→COLDLINE@60d):
+      `execution-store-{prd,test}-central-element-323112` (both were absent) +
+      `strategy-store-prd-central-element-323112` (`strategy-store-test` already existed). yaml folded across all 3
+      copies: `unified-api-contracts@1dd02a73` (exec-flat + strategy-tier + facade), `deployment-service@9f3f43b`
+      (folded execution/strategy yaml), PM mirror `unified-trading-pm@be973918e` (configs + ci-test — the mirror that
+      gated UTL CI green). `_KIND_ALIASES` (4 per-AG execution kinds + `execution-store-prediction` → `execution-store`)
+      landed in `unified-trading-library@d822bab5`. UTL QG green (v2 run 29661120709 SUCCESS @2026-07-18T21:10:48Z,
+      first run after the mirror fold). **GCP leg only** — the AWS leg + the `terraform plan` creates-only drift assert
+      this todo also asked for are NOT done; they are now tracked as their own open todo below rather than left as a
+      deferral note inside a ticked box.
+- [x] ✅ [CODE] P1. **GATE — confirm W2 strategy_store_split_brain repoint landed** — **SATISFIED 2026-07-18** (flipped
+      2026-07-31 corpus-sweep). Progress Log "OPERATOR DECISIONS" entry records the gate verified before cutover: "W2
+      gate SATISFIED (verified)"; the migrate entry independently records "strategy-service already resolves flat
+      `kind=\"strategy-store\"`, verified". Reader fold shipped `strategy-service@c425d5b5`; the remaining hardcoded
+      per-AG readers (deployment-api / UI / UAC facade) were repointed in the same cutover wave
+      (`unified-trading-system-ui@8075d6d7`, `unified-api-contracts@1dd02a73`). No re-tier happened over a split-brain
+      reader set.
+- [x] ✅ [DATA] P1. **Parity migrate** — **DONE + PARITY VERIFIED 2026-07-18** (flipped 2026-07-31 corpus-sweep against
+      this doc's own Progress Log byte counts). Fold D `strategy-store/*` → `strategy-store-prd/*`: src=dst=**37,765,413
+      B**. Fold C `execution-store-{cefi,defi,tradfi}/*` → `execution-store-prd/{ag}/*` (incl.
+      `nautilus-catalog-cache/`) + `execution-store-pred-prd/*` → `execution-store-prd/pred/`: cefi
+      src=dst=**1,610,459,707 B** (no snapshot drift); sports (0 objects) asserted empty. Source counts re-measured at
+      migrate time: cefi 6144 obj (confirms the ~6142 estimate), defi 2, tradfi 1, sports 0.
 - [x] ✅ [CODE] P1. **Atomic cutover** — **CODE LAYER DONE 2026-07-18 (6/7 repos, UTL CI GREEN).** LANDED: UAC@1dd02a73
       (yaml exec-flat+strategy-tier+facade), UTL@d822bab5 (registry exec_fills/nautilus + strategy 3 rows +
       _KIND_ALIASES exec-prediction + execution.py client), strategy-service@c425d5b5 (reader fold + VaR golden fix),
       execution-service@6af18c2e (writer surface + fill-twin), deployment-service@9f3f43b (yaml + single-root
-      consolidator-TF + canonical-kind maps), UI@8075d6d7 (2 catalogue routes), PM@34125fac3 (yaml mirrors).
+      consolidator-TF + canonical-kind maps), UI@8075d6d7 (2 catalogue routes), PM@be973918e (yaml mirrors).
       **deployment-api DEFERRED** (display-only, tree tangled with unrelated Fold-B/data_status WIP). **UTL CI break
       root-caused + fixed:** the resolver's workspace-yaml discovery finds
       unified-trading-pm/configs/cloud-providers.yaml in CI (deployment-service not a UTL dep); its stale-on-LDR per-AG
       execution-store failed UTL's folded-resolution tests even with a good UAC clone — the FIX-workflow PM agent folded
       it but hit the usage limit before committing; folded + pushed, qg-v2 re-triggered GREEN. Original todo text below.
-- [ ] [CODE] P1. **(orig) Atomic cutover** — repoint Fold C sites → `kind="execution-store"` + `{ag}/` path prefix, and
-      Fold D sites → the re-tiered flat `strategy-store` name (incl. the UAC `strategy_store_bucket` facade + the two UI
-      hardcoded routes). Ship per-repo QG-green: execution-service, strategy-service, UTL, deployment-api, UI, UAC.
+      **deployment-api DEFERRAL CLOSED — `deployment-api@ff1c691` (2026-07-19)** folded the execution/strategy
+      config-bucket paths + docstrings and regenerated the folded consolidator catalog (`deployment_api_config.py` now
+      documents "execution-store is a FLAT env-tiered yaml kind post Fold C … IGNORES asset_group"; `routes/services.py`
+      resolves the flat env-tiered bucket). That makes this cutover **7/7 repos**, not 6/7. **DEDUPED 2026-07-31
+      (corpus-sweep, operator-ruled):** an identical `[CODE] P1. (orig) Atomic cutover` twin sat directly below this
+      item — the deliberately-retained original todo text, but left as an OPEN checkbox, so it read as real remaining
+      work and double-counted this deliverable in every open-todo sweep. The checkbox is removed; its text is preserved
+      verbatim here as the audit trail it was meant to be: _"(orig) Atomic cutover — repoint Fold C sites →
+      `kind="execution-store"` + `{ag}/` path prefix, and Fold D sites → the re-tiered flat `strategy-store` name (incl.
+      the UAC `strategy_store_bucket` facade + the two UI hardcoded routes). Ship per-repo QG-green: execution-service,
+      strategy-service, UTL, deployment-api, UI, UAC."_
 - [x] ✅ [INFRA] P1. **Redeploy + consolidator retarget** — **DONE 2026-07-18.** No redeploy needed (operator: execution
       NOT live, static test data — nothing running to redeploy). **Consolidator retargeted via DIRECT gcloud** (apply
       unsafe): execution 3→1 single-root (`execution-cefi` job repurposed → `--bucket execution-store-prd`, tradfi/defi
@@ -138,6 +166,12 @@ UAC facade `canonical/gcs_paths.py::strategy_store_bucket` (must return the flat
       cefi+defi+tradfi; strategy-store-prd 172 = flat). yaml keys already folded. TF-state: IMPORTED folded
       execution-store-{prd,test} + strategy-store-prd; STATE-RM'd the deleted sources. Estate IAM/scheduler drift stays
       operator-aware (not applied).
+- [ ] [INFRA] P2. **AWS leg + `terraform plan` drift assert** — the residual of the (now `[x]`) Provision todo, split
+      out 2026-07-31 (corpus-sweep) so it stops hiding as prose inside a ticked box. Provision the folded
+      `execution-store-{prd,test}` + `strategy-store-prd` on **AWS** via the derived-from-yaml `for_each`, and run
+      `terraform plan` to assert the ONLY creates are the new folded buckets (no incidental drift). Note the known
+      starting condition: the AWS consolidators were all **404-drifted** at cutover time (recorded on the Redeploy +
+      Delete-sources todos), so expect to reconcile that drift as part of this, not to find a clean plan.
 - [ ] [INFRA] P2. **IAM + lifecycle** — join `execution-store-prd` + `strategy-store-prd` to
       [[bucket_iam_write_protection_per_tier_2026_06_09]] Phase-2 Group-B; `-test-` twins get test-tier.
       STANDARD→COLDLINE@60d whole-bucket, with a prefix-scoped STANDARD exception for `strategy-store/catalogue/`
@@ -222,3 +256,10 @@ UAC facade `canonical/gcs_paths.py::strategy_store_bucket` (must return the flat
   exec/strategy shape against the shared fixture (execution-service assertions are literal/mock;
   deployment-service/deployment-api/UI have none) — execution-service (29659402526) + strategy-service (29659413987) v2
   stayed GREEN. No UTL change required.
+
+- **na-eligibility-audit 2026-08-02** (re-confirms 2026-07-30; re-read after intervening edits, verdict unchanged):
+  KEEP-NA, valid — operator ruling 2026-07-17: all 5 bucket folds are HUMAN plans. NOTE 4 of the 6 open todos read STALE
+  against this doc's own 2026-07-18 Progress Log (provision+yaml scaffold, the W2 strategy_store gate 'SATISFIED
+  (verified)', parity-migrate 'MIGRATE DONE + PARITY ✓', and the duplicated '(orig) Atomic cutover' whose `[x]` twin
+  sits directly above it) — flagged, not flipped, to keep the fold's audit trail operator-owned.
+- **context-scout 2026-08-01**: populated/refreshed context_scope (5 entries).

@@ -30,6 +30,7 @@ related:
   [
     /plans/active/issues/plan_reconciliation_operator_decisions_2026_07_11.md,
     /plans/active/instruments_foundation_completeness_2026_06_24.md,
+    /plans/archive/issues/quickmerge_help_flag_misparsed_as_commit_message_2026_07_30.md,
   ]
 created: 2026-07-14
 source:

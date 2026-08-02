@@ -36,6 +36,12 @@ source:
   ]
 assigned_role: project_management
 drift_direction: none
+context_scope:
+  [
+    /plans/epics/plan_hygiene_master.md,
+    /codex/11-project-management/doc-frontmatter-schema.md,
+    /codex/12-agent-workflow/plan-hygiene.md,
+  ]
 ---
 
 # June-2026 vintage audit findings
@@ -95,7 +101,7 @@ autonomous workers — relocate via `git mv`, ask the operator for true deletion
       agent this wave). Now at `plans/archive/issues/`. Also annotated
       `defi_satellite_ao_dispatch_batch3_2026_07_26_finalize.md`'s own pending archive-todo for this doc so it isn't
       redone.
-- [ ] [PLAN] P2. `plans/active/issues/phantom_captures_defi_2026_06_28.md` — **NOT ARCHIVED — citation partially WRONG,
+- [ ] [PLAN] P2. `plans/archive/issues/phantom_captures_defi_2026_06_28.md` — **NOT ARCHIVED — citation partially WRONG,
       corrected in place, unified-trading-pm@(this commit).** The "apply reconciliation" todo IS genuinely done
       (verified real: `mvp_backfill_defi_onchain_v10_operational_log_2026_07_24.md:754-762` APPLY COMPLETE, corroborated
       by `mvp_backfill_defi_onchain_v10_2026_06_27.md`'s banner) and was flipped citing that evidence. **But** the doc's
@@ -449,7 +455,7 @@ autonomous workers — relocate via `git mv`, ask the operator for true deletion
       schema-provenance catch-all into batch2 once drafted. **Locked (`locked_by: live-defi-rollout`) — needs
       `[unlock-plan]`** before any archival (not yet archivable anyway — real remainder exists).
 - [x] ✅ [PLAN] P2. **DONE 2026-07-28 — checkboxes flipped in the source doc, greeks/strategy normalized + shipped.**
-      `plans/active/issues/service_dockerfile_pattern_normalization_2026_06_17.md` fully updated: the 6
+      `plans/archive/issues/service_dockerfile_pattern_normalization_2026_06_17.md` fully updated: the 6
       already-normalized repos (alerting-service, batch-live-reconciliation-service, fund-administration-service,
       market-data-processing-service, ml-service, trading-agent-service) re-verified by reading each live
       `Dockerfile`+`cloudbuild.yaml` in full (confirmed Pattern-A shaped, no code change needed) and their checkboxes
@@ -913,3 +919,4 @@ during §2-§4 execution should be treated the same way, not re-parked on a huma
 - **na-eligibility-audit 2026-07-30**: KEEP-NA, valid (infra tranche, dispatch agt-30721a) — Large actively-maintained
   P1 audit-tracking doc; all 7 remaining items are genuinely gated on external, not-yet-resolved state (live SPOT VMs,
   unresolved merge conflicts, pending batch runs), not defaulted/never-assessed work.
+- **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).

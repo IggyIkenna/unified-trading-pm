@@ -21,7 +21,7 @@ summary: >-
   so "not responding to nudges" is indistinguishable from "wedged."
 status: open
 nature: issue
-asset_group: [meta]
+asset_group: [ao] # retagged 2026-07-31 (corpus-sweep meta fold-in) -- was [meta]
 stage: [meta]
 repos: [agent-orchestrator]
 scope: [engineer]
@@ -36,7 +36,11 @@ tags:
     liveness-by-progress,
     automation-calibration,
   ]
-related: [plans/active/issues/pm_qg_plan_discipline_and_frontmatter_regression_2026_07_21.md]
+related:
+  [
+    plans/active/issues/pm_qg_plan_discipline_and_frontmatter_regression_2026_07_21.md,
+    /plans/archive/2026_07/ao_consolidated_closeout_2026_07_25.md,
+  ]
 created: "2026-07-21"
 parent_epic: agent_operating_framework_master
 priority: P2
@@ -47,6 +51,7 @@ source: [main-orchestrator-observation]
 resolved_by:
 locked_by:
 depends_on: []
+context_scope: [/plans/epics/agent_operating_framework_master.md]
 ---
 
 # What I found
@@ -145,3 +150,9 @@ progress-signal half.
 - **na-eligibility-audit 2026-07-30**: KEEP-NA, valid (infra tranche, dispatch agt-30721a) — Doc explicitly
   self-declares NA status: modifies the orchestrator's own worker-safety automation where a careless fix could suppress
   genuine wedge detection; one todo is an explicit operator-sign-off gate.
+- **context-scout 2026-08-01**: populated/refreshed context_scope (1 entries).
+- **na-eligibility-audit 2026-08-02** (autonomous, tranche `ao`): KEEP-NA, valid — 2026-07-30 verdict re-affirmed on a
+  full re-read. Doc self-declares the NA rationale (modifies the orchestrator's own worker-safety automation, where a
+  careless suppression predicate blinds genuine wedge detection), and one of the 3 open todos is an explicit
+  `[REVIEW] P3` operator sign-off gate. In scope only via the 2026-08-02 meta-retag sweep (`0409fa053`); content
+  unchanged.

@@ -8,7 +8,10 @@ alwaysApply: false
 ---
 # Strategy Architecture Rules
 
-SSOT: `unified-trading-codex/09-strategy/cross-cutting/config-architecture.md`
+SSOT: dead reference, no live successor (2026-07-30) — `unified-trading-codex` is archived; the only surviving copy of
+`config-architecture.md` is under `codex/09-strategy/_archived_pre_v2/`, which is not a live SSOT. The content below
+is not otherwise duplicated in `codex/` — treat this rule file itself as the working record until a live successor is
+written.
 
 ## Rule 1: Strategies NEVER access raw data
 

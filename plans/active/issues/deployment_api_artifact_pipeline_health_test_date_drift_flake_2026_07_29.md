@@ -41,6 +41,12 @@ source: >-
 resolved_by:
 locked_by:
 depends_on: []
+context_scope:
+  [
+    deployment-api/deployment_api/services/artifact_pipeline/service.py,
+    deployment-api/tests/unit/api/test_artifact_pipeline.py,
+    /plans/archive/issues/ci_test_content_and_tooling_speed_findings_2026_07_28.md,
+  ]
 ---
 
 ## Problem
@@ -74,9 +80,30 @@ indirection): parameterize `_resolve_window`'s "today" (or the whole health-wind
 clock, or have the test compute its fixture date relative to a frozen/mocked `datetime.now(UTC)` instead of a literal
 string. Low-risk, mechanical — no production behavior change, test-only.
 
+## Todos
+
+> Converted from the prose "Fix direction" above into a tracked checkbox 2026-07-31 (zero-checkbox sweep, all-9-tranches
+> re-run — register: `/plans/active/issues/zero_checkbox_sweep_all_tranches_2026_07_31.md`). This doc's own Progress Log
+> had already self-nominated for exactly this conversion. Scope and fix shape are unchanged.
+
+- [ ] [CODE] P3. **De-flake `test_health_flags_recent_failures_dup_builds_and_registry_sprawl`** — make the
+      trailing-7-day health window deterministic under test: either parameterize `_resolve_window`'s "today"
+      (`deployment_api/services/artifact_pipeline/service.py:79-92`) behind an injectable clock, or compute the
+      `_fact(...)` fixture date relative to a frozen `datetime.now(UTC)` rather than the literal
+      `"2026-07-22T00:00:00+00:00"`. **Done-when**: the test passes on a clean tree AND still passes when the system
+      clock is moved forward a year (the whole point — it must stop aging out). Test-only, no production behaviour
+      change. (repo: `deployment-api`)
+
 ## Scope note
 
 Discovered incidentally while shipping `small-1` (deployment-api sleep()-based test-waste fix) from
 `/plans/archive/issues/ci_test_content_and_tooling_speed_findings_2026_07_28.md`. That dispatch was narrowly scoped to 3
 named sleep() fixes across 3 repos and explicitly did not include this file; filing here rather than expanding scope
 mid-dispatch.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30**: KEEP-NA, valid — 0 open `- [ ]` todos. FINDING for the zero-checkbox sweep
+  (`issue_docs_zero_checkbox_sweep_2026_07_24.md`): its 'Fix direction (not yet done)' is prose, never converted to a
+  tracked checkbox.
+- **context-scout 2026-08-01**: populated context_scope (3 entries).

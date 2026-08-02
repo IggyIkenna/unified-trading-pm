@@ -24,7 +24,7 @@ related:
     issues/backfill_vm_silent_worker_stall_watchdog_2026_06_19.md,
     issues/fleet_mtds_qg_red_hardcoded_url_record_empty_ratchet_2026_06_22.md,
     issues/sports_manifest_null_vs_empty_dedup_double_count_2026_06_21.md,
-    /plans/active/data_pipeline_alert_substrate_residual_2026_07_24.md,
+    /plans/archive/2026_07/data_pipeline_alert_substrate_residual_2026_07_24.md,
     /plans/active/data_pipeline_self_healing_completion_residual_2026_07_24.md,
     /plans/active/data_pipeline_ag_residual_backfill_decisions_2026_07_24.md,
     issues/prod_terraform_drift_backlog_reconcile_2026_07_24.md,
@@ -47,6 +47,13 @@ depends_on:
 source:
 assigned_role: data_engineering
 drift_direction: advance-code
+context_scope:
+  [
+    /codex/05-infrastructure/data-pipeline-alerts.md,
+    /codex/05-infrastructure/vm-preemption-and-billing-waste-monitoring.md,
+    /plans/active/data_pipeline_self_healing_completion_residual_2026_07_24.md,
+    /plans/active/data_pipeline_ag_residual_backfill_decisions_2026_07_24.md,
+  ]
 ---
 
 > **🟢 2026-07-24 line-cap remediation split (plan line-cap remediation triage, row 9)**: unlocked (was
@@ -542,6 +549,15 @@ This plan **wires existing parts**. Net-new is only the keystone gate (Phase 1) 
     session — 403). **Still open, needs a follow-up with either broader VM-name search + GCS manifest freshness check
     (`measure_honest_coverage.py --asset-group cefi` / `--asset-group tradfi`) or an operator-side confirmation** — NOT
     flipping this todo to done on this partial evidence.
+  - ✅ **OWNERSHIP RESOLVED 2026-07-31 (corpus-wide ownership-conflict sweep)**:
+    `cross_cutting_satellite_ao_dispatch_ batch2_2026_07_26.md` deliberately DECLINED to batch this and routed it to
+    `/vm-preemption-billing-waste-audit`. That routing is correct and stands — but routed-away ≠ unowned, which is what
+    made this a conflict. **This doc RETAINS the todo**; batch2 cites it and does not own it.
+    `/vm-preemption-billing-waste-audit` is the execution mechanism, not a new owner. **Done-when** (so the next runner
+    isn't left re-deriving it): run that skill scoped to the cefi + tradfi live-capture families, then either (a) name
+    the current live VMs and cite a fresh manifest/GCS recency figure proving capture is flowing → flip this `[x]`, or
+    (b) confirm live capture for these families is genuinely stopped → that is a NEW P0 finding and gets its own issue
+    doc, not a flip here.
 
 ---
 
@@ -549,3 +565,12 @@ This plan **wires existing parts**. Net-new is only the keystone gate (Phase 1) 
 > `/plans/archive/2026_07/data_pipeline_hardening_self_monitoring_history_2026_07_24.md`: the remaining fully-shipped
 > Progress Log tail (ALERT SPAM REDUCTION through the TradFi databento outbound-call hardening entry,
 > 2026-06-22→2026-06-24) moved verbatim — 0 open todos in the moved content.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30**: RECLASSIFY candidate PARKED (conflict) — stays KEEP-NA — the content IS bounded
+  (re-measure a named VM set + a coverage check), but `cross_cutting_satellite_ao_dispatch_batch2_2026_07_26.md`
+  deliberately DECLINED to batch it and routed it to `/vm-preemption-billing-waste-audit` instead ('re-measuring is
+  cheap but belongs with … not a batch todo that would re-diagnose a stale snapshot'). Respecting that prior routing
+  rather than overriding it.
+- **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).

@@ -49,6 +49,13 @@ source: >-
   report + draft next batch) via AskUserQuestion. Genuine operator-decision-caliber questions are QUEUED in the linked
   issue doc per that instruction, NOT silently auto-decided (this overrides AUTONOMOUS_AGENT_RULES.md rule 2's default
   "decide yourself, don't ask" for THIS session only — the operator explicitly asked for queued questions instead).
+context_scope:
+  [
+    /cursor-configs/skills/ag-closeout-audit/SKILL.md,
+    /plans/active/issues/autonomous_session_operator_decisions_2026_07_25.md,
+    /plans/active/sports_consolidated_closeout_2026_07_19.md,
+    /codex/08-workflows/ci-cd-flow.md,
+  ]
 ---
 
 # AG closeout-audit rollout — cefi/defi/tradfi/prediction
@@ -222,7 +229,7 @@ source: >-
     `predictions_ml_walk_forward_and_arb_2026_06_20.md`, `predictions_other_bucket_and_ui_drilldown_2026_06_20.md`,
     `issues/kalshi_live_capture_regression_and_drift_2026_07_13.md`,
     `issues/prediction_arb_live_execution_bridge_2026_07_20.md`,
-    `issues/prediction_lifecycle_prefetch_gate_and_resolution_day_catalogue_2026_07_14.md`,
+    `/plans/archive/issues/prediction_lifecycle_prefetch_gate_and_resolution_day_catalogue_2026_07_14.md`,
     `issues/prediction_phantom_reconciler_wipes_bundle_atom_2026_07_10.md`,
     `issues/prediction_polymarket_legacy_dual_write_trees_metadata_loss_2026_07_24.md`,
     `issues/prediction_universe_capture_dead_since_07_01_2026_07_06.md`. Next: AO-eligibility triage + conflict-check
@@ -964,3 +971,4 @@ real, active, AO-dispatchable work — the batched-decisions gate that held it b
 - **na-eligibility-audit 2026-07-30**: KEEP-NA, valid (infra tranche, dispatch agt-30721a) — 962-line mega-Progress-Log
   for the ag-closeout-audit rollout; repeatedly gated by dated operator rulings on mass-flip safety after real
   half-landed-rename incidents; remaining item is a human-supervised re-verification, not a bounded fact.
+- **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).

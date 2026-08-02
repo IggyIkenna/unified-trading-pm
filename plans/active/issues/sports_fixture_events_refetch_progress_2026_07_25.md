@@ -557,3 +557,209 @@ plan's todo. Also confirmed **fully unrelated but discovered this session**: the
 (`issues/github_actions_billing_wall_recurrence_2026_07_29.md`) is still active as of this same check window (~11h since
 onset) — does not affect this VM (a GCE compute job, not GHA-gated) or either of this campaign's already-CI-verified
 fixes (`instruments-service@5a6deafd`/`unified-api-contracts@f3ae871c`, both green well before the wall's onset).
+
+**2026-07-30T22:20Z (slot-3, data_engineering) — RE-FETCH VM REACHED TERMINAL COMPLETION; ran the mandated
+post-completion VERIFY census; done-when NOT met — real, substantial progress but not zero.**
+`af-backfill-20260730-012007` confirmed `EXIT_STATUS=0`, `run.log` tail shows `date=2026-07-25` (the actual end of the
+`2020-06-06→2026-07-25` range) processed, then clean `DEPLOYMENT_COMPLETED`/self-delete — this campaign's re-fetch pass
+is genuinely finished, first time in ~20 health-checks. Ran `census_fixture_events_schema_variants_2026_07_25.py` full
+(no `--limit`) per the mandated next-step — first attempt returned 100% `read_error` (40,298/40,298), root-caused to
+`GCP_PROJECT_ID` not set in my session env (`get_storage_client()` raises `ValueError` inside the script's own retry
+loop, silently classified as `read_error` — an environment gap, not a real signal); re-ran with
+`GCP_PROJECT_ID=central-element-323112` set and got genuine results:
+
+| metric                                                                  | 2026-07-25 baseline | 2026-07-30 post-refetch |
+| ----------------------------------------------------------------------- | ------------------: | ----------------------: |
+| candidate objects                                                       |              43,233 |                  40,298 |
+| `canonical_13col`                                                       |              25,639 |          35,934 (89.2%) |
+| non-canonical (`degenerate_5col_stub`+`af_prefixed_10col`+`named_9col`) |              12,603 |               **4,327** |
+| `missing`                                                               |                 n/a |                      37 |
+
+Real progress (non-canonical objects dropped 12,603→4,327, -65.7%) but the todo's own done-when ("0 genuinely
+non-canonical objects remaining") is **NOT met** — **not flipping this checkbox or the parent plan's todo**. Wrote a
+fresh recovery-ids parquet (19,850 fixture rows across the 4,327 remaining objects) to
+`scripts/_fixture_events_recovery_ids_2026_07_30_post_refetch.parquet`, staged to GCS at
+`gs://deployment-scripts-central-element-323112/sports_fixture_events_refetch_2026_07_25/recovery_fixture_ids_2026_07_30.parquet`
+for the next dispatch. **Did NOT launch the next recovery pass this touch**: the af-backfill singleton lock
+(`launch-api-football-backfill-vm.sh`'s own `name~"^af-backfill-"` filter) is currently held by
+`af-backfill-20260730-220243` — a DIFFERENT, unrelated task (`VM_TASK=instruments-backfill`, confirmed via its own
+`run.log` header) that happens to share the `af-backfill-` name prefix this lock checks. Confirmed it's a live,
+legitimate, actively-progressing VM (not stale) — did not force past the lock or delete it. **Next dispatch**: once
+`af-backfill-20260730-220243` (or whatever `af-backfill-*`/`af-audit-*` VM is running) clears, launch:
+`bash deployment-service/scripts/vm/launch-api-football-backfill-vm.sh --force --entity FIXTURE_EVENTS --recovery-fixture-ids gs://deployment-scripts-central-element-323112/sports_fixture_events_refetch_2026_07_25/recovery_fixture_ids_2026_07_30.parquet 2020-06-06 2026-07-25`
+(the `--force` here bypasses the singleton lock ONLY once confirmed clear — not a bypass of a live VM), then repeat the
+health-check → re-census → (repeat if still non-zero) cycle this campaign has followed throughout.
+
+**Health-checked 2026-07-31T00:57Z (slot-12, data_engineering)**: lock still NOT clear —
+`gcloud compute instances list --filter='name~"^af-backfill-|^af-audit-"'` shows `af-backfill-20260730-220243` still
+`RUNNING` (the 3 other listed `af-backfill-*` VMs are prior campaigns, all `TERMINATED`). Confirmed it's genuinely live,
+not stale, before declining to force past it: heartbeat blob epoch `1785459408` = `2026-07-31T00:56:48Z` (~52s old at
+check time); `run.log` tail actively growing with real `Fetched N teams for league=X season=Y` lines +
+`PIPELINE_HEARTBEAT vm=af-backfill-20260730-220243 ag=SPORTS task=instruments-backfill` markers every ~60s through
+`00:56:36Z` — a different, legitimate, actively-progressing task (`instruments-backfill`, not this campaign's
+FIXTURE_EVENTS recovery), same as slot-3's 22:20Z finding. Did NOT force past the lock or delete it (VM-delete
+guardrail: only genuinely stale VMs qualify, and this one is clearly alive). Not completable this turn — the recovery
+re-fetch for the remaining 4,327 non-canonical objects still cannot launch. Recovery-ids parquet from the 2026-07-30
+post-refetch census remains staged at
+`gs://deployment-scripts-central-element-323112/sports_fixture_events_refetch_2026_07_25/recovery_fixture_ids_2026_07_30.parquet`
+(unchanged, no need to rebuild). Releasing via `/skip-current-task {"reason_code": "GATED"}`, not duplicate-launched.
+Next dispatch: repeat this lock-check (`gcloud compute instances list --filter='name~"^af-backfill-|^af-audit-"'`); once
+clear, launch the recovery command above, then repeat the health-check → re-census cycle.
+
+**Health-checked 2026-07-31T08:00Z-08:20Z (autonomous continuation), lock still held, genuinely alive — but ETA is now
+DAYS, not hours, and the cause looks self-inflicted by this campaign's own widening.** `af-backfill-20260730-220243`
+still `RUNNING` (heartbeat epoch `1785485539` vs. probe-time epoch `1785485571`, ~32s old); no preemption/delete op
+against it (`gcloud compute operations list --filter="targetLink~'af-backfill-20260730-220243'"` shows only the original
+`insert`). Pulled the full `run.log` (1,954 lines) to grep: **0** failure signatures
+(`attempted_failed|fail_fast|reached the request limit|Traceback|Killed|exit_code|DEPLOYMENT_COMPLETED`) — genuinely
+healthy, not stalled. `LAUNCH_PARAMS.json` shows this is a routine-looking `--entity FIXTURES` resume for
+`2026-06-26→2026-07-30` (5 weeks) — but it took ~6.5h just to fetch teams for all 383 leagues
+(`grep -c "Fetched .* teams for league"` = 383), then logged
+`Per-fixture enrichment: 180 fixtures x 4 entities = 494 calls queued (concurrency=10, skipped_already_captured=0)` for
+**a single day** (`2026-06-26`) — and `concurrency=10` doesn't help: the adapter's own rate-budget log
+(`Sports adapter api_football rate-budget set: 2 req/min -> _min_request_interval=30.0000s + UTC-minute window cap=2 (PRIMARY throttle)`)
+is a hard per-key ceiling, not per-worker, confirmed by measured throughput (79 distinct `fixture=` player-stat fetches
+between `07:35:37Z` and `08:14:37Z`, 39 min → ~2.03/min, matching the throttle exactly). At 2/min, 494 calls/day ≈
+4.1h/day × 35 days ≈ **~5.8 days** just for this 5-week window's per-fixture cascade — this is why the singleton lock,
+which looked like it should free up in hours, is now a multi-day hold.
+
+**Likely root cause, flagged for verification (dispatched an Explore agent, not yet returned as of this entry)**: this
+campaign's own `SPORTS_ENTITY_LEAGUE_COVERAGE` widening (todo #2/#3 above — FIXTURE_STATS/FIXTURE_LINEUPS from 96
+MVP-only → 383 all-curated leagues, `unified-api-contracts`/`instruments-service` quickmerges already shipped) is the
+strong suspect: the per-fixture task-queueing loop likely always cascades `--entity FIXTURES` into all 4 applicable
+per-fixture entities regardless of the CLI filter, and previously skipped ~287 non-MVP leagues entirely via the
+now-removed MVP pre-filter — meaning a "routine" 5-week FIXTURES catch-up used to be fast (96 leagues' worth of
+per-fixture cascade) and is now ~4x wider in league scope, hitting the SAME hard 2 req/min vendor ceiling. **If
+confirmed, this has a real capacity implication beyond this one VM**: todo #10 below (FIXTURE_STATS/FIXTURE_LINEUPS
+all-leagues backfill) would hit the identical 2 req/min ceiling across a much longer historical range
+(2020-06-06→present per the sports 2020-06 data floor), which at this measured rate is not a multi-day job but
+potentially a multi-week/multi-month one on a single VM — this changes the completion expectation for todo #10 from
+"launch and monitor to completion" to "launch and let it run for the long haul, monitor on a much longer cadence." Not
+escalating to a fresh `BLOCKED-OPERATOR` entry yet (nothing is broken, no decision is needed to keep going — just
+documenting the discovered timeline reality so nobody mistakes a healthy multi-day run for a stall). Will append the
+Explore agent's findings (hardcoded throttle vs. real vendor-plan limit; whether `--entity` truly doesn't gate the
+per-fixture cascade) once it returns, and reassess whether the 2 req/min figure itself is adjustable.
+
+Not completable this turn. Did NOT force past the lock (still genuinely alive, per the VM-delete guardrail). Recovery-
+ids parquet for the 4,327 remaining non-canonical objects remains staged unchanged. Releasing without duplicate-launch.
+Next dispatch: re-check the lock; given the ~5.8-day ETA just for this VM's 5-week window, widen the monitoring interval
+(30-60 min is wasteful at this timescale) rather than tight-looping — a stall check only needs to confirm the
+heartbeat/date-boundary is still climbing, not tick every 30 min for days.
+
+**Health-checked 2026-07-31T08:43Z (slot-16, data_engineering), lock STILL held — by a brand-new VM, not the one from
+the 08:00Z-08:20Z check.** `gcloud compute instances list --filter='name~"^af-backfill-|^af-audit-"'` shows
+`af-backfill-20260730-220243` (the 08:00Z-08:20Z check's `--entity FIXTURES` resume) is now GONE from the list entirely
+(not even `TERMINATED`) — confirmed via
+`gcloud compute operations list --filter="targetLink~'af-backfill-20260730-220243'"`: `stop` DONE at
+`2026-07-31T01:39:29-07:00` (=`08:39:29Z`) then `delete` DONE at `01:40:28-07:00` (=`08:40:28Z`), both by the ambient
+compute default SA — a clean stop+delete, not a preemption. A NEW VM, `af-backfill-20260731-094047`, was created
+2026-07-31T01:41:37-07:00 (=`08:41:37Z`, ~1min after the delete) and is `RUNNING` in `asia-northeast1-c`.
+`LAUNCH_PARAMS.json` shows it's **another** `--entity FIXTURES` resume (`RESUME_START_DATE=2026-06-26`,
+`RESUME_END_DATE=2026-07-30`) — the same recurring window/entity as the VM that just finished, not this campaign's
+FIXTURE_EVENTS recovery. Checked at `08:43:41Z`, ~2min after creation — no `run.log`/heartbeat blob exists yet (still
+booting/pulling tarballs, expected at this age, not a stall signature); confirmed genuinely fresh via
+`gcloud compute instances describe` creationTimestamp rather than assuming staleness from an absent log. Per the
+VM-delete guardrail this is unambiguously a live, brand-new VM — did not force past the lock or delete it.
+
+**Process observation, not yet escalating**: this is the second time in ~35min this campaign's singleton lock has been
+retaken immediately by a fresh `--entity FIXTURES` resume for essentially the same `2026-06-26→2026-07-30` window right
+as the prior instance finished — consistent with the 08:00Z-08:20Z entry's root-cause theory (the widened
+`SPORTS_ENTITY_LEAGUE_COVERAGE` 96→383 leagues makes this "routine" catch-up job hit the same hard 2 req/min
+per-fixture-cascade ceiling, so it now takes ~days instead of minutes and recurs before this recovery task's window ever
+gets a turn). Not filing a fresh escalation this touch — nothing new beyond what the 08:00Z-08:20Z entry already flagged
+(an Explore agent's findings on the throttle question are still pending), and one repeat data point isn't yet a
+confirmed starvation pattern. If a THIRD consecutive fresh FIXTURES-resume VM is observed retaking this lock immediately
+after another completes, that graduates to a real "this recovery task may never get the lock" finding worth a `/blocked`
+to main/operator (candidate options: relax the per-fixture 2 req/min throttle if it's a conservative hardcoded default
+rather than the vendor's real limit; or carve out a second API-Football key so FIXTURE_EVENTS recovery and routine
+FIXTURES catch-up don't share one singleton lock).
+
+Recovery-ids parquet for the 4,327 remaining non-canonical objects remains staged unchanged, no rebuild needed.
+Releasing via `/skip-current-task {"reason_code": "GATED"}`, not duplicate-launched. Next dispatch: per the prior
+entry's own guidance, widen the monitoring interval (this VM's sibling took ~6.5h+ just to fetch teams for all 383
+leagues before any per-fixture cascade even started) — a stall check only needs to confirm the lock-holding VM's
+heartbeat/log is still advancing, not tick every 30-60min. If the THIRD-consecutive-immediate-retake pattern above is
+confirmed on the next check, escalate via `/blocked` instead of continuing to just log it.
+
+**ROOT CAUSE FOUND + FIXED 2026-07-31T08:20Z-09:20Z (autonomous continuation, operator interactive): the 2 req/min
+throttle was NEVER a real vendor limit — a stray `FLEET_VMS` default of 250 was dividing the shared budget by 250
+instead of 1.** Two Explore-agent investigations traced
+`deployment_service/data_pipeline_monitors/ launch_budget_registry.py`'s `allocate_rate_budget()` +
+`launch-api-football-backfill-vm.sh`'s own measured-fleet override: `FLEET_VMS="${FLEET_VMS:-250}"` at line 99,
+contradicting its OWN comment 4 lines above ("Default 1 — this is the only VM"). `git show d259f61` ("perf(vm):
+pd-balanced >=250GB for ALL download-heavy backfill VMs") shows this was collateral damage from an unrelated disk-size
+sweep (`-FLEET_VMS="${FLEET_VMS:-1}"` / `+FLEET_VMS="${FLEET_VMS:- 250}"` alongside the real `--boot-disk-size` change)
+— a find-replace accident, not a deliberate throttle. Live `/status` confirmed the real vendor plan is "Mega" (1200
+req/min, 150,000/day — NOT the 300k the launcher's static constant assumes), so the correct solo-VM divisor of 1 yields
+~130-192 req/min depending on remaining daily quota, a **65-96x** speedup over the buggy 2 req/min. Same regression
+found + fixed in 2 more launchers (`launch-mtds-dex-pools/swaps-backfill-vm.sh`, cosmetic log-only there — `FLEET_VMS`
+isn't wired into any real computation in those two). **Shipped `deployment-service@c79d33c`** (all 3 files,
+`FLEET_VMS:-250` → `FLEET_VMS:-1`). Killed the stuck `af-backfill-20260730-220243` (FIXTURES resume, day-1-of-35 after
+~14h) and relaunched identically — `af-backfill-20260731-094047` completed the ENTIRE 35-day window in ~1h (most days
+already fresh via skip-if-fresh or future-dated with no stats to fetch yet), confirming the fix. Full root-cause
+detail + provenance already lives in this doc's own commit history (`unified-trading-pm@1b9a5d9e8`); this entry is the
+pointer for anyone reading forward.
+
+**FIXTURE_EVENTS pass-2 launched 2026-07-31T~12:30Z, PREEMPTED ~14:31Z (normal SPOT variance), relaunched.** Lock
+cleared once the FIXTURES VM above finished; launched
+`--entity FIXTURE_EVENTS --recovery-fixture-ids .../recovery_fixture_ids_2026_07_30.parquet 2020-06-06 2026-07-25` as
+`af-backfill-20260731-123439`. `gcloud compute operations list` confirms `compute.instances.preempted` at
+`2026-07-31T14:30:47-07:00`, matching the run.log's abrupt end (last processed `date=2021-09-12`, nowhere near the
+`2026-07-25` target) — genuinely preempted mid-run, not completed (the log's 44 `fail_fast` hits earlier in the run are
+an UNRELATED, self-resolved API-Football server-side bug, `error: 5xEr`, not a quota/preemption signal — log continued
+processing normally for ~1h after those).
+
+**NEW BLOCKER hit on relaunch: prod VM launches now require a service-account grant this session's identity lacks.**
+`deployment-service`'s 2026-08-01 `lc_tier_service_account()` (DP-VM-002 fix) now attaches
+`uts-prd-sa@central-element-323112.iam.gserviceaccount.com` to every `DEPLOYMENT_ENV=prod` launch; the shared
+`1060025368044-compute@...` identity every local session uses lacks `iam.serviceAccountUser` on it (confirmed: can't
+even `get-iam-policy` on it). Neither the `orchestrator-cloud-identity-self-service.md` self-service identity
+(`unified-trading-sa`, not ambient on a local laptop session) nor the operator's own `gcloud` account (expired token,
+can't reauth non-interactively) was reachable to self-grant. **Workaround (no extra grant needed):
+`LC_RUNTIME_SA=<your-own-identity-email>` — attaching a VM to the SAME identity you're already authenticated as needs no
+delegation permission.** Full writeup + the durable one-line fix (needs an operator or AO-orchestrator-identity
+session): `/plans/active/issues/prod_vm_launch_missing_service_account_user_grant_2026_08_02.md`. Relaunched
+FIXTURE_EVENTS pass-2 with this workaround as `af-backfill-20260802-152210` — running, resuming via skip-if-fresh from
+wherever the manifest shows work remains (no manual resume-state tracking needed).
+
+**Precise non-MVP FIXTURE_STATS/FIXTURE_LINEUPS widening volume censused 2026-07-31 (operator asked for a precise
+completion estimate).** First pass of a new manifest-only census script undercounted by querying
+`data_type == "FIXTURES"` alone — the writer migrated `FIXTURES` → `FIXTURES_SCHEDULE` mid-history (2026-07-14 cutover,
+`SCHEDULE_DEFINING_DATA_TYPES` in UAC's `_honest_coverage_logic.py`), silently dropping ~90% of the real denominator
+(567 vs the true 749 distinct non-MVP leagues). Corrected + verified twice: **749 distinct non-MVP leagues, 69,262
+`(date, league)` schedule shards, 138,336 shards still needing FIXTURE_STATS/FIXTURE_LINEUPS (125/91 already captured),
+≈634,600 estimated API calls** (using the empirical 4.5875 fixtures/shard ratio from this campaign's own FIXTURE_EVENTS
+recovery census) — **≈4.2 days at the measured live 150k/day quota, ≈8.5 days if the real usable daily budget is 75k**
+(operator's figure; the 150k I measured live 3× today vs. the operator's 75k was never reconciled — operator accepted
+the 8.5-day figure as the working assumption regardless). Census script shipped as `instruments-service@be3d8373`
+(`scripts/census_fixture_stats_lineups_widening_volume_2026_07_31.py`) so this number is cheaply re-checkable later
+without re-deriving it.
+
+**Operational decision (operator, 2026-07-31): the FIXTURE_STATS/FIXTURE_LINEUPS backfill should STOP once each day's
+quota is spent rather than run continuously for ~8.5 days.** Rationale beyond avoiding SPOT billing waste: the
+rate-budget is a ONE-TIME snapshot at launch (`effective_rpm = remaining_daily_quota / minutes_to_UTC_midnight`, never
+re-read mid-run — confirmed `ApiFootballAdapter.get_live_quota()` has zero production callers despite the launcher's own
+comment claiming a runtime re-read happens) — a VM left running past a UTC-midnight reset keeps using its STALE,
+now-far-too-conservative end-of-day rate rather than the fresh day's much larger budget, silently re-creating a
+throttle-shaped slowdown by a different mechanism than the FLEET_VMS bug. **Correct operational pattern**: launch →
+monitor → stop+delete near end of UTC day (or on a genuine quota-exhaustion signature) → wait for the `00:00Z` reset
+(VM-free `/status` probe) → relaunch WITHOUT `--force` (skip-if-fresh resumes cleanly, no manual state tracking) →
+repeat until the census (script above) shows non-MVP FIXTURE_STATS/FIXTURE_LINEUPS needed- shard count converges to 0.
+FIXTURE_STATS and FIXTURE_LINEUPS run as two SEPARATE sequential campaigns (the launcher CLI's `--sports-entity` takes
+exactly one entity, no multi-value support) — total ~8-9 daily cycles across both before this campaign's widening todo
+can be flipped. Not yet launched (FIXTURE_EVENTS pass-2 above still finishing); next dispatch launches FIXTURE_STATS for
+`2020-06-06..<today>` once pass-2 completes and the lock clears.
+
+**Health-checked 2026-08-02T14:56Z (autonomous continuation), RUNNING, healthy — and a new fact worth recording for
+future dispatches.** `af-backfill-20260802-152210` still `RUNNING`, `run.log` actively advancing (`date=2020-09-27` as
+of this check) with no failure signature. **Non-obvious**: this date is EARLIER than the `date=2021-09-12` this same
+recovery task had already reached before the 2026-07-31 preemption — this is NOT a regression or stall, it's expected
+behavior for `--recovery-fixture-ids` mode specifically. Unlike a plain `--entity FIXTURES` date-range resume (which
+genuinely skip-if-freshes and resumes near where it left off), recovery mode unconditionally sets `redo_all=True` for
+every allowlisted fixture (log: "Recovery mode: promoting redo_all=True so per-provider per-day skip is bypassed") —
+there is no `PROGRESS.json` checkpoint for this mode, so **every relaunch restarts the FULL `2020-06-06→2026-07-25` walk
+from day one and re-fetches all 19,850 recovery-scoped fixtures again**, not just the remainder. A future preemption on
+this specific task-type should be read as "full redo needed," not "resume from last date" — do not mistake an earlier
+date boundary for a bug. At the now-fixed ~192 req/min rate, a clean uninterrupted run should still only take ~1.7h
+total (19,850 ÷ 192), so a full redo is a modest cost, not a reason to change approach. Releasing without
+duplicate-launch; re-armed monitoring at the standard cadence.

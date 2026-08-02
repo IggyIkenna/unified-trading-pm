@@ -71,7 +71,7 @@ related:
     /plans/archive/2026_07/prediction_cross_cutting_debt_index_2026_07_25.md,
   ]
 created: 2026-07-18
-last_updated: 2026-07-26 # was 2026-07-25 — /plan-reconcile prediction shard re-counted the predictions_master epic digest (38→41 open, 9→12 untagged) and confirmed all 6 data_pipeline_e2e_milestones_gate todos targeted here genuinely landed. 2026-07-25 consolidated-closeout split pass: depends_on now gates on the 4 Phase A-E children, native todos relocated out (0 remaining), related: extended to the satellite/native-extract batch docs and the new cross-cutting-debt-index child
+last_updated: 2026-07-31 # was 2026-07-26 — /ag-closeout-audit prediction (scheduled) Finding-3 fix: added 6 previously-unindexed docs (2 kalshi issues, features_delta_one, prediction_trades_migration_concurrent_dispatch, 2 fresh 2026-07-31 adapter dead-code findings) to the Aggregated source docs index, and corrected the stale kalshi_live_capture_regression_and_drift entry (was "3 prose follow-ups", live-verified now 1 checkbox)
 parent_epic: predictions_master
 assigned_vm: NA
 execution_scope: local-only
@@ -106,6 +106,13 @@ source:
   tradfi are, using -test- buckets via data-pipeline-check-is / data-pipeline-check-mtds scoped to prediction shards for
   IS and MTDS. Authored slot-2 from a 6-agent read-only research pass; tab-2 unified-trading-pm was first synced from a
   stale June-12 HEAD up to origin/live-defi-rollout 6c4787972 so this is authored against the current corpus.
+context_scope:
+  [
+    /plans/epics/predictions_master.md,
+    /codex/02-data/availability-manifest-and-data-status.md,
+    /codex/04-architecture/prediction-batch-live.md,
+    /codex/02-data/prediction-data-types-catalog.md,
+  ]
 ---
 
 # Prediction consolidated close-out — one pass to MVP-backfill-ready (+ football arb)
@@ -337,14 +344,40 @@ fixture-linked before MVP backfill.
     - **[CODE] P1.** Repoint `polymarket_perp` against Polymarket's perps API (demo/testnet if available)
     - **[VERIFY] P1.** Pin the prediction-store event-capture gap (the real question the purge-vs-move decision needs)
     - +2 more (P2/P3, one DESCOPED-NOT-MVP) — see file for the rest
-  - [`plans/active/issues/prediction_lifecycle_prefetch_gate_and_resolution_day_catalogue_2026_07_14.md`](/plans/active/issues/prediction_lifecycle_prefetch_gate_and_resolution_day_catalogue_2026_07_14.md)
+  - [`/plans/archive/issues/prediction_lifecycle_prefetch_gate_and_resolution_day_catalogue_2026_07_14.md`](/plans/archive/issues/prediction_lifecycle_prefetch_gate_and_resolution_day_catalogue_2026_07_14.md)
     - **[VERIFY] P2.** Post-fix: re-measure prediction attempted/captured trajectory on a sampled window
     - **[INFRA] P1.** Launch the historical prediction re-backfill under the widened catalogue — **RULED 2026-07-28, GO
       (sharded SPOT VMs, full 2025-03-14→today range, no partial-window shortcut)**, retagged away from
       `[BLOCKED-OPERATOR-DECISION]`; see that doc's Todos section for the full mandate
   - [`plans/active/issues/kalshi_live_capture_regression_and_drift_2026_07_13.md`](/plans/active/issues/kalshi_live_capture_regression_and_drift_2026_07_13.md)
-    — status: open, 3 live-side follow-ups outstanding (prose, no `- [ ]` checkboxes): day=2026-06-28 stall triage, the
-    e2e-testing host regression fix, the schema-drift GitHub issue-chain triage (#45→#590)
+    — **1 open** (corrected 2026-07-31, `/ag-closeout-audit prediction` — was stale "3 prose follow-ups", all 3 resolved
+    since; live-verified via direct checkbox read). **[DATA] P2.** Verify the Kalshi execution-service paper-order flow
+    end-to-end — the same deliverable as `prediction_satellite_ao_dispatch_batch6_2026_07_29.md` todo 6's second leg,
+    itself currently `BLOCKED-OPERATOR-DECISION` (gated on the same credential/host question, see that plan).
+  - [`plans/active/issues/kalshi_execution_credential_secret_name_mismatch_2026_07_26.md`](/plans/active/issues/kalshi_execution_credential_secret_name_mismatch_2026_07_26.md)
+    — **added to this index 2026-07-31** (`/ag-closeout-audit prediction` Finding 3 fix). 2 open, covered by
+    `prediction_satellite_ao_dispatch_batch6_2026_07_29.md` todo 6 (secret reshape DONE 2026-07-31; live paper-order
+    verify BLOCKED-OPERATOR-DECISION, same gate as the item above).
+  - [`plans/active/issues/kalshi_mass_attempted_failed_unclassified_adapter_error_2026_07_27.md`](/plans/active/issues/kalshi_mass_attempted_failed_unclassified_adapter_error_2026_07_27.md)
+    — **added to this index 2026-07-31** (Finding 3 fix). 3 open, covered by
+    `prediction_satellite_ao_dispatch_batch6_2026_07_29.md` todo 7 (recurrence check + reclassification + contingent
+    fix, not yet dispatched).
+  - [`plans/active/issues/features_delta_one_dependency_checker_prediction_bucket_token_wrong_2026_07_27.md`](/plans/active/issues/features_delta_one_dependency_checker_prediction_bucket_token_wrong_2026_07_27.md)
+    — **added to this index 2026-07-31** (Finding 3 fix). 3 open P3, self-dispatching (`assigned_vm: planning`); its
+    higher-value item is already substantively closed via `data_pipeline_check_mdps_features_2026_07_20.md`, only a
+    small currently-unreachable volatility-module echo remains.
+  - [`plans/active/issues/prediction_trades_migration_concurrent_dispatch_2026_07_28.md`](/plans/active/issues/prediction_trades_migration_concurrent_dispatch_2026_07_28.md)
+    — **added to this index 2026-07-31** (Finding 3 fix). 2 prose-only recommended fixes, no checkboxes; dual-tagged
+    `[prediction, ao]`, `parent_epic: orchestrator_master` — genuinely owned by the `ao` tranche's own closeout
+    (dispatcher/checkpoint architecture, not prediction data work), not re-drafted here per the primary-owner rule for
+    multi-tranche docs.
+  - [`plans/active/issues/is_polymarket_dead_fixture_cross_reference_2026_07_31.md`](/plans/active/issues/is_polymarket_dead_fixture_cross_reference_2026_07_31.md)
+    — **new 2026-07-31** (filed by `prediction_consolidated_native_ao_extract_2026_07_25.md` todo 1's adapter dead-code
+    audit). 1 open `[BACKEND] P2` — genuine (A) delete vs (B) keep-and-document judgment call, explicitly "not
+    adjudicated" by its own filing; operator-gated, not AO-dispatchable as written.
+  - [`plans/active/issues/mtds_prediction_adapters_dead_rest_polling_interface_2026_07_31.md`](/plans/active/issues/mtds_prediction_adapters_dead_rest_polling_interface_2026_07_31.md)
+    — **new 2026-07-31** (same audit). 1 open `[BACKEND] P2` — same shape (A) delete vs (B) keep-and-document,
+    operator-gated.
   - [`plans/archive/issues/is_daily_enum_prediction_sports_fail_despite_coercion_2026_07_06.md`](/plans/archive/issues/is_daily_enum_prediction_sports_fail_despite_coercion_2026_07_06.md)
     (resolved, 1 residual — cross-link; note: archived location, not `plans/active/issues/`)
     - **[CODE] P2.** Durable fix: bound memory in the prediction CLOB universe scan (chunked pagination → incremental)
@@ -427,7 +460,7 @@ fixture-linked before MVP backfill.
     - **[ANALYSIS] P1.** Persist model + metrics to the ml-models registry; tag `model_family=sports_arb_v1`
     - **[AGENT] P1.** Predictions MTDS completion-% slice — per-(canonical_question_group, day) completion %
 - **Cross-cutting (shared w/ sports)**:
-  - [`plans/active/issues/dp_catalog_not_running_sports_prediction_2026_07_15.md`](/plans/active/issues/dp_catalog_not_running_sports_prediction_2026_07_15.md)
+  - [`plans/archive/issues/dp_catalog_not_running_sports_prediction_2026_07_15.md`](/plans/archive/issues/dp_catalog_not_running_sports_prediction_2026_07_15.md)
     (resolved)
     - **[OPS] P2.** Verify the next scheduled `lifecycle-catalogue-regen-sports` run (next `0 1 * * *` UTC)
     - **[INFRA] P3.** Grant `lifecycle-catalogue-regen@central-element-323112.iam.gserviceaccount.com`
@@ -525,7 +558,7 @@ sports's own consolidated closeout plan; short digest only:
 **Newly discovered (2026-07-24 completeness check via `grep -l '^asset_group:.*prediction'` — not previously named in
 this section)**:
 
-- [`plans/active/issues/prediction_arb_live_execution_bridge_2026_07_20.md`](/plans/active/issues/prediction_arb_live_execution_bridge_2026_07_20.md)
+- [`plans/archive/issues/prediction_arb_live_execution_bridge_2026_07_20.md`](/plans/archive/issues/prediction_arb_live_execution_bridge_2026_07_20.md)
   — **1 open** (corrected 2026-07-30, batch2 finalize re-triage; was wrongly marked 0 open — `status: open` on the doc
   itself). **[BACKEND] P1.** Build the paper-LIVE routing seam for `AtomicInstruction` → `AtomicLegExecutor` via the UTL
   `EventTransport` facade — the architecture question is **RULED (operator, 2026-07-28)**, so this is now build-ready
@@ -561,10 +594,18 @@ The autonomous slot-2 pass (operator: "prediction-specific files only") shipped 
 unit; the items below each require a SHARED file another slot is actively migrating, an irreversible prod-migration
 drain window, or an operator decision. They are ordered, not abandoned — each names its exact blocker.
 
-- [ ] [DATA] P2. **A4 column materialization** (shared): add the 6 fixture-match fields to UAC `InstrumentRecord`; IS
-      `process_write._records_to_dataframe` join (~6-line extension of the `clob_token_ids` block reading
-      `fixture_match_for_instrument_key`); MTDS prediction-tick schema. The resolver + side-table stamping already
-      shipped (`is@85988ade`); this turns it into real parquet/manifest columns.
+- [x] ✅ [DATA] P2. **STALE — CLOSED 2026-07-31 (na-eligibility-audit, prediction tranche).** A4 column materialization
+      (shared): add the 6 fixture-match fields to UAC `InstrumentRecord`; IS `process_write._records_to_dataframe` join
+      (~6-line extension of the `clob_token_ids` block reading `fixture_match_for_instrument_key`); MTDS prediction-tick
+      schema. **Already shipped, this checkbox was never flipped**: per
+      [`prediction_phase_ab_residuals_2026_07_24.md`](/plans/active/prediction_phase_ab_residuals_2026_07_24.md)'s own
+      A4 section (`[x]` DONE 2026-07-18) — UAC `InstrumentRecord` + `INSTRUMENTS_PARQUET_SCHEMA` shipped
+      `unified-api-contracts@e7ed754e`; IS `process_write._records_to_dataframe` join shipped
+      `instruments-service@e3ffc613`. MTDS prediction-tick schema is explicitly **OPTIONAL/DEFERRED** there ("catalogue
+      carries the attrs; tick-grain only if the arb path needs it") — a deliberate scope decision, not open blocked
+      work. The separate historical BACKFILL of these columns remains tracked as its own live Phase-B checkbox
+      ("Backfill the fixture-match attributes (A4 columns) across historical Polymarket + Kalshi soccer") — not
+      superseded by this close.
 - **E2 alias additions** (shared): add the missing Kalshi soccer team aliases (E2's worklist) to
   `unified_api_contracts.external.api_football.team_mappings`, plus the South-American club aliases for the odds-side
   ~66%→~100% — to reach the operator's ~0% gap.
@@ -592,6 +633,54 @@ drain window, or an operator decision. They are ordered, not abandoned — each 
   [`instruments_store_prediction_path_scheme_not_asset_group_pipeline_mode_2026_07_26.md`](/plans/archive/issues/instruments_store_prediction_path_scheme_not_asset_group_pipeline_mode_2026_07_26.md).
 
 ## Progress Log — condensed (2026-07-24, replaces the pre-split ~917-line tick-by-tick log)
+
+- **na-eligibility-audit 2026-07-31 (prediction tranche)**: KEEP-NA, stale item closed — the "A4 column materialization
+  (shared)" Deferred-work checkbox was superseded (UAC + IS legs shipped `unified-api-contracts@e7ed754e` /
+  `instruments-service@e3ffc613` per `prediction_phase_ab_residuals_2026_07_24.md`'s own A4 section; MTDS leg explicitly
+  OPTIONAL/DEFERRED, not blocked open work) — closed with citation, doc stays NA. Separately archived
+  `issues/prediction_lifecycle_prefetch_gate_and_resolution_day_catalogue_2026_07_14.md` (0 open todos, terminal) and
+  fixed this doc's own aggregated-source-docs link to its new `plans/archive/issues/` path in the same pass. No other
+  open item changed; this doc's role as the live Phase A-E coordination hub (0 native todos by design per its own
+  `gate_on_depends: false` note) is unaffected — not archived, still the live index.
+
+- **na-eligibility-audit 2026-07-30 (prediction tranche)**: KEEP-NA, valid — 1 open ([DATA] P2, A4 fixture-match column
+  materialization), which is the shared cross-repo half of work whose prediction-side legs are tracked in the Phase A-B
+  residuals fork. Note for whoever picks up `issues/prediction_closeout_tag_and_batch_claim_findings_2026_07_30.md`
+  Finding 3: that finding proposes adding 4 docs to THIS doc's aggregated-sources index, and
+  `prediction_satellite_ao_dispatch_batch2_finalize_2026_07_25.md` todo 2 separately edits the same index section —
+  same-file adjacency, sequence them rather than running both blind.
+- **2026-07-31 — `/ag-closeout-audit prediction` scheduled run (ag_closeout_auditor, slot 4, dispatch agt-592e74).**
+  Phase 0: re-discovered the covering-plan set via `generate_ag_closeout_audit_candidates.py` (7 auto-detected covering
+  docs) — confirmed a real, not-yet-fixed instance of the script's known `depends_on`-resolution gap (previously noted
+  for `native_ao_extract`-shaped forks): the script only resolves `depends_on` from discovered `_finalize` docs, never
+  from the closeout hub's OWN `depends_on` — so this doc's 4 Phase A-E children
+  (`prediction_phase_ab_residuals`/`_c_data_status_ui`/`_d_formal_smoke_and_backfill`/`_e_football_arb_live`, none of
+  which have their own `_finalize` sibling) are not structurally recognized as covering docs, only accidentally caught
+  by prose-text citation matching. Not fixed here (out of this run's authorized scope — the script is
+  `ao`/tooling-owned, `parent_epic: agent_operating_framework_master`); flagged for that tranche via this run's own
+  parked-findings doc. Phase 0.3: 52 raw `asset_group:[prediction]` candidates; of the 12 the script reported "never
+  cited," 11 are genuinely cross-cutting multi-AG docs (tagged with 3+ peer AG markers, e.g. "bugs found across
+  CeFi/DeFi/TradFi/Sports/Prediction") correctly excluded by the skill's orthogonality filter (which the script itself
+  does not implement), and 1 (`mtds_prediction_adapters_dead_rest_polling_interface_2026_07_31.md`) was a citation
+  false-positive — its basename WAS already cited in `prediction_consolidated_native_ao_extract_2026_07_25.md`'s
+  Progress Log, just broken by a prettier line-wrap inserting a stray space mid-filename (fixed same commit — the exact
+  "prettier can wrap a long bare filename" trap the skill's own Phase 0.3 notes warn about, confirmed live). Net: 0
+  genuinely-never-triaged prediction-primary candidates from the mechanical pre-filter after correction. Phase 1:
+  Workflow-classified the 2 docs with real fresh ground — both 2026-07-31-filed adapter dead-code findings
+  (`is_polymarket_dead_fixture_cross_reference`, `mtds_prediction_adapters_dead_rest_polling_interface`) — both
+  `orphaned_never_touched` but correctly non-batchable (each doc's own text already says its A-delete-vs-B-document
+  choice is "not adjudicated," a genuine operator/plan-owner judgment call, and `prediction_phase_ab_residuals`'s A5
+  subsection already acknowledges both without fixing them inline, per the same reasoning). Applied 2 mechanical fixes
+  from yesterday's parked findings (`issues/prediction_closeout_tag_and_batch_claim_findings_2026_07_30.md`): Finding 2
+  (batch4/batch6 duplicate cqg-reenumeration todo — checked off batch6's copy in place, citing batch4 todo 3 as sole
+  owner, without reordering any other todo given the fleet's live positional-task-ID-instability warning) and Finding 3
+  (added the 4 named docs + the 2 new dead-code docs to this index, corrected the stale
+  `kalshi_live_capture_regression_and_drift` entry). Findings 1 (inherited `cefi` tag on 2 forks) and 4
+  (`prediction_trades_migration_concurrent_dispatch` needs `ao`-tranche adoption) remain open — both still genuinely
+  operator/cross-tranche-gated, re-confirmed not stale. Phase 3: no new batch drafted — every orphaned doc found is
+  either non-batchable (operator-gated) or already covered; batch4 and batch6 remain the live dispatch surface. Full
+  report + remaining-open findings in this run's own parked-findings doc
+  (`issues/ag_closeout_audit_prediction_parked_2026_07_31.md`).
 
 > **The full tick-by-tick history was NOT deleted** — it lives verbatim in
 > [`prediction_consolidated_closeout_history_2026_07_18.md`](/plans/archive/2026_07/prediction_consolidated_closeout_history_2026_07_18.md)
@@ -654,3 +743,7 @@ drain window, or an operator decision. They are ordered, not abandoned — each 
   explicitly-SUPERSEDED history-only sections, so this doc's "functionally SUPERSEDED" wording agrees with the epic's
   own banners — an earlier read of this as a live contradiction between two active docs was refuted by counting the
   todos per section.
+
+## Progress Log
+
+- **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).

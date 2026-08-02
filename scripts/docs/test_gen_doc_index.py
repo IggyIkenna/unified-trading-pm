@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# Epic: agent_operating_framework_master
+# Lifecycle: permanent
+# Delete-when: NA
 """Smoke + determinism tests for gen_doc_index (the L0 map generator, W4).
 
 Run: .venv/bin/python -m pytest scripts/docs/test_gen_doc_index.py -q

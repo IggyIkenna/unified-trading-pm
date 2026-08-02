@@ -38,10 +38,15 @@ codex_ssots:
     /codex/12-agent-workflow/claude-cli-multi-account-headless-auth.md,
   ]
 related_plans:
-  - ../archive/2026_07/ao_consolidated_closeout_2026_07_25.md
-  - ../active/ao_fleet_observability_kpis_2026_07_20.md
   - ../active/ao_open_issues_consolidated_close_out_2026_07_17.md
   - ../active/ao_satellite_ao_dispatch_batch1_2026_07_26.md
+  - ../active/ao_satellite_ao_dispatch_batch1_finalize_2026_07_26.md
+  - ../active/ao_satellite_ao_dispatch_batch2_2026_07_30.md
+  - ../active/ao_satellite_ao_dispatch_batch2_finalize_2026_07_30.md
+  - ../active/ao_satellite_ao_dispatch_batch3_finalize_2026_07_31.md
+  - ../active/ao_satellite_ao_dispatch_batch4_finalize_2026_08_01.md
+  - ../active/deepseek_claude_blended_provider_routing_2026_07_28.md
+  - ../active/omniroute_llm_gateway_pilot_design_2026_07_30.md
 last_updated: 2026-07-16
 locked_by: live-defi-rollout
 locked_since: 2026-05-21
@@ -308,15 +313,10 @@ the single audit trail.
 
 ## Assigned active plans
 
-_5 active plans declare `parent_epic: orchestrator_master` in their frontmatter. Workers pick up in priority order (P0
+_8 active plans declare `parent_epic: orchestrator_master` in their frontmatter. Workers pick up in priority order (P0
 first). Auto-populated by `scripts/plans/populate_epic_bodies_2026_05_21.py`._
 
 ## P0 — must complete before next foundation gate
-
-### [`ao_fleet_observability_kpis_2026_07_20`](../active/ao_fleet_observability_kpis_2026_07_20.md)
-
-**status**: active · **estimate**: 2.8 cal AI-days (class: infra) **title**: AO fleet observability — make efficiency,
-escalator efficacy and account burn visible
 
 ### [`ao_open_issues_consolidated_close_out_2026_07_17`](../active/ao_open_issues_consolidated_close_out_2026_07_17.md)
 
@@ -324,18 +324,32 @@ escalator efficacy and account burn visible
 
 ## P1 — important; post-current-gate
 
-### [`ao_consolidated_closeout_2026_07_25`](../archive/2026_07/ao_consolidated_closeout_2026_07_25.md)
-
-**status**: archived 2026-07-30 (own 2 `## Todos` items done, zero remaining, `locked_by:` empty) · **estimate**: 4.8
-cal AI-days (class: infra) **title**: AO consolidated close-out — agent-orchestrator dispatch, worker/slot lifecycle,
-and framework tooling. Archiving this reachability digest does not close the `ao` tranche — see
-`ao_satellite_ao_dispatch_batch1_2026_07_26` and `ao_open_issues_consolidated_close_out_2026_07_17` above for the live
-picture.
-
 ### [`ao_satellite_ao_dispatch_batch1_2026_07_26`](../active/ao_satellite_ao_dispatch_batch1_2026_07_26.md)
 
 **status**: active · **estimate**: 1.6 cal AI-days (class: refactor) **title**: AO satellite AO batch 1 — first dispatch
 batch extracted from the AO tranche's satellite docs
+
+### [`ao_satellite_ao_dispatch_batch1_finalize_2026_07_26`](../active/ao_satellite_ao_dispatch_batch1_finalize_2026_07_26.md)
+
+**status**: active · **estimate**: 0.48 cal AI-days (class: infra) **title**: AO satellite AO batch 1 — finalize
+
+### [`ao_satellite_ao_dispatch_batch2_2026_07_30`](../active/ao_satellite_ao_dispatch_batch2_2026_07_30.md)
+
+**status**: active · **estimate**: 1.2 cal AI-days (class: refactor) **title**: AO satellite AO batch 2 — second
+dispatch batch extracted from the AO tranche's satellite docs
+
+### [`ao_satellite_ao_dispatch_batch2_finalize_2026_07_30`](../active/ao_satellite_ao_dispatch_batch2_finalize_2026_07_30.md)
+
+**status**: active · **estimate**: 0.4 cal AI-days (class: infra) **title**: AO satellite AO batch 2 — finalize
+
+### [`ao_satellite_ao_dispatch_batch3_finalize_2026_07_31`](../active/ao_satellite_ao_dispatch_batch3_finalize_2026_07_31.md)
+
+**status**: active · **estimate**: 0.4 cal AI-days (class: infra) **title**: AO satellite AO batch 3 — finalize
+
+### [`deepseek_claude_blended_provider_routing_2026_07_28`](../active/deepseek_claude_blended_provider_routing_2026_07_28.md)
+
+**status**: active · **estimate**: 2.4 cal AI-days (class: infra) **title**: DeepSeek/Claude blended provider routing
+for agent-orchestrator
 
 ## P2 — useful; opportunistic
 
@@ -343,4 +357,7 @@ _(no plans currently assigned at this priority)_
 
 ## P3 — backlog; revisit quarterly
 
-_(no plans currently assigned at this priority)_
+### [`omniroute_llm_gateway_pilot_design_2026_07_30`](../active/omniroute_llm_gateway_pilot_design_2026_07_30.md)
+
+**status**: active · **estimate**: 0.6 cal AI-days (class: research) **title**: OmniRoute multi-provider LLM-gateway
+pilot — deployment-api pipeline-UAT commentary (human execution)

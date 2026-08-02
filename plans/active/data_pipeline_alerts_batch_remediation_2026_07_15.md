@@ -10,7 +10,7 @@ summary:
   instruction."
 status: active
 nature: process
-asset_group: [meta]
+asset_group: [cross-cutting] # corrected 2026-07-31 (ag-closeout-audit cross-cutting Phase 0 meta-tag sweep) -- was [meta], a genuine mistag: multi-AG data-pipeline-alerts/consolidator remediation content, not process-level/spans-nothing meta
 stage: [data]
 repos:
   [
@@ -50,6 +50,13 @@ depends_on: []
 source: [operator Slack alert paste, 2026-07-15 conversation]
 assigned_role: infra
 drift_direction: advance-code
+context_scope:
+  [
+    /codex/05-infrastructure/data-pipeline-alerts.md,
+    /codex/05-infrastructure/manifest-consolidator-ssot.md,
+    /plans/active/issues/tradfi_unreachable_databento_data_types_mbp10_ohlcv_coarse_calendar_2026_07_15.md,
+    /plans/active/data_pipeline_hardening_self_monitoring_2026_06_22.md,
+  ]
 ---
 
 # Data-pipeline alerts batch remediation — 2026-07-15
@@ -114,3 +121,4 @@ stopping to ask. `/autonomous` was explicitly invoked. This is a LOCAL plan (`as
 - **na-eligibility-audit 2026-07-30**: KEEP-NA, valid (infra tranche, dispatch agt-30721a) — Explicit operator
   instruction to run locally/autonomously, not AO-dispatched; one item is a 24h real-wall-clock observation window that
   cannot complete in one session.
+- **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).

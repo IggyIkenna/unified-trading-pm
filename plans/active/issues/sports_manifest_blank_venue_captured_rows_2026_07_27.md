@@ -31,12 +31,13 @@ source: >-
   availability_index.parquet via unified_trading_library.read_availability_index (columns=[date, venue, pipeline_mode,
   instrument_type, data_type, row_count, capture_status], no filter, full history), 2026-07-27, during
   sports_consolidated_native_ao_extract_2026_07_25.md's Track C todo. Ad-hoc read-only query, not yet a saved script.
-execution_scope: local-only
+execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
 locked_by:
 locked_since:
-assigned_vm: NA
+assigned_vm: planning
+assigned_role: data_engineering
 resolved_by:
 ---
 
@@ -98,3 +99,13 @@ the MDPS-side hypothesis is more plausible for that data_type specifically.
       manifest-recording" per the todo's own done-when — that needs a read of the actual RAW parquet content (not just
       the manifest row) for one of these shard atoms, which was not attempted this pass (would need locating the exact
       GCS object per sampled row, out of this session's time-box). Left `- [ ]` — root cause still open.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30**: RECLASSIFY -> `assigned_vm: planning` — the sole `[DIAG] P2` is a read-only
+  root-cause with an explicit stated done-when ('a written root-cause finding for each affected data_type, with a
+  re-stampable / needs-writer-fix / accept-as-is recommendation'), i.e. an audit whose outcome is determinable by the
+  worker alone. Partial progress already recorded 2026-07-29; the remaining step (read the RAW parquet content behind
+  one sampled shard atom) is bounded and touches no delete/VM-launch. Conflict-check CLEAR: the doc itself states this
+  is a distinct axis from `sports_consolidated_native_ao_extract_2026_07_25.md`'s Track C venue re-stamp, and no active
+  planning doc claims the blank-`venue` root cause.

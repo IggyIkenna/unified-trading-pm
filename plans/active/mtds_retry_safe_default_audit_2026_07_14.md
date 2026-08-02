@@ -39,6 +39,12 @@ source:
   shipped concurrently (mtds@f82f29c1 + mtds@b8218f8a) while this plan was being authored — scope reduced to the
   unshipped remainder (QG lint + residual-site decision + codex SSOT). See Progress Log."
 drift_direction: advance-code
+context_scope:
+  [
+    /plans/epics/infrastructure_master.md,
+    /codex/04-architecture/shard-level-failure-isolation.md,
+    /codex/06-coding-standards/quality-gates.md,
+  ]
 ---
 
 # MTDS retry_safe convention — QG lint + codex SSOT (post-audit remainder)
@@ -48,6 +54,17 @@ drift_direction: advance-code
 > destination — ASK BEFORE CREATING" hard rule; the operator is away and did not specify AO-dispatch. To hand this to
 > the fleet later, flip `assigned_vm: planning` + `execution_scope: orchestrator-agent` (todos below already honour the
 > AO 10–20 cap and `[TAG]` format).
+>
+> **✅ THAT HAND-OFF HAS HAPPENED — ownership resolved 2026-07-31** (corpus-wide ownership-conflict sweep, operator
+> ruling newer/more-complete-wins). `/plans/active/cross_cutting_satellite_ao_dispatch_batch1b_2026_07_26.md`
+> (`assigned_vm: planning`) carries a single `[BACKEND] P3` todo that enumerates **all five** of this plan's todos
+> verbatim and in order, names both repos, and states a Done-when of "all 5 original todos in that doc are checked with
+> evidence". **batch1b is the execution vehicle; do NOT execute the three open todos below independently** — running
+> them here would double-dispatch the same MTDS/codex edits. This plan stays `active` + `assigned_vm: NA` on purpose:
+> its `- [ ]` boxes are the flip targets batch1b's Done-when points at, and keeping them open is what keeps the work
+> visible to `count_open_tasks.py` (which deliberately excludes satellite/batch aggregators from the deduped total, so
+> closing them here would make the work vanish from the count entirely). They were **not** marked `[x]` — the work is
+> genuinely not done, and a false `[x]` is the exact anti-pattern this sweep exists to remove.
 
 ## Context — what already shipped (do NOT redo)
 
@@ -128,3 +145,9 @@ but these 2 sites are exactly what an idiom-lint would flag — they need an exp
   residual-annotation commit (`mtds@0041a8a6`) are real, already-shipped ancestors. Flipped both todos, shipping now.
   Todos 1-2 (repo-local MTDS lint, residual-site decision) and 5 (parent-issue closeout) remain open — not addressed by
   this uncommitted diff.
+
+- **na-eligibility-audit 2026-07-30**: RECLASSIFY candidate PARKED (conflict) — stays KEEP-NA —
+  `cross_cutting_satellite_ao_dispatch_batch1b_2026_07_26.md` carries a todo whose stated Done-when claims ALL 5 of this
+  doc's original todos (Source cites this file by path). Verbatim duplicate claim — parked for an operator ruling on
+  which side owns it.
+- **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).

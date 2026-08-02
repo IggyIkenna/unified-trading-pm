@@ -330,7 +330,7 @@ picture.
       completed run, no re-walk needed.
   - [`plans/active/issues/phantom_audit_estate_coverage_gap_2026_07_10.md`](/plans/active/issues/phantom_audit_estate_coverage_gap_2026_07_10.md)
     — 0 open todos (closed/archived/record-only).
-  - [`plans/active/issues/phantom_captures_defi_2026_06_28.md`](/plans/active/issues/phantom_captures_defi_2026_06_28.md)
+  - [`plans/archive/issues/phantom_captures_defi_2026_06_28.md`](/plans/archive/issues/phantom_captures_defi_2026_06_28.md)
     (3 open)
     - **[SCRIPT] P1.** Diagnose defi phantom root cause: uniform ~25,400 counts across 7 `swaps_ohlcv_*` granularities
       suggest a single batch writer failure.
@@ -379,7 +379,7 @@ picture.
   - [`plans/archive/issues/defi_pool_canonical_instrument_id_policy_contradiction_2026_07_17.md`](/plans/archive/issues/defi_pool_canonical_instrument_id_policy_contradiction_2026_07_17.md)
     — 0 open todos (closed/archived/record-only) — corrected 2026-07-25 (plan-reconcile): `status: resolved`, both
     bullets `[x]`.
-  - [`plans/active/issues/defi_pool_chain_collision_curve_balancer_gap_2026_07_21.md`](/plans/active/issues/defi_pool_chain_collision_curve_balancer_gap_2026_07_21.md)
+  - [`plans/archive/issues/defi_pool_chain_collision_curve_balancer_gap_2026_07_21.md`](/plans/archive/issues/defi_pool_chain_collision_curve_balancer_gap_2026_07_21.md)
     (4 open — recounted live 2026-07-26 by `/plan-reconcile defi`; the previous "0 open todos
     (closed/archived/record-only)" entry was wrong, this doc is `status: open` with 4 live `- [ ]` todos at
     `:82`/`:84`/`:87`/`:89`)
@@ -415,8 +415,8 @@ picture.
       on a data_type with non-zero coverage elsewhere.
   - [`plans/active/issues/defi_lst_oracle_timestamp_glued_instrument_id_2026_07_20.md`](/plans/active/issues/defi_lst_oracle_timestamp_glued_instrument_id_2026_07_20.md)
     — 0 open todos (closed/archived/record-only).
-  - [`plans/active/issues/lst_exchange_rate_data_availability_2026_07_21.md`](/plans/active/issues/lst_exchange_rate_data_availability_2026_07_21.md)
-    — 0 open todos (closed/archived/record-only).
+  - [`plans/archive/issues/lst_exchange_rate_data_availability_2026_07_21.md`](/plans/archive/issues/lst_exchange_rate_data_availability_2026_07_21.md)
+    — 0 open todos (closed/archived/record-only; archived 2026-07-30).
   - [`plans/archive/issues/gas_fees_lst_rates_manifest_bucket_mismatch_2026_07_10.md`](/plans/archive/issues/gas_fees_lst_rates_manifest_bucket_mismatch_2026_07_10.md)
     — 0 open todos (closed/archived/record-only).
   - [`plans/archive/issues/mtds_lst_extended_rates_uncited_addresses_2026_07_19.md`](/plans/archive/issues/mtds_lst_extended_rates_uncited_addresses_2026_07_19.md)
@@ -477,7 +477,7 @@ picture.
     - **[VERIFY] P3.** Reconcile the `swaps_ohlcv_4h` timeframe discrepancy before either path ships.
   - [`plans/active/issues/defi_five_never_captured_venues_fix_2026_07_22.md`](/plans/archive/issues/defi_five_never_captured_venues_fix_2026_07_22.md)
     — 0 open todos (closed/archived/record-only).
-  - [`plans/active/issues/defi_mvp_backfill_optimization_ready_2026_07_20.md`](/plans/active/issues/defi_mvp_backfill_optimization_ready_2026_07_20.md)
+  - [`plans/archive/issues/defi_mvp_backfill_optimization_ready_2026_07_20.md`](/plans/archive/issues/defi_mvp_backfill_optimization_ready_2026_07_20.md)
     (3 open)
     - **[SCRIPT] P0.** Both DeFi launchers MISS the SPOT preemption contract (zero
       `lc_write_preemption_signal_file`/`lc_write_launch_params` calls) — must land before any wide SPOT wave.
@@ -486,7 +486,7 @@ picture.
     - **[SCRIPT] P1.** Knobs + async fan-out + executor-offload, together — the 3 concurrency knobs are inert alone;
       bundle with `ParallelPerSymbolRunner` fan-out + dedicated ThreadPoolExecutor. CANARY at 2 VMs before any wide
       wave.
-  - [`plans/active/issues/defi_venue_phase_live_definition_contradiction_2026_07_22.md`](/plans/active/issues/defi_venue_phase_live_definition_contradiction_2026_07_22.md)
+  - [`plans/archive/2026_07/defi_venue_phase_live_definition_contradiction_2026_07_22.md`](/plans/archive/2026_07/defi_venue_phase_live_definition_contradiction_2026_07_22.md)
     — 0 open todos (closed/archived/record-only).
   - [`plans/active/issues/defi_archetype_universe_no_curtailment_mechanism_2026_07_23.md`](/plans/active/issues/defi_archetype_universe_no_curtailment_mechanism_2026_07_23.md)
     (3 open)
@@ -527,7 +527,7 @@ picture.
     — 0 open todos (closed/archived/record-only).
   - [`plans/active/issues/defi_dead_storage_shape_b_cleanup_candidate_2026_07_10.md`](/plans/active/issues/defi_dead_storage_shape_b_cleanup_candidate_2026_07_10.md)
     — 0 open todos (closed/archived/record-only).
-  - [`plans/active/issues/onchain_manifest_dishonest_and_recompute_blocked_2026_07_21.md`](/plans/active/issues/onchain_manifest_dishonest_and_recompute_blocked_2026_07_21.md)
+  - [`plans/archive/issues/onchain_manifest_dishonest_and_recompute_blocked_2026_07_21.md`](/plans/archive/issues/onchain_manifest_dishonest_and_recompute_blocked_2026_07_21.md)
     — 0 open todos (closed/archived/record-only).
   - [`plans/active/issues/features_onchain_featureless_shards_and_vocabulary_split_2026_07_20.md`](/plans/active/issues/features_onchain_featureless_shards_and_vocabulary_split_2026_07_20.md)
     — 0 open todos (closed/archived/record-only).
@@ -537,7 +537,7 @@ picture.
     (1 open)
     - **[DATA] P2.** `lst_yields` sparse coverage (~15 days) — file the coverage extension with features-onchain/MTDS;
       STAKING_REWARD honestly books zero (visible log) outside that window until then.
-  - [`plans/active/issues/e2e_testing_collateral_validation_dead_import_2026_07_23.md`](/plans/active/issues/e2e_testing_collateral_validation_dead_import_2026_07_23.md)
+  - [`plans/archive/issues/e2e_testing_collateral_validation_dead_import_2026_07_23.md`](/plans/archive/issues/e2e_testing_collateral_validation_dead_import_2026_07_23.md)
     — 0 open todos (closed/archived/record-only) — operator ruling needed (rewrite vs delete vs gate-hardening) before
     this becomes a real todo.
   - [`plans/active/issues/deployment_ui_capability_bundle_stale_drift_pacifica_2026_07_16.md`](/plans/active/issues/deployment_ui_capability_bundle_stale_drift_pacifica_2026_07_16.md)
@@ -653,7 +653,7 @@ picture.
     (1 open)
     - **3. [DATA] P1.** Assess blast radius on existing candle data — any past MDPS run with `max_workers>1` over a
       heterogeneous file list may carry wrong leading-bin seeds.
-  - [`plans/active/issues/mtds_backfill_vm_startup_oom_rc137_2026_07_14.md`](/plans/active/issues/mtds_backfill_vm_startup_oom_rc137_2026_07_14.md)
+  - [`plans/archive/issues/mtds_backfill_vm_startup_oom_rc137_2026_07_14.md`](/plans/archive/issues/mtds_backfill_vm_startup_oom_rc137_2026_07_14.md)
     — 0 open todos (closed/archived/record-only).
   - [`plans/archive/issues/mtds_empty_string_fallback_codex_gate_blocking_pushes_2026_07_08.md`](/plans/archive/issues/mtds_empty_string_fallback_codex_gate_blocking_pushes_2026_07_08.md)
     (4 open)
@@ -692,11 +692,11 @@ picture.
       11 to cover cefi CEX venues (operator's live-probing-scope theme: broaden, don't narrow) — add cefi CEX venues to
       `_EXTRA_LIVE_PROBE_SOURCES_BY_AG`, relax/rename the RULE-11 test, re-verify the ~35 mis-flagged shards flip to
       captured. See the source issue doc for the full mandate.
-  - [`plans/active/issues/group_c_cloud_run_job_failures_triage_2026_07_16.md`](/plans/active/issues/group_c_cloud_run_job_failures_triage_2026_07_16.md)
+  - [`plans/archive/issues/group_c_cloud_run_job_failures_triage_2026_07_16.md`](/plans/archive/issues/group_c_cloud_run_job_failures_triage_2026_07_16.md)
     — 0 open todos (recounted live 2026-07-26 by `/plan-reconcile defi`, was "1 open"): the
     default-to-yesterday-date-bridge item flipped `[x] ✅ … FIXED 2026-07-16` at `:271`. Archival candidate — see this
     doc's own `## Archival + consolidation candidates` note.
-  - [`plans/active/issues/dp_catalog_not_running_sports_prediction_2026_07_15.md`](/plans/active/issues/dp_catalog_not_running_sports_prediction_2026_07_15.md)
+  - [`plans/archive/issues/dp_catalog_not_running_sports_prediction_2026_07_15.md`](/plans/archive/issues/dp_catalog_not_running_sports_prediction_2026_07_15.md)
     (2 open — sports/prediction-primary, tracked here for cross-AG catalogue overlap)
     - **[OPS] P2.** Verify the next scheduled `lifecycle-catalogue-regen-sports` run promotes successfully and
       `prod/catalog.parquet` row count is `>= 27,216`.

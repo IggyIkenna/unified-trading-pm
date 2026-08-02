@@ -45,6 +45,14 @@ drift_direction: correct-codex
 model_tier: opus-required
 execution_model: opus-1m
 thinking: high
+context_scope:
+  [
+    /codex/06-coding-standards/documentation-standards.md,
+    /codex/00-SSOT-INDEX.md,
+    /codex/06-coding-standards/model-tier-selection.md,
+    /plans/archive/issues/repo_docs_codex_ssot_consolidation_2026_06_01.md,
+    /plans/archive/issues/codex_ssot_audit_phase3_hold_vs_reclassify_contradiction_2026_07_27.md,
+  ]
 ---
 
 # Codex-vs-repo-docs SSOT audit + consolidation
@@ -219,12 +227,23 @@ from scope).
       mostly legitimately-absent (non-data-writing repos have no GCS/schema) — captured as a scoping finding in
       `/plans/active/issues/s5_7_required_docs_gaps_2026_07_29.md` (out of this dedup plan's scope; operator/main
       tiering decision).
-- [ ] [DOCS] P3. **Phase 5 follow-up — semantic codex-table-duplication detector.** `check_repo_docs_ssot.py` (Phase 5)
-      enforces the deterministic clauses (archived-mirror refs + hardcoded resolver-owned literals) but does NOT yet
-      detect a repo doc that reproduces a codex TABLE/contract verbatim (S5.11's core "no duplication" rule) — a
+- [x] ✅ [DOCS] P3. **Phase 5 follow-up — semantic codex-table-duplication detector.** `check_repo_docs_ssot.py`
+      (Phase 5) enforces the deterministic clauses (archived-mirror refs + hardcoded resolver-owned literals) but does
+      NOT yet detect a repo doc that reproduces a codex TABLE/contract verbatim (S5.11's core "no duplication" rule) — a
       verbatim-block detector is false-positive-prone (codex tables get legitimately quoted/referenced) and needs a
       calibrated heuristic. Design + add it as a third rule to `check_repo_docs_ssot.py`, baselined. (repo:
-      unified-trading-pm)
+      unified-trading-pm) **DONE 2026-07-31 — unified-trading-pm@dc1c65c80.** Added the `table-duplication` rule:
+      extracts markdown pipe-tables from BOTH the live codex corpus and each repo doc, canonicalizes cell content
+      (whitespace/pipe-alignment-blind via a `\x1f` join, case-preserving, separator row dropped), and flags an EXACT
+      whole-table match against a codex table that clears a significance floor (`_MIN_TABLE_ROWS=3` /
+      `_MIN_TABLE_CHARS     =100`). The floor is the false-positive control the todo called out: calibrated against the
+      live corpus (2358 codex tables) it drops the 88 trivial 2-row idiom-shaped tables that get legitimately echoed,
+      while still indexing >2200 real tables. Exact-match (not fuzzy) keeps the FP rate at the same bar as the other two
+      rules — a fuzzy pass is noted as future work in the docstring. Ratchets against the same
+      `repo_docs_ssot_baseline.yaml`; live-corpus scan finds ZERO new table-duplication violations (baseline content
+      unchanged — the codex/repo-doc corpus is already S5.11-clean on tables). +6 unit tests
+      (flag/no-flag/floor/backward-compat/archived-codex-exclusion), full suite 13 green; QG-green sentinel==HEAD,
+      quickmerge --agent, verified on origin.
 
 ## Phase 2 progress (2026-07-27)
 
@@ -403,11 +422,49 @@ either already-satisfied or stale. This session (Phase-2 worker) executed the **
       `unified-trading-pm@c6b2d9eb1` 2026-06-22**: reconciled 5 codex docs against the live code as of that date
       (PlanRegenLoop cadence 6h→30min; AutoSpawn ceilings 50/80→95/95 + env-name fixes; backend port 8026→8765 across
       overview/worker-liveness/multi-vm-topology; ES256 internal-token + HS256-retired in the multi-vm auth diagram).
-- [ ] [DOCS] P2. **deployment-api** (8) / **client-reporting-api** (8) / **alerting-service** (8).
-- [ ] [DOCS] P2. **trading-agent-service** (7) / **ibkr-gateway-infra** (4) / **batch-live-reconciliation-service** (1)
-      / **system-integration-tests** (1).
-- [ ] [DOCS] P2. **deployment-ui** (3) (`user-management-ui` dropped — ARCHIVED 2026-04-20, corrected 2026-07-15,
-      plan-reconcile).
+- [x] ✅ [DOCS] P2. **deployment-api** (8) / **client-reporting-api** (8) / **alerting-service** (8). — **DONE
+      2026-07-31** (Phase-3/4 apply, gate cleared). Ground-truthed each repo vs the Appendix-B registry before applying;
+      all cited codex targets VERIFIED-EXIST. **deployment-api@74785bf**: README un-archived (dropped the WRONG
+      `unified-trading-deployment-v3 — ARCHIVED` banner — it IS the live deploy/launch+subscriptions backend for both
+      UIs); TESTING → `scripts/quality-gates.sh` entrypoint (never-run-pytest); DEPLOYMENT_GUIDE `gcr.io/` → Artifact
+      Registry; DELETE `docs/specs/{PLANS_ALIGNMENT,README}.md` (dead dumps, all 5 cited plans archived). (Adopted this
+      slot's prior interrupted-session WIP that matched the registry exactly.) **client-reporting-api@93374e9**:
+      GCS_PATHS rewritten — the `does not read/write GCS` claim was STALE (service is a live GCS reader/writer via
+      `core/{hwm_reader,attribution_reader,ledger_views,invoice_state,recon_view}.py`, `resolve_bucket_name` kinds
+      `client-statements`/`client-reports`; layout deferred to the CLIENT_OPERATIONS_GUIDE runbook + codex bucket/object
+      SSOTs); TESTING → QG entrypoint; DEPLOYMENT_GUIDE `gcr.io/` → Artifact Registry (the MIGRATE-TO-CODEX
+      commercial-facts deltas were already shipped 2026-07-29, see the Phase-1 todo above).
+      **alerting-service@5d96dd2**: TESTING → QG entrypoint; DELETE `docs/specs/{PLANS_ALIGNMENT,README}.md` (dead
+      dumps, all 5 cited plans archived). KEEP-class docs untouched. Each shipped Pass-1 QG-green →
+      `quickmerge --agent`, verified on origin; all changed `.md` prettier-clean.
+- [x] ✅ [DOCS] P2. **trading-agent-service** (7) / **ibkr-gateway-infra** (4) / **batch-live-reconciliation-service**
+      (1) / **system-integration-tests** (1). — **DONE 2026-07-31 (slot-6, opus).** Ground-truthed each repo vs current
+      code/docs before applying (registries drift). **trading-agent-service@a84fccc**: `docs/CONFIGURATION.md` 3 stale
+      defaults fixed vs `config.py` (`data_refresh_seconds` 60→300, `fill_verify_seconds` 30→60 [registry missed this
+      one — caught by full-table ground-truth], `min_signal_strength` 0.20→0.25; the doc was the outlier vs
+      `SCHEMA_VALIDATION.md`+tests); `README.md` Key Dependencies replaced 3 NONEXISTENT packages
+      (`unified-trade-execution-interface`/`unified-ml-interface`/`unified-domain-client` — not in pyproject/imports; a
+      reader would import phantoms) with the 4 real path deps (`unified-api-contracts`/`unified-config-interface`/
+      `unified-trading-library`/`unified-cloud-interface`, matching
+      `DEPENDENCIES.md`+`ARCHITECTURE.md`+`pyproject.toml`) + linked `DEPENDENCIES.md`; archived-mirror refs already 0
+      (b481cf9). **batch-live-reconciliation-service@529bee8**: `docs/GCS_PATHS.md` References gained the canonical
+      recon SSOT (`/codex/09-strategy/operational/paper-batch-live-reconciliation.md`) — the determinism spine this
+      service reconciles (KEEP content; archived-mirror already live-form). **system-integration-tests@dd34439**: README
+      already fully remediated (verified 0 stale: manifest v9 not v5, `per-asset-group-bucket-layouts.md` not the
+      missing per-category, live `operational-modes-matrix.md` path); `docs/portable-backtest-criteria.md` References
+      gained the recon SSOT cross-link for its §3 Batch-Live Symmetry. **ibkr-gateway-infra**: NO worker-determinable
+      FIX-STALE remains — archived-mirror ARCHITECTURE ref already fixed (2496fcb); the two remaining contradictions
+      (`QUALITY_GATE_BYPASS_AUDIT.md` "Repo is archived" vs live README/coverage-floor; 2FA manual-vs-IBGA+TOTP) are
+      exactly the `[OPERATOR-DECISION]` items already tracked below (Phase-1 findings, the ibkr internal-contradictions
+      todo) — a strategy/owner call, not a worker guess; NOT re-filed. Each changed repo shipped Pass-1 QG-green →
+      `quickmerge --agent`, verified on origin; changed `.md` prettier-clean.
+- [x] ✅ [DOCS] P2. **deployment-ui** (3) (`user-management-ui` dropped — ARCHIVED 2026-04-20, corrected 2026-07-15,
+      plan-reconcile). — deployment-ui@b7ccd3b (2026-07-31): DELETE `src/README.md` (stock Vite+React boilerplate);
+      FIX-STALE `README.md` (env var `VITE_API_URL`→`VITE_DEPLOYMENT_API_URL` + `VITE_OAUTH_CLIENT_ID`→
+      `VITE_GOOGLE_CLIENT_ID` to match actual code; stale 7-tab table → real 16-screen/7-group nav per
+      `src/components/NavMenu.tsx`) + `docs/ARCHITECTURE.md` (stale "8-tab"/route table, component structure, endpoint
+      list all reconciled to current source). Repo-internal drift only, no codex target. QG-green (55s), verified on
+      origin.
 - [ ] [DOCS] P3. **unified-trading-system-ui** (152) — audit only data/path/contract docs; leave genuine UI docs.
 
 ### FIX-STALE pass-1 — landed 2026-06-01 (operator chose FIX-STALE-only; DELETEs/REDIRECTs held), ~340 fixes on LDR
@@ -416,7 +473,7 @@ deployment-service@`9627260`; instruments-service@`8bea654`+`9ecc4b2`; execution
 market-data-processing-service@`89161dc`; strategy-service@`80d298fe`; e2e-testing@`0de5471`;
 unified-trading-library@`168e649`+`c88278b`; market-tick-data-service@`d97ca3c`.
 
-- [ ] [DOCS] P2. **No NEW URDI refs in instruments-service (was: "Audit + rename in instruments-service" — corrected
+- [x] ✅ [DOCS] P2. **No NEW URDI refs in instruments-service (was: "Audit + rename in instruments-service" — corrected
       2026-07-12, finding 369, §A2 "50 reclassified" blanket ruling)**: `urdi_reference_provider.py` is grep-confirmed
       LOAD-BEARING — imported by `instruments_service/engine/orchestrator/__init__.py` +
       `reference_data/utils/defi_utils.py` + 6 production adapters (cefi/hyperliquid.py, cefi/deribit_combo_adapter.py,
@@ -427,7 +484,59 @@ unified-trading-library@`168e649`+`c88278b`; market-tick-data-service@`d97ca3c`.
       load-bearing module. Original text preserved: "Follow-up: URDI still in instruments-service CODE — docs URDI refs
       fixed, but code still uses URDI symbols (`URDI` is a phantom name per CLAUDE.md). Audit + rename in
       instruments-service." (Note: `cursor-configs/CLAUDE.md`'s system-map "URDI phantom" note is also stale per this
-      finding but is out of scope for this edit — not named in this chunk.)
+      finding but is out of scope for this edit — not named in this chunk.) — **DONE 2026-07-31 (slot-6, opus).** The
+      URDI-is-load-bearing ruling is applied everywhere: the forward guard ("no NEW URDI refs in docs") is already the
+      workspace `cursor-configs/CLAUDE.md` system-map rule ("URDI is a live internal module — 'phantom' label retired
+      2026-07-12"), and `instruments-service/docs/ADAPTER_ARCHITECTURE.md` already frames URDI correctly as the internal
+      load-bearing `reference_data/urdi_reference_provider.py` fetch spine. Fixed the one standalone URDI-scoped stale
+      ref — README flow step 1 cited `urdi_reference_provider.fetch(venue, date)` but the real public API
+      (`engine/urdi_reference_provider.py:71`) is `fetch_instruments_for_all_venues(venues, ...)` → `VenueFetchResult`
+      (**instruments-service@3357250e**). The README architecture-table URDI-as-external-repo ref (L118
+      `unified-reference-data-interface/`) was NOT half-fixed here: it is one row of a 4-row Concern/Location table
+      where every row carries the same BIG-FINDING error class (archived-mirror + 3 nonexistent dep repos), and one
+      row's correct target (L119 sports) is not trivially determinable — so the whole table + broader README rewrite is
+      tracked as the follow-up todo below rather than left inconsistent.
+- [x] ✅ [DOCS] P2. **instruments-service README/docs holistic BIG-FINDING FIX-STALE (beyond URDI — findings-closure
+      from -013, slot-6 2026-07-31)** — **DONE 2026-08-01 (slot-5), instruments-service@c5ece372.** Reconciled all 7
+      docs against `SETUP_GUIDE.md`/`ADAPTER_ARCHITECTURE.md`/live `pyproject.toml`+CLI as ground truth: README dep-repo
+      list fixed to the real editable siblings **UTL+UAC only** (3 nonexistent repos removed);
+      `InstrumentRecord`/`InstrumentGenerator`/`MockScenario` repointed to UAC `internal/{reference,testing,modes}`;
+      stale CLI (`--CEFI`…/`--redo-all`) → `--operation instruments --mode batch --asset-group …`/`--force`; 4 archived
+      `unified-trading-codex/` mirror refs → live `codex/` paths; corrected the stale header claims (the service DOES
+      make external calls + manages creds + canonicalises) and the removed service-local mock seed script (now
+      UAC-owned). `CONTRIBUTING.md` → LDR + `quickmerge --agent` + `quality-gates.sh` flow (dead `.cursorrules`/
+      `unified-trading-deployment-v2` refs dropped). `.github/BRANCH_PROTECTION.md` → `quality-gates-v2` + ratcheted
+      `MIN_COVERAGE` (was 35/65). `docs/SETUP_GUIDE.md` `--mode instruments`/`instruments-query` →
+      `--operation instruments     --mode batch` / `--operation status`. `docs/SPORTS_INSTRUMENTS.md`
+      `features-sports-{project}` → canonical `features-sports-{env}-{project}` (VERIFIED stale vs codex
+      bucket-isolation-model L178, not env-agnostic). DELETED `scripts/README.md` (documented only the nonexistent
+      `run_quality_gates.py`) + `.github/BRANCH_PROTECTION_SETUP.md` (dead manual how-to). **Grep-then-READ
+      correction**: the plan's "nonexistent `make ci-local`" note is WRONG — the `Makefile` + `make ci-local` target DO
+      exist, but the Makefile is ITSELF stale (see follow-up P3 below), so BRANCH_PROTECTION.md now points at the
+      canonical `scripts/quality-gates.sh` entrypoint instead. Original scope preserved below: the instruments-service
+      refreshed registry below (line ~802) classified the full repo but only the URDI slice shipped; the rest is a
+      determinable, NOT-operator-gated reconciliation that was never a standalone dispatchable todo. Reconcile
+      `README.md` against `SETUP_GUIDE.md`@2026-07-24 + `ADAPTER_ARCHITECTURE.md` @2026-07-19 as ground truth: the
+      Concern/Location table (L116-119) cites the ARCHIVED mirror `unified-trading-codex/02-data/` (→ live PM
+      `/codex/02-data/`) + 3 NONEXISTENT dep repos (`unified-internal-contracts`/UIC,
+      `unified-reference-data-interface`/URDI [→ internal `reference_data/adapters/`],
+      `unified-sports-reference-interface`) — actual editable siblings = UTL + UAC only; `InstrumentRecord`/
+      `InstrumentGenerator`/`INSTRUMENTS_SCHEMA` live in UAC `.../internal/reference/`, not UIC; stale CLI
+      `--CEFI/--TRADFI/--DEFI/--SPORTS`+`--redo-all` → real `--asset-group CEFI`+`--force`. Plus `CONTRIBUTING.md` +
+      `.github/BRANCH_PROTECTION.md` FIX-STALE (retired `git checkout main`/`python -m pytest`/`quality-gates` check →
+      `quality-gates-v2`, LDR flow), `docs/SETUP_GUIDE.md` `--mode instruments` →
+      `--operation instruments --mode batch`, `docs/SPORTS_INSTRUMENTS.md` `gs://features-sports-{project}/` env-tier
+      verify; + 2 DELETEs (`scripts/README.md` documenting only a non-existent `run_quality_gates.py`;
+      `.github/BRANCH_PROTECTION_SETUP.md` dead manual how-to). All cited codex/UAC targets VERIFIED-EXIST (registry
+      Verification notes, line ~792). Opus-gated editorial rewrite. (repo: instruments-service)
+- [ ] [CODE] P3. **instruments-service `Makefile` FIX-STALE** (follow-up finding, slot-5 2026-08-01): the `Makefile`'s
+      `ci-local`/`test`/`type-check`/`lint` targets are stale — `make test` runs `pytest --cov-fail-under=35` (real
+      floor is the ratcheted `MIN_COVERAGE=88` in `scripts/quality-gates.sh`), and `install`/`test`/`lint`/`type-check`
+      invoke `pip install`/`pytest`/`ruff`/`basedpyright` STANDALONE, which violates the workspace "never run
+      `pytest`/ruff/ basedpyright directly — `scripts/quality-gates.sh` is the entrypoint" rule. Either repoint
+      `make ci-local` to shell out to `bash scripts/quality-gates.sh` (single canonical gate) or delete the Makefile and
+      drop the last `make` references. Surfaced while fixing `.github/BRANCH_PROTECTION.md` (which no longer cites
+      `make ci-local`). (repo: instruments-service)
 - [x] ✅ [DOCS] P2. **AUDIT-03 F-45 codex update** — VERIFIED already-correct 2026-07-27 (Phase-2), no codex change
       needed. `rg` across `codex/` finds NO doc claiming `correlation_id` keys/partitions the events GCS path; every
       `correlation_id` reference is a column / PubSub attribute / function param (matches the code). Original finding
@@ -661,6 +770,20 @@ genuine-UI, out of scope.
       README/docs/coverage-floor treat it as live) and (b) 2FA automation (README/ARCHITECTURE claim IBGA+TOTP "no human
       2FA"; `DEPLOYMENT_GUIDE`/`FIRST_TIME_LOGIN` describe manual GUI/IB-Key login). Needs an operator/owner call on the
       repo's actual status + the canonical 2FA path before the FIX-STALE rewrite can land. (repo: ibkr-gateway-infra)
+      **⏸ PARKED 2026-07-31 (main, Option A of BLK-273ddfda — false prereq `ibkr-owner-decision-made`, priority:999):**
+      dispatch-scope mismatch — this is an owner decision, not worker/main-determinable, so it was churning through
+      workers. Ground-truth captured for the owner (slot-6, so the eventual rewrite need not re-derive it): (a)
+      **STATUS** — every objective signal says LIVE (active README describing a live deployed gateway;
+      actively-maintained `.coverage-floor-exception.md` @2026-03-08, floor 51% / actual 52.38%; on `live-defi-rollout`;
+      active workspace scope); the lone dissent is `QUALITY_GATE_BYPASS_AUDIT.md` L7 "Repo is archived", which reads
+      STALE — but status was deliberately owner-gated (an intent to wind IBKR down would not be visible in code), so NOT
+      overridden. (b) **2FA** — the README already reconciles the layering (`docker-compose.ibga.yml` IBGA
+      fully-automated TOTP = primary L62; `docker-compose.yml` gnzsnz manual 2FA = fallback L63; `DEPLOYMENT_GUIDE` Step
+      3 frames GUI login as First-Time / One-Time); the one residual is whether the IBGA path is truly zero-touch or
+      still needs that one-time GUI bootstrap (`DEPLOYMENT_GUIDE` L58/L189 + `FIRST_TIME_LOGIN.md` say a first-login IS
+      required on first start / re-provision). **UNPARK**: owner answers (a)+(b) → set `ibkr-owner-decision-made=true`,
+      restore priority 50 + `priority_override:     false`, reload → apply the FIX-STALE rewrite reconciling all 4 ibkr
+      docs per their call. Do NOT proceed before that.
 
 ### deployment-service refreshed registry (2026-07-27) — supersedes the stale Appendix-A `(~52)` entry
 
@@ -824,3 +947,7 @@ ground-truth WRONG (`demo`/`demo` login + `patrick@bankelysium.com` = the Elysiu
 provider; it is a genuine 846-line DeFi UI UAT walkthrough). KEEP (unchanged): the rest (`*/progress`, `*/issues`,
 `coverage-matrix`, `*/per-strategy-acceptance`, `*/smoke-test-baseline`, `LIVE_ODDS_PROVIDERS`, scripts READMEs). No
 MIGRATE-TO-CODEX; no codex target needs creating.
+
+## Progress Log
+
+- **context-scout 2026-08-01**: populated/refreshed context_scope (5 entries).

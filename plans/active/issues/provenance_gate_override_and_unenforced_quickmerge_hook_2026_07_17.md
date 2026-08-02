@@ -155,7 +155,9 @@ Not rogue agents — **the workspace contradicted itself, and the enforcement wa
       delete + repoint per "delete deprecated code (no shims)".
 - [ ] [DEVOPS] P3. The two husky UI repos (`deployment-ui`, `unified-trading-system-ui`) are skipped by the self-heal
       (`case "${_hooks_dir}" in */.husky/*) continue`), so they carry no strict guard. Wire it into husky's own
-      pre-push.
+      pre-push. **na-eligibility-audit 2026-08-01: already tracked (not yet done) as an open todo in
+      `ci_satellite_ao_dispatch_batch1_2026_07_26.md` ([INFRA] P3, "The two husky UI repos carry no strict-quickmerge
+      guard"), which cites this exact checkbox as its Source — track completion there.**
 - [x] [DEVOPS] P3. `/codex/08-workflows/ci-cd-flow.md:702` still calls the guard "WARN-default" — stale since it now
       blocks. — already covered by plans/active/ci_satellite_ao_dispatch_batch1_2026_07_26.md (see that doc for
       execution).
@@ -166,3 +168,19 @@ A gate that refuses is not automatically a broken gate. Before "unblocking" anyt
 answer was one `gh pr view --json comments` away, and the comment said exactly what to do. The alert being unhelpful
 (anonymous "PROMOTION LAG") is a real defect worth fixing, but it is not a licence to override the safety mechanism it
 was hiding.
+
+## na-eligibility-audit verdict
+
+**na-eligibility-audit 2026-07-30** (tranche `ci`, autonomous): KEEP-NA, valid — the open items sit under this doc's own
+"Remaining / for the operator" heading, and the head item is a genuine judgment call ("decide whether the 33 laundered
+commits need any dep-order spot-check, or whether this doc closes it"). The P3 hook-deletion item is separately
+conflict-gated as `/plans/archive/2026_07/ci_satellite_ao_dispatch_batch2_2026_07_29.md` Deferred **E4**, and the
+husky-UI-repos P3 item is already claimed by `/plans/active/ci_satellite_ao_dispatch_batch1_2026_07_26.md`.
+
+**na-eligibility-audit 2026-08-01** (tranche `ci`, autonomous): KEEP-NA, stale-items — re-confirmed all 3 items. The
+head judgment-call item stays valid. The hook-deletion item's E4 citation chain is now stale (batch2 archived) but the
+underlying fact holds: `scripts/dev/hooks/pre-push-strict-quickmerge.sh` still exists on disk (verified via `find`), and
+its only live re-extraction is `ci_satellite_ao_dispatch_batch4_2026_07_31.md` todo 1 — still `status: draft`, not yet
+an active duplicate, so this item stays open here. Annotated the husky-UI item with a citation to
+`ci_satellite_ao_dispatch_batch1_2026_07_26.md`'s still-open matching todo (verified NOT done there either — no
+false-[x] risk). No RECLASSIFY candidates.

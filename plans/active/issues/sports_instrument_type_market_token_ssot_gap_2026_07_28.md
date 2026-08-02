@@ -126,3 +126,10 @@ remediation paths, needing an operator/design call before either is executed:
       `instrument_type` values. Source: this doc.
 - [ ] [BACKEND] P2. Execute the chosen path in `deployment-api`/`unified-api-contracts` once decided, unit-test the
       before/after (34 → ~4 non-canonical), and re-run `/distinct-values/sports` to confirm.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30**: KEEP-NA, valid (sports tranche) — todo 1 is a literal `[DESIGN]` 'operator/design
+  decision' (accepted-exception set vs registry addition for 30 sports market tokens) and todo 2 is gated on it — the
+  doc's own Recommended-decision section spells out why a blind `InstrumentType` enum addition is unsafe (D6
+  canonical-bloat / denominator blast radius precedent)

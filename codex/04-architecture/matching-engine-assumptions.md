@@ -24,7 +24,7 @@ authoritative_for: [matching-engine per-matcher assumption surface, MatchingEngi
 referenced_by:
   [/codex/04-architecture/matching-engine-mode-dispatch.md, /codex/04-architecture/strategy-ensemble-topology.md]
 owner:
-last_reviewed: 2026-05-17
+last_reviewed: 2026-09-03
 code_refs:
 author: ikenna
 sources:
@@ -133,8 +133,12 @@ batch.
 
 ## MatchingEngineConfig (UAC)
 
-`MatchingEngineConfig` in `unified_api_contracts.internal.architecture_v2` (to be shipped with Phase 1.9) holds the
-configurable matching assumptions:
+`MatchingEngineConfig` in `unified_api_contracts.internal.architecture_v2` holds the configurable matching
+assumptions:
+
+> **STILL NOT SHIPPED (re-verified 2026-07-31).** `MatchingEngineConfig` is absent from every repo — Phase 1.9 has
+> not landed in the ~2.5 months since this doc was written. The defaults below are the spec, not importable values;
+> anything relying on them must read them from its own config until the UAC type exists.
 
 ```python
 class MatchingEngineConfig(BaseModel):

@@ -23,8 +23,8 @@ related:
   ]
 created: 2026-07-28
 parent_epic: infrastructure_master
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 priority: P2
 estimate_class: research
 drift_direction: worsening-slowly
@@ -32,6 +32,15 @@ source: [plans/active/defi_dex_pool_symbol_fix_backfill_purge_2026_07_25.md]
 resolved_by:
 locked_by:
 depends_on: []
+assigned_role: data_engineering
+context_scope:
+  [
+    /plans/active/defi_dex_pool_symbol_fix_backfill_purge_2026_07_25.md,
+    /codex/02-data/honest-coverage-model.md,
+    /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
+    market-tick-data-service/market_tick_data_service/cli/handlers/_catalogue_filter.py,
+    market-tick-data-service/market_tick_data_service/cli/handlers/dex_pools_handler.py,
+  ]
 ---
 
 # DeFi dex_pools instruments-service catalogue drastically under-covers historically-captured pools
@@ -120,7 +129,12 @@ treatment. No shortcuts, no MVP-only subset.
 
 ## Progress Log
 
+- **na-eligibility-audit 2026-07-30**: RECLASSIFY -> assigned_vm: planning (conflict-check CLEAR against 231 active
+  planning docs; no open todo elsewhere duplicates this claim) - operator RULED 2026-07-28 + retagged from [OPERATOR];
+  both todos carry explicit done-whens and a full-completion mandate
+
 - **2026-07-28 (gated-decision retag sweep)** — Applied the operator's general-theme ruling: expand the catalogue via a
   full historical-discovery backfill (full completion, no partial/MVP-only rollout) rather than accept the ~74% gap as
   permanent. Retagged the scope-policy todo from `[OPERATOR]` to `[DATA]` with the ruling + reasoning + a concrete
   full-completion mandate written into the doc. Docs-only, no code/catalogue change made.
+- **context-scout 2026-08-01**: populated context_scope (5 entries).

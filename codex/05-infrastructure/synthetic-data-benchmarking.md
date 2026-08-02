@@ -23,7 +23,7 @@ authoritative_for: [synthetic-data pipeline benchmark harness]
 referenced_by:
   [/codex/05-infrastructure/runtime-tiers-and-deployment.md, /codex/06-coding-standards/performance-targets.md]
 owner:
-last_reviewed: 2026-05-17
+last_reviewed: 2026-09-07
 code_refs:
 ---
 
@@ -46,7 +46,17 @@ count / parquet byte size / shard fan-out) matches a real backfill, even though 
 Bottleneck measurement is shape-driven, not value-driven — so realism axes 1-3 suffice; axis 4 (calibrated GBM / SDEs
 for value correctness) is post-cutover.
 
-## The five contract axes (UAC — `canonical/crosscutting/synthetic_generator.py`)
+> **[2026-07-31 freshness re-review]** Every code surface named in this doc was verified present — UTL
+> `unified_trading_library/synthetic/{generator,profile,harness,cli,report}.py`, UAC
+> `registry/generators/{cefi,defi,tradfi}.py`, the launcher
+> `deployment-service/scripts/vm/launch-synthetic-benchmark-vm.sh`, and the `synbench-` prefix in
+> `vm_zombie_watchdog.py`'s `_VM_PREFIX_TO_BUCKET`. **One path drifted**: UAC
+> `canonical/crosscutting/synthetic_generator` is now a **package directory**, not a single `.py` module (a sibling
+> `synthetic_generator_backup.py` also exists and currently carries the `SyntheticGeneratorId` enum). The
+> `last_executed: NEVER` / "matrix not yet populated" claims were **not** re-verified against GCS in this pass — they
+> are carried forward from 2026-05-22, not re-measured.
+
+## The five contract axes (UAC — `canonical/crosscutting/synthetic_generator/`)
 
 1. **`SyntheticGeneratorId`** — closed StrEnum, one id per `(asset_group, data_type)` a cutover archetype consumes.
    Pre-cutover: 6 cefi (`cefi_trades` / `cefi_ohlcv_1m` / `cefi_ohlcv_15m` / `cefi_funding_rate` / `cefi_open_interest`
@@ -138,8 +148,9 @@ re-raised — the harness catches it at the loop level so one bad stage doesn't 
 The Phase-6 aggregation groups the per-`(archetype, vm_shape)` `stage_profile.parquet` files into per-stage P50/P95/P99
 wall-clock + CPU% + RSS + IO, then derives a per-archetype × per-stage `(min_cpu, min_ram, min_disk, min_iops)`
 recommendation justified by the profile. Stages whose `wall_clock × scale_factor` exceeds the Group F item 18
-"operationally-acceptable window" are filed as P0 follow-ups for `live_pipeline_mtds_mdps_features_2026_05_08`
-consumers. The recommendation matrix replaces the guessed defaults in `runtime-tiers-and-deployment.md` (data-pipeline
+"operationally-acceptable window" are filed as P0 follow-ups for
+[`/plans/archive/2026_05/live_pipeline_mtds_mdps_features_2026_05_08.md`](/plans/archive/2026_05/live_pipeline_mtds_mdps_features_2026_05_08.md)
+(ARCHIVED) consumers. The recommendation matrix replaces the guessed defaults in `runtime-tiers-and-deployment.md` (data-pipeline
 VM machine type) + `performance-targets.md` (per-stage targets). **Status (2026-05-22): matrix not yet populated** — the
 real-VM runs remain blocked; this is post-cutover backlog tracked under `plans/epics/infrastructure_master.md`.
 

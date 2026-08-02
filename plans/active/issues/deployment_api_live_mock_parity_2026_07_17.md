@@ -15,14 +15,16 @@ summary: |
   parity decays every time an endpoint is added to one side only**.
 status: open
 nature: issue
-asset_group: [meta]
+asset_group:
+  [ui] # corrected 2026-07-30 (ui-tranche launch) -- was [meta]; deployment-api/deployment-ui
+  # mock-vs-live contract parity, core ui-tranche scope
 stage: [meta]
 repos: [deployment-api, deployment-ui]
 scope: [engineer]
 tags: [mock-parity, deployment-api, validation, ui, dx]
 related:
   [
-    /plans/active/issues/deployment_ui_l2_smoke_gate_red_2026_07_17.md,
+    /plans/archive/issues/deployment_ui_l2_smoke_gate_red_2026_07_17.md,
     /codex/05-infrastructure/deployment-observability.md,
   ]
 created: 2026-07-17
@@ -45,6 +47,13 @@ source:
     deployment-api/deployment_api/routes/health_overview.py#L131,
   ]
 depends_on: []
+context_scope:
+  [
+    deployment-api/scripts/compare_live_mock_parity.py,
+    deployment-api/Dockerfile,
+    deployment-api/deployment_api/routes/_gcp_cloud_functions.py,
+    /codex/05-infrastructure/deployment-observability.md,
+  ]
 ---
 
 # deployment-api mock mode has drifted from live
@@ -92,12 +101,45 @@ mock parity — the drift is historical, not systemic.
 
 ## Todos
 
-- [ ] [SERVICE] P2. **Fix `/api/data-status/coverage-summary` mock to match the live contract** — populate
+- [x] ✅ [SERVICE] P2. **Fix `/api/data-status/coverage-summary` mock to match the live contract** — populate
       `asset_groups` and rename `totals.dates_across_asset_groups` → `dates_across_categories`, plus
       `capture_status_counts` / `completion_pct` / `unique_instruments`. Highest-value: this is the endpoint the Data
-      Status UI work of 2026-07-16 sits on.
-- [ ] [SERVICE] P2. **Diagnose `ImportError: artifactregistry_v1`** driving the `/api/builds/history` +
-      `/api/fixtures/upcoming` 500s — venv-only, or a real missing dependency that reaches Cloud Run?
+      Status UI work of 2026-07-16 sits on. — **DONE 2026-07-30 (slot 5), `deployment-api@d7546e6`.** An earlier
+      "Cherry-pick D" commit (2026-07-20, `349946a`) had already populated `asset_groups` + renamed the field to
+      `dates_across_categories` for CEFI/DEFI/SPORTS/TRADFI, and `capture_status_counts`/`completion_pct` were already
+      present per-venue in `_mock_venue_entry` — but the default (instruments-service, unrestricted) live path iterates
+      all 5 `MarketCategory` values while `_MOCK_COVERAGE_SEED` only carried 4, leaving a live-only key gap on
+      `asset_groups.PREDICTION`. Added the missing PREDICTION seed entry (mirrors `build_mock_turbo_response`'s existing
+      PREDICTION seed shape: event-driven, high-attempt/low-capture). `unique_instruments` already present at the
+      per-response level. Regression test updated; full `quality-gates.sh` green, `quickmerge --agent` landed clean.
+- [x] ✅ [SERVICE] P2. **Diagnose `ImportError: artifactregistry_v1`** driving the `/api/builds/history` +
+      `/api/fixtures/upcoming` 500s — venv-only, or a real missing dependency that reaches Cloud Run? — **DONE
+      2026-07-30 (slot 8), `deployment-api@c064574`.** Genuine, reaches Cloud Run — NOT venv-only.
+      `google-cloud-artifact-registry` is a correctly-declared dependency of `deployment-service`
+      (`deployment-service/pyproject.toml`), and `deployment-api`'s own routes (`routes/builds.py`,
+      `routes/builds_history.py`) import `artifactregistry_v1` directly at call time. But `deployment-api`'s
+      `Dockerfile` installs the vendored `deployment-service` sibling with `uv pip install --system --no-deps` (comment:
+      avoids resolving `[tool.uv.sources]` sibling-repo paths that don't exist in the Cloud Build context) and its own
+      hand-maintained explicit dependency list (the `uv pip install --system` block) already carries
+      `google-cloud-run`/`google-cloud-compute` for exactly this reason but was missing `google-cloud-artifact-registry`
+      — so the production/Cloud Run image never installs it, while a normal dev `.venv` (`uv sync`, full dependency
+      resolution) has it and never reproduces the bug locally. Verified by reproducing the exact install sequence in an
+      isolated Python 3.13 venv: `uv pip install --no-deps <deployment-service checkout>` alone →
+      `ModuleNotFoundError: No module named     'google'`; adding `google-cloud-artifact-registry>=1.13.0,<2.0.0` (the
+      pin added below) → import succeeds. Fix: added `'google-cloud-artifact-registry>=1.13.0,<2.0.0'` to the
+      Dockerfile's explicit `uv pip install` list (next to `google-cloud-run`/`google-cloud-compute`). **Adjacent
+      finding, not folded into this fix** (different failure mode — degrades honestly, doesn't 500):
+      `deployment_api/routes/_gcp_cloud_functions.py` (wired into the live `/api/deployments/inventory` route) has the
+      identical gap for `google-cloud-functions` (also a `deployment-service` dep, missing from the same Dockerfile
+      list) — its `functions_v2.FunctionServiceClient()` call is `try/except`-wrapped so it silently returns `{}`
+      instead of 500ing, meaning the Cloud Functions census has likely been silently empty in production rather than
+      crashing. Tracked as a new P3 todo below. `google-cloud-scheduler` (deployment-service's third GCP dep missing
+      from the list) was checked and is NOT actually imported anywhere in `deployment_api` — no fix needed there.
+- [ ] [SERVICE] P3. **Add `google-cloud-functions>=1.16.0,<2.0.0` to the `deployment-api` Dockerfile's explicit
+      `uv pip install` list** (same list `google-cloud-artifact-registry` was just added to) — closes the silent
+      `{}`-degradation gap in `deployment_api/routes/_gcp_cloud_functions.py`'s `list_cloud_functions()` (wired into
+      `/api/deployments/inventory`), which has been silently returning an empty Cloud Functions census in the Cloud Run
+      image since deployment-service is vendored `--no-deps` there too. (repo: deployment-api)
 - [ ] [SERVICE] P3. **Bring `/api/repo-ci/overview` mock up to the staging-dormant contract** (`promotion_model`,
       `staging_dormant_mode`, `image_gcp`/`image_aws`, `image.deploy_host`/`deploy_model`).
 - [ ] [SERVICE] P3. **Reconcile the `/api/deployments` pagination contract** — live `has_more`+`total_count` vs mock
@@ -121,7 +163,17 @@ mock parity — the drift is historical, not systemic.
 
 ## Progress Log
 
+- **slot-8 2026-07-30**: Fixed the `artifactregistry_v1` ImportError — `deployment-api@c064574`. Root cause:
+  `deployment-api`'s `Dockerfile` vendors `deployment-service` with `uv pip install --system --no-deps` and its own
+  hand-maintained explicit `uv pip install` package list never carried `google-cloud-artifact-registry` (unlike
+  `google-cloud-run`/`google-cloud-compute`, added there for the identical reason). Verified genuine (not venv-only) by
+  reproducing the exact install sequence in an isolated Python 3.13 venv: `--no-deps` install of `deployment-service`
+  alone → `ModuleNotFoundError: No module named 'google'` on `from google.cloud import artifactregistry_v1`; adding the
+  pin fixes it. Filed a new P3 todo for the adjacent `google-cloud-functions` gap (same pattern, silently degrades
+  instead of 500ing — not folded into this fix). Full `quality-gates.sh` green (sentinel `c064574`), shipped via
+  `quickmerge --agent`.
 - **na-eligibility-audit 2026-07-30**: RECLASSIFY, conflict-cleared (infra tranche, dispatch agt-30721a) —
   bounded/deterministic-outcome work, no operator gate or live judgment call found; flipped
   `assigned_vm: NA -> planning`. Conflict-check run against all active `assigned_vm: planning` docs in this doc's
   `parent_epic` + the infra tranche's consolidated-closeout digest: zero/milestone-only overlap, clear to proceed.
+- **context-scout 2026-08-01**: populated context_scope (4 entries).

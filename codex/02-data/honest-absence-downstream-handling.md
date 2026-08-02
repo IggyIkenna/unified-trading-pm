@@ -553,6 +553,33 @@ under-count, ML training excludes the date as if the market was closed).
 explicit "zero-activity confirmed" type. Writers MUST pass `row_count=len(df)` to trigger this guard. If the instrument
 is live and data was expected, treat as Class 2 and call `record_failed` instead.
 
+### Class 4 — Catalogue-residual id-space mismatch (real captures discarded as false `SOURCE_RETURNED_ZERO`)
+
+**Description** (found 2026-07-29/30, `defi_compound_v3_lending_indices_zero_capture_regression_2026_07_29.md`):
+`record_catalogue_residual_empty_typed()` (`_catalogue_filter.py`) computes
+`residual = catalogue_ids - captured_ids_lower` and emits `record_empty(reason=SOURCE_RETURNED_ZERO)` per residual id —
+correct ONLY if `catalogue_ids` and `captured_ids` are drawn from the SAME id space.
+`catalogue_pool_ids_for_shard(..., instrument_type="lending")` builds `catalogue_ids` from the IS catalogue's canonical
+`VENUE-CHAIN:TYPE:SYMBOL` glued `instrument_id` column (e.g. `"compound_v3-ethereum:supply:cusdt"`, per
+instruments-service's `build_instrument_catalogue.py`). A caller whose own `captured_ids` are raw on-chain ADDRESSES
+(not the canonical glued form) will NEVER see any overlap — `residual` always evaluates to the FULL catalogue, so every
+real capture gets a false `SOURCE_RETURNED_ZERO` rejection from the honest-absence gate, routing the whole shard through
+`record_shard_failure` despite the write having already succeeded (shard-level-failure-isolation correctly prevents
+manifest corruption, but real coverage is silently lost). Confirmed hitting BOTH `lending_indices_handler.py`
+(COMPOUND_V3/MORPHO, fixed `market-tick-data-service@d36e2498`) and `risk_params_handler.py` (COMPOUND_V3/MORPHO, fixed
+`market-tick-data-service@674fdd6e`) — both keyed `captured_ids` by raw address via `market_count_map()`/
+`build_market_count_map()`. `evm_defi_collectors.py` and `_lst_rates_write.py` are NOT exposed: both key `captured_ids`
+by the shard's own WRITTEN canonical `instrument_id` column, matching the catalogue's id space by construction.
+
+**Correct fix**: before wiring `record_catalogue_residual_empty_typed()` into any handler, confirm `captured_ids` and
+the catalogue's `instrument_id` column (for the `instrument_type` being queried) are the SAME id form — canonical glued
+`VENUE-CHAIN:TYPE:SYMBOL` for non-`"pool"` instrument_types, raw lowercase address for `"pool"`. If a handler's own
+manifest grain is address-keyed (matching the correct IS-seeded `expected_unattempted` atom, per `market_count_map()`'s
+own docstring), do NOT wire catalogue-residual at all — `record_market_captures()`/the shard's own
+`record_shard_failure` on exception already reconciles correctly without it. **Any handler still carrying this call
+(check `risk_params_handler.py`'s own sibling wiring family, `lst_rates_handler.py`/`evm_defi_handler.py`, was audited
+2026-07-30 and confirmed clean) should be re-checked against this class before assuming it's safe.**
+
 ---
 
 ## Reason taxonomy (codified 2026-05-07 — operator direction)
@@ -1188,6 +1215,46 @@ on `capture_status`:
 **Cross-references**: writegate plan Phase 2.A (4-state routing in `_emit_status_for_shard`) ·
 `availability-manifest-and-data-status.md` § "4-state capture_status" ·
 `plans/active/writegate_honest_coverage_endtoend_2026_05_06.md`.
+
+---
+
+## Window-active vs shard-fetched — the two-signal contract (codified 2026-07-20)
+
+> Operator, verbatim (2026-07-20): _"the key is knowing what is empty data because there's nothing to aggregate in the
+> window vs not fetched yet — that's where the manifest needs to help, and different consumers (live and batch) will
+> have different ways of handling depending on their needs."_ Source:
+> `/plans/active/data_pipeline_check_mdps_features_2026_07_20.md` (MDPS/features e2e-check build); promoted here at the
+> plan's post-phase codex audit per the SSOT-direction rule (durable content belongs in codex, not the plan).
+
+A consumer asks one of two DIFFERENT questions about a candle/feature bin, and only one surface can answer each — never
+infer one from the other:
+
+| Question a consumer asks                   | Which surface answers it        | Representation                                                                                                        |
+| ------------------------------------------ | ------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
+| "Was this WINDOW active?"                  | the **parquet**, per bin        | Row EXISTS on the session grid with **NaN price-like fields + 0 volume/trade_count** — covered, nothing to aggregate. |
+| "Was this SHARD-DAY ever fetched/derived?" | the **manifest**, per shard-day | 4-state `capture_status` (`captured` / `empty_confirmed` / `attempted_failed` / `expected_unattempted`, see above).   |
+
+**Why it matters**: NaN alone cannot carry both meanings. A consumer must never infer "was this fetched?" from NaN in a
+parquet bin, nor "was this window active?" from the manifest alone — live and batch consumers handle each case
+differently per their own needs, so the pipeline's job is to PRESERVE the distinction faithfully, never paper over it.
+This is exactly why carry-forward (LOCF) is wrong for `derivative_ticker`-class adapters not routed through
+`_finalize_session_grid` (`supports_prior_day_seed=False`, see the `content_check`/all-NaN-OHLC discussion above, Phase
+3A CeFi adapter audit): LOCF fabricates an observation in a window that had none, conflating "nothing to aggregate" with
+"not yet fetched" and destroying the distinction.
+
+**Two failure modes this makes checkable** (both already have manifest-side tooling; the parquet-content-side check for
+case 2 below is a real remaining code gap, not yet built into the `/data-pipeline-check-mdps` /
+`/data-pipeline-check-features` drivers as of this writing):
+
+1. **Phantom capture** — manifest says `captured` but NO parquet object exists. Already checked (MTDS
+   `PHANTOM_CAPTURED_NO_OBJECT`, § "Phase 3A CeFi adapter audit results" above).
+2. **Inverse phantom** — parquet present but **100% NaN bins** while the manifest says `captured` (should have been
+   `empty_confirmed` with a typed reason). The historical case (`capture_status=captured` with all-NaN OHLC) is
+   documented above under "Phase 3A CeFi adapter audit results" with its scan-only reconciler
+   (`instruments-service/scripts/reconcile_legacy_nan_placeholder_bars.py`); that reconciler is a historical-scan tool,
+   not a live driver assertion. Adding a corresponding `content_check=` verdict to the MDPS/features e2e-check drivers
+   (so a fresh run catches a NEW inverse-phantom write, not just a historical scan) remains open — tracked as its own
+   `[SCRIPT] P1` follow-up, not folded into this doc-only promotion.
 
 ---
 

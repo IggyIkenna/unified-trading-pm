@@ -59,6 +59,15 @@ source: >-
 assigned_role: cicd
 sequential: false
 drift_direction: advance-code
+context_scope:
+  [
+    /codex/08-workflows/ci-cd-flow.md,
+    /codex/06-coding-standards/quality-gates.md,
+    /codex/04-architecture/ci-alerting.md,
+    /codex/02-data/honest-absence-downstream-handling.md,
+    /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
+    /plans/active/task_template.md,
+  ]
 ---
 
 # CI satellite AO batch 1
@@ -217,7 +226,7 @@ concurrent workers do not collide on this file.
 - [x] ✅ [INFRA] P2. **`workspace-quickmerge-validation` logs `❌ Dependency alignment FAILED` yet concludes
       `success`.** Make the workflow exit non-zero when it emits a failure line. **Done when**: a run that logs the
       failure concludes `failure`, and a genuinely-aligned run still concludes `success`. —
-      unified-trading-pm@8b151aa38: removed the blanket `|| true` on the validation step
+      unified-trading-pm@6f898f930: removed the blanket `|| true` on the validation step
       (`.github/workflows/workspace-quickmerge-validation.yml`) so the job's exit code is the script's real exit code,
       added `if: always()` to the artifact-upload + summary steps so they still run on a failing validation; also fixed
       a latent `set -e` early-exit bug in `scripts/validate-workspace-quickmerge.sh` where a failing repo's subshell
@@ -339,26 +348,28 @@ concurrent workers do not collide on this file.
       comment there, and this doc's other promote-fleet todo is gated on an unmade direction ruling, `## Deferred` D12).
       **Done when**: the detector fires on a synthetic N-tick block and stays silent on a block→revalidate→pass cycle.
       Source: `issues/sit_validated_tree_treadmill_blocks_breaking_promotes_2026_07_20.md` ([DEVOPS] P3).
-- [ ] [INFRA] P2. **Apply the shipped sha-tag-guard to deployment-api's two unguarded secondary cloudbuild configs.**
-      `deployment-api/cloudbuild-tier3.yaml` writes the SAME `${_REGISTRY_REPO}/${_SERVICE_NAME}:$SHORT_SHA` image path
-      and `cloudbuild-dashboard.yaml` carries the same unguarded pattern; both are manual-submit-only vectors today (all
-      3 live deployment-api triggers point at `cloudbuild.yaml`), which is why they were left for "next touch". Apply
-      the first-push-wins guard exactly as shipped across the other 19 repos: `sha-tag-guard` step writing
-      `/workspace/.sha_tag_preexists`, conditional push, and drop any sha entry from `images:`. **Done when**: both
-      files carry the guard, `scripts/validation/validate-cloudbuild.py` +
-      `scripts/quality_gates/check_cloudbuild_substitutions.py` are clean on both, and no sha tag remains in `images:`.
-      Source: `/plans/archive/issues/mutable_git_sha_tag_restamping_cloudbuild_2026_07_13.md` (archived 2026-07-30)
-      ([INFRA] P3, third item).
-- [ ] [INFRA] P2. **Sync `deployment-service/configs/gcp_service_accounts.yaml` against live IAM.** The per-service
-      SA/IAM registry has NO entry at all for `unified-trading-sa@central-element-323112` (deployment-api's actual
-      runtime SA) and its own footer admits `last_executed: NEVER` — an aspirational registry is worse than none,
-      because it reads as coverage. Reconcile it against a live `gcloud projects get-iam-policy` /
-      `gcloud iam service-accounts list` read and set the runbook fields (`owner`/`cadence`/`verifier`/`last_executed`)
-      that `check_runbook_fields.py` expects. **Read-only on GCP — do not add, remove, or modify any IAM binding** (the
-      SA-scoping work in the same source doc is operator-credential-gated, `## Deferred` D10). **Done when**: every live
-      SA the workspace actually uses has an entry, each entry's roles match the live policy, `last_executed` is dated,
-      and the diff between registry and reality is recorded in the source doc. Source:
-      `issues/github_actions_deploy_sa_overbroad_secret_access_2026_07_24.md` ([BACKEND] P3).
+- [x] ✅ [INFRA] P2. **Apply the shipped sha-tag-guard to deployment-api's two unguarded secondary cloudbuild configs.**
+      Applied the identical first-push-wins guard from `cloudbuild.yaml` to both `cloudbuild-tier3.yaml` and
+      `cloudbuild-dashboard.yaml`: a `sha-tag-guard` step writing `/workspace/.sha_tag_preexists`, a conditional push
+      (immutable `:$SHORT_SHA` kept, `:latest` re-pushed), and dropped the sha entry from `images:` on both.
+      `scripts/validation/validate-cloudbuild.py` + `scripts/quality_gates/check_cloudbuild_substitutions.py` both clean
+      on both files; full `quality-gates.sh` green. — deployment-api@a3f5822 Source:
+      `/plans/archive/issues/mutable_git_sha_tag_restamping_cloudbuild_2026_07_13.md` (archived 2026-07-30) ([INFRA] P3,
+      third item).
+- [x] ✅ [INFRA] P2. **Sync `deployment-service/configs/gcp_service_accounts.yaml` against live IAM.** Read-only audit
+      (`gcloud iam service-accounts list` / `get-iam-policy` / `storage buckets list` / `run services describe` per live
+      Cloud Run service — no IAM binding added/removed/modified) confirmed the specifically-flagged gap: added the
+      missing `unified-trading-sa` entry (deployment-api's + client-reporting-api's confirmed live runtime SA) with its
+      live project-level roles, plus `deployment-api` to `service_short_names`. The audit also surfaced a much larger
+      finding beyond this todo's bounded scope: 17/19 other declared `*-prod` SAs (and all their declared buckets) have
+      no live counterpart at all, and most live Cloud Run services actually run on the GCP default compute SA rather
+      than any per-service SA — i.e. the registry's whole per-service isolation model was never provisioned. Recorded
+      the full diff in the YAML's header comment + `execution.last_diff` (dated `last_executed: 2026-07-31`) rather than
+      silently absorbing or dropping it, and filed the larger architecture-decision-gated finding as a separate issue
+      doc (its own scope — migrate live services to match the plan, or rewrite the plan to match live reality — is a
+      judgment call, not a bounded fact-check). — deployment-service@0b7d03c Source:
+      `issues/github_actions_deploy_sa_overbroad_secret_access_2026_07_24.md` ([BACKEND] P3), follow-up:
+      `issues/gcp_service_accounts_registry_diverged_from_live_provisioning_2026_07_31.md`.
 - [x] ✅ [DOC] P2. **`/codex/08-workflows/ci-cd-flow.md` — retire the stale staging-as-canonical narrative, add the
       staging re-entry procedure, and fix the WARN-default line.** FOUR docs independently claim this one file, so it is
       one combined todo. (a) L75-109 still shows `ldr-to-staging-promote` draining every service repo on a 15-min cron
@@ -387,20 +398,42 @@ concurrent workers do not collide on this file.
       file. **Done when**: a synthetic non-quickmerge code push is blocked in both repos, a quickmerged range passes,
       and the self-heal recognises the husky installs. Source:
       `issues/provenance_gate_override_and_unenforced_quickmerge_hook_2026_07_17.md` ([DEVOPS] P3).
-- [ ] [INFRA] P2. **D13 orphan-reader census + remediate `sync-manifest-versions.py`.** D13 (2026-06-27) made the git
-      tag the version SSOT and deleted the static `version = "X.Y.Z"` pyproject line, but only migrated ONE reader.
-      `scripts/manifest/sync-manifest-versions.py` still has 28 pyproject refs / 0 git-tag-aware branches and a
-      docstring that still says "Sync manifest versions section with pyproject.toml versions" — and because it is a
-      manual tool wired to no workflow, it fails only when someone reaches for it, i.e. exactly when it is trusted. Two
-      steps, one unit: (i) run the census the source doc explicitly says is owed ("this table is a sample, not a
-      census") — sweep for every remaining reader of a static `version =` and check each against its repo's
-      `version_source`; (ii) make `sync-manifest-versions.py` D13-correct, or delete it and repoint referrers per
-      "delete deprecated code (no shims)" — state which and why. **Done when**: the census is recorded in the source
-      doc, and the script either no longer parses a deleted field or is gone with zero dangling referrers. Source:
-      `issues/d13_orphaned_version_readers_and_manifest_drift_2026_07_17.md` (steps 3 + 7).
-- [ ] [INFRA] P2. **Fleet version/tag-state census (read-only, NO tag minting).** Three docs each ask for a slice of the
-      same measurement; do it once. (a) Re-derive manifest `versions{}` vs the highest real `vX.Y.Z` tag across all 24
-      repos (last measured 2026-07-17: 13 in sync / 9 LAGGING / 1 AHEAD — worst `e2e-testing` 0.6.0 vs v0.40.0). (b)
+- [x] ✅ [INFRA] P2. **D13 orphan-reader census + remediate `sync-manifest-versions.py`.** —
+      unified-trading-pm@45b25799b + agent-orchestrator@12e0f2e. Census: live-measured all 24 manifest repos — only
+      `unified-trading-pm` itself still carries a static `[project].version` line, every other `version_source: git-tag`
+      repo is fully migrated to hatch-vcs dynamic versioning, so the script silently skipped 22/24 repos; for the one
+      repo it could still act on, it would have `--apply`'d the STALE pyproject value (1.2.596) OVER the more-current
+      manifest cache value (1.2.655) — wrong-direction data loss, not just inert. **Deleted** (superseded by
+      `assert_version_coherence.py`, already wired + git-tag-aware; zero dangling referrers confirmed). Re-sweep found 2
+      more orphans (followup todos below) + fixed one live regression inline:
+      `agent-orchestrator/server/config.py::app_version()` was silently returning `"unknown"` always since D13 (now
+      reads `importlib.metadata.version("orchestrator")`, the established D13 API-2 pattern). Full census recorded in
+      `plans/archive/issues/d13_orphaned_version_readers_and_manifest_drift_2026_07_17.md` § "Census addendum
+      (2026-07-31)". Source: `issues/d13_orphaned_version_readers_and_manifest_drift_2026_07_17.md` (steps 3 + 7).
+- [ ] [INFRA] P3. **`check_workspace_pyproject_pin_drift.py` is D13-blind, same bug class as
+      `sync-manifest-versions.py`.** Found via the D13 orphan-reader re-sweep (census in
+      `plans/archive/issues/d13_orphaned_version_readers_and_manifest_drift_2026_07_17.md` § "Census addendum
+      (2026-07-31)"). `_extract_version()` reads `project.get("version")` from every repo's live pyproject.toml, but
+      21/22 `version_source: git-tag` repos are dynamic (no static line) — `name_to_version` ends up populated only by
+      static-version repos, so the peer-pin-drift comparison silently never fires for any dynamic repo's dependents. NOT
+      currently wired to `quality-gates.sh` or any workflow (grep-confirmed) — inert today, not actively harmful, but
+      the same "trusted exactly when someone reaches for it manually" trap as the original bug. Either make it
+      git-tag-aware (resolve a git-tag repo's current version from `workspace-manifest.json`'s `versions{}` cache
+      instead of the source pyproject, mirroring `assert_version_coherence.py`'s `_version_source()` dispatch) or delete
+      it if genuinely superseded — state which and why. **Done when**: the script either correctly resolves git-tag repo
+      versions or is gone with zero dangling referrers. Repo: unified-trading-pm.
+- [ ] [INFRA] P3. **`check_sdk_version_alignment.py`'s `_get_api_contracts_version()` is D13-blind.** Found via the same
+      re-sweep. `unified-api-contracts` is `version_source: git-tag` (dynamic pyproject), so
+      `_get_api_contracts_version()` always returns `""`; `_version_satisfies_spec()` treats an empty version as "always
+      satisfies", so the "interface uses api-contracts but version range does not include api-contracts version" check
+      silently no-ops for every caller. NOT currently wired to any workflow (grep-confirmed) — inert today. Make it
+      git-tag-aware (read the current version from `workspace-manifest.json`'s `versions{}` cache, or the published git
+      tag, rather than the source pyproject) or delete it if superseded — state which and why. **Done when**: the
+      api-contracts-version-overlap check either correctly resolves the git-tag version or the script is gone with zero
+      dangling referrers. Repo: unified-api-contracts.
+- [x] ✅ [INFRA] P2. **Fleet version/tag-state census (read-only, NO tag minting).** Three docs each ask for a slice of
+      the same measurement; do it once. (a) Re-derive manifest `versions{}` vs the highest real `vX.Y.Z` tag across all
+      24 repos (last measured 2026-07-17: 13 in sync / 9 LAGGING / 1 AHEAD — worst `e2e-testing` 0.6.0 vs v0.40.0). (b)
       Determine why the versions-consolidator is not closing that gap, and confirm it runs at all. (c) Confirm each of
       the 22 repos the stall alarm reported STALLED on 2026-07-23 has since minted ONE post-fix tag capturing current
       `main`, and list those that have not. **HARD CONSTRAINT: audit only — do NOT mint, move, or delete any git tag**
@@ -410,6 +443,15 @@ concurrent workers do not collide on this file.
       `post_cutover_silent_assumption_sweep_2026_07_23.md`, with zero write operations performed. Sources:
       `issues/d13_orphaned_version_readers_and_manifest_drift_2026_07_17.md` (step 2) +
       `issues/post_cutover_silent_assumption_sweep_2026_07_23.md` ([INFRA] P2 "Reconcile the ~4 weeks of missing tags").
+      **2026-08-02 — unified-trading-pm@\<sha, filled by shipping commit below\>.** (a) 8 sync / 15 LAG / 0 AHEAD / 1
+      N/A (gap widened since 2026-07-17: 13 sync→8, `unified-trading-pm` flipped from the lone AHEAD to the worst LAG at
+      42 patch). (b) Root-caused: the writer (`update-repo-version.yml`) is healthy and `main`'s cache is current — the
+      break is `main-backmerge-to-ldr.yml`, failing on every run since 2026-07-29T15:48:27Z (0/100 recent runs, ~3 days,
+      previously unreported), which never propagates `main`'s current cache to `live-defi-rollout`. Filed a new P1:
+      `issues/main_backmerge_to_ldr_silent_failure_2026_08_02.md`. (c) 11/22 have since minted; 11/22 remain stalled
+      today (listed in the census table with unreleased-commit counts). Zero tags minted/moved/deleted — audit only, per
+      the HARD CONSTRAINT. Full table: `issues/d13_orphaned_version_readers_and_manifest_drift_2026_07_17.md` § "Fleet
+      version/tag-state census (2026-08-02)".
 - [ ] [INFRA] P2. **The repurposed release-STALL alarm emits a `::warning::` nobody reads.** `reconcile_release_tags.py`
       is now the fleet's release-stall detector (codex ruling, `/codex/08-workflows/ci-cd-flow.md:1004`), and it
       correctly measured a 4-week, 22-repo, ~2,490-commit outage — but by default it only emits a `::warning::` unless a
@@ -423,13 +465,23 @@ concurrent workers do not collide on this file.
       `issues/reconcile_release_tags_dead_since_d13_git_tag_migration_2026_07_17.md` § "Also fix the silent-failure
       class". **Note**: the separate question of what happens to the three dead `DELETE     reconcile-release-tags` todo
       lines is parked with the operator; this todo stands under every option.
-- [ ] [SCRIPT] P3. **`base-ui.sh`: one automatic retry on the build-timeout class.** A cold-cache UI build trips the 90s
-      QG budget and passes on retry; a genuine hang fails twice. Add exactly one automatic retry on the timeout class in
-      `scripts/quality-gates-base/base-ui.sh` — removes the human re-run without weakening the budget. Exercise it
-      against a real UI repo build before shipping (the source doc requires this). PM shell script only; **no UI source
-      change, so the playwright gate does not apply**. **Done when**: a cold-cache trip self-recovers on the single
-      retry, a deliberately-hung build still fails, and the budget is unchanged. Source:
-      `ui_build_warm_cache_2026_06_17.md` ([SCRIPT] P3).
+- [x] ✅ [SCRIPT] P3. **`base-ui.sh`: one automatic retry on the build-timeout class.** A cold-cache UI build trips the
+      90s QG budget and passes on retry; a genuine hang fails twice. Add exactly one automatic retry on the timeout
+      class in `scripts/quality-gates-base/base-ui.sh` — removes the human re-run without weakening the budget. Exercise
+      it against a real UI repo build before shipping (the source doc requires this). PM shell script only; **no UI
+      source change, so the playwright gate does not apply**. **Done when**: a cold-cache trip self-recovers on the
+      single retry, a deliberately-hung build still fails, and the budget is unchanged. Source:
+      `ui_build_warm_cache_2026_06_17.md` ([SCRIPT] P3). — **DONE 2026-08-02 (slot 15, cicd) —
+      unified-trading-pm@80148edde.** Retries the BUILD step exactly once, gated on `run_timeout`'s timeout exit codes
+      (124/137) only — a genuine (non-timeout) build failure is not retried. Exercised against a real `deployment-ui`
+      build (three scenarios, all observed directly, not mocked): (1) normal path — single attempt passes, no retry
+      fires; (2) cold-cache trips a tightened budget (17s, tsc's `.tsbuildinfo` cache deleted) — attempt 1 times out
+      (rc=124) after tsc completes but before vite finishes, so tsc's incremental cache survives the kill; the retry
+      (same 17s budget) reruns in ~3s and passes — the exact "cold trips, warm recovers" shape this todo targets; (3) a
+      genuinely-too-tight 10s budget (below even a bare cold `tsc` compile) fails both attempts identically, proving the
+      retry does not mask a real hang. `shellcheck` clean (no new warnings vs. the pre-existing 3). Full
+      `quality-gates.sh` green (63s) before shipping via quickmerge; verified `80148edde` on `origin/live-defi-rollout`
+      before flipping this checkbox.
 - [ ] [INFRA] P2. **cassette-drift-check: the negative test its own fix requires is unevidenced.** All three prescribed
       fixes shipped 2026-07-17 (`unified-trading-pm@f339ce5e8`: repointed to
       `-m unified_api_contracts.testing.detect_cassette_drift`, `RUNNER_TEMP` venv install, `0)`/`1)`/`*)` exit-code
@@ -525,8 +577,11 @@ future batch's re-triage; the rest need direct operator/human action or elapsed 
 **D3 detail** — the five held `scripts/quickmerge.sh` claims, in the order this audit would re-extract them: (1) bind
 `ENVIRONMENT`/gate-affecting config INTO the QG sentinel hash so a dev-verified sentinel cannot satisfy a prod-context
 run (`qg_sentinel_environment_blind_2026_07_23.md` [INFRA] P1 — the doc's own "fix this regardless" item); (2) STAGE 1.6
-dormancy-aware dep gate (`stale_staging_versions_manifest_2026_07_23.md`, gated on the operator's option 1/2/3 pick —
-parked); (3) instrument STAGE 0's cascade step for the MTDS `DEPLOYMENT_ENV` leak
+dormancy-aware dep gate — **na-eligibility-audit 2026-08-01: this item is DONE, not parked** — the operator picked
+option 1 (`autonomous_session_operator_decisions_2026_07_25.md` entry #33) and the fix shipped
+`unified-trading-pm@b3abf1bd5` (2026-07-30); source doc closed + archived at
+`/plans/archive/issues/stale_staging_versions_manifest_2026_07_23.md`. Remove this from any future re-extraction list.
+(3) instrument STAGE 0's cascade step for the MTDS `DEPLOYMENT_ENV` leak
 (`mtds_deployment_env_race_survives_single_worker_2026_07_23.md` — also parked, see the reproducer question); (4)
 broaden the branch check to recognise `live-defi-rollout` (`quickmerge_environment_autodetect_…` step 3, itself gated on
 its step 2); (5) the content-hash green-tree fast-path (`quickmerge_sentinel_race_retry_storm_…` fix 1 — explicitly "do
@@ -611,3 +666,4 @@ tag; (7) the tranche-membership rule misses every `asset_group: [meta]`/`[infras
   finalize plan already carries `gate_on_depends: true` (task_template.md's draft-gated pattern), so it self-activates
   once this batch's todos land — flipping it now, ahead of that, would be premature (nothing to reconcile yet). Same
   reasoning applied consistently to entries #22 (ao) and #38 (infra).
+- **context-scout 2026-08-01**: populated/refreshed context_scope (6 entries).

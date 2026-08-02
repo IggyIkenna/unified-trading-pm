@@ -120,6 +120,32 @@ wiring gap.
 has **no `chain=` path axis** (measured 2026-07-20). This is display residue, not a canonicalisation defect — do not
 flag it as a path/atom violation; report it once if at all.
 
+> **Refinement 2026-07-30 (first full-vocabulary census, Phase G):** most of the populated `chain` values ARE legitimate
+> (`STARKNET` 2,513 rows / `ZKSYNC` 1 row, both real `MAINNET_CHAIN_IDS` members matching `EXTENDED-STARKNET`/
+> `LIGHTER-ZKSYNC`) — H7's "display residue, not a defect" framing holds for these. But 3 tiny, distinct values in the
+> SAME `chain` column are NOT residue, they are wrong-axis garbage: `FUTURES` (8 rows, an instrument-type-shaped
+> string), `POLYMARKET_PERP` (3 rows) and `KALSHI_PERP` (3 rows, both venue-shaped strings) — none is a real chain id.
+> Tiny scale (14 rows total), tracked in
+> `plans/active/issues/cefi_sports_prediction_first_census_small_drift_2026_07_30.md` rather than its own issue doc.
+
+### H8 — 2026-07-30 first-ever census (G1) run — small residual venue/instrument_type drift
+
+`/data-pipeline-reconciliation`'s distinct-value census had never been run for cefi before Phase G of
+`data_pipeline_reconciliation_skill_2026_07_20.md` (2026-07-30, 9,492,020 rows). Findings beyond H7's refinement above:
+
+- **Venue underscore/hyphen dupes (tiny)** — `POLYMARKET_PERP` (4 rows) / `KALSHI_PERP` (4 rows) vs the registered
+  `POLYMARKET-PERP` (1,020 rows) / `KALSHI-PERP` (1,666 rows) — the SAME venues, wrong separator. `OKX-OPTIONS` (2 rows)
+  is not in `VENUES_BY_ASSET_GROUP['cefi']` at all.
+- **`instrument_type=spot` (4,923 rows, lowercase)** — not a C2a case-only variant (canonical is `SPOT_PAIR`/
+  `SPOT_ASSET`, not `SPOT`), a genuinely different/legacy token.
+- **5 stray `ohlcv_{5m,1h,1d,15s,15m}` data_type values (2 rows each, 10 total)** — candle-timeframe-shaped tokens on
+  the RAW-TICK bucket, vs the one legitimately-canonical `ohlcv_1m` (4,604 rows). Tiny, likely a pre-MDPS-candle-layer
+  historical/test artifact.
+
+All items above are small-scale (≤4,933 rows each, out of 9.49M) — tracked as a single todo rather than separate issue
+docs. `futures_chain`/`options_chain` instrument_type values are CORRECTLY suppressed as accepted exceptions
+(`CHAIN_BUNDLE_ACCEPTED_NONCANONICAL_INSTRUMENT_TYPES`) — not a finding.
+
 ## Known-good spot-check — run BEFORE trusting any absence result
 
 The generalised lesson from the defi `solana_amm_pool` false negative (SKILL.md § 4b): **an absence result is only

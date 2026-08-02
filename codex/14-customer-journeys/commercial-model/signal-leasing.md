@@ -20,7 +20,7 @@ related:
     ../shared-core/signal-broadcast-architecture.md,
   ]
 created: 2026-04-20
-authoritative_for: [signal-leasing commercial path (fourth path, pricing models)]
+authoritative_for: ["signal-leasing commercial path (fourth path, pricing models)"]
 referenced_by:
   [
     /codex/14-customer-journeys/commercial-model/dart-entry-points.md,

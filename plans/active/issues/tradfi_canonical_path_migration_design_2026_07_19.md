@@ -26,6 +26,7 @@ locked_by: live-defi-rollout
 locked_since: 2026-05-21
 assigned_vm: planning
 resolved_by:
+context_scope: [/plans/epics/tradfi_master.md]
 ---
 
 # TradFi Canonical Path Migration — Orphan-Proof Design
@@ -234,3 +235,7 @@ removal + casing normalization remain before backfill-resume.
       present and wired. Residual 82,311 pre-fix lowercase manifest rows are a separate, already-tracked repair todo
       (that doc's todo `-007`, re-tagged off `[OPERATOR]` 2026-07-28, gated on a fresh soft-delete-retention check) —
       out of this todo's own done-when, not re-duplicated here.
+
+## Progress Log
+
+- **context-scout 2026-08-01**: populated/refreshed context_scope (1 entries).

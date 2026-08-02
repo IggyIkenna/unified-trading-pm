@@ -30,6 +30,13 @@ estimate_calibrated_ai_days: 6
 last_updated: 2026-06-03
 locked_by: live-defi-rollout
 locked_since: 2026-05-25
+context_scope:
+  [
+    /plans/archive/2026_06/features_input_manifest_migration_2026_05_25.md,
+    /codex/02-data/data-lineage-MTDS-features-ml.md,
+    /codex/02-data/availability-manifest-and-data-status.md,
+    features-service/features_service/delta_one/app/core/feature_writer.py,
+  ]
 supersedes:
 superseded_by:
 depends_on:
@@ -735,3 +742,11 @@ Two bare `DEFERRED` mentions, re-audited 2026-07-21:
   named successor in this doc's own "Temporary states + their canonical follow-up plans" table:
   **`features_and_ml_master`** Phase 3 (honest-absence recording for mtf) owns emitting
   `empty_confirmed(NO_INPUT_AVAILABLE)` when `_load_and_join` returns `None`.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-08-01**: KEEP-NA, valid -- Full audit rationale: Read the full 738-line doc top to bottom,
+  including the 2026-07-27 "Track-1 todo reconciliation" banner (lines 55-84) that overrides the original
+  2026-05-26/06-03 todo list, and the "Open Track-1 todos" section (lines 677-707) which is itself the surviving,
+  already-re-triaged remainder (3 of the ori...
+- **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).

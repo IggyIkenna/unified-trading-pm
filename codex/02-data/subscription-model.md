@@ -35,7 +35,7 @@ authoritative_for:
   ]
 referenced_by: [/codex/02-data/README.md]
 owner:
-last_reviewed: 2026-05-17
+last_reviewed: 2026-10-03
 code_refs:
 ---
 

@@ -140,3 +140,19 @@ inspection of slot 2 and is charter-barred from tmux send-keys to worker panes, 
 and from editing AO runtime state — so the fix is **BACKEND/DEVOPS-owned**. Severity **P3**: every kick self-healed and
 nothing was blocked (bounded blast radius = wasted kick churn + masked idleness on one slot), but the pattern is
 confirmed, recurrence-prone, and points at a real one-shot-lifecycle exit-signal gap worth closing when cycles allow.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30**: KEEP-NA, valid — the sole open `[REVIEW] P3` is explicitly observation-gated
+  ('Not observed in the original incident … worth its own scoped fix **if it's ever observed live**'), and the doc sits
+  inside the worker-liveness / watchdog-escalation cluster that `ao_satellite_ao_dispatch_batch1_2026_07_26.md` holds in
+  its conflict-gated Deferred list. Its `[BACKEND]` half already shipped `agent-orchestrator@0e9ce0b`.
+- **2026-07-31 (conflict-gated re-triage) — RECLASSIFIED, not actually conflict-gated.** This doc's own fix landed
+  independently of the escalation-ordering fight (root-caused + shipped same session it was filed, `@0e9ce0b`). The
+  remaining `[REVIEW] P3` was never blocked BY the cluster or by anything else — it is purely observation-gated ("act
+  only if this scenario is ever observed live"), unrelated to whether the kick-vs-escalation ordering question is
+  resolved. Mis-filed into the conflict-gated bucket by association (same general subsystem), not by an actual
+  dependency. No action needed; correctly stays open and low-priority.
+- **na-eligibility-audit 2026-08-01** (autonomous, tranche `ao`, dispatch agt-8e95ca, slot 2): KEEP-NA, valid — the sole
+  open `[REVIEW] P3` remains explicitly observation-gated ("act only if this scenario is ever observed live"). No change
+  since the 2026-07-31 re-triage above.

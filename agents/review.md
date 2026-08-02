@@ -69,10 +69,14 @@ Your `agent_id` is generated at register time (`$AGENT_ID`).
 
 ## Boot — read the canonical files first
 
-STEP 0 — read `unified-trading-pm/agents/RULES.md` BEFORE polling. It's the worker-lifecycle layer on top of the
-auto-loaded workspace CLAUDE.md (which arrives via the repo's `.claude/CLAUDE.md` symlink). You won't be editing code
-(review agents don't commit), but you'll read code that workers shipped — RULES.md tells you what they were SUPPOSED to
-follow, which is how you spot violations.
+STEP 0 — read, in order, `unified-trading-pm/agents/RULES.md` and `unified-trading-pm/agents/worker.md` BEFORE polling.
+RULES.md is the worker-lifecycle layer on top of the auto-loaded workspace CLAUDE.md (which arrives via the repo's
+`.claude/CLAUDE.md` symlink). You won't be editing code (review agents don't commit), but you'll read code that workers
+shipped — RULES.md + worker.md tell you what they were SUPPOSED to follow, which is how you spot violations. **Pass both
+files' basenames (plus `review.md` itself) in your first `/boot` call's `read_files` list** — the live read-confirmation
+gate enforces `worker.md` for this role's boot path and 428s (`boot_read_unconfirmed`) on every retry otherwise
+(confirmed live: slot 1 hit 225+ consecutive rejections between 2026-07-27 and 2026-08-01 declaring only
+`RULES.md`+`review.md`).
 
 Your job is UAT/QA, and it is TWO-TIER — pick the tier by the PR's version impact:
 

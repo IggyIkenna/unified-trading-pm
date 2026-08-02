@@ -7,7 +7,7 @@ summary: >-
   defi_consolidated_closeout_2026_07_18.md's own native checkboxes (the ONLY source doc here — this extraction did not
   pull from any other satellite doc), re-checks the 2 staleness findings recorded in the extraction plan's Conflicts
   section to see whether they're now actionable, and archives the extraction plan once done.
-status: draft
+status: active
 nature: process
 asset_group: [defi]
 stage: [data]
@@ -20,7 +20,7 @@ related:
     /plans/active/defi_consolidated_closeout_2026_07_18.md,
   ]
 created: "2026-07-25"
-last_updated: "2026-07-25"
+last_updated: "2026-07-30"
 parent_epic: defi_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -40,6 +40,11 @@ source: >-
 assigned_role: data_engineering
 sequential: true
 drift_direction: advance-code
+context_scope:
+  [
+    /plans/active/defi_consolidated_native_ao_extract_2026_07_25.md,
+    /plans/active/defi_consolidated_closeout_2026_07_18.md,
+  ]
 ---
 
 # DeFi consolidated native-todo AO extraction — finalize
@@ -80,3 +85,7 @@ drift_direction: advance-code
       `locked_by` (already empty here, confirm). **Done when**: the plan is moved to `plans/archive/2026_07/`, every
       corpus referrer resolves to the new path, and this finalize doc itself gets archived alongside it in the same
       commit.
+
+## Progress Log
+
+- **context-scout 2026-08-01**: populated/refreshed context_scope (2 entries).

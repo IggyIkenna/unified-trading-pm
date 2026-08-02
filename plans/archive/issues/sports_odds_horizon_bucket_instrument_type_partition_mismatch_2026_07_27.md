@@ -31,7 +31,7 @@ tags: [sports, odds, partition-mismatch, streaming-writer, data-correctness, mdp
 related:
   [
     /plans/archive/issues/sports_shard_enumeration_cartesian_blowup_2026_07_20.md,
-    /plans/active/sports_satellite_ao_dispatch_batch3_2026_07_25.md,
+    /plans/archive/2026_07/sports_satellite_ao_dispatch_batch3_2026_07_25.md,
   ]
 created: 2026-07-27
 last_updated: 2026-07-29

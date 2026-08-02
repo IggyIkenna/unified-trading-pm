@@ -26,7 +26,7 @@ authoritative_for:
   [unified-api-contracts normalization chain (config to canonical), check_sdk_version_alignment SDK-pin gate]
 referenced_by: [/codex/02-data/subscription-model.md, /codex/02-data/vcr-cassette-ownership.md]
 owner:
-last_reviewed: 2026-05-17
+last_reviewed: 2026-08-31
 code_refs:
 ---
 
@@ -50,10 +50,15 @@ code_refs:
 
 The unified-api-contracts package version (pyproject.toml) is the single source of truth for:
 
-- **Endpoint-to-schema mappings** — `unified_api_contracts/endpoints.py` ENDPOINT_SCHEMA_MAP
-- **Base URLs** — `unified_api_contracts/endpoints.py` BASE_URLS
-- **All Pydantic schemas** — `unified_api_contracts/*/schemas.py`
-- **Venue manifest** — `unified_api_contracts/venue_manifest.py`
+- **Endpoint-to-schema mappings** — `unified_api_contracts/registry/endpoints.py` `ENDPOINT_SCHEMA_MAP`
+- **Base URLs** — `unified_api_contracts/registry/endpoints.py` `BASE_URLS`
+- **All Pydantic schemas** — `unified_api_contracts/external/<source>/schemas.py` (source-side) +
+  `unified_api_contracts/internal/schemas/` (service-internal)
+- **Venue manifest** — `unified_api_contracts/registry/venue_manifest/`
+
+> **Import discipline** — consumers import from the top-level `unified_api_contracts.{domain}` surface only; the deep
+> `registry.*` / `external.*` / `canonical.*` / `normalize_utils.*` paths named here are UAC-INTERNAL and are given for
+> orientation, not as consumer import targets (workspace CLAUDE.md § "Writing code → coding standards").
 
 When you bump `version` in pyproject.toml, you are versioning the entire contract surface. Consumers (UMI, UOI,
 services) depend on a specific unified-api-contracts version for type safety and validation.
@@ -147,7 +152,7 @@ validates against unified-api-contracts schemas.
                                       │
                                       ▼
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│ 4. UAC Normalizer (unified_api_contracts.canonical.normalize)                   │
+│ 4. UAC Normalizer (unified_api_contracts.external.<source>.normalize)        │
 │    - Converts validated raw schema → canonical type (CanonicalTrade, etc.)   │
 │    - Mandatory: never pass raw through to adapter output                     │
 └─────────────────────────────────────────────────────────────────────────────┘
@@ -178,7 +183,7 @@ Interfaces that use unified-api-contracts should:
 
 ```python
 # tests/integration/test_tardis_adapter.py
-from unified_api_contracts.tardis.schemas import TardisTrade
+from unified_api_contracts.external.tardis.schemas import TardisTrade
 
 def test_tardis_trade_validates():
     raw = load_fixture("tardis_trade.json")
@@ -196,7 +201,7 @@ def test_tardis_trade_validates():
 | execution-service (formerly unified-trade-execution-interface)     | >=1.0.0,<2.0.0            | ccxt, ib_insync                | Required                    |
 | instruments-service (formerly unified-reference-data-interface)    | >=0.1.0                   | ccxt                           | Required                    |
 | unified-cloud-interface                                            | >=1.0.0,<2.0.0            | —                              | Optional                    |
-| unified-trading-services                                           | >=1.1.0                   | —                              | Optional                    |
+| unified-trading-library (UTL)                                      | >=1.1.0                   | —                              | Optional                    |
 | market-tick-data-service                                           | >=1.0.0,<2.0.0            | databento, tardis-client       | Required                    |
 | instruments-service                                                | >=1.0.0,<2.0.0            | ccxt                           | Required                    |
 | execution-service                                                  | (path)                    | —                              | Optional                    |
@@ -217,15 +222,22 @@ def test_tardis_trade_validates():
 
 ## unified-api-contracts Consumers
 
-See `05-infrastructure/unified-libraries/archive/LIBRARY-DEPENDENCY-MATRIX.md` for the archived full list. Key
-consumers:
+> **[2026-07-31 freshness re-review] — `position-balance-monitor-service`, `risk-and-exposure-service` and
+> `pnl-attribution-service` NO LONGER EXIST as separate repos.** All three were subtree-merged into **`strategy-service`**
+> on 2026-05-20 as the `strategy_service/{position,risk,pnl}/` sub-packages — one Docker image parameterised by
+> `--operation`. Read every mention of those three names below as "the corresponding strategy-service sub-package"; the
+> responsibilities described are unchanged. SSOT:
+> [`/codex/04-architecture/strategy-service-architecture.md`](/codex/04-architecture/strategy-service-architecture.md).
+
+See [`/codex/05-infrastructure/unified-libraries/LIBRARY-DEPENDENCY-MATRIX.md`](/codex/05-infrastructure/unified-libraries/LIBRARY-DEPENDENCY-MATRIX.md)
+for the full list. Key consumers:
 
 - **market-tick-data-service/market_tick_data_service/market_interface** — market data adapters (Tardis, Databento,
   Binance, CCXT)
 - **execution-service (formerly unified-trade-execution-interface)** — order execution (Binance, OKX, Bybit, IBKR)
 - **instruments-service (formerly unified-reference-data-interface)** — instruments, CCXT
 - **unified-cloud-interface** — GCP/AWS SDK schemas
-- **unified-trading-services** — re-exports, cloud primitives
+- **unified-trading-library (UTL)** — re-exports, cloud primitives (there is no `unified-trading-services` repo)
 - **market-tick-data-service** — tick ingestion
 - **instruments-service** — instrument metadata
 - **execution-service** — order execution
@@ -236,7 +248,8 @@ consumers:
 
 ## References
 
-- **Schema governance:** `02-data/schema-governance.md`
-- **Dependency matrix:** `05-infrastructure/unified-libraries/LIBRARY-DEPENDENCY-MATRIX.md`
-- **Coding standards:** `06-coding-standards/README.md` (unified-api-contracts chain, no dict[str, Any])
+- **Schema governance:** [`/codex/02-data/schema-governance.md`](/codex/02-data/schema-governance.md)
+- **Dependency matrix:** [`/codex/05-infrastructure/unified-libraries/LIBRARY-DEPENDENCY-MATRIX.md`](/codex/05-infrastructure/unified-libraries/LIBRARY-DEPENDENCY-MATRIX.md)
+- **Coding standards:** [`/codex/06-coding-standards/README.md`](/codex/06-coding-standards/README.md)
+  (unified-api-contracts chain, no dict[str, Any])
 - **SCHEMA_VERSIONS.md:** `unified-api-contracts/SCHEMA_VERSIONS.md`

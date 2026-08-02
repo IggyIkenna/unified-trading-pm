@@ -126,9 +126,26 @@ depends_on: []
       `check_line_caps.sh` no-exceptions block (a same-length text swap still trips prettier's paragraph reflow into
       1001 lines, per `terminal_status_archival_backlog_sweep_2026_07_25.md`'s slot-2 Progress Log entry). **Done
       when**: split `sports_satellite_ao_dispatch_batch2_2026_07_24.md` under 1000L, then fix the reference.
-- [ ] [REVIEW] P3. Confirm `/plan-reconcile`'s existing contradiction-sweep phases are sufficient to catch a doc that
-      moves without its referrers being updated going forward (the archival-ritual gap above, once fixed, should be
-      enforced by more than operator diligence) — extend the skill's Phase 1/AO-dispatch-readiness hunters if not.
+- [x] [REVIEW] P3. ✅ **DONE 2026-08-02 (slot-12)** — determination: **NOT sufficient as they stood; extended.**
+      Verified by reading the actual code, not the skill's own prose: `check_reference_paths.py`'s existence check DOES
+      scan every `/codex/...`/`/plans/...` reference anywhere in body text (`GOOD_REF_RE.finditer(text)` over the whole
+      doc, not just frontmatter). But two things blunt it in practice — (a) `run_hygiene_sweep.sh` invokes it `--quiet`
+      (`scripts/plan-hygiene/run_hygiene_sweep.sh:181`), which suppresses the itemized per-file violation list, so Phase
+      1 mechanical adjudicators have nothing to adjudicate even when the gate goes red; (b) it's a shrinking-ratchet
+      check with substantial slack (`reference_paths_baseline.yaml`; live-verified 2026-08-02: existence baseline 901,
+      live count 913) — a moderate single-move regression (this doc's own cited incidents: 78/66/3 new dangling
+      referrers each) can land entirely inside that slack without ever pushing the corpus-wide total over the ratchet
+      ceiling. Net effect: for inline body-text references — the dominant referrer shape a doc move actually breaks —
+      the existing mechanism gave no per-move specificity and could silently miss a genuine regression, exactly matching
+      what happened in all three of this doc's 2026-07-25 incidents (none were caught by a `/plan-reconcile` pass; all
+      were found manually after the fact). Frontmatter `related:`/`depends_on`/ `supersedes` referrers ARE reliably
+      caught today (Phase 0's own inventory script computes those directly, ungated) — the gap was specifically inline
+      body-text citations. **Extended**: added Phase 1 hunter 8 ("Moved-doc referrer hunter") to
+      `cursor-configs/skills/plan-reconcile/SKILL.md` — a git-log-diff-driven, ratchet-independent pass that greps the
+      full corpus body text for every recently-moved doc's OLD path and routes any hit straight to the existing Phase 4
+      auto-fix row, plus a note to re-run `check_reference_paths.py` without `--quiet` so its itemized list becomes a
+      real Phase-1 candidate feed. Also corrected Phase 0's own text, which previously assumed the mechanical checker
+      always surfaces the flag (untrue under its default `--quiet` + ratchet invocation). `pm@<commit-pending>`.
 
 ## Codex SSOTs
 
@@ -143,3 +160,25 @@ convention's scope).
   stay-in-place-with-banner) that the bounded items depend on for correctness — stays NA as a whole; the mechanical
   cleanup items are individually plausible future RECLASSIFY candidates for a dedicated split once the policy decision
   lands.
+- **sports_satellite_ao_dispatch_batch3_finalize todo 2, 2026-07-31**: ratchet measurement while archiving 2 source docs
+  (`dp_catalog_not_running_sports_prediction_2026_07_15.md`, `sports_fixtures_schedule_wrong_schema_day_2026_04_14.md`
+  restored from a wrong archival) — `check_reference_paths.py` now reads 187 format / 919 existence (baseline 161/901),
+  and `check_archive_candidates.sh` reads 7 (baseline 4). Confirmed via `git stash` that BOTH ratchets were already over
+  baseline on the clean tree before this session's edits — none of the new violations belong to any file this session
+  touched (verified by grep). Pre-existing drift from other slots' concurrent work since the baseline was last lowered,
+  not a regression this session caused. Not fixed here (corpus-wide, well outside this todo's scope) — flagging the live
+  numbers for whoever next runs `--update-baseline` or works this doc's own P3 todos.
+- **na-eligibility-audit 2026-07-31**: KEEP-NA, valid — confirms continuity of the 2026-07-30 verdict above (this run's
+  only change since was the ratchet-measurement Progress Log entry directly above, a status note, not a todo/scope
+  change). Re-checked the open-todo mix on independent review: the P2 REVIEW item ("does archival mean physical-move or
+  stay-in-place-with-banner") is still a genuine unresolved policy call, and both P3 dangling-reference todos partially
+  depend on that same policy answer for correctness (archival-caused dangling refs are a subset of the existence-
+  violation backlog, per this doc's own 2026-07-25 Progress Log entries). Doc stays NA as a whole; unchanged from
+  yesterday's assessment.
+- **na-eligibility-audit 2026-08-02** (infra tranche, dispatch agt-fe5e17): KEEP-NA, valid — third consecutive
+  confirmation. The only change since the 2026-07-31 verdict is the new REVIEW P3 item (added and closed same-day,
+  2026-08-02, slot-12: verified `check_reference_paths.py`'s existence check IS body-text-aware but blunted by
+  `--quiet` + ratchet slack, then extended `/plan-reconcile`'s SKILL.md with a new moved-doc-referrer hunter) — an
+  already-resolved investigation, not new open scope. The 5 open items (`- [ ]` count confirmed via
+  `grep -cE '^- \[ \]'`) are unchanged from the prior two verdicts: the P2 REVIEW archival-convention policy call is
+  still unresolved, and the two P3 dangling-reference backlogs still partially depend on it. Doc stays NA as a whole.

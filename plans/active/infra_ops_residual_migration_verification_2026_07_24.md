@@ -38,9 +38,15 @@ estimate_baseline_ai_days: 3
 estimate_calibrated_ai_days: 1.8
 assigned_role: infra
 drift_direction: advance-code
-last_updated: "2026-07-24"
+last_updated: "2026-08-01"
 locked_by:
 locked_since:
+context_scope:
+  [
+    /plans/active/master_data_canonicalisation_migration_catalogue_2026_06_07.md,
+    /plans/archive/2026_07/tradfi_v9_stage1_finish_2026_07_06.md,
+    /codex/02-data/availability-manifest-and-data-status.md,
+  ]
 supersedes:
 superseded_by:
 depends_on: []
@@ -98,24 +104,43 @@ source: >-
       readiness as unconfirmed, not just tradfi-gated. Owning todo tracked in `tradfi_v9_stage1_finish_2026_07_06.md`
       (added this edit, plan-reconciliation finding 128). Fleet drained + `pre_migration` snapshot in place; AG-by-AG,
       operator OK between each.
-- [ ] [INFRA] P2. **Rollup Cloud Run Job image lags the API deploy** — `uts-prod-data-status-rollup` (the data-status
+- [x] ✅ [INFRA] P2. **DONE — ALREADY FIXED, stale checkbox.** **DONE 2026-08-01 (satellite-batch1 reconciliation):**
+      `deployment-service@c04d4562` (2026-06-15) already added the `gcloud run jobs update --image` + async `execute`
+      sync step to `deploy-shared.sh` ("[3/3] Sync data-status rollup Job to the new image") — landed 3 days after this
+      item's own report, never checked off. Full evidence: `cross_cutting_satellite_ao_dispatch_batch1_2026_07_26.md`
+      sub-item (A). **Rollup Cloud Run Job image lags the API deploy** — `uts-prod-data-status-rollup` (the data-status
       rollup `*/5` cron Job) is pinned to a fixed `deployment-api:<tag>`, INDEPENDENT of the `uts-shared-deployment-api`
       service `:latest`. A code deploy does NOT refresh the rollup (had to `gcloud run jobs update --image` + execute
       manually this time). Make `deployment-service/scripts/cloud-run/deploy-shared.sh` (or the cloud-build-router
       deploy dispatch) ALSO bump the rollup Job image (or pin both to the same digest) so live data-status auto-reflects
       new code.
-- [ ] [UI] P2. **deployment-ui — surface the could-exist vs manifest-capture distinction** — the headline
-      operator-chosen metric is shards-weighted could-exist (`completion_pct` now = shards-weighted on the `/manifest`
-      drilldown), but the coverage CARD shows the manifest-capture ratio (~95–98%). Surface both clearly +
-      `out_of_window` as the non-counting bucket, so the two surfaces don't read as contradictory. (deployment-ui
-      `DataStatusTab` + `HonestCoverageCard`; needs `[UI]` pw:L2 gate.)
-- [ ] [INFRA] P3. **Local-dev uvicorn restart flakiness** — repeated `:8004` bind/port races on
-      `restart-deployment-stack`-style restarts (worked around with explicit `fuser -k` + harness background launch).
-      Make the dev restart helper port-clear deterministically.
-- [ ] [SCRIPT] P2. **Rollup worker: precompute `unique_instruments`** — the Cloud Run data-status rollup
-      (deployment_api/scripts/data_status_rollup_worker.py) predates the field; in LIVE (non-beta) mode the rollup
-      fast-path serves coverage summaries WITHOUT unique_instruments until it recomputes them. Add the catalogue read to
-      the worker + redeploy the Cloud Run job. Repo: deployment-api. Provenance: operator ask 2026-06-12.
+- [x] ✅ [UI] P2. **DONE 2026-08-01 — `deployment-ui@727298b`.** `HonestCoverageCard.tsx` showed only 2 "of attempted"
+      values; added `completion_pct_shards_weighted` (could-exist, hidden not faked when absent) + `out_of_window` (now
+      an explicit labelled count, not just a bar segment) as 2 new distinct rows. Regression spec
+      `tests/smoke/data_status_coverage_labels.spec.ts` extended + passing (`pw:L2 ✓`, 4/4). Full evidence:
+      `cross_cutting_satellite_ao_dispatch_batch1_2026_07_26.md` sub-item (B). **deployment-ui — surface the could-exist
+      vs manifest-capture distinction** — the headline operator-chosen metric is shards-weighted could-exist
+      (`completion_pct` now = shards-weighted on the `/manifest` drilldown), but the coverage CARD shows the
+      manifest-capture ratio (~95–98%). Surface both clearly + `out_of_window` as the non-counting bucket, so the two
+      surfaces don't read as contradictory. (deployment-ui `DataStatusTab` + `HonestCoverageCard`; needs `[UI]` pw:L2
+      gate.)
+- [x] ✅ [INFRA] P3. **DONE — ALREADY FIXED, stale checkbox.** **DONE 2026-08-01 (satellite-batch1 reconciliation):**
+      `unified-trading-pm@678188510` (2026-06-15) already added a deterministic `stop_port()` free-wait (lsof + `ss`
+      LISTEN both clear, ~10s bounded, `kill -9` fallback) to `restart-deployment-stack.sh` — functionally equivalent to
+      (more robust than) the suggested `fuser -k`. Full evidence:
+      `cross_cutting_satellite_ao_dispatch_batch1_2026_07_26.md` sub-item (C). **Local-dev uvicorn restart flakiness** —
+      repeated `:8004` bind/port races on `restart-deployment-stack`-style restarts (worked around with explicit
+      `fuser -k` + harness background launch). Make the dev restart helper port-clear deterministically.
+- [x] ✅ [SCRIPT] P2. **DONE — ALREADY FIXED, stale checkbox.** **DONE 2026-08-01 (satellite-batch1 reconciliation):**
+      `deployment-api@5938b3e` (2026-06-12, same day as this item's own provenance date) already wired
+      `read_unique_instrument_count()` into `coverage.py::_assemble_coverage_entry`, which the rollup worker's
+      `_build_one_service_coverage` calls directly — a live rollup's `coverage.json.gz` already includes
+      `unique_instruments` with no recompute fallback. Full evidence:
+      `cross_cutting_satellite_ao_dispatch_batch1_2026_07_26.md` sub-item (D). **Rollup worker: precompute
+      `unique_instruments`** — the Cloud Run data-status rollup (deployment_api/scripts/data_status_rollup_worker.py)
+      predates the field; in LIVE (non-beta) mode the rollup fast-path serves coverage summaries WITHOUT
+      unique_instruments until it recomputes them. Add the catalogue read to the worker + redeploy the Cloud Run job.
+      Repo: deployment-api. Provenance: operator ask 2026-06-12.
 - [ ] [DATA] P3. **Re-stamp the legacy schema_version tails** (target: mtds `migrate_*_to_v9_canonical.py` +
       ManifestWriter rebuild). **DEFERRED — operator 2026-06-22: wait for the active backfill fleet to finish, then run
       in a quiet window** (NOT a force-drain for a small mostly-empty tail). **Trigger to resume:** the
@@ -134,10 +159,14 @@ source: >-
       the live consolidator (`*/1` re-derives the consolidated index) or live writers → also needs the quiet window. Run
       order when resumed: drain → consolidate+snapshot → mtds `--apply` (captured cells) + manifest-only re-stamp (empty
       cells) → re-consolidate → re-verify the distribution is uniform v9.
-- [ ] [SCRIPT] P1. MVP Phase 2-3 — already in `mvp_scope_catalogue_tagging_2026_06_08.md` (deployment-api
+- [x] [SCRIPT] P1. MVP Phase 2-3 — already in `mvp_scope_catalogue_tagging_2026_06_08.md` (deployment-api
       `scope=mvp|could_exist|all` + UI tick + features/strategy/model sections). Schedule, do not re-file. **(Pointer
       item — the actual work lives in `mvp_scope_catalogue_tagging_2026_06_08.md`; carried here unmodified from the
-      parent rather than dropped, per lossless-relocation.)**
+      parent rather than dropped, per lossless-relocation.)** -- CLOSED (na-eligibility-audit 2026-08-01): duplicate of
+      the actively-progressing owner `plans/active/mvp_scope_catalogue_tagging_2026_06_08.md` (most recent update
+      2026-07-28, `unified-api-contracts@0fb9821b`, ModelsMvpRule P2b, with an open P2b-2 follow-on already tracked
+      there) — this was a lossless-relocation pointer, not primary work for this plan, so closing here is a
+      citation-fix, not a scope drop.
 - [ ] [DESIGN] P1. **Execution-config compatibility pre-flight** (audit-and-enhance, NOT a new catalogue) — composite
       `assert_execution_config_compatible(archetype × venue × instrument × required-matching-fidelity)` joining the
       existing `archetype_capability` (SUPPORTED/BLOCKED — "staked_basis can't bet") + `archetype_capability_matrix`
@@ -152,9 +181,11 @@ source: >-
    shipped or finished.
 2. RESUME runbook un-paused once tradfi's fleet-drain + re-stamp closes (tracked jointly with
    `tradfi_v9_stage1_finish_2026_07_06.md`).
-3. Rollup Cloud Run Job image auto-tracks the API deploy; `unique_instruments` precomputed in the rollup worker.
-4. deployment-ui surfaces could-exist vs manifest-capture distinctly (`[UI]` pw:L2 gate required).
-5. Local-dev uvicorn restart is deterministic.
+3. ✅ DONE 2026-08-01 — Rollup Cloud Run Job image auto-tracks the API deploy; `unique_instruments` precomputed in the
+   rollup worker (both already fixed pre-2026-07-24, see items 3 + 6 above).
+4. ✅ DONE 2026-08-01 — deployment-ui surfaces could-exist vs manifest-capture distinctly (`[UI]` pw:L2 gate, see item 4
+   above).
+5. ✅ DONE 2026-08-01 — Local-dev uvicorn restart is deterministic (already fixed pre-2026-07-24, see item 5 above).
 6. Legacy schema_version tails re-stamped once the backfill fleet quiet-window opens (operator sign-off required,
    irreversible).
 7. MVP Phase 2-3 + execution-config pre-flight items re-homed to their named owning plans/epics (not executed here).
@@ -163,8 +194,30 @@ source: >-
 
 - 2026-07-24 — plan forked from `migration_verification_orphan_safety_2026_06_10.md` (line-cap remediation split); no
   further work done yet beyond what the parent's archived Progress Log already recorded.
+- 2026-08-01 — satellite-batch1 dispatch (`cross_cutting_satellite_ao_dispatch_batch1_2026_07_26.md` sub-items A-D)
+  reconciled items 3-6: 3 of 4 were already fixed months earlier (`deployment-service@c04d4562` 2026-06-15,
+  `unified-trading-pm@678188510` 2026-06-15, `deployment-api@5938b3e` 2026-06-12) but never checked off across this
+  doc's own fork chain — a real instance of the stale-carry-forward pattern this doc itself exists to catch. Only item 4
+  (deployment-ui could-exist/out_of_window surfacing) was genuinely open; fixed via `deployment-ui@727298b`. All 4
+  flipped `[x]` with citations; full evidence in the satellite batch1 plan.
+- **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).
 
 ## Deferred work — migrated to:
 
 - P3 (re-stamp legacy schema_version tails): N/A — no migration, still owned + open in this plan. Deferred per operator
   2026-06-22 pending the active backfill fleet finishing; trigger-to-resume condition documented inline.
+
+- **na-eligibility-audit 2026-07-30**: KEEP-NA, valid — the RESUME runbook needs operator OK between each AG, the
+  schema_version re-stamp needs operator sign-off on an irreversible `--apply`, and 2 of the 9 todos are pointer-only
+  items the doc itself says belong elsewhere.
+
+- **na-eligibility-audit 2026-08-01**: KEEP-NA-STALE (duplicated elsewhere) -- 1 item(s) closed as stale/duplicated (see
+  checkboxes above), doc stays assigned_vm: NA. Full audit rationale: 4 of 5 remaining open items are genuine judgment/
+  operator-gated work (broad multi-plan audit requiring a "confirm" judgment call; a production scheduler/rule un-pause
+  explicitly requiring "operator OK between each" AG; an irreversible-`--apply` schema re-stamp explicitly deferred
+  pending operator sign-off + a quiet backfill-fleet window; a pointer-only composite-function design task not yet even
+  filed under its named owning epic). The 5th (MVP Phase 2-3) is a verbatim pointer whose own text says "already in
+  `mvp_scope_catalogue_tagging_2026_06_08.md` ... Schedule, do not re-file" — that target doc is the real,
+  actively-progressing owner of this scope (most recent update 2026-07-28, `unified-api-contracts@0fb9821b`), so this
+  item is a citation-fix duplicate, not new dispatchable content. Since it is a genuine mix (4 KEEP_JUDGMENT + 1
+  duplicate), this is NOT a RECLASSIFY case.

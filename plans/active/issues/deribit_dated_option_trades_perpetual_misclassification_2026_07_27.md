@@ -154,3 +154,9 @@ reproduce.
 - [ ] [DATA] P1. **Root-cause + fix DERIBIT's dated-option-into-perpetual misclassification** — find the writer-side
       bug, run an exhaustive corpus-wide census, backfill/reclassify already-captured objects, then re-run Script 1 for
       DERIBIT specifically (see "What's NOT done / follow-up needed" above).
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30** (tranche=cefi, autonomous): KEEP-NA, valid - `execution_scope: human`; the sole
+  todo bundles a writer root-cause, a corpus-wide census, and a reclassify migration of already-captured multi-GB
+  objects.

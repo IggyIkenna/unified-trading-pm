@@ -52,7 +52,7 @@ authoritative_for:
   ]
 referenced_by: [cursor-configs/CLAUDE.md, cursor-configs/skills/check-agent-orchestrator/SKILL.md]
 owner:
-last_reviewed: 2026-07-21
+last_reviewed: 2026-07-31
 code_refs:
   [
     agent-orchestrator/server/regen_backlog_from_plan.py,
@@ -171,6 +171,20 @@ outranks a scheduled task's capacity floor. See `server/config.py`'s reserve/par
 mechanics; SSOT for the historical single-combined-reserve incident this replaces:
 `plans/archive/issues/ao_escalation_and_scheduled_dispatch_slot_starvation_2026_07_27.md`.
 
+**Report-mode dispatch throttle** (`plan_health._report_dispatch_gate`, AF-2
+`plans/archive/2026_07/ao_fleet_observability_kpis_2026_07_20.md`, `agent-orchestrator@d098970`) — a SEPARATE,
+plan_health-local mechanism from the fleet-wide dispatch-cooldown store above, no shared state: `mode="report"`
+dispatches (the only mode this gate covers — `reconcile`/`docs_reconcile`/`ag_closeout`/`na_eligibility`/
+`context_scout` register a disjoint `agent_kind` and are exempt by construction) coalesce onto the most recent
+`agent_kind="plan_health"` `AgentRow` when it is still live (no result posted yet, inside
+`tuning.plan_health_dispatch_timeout_seconds`, default 1800s) or the min-interval hasn't elapsed
+(`tuning.plan_health_min_interval_seconds`, default 7200s/2h) — logged as `plan_health_dispatch_coalesced`. `force=true`
+skips the interval half only; it never bypasses the live-dispatch check. Live-traffic re-measurement (2026-07-31, direct
+read-only query against `data/state/state.db`): zero `superseded-plan_health` reaps in the table's entire history, and
+`plan_health_dispatch_coalesced` has fired zero times since deploy — report-mode traffic (tied to
+`main-backmerge-to-ldr.yml`'s promotion ping) has simply never come in fast enough to exercise the throttle's blocking
+branch; no violation has occurred either.
+
 ## Behaviour domains
 
 The operating model has four domains, each with a dedicated section below and a detailed code-mapped SSOT. Keep the
@@ -185,7 +199,14 @@ dead worker's task or process stranded.
   account has headroom. Full gate contract: [autospawn.md](/codex/04-architecture/agent-orchestrator-autospawn.md).
 - **Liveness** (`WorkerLivenessWatchdog` + `WorkerLivenessKicker`): kicks a nudge-able worker; kills a genuinely
   stuck/silent/context-full one; AutoSpawn respawns. Full trigger contract + anti-thrash:
-  [worker-liveness.md](/codex/04-architecture/agent-orchestrator-worker-liveness.md).
+  [worker-liveness.md](/codex/04-architecture/agent-orchestrator-worker-liveness.md). **Sustained host saturation (QG
+  churn + claude fleet + swap) is a distinct false-positive class, not "wedged agent"**: a busy host delays tmux pane
+  reads past `verify_window_s`, so a genuinely-progressing worker's pane sample reads frozen and gets kicked — each kick
+  interrupts real in-flight work, which can stall fleet-wide `slot_done` completions for over an hour even while
+  dispatch keeps flowing. Fixed (`agent-orchestrator@64b5310`) via a progress-marker grace shield —
+  `_progress_marker_shields_kick` suppresses `worker_kicked` whenever `slot.last_ping` advanced within
+  `kick_progress_grace_seconds` (default 90s), even when the pane read classifies frozen. Full detail:
+  [worker-liveness.md § "WorkerLivenessKicker — host-load-aware grace shield + hard-kill escalation"](/codex/04-architecture/agent-orchestrator-worker-liveness.md).
 - **Death**: a dead worker with in-flight dirty WIP RESUMES (`--resume`, bounded by `ORCHESTRATOR_RESUME_MAX_ATTEMPTS`);
   dead + clean requeues. A `paused` slot's task is NEVER released (operator intent). Governed by
   `server/resume_lifecycle.py` + `server/tmux_pruner.py`.
@@ -378,6 +399,18 @@ logs + skips) and `systemctl restart`s the orchestrator only when HEAD moved, or
 checkout HEAD. A deduped Slack alert (`_alert_wedge`) fires when the pull is wedged AND the clone is `≥10` commits
 behind. Full SSOT + the open "current-checkout-but-stale-process" hardening gap:
 [overview.md § "Deployment scripts"](/codex/04-architecture/agent-orchestrator-overview.md).
+
+**Deploy currency covers the systemd unit file too, not just app code** (closed 2026-07-31,
+`orchestrator_deploy_currency_gap_stale_reload_unit_and_tmp_exhaustion_2026_07_31.md`, `agent-orchestrator@90a2b2f`): a
+9-day-stale `/etc/systemd/system/orchestrator.service` (still running a removed `--reload` flag) survived two
+cron-triggered `systemctl restart`s on the same day, because `systemctl restart` reuses whatever unit is already
+installed — the code-currency loop above has no equivalent for the unit file itself. `ao-self-pull.sh` now also runs
+`install-orchestrator-service.sh --operator ubuntu --restart` unconditionally every tick, after the code-pull logic;
+that script was already idempotent (diffs the rendered SSOT `scripts/orchestrator.service` against the installed copy,
+no-ops when identical, restarts only when it actually applies a change), so no new diff-detection logic was needed —
+just wiring the existing self-heal-capable command into the cron loop — the same "extract the idempotent check, run it
+every tick regardless of what triggered this tick" pattern `rescale-memory-cap.sh` already established for the cgroup
+memory cap (`orchestrator_api_full_outage_stale_cgroup_memory_cap_2026_07_30.md`).
 
 ## Checking live status from a dev checkout (read-only)
 

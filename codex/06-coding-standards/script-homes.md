@@ -76,7 +76,15 @@ everything that is _not_ production runtime. This doc is the SSOT for which goes
   confirms no stale data depends on the script (see [migration_verification_orphan_safety] § orphan sweep). If the
   script encodes a _recurring_ need, it has a **named successor** (a service CLI subcommand / deployment-service job)
   and is retired the moment that lands — never left as a parallel path ([Delete deprecated code] + [Temporary state must
-  have a named successor]).
+  have a named successor]). **Worked example (shipped 2026-07-30)**: 13 near-identical "load manifest → filter by
+  predicate → flip status/reason → snapshot → write back" one-offs across instruments-service and
+  market-tick-data-service (2026-05-04..2026-07-06) were the exact recurring-need pattern this rule anticipates — the
+  named successor is `select_shards_for_reprocess()` + `reprocess_shards()` (`unified-trading-library`) wired to
+  `instruments-service --operation reprocess-shards` (see
+  `/plans/archive/issues/manifest_reprocessing_generic_utility_2026_07_07.md`). Each new incident should reach for that
+  CLI subcommand first — a fresh hand-written reclassify script is now a smell, not the default. The 13 original
+  one-offs were left in place (not deleted) since each still carries a script-specific `Delete-when:` gate not yet
+  independently re-verified; this is compliant with this section's TEMPORARY-lifecycle intent, not an exception to it.
 - **Codegen / regeneration from the repo's own SSOT** (e.g. regenerate a schema YAML from the feature registry) may
   persist, but MUST be **deterministic + idempotent** (`sorted()` any set before render).
 - **Dev / CI mock-data seeders** may persist (local + CI mock-mode only).

@@ -20,7 +20,7 @@ created: 2026-03-27
 authoritative_for: [dual-cloud readiness gates, rollback and version-tagging requirements]
 referenced_by:
 owner:
-last_reviewed: 2026-05-17
+last_reviewed: 2026-10-18
 code_refs:
 ---
 

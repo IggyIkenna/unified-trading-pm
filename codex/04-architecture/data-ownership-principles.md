@@ -16,7 +16,7 @@ created: 2026-03-27
 authoritative_for: [data-ownership five-layer model and interface-vs-service role boundaries]
 referenced_by:
 owner:
-last_reviewed: 2026-05-17
+last_reviewed: 2026-09-22
 code_refs:
 ---
 

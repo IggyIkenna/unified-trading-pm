@@ -36,6 +36,13 @@ source:
   ]
 assigned_role: backend_engineer
 drift_direction: advance-code
+context_scope:
+  [
+    /codex/06-coding-standards/quality-gates.md,
+    /codex/06-coding-standards/README.md,
+    /plans/active/infra_satellite_ao_dispatch_batch1_2026_07_26.md,
+    /plans/active/infra_satellite_ao_dispatch_batch2_2026_07_27.md,
+  ]
 ---
 
 # Codex-violation ratchet to ≤5 fleet-wide
@@ -370,8 +377,21 @@ unchanged:
       as its own `[CODE] P3` todo in `infra_satellite_ao_dispatch_batch1_2026_07_26.md` ("Reconcile UAC's stale
       `defi_position.py` liquidation threshold to the registry-driven form"). Cross-referencing rather than leaving 2
       live copies of the same work — track it there going forward; not executed yet.
-- [ ] [CODE] P3. **`execution_service/engine/delta_proxy_repricer.py`** — **CORRECTED 2026-07-27**: the "dead-code
-      delete candidate" framing below was WRONG per the operator's 2026-07-27 ruling
+- [x] ✅ [CODE] P3. **DONE — `execution-service@89fbf99d`** ("feat(execution): wire delta-proxy repricer into live MM
+      QUOTE-instruction handling", 2026-07-28). The "separate, concurrent workstream" the 2026-07-27 correction below
+      referred to has landed: `DeltaProxyRepricer` is imported and wired into
+      `execution_service/engine/quote_maintenance.py` (module docstring line 1 states the wiring; import at line 74)
+      plus `execution_service/v2/handlers.py`, with `tests/unit/engine/test_delta_proxy_repricer.py` (+328L),
+      `test_quote_maintenance.py` (+236L) and `test_router_and_handlers.py` (+67L) — 873 insertions across 6 files.
+      **Independently re-verified 2026-08-02** (na-eligibility-audit, infra tranche), not taken on the finding's word:
+      `git show --stat 89fbf99d` in the execution-service checkout,
+      `git merge-base --is-ancestor 89fbf99d     origin/live-defi-rollout` → ancestor confirmed, and the live wiring +
+      test file re-read on disk. This closes finding 1 of
+      `/plans/active/issues/ag_closeout_audit_infra_parked_2026_07_31.md`, carried forward unreconciled by three
+      consecutive `/ag-closeout-audit infra` runs (07-31, 08-01, 08-02) because that skill is scoped out of
+      false-unchecked flips — it is in scope for this skill's KEEP-NA-stale-items verdict, which uses the same HARD
+      evidence bar. Original text preserved below for the record. Was: **CORRECTED 2026-07-27**: the "dead-code delete
+      candidate" framing below was WRONG per the operator's 2026-07-27 ruling
       (`june_2026_vintage_audit_findings_2026_07_27.md` §5-RESOLVED #19): it is **NOT dead code** — its dependency
       `UnderlyingTracker` is tested/used elsewhere, but the repricer class itself has zero tests/callers because it was
       built and never wired in. **Real work needed is the OPPOSITE of deletion: wire it into the live execution
@@ -497,14 +517,16 @@ unchanged:
       schema-provenance remains — Phase 3). Cleared: deep-imports (registry sites flipped to one-level facade),
       os.getenv, asyncio.run-in-loop, imports-in-fn, run_lifecycle pairing (live_mode_handler), preflight
       emit_preflight_skip (process_handler + orchestration_service). 31 files, full QG green.
-- [ ] [TEST] P2. **MTDS `tests/market_interface/` (70 test files) is NOT collected by the QG** (2026-06-11 finding,
+- [x] ✅ [TEST] P2. **MTDS `tests/market_interface/` (70 test files) is NOT collected by the QG** (2026-06-11 finding,
       eb33603 unit) — the gate runs the default `PYTEST_UNIT_DIR` (`tests/unit/` [+integration]), so the adapter
       canonical-output suites never run in QG/CI. **Pointer, not the SSOT for this fix** (resolved
       `autonomous_session_operator_decisions_2026_07_25.md` entry #34, 2026-07-26): a competing widening exists in
-      `issues/mtds_ungated_test_families_2026_07_17.md`, which measured the real cost as 40 pre-existing failures (not
-      absorbable in the same unit as this todo assumes) and prescribes a narrower target list + fix-the-40-first
-      ordering — turning on the whole tree with 40 known failures unfixed would red every unrelated MTDS commit. That
-      doc's scoping wins; this todo is satisfied once its fix lands. Repo: market-tick-data-service.
+      `/plans/archive/issues/mtds_ungated_test_families_2026_07_17.md`, which measured the real cost as 40 pre-existing
+      failures (not absorbable in the same unit as this todo assumes) and prescribed a narrower target list +
+      fix-the-40-first ordering — turning on the whole tree with 40 known failures unfixed would red every unrelated
+      MTDS commit. **That doc's fix landed and it is now archived (2026-07-31, na-eligibility-audit ci tranche) — all 70
+      files gated, `PYTEST_UNIT_DIR` widened `market-tick-data-service@4849d4f6`, this todo's own stated satisfaction
+      condition is met.** Repo: market-tick-data-service.
 - [x] ✅ [CODE] P2c. **none-budget repos pinned at 0 (census-honest) 2026-06-11** — alerting-service@c41baf1,
       client-reporting-api@c8a32ff, fund-administration-service@3d32a3e, greeks-service@9efb1e7,
       trading-agent-service@09d8dae (each double-QG-green at budget 0 before ship); system-integration-tests pinned 0 +
@@ -606,3 +628,16 @@ for a `batch2` on the next pass and rehome then.
   `delta_proxy_repricer.py` wire-in items this doc flags as waiting for exactly such a batch: confirmed zero hits, still
   genuinely uncovered — flagging these 3 items as a future RECLASSIFY candidate for a dedicated follow-up pass, not
   actioned this run.
+- **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).
+- **na-eligibility-audit 2026-08-02** (infra tranche, incremental run): **KEEP-NA, stale items — 1 item closed with
+  verified evidence.** In scope this run because the doc was edited since its 2026-07-30 marker (context-scout
+  backfill + a 2026-07-31 ci-tranche flip of the MTDS `PYTEST_UNIT_DIR` item). Read end-to-end; `grep -cE '^- \[ \]'` =
+  **7** at entry, matching this verdict's item count, **now 6**. Closed: the `delta_proxy_repricer.py` `[CODE] P3` item,
+  which `execution-service@89fbf99d` (2026-07-28) already satisfied — evidence re-derived from the execution-service
+  checkout this run (`git show --stat`, ancestor check against `origin/live-defi-rollout`, live re-read of
+  `quote_maintenance.py`'s import + the test file), not accepted from the reporting doc. Doc stays NA on the remaining
+  6: Phase 3's schema-provenance migration is flagged too-large-for-a-batch-todo in batch1's own Deferred section (a
+  genuine design pass, not a bounded todo), 2 items (UAC `defi_position.py`, deployment-api 5→0) are already
+  cross-referenced into `infra_satellite_ao_dispatch_batch1_2026_07_26.md`, and the 3 flagged as awaiting a batch2
+  (pip-audit bumps, domain-client base-gate retarget, `delta_proxy_repricer` — the last now closed above) are re-checked
+  again this run: `infra_satellite_ao_dispatch_batch2_2026_07_27.md` still does not cover the remaining 2.

@@ -6,7 +6,7 @@ summary: >-
   gate_on_depends: true until all 5 of that plan's sequential todos are done. Reconciles the parent
   (cefi_consolidated_closeout_2026_07_18.md) Track-2 checkboxes, cross-checks the 2 PRE-BACKFILL baselines (drafted
   separately in cefi_consolidated_native_ao_extract_2026_07_25.md) actually landed, then archives.
-status: draft
+status: active
 nature: process
 asset_group: [cefi]
 stage: [data]
@@ -20,7 +20,7 @@ related:
     /plans/active/cefi_consolidated_native_ao_extract_2026_07_25.md,
   ]
 created: "2026-07-25"
-last_updated: "2026-07-25"
+last_updated: "2026-07-31"
 parent_epic: cefi_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -41,6 +41,14 @@ source: >-
 assigned_role: data_engineering
 sequential: true
 drift_direction: advance-code
+context_scope:
+  [
+    /plans/active/cefi_track2_coverage_backfill_checkpoints_2026_07_25.md,
+    /plans/active/cefi_consolidated_native_ao_extract_2026_07_25.md,
+    /plans/active/cefi_deribit_binance_futures_bundle_verification_2026_06_20_finalize_2026_07_27.md,
+    /plans/active/issues/deribit_options_chain_af_g4_blocker_2026_07_03.md,
+    /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
+  ]
 ---
 
 # CeFi Track-2 coverage backfill checkpoints — finalize
@@ -70,3 +78,23 @@ drift_direction: advance-code
       `cefi_track2_coverage_backfill_checkpoints_2026_07_25` and fix each path to point at the archived location → clear
       `locked_by` (already empty, confirm). **Done when**: the plan is moved to `plans/archive/2026_07/`, every corpus
       referrer resolves to the new path, and this finalize doc itself gets archived alongside it in the same commit.
+- [ ] [REVIEW] P2. **Re-verify the DERIBIT `options_chain`/`futures_chain` capture gap and complete the deferred
+      close-out of `cefi_deribit_binance_futures_bundle_verification_2026_06_20.md`** (added 2026-07-31, per that plan's
+      finalize reconciliation — `cefi_deribit_binance_futures_bundle_verification_2026_06_20_finalize_2026_07_27.md`).
+      That plan's own todos are all `[x]`, but its Success Criteria were NOT met as of 2026-07-31: DERIBIT
+      `options_chain`/`futures_chain` were still ~100% `attempted_failed` (see
+      `issues/deribit_options_chain_af_g4_blocker_2026_07_03.md`), gated on THIS Track-2 backfill actually completing.
+      Once this plan's own 5 todos are `done` (this finalize plan's `depends_on` gate having fired confirms that),
+      re-read the DERIBIT `options_chain`/`futures_chain` manifest cells: if `attempted_failed` has genuinely dropped to
+      ~0 (or the residual is honestly `empty_confirmed`), update
+      `issues/deribit_options_chain_af_g4_blocker_2026_07_03.md` to closed, then re-run the
+      `cefi_deribit_binance_futures_bundle_verification_2026_06_20_finalize_2026_07_27.md` todo (its own reconciliation
+      is otherwise already done) to archive both `cefi_deribit_binance_futures_bundle_verification_2026_06_20.md` and
+      that finalize plan via the standard 6-step ritual. If the gap is still open, leave both docs active and update the
+      2026-07-31 finding note with the fresh numbers. Repo: unified-trading-pm. **Done when**: a PASS/FAIL verdict on
+      the DERIBIT gap is recorded, and either both deribit-bundle docs are archived (PASS) or the finding note is
+      refreshed with current evidence (FAIL).
+
+## Progress Log
+
+- **context-scout 2026-08-01**: populated/refreshed context_scope (5 entries).

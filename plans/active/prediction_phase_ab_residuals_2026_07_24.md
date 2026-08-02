@@ -52,7 +52,7 @@ related:
     /plans/archive/issues/plan_line_cap_remediation_2026_07_23.md,
   ]
 created: "2026-07-24"
-last_updated: "2026-07-30" # was 2026-07-26 — /plan-reconcile prediction shard corrected the A1 Kalshi-smoke-matrix todo's per-todo repo attribution (e2e-testing, not MTDS-only); no checkbox changes. 2026-07-25 — consolidated-closeout split pass added 2 todos relocated from the parent (adapter dead-code audit as new A5; merged reconciliation-cadence + duplicate-note in Phase B) + folded the POLYMARKET schema-extension ruling into the existing A2 todo (no new checkbox); open-todo count 11 -> 13. 2026-07-27 — batch2 todo-2 conflict-check re-verified item 9's instrument_type residual case-insensitively (still open, 176 genuinely-malformed rows, blank sub-population actively growing ~10/day); added new Phase-B P2 todo for the growing-blank finding; open-todo count 13 -> 14. 2026-07-30 — `prediction_satellite_ao_dispatch_batch1_finalize_2026_07_25.md` todo 1 reconciliation: flipped A1b (dead Kalshi host), A2a (canonical-identity migration, now 8/8), A2b (route writer through canonical builder), and A2c (POLYMARKET legacy dual-write trees) to DONE citing batch1's 7 commits; A1a annotated but stays open (Phase 6 fix still outstanding); open-todo count freshly re-verified live (not trusting either historical figure) at 9 of 19 total (was 14 pre-reconciliation)
+last_updated: "2026-07-31" # was 2026-07-30 — flipped A5 (adapter dead-code/fallback audit) to DONE: 2 dead-code findings filed as issue docs (is_polymarket_dead_fixture_cross_reference_2026_07_31.md, mtds_prediction_adapters_dead_rest_polling_interface_2026_07_31.md), 0 fallback/duplicate-implementation violations found. Prior: was 2026-07-26 — /plan-reconcile prediction shard corrected the A1 Kalshi-smoke-matrix todo's per-todo repo attribution (e2e-testing, not MTDS-only); no checkbox changes. 2026-07-25 — consolidated-closeout split pass added 2 todos relocated from the parent (adapter dead-code audit as new A5; merged reconciliation-cadence + duplicate-note in Phase B) + folded the POLYMARKET schema-extension ruling into the existing A2 todo (no new checkbox); open-todo count 11 -> 13. 2026-07-27 — batch2 todo-2 conflict-check re-verified item 9's instrument_type residual case-insensitively (still open, 176 genuinely-malformed rows, blank sub-population actively growing ~10/day); added new Phase-B P2 todo for the growing-blank finding; open-todo count 13 -> 14. 2026-07-30 — `prediction_satellite_ao_dispatch_batch1_finalize_2026_07_25.md` todo 1 reconciliation: flipped A1b (dead Kalshi host), A2a (canonical-identity migration, now 8/8), A2b (route writer through canonical builder), and A2c (POLYMARKET legacy dual-write trees) to DONE citing batch1's 7 commits; A1a annotated but stays open (Phase 6 fix still outstanding); open-todo count freshly re-verified live (not trusting either historical figure) at 9 of 19 total (was 14 pre-reconciliation)
 parent_epic: predictions_master
 assigned_vm: NA
 execution_scope: local-only
@@ -76,6 +76,13 @@ source: >-
   specific guidance for this plan ("Phase A-B residuals"). `sequential: true` added 2026-07-24 (plan audit finding) to
   encode this doc's own "Phase B — run the migrations (gated on Phase A green)" header text as a real ordering — this is
   a WITHIN-plan A-before-B ordering, not a cross-plan gate, so `sequential` (not `depends_on`) is the correct mechanism.
+context_scope:
+  [
+    /plans/active/prediction_consolidated_closeout_2026_07_18.md,
+    /codex/02-data/canonical-cutover-register.md,
+    /codex/02-data/non-canonical-path-inventory.md,
+    /plans/epics/predictions_master.md,
+  ]
 ---
 
 # Prediction Phase A-B residuals — code-ready writers + manifest migration follow-through
@@ -138,11 +145,15 @@ source: >-
       `prediction-live-{venue}-{data_type}` VMs, manifest-confirmed captures through `day=2026-07-27`). (repos:
       **e2e-testing** — `e2e-testing/scripts/validation/validate_batch_live_smoke_matrix.py:552` +
       market-tick-data-service for the `by_date/` drift leg)
-- [ ] [BACKEND] P1. **Adapters must apply lifecycle bounds BEFORE the network call** — today inactive days land as
-      `SOURCE_RETURNED_ZERO` instead of an honest `EXPECTED_*`, and the CLOB catalogue scoped to `end_date_iso==day` can
-      cap backfills to the resolution day.
-      `issues/prediction_lifecycle_prefetch_gate_and_resolution_day_catalogue_2026_07_14.md`. (repos:
-      market-tick-data-service). **Reconciled 2026-07-26** (resolved
+- [x] ✅ [BACKEND] P1. **STALE — CLOSED 2026-07-31 (na-eligibility-audit, prediction tranche).** Adapters must apply
+      lifecycle bounds BEFORE the network call — today inactive days land as `SOURCE_RETURNED_ZERO` instead of an honest
+      `EXPECTED_*`, and the CLOB catalogue scoped to `end_date_iso==day` can cap backfills to the resolution day. **Its
+      own source doc is now fully resolved and archived**:
+      `/plans/archive/issues/prediction_lifecycle_prefetch_gate_and_resolution_day_catalogue_2026_07_14.md` (all 5 todos
+      done — pre-fetch gate `market-tick-data-service@abe0904d`, active-window catalogue widening
+      `instruments-service@41ca79d7`, historical re-backfill terminal 2026-07-30, full-corpus VERIFY 81.8%
+      captured÷attempted). This checkbox described the same deliverable and was simply never flipped once the source doc
+      landed. (repos: market-tick-data-service). **Reconciled 2026-07-26** (resolved
       `autonomous_session_operator_decisions_2026_07_25.md` entry #13, option A) against
       `prediction_satellite_ao_dispatch_batch4_2026_07_26.md` todo 1's overlapping lifecycle-bounds legs — this todo's
       `EXPECTED_*` target state is the ratified contract (already an `OUT_OF_COVERAGE_WINDOW_REASONS` member, clipped
@@ -256,15 +267,15 @@ source: >-
       features-service)
 
       **2026-07-26 fold-in** (resolved `autonomous_session_operator_decisions_2026_07_25.md` entry #12, option A):
-                                                                                                                                                                                          `prediction_perps_kalshi_polymarket_parked_2026_07_24.md`'s sole remaining open item folds in here —
-                                                                                                                                                                                          **Polymarket-perp enumerator, BLOCKED-UPSTREAM** (no public perps API exists — `perps-api.polymarket.com` /
-                                                                                                                                                                                          `perps.polymarket.com` / `perp.polymarket.com` all NXDOMAIN, web-UI beta only, CFTC-DCM-approved perps launched
-                                                                                                                                                                                          2026-04-21; re-verified 2026-06-22 that the unified CLOB/Gamma discovery path does not enumerate perp markets
-                                                                                                                                                                                          either). Scaffold shipped at every layer (`PolymarketPerpReferenceDataAdapter` + MTDS adapter/connector +
-                                                                                                                                                                                          launcher gating + strategy honest-absence); real unblock is Polymarket publishing the public perps API or
-                                                                                                                                                                                          operator-provisioned beta credentials — status stays BLOCKED-CREDENTIALS, not descoped, auto-flows on endpoint
-                                                                                                                                                                                          availability. Ping: slot_0. Repo: instruments-service. The shell plan (10 other todos, all shipped) archived —
-                                                                                                                                                                                          see its own Progress Log.
+                                                                                                                                                                                                                      `prediction_perps_kalshi_polymarket_parked_2026_07_24.md`'s sole remaining open item folds in here —
+                                                                                                                                                                                                                      **Polymarket-perp enumerator, BLOCKED-UPSTREAM** (no public perps API exists — `perps-api.polymarket.com` /
+                                                                                                                                                                                                                      `perps.polymarket.com` / `perp.polymarket.com` all NXDOMAIN, web-UI beta only, CFTC-DCM-approved perps launched
+                                                                                                                                                                                                                      2026-04-21; re-verified 2026-06-22 that the unified CLOB/Gamma discovery path does not enumerate perp markets
+                                                                                                                                                                                                                      either). Scaffold shipped at every layer (`PolymarketPerpReferenceDataAdapter` + MTDS adapter/connector +
+                                                                                                                                                                                                                      launcher gating + strategy honest-absence); real unblock is Polymarket publishing the public perps API or
+                                                                                                                                                                                                                      operator-provisioned beta credentials — status stays BLOCKED-CREDENTIALS, not descoped, auto-flows on endpoint
+                                                                                                                                                                                                                      availability. Ping: slot_0. Repo: instruments-service. The shell plan (10 other todos, all shipped) archived —
+                                                                                                                                                                                                                      see its own Progress Log.
 
 ### A4 — Fixture-attribute WRITERS (Phase E depends on this landing before the Phase-D re-backfill)
 
@@ -291,20 +302,31 @@ source: >-
 
 ### A5 — Adapter code-quality audit (relocated 2026-07-25 from the parent's "Queued audits + reviews" section)
 
-- [ ] [BACKEND] P2. **Adapter dead-code/fallback audit.** Audit instruments-service's and market-tick-data-service's
-      prediction adapters (kalshi.py, polymarket/) for dead code, silent fallback branches, and duplicated logic, per
-      `/codex/06-coding-standards/adapter-dead-code-and-fallback-ban.md`. Exact paths:
-      `instruments_service/reference_data/adapters/prediction/kalshi.py` + `.../adapters/prediction/polymarket/`
-      (instruments-service), `.../adapters/prediction/` (market-tick-data-service). **Awareness note (not a done-when
-      gate)**: `prediction_satellite_ao_dispatch_batch1_2026_07_25.md` todo 1 already targets one known defect on this
-      surface — the dead `trading-api.kalshi.com` host — but in a DIFFERENT file
-      (`e2e-testing/scripts/validation/validate_batch_live_smoke_matrix.py`, not the adapter files themselves); if
-      batch1 has landed by the time this runs, don't re-file that as a new finding, just note it's already tracked. Also
-      tracked as an AO-dispatchable execution copy in `prediction_consolidated_native_ao_extract_2026_07_25.md`
-      (`status: draft`) todo 1 — that plan's own Done-when now reconciles evidence back into THIS checkbox (updated
-      2026-07-25, corpus-wide referrer fixup), not the parent's now-relocated section. Done when: every adapter file in
-      scope has either a filed finding (a new `plans/active/issues/<slug>.md`, one per distinct defect class found) or
-      an explicit "0 findings" line recorded in this plan's Progress Log — not silence. (repos: instruments-service,
+- [x] ✅ [BACKEND] P2. **Adapter dead-code/fallback audit — DONE 2026-07-31.** Audited instruments-service's
+      (`kalshi.py`, `fixture_match.py`, `polymarket/{adapter,clob,markets,parsing,_pkg_ref}.py`) and
+      market-tick-data-service's (`kalshi_adapter.py`, `polymarket_adapter.py`, `base_prediction_adapter.py`,
+      `_polymarket_helpers.py`, `_polymarket_shard_classify.py`) prediction adapters for dead code, silent fallback
+      branches, and duplicated logic, per `/codex/06-coding-standards/adapter-dead-code-and-fallback-ban.md`.
+      **Awareness note confirmed**: `prediction_satellite_ao_dispatch_batch1_2026_07_25.md` todo 1 already landed
+      (status: complete) — the dead `trading-api.kalshi.com` host defect is fixed with a regression-guard test
+      (`e2e-testing/tests/unit/test_validate_batch_live_smoke_matrix.py`); not re-filed. **2 distinct defect classes
+      found and filed as issue docs** (rule 1, dead code — no rule-2 silent-fallback or rule-3 duplicate-implementation
+      violations found; the several documented, logged fallback patterns present — e.g. Kalshi's `_resolve_cutoff()`
+      cutoff-lookup-failure default, the `market_lifecycle` GCS-read fallback chain — are all logged
+      (`logger.debug`/`.warning`) and code-commented with the specific historical incident each guards against, matching
+      the codex rule's "genuine, intentional fallback... named as such and logged" bar, not a silent
+      catch-and-continue): 1. `plans/active/issues/is_polymarket_dead_fixture_cross_reference_2026_07_31.md` —
+      instruments-service's `PolymarketReferenceDataAdapter._cross_reference_fixture()` + its
+      `_api_football_key`/`_fixture_cache` state, wired end-to-end from `factory.py` (resolves + injects a real
+      `api_football` secret) but never invoked by any live code path; the code's own comment calls it "unused." 2.
+      `plans/active/issues/mtds_prediction_adapters_dead_rest_polling_interface_2026_07_31.md` —
+      market-tick-data-service's `KalshiAdapter`/`PolymarketAdapter` carry a whole dead "live REST-polling" interface
+      (`get_markets`/`get_prices`/`normalize_market`/`normalize_odds`/`parse_market`/`parse_token`/
+      `parse_order_book`/`parse_trade`/`_convert_gamma_market`/`_build_order_book_record`, plus two
+      self-labeled-"Legacy" wrapper methods) — exercised only by tests, zero production call sites; the live pipeline is
+      exclusively `download_batch()` -> `get_trades_batch`/`get_books_batch`. Both issue docs carry a `[BACKEND] P2` fix
+      todo (delete-or-document-activation-path) — neither fixed inline here per findings-triage (genuine judgment call
+      between delete vs. document, not auto-resolved by an audit). (repos: instruments-service,
       market-tick-data-service)
 
 ## Phase B — run the migrations (gated on Phase A green)
@@ -445,6 +467,46 @@ source: >-
 
 ## Progress Log
 
+- **na-eligibility-audit 2026-07-31 (prediction tranche)**: KEEP-NA, stale item closed — 7 open (was 9 at the 2026-07-30
+  marker: A5 adapter dead-code audit resolved same-day by a sibling dispatch, -1; A1c closed this pass as stale, -1).
+  A1c ("Adapters must apply lifecycle bounds BEFORE the network call") described work whose own source doc
+  (`issues/prediction_lifecycle_prefetch_gate_and_resolution_day_catalogue_2026_07_14.md`) is now fully resolved and
+  archived — closed with citation. Remaining 7 open items re-verified against the 2026-07-30 marker's own reasoning,
+  unchanged: A1a stays gated on `prediction_capture_incident_remediation_2026_07_06.md`'s unimplemented Phase 6
+  (out-of-tranche doc, not re-opened this pass); the 6 Phase-B items (enumeration-driven manifest migration,
+  fixture-attribute historical backfill, ambiguous-canonical-value per-value escalation, instrument_type casing
+  re-verify, the actively-growing blank-instrument_type diagnostic, and the reconciliation-cadence top-up — the last
+  already a confirmed duplicate of `prediction_consolidated_native_ao_extract_2026_07_25.md` todo 4) each require a
+  writer drain + operator-held `--apply` on a race-sensitive `_index` CAS rewrite, an infra drain window, or end in a
+  genuine per-item escalation path — none worker-determinable end to end. Doc stays NA.
+
+- **2026-07-31 (slot-12, backend_engineer) — A5 adapter dead-code/fallback audit DONE, dispatched via
+  `prediction_consolidated_native_ao_extract_2026_07_25.md` todo 1.** Audited every prediction adapter file in scope
+  (instruments-service `kalshi.py`/`fixture_match.py`/`polymarket/*`, market-tick-data-service `kalshi_adapter.py`/
+  `polymarket_adapter.py`/`base_prediction_adapter.py`/`_polymarket_helpers.py`/`_polymarket_shard_classify.py`) against
+  `/codex/06-coding-standards/adapter-dead-code-and-fallback-ban.md`'s 3 rules. Confirmed the batch1 dead
+  `trading-api.kalshi.com` host defect already landed (status: complete, regression-guarded) — not re-filed. Found +
+  filed 2 distinct dead-code (rule 1) defect classes as issue docs (repo-wide grep-verified zero non-test production
+  call sites for each): `is_polymarket_dead_fixture_cross_reference_2026_07_31.md` (instruments-service —
+  `_cross_reference_fixture()` + its `_api_football_key`/`_fixture_cache` state, wired end-to-end from `factory.py`'s
+  real secret resolution but never invoked) and `mtds_prediction_adapters_dead_rest_polling_interface_2026_07_31.md`
+  (market-tick-data-service — a whole dead "live REST-polling" method family on `KalshiAdapter`/`PolymarketAdapter`,
+  test-only coverage, zero production call sites; the live pipeline is exclusively `download_batch()`-driven). No rule-2
+  silent-fallback violations found — every fallback branch checked (Kalshi `_resolve_cutoff()`'s cutoff-lookup-failure
+  default, `market_lifecycle`'s multi-path GCS-read degrade chain, etc.) is logged (`logger.debug`/`.warning`) and
+  code-commented with the specific incident it guards against. No rule-3 duplicate-implementation violations found (IS
+  reference-data adapters vs. MTDS market-data adapters are different services by design, not same-service duplicates).
+  Flipped the A5 checkbox above with full evidence; both issue docs carry their own `[BACKEND] P2` follow-up todo
+  (delete-or-document-activation-path — a genuine judgment call, not fixed inline per findings-triage).
+
+- **na-eligibility-audit 2026-07-30 (prediction tranche)**: KEEP-NA, valid — 9 open, re-verified live against this doc's
+  own 2026-07-30 reconciliation entry (9 open / 10 done / 19 total, matches). A1a stays gated on the sibling doc's
+  unimplemented Phase 6; A5 (adapter dead-code audit) and the Phase-B `/data-pipeline-reconciliation` cadence top-up are
+  CONFLICT — both already extracted into `prediction_consolidated_native_ao_extract_2026_07_25.md`
+  (`assigned_vm: planning`, `status: active`) todos 1 and 4. The Phase-B migration items require a writer drain + a
+  race-sensitive `_index` CAS rewrite with an operator-held `--apply`, and the ambiguous-canonical-value item ends in a
+  per-value escalation path. None is worker-determinable end to end.
+
 - **2026-07-24 (plan-hygiene split) — forked from `prediction_consolidated_closeout_2026_07_18.md`.** This plan carries
   forward the Phase A + Phase B sections verbatim (14 todos total: 5 done / 9 open at split time). See the parent's
   Progress Log (ticks 1-31, especially the A0/A2/A4/§5/§6 and Phase-B `--apply` entries — ticks 1, 4-9, 16-18, 21) for
@@ -536,7 +598,7 @@ source: >-
   4 of this doc's checkboxes to DONE citing batch1's 7 commits, annotated a 5th that stays open.** Batch1's 7 todos all
   cited this doc as Source but wrote their Done-when evidence into 3 different sibling docs' Progress Logs
   (`prediction_capture_incident_remediation_2026_07_06.md`,
-  `issues/prediction_lifecycle_prefetch_gate_and_resolution_day_catalogue_2026_07_14.md`,
+  `/plans/archive/issues/prediction_lifecycle_prefetch_gate_and_resolution_day_catalogue_2026_07_14.md`,
   `plans/archive/issues/prediction_polymarket_legacy_dual_write_trees_metadata_loss_2026_07_24.md`) plus this doc itself
   for todo 7 — all 3 sibling docs' Progress Log entries + their own checkboxes were already correctly flipped (confirmed
   by direct read); the gap was that NONE of batch1's 7 commit SHAs had yet been cited in THIS doc's own checkbox list.
@@ -560,3 +622,4 @@ source: >-
   open — none of them batch1's scope. No code changed this turn — doc-only reconciliation across 3 files (this doc,
   `prediction_capture_incident_remediation_2026_07_06.md`,
   `issues/kalshi_live_capture_regression_and_drift_2026_07_13.md`).
+- **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).

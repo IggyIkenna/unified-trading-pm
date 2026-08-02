@@ -114,3 +114,8 @@ adapter capability, not a refactor or config change. Suggested todo breakdown fo
 - [ ] [DESIGN] P3. Author the dedicated implementation plan per the breakdown above, when this becomes a priority (repo:
       market-tick-data-service). Not urgent — `dex_pool_swaps` coverage for every OTHER defi venue is unaffected; this
       is a 2-venue gap on a data_type that already has non-zero coverage elsewhere.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30**: KEEP-NA, valid - sole todo is 'author a dedicated implementation plan when this
+  becomes a priority' — plan-authoring + prioritisation, both operator calls

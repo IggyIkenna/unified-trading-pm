@@ -57,6 +57,12 @@ source: >-
   boundaries"). Content moved verbatim, not summarized. `depends_on` + `gate_on_depends: true` added 2026-07-24 (plan
   audit finding) to encode this doc's own header text ("gated on Phase B") as a real dispatch gate, matching the Phase E
   sibling's already-correct pattern — Phase B is now carried by `prediction_phase_ab_residuals_2026_07_24.md`.
+context_scope:
+  [
+    /plans/active/prediction_consolidated_closeout_2026_07_18.md,
+    /plans/active/prediction_phase_d_formal_smoke_and_backfill_2026_07_24.md,
+    /plans/epics/predictions_master.md,
+  ]
 ---
 
 # Prediction Phase C — data-status + honest-coverage UI
@@ -93,11 +99,26 @@ source: >-
       (repos: deployment-api, deployment-ui)
 - [ ] [BACKEND] P2. **DP_CATALOG stale alert (shared w/ sports)** — the `DP_CATALOG_NOT_RUNNING` alert fired for both
       sports + prediction `prod/catalog.parquet` (~25h stale); confirm the prediction catalogue writer runs on schedule.
-      Cross-link `issues/dp_catalog_not_running_sports_prediction_2026_07_15.md` (owned jointly with sports_master).
+      Cross-link `/plans/archive/issues/dp_catalog_not_running_sports_prediction_2026_07_15.md` (owned jointly with
+      sports_master; archived 2026-07-30 — doc reached 0 open todos).
 
 ## Progress Log
+
+- **na-eligibility-audit 2026-07-31 (prediction tranche)**: KEEP-NA, valid — 4 open, unchanged since the 2026-07-30
+  marker (this file's only intervening edit was a referrer-path fix elsewhere in the corpus repointing an archived
+  cross-link, not a content change to this doc's own scope). The real
+  `depends_on: [prediction_phase_ab_residuals_2026_07_24]`
+  - `gate_on_depends: true` gate is re-confirmed still live — the prerequisite doc still carries 7 open todos as of this
+    same run. KEEP-NA on that citation alone, per the skill's own rule. Doc stays NA.
+
+- **na-eligibility-audit 2026-07-30 (prediction tranche)**: KEEP-NA, valid — 4 open, and the doc carries
+  `depends_on: [prediction_phase_ab_residuals_2026_07_24]` + `gate_on_depends: true` against a prerequisite that is
+  still open (9 todos). Per this skill's own rule, a real `depends_on`+`gate_on_depends` gate on a still-open
+  prerequisite is KEEP-NA on that citation alone — gate confirmed real by direct read of both docs, not assumed. The P0
+  UI item additionally carries the workspace playwright gate.
 
 - **2026-07-24 (plan-hygiene split) — forked from `prediction_consolidated_closeout_2026_07_18.md`.** This plan carries
   forward the Phase C section verbatim (0 done / 4 open todos at split time). See the parent's Progress Log (ticks 1-31)
   for the full session-by-session history of the prediction close-out overall; none of those ticks closed a Phase C
   item, so there is no Phase-C-specific history to carry forward yet. Future work on this plan logs new entries below.
+- **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).

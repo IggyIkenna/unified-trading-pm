@@ -139,7 +139,7 @@ todos:
 isProject: false
 ---
 
-## Deferred work — migrated to: `plans/active/cicd_mvp_ldr_to_main_pipeline_2026_06_30.md` — successor:
+## Deferred work — migrated to: `plans/archive/2026_07/cicd_mvp_ldr_to_main_pipeline_2026_06_30.md` — successor:
 
 cicd_mvp_ldr_to_main_pipeline_2026_06_30 (verified 2026-07-21, batch-5 archived-plan discipline triage). The 3 open P4
 items assumed build-platform-triggered gating (Cloud Build / CodeBuild / GH Actions test workflows running the check

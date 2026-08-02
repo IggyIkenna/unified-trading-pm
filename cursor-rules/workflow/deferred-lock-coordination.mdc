@@ -82,5 +82,5 @@ When the primary repo work is out-of-scope:
 
 ## Reference
 
-- Plan: `plans/active/issues/aiohttp_cve_2026_34993_vcrpy_deadlock_2026_06_03.md` (deployment-service blockers)
+- Plan: `plans/archive/issues/aiohttp_cve_2026_34993_vcrpy_deadlock_2026_06_03.md` (deployment-service blockers)
 - SSOT: `codex/06-coding-standards/quality-gates.md` (uv lock gate behavior)

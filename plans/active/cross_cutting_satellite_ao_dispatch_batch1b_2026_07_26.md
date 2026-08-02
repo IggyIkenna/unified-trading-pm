@@ -55,6 +55,13 @@ source: >-
 assigned_role: data_engineering
 sequential: false
 drift_direction: advance-code
+context_scope:
+  [
+    /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
+    /plans/active/cross_cutting_satellite_ao_dispatch_batch1_2026_07_26.md,
+    /plans/active/cross_cutting_satellite_ao_dispatch_batch1_2026_07_26_finalize.md,
+    /cursor-configs/skills/ag-closeout-audit/SKILL.md,
+  ]
 ---
 
 # Cross-cutting satellite AO batch 1 (part 2 of 2) — fresh triage extraction
@@ -68,9 +75,9 @@ drift_direction: advance-code
 
 ## Todos
 
-- [ ] [MONITOR] P2. **Bake `deployment-service:latest`'s terraform default forward so it matches the live wave-launcher
-      runtime pin** (target repo: `deployment-service`). The `uts-prod-tradfi-wave-launcher` Cloud Run job was
-      runtime-re-pinned to `deployment-api@56f2060e` (carries `_write_last_run_sentinel`), but its terraform default
+- [x] ✅ [MONITOR] P2. **Bake `deployment-service:latest`'s terraform default forward so it matches the live
+      wave-launcher runtime pin** (target repo: `deployment-service`). The `uts-prod-tradfi-wave-launcher` Cloud Run job
+      was runtime-re-pinned to `deployment-api@56f2060e` (carries `_write_last_run_sentinel`), but its terraform default
       (`deployment-service:latest`) is still a SEPARATE, older image — a future `tofu apply` would silently revert the
       pin and stop the wave-launcher's host-cron sentinel write, producing a false `DP_CRON_DID_NOT_FIRE` page once the
       6h seed budget lapses. Trigger the `deployment-service-jobs-image-build` Cloud Build trigger from LDR (or confirm
@@ -80,27 +87,93 @@ drift_direction: advance-code
       the runtime pin can safely revert without regressing. **Done when**: `deployment-service:latest`'s pushed digest
       is confirmed to contain `_write_last_run_sentinel`, and the checkbox for this item in
       `dp_alert_flood_triage_and_monitor_fixes_2026_06_23.md` is flipped `[x]` citing the build id / commit sha
-      verified. Source: `dp_alert_flood_triage_and_monitor_fixes_2026_06_23.md`.
+      verified. Source: `dp_alert_flood_triage_and_monitor_fixes_2026_06_23.md`. — **Already resolved upstream
+      2026-07-28** (source doc's own copy of this checkbox, `dp_alert_flood_triage_and_monitor_fixes_2026_06_23.md`
+      lines 151-163, archived `[x]` "no code change needed — closed by 5 weeks of normal CI activity" — this todo was
+      drafted 2026-07-26, 2 days before that upstream resolution, so this copy went stale unflipped). **Fresh
+      re-verification 2026-08-01 (slot 11, data_engineering), no code/terraform change needed:** (1)
+      `gcloud builds list --filter="substitutions.TRIGGER_NAME=deployment-service-jobs-image-build"` shows the trigger
+      continuing to fire + SUCCEED on every push (5 consecutive successes 2026-07-31→2026-08-01, most recent
+      `802ac483-c08a-4b29-b820-72014dec9f6b` @ 2026-08-01T01:31:17Z, commit `248b715e` — the LDR→main promote commit);
+      (2) `gcloud artifacts docker images list … deployment-service --filter="tags:latest"` shows the current
+      `deployment-service:latest` digest `sha256:b48cfdc…` created 2026-08-01T01:35:00, i.e. built from that exact
+      commit; `git show 248b715e:scripts/wave_launcher.py` confirms `_write_last_run_sentinel` present (def line 185,
+      call line 425); (3) `gcloud run jobs describe     uts-prod-tradfi-wave-launcher` shows the job's
+      `spec.template.spec.template.spec.containers[0].image` already resolves to `…/deployment-service:latest` directly
+      (the tag, not a separately-pinned digest) — the runtime-pin-vs-terraform-default split this todo warns about no
+      longer exists today, so a `tofu apply` is harmless. Matches the source doc's 2026-07-28 finding exactly,
+      re-confirmed live 3 days later.
 - [ ] [SCRIPT] P2. **features-service coverage/script-canon cleanup** — three bounded follow-ups from the 2026-06-10
-      coverage session: (1) fix the per-module `pytest --cov=features_service.<module>` scipy/numpy/pytest-cov
-      double-import crash on Python 3.13 (pin/patch the version triad or add a tracked conftest pre-import; the
-      whole-package `--cov=features_service` CI gate is unaffected — this only unblocks local per-module TDD); (2)
-      relocate the smoke/e2e harnesses (`scripts/*/smoke_matrix.py` ×8, `scripts/e2e/*`) from features-service to
-      `e2e-testing/scripts/<domain>/` per `/codex/06-coding-standards/script-homes.md`, rewiring them to the
-      primary-consumer QG (STEP 5.65) — note this is a physical relocation, distinct from the separate already-open
-      "repoint smoke_matrix.py SSOT citations" todo (`mdps_features_deadcode_consolidation_2026_07_20.md` #7 /
-      duplicated across the cefi/tradfi/defi/prediction closeout docs), do not touch that doc's citation-only scope;
-      **Coordinate with the sibling `silent_wrong_answer_audit_candidates_2026_07_20.md` todo above — it recovers a
-      stash fix touching `smoke_matrix.py` before this relocation; sequence this relocation AFTER that stash-recovery
-      lands (or re-verify no conflict if this lands first).** (3) run the `script-homes.md` "Per-repo cleanup sweep"
+      coverage session: (1) ~~fix the per-module `pytest --cov=features_service.<module>` scipy/numpy/pytest-cov
+      double-import crash on Python 3.13~~ **DONE 2026-07-31 — features-service@60992d3e** (see
+      `plans/active/issues/features_service_coverage_and_script_canon_2026_06_10.md` line ~84 for the full root-cause +
+      fix writeup: an early pytest plugin, `tests/_native_lib_early_preimport.py`, pre-imports
+      numpy/scipy/talib/`unified_trading_library` before `coverage.start()` runs, so its `source=` probe-import never
+      purges-then-reloads their C-extension/pydantic-schema state; the whole-package `--cov=features_service` CI gate
+      was already unaffected and remains so); (2) ~~relocate the smoke/e2e harnesses (`scripts/*/smoke_matrix.py` ×8,
+      `scripts/e2e/*`) from features-service to `e2e-testing/scripts/<domain>/` per
+      `/codex/06-coding-standards/script-homes.md`, rewiring them to the primary-consumer QG (STEP 5.65)~~ **DONE
+      2026-07-31 — features-service@7717fbee (relocation + every real consumer repointed: the 8
+      `features_service/<domain>/smoke.py` package re-exporters, the 8 `tests/<domain>/unit/test_smoke_matrix.py`
+      dynamic loaders, `quality-gates.sh`'s E2E-driver/backfill-tooling smoke invocations, `pipeline_e2e_check.py`'s
+      `resolve_lookback.py` subprocess path) + e2e-testing@4b5a743 (the 13 relocated files landed under
+      `scripts/{delta_one,commodity,cross_instrument,calendar,sports,multi_timeframe,volatility,onchain,     features}/`,
+      wired into features-service's peripheral-dir QG loop for all 9 domains; kept e2e-testing's own
+      fallback-import/DTZ-TID251/empty-string-fallback ratchet baselines at-or-below via targeted `# noqa:` markers —
+      these only trip once the files land in e2e-testing's own scan scope, separate from features-service's). Verified:
+      117/117 features-service smoke_matrix unit tests + manual dry-run smokes of run_pipeline_e2e/run_backfill/
+      resolve_lookback pass from the new cross-repo location; `quality-gates.sh` green in both repos. Also fixed a
+      pre-existing unrelated bug found in the same session (`coverage_harness.py`'s `MdpsUniverseProvider.iter_atoms`
+      still unpacked `mdps_mvp_universe()` as a 2-tuple after it was upgraded to 3-tuples) — landed independently by
+      another slot as e2e-testing@65f43f4, reconciled via rebase. **CI-only gap found + fixed 2026-07-31 (cicd agent,
+      escalation agt-ddbcde, features-service#910 LDR→main promotion red):** the "locally green in both repos" claim
+      above was true but incomplete — it never exercised CI's clone topology. `dep_repos` (the space-separated sibling
+      list `python-quality-gates-v2.yml` clones per-repo) is derived ONLY from the pyproject `path = "../<repo>"`
+      editable-deps closure; e2e-testing has no `[build-system]` (scripts-only) so it can never appear there, meaning CI
+      never cloned it even though every local slot worktree already has it as a sibling. Result: features-service's 8
+      `tests/<domain>/unit/test_smoke_matrix.py` files hard-failed in real CI (117 broken pytest outcomes — 8 FAILED +
+      109 setup ERRORs, all `FileNotFoundError` on the relocated cross-repo path) while passing clean locally. Fixed via
+      unified-trading-pm@aa8f111 (new `extra-dep-repos.txt` override + `get_extra_dep_repos()` in
+      `rollout-workflow-templates.sh`, for exactly this shape: a sibling consumed by raw file path rather than as a
+      `uv sync`-installed package) + features-service@ce369620 (regenerated `dep_repos` to
+      `"unified-trading-library unified-api-contracts e2e-testing"`). Verified GREEN in a live `workflow_dispatch`
+      re-run on the fixed `live-defi-rollout` HEAD (features-service run 30605670801, `quality-gates-v2`
+      conclusion=success, including the `QG slice (tests)` job that previously failed). PR#910 itself is a frozen-head
+      ref pinned to the old (broken) LDR SHA — the fleet promote bot supersedes it with a fresh promote PR off the fixed
+      HEAD on its next ~15min tick, no manual PR action needed.** (3) run the `script-homes.md` "Per-repo cleanup sweep"
       (classify → relocate/fold-into-CLI/delete-dead, GCS-orphan-verify before any migration-script delete) across every
       repo's `scripts/` EXCLUDING features-service's smoke/e2e harnesses already handled in (2). Source:
       `plans/active/issues/features_service_coverage_and_script_canon_2026_06_10.md`. Done when: per-module coverage
-      runs green on Python 3.13 locally; the 8 smoke_matrix.py + e2e/* files exist under `e2e-testing/scripts/<domain>/`
-      and no longer under features-service, wired to that repo's QG; every repo's `scripts/` directory has been
-      classified per the script-homes canon with dead scripts deleted and relocatable scripts moved, each carrying the
-      required lifecycle marker.
-- [ ] [CODE] P2. **features-service — fix `odds_features_exporter.py` velocity-accel fallback NaN/math semantics
+      runs green on Python 3.13 locally; the 8 smoke_matrix.py + e2e/\* files exist under
+      `e2e-testing/scripts/<domain>/` and no longer under features-service, wired to that repo's QG; every repo's
+      `scripts/` directory has been classified per the script-homes canon with dead scripts deleted and relocatable
+      scripts moved, each carrying the required lifecycle marker.
+
+      **PARTIAL PROGRESS 2026-07-31 (slot 10) — lifecycle-marker stamping sub-piece DONE, classify/delete/relocate
+                                          NOT done.** Fleet-wide `grep -rL '^# Delete-when:' */scripts/ --include='*.py' --include='*.sh'` found 32
+                                          remaining unstamped scripts across 12 repos (client-reporting-api, deployment-service, deployment-ui,
+                                          e2e-testing, features-service, fund-administration-service, greeks-service, instruments-service,
+                                          market-data-processing-service, market-tick-data-service, unified-api-contracts, unified-trading-pm) — every
+                                          other repo in the fleet was already fully stamped from the prior rollout. Stamped all 32 using the
+                                          already-decided classification embedded in each script (existing `Epic:`/`Lifecycle:` prose where present) or
+                                          the nearest sibling-file epic convention (mechanical, no new judgment calls), then shipped per-repo via the
+                                          normal QG→quickmerge flow: client-reporting-api@c47835f, deployment-service@1261ce7, deployment-ui@5a4ce5a,
+                                          e2e-testing@42be3c1, features-service@3966bfcb, fund-administration-service (pending final quickmerge, commit
+                                          c0402e0 already QG-green), greeks-service@aee891d, instruments-service@240d80a7,
+                                          market-data-processing-service@0d43a64, market-tick-data-service@fe1c4ca2, unified-api-contracts@a4b1345d
+                                          (recovered via reflog after a quickmerge branch-reset bug — see
+                                          `plans/archive/issues/quickmerge_agent_regate_resets_branch_loses_local_commit_2026_07_31.md`), unified-trading-pm
+                                          (this commit). **The classify/delete/relocate portion of this item's done-when is intentionally NOT attempted
+                                          here** — that work requires per-script KEEP/DELETE/DEPRECATE/PROMOTE-TO-CLI judgment calls (campaign-gating
+                                          awareness, GCS-orphan-verification before any delete) that are explicitly scoped as
+                                          GATED+REVIEWED/human-judgment in `plans/active/repo_scripts_governance_audit_2026_06_18.md` (`assigned_vm: NA`)
+                                          — an AO worker attempting a fleet-wide classify+delete sweep unsupervised would risk deleting
+                                          campaign-in-flight one-offs (that governance-audit doc's own Finding 1 flags this exact risk for
+                                          instruments-service/MTDS). This item stays open; the marker-stamping done-when clause is satisfied, the
+                                          delete/relocate clauses are not — do not re-flip this checkbox until the governance-audit plan's Phase-1
+                                          delete/deprecate/promote execution actually lands.
+
+- [x] ✅ [CODE] P2. **features-service — fix `odds_features_exporter.py` velocity-accel fallback NaN/math semantics
       (dead-code + a legit-`0.0`-drop bug).** `_compute_velocity_from_pivoted`'s (lines ~509-514) elif/else acceleration
       branches are unreachable dead code today: `np.nan` satisfies `isinstance(x, float)`, so the line-509 guard always
       fires and the elif/else are never taken. Separately, the same function's `v_late = a or b` retrieval drops a
@@ -117,8 +190,18 @@ drift_direction: advance-code
       test asserting (a) the elif/else branches are reachable and produce the expected acceleration value for a non-NaN
       early velocity, and (b) a legitimate `v_late=0.0` is preserved rather than replaced by the fallback;
       `quality-gates.sh` is green in features-service; and the source doc's line ~71-75 checkbox is flipped citing the
-      commit sha.
-- [ ] [CODE] P2. **features-service — make `_make_session`'s aiohttp resolver construction lazy/loop-safe (latent
+      commit sha. — **ALREADY DONE 2026-07-31 (slot 15) — pre-existing, shipped before this todo was even written.**
+      Read the current function: the elif/else fallback no longer exists at all — it was REMOVED (not patched) by
+      `features-service@bf6fc2f4` ("fix(sports): gate T-0 closing-line-derived odds columns out of pre-match horizons",
+      2026-07-16, verified ancestor of `origin/live-defi-rollout`), replaced with a single deterministic
+      `v_mid - v_early` computation gated on `isinstance(v_mid, float) and isinstance(v_early, float)` — this makes the
+      unreachable-elif bug moot (dead code deleted, not made reachable) and there is no `a or b` pattern anywhere in the
+      function anymore (`row.get(...)` used directly), so the `0.0`-drop bug is independently gone too. Test coverage
+      already exists and passes (`tests/sports/unit/test_odds_features_exporter.py`, 16/16 velocity/ acceleration tests
+      green, incl. `test_acceleration_never_uses_the_closing_leg` and `test_acceleration_nan_when_v_early_is_nan` which
+      directly cover this todo's two done-when criteria). No new code needed — both source docs' line numbers were stale
+      (509-514 pre-dates the 2026-07-16 rewrite; actual function is now at line 636).
+- [x] ✅ [CODE] P2. **features-service — make `_make_session`'s aiohttp resolver construction lazy/loop-safe (latent
       out-of-loop-construction crash).** `features_service/onchain/app/core/data_loader.py:224`'s `_make_session`
       constructs `aiohttp.resolver.ThreadedResolver()` eagerly, which calls `asyncio.get_running_loop()` at construction
       time — this crashes with a `RuntimeError` if `_make_session` (or anything that constructs the session) is ever
@@ -133,7 +216,10 @@ drift_direction: advance-code
       item 35: this is now agent-owned scoped work, not parked on a human). Done when: the fix lands with a new/extended
       test confirming the session-construction path no longer raises the construction-time `RuntimeError` when exercised
       outside a running loop while existing async-context callers remain green; `quality-gates.sh` is green in
-      features-service; and the source doc's line ~76-79 checkbox is flipped citing the commit sha.
+      features-service; and the source doc's line ~76-79 checkbox is flipped citing the commit sha. —
+      features-service@25932d23: `_make_session` made async so `ThreadedResolver()` construction defers until awaited
+      inside a running loop; regression test `test_calling_outside_running_loop_does_not_raise_at_call_time` + existing
+      async-caller test confirmed green; quickmerge-shipped to live-defi-rollout.
 - [ ] [CODE] P2. Close the 4 remaining fixable-bug residuals from `fleet_data_acquisition_health_2026_06_21.md`: **(a)
       sports** — recheck `mtds-backfill-odds-*` ODDS_API source-completeness (item #4: manifest flags
       `complete=False missing=['ODDS_API']` despite 8.5K rows across 22 bookmaker shards) and verify the sports-odds
@@ -322,6 +408,14 @@ drift_direction: advance-code
       action available: legs (a/b/d/e) resolved, leg (c)'s only open scope is the disputed 2023-07-22→2023-11-01 window
       this blocker gates (the uncontested 2023-11-01+ floor is already fully captured). Full detail in
       `issues/aster_perp_funding_backfill_stale_launcher_and_genesis_conflict_2026_07_28.md`. Released via
+      `/skip-current-task {"reason_code": "BLOCKED"}`. — **Status 2026-07-31T (slot 13, data_engineering)**: re-verified
+      `BLK-a94f446d` still unanswered (fresh pull, corpus grep for the blocker id, `git log --since     2026-07-29` on
+      both this plan and the issue doc — only unrelated commits landed; no operator ruling recorded). The 2026-07-31
+      corpus-wide ownership-conflict sweep added a premise-correction banner to the issue doc (about Finding 1's
+      HL/ASTER-funding-equivalence claim being reversed) but explicitly left this todo's genesis-date question
+      `[OPERATOR]`-gated and unaffected. `POST /api/backlog/.../blockers` confirms no formal blocker record tied to this
+      task_id (the gate lives on the issue doc's own todo, not the backlog dispatcher), and a `/progress` call returned
+      no operator message. No unblocked action available — same as the 2026-07-29 status. Released via
       `/skip-current-task {"reason_code": "BLOCKED"}`.
 - [ ] [DATA] P2. **Build the GCS-persisted OBSERVED funding-cadence audit script** — the inferred half of Finding 3
       (`perp_funding_data_semantics_and_cadence_2026_06_16.md`) that the canonical `FUNDING_CADENCE_HISTORY`
@@ -348,7 +442,10 @@ drift_direction: advance-code
       question) is NOT resolved here — re-scoped as its own tracked todo in
       `/plans/active/issues/silent_wrong_answer_audit_untracked_followups_2026_07_28.md` (strategy-service repo, out of
       this dispatch's features-service/cross-cutting scope) rather than answered inline in this doc, so it isn't lost.
-      Source: `/plans/archive/issues/silent_wrong_answer_audit_candidates_2026_07_20.md` (archived 2026-07-28).
+      **Moved again 2026-07-30**: that gas-fee todo now lives in its own dispatchable doc,
+      `/plans/archive/issues/strategy_service_gas_fee_reader_hardcodes_1_gwei_2026_07_30.md` — follow that pointer, not
+      the untracked-followups doc, which now holds only the unrelated e2e-testing schema-contract decision. Source:
+      `/plans/archive/issues/silent_wrong_answer_audit_candidates_2026_07_20.md` (archived 2026-07-28).
 - [ ] [SCRIPT] P3. Close the stale `strategy_store_split_brain_2026_07_13.md` issue doc — its two remaining reader-code
       legs are already shipped, the doc frontmatter just never flipped. Verify both live: (1)
       `deployment-api/deployment_api/deployment_api_config.py` `effective_strategy_store_{cefi,tradfi,defi}_bucket` all
@@ -514,3 +611,7 @@ drift_direction: advance-code
       dispatch path, not both. Source: `plans/active/issues/macro_micro_econ_data_capture_audit_2026_06_05.md`. Done
       when: `CALENDAR_FEATURE_GROUPS` includes both groups, a batch `--operation compute` run produces non-zero
       `yield_curve`/`economic_results` shards for at least one recent day, and `quality-gates.sh` is green.
+
+## Progress Log
+
+- **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).

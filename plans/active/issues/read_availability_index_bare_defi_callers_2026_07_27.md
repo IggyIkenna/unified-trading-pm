@@ -273,9 +273,30 @@ not a mechanical column-list copy.
       incident class as the other findings in this audit). A regression test already exists and pins the exact
       projection (`tests/unit/test_manifest_freshness.py::test_bulk_load_uses_slim_column_path` — asserts `columns=` is
       present and contains `capture_status`/`error_reason`/the row-key columns). Not bare; nothing to fix.
-- [ ] [SCRIPT] P2. **unified-trading-library** — `manifest_writer/_queries.py` (4 sites) + `_maintenance.py` (4 sites) +
-      `_writer_io.py:156`: internal ManifestWriter query/maintenance helpers; lower urgency (less frequently invoked
-      than the hot-path findings above) but same fix pattern.
+- [x] ✅ [SCRIPT] P2. **DONE 2026-07-30 (slot-6)** — `unified-trading-library@6b0d0847`. **unified-trading-library** —
+      of the 9 bare sites across `_queries.py`/`_maintenance.py`/`_writer_io.py:156`, projected the 4 that are genuinely
+      safe (confirmed by direct read of each function's own downstream column usage, per this doc's caution):
+      `_queries.py` `check_data_available` → `columns=["date","venue"]`; `read_capture_status_counts` →
+      `columns=["data_type","date","capture_status","error_reason"]` (`asset_group` kwarg is dead — never used in the
+      function body, confirmed by direct read); `_maintenance.py` `purge_venue_before_date`'s first (dry-run/count-only)
+      read → `columns=["venue","date"]` (the real `dry_run=False` write-back re-fetches a fresh, unprojected index via
+      `merge_canonical_with_outstanding_shards()` and never reuses this one); `emit_migration_manifest_updates`'s
+      snapshot read → `columns=["date","venue","service_name","data_type"]` (only feeds `_remove_legacy_entries()`'s
+      length-based `legacy_removed` estimate; the real write-back similarly re-fetches fresh). Left the remaining 5
+      sites bare, WITH an in-code comment explaining why at each: `reconcile_manifest()`, `rebuild_manifest()`,
+      `rebuild_manifest_from_canonical_paths()`, and `merge_manifest_from_canonical_paths()` all return or write the
+      read DataFrame VERBATIM (full schema) on at least one code path (a dry-run return, an early blob-listing-failure
+      return, or the actual GCS write-back) — projecting would silently truncate the manifest schema on that path, a
+      correctness regression, not a memory win; `_writer_io.py:156` `lookup()` already needs ~25 of the ~30 V8 schema
+      columns to build `ManifestRow` plus any of `_ROW_KEY_COLUMNS` the caller's `row_key` specifies, so a projection
+      would buy negligible memory savings while adding real risk of dropping a column a future schema addition needs.
+      Also fixed a latent test-isolation gap this exposed: `test_manifest_writer_coverage_counts.py`'s
+      `_reset_module_state` fixture cleared `_INDEX_CACHE` but not `_INDEX_SLIM_CACHE` — invisible while
+      `read_capture_status_counts()` used the full-schema path, but once it started resolving through the slim-cache
+      path a stale cached count leaked across tests sharing the `"test-bucket"` name. Added
+      `tests/unit/test_manifest_writer_bare_reads_column_projection.py` pinning the exact `columns=` call signature per
+      fixed site (4 tests). Full `quality-gates.sh` green (149s, 2 runs — pre-commit + post-commit sentinel re-verify),
+      shipped via quickmerge --agent.
 - [x] ✅ [SCRIPT] P1. **DONE 2026-07-27 (slot-12)** — `features-service@e23d4da7`. **features-service** —
       `common/__init__.py:99`, `common/manifest_window_guard.py:115`, `common/manifest_leg_guard.py:98`: projected each
       to its actual column usage, confirmed by direct read (not a mechanical shared list):
@@ -289,9 +310,31 @@ not a mechanical column-list copy.
       existing production behavior, not a regression. Added a regression test per call site
       (`test_read_availability_index_is_column_projected`) pinning the exact `columns=` call signature. Full
       `quality-gates.sh` green (2 runs — pre-commit + post-commit sentinel re-verify), shipped via quickmerge --agent.
-- [ ] [SCRIPT] P2. **features-service** — `volatility/engine/orchestrator.py:276`,
+- [x] ✅ [SCRIPT] P2. **DONE 2026-07-30 (slot-3)** — `features-service@edf80c88`. **features-service** —
+      `volatility/engine/orchestrator.py:276` (now `:286`, line shifted),
       `volatility/core/orchestration_service.py:168`, `volatility/core/data_loader.py:364`,
-      `delta_one/app/core/dependency_checker.py:619`: project each to its actual column usage.
+      `delta_one/app/core/dependency_checker.py:619` (now `:756`, line shifted): projected each to its actual column
+      usage, confirmed by direct read (not a mechanical shared list) — `volatility/engine/orchestrator.py`
+      `_list_chain_files` → `columns=["date","venue","data_type","instrument_type","capture_status","instrument_id"]` +
+      a `date` filter (`asset_group` deliberately excluded: confirmed by direct read of UTL's `_read_index.py`
+      `_V8_COLUMNS` that `asset_group` is absent from the schema in ANY version and never synthesized by the reader, so
+      the function's own `"asset_group" in row.index` check is unreachable regardless of projection — unlike the
+      `strategy-service` sibling fix's precedent where `asset_group` was a real functional filter, here it is dead
+      weight); `orchestration_service.py` `_list_chain_files` (a near-identical twin with no `asset_group` logic) → same
+      columns + filter; `data_loader.py` `_resolve_spot_perp` →
+      `columns=["venue","instrument_type","instrument_id","data_type",     "capture_status","date"]` + a `date` filter
+      (matches the function's own existing post-read column-select exactly; simplified that now-redundant reselection to
+      `index.astype(str)` as part of the same change, which also brought the method back under the 50-line QG
+      method-size cap); `dependency_checker.py` `_build_captured_index` →
+      `columns=["date","venue","instrument_id","data_type","capture_status"]`, deliberately **no** `filters=` (unlike
+      this doc's other date-scoped fixes) since this call scans ALL dates to build a reusable lookback index, not one
+      specific date. Added a regression test per call site (`test_read_availability_index_is_column_projected`,
+      mirroring the established naming convention) pinning the exact `columns=`/`filters=` call signature; the
+      `orchestration_service.py` call site had zero prior test coverage at all, so a new
+      `tests/volatility/unit/test_core_orchestration_service.py` was added rather than folding into the
+      similarly-named-but-unrelated `test_orchestration_service.py` (which tests a different class,
+      `feature_group_service.VolatilityOrchestrationService` — see the follow-up todo below). Full `quality-gates.sh`
+      green (17979 passed, 209 skipped, 2 runs — pre-commit + post-commit sentinel re-verify).
 - [x] [SCRIPT] P1. ✅ **DONE 2026-07-27 (slot-3)** — `strategy-service@b26bb306`. **strategy-service** —
       `manifest_allocation_guard.py:170` `check_allocation_manifest`: projected to
       `columns=["date", "asset_group",     "capture_status", "schema_version"]` + `filters=[("date", "==", date_str)]`.
@@ -313,21 +356,72 @@ not a mechanical column-list copy.
       (the stale lock pinned 0.135.1, which broke `conftest.py`'s UTL import chain and blocked tests from even
       collecting — pre-existing drift, unrelated to this fix, fixed as a prerequisite to running QG at all). Full
       `quality-gates.sh` green (126s, 2nd run against committed HEAD for the sentinel), shipped via quickmerge --agent.
-- [ ] [SCRIPT] P2. **instruments-service** — `engine/orchestrator/process_completeness.py:468`
-      `_detect_thin_day_venues`: project to its actual column usage.
-- [ ] [SCRIPT] P2. **batch-live-reconciliation-service** — `stages/stage0_manifest_reason_check.py:177`: project to its
-      actual column usage.
-- [ ] [SCRIPT] P2. **deployment-service** — `cli/utils/manifest_reader.py:245,585,674`: project each to its actual
-      column usage (operator-invoked CLI, lower urgency than the live/hot-path findings above).
+- [x] ✅ [SCRIPT] P2. **DONE 2026-07-30 (slot-2)** — no code change needed, already fixed. **instruments-service** —
+      `engine/orchestrator/process_completeness.py:468` (now `:474`) `_detect_thin_day_venues`: verified by direct read
+      — the call is ALREADY projected (`columns=sorted(_required)` where
+      `_required = {"asset_group", "capture_status", "venue", "date", "instrument_count"}`), shipped in a prior commit
+      (`instruments-service@5134a5f0`, "fix(sports): bound memory in daily-enum sports historical-index reads",
+      2026-07-27) as a side effect of the `sports_is_daily_enum_backfill_oom_at_32gi_ceiling_2026_07_27.md` fix — same
+      incident class as `mtds_backfill_vm_startup_oom_rc137_2026_07_14`. Confirmed the projected columns match the
+      function's own downstream usage exactly (asset_group/capture_status/date drive the CeFi-history mask; venue groups
+      the history; date/instrument_count feed the per-venue median groupby — no other column is touched anywhere in the
+      function). Not bare; nothing to fix.
+- [x] ✅ [SCRIPT] P2. **DONE 2026-07-30 (slot-2)** — `batch-live-reconciliation-service@11cec2c`.
+      **batch-live-reconciliation-service** — `stages/stage0_manifest_reason_check.py:177`
+      `check_manifest_reason_agreement`: projected to `columns=["date","pipeline_mode","capture_status","error_reason"]`
+      — confirmed by direct read of `_get_sides()` (the only reader of the returned DataFrame): `date` for the row
+      filter, `pipeline_mode` for the batch/live split (incl. the `"pipeline_mode" not in manifest_df.columns` pre-v8
+      fallback check), `capture_status` + `error_reason` for the per-side status/reason extraction — no other column is
+      touched anywhere in the module. `asset_group` deliberately excluded (module docstring already states "the bucket
+      is already scoped to one asset_group", and it is not a real schema column per UTL's `_V8_COLUMNS`). No `filters=`
+      added — the real production caller (`stage0_data_pipeline_recon.py`) always passes a single-date list today, but
+      the function's own contract accepts an arbitrary `dates: list[str]` (exercised by the existing
+      `test_multiple_dates_mixed_outcomes` test), so a single-date equality filter would silently break the multi-date
+      case; scope stayed to the todo's literal ask (column projection only). Added
+      `test_read_availability_index_is_column_projected` pinning the exact `columns=` call signature. Full
+      `quality-gates.sh` green (36s, 2 runs — pre-commit + post-commit sentinel re-verify), shipped via quickmerge
+      --agent.
+- [x] ✅ [SCRIPT] P2. **DONE 2026-07-30 (slot-12)** — `deployment-service@b1480a1`. **deployment-service** —
+      `cli/utils/manifest_reader.py`: projected all 5 bare `read_availability_index()` call sites in the file (not just
+      the 3 originally cited at `:245,585,674` — `is_available`/`get_manifest_status` are the same file, same bug class,
+      fixed in the same commit per the findings-triage "in your file" rule): `is_available` → `columns=["date"]` (return
+      value is never inspected, cheapest single column); `get_completion` → `columns=["date","service_name","venue"]`;
+      `get_manifest_status` → `columns=["date","venue","service_name","league_id"]` (verified by direct read that
+      `_build_league_breakdown` also needs `league_id` — easy to miss); `get_venue_detail` → `columns=["venue","date"]`;
+      `get_coverage_summary` → `columns=["date","venue","instrument_count"]`. Each column set confirmed by direct read
+      of the function body's downstream usage (per the doc's caution above). Added 5 regression tests
+      (`tests/unit/test_manifest_reader_column_projection.py`) pinning the exact `columns=` call signature per site so a
+      future edit can't silently drop back to a bare call. `quality-gates.sh` green (199s), shipped via quickmerge
+      --agent.
 - [ ] [SCRIPT] P3. **features-service** smoke scripts (cross_instrument/multi_timeframe/volatility/onchain/delta_one
       `smoke_matrix.py`), **e2e-testing** (`build_smoke/live_manifest_reader.py:98`,
       `strategy/backtest_from_wizard_config.py:192`), **unified-trading-pm**
       (`plans/audit/results/     available_at_fill_rate_audit_2026_07_13.py:51`,
       `scripts/qg/honest_coverage_ratchet.py:66`): lower-urgency CI/audit-tooling call sites; project if convenient when
       touching these files for other reasons, not worth a dedicated dispatch on their own.
-- [ ] [SCRIPT] P2. **unified-trading-pm** — author a QG check (mirroring the existing writer-side
-      `check_manifest_writer_missing_write_before_return.py` pattern) that flags a NEW bare
-      `read_availability_index(bucket)` call site with no `columns=`/`filters=` kwarg in production (non-test,
-      non-scripts) code, baseline-ratcheted against the current corpus so existing bare calls don't block CI but no NEW
-      ones can land silently. This closes the "no enforcing gate exists" gap for good, not just this one-time audit's
-      findings.
+- [x] ✅ [SCRIPT] P2. **DONE 2026-07-31 (slot-5, checkbox flip verified slot-9)** — `unified-trading-pm@dbce7a24c`.
+      **unified-trading-pm** — added `scripts/quality_gates/check_bare_read_availability_index.py` (AST-walk,
+      production-code-only, mirrors `check_manifest_writer_missing_write_before_return.py`'s shrinking-ratchet pattern
+      exactly: `Finding`/`BaselineEntry` dataclasses, `baseline_key = (repo, file, line, function)`,
+      `# QG-allow: bare-read-availability-index` inline escape) + a bootstrapped 24-entry
+      `read_availability_index_bare_call_baseline.yaml` (classified `wrapper_alias_already_projected_internally` /
+      `intentionally_bare_verbatim_schema_required` / `pending_triage`) + `test_check_bare_read_availability_index.py`
+      regression tests + `base-service.sh` STEP 5.106 wiring. Re-verified 2026-07-31 (slot-9): re-ran a full
+      workspace-wide sweep (`--workspace-root <ws>`, no `--scope`) against current HEAD post-FF-pull — output is exactly
+      the 24 baselined WARNs enumerated in the yaml, `0 new occurrences`, confirming the baseline still matches reality
+      after the intervening commits since bootstrap. This closes the "no enforcing gate exists" gap — a NEW bare call
+      site now fails CI instead of landing silently.
+- [ ] [SCRIPT] P3. **features-service** — investigate whether
+      `features_service/volatility/core/orchestration_service.py`'s `VolatilityFeaturesOrchestrator` class is dead code:
+      it defines a near-identical (but simpler, no `asset_group`/ `pipeline_mode` derivation) twin of
+      `features_service/volatility/engine/orchestrator.py`'s class of the SAME name. Grepped the whole repo (excluding
+      tests/`__pycache__`): nothing outside its own file + `core/__init__.py`'s re-export imports it — every sibling
+      caller (`cli/handlers/batch_handler.py`, `engine/feature_group_service.py`, etc.) imports
+      `data_loader`/`feature_writer`/`dependency_checker` from `core/`, never `orchestration_service`. Found while
+      fixing todo above (2026-07-30, slot-3) — this file's `_list_chain_files` had ZERO existing test coverage,
+      consistent with genuinely-unreferenced code. Not deleted here (out of scope for a column-projection fix, and
+      grep-based "unused" is not proof — `FeatureProcessingResult` in this same file WAS deliberately collapsed to a
+      cross-import from `engine/orchestrator.py` back in 2026-05-11 per `features_service_qg_cleanup` Phase 1.2e, so the
+      class itself may be a leftover the same cleanup missed). **Done when**: confirmed genuinely dead (no dynamic
+      import / plugin-registry / CLI entry-point reference beyond static grep) and deleted, OR confirmed it has a real
+      caller and this todo is closed as not-applicable.

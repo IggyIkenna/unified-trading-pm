@@ -61,7 +61,7 @@ superseded_by:
 depends_on: [wsfeedconnector_phase35_gap_2026_07_06]
 source:
   [
-    plans/active/issues/wsfeedconnector_phase35_gap_2026_07_06.md#L155-L164,
+    plans/archive/issues/wsfeedconnector_phase35_gap_2026_07_06.md#L155-L164,
     unified-api-contracts/unified_api_contracts/registry/venue_constants.py#L365-L414,
     unified-api-contracts/unified_api_contracts/registry/market_data_categories.py#L232-L247,
     instruments-service/scripts/check_enumeration_completeness.py#L149-L199,
@@ -93,7 +93,7 @@ sequential: true
 
 ## 1. Context and prerequisite chain
 
-- **Parent issue**: `plans/active/issues/wsfeedconnector_phase35_gap_2026_07_06.md` gap-015 (the actual UAC removal) is
+- **Parent issue**: `plans/archive/issues/wsfeedconnector_phase35_gap_2026_07_06.md` gap-015 (the actual UAC removal) is
   `BLOCKED-BY-D2a` (BLK-9d69f223 resolved by main 2026-07-06). Main's directive was: "Re-scope gap-015 to EXCLUDE the
   bare COINBASE removal entirely. Only proceed with parts of gap-015 that do not touch the bare COINBASE key. File a
   follow-on task for the bare COINBASE removal after the 25-caller migration plan is drafted and lands."

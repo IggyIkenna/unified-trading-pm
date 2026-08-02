@@ -1,0 +1,141 @@
+---
+doc_type: issue
+title:
+  agent-orchestrator /done cross-repo checkbox-flip verification (`server/verify.py` Mode 2) fails to recognize a
+  genuine `[ ]` → `[x]` transition when the surrounding todo paragraph is substantially reworded in the same commit
+summary: >-
+  `POST /api/slots/<N>/done` 400'd 4 consecutive times with `reason: "cross_repo_pm_file_touched_no_checkbox_flip"` for
+  task `deployment_api_qg_size_gate_debt-007`, despite `unified-trading-pm@81370aa29` genuinely containing a `- [ ] ...`
+  → `- [x] ✅ ...` transition for the exact todo the task's `plan_ref` names, committed <1 minute before the first
+  `/done` call (well inside any timing window), on a clean pushed tree. Tried both the code-repo sha
+  (`deployment-api@2efb2a0`) and the PM-repo flip sha (`81370aa29`) as the `sha` param — same rejection either way, and
+  the rejection specifically named whichever sha was passed as "not touching the checkbox", proving the check is running
+  a content-diff heuristic against that commit rather than a bare `git log --since` presence check. Root-cause
+  hypothesis (not confirmed — no server-side access from a worker slot): the same `_mode2_disposition`/`check_plan_flip`
+  family already tracked in `ao_done_gate_no_carveout_for_red_gate_evidence_only_closure_2026_07_28.md` likely expects a
+  narrow, near-single-line diff shape (an isolated `- [ ]` line paired with an adjacent `+ [x]` line) to recognize a
+  flip. My commit's diff replaced an 18-line paragraph with 21 lines of reworded text (splitting one combined todo into
+  two — required because the todo covered 2 files and only one was actually done, following this SAME doc's own "one
+  todo per file... split at dispatch time" convention) — the checkbox transition is genuinely present in the diff, just
+  not as an isolated single-line change, and the heuristic apparently doesn't recognize it. This is a DIFFERENT failure
+  mode than the previously-fixed git-mv-bundled-with-flip incident (RULES.md's documented recovery: commit the flip
+  FIRST as a plain edit, THEN `git mv` separately) — no `git mv` was involved here at all, and I already followed the
+  "flip first, restructure separately" discipline (two separate commits: `f901b683f` did the wording/framing changes,
+  `81370aa29` did the actual split+flip) — the SECOND commit alone still failed the check.
+status: resolved # (was: open) 2026-07-31 -- fixed + shipped agent-orchestrator@caa1f70
+nature: issue
+asset_group: [ao]
+stage: [meta]
+repos: [agent-orchestrator]
+scope: [engineer, admin]
+tags: [agent-orchestrator, done-gate, plan-flip-verification, bug, verify-py]
+related:
+  [
+    /plans/active/issues/ao_done_gate_no_carveout_for_red_gate_evidence_only_closure_2026_07_28.md,
+    /plans/archive/issues/deployment_api_qg_size_gate_debt_2026_07_30.md,
+  ]
+created: 2026-07-31
+priority: P2
+parent_epic: orchestrator_master
+source:
+  "worker, slot 2, hit live while closing out deployment_api_qg_size_gate_debt-007 (breakdowns_core.py decomposition)"
+assigned_vm: NA
+execution_scope: local-only
+estimate_class: research
+assigned_role: backend_engineer
+resolved_by: agent-orchestrator@caa1f70
+locked_by:
+depends_on: []
+drift_direction: advance-code
+---
+
+# agent-orchestrator's plan-flip checker rejects a genuine `[ ]`→`[x]` transition inside a reworded paragraph
+
+## What I found
+
+Working `deployment_api_qg_size_gate_debt-007` (decompose `breakdowns_core.py`'s 6 oversized methods — a todo shared
+with `breakdowns_domain.py`, 8 more methods, not done this dispatch). Shipped the code (`deployment-api@2efb2a0`), then
+flipped the plan in two PM commits:
+
+1. `f901b683f` — reworded the existing (still-`[ ]`) todo to a "PARTIAL" framing describing what was done vs. what
+   remained, matching the `manifest.py` multi-session precedent already in this same doc.
+2. `81370aa29` — realized the `/done` `done_definition` ("Checkbox flipped in plan + code shipped") wants an actual
+   transition, and this doc's own na-eligibility-audit note says "one todo per file recommended... split at dispatch
+   time" — so I REPLACED the single combined todo with two: the `breakdowns_core.py` one flipped `- [x]` with full
+   evidence, `breakdowns_domain.py`'s split off as a fresh `- [ ]`.
+
+`git log --since="10 minutes ago" -- plans/active/issues/deployment_api_qg_size_gate_debt_2026_07_30.md` in the exact
+worktree the server checks (`.tabs/2/unified-trading-pm/`) shows both commits, seconds old, on a pushed
+(`origin/live-defi-rollout`-matching) tree. `grep -n "2efb2a0"` in the doc confirms the evidence sha is cited in the
+flipped line.
+
+`POST /api/slots/2/done` rejected 4 times, same `reason: "cross_repo_pm_file_touched_no_checkbox_flip"` every time:
+
+```
+{"task_id": "deployment_api_qg_size_gate_debt-007", "sha": "2efb2a0", ...}
+  -> "commit '2efb2a0' does not touch the plan checkbox..."
+{"task_id": "deployment_api_qg_size_gate_debt-007", "sha": "2efb2a0", ...} (retry, unchanged)
+  -> same
+{"task_id": "deployment_api_qg_size_gate_debt-007", "sha": "81370aa29", ...} (PM sha instead)
+  -> "commit '81370aa29' does not touch the plan checkbox..."
+```
+
+The error message ECHOES BACK whichever `sha` I passed as the one that "does not touch the plan checkbox" — proving the
+check resolves a specific commit and diffs IT (not a bare `git log --since` presence scan), and that diff-based check
+fails to recognize the transition in `81370aa29`'s diff even though the transition is genuinely there (confirmed by
+direct `git diff` inspection — old line `- [ ] ... **PARTIAL — ...` removed, new line `- [x] ✅ ... **DONE ...` added,
+for the exact same logical todo).
+
+## Why it matters
+
+This is the SAME `server/verify.py` Mode-2 checker family as
+`ao_done_gate_no_carveout_for_red_gate_evidence_only_closure_2026_07_28.md`, but a distinct failure mode: that doc is
+about legitimately-not-flipped todos having no accepted disposition; this is about a GENUINELY flipped todo not being
+recognized because the surrounding paragraph changed substantially in the same commit (a todo-split, not just a bare
+`[ ] -> [x]` toggle). Any worker following this doc's own "split at dispatch time" convention for a multi-file todo — or
+any worker doing a genuine reword-while-flipping — hits the same wall. No `git mv` was involved (ruling out the
+already-documented, already-fixed git-mv-bundled-with-flip incident), so this is a new variant, not a regression of that
+fix.
+
+## Recommended next step
+
+Whoever owns `server/verify.py`'s `check_plan_flip`/`_mode2_disposition` (same owner as the linked P2 doc) should: widen
+the flip-recognition diff heuristic to tolerate a `[ ]`→`[x]` transition that isn't an isolated single-line change
+(e.g., match on "does the pre-image contain this task's identifying text with `[ ]`, and does the post-image contain the
+SAME task's identifying anchor with `[x]`" rather than a strict adjacent-line-pair diff pattern) — or, if the true
+mechanism differs from this hypothesis, root-cause via actual `server/verify.py` access (unavailable from a worker slot)
+and correct the doc above once known.
+
+## Todos
+
+- [x] ✅ [CODE] P2. **DONE 2026-07-31 (slot-2, infra craft).** Root-caused empirically against the exact reproduction
+      (`unified-trading-pm@81370aa29`/`f901b683f`, task `deployment_api_qg_size_gate_debt-007`): confirmed via
+      `git     show --unified=0` that NEITHER commit's diff alone satisfies `_diff_flips_checkbox` — commit `f901b683f`
+      removes the original brief but adds another still-`[ ]` line (PARTIAL framing); commit `81370aa29` removes the
+      already-reworded (not original) line and adds the real `[x]` line. The exact-brief fallback
+      `_brief_is_currently_checked` also misses it once the closure line is annotated (`✅` + evidence trailer). Fixed
+      by extending the SAME tag+priority-correlated fallback `_archival_rename_disposition` already uses for the rename
+      case (`_brief_is_checked_by_tag_in_text`) to apply WITHOUT requiring a rename — wired into
+      `_mode1_fallback_disposition`, `_mode2_no_recent_commit_disposition`, and the `pm_shas`-non-empty branch of
+      `check_plan_flip` (new `reason="checkbox_checked_tag_correlated"`; fails CLOSED on ambiguous duplicate
+      tag+priority, same as the existing archival fallback). 2 new regression tests added
+      (`test_done_accepts_cross_repo_flip_when_paragraph_reworded_across_two_commits` — confirmed FAILING before the
+      fix, reproducing the exact incident;
+      `test_done_rejects_cross_repo_flip_when_tag_correlation_ambiguous_after_reword` — fail-closed sibling). Verified:
+      both new tests pass, full 33-test `test_done_gate_plan_flip_hard_reject.py` green (no regression across every
+      other disposition), `test_backlog_reconcile_brief.py` + `test_regen_backlog_from_plan.py` green (191 tests),
+      ruff/basedpyright clean, full `quality-gates.sh` green (2157 tests, 0 regressions, 129s). Repo:
+      agent-orchestrator@caa1f70.
+
+## Progress Log
+
+- 2026-07-31 (slot-2, worker): Filed after 4 rejected `/done` attempts on genuinely-complete, genuinely-flipped work.
+  Did not force a workaround (no blind re-flip, no bypass) — the plan doc's content is correct and the code is shipped;
+  only the `/done` signal itself is blocked. Ending session without a clean `/done` per the established precedent for
+  orchestrator-side `/done` anomalies (see `data_pipeline_failure_one_shot_done_no_agentrow_2026_07_29.md` for the
+  sibling precedent on a different `/done` failure class).
+- 2026-07-31 (slot-2, infra craft, same session picked this up interactively after closing out the
+  `deployment_api_qg_size_gate_debt_2026_07_30.md` plan that surfaced it): root-caused + fixed, see the flipped todo
+  above for full detail. `agent-orchestrator@caa1f70`. Resolves the issue — the same reword-then-split pattern this
+  doc's own convention recommends (split a multi-file todo at dispatch time) will now be recognized by `/done` without
+  requiring a workaround.

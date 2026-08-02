@@ -47,10 +47,32 @@ cd "$PROJECT_ROOT"
 QUICK_MODE=false; FIX_MODE=true; SKIP_VERSION_ALIGNMENT=false
 for arg in "$@"; do
     case $arg in
+        --help|-h)
+            # quickmerge_help_flag_misparsed_as_commit_message_2026_07_30: mirrors
+            # base-service.sh / base-library.sh's guard.
+            cat <<'QG_USAGE'
+Usage: quality-gates.sh [FLAGS]   (docs-only-repo gate body: base-codex.sh)
+
+  --quick                      Skip version-alignment check.
+  --no-fix                     Don't auto-reformat (markdownlint/prettier stay check-only).
+  --fix                        Auto-reformat with prettier (DEFAULT for this docs-only body —
+                                unlike base-service.sh/base-library.sh, FIX_MODE starts true).
+  --skip-version-alignment      Skip the version-alignment check.
+  --help, -h                    Show this message and exit 0 (no gate phases run).
+
+Unknown flags are a hard error (exit 1) — see quickmerge_help_flag_misparsed_as_commit_message_2026_07_30.
+QG_USAGE
+            exit 0
+            ;;
         --quick) QUICK_MODE=true ;;
         --no-fix) FIX_MODE=false ;;
         --fix) FIX_MODE=true ;;
         --skip-version-alignment) SKIP_VERSION_ALIGNMENT=true ;;
+        *)
+            echo "❌ quality-gates.sh: unknown flag: $arg" >&2
+            echo "   Run 'bash scripts/quality-gates.sh --help' for the full flag list." >&2
+            exit 1
+            ;;
     esac
 done
 
@@ -90,7 +112,9 @@ fi
 # ── [2] PRETTIER FORMATTING CHECK ────────────────────────────────────────────
 log_section "[2/4] PRETTIER FORMATTING"
 if command -v npx &>/dev/null || command -v prettier &>/dev/null; then
-    PRETTIER_CMD="npx --yes prettier@3.6.2"
+    # prettier@3.9.5 (not 3.6.2) — see base-service.sh's identical comment:
+    # prettier_emphasis_mangling_corpus_corruption_2026_07_14.
+    PRETTIER_CMD="npx --yes prettier@3.9.5"
     command -v npx &>/dev/null || PRETTIER_CMD="prettier"
     if [ "$FIX_MODE" = true ]; then
         run_timeout 60 $PRETTIER_CMD --write "**/*.md" "**/*.yaml" "**/*.yml" "**/*.json" \

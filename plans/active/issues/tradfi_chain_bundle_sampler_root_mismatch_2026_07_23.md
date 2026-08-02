@@ -65,6 +65,7 @@ assigned_vm: NA
 resolved_by:
   "mtds@98a81c26 fixes the garbage-underlying (TICKS) half only. The canonical-root -> raw-symbol reverse-translation
   half and the EXCHANGE_CODE_TO_NAME SSOT-contradiction finding remain open — see § open question."
+context_scope: [/plans/epics/infrastructure_master.md, /plans/active/tradfi_phase_d_terminal_gate_2026_07_24.md]
 ---
 
 # TradFi chain-bundle sampler: canonical-root mismatch, garbage-underlying data, and a disagreeing SSOT
@@ -275,3 +276,22 @@ once confirmed with Databento") while `tradfi_instrument_universe.py` already ca
 - `EXCHANGE_CODE_TO_NAME` disagreement — full exhaustive diff in § "Exhaustive `EXCHANGE_CODE_TO_NAME` diff" above:
   `unified-api-contracts/unified_api_contracts/registry/tradfi_instrument_universe.py:552` vs
   `unified-api-contracts/unified_api_contracts/registry/tradfi_symbology.py:166`.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30** (tradfi tranche): **KEEP-NA, valid — established ruling, not re-litigated.** The
+  sole open todo is self-tagged `P1-OPERATOR-DECISION` and states in its own text: "Not AO-dispatchable — blocked on the
+  same operator SSOT decision as §4, not a worker-determinable fact." Citation confirmed real by reading §4: two
+  `unified-api-contracts` files both define `EXCHANGE_CODE_TO_NAME` and disagree on 17 values (exhaustively diffed
+  2026-07-26 — 96 vs 61 keys, union 107), and the map is non-injective (`6A`+`M6A` both map to `AUD`), so the reverse
+  translation cannot be derived mechanically. Which registry wins is a genuine operator call.
+- **context-scout 2026-08-01**: populated/refreshed context_scope (2 entries).
+- **na-eligibility-audit 2026-08-01** (tradfi tranche): **KEEP-NA, valid — re-verified, unchanged.** Sole open todo
+  re-read end-to-end; count matches tranche-inventory tool (1). No content change since the 2026-07-30 verdict — only a
+  context-scout `context_scope` backfill touched the file since. Still self-tagged `P1-OPERATOR-DECISION`, not
+  worker-determinable; nothing to reclassify.
+- **na-eligibility-audit 2026-08-02** (tradfi tranche, dispatch agt-6397c9): **KEEP-NA, valid — re-verified, unchanged
+  (3rd consecutive pass).** Sole open todo re-read end-to-end via an independent sub-agent classification; count
+  reconciled (1/1). Still self-tagged `P1-OPERATOR-DECISION`, blocked on the same non-injective `EXCHANGE_CODE_TO_NAME`
+  SSOT contradiction (two disagreeing `unified-api-contracts` files, 17 mismatched values) — a genuine operator call,
+  not worker-determinable. No content drift since 2026-08-01. Nothing to reclassify.

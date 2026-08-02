@@ -13,7 +13,11 @@ summary: >-
   actually went dirty.
 status: open
 nature: issue
-asset_group: [infrastructure, meta]
+asset_group:
+  [ao, meta] # corrected 2026-08-02 (/ag-closeout-audit cross-cutting, operator-ruled) -- `infrastructure` -> `ao`; the
+  # defect is in agent-orchestrator's own `server/routes/git_health.py` fleet reporter (repos: [agent-orchestrator],
+  # parent_epic: orchestrator_master), i.e. ao-tranche, not generic infrastructure. Left multi-value (`meta` kept as
+  # ruled: substitution only), so it stays exempt from check_ag_closeout_linkage.py by construction.
 stage: [meta]
 repos: [agent-orchestrator]
 scope: [engineer, admin]
@@ -100,3 +104,8 @@ Someone with access to the live AO backend (planning VM) and the reporter cron s
 - **na-eligibility-audit 2026-07-30**: KEEP-NA, valid (infra tranche, dispatch agt-30721a) — Doc's own 'Recommended
   decision' section frames the remaining step as a field-design choice (new field vs. hysteresis bugfix) — genuine
   judgment call, diagnostic todos feed directly into it.
+- **na-eligibility-audit 2026-08-02** (autonomous, tranche `ao`): KEEP-NA, valid — 2026-07-30 verdict re-affirmed. In
+  scope this run only because of the 2026-08-02 `asset_group` retag `infrastructure` → `ao` (`6ef14a71e`); body content
+  unchanged. All 3 `[BACKEND] P3` todos are diagnostics feeding the doc's own unresolved field-design choice (keep the
+  hysteresis-gated `not_clean_since` and ADD a separate "last observed dirty transition" field, vs. bugfix the existing
+  field's reset semantics) — a genuine judgment call.

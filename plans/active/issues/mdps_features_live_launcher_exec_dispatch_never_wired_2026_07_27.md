@@ -37,26 +37,33 @@ related:
     /codex/02-data/live-data-persistence-and-event-log.md,
   ]
 created: 2026-07-27
-last_updated: 2026-07-27
+last_updated: 2026-07-30
 parent_epic: infrastructure_master
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 priority: P2
 estimate_class: design
 estimate_baseline_ai_days: 0.6
 estimate_calibrated_ai_days: 0.36
-assigned_role: infra_engineer
+assigned_role: infra
 drift_direction: advance-code
 locked_by:
 locked_since:
 supersedes:
 superseded_by:
-depends_on:
+depends_on: [uac_mdps_mvp_universe_data_type_axis_2026_07_30]
+gate_on_depends: true
+sequential: true
 source: interactive session, live-VM verification of the sibling dependency-conflict fix, 2026-07-27
 resolved_by:
 ---
 
 # launch-mdps-features-live.sh exec-dispatch was never actually wired up
+
+> **Machine-gated on `/plans/active/issues/uac_mdps_mvp_universe_data_type_axis_2026_07_30.md`** (`depends_on` +
+> `gate_on_depends: true`) — the exec-dispatch wiring todo below (and the P3 todos that follow it) will not dispatch
+> until that doc's UAC enumerator extension is done. Ruled 2026-07-30, BLK-fd70b57c: see the second `[SCRIPT]` todo
+> below for the full reasoning.
 
 ## Evidence
 
@@ -155,14 +162,35 @@ in-process / sub-ms" still holds once features-service is genuinely family-shard
       above (per-shard/per-family process decomposition) is unblocked and can be wired now. Reference: Phase 15
       successor plan (`live_pipeline_mtds_mdps_features_2026_05_08.md`, if a successor plan exists — none found under
       `plans/active/` as of this issue's filing; may need to be created).
-- [ ] [SCRIPT] P2. Once the shape is decided: add a `VM_TASK == "mdps-features-live"` (or generic "+"-split) branch to
-      `setup-data-pipeline-vm.sh`'s exec-dispatch section (mirrors the existing tarball-resolution split + the
-      multi-worker sharding pattern at ~line 2031 for backgrounding N python processes under one `_launch_with_tee`
-      wrapper) that invokes MDPS and features-service with the CLI flags their actual parsers require, per the decided
-      shape.
+- [x] ✅ [SCRIPT] P2. Once the shape is decided: add a `VM_TASK == "mdps-features-live"` (or generic "+"-split) branch
+      to `setup-data-pipeline-vm.sh`'s exec-dispatch section that invokes MDPS and features-service with the CLI flags
+      their actual parsers require, per the decided shape. **Investigated 2026-07-30 (operator-ruling closeout pass)**:
+      the 2026-07-29 ruling fixed the family↔asset_group mapping and the topology SHAPE, but did not specify the
+      **shard-discovery mechanism** this branch needs — no `discover_live_shards`-style function exists anywhere in the
+      workspace (`rg` verified), so left open rather than guessed. **RULED 2026-07-30 (BLK-fd70b57c, main-authority
+      answer — final)**: extend UAC's `mdps_mvp_universe(asset_group)`
+      (`unified_api_contracts.canonical.crosscutting._mvp_scope_mdps`) to a `(venue, data_type)` axis and make it the
+      SSOT shard enumerator this branch calls at boot — a hand-maintained bash array (rejected: violates the "shard atom
+      identical across writer/manifest/status/gate/UI" DATA hard rule) and repurposing
+      `live_stream_watcher.build_prediction_live_shards()` (rejected: wrong contract, boot-time ordering hazard) are
+      both ruled out on standards grounds, not preference. **RESOLVED VIA SPLIT, not via shipped code** — this todo's
+      own ask (decide the shard-discovery mechanism, or determine why it can't be decided yet) is genuinely done as of
+      this ruling; the exec-dispatch branch itself has NOT been written. Forked the UAC extension out to
+      `/plans/active/issues/uac_mdps_mvp_universe_data_type_axis_2026_07_30.md` (its own determinable, scoped contract
+      edit), gated this doc on it (`depends_on` + `gate_on_depends: true`, see frontmatter + banner above), and
+      re-opened the actual code-writing work below as its own gated todo so it isn't lost — unified-trading-pm, this
+      commit.
+- [ ] [SCRIPT] P2. Once `/plans/active/issues/uac_mdps_mvp_universe_data_type_axis_2026_07_30.md` lands (this doc is
+      `gate_on_depends`-blocked on it, so it will not dispatch until then): add the `VM_TASK == "mdps-features-live"`
+      (or generic "+"-split) branch to `setup-data-pipeline-vm.sh`'s exec-dispatch section (mirrors the existing
+      tarball-resolution split + the multi-worker sharding pattern at ~line 2031 for backgrounding N python processes
+      under one `_launch_with_tee` wrapper) that invokes MDPS and features-service with the CLI flags their actual
+      parsers require, per the ruled topology (per-shard MDPS + per-family features-service, per-family↔asset_group
+      mapping in `features-service@ebd43939`), using the extended UAC `mdps_mvp_universe()` to discover its
+      `(venue, data_type)` shard set at boot.
 - [ ] [SCRIPT] P3. Also fix `launch-mdps-features-live.sh`'s `VM_OPERATION=live_aggregate_and_compute` metadata value —
       it doesn't match any of MDPS's real `--operation` choices (`timer-candles`/`streaming-aggregation`/
-      `build-continuous`); once the dispatch branch is designed, set the metadata this launcher passes to match whatever
+      `build-continuous`); once the dispatch branch above ships, set the metadata this launcher passes to match whatever
       the branch actually consumes.
 - [ ] [SCRIPT] P3. Related, smaller gap noticed in passing: `vm-exec-with-gcs-tee.sh`'s post-launch task-failure path (a
       wrapped command exiting non-zero AFTER bootstrap succeeded, as happened here —
@@ -172,3 +200,14 @@ in-process / sub-ms" still holds once features-service is genuinely family-shard
       investigated further here since it's a different code path (the tee wrapper, not `_self_delete_on_setup_failure`);
       worth auditing once Gap 1/2 above are resolved and a real live launch exists to observe its failure-signaling
       behavior against.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30**: RECLASSIFY NA → planning — the gating [OPERATOR] design call was FULLY RULED
+  2026-07-29 (process topology option (a) + the family↔asset_group mapping, shipped `features-service@ebd43939`); all 3
+  remaining [SCRIPT] todos are now unblocked bounded implementation.
+- **2026-07-30 (slot-6, BLK-fd70b57c)**: 2026-07-30's own investigation note (above) correctly flagged the
+  shard-discovery mechanism as still undecided. Escalated; operator ruled extend UAC `mdps_mvp_universe()` (option A),
+  executed as a SPLIT — forked `/plans/active/issues/uac_mdps_mvp_universe_data_type_axis_2026_07_30.md` as a
+  prerequisite and gated this doc on it (`depends_on` + `gate_on_depends: true`). The exec-dispatch wiring todo and its
+  two P3 followers stay open, now correctly machine-gated rather than falsely dispatchable.

@@ -32,7 +32,7 @@ referenced_by:
     /codex/04-architecture/tenderly-execution-provider.md,
   ]
 owner:
-last_reviewed: 2026-05-17
+last_reviewed: 2026-09-24
 code_refs:
 ---
 
@@ -118,7 +118,7 @@ Then validates on-chain: `eth_getCode(address)` must return non-empty bytecode.
 
 | Mode              | Contract Needed? | Behavior                                                           |
 | ----------------- | ---------------- | ------------------------------------------------------------------ |
-| Backtest          | No               | `flash_loan_simulator.py` in execution-service simulates in-memory |
+| Backtest          | No               | simulated in-memory (see note below — no `flash_loan_simulator.py`) |
 | Paper trade       | No               | Signs but doesn't broadcast                                        |
 | Testnet (Sepolia) | Yes              | Pre-deployed, address in UAC                                       |
 | Tenderly fork     | Yes              | CI deploys fresh per fork via deploy script                        |
@@ -149,7 +149,13 @@ Then validates on-chain: `eth_getCode(address)` must return non-empty bytecode.
 | Deployment to chains | deployment-service                        |
 | Address registry     | UAC testnet_contracts.yaml                |
 | Preflight validation | execution-service AAVEConnector.connect() |
-| Backtest simulation  | execution-service flash_loan_simulator.py |
+| Backtest simulation  | execution-service (see note — file renamed/folded)  |
+
+> **⚠️ `flash_loan_simulator.py` does not exist (verified 2026-07-31).** This doc named it in two places as the
+> execution-service module that simulates flash loans in-memory during backtest. There is no file by that name anywhere
+> in the workspace. Flash-loan handling now appears under `execution_service/backtest_v2/benchmark_registry.py` and the
+> atomic-bundle path (`tests/unit/test_atomic_bundle_executor.py` exercises it), but this re-review did not establish
+> which module is the intended successor — do not cite a replacement until someone confirms it.
 
 ---
 

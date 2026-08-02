@@ -78,10 +78,12 @@ source: operator dictation 2026-07-17 (interactive session — six deployment-ui
 > the child plans linked above. Left unstruck deliberately, as the historical record this tracker was built to preserve;
 > do not read them as a pending backlog.
 >
-> One separate, genuinely open item surfaced by WS-5's own scale-up work but tracked independently (not a child of this
-> tracker, so not resolved by this archival):
-> [`alerts_endpoint_per_object_gcs_read_performance_2026_07_23.md`](/plans/active/issues/alerts_endpoint_per_object_gcs_read_performance_2026_07_23.md)
-> (`status: open`) — an N+1 GCS-read performance issue in the alerts ledger at scale.
+> One separate item surfaced by WS-5's own scale-up work but tracked independently (not a child of this tracker, so not
+> resolved by this archival): the N+1 GCS-read performance issue in the alerts ledger at scale, now itself resolved +
+> archived (root-cause reader-side fix shipped live `deployment-api@79a1d36`; remaining writer-side batching WONT-DO'd
+> as a cost/list-latency concern, not correctness) —
+> [`alerts_endpoint_per_object_gcs_read_performance_2026_07_23.md`](/plans/archive/issues/alerts_endpoint_per_object_gcs_read_performance_2026_07_23.md)
+> (`status: resolved`).
 >
 > Per `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`. Original tracker banners kept below for
 > history.

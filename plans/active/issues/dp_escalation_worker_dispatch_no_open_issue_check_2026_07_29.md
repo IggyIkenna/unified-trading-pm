@@ -23,7 +23,10 @@ summary: >-
   about Slack noise, this is about escalation-worker dispatch).
 status: open
 nature: process
-asset_group: [cross-cutting]
+asset_group:
+  [ao] # corrected 2026-08-02 (/ag-closeout-audit cross-cutting, operator-ruled) -- was [cross-cutting]; the subject is
+  # escalation-worker dispatch dedup in agent-orchestrator (orchestrator-capacity waste), squarely ao-tranche -- the
+  # cefi/derivative_ticker DP-FETCH-009 condition is only the triggering example, not a multi-AG subject.
 stage: [meta]
 repos: [agent-orchestrator, deployment-service]
 scope: [engineer, admin]
@@ -54,7 +57,7 @@ resolved_by:
 source:
   "data_pipeline_failure escalation worker (agt-0df274), found while working
   cefi_derivative_ticker_tardis_resolver_aiodns_hardfail_2026_07_28.md's third re-fire"
-last_updated: 2026-07-29
+last_updated: 2026-08-01
 ---
 
 # Escalation-worker dispatch has no "already an open issue doc" dedup check
@@ -122,3 +125,179 @@ regression) is worse.**
   Progress Log entry) — no lasting damage, but this is a materially worse failure mode than redundant re-diagnosis: a
   missing dedup check let a worker actively UNDO a standing correction. Reinforces Option A (check for an OPEN issue doc
   on the exact tuple before spawning / before taking any write action) over B or C.
+- **2026-07-30 (data_pipeline_failure escalation worker, agt-606bbf) — 4th dispatch for one condition in ~24h.**
+  `cefi_book_snapshot5_schema_contract_ts_event_levels_mismatch_2026_07_28.md` has now had FOUR separate
+  `data_pipeline_failure` worker dispatches for the identical `(asset_group=cefi, data_type=book_snapshot_5)` static
+  backlog: 2 did the original diagnosis+fix (2026-07-28), 2 more (2026-07-30, escalation_ids `agt-ccb54c` twice then
+  `agt-606bbf`) each spent a full session re-confirming the numerator is still frozen and the fix commits are still
+  ancestors of `origin/live-defi-rollout` — genuinely cheap per-session (git ancestor check + a Progress Log append, no
+  manifest read needed since the numbers were already labeled STATIC BACKLOG) but still a full worker-session dispatch
+  each time. Further corroborates Option A over B/C — a numerator-unchanged condition with an OPEN issue doc already
+  covering it should not need a fresh orchestrator-agent spawn at all, even a cheap one.
+- **2026-07-30 (data_pipeline_failure escalation worker, agt-40f31f) — 5th+ dispatch, `(cefi, derivative_ticker)`.**
+  `cefi_derivative_ticker_tardis_resolver_aiodns_hardfail_2026_07_28.md` re-fired again (its 5th dispatch overall — 2
+  diagnosis+fix sessions, 2 prior static-confirm sessions, now this one). This time the raw numerator had genuinely
+  MOVED since the last reading (158,085 → 158,475, +390) rather than being byte-identical, so a full live bounded
+  manifest read was actually warranted (not just a git-ancestor check) to rule out a real regression — it confirmed the
+  delta was fully attributable to writes already made on 2026-07-29 (before/concurrent with the prior session's same-day
+  reading), zero rows written in the last 24h, no new failure class. Still net-zero new work, but this instance shows a
+  numerator-moved condition can still be a false alarm — Option A's "skip only if numerator/ratio unchanged since
+  last_updated" criterion (as literally worded) would have WRONGLY forced a full re-diagnosis here, since the numerator
+  DID move. Worth folding into whichever option gets picked: the correct skip condition is "no new `written_at` activity
+  since the doc's last verified reading," not "numerator byte-identical" — the former is robust to reads landing on
+  different sides of a write batch, the latter isn't.
+
+- **na-eligibility-audit 2026-07-30**: KEEP-NA, valid — the doc self-documents its own AO-ineligibility: 'This needs an
+  operator/design call on the right dedup semantics before implementation (marked assigned_vm: NA — not
+  AO-dispatch-eligible as a bare fix-it todo per the dispatch-scope-eligibility rule)'.
+- **2026-07-30 (data_pipeline_failure escalation worker, agt-14f171) — 6th+ dispatch, `(cefi, derivative_ticker)`.**
+  `cefi_derivative_ticker_tardis_resolver_aiodns_hardfail_2026_07_28.md` re-fired yet again. This time the numerator
+  (158,475) WAS byte-identical to the immediately-prior verified reading (agt-40f31f, same day), so — per that prior
+  session's own "no new `written_at` activity" finding — skipped the live manifest read entirely and did only a
+  git-ancestor check on the two shipped fix commits (both still ancestors of `live-defi-rollout`). Session cost: two
+  file reads + one `git merge-base` check + a Progress Log append, no GCS read. Further corroborates Option A: this
+  condition has now consumed 6 full orchestrator-agent dispatches for a backlog that has not moved in any
+  root-cause-relevant way since 2026-07-28.
+- **2026-07-30 (data_pipeline_failure escalation worker, agt-d36d2a, slot 2) — a second condition,
+  `(cefi, liquidations)`, shows the identical pattern.**
+  `cefi_liquidations_attempted_failed_lifetime_count_stale_2026_07_30.md` (filed earlier the same day by `agt-029155`)
+  re-fired with `attempted_failed` byte-identical (44,422) and `attempted` up only 2 (749,121→749,123) — the boot
+  context's own `attempted_failed_staleness` annotation already labeled it "no new attempted_failed activity in 1d".
+  Skipped the live manifest re-read and did only a git-ancestor check on the two referenced fixes
+  (`market-tick-data-service@6a067cf1` + `tardis-concurrency-guard.sh`'s `TARDIS_MAX_CONCURRENT_VMS=1`), both still in
+  place; appended a Progress Log entry to that doc instead of a fresh diagnosis. Confirms this is not isolated to one
+  cell — at least two independent `(asset_group, data_type)` DP-FETCH-009 conditions are now each consuming repeat
+  full-worker dispatches for backlogs that already have an OPEN issue doc and zero new root-cause-relevant activity,
+  reinforcing that Option A's dedup check belongs at the dispatch layer (would save this exact session's spawn) rather
+  than being re-derived per-condition by convention alone.
+- **2026-07-31 (data_pipeline_failure escalation worker, agt-794496, slot 5) — `(cefi, derivative_ticker)` now at its
+  7th+ dispatch.** `cefi_derivative_ticker_tardis_resolver_aiodns_hardfail_2026_07_28.md` re-fired yet again with a
+  byte-identical `attempted_failed` numerator (158,475) to the immediately-prior verified reading; only the `attempted`
+  denominator moved. Session cost: two file reads + one `git merge-base --is-ancestor` check (both fix commits still in
+  place) + a Progress Log append, no GCS read, no code change. Further corroborates Option A — this single condition has
+  now consumed 7+ full orchestrator-agent dispatches since 2026-07-28 for a backlog whose root-cause-relevant state has
+  not changed since the second dispatch fixed it.
+- **2026-07-31 (data_pipeline_failure escalation worker, agt-bd4088, slot 2) — `(cefi, derivative_ticker)` now at its
+  8th+ dispatch.** Same condition re-fired again with a byte-identical `attempted_failed` numerator (158,475) to
+  agt-794496's immediately-prior verified reading; only `attempted` (denominator) moved. Session cost: two file reads +
+  one `git merge-base --is-ancestor` check (both fix commits still in place) + two Progress Log appends, no GCS read, no
+  code change. This single condition has now consumed 8+ full orchestrator-agent dispatches since 2026-07-28 for a
+  backlog whose root-cause-relevant state has not changed since the second dispatch fixed it — the per-dispatch cost is
+  small but the count keeps climbing with no sign of the underlying dedup gap closing; still awaiting the
+  operator/design decision on Option A/B/C.
+- **2026-07-31 (data_pipeline_failure escalation worker, agt-79b187, slot 13) — `(cefi, book_snapshot_5)` at its 9th+
+  dispatch; shipped a complementary, DIFFERENT-layer mitigation (not this doc's Option A/B/C, which stays open).**
+  `cefi_book_snapshot5_schema_contract_ts_event_levels_mismatch_2026_07_28.md` re-fired again — its own root-cause fix
+  (`unified-api-contracts@1c4d8864`, nullable-levels) confirmed still holding (a short post-fix tail was the same
+  self-resolving in-flight-stale-code pattern already documented there 4 times, not a regression). Rather than adding a
+  9th "nothing new, git-ancestor-check only" entry, traced WHY this specific condition keeps re-triggering a CRITICAL
+  page + escalation-worker spawn despite being 97%+ resolved: the already-shipped STATIC BACKLOG severity-downgrade
+  (`alerting-service@bb76cae`, `cefi_high_attempted_failed_batch_cluster_2026_07_23.md`) only fires when a cell's newest
+  row is `>=1` day old — a cell with a small but NONZERO decaying trickle (this one: 91 rows/24h against a 300k-row
+  total) never qualifies, so it reads "Fresh" and keeps CRITICAL-paging forever even after full root-cause resolution.
+  Shipped `deployment-service@a564cca`: a cell's own last-24h volume must now cross `ATTEMPTED_FAILED_ABS_THRESHOLD`
+  (the same bar the alert itself uses) to count as genuinely Fresh; below that it reads STATIC BACKLOG even at
+  `stale_days == 0`. Since `router.py` applies the severity downgrade BEFORE the PagerDuty/Telegram paging-channel
+  check, this should also stop the `wall_type=data_pipeline_failure` escalation fast path from re-firing for THIS
+  specific decaying-trickle shape going forward (and for any other DP-FETCH-009 cell in the same shape, e.g.
+  `cefi_liquidations_attempted_failed_lifetime_count_stale_2026_07_30.md` if it has a similar tail). **This does NOT
+  resolve this doc's own open Option A/B/C** (worker-spawn dedup at the orchestrator-dispatch layer for a condition
+  whose numerator is merely unchanged rather than one whose recent volume has fallen below a materiality floor — e.g.
+  `(cefi, derivative_ticker)`'s repeated dispatches above still need that separate, still-undecided fix). Full writeup
+  in the book_snapshot_5 doc's own Progress Log.
+- **2026-07-31 (data_pipeline_failure escalation worker, agt-164899, slot 12) — `(cefi, book_snapshot_5)`'s 10th+
+  dispatch, confirming the materiality fix (`deployment-service@a564cca`) is working but the escalation-worker spawn
+  itself still fires anyway.** The dispatch context for this session already carried the STATIC BACKLOG materiality
+  annotation (95 rows/24h, below the 500-row floor) — i.e. the alert severity/classification fix from the entry above IS
+  correctly suppressing the false-Fresh label now. But a full `data_pipeline_failure` orchestrator-agent session still
+  spawned anyway (this one) to handle it — the materiality fix downgrades CRITICAL to WARN routing/paging, it does not
+  stop the `repository_dispatch escalate-to-orchestrator` fast path from firing, which is this doc's own still-open
+  Option A/B/C. Session cost: two file reads + a git-ancestor check (4 commits) + one bounded column-projected manifest
+  read + a Progress Log append, no code change. Further corroborates that Option A (dedup at the escalation-dispatch
+  layer itself) is the fix that actually closes this doc's waste — the 9th dispatch's alerting-materiality fix is a
+  genuinely useful, complementary layer (correct classification) but does not substitute for it.
+- **2026-07-31 (data_pipeline_failure escalation worker, agt-05ca7f, slot 11) — `(cefi, book_snapshot_5)`'s 11th+
+  dispatch, same story again.** Dispatch context again carried the STATIC BACKLOG materiality annotation (110 rows/24h)
+  and a full worker session still spawned to handle it. Session cost: two file reads + a git-ancestor check (5 commits)
+  - one bounded column-projected manifest read + two Progress Log appends, no code change — this single condition has
+    now consumed 11+ full orchestrator-agent dispatches since 2026-07-28, at least 5 of which (7th onward) found nothing
+    to fix beyond re-confirming an already-materiality-suppressed decaying trickle. Full writeup in the book_snapshot_5
+    doc's own Progress Log. Still awaiting the operator/design decision on Option A/B/C — this entry adds no new
+    argument, just another data point on the climbing count.
+- **2026-07-31 (data_pipeline_failure escalation worker, agt-0bf4a3, slot 8) — `(cefi, book_snapshot_5)`'s 12th+
+  dispatch, same story again.** Dispatch context again carried the STATIC BACKLOG materiality annotation (110 rows/24h)
+  and a full worker session still spawned. Numerator (300,457) byte-identical to the last verified reading, so the live
+  manifest re-read was skipped per established precedent; session cost was two file reads + a git-ancestor batch check
+  (5 commits) + a Progress Log append, no GCS read, no code change. Adds no new argument — another data point on the
+  climbing count, still awaiting the operator/design decision on Option A/B/C.
+- **2026-07-31 (data_pipeline_failure escalation worker, agt-0bf4a3, slot 4) — 13th+ dispatch, and this time the SAME
+  escalation_id (`agt-0bf4a3`) as the entry directly above, not just the same condition.** This is a sharper data point
+  than the prior 12: it is not merely the same static condition re-detected on a later sweep, it is the literal same
+  escalation event dispatched to two different slots (slot 8, then slot 4) with byte-identical alert numbers
+  (300,457/1,085,862). Only the second confirmed exact-duplicate-escalation_id case observed so far (the first was
+  `agt-ccb54c` on 2026-07-30, also for this exact `(cefi, book_snapshot_5)` cell). This shape is NOT addressed by the
+  materiality fix at all (that fix changes classification/paging severity for a condition, it cannot deduplicate two
+  dispatches of the identical event) — it is squarely Option A/B/C's territory (dedup at the escalation-dispatch layer
+  itself, e.g. by escalation_id or by "does an OPEN issue doc already exist for this alert signature"). Session cost:
+  doc read + git-ancestor batch check (5 commits) + a Progress Log append in the book_snapshot_5 doc, no GCS read, no
+  code change. Still awaiting the operator/design decision on Option A/B/C.
+- **2026-07-31 (data_pipeline_failure escalation worker, agt-406c1f, slot 3) — `(cefi, book_snapshot_5)`'s 14th+
+  dispatch, a fresh (non-duplicate) escalation_id, still zero new work.** Numerator (300,457) byte-identical to the last
+  verified reading; denominator grew +4,574. Git-ancestor check (5 commits) all OK, live manifest re-read skipped per
+  established precedent. Session cost: two file reads + one git-ancestor batch check + a Progress Log append, no GCS
+  read, no code change. Adds no new argument — another data point on the climbing count (now 14+), still awaiting the
+  operator/design decision on Option A/B/C. Full writeup in the book_snapshot_5 doc's own Progress Log.
+- **2026-07-31 (data_pipeline_failure escalation worker, agt-406c1f, slot 2) — 15th+ dispatch, and this time the SAME
+  escalation_id (`agt-406c1f`) as the entry directly above, not just the same condition.** Third confirmed
+  exact-duplicate-escalation_id case (after `agt-ccb54c` 2026-07-30 and `agt-0bf4a3` 2026-07-31) — the literal same
+  escalation event dispatched to two different slots (slot 3, then slot 2) with byte-identical alert numbers
+  (300,457/1,090,436). Not addressed by the materiality fix (that fix changes classification/paging severity for a
+  condition, it cannot deduplicate two dispatches of the identical event) — squarely Option A/B/C's territory. Session
+  cost: doc read + git-ancestor batch check (5 commits) + a Progress Log append in the book_snapshot_5 doc, no GCS read,
+  no code change. Still awaiting the operator/design decision on Option A/B/C.
+- **2026-07-31 (data_pipeline_failure escalation worker, agt-7f0c1a, slot 9) — `(cefi, derivative_ticker)` now at its
+  10th+ dispatch.** Same condition re-fired again with a byte-identical `attempted_failed` numerator (158,475) to
+  agt-fc78d0's immediately-prior verified reading; only `attempted` (denominator) moved (+9,017). Session cost: two file
+  reads + one `git merge-base --is-ancestor` check (both fix commits still in place) + a Progress Log append, no GCS
+  read, no code change. Combined across both tracked conditions in this doc ((cefi, derivative_ticker) at 10th+, (cefi,
+  book_snapshot_5) at 15th+), this backlog has now consumed 25+ full orchestrator-agent dispatches with no sign of the
+  underlying dedup gap closing — still awaiting the operator/design decision on Option A/B/C.
+- **2026-08-01 (data_pipeline_failure escalation worker, agt-7f0c1a, slot 8) — `(cefi, derivative_ticker)`'s 11th+
+  dispatch, and this time the SAME escalation_id (`agt-7f0c1a`) as the entry directly above, not just the same
+  condition.** Fourth confirmed exact-duplicate-escalation_id case overall (after `agt-ccb54c` 2026-07-30, `agt-0bf4a3`
+  2026-07-31, and `agt-406c1f` 2026-07-31 — all three prior ones were `(cefi, book_snapshot_5)`) and the first one for
+  `(cefi, derivative_ticker)` — the literal same escalation event dispatched to two different slots (slot 9, then
+  slot 8) with byte-identical alert numbers (158,475/1,518,154 attempted_failed). Not addressed by the materiality fix
+  (that changes classification/paging severity for a condition, it cannot deduplicate two dispatches of the identical
+  event) — squarely Option A/B/C's territory. Session cost: two file reads + a git-ancestor check (2 commits, both still
+  in place) + a Progress Log append in the derivative_ticker doc, no GCS read, no code change. Combined across both
+  tracked conditions, this backlog has now consumed 26+ full orchestrator-agent dispatches — still awaiting the
+  operator/design decision on Option A/B/C.
+- **2026-08-01 (data_pipeline_failure escalation worker, agt-5aff6b, slot 6) — `(cefi, book_snapshot_5)` now at its
+  16th+ dispatch.** Same condition (300,457/1,094,600 = 27.4%, materiality-annotated STATIC BACKLOG per
+  `deployment-service@a564cca`) re-fired again with a byte-identical `attempted_failed` numerator to every verified
+  reading since 2026-07-31; only `attempted` (denominator) moved. Session cost: two file reads + one
+  `git merge-base --is-ancestor` batch check (5 commits, all still in place) + a Progress Log append in the
+  book_snapshot_5 doc, no GCS read, no code change. Combined across both tracked conditions ((cefi, derivative_ticker)
+  at 11th+, (cefi, book_snapshot_5) at 16th+), this backlog has now consumed 27+ full orchestrator-agent dispatches —
+  still awaiting the operator/design decision on Option A/B/C.
+- **2026-08-01 (data_pipeline_failure escalation worker, agt-066ced, slot 7) — `(cefi, derivative_ticker)` now at its
+  12th+ dispatch.** Fresh (non-duplicate) escalation_id, re-fired: 158,475/1,522,499 attempted_failed (10.4%), labeled
+  "STATIC BACKLOG — no new attempted_failed activity in 3d". Numerator byte-identical to every verified reading since
+  2026-07-30; only `attempted` (denominator) grew +4,345. Skipped the live manifest read per the established rule (no
+  new `written_at` activity since the last verified reading); did only a `git merge-base --is-ancestor` check on both
+  shipped fix commits (`market-tick-data-service@6a067cf1`, `@6c6fab03`), both still in place. Session cost: two file
+  reads + a git-ancestor check + a Progress Log append in the derivative_ticker doc, no GCS read, no code change.
+  Combined across both tracked conditions, this backlog has now consumed 28+ full orchestrator-agent dispatches — still
+  awaiting the operator/design decision on Option A/B/C.
+- **na-eligibility-audit 2026-08-01**: KEEP-NA, valid -- Full audit rationale: Both remaining open todos are genuinely
+  operator/design-gated. Todo 1 is explicitly an 'Operator/main-agent decision' among three named options (A/B/C) with
+  no decision made yet -- a textbook judgment call, not a checkable fact or scoped code change. Todo 2 is contingent on
+  that undecided design dec...
+- **2026-08-01 (data_pipeline_failure escalation worker, agt-6b4fdd, slot 4) — `(cefi, book_snapshot_5)` now at its
+  18th+ dispatch.** Byte-adjacent numerator (300,458, +1 vs the last verified reading) confirmed via a fresh bounded
+  manifest read to be genuine decaying noise (day-bucketed: 75/07-30 → 35/07-31 → 1/08-01), not a resurgence — pipeline
+  is healthy (13,775 captured book_snapshot_5 rows in the last 24h). All 5 fix commits still ancestors of
+  `origin/live-defi-rollout`. Combined across both tracked conditions, this backlog has now consumed 29+ full
+  orchestrator-agent dispatches — still awaiting the operator/design decision on Option A/B/C. Full writeup in the
+  book_snapshot_5 doc's own Progress Log.

@@ -9,7 +9,7 @@ summary: >-
   closed. Authored 2026-07-27 as part of na_docs_validity_and_ao_eligibility_audit_2026_07_26.md's Phase 1
   reclassification pass, per task_template.md's finalize-plan-coverage rule (every assigned_vm:planning plan needs a
   companion gated finalize plan).
-status: draft
+status: active
 nature: process
 asset_group: [cefi, defi]
 stage: [meta]
@@ -23,7 +23,7 @@ related:
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]
 created: "2026-07-27"
-last_updated: "2026-07-27"
+last_updated: "2026-07-30"
 parent_epic: defi_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -44,6 +44,12 @@ source: >-
   doc closes the finalize-plan-coverage gate the reclassification itself triggered.
 assigned_role: data_engineering
 drift_direction: advance-code
+context_scope:
+  [
+    /plans/active/defi_pipeline_e2e_and_coverage_validation_2026_06_20.md,
+    /plans/active/na_docs_validity_and_ao_eligibility_audit_2026_07_26.md,
+    /cursor-configs/skills/ag-closeout-audit/SKILL.md,
+  ]
 ---
 
 # defi_pipeline_e2e_and_coverage_validation_2026_06_20 — finalize
@@ -60,3 +66,7 @@ drift_direction: advance-code
       fully closed. If real work remains after the AO-dispatched todos land, leave
       `defi_pipeline_e2e_and_coverage_validation_2026_06_20.md` active (do not force-archive) and note what's still open
       here instead.
+
+## Progress Log
+
+- **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).

@@ -102,6 +102,12 @@ _qg_content_hash() {
         "${BASEDPYRIGHT_CMD:-basedpyright}" --version 2>/dev/null
         "${PYTHON_CMD:-python3}" --version 2>/dev/null                   # tool versions
         _qg_editable_sibling_hash                                        # workspace sibling deps (qg-common.sh)
+        # gate-affecting config (qg_sentinel_environment_blind_2026_07_23.md item 2): a
+        # byte-identical tree verified under ENVIRONMENT=development is NOT the same
+        # verified surface as under production/unset (bucket resolution, credential
+        # posture, etc. all key off this) — fold it into the hash so a config change
+        # alone forces a different hash, never a false HIT.
+        printf 'ENVIRONMENT=%s DEPLOYMENT_ENV=%s\n' "${ENVIRONMENT:-}" "${DEPLOYMENT_ENV:-}"
     } | _qg_hash
 }
 
@@ -301,9 +307,9 @@ Env var:
   QG_SLICE=tests|typecheck|lint-codex   CI parallel-job slice selector used by the
                                          reusable workflow — not usually set by hand.
 
-NOTE: any OTHER flag is currently silently ignored (no error, no effect) — there is
-no catch-all/unknown-flag case below. If you are not sure a flag is real, run --help
-first rather than guessing; the gate will otherwise proceed with default settings.
+Unknown flags are a hard error (exit 1) — see quickmerge_help_flag_misparsed_as_commit_message_2026_07_30
+for why: a silently-ignored unrecognized flag is how a fat-fingered run ends up executing the
+full gate with unintended default settings instead of failing loud.
 QG_USAGE
             exit 0
             ;;
@@ -318,6 +324,15 @@ QG_USAGE
         # CODEX_SCOPE_GLOBS block). Never writes the merge sentinel, so the commit still runs the FULL
         # gate at quickmerge Pass-1 / CI. For the local iterate loop only.
         --fast) QG_FAST=1; export QG_FAST ;;
+        *)
+            # quickmerge_help_flag_misparsed_as_commit_message_2026_07_30: previously any
+            # unrecognized flag was silently ignored here (no catch-all arm at all), so a typo
+            # or a caller passing through a flag this script doesn't know about proceeded with
+            # default settings instead of failing loud. Hard error instead.
+            echo "❌ quality-gates.sh: unknown flag: $arg" >&2
+            echo "   Run 'bash scripts/quality-gates.sh --help' for the full flag list." >&2
+            exit 1
+            ;;
     esac
 done
 
@@ -449,6 +464,17 @@ if [ -z "${GITHUB_ACTIONS:-}" ] && [ -z "${CI:-}" ] && [ -z "${CLOUD_BUILD:-}" ]
     export UV_CACHE_DIR="${UV_CACHE_DIR:-${_uv_ws_common}/.uv-cache}"
     export UV_LINK_MODE="${UV_LINK_MODE:-hardlink}"
     command -v uv &>/dev/null || pip install "uv==0.10.8" --quiet
+    # uv-version drift-guard — WARN-ONLY (never blocking; the fix is a one-line realign, not a gate).
+    # The workspace uv pin is 0.10.8 (uv_lockfile_determinism_2026_06_02.md — committed uv.lock files
+    # are `revision = 3`, the serialization 0.10.8 produces; a `uv lock` run under a drifted 0.11.x can
+    # re-serialize to a different revision, i.e. silent lock churn). setup.sh self-realigns on a FRESH
+    # bootstrap, but this check catches drift on a box that never re-runs setup.sh (a long-lived VM,
+    # a manually-updated uv). SSOT: plans/archive/issues/uv_pin_fleet_drift_2026_06_22.md.
+    _uv_ver="$(uv --version 2>/dev/null | awk '{print $2}')"
+    if [[ -n "$_uv_ver" && "$_uv_ver" != "0.10.8" ]]; then
+        echo "⚠️  uv version drift: running $_uv_ver, workspace pin is 0.10.8 — re-lock output may not match CI. Realign: curl -LsSf https://astral.sh/uv/0.10.8/install.sh | env UV_UNMANAGED_INSTALL=\$HOME/.local/bin sh"
+    fi
+    unset _uv_ver
     # uv.lock freshness — WARN-ONLY, never blocking (stays warn-only per 1.5b: making it blocking
     # treadmills on the semver CI-side `version =` bump). The lock IS now the install SSOT —
     # `uv sync --frozen` (below, 1.5b) installs the committed lock EXACTLY, byte-for-byte with CI — so a
@@ -641,7 +667,7 @@ BP_VER=$("$BASEDPYRIGHT_CMD" --version 2>/dev/null | head -1 | awk '{print $NF}'
 # promoter died ~7h 2026-06-29; the SIT-producer break slipped through because this gate used to be wired
 # ONLY into PM's repo-specific quality-gates.sh, not this shared base). Lives here so EVERY repo runs the
 # single script against its own workflows — no per-repo copies to maintain. (pyyaml is present in all repo
-# venvs + system python.) SSOT: plans/active/cicd_mvp_ldr_to_main_pipeline_2026_06_30.md.
+# venvs + system python.) SSOT: plans/archive/2026_07/cicd_mvp_ldr_to_main_pipeline_2026_06_30.md.
 _WF_YAML_GATE="${WORKSPACE_ROOT:-$(cd "$REPO_ROOT/.." && pwd)}/unified-trading-pm/scripts/quality_gates/check_workflow_yaml_valid.py"
 if [[ -f "$_WF_YAML_GATE" ]]; then
     if python3 "$_WF_YAML_GATE"; then
@@ -659,11 +685,18 @@ fi
 if [ "$RUN_LINT" = true ] && [ "$FIX_MODE" = true ]; then
     log_section "[1/6] AUTO-FIX"
     qg_prof start autofix
-    # Pre-format non-Python files with prettier to avoid pre-commit hook conflicts
+    # Pre-format non-Python files with prettier to avoid pre-commit hook conflicts.
+    # prettier@3.9.5 (not 3.6.2): prettier_emphasis_mangling_corpus_corruption_2026_07_14
+    # proved <3.9.5 deterministically corrupts markdown (bare underscore identifiers rewritten
+    # as asterisks/escaped-underscores) and shipped a PRETTIER_MIN_VERSION=3.9.5 guard — but
+    # only in scripts/hooks/prettier-autostage.sh (the prek per-commit hook). This tree-wide
+    # invocation is a SEPARATE code path that still hardcoded the old, proven-buggy 3.6.2,
+    # silently reintroducing the "resolved" corruption on every --fix run (incident:
+    # quickmerge_help_flag_misparsed_as_commit_message_2026_07_30).
     if command -v npx &>/dev/null; then
         _BASE_IGNORE="${WORKSPACE_ROOT}/unified-trading-pm/scripts/quality-gates-base/.prettierignore-base"
         _PRETTIER_IGNORES="--ignore-path .gitignore $([ -f .prettierignore ] && echo '--ignore-path .prettierignore') $([ -f "$_BASE_IGNORE" ] && echo "--ignore-path $_BASE_IGNORE")"
-        npx --yes prettier@3.6.2 --write --cache "**/*.{md,json,yaml,yml}" ${_PRETTIER_IGNORES} >/dev/null 2>&1 \
+        npx --yes prettier@3.9.5 --write --cache "**/*.{md,json,yaml,yml}" ${_PRETTIER_IGNORES} >/dev/null 2>&1 \
             || log_warn "Prettier not available or no files to format (skipping)"
     else
         log_warn "npx not available — skipping prettier pre-format (commit may require re-staging)"
@@ -796,7 +829,18 @@ if [ "$RUN_TESTS" = true ] && [ "$_QG_SENTINEL_HIT" != true ]; then
     else
         _PYTEST_N="1"
     fi
-    PARGS="-n ${_PYTEST_N} --timeout=${PYTEST_TIMEOUT:-60} -q -r a --tb=short --no-header --durations=25"
+    # Wall-clock per-test timeout. Explicit PYTEST_TIMEOUT wins; default raised 60->150
+    # to absorb GH-Actions-xdist + shared-host scheduling variance without meaningfully
+    # delaying detection of a genuinely hung test. This mirrors base-library.sh's own
+    # PYTEST_TIMEOUT_SECONDS fix (2026-07-30) for the identical bug class, which only
+    # covered library-repo callers — this is the separate, service-repo copy of the
+    # same PARGS line that the original fix missed (SERVICE repos source base-service.sh,
+    # not base-library.sh). SSOT: plans/active/issues/pytest_timeout_60s_flaky_under_contention_2026_07_29.md
+    # (todo 2: "grep for other hardcoded wall-clock literals lacking an env-var override" —
+    # this IS that recurrence, not a one-off). Kept the existing PYTEST_TIMEOUT name
+    # (not renamed to PYTEST_TIMEOUT_SECONDS) since it is already a live, documented
+    # override in real agent/operator use (e.g. plans/active/sports_consolidated_native_ao_extract_2026_07_25.md).
+    PARGS="-n ${_PYTEST_N} --timeout=${PYTEST_TIMEOUT:-150} -q -r a --tb=short --no-header --durations=25"
     # Per-repo test root override. Default: tests/unit/. Set PYTEST_UNIT_DIR before sourcing this
     # script to point at a different layout (e.g. PYTEST_UNIT_DIR="tests/" for per-family layouts).
     PYTEST_UNIT_DIR="${PYTEST_UNIT_DIR:-tests/unit/}"
@@ -826,6 +870,12 @@ if [ "$RUN_TESTS" = true ] && [ "$_QG_SENTINEL_HIT" != true ]; then
     # SSOT: plans/active/issues/features_service_cloud_build_quality_gates_hang_2026_07_15.md.
     _pytest_log="$(mktemp "${TMPDIR:-/tmp}/qg-pytest-out.XXXXXX")" || exit 1
     trap 'rm -f "${_pytest_log:-}"' EXIT INT HUP TERM
+    # Open OUR OWN read fd on the (still-empty) log file right now, before pytest starts
+    # writing to it. See the zero-test-silent-pass guard below for why: a run can take
+    # 10+ minutes, and a host-level tmp-cleanup cron can unlink the PATH mid-run (the file's
+    # DATA survives via any process's still-open fd; only the directory entry goes). Holding
+    # this fd from the start means our later read never depends on the path still resolving.
+    exec {_PYTEST_LOG_FD}<"$_pytest_log"
 
     # [OOM MITIGATION 2026-05-15] `"${MEM_WRAP[@]}"` prefix puts pytest in a
     # cgroup with hard memory cap on Linux (no-op + empty array on macOS).
@@ -853,16 +903,21 @@ if [ "$RUN_TESTS" = true ] && [ "$_QG_SENTINEL_HIT" != true ]; then
     log_ok "Tests PASSED"
 
     # Zero-test silent pass guard (fix-zero-test-silent-pass): QG must not pass with no tests executed.
-    # Read + remove _pytest_log IMMEDIATELY after the run that wrote it — do not let an unrelated
-    # subprocess (the PM integration pytest invocation below) run in between. That gap previously let
-    # host-level tmp-scratch interference (e.g. a stale-tmp cleanup cron racing this run's TMPDIR-backed
-    # scratch file) delete the log before it was read, producing a FALSE "ZERO TESTS RAN" failure on a
-    # run that actually passed (observed: features-service CI run 30325671949, 2026-07-28 — main suite
-    # logged "17954 passed, 209 skipped" but the guard read an already-missing file). Narrowing the
-    # write-to-read window to zero intervening work closes that race without touching the TMPDIR
-    # redirect itself (shared_host_tmp_tmpfs_exhaustion_2026_07_08 still needs TMPDIR off small /tmp).
-    _TESTS_RAN=$(grep -oE '[0-9]+ passed' "$_pytest_log" | grep -oE '[0-9]+' | head -1 || echo "0")
-    _SKIPPED=$(grep -oE '[0-9]+ skipped' "$_pytest_log" | grep -oE '[0-9]+' | head -1 || echo "0")
+    # Read via the fd opened at mktemp-time (see comment above), NOT by re-opening "$_pytest_log" by
+    # path. A 2026-07-28 fix narrowed the write-to-read window to zero intervening work, assuming the
+    # race was ONLY between end-of-write and this read — but the race can also happen DURING the (often
+    # 10+ minute) pytest run itself: a host-level tmp-cleanup cron unlinks the path while `tee` is still
+    # mid-write, and by the time we get here the path no longer resolves even though the data is intact
+    # (recurred on a run that actually passed: features-service CI run 30541840466, 2026-07-30 — main
+    # suite logged "17973 passed, 209 skipped" but a path-based `grep "$_pytest_log"` got ENOENT; same
+    # class as run 30325671949, 2026-07-28). Reading through our own long-held fd sidesteps the path
+    # lookup entirely, so an unlink at ANY point during the run is harmless. Single grep pass (not a
+    # `$(cat ...)` capture) keeps the original memory guarantee — never stuff the full (potentially huge)
+    # log into a bash variable, only the small set of "N passed"/"N skipped" matches.
+    _PASS_SKIP_MATCHES=$(grep -oE '[0-9]+ (passed|skipped)' <&"${_PYTEST_LOG_FD}" || echo "")
+    exec {_PYTEST_LOG_FD}<&-
+    _TESTS_RAN=$(printf '%s\n' "$_PASS_SKIP_MATCHES" | grep -oE '[0-9]+ passed' | grep -oE '[0-9]+' | head -1 || echo "0")
+    _SKIPPED=$(printf '%s\n' "$_PASS_SKIP_MATCHES" | grep -oE '[0-9]+ skipped' | grep -oE '[0-9]+' | head -1 || echo "0")
     rm -f "$_pytest_log"
     trap - EXIT INT HUP TERM
     if [ "${_TESTS_RAN:-0}" -eq 0 ]; then
@@ -1274,16 +1329,30 @@ _gcp_id_hits=$(codex_rg --pcre2 "GOOGLE_CLOUD_PROJECT|GCP_PROJECT(?!_ID)" --type
 
 # GCP auth: tests must use google.auth.default() — never pytest.skip for missing credential file
 # Acceptable: pytest.skip inside _skip_integration_without_creds autouse fixture (integration marker pattern)
-# Domain clients must come from unified_domain_client, not unified_trading_library
-# Services should import: InstrumentsDomainClient, ExecutionDomainClient, create_*_client from UDS
-UCS_DOMAIN=$(codex_rg 'from unified_trading_library import[^#]*?(InstrumentsDomainClient|ExecutionDomainClient|MarketCandleDataDomainClient|MarketTickDataDomainClient|create_instruments_client|create_execution_client|create_features_client|create_market_candle_data_client|create_market_tick_data_client)' \
-    --type py --glob "!tests/**" "$SOURCE_DIR/" 2>/dev/null || :)
-[[ -n "$UCS_DOMAIN" ]] && { log_fail "Domain clients must come from unified_domain_client, not unified_trading_library"; echo "$UCS_DOMAIN" | head -5; V=$(( V + 1 )); } || log_success "Domain clients imported from unified_domain_client"
+# Domain clients live in unified_trading_library.domain (re-exported at the UTL top level) — there is
+# NO separate unified_domain_client package anywhere in the workspace. RETARGETED 2026-07-30: this check
+# previously demanded imports come FROM unified_domain_client and FAILED on the correct top-level
+# `from unified_trading_library import InstrumentsDomainClient` pattern — which directly contradicted the
+# deep-import check below (DI), which independently requires the top-level form and fails on
+# `from unified_trading_library.domain import X`. No import shape could pass both checks at once. The
+# fix retargets this check to the real invariant: domain-client symbols must come from unified_trading_library
+# (top-level or .domain), never a stray non-unified per-repo shim — DI already owns "top-level, not deep".
+# FOLLOW-UP FIX 2026-07-30: the first retarget's negative lookahead only excluded `unified_trading_library`
+# absolute imports, so its `[a-zA-Z0-9_.]+` module-name class still matched a RELATIVE import's leading
+# dot (`from .instruments import X`) — which broke UTL's own internal source (e.g.
+# unified_trading_library/domain_client/clients/__init__.py legitimately does `from .instruments import
+# InstrumentsDomainClient`). Added a second `(?!\.)` lookahead to exclude relative imports entirely; caught
+# via UTL's own QG run immediately after the first fix shipped.
+# SSOT: plans/active/codex_violations_ratchet_to_five_2026_06_10.md.
+UCS_DOMAIN=$(codex_rg 'from (?!unified_trading_library)(?!\.)[a-zA-Z0-9_.]+ import[^#]*?(InstrumentsDomainClient|ExecutionDomainClient|MarketCandleDataDomainClient|MarketTickDataDomainClient|create_instruments_client|create_execution_client|create_features_client|create_market_candle_data_client|create_market_tick_data_client)' \
+    --pcre2 --type py --glob "!tests/**" "$SOURCE_DIR/" 2>/dev/null || :)
+[[ -n "$UCS_DOMAIN" ]] && { log_fail "Domain clients must come from unified_trading_library (top-level or .domain), not a per-repo shim"; echo "$UCS_DOMAIN" | head -5; V=$(( V + 1 )); } || log_success "Domain clients imported from unified_trading_library"
 
-# No domain imports from UCS (use # noqa: domain-ucs if UDC migration is pending)
-DOMAIN_FROM_UCS=$(codex_rg 'from unified_trading_library import.*(market_category|DomainValidation|UnifiedCloudServicesConfig)' \
-    --type py "$SOURCE_DIR/" 2>/dev/null | grep -v '# noqa' || :)
-[[ -n "$DOMAIN_FROM_UCS" ]] && { log_fail "Service imports domain symbols from UCS — use unified_domain_client instead"; echo "$DOMAIN_FROM_UCS" | head -5; V=$(( V + 1 )); } || log_success "No domain imports from UCS"
+# No domain imports from a non-unified_trading_library source (retargeted alongside UCS_DOMAIN above —
+# same rationale, same SSOT).
+DOMAIN_FROM_UCS=$(codex_rg 'from (?!unified_trading_library)(?!\.)[a-zA-Z0-9_.]+ import.*(market_category|DomainValidation|UnifiedCloudServicesConfig)' \
+    --pcre2 --type py "$SOURCE_DIR/" 2>/dev/null | grep -v '# noqa' || :)
+[[ -n "$DOMAIN_FROM_UCS" ]] && { log_fail "Service imports domain symbols from a non-unified_trading_library source — use unified_trading_library instead"; echo "$DOMAIN_FROM_UCS" | head -5; V=$(( V + 1 )); } || log_success "No stray domain imports outside unified_trading_library"
 
 # Schema provenance: local BaseModel/TypedDict/dataclass should import from UAC or UIC
 # SCHEMA_PROVENANCE_SKIP: set true for devops/PM repos where local BaseModel in checker scripts is expected
@@ -1414,58 +1483,11 @@ SWALLOWED=$(codex_rg "except Exception:" --type py --glob "!tests/**" "$SOURCE_D
     | grep -E "^[[:space:]]+(pass|return None)$" || :)
 [[ -n "$SWALLOWED" ]] && { log_fail "Swallowed errors — use @handle_api_errors or re-raise"; V=$(( V + 1 )); } || log_success "No swallowed errors"
 
-# File size — tests excluded (test files are often long due to fixtures/assertions)
-# FUNCTION_SIZE_EXTRA_EXCLUDES also applies here for consistency (same variable, same dirs to skip)
-qg_prof start size-checks
-# ONE find feeds TWO batched python passes — collapses the per-file subprocess spawn
-# (was 1 `wc` + 1 `python` PER source file = O(files) process launches, the size-check cost)
-# into ONE python process per check. Same find exclusions + same thresholds + the AST visitor
-# copied verbatim → byte-identical violations; only N spawns → 2. Helps every QG context
-# (local/CI/SIT), not just the change-scoped fast tier.
-# `|| true`: set-e-safety. The original `for f in $(find …)` tolerated a non-zero find exit
-# (e.g. a repo whose FUNCTION_SIZE_EXTRA_EXCLUDES uses rg `--glob` syntax that find rejects, or a
-# broken symlink) — the for-loop just iterated an empty list. As a bare ASSIGNMENT, a non-zero
-# find trips `set -e` and kills the whole gate (regression: mtds + any --glob-exclude repo).
-_SIZE_FILES=$(find . -name "*.py" ! -path "./.venv/*" ! -path "./scripts/*" ! -path "./.git/*" ! -path "./.claude/*" ! -path "./build/*" ! -path "./.venv-workspace/*" ! -path "*/site-packages/*" ! -path "./tests/*" "${FUNCTION_SIZE_EXTRA_EXCLUDES[@]}" 2>/dev/null || true)
-
-# File-size: line count is `wc -l` semantics == number of '\n' bytes.
-SVIOL=$(printf '%s\n' "$_SIZE_FILES" | $PYTHON_CMD -c "
-import sys
-mx=$MAX_FILE_LINES
-out=[]
-for p in (line.strip() for line in sys.stdin):
-  if not p: continue
-  try:
-    with open(p,'rb') as fp: n=fp.read().count(b'\n')
-  except OSError: continue
-  if n>mx: out.append(f'  {p}: {n} L')
-print('\n'.join(out))
-" 2>/dev/null || :)
-[[ -n "$SVIOL" ]] && { log_fail "Files exceed $MAX_FILE_LINES lines:\n$SVIOL"; V=$(( V + 1 )); } || log_success "File size OK"
-
-# Function/class/method size — tests excluded (test functions are often long)
-# FUNCTION_SIZE_EXTRA_EXCLUDES: optional array of extra ! -path args set in quality-gates.sh
-# e.g. FUNCTION_SIZE_EXTRA_EXCLUDES=("! -path ./features_service/*" "! -path ./examples/*")
-FSIZES=$(printf '%s\n' "$_SIZE_FILES" | $PYTHON_CMD -c "
-import ast, sys
-for p in (line.strip() for line in sys.stdin):
-  if not p: continue
-  try:
-    with open(p,'r',encoding='utf-8') as fp: tree=ast.parse(fp.read())
-    def v(n,par=None):
-      if isinstance(n,(ast.FunctionDef,ast.AsyncFunctionDef)):
-        l=(n.end_lineno or n.lineno)-n.lineno+1
-        if isinstance(par,ast.ClassDef): l>$MAX_METHOD_LINES and print(f'  {p}:{n.lineno}:{par.name}.{n.name}(): {l}L')
-        elif l>$MAX_FUNCTION_LINES: print(f'  {p}:{n.lineno}:{n.name}(): {l}L')
-      elif isinstance(n,ast.ClassDef):
-        l=(n.end_lineno or n.lineno)-n.lineno+1
-        l>$MAX_CLASS_LINES and print(f'  {p}:{n.lineno}:{n.name}: {l}L')
-      for c in ast.iter_child_nodes(n): v(c,n if isinstance(n,ast.ClassDef) else par)
-    v(tree)
-  except Exception: pass
-" 2>/dev/null || :)
-[[ -n "$FSIZES" ]] && { log_fail "Function/class/method size exceeded:\n$FSIZES"; V=$(( V + 1 )); } || log_success "Function/class/method size OK"
-qg_prof end size-checks
+# File / function / class / method size checks moved to the HARD-GATE zone below (STEP 5.5z,
+# after `_V_PRE_RATCHET=$V`) — a size violation must never be absorbable by CODEX_MAX_VIOLATIONS
+# headroom freed by an unrelated violation class shrinking (qg_size_gate_sentinel_skip_root_cause_2026_07_25.md).
+# FUNCTION_SIZE_EXTRA_EXCLUDES stays the per-repo allow-list; only WHERE the V-increment is
+# evaluated moved (zero tolerance, not the shared aggregate ceiling).
 
 # Security: pip-audit (BLOCKING — OSV vulnerability database check)
 # Use venv pip-audit to skip internal/editable packages that are not on PyPI.
@@ -1473,45 +1495,18 @@ qg_prof start pip-audit
 _PIPAUDIT="${PYTHON_CMD%python*}pip-audit"
 if [ ! -x "$_PIPAUDIT" ]; then _PIPAUDIT="pip-audit"; fi
 if command -v "$_PIPAUDIT" &>/dev/null; then
-    # CVE-2026-4539: no-fix-version (workspace-global, reviewed 2026-05-20)
-    # CVE-2026-45409: idna 3.11 — follow-up to CVE-2024-3651; no patched release as of 2026-05-22
-    # CVE-2026-3219: pip 26.0.1 concatenated tar+ZIP handling; fix: upgrade pip >= 26.1
-    # CVE-2026-6357: pip < 26.1 self-update check; fix: upgrade pip >= 26.1
-    # aiohttp cookie-CVE cluster CVE-2026-34993/47265/50269/54273-54280 (CookieJar.load() RCE, cross-origin cookie
-    #   re-send, the 2026-06-15 OSV batch) — RESOLVED: execution-service (the last holdout, held on aiohttp 3.13.5 via
-    #   a [tool.uv] override for its 8 aioresponses test files) migrated to adapter-boundary mocks and bumped to
-    #   aiohttp>=3.14.1 fleet-wide; the 11 ignore-vuln entries were dropped from QG_PIP_AUDIT_COMMON_IGNORES
-    #   (qg-common.sh). See plans/active/issues/aiohttp_cve_2026_34993_vcrpy_deadlock_2026_06_03.md.
-    # PYSEC-2026-196: pip 26.1.1 — console_scripts/gui_scripts treated as paths without sanitizing the resolved
-    #   absolute path. The fleet stays on the vulnerable pip line because the next pip release is incompatible with
-    #   the pinned vcrpy (operator-accepted 2026-06-05). Exploit surface nil — the fleet never pip-installs untrusted
-    #   packages at runtime. SUCCESSOR (remove this ignore): the same vcrpy-unblock that lets aiohttp reach 3.14.0.
-    # CVE-2026-54283 / -54282 (starlette <1.3.1, transitive via fastapi) — RESOLVED 2026-07-28: fastapi/starlette
-    #   floor lifted to fastapi>=0.137.0/starlette>=1.3.1 fleet-wide (the _IncludedRouter route-introspection break
-    #   fixed via UTL service_framework.fastapi_factory.get_route_paths/find_matching_route). Ignore DROPPED from
-    #   QG_PIP_AUDIT_COMMON_IGNORES (qg-common.sh). See
+    # aiohttp cookie-CVE cluster CVE-2026-34993/47265/50269/54273-54280 — RESOLVED: execution-service (the last
+    #   holdout) migrated to adapter-boundary mocks and bumped to aiohttp>=3.14.1 fleet-wide; the 11 ignore-vuln
+    #   entries were dropped from QG_PIP_AUDIT_COMMON_IGNORES. See
+    #   plans/active/issues/aiohttp_cve_2026_34993_vcrpy_deadlock_2026_06_03.md.
+    # CVE-2026-54283 / -54282 (starlette <1.3.1) — RESOLVED 2026-07-28: fastapi/starlette floor lifted to
+    #   fastapi>=0.137.0/starlette>=1.3.1 fleet-wide. Ignore DROPPED. See
     #   plans/active/issues/cve_affected_pinned_deps_remediation_2026_06_18.md.
-    # GHSA-6v7p-g79w-8964: msgpack <=1.1.2 (TRANSITIVE) — Unpacker re-used AFTER an unpack error can SEGV the process.
-    #   Exploit surface nil for us: we never feed untrusted msgpack to an Unpacker and then re-use it post-error.
-    #   A real fix exists (1.2.1) but msgpack is a transitive pin → bumping is a fleet-wide lock-regen campaign.
-    #   SUCCESSOR (remove this ignore): bump msgpack to >=1.2.1 fleet-wide + lock-regen. Tracked:
-    #   plans/active/data_feed_sla_registry_and_active_self_healing_2026_06_19.md § QG-unblock follow-ups.
-    # GHSA-4xgf-cpjx-pc3j: pydantic-settings <=2.13.x (TRANSITIVE) — NestedSecretsSettingsSource reads secret VALUES
-    #   from files in a configured secrets_dir. Exploit surface nil: services configure secrets_dir to trusted
-    #   Secret-Manager mount paths only, never untrusted input. Fleet-wide transitive lock-bump. MUST mirror
-    #   base-library.sh. SUCCESSOR: bump pydantic-settings to the fixed line + lock-regen fleet-wide (2026-06-19 advisory).
-    # CVE-2026-54911: ujson <=5.12.0 (TRANSITIVE) — ujson.dumps(reject_bytes=False) edge case on bytes encoding.
-    #   Exploit surface nil: we never serialize untrusted bytes with reject_bytes=False. Fleet-wide transitive
-    #   lock-bump. MUST mirror base-library.sh. SUCCESSOR: bump ujson to the fixed line + lock-regen (2026-06-19 advisory).
-    # GHSA-rpj2-4hq8-938g: vcrpy <8.2.1 (TRANSITIVE) YAML deserialization — re-added 2026-06-24: the fleet dropped this on
-    #   the aiohttp/vcrpy bump assuming every repo resolves vcrpy 8.2.1, but repos that pull vcrpy TRANSITIVELY (e.g.
-    #   ibkr-gateway-infra — no direct vcrpy dep) still lock 8.1.1, so the gate red-flagged them. Exploit surface nil:
-    #   VCR cassettes are first-party test fixtures, never untrusted input. SUCCESSOR: lock-regen the transitive-vcrpy repos
-    #   to 8.2.1 (then this is a no-op). MUST mirror base-library.sh.
-    # PYSEC-2026-215: idna <3.18 (TRANSITIVE) — new 2026-06-24 advisory hitting idna 3.11 fleet-wide. Exploit surface nil:
-    #   we parse only controlled/first-party hostnames. SUCCESSOR: add idna>=3.18 to workspace-constraints + lock-regen
-    #   fleet-wide (the FIXED line exists — idna 3.18), then drop this ignore. MUST mirror base-library.sh.
-    # Fleet-wide ignore list now lives in qg-common.sh::QG_PIP_AUDIT_COMMON_IGNORES (item 252).
+    # RE-AUDITED 2026-07-30: every entry currently in QG_PIP_AUDIT_COMMON_IGNORES was re-verified against each
+    # repo's ACTUAL locked version (not the version noted when first added) — 4 entries confirmed fully moot and
+    # dropped with zero repo changes; every remaining entry's real fix version + still-vulnerable repo list is
+    # documented at the ignore list itself (qg-common.sh), the single SSOT — do NOT re-duplicate that detail here.
+    # MUST mirror base-library.sh's equivalent comment.
     _pa_extra="${PIP_AUDIT_EXTRA_ARGS:-} ${QG_PIP_AUDIT_COMMON_IGNORES}"
     # DEPS-CHANGE/CRON TRIGGER (plan quality_gates_speed_and_config_ssot_2026_06_09 Phase 3):
     # the OSV query is a fixed ~30-40s network tax whose verdict only changes when the
@@ -2186,6 +2181,70 @@ fi
 # banner fails the run if ANY later step incremented V. Hard gates get ZERO codex tolerance —
 # they carry their own per-repo baselines inside the checkers.
 _V_PRE_RATCHET=$V
+
+# ── STEP 5.5z — FILE / FUNCTION / CLASS / METHOD SIZE (HARD GATE, zero codex tolerance) ──
+# Moved out of the codex-tolerance-counted section above (2026-07-30,
+# qg_size_gate_sentinel_skip_root_cause_2026_07_25.md P0 follow-up): a size violation was
+# previously counted into the shared `V`/`CODEX_MAX_VIOLATIONS` aggregate, so it could be
+# silently absorbed by tolerance headroom freed when an UNRELATED violation class (e.g.
+# os.getenv, bare pip install) shrank — confirmed live: instruments-service's
+# CODEX_MAX_VIOLATIONS=3 absorbed 2 brand-new size regressions once 2 other classes cleared,
+# reporting WARN_WITHIN_TOLERANCE + "ALL QUALITY GATES PASSED" despite the fresh size
+# regressions. Placed in the hard-gate zone (below `_V_PRE_RATCHET`) alongside
+# fallback-imports/DTZ/TID251/citations: any V-increment here is checked with ZERO tolerance by
+# the HARD-GATE AGGREGATION VERDICT further down, independent of CODEX_MAX_VIOLATIONS. Each
+# repo's own pre-existing size debt stays an explicit, auditable allow-list
+# (FUNCTION_SIZE_EXTRA_EXCLUDES) rather than a number that can't tell which class regressed.
+qg_prof start size-checks
+# ONE find feeds TWO batched python passes — collapses the per-file subprocess spawn
+# (was 1 `wc` + 1 `python` PER source file = O(files) process launches, the size-check cost)
+# into ONE python process per check. Same find exclusions + same thresholds + the AST visitor
+# copied verbatim → byte-identical violations; only N spawns → 2. Helps every QG context
+# (local/CI/SIT), not just the change-scoped fast tier.
+# `|| true`: set-e-safety. The original `for f in $(find …)` tolerated a non-zero find exit
+# (e.g. a repo whose FUNCTION_SIZE_EXTRA_EXCLUDES uses rg `--glob` syntax that find rejects, or a
+# broken symlink) — the for-loop just iterated an empty list. As a bare ASSIGNMENT, a non-zero
+# find trips `set -e` and kills the whole gate (regression: mtds + any --glob-exclude repo).
+_SIZE_FILES=$(find . -name "*.py" ! -path "./.venv/*" ! -path "./scripts/*" ! -path "./.git/*" ! -path "./.claude/*" ! -path "./build/*" ! -path "./.venv-workspace/*" ! -path "*/site-packages/*" ! -path "./tests/*" "${FUNCTION_SIZE_EXTRA_EXCLUDES[@]}" 2>/dev/null || true)
+
+# File-size: line count is `wc -l` semantics == number of '\n' bytes.
+SVIOL=$(printf '%s\n' "$_SIZE_FILES" | $PYTHON_CMD -c "
+import sys
+mx=$MAX_FILE_LINES
+out=[]
+for p in (line.strip() for line in sys.stdin):
+  if not p: continue
+  try:
+    with open(p,'rb') as fp: n=fp.read().count(b'\n')
+  except OSError: continue
+  if n>mx: out.append(f'  {p}: {n} L')
+print('\n'.join(out))
+" 2>/dev/null || :)
+[[ -n "$SVIOL" ]] && { log_fail "Files exceed $MAX_FILE_LINES lines:\n$SVIOL"; V=$(( V + 1 )); } || log_success "File size OK"
+
+# Function/class/method size — tests excluded (test functions are often long)
+# FUNCTION_SIZE_EXTRA_EXCLUDES: optional array of extra ! -path args set in quality-gates.sh
+# e.g. FUNCTION_SIZE_EXTRA_EXCLUDES=("! -path ./features_service/*" "! -path ./examples/*")
+FSIZES=$(printf '%s\n' "$_SIZE_FILES" | $PYTHON_CMD -c "
+import ast, sys
+for p in (line.strip() for line in sys.stdin):
+  if not p: continue
+  try:
+    with open(p,'r',encoding='utf-8') as fp: tree=ast.parse(fp.read())
+    def v(n,par=None):
+      if isinstance(n,(ast.FunctionDef,ast.AsyncFunctionDef)):
+        l=(n.end_lineno or n.lineno)-n.lineno+1
+        if isinstance(par,ast.ClassDef): l>$MAX_METHOD_LINES and print(f'  {p}:{n.lineno}:{par.name}.{n.name}(): {l}L')
+        elif l>$MAX_FUNCTION_LINES: print(f'  {p}:{n.lineno}:{n.name}(): {l}L')
+      elif isinstance(n,ast.ClassDef):
+        l=(n.end_lineno or n.lineno)-n.lineno+1
+        l>$MAX_CLASS_LINES and print(f'  {p}:{n.lineno}:{n.name}: {l}L')
+      for c in ast.iter_child_nodes(n): v(c,n if isinstance(n,ast.ClassDef) else par)
+    v(tree)
+  except Exception: pass
+" 2>/dev/null || :)
+[[ -n "$FSIZES" ]] && { log_fail "Function/class/method size exceeded:\n$FSIZES"; V=$(( V + 1 )); } || log_success "Function/class/method size OK"
+qg_prof end size-checks
 
 # ── [5.5a] WORKFLOW EXPRESSION GUARD (always-on, version-proof) ───────────────
 # Incident 2026-06-04: an empty `${{ }}` expression inside a run-block COMMENT in
@@ -3726,6 +3785,49 @@ else
     log_success "STEP 5.105: skipped (checker not yet provisioned in this repo's PM checkout)"
 fi
 
+# ── STEP 5.106: bare read_availability_index(bucket) call — READER-side mirror ─
+#
+# READER-side counterpart to STEP 5.102 (writer-side
+# check_manifest_writer_missing_write_before_return.py). Per
+# plans/active/issues/read_availability_index_bare_defi_callers_2026_07_27.md:
+# UTL's `read_availability_index(bucket, columns=None, filters=None)` decodes
+# the WHOLE consolidated availability index into a pandas DataFrame when
+# called bare — the defi prod index alone is 1.58 GB on disk (several GB once
+# decoded). A caller reachable with a defi-asset-group bucket that omits both
+# `columns=`/`filters=` is one cache-miss/cold-start from an OOM on a
+# memory-constrained Cloud Run job or VM (`mtds_backfill_vm_startup_oom_rc137_2026_07_14`
+# incident class). That audit fixed the ~35-40 sites it manually found;
+# this checker is the standing guard so no NEW bare call site lands silently.
+# AST-walk, production code only (scripts/tests excluded). SHRINKING ratchet:
+# read_availability_index_bare_call_baseline.yaml (24 entries at bootstrap —
+# a full workspace sweep the day this checker landed).
+# Escape: `# QG-allow: bare-read-availability-index` on the call line.
+_BARE_RAI_CHECKER="${REPO_ROOT}/unified-trading-pm/scripts/quality_gates/check_bare_read_availability_index.py"
+if [ -f "$_BARE_RAI_CHECKER" ]; then
+    _BRAI_REPO=$(basename "$PROJECT_ROOT")
+    _BRAI_WS="$REPO_ROOT"
+    _BRAI_SRC_ARG=()
+    [ -n "${SOURCE_DIR:-}" ] && [ -d "${SOURCE_DIR}" ] && _BRAI_SRC_ARG=(--source-dir "$SOURCE_DIR")
+    _BRAI_LOG="${TMPDIR:-/tmp}/bare_read_availability_index_qg.log.$$"
+    if $PYTHON_CMD "$_BARE_RAI_CHECKER" \
+            --workspace-root "$_BRAI_WS" --scope "$_BRAI_REPO" "${_BRAI_SRC_ARG[@]}" >"$_BRAI_LOG" 2>&1; then
+        if grep -q '^\[WARN\]' "$_BRAI_LOG" 2>/dev/null; then
+            log_warn "STEP 5.106: $(grep -c '^\[WARN\]' "$_BRAI_LOG") baselined bare read_availability_index() call site(s); 0 new"
+        else
+            log_success "STEP 5.106: No bare read_availability_index(bucket) call sites (columns=/filters= projection required)"
+        fi
+    else
+        log_fail "STEP 5.106: NEW bare read_availability_index(bucket) call — no columns=/filters= projection kwarg (read_availability_index_bare_defi_callers_2026_07_27):"
+        cat "$_BRAI_LOG"
+        log_fail "         Baseline: unified-trading-pm/scripts/quality_gates/read_availability_index_bare_call_baseline.yaml (NEVER raise a count)"
+        log_fail "         Recheck: $PYTHON_CMD unified-trading-pm/scripts/quality_gates/check_bare_read_availability_index.py --workspace-root $_BRAI_WS --scope $_BRAI_REPO"
+        V=$(( V + 1 ))
+    fi
+    rm -f "$_BRAI_LOG" 2>/dev/null
+else
+    log_success "STEP 5.106: skipped (checker not yet provisioned in this repo's PM checkout)"
+fi
+
 # ── STEP 5.89: record_empty/record_expected_empty reason closed-set ───────────
 #
 # Every ``record_empty(reason=...)`` / ``record_expected_empty(reason=...)`` call
@@ -4056,6 +4158,17 @@ if { [[ "${RUN_TESTS}" == "true" ]] && \
         git rev-parse HEAD > "${PROJECT_ROOT}/.qg_last_passed_sha" 2>/dev/null && \
             echo "Sentinel written: .qg_last_passed_sha=$(cat "${PROJECT_ROOT}/.qg_last_passed_sha")" || \
             echo "Warning: could not write .qg_last_passed_sha (non-git dir?)"
+        # Configuration binding (qg_sentinel_environment_blind_2026_07_23.md item 2): the
+        # SHA line alone only proves "a complete gate ran on this HEAD", not WHICH
+        # configuration it ran under. APPEND (not overwrite) the resolved ENVIRONMENT/
+        # DEPLOYMENT_ENV as trailing lines so quickmerge's sentinel check
+        # (_qm_check_agent_sentinel, quickmerge.sh) can refuse a config mismatch instead
+        # of silently trusting a pass verified under a DIFFERENT configuration than the
+        # one it's about to ship under. Appended, not prepended/replacing, so `head -1`
+        # (what every SHA reader already uses) is unaffected — and an OLD bare-SHA
+        # sentinel from before this fix still parses its SHA correctly.
+        { printf 'ENVIRONMENT=%s\n' "${ENVIRONMENT:-}"; printf 'DEPLOYMENT_ENV=%s\n' "${DEPLOYMENT_ENV:-}"; } \
+            >> "${PROJECT_ROOT}/.qg_last_passed_sha" 2>/dev/null || true
     else
         echo "SHA sentinel NOT refreshed (content-sentinel HIT → tests skipped; prior full-run SHA sentinel retained)."
     fi

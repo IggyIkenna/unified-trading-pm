@@ -234,3 +234,18 @@ anyone wants the code again.
   a new architectural pattern or contract. `/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md` and
   `/codex/04-architecture/agent-orchestrator-alerting.md` (cited above) already correctly describe the
   regen/prune/alerting architecture this fix operates within; nothing about that architecture changed.
+
+## Progress Log
+
+- **2026-08-01** (`ao_satellite_ao_dispatch_batch1_2026_07_26.md` residual todo): shipped the narrower raw-SQL-delete
+  backstop this doc's `[BACKEND] P3` explicitly scoped OUT ("rather than a raw SQLite `BEFORE DELETE` trigger"). Added
+  `agent-orchestrator/server/bootstrap.py::_migrate_done_task_delete_trace()` — an idempotent migration creating
+  `deleted_done_tasks_trace` + an `AFTER DELETE ON tasks WHEN OLD.status = 'done'` trigger that records `task_id` /
+  `plan_ref` / `done_sha` / `done_at` / `deleted_at` for ANY delete of a done row, including a bare out-of-band SQL
+  delete the application-level guard in `release_task_to_queue()` cannot see (that guard only catches an illegal
+  status-transition through the ORM, not a raw `DELETE`). The trigger only INSERTs, never raises — confirmed the
+  sanctioned `DELETE /api/backlog/{task_id}` path still succeeds unconditionally and is traced, not blocked. 4 new tests
+  in `tests/test_done_task_delete_trace.py` (raw-SQL delete traced, sanctioned operator delete traced + still succeeds,
+  non-done delete leaves no trace, migration idempotent across repeated `create_all_tables()` calls). This is pure
+  defense-in-depth on top of the already-complete application-level fix above — no behavior change for any existing
+  caller.

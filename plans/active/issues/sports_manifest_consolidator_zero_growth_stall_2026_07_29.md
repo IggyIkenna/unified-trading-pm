@@ -1,8 +1,8 @@
 ---
 doc_type: issue
 title:
-  "sports instruments-store manifest consolidator: canonical rows_out static (9,411,982) across every real merge cycle
-  for 47+ minutes while active backfill writes were in flight — new data is not being absorbed"
+  "RESOLVED 2026-07-30 — consolidator EXONERATED (static rows_out is an in-place UPDATE, not a drop); the real root
+  cause of the odds_api gaps is check_shard_freshness's ODDS_API-sentinel collision silently SKIPPING 572/595 dates"
 summary: >-
   Cloud Logging shows `manifest-consolidator bucket=instruments-store-sports-prd-central-element-323112` real-merge
   cycles (the ones that acquire the lock and do a genuine DuckDB merge, not the `error=locked` skips) reporting the
@@ -19,7 +19,19 @@ asset_group: [sports, meta]
 stage: [data]
 repos: [unified-trading-library, market-tick-data-service, deployment-service, instruments-service]
 scope: [engineer, admin]
-tags: [manifest, consolidator, data-correctness, data-loss-risk, sports, silent-drop, P0]
+tags:
+  [
+    manifest,
+    consolidator,
+    data-correctness,
+    sports,
+    P0,
+    freshness-skip,
+    check-shard-freshness,
+    smart-skip,
+    odds-api,
+    false-alarm-resolved,
+  ]
 related:
   [
     /codex/05-infrastructure/manifest-consolidator-ssot.md,
@@ -39,6 +51,17 @@ resolved_by:
 ---
 
 # Sports manifest consolidator: zero row growth despite active backfill writes
+
+> **🟩 RESOLVED 2026-07-30 (slot 3, operator-authorised live diagnostic: pause-cron + snapshot + probe). THE
+> CONSOLIDATOR IS NOT DROPPING ROWS — this doc's original premise is DISPROVEN.** Static `rows_out` with nonzero
+> `dedup_dropped` is the EXPECTED signature of an idempotent re-capture that UPDATES existing dedup keys in place;
+> `dedup_dropped` is not an independent measurement, it is _derived_ as `rows_in - rows_out`
+> (`manifest_consolidator.py:998`), so "all shard rows deduped" and "row count unchanged" are the same statement, not
+> two corroborating ones. The genuine root cause of the odds_api gaps is in the BACKFILL's smart-skip
+> (`check_shard_freshness`), not the merge — see § "Root cause (2026-07-30)". **Everything below the banner is retained
+> as the original 2026-07-29 report + the 07-30 addenda; read it as history, not as current fact.** Cron was paused
+> 10:34Z, snapshotted, probed, and **RESUMED 10:53Z (verified `ENABLED`, real merge completed 10:44:51Z, zero shards
+> pruned, no `CONSOLIDATOR_DOWN` fired)**.
 
 ## What I found
 
@@ -113,22 +136,47 @@ awareness given the blast radius).
 
 ## Recommended decision
 
-- [ ] [OPERATOR] P0. **Confirm scope + authorize a live diagnostic session** on the
-      `instruments-store-sports-prd-central-element-323112` consolidator: is `rows_out` genuinely static across
-      real-content-bearing shards (data loss / silent-drop bug), or is there a legitimate explanation (e.g. my specific
-      shard's rows are somehow exact duplicates of already-canonical content, which the day-level census above argues
-      strongly against for the `2020-2025` genuinely-absent-before dates)? Needs someone to read
-      `unified-trading-library/unified_trading_library/manifest_consolidator.py`'s dedup-key + UNION-ALL logic against a
-      live shard sample, ideally with the pause-cron + snapshot discipline `manifest-consolidator-ssot.md` mandates for
-      any diagnostic write action.
-- [ ] [DATA] P1. **Once root-caused, fix + verify**: re-run the day-level odds_api census after the fix lands and
-      confirm the `2020-06-06..2026-04-15` range (already twice-confirmed processed in VM logs) actually shows 0 missing
-      days — this is the blocking prerequisite for `sports_odds_api_scattered_multiyear_gaps_2026_07_27.md`'s P1
-      checkbox. Repo: unified-trading-library.
-- [ ] [DATA] P2. **Audit whether this affects other large sports buckets** (`market-data-tick-sports-prd` — note its OWN
-      consolidator cycle in the same logging window showed `shards=1 rows_in=0 rows_out=0` repeatedly, which reads as
-      genuinely idle rather than stalled, but worth a second look once the instruments-store mechanism is understood) or
-      is specific to `instruments-store-sports-prd`'s size/shape.
+- [x] ✅ [OPERATOR] P0. **DONE 2026-07-30 (slot 3) — live diagnostic executed under the codex pause+snapshot recipe;
+      verdict: `rows_out` is static for a LEGITIMATE reason, there is NO silent-drop bug.** Answer to the question as
+      posed ("data loss, or are the shard's rows exact duplicates of already-canonical content?") is **the second one**
+      — the shard rows collide with EXISTING canonical dedup keys and update them in place. Evidence in § "Root cause
+      (2026-07-30)": every one of a live shard's 1,049 dedup keys already existed in the canonical (0 new keys), and
+      **1,029/1,049 shard rows were already present in the canonical carrying the shard's own exact `attempted_at`** —
+      i.e. absorbed, not dropped (the 20-row residue is simply rows the VM wrote after the last merge). Independently:
+      the 849 manifest rows the gapfill VM genuinely produced on 2026-04-15 — **2,118 `row_count`, byte-matching its own
+      log line `Processed date=2026-04-15: … 2118 total records`** — are in the canonical right now, written during the
+      exact window this doc claimed content was being lost. Procedure evidence: cron
+      `uts-prod-manifest-consolidator-instruments-sports-cron` PAUSED 10:34Z → snapshot
+      `_index/snapshots/pre_zero_growth_diag_20260730T1044Z.parquet` (gen `1785406523005270`→ copy verified crc32c
+      `uGp0rg==`, size 235,278,458, source generation stable across the copy, via UTL `gcs_copy_object`) → RESUMED
+      10:53Z, verified `ENABLED` + a real merge at 10:44:51Z, `pruned_shards=0` throughout, no `CONSOLIDATOR_DOWN`. No
+      code fix shipped because **no consolidator defect exists**.
+- [x] ✅ [OPERATOR] P1. **RESOLVED 2026-07-31 (slot 16, retagging a stale marker — the fix itself shipped 2026-07-30 by
+      slot 3) — Option A (the WORKER REC) was implemented and is live on `live-defi-rollout`.** Verified via `git log`:
+      `market-tick-data-service@362e64e34c10af14a9cd46bec438156c90a4932b` ("fix(sports): scope smart-skip freshness
+      evidence to odds_api's declared source (572-day permanent-skip fix)") adds
+      `_SOURCE_SCOPED_FRESHNESS_VENUES = frozenset({"ODDS_API"})` + `_freshness_source_scope()` in
+      `tick_data_handler.py`, threading `expected_sources` through to UTL's
+      `check_shard_freshness(..., expected_sources=...)` (`unified_trading_library/manifest_writer/_queries.py:163`,
+      `_venue_evidence_rows` now requires the row's own `source` column to match when a token is source-scoped — see
+      that function's docstring for the exact mechanism). This is narrowly scoped to `ODDS_API` only, per the option's
+      own design (no fleet-wide blast radius; matches the P1 blast-radius audit below which confirms the collision class
+      is sports-only). **This retag was found stale for a day** (fix landed 2026-07-30T14:39Z, this checkbox wasn't
+      flipped until now) — no corpus-wide re-scan performed, just this one file caught while working the dependent
+      VERIFY task. **What is NOT yet done**: no backfill VM has been launched with the fixed code (checked
+      `gs://deployment-scripts-central-element-323112/vm-logs/` — no `mtds-backfill-odds-*` entry postdates 2026-07-29),
+      so the 595-day gap in the canonical is still open. That re-run is
+      `/plans/active/issues/sports_odds_api_scattered_multiyear_gaps_2026_07_27.md`'s own P1 todo, now unblocked by this
+      retag. Repos: market-tick-data-service, unified-trading-library (no new code — already shipped).
+- [x] ✅ [DATA] P1. **DONE 2026-07-30 (slot 7) — blast radius is SPORTS-ONLY; no other asset_group reproduces the
+      sentinel collision.** Full per-asset_group table + methodology in § "Blast-radius audit results (2026-07-30, slot
+      7)" below. Repo: unified-trading-library (no code change — audit found nothing else to fix).
+- [x] ✅ [DATA] P2. **DONE 2026-07-30 (slot 3) — premise void + verified idle.** There is no consolidator drop bug to
+      propagate to other buckets (P0 above). Re-verified `market-data-tick-sports-prd-central-element-323112` directly:
+      its `_index/per_vm/` holds exactly ONE object (`_legacy_seed.parquet`, 7.42 MiB, mtime 2026-07-17) — i.e. **no
+      per-VM writer has flushed a shard to it at all**, so the repeated `shards=1 rows_in=0 rows_out=0 error=-` cycles
+      (sampled 10:51–10:56Z 2026-07-30, six consecutive) are the honest no-op of a bucket with nothing pending, exactly
+      as the original doc suspected. Not a stall, not a size/shape effect.
 
 ## Addendum 2026-07-30 (slot 7, data_engineering) — new evidence, root-cause NOT yet found, P1 still blocked
 
@@ -236,7 +284,156 @@ still shows no commit since `14301571` (2026-07-24), so no root-cause fix has la
 the sole blocking prerequisite; this P1 todo's done_definition still cannot be met. Skipping with `reason_code=BLOCKED`
 to keep pushing toward the auto-park threshold rather than burning another session on read-only re-confirmation.
 
+## Root cause (2026-07-30, slot 3) — the consolidator is fine; the BACKFILL skips the dates
+
+Operator authorised the live diagnostic. Ran the `manifest-consolidator-ssot.md` § "Surgical ROW REMOVAL" discipline
+(steps 1–2 + 6; steps 3–5 never applied — nothing was rewritten): PAUSE cron → snapshot → probe → RESUME.
+
+### 1. `rows_out` static is an in-place UPDATE, and the "corroborating" metric is circular
+
+`dedup_dropped` is not measured, it is **derived**: `dedup_dropped=rows_in - rows_out` (`manifest_consolidator.py:998`).
+So "`rows_out` frozen" and "`dedup_dropped` == the shard's row count" are ONE observation restated, not two. A shard
+whose keys all already exist in the canonical produces exactly this signature while correctly updating every one of
+them. Reproduced live three times on 2026-07-30 with the then-active `af-backfill-20260730-012007` writer (canonical
+pinned at 11,789,693 while the shard grew):
+
+| merge (UTC) | shards | rows_in    | rows_out       | dedup_dropped | shard rows at the time |
+| ----------- | ------ | ---------- | -------------- | ------------- | ---------------------- |
+| 10:00:40    | 2      | 11,790,669 | **11,789,693** | 976           | 976                    |
+| 10:15:23    | 2      | 11,790,696 | **11,789,693** | 1,003         | 1,003                  |
+| 10:29:59    | 2      | 11,790,722 | **11,789,693** | 1,029         | 1,029                  |
+| 10:44:51    | 2      | 11,790,741 | **11,789,693** | 1,048         | 1,048                  |
+
+`dedup_dropped` tracks the shard's row count exactly, cycle for cycle — the tell of pure key-collision, not loss.
+
+### 2. Absorption proved positively, against the snapshot
+
+Captured the live shard before any prune could eat it (the forensic gap that defeated slots 7/9/11) and diffed it
+against the snapshotted canonical using the module's OWN `_resolve_dedup_cols` / `_dedup_key_sql` (no re-derived key):
+
+- dedup key resolved to the 16 columns `date, venue, data_type, service_name` + the 12 present optional dims.
+- shard = **1,049 rows / 1,049 distinct dedup keys**; **1,049 of 1,049 already present in the canonical, 0 new keys.**
+- **1,029 shard rows found in the canonical carrying the shard's own exact `attempted_at`**; 1,041 matching on
+  `(capture_status, row_count)`. The ~20-row residue is the rows the VM flushed after the last merge.
+- canonical self-consistency: **0 duplicate dedup-key groups** across all 11.79 M rows.
+- Historical control: the ONE date the odds gapfill genuinely processed, `2026-04-15`, holds **849 rows written
+  2026-07-29T20:34Z** — 63 `captured` summing to **row_count 2,118**, byte-matching the VM's own
+  `Processed date=2026-04-15: 1 venues ok, 0 failed, … 2118 total records`. Absorbed during the exact window this doc
+  reported as lossy.
+
+### 3. What actually blocks the odds_api backfill — a freshness-skip sentinel collision
+
+The 07-29/07-30 addenda's premise that the two `START_DATE=2020-06-06` VMs "processed real per-day work up through
+2026-04-15" is a **misreading of the run logs**. Both VMs' `run.log` contain **2,139 `SKIP date=…` lines and exactly ONE
+`Processed date=` line**:
+
+```
+2026-07-29 20:07:59 INFO SKIP date=2026-02-22: all 1 venues fresh (use --force to reprocess)
+…                                    (identical for every date 2020-06-06 … 2026-04-14)
+2026-07-29 20:09:17 INFO Processed date=2026-04-15: 1 venues ok, 0 failed, 0 skipped, 2118 total records
+```
+
+Nothing was ever written for the disputed range, so nothing could be dropped. The mechanism:
+`TickDataHandler._apply_freshness_skip` calls
+`check_shard_freshness(expected_venues=get_venues_for_asset_groups( ["sports"]))`, which for sports is the single
+pseudo-venue **`ODDS_API`**. `check_shard_freshness` then matches an expected venue against the `venue` column **OR**
+the `data_type` column, keyed only on `(date, service_name)`, and is **blind to `source` and `data_type`**. For every
+disputed date the canonical holds exactly one `service_name='market-tick-data-service'` row:
+
+```
+venue='ODDS_API'  data_type='odds_horizon_bucket'  source='mdps_odds_horizon_bucket'
+capture_status='empty_confirmed'  error_reason='SOURCE_RETURNED_ZERO'  schema_version=9
+written_at=2026-07-13T06:14:5x
+```
+
+That row belongs to a **different pipeline** (the MDPS odds-horizon-bucket rollup), yet it satisfies every staleness
+test: schema 9 == current; status is not `attempted_failed`; and the age test is disabled outright for historical dates
+(`freshness_max_age = 0.0 if date < now-7d`). → `is_fresh=True` → permanent skip. The REAL odds capture writes at a
+completely different granularity (`venue=<bookmaker>` e.g. `PINNACLE`/`BETONLINEAG`, `data_type='trades'`,
+`source='odds_api'`), which the check never looks for.
+
+**Falsifiable test over all 2,140 days in `2020-06-06..2026-04-15`** (`odds_api` present × `ODDS_API`-sentinel present):
+
+| has odds_api | has ODDS_API sentinel | days    |
+| ------------ | --------------------- | ------- |
+| ✗            | ✓                     | **572** |
+| ✗            | ✗                     | 23      |
+| ✓            | ✓                     | 1,497   |
+| ✓            | ✗                     | 48      |
+
+**572 of the 595 missing days (96.1%) are explained exactly by the sentinel skip**, and 2,071/2,071 distinct sentinel
+day-states evaluate FRESH under `check_shard_freshness`'s own predicate. `2026-04-15` — the one date that DID process —
+is one of the 48 with no sentinel. The remaining 23 sentinel-free missing days need a separate look (folded into the
+blast-radius todo). This is the textbook "entity-agnostic check passes while the target entity writes ZERO rows" class
+CLAUDE.md § async-discipline already warns about, here in a skip predicate rather than a progress monitor.
+
+### 4. Honest limits of this session
+
+- The 2026-07-29 20:47–21:35 shard files are still gone; that specific window is reconstructed by MECHANISM (a live
+  2026-07-30 reproduction of the identical signature + the VM logs), not by inspecting those exact bytes.
+- **No code fix shipped.** The defect is not in `manifest_consolidator.py`, and every candidate fix touches either a
+  shared UTL primitive used by every service or the sports expected-venue data model — a design ruling, not a scoped
+  change (hence P1 above is `[OPERATOR]` with options, per the AO dispatch-scope eligibility rule).
+- The 23 sentinel-free missing days are NOT yet explained.
+- Side-finding, unrelated: `unified_trading_library` is **unimportable in every slot-3 local venv** —
+  `service_framework/fastapi_factory.py` imports `fastapi.routing.iter_route_contexts` (needs the declared
+  `fastapi>=0.137.0`) while the venvs carry 0.135.1. Worked around locally with
+  `VIRTUAL_ENV=… uv pip install 'fastapi>=0.137.0,<1.0.0'` in `unified-trading-library/.venv` only. Prod images are
+  unaffected (they honour the pin); this is local venv drift. Tracked as a todo below.
+
+- [x] ✅ [SCRIPT] P3. **Re-sync the slot local venvs to UTL's declared `fastapi>=0.137.0` pin** — slot-11 2026-08-01.
+      `uv sync` run in `unified-trading-library`, `market-tick-data-service`, `instruments-service` (already green,
+      0.140.7) and `deployment-service`; all four now resolve `fastapi==0.140.7` and
+      `python -c "import unified_trading_library"` succeeds in every `.venv`. `.venv` is gitignored (no diff); the only
+      trackable side effect was a stale `uv.lock` `prek` pin in `deployment-service` (`>=0.3.0` → `>=0.4.4`, matching
+      the pin already declared upstream in `unified-trading-library`/`unified-api-contracts`) —
+      deployment-service@442e7b2.
+
+## Blast-radius audit results (2026-07-30, slot 7, data_engineering) — P1 todo
+
+Dispatched the `[DATA] P1` blast-radius todo. Method: (1) enumerate every real (non-test) call site of
+`check_shard_freshness` across the fleet and the exact `(bucket-family, service_name, expected_venues tokens)` triple
+each one checks; (2) for each triple, download that bucket's `_index/availability_index.parquet` ONCE (a single read of
+the already-materialised manifest, not a new whole-corpus GCS walk — same class of operation the root-cause section
+above used) and query it directly with DuckDB for the two concrete failure shapes the sentinel bug needs: a foreign
+`service_name`'s row satisfying the token via the `venue` column (the sports mechanism), or via the `data_type` column
+(the todo's literal wording). "Foreign" means a DIFFERENT logical pipeline than the one the caller's `service_name`
+declares — multiple genuine vendors capturing the SAME real venue (e.g. `tardis` + `binance`'s own REST fallback both
+under `venue=BINANCE-FUTURES`) is NOT this bug, it's expected multi-source coverage.
+
+| asset_group / caller                                        | bucket checked                                                 | service_name scope         | expected_venues token shape                                                                        | verdict                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| ----------------------------------------------------------- | -------------------------------------------------------------- | -------------------------- | -------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| sports / MTDS `_apply_freshness_skip`                       | `instruments-store-sports-prd`                                 | `market-tick-data-service` | pseudo-venue `ODDS_API`                                                                            | **PRESENT (confirmed)** — this issue's own root-cause section; MDPS's odds-horizon-bucket rollup stamps `venue=ODDS_API` under the SAME `service_name=market-tick-data-service` (a sports-specific ownership convention: "MTDS owns betting-market instruments+odds" per venue_mapping.py), so it satisfies the token via the `venue` column.                                                                                                                                                                                                                                      |
+| tradfi / MTDS `_apply_freshness_skip`                       | `market-data-tick-tradfi-prd` (98 MB manifest)                 | `market-tick-data-service` | real venues `CME,CBOE,NASDAQ,NYSE,ICE,FX,KRX,FRED`                                                 | **ABSENT** — live query: 0 rows anywhere with `data_type` literally equal to any of these 8 tokens. `venue`-column groups exist across multiple `source` values (`databento`,`yahoo`,`fred`) but every group is the SAME real venue's OWN multi-vendor capture, not a foreign pipeline. `market-data-processing-service` writes its own candle rows into this same bucket under its OWN `service_name` (49,536 rows) — no cross-stamping observed.                                                                                                                                 |
+| prediction / MTDS `_apply_freshness_skip`                   | `market-data-tick-pred-prd` (115 MB manifest)                  | `market-tick-data-service` | real venues `POLYMARKET,KALSHI`                                                                    | **ABSENT** for the sentinel-collision pattern (0 `data_type`-column hits). Surfaced an unrelated, real data-quality anomaly instead (filed as a new todo below): 58,013 rows carry `venue=KALSHI` but `source=polymarket_clob` — a source-mislabel, not a foreign-pipeline token collision (doesn't affect `check_shard_freshness` correctness since KALSHI is genuinely expected AND genuinely captured, just under the wrong `source` stamp).                                                                                                                                    |
+| cefi / MTDS `_apply_freshness_skip`                         | `market-data-tick-cefi-prd` (172 MB manifest)                  | `market-tick-data-service` | real venues (14 sampled incl. bare `OKX`, `COINBASE-CDE`, all Tardis-derived `*-SPOT`/`*-FUTURES`) | **ABSENT** — 0 `data_type`-column hits for any sampled token. Multi-`source` venue groups (e.g. `BYBIT`: `tardis`+`bybit`, `HYPERLIQUID`: `tardis`+`hyperliquid`) are the documented native-adapter-alongside-Tardis multi-vendor pattern, not a collision.                                                                                                                                                                                                                                                                                                                        |
+| defi / MTDS `_apply_freshness_skip`                         | `market-data-tick-defi-prd` (1.07 GB manifest)                 | `market-tick-data-service` | compound `PROTOCOL-CHAIN` strings (`UNISWAP_V2-ETHEREUM`, …)                                       | **NOT LIVE-VERIFIED this session** (manifest is >1 GB — a full download+query is disproportionate to a same-session audit's single-walk budget; judgment call, not a skip). Classified **structurally low-risk**: DeFi `data_type` values are generic categories (`gas_fees`,`lending_index`,`dex_swaps`,`oracle_price`,`lst_rate`,`liquidation`,`perp_funding`) — no other pipeline anywhere in the fleet writes a compound `PROTOCOL-CHAIN` string as a bare `data_type` value (grepped fleet-wide). Follow-up todo filed below for anyone who wants the live census closed out. |
+| onchain (defi) features / features-service `_skip_if_fresh` | `features-defi-prd` (37 KB manifest — dedicated, live-checked) | `features-service`         | feature_group names (`lst_yields`, `rewards`, …)                                                   | **ABSENT** — confirmed via direct read: the ENTIRE bucket has exactly one `service_name` value (`features-service`, 1,538 rows). features-service owns dedicated per-asset_group buckets (`features-{cefi,defi,pred,sports,tradfi}-prd`), never shared with MTDS/MDPS/IS, so no foreign pipeline can stamp this `service_name` there.                                                                                                                                                                                                                                              |
+| reference-data / instruments-service preflight              | `instruments-store-{ag}-prd`                                   | `instruments-service`      | reference entities (venue names, `FIXTURES`, `STANDINGS`, …)                                       | **Different collision class, already known + mitigated** — `process_preflight.py`'s own per-league `FIXTURES` coarse-match bug (one league's stale row marking the WHOLE date fresh for every other league) is a same-service, cross-ENTITY collision, not a cross-pipeline one; it already has a dedicated fix (`_should_skip_date_for_per_league`). No cross-pipeline (foreign `service_name`) collision evidence found for IS's own scope in the checked buckets.                                                                                                               |
+
+**Net finding: the sentinel-collision bug class is confirmed SPORTS-ONLY.** It depends on a sports-specific ownership
+quirk (MDPS's odds-horizon-bucket rollup deliberately writing under MTDS's `service_name` rather than its own, because
+instruments-service's sports-ownership doc assigns betting-market odds to MTDS) that has no analogue in cefi/tradfi/
+defi/prediction, where MDPS always writes its own candle rows under its own `service_name` with no observed
+cross-stamping. The `[OPERATOR]` P1 fix-approach ruling above (options A/B/C) therefore only needs to cover the sports
+`ODDS_API` path — no other asset_group needs the same row-scoping fix applied pre-emptively.
+
+- [ ] [DATA] P3. **Investigate KALSHI/polymarket_clob source-mislabel in the prediction-market manifest** — 58,013 rows
+      in `market-data-tick-pred-prd-central-element-323112` carry `venue=KALSHI, data_type=trades` but
+      `source=polymarket_clob` (writes span 2026-07-11 05:56–06:00 UTC, a narrow ~4-minute window — looks like a single
+      misconfigured backfill/replay run rather than an ongoing writer bug). Confirm whether these rows are genuine
+      KALSHI trades mis-stamped with the wrong `source`, or genuine POLYMARKET trades mis-stamped with the wrong `venue`
+      — either way `source=`/`venue=` disagree with each other for this slice. Done-when: root cause identified + (if
+      genuinely mislabeled) a restamp plan. Repo: market-tick-data-service.
+- [ ] [DATA] P3. **Close out the DeFi leg of the blast-radius audit with a live manifest census** — the P1 audit above
+      classified DeFi as structurally low-risk by naming-convention analysis only (its `market-data-tick-defi-prd`
+      manifest is 1.07 GB, judged disproportionate for this session's single-walk budget). Done-when: a single DuckDB
+      read of `market-data-tick-defi-prd-central-element-323112/_index/availability_index.parquet` confirms 0 rows have
+      `data_type` literally equal to any `ALL_DEFI_VENUES` token
+      (`unified-api-contracts/     unified_api_contracts/registry/defi_venues.py`). Repo: unified-trading-library.
+
 ## Codex SSOTs
 
 `/codex/05-infrastructure/manifest-consolidator-ssot.md` (merge engine, UNION-ALL invariants, pause-first discipline for
-any direct canonical intervention).
+any direct canonical intervention — § "Diagnostic caveats" now carries the static-`rows_out` lesson from this issue),
+`/codex/02-data/availability-manifest-and-data-status.md`, `/codex/02-data/sports-2020-06-data-floor.md`.

@@ -120,6 +120,20 @@ stale per-VM-shard fallback so treat the count as a lower bound and re-measure).
 2. Do not "fix" them from this skill — it is read-only, and the root cause is unknown. Report the count and cross-link
    the sports sheet ([`reference-sports.md`](reference-sports.md) H4).
 
+### H6 — 2026-07-30 first-ever census (G1) run — small instrument_type / data_type case drift
+
+Census run against `market-data-tick-pred-prd` (1,661,267 rows) — cleanest of the 4 AGs measured this pass: `venue`
+(POLYMARKET/KALSHI) and `chain` (POLYGON) axes both 100% canonical, 0 non-canonical. Two small residuals, genuinely new
+(no existing tracked doc found):
+
+- **`instrument_type` case drift** — `prediction_market` lowercase (9,720 rows) vs canonical `PREDICTION_MARKET`
+  (781,626 rows); `prediction` (76 rows, truncated/wrong token, not a case variant of anything canonical).
+- **`data_type=prediction_trades`** (2,477 rows) — not in `DATA_TYPES_BY_ASSET_GROUP['prediction']`; looks like a
+  redundant/legacy-prefixed variant of the canonical `trades` (753,064 rows).
+
+Both small-scale (≤10,000 rows out of 1.66M) — tracked in
+`plans/active/issues/cefi_sports_prediction_first_census_small_drift_2026_07_30.md`.
+
 ## Known-good spot-check — run BEFORE trusting any absence result
 
 The generalised lesson from the defi `solana_amm_pool` false negative (`SKILL.md` § 4b): **an absence result is only

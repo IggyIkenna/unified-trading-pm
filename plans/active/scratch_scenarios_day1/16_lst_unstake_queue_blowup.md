@@ -1,5 +1,19 @@
 ## Scenario `lst_unstake_queue_blowup` — LST/LRT withdrawal queue duration spikes
 
+> **🟢 SHIPPED 2026-07-31** — backed by the `DEFI_LST_UNSTAKE_QUEUE_BLOWUP` `ScenarioOverlay` entry
+> (`scenario_id="defi_lst_unstake_queue_blowup"`, `defi_`-prefixed per this registry file's own naming convention) in
+> `unified-api-contracts/unified_api_contracts/registry/scenarios/defi.py` (`unified-api-contracts@15ab5a48`; plan-of-
+> record `plans/archive/2026_07/scenario_library_completion_13_16_2026_07_27.md`), verified consumable by
+> `unified-trading-library`'s `ScenarioOverlayApplier` (the generic `LatencyInject` mutation-type dispatch — no applier
+> code change needed). This fragment stays as design provenance. **Scope note**: the fragment's own PRIMARY mechanism (a
+> per-LST `unstake_days_remaining` feature) needs a UAC `LST_WITHDRAWAL_THROUGHPUT_BASELINES` registry the fragment
+> itself marks `DEFERRED-TO-PHASE-2-IMPL` — modeled here via `LatencyInject` (added redemption delay) as the closest-fit
+> existing mutation type instead. Only the 12 LST/LRT tokens confirmed in UAC's real `LST_TOKEN_TO_PROTOCOL_ASSET`
+> registry are declared; the fragment's frxETH/sfrxETH/Sanctum/LBTC tokens aren't onboarded there yet and were NOT
+> invented. The `secondary_market_depeg` sub-variant is not separately modeled here — it composes with (and is
+> mechanically covered by) `execution_slippage_spike`'s pool-drain mechanism, per this fragment's own "Composes with"
+> section.
+
 | Field                | Value                                                                                                                                                                                                                                                                                                                                                                                      |
 | -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `scenario_id`        | `lst_unstake_queue_blowup`                                                                                                                                                                                                                                                                                                                                                                 |

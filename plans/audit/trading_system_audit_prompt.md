@@ -282,16 +282,16 @@ rg 'gcs_bucket|gs://' --type py --glob '!.venv*' \
 
 **Required state:**
 
-| Criterion                | Requirement                                                                                                                                |
-| ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------ |
-| Service→service imports  | Zero cross-service Python imports in T4 repos                                                                                              |
-| Cloud SDK confinement    | `google.cloud.*` and `boto3` only in `unified-trading-library/unified_trading_library/cloud_interface/` and `deployment-service/backends/` |
-| Cloud-agnostic I/O       | `get_storage_client()`, `get_secret_client()`, `CloudEventSink` used everywhere (from UTL cloud_interface)                                 |
-| Batch-live symmetry      | Same processing engine for batch and live; transport layer switches on `--mode`                                                            |
-| UCI PubSub               | Services use `get_pubsub_client()` from UTL cloud_interface, not `google-cloud-pubsub` directly                                            |
-| Deployment API boundary  | No direct `deployment_service` Python imports from other services                                                                          |
-| Separation of concerns   | Services contain only business logic (orchestration, decisions); all infrastructure delegated to libraries                                 |
-| No library duplication   | No service reimplements functionality that already exists in a unified-\* library (check with cross-repo rg)                               |
+| Criterion               | Requirement                                                                                                                                |
+| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| Service→service imports | Zero cross-service Python imports in T4 repos                                                                                              |
+| Cloud SDK confinement   | `google.cloud.*` and `boto3` only in `unified-trading-library/unified_trading_library/cloud_interface/` and `deployment-service/backends/` |
+| Cloud-agnostic I/O      | `get_storage_client()`, `get_secret_client()`, `CloudEventSink` used everywhere (from UTL cloud_interface)                                 |
+| Batch-live symmetry     | Same processing engine for batch and live; transport layer switches on `--mode`                                                            |
+| UCI PubSub              | Services use `get_pubsub_client()` from UTL cloud_interface, not `google-cloud-pubsub` directly                                            |
+| Deployment API boundary | No direct `deployment_service` Python imports from other services                                                                          |
+| Separation of concerns  | Services contain only business logic (orchestration, decisions); all infrastructure delegated to libraries                                 |
+| No library duplication  | No service reimplements functionality that already exists in a unified-\* library (check with cross-repo rg)                               |
 | Import ↔ manifest match | Every `from unified_*` import in a service has a corresponding entry in workspace-manifest.json `dependencies[]`                           |
 
 **Audit commands (separation of concerns):**
@@ -678,14 +678,14 @@ for r in m['repos']:
 
 **Required state:**
 
-| Criterion                   | Requirement                                                                             |
-| --------------------------- | --------------------------------------------------------------------------------------- |
-| All plans in SSOT-INDEX     | Every `.md` in `plans/active/` registered in `00-SSOT-INDEX.md`                         |
-| No phantom SSOT entries     | Every SSOT entry has a corresponding live file                                          |
-| Manifest ↔ topology sync   | All repos in manifest present in `runtime-topology.yaml`                                |
-| Cursor rules in sync        | `unified-trading-pm/cursor-rules/` and `.cursor/rules/` have equal rule counts          |
-| No orphan repos             | Every repo with a `pyproject.toml` is in `workspace-manifest.json`                      |
-| Manifest↔pyproject version | `workspace-manifest.json` version matches `pyproject.toml` version per repo; zero drift |
+| Criterion                  | Requirement                                                                                                                                                                                                                 |
+| -------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| All plans in SSOT-INDEX    | Every `.md` in `plans/active/` registered in `00-SSOT-INDEX.md`                                                                                                                                                             |
+| No phantom SSOT entries    | Every SSOT entry has a corresponding live file                                                                                                                                                                              |
+| Manifest ↔ topology sync   | All repos in manifest present in `runtime-topology.yaml`                                                                                                                                                                    |
+| Cursor rules symlinked     | Each sibling repo's `.cursor/rules` resolves as a valid symlink to `unified-trading-pm/.cursor/rules` (corrected 2026-08-02: `cursor-rules/` and `.cursor/rules/` are NOT synced and were never meant to have equal counts) |
+| No orphan repos            | Every repo with a `pyproject.toml` is in `workspace-manifest.json`                                                                                                                                                          |
+| Manifest↔pyproject version | `workspace-manifest.json` version matches `pyproject.toml` version per repo; zero drift                                                                                                                                     |
 
 **Scoring:** `PASS` — all criteria met. `WARN` — 1–3 new plans not yet registered (grace period 24h). `FAIL` — any plan
 unregistered for >24h; OR phantom SSOT entries; OR manifest/topology mismatch; OR manifest↔pyproject version drift on
@@ -1012,7 +1012,7 @@ rg 'rev-parse\|staging_commits\|sha.*mismatch\|skip ci' \
 # Expected: SHA verification before promoting each repo
 
 # Check conflict-resolution-agent output validation
-rg 'py_compile\|yaml\.safe_load\|<<<<<<<\|merge.*marker' \
+rg 'py_compile\|yaml\.safe_load\|<{7}\|merge.*marker' \
   unified-trading-pm/.github/workflows/conflict-resolution-agent.yml -n
 # Expected: validation checks for merge markers, py_compile, yaml.safe_load
 
@@ -1478,7 +1478,7 @@ rg 'System-First Architecture\|system-first' \
 | `semver-agent.yml`                 | Present in PM; triggers on staging push                                                                           |
 | `rules-alignment-agent.yml`        | Present in PM; verifies rules/AGENTS.md/CLAUDE.md consistency                                                     |
 | `codex-sync-agent.yml`             | Present in PM (codex is now a sub-directory of PM); triggers on manifest-updated dispatch                         |
-| `plan-alignment-agent.yml`         | Present in PM; validates INDEX.md ↔ active plans ↔ SSOT-INDEX alignment                                         |
+| `plan-alignment-agent.yml`         | Present in PM; validates INDEX.md ↔ active plans ↔ SSOT-INDEX alignment                                           |
 | `overnight-agent-orchestrator.yml` | Present; cron 01:00 UTC; tier-ordered (T0→T4); 3x retry on failure                                                |
 | `AGENTS.md` in all repos           | Workspace-generic, not PM-specific; includes full rules + mandatory cleanup                                       |
 | `.claude/CLAUDE.md` in all repos   | Symlink to canonical `unified-trading-pm/cursor-configs/CLAUDE.md`                                                |
@@ -2007,14 +2007,14 @@ except Exception as e:
 
 | Criterion                                | Requirement                                                                                                 |
 | ---------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
-| Infra ↔ UTL parity                      | Every infrastructure component in runtime-topology.yaml has a corresponding UTL cloud_interface abstraction |
+| Infra ↔ UTL parity                       | Every infrastructure component in runtime-topology.yaml has a corresponding UTL cloud_interface abstraction |
 | No direct infra SDK in services          | Services never import redis, kafka, firestore, etc. directly — only via UTL cloud_interface                 |
 | Storage abstraction                      | `get_storage_client()` covers GCS + S3                                                                      |
 | Messaging abstraction                    | `get_pubsub_client()` covers PubSub + SNS/SQS                                                               |
 | Secrets abstraction                      | `get_secret_client()` covers GCP Secret Manager + AWS Secrets Manager                                       |
 | Query abstraction                        | `get_query_client()` covers BigQuery + Athena (if in topology)                                              |
 | Cache abstraction (if Redis in topology) | `get_cache_client()` or equivalent in UTL cloud_interface covers Redis/Memcached                            |
-| Topology ↔ repo parity                  | All services in topology `service_flows` exist as repos in workspace                                        |
+| Topology ↔ repo parity                   | All services in topology `service_flows` exist as repos in workspace                                        |
 | No infrastructure orphans                | No infra component provisioned but never abstracted (dead infrastructure cost)                              |
 
 **Scoring:** `PASS` — full parity; every topology component has UTL cloud_interface abstraction; zero direct infra SDK

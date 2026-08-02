@@ -22,7 +22,7 @@ created: 2026-05-15
 authoritative_for: [VM launcher shellcheck security audit]
 referenced_by:
 owner: deployment-platform
-last_reviewed: 2026-05-17
+last_reviewed: 2026-09-27
 code_refs:
 type: infrastructure
 auditor: ikenna

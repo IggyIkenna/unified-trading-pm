@@ -71,9 +71,8 @@ step so nothing falls through.
 | System | `/contact` form stored via `api/contact/route.ts`; Calendly booking arrives via email webhook. Neither triggers auth state yet — prospect is anonymous.                             |
 
 **CTA routing convention**: "Book a call / Demo / Discuss a Mandate" sends to Calendly (skip form); "Contact /
-Partnership / request access code" sends to `/contact`. See
-[`feedback_marketing_cta_routing_calendly_vs_contact.md`](../../../.claude/projects/…/memory/feedback_marketing_cta_routing_calendly_vs_contact.md)
-(memory; duplicated here for completeness).
+Partnership / request access code" sends to `/contact`. See `feedback_marketing_cta_routing_calendly_vs_contact.md` (a
+personal agent-memory file — not a repo path, cannot resolve for other readers; duplicated here for completeness).
 
 ### Step 2 — Deep Dive review (briefings + docs + Our Story + FAQ)
 

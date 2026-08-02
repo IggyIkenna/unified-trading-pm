@@ -283,12 +283,47 @@ A second hypothesis was also eliminated on the way: that the 18,480 rows were th
 `venue=ODDS_API` meta shape (`instrument_type=sport`). Measured — the raw is 468+ files of `instrument_type=odds` under
 real bookmaker venues (BOVADA/PINNACLE/LADBROKES_UK/…), i.e. the fully consumable shape.
 
-- [ ] [DIAG] P1. Root-cause why ~360 in-window observations on 2025-12-18 and 2025-12-31 fail to bucket while 2025-12-24
-      legitimately has none. Likely candidates: a fixture-mapping join dropping them, or a secondary guard beyond
-      `bm<=0`. Do NOT "fix" this by relabelling the manifest. **2026-07-30 batch8 triage**: extracted as a tracked todo
-      in `sports_satellite_ao_dispatch_batch8_2026_07_30.md` (combined with the item below).
-- [ ] [DATA] P2. 2025-12-24 alone may legitimately become `empty_confirmed` once the above is understood — but only that
-      date, and only after the bucketing bug is fixed, so the two questions are not conflated again.
+- [x] [DIAG] P1. ✅ ROOT-CAUSED 2026-07-30 (`sports_satellite_ao_dispatch_batch8_2026_07_30.md` todo 1) — **NOT a
+      fixture-mapping join drop and NOT a hidden secondary guard.** Pulled the real raw `batch_odds_api` parquet for all
+      3 dates from `market-data-tick-sports-prd-central-element-323112` and replayed the adapter's exact guard chain
+      (`_materialise_fixture_identity` → causality → 48h zombie-staleness cap → 7-day kickoff-past cap →
+      `assign_horizon_buckets_vectorised`). Every one of the 316 (2025-12-18) / 310 (2025-12-31) in-window
+      (`0<=bm_minutes_to_kickoff<=1440`) rows survives ALL secondary guards intact (0 dropped by causality/staleness/
+      kickoff-past on either date) and reaches the per-bucket horizon-cap check — where 0/316 and 0/310 get assigned a
+      valid `horizon_idx`. Root mechanism: on BOTH dates `fetch_utc` has exactly **1 distinct value** (2025-12-18 12:00
+      UTC / 2025-12-31 12:00 UTC — a single daily fetch, confirmed live), and the ONLY fixtures kicking off within the
+      following 24h are exactly **2 A-League (`A_LEAGUE`/`SOCCER_AUSTRALIA_ALEAGUE`) matches per date** (12-18:
+      Macarthur FC v Brisbane Roar ko 2025-12-19T07:00Z + Western Sydney Wanderers v Auckland FC ko 2025-12-19T09:00Z;
+      12-31: Auckland FC v Newcastle Jets FC ko 2026-01-01T04:00Z + Western Sydney Wanderers v Macarthur FC ko
+      2026-01-01T08:00Z). Their `bm_minutes_to_kickoff` clusters at **~1144.5-1146.4 / ~1264.5-1266.4** (12-18) and
+      **~964.7-967 / ~1204.7-1206.7** (12-31) — all squarely inside the **615-minute dead zone (765-1380 min) between
+      `TIER1_HORIZONS`' T-12h window `[675,765]` and T-24h window `[1380,1500]`** (`bucket_assignment_     adapter.py`
+      `TIER1_HORIZONS`/`_HORIZON_CAPS` — 8 narrow accept-windows totaling ~235 of the 1440 pre-match minutes, by
+      design). Control date 2025-12-20 (working, 83.6% raw-bucketable) has **114 distinct `fetch_utc` values** spread
+      across the day vs these 2 dates' single noon snapshot — with many more snapshots-per-fixture, far more land inside
+      SOME target's narrow cap by chance. So the "REAL BUG" framing holds exactly as originally measured: real, valid
+      pre-match odds WERE captured for those A-League fixtures, but the single-fetch cadence on these 2 quiet dates
+      combined with `TIER1_HORIZONS`' sparse target grid means literally none of it could ever land in a bucket — a
+      genuine capture-cadence/target-density interaction, not a join bug or an extra guard. **Manifest-state
+      correction**: queried the live availability manifest directly in BOTH candidate buckets
+      (`market-data-tick-sports-prd-...` `odds_horizon_bucket` data_type, and `features-sports-prd-...`) for
+      `A_LEAGUE`/`SOCCER_AUSTRALIA_ALEAGUE` on all 3 dates — **no row of ANY capture_status exists** (not `captured`,
+      not `attempted_failed`, not `empty_confirmed`); the shard is simply unregistered.
+      `scripts/reprocess_sports_     odds.py` only writes `attempted_failed` to the manifest `if not dry_run:` (script
+      L958/L980) and its own docstring's usage example (L40) is a `--dry-run` invocation — so the `attempted_failed`
+      state quoted in this doc's §B2 repro log was very likely a **dry-run diagnostic that was never persisted**, not a
+      live manifest row. There is therefore currently nothing live to relabel for EITHER date — see the P2 item below.
+- [x] [DATA] P2. ✅ 2026-07-30 — **premise revisited, not executed.** The plan was to relabel 2025-12-24 alone to
+      `empty_confirmed` once the bucketing question above was understood. Live-checked both candidate manifests
+      (`market-data-tick-sports-prd`'s `odds_horizon_bucket` + `features-sports-prd`) for an `A_LEAGUE`/
+      `SOCCER_AUSTRALIA_ALEAGUE` row on 2025-12-24: **none exists** (see the DIAG finding above — the shard was never
+      registered, `attempted_failed` or otherwise, for any of the 3 dates). There is nothing live to relabel today. If
+      `reprocess_sports_odds.py` is next run for real (non-dry-run) against these dates: 2025-12-24 has **0** in-window
+      rows at all (genuinely nothing to bucket — honest absence, `empty_confirmed` is correct) while
+      2025-12-18/2025-12-31 have 316/310 in-window rows that are legitimately `attempted_failed`-worthy per the root
+      cause above (real data existed but landed in the T-12h/T-24h dead zone) — so the ORIGINAL guidance (2025-12-24
+      only, never 12-18/12-31) still stands as the correct rule for whenever that real run happens; it just doesn't
+      apply to any manifest state that exists right now.
 - [x] [DESIGN] P3. ~~~95% of captured odds are unbucketable~~ **RETRACTED — I generalised from three anomalous dates.**
       Operator challenged the number as implausible ("seems weird thats data corruption? we need to refetch odds!?").
       They were right that it did not add up. Measured against normal match days:
@@ -453,14 +488,24 @@ instruments never enter the denominator either — the date simply looks smaller
 ranges), or make the ASCII rule crypto-only and exempt sports. Latin-1/Latin-Extended accented characters are legitimate
 identity, not noise.
 
-- [ ] [CODE] P1. Narrow `_is_junk_instrument` so accented Latin characters are NOT rejected (target CJK/emoji ranges, or
-      scope the ASCII rule to crypto asset groups); add a regression test pinning `Sanluqueño` / `União` / `Potosí` as
-      KEPT and `龙虾` / `币安人生` as REJECTED. **2026-07-30 batch8 triage**: extracted as a tracked todo (combined with
-      the item below) in `sports_satellite_ao_dispatch_batch8_2026_07_30.md`, cross-referencing
+- [x] [CODE] P1. ✅ Narrowed `_is_junk_instrument` so accented Latin characters are NOT rejected (target CJK/emoji
+      ranges); added a regression test pinning `Sanluqueño` / `União` / `Potosí` as KEPT and `龙虾` / `币安人生` as
+      REJECTED — `instruments-service@453e76f1`, 7/7 tests green 2026-07-30. Tracked in
+      `sports_satellite_ao_dispatch_batch8_2026_07_30.md`, cross-referencing
       `instruments_foundation_phase0_cross_cutting_2026_07_24.md`'s G1.4 (whose "not implemented" framing is itself
       stale — live-verified the guard already exists in code).
-- [ ] [DIAG] P1. Quantify corpus-wide loss (the ~9.8% on 2021-11-26 is one sampled date) and re-capture the affected
-      date/league range once the guard is narrowed.
+- [x] ✅ [DIAG] P1. Quantify corpus-wide loss (the ~9.8% on 2021-11-26 is one sampled date) and re-capture the affected
+      date/league range once the guard is narrowed. **2026-07-30**: split into its own tracked todo (a single-date
+      recapture takes >180s of real API-Football quota — VM-backfill-shaped, not an interactive call) in
+      `sports_satellite_ao_dispatch_batch8_2026_07_30.md`. — **DONE THERE 2026-07-31; closed here 2026-08-02 by
+      `/na-eligibility-audit` (sports tranche) as a KEEP-NA-STALE citation fix, not new work.**
+      [`/plans/active/sports_satellite_ao_dispatch_batch8_2026_07_30.md`](/plans/active/sports_satellite_ao_dispatch_batch8_2026_07_30.md)'s
+      `[DIAG] P1` is `[x]` and names this doc §D as its own `Source:`. Evidence there: 2021-11-26 re-validated **225 →
+      225 instruments, 0 rejected** (was 225 → 203) against the live
+      `instruments-store-sports-prd-central-element-323112`; a 2nd sample date (2021-11-20) surfaced a NEW residual
+      non-Latin-script gap (Vietnamese `Công An Nhân Dân`, Azerbaijani `Səbail`) now carried as that same doc's own OPEN
+      `[CODE] P2` — the residual is owned there, not dropped here. Side-discovery fixed en route:
+      `instruments-service@627fd31c` (`--venues` case-mismatch silently returning 0 URDI records).
 
 ---
 
@@ -508,10 +553,28 @@ but we cannot currently refetch a past T-24h window. The only odds cron is `uts-
 **Operator 2026-07-18: credentials are available for BOTH live and batch**, so the remaining work is code + config, not
 a credential ask.
 
-- [ ] [CODE] P1. Implement The Odds API `/v4/historical/sports/{sport}/odds?date=<ISO>` adapter leg so past horizon
-      windows can be backfilled; cost per snapshot must be measured before a full-corpus run.
-- [ ] [DATA] P1. Once (E1) exists, backfill the T-24h (and T-1h / T-0) windows for fixtures that currently have no
-      sample there; re-derive odds_features after.
+- [x] ✅ [CODE] P1. **DONE 2026-07-31 — was ALREADY DONE, since 2026-04-11.** This finding's own "no `/v4/historical`
+      support anywhere in the codebase" claim was WRONG even when written (2026-07-18) —
+      `git log -S     "historical/sports"` on
+      `market_tick_data_service/market_interface/adapters/sports/odds_api_adapter.py` shows the historical-endpoint
+      calls (`_discover_fixtures` + `_run_league_fetch_loop`, both hitting `/v4/historical/sports/{sport}/odds`) landed
+      in commit `76c920ba` (2026-04-11), 3+ months before this finding — and it's wired into production via
+      `market_tick_data_service/adapters/umi_tick_provider.py:658` (`download_batch(date=date, data_types=data_types)`),
+      not orphaned code. `sports_satellite_ao_dispatch_batch8_     2026_07_30.md`'s own triage repeated the same wrong
+      "confirmed still absent... 2026-07-30" claim — a grep that somehow missed this file, propagated forward rather
+      than caught. **Cost-per-snapshot, genuinely not previously measured (only formula-derived:
+      `_CREDITS_PER_CALL = 60` = "10 × 3 markets × 2 implicit regions") — now EMPIRICALLY measured**: one real
+      `/v4/historical/sports/soccer_epl/odds` call, `x-requests-remaining` delta before/after = exactly 60 credits,
+      confirming the formula. (repo: market-tick-data-service, verification only — no code shipped, none needed)
+- [x] ✅ [DATA] P1. **DONE 2026-07-31 — backfill + re-derivation already complete, verified via the existing
+      `verify_ml_readiness.py` tool this codebase already has for exactly this check.** `day=2022-04-16` (this finding's
+      own sample date, originally 25/68 fixtures at T-24h / 29/68 at T-1h / 8/68 at T-0) now reads 100% non-NULL at both
+      target horizons (`T-24h`, `T-1h`; 594/594 cells, gate met). Broadened to an 11-day window
+      (2022-04-10..2022-04-20): 10/10 real matchdays 100% ready; the 1 "missing" date (2022-04-12) has ZERO raw odds
+      tick data at all (confirmed via `gcloud storage ls` — genuinely no fixtures that day, honest absence per the
+      adapter's own documented "non-matchday skip" behavior, not a gap). No indication of WHEN/HOW this backfill ran (no
+      commit/plan doc found citing it) — it simply happened, and this checkbox was never flipped to reflect it. (repo:
+      features-service + market-tick-data-service, verification only — data already correct, no re-derivation needed)
 - [ ] [CONFIG] P1. FORWARD fix — start capture earlier and poll often enough that every fixture is sampled in every
       declared horizon window (the observed 53-min slice of a 120-min T-24h window shows current polling is too sparse).
       **2026-07-30 batch8 triage note**: `sports_live_availability_and_source_latency_2026_07_24.md` (updated
@@ -617,10 +680,17 @@ read is a coverage blind spot.
       `plans/active/issues/sports_manifest_read_staleness_budget_missing_2026_07_15.md` (no per-AG staleness-budget
       override for sports while the consolidator cadence is ~11 min vs. the 120s generic default). No new diagnosis
       needed here; see that issue doc for the fix.
-- [ ] [AUDIT] P2. Extend this audit to leagues / fixtures / betting-market identifiers (operator: "in sports case
+- [x] [AUDIT] P2. Extend this audit to leagues / fixtures / betting-market identifiers (operator: "in sports case
       leagues and fixtures and betting market canonicals are relevant too") and fold the result into the migration so
       everything lands on one SSOT. **2026-07-30 batch8 triage**: extracted as a tracked todo in
-      `sports_satellite_ao_dispatch_batch8_2026_07_30.md`.
+      `sports_satellite_ao_dispatch_batch8_2026_07_30.md`. — **DE-DUPLICATED here 2026-08-02 by `/na-eligibility-audit`
+      (sports tranche), KEEP-NA-STALE citation fix. ⚠️ This `[x]` means "no longer tracked HERE", NOT "done"** — the
+      work is still genuinely OPEN as
+      [`/plans/active/sports_satellite_ao_dispatch_batch8_2026_07_30.md`](/plans/active/sports_satellite_ao_dispatch_batch8_2026_07_30.md)'s
+      `[ ] [AUDIT] P2`, which restates this item verbatim (all 3 identifier classes + the fold-into-Track-C step) and
+      names this doc §F as its own `Source:`. That doc is `status: active`, `assigned_vm: planning`, so the item is live
+      in the AO backlog; leaving it open here as well double-counted one piece of work in the NA corpus. Same convention
+      as the 5 sibling items above (lines ~450/642/648/651/670) already closed as tracked-elsewhere.
 
 ---
 
@@ -645,3 +715,20 @@ A-F, 24 in Part 2 § G-N, 31 in Part 3 § O-AA) — unchanged from the pre-split
 Any todo count/citation elsewhere in the corpus referencing "this doc" as one 1,843-line file with 73 open todos is
 still accurate in aggregate (same 73 total, now split across 3 files) — only the file path for a specific finding may
 have moved; use the section index above to locate it.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30**: KEEP-NA, valid (sports tranche) — MIXED, left NA: 10 of the 12 open todos are
+  bounded engineering, but `[MODEL] P2` ('consider adding T-6h or T-2h as a MODEL horizon') is a modelling judgment call
+  and `[AUDIT] P2` ('extend this audit to leagues / fixtures / betting-market identifiers and fold the result into the
+  migration') is open-ended by construction — neither has an outcome a worker can settle alone
+- **na-eligibility-audit 2026-08-02**: re-read (in scope again — 3 substantive commits landed after the 07-30 marker:
+  `03d0ef7c7`, `425366f35`, `26c07e337`, which closed 8 of the 12 then-open todos). **KEEP-NA stands; 4 open → 2 after
+  this pass.** Verdicts: **2 × KEEP-NA-STALE** (closed here as citation fixes — §D `[DIAG] P1`, already DONE in batch8
+  2026-07-31; §F `[AUDIT] P2`, extracted verbatim into batch8 and still open THERE, so keeping it open here too was
+  double-counting one item in the NA corpus). **2 × KEEP-NA valid**: §E `[CONFIG] P1` is explicitly gated on batch8's
+  still-open `[DIAG] P2` by its own text ("Leave open until that todo resolves it one way or the other" — gate
+  re-verified, that todo is still `[ ]`), and §E `[MODEL] P2` remains the modelling judgment call the 07-30 marker
+  named. No RECLASSIFY: the doc's own remaining work is a gated item plus a design call, and every bounded piece has
+  already been extracted to `sports_satellite_ao_dispatch_batch8_2026_07_30.md` (`assigned_vm: planning`) — flipping
+  this doc would dispatch duplicates of that batch

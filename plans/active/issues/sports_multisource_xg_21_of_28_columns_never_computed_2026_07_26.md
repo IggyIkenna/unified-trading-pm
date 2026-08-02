@@ -26,7 +26,7 @@ scope: [engineer]
 tags: [features-service, sports, xg, feature-engineering, dead-code, architecture-gap]
 related:
   [
-    /plans/active/issues/ml_service_sports_feature_frame_non_numeric_columns_break_feature_selection_2026_07_26.md,
+    /plans/archive/issues/ml_service_sports_feature_frame_non_numeric_columns_break_feature_selection_2026_07_26.md,
     /plans/active/issues/ml_service_sports_clv_training_pipeline_never_functional_2026_07_26.md,
     /plans/active/sports_satellite_ao_dispatch_batch5_2026_07_26.md,
   ]
@@ -46,6 +46,12 @@ source:
 resolved_by:
 locked_by:
 locked_since:
+context_scope:
+  [
+    /plans/archive/issues/ml_service_sports_feature_frame_non_numeric_columns_break_feature_selection_2026_07_26.md,
+    /plans/active/sports_satellite_ao_dispatch_batch5_2026_07_26.md,
+    /plans/epics/sports_master.md,
+  ]
 ---
 
 # 21 of 28 declared multisource-xG columns are dead placeholder schema
@@ -133,3 +139,14 @@ NOT attempting to improvise 21 formulas here.
 
 None directly on point — this is a features-service-internal feature-engineering gap, not a cross-cutting data pipeline
 contract.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30**: KEEP-NA, valid (sports tranche) — the sole open todo is tagged
+  `[OPERATOR/DESIGN]` and the doc itself cites the dispatch-scope rule for why: 'how should each of these 21 features
+  actually be computed' is a design/domain decision, and it deliberately stops at diagnosis rather than improvising 21
+  formulas
+- **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).
+- **na-eligibility-audit 2026-08-01**: KEEP-NA, valid (sports tranche) — re-verified, unchanged since the 2026-07-30
+  verdict (only a context-scout frontmatter backfill touched this doc since); sole open todo remains
+  `[OPERATOR/DESIGN] P3`, a genuine design decision the doc itself defers.

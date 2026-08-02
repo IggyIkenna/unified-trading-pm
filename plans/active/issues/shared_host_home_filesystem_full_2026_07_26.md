@@ -24,8 +24,8 @@ created: 2026-07-26
 priority: P1
 parent_epic: infrastructure_master
 source: "slot 2, discovered mid-task via a git-push ENOSPC failure, 2026-07-26 ~19:10 UTC"
-assigned_vm: planning
-execution_scope: orchestrator-agent
+assigned_vm: NA
+execution_scope: local-only
 drift_direction: advance-code
 depends_on: []
 locked_by:
@@ -290,3 +290,47 @@ specific to any one task.
   can likely move toward RESOLVED soon** — next entry should confirm sustained headroom (not just one good snapshot)
   before declaring it closed, since this doc has seen brief recoveries reverse before (see the 07-26 "MOOT" mark that
   later regressed).
+- 2026-07-31T08:5xZ (cicd escalation `agt-864e5d`, `WALL_TYPE=ldr_qg_failure`, agent-orchestrator promotion PR #738
+  LDR→main): a CI-job-level recurrence of this doc's tracked disk-pressure signature, not an interactive-session one —
+  corroborating from a new vantage point. Failing run `30617478005` (`QG slice (checks)` job, `pull_request`-triggered,
+  self-hosted runner `glue-1` — path `/opt/github-glue-runners-ao/glue-1/_work/...`) showed 2 pytest failures in
+  `tests/test_done_gate_plan_flip_hard_reject.py`, both textbook disk-exhaustion signatures, not assertion failures:
+  `subprocess.CalledProcessError` from `git config user.email`
+  (`error: failed to write new configuration file .../.git/config.lock`) and
+  `sqlalchemy.exc.OperationalError: (sqlite3.OperationalError) database or disk is full` during `create_all_tables()`.
+  `basedpyright` itself passed clean (0 errors, 0 warnings) — the "typecheck" QG-selector's failure was 100% these 2
+  pytest tests. Ruled out a real regression before concluding infra-flake: PR #738's diff touches exactly one file
+  (`.github/workflows/main-backmerge-to-ldr.yml`, a `grep ... || true` pipefail fix) with zero plausible causal path to
+  git-config or sqlite writes. Confirmed transient, not systemic: LDR's own `quality-gates-v2`
+  (`workflow_dispatch`-triggered) was green on every run immediately before (07:00Z, 08:05Z) and after this window; the
+  PR itself had already **self-merged at 08:46:13Z — 2 minutes before this failing run even started (08:48:35Z)** — the
+  exact "orphaned noise against an already-resolved wall" pattern
+  `/plans/active/issues/pytest_timeout_60s_flaky_under_contention_2026_07_29.md` documents extensively for a sibling
+  failure signature (pytest-timeout rather than disk-full, same underlying self-hosted-runner contention class). Current
+  host state (this session runs on the same shared VM per its worktree path): `df -h /` `678G 516G 162G 77%` — not in
+  crisis, but used-bytes climbed from the 2026-07-30 entry's `489G/678G (73%)` reading to `516G/678G (77%)` in about a
+  day; worth another look if the trend continues, not yet actionable on one data point. No code/test action taken or
+  needed — zero open `/api/repo-blockers` for agent-orchestrator, PR already merged, LDR already green on every recent
+  run. Filing here (not a new issue doc) since this is the same disk-pressure condition class this doc already tracks,
+  just observed from a CI-job vantage point rather than an interactive slot session.
+- 2026-07-31T10:43Z (slot-1, independent re-verification of the SAME escalation `agt-864e5d` — this session was
+  (re-)dispatched for it after the entry above was already written, so re-confirmed live rather than trusting the prior
+  write-up alone): re-checked all 4 load-bearing facts fresh — `gh pr view 738` → `state: MERGED`,
+  `mergedAt: 2026-07-31T08:46:13Z` (unchanged); `gh run list --workflow quality-gates-v2.yml --branch live-defi-rollout`
+  → 5/5 most recent runs `success`, including one at `09:55:17Z` (after the failing run and after the entry above);
+  `gh pr list --base main --state open` for agent-orchestrator → `[]`, no promotion PR currently open/blocked;
+  `GET /api/repo-blockers` → `{"open": []}`. All four confirm the prior entry's conclusion still holds unchanged ~2h
+  later: nothing to fix, nothing pending. `df -h`: `/` `678G 490G 188G 73%`, `/tmp` `2.0G 1.7G 384M 82%` — consistent
+  with the prior entry's non-crisis reading, not worsening. No code/test/workflow action taken (none would be correct —
+  there is no defect); pinged the authoring slot (`ci`) with this outcome and closed out the escalation via `/done`
+  without further changes.
+- **na-eligibility-audit 2026-08-02** (infra tranche, incremental run): **KEEP-NA, valid.** First verdict for this doc —
+  flagged unclassified by the 2026-08-01 `/ag-closeout-audit infra` run ("not previously read by this skill; flagging
+  for a future Phase-1 pass"), now closed. Read end-to-end; `grep -cE '^- \[ \]'` = **2**, matching this verdict's item
+  count. The headline crisis is genuinely resolved (the volume was expanded 290G → 484G → 678G; the latest reading in
+  this doc's own thread is 77% used, non-crisis), so this is not an ARCHIVE case only because 2 real todos remain. Both
+  stay NA: they are open-ended investigations whose stated outcome is "propose an action" rather than a determinable
+  fact (audit 157G of live multi-slot workspace for "real cleanup headroom"; determine ownership/purpose of two
+  directories "before proposing any action"), any resulting cleanup is unconditionally blocked for autonomous workers by
+  `block_destructive_commands.py`, and this doc itself records a `du -sh` census being killed by host pressure before
+  completing — so even the measurement half is not reliably completable from a slot session.

@@ -23,7 +23,7 @@ related:
     /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
   ]
 created: 2026-07-28
-last_updated: 2026-07-28 # (slot-3: Phase C/F re-scope — legacy bucket already deleted 2026-07-14)
+last_updated: 2026-07-30 # (rulings-closeout re-confirm — Phase B still correctly gated, no change)
 parent_epic: manifest_master
 assigned_vm: NA
 execution_scope: local-only
@@ -39,6 +39,14 @@ supersedes:
 superseded_by:
 depends_on:
 source: [data_completion_cefi_2026_07_15.md — consolidated 2026-07-28 per main-agent ruling BLK-650261be (slot-4)]
+context_scope:
+  [
+    /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
+    /plans/active/data_completion_cefi_2026_07_15.md,
+    /plans/active/issues/cefi_hardstop2_carveout_codex_vs_plan_contradiction_2026_07_29.md,
+    /plans/active/issues/cefi_legacy_bucket_deleted_before_l3_gate_2026_07_28.md,
+    /codex/05-infrastructure/vm-launcher-runbook.md,
+  ]
 ---
 
 # CeFi E4→E8 orphan-sweep + legacy gap-fill + manifest rebuild — VM execution chain
@@ -105,6 +113,21 @@ A VM-launcher category wiring this tool was added this session (slot-4, `deploym
 these ships a prod-touching run** — both are tooling only, proven in unit tests with mocked GCS, never invoked against
 production. This plan is where that invocation actually happens, phase by phase, with an operator at each irreversible
 step.
+
+## Co-claim structure — RESOLVED 2026-07-31 (corpus-wide ownership-conflict sweep)
+
+> Four other cefi docs point at this plan, which read as a co-claim. It is not — **this plan is the single EXECUTION
+> SSOT** and the others are gates or citations. The `[OPERATOR]` hard-stop on **Phase B was deliberately left exactly as
+> it is** (permanent human-only, delete-safety-protocol hard-stop #2); only the surrounding ownership was clarified.
+>
+> | Doc                                                                                      | Relationship to this plan                                                                                                                                                                                         |
+> | ---------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+> | `/plans/active/data_completion_cefi_2026_07_15.md`                                       | **CITES.** Its E4 + "NEXT SESSION — execute the migration" todos are already `SUPERSEDED-BY` this plan (verified 2026-07-31); they execute nothing themselves.                                                    |
+> | `/plans/active/issues/cefi_legacy_bucket_deleted_before_l3_gate_2026_07_28.md`           | **GATES Phase C.** Owns the normalization-aware snapshot-vs-`-prd` comparison that decides whether Phase C is done-by-fait-accompli or needs a from-snapshot re-scope. Nothing here should pre-empt that verdict. |
+> | `/plans/active/issues/cefi_hardstop2_carveout_codex_vs_plan_contradiction_2026_07_29.md` | **GATES Phase B's framing** (the hard-stop carve-out question) — not the execution.                                                                                                                               |
+> | `/plans/active/cefi_track7_candle_namespace_residual_2026_07_25.md`                      | **CITES** for sequencing only.                                                                                                                                                                                    |
+>
+> Net: **only this plan's own todos execute.** Every other doc either gates a phase or cites it.
 
 ## Phase A — E4a(i): PRE-DELETE GUARANTEE copy pass (additive, reversible, VM-launched)
 
@@ -240,3 +263,29 @@ dispatching this phase would just 404; explicitly NOT a claim that its gates wer
 rebuild + verify) don't touch the legacy bucket at all. Full evidence + the operator-intent question + the open
 verification item: `plans/active/issues/cefi_legacy_bucket_deleted_before_l3_gate_2026_07_28.md`. No code shipped (plan
 reconciliation only, per the finding's own recommended decision).
+
+### 2026-07-30 (rulings-closeout pass, separate session) — re-confirmed, no change
+
+Re-verified this doc's live-gate state per a workspace-wide sweep closing out recorded operator rulings implying
+unshipped work. Phase A remains correctly flipped done (already verified complete this session by an earlier pass,
+`canonical-migration-cefi-20260730-012546`). **Phase B remains correctly gated** — re-read
+`plans/active/issues/cefi_hardstop2_carveout_codex_vs_plan_contradiction_2026_07_29.md` directly: `status: open`,
+unchanged, no new resolution. Per this sweep's own explicit constraint (do not resolve an open operator-only policy
+contradiction, do not execute a ~1.2M-object prod delete without an independently-verified §3a citation), Phase B was
+NOT executed and the hard-stop-2 contradiction was NOT adjudicated. No action taken; no changes needed.
+
+### 2026-07-31 (na-eligibility-audit, tranche=cefi, autonomous) — KEEP-NA, valid
+
+All 4 open todos (Phases B/C/D/E) stay NA: the doc's own summary/banner declares "All steps are human-executed (LOCAL,
+not AO-dispatched)... never an autonomous-agent action," Phase B is the categorical delete-safety hard-stop #2
+(`[OPERATOR]`), Phase C is blocked on an unresolved migration-verification investigation, and Phase D/E — while reading
+individually as "dispatchable" in their own todo text — are real-production-write, VM-scale steps tightly interleaved
+with the still-open hard-stop-2 contradiction (`cefi_hardstop2_carveout_codex_vs_plan_contradiction_2026_07_29.md`). Per
+the skill's "stay skeptical of a todo's own self-framing" caveat, the doc-level banner governs over any individual
+todo's isolated wording. No reclassification.
+
+- **na-eligibility-audit 2026-08-01** (tranche=cefi, autonomous): KEEP-NA, valid — re-confirmed. All 4 open todos
+  (Phases B/C/D/E) still gated per the doc's own "all steps human-executed, never AO-dispatched" banner; Phase B still
+  blocked on `cefi_hardstop2_carveout_codex_vs_plan_contradiction_2026_07_29.md` (status: open, unchanged); Phase C
+  still blocked on the CF-11 investigation. No change since the 2026-07-31 marker above.
+- **context-scout 2026-08-01**: populated/refreshed context_scope (5 entries).

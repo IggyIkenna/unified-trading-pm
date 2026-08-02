@@ -24,7 +24,7 @@ referenced_by:
     /codex/04-architecture/autonomous-recovery-matrix.md,
     /codex/04-architecture/recovery-defence-in-depth-layers.md,
     /codex/09-strategy/architecture-v2/cross-cutting/risk-gates.md,
-    plans/active/drawdown_liquidation_policy_and_strategy_risk_config_2026_05_23.md,
+    plans/archive/drawdown_liquidation_policy_and_strategy_risk_config_2026_05_23.plan.md,
   ]
 owner:
 last_reviewed: 2026-05-23
@@ -35,7 +35,7 @@ code_refs:
 
 > SSOT for the 7-threshold drawdown configuration, expected drawdown model, 5-flag response policy, and per-strategy
 > idempotent close-all scripts. Codified 2026-05-23 per
-> `plans/active/drawdown_liquidation_policy_and_strategy_risk_config_2026_05_23.md`.
+> `plans/archive/drawdown_liquidation_policy_and_strategy_risk_config_2026_05_23.plan.md`.
 
 ## Principle
 

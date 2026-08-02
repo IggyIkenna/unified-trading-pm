@@ -1,0 +1,216 @@
+{
+  "schema_version": 1,
+  "skill": "data-pipeline-reconciliation",
+  "asset_group": "sports",
+  "layer": "raw-tick",
+  "mode": "interactive",
+  "run_at": "2026-08-01T10:51:00Z",
+  "run_date_label": "2026-08-01",
+  "phases_run": ["phase0", "phase1", "phase2"],
+  "tier": "tier1_in_session",
+  "buckets": {
+    "primary": {
+      "kind": "market-data",
+      "asset_group": "sports",
+      "deployment_env": "prd",
+      "resolved_name": "market-data-tick-sports-prd-central-element-323112",
+      "reachable": true,
+      "probe_method": "non-recursive top-level list_blobs(delimiter='/')",
+      "top_level_prefixes": [
+        "_index/",
+        "_legacy_migrated_processed/",
+        "_legacy_migrated_scripts/",
+        "_legacy_migrated_vm_staging/",
+        "_vm_staging/",
+        "processed/",
+        "processed_candles/",
+        "raw_tick_data/",
+        "scripts/"
+      ],
+      "new_top_level_prefix_since_2026_07_24": "processed_candles/"
+    },
+    "cross_reference_only": {
+      "kind": "instruments-store",
+      "asset_group": "sports",
+      "deployment_env": "prd",
+      "resolved_name": "instruments-store-sports-prd-central-element-323112",
+      "reachable": true,
+      "note": "Manifest max-date cross-check for F5 only; NOT independently four-surface-reconciled this pass."
+    }
+  },
+  "index_freshness": {
+    "primary_bucket": {
+      "latest_json": {
+        "last_run_at": "2026-08-01T10:37:41.920818+00:00",
+        "success": true,
+        "verdict": "empty",
+        "shards_scanned": 1,
+        "shards_changed": 0,
+        "rows_in": 0,
+        "rows_out": 0,
+        "no_op": true
+      },
+      "consolidator_stall_state": { "streak": 0, "baseline_shards": 1 },
+      "lock_held": false,
+      "phantom_audit_latest_json_present": false,
+      "availability_index_row_count": 628446,
+      "availability_index_row_count_2026_07_24": 465223,
+      "availability_index_max_date": "2026-07-29"
+    },
+    "cross_reference_bucket": {
+      "latest_json": {
+        "last_run_at": "2026-08-01T10:37:37.724699+00:00",
+        "success": true,
+        "verdict": "empty",
+        "shards_scanned": 0,
+        "no_op": true
+      },
+      "consolidator_stall_state": { "streak": 0, "baseline_shards": 2 },
+      "lock_held": true,
+      "lock_started_at": "2026-08-01T10:26:29.902564+00:00",
+      "lock_ambiguity_note": "latest.json shows a successful run 11 minutes AFTER lock started_at -- could be stale/orphaned or a fresh run about to release; not disambiguated this pass",
+      "phantom_audit_latest_json_present": true,
+      "phantom_audit_latest_json": {
+        "generated_at": "2026-07-25T02:23:45.881845+00:00",
+        "phantom_count": 0
+      },
+      "batch_odds_api_max_date": "2026-07-29"
+    }
+  },
+  "continuity_check_f1_2026_07_24": {
+    "still_holds": false,
+    "verdict": "RESOLVED",
+    "resolution_evidence": "addendum to plans/archive/issues/sports_odds_capture_pipeline_scheduling_status_unknown_2026_07_23.md, filed 2026-07-24, root-caused + closed 2026-07-26",
+    "root_cause": "deliberate 2026-06-07 sports-manifest-canonicalisation architecture -- market_tick_data_service/engine/orchestrator/_manifest_bucket.py::_resolve_manifest_bucket() routes sports canonical manifest to instruments-store-sports-prd by design, code-enforced since 2026-07-13",
+    "new_issue_doc_needed": false,
+    "note": "the 07-24 report's own text ('no follow-up issue doc appears to have been filed') was itself slightly inaccurate -- a follow-up addendum existed the entire time, just appended to a pre-existing doc rather than filed as a new slug"
+  },
+  "oracle_sample": {
+    "sample_size": 25,
+    "sample_method": "random, seed=42, drawn from current manifest",
+    "violations_require_pipeline_mode_false": 0,
+    "violations_require_pipeline_mode_true": 0,
+    "includes_new_fixture_id_path_segment": true
+  },
+  "schema_validation_sample": {
+    "n": 3,
+    "contract": "asset_group=sports, instrument_type=odds, data_type=trades",
+    "violations_total": 0,
+    "sampled_not_full_corpus": true
+  },
+  "findings": [
+    {
+      "id": "F5",
+      "type": "live_writer_outage (new finding class this pass -- not yet in reconciliation-finding-taxonomy.md)",
+      "severity": "HIGH",
+      "surfaces_disagreeing": ["S1(GCS)", "S3(manifest, both buckets agree)"],
+      "asset_group": "sports",
+      "summary": "uts-prod-market-tick-data-service-fast-t1-recon (shared Cloud Run Job) OOM-kills nearly every SPORTS execution since ~2026-07-27 (8Gi memory limit, 'The configured memory limit was reached'). Real GCS-side capture gap (not manifest lag): 0 raw_tick_data objects for day=2026-07-30, 2026-07-31, 2026-08-01 (partial) in market-data-tick-sports-prd, confirmed by direct delimiter-scoped listing. Cross-confirmed via instruments-store-sports-prd (canonical manifest bucket) independently showing the same batch_odds_api max-date=2026-07-29 ceiling.",
+      "evidence": {
+        "sampled_error_rate": "846/846 sampled ERROR log entries (2026-08-01T09:00-10:45Z) carry --asset-group SPORTS",
+        "onset_bound": "0 OOM errors at 2026-07-27T00:00-01:00Z, 42 at 2026-07-27T12:00-13:00Z -- onset within that window",
+        "still_active_at": "2026-08-01T10:43Z (check time)",
+        "ruled_out": [
+          "future-date-guard bug (fixed market-tick-data-service@410d7569, 2026-07-26)",
+          "odds-api-key deactivation (rotated 2026-07-29, live-verified HTTP 200 this pass)"
+        ],
+        "scheduler_status": "uts-prod-sports-scheduler-cron ENABLED, firing correctly at */5min"
+      },
+      "root_cause_confirmed": "proximate (OOM) only -- underlying memory-blowup mechanism NOT identified, code-level investigation needed",
+      "detector": "live gcloud logging read + gcloud run jobs executions list + direct GCS delimiter listing (all live, not inferred)",
+      "delete_eligible": false,
+      "new_issue_filed": "plans/active/issues/sports_fast_t1_recon_oom_live_capture_outage_2026_08_01.md",
+      "big_finding": true
+    },
+    {
+      "id": "F2",
+      "type": "non_canonical_axis_value",
+      "severity": "MEDIUM",
+      "surfaces_disagreeing": ["S3"],
+      "asset_group": "sports",
+      "summary": "56,953 of 628,446 manifest rows (9.06%) carry a venue value outside both VENUES_BY_ASSET_GROUP['sports'] (now 11 entries, up from 8) and SPORTS_ODDS_API_ACCEPTED_NONCANONICAL_BOOKMAKERS (now 23 entries, up from 20). Down from 12.3% at 2026-07-24 -- real registry-maintenance progress, but KALSHI's cross-AG bleed is unchanged and SPORT888/LADBROKES_UK grew in absolute volume.",
+      "breakdown": {
+        "KALSHI": {
+          "count": 20785,
+          "note": "UNCHANGED from 07-24; cross-AG (prediction-registered) bleed, still open, still 100% empty_confirmed/row_count=0"
+        },
+        "SPORT888": {
+          "count": 20066,
+          "note": "up from 13,997 at 07-24; distinct from now-canonical BET888SPORT (18,903 rows)"
+        },
+        "LADBROKES_UK": {
+          "count": 13560,
+          "note": "up from 8,859 at 07-24; distinct from now-canonical LADBROKES (12,210 rows)"
+        },
+        "": { "count": 2498, "note": "unchanged blank sentinel" },
+        "FOOTBALL": {
+          "count": 44,
+          "note": "NEW this pass -- venue field literally 'FOOTBALL', single historical date 2021-11-26, pipeline_mode=batch_footystats, data_type=arbitrage_opportunity, 100% attempted_failed, immaterial"
+        }
+      },
+      "resolved_since_07_24": [
+        "UNIBET_UK (9,423 rows, now accepted-list)",
+        "UNIBET_EU (12 rows, now accepted-list)",
+        "SMARKETS (4,162 rows, now canonical-list)",
+        "UNKNOWN (8 rows, not found in current manifest)"
+      ],
+      "detector": "in-session distinct-value census (G1) -- manifest column vs unified_api_contracts.registry.market_data_categories.VENUES_BY_ASSET_GROUP + SPORTS_ODDS_API_ACCEPTED_NONCANONICAL_BOOKMAKERS",
+      "delete_eligible": false,
+      "related_existing_issues": [
+        "plans/active/issues/cross_ag_prediction_rows_bleed_into_sports_instruments_index_2026_07_20.md"
+      ]
+    }
+  ],
+  "suppressed_exceptions": {
+    "AE-1_sports_blank_pipeline_mode_source": {
+      "applicable": null,
+      "note": "not re-checked this pass, unchanged condition expected"
+    },
+    "sports_data_type_casing_K0_K1": { "applicable": true, "note": "not re-measured this pass" }
+  },
+  "phase2_register_recheck": {
+    "item_4_scripts_in_bucket": {
+      "status": "RE-CONFIRMED PRESENT, unchanged disposition",
+      "objects": [
+        "scripts/fetch_missing_odds.py",
+        "scripts/oddspapi_historical_backfill.py",
+        "scripts/oddspapi_runner.py"
+      ]
+    },
+    "item_13_processed_vs_processed_candles": {
+      "status": "UPDATED -- processed_candles/ now exists (new since 07-24), candles-layer, out of scope this pass"
+    },
+    "new_noncanonical_location_found": false,
+    "register_patch_stanza_needed": false
+  },
+  "delete_suggestions": [],
+  "coverage_gaps": [
+    "instruments-store-sports-prd only spot-checked (manifest max-date cross-check for F5), not independently four-surface-reconciled this pass",
+    "--layer candles not run; new processed_candles/ prefix unexplored",
+    "Tier-2 100%-corpus per-datapoint validation not dispatched -- Tier-1 only",
+    "_index/phantom_audit_latest.json still absent for market-data-tick-sports-prd",
+    "id-form (G2) not applicable to sports (no stem rule), consistent with prior passes",
+    "Full manifest S1<->S3 join not performed -- 25-object oracle sample + 3-object schema sample only",
+    "reachable_coverage formula not recomputed this pass",
+    "instruments-store-sports-prd consolidator lock staleness not disambiguated (started 10:26:29Z, still held at 10:38:42Z check)",
+    "F5's underlying memory-blowup root cause not code-level investigated -- proximate cause (OOM) confirmed live only"
+  ],
+  "coverage_formula": {
+    "name": "reachable_coverage = captured / (captured + attempted_failed + expected_unattempted), empty_confirmed EXCLUDED",
+    "source": "honest-coverage-model.md (CK3-certified)",
+    "computed_value_primary_bucket": null,
+    "caveat": "NOT recomputed this pass -- flagged as a coverage gap rather than silently carried forward from 07-24's degenerate 100.0%"
+  },
+  "big_finding_notified_operator": true,
+  "issue_docs_touched": {
+    "new": ["plans/active/issues/sports_fast_t1_recon_oom_live_capture_outage_2026_08_01.md"],
+    "addenda_appended": [],
+    "confirmed_already_resolved_no_action_needed": [
+      "plans/archive/issues/sports_odds_capture_pipeline_scheduling_status_unknown_2026_07_23.md (F1 addendum, closed 2026-07-26)"
+    ]
+  },
+  "verdict": {
+    "is_100pct_canonical": false,
+    "headline": "Sports raw-tick (market-data-tick-sports-prd) remains structurally canonical at the path level (oracle: 0/25 violations) and schema-valid (0/3 sampled violations). F1 (manifest staleness) from the 07-24 report is CONFIRMED RESOLVED (deliberate architecture, closed 2026-07-26). F2 (venue drift) improved 12.3%->9.06% via real registry maintenance, though KALSHI's cross-AG bleed is unchanged. The standout new finding is F5: a live, currently-active Cloud Run Job OOM outage (uts-prod-market-tick-data-service-fast-t1-recon, SPORTS-scoped, since ~2026-07-27) that has zeroed out real raw-tick capture for at least 3 consecutive days as of check time -- flagged as the priority finding, new issue doc filed."
+  }
+}

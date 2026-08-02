@@ -48,6 +48,14 @@ source:
   human-readable canonical format, right? ... The whole point of canonical mapping is not just to get the thing from the
   source where it's called. It's to map it into something human-readable'). Investigation found real, proven prior art
   (InstrumentLeg/COMBO + the tradfi_symbology human-name registry) rather than a from-scratch design question."
+context_scope:
+  [
+    /plans/active/issues/instrument_id_format_canonicalization_2026_07_08.md,
+    /codex/02-data/cross-asset-canonical-target-ssot.md,
+    /plans/active/issues/tradfi_canonical_path_migration_design_2026_07_19.md,
+    /plans/audit/results/canonical_instrument_id_audit_2026_07_08.md,
+    instruments-service/instruments_service/reference_data/adapters/tradfi/databento/symbology.py,
+  ]
 ---
 
 > **Real code gap, not a naming decision** — the structured leg representation and the human-name translation registry
@@ -164,13 +172,20 @@ Read in full before touching any todo — this is the concrete acceptance spec, 
       only — it does not, by itself, rewrite the historical raw-tick-parquet/manifest `instrument_id` COLUMN content for
       single-leg rows already on disk; that content-level migration is tracked separately under the TradFi
       canonical-path migration effort (`plans/active/issues/tradfi_canonical_path_migration_design_2026_07_19.md`).
-- [ ] [SCRIPT] P2. (NEW, filed 2026-07-09) **Extend the 1-4 leg hard cap + logged-drop behavior to Deribit's existing
-      combo builders** (`cefi/deribit_combo_adapter.py`, `cefi/tardis/combos.py`) — the operator spec (2026-07-09)
-      explicitly made this cross-asset-group, not TradFi-only. Not attempted in this pass (untouched by this commit's
-      diff; needs fresh investigation of those adapters). **NOTE (na-eligibility-audit 2026-07-27)**: this exact item is
-      already claimed as `tradfi_satellite_ao_dispatch_batch1_2026_07_25.md`'s 5th todo (`status: active`,
-      `assigned_vm: planning`, cites this doc as its Source) — still open there too as of this audit. Not reclassified
-      independently; this checkbox stays open until that batch's todo lands and its finalize twin flips it here.
+- [x] ✅ [SCRIPT] P2. (NEW, filed 2026-07-09) **DONE 2026-07-27 (slot-8, data_engineering), flipped by
+      `tradfi_satellite_ao_dispatch_batch1_finalize_2026_07_25.md`'s reconciliation pass.** **Extend the 1-4 leg hard
+      cap + logged-drop behavior to Deribit's existing combo builders** (`cefi/deribit_combo_adapter.py`,
+      `cefi/tardis/combos.py`) — the operator spec (2026-07-09) explicitly made this cross-asset-group, not TradFi-only.
+      **Evidence: instruments-service@9416be7d** — added `_MAX_COMBO_LEGS = 4` to both files;
+      `deribit_combo_adapter.py::_build_legs()` now checks `len(raw_legs) > _MAX_COMBO_LEGS` and drops+logs (with
+      `combo_id` context) before per-leg parsing; `tardis/combos.py::_parse_deribit_combo_legs()` checks
+      `len(structure) > _MAX_COMBO_LEGS` right after resolving the structure code and drops+logs (with `code`/`raw_id`
+      context) — a defensive backstop since every entry in `_DERIBIT_COMBO_STRUCTURES` today tops out at 4 legs. New
+      unit tests added to `test_cefi_deribit_combo_boost.py` (`test_5_legs_dropped_not_truncated`),
+      `test_cefi_tradfi_comprehensive.py` (`test_parse_combo_instrument_5_legs_dropped_not_truncated`,
+      `test_parse_combo_legs_5_leg_structure_dropped_not_truncated`), all asserting drop-not-truncate.
+      `quality-gates.sh --no-fix` green, shipped via `quickmerge --agent`. Full detail:
+      `tradfi_satellite_ao_dispatch_batch1_2026_07_25.md`'s 5th todo.
 - [x] ✅ [SCRIPT] P3. **DONE 2026-07-26 (slot-10, data_engineering)** — Extended UAC's `build_leg()` with an opt-in
       `include_venue: bool = True` parameter (`unified-api-contracts@e1023c80`) and migrated all 3 TradFi combo-leg call
       sites (`instruments-service@de870864`) to it, deleting the local `_build_leg_key()` helper. Full detail:
@@ -178,6 +193,21 @@ Read in full before touching any todo — this is the concrete acceptance spec, 
 
 ## Progress Log
 
+- **na-eligibility-audit 2026-07-31** (tradfi tranche, dispatch agt-6d6eaf): **KEEP-NA, valid.** 0 open checkboxes
+  (matches tranche-inventory tool), but this doc is a live "prose-only remaining work" case — the entry below already
+  self-flags that it does not genuinely reach 0 open todos (the residual 91-CBOE + 312-DBEQ historical catalog `--apply`
+  reapply). That residual is operator-gated on citation alone: the doc's own "Rollout methodology (operator,
+  2026-07-09)" section (pause-for-confirmation before any unsupervised sweep) explicitly covers it, and a fresher,
+  independent 2026-07-29 pass (`tradfi_satellite_ao_dispatch_batch5_2026_07_29.md`'s own "Deferred — operator-gated"
+  section) re-confirmed the same disposition 2 days ago. No stale items, no duplicate claim, no reclassify — the pending
+  action is a GCS-catalog `--apply` rewrite genuinely requiring the recorded operator go-ahead.
+- **2026-07-30 (tradfi_satellite_ao_dispatch_batch1_finalize reconciliation pass)** — Flipped the Deribit 1-4 leg
+  hard-cap checkbox to `[x]`, citing `instruments-service@9416be7d` (verified reachable). This was the doc's only
+  remaining `- [ ]` checkbox — but `status` stays `active`, NOT `resolved`: the "Scope migration mechanics" `[x]` item
+  above documents a genuinely still-open prose-form action (the historical catalog `--apply` rewrite for the residual 91
+  CBOE + 312 DBEQ rows is deferred pending operator confirmation, and is not durable against the self-refreshing
+  `prod/catalog.parquet` roll-up until the upstream `by_date` corpus is migrated per
+  `tradfi_canonical_path_migration_design_2026_07_19.md`) — this doc does not genuinely reach 0 open todos.
 - **2026-07-08** — Filed after the operator correctly rejected an initial flat-string proposal for reusing raw exchange
   tickers instead of real human-readable names, and after investigation found real, proven prior art
   (`InstrumentLeg`/`InstrumentType.COMBO` + the `tradfi_symbology` human-name registry) rather than a from-scratch
@@ -199,3 +229,4 @@ Read in full before touching any todo — this is the concrete acceptance spec, 
   filed as its own follow-up). `quality-gates.sh --no-fix` green (exit 0). Landed instruments-service@<pending — see
   commit list in the parent task's final report> together with 3 pre-existing, already-verified, unrelated commits that
   were blocked from landing only by this WIP's test regression contaminating the shared tree.
+- **context-scout 2026-08-01**: populated/refreshed context_scope (5 entries).

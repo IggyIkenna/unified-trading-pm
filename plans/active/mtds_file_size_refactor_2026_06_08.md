@@ -40,6 +40,7 @@ source:
     "market-tick-data-service quality-gates.sh file-size gate (MAX_FILE_LINES=900, hard-fail, no baseline)",
   ]
 drift_direction: advance-code
+context_scope: [/plans/epics/mtds_mdps_master.md]
 ---
 
 # MTDS file-size refactor — split the 15 pre-existing >900-line source files
@@ -185,6 +186,7 @@ byte-identical output before/after).
   (all above the audited 3×/5×/7.8× targets). Shas: market-data-processing-service@c7e0437/85060ff/eee8433/2dd13db,
   unified-trading-pm@68bf2c85c/be1f7633c. The remaining M-2 scope (file-size splits, adapter-protocol pandas→polars,
   coverage/QG residuals) stays parked/⏸️ DEFERRED — unaffected by this fold.
+- **context-scout 2026-08-01**: populated/refreshed context_scope (1 entries).
 
 ## Deferred work — migrated to:
 
@@ -193,3 +195,6 @@ designated survivor/receptacle for the MTDS/MDPS file-size-splits + pandas→pol
 scope (was parked per the top-of-doc "⏸️ DEFERRED 2026-06-26 (operator) — non-essential, parked" banner — **operator
 directive 2026-07-27: resume**). There is no external successor to point to because the work was never migrated
 elsewhere — it stays captured here so nothing is lost. This plan itself remains the owner.
+
+- **na-eligibility-audit 2026-07-30**: KEEP-NA, valid — `locked_by: live-defi-rollout`; contains a [DESIGN] P3 that
+  explicitly requires an operator option-pick (Phase-6 `_publish_emission_check` scalability) before implementation.

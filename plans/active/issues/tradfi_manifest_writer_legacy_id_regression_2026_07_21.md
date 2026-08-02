@@ -32,6 +32,12 @@ source:
   root-cause investigation agent
 locked_by:
 resolved_by:
+context_scope:
+  [
+    /plans/epics/tradfi_master.md,
+    /codex/02-data/availability-manifest-and-data-status.md,
+    /plans/active/tradfi_satellite_ao_dispatch_batch5_2026_07_29.md,
+  ]
 ---
 
 # TradFi manifest writer — live legacy-id regression (not historical debt)
@@ -241,34 +247,126 @@ not a live regression), but real enough to need their own scoped root-cause-and-
 
 ## Follow-up (unchecked, added 2026-07-27 by this re-measurement — NOT auto-dispatched, `assigned_vm: NA` on this doc)
 
-- [ ] [DATA] P1. Root-cause + fix the live-path null-`instrument_id` write for tradfi equity/ETF (NASDAQ/NYSE,
-      `ohlcv_1m`+`trades`) — find the call site writing these manifest rows (confirmed NOT the `tradfi-bf-*` backfill
-      fleet, confirmed NOT within the 2026-07-21 fix-to-drain window) and apply the same canonical-id derivation
-      `mtds@56d39325` gave the backfill path. Repo: market-tick-data-service. Source: this doc's 2026-07-27
-      re-measurement, finding 1.
-- [ ] [DATA] P2. Investigate the CBOE `ohlcv_15m` `INDEX`/`OPTION` null-`instrument_id` writes (103 rows, all
-      2026-07-27) — confirm whether CBOE 15-minute intraday capture is in-MVP-scope, and if so give it the same
-      canonical-id treatment. Repo: market-tick-data-service. Source: this doc's 2026-07-27 re-measurement, finding 2.
-- [ ] [DATA] P1. Root-cause why the FX `SPOT_PAIR` manifest-row `instrument_id` is still bare (`BASE-QUOTE`, no colon)
-      for post-2026-07-25 captures on venue=`FX`, and NULL for venue=`YAHOO_FINANCE` captures — this contradicts
-      `tradfi_satellite_ao_dispatch_batch4_2026_07_26.md` todo-4's "already shipped" claim for the manifest write path.
-      Start at `market_tick_data_service/adapters/_umi_yahoo.py::fetch_yahoo_fx` and trace how its record reaches
-      `venue_fetch.py`'s `_canonicalize_manifest_instrument_id`/`resolve_tradfi_manifest_shard` (or bypasses it) for
-      this venue. **Check the leading hypothesis first**: `resolve_tradfi_manifest_shard` no-ops whenever
-      `VENUE_TO_ASSET_GROUP.get(venue) != "tradfi"`, and `"YAHOO_FINANCE"`/`"YAHOO"` are not registered tradfi venues
-      (only `"FX"`/`"CBOE"`/etc. are) — if the writer is stamping a vendor name into `venue` for some rows, that alone
-      would explain the silent no-canonicalization. Investigate TOGETHER with
-      `/plans/active/issues/tradfi_yahoo_venue_vendor_conflation_2026_07_27.md` (same-day sibling finding: a DIFFERENT
-      Yahoo adapter, `market_interface/adapters/tradfi/yahoo_finance_adapter.py`, unconditionally stamps `venue="YAHOO"`
-      — not confirmed as the same bug, but the same shape). Repo: market-tick-data-service. Source: this doc's
-      2026-07-27 re-measurement, finding 3.
-- [ ] [DOC] P3. Re-verify and update the `future`/`FUTURE` (singular instrument_type) characterization — this doc
-      previously called it a small (2,023-row) static legacy population; re-measured 2026-07-27 it is 9,126 rows and
-      growing (written through today). Confirm whether this population needs the same canonical-id fix, or is a
-      different, intentionally-uncanonicalized case. Source: this doc's 2026-07-27 re-measurement.
+> **NOTE (na-eligibility-audit 2026-07-30, tradfi tranche) — KEEP-NA-STALE, do NOT reclassify.** All four follow-up
+> todos below are already claimed VERBATIM as a single combined todo in
+> `/plans/active/tradfi_satellite_ao_dispatch_batch5_2026_07_29.md` ("Root-cause + fix 3 populations of NULL/bare
+> `instrument_id` manifest writes, plus one doc-hygiene fix", whose `Source:` cites this doc by name; its items (1)-(4)
+> map 1:1 onto todos 1-4 here). That batch doc is `assigned_vm: planning` but **`status: draft`** — so it is NOT
+> ingested and NOT dispatched today. Flipping THIS doc's `assigned_vm` to `planning` would dispatch a duplicate of that
+> extraction, so the shared conflict-check
+> (`/codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md` § 3) verdict is CONFLICT → citation fix
+> only, `assigned_vm` unchanged. **The live blocker is batch5's draft status**, which is the same unanswered operator
+> question already queued as item 5 in
+> `/plans/active/issues/tradfi_autonomous_session_operator_decisions_2026_07_25.md`. These checkboxes stay open until
+> batch5 is activated and its todo lands.
+
+- [x] ✅ [DATA] P1. **RE-CHARACTERIZED 2026-07-31 (slot 3, data_engineering) — NOT a live writer bug; the resolver is
+      already correct. Historical-registration repair split out as its own todo below. CLOSED 2026-07-31
+      (na-eligibility-audit, tradfi tranche, dispatch agt-6d6eaf) — this item's own stated ask (root-cause the live-path
+      null-instrument_id writes) is fully answered by the finding below; the only remaining actual work (the historical
+      repair) is tracked separately as the P2 item below ("NEW (2026-07-31, slot 3) — historical manifest repair...").**
+      Root-cause: re-measured live (2026-07-31) — the 3,612-row population is BYTE-IDENTICAL to the 2026-07-27
+      measurement (same count, same `written_at=2026-07-27T16:46:40-48Z` 8-second window), but its `date` (content-day)
+      column spans dozens of DISTINCT historical dates across 2024-2026 (e.g. 2025-01-02, 2025-01-06, 2024-01-29,
+      2024-01-19, ...), not one live-captured day. A single 8-second write burst covering scattered historical dates is
+      the signature of a metadata-only REGISTRATION/RECOVERY script running once against pre-existing GCS objects
+      (mirrors this doc's own "quarantine staleness"/`recover_tradfi_*`/`register_tradfi_*` script family — see
+      `tradfi_satellite_ao_dispatch_batch5_2026_07_29.md` todo 7), not a fresh per-day live/scheduled capture path.
+      Directly verified via `_resolve_tradfi_manifest_shard(False, "NYSE", "etf", "SPY")` and the NASDAQ/equity case
+      already covered by this repo's own test suite — **both resolve to the correct canonical id today** (see new
+      regression tests, `market-tick-data-service` commit below) — so there is no live equity/ETF writer defect left to
+      fix; the residual is stale historical manifest rows from that one registration event. **Fix scope split**: (a)
+      regression tests locking in the resolver's correct NASDAQ/NYSE equity+ETF behavior — DONE, this commit; (b) the
+      actual historical-row repair (re-derive + CAS-write a canonical id for these 3,612 already-registered rows) is
+      separate, bounded GCS-cross-referencing work — filed as its own follow-up todo below rather than rushed here.
+      Repo: market-tick-data-service. Source: this doc's 2026-07-27 re-measurement, finding 1.
+- [x] ✅ [DATA] P2. **RE-CHARACTERIZED 2026-07-31 (slot 3, data_engineering) — same registration-event signature as
+      finding 1, not a live capture-scope question. CLOSED 2026-07-31 (na-eligibility-audit, tradfi tranche, dispatch
+      agt-6d6eaf) — same disposition as item 1 above: root-cause fully answered, residual historical repair tracked
+      separately as the P2 item below.** The 103-row population's `date` column ALSO spans scattered historical dates
+      (2024-01-02, 2025-01-02/03/06/07/08/09/10, 2026-01-06/11, ...) sharing the identical
+      `written_at=2026-07-27T16:46:40-48Z` burst — same one-time registration event as finding 1, not a distinct "is
+      CBOE 15m intraday in-MVP-scope" live-capture question. Directly verified:
+      `_resolve_tradfi_manifest_shard(False,     "CBOE", "index", "VIX")` → `("INDEX", "CBOE:INDEX:VIX-USD")` (correct,
+      matches the 100 INDEX rows) and `_resolve_tradfi_manifest_shard(False, "CBOE", "option", "SPX")` → `None` for the
+      3 OPTION rows, BY DESIGN — a bare symbol like `SPX` has no strike/expiry/right, so `build_instrument_id` can't
+      build a real per-contract id from it alone (same shape as the existing `continuous_future` id-less case); this is
+      the caller's honest raw-symbol fallback, not a defect. No live writer fix needed for either sub-population.
+      Regression tests added (see below). The historical-row repair for the 100 INDEX rows folds into the same new
+      follow-up todo as finding 1 (OPTION rows correctly stay id-less, nothing to repair there). Repo:
+      market-tick-data-service. Source: this doc's 2026-07-27 re-measurement, finding 2.
+- [x] ✅ [DATA] P1. **RESOLVED 2026-07-31 (slot 3, data_engineering) — both sub-findings settled with live evidence; no
+      further action needed on either.** (a) FX `SPOT_PAIR` bare-id (venue=`FX`): directly verified
+      `_resolve_tradfi_manifest_shard(False, "FX", "spot_pair", "EUR-USD")` → `("SPOT_PAIR", "FX:SPOT_PAIR:EUR-USD")` —
+      the resolver is ALREADY correct for new captures (confirms `test_fx_spot_pair_now_resolves_canonical`, still
+      passing). Live re-measurement 2026-07-31 shows the bare-id population's `written_at` max is still 2026-07-25 —
+      zero NEW bare rows in the 6 days since — so the write-path fix genuinely holds; the remaining ~3,149 bare rows are
+      the ALREADY-TRACKED historical backlog (`issues/tradfi_fx_provenance_and_manifest_id_defects_2026_07_24.md`'s
+      one-time manifest backfill), not a live regression. **Correcting
+      `tradfi_satellite_ao_dispatch_batch4_2026_07_26.md` todo-4's premise was right to flag as unverified — it is now
+      VERIFIED true for new writes, just not yet retroactively backfilled.** (b) `venue=YAHOO_FINANCE`/`YAHOO` NULL-id
+      (6 rows, 2026-07-27): the **leading hypothesis in this todo was WRONG — do NOT register `YAHOO_FINANCE` in
+      `VENUE_TO_ASSET_GROUP`.** `unified-api-contracts/registry/market_data_categories.py` (line ~425) +
+      `expected_coverage.py` (line ~201) both confirm, in the codebase's own words:
+      `"YAHOO_FINANCE" removed 2026-07-15 — legacy source-as-venue modeling error;     no code ever stamps venue=YAHOO_FINANCE... Do NOT re-add it here`,
+      and `TRADFI_VENUE_ACCEPTED_NONCANONICAL_ALIASES` (`market_data_categories.py` ~line 765) already carries
+      `"YAHOO_FINANCE"` as an accepted-exception explicitly for this exact residual: "the manifest rows behind this
+      badge are pre-2026-07-15 legacy captures... genuinely dead, not a registry gap." Live re-measurement confirms this
+      directly: `_resolve_tradfi_manifest_shard(False, "YAHOO_FINANCE", "spot_pair", "EUR-USD")` correctly returns
+      `None` (test added, locks this in) — re-registering the venue would REINTRODUCE the exact modeling error the
+      2026-07-15 fix removed. The 6 residual rows are a stale one-time registration artifact (same 07-27T16:46:45Z burst
+      as findings 1/2, `date` spans 2025-01-02/03/06/07/08/09) already correctly excluded from the canonical census by
+      the accepted-exceptions list — **no code fix, no venue-registry change, and no further historical repair needed
+      for this sub-finding** (unlike (a) and findings 1/2, these 6 rows don't pollute any live-scope denominator). This
+      ALSO answers the sibling coordination question in
+      `/plans/active/issues/tradfi_yahoo_venue_vendor_conflation_2026_07_27.md` and
+      `tradfi_distinct_values_net_new_clusters_2026_07_28.md`'s todo item 2 (same YAHOO_FINANCE venue question) — cite
+      this finding rather than re-deriving it. `yahoo_finance_adapter.py::write_canonical_shard`'s unconditional
+      `venue="YAHOO"` stamp (the sibling doc's own finding) is confirmed DEAD CODE — grepped every call site in
+      market-tick-data-service; only `_umi_yahoo.py` uses `YahooFinanceAdapter`, and it calls `.download_daily()`/
+      `.download_intraday()` only, never `.write_canonical_shard()` — so it cannot be producing live rows today either
+      way. Repo: market-tick-data-service. Source: this doc's 2026-07-27 re-measurement, finding 3.
+- [x] ✅ [DOC] P3. **DONE 2026-07-31 (slot 3, data_engineering).** Re-verified live: `future`/`FUTURE` (singular)
+      instrument_type is **9,126 rows** (`FUTURE`=8,927, `future`=199) as of 2026-07-31 — byte-identical to the
+      2026-07-27 count (max `written_at` still 2026-07-27T16:46:48Z, zero growth in 4 days), confirming this population
+      is currently static (not "still growing" as this doc previously worried) pending the same investigation as the
+      other 07-27 registration-burst findings above. Updated this doc's characterization accordingly (was stale at
+      "2,023-row static legacy population"). No canonical-id fix determination made here — this todo was scoped as a
+      count refresh only; whether `future`/`FUTURE` needs its own canonical-id treatment is a separate open question,
+      not this todo's scope. Source: this doc's 2026-07-27 re-measurement + this 2026-07-31 re-verification.
+
+- [ ] [DATA] P2. **NEW (2026-07-31, slot 3) — historical manifest repair for the 2026-07-27T16:46:40-48Z registration
+      burst's null-id rows (findings 1 + 2's residual, split out per the "fix scope split" note above).** 3,612
+      NASDAQ/NYSE equity/ETF rows (`ohlcv_1m`/`trades`) + 100 CBOE INDEX rows (`ohlcv_15m`) carry canonical UPPERCASE
+      `instrument_type` but `instrument_id=None`, all written in one 8-second burst on 2026-07-27, content `date` spans
+      dozens of historical dates 2024-2026 (NOT a live bug — see findings 1/2 above; the resolver is proven correct for
+      these exact venue/itype shapes). Identify the exact registration/recovery script that ran at 2026-07-27T16:46Z
+      (candidates: the
+      `recover_tradfi_*`/`register_tradfi_*`/`correct_tradfi_recovery_quarantine_manifest_2026_07_27.py` script family
+      in `market_tick_data_service/scripts/` — none of the ones read this session matched by content, so the exact
+      script is still unidentified) to confirm what original identifying information (symbol/underlying) is recoverable
+      per row, then either (a) re-derive + CAS-write (`if_generation_match`, per this doc's own safety precedent) a
+      canonical id for each of the 3,712 rows by cross-referencing the actual GCS object each row corresponds to
+      (bounded — dozens of distinct dates, not a corpus walk), or (b) if the original symbol is genuinely unrecoverable
+      from the GCS object itself, document that explicitly rather than guessing. The 3 CBOE OPTION rows do NOT need
+      repair (correctly id-less by design, see finding 2). Done when: every one of the 3,712 rows either carries a
+      verified canonical id or has a recorded reason it can't be recovered, with a before/after manifest census. Repo:
+      market-tick-data-service. Source: this doc's 2026-07-31 re-characterization of findings 1/2,
+      `tradfi_satellite_ao_dispatch_batch5_2026_07_29.md` todo 4.
 
 ## Progress Log
 
+- **na-eligibility-audit 2026-07-31** (tradfi tranche, dispatch agt-6d6eaf): **KEEP-NA, stale items CLOSED (2 of 3).**
+  All 3 open checkboxes read end-to-end; count matches tranche-inventory tool. Items 1 and 2 (lines ~257, ~274) were
+  stale: each item's own text already stated its root-cause ask was fully answered (2026-07-31 re-characterization) with
+  the residual repair work split into the new item below — but items 1/2 themselves were left `[ ]` instead of being
+  flipped alongside items 3/4 in that same edit. Closed both now, citing the split-out residual item as the tracker for
+  the real remaining work. Item 5 (the historical manifest repair, `[DATA] P2`) stays open — genuinely current, bounded,
+  AO-shaped work not yet claimed by any active batch; flagged as a strong `tradfi` batch6 candidate for a future
+  `/ag-closeout-audit` pass, not reclassified here (no shared conflict-check has been run against it). The prior
+  2026-07-30 NOTE's "batch5 is status: draft" citation is now stale prose (batch5 activated + its extracting todo landed
+  2026-07-31) but does not change today's disposition — see the Follow-up section's NOTE box, left as-is (cosmetic,
+  non-blocking). Doc stays NA.
 - **2026-07-21T16:04Z (main session)** — finding measured + written up; dispatched a background agent to locate the
   exact `record_captured` call site, diagnose the divergence, and ship a scoped fix if safe (agent authorized to ship
   directly if the fix is small/well-tested; told to stop and report a design instead if it's not confident). Also
@@ -301,3 +399,50 @@ not a live regression), but real enough to need their own scoped root-cause-and-
   Four follow-up todos added above. Full working scripts (not committed — scratch analysis) used
   `unified_trading_library.get_storage_client().download_bytes()` +
   `resolve_bucket_name(kind="market-data", asset_group="tradfi")`, single-object reads only, no GCS walk.
+
+- **na-eligibility-audit 2026-07-30** (tradfi tranche): **KEEP-NA-STALE — citation fixed, `assigned_vm` deliberately
+  unchanged.** All 4 follow-up todos (added by the 2026-07-27 post-drain re-measurement) are bounded root-cause-and- fix
+  work with named repos and named entry points — the strongest RECLASSIFY candidate in this tranche on content alone.
+  The shared conflict-check returned CONFLICT: `/plans/active/tradfi_satellite_ao_dispatch_batch5_2026_07_29.md` already
+  extracts items (1)-(4) verbatim as one combined todo citing this doc as its `Source:`, and encodes the cross-doc
+  "investigate the YAHOO_FINANCE axis once, cite from all three" sequencing that a whole-doc flip would break. See the
+  note added above the follow-up todos.
+
+- **2026-07-31 (slot 3, data_engineering, `tradfi_satellite_ao_dispatch_batch5_2026_07_29` todo 4)** — worked all 4
+  follow-up items end-to-end. Re-measured live (single-object manifest read, no GCS walk): all 4 populations are
+  BYTE-IDENTICAL to the 2026-07-27 counts (zero growth in 4 days) — first clue this isn't an active bleed. Directly
+  exercised `_resolve_tradfi_manifest_shard` with the real (venue, itype, symbol) shapes for every affected population
+  (NASDAQ/equity, NYSE/etf, CBOE/index, CBOE/option, FX/spot_pair, YAHOO_FINANCE/spot_pair) — the CURRENT code resolves
+  every genuinely-fixable case correctly today. Then checked the `date` (content-day) distribution for findings 1/2/3b:
+  all three span DOZENS of scattered historical dates across 2024-2026 sharing the SAME narrow
+  `written_at=2026-07-27T16:46:40-48Z` burst — the signature of a one-time metadata registration/recovery script running
+  against pre-existing GCS objects, not a live/scheduled capture writer bug. This **overturns this doc's own leading
+  hypothesis** for finding 3 (do NOT register `YAHOO_FINANCE` in `VENUE_TO_ASSET_GROUP` — it was deliberately removed
+  2026-07-15 as a source-as-venue modeling error, confirmed via `unified-api-contracts`'s own registry comments +
+  `TRADFI_VENUE_ACCEPTED_NONCANONICAL_ALIASES` accepted-exception entry) and re-scopes findings 1/2 from "fix the live
+  writer" to "repair the stale historical rows a past registration event left behind" (split into a new P2 follow-up
+  todo above, since the GCS cross-referencing needed is separate bounded work, not reachable in this session without
+  rushing it). Shipped 6 new regression tests locking in the resolver's current-correct behavior
+  (`market-tick-data-service`, `tests/unit/engine/test_tradfi_manifest_shard.py`) — full `quality-gates.sh` green. Item
+  4 (doc-hygiene count refresh) done: confirmed still 9,126 rows, zero growth. Net: 2 of 4 items fully resolved (3, 4),
+  2 re-characterized with a properly-scoped new follow-up filed (1, 2) rather than force-fitting a "fix" to a symptom
+  that turned out not to be a live code defect.
+- **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).
+- **na-eligibility-audit 2026-08-01** (tradfi tranche): **KEEP-NA, valid — resolving the 2026-07-31 entry's open flag.**
+  Re-read the sole open todo (the 2026-07-31 historical-manifest-repair item) end-to-end; count matches
+  tranche-inventory tool (1). Verdict: KEEP-NA, not RECLASSIFY — two reasons, either sufficient: (1) the todo's own
+  first step ("identify the exact registration/recovery script that ran... none of the ones read this session matched by
+  content, so the exact script is still unidentified") is open-ended investigation, not yet a checkable fact; (2) the
+  remediation is a live-manifest CAS-write over 3,712 rows carrying neither a stated safe-idempotent justification nor
+  an `[OPERATOR]` tag per CLAUDE.md's AO-todo GCS-mutation HARD RULE — this tranche's own sibling doc
+  (`tradfi_within_bounds_source_zero_shard_atom_mismatch_2026_07_28.md`) treats an analogous manifest mutation as
+  needing a recorded operator go-ahead, and the same bar applies here rather than this audit unilaterally adding a
+  justification clause to someone else's todo. Not a batch6 candidate as currently scoped; would become AO-eligible if a
+  future author splits the investigation half into its own bounded todo and adds a stated safe-idempotent justification
+  (CAS pattern + row-count bound) for the write half.
+- **na-eligibility-audit 2026-08-02** (tradfi tranche, dispatch agt-6397c9): **KEEP-NA, valid — re-verified,
+  unchanged.** Sole open todo (the historical manifest repair) re-read end-to-end via an independent sub-agent
+  classification; count reconciled (1/1). Same two independently-sufficient grounds as 2026-08-01 still hold: the
+  registration/recovery script identification step remains open-ended investigation, and the remediation is a
+  live-manifest CAS-write lacking a stated safe-idempotent justification or `[OPERATOR]` tag. No content drift. Nothing
+  to reclassify.

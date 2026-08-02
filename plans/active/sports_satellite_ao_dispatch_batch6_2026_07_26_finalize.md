@@ -8,7 +8,7 @@ summary: >-
   operator-gated items for any that have since cleared), and then carries the 4th step batch2-5's finalize plans are all
   missing and which batch6 todo 7 adds to them: archive every source doc this batch drove to terminal status, in the
   same commit as the status flip, so `check_terminal_status_archived.py` never sees a terminal doc in `plans/active/`.
-status: draft
+status: active
 nature: process
 asset_group: [sports]
 stage: [data]
@@ -24,7 +24,7 @@ related:
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]
 created: "2026-07-26"
-last_updated: "2026-07-26"
+last_updated: "2026-07-30"
 parent_epic: sports_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -45,6 +45,13 @@ source: >-
 assigned_role: data_engineering
 sequential: true
 drift_direction: advance-code
+context_scope:
+  [
+    /plans/active/sports_satellite_ao_dispatch_batch6_2026_07_26.md,
+    /plans/active/sports_consolidated_closeout_2026_07_19.md,
+    /cursor-configs/skills/ag-closeout-audit/SKILL.md,
+    /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
+  ]
 ---
 
 # Sports satellite AO batch 6 — finalize
@@ -116,3 +123,7 @@ drift_direction: advance-code
       never left terminal-but-active for a CI gate to sweep up. **Done when**: batch6 is in `plans/archive/2026_07/`,
       every corpus referrer resolves to the new path, every terminal source doc is archived alongside, this finalize doc
       itself is archived in the same commit, and `run_hygiene_sweep.sh --ci` is still 0-hard-failures afterwards.
+
+## Progress Log
+
+- **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).

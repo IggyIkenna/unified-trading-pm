@@ -16,6 +16,21 @@
 # plan that just never got trimmed. `umbrella: true` frontmatter may still exist on old docs but is
 # no longer read by this script -- it is inert.
 #
+# ONE DOCUMENTED EXCEPTION (operator ruling 2026-07-30): a doc with ZERO OPEN TODOS archives via
+# the normal 6-step ritual regardless of how far over its cap it is. The cap exists to stop a LIVE
+# plan growing into an unreadable hub; it has no purpose on a finished doc that is on its way OUT
+# of plans/active/. Blocking that archival is actively counterproductive -- on 2026-07-30 this
+# gate refused a completion marker on a 1509L zero-open-todo doc, which left the doc `active` so
+# every /plan-reconcile, /ag-closeout-audit and /na-eligibility-audit run re-reads all 1509 lines
+# of it forever. Gated on zero open todos VERIFIED against the /plan-reconcile Phase-2
+# HARD-evidence bar (one open todo -> it is a live plan, cap applies normally: split or fold), and
+# on the commit being the archival move itself. Once under plans/archive/ the doc is outside this
+# script's globs anyway (status: complete / nature: record docs are unbounded by design, same as
+# the extracted-history case in the SCOPED-mode note below). SSOT:
+# /codex/12-agent-workflow/plan-completion-and-archival-discipline.md
+# section "The line-cap does NOT block archival of an already-done doc". Never delete content from
+# a done plan just to get it under a cap.
+#
 # Usage: bash scripts/plan-hygiene/check_line_caps.sh [--quiet] [--update-baseline] [file ...]
 # No files given -> full-corpus glob (plans/active/*.md + plans/epics/*.md), gated by the
 # shrinking-ratchet baseline (see below).

@@ -46,7 +46,7 @@ related:
     /plans/active/prediction_phase_c_data_status_ui_2026_07_24.md,
     /plans/active/prediction_phase_ab_residuals_2026_07_24.md,
     /plans/active/prediction_phase_d_formal_smoke_and_backfill_2026_07_24.md,
-    /plans/active/issues/prediction_arb_live_execution_bridge_2026_07_20.md,
+    /plans/archive/issues/prediction_arb_live_execution_bridge_2026_07_20.md,
     /plans/archive/issues/plan_line_cap_remediation_2026_07_23.md,
   ]
 created: "2026-07-24"
@@ -73,6 +73,13 @@ source: >-
   boundaries — one depends_on-gated: Phase E gated on B+D"). Content moved verbatim, not summarized. The `depends_on` +
   `gate_on_depends: true` on the Phase A-B residuals and Phase D sibling plans encodes the parent plan's own Phase-E
   header text ("gated on B+D") as a real dispatch gate.
+context_scope:
+  [
+    /plans/active/prediction_consolidated_closeout_2026_07_18.md,
+    /codex/04-architecture/cross-venue-prediction-arb-detection.md,
+    /codex/16-strategy-playbooks/strategy/cme-polymarket-arb.md,
+    /plans/epics/predictions_master.md,
+  ]
 ---
 
 # Prediction Phase E — football (soccer) cross-venue arb enablement, live path
@@ -152,9 +159,15 @@ source: >-
 
 ## Progress Log
 
+- **na-eligibility-audit 2026-07-30 (prediction tranche)**: KEEP-NA, valid — 3 open,
+  `depends_on: [prediction_phase_ab_residuals_2026_07_24, prediction_phase_d_formal_smoke_and_backfill_2026_07_24]` +
+  `gate_on_depends: true`, both prerequisites still open (verified by direct read). KEEP-NA on the gate citation alone;
+  not re-derived.
+
 - **2026-07-24 (plan-hygiene split) — forked from `prediction_consolidated_closeout_2026_07_18.md`.** This plan carries
   forward the Phase E section verbatim (5 todos total: 2 done / 3 open at split time). See the parent's Progress Log
   (ticks 24-31 — the identity-wiring trace, the 3-venue Betfair signal build, the execution-bridge build, and the
   net-of-fees entry gate + paper proofs) for the full session-by-session history of what is already shipped here,
   including the live-execution-bridge P1 issue (`issues/prediction_arb_live_execution_bridge_2026_07_20.md`) opened
   along the way. Future work on this plan logs new entries below.
+- **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).

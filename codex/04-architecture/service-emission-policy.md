@@ -23,9 +23,9 @@ authoritative_for:
     service emission policy four-piece architecture seam (UAC-declaration/UTL-publisher/UAC-resolver/v8-manifest-column
     composition),
   ]
-referenced_by: [plans/audit/results/run_lifecycle_events_audit_2026_05_05.md]
+referenced_by: [/plans/audit/results/run_lifecycle_events_audit_2026_05_05.md]
 owner:
-last_reviewed: 2026-05-17
+last_reviewed: 2026-09-04
 code_refs:
 ---
 
@@ -55,11 +55,22 @@ code_refs:
 > - **UAC manifest column declaration** — `service_emission_state.ServiceEmissionStateEnum` +
 >   `manifest_schema.V8_NEW_COLUMNS` (Phase 1.A + 1.C, UAC@`174f401` + rename @UAC@`76f950a`).
 >
-> Slice (c) Phase 6.1-6.9 (per-service rollout) is multi-week + tracked by
-> [`plans/active/writegate_honest_coverage_endtoend_2026_05_06.md`](../../plans/active/writegate_honest_coverage_endtoend_2026_05_06.md).
-> v8 manifest column wiring (UTL `ManifestWriter` extension + Phase 4 workspace consumer sweep) is tracked by
-> [`plans/active/manifest_schema_final_gate_2026_05_09.md`](../../plans/active/manifest_schema_final_gate_2026_05_09.md)
-> Phase 2 + 4.
+> Slice (c) Phase 6.1-6.9 (per-service rollout) was tracked by
+> [`/plans/archive/2026_05/writegate_honest_coverage_endtoend_2026_05_06.md`](/plans/archive/2026_05/writegate_honest_coverage_endtoend_2026_05_06.md)
+> (ARCHIVED). v8 manifest column wiring (UTL `ManifestWriter` extension + Phase 4 workspace consumer sweep) was tracked
+> by
+> [`/plans/archive/2026_05/manifest_schema_final_gate_2026_05_09.md`](/plans/archive/2026_05/manifest_schema_final_gate_2026_05_09.md)
+> Phase 2 + 4 (ARCHIVED).
+
+> **[DELTA 2026-07-31 freshness re-review] — the manifest schema is now v9, not v8.** v9 went live 2026-05-30
+> (UTL@`c7bfa427`, `MANIFEST_SCHEMA_VERSION = 9`) and adds only the universal `source: str` column; **all v8 emission
+> semantics below are unchanged and still correct**. The three emission columns are still declared under the constant
+> name `V8_NEW_COLUMNS` in UAC `manifest_schema.py` (the constant was not renamed) — so "v8 column" below means "the
+> three emission columns introduced at v8", not "the current schema version". SSOT:
+> [`/codex/02-data/availability-manifest-and-data-status.md`](/codex/02-data/availability-manifest-and-data-status.md)
+> § "Schema v9". Also note `service_emission_policy` is now a **package**
+> (`canonical/crosscutting/service_emission_policy/{_enums,_policies,_functions}.py`), not a single module — the dotted
+> paths cited below still resolve via its `__init__`.
 
 ## The four pieces
 
@@ -148,10 +159,10 @@ imports UAC. The runtime path is `publisher → resolver → ManifestWriter`; th
   full manifest schema (v8 incl. the 3 new emission columns); `AvailabilityRecord` dataclass.
 - [`/codex/02-data/honest-absence-downstream-handling.md`](/codex/02-data/honest-absence-downstream-handling.md) —
   downstream NaN-handling tolerances per consumer class (the layer below this doc).
-- [`../../plans/active/manifest_schema_final_gate_2026_05_09.md`](../../plans/active/manifest_schema_final_gate_2026_05_09.md)
-  — owns the v8 manifest schema columns + the `next_state` resolver.
-- [`../../plans/active/writegate_honest_coverage_endtoend_2026_05_06.md`](../../plans/active/writegate_honest_coverage_endtoend_2026_05_06.md)
-  slices (a) + (b) + (c) — the architecture plan + per-service rollout.
+- [`/plans/archive/2026_05/manifest_schema_final_gate_2026_05_09.md`](/plans/archive/2026_05/manifest_schema_final_gate_2026_05_09.md)
+  — owned the v8 manifest schema columns + the `next_state` resolver (ARCHIVED).
+- [`/plans/archive/2026_05/writegate_honest_coverage_endtoend_2026_05_06.md`](/plans/archive/2026_05/writegate_honest_coverage_endtoend_2026_05_06.md)
+  slices (a) + (b) + (c) — the architecture plan + per-service rollout (ARCHIVED).
 - `cursor-configs/CLAUDE.md` § "Service-output emission policy" — key-rule entry pointing here.
 - `unified_api_contracts.canonical.crosscutting.service_emission_policy` — the policy SSOT module.
 - `unified_api_contracts.canonical.crosscutting.service_emission_state` — the manifest-column enum module.

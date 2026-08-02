@@ -49,13 +49,14 @@ code_refs:
 ```
 1. Push to live-defi-rollout (LDR)
    └─ bash scripts/quality-gates.sh          ← FULL: lint+tests+typecheck+codex+pip-audit
-      └─ exit 0, no skip flags → writes .qg_last_passed_sha (SHA fingerprint)
+      └─ exit 0, no skip flags → writes .qg_last_passed_sha (SHA fingerprint + the resolved
+         ENVIRONMENT/DEPLOYMENT_ENV — appended 2026-07-30, qg_sentinel_environment_blind_2026_07_23.md)
          partial run (--skip-tests etc.)     → sentinel NOT written
 
 2. bash scripts/quickmerge.sh "msg" --agent --files '...'
-   └─ reads .qg_last_passed_sha
-      SHA mismatch / missing → EXIT 1 ("Run quality-gates.sh on current HEAD first")
-      SHA match → skip Pass 2 QG re-runs → commit + push branch + gh pr create → staging
+   └─ reads .qg_last_passed_sha — SHA AND config (ENVIRONMENT/DEPLOYMENT_ENV) must both match
+      SHA/config mismatch / missing → EXIT 1 ("Run quality-gates.sh on current HEAD first")
+      SHA + config match → skip Pass 2 QG re-runs → commit + push branch + gh pr create → staging
                   auto-merge enabled on PR immediately
 
 3. workspace-qg GHA fires on the staging PR  ← triggers: push [main,staging] + PR→[main,staging]
@@ -102,11 +103,13 @@ bash scripts/quality-gates.sh
 ```
 
 Runs in order: ruff format → ruff check → basedpyright → pytest → codex audit → pip-audit. All must pass. On clean exit
-with **no skip flags**: writes `.qg_last_passed_sha` with current HEAD SHA.
+with **no skip flags**: writes `.qg_last_passed_sha` with the current HEAD SHA plus the resolved
+`ENVIRONMENT`/`DEPLOYMENT_ENV` this pass ran under (appended 2026-07-30 — `qg_sentinel_environment_blind_2026_07_23.md`;
+see `/codex/05-infrastructure/quickmerge-architecture.md` § "Sentinel integration").
 
-**Enforcement**: `quickmerge --agent` reads this sentinel and exits 1 if SHA doesn't match. Partial runs
-(`--skip-tests`, `--skip-lint`, `--quick`, `--skip-codex`) do NOT write the sentinel and cannot unblock a quickmerge.
-There is no way to fake a full pass.
+**Enforcement**: `quickmerge --agent` reads this sentinel and exits 1 if the SHA doesn't match OR the sentinel's
+recorded configuration doesn't match what this run resolved. Partial runs (`--skip-tests`, `--skip-lint`, `--quick`,
+`--skip-codex`) do NOT write the sentinel and cannot unblock a quickmerge. There is no way to fake a full pass.
 
 ---
 

@@ -21,7 +21,7 @@ created: 2026-04-03
 authoritative_for: [per-client configuration schema and the five risk dimensions]
 referenced_by:
 owner:
-last_reviewed: 2026-05-17
+last_reviewed: 2026-08-18
 code_refs:
 ---
 

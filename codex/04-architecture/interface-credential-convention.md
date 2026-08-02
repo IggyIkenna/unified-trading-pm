@@ -40,7 +40,7 @@ referenced_by:
     /codex/05-infrastructure/credentials-matrix.md,
   ]
 owner:
-last_reviewed: 2026-05-17
+last_reviewed: 2026-09-25
 code_refs:
 ---
 
@@ -136,7 +136,7 @@ table.
 > `wallet_provisioning.json` to the staging bucket, (b) asserts `get_custody_provider()` returns the new provider class
 > within `ApiKeyReloader`'s polling interval (no service restart), and (c) confirms the `WALLET_PROVISIONING_RELOADED`
 > event fires. Test location: `execution-service/tests/integration/test_signing_surface_hot_reload.py` (to be added;
-> tracked in `plans/active/api_keys_wallets_accounts_readiness_2026_05_10.md`).
+> tracked in `plans/archive/2026_05/api_keys_wallets_accounts_readiness_2026_05_10.md`).
 >
 > ```yaml
 > execution:
@@ -220,8 +220,10 @@ memory between signing calls.
 
 Canonical enforcement:
 
-1. `ApiKeyReloader` (UTL) polls at `reload_interval_seconds` (default 60s) and refreshes the key reference. Each signing
-   call reads the current key from the reloader's latest fetch — NOT from a long-lived in-memory field.
+1. `ApiKeyReloader` (UTL) polls at `refresh_interval` (default `DEFAULT_REFRESH_INTERVAL` = 300s — corrected 2026-07-31,
+   was cited as `reload_interval_seconds` default 60s, neither the name nor the default matched
+   `unified_trading_library/api_key_reloader.py`) and refreshes the key reference. Each signing call reads the current
+   key from the reloader's latest fetch — NOT from a long-lived in-memory field.
 2. The DeFi connector `connect(config={...})` call happens **inside the trade-dispatch loop**, not at service startup.
    The caller resolves the key immediately before calling `connect()`, uses it for the signing scope, and drops the
    reference.

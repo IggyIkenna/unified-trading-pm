@@ -57,17 +57,6 @@ depends_on:
   - manifest-migration-master-2026-05-07
   - writegate-honest-coverage-endtoend-2026-05-06
 
-> **✅ VM FLEET COMPLETE — Phase 3 migration finished 2026-05-19 ~16:01 UTC (slot 3 CO-DUTY close)**
-> All 31 VMs TERMINATED. defi ✅ cefi ✅ sports ✅ tradfi (2020–2026) ✅ prediction-2025 ✅ prediction-2026 ✅
-> **ROOT CAUSE CONFIRMED (2026-05-19 ~17:00 UTC):** prediction 14,403 + tradfi 245,907 "phantoms" are FALSE POSITIVES —
-> reconciler Axis-10 bug: `ASSET_GROUP_CONFIG[ag]["prefix_tpls"]` lacked `pipeline_mode=batch_*/` variants.
-> Parquets confirmed on GCS at new paths (e.g. `day=*/pipeline_mode=batch_databento/asset_group=tradfi/`). NO DATA LOSS.
-> **Axis-10 fix SHIPPED: instruments-service@8accb30** — adds pipeline_mode= templates for cefi/defi/tradfi/prediction.
-> **DO NOT run Phase 6 --apply** — these are false positives; --apply would corrupt real captured rows.
-> Phase 3.6 re-audit (Axis-10 fix): ALL 5 CONFIRMED ✅ — prediction ✅ 0 / sports ✅ 0 / tradfi ✅ 0 / defi ✅ 0 (311,602 real) / cefi ✅ 0 (1,290,707 real)
-> Operator sign-off step 7 (HUMAN-ONLY): ALL 5 re-audits green — ready for per-asset-group sign-off.
-> See `issues/prediction_polymarket_phantom_manifest_14403_2026_05_19.md` for full RCA.
-
 todos:
   - id: phase-0-pre-audit-gcs-state
     content: |
@@ -113,7 +102,9 @@ todos:
         **Critical**: run from a same-region GCE VM per CLAUDE.md "phantom audit re-runnable recipe" rule —
         cross-region listing is 18× slower (~12 prefixes/sec from laptop vs 222/sec on `asia-northeast1-c`).
     status: done
-    note: "Shipped unified-trading-pm@0cc633c8 (doc) + @12483f5b (plan flip). Pre-audit artifact at plans/archive/issues/gcs_migration_bundle_preaudit_2026_05_08.md."
+    note:
+      "Shipped unified-trading-pm@0cc633c8 (doc) + @12483f5b (plan flip). Pre-audit artifact at
+      plans/archive/issues/gcs_migration_bundle_preaudit_2026_05_08.md."
 
   - id: phase-1a-uac-pipeline-mode-enum
     content: |
@@ -342,7 +333,9 @@ todos:
         (2026-05-19) that current features-* readers only use `ticks.parquet` for intentionally-bundled types —
         no fix required today. Revisit if new MTDS OHLCV readers are added.
     status: done
-    note: "GAP-2.3 from code_freeze plan. Added 2026-05-19 slot-3 per work_split_2026_05_19_ikenna.md. Shipped unified-trading-pm@916742464."
+    note:
+      "GAP-2.3 from code_freeze plan. Added 2026-05-19 slot-3 per work_split_2026_05_19_ikenna.md. Shipped
+      unified-trading-pm@916742464."
 
   - id: phase-3-execution-plan-and-vm-launch
     content: |
@@ -641,6 +634,17 @@ estimate_calibration_note: |
   Owner agent: fill baseline + multiply × 0.8 per codex/08-workflows/estimation-calibration.md. Refine class if dominant work-class differs.
 parent_epic: manifest_master
 ---
+
+> **✅ VM FLEET COMPLETE — Phase 3 migration finished 2026-05-19 ~16:01 UTC (slot 3 CO-DUTY close)** All 31 VMs
+> TERMINATED. defi ✅ cefi ✅ sports ✅ tradfi (2020–2026) ✅ prediction-2025 ✅ prediction-2026 ✅ **ROOT CAUSE
+> CONFIRMED (2026-05-19 ~17:00 UTC):** prediction 14,403 + tradfi 245,907 "phantoms" are FALSE POSITIVES — reconciler
+> Axis-10 bug: `ASSET_GROUP_CONFIG[ag]["prefix_tpls"]` lacked `pipeline_mode=batch_*/` variants. Parquets confirmed on
+> GCS at new paths (e.g. `day=*/pipeline_mode=batch_databento/asset_group=tradfi/`). NO DATA LOSS. **Axis-10 fix
+> SHIPPED: instruments-service@8accb30** — adds pipeline_mode= templates for cefi/defi/tradfi/prediction. **DO NOT run
+> Phase 6 --apply** — these are false positives; --apply would corrupt real captured rows. Phase 3.6 re-audit (Axis-10
+> fix): ALL 5 CONFIRMED ✅ — prediction ✅ 0 / sports ✅ 0 / tradfi ✅ 0 / defi ✅ 0 (311,602 real) / cefi ✅ 0
+> (1,290,707 real) Operator sign-off step 7 (HUMAN-ONLY): ALL 5 re-audits green — ready for per-asset-group sign-off.
+> See `issues/prediction_polymarket_phantom_manifest_14403_2026_05_19.md` for full RCA.
 
 ## Deferred work — migrated to:
 

@@ -1,5 +1,14 @@
 ## Scenario `execution_slippage_spike` — Order fill price diverges from intended (DEX + CeFi)
 
+> **🟢 SHIPPED 2026-07-31** — backed by the `EXECUTION_SLIPPAGE_SPIKE` `ScenarioOverlay` entry in
+> `unified-api-contracts/unified_api_contracts/registry/scenarios/cross_asset.py` (`unified-api-contracts@15ab5a48`;
+> plan-of-record `plans/archive/2026_07/scenario_library_completion_13_16_2026_07_27.md`), verified consumable by
+> `unified-trading-library`'s `ScenarioOverlayApplier` (the generic `BookSpoof` mutation-type dispatch — no applier code
+> change needed). This fragment stays as design provenance; the fragment's own `EXECUTION_QUALITY`/
+> `LIQUIDITY_DRAIN`/`BOOK_THINNING` categories and `EXECUTION_SLIPPAGE_EXCEEDED`/`CEFI_BOOK_THIN` alert codes were
+> mapped to the closest-fit existing UAC enums (`VENUE_OUTAGE` category, `SPREAD_BLOWOUT_BPS` breaker) — see the
+> registry file's own module docstring for the full substitution rationale.
+
 | Field                | Value                                                                                                                                                                                                                                                                                                                                 |
 | -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `scenario_id`        | `execution_slippage_spike`                                                                                                                                                                                                                                                                                                            |

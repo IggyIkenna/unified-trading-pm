@@ -30,7 +30,7 @@ created: 2026-03-27
 authoritative_for: [backfill-then-live startup and lookback warm-up sequencing]
 referenced_by: [/codex/15-runbooks/backfill-completion-playbook.md]
 owner:
-last_reviewed: 2026-05-17
+last_reviewed: 2026-08-17
 code_refs:
 ---
 

@@ -53,8 +53,8 @@ code_refs:
 > below currently cover the May-23 live + immediate-backtest archetype subset. The Phase 9 expansions (4 MEV + 1
 > cross-domain event arb + 5 new MARKET*MAKING*_ + 3 DEFI*LP*_ + 17 expanded VOL*\* + 4 PORTFOLIO*\*) are catalogued in
 > UAC; their full per-cell matrix rows are tracked under
-> [`plans/active/codex_refactor_2026_05_08.md`](../../../plans/active/codex_refactor_2026_05_08.md) Phase A.4 + the
-> per-archetype materialisation in Phase B.
+> [`plans/archive/codex_refactor_2026_05_08.plan.md`](../../../plans/archive/codex_refactor_2026_05_08.plan.md) Phase
+> A.4 + the per-archetype materialisation in Phase B.
 >
 > **Sources:** `strategy-service/strategy_service/engine/strategies/v2/`, UAC `registry/capability_declarations/`,
 > [`02-venues/venue-registry-reference.md`](../../02-venues/venue-registry-reference.md),
@@ -2299,7 +2299,7 @@ summary:
   slot_labels. 21 block-list entries. 10 UAC registry gaps identified. Companion doc `uac-registry-gaps.md` pending.
 - **2026-05-08** — Refresh stub: scope updated to "53 archetypes" per UAC `StrategyArchetype` SSOT (PM@d6d0cd57
   refreshed `strategy-summary.md`); the 18-archetype matrix body is preserved as the May-23 live + immediate-backtest
-  subset, full Phase 9 materialisation tracked under `plans/active/codex_refactor_2026_05_08.md` Phase A.4 + B.
+  subset, full Phase 9 materialisation tracked under `plans/archive/codex_refactor_2026_05_08.plan.md` Phase A.4 + B.
   (Duplicate stub-line removed 2026-05-12 per slot 8 strategy audit ST-16.)
 - **2026-05-12** — Currency note: UAC `StrategyArchetype` is now 55 (not 53) per slot 8 strategy audit ST-1 — the
   `CARRY_RECURSIVE_STAKED` split (into `CARRY_RECURSIVE_BORROW_LENDING_ONLY` + `CARRY_RECURSIVE_BORROW_PERP_HEDGED`) was

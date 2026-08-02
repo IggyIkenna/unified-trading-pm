@@ -276,10 +276,6 @@ BE_EXCLUDE_GLOBS+=("**/reconcile_release_tags.py")
 # and _parse_ts() (malformed timestamp) — best-effort fallback, never blocks the alert.
 # Documented in QUALITY_GATE_BYPASS_AUDIT.md §2.9 (added 2026-06-27)
 BE_EXCLUDE_GLOBS+=("**/cron_liveness_watchdog.py")
-
-# requests CVE-2026-25645: no fix version available yet (fix in requests>=2.33.0, not released)
-# urllib3 PYSEC-2026-141/142: fix in urllib3>=2.7.0 (transitive dep, not yet updated upstream)
-PIP_AUDIT_EXTRA_ARGS="--ignore-vuln CVE-2026-25645 --ignore-vuln CVE-2026-34515 --ignore-vuln CVE-2026-34513 --ignore-vuln CVE-2026-34516 --ignore-vuln CVE-2026-34517 --ignore-vuln CVE-2026-34519 --ignore-vuln CVE-2026-34518 --ignore-vuln CVE-2026-34520 --ignore-vuln CVE-2026-34525 --ignore-vuln CVE-2026-22815 --ignore-vuln CVE-2026-34514 --ignore-vuln CVE-2026-4539 --ignore-vuln PYSEC-2026-141 --ignore-vuln PYSEC-2026-142"
 # sync-catalogue-yaml.py: B608 (SQL injection) is a false positive — bucket param comes from CLI arg, not user input
 BANDIT_EXTRA_ARGS="--exclude scripts/catalogue/sync-catalogue-yaml.py"
 # PM is not a service — ServiceBootstrap (5.61) and Health API (5.62) don't apply.
@@ -491,7 +487,7 @@ fi
 #   PB-19: no mode-branching in PBMS engine/core
 #   UI-18: no React/Next/Vite/Webpack package.json in any Python service repo
 # Current baseline 0 — any new violation in any rule = regression.
-ARCH_RATCHETS_CHECKER="${REPO_ROOT}/unified-trading-pm/scripts/quality_gates/check_architectural_ratchets.py"
+ARCH_RATCHETS_CHECKER="${REPO_ROOT}/scripts/quality_gates/check_architectural_ratchets.py"
 if [ -f "$ARCH_RATCHETS_CHECKER" ] && [ -n "${WORKSPACE_ROOT:-}" ]; then
     echo "Running Architectural ratchets check (ST-19 + PB-19 + UI-18)..."
     if python3 "$ARCH_RATCHETS_CHECKER" --workspace-root "$WORKSPACE_ROOT" >/dev/null; then
@@ -500,6 +496,28 @@ if [ -f "$ARCH_RATCHETS_CHECKER" ] && [ -n "${WORKSPACE_ROOT:-}" ]; then
         echo "❌ Architectural ratchets regression — see governance_qg_automation_gaps_post_cutover_2026_05_12.md § Group C" >&2
         echo "   Either fix the new violation OR re-baseline with --baseline-write after intentional debt" >&2
         _post_gate_fail "architectural-ratchets"
+    fi
+fi
+
+# ── Post-gates: PYTEST_UNIT_DIR fleet coverage sweep — baselined ratchet ──
+# SSOT: plans/active/issues/mtds_ungated_test_families_2026_07_17.md (todo 5) +
+# plans/active/ci_satellite_ao_dispatch_batch2_2026_07_29.md (todo 12).
+# MTDS never set PYTEST_UNIT_DIR, so its whole tests/market_interface/ family
+# (49 unit modules) silently never ran in the gate. This is the fleet-wide
+# guard so the next per-family repo doesn't slip into the same gap unnoticed —
+# flags any repo with a tests/<family>/unit/ dir its PYTEST_UNIT_DIR doesn't
+# reach. Current baseline 1 (execution-service tests/sports_execution/unit/,
+# pre-existing, this todo doesn't fix it) — ratchet down as families get gated.
+PYTEST_UNIT_DIR_COVERAGE_CHECKER="${REPO_ROOT}/scripts/quality_gates/check_pytest_unit_dir_coverage.py"
+if [ -f "$PYTEST_UNIT_DIR_COVERAGE_CHECKER" ] && [ -n "${WORKSPACE_ROOT:-}" ]; then
+    echo "Running PYTEST_UNIT_DIR fleet coverage sweep (ratchet mode)..."
+    if python3 "$PYTEST_UNIT_DIR_COVERAGE_CHECKER" --workspace-root "$WORKSPACE_ROOT" >/dev/null; then
+        log_success "PYTEST_UNIT_DIR fleet coverage sweep passed (at-or-below baseline)"
+    else
+        echo "❌ PYTEST_UNIT_DIR fleet coverage regression — a tests/<family>/unit/ dir isn't reachable via that repo's PYTEST_UNIT_DIR" >&2
+        echo "   Add the family dir to that repo's PYTEST_UNIT_DIR= (scripts/quality-gates.sh), proving the widened gate stays GREEN (rule 11a)," >&2
+        echo "   or re-baseline with --update-baseline after intentional debt. See mtds_ungated_test_families_2026_07_17.md." >&2
+        _post_gate_fail "pytest-unit-dir-coverage"
     fi
 fi
 
@@ -554,6 +572,27 @@ if [ -f "$EVIDENCE_CHECKER" ] && [ -n "${WORKSPACE_ROOT:-}" ]; then
         echo "   build/deploy/promote-green claim has no 'Evidence: cloudbuild=<id>' ref. See plans/PLAN_FORMAT.md § 8b." >&2
         echo "   Re-baseline sub-rule B after intentional debt: python3 ${EVIDENCE_CHECKER} --workspace-root \$WORKSPACE_ROOT --baseline-write" >&2
         _post_gate_fail "evidence-backed-completion"
+    fi
+fi
+
+# ── Post-gates: Plan commit-SHA evidence (`resolved_by:`/`<repo>@<sha>` must resolve to a REAL commit) ──
+# SSOT: plans/active/issues/mtds_plan_flip_fabricated_commit_sha_evidence_2026_07_30.md + plans/PLAN_FORMAT.md § 8c.
+# A code-ship claim (`<repo>@<sha>`) is explicitly OUT of scope for the Cloud Build evidence gate above (§ 8b) — its
+# evidence is "the commit + the local QG sentinel", but nothing previously verified that commit actually EXISTS. This
+# gate closes that gap: `resolved_by:` frontmatter + `- [x]` todo citations of `<repo>@<sha>`, where `<repo>` is a
+# present sibling clone, must resolve via `git cat-file -t <sha>` in that repo. Baselined ratchet (pre-existing
+# corpus drift is grandfathered; new fabricated/unresolvable citations regress the gate). Re-baseline with
+# --baseline-write only after confirming a flagged citation is genuine non-fabricated drift, not a fresh fabrication.
+PLAN_SHA_EVIDENCE_CHECKER="${REPO_ROOT}/scripts/quality_gates/check_plan_commit_sha_evidence.py"
+if [ -f "$PLAN_SHA_EVIDENCE_CHECKER" ] && [ -n "${WORKSPACE_ROOT:-}" ]; then
+    echo "Running Plan commit-SHA evidence check (resolved_by:/<repo>@<sha> citations must resolve)..."
+    if python3 "$PLAN_SHA_EVIDENCE_CHECKER" --workspace-root "$WORKSPACE_ROOT" >/dev/null; then
+        log_success "Plan commit-SHA evidence check passed (at/below baseline)"
+    else
+        echo "❌ Plan commit-SHA evidence regression — a resolved_by:/<repo>@<sha> citation does not resolve to a real" >&2
+        echo "   commit in the cited repo's local clone. See plans/PLAN_FORMAT.md § 8c." >&2
+        echo "   Re-baseline after confirming pre-existing debt: python3 ${PLAN_SHA_EVIDENCE_CHECKER} --workspace-root \$WORKSPACE_ROOT --baseline-write" >&2
+        _post_gate_fail "plan-commit-sha-evidence"
     fi
 fi
 
@@ -809,7 +848,7 @@ fi
 # ── Workflow YAML parse gate — MOVED to the shared base (2026-06-30) ──
 # Was here (PM-only), so only PM's workflows were validated → the SIT-producer YAML break slipped through.
 # Now lives in scripts/quality-gates-base/base-service.sh [0/6] so EVERY repo runs the ONE PM-hosted
-# checker against its own .github/workflows. SSOT: plans/active/cicd_mvp_ldr_to_main_pipeline_2026_06_30.md.
+# checker against its own .github/workflows. SSOT: plans/archive/2026_07/cicd_mvp_ldr_to_main_pipeline_2026_06_30.md.
 
 # ── Post-gates: STEP 5.64 — PM script path-reference ratchet (blocking) ──
 # SSOT: CLAUDE.md § "Grep-Then-Read, Not Grep-Then-Conclude" + scripts/quality_gates/check_pm_script_path_refs.py.
@@ -991,4 +1030,17 @@ if [ -f "$DIGEST_DRIFT_CHECKER" ] && [ -n "${WORKSPACE_ROOT:-}" ]; then
     echo "Running base-image digest drift detector (warn-only)..."
     python3 "$DIGEST_DRIFT_CHECKER" --workspace-root "$WORKSPACE_ROOT" \
         || { echo "⚠ Digest drift checker errored (non-blocking)" >&2; }
+fi
+
+# ── Post-gates: uv pip install retry-wrapper drift detector (warn-only — non-blocking) ──
+# Scans every service Dockerfile's RUN --mount=type=secret,id=gar_token layer for the
+# documented 3-attempt retry loop around `uv pip install ... --no-sources` and warns if a
+# repo has silently dropped it (re-exposing the transient GAR publish-ordering race the
+# wrapper exists to absorb). Mirrors the base-image digest-drift detector above.
+# SSOT: codex/06-coding-standards/dockerfile-standards.md § "uv pip install Retry Wrapper"
+UV_RETRY_DRIFT_CHECKER="${REPO_ROOT}/scripts/quality_gates/check_uv_install_retry_wrapper_drift.py"
+if [ -f "$UV_RETRY_DRIFT_CHECKER" ] && [ -n "${WORKSPACE_ROOT:-}" ]; then
+    echo "Running uv pip install retry-wrapper drift detector (warn-only)..."
+    python3 "$UV_RETRY_DRIFT_CHECKER" --workspace-root "$WORKSPACE_ROOT" \
+        || { echo "⚠ uv install retry-wrapper drift checker errored (non-blocking)" >&2; }
 fi

@@ -44,6 +44,13 @@ source:
     "discovered 2026-07-20 while accelerating the HL trades full-universe backfill (operator: 'surely you don't need to
     reload same catalogue each day you can cache it load once no?')",
   ]
+context_scope:
+  [
+    /plans/archive/issues/vm_startup_scripts_no_auto_rollout_to_gcs_2026_07_19.md,
+    market-tick-data-service/market_tick_data_service/cli/handlers/_onchain_perp_batch_symbols.py,
+    deployment-service/scripts/vm/setup-data-pipeline-vm.sh,
+    deployment-service/scripts/vm/launch-cefi-hl-aster-historical-backfill.sh,
+  ]
 ---
 
 # cefi backfill re-loads the catalogue + re-resolves the universe every day
@@ -102,3 +109,16 @@ parallelism (fleet still does ~565 catalogue reloads total). The proper fix abov
 - [ ] [BACKEND] P2. **Implement the proper fix (range-loop in one process, or a cross-process `CeFiCatalogReader`
       cache)** — the interim per-year sharding mitigation only hides the per-day catalogue-reload waste behind
       parallelism; neither of the two proper-fix options above has been implemented.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30** (tranche=cefi, autonomous): KEEP-NA, valid - the sole todo is an unresolved choice
+  between two architectures (range-loop in one process vs a cross-process catalogue cache), one of which changes the
+  shared VM startup script fleet-wide.
+- **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).
+- **na-eligibility-audit 2026-08-02** (tranche=cefi, autonomous): KEEP-NA, valid — re-verdicted only because the
+  2026-08-01 `context-scout` frontmatter backfill moved the doc's git date past the 07-30 marker; the body is
+  byte-identical to the 07-30 reading (verified `git diff eaa6bfd1e..HEAD` = the `context_scope` block only). Verdict
+  unchanged: the sole todo is still an unresolved architecture choice (range-loop in one process vs a cross-process
+  `CeFiCatalogReader` cache), one branch of which rewrites the shared fleet-wide VM startup script. Not
+  worker-determinable.

@@ -44,6 +44,13 @@ source:
   under the 2000L umbrella cap. Split type is clean-partition per the triage doc (no depends_on/sequential needed) — the
   gate's real-world prerequisite (migration must land before a re-smoke-test is meaningful) is documented in prose in
   the Phase D todos themselves (unchanged from the parent), not encoded as a dispatch gate.
+context_scope:
+  [
+    /plans/active/tradfi_consolidated_closeout_2026_07_18.md,
+    /plans/active/tradfi_manifest_content_recovery_completion_2026_07_24.md,
+    /codex/02-data/tradfi-databento-sourcing-ssot.md,
+    /codex/02-data/honest-coverage-model.md,
+  ]
 ---
 
 # TradFi Phase-D terminal gate
@@ -110,6 +117,24 @@ source:
 `tradfi_consolidated_closeout_2026_07_18.md` (not duplicated here).
 
 ## Progress Log
+
+- **na-eligibility-audit 2026-07-31** (tradfi tranche, dispatch agt-6d6eaf): **KEEP-NA, valid.** Both open checkboxes
+  (P0 MVP-backfill-readiness gate; P1 post-full-backfill reconciliation checkpoint) read end-to-end; count matches
+  tranche-inventory tool (2). Both remain explicitly gated exactly per the 2026-07-30 entry below — no new evidence has
+  cleared either OR-gate since. Nothing changed since the prior verdict; doc stays NA.
+- **2026-07-30 (tradfi_satellite_ao_dispatch_batch1_finalize reconciliation pass)** — Flipped the "VM fleet preemption
+  auto-recovery... coverage gap" backtick-wrapped note above to a real `[x]` checkbox, citing
+  `unified-trading-pm@3ebdd1a4e` (verified reachable) for the doc-scoping addition and the already-cited
+  `deployment-service@db5d3c7` for the launcher code fix. `status` stays `active` — this doc still carries 2 genuinely
+  open P0/P1 checkboxes (MVP backfill readiness gate; post-full-backfill reconciliation checkpoint), both operator-gated
+  per the na-eligibility-audit entry below, so it does not reach 0 open todos.
+- **na-eligibility-audit 2026-07-30** (tradfi tranche): **KEEP-NA, valid.** Both open todos read end-to-end and are
+  explicitly gated. The P0 MVP-backfill-readiness gate says in its own text "**Still blocked** … do not start this until
+  the chain-bundle follow-up is resolved **or the operator explicitly accepts the current evidence as sufficient**" — an
+  operator acceptance decision — and the named chain-bundle blocker
+  (`/plans/active/issues/tradfi_chain_bundle_sampler_root_mismatch_2026_07_23.md` §4) is itself operator-gated on the
+  `EXCHANGE_CODE_TO_NAME` SSOT contradiction. The P1 post-backfill reconciliation checkpoint is gated on that same P0.
+  Nothing worker-determinable to dispatch.
 
 > **Moved verbatim from the parent's Progress Log (2026-07-24 line-cap split)** — this is the Phase-D testing slice of
 > the parent's single continuous autonomous-session narrative (tick 13's terminal-gate runbook, ticks 17-19's MVP-only
@@ -385,16 +410,21 @@ tracked below as follow-up, not blocking this plan's core migration/manifest-rec
   `"FX": "fx"`) + `instruments-service@f9be7ec7` (new `FxReferenceDataAdapter`,
   `instruments_service/reference_data/adapters/tradfi/fx.py`, byte-identical canonical-id construction to MTDS's own
   `FX:SPOT_PAIR:{BASE}-{QUOTE}`, 5 new unit tests, all passing).
-- `- [ ] [DATA] P2. VM fleet preemption auto-recovery has a real, already-tracked coverage gap for short-lived VMs`
-  (found investigating why Phase-D checker VMs kept hitting `vm_self_deleted_no_exit_status` with no auto-relaunch):
-  auto-detect + auto-relaunch (`exit_code_fleet_monitor.py` → `RelaunchPreemptedVm`) DOES cover
-  `mtds-backfill-*-pipelinecheck-*`/`instr-backfill-*-pipelinecheck-*` VMs by launcher-prefix registry match, but its
-  trigger (a `PREEMPTED` blob written by a systemd unit installed partway through `setup-data-pipeline-vm.sh`'s
+- [x] ✅ [DATA] P2. **VM fleet preemption auto-recovery has a real, already-tracked coverage gap for short-lived VMs —
+      DONE 2026-07-27 (slot-15), flipped by `tradfi_satellite_ao_dispatch_batch1_finalize_2026_07_25.md`'s
+      reconciliation pass.** (found investigating why Phase-D checker VMs kept hitting `vm_self_deleted_no_exit_status`
+      with no auto-relaunch): auto-detect + auto-relaunch (`exit_code_fleet_monitor.py` → `RelaunchPreemptedVm`) DOES
+      cover `mtds-backfill-*-pipelinecheck-*`/`instr-backfill-*-pipelinecheck-*` VMs by launcher-prefix registry match,
+      but its trigger (a `PREEMPTED` blob written by a systemd unit installed partway through
+      `setup-data-pipeline-vm.sh`'s
   > 1000-line startup) only reliably fires for multi-hour production backfills — a single-shard smoke-test VM is
   > disproportionately likely to be preempted in the early-boot blind window before the unit installs, exactly the
-  > silent-miss case already tracked in `plans/active/issues/vm_fleet_preemption_autorecovery_gap_2026_07_23.md`. That
-  > issue's remaining scoping (items 8-9) doesn't yet name the two pipeline-check launchers as candidates for the
-  > native-shutdown-script fix (3 other launchers already use it) — add them there rather than re-solving here.
+  > silent-miss case tracked in `/plans/archive/issues/vm_fleet_preemption_autorecovery_gap_2026_07_23.md` (archived
+  > 2026-07-30, all 9 todos done). **Evidence: unified-trading-pm@3ebdd1a4e** named both
+  > `mtds-backfill-*-pipelinecheck-*` and `instr-backfill-*-pipelinecheck-*` as candidates in that doc's item 8/9
+  > scoping list (which emit the `instr-backfill-*-pipelinecheck-*` / `mtds-backfill-*-pipelinecheck-*` VM names this
+  > note describes); the actual native-shutdown-script code fix shipped `deployment-service@db5d3c7` — the gap this note
+  > flags is now closed at both the doc-scoping and launcher levels.
 - `- [ ] [DATA] P1-OPERATOR-REVIEW. (carried forward) Review the retire-phase candidate list (50,520 rows) before ever running --apply — unchanged from the earlier entry; still awaiting operator review, not touched this continuation.`
 
 ### 2026-07-24 — session wrap-up (operator asked to stop after shipping local + pre-compact)
@@ -469,7 +499,7 @@ its 2026-07-24 12:43 UTC launch — well before session-end); no re-launch was n
 | 3 `TestIsBundledChainShardCboeCorrection` regression tests                 | Written, verified in isolation, withheld from the shipped commit                                                                                                                 | `mtds_deployment_env_race_survives_single_worker_2026_07_23.md` resolution                                                                                 |
 | `DEPLOYMENT_ENV` pytest race root cause                                    | Narrowed to quickmerge's cascade/pull step this session (5 dirty / 1 clean via quickmerge vs. 1 clean via direct `quality-gates.sh` back-to-back); exact mechanism still unknown | Needs someone to instrument the cascade step itself (env diff before/after `STAGE 0`), not another blind-retry session                                     |
 | Chain-bundle canonical-root→raw-Databento-symbol reverse translation (CME) | Genuinely open, blocked on an `EXCHANGE_CODE_TO_NAME` SSOT contradiction across two UAC files                                                                                    | Operator input, per `tradfi_chain_bundle_sampler_root_mismatch_2026_07_23.md` §4                                                                           |
-| VM fleet preemption early-boot blind window for smoke-test VMs             | Tracked, not yet actioned                                                                                                                                                        | `vm_fleet_preemption_autorecovery_gap_2026_07_23.md` items 8-9                                                                                             |
+| VM fleet preemption early-boot blind window for smoke-test VMs             | FIXED + shipped 2026-07-30 (deployment-service@db5d3c7)                                                                                                                          | `/plans/archive/issues/vm_fleet_preemption_autorecovery_gap_2026_07_23.md` items 8-9 (resolved)                                                            |
 | Retire-phase 50,520-row `--apply`                                          | Untouched all session, correctly                                                                                                                                                 | Operator review — hard stop, never autonomous                                                                                                              |
 
 **Recommended next item**: read the CBOE VM's `run.log` first (cheapest, already in flight) before picking up anything
@@ -490,3 +520,5 @@ tracked elsewhere in this doc, which remains genuinely open.
 **End of forked content.** For MVP universe / ground-truth-verdict context, Phase A2/C (adapter correctness,
 data-status, honest-coverage) still tracked on the parent, and the full aggregated source-doc list, see
 `tradfi_consolidated_closeout_2026_07_18.md`.
+
+- **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).

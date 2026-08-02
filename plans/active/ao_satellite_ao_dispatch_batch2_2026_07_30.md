@@ -14,7 +14,7 @@ summary: >-
   (`orchestrator_jwt_secret_not_pinned_causes_fleet_git_status_outage`'s DEVOPS P1) is the same "highest-value
   now-actionable orphan" the prior 2026-07-30 audit identified but did not batch (no operator was reachable that run).
   Every todo below targets files disjoint from every sibling todo, so the plan needs no `sequential` gate.
-status: draft
+status: active
 nature: process
 asset_group: [ao]
 stage: [meta]
@@ -24,8 +24,8 @@ tags: [ao, agent-orchestrator, ao-dispatch, close-out, batch-2, satellite-docs]
 related:
   [
     /plans/active/ao_satellite_ao_dispatch_batch2_finalize_2026_07_30.md,
-    /plans/active/ao_satellite_ao_dispatch_batch1_2026_07_26.md,
-    /plans/active/ao_satellite_ao_dispatch_batch1_finalize_2026_07_26.md,
+    /plans/archive/2026_07/ao_satellite_ao_dispatch_batch1_2026_07_26.md,
+    /plans/archive/2026_07/ao_satellite_ao_dispatch_batch1_finalize_2026_07_26.md,
     /plans/active/ao_open_issues_consolidated_close_out_2026_07_17.md,
     /plans/archive/2026_07/ao_consolidated_closeout_2026_07_25.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
@@ -33,8 +33,8 @@ related:
 created: "2026-07-30"
 last_updated: "2026-07-30"
 parent_epic: orchestrator_master
-assigned_vm: planning
-execution_scope: orchestrator-agent
+assigned_vm: NA
+execution_scope: local-only
 priority: P1
 estimate_class: refactor
 estimate_baseline_ai_days: 3.0
@@ -55,6 +55,14 @@ source: >-
   candidate) plus direct reads of the remaining cited docs; Phase 3 ran the conflict-check grep against both the 3
   covering docs and the whole plans/active corpus before drafting (caught one cross-tranche duplicate-claim, held out of
   this batch).
+context_scope:
+  [
+    /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
+    /codex/05-infrastructure/per-tab-worktrees.md,
+    /codex/12-agent-workflow/pre-task-plan-conflict-check.md,
+    /plans/active/ao_satellite_ao_dispatch_batch2_finalize_2026_07_30.md,
+    /plans/active/ao_open_issues_consolidated_close_out_2026_07_17.md,
+  ]
 ---
 
 # AO satellite AO batch 2
@@ -89,8 +97,9 @@ other orphaned candidate considered and why it was NOT drafted.
 
 ## Todos
 
-- [ ] [BACKEND] P2. **Add a 4th `/done`-gate disposition for a genuinely-open todo blocked on another owner's in-flight
-      fix, and fix a recurring self-archival rename-blindness bug.** In `agent-orchestrator/server/verify.py`: (1) add
+- [x] ✅ [BACKEND] P2. **DONE 2026-07-30 (slot-3, backend_engineer) — all 3 sub-items VERIFIED ALREADY SHIPPED, no new
+      code needed.** Add a 4th `/done`-gate disposition for a genuinely-open todo blocked on another owner's in-flight
+      fix, and fix a recurring self-archival rename-blindness bug. In `agent-orchestrator/server/verify.py`: (1) add
       `_diff_blocks_checkbox` matching a `BLOCKED-ON:<ref>`-style marker (mirroring the existing
       `_diff_cancels_checkbox`/`_diff_defers_checkbox`), accepted via `reason="todo_blocked_pending_other_owner"`; (2)
       extend Mode-2's empty-`pm_shas` fallback to recognize CANCELLED/DEFERRED/BLOCKED markers on the current on-disk
@@ -102,32 +111,86 @@ other orphaned candidate considered and why it was NOT drafted.
       fallback, rename-followed self-archival detection). Source:
       `/plans/active/issues/ao_done_gate_no_carveout_for_red_gate_evidence_only_closure_2026_07_28.md` (3 of its 4 todos
       — the 4th, a codex-doc note, is sequenced behind these and stays with the source doc). Repo: agent-orchestrator.
-- [ ] [WORKER] P1. **Re-verify, then recover-or-mark-moot, the 4 named orphaned worker commits.** For each of
-      features-service `207afd62` + `d1c1ad8a`, unified-api-contracts `724bd9be`, agent-orchestrator `559452e`: check
-      (via `git log --grep` / content-diff against current `origin/live-defi-rollout`) whether the same functional
-      change already landed under a different SHA via independent duplicate work. This audit's own Phase-1 pass already
-      found strong evidence all 4 did — `a90256f5` (features-service, same census-manifest persist as `207afd62`),
-      `a9429cba` (features-service, same `accepted_quotes_for_venue` wiring as `d1c1ad8a`), `698b5b6f`
-      (unified-api-contracts, byte-identical commit message/date to `724bd9be`'s saved patch), `09cda29`
-      (agent-orchestrator, same `/api/backlog/{id}/reconcile-brief` feature as `559452e`) — confirm each, then flip the
-      corresponding item MOOT-SUPERSEDED citing the landed SHA. For any genuinely still-missing item instead,
-      cherry-pick the saved backstop patch (`.orch-orphan-commits-recovery/`) onto current origin tip and ship via
-      quickmerge per the doc's own stated recipe. **Done when**: all 4 items have an explicit disposition
-      (MOOT-SUPERSEDED + landed SHA, or recovered + re-shipped SHA) recorded in the source doc. Source:
-      `/plans/active/issues/branch_reset_to_origin_orphans_unpushed_worker_commits_2026_07_27.md`. Repos:
-      features-service, unified-api-contracts, agent-orchestrator (read-only verification; write only if a genuine
-      recovery is needed).
-- [ ] [BACKEND] P1. **Root-cause + fix why `sequential: true` did not gate dispatch order for a queued predecessor.**
-      `mtds_available_at_cross_asset_backfill_2026_07_13.md` carries `sequential: true` (added 2026-07-14 for this exact
-      bug class) yet task `-006` was dispatched while its direct predecessor `-001` was still `queued`. Read
-      `_wire_sequential_prereqs` in `agent-orchestrator/server/regen_backlog_from_plan.py` directly, reproduce against
-      the plan's current task rows, and determine the actual cause (candidate hypotheses in the source doc:
-      stale-ordinal chaining after checkbox renumbering, a lane-crossing bug when two asset-group sub-sequences
-      interleave in one file, or prereqs not re-derived on every regen tick). **Done when**: `quality-gates.sh` green +
-      a regression test asserting a `sequential: true` plan never offers a later-in-document unchecked todo while an
-      earlier one is still `queued` (not `done`); then re-check the live backlog to confirm `-001` dispatches/completes
-      before `-006` is ever offered again. Source:
-      `/plans/active/issues/mtds_backfill_sequential_true_dispatch_order_violated_2026_07_29.md`. Repo:
+
+      **Verification (not a re-implementation)**: on picking this up, read `server/verify.py` directly before writing
+                                                                      any code and found all 3 sub-items already present on current HEAD:
+                                                                      - Sub-items (1) + (2) (the `BLOCKED-ON` disposition + the Mode-1/Mode-2 marker-fallback for an aged-out log
+                                                                        window): already shipped by a different worker (slot-7, per the source doc's own Progress Log) at
+                                                                        `agent-orchestrator@22a14b1` (`_diff_blocks_checkbox`, `_ADDED_BLOCKED_LINE_RE`,
+                                                                        `reason="todo_blocked_pending_other_owner"`) and `agent-orchestrator@e1b30f5` (`_marker_disposition_in_text`,
+                                                                        `_mode1_fallback_disposition`/`_mode2_no_recent_commit_disposition`) — both confirmed ancestors of my current
+                                                                        HEAD via `git merge-base --is-ancestor`.
+                                                                      - Sub-item (3) (self-archival rename-blindness): traced `_same_commit_added_path_matching_basename` +
+                                                                        `_flips_at_path_or_rename`/`_cancels_at_path_or_rename`/`_defers_at_path_or_rename` — already wired into BOTH
+                                                                        `_mode1_disposition` AND `_mode2_disposition` — to an EARLIER, separate commit,
+                                                                        `agent-orchestrator@587c8db` (2026-07-28T20:30:49+01:00, `fix(ao): M3 plan-flip check follows an archival
+                                                                        git-mv bundled with the checkbox flip`), also confirmed an ancestor of HEAD. This means the 2 real-world
+                                                                        recurrences the source doc's todo 4 cites (2026-07-29, slots 12 and 2) hit an already-shipped-but-likely
+                                                                        not-yet-deployed-to-the-live-orchestrator-process version of the fix, not a genuine code gap — the codebase
+                                                                        itself was already correct by the time those recurrences were reported.
+                                                                      - Regression tests for all 3 sub-items already exist and PASS on HEAD — ran them directly rather than trusting
+                                                                        the claim: full `tests/test_done_gate_plan_flip_hard_reject.py` (29/29 passed), specifically confirming
+                                                                        `test_done_accepts_when_commit_blocks_todo_pending_other_owner` +
+                                                                        `test_done_accepts_cross_repo_when_pm_commit_blocks_todo_pending_other_owner` (sub-item 1),
+                                                                        `test_done_accepts_cross_repo_when_todo_blocked_outside_the_log_window` +
+                                                                        `test_done_accepts_cross_repo_when_todo_deferred_outside_the_log_window` +
+                                                                        `test_done_accepts_cross_repo_when_todo_cancelled_outside_the_log_window` +
+                                                                        `test_done_rejects_cross_repo_when_marker_disposition_is_ambiguous` (sub-item 2), and
+                                                                        `test_done_accepts_cross_repo_when_checkbox_flip_bundled_with_archival_git_mv` +
+                                                                        `test_done_accepts_single_repo_when_checkbox_flip_bundled_with_archival_git_mv` (sub-item 3, both PASSED).
+                                                                      - No code changes shipped (there was nothing to change) — per this plan's "don't edit the source issue doc's
+                                                                        checkboxes" rule, `ao_done_gate_no_carveout_for_red_gate_evidence_only_closure_2026_07_28.md`'s own todo 4 is
+                                                                        left untouched here; the paired finalize plan reconciles this evidence back into it.
+
+- [x] [WORKER] P1. ✅ **MOOT — already fully resolved before this batch was drafted; re-verified 2026-07-30, no action
+      needed.** The source doc (`branch_reset_to_origin_orphans_unpushed_worker_commits_2026_07_27.md`) was already
+      `status: resolved` + ARCHIVED the same day this batch2 audit ran, by an earlier "bounded recovery sweep, infra
+      role" pass that already recorded the exact disposition this todo asks for, for all 4 items — this batch2 audit's
+      Phase-1 pass apparently re-derived the same finding independently without noticing the source doc had already
+      closed it. Independently re-verified all 4 today via `git merge-base --is-ancestor` + content-diff against current
+      `origin/live-defi-rollout` (unified-trading-system-repos/.tabs/8): (1) features-service `207afd62` — orphan
+      confirmed NOT on origin; `a90256f5` confirmed ON origin ("feat(sports): always write stable derived_features
+      residue census manifest"). (2) features-service `d1c1ad8a` — orphan confirmed NOT on origin; `a9429cba` confirmed
+      ON origin, `accepted_quotes_for_venue` symbol live at `mvp_universe_filter.py:48,64,71,97`. (3)
+      unified-api-contracts `724bd9be` — orphan confirmed NOT on origin; `698b5b6f` confirmed ON origin,
+      `git diff 724bd9be 698b5b6f --stat` is EMPTY (byte-identical). (4) agent-orchestrator `559452e` — orphan confirmed
+      NOT on origin; `09cda29` confirmed ON origin, route live at `server/routes/backlog.py:391` +
+      `tests/test_backlog_reconcile_brief.py` present. No genuine recovery needed for any of the 4 (matches the
+      already-recorded verdict); no code changes made in any of the 3 verification-only repos. Source doc's own
+      checkboxes/dispositions left untouched (already correct, doc archived) per this plan's "don't edit the source
+      doc's checkboxes" rule. Repos: features-service, unified-api-contracts, agent-orchestrator (read-only, confirmed
+      no write needed), unified-trading-pm (this flip).
+- [x] [BACKEND] P1. ✅ **Root-caused + fixed — `agent-orchestrator@77769ab`.** Actual cause: NONE of the 3 candidate
+      hypotheses in the source doc as literally stated — the real mechanism is call-ORDER, not stale ordinals or lane
+      interleaving per se. `_wire_sequential_prereqs` (server/regen_backlog_from_plan.py) runs BEFORE `_prune_stale` in
+      `regen()`'s pipeline. When a same-plan todo's TEXT changes mid-tick (a reword/retag — exactly what happened to
+      both `-001`'s and `-006`'s todo text on 2026-07-28, "retagged... same ruling"), the OLD row for the pre-edit brief
+      is still sitting in `backlog.tasks` at chain-wiring time (an orphan about to be pruned, but not yet), carrying a
+      STALE `plan_order` from a prior tick that can tie/interleave with the freshly (re)computed `(plan_order, id)`
+      values for the plan's live todos — sorting the stale row into the chain and hijacking the immediate-predecessor
+      slot the fresh row should have gotten. Once the orphan is pruned moments later (same tick or the next), an id
+      absent from both DB and backlog reads as satisfied by design, so the hijacked task can dispatch with its TRUE
+      predecessor still queued. Reproduced via a self-contained regen() test (reword a mid-sequential-plan todo, assert
+      the reworded row still chains onto its true document-order predecessor, not the stale orphan) — FAILS on pre-fix
+      code (`['p-002'] == ['p-001']` mismatch), PASSES post-fix. **Fix**: track each tick's live (non-orphan) task ids
+      per plan during the scan loop (`current_task_ids_by_plan`) and restrict `_wire_sequential_prereqs`'s chain WALK to
+      those live ids only, while still classifying same-plan-vs-cross-plan links from the FULL per-plan task set (so a
+      genuinely stale same-plan link is still recognised + stripped by the non-sequential branch) —
+      `_wire_sequential_prereqs` signature gained an optional `current_task_ids_by_plan: dict[str, set[str]] | None`
+      param, defaulting to the old (unfiltered) behavior when omitted. **Gate met**: new regression test
+      `test_sequential_reword_mid_flight_does_not_corrupt_chain` (`tests/test_regen_reconcile.py`) fails pre-fix, passes
+      post-fix; full `tests/test_regen_reconcile.py` (17/17), the broader regen-touching suite (287/287 across
+      `test_backlog_reconcile_brief.py`, `test_done_gate_plan_flip_hard_reject.py`, `test_e2e_findings_remediation.py`,
+      `test_failover_allowed.py`, `test_operator_gated_dispatch_ruling.py`, `test_regen_backlog_from_plan.py`,
+      `test_regen_effort_field.py`, `test_role_registry.py`, `test_skip_endpoint_cooldown_and_park.py`,
+      `test_skip_stale_marker_orphan.py`), and the full repo `quality-gates.sh` (2077 passed, 2 skipped) all green.
+      Shipped via quickmerge, landed on `live-defi-rollout`. **Live-backlog re-check deliberately NOT done from this
+      todo** — the source issue doc already tracks it as its own separate `[VERIFY] P2` todo, explicitly gated on the
+      fix reaching the live orchestrator VM through the normal deploy pipeline (this fix hasn't been deployed there yet
+      as of this commit; forcing a live orchestrator restart mid-fleet-operation to satisfy it here would be out of this
+      todo's scope). `mtds_available_at_cross_asset_backfill_2026_07_13.md` carries `sequential: true` (added 2026-07-14
+      for this exact bug class) yet task `-006` was dispatched while its direct predecessor `-001` was still `queued`.
+      Source: `/plans/active/issues/mtds_backfill_sequential_true_dispatch_order_violated_2026_07_29.md`. Repo:
       agent-orchestrator.
 - [ ] [SCRIPT] P3. **Read-only: verify whether `na-eligibility-auditor.timer`'s most recent scheduled fire(s) since
       2026-07-28 reached `agent_kind=na_eligibility_auditor` lifecycle-complete.** Use the read-only SSM path
@@ -147,18 +210,13 @@ other orphaned candidate considered and why it was NOT drafted.
       minted on that host and `/api/fleet/git-health` reports `reporter_stale=false` for it within one 15-min tick.
       Source: `/plans/active/issues/git_status_reporter_stale_public_url_token_expiry_2026_07_24.md` (its remaining
       INFRA P3 item). Repo: agent-orchestrator (host/credential action, no code change expected).
-- [ ] [DEVOPS] P1. **Pin `ORCHESTRATOR_JWT_SECRET_GCS` for `orchestrator.service`.** Create a persisted random-value
-      secret object (e.g. `gs://central-element-323112-orchestrator-creds/orchestrator/jwt-secret.txt`, mirroring the
-      existing pinned internal secret/key pattern), add `Environment=ORCHESTRATOR_JWT_SECRET_GCS=gs://...` to
-      `/etc/systemd/system/orchestrator.service` via `sudoedit`, then
-      `systemctl daemon-reload && systemctl restart orchestrator.service`. This closes a fleet-wide ~4.5h-outage root
-      cause (an unpinned JWT secret regenerates on every restart, invalidating every slot's cached token at once) that
-      has sat unclaimed since its only blocker — an operator-chosen maintenance window — was removed by the 2026-07-28
-      CLAUDE.md ruling. **Done when**: a token captured before the restart still validates after it, and `/api/healthz`
-      reports healthy post-restart. Source:
-      `/plans/active/issues/orchestrator_jwt_secret_not_pinned_causes_fleet_git_status_outage_2026_07_24.md` (its
-      remaining DEVOPS P1 item — the SCRIPT P2 loopback-fix half is already done, see batch1 todo 3). Repo:
-      agent-orchestrator (live-host action).
+- [x] [DEVOPS] P1. ✅ **DONE 2026-07-30 — already resolved, don't dispatch.** The `.env.local`-based literal
+      `ORCHESTRATOR_JWT_SECRET` was found already durably pinned (verified: a token survives a real restart), and the
+      systemd-unit-level `ORCHESTRATOR_JWT_SECRET_GCS` drop-in this todo describes was separately completed the same day
+      (`/etc/systemd/system/orchestrator.service.d/jwt-secret-gcs.conf`, verified via a genuine `systemctl     restart`
+      — token survived). Full evidence in the source doc's own "Remaining work" section (both todos) — now archived at
+      `/plans/archive/issues/orchestrator_jwt_secret_not_pinned_causes_fleet_git_status_outage_2026_07_24.md`. Repo:
+      agent-orchestrator (no code change needed for this todo specifically).
 - [ ] [DOCS] P1. [OPERATOR] **Update two codex docs still describing the old always-pin dispatch model.**
       `/codex/12-agent-workflow/work-philosophy.md` and
       `/codex/04-architecture/agent-orchestrator-backlog-state-alignment.md` both need to state that
@@ -222,7 +280,7 @@ other orphaned candidate considered and why it was NOT drafted.
 
 ## Deferred — already claimed by an active plan outside this tranche (conflict-check caught this)
 
-- `/plans/active/issues/blank_assigned_vm_dispatch_classification_gap_2026_07_26.md` — its sole open todo (run the
+- `/plans/archive/issues/blank_assigned_vm_dispatch_classification_gap_2026_07_26.md` — its sole open todo (run the
   standard conflict-check against the 30 docs this doc itself flipped `NA→planning` on 2026-07-26, before their content
   is trusted for dispatch) is mechanically bounded and would otherwise qualify, but it is already a live, unchecked
   `[REVIEW] P2` todo inside `/plans/active/na_docs_validity_and_ao_eligibility_audit_2026_07_26.md` (asset_group:
@@ -232,11 +290,11 @@ other orphaned candidate considered and why it was NOT drafted.
 
 ## Deferred — time-gated (re-check after the date passes, not a design question)
 
-- `/plans/active/issues/ao_done_require_origin_not_enforced_2026_07_29.md` — its sole open todo (re-measure the
-  `on_origin=False` rate over a fuller-volume window, then flip `done_require_origin=true` if it holds near 0%) is
-  explicitly blocked on normal dispatch volume resuming past **2026-08-02** (some accounts are rate-limited through that
-  date per a separate swap-exhaustion finding). Re-triage this item once that date has passed — it is otherwise bounded
-  and dispatch-eligible (an existing tool + an established near-zero threshold, not a design fork).
+- ~~`/plans/active/issues/ao_done_require_origin_not_enforced_2026_07_29.md`~~ — **RESOLVED + archived 2026-07-30, stale
+  by the time this plan was drafted**: the operator reviewed the 3-spot-check trend (0/151, 0/52, 0/222 false, all 0.0%)
+  directly and explicitly overrode the "wait a few days" gate this note assumed still applied. Flipped + shipped
+  `agent-orchestrator@cf7cd35`. Now at `/plans/archive/issues/ao_done_require_origin_not_enforced_2026_07_29.md` —
+  nothing left to re-triage here.
 
 ## Methodology note — scope of this Phase-1 pass
 
@@ -275,3 +333,13 @@ never-cited set). This is the same scope boundary the 2026-07-26 and 2026-07-30 
   drafting; it caught one cross-tranche duplicate claim (held out, see Deferred) and confirmed zero file-collisions
   among the 8 drafted todos (no `sequential` gate needed). Left `status: draft` deliberately — flipping to `active` is
   the operator's call.
+- **na-eligibility-audit 2026-08-01** (autonomous, tranche `ao`, dispatch agt-8e95ca, slot 2): KEEP-NA, valid — this doc
+  carries the same NA/local-only satellite-batch convention as batch1/batch3/batch4 (all 4-for-4 in this tranche, not a
+  one-off default; `ao_open_issues_consolidated_close_out_2026_07_17.md:136` records it as established fact). Of the 4
+  open items, 3 require the same specialized SSM/host/credential access this tranche's work consistently uses
+  interactive sessions for, and 1 (`[DOCS] P1`) is explicitly `[OPERATOR]`-tagged. **Worth the operator's attention as a
+  possible systemic skill-convention drift** (the `ag-closeout-audit` SKILL.md's own authoring convention for
+  `_satellite_ao_dispatch_batch{N}_` docs states `assigned_vm: planning` — no explicit ruling/citation found in any of
+  the 4 `ao` batch docs explaining the deviation) — not treated as an audit-scope oversight this run given its 100%
+  consistency, but a one-time explicit ruling would save future audits from re-deriving this reasoning.
+- **context-scout 2026-08-01**: populated/refreshed context_scope (5 entries).

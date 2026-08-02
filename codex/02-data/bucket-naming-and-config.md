@@ -14,7 +14,7 @@ scope: [engineer, admin]
 tags: [bucket-naming, canonicalisation, ssot-audit, migration, infrastructure]
 related:
   [
-    ../../plans/archive/2026_05/bucket_name_ssot_canonicalisation_2026_05_10.md,
+    /plans/archive/2026_05/bucket_name_ssot_canonicalisation_2026_05_10.md,
     /codex/05-infrastructure/gcs-object-operations.md,
   ]
 created: 2026-03-27
@@ -26,7 +26,7 @@ referenced_by:
     /codex/02-data/is-test-run-audit-2026-04-20.md,
   ]
 owner:
-last_reviewed: 2026-05-17
+last_reviewed: 2026-08-14
 code_refs:
 superseded_by: /codex/05-infrastructure/bucket-isolation-model.md
 superseded_on: 2026-05-11
@@ -59,9 +59,9 @@ bucket = resolve_bucket_name(
 - **Canonical config**: `unified_api_contracts/config/cloud-providers.yaml` (UAC-packaged — the always-available SSOT,
   since UTL is T0 and reads it via `importlib.resources`; relocated 2026-06-10 to fix the T0→T4 sibling-walk that broke
   standalone CI clones). The `deployment-service/configs/cloud-providers.yaml` copy is the authoring location + the
-  local `deployment_service.env_substitutor` read; `unified-trading-pm/configs/cloud-providers.yaml` is a byte-identical
-  mirror. All three stay in sync. SSOT:
-  `plans/archive/2026_07/bucket_name_ssot_legacy_dual_write_remediation_2026_06_01.md`.
+  local `deployment_service.config.env_substitutor` read; `unified-trading-pm/configs/cloud-providers.yaml` is a
+  byte-identical mirror. All three stay in sync. SSOT:
+  `/plans/archive/2026_07/bucket_name_ssot_legacy_dual_write_remediation_2026_06_01.md`.
 - **Env tier** (`${DEPLOYMENT_ENV}` → staging/prod/development) extends to ALL buckets across both clouds.
 - **`pipeline_mode` lives in PATH**, NOT in bucket name.
 - **Region-pinned**: GCP `asia-northeast1`, AWS `ap-northeast-1` (Tokyo same-metro, ~5× cheaper egress).
@@ -74,7 +74,7 @@ bucket = resolve_bucket_name(
    workspace rule and the QG STEP 5.69 ratchet.
 2. `unified-trading-library/unified_trading_library/cloud_interface/bucket_naming.py` — canonical resolver code.
 3. `deployment-service/configs/cloud-providers.yaml` — the per-bucket-kind registry.
-4. `plans/archive/2026_05/bucket_name_ssot_canonicalisation_2026_05_10.md` — migration plan (archived; complete).
+4. `/plans/archive/2026_05/bucket_name_ssot_canonicalisation_2026_05_10.md` — migration plan (archived; complete).
 
 ## Why this doc was retained as a stub (not deleted)
 

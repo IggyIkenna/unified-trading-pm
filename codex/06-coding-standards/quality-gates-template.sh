@@ -9,6 +9,15 @@
 #   bash scripts/quality-gates.sh --no-fix  # Verify only (CI mode)
 #   bash scripts/quality-gates.sh --quick   # Skip slow checks (local dev)
 #   bash scripts/quality-gates.sh --skip-typecheck  # Skip type checking
+#   bash scripts/quality-gates.sh --help    # Show usage and exit 0 (no gate phases run)
+#
+# Any flag not listed above is a hard error (exit 1) — see
+# quickmerge_help_flag_misparsed_as_commit_message_2026_07_30: a template that silently
+# ignores an unrecognized flag is how a fat-fingered run (e.g. --help itself, before this
+# fix) ends up executing the full gate with unintended default settings instead of failing
+# loud. Every concrete quality-gates.sh in this repo (base-service.sh / base-library.sh /
+# base-codex.sh) implements this same --help + unknown-flag-errors contract; this template
+# must not drift from it.
 #
 # Requirements:
 #   - Python >=3.13,<3.14
@@ -32,9 +41,18 @@ QUICK_MODE=false
 SKIP_TYPECHECK=false
 for arg in "$@"; do
     case $arg in
+        --help|-h)
+            sed -n '/^# Usage:/,/^# Requirements:/{/^# Requirements:/!p}' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'
+            exit 0
+            ;;
         --no-fix) FIX_MODE=false ;;
         --quick) QUICK_MODE=true ;;
         --skip-typecheck) SKIP_TYPECHECK=true ;;
+        *)
+            echo "❌ quality-gates.sh: unknown flag: $arg" >&2
+            echo "   Run 'bash scripts/quality-gates.sh --help' for the full flag list." >&2
+            exit 1
+            ;;
     esac
 done
 
@@ -136,8 +154,12 @@ log_section "[2/4] LINTING & FORMATTING"
 if [[ "$FIX_MODE" == "true" ]]; then
     # Run prettier FIRST on non-Python files to prevent ruff/prettier pre-commit hook conflicts.
     # See: 06-coding-standards/quality-gates.md § Formatter Conflict Resolution
+    # prettier@3.9.5 (not 3.6.2) — see prettier_emphasis_mangling_corpus_corruption_2026_07_14:
+    # <3.9.5 deterministically corrupts markdown (bare underscore identifiers rewritten as
+    # asterisks/escaped-underscores). Every concrete quality-gates.sh in this repo now pins
+    # 3.9.5; this template must not teach the proven-buggy version to new repos.
     if command -v npx &>/dev/null; then
-        npx --yes prettier@3.6.2 --write "**/*.{md,json,yaml,yml}" --ignore-path .gitignore 2>/dev/null \
+        npx --yes prettier@3.9.5 --write "**/*.{md,json,yaml,yml}" --ignore-path .gitignore 2>/dev/null \
             && echo "Prettier: non-Python files formatted" \
             || echo "Prettier not available or no files to format (skipping)"
     fi

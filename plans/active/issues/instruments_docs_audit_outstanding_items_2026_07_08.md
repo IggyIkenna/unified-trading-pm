@@ -614,6 +614,9 @@ documented MVP scope doesn't actually restrict day-to-day fetches. Also: US2Y ge
 
 ## Progress Log
 
+- **na-eligibility-audit 2026-07-30**: KEEP-NA, valid - index doc whose section E is explicitly 'Operator decisions
+  required (not engineer fixes)'; the single todo is meta-tracking over dozens of prose items
+
 - 2026-07-08: Created from the instruments-service docs-cleanup audit (slot-3). 6 of 7 docs rewritten to spec + all
   outstanding items verified vs code; TRADFI deferred (§H).
 - 2026-07-08: A1 (Sports `UNKNOWN` league_id) root cause **CONFIRMED** — catalogue↔enumerator feedback loop
@@ -629,3 +632,10 @@ documented MVP scope doesn't actually restrict day-to-day fetches. Also: US2Y ge
   catalogue row + 2,373 manifest rows removed, backed up first, per-VM shards confirmed clean). Verified 0 remaining + a
   live post-backfill catalogue rebuild via the patched code mints 0 new phantom rows. Regression tests added in
   `instruments-service/tests/unit/scripts/`. Full evidence: `sports_manifest_unknown_league_id_2026_07_08.md`.
+
+- **na-eligibility-audit 2026-07-30** (tranche=cefi, autonomous): KEEP-NA, valid - the sole todo is an open-ended
+  tracking meta-item over dozens of prose-only findings in sections B-F; no bounded outcome.
+- **na-eligibility-audit 2026-07-30**: KEEP-NA, valid (sports tranche) — the sole todo is a meta-tracking ask spanning
+  dozens of prose bullets across sections B-F and 5 asset groups, and section E is literally titled 'Operator decisions
+  required (not engineer fixes)' — converting that corpus to checkboxes requires per-item triage including those
+  operator calls, so the outcome is not determinable by a worker alone

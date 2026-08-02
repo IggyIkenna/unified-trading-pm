@@ -24,7 +24,7 @@ created: 2026-03-27
 authoritative_for: [library repo setup checklist]
 referenced_by: [/codex/05-infrastructure/new-repo-setup.md]
 owner:
-last_reviewed: 2026-05-17
+last_reviewed: 2026-10-16
 code_refs:
 ---
 

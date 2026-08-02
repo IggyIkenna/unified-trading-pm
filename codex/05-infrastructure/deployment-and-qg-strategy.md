@@ -32,7 +32,7 @@ created: 2026-05-14
 authoritative_for: [deployment-method decision matrix (tarball vs image per env) + the 4-tier QG enforcement stack]
 referenced_by: [/codex/05-infrastructure/act-preflight-coverage.md]
 owner: workspace-platform
-last_reviewed: 2026-05-17
+last_reviewed: 2026-09-17
 code_refs:
 type: infrastructure
 ---
@@ -275,13 +275,13 @@ is test coverage on the function (Phase 8 target = 100% on validation + orchestr
 - **Runtime tiers + deployment** (existing):
   [`/codex/05-infrastructure/runtime-tiers-and-deployment.md`](runtime-tiers-and-deployment.md)
 - **Promote workflow May-23 CLI plan**:
-  [`plans/active/promote_workflow_may23_cli_path_2026_05_10.md`](../../plans/active/promote_workflow_may23_cli_path_2026_05_10.md)
+  [`plans/archive/2026_05/promote_workflow_may23_cli_path_2026_05_10.md`](../../plans/archive/2026_05/promote_workflow_may23_cli_path_2026_05_10.md)
   — wires in the env-locking enforcement + 99%-repo identification
 - **Promote workflow post-cutover UI plan**:
-  [`plans/active/promote_workflow_post_cutover_ui_pipeline_2026_05_10.md`](../../plans/active/promote_workflow_post_cutover_ui_pipeline_2026_05_10.md)
+  [`plans/archive/2026_05/promote_workflow_post_cutover_ui_pipeline_2026_05_10.md`](../../plans/archive/2026_05/promote_workflow_post_cutover_ui_pipeline_2026_05_10.md)
   — full UI pipeline build
 - **Governance HARD RULE automation + QG ratchet** (pulled-forward to May-23):
-  [`plans/active/governance_qg_automation_gaps_post_cutover_2026_05_12.md`](../../plans/archive/governance_qg_automation_gaps_post_cutover_2026_05_12.md)
+  [`plans/archive/governance_qg_automation_gaps_post_cutover_2026_05_12.md`](../../plans/archive/governance_qg_automation_gaps_post_cutover_2026_05_12.md)
   — wires audit scripts (`dockerfile-base-pin.sh`, `artifact-registry-retention.sh`, `snapshot.sh`)
 - **MVP universe**:
   [`/codex/09-strategy/mvp-universe-per-asset-group.md`](/codex/09-strategy/mvp-universe-per-asset-group.md)
@@ -339,7 +339,7 @@ Audit completed; findings in `plans/audit/results/vm_deployment_events_audit_202
 ### GCS lifecycle gap (operator action required)
 
 `vm-logs/` prefix: 4,130 dirs, no lifecycle purge, growing ~1,800/year. Watchdog `gsutil ls` latency grows with this.
-See `plans/active/issues/deployment_events_lifecycle_audit_2026_05_15.md` for the 3 `gsutil lifecycle set` commands
+See `plans/archive/issues/deployment_events_lifecycle_audit_2026_05_15.md` for the 3 `gsutil lifecycle set` commands
 needed (14d vm-logs, 30d QG snapshots, 90d events). Non-blocking May-23 (P2) but recommended before cutover.
 
 ## Continuous verification
@@ -371,7 +371,7 @@ Last reviewed: 2026-05-15. Next review: 2026-05-17 (post 99%-repo image-build + 
   > (5.79-5.82) has NOT been verified as of 2026-05-22 — verify per-repo QG output before assuming advisory-only.
   > Tracked under `plans/epics/infrastructure_master.md`.
 
-  Plan: `plans/active/deployment_and_qg_strategy_implementation_2026_05_13.md`. STEP SSOT:
+  Plan: `plans/archive/deployment_and_qg_strategy_implementation_2026_05_13.md`. STEP SSOT:
   `/codex/06-coding-standards/quality-gates.md` §§ 5.79-5.82.
 
 - **B-018 Phase 4.A QG snapshot cron** (2026-05-15): Daily QG-status snapshot (described at § "99%-repo identification"
@@ -379,7 +379,7 @@ Last reviewed: 2026-05-15. Next review: 2026-05-17 (post 99%-repo image-build + 
   prefix: `qg-snapshot` (registered in `vm_zombie_watchdog.py:VM_PREFIX_TO_BUCKET`). GCS output:
   `quality_gates_snapshot/` prefix in deployment bucket. Launcher:
   `deployment-service/scripts/vm/launch-qg-snapshot-vm.sh`. Scheduler: BLOCKED-OPERATOR-DECISION (Cloud Scheduler IAM
-  same as honest-coverage cron above). Plan: `plans/active/deployment_and_qg_strategy_implementation_2026_05_13.md` §
+  same as honest-coverage cron above). Plan: `plans/archive/deployment_and_qg_strategy_implementation_2026_05_13.md` §
   Phase 4.A.
 
 ## Phase 9 — Deployment API endpoint extensions (shipped 2026-05-15)
@@ -405,5 +405,5 @@ These are now workspace defaults — not optional add-ons.
 
 **Phase 10 venue admission** (strategy-service): codex updated by slot 3/11 at `codex/09-strategy/` —
 `batch-live-architecture.md` + `carry-recursive-borrow-perp-hedged.md`; drift findings in
-`plans/active/issues/strategy_service_phase10_codex_drift_2026_05_15.md`. No `codex/05-infrastructure/*` gaps found for
+`plans/archive/issues/strategy_service_phase10_codex_drift_2026_05_15.md`. No `codex/05-infrastructure/*` gaps found for
 venue admission (infra surfaces are neutral to venue admission logic).

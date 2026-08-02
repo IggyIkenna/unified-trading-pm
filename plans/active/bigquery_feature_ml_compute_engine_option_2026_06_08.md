@@ -37,6 +37,8 @@ source:
     composes with /codex/06-coding-standards/data-engine-selection.md + read-time-filter-pushdown.md,
   ]
 drift_direction: advance-code
+context_scope:
+  [/codex/06-coding-standards/data-engine-selection.md, /codex/06-coding-standards/read-time-filter-pushdown.md]
 ---
 
 # BigQuery as an OPTIONAL feature/ML compute engine
@@ -110,3 +112,10 @@ drift_direction: advance-code
    (cross-instrument, long-window)? Recommend the scale-bound subset first, with the formula_version asserted equal.
 2. **BQML vs BQ-as-feature-store** for ML — train in-warehouse, or BQ feeds ml-service? Likely per-model.
 3. **Sequencing** — this depends on the canonical v9 migration landing (stable schema). Gate after the per-AG `--apply`.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30**: KEEP-NA, valid — 3 unresolved operator design questions (feature-SQL scope,
+  BQML-vs-feature-store, sequencing behind the canonical-v9 migration) gate every remaining todo;
+  `locked_by: live-defi-rollout`.
+- **context-scout 2026-08-01**: populated/refreshed context_scope (2 entries).

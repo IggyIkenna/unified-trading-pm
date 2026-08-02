@@ -51,17 +51,23 @@ should be retired so the ceiling can ratchet back toward zero.
 
 ## Recommended decision
 
-- [ ] [SCRIPT] P3. Type-annotate the new
-      `scripts/openapi/{_capability_extract,_capability_gaps,_capability_orphan,generate_capability_manifest}.py`
-      capability files in `unified-trading-pm` so they are strict-clean (resolve the +6 `reportAny`/`reportUnknown*`
-      errors), then ratchet `BASEDPYRIGHT_MAX_ERRORS` in `scripts/quality-gates.sh` back down to 1511 (or lower). The
-      1517 ceiling is the interim clear. Verify with `cd unified-trading-pm && .venv/bin/basedpyright scripts/` (count
-      must be at-or-below the new ceiling). Related:
-      `plans/archive/2026_07/capability_wizard_and_manifest_2026_06_11.md`.
-- [ ] [SCRIPT] P3. **NICE-TO-HAVE** Opportunistically annotate the other long-standing untyped PM scripts
-      (`check-repo-readiness.py`, `cicd/check_ci_status_bot_only.py`, `generate-cicd-diagram.py`,
-      `feature_parity_diff.py`) to drive the ceiling materially below 1511 over time, one PR per file (provenance: same
-      run 27355114310).
+- [x] ✅ [SCRIPT] P3. **SUPERSEDED 2026-08-01 (slot 12) — moot, no code change.** The premise (annotate the 4 capability
+      files, then ratchet `BASEDPYRIGHT_MAX_ERRORS` back down to 1511) no longer applies: the 2026-06-24 warn-only fix
+      removed `BASEDPYRIGHT_MAX_ERRORS` from `scripts/quality-gates.sh` entirely (there is nothing left to ratchet), and
+      the later 2026-07-27 fix (`unified-trading-pm@0db8ec5f2`, the `[CICD] P1` todo below) added `"scripts"` to
+      `[tool.basedpyright] exclude` in `pyproject.toml`, so basedpyright analyzes ZERO files under `scripts/` regardless
+      of CLI args. Re-verified live: `uv run basedpyright scripts/` → **0 errors, 0 warnings, 0 notes**.
+      `scripts/quality-gates.sh:34-41` carries an explicit
+      `DO NOT re-add BASEDPYRIGHT_MAX_ERRORS or narrow the pyproject.toml exclude` note — annotating the 4 files for a
+      scan that structurally never runs would be pure busywork with no verifiable effect and no gate to check it
+      against, and narrowing the exclude to make the scan "count" again is the exact regression that note forbids. No
+      code shipped; this todo is closed as superseded by the broader fix, not executed as literally written.
+- [x] ✅ [SCRIPT] P3. **NICE-TO-HAVE — SUPERSEDED 2026-08-01 (slot 12), same reasoning as above.** "Drive the ceiling
+      materially below 1511" is moot: there is no ceiling (removed) and no scan (excluded) for any PM `scripts/` file,
+      so annotating `check-repo-readiness.py` / `cicd/check_ci_status_bot_only.py` / `generate-cicd-diagram.py` /
+      `feature_parity_diff.py` would not move any enforced number. Real type-safety work on these files is still welcome
+      as ordinary code quality, but it is no longer this issue doc's QG-debt story — closing rather than leaving it to
+      be re-discovered as apparently-still-live debt.
 
 ## New inputs (2026-06-24) — recurring-trap diagnosis + the design fork (from orchestrator_self_healing_hardening incident review)
 
@@ -116,11 +122,39 @@ shipping):
       ever scanned, so they were vestigial dead config, not kept as a shim). Full `bash scripts/quality-gates.sh` green,
       sentinel verified matching HEAD.
 
-- [ ] [SCRIPT] P3. **New side-effect of the exclude-the-scan fix above**:
-      `scripts/manifest/check-pyrightconfig-extrapaths.py` (a standalone, NOT CI-wired, manually-invoked audit tool —
-      confirmed via grep, no `.github/workflows/` or other script calls it) will now flag PM's own repo entry as a
-      "MISSING extraPath" (its Rule 3) the next time someone runs it, since PM's `[tool.basedpyright]` no longer carries
-      `extraPaths` at all (removed as dead config — nothing is ever scanned). Not a QG blocker (tool isn't wired into
-      any gate), but a real false-positive the next manual run will hit. Fix: either add PM to an exemption list in that
-      script (repos whose basedpyright config excludes their own `SOURCE_DIR` have nothing to resolve imports for) or
-      skip repos where `exclude` covers `include`. (repo: unified-trading-pm).
+- [x] ✅ [SCRIPT] P3. **SUPERSEDED 2026-08-01 (slot 11) — moot, no code change.** The predicted "PM flagged as MISSING
+      extraPath" false positive does NOT reproduce. Re-verified live:
+      `uv run python3 scripts/manifest/check-pyrightconfig-extrapaths.py` → `extraPaths alignment OK`, exit 0 — **zero**
+      warnings/errors for ALL 24 `workspace-manifest.json` repos, not just PM. Root cause: the script's per-repo loop
+      only ever reads `<repo>/pyrightconfig.json` (`pyright_path = repo_root / "pyrightconfig.json"`); it has never been
+      updated to read `pyproject.toml`'s `[tool.basedpyright]` table. Grep-confirmed ZERO of the 24 repos still carry a
+      `pyrightconfig.json` file — the fleet's own pyproject.toml comments ("ported from deleted pyrightconfig.json",
+      `execution-service`/`system-integration-tests`) show the migration off `pyrightconfig.json` to
+      `pyproject.toml`-native basedpyright config is ALREADY COMPLETE fleet-wide, and
+      `codex/06-coding-standards/quality-gates.md` § "pyrightconfig.json silently overrides pyproject.toml" itself
+      sanctions deleting `pyrightconfig.json` as the resolution when both coexist. So
+      `if not pyright_path.exists():     continue` fires for EVERY repo before Rule 3 (or any rule) ever runs — PM
+      included, so its predicted false positive can't fire because nothing runs for anyone. Independently, even a
+      hypothetical pyproject.toml-aware rewrite would still exempt PM via the script's own pre-existing
+      `if not raw_paths: continue` gate: PM's `[tool.basedpyright]` carries zero `extraPaths` anywhere (top-level or
+      nested), so its whole Rule 1/2/3 block would never execute regardless — the proposed exemption-list /
+      exclude-covers-include fix targets a scenario that structurally cannot occur, on a config format no repo uses.
+      Writing that fix now would be speculative code with no live case to verify it against; closing as superseded
+      rather than executed as literally written. The broader, real finding — the tool is fully dormant fleet-wide, not
+      just for PM — is captured as its own follow-up todo below rather than left as a chat-only observation. (repo:
+      unified-trading-pm).
+- [x] ✅ [SCRIPT] P3. **New finding (2026-08-01, slot 11) — the whole tool is fleet-wide dead, not just a PM
+      false-positive.** `check-pyrightconfig-extrapaths.py` only reads `<repo>/pyrightconfig.json`; zero of the 24
+      `workspace-manifest.json` repos still have that file (all migrated to `pyproject.toml`'s `[tool.basedpyright]` —
+      see `codex/06-coding-standards/quality-gates.md` § "pyrightconfig.json silently overrides pyproject.toml").
+      Running it today prints `extraPaths alignment OK` unconditionally for every repo — the audit no longer checks
+      anything real. **FIXED 2026-08-01 (slot 9)** — chose option (a): added `load_basedpyright_config()`, which prefers
+      `pyrightconfig.json` (back-compat) and falls back to parsing `[tool.basedpyright]` out of `pyproject.toml` via
+      stdlib `tomllib`; the parsed table is a drop-in for the existing `extrapaths_from_config()` / `get_source_dir()`
+      helpers (same key shapes), so no rewrite of the rule logic was needed. `--apply` auto-fix stays JSON-only (gated
+      on `config_path.suffix == ".json"`) — a `pyproject.toml` finding now reports as a warning directing a manual edit
+      instead of silently no-op'ing. Re-run live against the real fleet: the script now exits 1 and surfaces real drift
+      across 15 repos (dead extraPaths, missing extraPaths, 5 import-vs-manifest gaps) — captured as tracked todos per
+      the findings-closure rule:
+      `plans/archive/issues/basedpyright_extrapaths_pyproject_migration_findings_2026_08_01.md` (all 14 todos done,
+      archived). Evidence: `unified-trading-pm@<sha>` (this commit). (repo: unified-trading-pm).

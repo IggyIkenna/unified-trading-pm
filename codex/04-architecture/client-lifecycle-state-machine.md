@@ -18,7 +18,7 @@ authoritative_for: [client onboarding state machine and lifecycle states]
 referenced_by:
   [/codex/04-architecture/capital-efficiency-patterns.md, /codex/04-architecture/client-lifecycle-event-bus.md]
 owner:
-last_reviewed: 2026-05-17
+last_reviewed: 2026-10-05
 code_refs:
 ---
 
@@ -36,11 +36,11 @@ allocated to archetypes.
 
 **Deferred:** multi-client concurrent onboarding, production KYC provider integration (Onfido / Jumio), automated
 state-progression webhooks. These items are post-cutover and tracked in
-`wallet_treasury_post_cutover_custody_signing_2026_06_01.md`.
+[`/plans/archive/wallet_treasury_post_cutover_custody_signing_2026_06_01.md`](/plans/archive/wallet_treasury_post_cutover_custody_signing_2026_06_01.md).
 
 > **[DELTA 2026-05-22]** **Current state:** MVP ships with manual single-client DRAFT→LIVE walkthrough; no production
 > KYC provider wired; SUSPENDED is terminal (no automated re-activation). **Planned delta:** Post-cutover items tracked
-> in `wallet_treasury_post_cutover_custody_signing_2026_06_01.md`: production Onfido/Jumio KYC wiring, multi-client
+> in [`/plans/archive/wallet_treasury_post_cutover_custody_signing_2026_06_01.md`](/plans/archive/wallet_treasury_post_cutover_custody_signing_2026_06_01.md): production Onfido/Jumio KYC wiring, multi-client
 > concurrent onboarding, automated state-progression webhooks, SUSPENDED recovery path. **Target architecture:**
 > `ClientOnboardingStateMachine` accepts KYC provider webhooks, auto-advances on approval, and supports
 > operator-initiated SUSPENDED → re-onboarding flow.
@@ -82,9 +82,15 @@ stateDiagram-v2
 | `SUBSCRIBED → LIVE`            | none beyond state change                                       | Final operator gate confirming readiness                  |
 | `Any → SUSPENDED`              | `suspension_reason: str`                                       | Non-blank; included in audit log entry                    |
 
-The `ClientOnboardingStateMachine.advance(client_id, target_state, evidence)` method validates the evidence dict against
-these requirements before writing. Missing required fields raise `MissingTransitionEvidenceError` (fail-loud; no silent
-defaults).
+The `ClientOnboardingStateMachine.advance(...)` method validates the evidence dict against these requirements before
+writing. Missing required fields raise **`InvalidStateTransitionError`** (fail-loud; no silent defaults).
+
+> **Corrected 2026-07-31.** The implementation defines exactly **one** exception type,
+> `InvalidStateTransitionError(ValueError)` in
+> `unified-trading-library/unified_trading_library/client_lifecycle/onboarding.py`. Earlier revisions of this doc named
+> three separate errors (`MissingTransitionEvidenceError`, `IllegalStateRegressionError`, `IllegalStateSkipError`) and
+> two sub-validators (`assert_kyc_evidence`, `assert_deposit_evidence`) — **none of these exist in any repo**. All three
+> failure modes (missing evidence, regression, state-skip) raise the same `InvalidStateTransitionError`.
 
 ---
 
@@ -93,7 +99,7 @@ defaults).
 Advancing a client to its **current state** is a **no-op**: the method returns the existing state record unchanged and
 does **not** append a duplicate audit log entry. This allows retry-safe callers.
 
-Advancing to a state **already in the past** (regression) raises `IllegalStateRegressionError`. There is no rollback
+Advancing to a state **already in the past** (regression) raises `InvalidStateTransitionError`. There is no rollback
 path — state only moves forward (or to SUSPENDED).
 
 ---
@@ -133,35 +139,44 @@ to guard concurrent writers — see manifest concurrency principle in CLAUDE.md.
 
 ### UAC types
 
+All five live in `unified_api_contracts/internal/domain/client_lifecycle.py` (field lists verified 2026-07-31 — there
+is **no** `unified_api_contracts.canonical.domain.client` module; that path in earlier revisions was wrong):
+
 - `ClientOnboardingState` — 7-value enum (`DRAFT` / `KYC_SUBMITTED` / `KYC_APPROVED` / `DEPOSITED` / `SUBSCRIBED` /
-  `LIVE` / `SUSPENDED`); canonical in `unified_api_contracts.canonical.domain.client`
-- `ClientKYCStub` — KYC payload attached at `KYC_SUBMITTED`; fields: `full_name`, `jurisdiction`, `submitted_at`,
-  `kyc_provider` (currently `STUB` for MVP)
-- `ClientApiKeyMaterial` — API key credentials issued to the client post-`LIVE`; stored separately in Secret Manager
-- `ClientRiskPreferences` — per-client risk limits (max drawdown, max allocation per archetype); attached at `DEPOSITED`
-  or later
-- `ClientShareClassSubscription` — required pre-`SUBSCRIBED`; fields: `client_id`, `share_class_id`, `archetype`,
-  `allocation_pct`, `status` (`ACTIVE` / `SUSPENDED_DRAWDOWN` / `TERMINATED`)
+  `LIVE` / `SUSPENDED`) — matches the diagram above exactly
+- `ClientKYCStub` — KYC payload attached at `KYC_SUBMITTED`; fields: `client_name`, `client_email`, `jurisdiction`,
+  `accredited_investor_claimed`, `submitted_at`, `approved_at`, `approval_notes`. (There is **no** `full_name` field —
+  it is `client_name` — and **no** `kyc_provider` field; the MVP has no provider axis at all.)
+- `ClientApiKeyMaterial` — API key credentials issued post-`LIVE`; fields: `api_key_id`, `label`, `created_at`,
+  `expires_at`, `scopes`. Secret material itself lives in Secret Manager, not this record.
+- `ClientRiskPreferences` — per-client risk limits; fields: `max_leverage`, `max_single_leg_usd`, `max_daily_loss_pct`,
+  `max_drawdown_pct`, `liquidation_threshold_pct`, `preferred_currencies`
+- `ClientShareClassSubscription` — required pre-`SUBSCRIBED`; fields: `client_id`, `share_class_id`, **`archetype_id`**,
+  `allocation_pct`, `max_drawdown_for_suspension_pct`, `subscribed_at`, `suspended_at`, `suspension_reason`. (There is
+  **no** `status` enum field — suspension is expressed by `suspended_at` + `suspension_reason` being set.)
 
 ### UTL
 
-- `ClientOnboardingStateMachine` — shipped at UTL@b87daf02 + UTL@a93f78be; implements advance + idempotency + evidence
-  validation + GCS read/write; `assert_kyc_evidence` / `assert_deposit_evidence` sub-validators
+- `ClientOnboardingStateMachine` — shipped at UTL@b87daf02 + UTL@a93f78be (both SHAs verified present in UTL history);
+  lives in `unified_trading_library/client_lifecycle/onboarding.py`; implements `advance` + idempotency + evidence
+  validation + GCS read/write. It does **not** expose `assert_kyc_evidence` / `assert_deposit_evidence` sub-validators —
+  validation is inline in `advance`.
 
-### Plans
+### Plans (all archived — records, not live tracking)
 
-- `wallet_treasury_client_flow_2026_05_10.md` Phase 1 — UAC types + GCS layout
-- `wallet_treasury_client_flow_2026_05_10.md` Phase 2.A — `ClientOnboardingStateMachine` UTL implementation
-- `wallet_treasury_client_flow_2026_05_10.md` Phase 7.A — demo client seed walkthrough (DRAFT → LIVE)
+- [`/plans/archive/wallet_treasury_client_flow_2026_05_10.md`](/plans/archive/wallet_treasury_client_flow_2026_05_10.md)
+  Phase 1 (UAC types + GCS layout), Phase 2.A (`ClientOnboardingStateMachine` UTL implementation), Phase 7.A (demo
+  client seed walkthrough DRAFT → LIVE — see `client-reporting-api/scripts/seed_demo_client.py`)
 
 ---
 
 ## Anti-Patterns
 
-- **Never skip states.** `DRAFT → DEPOSITED` in a single call is rejected by `IllegalStateSkipError`. All intermediate
-  states must be explicitly advanced through.
-- **Never inline KYC PII in the audit log.** `history[].evidence` must contain references (e.g. `kyc_document_ref`) not
-  raw PII fields (passport numbers, SSN). Full KYC payload stored separately in a KYC-scoped bucket with tighter IAM.
+- **Never skip states.** `DRAFT → DEPOSITED` in a single call is rejected by `InvalidStateTransitionError`. All
+  intermediate states must be explicitly advanced through.
+- **Never inline KYC PII in the audit log.** `history[].evidence` must contain references, not raw PII fields (passport
+  numbers, SSN). Full KYC payload stored separately in a KYC-scoped bucket with tighter IAM. (Earlier revisions named a
+  `kyc_document_ref` field as the reference carrier; no such field exists — the rule is the convention, not a schema.)
 - **Never persist state in service memory.** The GCS file is the authoritative store. Services re-read on each
   `advance()` call; no in-process cache of `ClientOnboardingState`.
-- **Never advance from SUSPENDED.** SUSPENDED is terminal in the MVP — attempts raise `IllegalStateRegressionError`.
+- **Never advance from SUSPENDED.** SUSPENDED is terminal in the MVP — attempts raise `InvalidStateTransitionError`.

@@ -26,6 +26,7 @@ estimate_baseline_ai_days:
 estimate_calibrated_ai_days:
 locked_by:
 locked_since:
+context_scope: # elective minimal reading-list — codex SSOTs, related docs, key source paths; see doc-frontmatter-schema.md
 supersedes:
 superseded_by:
 depends_on:
@@ -420,6 +421,15 @@ ingested). Use for operator-only work, trackers, design docs, and dispatcher-sur
   plan (no infinite regress) or a genuinely single-todo plan where archival is trivial enough to fold into that one
   todo's own done-when. Enforced (ratchet-mode, warn-only, wired into `quality-gates.sh`) by
   `scripts/quality_gates/check_finalize_plan_coverage.py`.
+- **Finalize-plan todos: give the "reconcile source docs" todo and the "archive this plan" todo DIFFERENT `[TAG] P<n>.`
+  prefixes (found 2026-07-31, `sports_satellite_ao_dispatch_batch3_finalize_2026_07_25.md`).** Both
+  `batch2_finalize`/`batch3_finalize` authored these as `[DOC] P1` for BOTH todos — harmless until the self-archival
+  todo lands in the SAME commit as its own `git mv`, at which point the AO done-gate's tag+priority disambiguator
+  (`server/verify.py::_brief_is_checked_by_tag_in_text` — the fallback for exactly this "flip + archive in one commit"
+  shape) finds 2 same-tag-priority checked lines and fails CLOSED (refuses `/done` rather than risk confirming the wrong
+  todo) — a real `/done` rejection this exact session hit and had to retag around after the fact. Pick distinct
+  tags/priorities at authoring time (e.g. `[REVIEW]` for reconciliation, `[DOC]` reserved for the archival todo alone)
+  so this never collides.
 - **NEVER hand-edit `backlog.yaml`.** Author plans; the backend derives the backlog.
 
 ---

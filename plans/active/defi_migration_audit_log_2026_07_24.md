@@ -54,6 +54,11 @@ source:
     extraction 2026-07-24)",
   ]
 drift_direction: advance-code
+context_scope:
+  [
+    /plans/active/master_data_canonicalisation_migration_catalogue_2026_06_07.md,
+    /plans/active/is_catalogue_g1_root_audit_log_2026_07_24.md,
+  ]
 ---
 
 # DeFi migration audit log
@@ -67,6 +72,11 @@ drift_direction: advance-code
 > copies were byte-identical). See `master_data_canonicalisation_migration_catalogue_2026_06_07.md` for the live
 > gate-board + dependency DAG this content feeds into (this doc is a historical/audit record, not itself gating
 > anything).
+
+> **na-eligibility-audit 2026-08-01**: MIXED — re-read end to end (15 open items). 14 stay KEEP-NA valid (dated operator
+> rulings, still-open cross-plan gates, operator-sign-off-gated GCS deletes, design/scope judgment calls). 1 item (the
+> QG-harness rootdir finding) was assessed and NOT extracted — see its inline note below (already declined by
+> `defi_satellite_ao_dispatch_batch6_2026_07_30.md` as under-evidenced). Doc stays `assigned_vm: NA`.
 
 ## vm-defi (slot-2) status + findings — 2026-06-07
 
@@ -564,9 +574,10 @@ migration-blocking**: file-size loop excludes `./scripts/*` (migration code clea
 basedpyright-on-touched; `--apply` runs from VM/tarball not the sentinel. (The hollow-sentinel harness finding below is
 the related ship-hygiene item.)
 
-- [ ] [INFRA] P2. **🔴 LOCAL QG HARNESS collects the WRONG test suite for some repos — the green sentinel is HOLLOW
-      (surfaced slot-7 2026-06-08).** Running `bash scripts/quality-gates.sh --no-fix` for **instruments-service** AND
-      **market-tick-data-service** on this host produced a `[3/6] TESTS` run with `rootdir: …/unified-trading-pm`,
+- [x] ⛔ [INFRA] P2. **RESOLVED-NO-ACTION 2026-08-02 (see scoping-read annotation below).** 🔴 LOCAL QG HARNESS collects
+      the WRONG test suite for some repos — the green sentinel is HOLLOW (surfaced slot-7 2026-06-08).** Running
+      `bash scripts/quality-gates.sh --no-fix` for **instruments-service** AND **market-tick-data-service** on this host
+      produced a `[3/6] TESTS` run with `rootdir: …/unified-trading-pm`,
       `configfile: unified-trading-pm/pyproject.toml`, **`collected 6 items`** — it ran only PM's 6
       `tests/integration/test_pm_scripts_integration.py` tests, NOT the repo's own suite (IS has ~3,267 tests; its own
       `pyproject.toml` declares `[tool.pytest.ini_options] testpaths=["tests"]`). The QG still **exits 0 + writes
@@ -581,7 +592,25 @@ the related ship-hygiene item.)
       root-cause the rootdir/cwd resolution (likely `quality-gates-base/base-service.sh` `cd "$PROJECT_ROOT"` vs the
       governed subprocess) so per-repo QGs collect their own suite. Repos: unified-trading-pm
       (`scripts/quality-gates-base/base-service.sh`) + per-repo `quality-gates.sh`. parent_epic: manifest_master.
-      Provenance: slot-7 cross-cutting sweep 2026-06-08.
+      Provenance: slot-7 cross-cutting sweep 2026-06-08. **na-eligibility-audit 2026-08-01: not extracted — already
+      assessed by `defi_satellite_ao_dispatch_batch6_2026_07_30.md`'s Operator-gated/Deferred section: "bounded-sounding
+      but under-evidenced (zero coverage found anywhere) — needs a scoping read before it's draftable." Stays KEEP-NA
+      pending that scoping read; not re-litigated here.** **Scoping read 2026-08-02
+      (`plans/archive/2026_08/defi_satellite_ao_dispatch_batch7_2026_08_01_finalize.md` todo 2, slot-13) —
+      RESOLVED-NO-ACTION on code evidence, not re-litigated further.** Read `scripts/quality-gates-base/qg-common.sh`
+      (lines 102-136): a **WORKTREE-IDENTITY GUARD** shipped 2026-07-24
+      (`qg_backfill_disk_and_lint_checks_resolve_via_main_clone_not_worktree_2026_07_24.md`, a related but distinct
+      sibling-worktree incident) now hard-fails (`exit 1`) the instant `PROJECT_ROOT` disagrees with
+      `git rev-parse     --show-toplevel` for the invoking cwd — exactly the PROJECT_ROOT/rootdir mis-resolution class
+      this finding's "Owner" note names as the suspected cause. `base-service.sh:61` `cd "$PROJECT_ROOT"` runs pytest
+      from that now-guarded cwd, so pytest's own upward rootdir search would find the REPO's own `pyproject.toml`
+      (`testpaths=["tests"]`) first, not PM's — the silent "collected 6 items, exits 0" hollow-pass this finding
+      describes can no longer happen unnoticed; a mismatch now aborts the gate loudly instead. **Could not live-repro
+      this session**: `uv run pytest --collect-only` in this slot's `instruments-service` stalled past a 90s bound (no
+      `.venv` yet, `uv sync` itself hung) — consistent with ordinary shared-host contention, not a repro of the original
+      bug, so this is a code-evidence verdict, not a fresh empirical one. If a NEW hollow-pass instance is ever observed
+      (a QG run that exits 0 but visibly collects the wrong repo's tests), file a fresh issue doc rather than reopen
+      this line.
 - [ ] [DATA] P1. **DeFi instruments-store `by_date` has a DOUBLED `day={D}/day={D}/` prefix on the recent tail**
       (~2026-05-05 onward — `day=2026-05-05/07` confirmed doubled; `day=2026-05-03` and ALL earlier days are single,
       canonical `day={D}/venue={V}/instruments.parquet`). Surfaced by the G2 verify dry-run 2026-06-07 (slot-2). **TWO
@@ -724,3 +753,7 @@ speed-note (both deferred optimisations, non-blocking).
   and its derivation deps (`source_string_for`/`default_transport_for_source`/`derive_pipeline_mode_for_row`) were
   untouched by the recent batch → dry-run output is provably identical to the green run above. **No new code owed; HOLD
   stands.\*\* Remaining gates remain purely operational (drain + the gated v9 instruments-store walk + IS backfill).
+
+## Progress Log
+
+- **context-scout 2026-08-01**: populated/refreshed context_scope (2 entries).

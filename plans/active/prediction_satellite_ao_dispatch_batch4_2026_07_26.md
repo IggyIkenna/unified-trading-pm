@@ -62,6 +62,13 @@ source: >-
 assigned_role: data_engineering
 sequential: false
 drift_direction: advance-code
+context_scope:
+  [
+    /plans/active/prediction_consolidated_closeout_2026_07_18.md,
+    /cursor-configs/skills/ag-closeout-audit/SKILL.md,
+    /plans/epics/predictions_master.md,
+    /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
+  ]
 ---
 
 # Prediction satellite AO batch 4 — un-triaged sibling-doc gap extraction
@@ -277,6 +284,16 @@ honest-absence, no silent fallback):
     across UAC (schema) / instruments-service (resolver) / features-service (consumption) / strategy-service (arb
     layer), per the theme's full-completion mandate (no shortcuts, no partial MVP). Source doc's own todo carries the
     scoping detail; this ruling only removes the "needs a design session first" gate.
+
+    **Partial ship 2026-07-31** (`prediction_satellite_ao_dispatch_batch6_2026_07_29.md`'s fixture-pairing todo,
+    `prediction_satellite_ao_dispatch_batch6-008`): UAC (`@1dddc680`), instruments-service (`@62a8b1d8`), and
+    strategy-service (`@d71c8aa4`) all shipped real code for the MLB league; features-service needed no changes (its
+    dispatch/kernel were already sport-agnostic, confirmed via its existing test coverage). The genuinely remaining
+    piece — cross-venue team-name alias tables for MLB/NFL/NBA/tennis, needed to safely widen past MLB and pair on
+    venue-mismatched team-name renderings without risking a false pair — is real data-engineering work, not a
+    code-wiring gap, and was NOT fabricated; it's tracked as its own new `[DATA] P2` todo in the batch6 doc. Full
+    per-repo breakdown + the "why not the rest" reasoning is in that todo's own Partial-progress note and the source
+    doc's (`prediction_cross_venue_arb_and_coverage_2026_07_24.md`) matching update.
 - **Politics/geo cross-venue canonicalization audit (which families are genuinely arbable + how to name/group them)** —
   **RULED: build the FULL structured enumeration now (bounded, checkable), narrowed to a residual operator ask only
   where genuinely tied.** Determining whether two differently-labeled venue markets resolve to the SAME real-world event
@@ -533,3 +550,83 @@ Phase B itself is a large multi-repo migration that warrants its own dedicated p
   armed. Per-day cost is genuinely substantial (hundreds of `gcs_describe_object` calls per day — 500-800 condition_ids
   × 2 path candidates each), confirmed via a 90s dry-run probe that didn't finish one day — this is why the run takes
   real wall-clock time, not a hang. Still running — see next entry for the outcome.
+- 2026-07-30 (slot 6, `data_engineering`, backlog task `prediction_satellite_ao_dispatch_batch4-023`): re-dispatched to
+  this same 4b-i resume. **No live process found** (`ps aux` clean) — slot-12's day-158 relaunch died again with zero
+  further checkpoint progress recorded (slot-10's later checkpoint copy is byte-identical, same 157/348, confirming no
+  advancement happened in between). Re-verified fresh: cron `uts-prod-manifest-consolidator-market-data-prediction-cron`
+  still `ENABLED` (pinned `--account=unified-trading-sa@...`, per slot-8's documented gotcha). Recovered the 157/348
+  checkpoint (0 anomalies) from slot-12's scratchpad into this slot's own scratchpad. Re-launched
+  `.venv/bin/python scripts/migrate_prediction_trades_legacy_bundle_2026_07_28.py --apply --report <checkpoint>` from
+  day 158/348 via the harness's tracked `run_in_background` (not `nohup`/`setsid`), plus a SEPARATE self-heartbeating
+  watchdog script (`heartbeat_watchdog_4bi.sh`, also harness-tracked `run_in_background`) posting `/progress` every 5
+  min with the live checkpoint line-count, specifically to avoid the `WorkerLivenessWatchdog` collateral-kill this doc's
+  slot-7/slot-8/slot-15 entries already hit repeatedly. Still running — see next entry for the outcome.
+- 2026-07-31T23:0xZ (slot 15, `data_engineering`, backlog task `prediction_satellite_ao_dispatch_batch4-023`):
+  re-dispatched to this same 4b-i resume. **Real substantial progress confirmed**: slot-6's 2026-07-30 relaunch (and at
+  least one further unrecorded resume — no closing Progress Log entry exists between then and now, the same
+  "silent-under-reporting" pattern this doc has already flagged twice) drove the checkpoint from 157/348 to **299/348**
+  before dying again with no live process found (`ps aux` clean, no `migrate_prediction_trades`/`watchdog`/`resume_4bi`
+  process). Found the frontier scattered across 13 scratchpad copies (slots 6/7/8/9×2/10/12/13/15, newest dated
+  `2026-07-31T22:37Z`) — merged all by `day` (dedup, prefer higher `canonical_enriched`): **299/348 unique days, 0
+  anomalies, 0 errors** across the merge. **Fixed the durability gap this doc has now flagged 3 times**: uploaded the
+  merged checkpoint to
+  `gs://market-data-tick-pred-prd-central-element-323112/_ops/prediction_trades_migration_checkpoint_2026_07_31.jsonl`
+  (durable, bucket-colocated with the data it tracks) rather than leaving it scratchpad-only — any future resumer should
+  pull from there first, not re-scavenge scratchpads. **Blocker reproduces immediately on resume** (dry-run 1-day
+  probe): same `ManifestConsolidatorStaleError` as the 2026-07-29 episode. **This time confirmed NOT a bug** —
+  live-checked `uts-prod-manifest-consolidator-market-data-prediction-cron` is genuinely `PAUSED` (asia-northeast1) as
+  part of `mtds_available_at_cross_asset_backfill_2026_07_13.md`'s OWN currently-in-progress Apply/Resume protocol (that
+  plan's Progress Log #7, 2026-07-31 slot-16: snapshot+pause both complete, Apply not yet run, a real unbounded-memory
+  risk was found and its fix issue (`mtds_manifest_rebuild_scripts_unbounded_memory_no_chunking_2026_07_31.md`) already
+  SHIPPED same day — both its todos are `[x]`). So the sibling plan is legitimately mid-maintenance-window, not stuck on
+  the earlier dispatch-order bug this time. Per this doc's own established precedent (slot-14/15 2026-07-29): **not**
+  touching that plan's cron, **not** arming another watcher this pass (a proven-working pattern, but this todo alone has
+  now churned across 9 dispatches over 3 days largely re-deriving the same external-wait state — the
+  merge+durable-upload above is the actual new value this touch adds). Released via
+  `/skip-current-task {"reason_code": "GATED"}`. **For the next resumer**: pull the checkpoint from the GCS path above
+  (or any scratchpad copy — content-identical), re-verify the cron state fresh, and if `ENABLED`, resume with
+  `--report <checkpoint>` from day 300/348 (49 days remaining).
+- **2026-08-01T02:2xZ (slot 6, `data_engineering`, backlog task `prediction_satellite_ao_dispatch_batch4-023`, resumed
+  after `already_in_progress: true`)**: an orchestrator restart at ~20:45Z had SIGKILLed a prior in-flight `--apply` run
+  on this slot mid-session (cgroup-child kill, per the boot-time heads-up message) — confirmed no live
+  `migrate_prediction_trades`/watchdog process on this host (`ps aux` clean) and no local scratchpad checkpoint newer
+  than the 298/348-day file already superseded by slot-15's 2026-07-31 merge. **Checkpoint is not lost**: the durable
+  GCS copy from the prior entry
+  (`gs://market-data-tick-pred-prd-central-element-323112/_ops/prediction_trades_migration_checkpoint_2026_07_31.jsonl`)
+  still reads 299 lines/days, 0 anomalies — confirms nothing progressed past 299/348 before the restart killed whatever
+  resume attempt was running, and nothing regressed either. **Blocker re-verified, unchanged**:
+  `uts-prod-manifest-consolidator-market-data-prediction-cron` still `PAUSED` (`userUpdateTime: 2026-07-31T13:45:51Z`,
+  pinned `--account=unified-trading-sa@...` per the documented gotcha); `mtds_available_at_cross_asset_backfill-001`
+  (the Apply predecessor that must land before this cron can safely resume) still `status: queued` via
+  `GET /api/backlog`, its sibling `-006` (Resume cron) still shows `status: dispatched` (`dispatched_to: 3`,
+  `dispatched_at: 2026-07-31T23:33:21Z`, `done_at: null` — over 24h with no completion). The dispatch-order fix this
+  doc's own history references (`agent-orchestrator@77769ab`) has NOT resolved this specific pair even ~5 days
+  post-landing — logged fresh corroborating evidence on
+  `issues/mtds_backfill_sequential_true_dispatch_order_violated_2026_07_29.md` (this commit) rather than re-deriving it
+  here. **Not resuming the enrichment run this touch** — the blocker is identical to the last 3 dispatches (2026-07-29
+  ×2, 2026-07-31) and nothing about it has changed; per this doc's own established precedent (slot-14/15 2026-07-29,
+  slot-15 2026-07-31), camping another watcher on a static ~3-day external stall adds no value the durable checkpoint
+  doesn't already preserve. Released via `/skip-current-task {"reason_code": "GATED"}`. **For the next resumer**: pull
+  the checkpoint from the GCS path above, re-verify BOTH the cron state AND
+  `mtds_available_at_cross_asset_backfill-001`'s live backlog status fresh (don't trust this entry once time has passed)
+  — if the cron is `ENABLED`, resume with `--report <checkpoint>` from day 300/348 (49 days remaining); if still
+  `PAUSED`, the real unblock is `-001` actually landing (either the dispatch-order bug getting fixed for real, or a
+  data_engineering worker being dispatched `-001` directly per that plan's own backlog entry).
+- **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).
+- **2026-08-01T09:2xZ (slot 7, `data_engineering`, backlog task `prediction_satellite_ao_dispatch_batch4-023`, resumed
+  after `already_in_progress: true`)**: re-verified both blocker legs fresh, no change. Cron
+  `uts-prod-manifest-consolidator-market-data-prediction-cron` still `PAUSED` (`userUpdateTime: 2026-07-31T13:45:51Z`,
+  pinned `--account=unified-trading-sa@...`). `mtds_available_at_cross_asset_backfill-001` still `status: queued`
+  (`GET /api/backlog`); sibling `-006` still `dispatched` to slot 3, now ~34h in (`dispatched_at: 2026-07-31T23:33:21Z`,
+  `done_at: null`). **New finding this touch**: confirmed slot 3 is NOT wedged/dead — `tmux capture-pane` shows it alive
+  and genuinely mid-work on `-006` ("Apply rebuild_prediction_manifest.py full-range", waiting on "chunk 21" of its own
+  chunked apply, actively heartbeating). This rules out the "stalled dispatch" concern implicit in prior entries' ">24h
+  no completion" framing — the long duration is real chunked-apply work in progress, not a dead session masking as
+  `dispatched`. No change to this todo's own action: per the established precedent (slot-14/15 2026-07-29,
+  slot-15/slot-6 2026-07-31, slot-6 2026-08-01), not touching the sibling plan's cron/Apply/Resume todos, not arming
+  another watcher on an unchanged external stall. Released via `/skip-current-task {"reason_code": "GATED"}`. **For the
+  next resumer**: same as the prior entry — pull the checkpoint from
+  `gs://market-data-tick-pred-prd-central-element-323112/_ops/prediction_trades_migration_checkpoint_2026_07_31.jsonl`
+  (299/348 days, 0 anomalies), re-verify the cron + `-001` status fresh; if `-006`'s chunked apply (slot 3) has finished
+  and `-001`/`-006` both show `done`, the cron should resume shortly after per that plan's own protocol — check
+  `-001`/`-006` status before assuming the block persists.

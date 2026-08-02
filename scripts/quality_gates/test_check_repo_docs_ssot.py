@@ -18,7 +18,12 @@ from pathlib import Path
 _HERE = Path(__file__).parent
 sys.path.insert(0, str(_HERE))
 
-from check_repo_docs_ssot import _iter_repo_docs, find_violations  # type: ignore[import-not-found]
+from check_repo_docs_ssot import (  # type: ignore[import-not-found]
+    _build_codex_table_index,
+    _extract_tables,
+    _iter_repo_docs,
+    find_violations,
+)
 
 _PM_ROOT = _HERE.parents[1]
 _WORKSPACE_ROOT = _PM_ROOT.parent
@@ -117,3 +122,79 @@ def test_archive_and_vendored_trees_are_excluded(tmp_path: Path) -> None:
     assert "execution-service/docs/GCS_PATHS.md" in rels
     assert "execution-service/docs/archive/OLD.md" not in rels
     assert "execution-service/docs/.cursor/rules/x.md" not in rels
+
+
+# --- table-duplication rule (Phase 5 follow-up, codex_vs_repo_docs_ssot_audit_2026_06_01.md) ---
+
+_BIG_TABLE_MD = (
+    "| Repo doc               | Link to codex SSOT (do NOT duplicate)                | Keep in repo doc    |\n"
+    "| ----------------------- | ------------------------------------------------------ | --------------------- |\n"
+    "| `README.md`            | none — pads the fixture past the significance floor  | purpose/quickstart  |\n"
+    "| `docs/ARCHITECTURE.md` | cross-cutting patterns live in the codex arch doc set | this repo's modules |\n"
+)
+
+
+def test_extract_tables_excludes_separator_row() -> None:
+    tables = _extract_tables(_BIG_TABLE_MD)
+    assert len(tables) == 1
+    start_line, rows = tables[0]
+    assert start_line == 1
+    assert len(rows) == 3  # header + 2 data rows; the `---|---|---` separator is dropped
+    assert rows[0][0] == "Repo doc"
+    assert rows[1][0] == "`README.md`"
+
+
+def test_table_duplication_flagged_for_verbatim_codex_table_copy(tmp_path: Path) -> None:
+    codex_doc = tmp_path / "codex" / "06-coding-standards" / "documentation-standards.md"
+    codex_doc.parent.mkdir(parents=True, exist_ok=True)
+    codex_doc.write_text(f"## S5.11\n\n{_BIG_TABLE_MD}", encoding="utf-8")
+    codex_index = _build_codex_table_index(tmp_path)
+    assert codex_index  # the fixture table clears the significance floor
+
+    doc = _mk_repo_doc(tmp_path, "deployment-service", "docs/ARCHITECTURE.md", f"# Architecture\n\n{_BIG_TABLE_MD}")
+    violations = find_violations([doc], tmp_path, codex_index)
+    hits = violations["deployment-service/docs/ARCHITECTURE.md"]
+    assert any(rule == "table-duplication" for _lineno, rule, _literal in hits)
+
+
+def test_table_duplication_not_flagged_without_codex_index(tmp_path: Path) -> None:
+    """Backward-compat: callers that don't pass codex_index (existing tests/tools) see no table rule."""
+    doc = _mk_repo_doc(tmp_path, "deployment-service", "docs/ARCHITECTURE.md", f"# Architecture\n\n{_BIG_TABLE_MD}")
+    violations = find_violations([doc], tmp_path)
+    assert violations == {}
+
+
+def test_table_duplication_not_flagged_below_significance_floor(tmp_path: Path) -> None:
+    """A trivial 2-row (header + 1 data row) table is common-idiom shaped — excluded by the floor."""
+    small_table = "| Level | Behaviour |\n| --- | --- |\n| low | ignore |\n"
+    codex_doc = tmp_path / "codex" / "06-coding-standards" / "tiny.md"
+    codex_doc.parent.mkdir(parents=True, exist_ok=True)
+    codex_doc.write_text(small_table, encoding="utf-8")
+    codex_index = _build_codex_table_index(tmp_path)
+    assert not codex_index  # below _MIN_TABLE_ROWS / _MIN_TABLE_CHARS, never indexed
+
+    doc = _mk_repo_doc(tmp_path, "deployment-service", "docs/ARCHITECTURE.md", small_table)
+    violations = find_violations([doc], tmp_path, codex_index)
+    assert violations == {}
+
+
+def test_table_duplication_not_flagged_on_different_content(tmp_path: Path) -> None:
+    codex_doc = tmp_path / "codex" / "06-coding-standards" / "documentation-standards.md"
+    codex_doc.parent.mkdir(parents=True, exist_ok=True)
+    codex_doc.write_text(_BIG_TABLE_MD, encoding="utf-8")
+    codex_index = _build_codex_table_index(tmp_path)
+
+    different_table = _BIG_TABLE_MD.replace("ARCHITECTURE.md", "CONFIGURATION.md").replace(
+        "modules", "config-fields-and-defaults"
+    )
+    doc = _mk_repo_doc(tmp_path, "deployment-service", "docs/CONFIGURATION.md", different_table)
+    violations = find_violations([doc], tmp_path, codex_index)
+    assert violations == {}
+
+
+def test_codex_archived_dirs_excluded_from_table_index(tmp_path: Path) -> None:
+    archived_doc = tmp_path / "codex" / "10-audit" / "_archive" / "old.md"
+    archived_doc.parent.mkdir(parents=True, exist_ok=True)
+    archived_doc.write_text(_BIG_TABLE_MD, encoding="utf-8")
+    codex_index = _build_codex_table_index(tmp_path)
+    assert codex_index == {}

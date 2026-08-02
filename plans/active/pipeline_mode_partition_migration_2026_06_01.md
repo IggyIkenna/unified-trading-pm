@@ -30,6 +30,8 @@ superseded_by:
 depends_on: []
 source:
 drift_direction: advance-code
+context_scope:
+  [/plans/epics/batch_live_symmetry_master.md, /codex/02-data/pipeline-mode-and-batch-live-reconciliation.md]
 ---
 
 **MIGRATED FROM:** `plans/archive/2026_06/pipeline_mode_implementation_2026_05_28.md` Phase 5 (on-disk partition —
@@ -114,3 +116,10 @@ partition walk anywhere (single-walk discipline):
   `sports_manifest_canonicalisation_2026_06_01.md` / `prediction_manifest_canonicalisation_2026_06_01.md` — each carries
   the `pipeline_mode=` partition as a named C-pipeline_mode rider in its single-walk.
 - Single-walk discipline (HARD RULE — CLAUDE.md § Manifest + honest absence).
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30**: KEEP-NA, valid — `locked_by: live-defi-rollout`; both todos are riders that
+  complete only inside another plan's whole-corpus walk (single-walk discipline) and need window coordination with the
+  IS migration owner.
+- **context-scout 2026-08-01**: populated/refreshed context_scope (2 entries).

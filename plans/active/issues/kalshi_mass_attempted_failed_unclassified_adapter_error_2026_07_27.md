@@ -19,7 +19,7 @@ scope: [engineer]
 tags: [prediction, kalshi, data-correctness, attempted-failed, manifest, big-finding]
 related:
   [
-    /plans/active/issues/prediction_lifecycle_prefetch_gate_and_resolution_day_catalogue_2026_07_14.md,
+    /plans/archive/issues/prediction_lifecycle_prefetch_gate_and_resolution_day_catalogue_2026_07_14.md,
     /plans/active/issues/kalshi_live_capture_regression_and_drift_2026_07_13.md,
     /plans/archive/2026_07/prediction_satellite_ao_dispatch_batch1_2026_07_25.md,
   ]
@@ -91,6 +91,11 @@ attempt volume further.
       venue). Repo: market-tick-data-service.
 
 ## Progress log
+
+- **na-eligibility-audit 2026-07-30 (prediction tranche)**: KEEP-NA, valid — all 3 open todos are CONFLICT:
+  `prediction_satellite_ao_dispatch_batch6_2026_07_29.md` todo 6 claims the entire 3-step chain (recurrence check ->
+  exception reclassification -> contingent backoff fix) verbatim as one internally-sequential todo. Flipping this doc
+  would dispatch a duplicate.
 
 - 2026-07-27: Filed from `prediction_satellite_ao_dispatch_batch1-004`'s read-only re-measurement pass (slot 15). No
   code changed; no root cause investigated yet.

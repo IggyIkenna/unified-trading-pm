@@ -24,7 +24,7 @@ related:
     /plans/active/cefi_track7_candle_namespace_residual_finalize_2026_07_25.md,
   ]
 created: "2026-07-25"
-last_updated: "2026-07-28" # (was: 2026-07-25; hard-stop review 2026-07-28 — confirmed remains permanent, no unlock)
+last_updated: "2026-07-30" # (rulings-closeout re-confirm — both gates still hold, no change)
 parent_epic: cefi_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -48,6 +48,14 @@ source: >-
 assigned_role: data_engineering
 sequential: true
 drift_direction: advance-code
+context_scope:
+  [
+    /plans/active/cefi_consolidated_native_ao_extract_2026_07_25.md,
+    /plans/active/issues/candle_feature_canonical_path_divergence_2026_07_20.md,
+    /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
+    /codex/02-data/availability-manifest-and-data-status.md,
+    /plans/active/issues/cefi_hardstop2_carveout_codex_vs_plan_contradiction_2026_07_29.md,
+  ]
 ---
 
 # CeFi Track-7 candle-namespace residual — gated delete
@@ -122,3 +130,15 @@ companion `cefi_track7_candle_namespace_residual_finalize_2026_07_25.md`
 
 `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md`, `/codex/02-data/availability-manifest-and-data-status.md`.
 No new durable contract is created by this plan.
+
+## Progress Log
+
+- **2026-07-30 (rulings-closeout pass, separate session)** — re-verified this plan's gate state per a workspace-wide
+  sweep closing out recorded operator rulings implying unshipped work. Confirmed unchanged, both gates still hold: (1)
+  `plans/active/issues/cefi_hardstop2_carveout_codex_vs_plan_contradiction_2026_07_29.md` is still `status: open`
+  (re-read directly, no new resolution); (2) this plan's own `depends_on` prerequisite,
+  `cefi_consolidated_native_ao_extract_2026_07_25.md`'s candidate-7 verify+backfill todo, is still literally `- [ ]`
+  unchecked (line 157 of that doc, re-grepped directly). Neither gate cleared, so the delete was NOT executed. No action
+  taken; no changes needed.
+
+- **context-scout 2026-08-01**: populated/refreshed context_scope (5 entries).

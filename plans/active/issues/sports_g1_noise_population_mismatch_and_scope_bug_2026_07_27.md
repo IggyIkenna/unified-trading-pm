@@ -128,20 +128,35 @@ materially larger, separate operation, not something to do inside this 1-hour-sc
        considers rows whose `data_type` is a football data type, never `trades`/`odds_horizon_bucket`/other MTDS types
        (a row with no `data_type` column at all, e.g. the legacy seed shape, falls back to the prior behavior). 4 new
        unit tests in `tests/unit/scripts/test_delete_noncanonical_sports_leagues_2026_06_25.py`, all passing; full QG
-       green. (repo: instruments-service)
-2. **[DATA] P2 — Operator/judgment**: decide which canonical-set definition is authoritative for a "not in registry"
-   wipe (full 383-league registry, not MVP-96 — MVP-scope incorrectly flags valid non-MVP registered leagues) and
-   re-baseline the G1 NOISE population's tracked figure in the plan corpus against a fresh, football-only, fixed-script
-   dry-run once (1) ships.
-3. **[DIAG] P2 — Reconcile §U's exact population**: a fresh read of raw FIXTURES parquet content (`af_league_id` +
-   `round`), scoped and single-walk, to determine whether §U's 10,869/489 population is in fact a subset of the
-   football-only 17,767/734 manifest-index cut measured here, before treating §U's original approval as covering any
-   part of the current residual.
-4. **[REVIEW] P3 — Corpus hygiene**: the plan's own text ("§U... already-approved... the scale differs by ~10x, so this
-   must not be assumed") anticipated exactly this outcome; once (1)-(3) land, update
-   `sports_closeout_track_s2_foldin_2026_07_25.md`'s G1 sub-item with the corrected figures and this doc's citation.
-5. [ ] **[DATA] P2 — items 2-4 above are still plain numbered prose, never real checkboxes**: the operator canonical-set
-       decision (2), the §U population reconciliation (3), and the corpus hygiene doc update (4) all remain unactioned.
+       green. (repo: instruments-service) Items 2-4 are now tracked as real checkboxes in the `## Todos` section below
+       (converted 2026-07-31, zero-checkbox sweep) — they were plain numbered prose, which is why item 5 existed to flag
+       them. Item 1 above stays as the record of what already shipped.
+
+## Todos
+
+> Converted from the numbered prose above into tracked checkboxes 2026-07-31 (zero-checkbox sweep, all-9-tranches re-run
+> — register: `/plans/active/issues/zero_checkbox_sweep_all_tranches_2026_07_31.md`). The doc's own former item 5
+> existed purely to say "items 2-4 are prose, not checkboxes", so that item is now satisfied and is folded away rather
+> than left as a self-referential todo. **This doc is `assigned_vm: planning`** — these are genuinely dispatchable, so
+> the ordering matters and is stated in the text (there is no per-todo prereq syntax; prereqs come only from
+> `sequential`/`gate_on_depends`).
+
+- [ ] [OPERATOR] P2. **Decide which canonical-set definition is authoritative for a "not in registry" wipe** — the full
+      383-league registry, NOT MVP-96 (MVP-scope incorrectly flags valid non-MVP _registered_ leagues as noise). This is
+      a judgment call about what may be deleted, so it is operator-gated and must not be guessed. Once ruled,
+      re-baseline the G1 NOISE population's tracked figure in the plan corpus against a fresh, football-only,
+      fixed-script **dry-run** (the scope-bug fix in item 1 has already shipped, so the dry-run is now meaningful).
+      (repo: `instruments-service`)
+- [ ] [DIAG] P2. **Reconcile §U's exact population** — a fresh, scoped, SINGLE-WALK read of raw FIXTURES parquet content
+      (`af_league_id` + `round`) to determine whether §U's 10,869/489 population is in fact a subset of the
+      football-only 17,767/734 manifest-index cut measured here. **Done-when**: the subset question is answered yes/no
+      with the measured counts recorded in this doc. Until it is answered, §U's original approval must NOT be treated as
+      covering any part of the current residual. Read-only — no `--apply`, no deletes. (repo: `instruments-service`)
+- [ ] [REVIEW] P3. **Corpus hygiene — update the closeout's G1 sub-item.** After the two todos above land, update
+      `/plans/active/sports_closeout_track_s2_foldin_2026_07_25.md`'s G1 sub-item with the corrected figures and a
+      citation to this doc. The plan's own text ("§U... already-approved... the scale differs by ~10x, so this must not
+      be assumed") anticipated exactly this outcome. Ordering: do this LAST — it records the other two's results. (repo:
+      `unified-trading-pm`)
 
 ## Census script (read-only, no writes)
 

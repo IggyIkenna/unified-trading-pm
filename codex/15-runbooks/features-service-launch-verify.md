@@ -49,7 +49,7 @@ operation per the workspace "[No fire-and-forget VM launches](../../cursor-confi
 Consolidated launcher:
 [`deployment-service/scripts/vm/launch-features-vm.sh`](../../../deployment-service/scripts/vm/launch-features-vm.sh)
 (Phase 8A of
-[`features_repo_consolidation_2026_05_08.md`](../../plans/active/features_repo_consolidation_2026_05_08.md)). This
+[`features_repo_consolidation_2026_05_08.md`](../../plans/archive/features_repo_consolidation_2026_05_08.plan.md)). This
 single launcher supersedes the legacy per-family `launch-features-<family>-*.sh` scripts. Any reference to a per-family
 launcher is stale — redirect to `--feature-family <name>`.
 
@@ -327,8 +327,8 @@ If the final event is `FAILED` rather than `STOPPED`:
   schema + 4-state taxonomy + `feature_family` column.
 - [Honest absence downstream handling (codex/02-data)](/codex/02-data/honest-absence-downstream-handling.md) — NaN
   tolerances + per-consumer pre-flight gates.
-- [Plan-of-record (PM/plans/active)](../../plans/active/features_repo_consolidation_2026_05_08.md) — full consolidation
-  plan with Phase 8A launcher commit + Phase 10 QG sweep result.
+- [Plan-of-record (PM/plans/active)](../../plans/archive/features_repo_consolidation_2026_05_08.plan.md) — full
+  consolidation plan with Phase 8A launcher commit + Phase 10 QG sweep result.
 
 ## Reviewer enforcement
 

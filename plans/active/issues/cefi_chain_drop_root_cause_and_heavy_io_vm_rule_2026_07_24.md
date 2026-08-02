@@ -44,6 +44,13 @@ code_refs:
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
+context_scope:
+  [
+    /plans/active/cefi_consolidated_closeout_2026_07_18.md,
+    /plans/active/cefi_4surface_migration_execution_log_2026_07_24.md,
+    /codex/05-infrastructure/vm-launcher-runbook.md,
+    /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
+  ]
 ---
 
 # CeFi Surface-C chain-drop root cause + dry-run blind-spot fix + heavy-I/O-on-VM hard rule
@@ -521,3 +528,15 @@ verifier (2 consecutive clean passes, confirming colon_wire's actual status alon
       LIGHTER-ZKSYNC/BYBIT-SPOT/COINBASE-FUTURES) → resume cron → verify ENABLED → loop-until-dry full-range verifier (2
       consecutive clean passes, confirming colon_wire) → `verify_cefi_canonical_4surface_2026_07_20.py` final re-proof →
       archive this plan + its parent. Session paused 2026-07-25 on operator request (host contention); not yet resumed.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30** (tranche=cefi, autonomous): KEEP-NA, valid - the sole todo resumes a migration
+  explicitly PAUSED 2026-07-25 on operator request (host contention) and involves cron pause/resume around prod GCS
+  renames.
+- **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).
+- **na-eligibility-audit 2026-08-02** (tranche=cefi, autonomous): KEEP-NA, valid — re-verdicted only because the
+  2026-08-01 `context-scout` frontmatter backfill moved the doc's git date past the 07-30 marker; the body is
+  byte-identical to the 07-30 reading (verified `git diff eaa6bfd1e..HEAD` = the `context_scope` block only). Verdict
+  unchanged: the sole todo resumes a migration explicitly PAUSED 2026-07-25 on operator request (host contention) and
+  wraps prod GCS renames in a consolidator-cron pause/resume. Not worker-determinable.

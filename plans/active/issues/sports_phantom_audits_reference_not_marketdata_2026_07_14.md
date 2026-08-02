@@ -53,13 +53,19 @@ priority: P2
 source:
   Interactive session 2026-07-14 (slot-3·hk) — running phantom+reprobe across all consolidators to populate cockpit
   audit lines; discovered the sports split when the two signals landed on different cards.
-assigned_vm: NA
+assigned_vm: planning
 resolved_by:
 locked_by:
-execution_scope: local-only
+execution_scope: orchestrator-agent
 assigned_role: infra
 drift_direction: advance-code
 depends_on: []
+context_scope:
+  [
+    /codex/05-infrastructure/manifest-consolidator-ssot.md,
+    /codex/04-architecture/instruments-service-as-ssot-for-mtds.md,
+    /plans/active/sports_consolidated_closeout_2026_07_19.md,
+  ]
 ---
 
 # Sports phantom audit targets the reference manifest, not market-data
@@ -289,4 +295,30 @@ unverified" down to a fully-explained 99.8% (two confirmed tool-limitation class
 - [ ] [DATA] P3. **Spot-check the remaining ~1,335-row (0.19%) phantom residual** — STANDINGS (460), TEAMS (460), XG
       (300), WEATHER (106), MATCHES (7), FIXTURES (2) rows are not explained by either confirmed false-positive class
       (unregistered data_type / cache-hit day-vs-trigger-date mismatch) and were left unexamined per the 2026-07-23
-      RE-TRIAGE.
+      RE-TRIAGE. **DO NOT dispatch/investigate this item independently (2026-07-30 conflict re-check)** — the 2026-07-30
+      na-eligibility-audit's "Conflict-check CLEAR" note below predates the actual resolution: the operator HAS since
+      ruled on this exact sequencing in `plans/active/issues/autonomous_session_operator_decisions_2026_07_25.md` entry
+      #8 (option A, 2026-07-25): merge this spot-check into Track S2's "decision 16" day-partition root-cause
+      investigation as a corroborating data point, not a separate classification pass. That investigation is now
+      dispatched (and this residual explicitly folded into it) as `sports_satellite_ao_dispatch_batch7_2026_07_27.md`'s
+      decision-16 `[DIAG] P2` todo. A worker claiming THIS checkbox should cross-check that todo's outcome first and,
+      once it lands, either close this item by reference (root cause shared — nothing further to spot-check
+      independently) or resume an independent spot-check only if batch7's write-up explicitly says the mechanisms are
+      unrelated.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30**: RECLASSIFY -> `assigned_vm: planning` — the operator's 2026-07-14 'leave code
+  as-is, document only' ruling scopes CODE changes, and the sole remaining todo is not one: it is a read-only spot-check
+  of a precisely-enumerated 1,335-row residual (STANDINGS 460 / TEAMS 460 / XG 300 / WEATHER 106 / MATCHES 7 /
+  FIXTURES 2) left unexamined after the 2026-07-23 RE-TRIAGE explained 99.8% of the original 721,154 as two confirmed
+  tool false-positive classes. Bounded population, bounded method, no `--apply`. Conflict-check CLEAR:
+  `sports_satellite_ao_dispatch_batch5_2026_07_26.md` (active, planning) carries no open todo claiming this residual.
+  **Correction (2026-07-30, sports_satellite_ao_dispatch_batch3_finalize todo-3 re-check)**: "Conflict-check CLEAR"
+  above only checked batch5 by name and missed the actual live conflict — this exact residual was already flagged
+  `conflict_gated` since batch3/batch4 (2026-07-25) against Track S2's "decision 16" investigation, formalized as
+  `autonomous_session_operator_decisions_2026_07_25.md` entry #8, which the operator resolved (option A) the SAME day
+  this doc was authored: merge into decision 16, don't dispatch as a separate pass. See the amended todo above — do not
+  treat the `assigned_vm: planning` reclassification as license to dispatch this checkbox independently of batch7's
+  decision-16 investigation.
+- **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).

@@ -15,7 +15,7 @@ summary: >-
   BLOCKED-OPERATOR-DECISION in the Deferred section. The remaining 24 orphaned-but-not-AO-eligible docs are
   non-batchable (operator-gated / time-gated / too-large-or-risky / human-only per the skill's taxonomy) and are listed
   in the Deferred section for the next iteration or an explicit operator ruling.
-status: draft
+status: active
 nature: process
 asset_group: [defi]
 stage: [data]
@@ -34,17 +34,17 @@ related:
   [
     /plans/active/defi_consolidated_closeout_2026_07_18.md,
     /plans/archive/2026_07/defi_consolidated_closeout_aggregated_sources_2026_07_24.md,
-    /plans/active/defi_satellite_ao_dispatch_batch1_2026_07_25.md,
+    /plans/archive/2026_07/defi_satellite_ao_dispatch_batch1_2026_07_25.md,
     /plans/active/defi_satellite_ao_dispatch_batch2_2026_07_26.md,
     /plans/active/defi_satellite_ao_dispatch_batch2_2026_07_26_finalize.md,
     /plans/active/defi_satellite_ao_dispatch_batch3_2026_07_26.md,
     /plans/active/defi_satellite_ao_dispatch_batch3_2026_07_26_finalize.md,
     /plans/archive/2026_07/defi_satellite_ao_dispatch_batch4_2026_07_26.md,
-    /plans/active/defi_satellite_ao_dispatch_batch4_2026_07_26_finalize.md,
+    /plans/archive/2026_07/defi_satellite_ao_dispatch_batch4_2026_07_26_finalize.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]
 created: "2026-07-27"
-last_updated: "2026-07-27"
+last_updated: "2026-07-30"
 parent_epic: defi_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -56,6 +56,14 @@ locked_by:
 locked_since:
 supersedes:
 superseded_by:
+context_scope:
+  [
+    /plans/active/defi_consolidated_closeout_2026_07_18.md,
+    /plans/active/defi_satellite_ao_dispatch_batch3_2026_07_26.md,
+    /plans/active/defi_satellite_ao_dispatch_batch5_2026_07_27_finalize.md,
+    /cursor-configs/skills/ag-closeout-audit/SKILL.md,
+    /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
+  ]
 depends_on: []
 source: >-
   `/ag-closeout-audit defi` run 2026-07-27 (autonomous, scheduled ag_closeout_auditor, tranche=defi) — Phase 1
@@ -69,45 +77,56 @@ drift_direction: advance-code
 
 # DeFi satellite AO batch 5 — 2026-07-27
 
-**status: draft — NOT dispatched.** Flipping to `active` is an operator decision (per CLAUDE.md "Plan destination — ASK
-BEFORE CREATING" HARD RULE); this batch was drafted autonomously by the scheduled `ag_closeout_auditor` and awaits
-operator approval.
+**status: active — operator-approved + dispatched 2026-07-30** (`unified-trading-pm@5a6bbefc3`, "activate 9 fresh
+ag-closeout-audit dispatch batches (operator go-ahead)"). Drafted autonomously by the scheduled `ag_closeout_auditor` on
+2026-07-27 and held at `draft` per CLAUDE.md's "Plan destination — ASK BEFORE CREATING" HARD RULE until that approval
+landed. Its gated twin `defi_satellite_ao_dispatch_batch5_2026_07_27_finalize.md` is likewise `active`, held by
+`depends_on` + `gate_on_depends: true` rather than by a `draft` status.
 
 ## Todos
 
-- [ ] [DATA] P1. Run `/data-pipeline-check-is` and `/data-pipeline-check-mtds` 3x each across the defi asset_group
-      (gate-audit §11: pre-backfill baseline, mid-backfill spot-check, post-backfill final gate per skill — 0 dated runs
-      of either on record for defi today) and record each run's report path + date in this doc. Repos:
-      instruments-service, market-tick-data-service. Done when: 6 total dated skill-run report paths (3 IS + 3 MTDS) are
-      cited against defi in this doc, each labeled with its baseline/mid/final phase, with no prior dated run superseded
-      silently. Source: `plans/active/defi_track5_coverage_mvp_backfill_2026_07_24.md`
+- [x] ✅ [DATA] P1. **MOVED to Conflict-gated item 3 below (BLOCKED-OPERATOR-DECISION) — 2026-07-30, slot-12.** Was:
+      "Run `/data-pipeline-check-is` and `/data-pipeline-check-mtds` 3x each across the defi asset_group." Both skills'
+      SKILL.md § 0 forbid synthesizing `--day`; filed `/blocked` (`BLK-b5b0e61a`, duplicate of standing `BLK-d355f03a`
+      already independently raised by slots 4 and 5); operator ruled **C** — park, do not invent a day. **No dated runs
+      were performed; this checkbox marks the triage disposition, not the audit as complete.** See Conflict-gated item 3
+      for the full detail; the substantive todo returns to this list once the operator names the baseline/mid/final
+      day(s).
 
-- [ ] [DATA] P3. For a representative sample of shards from the 5 affected pool-heavy DEX venues (PANCAKESWAP_V3-BSC,
+- [x] ✅ [DATA] P3. **ALREADY DONE — verified stale 2026-08-02 against the (now archived) source doc; no new work
+      needed.** Both halves this todo asks for were completed and shipped BEFORE the batch was activated, so leaving it
+      open would re-dispatch already-shipped work. (a) The harmless-vs-real verdict: **REAL bug** —
+      `0 of 28 sampled duplicate groups across 3 samples were byte-identical` (`UNISWAP_V3-OPTIMISM`/`2023-11-22` 16/16
+      differing; `PANCAKESWAP_V3-BSC`/`2023-08-19` 3/3; `PANCAKESWAP_V3-BSC`/`2023-12-15` 9/9), recorded 2026-07-29. (b)
+      The root-cause + follow-up fix: the `instrument_key` grammar (`VENUE:TYPE:BASE-QUOTE:FEE_TIER`) omits
+      `pool_address`, so distinct on-chain pools legitimately collide — a **structural** cause identical across all 5
+      pool-heavy venues, not a per-venue one, which is why re-sampling the remaining 3 venues would yield no new
+      information or action. The filed follow-up was then resolved per operator ruling **Option B** (2026-07-30,
+      `BLK-b3379171`): consumer-side fix, no grammar change — `build_instrument_catalogue.py::_aggregate_key()`
+      confirmed already safe (keys POOL rows on `pool::<chain>::<pool_address>`), the one naive consumer was a vanished
+      scratchpad script, plus a shipped regression test proving same-symbol/different-address pools keep distinct
+      lifecycles — `instruments-service@30fe4511`. **Honest scope note**: 2 of the 5 named venues were actually sampled
+      (3 shards); the other 3 were not, and are covered by the structural root-cause + shipped fix rather than by direct
+      measurement. Source (archived 2026-07-30, `status: resolved`, 0 open todos):
+      `/plans/archive/issues/defi_instrument_availability_duplicate_instrument_key_rows_2026_07_26.md`. Was: "For a
+      representative sample of shards from the 5 affected pool-heavy DEX venues (PANCAKESWAP_V3-BSC,
       UNISWAP_V3-OPTIMISM, UNISWAP_V3-POLYGON, UNISWAP_V4-ETHEREUM, PANCAKESWAP_V3-BASE), load each flat-shape
       instrument_availability `instruments.parquet` and, for every set of rows sharing a duplicate `instrument_key`
       within that (day, venue) shard, compare all non-key columns to classify the duplicates as byte-identical (harmless
       re-write) or field-divergent (real dedup/write-time bug); if any venue shows divergence, root-cause why the
       instruments-service writer emits the same `instrument_key` more than once per day-shard and file a follow-up
-      root-cause/fix todo against the writer. Repo: instruments-service. Done when: a recorded harmless-vs-real verdict
-      exists for each sampled venue, with a fix todo filed if any venue shows real divergence. Source:
-      `plans/active/issues/defi_instrument_availability_duplicate_instrument_key_rows_2026_07_26.md`
+      root-cause/fix todo against the writer. Repo: instruments-service."
 
-- [ ] [DATA] P2. Fix the bare-`instrument_id`-only pre-flight/dedup keying gap (filed 2026-07-26 by batch1's Stage-2/3
-      audit): add `chain` to the atom/key tuple in
-      `market_tick_data_service/engine/orchestrator/__init__.py::_run_preflight_availability_check` (~L487-560;
-      currently keys the captured-skip set on `(venue, data_type) → {bare instrument_id}` with `chain` never read in the
-      function — fold `chain` into the atom string or make the key `(venue, chain, data_type) → {instrument_id}`), and
-      verify/fix the equivalent gap in `market_data_processing_service/app/core/orchestration_scanner.py`'s
-      `existing_outputs` dedup set (~L680-693, `(timeframe, instrument_id)` via `extract_instrument_id_from_blob_path`)
-      — first run the scoped `gcloud storage ls`/GCS check (which timed out in the audit pass) to confirm whether MDPS
-      output filenames already embed `chain`; if they do, that specific site may be a non-issue and only needs the cited
-      evidence, otherwise fix it. Do NOT edit the read-path (`defi_catalog_reader.py`, confirmed PASS) or the catalogue
-      (confirmed Option-A-compliant). Repos: market-tick-data-service, market-data-processing-service. Done when: both
-      sites are confirmed either chain-safe (with cited GCS/code evidence) or fixed, with a regression test for the
-      2-chain-same-address collision case using one of the 6 real collision addresses (e.g. CURVE
-      `0x004c167d27ada24305b76d80762997fa6eb8d9b2` on AVALANCHE+OPTIMISM), shipped via scoped
-      `quickmerge.sh --agent --files`. Source:
-      `plans/active/issues/defi_pool_chain_collision_curve_balancer_gap_2026_07_21.md`
+- [x] ✅ [DATA] P2. **ALREADY DONE — discovered stale/duplicate 2026-07-30 while archiving the source issue doc.** Both
+      sites this todo describes were already fixed/confirmed in the source issue doc BEFORE this todo was dispatched:
+      MTDS `_run_preflight_availability_check` chain-keying fix shipped `market-tick-data-service@5bf8a3c7` (2026-07-29,
+      with the exact CURVE-collision regression test this todo asks for); MDPS `orchestration_scanner.py`
+      `existing_outputs` dedup confirmed NON-ISSUE via a real scoped GCS read (2026-07-29, real MDPS candle output
+      filenames already embed the full chain-qualified canonical id, never the bare `pool_address`), split off + closed
+      as `plans/archive/issues/mdps_orchestration_scanner_bare_instrument_id_chain_collision_2026_07_29.md`. This
+      `batch5` todo was generated before that closure landed and never got flipped. No new work needed here — flipping
+      to avoid a future re-dispatch of already-shipped work. Source (now archived, fully closed 2026-07-30):
+      `archive/issues/defi_pool_chain_collision_curve_balancer_gap_2026_07_21.md`
 
 - [ ] [SERVICE] P3. Now that the staking-yields Cloud Scheduler/Cloud Run Job went live 2026-07-26 (per this doc's §6.1,
       deployment-service@bd46bf2), query the live prod corpus (`market-data-tick-defi-prd-central-element-323112`) under
@@ -185,6 +204,17 @@ operator approval.
    the undecided default). **Operator decision needed**: (a) confirm batch3's C6 already covers the full window once it
    completes (recommended — re-check after C6 lands, no new dispatch needed), or (b) rule on the Pyth Hermes
    coverage/backtest-window go/no-go first if a wider window than C6's is actually wanted.
+3. **Run `/data-pipeline-check-is` and `/data-pipeline-check-mtds` 3x each across the defi asset_group** (gate-audit
+   §11: pre-backfill baseline, mid-backfill spot-check, post-backfill final gate per skill — 0 dated runs of either on
+   record for defi today; moved here from the Todos list 2026-07-30, slot-12). REJECTED as a directly-dispatchable AO
+   todo: both skills' own SKILL.md § 0 hard rule states `--day` MUST come from the operator or the dispatching plan/task
+   and is NEVER synthesized by the worker or main — this exact `--day` ambiguity was independently hit by 3 worker slots
+   (4, 5, 12) before main stopped the re-dispatch churn at the source. Neither a single reused day nor 3 distinct days
+   may be picked without an operator ruling. **Operator decision needed**: name the baseline/mid/final day(s) to use for
+   the 6 runs (3 IS + 3 MTDS) — tracked as blocked question `BLK-d355f03a` (also raised independently by slot-12 as
+   `BLK-b5b0e61a` before the standing question was found). Once named, this todo returns to the Todos list and
+   dispatches normally. Repos: instruments-service, market-tick-data-service. Source:
+   `plans/active/defi_track5_coverage_mvp_backfill_2026_07_24.md`.
 
 ### Non-batchable orphans (24 docs) — operator-gated / time-gated / too-large-or-risky / human-only
 
@@ -255,9 +285,9 @@ dedicated standalone plan) — re-running this skill will keep re-surfacing them
 - `issues/defi_dexpool_second_writer_path_and_zero_capture_2026_07_10.md` — item 2 fully closed; no remaining action.
 - `issues/defi_legacy_precanonical_composite_venue_objects_2026_07_24.md` — todos 1-2 done, remainder tracked elsewhere
   per the doc's own annotation.
-- `issues/onchain_manifest_dishonest_and_recompute_blocked_2026_07_21.md` — prose-only 4-step fix chain, no bounded
-  single todo extractable without first diagnosing the frozen onchain consolidator (a diagnosis task, not a checkable
-  fact).
+- `archive/issues/onchain_manifest_dishonest_and_recompute_blocked_2026_07_21.md` — ✅ RESOLVED 2026-07-30
+  (features-service@d8a643a0, slot-4): both halves of the doc's one todo shipped (orphaned tree deleted + 1508-row
+  backfill registered); doc archived.
 - `issues/defi_catalog_engine_config_key_contract_drift_2026_07_23.md` (see operator-gated above, dual-listed by
   reasoning shape).
 - `issues/defi_morpho_lending_indices_never_wired_2026_07_12.md` — remaining item is a re-run of an existing gate,
@@ -267,8 +297,8 @@ dedicated standalone plan) — re-running this skill will keep re-surfacing them
 
 ### Known, already-tracked mistag (no action needed here)
 
-- `archive/issues/mtds_empty_string_fallback_codex_gate_blocking_pushes_2026_07_08.md` — tagged `asset_group: [defi]` but is
-  fleet-wide CI/QG infra content. Already flagged by batch2/batch3 and carries an open `[DOC] P2` retag todo in
+- `archive/issues/mtds_empty_string_fallback_codex_gate_blocking_pushes_2026_07_08.md` — tagged `asset_group: [defi]`
+  but is fleet-wide CI/QG infra content. Already flagged by batch2/batch3 and carries an open `[DOC] P2` retag todo in
   `defi_satellite_ao_dispatch_batch2_2026_07_26_finalize.md:73-76`. Not re-flagged as a new finding.
 
 ### Self-gated covering-plan doc (no action needed — will clear on its own)
@@ -285,3 +315,23 @@ dedicated standalone plan) — re-running this skill will keep re-surfacing them
   33 orphaned (30 partial, 3 never-touched); Phase-3 conflict-check (9 agents, opus/high) over the 9 AO-eligible orphans
   cleared 7 into todos above, parked 2 as genuine conflicts (see Deferred). 24 non-AO-eligible orphans + 1 known
   mistag + 1 self-gated covering-plan doc recorded in Deferred for the next iteration / operator ruling.
+- 2026-07-30 (slot-12, data_engineering): Dispatched todo 1 (the `/data-pipeline-check-is`/`-mtds` 6-run checkpoint
+  cadence). Both skills' SKILL.md § 0 forbids synthesizing `--day` — filed `/blocked` (`BLK-b5b0e61a`); operator ruled
+  **C** (park, do not invent a day), noting slots 4 and 5 independently hit the same question first under the standing
+  blocked question `BLK-d355f03a`. Moved the todo out of `## Todos` into `### Conflict-gated` item 3, tagged
+  BLOCKED-OPERATOR-DECISION, citing both blocked-question ids. No dated runs were attempted. Returns to `## Todos` once
+  the operator names the baseline/mid/final day(s).
+
+- **context-scout 2026-08-01**: populated/refreshed context_scope (5 entries).
+
+- 2026-08-02 (worker, slot-3): Post-activation reconciliation. (1) The frontmatter `status: draft` → `active` flip had
+  already landed 2026-07-30 (`unified-trading-pm@5a6bbefc3`, operator go-ahead across 9 batches), and the finalize twin
+  is `active` too (its redundant `draft` double-gate removed in `unified-trading-pm@233ebd614`) — but the BODY banners
+  in both docs still read "status: draft — NOT dispatched", contradicting their own frontmatter. Rewrote both banners (+
+  the finalize `summary:`) to state the real dispatched state; the `depends_on`/`gate_on_depends` machine gate is
+  unchanged. (2) Re-verified all 7 todos against current corpus state: 4 open todos still map to genuinely-open todos in
+  their `status: open` source issue docs (staking-yields leaf names, swaps_ohlcv registry fix, dex_pools/swaps coverage
+  re-check, `_instruments_metadata` reader verification) — left as-is; 1 open todo (duplicate `instrument_key`) was
+  found fully superseded — its source doc was archived `status: resolved` on 2026-07-30 with the verdict recorded and
+  the resolving fix shipped (`instruments-service@30fe4511`) — flipped `[x]` with the evidence and an honest
+  2-of-5-venues-sampled scope note, so AO does not re-dispatch shipped work. Open todos: 5 → 4.

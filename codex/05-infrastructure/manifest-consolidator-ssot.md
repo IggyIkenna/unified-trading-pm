@@ -264,6 +264,31 @@ metadata-replace + mtime-bump semantics) + `::test_get_content_write_mtime_never
 > (`gcloud storage objects describe gs://<bucket>/_index/availability_index.parquet --format="value(custom_fields.consolidator_content_write_at)"`
 > — note `custom_fields`, NOT `metadata`, in current gcloud) while per-VM shards can land.
 
+> **Diagnostic caveat #2 — a STATIC `rows_out` with a nonzero, fluctuating `dedup_dropped` is NOT evidence of a silent
+> drop. It is the EXPECTED signature of an idempotent re-capture (2026-07-30).** `dedup_dropped` is not an independent
+> measurement — `consolidate()` computes it as **`rows_in - rows_out`** (`manifest_consolidator.py`, the
+> `ConsolidationReport` construction). So "`rows_out` unchanged" and "`dedup_dropped` == this cycle's shard row count"
+> are the SAME fact stated twice, never two corroborating signals. A writer re-capturing cells that already exist in the
+> canonical collides on the dedup key and UPDATES those rows in place; row COUNT is conserved by construction, and
+> `dedup_dropped` rises with the shard purely because the shard is growing. Watching the row count therefore cannot
+> distinguish "absorbing correctly" from "dropping silently".
+>
+> **The correct absorption test is content, not count**: capture the per-VM shard BEFORE a prune can delete it, then
+> assert the canonical carries the shard rows' own `attempted_at` (or `(capture_status, row_count)`) on the SAME dedup
+> key — resolving that key with the module's own `_resolve_dedup_cols()` + `_dedup_key_sql()`, never a hand-rolled key.
+> Measured live 2026-07-30 on `instruments-store-sports-prd`: four consecutive merges held `rows_out=11,789,693` while
+> `dedup_dropped` climbed 976→1,003→1,029→1,048 in lockstep with the shard, and 1,029/1,049 shard rows were verifiably
+> already in the canonical with the shard's exact `attempted_at` — zero loss. This false signal consumed four worker
+> sessions before being disproven; the actual defect was upstream, in the BACKFILL's `check_shard_freshness` smart-skip
+> (which is `source`/`data_type`-blind and matches an `expected_venues` token against the `data_type` column too, so an
+> unrelated pipeline's sentinel row marks a date "fresh" forever). Full account + the 2×2 proof:
+> `/plans/active/issues/sports_manifest_consolidator_zero_growth_stall_2026_07_29.md` § "Root cause (2026-07-30)".
+>
+> **Corollary — "the writer's log says it processed the date" is not evidence either.** Both VMs blamed in that incident
+> logged **2,139 `SKIP date=… all N venues fresh` lines and exactly ONE `Processed date=`**; the investigation had read
+> the skip lines as processing. Grep for `Processed date=` explicitly and COUNT it before concluding a writer produced
+> anything for a range.
+
 > **A shard's mtime is `blob.updated`, NOT `creation_time` — and a lifecycle transition moves it (2026-07-17).** Both
 > `_list_per_vm_shards_with_mtime` and `_prune_consolidated_shards` read **`blob.updated`**. `gcloud storage ls -l`
 > prints **`creation_time`**, so the two disagree whenever anything touches an object without rewriting it — most
@@ -479,11 +504,31 @@ terraform locals via `gen_consolidator_catalog.py`, so a new consolidator auto-a
   join — against a stale index: ran green, wrote nothing) · `stale_output` (index older than budget while shards wait) ·
   `empty` (genuinely empty bucket) · `unknown`. When `latest.json` is present its verdict is authoritative; absent, the
   endpoint derives it from index freshness + the Cloud Run execution join (`latest_execution_by_job`).
-- **Per-(kind, AG) cadence staleness budget** — the Cloud Scheduler cron is a uniform `*/1` for every consolidator, so
-  the real budget is the `MANIFEST_CONSOLIDATED_STALENESS_SEC` each producer VM sets: **live market-data ticks
-  (defi/tradfi/sports/prediction) = 120s; every other consolidator = 86400s** (matches all producer launchers + cefi's
-  daily batch). Carried per catalog entry (`gen_consolidator_catalog.py` `_staleness_budget`), read by `_entry_budget`;
-  each job is judged against its own cadence, not a uniform 120s.
+- **Per-(kind, AG) cadence staleness budget — CORRECTED 2026-07-30
+  (manifest_consolidator_cadence_cost_audit_2026_07_20.md).** The "every other consolidator = 86400s" claim below was
+  WRONG — it never matched the actual enforcement code. The REAL code-level override,
+  `unified_trading_library.manifest_writer._staleness_budget.AG_STALENESS_BUDGET_SEC` (read by
+  `read_availability_index()`/`assert_consolidator_healthy()` via `_state.py`'s `_resolve_consolidated_staleness_sec()`
+  — this is the gate every REAL caller hits, not just the cockpit display), is
+  `{"cefi": 86400, "sports": 1800, "defi": 3600}` (sports added 2026-07-24, defi added 2026-07-29). Every OTHER
+  asset_group/bucket — tradfi, prediction, and every asset-group-less flat bucket (`strategy-store`, `execution-store`,
+  `ml-store`, `features-calendar`) — falls through to the Pydantic field default of **120s**, unless the SPECIFIC
+  reading process happens to export `MANIFEST_CONSOLIDATED_STALENESS_SEC` itself (set ad hoc by ~25 one-off backfill-VM
+  launchers, `deployment-service/scripts/vm/launch-*-backfill-vm.sh`, all `=86400` — NOT a durable per-bucket guarantee
+  for every reader, e.g. a dashboard or health check that never sets it). `deployment-api`'s cockpit-only
+  `_AG_STALENESS_BUDGET_SEC` (`deployment_api/routes/health_consolidator.py`) mirrors the SAME 3-entry dict (duplicated,
+  not imported — deployment-api depends on UTL, not vice versa).
+
+  The Cloud Scheduler cron is **NO LONGER a uniform `*/1`** either (RULED 2026-07-29 "proceed", shipped 2026-07-30): 12
+  of the 18 consolidator jobs (`manifest_consolidator_cadence_cost_audit_2026_07_20.md` found cost tracks INVOCATION
+  COUNT, not data volume — ~$180/day on a uniform per-minute cadence) now run **hourly** (`0 * * * *`) instead of
+  `*/1 * * * *`: `instruments-{cefi,tradfi,defi,prediction}`, `market-data-cefi`,
+  `features-{cefi,defi,tradfi,calendar}`, `strategy`, `execution`, `ml-training-artifacts`
+  (`deployment-service/terraform/gcp/manifest_consolidator_scheduler.tf`'s `manifest_consolidator_schedule` local). The
+  4 live market-data buckets (defi/tradfi/sports/prediction) and `instruments-sports`/`features-sports` (an
+  actively-written bucket at audit time) stay on `*/1`. The liveness watchdog (below) was split into a matching
+  fast/slow tier pair so the hourly-cadence buckets don't false-trip `CONSOLIDATOR_DOWN` ~5min into every gap.
+
 - **Backlog + oldest-pending** — `per_vm_shard_backlog` returns `(pending, total, oldest_pending_at)` from ONE prefix
   list: pending shards, fan-in width, and the oldest un-absorbed shard's age ("how long has the merge been behind").
 - **Absolute index snapshot** — row count (cheap parquet-footer ranged read, never downloads the whole index) + file
@@ -518,6 +563,22 @@ sports IS canonical, reopening the L6/E8 data-loss gate
   one-off maintenance rewrites opt out via `ManifestWriter(allow_index_shrink=True)` — never a standing service. The
   consolidator's own `_ROW_COUNT_REGRESSION_ALERT_THRESHOLD` (0.1%, observability-only) is the sibling check on the
   merge side.
+- **Defense-in-depth against ad-hoc-CLI OOM (UTL `unified-trading-library@74fdeeca`, 2026-07-31)**: a `ManifestWriter`
+  that DOES land on the legacy CAS path (per_vm_shards not set — an interactive/ad-hoc CLI invocation, not a standing
+  service) can still trigger the SAME class of unbounded-memory failure the Cloud Run job's own DuckDB path guards
+  against (see "Why the OOM is unavoidable at 1 GB" below), because the legacy path's `pd.read_parquet` +
+  `pd.concat`/`.drop_duplicates()` merge has NO memory cap at all. Confirmed incident: a routine single-day/single-venue
+  `market-tick-data-service` capture (`AAVE-PLASMA`, 18 rows) ballooned to 44.4GB RSS on a 61GB shared host before being
+  killed — root-caused to `_write_with_generation_match()`'s legacy-mode fallthrough, NOT `consolidate()` (which has
+  exactly one production call site, its own Cloud Run entrypoint). Fix: `_refuse_if_legacy_read_oversized()`
+  cheap-checks the canonical blob's compressed size via a metadata-only `blob.reload()` (no download) BEFORE any
+  read/merge is attempted; oversized (default >200 MiB, `MANIFEST_LEGACY_READ_MAX_BYTES`) raises
+  `ManifestLegacyWriteRefusedError` instead of proceeding — a REFUSE, not a truncated read (the canonical blob is fully
+  overwritten on every legacy write, so a partial read would silently drop untouched rows). Escape hatches:
+  `MANIFEST_LEGACY_READ_MAX_BYTES=0` (env opt-out) or `ManifestWriter(allow_oversized_legacy_write=True)` (per-writer
+  force flag) for a deliberate one-off correction script — both reintroduce the original unbounded-memory risk, so
+  prefer converting the writer to per-VM shard mode instead (this section's own HARD RULE) wherever the caller can. Full
+  incident + fix detail: `plans/archive/issues/manifest_consolidator_inline_unbounded_memory_cli_2026_07_31.md`.
 - **The per-VM shard flush is ALREADY debounced — do not re-derive an "O(n²) flush" hypothesis.**
   `unified-trading-library@6b6d53bd` (2026-06-21, "serialize per-VM shard write + coalesce per-call final into the
   debounce") added a count+time write-debounce specifically for the per-VM shard path: `_state.py`'s
@@ -650,6 +711,11 @@ removed.
   (`ManifestConsolidatorStaleError` / `CONSOLIDATOR_DOWN`), recovery is tracked via the autonomous-recovery matrix, and
   alert routing still uses the same `CRITICAL` → PagerDuty + Telegram channel path. The registry-keyed `refetch_action`
   pattern does NOT apply to the consolidator (it is infrastructure, not a data source, and has its own watchdog).
+  **STALE as of 2026-07-30 — see the corrected § above** ("Per-(kind, AG) cadence staleness budget"): sports (1800s,
+  2026-07-24) and defi (3600s, 2026-07-29) have SINCE gained their own code-level overrides too, so "every OTHER
+  asset_group keeps the 120s default" no longer holds for those two — only tradfi/prediction/the flat Group-B buckets
+  still fall through to 120s (absent a reader-side env override). Kept this entry's original 2026-07-12 finding intact
+  above (historically accurate at the time) rather than rewritten, per this doc's own dated-finding convention.
 
 ## Verification recipe
 

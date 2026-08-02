@@ -45,6 +45,22 @@ depends_on: []
 > data. The remaining build is the operator-decided warm-GCS-parts path tracked in `mtds_plan_reconciliation_2026_06_29`
 > **§ Section F M-C7**. Verified in live code by the consolidation pass.
 
+> **🔴 CORRECTION 2026-07-31**: the 2026-07-29 annotation below states "52 `warm-sink-persist-*` Cloud Storage
+> subscriptions, confirmed live" — that was true AT THE TIME but is **no longer current**. Live-verified 2026-07-31:
+> `gcloud pubsub subscriptions list --filter="name:warm-sink" --project=central-element-323112` returns only **2** of
+> the 52 (`warm-sink-persist-prediction-trades`, `warm-sink-persist-prediction-book-snapshot-5`). This is NOT a "never
+> applied" bug — Cloud Audit Logs confirm all 52 were genuinely created via `CreateSubscription` on 2026-06-29
+> (`c540cd03`) — it is **GCP's native `Subscriber.InternalExpireInactiveSubscription` auto-expiry**: 50 audit-log
+> entries of that exact method name, one per now-missing subscription. Pub/Sub auto-deletes a subscription after ~31
+> days with zero delivered messages unless `expiration_policy { ttl = "" }` (never-expire) is set; `warm_sink.tf`'s 52
+> resource blocks do NOT set `expiration_policy` at all, so every subscription whose topic never received a single real
+> published message (i.e. every asset_group×data_type except the 2 prediction ones, which is consistent with the
+> SINK_MATRIX finding that only those 2 producers were ever actually wired to publish) silently expired ~2026-07-30.
+> **Fix requires BOTH**: (1) add `expiration_policy { ttl = "" }` to all 52 resources so this doesn't recur, AND (2)
+> `terraform apply` to recreate the 50 missing ones — a `terraform apply` alone without the policy change will recreate
+> them but they will silently expire again in ~31 days if their producer still isn't publishing. Tracked in the new
+> fleet-wide plan being drafted per operator instruction 2026-07-31 ("yeah we should do it").
+
 > **🟢 Retagged 2026-07-29 (corpus hygiene pass): resolved-by-reference — see
 > `plans/active/june_2026_vintage_audit_findings_2026_07_27.md` §5-RESOLVED item 17 ("M-C7 warm-GCS-parts durable sink
 > -- APPROVED to build real code").** The operator build-greenlight this doc's banner above was awaiting is granted —

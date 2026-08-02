@@ -198,6 +198,26 @@ print(' '.join(visited))
 " 2>/dev/null || echo ""
 }
 
+# Extra dep_repos NOT expressible via the pyproject `path = "../<repo>"` editable-deps closure
+# get_dep_repos() walks above. That closure can only ever contain repos that are genuine `uv
+# sync`-installed packages of the caller; it has no way to express "clone this sibling on disk
+# too, but never install it" — the exact shape needed when a repo loads another repo's files by
+# raw file path (importlib.util.spec_from_file_location) rather than importing it as a package.
+# SOURCE OF TRUTH = extra-dep-repos.txt (`<repo>: <space-separated extra repo names>`, one repo
+# per line, # comments ignored) — a short, explicit, git-tracked override, mirroring the
+# self-hosted-qg-repos.txt allowlist pattern just below.
+get_extra_dep_repos() {
+  local repo="$1" overrides="$SCRIPT_DIR/extra-dep-repos.txt"
+  [ -f "$overrides" ] || return 0
+  local line rest
+  while IFS= read -r line || [ -n "$line" ]; do
+    line="${line%%#*}"
+    case "$line" in
+      "$repo":*) rest="${line#*:}"; printf '%s ' "$rest" ;;
+    esac
+  done < "$overrides"
+}
+
 # Whether `repo` gets quality-gates-v2's real test/lint job on self-hosted runners.
 # SOURCE OF TRUTH = self-hosted-qg-repos.txt (one repo name per line, # comments ignored) — a
 # short, explicit, git-tracked allowlist rather than a derived rule, since this is a deliberate
@@ -267,6 +287,12 @@ for template in "$TEMPLATE_DIR"/*.yml "$TEMPLATE_DIR"/*.yml.tmpl; do
     # For .tmpl files: perform substitution; for .yml files: direct copy
     if [ "$is_tmpl" = true ]; then
       dep_repos=$(get_dep_repos "$repo")
+      extra_dep_repos=$(get_extra_dep_repos "$repo")
+      if [ -n "$extra_dep_repos" ]; then
+        # Union + de-dupe, preserving order (pyproject closure first, then extras) — a repo can
+        # legitimately appear in both (already-transitive) without being cloned twice.
+        dep_repos=$(printf '%s\n' $dep_repos $extra_dep_repos | awk 'NF && !seen[$0]++' | tr '\n' ' ' | sed 's/ *$//')
+      fi
       repo_underscore="${repo//-/_}"
       version_source=$(get_version_source "$repo")
       qg_runner_labels=$(get_qg_runner_labels "$repo")

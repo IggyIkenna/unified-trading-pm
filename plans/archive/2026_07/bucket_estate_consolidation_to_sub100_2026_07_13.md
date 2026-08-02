@@ -804,7 +804,7 @@ of a LIVE canonical kind (the smoke-check tier), and everything on the estate-cl
   **Finding 2, part 3 — the real Morpho gap, ground-truth confirmed (not the VM log's claim, not the manifest).** First
   tried the MTDS manifest (`read_availability_index` on `market-data-tick-defi-prd-central-element-323112`) — hit
   `ManifestConsolidatorStaleError` (consolidator genuinely behind, a live pre-existing condition documented separately
-  in `plans/active/issues/mtds_backfill_vm_startup_oom_rc137_2026_07_14.md`). Downloaded the consolidated
+  in `plans/archive/issues/mtds_backfill_vm_startup_oom_rc137_2026_07_14.md`). Downloaded the consolidated
   `_index/availability_index.parquet` directly (445MB, one-time, matching the technique that issue doc's own repro used)
   and slim-filtered via pyarrow (`data_type=lending_indices`, `venue=MORPHO`): found 561,932 manifest rows, but ALL of
   them `capture_status` ∈ {`expected_unattempted`, `empty_confirmed`} with `service_name=instruments-service` — **zero

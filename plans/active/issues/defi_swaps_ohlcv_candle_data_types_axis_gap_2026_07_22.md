@@ -42,7 +42,7 @@ related:
   [
     plans/archive/2026_07/distinct_values_noncanonical_audit_2026_07_20.md,
     plans/active/issues/defi_perp_daily_ctx_manifest_gap_reader_risk_2026_07_22.md,
-    plans/active/issues/defi_venue_phase_live_definition_contradiction_2026_07_22.md,
+    plans/archive/2026_07/defi_venue_phase_live_definition_contradiction_2026_07_22.md,
     plans/active/master_data_canonicalisation_migration_catalogue_2026_06_07.md,
   ]
 created: "2026-07-22"
@@ -53,8 +53,8 @@ source: >-
   distinct_values_noncanonical_audit_2026_07_20.md's D5/D6 todo (~line 328), dispatched to a sub-agent under /autonomous
   with an explicit precedent to stop short if the fix requires an unmeasured UAC canonical-set/denominator addition
   (mirrors the sibling perp_daily_ctx todo's own stop-short outcome on this same plan)
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 estimate_class: research
 estimate_baseline_ai_days: 1
 estimate_calibrated_ai_days: 1.2
@@ -66,6 +66,14 @@ supersedes:
 superseded_by:
 resolved_by:
 depends_on: []
+context_scope:
+  [
+    /plans/active/master_data_canonicalisation_migration_catalogue_2026_06_07.md,
+    /plans/active/issues/defi_perp_daily_ctx_manifest_gap_reader_risk_2026_07_22.md,
+    /plans/archive/2026_07/distinct_values_noncanonical_audit_2026_07_20.md,
+    instruments-service/scripts/enumerate_expected_universe.py,
+    unified-api-contracts/unified_api_contracts/registry/market_data_categories.py,
+  ]
 ---
 
 # defi `swaps_ohlcv_*` MDPS candle data_types — real registry gap, fix needs a denominator blast-radius measurement
@@ -271,6 +279,10 @@ in a registry/exception addition without addressing the discrepancy.
 
 ## Progress Log
 
+- **na-eligibility-audit 2026-07-30**: RECLASSIFY -> assigned_vm: planning (conflict-check CLEAR against 231 active
+  planning docs; no open todo elsewhere duplicates this claim) - the gating VERIFY was executed 2026-07-28 with a
+  decisive measured verdict (guard REQUIRED, then provably inert) — Path A is now fully specified
+
 ### 2026-07-28 (slot-5) — completeness_pct denominator-delta simulation (bounded, read-only)
 
 Executed the P2 VERIFY todo above via `defi_satellite_ao_dispatch_batch1_2026_07_25.md`'s dispatch of this exact item.
@@ -323,8 +335,9 @@ mode `_TRADFI_MTDS_TICK_MANIFEST_EXCLUDED_DATA_TYPES` was built to prevent for t
 denominator `enumerate_expected_universe.py::enumerate_v2` materialises (the mechanism this doc's finding 6 traced).
 This is a **different** completeness_pct computation from `check_enumeration_completeness.py`'s Layer-1
 venue/instrument_type metric (used elsewhere, e.g.
-`issues/defi_venue_phase_live_definition_contradiction_2026_07_22.md`'s cited `n_expected=109`/`completeness_pct=2.75`
-figure) — the two share a name but different denominators/producers; flagging explicitly to avoid conflating them.
+`/plans/archive/2026_07/defi_venue_phase_live_definition_contradiction_2026_07_22.md`'s cited
+`n_expected=109`/`completeness_pct=2.75` figure) — the two share a name but different denominators/producers; flagging
+explicitly to avoid conflating them.
 
 **Answer to the gating question** (for `defi_satellite_ao_dispatch_batch5_2026_07_27.md`'s gated `[CODE]` todo): **the
 exclusion-guard IS required** — do not execute Path A's registry addition without first landing the
@@ -332,6 +345,8 @@ exclusion-guard IS required** — do not execute Path A's registry addition with
 was ad-hoc/scratch-only (not committed, per this todo's "ship no registry/code change" instruction) — the method above
 is fully reproducible from this description alone (live `DATA_TYPES_BY_ASSET_GROUP['defi']` import + the documented
 `enumerate_v2` cross-join contract).
+
+- **context-scout 2026-08-01**: populated context_scope (5 entries).
 
 ## Not fixed here, why
 

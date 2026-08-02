@@ -202,6 +202,26 @@ still hits `force=True` at exactly `kick_escalation_threshold` kicks).
 
 ---
 
+## `_typed_occupant_liveness` dispatch-ordering race (2026-07-30) — a DIFFERENT gap, same lookup function
+
+A one-shot/typed escalation worker's mandated STEP-0 heartbeat could land in the window between `do_spawn()` returning
+(the boot prompt is pasted, worker executing) and `escalation.escalate()`/`plan_health.dispatch()` opening the
+`_register_agent`+`claim_slot_for_typed_agent` session — `do_spawn` runs deliberately OUTSIDE any DB session
+(`orchestrator_spawn_reliability_db_lock_2026_06_10`, so the multi-second boot wait never holds the SQLite write lock).
+In that window the slot looks fully unclaimed to `find_active_agent_for_session` (no AgentRow yet), so
+`_typed_occupant_liveness` resolves `"stale"` and the heartbeat handler falls through to the ordinary
+`pick_next_task`/`assign_task_to_slot` idle-dispatch path — silently binding a foreign Class-A backlog task to a slot
+that is actually mid-dispatch of a typed one-shot occupant. **This is NOT the same gap as the `/done` 400 family above**
+(an AgentRow that existed and was later archived out from under a live session) — here the row never existed yet at
+lookup time; the two share `find_active_agent_for_session`'s query shape but not a root cause, so a single fix does not
+close both. Fixed (`agent-orchestrator@3d993fb`): both dispatchers now pre-stamp `SlotRow.status="working"` +
+`last_spawned_at=now` in their PRE-spawn session (rolled back to `idle` on a failed spawn), and `heartbeat_slot` holds
+the slot for a bounded 45s grace window when it sees that pre-stamp with no live typed occupant resolved yet — self-
+healing to normal dispatch if the window elapses on a genuinely stuck/failed spawn. Full incident + fleet-audit detail:
+`/plans/archive/issues/cicd_heartbeat_steals_slot_regression_immediate_dispatch_2026_07_29.md`.
+
+---
+
 ## Interaction with AutoSpawnLoop
 
 ```
@@ -244,6 +264,49 @@ resume nudge prefixes an explicit "run `/compact` first" instruction (`_do_spawn
 Since a session the context-burn trigger just killed is, by construction, at/above `context_burn_kill_min_pct` (98) —
 always well above even the lowered 80% — lowering `resume_fresh_context_pct` cannot regress the context-burn-kill →
 dead-worker → resume-classification chain: a context-burn kill is always followed by a requeue, never a resume.
+
+---
+
+## Held-behind-a-`/blocked`-gate merge pattern — failure mode + the gate-aware unpushed sweep (2026-07-26/31)
+
+**The pattern this protects.** A worker sometimes deliberately commits locally but WITHHOLDS the push, pending an
+operator sign-off gate raised via `/blocked` (e.g. a design doc's "OPERATOR RATIFICATION REQUIRED BEFORE MERGE"). The
+commit sits ahead-of-origin on an otherwise clean tree until the operator answers. This is a legitimate hold, not
+stuck/orphaned WIP.
+
+**The failure mode (2026-07-26 incident, `watchdog_unpushed_sweep_defeats_operator_merge_gate_2026_07_26.md`).**
+`_sweep_unpushed_slots` (below) exists specifically to rescue a dead session's committed-but-unpushed HEAD so it is
+never silently lost. Before the fix, it was **unconditional** — it had zero awareness that the exact commits it was
+about to push might be the subject of an OPEN, task-linked `/blocked` entry acting as an operator merge gate. Sequence
+observed: a worker filed a `/blocked` merge-sign-off question, got only an interim "HOLD, do NOT quickmerge yet" (never
+finally ratified), froze, was reclaimed dead by the watchdog, and ~6 minutes later the unpushed-sweep pushed the held
+commits to `live-defi-rollout` anyway — defeating the operator gate purely through automation, with the standing `*/15`
+LDR→main auto-promote then poised to carry the unratified change to `main`. The lesson generalizes: **any "push held
+pending human sign-off" pattern is silently defeatable by a rescue-on-death sweep unless that sweep is taught to
+recognize the hold.**
+
+**The gate-aware fix (`agent-orchestrator@49c919d`).** `_sweep_unpushed_slots` (`worker_liveness_watchdog.py:1499`) now
+checks, per slot, whether the slot's `current_task` has an OPEN task-linked `BlockedRow` (`answered_at IS NULL` — this
+single predicate covers unanswered AND partial/`operator_pending` answers, since a partial/interim answer intentionally
+leaves `answered_at` unset per `state_store.activity`'s own `partial_answer_blocked` semantics) before calling
+`push_or_preserve_ahead_commits`. If gated, the WHOLE slot's ahead commits (every repo, not just the one under
+discussion — the block is keyed on the task, which can span repos) are **preserved on a
+`wip-preserve/orchestrator-slot-<N>-<sha>` ref instead of pushed to `origin/<base>`**, even when they would otherwise
+pass the ordinary QG-sentinel + trailer checks that let a normal rescue proceed (`push_or_preserve_ahead_commits`'s
+`gated: bool` param, `server/worktree_clean_check/_ahead_push.py`). Every resulting `OrphanCommit` carries `gated=True`,
+and the sweep fires a **distinct** `unpushed_held_behind_open_gate` activity event (slot_id + task_id + repo + sha) in
+addition to the ordinary `slot_unpushed_commits_reclaimed` event — so "a merge gate held a push" is never silently
+indistinguishable from an ordinary push-rejection-then-preserve in the activity log; a human decides the actual
+ratify/discard call from there. Nothing is discarded — the point is "don't auto-ship held work," not "lose it."
+
+**Contract for future gated-merge workflows.** A worker (or a future automation) that wants to hold a commit behind a
+human sign-off should route the hold through a **task-linked, unanswered `/blocked` entry** — that is the ONE signal the
+unpushed sweep (and any future rescue-on-death path built the same way) recognizes as "do not auto-ship." A hold
+implemented any other way (e.g. a code comment, a Slack thread, an unlinked doc note) is invisible to this mechanism and
+remains exactly as defeatable as the 2026-07-26 incident. Regression coverage: `tests/test_watchdog_unpushed_sweep.py` —
+`test_sweep_gates_push_behind_open_operator_blocked_entry`,
+`test_sweep_gates_push_behind_partial_answered_blocked_entry`, `test_sweep_pushes_when_blocked_entry_already_answered`
+(a FINAL-answered historical row does not false-positive gate).
 
 ---
 

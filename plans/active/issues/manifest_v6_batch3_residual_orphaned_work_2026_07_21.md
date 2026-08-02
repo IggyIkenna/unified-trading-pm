@@ -169,3 +169,9 @@ overhead.
 ## Codex SSOTs
 
 `/codex/02-data/shard-granularity-cefi.md`, `/codex/02-data/availability-manifest-and-data-status.md`.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30**: KEEP-NA, valid — both remaining todos carry `depends_on` +
+  `gate_on_depends: true` on `cefi_chain_tail_v6_canonicalisation_2026_07_21`, whose todos 5-8 are still open — never
+  re-litigate a live gate.

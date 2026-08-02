@@ -208,7 +208,7 @@ Candidate canaries first (the cloudbuild template names them): `execution-servic
       alerting/execution/greeks with a 2-sibling context). The other 6 (strategy, batch-live-reconciliation,
       fund-administration, market-data-processing, ml, trading-agent) are **Pattern-B-bespoke** → left
       GCP-authoritative; normalization filed in
-      `plans/active/issues/service_dockerfile_pattern_normalization_2026_06_17.md`. See findings log for the full
+      `plans/archive/issues/service_dockerfile_pattern_normalization_2026_06_17.md`. See findings log for the full
       matrix.
 - [x] [INFRA] P2. **DONE 2026-07-22 — 14/14 GCP service builds SUCCESS** against the fresh UTL base digest
       `sha256:7f443e9ef81e2ce480935820838b57a345112342e9d1ea9b8d44e04d8bb5f18e` (shipped in Phase 1). The 2026-06-18
@@ -421,7 +421,7 @@ carries UTL + UAC + shared deps, so no additional AR auth is needed inside the s
 strategy, trading-agent, greeks) `COPY` sibling sources into the build context (`unified-api-contracts/`,
 `unified-trading-library/`, sometimes `market-tick-data-service/` + `configs/cloud-providers.yaml`) — local builds need
 a multi-repo context; these are **GCP-authoritative**. See
-`plans/active/issues/service_dockerfile_pattern_normalization_2026_06_17.md` for the normalization proposal.
+`plans/archive/issues/service_dockerfile_pattern_normalization_2026_06_17.md` for the normalization proposal.
 
 ### GCP — trigger fire (authoritative build with test-in-image)
 

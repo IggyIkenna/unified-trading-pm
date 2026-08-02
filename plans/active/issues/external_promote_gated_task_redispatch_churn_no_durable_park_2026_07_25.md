@@ -81,17 +81,68 @@ condition fires.
 
 ## Todos
 
-- [ ] [BACKEND] P3. Give a worker that hits an EXTERNAL gate (a commit/promote not yet on a target branch) a way to park
-      the task DURABLY — either (a) let it set a named `auto_unpark__<task-id>` prereq keyed on the gate condition
-      (mirroring batch2-011), which the dispatcher already honors and which survives re-derivation, or (b) support an
-      explicit "gated on external ref reaching branch X" marker the dispatcher treats as a real blocker. **Done when**:
-      a promote-gated verification task parks after the FIRST worker detects the gate and does NOT re-dispatch to a
-      fresh worker every tick, resuming only when the gate clears — with a test simulating "ref not yet on main".
-- [ ] [BACKEND] P3. Confirm why a `priority_override` (priority 999) park does not survive backlog re-derivation while a
-      named `auto_unpark__` prereq does — document the difference so workers pick the durable mechanism for external
-      gates (cross-ref RULES.md sec4 and the batch2-011 park). If `priority_override` parks are meant to be durable,
-      that is a separate bug; if not, workers should stop using them for anything that must outlast a re-derivation
-      tick.
+> **✅ CONFLICT RESOLVED 2026-07-31 — OPERATOR RULED OPTION A** (corpus-wide ownership-conflict sweep; this is the
+> decision the "Deferred — HELD" section below was waiting on, and it recommended exactly this). The file-collision was
+> with `/plans/archive/2026_07/ao_satellite_ao_dispatch_batch1_2026_07_26.md`'s `[BACKEND] P3` "Audit every
+> `/skip-current-task` `reason_code` for a silent, unpaged durable park", which is **explicitly AUDIT-ONLY** ("do not
+> change `auto_park.py` in this todo"). **Sequence: batch1's read-only audit lands FIRST, then this doc's implementation
+> dispatches against its findings.** Nobody edits `auto_park.py` until the audit exists — that is what stops the two
+> from racing on the same file.
+>
+> The operator also allowed folding "if that's cleaner once you read current state". It is: the two former todos were a
+> mechanism-design item and a diagnostic question whose answer (why does a `priority_override` park evaporate but a
+> named `auto_unpark__` prereq survive?) **is the input that decides the mechanism**. Sequencing them as separate
+> dispatches would have re-read the same dispatcher code twice. **Folded into one gated item below**; neither half was
+> dropped — both done-whens are preserved verbatim.
+
+- [ ] [BACKEND] P3. **GATED: do not start until `ao_satellite_ao_dispatch_batch1_2026_07_26.md`'s `/skip-current-task`
+      `reason_code` audit is done and its per-`reason_code` table exists.** Then, in one change: **(1) [was todo 2 — do
+      this first, it decides (2)]** Confirm why a `priority_override` (priority 999) park does not survive backlog
+      re-derivation while a named `auto_unpark__` prereq does — document the difference so workers pick the durable
+      mechanism for external gates (cross-ref RULES.md sec4 and the batch2-011 park). If `priority_override` parks are
+      meant to be durable, that is a separate bug and gets its own todo; if not, workers should stop using them for
+      anything that must outlast a re-derivation tick. **(2) [was todo 1]** Give a worker that hits an EXTERNAL gate (a
+      commit/promote not yet on a target branch) a way to park the task DURABLY — either (a) let it set a named
+      `auto_unpark__<task-id>` prereq keyed on the gate condition (mirroring batch2-011), which the dispatcher already
+      honors and which survives re-derivation, or (b) support an explicit "gated on external ref reaching branch X"
+      marker the dispatcher treats as a real blocker; pick between them using (1)'s finding and the audit's table rather
+      than guessing. **Done when**: BOTH halves land — the priority_override-vs-prereq difference is documented, AND a
+      promote-gated verification task parks after the FIRST worker detects the gate and does NOT re-dispatch to a fresh
+      worker every tick, resuming only when the gate clears, with a test simulating "ref not yet on main".
+
+## Deferred — HELD by the `/na-eligibility-audit ao` conflict-check (2026-07-30)
+
+**BLOCKED-OPERATOR-DECISION — file-collision overlap on the durable-park mechanism. Recommend option A.**
+
+Both open `[BACKEND] P3` todos were verdicted **RECLASSIFY** in Phase 1: they are bounded, with stated done-whens, no
+operator gate and no undecided authority call — todo 1 even names the proven mechanism to reuse (the
+`auto_unpark__<task-id>` prereq that `sports_satellite_ao_dispatch_batch2-011` already uses and the dispatcher already
+honors), and todo 2 is a pure code-read-and-document with a determinable outcome.
+
+**They were NOT flipped, because Phase 2's conflict-check did not clear them.** Both sides:
+
+- **This doc** would change the dispatcher/park path so an external-ref gate produces a durable park, and would document
+  why a `priority_override` park does not survive re-derivation while a named `auto_unpark__` prereq does.
+- **`/plans/archive/2026_07/ao_satellite_ao_dispatch_batch1_2026_07_26.md`** (ACTIVE, `assigned_vm: planning`) carries
+  an OPEN `[BACKEND] P3`: "Audit every `/skip-current-task` `reason_code` for a silent, unpaged durable park … Read the
+  skip handler in `agent-orchestrator/server/routes/slots_ops.py` and `server/auto_park.py::maybe_auto_park` (plus
+  `_ESCALATING_REASON_CODES`)". It is **AUDIT-ONLY** by its own wording ("do NOT change `auto_park.py` in this todo") —
+  so this is a file-collision + sequencing overlap rather than a verbatim duplicate claim, the same class batch1 itself
+  used to defer the AutoSpawn no-eligible-worker gap ("FILE-COLLISION-gated only").
+
+Notably, batch1's audit todo ends "if the audit finds an uncovered code, file it as a NEW tracked todo in the source doc
+instead" — an external-promote gate is plausibly exactly such an uncovered code, so the two could converge into one item
+rather than two.
+
+- **A: Sequence — let batch1's audit-only pass land first, then dispatch this doc against its findings. [WORKER REC]**
+  The audit is read-only and cheap, it enumerates every `reason_code`'s park/paging coverage, and its output is the
+  natural specification for this doc's fix. Zero collision risk and it may fold both todos into one well-scoped change.
+- **B: Flip this doc to `planning` now** and rely on the two workers not colliding (batch1's todo is read-only, so the
+  risk is moderate rather than severe) — faster, but two agents would be reasoning about `auto_park.py` concurrently
+  with no shared conclusion.
+- **C: Fold these two todos into `ao_satellite_ao_dispatch_batch1_2026_07_26.md`** so one plan owns the whole
+  `auto_park.py` surface.
+- **Other**: operator may specify a different sequencing.
 
 ## Triage / charter note
 
@@ -102,3 +153,17 @@ DEVOPS-owned treadmill fix will do), but a real, repeatable dispatch-noise + thr
 up other work" guidance by handing the SAME gated task back to each freed worker. Filed per the big-finding triage rule
 (cross-cutting dispatch gap, recurred 3x in one window). The durable-park mechanism already exists (auto_unpark) — this
 is about routing external-gate tasks through it instead of through the churn path.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30**: Both todos RECLASSIFY-verdicted in Phase 1 but **HELD at Phase 2 (conflict) —
+  parked as BLOCKED-OPERATOR-DECISION**, see the `## Deferred — HELD by the /na-eligibility-audit ao conflict-check`
+  section above for both sides, the three options and the marked recommendation. `assigned_vm` deliberately left `NA`
+  pending that ruling.
+- **2026-08-01 — GATE CLEARED.** The prerequisite audit (`ao_satellite_ao_dispatch_batch1_2026_07_26.md`'s
+  `[BACKEND] P3`, AUDIT-ONLY) is done — full per-`reason_code` table now in
+  `/plans/archive/issues/gated_skip_park_no_slack_page_2026_07_25.md`'s Progress Log. Finding relevant to this doc's
+  todo: the audit found **zero uncovered `reason_code` gaps** (BLOCKED/PARKED/GATED all page identically; OTHER never
+  reaches durable-park), so this doc's implementation todo is not folding in a newly-discovered code — it proceeds
+  exactly as scoped above. This doc is now unblocked to dispatch; not implemented in this pass (out of scope for the
+  audit-only batch todo that was gating it).

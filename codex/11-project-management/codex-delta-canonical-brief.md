@@ -17,13 +17,27 @@ created: 2026-03-27
 authoritative_for: [codex delta canonical decision log (historical)]
 referenced_by:
 owner:
-last_reviewed: 2026-05-17
+last_reviewed: 2026-09-08
 code_refs:
 ---
 
 # Codex Delta Canonical Brief
 
-**Last updated:** 2026-02-11  
+> **⚠️ HISTORICAL — `status: stale` is correct (re-confirmed 2026-07-31).** This brief predates the May-23 cutover and
+> the agent-orchestrator era. Two of its operating decisions are now **superseded** and MUST NOT be followed:
+>
+> - **"GitHub Projects v2 is the execution surface"** — it is not. Work is tracked as `- [ ]` todos in
+>   `plans/active/*.md`, from which the orchestrator backlog is derived (`regen_backlog_from_plan.py`; never hand-edit
+>   `backlog.yaml`). SSOT
+>   [`/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md`](/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md).
+> - **The `pending → in_progress → ready_for_testing → uat_accepted → done` checklist lifecycle** — superseded by the
+>   plan-todo + evidence-backed-completion model (SSOT [`/plans/PLAN_FORMAT.md`](/plans/PLAN_FORMAT.md) § 8b and
+>   [`/codex/12-agent-workflow/commit-push-flip-rule.md`](/codex/12-agent-workflow/commit-push-flip-rule.md)).
+>
+> Retained only as the **decision log of record** for Feb-2026 program intent (mission targets, client focus, ownership
+> defaults). Do not cite it for current process.
+
+**Last updated:** 2026-02-11
 **Purpose:** Durable strategy memory for Codex Delta planning, timeline intent, client focus, rollout policy, and
 decision ownership.
 
@@ -32,7 +46,7 @@ decision ownership.
 ## Why This Exists
 
 This file is the durable source for strategic PM context that can be lost in workspace-scoped chat history (for example,
-when Cursor workspace IDs change and a conversation tab disappears).  
+when Cursor workspace IDs change and a conversation tab disappears).
 Plan files remain execution artifacts; this brief preserves business and delivery intent.
 
 ---
