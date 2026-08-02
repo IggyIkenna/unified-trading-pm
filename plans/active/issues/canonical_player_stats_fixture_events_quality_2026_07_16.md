@@ -197,12 +197,12 @@ its own touched subset piecemeal.
 
 ## Follow-up todos (added 2026-07-26, slot-2)
 
-- [ ] [DATA] P2. Investigate the 88/1,298 (6.8%) `PLAYER_STATS` manifest-`captured`-but-no-GCS-object cells dated 2025
-      (current writer generation, NOT the 2019-era quirk the rest of the 1,298 population matches) — check for a
+- [x] ✅ [DATA] P2. Investigate the 88/1,298 (6.8%) `PLAYER_STATS` manifest-`captured`-but-no-GCS-object cells dated
+      2025 (current writer generation, NOT the 2019-era quirk the rest of the 1,298 population matches) — check for a
       corresponding `attempted_failed`/error-log signal on the same (date, league, `batch_api_football`) cells, and
       determine whether this is a live write-completion race, a later deletion, or another current-pipeline gap. Do NOT
       relabel the manifest rows until the mechanism is understood. (repo: instruments-service /
-      market-tick-data-service)
+      market-tick-data-service) — instruments-service@36b59400 + see Progress Log 2026-08-02 for the root-cause verdict.
 - [ ] [DATA] P3. Once the 2025 mechanism above is understood (and, separately, for the 1,210 2018-2020-era cells already
       attributed to the Defect-3 writer-generation quirk), decide + execute the actual manifest reconciliation (relabel
       to an honest `capture_status`, or document why `captured` with no object is the correct historical record for that
@@ -220,3 +220,47 @@ its own touched subset piecemeal.
   guessed at. No manifest reconciliation action taken this pass (ruled non-actionable-in-this-todo, see the follow-up
   todos).
 - **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).
+- **2026-08-02 (slot-3)**: 2025-cell follow-up RESOLVED — mechanism understood, root-caused with evidence, no relabel
+  performed (correctly deferred to the P3 reconciliation todo below). Re-derived the exact 88 cells
+  (`instruments-service@36b59400`, `scripts/census_player_stats_2025_missing_2026_08_02.py`, single bounded manifest
+  read + real-path existence check, same methodology as the fixture_events sibling census) and characterized their
+  provenance columns. **Verdict: a stale/orphaned manifest row left behind by an unpaired one-off migration — NOT a live
+  write-completion race, and NOT the 2026-07-26 empty-write incident** (ruled out directly: that incident only ever
+  touched the 3,274 _nested-schema_ cells, a disjoint population from these 88 `not_found` cells, which were already
+  measured absent from GCS _before_ the incident's `--apply` ever ran).
+  - All 88 rows share the SAME signature: `league_id=None` (blank/unresolved), `written_at` on 2026-07-14 (spread
+    11:38–16:20 UTC, one per date — not a single bulk timestamp), `job_id=""`/`enumerator_run_id=""` (no run correlator
+    retained), `error_reason=""` (consistent with `captured`, never `attempted_failed`), and a real nonzero
+    `instrument_count` (89–12,003 rows) — i.e. these are NOT empty placeholders, they genuinely once described real
+    data.
+  - **0/88 have a matching `attempted_failed` row at the same key** anywhere in the current manifest — expected, since a
+    same-key row can't hold both states simultaneously today (confirms this was never a fetch failure).
+  - **Direct GCS verification (2025-09-01, 2025-10-15, 2025-11-30 sampled) proves the REAL data exists and is correctly
+    captured** — 5+ per-league `player_stats.parquet` objects sit at the current canonical
+    `pipeline_mode=batch_api_football/entity=player_stats/league={L}/` path for every sampled date, each with its OWN
+    correct `captured` manifest row (real `league_id`, correct `written_at` ~14:55–16:29 UTC same day, correct
+    per-league row counts). The 88 `league_id=None` rows are a SEPARATE, EXTRA manifest row per date sitting alongside
+    those correct rows — not the only record for that date.
+  - **Root cause, corroborated by code + timeline**: `rescan_sports_manifest.py` (`Lifecycle: permanent`, walks GCS and
+    rebuilds manifest rows from whatever parquet it finds) ran across many 2025 dates on 2026-07-14, at a point when
+    each date's PLAYER_STATS data still lived at the OLD bare single-file path
+    (`entity=player_stats/player_stats.parquet`, all leagues combined) — it wrote a `captured` row with blank
+    `league_id` and the bare file's total row count. Later the SAME DAY, `migrate_sports_per_league.py` (per-league
+    migration, `scripts/migrate_sports_per_league.py:345-355`) split that bare file into the per-league objects and
+    **deletes the original bare file once all per-league writes succeed** — by design, not a bug in itself. A
+    downstream/parallel pass (`backfill_sports_per_entity_manifest.py`, whose own docstring says it exists to fix
+    "`rescan_sports_manifest.py` wrote rows with `league_id=''`") then wrote the correct per-league manifest rows. **No
+    step in that three-script sequence ever retired the ORIGINAL blank-league row** — it is a manifest row honestly
+    describing a real (now legitimately migrated-away) object that no current tooling ever goes back to reconcile.
+    Independently corroborated by a parallel code-read of the CURRENT live per-league writer
+    (`sports_reference_fixtures_write.py::_write_fixture_entity_per_league`): it writes the GCS object BEFORE calling
+    `manifest.record_captured(...)` (object-then-manifest order), so the CURRENT writer path structurally cannot produce
+    a captured-with-no-object row via a race — ruling out mechanism (a) for these 88 cells specifically.
+  - **Disposition**: closest to "a later deletion" per the todo's own taxonomy — a legitimate, sanctioned deletion (the
+    per-league migration) that left its source manifest row unreconciled. This is now understood well enough to hand to
+    the P3 reconciliation todo below: relabeling these 88 rows (e.g. to reflect they describe a migrated/superseded
+    shard, not a live gap) is safe now that the mechanism is confirmed non-recurring-by-default (the migration script is
+    a one-off, not a scheduled job) and non-data-loss (the real per-league data is present and correctly captured under
+    its own rows).
+  - Evidence: `instruments-service@36b59400` (census script + JSON root-cause report,
+    `scripts/_player_stats_2025_missing_root_cause_2026_08_02.json`).
