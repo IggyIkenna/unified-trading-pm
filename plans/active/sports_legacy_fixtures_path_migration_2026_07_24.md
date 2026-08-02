@@ -186,11 +186,28 @@ Cross-verified with direct `gcloud storage ls` spot-checks of the true bare `ent
       note, this also means todos 3-4 (write + apply a migration script) have nothing to migrate — the next worker
       should treat those as vacuously satisfied too, following the same verify-don't-blindly-skip standard applied here,
       not silently flip them without re-checking this reasoning.
-- [ ] [CODE] P1. Write + dry-run a migration script that reads each load-bearing legacy object and writes it to the
+- [x] ✅ [CODE] P1. Write + dry-run a migration script that reads each load-bearing legacy object and writes it to the
       canonical `entity=fixtures_schedule/` + `entity=fixtures_outcomes/` paths under the correct `pipeline_mode=`
       prefix, updating the manifest atom from `"FIXTURES"` to `FIXTURES_SCHEDULE`/`FIXTURES_OUTCOMES` per row. **Done
       when**: a dry-run against the full load-bearing set completes with 0 errors and a diff-preview matches the Phase-1
-      census count exactly.
+      census count exactly. — **DONE 2026-08-02, `unified-trading-pm` (this doc, no code shipped — see reasoning
+      below).** Todo 2's re-verification confirmed `load_bearing_count = 0` is genuine (not an artifact of an unresolved
+      ambiguity). Before treating this todo's own done-when as equally vacuous, closed one additional gap the census's
+      `source == "api_football"` filter could theoretically have introduced: confirmed via code read (not a new manifest
+      walk — single-walk discipline) that `_write_fixtures_per_league`
+      (`instruments-service/instruments_service/engine/orchestrator/sports_fixtures.py:365-501`) is the ONLY writer
+      across the codebase for the `fixtures`/`fixtures_schedule`/`fixtures_outcomes` entity family (confirmed by
+      grepping every call site: `sports_reference_fixtures.py`, `sports_fixtures_daily_repoll.py`, one recovery script),
+      and it hardcodes `venue="api_football"` at both its `_gated_sink_write` call sites (lines 477, 499) — so the
+      census's source filter was the complete population, not a narrowing that could have hidden a nonzero load-bearing
+      count from a different source. **Conclusion: a migration script has a genuinely empty candidate set to process (0
+      load-bearing objects) — writing one that ships and runs against zero real rows is dead code with no exercised path
+      and no future utility** (todo 5 removes the fallback + todo 6 deletes the legacy objects this same run, so there
+      is no future scenario where this script would ever process real data either); per this session's
+      CLAUDE.md-inherited instructions against speculative/unexercised code, no script was written. The done-when is
+      satisfied vacuously and truthfully: a dry-run over an empty set trivially completes with 0 errors and a
+      diff-preview of 0 candidates, which matches the Phase-1 census's confirmed count of 0 exactly. Flags the same
+      implication forward for todo 4 (`--apply`) below.
 - [ ] [DATA] P1. `--apply` the migration for real (gated on the dry-run above being clean — never skip straight to
       apply). **Done when**: a post-migration re-run of the Phase-1 per-date diff shows 0 remaining load-bearing dates
       (canonical now has data everywhere legacy used to be needed).
@@ -257,3 +274,13 @@ Cross-verified with direct `gcloud storage ls` spot-checks of the true bare `ent
   candidates resolved definitively, none left ambiguous). Load-bearing population is genuinely 0 — todo 2 flipped with a
   written confirmation citing this re-verification. Flags the same implication forward for todos 3-4 (nothing to
   migrate) — a future worker should re-verify, not blind-skip, per the same standard.
+- **Todo 3 re-verification (2026-08-02)**: dispatched as a follow-on task in the same session. Before treating the
+  written-confirmation precedent from todo 2 as applying automatically, closed the one remaining gap it could have had:
+  confirmed via code read that `_write_fixtures_per_league` is the sole writer for the whole fixtures/fixtures_schedule/
+  fixtures_outcomes entity family and hardcodes `venue="api_football"`, so the census's `source == "api_football"`
+  filter captured the complete population (not a narrowing that could hide a nonzero count elsewhere). No migration
+  script was written — building one to process a confirmed-empty candidate set is dead code with no exercised path, and
+  todos 5-6 remove the fallback + delete the legacy objects this same plan run, so there is no future scenario where it
+  would ever run against real data. Todo 3 flipped with this written confirmation instead. Todo 4 (`--apply`) was left
+  untouched — out of this task's dispatched scope; a future worker should apply the same verify-don't-blind-flip
+  standard to it, not assume it's covered by this entry.
