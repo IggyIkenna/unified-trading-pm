@@ -234,11 +234,14 @@ which value is measured-reality is needed per venue, not a mechanical merge.
       manifest coverage for 2023-04-15..2023-12-31 once `DEPLOYMENT_COMPLETED exit_code=0` lands for
       `cefi-hyperliquid-2023-*`. (repo: market-tick-data-service / deployment-service — investigation + cross-ref only,
       no code shipped this task)
-- [ ] [DATA] P2. DERIBIT's `trades` data_type has a sparse, likely-partial historical backfill: real captured rows
-      (thousands-to-hundreds-of-thousands `instrument_count`/day) exist 2019-05-08 through 2019-12, but not on every
-      calendar day — unlike `book_snapshot_5`/`derivative_ticker`, which start cleanly and densely at 2020-01-01.
-      Investigate whether more complete 2019 Deribit history is available from Tardis and whether the existing sparse
-      rows are worth completing into a dense daily series. (repo: market-tick-data-service backfill)
+- [x] ✅ [DATA] P2. **DONE 2026-08-02 (slot-9, duplicate of the same finding in
+      `/plans/active/issues/coverage_floor_new_backfill_gaps_found_2026_07_27.md`, synced here to avoid a stale
+      duplicate)** — DERIBIT's `trades` sparse-2019 gap root-caused: Tardis confirms `availableSince: 2019-03-30` for
+      DERIBIT (denser + earlier than our 2019-05-08 floor); root cause was `_venue_years()` in
+      `deployment-service/scripts/vm/launch-cefi-sharded-backfill.sh` never including `"2019"` for DERIBIT, so no
+      full-year sharded launch ever targeted it. Fix shipped (added `"2019"` + generalized `START_DATE` override) — full
+      writeup + follow-up launch command in the sibling doc above. Evidence: `deployment-service@4fff44f`. (repo:
+      market-tick-data-service backfill)
 - [ ] [DATA] P3. `venue_mapping.py`'s `BINANCE-DELIVERY` entry (`2020-01-01`) has ZERO real captured rows in the
       manifest (only 7 `attempted_failed` rows dated 2026-07-26) — the registered floor is unverifiable against measured
       reality because no real data exists yet. Investigate whether Binance COIN-M delivery contracts are actually being
