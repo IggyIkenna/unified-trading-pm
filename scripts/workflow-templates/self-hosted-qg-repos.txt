@@ -53,6 +53,20 @@
 # admitted job's SIGALRM budget being blown by whole-host contention. Reverted to ubuntu-latest per the doc's
 # precedented per-repo fix; e2e-testing is NOT one of the operator's 6 explicitly-protected repos, so no ruling
 # conflict.
+#
+# execution-service REVERTED AGAIN 2026-08-02 (cicd agent slot-9, escalation agt-917b7b, ldr_qg_failure, PR #537
+# LDR->main promotion): `QG slice (tests)` job was ADMITTED (started 15:02:52Z, cleared setup + deps steps) then sat
+# in_progress on "Run quality gates (leg tests)" for 1h40m+ with zero step completion (run 30747480278) — cancelled by
+# this worker to free the sole `glue-1` runner for execution-service. A sibling run's `QG slice (checks)` job hit the
+# 120s basedpyright timeout (exit=124, 0 errors/0 warnings extracted — a genuine timeout, not a real type error) on the
+# same host, consistent with contention from the stuck tests job. Host `uptime` at diagnosis time: load average
+# 50.66/53.41/53.37 on the shared box (61GB RAM, 22GB swap in use) — same whole-host-thrash signature as the
+# unified-trading-library and e2e-testing corroborations above. Reproduced BOTH `QG_SLICE=typecheck` and
+# `QG_SLICE=tests` locally (ubuntu, 16 cores/61GB): typecheck passes in ~35s (906 pre-existing non-blocking
+# basedpyright warnings, no MAX_ERRORS ceiling set — not a regression), tests pass in ~73s (7811 passed, 21 skipped) —
+# confirming this is a CI-host-contention failure, not a code defect. Reverted to ubuntu-latest per the doc's
+# precedented per-repo fix (3rd corroboration); execution-service is NOT one of the operator's 6 explicitly-protected
+# repos, so no ruling conflict.
 agent-orchestrator
 unified-trading-pm
 strategy-service
@@ -66,7 +80,6 @@ greeks-service
 ibkr-gateway-infra
 instruments-service
 market-tick-data-service
-execution-service
 batch-live-reconciliation-service
 alerting-service
 client-reporting-api
