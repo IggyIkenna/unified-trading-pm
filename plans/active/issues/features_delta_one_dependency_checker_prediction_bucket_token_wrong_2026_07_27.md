@@ -208,3 +208,27 @@ four now route through the one helper.
       PREDICTION is ever added to `volatility`'s asset_group choices: route both through
       `DependencyChecker._resolve_mdps_bucket` (same fix pattern as this issue doc), or extract a shared helper if
       `dependency_checker.py` cross-family imports are undesirable.
+
+## Progress Log
+
+- **2026-08-02 (slot-15, data_engineering craft) — last `[SCRIPT] P3` todo: code DONE + committed locally, NOT yet
+  shipped (blocked on shared-host QG capacity, not a code issue).** Chose the "extract a shared helper" branch
+  (cross-family imports between `delta_one`/`volatility` have zero precedent in this codebase, confirmed via grep) —
+  added `features_service.common.resolve_mdps_candle_bucket` (new function in the already-cross-family-shared
+  `features_service/common/__init__.py`, alongside its existing `resolve_bucket`/`resolve_bucket_uri`), routed both
+  `volatility/core/dependency_checker.py::_resolve_input_bucket` and
+  `volatility/core/data_loader.py::_get_market_data_bucket` through it, added regression tests at all 3 layers (the new
+  shared helper directly in `tests/common/test_common_init.py`, plus both volatility call sites), mirroring delta_one's
+  existing `TestResolveMdpsBucketPredictionAbbreviation` pattern. Committed: `features-service@0997fbac` (local HEAD,
+  `git rev-list --count HEAD ^origin/live-defi-rollout` = 1). **Blocked shipping**: Pass-1 `quality-gates.sh` was killed
+  by the shared-host QG governor/CPU-backstop 3 CONSECUTIVE times, identical failure signature each time (`Terminated`
+  right after `dep-content gate: PASS`, before venv setup even completes) — confirmed via
+  `qg-host-governor.sh --status` + `uptime` this is genuine fleet-wide contention (load average 18-26 on an 8-core host,
+  13-17 concurrent `quality-gates.sh` processes observed, well over the documented "≤2 full QGs at once" budget), not a
+  bug in this commit — matches the already-tracked, unresolved
+  `plans/active/issues/fleet_wide_qg_capacity_crisis_continues_day2_2026_07_29.md` pattern. Per the retry-discipline
+  rule (3 identical consecutive failures = a stable condition, stop blind-retrying), not attempting a 4th immediate
+  retry. **Resume point**: re-run `bash scripts/quality-gates.sh --no-fix` in `features-service` once host load eases
+  (check `uptime` / `pgrep -f 'quality-gates.sh' | wc -l` first), then `quickmerge --agent --files` the 6 files in
+  `features-service@0997fbac`, then flip this todo's checkbox with the shipped SHA + verify-on-origin evidence. The code
+  itself needs no further changes.
