@@ -217,6 +217,19 @@ report file exists YET because neither driver has finished its full 21-leg matri
       `instr-backfill-sports-pchk-0802193411-f-cab3-api-football`, both API_FOOTBALL force-leg re-runs of an
       already-passed leg) -- confirm they're redundant against the existing complete baseline report and terminate if
       so, to stop further SPOT VM billing waste. (repo: instruments-service, operator/infra -- VM lifecycle)
+
+      **⚠️ SAFETY CORRECTION 2026-08-02T20:01Z (slot 8) -- do NOT terminate the second VM named above without
+          re-checking its run.log first.** Read both VMs' `run.log` chunk headers directly (per this doc's own "Baseline
+          checkpoint -- CORRECTED status" section correction above): `instr-backfill-sports-pchk-0802193055-*-a2a5-...`
+          IS genuinely processing `2025-12-20` (baseline) -- consistent with this todo's redundancy concern, safe to
+          investigate/terminate once confirmed. **But `instr-backfill-sports-pchk-0802193411-*-cab3-...` is NOT a baseline
+          duplicate -- it is slot-7's legitimate, actively-running MID checkpoint (`2025-12-24`) driver's own VM** (the
+          SAME VM this doc's "Mid/final checkpoints" section above documents as healthy, in-progress work). Terminating it
+          would kill genuinely-needed live work, not billing waste. The leg-letter in a VM's name (`-f-`/`-s-`/`-l-`) has
+          been observed to NOT reliably match reality either (this exact VM read back with a `-s-` in its live name at one
+          check) -- always confirm BOTH the day and the leg from `run.log`'s own `--- Chunk N/M: <date> → <date> ---`
+          header before touching any VM this todo names, not from the name alone.
+
 - [ ] [DATA] P1. Run the mid (2025-12-24) checkpoint, same 7-venue force/skip/live matrix -- confirmed NOT STARTED
       (verified 2026-08-02, slot 13: no report file exists). (repo: instruments-service, skill-driven)
 - [ ] [DATA] P1. Run the final (2025-12-18) checkpoint, same 7-venue force/skip/live matrix -- confirmed NOT STARTED
