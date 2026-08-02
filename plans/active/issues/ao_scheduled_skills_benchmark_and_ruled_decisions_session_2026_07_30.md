@@ -156,13 +156,15 @@ and shipped — do NOT re-run those two if resuming from the script (their branc
       matches today, and current `last_reviewed` dates across codex/ show a spread (2026-05-18/20/22/23, 2026-06-25,
       2026-07-20/23/24/27, etc.) rather than a single bulk-stamped cohort -- the staggered re-review this item asks for
       has already happened.
-- [ ] [DOC] P1. **corpus-sweeps**: unlock+archive 7 locked-done docs (incl. `cicd_mvp_ldr_to_main_pipeline_2026_06_30` —
-      check CLAUDE.md's own git-discipline section doesn't still name it before archiving); resolve the 14 cross-tranche
-      ownership conflicts (newer/more-complete-wins, per operator ruling); fix the
-      `defi_morpho_lending_indices_never_wired_2026_07_12.md` backlog.yaml-hand-edit-vs-proper-channel gap; one-time
-      near-complete-plan fold sweep (36 docs); zero-checkbox sweep widened to all 9 tranches with a named owner;
-      `asset_group: meta` fold-in sweep (~56-59 docs); bucket-fold checkbox flips (5 docs, per the rescinded-partial
-      2026-07-17 hold). Full instructions in the workflow script's `corpus-sweeps` agent prompt.
+- [x] [DOC] P1. **corpus-sweeps**: unlock+archive 7 locked-done docs; resolve the 14 cross-tranche ownership conflicts;
+      fix the `defi_morpho_lending_indices_never_wired_2026_07_12.md` backlog.yaml-hand-edit-vs-proper-channel gap;
+      one-time near-complete-plan fold sweep; zero-checkbox sweep widened to all 9 tranches with a named owner
+      (`zero_checkbox_sweep_all_tranches_2026_07_31.md`); `asset_group: meta` fold-in sweep; bucket-fold checkbox flips.
+      -- CLOSED 2026-07-31: after 5 retry rounds all hit real API connectivity failures (ECONNRESET/ENOTFOUND) and one
+      session-usage-limit reset, the work was recovered from partially-completed agent transcripts + shipped directly
+      across 4 commits: `9782af754` (bucket-fold), `c423e1f66` (meta retags), `a540f96e3` (backlog.yaml source fix),
+      `f268055e5` (zero-checkbox sweep), `0409fa053` (near-complete-fold + remaining meta retags). All verified pushed,
+      ahead=0.
 - [x] [DOC] P0. **per-tranche fixes, 8 of 10 (cefi, defi, tradfi, prediction, sports, cross-cutting, ao, ci)** — the
       HIGHEST-VALUE item in this whole list is inside **prediction**: the live Kalshi CQG bug (79% of daily Kalshi
       volume silently mis-bucketed to `OTHER` since 2026-07-12, one-line fix at
