@@ -477,3 +477,46 @@ not just noting.
   `ci`/`ci-reconcile` precedents. Slot left clean on `live-defi-rollout` (only this doc touched; `strategy-service`
   working tree already clean, no commit needed there). Eleventh repo-specific corroboration of the
   `Type check FAILED/timeout (exit=124)` signature class in this doc-pair, third specific to `strategy-service`.
+
+- **2026-08-02 ~23:20-23:50Z (cicd escalation `agt-68298f`, slot 5, `market-data-processing-service`,
+  `wall_type=main_ci_red`, `pr_number=0` — Option-B direct-push promotion)** — twelfth repo-specific corroboration, a
+  DIFFERENT failure shape within the same root incident: not the `checks`-leg basedpyright timeout, a `tests`-leg pytest
+  hang. `main` HEAD `0f77552` (tip of the last successful Option-B promotion, PR #568, merged `13:16:43Z`) failed
+  `quality-gates-v2` via `workflow_dispatch` (`30757463906`, created `16:48:28Z`, jobs actually ran `20:16-20:56Z`):
+  `QG slice (tests)` step `Run quality gates (leg tests)` produced normal output through
+  `Coverage floor: MIN_COVERAGE=70` then went silent for ~14min before a `PluggyTeardownRaisedWarning` /
+  `OSError: cannot send (already closed?)` during `pytest_sessionfinish` teardown, exit=1, no genuine `FAILED tests/...`
+  line anywhere in the log — a resource-starvation teardown crash, not an assertion failure. **Reproduced the identical
+  signature on `live-defi-rollout` HEAD itself** (`9642cbb`, which already carries a correctly-scoped 1-line fix —
+  `fix(mdps): streaming chain-bundle write path resolves output bucket, not source bucket`,
+  `get_output_bucket_for_asset_group()` swapped in for `get_bucket_for_asset_group()`, 13 lines + a 3-line test-stub
+  addition, reviewed and confirmed low-risk/targeted): run `30758737872` (`workflow_dispatch`, `17:22:44Z`) hit the
+  exact same `Coverage floor` → 14min silence → `PluggyTeardownRaisedWarning`/`OSError: cannot send` → `exit=1` shape,
+  this time after a 57min `QG slice (tests)` job. Same signature at TWO different commits including the one carrying the
+  fix rules out a code regression as the cause. Confirmed via `git log 2ce1def..9642cbb` that only 9 small, incremental
+  commits separate LDR's current HEAD from the last CI-green LDR run (`2ce1def`, `07:47:04Z`) — no large/risky change in
+  the window either. Host corroboration at investigation time: `uptime` load average **32.60/28.42/29.62**, swap
+  **20Gi/47Gi** in use, **25** concurrent `quality-gates.sh` processes already live on this shared host — the identical
+  whole-host-thrashing signature every other entry in this doc tracks. Confirmed via the `ldr-to-main-promote-fleet`
+  gate itself (`30772388512`, `23:30:36Z`):
+  `GATE BLOCK market-data-processing-service: ci_status=FAILING (cached='FAILING', live='FAILING') — LDR CI is red; fix before LDR→main`
+  — the promotion gate is correctly deferring, not stuck/broken; it will self-clear the moment either branch's dispatch
+  completes green. This repo's self-hosted runner pool is also `K=1` (`glue-ip-172-31-5-118-1`, confirmed via
+  `GET /repos/.../actions/runners`) — same structural single-runner exposure the
+  `features-service`/`unified-trading-api` entries above named, but NOT a deadlock here: a fresh `workflow_dispatch`
+  retrigger on `live-defi-rollout` (`30772053085`, started `23:20:31Z`, not triggered by me) was actively making
+  progress (`content sentinel` done, `QG slice (checks)` `in_progress`, `QG slice (tests)` queued behind it) throughout
+  this investigation — genuine FIFO progress, not a stuck wedge, so no kill-to-unwedge intervention was warranted this
+  time. **Disposition: no code or workflow change made or needed.** Did not add a redundant retrigger on either branch —
+  a `workflow_dispatch` run was already `in_progress`/progressing on `live-defi-rollout`'s exact HEAD at investigation
+  start, and per this doc's established posture a duplicate dispatch onto an already-contended `K=1` runner doesn't
+  help. Did not force-resolve, lower a coverage floor, pragma-skip, or push anything to `main` — per the cicd role's
+  hard rule (never force-fix LDR for a main-only problem, never push to protected `main`), and per this doc's
+  established posture, a wall this well-corroborated as pure infra contention is not one a code change can fix; the code
+  fix already on LDR (`9642cbb`) is correct and will reach `main` automatically via the next clean
+  `ldr-to-main-promote-fleet` tick once a completed-green run updates `ci_status`. `gh pr list --state open` → `[]` (no
+  promotion PR to unblock), `GET /api/repo-blockers` → `open: []` — nothing currently blocked to fast-path. Pinged
+  `AUTHORING_SLOT=ci-reconcile` per the standard completion step. Slot left clean on `live-defi-rollout` (only this doc
+  touched; `market-data-processing-service` working tree already clean, no commit needed there). Twelfth repo-specific
+  corroboration overall, first to show the `tests`-leg `PluggyTeardownRaisedWarning`/`OSError: cannot send` hang shape
+  (vs. the more common `checks`-leg basedpyright timeout).
