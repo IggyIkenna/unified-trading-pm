@@ -391,3 +391,42 @@ not just noting.
   422 this doc's `ci`/`ci-reconcile` precedents already hit. Slot left clean on `live-defi-rollout` (only this doc
   touched; `deployment-api` working tree already clean, no commit needed there). Eighth repo-specific corroboration of
   the `Type check FAILED/timeout (exit=124)` signature class in this doc-pair, first specific to `deployment-api`.
+
+- **2026-08-02 ~22:57-23:15Z (cicd escalation `agt-f70a66`, slot 4, `features-service`, `wall_type=main_ci_red`,
+  `pr_number=0` — Option-B direct-push promotion, same template as the `deployment-api` entry above)** — a DIFFERENT
+  failure mechanism within the same root incident: not merely slow-but-progressing contention, a genuine DEADLOCK.
+  `features-service` (one of the operator-ruled protected-6 self-hosted repos) gets exactly ONE dedicated glue-1 runner
+  (`github-glue-runner-features-service@glue-1.service`) — confirmed via `systemctl`/`journalctl` on the runner host
+  itself (this session runs on `i-172-31-5-118`, the same box). That single slot was monopolized by LDR's own
+  `QG slice (tests)` job, started `21:11:27Z`, still "running" with **zero forward progress** at investigation time
+  (~1h46m elapsed vs. this doc's own local reproductions of 141-264s): its `pytest` process was in kernel state **`D`
+  (uninterruptible disk-sleep)**, ~0.1-2.6% CPU, `wchan=0` — a real hang, not GC/compute load — while host-wide `uptime`
+  read load-average 32-35 on 16 vCPUs with 24-27Gi/47Gi swap in use (identical whole-host-thrashing signature this doc
+  has tracked since 2026-07-27; other repos' pytest processes — `unified-api-contracts`, `ml-service` — were
+  independently observed in the same `D` state at the same time, so this is fleet-wide, not features-service-specific).
+  Because this repo's runner pool is `K=1` (unlike PM's 5+3), the wedge meant **main's own promotion-triggered
+  `quality-gates-v2` run (`30749065832`) sat fully `queued` — never even started a job — since its `13:01:51Z` push**,
+  and LDR's confirmatory run (`30763419660`) had a second job (`QG slice (checks)`) stuck `queued` behind the wedged one
+  too. Unlike this doc's ~8 prior corroborations (where an `in_progress`/`queued` dispatch was making real if slow
+  progress and the established disposition was "don't add load, let it self-resolve"), here NOTHING would resolve on its
+  own short of GH Actions' 360-minute default job timeout — the runner had zero other jobs it could pick up while
+  wedged, so main's queued run had no path to ever executing.
+
+  **Disposition: killed the wedged process tree by exact PID** (SIGTERM then SIGKILL on `1786573`/`1786580`/`1787646`/
+  `1786581`/`1787756`/`1787757` — the job-step bash script + `quality-gates.sh` + the hung `pytest` + their `tee`
+  side-channels; never touched the `Runner.Listener`/`Runner.Worker` processes or any other repo's runner) — per
+  CLAUDE.md's "confirmed runaway process endangering the host may be killed the same way (SIGTERM→SIGKILL) —
+  investigate + doc it, don't wait on approval." This is a deliberate departure from the doc's established pure-observe
+  posture, justified because the wedge was a hard deadlock (a stuck K=1 slot with no other job to run), not ordinary
+  contention-slowness a duplicate dispatch would only worsen. Effect verified: the runner picked up the next queued job
+  within ~35s (`journalctl`: "Job ... completed with result: Failed" at `23:04:21Z`, immediately followed by "Running
+  job: QG slice (checks)" at `23:05:08Z`); `30763419660` moved `queued`→`in_progress`; main's `30749065832` remains
+  queued behind it in normal FIFO order (expected with K=1, not a new wedge). In parallel, reproduced locally
+  (backgrounded, heartbeated) at current LDR HEAD `529ec90e`: `bash scripts/quality-gates.sh --no-fix` reached 13%+ of
+  the 18,299-item suite with zero failures before this entry was written — steady dot progress, not stalled,
+  corroborating the code itself is clean and the wall was purely infra. Did not force a redundant `workflow_dispatch` on
+  either branch — the now-freed queue drains on its own. Ninth repo-specific corroboration of the fleet-wide contention
+  root cause, first to involve an actual kill-to-unwedge intervention rather than pure observation — worth the
+  operator's attention if this K=1-deadlock failure mode recurs, since unlike PM's multi-runner pool, every protected-6
+  repo with a single dedicated runner is structurally exposed to the same eternal-queue failure mode whenever ITS OWN
+  prior job wedges, independent of overall fleet load level.
