@@ -919,3 +919,33 @@ those commits landed). The escalation's own repo-blocker list (`GET /api/repo-bl
   on this evidence). No market-data-processing-service code or test change made or needed — same "orphaned noise against
   an already-resolved wall" conclusion as every prior entry in this doc. Slot left clean (0 commits ahead of
   `origin/live-defi-rollout` besides this doc edit). Pinged the authoring slot (`ci`) with the outcome.
+- **2026-08-02 ~18:35Z (`cicd` escalation `agt-537de5`, slot 9, `WALL_TYPE=ldr_qg_failure`, `PR_NUMBER=0`)**: direct LDR
+  push-gate red for unified-trading-api — this is the run the `agt-60a920`/slot-8 entry above already flagged as "in
+  progress" while investigating a DIFFERENT run (`30748526804`, promotion PR #495): `workflow_dispatch` run
+  [30750131924](https://github.com/IggyIkenna/unified-trading-api/actions/runs/30750131924) on LDR HEAD `990187dd5`
+  (started `13:32:00Z`) finished `failure` after **4h50m36s** — its `checks` slice queued 2h43m before pickup then
+  passed; its `tests` slice ran ~2h and hit `Failed: Timeout (>150.0s)` on **12 tests across 10+ unrelated files**
+  (defi/basis, events/news, defi/lending, registry/lifecycle, defi/lp, catalogue, instrument routes, auth-middleware,
+  reporting, service-status) — the widest single-run spread yet recorded in this doc, matching its established "genuine
+  scheduler contention, not a per-test anti-pattern" signature even more starkly than prior entries. Every captured
+  stack trace is the same shape as this doc's earlier `test_understat_...`/`test_tardis_...` entries: `TestClient.get()`
+  → `anyio.from_thread.py:334 call` → `concurrent.futures._base.py:451 result` → `threading.py:359 wait` — genuinely
+  blocked waiting on the ASGI app's response via the anyio portal thread, not inside any handler-specific code path.
+  Reproduced locally end-to-end on current LDR HEAD (`990187dd5`, confirmed `HEAD == origin/live-defi-rollout`, zero
+  diff): backgrounded full `bash scripts/quality-gates.sh` per this role's mandatory non-blocking pattern — **ALL
+  QUALITY GATES PASSED in 111s, 441 passed, 0 failures, 0 timeouts** — a clean repro with zero contention-induced
+  slowness locally, consistent with every prior entry's "legitimately fast, blown out by CI-side scheduling" conclusion.
+  `GET /api/repo-blockers` → `{"open": []}`; `gh pr list --state open` → empty for unified-trading-api. Since this is a
+  direct-LDR push gate (no PR to self-merge past the flake, unlike most prior entries in this doc), triggered a fresh
+  `workflow_dispatch` re-verification
+  ([30761689446](https://github.com/IggyIkenna/unified-trading-api/actions/runs/30761689446)) on the same HEAD rather
+  than relying solely on the local repro — `content sentinel` passed in 5s, `QG slice (tests)`/`QG slice (checks)` still
+  running at investigation time; per this doc's own established precedent, not holding the slot to babysit it
+  synchronously (queued/running CI resolves asynchronously; the fleet-wide capacity crisis is the actionable item,
+  already tracked in `fleet_wide_qg_capacity_crisis_continues_day2_2026_07_29.md`, not something a single wall-clearer
+  can fix). No `live-defi-rollout` code or test change made or needed — same "orphaned noise / known flake class, tree
+  not actually broken" conclusion as every prior entry in this doc. Widens the confirmed-repo list's evidence for
+  unified-trading-api specifically (2nd occurrence within ~2h, `agt-60a920`'s PR #495 case and this direct-push case)
+  without adding a new repo to the list (already added by `agt-60a920`). Slot left clean (unified-trading-api on
+  `live-defi-rollout`, 0 commits ahead of `origin` besides this doc edit). Pinged the authoring slot (`ci-reconcile`)
+  with the outcome.
