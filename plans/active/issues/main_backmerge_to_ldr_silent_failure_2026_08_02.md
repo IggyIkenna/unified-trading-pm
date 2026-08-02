@@ -142,17 +142,23 @@ concrete git/CI defect, not a design question) — so it is dispatched here rath
       which this incident proved is unreachable when the failure happens earlier than that. Repo: unified-trading-pm.
       **Still open** — the specific silent-failure instance (pipefail) is fixed above, but the general architectural gap
       (a future different early failure would still die silently) is unaddressed; this is design work, not mechanical.
-- [ ] [INFRA] P1. **Once fixed, drain the backlog**: confirm `live-defi-rollout` catches up to `origin/main` (verify
-      `git rev-list --count origin/live-defi-rollout..origin/main` reaches 0, or explain any remaining gap), then
-      re-verify the 2026-08-02 census's LAG table in
-      `/plans/archive/issues/d13_orphaned_version_readers_and_manifest_drift_2026_07_17.md` — most of the 15 LAGGING
-      repos should resolve to `sync` once the backmerge catches up (a handful may still genuinely lag if `main` itself
-      hasn't been bumped for them). Repo: unified-trading-pm. **BLOCKED on PR #2012**
-      (`https://github.com/IggyIkenna/unified-trading-pm/pull/2012`, "[backmerge] main → live-defi-rollout (CONFLICT —
-      needs resolution)"), auto-opened + auto-escalated to the orchestrator (opus worker) by the now-fixed workflow's
-      own conflict path in the `30755035830` verification run above. Human/opus resolution of that conflict (222+
-      commits of accumulated main/LDR drift since 2026-07-29) is a prerequisite for a clean backmerge to actually land —
-      do not re-attempt this todo until PR #2012 is resolved.
+- [x] ✅ [INFRA] P1. **Once fixed, drain the backlog** — unified-trading-pm (verification only, no further code). PR
+      #2012 merged 2026-08-02T16:12:15Z (resolved via a separate, single-line conflict in
+      `plans/active/defi_consolidated_closeout_2026_07_18.md`'s `last_updated` frontmatter field — LDR already carried
+      the correct, bug-fixed value from a prior 2026-07-30 fix; `main`'s copy was still stale/corrupted; the SAME
+      resolution was applied independently and concurrently by slot-6 (`117e500ba`, superseded) and slot-4 (`d2b5c84d3`,
+      landed) — content-identical, confirmed via diff, no data lost either way). **Verified live**:
+      `git rev-list --count origin/live-defi-rollout..origin/main` = **0** (was 210+ on `workspace-manifest.json`
+      alone). Re-ran the 2026-08-02 census's LAG table against LDR's current manifest: **12 of the 15 LAGGING repos now
+      read `sync`** (alerting-service, deployment-api, deployment-service, execution-service, features-service,
+      instruments-service, market-tick-data-service, strategy-service, unified-api-contracts, unified-trading-api,
+      unified-trading-library, unified-trading-pm — all now exactly match their highest tag). The remaining 3
+      (agent-orchestrator, greeks-service, ibkr-gateway-infra) correctly stay LAG — they are exactly the 3 of the "still
+      STALLED" repos (part c) whose `main` itself was never bumped with a new tag, so there was nothing new for the
+      backmerge to bring across; fully explained, not a residual bug. Additionally triggered 2 more manual
+      `workflow_dispatch` runs (`30756289836`, `30756315282`) after the conflict resolved — both `success` (`noop`,
+      nothing left to merge), giving 3 consecutive clean runs total since the fix (real trigger `30755035830` + 2
+      manual), satisfying this doc's original "3 consecutive successful runs" bar.
 
 ## Progress Log
 
@@ -174,3 +180,16 @@ concrete git/CI defect, not a design question) — so it is dispatched here rath
   this same incident concurrently (`54abad696`, "add temp verbose trace ... will be removed once root-caused", pushed
   directly to LDR ~15:37Z, before my main-side fix at ~15:44Z) — no conflicting plan-doc edits from them, so removed
   their now-redundant `set -x` (root cause is found) in the same commit as this flip.
+- **slot-6 2026-08-02 (main_backmerge_to_ldr_silent_failure-002)**: filed this doc originally (as a Findings Closure
+  follow-up from the fleet version/tag-state census), then picked up its own P1 fix todo on redispatch. In parallel with
+  slot-15's diagnosis, independently traced the "why can't my own diagnostic commit reach `main`" question and found PR
+  #2014 (the LDR→main Option-B auto-drain promote PR) was `CONFLICTING`/`DIRTY` — the fleet's LDR→main promotion had not
+  merged since 2026-07-30T06:45:41Z (2.5+ days), a second, related outage on top of slot-15's main→LDR finding. Local
+  `git merge-tree` isolated the conflict to exactly one file/field (`defi_consolidated_closeout_2026_07_18.md`'s
+  `last_updated`), resolved it (kept LDR's already-fixed value), and pushed — landed a beat behind slot-4's
+  content-identical concurrent fix (`d2b5c84d3`), so mine (`117e500ba`) was discarded as redundant (verified
+  tree-identical, zero information lost) and the working branch fast-forwarded to origin. Cleaned up the now-obsolete
+  `set -x` diagnostic (already gone from LDR by the time of the reset — pulled back out automatically once main's fixed
+  copy backmerged in). Verified + flipped todo 4 above (drained-backlog confirmation, 3-consecutive-runs bar, LAG-table
+  re-check). Net: both the main→LDR (this doc's original scope) and LDR→main (found as a side effect) halves of the
+  bidirectional sync are now confirmed healthy.
