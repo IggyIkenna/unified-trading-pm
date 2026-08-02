@@ -258,11 +258,14 @@ but it is a deliberate, disclosed contribution to a RED ratchet, not an accident
 
 ## Todos
 
-- [ ] [OPERATOR] P0. **Rule § 1a** — the Track C UNIBET/SMARKETS destructive instruction. Done-when: an option is picked
-      and the closeout todo is edited to match in the SAME edit. (repo: `unified-trading-pm`)
-- [ ] [OPERATOR] P0. **Rule § 1b** — the two `sports_reference_v2/by_date/` delete todos vs the 1,492 sole-copy rows.
-      Done-when: both todos are either `[OPERATOR]`-tagged with the §3a citation or the carve-out is resolved. (repo:
+- [x] ✅ [OPERATOR] P0. **Rule § 1a** — RULED 2026-08-02, option A (strike + replace with pointer). The UNIBET-fold and
+      SMARKETS-purge clauses are struck from `sports_consolidated_closeout_2026_07_19.md`'s Track C todo; the STOP
+      banner now records the historical disproof rather than gating a still-live instruction. (repo:
       `unified-trading-pm`)
+- [x] ✅ [OPERATOR] P0. **Rule § 1b** — RULED 2026-08-02, option A (retag `[OPERATOR]` + delete-safety §3a citation).
+      Both todos already carried this exact retag from the run's own auto-fix (`unified-trading-pm@b710bbd`, executing
+      the 2026-07-28 amendment) — the ruling confirms that disposition as final; option B (resolving the 1,492 rows) was
+      not selected, so the todos remain `[OPERATOR]`-gated pending that carve-out. (repo: `unified-trading-pm`)
 - [ ] [OPERATOR] P1. **Rule § 1c** — tradfi E7 completion marker vs the R1 data-loss finding. (repo:
       `unified-trading-pm`)
 - [ ] [OPERATOR] P1. **Rule § 1d and § 1e** — cefi Track 1 completion claim and the legacy-bucket deletion date. (repo:

@@ -513,18 +513,19 @@ manifest-atom fix (C-track) and the ODDS-LEAK shard cleanup — else the re-run 
       the raw-tick vendor `source=ODDS_API`; multiple other already-shipped scripts independently hardcode this exact
       value as protected). **Done when**: the Distinct Values panel + the QG assertion todo below both read 0
       non-canonical for all three axes.
-- [ ] [DATA] P1. **NEW — venue vocabulary cleanup, 4 distinct dispositions for the 9 non-canonical values** (once the
-      parse-bug fix above stops new pollution — fix the parser FIRST, re-stamp SECOND, same ordering lesson as the
-      original F1/F2 note): (1) casing/aliasing rewrite — LADBROKES_UK→LADBROKES, UNIBET_UK/UNIBET_EU→UNIBET,
-      SPORT888→BET888SPORT (all 4 already exist correctly-cased in the UAC venue registry, this is a pure re-stamp, no
-      registry gap); (2) cross-AG bleed — KALSHI, POLYMARKET rows belong to `asset_group=prediction`; same remediation
-      pattern as the "Cross-AG finding" section below (root-cause the write path, then purge); (3) residual-only —
-      SMARKETS is an explicitly deleted venue (codex: "removed from all repos, no manifest rows should be expected") —
-      any remaining rows are stale residue to purge, not a registry gap; (4) parse-bug residue — FOOTBALL/UNKNOWN clear
-      once the venue-parts[0] fix above ships and existing rows are re-stamped. Also still fix the original footystats
-      legacy bundle mislabel (`venue=ODDS_API`→`FOOTYSTATS`, 42,476 rows) — unrelated to the parse bug, a separate
-      writer defect. <br>⛔ **STOP — DO NOT EXECUTE DISPOSITIONS (1)'s UNIBET CLAUSE OR (3) AS WRITTEN. Both premises
-      were DISPROVEN 2026-07-27**, two days after this todo was authored, by measured evidence in
+- [ ] [DATA] P1. **NEW — venue vocabulary cleanup, dispositions for the 9 non-canonical values** (once the parse-bug fix
+      above stops new pollution — fix the parser FIRST, re-stamp SECOND, same ordering lesson as the original F1/F2
+      note): (1) casing/aliasing rewrite — LADBROKES_UK→LADBROKES, SPORT888→BET888SPORT (both already exist
+      correctly-cased in the UAC venue registry, this is a pure re-stamp, no registry gap); **UNIBET_UK/UNIBET_EU are
+      NOT part of this rewrite — struck 2026-08-02, see the disproof + pointer below**; (2) cross-AG bleed — KALSHI,
+      POLYMARKET rows belong to `asset_group=prediction`; same remediation pattern as the "Cross-AG finding" section
+      below (root-cause the write path, then purge); (3) **SMARKETS residual — struck 2026-08-02, see below**; (4)
+      parse-bug residue — FOOTBALL/UNKNOWN clear once the venue-parts[0] fix above ships and existing rows are
+      re-stamped. Also still fix the original footystats legacy bundle mislabel (`venue=ODDS_API`→`FOOTYSTATS`, 42,476
+      rows) — unrelated to the parse bug, a separate writer defect. **RESOLVED 2026-08-02 (operator ruling on
+      plan_reconcile_parked_operator_decisions_2026_08_02.md § 1a, option A): the UNIBET-fold and SMARKETS-purge clauses
+      are STRUCK from disposition (1)/(3) above, not just banered** — both premises were DISPROVEN 2026-07-27, two days
+      after this todo was authored, by measured evidence in
       [`/plans/active/sports_consolidated_native_ao_extract_2026_07_25.md:151-166`](/plans/active/sports_consolidated_native_ao_extract_2026_07_25.md).
       **(a) `UNIBET_UK`/`UNIBET_EU` → `UNIBET` is NOT a casing/alias fold** — a live content comparison proved they are
       genuinely distinct bookmaker feeds (a shared day/league/fixture/market shows DIFFERENT simultaneous odds), so the
@@ -535,11 +536,8 @@ manifest-atom fix (C-track) and the ODDS-LEAK shard cleanup — else the re-run 
       `/codex/01-domain/sports-instruments.md` § "VENUE COUNT CORRECTED 2026-07-24" lists SMARKETS among the 28 live
       registered ODDS_API bookmaker venues. It was never "removed from all repos"; a purge would destroy over a million
       rows of genuine live production data. The `LADBROKES_UK`/`SPORT888` re-stamps in (1), and dispositions (2) and
-      (4), are UNAFFECTED and still stand. Banner added 2026-08-02 by the `/plan-reconcile` whole-corpus run, which
-      found this correction had never been back-ported here — leaving the stale destructive instruction as the version a
-      dispatched worker would read. The disposition ruling itself is parked at
-      [`/plans/active/issues/plan_reconcile_parked_operator_decisions_2026_08_02.md`](/plans/active/issues/plan_reconcile_parked_operator_decisions_2026_08_02.md)
-      § 1a; this banner only makes the todo safe to read, it does not decide it.
+      (4), are UNAFFECTED and still stand. No worker can pick up the struck clauses anymore — they no longer exist in
+      the todo text above, only this historical record of why they were removed.
 - **[CODE] P0/P1.** EXCHANGE_ODDS vs FIXED_ODDS fork — **MOVED 2026-07-25** to its own child,
   `sports_closeout_exchange_fixed_odds_fork_2026_07_25.md` (`sequential: true`, 11 todos — the GCS-move step split into
   an immediately-dispatchable pass for the 5 already-unambiguous venues plus a separate `[OPERATOR]`-gated follow-on for
