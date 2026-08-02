@@ -236,10 +236,25 @@ Cross-verified with direct `gcloud storage ls` spot-checks of the true bare `ent
       todo's scope; Track S's own checkbox lives in a sibling plan and was left untouched per the adjacent-finding
       triage rule — a future worker/operator should correct or archive it there with this citation, not re-derive it
       from scratch).
-- [ ] [CODE] P1. Remove `_read_fixtures_entity_with_schedule_fallback` and its 3 call sites in `sports_fixtures.py`,
+- [x] ✅ [CODE] P1. Remove `_read_fixtures_entity_with_schedule_fallback` and its 3 call sites in `sports_fixtures.py`,
       replacing them with direct canonical-only reads. **Done when**: the function and its call sites no longer exist,
       and the sports pipeline-check (or a targeted smoke test) still passes reading only canonical paths for the
-      previously-load-bearing dates.
+      previously-load-bearing dates. — **DONE 2026-08-02, `instruments-service@333c35d2`.** Grepped the real call-site
+      count before removing rather than trusting the todo's own "3" figure: found **4** live call sites, not 3 —
+      `_read_fixture_ids_from_gcs`, `_find_stale_fixture_leagues_for_date`, `_find_stale_fixture_ids_for_date` (matching
+      the todo text) plus `_build_fixture_league_map_from_gcs` (named in the removed function's own docstring as a
+      caller, but not counted in this todo's summary line — the done-when itself only says "the function and its call
+      sites", no fixed count, so all 4 were removed). Each replaced with a direct
+      `_orch._read_per_league_entity_df(bucket, date, "fixtures_schedule", ...)` call (same pattern the removed
+      function's primary branch used, matching this file's existing `_orch.`-prefixed same-module-call convention).
+      Removed the function's 3 fallback-specific unit tests in `tests/unit/test_sports_fixture_status_refresh_scan.py`
+      (`test_schedule_fallback_prefers_fixtures_schedule`, `..._falls_back_to_legacy_fixtures_when_schedule_absent`,
+      `..._returns_none_when_neither_entity_exists`) — the remaining tests for `_find_stale_fixture_leagues_for_date`/
+      `_find_stale_fixture_ids_for_date` mock at the `get_storage_client()` layer (below the removed indirection) and
+      needed no changes; a full `quality-gates.sh` run passed clean (156s) confirming they still pass. No smoke-test
+      against real "previously-load-bearing dates" was run because Phase 1's census already proved that population is
+      empty (0 rows) — the done-when's own premise (a previously-load-bearing date existing to test against) does not
+      hold, consistent with todos 2-4's vacuous reasoning above.
 - [ ] [DATA] P2. Snapshot-then-delete the migrated legacy-path GCS objects (per five-part proof,
       `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md`), and purge their now-superseded
       `data_type="FIXTURES"` manifest rows for the migrated population only (leave the redundant-with-canonical and
@@ -323,3 +338,10 @@ Cross-verified with direct `gcloud storage ls` spot-checks of the true bare `ent
   Flagged forward for todos 5-6 (which touch this same subsystem) rather than acted on immediately (out of this
   session's dispatched scope), and Track S's own checkbox was deliberately left untouched (lives in a sibling plan;
   correcting it there is a separate action for whoever next touches that plan, not silently absorbed here).
+- **Todo 5 shipped (2026-08-02)**: dispatched as a follow-on task in the same session — this one required real code,
+  unlike todos 2-4. Discovered the todo's own "3 call sites" count was stale before removing anything: grepped and found
+  4 live call sites (the extra one, `_build_fixture_league_map_from_gcs`, was actually named as a caller in the removed
+  function's own docstring, just not counted in the todo's summary line). Removed all 4, replaced each with a direct
+  `fixtures_schedule` read, and removed the 3 now-dead fallback-specific unit tests. Full `quality-gates.sh` green
+  (156s), shipped `instruments-service@333c35d2` via the standard Pass-1/Pass-2 flow. Full evidence on todo 5's own
+  checkbox above.
