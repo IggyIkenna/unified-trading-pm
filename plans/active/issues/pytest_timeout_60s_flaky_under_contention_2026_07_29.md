@@ -837,3 +837,39 @@ those commits landed). The escalation's own repo-blocker list (`GET /api/repo-bl
   `/skip-current-task` rather than `/done` (a `/done` call with no checkbox flip would 409 under the M3 plan-flip gate,
   correctly — see `ao_done_gate_tag_correlation_false_match_on_leading_marker_2026_08_02.md` for a related M3 finding
   from this same session).
+- **2026-08-02 ~16:25Z (`cicd` escalation `agt-60a920`, slot 8) — 1st confirmed instance in a NEW repo
+  (unified-trading-api)**: promotion PR #495 (LDR→main, "Option-B direct"), failing run
+  [30748526804](https://github.com/IggyIkenna/unified-trading-api/actions/runs/30748526804) (`QG slice (tests)` job,
+  `pull_request`-triggered, head SHA `751483305fe5`, started `12:46:23Z`). 6 tests across 5 unrelated files all hit
+  `Failed: Timeout (>150.0s) from pytest-timeout`:
+  `test_defi_lp.py::TestDefiLpRebalanceHistory:: test_get_rebalance_history_returns_200`,
+  `test_strategy_performance.py:: TestPerformanceEndpointMissingViewFallback::test_single_view_request_returns_only_that_view`,
+  `test_routes.py::TestInstrumentRoutes::test_get_instruments_with_filter`,
+  `test_event_logging.py::TestAuthEventLogging::test_auth_disabled_skips_key_validation`,
+  `test_routes_extra.py::TestReportingRoutes::test_get_pnl_attribution`, and
+  `test_routes_extra.py::TestDerivativesRoutes::test_get_options_chain` —
+  `6 failed, 435 passed, 8 warnings in 3096.45s (0:51:36)`. No shared code path across these 5 files
+  (defi/strategy/instruments/auth/reporting/derivatives) — the breadth itself is this doc's established signature for
+  genuine scheduler-level contention rather than a per-test anti-pattern (todo 6's argument). Isolated local re-run of
+  exactly these 6 test ids together (`uv sync --frozen` + targeted `pytest --timeout=60`): **6 passed, 2 warnings in
+  14.90s**, slowest single case 0.52s setup + 0.47s call — a >300x margin under even a tightened 60s budget. Confirmed
+  root fact: PR #495 `state=MERGED`, `mergedAt=2026-08-02T12:46:24Z` — **1 second** after the failing run's own
+  `createdAt` (`12:46:23Z`), the tightest self-merge race yet recorded in this doc — self-merged via an independent
+  already-green check on the same head SHA before this `pull_request`-triggered run had even finished its setup step.
+  (`git merge-base --is-ancestor` doesn't directly apply since the promote-merge squashes to a new SHA — confirmed
+  equivalence instead via `main` HEAD `68e276b7`'s own commit message/timestamp exactly matching PR #495's
+  title/`mergedAt`.) Zero open PRs, zero open `/api/repo-blockers` entries for unified-trading-api. Live host
+  corroboration gathered during this exact investigation: load average climbed **38→54** (16-vCPU box) and concurrent
+  `quality-gates.sh --no-fix` processes climbed **27→33** (`pgrep -af`) over the ~15min of this investigation alone,
+  19Gi/47Gi swap in active use — confirms the fleet-wide capacity crisis
+  (`fleet_wide_qg_capacity_crisis_continues_day2_2026_07_29.md`) is still live and worsening in real time, 2 days past
+  that doc's last dated entry. Further corroboration: a `workflow_dispatch` re-test of the CURRENT `live-defi-rollout`
+  HEAD (`990187dd5`, run `30750131924`) had its `checks` slice queued **2h43m** (`13:32:00Z`→`16:15:31Z`) before a
+  self-hosted runner picked it up, then passed; its `tests` slice was still `in_progress` at investigation time —
+  direct, same-repo evidence that queue depth, not code, is the bottleneck. Same "orphaned noise against an
+  already-resolved wall" conclusion as every prior entry in this doc — no `live-defi-rollout` code or test change made
+  or needed. Widens this doc's confirmed-repo list to 7 (unified-api-contracts, deployment-api, instruments-service,
+  features-service, market-tick-data-service, client-reporting-api, now unified-trading-api). Slot left clean
+  (unified-trading-api already on `live-defi-rollout`, 0 commits ahead of `origin`, nothing to commit). Pinged the
+  authoring slot (`AUTHORING_SLOT=ci`) with the outcome — likely a 400/422 given the non-numeric slot id, per this doc's
+  own already-documented dead end for non-integer `AUTHORING_SLOT` values, not retried further.
