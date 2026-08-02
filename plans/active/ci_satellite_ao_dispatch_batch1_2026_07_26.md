@@ -626,10 +626,25 @@ here now, retroactively, to close that gap. Each item cites its source doc + ori
       elevated `ldr_qg_failure`/plan_health escalation counts seen 2026-07-29 evening into 2026-07-30 were partly caused
       by this outage rather than (or in addition to) the host-contention root cause tracked elsewhere — worth separating
       in the record for future triage.
-- [ ] [SCRIPT] P2. **(from `ldr_to_main_promote_workflows_sustained_startup_failure_2026_07_30.md`)** Add a lightweight
-      standing monitor (or extend `scripts/cicd/promotion_lag_monitor.py`) that alerts when
+- [x] ✅ [SCRIPT] P2. **(from `ldr_to_main_promote_workflows_sustained_startup_failure_2026_07_30.md`)** Add a
+      lightweight standing monitor (or extend `scripts/cicd/promotion_lag_monitor.py`) that alerts when
       `ldr-to-main-promote-fleet.yml`/`ldr-to-main-promote.yml` post 3+ consecutive `startup_failure` runs — this
-      incident ran silently for ~10h before being noticed as a side-effect of an unrelated task.
+      incident ran silently for ~10h before being noticed as a side-effect of an unrelated task. — **DONE (slot-9,
+      cicd)** — unified-trading-pm@ccb1d7b10. Delivered a standalone monitor (mirroring
+      `glue_pool_starvation_monitor.py`'s cheapest-honest-signal pattern rather than extending
+      `promotion_lag_monitor.py`, since a `startup_failure` run never reaches a job and so has no branch-pair compare
+      state to hook into): `scripts/cicd/promote_fleet_startup_failure_monitor.py` fetches each target workflow's
+      most-recent completed runs and pages once the LEADING (most-recent-first) run of them share `startup_failure` for
+      `threshold` (default 3) consecutive runs — a single failure is noise, insufficient history never false-positives.
+      New `.github/workflows/promote-fleet-startup-failure-monitor.yml` (schedule `*/15`, `workflow_dispatch` with a
+      `threshold` input) routes a positive finding through the reusable `notify-slack.yml` carrier with
+      `dedup_key: promote-fleet-startup-failure` + `cooldown_min: 60` (a standing condition, not a per-tick page), per
+      `/codex/04-architecture/ci-alerting.md`. `tests/unit/test_promote_fleet_startup_failure_monitor.py` (16 cases)
+      proves: the exact-threshold and longer-than-threshold streak both fire, a streak shorter than threshold does not,
+      insufficient run history never false-positives even if every run so far matches, a lone transient failure never
+      pages, and the report names each stuck workflow + its streak length. Full PM `quality-gates.sh` green (1631
+      passed, 0 failed; sentinel matched committed HEAD). NOT wired into `scripts/quality-gates.sh` (this is a standing
+      GHA monitor, not a QG checker — no same-file registration contention applies here).
 - [ ] [CI] P1. **(from `ldr_to_main_promote_workflows_sustained_startup_failure_2026_07_30.md`)** A promote PR can sit
       with ALL required checks green (`quality-gates-v2`, `image-build-gate`, `sit-gate/fleet-green`,
       `semver-agent/label-check`) for 10+ min without merging — observed on `market-tick-data-service` PR #791
