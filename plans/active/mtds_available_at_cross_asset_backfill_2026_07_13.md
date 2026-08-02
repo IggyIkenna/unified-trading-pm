@@ -319,18 +319,18 @@ verify the guardrail did not trip + row counts are unchanged before resuming the
       rose (69.97% → ~77-82%, exact number disputed between #11's and #12's independent reads, both far from 100%).
       **Still open (2026-08-02, slot-14, Progress Log #12)**: per-month breakdown shows 2019-01..2023-03 sitting at a
       stable ~50-60% fill, not near-100% — NOT resolved by this apply/consolidate. Unclear whether that's a genuine
-      structural ceiling (a bundled/no-timestamp shard class `_available_at_from_blob`'s GCS-`time_created` proxy
-      can't populate) or an incomplete-fill signal — chunks 1-52 of THIS todo's own apply ran the FIRST (pre-fix)
-      launch's code, before `9d354cea` shipped, even though they didn't crash there. **Do not flip this checkbox until
-      that question is resolved** — re-read `_available_at_from_blob`'s docstring + investigate, or re-run
+      structural ceiling (a bundled/no-timestamp shard class `_available_at_from_blob`'s GCS-`time_created` proxy can't
+      populate) or an incomplete-fill signal — chunks 1-52 of THIS todo's own apply ran the FIRST (pre-fix) launch's
+      code, before `9d354cea` shipped, even though they didn't crash there. **Do not flip this checkbox until that
+      question is resolved** — re-read `_available_at_from_blob`'s docstring + investigate, or re-run
       `--start-date 2019-01-02 --end-date 2023-04-10 --chunk-days 30` now that the fix is live, to see if the ceiling
       moves. (repo: market-tick-data-service, unified-trading-library)
 - [x] ✅ [DATA] P1. **No longer gated on an operator decision (retagged 2026-07-28, same ruling)** — Resume the tradfi
       consolidator cron; record evidence in the Progress Log. **Retrofit 2026-07-30** (dp_watcher_003 issue's 2nd todo):
       resume via `scripts/mtds_available_at_backfill_resume_tradfi_2026_07_30.py` (maintenance-window-aware), not raw
       `gcloud`. (repo: market-tick-data-service) — ✅ 2026-08-02 (data_engineering slot-3): ran the sanctioned resume
-      script, maintenance window released, cron confirmed `ENABLED` (`*/1 * * * *`) via `gcloud scheduler jobs
-      describe`. This closes the fleet-wide tradfi backfill VM outage tracked in
+      script, maintenance window released, cron confirmed `ENABLED` (`*/1 * * * *`) via
+      `gcloud scheduler jobs     describe`. This closes the fleet-wide tradfi backfill VM outage tracked in
       `/plans/active/issues/tradfi_ohlcv_backfill_oom_preflight_fails_paused_consolidator_2026_08_02.md` — the index
       will re-freshen every minute going forward, clearing the OOM-preflight guard for new VM launches.
 - [ ] [INFRA] P3. **NEW — 2026-08-02 (slot-3)**: `MANIFEST_COLUMN_FILL_REGRESSION` (the consolidator's
@@ -712,10 +712,10 @@ Downloaded pre/post index parquets and diffed directly:
 outage (`/plans/active/issues/tradfi_ohlcv_backfill_oom_preflight_fails_paused_consolidator_2026_08_02.md`) — the index
 will stay fresh going forward, clearing the `setup-data-pipeline-vm.sh` OOM-preflight guard for new launches. **This
 cron-resume is independently complete and MUST NOT be re-paused** — re-pausing would reopen the fleet-wide outage this
-closed. Only the "Apply" todo's completeness is still an open question — see #12 immediately below, which read the
-index shortly after this checkpoint and found the aggregate fill number alone hides a real per-month structural gap.
-07-29 snapshot (`pre_available_at_backfill_20260729T010709Z.parquet`) remains the pre-backfill rollback point if ever
-needed (untouched this session). The guardrail false-positive is filed as its own new P3 todo above
+closed. Only the "Apply" todo's completeness is still an open question — see #12 immediately below, which read the index
+shortly after this checkpoint and found the aggregate fill number alone hides a real per-month structural gap. 07-29
+snapshot (`pre_available_at_backfill_20260729T010709Z.parquet`) remains the pre-backfill rollback point if ever needed
+(untouched this session). The guardrail false-positive is filed as its own new P3 todo above
 (`MANIFEST_COLUMN_FILL_REGRESSION` blind to legitimately-blank-by-shape columns) — it will likely recur on this plan's
 own prediction/defi apply todos.
 
@@ -761,21 +761,31 @@ too, not just fills existing rows' `available_at`). **Per-month breakdown surfac
 baseline didn't show**: 2019-01 through 2023-03 sits at a stable **~50-60%** fill rate (not near-100%), while 2023-04
 onward (past #11's original crash point) sits at **~85-90%**. #11's own note says chunks 1-52 (2019-01-02..2023-04-10)
 "completed cleanly" in the FIRST launch — but "completed cleanly" only means the scan/emit loop didn't crash, not that
-it drove fill rate to ~100%; I have NOT determined whether ~50-60% is a genuine structural ceiling for that era (e.g., a
-real bundled/no-timestamp class the rebuild's `_available_at_from_blob` proxy — GCS `time_created` — cannot always
-populate) or an incomplete-fill signal warranting a re-run of 2019-2023-04-10 with the NOW-fixed bundled-shard code path
-(chunks 1-52 ran against the FIRST launch's pre-fix code, before `9d354cea` shipped — worth checking whether the
-bundled-shard bug this session's fix targets could ALSO have silently affected fill-rate computation for that earlier
-range even though it didn't crash there). **Flagging this as a genuinely open question for whoever continues** — did not
-attempt to resolve it this session (time-boxed to the prediction-lane launch + diagnosis); recommend re-reading
-`_available_at_from_blob`'s docstring + checking whether pre-2023-04 shards are disproportionately in a category that
-proxy can't timestamp, OR just re-running `--start-date 2019-01-02 --end-date 2023-04-10 --chunk-days 30` now that the
-bundled-shard fix is live, to see if the ceiling moves.
+it drove fill rate to ~100%.
+
+**Follow-up same session — sharpened, NOT a structural ceiling.** Split fill rate by `(era, data_type)` and
+`(era, is_bundled)` (bundled = `data_type in {futures_chain, options_chain, event_contract}`, matching
+`_emit_shard_row`'s own gate): pre-2023-04 has **zero** bundled-`data_type` rows at all (the bundled-by-underlying
+convention #11's crash example hit only appears from 2023-04-11 onward, i.e. it's entirely a post-2023-04 phenomenon in
+THIS split, not a pre-existing pre-2023-04 class) — so the bundled/no-timestamp hypothesis is RULED OUT for this era.
+The actual pre-2023-04 shortfall is concentrated in the two dominant, perfectly ordinary non-bundled data types:
+`ohlcv_1s` (141,009 rows, 58.0% filled) and `ohlcv_1m` (137,322 rows, 55.1% filled) — plain per-instrument OHLCV shards
+that `_available_at_from_blob`'s own docstring says should "not [be] expected" to fail (it only returns `""` when GCS
+hasn't populated `time_created`, essentially never on a real listed blob). A ~55% ceiling on ordinary listed blobs
+strongly suggests the chunks-1-52 scan simply never re-emitted roughly half of the existing captured rows for that era
+(a path-parsing coverage gap, similar in KIND to the bundled-shape gap #11 found for 2023-04+, but a different,
+not-yet-identified shape) — their manifest rows are un-touched leftovers from before the 07-14 live-writer fix, not
+something the rebuild intentionally exempts. **Recommend**: re-running
+`--start-date 2019-01-02 --end-date 2023-04-10 --chunk-days 30` (now on the `9d354cea`-fixed code) is the right next
+step, but ALSO grep the resulting log for `unparseable` counts specifically for this range before trusting a clean
+re-run — if unparseable stays 0 while fill rate still doesn't move, the gap is likely NOT a path-parsing issue and needs
+a different explanation (e.g. dedup losing the fresh row to an older un-touched one on the consolidator side). Did not
+attempt the re-run or the parser investigation this session (time-boxed to the prediction-lane launch).
 
 **Prediction stays unflipped** (`-006`, neither lane complete for it). **Tradfi's cron-resume todo stays flipped**
 (independently verified complete, see #11) but **the Apply todo is reverted to unflipped** per this session's own
-finding above — the aggregate fill number alone hid a real per-month gap, so "applied without crashing" is not the
-same as "backlog resolved." Cron confirmed still `PAUSED` for prediction
+finding above — the aggregate fill number alone hid a real per-month gap, so "applied without crashing" is not the same
+as "backlog resolved." Cron confirmed still `PAUSED` for prediction
 (`uts-prod-manifest-consolidator-market-data-prediction-cron`); tradfi's is `ENABLED` per #11. Snapshots from 07-29
 remain the valid rollback points, untouched. `unified-trading-sa` GCP identity used for diagnostic reads (the default
 `github-actions-deploy` active account lacks `cloudscheduler.jobs.get` — switched per RULES.md § 5's self-service
