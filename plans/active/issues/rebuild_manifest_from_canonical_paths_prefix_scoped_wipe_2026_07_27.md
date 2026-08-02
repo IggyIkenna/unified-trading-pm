@@ -35,7 +35,7 @@ scope: [engineer, admin]
 tags: [data-correctness, manifest, gcs, mdps, mtds, candle, orphan, data-loss-risk, operator-notify]
 related:
   [
-    /plans/active/issues/mdps_cefi_candle_manifest_orphan_reconciliation_2026_07_26.md,
+    /plans/archive/issues/mdps_cefi_candle_manifest_orphan_reconciliation_2026_07_26.md,
     /plans/active/issues/mdps_candle_manifest_near_total_coverage_gap_2026_07_27.md,
     /plans/active/data_pipeline_check_mdps_features_2026_07_20.md,
     /plans/active/issues/mdps_backfill_cefi_trades_gap_fill_completion_2026_07_28.md,
@@ -106,7 +106,7 @@ precondition.
 
 ## Two live risk sites
 
-1. **`plans/active/issues/mdps_cefi_candle_manifest_orphan_reconciliation_2026_07_26.md`** (RESOLVED 2026-07-31, about
+1. **`plans/archive/issues/mdps_cefi_candle_manifest_orphan_reconciliation_2026_07_26.md`** (RESOLVED 2026-07-31, about
    to be archived — its own reconciliation goal was closed as a byproduct of a DIFFERENT, already-shipped tool
    (`backfill_candle_manifest.py`'s corpus-wide campaign, `mdps_candle_manifest_near_total_coverage_gap_2026_07_27.md`
    todo 2); the corrected recipe below was never actually invoked against prod) recommended exactly this unsafe call:

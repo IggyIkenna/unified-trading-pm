@@ -37,7 +37,7 @@ scope: [engineer]
 tags: [defi, features-service, delta-one, data-loader, pass-through, candle-loading, data-correctness, vm-spend-waste]
 related:
   - /plans/active/issues/delta_one_lookback_instrument_discovery_wrong_universe_for_passthrough_defi_2026_07_30.md
-  - /plans/active/issues/features_service_defi_backfill_vm_oom_unexplained_2026_07_26.md
+  - /plans/archive/issues/features_service_defi_backfill_vm_oom_unexplained_2026_07_26.md
   - /plans/active/defi_satellite_ao_dispatch_batch3_2026_07_26.md
 created: "2026-07-30"
 source: [DP_VM_EXIT_NONZERO escalation for features-delta-one-defi-20260730-222034]

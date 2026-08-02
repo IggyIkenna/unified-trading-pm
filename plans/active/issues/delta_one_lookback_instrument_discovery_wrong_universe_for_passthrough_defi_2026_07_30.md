@@ -37,7 +37,7 @@ scope: [engineer]
 tags: [defi, features-service, delta-one, lookback-validator, instrument-discovery, data-correctness]
 related:
   - /plans/active/defi_satellite_ao_dispatch_batch3_2026_07_26.md
-  - /plans/active/issues/features_service_defi_backfill_vm_oom_unexplained_2026_07_26.md
+  - /plans/archive/issues/features_service_defi_backfill_vm_oom_unexplained_2026_07_26.md
 created: "2026-07-30"
 source: [defi_satellite_ao_dispatch_batch3_2026_07_26.md-D1]
 parent_epic: defi_master
@@ -53,7 +53,7 @@ depends_on: []
 context_scope:
   [
     /plans/active/defi_satellite_ao_dispatch_batch3_2026_07_26.md,
-    /plans/active/issues/features_service_defi_backfill_vm_oom_unexplained_2026_07_26.md,
+    /plans/archive/issues/features_service_defi_backfill_vm_oom_unexplained_2026_07_26.md,
     features-service/features_service/delta_one/app/core/dependency_checker.py,
     unified-api-contracts/unified_api_contracts/registry/market_data_categories.py,
   ]

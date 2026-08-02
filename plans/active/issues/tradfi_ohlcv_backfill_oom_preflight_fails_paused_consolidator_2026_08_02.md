@@ -47,7 +47,7 @@ related:
   [
     /plans/active/mtds_available_at_cross_asset_backfill_2026_07_13.md,
     /plans/active/issues/tradfi_pred_manifest_consolidator_cron_stuck_paused_2026_07_29.md,
-    /plans/active/issues/tradfi_manifest_consolidator_staleness_budget_missing_2026_07_31.md,
+    /plans/archive/issues/tradfi_manifest_consolidator_staleness_budget_missing_2026_07_31.md,
     /plans/active/tradfi_satellite_ao_dispatch_batch5_2026_07_29.md,
   ]
 created: 2026-08-02

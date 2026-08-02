@@ -268,7 +268,7 @@ concurrent workers do not collide on this file.
       `unified-trading-pm@5607023a2` + `unified-api-contracts@e34afc1d` + `system-integration-tests@67db4da` (**citation
       corrected 2026-07-31, then re-corrected same day** — the original citation, SHA prefix `7e0aab35f` in this repo,
       did not resolve to any commit in this repo's history, see
-      `plans/active/issues/plan_commit_sha_evidence_regression_7e0aab35f_2026_07_31.md`; a first correction attempt
+      `plans/archive/issues/plan_commit_sha_evidence_regression_7e0aab35f_2026_07_31.md`; a first correction attempt
       split the work across two PM commits and cited a second non-existent SHA, `0b17f0747`, for a "design/initial
       extend" half — `git cat-file -e 0b17f0747` fails and `git log -- scripts/cicd/detect_breaking_change.py` shows no
       such commit; the single real commit `5607023a2`'s diff (`/codex/08-workflows/ci-cd-flow.md` +

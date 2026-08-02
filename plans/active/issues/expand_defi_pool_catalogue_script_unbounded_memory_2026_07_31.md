@@ -29,7 +29,7 @@ related:
   [
     /plans/active/issues/mtds_gas_fees_migration_script_unbounded_memory_2026_07_30.md,
     /plans/active/issues/delta_one_skip_dependency_check_oom_pre_2023_05_dates_2026_07_31.md,
-    /plans/active/issues/utl_get_captured_instruments_unfiltered_manifest_read_2026_07_31.md,
+    /plans/archive/issues/utl_get_captured_instruments_unfiltered_manifest_read_2026_07_31.md,
     /plans/active/issues/defi_dex_pools_catalogue_undercoverage_vs_historical_capture_2026_07_28.md,
   ]
 created: 2026-07-31
@@ -92,7 +92,7 @@ locked_since:
     `filters=` row-group pushdown (`features-service@f8e21361` + `@b1652b59`) —
     `/plans/active/issues/delta_one_skip_dependency_check_oom_pre_2023_05_dates_2026_07_31.md`.
   - UTL's `get_captured_instruments` — same anti-pattern, filed as its own sibling follow-up —
-    `/plans/active/issues/utl_get_captured_instruments_unfiltered_manifest_read_2026_07_31.md`.
+    `/plans/archive/issues/utl_get_captured_instruments_unfiltered_manifest_read_2026_07_31.md`.
   - This script — unfiltered wide read of the same availability manifest.
   - Plus the ADJACENT write-side sibling from the day before:
     `mtds_gas_fees_migration_script_unbounded_memory_2026_07_30.md` (a `ManifestWriter` construction missing
