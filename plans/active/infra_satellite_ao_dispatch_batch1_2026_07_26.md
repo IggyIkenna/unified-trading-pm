@@ -490,7 +490,7 @@ orphaned?" resolves to "everything," because nothing in the covering set does an
       filed as a follow-up todo. Repos: strategy-service (read), unified-trading-pm (the verdict). Source:
       `issues/service_dockerfile_pattern_normalization_2026_06_17.md`.
 
-- [ ] [DOCS] P2. **Land the 3 bounded codex FIX-STALE corrections this audit plan has carried unowned since
+- [x] ✅ [DOCS] P2. **Land the 3 bounded codex FIX-STALE corrections this audit plan has carried unowned since
       2026-06-01.** (a) **AUDIT-03 F-45**: code wins — the events GCS path keys on `instance_id`; `correlation_id` is a
       column, NOT a path key. Find every codex doc claiming `correlation_id` is a path key and correct it to the
       implemented `instance_id` path semantics (verify against the writer's actual path construction before editing).
@@ -502,7 +502,22 @@ orphaned?" resolves to "everything," because nothing in the covering set does an
       `base-service.sh`, a deferred contention hotspot in this batch. **Done when**: all three corrections are shipped,
       `bash scripts/plan-hygiene/run_hygiene_sweep.sh --ci --no-regen` is no worse than before, and each corrected claim
       is verified against code/registry rather than restated. Repo: unified-trading-pm. Source:
-      `codex_vs_repo_docs_ssot_audit_2026_06_01.md`.
+      `codex_vs_repo_docs_ssot_audit_2026_06_01.md`. — **DONE 2026-08-02 (slot 7, data_engineering) — already resolved
+      as no-op, this todo was stale**: this exact source doc already carries all 3 items flipped `[x]` since 2026-07-27
+      (Phase-2, `unified-trading-pm@7c3fcfe68` — "flip 3 AUDIT-03/gcs_hive codex-migration items (all verified no-op)"),
+      one day AFTER this plan (created 2026-07-26) copied the still-open finding across — the two tracks diverged and
+      this copy was never updated. Independently re-verified against current code/registry before trusting the prior
+      resolution (per this todo's own done-when bar): (a) `rg correlation_id codex/` — every hit is a log field / column
+      / PubSub attribute / function param, none describe it as a GCS path key; the events path keys on `instance_id`
+      exactly as claimed. (b) `custody-providers.md`'s sole `Elysium` reference is the
+      `pod-elysium-client-onboarding.md` link (the client POD), not the removed data provider — no stale ref to scrub;
+      the entity-governance SSOT already lives in `org-fund-client-entity-model.md` +
+      `capital-structure-and-regulatory.md`, not custody-providers.md (grafting it there would violate the plan's own
+      no-duplicate-SSOT rule). (c) Sampled hive-partition path examples in
+      `sports-data-source-coverage-matrix.md`/`sports-data-types-catalog.md` — all canonical `key=value` segments
+      (`by_date/day=*/entity=.../league=...`, `asset_group=sports`), nothing malformed. **No codex edit needed** — 0
+      corrections to ship, all three verified already-correct. `run_hygiene_sweep.sh --ci --no-regen` baseline: 0 hard
+      failures (1 pre-existing unrelated soft warning), unchanged by this checkbox-only edit.
 
 - [x] ✅ [INFRA] P1. **Produce the resource-by-resource classification of the prod terraform drift backlog (READ-ONLY —
       the apply stays operator-only).** `terraform/state/prod` (`deployment-service/terraform/gcp`) shows
