@@ -1,0 +1,85 @@
+---
+doc_type: cursor-rule
+description: Every UI surface owns one time horizon and verb — resolve overlap by checking the canonical ownership table
+alwaysApply: true
+priority: 90
+tags:
+- ui
+- architecture
+- navigation
+- critical
+---
+# Canonical Surface Ownership
+
+> **⚠️ PARTIALLY SUPERSEDED (added 2026-08-02, docs-reconcile — matches the banner already on the sibling
+> `cross-surface-navigation.mdc`)**: the ownership table below maps to the **pre-consolidation** multi-UI
+> architecture (separate surfaces on ports :5173/:5175/:5177/:5179/:5180/:5182/:5183). Those surfaces were
+> **consolidated into `unified-trading-system-ui`** (single Next.js app; route groups, not separate ports) in
+> 2026-05, per `component-patterns.mdc` and the workspace CLAUDE.md system map. The *principle* (one surface owns
+> one time-horizon + verb pair, resolve overlap via that tie-breaker) still holds; the **port numbers are stale**.
+> Resolve the live route map against `unified-trading-pm/scripts/dev/ui-api-mapping.json` + the Next.js `app/`
+> route groups.
+
+RULE: Every UI surface owns exactly one time horizon and one dominant verb. If a concept could appear in two surfaces, the tie-breaker is the user's verb and time horizon when they need that data.
+
+WHY: 11 UIs grew in isolation with duplicate routes (P&L in 3 UIs, /deployments in 10 UIs, alerts in 3 UIs). The redesign collapses to 7 surfaces with zero overlap. Drift recreates the original mess.
+
+## Ownership Table
+
+| Surface | Time Horizon | Verbs | Owns |
+|---|---|---|---|
+| **Trading Command Center** (5177) | Real-time | OBSERVE, INTERVENE | Live positions, live risk/exposure, margin/LTV, feature freshness, alerts, kill switches |
+| **Strategy Analytics** (5175) | Historical / design-time | DESIGN, SIMULATE, COMPARE, PROMOTE | Strategy catalogue, backtest results, config grids, tick data, instruments, promotion flow |
+| **Market Intelligence** (5180) | T+0 to T+n retrospective | EXPLAIN, RECONCILE | P&L attribution (6D), recon, latency, order book, trade desk, report generation |
+| **Operations Hub** (5183) | Deployment/ops time | DEPLOY, DIAGNOSE | Services, deployments, batch jobs, logs, events, compliance, CI/CD, data health |
+| **Config & Onboarding** (5173) | Pre-trade / setup | DEFINE, CONFIGURE, PUBLISH | Clients, strategies, venues, API keys, credentials, risk config, venue connections |
+| **ML Platform** (5179) | Training/experiment time | TRAIN, EVALUATE, DEPLOY | Experiments, models, hyperparameter grids |
+| **Reporting & Settlement** (5182) | EOD / periodic | REPORT, SETTLE | EOD positions, invoices, settlements, performance reports |
+
+## Overlap Resolution
+
+- **Positions**: Trading = live feed. Reporting = EOD snapshot. Different datasets.
+- **Risk/exposure**: Trading = current risk matrix. Markets may explain past risk in P&L context only.
+- **Reports**: Markets = generation (analyst workflow). Reporting = catalogue (client downloads).
+- **P&L**: Trading = summary panel (links to full). Markets = full 5-level drill-down.
+- **Alerts**: Trading = live trading alerts + incident management. Ops = infra/service alerts only.
+- **Logs/Events**: Operations Hub owns ALL logs and events (`/logs`, `/events`, `/audit`). Trading Command Center only shows alerts (events that crossed thresholds). The hierarchy: raw event → alert (if threshold) → incident (if escalated).
+- **Service-Client mapping**: Config & Onboarding `/clients/:id` shows which strategy instances belong to a client AND which shared services are involved (EntityLinks to Ops). All services are shared — sharding is logical `(strategy_id, client_id)`, not physical.
+- **Version tracking**: Operations Hub `/services` grid shows deployed vs expected version (from manifest). Drift = amber badge.
+
+## Risk Limits — Value vs Limit, Not Just Value
+
+Every risk metric must be shown as value *against its limit* with utilization %. Limits cascade through the hierarchy:
+Firm → Client → Strategy → Venue → Instrument. Each level has its own limit types (LTV, margin, delta, concentration,
+drawdown, leverage, funding rate risk). Display as progress bars: green < 70%, amber 70-90%, red > 90%.
+
+Risk limits live exclusively in Trading Command Center `/risk`. The drill-down is the same pattern as P&L:
+click aggregate → per-client → per-strategy → per-venue → per-instrument. Highest utilization floats to top.
+
+## Grafana — Infrastructure Only
+
+- **Traders/PMs** use in-platform UIs for P&L, positions, risk, limits. Never Grafana.
+- **Quant devs/SREs** use Grafana for service latency, feature freshness, queue depths, deployment metrics.
+- **Bridge:** Operations Hub `/services/:name` has a "Deep Dive in Grafana" link, pre-filtered via URL params.
+- **Business-side new views:** Solved by DimensionalGrid + FilterBar + TimeSeriesToggle composability, not Grafana.
+
+## DO
+
+- Check this table before adding a new page or route to any UI
+- Use cross-links (EntityLink, CrossLink) instead of duplicating a view
+- When a user needs data from another surface, build a deep link with context params (?client_id=, ?strategy_id=, ?as_of=, ?from=)
+- Show every risk metric as value-vs-limit with utilization % (never show a metric without its limit)
+- Sort risk views by highest utilization first (early insight — what's closest to breach)
+- Link to Grafana from Operations Hub only, never from trading/strategy/markets surfaces
+
+## NEVER
+
+- Add a /deployments route to any non-Operations UI
+- Render a live risk matrix outside Trading Command Center
+- Build a P&L drill-down outside Market Intelligence
+- Duplicate alert feeds across surfaces (use cross-links)
+- Add a page that mixes time horizons (e.g., live positions + historical recon on the same page)
+- Show a risk metric without its corresponding limit threshold
+- Embed Grafana iframes in trading/strategy/markets surfaces (link out from Ops only)
+
+SSOT: `unified-trading-pm/plans/active/ui_platform_redesign_2026_03_17.md`

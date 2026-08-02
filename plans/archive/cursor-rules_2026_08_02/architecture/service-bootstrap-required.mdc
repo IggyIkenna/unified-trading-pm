@@ -1,0 +1,50 @@
+---
+doc_type: cursor-rule
+description: New services MUST use ServiceBootstrap. No hand-rolled main() boilerplate.
+globs:
+- '*-service/*/cli/main.py'
+- '*-service/*/__main__.py'
+alwaysApply: false
+---
+# Service Entry Points Must Use ServiceBootstrap
+
+## Rule
+
+New services MUST use `ServiceBootstrap` from `unified_trading_library` for their CLI entry point.
+Do NOT hand-write LOG_LEVEL validation, GracefulShutdownHandler, event sink construction,
+setup_service_observability, correlation ID generation, STARTED/STOPPED/FAILED lifecycle events,
+or exit code handling. `ServiceBootstrap.run()` handles all of this.
+
+## Pattern
+
+```python
+from unified_trading_library import ServiceBootstrap, BaseModeHandler
+
+class MyHandler(BaseModeHandler):
+    async def run(self) -> dict[str, object]:
+        # Domain logic only
+        return {"status": "ok"}
+
+def main() -> None:
+    """SERVICE_EVENT: STARTED / SERVICE_EVENT: STOPPED / SERVICE_EVENT: FAILED"""
+    ServiceBootstrap(
+        service_name="my-service",
+        operations={"compute": MyHandler},
+        config_fn=get_config,
+        extra_args_fn=add_custom_args,
+    ).run()
+```
+
+## Anti-Patterns
+
+- `os.environ.get("LOG_LEVEL")` in service main.py — ServiceBootstrap handles this
+- `GracefulShutdownHandler()` in service main.py — ServiceBootstrap handles this
+- `GCSEventSink(...)` / `PubSubEventSink(...)` construction in service main.py — use `build_event_sink()`
+- `setup_service_observability(...)` in service main.py — ServiceBootstrap handles this
+- `log_event("STARTED")` / `log_event("STOPPED")` in service main.py — ServiceBootstrap handles this
+- Manual `sys.exit()` with exit code logic — ServiceBootstrap handles this
+
+## Reference
+
+- Framework docs: `unified-trading-pm/codex/04-architecture/service-framework.md`
+- Source: `unified-trading-library/unified_trading_library/service_framework/`

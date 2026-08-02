@@ -1,0 +1,28 @@
+---
+doc_type: cursor-rule
+description: Version alignment blocks QG/quickmerge/force-sync if behind remote — 3 layers of drift protection
+alwaysApply: true
+priority: 90
+tags:
+- version-alignment
+- quality-gates
+- safety
+- agents
+---
+# Version Alignment Gate
+
+RULE: Quality gates BLOCK if your repo or its dependencies have version drift vs remote staging/main. Pre-commit blocks if you're behind on branch commits. Admin force-sync blocks if remote manifest has bumps your local doesn't have.
+
+WHY: Force-pushing or quickmerging with stale versions can revert remote bumps or create integration conflicts. Three layers catch drift at different stages.
+
+DO: Fix drift before proceeding. Pull latest PM manifest: `cd unified-trading-pm && git pull origin main`. Then run version alignment: `bash unified-trading-pm/scripts/repo-management/run-version-alignment.sh --fix`.
+
+NEVER: Use `--skip-version-alignment` in agent or automated contexts. This flag is human-only.
+NEVER: Use `--force-version-override` in agent scripts. This flag is human-only.
+NEVER: Use `SKIP_BRANCH_DRIFT=1` in agent commits. This override is human-only.
+
+## Layers
+1. **Pre-commit** (`check-branch-drift.sh`): Branch commit drift only. Instant, no network for version check.
+2. **Quality gates** (`version-alignment-gate.sh`): Self + dependency version drift vs remote PM manifest. One fetch, ~3s.
+3. **Admin force-sync** (safety gate 3): All repos' versions vs remote PM manifest. Blocks force-push to main/staging.
+4. **Quickmerge** (stage 1.6): Dependency version canary. Warning only, doesn't block.

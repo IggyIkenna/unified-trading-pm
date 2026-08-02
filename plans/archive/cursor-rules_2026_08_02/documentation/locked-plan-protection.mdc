@@ -1,0 +1,33 @@
+---
+doc_type: cursor-rule
+description: Locked plans must not be archived or deleted by agents — requires human [unlock-plan] tag
+alwaysApply: true
+priority: 80
+tags:
+- plans
+- agents
+- safety
+---
+# Locked Plan Protection
+
+RULE: Plans with `locked_by` in frontmatter MUST NOT be archived, deleted, or moved by any agent or automated process.
+
+WHY: Plans are locked when actively being implemented. Premature archival removes context that the conflict-resolution-agent needs to make correct decisions. A locked plan's removal could cause downstream agents to make wrong choices.
+
+DO: Check `locked_by` field before any plan archival. If present, skip and report.
+DO: Require `[unlock-plan]` tag in commit message to delete a locked plan (enforced by PM quality-gates.sh).
+DO: Check plan-level `depends_on` — don't archive a plan that other active plans depend on.
+
+NEVER: Archive or delete a plan that has `locked_by` set, regardless of todo completion status.
+NEVER: Bypass this check by removing the `locked_by` field programmatically — that's equivalent to unlocking.
+
+## Agent Unlock Protocol
+
+Agents MAY request a plan unlock when all todos are genuinely complete, but they MUST NOT do it autonomously:
+
+1. Agent detects a locked plan with all todos done
+2. Agent asks the human: "Plan X is locked by branch Y but all todos are complete. Should I unlock it? I would need `[unlock-plan]` in the commit message."
+3. Human approves → agent removes `locked_by`/`locked_since` from frontmatter and includes `[unlock-plan]` in the commit message
+4. Human denies → agent leaves the plan locked and moves on
+
+This ensures agents don't accidentally remove plans that a human is still relying on, while still allowing agents to initiate the cleanup conversation.

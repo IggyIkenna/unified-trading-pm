@@ -1,0 +1,169 @@
+---
+doc_type: cursor-rule
+description: UI quality gate standards — component testing, E2E flows, accessibility, performance, visual regression
+alwaysApply: true
+priority: 85
+tags:
+- ui
+- testing
+- quality-gates
+- critical
+---
+# UI Quality Gates
+
+RULE: Every UI repo must pass these quality gates before merge. UI quality gates extend (not replace) the standard `scripts/quality-gates.sh` with UI-specific checks.
+
+WHY: UI repos currently have inconsistent testing — some have vitest, some don't. Three repos in the March audit were flagged for missing vitest despite `testing_level=unit` in the manifest. Standardize now.
+
+## Gate 1: Lint + Format (existing)
+
+```bash
+npx eslint src/ --max-warnings 0
+npx prettier --check "src/**/*.{ts,tsx,css}"
+```
+
+Already in quality-gates.sh for UI repos.
+
+## Gate 2: TypeScript Strict (existing)
+
+```bash
+npx tsc --noEmit
+```
+
+All UI repos use strict TypeScript. No `any` types. No `@ts-ignore`.
+
+## Gate 3: Component Tests (vitest)
+
+```bash
+CI=true npm test -- --run
+```
+
+**Minimum requirements:**
+- Every shared component exported from ui-kit has at least one test
+- Every page component has at least a render test (mounts without crash)
+- DimensionalGrid, FilterBar, EntityLink, CrossLink need interaction tests (click, filter, sort)
+- Use `vitest` with `pool: "forks"` (not threads — prevents zombie node processes)
+- Use `@testing-library/react` for component testing
+
+**What to test per component type:**
+
+| Component Type | Must Test |
+|---|---|
+| Navigation (GlobalNavBar, SidebarNav, BreadcrumbNav) | Renders all links, highlights active, click navigates |
+| Data display (DimensionalGrid, tables) | Renders data, sorts on click, filters reduce rows |
+| Interactive (FilterBar, SelectionToolbar) | State changes on user interaction, URL params update |
+| Cross-link (EntityLink, CrossLink) | Correct href generated, context params included |
+| KPI cards (StatCard) | Renders value, label, delta; correct color for positive/negative |
+
+## Gate 4: Build Smoke Test
+
+```bash
+# Satellite UIs (Vite):
+VITE_MOCK_API=true npx vite build
+
+# Unified platform (Next.js):
+NEXT_PUBLIC_MOCK_API=true pnpm build
+```
+
+Must build without errors. Tests that the app compiles with mock data.
+
+## Gate 5: Accessibility (a11y)
+
+**Automated checks (vitest-axe or similar):**
+- Every interactive element has an accessible name
+- Color contrast meets WCAG 2.1 AA (4.5:1 for text, 3:1 for large text)
+- Focus is visible on all interactive elements (already using --color-border-focus)
+- Tables have proper `<th>` headers
+- Forms have associated labels
+
+**Manual checks (Phase 7):**
+- Keyboard navigation through all routes
+- Screen reader announces page changes
+- No keyboard traps
+
+## Gate 6: Cross-Link Integrity
+
+**Automated check (can be a vitest test or script):**
+- Every `EntityLink` type maps to a valid surface in SurfaceRegistry
+- Every `buildCrossLink()` target surface exists
+- No hardcoded port numbers (grep for `localhost:51[0-9]{2}`)
+- No hardcoded URLs to other UIs (must use SurfaceRegistry)
+
+```bash
+# Quick grep check for hardcoded ports
+rg 'localhost:51[0-9]{2}' src/ --type ts --type tsx
+# Should return 0 results (all ports come from SurfaceRegistry)
+```
+
+## Gate 7: No Orphan Deployments Route
+
+```bash
+# Every UI except deployment-ui should have zero /deployments routes
+rg 'path.*deployments|to.*deployments' src/ --type ts --type tsx
+# Should return 0 results in all non-Operations UIs
+```
+
+## Gate 8: Performance Budget
+
+**Build size limits (vite build output):**
+- Individual UI bundle: < 500KB gzipped (excluding shared chunks)
+- Shared ui-kit chunk: < 150KB gzipped
+- No single page component > 300 lines (split into sub-components)
+- Images must be optimized (< 100KB each, prefer SVG)
+
+**Runtime (manual, Phase 7):**
+- First contentful paint: < 1.5s (mock mode)
+- Time to interactive: < 2.5s (mock mode)
+- DimensionalGrid with 1000 rows: renders in < 500ms (use virtualization)
+
+## Quality Gate Script Template
+
+For UI repos that don't have quality-gates.sh yet, use this template:
+
+```bash
+#!/usr/bin/env bash
+set -euo pipefail
+
+echo "=== UI Quality Gates ==="
+
+echo "[1/6] Lint..."
+npx eslint src/ --max-warnings 0
+
+echo "[2/6] Format..."
+npx prettier --check "src/**/*.{ts,tsx,css}"
+
+echo "[3/6] TypeScript..."
+npx tsc --noEmit
+
+echo "[4/6] Tests..."
+CI=true npm test -- --run 2>/dev/null || echo "WARN: No tests found"
+
+echo "[5/6] Build..."
+# Use VITE_MOCK_API for Vite UIs, NEXT_PUBLIC_MOCK_API for Next.js unified platform
+VITE_MOCK_API=true NEXT_PUBLIC_MOCK_API=true npx vite build 2>/dev/null || pnpm build
+
+echo "[6/6] Cross-link check..."
+if rg -q 'localhost:51[0-9]{2}' src/ --type ts 2>/dev/null; then
+  echo "FAIL: Hardcoded port numbers found"
+  exit 1
+fi
+
+echo "=== All gates passed ==="
+```
+
+## DO
+
+- Run `CI=true npm test -- --run` before every commit to a UI repo
+- Use `pool: "forks"` in vitest.config.ts
+- Test cross-link URLs in component tests
+- Keep page components under 300 lines
+
+## NEVER
+
+- Skip vitest in a UI repo (all must have tests)
+- Use `pool: "threads"` (causes zombie node processes)
+- Hardcode port numbers or URLs to other surfaces
+- Ship a component without at least a render test
+
+SSOT: `unified-trading-pm/cursor-rules/ui/ui-quality-gates.mdc`
+Cross-ref: `unified-trading-pm/codex/06-coding-standards/quality-gates.md`

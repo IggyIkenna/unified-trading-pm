@@ -1,0 +1,121 @@
+---
+doc_type: cursor-rule
+description: Cross-surface deep linking protocol — URL params, context preservation, EntityLink routing map
+alwaysApply: false
+priority: 70
+tags:
+- ui
+- navigation
+- cross-linking
+---
+# Cross-Surface Navigation Protocol
+
+> **⚠️ PARTIALLY SUPERSEDED (2026-06-02)**: the entity-routing table below maps to the **pre-consolidation** multi-UI
+> architecture (separate surfaces on ports :5175/:5177/:5179/:5180/:5182/:5183). Those surfaces were **consolidated into
+> `unified-trading-system-ui`** (single Next.js app; route groups, not separate ports) in 2026-05. The *principle*
+> (entity names are clickable portals, context preserved via URL params, link-don't-duplicate) still holds; the
+> **target ports/surfaces are stale**. Resolve the live route map against
+> `unified-trading-pm/scripts/dev/ui-api-mapping.json` + the Next.js `app/` route groups. Full rewrite tracked in the
+> context-hygiene plan (Phase 6).
+
+RULE: Users never hit dead ends. Every entity name is a clickable portal to its canonical surface. Cross-links preserve filter context via URL params. No surface should duplicate a view — link to the owner instead.
+
+WHY: cross-linking turns the platform's surfaces into one coherent experience (originally separate port-isolated UIs, now route groups within the unified Next.js app).
+
+## Entity Routing Map
+
+| Entity type | Target Surface | Target Path | Example |
+|---|---|---|---|
+| strategy | Strategy Analytics :5175 | `/strategies/:id` | "BTC Basis v3" → strategy detail |
+| client | Market Intelligence :5180 | `/pnl/client/:id` | "Blue Coast" → client P&L |
+| instrument | Strategy Analytics :5175 | `/instruments?q=:symbol` | "BTC-PERP" → instrument detail |
+| service | Operations :5183 | `/services/:name` | "execution-service" → service ops |
+| experiment | ML Platform :5179 | `/experiments/:id` | "exp-221" → experiment detail |
+| settlement | Reporting :5182 | `/settlements/:id` | "SETT-2026-03" → settlement detail |
+| batch_job | Operations :5183 | `/jobs/:id` | "JOB-123" → job detail |
+| run | Trading Command Center :5177 | `/positions/:runId` | "run-2026-03-17" → position detail |
+| alert | Trading Command Center :5177 | `/alerts?id=:id` | alert → alert detail |
+| report | Reporting :5182 | `/reports/:id` | "RPT-2026-03" → report detail |
+
+## URL Param Protocol
+
+All cross-links carry context params so the destination pre-filters:
+
+```
+?client_id=blue-coast        — pre-filter to this client
+?strategy_id=BTC_BASIS_V3    — pre-filter to this strategy
+?venue=binance               — pre-filter to this venue
+?component=funding           — pre-filter P&L to this component
+?as_of=2026-03-14T14:32:00Z  — point-in-time snapshot (omitted = live)
+?period=1w                   — time series period (1d, 1w, 1m, 3m, 1y)
+?from=trading                — breadcrumb knows where user came from
+```
+
+### Building Cross-Links
+
+```tsx
+import { buildCrossLink } from "@unified-trading/ui-kit";
+
+// From Trading Command Center → Market Intelligence P&L
+const url = buildCrossLink("marketIntelligence", "/pnl", {
+  client_id: "blue-coast",
+  strategy_id: "BTC_BASIS_V3",
+  from: "trading"
+});
+// → http://localhost:5180/pnl?client_id=blue-coast&strategy_id=BTC_BASIS_V3&from=trading
+```
+
+### Reading Cross-Link Params (receiving side)
+
+```tsx
+import { useDeepLinkParams } from "@unified-trading/ui-kit";
+
+function PnLPage() {
+  const { clientId, strategyId, from } = useDeepLinkParams();
+  // Auto-apply as default filters on mount
+}
+```
+
+## Surface Registry
+
+Port resolution uses `ui-api-mapping.json` as SSOT. In production, ports become path prefixes.
+
+```tsx
+import { SURFACES } from "@unified-trading/ui-kit";
+
+SURFACES.trading          // { name: "Trading", port: 5177 }
+SURFACES.strategyAnalytics // { name: "Strategy Analytics", port: 5175 }
+SURFACES.marketIntelligence // { name: "Market Intelligence", port: 5180 }
+SURFACES.operations        // { name: "Operations", port: 5183 }
+SURFACES.config            // { name: "Config", port: 5173 }
+SURFACES.mlPlatform        // { name: "ML Platform", port: 5179 }
+SURFACES.reporting         // { name: "Reporting", port: 5182 }
+```
+
+## Lifecycle Rail → Surface Mapping
+
+| Lifecycle Step | Target Surface | Route |
+|---|---|---|
+| Design | Config & Onboarding | `/strategies` |
+| Simulate | Strategy Analytics | `/grid` |
+| Promote | Strategy Analytics | `/grid` (selection + promote flow) |
+| Run | Trading Command Center | `/` |
+| Monitor | Trading Command Center | `/alerts` |
+| Explain | Market Intelligence | `/pnl` |
+| Reconcile | Market Intelligence | `/recon` |
+
+## DO
+
+- Use `<EntityLink>` for every entity name in every table cell
+- Pass `?from=` so breadcrumbs show navigation history
+- Carry filter context across surfaces (client_id, strategy_id)
+- Use `buildCrossLink()` — never hardcode URLs or port numbers
+
+## NEVER
+
+- Hardcode `http://localhost:5175` — use SurfaceRegistry
+- Navigate to another surface without passing context params
+- Duplicate a view instead of cross-linking to the canonical owner
+- Build inline navigation that bypasses the GlobalNavBar
+
+SSOT: `unified-trading-ui-kit/src/lib/surface-registry.ts`, `unified-trading-pm/scripts/dev/ui-api-mapping.json`
