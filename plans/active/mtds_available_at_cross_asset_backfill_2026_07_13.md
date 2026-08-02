@@ -790,3 +790,22 @@ as "backlog resolved." Cron confirmed still `PAUSED` for prediction
 remain the valid rollback points, untouched. `unified-trading-sa` GCP identity used for diagnostic reads (the default
 `github-actions-deploy` active account lacks `cloudscheduler.jobs.get` — switched per RULES.md § 5's self-service
 ambient-identity rule).
+
+**Session-end handoff (2026-08-02T16:35Z, context-usage-triggered).** The prediction continuation launched above is
+STILL RUNNING (PID 4180822, `--start-date 2025-01-01 --end-date 2026-08-01 --chunk-days 15`) — chunk 11/44 confirmed
+complete as of this checkpoint (0 write failures throughout, RSS ~1.1GB, stable), chunk 12 in progress. This process is
+independent of this chat session and will keep running after compaction/handoff — check
+`ps aux | grep rebuild_prediction_manifest` for liveness, or re-run
+`scripts/mtds_prediction_fillrate_check_2026_08_02.py` (promoted this session, see below) to see how far it's gotten.
+**Promoted 3 reusable scripts from scratchpad to `market-tick-data-service/scripts/`** (verified with
+`quality-gates.sh`, `market-tick-data-service@3c51b3d0`): `mtds_prediction_fillrate_check_2026_08_02.py` and
+`mtds_tradfi_fillrate_check_2026_08_02.py` (the exact fill-rate/era-split diagnostics this session used — re-run either
+after the next apply chunk lands, no need to hand-roll a new one-off) and `odds_api_rss_sampler_2026_08_02.py` (for the
+sibling OOM doc, once vendor credits are restored). **Next steps for whoever resumes**: (1) let the prediction
+continuation finish (or resume it from 2025-01-01 if it died — the script re-scans the whole range every time by design,
+so it's safe to just re-launch identically, not resume-by-date); (2) once done, force-consolidate + re-run the fill-rate
+check + verify guardrail/row-count per the "Still required" checklist in #9's entry above; (3) separately, re-run
+`--start-date 2019-01-02 --end-date 2023-04-10 --chunk-days 30` for tradfi to test whether the pre-2023-04 fill-rate
+ceiling moves now that the bundled-shard fix is live, checking `unparseable` counts per this session's recommendation;
+(4) the operator has approved purchasing additional odds-api credits (BLK-6728ec9a, option B) for the UNRELATED sports
+odds_api backfill — re-verify live before resuming that separate work, do not assume the purchase is instant.
