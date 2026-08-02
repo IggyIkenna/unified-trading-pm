@@ -23,7 +23,10 @@ summary: >-
   green and immediately closed the escalation 9 minutes after dispatch, despite PR #796's own head never having passed.
 status: resolved
 nature: issue
-asset_group: [cross-cutting]
+asset_group:
+  [ao] # corrected 2026-08-02 (/ag-closeout-audit cross-cutting, operator-ruled) -- was [cross-cutting]; the defect is
+  # in agent-orchestrator's `_poll_wall_resolution` escalation watchdog (repos: [agent-orchestrator]), squarely
+  # ao-tranche -- the ldr_qg_failure wall it mis-resolves is the input, not the subject.
 stage: [meta]
 repos: [agent-orchestrator]
 scope: [engineer, admin]

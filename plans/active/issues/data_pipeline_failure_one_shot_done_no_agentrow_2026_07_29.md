@@ -17,7 +17,10 @@ summary: >-
   worker slot) — flagging with the diagnostic head-start for whoever has orchestrator-DB access.
 status: open
 nature: issue
-asset_group: [cross-cutting]
+asset_group:
+  [ao] # corrected 2026-08-02 (/ag-closeout-audit cross-cutting, operator-ruled) -- was [cross-cutting]; the defect is
+  # agent-orchestrator's one-shot AgentRow / `/done` lifecycle (repos: [agent-orchestrator]), squarely ao-tranche --
+  # `data_pipeline_failure` is the worker ROLE that hit it, not a data/multi-AG subject.
 stage: [meta]
 repos: [agent-orchestrator]
 scope: [engineer, admin]

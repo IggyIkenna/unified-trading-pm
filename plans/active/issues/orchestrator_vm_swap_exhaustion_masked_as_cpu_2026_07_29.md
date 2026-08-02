@@ -20,7 +20,10 @@ summary: >-
   agent-orchestrator@4742ce2), so the next person doesn't need to SSM in and run vmstat/top to catch this.
 status: open
 nature: issue
-asset_group: [cross-cutting]
+asset_group:
+  [ao] # corrected 2026-08-02 (/ag-closeout-audit cross-cutting, operator-ruled) -- was [cross-cutting]; the subject is
+  # the orchestrator VM's own host-resource exhaustion + the AO dashboard's swap% observability gap
+  # (repos: [agent-orchestrator], parent_epic: orchestrator_master), squarely ao-tranche.
 stage: [meta]
 repos: [agent-orchestrator]
 scope: [engineer, admin]

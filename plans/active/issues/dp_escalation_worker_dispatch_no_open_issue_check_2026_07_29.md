@@ -23,7 +23,10 @@ summary: >-
   about Slack noise, this is about escalation-worker dispatch).
 status: open
 nature: process
-asset_group: [cross-cutting]
+asset_group:
+  [ao] # corrected 2026-08-02 (/ag-closeout-audit cross-cutting, operator-ruled) -- was [cross-cutting]; the subject is
+  # escalation-worker dispatch dedup in agent-orchestrator (orchestrator-capacity waste), squarely ao-tranche -- the
+  # cefi/derivative_ticker DP-FETCH-009 condition is only the triggering example, not a multi-AG subject.
 stage: [meta]
 repos: [agent-orchestrator, deployment-service]
 scope: [engineer, admin]

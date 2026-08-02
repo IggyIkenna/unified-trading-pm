@@ -23,7 +23,10 @@ summary: >-
   mandate throughout.
 status: complete # (was: open) 2026-07-30 corpus-reduction sweep: all 3 todos (P1/P2/P3) shipped/closed, 0 open todos
 nature: issue
-asset_group: [cross-cutting]
+asset_group:
+  [ao] # corrected 2026-08-02 (/ag-closeout-audit cross-cutting, operator-ruled) -- was [cross-cutting]; content is an
+  # agent-orchestrator slot-lifecycle / heartbeat-dispatch regression (repos: [agent-orchestrator]), squarely
+  # ao-tranche, not generic cross-AG content.
 stage: [meta]
 repos: [agent-orchestrator]
 scope: [engineer, admin]
