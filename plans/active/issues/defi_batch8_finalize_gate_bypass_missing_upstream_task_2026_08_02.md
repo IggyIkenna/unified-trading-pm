@@ -210,3 +210,16 @@ No design call needed — every fact here is independently checkable:
   root-cause todo test BOTH reproductions against the same parser-shape hypothesis before concluding the fix. Not fixing
   inline (agent-orchestrator server code, outside this task's craft/repo scope) — added here rather than filing a
   duplicate doc since it directly strengthens this doc's own open investigation.
+
+- **2026-08-02 (slot 4, backend_engineer craft, task `defi_batch8_finalize_gate_bypass_missing_upstream_task-002`)** —
+  Dispatched todo 2 ("fix the identified cause") while todo 1 (root-cause) was STILL `dispatched` to slot 8, in progress
+  (`dispatched_at: 2026-08-02T15:47:02Z`, not yet `done`, not stale by the 25-min bar). Todo 2's own done-when literally
+  requires "the identified cause" as a precondition — nothing has landed yet (`git log` on
+  `agent-orchestrator/server/regen_backlog_from_plan.py` shows no new commit since `2b0b9e9`, predating this issue doc).
+  Both todo 1 and todo 2 target the SAME file/function (`_wire_gate_on_depends_prereqs` / `regen_backlog_from_plan.py`)
+  per the file-scope each todo names — starting todo 2's fix work now would either duplicate slot 8's in-flight
+  investigation or collide with it mid-edit on the same file, violating the same-file-never multi-agent-safety rule even
+  though these are informal issue-doc todos rather than a `sequential: true`-gated plan. Declining rather than guessing
+  at a fix ahead of the confirmed root cause, or redoing slot 8's diagnosis. **Next dispatch**: check
+  `git log -- agent-orchestrator/server/regen_backlog_from_plan.py` for slot 8's root-cause commit (or this doc's todo 1
+  checkbox/Progress Log for the identified cause) before starting todo 2's fix.
