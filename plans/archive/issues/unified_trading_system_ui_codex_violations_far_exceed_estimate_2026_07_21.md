@@ -19,7 +19,7 @@ summary: >-
   per-PR one.
 status: resolved
 nature: issue
-asset_group: [meta]
+asset_group: [ui] # retagged 2026-07-31 (corpus-sweep meta fold-in) -- was [meta]
 stage: [meta]
 repos: [unified-trading-system-ui]
 scope: [engineer]
@@ -29,6 +29,7 @@ related:
     plans/active/issues/ui_codex_gate_blind_to_app_router_layout_2026_07_21.md,
     /plans/archive/issues/ui_hardcoded_colour_and_localhost_debt_2026_07_21.md,
     /codex/06-coding-standards/ui-testing-layers.md,
+    /plans/active/ui_consolidated_closeout_2026_07_30.md,
   ]
 created: "2026-07-21"
 parent_epic: agent_operating_framework_master

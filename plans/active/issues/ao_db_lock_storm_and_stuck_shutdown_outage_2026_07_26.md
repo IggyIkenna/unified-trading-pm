@@ -12,7 +12,7 @@ summary:
   diagnosis live only in chat.
 status: open
 nature: issue
-asset_group: [meta]
+asset_group: [ao] # retagged 2026-07-31 (corpus-sweep meta fold-in) -- was [meta]
 stage: [meta]
 repos: [agent-orchestrator]
 scope: [engineer]
@@ -21,6 +21,7 @@ related:
   [
     /plans/archive/issues/ao_review_agent_spawn_db_lock_under_load_2026_07_26.md,
     /plans/archive/issues/ao_dispatch_health_idle_slot_thrash_2026_07_26.md,
+    /plans/archive/2026_07/ao_consolidated_closeout_2026_07_25.md,
   ]
 created: 2026-07-26
 last_updated: 2026-07-27

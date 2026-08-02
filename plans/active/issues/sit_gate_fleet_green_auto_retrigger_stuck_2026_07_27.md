@@ -18,7 +18,7 @@ summary: >-
   benefit) but should not be the standing recovery path.
 status: open
 nature: issue
-asset_group: [meta]
+asset_group: [ci] # retagged 2026-07-31 (corpus-sweep meta fold-in) -- was [meta]
 stage: [meta]
 repos: [unified-trading-pm, system-integration-tests]
 scope: [engineer]
@@ -27,6 +27,7 @@ related:
   [
     /codex/08-workflows/ci-cd-flow.md,
     /plans/archive/issues/sports_is_daily_enum_backfill_oom_at_32gi_ceiling_2026_07_27.md,
+    /plans/archive/2026_07/ci_consolidated_closeout_2026_07_25.md,
   ]
 created: 2026-07-27
 priority: P2

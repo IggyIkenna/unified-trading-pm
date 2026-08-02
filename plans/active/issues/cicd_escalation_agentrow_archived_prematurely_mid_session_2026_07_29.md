@@ -36,7 +36,7 @@ summary: >-
   lifecycle-complete, which is itself an inconsistent state regardless of what caused the original archival.
 status: open
 nature: issue
-asset_group: [meta]
+asset_group: [ao] # retagged 2026-07-31 (corpus-sweep meta fold-in) -- was [meta]
 stage: [meta]
 repos: [agent-orchestrator]
 scope: [engineer]
@@ -48,6 +48,7 @@ related:
     /plans/archive/issues/ag_closeout_auditor_one_shot_complete_no_agentrow_recurrence_2026_07_29.md,
     /plans/active/issues/one_shot_worker_completes_but_no_clean_exit_signal_watchdog_rekicks_2026_07_25.md,
     /plans/active/issues/data_pipeline_failure_one_shot_done_no_agentrow_2026_07_29.md,
+    /plans/archive/2026_07/ao_consolidated_closeout_2026_07_25.md,
   ]
 created: "2026-07-29"
 parent_epic: agent_operating_framework_master

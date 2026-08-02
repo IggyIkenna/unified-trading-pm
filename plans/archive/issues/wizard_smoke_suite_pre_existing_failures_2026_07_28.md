@@ -7,12 +7,16 @@ summary: >-
   failures tracked here as follow-up.
 status: resolved
 nature: process
-asset_group: [meta]
+asset_group: [ui] # retagged 2026-07-31 (corpus-sweep meta fold-in) -- was [meta]
 stage: [meta]
 repos: [unified-trading-system-ui]
 scope: [engineer]
 tags: [ui, playwright, smoke, tech-debt]
-related: [/plans/active/issues/capability_wizard_gap_discovery_2026_06_11.md]
+related:
+  [
+    /plans/active/issues/capability_wizard_gap_discovery_2026_06_11.md,
+    /plans/active/ui_consolidated_closeout_2026_07_30.md,
+  ]
 created: 2026-07-28
 parent_epic: agent_operating_framework_master
 priority: P3

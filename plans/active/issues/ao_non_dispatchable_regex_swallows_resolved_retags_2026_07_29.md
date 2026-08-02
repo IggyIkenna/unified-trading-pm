@@ -25,7 +25,7 @@ summary:
   in the body."
 status: open
 nature: issue
-asset_group: [meta]
+asset_group: [ao] # retagged 2026-07-31 (corpus-sweep meta fold-in) -- was [meta]
 stage: [meta]
 repos: [agent-orchestrator, unified-trading-pm]
 scope: [engineer, admin]
@@ -34,6 +34,7 @@ related:
   [
     /plans/active/infra_capture_and_devops_leftovers_2026_07_06.md,
     /plans/active/cross_cutting_satellite_ao_dispatch_batch2_2026_07_26.md,
+    /plans/archive/2026_07/ao_consolidated_closeout_2026_07_25.md,
   ]
 created: 2026-07-29
 priority: P1

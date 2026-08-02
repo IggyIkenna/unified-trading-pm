@@ -11,7 +11,7 @@ summary: |
   problem" — retitled + reprioritized accordingly.
 status: open
 nature: process
-asset_group: [meta]
+asset_group: [infrastructure] # retagged 2026-07-31 (corpus-sweep meta fold-in) -- was [meta]
 stage: [meta]
 repos: [unified-trading-pm]
 scope: [engineer, admin]
@@ -30,7 +30,11 @@ drift_direction: advance-code
 resolved_by:
 locked_by:
 source: [unified_trading_api_pip_audit_stale_ignore_list-001 -- observed while shipping the dependency fix]
-related: [plans/active/issues/qg_host_governor_severe_contention_2026_07_13.md]
+related:
+  [
+    plans/active/issues/qg_host_governor_severe_contention_2026_07_13.md,
+    /plans/active/infra_consolidated_closeout_2026_07_25.md,
+  ]
 depends_on: []
 ---
 

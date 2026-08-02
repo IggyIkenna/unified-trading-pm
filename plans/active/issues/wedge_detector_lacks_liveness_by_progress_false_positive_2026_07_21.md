@@ -21,7 +21,7 @@ summary: >-
   so "not responding to nudges" is indistinguishable from "wedged."
 status: open
 nature: issue
-asset_group: [meta]
+asset_group: [ao] # retagged 2026-07-31 (corpus-sweep meta fold-in) -- was [meta]
 stage: [meta]
 repos: [agent-orchestrator]
 scope: [engineer]
@@ -36,7 +36,11 @@ tags:
     liveness-by-progress,
     automation-calibration,
   ]
-related: [plans/active/issues/pm_qg_plan_discipline_and_frontmatter_regression_2026_07_21.md]
+related:
+  [
+    plans/active/issues/pm_qg_plan_discipline_and_frontmatter_regression_2026_07_21.md,
+    /plans/archive/2026_07/ao_consolidated_closeout_2026_07_25.md,
+  ]
 created: "2026-07-21"
 parent_epic: agent_operating_framework_master
 priority: P2

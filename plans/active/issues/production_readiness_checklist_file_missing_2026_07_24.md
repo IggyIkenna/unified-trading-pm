@@ -16,12 +16,18 @@ summary: >-
   issue doc once the cited backing file turned out to be missing entirely rather than just moved.
 status: open
 nature: issue
-asset_group: [meta]
+asset_group: [infrastructure] # retagged 2026-07-31 (corpus-sweep meta fold-in) -- was [meta]
 stage: [meta]
 repos: [deployment-service, unified-trading-pm]
 scope: [engineer, admin]
 tags: [docs-reconcile, checklist, production-readiness, dangling-reference, cross-repo]
-related: [/codex/06-coding-standards/README.md, /codex/10-audit/README.md, /codex/README.md]
+related:
+  [
+    /codex/06-coding-standards/README.md,
+    /codex/10-audit/README.md,
+    /codex/README.md,
+    /plans/active/infra_consolidated_closeout_2026_07_25.md,
+  ]
 created: 2026-07-24
 parent_epic: agent_operating_framework_master
 priority: P2

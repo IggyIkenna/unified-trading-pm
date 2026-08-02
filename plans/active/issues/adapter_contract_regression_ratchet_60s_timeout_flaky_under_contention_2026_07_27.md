@@ -12,12 +12,16 @@ summary: >-
   diff (features-service orchestrator.py pipeline_mode fix) purely due to this flake.
 status: open
 nature: issue
-asset_group: [meta]
+asset_group: [ci] # retagged 2026-07-31 (corpus-sweep meta fold-in) -- was [meta]
 stage: [meta]
 repos: [unified-trading-pm, features-service]
 scope: [engineer, admin]
 tags: [quality-gates, flaky-gate, timeout, adapter-contract-regression, ci, shared-host-contention]
-related: [/plans/archive/issues/lint_sweep_774602ea8_regression_audit_2026_05_20.md]
+related:
+  [
+    /plans/archive/issues/lint_sweep_774602ea8_regression_audit_2026_05_20.md,
+    /plans/archive/2026_07/ci_consolidated_closeout_2026_07_25.md,
+  ]
 created: 2026-07-27
 last_updated: 2026-07-27
 parent_epic: infrastructure_master

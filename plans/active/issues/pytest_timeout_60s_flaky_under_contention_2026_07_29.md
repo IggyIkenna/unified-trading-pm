@@ -20,12 +20,16 @@ summary: >-
   runner's core count) rather than cross-job host sharing.
 status: open
 nature: issue
-asset_group: [meta]
+asset_group: [ci] # retagged 2026-07-31 (corpus-sweep meta fold-in) -- was [meta]
 stage: [meta]
 repos: [unified-trading-pm, unified-api-contracts, instruments-service, features-service]
 scope: [engineer, admin]
 tags: [quality-gates, flaky-gate, timeout, pytest-timeout, ci, shared-host-contention, xdist]
-related: [/plans/active/issues/adapter_contract_regression_ratchet_60s_timeout_flaky_under_contention_2026_07_27.md]
+related:
+  [
+    /plans/active/issues/adapter_contract_regression_ratchet_60s_timeout_flaky_under_contention_2026_07_27.md,
+    /plans/archive/2026_07/ci_consolidated_closeout_2026_07_25.md,
+  ]
 created: 2026-07-29
 last_updated: 2026-08-01
 parent_epic: infrastructure_master

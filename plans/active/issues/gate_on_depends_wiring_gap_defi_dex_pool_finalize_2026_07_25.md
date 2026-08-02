@@ -24,7 +24,7 @@ summary: >-
   work now, and am moving to other work rather than holding the slot.
 status: open
 nature: issue
-asset_group: [meta]
+asset_group: [ao] # retagged 2026-07-31 (corpus-sweep meta fold-in) -- was [meta]
 stage: [meta]
 repos: [agent-orchestrator]
 scope: [engineer, admin]
@@ -35,6 +35,7 @@ related:
     /plans/active/defi_dex_pool_symbol_fix_backfill_purge_2026_07_25.md,
     /plans/archive/issues/gate_on_depends_noop_on_local_only_upstream_2026_07_21.md,
     /plans/archive/issues/gate_on_depends_noop_on_assigned_vm_na_upstream_2026_07_21.md,
+    /plans/archive/2026_07/ao_consolidated_closeout_2026_07_25.md,
   ]
 created: "2026-07-25"
 source:

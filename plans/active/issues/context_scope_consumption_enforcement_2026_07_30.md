@@ -8,7 +8,7 @@ summary:
   intended context-window/model-tier-downgrade payoff, which needs mechanical enforcement at dispatch/boot time."
 status: open
 nature: issue
-asset_group: [meta]
+asset_group: [ao] # retagged 2026-07-31 (corpus-sweep meta fold-in) -- was [meta]
 stage: [meta]
 repos: [agent-orchestrator, unified-trading-pm]
 scope: [engineer, admin]
@@ -18,6 +18,7 @@ related:
     /cursor-configs/skills/context-scout/SKILL.md,
     /codex/11-project-management/doc-frontmatter-schema.md,
     /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
+    /plans/archive/2026_07/ao_consolidated_closeout_2026_07_25.md,
   ]
 created: 2026-07-30
 parent_epic: agent_operating_framework_master

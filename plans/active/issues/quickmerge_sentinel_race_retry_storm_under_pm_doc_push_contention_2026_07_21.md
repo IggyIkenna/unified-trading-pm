@@ -14,7 +14,7 @@ summary: >-
   efficiency/throughput hole worth capturing.
 status: open
 nature: issue
-asset_group: [meta]
+asset_group: [ci] # retagged 2026-07-31 (corpus-sweep meta fold-in) -- was [meta]
 stage: [meta]
 repos: [unified-trading-pm]
 scope: [engineer]

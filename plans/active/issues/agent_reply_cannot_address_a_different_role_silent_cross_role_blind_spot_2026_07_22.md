@@ -18,7 +18,7 @@ summary: >-
   /api/agents/by-role/review/message, direction=to_agent, msg 1627) — that path delivers + tmux-nudges correctly.
 status: open
 nature: issue
-asset_group: [meta]
+asset_group: [ao] # retagged 2026-07-31 (corpus-sweep meta fold-in) -- was [meta]
 stage: [meta]
 repos: [agent-orchestrator]
 scope: [engineer]
@@ -28,6 +28,7 @@ related:
   [
     plans/active/issues/wedge_detector_lacks_liveness_by_progress_false_positive_2026_07_21.md,
     plans/active/issues/quickmerge_sentinel_race_retry_storm_under_pm_doc_push_contention_2026_07_21.md,
+    /plans/archive/2026_07/ao_consolidated_closeout_2026_07_25.md,
   ]
 created: "2026-07-22"
 parent_epic: agent_operating_framework_master

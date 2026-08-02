@@ -12,13 +12,14 @@ summary:
   stopgap, not a fix; the actual decomposition work is this doc."
 status: resolved # (was: open) 2026-07-31 — all 27 files decomposed, FUNCTION_SIZE_EXTRA_EXCLUDES now empty
 nature: issue
-asset_group: [meta]
+asset_group: [ci] # retagged 2026-07-31 (corpus-sweep meta fold-in) -- was [meta]
 stage: [meta]
 repos: [deployment-api]
 scope: [engineer]
 tags: [code-quality, function-size, file-size, qg-ratchet, quality-gates, deployment-api]
 related:
   - /plans/archive/issues/qg_size_gate_sentinel_skip_root_cause_2026_07_25.md
+  - /plans/archive/2026_07/ci_consolidated_closeout_2026_07_25.md
 created: 2026-07-30
 last_updated: 2026-07-31 # status flipped resolved -- 0 open todos remain, closing fix deployment-api@2658beb
 parent_epic: deployment_and_user_management_master

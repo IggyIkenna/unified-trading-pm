@@ -16,7 +16,7 @@ summary: >-
   generated `.json`, so 14 markdown docs), several with multiple occurrences.
 status: open
 nature: notes
-asset_group: [meta]
+asset_group: [ao] # retagged 2026-07-31 (corpus-sweep meta fold-in) -- was [meta]
 stage: [meta]
 repos: [agent-orchestrator]
 scope: [engineer]
@@ -27,6 +27,7 @@ related:
     /plans/active/issues/sports_odds_api_scattered_multiyear_gaps_2026_07_27.md,
     /plans/archive/issues/sports_odds_api_key_deactivated_2026_07_26.md,
     /plans/active/sports_closeout_track_s2_foldin_2026_07_25.md,
+    /plans/archive/2026_07/ao_consolidated_closeout_2026_07_25.md,
   ]
 created: 2026-07-28
 last_updated: 2026-07-28

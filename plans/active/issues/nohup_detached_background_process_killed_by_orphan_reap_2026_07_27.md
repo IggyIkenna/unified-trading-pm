@@ -14,7 +14,7 @@ summary: >-
   parented and tracked, and the harness notifies on real completion.
 status: open
 nature: issue
-asset_group: [meta]
+asset_group: [ao] # retagged 2026-07-31 (corpus-sweep meta fold-in) -- was [meta]
 stage: [meta]
 repos: [agent-orchestrator]
 scope: [engineer, admin]
@@ -23,6 +23,7 @@ related:
   [
     /codex/04-architecture/agent-orchestrator-worker-liveness.md,
     /codex/12-agent-workflow/async-wait-and-poll-discipline.md,
+    /plans/archive/2026_07/ao_consolidated_closeout_2026_07_25.md,
   ]
 created: "2026-07-27"
 source: "found while verifying instrument_availability_hive_canonicalisation-001 on real infra, slot-8, 2026-07-27"

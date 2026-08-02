@@ -7,12 +7,16 @@ summary:
   reproducibly, in isolation, on a clean tree with zero code changes — pre-existing, not caused by that plan's work.
 status: open
 nature: issue
-asset_group: [meta]
+asset_group: [ao] # retagged 2026-07-31 (corpus-sweep meta fold-in) -- was [meta]
 stage: [meta]
 repos: [agent-orchestrator]
 scope: [engineer]
 tags: [dashboard, playwright, e2e, flaky-test, backlog]
-related: [/plans/archive/2026_07/ao_backlog_collision_alert_and_remediation_ui_2026_07_26.md]
+related:
+  [
+    /plans/archive/2026_07/ao_backlog_collision_alert_and_remediation_ui_2026_07_26.md,
+    /plans/archive/2026_07/ao_consolidated_closeout_2026_07_25.md,
+  ]
 created: 2026-07-26
 parent_epic: orchestrator_master
 assigned_vm: NA

@@ -10,7 +10,7 @@ summary:
   quick-win — raise K on current 61 GB hosts now (data-backed) — precedes the full governor.
 status: active
 nature: process
-asset_group: [meta]
+asset_group: [ci] # retagged 2026-07-31 (corpus-sweep meta fold-in) -- was [meta]
 stage: [meta]
 repos: [unified-trading-pm, agent-orchestrator]
 scope: [engineer, admin]
@@ -20,6 +20,7 @@ related:
     plans/active/issues/qg_host_governor_severe_contention_2026_07_13.md,
     /codex/06-coding-standards/quality-gates.md,
     scripts/quality-gates-base/qg-host-governor.sh,
+    /plans/archive/2026_07/ci_consolidated_closeout_2026_07_25.md,
   ]
 created: "2026-07-14"
 last_updated: 2026-07-16

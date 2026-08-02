@@ -14,7 +14,7 @@ summary:
   from ordinary fleet-drift races."
 status: open
 nature: issue
-asset_group: [meta]
+asset_group: [ao] # retagged 2026-07-31 (corpus-sweep meta fold-in) -- was [meta]
 stage: [meta]
 repos: [unified-trading-pm, agent-orchestrator]
 scope: [engineer, admin]
@@ -23,6 +23,7 @@ related:
   [
     /plans/archive/issues/mtds_empty_string_fallback_baseline_drift_2026_07_30.md,
     /plans/archive/issues/mtds_adapter_contract_baseline_stale_after_manifest_fn_move_2026_07_30.md,
+    /plans/archive/2026_07/ao_consolidated_closeout_2026_07_25.md,
   ]
 created: 2026-07-30
 priority: P1

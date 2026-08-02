@@ -8,12 +8,16 @@ summary: >-
   — pre-existing, unrelated to the provider-badge work that surfaced it.
 status: open
 nature: process
-asset_group: [meta]
+asset_group: [ao] # retagged 2026-07-31 (corpus-sweep meta fold-in) -- was [meta]
 stage: [meta]
 repos: [agent-orchestrator]
 scope: [engineer]
 tags: [agent-orchestrator, playwright, e2e, flake]
-related: [/plans/active/deepseek_claude_blended_provider_routing_2026_07_28.md]
+related:
+  [
+    /plans/active/deepseek_claude_blended_provider_routing_2026_07_28.md,
+    /plans/archive/2026_07/ao_consolidated_closeout_2026_07_25.md,
+  ]
 created: 2026-07-30
 parent_epic: orchestrator_master
 priority: P3

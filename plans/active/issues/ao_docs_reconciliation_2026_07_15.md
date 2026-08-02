@@ -13,7 +13,7 @@ summary: |
   ritual + ASK). This doc is the living tracker + verdict matrix; verified findings accrue here.
 status: open
 nature: issue
-asset_group: [meta]
+asset_group: [ao] # retagged 2026-07-31 (corpus-sweep meta fold-in) -- was [meta]
 stage: [meta]
 repos: [agent-orchestrator, unified-trading-pm]
 scope: [engineer, admin]
