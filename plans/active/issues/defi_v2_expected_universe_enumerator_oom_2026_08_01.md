@@ -14,7 +14,7 @@ summary: >-
   written. Net effect, confirmed via a live manifest census: the entire DeFi per-instrument `expected_unattempted`
   denominator is silently empty — 0 rows for risk_params/ liquidation_events/dex_pool_state/dex_pool_swaps/oracle_prices
   (and every other DeFi data_type), fleet-wide, for 19+ days.
-status: open
+status: resolved
 nature: issue
 asset_group: [defi]
 stage: [data]
@@ -38,7 +38,7 @@ priority: P0
 estimate_class: refactor
 assigned_role: data_engineering
 drift_direction: advance-code
-resolved_by:
+resolved_by: "slot-16 (data_engineering), defi_v2_expected_universe_enumerator_oom-003, 2026-08-02T22:18Z"
 locked_by:
 context_scope:
   [
@@ -186,13 +186,35 @@ correctly scoped and already covers these 5 data_types in code; it just needs to
       rows now materialise for `risk_params`/`dex_pool_state`/`dex_pool_swaps`/ `oracle_prices` (and any other
       previously-empty DeFi data_type). Record before/after counts in this doc's Progress Log. (repo:
       instruments-service) — instruments-service@66adbc1d, deployment-service@46e0eda
-- [ ] [DATA] P2. Investigate whether `liquidation_events`/`risk_params` having no recurring collector in
+- [x] ✅ [DATA] P2. Investigate whether `liquidation_events`/`risk_params` having no recurring collector in
       `deployment-service/terraform/gcp/defi_collection_scheduler.tf`'s `defi_collect_operations` map is intentional
       (one-off backfill only, by design) or a genuine scheduling gap — if a gap, wire a scheduler entry mirroring the
-      sibling `oracle-prices`/`dex-pools` pattern. (repo: deployment-service)
+      sibling `oracle-prices`/`dex-pools` pattern. (repo: deployment-service) — deployment-service@b370df8. **VERDICT:
+      genuine scheduling gap, not intentional** — see Progress Log for full evidence; both scheduler entries now wired.
 
 ## Progress Log
 
+- 2026-08-02T22:18Z (slot-16, data_engineering, task `defi_v2_expected_universe_enumerator_oom-003`): Todo 3 resolved —
+  **VERDICT: genuine scheduling gap, not an intentional backfill-only design.** Evidence: (1) both `collect-risk-params`
+  and `collect-liquidation-events` are fully implemented, real handlers
+  (`market_tick_data_service/cli/handlers/risk_params_handler.py`, `liquidation_events_handler.py` — the latter
+  explicitly distinct from `liquidations_handler.py`, which the scheduler DOES already wire) with functional subgraph
+  fetch logic, and both are already registered CLI operations in `cli/main.py`'s `ServiceBootstrap` `operations=` map
+  (`collect-risk-params`/`collect-liquidation-events`) — dispatchable today, just never invoked on a schedule. (2)
+  Searched `unified-trading-pm` for any design doc declaring these backfill-only/one-off-by-design — none exists; the
+  originating plan (`plans/archive/defi_data_types_completeness_2026_04_24.plan.md`) built `liquidation_events` as a
+  regular adapter alongside every other scheduled DeFi data_type, with no scheduling caveat. (3) This issue's own Todo 2
+  census confirms the practical effect: `risk_params` has 29,024 rows from "an ad-hoc/manual capture, not this
+  scheduler" (someone ran it once, it never recurred) and `liquidation_events` has ZERO rows of ANY capture_status —
+  never captured at all, despite the enumerator (Todo 1/2's fix) now correctly seeding its `expected_unattempted`
+  denominator (~1,141 rows) — a permanently-zero-coverage cell with no collector to ever fill it. Fixed:
+  `deployment-service@b370df8` wires both into `defi_collection_scheduler.tf`'s `defi_collect_operations` map, mirroring
+  the sibling `lending-indices`/`liquidations` pattern exactly (1 cpu/2Gi Cloud Run Job + Cloud Scheduler cron, same
+  module/resource wiring, no new IAM needed) — `risk-params` at `00:50 UTC` (right after `lending-indices` at `00:45`,
+  its rate-index sibling) and `liquidation-events` at `01:35 UTC` (right after `liquidations` at `01:30`, same
+  protocols). Verified `tofu validate` clean (backend-free local init, no state touched) and `tofu fmt -check` clean
+  before committing. Full `quality-gates.sh` green, shipped via quickmerge. **This closes all 3 todos on this issue** —
+  marking `status: resolved`.
 - 2026-08-01 (slot-16, data_engineering): Issue filed during investigation of
   `/plans/archive/2026_08/defi_expected_unattempted_seeder_design_2026_07_26.md`'s Todo 6. Full evidence above (Cloud
   Run execution history, `gcloud run jobs executions describe` OOM message, live manifest census, code-read root cause).
