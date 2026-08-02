@@ -161,10 +161,31 @@ Cross-verified with direct `gcloud storage ls` spot-checks of the true bare `ent
       can proceed on this evidence. Todo 6 (delete) now covers the `redundant` (42,688, real duplicate objects) and
       `stale_label` (83, phantom manifest rows with no real backing object) populations, not a "migrated" population —
       re-read finding T's reversibility citation against this shape before `--apply`.
-- [ ] [DIAG] P1. For the load-bearing subset only, confirm each row's content actually maps cleanly onto the
+- [x] ✅ [DIAG] P1. For the load-bearing subset only, confirm each row's content actually maps cleanly onto the
       `entity=fixtures_schedule/` (schedule fields incl. `round`) + `entity=fixtures_outcomes/` (scores/status) split —
       spot-check a sample against the current split-entity writer's schema. **Done when**: a written confirmation states
-      the schema mapping holds for a representative sample, or documents exactly which fields don't map cleanly.
+      the schema mapping holds for a representative sample, or documents exactly which fields don't map cleanly. —
+      **DONE 2026-08-02, `unified-trading-pm` (this doc, no code change).** Re-verified (not blindly trusted) todo 1's
+      `load_bearing_count = 0` finding before treating this todo's own done-when as vacuous: (1) re-read the census
+      script `instruments-service/scripts/census_sports_fixtures_legacy_load_bearing_2026_08_02.py` line-by-line — its
+      per-candidate real-GCS-read step (`_blob_real`: `blob_exists` + non-zero-row parquet parse, both legacy and
+      canonical paths) uses the exact same production path-builder functions
+      (`_sports_ref_legacy_blob_path`/`_sports_ref_canonical_blob_path`,
+      `instruments-service/instruments_service/engine     /orchestrator/sports_fixtures.py:122-148`) that
+      `_read_fixtures_entity_with_schedule_fallback` itself calls in production (same file, lines 535/538/603/606) — not
+      a reimplemented/divergent path scheme; (2) confirmed the committed report
+      (`instruments-service/scripts/_sports_fixtures_legacy_census_report_2026_08_02.json`) shows `read_error_count: 0`
+      — all 83 candidates resolved to a definite verdict (0 `load_bearing`, 0 `redundant_gcs`, 83 `stale_label`), so
+      there is no unresolved ambiguity masking a nonzero load-bearing count. **Conclusion: the load-bearing population
+      is genuinely empty (0 rows) — this todo's done-when has no subject to spot-check.** For documentation
+      completeness, the current split-entity writer's schema (same file, lines 464-501) was also read:
+      `entity=fixtures_schedule` carries all fields except the Q6 outcome columns + `match_end_time` (written for every
+      fixture), `entity=fixtures_outcomes` carries the Q6 outcome columns + a small key set (written only once
+      `home_score_regulation` is populated) — this IS the target split todos 2-4 would map onto if any load-bearing rows
+      existed, but since none do, no per-row mapping exercise was performed or needed. Per the census's own progress-log
+      note, this also means todos 3-4 (write + apply a migration script) have nothing to migrate — the next worker
+      should treat those as vacuously satisfied too, following the same verify-don't-blindly-skip standard applied here,
+      not silently flip them without re-checking this reasoning.
 - [ ] [CODE] P1. Write + dry-run a migration script that reads each load-bearing legacy object and writes it to the
       canonical `entity=fixtures_schedule/` + `entity=fixtures_outcomes/` paths under the correct `pipeline_mode=`
       prefix, updating the manifest atom from `"FIXTURES"` to `FIXTURES_SCHEDULE`/`FIXTURES_OUTCOMES` per row. **Done
@@ -229,3 +250,10 @@ Cross-verified with direct `gcloud storage ls` spot-checks of the true bare `ent
   `gate_on_depends` + `sequential`) per `task_template.md` §4's finalize-plan-coverage rule, which applies the moment a
   `doc_type: plan` becomes `assigned_vm: planning`. No todo text changed — all 7 todos keep their original scope and
   done-whens.
+- **Todo 2 re-verification (2026-08-02)**: per the Phase-1 census's own note that todo 2's done-when goes vacuous when
+  `load_bearing_count = 0`, re-verified rather than blindly trusted the finding before flipping the checkbox: reviewed
+  the census script's methodology (real per-object GCS reads via the exact same production path-builder functions the
+  live fallback uses, not a reimplementation) and confirmed the committed report shows `read_error_count: 0` (all 83
+  candidates resolved definitively, none left ambiguous). Load-bearing population is genuinely 0 — todo 2 flipped with a
+  written confirmation citing this re-verification. Flags the same implication forward for todos 3-4 (nothing to
+  migrate) — a future worker should re-verify, not blind-skip, per the same standard.
