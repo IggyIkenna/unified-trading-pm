@@ -238,3 +238,24 @@ boot-loop doc's citation of `server/prompts.py` and `server/routes/slots_worker.
     all), which is squarely todo 1's scope ("make the selection collision-aware: skip a tmux session that already has a
     live `AgentRow` for a persistent role") -- todo 1's fix should cover both `_pick_free_slot` implementations, not
     only the one this doc's title names.
+
+- **na-eligibility-audit 2026-08-01 (autonomous, tranche `tradfi`, dispatch agt-3589fe, slot 5)**: a THIRD occurrence of
+  the same collision shape, on the task-assignment surface (not `tmux_session_lost`) already flagged as a possible data
+  point in this doc's `tranche ao` / slot-2 entry above. This dispatch's own `/boot` call (role=na_eligibility_auditor,
+  tranche=tradfi) returned `task.id=persistent_slot_tmux_session_hijacked_by_transient_plan_health_dispatch-001` —
+  **this doc's own todo-1 tracking task** — `assigned_role: backend_engineer`,
+  `dispatch_reason: "tier=1 priority=20 plan_order=0 — highest-rank queued task with prereqs met and no collision"`. The
+  `"no collision"` in that dispatch reason is itself notable: the picker's own collision check evidently does not
+  consider "this slot already has a fixed, non-backlog role assignment from its dispatch" a collision — consistent with
+  todo 1's hypothesis that tmux-session occupancy is the only thing checked, not role/assignment identity. Proceeded per
+  role file (ignored the mismatched task) — additionally called `POST /api/slots/5/skip-current-task`
+  (`reason_code: OTHER`) to release the wrongly-bound task back to `queued` rather than leaving it silently claimed by a
+  slot that would never call its `/done`, so a real `backend_engineer` worker remains able to pick it up; response
+  confirmed `tmux_session_kept_alive: true`, `fleet_cooldown_armed: false` (correctly slot-scoped per
+  `SkipCurrentTaskRequest`'s own OTHER-reason-code doc — a scope mismatch is a per-slot fact, not fleet-wide blockage).
+  Flagging for whoever works todo 1: **a transient plan_health dispatch's `/boot` call should probably not run through
+  the same generic-backlog dispatch path at all** — three independent runs now (slot 1/review-persistent-role, slot
+  2/tranche-ao, slot 5/tranche-tradfi) show the `/boot` → `_pick_free_slot`-or-equivalent generic-task-assignment path
+  has no awareness that the calling session already has a complete, self-contained assignment from its own dispatch
+  payload (`tranche`/`mode`), independent of the `review`-vs-`persistent-role` collision vector todo 1 already scopes
+  for tmux-kill collisions specifically.
