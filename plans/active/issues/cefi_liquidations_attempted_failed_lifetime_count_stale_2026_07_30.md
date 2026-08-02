@@ -47,7 +47,7 @@ locked_by:
 execution_scope: local-only
 drift_direction: advance-code
 depends_on: []
-last_updated: 2026-07-30
+last_updated: 2026-08-02
 locked_since:
 context_scope:
   [
@@ -197,3 +197,14 @@ not lost if the bound expires unanswered.
   `[OPERATOR]`/operator-conditional (decide among options A/B/C; the DIAG follow-up is gated on that decision). Not
   worker-determinable.
 - **context-scout 2026-08-01**: populated context_scope (4 entries).
+- **2026-08-02 (data_pipeline_failure escalation worker, `agt-4255c7`, slot 2) — 3rd dispatch, re-fire confirmed
+  static.** Re-page carried `44,425 attempted_failed of 749,139 attempted` (ratio 5.9%) vs the 2nd dispatch's
+  `44,422 / 749,123` — `attempted_failed` grew by only 3 rows and `attempted` by 16 over the intervening period,
+  matching the boot context's own `attempted_failed_staleness` label ("only 3 attempted_failed row(s) in the last 1d —
+  below the 500-row materiality floor; a decaying trickle on already-tracked backlog, not a fresh regression"). Per the
+  established skip-condition (`/plans/active/issues/dp_escalation_worker_dispatch_no_open_issue_check_2026_07_29.md`),
+  did a cheap verification instead of re-deriving the diagnosis: confirmed `market-tick-data-service@6a067cf1` (aiodns
+  fix) is still an ancestor of `origin/live-defi-rollout`, and
+  `deployment-service/scripts/vm/tardis-concurrency-guard.sh` still caps `TARDIS_MAX_CONCURRENT_VMS=1`. Both root-cause
+  fixes remain in place; no new failure class observed; the operator decision on lifetime-count-vs-trailing-window
+  (options A/B/C above) is still open and unaffected. No code changed.
