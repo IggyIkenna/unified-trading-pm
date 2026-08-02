@@ -143,18 +143,27 @@ further this session (outside this task's scope — filed here instead of silent
 
 ## Recommended fix path
 
-- [ ] [INFRA] P1. Confirm directly (e.g. re-run one shard-day with `--log-level DEBUG` or inspect the VM's actual
-      launched `bash -c` command via `WATCHDOG_TRACE.log`/serial console) whether `MDPS_OUTPUT_BUCKET_SPORTS` is
-      genuinely present in the VM's process environment for a `pipeline_e2e_check.py`-launched MDPS backfill VM. (repo:
-      deployment-service)
+- [x] ✅ [INFRA] P1. **DONE 2026-08-02 (slot-10, data_pipeline_failure escalation agt-4f0f41).** Confirmed directly:
+      `run.log`'s own startup line for BOTH the original force-leg VM
+      (`mdps-backfill-sports-pipelinecheck-20260802-161417-d0c755`) and a fresh relaunch I ran with the identical argv
+      (`mdps-backfill-sports-relaunch-20260802-163614-dp001`) prints the exact `bash -c` command
+      `vm-exec` invoked, verbatim: `... MDPS_ASSET_GROUP=SPORTS MDPS_DATA_TYPES='odds_horizon_bucket'
+      MDPS_OUTPUT_BUCKET_SPORTS=market-data-tick-sports-test-central-element-323112 SKIP_DEPENDENCY_CHECK=true
+      /home/ikennaigboaka/venv/bin/python -m market_data_processing_service --operation process --mode batch ...`.
+      **`MDPS_OUTPUT_BUCKET_SPORTS` IS genuinely present in the VM's process environment, correctly set to the
+      `-test-` bucket** — this rules out a launcher/argv-wiring gap entirely; the defect is squarely in
+      `market-data-processing-service`'s write-path code (todo below), not `launch-mdps-backfill-vm.sh`. (repo:
+      deployment-service — confirmation only, no code change needed here)
 - [ ] [CODE] P1. If the env var IS present but still not honored: trace which code path SPORTS:odds_horizon_bucket
       candle writes actually go through (the `MATCH_ODDS`/`odds_horizon_bucket` instrument_type in the failing paths
       suggests a sports-specific writer) and confirm it calls `config.get_output_bucket_for_asset_group()` like every
       other MDPS write path, not a bucket resolved some other way. (repo: market-data-processing-service)
-- [ ] [CODE] P1. If the env var is genuinely missing from the launched command: fix `launch-mdps-backfill-vm.sh`'s
-      `--output-bucket`/`MDPS_OUTPUT_BUCKET_${cat_upper}` wiring (lines ~261-282) — confirm `OUTPUT_BUCKET_OVERRIDE` and
-      the per-cat `_out_val` variable are both actually populated and reach the `cmd` string for the `sports` category
-      specifically. (repo: deployment-service)
+- [x] ✅ [CODE] P1. **MOOT 2026-08-02 (slot-10, agt-4f0f41)** — the env var IS present (see todo 1 above), so this
+      "if genuinely missing" branch does not apply; `launch-mdps-backfill-vm.sh`'s existing
+      `OUTPUT_BUCKET_OVERRIDE`/`_out_val` wiring is confirmed working correctly for `sports`. Separately (independent
+      hardening, not a fix for THIS bug): shipped a fail-fast guard in the same function requiring
+      `--source-bucket`/`--output-bucket` whenever `--env != prod`, so a FUTURE caller that omits them entirely fails in
+      <1s instead of burning a full VM run — `deployment-service@<pending>`. (repo: deployment-service)
 - [ ] [DATA] P2. Once fixed, re-run a from-scratch force+skip
       `pipeline_e2e_check.py --asset-group SPORTS     --data-types odds_horizon_bucket` and confirm a genuine (non-403,
       non-timeout) verdict — either a real pass or a real data-derivation failure, not an infra/bucket-targeting
@@ -167,3 +176,26 @@ further this session (outside this task's scope — filed here instead of silent
   (`market-data-processing-service@dbcba44`). Confirmed the timeout mechanism itself works (both legs terminated
   genuinely within ~3.7min, well inside the new 3600s budget) — this doc tracks only the unrelated PROD-bucket-write
   defect discovered as a byproduct, not fixed in this session (outside this task's scope).
+- **2026-08-02 (slot-10, data_pipeline_failure escalation agt-4f0f41) — corroborating occurrence + todo 1/3 answered,
+  NOT fixed.** Independently dispatched via `DP_VM_EXIT_NONZERO` (DP-VM-001) for this exact force-leg VM
+  (`mdps-backfill-sports-pipelinecheck-20260802-161417-d0c755`, `exit_code=1`), before finding this doc already tracked
+  it. Confirmed `MDPS_OUTPUT_BUCKET_SPORTS` is genuinely present + correctly set in the VM's actual process env (see
+  todo 1) — ruling out the launcher-wiring branch (todo 3). Re-ran the identical shard as a fresh relaunch
+  (`mdps-backfill-sports-relaunch-20260802-163614-dp001`, same `--env staging --source-bucket <prd> --output-bucket
+  <test> --data-types odds_horizon_bucket --force` argv) to confirm this is a genuine, repeatable code defect and not a
+  one-off — **it reproduced identically, `exit_code=1`, same 403-against-`-prd-` write pattern.** New observation for
+  whoever picks up todo 2 (tracing the actual write call site): `run.log` also shows a DIFFERENT, seemingly-unrelated
+  client-side validation error firing heavily for this same shard —
+  `StreamingParquetWriter pre-write validation failed: [partition_mismatch] ... venue mismatch in
+  'FOOTBALL:UNIBET:MATCH_ODDS:...': partition declares FOOTBALL, id has UNIBET` (repeats for UNIBET/SPORT888/BETFAIR_EX_EU/
+  etc.) — every SPORTS:odds_horizon_bucket instrument's partition path derives `venue=FOOTBALL` (the SPORT, not the
+  bookmaker) while the real venue lives in the instrument_id. Not confirmed whether this is causally related to the
+  bucket-targeting bug (e.g. instruments failing this validation falling through to a different/older write path that
+  doesn't consult `MDPS_OUTPUT_BUCKET_SPORTS`), but it's the same shard, same run, and worth checking first since it's
+  the more specific signal — a manifest write in the SAME run correctly landed on the `-test-` bucket
+  (`ManifestWriter: per-VM shard updated ... at market-data-tick-sports-test-central-element-323112/_index/per_vm/...`),
+  so bucket-override resolution is NOT globally broken in this run, only for (some/all of) the actual candle-parquet
+  writes. Per RB-INFRA-RELAUNCH's "re-fails the same way twice → stop relaunching, root cause is already an issue" —
+  did not attempt a third relaunch; this doc's existing P1/`assigned_vm:planning` todo 2 is the correct next step, not
+  further relaunches. Shipped an unrelated, independent hardening fix in the same session (see todo 3) — does not close
+  this issue.
