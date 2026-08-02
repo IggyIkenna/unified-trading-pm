@@ -52,6 +52,27 @@ context_scope:
   ]
 ---
 
+# ⚠️ 2026-08-02 UPDATE — VERDICT OVERTURNED: OI _IS_ available at source (already in the corpus under `derivative_ticker`)
+
+The original "structurally infeasible" verdict below inspected ONLY `perp_funding` (Hyperliquid's `/info fundingHistory`
+REST endpoint, which genuinely returns just `fundingRate`/`premium`/`time` — no OI). It never checked
+`derivative_ticker`, which MTDS captures from Hyperliquid's **S3 `asset_ctxs` archive** — and that archive DOES carry
+open interest. `market_tick_data_service/adapters/hyperliquid_s3.py::_parse_asset_ctxs_csv` already parses
+`open_interest`, `mark_price` (`mark_px`), `index_price` (`oracle_px`), `funding`, `premium`, `mid_px`, `day_ntl_vlm`.
+
+**Evidence (direct parquet read, not simulated), same date slot-2 declared infeasible (2023-07-11), HYPERLIQUID ETH-USD
+`derivative_ticker`:** 1442 rows (per-minute), `open_interest` 1442/1442 non-null & **all non-zero** (e.g. 427.7569),
+`mark_price` 1442/1442 non-zero (1879.84…), `index_price` 1442/1442 non-zero (1880.4…). Confirmed the same
+`derivative_ticker` prefix exists for HYPERLIQUID across all three eras (2023-07-11, 2024-06-01, 2026-06-09) in
+`gs://market-data-tick-cefi-prd-central-element-323112/raw_tick_data/by_date/day=.../venue=HYPERLIQUID/instrument_type=perpetual/data_type=derivative_ticker/`.
+
+Per the operator's interim guidance (reject C; investigate OI-availability first; **OI available → direction B**), the
+fix direction is therefore **B**, and it does NOT require adding a new venue capture — the OI already exists in the
+corpus under `derivative_ticker`. The remaining work is a scoped features-service change to source
+`open_interest`/`mark_price`/`index_price` for delta_one `funding_oi` from the existing `derivative_ticker` capture
+(per-minute) aligned to the hourly-settled `perp_funding` grain. Final B-implementation shape + effort is
+repo-owner-ratifiable, but the precondition (OI-availability) is now CONFIRMED, not open. See 2026-08-02 Progress Log.
+
 # What I found
 
 Dispatched to `defi_satellite_ao_dispatch_batch3_2026_07_26.md`'s D1 todo (delta_one leg), after confirming
@@ -130,13 +151,20 @@ fixes above.
 
 # Recommended decision
 
-- [ ] [OPERATOR] P2. Decide the fix direction for `funding_oi` DEFI/HYPERLIQUID: (a) extend the MTDS HYPERLIQUID
-      perp_funding adapter to also capture open interest, if the venue's API exposes it at this polling grain -- the
-      more correct fix if feasible; or (b) rework `funding_oi.py` to degrade gracefully when OI is absent (compute
-      funding/basis features only, mark OI-derived columns as intentionally-null rather than failing the whole shard) --
-      the pragmatic fix if OI genuinely isn't available from HYPERLIQUID at this endpoint. Either requires a repo
-      owner's judgment call, not a blind backfill-session guess.
-- [ ] [DATA] P3. Once a fix direction lands, resume the `funding_oi` leg of
+- [x] ✅ [OPERATOR] P2. Fix-direction RULED = **B** (2026-08-02): OI-availability is CONFIRMED at source (Hyperliquid
+      `asset_ctxs` archive, already captured under `derivative_ticker` — see the 2026-08-02 UPDATE banner + Progress
+      Log). Per the operator's own interim sequencing (OI available → B), C (descope) is rejected and A (degrade) is
+      unnecessary. The final B-implementation shape/effort is repo-owner-ratifiable but the direction is settled.
+- [ ] [BACKEND] P2. Implement direction B: source `open_interest`/`mark_price`/`index_price` for delta_one `funding_oi`
+      from the existing HYPERLIQUID `derivative_ticker` capture (asset_ctxs, per-minute, already in the corpus) rather
+      than the OI-less `perp_funding` rows — align the per-minute `derivative_ticker` OI to the hourly-settled
+      `perp_funding` grain in the pass-through reshape path
+      (`features_service/delta_one/app/core/_passthrough_loader.py` +
+      `features_service/delta_one/app/calculators/funding_oi.py`). Repo: features-service. Done when: a DEFI
+      `funding_oi` verification-window run over `2023-05-12..2023-10-31` loads non-null `open_interest` for a majority
+      of HYPERLIQUID instruments and passes the >50% NaN column-quality gate, verified by a new unit test;
+      `bash     scripts/quality-gates.sh` green.
+- [ ] [DATA] P3. Once the [BACKEND] B fix above lands, resume the `funding_oi` leg of
       `defi_satellite_ao_dispatch_batch3_2026_07_26.md`'s D1 todo over the verified-clean manifest window
       (`2023-05-12..2023-10-31`). Repo: features-service. Done when: a verification-window run writes real
       `record_captured` rows for `funding_oi` (not `record_failed`/rejected-shard).
@@ -148,3 +176,21 @@ fixes above.
   inspection across two capture eras (not simulated/guessed). Did not relaunch `funding_oi` further -- deterministic,
   fix-direction is genuinely operator/repo-owner scoped.
 - **context-scout 2026-08-01**: populated context_scope (4 entries).
+- **2026-08-02 (slot-8, data_engineering craft) — OI-availability investigation (operator's B-precondition) CONCLUDED:
+  OI IS available; original "structurally infeasible" verdict OVERTURNED.** Operator/main gave interim guidance
+  (disposition:partial): reject C, investigate OI-availability at source first, then B (if available) / A (if not). I
+  traced the two capture paths: (1) `perp_funding` uses `/info fundingHistory` (`_perp_funding_hyperliquid.py`) —
+  returns only `fundingRate`/`premium`/`time`, genuinely no OI (this is what slot-2 correctly saw); (2)
+  `derivative_ticker` uses the Hyperliquid **S3 `asset_ctxs` archive** (`hyperliquid_s3.py::_parse_asset_ctxs_csv`)
+  which DOES capture `open_interest`/`mark_price`/`index_price`/`funding`/`premium`/`mid_px` — slot-2 never checked this
+  path. Verified against real corpus (direct parquet read):
+  `gs://market-data-tick-cefi-prd-.../day=2023-07-11/.../venue=HYPERLIQUID/ .../data_type=derivative_ticker/HYPERLIQUID:PERPETUAL:ETH-USD@LIN.parquet`
+  — 1442 per-minute rows, `open_interest` 1442/1442 non-null & all non-zero (427.7569…), `mark_price`/`index_price`
+  likewise fully populated; same `derivative_ticker` prefix confirmed present for HYPERLIQUID on 2023-07-11, 2024-06-01,
+  2026-06-09. So OI is available at source AND already in the corpus — no new venue capture needed. Per the operator's
+  firm sequencing this settles the fix-direction to **B** (marked the `[OPERATOR] P2` resolved above, per the
+  retag-on-resolve rule) and reduces it to a scoped features-service change (new `[BACKEND] P2` todo above): join the
+  existing per-minute `derivative_ticker` OI to the hourly `perp_funding` grain in the delta_one pass-through reshape.
+  Did NOT implement the B fix (repo-owner- ratifiable per operator guidance; it's a distinct backend_engineer todo) and
+  did NOT relaunch (no fix has landed — a relaunch would still fail the NaN gate). Method note: read one small parquet
+  via the repo `.venv` (bounded, single file — no whole-corpus walk).
