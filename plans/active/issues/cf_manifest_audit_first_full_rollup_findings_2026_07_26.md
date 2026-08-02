@@ -98,7 +98,9 @@ Full per-bucket rollup (excluding the Finding-1 false positives above):
    worked).
 2. **CF-8 (`available_at`) RED on 4 of 5 asset_groups is NEW** — first evidence ever, since this check never ran to
    completion before. The source doc's "already-confirmed" GREEN language for tradfi/sports/prediction is contradicted
-   here for CF-8 (and Era-B on tradfi, CF-3/CF-4 on sports/instruments-store). Only defi reads fully clean.
+   here for CF-8 (and CF-3/CF-4 on sports/instruments-store). **Era-B on tradfi is NOT actually a contradiction** — see
+   the correction on its own todo below (2026-08-02, slot 15): the source doc never claimed tradfi's Era-B was GREEN in
+   the first place; it explicitly documented it RED-but-design-adjudicated. Only defi reads fully clean.
 
 ## Recommended decision
 
@@ -194,15 +196,58 @@ Full per-bucket rollup (excluding the Finding-1 false positives above):
       duplicate run for the same reason — see that plan's Progress Log #13-#17). No new dispatchable work here beyond
       what that sibling plan already owns; root cause fully traced, fix already engineered and running, nothing this
       todo's own scope ("diagnose") leaves open. No code shipped this touch.
-- [ ] [DATA] P2. Diagnose + fix Era-B (chain `data_type` in `{options_chain,futures_chain}` must be 0) RED on
+- [x] ✅ [DATA] P2. Diagnose + fix Era-B (chain `data_type` in `{options_chain,futures_chain}` must be 0) RED on
       `market-data-tick-tradfi-prd` — contradicts the "already-confirmed" GREEN claim in
       `cross_cutting_manifest_canonicalisation_findings_2026_07_11.md`; re-verify that doc's tradfi Adjudication against
-      this fresh evidence. Repo: market-tick-data-service.
+      this fresh evidence. Repo: market-tick-data-service. — **2026-08-02 (data_engineering slot-15): re-verified live,
+      re-read the source doc's actual claim, no fix needed.** The premise in this todo's own title is imprecise: the
+      source doc (`cross_cutting_manifest_canonicalisation_findings_2026_07_11.md`, per-AG table row for tradfi + its
+      "Adjudication 2026-07-14" section) never claims tradfi's Era-B is GREEN — it explicitly documents it RED
+      (`242,210 chain-rows`) and states this is "EXPLICITLY ADJUDICATED as a non-issue" (tradfi's bundle-grain data
+      model; the checker's blanket "data_type in {options_chain,futures_chain} must be 0" premise, written for
+      per-contract AGs like cefi, doesn't hold for tradfi's coarser bundle-grain chain representation), re-confirmed
+      unchanged across 5+ independent sessions 2026-07-08→07-28 (most recently `tradfi_v9_stage1_finish_2026_07_06.md`
+      2026-07-28: "only pre-adjudicated CF-8/Era-B remain"). Ran a fresh, read-only, column-pruned
+      `cf_manifest_audit.audit()` against the live bucket directly (no GCS walk) — confirms Era-B still RED, **107,296
+      rows** (`options_chain`=104,540 + `futures_chain`=2,756), DOWN from the 242,210 baseline (consistent with ongoing
+      unrelated dedup/consolidation work, not a new regression). Broke down the composition: ALL 107,296 rows are
+      `capture_status=captured` (genuine historical trade data, not preflight/expected placeholder rows), venues CME
+      (106,635) + ICE (661) exclusively, `date` range 2023-05-01 through 2026-01-30 with **zero rows dated after
+      2026-01-30** — i.e. this is entirely pre-existing historical data with no active growth, matching the exact shape
+      `tradfi_chain_bundle_sampler_root_mismatch_2026_07_23.md` independently documents as tradfi's normal, expected
+      chain-bundle representation for CME/ICE futures/options products (that doc investigates a sampler bug around these
+      rows, not the `data_type` labeling itself — it never flags `data_type=options_chain/futures_chain` as wrong).
+      **Conclusion: this is a re-confirmation of the already-adjudicated design exception, not a new or contradicting
+      finding** — no code fix needed; the rollup doc's "contradicts GREEN" framing above (Finding 2) is corrected. Filed
+      a scoped P3 follow-up (below) for the one real residual: the checker itself has no way to distinguish "adjudicated
+      design exception" from "genuine gap" and will re-flag this every audit run forever. (repo: unified-trading-pm,
+      docs-only this touch)
 - [ ] [DATA] P2. Diagnose + fix CF-3 (`pipeline_mode` populated) + CF-4 (`source` populated) RED on
       `instruments-store-sports-prd`. Repo: instruments-service, unified-trading-library.
+- [ ] [DATA] P3. Add a per-AG exception to `cf_manifest_audit.py::_check_era_b` so tradfi's already-adjudicated
+      bundle-grain `data_type in {options_chain,futures_chain}` captured rows stop reading RED on every audit run
+      (currently 107,296 rows, CME+ICE only, all historical — see the Era-B todo above for the full evidence chain).
+      Needs care: must NOT also suppress cefi's genuine, still-live, unadjudicated Era-B gap (521,513 rows) — the
+      exception has to be keyed to tradfi specifically (or to an explicit per-AG adjudicated-exception registry), not a
+      blanket "any AG" carve-out, mirroring the caution already applied to the sports skip-signal-false-negative and
+      CF-8-denominator checker fixes in sibling docs (root-causing != safely fixing; a rushed fix risks masking a future
+      genuine regression). Repo: unified-trading-library.
 
 ## Progress Log
 
+- **data_engineering slot-15, 2026-08-02**: dispatched onto the tradfi Era-B todo. Re-verified live via a fresh,
+  read-only `cf_manifest_audit.audit()` call (column-pruned index read, no GCS walk) against
+  `market-data-tick-tradfi-prd-central-element-323112`: Era-B still RED, 107,296 rows, all `capture_status=captured`,
+  venues CME+ICE only, dated 2023-05-01 to 2026-01-30 with zero growth past that date. Cross-referenced
+  `cross_cutting_manifest_canonicalisation_findings_2026_07_11.md`'s own tradfi table row + its "Adjudication
+  2026-07-14" section (re-confirmed 5+ times through 2026-07-28) and
+  `tradfi_chain_bundle_sampler_root_mismatch_2026_07_23.md` (independently treats
+  `data_type=options_chain/futures_chain` as tradfi's normal chain-bundle shape, not a bug) — concluded this todo's own
+  premise ("contradicts an already-confirmed GREEN claim") was a mischaracterization: the source doc never claimed
+  tradfi Era-B was GREEN, only RED-and-design-adjudicated. No code fix needed for the data itself; flipped this checkbox
+  as diagnosed, corrected the mischaracterization in Finding 2's prose above, and filed a scoped P3 follow-up for the
+  one real residual (the checker has no adjudicated-exception mechanism, so it will re-flag this every run). No
+  production data or code touched this session — read-only diagnostic + this doc edit.
 - **context-scout 2026-08-01**: populated context_scope (3 entries).
 - **data_engineering slot-3, 2026-08-02**: dispatched onto the CF-8 todo, scoped to the `market-data-tick-tradfi-prd`
   bucket named in its title. Split the original 4-bucket compound todo into per-bucket items (see "Recommended decision"
