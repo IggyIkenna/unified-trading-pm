@@ -118,8 +118,23 @@ context_scope:
       events references this todo or batch5 either. Its own input (batch4's read-only sweep report,
       `market-tick-data-service@76ca401f`, done 2026-07-27) remains available, so that todo is itself dispatchable as
       its own backlog task derived from batch5's doc — just not yet picked up/executed. Releasing again via
-      `/skip-current-task {"reason_code": "GATED"}`. **Archive every source doc todo 1 drives to
-      `status: resolved`/`complete` — in the same commit as the flip, never left sitting in `plans/active/`.**
+      `/skip-current-task {"reason_code": "GATED"}`. **Reconfirmed 2026-08-02 (slot 14, data_engineering) — root cause
+      of the 4+ day stall found: it was never "not yet picked up," it structurally could not be picked up.** A full
+      `GET /api/backlog` scan (1337 tasks) found **zero** tasks matching this todo's content anywhere — the only task
+      ever derived for `sports_satellite_ao_dispatch_batch5_2026_07_26.md` is an orphan
+      (`sports_satellite_ao_dispatch_batch5-024`, `done_at: 2026-07-26T01:27:01Z`, done 3 minutes after queuing —
+      clearly a much simpler pre-reword version of this todo). The regen correctly orphaned the stale row once the text
+      was expanded to today's substantial multi-part description, but never derived a fresh task for the new wording —
+      every prior "genuinely dispatchable, just not picked up" verdict (slots 11/3/16) was a reasonable read at the time
+      but is now known to be off by one level: dispatchability itself was the missing piece. Filed as corroborating
+      evidence (not a new doc — same shape, second independent case) in
+      `/plans/active/issues/defi_batch8_finalize_gate_bypass_missing_upstream_task_2026_08_02.md`'s Progress Log
+      (unified-trading-pm commit follows) — both this todo and that doc's affected todo share the identical shape
+      (bolded multi-clause description immediately after the priority marker, followed by lettered sub-parts spanning
+      many lines), strengthening that doc's own parser-shape hypothesis. Releasing again via
+      `/skip-current-task {"reason_code": "GATED"}` — nothing this data_engineering task can do until the
+      agent-orchestrator backend fix lands and a fresh task actually derives. **Archive every source doc todo 1 drives
+      to `status: resolved`/`complete` — in the same commit as the flip, never left sitting in `plans/active/`.**
       `check_terminal_status_archived.py` HARD-fails on any doc whose frontmatter reads a terminal status while it still
       lives under `plans/active/` (including `plans/active/issues/`) — the omission of this exact step across the sports
       finalize-plan family already forced one such HARD-fail: the `plan_health` gate's own remediation

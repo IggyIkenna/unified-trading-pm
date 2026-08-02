@@ -186,3 +186,27 @@ No design call needed — every fact here is independently checkable:
   `plan_ref: plans/active/defi_satellite_ao_dispatch_batch8_2026_08_02.md`. This doc's own `[BACKEND] P1` root-cause
   todo is `dispatched` (slot 5, in progress as of this check) — not re-doing that investigation. Declined `finalize-001`
   again per this doc's own Recommended-decision item 4; skipping.
+- **2026-08-02 (slot 14, data_engineering) — SECOND, INDEPENDENT case found, strongly corroborating the parser-shape
+  hypothesis in "Recommended decision" item 1.** Dispatched to a completely different plan's gated finalize twin,
+  `sports_satellite_ao_dispatch_batch5_2026_07_26_finalize-016` (todo 2, gated on
+  `sports_satellite_ao_dispatch_batch5_2026_07_26.md` reaching 0 open todos). That plan's remaining open todo (line 114,
+  the "zombie-tick purge/re-derive + ML-readiness gate-semantics fix") has been re-confirmed `[ ]`-open-but-"genuinely
+  dispatchable, just not picked up" by FOUR prior slots (11, 3, 16, and now this one) across 2026-07-30 through
+  2026-08-02 — but a full `GET /api/backlog` scan (1337 tasks) finds **zero** tasks matching this todo's content
+  anywhere in the backlog (only one keyword-coincidental unrelated match from a different plan). The only task ever
+  derived for this plan_ref (`sports_satellite_ao_dispatch_batch5-024`) is `orphan: true`, `status: done`,
+  `done_at: 2026-07-26T01:27:01Z` — done just 3 minutes after being queued (`queued_at: 2026-07-26T01:24:07Z`), which
+  reads as a much simpler pre-reword version of this todo that was trivially satisfied before the text was expanded into
+  today's substantial multi-part description; the regen correctly flagged the old row as orphaned once the brief
+  changed, but never derived a FRESH task for the new wording — so all 4 prior "just hasn't been picked up yet" verdicts
+  were subtly wrong: it structurally could not have been picked up, not just wasn't. **Both affected todos share the
+  exact same shape** this doc's own item 1 flagged as the leading hypothesis: a bolded multi-clause description
+  immediately after the priority marker (`**Prove force + skip...**` there,
+  `**market-tick-data-service + ...: execute the zombie-tick purge...**` here), followed by several lettered/bulleted
+  sub-parts spanning many lines ((a)/(b)/(c) in both cases). This is independent evidence from an unrelated
+  plan/asset_group (sports, not defi) and a different trigger path (a same-plan reword-orphans-without- re-deriving
+  case, not a zero-upstream-tasks `gate_on_depends` case) — but the same textual shape in both strongly suggests one
+  shared parser gap, not two coincidentally similar bugs. Recommend whoever picks up this doc's `[BACKEND] P1`
+  root-cause todo test BOTH reproductions against the same parser-shape hypothesis before concluding the fix. Not fixing
+  inline (agent-orchestrator server code, outside this task's craft/repo scope) — added here rather than filing a
+  duplicate doc since it directly strengthens this doc's own open investigation.
