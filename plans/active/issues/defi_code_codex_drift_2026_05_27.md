@@ -146,36 +146,32 @@ Code (DEFERRED-UNTIL-PIPELINE-DONE; other agents are correcting code — re-veri
       pre-apply block.** ⚠️ Do NOT "fix" this back to `dex_pools` — the `mtds_mdps_master.md` Phase 9
       `dex_pool_state→dex_pools` rename is a SUPERSEDED dead-letter (banner added there 2026-06-08). Defi audit guard
       (`defi-dexpool-name`) pins the canonical name. (reversed per SSOT; verified end-to-end by the 2026-06-08 sweep.)
-- [ ] [DATA] P2. D15 — HYPERLIQUID + ASTER classification. **Partially resolved (corrected 2026-07-27):** the
-      phase-label contradiction this item originally flagged is moot — both venues were removed entirely from
+- [x] ✅ [DATA] P2. D15 — HYPERLIQUID + ASTER classification. **Resolved at this item's scope 2026-08-02** (this
+      checkbox tracked "scope + schedule the migration as its own tracked plan" — that deliverable is now done; the
+      migration's own execution is tracked in the new plan, not here). **Partially resolved (corrected 2026-07-27):**
+      the phase-label contradiction this item originally flagged is moot — both venues were removed entirely from
       `ALL_DEFI_VENUES`/`DEFI_VENUE_PHASE` on 2026-06-21 (commit `0d0e00a89`, fixing a 48.5k `attempted_failed`
       regression) and `perp_funding_handler` itself was retired 2026-07-08. **Operator decision (2026-07-27, pre-June-1
       stale-plans audit):** keep both venues pure CEFI (do not dual-classify in UAC, despite the 2026-07-07
       `honest_coverage_shard_dimension_model_definitional_data_2026_07_07.md` "intentional hybrid" note, which was never
       reconciled against the 06-21 fix) — but the frozen legacy GCS/manifest corpus still sitting under
       `asset_group=defi` (HYPERLIQUID/HYPERLIQUID: 3.77M rows through 2026-05-31; ASTER/BSC: 1.07M rows through
-      2026-05-31) must be migrated into `asset_group=cefi` so data agrees with the code-level classification. Remaining
-      work: scope + schedule that migration as its own tracked plan (mirror
-      `plans/archive/2026_07/solana_defi_legacy_migration_2026_05_27.md`'s pattern — legacy→ canonical prefix migration,
-      coordinated with instruments-service + manifest); heavy GCS I/O, needs a VM, not a local-machine operation. Not
-      yet scoped — this checkbox stays `[~]` until that migration plan exists.
+      2026-05-31) must be migrated into `asset_group=cefi` so data agrees with the code-level classification.
 
       **CLEAR for dispatch (2026-07-30, conflict-check)** — no other active doc claims this migration. **Flagging, not
-                                                                                      blocking**: `honest_coverage_shard_dimension_model_definitional_data_2026_07_07.md` still carries an unretracted
-                                                                                      "intentional hybrid CEFI+DEFI" classification note for these venues that this doc itself calls out as "never
-                                                                                      reconciled" against the later 06-21 operator ruling — worth a quick operator confirmation before/while scoping the
-                                                                                      migration plan, not a hard block.
+                                                                                          blocking**: `honest_coverage_shard_dimension_model_definitional_data_2026_07_07.md` still carries an unretracted
+                                                                                          "intentional hybrid CEFI+DEFI" classification note for these venues that this doc itself calls out as "never
+                                                                                          reconciled" against the later 06-21 operator ruling — worth a quick operator confirmation before/while scoping the
+                                                                                          migration plan, not a hard block.
 
-              **Migration plan now scoped (2026-08-02)**:
-              `plans/active/hyperliquid_aster_defi_to_cefi_asset_group_migration_2026_08_02.md` (`status: draft`,
-              `assigned_vm: NA` per ask-before-creating default). Re-verified live 2026-08-02: legacy `asset_group=defi`
-              corpus confirmed still present (bounded per-day checks), writes stopped between 2026-06-05 and 2026-06-20 —
-              frozen, no live-write race. This checkbox stays `[~]` — the migration itself hasn't executed, only scoped.
-
-- [x] ✅ [DATA] P2. D15 sub-item — migration plan authored/scoped (the specific blocking condition D15 named: "stays
-      `[~]` until that migration plan exists"). See
-      `plans/active/hyperliquid_aster_defi_to_cefi_asset_group_migration_2026_08_02.md` — 2026-08-02. **D15 itself stays
-      open above** — only the scoping deliverable is done here; the actual GCS/manifest migration has not run.
+          **Migration plan filed 2026-08-02** (this item's remaining action):
+          `plans/active/hyperliquid_aster_defi_to_cefi_asset_group_migration_2026_08_02.md` (`status: draft`,
+          `assigned_vm: NA` per ask-before-creating default; mirrors `solana_defi_legacy_migration_2026_05_27`'s gate
+          pattern — Phase 1 audit+script, Phase 2 VM execution, Phase 3 manifest reconcile, Phase 4 operator-gated
+          delete). Re-verified live 2026-08-02: legacy `asset_group=defi` corpus confirmed still present (bounded
+          per-day GCS checks, not a whole-corpus walk), writes stopped between 2026-06-05 and 2026-06-20 (frozen, no
+          live-write race to coordinate a migration around). **The GCS/manifest migration itself has NOT executed yet —
+          that work now lives in the new plan's own todos, not here.**
 
 - [x] ✅ [CODE] P3. D7 — **SHIPPED** MTDS@d3e02228
       (`fix(mev): remove banned bloxroute relays + stale .bak from     mev_events_handler`): the 2 bloxroute URLs are
