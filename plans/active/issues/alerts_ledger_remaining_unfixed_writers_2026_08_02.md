@@ -8,7 +8,7 @@ summary: >-
   consumer todo) found a 3RD unfixed writer not enumerated in that archived plan: agent-orchestrator's own
   notifications/slack.py. All 3 share the identical shape already proven safe to fix (persist-event's own
   cp-down-append-cp-up -> single never-overwritten object migration, unified-trading-pm@4cbf2006d).
-status: open
+status: resolved
 nature: issue
 asset_group: [ci]
 stage: [meta]
@@ -32,6 +32,8 @@ assigned_role: infra
 depends_on: []
 locked_by:
 resolved_by:
+  slot-15 (todo 1, 2026-08-02, already fixed unified-trading-pm@363e8a7cc), slot-7 (todos 2-3, 2026-08-02) --
+  unified-trading-pm@963daa611 (todo 2, already fixed) and agent-orchestrator@80cb301 (todo 3, genuine fix)
 source: "incidental finding while resolving ci_satellite_ao_dispatch_batch1-027 (slot 7, infra, 2026-08-02)"
 ---
 
@@ -98,12 +100,22 @@ Apply the same proven, already-shipped fix (one never-overwritten object per wri
       spot-checked still live/unreverted in 4 rendered per-repo copies (instruments-service, market-tick-data-service,
       agent-orchestrator, deployment-api — `.github/workflows/semver-agent.yml`), no later commit touches the
       persist-step in any of them.
-- [ ] [INFRA] P2. Fix `agent-orchestrator/server/notifications/slack.py::_persist_to_gcs()` (lines 127-169) the same way
-      -- replace the `download_from_storage` + string-append + `upload_to_storage` dance with a single never-overwritten
-      object write (e.g. `cicd/alerts/{date}/{alert_class}-{nanosecond-timestamp}-{random}.jsonl`), confirming
-      `deployment-api::_read_ledgers_sync()`'s existing prefix-walk over `cicd/alerts/` (already proven resilient to
-      this shape for the events ledger) picks up the new per-file layout with no reader change needed. (repo:
-      agent-orchestrator)
+- [x] ✅ [INFRA] P2. Fix `agent-orchestrator/server/notifications/slack.py::_persist_to_gcs()` (lines 127-169) the same
+      way -- replace the `download_from_storage` + string-append + `upload_to_storage` dance with a single
+      never-overwritten object write (e.g. `cicd/alerts/{date}/{alert_class}-{nanosecond-timestamp}-{random}.jsonl`),
+      confirming `deployment-api::_read_ledgers_sync()`'s existing prefix-walk over `cicd/alerts/` (already proven
+      resilient to this shape for the events ledger) picks up the new per-file layout with no reader change needed.
+      (repo: agent-orchestrator) — **agent-orchestrator@80cb301**. Unlike todos 1-2, this one WAS genuinely still
+      broken: confirmed live at `server/notifications/slack.py::_persist_to_gcs()` before touching anything (per craft
+      north-star + both prior todos' stale-citation precedent) — it still did the unlocked `download_from_storage` +
+      string-append + `upload_to_storage` read-modify-write onto the shared `cicd/alerts/{date}/alerts.jsonl`. Fixed to
+      mirror the proven pattern (deployment-api's `_persist_alert()`, `semver-agent.yml.tmpl`, both 2026-07-21): each
+      alert now writes straight to its own never-overwritten `cicd/alerts/{date}/{uuid4().hex}.jsonl` object, no read/
+      merge/lock. `deployment-api::_read_ledgers_sync()`'s existing prefix-walk needs no reader change. QG-verified:
+      full `quality-gates.sh` green (2239 passed, 2 skipped, 0 basedpyright errors) before shipping; existing
+      `_persist_to_gcs` tests (`test_slack_notifications.py`, `test_alert_quality_overhaul.py`) all mock at the function
+      boundary so the internal-implementation change is untested-but-covered by the function-level mocks (no test
+      asserted the old download/append internals). Verified SHA on origin before this flip.
 
 ## Progress Log
 
@@ -128,3 +140,9 @@ Apply the same proven, already-shipped fix (one never-overwritten object per wri
   the later doc that closed it. Flipped todo 2 with evidence; did not touch todo 3
   (`agent-orchestrator/server/notifications/slack.py`) -- out of scope, not independently re-verified. A worker picking
   it up should do the same live-file check first, given both prior todos in this doc turned out stale.
+
+- 2026-08-02 (slot 7, infra): dispatched todo 3 (`agent-orchestrator/server/notifications/slack.py::_persist_to_gcs()`).
+  Read the LIVE function first (both priors were stale) -- this time it WAS genuinely still broken: the unlocked
+  download-append-upload race, unfixed. Fixed to mirror the proven one-object-per-write pattern, shipped
+  `agent-orchestrator@80cb301` (full `quality-gates.sh` green: 2239 passed, 0 basedpyright errors), verified SHA on
+  origin, flipped the checkbox. All 3 todos in this doc are now done -- flipping `status` to `resolved`.
