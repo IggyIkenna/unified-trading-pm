@@ -46,7 +46,7 @@ related:
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]
 created: "2026-07-29"
-last_updated: "2026-07-30"
+last_updated: "2026-08-02"
 parent_epic: tradfi_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -337,14 +337,64 @@ ground to open up, and it did:
   left OUT of the numbered list above because on reflection they're small enough to fold into whichever batch actually
   runs the FX backfill once the provenance fix ships; tracking them here avoids a todo that immediately re-defers
   itself**.
-- **`tradfi_legacy_twin_bucket_deletes_signoff_2026_07_24.md`'s todo 3 (the actual legacy-twin bucket DELETE)** — the
-  doc's own 2026-07-28 update reversibility-qualifies this (Part-5 twin-coverage=100% + a fresh
-  `gcs_bucket_soft_delete_retention_seconds` check ≥604800s, per delete-safety-protocol §3a path (c)), so it is no
-  longer purely operator-gated in principle. Not drafted here regardless: this is a real prod-bucket delete, and
-  `tradfi_satellite_ao_dispatch_batch1_2026_07_25.md`'s still-open todo 2 (dry-run + Progress-Log posting) hasn't landed
-  yet — drafting the delete before the dry-run's fresh numbers exist would be premature. **Recommend**: once batch1's
-  dry-run lands, bring this to the operator directly for a go/no-go on the delete itself (repeating the hard-stop norm
-  for prod-bucket deletes) rather than auto-drafting it into a future batch.
+- **`/plans/active/tradfi_legacy_twin_bucket_deletes_signoff_2026_07_24.md`'s todo 3 (the actual legacy-twin bucket
+  DELETE)** — **⚠️ FALSE PREMISE, CORRECTED 2026-08-02 (operator-ruled correction pass).** What this bullet said when it
+  was written on 2026-07-29 is quoted verbatim at the bottom of this entry; it is wrong on two counts and must not be
+  read as current.
+
+  **Correction 1 — twin coverage is 0%, not 100%.** The original text read the 2026-07-28 §3a extension as though it had
+  already _established_ "Part-5 twin-coverage=100%". It did not: 100% content-verified canonical-twin coverage is a
+  **precondition** §3a path (c) imposes before this delete class becomes reversibility-qualified, and the only fresh
+  measurement of that precondition came back **0%**. Measured 2026-07-30 (dispatched from batch1's REVIEW todo) against
+  the live prod report
+  `gs://market-data-tick-tradfi-prd-central-element-323112/_index/audit/orphan_sweep_tradfi.parquet` via
+  `instruments-service/scripts/cleanup_legacy_twins.py --asset-group tradfi` with `--apply` omitted (omitting `--apply`
+  IS the dry-run on this CLI; the `--dry-run` flag named in the older todo text does not exist): **900 class-B legacy
+  twins loaded → 0 deletable, 900 BLOCKED**, every single one with reason _"canonical twin NOT captured in manifest -
+  would delete the only copy"_. Evidence: `/plans/active/tradfi_legacy_twin_bucket_deletes_signoff_2026_07_24.md`'s own
+  Progress Log, 2026-07-30 doc-triage entry (re-confirmed still the last measurement by the 2026-07-31
+  na-eligibility-audit pass). So the delete gate does NOT clear — and it is gated on a **measured negative**, which is a
+  stronger and more durable block than the "just waiting on numbers" framing the original bullet implied.
+
+  **Correction 2 — batch1's dry-run HAS landed; the "bring it to the operator" recommendation is spent.** The original
+  text said `tradfi_satellite_ao_dispatch_batch1_2026_07_25.md`'s "still-open todo 2 (dry-run + Progress-Log posting)
+  hasn't landed yet". It landed 2026-07-30 — that batch1 REVIEW todo is precisely what executed the dry-run quoted above
+  — and batch1 is now archived at `/plans/archive/2026_07/tradfi_satellite_ao_dispatch_batch1_2026_07_25.md`. The
+  original "once batch1's dry-run lands, bring this to the operator for a go/no-go" recommendation is therefore
+  **discharged, not pending**: the dry-run landed and the answer is no-go-by-measurement. **Do NOT re-raise it as a
+  fresh operator ask** — there is nothing for the operator to rule on while coverage measures 0%; the blocking work is
+  technical (establish real canonical-twin coverage, or explain why the manifest says there is none), not a decision.
+
+  **Still deferred, still not drafted as a batch todo** — unchanged conclusion, corrected reasoning. Whoever picks this
+  up next must re-measure coverage fresh (never reuse the numbers above as the §3a same-run check) and must not
+  interpret this entry as clearance.
+
+  <!-- prettier-ignore -->
+  > _Original 2026-07-29 text, preserved verbatim for provenance (SUPERSEDED — do not act on it):_ "the doc's own
+  > 2026-07-28 update reversibility-qualifies this (Part-5 twin-coverage=100% + a fresh
+  > `gcs_bucket_soft_delete_retention_seconds` check ≥604800s, per delete-safety-protocol §3a path (c)), so it is no
+  > longer purely operator-gated in principle. Not drafted here regardless: this is a real prod-bucket delete, and
+  > `tradfi_satellite_ao_dispatch_batch1_2026_07_25.md`'s still-open todo 2 (dry-run + Progress-Log posting) hasn't
+  > landed yet — drafting the delete before the dry-run's fresh numbers exist would be premature. **Recommend**: once
+  > batch1's dry-run lands, bring this to the operator directly for a go/no-go on the delete itself (repeating the
+  > hard-stop norm for prod-bucket deletes) rather than auto-drafting it into a future batch."
+
+- **UNRESOLVED — the legacy-twin candidate set silently shrank 995 → 900 rows and nobody knows why (flagged 2026-08-02,
+  explicitly NOT accepted).** The candidate population for the delete above is cited as **995** actionable class-B rows
+  throughout `/plans/active/tradfi_legacy_twin_bucket_deletes_signoff_2026_07_24.md` (its "Where the dry-run evidence
+  already lives" section and its still-open delete todo both scope the delete to "the 995 tradfi legacy-B candidate
+  rows"), sourced from the 2026-07-10 full orphan sweep
+  (`A_canonical_manifested=2,594,017 · B_legacy_duplicate=995 · … · E_orphan_real=0` over 10,584,946 objects). The
+  2026-07-30 dry-run loaded **900** rows from the same report URI — **95 rows fewer**, with no explanation. The
+  executing session recorded the discrepancy honestly ("the report has evidently shrunk by 95 rows in the interim, not
+  re-investigated here") and moved on; **no one has investigated it since, and no doc in the corpus explains it.** This
+  matters beyond bookkeeping: the report is the delete's candidate list, so an unexplained mutation of that list is an
+  unexplained mutation of a delete's blast radius. Candidate explanations, none verified: (a) the report was
+  legitimately regenerated by a later sweep with a corrected taxonomy; (b) 95 twins were folded/migrated/deleted by
+  another pass and the report picked that up; (c) the loader silently drops malformed/unparseable rows; (d) two
+  different report generations are being conflated. **Do not treat 900 as the authoritative number, and do not treat the
+  995 → 900 delta as benign, until it is explained.** Tracked for resolution in this batch's finalize plan
+  (`/plans/active/tradfi_satellite_ao_dispatch_batch5_2026_07_29_finalize.md`, todo 2) rather than left as prose.
 
 ## Deferred — too-large-or-risky (needs its own dedicated plan, not a batch todo; unchanged from batch1-4)
 
@@ -655,6 +705,28 @@ mirroring the batch1/batch2/batch3/batch4 finalize pattern.
   the 1d/24h hit-rate re-measure against the ~19% (454/2398) baseline — no VM-side work is needed before that (fleet is
   fully idle).
 - **context-scout 2026-08-01**: populated/refreshed context_scope (5 entries).
+
+- **2026-08-02 (operator-ruled correction pass, doc-content only — no bucket data touched, no GCS/manifest call made)**
+  — Corrected a FALSE delete-safety premise in this plan's Deferred — conflict-gated section. The
+  legacy-twin-bucket-delete bullet asserted "Part-5 twin-coverage=100%" as established fact; it is a §3a path (c)
+  **precondition**, and the only fresh measurement of it (2026-07-30 dry-run, dispatched from batch1's REVIEW todo,
+  against `_index/audit/orphan_sweep_tradfi.parquet` in the tradfi prod tick bucket) returned **0%** — 900 class-B twins
+  loaded, **0 deletable, 900 BLOCKED**, every one "canonical twin NOT captured in manifest - would delete the only
+  copy". Also corrected the same bullet's second stale claim (batch1's dry-run "hasn't landed yet" — it landed
+  2026-07-30 and batch1 is archived), and marked its "bring this to the operator for a go/no-go" recommendation
+  **discharged**, so nobody re-raises a spent operator ask against a gate that is technical, not a decision. Original
+  bullet text preserved verbatim inline for provenance. Separately flagged, as a NEW explicitly-unresolved Deferred item
+  rather than silently accepting it: the candidate set **shrank 995 → 900 rows** between the 2026-07-10 orphan sweep and
+  the 2026-07-30 dry-run with **no explanation recorded anywhere in the corpus** — the 2026-07-30 executing session
+  logged the delta honestly and did not investigate, and no doc has since. Since that report IS the delete's candidate
+  list, an unexplained mutation of it is an unexplained mutation of a delete's blast radius; wired into
+  `/plans/active/tradfi_satellite_ao_dispatch_batch5_2026_07_29_finalize.md`'s todo 2 as tracked work (explain-with-
+  evidence, or file its own issue doc — never close as accepted). Verified before editing that no other session had
+  already made this correction (`rg '0%|900'` over this file: 0 hits pre-edit). Both this plan and its finalize twin
+  were ALREADY `status: active` (this plan `5a6bbefc3` 2026-07-30; the finalize `233ebd614` same day, the corpus-wide
+  removal of the redundant finalize double-gate) — the ruled flip needed no frontmatter change; what it DID need was the
+  finalize's body banner and frontmatter `summary`, both still asserting "stays draft", brought into line, since
+  `233ebd614` was a frontmatter-only bulk flip.
 
 ## Codex SSOTs
 
