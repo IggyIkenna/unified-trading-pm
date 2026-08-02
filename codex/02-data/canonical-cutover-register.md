@@ -193,7 +193,7 @@ in 3c and must not be conflated with it. Grammar SSOT:
 > (resolved, archived). The pre-ruling table + "binding consequence" text below is HISTORY — do not act on it.
 >
 > **⛔ DeFi carve-out, 2026-07-24 (operator, `adb28421d`,
-> `plans/active/issues/cross_ag_instrument_type_casing_100pct_directive_2026_07_24.md`) — DeFi is NOT part of the
+> `/plans/archive/2026_08/cross_ag_instrument_type_casing_100pct_directive_2026_07_24.md`) — DeFi is NOT part of the
 > blanket-UPPERCASE population this subsection and the §7 table row otherwise describe.** DeFi's corpus was measured
 > genuinely mixed (not close-to-one-direction like cefi/tradfi/prediction), so DeFi's target is decided
 > **per-`instrument_type`-value, least-migration-cost** (whichever casing already dominates for a given value becomes

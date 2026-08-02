@@ -251,7 +251,7 @@ manifest-atom fix (C-track) and the ODDS-LEAK shard cleanup — else the re-run 
     Distinct Values panel (venues / instrument_types / data_types / chains) reads 0 non-canonical across all four
     axes.** **Cross-AG note (operator, 2026-07-24)**: this target already implies literal 100% canonical
     `instrument_type` for sports, consistent with the cross-AG standard applied to tradfi/cefi/prediction (see
-    `plans/active/issues/cross_ag_instrument_type_casing_100pct_directive_2026_07_24.md`) — the
+    `/plans/archive/2026_08/cross_ag_instrument_type_casing_100pct_directive_2026_07_24.md`) — the
     `ODDS_API_MARKET_TO_CANONICAL` target vocabulary this fix resolves through is already UPPER on `market_key` (line
     above), so no separate casing migration is needed here once the parts[]-index bug itself is fixed; this is a
     content-correctness fix that happens to land on the same casing target, not a distinct casing todo. DeFi is the sole

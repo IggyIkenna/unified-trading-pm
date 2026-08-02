@@ -69,11 +69,11 @@ built to close (and did close, per that script's own fresh live re-verification 
 
 ## Why it matters
 
-`cross_ag_instrument_type_casing_100pct_directive_2026_07_24.md` set a literal-100% UPPERCASE bar for tradfi. Either the
-writer-side fix (`_tradfi_manifest_canon.py::canonicalize_tradfi_manifest_itype`, wired into `venue_fetch.py` +
-`sentinels.py`) has a gap some capture path still bypasses, or a third write path (not covered by either prior audit) is
-re-introducing lowercase rows. This directly affects: (a) the semantic-relabel script this issue was found alongside —
-those lowercase rows are OUTSIDE its `_TOUCHABLE_STORED_TYPES` scope (which matches exact-case
+`/plans/archive/2026_08/cross_ag_instrument_type_casing_100pct_directive_2026_07_24.md` set a literal-100% UPPERCASE bar
+for tradfi. Either the writer-side fix (`_tradfi_manifest_canon.py::canonicalize_tradfi_manifest_itype`, wired into
+`venue_fetch.py` + `sentinels.py`) has a gap some capture path still bypasses, or a third write path (not covered by
+either prior audit) is re-introducing lowercase rows. This directly affects: (a) the semantic-relabel script this issue
+was found alongside — those lowercase rows are OUTSIDE its `_TOUCHABLE_STORED_TYPES` scope (which matches exact-case
 `{FUTURE, OPTION, COMBO, ...}` — a `future`/`combo` typed row is silently skipped by that script too, not just the
 casing script); (b) any downstream consumer trusting the UPPERCASE-enum contract.
 

@@ -18,7 +18,7 @@ summary: >-
   is never acceptable. Different `instrument_type` values ARE allowed to land on different canonical casings from EACH
   OTHER within DeFi only. The GCS path-segment (always lowercase) and id-middle-segment (always UPPER) legs are
   unchanged by any of this — only the manifest COLUMN casing target is affected.
-status: open
+status: resolved # (was: open) 2026-08-02 -- all 3 todos done, doc archived per the 6-step ritual
 nature: issue
 asset_group: [tradfi, cefi, defi, prediction, sports]
 stage: [data]
@@ -64,7 +64,7 @@ source:
 assigned_vm: planning
 execution_scope: orchestrator-agent
 locked_by:
-resolved_by:
+resolved_by: slot-8, cross_ag_instrument_type_casing_100pct_directive-002, 2026-08-02
 drift_direction: advance-code
 depends_on: []
 context_scope:
@@ -75,6 +75,24 @@ context_scope:
     /codex/02-data/cross-asset-canonical-target-ssot.md,
   ]
 ---
+
+> **✅ ARCHIVED 2026-08-02 — all 3 todos done, all per-AG execution items closed or pointed at their live homes.**
+> Codex-alignment check: **no new codex content required.** All 3 correction-banner sections this doc's own P1 todo
+> added (`/codex/02-data/canonical-cutover-register.md` §3c/§7, `/codex/02-data/cross-asset-canonical-target-ssot.md`
+> §7, `/codex/02-data/reconciliation-finding-taxonomy.md` §5.1) already restate the full operator-directive framing
+> verbatim, not a bare citation — updated their path pointers to this archive location only. The D1 measurement snapshot
+> figures (tradfi 3,300,155 re-stamps; cefi ~99.41%; prediction 99.46%) are independently already recorded in
+> `reconciliation-finding-taxonomy.md` §5.1; sports' distinct content-bug detail already lives in
+> `/plans/active/sports_consolidated_closeout_2026_07_19.md` (execution-appropriate, not a codex-durable contract). 15
+> of the 16 corpus-wide referrers found via
+> `grep -rl cross_ag_instrument_type_casing_100pct_directive_2026_07_24 --include=*.md .` had their path updated to this
+> archive location in the same session; the 16th
+> (`/plans/active/na_docs_validity_and_ao_eligibility_audit_2026_07_26.md:445`) is a bare-slug mention inside a
+> past-tense retrospective sentence with no path/extension to fix — left as historical narrative, unchanged. See the
+> doc's own "Where each asset_group's execution item lives" section below for the live per-AG work (tradfi/defi
+> resolved; cefi/prediction/sports still have open execution items in their own plans, unaffected by this archival —
+> this doc's own scope was the CROSS-AG DIRECTIVE, not the per-AG execution, which was always tracked in those other
+> plans).
 
 # Cross-AG instrument_type manifest casing — 100% target for 4 AGs, per-value least-resistance for DeFi
 
@@ -195,8 +213,8 @@ is the durable record; the 5 per-AG plans' execution-item pointers above are how
       `reconciliation-finding-taxonomy.md` §5.1); the table's sports row is a "not measured by D1" absence-note, not a
       fact needing a codex home, and sports' own content-bug detail already lives in
       `sports_consolidated_closeout_2026_07_19.md` (execution-appropriate, not a codex-durable contract). Verdict: **no
-      new codex content required** — updated the 3 banners' path pointers only (post-move path), same commit as the
-      other 12 corpus-wide referrer fixes (15 of 16 hits fixed; the 16th,
+      new codex content required** — updated the 3 banners' path pointers only (post-move path), same session as the
+      other 12 non-codex corpus-wide referrer fixes (15 of 16 hits fixed total; the 16th,
       `na_docs_validity_and_ao_eligibility_audit_2026_07_26.md:445`, is a bare-slug mention inside a past-tense
       retrospective sentence with no path/extension to fix — left as historical narrative). Moved to
       `plans/archive/2026_08/cross_ag_instrument_type_casing_100pct_directive_2026_07_24.md` with an ARCHIVED banner;

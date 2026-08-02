@@ -329,7 +329,7 @@ Detail + per-protocol table: `instruments-service/docs/DEFI_INSTRUMENTS.md` §Le
 > [`reconciliation-finding-taxonomy.md`](reconciliation-finding-taxonomy.md) §5.1 and enforce UPPERCASE for the column.
 >
 > **DeFi carve-out, 2026-07-24 (operator, `adb28421d`,
-> `plans/active/issues/cross_ag_instrument_type_casing_100pct_directive_2026_07_24.md`) — "enforce UPPERCASE for the
+> `/plans/archive/2026_08/cross_ag_instrument_type_casing_100pct_directive_2026_07_24.md`) — "enforce UPPERCASE for the
 > column" above does NOT apply to defi.** DeFi's corpus was measured genuinely mixed (not close-to-one-direction like
 > cefi/tradfi/prediction), so its target is decided per-`instrument_type`-value, least-migration-cost: whichever casing
 > already dominates for a given value becomes that value's target, the minority migrates — hard constraint, casing must

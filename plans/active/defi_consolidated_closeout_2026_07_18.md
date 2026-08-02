@@ -349,16 +349,16 @@ Discriminator = **does a manifest row exist**.
   (catalogue wins, ruling D1) · GCS **path segment → lowercase** (unchanged) · **id middle segment → UPPER**
   (unchanged). Do not bundle path and column into one case. SSOT: `/codex/02-data/cross-asset-canonical-target-ssot.md`
   §7. **⛔ FURTHER REFINED 2026-08-02 fold-in, operator directive 2026-07-24
-  (`cross_ag_instrument_type_casing_100pct_directive_2026_07_24.md`) — the blanket-manifest-COLUMN-UPPERCASE framing
-  above does NOT apply to DeFi.** DeFi's corpus was separately flagged as genuinely mixed (not close-to-one-direction),
-  so its manifest-COLUMN casing is decided PER `instrument_type` value on a least-migration-cost basis (whichever casing
-  is already dominant for that value wins; the minority migrates to match) — DeFi is the sole asset_group with this
-  per-value freedom, the other four (tradfi/cefi/prediction/sports) target uniform UPPERCASE. **RESOLVED as a no-op
-  2026-07-24**: `defi_track01_per_instrument_and_canon_id_2026_07_24.md`'s "Manifest instrument_type case +
-  venue-spelling unify" todo ran the required per-value census live and found every one of the 11 live `instrument_type`
-  values already 100% one casing — lowercase, zero uppercase rows anywhere — so no migration was needed; that casing IS
-  the ratified target now. The GCS path segment (lowercase) and id middle segment (UPPER) legs remain unchanged by any
-  of this.
+  (`/plans/archive/2026_08/cross_ag_instrument_type_casing_100pct_directive_2026_07_24.md`) — the
+  blanket-manifest-COLUMN-UPPERCASE framing above does NOT apply to DeFi.** DeFi's corpus was separately flagged as
+  genuinely mixed (not close-to-one-direction), so its manifest-COLUMN casing is decided PER `instrument_type` value on
+  a least-migration-cost basis (whichever casing is already dominant for that value wins; the minority migrates to
+  match) — DeFi is the sole asset_group with this per-value freedom, the other four (tradfi/cefi/prediction/sports)
+  target uniform UPPERCASE. **RESOLVED as a no-op 2026-07-24**:
+  `defi_track01_per_instrument_and_canon_id_2026_07_24.md`'s "Manifest instrument_type case + venue-spelling unify" todo
+  ran the required per-value census live and found every one of the 11 live `instrument_type` values already 100% one
+  casing — lowercase, zero uppercase rows anywhere — so no migration was needed; that casing IS the ratified target now.
+  The GCS path segment (lowercase) and id middle segment (UPPER) legs remain unchanged by any of this.
 - **Culled-venue purge = dead-only, snapshot-first, keep LIGHTER + EXTENDED** (see Track 7).
 - **Combos = leg-aware signed-weight spec** (cross-AG) — see Track 1 + the cefi/tradfi hand-offs.
 - **Restore the removed data-status enumeration** (raw distinct-values audit view) — Track 6.
@@ -699,20 +699,20 @@ file, not here.
       the two plans' own done-when criteria, before any `--apply`.
 
       **UPDATE 2026-08-02 (finalize task `defi_dex_pool_symbol_fix_backfill_purge_finalize_2026_07_25.md`, slot-13
-                  review craft): all 5 todos of `defi_dex_pool_symbol_fix_backfill_purge_2026_07_25.md` SHIPPED and independently
-                  re-verified — no longer forward-looking.** Query fix: `market-tick-data-service@63199601` (verified an ancestor
-                  of `origin/live-defi-rollout`; live-tested against all 4 real subgraphs, all returned populated
-                  `inputTokens`/`fees`). Live-test recoverability: `market-tick-data-service@0f40a69f` (curve/OPTIMISM confirmed
-                  DEINDEXED; curve/ETHEREUM+AVALANCHE, sushiswap/ARBITRUM, trader_joe_v2/AVALANCHE, velodrome_v2/OPTIMISM all
-                  RECOVERABLE). Backfill: `mtds-dex-pools-symbolfix-batch1c`/`batch2` completed cleanly across the full
-                  confirmed-recoverable range, manifest spot-checked (symbol-named leaves, creation-timestamp-verified against
-                  each VM's run window). Purge (both categories — lst_rates `_migrated_*` markers AND the old dex_pool_state
-                  address-keyed leaves): independently re-verified complete, zero SAFE markers remain (only the irreducible
-                  FLAGGED floor — `FLAGGED_ROWCOUNT_SHORTFALL: 1287` + `FLAGGED_NO_SIBLINGS_NO_BACKUP: 977`, ZERO SAFE, an exact
-                  match to the corpus's known FLAGGED ceiling). Full evidence trail (VM names, spot-checks, preemption-recovery
-                  log) lives in that plan's own Progress Log — not duplicated here. Sibling issue doc
-                  `issues/defi_dex_pools_subgraph_query_missing_input_tokens_2026_07_25.md` flipped `status: open` → `status:
-                  resolved` accordingly in this same commit.
+                              review craft): all 5 todos of `defi_dex_pool_symbol_fix_backfill_purge_2026_07_25.md` SHIPPED and independently
+                              re-verified — no longer forward-looking.** Query fix: `market-tick-data-service@63199601` (verified an ancestor
+                              of `origin/live-defi-rollout`; live-tested against all 4 real subgraphs, all returned populated
+                              `inputTokens`/`fees`). Live-test recoverability: `market-tick-data-service@0f40a69f` (curve/OPTIMISM confirmed
+                              DEINDEXED; curve/ETHEREUM+AVALANCHE, sushiswap/ARBITRUM, trader_joe_v2/AVALANCHE, velodrome_v2/OPTIMISM all
+                              RECOVERABLE). Backfill: `mtds-dex-pools-symbolfix-batch1c`/`batch2` completed cleanly across the full
+                              confirmed-recoverable range, manifest spot-checked (symbol-named leaves, creation-timestamp-verified against
+                              each VM's run window). Purge (both categories — lst_rates `_migrated_*` markers AND the old dex_pool_state
+                              address-keyed leaves): independently re-verified complete, zero SAFE markers remain (only the irreducible
+                              FLAGGED floor — `FLAGGED_ROWCOUNT_SHORTFALL: 1287` + `FLAGGED_NO_SIBLINGS_NO_BACKUP: 977`, ZERO SAFE, an exact
+                              match to the corpus's known FLAGGED ceiling). Full evidence trail (VM names, spot-checks, preemption-recovery
+                              log) lives in that plan's own Progress Log — not duplicated here. Sibling issue doc
+                              `issues/defi_dex_pools_subgraph_query_missing_input_tokens_2026_07_25.md` flipped `status: open` → `status:
+                              resolved` accordingly in this same commit.
 
 - [x] ✅ [DATA] P2. **19 glued-id rows (was 21) — ALL CONFIRMED PHANTOM 2026-08-01, folds into the `:401` P0 purge, NOT
       fixable by retry/rebuild.** Writer fix SHIPPED (`market-tick-data-service@f2e3ad41`/`70b9a81a`). The 9 ORCA/SOLANA
