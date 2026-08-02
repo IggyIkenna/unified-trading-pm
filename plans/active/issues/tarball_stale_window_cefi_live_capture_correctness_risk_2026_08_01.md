@@ -207,17 +207,55 @@ for visibility per the data-pipeline-correctness HARD RULE, not to be conflated 
       `2026-07-30` through `2026-08-01`. **CONFIRMED P0**: see "## CONFIRMED — 2026-08-01 manifest check" above —
       `ASTER book_snapshot_5` is a currently-ongoing, unbroken 100%-empty stretch across the whole window on the live
       consolidated VM. (repo: market-tick-data-service)
-- [ ] [INFRA] P0. **Manually relaunch `mtds-live-cefi-consolidated-*`** (launcher
-      `deployment-service/scripts/vm/launch-mtds-live-cefi-consolidated.sh`) so it re-pulls the now-rebuilt `mtds-code`
-      tarball (`b2a450e87a30`, rebuilt `2026-08-01T12:42:24Z`, contains `4f244845` + `8a6bbc97`) and resumes real
-      `ASTER book_snapshot_5` capture (currently 100% empty since at least `2026-07-30`). Before relaunching: confirm
-      this is genuinely the stale-tarball case (current instance `-20260731-211041` booted `2026-07-31T21:10:49Z`,
-      unpinned, no `TARBALL_PINS.json` — matches) per the VM-delete guardrail
-      (`unified-trading-pm/agents/data_engineering.md` § "VM-delete guardrail") — this VM is a healthy, actively-writing
-      `LONG_LIVED_LIVE` instance for its OTHER 16 shards, so a relaunch briefly interrupts ALL of them, not just ASTER;
-      weigh a low-traffic relaunch window vs. the ongoing correctness cost of leaving ASTER book_snapshot_5 broken.
-      After relaunch: re-run `check_cefi_tarball_stale_window_capture_status_2026_08_01.py` (or its successor) against
-      the new day's data to confirm `ASTER book_snapshot_5` resumes `captured` rows. (repo: deployment-service)
+- [x] ✅ [INFRA] P0. **DONE 2026-08-01T15:18Z, deployment-service@aa146bc verification run.** Manually relaunched
+      `mtds-live-cefi-consolidated-*` — confirmed genuine stale-tarball case per the VM-delete guardrail (heartbeat
+      64s-fresh = alive, not a stale/dead-VM situation; old instance `-20260731-211041` booted before the tarball fix,
+      unpinned, no `TARBALL_PINS.json`), then launched the replacement via `--force` (bypasses the singleton lock; never
+      deletes-first). New instance `mtds-live-cefi-consolidated-20260801-151833` booted clean (`VM SETUP     COMPLETE`,
+      all 17 shards started, exit 0) and was left running ~15h alongside the old instance before this session resumed (a
+      long suspension, not a stuck boot — heartbeat daemon stayed alive throughout, status field just never updates past
+      "starting", a separate cosmetic bug worth a P3 note but not investigated further here). **Verified via the per-VM
+      manifest shard for `2026-08-02` (today), filtered to `attempted_at > 05:00Z`: RELAUNCH SUCCEEDED for the
+      tarball-staleness-affected venues** — `BINANCE-FUTURES` (book_snapshot_5 718/720 captured, trades 714/716
+      captured), `HYPERLIQUID` (book_snapshot_5/derivative_ticker/trades all majority `captured`, thousands of real
+      instrument-rows), `KRAKEN-FUTURES` (book_snapshot_5/derivative_ticker majority `captured`), `OKX-FUTURES`
+      (book_snapshot_5/derivative_ticker partial `captured`) — all now receiving real market data, confirming the
+      relaunch (and the underlying tarball fix) genuinely worked for these shards. Retired the old, now-redundant VM
+      (`gcloud compute instances delete mtds-live-cefi-consolidated-20260731-211041`) once the new one was confirmed
+      healthy — was double-billing ~$17/day extra + carrying zero remaining value once superseded.
+      **`ASTER book_snapshot_5`/`liquidations` did NOT recover** — see the new todo below; this is now CONFIRMED as a
+      separate, deeper bug, not caused by (or fixable via) the tarball-staleness incident this doc tracks. (repo:
+      deployment-service)
+- [ ] [DATA] P0. **NEW FINDING 2026-08-02, NOT the tarball-staleness bug — needs its own dedicated connector-level
+      investigation.** `ASTER book_snapshot_5` + `ASTER liquidations` remain 100% `empty_confirmed`
+      (`error_reason=SOURCE_RETURNED_ZERO`) on the FRESH, correctly-relaunched VM (confirmed running
+      `deployment-     service@aa146bc`-era code, Python 3.13.14, all other 4 venues checked ARE capturing correctly on
+      this exact same VM) — ruling out tarball/deployment/environment causes definitively. Live evidence gathered
+      (`gcloud compute ssh mtds-live-cefi-consolidated-20260801-151833`, both processes alive, real CPU time
+      accumulated, not crash-looping): the `websocket-streaming` processes for both ASTER shards ARE running and DO
+      receive/process real per-instrument windows (log:
+      `instrument-window flush failed for cefi/ASTER/book_snapshot_5/     ASTER:PERPETUAL:1000LUNC-USDT@LIN`), and the
+      per-VM manifest shard (the authoritative, non-consolidated source) confirms the write path itself works
+      (`ManifestWriter: per-VM shard updated` fires continuously, thousands of entries) — but EVERY window for EVERY
+      ASTER instrument is recorded via `market_tick_data_service/live/websocket_runner.py::_record_empty_window` (line
+      ~771, `EmptyConfirmedReason.SOURCE_RETURNED_ZERO`) rather than `record_captured`. Since `_in_connectivity_gap()`
+      is NOT true (would route to `record_failed`/`UPSTREAM_LIVE_GAP` instead), the connectivity watchdog believes the
+      feed is healthy — meaning the WS connection itself is fine but zero ticks are being PARSED/COUNTED per instrument
+      window, pointing at `market_tick_data_service/live/connectors/aster_book_liq_ws.py`'s message parsing/dispatch
+      path (`_parse_aster_depth5`/`_retag_aster_book_tick`/the combined-stream subscription list) as the most likely
+      fault, not yet root-caused to an exact line. A single transient Redis restart was also observed
+      (`redis-server.service` restarted once at `06:26Z` today, `journalctl` confirms exactly ONE restart in 15h — ran
+      healthy continuously from VM boot `2026-08-01T15:20Z` until then) — this is a RED HERRING for the main bug (a
+      single brief restart cannot explain a ~15h, 100%-unbroken empty stretch that started at VM boot, before the
+      restart even happened) but is itself worth a lightweight follow-up note (why did Redis restart at all —
+      unattended-upgrades? a systemd timer? — not investigated). **Also newly found**: `DERIBIT     derivative_ticker`
+      is ALSO 100% `empty_confirmed` on this same fresh VM (3506/3506 rows empty as of `2026-08-02` today) — NOT
+      previously flagged in this doc's original manifest check (which only named ASTER as confirmed P0); same
+      investigation should cover both, or a decision made to split them once root-caused (may be unrelated failure
+      modes). Done-when: both venues' respective connectors are read/instrumented/fixed (or ruled correctly
+      non-capturing for a real exchange-side reason), and manifest rows show `captured` (or a legitimate
+      `expected_unattempted`) instead of `SOURCE_RETURNED_ZERO` for a representative post-fix window. (repo:
+      market-tick-data-service)
 - [ ] [DATA] P3. File a SEPARATE issue doc for the two pre-existing, unrelated chronic findings surfaced incidentally by
       this check: `OKX-FUTURES trades` intermittent zero-capture (going back to at least `2026-07-20`, live pipeline)
       and `POLYMARKET-PERP perp_funding` permanently `attempted_failed` since at least `2026-07-28` (batch pipeline).
