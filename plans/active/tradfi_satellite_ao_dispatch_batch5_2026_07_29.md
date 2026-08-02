@@ -790,6 +790,21 @@ mirroring the batch1/batch2/batch3/batch4 finalize pattern.
   earlier for the pre-flight sanity check — it self-deletes on its own once its dry pass completes, no action needed on
   it.
 
+- **2026-08-02T18:56Z (slot-3, data_engineering) — adopted, no relaunch, watchdog armed.** Dispatched `-001` after
+  slot-15's session ended without a follow-up checkpoint. Re-verified live before touching anything (not trusting the
+  prior entry's snapshot):
+  `gcloud compute instances describe mdps-backfill-tradfi-20260802-175522 --zone asia-northeast1-c` → `RUNNING`;
+  `run.log` tail shows real forward progress (`day=2020-06-16` at 18:53:28Z, ~3 days/min steady pace, consistent with
+  slot-15's measured rate) — genuinely alive, not stalled. Per the Tardis-style single-VM-fleet caution (avoid duplicate
+  SPOT launches on the same shard prefix), did NOT launch a second backfill — this todo's "launch" instruction is
+  already satisfied by the in-flight VM. Armed a `run_in_background` Monitor watchdog (30-min poll cadence) tailing
+  `run.log` via a byte-range `gsutil cat` (cheap, no full re-download) for `day=` progress +
+  Traceback/ERROR/FAILED/Killed/OOM signatures + the VM's terminal (non-`RUNNING`) status — will checkpoint here again
+  on the next meaningful event. At the current pace the full `2020-01-01..2026-07-25` range (~2398 days) projects to
+  ~13h total, well past this VM's start (`17:55:22Z` → ETA roughly `2026-08-03T07:00Z`). **Not yet done**: backfill
+  still running; `build-continuous --root ES`, hit-rate re-measure, and this checkbox all remain open until the VM
+  reaches a genuine terminal state (not just "still running").
+
 ## Codex SSOTs
 
 No new durable contract is created by this plan — every todo executes an already-decided spec from its source doc, or
