@@ -106,7 +106,33 @@ Full per-bucket rollup (excluding the Finding-1 false positives above):
 > asset_groups — too broad to flip as one unit once real per-bucket work started landing at different paces. Split into
 > 4 per-bucket todos; see the Progress Log for the full tradfi investigation (which also surfaced a likely checker-level
 > bug in CF-8 itself, filed separately:
-> `/plans/active/issues/cf8_available_at_denominator_scoped_to_full_manifest_not_captured_2026_08_02.md`).
+> `/plans/archive/issues/cf8_available_at_denominator_scoped_to_full_manifest_not_captured_2026_08_02.md`).
+
+> **Denominator-fix re-verification, 2026-08-02T19:15Z (slot 4, data_engineering)** — the checker bug flagged above
+> shipped (`unified-trading-library@6af7c4b7`, confirmed present on `origin/main`). Ran a fresh, read-only
+> `cf_manifest_audit.py --all-ags` across all 10 prod buckets locally (memory-bounded, column-pruned index read, no GCS
+> walk) and diffed the per-bucket CF-8 verdict against the actual raw `2026-07-26.json` pulled directly from
+> `gs://cf-manifest-audit-central-element-323112/cf_audit/` (not the prose table above). **Result: zero verdict change —
+> the exact same 5 RED / 5 GREEN split as 2026-07-26, bucket-for-bucket.** The 5 buckets that read GREEN on 07-26
+> (`instruments-store-{cefi,defi,tradfi,pred}-prd`, `market-data-tick-defi-prd`) had already reached literal 100%
+> `available_at` fill across ALL rows (captured + non-captured combined) — a strictly stronger bar than the corrected
+> captured-only check, so they were never denominator-diluted false REDs to begin with; they stay GREEN under either
+> denominator. The 5 RED buckets are **genuinely RED under the corrected, canonical-per-CF8-definition denominator too**
+> — real captured-row fill gaps, not an artifact of the old bug:
+>
+> | bucket                         | captured-only `available_at` fill | verdict |
+> | ------------------------------ | --------------------------------- | ------- |
+> | `market-data-tick-cefi-prd`    | 1,223,809/4,191,160 = 29.20%      | RED     |
+> | `market-data-tick-tradfi-prd`  | 1,395,684/1,703,744 = 81.92%      | RED     |
+> | `market-data-tick-sports-prd`  | 503,722/613,034 = 82.17%          | RED     |
+> | `instruments-store-sports-prd` | 5,856,820/6,396,870 = 91.56%      | RED     |
+> | `market-data-tick-pred-prd`    | 318,065/351,535 = 90.48%          | RED     |
+>
+> Net: the denominator fix was still the right correctness change (matches the CF-8 canonical definition, makes the
+> reported percentages meaningful instead of diluted-and-misleading), but it does NOT retire any of the 5 per-bucket
+> todos below — none of them can be closed as "was a checker artifact." All 5 remain real data-gap work, tracked as
+> already split out below / in the sibling plans each todo cites. Closes the loop opened by the
+> `cf8_available_at_denominator_scoped_to_full_manifest_not_captured_2026_08_02.md` P2 follow-up todo.
 
 - [x] ✅ [DATA] P2. Diagnose CF-8 (`available_at` non-null coverage) RED on `market-data-tick-tradfi-prd`. Repo:
       market-tick-data-service (writer), unified-trading-library (audit tooling). — 2026-08-02 (data_engineering
@@ -149,7 +175,9 @@ Full per-bucket rollup (excluding the Finding-1 false positives above):
 - [ ] [DATA] P2. Diagnose + fix CF-8 RED on `market-data-tick-pred-prd`. Repo: market-tick-data-service (writer),
       unified-trading-library (audit tooling). — 2026-08-02 (data_engineering slot-3): not worked this session — tracked
       by `mtds_available_at_cross_asset_backfill_2026_07_13.md`'s `-001`/`-006` todos, actively worked across many
-      sessions (most recently 2026-08-02).
+      sessions (most recently 2026-08-02). — 2026-08-02T19:15Z (slot 4): confirmed still RED under the corrected
+      captured-only denominator (post-`6af7c4b7`): 318,065/351,535 = 90.48% fill, a genuine gap (not a denominator
+      artifact) — see the "Denominator-fix re-verification" note above for the full cross-bucket comparison.
 - [ ] [DATA] P2. Diagnose + fix Era-B (chain `data_type` in `{options_chain,futures_chain}` must be 0) RED on
       `market-data-tick-tradfi-prd` — contradicts the "already-confirmed" GREEN claim in
       `cross_cutting_manifest_canonicalisation_findings_2026_07_11.md`; re-verify that doc's tradfi Adjudication against
@@ -166,6 +194,6 @@ Full per-bucket rollup (excluding the Finding-1 false positives above):
   rather than duplicated here. Headline: fixed a real crash bug (`market-tick-data-service@9d354cea`), ran the
   historical backfill, closed the fleet-wide tradfi backfill VM outage, and — while re-verifying whether CF-8 actually
   went GREEN — found the CF-8 checker itself likely uses the wrong denominator (filed as its own issue:
-  `/plans/active/issues/cf8_available_at_denominator_scoped_to_full_manifest_not_captured_2026_08_02.md`). CF-8 is
+  `/plans/archive/issues/cf8_available_at_denominator_scoped_to_full_manifest_not_captured_2026_08_02.md`). CF-8 is
   confirmed still RED on tradfi (live `cf_manifest_audit.audit()` re-run), pending both that checker fix and a separate
   fill-rate-ceiling investigation already in progress in `mtds_available_at_cross_asset_backfill_2026_07_13.md`.

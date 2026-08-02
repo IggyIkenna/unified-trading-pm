@@ -26,7 +26,7 @@ summary: >-
   "available_at fill rate" against `capture_status=='captured'` rows specifically — including the ORIGINAL 2026-07-13
   audit that started that plan (`manifest_writer_record_captured_available_at_never_persisted_2026_07_13.md`'s table is
   explicitly labeled "captured rows").
-status: open
+status: resolved
 nature: issue
 asset_group: [cross-cutting]
 stage: [data]
@@ -54,6 +54,8 @@ source:
 assigned_vm: planning
 locked_by:
 resolved_by:
+  "unified-trading-library@6af7c4b7 (denominator fix, captured-status filter mirroring _cells()) + 2026-08-02T19:15Z
+  slot-4 10-bucket re-verification confirming zero net CF-8 verdict change vs the 2026-07-26 rollup"
 execution_scope: orchestrator-agent
 estimate_class: refactor
 estimate_baseline_ai_days: 0.5
@@ -70,6 +72,18 @@ context_scope:
 ---
 
 # CF-8's denominator is the full manifest, not captured rows — likely mis-scoped, fleet-wide blast radius
+
+> **✅ RESOLVED 2026-08-02.** Both todos shipped: the fix itself (`unified-trading-library@6af7c4b7`, scoping CF-8's
+> denominator to `capture_status=='captured'` rows, mirroring the existing `_cells()` pattern) and the fleet-wide
+> re-verification (slot 4, 2026-08-02T19:15Z — a fresh 10-bucket `cf_manifest_audit.py --all-ags` run diffed against the
+> actual raw 2026-07-26 rollup JSON found ZERO verdict change: the same 5 RED / 5 GREEN split, bucket-for-bucket, both
+> before and after the fix — every previously-RED bucket is genuinely RED under the corrected denominator too, full
+> evidence in `cf_manifest_audit_first_full_rollup_findings_2026_07_26.md`'s "Denominator-fix re-verification" note).
+> Codex-alignment: no new codex SSOT needed — this is a narrow single-function correctness fix (the corrected
+> denominator convention is now self-documented in `_check_cf8_available_at`'s own code comment, citing this doc), not a
+> new cross-cutting architectural pattern. Moved to
+> `/plans/archive/issues/cf8_available_at_denominator_scoped_to_full_manifest_not_captured_2026_08_02.md`; corpus
+> referrer (`cf_manifest_audit_first_full_rollup_findings_2026_07_26.md`) repointed to the archive path.
 
 ## What I found
 
@@ -123,9 +137,18 @@ changing it, in case something already compensates for or intentionally relies o
       (`test_check_cf8_available_at_keys_off_captured_rows_only`,
       `test_check_cf8_available_at_green_when_all_captured_rows_filled`) proving the captured-only denominator and that
       the fix makes a previously-unreachable GREEN reachable. QG green, shipped via quickmerge.
-- [ ] [DATA] P2. Once the fix above ships, re-run `cf_manifest_audit.py --all-ags` (or the scheduled job's next run) and
-      diff against the 2026-07-26 rollup's 10-bucket CF-8 verdicts — some currently-RED buckets may already be GREEN
-      under the corrected denominator (particularly tradfi, sports, prediction — the 3 non-cefi asset_groups this
-      session's backfill work has been actively improving). Update
-      `cf_manifest_audit_first_full_rollup_findings_2026_07_26.md`'s CF-8 todo + this doc's findings with the corrected
-      picture. Repo: NA (audit + doc update only).
+- [x] ✅ [DATA] P2. **DONE 2026-08-02T19:15Z (slot 4).** Re-ran `cf_manifest_audit.py --all-ags` (all 10 prod buckets,
+      read-only, memory-bounded via `run-bounded-analysis.sh` — `--mem-cap` needed raising to 40G on this host, since
+      the fallback `ulimit -v`/RLIMIT_AS mechanism requires materially more headroom than the deployed job's own 32Gi
+      RSS-based cgroup cap for the same workload, confirmed live on the 39.4M-row defi bucket) and diffed against the
+      ACTUAL raw `gs://cf-manifest-audit-central-element-323112/cf_audit/2026-07-26.json` (pulled directly, not the
+      prose table). **Result: zero verdict change** — identical 5 RED / 5 GREEN split, bucket-for-bucket, before and
+      after the fix. None of the 5 previously-RED buckets flipped GREEN under the corrected denominator; the 5
+      previously-GREEN buckets had already reached literal 100% `available_at` fill across ALL rows (captured +
+      non-captured), a strictly stronger bar than the corrected check requires, so they were never denominator-diluted
+      false REDs. Concretely: `market-data-tick-cefi-prd` 29.20% (1,223,809/4,191,160), `market-data-tick-tradfi-prd`
+      81.92% (1,395,684/1,703,744), `market-data-tick-sports-prd` 82.17% (503,722/613,034),
+      `instruments-store-sports-prd` 91.56% (5,856,820/6,396,870), `market-data-tick-pred-prd` 90.48% (318,065/351,535)
+      — all confirmed GENUINE captured-row fill gaps, not checker artifacts. Updated
+      `cf_manifest_audit_first_full_rollup_findings_2026_07_26.md` (new "Denominator-fix re-verification" note + the
+      pred-tick todo) with the corrected picture. Repo: NA (audit + doc update only, as scoped).
