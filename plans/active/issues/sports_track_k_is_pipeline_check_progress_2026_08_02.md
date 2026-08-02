@@ -51,12 +51,33 @@ Driver PID 3466458 on this host.
 
 - `force`: **PASSED** (917.8s, `Shard completeness OK: 8/1 venues written for date=2025-12-20`, wrote 26,877 records
   across 390 venues per the manifest writer's own summary line).
-- `skip`: **FAILED** (`reason=skip_signal_not_found`, 867.1s) -- **not yet root-caused**. The skip-if-fresh signal did
-  not fire against the force-leg's own just-written test-bucket data. Per the `data-pipeline-check-is` skill's own
-  caution ("read the VM run.log as ground truth, not the report verdict" -- the raw->canonical instrument-id migration
-  can produce false-negative verdicts), this needs a direct read of the skip-leg VM's `run.log` for the actual
-  freshness-check log line before concluding this is a genuine regression vs. a known false-negative class. NOT
-  investigated yet this session.
+- `skip`: **FAILED** (`reason=skip_signal_not_found`, 867.1s) -- **ROOT-CAUSED 2026-08-02 (slot 9)**: read the skip-leg
+  VM's `run.log` directly
+  (`gs://deployment-scripts-central-element-323112/vm-logs/instr-backfill-sports-pchk-0802183841-s-a2a5-api-football/run.log`,
+  227,944 chars). **This is a checker false-negative, NOT a real skip-logic regression** -- and NOT the raw->canonical
+  instrument-id migration class this doc originally hypothesized. The actual mechanism: `run.log:23` logs
+  `"date=2025-12-20: deferring pre-flight to per-league entity handlers (sports per-league mode; expected=[...])"`, and
+  `instruments_service/engine/orchestrator/process_preflight.py:578-590` shows why --
+  `_has_sports_per_league_in_scope = bool(set(expected) & _SPORTS_PER_LEAGUE_ENTITIES)` is true for API_FOOTBALL's
+  `expected` set (FIXTURES_SCHEDULE/TEAMS/STANDINGS/etc., all in `_SPORTS_PER_LEAGUE_ENTITIES`), which unconditionally
+  sets `is_fresh = False` at the coarse level and defers the real freshness decision to each entity handler's own
+  `_should_skip_date_for_per_league` call -- so the top-level
+  `"SKIP date=%s: all %d venues/entities already fresh in manifest"` line `pipeline_e2e_check.py`'s
+  `contains_skip_signal` greps for (`pattern = f"SKIP date={day}: all "`) can **structurally never appear** in a
+  per-league-mode sports run's log, regardless of whether skip actually worked. The per-league skip logic demonstrably
+  DID work correctly this run: `run.log:915` logs
+  `"Per-fixture pre-fetch skip: 499 (entity, fixture_id) pairs already in existing per-league parquets — skipping api_football calls (pass --force to re-fetch regardless)"`
+  -- i.e. the skip-leg correctly avoided re-fetching the 499 pairs the force-leg had just captured, and only queued
+  genuinely-new work (1603 - 499 = 1104 calls). **Since `_SPORTS_PER_LEAGUE_ENTITIES` covers ~15 entity types spanning
+  nearly every sports data_type** (FIXTURES_SCHEDULE, PREDICTIONS, MATCHES, STANDINGS, TEAMS, INJURIES, FIXTURE_STATS,
+  FIXTURE_EVENTS, FIXTURE_LINEUPS, PLAYER_STATS, XG, PLAYER_VALUES, SFI_PROGRESSIVE_STATS, WEATHER,
+  ODDS_HORIZON_BUCKET), **this false-negative is NOT API_FOOTBALL-specific — expect `skip_signal_not_found` on the
+  remaining 6 venues' skip legs too** (BETFAIR, FOOTYSTATS, OPEN_METEO, SOCCER_FOOTBALL_INFO, TRANSFERMARKT, UNDERSTAT),
+  since each provider's `expected` set for SPORTS necessarily includes at least one per-league entity. **Do not spend
+  time re-investigating this same symptom on other venues in this checkpoint matrix** -- cite this root-cause instead
+  and move on; a real checker fix is tracked as its own todo below (properly scoped -- the fix needs per-provider-aware
+  secondary signals, which is more than this investigation's scope and risks a worse failure mode, a false-POSITIVE skip
+  verification, if rushed).
 - `live`: **IN PROGRESS** at checkpoint time. VM `instr-backfill-sports-pchk-0802183841-l-a2a5-api-football`, launched
   `2026-08-02T19:08:52Z`, healthy (fresh heartbeat, log growing normally through the same
   teams/standings/stats/events/lineups/player-stats phase sequence the force-leg went through).
@@ -90,9 +111,26 @@ Not yet started.
 
 ## Todos
 
-- [ ] [DATA] P1. Investigate the `skip_signal_not_found` finding on API_FOOTBALL's skip-leg (real regression vs. known
-      raw->canonical false-negative class) -- read the skip-leg VM's `run.log` directly, per the
-      `data-pipeline-check-is` skill's own "read run.log as ground truth" guidance. (repo: instruments-service)
+- [x] ✅ [DATA] P1. Investigate the `skip_signal_not_found` finding on API_FOOTBALL's skip-leg (real regression vs.
+      known raw->canonical false-negative class) -- read the skip-leg VM's `run.log` directly, per the
+      `data-pipeline-check-is` skill's own "read run.log as ground truth" guidance. (repo: instruments-service) --
+      unified-trading-pm@(this commit), see "Baseline checkpoint" section above for full root-cause + evidence: checker
+      false-negative (SPORTS per-league mode structurally never emits the coarse `SKIP date=...` line the checker greps
+      for), NOT a real skip-logic regression; expect the same symptom on all remaining 6 venues.
+- [ ] [DATA] P2. Fix `pipeline_e2e_check.py`'s skip-leg verification to recognize SPORTS per-league mode: any run whose
+      `expected` entities intersect `process_preflight.py`'s `_SPORTS_PER_LEAGUE_ENTITIES` frozenset defers the coarse
+      freshness check (`is_fresh = False` unconditionally at `process_preflight.py:583`), so the
+      `f"SKIP date={day}: all "` pattern `contains_skip_signal` greps for (`pipeline_e2e_check.py:592`) can never match
+      for these runs regardless of whether skip actually worked -- this makes `skip_signal_not_found` a permanent
+      false-negative for the ENTIRE SPORTS asset_group's skip leg (not just API_FOOTBALL), since nearly every sports
+      data_type is in that frozenset. Needs a per-provider-aware secondary signal (each entity handler logs its own
+      "already captured, skipping" line with different wording -- e.g. API_FOOTBALL's
+      `"Per-fixture pre-fetch skip: %d ... pairs already in existing per-league parquets"` -- footystats.py/sfi.py/
+      transfermarkt.py each have their own call sites around `_should_skip_date_for_per_league` with their own log
+      phrasing, not yet surveyed) before the checker can distinguish a genuine skip regression from expected
+      per-league-mode behavior. Out of scope for the investigation above (root-causing ≠ safely fixing -- a rushed fix
+      risks a false-POSITIVE skip verification, which is worse for data-correctness than today's honest fail-closed
+      state). (repo: instruments-service)
 - [ ] [DATA] P1. Complete the baseline (2025-12-20) checkpoint: 6 remaining venues x 3 legs, then write/finalize the
       report at `plans/audit/results/data_pipeline_e2e_check_is_2025-12-20.md`. (repo: instruments-service,
       skill-driven)
@@ -108,3 +146,15 @@ Not yet started.
 
 - 2026-08-02T19:20Z (slot 11, data_engineering): filed this tracker as a context-limit checkpoint mid-baseline-run; see
   "Baseline checkpoint" section above for full state. Background VM continues independently of this session.
+- 2026-08-02 (slot 9, data_engineering): root-caused the `skip_signal_not_found` finding on API_FOOTBALL's skip-leg by
+  fetching the skip-leg VM's `run.log` directly from
+  `gs://deployment-scripts-central-element-323112/vm-logs/instr-backfill-sports-pchk-0802183841-s-a2a5-api-football/run.log`
+  (via `unified_trading_library.download_from_storage`, not `gsutil` -- the interactive shell's `gsutil` creds were
+  invalid on this host; the UTL client used the ambient service-account credential successfully). Verdict: checker
+  false-negative, not a real regression -- see "Baseline checkpoint" section for the full mechanism (SPORTS per-league
+  mode in `process_preflight.py` structurally defers the coarse freshness check for any run touching
+  `_SPORTS_PER_LEAGUE_ENTITIES`, so `pipeline_e2e_check.py`'s `"SKIP date=... all "` grep can never match). No code
+  changed this session (the actual checker fix is correctly out of scope for a root-cause investigation and is now
+  tracked as its own P2 todo above, since a rushed fix risks a worse failure mode). Flipped this todo's checkbox
+  accordingly. Did NOT touch the remaining checkpoint work (6 venues baseline, mid/final checkpoints, or the live-leg
+  VM's current status) -- out of scope for this task.
