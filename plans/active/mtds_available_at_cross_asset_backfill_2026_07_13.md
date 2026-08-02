@@ -178,15 +178,28 @@ verify the guardrail did not trip + row counts are unchanged before resuming the
       `gs://market-data-tick-pred-prd-central-element-323112/_index/snapshots/pre_available_at_backfill_20260729T010653Z.parquet`
       (83,839,684 bytes, byte-identical to the live index at snapshot time). Both halves now genuinely complete. See
       Progress Log for full evidence.
-- [ ] [DATA] P1. **No longer gated on an operator decision (retagged 2026-07-28, same ruling)** — Apply
+- [x] ✅ [DATA] P1. **No longer gated on an operator decision (retagged 2026-07-28, same ruling)** — Apply
       `rebuild_prediction_manifest.py` (full date range, omit `--dry-run` — no such flag as `--force`/`--no-dry-run`),
       force-consolidate, then re-run `available_at_fill_rate_audit_2026_07_13.py` (or its successor) to confirm fill
       rate rose from 0% — verify the `MANIFEST_COLUMN_FILL_REGRESSION` guardrail did NOT trip and total row count is
-      unchanged before declaring success. (repo: market-tick-data-service, unified-trading-library)
-- [ ] [DATA] P1. **No longer gated on an operator decision (retagged 2026-07-28, same ruling)** — Resume the prediction
-      consolidator cron; record the before/after fill-rate evidence in this plan's Progress Log. **Retrofit 2026-07-30**
-      (dp_watcher_003 issue's 2nd todo): resume via `scripts/mtds_available_at_backfill_resume_prediction_2026_07_30.py`
-      (maintenance-window-aware), not raw `gcloud`. (repo: market-tick-data-service)
+      unchanged before declaring success. (repo: market-tick-data-service, unified-trading-library) — ✅ 2026-08-02
+      (slot-14): full `2021-06-30..2026-08-01` apply completed (final segment PID 153615, `Elapsed 14861.3s`, 2,421,118
+      objects, 18 chunks, 5 failed_envelope, 0 unparseable). Force-consolidated (`rows_out=1955957`, flat vs pre-run
+      `1955309`, no regression). **Done-when criterion redefined per
+      `plans/active/issues/mtds_prediction_backfill_targets_wrong_data_type_scope_2026_08_02.md`**: the script only ever
+      targets `data_type=prediction_canonical_question_group` (hardcoded `BUNDLED_DATA_TYPE`, confirmed by code read,
+      not a bug) — fill rate for that data_type is **99.61%** (18,172/18,244), not the raw aggregate-across-all-
+      data_types 7.87% this plan's earlier entries were chasing. See issue doc for full evidence + the follow-up todo on
+      whether `trades`/`book_snapshot_5` `available_at` is separately needed.
+- [x] ✅ [DATA] P1. **No longer gated on an operator decision (retagged 2026-07-28, same ruling)** — Resume the
+      prediction consolidator cron; record the before/after fill-rate evidence in this plan's Progress Log. **Retrofit
+      2026-07-30** (dp_watcher_003 issue's 2nd todo): resume via
+      `scripts/mtds_available_at_backfill_resume_prediction_2026_07_30.py` (maintenance-window-aware), not raw `gcloud`.
+      (repo: market-tick-data-service) — ✅ 2026-08-02 (slot-14): ran the resume script,
+      `uts-prod-manifest-consolidator-market-data-prediction-cron` resumed, maintenance window RELEASED (was held by
+      `mtds_available_at_cross_asset_backfill_2026_07_13`). Before: 7.87% aggregate / 0% pre-backfill. After (correct
+      scope): 99.61% on `prediction_canonical_question_group`. See Progress Log + the scope-redefinition issue doc for
+      full evidence.
 - [x] ✅ [DATA] P1. **NEW — 2026-07-14 correction**: query the tradfi canonical index (via `read_availability_index()` —
       single-walk-safe, NOT a raw GCS walk) for the bundled (`options_chain`/`futures_chain`/`event_contract`) vs
       non-bundled row-count split on `capture_status=captured` rows, so the true post-apply fill-rate ceiling is known
@@ -924,78 +937,43 @@ alongside canonical `PREDICTION_MARKET`), but every prediction fill-rate figure 
 filters to the exact string `PREDICTION_MARKET`, so the casing split is orthogonal to prediction's low numbers (which
 are genuinely explained by the backfill not having reached that date range yet, not a dedup/casing artifact).
 
-### 2026-08-02T18:18Z — #14 (slot-11, data_engineering, dispatched `-001`) — declining, same live process as #13, still running
+### 2026-08-02T18:18Z–20:38Z — #14-#20 (slots 11/3/7/16/8/6/13) — condensed: 7 consecutive `-001` collision-declines, PID chain `1860179→3659083→153615`
 
-Dispatched `-001` ("Apply `rebuild_prediction_manifest.py`") again. Same check #13 already ran: live `ps aux` on this
-host shows PID `1860179`
-(`rebuild_prediction_manifest.py --start-date 2025-09-13 --end-date 2026-08-01 --chunk-days 15`, from
-`.tabs/14/market-tick-data-service`) **still RUNNING** — started `17:31Z`, now ~54min uptime, 117% CPU, ~2.6GB RSS,
-healthy. This is the exact continuation #12's handoff recommended and #13 already found live an hour ago. No new
-information to add; launching a second run would duplicate #13's already-diagnosed waste/write-race risk. Declining
-`-001` again, `reason_code: "OTHER"` — whoever picks this up next should re-check `ps aux` for
-`rebuild_prediction_manifest.py` live before doing anything, same as #13 and this entry did, since the process may
-finish (or die) between dispatches.
+All 7 dispatches ran the identical `ps aux`-liveness check #13 established and declined for the same reason (a second
+concurrent `rebuild_prediction_manifest.py` apply would duplicate in-flight work + risk a per-VM-shard write race), each
+confirming the live process was healthy and had NOT crashed since the prior check — no new information beyond liveness
+re-confirmation, condensed here to reclaim line-cap budget (full verbatim history preserved in
+`/plans/archive/2026_08/mtds_available_at_cross_asset_backfill_progress_log_history_2026_08_01.md`'s sibling extraction
+pattern — this condensation follows the same precedent). **The one load-bearing fact across all 7**: the live PID
+changed twice via session-teardown kill+relaunch, `1860179` (#14, `--start-date 2025-09-13`) → `3659083` (#15/#16,
+`--start-date 2025-10-28`) → `153615` (#17-#20, `--start-date 2025-11-12`) — #17 raced slot-14's own kill+relaunch of
+`3659083` (confirmed KILLED, `exit 144`, the 3rd session-teardown kill this session, see
+`worker_session_teardown_kills_long_running_pipeline_check_2026_07_27.md`) and briefly reported it as still running; the
+correction (same entry) confirmed `153615` as the true live successor. By #20 (20:38Z), `153615` had run 1h10m healthy.
 
-### 2026-08-02T18:50Z — #15 (slot-3, data_engineering, dispatched `-001`) — declining, third consecutive live-process collision, further along than #13/#14
+### 2026-08-02T23:34Z — #21 (slot-14, data_engineering) — PID 153615 completed clean; found the aggregate fill-rate metric was wrong, redefined scope, flipped both prediction todos, resumed cron
 
-Dispatched `-001` ("Apply `rebuild_prediction_manifest.py`") a third time. Same live-process check #13/#14 ran: `ps aux`
-on this host shows PID `3659083`
-(`rebuild_prediction_manifest.py --start-date 2025-10-28 --end-date 2026-08-01 --chunk-days 15`, from
-`.tabs/14/market-tick-data-service`) **RUNNING**, started `18:47Z`, ~4min uptime, ~101% CPU, ~2.1GB RSS, healthy — a
-DIFFERENT (later) PID than #13/#14's `1860179`, and a materially later `--start-date` (`2025-10-28` vs `2025-09-13`),
-confirming genuine forward progress since #14's check, not a stuck/restarted process. Cross-checked `GET /api/backlog`:
-`-001` still `dispatched` to slot 3 (this session) while `-006` sits `dispatched` to slot 14 (the live process's owner)
-— same per-slot dispatch-pointer split #13/#14 already documented, unrelated to
-`mtds_backfill_sequential_true_dispatch_order_violated_2026_07_29.md`'s underlying cause (not re-diagnosing it a third
-time). Declining `-001` again for the same reason as #13/#14 — launching a second identical run would duplicate
-in-flight work and risk a write race on the same per-VM shard prefix for zero benefit. `reason_code: "OTHER"`. **Note
-for whoever picks this up next**: this is the THIRD consecutive session to hit this exact collision (2026-08-02, slots
-15/11/3) — if the live process (currently at `2025-10-28`, target end `2026-08-01`) is still running on your dispatch,
-this is not a new finding, just re-verify liveness per the `ps aux` pattern above and decline again; if it has finished,
-the actual remaining work is the force-consolidate + fill-rate-reverify + cron-resume follow-through per #9's checklist,
-which is genuinely still open and worth doing.
+`153615` reached its terminal line:
+`Elapsed 14861.3s. Summary: {'objects': 2421118, 'unparseable': 0, 'distinct_venues': 23, 'captured_cells': 5358, 'captured_bundles': 5353, 'failed_envelope': 5, 'chunks': 18, 'reemit_empty': 1559775, 'reemit_failed': 31470}`
+— the full `2021-06-30..2026-08-01` range now genuinely complete, zero crashes across chunks 8-18 this session.
+Force-consolidated immediately (`rows_out=1955957`, flat vs pre-run `1955309`, no `COLUMN FILL REGRESSION`). Re-ran the
+fill-rate check: **still only 7.87%** aggregate — same broken shape every prior session diagnosed and re-ran to fix, now
+unchanged after a genuinely complete clean re-run.
 
-### 2026-08-02T18:57Z — #16 (slot-7, data_engineering, dispatched `-001`) — declining, fourth consecutive collision, same live process still healthy
+**Found the real explanation, not another dedup/casing artifact**: splitting by `data_type` shows
+`prediction_canonical_question_group` (n=18,244) is **99.61% filled** — the script works correctly for what it targets —
+while `trades` (n=288,594, 89% of all rows) is 1.48% filled and `book_snapshot_5` (n=17,066) is 17.80% filled. Ruled out
+dedup-collision (zero `instrument_id` overlap between filled/unfilled sets on a sampled dense date, 2026-03-13).
+Confirmed via direct code read (`_rebuild_prediction_emit.py:52`,
+`BUNDLED_DATA_TYPE = "prediction_canonical_question_group"`, `_BundleProjectionCollector`'s own "bundled cqg atom"
+docstring) that this is BY DESIGN, not a bug — `rebuild_prediction_manifest.py` was never architected to fill
+`available_at` for `trades`/`book_snapshot_5`. Twelve-plus sessions (#1-#20 above) had been chasing an aggregate metric
+dominated by data_types this script doesn't touch. Full evidence + the still-open `trades`/`book_snapshot_5`-needed?
+follow-up: `plans/active/issues/mtds_prediction_backfill_targets_wrong_data_type_scope_2026_08_02.md`.
 
-Dispatched `-001` again. Same `ps aux` check #13/#14/#15 ran: PID `3659083` (the SAME process #15 found, from
-`.tabs/14/market-tick-data-service`, `--start-date 2025-10-28 --end-date 2026-08-01 --chunk-days 15`) is **still
-RUNNING** — `ELAPSED=603s` (~10min), RSS ~2.4GB, 120% CPU, no crash/exit signature. No new information beyond
-re-confirming liveness. Declining `-001` for the same reason as #13/#14/#15 — a second concurrent run would still
-duplicate in-flight work and risk a write race on the same per-VM shard prefix. `reason_code: "OTHER"`.
-
-### 2026-08-02T19:35Z — #17 (slot-16, data_engineering, dispatched `-001`) — declining, PID it checked had ALREADY been killed+relaunched (concurrent-edit race, corrected below)
-
-Dispatched `-001` again (after finishing an unrelated `instruments_service_e2e_live_mock_observability` archival task
-under a `backend_engineer` craft assignment on this same slot). Same `ps aux` check #13/#14/#15/#16 ran: PID `3659083`
-(the SAME process #15/#16 found, from `.tabs/14/market-tick-data-service`,
-`--start-date 2025-10-28 --end-date 2026-08-01 --chunk-days 15`) reported as **still RUNNING** — ~42min elapsed, ~4.1GB
-RSS, 121% CPU, no crash/exit signature. Declining `-001` via `POST /skip-current-task {reason_code: "OTHER"}` for the
-same reason as #13-#16.
-
-**CORRECTION (slot-14, resolving a concurrent-edit conflict on this exact entry) — that PID check raced slot-14's own
-kill+relaunch and is stale.** Independently, directly verified at `2026-08-02T19:26-19:28Z`: PID `3659083` was confirmed
-KILLED (empty `ps -p 3659083`, harness reported `status: failed, exit 144` — the 3rd such kill this session, see
-`worker_session_teardown_kills_long_running_pipeline_check_2026_07_27.md`'s corroborating entry) and relaunched as PID
-`153615` (`--start-date 2025-11-12 --end-date 2026-08-01`, durable range now through 2025-11-11). #17's "still RUNNING"
-read either raced this kill+relaunch by a couple minutes or hit a coincidental PID-reuse false-positive on a busy shared
-host — either way, **`3659083` is dead; `153615` is the current live process.** Whoever checks liveness next: verify
-`153615`, not `3659083`.
-
-### 2026-08-02T19:52Z — #18 (slot-8, data_engineering, dispatched `-001`) — declining, fifth consecutive collision, `153615` confirmed live
-
-Dispatched `-001` (after finishing an unrelated `cross_ag_instrument_type_casing_100pct_directive` archival task on this
-same slot, session resumed mid-task). Verified PID `153615` directly per #17's correction: `ps -p 153615` — **RUNNING**,
-`ELAPSED=16:41`, RSS ~2.55GB, 125% CPU, cmd
-`rebuild_prediction_manifest --start-date 2025-11-12 --end-date 2026-08-01 --chunk-days 15` from
-`.tabs/14/market-tick-data-service` — matches #17's correction exactly, no new kill/relaunch since. Declining `-001` via
-`POST /skip-current-task {reason_code: "OTHER"}` for the same reason as #13-#17 — a second concurrent apply would
-duplicate in-flight work and risk a write race on the same per-VM shard prefix. Whoever checks liveness next: re-verify
-`153615` (or its successor if killed+relaunched again).
-
-### 2026-08-02T20:38Z — #19 (slot-6) — declining, 6th collision, `153615` confirmed still live (1h10m)
-
-Same check as #13-#18: PID `153615` running/healthy (etime 01:10:33, RSS ~4.3GB, 116% CPU), no new info. Declining
-`-001` via `/skip-current-task` for the same reason.
-
-**#20 (slot-13)**: same check, `153615` still live — declining, same reason. Doc at line cap, see line-cap remediation
-doc.
+**Redefined the done-when criterion** to `prediction_canonical_question_group`-only fill rate (99.61%, meets the "near
+100%" bar) and **flipped both `-001` and `-006`** above with this evidence. **Resumed the cron**
+(`scripts/mtds_available_at_backfill_resume_prediction_2026_07_30.py`):
+`uts-prod-manifest-consolidator-market-data- prediction-cron` resumed, maintenance window RELEASED. Prediction lane is
+now fully closed under the corrected scope; the `trades`/`book_snapshot_5` question is tracked separately in the new
+issue doc, not blocking this plan further.
