@@ -868,8 +868,48 @@ rows, then MANY distinct real per-instrument objects (this row-key's dedup group
 different CME futures contracts trading that day, not one instrument) collapse onto a tiny number of manifest row-keys —
 consistent with the small `captured_cells` counts this session's re-run reported per chunk (e.g. `3796` cells for a
 whole 30-day chunk) vs. the much larger row counts the fill-rate check's `groupby` sees when reading the full manifest —
-those are two different levels of aggregation that this session did not fully reconcile. **Not confirmed as the root
-cause** (would need to trace the actual row-key definition in `_writer_captured.py`/`_resolve_dedup_cols` and confirm
-whether `instrument_id` SHOULD be populated for tradfi OHLCV rows specifically, or whether blank-`instrument_id` is
-by-design for this data_type and the real key differs) — flagging as the concrete next investigative step, sharper than
-the general "check the dedup ordering" note above.
+those are two different levels of aggregation that this session did not fully reconcile.
+
+**Same session, follow-up — CONFIRMED via the actual dedup-key code, not just data sampling.** Read
+`unified_trading_library/manifest_consolidator.py`: `_BASE_DEDUP_COLS = ("date", "venue", "data_type", "service_name")`,
+and `_OPTIONAL_DEDUP_COLS` explicitly **includes `"instrument_id"`** (`_resolve_dedup_cols`, line ~2109) — it IS a real
+dedup dimension, not incidental.
+
+**CORRECTION, same session — the "populate instrument_id per-object" conclusion immediately below was premature;
+verified against the real GCS object and it does NOT hold.** Checked the actual object behind one of these rows directly
+(`gs://.../day=2020-01-02/pipeline_mode=batch_databento/asset_group=tradfi/venue=CME/instrument_type=future/ data_type=ohlcv_1m/ticks.parquet`):
+there is exactly ONE file, named `ticks.parquet` (not a per-instrument filename) — this shape is a genuine bundle-by-day
+file covering many instruments, not a mis-parsed per-instrument object. So a blank `instrument_id` for this shape is
+correct-by-design given the rebuild script's own parsing rules, not a parser bug — retracting the "real fix: populate
+instrument_id per-object" recommendation two paragraphs above.
+
+**What the same query DID surface, re-checked with `instrument_type` included this time (181 rows for just
+`date=2020-01-02, venue=CME, data_type=ohlcv_1m`)**: the manifest carries BOTH lowercase (`combo`, `future`) AND
+uppercase-canonical (`COMBO`, `FUTURE`) `instrument_type` values as PERMANENTLY DISTINCT dedup groups for what is
+conceptually the same instrument class — e.g. many `combo` rows (old, `written_at` 2026-07-18..07-28) coexist alongside
+`COMBO` rows (this session's fresh rebuild, `written_at` 2026-08-02T17:40) without ever merging, because dedup on
+`instrument_type` is case-sensitive. **This is NOT a new bug** — it's the already-known, already-ruled C2a
+`instrument_type` casing issue (`/codex/02-data/cross-asset-canonical-target-ssot.md` and siblings; CLAUDE.md's own
+domain index: "C2a instrument_type COLUMN casing... RULED (D1/D2 2026-07-20) but migration_pending — compare
+case-insensitively, do NOT flag, do NOT refuse"). Its practical effect here: this session's rebuild (uppercase) never
+actually overwrites/fixes the old lowercase rows' `available_at` — it just adds a SEPARATE, parallel-but-never- merged
+uppercase row, so the fill-rate check (which reads BOTH casings as distinct rows) sees the old unfilled lowercase rows
+persist forever alongside the new filled uppercase ones, diluting the aggregate. **This plausibly explains the
+byte-identical-after-re-run result better than the retracted instrument_id theory**: the rebuild isn't failing to write
+useful data, it's writing correct data that the still-migration-pending casing split prevents from ever superseding the
+old rows.
+
+**CONFIRMED, same session — re-ran the fill-rate check with `instrument_type.str.upper()` folded before grouping**
+(pre-2023-04, `ohlcv_1m`+`ohlcv_1s`, `n=280,005` rows): naive case-sensitive fill rate **56.8%**, matching the earlier
+per-data_type numbers. Folded — grouping by `(date, venue, data_type, UPPER(instrument_type))` and counting a key as
+"covered" if ANY casing variant of that key is filled — jumps to **8,832 distinct folded keys, 7,418 covered (84.0%)**.
+**Casing duplication explains the large majority of the apparent gap** (56.8% → 84.0% just from folding), though not all
+of it — a genuine ~16% remains unfilled even after folding, which is real remaining work, not a measurement artifact.
+**Practical implication for whoever closes this out**: (1) the "fill rate" metric this whole investigation has been
+using is measuring the wrong thing while the C2a casing migration stays pending — any completion check for this todo
+should fold casing first, or it will perpetually undercount; (2) do NOT attempt a third full re-run of the rebuild
+expecting a different result — the rebuild is already landing correct data, the remaining ~16% gap plus the casing-fold
+itself are the real next steps, not another `rebuild_tradfi_manifest.py` invocation; (3) whether to actually MIGRATE the
+old lowercase rows to canonical uppercase (closing the split permanently) is the C2a ruling's own open migration work,
+out of this plan's scope — this doc's Apply todo should likely be evaluated against the FOLDED number, not the raw one,
+when deciding whether to flip it.
