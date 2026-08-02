@@ -935,3 +935,22 @@ information to add; launching a second run would duplicate #13's already-diagnos
 `-001` again, `reason_code: "OTHER"` — whoever picks this up next should re-check `ps aux` for
 `rebuild_prediction_manifest.py` live before doing anything, same as #13 and this entry did, since the process may
 finish (or die) between dispatches.
+
+### 2026-08-02T18:50Z — #15 (slot-3, data_engineering, dispatched `-001`) — declining, third consecutive live-process collision, further along than #13/#14
+
+Dispatched `-001` ("Apply `rebuild_prediction_manifest.py`") a third time. Same live-process check #13/#14 ran: `ps aux`
+on this host shows PID `3659083`
+(`rebuild_prediction_manifest.py --start-date 2025-10-28 --end-date 2026-08-01 --chunk-days 15`, from
+`.tabs/14/market-tick-data-service`) **RUNNING**, started `18:47Z`, ~4min uptime, ~101% CPU, ~2.1GB RSS, healthy — a
+DIFFERENT (later) PID than #13/#14's `1860179`, and a materially later `--start-date` (`2025-10-28` vs `2025-09-13`),
+confirming genuine forward progress since #14's check, not a stuck/restarted process. Cross-checked `GET /api/backlog`:
+`-001` still `dispatched` to slot 3 (this session) while `-006` sits `dispatched` to slot 14 (the live process's owner)
+— same per-slot dispatch-pointer split #13/#14 already documented, unrelated to
+`mtds_backfill_sequential_true_dispatch_order_violated_2026_07_29.md`'s underlying cause (not re-diagnosing it a third
+time). Declining `-001` again for the same reason as #13/#14 — launching a second identical run would duplicate
+in-flight work and risk a write race on the same per-VM shard prefix for zero benefit. `reason_code: "OTHER"`. **Note
+for whoever picks this up next**: this is the THIRD consecutive session to hit this exact collision (2026-08-02, slots
+15/11/3) — if the live process (currently at `2025-10-28`, target end `2026-08-01`) is still running on your dispatch,
+this is not a new finding, just re-verify liveness per the `ps aux` pattern above and decline again; if it has finished,
+the actual remaining work is the force-consolidate + fill-rate-reverify + cron-resume follow-through per #9's checklist,
+which is genuinely still open and worth doing.
