@@ -267,7 +267,7 @@ not duplicated here.
       PREDICTION lane, which IS actively running (backlog task `-006`, dispatched to slot 3, mid chunked-apply as of
       this check) — i.e. tradfi's resume has no live ETA yet because its own Apply hasn't even been picked up,
       consistent with the already-tracked dispatcher issue
-      `/plans/active/issues/mtds_backfill_sequential_true_dispatch_order_violated_2026_07_29.md`. **Not fixed here**:
+      `/plans/archive/issues/mtds_backfill_sequential_true_dispatch_order_violated_2026_07_29.md`. **Not fixed here**:
       running the tradfi Apply/Resume belongs to `mtds_available_at_cross_asset_backfill_2026_07_13.md`'s own todos
       (lines 296-308) — doing it from this doc's scope would duplicate ownership of a plan that already tracks it and
       risk the exact concurrent-dispatch collision the prediction lane's own Progress Log documents happening 3x.
