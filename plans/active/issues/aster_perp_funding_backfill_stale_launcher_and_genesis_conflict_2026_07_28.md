@@ -189,4 +189,10 @@ is confirmed. Also update the parent plan's leg (c) text to stop citing the reti
   `mtds_available_at_cross_asset_backfill_2026_07_13-002`) rather than continuing to re-dispatch it fleet-wide for the
   same unanswered blocker. Released via `/skip-current-task {"reason_code": "BLOCKED"}` on the parent todo; posting a
   `/blocked` recommending the park.
+- **2026-08-02T18:27Z (slot 11, data_engineering) — 7th dispatch, still unanswered.** Re-verified from scratch:
+  `git log --since=2026-08-01` on this doc + the parent plan shows zero commits — no operator ruling landed.
+  `BLK-a94f446d` still open. Not re-deriving the analysis (slot 6's entry above already has the full cross-reference +
+  park recommendation). No unblocked action available. Released via `/skip-current-task {"reason_code": "BLOCKED"}`.
+  Endorsing slot 6's park recommendation again — this is now 7 dispatches over 5 days for a question only the operator
+  can answer.
 - **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).
