@@ -645,12 +645,35 @@ here now, retroactively, to close that gap. Each item cites its source doc + ori
       pages, and the report names each stuck workflow + its streak length. Full PM `quality-gates.sh` green (1631
       passed, 0 failed; sentinel matched committed HEAD). NOT wired into `scripts/quality-gates.sh` (this is a standing
       GHA monitor, not a QG checker — no same-file registration contention applies here).
-- [ ] [CI] P1. **(from `ldr_to_main_promote_workflows_sustained_startup_failure_2026_07_30.md`)** A promote PR can sit
-      with ALL required checks green (`quality-gates-v2`, `image-build-gate`, `sit-gate/fleet-green`,
+- [x] ✅ [CI] P1. **(from `ldr_to_main_promote_workflows_sustained_startup_failure_2026_07_30.md`)** A promote PR can
+      sit with ALL required checks green (`quality-gates-v2`, `image-build-gate`, `sit-gate/fleet-green`,
       `semver-agent/label-check`) for 10+ min without merging — observed on `market-tick-data-service` PR #791
       (`mergeStateStatus: UNSTABLE`, `mergeable: MERGEABLE`, `mergedAt: null`, `autoMergeRequest: null`), repeated
       across 8 straight regenerated PRs (#788→#791). Check whether the promote-PR-creation step needs to explicitly
-      enable auto-merge rather than relying on a default.
+      enable auto-merge rather than relying on a default. — **DONE 2026-08-02 (slot-10, cicd)** —
+      `unified-trading-pm@4bf65b67c`. **Finding: the code already explicitly arms auto-merge at all 3 sites (never
+      relied on a default), and the reported gap is NOT currently reproducing** — verified via a real live run (run
+      `30748479158` logs the arm succeeding for MTDS PR #815) and PR history (15 consecutive MTDS promote PRs #801→#815
+      merged within seconds of creation, 2026-07-31→2026-08-02, zero manual intervention). Root cause of the original
+      #788-793 gap traces most plausibly to the concurrent GitHub Actions billing-wall incident
+      (`github_actions_billing_wall_recurrence_2026_07_29.md`) rather than a code defect — cleared 2026-07-31, same day
+      the clean-merge streak begins. **Adjacent bug found + fixed in the same file**: all 3 `gh pr merge --auto`
+      arm-call sites in `scripts/cicd/ldr_to_main_fleet_promote.sh::process_repo()` unconditionally tallied
+      `_done PROMOTED` after the arm attempt regardless of whether the arm itself succeeded — a repo needing a manual
+      merge was silently counted identically to a genuinely-armed one (the close+reopen re-arm site was worse: it
+      swallowed the arm call's exit code via `2>/dev/null || true`, not even logging the failure). Each site now
+      branches on its own exit status into a new `ARM_FAILED` terminal state, wired through the aggregation tally,
+      `GITHUB_OUTPUT`, job outputs, and a dedicated Slack notify job
+      (`.github/workflows/ldr-to-main-promote-fleet.yml`). Also fixed `test-ldr-promote-provenance-rearm-gate.sh`,
+      discovered silently FATAL-ing (exit 2) since the 2026-08-01 script-extraction refactor (`468e9413e`) moved
+      `provenance_check_ok()` out of the workflow file's embedded `run:` block into the now-standalone
+      `ldr_to_main_fleet_promote.sh` without updating this test's extraction target — repointed it + added a new
+      regression test (`test-ldr-promote-arm-failed-tally.sh`) proving the ARM_FAILED tally with both structural
+      assertions and a functional harness against the real extracted aggregation code. Full PM `quality-gates.sh` green.
+      **Incidental fix, filed separately**: authored the missing companion finalize plan for
+      `plans_archive_reference_path_hygiene_2026_08_02.md` (`unified-trading-pm@fb1c05791`) after discovering it was
+      blocking the corpus-wide `check_finalize_plan_coverage.py` gate — unrelated to this todo, shipped as its own
+      commit.
 - [ ] [DEVOPS] P2. **EXTRACTED** from `uac_value_only_config_change_breaks_utl_untested_2026_07_20.md` (locked doc, only
       this bounded item extracted — its main P0/P1 chain stays there, operator-gated). Fix the invalid `sit_retry_cap`
       wall_type in `sit-debounce-trigger.yml` (it can never succeed) and decide whether a red SIT should escalate to a
