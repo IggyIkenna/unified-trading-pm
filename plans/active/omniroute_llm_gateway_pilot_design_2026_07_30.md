@@ -269,3 +269,8 @@ under active consideration, and only once its 3 prerequisite research todos reso
   of scope, unchanged) with 3 research prerequisites before any code: real OmniRoute account/dashboard access, the real
   allowlist/combo mechanism confirmed against real docs (not the marketing page), and the operator's actual curated
   model list. No code shipped this entry — planning/research only.
+- **na-eligibility-audit 2026-08-02** (autonomous, tranche `ao`, dispatch agt-da0e58, slot 10): re-verified, no change —
+  all 6 remaining open todos are either directly `[OPERATOR]`-tagged (stand up OmniRoute, sign up for real account
+  access, decide the curated model allowlist) or explicitly gated behind one of those three (`[REVIEW]`/`[INFRA]`
+  follow-ons). Doc still stays `assigned_vm: NA`/`execution_scope: local-only` by explicit operator choice per its own
+  opening section. No re-litigation needed — citation still present verbatim.

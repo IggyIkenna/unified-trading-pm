@@ -201,3 +201,12 @@ Not mutually exclusive (e.g. 1+2 together is plausible). This doc does not pick 
 
   **Not committed by review** (zero commits, role boundary) — handed to main to route to a worker for the `docs(plans):`
   quickmerge.
+
+- **na-eligibility-audit 2026-08-02** (autonomous, tranche `ao`, dispatch agt-da0e58, slot 10): KEEP-NA, valid — active
+  P1 incident, still escalating (6 recurrences logged as of this entry, operator escalations esc17/esc18 pending). Of
+  the 3 open todos: `[OPERATOR] P1` is a direct operator-scope policy decision (correctly tagged); `[INFRA] P2` is
+  explicitly gated on that decision, not yet actionable; `[DIAG] P2` ("best-effort... if feasible", no bounded
+  done-when) is a live diagnostic already being substantially advanced in real time by the review-agent chain in this
+  same Progress Log (cgroup reads, `tmux_session_lost` census, candidate-process ruling-out) — dispatching a separate AO
+  worker to redundantly re-investigate the SAME live incident right now would duplicate in-flight human/review work, not
+  add bounded value. Doc correctly stays `assigned_vm: NA` in full; no reclassification.
