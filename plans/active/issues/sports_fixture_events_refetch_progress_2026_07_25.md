@@ -749,3 +749,17 @@ FIXTURE_STATS and FIXTURE_LINEUPS run as two SEPARATE sequential campaigns (the 
 exactly one entity, no multi-value support) — total ~8-9 daily cycles across both before this campaign's widening todo
 can be flipped. Not yet launched (FIXTURE_EVENTS pass-2 above still finishing); next dispatch launches FIXTURE_STATS for
 `2020-06-06..<today>` once pass-2 completes and the lock clears.
+
+**Health-checked 2026-08-02T14:56Z (autonomous continuation), RUNNING, healthy — and a new fact worth recording for
+future dispatches.** `af-backfill-20260802-152210` still `RUNNING`, `run.log` actively advancing (`date=2020-09-27` as
+of this check) with no failure signature. **Non-obvious**: this date is EARLIER than the `date=2021-09-12` this same
+recovery task had already reached before the 2026-07-31 preemption — this is NOT a regression or stall, it's expected
+behavior for `--recovery-fixture-ids` mode specifically. Unlike a plain `--entity FIXTURES` date-range resume (which
+genuinely skip-if-freshes and resumes near where it left off), recovery mode unconditionally sets `redo_all=True` for
+every allowlisted fixture (log: "Recovery mode: promoting redo_all=True so per-provider per-day skip is bypassed") —
+there is no `PROGRESS.json` checkpoint for this mode, so **every relaunch restarts the FULL `2020-06-06→2026-07-25` walk
+from day one and re-fetches all 19,850 recovery-scoped fixtures again**, not just the remainder. A future preemption on
+this specific task-type should be read as "full redo needed," not "resume from last date" — do not mistake an earlier
+date boundary for a bug. At the now-fixed ~192 req/min rate, a clean uninterrupted run should still only take ~1.7h
+total (19,850 ÷ 192), so a full redo is a modest cost, not a reason to change approach. Releasing without
+duplicate-launch; re-armed monitoring at the standard cadence.
