@@ -238,16 +238,34 @@ otherwise-independent P3 todos over one soft file-overlap risk).
       retention on the sports prd buckets) is deliberately NOT extracted here — it is an infra spend decision, see the
       Deferred section.
 
-- [ ] [REVIEW] P3. **Sweep `features_service/sports/` for the same `= pd.NA`-then-never-filled idiom that upcast 23 xG
-      columns to object dtype and crashed the first real SPORTS model fit.** The root cause is already fixed at one site
-      (`features-service@c54f9eaf`: `multisource_xg_calculator.py`'s `out[col] = pd.NA` → `np.nan`, since `pd.NA`
-      upcasts a column to `object`, which then survives GCS write/read and poisons ml-service's cross-date merge). The
-      open question is whether the idiom exists elsewhere. **One named lead to check first, not just a blind grep**: the
-      investigation that found the original flagged `writer.py`'s `season_context` columns as using an identical
-      "initialized to `pd.NA`" pattern per its own code comment — that was never independently verified as dead, only
-      flagged. Repo: features-service. **Done when**: every `pd.NA` initialisation site under `features_service/sports/`
-      is listed with a verdict (genuinely filled later / never filled → converted to `np.nan` / not a dtype risk),
-      `writer.py`'s `season_context` case is explicitly resolved either way, and `quality-gates.sh` is green. Source:
+- [x] ✅ [REVIEW] P3. **DONE — `features-service@06a98496`.** Swept every `= pd.NA` initialisation site under
+      `features_service/sports/` (`grep -rn "pd\.NA" features_service/sports/`, 14 hits across 9 files) and verdicted
+      each: - `season_context.py:255` / `writer.py:157`'s comment — **NOT a dtype risk, no change.** Already
+      independently verified 2026-07-30 in
+      `issues/sports_multisource_xg_21_of_28_columns_never_computed_2026_07_26.md`'s own sibling `[REVIEW]` item: every
+      one of the 20 `SEASON_CONTEXT_COLUMNS` has a real, grep-confirmed assignment site. Spot- re-read this pass:
+      unchanged since that verdict — no new action. - `goal_timing.py:301` — **genuinely never-filled → FIXED.**
+      `early_goal_rate_*`/`late_goal_rate_*` (via `_derive_rates`) and the bucket/situational copies are only
+      conditionally overwritten when their source columns are present in the input; when absent, the `pd.NA` pre-fill
+      survives to return. Converted to `np.nan`. - `league_calculator.py:78` — **genuinely never-filled → FIXED.**
+      `compute_league_features` (a live registered feature builder, `tracking/feature_builder_registry.py:66`) only ever
+      assigns 5 of the 29 `LEAGUE_COLUMNS` (position/points-pct); the other 24 (attack/defense strength, goal metrics,
+      win/draw/loss rates, home/away splits, relative strength) are NEVER computed by this entry point at all — always
+      `pd.NA` (same class as the original 21 dead xG columns). Converted to `float("nan")`. - `venue_context.py:171` —
+      **genuinely never-filled → FIXED.** Several numeric columns (`home_venue_*` stats, `away_cumulative_travel_km`,
+      `*_days_since_last_match`, `is_evening_kickoff`, `is_midweek_match`, and the direct-copy columns) are only
+      conditionally overwritten when their source column is present. Converted to `np.nan`. -
+      `xg_decomposition_calculator.py:442` — **genuinely dtype-risk → FIXED (different mechanism, same root cause).**
+      The per-fixture exception-handler fallback defaulted a failed fixture's row to `pd.NA`; confirmed empirically
+      (`pd.DataFrame(rows)` with mixed `pd.NA`/float rows) that this upcasts the WHOLE column to `object` dtype for
+      every fixture in the batch, not just the failed one, whenever `pd.DataFrame(rows)` mixes it with a successful
+      fixture's real float values. Converted to `float("nan")`. - `relative_context_calculator.py:132` — **NOT a dtype
+      risk, no change.** The `pd.NA` pre-fill is unconditionally and fully overwritten by the `METRIC_FAMILIES` loop for
+      every one of the 60 `RELATIVE_CONTEXT_COLUMNS` before `out` is ever returned — a dead pre-fill, never
+      observable. - `bucketed_features_calculator.py` (2 sites) — **NOT a dtype risk, no change.**
+      `BUCKETED_FEATURES_COLUMNS` are genuinely categorical/string bucket labels (e.g. `"3-4"`, `"low"`) — `object`
+      dtype is the correct, intended dtype for these columns, not an upcast artifact. `quality-gates.sh` green
+      (sentinel-verified at `06a98496`). Repo: features-service. Source:
       `issues/sports_multisource_xg_21_of_28_columns_never_computed_2026_07_26.md` (`[REVIEW]` item). **Note**: that
       doc's sibling `[OPERATOR/DESIGN] P3` item (decide which of the 5 unfilled xG column groups to build vs prune) is
       deliberately NOT extracted — the doc itself stops at diagnosis per the dispatch-scope rule.
