@@ -109,11 +109,17 @@ false-positive surface). Recommend, in order:
 - [ ] [INFRA] P2. Widen `_TODO_TAG_PRIORITY_RE` (or add a preprocessing strip) so a `brief`/plan line with a leading
       `BLOCKED-<TOKEN>` (or similar) marker before `[TAG] P<n>.` still extracts tag+priority correctly. Add a regression
       test using a brief like `"BLOCKED-UPSTREAM-DESIGN [DATA] P2. ..."`. (repo: agent-orchestrator)
-- [ ] [INFRA] P2. Harden `_brief_is_checked_by_tag_in_text` (and `_marker_disposition_in_text`'s analogous risk) against
-      correlating to an UNRELATED same-tag-priority line — require some shared distinguishing text beyond the
-      tag+priority prefix, or otherwise prove the matched line actually corresponds to `brief`'s todo. Add a regression
-      test mirroring the live L304/`canonical_path_oracle_blind_to_filename_stem-002` false-positive (two different
-      `[DATA] P2.` todos in one doc, only one checked, brief belongs to the OTHER one). (repo: agent-orchestrator)
+- [x] ✅ [INFRA] P2. **DONE 2026-08-02 (slot-6) — `agent-orchestrator@3511af4`.** Hardened both
+      `_brief_is_checked_by_tag_in_text` and `_marker_disposition_in_text`: a `hits == 1` tag+priority correlation now
+      also requires at least one shared length->=6 word between `brief`'s own text and the matched line's text (both
+      taken after the shared `[TAG] P<n>.` prefix) via a new `_shares_distinguishing_content` helper. Falls back to the
+      prior accept-on-`hits==1` behavior when `brief` itself carries no such word (e.g. the test suite's generic
+      `"do the thing"` fixtures), so no regression to the existing self-archival / paragraph-reword acceptance tests
+      (full `test_done_gate_plan_flip_hard_reject.py` suite green, 35/35, including all pre-existing tag-correlation
+      cases). Added 2 new regression tests: `test_done_rejects_cross_repo_when_tag_correlation_matches_unrelated_todo`
+      (mirrors the live L304/`canonical_path_oracle_blind_to_filename_stem-002` false positive — must 409) and
+      `test_done_accepts_cross_repo_when_tag_correlation_content_matches` (genuine reworded+annotated correlation still
+      accepts). Full `quality-gates.sh` green (2228 passed), verified on origin/live-defi-rollout.
 
 ## Progress Log
 
@@ -122,3 +128,6 @@ false-positive surface). Recommend, in order:
   `verify.check_plan_flip` against slot-12's real `unified-trading-pm@5f00baeed` commit. Resolved my own session via
   `/skip-current-task` (task correctly stays un-completable via `/done` as scoped; the substantive churn-fix is already
   shipped and logged in `canonical_path_oracle_blind_to_filename_stem_2026_07_20.md`'s Progress Log).
+- **slot-6 2026-08-02**: dispatched todo 2 (`ao_done_gate_tag_correlation_false_match_on_leading_marker-001`). Shipped
+  `agent-orchestrator@3511af4` — see the flipped checkbox above for the fix summary. Todo 1 (widen
+  `_TODO_TAG_PRIORITY_RE` for a leading marker) remains open, unassigned to this task.
