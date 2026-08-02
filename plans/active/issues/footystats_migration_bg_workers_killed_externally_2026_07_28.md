@@ -389,18 +389,13 @@ but genuinely different:
 periodic agent check-ins + relaunch instead (works, but is more agent-turns than the loop would cost). If this incident
 class keeps recurring across sessions, worth actually building the loop rather than continuing to hand-relaunch.
 
-**Distinct, smaller finding not requiring its own issue doc**: `delete_migrated_defi_markers_2026_07_23.py`'s
-`todo = [m for m in markers if m not in already_done]` filter has no safety check against a `--resume-log` shared
-between a `--dry-run` and `--apply` invocation — if reused, `--apply` will discover `todo=[]` (everything already
-"processed" by the dry-run) and silently do nothing, reporting a false "0 to process, 0 deleted" success rather than
-erroring. Worked around this session by always using separate `.dry.` / `.apply.` resume-log paths (per this file's own
-naming convention, apparently anticipated by whoever built it). A cheap hardening fix for a future session: have the
-script refuse to proceed (or warn loudly) if `--apply` is passed a resume-log where 100% of in-scope markers already
-show `action: "would_delete"` (dry-run dispositions) rather than `action: "deleted"`/`"none"` (apply dispositions) —
-would catch this exact silent-no-op class before it ships a false "nothing to delete" report. Logged here rather than as
-a separate plan todo since it is a small, generalizable script-robustness gap discovered in passing, not blocking
-`/plans/archive/2026_08/defi_dex_pool_symbol_fix_backfill_purge_2026_07_25.md`'s todo 5 (which used the separate-paths
-workaround successfully).
+**Distinct, smaller finding not requiring its own issue doc — HARDENED 2026-08-02, see the `## Todos` P3 item below**:
+`delete_migrated_defi_markers_2026_07_23.py`'s `todo = [m for m in markers if m not in already_done]` filter had no
+safety check against a `--resume-log` shared between a `--dry-run` and `--apply` invocation — if reused, `--apply`
+would discover `todo=[]` (everything already "processed" by the dry-run) and silently do nothing, reporting a false
+"0 to process, 0 deleted" success rather than erroring. Worked around in the original session by always using separate
+`.dry.` / `.apply.` resume-log paths (per this file's own naming convention, apparently anticipated by whoever built
+it). The class of bug now refuses/warns loudly instead of relying on that naming-convention discipline alone.
 
 ## Todos
 
@@ -422,8 +417,23 @@ workaround successfully).
       since the pattern is explicitly the standard for ANY future multi-hour LOCAL background migration workspace-wide,
       matching the existing generic-dev-tool precedent (`run-bounded-analysis.sh`) rather than one script's originating
       repo.
-- [ ] [SCRIPT] P3. Harden `delete_migrated_defi_markers_2026_07_23.py` (and any sibling resume-log-driven script) to
+- [x] ✅ [SCRIPT] P3. Harden `delete_migrated_defi_markers_2026_07_23.py` (and any sibling resume-log-driven script) to
       refuse/warn loudly if `--apply` is passed a resume-log where 100% of in-scope markers already show
       `action: "would_delete"` (dry-run dispositions) rather than `action: "deleted"`/`"none"` (apply dispositions) —
       catches the silent-no-op class (shared dry-run/apply resume-log) before it ships a false "nothing to delete"
-      report.
+      report. — market-tick-data-service@TBD (SHA filled in at ship time). Added a
+      `dry_run_resume_log_reuse_detected()` guard + `--allow-dry-run-resume-log-reuse` override to
+      `delete_migrated_defi_markers_2026_07_23.py`, and to every confirmed genuine sibling with the same
+      `--resume-log`-gated dry-run/apply shape (found via a dedicated codebase-wide search, scoped to
+      `market-tick-data-service` — no other repo has this pattern): `fold_lst_rates_migrated_markers_2026_07_25.py`
+      (dry-run-only signal `action=="would_fold"`) and `purge_superseded_dex_pool_address_keyed_leaves_2026_07_28.py`
+      (leaf-level `action=="would_delete"` across all leaves of every in-scope already-processed shard — required
+      widening `_load_resume_log()`'s return type from a bare key-set to a dict of full shard records so the
+      leaf-level actions are retrievable). `fold_legacy_composite_venue_objects_2026_07_31.py` has NO
+      would-vs-did action marker at all (`written`/`manifest_registered` both legitimately stay 0 on a genuine
+      apply run whose objects were all already `blob_exists`-skipped), so it needed an explicit `"mode":
+      "apply"/"dry_run"` tag added to every resume-log record instead of an inferred signal — same guard shape,
+      different detection input. `quantify_dex_pools_catalogue_gap_other_12_protocols_2026_08_02.py` has the same
+      resume-log gating but no `--apply` at all (report-only), so the cross-contamination class this todo targets
+      cannot occur there — left unchanged. 24 new unit tests added across the 4 existing test files (one per
+      hardened script), all credential-free/GCS-free, all green.
