@@ -87,7 +87,21 @@ Launched `mtds-live-cefi-consolidated-20260730-010147` (`asia-northeast1-c`, `e2
       resolved (both per that plan's own completion mandate). If still empty well past 13:30 UTC, treat as a genuine new
       bug (this doc's finding only explains absence BEFORE the catalogue refresh) and investigate the live shard logs
       fresh (SSH, `sudo tail -f /home/ikennaigboaka/logs/live-aster-*.log`) rather than assuming the same root cause
-      applies.
+      applies. **STILL NOT VERIFIED, checked 2026-08-02T13:32Z UTC (slot 2, spot-check during an unrelated finalize-plan
+      reconciliation)**: ran the exact command above for day=2026-07-30 AND day=2026-07-31 AND day=2026-08-01 — **all
+      three return zero objects** (`ERROR: ... matched no objects`); listing each day's full `pipeline_mode=` partition
+      set shows only `batch_*` modes present (e.g. `batch_hyperliquid`, `batch_kalshi_perp`, `batch_tardis`,
+      `batch_deribit`) — **no `live_*` pipeline_mode has appeared under this bucket on any of the 3 days checked**, well
+      past the 13:30 UTC catalogue refresh this todo's branch condition names. Separately: the 2026-07-30-launched VM
+      (`mtds-live-cefi-consolidated-20260730-010147`) is no longer in the live fleet
+      (`gcloud compute instances list     --filter="name~mtds-live"` returns only one instance) — it has been replaced
+      by `mtds-live-cefi-consolidated-20260802-130832`, created 2026-08-02T13:08:40Z, ~24 minutes before this check (too
+      fresh to expect any data from). **Did not chase further** (out of scope for the task that triggered this
+      spot-check) — but this is now past the "genuine new bug" threshold this todo's own branch anticipates: 3 full days
+      with zero live rows from the OLD VM, and an unexplained VM replacement with no landed-data window in between.
+      Whoever picks this up next should SSH the current VM, `sudo tail -f` the ASTER shard logs fresh (per this todo's
+      own fallback instruction), and separately check why the 07-30 VM disappeared (self-heal/zombie-watchdog relaunch?
+      crash? manual replace?) before assuming the fresh VM will behave differently.
 - [ ] [DATA] P3. Spot-check 2-3 of the 15 pre-existing venues (e.g. HYPERLIQUID, BINANCE-FUTURES) the same way — they
       hit the identical empty-universe wait, so their data-landing should resume at the same time; confirms the fix is
       fleet-wide, not ASTER-specific relief only.
