@@ -17,7 +17,7 @@ summary: >-
   (895,900 total rows) is the SMALLEST of the three asset_groups this plan covers; tradfi (1.6M captured rows) and defi
   (3.0M captured rows) would very likely hit the same unbounded-growth wall worse, at exactly the moment those legs'
   `-014`/`-020`-style apply todos in this same plan try to run their own full-range apply.
-status: open
+status: resolved
 nature: issue
 asset_group: [tradfi, defi, prediction]
 stage: [data]
@@ -40,6 +40,8 @@ drift_direction: advance-code
 depends_on: []
 locked_by:
 resolved_by:
+  plan_reconciler 2026-08-02 -- all todos verified [x] with HARD evidence (sha/artifact), no un-migrated deferred work
+  found. See /plans/active/issues/plan_reconciler_findings_undefined.md.
 ---
 
 # MTDS manifest-rebuild scripts have no date-range chunking — unbounded memory on full-corpus apply

@@ -242,6 +242,52 @@ remaining work, or a structural finalize-plan-coverage gate)**:
 - `ag_closeout_linkage_gate_blind_to_four_tranches_2026_07_30.md` — all 5 numbered todos done, but carries a genuine,
   still-open `## BLOCKED-OPERATOR-DECISION` section (3 named options A/B/C + a [WORKER REC]) about whether/how to retag
   ~20 habitually-mistagged `cross-cutting` docs into `ci`/`ao`. **Parked into this run's `parked_items`** — see below.
+- `ao_dispatch_priority_inversion_starvation_has_no_page_path_2026_07_30.md` — na-eligibility-audit (2026-08-01) already
+  determined ARCHIVE-eligible but deliberately NOT archived independently — a sibling active AO plan
+  (`ao_satellite_ao_dispatch_batch3_finalize_2026_07_31.md`) already carries its own queued todo naming this doc for the
+  archival ritual. Archiving it here would be duplicate/collision work.
+- `autonomous_session_operator_decisions_2026_07_25.md` (943 lines, 23 numbered decision entries) — its OWN latest entry
+  (2026-07-31) already explicitly re-verified and confirmed: "the parent rollout plan itself is not [concluded], so this
+  doc correctly stays `status: open`... No frontmatter change needed."
+
+**Archived this run (6 more, all HARD-evidenced)**:
+
+10. `cefi_content_migration_shard17_default_bump_2026_07_31.md` — deployment-service@9e6004a
+11. `features_sports_env_staging_reads_empty_staging_reference_data_2026_08_01.md` — live GCS reads confirmed
+    (`GCS read leagues: 1228 rows` etc.)
+12. `footystats_migration_bg_workers_killed_externally_2026_07_28.md` — operator-ruled forensic check + documented
+    pattern
+13. `mdps_tradfi_chain_bundle_aggregate_write_malformed_row_key_2026_07_31.md` — schema contract fix, confirmed on
+    live-defi-rollout
+14. `mtds_manifest_rebuild_scripts_unbounded_memory_no_chunking_2026_07_31.md` — market-tick-data-service@749ca622, 9786
+    tests passed
+15. `watchdog_unpushed_sweep_defeats_operator_merge_gate_2026_07_26.md` — agent-orchestrator@49c919d (verified
+    ancestor) + codex doc section independently confirmed present at HEAD
+
+Referrer-fix gap (grace-blocked, same shape as before): 1 more —
+`tradfi_mdps_es_mes_backfill_fleet_consolidator_staleness_failures_2026_07_31.md` references item 13 above but was
+inside the 12h grace window at check time (age=0h — this file was itself touched by ME in an earlier checkpoint this
+same run, so the grace-window rule is being applied strictly/conservatively rather than carving out self-authorship).
+Follow-up needed once grace clears.
+
+### F1 — likely FALSE-CHECKED todo, real data-pipeline-correctness question (P1, big finding, PARKED not fixed)
+
+`sports_batch_odds_api_capture_outage_recurrence_check_2026_07_26.md`'s `[DATA] P0` todo (line 267) is marked `[x]`, but
+its own stated "Done when" bar ("both windows show full historical coverage in the manifest... and this todo cites the
+launcher/dispatch evidence") is **not met** by anything written in the checked item, and the doc's own LAST Progress Log
+entry (2026-07-29, the final paragraph in the file) ends: "Did not launch the backfill VM as part of this edit — that
+remains the actual next action." No launcher/VM evidence for the actual backfill exists anywhere in the doc, and a
+corpus-wide grep for a matching launch found nothing. Two readings: (a) the checkbox was deliberately narrowed by a
+2026-07-29 "corpus hygiene pass" to mean "both approval GATES (launch-decision + credential) are now unblocked", not
+"backfill complete" — a legitimate, if under-explained, scope narrowing; or (b) this is a genuine false-checked todo
+(Phase 2's "a plan can be false-checked" case) and the ~29-day sports-odds gap this doc exists to fix is still
+un-backfilled today. **Did NOT unilaterally un-check the box** — un-checking is itself a judgment call on a doc I did
+not author, on a live data-correctness question, and the "Done when" bar could plausibly have been intentionally
+satisfied-by-proxy (unblocking = the todo's real job, backfill-launch = separately owned elsewhere and simply not found
+by my grep). **Recommend**: verify directly whether the 2026-06-27..2026-07-15 total-gap window and the
+2026-07-16..2026-07-25 granularity-loss window actually show full historical coverage in the live manifest today; if
+not, re-open the todo (or split it into "unblocked" [x] + "backfill launched and verified" [ ]) and dispatch the actual
+launch.
 
 ## Refuted (dropped by verify)
 

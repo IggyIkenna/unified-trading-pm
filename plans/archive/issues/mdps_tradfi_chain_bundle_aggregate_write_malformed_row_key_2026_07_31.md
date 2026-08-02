@@ -25,7 +25,7 @@ summary: >-
   outright (`ALL FAILED (5/5)` or `(6/6)` on every date checked). Neither blocks the per-instrument candle output that
   downstream consumers (features-service, strategy) actually need -- shard-level failure isolation means the process
   continues past both and keeps writing the real per-instrument files.
-status: open
+status: resolved
 nature: issue
 asset_group: [tradfi]
 stage: [data]
@@ -48,6 +48,8 @@ drift_direction: advance-code
 depends_on: []
 locked_by:
 resolved_by:
+  plan_reconciler 2026-08-02 -- all todos verified [x] with HARD evidence (sha/artifact), no un-migrated deferred work
+  found. See /plans/active/issues/plan_reconciler_findings_undefined.md.
 ---
 
 # What I found

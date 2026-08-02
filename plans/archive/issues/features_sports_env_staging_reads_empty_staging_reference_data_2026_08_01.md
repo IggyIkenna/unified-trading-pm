@@ -15,7 +15,7 @@ summary: >-
   reference data — so the compute always finds "17/17 entities missing" and correctly (per the honest-absence model)
   records `empty_confirmed`, even for `SPORTS_SMOKE_DATES`' explicitly-"busy" days that have real fixtures in the
   `-prd-` tier.
-status: open
+status: resolved
 nature: issue
 asset_group: [sports]
 stage: [data]
@@ -36,6 +36,8 @@ execution_scope: orchestrator-agent
 drift_direction: advance-code
 source: [sports_consolidated_native_ao_extract-032]
 resolved_by:
+  plan_reconciler 2026-08-02 -- all todos verified [x] with HARD evidence (sha/artifact), no un-migrated deferred work
+  found. See /plans/active/issues/plan_reconciler_findings_undefined.md.
 locked_by:
 context_scope: [/codex/02-data/honest-absence-downstream-handling.md]
 depends_on: []

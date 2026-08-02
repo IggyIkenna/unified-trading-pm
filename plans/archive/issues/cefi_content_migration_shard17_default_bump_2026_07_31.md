@@ -15,7 +15,7 @@ summary: >-
   actually implemented — shipped it now (`deployment-service@9e6004a`). Did NOT relaunch shard 17 again: the parent
   doc's own Progress Log already flagged this VM as the 2nd relaunch of the day (`RB-INFRA-RELAUNCH`'s
   ≤2/(vm-prefix,day) bound), so a 3rd death today pages/holds rather than relaunches.
-status: open
+status: resolved
 nature: issue
 asset_group: [cefi, meta]
 stage: [data, meta]
@@ -44,6 +44,8 @@ assigned_role: data_engineering
 drift_direction: advance-code
 depends_on: []
 resolved_by:
+  plan_reconciler 2026-08-02 -- all todos verified [x] with HARD evidence (sha/artifact), no un-migrated deferred work
+  found. See /plans/active/issues/plan_reconciler_findings_undefined.md.
 locked_by:
 context_scope:
   [
