@@ -108,5 +108,6 @@ downstream playbook becomes their next frame. One short paragraph. Chain back to
 - [rule 01 — grammar](../_ssot-rules/01-grammar.md)
 - [rule 02 — tone and posture](../_ssot-rules/02-tone-and-posture.md)
 - [[cite rules 03–10 as invoked]]
-- [Impl-layer doc for this audience (if exists)](../playbooks/[xx-filename].md)
+- Impl-layer doc for this audience (if exists): `../playbooks/[xx-filename].md` (fill in the real filename — this is a
+  template placeholder, not a real link)
 - [Playwright spec](../testing/[matching spec path])

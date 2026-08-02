@@ -22,7 +22,12 @@ This is `unified-trading-pm` — Level 0 (root) in the workspace topology.
   - `.github/workflows/version-bump.yml` — semver automation
 - **Workspace manifest** (`workspace-manifest.json`) — registry of all repos, tiers, versions
 - **Automation scripts** (`scripts/`, `github-integration/`) — workspace-wide tooling
-- **Cursor rule source** (`cursor-rules/`, `cursor-configs/`) — synced to `.cursor/rules/`
+- **Cursor rule source** — `.cursor/rules/` is the canonical, git-tracked rule tree; symlinked out to sibling repos
+  via `scripts/workspace/setup-cursor-rules-symlink.sh` ("no sync scripts needed" per its own header). **Corrected
+  2026-08-02 (docs-reconcile)**: this bullet previously claimed `cursor-rules/` (a separate, smaller, 25-file tree)
+  syncs to `.cursor/rules/` (150 files) — that sync does not exist; the two trees have 0 file overlap. What
+  `cursor-rules/` is for today is unresolved — flagged for operator review.
+- **`cursor-configs/`** — VS Code workspace profiles (unrelated to the rule-source question above)
 - **Plans and coordination** (`plans/`) — phase execution plans
 
 ## What This Repo Is NOT

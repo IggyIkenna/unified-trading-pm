@@ -11,6 +11,15 @@ tags:
 ---
 # Canonical Surface Ownership
 
+> **⚠️ PARTIALLY SUPERSEDED (added 2026-08-02, docs-reconcile — matches the banner already on the sibling
+> `cross-surface-navigation.mdc`)**: the ownership table below maps to the **pre-consolidation** multi-UI
+> architecture (separate surfaces on ports :5173/:5175/:5177/:5179/:5180/:5182/:5183). Those surfaces were
+> **consolidated into `unified-trading-system-ui`** (single Next.js app; route groups, not separate ports) in
+> 2026-05, per `component-patterns.mdc` and the workspace CLAUDE.md system map. The *principle* (one surface owns
+> one time-horizon + verb pair, resolve overlap via that tie-breaker) still holds; the **port numbers are stale**.
+> Resolve the live route map against `unified-trading-pm/scripts/dev/ui-api-mapping.json` + the Next.js `app/`
+> route groups.
+
 RULE: Every UI surface owns exactly one time horizon and one dominant verb. If a concept could appear in two surfaces, the tie-breaker is the user's verb and time horizon when they need that data.
 
 WHY: 11 UIs grew in isolation with duplicate routes (P&L in 3 UIs, /deployments in 10 UIs, alerts in 3 UIs). The redesign collapses to 7 surfaces with zero overlap. Drift recreates the original mess.

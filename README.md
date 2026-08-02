@@ -53,7 +53,9 @@ unified-trading-pm/
 │   ├── repo-management/           GitHub repo and collaborator setup
 │   └── migration/                 One-off migrations and cleanups (4 scripts)
 │
-├── cursor-rules/                  Git-tracked SSOT for all .cursor/rules/*.mdc
+├── cursor-rules/                  Separate, smaller rule tree — NOT synced to .cursor/rules/ (verified 2026-08-02,
+│                                   0 file overlap; the canonical git-tracked source is .cursor/rules/ itself,
+│                                   symlinked to sibling repos by scripts/workspace/setup-cursor-rules-symlink.sh)
 ├── cursor-configs/                VS Code workspace profiles
 │
 ├── plans/                         Project planning and execution

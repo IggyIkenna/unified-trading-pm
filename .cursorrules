@@ -22,3 +22,9 @@ See `.cursor/rules/` for detailed PM-specific rules:
 - `ssot-template-propagation.mdc` — template edit and propagation workflow
 - `manifest-dag-sync.mdc` — keep DAG SVG in sync with manifest
 - `pm-python-standards.mdc` — Python linting and testing standards
+
+## Finding docs/rules/SSOTs
+
+Grep `DOC_INDEX.generated.md` first (regen: `.venv/bin/python scripts/docs/gen_doc_index.py` if stale/absent —
+never read it whole). Narrow with frontmatter facets, e.g. `rg -l '^authoritative_for:.*<topic>' codex/`. Full
+doctrine: `cursor-configs/CLAUDE.md` § "Doc retrieval".

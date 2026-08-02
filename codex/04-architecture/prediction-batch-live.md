@@ -20,6 +20,7 @@ related:
     /codex/04-architecture/cefi-batch-live.md,
     /codex/04-architecture/tradfi-batch-live.md,
     /codex/04-architecture/sports-batch-live.md,
+    /codex/02-data/prediction-schema-paths.md,
   ]
 created: 2026-05-16
 authoritative_for: [prediction asset-group batch/live architecture, prediction canonical-question-group shard atom]
