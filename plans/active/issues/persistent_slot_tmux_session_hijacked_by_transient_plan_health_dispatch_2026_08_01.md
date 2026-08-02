@@ -195,6 +195,21 @@ boot-loop doc's citation of `server/prompts.py` and `server/routes/slots_worker.
       Verified via code read (not re-run — this is already-committed, already-`Quickmerge: agent`-gated code from a
       prior session; per `RULES.md` never-run-pytest-directly, no redundant local pytest invocation for a spot-check of
       code this task didn't modify).
+- [ ] [BACKEND] P2. **Make a transient `plan_health` dispatch's first `/boot` call carry its own dispatch assignment
+      (`tranche`/`mode`) instead of falling through to the generic backlog picker.** This is a DIFFERENT bug from todo 1
+      (which fixed the tmux-session-KILL vector only) — three corroborating occurrences already sit in this doc's
+      Progress Log in prose but were never converted into a tracked todo: slot 1 (review persistent-role context), slot
+      2 (tranche `ao`, dispatch `agt-8e95ca`), and slot 5 (tranche `tradfi`, dispatch `agt-3589fe`) each had their first
+      `/boot` after a `plan_health` dispatch return an unrelated generic backlog task (e.g.
+      `assigned_role:     backend_engineer`) instead of carrying the `na_eligibility_auditor`/`ag_closeout` assignment
+      the dispatch itself specified. Each session self-detected the mismatch and worked around it (ignored the wrong
+      task, or `/skip-current-task`'d it) per its role file — no work was lost — but this is a latent dispatch-routing
+      gap every future transient dispatch has to independently notice and route around, not a one-off. Root-cause
+      candidate (per the 2026-08-02 slot-9 Progress Log entry below): the `/boot` → `_pick_free_slot`-or-equivalent
+      generic-task- assignment path has no awareness that the calling session already has a complete, self-contained
+      assignment from its own dispatch payload — confirm against the actual dispatch code and fix so a
+      `plan_health`-dispatched session's first `/boot` always returns its own assignment, never a generic-backlog
+      substitute. (repo: agent-orchestrator)
 
 ## Codex SSOTs
 
@@ -294,3 +309,12 @@ boot-loop doc's citation of `server/prompts.py` and `server/routes/slots_worker.
   code, no gap. Flipped todo 1 + todo 4 with evidence inline above; left todo 2 (higher-visibility
   `stale_spawn_base_role_cleared` signal, still open) and the cross-referenced "no collision" task-assignment gap
   (previous entry) untouched — genuinely separate, unshipped work outside this dispatch's task-001 scope.
+
+- **review role 2026-08-02 (slot 1, agt-8782c1)**: routine discipline-warning sweep surfaced a `slot_task_skipped` event
+  (slot 5, `11:37:10Z`, dispatch `agt-3589fe`) matching this doc's own already-recorded tranche-`tradfi`/slot-5
+  occurrence above byte-for-byte (same dispatch id) — not a new/4th instance, just this event resurfacing via the
+  general activity feed. While cross-referencing it, confirmed the "boot returns the wrong task" gap the last two
+  Progress Log entries both flagged in prose (bolded "genuinely separate, unshipped work") had never been converted into
+  a tracked `- [ ]` todo, despite three corroborating occurrences already sitting in this doc. Added todo 5 above to
+  close that gap per the findings-closure hard rule (prose flags don't dispatch; todos do). No new evidence gathered —
+  the underlying occurrences are exactly the ones already documented above.
