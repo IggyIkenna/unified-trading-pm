@@ -585,6 +585,13 @@ file, not here.
 > The FLAGGED-marker remediation decision record and the Solana AMM symbol-collision fix stayed here (also done) because
 > open todos below point at them directly.
 
+> **Linkage note (2026-08-02, ag-closeout-audit defi Phase 0 Orthogonality HARD CHECK)**:
+> [`defi_collateral_sizing_and_wizard_full_parameterization_2026_06_17.md`](/plans/active/defi_collateral_sizing_and_wizard_full_parameterization_2026_06_17.md)
+> was retagged `asset_group: [cross-cutting]` → `[defi]` (a pattern-3 fork-inherits-parent-tag mistag — content is 100%
+> defi-specific staked-basis/LST collateral sizing + wizard parameterization work, previously invisible to this
+> tranche's membership test). Citing it here so it registers as covered-by-itself in the linkage check rather than a
+> newly-orphaned doc within this tranche.
+
 - [ ] [SCRIPT] P3. **Root-cause `quickmerge.sh` silently resetting an unpushed commit** (observed 2026-07-22, 2
       hypotheses ruled out, cause not confirmed, non-reproducible on retry). Needs a `bash -x`/`set -x` trace the next
       time it recurs. (repo: unified-trading-pm)
@@ -682,20 +689,20 @@ file, not here.
       the two plans' own done-when criteria, before any `--apply`.
 
       **UPDATE 2026-08-02 (finalize task `defi_dex_pool_symbol_fix_backfill_purge_finalize_2026_07_25.md`, slot-13
-          review craft): all 5 todos of `defi_dex_pool_symbol_fix_backfill_purge_2026_07_25.md` SHIPPED and independently
-          re-verified — no longer forward-looking.** Query fix: `market-tick-data-service@63199601` (verified an ancestor
-          of `origin/live-defi-rollout`; live-tested against all 4 real subgraphs, all returned populated
-          `inputTokens`/`fees`). Live-test recoverability: `market-tick-data-service@0f40a69f` (curve/OPTIMISM confirmed
-          DEINDEXED; curve/ETHEREUM+AVALANCHE, sushiswap/ARBITRUM, trader_joe_v2/AVALANCHE, velodrome_v2/OPTIMISM all
-          RECOVERABLE). Backfill: `mtds-dex-pools-symbolfix-batch1c`/`batch2` completed cleanly across the full
-          confirmed-recoverable range, manifest spot-checked (symbol-named leaves, creation-timestamp-verified against
-          each VM's run window). Purge (both categories — lst_rates `_migrated_*` markers AND the old dex_pool_state
-          address-keyed leaves): independently re-verified complete, zero SAFE markers remain (only the irreducible
-          FLAGGED floor — `FLAGGED_ROWCOUNT_SHORTFALL: 1287` + `FLAGGED_NO_SIBLINGS_NO_BACKUP: 977`, ZERO SAFE, an exact
-          match to the corpus's known FLAGGED ceiling). Full evidence trail (VM names, spot-checks, preemption-recovery
-          log) lives in that plan's own Progress Log — not duplicated here. Sibling issue doc
-          `issues/defi_dex_pools_subgraph_query_missing_input_tokens_2026_07_25.md` flipped `status: open` → `status:
-          resolved` accordingly in this same commit.
+              review craft): all 5 todos of `defi_dex_pool_symbol_fix_backfill_purge_2026_07_25.md` SHIPPED and independently
+              re-verified — no longer forward-looking.** Query fix: `market-tick-data-service@63199601` (verified an ancestor
+              of `origin/live-defi-rollout`; live-tested against all 4 real subgraphs, all returned populated
+              `inputTokens`/`fees`). Live-test recoverability: `market-tick-data-service@0f40a69f` (curve/OPTIMISM confirmed
+              DEINDEXED; curve/ETHEREUM+AVALANCHE, sushiswap/ARBITRUM, trader_joe_v2/AVALANCHE, velodrome_v2/OPTIMISM all
+              RECOVERABLE). Backfill: `mtds-dex-pools-symbolfix-batch1c`/`batch2` completed cleanly across the full
+              confirmed-recoverable range, manifest spot-checked (symbol-named leaves, creation-timestamp-verified against
+              each VM's run window). Purge (both categories — lst_rates `_migrated_*` markers AND the old dex_pool_state
+              address-keyed leaves): independently re-verified complete, zero SAFE markers remain (only the irreducible
+              FLAGGED floor — `FLAGGED_ROWCOUNT_SHORTFALL: 1287` + `FLAGGED_NO_SIBLINGS_NO_BACKUP: 977`, ZERO SAFE, an exact
+              match to the corpus's known FLAGGED ceiling). Full evidence trail (VM names, spot-checks, preemption-recovery
+              log) lives in that plan's own Progress Log — not duplicated here. Sibling issue doc
+              `issues/defi_dex_pools_subgraph_query_missing_input_tokens_2026_07_25.md` flipped `status: open` → `status:
+              resolved` accordingly in this same commit.
 
 - [x] ✅ [DATA] P2. **19 glued-id rows (was 21) — ALL CONFIRMED PHANTOM 2026-08-01, folds into the `:401` P0 purge, NOT
       fixable by retry/rebuild.** Writer fix SHIPPED (`market-tick-data-service@f2e3ad41`/`70b9a81a`). The 9 ORCA/SOLANA
