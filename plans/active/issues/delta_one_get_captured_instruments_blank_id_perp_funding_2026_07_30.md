@@ -121,8 +121,12 @@ row is genuinely `captured`). Add a regression test asserting a DEFI `perp_fundi
       unified-trading-library. Done when: a DEFI `perp_funding` manifest row with blank `instrument_id` is returned by
       `get_captured_instruments()`, verified by a new unit test; `bash     scripts/quality-gates.sh` green in both
       unified-trading-library and features-service (post wheel-bump). — unified-trading-library@9fb3a73d
-- [ ] [DATA] P2. Once the above lands, resume `defi_satellite_ao_dispatch_batch3_2026_07_26.md`'s D1 delta_one
-      `funding_oi` leg: relaunch
+- [ ] [DATA] P2. BLOCKED-OPERATOR-DECISION (funding_oi/HYPERLIQUID is structurally infeasible — the venue never captures
+      open_interest, so no relaunch can produce real rows; fix-direction is a repo-owner/operator design call tracked in
+      `/plans/active/issues/defi_delta_one_funding_oi_hyperliquid_missing_open_interest_2026_07_31.md`'s
+      `[OPERATOR] P2`. DO NOT relaunch until that decision lands — every prior relaunch was guaranteed-wasted VM spend,
+      see 2026-08-02 Progress Log). Once the fix-direction lands, resume
+      `defi_satellite_ao_dispatch_batch3_2026_07_26.md`'s D1 delta_one `funding_oi` leg: relaunch
       `--feature-family delta_one --asset-group DEFI --feature-group funding_oi     --start-date 2023-05-12 --end-date 2026-06-09 --timeframe 15m`
       (SPOT). Repo: features-service. Done when: `features-delta-one-defi` has real funding_oi rows for HYPERLIQUID, not
       empty_confirmed/failed.
@@ -162,3 +166,24 @@ row is genuinely `captured`). Add a regression test asserting a DEFI `perp_fundi
   (`HYPERLIQUID:perpetual:`) — that's the companion candle-loader-pass-through issue's scope, not this UTL-function
   fix's.
 - **context-scout 2026-08-01**: populated context_scope (4 entries).
+- **2026-08-02 (slot-8, data_engineering craft) — todo 2 NOT relaunched; marked BLOCKED-OPERATOR-DECISION after
+  re-confirming the funding_oi/HYPERLIQUID leg is structurally infeasible.** Dispatched todo 2 ("resume the funding_oi
+  leg"). Before launching any VM (per this chain's own repeated "relaunching is guaranteed-wasted spend" lesson),
+  verified the state end-to-end: (1) UTL blank-id fix (todo 1, `9fb3a73d`) confirmed on LDR — instrument discovery is no
+  longer the blocker; (2) `funding_oi.py::get_required_columns()` STILL hard-requires
+  `["funding_rate", "open_interest"]` with NO commits since 2026-07-31, and the MTDS HYPERLIQUID perp_funding handler
+  has NO OI-capture fix landed either — so the
+  `defi_delta_one_funding_oi_hyperliquid_missing_open_interest_2026_07_31.md` structural gap (HYPERLIQUID never captures
+  OI in either capture era, direct-parquet-confirmed by slot-2) is fully current, `status: open`, `[OPERATOR] P2`
+  fix-direction decision UNMADE; (3) live GCS check — `gs://features-defi-prd-central-element-323112/delta_one/by_date/`
+  contains ONLY `feature_group=returns` (303,812 parquet objects — the returns leg IS complete) and ZERO `funding_oi`
+  objects. Every funding_oi relaunch fails the >50% NaN column-quality gate deterministically on every date; no
+  window/SPOT-flag choice changes that. Did NOT launch a VM (guaranteed waste, exactly the 10+ VM storm 2026-07-30
+  already proved). Marked todo 2 above `BLOCKED-OPERATOR-DECISION` (a live token → non-dispatchable per
+  `regen_backlog_from_plan._is_non_dispatchable`, stops the redispatch-into-failure loop) and posted a `/blocked`
+  question surfacing the operator fix-direction decision. Also flagging for main/operator: the parent
+  `defi_satellite_ao_dispatch_batch3_2026_07_26.md` D1 todo (line ~103) carries a `BLOCKED-ON:` prefix that is NOT a
+  recognized non-dispatchable token (the regex only matches
+  `BLOCKED-OPERATOR/CREDENTIALS/BILLING/UPSTREAM-*/PLAYWRIGHT/JURISDICTION`), so that P1 todo is STILL dispatchable and
+  can re-trigger the same VM storm — but it bundles a still-doable onchain leg + the already-done returns leg, so it
+  needs a main/operator SPLIT (not a blanket block), which is out of this worker's scope.
