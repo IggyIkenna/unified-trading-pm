@@ -11,7 +11,7 @@ summary: >-
   pipeline_mode=batch_aster, and derived processed_candles/ files (timeframe=15s/1m, unregistered — 0 MDPS manifest rows
   for ASTER at all) exist for the same day. So real trade data IS landing on disk; the manifest is not reflecting it as
   captured — a registration gap, not (necessarily) a fetch failure.
-status: resolved
+status: open
 nature: issue
 asset_group: [cefi]
 stage: [data]
@@ -24,10 +24,9 @@ related:
     /plans/active/issues/cefi_hl_aster_batch_data_gaps_2026_06_22.md,
     /plans/active/aster_and_cefi_rolling_adv_feature_2026_07_21.md,
     /plans/archive/2026_07/cefi_satellite_ao_dispatch_batch1_2026_07_25.md,
-    /plans/active/cefi_satellite_ao_dispatch_batch5_2026_08_02.md,
   ]
 created: "2026-07-26"
-last_updated: "2026-08-02"
+last_updated: "2026-07-26"
 parent_epic: cefi_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -43,7 +42,7 @@ source: >-
   listing (gcloud storage ls, scoped single-prefix reads, no whole-corpus walk) — evidence below.
 locked_by:
 locked_since:
-resolved_by: slot-8 (2026-08-02)
+resolved_by:
 depends_on: []
 context_scope:
   [
@@ -55,16 +54,6 @@ context_scope:
 ---
 
 # ASTER raw-trade capture — manifest registration gap
-
-> **🟢 RESOLVED + ARCHIVED 2026-08-02.** All 4 todos done: P0 root-caused + fixed (`market-tick-data-service@7a730cd6`),
-> P1 registered the already-written orphan data (`market-tick-data-service@9415ef7a`), P2 re-scoped + launched the ASTER
-> MDPS candle backfill (`mdps-backfill-cefi-20260802-140125`, continues running independently — its output is registered
-> for free by `/plans/active/cefi_satellite_ao_dispatch_batch5_2026_08_02.md`'s existing SCRIPT P3 additive manifest
-> reconciliation todo, no new tracking needed). **No new durable contract from this doc** — codex-alignment check: the
-> fix (`ManifestWriter(per_vm_shards=True)` on `OnchainPerpBatchHandler`) already matches the existing established
-> pattern (`rebuild_sports_manifest_v9.py` / `recover_tradfi_chain_manifest_registration_2026_07_22.py`) and needed no
-> new codex doc. Moved to `/plans/archive/issues/aster_raw_capture_manifest_registration_gap_2026_07_26.md`; corpus
-> referrers updated.
 
 ## What I found
 
@@ -181,30 +170,17 @@ context_scope:
       registration of the newly-written candles) is a new todo below, per the findings-closure discipline. No code
       change was needed (pure re-scope + launch).
 
-- [x] [DATA] P2. **DONE 2026-08-02 (slot-8, data_engineering) — closed as verified-healthy-and-progressing; the
-      registration half is ALREADY covered elsewhere, not duplicated here.** Originally asked to wait for
-      `mdps-backfill-cefi-20260802-140125` to reach full completion, then run a manifest reconciliation. Revised on
-      pickup for two reasons: (1) **conflict-check** — `cefi_satellite_ao_dispatch_batch5_2026_08_02.md`'s
-      `[SCRIPT]     P3` todo already runs
-      `merge_manifest_from_canonical_paths(bucket="market-data-tick-cefi-prd-central-element-323112",     service_name="market-data-processing-service", prefix="processed_candles/by_date")`
-      — the SAME bucket/prefix/ service_name this todo would have targeted. That merge is additive over the WHOLE
-      prefix, so whenever it runs it will pick up ASTER's newly-written candles for free; authoring a second,
-      ASTER-scoped reconciliation todo here would be the exact duplicate-dispatch risk the shared conflict-check
-      protocol forbids. (2) **the full 2024-2026 range genuinely cannot complete within a single session** — read
-      `run.log` directly (not just `PROGRESS.json`, which only advances once an ENTIRE date finishes): confirmed
-      hundreds of real per-instrument/per-timeframe candle writes (`POLARS AGGREGATED: N candles`) and
-      `ManifestWriter: per-VM shard updated` calls (193+ entries within 5 minutes) for `date=2024-01-01` alone,
-      `RESOURCE_SAMPLE` showing bounded memory (1.5-5.7GiB RSS, well under the 32GB OOM ceiling the memory-scaling fix
-      targeted) and active CPU (up to 131.9%) — genuinely healthy, not stalled or crash-looping, but a single early-2024
-      date alone took >5 minutes to finish, so the full ~945-day range is multi-day work, exactly like the sibling
-      HYPERLIQUID/LIGHTER-ZKSYNC/EXTENDED-STARKNET full-range VM in `cefi_satellite_ao_dispatch_batch1_2026_07_25.md`
-      (which was also left "continues running independently", never waited on to completion). Forcing a same-session
-      wait for VM termination would mean holding this task's slot idle for many hours, which the async-wait-discipline
-      HARD RULE explicitly warns against. **Resolution**: the VM continues running independently (SPOT, self-resuming
-      from its PROGRESS checkpoint on preemption per the backfill-VM contract); its output will be registered for free
-      the next time batch5's already-tracked SCRIPT P3 reconciliation runs — no new todo needed. If that reconciliation
-      happens to run BEFORE this VM finishes, it is still safe (additive/idempotent, re-running later just picks up the
-      rest) — not a blocking ordering dependency.
+- [ ] [DATA] P2. **Follow-up from the P2 re-scope above.** Verify `mdps-backfill-cefi-20260802-140125` (ASTER MDPS
+      candle backfill, `2024-01-01..2026-08-01`) reaches completion (check `PROGRESS.json`'s `last_completed_date`
+      advances to the end date, or the VM's exit code/heartbeat goes terminal), then run the additive manifest
+      reconciliation merge the launcher itself reminds to run post-backfill (NEVER
+      `rebuild_manifest_from_canonical_paths` — that wholesale-replaces the bucket's whole manifest index and would
+      delete this bucket's raw-tick rows, per
+      `/plans/active/issues/rebuild_manifest_from_canonical_paths_prefix_scoped_wipe_2026_07_27.md`):
+      `merge_manifest_from_canonical_paths('market-data-tick-cefi-central-element-323112',     service_name='market-data-processing-service', prefix='processed_candles/by_date')`.
+      Repo: market-data-processing-service / unified-trading-library. **Done when**: a fresh `read_availability_index`
+      read shows `market-data-processing-service` rows for ASTER spanning materially more than the current 2 days, and
+      the VM's terminal status (exit_code / heartbeat) is confirmed, not assumed.
 
 ## Progress Log (2026-07-26)
 
@@ -226,14 +202,8 @@ context_scope:
 
 - Closed todo 3 (P2, the re-scope). Re-verified the manifest fix live, re-scoped and launched the ASTER MDPS candle
   backfill (`mdps-backfill-cefi-20260802-140125`), confirmed genuine progress. See the todo's own evidence line for full
-  detail.
-- Closed todo 4 (P2, the completion-verification follow-up I drafted immediately after todo 3). On pickup, found it
-  would have duplicated `cefi_satellite_ao_dispatch_batch5_2026_08_02.md`'s already-tracked SCRIPT P3 manifest
-  reconciliation (same bucket/prefix/service_name, additive — will register ASTER's new candles for free), and that
-  waiting in-session for full multi-day VM completion would violate the async-wait-discipline HARD RULE. Revised +
-  closed with health/progress evidence instead of duplicating tracked work or blocking the slot for hours. See the
-  todo's own evidence line for the full reasoning. This issue doc's own P0/P1/P2 chain is now fully closed; the only
-  remaining thread (registering ASTER's new candles) rides on batch5's existing todo, no new tracking needed here.
+  detail. A new follow-up todo (verify completion + additive manifest reconciliation) is queued above — the backfill is
+  multi-day and continues running independently, not waited-on to completion this session.
 
 ## Not yet checked (deliberately out of scope for this discovery pass)
 
