@@ -409,13 +409,31 @@ tooling, historical floors, the cross-repo lineage, and dead-code — findings j
       across every sub-family pass via the one `DataLoader` instance reused per run (see `batch_handler.py`). Added
       `TestCollectDailyFrames.test_second_call_for_same_instrument_date_range_reuses_cache` asserting a second identical
       `_collect_daily_frames` call hits `blob_exists` zero additional times.
-- [ ] 10-followup-b. [SCRIPT] P2. **NEW 2026-07-28 (slot-13, from todo 10's benchmark).** MDPS's per-date backfill
+- [x] ✅ 10-followup-b. [SCRIPT] P2. **NEW 2026-07-28 (slot-13, from todo 10's benchmark).** MDPS's per-date backfill
       subprocess loop pays a flat ~14.0s spawn+GCS-list-and-bail tax for EVERY calendar day attempted, even when that
       day has zero raw-tick input (measured: 13/15 empty days in the CEFI:BINANCE-FUTURES:trades benchmark window, i.e.
       most days). At full flat-2019 (2757-day) scale this empty-skip tax dominates wall-clock over real compute.
       Pre-filter the date range against the availability manifest/census (same single-walk discipline already codified
       for MDPS elsewhere in this plan) BEFORE spawning a per-date subprocess, instead of discovering absence per-date at
-      runtime. Repo: market-data-processing-service / deployment-service (`launch-mdps-backfill-vm.sh`).
+      runtime. Repo: market-data-processing-service / deployment-service (`launch-mdps-backfill-vm.sh`). — **DONE
+      (2026-08-02, slot-16).** Added `DependencyChecker.precompute_confirmed_empty_dates()` — one ranged manifest read
+      (row-group `filters=` date-range pushdown, same single-walk discipline as `check_upstream_manifest_has_live_gap`)
+      confirming which dates in `[start_date, end_date]` have zero captured `market-tick-data-service` raw ticks. Safe
+      because `check_dependencies`'s `market-tick-data-service` dep is an UNFILTERED `raw_tick_data/by_date/day={date}/`
+      blob-presence check (no venue/data_type narrowing) — a date confirmed empty there is guaranteed to fail that check
+      regardless of the caller's `--venues`/`--data-types`, so no filter-scope matching was needed. Wired into
+      `process_candles_handler` via `_prefilter_confirmed_empty_dates`, which drops confirmed-empty dates from the
+      subprocess dispatch list before any child spawns while replicating the exact
+      `(processed=False, failed=fail_on_missing)` contract a live dependency-check miss would have produced — changes
+      WHEN absence is discovered, never WHETHER a date counts as failed. Fail-safe by design: mock mode, a stale/down
+      consolidator (`assert_consolidator_healthy`), a manifest read failure, or `--skip-dependency-check` all disable
+      the pre-filter entirely for that run, falling back to spawning every date exactly as before. 17 new unit tests
+      added (`TestPrecomputeConfirmedEmptyDates` in `test_dependency_checker_coverage.py`,
+      `TestPrefilterConfirmedEmptyDates` in `test_date_concurrency_dispatch.py`); 5 pre-existing tests that exercise
+      `process_candles_handler` with `is_mock_mode=False` updated to mock `DependencyChecker` (previously they never
+      exercised any real dependency-checking code before reaching the mocked dispatch primitive — my new pre-filter step
+      now runs ahead of that point). Full QG green (2315 passed / 2 skipped). Evidence:
+      `market-data-processing-service@28e6c06`.
 - [x] ✅ 14-followup. [SCRIPT] P1. **NEW 2026-07-31 (slot-4, from todo 14's post-phase codex audit).** Add an
       "inverse-phantom" `content_check=` verdict to both `/data-pipeline-check-mdps` and `/data-pipeline-check-features`
       drivers: a freshly-written parquet with 100% NaN bins while the manifest records `capture_status=captured` should
