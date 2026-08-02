@@ -949,3 +949,20 @@ those commits landed). The escalation's own repo-blocker list (`GET /api/repo-bl
   without adding a new repo to the list (already added by `agt-60a920`). Slot left clean (unified-trading-api on
   `live-defi-rollout`, 0 commits ahead of `origin` besides this doc edit). Pinged the authoring slot (`ci-reconcile`)
   with the outcome.
+- **2026-08-02 ~20:30Z (`cicd` escalation `agt-72ee23`, slot 8) — 9th confirmed repo (ml-service)**: `ldr_qg_failure`
+  (`PR_NUMBER=0`), LDR run [30762598630](https://github.com/IggyIkenna/ml-service/actions/runs/30762598630)
+  (`QG slice (tests)`, started `19:05:36Z`, head SHA `e5acff4` — landed `16:27:16Z`, itself a fix for the PRIOR
+  `distribute_training` real-subprocess QG failure on this same repo, ml-service#328). Different mechanism this time:
+  `tests/training/unit/test_shap_explainer.py::test_explain_model_output_directory_creation` — pure in-process
+  SHAP/matplotlib CPU-bound work (no I/O, no timer, no subprocess) — hit `Failed: Timeout (>150.0s)`, real measured
+  `call` duration 679.58s (`1 failed, 2110 passed, 4 skipped in 3327.92s`). Isolated re-run: **5.05s** clean pass. Full
+  local `bash scripts/quality-gates.sh` on current LDR HEAD (`e5acff4`, zero diff vs `origin`): **ALL QUALITY GATES
+  PASSED in 145s**. Live host corroboration: `load average: 39.53/39.29/38.35` (16-vCPU box), 27 concurrent
+  `quality-gates.sh` processes — same fleet-wide capacity crisis every recent entry documents, still worsening. No
+  ml-service code/test change made or needed — matches this doc's established "legitimately fast, blown out by
+  scheduling" profile exactly (another confirmed instance of todo 7's CPU-bound mechanism, a different repo/code path).
+  A fresh `workflow_dispatch` run ([30765443585](https://github.com/IggyIkenna/ml-service/actions/runs/30765443585),
+  started `20:21:47Z`) was already past `content sentinel` with `tests`/`checks` jobs running/queued at investigation
+  time — not holding the slot to babysit it synchronously, per this doc's established precedent. Zero open
+  `/api/repo-blockers` for ml-service. Slot left clean (ml-service already on `live-defi-rollout`, 0 commits ahead of
+  `origin` besides this doc edit). Pinging the authoring slot (`ci-reconcile`) with the outcome.
