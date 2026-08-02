@@ -38,8 +38,8 @@ priority: P2
 source:
   "/na-eligibility-audit tranche=ao, autonomous scheduled run 2026-08-02 — found while completeness-checking each
   in-scope doc's reported verdict count against `grep -cE '^- \\[ \\]'` per the skill's Phase-1 verification rule"
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning # reclassified NA -> planning 2026-08-02 (na-eligibility-audit, infra tranche) — conflict-check CLEAR
+execution_scope: orchestrator-agent
 estimate_class: refactor
 estimate_baseline_ai_days: 0.3
 estimate_calibrated_ai_days: 0.12
@@ -152,12 +152,13 @@ bug, which is why the fix belongs in a shared helper rather than patched per-scr
       the old → new numbers in the commit message (a baseline MOVE for a measurement fix, not a laundered regression).
       **Done when**: the baseline matches a fence-aware count. (repo: unified-trading-pm)
 
-## Plan-destination note (unresolved)
+## Plan-destination note (resolved 2026-08-02)
 
 Filed `assigned_vm: NA` per the ask-before-creating HARD RULE's default (this run is autonomous, no operator present to
 answer). All three todos are bounded and worker-determinable — named files, named done-when, no design call — so this is
 a clean AO-dispatch candidate the operator can flip to `assigned_vm: planning` without further scoping. Flagged rather
-than flipped, because choosing the destination is the operator's call, not the auditor's.
+than flipped at filing time, because choosing the destination is the operator's call, not the auditor's — resolved below
+by a subsequent `/na-eligibility-audit` pass applying that same self-assessment.
 
 ## Progress Log
 
@@ -166,3 +167,16 @@ than flipped, because choosing the destination is the operator's call, not the a
   affected docs' counts could not be reconciled with their actual verdict sets, and the discrepancy traced to quoted
   checkboxes inside code fences rather than to an under-read. Measured corpus-wide before filing (356 docs) so the blast
   radius is a number, not an estimate.
+- **na-eligibility-audit 2026-08-02 (infra tranche, dispatch agt-fe5e17)**: RECLASSIFY — `assigned_vm: NA -> planning`.
+  All 3 todos are bounded/worker-determinable (named files, exact done-when checks, fix approach already decided in this
+  doc's own "Recommended fix" section) per the dispatch-scope-eligibility bar
+  (`/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md` § 5). Conflict-check
+  (`/codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md` § 3) run against: (a) active
+  `assigned_vm: planning` docs in `parent_epic: plan_hygiene_master` — none claim the fenced-code-block checkbox-count
+  bug specifically (grepped `fenced`/`CHECKBOX_RE`/`in_fence` corpus-wide; the only hits are unrelated docs that merely
+  cite this doc's own two example filenames); (b) no sibling batch/finalize doc drafted this run; (c)
+  `infra_consolidated_closeout_2026_07_25.md` mentions `generate_na_doc_tranche_inventory.py` but for a disjoint bug
+  (asset_group-vs-parent_epic tranche-membership mistagging, not checkbox counting). Clear — no conflict found. Also
+  corrected `execution_scope: local-only -> orchestrator-agent` (was stale for a now-dispatchable doc). No finalize-plan
+  companion authored: `doc_type: issue`, structurally exempt from the finalize-plan-coverage rule
+  (`check_finalize_plan_coverage.py` only globs `plans/active/*.md` plan docs).
