@@ -572,13 +572,30 @@ else
 fi
 
 # ── [4/6] BUILD ──────────────────────────────────────────────────────────────
+# One automatic retry on the TIMEOUT class only (rc 124/137 from run_timeout's
+# GNU-timeout wrapping): a cold-cache build legitimately trips the budget once
+# and passes on a warm retry (ui_build_warm_cache_2026_06_17.md), while a
+# genuine hang still fails twice. A non-timeout build failure (real compile/
+# lint-in-build error) is NOT retried — that would just burn the budget twice
+# on a failure a retry can never fix.
 if [ "$SKIP_BUILD" = false ]; then
   log_section "[4/6] BUILD"
   if _out=$(run_timeout "$STEP_TIMEOUT_BUILD" npm run build 2>&1); then
     log_success "Build passed"
   else
-    echo "$_out"
-    log_fail "Build FAILED (timeout=${STEP_TIMEOUT_BUILD}s)"; exit 1
+    _build_rc=$?
+    if [ "$_build_rc" -eq 124 ] || [ "$_build_rc" -eq 137 ]; then
+      log_warn "Build TIMED OUT (rc=${_build_rc}, timeout=${STEP_TIMEOUT_BUILD}s) — retrying once (cold-cache class)"
+      if _out=$(run_timeout "$STEP_TIMEOUT_BUILD" npm run build 2>&1); then
+        log_success "Build passed on retry (cold-cache trip self-recovered)"
+      else
+        echo "$_out"
+        log_fail "Build FAILED again on retry (timeout=${STEP_TIMEOUT_BUILD}s) — genuine hang, not cold-cache"; exit 1
+      fi
+    else
+      echo "$_out"
+      log_fail "Build FAILED (rc=${_build_rc}, timeout=${STEP_TIMEOUT_BUILD}s)"; exit 1
+    fi
   fi
 else
   log_section "[4/6] BUILD — skipped (--lint / --test / --quick)"
