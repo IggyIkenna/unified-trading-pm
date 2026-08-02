@@ -135,13 +135,32 @@ concrete git/CI defect, not a design question) — so it is dispatched here rath
       todo's original text is superseded by that conflict finding (see todo 4 below) — the silent-failure regression
       itself is fixed and verified; a _separate_, expected, correctly-surfaced piece of work (resolving 3+ days of
       accumulated main/LDR drift) now blocks a clean run.
-- [ ] [INFRA] P2. **Close the silent-failure gap**: whatever the root cause turns out to be, ensure a failure at or
+- [x] ✅ [INFRA] P2. **Close the silent-failure gap**: whatever the root cause turns out to be, ensure a failure at or
       before the `git fetch`/`git ls-remote` step ALSO reaches a visible alert (either wrap those early commands so a
       failure still sets `DECISION=error` and hits the existing `exit 1` + (if a Slack step exists on this workflow)
       notify path, or add a dedicated failure notifier) — the current design's only safety net is the conflict-PR path,
-      which this incident proved is unreachable when the failure happens earlier than that. Repo: unified-trading-pm.
-      **Still open** — the specific silent-failure instance (pipefail) is fixed above, but the general architectural gap
-      (a future different early failure would still die silently) is unaddressed; this is design work, not mechanical.
+      which this incident proved is unreachable when the failure happens earlier than that. Repo: unified-trading-pm —
+      unified-trading-pm@eb473fd95. Implemented BOTH options: (1) an unconditional `trap     ... ERR` added right after
+      `set -uo pipefail` in the "bm" step records `decision=error` + a diagnostic
+      `reason=script aborted at line N running: <cmd>` to `$GITHUB_OUTPUT` on ANY early command failure (not just the
+      already-fixed grep) — verified locally by injecting a fake `git ls-remote` failure and confirming the trap fires
+      before the next line executes and `$GITHUB_OUTPUT` gets the right keys; (2) discovered while investigating why the
+      existing "Notify orchestrator" `if: always()` step (which already posts every decision to `/api/mirror-events`)
+      wasn't actually alerting anyone: that endpoint's alerting logic (`_ALERTED_DECISIONS = {"skip", "race-lost"}` in
+      `agent-orchestrator/server/routes/ops.py`) is keyed to `tab-mirror-to-ldr.yml`'s decision vocabulary, not this
+      workflow's (`noop`/`merged`/`conflict`/`race`/`error`) — so even a correctly-recorded `decision=error` was NEVER
+      going to surface as a visible alert through that path, which is the deeper reason this incident stayed invisible
+      for 3 days. Rather than couple this repo's fix to an agent-orchestrator change, added a dedicated `notify-failure`
+      job (uses the fleet's standard reusable `notify-slack.yml` carrier, same one `branch-health.yml`/`ci-health.yml`
+      use) that fires on `needs.backmerge.result == 'failure' || needs.backmerge.outputs.decision == 'error'` — CRITICAL
+      severity, deduped (`main-backmerge-to-ldr:failure`, 60min cooldown) so a standing outage doesn't spam. Added
+      job-level `outputs:     decision/reason` on the `backmerge` job so `notify-failure` can read them even when the
+      failing step is a DIFFERENT one (checkout/app-token) that never reaches "bm" at all. YAML validated
+      (`python3 -c     "yaml.safe_load(...)"`), the extracted "bm" step script validated (`bash -n`). **Scope note**:
+      this fix is PM-only per this todo's stated repo scope — every other repo's `main-backmerge-to-ldr.yml` copy is
+      rolled out from `scripts/workflow-templates/main-backmerge-to-ldr.yml` (byte-identical to PM's pre-fix copy except
+      `runs-on`), so the SAME silent-failure risk still exists fleet-wide; see the new follow-up todo below rather than
+      silently expanding this todo's scope.
 - [x] ✅ [INFRA] P1. **Once fixed, drain the backlog** — unified-trading-pm (verification only, no further code). PR
       #2012 merged 2026-08-02T16:12:15Z (resolved via a separate, single-line conflict in
       `plans/active/defi_consolidated_closeout_2026_07_18.md`'s `last_updated` frontmatter field — LDR already carried
@@ -159,6 +178,16 @@ concrete git/CI defect, not a design question) — so it is dispatched here rath
       `workflow_dispatch` runs (`30756289836`, `30756315282`) after the conflict resolved — both `success` (`noop`,
       nothing left to merge), giving 3 consecutive clean runs total since the fix (real trigger `30755035830` + 2
       manual), satisfying this doc's original "3 consecutive successful runs" bar.
+- [ ] [INFRA] P3. **Roll the todo-3 silent-failure defense-in-depth out fleet-wide**: port the `trap ... ERR` +
+      job-level `outputs:` + dedicated `notify-failure` job (added to PM's own
+      `.github/workflows/main-backmerge-to-ldr.yml` in todo 3 above) into the canonical template at
+      `unified-trading-pm/scripts/workflow-templates/main-backmerge-to-ldr.yml`, then run
+      `rollout-workflow-templates.sh --template main-backmerge-to-ldr.yml` (all repos) so every OTHER repo's copy —
+      currently byte-identical to PM's pre-todo-3 copy except `runs-on`, confirmed via diff 2026-08-02 — gets the same
+      protection instead of carrying the identical silent-failure risk. Repo: unified-trading-pm (template) + fleet-wide
+      rollout verification (every repo in `scripts/quality_gates/workflow_template_drift_baseline.json`'s
+      `main-backmerge-to-ldr.yml` entries). Left as a separate follow-up rather than folded into todo 3 because todo 3's
+      own stated scope was PM-only and a 20+-repo template rollout is a materially bigger, separately-reviewable change.
 
 ## Progress Log
 
@@ -193,3 +222,20 @@ concrete git/CI defect, not a design question) — so it is dispatched here rath
   copy backmerged in). Verified + flipped todo 4 above (drained-backlog confirmation, 3-consecutive-runs bar, LAG-table
   re-check). Net: both the main→LDR (this doc's original scope) and LDR→main (found as a side effect) halves of the
   bidirectional sync are now confirmed healthy.
+- **slot-6 2026-08-02 (main_backmerge_to_ldr_silent_failure-003)**: closed todo 3 (the remaining open defense-in-depth
+  item). Added an unconditional `trap ... ERR` right after `set -uo pipefail` in the "bm" step of
+  `.github/workflows/main-backmerge-to-ldr.yml` — records `decision=error` + a diagnostic `reason=` (failing line +
+  command) to `$GITHUB_OUTPUT` on ANY early command failure, not just the specific grep pipefail already fixed in todo
+  2; smoke-tested locally by injecting a fake failing `git ls-remote` in an isolated script copy and confirming the trap
+  fires (never reaches the following line) and writes the correct keys. While investigating whether the existing "Notify
+  orchestrator" step's `/api/mirror-events` POST would actually surface a `decision=error` as a real alert, found it
+  would NOT: `agent-orchestrator/server/routes/ops.py`'s `_ALERTED_DECISIONS = {"skip", "race-lost"}` is
+  `tab-mirror-to-ldr.yml`'s decision vocabulary, not this workflow's — a correctly-recorded `decision=error` was never
+  going to page anyone through that path, which is the deeper reason this class of failure stayed invisible. Rather than
+  couple this repo's fix to an agent-orchestrator change, added a dedicated `notify-failure` job using the fleet's
+  standard `notify-slack.yml` reusable carrier (same one `branch-health.yml` uses), firing on
+  `needs.backmerge.result == 'failure' || needs.backmerge.outputs.decision == 'error'` (CRITICAL, deduped 60min) — and
+  added job-level `outputs: decision/reason` on `backmerge` so it also catches a failure in an EARLIER step (checkout/
+  app-token) that never reaches "bm" at all. Validated via `python3 -c "yaml.safe_load(...)"` (parses clean) and
+  `bash -n` on the extracted step script (no syntax errors). Filed a new P3 follow-up todo above for the fleet-wide
+  template rollout (out of this todo's stated PM-only scope) rather than doing a 20+-repo rollout inline here.
