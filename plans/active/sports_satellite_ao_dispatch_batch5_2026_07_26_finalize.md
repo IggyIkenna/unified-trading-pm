@@ -148,19 +148,27 @@ context_scope:
       (slots 8, 11, 3, 16, 14, now 9) — the todo's own text above cites an auto-park threshold of 3 BLOCKED/GATED
       declines, which this has exceeded by 2x without auto-parking; noting as a possible second, independent dispatcher
       gap, not investigating further (outside this task's scope). Releasing again via
-      `/skip-current-task {"reason_code": "GATED"}`. **Archive every source doc todo 1 drives to
-      `status: resolved`/`complete` — in the same commit as the flip, never left sitting in `plans/active/`.**
-      `check_terminal_status_archived.py` HARD-fails on any doc whose frontmatter reads a terminal status while it still
-      lives under `plans/active/` (including `plans/active/issues/`) — the omission of this exact step across the sports
-      finalize-plan family already forced one such HARD-fail: the `plan_health` gate's own remediation
-      (`unified-trading-pm@57ed9271c`, escalation `agt-9a5061`, PR #1545) auto-archived 11 docs nobody's plan owned. For
-      every source doc todo 1 flips to `resolved` with 0 open todos: re-verify the 0-open-todos count and the resolution
-      banner one more time, then archive it to `plans/archive/2026_07/` IN THE SAME COMMIT as the status flip — fix
-      every corpus referrer of the archived doc's pre-archive path (grep for the basename). If todo 1 already ran before
-      this todo existed in the plan, archive any already-`resolved`-but-still-active doc now, noting the flip predated
-      this rule. **Done when**: no source doc this plan drives to a terminal status remains under `plans/active/`,
-      `bash scripts/plan-hygiene/run_hygiene_sweep.sh --ci` reports 0 hard failures, and every corpus referrer resolves
-      to the archived path. Source: `archive/issues/sports_plan_reconcile_operator_decisions_2026_07_26.md` § 2.
+      `/skip-current-task {"reason_code": "GATED"}`. **Reconfirmed 2026-08-02T16:14Z (slot 10, data_engineering) —
+      dispatch #7, zero drift, escalated for a manual park.** `sports_satellite_ao_dispatch_batch5_2026_07_26.md`'s
+      zombie-tick todo still `[ ]`; `agent-orchestrator` HEAD still `2b0b9e9` (same as when the defi sibling's fix was
+      last checked this session) — neither the parser-shape nor the word-order-bug fix has landed yet. This is now 7
+      dispatches (slots 8, 11, 3, 16, 14, 9, now 10) against a stated auto-park-at-3 threshold, more than double with no
+      auto-park firing. Rather than re-confirm a 8th time later, messaged main directly requesting a manual park (per
+      RULES.md § "Park a task" — a main/operator action, not something this data_engineering task should hand-edit)
+      until the backend fix lands. Releasing again via `/skip-current-task {"reason_code": "GATED"}`. **Archive every
+      source doc todo 1 drives to `status: resolved`/`complete` — in the same commit as the flip, never left sitting in
+      `plans/active/`.** `check_terminal_status_archived.py` HARD-fails on any doc whose frontmatter reads a terminal
+      status while it still lives under `plans/active/` (including `plans/active/issues/`) — the omission of this exact
+      step across the sports finalize-plan family already forced one such HARD-fail: the `plan_health` gate's own
+      remediation (`unified-trading-pm@57ed9271c`, escalation `agt-9a5061`, PR #1545) auto-archived 11 docs nobody's
+      plan owned. For every source doc todo 1 flips to `resolved` with 0 open todos: re-verify the 0-open-todos count
+      and the resolution banner one more time, then archive it to `plans/archive/2026_07/` IN THE SAME COMMIT as the
+      status flip — fix every corpus referrer of the archived doc's pre-archive path (grep for the basename). If todo 1
+      already ran before this todo existed in the plan, archive any already-`resolved`-but-still-active doc now, noting
+      the flip predated this rule. **Done when**: no source doc this plan drives to a terminal status remains under
+      `plans/active/`, `bash scripts/plan-hygiene/run_hygiene_sweep.sh --ci` reports 0 hard failures, and every corpus
+      referrer resolves to the archived path. Source:
+      `archive/issues/sports_plan_reconcile_operator_decisions_2026_07_26.md` § 2.
 - [x] ✅ [REVIEW] P1. **DONE 2026-07-28 — unified-trading-pm (this commit).** Re-checked all Deferred items from
       batch5's own doc via direct reads of every named target/blocker doc (not trusting batch5's own dated ruling-text
       at face value — several turned out stale). **Count correction found at pickup**: `grep -c '^- \*\*'` under
