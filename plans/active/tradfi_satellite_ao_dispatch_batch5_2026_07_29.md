@@ -743,6 +743,28 @@ mirroring the batch1/batch2/batch3/batch4 finalize pattern.
   finalize's body banner and frontmatter `summary`, both still asserting "stays draft", brought into line, since
   `233ebd614` was a frontmatter-only bulk flip.
 
+- **2026-08-02 (slot-4, data_engineering craft, task `tradfi_satellite_ao_dispatch_batch5-001`)** — Resumed todo 2 for
+  the 10th time. **Gate has escalated, not lifted, since slot-4's 2026-08-01 park.** Live-reconfirmed: (1) `gsutil stat`
+  on `gs://market-data-tick-tradfi-prd-central-element-323112/_index/availability_index.parquet` still reads
+  `Update time: Fri, 31 Jul 2026 18:29:55 GMT` — unchanged, now ~45h stale (checked `2026-08-02T15:48:13Z`) against the
+  24h preflight budget; (2) `plans/active/mtds_available_at_cross_asset_backfill_2026_07_13.md` lines 305/314 (tradfi
+  apply + resume todos) are both still `- [ ]` open, confirmed by direct read this session. **New since
+  slot-6/8/15/slot-4's prior park**: a separate, freshly-filed issue doc,
+  `issues/tradfi_ohlcv_backfill_oom_preflight_fails_paused_consolidator_2026_08_02.md` (filed today by a
+  `data_pipeline_failure` escalation, corroborated independently by a second escalation also run under this same slot
+  number under a different task), proves the consequence is now ACTIVE FLEET-WIDE FAILURE, not just a soft blocker:
+  every tradfi download-VM launch (any venue) self-deletes at boot with `exit_code=78` (shell-level OOM preflight in
+  `setup-data-pipeline-vm.sh` §5b) because the staleness budget is blown — confirmed on two independent launcher
+  families (NASDAQ 2024 historical, CME current-year incremental) today. That doc carries its own `[OPERATOR] P1` todo
+  (expedite the apply+resume vs. authorize an early out-of-sequence cron resume) and an already-answered `/blocked`
+  (`BLK-058d5928`, option A: leave paused, file, don't override). Launching this todo's `launch-mdps-backfill-vm.sh`
+  ES/MES fleet right now would hit the identical rc=78 self-delete before any capture — not a hypothetical, a
+  confirmed-live mechanism. Declining again rather than attempting a launch guaranteed to fail or busy-waiting on a
+  cross-plan gate this task cannot unilaterally resolve. **Next dispatch**: check
+  `issues/tradfi_ohlcv_backfill_oom_preflight_fails_paused_consolidator_2026_08_02.md`'s `[OPERATOR]` todo for
+  resolution (or `mtds_available_at_cross_asset_backfill_2026_07_13.md` lines 305/314 flipping done) before attempting
+  any tradfi download-VM launch for this todo — until then every such launch will fail identically.
+
 ## Codex SSOTs
 
 No new durable contract is created by this plan — every todo executes an already-decided spec from its source doc, or
