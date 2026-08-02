@@ -152,10 +152,10 @@ No design call needed — every fact here is independently checkable:
 
 ## Todos
 
-- [ ] [BACKEND] P1. Root-cause why `defi_satellite_ao_dispatch_batch8_2026_08_02.md`'s own `- [ ] [DATA] P3.` todo never
-      derived into a backlog task (see "Recommended decision" item 1 for the specific parser-shape hypothesis to check
-      first). Repo: agent-orchestrator. Done when: the specific exclusion cause is identified and cited with a code line
-      reference.
+- [x] ✅ [BACKEND] P1. Root-cause why `defi_satellite_ao_dispatch_batch8_2026_08_02.md`'s own `- [ ] [DATA] P3.` todo
+      never derived into a backlog task — agent-orchestrator (no commit, investigation-only; see Progress Log 2026-08-02
+      slot-15 entry below for the code-line-cited cause and the reproduction that REFUTES the "Recommended decision"
+      item 1 parser-shape hypothesis).
 - [ ] [BACKEND] P1. Fix the identified cause and confirm via `POST /api/backlog/regen` + `GET /api/backlog` that a task
       now exists with `plan_ref:     plans/active/defi_satellite_ao_dispatch_batch8_2026_08_02.md`. Repo:
       agent-orchestrator. Done when: the task is present and dispatchable (not blocked on an unrelated condition).
@@ -232,3 +232,19 @@ No design call needed — every fact here is independently checkable:
   nor todo 2 (fix) has landed yet, despite todo 1 having shown `dispatched` (slot 8) as of the last entry. Not
   re-investigating or duplicating that work. Declining `finalize-001` again per this doc's own Recommended-decision item
   4; skipping rather than holding the slot.
+- **2026-08-02 (slot 15, backend_engineer craft, task `defi_batch8_finalize_gate_bypass_missing_upstream_task-001`)** —
+  **Root cause identified, code-line-cited, and reproduced. The "Recommended decision" item 1 parser-shape hypothesis
+  (bolded multi-clause todo text + lettered/bulleted sub-parts confusing the checkbox-continuation-block scanner) is
+  REFUTED for this specific todo** — a standalone repro against the live plan text confirms `_UNCHECKED_RE`
+  (`agent-orchestrator/server/regen_backlog_from_plan.py:96`) matches the checkbox line cleanly and
+  `_TODO_BLOCK_BOUNDARY_RE` (line 1216) correctly captures the full 27-line continuation block up to the next `- [` /
+  header boundary — the checkbox parse itself is fine. **Actual cause: `_is_non_dispatchable()` (line 1202) →
+  `_has_live_blocked_token()` (line 1180) false-positives on the todo's own resolved-blocker citation.** The todo's
+  continuation block reads (verbatim, batch8 plan line 86): "the source todo's original
+  `BLOCKED-CREDENTIALS (2026-07-22)` framing **was retired** 2026-07-29" — i.e. the resolution verb ("was retired")
+  trails the `BLOCKED-CREDENTIALS` marker instead of leading it. `_STALE_MARKER_PREFIX_RE` (line 1169) only recognizes
+  resolution language found in the ≤60 chars **immediately BEFORE** a `BLOCKED-<TOKEN>` match
+  (`was `X``, `no longer X`, `retagged from X`, `previously X` — all keyword-then-marker). This todo's phrasing is marker-then-keyword ("original `BLOCKED-CREDENTIALS` framing was retired"), which the backward-only lookback cannot see: the 60-char prefix immediately preceding the match is `"...the source todo's original \`"` (no stale keyword present), so `_STALE_MARKER_PREFIX_RE.search(prefix)` returns `None`, `_has_live_blocked_token` returns `True`, `_is_non_dispatchable` returns `True`, and `_parse_open_todos` (line 1309-1310) silently `continue`s past the todo — it is never appended to `results`, so it never becomes a backlog task. This is the SAME underlying bug class as `ao_non_dispatchable_regex_swallows_resolved_retags_2026_07_29.md` (a resolved-retag false-positive on the BLOCKED-token guard), but a THIRD, previously-uncovered trigger shape: not a missing token in the allow-list (that was the 2026-07-29 fix), not a missing token variant (`BLOCKED-UPSTREAM-DESIGN`, the `2b0b9e9` fix), but a **word-order variant** — the guard's stale-marker lookback is directionally one-sided (keyword-before-marker only) and this todo's prose states the resolution keyword-after-marker instead. **Verified via standalone reproduction** (regex definitions copied verbatim from `agent-orchestrator/server/regen_backlog_from_plan.py` lines 1154-1216, run against the live `plans/active/defi_satellite_ao_dispatch_batch8_2026_08_02.md` text — no fabricated input): `is_non_dispatchable()` returns `True` for this todo's block; the single `BLOCKED-CREDENTIALS` match's 60-char prefix is `"...the source todo's original \`"`, and `_STALE_MARKER_PREFIX_RE` does not match it. Not fixing inline — todo 2 ("fix the identified cause") is a separate dispatched task targeting the same file; per this doc's own slot-4 note above, starting the fix here would risk a same-file collision. **Next dispatch (todo 2)**: extend `_STALE_MARKER_PREFIX_RE`'s coverage (or add a companion forward-lookahead check) to also recognize marker-then-resolution-keyword phrasing (e.g. ``
+  `BLOCKED-<TOKEN>` ... (was retired|no longer applies|resolved) `` within a bounded lookahead window after the match,
+  mirroring the existing backward-lookback structure) — then re-run this doc's own reproduction against this exact todo
+  block to confirm `is_non_dispatchable()` flips to `False` before calling `POST /api/backlog/regen`.
