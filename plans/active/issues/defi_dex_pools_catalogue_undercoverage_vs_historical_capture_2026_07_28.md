@@ -28,14 +28,14 @@ execution_scope: orchestrator-agent
 priority: P2
 estimate_class: research
 drift_direction: worsening-slowly
-source: [/plans/active/defi_dex_pool_symbol_fix_backfill_purge_2026_07_25.md]
+source: [/plans/archive/2026_08/defi_dex_pool_symbol_fix_backfill_purge_2026_07_25.md]
 resolved_by:
 locked_by:
 depends_on: []
 assigned_role: data_engineering
 context_scope:
   [
-    /plans/active/defi_dex_pool_symbol_fix_backfill_purge_2026_07_25.md,
+    /plans/archive/2026_08/defi_dex_pool_symbol_fix_backfill_purge_2026_07_25.md,
     /codex/02-data/honest-coverage-model.md,
     /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
     market-tick-data-service/market_tick_data_service/cli/handlers/_catalogue_filter.py,

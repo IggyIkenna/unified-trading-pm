@@ -20,7 +20,7 @@ scope: [engineer]
 tags: [defi, subgraph, dex-pools, close-out, finalize, archival]
 related:
   [
-    /plans/active/defi_dex_pool_symbol_fix_backfill_purge_2026_07_25.md,
+    /plans/archive/2026_08/defi_dex_pool_symbol_fix_backfill_purge_2026_07_25.md,
     /plans/active/defi_consolidated_closeout_2026_07_18.md,
     /plans/archive/issues/defi_dex_pools_subgraph_query_missing_input_tokens_2026_07_25.md,
     /plans/archive/issues/defi_migrated_marker_flagged_root_cause_clusters_2026_07_25.md,
@@ -42,16 +42,17 @@ depends_on: [defi_dex_pool_symbol_fix_backfill_purge_2026_07_25]
 gate_on_depends: true
 source: >-
   Quality-gates finalize-plan-coverage post-gate regression (2026-07-25, ldr_qg_failure escalation on
-  unified-trading-pm) — defi_dex_pool_symbol_fix_backfill_purge_2026_07_25.md shipped `assigned_vm: planning` with >1
-  todo and no gated finalize plan, per task_template.md §4's operator ruling 2026-07-24. Authored to bring the check
-  back to baseline, mirroring sports_closeout_batch1_finalize_2026_07_24.md's reconcile-then-archive pattern (single
-  self-contained parent plus its one originating issue doc, not a multi-source-doc batch extraction).
+  unified-trading-pm) — /plans/archive/2026_08/defi_dex_pool_symbol_fix_backfill_purge_2026_07_25.md shipped
+  `assigned_vm: planning` with >1 todo and no gated finalize plan, per task_template.md §4's operator ruling 2026-07-24.
+  Authored to bring the check back to baseline, mirroring sports_closeout_batch1_finalize_2026_07_24.md's
+  reconcile-then-archive pattern (single self-contained parent plus its one originating issue doc, not a
+  multi-source-doc batch extraction).
 assigned_role: backend_engineer
 sequential: true
 drift_direction: advance-code
 context_scope:
   [
-    /plans/active/defi_dex_pool_symbol_fix_backfill_purge_2026_07_25.md,
+    /plans/archive/2026_08/defi_dex_pool_symbol_fix_backfill_purge_2026_07_25.md,
     /plans/active/defi_consolidated_closeout_2026_07_18.md,
     /plans/archive/issues/defi_dex_pools_subgraph_query_missing_input_tokens_2026_07_25.md,
     /plans/archive/issues/defi_migrated_marker_flagged_root_cause_clusters_2026_07_25.md,
