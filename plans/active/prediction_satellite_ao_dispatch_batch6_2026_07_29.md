@@ -550,6 +550,23 @@ sports-tranche-owned).
     the MTDS CODE_QUICK backlog pass, `/plans/archive/issues/code_quick_cross_repo_fix_backlog_2026_07_28.md` (both docs
     now archived, both closed — this note is historical, kept to avoid a duplicate claim on the same fix if re-read).
 
+## Deferred — duplicate extraction, sole owner is batch4 todo 3
+
+- **cqg partition-completeness — recent-window catalogue re-enumeration (operational run, already-fixed classifier).**
+  Sole owner:
+  [`prediction_satellite_ao_dispatch_batch4_2026_07_26.md`](/plans/active/prediction_satellite_ao_dispatch_batch4_2026_07_26.md)
+  **todo 3** ("cqg recent-window catalogue re-enumeration with the already-fixed classifier", `[SCRIPT] P2`, still
+  `[ ]`, `status: active`). This batch extracted the SAME item from the SAME source doc
+  (`prediction_cross_venue_arb_and_coverage_2026_07_24.md`) — flagged as a duplicate-dispatch hazard by
+  [`issues/prediction_closeout_tag_and_batch_claim_findings_2026_07_30.md`](/plans/active/issues/prediction_closeout_tag_and_batch_claim_findings_2026_07_30.md)
+  Finding 2 and **RULED by the operator 2026-07-30**: drop this batch's copy and cite batch4 todo 3 here instead.
+  **Executed as**: the citation above (ruling's second half). The ruling's first half — physically deleting the todo
+  line — was deliberately NOT performed, because by the time the ruling was applied this plan had already gone
+  `status: active` and was live-dispatching, and `regen_backlog_from_plan.py` derives task IDs positionally, so deleting
+  a line renumbers every subsequent todo on a plan with open dispatched work. This batch's copy is instead checked `[x]`
+  IN PLACE in the Todos section above, annotated "DUPLICATE — not independently executed". Same outcome — exactly one
+  owner, duplicate-dispatch risk closed — via the mechanism that is safe on a live plan.
+
 ## Deferred — too large for a batch todo (needs its own dedicated plan)
 
 - **`plans/active/data_completion_prediction_2026_07_15.md`'s Phase-B OBJECT-layer CQG-bundle migration** — a
@@ -768,3 +785,12 @@ sports-odds/sports-registry content with zero prediction-market-specific work �
   was larger than one pass could responsibly cover, per `task_template.md`'s "partial-parallelism isn't expressible in
   one plan → SPLIT" guidance.
 - **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).
+- **2026-08-02 (slot 3, worker `ao-fix-prediction`)**: executed the operator's 2026-07-30 ruling on
+  [`issues/prediction_closeout_tag_and_batch_claim_findings_2026_07_30.md`](/plans/active/issues/prediction_closeout_tag_and_batch_claim_findings_2026_07_30.md)
+  Finding 2 — added the `## Deferred — duplicate extraction, sole owner is batch4 todo 3` section above, which is where
+  the ruling asked the batch4-todo-3 citation to live. No todo was added, removed, or reordered, so every open todo's
+  positional task ID is unchanged. Also re-verified the ruling's other two halves were already satisfied before this
+  pass: this plan is `status: active` (flipped 2026-07-30/31, not by this pass) and the P0 Kalshi CQG bug todo 1 aimed
+  at is genuinely fixed at HEAD (`instruments-service@e0f7aaad`, the Kalshi branch of
+  `engine/orchestrator/prediction.py` now extracts the bare ticker via `rsplit(":", 1)[-1]` before classifying) — the
+  bug is no longer live, and no re-flip was needed.
