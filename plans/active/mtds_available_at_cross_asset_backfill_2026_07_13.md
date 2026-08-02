@@ -840,3 +840,18 @@ fill-rate ceiling moves now that the bundled-shard fix is live, checking `unpars
 recommendation; (3) the operator has approved purchasing additional odds-api credits (BLK-6728ec9a, option B) for the
 UNRELATED sports odds_api backfill — re-verify live before resuming that separate work, do not assume the purchase is
 instant.
+
+### 2026-08-02T17:52Z — #13 (slot-15, data_engineering, dispatched `-001`) — declining, exact apply already live under slot-14's `-006`
+
+Dispatched `-001` ("Apply `rebuild_prediction_manifest.py`"). Before launching anything, verified live process state
+(not trusting the doc's last checkpoint blind): `ps aux` shows PID 1860179,
+`rebuild_prediction_manifest.py --start-date 2025-09-13 --end-date 2026-08-01 --chunk-days 15` — the EXACT command #12's
+handoff recommended — already RUNNING (started 17:31Z, ~20min uptime, 127% CPU, healthy) from
+`.tabs/14/market-tick-data-service`. Cross-checked `GET /api/state`: slot 14 is dispatched on
+`mtds_available_at_cross_asset_backfill-006` with `last_msg` confirming "Prediction backfill continues healthily in
+background (chunk 2/32, RSS ~2.3GB)" plus a completed tradfi pre-2023-04 re-run (see `unified-trading-pm@90dc8d193`).
+Launching a second, identical apply here would waste shared-host compute and risk a write race on the same per-VM shard
+prefix for no benefit — not doing that. Declining `-001` and skipping (not holding the slot for a multi-chunk apply
+another slot already owns), `reason_code: "OTHER"` (a per-slot duplication fact, not a fleet-wide blocking condition —
+the follow-through steps, force-consolidate/fill-rate-reverify/cron-resume, remain open work for whoever picks up next
+once slot-14's run actually finishes).
