@@ -165,17 +165,25 @@ and shipped — do NOT re-run those two if resuming from the script (their branc
       across 4 commits: `9782af754` (bucket-fold), `c423e1f66` (meta retags), `a540f96e3` (backlog.yaml source fix),
       `f268055e5` (zero-checkbox sweep), `0409fa053` (near-complete-fold + remaining meta retags). All verified pushed,
       ahead=0.
-- [x] [DOC] P0. **per-tranche fixes, 8 of 10 (cefi, defi, tradfi, prediction, sports, cross-cutting, ao, ci)** — the
-      HIGHEST-VALUE item in this whole list is inside **prediction**: the live Kalshi CQG bug (79% of daily Kalshi
-      volume silently mis-bucketed to `OTHER` since 2026-07-12, one-line fix at
-      `instruments-service/.../prediction.py:95`) is still undispatched — `prediction_satellite_ao_dispatch_batch6`
-      needs its duplicate todo 7 removed (cite batch4 todo 3 instead) and flipping `status: draft` -> `active`. Also in
-      this batch: tradfi batch5's false delete-safety premise correction + flip; defi batch5 flip + the 206K-row
-      factory-address todo; sports batch8 draft + the venue-mapping-before-retirement hard gate + the
-      `sports_legacy_fixtures_path_migration` sequential-chain reclassify + 3 archivals; cross-cutting's ~20-doc ci/ao
-      retag; ao's adoption of `prediction_trades_migration_concurrent_dispatch_2026_07_28`. Full per-tranche task text
-      is in the workflow script's `TRANCHE_PROMPTS` object — copy each entry verbatim into a fresh dispatch if the
-      script itself is gone. -- CLOSED (na-eligibility-audit 2026-08-01): directly verified
+- [x] [DOC] P0. **per-tranche fixes, all 8 (cefi, defi, tradfi, prediction, sports, cross-cutting, ao, ci) + integrate**
+      -- CLOSED 2026-08-02 for real: a dedicated round-5 Workflow (8 parallel worktree-isolated agents + one integrate
+      pass) ran clean end-to-end (0 errors, 9/9 agents done) after this session's earlier attempts kept hitting API
+      connectivity failures. 4 of the 8 tranches (defi/tradfi/sports/prediction) had already been independently
+      completed via the standard AO batch-dispatch pipeline before this round ran (confirmed by each agent's own "check
+      first" verification, consistent with the earlier na-eligibility-audit finding below); the other 4 (cefi,
+      cross-cutting, ao, ci) did genuine new work this round. Integrated + shipped in one pass:
+      `unified-trading-pm@766822efe`. Verified `git merge-base --is-ancestor 766822efe origin/live-defi-rollout` = true,
+      `git rev-list --count origin/live-defi-rollout..HEAD` = 0. HIGHEST-VALUE item in this whole list is inside
+      **prediction**: the live Kalshi CQG bug (79% of daily Kalshi volume silently mis-bucketed to `OTHER` since
+      2026-07-12, one-line fix at `instruments-service/.../prediction.py:95`) is still undispatched —
+      `prediction_satellite_ao_dispatch_batch6` needs its duplicate todo 7 removed (cite batch4 todo 3 instead) and
+      flipping `status: draft` -> `active`. Also in this batch: tradfi batch5's false delete-safety premise correction +
+      flip; defi batch5 flip + the 206K-row factory-address todo; sports batch8 draft + the
+      venue-mapping-before-retirement hard gate + the `sports_legacy_fixtures_path_migration` sequential-chain
+      reclassify + 3 archivals; cross-cutting's ~20-doc ci/ao retag; ao's adoption of
+      `prediction_trades_migration_concurrent_dispatch_2026_07_28`. Full per-tranche task text is in the workflow
+      script's `TRANCHE_PROMPTS` object — copy each entry verbatim into a fresh dispatch if the script itself is gone.
+      -- CLOSED (na-eligibility-audit 2026-08-01): directly verified
       `prediction_satellite_ao_dispatch_batch6_2026_07_29.md` is status:active, assigned_vm:planning, and already
       contains the Kalshi-CQG fix plus the "batch4 todo 3 is the single owner going forward" dedup language; also
       confirmed status:active + assigned_vm:planning on `defi_satellite_ao_dispatch_batch5_2026_07_27.md`,
