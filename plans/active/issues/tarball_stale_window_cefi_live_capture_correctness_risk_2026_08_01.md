@@ -325,16 +325,21 @@ for visibility per the data-pipeline-correctness HARD RULE, not to be conflated 
       it's consistent with the sibling resolution above (a single all-market stream, genuinely ~1-9 events/day
       historically; a 9-minute window is far too short to expect one) — no separate liquidations fix needed. (repo:
       market-tick-data-service) — **Shipped: market-tick-data-service@28049156.**
-- [ ] [INFRA] P0. **Verify the ASTER multi-connection sharding fix (market-tick-data-service@28049156) end-to-end in
-      production** — code alone is not done-when per the data-pipeline-correctness HARD RULE. Mirrors the earlier
-      `[INFRA] P0` relaunch todo above: confirm the running `mtds-live-cefi-consolidated-*` VM's heartbeat is genuinely
-      stale/superseded (per the VM-delete guardrail — heartbeat age, `run.log` tail, manifest shard mtime) before
-      relaunch, `--force` relaunch (never deletes-first) once the new tarball carrying `28049156` is confirmed built,
-      then re-read the per-VM manifest shard directly (bypasses manifest-consolidator lag) for `ASTER book_snapshot_5`
-      over a window long enough to observe multiple flush cycles — confirm real, non-zero-`instrument_count` `captured`
-      rows (not just `empty_confirmed`) across MULTIPLE symbols, not just the one BTC probe this fix's root-cause
-      investigation used. Retire the confirmed-stale old instance once the new one is verified healthy. (repo:
-      deployment-service)
+- [x] ✅ [INFRA] P0. **VERIFIED 2026-08-02T14:39Z, deployment-service.** Confirmed the running old VM
+      (`mtds-live-cefi-consolidated-20260802-130832`, heartbeat fresh but tarball built 13:31:18Z — `2c73a66c`, NOT
+      including `28049156`, confirmed via `git merge-base --is-ancestor`) was genuinely stale, not just old-but-fine.
+      Rebuilt the 4 gated core tarballs (`bash deployment-service/scripts/vm/create-code-tarballs.sh`, no scope flag =
+      CORE); confirmed `mtds-code` manifest now pins `28049156` as an ancestor. `--force` relaunched (never
+      deletes-first): `mtds-live-cefi-consolidated-20260802-142543`. `lc_verify_tarball_freshness` confirmed all 4
+      tarballs current at launch. Verified clean boot via SSH (`=== VM SETUP COMPLETE ===`, 17/17 MVP shards running).
+      Read the per-VM manifest shard directly (`_index/per_vm/mtds-live-cefi-consolidated-20260802-142543.parquet`,
+      bypasses manifest-consolidator lag), filtered to `venue=ASTER, data_type=book_snapshot_5`: **501/521 rows
+      `captured` (20 `empty_confirmed`), 515 distinct `instrument_id` symbols, 51,553 total captured instrument-rows,
+      spread across 8 distinct flush-cycle minute-buckets from `14:29Z` to `14:39Z`** — confirms the multi-connection
+      sharding fix works in production across multiple symbols and multiple flush cycles, not just the single BTC probe
+      used during root-cause. Retired the confirmed-stale old instance
+      (`gcloud compute instances delete mtds-live-cefi-consolidated-20260802-130832`) once the new one was verified
+      healthy. (repo: deployment-service)
 - [ ] [DATA] P3. File a SEPARATE issue doc for the two pre-existing, unrelated chronic findings surfaced incidentally by
       this check: `OKX-FUTURES trades` intermittent zero-capture (going back to at least `2026-07-20`, live pipeline)
       and `POLYMARKET-PERP perp_funding` permanently `attempted_failed` since at least `2026-07-28` (batch pipeline).
