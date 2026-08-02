@@ -14,7 +14,7 @@ summary: >-
   verified live here, but the mechanism (a Linux-only /proc read) makes it the obvious explanation and no code in this
   session touched this file. NOT a regression from anything shipped today — a pre-existing local-dev-on-macOS gap that
   happened to block an unrelated fleet-wide ship.
-status: open
+status: resolved
 nature: issue
 asset_group: [ci]
 stage: [meta]
@@ -38,11 +38,21 @@ drift_direction: advance-code
 depends_on: []
 assigned_vm: planning
 resolved_by:
+  "slot-16, 2026-08-02 (all 3 todos closed: Linux liveness confirmed, cross-platform test skip already shipped by slot-1
+  @agent-orchestrator@24bd611, quality-gates-v2.yml concurrency fix shipped @agent-orchestrator@f7fe4e9)"
 locked_by:
 locked_since:
 ---
 
 # agent-orchestrator's proc-cwd liveness test is macOS-incompatible
+
+> **🟢 RESOLVED 2026-08-02** — all three todos closed. (1) Linux liveness confirmed live on a Linux slot host (test
+> passes, 1 passed in 2.86s). (2) The cross-platform fix was already shipped independently by slot-1
+> (`agent-orchestrator@24bd611`, 2026-08-02): a `@pytest.mark.skipif(sys.platform == "darwin", ...)` on the ONE affected
+> test — matching this doc's own steer that the implementation already degrades gracefully by design and only the TEST
+> needed the platform conditional. (3) The `quality-gates-v2.yml` concurrency fix (this doc's original blocker) shipped
+> `agent-orchestrator@f7fe4e9` — `quality-gates.sh --no-fix` PASSED (2226 passed/2 skipped), quickmerge landed +
+> verified. Zero open follow-up todos. Fleet rollout (companion issue doc) is complete for agent-orchestrator.
 
 ## What happened
 
@@ -93,11 +103,16 @@ workspace bans shipping from anything but a green `quality-gates.sh` tree, so `a
       cleanly (1 passed in 2.86s), confirming the mechanism hypothesis: `/proc/<pid>/cwd` resolves fine on Linux, this
       is purely a macOS-local-dev gap, not a broken feature on the real deployment targets. Also confirmed via the full
       `quality-gates.sh --no-fix` run (2226 passed, 2 skipped) — this test is not among the skips.
-- [ ] [SCRIPT] P3. Decide + implement a cross-platform fix (either a real non-`/proc` liveness signal for macOS, e.g.
+- [x] ✅ [SCRIPT] P3. Decide + implement a cross-platform fix (either a real non-`/proc` liveness signal for macOS, e.g.
       `psutil.Process(pid).cwd()`, or an explicit `sys.platform != "linux"` skip that degrades to the other two liveness
       signals — the function's own docstring says "the caller's other two signals (claim, worker_alive) still stand" —
       this suggests a graceful skip may already be the intended degraded behavior and only the TEST itself needs a
-      `sys.platform`-conditional skip, not the implementation).
+      `sys.platform`-conditional skip, not the implementation). — **2026-08-02 (slot-16): ALREADY SHIPPED, discovered on
+      fresh-pull.** Slot-1 independently implemented exactly the steered option — `agent-orchestrator@24bd611`
+      (2026-08-02 12:58:58+0100) added `@pytest.mark.skipif(sys.platform == "darwin", reason="...")` directly on
+      `test_default_proc_cwd_live_true_for_live_process_under_slot_dir` in `tests/test_dirty_state_resolution.py`, the
+      implementation (`_default_proc_cwd_live`) untouched — confirmed via `git blame`. No further action needed;
+      flipping to close the doc.
 - [x] ✅ [SCRIPT] P2. Once fixed, ship the already-rendered local `.github/workflows/quality-gates-v2.yml` change in
       `agent-orchestrator` (`fix(ci): cancel-in-progress on pull_request events for quality-gates-v2 (was push-only)` —
       same commit message as the other 21 repos) via `quality-gates.sh --no-fix && quickmerge.sh --agent --files`,
