@@ -610,3 +610,44 @@ not resumed. **Both `-001` and `-006` stay unflipped.** Cron confirmed still `PA
 by this session — only ran read-only diagnostics + the idempotent apply script). Maintenance-window lock
 (`_maintenance_window.json`, expires 2026-08-03T04:56:45Z) still valid for this plan; if this session's apply runs past
 that, the lock needs renewing before it lapses.
+
+### 2026-08-02 — #11 (slot-3, data_engineering) — tradfi apply crashed on a real bundled-shard bug, fixed + shipped, resumed
+
+Dispatched via `cf_manifest_audit_first_full_rollup_findings-001` (the fresh CF-manifest-audit's CF-8 finding for
+tradfi, which is exactly this plan's remaining tradfi todos — folded in here rather than duplicated). Also the CRITICAL
+PATH context from `/plans/active/issues/tradfi_ohlcv_backfill_oom_preflight_fails_paused_consolidator_2026_08_02.md`:
+the cron pause since 07-29 has left `availability_index.parquet` ~42h+ stale, causing EVERY tradfi download-VM to
+self-delete at boot (`exit_code=78` OOM preflight) — fleet-wide outage, not one shard.
+
+**Baseline read** (fresh index download, single-file, not a corpus walk): 1,496,036 captured rows, `available_at` 69.97%
+filled (1,046,738) — live captures since the 07-14 writer fix (`market-tick-data-service@65a6f9e0`) are already filling
+it going forward; the gap is the pre-fix historical backlog, exactly what this todo's apply closes. Date range
+2019-01-02..2026-07-30.
+
+**Launched** `rebuild_tradfi_manifest.py --start-date 2019-01-02 --end-date 2026-07-30 --chunk-days 30`
+(`GCP_PROJECT_ID=central-element-323112` exported per the prediction session's documented gotcha). **Crashed at chunk
+53/93** (`2023-04-11..2023-05-10`) after 52 chunks completed cleanly:
+`ValueError: ManifestWriter.add() with bundled data_type='futures_chain' is banned`. Root cause: the 2026-07-14 "dead
+code" removal (`c8c01855`, earlier in this same plan's Progress Log) deleted the
+`if parsed.data_type in BUNDLED_DATA_TYPES` branch, reasoning from a 2026-07 recent-date sample + the live manifest's
+already-captured rows that this branch never fires. **That sample never covered 2023-era history** — confirmed live via
+`gsutil ls`:
+`day=2023-05-01/pipeline_mode=batch_databento/asset_group=tradfi/venue=CME/instrument_type=futures_chain/ data_type=futures_chain/underlying=AUD/quote=USD/margin=linear/ticks.parquet`
+— a real early-databento bundled-by-underlying convention (both `instrument_type` AND `data_type` literally the
+chain-type) that later shifted to per-instrument OHLCV files. Since chunks 1-52 (2019-01-02..2023-04-10) completed
+without hitting this, that range is confirmed clean — no earlier bundled-shape gap to worry about.
+
+**Fixed + shipped**: `market-tick-data-service@9d354cea` restores the branch (extracted into a new `_emit_shard_row`
+helper to stay under the 200-line function cap after the file also needed trimming to stay ≤900 lines), routing
+genuinely-bundled `data_type` values through `_emit_bundled_shard_row`/`record_captured_from_counts`. New regression
+test (`test_scan_rebuild_bundled_data_type_routes_to_record_captured_from_counts`) reproduces the exact crash. Full
+`quality-gates.sh` green, `quickmerge --agent` landed on `live-defi-rollout` (verified via `merge-base --is-ancestor`).
+
+**Resumed** the apply from the crash point: `--start-date 2023-04-11 --end-date 2026-07-30 --chunk-days 30` (not
+re-scanning the already-clean 2019-2023-04-10 range — efficiency north-star). Running in background under `Monitor` with
+a 9-min heartbeat, not `ScheduleWakeup`.
+
+**Not yet done**: apply for 2023-04-11..2026-07-30 not finished, force-consolidate not run, fill-rate not re-verified,
+cron not resumed. Tradfi's two remaining todos above stay unflipped until all of that completes. Cron confirmed still
+`PAUSED`; 07-29 snapshot (`pre_available_at_backfill_20260729T010709Z.parquet`) still the valid rollback point
+(untouched this session — only ran the idempotent apply script + read-only diagnostics).
