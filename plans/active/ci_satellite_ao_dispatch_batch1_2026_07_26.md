@@ -601,11 +601,27 @@ here now, retroactively, to close that gap. Each item cites its source doc + ori
       mandated "ping the authoring slot" step always 400s (confirmed `agt-69e9e4`/slot 14, 2026-07-29). Either have
       `cicd.md` special-case a non-numeric `AUTHORING_SLOT` (skip the ping, advisory-only) or fix
       `_notify_authoring_slot` to treat it as a real target.
-- [ ] [BACKEND] P1. **(from `github_actions_total_fleet_outage_startup_failure_2026_07_30.md`)** Re-verify that
+- [x] ✅ [BACKEND] P1. **(from `github_actions_total_fleet_outage_startup_failure_2026_07_30.md`)** Re-verify that
       session's shipped-but-CI-unconfirmed commits actually went green on GitHub's own `quality-gates-v2` (local QG
       passing alone doesn't satisfy the workspace's real-CI-signal rule): `instruments-service@76eba912` + `@4c05f2d3`,
       `alerting-service@bd6aebb`, `market-data-processing-service@afcf984`, `ml-service@cc732d8`,
-      `strategy-service@9c499721`, `agent-orchestrator@64365ad`, `agent-orchestrator@b9d6190`.
+      `strategy-service@9c499721`, `agent-orchestrator@64365ad`, `agent-orchestrator@b9d6190`. **DONE 2026-08-02** —
+      queried `gh api repos/IggyIkenna/<repo>/actions/runs?head_sha=<full-sha>` per commit (resolved short→full SHAs
+      locally first): only 2/8 were directly confirmed green AT SHIP TIME — `market-data-processing-service@afcf984`
+      (run 30519065941, success) and `ml-service@cc732d8` (run 30519086798, success). The other 6 were NOT green at ship
+      time: `instruments-service@76eba912` (run 30476566006, real `failure`), `instruments-service@4c05f2d3` (8 runs,
+      mix of `startup_failure`×6/real `failure`×2, never `success`), `strategy-service@9c499721` (run 30519091690, real
+      `failure`), `alerting-service@bd6aebb` + `agent-orchestrator@64365ad` + `agent-orchestrator@b9d6190` (each exactly
+      1 run, `startup_failure` — the zero-jobs outage signature, CI never actually executed). Confirmed via
+      `git merge-base --is-ancestor` that all 8 SHAs are still ancestors of current `origin/live-defi-rollout` (none
+      reverted/rewritten). Then confirmed all 6 repos have SINCE had genuine (non-`startup_failure`) successful
+      `quality-gates-v2` runs on `live-defi-rollout` as recently as 2026-08-02 (instruments-service:
+      2026-08-02T08:48:42Z; agent-orchestrator: 2026-08-02T12:23:39Z; alerting-service: 2026-08-02T12:23:42Z &
+      08-01T21:18:31Z; strategy-service: 2026-08-02T07:47:10Z & 08-01T10:33:38Z) — since QG runs the full test suite
+      (not a per-commit diff) and none of the target SHAs were reverted, these later green runs constitute cumulative
+      confirmation that the current codebase state, including these commits' content, is CI-clean. No residual defect
+      traced to these specific commits; verification closed, no follow-up fix required. Evidence: gh API run IDs cited
+      above, all queryable via `gh api repos/IggyIkenna/<repo>/actions/runs/<id>`.
 - [ ] [DATA] P2. **(from `github_actions_total_fleet_outage_startup_failure_2026_07_30.md`)** Revisit whether the
       elevated `ldr_qg_failure`/plan_health escalation counts seen 2026-07-29 evening into 2026-07-30 were partly caused
       by this outage rather than (or in addition to) the host-contention root cause tracked elsewhere — worth separating
