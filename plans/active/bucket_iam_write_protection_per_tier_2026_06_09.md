@@ -314,11 +314,11 @@ Two independent gates because Group A and Group B are at different stages:
       compute SA) — do not leave this tag stale per CLAUDE.md's retag-on-resolve rule.
 
       > **🟥 Note (2026-07-31, slot-14)**: even once this todo removes `unified-trading-sa`'s `storage.objectAdmin`,
-                                                  > that SA still live-holds `roles/resourcemanager.projectIamAdmin` + `roles/iam.serviceAccountAdmin` (undeclared
-                                                  > in any terraform in this repo) — both self-escalation-capable, i.e. it could re-grant itself storage access
-                                                  > (or any other role) without going through terraform at all. See
-                                                  > `issues/unified_trading_sa_live_iam_drift_vs_terraform_2026_07_31.md` — a full de-privilege of this SA is not
-                                                  > actually complete until that doc's P1/P2 also land.
+                                                      > that SA still live-holds `roles/resourcemanager.projectIamAdmin` + `roles/iam.serviceAccountAdmin` (undeclared
+                                                      > in any terraform in this repo) — both self-escalation-capable, i.e. it could re-grant itself storage access
+                                                      > (or any other role) without going through terraform at all. See
+                                                      > `issues/unified_trading_sa_live_iam_drift_vs_terraform_2026_07_31.md` — a full de-privilege of this SA is not
+                                                      > actually complete until that doc's P1/P2 also land.
 
 > **🟥 P2.2 SCOPE GAP found 2026-07-30 (slot-12) — "wire each runtime to its tier SA" is not mechanically executable
 > today.** Investigation (live GCP IAM queries + static analysis, no state mutated) found 3 independently-blocking
@@ -482,3 +482,16 @@ Two independent gates because Group A and Group B are at different stages:
 ## Progress Log
 
 - **context-scout 2026-08-01**: populated/refreshed context_scope (6 entries).
+- **slot-6 2026-08-02**: dispatched task `bucket_iam_write_protection_per_tier-018` (P2.2e, the
+  `uts-shared- deployment-api` live-traffic cutover). Did NOT proceed — confirmed both gating docs are still
+  `status: open` and the explicit downstream gate from `deployment_api_sigabrt_crash_loop_2026_07_24.md`'s
+  `2026-08-01T00:06Z (main-orchestrator agt-26fe12)` entry is still in force verbatim: "any live-traffic cutover to a
+  fresh revision (e.g. `bucket_iam_write_protection_per_tier-018` P2.2e) MUST NOT proceed on a 'resolved' reading of
+  this doc — the cold-start path is demonstrably still flaky; hold 100% traffic on the warm instance until finding-6's
+  durable-close bar is met." Checked the companion tracker
+  (`deployment_api_cloud_run_coldstart_flaky_exit0_blocks_prd_sa_cutover_2026_07_31.md`) — no `durable-close` language
+  present, i.e. the raised bar (N-consecutive fresh cold-starts over a multi-hour window spanning quiet periods, zero
+  `exit(0)` failures) has not been met. Also confirmed the related `BLK-a14e9de5` (Google Cloud Support case question on
+  `deployment_api_sigabrt_crash_loop-028`) is still unanswered. This is a live-production service traffic cutover
+  explicitly gated by main-orchestrator's own instruction — not proceeding without that gate clearing is not optional
+  caution, it's compliance with a standing directive. No action taken; releasing via `/skip-current-task`.
