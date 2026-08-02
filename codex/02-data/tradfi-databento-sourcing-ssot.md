@@ -35,7 +35,7 @@ referenced_by:
     plans/epics/tradfi_master.md,
   ]
 owner:
-last_reviewed: 2026-06-25
+last_reviewed: 2026-08-03
 code_refs:
 ---
 
@@ -51,6 +51,22 @@ code_refs:
 > terminated). `batch_massive` `PipelineMode` + `possible_manifest` recognition are no longer guarding any on-disk
 > objects and can now be removed from code — tracked separately, not yet done as of this doc's last edit. Full plan:
 > `plans/active/issues/tradfi_canonical_path_migration_design_2026_07_19.md`.
+>
+> **2026-08-03 — the removal is NOW COMPLETE ACROSS ALL REPOS.** The two commits cited above (`uac@a2beed46` +
+> `mtds@362a487e`) only ever covered the **read-time `SOURCE_PRIORITY` dict** and **MTDS tick routing** — neither
+> touched **instruments-service**, whose Massive **reference-data** adapter stayed live, tested and fully wired for two
+> more weeks (found by `/plans/active/issues/tradfi_adapter_dead_code_fallback_audit_2026_07_25.md` Finding I-2; the
+> same inconsistent-sweep root cause also left `VENUE_DATA_AVAILABILITY["POLYGON"]` behind, see
+> `/plans/active/issues/uac_venue_data_availability_stale_polygon_entry_2026_08_02.md`). Operator ruling 2026-08-02
+> chose option A (finish the removal). `instruments-service@e7933317` deletes
+> `reference_data/adapters/tradfi/massive.py` + `tests/unit/test_massive_adapter.py` and unwires every call site — the
+> factory `_ADAPTERS`/`ADAPTER_DATA_SOURCES` entries, `_resolve_source_aware_adapter_key`, the `--source` CLI flag and
+> its whole `source=` plumbing (that chain existed solely to re-point a Databento venue at Massive), the `MASSIVE`
+> pseudo-venue key-reloader branch, and the `sessions.py` `EXCHANGE_HOURS`/`get_session_metadata` aliases whose only
+> consumer was `massive.py`. **Databento is now the sole TradFi reference-data source in code as well as in policy.**
+> Deliberately still present (NOT a gap): UAC's `external/massive/` normalisers + schemas, `PipelineMode.BATCH_MASSIVE`
+> / `possible_manifest` recognition, and the `source="massive"` mentions in instruments-service `scripts/` +
+> `tests/scripts/` — those describe **historical data provenance**, not adapter wiring.
 >
 > **2026-07-20 operator ruling — WRITE-side hard-reject of `source='massive'` is ACCEPTED.** Because the UTL
 > manifest-writer source gate is registry-driven off UAC `SOURCE_PRIORITY`
