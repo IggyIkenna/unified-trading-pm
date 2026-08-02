@@ -314,11 +314,11 @@ Two independent gates because Group A and Group B are at different stages:
       compute SA) — do not leave this tag stale per CLAUDE.md's retag-on-resolve rule.
 
       > **🟥 Note (2026-07-31, slot-14)**: even once this todo removes `unified-trading-sa`'s `storage.objectAdmin`,
-                                                                                  > that SA still live-holds `roles/resourcemanager.projectIamAdmin` + `roles/iam.serviceAccountAdmin` (undeclared
-                                                                                  > in any terraform in this repo) — both self-escalation-capable, i.e. it could re-grant itself storage access
-                                                                                  > (or any other role) without going through terraform at all. See
-                                                                                  > `issues/unified_trading_sa_live_iam_drift_vs_terraform_2026_07_31.md` — a full de-privilege of this SA is not
-                                                                                  > actually complete until that doc's P1/P2 also land.
+                                                                                      > that SA still live-holds `roles/resourcemanager.projectIamAdmin` + `roles/iam.serviceAccountAdmin` (undeclared
+                                                                                      > in any terraform in this repo) — both self-escalation-capable, i.e. it could re-grant itself storage access
+                                                                                      > (or any other role) without going through terraform at all. See
+                                                                                      > `issues/unified_trading_sa_live_iam_drift_vs_terraform_2026_07_31.md` — a full de-privilege of this SA is not
+                                                                                      > actually complete until that doc's P1/P2 also land.
 
 > **🟥 P2.2 SCOPE GAP found 2026-07-30 (slot-12) — "wire each runtime to its tier SA" is not mechanically executable
 > today.** Investigation (live GCP IAM queries + static analysis, no state mutated) found 3 independently-blocking
@@ -530,20 +530,26 @@ Two independent gates because Group A and Group B are at different stages:
       identical to `test_gcp_services.py`'s own established pattern) — it runs on-demand via the documented command in
       its own docstring, self-skips safely without the impersonation grant, and asserts real IAM state when run with it.
       (repo: deployment-service)
-- [ ] [INFRA] P2.3b. **NEW, opened 2026-08-02 (slot-4) during P2.3.** `RUN_INTEGRATION=true` cannot be safely
-      defaulted-on for deployment-service today: doing so would also activate the pre-existing
-      `tests/integration/test_gcp_services.py`, whose `TestCloudLoggingIntegration.test_logging_client_init` (and
-      siblings) construct real GCP clients with no `DefaultCredentialsError` catch, and `quality-gates-v2.yml`'s CI
-      pipeline has zero GCP-credential provisioning
-      (`grep -n "GCP_SA_KEY\|google-github-actions\|auth@" .github/workflows/*.yml` → 0 hits) — flipping the flag would
-      break `quality-gates-v2` CI on every future push for the whole repo, not just this new test. This gap predates
-      this plan (test_gcp_services.py's own docstring already claims "In CI, these run when GCP_SA_KEY secret is
-      configured" — that CI wiring does not actually exist). Scope a real fix: either (a) provision CI GCP credentials
-      (Workload Identity Federation preferred over a long-lived SA key) and flip `RUN_INTEGRATION=true`, or (b) wrap
-      `test_gcp_services.py`'s client-construction calls in the same `DefaultCredentialsError`-tolerant skip pattern
-      this new IAM test already uses, so the flag is at least locally/interactively safe to flip even before CI
-      credentials exist. A credential-provisioning judgment call for (a) — repo owner should weigh in before
-      implementing. (repo: deployment-service)
+- [x] ✅ [INFRA] P2.3b. **DONE 2026-08-02 (slot-9) — `deployment-service@4b776f0`.** Implemented option (b) exactly as
+      scoped (option (a) — provisioning real CI GCP credentials — stays untouched, a separate operator-judgment call,
+      not attempted here): added a shared `_gcp_client(factory)` helper to `tests/integration/test_gcp_services.py` that
+      catches `google.auth.exceptions.DefaultCredentialsError` around every GCP client-construction call site (Cloud
+      Logging ×4, Compute Engine ×4, Cloud Build ×3, Cloud Run Jobs/Executions ×6, Artifact Registry
+      `google.auth.default()` ×2 — 19 sites total across the file) and `pytest.skip()`s with the exact
+      `"No GCP credentials — skipping integration test: …"` phrasing `base-service.sh`'s STEP-5 credential-skip QG check
+      (`BAD_AUTH_SKIP` regex) already allowlists — mirrors `test_bucket_iam_tier_isolation.py`'s existing
+      skip-on-credential-gap convention. `RUN_INTEGRATION` is left `false` (unchanged) — this todo only makes flipping
+      it locally/interactively safe, per its own scoping; the CI-credential decision (option a) is not this todo's to
+      make. Live-verified: `bash scripts/quality-gates.sh` green (3018 passed, 5 skipped, "No credential-file skip
+      patterns in tests" ✅) on the committed HEAD; SHA confirmed on `origin/live-defi-rollout` via
+      `git merge-base --is-ancestor`. **Note for a future pass on option (a)**: `tests/conftest.py`'s existing autouse
+      `_skip_integration_without_creds` fixture (shipped 2026-07-13, `deployment-service@cad9416`, predates this
+      finding) already unconditionally skips every `@pytest.mark.integration` test whenever pytest-socket's
+      `--allow-hosts` is set — which `quality-gates.sh`'s TESTS phase always passes — so in practice CI already never
+      reaches this file's client-construction code today even with `RUN_INTEGRATION=true`; this todo's fix is
+      independent defense-in-depth (the direct, non-quality-gates.sh `pytest tests/integration/…` invocation path, and
+      any future change to that conftest fixture) rather than evidence the CI-breakage risk was empirically reproduced
+      this pass.
 
 ### Phase 3 — Codex alignment
 
@@ -602,3 +608,7 @@ Two independent gates because Group A and Group B are at different stages:
   evidence since slot-5's 18:12Z live cold-start failure. Rather than re-attempt the identical test a 4th time, retagged
   P2.2e `[OPERATOR]` (same fix pattern as P2.2d2c2 above) so the backlog stops re-offering a task no worker can
   currently clear. No code changed; releasing via `/skip-current-task`.
+- **slot-9 2026-08-02**: dispatched task `bucket_iam_write_protection_per_tier-024` (P2.3b). Implemented option (b) from
+  the todo's own text — see P2.3b's checkbox above for the full evidence trail (`deployment-service@4b776f0`,
+  quality-gates.sh green, SHA verified on origin). Left `RUN_INTEGRATION` and the CI-credential decision (option a)
+  untouched, as scoped.
