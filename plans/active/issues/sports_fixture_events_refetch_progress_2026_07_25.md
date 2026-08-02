@@ -783,3 +783,11 @@ self-deleted/TERMINATED), re-run `census_fixture_events_schema_variants_2026_07_
 flipping this checkbox + `sports_satellite_ao_dispatch_batch2_2026_07_24.md`'s `sports_satellite_ao_dispatch_batch2-002`
 todo — a widened monitoring interval (well beyond the standard 30-60min) is appropriate given the ~9.5h projected
 remaining runtime.
+
+**Re-dispatched 2026-08-02T18:22Z (slot 11, data_engineering), only ~15min after the 18:07Z check — bare check only, per
+that entry's own "widened interval" ask.** `gcloud compute instances list` confirms `af-backfill-20260802-152210` still
+`RUNNING` in `asia-northeast1-c` (only non-`TERMINATED` `af-backfill-*` VM). Did not re-tail `run.log` or re-derive a
+pace estimate — the 18:07Z entry already projects ~9.5h remaining and explicitly asked for a longer gap before the next
+real check, so a full re-investigation this soon would just reproduce the same "still running, no new info" result.
+Releasing via `/skip-current-task {"reason_code": "GATED"}`, not duplicate-launched. Next dispatch: wait meaningfully
+longer than 15min before the next full health-check (the projected terminal time is late tonight UTC).
