@@ -343,7 +343,7 @@ plan Phase 7.A wires `/api/kill-switch/{id}/arm` + `/disarm` endpoints that cons
 ## Cross-link with alerting recovery events
 
 The bus + alerting-service emit complementary events. Per the
-[`alerting_service_live_rules_2026_05_07.md`](../../plans/active/alerting_service_live_rules_2026_05_07.md) plan (Round
+[`alerting_service_live_rules_2026_05_07.md`](../../plans/archive/2026_05/alerting_service_live_rules_2026_05_07.md) plan (Round
 1 UAC@a7a99b5 added two recovery AlertCodes):
 
 | AlertCode                     | Emitted by                                                                             | Severity | Carried by `KillSwitchDisarmEvent`                               |

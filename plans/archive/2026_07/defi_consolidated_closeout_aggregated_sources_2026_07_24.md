@@ -96,7 +96,7 @@ picture.
     explicitly "not defi-scoped itself" per its own doc).
 
 - **Bucket / storage / migration**:
-  - [`plans/active/defi_dedicated_bucket_shared_migration_2026_07_13.md`](/plans/active/defi_dedicated_bucket_shared_migration_2026_07_13.md)
+  - [`plans/active/defi_dedicated_bucket_shared_migration_2026_07_13.md`](/plans/archive/2026_07/defi_dedicated_bucket_shared_migration_2026_07_13.md)
     - **[SCRIPT] P2.** 3 diagnostic/migration scripts (MTDS + strategy-service) still hardcode dead flat bucket-name
       templates for dex-pools/lst-rates/perp-funding — need the same
       `resolve_bucket_name(kind="tick-data", asset_group="defi")` repoint already shipped elsewhere.
@@ -597,7 +597,7 @@ picture.
     - **5. [DOCS] P2.** Add an explicit "never pass `--allow-live-prod-writes`" prohibition to the MTDS check skill doc.
     - **6. [DATA] P3.** Decide whether `market_lifecycle`/`futures_contracts` are in the canonical shard grammar's
       scope.
-  - [`plans/active/issues/batch_live_filename_divergence_sanitize_symbol_2026_07_20.md`](/plans/active/issues/batch_live_filename_divergence_sanitize_symbol_2026_07_20.md)
+  - [`plans/active/issues/batch_live_filename_divergence_sanitize_symbol_2026_07_20.md`](/plans/archive/issues/batch_live_filename_divergence_sanitize_symbol_2026_07_20.md)
     (4 open)
     - **[SERVICE] P1.** Add a write-time canonical-path guard to the Tardis cefi lane (currently has none) — DEFAULT
       all-class `canonical_path_violations`.

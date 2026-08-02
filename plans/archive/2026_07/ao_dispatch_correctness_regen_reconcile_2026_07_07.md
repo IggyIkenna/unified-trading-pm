@@ -264,7 +264,7 @@ the start, author them as N separate plans (each ≤20 todos), one per agent —
 ## Codex SSOTs (read before touching; update at Phase 6 — plan↔codex drift is review-blocking)
 
 - `/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md` — dispatch + regen + ingestion contract.
-- `/codex/12-agent-workflow/agent-orchestrator-overview.md` — runtime loops (AutoSpawn / regen / failover / watchdog).
+- `/codex/04-architecture/agent-orchestrator-overview.md` — runtime loops (AutoSpawn / regen / failover / watchdog).
 - `/codex/04-architecture/role-registry.md` — role → (model, thinking, lifecycle); the tag→role mapping extends this.
 
 ---

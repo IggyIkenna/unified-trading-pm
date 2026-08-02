@@ -335,7 +335,7 @@ the 35 satellite docs. This plan extracts the conflict-clear, bounded-outcome su
   this "the single riskiest automated code path in the system" and says the fix needs a real design decision; a
   characterisation test alone would land in `tests/test_watchdog_unpushed_sweep.py`, the same module the gate-aware
   sweep fix above will need. Held on both counts.
-- **Periodic dirty-resolution sweep** — `/plans/active/issues/idle_slot_dirty_wip_never_auto_resolves_2026_07_20.md`
+- **Periodic dirty-resolution sweep** — `/plans/archive/issues/idle_slot_dirty_wip_never_auto_resolves_2026_07_20.md`
   (BACKEND P2 ×2). Adding a NEW automatic caller of `commit_and_push_dirty_repos` (a realign path that has already
   destroyed work — see `slot_double_reset_dataloss_race_2026_07_25.md`) while the operator-merge-gate bypass above is
   unresolved is exactly the compounding this skill's non-batchable taxonomy warns about. Re-check after the gate-aware
@@ -414,7 +414,7 @@ the 35 satellite docs. This plan extracts the conflict-clear, bounded-outcome su
   `/plans/active/issues/git_status_reporter_stale_public_url_token_expiry_2026_07_24.md` `[INFRA]` P3 (re-mint
   `~/.orch_token`) remains a distinct credential operation, unaffected by this ruling. Their code-side siblings ARE in
   this batch as todo 3.
-- `/plans/active/issues/idle_slot_dirty_wip_never_auto_resolves_2026_07_20.md` and
+- `/plans/archive/issues/idle_slot_dirty_wip_never_auto_resolves_2026_07_20.md` and
   `/plans/active/issues/reaper_kills_inflight_detached_quickmerge_false_done_2026_07_24.md` per-slot WIP recovery items
   — each needs foreign-worktree access plus a judgment call on whether specific commits are superseded.
 - `/plans/archive/issues/ao_backlog_done_row_disappearance_2026_07_25.md` — **stale tag here**: its watch-log-check todo

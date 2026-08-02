@@ -173,7 +173,7 @@ This is a LESSONS-LEARNED doc, not a code fix. Verification = confirm Phase 2.0 
 8-day-prior-migration argument):
 
 ```bash
-grep -n "vacuously satisfied\|migration landed.*days before\|drain gate" /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/1/unified-trading-pm/plans/active/code_freeze_migrate_backfill_sequencing_2026_05_10.md
+grep -n "vacuously satisfied\|migration landed.*days before\|drain gate" /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/1/unified-trading-pm/plans/archive/2026_05/code_freeze_migrate_backfill_sequencing_2026_05_10.md
 ```
 
 If no hits, add a one-paragraph annotation to the Phase 2.0 gate description capturing the 2026-05-15 safety rationale.

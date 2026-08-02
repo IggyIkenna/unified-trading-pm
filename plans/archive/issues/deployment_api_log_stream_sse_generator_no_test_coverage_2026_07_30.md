@@ -19,7 +19,7 @@ scope: [engineer]
 tags: [deployment-api, testing, sse, log-stream, coverage-gap, observability]
 related:
   [
-    /plans/active/data_pipeline_alert_substrate_residual_2026_07_24_finalize_2026_07_30.md,
+    /plans/archive/2026_07/data_pipeline_alert_substrate_residual_2026_07_24_finalize_2026_07_30.md,
     /codex/06-coding-standards/integration-testing-layers.md,
   ]
 created: "2026-07-30"

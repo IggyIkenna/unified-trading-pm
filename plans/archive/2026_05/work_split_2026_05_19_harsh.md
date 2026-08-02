@@ -482,7 +482,7 @@ Boot:
 
 2. Read unified-trading-pm/harsh_orchestrator/AGENT_ONBOARDING.md
 
-3. Read unified-trading-pm/plans/active/work_split_2026_05_19_harsh.md § "Slot <N>"
+3. Read unified-trading-pm/plans/archive/2026_05/work_split_2026_05_19_harsh.md § "Slot <N>"
 
 4. Read your top plan-of-record.
 

@@ -255,7 +255,7 @@ applied to every repo this grep surfaces, not just instruments-service.
         all 8 affected repos, and the workspace already has a proven precedent for exactly this problem shape (the
         `BASE_IMAGE_DIGEST` pin: SSOT doc + `scripts/propagation/add-dockerfile-digest-arg.py` +
         `scripts/quality_gates/check_base_image_digest_drift.py` + QG STEP 5.79). Documented the canonical pattern as a
-        new SSOT section in `codex/06-coding-standards/dockerfile-standards.md` § "uv pip install Retry Wrapper
+        new SSOT section in `/codex/06-coding-standards/dockerfile-standards.md` § "uv pip install Retry Wrapper
         (BuildKit-secret GAR auth)" — `unified-trading-pm@<see Progress Log for sha>`. **Scoped down from the full
         automation** (propagation script + fleet drift-checker + QG step mirroring the digest-pin precedent) — that is a
         multi-hour build, not a 1-hour P3 doc-decision task, so it's split into its own properly-scoped follow-up below
@@ -335,7 +335,7 @@ Session status at checkpoint (a fresh session picking this up should verify curr
   terminal status. `greeks-service` — still actively diagnosing/verifying as of this checkpoint; if a fresh session
   finds no completion report, re-check `gcloud builds list`/`gh run list` for this repo directly rather than
   re-diagnosing from scratch (a lot of the pattern-matching for this repo class is already in this doc above).
-- **Known incomplete, NOT mine to finish**: `codex/14-customer-journeys/commercial-model/ODUM_SLA_v4_2026-07-24.md` (an
+- **Known incomplete, NOT mine to finish**: `/codex/14-customer-journeys/commercial-model/ODUM_SLA_v4_2026-07-24.md` (an
   unrelated file from another concurrent session, missing `scope:` frontmatter) was blocking the fleet-wide
   `codex-scope-coverage` QG gate for EVERY commit in this shared checkout. Added the minimal `scope: [admin]` line
   (matching its own sibling files in the same batch, e.g. `elysium-delay-letter-2026-07-20.md`) to unblock the shared

@@ -222,7 +222,7 @@ sports-tranche-owned).
       at T+25min, full detail in the source doc). **Real finding**: forcing 4-way concurrency against this launcher's
       Polymarket singleton lock surfaced genuine 429 contention (392-668/VM over 25min) — the lock's stated "shared
       egress NAT" rationale was checked live and found WRONG (each VM has its own distinct external IP), corrected in
-      `codex/05-infrastructure/vm-tarball-deployment.md` in the same commit — but the practical 429-contention risk it
+      `/codex/05-infrastructure/vm-tarball-deployment.md` in the same commit — but the practical 429-contention risk it
       warns about is real regardless of the wrong mechanism; proceeded because the adapter's retry/backoff absorbed
       every 429 with 0 recorded failures across all 4 shards. **Scope note**: this `[x]` covers the LAUNCH action only
       (STARTED <60s + ≥1 progress/hr verified, no fire-and-forget) — the backfill itself is still RUNNING (multi-day

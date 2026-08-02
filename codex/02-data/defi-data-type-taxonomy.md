@@ -354,7 +354,7 @@ For each protocol in the catalogue, this matrix declares which data_types are ca
 - [`amm-slippage-simulation.md`](/codex/04-architecture/amm-slippage-simulation.md) — how `dex_pools` data feeds
   matching engine.
 - Plan:
-  [`defi_catalogue_chain_primitives_2026_05_10.md`](../../plans/active/defi_catalogue_chain_primitives_2026_05_10.md)
+  [`defi_catalogue_chain_primitives_2026_05_10.md`](../../plans/archive/2026_05/defi_catalogue_chain_primitives_2026_05_10.md)
   Phase 3 owns the buildout for every ✗ above.
 
 ## Update protocol

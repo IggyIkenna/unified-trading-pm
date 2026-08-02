@@ -586,7 +586,7 @@ spot-checks.
 ```
 WORKSPACE_ROOT: /home/hk/unified-trading-system-repos
 REPO: unified-trading-system-ui
-Read unified-trading-pm/plans/active/defi_ui_component_audit_2026_03_31.plan.md § Status Tracking + relevant section.
+Read unified-trading-pm/plans/ai/defi_ui_component_audit_2026_03_31.plan.md § Status Tracking + relevant section.
 Follow UI .cursorrules: no new pages without approval; mock data in lib/mocks/fixtures only.
 Return: files changed, 3-line summary, any tsc errors in touched files only.
 ```

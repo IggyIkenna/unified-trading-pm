@@ -141,7 +141,7 @@ rows, that's a separate write-path bug to diagnose via its logs.
       gate. No new automation is needed; un-pausing IS the standing mechanism once the gate clears. (repo:
       deployment-service)
 - [ ] [DOCS] P3. **Fix the stale referrer in `plans/active/lst_rate_honest_coverage_2026_07_21.md`** — it still points
-      at `/plans/active/issues/lst_exchange_rate_data_availability_2026_07_21.md` (now archived to
+      at `/plans/archive/issues/lst_exchange_rate_data_availability_2026_07_21.md` (now archived to
       `/plans/archive/issues/...`), but that file is already at 1001 lines (over the 1000-line hard cap with no baseline
       exemption for a touched file — `check_line_caps.sh`), so the referrer fix could not be committed alongside the
       archival. Trim the plan below the cap first, then fix the two stale path references (frontmatter `related:` + the

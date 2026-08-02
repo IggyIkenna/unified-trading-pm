@@ -853,7 +853,7 @@ Depends on Phases 2-6 having enumerated the universe of credentials.
       | SKIP: 9 (post-cutover). Root-cause triage: - **🔴 10 wrapped wallet keys missing** —
       `csb-{eth,arb,base,poly,sol}-hot-*-v1-wrapped` + `gas-reserve-{eth,arb,base,poly,sol}-v1-wrapped` — must provision
       via pre-cutover-test-wallets-runbook BEFORE May-23. Operator action: wrap private keys + push to SM per
-      `/codex/05-infrastructure/pre-cutover-test-wallets-runbook.md`. - **🟡 11 naming drift items** — exist in SM under
+      `/codex/15-runbooks/pre-cutover-test-wallets-runbook.md`. - **🟡 11 naming drift items** — exist in SM under
       legacy names, need canonical aliases: `binance-trade-api-secret` (→`binance-trade-api-key-secret`),
       `deribit-trade-api-secret` (→`deribit-trade-api-key-secret`), `bybit-trade-api-key` (→`bybit_api_key`),
       `bybit-trade-api-secret` (→`bybit_api_secret`), `bybit-read-api-key` (→`bybit_api_key`),
@@ -977,4 +977,4 @@ _Archived 2026-05-23 slot 2. Operator actions and post-cutover items migrated to
 - **Phase 8.D — Pre-cutover credential probe (OPERATOR ACTION)**: Must run
   `credential-probe.sh --mode live --archetype carry_staked_basis` from GCE VM with trading-VM SA. Provision 10 wrapped
   wallet keys (`csb-{eth,arb,base,poly,sol}-hot-*-v1-wrapped` etc.) + 11 canonical SM name aliases + 3 infra keys.
-  Pre-cutover-test-wallets-runbook at `/codex/05-infrastructure/pre-cutover-test-wallets-runbook.md`.
+  Pre-cutover-test-wallets-runbook at `/codex/15-runbooks/pre-cutover-test-wallets-runbook.md`.

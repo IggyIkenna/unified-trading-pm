@@ -73,7 +73,7 @@ Per-asset_group depth (matches CLAUDE.md "Per-asset-group shard-key matrix"):
 > [`/codex/04-architecture/features-service-architecture.md`](/codex/04-architecture/features-service-architecture.md).
 
 > **`pipeline_mode` is the outermost partition column** above every tree shown above (added 2026-05-08 per
-> [`gcs_migration_bundle_pipeline_mode_2026_05_08`](../../plans/active/gcs_migration_bundle_pipeline_mode_2026_05_08.md)).
+> [`gcs_migration_bundle_pipeline_mode_2026_05_08`](../../plans/archive/2026_05/gcs_migration_bundle_pipeline_mode_2026_05_08.md)).
 > Every drilldown tree implicitly stratifies by `pipeline_mode={batch_*, live_websocket, ...}` first, then by the
 > per-asset_group axes listed in the table above. Operators querying the data-status drilldown UI without an explicit
 > `pipeline_mode` filter see the **batch-vs-live merged** view (live wins for dates where live exists, batch otherwise,

@@ -71,7 +71,7 @@ Parallel-up across asset_groups within a layer is encouraged. Parallel-up across
 | 8   | perf                                                                                       | gated on layer 6 GREEN — never optimise a broken pipeline             |
 
 Master tracker for the audits + GREEN states:
-[plans/active/issues/mega_audit_and_plan_beefup_progression_2026_05_20.md](../../plans/active/issues/mega_audit_and_plan_beefup_progression_2026_05_20.md).
+[plans/active/issues/mega_audit_and_plan_beefup_progression_2026_05_20.md](../../plans/archive/issues/mega_audit_and_plan_beefup_progression_2026_05_20.md).
 
 ## Why this rule exists (the retrospective insight)
 

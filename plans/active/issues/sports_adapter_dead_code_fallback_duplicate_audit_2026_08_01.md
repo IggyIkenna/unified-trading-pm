@@ -329,7 +329,7 @@ named) rather than left as prose, per the findings-closure hard rule.
       was never re-exported from `prediction_markets/__init__.py`'s `__all__` either — genuinely dead code, not a stale
       comment on live-but-unwired code. Deleted the stub file + its 4-test dedicated block in
       `tests/sports_execution/unit/test_prediction_markets.py`. Also corrected
-      `codex/05-infrastructure/secret-manager-naming.md` §2.3, which had independently inherited the same stale
+      `/codex/05-infrastructure/secret-manager-naming.md` §2.3, which had independently inherited the same stale
       "documented-but-not-yet-wired NautilusTrader adapter config STUB" framing for Kalshi (that codex doc's own
       2026-07-23 pass took the stub's self-description at face value rather than verifying it) — now states the live
       two-secret model, notes `kalshi-api-credentials` is an orphaned GCP secret (separate cleanup, not resolved here),

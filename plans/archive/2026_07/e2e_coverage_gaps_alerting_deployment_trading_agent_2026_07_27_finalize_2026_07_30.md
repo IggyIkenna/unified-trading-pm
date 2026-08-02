@@ -16,7 +16,7 @@ scope: [engineer, admin]
 tags: [ao-dispatch, close-out, reclassification, na-audit]
 related:
   [
-    /plans/active/e2e_coverage_gaps_alerting_deployment_trading_agent_2026_07_27.md,
+    /plans/archive/2026_07/e2e_coverage_gaps_alerting_deployment_trading_agent_2026_07_27.md,
     /cursor-configs/skills/na-eligibility-audit/SKILL.md,
     /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
   ]

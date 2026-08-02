@@ -48,7 +48,7 @@ context_scope:
   [
     /plans/active/defi_consolidated_closeout_2026_07_18.md,
     /plans/active/defi_consolidated_native_ao_extract_2026_07_25.md,
-    /plans/active/defi_satellite_ao_dispatch_batch7_2026_08_01_finalize.md,
+    /plans/archive/2026_08/defi_satellite_ao_dispatch_batch7_2026_08_01_finalize.md,
     /cursor-configs/skills/na-eligibility-audit/SKILL.md,
     /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
   ]

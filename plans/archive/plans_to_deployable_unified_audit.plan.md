@@ -80,7 +80,7 @@ deployment-service configs + SSOT = lots to check against.
 
 ## 3. Audit Prompt
 
-**SSOT:** `unified-trading-pm/plans/active/trading_system_audit_prompt.plan.md`
+**SSOT:** `unified-trading-pm/plans/archive/trading_system_audit_prompt.plan.md`
 
 ---
 

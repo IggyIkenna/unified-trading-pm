@@ -153,7 +153,7 @@ No failing check-classes.
   - `deployment_api/services/shard_detail.py:      backward-compat fallback for old GCS parquets written before 2026-05-23.`
 - ❌ Pydantic BaseModel subclasses found in service source — domain data contracts must live in UIC
   domain/<service-name>/
-- ❌ See: unified-trading-pm/plans/active/SCHEMA_CONTRACTS_AUDIT.md Section 3b
+- ❌ See: unified-trading-pm/plans/archive/SCHEMA_CONTRACTS_AUDIT.md Section 3b
   - `deployment_api/models/recursive_borrow.py:class CellCoverage(BaseModel):`
   - `deployment_api/models/recursive_borrow.py:class CoverageSummary(BaseModel):`
   - `deployment_api/models/recursive_borrow.py:class RecursiveBorrowCoverageResponse(BaseModel):`
@@ -244,7 +244,7 @@ No failing check-classes.
   - `execution_service/engine/backtest/passive_aggressive_hybrid.py:# Default config for backward compatibility with tests that import constants`
 - ❌ Pydantic BaseModel subclasses found in service source — domain data contracts must live in UIC
   domain/<service-name>/
-- ❌ See: unified-trading-pm/plans/active/SCHEMA_CONTRACTS_AUDIT.md Section 3b
+- ❌ See: unified-trading-pm/plans/archive/SCHEMA_CONTRACTS_AUDIT.md Section 3b
   - `execution_service/models/rate_impact.py:class HistoricalPoolState(BaseModel):`
   - `execution_service/models/rate_impact.py:class RateImpactRequest(BaseModel):`
   - `execution_service/trade_execution/order_types.py:class StopLimitOrder(BaseModel):`
@@ -415,7 +415,7 @@ No failing check-classes.
   - `./strategy_service/preflight.py:140:PreflightRunner.run(): 70L`
 - ❌ Pydantic BaseModel subclasses found in service source — domain data contracts must live in UIC
   domain/<service-name>/
-- ❌ See: unified-trading-pm/plans/active/SCHEMA_CONTRACTS_AUDIT.md Section 3b
+- ❌ See: unified-trading-pm/plans/archive/SCHEMA_CONTRACTS_AUDIT.md Section 3b
   - `strategy_service/api/restriction_profile_router.py:class RestrictionProfileResponse(BaseModel):`
   - `strategy_service/api/registry_router.py:class MlModelEntry(BaseModel):`
   - `strategy_service/api/registry_router.py:class ArchetypeEntry(BaseModel):`

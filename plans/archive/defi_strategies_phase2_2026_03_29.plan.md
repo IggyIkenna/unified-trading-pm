@@ -130,7 +130,7 @@ Phase 2 expands to the full DeFi strategy suite.
 
 ```
 Continue the DeFi strategies work from the plan at:
-unified-trading-pm/plans/active/defi_strategies_phase2_2026_03_29.plan.md
+unified-trading-pm/plans/archive/defi_strategies_phase2_2026_03_29.plan.md
 
 Phase 1 is done (lending + basis trade pipeline, batch=live parity).
 Start with Phase 2A: download multi-coin funding rate data for 20 coins

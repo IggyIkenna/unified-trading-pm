@@ -94,7 +94,7 @@ it never reaches `origin/live-defi-rollout` on its own.
       finalize plan (`ao_consolidated_closeout_2026_07_25_finalize_2026_07_30.md`) did not cite or reconcile evidence
       back into this file; flipped directly during the 2026-07-31 conflict-gated re-triage pass instead. (Prior note,
       retained for history: this todo was previously flagged "ALREADY CLAIMED by
-      `/plans/active/ao_consolidated_closeout_2026_07_25.md`'s `[INFRA] P2` todo — do NOT dispatch from here" by
+      `/plans/archive/2026_07/ao_consolidated_closeout_2026_07_25.md`'s `[INFRA] P2` todo — do NOT dispatch from here" by
       `/na-eligibility-audit ao` 2026-07-30, with the sequencing gate below noted CLEARED via
       `agent-orchestrator@64b5310`.) Original gating note follows for history. **Gated 2026-07-26** (resolved
       `autonomous_session_operator_decisions_2026_07_25.md` entry #21, option A — soften first): do NOT land this
@@ -165,7 +165,7 @@ review(slot1)'s behalf per the async-wait/stuck-recovery watchdog guidance.
 
 - **na-eligibility-audit 2026-07-30**: KEEP-NA-STALE (citation fixed, no reclassification) — the `[INFRA] P2`
   hard-kill-escalation todo is already claimed verbatim by an OPEN todo in the active `assigned_vm: planning` doc
-  `/plans/active/ao_consolidated_closeout_2026_07_25.md`; flipping this doc would duplicate that dispatch. Also recorded
+  `/plans/archive/2026_07/ao_consolidated_closeout_2026_07_25.md`; flipping this doc would duplicate that dispatch. Also recorded
   that the todo's stated gate has CLEARED — the
   `host_saturation_false_worker_kicks_stall_fleet_completions_2026_07_26.md` two-window fix it waits on shipped as
   `agent-orchestrator@64b5310`, so the closeout's todo is now unblocked. The second `[INFRA] P2` reclaim-and-push item

@@ -66,7 +66,7 @@ related:
     /plans/active/cefi_consolidated_closeout_2026_07_18.md,
     /plans/active/tradfi_consolidated_closeout_2026_07_18.md,
     /plans/active/data_completion_defi_2026_07_15.md,
-    /plans/active/defi_dedicated_bucket_shared_migration_2026_07_13.md,
+    /plans/archive/2026_07/defi_dedicated_bucket_shared_migration_2026_07_13.md,
     /plans/archive/2026_07/defi_onchain_derivable_values_and_date_drift_2026_06_20.md,
     /plans/active/defi_pipeline_e2e_and_coverage_validation_2026_06_20.md,
     /plans/archive/2026_07/mtds_defi_dex_zero_capture_protocols_2026_07_14.md,

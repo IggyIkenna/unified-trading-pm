@@ -747,7 +747,7 @@ Audit checklist for `_cleanup_after_<shard>()` implementations:
 
 The first four are in the service's control. The last two (Polars arenas, profiler buffers) need engine-/framework-level
 discipline; see the architecture audit
-[`plans/active/mdps_long_running_multi_shard_architecture_audit_2026_05_28.md`](../../plans/active/mdps_long_running_multi_shard_architecture_audit_2026_05_28.md).
+[`plans/active/mdps_long_running_multi_shard_architecture_audit_2026_05_28.md`](../../plans/archive/2026_06/mdps_long_running_multi_shard_architecture_audit_2026_05_28.md).
 
 ### Granularity
 

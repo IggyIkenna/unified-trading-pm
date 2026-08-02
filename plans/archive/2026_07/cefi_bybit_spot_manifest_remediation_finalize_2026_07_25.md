@@ -20,7 +20,7 @@ related:
     /plans/archive/2026_07/cefi_bybit_spot_manifest_remediation_2026_07_25.md,
     /plans/archive/issues/bybit_spot_manifest_stray_captures_2026_07_07.md,
     /plans/active/issues/instruments_remaining_work_audit_2026_07_10.md,
-    /plans/active/cefi_misc_audits_and_hygiene_2026_07_25.md,
+    /plans/archive/2026_08/cefi_misc_audits_and_hygiene_2026_07_25.md,
   ]
 created: "2026-07-25"
 last_updated: "2026-07-25"

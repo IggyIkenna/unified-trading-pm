@@ -318,7 +318,7 @@ source:
       **NOTE (na-eligibility-audit 2026-07-30, tradfi tranche)**: this exact item was extracted VERBATIM as
       `/plans/active/tradfi_satellite_ao_dispatch_batch5_2026_07_29.md`'s "Bundle CME roots into fewer larger VMs" todo
       (which cites this doc's own then-still-open item as its source, via
-      `/plans/active/tradfi_satellite_ao_dispatch_batch4_2026_07_26_finalize.md`'s 2026-07-30 Deferred re-check). batch5
+      `/plans/archive/2026_07/tradfi_satellite_ao_dispatch_batch4_2026_07_26_finalize.md`'s 2026-07-30 Deferred re-check). batch5
       was activated 2026-07-30 (`5a6bbefc3`) and its todo dispatched + shipped as above.
 - [x] ✅ [BACKEND] P1. **Real retry-on-429 in the Databento fetch path — SHIPPED mtds@73c286a2 (`databento_retry.py`).**
       The fetch previously recorded ANY exception (incl. `RATE_LIMIT`/429) as a per-schema shard failure with no retry

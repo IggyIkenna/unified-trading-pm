@@ -102,7 +102,7 @@ deployment-api / UTL / MDPS to other agents.
 **Read-first**:
 
 - [`plans/active/alerting_service_live_rules_2026_05_07.plan.md`](alerting_service_live_rules_2026_05_07.plan.md)
-- [`/codex/14-playbooks/alerting/alert-code-taxonomy.md`](/codex/14-playbooks/alerting/alert-code-taxonomy.md) (codex
+- [`/codex/15-runbooks/alerting/alert-code-taxonomy.md`](/codex/15-runbooks/alerting/alert-code-taxonomy.md) (codex
   SSOT expects the StrEnum to land at the spec'd location)
 - Audit §3 #5 in [`_AUDIT_2026_05_07_dependency_graph.md`](_AUDIT_2026_05_07_dependency_graph.md) (AAVE bps ambiguity)
 - Existing UAC StrEnum patterns (e.g. `LifecycleEventType`, `PreflightSkipReason`) for shape consistency

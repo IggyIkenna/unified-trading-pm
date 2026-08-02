@@ -99,7 +99,7 @@ matches `run-bounded-analysis.sh`'s own documented "prefer DuckDB over pandas" p
 ## Why it matters
 
 `read_availability_index(bucket, columns=[...])` is the documented, codex-referenced fast-path for downstream services
-to check manifest state without a GCS walk (`codex/02-data/availability-manifest-and-data-status.md`), and its own
+to check manifest state without a GCS walk (`/codex/02-data/availability-manifest-and-data-status.md`), and its own
 docstring specifically claims the `columns=` kwarg "reduc[es] peak in-process memory ... to the size of the requested
 columns." `read_availability_index_bare_defi_callers_2026_07_27.md` already found ~35-40 call sites across 8 repos that
 call this helper WITHOUT `columns=`/`filters=` against DeFi buckets and flagged them as OOM-risk — but that audit's own

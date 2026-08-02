@@ -16,7 +16,7 @@ scope: [engineer]
 tags: [agent-orchestrator, worker-liveness, cross-role-messaging, plan-reconcile]
 related:
   [
-    /plans/active/ao_issue_docs_consolidated_remediation_2026_07_23.md,
+    /plans/archive/2026_07/ao_issue_docs_consolidated_remediation_2026_07_23.md,
     /plans/archive/2026_07/ao_remediation_a_independent_fixes_2026_07_23.md,
     /plans/archive/2026_07/ao_remediation_b_code_chain_2026_07_23.md,
     /plans/active/issues/wedge_detector_lacks_liveness_by_progress_false_positive_2026_07_21.md,
@@ -46,7 +46,7 @@ source:
 # AO held safety fixes — dispatch
 
 > **Split from
-> [`ao_issue_docs_consolidated_remediation_2026_07_23`](/plans/active/ao_issue_docs_consolidated_remediation_2026_07_23.md)'s
+> [`ao_issue_docs_consolidated_remediation_2026_07_23`](/plans/archive/2026_07/ao_issue_docs_consolidated_remediation_2026_07_23.md)'s
 > "Held for operator review" section.** Operator ruling 2026-07-23 (Q2) held these out of the original dispatch because
 > each touches machinery where a careless change is dangerous (at-least-once message delivery; genuine wedge detection).
 > Operator ruling 2026-07-24: dispatch both now, without waiting for

@@ -100,7 +100,7 @@ under-utilisation is fine, mid-cycle collision is not.
     plan-of-record `## Open questions` sections.
 - **Plan-of-record**: this file + [LEDGER](../../harsh_orchestrator/LEDGER.md) +
   [code_freeze](code_freeze_migrate_backfill_sequencing_2026_05_10.md).
-- **Repos owned (collision boundary)**: `unified-trading-pm/plans/active/work_split_2026_05_11_harsh.md` +
+- **Repos owned (collision boundary)**: `unified-trading-pm/plans/archive/work_split_2026_05_11_harsh.md` +
   `unified-trading-pm/harsh_orchestrator/*` + `unified-trading-pm/plans/active/_agent_pings.md` (cross-side ledger
   curation). Does NOT touch UAC / UTL / service repos.
 - **Read-first**: CLAUDE.md § "Daily Work-Split Process" + § "Findings Triage Discipline" + § "CI Verification After

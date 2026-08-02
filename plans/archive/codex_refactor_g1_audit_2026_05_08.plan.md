@@ -67,7 +67,7 @@ active plan.
 
 | Path                                                                   | Result     |
 | ---------------------------------------------------------------------- | ---------- |
-| `/codex/05-infrastructure/cloud-agnostic-migration.md`                 | ✅ DELETED |
+| `/codex/04-architecture/cloud-agnostic-migration.md`                 | ✅ DELETED |
 | `/codex/05-infrastructure/deployment-ui-environment-tiers.md`          | ✅ DELETED |
 | `/codex/05-infrastructure/launcher-script-consolidation-2026-05-07.md` | ✅ DELETED |
 
@@ -111,7 +111,7 @@ These need a sweep to align with the multi-axis correction banner / Q1 resolutio
 | E.2   | `codex/14-playbooks/` does NOT exist ✅. `codex/14-customer-journeys/` exists ✅. `codex/15-runbooks/` exists ✅. `codex/16-strategy-playbooks/` exists ✅.                                                                                                                                                                                        |
 | E.3   | `codex/09-strategy/cross-cutting/` does NOT exist ✅. `codex/09-strategy/operational/` exists ✅. `codex/09-strategy/architecture-v2/cross-cutting/` exists ✅.                                                                                                                                                                                    |
 | E.4   | `/codex/02-data/per-category-bucket-layouts.md` does NOT exist ✅. `/codex/02-data/per-asset-group-bucket-layouts.md` exists ✅.                                                                                                                                                                                                                   |
-| E.5   | `/codex/06-coding-standards/cod-deadlock-verification-report.md` does NOT exist ✅. `/codex/06-coding-standards/orphan-audit.md` does NOT exist ✅.                                                                                                                                                                                                |
+| E.5   | `/codex/06-coding-standards/cod-deadlock-verification-report.md` does NOT exist ✅. `/codex/04-architecture/orphan-audit.md` does NOT exist ✅.                                                                                                                                                                                                |
 
 ## 2. Broken links — the largest finding
 
@@ -149,7 +149,7 @@ CLAUDE.md (and by symlink, `SUB_AGENT_MANDATORY_RULES.md` + every per-repo `.cla
 
 - `cursor-configs/CLAUDE.md:119` — `/codex/14-customer-journeys/shared-core/signal-broadcast-architecture.md` (Signal
   Leasing rule body). The actual file now lives at
-  `/codex/16-strategy-playbooks/shared-core/signal-broadcast-architecture.md` (verify path).
+  `/codex/14-customer-journeys/shared-core/signal-broadcast-architecture.md` (verify path).
 - `cursor-configs/CLAUDE.md:926` — `unified-trading-pm/codex/14-customer-journeys/authentication/firebase-local.md`. The
   actual file now lives at `/codex/14-customer-journeys/authentication/firebase-local.md`.
 

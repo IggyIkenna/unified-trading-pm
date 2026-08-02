@@ -21,7 +21,7 @@ related:
     /plans/archive/issues/bybit_spot_manifest_stray_captures_2026_07_07.md,
     /plans/active/issues/instruments_remaining_work_audit_2026_07_10.md,
     /plans/archive/issues/cefi_layer1_denominator_gaps_2026_07_03.md,
-    /plans/active/cefi_misc_audits_and_hygiene_2026_07_25.md,
+    /plans/archive/2026_08/cefi_misc_audits_and_hygiene_2026_07_25.md,
     /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
     /codex/02-data/honest-coverage-model.md,
   ]

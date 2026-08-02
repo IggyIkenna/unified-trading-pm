@@ -352,7 +352,7 @@ rather than deciding unilaterally:
   gap between shipped-and-verified code and plan state (the exact false-duplicate-dispatch risk the "Note (2026-07-27)"
   on this todo was trying to prevent — the dispatcher re-derived it anyway because the checkbox itself was never
   flipped, only the archived sibling doc's todos were). Also added a short codex note
-  (`codex/06-coding-standards/quality-gates.md` § "Checker-output capture paths — TMPDIR-aware AND PID-suffixed")
+  (`/codex/06-coding-standards/quality-gates.md` § "Checker-output capture paths — TMPDIR-aware AND PID-suffixed")
   recording the convention so a future new STEP checker doesn't reintroduce the same bug class. This session's first
   attempt at this same work hit a real orchestrator gotcha and died mid-`/done` (see `agents/RULES.md`'s 2026-07-30
   "never combine the checkbox flip with a `git mv` archival in ONE commit" addition, authored independently by another

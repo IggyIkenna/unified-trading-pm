@@ -453,7 +453,7 @@ Phase 5 (E2E + Docs)
   - P&L attribution timing
   - M2M valuation methodology
 
-- [ ] [AGENT] P1. Update `/codex/09-strategy/defi/staked-basis.md` with reward lifecycle integration
+- [ ] [AGENT] P1. Update `/codex/09-strategy/_archived_pre_v2/defi/staked-basis.md` with reward lifecycle integration
 
 - [ ] [AGENT] P1. Create `/codex/02-data/instrument-pipeline-defi.md`:
   - MISSING: file does not exist in `unified-trading-pm/codex/02-data/`

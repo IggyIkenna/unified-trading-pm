@@ -33,7 +33,7 @@ related:
   - /plans/archive/2026_07/sports_closeout_batch1_ao_ready_2026_07_24.md
   - /plans/active/sports_consolidated_closeout_2026_07_19.md
   - /plans/active/issues/sports_index_recency_masked_captured_atoms_2026_07_13.md
-  - /plans/active/issues/sports_odds_manifest_consolidator_captured_outranks_resurrection_2026_07_24.md
+  - /plans/archive/issues/sports_odds_manifest_consolidator_captured_outranks_resurrection_2026_07_24.md
 created: "2026-07-24"
 parent_epic: sports_master
 priority: P1

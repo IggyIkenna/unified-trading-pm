@@ -34,8 +34,8 @@ related:
   [
     /plans/active/prediction_consolidated_closeout_2026_07_18.md,
     /plans/archive/2026_07/prediction_satellite_ao_dispatch_batch1_2026_07_25.md,
-    /plans/active/prediction_satellite_ao_dispatch_batch2_2026_07_25.md,
-    /plans/active/prediction_satellite_ao_dispatch_batch2_finalize_2026_07_25.md,
+    /plans/archive/2026_07/prediction_satellite_ao_dispatch_batch2_2026_07_25.md,
+    /plans/archive/2026_07/prediction_satellite_ao_dispatch_batch2_finalize_2026_07_25.md,
     /plans/active/sports_satellite_ao_dispatch_batch5_2026_07_26.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]

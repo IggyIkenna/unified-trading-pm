@@ -135,7 +135,7 @@ reaper-false-done, clean-exit-signal, auto-park-enforcement).
 **Sources**:
 [issues/killed_slot_orphans_committed_unpushed_work_no_push_path_2026_07_21.md](/plans/active/issues/killed_slot_orphans_committed_unpushed_work_no_push_path_2026_07_21.md)
 (killed slot's watchdog frozen-kick loop leaves orphaned unpushed commits) ·
-[issues/idle_slot_dirty_wip_never_auto_resolves_2026_07_20.md](/plans/active/issues/idle_slot_dirty_wip_never_auto_resolves_2026_07_20.md)
+[issues/idle_slot_dirty_wip_never_auto_resolves_2026_07_20.md](/plans/archive/issues/idle_slot_dirty_wip_never_auto_resolves_2026_07_20.md)
 (idle-slot dirty WIP never triggers orphan-inherit — spawn-only mechanism gap) ·
 [issues/slot_double_reset_dataloss_race_2026_07_25.md](/plans/archive/issues/slot_double_reset_dataloss_race_2026_07_25.md)
 (slot worktree double-reset data-loss race, two realign code paths) ·

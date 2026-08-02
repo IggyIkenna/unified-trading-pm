@@ -98,7 +98,7 @@ that determination is the actual next step, not yet done.
       changing the symbol grammar). **Superseded by the narrow consumer-side fix below** (BLK-b3379171, worker slot 8,
       2026-07-30): the originally-scoped fix (append `pool_address`/a hash disambiguator INTO the symbolic
       `instrument_key`/`glued_pair_id` grammar) is exactly the id-folding the operator already REJECTED —
-      `codex/02-data/defi-canonical-naming-ssot.md` § "POOL identity is a two-id / dual-key model (Option A,
+      `/codex/02-data/defi-canonical-naming-ssot.md` § "POOL identity is a two-id / dual-key model (Option A,
       operator-ruled 2026-07-18)" states verbatim that a POOL row's `instrument_id`/`canonical_instrument_id` (machine
       key, bare `pool_address.lower()`, the MTDS/manifest join key) and `glued_pair_id` (symbolic
       `<VENUE>-<CHAIN>:POOL:<BASE>-<QUOTE>[-<FEE_BPS>]`, the human-readable/UI form) "MUST keep diverging for POOL rows"

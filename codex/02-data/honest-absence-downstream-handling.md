@@ -211,7 +211,7 @@ workspace-wide gate that "handles" missing data — by design.
   [`availability-manifest-and-data-status.md`](availability-manifest-and-data-status.md).
 - Per-source `available_at` stamping (so downstream gating works): same doc, § _per-row, write-time `available_at`_.
 - Banned `_create_empty_output` placeholder method (writegate Phase 2.A workspace deletion):
-  [`unified-trading-pm/plans/active/writegate_honest_coverage_endtoend_2026_05_06.md`](../../plans/active/writegate_honest_coverage_endtoend_2026_05_06.md).
+  [`unified-trading-pm/plans/archive/2026_05/writegate_honest_coverage_endtoend_2026_05_06.md`](../../plans/archive/2026_05/writegate_honest_coverage_endtoend_2026_05_06.md).
 - Feature calculator NaN tolerance + per-feature_group thresholds: UAC `feature_group → required_inputs` DAG SSOT.
 - TradFi calendar / market-hours SSOT: `unified_api_contracts.canonical.crosscutting.venue_trading_calendar`.
 
@@ -1445,7 +1445,7 @@ Downstream consumers that compute honest-coverage percentages must handle this v
 - **Reporting surfaces** — no action needed if they already read from the drilldown endpoint (gets the cache benefit).
 
 This note is pre-emptive — v2 has not yet launched. Update this section after Phase 4 of
-[`expected_universe_v2_design_2026_05_08.md`](../../plans/active/expected_universe_v2_design_2026_05_08.md) completes.
+[`expected_universe_v2_design_2026_05_08.md`](../../plans/archive/2026_05/expected_universe_v2_design_2026_05_08.md) completes.
 
 ### Cross-references
 
@@ -1545,7 +1545,7 @@ handling (skip / NaN-fill / alert). The two scenario-aware differences are:
 `MANIFEST` tap layer is DEFERRED to post-cutover per Phase 3.G. Pre-cutover scenario-driven gap injection is limited to
 the `ORDER` layer (adversarial fill rejection / matching-engine adversarial mode) — these do not produce manifest gaps
 directly. Full gap-injection scenarios (DropRows + ManifestPhantom) activate post-cutover per
-[`../../plans/active/simulation_scenarios_post_cutover_2026_06_01.md`](../../plans/active/simulation_scenarios_post_cutover_2026_06_01.md).
+[`../../plans/archive/2026_05/simulation_scenarios_post_cutover_2026_06_01.md`](../../plans/archive/2026_05/simulation_scenarios_post_cutover_2026_06_01.md).
 
 ---
 

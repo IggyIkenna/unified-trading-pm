@@ -1654,7 +1654,7 @@ scripts default is `false`). With `force=true`, the orchestrator re-fetches ever
 | deployment-service    | `scripts/vm/launch-{api-football,transfermarkt,footystats,understat,openmeteo}-backfill-vm.sh` (sports instruments only) | 2     |
 | deployment-service    | `scripts/vm/launch-instruments-smoke-vm.sh` (single-day, \*-test buckets)                                                | ref   |
 | unified-api-contracts | `unified_api_contracts/canonical/coverage_starts.py`                                                                     | ref   |
-| unified-trading-pm    | `/codex/14-playbooks/backfill-completion-playbook.md`                                                                    | ref   |
+| unified-trading-pm    | `/codex/15-runbooks/backfill-completion-playbook.md`                                                                    | ref   |
 
 **Explicitly NOT used** (these run MTDS / market-tick-data, not instruments-service): `launch-cefi-sharded-backfill.sh`,
 `launch-tradfi-backfill-vm.sh`, `launch-mdps-*-backfill*.sh`.

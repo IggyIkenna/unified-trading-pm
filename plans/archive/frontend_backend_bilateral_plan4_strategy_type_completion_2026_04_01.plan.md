@@ -221,12 +221,12 @@ representative_sample.py, CLAUDE.md removed providers list.
 | --- | -------------------------------- | ------ | ----------- | ----------------------------------------------------------------------------------------------------------------- |
 | 1   | `ALL_DATA_TYPES`                 | UAC    | DELETE      | Config constant; superseded by registry pattern + Pydantic configs                                                |
 | 2   | `ALL_FRESHNESS_CONTRACTS`        | UIC    | DELETE      | Superseded by per-service health API freshness callbacks                                                          |
-| 3   | `AsterExchangeInfo`              | UAC    | COMPLETE    | Aster is documented CeFi venue in /codex/09-strategy/defi/basis-trade.md; representative_sample.py has ASTER spec |
+| 3   | `AsterExchangeInfo`              | UAC    | COMPLETE    | Aster is documented CeFi venue in /codex/09-strategy/_archived_pre_v2/defi/basis-trade.md; representative_sample.py has ASTER spec |
 | 4   | `AuditRequirement`               | UIC    | COMPLETE    | Referenced in /codex/07-security/audit-logging.md                                                                 |
 | 5   | `AuditRetention`                 | UIC    | COMPLETE    | Referenced in /codex/07-security/audit-logging.md (cold_years=7 retention)                                        |
 | 6   | `BINANCE_FUTURES`                | UAC    | DELETE      | Venue string constant; superseded by VENUE_CATEGORY_MAP registry pattern                                          |
 | 7   | `BINANCE_SPOT`                   | UAC    | DELETE      | Venue string constant; superseded by registry pattern                                                             |
-| 8   | `BOOKMAKER_REGISTRY`             | UAC    | COMPLETE    | Sports arb pipeline needs bookmaker registry; /codex/09-strategy/cross-cutting/prediction-markets.md              |
+| 8   | `BOOKMAKER_REGISTRY`             | UAC    | COMPLETE    | Sports arb pipeline needs bookmaker registry; /codex/09-strategy/architecture-v2/cross-cutting/prediction-markets.md              |
 | 9   | `BYBIT_FUTURES`                  | UAC    | DELETE      | Venue string constant; superseded by registry pattern                                                             |
 | 10  | `BYBIT_SPOT`                     | UAC    | DELETE      | Venue string constant; superseded by registry pattern                                                             |
 | 11  | `BackfillSpec`                   | UIC    | DELETE      | Speculative infra type; no codex or plan reference                                                                |
@@ -273,7 +273,7 @@ representative_sample.py, CLAUDE.md removed providers list.
 | 52  | `DATA_TYPES_BY_CATEGORY`         | UAC    | DELETE      | Config constant; superseded by registry                                                                           |
 | 53  | `DEFI_INSTRUMENTS`               | UAC    | KEEP        | Backward-compat alias in representative_sample.py; downstream consumers use it                                    |
 | 54  | `DEFI_LENDING_ASSETS`            | UAC    | KEEP        | Backward-compat alias in representative_sample.py; downstream consumers use it                                    |
-| 55  | `DEFI_MAJOR_ASSET_ADDRESSES`     | UAC    | COMPLETE    | Referenced in /codex/09-strategy/cross-cutting/instrument-filtering.md (EVM subgraph queries)                     |
+| 55  | `DEFI_MAJOR_ASSET_ADDRESSES`     | UAC    | COMPLETE    | Referenced in /codex/09-strategy/operational/instrument-filtering.md (EVM subgraph queries)                     |
 | 56  | `DEFI_MAJOR_ASSET_ADDRESS_LIST`  | UAC    | COMPLETE    | Companion to DEFI_MAJOR_ASSET_ADDRESSES                                                                           |
 | 57  | `DEFI_MAJOR_ASSET_SYMBOLS`       | UAC    | COMPLETE    | Referenced in 15+ strategy docs in codex/09-strategy/ (instrument filtering SSOT)                                 |
 | 58  | `DEX_VENUES`                     | UAC    | DELETE      | Venue classification constant; superseded by VENUE_CATEGORY_MAP                                                   |
@@ -291,13 +291,13 @@ representative_sample.py, CLAUDE.md removed providers list.
 | 70  | `DeribitGetInstrumentsResponse`  | UAC    | COMPLETE    | Deribit is active venue; bulk instruments response                                                                |
 | 71  | `DeviationStatus`                | UIC    | DELETE      | Speculative monitoring type; no codex or plan reference                                                           |
 | 72  | `DividendType`                   | UIC    | DELETE      | TradFi corporate actions; no active strategy uses it directly                                                     |
-| 73  | `DriftOrderSide`                 | UIC    | COMPLETE    | Drift Protocol is documented in /codex/09-strategy/defi/sol-basis-trade.md                                        |
+| 73  | `DriftOrderSide`                 | UIC    | COMPLETE    | Drift Protocol is documented in /codex/09-strategy/_archived_pre_v2/defi/sol-basis-trade.md                                        |
 | 74  | `ENDPOINT_REGISTRY`              | UAC    | DELETE      | Superseded by OpenAPI spec (Plan 5 confirms)                                                                      |
 | 75  | `EXCHANGE_COMMISSION_RATES`      | UIC    | DELETE      | Static constant; superseded by per-venue config                                                                   |
 | 76  | `EXCHANGE_VENUES`                | UIC    | DELETE      | Venue list constant; superseded by registry pattern                                                               |
 | 77  | `EXECUTION_AUDIT`                | UIC    | COMPLETE    | Referenced in /codex/07-security/audit-logging.md                                                                 |
 | 78  | `EndpointSpec`                   | UAC    | COMPLETE    | Referenced in /codex/02-data/operation-capability-registry.md                                                     |
-| 79  | `EnvVars`                        | UIC    | COMPLETE    | Referenced in /codex/09-strategy/cross-cutting/operational-modes-matrix.md (canonical env var names)              |
+| 79  | `EnvVars`                        | UIC    | COMPLETE    | Referenced in /codex/09-strategy/architecture-v2/cross-cutting/operational-modes-matrix.md (canonical env var names)              |
 | 80  | `FEATURES_SCHEMA`                | UIC    | DELETE      | Static schema constant; superseded by typed feature config                                                        |
 | 81  | `FEATURE_FRESHNESS`              | UIC    | DELETE      | Superseded by per-service health API freshness callbacks                                                          |
 | 82  | `FX_SPOT_PAIRS`                  | UAC    | DELETE      | Static constant; no active FX strategy                                                                            |
@@ -318,7 +318,7 @@ representative_sample.py, CLAUDE.md removed providers list.
 | 97  | `KalshiMarket`                   | UAC    | DELETE      | Kalshi prediction market; abandoned integration per decision criteria                                             |
 | 98  | `KalshiOrderBook`                | UAC    | DELETE      | Kalshi prediction market; abandoned                                                                               |
 | 99  | `KalshiTrade`                    | UAC    | DELETE      | Kalshi prediction market; abandoned                                                                               |
-| 100 | `KaminoBorrowParams`             | UIC    | COMPLETE    | Kamino lending on Solana; /codex/09-strategy/defi/sol-lending-yield.md references Kamino                          |
+| 100 | `KaminoBorrowParams`             | UIC    | COMPLETE    | Kamino lending on Solana; /codex/09-strategy/_archived_pre_v2/defi/sol-lending-yield.md references Kamino                          |
 | 101 | `LiquidationHeatmapResponse`     | UAC    | DELETE      | Speculative visualization type; no codex reference                                                                |
 | 102 | `LiquidationLevel`               | UAC    | DELETE      | Speculative visualization type; no codex reference                                                                |
 | 103 | `MARKET_TICK_FRESHNESS`          | UIC    | DELETE      | Superseded by per-service health API freshness callbacks                                                          |
@@ -340,8 +340,8 @@ representative_sample.py, CLAUDE.md removed providers list.
 | 119 | `OKX_SPOT`                       | UAC    | DELETE      | Venue string constant; superseded by registry pattern                                                             |
 | 120 | `OPTIONAL_CONFIG_FIELDS`         | UAC    | DELETE      | Superseded by Pydantic config classes (Plan 5 confirms)                                                           |
 | 121 | `OnchainDataFreshnessConfig`     | UIC    | COMPLETE    | Referenced in archived plans; onchain staleness config per chain                                                  |
-| 122 | `OperationalMode`                | UIC    | COMPLETE    | Referenced in /codex/09-strategy/cross-cutting/operational-modes-matrix.md (core enum)                            |
-| 123 | `OptionContract`                 | UIC    | COMPLETE    | Options pipeline; /codex/09-strategy/tradfi/market-making-options.md                                              |
+| 122 | `OperationalMode`                | UIC    | COMPLETE    | Referenced in /codex/09-strategy/architecture-v2/cross-cutting/operational-modes-matrix.md (core enum)                            |
+| 123 | `OptionContract`                 | UIC    | COMPLETE    | Options pipeline; /codex/09-strategy/_archived_pre_v2/tradfi/market-making-options.md                                              |
 | 124 | `OrderBookSnapshot`              | UIC    | COMPLETE    | Order book representation; used by market data pipeline                                                           |
 | 125 | `PolygonDividendsResponse`       | UAC    | DELETE      | Polygon.io TradFi data vendor; no active strategy wires this                                                      |
 | 126 | `PolygonOptionContractsResponse` | UAC    | DELETE      | Polygon.io TradFi data vendor; abandoned integration                                                              |
@@ -351,14 +351,14 @@ representative_sample.py, CLAUDE.md removed providers list.
 | 130 | `QUARTERLY_MONTHS`               | UAC    | KEEP        | Defined in representative_sample.py; used by futures generation                                                   |
 | 131 | `REQUIRED_CONFIG_FIELDS`         | UAC    | DELETE      | Superseded by Pydantic config classes (Plan 5 confirms)                                                           |
 | 132 | `RateLimitInfo`                  | UAC    | COMPLETE    | Rate limiting metadata; needed for venue adapter error classification                                             |
-| 133 | `RebalanceCostEstimate`          | UIC    | COMPLETE    | Portfolio rebalancing cost; /codex/09-strategy/defi/cross-chain-sor-rebalancing.md                                |
-| 134 | `SHARE_CLASS_BASE_ASSETS`        | UAC    | COMPLETE    | Share class config; /codex/09-strategy/cross-cutting/share-classes.md                                             |
+| 133 | `RebalanceCostEstimate`          | UIC    | COMPLETE    | Portfolio rebalancing cost; /codex/09-strategy/_archived_pre_v2/defi/cross-chain-sor-rebalancing.md                                |
+| 134 | `SHARE_CLASS_BASE_ASSETS`        | UAC    | COMPLETE    | Share class config; /codex/09-strategy/_archived_pre_v2/cross-cutting/share-classes.md                                             |
 | 135 | `SPORTS_VENUES`                  | UAC    | DELETE      | Venue list constant; superseded by registry pattern                                                               |
 | 136 | `ServiceExecutionStatus`         | UIC    | DELETE      | Speculative infra type; superseded by health API pattern                                                          |
 | 137 | `ServiceHealthResponse`          | UIC    | DELETE      | Superseded by make_health_router pattern from UTL                                                                 |
 | 138 | `SettlementPrice`                | UIC    | COMPLETE    | Settlement pipeline; needed for position/P&L calculations                                                         |
 | 139 | `ShardIncompleteDetails`         | UIC    | DELETE      | Speculative monitoring detail type; no codex reference                                                            |
-| 140 | `ShareClass`                     | UAC    | COMPLETE    | Referenced in /codex/09-strategy/cross-cutting/share-classes.md (enum in UAC internal)                            |
+| 140 | `ShareClass`                     | UAC    | COMPLETE    | Referenced in /codex/09-strategy/_archived_pre_v2/cross-cutting/share-classes.md (enum in UAC internal)                            |
 | 141 | `ShareClassConfig`               | UIC    | COMPLETE    | Share class configuration; companion to ShareClass enum                                                           |
 | 142 | `StrategyModeParams`             | UIC    | COMPLETE    | Strategy mode configuration; used by strategy-service engine                                                      |
 | 143 | `StrategyNAV`                    | UIC    | DELETE      | Speculative NAV type; no codex or plan reference                                                                  |

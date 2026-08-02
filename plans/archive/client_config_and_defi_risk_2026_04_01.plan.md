@@ -367,7 +367,7 @@ Phase 4 (Docs)
 
 ## Phase 4: Documentation
 
-- [x] [AGENT] P1. Create `/codex/09-strategy/cross-cutting/client-strategy-config.md`:
+- [x] [AGENT] P1. Create `/codex/09-strategy/operational/client-strategy-config.md`:
   - Per-client override schema
   - Venue restriction mechanism
   - Feature gating (basic vs premium)

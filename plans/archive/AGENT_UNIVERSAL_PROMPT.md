@@ -26,11 +26,11 @@ Complete the plan. After you've completed the plan, ask yourself, "Did you compl
 
 BEFORE ANY CODE, read these files IN ORDER — they are your ground truth:
 
-1. .cursor/plans/CITADEL_VISION_2026_03_22.md — the complete system vision, service architecture,
+1. .cursor/plans/archive/CITADEL_VISION_2026_03_22.md — the complete system vision, service architecture,
    live/batch pattern, separation of concerns, interface contracts, collection names
 2. .cursor/plans/{AGENT_N}_*_2026_03_22.md — YOUR specific plan with phased todos
-3. .cursor/plans/AGENT_PROMPTS.md — shared preamble (read the SHARED PREAMBLE section)
-4. .cursor/plans/PLAN_AMENDMENTS_2026_03_22.md — corrections and additions to original plans
+3. .cursor/plans/archive/AGENT_PROMPTS.md — shared preamble (read the SHARED PREAMBLE section)
+4. .cursor/plans/archive/PLAN_AMENDMENTS_2026_03_22.md — corrections and additions to original plans
 5. unified-trading-pm/cursor-configs/SUB_AGENT_MANDATORY_RULES.md — mandatory coding rules
 6. .cursorrules — workspace standards
 

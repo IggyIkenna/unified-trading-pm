@@ -336,7 +336,7 @@ not duplicated here.
   tracked under the OTHER plan's own todos (lines 296-308), and duplicating it here risks the same concurrent-dispatch
   collision that plan's own Progress Log already documents 3x for the prediction lane. Left the sports-`-test-` finding
   (P2, features-sports-test bucket, no consolidated index) untouched — separate root cause (consolidator scheduler never
-  wired to `-test-` buckets by design, per `codex/05-infrastructure/manifest-consolidator-ssot.md` § "Coverage
+  wired to `-test-` buckets by design, per `/codex/05-infrastructure/manifest-consolidator-ssot.md` § "Coverage
   exemptions"), out of this todo's scope.
 - 2026-08-01 (slot-12, data_engineering, backlog task `features_smoke_matrix_verification_findings-001`): closed finding
   1 (multi_timeframe CLI argparse duplicate). Root cause: `ServiceBootstrap` defaults `add_date_args=True`, which

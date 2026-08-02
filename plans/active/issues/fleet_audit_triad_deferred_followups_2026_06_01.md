@@ -104,7 +104,7 @@ they are not silently lost on archival (per the plan-archival HARD RULE).
 
           **DONE (2026-08-02, slot-15)** — read all 3 named residual docs deliberately (not a find-replace); none of them
           claimed the retired `zero_activity=True` boolean column (the actual B2 error) — `codex/00-SSOT-INDEX.md` and
-          `codex/04-architecture/batch-live-architecture.md` only use `ZERO_ACTIVITY_BAR` as the category *label*, which
+          `/codex/04-architecture/batch-live-architecture.md` only use `ZERO_ACTIVITY_BAR` as the category *label*, which
           the existing banner in `live-pipeline-architecture.md` explicitly retains for continuity; `alerting-batch-live.md`
           uses `zero_activity_bar_rate`, a real, shipped `StreamingHealthSnapshot` field
           (`unified_trading_library/streaming/streaming_health.py`), unrelated to the retired boolean. Added a short

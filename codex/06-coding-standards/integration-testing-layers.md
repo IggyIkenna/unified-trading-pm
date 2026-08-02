@@ -582,7 +582,7 @@ POST-REFACTOR VALIDATION (after all tiers green):
 ## References
 
 - **Cursor rule:** `.cursor/rules/integration-testing-layers.mdc`
-- **Plan:** `unified-trading-pm/plans/cursor-plans/consolidated_remaining_work.plan.md`
+- **Plan:** `unified-trading-pm/plans/archive/consolidated_remaining_work.plan.md`
 - **Manifest:** `unified-trading-pm/workspace-manifest.json`
 - **Topology DAG:** `04-architecture/TOPOLOGY-DAG.md`
 - **Service pair flows:** `08-workflows/service-pair-flows.md` (SSOT for producer→consumer schema pairs)

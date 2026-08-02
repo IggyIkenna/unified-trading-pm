@@ -15,7 +15,7 @@ scope: [engineer]
 tags: [defi, ao-dispatch, close-out, batch-7, satellite-docs, archival]
 related:
   [
-    /plans/active/defi_satellite_ao_dispatch_batch7_2026_08_01.md,
+    /plans/archive/2026_08/defi_satellite_ao_dispatch_batch7_2026_08_01.md,
     /plans/active/defi_consolidated_closeout_2026_07_18.md,
     /plans/active/issues/mtds_gas_fees_migration_script_unbounded_memory_2026_07_30.md,
     /cursor-configs/skills/na-eligibility-audit/SKILL.md,
@@ -35,7 +35,7 @@ supersedes:
 superseded_by:
 context_scope:
   [
-    /plans/active/defi_satellite_ao_dispatch_batch7_2026_08_01.md,
+    /plans/archive/2026_08/defi_satellite_ao_dispatch_batch7_2026_08_01.md,
     /plans/active/defi_consolidated_closeout_2026_07_18.md,
     /plans/active/issues/mtds_gas_fees_migration_script_unbounded_memory_2026_07_30.md,
     /cursor-configs/skills/na-eligibility-audit/SKILL.md,
@@ -105,7 +105,7 @@ these until batch7 is fully done.**
       `issues/defi_lst_oracle_timestamp_glued_instrument_id_2026_07_20.md`, `defi_migration_audit_log_2026_07_24.md`
       (finalize-doc citation). Left untouched: `INDEX.md` (auto-generated, regenerated via script below, not
       hand-edited), `plans/archive/2026_07/active_plan_inventory_dashboard_2026_07_24.md` (frozen historical snapshot),
-      `codex/02-data/availability-manifest-and-data-status.md` (already cited the forward-looking archive path). (6) no
+      `/codex/02-data/availability-manifest-and-data-status.md` (already cited the forward-looking archive path). (6) no
       lock existed (`locked_by:` empty on both docs); `git mv` both docs to `plans/archive/2026_08/` in the same commit,
       re-ran `scripts/plans/regenerate_active_plan_index.py` to drop both from `INDEX.md`.
 

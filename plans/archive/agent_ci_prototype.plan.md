@@ -85,7 +85,7 @@ GitHub Actions runner (ubuntu-latest, ephemeral)
 
 ```bash
 claude --print --dangerously-skip-permissions \
-  "$(cat unified-trading-pm/plans/active/trading_system_audit_prompt.md)" \
+  "$(cat unified-trading-pm/plans/audit/trading_system_audit_prompt.md)" \
   > audit-report.txt
 ```
 

@@ -99,8 +99,8 @@ source: >-
 
 ## Codex SSOTs
 
-`/codex/11-project-management/plan-completion-and-archival-discipline.md`,
-`/codex/12-agent-workflow/ao-dispatch-batch-naming-and-conflict-check.md`.
+`/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`,
+`/codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md`.
 
 ## Progress Log
 
@@ -108,8 +108,8 @@ source: >-
   13). `status: active` from creation (no-double-gate finding); `gate_on_depends: true` holds every todo until batch3's
   8 todos are done.
 - **context-scout 2026-08-01**: populated/refreshed context_scope (5 entries). NOTE: this doc's own "Codex SSOTs"
-  section above cites `/codex/12-agent-workflow/ao-dispatch-batch-naming-and-conflict-check.md` and
-  `/codex/11-project-management/plan-completion-and-archival-discipline.md` — both paths are STALE (the two docs' actual
+  section above cites `/codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md` and
+  `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md` — both paths are STALE (the two docs' actual
   directories are swapped: the naming/conflict-check doc lives at `/codex/11-project-management/`, the
   archival-discipline doc at `/codex/12-agent-workflow/`). `context_scope` above uses the CORRECTED, disk-verified
   paths; the body line is left unedited per this pass's scope (frontmatter + Progress Log only) — flagging for a future

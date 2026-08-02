@@ -29,7 +29,7 @@ tags: [gcs, buckets, terraform, config-drift, cleanup-regression, lifecycle, dat
 related:
   [
     /plans/archive/2026_07/gcs_bucket_estate_cleanup_2026_07_10.md,
-    /plans/active/defi_dedicated_bucket_shared_migration_2026_07_13.md,
+    /plans/archive/2026_07/defi_dedicated_bucket_shared_migration_2026_07_13.md,
     /plans/archive/2026_07/bucket_env_split_rollout_2026_06.md,
   ]
 created: "2026-07-13"

@@ -12,7 +12,7 @@ summary: >-
   decision), a centralization design ruling made, and every finding resolved to fix/delete/confirm-safe or spun off into
   its own tracked issue. See the doc body for the full per-round findings and the batch-fixes resumption doc (archived)
   for the shipping history. One new issue spun off from a late-stage discovery:
-  `/plans/active/issues/utl_domain_client_market_data_whole_file_dead_2026_07_30.md`.
+  `/plans/archive/issues/utl_domain_client_market_data_whole_file_dead_2026_07_30.md`.
 status: resolved
 nature: issue
 asset_group: [cefi, defi, tradfi, sports, prediction]
@@ -572,7 +572,7 @@ going forward. Still open, tracked as a todo below.
       `MarketTickDataDomainClient._build_tick_gcs_path()` with the same missing-segments bug — and grepping all 6
       classes in that file individually found zero real callers and zero test coverage for the whole file. This is
       genuinely separate scope (different module, only surfaced via the name collision) — filed as its own issue rather
-      than folded in here: `/plans/active/issues/utl_domain_client_market_data_whole_file_dead_2026_07_30.md`. (repo:
+      than folded in here: `/plans/archive/issues/utl_domain_client_market_data_whole_file_dead_2026_07_30.md`. (repo:
       unified-trading-library)
 
 - [x] [SCRIPT] P1. **Fix `features-service/delta_one/app/core/dependency_checker.py:648`'s vacuous-pass bug** —

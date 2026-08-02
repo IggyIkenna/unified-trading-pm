@@ -79,7 +79,7 @@ bash unified-trading-pm/scripts/dev/setup-tab-worktrees.sh --reset-slot <N>
 
 # 2. Boot context: read CLAUDE.md HARD RULE + master coordinator Phase -1
 cat unified-trading-pm/cursor-configs/CLAUDE.md   # § "Quality Gates Are A Merge Prerequisite"
-cat unified-trading-pm/plans/active/mtds_mdps_master.md   # § "Phase -1: Workspace-wide QG green"
+cat unified-trading-pm/plans/epics/mtds_mdps_master.md   # § "Phase -1: Workspace-wide QG green"
 
 # 3. For EACH repo in the cluster, run:
 cd <repo> && bash scripts/quality-gates.sh
