@@ -39,10 +39,10 @@ related:
     /plans/active/sports_p2_history_apifootball_2015_to_present_2026_06_27.md,
   ]
 created: "2026-07-24"
-last_updated: "2026-07-24"
+last_updated: "2026-08-02"
 parent_epic: sports_master
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 priority: P0
 estimate_class: infra
 estimate_baseline_ai_days: 4
@@ -55,9 +55,12 @@ depends_on: []
 source: >-
   Forked 2026-07-24 from sports_consolidated_closeout_2026_07_19.md's FROZEN-legacy-path-contradiction todo, per
   operator ruling during the 5-AG plan-quality audit session: "scope a real migration instead" of grandfathering the
-  fallback, after a live measurement showed real post-floor data (~72K captured rows) sits behind it. LOCAL/human plan
-  per task_template.md's stated default (not asked to make this AO-dispatched).
+  fallback, after a live measurement showed real post-floor data (~72K captured rows) sits behind it. Authored
+  LOCAL/human per task_template.md's stated default; RECLASSIFIED to AO-dispatched 2026-08-02 (operator ruling
+  2026-07-30) with `sequential: true`, exactly the disposition the 2026-07-30 na-eligibility-audit recommended when it
+  parked this doc pending an explicit AO-dispatch authorization.
 assigned_role: data_engineering
+sequential: true
 drift_direction: advance-code
 context_scope:
   [
@@ -75,6 +78,26 @@ context_scope:
 > (`_read_fixtures_entity_with_schedule_fallback` in `sports_fixtures.py`, 3 call sites) for dates where the canonical
 > `entity=fixtures_schedule/` path is empty. The 2026-07-24 measurement below is real (live `gcloud`/manifest reads),
 > not an estimate — read it before touching any todo.
+
+> **🟡 RECLASSIFIED TO AO-DISPATCHED 2026-08-02** (operator ruling 2026-07-30). `assigned_vm: NA` → `planning`,
+> `execution_scope: local-only` → `orchestrator-agent`, and **`sequential: true` added in the same edit — that
+> combination is the whole point, not incidental.** The 2026-07-30 na-eligibility-audit called this a STRONG reclassify
+> candidate on content (all 7 todos carry explicit done-whens; the P2 delete is already reversibility-verified under
+> finding T, soft-delete 604800s) but parked it for exactly two reasons, both now resolved: (a) it is a strict
+> dependency chain (census → schema check → script+dry-run → `--apply` → remove fallback → delete → doc) with same-file
+> overlap on `sports_fixtures.py` and the migration script, so flipping it WITHOUT `sequential: true` would fan four
+> same-priority P1s at the same files concurrently — `sequential: true` now serialises the whole plan; (b) dispatching a
+> P0 prod data migration + gated delete was an authority call the skill could not self-grant — the operator has now
+> granted it.
+>
+> **`execution_scope` mattered as much as `assigned_vm`**: `local-only` makes the orchestrator skip ingestion entirely
+> (`regen_backlog_from_plan.py`'s `_EXECUTION_SCOPE_LOCAL_ONLY`), so flipping `assigned_vm` alone would have been a
+> silent no-op — the plan would have read as dispatched while never entering the backlog.
+>
+> **Still true and unchanged**: todo 1 (the Phase-1 census) is NOT conflict-gated (operator ruling 2026-07-25,
+> `autonomous_session_operator_decisions_2026_07_25.md` entry #7 — "dispatch as-is"). The later `--apply` todo still
+> needs its own re-check against `sports_consolidated_closeout_2026_07_19.md`'s Tracks S/E/C1 once those land; that
+> re-check is part of that todo's own execution, and `sequential: true` guarantees the census lands first either way.
 
 ## The measurement (2026-07-24, live, read-only)
 
@@ -172,3 +195,10 @@ Cross-verified with direct `gcloud storage ls` spot-checks of the true bare `ent
   blocker is the na-eligibility-audit's separate AO-dispatch-authority parking noted directly above, not the
   Track-S/E/C1 conflict.
 - **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).
+- **2026-08-02 (operator ruling 2026-07-30, executed)**: reclassified `assigned_vm: NA` → `planning` +
+  `execution_scope: local-only` → `orchestrator-agent` + added `sequential: true`, resolving the na-eligibility-audit's
+  2026-07-30 parking note above on both of its stated grounds. Authored the companion gated finalize plan
+  `/plans/active/sports_legacy_fixtures_path_migration_2026_07_24_finalize_2026_08_02.md` (`depends_on` +
+  `gate_on_depends` + `sequential`) per `task_template.md` §4's finalize-plan-coverage rule, which applies the moment a
+  `doc_type: plan` becomes `assigned_vm: planning`. No todo text changed — all 7 todos keep their original scope and
+  done-whens.
