@@ -248,3 +248,17 @@ No design call needed — every fact here is independently checkable:
   `BLOCKED-<TOKEN>` ... (was retired|no longer applies|resolved) `` within a bounded lookahead window after the match,
   mirroring the existing backward-lookback structure) — then re-run this doc's own reproduction against this exact todo
   block to confirm `is_non_dispatchable()` flips to `False` before calling `POST /api/backlog/regen`.
+
+- **2026-08-02 (slot 9, data_engineering craft) — 5th corroborating recurrence, still unfixed; root cause now
+  documented, fix (todo 2) still unclaimed.** `defi_satellite_ao_dispatch_batch8_2026_08_02_finalize-001` re-dispatched
+  to this slot via `/heartbeat` after an unrelated skip. Fresh-pulled `unified-trading-pm` + `agent-orchestrator` to
+  latest `live-defi-rollout` before checking (not relying on a stale local ref). Re-verified: batch8's own
+  `- [ ] [DATA] P3.` todo is still unchecked on disk. `GET /api/backlog` confirms todo 1 (root-cause) is now `done`
+  (slot 15, `2026-08-02T16:03:39Z` — see the code-line-cited word-order-bug finding directly above) but todo 2 (the
+  actual fix) is still `queued`/unclaimed, and no new commit has landed on
+  `agent-orchestrator/server/regen_backlog_from_plan.py` beyond what slot 15's investigation already read (HEAD
+  `c547566`, an unrelated docs commit). Declining `finalize-001` again per this doc's own Recommended-decision item 4 —
+  same reasoning as the 4 prior recurrences, now with a concretely-identified, not-yet-landed fix to wait on rather than
+  an open-ended investigation. Not picking up todo 2 myself mid-task (different craft — `[BACKEND]`/agent-orchestrator —
+  and self-initiating unassigned "related work" outside the current dispatch is against the worker
+  `/boot`-per-shippable-unit discipline); it stays queued for the next `backend_engineer`-eligible dispatch. Skipping.
