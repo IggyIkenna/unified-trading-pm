@@ -344,13 +344,18 @@ disproving a pure date-span explanation there), this sports case has a much clea
 growth across sequential real-fetch days — so a small fixed chunk size should be a reliable mitigation here even though
 it wasn't a reliable one for CEFI.
 
-- [ ] [DATA] P1. **Root-cause the actual retained-memory object(s) across date iterations in the sports odds_api
-      download path** (`market_tick_data_service`, the code path `--operation download --asset-group SPORTS` walks
-      per-date inside one process — likely `TickDataHandler.process()`'s date loop or the `odds_api` adapter/finalizer
-      holding a growing cache/buffer keyed across dates instead of per-date). A memray/tracemalloc profile across 2-3
-      consecutive real-fetch days would show whether it's an unbounded cache, an un-drained event-sink buffer, or
-      accumulating asyncio/aiohttp session state. This is the durable fix; the small-chunk-size mitigation above is a
-      workaround, not a repair. Repo: market-tick-data-service.
+- [ ] [DATA] P1. **BLOCKED-CREDENTIALS 2026-08-02 (slot 14) — the-odds-api.com account is OUT OF USAGE CREDITS
+      (5,000,772/5,000,000 used); no further real-fetch profiling (memray/tracemalloc/lightweight sampler) is possible
+      until the operator either waits for the monthly reset or purchases additional credits — see this doc's 2026-08-02
+      Progress Log entry and `sports_odds_api_scattered_multiyear_gaps_2026_07_27.md`'s matching P1 for full detail. Do
+      NOT re-dispatch/re-attempt until credits are confirmed available again.** Root-cause the actual retained-memory
+      object(s) across date iterations in the sports odds_api download path (`market_tick_data_service`, the code path
+      `--operation download --asset-group SPORTS` walks per-date inside one process — likely
+      `TickDataHandler.process()`'s date loop or the `odds_api` adapter/finalizer holding a growing cache/buffer keyed
+      across dates instead of per-date). A memray/tracemalloc profile across 2-3 consecutive real-fetch days would show
+      whether it's an unbounded cache, an un-drained event-sink buffer, or accumulating asyncio/aiohttp session state.
+      This is the durable fix; the small-chunk-size mitigation above is a workaround, not a repair. Repo:
+      market-tick-data-service.
 - [ ] [DATA] P2. **Consider an adaptive/smaller default `--chunk-size` specifically for "recent history" chunks** (the
       tail nearest the current date, where live-capture dormancy windows and scattered small gaps cluster densely) vs.
       the 250-day default that's proven safe for older, mostly-skip-dense history — either launcher-side (detect via a
