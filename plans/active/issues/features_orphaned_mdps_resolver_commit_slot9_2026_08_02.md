@@ -15,7 +15,7 @@ summary: >-
   `features_service/volatility/core/{dependency_checker,data_loader}.py` — currently latent (volatility's
   `ASSET_GROUP_CHOICES` doesn't include PREDICTION yet) but would break the moment PREDICTION is added, identically to
   delta_one's history.
-status: open
+status: resolved
 nature: issue
 asset_group: [prediction]
 stage: [data]
@@ -35,7 +35,7 @@ execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
 assigned_vm: planning
-resolved_by:
+resolved_by: features-service@0997fbac
 locked_by:
 locked_since:
 ---
@@ -106,9 +106,9 @@ marked it done based on this commit, since it never reached origin. No doc corre
 
 ## Recommended decision
 
-- [ ] [DATA] P2. **Primary path — re-implement from spec** (slot-independent; dispatches to any DATA worker via normal
-      PlanRegenLoop): in `features-service`, add `features_service.common.resolve_mdps_bucket()` next to the existing
-      `resolve_bucket`/`resolve_bucket_uri` helpers, and route both
+- [x] ✅ [DATA] P2. **Primary path — re-implement from spec** (slot-independent; dispatches to any DATA worker via
+      normal PlanRegenLoop): in `features-service`, add `features_service.common.resolve_mdps_bucket()` next to the
+      existing `resolve_bucket`/`resolve_bucket_uri` helpers, and route both
       `features_service/volatility/core/dependency_checker.py` and `.../data_loader.py`'s direct
       `resolve_bucket_name(kind="market-data", asset_group=...)` calls through it — mirrors the identical,
       already-shipped `_resolve_mdps_bucket` pattern in `features_service/delta_one/app/core/dependency_checker.py` (see
@@ -121,4 +121,18 @@ marked it done based on this commit, since it never reached origin. No doc corre
       9's clone hasn't been reset/reassigned since), `git cherry-pick 272de118` saves rewriting the diff; verify it
       applies cleanly and tests pass before shipping. This is opportunistic ONLY — do not wait on slot 9 or block on it
       being available; if the reflog entry is gone, just take the primary path above. No backlog affinity is set for
-      this todo (deliberate, see "Why it matters").
+      this todo (deliberate, see "Why it matters"). — **2026-08-02 (slot-15, data_engineering craft) — DONE, via the
+      primary (re-implement) path, independently and concurrently with this issue doc being filed — did not know of
+      slot-9's orphaned `272de118` until pulling this doc after shipping.** Was separately dispatched the sibling
+      `[SCRIPT] P3` todo in `features_delta_one_dependency_checker_prediction_bucket_token_wrong_2026_07_27.md` (this
+      doc's own `related:`) asking for the identical fix; implemented it from spec (not aware this issue doc or slot-9's
+      commit existed at the time). Shipped: `features-service@0997fbac`, verified on origin via
+      `git merge-base --is-ancestor`. Same shape as the orphaned commit described above (a new `features_service.common`
+      cross-family helper + both volatility call sites routed through it), one naming difference
+      (`resolve_mdps_candle_bucket` here vs. the orphaned commit's `resolve_mdps_bucket` — functionally identical, not a
+      compatibility concern since neither name existed on origin before this). Added regression coverage at all 3 layers
+      (the shared helper directly, plus both volatility call sites), mirroring delta_one's
+      `TestResolveMdpsBucketPredictionAbbreviation`. Full `quality-gates.sh` green (after fixing an unrelated,
+      pre-existing corrupted `.venv` on this host — `pytz`/`ethpm` partial installs from earlier interrupted runs under
+      the shared-host QG capacity crisis; `uv sync --reinstall` fixed it, not a code issue). Slot-9's orphaned
+      `272de118` is now moot — no cherry-pick needed, no action required from slot 9's clone.
