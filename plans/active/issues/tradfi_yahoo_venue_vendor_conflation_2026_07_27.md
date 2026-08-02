@@ -133,6 +133,13 @@ classes (EQUITY looks like the clearest win, since a real exchange is normally r
 > (`/codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md` § 3) verdict is CONFLICT → citation fix
 > only. Live blocker = batch5's draft status (operator item 5 in
 > `/plans/active/issues/tradfi_autonomous_session_operator_decisions_2026_07_25.md`).
+>
+> **CITATION UPDATE (na-eligibility-audit 2026-08-02, tradfi tranche)**:
+> `tradfi_satellite_ao_dispatch_batch5_2026_07_29.md` has since flipped `status: draft` → `status: active` (confirmed
+> live, 2026-08-02) — its todo 8 (this doc's extraction) is now a live, active, dispatched item and is still open. The
+> "NOT ingested, NOT dispatched today" wording above is stale prose; the underlying disposition is unchanged
+> (KEEP-NA-STALE, citation fix only) — if anything this strengthens the duplicate-coverage conclusion, since the live
+> copy is the one that will actually get worked.
 
 - [ ] [DATA] P2. **Run the Phase-0 investigation methodology** (reconcile real counts + trace consumers for a
       `venue="YAHOO"` dependency) before deciding whether/how to fix the vendor-as-venue stamp — per "Recommended next
@@ -151,3 +158,9 @@ classes (EQUITY looks like the clearest win, since a real exchange is normally r
   open todo re-read; count matches tranche-inventory tool (1). No content change since the 2026-07-30 verdict — only a
   context-scout `context_scope` backfill touched the file since. Conflict-check basis unchanged: batch5 still extracts
   this todo verbatim and still sequences it first among the three entangled Yahoo/venue todos.
+- **na-eligibility-audit 2026-08-02** (tradfi tranche, dispatch agt-6397c9): **KEEP-NA-STALE, re-verified — citation
+  drift found and fixed.** Sole open todo re-read end-to-end via an independent sub-agent classification; count
+  reconciled (1/1). Confirmed via direct grep of batch5's content that todo 8 there still verbatim-covers this doc's
+  investigation and is sequenced first among 3 entangled Yahoo/venue todos. Found batch5's `status` field has since
+  flipped `draft` → `active` (last touched 2026-08-01) — updated the NOTE block above to correct the stale "NOT
+  ingested, NOT dispatched today" wording; disposition unchanged (KEEP-NA-STALE, `assigned_vm` stays NA).

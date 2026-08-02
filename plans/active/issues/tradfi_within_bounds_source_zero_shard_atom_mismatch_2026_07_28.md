@@ -239,6 +239,13 @@ population — the "elsewhere" gap that doc pointed at is this manifest bookkeep
 > `/plans/active/tradfi_manifest_content_recovery_completion_2026_07_24.md`) is a standing operator-review hard stop —
 > so this doc would stay NA on that ground even if the batch5 overlap did not exist. Live blocker = batch5's draft
 > status (operator item 5 in `/plans/active/issues/tradfi_autonomous_session_operator_decisions_2026_07_25.md`).
+>
+> **CITATION UPDATE (na-eligibility-audit 2026-08-02, tradfi tranche)**:
+> `tradfi_satellite_ao_dispatch_batch5_2026_07_29.md` has since flipped `status: draft` → `status: active` and its
+> combined extraction-todo is now `[x]` DONE (confirming `--apply` was intentionally NOT run there either, still pending
+> operator approval — same substance, not a live-run). The "NOT ingested, NOT dispatched today" wording above is stale
+> prose; todo 1 here stays open/NA on the independently-sufficient operator-gate ground (below), unaffected by this
+> correction.
 
 - [ ] [DATA] P0. Migration/purge pass: for every CME + CBOE bundle-grain
       `attempted_failed(WithinBoundsTradfiSourceZero)` row keyed by the retired `instrument_id=<parent>.FUT`/`.OPT`
@@ -325,3 +332,9 @@ population — the "elsewhere" gap that doc pointed at is this manifest bookkeep
   entries above (still awaiting the `--apply` go-ahead on the measured 81,454-row drop); todo 4 is explicitly sequenced
   after todo 1 so it cannot start independently; todo 3 is conditionally-scoped ("if it is found to cause..."), not a
   hard bounded task. Nothing to reclassify.
+- **na-eligibility-audit 2026-08-02** (tradfi tranche, dispatch agt-6397c9): **KEEP-NA, valid — re-verified, citation
+  drift found and fixed.** All 3 open todos re-read end-to-end via an independent sub-agent classification; count
+  reconciled (3/3). Found batch5's `status` field had flipped `draft` → `active` with its combined extraction-todo now
+  `[x]` DONE (still no live `--apply` run) — updated the NOTE block above to correct the stale wording. Todo 1's
+  independently-sufficient operator-gate ground (81,454-row measured drop still awaiting go-ahead) is unaffected; todos
+  3/4 unchanged (conditional / sequenced-after). Nothing to reclassify.
