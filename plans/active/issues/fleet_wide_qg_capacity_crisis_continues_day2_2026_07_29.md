@@ -327,3 +327,28 @@ not just noting.
   `GET /api/repo-blockers` → `open: []` (nothing to fast-path). Pinged `AUTHORING_SLOT=ci` with the outcome (non-numeric
   literal — see whether it 400s/422s like the `ci-reconcile` literal this doc's prior entries already hit). Slot left
   clean on `live-defi-rollout`, no branch changes to `deployment-service` beyond this doc.
+
+- **2026-08-02 ~21:40-21:50Z (cicd escalation `agt-e3d260`, slot 6, `strategy-service`, `wall_type=ldr_qg_failure`,
+  `pr_number=0` — direct LDR push, no PR)** — second same-day `strategy-service` corroboration of the identical
+  `Type check FAILED/timeout (exit=124)` signature (first was the ~15:40 UTC entry in the parent doc
+  `fleet_wide_qg_self_hosted_runner_capacity_crisis_2026_07_27.md`). Reproduced locally at current `live-defi-rollout`
+  HEAD `a6689ca0` (backgrounded, heartbeated per the mandatory pattern): `bash scripts/quality-gates.sh` →
+  **`✅ ALL QUALITY GATES PASSED (141s)`** — tests slice 5660 passed/248 skipped/22 xfailed/0 failed, coverage
+  83.24%≥74% floor, basedpyright surfaced only its 7 pre-existing tolerated warnings (no timeout), codex-compliance gate
+  3/4 violations (within tolerance, includes the known-tracked STEP 5.37 `greek_model.py` Reg-T threshold site).
+  Cross-checked CI directly: `gh run list` shows the exact same HEAD (`a6689ca0`) has TWO runs — a completed `failure`
+  (`30750125692`, 13:31:51Z, 6h31m wall time) and an `in_progress` retrigger (`30765248540`, started 20:16:33Z, not
+  triggered by me) — both hitting `checks`-leg `basedpyright ... Type check FAILED/timeout (exit=124)` at the full
+  documented `PYRIGHT_TIMEOUT`, identical to every other signature in this doc. Live host corroboration at diagnosis
+  time: `uptime` load average **61.77/51.27/42.71**, swap **26Gi/47Gi** in use — same whole-host-thrashing signature, if
+  anything worse than prior entries' 48-49 load-average readings. `gh pr list --state open` → `[]`,
+  `GET /api/repo-blockers` → `open: []` — nothing currently blocked. **Disposition: no code/test/workflow change made or
+  needed.** Did not add a redundant retrigger — a `workflow_dispatch` run was already `in_progress` on this exact HEAD
+  at investigation start, and per this doc's established posture a duplicate dispatch onto an already-contended runner
+  pool doesn't help. Did not touch `self_hosted_runner_labels` or the allowlist — `strategy-service` is one of the repos
+  the 2026-07-28 operator ruling says to leave alone. Attempted to ping `AUTHORING_SLOT=ci-reconcile` per the standard
+  completion step — `POST /api/slots/ci-reconcile/message` 422s (`slot_id` must be a valid integer; `ci-reconcile` is a
+  non-numeric literal, same class of 422 this doc's `ci`/`ci-reconcile` precedents already hit). Slot left clean on
+  `live-defi-rollout` (only this doc + `strategy-service`'s already-clean working tree touched — no commit made in
+  `strategy-service`, nothing to leave dirty). Seventh repo-specific corroboration of the
+  `Type check FAILED/timeout (exit=124)` signature class in this doc-pair, second specific to `strategy-service`.
