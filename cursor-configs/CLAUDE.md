@@ -7,10 +7,10 @@
 > codex SSOT, leave the directive + pointer here); honour the size budget below.
 >
 > **Conditional format (the organizing rule)**: the body splits into **always-on** (apply to every task — read it) and a
-> **conditional domain index** (`§ When your task touches X`). **Only open a codex SSOT when your current task actually
-> involves that rule/domain** — a grep-0 on a domain you're not working in is irrelevant; a rule you ARE working under,
-> you read in full first. **Placing a new rule**: always-on block only if it applies to EVERY task; otherwise a
-> one-liner under the matching conditional `§` (+ its codex SSOT).
+> **conditional domain index** (`§ When your task touches X`). **Only open a codex SSOT when your current task involves
+> that rule/domain** — a grep-0 on a domain you're not working in is irrelevant; a rule you ARE working under, you read
+> in full first. **Placing a new rule**: always-on block only if it applies to EVERY task; otherwise a one-liner under
+> the matching conditional `§` (+ its codex SSOT).
 >
 > **Durable facts live in codex (SSOT) + a one-liner here, NEVER in agent `memory/` (HARD RULE)**: memory is per-cwd,
 > local-only, NOT inherited by sub-agents. Sub-agents reach topic-parity via `SUB_AGENT_MANDATORY_RULES.md`.
