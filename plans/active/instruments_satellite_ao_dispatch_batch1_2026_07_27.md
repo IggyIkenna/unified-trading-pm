@@ -214,7 +214,7 @@ source doc is untouched (beyond one stale-checkbox citation fix, done directly, 
       `YAHOO_FINANCE`/`unified-api-contracts@fec3f110` cleanup) names this exact file as one of 5 venue-shaped
       registries that must be swept together; only this one was missed for POLYGON. Filed as a follow-up per this todo's
       own instruction (audit-only, not fix-inline):
-      `plans/active/issues/uac_venue_data_availability_stale_polygon_entry_2026_08_02.md`. **Also surfaced (not
+      `plans/archive/issues/uac_venue_data_availability_stale_polygon_entry_2026_08_02.md`. **Also surfaced (not
       re-filed, already tracked)**: `tradfi_adapter_dead_code_fallback_audit_2026_07_25.md` Finding I-2 (open
       `[OPERATOR] P1`, filed 2026-07-31) found instruments-service's actual `massive.py` Polygon.io adapter is still
       live/tested/fully-wired, contradicting the codex/CLAUDE.md "removed 2026-07-19" claim — corroborates that the
@@ -281,8 +281,8 @@ checkbox found anywhere.
   twin — 0 open todos remain here; flagged for archival separately, out of this skill's scope).
 - **data_engineering 2026-08-02 (instruments_satellite_ao_dispatch_batch1-004)**: closed todo 4 (TradFi POLYGON/FRED
   conflation audit). Verdict + full evidence trail on the flipped checkbox above; one gap found and filed as
-  `plans/active/issues/uac_venue_data_availability_stale_polygon_entry_2026_08_02.md`. All 5 todos in this batch are now
-  genuinely `[x]`. **Note — this plan's gated finalize twin
+  `plans/archive/issues/uac_venue_data_availability_stale_polygon_entry_2026_08_02.md`. All 5 todos in this batch are
+  now genuinely `[x]`. **Note — this plan's gated finalize twin
   (`instruments_satellite_ao_dispatch_batch1_finalize_2026_07_27.md`) already archived itself 2026-07-29/30 claiming all
   5 were done + this parent was archived — BOTH claims were false at the time (this todo 4 was still open, and this
   parent plan was never actually moved to archive/, which is why it was still live and dispatchable today). See
