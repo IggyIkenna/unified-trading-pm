@@ -309,9 +309,13 @@ tooling, historical floors, the cross-repo lineage, and dead-code — findings j
       independently-dispatchable build/run/report todos rather than risk a rushed, unsafe attempt at the full scope in
       one dispatch. Full scoping + the 4 todos:
       `issues/mdps_features_ml_strategy_orphan_sweep_tooling_gap_2026_07_27.md`.
-- **[DATA] P0. 11b.** The actual cross-repo orphan/lineage report — remains open, tracked via the 4 todos in
-  `issues/mdps_features_ml_strategy_orphan_sweep_tooling_gap_2026_07_27.md` (build+run MDPS/features/ml-strategy sweeps,
-  then write the combined report). Non-checkbox pointer per the scoping above.
+- [x] 11b. ✅ [DATA] P0. **The actual cross-repo orphan/lineage report. DONE 2026-08-03** (`unified-trading-pm`) — all 4
+      todos in `mdps_features_ml_strategy_orphan_sweep_tooling_gap_2026_07_27.md` (now archived, resolved) landed real
+      per-stage findings (MDPS candle, features, ml/strategy sweeps built + validated on real prod data); the combined
+      report is
+      [`issues/mdps_features_ml_strategy_orphan_lineage_report_2026_08_03.md`](issues/mdps_features_ml_strategy_orphan_lineage_report_2026_08_03.md).
+      Headline: every pipeline stage now has real-prod-data-validated orphan tooling; every real orphan population found
+      is either already backfilled or has a small, bounded, already-tracked follow-up — no new corpus-wide unknown.
 - [ ] 11c. [DATA] P0. **MIGRATE existing candle/feature data to zero orphans** (MVP or not) — WRITES the GCS manifest
       (safe additive `merge_manifest_from_canonical_paths()` from 11a, never destructive
       `rebuild_manifest_from_canonical_paths`). **Not `[OPERATOR]`-pre-gated** (corrected 2026-07-27 — the additive path

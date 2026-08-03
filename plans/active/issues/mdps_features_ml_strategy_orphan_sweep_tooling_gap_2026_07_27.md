@@ -17,7 +17,7 @@ summary: >-
   genuinely different shape (candle adds instrument_type×data_type×timeframe; feature is asset_group×feature_family;
   ml/strategy are run/model-id-keyed, not day-sharded). Splitting into 3 independently-dispatchable build+run todos
   rather than leaving one all-or-nothing checkbox no single session can honestly complete.
-status: open
+status: resolved
 nature: issue
 asset_group: [cefi, defi, tradfi, sports, prediction]
 stage: [data]
@@ -54,7 +54,7 @@ drift_direction: advance-code
 source: >-
   Surfaced 2026-07-27 (slot-15, infra) while scoping data_pipeline_check_mdps_features_2026_07_20.md todo 11b before
   attempting a full cross-repo lineage audit in-session.
-resolved_by:
+resolved_by: unified-trading-pm (mdps_features_ml_strategy_orphan_lineage_report_2026_08_03.md)
 locked_by:
 locked_since:
 context_scope:
@@ -67,6 +67,14 @@ context_scope:
   ]
 depends_on: []
 ---
+
+> **🟢 ARCHIVED 2026-08-03** — `status: resolved` with zero open todos (all of 1, 2, 2b, 2c, 2d, 3, 3b, 3c, 4 done);
+> archived per
+> [`/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`](/codex/12-agent-workflow/plan-completion-and-archival-discipline.md).
+> Combined cross-repo lineage report (this doc's todo 4 deliverable) lives at
+> [`mdps_features_ml_strategy_orphan_lineage_report_2026_08_03.md`](/plans/active/issues/mdps_features_ml_strategy_orphan_lineage_report_2026_08_03.md).
+> Every per-stage finding's own follow-up work stays tracked in its own doc (see that report's "Stage-by-stage findings"
+> section for the full pointer list) — nothing here evaporates with the archive.
 
 # No orphan-detection tooling for MDPS/features/ml/strategy — todo 11b needs 3 new tools, not one VM run
 
@@ -119,7 +127,7 @@ lets each one be built, validated, and run to real completion on its own timelin
 
 - [x] 1. ✅ [SCRIPT] P1. **Build + validate an MDPS candle-layer orphan sweep** (new script in
       `market-data-processing-service/scripts/`, name TBD) — design brief with file:line citations + open items done:
-      [`mdps_candle_orphan_sweep_design_brief_2026_07_27.md`](mdps_candle_orphan_sweep_design_brief_2026_07_27.md).
+      [`mdps_candle_orphan_sweep_design_brief_2026_07_27.md`](/plans/archive/issues/mdps_candle_orphan_sweep_design_brief_2026_07_27.md).
       Mirror `migration_orphan_sweep.py`'s A-E taxonomy against `processed_candles/by_date/` per asset_group (shard key:
       day, venue, chain, instrument_type, data_type, timeframe; note the real measured DEFI path segment ORDER is
       `timeframe/data_type/instrument_type/venue`, NOT the cefi-analog `venue/instrument_type/data_type` — verify per-AG
@@ -160,7 +168,7 @@ lets each one be built, validated, and run to real completion on its own timelin
       candle-manifest coverage gap** — spot-verified against the live cefi manifest directly (75 total MDPS rows in an
       8.78M-row index, zero for the flagged DERIBIT object) to confirm this is a real manifest absence, not a sweep-tool
       bug. Filed as its own P0 finding, out of this todo's scope:
-      [`mdps_candle_manifest_near_total_coverage_gap_2026_07_27.md`](mdps_candle_manifest_near_total_coverage_gap_2026_07_27.md)
+      [`mdps_candle_manifest_near_total_coverage_gap_2026_07_27.md`](/plans/active/issues/mdps_candle_manifest_near_total_coverage_gap_2026_07_27.md)
       (root-cause + backfill are that doc's todos, not this one's — todo 1's own scope was build+validate the TOOL,
       which is now genuinely done: built, bug-fixed, 31-test-covered, and run to completion on real prod data for 4/5
       asset_groups). Sports's full-corpus sweep (only a bounded 200-object sample run) is P2 follow-up in the new issue
@@ -202,7 +210,7 @@ lets each one be built, validated, and run to real completion on its own timelin
       detection is object-driven not manifest-driven). The two real orphan gaps (onchain 45%, sports 35%) plus the
       calendar phantom-row anomaly are big findings, out of THIS todo's scope (validate the tool) — filed as their own
       doc:
-      [`features_service_manifest_coverage_gap_2026_08_03.md`](features_service_manifest_coverage_gap_2026_08_03.md)
+      [`features_service_manifest_coverage_gap_2026_08_03.md`](/plans/active/issues/features_service_manifest_coverage_gap_2026_08_03.md)
       (backfill + investigation todos live there, not here). `commodity` remains genuinely unwired (flat JSON
       `signal.json`, not parquet, positional day+feature_group with no hive keys at all, own dedicated bucket) — split
       to todo 2c below rather than guessed at in this dispatch.
@@ -314,8 +322,8 @@ lets each one be built, validated, and run to real completion on its own timelin
       captured cells) with 7 real orphan objects (genuine 2025-06-15/16 backtest artifacts) — a real data-correctness
       gap, filed as its own doc rather than absorbed into this todo's "validate the tool" scope (mirrors todo 1's/todo
       2b's own precedent):
-      [`ml_strategy_manifest_coverage_gap_2026_08_03.md`](ml_strategy_manifest_coverage_gap_2026_08_03.md). (b)
-      strategy_orders/positions/pnl wiring, (c) backtest_results investigation, and (d) the ml_models/etc.
+      [`ml_strategy_manifest_coverage_gap_2026_08_03.md`](/plans/active/issues/ml_strategy_manifest_coverage_gap_2026_08_03.md).
+      (b) strategy_orders/positions/pnl wiring, (c) backtest_results investigation, and (d) the ml_models/etc.
       manifest-WRITE design pass are each their own genuine judgment call — split to todo 3c below rather than guessed
       at in this dispatch, mirroring how todo 2 split unwired families to 2b/2c/2d.
 - [x] 3c. ✅ [SCRIPT] P2. **Design + wire the remaining ml/strategy orphan-coverage gaps todo 3/3b explicitly deferred**
@@ -351,9 +359,18 @@ lets each one be built, validated, and run to real completion on its own timelin
       either a phantom corpus (a) or an undefined comparison (b/c). Filed as its own doc with `[OPERATOR]`-tagged
       decision todos + a follow-on `[SCRIPT]` build todo gated on those decisions, rather than guess at a manifest
       schema unilaterally:
-      [`strategy_ml_orphan_coverage_design_gaps_2026_08_03.md`](strategy_ml_orphan_coverage_design_gaps_2026_08_03.md).
-- [ ] 4. [DOC] P2. Once todos 1-3c land real per-stage findings, write the combined cross-repo lineage report
-      `data_pipeline_check_mdps_features_2026_07_20.md` todo 11b actually asks for, then flip that todo.
+      [`strategy_ml_orphan_coverage_design_gaps_2026_08_03.md`](/plans/active/issues/strategy_ml_orphan_coverage_design_gaps_2026_08_03.md).
+- [x] 4. ✅ [DOC] P2. Once todos 1-3c land real per-stage findings, write the combined cross-repo lineage report
+      `data_pipeline_check_mdps_features_2026_07_20.md` todo 11b actually asks for, then flip that todo. **Done
+      2026-08-03** (`unified-trading-pm`): synthesized all 4 stage docs (raw-MTDS + the 3 new todo-1/2/2b-2d/3-3c
+      sweeps) into one report —
+      [`mdps_features_ml_strategy_orphan_lineage_report_2026_08_03.md`](/plans/active/issues/mdps_features_ml_strategy_orphan_lineage_report_2026_08_03.md).
+      Headline: every pipeline stage now has working, real-prod-data-validated orphan tooling (a corpus-wide gap this
+      doc's own scoping found didn't exist before todos 1-3c); every real orphan population found across all 4 stages is
+      either already backfilled or has a small, bounded, already-tracked follow-up — no new corpus-wide unknown
+      surfaced. Flipped `data_pipeline_check_mdps_features_2026_07_20.md`'s 11b pointer to cite the report in the same
+      commit. This issue doc's own scope (build the tooling + report the findings) is now fully complete — all todos 1-4
+      done.
 
 ## Progress Log
 
@@ -406,7 +423,7 @@ lets each one be built, validated, and run to real completion on its own timelin
   under 3 minutes, zero preemptions. Surfaced two real, substantial manifest-coverage gaps (onchain/defi 45% orphan,
   sports/sports 35% orphan = 67,860 real orphan objects) and one phantom-captured anomaly (calendar: 6 manifest rows, 0
   backing objects) — filed as their own doc, out of this todo's "validate the tool" scope:
-  [`features_service_manifest_coverage_gap_2026_08_03.md`](features_service_manifest_coverage_gap_2026_08_03.md).
+  [`features_service_manifest_coverage_gap_2026_08_03.md`](/plans/active/issues/features_service_manifest_coverage_gap_2026_08_03.md).
   Flipped todo 2b — genuinely complete (tool validated against real data for all 5 wired families, 2 of the 3
   originally-unwired families now wired). Split `commodity` (JSON not parquet, needs its own classification path) to new
   todo 2c rather than guess at its shape under time pressure.
@@ -470,7 +487,8 @@ lets each one be built, validated, and run to real completion on its own timelin
   `/codex/02-data/orphan-object-detection.md` §2c/§2d. Re-ran the ml VM to confirm clean (`A=0 C=2 D=0 E=0 F=236`).
   `strategy_instructions`'s real run found the manifest completely absent in prod (0 captured cells) with 7 real orphan
   objects — filed as its own doc, out of this todo's "validate the tool" scope, mirroring todo 1's/todo 2b's own
-  precedent: [`ml_strategy_manifest_coverage_gap_2026_08_03.md`](ml_strategy_manifest_coverage_gap_2026_08_03.md).
+  precedent:
+  [`ml_strategy_manifest_coverage_gap_2026_08_03.md`](/plans/active/issues/ml_strategy_manifest_coverage_gap_2026_08_03.md).
   Flipped todo 3b (genuinely complete: build + validate + PATH_REGISTRY decision + the sibling-corpus bug the real run
   caught, all done). Split (b) strategy_orders/positions/pnl wiring, (c) backtest_results investigation, and (d) the
   ml_models manifest-WRITE design pass to new todo 3c — each is its own genuine judgment call, mirroring todo 2's own
@@ -489,6 +507,6 @@ lets each one be built, validated, and run to real completion on its own timelin
   buildable without an operator-facing decision first (wire-up-or-delete for strategy_orders/positions/pnl; a
   manifest-WRITE design pass for backtest_results and ml_models/etc.) — filed as its own doc with `[OPERATOR]`-tagged
   decision todos + a gated follow-on build todo rather than guess at an unverified manifest schema:
-  [`strategy_ml_orphan_coverage_design_gaps_2026_08_03.md`](strategy_ml_orphan_coverage_design_gaps_2026_08_03.md).
+  [`strategy_ml_orphan_coverage_design_gaps_2026_08_03.md`](/plans/active/issues/strategy_ml_orphan_coverage_design_gaps_2026_08_03.md).
   Flipped todo 3c — the investigation/design-pass scope this todo asked for is genuinely complete; todo 4 (the combined
   cross-repo report) remains open, gated on todos 1-3c's real findings, which now all exist.
