@@ -824,6 +824,22 @@ mirroring the batch1/batch2/batch3/batch4 finalize pattern.
   consistent with the manual check moments earlier (`day=2021-04-27` at `20:30Z`). VM remains healthy, 0 errors, ~13h
   ETA holds. Follow-through (`build-continuous`, hit-rate re-measure, checkbox flip) still not yet done.
 
+- **2026-08-03T01:09Z (slot-3, data_engineering) — session-end checkpoint, context-usage-triggered (~65%), handing off
+  mid-backfill.** VM `mdps-backfill-tradfi-20260802-175522` confirmed `RUNNING`, last real progress
+  `day=2023-09-13 at 01:02:27Z` — roughly 63% through the full `2020-01-01..2026-07-25` range (~2398 days), 0 errors the
+  entire session, pace steady ~3.3 days/min. **Zero data at risk from this handoff**: everything durable (methodology,
+  the watchdog-syntax fix, every real progress checkpoint) is already committed above; the only session-local artifact
+  is the corrected `Monitor` watchdog task itself (id `b5g3kc6ko` in this chat session), which is NOT durable and dies
+  with this session — **whoever resumes must re-arm their own watchdog** (fixed byte-range recipe:
+  `gsutil cat -r -150000` / `-r -200000`, NO trailing dash — see the 2026-08-02T20:31Z correction entry above for the
+  full incident) rather than assume one is still watching. At the current pace, ETA to the full range is roughly
+  `2026-08-03T07:00-08:00Z`. **Resume checklist for the next session**: (1)
+  `gcloud compute instances describe mdps-backfill-tradfi-20260802-175522 --zone asia-northeast1-c` to confirm still
+  `RUNNING` (or find its terminal state if it finished/died while unwatched); (2) if still running, re-arm a watchdog
+  with the corrected syntax and keep waiting — do NOT launch a second VM; (3) once terminal, run
+  `build-continuous --root ES`, re-measure the `continuous_future` hit rate against the ~19% (454/2398) baseline this
+  todo exists to beat, and only then flip this checkbox with the before/after evidence. Todo NOT done — do not flip.
+
 ## Codex SSOTs
 
 No new durable contract is created by this plan — every todo executes an already-decided spec from its source doc, or
