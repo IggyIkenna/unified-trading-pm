@@ -314,18 +314,20 @@ the diagnostic script itself (kept for lifecycle-marker traceability, delete-whe
   every KALSHI scaffold row was stamped with Polymarket's provenance. Fixed by venue-resolving via
   `derive_pipeline_mode_for_row` FIRST for `asset_group="prediction"` (its `_VENUE_OVERRIDES["KALSHI"] == BATCH_KALSHI`,
   the same table the already-fixed real capture writer uses) — provable safe superset for POLYMARKET rows and every
-  other asset_group (unreachable branch there); 13 new unit tests. `instruments-service@afdb1ad6`. Then backstamped the
-  live corpus via a new `market-tick-data-service/scripts/restamp_prediction_kalshi_scaffold_provenance_2026_08_03.py`
-  (additive per-VM-shard write — race-free vs the live per-minute consolidator, since `pipeline_mode`/`source` aren't
-  consolidator dedup-key columns): dry-run measured 12,006 live target rows (this todo's originally-cited 129,227 had
-  already collapsed via unrelated ongoing corpus maintenance — same churn pattern as this doc's earlier "Class-B...
-  13,292 -> 51" finding), 0 captured (confirms scope is disjoint from the already-fixed captured-row defect), applied,
-  consolidator-merge verified clean (0 residual mismatched KALSHI rows) 2026-08-03T17:1x.
-  `market-tick-data-service@ce275975` (+`d3260d2f` dropping 2 unneeded `# type: ignore` the precedent script's pattern
-  didn't actually need here since basedpyright's `include=["market_tick_data_service"]` never typechecks repo-root
-  `scripts/`). Also found + fixed a PRE-EXISTING, unrelated repo-wide QG false-positive blocking ship
-  (`market-tick-data-service@5893ae3e`): STEP 5.95's naive `# type: ignore` text-count ratchet was tripped by a
-  docstring in `scripts/pipeline_e2e_check.py` merely _mentioning_ the phrase in prose (landed 2026-08-03 in `bccb95ea`,
-  after the 2026-07-30 ratchet freeze) — rephrased, no behavior change. Filed a new P3 todo above for the sibling bug
-  class in OTHER `_VENUE_OVERRIDES` venues (spot-checked live: `tradfi`/IBKR currently mis-stamps `batch_fred` — out of
-  this P2's scope, needs its own rule-11 cross-AG verification).
+  other asset_group (unreachable branch there); 5 new unit tests. `instruments-service@afdb1ad6` (corrected 2026-08-03
+  from a mis-stated "13" per review spot-check msg #3572 — `afdb1ad6` adds 5, the mtds restamp commit `ce275975` below
+  adds 12, so 17 total across both, independently re-counted from the diffs). Then backstamped the live corpus via a new
+  `market-tick-data-service/scripts/restamp_prediction_kalshi_scaffold_provenance_2026_08_03.py` (additive per-VM-shard
+  write — race-free vs the live per-minute consolidator, since `pipeline_mode`/`source` aren't consolidator dedup-key
+  columns): dry-run measured 12,006 live target rows (this todo's originally-cited 129,227 had already collapsed via
+  unrelated ongoing corpus maintenance — same churn pattern as this doc's earlier "Class-B... 13,292 -> 51" finding), 0
+  captured (confirms scope is disjoint from the already-fixed captured-row defect), applied, consolidator-merge verified
+  clean (0 residual mismatched KALSHI rows) 2026-08-03T17:1x. `market-tick-data-service@ce275975` (+`d3260d2f` dropping
+  2 unneeded `# type: ignore` the precedent script's pattern didn't actually need here since basedpyright's
+  `include=["market_tick_data_service"]` never typechecks repo-root `scripts/`). Also found + fixed a PRE-EXISTING,
+  unrelated repo-wide QG false-positive blocking ship (`market-tick-data-service@5893ae3e`): STEP 5.95's naive
+  `# type: ignore` text-count ratchet was tripped by a docstring in `scripts/pipeline_e2e_check.py` merely _mentioning_
+  the phrase in prose (landed 2026-08-03 in `bccb95ea`, after the 2026-07-30 ratchet freeze) — rephrased, no behavior
+  change. Filed a new P3 todo above for the sibling bug class in OTHER `_VENUE_OVERRIDES` venues (spot-checked live:
+  `tradfi`/IBKR currently mis-stamps `batch_fred` — out of this P2's scope, needs its own rule-11 cross-AG
+  verification).
