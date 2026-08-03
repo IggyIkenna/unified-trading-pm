@@ -80,11 +80,12 @@ deleted, not left as misleading documentation.
 
 ## Todos
 
-- [ ] [AUDIT] P3. **Audit multi_timeframe's feature_builder_registry `depends_on` entries** — for each, check whether
+- [x] [AUDIT] P3. **Audit multi_timeframe's feature_builder_registry `depends_on` entries** — for each, check whether
       the dependent calculator's `__init__` accepts an upstream-injected DataFrame (like composite_sr did) vs recomputes
       internally (like delta_one's confluence/risk_reward/wedge_quality). Repo: features-service. Done when: every
       declared dep in `features_service/multi_timeframe/schemas/feature_builder_registry.py` is classified
-      real-bug-fixed/confirmed-harmless/deleted-dead-code, with evidence per entry.
+      real-bug-fixed/confirmed-harmless/deleted-dead-code, with evidence per entry. ✅ — audited, see Progress Log
+      2026-08-03 entry (only 1 of 9 registry entries declares a non-empty `depends_on`; classified CONFIRMED-HARMLESS).
 - [ ] [AUDIT] P3. **Audit onchain's feature_builder_registry `depends_on` entries** — same method as above. Repo:
       features-service. Done when: every declared dep in `features_service/onchain/schemas/feature_builder_registry.py`
       is classified real-bug-fixed/ confirmed-harmless/deleted-dead-code, with evidence per entry.
@@ -104,3 +105,31 @@ deleted, not left as misleading documentation.
   and the cross-cutting consolidated closeout (zero mentions of feature_builder_registry) — cleared. Added
   `assigned_role: backend_engineer` (was missing). `doc_type: issue` — exempt from the finalize-plan-coverage rule, no
   companion finalize doc authored.
+
+- **2026-08-03 (multi_timeframe audit, slot 8)**: Read
+  `features_service/multi_timeframe/schemas/feature_builder_registry.py`'s `_metadata` table (9 registry entries: the 6
+  Phase-0 cross-TF/regime calcs + `wedge_confluence`, `tf_risk_reward`, `tf_confluence_signals`). Only **one** entry
+  declares a non-empty `depends_on`: `tf_risk_reward` → `["wedge_confluence"]` — every other entry's `depends_on` is
+  `[]`. Classification of that one declared dep: **CONFIRMED-HARMLESS** (decorative, same pattern as delta_one, not a
+  live bug like cross_instrument's `composite_sr`). Evidence:
+  - `TfRiskRewardCalculator.__init__` (`features_service/multi_timeframe/calculators/tf_risk_reward.py:82-89`) takes
+    only `timeframes`/`timeframe`/`mode` — no injectable upstream-DataFrame param. Same for
+    `WedgeConfluenceCalculator.__init__` (`wedge_confluence.py:140-147`), and the shared
+    `BaseFeatureCalculator.__init__` (`base_calculator.py:45-49`) caps every MTF calculator to `timeframe`/`mode` —
+    there is no constructor-injection point anywhere in this engine's calculator hierarchy (unlike cross_instrument's
+    `composite_sr`, which genuinely had one that went unwired).
+  - `TfRiskRewardCalculator._calculate_features` reads `poly_medium_resistance_value_{tf}`,
+    `poly_medium_support_value_{tf}`, `atr_14_{tf}` directly off the shared input `df` (the MTF join-layer frame) — it
+    never references any of `wedge_confluence`'s actual OUTPUT columns (`wedge_confluence_score`,
+    `wedge_confluence_{lo}_{hi}`, `wedge_convergence_alignment`, `wedge_min_bars_to_convergence`); confirmed via
+    `rg -n "wedge_confluence" tf_risk_reward.py` → zero hits. Both calculators independently read raw poly/ATR columns
+    off the same pre-joined frame; there is no producer→consumer data relationship between them despite the declared
+    `depends_on` edge.
+  - `features_service/multi_timeframe/engine/orchestrator.py` sequences calculators via a flat
+    `self.config.enabled_feature_groups` list (line ~590, `for group_name in self.config.enabled_feature_groups`) —
+    `resolve_build_order()`/`get_all_builders()` are imported by `schemas/__init__.py` and re-exported but never
+    actually called by the orchestrator, batch handler, or service (`rg -n "resolve_build_order"` outside the schema
+    module itself → 0 call sites), matching the doc's original cross-engine finding.
+  - Repo: features-service (no code change — audit-only todo, done_definition is classification with evidence, not
+    deletion; leaving the registry file as-is mirrors how delta_one's confirmed-harmless finding was left in this same
+    doc, not deleted). Checkbox flipped above.
