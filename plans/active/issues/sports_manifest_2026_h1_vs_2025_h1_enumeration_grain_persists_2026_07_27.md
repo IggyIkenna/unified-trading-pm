@@ -200,10 +200,41 @@ distributed by date) — both are P2/P3-appropriate follow-ups, not a foundation
       picks up the change and the recurring job's next 01:30 UTC run will carry the live rolling `--start-date`,
       verifiable via `gcloud run jobs executions list --job expected-universe-v2-sports` post-apply per the file's own
       "NOT fire-and-forget" verification note).
-- [ ] [DATA] P2. Implement job (2): the gated one-time historical `expected_unattempted` denominator backfill floored at
-      **2020-06-06** (sports). Gated + resource-bounded (heavy — run on a VM per the heavy-I/O rule, never locally);
+- [x] ✅ [DATA] P2. Implement job (2): the gated one-time historical `expected_unattempted` denominator backfill floored
+      at **2020-06-06** (sports). Gated + resource-bounded (heavy — run on a VM per the heavy-I/O rule, never locally);
       scope to sports first. Done-when: 2020-06-06..present sports dates carry a seeded `expected_unattempted` universe
-      so cross-year honest-coverage comparisons share one denominator regime. (repo: deployment-service)
+      so cross-year honest-coverage comparisons share one denominator regime. (repo: deployment-service) —
+      deployment-service@e903189. New `scripts/vm/launch-expected-universe-v2-historical-backfill-vm.sh` chunks
+      floor-date..(rolling-boundary − 1 day) into calendar-year windows and launches
+      `launch-expected-universe-v2-vm.sh --apply-write` per chunk sequentially (waits for each chunk's VM to reach a
+      terminal state before the next — respects the child launcher's own singleton lock, no `--force`), with
+      `ENUM_START_DATE`/`ENUM_END_DATE` per chunk (env hooks the child launcher already supported). Sports defaults
+      `--floor-date` to `2020-06-06` (codex/02-data/sports-2020-06-data-floor.md); every other asset_group requires an
+      explicit `--floor-date` (no codified floor yet — that's job (3) below). Rolling boundary is computed live
+      (`today - 120d`, mirroring job (1)'s fix) so a re-run correctly narrows to only the still-uncovered range. Safe to
+      re-run: the enumerator only ADDS `expected_unattempted` rows to cells with no existing capture_status row, and
+      each chunk writes its own per-VM shard. Verified via `--dry-run` against the real 2026-08-03 clock: sports
+      produces 7 chunks (2020-06-06..2020-12-31 through 2026-01-01..2026-04-04); the non-dry-run sequential launch+wait
+      loop verified against a stubbed child-launcher + stubbed `gcloud` (new
+      `tests/test_launch_expected_universe_v2_historical_backfill.sh`, 9/9 pass). The actual production launch (7 real
+      GCE VMs sequentially against the live sports manifest bucket) was NOT run in this session — each chunk's real run
+      is comparable in scale to the recurring job's own 120-day window (which needs a 3600s Cloud Run Job timeout for
+      ~1/15th the span), so a full 7-chunk sequential run is a multi-hour-to-multi-day real backfill, outside a single
+      worker-session's scope; kicking it off is the operator's/a dedicated follow-up run's call. Also fixed a
+      pre-existing `set -e` leak in the sibling `test_launch_expected_universe_v2.sh`'s `_run` test helper (found while
+      modeling this task's new harness on it — it broke that file's own non-verbose mode).
+- [ ] [DATA] P2. Launch + verify the real production run of job (2)'s new
+      `scripts/vm/launch-expected-universe-v2-historical-backfill-vm.sh sports` (deployment-service@e903189) — 7
+      sequential calendar-year VM chunks, 2020-06-06..2026-04-04 (recompute the rolling boundary live at launch time,
+      don't reuse this fixed date). Launch chunk 1 (2020-06-06..2020-12-31) first as a validation slice; confirm it
+      completes clean (no OOM — sports isn't on the defi memory-bump stopgap tier, verify e2-standard-4/16GB is actually
+      sufficient for sports' catalogue size before trusting the remaining 6 chunks to the same default) and writes a
+      sane row count to its per-VM shard before letting the rest run. NOT fire-and-forget: verify each chunk's STARTED
+      event <60s, monitor progress, verify STOPPED/FAILED at completion (script already blocks sequentially and prints
+      each chunk's VM name + log paths). Done-when: all 7 chunks TERMINATED with no FAILED lifecycle event, per-VM
+      shards visible in `gs://instruments-store-sports-prd-central-element-323112/_index/per_vm/`, and a post-run
+      cell-seeding ratio re-check (same method as this issue's own read-only measurement) shows the 2025-vs-2026 H1
+      ratio has moved toward ~1x. (repo: deployment-service)
 - [ ] [DATA] P3. Re-measure the same static-default `expected_universe_start_date` pattern for
       cefi/defi/tradfi/prediction (same `expected_universe_v2_asset_groups` map, same `.tf`) — NOT covered by this
       sports-scoped issue; likely the same boundary artifact. Read-only measurement first; widen/backfill per the same
