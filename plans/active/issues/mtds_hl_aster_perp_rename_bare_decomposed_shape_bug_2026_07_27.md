@@ -169,6 +169,35 @@ sibling todo reads `[x]`.
       line under severe host-wide swap pressure (9-13GB swap in use, unrelated to this script) once cleanup of its large
       in-memory DataFrames was the only remaining work — both GCS and manifest result stats were already fully logged
       before termination, so no evidence was lost.
-- [ ] [SCRIPT] P2. Once confirmed fixed + no double-suffix + cross-checked against the sibling closure, execute
-      `--apply --stamp <stamp>` for the 1,496 real renames (small, bounded scale — a direct execution, not a VM launch)
-      with the standard idempotent copy→verify→delete safety this script already implements.
+- [x] ✅ [SCRIPT] P2. **DONE 2026-08-03 (slot-3)** — re-confirmed via a fresh dry-run first (0 double-suffix anywhere,
+      fix intact on disk), then executed
+      `CLOUD_PROVIDER=gcp GCP_PROJECT_ID=central-element-323112 python scripts/migrate_onchain_perp_perpetual_canonical_2026_07_08.py --apply --stamp 20260803T1457Z`
+      against real prod GCS (`market-data-tick-cefi-prd-central-element-323112`). **Count drift noted**: 1,970 in-scope
+      renames this run, not the 1,496 from 2026-07-27 — corpus grew over the intervening week AND now includes
+      HYPERLIQUID objects (e.g. `ADA-USD@LIN.parquet`) alongside ASTER, not just ASTER as originally reported; this is
+      NOT a regression — the fix's own design + unit tests explicitly cover the already-decomposed shape for BOTH venues
+      (see todo 1's test list), the earlier 1,496 was simply a snapshot of a smaller in-scope set at the time. **GCS
+      result**: `{'deleted_dup_source': 1048, 'renamed': 922}` = 1,970 total, 0 errors, 0 `source_missing`. The 1,048
+      `deleted_dup_source` outcomes mean the CANONICAL target already existed for those objects (likely written fresh by
+      live/batch capture under the correct name) while the stale bare-shape duplicate lingered — safely deleted per the
+      script's existing idempotent logic, no data lost. **Manifest result**: loaded 9,979,440 rows (42 cols); 2,073,538
+      in-scope HL/ASTER batch rows; 0 `_from_venue_perp_shape` (confirms, independently and again, zero overlap with the
+      sibling Script-2/3 closure); 56 `_from_bare_legacy_shape` rows transformed; 645,743 duplicate rows collapsed on
+      merge; 1,462 `attempted_failed` rows correctly flipped to `captured` via a real captured-duplicate at the same
+      canonical key; 6,003 `attempted_failed` remain (legitimate); final index 9,333,697 rows. Backup written to
+      `gs://market-data-tick-cefi-prd-central-element-323112/_index/backups/availability_index.pre_perpetual_canonical_20260803T1457Z.parquet`
+      before the overwrite. **Host-safety note**: the manifest-rewrite phase (full in-memory pandas load + sort/groupby/
+      dedup over ~10M rows) transiently used 14-16GB RSS on the shared host — watched closely given this exact shape
+      caused 2 prior OOM outages on this host (`RULES.md` § 1), but it plateaued/oscillated rather than climbing
+      unboundedly and the host retained double-digit GB "available" throughout; did not require killing. Evidence:
+      `unified-trading-pm@<this commit>` (plan flip only — no code changed in market-tick-data-service for this todo,
+      pure runtime execution against already-shipped code from todo 1).
+- [ ] [SCRIPT] P3. **Follow-up (not this task's scope)**: investigate whether HL/ASTER batch capture is still actively
+      WRITING new objects in the bare (no `VENUE:` prefix) filename shape this migration just cleaned up — the 1,048
+      `deleted_dup_source` outcomes above show canonical-named counterparts already existed for most of the 1,970
+      objects, meaning something recently wrote the CORRECT name while the stale bare-named duplicate never got cleaned
+      up until now; if the underlying writer is still emitting the bare shape for NEW captures, this class of bug will
+      recur after this one-off script's cleanup. Check the batch_hyperliquid/batch_aster capture path for any remaining
+      bare-filename write site (repo: market-tick-data-service). If confirmed still active, file a proper fix todo; if
+      it was a one-time historical artifact (e.g. from the original 2026-06-22 migration's own incomplete pass), this
+      todo resolves as `no-issue-found`.
