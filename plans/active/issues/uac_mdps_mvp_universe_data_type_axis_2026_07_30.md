@@ -97,9 +97,14 @@ ordering hazard).
       `test_models_is_total_returns_empty` all assert `mdps_mvp_universe(...) == frozenset()` with no raise;
       `test_unknown_asset_group_raises` confirms a genuinely undeclared asset_group still raises, so the two cases stay
       distinguishable.
-- [ ] [BACKEND] P3. Run the post-phase codex audit on any codex doc describing `mdps_mvp_universe()`'s contract/shape
+- [x] ✅ [BACKEND] P3. Run the post-phase codex audit on any codex doc describing `mdps_mvp_universe()`'s contract/shape
       (grep `codex/` for `mdps_mvp_universe` / `_mvp_scope_mdps`) since its signature changed — update or
-      SUPERSEDED-banner anything now stale.
+      SUPERSEDED-banner anything now stale. Evidence: `rg -ni 'mdps_mvp_universe|_mvp_scope_mdps'` and a wildcard-spaced
+      variant across all of `codex/` (1072 files, 16.3MB) return ZERO hits — no codex SSOT doc describes this function's
+      contract/shape at all, so there is nothing stale to update or SUPERSEDED-banner. (The nearby
+      `mvp-scope-canonical.md` / `cefi-capture-universe.md` docs cover the sibling `mvp_scope.py` /
+      `is_in_mvp_capture_universe` predicate, a different module, and were unaffected by this change.) Audit-clean, no
+      code change required.
 - [x] ✅ [BACKEND] P2. **NEW 2026-07-31 (slot-8, discovered via `market-data-processing-service`'s `quality-gates.sh` §
       "PIPELINE-E2E-CHECK DRIVER SMOKE" step — non-blocking on QG's own exit code, but a real enumeration break).**
       `market-data-processing-service/scripts/pipeline_e2e_check.py::_candle_data_types_for_market_ag` (line ~436) was
@@ -125,6 +130,23 @@ ordering hazard).
       `get_mvp_data_types_for_cefi_venue_itype` / `is_mvp` imports dropped. Repro re-run clean post-fix:
       `--dry-enumerate` produces 819/91/1974 shard-cells for cefi/tradfi/defi respectively with no unpack error;
       `bash scripts/quality-gates.sh` PIPELINE-E2E-CHECK DRIVER SMOKE step passes.
+- [ ] [SCRIPT] P3. **Archive this doc per the plan-completion-and-archival-discipline HARD RULE (all 4 todos above are
+      now `[x]`, `locked_by:` empty).** Do NOT just `git mv` it blind:
+      `mdps_features_live_launcher_exec_dispatch_never_wired_2026_07_27.md` carries
+      `depends_on: [uac_mdps_mvp_universe_data_type_axis_2026_07_30]` + `gate_on_depends: true`, and
+      `agent-orchestrator/server/regen_backlog_from_plan.py`'s `_wire_gate_on_depends_prereqs` resolves that upstream
+      slug by scanning `plans/active/*.md` — moving this doc out of `plans/active/` could make a future regen tick fail
+      to find it. First verify (read `_wire_gate_on_depends_prereqs` + `_scrub_completed_upstream_prereqs` in
+      `regen_backlog_from_plan.py`) whether the gate's `prereqs.completed_tasks` wiring is a one-time derivation
+      (already-recorded SQLite task IDs, safe to archive — the dependent plan's gate stays satisfied via its own DB
+      state regardless of the source doc's path) or a live re-derivation-on-every-tick (NOT safe to archive without
+      first re-pointing the dependent plan's `depends_on` at the archived path or confirming archived docs are still
+      scanned). Then run the 6-step archival ritual
+      (codex/12-agent-workflow/plan-completion-and-archival-discipline.md): fix the 2 referrers
+      (`plans/active/data_pipeline_check_mdps_features_2026_07_20.md`,
+      `plans/active/issues/mdps_features_live_launcher_exec_dispatch_never_wired_2026_07_27.md` — the latter's
+      `depends_on`/`gate_on_depends`/banner all cite this doc by slug), add the archived-banner, `git mv` to
+      `plans/archive/2026_08/`.
 
 ## Progress Log
 
@@ -145,3 +167,12 @@ ordering hazard).
   quality-gates.sh green + PIPELINE-E2E-CHECK DRIVER SMOKE passing is the regression proof (no unit test previously
   covered this enumeration path).
 - **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).
+- **2026-08-03 (slot-8)**: Ran todo 3's codex audit — `rg -ni 'mdps_mvp_universe|_mvp_scope_mdps'` across all of
+  `codex/` (1072 files) returns zero hits; no codex SSOT describes this function's contract/shape, so there is nothing
+  stale to fix. Flipped the checkbox. That leaves all 4 original todos `[x]` with `locked_by:` empty, which per
+  `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md` means this doc is due for immediate archival —
+  but it gates `mdps_features_live_launcher_exec_dispatch_never_wired_2026_07_27.md` via `depends_on` +
+  `gate_on_depends: true`, and I haven't verified whether `regen_backlog_from_plan.py`'s gate-wiring is a one-time
+  derivation (archival-safe) or re-derived every tick by scanning `plans/active/*.md` (archival-risky without first
+  re-pointing the dependent plan). Rather than archive blind on a P3 audit task's narrow scope, added a new tracked P3
+  todo above scoping the exact check + the 6-step ritual (2 referrers named) for whoever picks it up next.
