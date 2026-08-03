@@ -184,3 +184,45 @@ repeated here.
   doc within minutes of each other and have been merged here (not left as two competing files). Todo 2 (operator-flagged
   dedup/cooldown gap) remains open and unaddressed by this entry — now ~15 same-day fires for `features-service` alone,
   plus corroborating counts for `deployment-service`/`execution-service`.
+
+- **2026-08-03 ~15:56Z (`cicd` escalation `agt-5b13b5`, slot 8, `alerting-service`, `wall_type=ldr_qg_failure`,
+  `pr_number=0`) — a 4th repo added to the corroboration list, no code gap, one supporting data point on the
+  same-tree-different-outcome signature**: escalation cited run `30808107879` (started `11:05:12Z`, commit `21bd8bc0`)
+  which failed the `tests` slice on two unrelated, independently-mocked tests —
+  `test_router_deployment_enrichment.py::TestDataPipelineDeepLinks::test_empty_base_url_omits_links` and
+  `test_incident_persister.py::TestPersistActionEvent::test_upload_called_once` — both
+  `Failed: Timeout (>150.0s) from pytest-timeout`, 2 failed/908 passed/972.22s actual pytest runtime. Read both test
+  files + the code paths they exercise
+  (`alerting_service/notifiers/router.py::route_event`/`_mirror_to_data_pipeline_slack`,
+  `alerting_service/gateway/incident_persister.py::IncidentPersister`): every external sink (`AlertingSystemConfig`,
+  `send_data_pipeline_alert`, `get_paging_credentials`, `_persist_*`, `send_uts_live_alert`) is patched in the router
+  test, and the persister test injects a `MagicMock` `storage_client` directly — no un-mocked network/GCS call on either
+  path. Specifically checked for the `_get_cloud_config` lru_cache-poisoning bug class documented elsewhere in this
+  repo's own history: `tests/conftest.py` already carries an autouse `_clear_notifier_config_caches` fixture that
+  cache-clears `router`/`pagerduty`/`slack`/`storage_store`'s `_get_cloud_config` before every test — ruled out. Two
+  unrelated tests timing out at exactly the shared 150s ceiling, on properly-mocked code, is the established
+  scheduler-starvation signature, not a per-test defect. Confirmed `gh api .../actions/runners`: `alerting-service` has
+  exactly ONE online runner, `glue-ip-172-31-5-118-1` (same name/IP as every other repo in this doc-chain), `busy=true`
+  — the fleet-wide single-runner bottleneck, not repo-specific. **Direct corroborating evidence for the
+  same-tree-different-outcome signature**: a `main`-branch `quality-gates-v2` run (`30813349842`, `workflow_dispatch`,
+  started `12:23:01Z`, overlapping the failing LDR run's own `12:14-12:58Z` window) completed `success` on
+  content-equivalent code — same test suite, same approximate wall-clock window, opposite outcome, purely a function of
+  which runner-contention lottery each run drew. `ldr-to-main-promote-fleet`'s latest tick (`30828957778`, `15:45:08Z`)
+  already reads `alerting-service` `ci_status cached='MAIN_GREEN' live='MAIN_GREEN'`,
+  `SKIP: main tree == LDR tree (content-identical)` — the promotion gate is UNAFFECTED by the earlier LDR-run failure (a
+  later `main` success already overwrote the Firestore `ci_status` projection).
+  `alerting-service/scripts/quality-gates.sh` carries no `PYTEST_TIMEOUT` override (stays at `base-service.sh`'s shared
+  150s default) and pins `PYTEST_WORKERS=2` (fixed, not `auto`) — consistent with, not a cause of, the contention
+  signature. Per this doc-chain's established practice (todo 1: root-cause is capacity-side, another per-repo timeout
+  raise is discouraged), did NOT bump `PYTEST_TIMEOUT` for this repo. A fresh re-verify run (`30816220716`, dispatched
+  by an earlier pass before this escalation) was still genuinely `in_progress` at investigation end —
+  `QG slice (checks)` alone took `44m26s` (itself evidence of the same runner contention outside the `tests` slice), and
+  the `tests` slice's own `Run quality gates (leg tests)` step had been running ~51min with no completion — did not
+  cancel/redispatch (would lose real elapsed queue survival for zero benefit, per this doc-chain's established
+  precedent). `GET /api/repo-blockers` → `open: []`; no redundant runner-hogging job found to cancel. **Disposition: no
+  code or workflow change made or needed** — outcome of `30816220716` left for the next occurrence, consistent with
+  practice. `AUTHORING_SLOT=ldr-ci-monitor` (a workflow-dispatch sentinel, not a real numbered slot per `cicd.md`'s
+  `^[0-9]+$` check) — skipped the authoring-slot ping (the dispatch-time Slack alert already covers the FYI). Slot left
+  clean (`alerting-service` and `unified-trading-pm` both on `live-defi-rollout`, 0 commits ahead of origin beyond this
+  doc's own commit; no branch changes in either repo). Now a 4th repo (`alerting-service`, alongside
+  `deployment-service`/`features-service`/ `execution-service`) showing this identical bug-class signature.
