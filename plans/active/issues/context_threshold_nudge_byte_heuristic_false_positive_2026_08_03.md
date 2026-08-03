@@ -89,9 +89,21 @@ session with no completed turn).
 
 # Plan
 
-- [ ] [SCRIPT] P3. **Rewrite `context-threshold-nudge.sh` to compute `EST_TOKENS` from the last transcript line's
+- [x] [SCRIPT] P3. **Rewrite `context-threshold-nudge.sh` to compute `EST_TOKENS` from the last transcript line's
       `message.usage` fields (summed) when available, falling back to the existing byte/4 heuristic only when no
       assistant-turn usage data exists.** Update the nudge message to state whether the figure is `measured` (real
       usage) or `estimated` (heuristic fallback), so a future false-positive is distinguishable from a real one at a
       glance. Verify against this session's own transcript (expect the computed figure to land near the ~29-30%
-      independently derived above, not a byte-count-inflated number) before shipping.
+      independently derived above, not a byte-count-inflated number) before shipping. — `unified-trading-pm@070d679f1`.
+      Verified via `bash -x` traces against 3 cases run directly against this hook script: (1) this session's real
+      transcript → `REAL_TOKENS=330394`, `SOURCE=measured`, correctly stayed silent (well under the 650000-token
+      threshold, confirming the false positive is gone); (2) a synthetic transcript line with
+      `cache_read_input_tokens=700000` → fired with `"Context usage is MEASURED at ~70%..."`; (3) a synthetic transcript
+      with no assistant/usage line at all → `REAL_TOKENS=` empty, correctly fell back to `SOURCE=estimated`,
+      `EST_TOKENS=19` (byte/4 on a 76-byte fixture).
+
+# Progress Log
+
+- **2026-08-03**: filed, diagnosed (real transcript `message.usage` cross-check ≈29-30%, matching the operator's own
+  reading, vs the byte heuristic's false ≥65% read), fixed, and verified all in one session. See the todo's own evidence
+  line for the fix commit + the 3 verification cases run. No residual follow-up — archiving next.
