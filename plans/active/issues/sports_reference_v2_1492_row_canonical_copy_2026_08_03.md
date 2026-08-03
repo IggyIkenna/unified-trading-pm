@@ -52,16 +52,62 @@ pending exactly this migration.
 
 ## Todos
 
-- [ ] [DATA] P1. Identify the exact 1,492 rows (re-run the census from
+- [x] ✅ [DATA] P1. Identify the exact 1,492 rows (re-run the census from
       `sports_satellite_ao_dispatch_batch5_2026_07_26.md` to confirm the count is still current — the corpus has moved
-      since 2026-07-26).
+      since 2026-07-26). **DONE 2026-08-03 — count is NOT current: corrected to 764 distinct rows** (down from the cited
+      1,492; see Progress Log for full methodology + evidence). Durable artifact:
+      `gs://instruments-store-sports-prd-central-element-323112/_index/audit/sports_reference_v2_prefloor_census_2026_08_03.parquet`
+      (764 rows, one per (day, entity) cell) — this is the exact row list todo 2 should consume.
 - [ ] [DATA] P1. Copy the confirmed rows to canonical storage (the same target path/schema the rest of the sports corpus
-      already uses), verified row-count-conservation + content-identical.
+      already uses), verified row-count-conservation + content-identical. **UPDATED SCOPE (2026-08-03)**: copy the 764
+      deduplicated (day, entity) cells listed in `sports_reference_v2_prefloor_census_2026_08_03.parquet` — source from
+      either the `bare_uri` or `pipeline_mode_uri` column (content-identical, crc32c-verified) for each cell, do NOT
+      copy both (would double-write canonical storage for the same logical row).
 - [ ] [VERIFY] P1. Re-run the canonical-twin check against the copied rows — confirm 100% now have a canonical twin.
 - [ ] [OPERATOR] P2. Once verified, retag the two `sports_reference_v2/by_date/` cull todos back to self-justified (drop
       the `[OPERATOR]` + delete-safety §3a citation added 2026-08-02) — this is the reversion B's ruling specified, not
       an independent decision.
+- [ ] [DATA] P3. Root-cause and retire whatever wrote the 764 `pipeline_mode=batch_api_football`-tagged duplicate copies
+      INTO `sports_reference_v2/by_date/` (still the legacy tree, not canonical `sports_reference/by_date/`) around
+      2026-06-24 — see Progress Log finding below. Low urgency (byte-identical duplicates, no correctness impact, all
+      mtimes cluster at a single past date so it does not look like an active ongoing writer), but it's an undocumented
+      migration-script side-effect worth tracing to its source script and either fixing (write to the correct canonical
+      path) or deleting.
 
 ## Progress Log
 
 - **2026-08-03** — Filed per operator ruling resolving the § 1b A-vs-B conflict in favor of B.
+- **2026-08-03 (data_engineering, slot 14)** — Re-ran the census live against GCS (not against a stale snapshot).
+  Methodology: `gsutil ls -r` (bounded to the single `sports_reference_v2/by_date/` prefix — 1,592 objects, 42 MB total,
+  NOT a whole-corpus walk) → parsed `day=`/`entity=`/`pipeline_mode=` from each URI → split on the ratified 2020-06-06
+  floor.
+  - **Live count today: 1,528 physical objects for pre-floor days** (up from the 1,492 cited by the batch5 doc /
+    2026-07-22 triage), BUT these decompose to **exactly 764 distinct (day, entity) logical cells** (382 distinct days ×
+    2 entities `fixtures`+`fixture_stats`, same day range as the original triage: 2018-01-02..2020-05-25). Every single
+    cell (764/764) has TWO physical copies: one at the bare `day={D}/entity={E}/` path and one at
+    `day={D}/pipeline_mode=batch_api_football/entity={E}/` — both still under the legacy `sports_reference_v2/` tree
+    (not the canonical `sports_reference/` tree). Verified these are true duplicates, not divergent content: all 764/764
+    pairs are byte-size-identical, and a 15-pair crc32c spot-check (matching the original triage's 15-sample rigor)
+    found 0 mismatches. The pipeline_mode-tagged copies' mtime is 2026-06-24 (sampled) — i.e. they already existed
+    before the original 2026-07-22 triage ran, but that triage's own §5 explicitly found "0% pipeline_mode coverage" for
+    this population, meaning its classifier did not count these pipeline_mode-tagged siblings into the 1,492/34,385
+    figures at all. This reconciles the previously-unexplained "728-row" figure quoted verbatim in
+    `sports_satellite_ao_dispatch_batch2_2026_07_24.md:617` and this doc's own source triage (§7 todo 4's completion
+    note): the 2026-07-25 rescan's own audit-parquet snapshot recorded exactly 728 v2-pre-floor rows (confirmed by
+    reading `gs://…/_index/audit/orphan_sweep_sports.parquet`, mtime 2026-07-25), but ALL entity=`fixture_stats` only (0
+    `fixtures`), over a narrower day range (2018-01-02..2019-01-09, 364 days) — a partial/incomplete recording of the
+    same underlying 764-cell population, not a separate population.
+  - **Re-verified the "sole surviving copy" premise still holds**: ran an exhaustive canonical-twin existence check
+    (bounded per-cell `list_blobs(prefix=…, max_results=1)`, 764 checks via a thread pool — not a corpus walk) against
+    `sports_reference/by_date/day={D}/entity={E}/` for all 764 cells, plus a 4-day spot check of the
+    pipeline_mode-tagged canonical variant and the bare day-level prefix. **Result: 0/764 cells have any canonical twin
+    at any path variant** — same conclusion as the 2026-07-22 triage, just against the corrected 764-cell population.
+  - **Conclusion: the count is NOT current. Corrected figure is 764 distinct rows** (not 1,492) — the original count
+    over-stated physical-object count without deduplicating the in-tree `pipeline_mode=`-tagged sibling copies that
+    already existed at triage time but were excluded from that triage's own classification. Todo 2 (copy to canonical)
+    has been updated to target the 764-row deduplicated set via the new durable artifact
+    `_index/audit/sports_reference_v2_prefloor_census_2026_08_03.parquet` (source columns `bare_uri`/
+    `pipeline_mode_uri`, `content_identical_by_size=True` for all 764 rows, `has_canonical_twin=False` for all 764).
+  - New finding filed as todo 5 above (adjacent to this doc's own scope, not a separate issue doc): an unexplained,
+    apparently one-time (not ongoing) migration-script side-effect wrote pipeline_mode-tagged duplicates into the wrong
+    (legacy v2, not canonical) tree — low urgency, tracked for a follow-up trace-and-retire pass.
