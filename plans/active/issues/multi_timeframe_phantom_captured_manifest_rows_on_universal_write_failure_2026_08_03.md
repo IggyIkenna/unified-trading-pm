@@ -201,6 +201,30 @@ on `_index/per_vm/features-e2e-cefi-20260803-161807-38e1b8.parquet`).
       dropping `tf_structure_context`/`wedge_confluence`/`tf_risk_reward` (or accepting their permanent `record_empty`
       manifest state) until/unless those upstream groups are separately enabled. Repo: features-service. Not resolved
       here — genuinely needs an operator call given the compute-cost tradeoff.
+- [ ] [SCRIPT] P1. **`_write_batch_manifest`'s `record_empty(reason=SOURCE_RETURNED_ZERO)` call is REJECTED at runtime —
+      no `FetchEvidence` supplied — so a 0-success group writes NEITHER a captured row NOR an honest-empty one; the
+      manifest write is silently skipped entirely** (found via a real live-VM verification of the shipped
+      `features-service@7eca96ac` fix, VM `features-e2e-cefi-20260803-172051-38e1b8`, force leg, `exit_code=0`, run
+      BEFORE `31bef7c3`'s root-cause fixes landed — may already be moot if those fixes mean groups now succeed; needs
+      re-checking against a run using both shas). The phantom-captured bug this doc exists for IS fixed (confirmed: no
+      manifest shard object exists at all for this run, so no false `captured` row survives) — but
+      `ManifestWriter.record_empty()` itself enforces "requires FetchEvidence proving a clean 200+empty fetch
+      (http_status in 2xx AND response_received AND rows_in_response==0 AND error_signal=='')" and the call site in
+      `_write_batch_manifest` supplies none, so the write raises and is caught by the surrounding
+      `except (...): logger.warning("ManifestWriter failed (non-fatal): %s", exc)` — confirmed via the real run.log:
+      `WARNING ManifestWriter failed (non-fatal): record_empty(reason=SOURCE_RETURNED_ZERO) requires FetchEvidence ...     [row_key={'date': '2026-07-05', 'feature_group': 'tf_momentum_alignment', 'timeframe': '1d'}]`.
+      Net effect: a 0-success group is invisible to the manifest entirely (neither state) — BETTER than phantom-captured
+      (no downstream consumer would trust nonexistent data) but not the honest-absence signal the fix intended, and the
+      warning is silently swallowed (non-fatal by design, but nobody sees it besides a run.log grep). Fix: either (a)
+      construct a real `FetchEvidence` for this call site (multi_timeframe's failure mode genuinely IS "processing ran,
+      0 rows resulted" — check whether it cleanly maps to the 200+empty contract `record_empty` demands, or whether
+      `record_failed` with a `RecordFailedReason` is the semantically correct call instead, per the error message's own
+      suggestion), or (b) if `SOURCE_RETURNED_ZERO` doesn't fit this failure shape, pick the correct
+      `EmptyConfirmedReason`/API for "a compute step ran and produced 0 output for reasons not reducible to a single
+      HTTP fetch". Repo: features-service
+      (`features_service/multi_timeframe/engine/orchestrator.py::_write_batch_manifest`). **Done when**: a fresh
+      from-scratch live-VM verification (not just a unit test) produces a manifest row with a genuine empty/failed state
+      instead of the write being silently rejected.
 
 ## Progress Log
 
