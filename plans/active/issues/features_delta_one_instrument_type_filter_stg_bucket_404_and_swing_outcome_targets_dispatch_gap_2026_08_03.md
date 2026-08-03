@@ -162,12 +162,17 @@ from `calculators/__init__.py`'s module-level registry):
 
 ## Recommended fix path
 
-- [ ] [SCRIPT] P1. Fix `features_service/delta_one/config.py::get_instruments_store_bucket` to honour test-run
+- [x] ✅ [SCRIPT] P1. Fix `features_service/delta_one/config.py::get_instruments_store_bucket` to honour test-run
       awareness, mirroring the `test_aware`/`deployment_env="test" if is_test_run else None` pattern already shipped at
       the other 4 sites (see "Root cause 1" above for the exact prior-fix commits to mirror). **Done when**: a fresh
       `-test-`/`--env staging` delta_one run's `filter_by_instrument_type` call resolves the real
       `instruments-store-{ag}-test-...` bucket (confirm via a live log line, not just code review) with no 404. Repo:
-      features-service.
+      features-service. — features-service@b24122c5. `resolve_bucket()` (features_service/common/**init**.py) now
+      accepts a `deployment_env` passthrough; `get_instruments_store_bucket` passes `"test"` when `is_test_run`.
+      Confirmed live (not just code review) via a direct `uv run python` smoke:
+      `IS_TEST_RUN=true DEPLOYMENT_ENV=staging` resolves `instruments-store-tradfi-test-central-element-323112` (no
+      404); `IS_TEST_RUN` unset/`DEPLOYMENT_ENV=prod` still resolves
+      `instruments-store-tradfi-prd-central-element-323112` unchanged.
 - [ ] [SCRIPT] P2. Add `swing_outcome_targets` to `orchestrator.py::_create_calculator`'s local `calculator_map` dict
       (it is already imported + implemented per `calculators/__init__.py`) — or, if there's a genuine reason it's
       excluded from batch dispatch that this doc's investigation missed, document that reason inline the same way
