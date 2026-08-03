@@ -163,3 +163,11 @@ DEPLOYMENT_ENV race — left exactly as still open below". Cross- verified again
 still-open, unrelated leak"; Deferred **E7** remains open/parked, unchanged. Independently corroborated by the sibling
 `/ag-closeout-audit ci` skill's same-day draft `ci_satellite_ao_dispatch_batch4_2026_07_31.md` (row D4-12):
 "genuinely-unbounded investigation... same as batch1 D3(3) / batch2 E7." No reclassification.
+
+**na-eligibility-audit 2026-08-03** (tranche `ci`, autonomous, `agt-4acc10`): **CONFIRMS the verdict above, unchanged.**
+Re-read end-to-end; only change since the last marker is mechanical (referrer-path repoint), no substantive content
+movement. Specifically stress-tested the sole open todo ("instrument quickmerge's cascade/pull step") against the
+RECLASSIFY bar since it reads more action-shaped than a pure root-cause hunt — it doesn't clear it: near-identical
+instrumentation (print-based env/pid tracing) is already documented as tried and clean across 8 runs in the sibling
+monkeypatch-leak doc, and this doc's own bisection found non-deterministic clean/dirty outcomes even under confirmed-
+serial execution. Surface-bounded, substance-unbounded — stays KEEP-NA. No RECLASSIFY, no ARCHIVE.

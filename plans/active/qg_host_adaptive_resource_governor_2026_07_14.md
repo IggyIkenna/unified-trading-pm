@@ -704,3 +704,13 @@ there: the governor gates **RAM/CPU admission, not disk**, so it must not be cit
   human-driven...") governs the whole remaining scope; the other 8 open items are either explicitly
   DEFERRED-with-stated-reactivation-condition or real unimplemented-but-well-specified engineering follow-ons under the
   same human-driven ruling, not defaulted-and-never-assessed work.
+- **na-eligibility-audit 2026-08-03** (tranche `ci`, autonomous, `agt-4acc10`): **CONFIRMS KEEP-NA, valid — unchanged**
+  (9/9 open items re-verified). 8 items (baseline-schema consolidation, cpu_weight unpinned re-measure, baseline-
+  freshness loop, FIFO/aging, Slack alerting, small-host sizing, PYRIGHT_TIMEOUT default raise, pytest-xdist worker-
+  death fix) re-confirmed under the standing 2026-07-14 operator ruling — citation verified real and still governing;
+  none duplicated into any active `assigned_vm: planning` sibling (checked `ao_open_issues_consolidated_close_out`,
+  `cross_cutting_satellite_ao_dispatch_batch1b`, `orchestrator_vm_e2e_hardening`,
+  `sports_consolidated_native_ao_extract` — all incidental context mentions, not systemic fixes). Item 9 (line 684,
+  "FORKED 2026-08-03") is the redirect to `qg_governor_glue_runner_ledger_coordination_2026_08_03.md` (also re-
+  confirmed KEEP-NA this same run, 5 items, no double-count with this doc's other 8) — correctly open until that fork
+  ships and closes it back here. No RECLASSIFY, no ARCHIVE.

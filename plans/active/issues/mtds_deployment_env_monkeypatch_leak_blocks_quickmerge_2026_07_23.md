@@ -348,3 +348,10 @@ investigation" guidance) — retrying with real spacing (not back-to-back) per t
   empirically falsified test-level fixes, a falsified "structural guarantee" (`PYTEST_WORKERS=1` reproduced 5/5), and a
   leading-but-unproven cascade-step theory across 14+ occurrences. Outcome is not determinable by a worker alone —
   correctly NA.
+
+**na-eligibility-audit 2026-08-03** (tranche `ci`, autonomous, `agt-4acc10`): **CONFIRMS KEEP-NA, valid — unchanged.**
+Re-read end-to-end; only change since the last marker is mechanical (`context_scope`/referrer-path edits), no
+substantive content movement. The sole open todo documents 14+ confirmed occurrences, two falsified test-level fixes, a
+falsified structural guarantee, and 10+ clean diagnostic attempts that never once caught the leak in the act — not
+worker-determinable. Independently corroborated by archived `ci_satellite_ao_dispatch_batch2_2026_07_29.md` Deferred E7,
+batch1 D3(3), and batch4-draft D4-12. No RECLASSIFY, no ARCHIVE.

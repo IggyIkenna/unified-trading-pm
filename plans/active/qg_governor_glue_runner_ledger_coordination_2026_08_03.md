@@ -252,3 +252,18 @@ path") without needing a separate runner-install-time env var.
   `git stash` before this change (pre-existing environment gap, not a regression).
 - **Committed**: `unified-trading-pm@fada7dc20` (landed on LDR trunk; `ldr-to-main-promote.yml` drains PM→main,
   ~15-30min SLA).
+
+## na-eligibility-audit verdict
+
+**na-eligibility-audit 2026-08-03** (tranche `ci`, autonomous, `agt-4acc10`): KEEP-NA, valid — first audit pass (filed
+today). Confirmed this is a clean, narrow, single-item fork out of exactly one checkbox in
+`qg_host_adaptive_resource_governor_2026_07_14.md` (that doc's line-684 "FORKED 2026-08-03" item, which explicitly stays
+open until this plan ships and closes it back there) — no double-counting between the two docs' open items. All 5
+remaining items (Phase 2 validation + Phase 3 rollout) run against the single production glue-runner host, which is also
+the central orchestrator VM, during an active, still-open fleet-wide capacity crisis
+(`fleet_wide_qg_capacity_crisis_continues_day2_2026_07_29.md`, re-confirmed KEEP-NA this same run) — genuine
+timing/coordination judgment calls on shared production infra mid-incident, several explicit in the doc's own text (e.g.
+Phase 3 item 1: "coordinating timing so the cutover itself doesn't collide with whatever firefighting is active"). Not
+RECLASSIFY-eligible. No ARCHIVE. Hygiene nits noted for a future touch (not actioned, not verdict- changing): Phase 3's
+gate text says "≥3 different glue-runner hosts" but this doc's own Phase-0 finding today established there is only ONE;
+Phase 2→Phase 3 has a real dependency not expressed via `sequential`/`depends_on`.

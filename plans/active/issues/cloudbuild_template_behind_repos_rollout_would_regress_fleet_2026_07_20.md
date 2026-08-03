@@ -221,3 +221,10 @@ the re-scoped guard rollout. This doc's sole open checkbox already cites the ext
 AO-dispatchable copy of this todo lives in … — this doc stays `assigned_vm: NA`; flip this checkbox from there"), so the
 citation is correct and no hygiene fix is needed. Flipping `assigned_vm` here now would open a SECOND dispatch path to
 the identical fleet-wide rollout — Phase-1 citation class (a), a body sentence redirecting work to a different doc.
+
+**na-eligibility-audit 2026-08-03** (tranche `ci`, autonomous, `agt-4acc10`): **CONFIRMS the verdict above, unchanged.**
+Re-read end-to-end; re-verified the redirect citation to `ci_satellite_ao_dispatch_batch5_2026_08_02.md` todo 1 is still
+accurate (that plan still carries the re-scoped guard rollout as its todo 1). Note: batch5 is `status: draft` — not yet
+dispatched — a detail the prior 08-02 verdict didn't explicitly flag; doesn't change this doc's own correct-redirect
+verdict (the citation is right regardless of whether the target is live yet), but the underlying fleet-wide rollout
+isn't actually AO-live anywhere yet. No RECLASSIFY, no ARCHIVE.

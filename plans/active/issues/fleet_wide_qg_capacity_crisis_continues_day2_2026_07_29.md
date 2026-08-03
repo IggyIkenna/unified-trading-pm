@@ -362,3 +362,15 @@ not just noting.
   observe whether the raise actually clears CI** (mirrors `agt-8e5d24`'s own open question for features-service) before
   repeating either a no-op confirmation or another timeout raise. Slot left clean on `live-defi-rollout` (only
   `market-data-processing-service` touched by this session's code commit + this doc).
+
+**na-eligibility-audit 2026-08-03** (tranche `ci`, autonomous, `agt-4acc10`): KEEP-NA, valid (mixed reasons per item),
+re-read end-to-end (doc grew substantially today via the entries above since the last marker). 3 open todos: (1) AWS
+Cost Explorer $ quantification for the retry storm — this doc's own 2026-08-01 audit note already called this
+RECLASSIFY-eligible but deliberately deferred extraction; re-confirmed still deferred by BOTH
+`ci_satellite_ao_dispatch_batch4_2026_07_31.md` and `ci_satellite_ao_dispatch_batch5_2026_08_02.md` (D5-6: "Same
+precedent batch3 and batch4 both applied: do not fold an actively-evolving incident doc's items into a static batch.
+Re-triage once its own Progress Log shows the capacity question settled") — doc is still actively evolving (grew again
+today), so respecting the standing deferral rather than proposing a fresh RECLASSIFY. (2) OOM-killer `dmesg`/
+`journalctl -k` confirmation — needs root, operator-gated. (3) `RETRY_PER_TICK` scaling design question — genuine
+undecided tradeoff, "leave as-is" is a valid outcome. No RECLASSIFY, no ARCHIVE. Flagging item 1 for whoever next
+assembles a ci satellite batch once this doc's Progress Log stabilizes.

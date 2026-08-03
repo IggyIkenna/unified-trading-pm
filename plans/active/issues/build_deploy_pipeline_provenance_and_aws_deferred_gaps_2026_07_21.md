@@ -160,3 +160,10 @@ end-to-end; all 4 open todos re-verified against the rubric (#4 + #7 AWS-lane ga
 explicit "do not assume it is a bug" / "confirm whether" judgment calls). The only change since the last marker is the
 2026-08-01 context-scout `context_scope` backfill — pure metadata, zero content movement, so nothing to re-verdict. The
 operator ruling was re-confirmed present verbatim, not re-derived.
+
+**na-eligibility-audit 2026-08-03** (tranche `ci`, autonomous, `agt-4acc10`): **CONFIRMS the verdict above, unchanged.**
+Re-read end-to-end; only change since the last marker is a `context_scope backfill batch 2/5` commit (metadata-only,
+verified via diff — one line added to the `context_scope` list, zero content movement). All 4 items re-verified against
+the same top-of-doc operator ruling and file-ownership coordination gates; cross-checked against
+`ci_satellite_ao_dispatch_batch1_2026_07_26.md` D26 (verbatim match, all 4 items, consistent un-dispatched status). No
+RECLASSIFY, no ARCHIVE.

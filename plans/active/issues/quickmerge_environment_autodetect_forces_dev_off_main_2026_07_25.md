@@ -174,7 +174,8 @@ change needs a caller audit across the repo before touching it — out of scope 
 - [ ] [INFRA] P2. **Finish the quickmerge environment auto-detect follow-up** — steps 2-4 above (align
       `UnifiedCloudServicesConfig.environment`'s alias precedence with `BaseConfig.environment`'s, then revisit whether
       `scripts/quickmerge.sh`'s branch check should broaden to `live-defi-rollout`/`staging`, then grep the other ~20
-      repos for the same ambient-default-reliant test pattern) remain unstarted.
+      repos for the same ambient-default-reliant test pattern) remain unstarted. (steps 2+4 tracked in
+      `ci_satellite_ao_dispatch_batch4_2026_07_31.md` todo 2, status: draft; step 3 tracked there as Deferred D4-1)
 
 ## na-eligibility-audit verdict
 
@@ -194,6 +195,15 @@ as "the known stale branch-name artifact," cleared there per a cited precedent
 DIFFERENT doc; per the HARD RULE that archival/reclassification never proceeds on a non-empty `locked_by` without
 `[unlock-plan]` operator confirmation, this pass took no action on the lock field itself. Recommend the operator either
 confirm this is the same stale artifact (and clear it per the cited precedent) or clarify what it actually locks here.
+
+**na-eligibility-audit 2026-08-03** (tranche `ci`, autonomous, `agt-4acc10`): KEEP-NA-STALE (already-duplicated) —
+citation correction. The 2026-07-30/08-01 citation to archived `ci_satellite_ao_dispatch_batch2_2026_07_29.md` Deferred
+E5 is now stale (batch2 is archived/superseded). Verified live: steps 2+4 are now extracted verbatim as todo 2 in
+`/plans/active/ci_satellite_ao_dispatch_batch4_2026_07_31.md` (lines 143-167, `Source:` cites this doc's Suggested next
+steps 2+4), with step 3 tracked there as Deferred **D4-1** (still gated on todo 2 landing + `quickmerge.sh` being free).
+Batch4 is `status: draft` — not yet dispatched — so this is a citation fix, not a reclassification; flipping this doc
+directly would race/duplicate-dispatch onto the same `unified-trading-library` config files batch4 already owns once
+activated. `locked_by` anomaly (flagged 2026-08-01) unchanged, still unactioned pending operator.
 
 ## Progress Log
 

@@ -176,3 +176,15 @@ without knowing what it is). No further action was taken on `deployment-api` —
   baseline regeneration needed (todo 2 N/A). Full `quality-gates.sh` from `execution-service` passed clean (exit 0, STEP
   5.83 `OK`) and `quickmerge.sh --agent` shipped `execution-service@4485e0bd`. Blocking scope of this issue is closed;
   leaving `status: open` only for the still-outstanding, non-blocking todo 3 design-hardening suggestion.
+
+## na-eligibility-audit verdict
+
+**na-eligibility-audit 2026-08-03** (tranche `ci`, autonomous, `agt-4acc10`): KEEP-NA, valid — first audit pass on this
+doc (filed today). The sole open item (todo 3, `[INFRA] P3`) is a genuine undecided architecture tradeoff: whether STEP
+5.83 should validate against a canonical/fresh state (`git show origin/<branch>:<path>`) instead of each shipping repo's
+local, possibly-stale sibling checkouts — adds per-run network/git-show cost vs. accepting host-checkout staleness, no
+decision made either way. Checked the cross-referenced sibling
+`adapter_contract_regression_ratchet_60s_timeout_flaky_under_contention_2026_07_27.md` (`assigned_vm: planning`,
+active): its own open todo is about making the file-walk faster/lighter, a related but distinct concern (speed, not
+source-of-truth staleness) — no duplication. Not RECLASSIFY-eligible (the outcome isn't worker-determinable without a
+design call). No ARCHIVE.

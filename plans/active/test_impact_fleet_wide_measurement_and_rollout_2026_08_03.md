@@ -384,3 +384,21 @@ to be per repo — not measured here, out of this todo's scope.
     4th is not "clean, zero divergences" — it's "no evidence either way." **The backtest does NOT accelerate anything
     right now; the live single-repo trial (clock to 2026-08-17) remains the only real evidence path**, unless the
     capacity crisis resolves and a re-run produces a genuinely large, clean sample.
+
+## na-eligibility-audit verdict
+
+**na-eligibility-audit 2026-08-03** (tranche `ci`, autonomous, `agt-4acc10`): KEEP-NA, valid — first audit pass (filed
+today). All 4 open items re-verified: the calendar-gated shadow-trial item (re-visit ~2026-08-17); the promotion
+decision (explicitly self-described as "itself an operator call, not a worker todo"); the fleet-wide evidence
+sufficiency item (explicit human/reviewer judgment call). The `[SCRIPT]`-tagged divergence-analysis tool item is
+individually bounded/deterministic-shaped on its own and would read as a strong RECLASSIFY candidate in isolation — NOT
+recommending RECLASSIFY on it: this doc's own frontmatter `source:` and Progress Log both carry an explicit, dated
+operator instruction that the intended next action is flipping the WHOLE plan to `assigned_vm: planning` once the
+operator completes their own `/pre-compact` checkpoint, not a partial/cherry-picked dispatch; the plan also sets
+`sequential: true` at the plan level, so a partial RECLASSIFY of one item isn't structurally consistent with how it's
+built today. No ARCHIVE. Confirmed zero active `assigned_vm: planning` siblings in
+`parent_epic: deployment_and_user_management_master` overlapping this content (one apparent grep hit was a false
+positive — a different plan's `parent_epic`). **Flag for the orchestrating agent/operator** (informational only, not an
+audit action): whether the operator's own `/pre-compact` checkpoint — the doc's stated flip-trigger — has already
+happened this session is a timing question outside na-eligibility-audit's mechanism; if it has, this doc may already be
+due for its own pre-authorized next action independent of this audit.
