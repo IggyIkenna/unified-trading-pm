@@ -197,7 +197,9 @@ Three candidate directions — genuinely a design decision, not something a sing
       `ml-service --operation pipeline --asset-group SPORTS --family pregame_clv_family --target-types clv     --target-type clv --timeframes fixture --start-date 2026-04-01 --end-date 2026-04-17`
       (Bug 1 workaround: pass both `--target-types` and `--target-type`) to produce and promote the actual 3 new model
       artifacts.
-- [ ] [ML] P2. **Run the literal 3-variant CLV model retrain** — produce and promote the actual new trained artifacts
+- [x] ✅ [ML] P2. **DONE 2026-08-03 (slot-3, `data_engineering`) — all 3 variants produced + independently
+      GCS-verified.** **Run the literal 3-variant CLV model retrain** — produce and promote the actual new trained
+      artifacts
       (`ml-service --operation pipeline --asset-group SPORTS --family pregame_clv_family --target-types clv     --target-type clv --timeframes fixture --start-date 2026-04-01 --end-date 2026-04-17`);
       the underlying target-generation fix is real-data-verified but the retrain itself has not been run (per the
       Deferred-work table below). **ATTEMPTED 2026-08-03, genuinely BLOCKED one layer deeper** (slot-11,
@@ -323,6 +325,36 @@ Three candidate directions — genuinely a design decision, not something a sing
   (372,665 bytes, accuracy=0.80, non-degenerate target). **Writing this up now because the server flagged
   `directive: compact_now`** — running the remaining 2 variants next, in a fresh context. If this session ends before
   that, see the Deferred-work table below for exact resume instructions.
+- 2026-08-03 (slot-3, `data_engineering`): **`[ML] P2` DONE — all 3 variants produced and independently GCS-verified.**
+  Ran the corrected command
+  (`GCP_PROJECT_ID=central-element-323112 python -m ml_service.training.cli.main --operation train --mode batch --asset-group SPORTS --family pregame_clv_family --target-types clv --skip-dependency-check --timeframes fixture --start-date 2026-04-01 --end-date 2026-04-17`)
+  3 times. Each run: real prod GCS data (597 fixtures/9 dates for this window via this loader — see child doc's
+  Finding-3 discrepancy note), native `odds_targets` merge (`TrainingOrchestrator` already has it, no patch needed for
+  this operation), non-degenerate CLV target (`up=64/10.7%, flat=505/84.6%, down=28/4.7%`, consistent across all 3 runs
+  since the input data/window is identical), real LightGBM training (accuracy=0.80), SHAP explanations uploaded, and a
+  real `model.joblib` persisted via `ModelRegistry.store_model` — confirmed by a live GCS `list_blobs` call for EACH
+  artifact (not just trusting the log line), all exactly 372,665 bytes:
+  - Variant 1:
+    `gs://ml-store-prd-central-element-323112/models/models/CEFI_UNKNOWN_clv_LIGHTGBM_fixture_V20260803191857/training-period-2026-08/model.joblib`
+  - Variant 2:
+    `gs://ml-store-prd-central-element-323112/models/models/CEFI_UNKNOWN_clv_LIGHTGBM_fixture_V20260803192941/training-period-2026-08/model.joblib`
+  - Variant 3:
+    `gs://ml-store-prd-central-element-323112/models/models/CEFI_UNKNOWN_clv_LIGHTGBM_fixture_V20260803193831/training-period-2026-08/model.joblib`
+
+  Each run's process exits non-zero AFTER the artifact is already durably written — a pre-existing, unrelated missing
+  GCP Pub/Sub topic (`ml_model_coordination_events`, 404 NotFound in `central-element-323112`) crashes the post-training
+  coordination-event publish step (child doc's Finding 6, filed as its own `[INFRA] P2` follow-up). Verified this does
+  NOT affect artifact validity (independent GCS listing for all 3, not just the log line).
+
+  **Full session summary**: found + fixed 2 real bugs (`ml-service@37d59f1` — `PipelineHandler` never merged
+  `odds_targets` for CLV; `GradientBoostingClassifier` crashed on real NaN gaps in feature selection), discovered the
+  parent todo's own literal `--operation pipeline` command can never persist an artifact regardless of fixes
+  (`store_model` is never called from that path) and that `--operation train --skip-dependency-check` is the
+  actually-correct command, and used it to produce + verify all 3 real trained artifacts this todo requires. Full
+  evidence chain in
+  `/plans/active/issues/ml_service_pipeline_handler_clv_target_bypasses_odds_targets_merge_2026_08_03.md` (its own
+  Findings 1+2 fixed-and-closed, Findings 4-6 documented, remaining `[CODE] P3`/`[DATA] P3`/`[INFRA] P2` follow-ups left
+  open for whoever picks them up next — not blocking this todo's own completion).
 
 ## Deferred work after 2026-07-26 (pre-compact checkpoint, slot-7)
 
@@ -366,3 +398,13 @@ will auto-push a held commit the moment it reclaims a session it considers dead 
   check, a different, adjacent claim.
 - **context-scout 2026-08-03**: refreshed context_scope (6 entries) — added `odds_targets_exporter.py`, the actual new
   export artifact this doc's ratified fix built (the file the remaining `[ML] P2` retrain depends on being backfilled).
+- **2026-08-03 (slot-3)**: every todo in this doc is now done and it is unlocked — archival-eligible per
+  `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`. NOT archived this session (10 referrer docs
+  would need path fixups — `plans/active/na_docs_validity_and_ao_eligibility_audit_2026_07_26.md`,
+  `plans/active/sports_satellite_ao_dispatch_batch6_2026_07_26.md`,
+  `plans/active/issues/ml_service_pipeline_handler_clv_target_bypasses_odds_targets_merge_2026_08_03.md`,
+  `plans/active/issues/ml_service_sports_clv_training_pipeline_never_functional_2026_07_26.md`,
+  `plans/active/issues/sports_clv_target_builder_family_route_likely_same_pit_gap_2026_07_26.md`, + 5 already-archived
+  docs — out of scope for this task's assigned done_definition). Tracked as its own todo instead of silently skipped:
+  - [ ] [DOCS] P3. Archive this doc (`git mv` to `plans/archive/2026_08/`, add a superseded/archived banner, fix the 10
+        referrer paths listed above) per the 6-step archival ritual. (repo: unified-trading-pm)

@@ -262,10 +262,12 @@ all).
       `--operation pipeline`/`train` don't silently accept `--task-type classification` and crash deep in hyperparameter
       tuning — either default to `regression` for these target types, or fail fast at config-build time with a clear
       message pointing at `--task-type regression`. (repo: ml-service)
-- [ ] [DOCS] P2. Update this doc's own final-step guidance (and the parent doc's todo text) to specify
-      `--operation train --skip-dependency-check --task-type regression` (NOT `--operation pipeline`) as the correct
-      retrain command going forward, given Finding 5 — already actioned in the parent doc's Progress Log this session,
-      flagging here so the two docs don't drift.
+- [x] ✅ [DOCS] P2. **DONE 2026-08-03 (slot-3)** — Update this doc's own final-step guidance (and the parent doc's todo
+      text) to specify `--operation train --skip-dependency-check` (NOT `--operation pipeline`; NOT
+      `--task-type regression` either — that flag is `--operation pipeline`-specific per Finding 4, `--operation train`
+      handles the raw `{-1,0,1}` CLV labels fine as classification via its own separate `ModelTrainer`) as the correct
+      retrain command going forward. Actioned in the parent doc's Progress Log + `[ML] P2` todo, which is now DONE — all
+      3 variants produced and GCS-verified using this exact command.
 - [ ] [INFRA] P2. Provision the missing GCP Pub/Sub topic `ml_model_coordination_events` in `central-element-323112` (or
       fix `_emit_model_trained_event`'s error handling to not crash the whole process on a best-effort
       coordination-event publish failure — `log_event("STARTED", ...)` elsewhere in this same file already treats its
@@ -298,3 +300,11 @@ if not in its originally-literal command text.
   `gs://ml-store-prd-central-element-323112/models/models/CEFI_UNKNOWN_clv_LIGHTGBM_fixture_V20260803191857/training-period-2026-08/model.joblib`
   (accuracy=0.80, non-degenerate target). This is 1 of the parent doc's "3 variants" — continuing to run the command 2
   more times to produce the remaining 2 before closing the parent doc's final todo.
+- 2026-08-03 (slot-3, data_engineering): produced + independently GCS-verified variants 2 and 3, closing the parent
+  doc's `[ML] P2`:
+  `gs://ml-store-prd-central-element-323112/models/models/CEFI_UNKNOWN_clv_LIGHTGBM_fixture_V20260803192941/training-period-2026-08/model.joblib`,
+  `gs://ml-store-prd-central-element-323112/models/models/CEFI_UNKNOWN_clv_LIGHTGBM_fixture_V20260803193831/training-period-2026-08/model.joblib`
+  (both 372,665 bytes, identical to variant 1). Flipped `[DOCS] P2` done (corrected: `--task-type regression` is
+  `--operation pipeline`-specific per Finding 4, not needed for `--operation train`). This doc's own `[CODE] P3`
+  (console-script wiring), `[DATA] P3` (fixture-count discrepancy), and `[INFRA] P2` (missing Pub/Sub topic) remain
+  open, unclaimed follow-ups — not blocking the parent doc's now-complete retrain.
