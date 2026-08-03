@@ -357,7 +357,7 @@ Detail + per-protocol table: `instruments-service/docs/DEFI_INSTRUMENTS.md` §Le
 > `instrument_availability` / `market_lifecycle` / `futures_contracts` are the standing violations (`day=`/`venue=`
 > only) → RULED HIVE, `migration_pending`. Build the ordered keys via the sink PREFIX, not the partition dict (the sink
 > sorts dict keys alphabetically). See §11b R2 +
-> [`../../plans/active/issues/instrument_availability_hive_canonicalisation_2026_07_21.md`](../../plans/active/issues/instrument_availability_hive_canonicalisation_2026_07_21.md).
+> [`../../plans/archive/issues/instrument_availability_hive_canonicalisation_2026_07_21.md`](../../plans/archive/issues/instrument_availability_hive_canonicalisation_2026_07_21.md).
 
 - **cefi/tradfi flat**:
   `raw_tick_data/by_date/day={D}/pipeline_mode={mode}_{src}/asset_group={ag}/venue={V}/instrument_type={it}/data_type={dt}/{instrument_id}.parquet`
@@ -405,9 +405,13 @@ Detail + per-protocol table: `instruments-service/docs/DEFI_INSTRUMENTS.md` §Le
   dict — the sink sorts dict keys alphabetically, `protocol_impls.py:26`). `market_lifecycle` and `futures_contracts`
   ride the identical shape (`market_lifecycle.parquet` / `futures_contracts.parquet` leaf). Shipped:
   `unified-trading-library@43fa6f3f` (registry template + layout-tolerant readers), `instruments-service@a9be6ce9`
-  (writer sink-prefix + reader lockstep). `migration_pending` — the historical flat objects are not yet migrated; see
-  [`../../plans/active/issues/instrument_availability_hive_canonicalisation_2026_07_21.md`](../../plans/active/issues/instrument_availability_hive_canonicalisation_2026_07_21.md)
-  todos 7-8.
+  (writer sink-prefix + reader lockstep). **Historical migration EXECUTED 2026-08-03** for the recognized flat
+  `day=/venue=` population (cefi/defi/tradfi/prediction/sports): 84,320 of 117,166 candidates copied-to-hive-and-purged,
+  32,846 `content_mismatch` correctly preserved pending an operator authoritative-source decision (NOT a migration gap —
+  see the residual issue doc below), 0 failed. Full figures + dated post-migration probe:
+  [`canonical-cutover-register.md`](canonical-cutover-register.md) §6b. See
+  [`../../plans/archive/issues/instrument_availability_hive_canonicalisation_2026_07_21.md`](../../plans/archive/issues/instrument_availability_hive_canonicalisation_2026_07_21.md)
+  (todos 1-8, all closed) for the full cutover history.
 
   > **sports exception — `league=` is a legitimate trailing key (RULED 2026-08-03, operator ruling on todo 1 of
   > [`instrument_availability_hive_migration_unrecognized_shapes_and_content_mismatch_2026_08_03.md`](../../plans/active/issues/instrument_availability_hive_migration_unrecognized_shapes_and_content_mismatch_2026_08_03.md)).**
@@ -502,7 +506,7 @@ writer(s) + data migration ship — see `canonical-cutover-register.md` §6a–�
   (you would get `asset_group=/day=/pipeline_mode=/venue=` — wrong order, `day` not first). The fix MUST bake the
   ordered canonical keys into the sink **PREFIX** (as the sports lane does), and the registry template is the SSOT and
   must be updated too. Fix + migration:
-  [`../../plans/active/issues/instrument_availability_hive_canonicalisation_2026_07_21.md`](../../plans/active/issues/instrument_availability_hive_canonicalisation_2026_07_21.md).
+  [`../../plans/archive/issues/instrument_availability_hive_canonicalisation_2026_07_21.md`](../../plans/archive/issues/instrument_availability_hive_canonicalisation_2026_07_21.md).
 
 - **R3 — cefi chain-tail v6 canonical everywhere; migrate ALL v5.** The v6 tail
   `underlying={ROOT}/quote={Q}/margin={M}/ticks.parquet` is canonical everywhere; the v5 bare tail

@@ -367,22 +367,54 @@ Full detail:
 **Target ruled: 2026-07-21** (operator R2, HARD RULE) — every data-at-rest bucket MUST use the FULL canonical hive
 grammar (canonical key set incl. `pipeline_mode=`/`asset_group=`, in canonical order), not a reduced/flat subset. This
 resolves the "`instrument_availability` FLAT vs hive" contested axis → **RULED HIVE**. **In force at the writer:
-2026-07-22 → `unified-trading-library@43fa6f3f` + `instruments-service@a9be6ce9`. Historical flat objects:
-`migration_pending` (todo 7 of the issue doc, not yet run).**
+2026-07-22 → `unified-trading-library@43fa6f3f` + `instruments-service@a9be6ce9`. Historical migration: EXECUTED
+2026-08-03 for the recognized flat `day=/venue=` shape (see below). effective-from for classification stays 2026-07-22**
+(the writer-ship date, per this register's own convention — the historical backfill date is recorded separately, not
+substituted in).
 
-| Surface       | State today                                                                                                                                                                                                          |
-| ------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| registry SSOT | ✅ hive — `registry.py:35` `instrument_availability/by_date/day={date}/pipeline_mode={pipeline_mode}/asset_group={category}/venue={venue}/`                                                                          |
-| live writer   | ✅ hive — `process_write.py` + `writers.py` (`_instrument_availability_sink_for`/`_market_lifecycle_sink_for` sink-prefix helpers)                                                                                   |
-| siblings      | ✅ same fix applied: `market_lifecycle`, `futures_contracts`                                                                                                                                                         |
-| readers       | ✅ layout-tolerant across the cutover (day-scoped listing matched on the venue-tail): `cloud_data_provider.py`, `instrument_lifecycle_loader.py`, `manifest_writer/*`, `options_cluster_lookup.py`, `tradfi_live.py` |
+| Surface       | State today                                                                                                                                                                                                                                                                                                                                                                        |
+| ------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| registry SSOT | ✅ hive — `registry.py:35` `instrument_availability/by_date/day={date}/pipeline_mode={pipeline_mode}/asset_group={category}/venue={venue}/`                                                                                                                                                                                                                                        |
+| live writer   | ✅ hive for cefi/defi/tradfi/prediction — `process_write.py` + `writers.py` (`_instrument_availability_sink_for`/`_market_lifecycle_sink_for` sink-prefix helpers). ⚠️ **sports's live writer was never actually fixed** — it emits a THIRD, unrecognized flat shape (`day=/league=/venue=`, confirmed still live 2026-08-02), not covered by this cutover — see "Residual" below. |
+| siblings      | ✅ same fix applied: `market_lifecycle`, `futures_contracts`                                                                                                                                                                                                                                                                                                                       |
+| readers       | ✅ layout-tolerant across the cutover (day-scoped listing matched on the venue-tail): `cloud_data_provider.py`, `instrument_lifecycle_loader.py`, `manifest_writer/*`, `options_cluster_lookup.py`, `tradfi_live.py`                                                                                                                                                               |
 
 **Trap (avoided):** the UTL sink sorts partition-dict keys ALPHABETICALLY (`protocol_impls.py:26`), so
 `pipeline_mode=`/`asset_group=` cannot be added to the partition dict — the fix bakes ordered keys into the sink PREFIX,
-and updates the registry template (SSOT). Historical flat objects remain `migration_pending` (not yet migrated), NOT a
-fresh finding. Remaining work (historical migration + this register's effective-from date once it runs):
-[`../../plans/active/issues/instrument_availability_hive_canonicalisation_2026_07_21.md`](../../plans/active/issues/instrument_availability_hive_canonicalisation_2026_07_21.md)
-todos 7-8.
+and updates the registry template (SSOT).
+
+**Historical migration — EXECUTED 2026-08-03 for the recognized flat `day=/venue=` shape, real PROD infra, both legs
+dedicated-VM (never in-session, per the heavy-I/O rule):**
+
+- **Copy-and-verify** (todo 7c): `instruments-service@242b29ae` (tool) + `deployment-service@1c19e5e` (launcher wiring),
+  `{ag}-iah` VM categories, one VM per asset_group, full mode; every asset_group re-run twice (idempotency confirmed —
+  second run `copied: 0`).
+- **Purge** (todo 7d): `instruments-service@06be51ec` (tool — fresh per-object Part1+Part2 re-verify immediately before
+  every delete + generation-matched `gcs_conditional_delete`) + `deployment-service@b19c94b7` (launcher wiring),
+  `{ag}-iah-purge` VM categories, one VM per asset_group.
+- **Recognized-flat-shape candidate population: 117,166** (cefi 7,650 / defi 73,679 / tradfi 25,402 / prediction 4,105 /
+  sports 6,330). Of these: **84,320 copied-to-hive-and-purged-from-flat** (safe, twin-verified; cefi 6,156 / defi 42,364
+  / tradfi 25,365 / prediction 4,105 / sports 6,330 — prediction and sports 100% clean, zero residual flat). **32,846
+  content_mismatch** (cefi 1,494 / defi 31,315 / tradfi 37) — the hive target already exists with a DIFFERENT (crc32c,
+  size) than the flat source; correctly left in place pending an operator authoritative-source decision, NOT deleted.
+  **0 failed.**
+- **Dated post-migration probe (2026-08-03, this todo)** — live `gcloud storage ls` (bucket-scoped, not a corpus walk)
+  on `instruments-store-cefi-prd-central-element-323112/instrument_availability/by_date/`: `day=2020-06-15/` returns
+  ONLY the `pipeline_mode=` hive subtree (flat fully purged); `day=2019-03-30/` returns BOTH `pipeline_mode=` (hive,
+  copied) AND the preserved flat `venue=DERIBIT/instruments.parquet` — exactly the expected
+  content_mismatch-preservation behavior 7c/7d report, not a migration miss.
+
+**Residual — NOT covered by this migration, tracked as a NEW finding in a separate issue doc:** discovered 2026-08-03
+during 7c/7d — sports's live writer never actually emitted the assumed flat `day=/venue=` shape; it emits a THIRD,
+unrecognized shape (`day=/league=/venue=`, ~172,595 objects, writer still non-canonical as of 2026-08-02), and
+prediction has a SECOND unrecognized shape (`canonical_question_group=/day=/venue=`, ~25,745 objects, group-before-day).
+Combined **~198,340 objects** were invisible to the 7c/7d migration tool and remain fully untouched/non-canonical. Full
+writeup + todos (writer fix, target-shape ruling, tool extension, content_mismatch resolution policy):
+[`../../plans/active/issues/instrument_availability_hive_migration_unrecognized_shapes_and_content_mismatch_2026_08_03.md`](../../plans/active/issues/instrument_availability_hive_migration_unrecognized_shapes_and_content_mismatch_2026_08_03.md).
+
+Full detail:
+[`../../plans/archive/issues/instrument_availability_hive_canonicalisation_2026_07_21.md`](../../plans/archive/issues/instrument_availability_hive_canonicalisation_2026_07_21.md)
+(todos 1-8, all closed). Non-canonical-path-inventory row #16 updated in lockstep.
 
 ---
 
