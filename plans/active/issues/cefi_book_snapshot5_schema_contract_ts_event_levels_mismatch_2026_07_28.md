@@ -95,10 +95,12 @@ source:
   data_pipeline_failure worker (slot-16), fired 2026-07-28, asset_group=cefi data_type=book_snapshot_5, 299,467
   attempted_failed of 1,037,001 attempted (28.9%), flagged Fresh (0d old)."
 last_updated:
-  2026-08-01 (18th+ dispatch, agt-6b4fdd, slot 4 -- numerator 300,458/1,099,255 (27.3%), STATIC BACKLOG (1 row/24h,
-  below the 500-row floor); confirmed all 5 fix commits still hold + a fresh bounded live read showing continued decay
-  (75->35->1 rows/day over the last 3 days) and healthy capture (13,775 captured rows/24h vs. 1 attempted_failed) -- see
-  Progress Log for detail.)
+  2026-08-03 (19th+ dispatch, agt-e11908, slot 4 -- numerator 300,744/1,121,420 (26.8%), STATIC BACKLOG (215 rows/24h,
+  below the 500-row floor, up from 1 on 08-01); confirmed all 5 fix commits still hold + a fresh bounded live read
+  showing the trickle is NOT a schema-contract-violation resurgence (zero new violations past the established
+  2026-07-31T04:18:05Z checkpoint; the current 08-02/08-03 trickle's error_reasons are 100% Tardis 403/404
+  rate-limit-family, the OTHER already-tracked mechanism per cefi_high_attempted_failed_batch_cluster_2026_07_23.md) and
+  healthy capture (11,848 captured rows/24h vs. 215 attempted_failed) -- see Progress Log for detail.)
 context_scope:
   [
     /codex/05-infrastructure/data-pipeline-alerts.md,
@@ -726,3 +728,41 @@ against the reproduction script.
   self-declared as needing "its own scoping (design decision: build the missing writer, or change the calculators)", and
   the `[SERVICE] P2` observability gap is self-declared "a design call, not fixed here … needs a maintainer/ operator
   call on the right shape, not a unilateral change". Both are open design questions, not worker-determinable.
+- **2026-08-03 (data_pipeline_failure escalation worker, agt-e11908, slot 4) — 19th+ dispatch: trickle has ticked UP
+  (1→215 rows/24h) but a deeper check confirms it is NOT the schema-contract mechanism resurfacing — it's the OTHER
+  already-tracked Tardis rate-limit backlog.** Received another `DP_RUN_MOSTLY_EMPTY` (DP-FETCH-009) CRITICAL page for
+  `(cefi, book_snapshot_5)`: 300,744/1,121,420 = 26.8%, alert context labeled "STATIC BACKLOG — only 215
+  attempted_failed row(s) in the last 1d (below the 500-row materiality floor); a decaying trickle on already-tracked
+  backlog, not a fresh regression." No issue doc pre-linked (`Filed issue: (none — alert carries the details)`); found
+  this doc via the standard pre-task plan/issue conflict-check grep. Re-verified all five fix commits are still
+  ancestors of `origin/live-defi-rollout` (fresh `git fetch` in each of the three repos): MTDS `339ca767`/`6bf568ee`,
+  UAC `8db188fe`/`1c4d8864`, deployment-service `a564cca` — all OK.
+
+  The 215/24h figure is a real increase over the last several dispatches' 1-110/24h readings (not byte-identical), so —
+  per this doc's own established pattern of pulling a fresh read whenever the numerator/trickle isn't static — did a
+  bounded, column-projected live read of
+  `gs://market-data-tick-cefi-prd-central-element-323112/_index/availability_index.parquet` (via a direct
+  `pandas.read_parquet(..., columns=..., filters=...)` call wrapped in
+  `scripts/dev/run-bounded-analysis.sh --mem-cap 8G`, since the full `unified_trading_library` import chain currently
+  fails in this slot's shared venv on an unrelated `fastapi.routing.iter_route_contexts` ImportError — a pre-existing
+  environment issue, not touched here, not this task's scope). Findings: (1) total matches the alert exactly (300,744);
+  (2) of the 6,861 all-time `"schema contract violated"` rows, exactly 16 postdate the last confirmed post-fix
+  checkpoint (`agt-05ca7f`'s `2026-07-31T04:18:05Z`) — and all 16 are the SAME already-documented KRAKEN-SPOT/OKX-SWAP
+  tail (timestamps 04:18:05Z-06:05:19Z on 2026-07-31, byte-identical to what `agt-05ca7f` already logged) — **zero NEW
+  schema-contract-violation rows since that checkpoint**, confirming all three root-cause fixes (contract shape,
+  ts_event derivation, nullable levels) still hold with no resurgence; (3) the last-24h trickle (215 rows, matching the
+  alert exactly: COINBASE-SPOT 58, COINBASE-FUTURES 51, BYBIT 50, DERIBIT 31, OKX 21, BITFINEX-FUTURES 4) carries ZERO
+  `"schema contract violated"` rows — its `error_reason` breakdown is 100% `Tardis HTTP 403 code=274 concurrent-IP-lock`
+  (109), `UNCLASSIFIED:404 GET https` (50), `403 POST https` (35), `UNCLASSIFIED:UNCLASSIFIED_VENUE_ERROR` (21) — i.e.
+  this specific data_type's growing trickle is the OTHER already-open mechanism
+  (`cefi_high_attempted_failed_batch_cluster_2026_07_23.md` / `tardis_concurrent_ip_lockout_2026_07_12.md`'s Tardis
+  concurrent-IP-lock / rate-limit family), not a new or recurring schema-contract bug; (4) pipeline health: 11,848
+  `captured` book_snapshot_5 rows written in the last 24h vs. 215 `attempted_failed` in the same window (98.2% success
+  rate) — actively healthy, not stalled. **Conclusion: no code fix needed this session** — the uptick from 1 to 215
+  rows/24h is real but belongs to a DIFFERENT, already-tracked issue than this doc's schema-contract fix, and does not
+  indicate any regression of this doc's own fixes. Session cost: doc reads + git-ancestor batch check (5 commits) + one
+  bounded GCS read (schema-violation-tail check + last-24h error_reason/venue breakdown + captured-rows health check) +
+  this Progress Log append, no code change, no VM launch, no GCS/manifest write. Pinged `dp-fleet-monitor` (authoring
+  slot) with this outcome; this is now the 19th+ dispatch for this condition, further corroborating
+  `dp_escalation_worker_dispatch_no_open_issue_check_2026_07_29.md`'s still-open Option A recommendation for dedup at
+  the orchestrator dispatch layer.

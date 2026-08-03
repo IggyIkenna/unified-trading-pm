@@ -307,5 +307,14 @@ regression) is worse.**
   manifest read to be genuine decaying noise (day-bucketed: 75/07-30 → 35/07-31 → 1/08-01), not a resurgence — pipeline
   is healthy (13,775 captured book_snapshot_5 rows in the last 24h). All 5 fix commits still ancestors of
   `origin/live-defi-rollout`. Combined across both tracked conditions, this backlog has now consumed 29+ full
-  orchestrator-agent dispatches — still awaiting the operator/design decision on Option A/B/C. Full writeup in the
-  book_snapshot_5 doc's own Progress Log.
+  orchestrator-agent dispatches — still awaiting the operator/design decision on Option A/B/C.
+- **2026-08-03 (data_pipeline_failure escalation worker, agt-e11908, slot 4) — `(cefi, book_snapshot_5)` now at its
+  19th+ dispatch, trickle ticked UP (1→215/24h) but confirmed to be a DIFFERENT already-tracked mechanism, not a
+  regression.** All 5 fix commits still ancestors of `origin/live-defi-rollout`. Fresh bounded manifest read: zero new
+  `"schema contract violated"` rows past the established 2026-07-31T04:18:05Z checkpoint; the growing 215/24h trickle is
+  100% Tardis 403/404 rate-limit-family `error_reason`s — the OTHER already-open backlog
+  (`cefi_high_attempted_failed_batch_cluster_2026_07_23.md`), not this doc's schema-contract mechanism resurfacing.
+  Pipeline healthy (11,848 captured rows/24h vs 215 attempted_failed). Combined across both tracked conditions, this
+  backlog has now consumed 30+ full orchestrator-agent dispatches — still awaiting the operator/design decision on
+  Option A/B/C. Full writeup in the book_snapshot_5 doc's own Progress Log. Full writeup in the book_snapshot_5 doc's
+  own Progress Log.
