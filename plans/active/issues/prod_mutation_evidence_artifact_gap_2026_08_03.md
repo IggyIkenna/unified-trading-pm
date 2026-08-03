@@ -38,6 +38,13 @@ source:
 drift_direction: advance-process
 estimate_class: design
 depends_on: []
+context_scope:
+  [
+    /plans/PLAN_FORMAT.md,
+    scripts/quality_gates/check_evidence_backed_completion.py,
+    /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
+    /plans/active/issues/prediction_phantom_reconciler_wipes_bundle_atom_2026_07_10.md,
+  ]
 ---
 
 # Prod DATA-mutation claims have no verifiable evidence artifact (evidence-backing gap)
@@ -89,3 +96,6 @@ not a code defect.
   do_rename, prediction restamp row-counts) into this single durable finding rather than surfacing each as an ephemeral
   operator message (which scroll out of the role-history window — the exact bounded-window problem that also lost the
   BLK-7318d847 ruling reference this session). Filed for an operator ruling; no code/data changed.
+- **context-scout 2026-08-03**: populated context_scope (4 entries) — the two SSOTs define the existing §8b
+  evidence-backing contract this issue asks to extend, the QG script is the machine enforcer that would grow a
+  prod-mutation branch, and the cited prediction incident doc is the precedent making the stakes concrete.

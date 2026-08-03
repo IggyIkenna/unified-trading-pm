@@ -45,9 +45,11 @@ locked_since:
 context_scope:
   [
     /plans/archive/issues/mdps_features_ml_strategy_orphan_sweep_tooling_gap_2026_07_27.md,
+    /plans/active/issues/ml_strategy_manifest_coverage_gap_2026_08_03.md,
+    /codex/02-data/orphan-object-detection.md,
     strategy-service/strategy_service/engine/core/cloud_strategy_storage.py,
     strategy-service/strategy_service/engine/core/gcs_storage_service.py,
-    strategy-service/scripts/strategy_orphan_sweep.py,
+    ml-service/ml_service/training/app/core/training_orchestrator.py,
   ]
 depends_on: []
 ---
@@ -165,3 +167,6 @@ just (c).
   every write call site for all 3 deferred families rather than guessing at shape, per the parent doc's own discipline).
   Conclusion: none of the 3 is buildable as a mechanical sweep-tool port right now — each needs an operator-facing
   decision first (dead-code wire-up-or-delete for (a); a manifest-WRITE design pass for (b)/(c)).
+- **context-scout 2026-08-03**: refreshed context_scope (6 entries) — swapped in the sibling "todo 3b" doc (the real VM
+  run gap (c) cites as prior evidence) and the orphan-detection codex SSOT, and swapped the ml-service writer in for the
+  sweep-tool script since this doc's decision is about the 3 write-site gaps, not the future sweep extension.

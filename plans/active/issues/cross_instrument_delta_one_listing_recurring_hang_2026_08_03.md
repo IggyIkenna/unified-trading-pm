@@ -45,8 +45,11 @@ locked_by:
 locked_since:
 context_scope:
   [
+    unified-trading-library/unified_trading_library/cloud_interface/providers/gcp.py,
     features-service/features_service/cross_instrument/cli/handlers/batch_handler.py,
-    /codex/12-agent-workflow/async-wait-and-poll-discipline.md,
+    features-service/scripts/pipeline_e2e_check.py,
+    deployment-service/deployment_service/smoke_test_framework.py,
+    /plans/active/issues/features_cross_instrument_smoke_verify_unbounded_memory_second_ao_outage_2026_08_01.md,
     /plans/active/issues/features_e2e_check_full_matrix_widespread_real_failures_2026_07_27.md,
   ]
 resolved_by:
@@ -192,3 +195,6 @@ the verification-only todo that surfaced it). Candidate hypotheses, none confirm
   neutralized by tree scale (PROD's `check_exists` short-circuit keeps mature day= trees' recent-write density low
   regardless of total size). Filed the pruning fix as its own P3 todo rather than implementing inline. See checkbox
   above for full evidence chain.
+- **context-scout 2026-08-03**: refreshed context_scope (6 entries) — the P2 diagnostic fix is shipped in UTL's `gcp.py`
+  (not previously in scope), so re-pointed at the actual fix site plus the two remaining open P3 todos' real targets;
+  dropped the async-wait-discipline codex doc since the hang mechanism is now deterministically understood.

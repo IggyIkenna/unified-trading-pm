@@ -63,8 +63,8 @@ depends_on: []
 context_scope:
   [
     deployment-service/scripts/vm/setup-data-pipeline-vm.sh,
+    /codex/05-infrastructure/vm-launcher-runbook.md,
     /codex/02-data/honest-absence-downstream-handling.md,
-    /codex/05-infrastructure/vm-preemption-and-billing-waste-monitoring.md,
     /plans/active/issues/tradfi_backfill_oom_remediation_2026_06_24.md,
   ]
 ---
@@ -179,3 +179,6 @@ the actual CME ES/MES 2020 gap this incident left behind has been recaptured by 
     a later fully-successful chunk's checkpoint advance (the exact incident pattern), and unchanged full-failure
     behavior. All 185 tests in the file pass (`quality-gates.sh` run separately before shipping). Todo 2 (spot-check the
     CME ES/MES 2020 gap) is unclaimed — separate DATA/verification-only scope, left for pickup.
+- **context-scout 2026-08-03**: refreshed context_scope (4 entries) — swapped the preemption-monitoring codex doc for
+  `vm-launcher-runbook.md`, which the doc's own "Why it matters" section explicitly cites as the exact mechanism
+  (RelaunchPreemptedVm / PROGRESS.json trust) this bug threatens — this VM wasn't preempted, so that was a weaker match.

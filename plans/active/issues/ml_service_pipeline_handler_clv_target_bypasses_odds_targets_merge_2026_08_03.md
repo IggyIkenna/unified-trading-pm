@@ -53,9 +53,10 @@ context_scope:
   [
     /plans/active/issues/sports_clv_target_pit_gated_out_of_odds_features_export_2026_07_26.md,
     ml-service/ml_service/training/cli/handlers/pipeline_handler.py,
-    ml-service/ml_service/training/app/core/sports_target_generator.py,
     ml-service/ml_service/training/app/core/training_orchestrator.py,
-    ml-service/ml_service/training/app/core/training_targets.py,
+    ml-service/ml_service/cli/main.py,
+    ml-service/ml_service/training/app/core/uniform_training_pipeline.py,
+    ml-service/ml_service/training/cli/handlers/__init__.py,
   ]
 ---
 
@@ -308,3 +309,6 @@ if not in its originally-literal command text.
   `--operation pipeline`-specific per Finding 4, not needed for `--operation train`). This doc's own `[CODE] P3`
   (console-script wiring), `[DATA] P3` (fixture-count discrepancy), and `[INFRA] P2` (missing Pub/Sub topic) remain
   open, unclaimed follow-ups — not blocking the parent doc's now-complete retrain.
+- **context-scout 2026-08-03**: refreshed context_scope (6 entries) — Findings 1+2 are done and shipped; scope moved to
+  Findings 3-6 during the same session, so swapped the now-stable generator/targets files for the three still-open
+  todos' real targets (console-script CLI wiring, task_type validation, and the Pub/Sub emit-event site).

@@ -43,6 +43,14 @@ resolved_by:
 drift_direction: advance-code
 depends_on: []
 last_updated: 2026-08-03
+context_scope:
+  [
+    market-tick-data-service/market_tick_data_service/live/websocket_runner.py,
+    /plans/active/issues/live_mode_event_sink_topic_missing_2026_06_21.md,
+    deployment-service/terraform/gcp/qg_snapshot_scheduler.tf,
+    /codex/02-data/live-data-persistence-and-event-log.md,
+    /plans/active/issues/mtds_prediction_rebuild_instrument_type_mismatch_2026_08_01.md,
+  ]
 ---
 
 # prediction live-capture VMs fail to publish CandleBoundaryCrossedEvent — target Pub/Sub topic missing
@@ -118,3 +126,12 @@ distinguish it from the genuinely-new missing-topic issue.
   VMs. Confirmed the topic doesn't exist via a direct Pub/Sub API read (not inference). Did not investigate further
   (historical duration, cross-asset-group scope, or MDPS consumption dependency) — filed as its own tracked issue per
   the findings-become-todos rule rather than expanding the P3 fix's scope.
+- **context-scout 2026-08-03**: populated context_scope (5 entries) — surfaced an unstated prior-art lead this doc's own
+  author didn't cite: `deployment-service/terraform/gcp/qg_snapshot_scheduler.tf:49-62` records that the old per-service
+  `{service_name}-events` topic naming was deliberately deleted 2026-07-30 after `unified-trading-library@ 9bdcf7a2`
+  repointed `build_event_sink()` at a shared `service-lifecycle-events` topic — the EXACT same 404 symptom
+  `live_mode_event_sink_topic_missing_2026_06_21.md` (status: resolved) already fixed fleet-wide, one month earlier.
+  This suggests `websocket_runner.py`'s `_publish_boundary_event` → `log_event(...)` call path may not need a new topic
+  provisioned so much as the same sink-factory repoint that fix already gave the STARTED-lifecycle events. Did not trace
+  why `log_event`'s module-global `_writer` would differ between call sites — that's the natural next step, which is why
+  both docs are in context_scope together.

@@ -35,6 +35,14 @@ supersedes:
 superseded_by:
 depends_on:
 source:
+context_scope:
+  [
+    agent-orchestrator/scripts/orchestrator/omniroute-eval/README.md,
+    /plans/audit/results/omniroute_free_tier_cost_analysis_2026_07_31.md,
+    /plans/audit/results/claude_account_usage_value_measurement_2026_08_01.md,
+    /codex/06-coding-standards/model-tier-selection.md,
+    agent-orchestrator/server/accounts.py,
+  ]
 ---
 
 > **🟡 A live OmniRoute instance is running on the operator's host** (`127.0.0.1:20128`, loopback-only,
@@ -198,3 +206,10 @@ the whole matrix silently benchmarks whichever models OmniRoute chose to substit
 **Live-state caveat for whoever resumes**: the running instance holds real API keys for 5 providers and is loopback-only
 by configuration, not by firewall. If this host is ever repurposed or the evaluation lapses, run the Phase-3
 decommission todo — revoking the keys at source is the part that cannot be undone later.
+
+## Progress Log
+
+- **context-scout 2026-08-03**: populated context_scope (5 entries) — the harness README carries the 7 hard-won traps
+  the doc says silently produce wrong results if skipped (mandatory before the P0 provider-matrix.sh build), the two
+  upstream audit plans are the "why this plan exists" chain, and the codex/source pair are the doc's own in-body "Codex
+  SSOTs" picks most relevant to the eventual go/no-go decision.

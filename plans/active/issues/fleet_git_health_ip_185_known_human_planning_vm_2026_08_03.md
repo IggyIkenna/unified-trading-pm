@@ -34,6 +34,12 @@ source:
 drift_direction: advance-process
 estimate_class: infra
 depends_on: []
+context_scope:
+  [
+    agent-orchestrator/server/routes/git_health.py,
+    /codex/05-infrastructure/per-tab-worktrees.md,
+    /codex/04-architecture/runtime-deployment-topology.md,
+  ]
 ---
 
 # ip-172-31-0-185 is the LIVE human-planning VM — a known scanner false-positive, do NOT rescue its WIP
@@ -71,3 +77,7 @@ re-discovering it and asking whether it's a decommissioned host whose worker WIP
   Re-verified via AWS both times; the answer is stable. This doc is the durable record so future incarnations
   self-resolve. The only open action is the scanner allowlist (INFRA todo above) — until that lands, expect the re-flag
   to recur; point re-flaggers here.
+- **context-scout 2026-08-03**: populated context_scope (3 entries) — the doc's own todo hedges between
+  deployment-service and agent-orchestrator as "the scanner's home"; grep-confirmed the actual scanner source
+  (reporter_stale/ff_cron_stale logic) lives in agent-orchestrator, not deployment-service — a red herring worth
+  flagging to whoever picks up the todo.
