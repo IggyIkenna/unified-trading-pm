@@ -803,4 +803,7 @@ Listed for discoverability only — being listed here is NOT dispatch, per this 
 - **na-eligibility-audit 2026-07-31** (tranche=cefi, autonomous): KEEP-NA, valid — re-verified after the file's last
   commit (5fb83f4ea) touched only a corpus-referrer link (archived-doc path fix from an unrelated ag-closeout-audit
   run), not this doc's own todo/scope. Verdict unchanged from 2026-07-30.
+- **context-scout 2026-08-03**: re-confirmed context_scope (2 entries) unchanged — this doc is itself a pointer/index of
+  dozens of other docs (its own body IS the reading list), so the parent plan + the line-cap-remediation source doc
+  remain the right minimal set; no source-code paths added (genuinely code-free discoverability-index doc).
 - **context-scout 2026-08-01**: populated/refreshed context_scope (2 entries).

@@ -35,8 +35,6 @@ context_scope:
     /plans/active/ao_open_issues_consolidated_close_out_2026_07_17.md,
     /plans/archive/2026_07/ao_satellite_ao_dispatch_batch1_2026_07_26.md,
     /plans/active/ao_satellite_ao_dispatch_batch2_2026_07_30.md,
-    cursor-configs/skills/ag-closeout-audit/SKILL.md,
-    /plans/archive/2026_07/ao_satellite_ao_dispatch_batch1_2026_07_26.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]
 source:
@@ -117,6 +115,9 @@ source:
   other 2 `[REVIEW]`-tagged items require open-ended audit judgment (classify 8 conflict-gated docs, bucket 7 unclear
   docs) — the same shape as this skill's own work, not a deterministic check. No stale/superseded items found.
 - **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).
+- **context-scout 2026-08-03**: refreshed context_scope (4 entries) — deduped 2 accidental repeated entries (a duplicate
+  `ao_satellite_ao_dispatch_batch1_2026_07_26.md` and a leading-slash-vs-not duplicate of `ag-closeout-audit/SKILL.md`)
+  that had crept in since the last scout pass; content otherwise unchanged.
 - **na-eligibility-audit 2026-08-03** (reclassify pass): KEEP-NA, valid (blocker-currency only) — annotated todo 1 in
   place: `ao_satellite_ao_dispatch_batch2_2026_07_30.md` is now `status: active` with 4/8 todos done, so the
   approve/dispatch ask is satisfied even though the checkbox stays open pending batch2's own remainder. The other 3 open

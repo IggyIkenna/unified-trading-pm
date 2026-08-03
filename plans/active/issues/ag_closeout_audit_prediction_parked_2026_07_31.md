@@ -253,3 +253,4 @@ paired `_finalize` sibling will show the same gap; prediction is a confirmed liv
   parked_findings ledger: 0 new findings this run (re-verification record only, nothing else appended).
 
 - **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).
+- **context-scout 2026-08-03**: re-scouted; context_scope unchanged (4 entries), still accurate.

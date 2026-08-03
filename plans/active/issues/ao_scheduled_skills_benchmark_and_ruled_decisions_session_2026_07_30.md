@@ -44,12 +44,11 @@ locked_by:
 depends_on: []
 context_scope:
   [
-    /plans/active/issues/aws_codebuild_terraform_import_pending_2026_07_22.md,
-    /plans/active/issues/sports_manifest_consolidator_zero_growth_stall_2026_07_29.md,
-    /plans/active/issues/plan_reconcile_autonomous_sweep_2026_07_30.md,
-    /plans/active/issues/docs_reconcile_autonomous_sweep_2026_07_30.md,
     /cursor-configs/skills/plan-reconcile/SKILL.md,
     /cursor-configs/skills/na-eligibility-audit/SKILL.md,
+    /agents/na_eligibility_auditor.md,
+    /plans/active/issues/plan_reconcile_autonomous_sweep_2026_07_30.md,
+    /plans/active/issues/docs_reconcile_autonomous_sweep_2026_07_30.md,
   ]
 ---
 
@@ -338,3 +337,8 @@ and shipped — do NOT re-run those two if resuming from the script (their branc
   `[SCRIPT]` todo/plan (add a fetch+rebase to each `plan_health`-family skill's STEP 0) rather than staying a buried P2
   line here — flagged prominently in this run's chat report for operator attention, not resolved unilaterally since it
   touches every scheduled skill's boot sequence.
+- **context-scout 2026-08-03**: refreshed context_scope (5 entries) — swapped out the two now-CLOSED issue docs
+  (`aws_codebuild_terraform_import_pending_2026_07_22.md`,
+  `sports_manifest_consolidator_zero_growth_stall_2026_07_29.md`, both fully resolved per this doc's own P0 section) for
+  `/agents/na_eligibility_auditor.md`, the concrete file cited by the 2026-08-03 log entry above as needing the STEP-0
+  fetch+rebase fix; kept both still-relevant SKILL.md refs and the two still-open autonomous-sweep issue docs.

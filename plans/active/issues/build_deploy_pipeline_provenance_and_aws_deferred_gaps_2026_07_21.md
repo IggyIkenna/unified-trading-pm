@@ -147,6 +147,8 @@ acting. (The artifact-pipeline page does not depend on this — it reads the Clo
   existing issue doc covered these; the adjacent `change_freeze_…` doc (resolved) is about the freeze calendar, not the
   replay-filter naming. Loop Ikenna in before any fix — every open item lives in a file in his active CI area.
 - **context-scout 2026-08-01**: populated context_scope (4 entries).
+- **context-scout 2026-08-03**: refreshed context_scope (5 entries, unchanged) — verified all still accurate and
+  resolve.
 
 ## na-eligibility-audit verdict
 

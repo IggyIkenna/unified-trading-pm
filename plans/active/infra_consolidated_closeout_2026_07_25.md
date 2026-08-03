@@ -42,13 +42,11 @@ locked_by:
 locked_since:
 context_scope:
   [
-    /codex/06-coding-standards/README.md,
+    /cursor-configs/skills/ag-closeout-audit/SKILL.md,
+    /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
     /codex/06-coding-standards/quality-gates.md,
     /codex/11-project-management/,
-    /cursor-configs/skills/ag-closeout-audit/SKILL.md,
-    /plans/active/infra_satellite_ao_dispatch_batch1_2026_07_26.md,
-    /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
-    /plans/active/infra_satellite_ao_dispatch_batch5_2026_08_01.md,
+    /plans/active/issues/ag_closeout_audit_infra_parked_2026_08_03.md,
   ]
 supersedes:
 superseded_by:
@@ -392,6 +390,12 @@ not data-pipeline).
   non-batchable table, blast-radius-judgment-gated, unchanged). Re-ran the linkage check after adding these mentions:
   71/78 (7 infra orphans resolved; the residual 71 are other tranches', outside this run's remit — flagged in this run's
   `evidence` for visibility, not fixed here).
+- **context-scout 2026-08-03**: refreshed context_scope (7 -> 5 entries) — dropped the two specific
+  `infra_satellite_ao_dispatch_batchN` pointers (batch1/batch5) since satellite batches rotate frequently (batch6/
+  batch7-declined already superseded them by this date) and `README.md` (redundant with `quality-gates.md` for Track 1's
+  coding-standards content); added the current `ag_closeout_audit_infra_parked_2026_08_03.md` parked-findings doc, which
+  reflects this tranche's live unresolved state (the `asset_group` mistag deadlock) better than a stale batch number
+  would.
 - **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).
 - **na-eligibility-audit 2026-08-02** (infra tranche, incremental run): **KEEP-NA, valid — unchanged from the 2026-07-30
   verdict.** In scope this run because the doc was edited since that marker (2026-08-01 `/ag-closeout-audit`

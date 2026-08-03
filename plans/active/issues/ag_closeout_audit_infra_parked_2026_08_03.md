@@ -71,6 +71,8 @@ context_scope:
     /plans/active/issues/ag_closeout_audit_infra_parked_2026_08_02.md,
     /scripts/plan-hygiene/generate_ag_closeout_audit_candidates.py,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
+    /plans/active/infra_satellite_ao_dispatch_batch3_2026_07_30.md,
+    /plans/active/issues/stale_agentwork_scratch_clone_not_deletable_unpushed_stashes_2026_07_30.md,
   ]
 ---
 
@@ -303,3 +305,6 @@ fix recorded in-line (batch6 todo 1) and 6 carried-forward items re-verified (5 
   `Consider adding...` suggestion, not a decided spec); todo 4 explicitly states "neither is ready to batch as-is" and
   one half needs "a design decision... that this run did not make." None of the 4 clears the bounded/deterministic bar
   for RECLASSIFY. No other action.
+- **context-scout 2026-08-03**: populated/refreshed context_scope (5 entries) — added the two concrete todo targets
+  (`infra_satellite_ao_dispatch_batch3_2026_07_30.md` for finding 10, the stale-agentwork-scratch-clone doc for
+  finding 11) alongside the existing 3.

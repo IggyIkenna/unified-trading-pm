@@ -43,6 +43,8 @@ context_scope:
     /plans/archive/issues/cefi_live_ws_capture_dormant_since_2026_06_29_2026_07_14.md,
     /codex/04-architecture/instruments-service-as-ssot-for-mtds.md,
     /plans/active/cefi_satellite_ao_dispatch_batch4_2026_07_31.md,
+    /plans/active/cefi_satellite_ao_dispatch_batch5_2026_08_02.md,
+    market-tick-data-service/market_tick_data_service/live/connectors/aster_book_liq_ws.py,
   ]
 ---
 
@@ -160,3 +162,6 @@ Launched `mtds-live-cefi-consolidated-20260730-010147` (`asia-northeast1-c`, `e2
   no gap and no double-claim. Extraction banner added above the todos. `assigned_vm: NA` unchanged. Also merged a stray
   second `## Progress Log (na-eligibility-audit)` heading back into the single `## Progress Log` section (structural
   fix, no content change).
+- **context-scout 2026-08-03**: refreshed context_scope (6 entries, was 4) — added `cefi_satellite_ao_dispatch_batch5`
+  (now the live claim for todo 3) and the real ASTER-liquidations connector source
+  (`live/connectors/aster_book_liq_ws.py`) named in the 2026-08-02 investigation append.

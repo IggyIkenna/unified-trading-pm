@@ -76,11 +76,11 @@ depends_on:
 context_scope:
   [
     /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
-    /codex/12-agent-workflow/async-wait-and-poll-discipline.md,
-    /codex/05-infrastructure/per-tab-worktrees.md,
-    agent-orchestrator/server/regen_backlog_from_plan.py,
-    agent-orchestrator/server/dispatch.py,
-    agent-orchestrator/server/verify.py,
+    /codex/04-architecture/recovery-defence-in-depth-layers.md,
+    /plans/active/issues/ao_docs_reconciliation_2026_07_15.md,
+    agent-orchestrator/server/worker_liveness_watchdog.py,
+    agent-orchestrator/server/stale_dispatch.py,
+    agent-orchestrator/server/routes/agents.py,
   ]
 locked_by:
 locked_since:
@@ -900,3 +900,8 @@ the close-the-loop point: plan_health keeps correctly re-reporting a real, owned
   `ao_uniform_agent_liveness_contract_2026_07_20.md`) and touches the fleet's most incident-prone subsystem
   (`WorkerLivenessWatchdog`); it needs a human re-scope pass before it could be safely dispatched, not a mechanical
   bounded-check.
+
+- **context-scout 2026-08-03**: refreshed context_scope (6 entries) — swapped in the Layer-1 recovery SSOT, the
+  `ao_docs_reconciliation` close-out target, and the two source files (`worker_liveness_watchdog.py`,
+  `stale_dispatch.py`) most load-bearing for the still-open Phase 8/LAST P0 items; dropped entries tied to
+  already-archived earlier phases.

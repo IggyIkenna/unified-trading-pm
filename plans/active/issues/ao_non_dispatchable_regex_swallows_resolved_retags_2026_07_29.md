@@ -207,6 +207,8 @@ past tense rather than deleting it outright.
     and 1 file got a minor doc-hygiene checkbox flip; the remaining 21 mentions across 13 files are genuinely
     dispatchable as rephrased. Shipped: `unified-trading-pm` (this commit, files listed above).
 - **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).
+- **context-scout 2026-08-03**: refreshed context_scope (4 entries, unchanged) — verified all still accurate and
+  resolve.
 - **na-eligibility-audit 2026-08-02** (autonomous, tranche `ao`): KEEP-NA, valid — **this doc's own 2026-07-30
   RECLASSIFY→`planning` (infra tranche, agt-30721a, recorded above) was REVERTED** by the 2026-07-31 operator directive
   `unified-trading-pm@14478ca26` ("work these interactively now rather than queue behind AO's current busy backlog"),

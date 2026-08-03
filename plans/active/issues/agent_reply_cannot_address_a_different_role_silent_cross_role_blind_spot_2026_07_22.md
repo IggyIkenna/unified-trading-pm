@@ -211,3 +211,4 @@ too large.
   dispatch the still-gated P1/P3 items) — flagging the review.md item as a legitimate future manual carve-out candidate
   rather than silently dropping it. Doc-level disposition unchanged from the 2 prior passes; this refines the reason
   with a per-item read.
+- **context-scout 2026-08-03**: re-scouted; context_scope unchanged (6 entries), still accurate.

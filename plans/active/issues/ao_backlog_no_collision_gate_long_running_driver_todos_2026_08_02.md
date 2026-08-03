@@ -36,7 +36,14 @@ drift_direction: advance-code
 depends_on: []
 resolved_by:
 locked_by:
-context_scope: [/plans/archive/issues/sports_track_k_is_pipeline_check_progress_2026_08_02.md, agents/RULES.md]
+context_scope:
+  [
+    /plans/archive/issues/sports_track_k_is_pipeline_check_progress_2026_08_02.md,
+    agents/RULES.md,
+    agent-orchestrator/server/regen_backlog_from_plan.py,
+    agent-orchestrator/server/auto_park.py,
+    /plans/active/issues/backlog_park_lost_across_sibling_todo_insertion_2026_07_30.md,
+  ]
 ---
 
 # AO backlog regen has no collision/liveness gate for a todo whose completion depends on a multi-hour external driver -- 2026-08-02
@@ -132,3 +139,8 @@ even if nobody revisits it.
   (durable auto-park via the hard-gate `prereqs.prerequisites` primitive this doc's own risk analysis explicitly steers
   away from) — so item 1 requires a genuine build-vs-extend judgment call, not a mechanical follow of established
   precedent.
+
+- **context-scout 2026-08-03**: populated/refreshed context_scope (5 entries) — added the actual source-code target
+  (`regen_backlog_from_plan.py`, the file todo 1 modifies), the prior-art mechanism (`auto_park.py`, already cross-
+  referenced by the na-eligibility-audit note above), and the sibling park-durability issue doc alongside the
+  existing 2.

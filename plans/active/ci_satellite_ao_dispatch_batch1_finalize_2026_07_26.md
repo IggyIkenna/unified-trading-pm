@@ -166,3 +166,5 @@ context_scope:
   That plan completed and was archived to `/plans/archive/2026_07/`, and its todo 4 sub-item (b) already carries the
   verbatim finding ("the 2 SPECIFIC 2026-07-17 offenders named in this todo … are STALE", with the live re-verification
   that `deployment-ui` has no open promote PR).
+- **context-scout 2026-08-03**: re-confirmed context_scope (5 entries) unchanged — still matches this doc's own "Codex
+  SSOTs" section; no source-code paths added (`_finalize` gate doc, skip-source carve-out).

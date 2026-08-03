@@ -156,6 +156,9 @@ the call is still awaited (ordering preserved), and check the file's line/functi
   liquidations_handler.py, liquidation_events_hand...
 - **context-scout 2026-08-01**: populated context_scope (4 entries).
 
+- **context-scout 2026-08-03**: refreshed context_scope (6 entries, unchanged) — verified all still accurate and
+  resolve; the remaining open todo (extend concurrency to the 8 residual DeFi handlers) is already directly represented
+  by the `dex_swaps_handler.py` + `solana_defi_handler.py` entries.
 - **na-eligibility-audit 2026-08-03 (cross-cutting tranche)**: KEEP-NA, valid — reaffirmed, unchanged. Today's edit that
   put this doc back in incremental scope was a cosmetic `context_scope` backfill commit, not a content change; the
   2026-08-01 rationale (a concurrency-critical shared-writer change needing per-handler verification, not a mass edit)

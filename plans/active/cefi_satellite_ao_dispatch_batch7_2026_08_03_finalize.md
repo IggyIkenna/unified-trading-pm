@@ -102,3 +102,8 @@ context_scope:
 
 - `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md` — the 6-step archival ritual this plan's todo 3
   executes.
+
+## Progress Log
+
+- **context-scout 2026-08-03**: re-confirmed context_scope (3 entries) unchanged — `_finalize` gate doc, no source-code
+  paths added per the skip-source carve-out.

@@ -278,3 +278,5 @@ forces an operator/main manual DB patch outside the normal flow.
   (`[DOC] P3`, BLOCKED-marker convention for `task_template.md`) is small and unblocked, but the doc as a whole is
   correctly NA per the revert.
 - **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).
+- **context-scout 2026-08-03**: refreshed context_scope (6 entries, unchanged) — verified all still accurate and
+  resolve; doc's own remaining work (the `[DOC] P3` `task_template.md` note-add) is already reflected.

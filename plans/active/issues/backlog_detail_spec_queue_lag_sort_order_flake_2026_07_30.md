@@ -99,6 +99,8 @@ first:
   dispatch a second worker onto already-claimed work. Fixed the checkbox citation to point at the authoritative doc per
   the KEEP-NA-STALE rule; `assigned_vm: NA` left as-is (zero backlog impact, pure hygiene).
 - **context-scout 2026-08-01**: populated context_scope (3 entries).
+- **context-scout 2026-08-03**: refreshed context_scope (3 entries, unchanged) — verified all still accurate and
+  resolve.
 - **na-eligibility-audit 2026-08-02** (autonomous, tranche `ao`): KEEP-NA-STALE re-affirmed, **citation corrected**. The
   duplicate-routing verdict from 2026-07-31 still stands, but the evidence it cited went stale one day later: the
   successor doc `/plans/active/issues/ao_dashboard_backlog_detail_queue_lag_e2e_flaky_2026_07_26.md` was described as

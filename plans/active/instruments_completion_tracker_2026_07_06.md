@@ -699,3 +699,6 @@ reconciling + signing off, not redoing.)_
 **na-eligibility-audit 2026-08-03**: KEEP-NA, stale items. Closed 1 checkbox (generic manifest-reprocessing utility)
 whose "STILL OPEN" note pre-dated its actual shipping+archival by 2 days. All other open items reviewed, no other
 staleness found — doc stays `assigned_vm: NA`.
+
+**context-scout 2026-08-03**: re-scouted; context_scope unchanged (5 entries), still accurate against the doc's current
+content post-line-cap-split.

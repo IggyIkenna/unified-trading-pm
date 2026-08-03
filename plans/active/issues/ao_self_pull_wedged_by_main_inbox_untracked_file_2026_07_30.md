@@ -48,7 +48,6 @@ context_scope:
     /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
     agent-orchestrator/scripts/ao-self-pull.sh,
     /agents/main.md,
-    unified-trading-pm/agents/main.md,
     /plans/archive/issues/operator_gated_blocked_answer_is_a_no_op_2026_07_30.md,
   ]
 ---
@@ -225,3 +224,6 @@ follows correctly — only the webhook config is missing).
   sole-generic-infra-bucket fallback, per that script's own docstring) resolved it — `--tranche ao` now returns 81 docs
   and DOES include this one (confirmed live: this doc is in this run's own Phase 0 in-scope population), so the
   tranche-level deadlock this doc's 2026-08-02 marker flagged no longer applies.
+- **context-scout 2026-08-03**: refreshed context_scope (5 entries) — deduped a repeated `agents/main.md` entry
+  (previously listed both as `/agents/main.md` and `unified-trading-pm/agents/main.md`, the same file); content
+  otherwise unchanged and all entries verified to resolve.

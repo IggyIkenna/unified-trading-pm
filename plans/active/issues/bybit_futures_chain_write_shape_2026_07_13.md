@@ -43,6 +43,7 @@ context_scope:
     /codex/02-data/data-pipeline-correctness-hard-rule.md,
     market-tick-data-service/docs/canonical-write-conventions.md,
     market-tick-data-service/docs/GCS_PATHS.md,
+    /plans/active/cefi_satellite_ao_dispatch_batch4_2026_07_31.md,
   ]
 ---
 
@@ -168,3 +169,5 @@ workspace).
   ARCHIVAL, not an `assigned_vm` flip) and no unlock question arises — the doc has genuine open work either way.
   **Parked for the operator**: batch4 has sat `status: draft` since 2026-07-31, so this todo currently has no live
   dispatch path via either doc — see this run's report.
+- **context-scout 2026-08-03**: refreshed context_scope (5 entries) — added the batch4 satellite-dispatch plan the
+  extraction banner now points to.

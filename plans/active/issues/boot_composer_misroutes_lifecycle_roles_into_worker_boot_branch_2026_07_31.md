@@ -51,7 +51,8 @@ context_scope:
     agent-orchestrator/server/prompts.py,
     agent-orchestrator/server/autospawn.py,
     agent-orchestrator/server/routes/slots_worker.py,
-    agents/review.md,
+    /agents/review.md,
+    /agents/ag_closeout_auditor.md,
   ]
 ---
 
@@ -210,6 +211,9 @@ cefi-specific** — same defect now reproduced on a second tranche.
 ## Progress Log
 
 - **context-scout 2026-08-01**: populated context_scope (4 entries).
+- **context-scout 2026-08-03**: refreshed context_scope (5 entries) — added `/agents/ag_closeout_auditor.md` (the second
+  affected lifecycle role documented in the 2026-07-31 severity-escalation section, whose data-loss variant the fix must
+  also cover); kept the other 4 entries, verified all resolve.
 - **na-eligibility-audit 2026-08-02** (infra tranche, incremental run): **KEEP-NA, valid.** First verdict for this doc
   (no prior marker). Read end-to-end; `grep -cE '^- \[ \]'` = **3**, matching this verdict's item count. All 3 are
   `[SCRIPT]` fixes inside `agent-orchestrator`'s own boot-composer, `/done` completion gate and backlog task-binding

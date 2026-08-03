@@ -123,3 +123,5 @@ parallelism (fleet still does ~565 catalogue reloads total). The proper fix abov
   unchanged: the sole todo is still an unresolved architecture choice (range-loop in one process vs a cross-process
   `CeFiCatalogReader` cache), one branch of which rewrites the shared fleet-wide VM startup script. Not
   worker-determinable.
+- **context-scout 2026-08-03**: re-verified context_scope (5 entries) — body unchanged since 2026-08-01, existing list
+  still accurate.

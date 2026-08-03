@@ -89,12 +89,9 @@ context_scope:
   [
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
     /plans/active/master_data_canonicalisation_migration_catalogue_2026_06_07.md,
-    /plans/active/bucket_estate_consolidation_closeout_2026_07_24.md,
     /codex/02-data/data-pipeline-correctness-hard-rule.md,
-    /plans/active/data_pipeline_reconciliation_skill_2026_07_20.md,
     /codex/02-data/availability-manifest-and-data-status.md,
     /codex/02-data/pipeline-mode-partition.md,
-    /codex/05-infrastructure/bucket-isolation-model.md,
     /codex/02-data/honest-coverage-model.md,
   ]
 depends_on: []
@@ -730,6 +727,10 @@ criterion; it also carries the `v2_engine_venue_buildout` over-count caveat this
   **Zero genuine new orphans found — no Phase 3 batch draft this run.**
   `cross_cutting_satellite_ao_dispatch_batch3_2026_08_01.md` remains `status: draft`, still awaiting operator approval
   to dispatch (untouched by this run, per the never-auto-flip HARD RULE).
+- **context-scout 2026-08-03**: trimmed context_scope from 9 to 6 entries (dropped 3 Track-specific/narrower pointers —
+  `bucket_estate_consolidation_closeout_2026_07_24.md`, `data_pipeline_reconciliation_skill_2026_07_20.md` (now fully
+  DONE per its own Progress Log), `bucket-isolation-model.md` — to stay within the intended 2-6 MVI range; kept the
+  broadly-applicable process/codex SSOTs).
 - **context-scout 2026-08-01**: populated/refreshed context_scope (6 entries).
 - **2026-08-01** — `/ag-closeout-audit cross-cutting` **re-invocation** (autonomous, scheduled `ag_closeout_auditor`
   dispatch `agt-a5c7d6`, slot 13). Phase 0 used `generate_ag_closeout_audit_candidates.py --tranche cross-cutting` (90

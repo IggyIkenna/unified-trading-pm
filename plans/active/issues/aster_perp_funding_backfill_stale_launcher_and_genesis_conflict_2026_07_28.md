@@ -198,6 +198,8 @@ is confirmed. Also update the parent plan's leg (c) text to stop citing the reti
   Endorsing slot 6's park recommendation again — this is now 7 dispatches over 5 days for a question only the operator
   can answer.
 - **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).
+- **context-scout 2026-08-03**: refreshed context_scope (6 entries, unchanged) — verified all still accurate and
+  resolve; doc's sole open todo (operator-gated genesis-date confirmation) is unaffected.
 - **2026-08-02T19:56Z (slot 8, data_engineering) — 8th dispatch, still unanswered.** Re-verified:
   `git log --since=2026-08-02T18:27Z` on this doc + the parent plan shows only the commit recording the 7th re-verify
   itself — zero new commits, `BLK-a94f446d` still open. Not re-deriving the analysis (slot 6's cross-reference + slot
