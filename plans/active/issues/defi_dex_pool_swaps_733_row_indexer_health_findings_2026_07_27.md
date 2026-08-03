@@ -48,7 +48,7 @@ estimate_calibrated_ai_days: 0.2
 assigned_role: data_engineering
 drift_direction: unknown
 depends_on: []
-last_updated: 2026-08-01
+last_updated: 2026-08-03
 locked_by:
 locked_since:
 supersedes:
@@ -593,6 +593,26 @@ absorb the actual remediation work.
 
 ## Progress Log
 
+- **2026-08-03 (data_pipeline_failure escalation worker, agt-e2a77a, slot 11) — same static backlog, no new root cause,
+  no code change.** Dispatched off another `DP_RUN_MOSTLY_EMPTY` (DP-FETCH-009) CRITICAL page for
+  `(asset_group=defi, data_type=dex_pool_swaps)`: 1494 attempted_failed cells of 4,618,154 attempted, framed by the
+  monitor itself as "STATIC BACKLOG — only 37 attempted_failed row(s) in the last 1d (below the 500-row materiality
+  floor); a decaying trickle on already-tracked backlog, not a fresh regression." That 37-row/1d figure is consistent
+  with the small ongoing growth this doc has tracked every pass (1087→1097→1099, 2026-07-28; 1407, 2026-08-01; ~1450s
+  implied 2026-08-02) — ordinary continued trickle from the two still-open, already-diagnosed conditions
+  (UNISWAP_V3/OPTIMISM's confirmed-structural "bad indexers", PANCAKESWAP_V3/BSC's frozen-indexer-head), not a new
+  venue/chain or a new failure class. Per this doc's own established precedent (skip the expensive live manifest re-read
+  when the dispatch context already carries the monitor's own materiality/staleness verdict — see the 2026-08-01 entries
+  above), did not re-pull `availability_index.parquet` this pass; instead verified the one already-shipped code fix is
+  still live: `git merge-base --is-ancestor dddd1b21 origin/live-defi-rollout` in `market-tick-data-service` —
+  **confirmed still an ancestor** (CURVE/OPTIMISM's `EXPECTED_SUBGRAPH_DEINDEXED` detection is intact). No code change
+  ships this pass. The three still-open todos below (UNISWAP_V3/OPTIMISM dead-subgraph fix/replace, PANCAKESWAP_V3/BSC
+  frozen-indexer investigation, CURVE/OPTIMISM stale-VM restart blocked on the missing `PROGRESS.json` checkpoint)
+  remain correctly scoped and are the actual remaining work — not something this one-shot escalation pass re-derives or
+  re-decides. This is another data point for the still-open cross-asset-group dedup gap
+  (`/plans/active/issues/dp_escalation_worker_dispatch_no_open_issue_check_2026_07_29.md`, Option A/B/C, operator/design
+  decision still pending): a full `data_pipeline_failure` orchestrator-agent session dispatched for a condition whose
+  root-cause-relevant state has not changed since the last verified reading. Commit is doc-only (`unified-trading-pm`).
 - 2026-08-02T~21:10Z (slot 8, data_engineering, task `defi_dex_pool_swaps_733_row_indexer_health_findings-001`):
   resolved the open P2 "bad indexers transient vs. permanent" todo. Re-probed both subgraphs live (gateway + the
   sanctioned `scripts/subgraph_health_probe.py --dry-run` tool) after the 6-day window this todo's own bar required.
