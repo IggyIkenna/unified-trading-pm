@@ -171,11 +171,28 @@ No design call needed — every piece here is independently checkable, not a jud
   target path updated once the source doc's own status is re-checked). Repo: unified-trading-pm. Done when: the plan is
   at its archive path with a correct banner and zero broken referrers. Requires plan_reconciler's designated archival
   authority — do not dispatch to a general worker.
-- [ ] [DATA] P2. **Bounded sweep for the same false-claim pattern in other archived finalize twins** — grep
-      `plans/archive/**/*_finalize_*.md` for a "DONE" claim citing a specific parent-todo verdict, then spot-check (5-10
-      docs, not exhaustive) whether the parent plan's real checkbox / the source doc's real checkbox actually matches
-      the claim. Repo: unified-trading-pm. Done when: a pass/fail count is recorded for the sampled set; if any other
-      false claim is found, file it the same way this doc was filed (don't fix inline).
+- [x] ✅ [DATA] P2. **DONE 2026-08-03 (slot-16) — 8/8 PASS, no other false claim found.** Inventoried all 40
+      `plans/archive/**/*_finalize_*.md` docs (this doc's own known-false one excluded), then spot-checked the 8 most
+      structurally similar to the confirmed incident — the `*_satellite_ao_dispatch_batch*_finalize_*.md` docs, each
+      claiming a specific "reconciled N source docs' checkboxes" verdict, the same claim SHAPE that was false here:
+      `ao_satellite_ao_dispatch_batch1_finalize_2026_07_26.md`,
+      `cefi_satellite_ao_dispatch_batch1_finalize_2026_07_25.md`,
+      `ci_satellite_ao_dispatch_batch2_finalize_2026_07_29.md`,
+      `defi_satellite_ao_dispatch_batch1_finalize_2026_07_25.md`,
+      `prediction_satellite_ao_dispatch_batch1_finalize_2026_07_25.md`,
+      `sports_satellite_ao_dispatch_batch3_finalize_2026_07_25.md`,
+      `sports_satellite_ao_dispatch_batch4_finalize_2026_07_25.md`,
+      `tradfi_satellite_ao_dispatch_batch1_finalize_2026_07_25.md`. For each: verified the referenced parent plan is
+      genuinely archived (physically at its archive path, `status: complete`, 0 open `- [ ]` checkboxes, absent from
+      `plans/active/`) AND spot-checked one named source-doc reconciliation claim per doc against the source doc's real
+      on-disk state (exact cited SHA/checkbox/line). **Result: 8/8 PASS** — every parent-archival claim held up and
+      every spot-checked source-doc citation matched. Two docs (cefi batch1, sports batch4) showed the SAME kind of
+      mid-reconciliation discrepancy this incident's root-cause session hit, but in both cases it was caught and
+      honestly recorded (migrated to a tracked follow-up todo / left genuinely open) rather than papered over with a
+      false "done" claim — the healthy version of the pattern this doc's incident lacked. **No new false-claim issue doc
+      filed** — nothing in this sample warrants one. This is a bounded, non-exhaustive spot-check (8/40 finalize docs);
+      the remaining 32 are unaudited and could still harbor an instance, but the sampled evidence does not suggest the
+      confirmed incident is part of a wider pattern. Repo: unified-trading-pm — audit only, no code shipped.
 
 ## Progress Log
 
