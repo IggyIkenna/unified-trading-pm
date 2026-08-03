@@ -36,6 +36,9 @@ depends_on: []
 last_updated: 2026-07-27
 context_scope:
   [
+    /plans/active/data_completion_to_100_all_ag_2026_06_21.md,
+    /plans/epics/infrastructure_master.md,
+    /plans/archive/issues/deadman_monitor_log_event_crash_2026_06_23.md,
     /codex/05-infrastructure/data-pipeline-alerts.md,
     /codex/05-infrastructure/deployment-observability.md,
     alerting-service/alerting_service/notifiers/data_pipeline_slack.py,

@@ -44,10 +44,12 @@ locked_by:
 depends_on: []
 context_scope:
   [
-    /cursor-configs/skills/plan-reconcile/SKILL.md,
-    /cursor-configs/skills/na-eligibility-audit/SKILL.md,
+    /plans/active/issues/aws_codebuild_terraform_import_pending_2026_07_22.md,
+    /plans/active/issues/sports_manifest_consolidator_zero_growth_stall_2026_07_29.md,
     /plans/active/issues/plan_reconcile_autonomous_sweep_2026_07_30.md,
     /plans/active/issues/docs_reconcile_autonomous_sweep_2026_07_30.md,
+    /cursor-configs/skills/plan-reconcile/SKILL.md,
+    /cursor-configs/skills/na-eligibility-audit/SKILL.md,
   ]
 ---
 
@@ -251,7 +253,15 @@ and shipped — do NOT re-run those two if resuming from the script (their branc
   is whichever is LESS complete, not whichever is yours — verify by actually running the script, don't assume.
 - **`git pull --ff-only` with autostash can layer a stale stashed diff on top of a newly-pulled file that already fixes
   the same lines**, producing a working tree that LOOKS like a merge but is actually double-application. If a file shows
-  unexpected unstaged changes right after a pull-with-autostash, diff it before trusting either side.
+  unexpected unstaged changes right after a pull-with-autostash, diff it before trusting either side. **A more insidious
+  variant found 2026-08-02**: when both the autostash and the freshly-pulled tree independently add the SAME frontmatter
+  key (e.g. two sessions both backfilling `context_scope:`), the layering can produce a file with the key repeated TWICE
+  — `git`'s own conflict machinery never flags this (no conflict-marker lines at all; it's not a line-content clash,
+  it's a structural YAML duplicate-key issue), so it silently ships unless something parses the frontmatter and notices
+  two `context_scope:` lines. Found via a corpus-wide sweep (`grep -c '^context_scope:'` per staged file's frontmatter
+  block, not a git-status check) after ~275 of ~490 staged docs in one batch turned out to have this exact defect;
+  `scripts/plan-hygiene/fix_conflict_markers.py` (added same session) does not catch this class — it only resolves
+  visible marker conflicts — so a duplicate-key sweep needs its own pass, not a rerun of the marker fixer.
 - **A background agent's task-notification "failed" status does not mean zero progress** — check actual repo/git state
   before assuming a retry needs to start from scratch (the na-eligibility-audit integration agent from earlier in this
   same session had already merged 2 of 9 tranches before dying on an unrelated session-limit; this session's

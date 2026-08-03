@@ -50,6 +50,7 @@ context_scope:
     market-tick-data-service/market_tick_data_service/cli/handlers/_onchain_perp_batch_symbols.py,
     deployment-service/scripts/vm/setup-data-pipeline-vm.sh,
     deployment-service/scripts/vm/launch-cefi-hl-aster-historical-backfill.sh,
+    /plans/active/issues/cefi_hl_aster_batch_data_gaps_2026_06_22.md,
   ]
 ---
 

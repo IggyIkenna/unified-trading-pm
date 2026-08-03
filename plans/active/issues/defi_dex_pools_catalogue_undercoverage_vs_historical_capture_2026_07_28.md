@@ -37,9 +37,11 @@ context_scope:
   [
     /plans/archive/2026_08/defi_dex_pool_symbol_fix_backfill_purge_2026_07_25.md,
     /codex/02-data/honest-coverage-model.md,
+    /codex/04-architecture/instruments-service-as-ssot-for-mtds.md,
+    market-tick-data-service/market_tick_data_service/cli/handlers/dex_pools_handler.py,
+    /plans/active/issues/cefi_enumeration_audit_instrument_type_leakage_and_catalogue_orphans_2026_07_27.md,
     /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
     market-tick-data-service/market_tick_data_service/cli/handlers/_catalogue_filter.py,
-    market-tick-data-service/market_tick_data_service/cli/handlers/dex_pools_handler.py,
   ]
 ---
 

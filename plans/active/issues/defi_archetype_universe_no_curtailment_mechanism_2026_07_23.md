@@ -37,6 +37,11 @@ source: agent-discovered (per-archetype DeFi universe mapping audit, 2026-07-23)
 depends_on: []
 context_scope:
   [
+    /codex/04-architecture/tier-and-import-architecture.md,
+    /plans/active/issues/defi_catalog_engine_config_key_contract_drift_2026_07_23.md,
+    /plans/active/issues/pnl_interest_accrual_wrong_engine_and_banned_formula_2026_07_21.md,
+    strategy-service/strategy_service/engine/strategies/v2/target_universe/,
+    unified-api-contracts/unified_api_contracts/internal/architecture_v2/archetype_leg_spec_seeds.py,
     strategy-service/strategy_service/engine/strategies/v2/target_universe/catalog.py,
     strategy-service/strategy_service/engine/strategies/v2/factory.py,
     strategy-service/strategy_service/engine/strategies/v2/carry_and_yield/recursive_staked.py,

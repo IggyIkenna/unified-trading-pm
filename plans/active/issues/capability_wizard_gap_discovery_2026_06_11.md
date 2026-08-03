@@ -33,6 +33,8 @@ context_scope:
     /plans/active/issues/capability_wizard_analysis_findings_2026_06_11.md,
     /plans/archive/2026_07/capability_wizard_and_manifest_2026_06_11.md,
     /plans/archive/issues/cefi_margin_model_hyphenated_instrument_id_misclassification_2026_07_27.md,
+    unified-api-contracts/unified_api_contracts/internal/architecture_v2,
+    unified-trading-pm/scripts/openapi,
   ]
 ---
 

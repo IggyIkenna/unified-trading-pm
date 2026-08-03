@@ -39,9 +39,9 @@ locked_since:
 context_scope:
   [
     /plans/active/issues/instrument_availability_hive_canonicalisation_2026_07_21.md,
-    /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
     instruments-service/instruments_service/engine/orchestrator/writers.py,
     market-tick-data-service/market_tick_data_service/instrument_availability_paths.py,
+    /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
   ]
 ---
 

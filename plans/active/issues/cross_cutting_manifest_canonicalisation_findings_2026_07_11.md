@@ -56,8 +56,10 @@ source:
 resolved_by:
 context_scope:
   [
-    /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
     /plans/active/master_data_canonicalisation_migration_catalogue_2026_06_07.md,
+    /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
+    /plans/active/issues/cf_manifest_audit_first_full_rollup_findings_2026_07_26.md,
+    unified-trading-library/unified_trading_library/cf_manifest_audit.py,
     plans/audit/results/cf_manifest_audit_2026_06_01.py,
     market-tick-data-service/market_tick_data_service/scripts/populate_v9_index_columns_inplace.py,
   ]

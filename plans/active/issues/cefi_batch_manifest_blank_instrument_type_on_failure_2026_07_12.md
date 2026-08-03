@@ -48,6 +48,9 @@ context_scope:
     /plans/archive/issues/tardis_concurrent_ip_lockout_2026_07_12.md,
     /codex/02-data/honest-coverage-model.md,
     market-tick-data-service/market_tick_data_service/market_interface/adapters/tradfi/tardis_batch_download.py,
+    /codex/02-data/availability-manifest-and-data-status.md,
+    /codex/02-data/honest-absence-downstream-handling.md,
+    market-tick-data-service/market_tick_data_service/live/manifest_recorder.py,
   ]
 ---
 

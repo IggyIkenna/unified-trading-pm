@@ -50,9 +50,11 @@ depends_on: []
 context_scope:
   [
     deployment-api/scripts/compare_live_mock_parity.py,
+    deployment-api/deployment_api/services/data_status/rollup_cache.py,
+    /plans/active/issues/deployment_ui_l2_smoke_gate_red_2026_07_17.md,
+    /codex/05-infrastructure/deployment-observability.md,
     deployment-api/Dockerfile,
     deployment-api/deployment_api/routes/_gcp_cloud_functions.py,
-    /codex/05-infrastructure/deployment-observability.md,
   ]
 ---
 

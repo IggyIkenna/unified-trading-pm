@@ -55,6 +55,9 @@ context_scope:
   [
     /plans/active/issues/lst_yields_writegate_permanently_blocked_2026_07_28.md,
     /plans/active/issues/pnl_interest_accrual_wrong_engine_and_banned_formula_2026_07_21.md,
+    /plans/active/defi_satellite_ao_dispatch_batch1_2026_07_25.md,
+    /codex/02-data/pipeline-mode-partition.md,
+    /codex/02-data/defi-canonical-naming-ssot.md,
     features-service/features_service/onchain/cli/main.py,
     features-service/features_service/onchain/app/core/data_loader.py,
   ]

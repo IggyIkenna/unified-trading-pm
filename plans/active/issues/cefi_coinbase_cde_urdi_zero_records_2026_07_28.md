@@ -38,7 +38,9 @@ context_scope:
   [
     /codex/02-data/four-surface-reconciliation-procedure.md,
     cursor-configs/skills/data-pipeline-check-is/SKILL.md,
+    instruments-service/instruments_service/engine/orchestrator/process_zero_records.py,
     instruments-service/instruments_service/reference_data/adapters/cefi/coinbase_cde.py,
+    unified-api-contracts/unified_api_contracts/registry/venue_mapping.py,
   ]
 ---
 

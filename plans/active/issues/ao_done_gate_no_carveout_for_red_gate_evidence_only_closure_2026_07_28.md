@@ -48,6 +48,8 @@ context_scope:
     /plans/active/data_completion_cefi_2026_07_15.md,
     /plans/active/task_template.md,
     agent-orchestrator/server/verify.py,
+    agent-orchestrator/tests/test_done_gate_plan_flip_hard_reject.py,
+    /plans/archive/issues/ao_done_gate_checkbox_flip_blind_to_self_archived_plan_ref_2026_07_26.md,
   ]
 ---
 

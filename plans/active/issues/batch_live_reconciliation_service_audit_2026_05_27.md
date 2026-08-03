@@ -48,10 +48,13 @@ drift_direction: advance-code
 depends_on: []
 context_scope:
   [
+    /codex/04-architecture/reconciliation-resolution.md,
+    /codex/04-architecture/reconciliation-age-tracking.md,
+    /codex/09-strategy/operational/batch-live-reconciliation-threshold-calibration.md,
+    /codex/04-architecture/paper-vs-live-execution-seam.md,
     /plans/active/citadel_paper_batch_live_reconciliation_2026_06_19.md,
     /plans/archive/issues/blrs_g3_g10_rescope_2026_07_28.md,
     /plans/archive/issues/recon_freeze_armed_never_published_2026_05_27.md,
-    /codex/04-architecture/reconciliation-resolution.md,
   ]
 ---
 

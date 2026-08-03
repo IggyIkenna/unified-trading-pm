@@ -40,6 +40,8 @@ drift_direction: advance-code
 context_scope:
   [
     /plans/active/infra_capture_and_devops_leftovers_2026_07_06.md,
+    /plans/archive/issues/cefi_live_ws_capture_dormant_since_2026_06_29_2026_07_14.md,
+    /codex/04-architecture/instruments-service-as-ssot-for-mtds.md,
     /plans/active/cefi_satellite_ao_dispatch_batch4_2026_07_31.md,
   ]
 ---

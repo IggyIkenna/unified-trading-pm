@@ -52,9 +52,10 @@ locked_since:
 context_scope:
   [
     /codex/05-infrastructure/data-pipeline-alerts.md,
-    /plans/active/issues/dp_escalation_worker_dispatch_no_open_issue_check_2026_07_29.md,
     deployment-service/deployment_service/data_pipeline_monitors/meta_watchers.py,
     deployment-service/deployment_service/data_pipeline_monitors/known_dead_cells_registry.py,
+    deployment-service/deployment_service/data_pipeline_monitors/attempted_failed_staleness.py,
+    /plans/active/issues/dp_escalation_worker_dispatch_no_open_issue_check_2026_07_29.md,
   ]
 ---
 

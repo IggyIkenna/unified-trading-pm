@@ -45,8 +45,9 @@ context_scope:
   [
     /codex/02-data/honest-absence-downstream-handling.md,
     /plans/active/task_template.md,
-    /plans/active/defi_consolidated_closeout_2026_07_18.md,
+    /plans/active/cross_cutting_satellite_ao_dispatch_batch2_2026_07_26.md,
     market-tick-data-service/market_tick_data_service/cli/handlers/_defi_manifest.py,
+    /plans/active/defi_consolidated_closeout_2026_07_18.md,
     unified-api-contracts/unified_api_contracts/canonical/crosscutting/honest_coverage.py,
   ]
 ---

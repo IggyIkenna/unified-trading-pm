@@ -40,10 +40,12 @@ source: ["cross_cutting_satellite_ao_dispatch_batch1b-006, slot 14, 2026-07-28"]
 drift_direction: advance-code
 context_scope:
   [
-    /plans/active/issues/defi_hyperliquid_perp_funding_derivative_ticker_divergence_2026_07_28.md,
+    /plans/active/cross_cutting_satellite_ao_dispatch_batch1b_2026_07_26.md,
     /plans/active/issues/perp_funding_data_semantics_and_cadence_2026_06_16.md,
-    deployment-service/scripts/vm/launch-cefi-hl-aster-historical-backfill.sh,
     market-tick-data-service/market_tick_data_service/cli/handlers/perp_funding_handler.py,
+    deployment-service/scripts/vm/launch-cefi-hl-aster-historical-backfill.sh,
+    /codex/05-infrastructure/vm-launcher-runbook.md,
+    /plans/active/issues/defi_hyperliquid_perp_funding_derivative_ticker_divergence_2026_07_28.md,
   ]
 ---
 

@@ -45,6 +45,13 @@ drift_direction: none
 depends_on: []
 locked_by:
 locked_since:
+context_scope:
+  [
+    /plans/archive/2026_07/cefi_migration_cutover_and_track8_completion_2026_07_25.md,
+    /plans/active/issues/deribit_combo_perpetual_partition_move_2026_07_21.md,
+    /plans/active/issues/cefi_chain_drop_root_cause_and_heavy_io_vm_rule_2026_07_24.md,
+    market-tick-data-service/market_tick_data_service/market_interface/adapters/tradfi/tardis_cefi_shards.py,
+  ]
 resolved_by:
 ---
 

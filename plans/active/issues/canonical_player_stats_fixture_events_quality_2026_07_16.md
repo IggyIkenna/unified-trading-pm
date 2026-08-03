@@ -51,6 +51,8 @@ context_scope:
     /plans/epics/sports_master.md,
     /codex/02-data/honest-absence-downstream-handling.md,
     /codex/02-data/availability-manifest-and-data-status.md,
+    /plans/archive/issues/sports_legacy_canonical_row_gap_2026_07_16.md,
+    instruments-service/scripts/dedup_canonical_player_stats_2026_07_25.py,
   ]
 ---
 

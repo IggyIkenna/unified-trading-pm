@@ -32,7 +32,11 @@ execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
 context_scope:
-  [/plans/active/ag_closeout_audit_rollout_2026_07_25.md, /cursor-configs/skills/ag-closeout-audit/SKILL.md]
+  [
+    /plans/active/ag_closeout_audit_rollout_2026_07_25.md,
+    /cursor-configs/skills/ag-closeout-audit/SKILL.md,
+    /cursor-configs/SUB_AGENT_MANDATORY_RULES.md,
+  ]
 ---
 
 # Autonomous session 2026-07-25 — queued operator decisions

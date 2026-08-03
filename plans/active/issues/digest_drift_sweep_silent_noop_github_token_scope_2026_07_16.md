@@ -68,6 +68,13 @@ assigned_role: devops
 drift_direction: advance-code
 last_updated: 2026-07-16
 locked_by:
+context_scope:
+  [
+    /codex/08-workflows/ci-cd-flow.md,
+    /plans/active/issues/post_cutover_silent_assumption_sweep_2026_07_23.md,
+    /plans/active/ci_satellite_ao_dispatch_batch1_2026_07_26.md,
+    .github/workflows/digest-drift-sweep.yml,
+  ]
 resolved_by:
 depends_on: []
 ---

@@ -59,6 +59,7 @@ context_scope:
     /codex/02-data/pipeline-mode-partition.md,
     /plans/archive/2026_07/candle_canonical_path_migration_execution_2026_07_24.md,
     /plans/active/issues/mdps_candle_manifest_near_total_coverage_gap_2026_07_27.md,
+    market-data-processing-service/scripts/migrate_candle_canonical_2026_07.py,
   ]
 ---
 

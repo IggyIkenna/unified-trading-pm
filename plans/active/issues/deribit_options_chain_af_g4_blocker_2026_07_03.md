@@ -23,6 +23,13 @@ drift_direction: advance-code
 depends_on: []
 last_updated: 2026-07-29
 locked_by: live-defi-rollout
+context_scope:
+  [
+    /plans/active/issues/cefi_high_attempted_failed_batch_cluster_2026_07_23.md,
+    /plans/archive/issues/utl_uac_skew_fleet_audit_2026_07_15.md,
+    /plans/active/cefi_track2_coverage_backfill_checkpoints_2026_07_25.md,
+    /plans/active/issues/dp_escalation_worker_dispatch_no_open_issue_check_2026_07_29.md,
+  ]
 locked_since: 2026-05-21
 resolved_by:
 ---

@@ -50,10 +50,12 @@ source:
 resolved_by:
 context_scope:
   [
-    /plans/audit/results/data_pipeline_reconciliation_defi_2026_07_20.md,
-    /codex/02-data/pipeline-mode-partition.md,
     unified-api-contracts/unified_api_contracts/canonical/crosscutting/_source_priority_data.py,
     market-tick-data-service/market_tick_data_service/cli/handlers/vault_share_price_handler.py,
+    /codex/02-data/pipeline-mode-partition.md,
+    /codex/02-data/non-canonical-path-inventory.md,
+    /plans/audit/results/data_pipeline_reconciliation_defi_2026_07_20.md,
+    /plans/active/defi_satellite_ao_dispatch_batch1_2026_07_25.md,
   ]
 ---
 

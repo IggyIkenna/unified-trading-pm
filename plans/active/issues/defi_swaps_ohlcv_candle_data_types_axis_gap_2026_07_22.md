@@ -68,11 +68,12 @@ resolved_by:
 depends_on: []
 context_scope:
   [
-    /plans/active/master_data_canonicalisation_migration_catalogue_2026_06_07.md,
-    /plans/active/issues/defi_perp_daily_ctx_manifest_gap_reader_risk_2026_07_22.md,
-    /plans/archive/2026_07/distinct_values_noncanonical_audit_2026_07_20.md,
     instruments-service/scripts/enumerate_expected_universe.py,
     unified-api-contracts/unified_api_contracts/registry/market_data_categories.py,
+    /plans/active/issues/defi_venue_phase_live_definition_contradiction_2026_07_22.md,
+    /plans/active/master_data_canonicalisation_migration_catalogue_2026_06_07.md,
+    /plans/archive/2026_07/distinct_values_noncanonical_audit_2026_07_20.md,
+    /plans/active/issues/defi_perp_daily_ctx_manifest_gap_reader_risk_2026_07_22.md,
   ]
 ---
 

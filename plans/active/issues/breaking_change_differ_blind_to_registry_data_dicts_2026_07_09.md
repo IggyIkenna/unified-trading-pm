@@ -56,6 +56,9 @@ context_scope:
     /plans/archive/2026_07/ci_satellite_ao_dispatch_batch2_2026_07_29.md,
     scripts/cicd/detect_breaking_change.py,
     /codex/08-workflows/ci-cd-flow.md,
+    /plans/active/ci_satellite_ao_dispatch_batch2_2026_07_29.md,
+    /plans/archive/issues/instruments_service_cefi_qg_red_on_ldr_head_2026_07_08.md,
+    /codex/02-data/data-pipeline-correctness-hard-rule.md,
   ]
 ---
 

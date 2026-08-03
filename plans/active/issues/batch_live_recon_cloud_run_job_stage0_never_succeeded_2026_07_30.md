@@ -51,6 +51,9 @@ source: >-
   executions list/describe` + `gcloud logging read` + `gsutil ls`, all read-only.
 context_scope:
   [
+    /plans/active/citadel_paper_batch_live_reconciliation_2026_06_19.md,
+    /plans/active/issues/batch_live_reconciliation_service_audit_2026_05_27.md,
+    /plans/archive/issues/setup_data_pipeline_vm_dispatch_gap_batch_live_recon_chaos_drill_2026_07_30.md,
     /plans/active/issues/recon_bucket_missing_nightly_recon_failing_2026_07_13.md,
     /codex/09-strategy/operational/paper-batch-live-reconciliation.md,
     deployment-service/scripts/vm/launch-batch-live-recon-cron-vm.sh,

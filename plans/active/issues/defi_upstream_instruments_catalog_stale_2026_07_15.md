@@ -92,10 +92,10 @@ depends_on: []
 last_updated: 2026-07-15
 context_scope:
   [
-    /codex/02-data/honest-absence-downstream-handling.md,
-    /codex/02-data/availability-manifest-and-data-status.md,
     /plans/active/data_pipeline_alerts_batch_remediation_2026_07_15.md,
     market-tick-data-service/market_tick_data_service/cli/handlers/_defi_manifest.py,
+    /codex/02-data/availability-manifest-and-data-status.md,
+    /codex/02-data/honest-absence-downstream-handling.md,
   ]
 ---
 

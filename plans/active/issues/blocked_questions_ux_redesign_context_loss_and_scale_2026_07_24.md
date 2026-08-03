@@ -39,9 +39,10 @@ depends_on: []
 context_scope:
   [
     /plans/epics/escalation_and_disaster_recovery_master.md,
-    /plans/archive/issues/operator_gated_blocked_answer_is_a_no_op_2026_07_30.md,
-    agent-orchestrator/server/orm.py,
+    /plans/active/issues/dispatch_sequential_gate_fix_2026_07_24.md,
     agent-orchestrator/server/transcript_log.py,
+    agent-orchestrator/server/orm.py,
+    /plans/archive/issues/operator_gated_blocked_answer_is_a_no_op_2026_07_30.md,
   ]
 ---
 

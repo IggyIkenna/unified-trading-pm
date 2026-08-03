@@ -59,9 +59,11 @@ superseded_by:
 resolved_by:
 context_scope:
   [
-    /codex/02-data/non-canonical-path-inventory.md,
-    /codex/02-data/pipeline-mode-partition.md,
     /plans/active/data_pipeline_reconciliation_skill_2026_07_20.md,
+    /codex/02-data/non-canonical-path-inventory.md,
+    /codex/02-data/four-surface-reconciliation-procedure.md,
+    /codex/05-infrastructure/bucket-isolation-model.md,
+    /codex/02-data/pipeline-mode-partition.md,
     /plans/active/infra_satellite_ao_dispatch_batch2_2026_07_27.md,
     instruments-service/instruments_service/engine/orchestrator/writers.py,
   ]

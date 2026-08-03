@@ -43,8 +43,8 @@ locked_by:
 depends_on: []
 context_scope:
   [
-    deployment-api/deployment_api/services/artifact_pipeline/service.py,
     deployment-api/tests/unit/api/test_artifact_pipeline.py,
+    deployment-api/deployment_api/services/artifact_pipeline/service.py,
     /plans/archive/issues/ci_test_content_and_tooling_speed_findings_2026_07_28.md,
   ]
 ---

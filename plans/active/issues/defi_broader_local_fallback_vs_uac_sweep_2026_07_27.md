@@ -47,6 +47,7 @@ locked_since:
 context_scope:
   [
     /plans/archive/2026_07/defi_onchain_derivable_values_and_date_drift_2026_06_20.md,
+    /plans/archive/issues/defi_fork1_prep_audit_2026_05_08.md,
     instruments-service/instruments_service/reference_data/utils/evm_creation_resolver.py,
     unified-api-contracts/unified_api_contracts/registry/chain_env.py,
   ]

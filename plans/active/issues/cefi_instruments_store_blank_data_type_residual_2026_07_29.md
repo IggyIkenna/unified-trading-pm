@@ -33,6 +33,8 @@ drift_direction: advance-code
 context_scope:
   [
     /plans/active/data_completion_cefi_2026_07_15.md,
+    /codex/02-data/availability-manifest-and-data-status.md,
+    unified-trading-library/unified_trading_library/manifest_writer_normalising.py,
     /plans/active/issues/cefi_e6_cf7_relabel_and_attempted_failed_remeasure_2026_07_26.md,
     /plans/archive/issues/manifest_reprocessing_generic_utility_2026_07_07.md,
     unified-trading-library/unified_trading_library/manifest_writer/_rows.py,

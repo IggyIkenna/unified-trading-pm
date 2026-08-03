@@ -49,6 +49,10 @@ supersedes:
 superseded_by:
 context_scope:
   [
+    /plans/archive/issues/blocked_marker_continuation_line_not_scanned_2026_07_26.md,
+    /plans/active/issues/sports_odds_api_scattered_multiyear_gaps_2026_07_27.md,
+    /plans/archive/issues/sports_odds_api_key_deactivated_2026_07_26.md,
+    /plans/active/sports_closeout_track_s2_foldin_2026_07_25.md,
     agent-orchestrator/server/regen_backlog_from_plan.py,
     /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
     agents/RULES.md,

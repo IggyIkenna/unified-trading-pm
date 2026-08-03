@@ -69,8 +69,10 @@ last_updated: 2026-07-29
 context_scope:
   [
     /plans/active/issues/deribit_options_chain_af_g4_blocker_2026_07_03.md,
-    /plans/archive/issues/tardis_concurrent_ip_lockout_2026_07_12.md,
+    /plans/active/issues/tardis_impossible_combinations_recorded_as_attempted_failed_2026_07_17.md,
+    /plans/active/cefi_track2_coverage_backfill_checkpoints_2026_07_25.md,
     /codex/02-data/availability-manifest-and-data-status.md,
+    /plans/archive/issues/tardis_concurrent_ip_lockout_2026_07_12.md,
     /codex/04-architecture/shard-level-failure-isolation.md,
   ]
 ---

@@ -32,6 +32,8 @@ context_scope:
     /plans/active/issues/capability_wizard_gap_discovery_2026_06_11.md,
     /plans/archive/2026_07/capability_wizard_and_manifest_2026_06_11.md,
     /codex/04-architecture/execution-algorithm-selection.md,
+    unified-api-contracts/unified_api_contracts/internal/architecture_v2,
+    unified-trading-pm/scripts/openapi,
   ]
 ---
 

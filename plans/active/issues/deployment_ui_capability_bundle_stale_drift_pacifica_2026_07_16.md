@@ -44,6 +44,13 @@ source:
 assigned_vm: NA
 resolved_by:
 locked_by:
+context_scope:
+  [
+    deployment-ui/src/data/capability-manifest.json,
+    deployment-ui/src/components/CapabilityTab.tsx,
+    /codex/04-architecture/solana-defi-coverage.md,
+    /plans/active/defi_consolidated_closeout_2026_07_18.md,
+  ]
 execution_scope: local-only
 model_tier: sonnet-doable
 thinking_tier: medium

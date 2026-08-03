@@ -47,8 +47,10 @@ depends_on: []
 context_scope:
   [
     /codex/05-infrastructure/billing-cost-observability.md,
-    deployment-api/deployment_api/services/cost_observability,
+    deployment-api/deployment_api/routes/costs.py,
     deployment-ui/src/pages/CostObservability.tsx,
+    /plans/archive/2026_07/cost_observability_ui_2026_07_08.md,
+    deployment-api/deployment_api/services/cost_observability,
   ]
 ---
 

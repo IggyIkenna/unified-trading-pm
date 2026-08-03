@@ -49,8 +49,9 @@ drift_direction: advance-code
 locked_since:
 context_scope:
   [
-    /plans/active/issues/honest_coverage_shard_dimension_model_definitional_data_2026_07_07.md,
     /plans/active/instruments_completion_tracker_2026_07_06.md,
+    /plans/active/issues/honest_coverage_shard_dimension_model_definitional_data_2026_07_07.md,
+    /plans/active/issues/defi_plasma_chain_onboarding_gap_2026_07_26.md,
     deployment-api/deployment_api/services/data_status/defi.py,
     unified-api-contracts/unified_api_contracts/registry/defi_venues.py,
   ]

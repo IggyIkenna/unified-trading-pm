@@ -49,6 +49,7 @@ context_scope:
   [
     /plans/active/issues/cross_cutting_manifest_canonicalisation_findings_2026_07_11.md,
     /plans/active/cross_cutting_satellite_ao_dispatch_batch1_2026_07_26.md,
+    /plans/archive/issues/cf_manifest_audit_scheduled_job_daily_failure_2026_07_13.md,
     unified-trading-library/unified_trading_library/cf_manifest_audit.py,
   ]
 ---

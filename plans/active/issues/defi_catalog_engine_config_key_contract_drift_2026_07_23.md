@@ -41,9 +41,12 @@ source: agent-discovered (orphaned-archetype build, mechanical pre-flight sweep,
 depends_on: []
 context_scope:
   [
+    /plans/active/issues/defi_archetype_universe_no_curtailment_mechanism_2026_07_23.md,
+    /plans/active/issues/pnl_interest_accrual_wrong_engine_and_banned_formula_2026_07_21.md,
+    strategy-service/strategy_service/engine/strategies/v2/target_universe/,
+    strategy-service/strategy_service/engine/strategies/v2/orchestrator.py,
     strategy-service/tests/unit/engine/strategies/v2/test_all_catalogued_archetypes_construct_and_fire.py,
     strategy-service/strategy_service/engine/strategies/v2/target_universe/catalog.py,
-    /plans/active/issues/defi_archetype_universe_no_curtailment_mechanism_2026_07_23.md,
   ]
 ---
 

@@ -46,9 +46,11 @@ source:
   ]
 context_scope:
   [
-    /plans/archive/issues/hatch_vcs_main_tag_ancestry_gap_breaks_cross_repo_pip_install_2026_07_26.md,
-    /plans/active/issues/fleet_wide_qg_capacity_crisis_continues_day2_2026_07_29.md,
     /plans/archive/issues/defi_wizard_batch2_018_residual_findings_2026_07_26.md,
+    /plans/archive/issues/hatch_vcs_main_tag_ancestry_gap_breaks_cross_repo_pip_install_2026_07_26.md,
+    /codex/08-workflows/ci-cd-flow.md,
+    unified-trading-system-ui/.github/workflows/ci.yml,
+    /plans/active/issues/fleet_wide_qg_capacity_crisis_continues_day2_2026_07_29.md,
   ]
 ---
 
