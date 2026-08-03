@@ -280,12 +280,23 @@ var, ignoring any env; `_tradfi-ohlcv-launcher-lib.sh` reads a differently-named
 verifying whether `escalation._recover_backfill_vm`'s `bigger_machine` wiring is a live no-op before trusting it
 anywhere.
 
-- [ ] [BACKEND] P3. Distinguish a genuine OOM from a stall-induced SIGKILL in `exit_code_fleet_monitor._finding_for()`
-      before setting `details["oom"]`/`bigger_machine` — e.g. read the archived deployment record's
-      `mem_pct`/`mem_slope` history (already collected in `host_metrics_window`) or the run.log's own
-      `cause=`/`WORKER_STALLED` marker, and only flag OOM when memory was genuinely climbing toward the critical
+- [x] ✅ [BACKEND] P3. Distinguish a genuine OOM from a stall-induced SIGKILL in
+      `exit_code_fleet_monitor._finding_for()` before setting `details["oom"]`/`bigger_machine` — e.g. read the archived
+      deployment record's `mem_pct`/`mem_slope` history (already collected in `host_metrics_window`) or the run.log's
+      own `cause=`/`WORKER_STALLED` marker, and only flag OOM when memory was genuinely climbing toward the critical
       threshold at kill time. Repo: deployment-service. Evidence: this doc's Progress Log entry above (deployment_id
-      `bdd2f745-bea7-46a0-89a3-ed6e962fd74a`, `mem_pct` flat at 17.0%, `cause=stall`).
+      `bdd2f745-bea7-46a0-89a3-ed6e962fd74a`, `mem_pct` flat at 17.0%, `cause=stall`). — **deployment-service@e9196ee**:
+      added a `stall_marker: bool` param to `_finding_for()`, sourced in `sweep()` from the existing (already-tested)
+      `_gcs.run_log_shows_stall()` helper, gated to only read run.log on the `exit_code==137` candidate path (same
+      per-tick download-count discipline as the other gated reads in `sweep()`). `oom` is now
+      `exit_code == 137 and not stall_marker` — a positive `WORKER_STALLED`/`cause=stall` run.log marker overrides the
+      pure exit-code-137 equality check, so `details["oom"]`/`bigger_machine` are no longer stamped on a stall-induced
+      SIGKILL (tier falls to the safe pre-existing `page_operator` default rather than the OOM `auto_recover` path — no
+      escalation-routing re-architecture attempted, scoped strictly to the mislabeling per the todo text). 2 new
+      `_finding_for`-level tests (137-without-marker still OOM; 137-with-marker not OOM, no `bigger_machine`, stays
+      `page_operator`) + 1 new `sweep()` end-to-end test reproducing this doc's own `bdd2f745-...` incident's run.log
+      shape via `finding_sink`. `quality-gates.sh` green (sentinel `e9196eea87a0bda842e179954be3dabfcc1c2066`), verified
+      on origin.
 - [ ] [BACKEND] P3. Verify whether `escalation._recover_backfill_vm`'s `bigger_machine` hint actually reaches either
       tradfi launcher today (neither reads a `MACHINE_TYPE` env consistently per the note above) — if it is a silent
       no-op, either wire it through properly or drop the hint rather than leave a documented-but-dead auto-escalation
