@@ -462,15 +462,29 @@ concurrent workers do not collide on this file.
       docs/ping logs). unified-trading-pm@bd0e44dd3. Source:
       `plans/archive/issues/d13_orphaned_version_readers_and_manifest_drift_2026_07_17.md` § "Census addendum
       (2026-07-31)".
-- [ ] [INFRA] P3. **`check_sdk_version_alignment.py`'s `_get_api_contracts_version()` is D13-blind.** Found via the same
-      re-sweep. `unified-api-contracts` is `version_source: git-tag` (dynamic pyproject), so
-      `_get_api_contracts_version()` always returns `""`; `_version_satisfies_spec()` treats an empty version as "always
-      satisfies", so the "interface uses api-contracts but version range does not include api-contracts version" check
-      silently no-ops for every caller. NOT currently wired to any workflow (grep-confirmed) — inert today. Make it
-      git-tag-aware (read the current version from `workspace-manifest.json`'s `versions{}` cache, or the published git
-      tag, rather than the source pyproject) or delete it if superseded — state which and why. **Done when**: the
-      api-contracts-version-overlap check either correctly resolves the git-tag version or the script is gone with zero
-      dangling referrers. Repo: unified-api-contracts.
+- [x] ✅ [INFRA] P3. **DONE 2026-08-03 (slot-7, infra)** — **`check_sdk_version_alignment.py`'s
+      `_get_api_contracts_version()` was D13-blind — REMOVED, not fixed, superseded.** Confirmed doubly-broken, not just
+      D13-blind: even ignoring the always-`""` git-tag version, the check's dependency lookup
+      (`"api-contracts" in iface_deps`) could never match anyway, since every real consumer's pyproject.toml declares
+      the dependency as `"unified-api-contracts"`, not `"api-contracts"` — so it never fired for any caller, ever. Its
+      function (does a consumer's declared api-contracts version range admit api-contracts' current version) is already
+      correctly performed, git-tag-aware, by `assert_version_coherence.py`'s `_check_dep_floors()` (wired into PM's
+      `quality-gates.sh:979`, resolves from `workspace-manifest.json`'s `versions{}` cache). Removed
+      `_get_api_contracts_version()`, `_version_satisfies_spec()`, and the api-contracts-overlap block in `main()`; also
+      deleted `_heuristic_overlap()` (dead code, never called). **Kept** the still-functional SDK-schema-alignment check
+      (databento/tardis/ccxt/ib_insync vs. api-contracts schema modules + `[schema-validation]` pins) since it's
+      unrelated to the D13 bug and not covered by `assert_version_coherence.py` — fixed an adjacent bug found while
+      verifying it still works: `_schema_module_exists()` looked for a fallback dir `api_contracts_external`, which
+      doesn't exist (real dir is `external/`), causing false-positive "no schemas" errors for databento/ccxt/ibkr, which
+      genuinely exist there. Verified via a live `uv run python scripts/check_sdk_version_alignment.py` run before/after
+      (identical output pre-edit whether stashed or not, confirming zero behavior change to the overlap check; false
+      positives gone post schema-dir fix, replaced by genuine signal). Full `quality-gates.sh` green (310s). —
+      unified-api-contracts@44ba64b3. Two further, genuinely out-of-scope findings surfaced once the false positives
+      cleared (stale `INTERFACES` list, 11/16 dead; api-contracts' own `[schema-validation]` extras missing 3 SDK pins
+      that `SCHEMA_VERSIONS.md` already documents) filed as follow-up todos rather than absorbed:
+      `issues/check_sdk_version_alignment_stale_interfaces_and_missing_pins_2026_08_03.md`. Source:
+      `plans/archive/issues/d13_orphaned_version_readers_and_manifest_drift_2026_07_17.md` § "Census addendum
+      (2026-07-31)".
 - [x] ✅ [INFRA] P2. **Fleet version/tag-state census (read-only, NO tag minting).** Three docs each ask for a slice of
       the same measurement; do it once. (a) Re-derive manifest `versions{}` vs the highest real `vX.Y.Z` tag across all
       24 repos (last measured 2026-07-17: 13 in sync / 9 LAGGING / 1 AHEAD — worst `e2e-testing` 0.6.0 vs v0.40.0). (b)
