@@ -15,7 +15,7 @@ summary:
   false-stale class the cefi override already fixed. Any caller that does not set MANIFEST_CONSOLIDATED_STALENESS_SEC by
   hand (audit scripts, the /data-freshness skill, downstream reads, the deployment-api cockpit consolidator-health view)
   sees false outages on a perfectly healthy sports consolidator."
-status: open
+status: resolved
 priority: P1
 nature: notes
 asset_group: [sports, meta]
@@ -34,7 +34,7 @@ source:
   ManifestConsolidatorStaleError. Workaround used for the CF11 run: MANIFEST_CONSOLIDATED_STALENESS_SEC=3600 env
   (mirrors cefi launchers) so the healthy consolidated blob is served."
 locked_by:
-resolved_by:
+resolved_by: "slot-13 (data_engineering), sports_manifest_read_staleness_budget_missing-001, 2026-08-03"
 execution_scope: orchestrator-agent
 assigned_role: backend_engineer
 model_tier: sonnet-doable
@@ -112,9 +112,18 @@ uniformity — either is defensible; 1800s is the tighter, still-safe choice.
       `_AG_STALENESS_BUDGET_SEC`, docstring note on the ~11-min cadence, and updated/added
       `test_route_health_overview.py` assertions for `_budget_for`/`_entry_budget` sports coverage; `quality-gates.sh`
       green).
-- [ ] [DATA] P2. Grep the fleet for scripts that hardcode `MANIFEST_CONSOLIDATED_STALENESS_SEC` for the sports bucket as
-      a workaround (e.g. `instruments-service/scripts/backfill/api_football_cf11_guaranteed_type_closer_2026_07_15.py`)
-      and drop the per-script env once the per-AG override lands (repo: instruments-service).
+- [x] ✅ [DATA] P2. Grep the fleet for scripts that hardcode `MANIFEST_CONSOLIDATED_STALENESS_SEC` for the sports bucket
+      as a workaround (e.g.
+      `instruments-service/scripts/backfill/api_football_cf11_guaranteed_type_closer_2026_07_15.py` — since renamed to
+      `api_football_cf11_manifest_reconcile_2026_07_15.py`) and drop the per-script env once the per-AG override lands
+      (repo: instruments-service). Grepped `MANIFEST_CONSOLIDATED_STALENESS_SEC` across the workspace;
+      `instruments-service`'s only hit was the doc-named script (`api_football_cf11_manifest_reconcile_2026_07_15.py`,
+      hardcoding `os.environ["MANIFEST_CONSOLIDATED_STALENESS_SEC"] = "3600"`). Confirmed via
+      `unified_trading_library.manifest_writer._state._resolve_consolidated_staleness_sec` that the per-AG override
+      (`staleness_budget_for_bucket`) is consulted FIRST and short-circuits entirely on a hit — the env var is never
+      even read for a sports bucket once the per-AG entry exists, making the hardcode genuinely dead code, not just
+      redundant. Removed the line + updated the docstring to explain why it's no longer needed —
+      `instruments-service@0e22d54b`. `quality-gates.sh` green.
 
 ## RE-TRIAGE (2026-07-23)
 
@@ -141,3 +150,14 @@ gate, unaffected by any of those. No conflicting doc found.
   `assigned_vm: NA -> planning`. Conflict-check run against all active `assigned_vm: planning` docs in this doc's
   `parent_epic` + the infra tranche's consolidated-closeout digest: zero/milestone-only overlap, clear to proceed.
 - **context-scout 2026-08-03**: populated context_scope (3 entries).
+- **2026-08-03T~19:15Z** (AO dispatch, slot 13, `data_engineering`) — Shipped the last open todo (3 of 3). Re-verified
+  todos 1-2 are genuinely live in current code (the 2026-07-23 RE-TRIAGE note predates their fix and is now stale --
+  `AG_STALENESS_BUDGET_SEC = {"cefi": 86400, "sports": 1800, "defi": 3600, "tradfi": 7200}` in
+  `unified-trading-library/unified_trading_library/manifest_writer/_staleness_budget.py` and
+  `_AG_STALENESS_BUDGET_SEC = {"cefi": 86400, "sports": 1800, "defi": 3600}` in
+  `deployment-api/deployment_api/routes/health_consolidator/__init__.py` both confirmed present). Fleet grep for
+  `MANIFEST_CONSOLIDATED_STALENESS_SEC` found exactly one instruments-service hit hardcoding a sports workaround;
+  removed it (`instruments-service@0e22d54b`), confirmed dead-not-just-redundant via
+  `_resolve_consolidated_staleness_sec`'s source (per-AG override short-circuits before the env var is ever read).
+  `quality-gates.sh` green, SHA verified ancestor of `origin/live-defi-rollout`. Doc `status` flipped to `resolved`;
+  archiving per issue-doc-lifecycle (all todos done, unlocked).
