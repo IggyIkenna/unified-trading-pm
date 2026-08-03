@@ -146,3 +146,13 @@ and just burn more contended compute.
 - **context-scout 2026-08-03**: populated context_scope (5 entries) — codex CI-flow + CI-walls-runbook SSOTs, the
   governor plan this doc found not preventing recurrence, the governor script itself, and the specific failing test
   file.
+- **cicd re-dispatch 2026-08-03 (same escalation_id=agt-aa84f7, slot 4)**: the orchestrator re-fired the identical
+  escalation (same repo/PR/wall_type/CONTEXT/failing-run-URL as this doc's original filing). Re-verified rather than
+  re-investigating from scratch: `gh pr view 678` still shows `state: MERGED`, `mergedAt: 2026-08-03T18:20:44Z`,
+  `mergeCommit: c571a5b3` — confirms the original finding (§6, "the specific wall is already moot") still holds; LDR
+  HEAD has moved well past that merge (`b64e4a7` at re-check time). The systemic host-contention cause is still ACTIVE:
+  `gh run list --workflow quality-gates-v2.yml --branch live-defi-rollout` shows a run `queued` 23m48s plus three more
+  recent `cancelled` runs, `uptime` load average 22-28 on 8 physical cores. No code touched (none to touch — PR#678 has
+  no outstanding action), no repo-blockers open for deployment-service. The open questions in this doc (governor/CI
+  glue-runner integration gap, required-check enforcement on `ldr_main`) remain unanswered and are the actual next step
+  for whoever has host-capacity/governor context — this re-dispatch did not have new information to add there.
