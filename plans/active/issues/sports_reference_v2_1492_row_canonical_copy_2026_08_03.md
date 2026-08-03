@@ -6,7 +6,7 @@ summary: >-
   conflicting concurrent-session ruling of option A): before the two sports_reference_v2/by_date/ delete todos can
   revert to self-justified, the 1,492 rows sports_satellite_ao_dispatch_batch5_2026_07_26.md proved are the SOLE
   surviving copy of real pre-floor data (no canonical twin) must be copied to canonical storage.
-status: open
+status: resolved
 nature: issue
 asset_group: [sports]
 stage: [data]
@@ -34,6 +34,11 @@ sequential: true
 drift_direction: advance-code
 depends_on: []
 resolved_by:
+  "Operator ruling 2026-08-03 ('agreed'): wipe instead of copy, per
+  sports_v2_1492_row_copy_contradicts_floor_wipe_2026_08_03.md's recommendation. Executed via
+  deployment-service/scripts/wipe_pre_floor_sports_2026_07_21.py against
+  instruments-store-sports-prd-central-element-323112/sports_reference_v2/by_date/ -- 1,528/1,528 objects deleted, 0
+  errors, post-delete verification shows 0 pre-floor day dirs remain."
 locked_by:
 locked_since:
 supersedes:
@@ -66,22 +71,23 @@ pending exactly this migration.
       1,492; see Progress Log for full methodology + evidence). Durable artifact:
       `gs://instruments-store-sports-prd-central-element-323112/_index/audit/sports_reference_v2_prefloor_census_2026_08_03.parquet`
       (764 rows, one per (day, entity) cell) — this is the exact row list todo 2 should consume.
-- [ ] [DATA] P1. Copy the confirmed rows to canonical storage (the same target path/schema the rest of the sports corpus
-      already uses), verified row-count-conservation + content-identical. **UPDATED SCOPE (2026-08-03, slot 14)**: copy
-      the 764 deduplicated (day, entity) cells listed in `sports_reference_v2_prefloor_census_2026_08_03.parquet` —
-      source from either the `bare_uri` or `pipeline_mode_uri` column (content-identical, crc32c-verified) for each
-      cell, do NOT copy both (would double-write canonical storage for the same logical row). **HOLD 2026-08-03 (slot
-      15, task `sports_reference_v2_1492_row_canonical_copy-002`)**: NOT executed, regardless of the corrected 764-cell
-      scope — copying ANY pre-floor row here directly contradicts `/codex/02-data/sports-2020-06-data-floor.md` (the
-      same operator's 2026-07-21 ruling that pre-floor sports data is fabrication-by-construction and must be WIPED, not
-      backfilled/copied — already executed for the canonical-tree equivalent, `sports_reference/fixtures` 4,735
-      objects). See `/plans/active/issues/sports_v2_1492_row_copy_contradicts_floor_wipe_2026_08_03.md` for the full
-      evidence and a recommendation to extend the pre-floor wipe to `sports_reference_v2/by_date/` instead of copying.
-      Filed `/blocked` for operator reconciliation between the two rulings.
-- [ ] [VERIFY] P1. Re-run the canonical-twin check against the copied rows — confirm 100% now have a canonical twin.
-- [ ] [OPERATOR] P2. Once verified, retag the two `sports_reference_v2/by_date/` cull todos back to self-justified (drop
-      the `[OPERATOR]` + delete-safety §3a citation added 2026-08-02) — this is the reversion B's ruling specified, not
-      an independent decision.
+- [x] ✅ [OPERATOR] P1. **SUPERSEDED 2026-08-03 — operator agreed with the wipe recommendation over the copy.** Todo 2
+      as originally worded ("copy to canonical") is retired; see the new todo 2 below for what actually shipped.
+- [x] ✅ [DATA] P1. **Wipe the 764 confirmed pre-floor cells instead of copying** (per operator ruling on
+      `sports_v2_1492_row_copy_contradicts_floor_wipe_2026_08_03.md`, "agreed"). Executed
+      `deployment-service/scripts/wipe_pre_floor_sports_2026_07_21.py --bucket     instruments-store-sports-prd-central-element-323112 --root-prefix sports_reference_v2/by_date --apply`
+      — census-first (mandatory, this bucket has soft-delete=0): 382 pre-floor day dirs, 1,528 objects (764 cells × 2
+      physical copies each, bare + `pipeline_mode=`-tagged — matches the census exactly). Applied:
+      `{'DELETED': 1528, 'ERROR': 0}`. Post-delete verification re-run: 0 pre-floor day dirs remain, 16 post-floor day
+      dirs (2024-12-24..2026-04-20) untouched. Snapshots (pre-apply + apply + verify) preserved in this session's
+      scratchpad as the recovery record (soft-delete=0 means the snapshot is the only one).
+- [x] ✅ [VERIFY] P1. **Post-delete listing confirms 0 pre-floor objects remain** — see above, folded into the same
+      verification pass (a separate "canonical-twin check" no longer applies since nothing was copied).
+- [x] ✅ [OPERATOR] P2. **Retag the two `sports_reference_v2/by_date/` cull todos** — done in
+      `sports_consolidated_closeout_2026_07_19.md` and `sports_consolidated_native_ao_extract_2026_07_25.md`: the
+      764-row sole-surviving-copy carve-out that blocked them is resolved (wiped, not orphaned), so both revert toward
+      self-justified. Full cull of the REMAINING 16 post-floor day dirs still needs its own reader-check first (not
+      executed here — different, broader scope than this doc's 764-cell carve-out) — see those docs' updated todo text.
 - [ ] [DATA] P3. Root-cause and retire whatever wrote the 764 `pipeline_mode=batch_api_football`-tagged duplicate copies
       INTO `sports_reference_v2/by_date/` (still the legacy tree, not canonical `sports_reference/by_date/`) around
       2026-06-24 — see Progress Log finding below. Low urgency (byte-identical duplicates, no correctness impact, all
@@ -144,3 +150,6 @@ pending exactly this migration.
   todo. Todo 1 (re-run the census) also not executed — pending the disposition ruling, since a fresh census only matters
   if the copy path is confirmed as correct.
 - **context-scout 2026-08-03**: populated context_scope (4 entries).
+- **2026-08-03 (final)**: Operator ruled "agreed" on the wipe-not-copy recommendation. Executed the wipe directly (see
+  todo 2 above for full command + result). This doc is now resolved — its title/summary describe the original "copy"
+  framing that was superseded; kept as historical record per the Todos section above rather than rewritten.
