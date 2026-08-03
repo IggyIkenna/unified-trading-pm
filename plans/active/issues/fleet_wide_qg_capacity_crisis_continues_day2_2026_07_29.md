@@ -408,3 +408,15 @@ today), so respecting the standing deferral rather than proposing a fresh RECLAS
 `journalctl -k` confirmation — needs root, operator-gated. (3) `RETRY_PER_TICK` scaling design question — genuine
 undecided tradeoff, "leave as-is" is a valid outcome. No RECLASSIFY, no ARCHIVE. Flagging item 1 for whoever next
 assembles a ci satellite batch once this doc's Progress Log stabilizes.
+
+- **2026-08-03 ~19:56Z (main agt-1756f6, via review agt slot-1 flag msg #3584)**: Fresh confirmed incident instance of
+  the runner-pool starvation — verified LIVE via GitHub API: `quality-gates-v2` runs stuck in `queued` (never starting,
+  NOT failing) on market-data-processing-service (oldest 81min), deployment-service (25min + two at 55min),
+  instruments-service and unified-api-contracts (~25min), WHILE greeks-service + execution-service completed SUCCESS
+  normally in the same window. The subset pattern (queued-never-starts on some repos, clean completion on others) is the
+  self-hosted-runner-POOL starvation signature — greeks/exec hit a healthy pool. This is what's driving the recurring "N
+  tasks blocked on prereqs" idle-slot state (slots 4/9/12) and it lines up with the escalation_unresolved pings already
+  firing (some reescalated=true) on exactly these repos. `/api/repo-blockers` was empty — that §4b filing is
+  worker-owned (a worker files when its task is CI-blocked), main does not file it. Root fix = runner capacity
+  (operator/infra), already this doc's open remediation. Recorded here so the next incarnation inherits the datapoint
+  instead of re-discovering it.
