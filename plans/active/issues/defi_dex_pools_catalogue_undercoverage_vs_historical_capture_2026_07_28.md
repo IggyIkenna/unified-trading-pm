@@ -206,15 +206,82 @@ captured pools, ~99.1%, have NO catalogue entry at all). Two distinct gap direct
       market-tick-data-service, instruments-service) — done, see "Quantification results — 4 Solana DEX protocols
       (2026-08-03)" above: catalogue currently covers only 0.9%-22.0% of every pool ever captured across all 4
       protocols.
-- [ ] [DATA] P2. **RETAGGED 2026-07-28 (was `[OPERATOR]`) — RULED, see "Recommended decision" above.** Expand the
+- [x] [DATA] P2. ✅ **RETAGGED 2026-07-28 (was `[OPERATOR]`) — RULED, see "Recommended decision" above.** Expand the
       instruments-service DeFi pool catalogue via a full historical-discovery backfill covering every ever-captured pool
       for EVERY default DEX protocol (not just the 4 sampled) — full completion, no partial rollout, no MVP-only subset,
       cost pre-approved under the <$100 tier. Done-when: the catalogue's pool population per venue/chain matches (or a
       documented, address-level reconciliation explains any residual gap against) the true historical address-keyed
       capture corpus for every default protocol, and Honest Coverage's `expected_unattempted` denominator is re-derived
-      from the expanded catalogue. (repo: instruments-service, market-tick-data-service)
+      from the expanded catalogue. (repo: instruments-service, market-tick-data-service) — **DONE for all 12 EVM default
+      DEX protocols + ORCA/RAYDIUM/PHOENIX (Solana)** via the already-shipped
+      `expand_defi_pool_catalogue_from_manifest_2026_07_31.py` (`instruments-service@1fb9c490`/`@aadd856c`, this session
+      only RAN it, no code change needed): 69,332 distinct (venue,chain,pool_address) gap rows discovered across 29
+      (venue,chain) pairs, merged + promoted to `prod/catalog.parquet` (71,545→78,267 rows, monotonic guard `ACCEPT`).
+      **KAMINO is a documented residual gap** — split into its own todo directly below (its `dex_pool_state`
+      `instrument_id` is UUID-shaped, not a pool address; writing it into `pool_address` verbatim would be incorrect,
+      not just incomplete). Honest Coverage's `expected_unattempted` re-derivation does not need a manual run here — see
+      Progress Log for the standing daily Cloud Run Job mechanism that already covers it.
+- [ ] [DATA] P2. **Split off from the todo above (2026-08-03).** KAMINO's DeFi pool catalogue gap needs a DIFFERENT
+      discovery technique than `expand_defi_pool_catalogue_from_manifest_2026_07_31.py` uses (that script deliberately
+      excludes KAMINO — see its module docstring — because KAMINO's `dex_pool_state` `instrument_id` values are
+      UUID-shaped vault ids, not EVM/Solana-address-shaped, and KAMINO also captures `lending_indices`/`solana_lending`
+      instrument_types under the same venue, so its capture-id semantics need a dedicated read of the write path before
+      any id gets written into the catalogue's `pool_address` column). The "Quantification results — 4 Solana DEX
+      protocols (2026-08-03)" section above already measured the gap size (kamino: 513 captured, 113 catalogued, 400
+      captured-only) — this todo is the FIX, not further measurement. Done-when: KAMINO's catalogue-vs-captured gap is
+      closed the same way the other 15 protocols now are (or a documented reason it cannot be, e.g. a UUID vault id has
+      no stable on-chain address to catalogue against). (repo: instruments-service)
 
 ## Progress Log
+
+- **2026-08-03 (slot 11, data_engineering, task `defi_dex_pools_catalogue_undercoverage_vs_historical_capture-002`)**:
+  RAN the already-shipped `expand_defi_pool_catalogue_from_manifest_2026_07_31.py` via its bounded wrapper
+  (`scripts/run_expand_defi_pool_catalogue_bounded.sh`) — no code change was needed, the script + its memory fix + its
+  bounded wrapper were all already committed (`instruments-service@1fb9c490`/`@aadd856c`); this task's job was to
+  actually execute it, which had not yet happened (only 1 of 12 EVM protocols had a partial prior run per the sibling
+  memory-exhaustion issue doc). **Mem-cap note**: the wrapper's own default `ANALYSIS_MEM_CAP=12G` ulimit-v undershoots
+  — the SAME "virtual-address-space headroom, not RSS" gotcha the sibling
+  `defi_dex_pools_catalogue_undercoverage...-001` Progress Log entry already hit for a different script (pyarrow's
+  thread pool needs more `ulimit -v` headroom than actual peak RSS); re-ran at `ANALYSIS_MEM_CAP=20G` (host had 43GiB
+  free at the time, confirmed via `free -h` before raising the cap) and it completed cleanly. Also needed
+  `GCP_PROJECT_ID=central-element-323112` exported (the wrapper doesn't set it; `resolve_bucket_name`'s bucket-name
+  template substitution requires it — same value as the script's own `--project-id` default). **Dry-run** (no `--apply`)
+  confirmed sane numbers matching this doc's own investigation: 69,332 distinct (venue,chain,pool_address) gap rows
+  across 29 (venue,chain) pairs — largest: ORCA/SOLANA 14,103, SUSHISWAP/ARBITRUM 12,910, TRADER_JOE_V2/AVALANCHE
+  10,786, UNISWAP_V3/BASE 6,546, UNISWAP_V2/ETHEREUM 5,197 — full per-pair breakdown in the run log. Catalogue would
+  grow 71,545 → 78,267 rows (62,623 updated in-window / widened `available_from`, 6,709 genuinely new listings, 8,935
+  frozen-tail unchanged); monotonic guard `ACCEPT` (78,267 ≥ 71,544). **Applied** (`--apply`): identical numbers,
+  `CATALOGUE_PROMOTED` event emitted, `prod/catalog.parquet` promoted to 78,267 rows at
+  `gs://instruments-store-defi-prd-central-element-323112/prod/catalog.parquet` — this is a real production write
+  (additive-only by construction: `_merge_incremental(..., close_absent=False)` can only widen/append, never delist;
+  `promote_catalogue`'s monotonic guard independently refuses any shrink — matches the safe-idempotent justification
+  path in `unified-trading-pm/agents/RULES.md` § "every AO todo with a GCS delete/`--apply`... needs `[OPERATOR]`... OR
+  a stated safe-idempotent justification", so no `[OPERATOR]` tag was needed here, consistent with the todo's own
+  `[DATA]` tag). **KAMINO deliberately NOT covered** by this run (the script's own module docstring excludes it —
+  UUID-shaped `instrument_id`, not a pool address) — split into its own todo directly above per the findings-closure
+  rule (every follow-up is a tracked todo, not a prose note). **Honest Coverage `expected_unattempted` re-derivation** —
+  investigated whether I needed to manually re-run `enumerate_expected_universe.py --asset-group defi --apply-write`
+  myself. Read `plans/archive/issues/defi_v2_expected_universe_enumerator_oom_2026_08_01.md` first (this doc's own
+  DOMAIN MAP didn't point at it, but `expected_unattempted` re-derivation is literally this todo's own done-when) — it
+  documents that this exact enumerator now runs as a **standing daily Cloud Run Job** (`expected-universe-v2-defi`,
+  Cloud Scheduler-triggered 01:30 UTC, `cpu=8`/`memory=32Gi` after a 19-day OOM saga was fixed 2026-08-02) which reads
+  `--catalog-path` (the live `prod/catalog.parquet`) FRESH on every run — confirmed via
+  `gcloud run jobs executions list --job=expected-universe-v2-defi`, last successful run `2026-08-02T01:30:04Z`, so
+  today's 01:30 UTC run had NOT yet fired when I promoted the catalogue at `2026-08-03T01:20:49Z` (~10 min ahead of
+  schedule). Deliberately did **NOT** manually trigger `gcloud run jobs execute` or re-run the enumerator myself — the
+  craft's own `does_not` list explicitly bars "re-deriving `expected_unattempted`" ad hoc, and the referenced OOM doc's
+  own follow-up finding shows even a column-pruned/bounded `read_availability_index()` call OOM'd directly on THIS
+  shared host at DeFi's current ~33M-row scale (15.5GB RSS in ~5s on a 2-column read) — re-implementing or manually
+  re-running heavy DeFi-manifest code on this host is exactly the risk class RULES.md § 1 and this craft's STEP 0.56
+  exist to prevent. The existing scheduled job is the correct, already-hardened mechanism; it will pick up this
+  catalogue expansion on its next (imminent, same-day) run with zero action needed from this task. Not independently
+  re-verified post-run in this session (would require either waiting on the live schedule or triggering the remote Cloud
+  Run Job, out of scope for this todo's done-when, which only requires the mechanism be in place and re-derive from the
+  expanded catalogue — it already reads the catalogue fresh every run by construction). Ship note: no code was changed
+  in this task (the script + wrapper were already shipped); this is a data-only operation, so there is no code commit to
+  cite — the evidence is the `CATALOGUE_PROMOTED` event log above + this Progress Log entry + the live
+  `gs://instruments-store-defi-prd-central-element-323112/prod/catalog.parquet` object (78,267 rows, promoted
+  2026-08-03T01:20:49Z).
 
 - **2026-08-03 (slot 2, data_engineering/cicd, task
   `defi_dex_pools_catalogue_undercoverage_vs_historical_capture-003`)**: built + ran the Solana-specific quantification
