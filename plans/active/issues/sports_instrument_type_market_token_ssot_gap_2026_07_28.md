@@ -129,11 +129,21 @@ remediation paths, needing an operator/design call before either is executed:
    `DATA_TYPES_BY_ASSET_GROUP`/`VENUES_BY_ASSET_GROUP`, then measure the denominator-expansion blast radius before
    shipping (same caution as D5/D6).
 
-- [ ] [DESIGN] P2. Operator/design decision: accepted-exception (path 1, fast, matches shipped precedent) vs. registry
+- [x] [DESIGN] P2. Operator/design decision: accepted-exception (path 1, fast, matches shipped precedent) vs. registry
       addition (path 2, needs denominator-blast-radius measurement first) for the 30 sports market-token
-      `instrument_type` values. Source: this doc.
-- [ ] [BACKEND] P2. Execute the chosen path in `deployment-api`/`unified-api-contracts` once decided, unit-test the
-      before/after (34 → ~4 non-canonical), and re-run `/distinct-values/sports` to confirm.
+      `instrument_type` values. Source: this doc. — decided: path 1 (accepted-exception), evidenced by the
+      `SPORTS_MARKET_TOKEN_ACCEPTED_NONCANONICAL_INSTRUMENT_TYPES` registry comment in `unified-api-contracts@26092ac8`
+      ("operator decision 2026-07-30 — accepted-exception over global enum growth, avoiding cross-asset-group enum
+      bloat + denominator blast radius").
+- [x] [BACKEND] P2. Execute the chosen path in `deployment-api`/`unified-api-contracts` once decided, unit-test the
+      before/after (34 → ~4 non-canonical), and re-run `/distinct-values/sports` to confirm. —
+      `unified-api-contracts@26092ac8` (2026-07-30, registers
+      `SPORTS_MARKET_TOKEN_ACCEPTED_NONCANONICAL_INSTRUMENT_TYPES`) +
+      `deployment-api@7988451056be068cc6ec4b8d215b4567d35b33ac` (wires it into
+      `_ACCEPTED_EXCEPTIONS[("instrument_types", "sports")]`, recovered 2026-07-30 WIP found abandoned on a shared
+      checkout, verified + shipped 2026-08-03) + `deployment-api@36f6da14e374a2fbd62e17269174c0838e4e6ffd` (regression
+      test `test_sports_market_token_instrument_types_are_accepted_exceptions_not_findings`, proves the panel drops
+      exactly 34 → 4, not 0 — the 4 already-tracked values `odds`/`exchange_odds`/`fixed_odds`/`ODDS` still flag).
 
 ## Progress Log
 
@@ -141,3 +151,12 @@ remediation paths, needing an operator/design call before either is executed:
   decision' (accepted-exception set vs registry addition for 30 sports market tokens) and todo 2 is gated on it — the
   doc's own Recommended-decision section spells out why a blind `InstrumentType` enum addition is unsafe (D6
   canonical-bloat / denominator blast radius precedent)
+- **2026-08-03**: Both todos DONE. The `unified-api-contracts` half (registry export) landed 2026-07-30
+  (`26092ac8f0217281388997f4a0ebc64fc0399e60`) same-session as the operator decision, but the `deployment-api` half
+  (wiring it into `_ACCEPTED_EXCEPTIONS`) was left as uncommitted WIP on a shared checkout, found abandoned + stale (3+
+  days, no active claim), safely stashed/pulled-forward/popped, then verified (imports resolve, dict structure correct,
+  both cited-doc UAC symbols + this doc's own recommended path all consistent) and shipped this session. Confirmed the
+  34→4 math directly (ad hoc + now a permanent regression test). This doc's remaining content (What I found / Why it
+  matters / Recommended decision) is now historical — every todo is checked and unlocked; flagging for archival per the
+  plan-completion-and-archival-discipline HARD RULE (not executed in this same session — scoped to the deployment-api
+  fix only).
