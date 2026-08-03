@@ -26,7 +26,7 @@ summary:
   drift') that likely did not touch doc substance -- worth checking whether `generate_context_scope_inventory.py`'s
   STALE/UP_TO_DATE heuristic (marker date vs. `last_updated`-or-git-commit-date) can be fooled into UP_TO_DATE by a
   content-irrelevant mechanical commit bumping the fallback date, independent of the Phase-1 miss confirmed above."
-status: open
+status: resolved
 nature: process
 asset_group: [ao]
 stage: [meta]
@@ -48,6 +48,12 @@ source:
   via corpus grep, dozens of other docs have `.py` entries)."
 locked_by:
 resolved_by:
+  "all 4 todos DONE 2026-08-03: item 1 live Phase-1 re-run confirmed the 2 named source paths surfaced
+  (unified-trading-pm@c4ab47371); item 2 corpus spot-check measured 62.1% source-path rate excluding carve-outs, up from
+  the 51% 2026-07-30 baseline (unified-trading-pm@b0422e033); item 3 shipped the deterministic post-hoc source-hunting
+  lint, wired into SKILL.md Phase 3 (unified-trading-pm@1c5d7553d); item 4 confirmed the STALE/UP_TO_DATE false-positive
+  risk was real (commit 17b53df1e3 was a live occurrence) and replaced the line/bracket-scan heuristic with a structured
+  frontmatter+body diff, re-verified 0 mismatches across 1007 pairs (unified-trading-pm@8470b3a70)"
 execution_scope: orchestrator-agent
 assigned_role: docs_reconciler
 model_tier: sonnet-doable
@@ -62,6 +68,11 @@ context_scope:
   ]
 priority: P2
 ---
+
+> **🟢 ARCHIVED 2026-08-03** — `status: resolved` with zero open todos; archived per
+> [`/codex/11-project-management/issue-doc-lifecycle.md`](/codex/11-project-management/issue-doc-lifecycle.md)'s
+> archive-on-resolve rule. Resolution evidence carried in `resolved_by:`. No content was rewritten. Reconciled +
+> archived by `context_scout_source_hunting_gap_2026_08_03_finalize_2026_08_03.md`'s own gated todo.
 
 ## What I found
 
