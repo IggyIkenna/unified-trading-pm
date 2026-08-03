@@ -32,6 +32,7 @@ repos:
     instruments-service,
     ml-service,
     alerting-service,
+    execution-service,
   ]
 scope: [engineer, admin]
 tags: [quality-gates, flaky-gate, timeout, pytest-timeout, ci, shared-host-contention, xdist]
@@ -41,7 +42,7 @@ related:
     /plans/active/issues/fleet_wide_qg_capacity_crisis_continues_day2_2026_07_29.md,
   ]
 created: 2026-08-02
-last_updated: 2026-08-03T14:00Z
+last_updated: 2026-08-03T14:19Z
 parent_epic: infrastructure_master
 assigned_vm: NA
 execution_scope: local-only
@@ -777,3 +778,32 @@ assertion — only the wall-clock deadline the same passing tests are held to. V
   root-cause fix). `AUTHORING_SLOT=ci-reconcile` (sentinel) — per cicd.md, skipped the authoring-slot ping. Slot left
   clean (`alerting-service`/`agent-orchestrator`/`unified-trading-pm` all on `live-defi-rollout`, 0 commits ahead of
   origin beyond this doc edit).
+
+- **2026-08-03 ~14:05-14:20Z (`cicd` escalation `agt-956fe9`, slot 2, `execution-service`, `wall_type=main_ci_red`,
+  `pr_number=0`) — NEW repo added to this doc, fixed with the sustained-red repo-local mitigation**: `main`'s
+  `quality-gates-v2` had 2 consecutive same-day failures, both the established signature — push run `30790881175`
+  (06:38:52Z) crashed TWO xdist workers via `Failed: Timeout (>150.0s) from pytest-timeout`, cascading into
+  `RuntimeError: Unexpectedly no active workers available` (1591s wall, 3303 passed); `workflow_dispatch` retry
+  `30812209370` (12:06:45Z) crashed a worker on `TestExchangeFillFee::test_fill_fee_optional_fields` — a 2-line
+  dataclass-construction test with zero I/O, cannot legitimately take 150s — then a second worker also crashed, again
+  cascading to `RuntimeError: Unexpectedly no active workers available` (1261s wall, 3329 passed). Confirmed test file
+  byte-identical between `main`/`live-defi-rollout` (no code/test diff); no green run recorded since
+  2026-08-02T00:33:08Z (~13.5h), every LDR `workflow_dispatch` attempt since then either `cancelled` (concurrency churn)
+  or not yet observed green — a sustained non-self-clearing red, not a still-in-flight wait, matching the bar this doc's
+  todo 1 sets for the repo-local mitigation (already applied to `unified-trading-api`, `features-service`,
+  `deployment-service`). Confirmed execution-service's `PYRIGHT_TIMEOUT=300` override already existed (from an earlier,
+  unrelated fix) but `PYTEST_TIMEOUT` did not. Applied the identical sanctioned mitigation: `execution-service@7803a634`
+  adds `PYTEST_TIMEOUT=${PYTEST_TIMEOUT:-300}` to `scripts/quality-gates.sh`. Verified green via quickmerge's own Pass-1
+  QG (`✅ ALL QUALITY GATES PASSED`, 197s, all steps green) — decisive confirmation no code/test defect. Shipped via
+  `quickmerge --agent --files 'scripts/quality-gates.sh'`, confirmed on `origin/live-defi-rollout` via
+  `merge-base --is-ancestor` (`7803a634`). `GET /api/repo-blockers` → `open: []`. Triggered a fresh `quality-gates-v2`
+  on LDR against the new head (`30822100465`, since LDR pushes here don't carry an automatic push-trigger — every prior
+  LDR run in this repo's history was `workflow_dispatch`, so a manual trigger was needed, not redundant). Also directly
+  re-triggered `quality-gates-v2` on `main` itself (`30822051928`) per the `ml-service` entry's "only main can speak for
+  main" finding (a green LDR/promotion alone cannot clear a main-originated `ci_status=FAILING` — only a real
+  main-branch run can) — this run predates the fix (main doesn't get the mitigation until the next LDR→main promotion),
+  so it may still hit the same flake; a green LDR run should auto-promote via `ldr-to-main-promote-fleet` regardless.
+  Did not wait for either run's completion (both are 30-90min-class jobs on the same contended host; per this doc's
+  established practice, outcome left for a follow-up occurrence if either comes back red). `AUTHORING_SLOT=ci-reconcile`
+  (sentinel) — per cicd.md, skipped the authoring-slot ping. Slot left clean (`execution-service` and
+  `unified-trading-pm` both on `live-defi-rollout`, 0 commits ahead of origin beyond this doc edit and the shipped fix).
