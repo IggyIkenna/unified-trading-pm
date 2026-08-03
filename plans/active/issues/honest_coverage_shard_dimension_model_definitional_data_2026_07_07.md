@@ -42,6 +42,7 @@ context_scope:
     /codex/04-architecture/instrument-universe-registry-consolidation.md,
     instruments-service/instruments_service/engine/orchestrator/writers.py,
     deployment-api/deployment_api/services/data_status/breakdowns_core.py,
+    deployment-api/deployment_api/services/data_status/mtds.py,
   ]
 execution_scope: local-only
 model_tier: opus-required
@@ -607,3 +608,5 @@ longer has its own download button.
 - **na-eligibility-audit 2026-07-30** (tranche=cefi, autonomous): KEEP-NA, valid - re-verified after its 2026-07-30
   edit: still carries a `[CODE]` item "deliberately deferred pending explicit go-ahead" and a `[VERIFY]` item the doc
   marks genuinely contested + actively under concurrent investigation.
+- **context-scout 2026-08-03**: refreshed context_scope (6 entries — added `mtds.py`, the source target for the
+  still-open `[CODE] P1` "move `market_metadata` off the MTDS daily axis" todo).

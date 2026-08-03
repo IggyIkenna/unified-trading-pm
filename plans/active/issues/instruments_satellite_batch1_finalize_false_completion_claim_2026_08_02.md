@@ -234,3 +234,5 @@ No design call needed — every piece here is independently checkable, not a jud
   tranche, but its bare `asset_group: [meta]` default-folds it into `infra` — the same membership-vs-ownership mismatch
   recorded as a tranche-level finding in `infra_consolidated_closeout_2026_07_25.md`'s 2026-08-02 marker. Classified and
   marked here because infra is the machine-assigned owning tranche; the retag itself is outside this skill's apply set.
+
+- **context-scout 2026-08-03**: refreshed context_scope (3 entries) — still accurate against current content.

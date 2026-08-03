@@ -40,10 +40,11 @@ resolved_by:
 locked_by:
 context_scope:
   [
-    /plans/archive/2026_07/ao_consolidated_closeout_2026_07_25.md,
-    /plans/active/issues/host_saturation_false_worker_kicks_stall_fleet_completions_2026_07_26.md,
     /codex/04-architecture/autonomous-recovery-matrix.md,
-    /plans/archive/2026_07/ao_uniform_agent_liveness_contract_2026_07_20.md,
+    /plans/active/issues/host_saturation_false_worker_kicks_stall_fleet_completions_2026_07_26.md,
+    agent-orchestrator/server/autospawn.py,
+    agent-orchestrator/server/worktree_clean_check/_branch_state.py,
+    agent-orchestrator/server/worker_liveness_watchdog.py,
   ]
 depends_on: []
 ---
@@ -203,3 +204,6 @@ review(slot1)'s behalf per the async-wait/stuck-recovery watchdog guidance.
   same unconditional sweep is a real design/safety call given that code's own incident history (2 cited prior data-loss
   near-misses in its own comments) — genuinely narrower in scope than before, but still judgment-gated, not mechanical.
   Stays NA.
+- **context-scout 2026-08-03**: refreshed context_scope (5 entries) — narrowed from the 2 now-archived/superseded plan
+  refs to the concrete source files the 2026-08-03 marker points at (`autospawn.py`, `_branch_state.py`,
+  `worker_liveness_watchdog.py`), matching the doc's narrowed remaining scope (the diverged sub-case only).

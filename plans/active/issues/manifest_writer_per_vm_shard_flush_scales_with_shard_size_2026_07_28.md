@@ -129,3 +129,5 @@ its own review):
   put this doc back in incremental scope was a cosmetic `context_scope`/reference-path-repointing commit, not a content
   change to the 3 open todos; the 2026-07-30 rationale (shared-infra concurrency-critical performance design work,
   needing its own review) still holds.
+- **context-scout 2026-08-03**: refreshed context_scope (5 entries) — reviewed against current doc content, list still
+  accurate (unchanged).

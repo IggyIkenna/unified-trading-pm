@@ -46,11 +46,11 @@ locked_by:
 locked_since:
 context_scope:
   [
-    /plans/active/issues/mdps_features_ml_strategy_orphan_sweep_tooling_gap_2026_07_27.md,
-    /plans/archive/issues/mdps_candle_orphan_sweep_design_brief_2026_07_27.md,
-    /plans/active/issues/candle_feature_canonical_path_divergence_2026_07_20.md,
+    market-data-processing-service/scripts/backfill_defi_dex_pool_swaps_source_correction.py,
+    deployment-service/scripts/vm/launch-backfill-defi-dex-swaps-source-correction-vm.sh,
+    /plans/active/issues/reap_zombies_wrong_log_path_kills_healthy_vms_2026_08_03.md,
     /codex/02-data/orphan-object-detection.md,
-    /plans/archive/issues/mdps_cefi_candle_manifest_orphan_reconciliation_2026_07_26.md,
+    /plans/active/issues/mdps_features_ml_strategy_orphan_sweep_tooling_gap_2026_07_27.md,
   ]
 depends_on: []
 ---
@@ -524,3 +524,8 @@ the candle layer instead of raw-tick.
   doc's own todo 1 tracks — see its Progress Log entry for the todo 1 checkbox flip. Handing back to
   `mdps_candle_manifest_population_disconnect_2026_07_25.md` todo 5 to do its own manifest-coverage spot-check and flip
   against this evidence.
+- **context-scout 2026-08-03**: refreshed context_scope (5 entries) — this doc's remaining scope has narrowed to just
+  the defi dex_pool_swaps source-correction campaign verification, so swapped out 3 now-historical entries (the design
+  brief + the two folded/resolved sibling reconciliation docs) for the actual tool
+  (`backfill_defi_dex_pool_swaps_source_correction.py`), its VM launcher, and the active VM-reliability issue
+  (`reap_zombies_wrong_log_path_kills_healthy_vms_2026_08_03.md`) affecting this campaign's relaunches.

@@ -91,3 +91,5 @@ here.
   race), determinable by code read; conflict-check clear (`data_pipeline_check_mdps_features` only REFERENCES this doc
   as owner). Shared conflict-check protocol:
   `/codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md` sect.3 - CLEARED.
+- **context-scout 2026-08-03**: refreshed context_scope (4 entries) — reviewed against current doc content, list still
+  accurate (unchanged).

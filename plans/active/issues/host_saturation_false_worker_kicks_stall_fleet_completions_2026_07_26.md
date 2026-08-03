@@ -60,9 +60,9 @@ context_scope:
   [
     /plans/active/issues/one_shot_worker_completes_but_no_clean_exit_signal_watchdog_rekicks_2026_07_25.md,
     /plans/active/issues/wedge_detector_lacks_liveness_by_progress_false_positive_2026_07_21.md,
-    /plans/archive/issues/watchdog_unpushed_sweep_defeats_operator_merge_gate_2026_07_26.md,
     /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
     /codex/04-architecture/agent-orchestrator-worker-liveness.md,
+    scripts/quality-gates-base/base-service.sh,
   ]
 depends_on: []
 ---
@@ -218,3 +218,6 @@ is known-wrong is actively dangerous.
   single open item is the fleet-wide QG-admission semaphore (`[DEVOPS] P1`), assessed and correctly left open by two
   prior audit passes (2026-07-30, 2026-07-31) as genuinely out-of-bounded-scope, large-blast-radius infra work touching
   the shared `base-service.sh`/QG entry point every repo invokes. Re-confirmed on independent re-read — no change.
+- **context-scout 2026-08-03**: refreshed context_scope (5 entries — added `scripts/quality-gates-base/base-service.sh`,
+  the shared QG entry point the sole remaining `[DEVOPS] P1` admission-semaphore todo must touch; dropped the archived
+  `watchdog_unpushed_sweep_defeats_operator_merge_gate_2026_07_26.md` sibling to stay within the minimal-list cap).

@@ -646,3 +646,5 @@ documented MVP scope doesn't actually restrict day-to-day fetches. Also: US2Y ge
   dozens of prose bullets across sections B-F and 5 asset groups, and section E is literally titled 'Operator decisions
   required (not engineer fixes)' — converting that corpus to checkboxes requires per-item triage including those
   operator calls, so the outcome is not determinable by a worker alone
+
+- **context-scout 2026-08-03**: refreshed context_scope (4 entries) — still accurate against current content.

@@ -60,10 +60,10 @@ locked_since:
 context_scope:
   [
     /plans/active/data_pipeline_check_mdps_features_2026_07_20.md,
+    /plans/active/issues/features_delta_one_instrument_type_filter_stg_bucket_404_and_swing_outcome_targets_dispatch_gap_2026_08_03.md,
     /plans/active/issues/features_require_captured_misses_tradfi_processed_candles_gap_2026_07_27.md,
-    /plans/archive/issues/features_e2e_check_delta_one_timeout_orphans_duplicate_vms_2026_07_27.md,
     /codex/02-data/data-pipeline-correctness-hard-rule.md,
-    /codex/02-data/external-data-always-available-rule.md,
+    features-service/features_service/multi_timeframe/cli/main.py,
   ]
 resolved_by:
 ---
@@ -484,3 +484,4 @@ automatically once A is fixed and TRADFI:delta_one's force leg produces real out
   to completion). No code changes this session (verification-only). **Remaining open**: CEFI:cross_instrument and
   CEFI:multi_timeframe verdicts pending; once both land, this todo's final consolidated verdict across all 6 shards can
   be written and the checkbox flipped.
+- **context-scout 2026-08-03**: populated/refreshed context_scope (5 entries).

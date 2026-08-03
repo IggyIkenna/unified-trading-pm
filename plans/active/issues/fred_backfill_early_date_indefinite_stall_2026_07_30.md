@@ -51,8 +51,10 @@ context_scope:
   [
     /plans/active/issues/macro_micro_econ_data_capture_audit_2026_06_05.md,
     /codex/05-infrastructure/manifest-consolidator-ssot.md,
-    /codex/05-infrastructure/vm-launcher-runbook.md,
     unified-trading-library/unified_trading_library/manifest_writer/_staleness_budget.py,
+    market-tick-data-service/market_tick_data_service/engine/tradfi_catalog_reader.py,
+    deployment-service/deployment_service/data_pipeline_monitors/exit_code_fleet_monitor.py,
+    /plans/archive/issues/tradfi_manifest_consolidator_fred_widespan_stall_2026_07_30.md,
   ]
 supersedes:
 superseded_by:
@@ -308,3 +310,8 @@ anywhere.
   measured at ~75s (vs. 6+ minutes pre-fix) — this substantially reduces (but doesn't eliminate) the value of todo P2's
   explicit `AG_CONSOLIDATOR_INFLIGHT_HORIZON_SEC["tradfi"]` override above; left that todo open since a measured,
   explicit value is still better than the current default regardless of how much healthier the consolidator now is.
+
+- **context-scout 2026-08-03**: refreshed context_scope (6 entries — swapped `vm-launcher-runbook.md` out for the actual
+  remaining-todo targets: `tradfi_catalog_reader.py` (open DATA P3 — same iterrows fix needed on the cefi/defi
+  siblings), `exit_code_fleet_monitor.py` (open BACKEND P3 — OOM-vs-stall misclassification), and the sibling archived
+  issue doc that root-caused the consolidator's own slow-cycle chunk-count blowup).

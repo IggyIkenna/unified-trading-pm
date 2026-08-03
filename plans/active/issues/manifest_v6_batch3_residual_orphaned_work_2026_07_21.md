@@ -205,3 +205,5 @@ overhead.
   same doc ("No genuine conflict found, and nothing is stealthily duplicating this doc's ground"). `locked_by` empty.
   `execution_scope` was already `orchestrator-agent` (no change needed); only `assigned_vm` flipped. A companion
   finalize doc is owed (not authored here).
+- **context-scout 2026-08-03**: refreshed context_scope (5 entries) — reviewed against current doc content, list still
+  accurate (unchanged).

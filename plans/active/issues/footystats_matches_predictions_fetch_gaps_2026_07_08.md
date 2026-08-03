@@ -426,3 +426,4 @@ code-fix task). A data_engineering slot with a full session budget should:
   `footystats_matches_predictions_odds_pending_fetch_universe_expansion_2026_07_27.md` doc. NOTE carried over from 07-30
   (still true, not fixed this pass — out of this audit's scope): the in-checkbox un-block sequence text is stale ("only
   todo #6 remains" — #6 is `[x]`).
+- **context-scout 2026-08-03**: refreshed context_scope (4 entries, unchanged — verified all still resolve).

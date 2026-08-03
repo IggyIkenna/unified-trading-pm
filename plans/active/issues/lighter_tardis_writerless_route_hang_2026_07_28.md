@@ -106,3 +106,5 @@ error in that case, or (b) add a bounded timeout so a misconfigured caller degra
 - **na-eligibility-audit 2026-07-30**: RECLASSIFY -> assigned_vm: planning (conflict-check CLEAR against 231 active
   planning docs; no open todo elsewhere duplicates this claim) - scoped root-cause diagnostic with an explicit stated
   done-when (identify the blocking await) — AO-eligible per dispatch-scope eligibility
+- **context-scout 2026-08-03**: refreshed context_scope (4 entries) — reviewed against current doc content, list still
+  accurate (unchanged).

@@ -53,6 +53,7 @@ context_scope:
     /plans/archive/2026_07/features_service_defi_data_loading_blockers_2026_05_29.md,
     /plans/active/issues/fleet_audit_triad_deferred_followups_2026_06_01.md,
     /plans/archive/issues/gcs_hive_partition_malformed_paths_remediation_2026_06_01.md,
+    /plans/active/infra_satellite_ao_dispatch_batch1_2026_07_26.md,
   ]
 execution_scope: local-only
 locked_since: 2026-06-02
@@ -523,3 +524,5 @@ tracked here.
   `locked_by: live-defi-rollout` with no `[unlock-plan]` grant, and genuinely-open non-infra work outside any infra
   pass's scope (the UAC DeFi venue-registry `BLOCKED-DISCIPLINE` items, alerting's `NEEDS-LIVE` ML-baseline item, 2
   `tofu apply` operator-gated infra items, and the BLOCKED backfill-VM cluster).
+- **context-scout 2026-08-03**: refreshed context_scope (5 entries; added
+  `infra_satellite_ao_dispatch_batch1_2026_07_26.md`, the live plan several rehomed items now cite).

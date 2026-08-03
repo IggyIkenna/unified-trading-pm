@@ -51,6 +51,7 @@ locked_since:
 context_scope:
   [
     /plans/active/issues/mdps_features_ml_strategy_orphan_sweep_tooling_gap_2026_07_27.md,
+    /plans/active/issues/mdps_candle_manifest_near_total_coverage_gap_2026_07_27.md,
     /codex/02-data/orphan-object-detection.md,
     features-service/scripts/feature_orphan_sweep.py,
   ]
@@ -246,3 +247,4 @@ not something an AO worker should guess at.
   `signal.json` always failed the footer read with `ArrowInvalid`) — branched on `FamilyConfig.object_suffix`, counting
   `row_count=1` per non-parquet object per the live writer's own convention. No new todo needed here — commodity is now
   fully covered (built, wired, validated, backfilled) alongside the other 7 wired families.
+- **context-scout 2026-08-03**: populated/refreshed context_scope (4 entries).

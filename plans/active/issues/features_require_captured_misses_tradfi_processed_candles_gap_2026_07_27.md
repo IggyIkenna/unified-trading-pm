@@ -237,3 +237,5 @@ input gap didn't change.
   fix's push landed first at `features-service@4fbf4dc7`) — same stated intent as this fix's reconciliation of slot-14's
   probe. Not coordinated with directly; whoever rebases second will find their change already subsumed and should drop
   the now-redundant hunks rather than re-applying an equivalent fix on top.
+
+- **context-scout 2026-08-03**: populated/refreshed context_scope (4 entries).

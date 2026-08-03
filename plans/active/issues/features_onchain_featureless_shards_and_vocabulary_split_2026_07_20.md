@@ -315,3 +315,4 @@ build-MTDS-collectors → recompute), not a new one.
   collection)... size them as their own work' per the doc author" — i.e. building 5 protocol-specific on-chain data
   collectors from scratch needs a human sizing/scoping pass (which on-chain source per protocol/field) before any
   worker-determinable todo exists, not a bare mechanical build. Doc stays `assigned_vm: NA`.
+- **context-scout 2026-08-03**: populated/refreshed context_scope (5 entries).

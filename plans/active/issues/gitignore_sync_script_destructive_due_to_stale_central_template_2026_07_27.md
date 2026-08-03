@@ -137,3 +137,4 @@ each of the 24 sibling repos has independently accumulated that I did not audit 
   already-`[x]` item's text (no wording/content change). `grep -cE '^- \[ \]'` = **2**, matching this verdict: the
   template-reconciliation item still needs human diffing judgment, and the dependent P3 verify item is gated behind it.
   No action needed.
+- **context-scout 2026-08-03**: refreshed context_scope (4 entries, unchanged — verified all still resolve).

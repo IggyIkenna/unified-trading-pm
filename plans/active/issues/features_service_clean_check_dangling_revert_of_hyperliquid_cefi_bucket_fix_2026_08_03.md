@@ -45,6 +45,8 @@ context_scope:
   [
     /plans/archive/issues/defi_delta_one_funding_oi_hyperliquid_missing_open_interest_2026_07_31.md,
     features-service/features_service/delta_one/app/core/_passthrough_loader.py,
+    agent-orchestrator/server/worktree_clean_check,
+    /plans/archive/issues/delta_one_candle_loader_no_pass_through_path_defi_2026_07_30.md,
   ]
 locked_by:
 resolved_by:
@@ -175,3 +177,4 @@ problem with the fix that was never written down — which would be a genuine da
   invisible to every existing `worktree_clean_check` gate (which checks git-status only, never `git stash list`, for any
   repo) — filed the concrete fix as a new `[BACKEND]` P3 todo above rather than implementing it inline (a real
   agent-orchestrator server-code change, outside this doc-only task's scope).
+- **context-scout 2026-08-03**: populated/refreshed context_scope (4 entries).

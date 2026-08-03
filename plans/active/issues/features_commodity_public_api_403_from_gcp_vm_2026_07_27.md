@@ -100,3 +100,7 @@ environment-level cause (VM IP / headers) than 3 independent site outages.
       range is on any of EIA/CFTC/Baker Hughes' block-lists (unlikely to be operator-actionable beyond routing through a
       different egress path); not urgent — commodity is a P1/lower-priority family, not currently gating anything else
       in the matrix.
+
+## Progress Log
+
+- **context-scout 2026-08-03**: populated/refreshed context_scope (5 entries).

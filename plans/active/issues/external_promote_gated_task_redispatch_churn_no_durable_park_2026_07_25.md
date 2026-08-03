@@ -54,6 +54,7 @@ context_scope:
     /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
     /plans/active/issues/sit_validated_tree_treadmill_blocks_breaking_promotes_2026_07_20.md,
     /plans/archive/2026_07/ao_satellite_ao_dispatch_batch1_2026_07_26.md,
+    /plans/archive/issues/gated_skip_park_no_slack_page_2026_07_25.md,
     agent-orchestrator/server/auto_park.py,
     agent-orchestrator/server/routes/slots_ops.py,
   ]
@@ -181,3 +182,6 @@ is about routing external-gate tasks through it instead of through the churn pat
   reaches durable-park), so this doc's implementation todo is not folding in a newly-discovered code — it proceeds
   exactly as scoped above. This doc is now unblocked to dispatch; not implemented in this pass (out of scope for the
   audit-only batch todo that was gating it).
+- **context-scout 2026-08-03**: refreshed context_scope (6 entries) — added
+  `/plans/archive/issues/gated_skip_park_no_slack_page_2026_07_25.md`, the archived audit doc whose per-`reason_code`
+  table this doc's own Progress Log names as the input the implementation todo proceeds against.

@@ -47,7 +47,13 @@ source: >-
   `not_clean_since`, rather than a bug fix to the existing field.
 resolved_by:
 locked_by:
-context_scope: [agent-orchestrator/server/routes/git_health.py, scripts/dev/slot-git-status-report.sh, agents/review.md]
+context_scope:
+  [
+    agent-orchestrator/server/routes/git_health.py,
+    scripts/dev/slot-git-status-report.sh,
+    agents/review.md,
+    /plans/active/infra_satellite_ao_dispatch_batch3_2026_07_30.md,
+  ]
 drift_direction: advance-code
 depends_on: []
 ---
@@ -125,3 +131,6 @@ Someone with access to the live AO backend (planning VM) and the reporter cron s
   root-cause-contingent architecture decision, unchanged from every prior pass, and
   `infra_satellite_ao_dispatch_batch3_2026_07_30.md`'s own combined todo explicitly excludes that branch from its
   bounded scope too ("a code change only if the verdict is (i) or (ii)... NOT a schema/field addition").
+- **context-scout 2026-08-03**: refreshed context_scope (4 entries — added
+  `infra_satellite_ao_dispatch_batch3_2026_07_30.md`, the doc that now actually tracks todos #1+#2's diagnostic work per
+  the 2026-08-03 na-eligibility-audit citation above).

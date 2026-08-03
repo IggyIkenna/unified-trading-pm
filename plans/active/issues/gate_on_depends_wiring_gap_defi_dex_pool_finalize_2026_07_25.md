@@ -715,3 +715,4 @@ note above already covers. Independently re-verified before declining:
   third root-cause mechanism, reproduced again the same day on an unrelated plan pair, plus the 2026-07-31 operator
   directive routing AO-machinery/dispatch-logic docs to `execution_scope: local-only`. Only change since the last marker
   is a mechanical `context_scope` path fix reflecting the quoted plan's archival — no substantive content changed.
+- **context-scout 2026-08-03**: refreshed context_scope (5 entries, unchanged — verified all still resolve).

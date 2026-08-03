@@ -127,3 +127,5 @@ is in this cutover's delete scope** (`instruments-store-sports` / `market-data-t
 - **na-eligibility-audit 2026-07-30**: KEEP-NA, valid (infra tranche, dispatch agt-30721a) — Sole todo is explicitly
   timing-gated by the doc's own Disposition section on other asset groups' own legacy-bucket decommission timing, not
   yet reached.
+
+- **context-scout 2026-08-03**: refreshed context_scope (5 entries) — still accurate against current content.

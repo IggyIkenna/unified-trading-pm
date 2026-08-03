@@ -59,6 +59,8 @@ context_scope:
     features-service/features_service/delta_one/cli/handlers/instrument_type_filter.py,
     features-service/features_service/delta_one/config.py,
     features-service/features_service/delta_one/engine/orchestrator.py,
+    unified-trading-library/unified_trading_library/pipeline_mode_resolver.py,
+    features-service/features_service/delta_one/app/core/data_loader.py,
     /plans/active/issues/pipeline_e2e_check_missing_env_flag_test_bucket_403_2026_08_01.md,
   ]
 resolved_by:
@@ -339,3 +341,4 @@ from `calculators/__init__.py`'s module-level registry):
      set/clear/no-leak behavior)
   - an updated `test_unrecognized_venue_falls_back_rather_than_crashing` (its old assertion accidentally depended on the
     case-sensitivity bug being present).
+- **context-scout 2026-08-03**: populated/refreshed context_scope (6 entries).

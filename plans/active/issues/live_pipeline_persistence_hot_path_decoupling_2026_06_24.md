@@ -34,9 +34,9 @@ locked_by: live-defi-rollout
 locked_since: 2026-05-21
 context_scope:
   [
-    /codex/02-data/pipeline-mode-and-batch-live-reconciliation.md,
+    /codex/02-data/live-data-persistence-and-event-log.md,
+    /plans/active/live_event_log_warm_sink_recovery_and_cold_compaction_2026_07_31.md,
     /plans/archive/2026_06/live_data_persistence_central_event_log_2026_06_25.md,
-    /plans/active/june_2026_vintage_audit_findings_2026_07_27.md,
     deployment-service/deployment_service/jobs/live_event_log_compactor.py,
     deployment-service/terraform/gcp/live_event_log/compaction_job.tf,
   ]
@@ -231,3 +231,10 @@ per-tick files). This issue doc is the problem-record; the plan is the executabl
       determinism test now that the full three-tier pipeline (Pub/Sub → warm GCS → cold compaction) actually executes
       end-to-end. Repos: deployment-service (job + terraform), market-tick-data-service / market-data-processing-service
       (determinism re-test).
+
+## Progress Log
+
+- **context-scout 2026-08-03**: refreshed context_scope (5 entries) — swapped in the actual active successor plan
+  (`live_event_log_warm_sink_recovery_and_cold_compaction_2026_07_31.md`, which now carries the remaining compaction-job
+  build work) and the better-matching codex SSOT (`/codex/02-data/live-data-persistence-and-event-log.md`) in place of
+  the now-superseded vintage-audit-findings pointer and a less-specific pipeline-mode codex doc.

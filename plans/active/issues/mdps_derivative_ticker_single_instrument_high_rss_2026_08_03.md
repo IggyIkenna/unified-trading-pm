@@ -106,3 +106,7 @@ genuine defect — hence P3, not P1 like todo 1.
       instrument — escalate to P1 and root-cause the specific aggregation step responsible (bisect by commenting out
       timeframes one at a time, or profile with `tracemalloc`/`memray`), following the same "unscoped listing/retention"
       investigation pattern as todo 1. Repo: market-data-processing-service.
+
+## Progress Log
+
+- **context-scout 2026-08-03**: refreshed context_scope (3 entries, unchanged — still accurate).

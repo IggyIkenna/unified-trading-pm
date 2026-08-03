@@ -41,6 +41,7 @@ context_scope:
     /plans/archive/2026_07/layer1_remeasure_and_certify_2026_07_06.md,
     /plans/archive/2026_07/tradfi_v9_stage1_finish_2026_07_06.md,
     e2e-testing/scripts/build_smoke/live_manifest_reader.py,
+    e2e-testing/scripts/build_smoke/run_live_verify_tradfi.py,
   ]
 execution_scope: orchestrator-agent
 model_tier: sonnet-doable
@@ -295,3 +296,5 @@ numbering.)**
 
 - **na-eligibility-audit 2026-07-30**: KEEP-NA, valid — sole todo self-parked BLOCKED-PREREQUISITES after 4 bounces,
   with an explicit 'Operator action required (any one of)' list and a prerequisite chain in another plan.
+- **context-scout 2026-08-03**: refreshed context_scope (5 entries — added `run_live_verify_tradfi.py`, the actual
+  script the sole remaining `-004` todo needs re-run once the `prd/`-vs-`prod/` path disagreement resolves).
