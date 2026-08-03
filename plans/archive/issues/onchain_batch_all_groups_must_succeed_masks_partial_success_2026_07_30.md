@@ -29,7 +29,7 @@ scope: [engineer]
 tags: [defi, features-service, onchain, batch-handler, exit-code, partial-success, data-correctness]
 related:
   - /plans/active/defi_satellite_ao_dispatch_batch3_2026_07_26.md
-  - /plans/active/issues/delta_one_lookback_instrument_discovery_wrong_universe_for_passthrough_defi_2026_07_30.md
+  - /plans/archive/issues/delta_one_lookback_instrument_discovery_wrong_universe_for_passthrough_defi_2026_07_30.md
   - /plans/active/issues/features_onchain_featureless_shards_and_vocabulary_split_2026_07_20.md
 created: "2026-07-30"
 source: [defi_satellite_ao_dispatch_batch3_2026_07_26.md-D1]
