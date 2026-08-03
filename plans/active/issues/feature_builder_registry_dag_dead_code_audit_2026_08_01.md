@@ -92,10 +92,48 @@ deleted, not left as misleading documentation.
       Progress Log 2026-08-03 (onchain) entry (2 of 16 registry entries declare non-empty `depends_on`:
       `aave_rate_impact` CONFIRMED-HARMLESS, `onchain_regime` a genuine unwired-feature-group GAP — new follow-up todo
       added below).
-- [ ] [AUDIT] P3. **Audit volatility's feature_builder_registry `depends_on` entries** — same method as above. Repo:
+- [x] ✅ [AUDIT] P3. **Audit volatility's feature_builder_registry `depends_on` entries** — same method as above. Repo:
       features-service. Done when: every declared dep in
       `features_service/volatility/schemas/feature_builder_registry.py` is classified real-bug-fixed/
-      confirmed-harmless/deleted-dead-code, with evidence per entry.
+      confirmed-harmless/deleted-dead-code, with evidence per entry. ✅ — audited, see Progress Log 2026-08-03
+      (volatility) entry (4 of 8 registry entries declare a non-empty `depends_on`, all 4 classified CONFIRMED-HARMLESS
+      by the literal method, but compounded by a materially worse finding: all 4 dependent calculators, plus 2 more
+      zero-dep entries, are entirely unwired from every production dispatch path — new follow-up todo added below).
+- [ ] [BACKEND] P1. **New, opened by the volatility audit above.** Wire (or delete) the 6 fully-unwired volatility
+      feature groups: `gamma_exposure`, `variance_risk_premium`, `second_order_greeks`, `vol_surface_term_structure`,
+      `tradfi_vol_surface`, `vol_greeks_features`. None of the 8 registry entries' calculators for these 6 groups are
+      ever instantiated by any production dispatch path — confirmed via 3 independent surfaces: (1) the CLI's
+      `FEATURE_GROUPS` choices (`features_service/volatility/cli/parser.py:11-17`) list only
+      `options_iv`/`options_term_structure`/`futures_basis`/`futures_term_structure`/`ALL` — the other 6 groups cannot
+      even be requested; (2) `VolatilityOrchestrationService._calculate_features`'s dispatch (the CLI batch/live
+      handlers' orchestrator, `features_service/volatility/engine/feature_group_service.py:303-321`) has an `elif` chain
+      covering only those same 4 groups, falling through to `"Unknown feature group"` for anything else; (3)
+      `VolatilityFeaturesOrchestrator.__init__` (the GCS chain-file orchestrator used by `service.py`,
+      `features_service/volatility/engine/orchestrator.py:113-116`) only constructs `VolatilityCalculator` +
+      `FuturesCalculator` — `GEXCalculator`/`VRPCalculator`/`SecondOrderGreeksCalculator`/
+      `VolSurfaceTermStructureCalculator`/`TradFiVolSurfaceCalculator` have ZERO instantiation call sites anywhere in
+      `features_service/` outside their own module + unit tests (confirmed via `rg` for each class name + its `(`
+      constructor call, repo-wide). `VolGreeksFeaturesExtractor` (the `vol_greeks_features` entry's mapped calculator
+      name in `_CALCULATOR_CLASS_MAP`) is worse still — that class **does not exist anywhere in the codebase**; the
+      actual implementation lives as unrelated module-level functions in
+      `features_service/volatility/vol_surface_feature_extractor.py` (`extract_vol_greeks_feature_dict` etc.), which are
+      ALSO never called outside their own module + tests — the registry's `_CALCULATOR_CLASS_MAP` entry is a dangling
+      reference to a name that was never implemented under that name. Yet
+      `features_service/volatility/schemas/feature_definitions.yaml` declares fully-specified, several `P0`-priority
+      features for every one of these 6 groups (`gamma_exposure:` line 307, `variance_risk_premium:` line 348,
+      `second_order_greeks:` line 397, `tradfi_vol_surface:` line 439, `vol_surface_term_structure:` line 604) — this is
+      the SAME failure class as this doc's `composite_sr` and `onchain_regime` findings (real, designed features
+      silently never computed), but affecting SIX feature groups in one engine rather than one. Done when: for each of
+      the 6 groups, either (a) registered in `FEATURE_GROUPS` + dispatched via
+      `VolatilityOrchestrationService._calculate_features` (or the GCS-chain orchestrator, whichever is the intended
+      production path for that group), with any genuine upstream data need threaded through (e.g.
+      `SecondOrderGreeksCalculator.compute()` needs `call_delta`/`sigma`/`tau`/`vega` sourced from `options_iv`'s
+      computed `OptionsIvRecord`, per its own docstring — a real scalar-parameter consumer relationship, not a
+      DataFrame-injection one), and covered by an integration-level test proving it runs end-to-end; or (b) if the
+      operator rules a group is no longer wanted, deleted (calculator file, registry entry, yaml block, tests) rather
+      than left as misleading unwired documentation. (repo: features-service) — scoped out of THIS audit todo
+      (classification only) given the larger surface (6 groups × dispatch wiring + per-group data-threading design +
+      tests), mirroring how `onchain_regime`'s fix was scoped as its own separate unit of work.
 - [ ] [BACKEND] P1. **New, opened by the onchain audit above.** Wire (or delete) the fully-unwired `onchain_regime`
       feature group in features-service's onchain engine. `compute_onchain_regime_features()`
       (`features_service/onchain/app/calculators/onchain_regime_calculator.py`) is never registered via
@@ -193,3 +231,48 @@ deleted, not left as misleading documentation.
   - Repo: features-service (no code change in THIS todo — audit-only, classification with evidence; the new gap gets a
     separate tracked `[BACKEND] P1` todo per CLAUDE.md's "every follow-up is a tracked todo, never prose" rule).
     Checkbox flipped above.
+
+- **2026-08-03 (volatility audit, slot 11)**: Read `features_service/volatility/schemas/feature_builder_registry.py`'s
+  `_metadata` table (8 entries: `options_iv`, `futures_term_structure`, `tradfi_vol_surface`, `vol_greeks_features`,
+  `gamma_exposure`, `variance_risk_premium`, `second_order_greeks`, `vol_surface_term_structure`).
+  `rg -n "resolve_build_order"` confirms the same cross-engine pattern — 0 call sites outside the schema module itself,
+  only imported/re-exported. **Four** entries declare a non-empty `depends_on`:
+  - **`gamma_exposure`** → `["options_iv"]`. `GEXCalculator.compute()` (`gex_calculator.py:47`) takes the RAW options
+    chain DataFrame (columns `strike`/`option_type`/`gamma`/`open_interest`) + `spot_price` — it never reads any of
+    `options_iv`'s computed output columns (`atm_iv`, `call_25d_iv`, etc.). No `__init__` override at all (confirmed:
+    `grep -n "__init__" gex_calculator.py` → 0 hits, default object init, no injection point). Classification:
+    **CONFIRMED-HARMLESS** by the literal method (decorative, same pattern as
+    delta_one/multi_timeframe/aave_rate_impact).
+  - **`variance_risk_premium`** → `["options_iv", "futures_term_structure"]`. `VRPCalculator.compute()`
+    (`vrp_calculator.py:44`) takes `atm_iv`/`rv_20`/`vrp_history`/`front_atm_iv`/`back_atm_iv` as scalar params — no
+    `__init__` at all (0 hits, same as above). The `atm_iv` param IS genuinely `options_iv`-shaped (a real semantic
+    relationship, same class as `second_order_greeks` below) — but `rv_20` comes from delta_one (not either declared
+    dep), and neither `front_atm_iv`/`back_atm_iv` reads `futures_term_structure`'s actual output columns (`basis`,
+    `roll_yield_*`, `curve_slope`, etc.) — so the `futures_term_structure` half of the declared edge is
+    decorative/mismatched regardless. No constructor-injection point either way (scalar params, not DataFrame).
+    Classification: **CONFIRMED-HARMLESS** by the literal method (no DataFrame injection point in `__init__`).
+  - **`second_order_greeks`** → `["options_iv"]`. `SecondOrderGreeksCalculator.compute()` (`second_order_greeks.py:102`)
+    takes `call_delta`/`sigma`/`tau`/`vega` — per the class's own docstring ("All inputs come from the OptionsIvRecord
+    or the options chain DataFrame") this IS a genuine producer→consumer relationship with `options_iv`'s output, same
+    failure class as `composite_sr`/`onchain_regime` — but expressed as scalar call params, not a DataFrame
+    constructor-injection point (no `__init__` override, 0 hits). Classification: **CONFIRMED-HARMLESS** by the literal
+    audit method (no injectable-DataFrame constructor point exists to leave unwired), though the underlying data
+    relationship is real — see the new follow-up todo below.
+  - **`vol_surface_term_structure`** → `["options_iv"]`.
+    `VolSurfaceTermStructureCalculator.calculate_vol_surface_term_structure()` (`vol_surface_term_structure.py:180`)
+    takes the RAW `options_df` and recomputes ATM IV/skew independently via its own
+    `_atm_for_bucket`/`interpolate_iv_at_delta`/`compute_atm_iv` helpers — it never reads `options_iv`'s computed output
+    columns. `__init__` (`vol_surface_term_structure.py:170`) takes only `max_history: int` — no injectable DataFrame
+    param. Classification: **CONFIRMED-HARMLESS** (decorative, recomputes from raw data independently).
+  - **Compounding finding (worse than decorative-depends_on)**: all 4 of the above calculators, PLUS the 2 zero-dep
+    entries (`tradfi_vol_surface`/`TradFiVolSurfaceCalculator`, `vol_greeks_features`/ `VolGreeksFeaturesExtractor`),
+    are **entirely unwired from every production dispatch path** — confirmed via 3 independent surfaces (CLI
+    `FEATURE_GROUPS` choices, `VolatilityOrchestrationService._calculate_features`'s elif chain,
+    `VolatilityFeaturesOrchestrator.__init__`'s calculator instantiations) — see the new `[BACKEND] P1` todo below for
+    full evidence. This is a materially bigger and more severe finding than a decorative `depends_on` edge: 6 of this
+    engine's 8 registry entries, despite `feature_definitions.yaml` declaring fully-specified P0/P1 features for each,
+    are dead code in production, not just dead documentation.
+  - Repo: features-service (no code change in THIS todo — audit-only, classification with evidence per the literal "does
+    `__init__` accept an injectable upstream DataFrame" method; the compounding unwired-groups gap gets its own separate
+    tracked `[BACKEND] P1` todo per CLAUDE.md's "every follow-up is a tracked todo, never prose" rule). Checkbox flipped
+    above.
