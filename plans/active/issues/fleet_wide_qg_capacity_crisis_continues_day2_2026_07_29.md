@@ -783,3 +783,37 @@ not just noting.
   doc touched in PM; the same pre-existing unrelated unpushed `agent-orchestrator@786e1ca` from prior sessions in this
   slot, referenced in the `agt-c82335` entry above, was again left untouched as out-of-scope for this one-shot
   escalation).
+
+- **2026-08-03 ~04:29-04:40Z (cicd escalation `agt-15e651`, slot 5, `features-service`, `wall_type=main_ci_red`,
+  `pr_number=0`)** — a re-dispatch of the exact same wall `agt-c82335` (above) diagnosed ~65min earlier; same
+  boot-context false premise repeated verbatim ("the code fix already exists on `live-defi-rollout`" — still false, LDR
+  is still genuinely red, same root cause). Confirms rather than re-derives: `main` HEAD unchanged (`4bbc25eb`,
+  445-vs-5-commit gap now at 5 unpromoted LDR commits), its `quality-gates-v2` run `30780455914` (started 02:55Z, same
+  run `agt-c82335` was watching) has `QG slice (checks)` completed `failure` (same
+  `Type check FAILED/timeout (exit=124)` signature) and `QG slice (tests)` still `in_progress` (now ~67min on that leg).
+  LDR's own run `30780475199` (queued since 02:55:35) had NOT started either job as of `agt-c82335`'s last check
+  (03:59Z) but **has since started**: direct process inspection on this same host (`ip-172-31-5-118`, still the exact
+  runner match) found two live `pytest` processes for `features-service` — PID 496202 (started 03:34Z, `D`-state
+  disk-I/O wait, matches main's in-progress tests leg) and PID 1738046 (started 04:33Z, `R`-state, 78% CPU, matches
+  LDR's tests leg finally being claimed) — i.e. real forward progress, not a stuck/dead queue entry. Host corroboration:
+  `uptime` load average **41.44/42.30/42.62** (16 vCPUs, >2.5x oversubscribed), swap **27Gi/47Gi** in use — same or
+  worse than every prior entry, consistent with the crisis still not abating. Fleet-promote gate unchanged:
+  `GATE BLOCK features-service: ci_status=FAILING (cached='FAILING', live='FAILING') — LDR CI is red; fix before LDR→main`.
+  **Disposition: no code/test/workflow change made or needed** — same conclusion as `agt-c82335`, now with a 4th
+  independent confirmation for this repo alone (6th combined with the `deployment-api`/`instruments-service` entries
+  above) that the fleet is still capacity-constrained with no durable green since 2026-08-02T09:16Z (~19h and counting).
+  Did not retrigger either run — both are now genuinely claimed and progressing (verified via live process state, not
+  just the CI API's queued/in_progress label, which the `agt-c82335` entry already showed can lag reality) and a
+  duplicate dispatch would cancel real work via `cancel-in-progress`. `GET /api/repo-blockers` → `open: []` — nothing to
+  fast-path. `AUTHORING_SLOT=ci-reconcile` is not a live numeric slot (same non-int rejection as `agt-05a7fe`) — this
+  entry is the outcome record. **Flagging for the operator via this doc's standing P1, not a new escalation**: this is
+  now the 4th consecutive `cicd` dispatch onto the identical `features-service main_ci_red` /
+  `deployment-api main_ci_red` family within ~3 hours, each independently reaching "self-heals, no action" — the
+  self-heal has not actually landed in that window (LDR's own tests leg only started progressing ~40min into THIS
+  entry's investigation), so if the pattern repeats past this run's completion, the next occurrence should stop
+  re-deriving the diagnosis and instead apply this doc's own established escalation path (the `PYTEST_TIMEOUT`-raise
+  precedent in `pytest_timeout_60s_flaky_under_contention_continued_2026_08_02.md`, or an `[OPERATOR]` capacity
+  decision) rather than a 5th identical no-op confirmation. Slot left clean on `live-defi-rollout` (only this doc
+  touched; `features-service`/`agent-orchestrator` worktrees read-only in this session, no commit needed there; the same
+  pre-existing unrelated unpushed `agent-orchestrator@786e1ca` from prior sessions in this slot was again left untouched
+  as out-of-scope for this one-shot escalation).
