@@ -241,15 +241,24 @@ inline in the doc itself (Progress Log entry) or in a per-tranche audit-results 
       pre-filter itself over-includes for this one tranche pairing). Fix: for `cross-cutting`, additionally require the
       doc is NOT already cited in `ci`/`infra`/`ao`'s own covering docs before counting it as a cross-cutting candidate
       (mirrors the `peer_cited` exclusion already correct in `generate_na_doc_tranche_inventory.py`).
-- [ ] [REVIEW] P2. **Convert 43 confirmed prose-trap docs to real checkboxes, then re-judge AO-eligibility per item** —
-      the zero-open-todo classification pass (99 docs, 7 agents) found 8 genuine `PERMANENT_REFERENCE` docs (correct
-      as-is, no action) and 16 genuine `KEEP_NA_VALID` (correct as-is), but also 24 `RECLASSIFY_CANDIDATE` (real,
-      bounded, worker-determinable remaining work stated only as numbered prose, never given a checkbox — a stronger
-      signal than plain conversion) and 19 `NEEDS_CHECKBOX_CONVERSION` (real remaining work in prose, AO-eligibility not
-      yet assessed). Neither bucket was executed this pass — converting prose to checkboxes is real editorial judgment
-      per doc (exact wording, `[TAG] P#.`, done-when clause), the same care applied to the 6 orphan candidates above,
-      not a mechanical batch op. RECLASSIFY_CANDIDATE (24):
-      `ag_closeout_audit_asset_group_comment_grep_blindspot_2026_07_26`,
+- [ ] [SCRIPT] P2. **Wire `scripts/plan-hygiene/check_na_duplicate_staleness.py` (new, 2026-08-03) into this skill's own
+      scheduled cadence** — it currently exists only as a standalone script, invoked by hand. It mechanically flags
+      `assigned_vm: NA` docs whose open checkbox is duplicate-tracked by an active `planning` doc (via `Source:`
+      citations) where the AO-side copy already shipped `[x]` but the NA-side original was never reconciled — exactly
+      the "KEEP-NA-STALE (already-duplicated)" verdict class this skill's own rubric already names, just without a
+      mechanical pre-filter. First run found 65 such candidates + 56 more via a looser any-doc-reference check; a
+      129-candidate hand-verification pass the same session found roughly a third were genuine closes, the rest false
+      positives (citation existed but didn't cover the specific blocked checkbox) — confirming the tool is a candidate
+      filter for Phase 1, not an auto-closer. **Done when**: this script's candidate list is read as part of Phase 0 (or
+      a new Phase 0.5) on the `na-eligibility-auditor.timer` cadence, so this class of staleness gets caught by the
+      existing 2-hourly cron instead of requiring another one-off manual session. the zero-open-todo classification pass
+      (99 docs, 7 agents) found 8 genuine `PERMANENT_REFERENCE` docs (correct as-is, no action) and 16 genuine
+      `KEEP_NA_VALID` (correct as-is), but also 24 `RECLASSIFY_CANDIDATE` (real, bounded, worker-determinable remaining
+      work stated only as numbered prose, never given a checkbox — a stronger signal than plain conversion) and 19
+      `NEEDS_CHECKBOX_CONVERSION` (real remaining work in prose, AO-eligibility not yet assessed). Neither bucket was
+      executed this pass — converting prose to checkboxes is real editorial judgment per doc (exact wording,
+      `[TAG] P#.`, done-when clause), the same care applied to the 6 orphan candidates above, not a mechanical batch op.
+      RECLASSIFY_CANDIDATE (24): `ag_closeout_audit_asset_group_comment_grep_blindspot_2026_07_26`,
       `ao_m3_verify_plan_flip_blind_to_archival_rename_2026_07_26`,
       `blocking_gcs_writes_on_event_loop_cross_asset_group_2026_07_18`,
       `cefi_available_at_wallclock_despite_deterministic_row_timestamp_2026_07_24`,

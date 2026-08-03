@@ -189,3 +189,10 @@ convention's scope).
   already-resolved investigation, not new open scope. The 5 open items (`- [ ]` count confirmed via
   `grep -cE '^- \[ \]'`) are unchanged from the prior two verdicts: the P2 REVIEW archival-convention policy call is
   still unresolved, and the two P3 dangling-reference backlogs still partially depend on it. Doc stays NA as a whole.
+- [ ] [DOC] P3. **2026-08-03 baseline drift, root cause not yet investigated**: `check_reference_paths.py` live-run
+      showed `existence_count` 88 vs. baseline 87 (format_count 81, unchanged/passing) — confirmed via `git stash`
+      round-trip that this +1 already existed at HEAD before that session's own edits, so it landed via someone else's
+      commit in the interim (this doc's own baseline had dropped to ~87-901 range across 2026-08-02, so a lot of cleanup
+      landed that day too — exact commit that introduced the +1 not identified). **Done when**: run
+      `python3 scripts/plan-hygiene/check_reference_paths.py` fresh, diff against this doc's last-known-good baseline
+      number, find + fix the specific new dangling ref, `--update-baseline`.
